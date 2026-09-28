@@ -16,6 +16,16 @@
 </p>
 
 <p align="center">
+  <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️ Download the latest DMG</b></a>
+  &nbsp;·&nbsp; or install with <a href="#with-homebrew"><b>Homebrew</b></a>
+</p>
+
+```bash
+brew tap adityajaindxb/notchapples https://github.com/AdityaJainDXB/NotchApples
+brew install --cask notch-apple
+```
+
+<p align="center">
   <img src="docs/screenshots/claude.png" width="720" alt="Notch apple expanded, showing the Claude tab">
 </p>
 
