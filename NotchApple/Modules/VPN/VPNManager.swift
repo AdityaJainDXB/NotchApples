@@ -202,6 +202,66 @@ final class VPNManager: ObservableObject {
         return p
     }
 
+    // MARK: VPN client (Tunnelblick is bundled; WireGuard comes from the App Store)
+
+    enum VPNClient { case tunnelblick, wireGuard }
+
+    /// Set when a Connect needs a client app that isn't installed yet.
+    @Published var needsVPNClient: VPNClient?
+    /// The profile to finish connecting once the client is installed.
+    private var pendingProfile: VPNProfile?
+    private var installWatcher: Timer?
+
+    /// Tunnelblick's notarized installer, bundled unmodified (GPL-2.0).
+    static var bundledTunnelblick: URL? {
+        Bundle.main.url(forResource: "Tunnelblick", withExtension: "dmg")
+    }
+
+    static var hasTunnelblick: Bool {
+        NSWorkspace.shared.urlForApplication(withBundleIdentifier: "net.tunnelblick.tunnelblick") != nil
+    }
+
+    /// Opens the client installer and finishes the pending connection as soon as it's installed.
+    func installVPNClient() {
+        switch needsVPNClient {
+        case .tunnelblick:
+            if let dmg = Self.bundledTunnelblick { NSWorkspace.shared.open(dmg) }
+            else { NSWorkspace.shared.open(URL(string: "https://tunnelblick.net/downloads.html")!) }
+            message = "Follow the Tunnelblick installer. When it's done, your server connects automatically."
+        case .wireGuard:
+            NSWorkspace.shared.open(URL(string: "macappstore://apps.apple.com/app/wireguard/id1451685025")!)
+            message = "Install WireGuard from the App Store. When it's done, your profile opens automatically."
+        case nil:
+            return
+        }
+        // Watch for the app to appear (up to 10 minutes), then resume.
+        installWatcher?.invalidate()
+        let started = Date.now
+        installWatcher = Timer.scheduledTimer(withTimeInterval: 2, repeats: true) { [weak self] timer in
+            Task { @MainActor in
+                guard let self else { timer.invalidate(); return }
+                let installed = self.needsVPNClient == .wireGuard
+                    ? NSWorkspace.shared.urlForApplication(withBundleIdentifier: "com.wireguard.macos") != nil
+                    : Self.hasTunnelblick
+                if installed, let profile = self.pendingProfile {
+                    timer.invalidate()
+                    self.needsVPNClient = nil
+                    self.pendingProfile = nil
+                    await self.connect(profile)
+                } else if Date.now.timeIntervalSince(started) > 600 {
+                    timer.invalidate()
+                }
+            }
+        }
+    }
+
+    func cancelClientInstall() {
+        installWatcher?.invalidate()
+        needsVPNClient = nil
+        pendingProfile = nil
+        message = nil
+    }
+
     // MARK: Connect
 
     func connect(_ profileArg: VPNProfile) async {
@@ -289,8 +349,15 @@ final class VPNManager: ObservableObject {
                     NSWorkspace.shared.open(page)
                     message = (message ?? "") + " The username and password are on the page that just opened in your browser."
                 }
+            } else if profile.kind == .openVPN, Self.bundledTunnelblick != nil {
+                // Offer the Tunnelblick installer that ships inside Notch apple, then finish connecting.
+                pendingProfile = profile
+                needsVPNClient = .tunnelblick
+                message = "One-time setup: install the free VPN helper (Tunnelblick), then this server connects automatically."
             } else {
                 NSWorkspace.shared.activateFileViewerSelecting([url])
+                pendingProfile = profile
+                needsVPNClient = profile.kind == .wireGuard ? .wireGuard : .tunnelblick
                 message = "Saved \(url.lastPathComponent) to Downloads. Install the free \(profile.kind == .wireGuard ? "WireGuard" : "Tunnelblick") app to connect."
             }
         } catch {

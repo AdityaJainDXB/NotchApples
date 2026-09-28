@@ -1,0 +1,7 @@
+Tunnelblick 9.0.1 (build 6491), included unmodified so Notch apple's VPN works
+without a separate download. Tunnelblick is free software (GPL-2.0), © Jonathan
+K. Bullard and contributors, notarized by its developer.
+
+Source code:  https://github.com/Tunnelblick/Tunnelblick (tag v9.0.1)
+Website:      https://tunnelblick.net
+SHA-256:      73ca843b7720cd9261a7fd6cf53b0901a06f69c25824ef09430e4094f0688ad0

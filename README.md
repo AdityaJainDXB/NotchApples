@@ -64,6 +64,17 @@ When the VPN module is on, a **VPN On/Off** pill in the notch header shows the t
 
 ## Install
 
+### With Homebrew
+
+```bash
+brew tap adityajaindxb/notchapples https://github.com/AdityaJainDXB/NotchApples
+brew install --cask notch-apple
+```
+
+Update later with `brew upgrade --cask notch-apple`. The first time you open it, macOS may block it because it isn't notarized: go to **System Settings → Privacy & Security** and click **Open Anyway**.
+
+### Manually
+
 1. Download the latest `NotchApple-x.y.z.dmg` from [**Releases**](../../releases).
 2. Open it and drag **Notch apple** into **Applications**.
 3. The app is ad-hoc signed, not notarized, so on first launch right-click the app and choose **Open**, then confirm. (Or run `xattr -dr com.apple.quarantine "/Applications/Notch apple.app"`.)
@@ -113,20 +124,21 @@ How rooms stay private:
 
 > Anyone who knows the code can join the room, and short numeric codes are easy to guess. For a private chat, use **New room**, which makes a code with about a trillion possibilities.
 
+**Notifications.** When someone messages you while the notch is closed or you're on another tab, you get a macOS notification (sender, message and room), the closed notch grows a small purple dot, and the Messenger tab shows a badge. Click the notification to jump straight to the chat. Messenger keeps listening in the background, rejoining your last room when Notch apple starts. Turn notifications or message previews off in **Settings → Messenger**.
+
 Turn off **Allow local network discovery** in **Settings → Messenger** to stay invisible on your Wi-Fi.
 
 ## Using the VPN
 
 Notch apple doesn't run any VPN servers. It organises free VPN profiles and connects them for you. A **profile** is a small text file that says which server to connect to and how: `.ovpn` for **OpenVPN** or `.conf` for **WireGuard**.
 
-In the free download, Notch apple passes the profile to a free VPN app, which makes the actual connection. So install that app first.
+Notch apple hands the profile to a VPN helper app that makes the actual connection. **You don't need to download anything yourself:** the free, open-source [Tunnelblick](https://tunnelblick.net) installer (notarized by its developer) is **included inside Notch apple**.
 
-### Step 1: Install a free VPN app (one time)
+### Step 1: One-time setup (automatic)
 
-| Profile type | Install one of these (all free) |
-| --- | --- |
-| `.ovpn` (OpenVPN), including all the built-in free servers | [Tunnelblick](https://tunnelblick.net) (recommended) or [OpenVPN Connect](https://openvpn.net/client/) |
-| `.conf` (WireGuard) | [WireGuard](https://apps.apple.com/app/wireguard/id1451685025) from the Mac App Store |
+The first time you click **Connect** on an OpenVPN server, Notch apple shows **"One-time setup: install the VPN helper"**. Click **Install**, follow Tunnelblick's installer, and Notch apple finishes connecting your server automatically once it's installed. After that, every **Connect** goes straight through.
+
+You can also install it with Homebrew: `brew install --cask tunnelblick`. For WireGuard `.conf` profiles, Notch apple offers the free [WireGuard](https://apps.apple.com/app/wireguard/id1451685025) app from the Mac App Store the same way.
 
 ### Step 2: Turn on the VPN module
 
@@ -165,7 +177,7 @@ Tunnelblick or WireGuard shows **Connected**, and [whatismyipaddress.com](https:
 
 | Problem | Fix |
 | --- | --- |
-| "Saved … to Downloads. Install the free Tunnelblick app" | No VPN app is installed yet. Do Step 1, then click **Connect** again. |
+| "One-time setup: install the VPN helper" | Click **Install** and follow the Tunnelblick installer (Step 1). |
 | A server won't connect | Free servers come and go. Try another, or switch between TCP and UDP. |
 | "Auth failed" | The password has changed. Copy the current one from the provider's page (see the table above). |
 | The server list won't load | GitHub or vpngate.net may be blocked on your network. Import a Proton VPN file instead. |
@@ -220,6 +232,13 @@ Notch apple is built to cost nothing, so the public DMG is **ad-hoc signed**. A 
 | **VPN tunnels** (Network Extension entitlement) | Hands the profile to the free WireGuard, Tunnelblick, or OpenVPN Connect app | Connects natively. Add a Packet Tunnel Provider target (`com.notchapple.app.tunnel`, for example with wireguard-apple) and the Network Extension entitlement |
 | **WeatherKit** | Uses [Open-Meteo](https://open-meteo.com), which is free and needs no key | Add the WeatherKit capability and set the Swift flag `-D WEATHERKIT` |
 | **App Group** (widget now-playing) | The widget shows weather and calendar only | Add `group.com.notchapple.shared` to both targets |
+
+### Included third-party software
+
+| Software | Why | Licence |
+| --- | --- | --- |
+| [Tunnelblick](https://github.com/Tunnelblick/Tunnelblick) 9.0.1 installer, unmodified and notarized by its developer | Connects OpenVPN profiles | GPL-2.0 (licence and source link shipped in the app) |
+| [BackgroundMusic](https://github.com/kyleneideck/BackgroundMusic) 0.5.0 installer, unmodified | Optional per-app audio on macOS 14.0–14.1 | GPL-2.0 |
 
 ### Per-app audio on macOS 14.0–14.1
 

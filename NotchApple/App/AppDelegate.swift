@@ -15,6 +15,7 @@ import AppKit
 import SwiftUI
 import Combine
 
+@MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate {
     private var notchController: NotchWindowController?
     private var statusItem: NSStatusItem?
@@ -25,6 +26,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         notchController?.show()
 
         NowPlayingMonitor.shared.start()
+        startMessengerInBackground()
 
         // Show/hide the status item live as the preference changes.
         applyStatusItemPreference()
@@ -41,6 +43,24 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         NotificationCenter.default.publisher(for: NSApplication.didChangeScreenParametersNotification)
             .sink { [weak self] _ in self?.notchController?.reposition() }
             .store(in: &cancellables)
+    }
+
+    /// Keeps Messenger listening while the notch is closed, so new messages can notify you:
+    /// nearby Wi-Fi discovery (if allowed) and the last room you were in.
+    private func startMessengerInBackground() {
+        MessengerNotifier.shared.start()
+        guard SettingsManager.shared.messengerEnabled else { return }
+        MessengerNotifier.shared.requestAuthorizationIfNeeded()
+        LocalP2PManager.shared.start()
+        if let room = UserDefaults.standard.string(forKey: "messenger.activeRoom") {
+            WebP2PManager.shared.join(room)
+        }
+    }
+
+    func applicationWillTerminate(_ notification: Notification) {
+        // Say goodbye to the room but remember it for next launch.
+        WebP2PManager.shared.leave(remember: true)
+        LocalP2PManager.shared.stop()
     }
 
     /// Registers or removes the global ⌘E shortcut to match the preference.

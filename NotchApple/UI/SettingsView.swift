@@ -316,6 +316,7 @@ private struct ClaudeSettings: View {
 private struct MessengerSettings: View {
     @EnvironmentObject private var settings: SettingsManager
     @StateObject private var identity = MessengerIdentity.shared
+    @StateObject private var notifier = MessengerNotifier.shared
     @State private var handleDraft = MessengerIdentity.shared.handle
     @State private var cleared = false
 
@@ -339,6 +340,16 @@ private struct MessengerSettings: View {
                 Text("Identity")
             } footer: {
                 Text("No accounts, emails or phone numbers. Other people only see this handle.")
+            }
+            Section {
+                Toggle("Notify me about new messages", isOn: $notifier.notificationsEnabled)
+                    .onChange(of: notifier.notificationsEnabled) { _, on in if on { notifier.requestAuthorizationIfNeeded() } }
+                Toggle("Show message text in notifications", isOn: $notifier.showPreview)
+                    .disabled(!notifier.notificationsEnabled)
+            } header: {
+                Text("Notifications")
+            } footer: {
+                Text("A purple dot on the notch also shows when you have unread messages.")
             }
             Section {
                 Toggle(isOn: $settings.messengerLocalDiscovery) {

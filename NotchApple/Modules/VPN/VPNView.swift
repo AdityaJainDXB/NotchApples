@@ -26,6 +26,7 @@ struct VPNView: View {
     var body: some View {
         VStack(spacing: 10) {
             statusBar
+            if let client = vpn.needsVPNClient { clientBanner(client) }
             HStack(alignment: .top, spacing: 12) {
                 GlassCard {
                     VStack(alignment: .leading, spacing: 8) {
@@ -72,6 +73,27 @@ struct VPNView: View {
 
     private func reload() {
         Task { source == .library ? await vpn.loadLibrary() : await vpn.loadVPNGate() }
+    }
+
+    /// One-time setup prompt when a VPN client app is needed.
+    private func clientBanner(_ client: VPNManager.VPNClient) -> some View {
+        HStack(spacing: 10) {
+            Image(systemName: "arrow.down.app.fill").font(.system(size: 22)).foregroundStyle(Theme.accentGradient)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(client == .tunnelblick ? "One-time setup: install the VPN helper" : "One-time setup: install WireGuard")
+                    .font(.system(size: 13, weight: .semibold)).foregroundStyle(.white)
+                Text(client == .tunnelblick
+                     ? "Tunnelblick is free, open source and included with Notch apple. After installing, your server connects automatically."
+                     : "WireGuard is free on the Mac App Store. After installing, your profile opens automatically.")
+                    .font(.system(size: 11)).foregroundStyle(Theme.textSecondary).lineLimit(2)
+            }
+            Spacer()
+            Button("Not now") { vpn.cancelClientInstall() }.buttonStyle(PurpleButtonStyle(prominent: false))
+            Button(client == .tunnelblick ? "Install" : "Open App Store") { vpn.installVPNClient() }
+                .buttonStyle(PurpleButtonStyle())
+        }
+        .padding(10)
+        .background(Theme.accent.opacity(0.18), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
     }
 
     private var statusBar: some View {

@@ -163,6 +163,7 @@ struct NotchRootView: View {
 
 /// A notch tab: 28 pt tall, with hover and selected states.
 private struct TabButton: View {
+    @ObservedObject private var notifier = MessengerNotifier.shared
     let module: Module
     let active: Bool
     var compact = false
@@ -187,10 +188,18 @@ private struct TabButton: View {
                     }
                 }
                 .contentShape(Capsule())
+                .overlay(alignment: .topTrailing) {
+                    // Unread messages badge.
+                    if module == .messenger && notifier.unread > 0 && !active {
+                        Circle().fill(Theme.accentBright).frame(width: 9, height: 9)
+                            .overlay(Circle().stroke(Theme.deep, lineWidth: 2))
+                            .offset(x: -2, y: 2)
+                    }
+                }
         }
         .buttonStyle(.plain)
         .onHover { hovering = $0 }
-        .help(module.title)
+        .help(module == .messenger && notifier.unread > 0 ? "Messenger · \(notifier.unread) unread" : module.title)
         .accessibilityLabel(module.title)
         .accessibilityAddTraits(active ? .isSelected : [])
     }

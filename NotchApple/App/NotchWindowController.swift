@@ -68,6 +68,8 @@ final class NotchTriggerView: NSView {
     var onHoverChange: (Bool) -> Void = { _ in }
 
     private var isHovered = false { didSet { needsDisplay = true } }
+    /// Unread Messenger messages; > 0 grows the notch and shows a purple dot.
+    var unread = 0 { didSet { if oldValue != unread { needsDisplay = true } } }
     private var tracking: NSTrackingArea?
 
     override init(frame: NSRect) {
@@ -92,6 +94,10 @@ final class NotchTriggerView: NSView {
         var notch = bounds.insetBy(dx: pad.width - NotchRootView.collapsedShoulder, dy: 0)
         notch.origin.y += pad.height
         notch.size.height -= pad.height
+        if unread > 0 {
+            // The hardware notch has no pixels, so grow "ears" beside it for the dot.
+            notch = notch.insetBy(dx: -(Self.hitPadding.width - NotchRootView.collapsedShoulder - 2), dy: 0)
+        }
         if isHovered {
             // Hover feedback only — opening still requires a click.
             notch = notch.insetBy(dx: -6, dy: 0)
@@ -102,6 +108,14 @@ final class NotchTriggerView: NSView {
         let path = Self.notchPath(in: notch, shoulder: NotchRootView.collapsedShoulder, bottom: min(10, notch.height / 2))
         NSColor.black.setFill()
         path.fill()
+
+        if unread > 0 {
+            let d: CGFloat = 8
+            let dot = NSRect(x: notch.maxX - NotchRootView.collapsedShoulder - 8 - d,
+                             y: notch.midY - d / 2, width: d, height: d)
+            NSColor(Theme.accentBright).setFill()
+            NSBezierPath(ovalIn: dot).fill()
+        }
 
         if isHovered {
             NSColor(Theme.accent).withAlphaComponent(0.9).setStroke()
@@ -166,6 +180,7 @@ final class HoverTrackingView: NSView {
     override func mouseExited(with event: NSEvent) { onHoverChange(false) }
 }
 
+@MainActor
 final class NotchWindowController {
     private let panel: NotchPanel
     private let trigger: NotchPanel
@@ -196,6 +211,17 @@ final class NotchWindowController {
 
         triggerView.onClick = { [weak self] in self?.toggle() }
         triggerView.onDragEnter = { [weak self] in self?.openForDrop() }
+        let notifier = MessengerNotifier.shared
+        notifier.isMessengerVisible = { [weak self] in
+            guard let self else { return false }
+            return self.state.isExpanded && self.state.selected == .messenger
+        }
+        notifier.openMessenger = { [weak self] in
+            guard let self else { return }
+            self.state.selected = .messenger
+            self.expand()
+        }
+        notifier.onUnreadChange = { [weak self] n in self?.triggerView.unread = n }
         triggerView.onHoverChange = { [weak self] inside in self?.hoverChanged(inside: inside, overPanel: false) }
         container.onHoverChange = { [weak self] inside in self?.hoverChanged(inside: inside, overPanel: true) }
         state.toggle = { [weak self] in self?.toggle() }

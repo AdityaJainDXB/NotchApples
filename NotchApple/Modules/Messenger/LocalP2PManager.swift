@@ -111,6 +111,7 @@ final class LocalP2PManager: NSObject, ObservableObject {
             guard let text = env.text, !messages.contains(where: { $0.id == env.id }) else { return }
             messages.append(MessengerMessage(id: env.id, senderID: env.senderID, sender: env.sender,
                                              text: String(text.prefix(2000)), date: env.ts, isMine: false))
+            MessengerNotifier.shared.incoming(messages[messages.count - 1], source: "Nearby Wi-Fi")
         case .presence, .leave:
             break
         }

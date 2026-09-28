@@ -93,17 +93,20 @@ final class WebP2PManager: ObservableObject {
     func join(_ rawRoom: String) {
         let room = Self.normalize(rawRoom)
         guard !room.isEmpty else { return }
-        leave()
+        leave(remember: true)
         self.room = room
         key = SymmetricKey(data: SHA256.hash(data: Data("notchapple-room-key|\(room)".utf8)))
         let topicHash = SHA256.hash(data: Data("notchapple-room-topic|\(room)".utf8))
             .map { String(format: "%02x", $0) }.joined()
+        UserDefaults.standard.set(room, forKey: "messenger.activeRoom")
         topic = "notchapple-v1-\(topicHash.prefix(40))"    // valid for both ntfy and MQTT
         relayIndex = 0
         connect()
     }
 
-    func leave() {
+    /// Leaves the room. `remember: false` is used on quit so the room is rejoined next launch.
+    func leave(remember: Bool = false) {
+        if !remember { UserDefaults.standard.removeObject(forKey: "messenger.activeRoom") }
         if state == .joined { publish(kind: .leave, text: nil) }
         presenceTimer?.invalidate(); pingTimer?.invalidate()
         presenceTimer = nil; pingTimer = nil
@@ -176,6 +179,7 @@ final class WebP2PManager: ObservableObject {
             members[env.senderID] = (String(env.sender.prefix(32)), .now)
             messages.append(MessengerMessage(id: env.id, senderID: env.senderID, sender: String(env.sender.prefix(32)),
                                              text: String(text.prefix(2000)), date: env.ts, isMine: false))
+            MessengerNotifier.shared.incoming(messages[messages.count - 1], source: "Room #\(room ?? "")")
         }
     }
 

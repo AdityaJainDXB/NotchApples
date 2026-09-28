@@ -33,6 +33,8 @@ struct NotchMessengerView: View {
             inputBar
         }
         .onAppear {
+            MessengerNotifier.shared.markAllRead()
+            MessengerNotifier.shared.requestAuthorizationIfNeeded()
             roomDraft = lastRoom
             if mode == .nearby { local.start() }
         }
