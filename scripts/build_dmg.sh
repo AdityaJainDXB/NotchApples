@@ -19,28 +19,22 @@ xcodebuild -project NotchApple.xcodeproj -scheme NotchApple -configuration Relea
 APP="build/dd/Build/Products/Release/Notch apple.app"
 [ -d "$APP" ] || { echo "Build failed"; exit 1; }
 
-STAGE=$(mktemp -d)
-cp -R "$APP" "$STAGE/"
-ln -s /Applications "$STAGE/Applications"
-# Optional audio driver for macOS 14.0–14.1 (GPL-2.0, shipped unmodified with its licence).
-mkdir -p "$STAGE/Extras"
-cp NotchApple/Resources/BackgroundMusic.pkg "$STAGE/Extras/Install BackgroundMusic audio driver (optional).pkg"
-cp ThirdParty/BackgroundMusic-LICENSE.txt "$STAGE/Extras/BackgroundMusic LICENSE.txt"
-cat > "$STAGE/Extras/About these extras.txt" <<'TXT'
-BackgroundMusic audio driver (optional)
+# Optional extras (BackgroundMusic driver, licences) ship inside the app:
+# Settings → Audio installs the driver; licences are in Contents/Resources.
 
-You only need this on macOS 14.0 or 14.1. On macOS 14.2 and later, Notch apple
-changes per-app volume and EQ natively, with nothing to install.
-
-BackgroundMusic is free software by Kyle Neideck and contributors, licensed
-under the GNU GPL v2 (see "BackgroundMusic LICENSE.txt").
-Source code: https://github.com/kyleneideck/BackgroundMusic
-TXT
+# Styled installer window (vibrant background, drag-to-Applications layout).
+# dmgbuild writes the Finder layout directly — no Finder scripting needed.
+VENV=build/.dmgvenv
+[ -x "$VENV/bin/dmgbuild" ] || { python3 -m venv "$VENV" && "$VENV/bin/pip" -q install "dmgbuild==1.6.5"; }
+BG=build/dmg-background.tiff
+swift scripts/make_dmg_background.swift build >/dev/null
 mkdir -p dist
 DMG="dist/NotchApple-$VERSION.dmg"
 rm -f "$DMG"
-hdiutil create -volname "Notch apple" -srcfolder "$STAGE" -ov -format UDZO "$DMG" >/dev/null
-rm -rf "$STAGE"
+"$VENV/bin/dmgbuild" -s scripts/dmg/dmg_settings.py \
+  -D app="$APP" -D background="$BG" \
+  "Notch apple" "$DMG" >/dev/null
+
 # Keep the Homebrew cask in step with this release.
 SHA=$(shasum -a 256 "$DMG" | awk '{print $1}')
 sed -i '' -E "s/^  version \".*\"/  version \"$VERSION\"/; s/^  sha256 \".*\"/  sha256 \"$SHA\"/" Casks/notch-apple.rb

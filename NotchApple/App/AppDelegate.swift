@@ -29,6 +29,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         startMessengerInBackground()
         applyClipboardPreference()
         LiveActivityCenter.shared.start()
+        showWelcomeOnFirstLaunch()
 
         // Show/hide the status item live as the preference changes.
         applyStatusItemPreference()
@@ -64,6 +65,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         // Say goodbye to the room but remember it for next launch.
         WebP2PManager.shared.leave(remember: true)
         LocalP2PManager.shared.stop()
+    }
+
+    /// First launch: open Settings on the Permissions pane with a short welcome.
+    private func showWelcomeOnFirstLaunch() {
+        let key = "onboarding.permissionsShown"
+        guard !UserDefaults.standard.bool(forKey: key) else { return }
+        UserDefaults.standard.set(true, forKey: key)
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
+            AppDelegate.openSettingsWindow(tab: .permissions)
+        }
     }
 
     /// Records the clipboard in the background whenever the Clipboard module is on.

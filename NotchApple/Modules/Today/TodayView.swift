@@ -30,11 +30,12 @@ final class TodayModel: ObservableObject {
     private let store = EKEventStore()
     private var lastWeatherFetch = Date.distantPast
 
-    func refresh() {
+    func refresh(forceWeather: Bool = false) {
         battery = LiveActivityCenter.battery()
         loadEvents()
+        LocationProvider.shared.refreshIfStale()
         // Weather changes slowly; refresh at most every 15 minutes.
-        if Date.now.timeIntervalSince(lastWeatherFetch) > 900 {
+        if forceWeather || Date.now.timeIntervalSince(lastWeatherFetch) > 900 {
             lastWeatherFetch = .now
             Task { weather = try? await WeatherService.current(for: SharedStore.weatherLocation) }
         }
@@ -64,6 +65,7 @@ final class TodayModel: ObservableObject {
 
 struct TodayView: View {
     @StateObject private var model = TodayModel.shared
+    @StateObject private var location = LocationProvider.shared
 
     var body: some View {
         HStack(alignment: .top, spacing: 12) {
@@ -84,6 +86,13 @@ struct TodayView: View {
                         }
                     } else {
                         Label("Loading weather…", systemImage: "cloud").font(.system(size: 12)).foregroundStyle(Theme.textSecondary)
+                    }
+                    if location.useCurrentLocation && location.status == .notDetermined {
+                        Button { location.requestLocation() } label: { Label("Use my location", systemImage: "location.fill") }
+                            .buttonStyle(PurpleButtonStyle(prominent: false))
+                    } else if location.useCurrentLocation && !location.isAuthorized {
+                        Button("Allow location in Settings…", action: location.openSystemSettings)
+                            .buttonStyle(PurpleButtonStyle(prominent: false))
                     }
 
                     Spacer(minLength: 0)
@@ -131,7 +140,11 @@ struct TodayView: View {
                 }
             }
         }
-        .onAppear { model.refresh() }
+        .onAppear {
+            model.refresh()
+            // First time: ask for location so weather is local, not Cupertino.
+            if location.useCurrentLocation && location.status == .notDetermined { location.requestLocation() }
+        }
     }
 
     private func timeText(_ e: TodayModel.Event) -> String {

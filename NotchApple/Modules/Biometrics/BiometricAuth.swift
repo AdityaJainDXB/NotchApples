@@ -50,7 +50,7 @@ struct LockView: View {
     var body: some View {
         VStack(spacing: 14) {
             if usingFace {
-                FaceScanView(engine: face, size: 130)
+                FaceScanView(engine: face, size: 110, showsCamera: false)
             } else {
                 Image(systemName: BiometricAuth.symbol)
                     .font(.system(size: 44, weight: .light))

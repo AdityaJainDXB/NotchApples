@@ -43,12 +43,12 @@ brew install --cask notch-apple
 | **File Shelf**: drop files into the notch | **Audio**: output, master and per-app volume and EQ |
 | ![VPN](docs/screenshots/vpn.png) | ![Now Playing](docs/screenshots/nowplaying.png) |
 | **VPN**: your profiles and free servers | **Now Playing** |
+| ![Settings: Permissions](docs/screenshots/settings-permissions.png) | ![Settings: Authentication](docs/screenshots/settings-authentication.png) |
+| **First launch**: every permission in one place | **Face unlock**: Face ID-style |
 | ![Settings](docs/screenshots/settings-general.png) | ![Settings: Modules](docs/screenshots/settings-modules.png) |
 | **Settings**: a sidebar of panes, like System Settings | **Settings → Modules**: every feature is optional |
 | ![Settings: VPN](docs/screenshots/settings-vpn.png) | ![Settings: Audio](docs/screenshots/settings-audio.png) |
 | **Settings → VPN**: free servers and your profiles | **Settings → Audio**: built-in per-app engine |
-| ![Settings: Authentication](docs/screenshots/settings-authentication.png) | |
-| **Settings → Authentication**: face unlock | |
 
 ## Features
 
@@ -68,7 +68,7 @@ Every module is **optional** and can be switched on or off in **Settings → Mod
 | 🛡 **VPN** | A built-in list of **free OpenVPN servers** from [Zoult/.ovpn](https://github.com/Zoult/.ovpn) and [VPN Gate](https://www.vpngate.net), or import your own `.ovpn` / `.conf`. See [Using the VPN](#using-the-vpn). |
 | 🎵 **Now Playing** | Shows the current track from Apple Music or Spotify. |
 | 🔐 **Biometric Lock** | Requires Touch ID, Apple Watch, your password, or **face unlock** (your Mac's camera) before the notch opens. See [Face unlock](#face-unlock). |
-| 🧩 **Widget** | A desktop widget (and Lock Screen widget on newer macOS) showing weather, now playing, and your next calendar events. |
+| 🧩 **Widget** | Small, medium and large desktop widgets with local weather, now playing, and your next calendar events. (macOS has no lock screen widget type yet; Apple's lock screen widget sizes are iPhone and iPad only.) |
 
 **Live activities:** like the iPhone's Dynamic Island, the closed notch shows small indicators on either side: the focus countdown, battery when charging, and a purple dot for unread messages.
 
@@ -95,6 +95,8 @@ Update later with `brew upgrade --cask notch-apple`. The first time you open it,
 
 ### Manually
 
+<p align="center"><img src="docs/screenshots/dmg-installer.png" width="520" alt="The Notch apple installer window: drag the app onto Applications"></p>
+
 1. Download the latest `NotchApple-x.y.z.dmg` from [**Releases**](../../releases).
 2. Open it and drag **Notch apple** into **Applications**.
 3. The app is ad-hoc signed, not notarized, so on first launch right-click the app and choose **Open**, then confirm. (Or run `xattr -dr com.apple.quarantine "/Applications/Notch apple.app"`.)
@@ -104,12 +106,23 @@ On a Mac without a notch, a slim pill appears at the top center of the menu bar 
 
 ## Permissions
 
+On first launch, Notch apple opens **Settings → Permissions**. It shows everything in one place, with a switch or **Allow** button for each, and all of it is optional:
+
+- **Open at login / run in the background:** registers Notch apple as a login item. If macOS asks, approve it under **System Settings → General → Login Items & Extensions** ("Allow in the Background").
+- **Notifications:** messages and focus timer alerts.
+- **Location:** local weather in Today and the widget (approximate location only). Without it, weather uses the city you choose in **Settings → Widget**.
+- **Calendars:** your next events.
+- **Camera:** only for face unlock.
+
+The table below lists when each is asked for.
+
 | Permission | Used by | When it's asked |
 | --- | --- | --- |
 | Screen Recording | Claude → Share Screen | The first time you share your screen |
 | Local Network | PairDrop, Messenger (Nearby Wi-Fi) | The first time either looks for nearby devices |
 | Calendars | Widget | When the widget first loads |
 | Touch ID / password | Biometric Lock | Each time you open the notch while the lock is on |
+| Location | Weather | The first time you open Today (approximate location, weather only) |
 | Camera | Face unlock | When you set up or use face unlock. Only a face template is saved, never photos |
 | System audio recording | Audio → per-app volume / EQ | The first time you change an app's volume or EQ. Audio is processed on your Mac and never recorded or sent anywhere |
 
@@ -120,7 +133,7 @@ Unlock Notch apple by looking at your Mac's camera.
 1. Go to **Settings → Authentication** and turn on **Lock Notch apple**.
 2. Click **Set up face unlock…** and allow camera access. Follow the prompts (look straight, turn slightly left and right, tilt up and down) while it takes six photos.
 3. Click **Test…** to check it recognises you. Good, even lighting helps.
-4. Now when you open the notch, it asks you to look at the camera and **blink**. **Use Touch ID** is always there as a fallback.
+4. Now when you open the notch, a **Face ID-style** animation asks you to look at the camera and **blink**. It turns into a green check with a trackpad tap when it recognises you, and shakes red if it doesn't. **Use Touch ID** is always there as a fallback.
 
 How it works: Apple's Vision framework finds your face in each photo and turns it into a *feature print* (a list of numbers). Only those numbers and a match threshold calibrated from your own photos are saved, in the **macOS Keychain** (this Mac only, readable only while it's unlocked). The photos themselves are never saved or sent anywhere. Unlocking needs several matching frames **and a blink**, which stops a printed photo from working. **Delete face data…** removes the template; it asks for Touch ID or your password first.
 
@@ -262,7 +275,7 @@ Notch apple is built to cost nothing, so the public DMG is **ad-hoc signed**. A 
 
 ### Per-app audio on macOS 14.0–14.1
 
-Per-app volume and EQ use Core Audio process taps, which arrived in macOS 14.2. On 14.0–14.1, install the **BackgroundMusic** audio driver from the DMG's **Extras** folder (or **Settings → Audio → Install BackgroundMusic driver…**) to get per-app volume. BackgroundMusic is © Kyle Neideck and contributors, GPL-2.0, and is included unmodified with its licence. Source: [kyleneideck/BackgroundMusic](https://github.com/kyleneideck/BackgroundMusic).
+Per-app volume and EQ use Core Audio process taps, which arrived in macOS 14.2. On 14.0–14.1, install the **BackgroundMusic** audio driver from **Settings → Audio → Install BackgroundMusic driver…** (it's included in the app) to get per-app volume. BackgroundMusic is © Kyle Neideck and contributors, GPL-2.0, and is included unmodified with its licence. Source: [kyleneideck/BackgroundMusic](https://github.com/kyleneideck/BackgroundMusic).
 
 ## Privacy
 

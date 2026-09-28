@@ -131,6 +131,9 @@ final class FaceUnlockEngine: NSObject, ObservableObject {
     @Published private(set) var progress: Double = 0
     @Published private(set) var faceVisible = false
     @Published private(set) var error: String?
+    /// Result of the last scan, for the Face ID-style success / failure animation.
+    enum Outcome { case success, failure }
+    @Published private(set) var outcome: Outcome?
 
     let session = AVCaptureSession()
     private let output = AVCaptureVideoDataOutput()
@@ -157,6 +160,7 @@ final class FaceUnlockEngine: NSObject, ObservableObject {
 
     /// Takes several photos and saves the face template to the Keychain.
     func enrol(completion: @escaping (Bool) -> Void) {
+        outcome = nil
         samples = []
         progress = 0
         onEnrolled = completion
@@ -166,6 +170,7 @@ final class FaceUnlockEngine: NSObject, ObservableObject {
 
     /// Looks for a matching, blinking face for up to `timeout` seconds.
     func verify(timeout: TimeInterval = 8, completion: @escaping (Bool) -> Void) {
+        outcome = nil
         guard let template = FaceTemplateStore.load() else { completion(false); return }
         self.template = template
         matches = 0; eyesWereOpen = false; blinked = false
@@ -243,6 +248,8 @@ final class FaceUnlockEngine: NSObject, ObservableObject {
                 onEnrolled = nil
                 prompt = ok ? "Face saved" : "Couldn't save to the Keychain"
                 stop()
+                outcome = ok ? .success : .failure
+                Haptics.play(ok)
                 done?(ok)
             } else {
                 prompt = Self.enrolPrompts[samples.count]
@@ -253,6 +260,8 @@ final class FaceUnlockEngine: NSObject, ObservableObject {
                 let done = onVerified
                 onVerified = nil
                 stop()
+                outcome = .failure
+                Haptics.play(false)
                 done?(false)
                 return
             }
@@ -265,6 +274,8 @@ final class FaceUnlockEngine: NSObject, ObservableObject {
                 let done = onVerified
                 onVerified = nil
                 stop()
+                outcome = .success
+                Haptics.play(true)
                 done?(true)
             }
         case .idle:
@@ -358,28 +369,116 @@ struct CameraPreview: NSViewRepresentable {
 }
 
 /// Round camera view with a progress ring, used for both enrolment and unlock.
+/// Trackpad haptic feedback, like the tap you feel when Face ID succeeds on iPhone.
+enum Haptics {
+    static func play(_ success: Bool) {
+        let performer = NSHapticFeedbackManager.defaultPerformer
+        performer.perform(success ? .levelChange : .generic, performanceTime: .now)
+        if !success {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.12) { performer.perform(.generic, performanceTime: .now) }
+        }
+    }
+}
+
+/// Face ID-style scanner.
+///  • Unlocking (`showsCamera: false`): the Face ID glyph pulses while scanning,
+///    turns into a green check on success, and shakes red on failure — no live
+///    camera image, just like iPhone.
+///  • Setting up (`showsCamera: true`): a round camera view inside a ring of
+///    tick marks that light up as each angle is captured.
 struct FaceScanView: View {
     @ObservedObject var engine: FaceUnlockEngine
     var size: CGFloat = 150
+    var showsCamera = true
+    @State private var shake: CGFloat = 0
+
+    private var tint: Color {
+        switch engine.outcome {
+        case .success: .green
+        case .failure: .red
+        case nil: engine.faceVisible ? .green : Theme.accent
+        }
+    }
 
     var body: some View {
-        VStack(spacing: 10) {
+        VStack(spacing: 12) {
             ZStack {
-                CameraPreview(session: engine.session)
-                    .frame(width: size, height: size)
-                    .clipShape(Circle())
-                    .overlay(Circle().stroke(Color.white.opacity(0.15), lineWidth: 6))
-                Circle()
-                    .trim(from: 0, to: engine.progress)
-                    .stroke(engine.faceVisible ? Color.green : Theme.accent, style: StrokeStyle(lineWidth: 6, lineCap: .round))
-                    .rotationEffect(.degrees(-90))
-                    .animation(.easeOut(duration: 0.25), value: engine.progress)
+                if showsCamera {
+                    CameraPreview(session: engine.session)
+                        .frame(width: size * 0.8, height: size * 0.8)
+                        .clipShape(Circle())
+                    TickRing(progress: engine.progress, tint: tint)
+                        .frame(width: size, height: size)
+                } else {
+                    glyph
+                }
             }
-            .frame(width: size + 6, height: size + 6)
+            .frame(width: size, height: size)
+            .modifier(ShakeEffect(amount: shake))
+            .onChange(of: engine.outcome) { _, outcome in
+                if outcome == .failure { withAnimation(.linear(duration: 0.4)) { shake += 1 } }
+            }
+
             Text(engine.error ?? engine.prompt)
                 .font(.system(size: 13, weight: .medium))
                 .foregroundStyle(engine.error == nil ? .primary : Color.red)
                 .multilineTextAlignment(.center)
+                .contentTransition(.opacity)
         }
+        .animation(.spring(response: 0.35, dampingFraction: 0.7), value: engine.outcome)
+    }
+
+    @ViewBuilder private var glyph: some View {
+        switch engine.outcome {
+        case .success:
+            Image(systemName: "checkmark.circle")
+                .font(.system(size: size * 0.55, weight: .light))
+                .foregroundStyle(.green)
+                .symbolEffect(.bounce, value: engine.outcome)
+                .transition(.scale.combined(with: .opacity))
+        default:
+            Image(systemName: "faceid")
+                .font(.system(size: size * 0.55, weight: .light))
+                .foregroundStyle(tint)
+                .symbolEffect(.pulse, options: .repeating, isActive: engine.mode == .verifying)
+                .transition(.scale.combined(with: .opacity))
+        }
+    }
+}
+
+/// iPhone-style enrolment ring: 60 ticks around the camera that light up with progress.
+private struct TickRing: View {
+    let progress: Double
+    let tint: Color
+    private let count = 60
+
+    var body: some View {
+        GeometryReader { geo in
+            let r = min(geo.size.width, geo.size.height) / 2
+            ZStack {
+                ForEach(0..<count, id: \.self) { i in
+                    let on = Double(i) / Double(count) < progress
+                    Capsule()
+                        .fill(on ? tint : Color.secondary.opacity(0.35))
+                        .frame(width: 3, height: on ? 12 : 8)
+                        .offset(y: -r + 8)
+                        .rotationEffect(.degrees(Double(i) / Double(count) * 360))
+                        .animation(.easeOut(duration: 0.2).delay(Double(i) * 0.004), value: on)
+                }
+            }
+            .frame(width: geo.size.width, height: geo.size.height)
+        }
+    }
+}
+
+/// Horizontal shake, like a wrong passcode on iPhone.
+private struct ShakeEffect: GeometryEffect {
+    var amount: CGFloat
+    var animatableData: CGFloat {
+        get { amount }
+        set { amount = newValue }
+    }
+    func effectValue(size: CGSize) -> ProjectionTransform {
+        ProjectionTransform(CGAffineTransform(translationX: 10 * sin(amount * .pi * 6), y: 0))
     }
 }

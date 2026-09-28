@@ -13,6 +13,7 @@
 import WidgetKit
 import SwiftUI
 import EventKit
+import CoreLocation
 
 struct NotchEntry: TimelineEntry {
     let date: Date
@@ -49,8 +50,18 @@ struct Provider: TimelineProvider {
     }
 
     private func makeEntry() async -> NotchEntry {
-        let weather = try? await WeatherService.current(for: SharedStore.weatherLocation)
+        let weather = try? await WeatherService.current(for: await Self.weatherLocation())
         return NotchEntry(date: .now, weather: weather, nowPlaying: SharedStore.nowPlaying, events: await upcomingEvents())
+    }
+
+    /// Uses the Mac's current location when Notch apple has location permission
+    /// (widgets share their app's permission), otherwise the saved city.
+    private static func weatherLocation() async -> WeatherLocation {
+        let manager = CLLocationManager()
+        guard [.authorizedAlways, .authorized].contains(manager.authorizationStatus),
+              let loc = manager.location else { return SharedStore.weatherLocation }
+        let name = (try? await CLGeocoder().reverseGeocodeLocation(loc))?.first?.locality ?? "My location"
+        return WeatherLocation(name: name, latitude: loc.coordinate.latitude, longitude: loc.coordinate.longitude)
     }
 
     private func upcomingEvents() async -> [EventItem] {
@@ -62,7 +73,7 @@ struct Provider: TimelineProvider {
         return store.events(matching: predicate)
             .filter { !$0.isAllDay }
             .sorted { $0.startDate < $1.startDate }
-            .prefix(3)
+            .prefix(5)
             .map { EventItem(title: $0.title ?? "Event", start: $0.startDate, color: Color(nsColor: $0.calendar.color)) }
     }
 }
@@ -81,6 +92,7 @@ struct NotchWidgetView: View {
     var body: some View {
         switch family {
         case .systemSmall: small
+        case .systemLarge: large
         default: medium
         }
     }
@@ -123,6 +135,36 @@ struct NotchWidgetView: View {
         .foregroundStyle(.white)
     }
 
+    private var large: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(alignment: .top) {
+                VStack(alignment: .leading, spacing: 4) { weatherBlock }
+                Spacer()
+                Text(entry.date, format: .dateTime.weekday(.wide).day().month())
+                    .font(.caption.weight(.semibold)).foregroundStyle(.white.opacity(0.7))
+            }
+            Divider().overlay(Color.white.opacity(0.15))
+            Text("UP NEXT").font(.system(size: 10, weight: .bold)).foregroundStyle(purple)
+            if entry.events.isEmpty {
+                Text("No upcoming events").font(.caption).foregroundStyle(.white.opacity(0.6))
+            }
+            ForEach(entry.events, id: \.self) { e in
+                HStack(spacing: 8) {
+                    Capsule().fill(e.color).frame(width: 4, height: 30)
+                    VStack(alignment: .leading, spacing: 1) {
+                        Text(e.title).font(.callout.weight(.semibold)).lineLimit(1)
+                        Text(e.start, format: .dateTime.weekday(.abbreviated).hour().minute())
+                            .font(.caption).foregroundStyle(.white.opacity(0.6))
+                    }
+                }
+            }
+            Spacer(minLength: 0)
+            Divider().overlay(Color.white.opacity(0.15))
+            musicBlock
+        }
+        .foregroundStyle(.white)
+    }
+
     @ViewBuilder private var weatherBlock: some View {
         if let w = entry.weather {
             HStack(spacing: 6) {
@@ -159,6 +201,6 @@ struct NotchAppleWidget: Widget {
         }
         .configurationDisplayName("Notch apple")
         .description("Weather, now playing and your next events.")
-        .supportedFamilies([.systemSmall, .systemMedium])
+        .supportedFamilies([.systemSmall, .systemMedium, .systemLarge])
     }
 }

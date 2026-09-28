@@ -17,7 +17,7 @@ import UniformTypeIdentifiers
 
 /// Panes in the Settings window. `selection` lets other code jump to a pane.
 enum SettingsTab: String, CaseIterable, Identifiable, Hashable {
-    case general, authentication, modules, claude, messenger, clipboard, focus, audio, vpn, widget, about
+    case general, permissions, authentication, modules, claude, messenger, clipboard, focus, audio, vpn, widget, about
     static let selection = PassthroughSubject<SettingsTab, Never>()
 
     var id: String { rawValue }
@@ -25,6 +25,7 @@ enum SettingsTab: String, CaseIterable, Identifiable, Hashable {
     var title: String {
         switch self {
         case .general: "General"
+        case .permissions: "Permissions"
         case .authentication: "Authentication"
         case .modules: "Modules"
         case .claude: "Claude"
@@ -41,6 +42,7 @@ enum SettingsTab: String, CaseIterable, Identifiable, Hashable {
     var symbol: String {
         switch self {
         case .general: "gearshape.fill"
+        case .permissions: "hand.raised.fill"
         case .authentication: "faceid"
         case .modules: "square.grid.2x2.fill"
         case .claude: "sparkles"
@@ -58,6 +60,7 @@ enum SettingsTab: String, CaseIterable, Identifiable, Hashable {
     var tint: Color {
         switch self {
         case .general: .gray
+        case .permissions: .blue
         case .authentication: .red
         case .modules: Theme.accent
         case .claude: .orange
@@ -94,6 +97,8 @@ struct SettingsView: View {
             Group {
                 switch tab {
                 case .general: GeneralSettings()
+                case .permissions: PermissionsView(showsWelcome: !UserDefaults.standard.bool(forKey: "onboarding.welcomeDismissed"))
+                    .onDisappear { UserDefaults.standard.set(true, forKey: "onboarding.welcomeDismissed") }
                 case .authentication: AuthenticationSettings()
                 case .modules: ModulesSettings()
                 case .claude: ClaudeSettings()
@@ -111,8 +116,8 @@ struct SettingsView: View {
         .frame(minWidth: 720, minHeight: 520)
         .tint(Theme.accent)
         .onReceive(SettingsTab.selection) { tab = $0 }
-        .onAppear { SettingsWindowController.shared.window?.title = tab.title }
-        .onChange(of: tab) { _, new in SettingsWindowController.shared.window?.title = new.title }
+        .onAppear { SettingsWindowController.currentWindow?.title = tab.title }
+        .onChange(of: tab) { _, new in SettingsWindowController.currentWindow?.title = new.title }
     }
 }
 
@@ -127,7 +132,7 @@ private struct GeneralSettings: View {
             Section {
                 Toggle("Launch at login", isOn: $launchAtLogin)
                     .onChange(of: launchAtLogin) { _, on in
-                        try? on ? SMAppService.mainApp.register() : SMAppService.mainApp.unregister()
+                        on ? PermissionsModel.shared.enableLoginItem() : PermissionsModel.shared.disableLoginItem()
                     }
                 Toggle("Show icon in menu bar", isOn: $settings.showStatusItem)
                 Toggle(isOn: $settings.showChargingActivity) {
@@ -206,7 +211,7 @@ private struct AuthenticationSettings: View {
         .sheet(item: $sheet) { which in
             VStack(spacing: 16) {
                 Text(which == .enrol ? "Set up face unlock" : "Test face unlock").font(.title3.bold())
-                FaceScanView(engine: engine, size: 200)
+                FaceScanView(engine: engine, size: 200, showsCamera: which == .enrol)
                 Button("Cancel") { engine.stop(); sheet = nil }
             }
             .padding(24)
@@ -577,9 +582,24 @@ private struct VPNSettings: View {
 private struct WidgetSettings: View {
     @State private var city = SharedStore.weatherLocation.name
     @State private var status: String?
+    @StateObject private var location = LocationProvider.shared
 
     var body: some View {
         Form {
+            Section {
+                Toggle("Use my current location", isOn: $location.useCurrentLocation)
+                    .onChange(of: location.useCurrentLocation) { _, on in if on { location.requestLocation() } }
+                if location.useCurrentLocation {
+                    LabeledContent("Location", value: location.isAuthorized ? location.cityName : "Permission needed")
+                    if !location.isAuthorized {
+                        Button(location.status == .notDetermined ? "Allow location…" : "Open Location Services settings…") {
+                            location.status == .notDetermined ? location.requestLocation() : location.openSystemSettings()
+                        }
+                    }
+                }
+            } footer: {
+                Text("Only your approximate location is used, and only to fetch the weather.")
+            }
             Section {
                 HStack {
                     TextField("City", text: $city)
@@ -595,10 +615,11 @@ private struct WidgetSettings: View {
                 }
                 if let status { Text(status).font(.callout).foregroundStyle(.secondary) }
             } header: {
-                Text("Weather location")
+                Text("Or choose a city")
             } footer: {
                 Text("Weather comes from free Open-Meteo data.")
             }
+            .disabled(location.useCurrentLocation)
             Section("Add the widget") {
                 Text("Right-click the desktop, choose Edit Widgets…, and search for “Notch apple”.")
             }
