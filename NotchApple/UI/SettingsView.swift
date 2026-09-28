@@ -17,7 +17,7 @@ import UniformTypeIdentifiers
 
 /// Panes in the Settings window. `selection` lets other code jump to a pane.
 enum SettingsTab: String, CaseIterable, Identifiable, Hashable {
-    case general, modules, claude, audio, vpn, widget, about
+    case general, modules, claude, messenger, audio, vpn, widget, about
     static let selection = PassthroughSubject<SettingsTab, Never>()
 
     var id: String { rawValue }
@@ -27,6 +27,7 @@ enum SettingsTab: String, CaseIterable, Identifiable, Hashable {
         case .general: "General"
         case .modules: "Modules"
         case .claude: "Claude"
+        case .messenger: "Messenger"
         case .audio: "Audio"
         case .vpn: "VPN"
         case .widget: "Widget"
@@ -39,6 +40,7 @@ enum SettingsTab: String, CaseIterable, Identifiable, Hashable {
         case .general: "gearshape.fill"
         case .modules: "square.grid.2x2.fill"
         case .claude: "sparkles"
+        case .messenger: "bubble.left.and.bubble.right.fill"
         case .audio: "speaker.wave.2.fill"
         case .vpn: "lock.shield.fill"
         case .widget: "rectangle.3.group.fill"
@@ -52,6 +54,7 @@ enum SettingsTab: String, CaseIterable, Identifiable, Hashable {
         case .general: .gray
         case .modules: Theme.accent
         case .claude: .orange
+        case .messenger: .green
         case .audio: .pink
         case .vpn: .blue
         case .widget: .teal
@@ -84,6 +87,7 @@ struct SettingsView: View {
                 case .general: GeneralSettings()
                 case .modules: ModulesSettings()
                 case .claude: ClaudeSettings()
+                case .messenger: MessengerSettings()
                 case .audio: AudioSettings()
                 case .vpn: VPNSettings()
                 case .widget: WidgetSettings()
@@ -212,6 +216,68 @@ private struct ClaudeSettings: View {
             }
         }
         .formStyle(.grouped)
+    }
+}
+
+// MARK: - Messenger
+
+private struct MessengerSettings: View {
+    @EnvironmentObject private var settings: SettingsManager
+    @StateObject private var identity = MessengerIdentity.shared
+    @State private var handleDraft = MessengerIdentity.shared.handle
+    @State private var cleared = false
+
+    var body: some View {
+        Form {
+            Section {
+                Toggle("Enable Notch Messenger", isOn: $settings.messengerEnabled)
+            }
+            Section {
+                HStack {
+                    TextField("Display handle", text: $handleDraft)
+                        .onSubmit(saveHandle)
+                    Button("Save", action: saveHandle)
+                        .disabled(MessengerIdentity.sanitize(handleDraft) == identity.handle)
+                    Button("Randomize") {
+                        identity.regenerate(); handleDraft = identity.handle
+                        LocalP2PManager.shared.restart()
+                    }
+                }
+            } header: {
+                Text("Identity")
+            } footer: {
+                Text("No accounts, emails or phone numbers. Other people only see this handle.")
+            }
+            Section {
+                Toggle(isOn: $settings.messengerLocalDiscovery) {
+                    Text("Allow local network discovery")
+                    Text("Lets people on the same Wi-Fi find you in Nearby mode. Traffic is encrypted between Macs.")
+                }
+                .onChange(of: settings.messengerLocalDiscovery) { _, on in
+                    on ? LocalP2PManager.shared.start() : LocalP2PManager.shared.stop()
+                }
+            } header: {
+                Text("Nearby Wi-Fi")
+            }
+            Section {
+                Button(cleared ? "Cleared" : "Clear chat history and disconnect", role: .destructive) {
+                    LocalP2PManager.shared.stop(); LocalP2PManager.shared.clear()
+                    WebP2PManager.shared.leave(); WebP2PManager.shared.clear()
+                    cleared = true
+                }
+            } header: {
+                Text("Anonymous rooms")
+            } footer: {
+                Text("Room messages are end-to-end encrypted with a key made from the room code and relayed live through a free public server that can't read them. Nothing is stored, and chat history only lives in memory until you quit. Short codes like 8821 are easy to guess, so use a longer room name for private chats.")
+            }
+        }
+        .formStyle(.grouped)
+    }
+
+    private func saveHandle() {
+        identity.handle = MessengerIdentity.sanitize(handleDraft)
+        handleDraft = identity.handle
+        LocalP2PManager.shared.restart()
     }
 }
 

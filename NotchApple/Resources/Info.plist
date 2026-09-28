@@ -16,8 +16,8 @@
 	<key>LSUIElement</key><true/>
 	<key>LSApplicationCategoryType</key><string>public.app-category.productivity</string>
 	<key>NSHumanReadableCopyright</key><string>MIT License</string>
-	<key>NSLocalNetworkUsageDescription</key><string>Notch apple discovers nearby devices on your Wi-Fi for PairDrop file sharing. Nothing leaves your local network.</string>
-	<key>NSBonjourServices</key><array><string>_notchapple._tcp</string></array>
+	<key>NSLocalNetworkUsageDescription</key><string>Notch apple discovers nearby devices on your Wi-Fi for PairDrop file sharing and Messenger chat. Nothing leaves your local network.</string>
+	<key>NSBonjourServices</key><array><string>_notchapple._tcp</string><string>_notch-chat._tcp</string><string>_notch-chat._udp</string></array>
 	<key>NSCalendarsFullAccessUsageDescription</key><string>Shows your upcoming events in the notch and widget.</string>
 	<key>NSScreenCaptureUsageDescription</key><string>Lets you share a screenshot with Claude when you tap Share Screen.</string>
 	<key>NSAudioCaptureUsageDescription</key><string>Lets you change the volume and EQ of individual apps. Audio is processed on your Mac and never recorded or sent anywhere.</string>

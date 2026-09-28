@@ -86,7 +86,9 @@ struct NotchRootView: View {
     private var header: some View {
         HStack(spacing: 2) {
             ForEach(settings.enabledTabs) { module in
-                TabButton(module: module, active: state.selected == module) {
+                // With many tabs, inactive ones collapse to icons so the header fits.
+                TabButton(module: module, active: state.selected == module,
+                          compact: settings.enabledTabs.count > 6 && state.selected != module) {
                     withAnimation(Theme.spring) { state.selected = module }
                 }
             }
@@ -111,6 +113,7 @@ struct NotchRootView: View {
         } else {
             switch state.selected {
             case .claude: ClaudeChatView()
+            case .messenger: NotchMessengerView()
             case .shelf: FileShelfView()
             case .share: ShareView()
             case .audio: AudioView()
@@ -131,13 +134,14 @@ struct NotchRootView: View {
 private struct TabButton: View {
     let module: Module
     let active: Bool
+    var compact = false
     let action: () -> Void
     @State private var hovering = false
 
     var body: some View {
         Button(action: action) {
             Label(module.title, systemImage: module.symbol)
-                .labelStyle(.titleAndIcon)
+                .labelStyle(TabLabelStyle(compact: compact))
                 .lineLimit(1)
                 .fixedSize()
                 .font(.system(size: 13, weight: .semibold))
@@ -155,6 +159,18 @@ private struct TabButton: View {
         }
         .buttonStyle(.plain)
         .onHover { hovering = $0 }
+        .help(module.title)
+        .accessibilityLabel(module.title)
         .accessibilityAddTraits(active ? .isSelected : [])
+    }
+}
+
+private struct TabLabelStyle: LabelStyle {
+    let compact: Bool
+    func makeBody(configuration: Configuration) -> some View {
+        HStack(spacing: 6) {
+            configuration.icon
+            if !compact { configuration.title }
+        }
     }
 }

@@ -12,13 +12,14 @@ import SwiftUI
 
 /// Every optional feature module in the app.
 enum Module: String, CaseIterable, Identifiable {
-    case claude, shelf, share, audio, vpn, nowPlaying, security
+    case claude, messenger, shelf, share, audio, vpn, nowPlaying, security
 
     var id: String { rawValue }
 
     var title: String {
         switch self {
         case .claude: "Claude"
+        case .messenger: "Messenger"
         case .shelf: "Shelf"
         case .share: "Share"
         case .audio: "Audio"
@@ -31,6 +32,7 @@ enum Module: String, CaseIterable, Identifiable {
     var symbol: String {
         switch self {
         case .claude: "sparkles"
+        case .messenger: "bubble.left.and.bubble.right.fill"
         case .shelf: "tray.full.fill"
         case .share: "dot.radiowaves.left.and.right"
         case .audio: "speaker.wave.2.fill"
@@ -43,6 +45,7 @@ enum Module: String, CaseIterable, Identifiable {
     var blurb: String {
         switch self {
         case .claude: "Chat with Claude using your own API key. Optionally share your screen."
+        case .messenger: "Chat anonymously with people on your Wi-Fi, or in an encrypted room joined by code."
         case .shelf: "Drop files and folders into the notch for quick access later."
         case .share: "AirDrop plus PairDrop — local, serverless sharing with a 6-digit code."
         case .audio: "Output device, master volume, and per-app volume / EQ via BackgroundMusic."
@@ -64,6 +67,7 @@ final class SettingsManager: ObservableObject {
     static let shared = SettingsManager()
 
     @AppStorage(Module.claude.storageKey) var claudeEnabled = true
+    @AppStorage(Module.messenger.storageKey) var messengerEnabled = true
     @AppStorage(Module.shelf.storageKey) var shelfEnabled = true
     @AppStorage(Module.share.storageKey) var shareEnabled = true
     @AppStorage(Module.audio.storageKey) var audioEnabled = true
@@ -79,6 +83,8 @@ final class SettingsManager: ObservableObject {
     @AppStorage("ui.stickyNotch") var stickyNotch = false
     /// Toggle the notch from anywhere with ⌘E (Carbon hot key, no Accessibility permission needed).
     @AppStorage("ui.globalHotkey") var globalHotkeyEnabled = true
+    /// Let Messenger find people on the local network (Nearby Wi-Fi mode).
+    @AppStorage("messenger.localDiscovery") var messengerLocalDiscovery = true
 
     func isEnabled(_ module: Module) -> Bool {
         binding(for: module).wrappedValue
@@ -88,6 +94,7 @@ final class SettingsManager: ObservableObject {
     func binding(for module: Module) -> Binding<Bool> {
         switch module {
         case .claude: $claudeEnabled
+        case .messenger: $messengerEnabled
         case .shelf: $shelfEnabled
         case .share: $shareEnabled
         case .audio: $audioEnabled

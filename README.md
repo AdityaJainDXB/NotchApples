@@ -25,12 +25,14 @@
 
 | | |
 | --- | --- |
-| ![File Shelf](docs/screenshots/shelf.png) | ![AirDrop and PairDrop](docs/screenshots/share.png) |
-| **File Shelf**: drop files into the notch | **Share**: AirDrop and PairDrop |
-| ![Audio](docs/screenshots/audio.png) | ![VPN](docs/screenshots/vpn.png) |
-| **Audio**: output, master and per-app volume and EQ | **VPN**: your profiles and free servers |
-| ![Now Playing](docs/screenshots/nowplaying.png) | ![Settings](docs/screenshots/settings-general.png) |
-| **Now Playing** | **Settings**: a sidebar of panes, like System Settings |
+| ![Messenger](docs/screenshots/messenger.png) | ![AirDrop and PairDrop](docs/screenshots/share.png) |
+| **Messenger**: an anonymous, end-to-end-encrypted room | **Share**: AirDrop and PairDrop |
+| ![File Shelf](docs/screenshots/shelf.png) | ![Audio](docs/screenshots/audio.png) |
+| **File Shelf**: drop files into the notch | **Audio**: output, master and per-app volume and EQ |
+| ![VPN](docs/screenshots/vpn.png) | ![Now Playing](docs/screenshots/nowplaying.png) |
+| **VPN**: your profiles and free servers | **Now Playing** |
+| ![Settings](docs/screenshots/settings-general.png) | ![Settings: Modules](docs/screenshots/settings-modules.png) |
+| **Settings**: a sidebar of panes, like System Settings | **Settings → Modules**: every feature is optional |
 | ![Settings: VPN](docs/screenshots/settings-vpn.png) | ![Settings: Audio](docs/screenshots/settings-audio.png) |
 | **Settings → VPN**: free servers and your profiles | **Settings → Audio**: built-in per-app engine |
 
@@ -41,6 +43,7 @@ Every module is **optional** and can be switched on or off in **Settings → Mod
 | Module | What it does |
 | --- | --- |
 | ✨ **Claude** | Chat with Claude from the notch using **your own** Anthropic API key, which is stored in the Keychain. Tap **Share Screen** to attach a screenshot so Claude can see what you're looking at. |
+| 💬 **Messenger** | Chat anonymously with **people on the same Wi-Fi** (found automatically, encrypted between Macs), or join an **anonymous room** with any code, like `cafe-study` or `8821`. Rooms are end-to-end encrypted, and nothing is stored anywhere. You get a random handle like `PurplePanda#402`, and there are no accounts. See [Using Messenger](#using-messenger). |
 | 🗂 **File Shelf** | Drag a file onto the notch and it opens straight to the shelf. Files stay there across relaunches thanks to security-scoped bookmarks. Double-click to open, or drag them back out. There's also an **Add files…** button. |
 | 📡 **Share** | Send files with **AirDrop**, or use **PairDrop** between devices on the same Wi-Fi. To receive, just show your 6-digit code. To send, type the other device's code; there's no need to pick the device. No server is involved. |
 | 🔊 **Audio** | Pick the output device, set the master volume, and change **per-app volume (0–150%)** and a **10-band per-app EQ** with presets. It's built in on macOS 14.2+, with nothing to install. |
@@ -69,10 +72,28 @@ On a Mac without a notch, a slim pill appears at the top center of the menu bar 
 | Permission | Used by | When it's asked |
 | --- | --- | --- |
 | Screen Recording | Claude → Share Screen | The first time you share your screen |
-| Local Network | PairDrop | When you turn PairDrop on |
+| Local Network | PairDrop, Messenger (Nearby Wi-Fi) | The first time either looks for nearby devices |
 | Calendars | Widget | When the widget first loads |
 | Touch ID / password | Biometric Lock | Each time you open the notch while the lock is on |
 | System audio recording | Audio → per-app volume / EQ | The first time you change an app's volume or EQ. Audio is processed on your Mac and never recorded or sent anywhere |
+
+## Using Messenger
+
+Open the notch and click the 💬 tab. Your handle (for example `MistyOwl#769`) is shown top right; change it in **Settings → Messenger**.
+
+**Nearby Wi-Fi.** Anyone on the same network with Notch apple and Messenger open appears automatically ("2 people nearby on Wi-Fi"). Just type. This uses Apple's MultipeerConnectivity with encryption required, and works without internet.
+
+**Anonymous room.** Type any room code and press **Join**. Everyone who enters the same code (`#Cafe-Study`, `cafe-study` and `CAFE-STUDY ` all count as the same) is in the same room and shown as "3 online".
+
+How rooms stay private:
+- The code is hashed on your Mac with SHA-256 into two separate values: a topic name for the relay, and a 256-bit AES-GCM key.
+- The relay only ever sees a random-looking topic and encrypted bytes. It never sees the room name, your handle or your messages.
+- Messages are relayed live through the free, open-source [ntfy.sh](https://ntfy.sh) service over HTTPS (port 443, so it works on school and office Wi-Fi). Each message is sent with `Cache: no`, so the relay stores nothing. Public MQTT brokers are used as a fallback.
+- Chat history only lives in memory. **Settings → Messenger → Clear chat history and disconnect** wipes it.
+
+> Anyone who knows the code can join the room, and short numeric codes are easy to guess. For a private chat, use a longer, unusual room name.
+
+Turn off **Allow local network discovery** in **Settings → Messenger** to stay invisible on your Wi-Fi.
 
 ## Using the VPN
 
@@ -162,6 +183,7 @@ NotchApple/
     Claude/      Messages API client, ScreenCaptureKit capture, chat UI
     Shelf/       Drop zone + security-scoped bookmarks
     Sharing/     AirDrop + PairDrop (Network.framework / Bonjour)
+    Messenger/   Nearby Wi-Fi chat (MultipeerConnectivity) + encrypted rooms (CryptoKit, ntfy / MQTT relay)
     Audio/       CoreAudio routing, native process-tap volume + EQ, BackgroundMusic fallback
     VPN/         NetworkExtension manager, free server library, VPN Gate, profile import
     NowPlaying/  Music / Spotify distributed-notification monitor
@@ -189,7 +211,8 @@ Per-app volume and EQ use Core Audio process taps, which arrived in macOS 14.2. 
   - `api.anthropic.com`, using your own key, when you chat with Claude
   - `open-meteo.com` for weather
   - `api.github.com` / `raw.githubusercontent.com` for the free VPN server list, and `vpngate.net`, only when you open the VPN tab
-- PairDrop traffic never leaves your local network.
+- PairDrop and Nearby Wi-Fi chat never leave your local network.
+- Anonymous room messages are end-to-end encrypted before they leave your Mac, and the relay (`ntfy.sh`, or a public MQTT broker as a fallback) stores nothing.
 - Per-app audio is processed in memory on your Mac. Nothing is recorded.
 - Your API key is stored in the macOS Keychain (`WhenUnlockedThisDeviceOnly`).
 
