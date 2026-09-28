@@ -85,7 +85,7 @@ struct NotchRootView: View {
     }
 
     private var header: some View {
-        HStack(spacing: 6) {
+        HStack(spacing: 4) {
             ForEach(settings.enabledTabs) { module in
                 let active = state.selected == module
                 Button {
@@ -93,6 +93,8 @@ struct NotchRootView: View {
                 } label: {
                     Label(module.title, systemImage: module.symbol)
                         .labelStyle(.titleAndIcon)
+                        .lineLimit(1)
+                        .fixedSize()
                         .font(.system(size: 12, weight: .semibold))
                         .foregroundStyle(active ? .white : Theme.textSecondary)
                         .padding(.horizontal, 10).padding(.vertical, 6)
@@ -106,7 +108,8 @@ struct NotchRootView: View {
                 .buttonStyle(.plain)
             }
             Spacer(minLength: 0)
-            Button { AppDelegate.openSettingsWindow(); state.close() } label: {
+            if settings.vpnEnabled { VPNQuickStatus() }
+            Button { state.close(); AppDelegate.openSettingsWindow() } label: {
                 Image(systemName: "gearshape.fill").foregroundStyle(Theme.textSecondary)
             }
             .buttonStyle(.plain).help("Settings")
@@ -124,7 +127,7 @@ struct NotchRootView: View {
             VStack(spacing: 8) {
                 Image(systemName: "square.dashed").font(.largeTitle).foregroundStyle(Theme.accent)
                 Text("All modules are turned off").foregroundStyle(.white)
-                Button("Open Settings") { AppDelegate.openSettingsWindow() }.buttonStyle(PurpleButtonStyle())
+                Button("Open Settings") { state.close(); AppDelegate.openSettingsWindow() }.buttonStyle(PurpleButtonStyle())
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         } else {

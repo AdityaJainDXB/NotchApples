@@ -43,14 +43,52 @@ final class NotchState: ObservableObject {
     /// Size of the physical notch (or a synthetic pill on notch-less Macs).
     @Published var notchSize = CGSize(width: 200, height: 32)
     /// Size of the fully expanded panel.
-    let expandedSize = CGSize(width: 620, height: 400)
+    let expandedSize = CGSize(width: 720, height: 400)
 
     var toggle: () -> Void = {}
     var close: () -> Void = {}
 }
 
+/// A tiny, fixed-size window sitting exactly over the notch. It draws the
+/// collapsed notch and turns a click into `onClick`. Being plain AppKit (no
+/// SwiftUI host), it can be repositioned freely without layout side effects.
+final class NotchTriggerView: NSView {
+    var onClick: () -> Void = {}
+
+    override func draw(_ dirtyRect: NSRect) {
+        // Black notch silhouette; invisible on a real notch, a pill elsewhere.
+        let r = min(10, bounds.height / 2)
+        let path = NSBezierPath()
+        path.move(to: NSPoint(x: bounds.minX, y: bounds.maxY))
+        path.line(to: NSPoint(x: bounds.maxX, y: bounds.maxY))
+        path.line(to: NSPoint(x: bounds.maxX, y: bounds.minY + r))
+        path.curve(to: NSPoint(x: bounds.maxX - r, y: bounds.minY),
+                   controlPoint1: NSPoint(x: bounds.maxX, y: bounds.minY), controlPoint2: NSPoint(x: bounds.maxX, y: bounds.minY))
+        path.line(to: NSPoint(x: bounds.minX + r, y: bounds.minY))
+        path.curve(to: NSPoint(x: bounds.minX, y: bounds.minY + r),
+                   controlPoint1: NSPoint(x: bounds.minX, y: bounds.minY), controlPoint2: NSPoint(x: bounds.minX, y: bounds.minY))
+        path.close()
+        NSColor.black.setFill()
+        path.fill()
+    }
+
+    override func acceptsFirstMouse(for event: NSEvent?) -> Bool { true }
+    override func mouseDown(with event: NSEvent) { onClick() }
+}
+
+/// Owns the notch windows.
+///
+/// Two windows, neither of which is ever resized while visible:
+///  • `trigger` — notch-sized, always on screen, catches the click that opens.
+///  • `panel`   — expanded-sized SwiftUI host, ordered in/out on toggle.
+///
+/// Resizing an NSHostingView's window mid-animation can throw AppKit into an
+/// "Update Constraints in Window" loop and crash, so the SwiftUI window keeps
+/// a constant frame and the open/close effect is animated inside it.
 final class NotchWindowController {
     private let panel: NotchPanel
+    private let trigger: NotchPanel
+    private let triggerView = NotchTriggerView()
     let state = NotchState()
     private var outsideClickMonitor: Any?
     private var keyMonitor: Any?
@@ -61,17 +99,22 @@ final class NotchWindowController {
             .environmentObject(state)
             .environmentObject(SettingsManager.shared)
         let host = NSHostingView(rootView: root)
+        host.sizingOptions = []          // the controller owns the frame, not SwiftUI
         host.wantsLayer = true
         host.layer?.backgroundColor = .clear
         panel.contentView = host
 
+        trigger = NotchPanel(contentRect: .zero)
+        trigger.contentView = triggerView
+
+        triggerView.onClick = { [weak self] in self?.toggle() }
         state.toggle = { [weak self] in self?.toggle() }
         state.close = { [weak self] in self?.collapse() }
     }
 
     func show() {
         reposition()
-        panel.orderFrontRegardless()
+        trigger.orderFrontRegardless()
     }
 
     /// The screen that owns the notch: the built-in display if present, else main.
@@ -79,7 +122,7 @@ final class NotchWindowController {
         NSScreen.screens.first { $0.safeAreaInsets.top > 0 } ?? NSScreen.main
     }
 
-    /// Recomputes the notch size and snaps the panel to it.
+    /// Recomputes the notch size and positions both windows.
     func reposition() {
         guard let screen = targetScreen else { return }
         if screen.safeAreaInsets.top > 0,
@@ -92,23 +135,25 @@ final class NotchWindowController {
             let barHeight = screen.frame.maxY - screen.visibleFrame.maxY
             state.notchSize = CGSize(width: 190, height: max(barHeight, 24))
         }
-        panel.setFrame(frame(expanded: state.isExpanded, on: screen), display: true)
+        trigger.setFrame(frame(size: state.notchSize, on: screen), display: true)
+        panel.setFrame(frame(size: state.expandedSize, on: screen), display: false)
     }
 
-    private func frame(expanded: Bool, on screen: NSScreen) -> NSRect {
-        let size = expanded ? state.expandedSize : state.notchSize
-        return NSRect(x: screen.frame.midX - size.width / 2,
-                      y: screen.frame.maxY - size.height,
-                      width: size.width, height: size.height)
+    private func frame(size: CGSize, on screen: NSScreen) -> NSRect {
+        NSRect(x: screen.frame.midX - size.width / 2, y: screen.frame.maxY - size.height,
+               width: size.width, height: size.height)
     }
 
     func toggle() { state.isExpanded ? collapse() : expand() }
 
     func expand() {
-        guard let screen = targetScreen, !state.isExpanded else { return }
-        panel.setFrame(frame(expanded: true, on: screen), display: true)
+        guard !state.isExpanded else { return }
+        panel.orderFrontRegardless()
         panel.makeKey()
-        withAnimation(Theme.spring) { state.isExpanded = true }
+        // Let the panel present one collapsed frame, then spring open.
+        DispatchQueue.main.async { [weak self] in
+            withAnimation(Theme.spring) { self?.state.isExpanded = true }
+        }
         installMonitors()
     }
 
@@ -119,8 +164,8 @@ final class NotchWindowController {
         state.isUnlocked = false
         removeMonitors()
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) { [weak self] in
-            guard let self, !self.state.isExpanded, let screen = self.targetScreen else { return }
-            self.panel.setFrame(self.frame(expanded: false, on: screen), display: true)
+            guard let self, !self.state.isExpanded else { return }
+            self.panel.orderOut(nil)
         }
     }
 

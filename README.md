@@ -15,7 +15,22 @@
   <img alt="License" src="https://img.shields.io/badge/license-MIT-8a5cf6">
 </p>
 
+<p align="center">
+  <img src="docs/screenshots/claude.png" width="720" alt="Notch apple expanded, showing the Claude tab">
+</p>
+
 ---
+
+## Screenshots
+
+| | |
+| --- | --- |
+| ![File Shelf](docs/screenshots/shelf.png) | ![AirDrop and PairDrop](docs/screenshots/share.png) |
+| **File Shelf**: drop files into the notch | **Share**: AirDrop and PairDrop |
+| ![Audio](docs/screenshots/audio.png) | ![VPN](docs/screenshots/vpn.png) |
+| **Audio**: output, master and per-app volume | **VPN**: your profiles and free VPN Gate relays |
+| ![Now Playing](docs/screenshots/nowplaying.png) | ![Settings](docs/screenshots/settings-modules.png) |
+| **Now Playing** | **Settings**: every module is optional |
 
 ## Features
 
@@ -32,7 +47,11 @@ Every module is **optional** and can be switched on or off in **Settings → Mod
 | 🔐 **Biometric Lock** | Requires Touch ID, Apple Watch, or your password before the notch opens. |
 | 🧩 **Widget** | A desktop widget (and Lock Screen widget on newer macOS) showing weather, now playing, and your next calendar events. |
 
-**The notch opens only when you click it.** There are no hover triggers anywhere in the app. Press `Esc` or click anywhere else to close it.
+**Open the notch by clicking it, or press `⌘E` from any app.** There are no hover triggers anywhere in the app. Press `⌘E` or `Esc`, or click anywhere else, to close it.
+
+`⌘E` is a system-wide shortcut registered through Carbon, so it needs no Accessibility permission. While it's on, other apps won't receive `⌘E` (for example "Use Selection for Find"). You can turn it off in **Settings → General**.
+
+When the VPN module is on, a **VPN On/Off** pill in the notch header shows the tunnel status. The full VPN setup (importing profiles and loading free servers) is under **Settings → VPN**.
 
 ## Install
 

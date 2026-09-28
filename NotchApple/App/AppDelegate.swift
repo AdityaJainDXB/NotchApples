@@ -28,15 +28,28 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         // Show/hide the status item live as the preference changes.
         applyStatusItemPreference()
+        applyHotkeyPreference()
         NotificationCenter.default.publisher(for: UserDefaults.didChangeNotification)
             .receive(on: RunLoop.main)
-            .sink { [weak self] _ in self?.applyStatusItemPreference() }
+            .sink { [weak self] _ in
+                self?.applyStatusItemPreference()
+                self?.applyHotkeyPreference()
+            }
             .store(in: &cancellables)
 
         // Re-anchor when displays are connected, removed or rearranged.
         NotificationCenter.default.publisher(for: NSApplication.didChangeScreenParametersNotification)
             .sink { [weak self] _ in self?.notchController?.reposition() }
             .store(in: &cancellables)
+    }
+
+    /// Registers or removes the global ⌘E shortcut to match the preference.
+    private func applyHotkeyPreference() {
+        if SettingsManager.shared.globalHotkeyEnabled {
+            GlobalHotkeyManager.shared.register { [weak self] in self?.notchController?.toggle() }
+        } else {
+            GlobalHotkeyManager.shared.unregister()
+        }
     }
 
     private func applyStatusItemPreference() {
@@ -72,11 +85,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     @objc func toggleNotch() { notchController?.toggle() }
 
-    @objc func openSettings() { AppDelegate.openSettingsWindow() }
+    @objc func openSettings() {
+        notchController?.collapse()
+        AppDelegate.openSettingsWindow()
+    }
 
-    /// Opens the SwiftUI `Settings` scene from anywhere (agent apps have no app menu).
-    static func openSettingsWindow() {
-        NSApp.activate(ignoringOtherApps: true)
-        NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil)
+    /// Opens the Settings window. Agent apps can't rely on the SwiftUI `Settings`
+    /// scene, so this goes through our own `SettingsWindowController`.
+    static func openSettingsWindow(tab: SettingsTab? = nil) {
+        SettingsWindowController.shared.show(tab: tab)
     }
 }

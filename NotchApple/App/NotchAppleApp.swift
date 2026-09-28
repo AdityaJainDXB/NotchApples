@@ -14,9 +14,8 @@ struct NotchAppleApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
 
     var body: some Scene {
-        Settings {
-            SettingsView()
-                .environmentObject(SettingsManager.shared)
-        }
+        // Settings live in `SettingsWindowController`; this empty scene only
+        // satisfies SwiftUI's requirement that an App declares a Scene.
+        Settings { EmptyView() }
     }
 }

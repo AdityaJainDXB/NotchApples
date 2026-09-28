@@ -77,6 +77,8 @@ final class SettingsManager: ObservableObject {
     @AppStorage("ui.showStatusItem") var showStatusItem = true
     /// Keep the notch open when it loses focus (useful while dragging files in).
     @AppStorage("ui.stickyNotch") var stickyNotch = false
+    /// Toggle the notch from anywhere with ⌘E (Carbon hot key, no Accessibility permission needed).
+    @AppStorage("ui.globalHotkey") var globalHotkeyEnabled = true
 
     func isEnabled(_ module: Module) -> Bool {
         binding(for: module).wrappedValue

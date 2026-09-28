@@ -80,3 +80,29 @@ struct VPNView: View {
         }
     }
 }
+
+/// Compact VPN status shown in the notch header whenever the VPN module is on.
+/// Click to disconnect, or to jump to the VPN tab when not connected.
+struct VPNQuickStatus: View {
+    @StateObject private var vpn = VPNManager.shared
+    @EnvironmentObject private var state: NotchState
+
+    private var connected: Bool { vpn.status == .connected || vpn.status == .connecting }
+
+    var body: some View {
+        Button {
+            if connected { vpn.disconnect() }
+            else { withAnimation(Theme.spring) { state.selected = .vpn } }
+        } label: {
+            HStack(spacing: 4) {
+                Image(systemName: connected ? "lock.shield.fill" : "lock.open")
+                Text(connected ? "VPN On" : "VPN Off").font(.system(size: 11, weight: .semibold))
+            }
+            .foregroundStyle(connected ? Color.green : Theme.textSecondary)
+            .padding(.horizontal, 8).padding(.vertical, 4)
+            .background(Color.white.opacity(0.08), in: Capsule())
+        }
+        .buttonStyle(.plain)
+        .help(connected ? "Disconnect VPN" : "Open VPN")
+    }
+}
