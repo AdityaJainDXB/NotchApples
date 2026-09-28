@@ -15,6 +15,10 @@ enum KeychainHelper {
 
     enum Key: String {
         case anthropicAPIKey = "anthropic.apiKey"
+        case geminiAPIKey = "gemini.apiKey"
+        case groqAPIKey = "groq.apiKey"
+        case openRouterAPIKey = "openrouter.apiKey"
+        case openAIAPIKey = "openai.apiKey"
         case faceTemplate = "faceUnlock.template"
     }
 

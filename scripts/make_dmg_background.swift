@@ -1,12 +1,24 @@
 // Renders the DMG window background (660 × 420 pt, @1x and @2x) for build_dmg.sh.
-// Vibrant purple gradient, soft glows, an arrow from the app icon to Applications.
+// Vibrant purple gradient, soft glows, frosted tiles, white rounded type.
 // Usage: swift scripts/make_dmg_background.swift <output-dir>
+//
+// Finder draws the item names ("Notch apple", "Applications") itself and
+// always in dark text on a custom background — it can't be recoloured — so
+// each name sits on a light frosted pill that's part of this image.
 import AppKit
 
 let out = CommandLine.arguments[1]
 let W: CGFloat = 660, H: CGFloat = 420
-// Icon centres (must match build_dmg.sh / dmg_settings.py), in top-left coordinates.
-let appCenter = CGPoint(x: 180, y: 200), appsCenter = CGPoint(x: 480, y: 200)
+// Icon centres — must match scripts/dmg/dmg_settings.py (top-left coordinates).
+let iconY: CGFloat = 186
+let appX: CGFloat = 180, appsX: CGFloat = 480
+// Finder puts a 13 pt name ~83 pt below a 128 pt icon's centre.
+let labelY = iconY + 83
+
+func rounded(_ size: CGFloat, _ weight: NSFont.Weight) -> NSFont {
+    let base = NSFont.systemFont(ofSize: size, weight: weight)
+    return NSFont(descriptor: base.fontDescriptor.withDesign(.rounded) ?? base.fontDescriptor, size: size) ?? base
+}
 
 func render(scale: CGFloat) -> NSBitmapImageRep {
     let rep = NSBitmapImageRep(bitmapDataPlanes: nil, pixelsWide: Int(W * scale), pixelsHigh: Int(H * scale),
@@ -14,66 +26,72 @@ func render(scale: CGFloat) -> NSBitmapImageRep {
                                colorSpaceName: .deviceRGB, bytesPerRow: 0, bitsPerPixel: 0)!
     rep.size = NSSize(width: W, height: H)
     NSGraphicsContext.saveGraphicsState()
-    NSGraphicsContext.current = NSGraphicsContext(bitmapImageRep: rep)
-    let ctx = NSGraphicsContext.current!.cgContext
-    // Flip to top-left origin for easier layout.
+    let gctx = NSGraphicsContext(bitmapImageRep: rep)!
+    NSGraphicsContext.current = gctx
+    // Use a flipped context so y grows downwards, like Finder's icon positions.
+    let flipped = NSGraphicsContext(cgContext: gctx.cgContext, flipped: true)
+    NSGraphicsContext.current = flipped
+    let ctx = flipped.cgContext
     ctx.translateBy(x: 0, y: H); ctx.scaleBy(x: 1, y: -1)
 
     // Base gradient: deep violet → purple → magenta.
-    NSGradient(colors: [NSColor(red: 0.16, green: 0.05, blue: 0.38, alpha: 1),
-                        NSColor(red: 0.42, green: 0.17, blue: 0.85, alpha: 1),
-                        NSColor(red: 0.85, green: 0.30, blue: 0.75, alpha: 1)])!
+    NSGradient(colors: [NSColor(red: 0.13, green: 0.04, blue: 0.33, alpha: 1),
+                        NSColor(red: 0.40, green: 0.16, blue: 0.84, alpha: 1),
+                        NSColor(red: 0.86, green: 0.30, blue: 0.74, alpha: 1)])!
         .draw(in: NSRect(x: 0, y: 0, width: W, height: H), angle: -35)
 
-    // Soft glows.
     func glow(_ c: CGPoint, _ r: CGFloat, _ color: NSColor) {
-        let g = NSGradient(colors: [color, color.withAlphaComponent(0)])!
-        g.draw(fromCenter: c, radius: 0, toCenter: c, radius: r, options: [])
+        NSGradient(colors: [color, color.withAlphaComponent(0)])!
+            .draw(fromCenter: c, radius: 0, toCenter: c, radius: r, options: [])
     }
-    glow(CGPoint(x: 90, y: 60), 260, NSColor(red: 0.45, green: 0.75, blue: 1, alpha: 0.45))
-    glow(CGPoint(x: 600, y: 380), 280, NSColor(red: 1, green: 0.55, blue: 0.85, alpha: 0.45))
-    glow(CGPoint(x: 330, y: 200), 220, NSColor.white.withAlphaComponent(0.10))
+    glow(CGPoint(x: 70, y: 40), 280, NSColor(red: 0.45, green: 0.78, blue: 1, alpha: 0.42))
+    glow(CGPoint(x: 620, y: 400), 300, NSColor(red: 1, green: 0.55, blue: 0.85, alpha: 0.42))
+    glow(CGPoint(x: W / 2, y: iconY), 240, NSColor.white.withAlphaComponent(0.08))
 
-    // Frosted "drop zones" behind each icon.
-    for c in [appCenter, appsCenter] {
-        let r = NSRect(x: c.x - 82, y: c.y - 82, width: 164, height: 164)
-        NSColor.white.withAlphaComponent(0.12).setFill()
-        NSBezierPath(roundedRect: r, xRadius: 34, yRadius: 34).fill()
-        NSColor.white.withAlphaComponent(0.25).setStroke()
-        let border = NSBezierPath(roundedRect: r.insetBy(dx: 0.5, dy: 0.5), xRadius: 34, yRadius: 34)
+    // Frosted tiles, each holding an icon and its name pill.
+    for x in [appX, appsX] {
+        let tile = NSRect(x: x - 92, y: iconY - 84, width: 184, height: 204)
+        NSColor.white.withAlphaComponent(0.11).setFill()
+        NSBezierPath(roundedRect: tile, xRadius: 36, yRadius: 36).fill()
+        NSColor.white.withAlphaComponent(0.24).setStroke()
+        let border = NSBezierPath(roundedRect: tile.insetBy(dx: 0.5, dy: 0.5), xRadius: 36, yRadius: 36)
         border.lineWidth = 1; border.stroke()
+        // Light pill behind Finder's (dark) item name.
+        let pill = NSRect(x: x - 68, y: labelY - 12, width: 136, height: 24)
+        NSColor.white.withAlphaComponent(0.82).setFill()
+        NSBezierPath(roundedRect: pill, xRadius: 12, yRadius: 12).fill()
     }
 
-    // Dashed arrow.
+    // Arrow, vertically centred on the icons.
+    NSColor.white.withAlphaComponent(0.92).setStroke()
     let arrow = NSBezierPath()
-    arrow.move(to: CGPoint(x: appCenter.x + 96, y: appCenter.y))
-    arrow.line(to: CGPoint(x: appsCenter.x - 104, y: appsCenter.y))
-    arrow.lineWidth = 4
-    arrow.lineCapStyle = .round
+    arrow.move(to: CGPoint(x: appX + 104, y: iconY))
+    arrow.line(to: CGPoint(x: appsX - 110, y: iconY))
+    arrow.lineWidth = 4; arrow.lineCapStyle = .round
     arrow.setLineDash([10, 9], count: 2, phase: 0)
-    NSColor.white.withAlphaComponent(0.9).setStroke()
     arrow.stroke()
+    let tip = CGPoint(x: appsX - 102, y: iconY)
     let head = NSBezierPath()
-    let tip = CGPoint(x: appsCenter.x - 96, y: appsCenter.y)
-    head.move(to: CGPoint(x: tip.x - 16, y: tip.y - 12))
-    head.line(to: tip)
-    head.line(to: CGPoint(x: tip.x - 16, y: tip.y + 12))
+    head.move(to: CGPoint(x: tip.x - 15, y: tip.y - 12)); head.line(to: tip); head.line(to: CGPoint(x: tip.x - 15, y: tip.y + 12))
     head.lineWidth = 4; head.lineCapStyle = .round; head.lineJoinStyle = .round
     head.stroke()
 
-    // Text (drawn unflipped).
-    func text(_ s: String, _ y: CGFloat, _ size: CGFloat, _ weight: NSFont.Weight, _ alpha: CGFloat) {
+    // White, centred text with a soft shadow for legibility.
+    func text(_ s: String, centerY: CGFloat, font: NSFont, alpha: CGFloat) {
+        let shadow = NSShadow()
+        shadow.shadowColor = NSColor.black.withAlphaComponent(0.28)
+        shadow.shadowBlurRadius = 6
+        shadow.shadowOffset = NSSize(width: 0, height: -1)
         let style = NSMutableParagraphStyle(); style.alignment = .center
-        let attrs: [NSAttributedString.Key: Any] = [.font: NSFont.systemFont(ofSize: size, weight: weight),
-                                                   .foregroundColor: NSColor.white.withAlphaComponent(alpha),
-                                                   .paragraphStyle: style]
-        ctx.saveGState(); ctx.translateBy(x: 0, y: H); ctx.scaleBy(x: 1, y: -1)
-        NSString(string: s).draw(in: NSRect(x: 0, y: H - y - size * 1.4, width: W, height: size * 1.6), withAttributes: attrs)
-        ctx.restoreGState()
+        let attrs: [NSAttributedString.Key: Any] = [.font: font, .foregroundColor: NSColor.white.withAlphaComponent(alpha),
+                                                   .paragraphStyle: style, .shadow: shadow]
+        let str = NSAttributedString(string: s, attributes: attrs)
+        let h = str.size().height
+        str.draw(in: NSRect(x: 0, y: centerY - h / 2, width: W, height: h))
     }
-    text("Install Notch apple", 34, 24, .bold, 1)
-    text("Drag the app onto the Applications folder", 68, 14, .medium, 0.85)
-    text("Then open it from Applications, or with Spotlight.", 360, 12, .regular, 0.7)
+    text("Notch apple", centerY: 44, font: rounded(28, .bold), alpha: 1)
+    text("Drag the app onto Applications to install", centerY: 76, font: rounded(14, .medium), alpha: 0.88)
+    text("Then open it from Applications or Spotlight", centerY: 356, font: rounded(12.5, .regular), alpha: 0.78)
 
     NSGraphicsContext.restoreGraphicsState()
     return rep

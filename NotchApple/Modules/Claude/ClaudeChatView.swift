@@ -8,6 +8,57 @@
 
 import SwiftUI
 
+/// Which AI provider and model the AI tab uses. Persisted; one model per provider.
+@MainActor
+final class AIConfig: ObservableObject {
+    static let shared = AIConfig()
+
+    @AppStorage("ai.provider") private var providerRaw = ""
+    @AppStorage("ai.models") private var modelsJSON = "{}"
+    @Published private(set) var availableModels: [AIProvider: [String]] = [:]
+    @Published private(set) var loadingModels = false
+    @Published private(set) var modelError: String?
+
+    var provider: AIProvider {
+        get {
+            if let p = AIProvider(rawValue: providerRaw) { return p }
+            // Existing Claude users keep Claude; everyone else starts on free Gemini.
+            return AIProvider.claude.apiKey != nil ? .claude : .gemini
+        }
+        set { objectWillChange.send(); providerRaw = newValue.rawValue; refreshModels() }
+    }
+
+    private var chosen: [String: String] {
+        get { (try? JSONDecoder().decode([String: String].self, from: Data(modelsJSON.utf8))) ?? [:] }
+        set { modelsJSON = String(decoding: (try? JSONEncoder().encode(newValue)) ?? Data("{}".utf8), as: UTF8.self) }
+    }
+
+    func model(for p: AIProvider) -> String {
+        if let m = chosen[p.rawValue], !m.isEmpty { return m }
+        if p == .claude, let legacy = UserDefaults.standard.string(forKey: "claude.model") { return legacy }
+        return availableModels[p]?.first ?? p.fallbackModel
+    }
+
+    var model: String { model(for: provider) }
+
+    func setModel(_ m: String, for p: AIProvider) {
+        objectWillChange.send()
+        var c = chosen; c[p.rawValue] = m; chosen = c
+    }
+
+    func refreshModels() {
+        let p = provider
+        guard p.isConfigured else { return }
+        loadingModels = true
+        modelError = nil
+        Task {
+            do { availableModels[p] = try await AIClient.models(for: p) }
+            catch { modelError = error.localizedDescription }
+            loadingModels = false
+        }
+    }
+}
+
 @MainActor
 final class ClaudeChatModel: ObservableObject {
     static let shared = ClaudeChatModel()   // survives notch open/close
@@ -17,8 +68,6 @@ final class ClaudeChatModel: ObservableObject {
     @Published var attachScreen = false
     @Published var isSending = false
     @Published var error: String?
-
-    var hasKey: Bool { KeychainHelper.get(.anthropicAPIKey)?.isEmpty == false }
 
     func send() {
         let prompt = draft.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -35,8 +84,9 @@ final class ClaudeChatModel: ObservableObject {
                 attachScreen = false
             }
             messages.append(message)
+            let config = AIConfig.shared
             do {
-                let reply = try await ClaudeClient.send(messages, model: SettingsManager.shared.claudeModel)
+                let reply = try await AIClient.send(messages, provider: config.provider, model: config.model)
                 messages.append(ChatMessage(role: .assistant, text: reply))
             } catch {
                 self.error = error.localizedDescription
@@ -50,31 +100,85 @@ final class ClaudeChatModel: ObservableObject {
 
 struct ClaudeChatView: View {
     @StateObject private var model = ClaudeChatModel.shared
+    @StateObject private var config = AIConfig.shared
     @State private var keyDraft = ""
 
     var body: some View {
-        if model.hasKey { chat } else { keyPrompt }
+        VStack(spacing: 8) {
+            providerBar
+            if config.provider.isConfigured { chat } else { keyPrompt }
+        }
+        .onAppear { if config.availableModels[config.provider] == nil { config.refreshModels() } }
     }
 
-    /// First-run: ask for the user's own API key, stored in the Keychain.
+    /// Switch provider and model without leaving the notch.
+    private var providerBar: some View {
+        HStack(spacing: 8) {
+            Menu {
+                Section("Free") {
+                    ForEach(AIProvider.allCases.filter(\.isFree)) { p in
+                        Button { config.provider = p } label: { Label(p.title, systemImage: p == config.provider ? "checkmark" : "") }
+                    }
+                }
+                Section("Paid (your own account)") {
+                    ForEach(AIProvider.allCases.filter { !$0.isFree }) { p in
+                        Button { config.provider = p } label: { Label(p.title, systemImage: p == config.provider ? "checkmark" : "") }
+                    }
+                }
+            } label: {
+                Label(config.provider.title, systemImage: "sparkles").font(.system(size: 12, weight: .semibold))
+            }
+            .menuStyle(.borderlessButton).fixedSize()
+
+            if config.provider.isConfigured {
+                Menu {
+                    let models = config.availableModels[config.provider] ?? []
+                    if models.isEmpty { Text(config.loadingModels ? "Loading models…" : "No models found") }
+                    ForEach(models, id: \.self) { m in
+                        Button { config.setModel(m, for: config.provider) } label: {
+                            Label(m, systemImage: m == config.model ? "checkmark" : "")
+                        }
+                    }
+                    Divider()
+                    Button("Refresh model list") { config.refreshModels() }
+                } label: {
+                    Text(config.model).font(.system(size: 12)).lineLimit(1)
+                }
+                .menuStyle(.borderlessButton).fixedSize()
+            }
+            Spacer()
+            Text(config.provider.costNote).font(.system(size: 11))
+                .foregroundStyle(config.provider.isFree ? Color.green.opacity(0.9) : Theme.textSecondary)
+        }
+    }
+
+    /// First run for a provider: explain where to get a free key and save it to the Keychain.
     private var keyPrompt: some View {
         VStack(alignment: .leading, spacing: 10) {
-            Label("Bring your own Claude key", systemImage: "key.fill").font(.headline).foregroundStyle(.white)
-            Text("Your key is stored in the macOS Keychain and sent only to api.anthropic.com. Get one at console.anthropic.com.")
+            Label("Add your \(config.provider.title) key", systemImage: "key.fill").font(.headline).foregroundStyle(.white)
+            Text("\(config.provider.costNote). Your key is stored in the macOS Keychain and sent only to \(config.provider.title).")
                 .font(.caption).foregroundStyle(Theme.textSecondary)
             HStack {
-                SecureField("sk-ant-…", text: $keyDraft)
+                SecureField(config.provider.keyPlaceholder, text: $keyDraft)
                     .textFieldStyle(.roundedBorder)
-                Button("Save") {
-                    KeychainHelper.set(keyDraft.trimmingCharacters(in: .whitespaces), for: .anthropicAPIKey)
-                    keyDraft = ""
-                    model.objectWillChange.send()
-                }
-                .buttonStyle(PurpleButtonStyle())
-                .disabled(keyDraft.isEmpty)
+                    .onSubmit(saveKey)
+                Button("Save", action: saveKey)
+                    .buttonStyle(PurpleButtonStyle())
+                    .disabled(keyDraft.isEmpty)
             }
+            Link(config.provider.isFree ? "Get a free key →" : "Get a key →", destination: config.provider.keyURL)
+                .font(.caption.bold())
         }
         .frame(maxHeight: .infinity, alignment: .center)
+    }
+
+    private func saveKey() {
+        let key = keyDraft.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !key.isEmpty else { return }
+        KeychainHelper.set(key, for: config.provider.keychainKey)
+        keyDraft = ""
+        config.objectWillChange.send()
+        config.refreshModels()
     }
 
     private var chat: some View {
@@ -83,9 +187,9 @@ struct ClaudeChatView: View {
                 ScrollView {
                     LazyVStack(alignment: .leading, spacing: 8) {
                         if model.messages.isEmpty {
-                            Text("Ask Claude anything. Toggle 📺 to include your screen.")
+                            Text("Ask anything. Toggle the screen button to include a screenshot.")
                                 .font(.callout).foregroundStyle(Theme.textSecondary)
-                                .frame(maxWidth: .infinity).padding(.top, 40)
+                                .frame(maxWidth: .infinity).padding(.top, 30)
                         }
                         ForEach(model.messages) { Bubble(message: $0).id($0.id) }
                         if model.isSending {
@@ -98,7 +202,7 @@ struct ClaudeChatView: View {
                 }
             }
 
-            if let error = model.error {
+            if let error = model.error ?? config.modelError {
                 Text(error).font(.caption).foregroundStyle(.red.opacity(0.9)).lineLimit(2)
             }
 
@@ -107,9 +211,9 @@ struct ClaudeChatView: View {
                     Image(systemName: model.attachScreen ? "display.and.arrow.down" : "display")
                 }
                 .toggleStyle(.button)
-                .help("Share Screen — attach a screenshot to your next message")
+                .help("Share Screen: attach a screenshot to your next message (needs a model that can see images)")
 
-                TextField("Message Claude…", text: $model.draft)
+                TextField("Message \(config.provider == .claude ? "Claude" : "AI")…", text: $model.draft)
                     .textFieldStyle(.plain)
                     .padding(.horizontal, 12).padding(.vertical, 8)
                     .background(Color.white.opacity(0.08), in: Capsule())

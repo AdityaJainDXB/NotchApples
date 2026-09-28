@@ -29,6 +29,7 @@
 		5017D7AB333DCC40EBD7CDBB /* MessengerModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 033E65EDFD61BEE79967253B /* MessengerModels.swift */; };
 		537F255A1D69F77CC3D7AF9E /* FocusView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C357EE29CC1EB9117F9FD20 /* FocusView.swift */; };
 		5AA91607B79AC951AF761EAC /* AppAudioTap.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7FA95D922A40D6601CCC213A /* AppAudioTap.swift */; };
+		5B0455BCC42E04EAF3366727 /* AIProviders.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A2A98A73E13E924C3E3852B /* AIProviders.swift */; };
 		5DCFF5FAC0FB3C4B22AE8E7B /* NotchMessengerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 643FFB36BCE34E64BBD52883 /* NotchMessengerView.swift */; };
 		5F2E6DC4CD761DFB777B0C6B /* SharedStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9E160C9C8DBBE561F7DD2AD /* SharedStore.swift */; };
 		66F9ECB3DB5740E0CA3A1801 /* NotchWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3ED6813AA8EF7F3F44235A0D /* NotchWindowController.swift */; };
@@ -84,6 +85,7 @@
 
 /* Begin PBXFileReference section */
 		033E65EDFD61BEE79967253B /* MessengerModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessengerModels.swift; sourceTree = "<group>"; };
+		0A2A98A73E13E924C3E3852B /* AIProviders.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIProviders.swift; sourceTree = "<group>"; };
 		0ECABC7EEC9804BECB1923C7 /* GlobalHotkeyManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlobalHotkeyManager.swift; sourceTree = "<group>"; };
 		184C7A8AA7E8B37DB1D50EFD /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		19CE2857208E57529A83DED6 /* VPNView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VPNView.swift; sourceTree = "<group>"; };
@@ -141,6 +143,7 @@
 		266F4B9D59CAFDD3ED749F99 /* Claude */ = {
 			isa = PBXGroup;
 			children = (
+				0A2A98A73E13E924C3E3852B /* AIProviders.swift */,
 				76A2AE80E039AD25E2029A03 /* ClaudeChatView.swift */,
 				6747ADA828FF1D33683B30C8 /* ClaudeClient.swift */,
 				D95BC205F9AD85B9383E0C9D /* ScreenCapture.swift */,
@@ -464,6 +467,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				5B0455BCC42E04EAF3366727 /* AIProviders.swift in Sources */,
 				5AA91607B79AC951AF761EAC /* AppAudioTap.swift in Sources */,
 				AABC2217E3C2A9F56856E479 /* AppDelegate.swift in Sources */,
 				695DD73EF704946DF4FBD01C /* AudioDeviceController.swift in Sources */,
@@ -599,7 +603,7 @@
 				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Manual;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 11;
+				CURRENT_PROJECT_VERSION = 12;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = "";
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -614,7 +618,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 1.8.0;
+				MARKETING_VERSION = 1.9.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -697,7 +701,7 @@
 				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Manual;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 11;
+				CURRENT_PROJECT_VERSION = 12;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = "";
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -718,7 +722,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 1.8.0;
+				MARKETING_VERSION = 1.9.0;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;

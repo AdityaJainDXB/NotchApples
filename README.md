@@ -59,7 +59,7 @@ Every module is **optional** and can be switched on or off in **Settings → Mod
 | ☀️ **Today** | The date, current weather, your next calendar events (with a **Now** badge for meetings in progress) and battery at a glance. |
 | ⏱ **Focus** | A Pomodoro timer: 25-minute focus sessions and 5-minute breaks, with a long break every 4th session. While it runs, **the countdown shows beside the closed notch**. You get a notification and a sound when each session ends. Lengths are adjustable in **Settings → Focus**. |
 | 🔋 **Charging** | Plug in or unplug the charger and the notch briefly shows your battery level. Turn it off in **Settings → General**. |
-| ✨ **Claude** | Chat with Claude from the notch using **your own** Anthropic API key, which is stored in the Keychain. Tap **Share Screen** to attach a screenshot so Claude can see what you're looking at. |
+| ✨ **AI** | Chat from the notch with **free** AI (Google Gemini, Groq, OpenRouter's free models, or Ollama running on your Mac) or paid Claude / ChatGPT with your own key. Switch provider and model right in the notch. Tap **Share Screen** to attach a screenshot. See [Free AI options](#free-ai-options). |
 | 💬 **Messenger** | Chat anonymously with **people on the same Wi-Fi** (found automatically, encrypted between Macs), or **create or join an anonymous room** with a code, like `cafe-study` or `8821`. Rooms are end-to-end encrypted, and nothing is stored anywhere. You get a random handle like `PurplePanda#402`, and there are no accounts. See [Using Messenger](#using-messenger). |
 | 📋 **Clipboard** | Everything you copy (text, links, images and files) is saved to a searchable history in the notch. Click an item to copy it again, pin the ones you want to keep, and filter by type. Items that password managers mark as secret are never saved, and history stays on your Mac. Choose how many items to keep in **Settings → Clipboard**. |
 | 🗂 **File Shelf** | Drag a file onto the notch and it opens straight to the shelf. Files stay there across relaunches thanks to security-scoped bookmarks. Double-click to open, or drag them back out. There's also an **Add files…** button. |
@@ -125,6 +125,21 @@ The table below lists when each is asked for.
 | Location | Weather | The first time you open Today (approximate location, weather only) |
 | Camera | Face unlock | When you set up or use face unlock. Only a face template is saved, never photos |
 | System audio recording | Audio → per-app volume / EQ | The first time you change an app's volume or EQ. Audio is processed on your Mac and never recorded or sent anywhere |
+
+## Free AI options
+
+The AI tab doesn't require a paid account. Pick a provider in the notch or in **Settings → AI**:
+
+| Provider | Cost | Get a key | Notes |
+| --- | --- | --- | --- |
+| **Google Gemini** | Free tier, no billing | [aistudio.google.com/apikey](https://aistudio.google.com/apikey) | Fast; can see screenshots. The default. |
+| **Groq** | Free tier, no billing | [console.groq.com/keys](https://console.groq.com/keys) | Very fast open models (Llama, Qwen, DeepSeek-distilled and more). |
+| **OpenRouter** | Free models, no billing | [openrouter.ai/keys](https://openrouter.ai/keys) | Only the free models are listed. The selection changes over time. |
+| **Ollama** | Free, runs on your Mac | No key. [Download Ollama](https://ollama.com/download) | Private and offline. Run e.g. `ollama run llama3.2` once. |
+| Claude | Paid (your Anthropic account) | [console.anthropic.com](https://console.anthropic.com/settings/keys) | |
+| ChatGPT (OpenAI) | Paid (your OpenAI account) | [platform.openai.com](https://platform.openai.com/api-keys) | The OpenAI API has no free tier. |
+
+Model lists are loaded live from each provider, so new models appear automatically, and you can type any model ID. The official DeepSeek API also requires billing; DeepSeek models appear in Groq's and OpenRouter's free lists when they're available. Keys are stored in your Keychain and sent only to that provider.
 
 ## Face unlock
 
@@ -280,7 +295,7 @@ Per-app volume and EQ use Core Audio process taps, which arrived in macOS 14.2. 
 ## Privacy
 
 - Everything runs on your Mac. The only network requests are:
-  - `api.anthropic.com`, using your own key, when you chat with Claude
+  - the AI provider you chose (Gemini, Groq, OpenRouter, Anthropic or OpenAI), using your own key, when you chat. Ollama stays on your Mac
   - `open-meteo.com` for weather
   - `api.github.com` / `raw.githubusercontent.com` for the free VPN server list, and `vpngate.net`, only when you open the VPN tab
 - PairDrop and Nearby Wi-Fi chat never leave your local network.

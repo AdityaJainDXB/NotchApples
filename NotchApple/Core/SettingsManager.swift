@@ -20,7 +20,7 @@ enum Module: String, CaseIterable, Identifiable {
         switch self {
         case .today: "Today"
         case .focus: "Focus"
-        case .claude: "Claude"
+        case .claude: "AI"
         case .messenger: "Messenger"
         case .clipboard: "Clipboard"
         case .shelf: "Shelf"
@@ -50,7 +50,7 @@ enum Module: String, CaseIterable, Identifiable {
 
     var blurb: String {
         switch self {
-        case .claude: "Chat with Claude using your own API key. Optionally share your screen."
+        case .claude: "Chat with AI: free Gemini, Groq, OpenRouter or local Ollama, or paid Claude / ChatGPT. Optionally share your screen."
         case .today: "Weather, your next calendar events and battery at a glance."
         case .focus: "A Pomodoro focus timer with a countdown beside the notch."
         case .clipboard: "Keeps everything you copy, so you can find and copy it again later."

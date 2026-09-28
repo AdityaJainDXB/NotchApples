@@ -26,6 +26,6 @@ arrange_by = None
 
 # Positions match the frosted tiles in dmg-background.tiff (centre points).
 icon_locations = {
-    "Notch apple.app": (180, 200),
-    "Applications": (480, 200),
+    "Notch apple.app": (180, 186),
+    "Applications": (480, 186),
 }

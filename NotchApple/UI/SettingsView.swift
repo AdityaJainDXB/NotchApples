@@ -28,7 +28,7 @@ enum SettingsTab: String, CaseIterable, Identifiable, Hashable {
         case .permissions: "Permissions"
         case .authentication: "Authentication"
         case .modules: "Modules"
-        case .claude: "Claude"
+        case .claude: "AI"
         case .messenger: "Messenger"
         case .clipboard: "Clipboard"
         case .focus: "Focus"
@@ -279,52 +279,89 @@ private struct ModulesSettings: View {
     }
 }
 
-// MARK: - Claude
+// MARK: - AI
 
 private struct ClaudeSettings: View {
-    @EnvironmentObject private var settings: SettingsManager
-    @State private var key = ""
-    @State private var hasKey = KeychainHelper.get(.anthropicAPIKey) != nil
+    @StateObject private var config = AIConfig.shared
+    @State private var drafts: [AIProvider: String] = [:]
+    @State private var customModel = ""
+    @State private var refresh = 0     // bump to re-read Keychain state
 
     var body: some View {
         Form {
             Section {
-                if hasKey {
-                    LabeledContent("API key") {
-                        HStack {
-                            Label("Saved in Keychain", systemImage: "checkmark.seal.fill").foregroundStyle(.green)
-                            Button("Remove…", role: .destructive) {
-                                Task {
-                                    // Require biometrics before touching the stored secret.
-                                    if await BiometricAuth.authenticate(reason: "remove your Claude API key") {
-                                        KeychainHelper.delete(.anthropicAPIKey); hasKey = false
-                                    }
-                                }
-                            }
-                        }
+                Picker("Provider", selection: Binding(get: { config.provider }, set: { config.provider = $0 })) {
+                    Section("Free") { ForEach(AIProvider.allCases.filter(\.isFree)) { Text($0.title).tag($0) } }
+                    Section("Paid") { ForEach(AIProvider.allCases.filter { !$0.isFree }) { Text($0.title).tag($0) } }
+                }
+                LabeledContent("Cost", value: config.provider.costNote)
+                if config.provider.isConfigured {
+                    Picker("Model", selection: Binding(get: { config.model }, set: { config.setModel($0, for: config.provider) })) {
+                        let models = config.availableModels[config.provider] ?? []
+                        ForEach(models.contains(config.model) ? models : [config.model] + models, id: \.self) { Text($0).tag($0) }
                     }
-                } else {
-                    SecureField("API key", text: $key, prompt: Text("sk-ant-…"))
-                    Button("Save to Keychain") {
-                        KeychainHelper.set(key.trimmingCharacters(in: .whitespaces), for: .anthropicAPIKey)
-                        key = ""; hasKey = true
+                    HStack {
+                        TextField("Or type a model ID", text: $customModel)
+                        Button("Use") { config.setModel(customModel, for: config.provider); customModel = "" }
+                            .disabled(customModel.isEmpty)
+                        Button("Refresh list") { config.refreshModels() }
+                        if config.loadingModels { ProgressView().controlSize(.small) }
                     }
-                    .disabled(key.isEmpty)
+                    if let e = config.modelError { Text(e).font(.callout).foregroundStyle(.red) }
                 }
             } header: {
-                Text("Account")
+                Text("Provider")
             } footer: {
-                Link("Get an API key at console.anthropic.com", destination: URL(string: "https://console.anthropic.com/settings/keys")!)
+                Text("Free options need no credit card. OpenRouter's free list changes over time (Qwen, Llama, and DeepSeek when available). The official DeepSeek and ChatGPT APIs require billing.")
             }
+
             Section {
-                Picker("Model", selection: $settings.claudeModel) {
-                    ForEach(ClaudeClient.models, id: \.self) { Text($0).tag($0) }
+                ForEach(AIProvider.allCases.filter(\.needsKey)) { p in
+                    keyRow(p)
                 }
+                LabeledContent("Ollama") {
+                    Link("Download Ollama (free, runs locally) →", destination: AIProvider.ollama.keyURL)
+                }
+            } header: {
+                Text("API keys")
             } footer: {
-                Text("Usage is billed to your own Anthropic account. Requests go straight from your Mac to Anthropic.")
+                Text("Keys are stored in your Keychain on this Mac and sent only to that provider.")
             }
         }
         .formStyle(.grouped)
+        .id(refresh)
+        .onAppear { if config.availableModels[config.provider] == nil { config.refreshModels() } }
+    }
+
+    @ViewBuilder
+    private func keyRow(_ p: AIProvider) -> some View {
+        if p.apiKey != nil {
+            LabeledContent(p.title) {
+                HStack {
+                    Label("Saved", systemImage: "checkmark.seal.fill").foregroundStyle(.green)
+                    Button("Remove", role: .destructive) {
+                        KeychainHelper.delete(p.keychainKey); refresh += 1; config.objectWillChange.send()
+                    }
+                }
+            }
+        } else {
+            LabeledContent(p.title) {
+                HStack {
+                    SecureField(p.keyPlaceholder, text: Binding(get: { drafts[p] ?? "" }, set: { drafts[p] = $0 }))
+                        .frame(width: 200)
+                    Button("Save") {
+                        let key = (drafts[p] ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+                        guard !key.isEmpty else { return }
+                        KeychainHelper.set(key, for: p.keychainKey)
+                        drafts[p] = nil; refresh += 1
+                        config.objectWillChange.send()
+                        if p == config.provider { config.refreshModels() }
+                    }
+                    .disabled((drafts[p] ?? "").isEmpty)
+                    Link(p.isFree ? "Free key" : "Get key", destination: p.keyURL)
+                }
+            }
+        }
     }
 }
 
