@@ -1,0 +1,59 @@
+//
+//  KeychainHelper.swift
+//  Notch apple
+//
+//  Minimal wrapper over the Security framework for storing secrets (the
+//  user's Anthropic API key) in the login Keychain. Secrets never touch
+//  UserDefaults or disk in plain text.
+//
+
+import Foundation
+import Security
+
+enum KeychainHelper {
+    private static let service = "com.notchapple.app"
+
+    enum Key: String {
+        case anthropicAPIKey = "anthropic.apiKey"
+    }
+
+    /// Saves (or replaces) a string value.
+    @discardableResult
+    static func set(_ value: String, for key: Key) -> Bool {
+        delete(key)
+        let query: [String: Any] = [
+            kSecClass as String: kSecClassGenericPassword,
+            kSecAttrService as String: service,
+            kSecAttrAccount as String: key.rawValue,
+            kSecValueData as String: Data(value.utf8),
+            // Only readable while the Mac is unlocked, never synced to other devices.
+            kSecAttrAccessible as String: kSecAttrAccessibleWhenUnlockedThisDeviceOnly,
+        ]
+        return SecItemAdd(query as CFDictionary, nil) == errSecSuccess
+    }
+
+    static func get(_ key: Key) -> String? {
+        let query: [String: Any] = [
+            kSecClass as String: kSecClassGenericPassword,
+            kSecAttrService as String: service,
+            kSecAttrAccount as String: key.rawValue,
+            kSecReturnData as String: true,
+            kSecMatchLimit as String: kSecMatchLimitOne,
+        ]
+        var result: AnyObject?
+        guard SecItemCopyMatching(query as CFDictionary, &result) == errSecSuccess,
+              let data = result as? Data else { return nil }
+        return String(data: data, encoding: .utf8)
+    }
+
+    @discardableResult
+    static func delete(_ key: Key) -> Bool {
+        let query: [String: Any] = [
+            kSecClass as String: kSecClassGenericPassword,
+            kSecAttrService as String: service,
+            kSecAttrAccount as String: key.rawValue,
+        ]
+        let status = SecItemDelete(query as CFDictionary)
+        return status == errSecSuccess || status == errSecItemNotFound
+    }
+}
