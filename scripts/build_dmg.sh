@@ -38,4 +38,9 @@ rm -f "$DMG"
 # Keep the Homebrew cask in step with this release.
 SHA=$(shasum -a 256 "$DMG" | awk '{print $1}')
 sed -i '' -E "s/^  version \".*\"/  version \"$VERSION\"/; s/^  sha256 \".*\"/  sha256 \"$SHA\"/" Casks/notch-apple.rb
+# Remove the built app now that it's inside the DMG, so there's only one
+# "Notch apple" on this Mac (the one in /Applications). Build caches stay.
+/System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister -u "$PWD/$APP" 2>/dev/null || true
+rm -rf "$APP"
+
 echo "✅ $DMG  (cask updated: $VERSION)"
