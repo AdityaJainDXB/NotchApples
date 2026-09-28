@@ -128,6 +128,10 @@ private struct GeneralSettings: View {
                     Text("Open and close with ⌘E")
                     Text("Works in any app. While on, other apps don't receive ⌘E.")
                 }
+                Toggle(isOn: $settings.hoverToOpen) {
+                    Text("Open on hover")
+                    Text("Opens when the pointer rests on the notch and closes when it moves away. Click inside to keep it open.")
+                }
                 Toggle(isOn: $settings.stickyNotch) {
                     Text("Keep open when clicking elsewhere")
                     Text("Otherwise the notch closes when you click outside it or press Esc.")
@@ -135,7 +139,7 @@ private struct GeneralSettings: View {
             } header: {
                 Text("Notch")
             } footer: {
-                Text("The notch opens when you click it, press ⌘E, or drag a file onto it. Hovering only highlights it.")
+                Text("The notch opens when you click it, press ⌘E, or drag a file onto it. With Open on hover off, hovering only highlights it.")
             }
         }
         .formStyle(.grouped)

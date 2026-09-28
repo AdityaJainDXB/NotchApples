@@ -65,6 +65,7 @@ final class NotchTriggerView: NSView {
 
     var onClick: () -> Void = {}
     var onDragEnter: () -> Void = {}
+    var onHoverChange: (Bool) -> Void = { _ in }
 
     private var isHovered = false { didSet { needsDisplay = true } }
     private var tracking: NSTrackingArea?
@@ -135,8 +136,8 @@ final class NotchTriggerView: NSView {
 
     override func acceptsFirstMouse(for event: NSEvent?) -> Bool { true }
     override func mouseDown(with event: NSEvent) { onClick() }
-    override func mouseEntered(with event: NSEvent) { isHovered = true; NSCursor.pointingHand.set() }
-    override func mouseExited(with event: NSEvent) { isHovered = false; NSCursor.arrow.set() }
+    override func mouseEntered(with event: NSEvent) { isHovered = true; NSCursor.pointingHand.set(); onHoverChange(true) }
+    override func mouseExited(with event: NSEvent) { isHovered = false; NSCursor.arrow.set(); onHoverChange(false) }
 
     // Spring-loading: dragging a file onto the notch opens it on the File Shelf,
     // and the drop itself lands in the shelf's drop zone.
@@ -146,6 +147,25 @@ final class NotchTriggerView: NSView {
     }
 }
 
+/// Hosts the SwiftUI notch and reports when the pointer enters or leaves it
+/// (used only by the optional "open on hover" setting).
+final class HoverTrackingView: NSView {
+    var onHoverChange: (Bool) -> Void = { _ in }
+    private var tracking: NSTrackingArea?
+
+    override func updateTrackingAreas() {
+        super.updateTrackingAreas()
+        if let tracking { removeTrackingArea(tracking) }
+        let area = NSTrackingArea(rect: bounds, options: [.mouseEnteredAndExited, .activeAlways, .inVisibleRect],
+                                  owner: self, userInfo: nil)
+        addTrackingArea(area)
+        tracking = area
+    }
+
+    override func mouseEntered(with event: NSEvent) { onHoverChange(true) }
+    override func mouseExited(with event: NSEvent) { onHoverChange(false) }
+}
+
 final class NotchWindowController {
     private let panel: NotchPanel
     private let trigger: NotchPanel
@@ -153,6 +173,7 @@ final class NotchWindowController {
     let state = NotchState()
     private var outsideClickMonitor: Any?
     private var keyMonitor: Any?
+    private var clickInsideMonitor: Any?
 
     init() {
         panel = NotchPanel(contentRect: .zero)
@@ -163,7 +184,10 @@ final class NotchWindowController {
         host.sizingOptions = []          // the controller owns the frame, not SwiftUI
         host.wantsLayer = true
         host.layer?.backgroundColor = .clear
-        panel.contentView = host
+        let container = HoverTrackingView()
+        host.autoresizingMask = [.width, .height]
+        container.addSubview(host)
+        panel.contentView = container
 
         trigger = NotchPanel(contentRect: .zero)
         trigger.contentView = triggerView
@@ -172,6 +196,8 @@ final class NotchWindowController {
 
         triggerView.onClick = { [weak self] in self?.toggle() }
         triggerView.onDragEnter = { [weak self] in self?.openForDrop() }
+        triggerView.onHoverChange = { [weak self] inside in self?.hoverChanged(inside: inside, overPanel: false) }
+        container.onHoverChange = { [weak self] inside in self?.hoverChanged(inside: inside, overPanel: true) }
         state.toggle = { [weak self] in self?.toggle() }
         state.close = { [weak self] in self?.collapse() }
     }
@@ -214,6 +240,8 @@ final class NotchWindowController {
 
     func expand() {
         guard !state.isExpanded else { return }
+        openedByHover = false   // the hover path sets this back to true right after
+        pinnedByClick = false
         panel.orderFrontRegardless()
         panel.makeKey()
         // Let the panel present one collapsed frame, then spring open.
@@ -229,8 +257,45 @@ final class NotchWindowController {
         expand()
     }
 
+    // MARK: Hover to open (optional, off by default)
+
+    /// True when the current open was caused by hovering rather than a click or ⌘E.
+    private var openedByHover = false
+    /// Set once the user clicks inside a hover-opened notch, so moving out no longer closes it.
+    private var pinnedByClick = false
+    private var hoverWork: DispatchWorkItem?
+
+    private func hoverChanged(inside: Bool, overPanel: Bool) {
+        guard SettingsManager.shared.hoverToOpen else { return }
+        hoverWork?.cancel()
+        let work: DispatchWorkItem
+        if inside {
+            // A short delay so just passing the pointer across the menu bar doesn't open it.
+            guard !state.isExpanded, !overPanel else { return }
+            work = DispatchWorkItem { [weak self] in
+                guard let self, !self.state.isExpanded else { return }
+                self.expand()
+                self.openedByHover = true
+            }
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.15, execute: work)
+        } else {
+            // Leaving the trigger while the panel is opening lands on the panel, so only the
+            // panel's own exit closes it; a small grace period allows brief overshoots.
+            guard overPanel, state.isExpanded, openedByHover, !pinnedByClick else { return }
+            work = DispatchWorkItem { [weak self] in
+                guard let self, self.openedByHover, !self.pinnedByClick else { return }
+                self.collapse()
+            }
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.35, execute: work)
+        }
+        hoverWork = work
+    }
+
     func collapse() {
         guard state.isExpanded else { return }
+        hoverWork?.cancel()
+        openedByHover = false
+        pinnedByClick = false
         withAnimation(Theme.spring) { state.isExpanded = false }
         // Re-lock biometric gate every time the notch closes.
         state.isUnlocked = false
@@ -251,6 +316,10 @@ final class NotchWindowController {
         // Esc works even when another app is frontmost (Carbon hot key, active only while open)…
         GlobalHotkeyManager.shared.register(.closeNotch) { [weak self] in self?.collapse() }
         // …and as a local fallback when the panel itself has focus.
+        clickInsideMonitor = NSEvent.addLocalMonitorForEvents(matching: [.leftMouseDown, .rightMouseDown]) { [weak self] event in
+            if let self, event.window === self.panel { self.pinnedByClick = true }
+            return event
+        }
         keyMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
             if event.keyCode == 53 { self?.collapse(); return nil }
             return event
@@ -260,6 +329,8 @@ final class NotchWindowController {
     private func removeMonitors() {
         if let m = outsideClickMonitor { NSEvent.removeMonitor(m) }
         if let m = keyMonitor { NSEvent.removeMonitor(m) }
+        if let m = clickInsideMonitor { NSEvent.removeMonitor(m) }
+        clickInsideMonitor = nil
         outsideClickMonitor = nil
         keyMonitor = nil
         GlobalHotkeyManager.shared.unregister(.closeNotch)

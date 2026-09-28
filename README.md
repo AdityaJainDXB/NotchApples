@@ -54,7 +54,9 @@ Every module is **optional** and can be switched on or off in **Settings → Mod
 | 🔐 **Biometric Lock** | Requires Touch ID, Apple Watch, your password, or **face unlock** (your Mac's camera) before the notch opens. See [Face unlock](#face-unlock). |
 | 🧩 **Widget** | A desktop widget (and Lock Screen widget on newer macOS) showing weather, now playing, and your next calendar events. |
 
-**Open the notch by clicking it, pressing `⌘E` in any app, or dragging a file onto it.** Hovering only highlights the notch; it never opens it. Press `Esc` or `⌘E`, or click anywhere else, to close it.
+**Open the notch by clicking it, pressing `⌘E` in any app, or dragging a file onto it.** Press `Esc` or `⌘E`, or click anywhere else, to close it.
+
+**Open on hover (optional, off by default):** turn it on in **Settings → General**. The notch then opens when the pointer rests on it and closes when the pointer moves away. Click inside to keep it open while you type or drag. With the option off, hovering only highlights the notch.
 
 `⌘E` is a system-wide shortcut registered through Carbon, so it needs no Accessibility permission. While it's on, other apps won't receive `⌘E` (for example "Use Selection for Find"). You can turn it off in **Settings → General**.
 

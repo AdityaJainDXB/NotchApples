@@ -81,6 +81,8 @@ final class SettingsManager: ObservableObject {
     @AppStorage("ui.showStatusItem") var showStatusItem = true
     /// Keep the notch open when it loses focus (useful while dragging files in).
     @AppStorage("ui.stickyNotch") var stickyNotch = false
+    /// Open the notch when the pointer hovers over it, and close it when the pointer leaves. Off by default.
+    @AppStorage("ui.hoverToOpen") var hoverToOpen = false
     /// Toggle the notch from anywhere with ⌘E (Carbon hot key, no Accessibility permission needed).
     @AppStorage("ui.globalHotkey") var globalHotkeyEnabled = true
     /// Offer webcam face unlock (enrolled in Settings → Authentication) on the lock screen.
