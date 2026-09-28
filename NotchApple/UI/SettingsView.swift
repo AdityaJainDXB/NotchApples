@@ -17,7 +17,7 @@ import UniformTypeIdentifiers
 
 /// Panes in the Settings window. `selection` lets other code jump to a pane.
 enum SettingsTab: String, CaseIterable, Identifiable, Hashable {
-    case general, authentication, modules, claude, messenger, audio, vpn, widget, about
+    case general, authentication, modules, claude, messenger, clipboard, audio, vpn, widget, about
     static let selection = PassthroughSubject<SettingsTab, Never>()
 
     var id: String { rawValue }
@@ -29,6 +29,7 @@ enum SettingsTab: String, CaseIterable, Identifiable, Hashable {
         case .modules: "Modules"
         case .claude: "Claude"
         case .messenger: "Messenger"
+        case .clipboard: "Clipboard"
         case .audio: "Audio"
         case .vpn: "VPN"
         case .widget: "Widget"
@@ -43,6 +44,7 @@ enum SettingsTab: String, CaseIterable, Identifiable, Hashable {
         case .modules: "square.grid.2x2.fill"
         case .claude: "sparkles"
         case .messenger: "bubble.left.and.bubble.right.fill"
+        case .clipboard: "doc.on.clipboard.fill"
         case .audio: "speaker.wave.2.fill"
         case .vpn: "lock.shield.fill"
         case .widget: "rectangle.3.group.fill"
@@ -58,6 +60,7 @@ enum SettingsTab: String, CaseIterable, Identifiable, Hashable {
         case .modules: Theme.accent
         case .claude: .orange
         case .messenger: .green
+        case .clipboard: .yellow
         case .audio: .pink
         case .vpn: .blue
         case .widget: .teal
@@ -92,6 +95,7 @@ struct SettingsView: View {
                 case .modules: ModulesSettings()
                 case .claude: ClaudeSettings()
                 case .messenger: MessengerSettings()
+                case .clipboard: ClipboardSettings()
                 case .audio: AudioSettings()
                 case .vpn: VPNSettings()
                 case .widget: WidgetSettings()
@@ -381,6 +385,41 @@ private struct MessengerSettings: View {
         identity.handle = MessengerIdentity.sanitize(handleDraft)
         handleDraft = identity.handle
         LocalP2PManager.shared.restart()
+    }
+}
+
+// MARK: - Clipboard
+
+private struct ClipboardSettings: View {
+    @EnvironmentObject private var settings: SettingsManager
+    @StateObject private var history = ClipboardHistory.shared
+    @State private var cleared = false
+
+    var body: some View {
+        Form {
+            Section {
+                Toggle("Save everything I copy", isOn: $settings.clipboardEnabled)
+            }
+            Section {
+                Picker("Keep the last", selection: $history.limit) {
+                    ForEach([50, 100, 200, 500, 1000], id: \.self) { Text("\($0) items").tag($0) }
+                }
+                Toggle(isOn: $history.persist) {
+                    Text("Keep history after restart")
+                    Text("Saved in Application Support on this Mac. Turn off to keep history in memory only.")
+                }
+                .onChange(of: history.persist) { _, on in if !on { history.forgetSavedHistory() } }
+                LabeledContent("Saved items", value: "\(history.items.count)")
+                Button(cleared ? "Cleared" : "Clear history (keeps pinned items)", role: .destructive) {
+                    history.clearUnpinned(); cleared = true
+                }
+            } header: {
+                Text("History")
+            } footer: {
+                Text("Pinned items are never removed automatically. Anything a password manager marks as secret is never saved, and nothing leaves your Mac.")
+            }
+        }
+        .formStyle(.grouped)
     }
 }
 

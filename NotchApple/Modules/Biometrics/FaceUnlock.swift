@@ -32,43 +32,85 @@ import SwiftUI
 
 // MARK: - Stored template
 
+// MARK: - Pluggable face embedder
+
+/// Turns a cropped face into a vector of numbers. Two photos of the same person
+/// should give vectors that are close together (small Euclidean distance).
+///
+/// To use a dedicated Core ML face-recognition model (for example an ArcFace
+/// model), implement this protocol with `VNCoreMLRequest` and set
+/// `FaceUnlockEngine.embedder`. Templates remember which embedder made them,
+/// so switching embedders simply asks the user to enrol again.
+protocol FaceEmbedder: Sendable {
+    /// Stable ID saved with each template, e.g. "vision-featureprint-v1".
+    var identifier: String { get }
+    func embedding(forFace face: CGImage) -> [Float]?
+}
+
+/// Default embedder: Apple's built-in Vision feature print. No extra model to ship.
+struct VisionFeaturePrintEmbedder: FaceEmbedder {
+    let identifier = "vision-featureprint-v1"
+
+    func embedding(forFace face: CGImage) -> [Float]? {
+        let request = VNGenerateImageFeaturePrintRequest()
+        try? VNImageRequestHandler(cgImage: face).perform([request])
+        guard let print = request.results?.first else { return nil }
+        let data = print.data
+        switch print.elementType {
+        case .float:
+            return data.withUnsafeBytes { Array($0.bindMemory(to: Float.self)) }
+        case .double:
+            return data.withUnsafeBytes { $0.bindMemory(to: Double.self).map(Float.init) }
+        default:
+            return nil
+        }
+    }
+}
+
+enum FaceMath {
+    static func distance(_ a: [Float], _ b: [Float]) -> Float {
+        guard a.count == b.count else { return .infinity }
+        var sum: Float = 0
+        for i in a.indices { let d = a[i] - b[i]; sum += d * d }
+        return sum.squareRoot()
+    }
+}
+
+// MARK: - Stored template
+
 private struct FaceTemplate: Codable {
-    /// Archived `VNFeaturePrintObservation`s, one per enrolment photo.
-    var prints: [Data]
+    /// One embedding per enrolment photo.
+    var embeddings: [[Float]]
     /// Largest distance still counted as "same face".
     var threshold: Float
+    /// Which `FaceEmbedder` produced these.
+    var embedder: String
     var created: Date
 }
 
 enum FaceTemplateStore {
-    static var isEnrolled: Bool { KeychainHelper.getData(.faceTemplate) != nil }
+    static var isEnrolled: Bool { load() != nil }
 
-    fileprivate static func load() -> (prints: [VNFeaturePrintObservation], threshold: Float)? {
+    fileprivate static func load() -> (embeddings: [[Float]], threshold: Float)? {
         guard let data = KeychainHelper.getData(.faceTemplate),
-              let template = try? JSONDecoder().decode(FaceTemplate.self, from: data) else { return nil }
-        let prints = template.prints.compactMap {
-            try? NSKeyedUnarchiver.unarchivedObject(ofClass: VNFeaturePrintObservation.self, from: $0)
-        }
-        return prints.isEmpty ? nil : (prints, template.threshold)
+              let template = try? JSONDecoder().decode(FaceTemplate.self, from: data),
+              template.embedder == FaceUnlockEngine.embedder.identifier,
+              !template.embeddings.isEmpty else { return nil }
+        return (template.embeddings, template.threshold)
     }
 
-    fileprivate static func save(_ prints: [VNFeaturePrintObservation]) -> Bool {
+    fileprivate static func save(_ embeddings: [[Float]]) -> Bool {
         // Calibrate: how different are the user's own enrolment photos?
         var distances: [Float] = []
-        for i in prints.indices {
-            for j in prints.indices where j > i {
-                var d: Float = 0
-                try? prints[i].computeDistance(&d, to: prints[j])
-                distances.append(d)
-            }
+        for i in embeddings.indices {
+            for j in embeddings.indices where j > i { distances.append(FaceMath.distance(embeddings[i], embeddings[j])) }
         }
         let spread = distances.max() ?? 0.5
         // Allow some slack for lighting, but never accept anything wildly different.
         let threshold = max(0.25, min(spread * 1.2, 0.75))
-        let archived = prints.compactMap { try? NSKeyedArchiver.archivedData(withRootObject: $0, requiringSecureCoding: true) }
-        guard let data = try? JSONEncoder().encode(FaceTemplate(prints: archived, threshold: threshold, created: .now)) else {
-            return false
-        }
+        let template = FaceTemplate(embeddings: embeddings, threshold: threshold,
+                                    embedder: FaceUnlockEngine.embedder.identifier, created: .now)
+        guard let data = try? JSONEncoder().encode(template) else { return false }
         return KeychainHelper.setData(data, for: .faceTemplate)
     }
 
@@ -80,6 +122,9 @@ enum FaceTemplateStore {
 @MainActor
 final class FaceUnlockEngine: NSObject, ObservableObject {
     enum Mode { case idle, enrolling, verifying }
+
+    /// Swap for a Core ML-backed embedder to upgrade recognition.
+    nonisolated static let embedder: any FaceEmbedder = VisionFeaturePrintEmbedder()
 
     @Published private(set) var mode: Mode = .idle
     @Published private(set) var prompt = ""
@@ -93,7 +138,7 @@ final class FaceUnlockEngine: NSObject, ObservableObject {
     private var lastProcessed = Date.distantPast
 
     // Enrolment state
-    private var samples: [VNFeaturePrintObservation] = []
+    private var samples: [[Float]] = []
     private static let samplesNeeded = 6
     private static let enrolPrompts = ["Look straight at the camera", "Turn your head slightly left",
                                        "Turn your head slightly right", "Tilt your chin up a little",
@@ -101,7 +146,7 @@ final class FaceUnlockEngine: NSObject, ObservableObject {
     private var onEnrolled: ((Bool) -> Void)?
 
     // Verification state
-    private var template: (prints: [VNFeaturePrintObservation], threshold: Float)?
+    private var template: (embeddings: [[Float]], threshold: Float)?
     private var matches = 0
     private var eyesWereOpen = false
     private var blinked = false
@@ -188,7 +233,7 @@ final class FaceUnlockEngine: NSObject, ObservableObject {
         faceVisible = result.faceFound
         switch mode {
         case .enrolling:
-            guard let print = result.print, result.eyesOpen else { return }
+            guard let print = result.embedding, result.eyesOpen else { return }
             // Space samples out so each pose is a little different.
             samples.append(print)
             progress = Double(samples.count) / Double(Self.samplesNeeded)
@@ -213,7 +258,7 @@ final class FaceUnlockEngine: NSObject, ObservableObject {
             }
             if result.eyesOpen { eyesWereOpen = true }
             if eyesWereOpen && result.eyesClosed { blinked = true }
-            if let print = result.print, let template, Self.matchesTemplate(print, template) { matches += 1 }
+            if let embedding = result.embedding, let template, Self.matchesTemplate(embedding, template) { matches += 1 }
             progress = min(1, Double(min(matches, 3)) / 3 * 0.7 + (blinked ? 0.3 : 0))
             prompt = matches < 3 ? "Look at the camera" : (blinked ? "Recognised" : "Now blink")
             if matches >= 3 && blinked {
@@ -227,12 +272,9 @@ final class FaceUnlockEngine: NSObject, ObservableObject {
         }
     }
 
-    private static func matchesTemplate(_ print: VNFeaturePrintObservation,
-                                        _ template: (prints: [VNFeaturePrintObservation], threshold: Float)) -> Bool {
-        let best = template.prints.compactMap { stored -> Float? in
-            var d: Float = 0
-            return (try? print.computeDistance(&d, to: stored)) != nil ? d : nil
-        }.min() ?? .infinity
+    private static func matchesTemplate(_ embedding: [Float],
+                                        _ template: (embeddings: [[Float]], threshold: Float)) -> Bool {
+        let best = template.embeddings.map { FaceMath.distance(embedding, $0) }.min() ?? .infinity
         return best <= template.threshold
     }
 }
@@ -241,7 +283,7 @@ final class FaceUnlockEngine: NSObject, ObservableObject {
 
 fileprivate struct FrameResult: @unchecked Sendable {
     var faceFound = false
-    var print: VNFeaturePrintObservation?
+    var embedding: [Float]?
     var eyesOpen = false
     var eyesClosed = false
 }
@@ -284,9 +326,7 @@ extension FaceUnlockEngine: AVCaptureVideoDataOutputSampleBufferDelegate {
             .intersection(image.extent)
         let context = CIContext()
         guard let crop = context.createCGImage(image.cropped(to: rect), from: rect) else { return result }
-        let printRequest = VNGenerateImageFeaturePrintRequest()
-        try? VNImageRequestHandler(cgImage: crop).perform([printRequest])
-        result.print = printRequest.results?.first
+        result.embedding = FaceUnlockEngine.embedder.embedding(forFace: crop)
         return result
     }
 

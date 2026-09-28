@@ -27,6 +27,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         NowPlayingMonitor.shared.start()
         startMessengerInBackground()
+        applyClipboardPreference()
 
         // Show/hide the status item live as the preference changes.
         applyStatusItemPreference()
@@ -36,6 +37,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             .sink { [weak self] _ in
                 self?.applyStatusItemPreference()
                 self?.applyHotkeyPreference()
+                self?.applyClipboardPreference()
             }
             .store(in: &cancellables)
 
@@ -61,6 +63,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         // Say goodbye to the room but remember it for next launch.
         WebP2PManager.shared.leave(remember: true)
         LocalP2PManager.shared.stop()
+    }
+
+    /// Records the clipboard in the background whenever the Clipboard module is on.
+    private func applyClipboardPreference() {
+        SettingsManager.shared.clipboardEnabled ? ClipboardHistory.shared.start() : ClipboardHistory.shared.stop()
     }
 
     /// Registers or removes the global ⌘E shortcut to match the preference.

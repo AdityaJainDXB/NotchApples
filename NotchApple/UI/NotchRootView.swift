@@ -145,6 +145,7 @@ struct NotchRootView: View {
             switch state.selected {
             case .claude: ClaudeChatView()
             case .messenger: NotchMessengerView()
+            case .clipboard: ClipboardView()
             case .shelf: FileShelfView()
             case .share: ShareView()
             case .audio: AudioView()
