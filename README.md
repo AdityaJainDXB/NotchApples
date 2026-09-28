@@ -18,6 +18,7 @@
 <p align="center">
   <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️ Download the latest DMG</b></a>
   &nbsp;·&nbsp; or install with <a href="#with-homebrew"><b>Homebrew</b></a>
+  &nbsp;·&nbsp; want it smaller? <a href="#want-a-lighter-version"><b>Lighter versions</b></a>
 </p>
 
 ```bash
@@ -106,6 +107,34 @@ Update later with `brew upgrade --cask notch-apple`. The first time you open it,
 4. Click the notch, or the menu-bar icon, to get started.
 
 On a Mac without a notch, a slim pill appears at the top center of the menu bar instead.
+
+## Want a lighter version?
+
+Every feature is optional, so the easiest way to slim Notch apple down is to **turn off what you don't need in Settings → Modules**. Turned-off modules disappear from the notch and stop running in the background.
+
+If you'd rather install an older, smaller build, every version is still available. Each release **includes everything from the ones above it**, so pick the first one that has what you want. Click a version number to download its DMG, or see the [full release notes](https://github.com/AdityaJainDXB/NotchApples/releases).
+
+| Version | Download size | What it adds | Known issues (fixed later) |
+| --- | --- | --- | --- |
+| [**1.0.0**](https://github.com/AdityaJainDXB/NotchApples/releases/download/v1.0.0/NotchApple-1.0.0.dmg) | 1.8 MB | The original notch hub: Claude chat with screen sharing, File Shelf, AirDrop and PairDrop, audio output and volume, VPN profile import, Now Playing, biometric lock, desktop widget. | Settings doesn't open from the notch (fixed in 1.1.0). |
+| [**1.1.0**](https://github.com/AdityaJainDXB/NotchApples/releases/download/v1.1.0/NotchApple-1.1.0.dmg) | 1.9 MB | Working Settings window, **⌘E** to open and close the notch from anywhere, a VPN status pill in the notch. |  |
+| [**1.2.0**](https://github.com/AdityaJainDXB/NotchApples/releases/download/v1.2.0/NotchApple-1.2.0.dmg) | 3.6 MB | Free VPN server list, easier PairDrop (just type a code), drag files onto the notch, **native per-app volume and EQ**, a redesigned Settings window. |  |
+| [**1.3.0**](https://github.com/AdityaJainDXB/NotchApples/releases/download/v1.3.0/NotchApple-1.3.0.dmg) | 3.7 MB | **Messenger**: chat on the same Wi-Fi or in anonymous encrypted rooms. | Messenger can crash if the network drops (fixed in 1.7.0). |
+| [**1.3.1**](https://github.com/AdityaJainDXB/NotchApples/releases/download/v1.3.1/NotchApple-1.3.1.dmg) | 3.7 MB | Create Messenger rooms, and a rounded notch shape like the real MacBook notch. | Same Messenger crash as 1.3.0. |
+| [**1.4.0**](https://github.com/AdityaJainDXB/NotchApples/releases/download/v1.4.0/NotchApple-1.4.0.dmg) | 3.8 MB | **Face unlock** for Notch apple's lock (webcam). | Same Messenger crash as 1.3.0. |
+| [**1.4.1**](https://github.com/AdityaJainDXB/NotchApples/releases/download/v1.4.1/NotchApple-1.4.1.dmg) | 3.8 MB | Optional **open on hover**. **The last small version (under 4 MB).** | Same Messenger crash as 1.3.0. |
+| [**1.5.0**](https://github.com/AdityaJainDXB/NotchApples/releases/download/v1.5.0/NotchApple-1.5.0.dmg) | 30 MB | The VPN connects out of the box (the Tunnelblick helper is included, **which is why the app grows to about 30 MB**), message notifications, Homebrew install. | Same Messenger crash as 1.3.0. |
+| [**1.6.0**](https://github.com/AdityaJainDXB/NotchApples/releases/download/v1.6.0/NotchApple-1.6.0.dmg) | 30 MB | **Clipboard** history. | Same Messenger crash as 1.3.0. Face unlock needs setting up again after upgrading from 1.4–1.5. |
+| [**1.7.0**](https://github.com/AdityaJainDXB/NotchApples/releases/download/v1.7.0/NotchApple-1.7.0.dmg) | 31 MB | **Today** tab (weather, calendar, battery), **Focus** timer, live activities beside the notch, the charging indicator. |  |
+| [**1.8.0**](https://github.com/AdityaJainDXB/NotchApples/releases/download/v1.8.0/NotchApple-1.8.0.dmg) | 31 MB | Local weather (uses your location), a Permissions screen on first launch, Face ID-style face unlock, a large widget, the styled installer. |  |
+| [**1.9.0**](https://github.com/AdityaJainDXB/NotchApples/releases/download/v1.9.0/NotchApple-1.9.0.dmg) | 31 MB | **Free AI choices**: Gemini, Groq, OpenRouter and Ollama, alongside paid Claude and ChatGPT. |  |
+| [**1.10.0**](https://github.com/AdityaJainDXB/NotchApples/releases/download/v1.10.0/NotchApple-1.10.0.dmg) | 31 MB | The AI can **see your screen when you ask**, one-click AI actions, DeepSeek, **AI History**, **Notes**, smoother notch opening. The latest version. |  |
+
+Good to know:
+- **1.4.1 is the last version under 4 MB.** From 1.5.0 on, the app includes the Tunnelblick VPN helper, which accounts for most of the extra size. If you don't use the VPN, 1.4.1 or earlier stays small.
+- Older versions don't get fixes. The Messenger crash in 1.3.0–1.6.0 only happens when the network drops, but it's worth knowing about.
+- Homebrew always installs the latest version. For an older one, download its DMG above and drag it to Applications in the same way. Remove the current version first.
+- Going back to 1.5.0 or earlier after setting up face unlock in 1.6.0 or later means setting face unlock up again.
 
 ## Permissions
 
