@@ -2,15 +2,15 @@
 //  AudioDeviceController.swift
 //  Notch apple
 //
-//  CoreAudio wrapper for output-device routing and master volume, plus a
-//  bridge to the open-source BackgroundMusic driver for per-app volume.
+//  CoreAudio wrapper for output-device routing, master volume, and per-app
+//  volume / EQ.
 //
-//  Why a driver? macOS offers no public API to change another app's volume.
-//  BackgroundMusic (https://github.com/kyleneideck/BackgroundMusic) installs a
-//  virtual output device ("Background Music", UID "BGMDevice") that apps play
-//  into; it exposes a custom property `apvs` holding per-app relative volumes.
-//  When the driver is installed we read/write that property directly. When it
-//  isn't, the per-app UI explains how to install it.
+//  Per-app audio has two backends:
+//   • Native (macOS 14.2+): Core Audio process taps — see AppAudioTap.swift.
+//     No driver, nothing to install.
+//   • BackgroundMusic driver (macOS 14.0–14.1 fallback): the open-source
+//     driver (https://github.com/kyleneideck/BackgroundMusic, bundled in the
+//     DMG) exposes a custom `apvs` property holding per-app relative volumes.
 //
 
 import Foundation
@@ -28,7 +28,7 @@ struct AppVolume: Identifiable, Hashable {
     let bundleID: String
     let name: String
     let pid: pid_t
-    /// 0…100 where 50 is unchanged (BackgroundMusic's relative scale).
+    /// Percent, 0…150, where 100 is unchanged.
     var level: Double
 }
 
@@ -40,6 +40,23 @@ final class AudioDeviceController: ObservableObject {
     @Published var volume: Float = 0.5
     @Published private(set) var backgroundMusicDevice: AudioDeviceID?
     @Published var appVolumes: [AppVolume] = []
+    /// Last per-app audio error to show in the UI, if any.
+    @Published private(set) var appAudioError: String?
+
+    /// Which per-app backend is active.
+    enum Backend { case native, backgroundMusic, unavailable }
+    var backend: Backend {
+        if AppAudioTapManager.isSupported { return .native }
+        return backgroundMusicDevice != nil ? .backgroundMusic : .unavailable
+    }
+
+    /// Saved per-app levels (bundle ID → percent), so settings survive relaunch.
+    private var savedLevels: [String: Double] {
+        get { UserDefaults.standard.dictionary(forKey: "audio.appLevels") as? [String: Double] ?? [:] }
+        set { UserDefaults.standard.set(newValue, forKey: "audio.appLevels") }
+    }
+
+    private var outputUID: String? { outputs.first { $0.id == defaultOutput }?.uid }
 
     private static let bgmUID = "BGMDevice"
     /// FourCC 'apvs' — kAudioDeviceCustomPropertyAppVolumes in BGM_Types.h
@@ -63,6 +80,9 @@ final class AudioDeviceController: ObservableObject {
         AudioObjectSetPropertyData(AudioObjectID(kAudioObjectSystemObject), &addr, 0, nil,
                                    UInt32(MemoryLayout<AudioDeviceID>.size), &dev)
         refresh()
+        // Taps are bound to an output device, so rebuild them on the new one.
+        AppAudioTapManager.shared.removeAll()
+        appVolumes.forEach { reapply($0) }
     }
 
     func setVolume(_ value: Float) {
@@ -80,45 +100,56 @@ final class AudioDeviceController: ObservableObject {
         }
     }
 
-    // MARK: Per-app volume (BackgroundMusic)
+    // MARK: Per-app volume and EQ
 
-    /// Lists regular running apps, merged with any levels BackgroundMusic already stores.
+    /// Lists regular running apps with their saved levels.
     func refreshAppVolumes() {
-        let stored = readBGMVolumes()
+        let saved = savedLevels
         appVolumes = NSWorkspace.shared.runningApplications
             .filter { $0.activationPolicy == .regular && $0.bundleIdentifier != Bundle.main.bundleIdentifier }
             .compactMap { app in
                 guard let bid = app.bundleIdentifier else { return nil }
                 return AppVolume(bundleID: bid, name: app.localizedName ?? bid, pid: app.processIdentifier,
-                                 level: stored[bid] ?? 50)
+                                 level: saved[bid] ?? 100)
             }
-            .sorted { $0.name < $1.name }
+            .sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
     }
 
     func setAppVolume(_ app: AppVolume, level: Double) {
-        if let i = appVolumes.firstIndex(of: app) { appVolumes[i].level = level }
+        guard let i = appVolumes.firstIndex(where: { $0.bundleID == app.bundleID }) else { return }
+        appVolumes[i].level = level
+        savedLevels[app.bundleID] = level
+        reapply(appVolumes[i])
+    }
+
+    /// Pushes the app's current volume + EQ to whichever backend is active.
+    func reapply(_ app: AppVolume) {
+        let eq = EQStore.shared.gains(for: app.bundleID)
+        switch backend {
+        case .native:
+            guard let uid = outputUID else { return }
+            AppAudioTapManager.shared.apply(pid: app.pid, volume: app.level / 100, eqDB: eq, outputDeviceUID: uid)
+            appAudioError = AppAudioTapManager.shared.lastError
+        case .backgroundMusic:
+            writeBGMVolume(app, percent: app.level)
+        case .unavailable:
+            break
+        }
+    }
+
+    func reapply(bundleID: String) {
+        if let app = appVolumes.first(where: { $0.bundleID == bundleID }) { reapply(app) }
+    }
+
+    /// BackgroundMusic's scale is 0…100 with 50 = unchanged.
+    private func writeBGMVolume(_ app: AppVolume, percent: Double) {
         guard let device = backgroundMusicDevice else { return }
-        let entry: [String: Any] = ["pid": app.pid, "bid": app.bundleID, "rvol": Int(level)]
+        let entry: [String: Any] = ["pid": app.pid, "bid": app.bundleID, "rvol": Int(min(100, percent / 2))]
         var array: Unmanaged<CFArray> = .passRetained([entry] as CFArray)
         defer { array.release() }
         var addr = AudioObjectPropertyAddress(mSelector: Self.bgmAppVolumes,
                                               mScope: kAudioObjectPropertyScopeGlobal, mElement: kAudioObjectPropertyElementMain)
         AudioObjectSetPropertyData(device, &addr, 0, nil, UInt32(MemoryLayout<CFArray>.size), &array)
-    }
-
-    private func readBGMVolumes() -> [String: Double] {
-        guard let device = backgroundMusicDevice else { return [:] }
-        var addr = AudioObjectPropertyAddress(mSelector: Self.bgmAppVolumes,
-                                              mScope: kAudioObjectPropertyScopeGlobal, mElement: kAudioObjectPropertyElementMain)
-        var size = UInt32(MemoryLayout<CFArray>.size)
-        var array: Unmanaged<CFArray>?
-        guard AudioObjectGetPropertyData(device, &addr, 0, nil, &size, &array) == noErr,
-              let list = array?.takeRetainedValue() as? [[String: Any]] else { return [:] }
-        var result: [String: Double] = [:]
-        for item in list {
-            if let bid = item["bid"] as? String, let v = item["rvol"] as? Int { result[bid] = Double(v) }
-        }
-        return result
     }
 
     // MARK: CoreAudio helpers

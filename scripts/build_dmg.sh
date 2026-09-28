@@ -14,6 +14,20 @@ APP="build/dd/Build/Products/Release/Notch apple.app"
 STAGE=$(mktemp -d)
 cp -R "$APP" "$STAGE/"
 ln -s /Applications "$STAGE/Applications"
+# Optional audio driver for macOS 14.0–14.1 (GPL-2.0, shipped unmodified with its licence).
+mkdir -p "$STAGE/Extras"
+cp NotchApple/Resources/BackgroundMusic.pkg "$STAGE/Extras/Install BackgroundMusic audio driver (optional).pkg"
+cp ThirdParty/BackgroundMusic-LICENSE.txt "$STAGE/Extras/BackgroundMusic LICENSE.txt"
+cat > "$STAGE/Extras/About these extras.txt" <<'TXT'
+BackgroundMusic audio driver (optional)
+
+You only need this on macOS 14.0 or 14.1. On macOS 14.2 and later, Notch apple
+changes per-app volume and EQ natively, with nothing to install.
+
+BackgroundMusic is free software by Kyle Neideck and contributors, licensed
+under the GNU GPL v2 (see "BackgroundMusic LICENSE.txt").
+Source code: https://github.com/kyleneideck/BackgroundMusic
+TXT
 mkdir -p dist
 DMG="dist/NotchApple-$VERSION.dmg"
 rm -f "$DMG"

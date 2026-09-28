@@ -87,12 +87,16 @@ struct FileShelfView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack {
-                Text("File Shelf").sectionTitle()
+                Text("File shelf").sectionTitle()
+                Text("Drag files onto the notch to keep them here").font(.system(size: 11)).foregroundStyle(Theme.textSecondary)
                 Spacer()
                 if !store.items.isEmpty {
-                    Button("Clear") { withAnimation { store.removeAll() } }
+                    Button("Clear all") { withAnimation { store.removeAll() } }
                         .buttonStyle(PurpleButtonStyle(prominent: false))
                 }
+                // Keyboard/pointer alternative to drag and drop (HIG › Drag and drop).
+                Button { addViaPanel() } label: { Label("Add files…", systemImage: "plus") }
+                    .buttonStyle(PurpleButtonStyle())
             }
 
             ZStack {
@@ -104,7 +108,8 @@ struct FileShelfView: View {
                 if store.items.isEmpty {
                     VStack(spacing: 6) {
                         Image(systemName: "tray.and.arrow.down.fill").font(.system(size: 30)).foregroundStyle(Theme.accentGradient)
-                        Text("Drop files or folders here").foregroundStyle(Theme.textSecondary)
+                        Text(targeted ? "Release to add" : "Drop files or folders here")
+                            .font(.system(size: 13)).foregroundStyle(Theme.textSecondary)
                     }
                 } else {
                     ScrollView(.horizontal, showsIndicators: false) {
@@ -126,6 +131,14 @@ struct FileShelfView: View {
             }
         }
     }
+
+    private func addViaPanel() {
+        let panel = NSOpenPanel()
+        panel.allowsMultipleSelection = true
+        panel.canChooseDirectories = true
+        NSApp.activate(ignoringOtherApps: true)
+        if panel.runModal() == .OK { withAnimation(Theme.spring) { panel.urls.forEach(store.add) } }
+    }
 }
 
 private struct ShelfTile: View {
@@ -139,7 +152,7 @@ private struct ShelfTile: View {
                 else { Image(systemName: "doc.fill").font(.system(size: 30)).foregroundStyle(Theme.accent) }
             }
             .frame(width: 64, height: 64)
-            Text(item.name).font(.caption2).foregroundStyle(.white).lineLimit(1).frame(width: 80)
+            Text(item.name).font(.system(size: 11)).foregroundStyle(.white).lineLimit(1).frame(width: 84)
         }
         .padding(6)
         .background(Color.white.opacity(0.05), in: RoundedRectangle(cornerRadius: 10))

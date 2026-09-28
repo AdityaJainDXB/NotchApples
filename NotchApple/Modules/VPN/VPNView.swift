@@ -2,8 +2,8 @@
 //  VPNView.swift
 //  Notch apple
 //
-//  Sleek client UI over `VPNManager`: saved profiles on the left, the free
-//  VPN Gate relay list on the right.
+//  Sleek client UI over `VPNManager`: saved profiles on the left, free servers
+//  on the right (the free .ovpn library by default, or VPN Gate).
 //
 
 import SwiftUI
@@ -12,71 +12,115 @@ import UniformTypeIdentifiers
 struct VPNView: View {
     @StateObject private var vpn = VPNManager.shared
     @State private var importing = false
+    @State private var source: FreeSource = .library
+    @State private var search = ""
+
+    enum FreeSource: String, CaseIterable { case library = "Free library", vpnGate = "VPN Gate" }
+
+    private var freeServers: [VPNProfile] {
+        let list = source == .library ? vpn.library : vpn.vpnGate
+        guard !search.isEmpty else { return list }
+        return list.filter { $0.name.localizedCaseInsensitiveContains(search) }
+    }
 
     var body: some View {
         VStack(spacing: 10) {
             statusBar
             HStack(alignment: .top, spacing: 12) {
                 GlassCard {
-                    VStack(alignment: .leading, spacing: 6) {
+                    VStack(alignment: .leading, spacing: 8) {
                         HStack {
-                            Text("My Profiles").sectionTitle()
+                            Text("My profiles").sectionTitle()
                             Spacer()
-                            Button { importing = true } label: { Image(systemName: "plus") }
-                                .buttonStyle(PurpleButtonStyle(prominent: false)).help("Import .conf / .ovpn")
+                            IconButton(systemImage: "plus", help: "Import a .ovpn or .conf file") { importing = true }
                         }
                         if vpn.profiles.isEmpty {
-                            Text("Import a WireGuard .conf or OpenVPN .ovpn file.").font(.caption).foregroundStyle(Theme.textSecondary)
+                            Text("Import a WireGuard .conf or OpenVPN .ovpn file, or save one from the free servers.")
+                                .font(.system(size: 12)).foregroundStyle(Theme.textSecondary)
                         }
-                        ScrollView { VStack(spacing: 4) { ForEach(vpn.profiles) { row($0, saved: true) } } }
+                        ScrollView { VStack(spacing: 2) { ForEach(vpn.profiles) { VPNRow(profile: $0, saved: true) } } }
                     }
                 }
+                .frame(width: 260)
+
                 GlassCard {
-                    VStack(alignment: .leading, spacing: 6) {
+                    VStack(alignment: .leading, spacing: 8) {
                         HStack {
-                            Text("VPN Gate · Free relays").sectionTitle()
+                            Picker("Source", selection: $source) {
+                                ForEach(FreeSource.allCases, id: \.self) { Text($0.rawValue).tag($0) }
+                            }
+                            .pickerStyle(.segmented).labelsHidden().frame(width: 200)
+                            if vpn.loadingLibrary || vpn.loadingGate { ProgressView().controlSize(.small) }
                             Spacer()
-                            if vpn.loadingGate { ProgressView().controlSize(.mini) }
-                            Button { Task { await vpn.loadVPNGate() } } label: { Image(systemName: "arrow.clockwise") }
-                                .buttonStyle(PurpleButtonStyle(prominent: false))
+                            IconButton(systemImage: "arrow.clockwise", help: "Refresh servers") { reload() }
                         }
-                        ScrollView { VStack(spacing: 4) { ForEach(vpn.vpnGate) { row($0, saved: false) } } }
+                        TextField("Search country", text: $search)
+                            .textFieldStyle(.plain).font(.system(size: 12))
+                            .padding(.horizontal, 10).frame(height: 28)
+                            .background(Theme.surface, in: RoundedRectangle(cornerRadius: 8))
+                        ScrollView { LazyVStack(spacing: 2) { ForEach(freeServers) { VPNRow(profile: $0, saved: false) } } }
                     }
                 }
             }
         }
+        .onAppear { if vpn.library.isEmpty { reload() } }
+        .onChange(of: source) { _, _ in if freeServers.isEmpty { reload() } }
         .fileImporter(isPresented: $importing, allowedContentTypes: [.data, .plainText], allowsMultipleSelection: true) { result in
             if case .success(let urls) = result { urls.forEach(vpn.importProfile) }
         }
     }
 
+    private func reload() {
+        Task { source == .library ? await vpn.loadLibrary() : await vpn.loadVPNGate() }
+    }
+
     private var statusBar: some View {
-        HStack {
+        HStack(spacing: 8) {
             Circle().fill(vpn.status == .connected ? Color.green : Theme.textSecondary).frame(width: 8, height: 8)
-            Text(vpn.status.label).font(.callout.weight(.semibold)).foregroundStyle(.white)
-            if let msg = vpn.message { Text(msg).font(.caption).foregroundStyle(Theme.textSecondary).lineLimit(2) }
+            Text(vpn.status == .invalid ? "Pick a server to connect" : vpn.status.label)
+                .font(.system(size: 13, weight: .semibold)).foregroundStyle(.white)
+            if let msg = vpn.message {
+                Text(msg).font(.system(size: 11)).foregroundStyle(Theme.textSecondary).lineLimit(2)
+            }
             Spacer()
             if vpn.status == .connected || vpn.status == .connecting {
                 Button("Disconnect", action: vpn.disconnect).buttonStyle(PurpleButtonStyle())
             }
         }
     }
+}
 
-    private func row(_ p: VPNProfile, saved: Bool) -> some View {
+/// One server / profile row with a hover highlight and a full-height hit area.
+private struct VPNRow: View {
+    let profile: VPNProfile
+    let saved: Bool
+    @ObservedObject private var vpn = VPNManager.shared
+    @State private var hovering = false
+
+    var body: some View {
         HStack(spacing: 8) {
-            Text(p.kind.rawValue).font(.system(size: 9, weight: .bold))
-                .padding(.horizontal, 5).padding(.vertical, 2)
+            Text(profile.kind.rawValue).font(.system(size: 10, weight: .bold))
+                .padding(.horizontal, 6).padding(.vertical, 3)
                 .background(Theme.accent.opacity(0.3), in: Capsule())
-            VStack(alignment: .leading, spacing: 0) {
-                Text(p.name).font(.caption).foregroundStyle(.white).lineLimit(1)
-                Text(p.server).font(.caption2).foregroundStyle(Theme.textSecondary).lineLimit(1)
+            VStack(alignment: .leading, spacing: 1) {
+                Text(profile.name).font(.system(size: 12, weight: .medium)).foregroundStyle(.white).lineLimit(1)
+                Text("\(profile.server) · \(profile.credentialsHint ?? (profile.credentialsURL != nil ? "login on provider's page" : ""))")
+                    .font(.system(size: 11)).foregroundStyle(Theme.textSecondary).lineLimit(1)
             }
-            Spacer()
-            Button("Connect") { Task { await vpn.connect(p) } }.buttonStyle(PurpleButtonStyle())
+            Spacer(minLength: 4)
+            if !saved {
+                IconButton(systemImage: "star", help: "Save to My profiles") { vpn.add(profile) }
+            }
+            Button("Connect") { Task { await vpn.connect(profile) } }.buttonStyle(PurpleButtonStyle())
         }
+        .padding(.horizontal, 6).padding(.vertical, 4)
+        .background(RoundedRectangle(cornerRadius: 8).fill(hovering ? Theme.surface : .clear))
+        .contentShape(Rectangle())
+        .onHover { hovering = $0 }
         .contextMenu {
-            if saved { Button("Delete", role: .destructive) { vpn.remove(p) } }
-            else { Button("Save to My Profiles") { vpn.add(p) } }
+            if saved { Button("Delete", role: .destructive) { vpn.remove(profile) } }
+            else { Button("Save to My profiles") { vpn.add(profile) } }
+            if let page = profile.credentialsURL { Button("Open login page") { NSWorkspace.shared.open(page) } }
         }
     }
 }
@@ -86,6 +130,7 @@ struct VPNView: View {
 struct VPNQuickStatus: View {
     @StateObject private var vpn = VPNManager.shared
     @EnvironmentObject private var state: NotchState
+    @State private var hovering = false
 
     private var connected: Bool { vpn.status == .connected || vpn.status == .connecting }
 
@@ -94,15 +139,17 @@ struct VPNQuickStatus: View {
             if connected { vpn.disconnect() }
             else { withAnimation(Theme.spring) { state.selected = .vpn } }
         } label: {
-            HStack(spacing: 4) {
+            HStack(spacing: 5) {
                 Image(systemName: connected ? "lock.shield.fill" : "lock.open")
-                Text(connected ? "VPN On" : "VPN Off").font(.system(size: 11, weight: .semibold))
+                Text(connected ? "VPN on" : "VPN off").font(.system(size: 12, weight: .semibold))
             }
             .foregroundStyle(connected ? Color.green : Theme.textSecondary)
-            .padding(.horizontal, 8).padding(.vertical, 4)
-            .background(Color.white.opacity(0.08), in: Capsule())
+            .padding(.horizontal, 10).frame(height: Theme.minTarget)
+            .background(hovering ? Theme.surfaceHover : Theme.surface, in: Capsule())
+            .contentShape(Capsule())
         }
         .buttonStyle(.plain)
+        .onHover { hovering = $0 }
         .help(connected ? "Disconnect VPN" : "Open VPN")
     }
 }

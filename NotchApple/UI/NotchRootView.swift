@@ -56,9 +56,8 @@ struct NotchRootView: View {
         }
         .frame(width: size.width, height: size.height, alignment: .top)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-        .contentShape(Rectangle())
-        // Explicit click is the ONLY way to open. No .onHover anywhere.
-        .onTapGesture { if !state.isExpanded { state.toggle() } }
+        // Opening is handled by the notch trigger window (click, ⌘E or file drag);
+        // hover only shows feedback there and never opens the notch.
         .preferredColorScheme(.dark)
         .tint(Theme.accent)
     }
@@ -70,7 +69,7 @@ struct NotchRootView: View {
         } else {
             VStack(spacing: 10) {
                 header
-                Divider().overlay(Color.white.opacity(0.08))
+                Divider().overlay(Theme.separator)
                 moduleBody
                     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
                     .id(state.selected)
@@ -85,40 +84,19 @@ struct NotchRootView: View {
     }
 
     private var header: some View {
-        HStack(spacing: 4) {
+        HStack(spacing: 2) {
             ForEach(settings.enabledTabs) { module in
-                let active = state.selected == module
-                Button {
+                TabButton(module: module, active: state.selected == module) {
                     withAnimation(Theme.spring) { state.selected = module }
-                } label: {
-                    Label(module.title, systemImage: module.symbol)
-                        .labelStyle(.titleAndIcon)
-                        .lineLimit(1)
-                        .fixedSize()
-                        .font(.system(size: 12, weight: .semibold))
-                        .foregroundStyle(active ? .white : Theme.textSecondary)
-                        .padding(.horizontal, 10).padding(.vertical, 6)
-                        .background {
-                            if active {
-                                Capsule().fill(Theme.accentGradient)
-                                    .shadow(color: Theme.accent.opacity(0.5), radius: 8)
-                            }
-                        }
                 }
-                .buttonStyle(.plain)
             }
             Spacer(minLength: 0)
             if settings.vpnEnabled { VPNQuickStatus() }
-            Button { state.close(); AppDelegate.openSettingsWindow() } label: {
-                Image(systemName: "gearshape.fill").foregroundStyle(Theme.textSecondary)
+            IconButton(systemImage: "gearshape.fill", help: "Settings (⌘,)") {
+                state.close(); AppDelegate.openSettingsWindow()
             }
-            .buttonStyle(.plain).help("Settings")
-            Button { state.close() } label: {
-                Image(systemName: "chevron.up.circle.fill").foregroundStyle(Theme.textSecondary)
-            }
-            .buttonStyle(.plain).help("Close (Esc)")
+            IconButton(systemImage: "chevron.up", help: "Close (Esc or ⌘E)") { state.close() }
         }
-        .font(.system(size: 15))
     }
 
     @ViewBuilder
@@ -146,5 +124,37 @@ struct NotchRootView: View {
     private func ensureValidSelection() {
         let tabs = settings.enabledTabs
         if !tabs.contains(state.selected), let first = tabs.first { state.selected = first }
+    }
+}
+
+/// A notch tab: 28 pt tall, with hover and selected states.
+private struct TabButton: View {
+    let module: Module
+    let active: Bool
+    let action: () -> Void
+    @State private var hovering = false
+
+    var body: some View {
+        Button(action: action) {
+            Label(module.title, systemImage: module.symbol)
+                .labelStyle(.titleAndIcon)
+                .lineLimit(1)
+                .fixedSize()
+                .font(.system(size: 13, weight: .semibold))
+                .foregroundStyle(active || hovering ? .white : Theme.textSecondary)
+                .padding(.horizontal, 11)
+                .frame(height: Theme.minTarget + 2)
+                .background {
+                    if active {
+                        Capsule().fill(Theme.accentGradient).shadow(color: Theme.accent.opacity(0.5), radius: 8)
+                    } else if hovering {
+                        Capsule().fill(Theme.surfaceHover)
+                    }
+                }
+                .contentShape(Capsule())
+        }
+        .buttonStyle(.plain)
+        .onHover { hovering = $0 }
+        .accessibilityAddTraits(active ? .isSelected : [])
     }
 }

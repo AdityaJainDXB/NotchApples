@@ -20,6 +20,7 @@
 	<key>NSBonjourServices</key><array><string>_notchapple._tcp</string></array>
 	<key>NSCalendarsFullAccessUsageDescription</key><string>Shows your upcoming events in the notch and widget.</string>
 	<key>NSScreenCaptureUsageDescription</key><string>Lets you share a screenshot with Claude when you tap Share Screen.</string>
+	<key>NSAudioCaptureUsageDescription</key><string>Lets you change the volume and EQ of individual apps. Audio is processed on your Mac and never recorded or sent anywhere.</string>
 	<key>NSAppleEventsUsageDescription</key><string>Reads the currently playing track from Music or Spotify.</string>
 </dict>
 </plist>

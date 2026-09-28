@@ -2,13 +2,14 @@
 //  GlobalHotkeyManager.swift
 //  Notch apple
 //
-//  System-wide ⌘E to toggle the notch, built on Carbon's `RegisterEventHotKey`.
-//  Unlike an NSEvent global monitor, a registered hot key needs no
-//  Accessibility permission and never sees any other keystrokes.
+//  System-wide hot keys built on Carbon's `RegisterEventHotKey`. Unlike an
+//  NSEvent global monitor, a registered hot key needs no Accessibility
+//  permission and never sees any other keystrokes.
 //
-//  Note: while registered, ⌘E is consumed system-wide (so apps won't receive
-//  their own ⌘E, e.g. "Use Selection for Find"). It can be turned off in
-//  Settings → General.
+//  Two keys are used:
+//   • ⌘E  — toggles the notch (always registered while the preference is on).
+//   • Esc — closes the notch; registered only while the notch is open, so
+//           other apps get their Escape key back the moment it closes.
 //
 
 import Carbon.HIToolbox
@@ -16,31 +17,59 @@ import Carbon.HIToolbox
 final class GlobalHotkeyManager {
     static let shared = GlobalHotkeyManager()
 
-    private var hotKeyRef: EventHotKeyRef?
-    private var handlerRef: EventHandlerRef?
-    private var action: (() -> Void)?
+    enum Key: UInt32 {
+        case toggleNotch = 1
+        case closeNotch = 2
 
-    /// Registers ⌘E. Calling again replaces the previous action.
-    func register(action: @escaping () -> Void) {
-        self.action = action
-        guard hotKeyRef == nil else { return }
+        var keyCode: UInt32 {
+            switch self {
+            case .toggleNotch: UInt32(kVK_ANSI_E)
+            case .closeNotch: UInt32(kVK_Escape)
+            }
+        }
 
-        var eventType = EventTypeSpec(eventClass: OSType(kEventClassKeyboard), eventKind: UInt32(kEventHotKeyPressed))
-        InstallEventHandler(GetApplicationEventTarget(), { _, _, userData in
-            guard let userData else { return noErr }
-            let manager = Unmanaged<GlobalHotkeyManager>.fromOpaque(userData).takeUnretainedValue()
-            DispatchQueue.main.async { manager.action?() }
-            return noErr
-        }, 1, &eventType, Unmanaged.passUnretained(self).toOpaque(), &handlerRef)
-
-        let id = EventHotKeyID(signature: OSType(0x4E545348), id: 1)   // 'NTSH'
-        RegisterEventHotKey(UInt32(kVK_ANSI_E), UInt32(cmdKey), id, GetApplicationEventTarget(), 0, &hotKeyRef)
+        var modifiers: UInt32 {
+            switch self {
+            case .toggleNotch: UInt32(cmdKey)
+            case .closeNotch: 0
+            }
+        }
     }
 
-    func unregister() {
-        if let hotKeyRef { UnregisterEventHotKey(hotKeyRef) }
-        if let handlerRef { RemoveEventHandler(handlerRef) }
-        hotKeyRef = nil
-        handlerRef = nil
+    private var refs: [Key: EventHotKeyRef] = [:]
+    private var actions: [Key: () -> Void] = [:]
+    private var handlerRef: EventHandlerRef?
+
+    /// Registers `key`. Calling again just replaces the action.
+    func register(_ key: Key, action: @escaping () -> Void) {
+        actions[key] = action
+        installHandlerIfNeeded()
+        guard refs[key] == nil else { return }
+        var ref: EventHotKeyRef?
+        let id = EventHotKeyID(signature: OSType(0x4E545348), id: key.rawValue)   // 'NTSH'
+        if RegisterEventHotKey(key.keyCode, key.modifiers, id, GetApplicationEventTarget(), 0, &ref) == noErr, let ref {
+            refs[key] = ref
+        }
+    }
+
+    func unregister(_ key: Key) {
+        if let ref = refs.removeValue(forKey: key) { UnregisterEventHotKey(ref) }
+        actions[key] = nil
+    }
+
+    private func installHandlerIfNeeded() {
+        guard handlerRef == nil else { return }
+        var eventType = EventTypeSpec(eventClass: OSType(kEventClassKeyboard), eventKind: UInt32(kEventHotKeyPressed))
+        InstallEventHandler(GetApplicationEventTarget(), { _, event, userData in
+            guard let event, let userData else { return noErr }
+            var hotKeyID = EventHotKeyID()
+            GetEventParameter(event, EventParamName(kEventParamDirectObject), EventParamType(typeEventHotKeyID),
+                              nil, MemoryLayout<EventHotKeyID>.size, nil, &hotKeyID)
+            let manager = Unmanaged<GlobalHotkeyManager>.fromOpaque(userData).takeUnretainedValue()
+            if let key = Key(rawValue: hotKeyID.id) {
+                DispatchQueue.main.async { manager.actions[key]?() }
+            }
+            return noErr
+        }, 1, &eventType, Unmanaged.passUnretained(self).toOpaque(), &handlerRef)
     }
 }

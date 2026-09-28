@@ -46,9 +46,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     /// Registers or removes the global ⌘E shortcut to match the preference.
     private func applyHotkeyPreference() {
         if SettingsManager.shared.globalHotkeyEnabled {
-            GlobalHotkeyManager.shared.register { [weak self] in self?.notchController?.toggle() }
+            GlobalHotkeyManager.shared.register(.toggleNotch) { [weak self] in self?.notchController?.toggle() }
         } else {
-            GlobalHotkeyManager.shared.unregister()
+            GlobalHotkeyManager.shared.unregister(.toggleNotch)
         }
     }
 

@@ -28,9 +28,11 @@
 | ![File Shelf](docs/screenshots/shelf.png) | ![AirDrop and PairDrop](docs/screenshots/share.png) |
 | **File Shelf**: drop files into the notch | **Share**: AirDrop and PairDrop |
 | ![Audio](docs/screenshots/audio.png) | ![VPN](docs/screenshots/vpn.png) |
-| **Audio**: output, master and per-app volume | **VPN**: your profiles and free VPN Gate relays |
-| ![Now Playing](docs/screenshots/nowplaying.png) | ![Settings](docs/screenshots/settings-modules.png) |
-| **Now Playing** | **Settings**: every module is optional |
+| **Audio**: output, master and per-app volume and EQ | **VPN**: your profiles and free servers |
+| ![Now Playing](docs/screenshots/nowplaying.png) | ![Settings](docs/screenshots/settings-general.png) |
+| **Now Playing** | **Settings**: a sidebar of panes, like System Settings |
+| ![Settings: VPN](docs/screenshots/settings-vpn.png) | ![Settings: Audio](docs/screenshots/settings-audio.png) |
+| **Settings → VPN**: free servers and your profiles | **Settings → Audio**: built-in per-app engine |
 
 ## Features
 
@@ -39,15 +41,15 @@ Every module is **optional** and can be switched on or off in **Settings → Mod
 | Module | What it does |
 | --- | --- |
 | ✨ **Claude** | Chat with Claude from the notch using **your own** Anthropic API key, which is stored in the Keychain. Tap **Share Screen** to attach a screenshot so Claude can see what you're looking at. |
-| 🗂 **File Shelf** | Drag files and folders onto the notch. They stay there across relaunches thanks to security-scoped bookmarks. Double-click to open, or drag them back out. |
-| 📡 **Share** | Send files with **AirDrop**, or use **PairDrop**: sharing between devices on the same Wi-Fi, found over Bonjour and paired with a 6-digit code. No server is involved. |
-| 🔊 **Audio** | Pick the output device, set the master volume, and change **per-app volume** and **per-app EQ** through the free [BackgroundMusic](https://github.com/kyleneideck/BackgroundMusic) driver. |
-| 🛡 **VPN** | Import WireGuard `.conf` or OpenVPN `.ovpn` profiles, or browse the free [VPN Gate](https://www.vpngate.net) relays. |
+| 🗂 **File Shelf** | Drag a file onto the notch and it opens straight to the shelf. Files stay there across relaunches thanks to security-scoped bookmarks. Double-click to open, or drag them back out. There's also an **Add files…** button. |
+| 📡 **Share** | Send files with **AirDrop**, or use **PairDrop** between devices on the same Wi-Fi. To receive, just show your 6-digit code. To send, type the other device's code; there's no need to pick the device. No server is involved. |
+| 🔊 **Audio** | Pick the output device, set the master volume, and change **per-app volume (0–150%)** and a **10-band per-app EQ** with presets. It's built in on macOS 14.2+, with nothing to install. |
+| 🛡 **VPN** | A built-in list of **free OpenVPN servers** from [Zoult/.ovpn](https://github.com/Zoult/.ovpn) and [VPN Gate](https://www.vpngate.net), or import your own `.ovpn` / `.conf`. See [Using the VPN](#using-the-vpn). |
 | 🎵 **Now Playing** | Shows the current track from Apple Music or Spotify. |
 | 🔐 **Biometric Lock** | Requires Touch ID, Apple Watch, or your password before the notch opens. |
 | 🧩 **Widget** | A desktop widget (and Lock Screen widget on newer macOS) showing weather, now playing, and your next calendar events. |
 
-**Open the notch by clicking it, or press `⌘E` from any app.** There are no hover triggers anywhere in the app. Press `⌘E` or `Esc`, or click anywhere else, to close it.
+**Open the notch by clicking it, pressing `⌘E` in any app, or dragging a file onto it.** Hovering only highlights the notch; it never opens it. Press `Esc` or `⌘E`, or click anywhere else, to close it.
 
 `⌘E` is a system-wide shortcut registered through Carbon, so it needs no Accessibility permission. While it's on, other apps won't receive `⌘E` (for example "Use Selection for Find"). You can turn it off in **Settings → General**.
 
@@ -70,6 +72,64 @@ On a Mac without a notch, a slim pill appears at the top center of the menu bar 
 | Local Network | PairDrop | When you turn PairDrop on |
 | Calendars | Widget | When the widget first loads |
 | Touch ID / password | Biometric Lock | Each time you open the notch while the lock is on |
+| System audio recording | Audio → per-app volume / EQ | The first time you change an app's volume or EQ. Audio is processed on your Mac and never recorded or sent anywhere |
+
+## Using the VPN
+
+Notch apple doesn't run any VPN servers. It organises free VPN profiles and connects them for you. A **profile** is a small text file that says which server to connect to and how: `.ovpn` for **OpenVPN** or `.conf` for **WireGuard**.
+
+In the free download, Notch apple passes the profile to a free VPN app, which makes the actual connection. So install that app first.
+
+### Step 1: Install a free VPN app (one time)
+
+| Profile type | Install one of these (all free) |
+| --- | --- |
+| `.ovpn` (OpenVPN), including all the built-in free servers | [Tunnelblick](https://tunnelblick.net) (recommended) or [OpenVPN Connect](https://openvpn.net/client/) |
+| `.conf` (WireGuard) | [WireGuard](https://apps.apple.com/app/wireguard/id1451685025) from the Mac App Store |
+
+### Step 2: Turn on the VPN module
+
+Go to **Settings → Modules** and switch **VPN** on. A **VPN** tab and a **VPN on/off** pill appear in the notch.
+
+### Step 3: Pick a free server (nothing to download)
+
+1. Open the notch and go to the **VPN** tab. The **Free library** list loads automatically. It has about 270 free OpenVPN servers from [github.com/Zoult/.ovpn](https://github.com/Zoult/.ovpn), grouped by country. Type in **Search country** to filter.
+2. Click **Connect**. Notch apple downloads that server's `.ovpn`, saves it to **Downloads**, and opens it in Tunnelblick or OpenVPN Connect.
+3. In Tunnelblick, click **OK / Install**, then click **Connect**.
+4. If it asks for a username and password, use the login for that provider:
+
+| Server label | Username and password |
+| --- | --- |
+| **IPSpeed** | None needed |
+| **VPNBook** | Shown on [vpnbook.com/freevpn](https://www.vpnbook.com/freevpn). It changes regularly, so copy it fresh |
+| **FreeVPN4You** | Shown on that country's page at [freevpn4you.net](https://freevpn4you.net) |
+| **FreeOpenVPN** | Shown on that country's page at [freeopenvpn.org](https://www.freeopenvpn.org) |
+| **VPN Gate** (second tab) | `vpn` / `vpn` |
+
+Notch apple opens the right login page for you when you click **Connect**. Click ☆ to keep a server in **My profiles**.
+
+### Or use your own `.ovpn` / `.conf`
+
+- **VPN Gate website:** at [vpngate.net](https://www.vpngate.net/en/), click **OpenVPN Config file** next to any server and download the TCP or UDP `.ovpn`. The login is `vpn` / `vpn`.
+- **Proton VPN free plan (most reliable):** create a free account at [protonvpn.com](https://protonvpn.com). Then go to **Account → Downloads**, choose **OpenVPN configuration files** (macOS, a free server) or **WireGuard configuration**. For OpenVPN, log in with the **OpenVPN / IKEv2 username** shown in your account, not your normal login.
+- **Work or your own server:** use the file your admin gives you.
+
+Import it with **VPN → +** in the notch, or **Settings → VPN → Import .ovpn or .conf file…**, then click **Connect**.
+
+### Check it's working
+
+Tunnelblick or WireGuard shows **Connected**, and [whatismyipaddress.com](https://whatismyipaddress.com) shows the server's country. Disconnect from Tunnelblick or WireGuard.
+
+### Troubleshooting
+
+| Problem | Fix |
+| --- | --- |
+| "Saved … to Downloads. Install the free Tunnelblick app" | No VPN app is installed yet. Do Step 1, then click **Connect** again. |
+| A server won't connect | Free servers come and go. Try another, or switch between TCP and UDP. |
+| "Auth failed" | The password has changed. Copy the current one from the provider's page (see the table above). |
+| The server list won't load | GitHub or vpngate.net may be blocked on your network. Import a Proton VPN file instead. |
+
+> **Privacy note:** free public servers are run by third parties and may keep logs. They're fine for getting around region blocks or on public Wi-Fi, but use a provider you trust for anything sensitive. The server list is fetched live from GitHub; no configs are bundled in the app.
 
 ## Build from source
 
@@ -102,8 +162,8 @@ NotchApple/
     Claude/      Messages API client, ScreenCaptureKit capture, chat UI
     Shelf/       Drop zone + security-scoped bookmarks
     Sharing/     AirDrop + PairDrop (Network.framework / Bonjour)
-    Audio/       CoreAudio routing, BackgroundMusic per-app volume, EQ
-    VPN/         NetworkExtension manager, VPN Gate, profile import
+    Audio/       CoreAudio routing, native process-tap volume + EQ, BackgroundMusic fallback
+    VPN/         NetworkExtension manager, free server library, VPN Gate, profile import
     NowPlaying/  Music / Spotify distributed-notification monitor
 NotchWidget/  WidgetKit extension
 Shared/       Code shared by the app and widget (weather, shared store)
@@ -119,15 +179,18 @@ Notch apple is built to cost nothing, so the public DMG is **ad-hoc signed**. A 
 | **WeatherKit** | Uses [Open-Meteo](https://open-meteo.com), which is free and needs no key | Add the WeatherKit capability and set the Swift flag `-D WEATHERKIT` |
 | **App Group** (widget now-playing) | The widget shows weather and calendar only | Add `group.com.notchapple.shared` to both targets |
 
-Per-app volume needs the open-source BackgroundMusic driver. Per-app EQ settings are saved, and `EQStore.apply(_:)` is the hook where a DSP backend plugs in.
+### Per-app audio on macOS 14.0–14.1
+
+Per-app volume and EQ use Core Audio process taps, which arrived in macOS 14.2. On 14.0–14.1, install the **BackgroundMusic** audio driver from the DMG's **Extras** folder (or **Settings → Audio → Install BackgroundMusic driver…**) to get per-app volume. BackgroundMusic is © Kyle Neideck and contributors, GPL-2.0, and is included unmodified with its licence. Source: [kyleneideck/BackgroundMusic](https://github.com/kyleneideck/BackgroundMusic).
 
 ## Privacy
 
 - Everything runs on your Mac. The only network requests are:
   - `api.anthropic.com`, using your own key, when you chat with Claude
   - `open-meteo.com` for weather
-  - `vpngate.net`, only when you open the relay list
+  - `api.github.com` / `raw.githubusercontent.com` for the free VPN server list, and `vpngate.net`, only when you open the VPN tab
 - PairDrop traffic never leaves your local network.
+- Per-app audio is processed in memory on your Mac. Nothing is recorded.
 - Your API key is stored in the macOS Keychain (`WhenUnlockedThisDeviceOnly`).
 
 ## License

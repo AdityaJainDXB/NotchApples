@@ -18,9 +18,11 @@ final class SettingsWindowController: NSWindowController, NSWindowDelegate {
         let hosting = NSHostingController(rootView: SettingsView().environmentObject(SettingsManager.shared))
         let window = NSWindow(contentViewController: hosting)
         window.title = "Notch apple Settings"
-        window.styleMask = [.titled, .closable, .miniaturizable]
+        // HIG › Settings: no minimize/zoom for a settings window.
+        window.styleMask = [.titled, .closable, .fullSizeContentView]
+        window.toolbarStyle = .unified
         window.isReleasedWhenClosed = false
-        window.setContentSize(NSSize(width: 560, height: 500))
+        window.setContentSize(NSSize(width: 720, height: 520))
         window.center()
         super.init(window: window)
         window.delegate = self
