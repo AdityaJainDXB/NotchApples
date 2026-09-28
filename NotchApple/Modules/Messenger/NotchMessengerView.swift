@@ -18,6 +18,7 @@ struct NotchMessengerView: View {
     @StateObject private var identity = MessengerIdentity.shared
     @State private var draft = ""
     @State private var roomDraft = ""
+    @State private var copied = false
 
     private static let emoji = ["👋", "😂", "👍", "❤️", "🔥", "🎉"]
 
@@ -95,8 +96,20 @@ struct NotchMessengerView: View {
             TextField("Room code, e.g. cafe-study or 8821", text: $roomDraft)
                 .textFieldStyle(.plain).font(.system(size: 13))
                 .onSubmit(joinRoom)
+            if web.state == .joined, let room = web.room {
+                // Share: copy the code so friends can join the same room.
+                Button { copy(room) } label: {
+                    Label(copied ? "Copied" : "Copy code", systemImage: copied ? "checkmark" : "doc.on.doc")
+                }
+                .buttonStyle(PurpleButtonStyle(prominent: false))
+                .help("Copy this room's code to share it")
+            }
             if web.state == .joined || web.state == .connecting {
                 Button("Leave") { web.leave() }.buttonStyle(PurpleButtonStyle(prominent: false))
+            } else {
+                Button { createRoom() } label: { Label("New room", systemImage: "plus.bubble") }
+                    .buttonStyle(PurpleButtonStyle(prominent: false))
+                    .help("Create a private room with a hard-to-guess code")
             }
             Button(web.room == WebP2PManager.normalize(roomDraft) && web.state == .joined ? "Joined" : "Join", action: joinRoom)
                 .buttonStyle(PurpleButtonStyle())
@@ -105,6 +118,22 @@ struct NotchMessengerView: View {
         .padding(.horizontal, 12).frame(height: 36)
         .background(Theme.surface, in: RoundedRectangle(cornerRadius: 10))
         .help("Anyone with the same code joins the same room. Messages are end-to-end encrypted with a key made from the code, so longer codes are more private.")
+    }
+
+    /// Creates a new private room: a random, hard-to-guess code (about 10¹² combinations),
+    /// joins it, and copies the code so it can be pasted to friends.
+    private func createRoom() {
+        let code = WebP2PManager.newRoomCode()
+        roomDraft = code
+        joinRoom()
+        copy(code)
+    }
+
+    private func copy(_ code: String) {
+        NSPasteboard.general.clearContents()
+        NSPasteboard.general.setString(code, forType: .string)
+        withAnimation { copied = true }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2) { withAnimation { copied = false } }
     }
 
     private func joinRoom() {
@@ -138,7 +167,9 @@ struct NotchMessengerView: View {
                 .font(.system(size: 26)).foregroundStyle(Theme.accentGradient)
             Text(mode == .nearby
                  ? "Anyone on this Wi-Fi with Notch apple and Messenger open shows up here automatically."
-                 : "Type a room code and press Join. Share the same code with friends to chat. Messages are end-to-end encrypted and never stored.")
+                 : web.state == .joined
+                 ? "You're in the room. Press Copy code and send it to friends; anyone with the code can join."
+                 : "Press New room to create a private room (its code is copied for you to share), or type a friend's code and press Join. Messages are end-to-end encrypted and never stored.")
                 .font(.system(size: 12)).foregroundStyle(Theme.textSecondary)
                 .multilineTextAlignment(.center).frame(maxWidth: 420)
         }

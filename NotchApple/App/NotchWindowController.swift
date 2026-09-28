@@ -88,7 +88,7 @@ final class NotchTriggerView: NSView {
     override func draw(_ dirtyRect: NSRect) {
         // The visible notch sits in the middle of the padded hit area.
         let pad = Self.hitPadding
-        var notch = bounds.insetBy(dx: pad.width, dy: 0)
+        var notch = bounds.insetBy(dx: pad.width - NotchRootView.collapsedShoulder, dy: 0)
         notch.origin.y += pad.height
         notch.size.height -= pad.height
         if isHovered {
@@ -98,17 +98,7 @@ final class NotchTriggerView: NSView {
             notch.size.height += 3
         }
 
-        let r = min(10, notch.height / 2)
-        let path = NSBezierPath()
-        path.move(to: NSPoint(x: notch.minX, y: notch.maxY))
-        path.line(to: NSPoint(x: notch.maxX, y: notch.maxY))
-        path.line(to: NSPoint(x: notch.maxX, y: notch.minY + r))
-        path.curve(to: NSPoint(x: notch.maxX - r, y: notch.minY),
-                   controlPoint1: NSPoint(x: notch.maxX, y: notch.minY), controlPoint2: NSPoint(x: notch.maxX, y: notch.minY))
-        path.line(to: NSPoint(x: notch.minX + r, y: notch.minY))
-        path.curve(to: NSPoint(x: notch.minX, y: notch.minY + r),
-                   controlPoint1: NSPoint(x: notch.minX, y: notch.minY), controlPoint2: NSPoint(x: notch.minX, y: notch.minY))
-        path.close()
+        let path = Self.notchPath(in: notch, shoulder: NotchRootView.collapsedShoulder, bottom: min(10, notch.height / 2))
         NSColor.black.setFill()
         path.fill()
 
@@ -117,6 +107,30 @@ final class NotchTriggerView: NSView {
             path.lineWidth = 1.5
             path.stroke()
         }
+    }
+
+    /// AppKit twin of `NotchShape` (AppKit's y axis points up, so top = maxY).
+    static func notchPath(in r: NSRect, shoulder t: CGFloat, bottom b: CGFloat) -> NSBezierPath {
+        let k: CGFloat = 0.55
+        let p = NSBezierPath()
+        p.move(to: NSPoint(x: r.minX, y: r.maxY))
+        p.curve(to: NSPoint(x: r.minX + t, y: r.maxY - t),
+                controlPoint1: NSPoint(x: r.minX + t * k, y: r.maxY),
+                controlPoint2: NSPoint(x: r.minX + t, y: r.maxY - t * (1 - k)))
+        p.line(to: NSPoint(x: r.minX + t, y: r.minY + b))
+        p.curve(to: NSPoint(x: r.minX + t + b, y: r.minY),
+                controlPoint1: NSPoint(x: r.minX + t, y: r.minY + b * (1 - k)),
+                controlPoint2: NSPoint(x: r.minX + t + b * (1 - k), y: r.minY))
+        p.line(to: NSPoint(x: r.maxX - t - b, y: r.minY))
+        p.curve(to: NSPoint(x: r.maxX - t, y: r.minY + b),
+                controlPoint1: NSPoint(x: r.maxX - t - b * (1 - k), y: r.minY),
+                controlPoint2: NSPoint(x: r.maxX - t, y: r.minY + b * (1 - k)))
+        p.line(to: NSPoint(x: r.maxX - t, y: r.maxY - t))
+        p.curve(to: NSPoint(x: r.maxX, y: r.maxY),
+                controlPoint1: NSPoint(x: r.maxX - t, y: r.maxY - t * (1 - k)),
+                controlPoint2: NSPoint(x: r.maxX - t * k, y: r.maxY))
+        p.close()
+        return p
     }
 
     override func acceptsFirstMouse(for event: NSEvent?) -> Bool { true }

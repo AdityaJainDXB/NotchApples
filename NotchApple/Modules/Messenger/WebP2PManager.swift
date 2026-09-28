@@ -78,6 +78,18 @@ final class WebP2PManager: ObservableObject {
         return r
     }
 
+    /// A fresh, readable, hard-to-guess room code, e.g. `violet-otter-4821-k7qz`.
+    static func newRoomCode() -> String {
+        let words = ["violet", "amber", "cobalt", "coral", "jade", "lunar", "solar", "misty", "velvet", "neon",
+                     "maple", "cedar", "orbit", "pixel", "ember", "frost"]
+        let animals = ["otter", "panda", "falcon", "lynx", "koala", "raven", "tiger", "gecko",
+                       "moose", "heron", "bison", "dingo", "manta", "puffin", "yak", "zebra"]
+        let alphabet = Array("abcdefghjkmnpqrstuvwxyz23456789")
+        var rng = SystemRandomNumberGenerator()
+        let tail = String((0..<4).map { _ in alphabet.randomElement(using: &rng)! })
+        return "\(words.randomElement(using: &rng)!)-\(animals.randomElement(using: &rng)!)-\(Int.random(in: 1000...9999, using: &rng))-\(tail)"
+    }
+
     func join(_ rawRoom: String) {
         let room = Self.normalize(rawRoom)
         guard !room.isEmpty else { return }
@@ -160,6 +172,7 @@ final class WebP2PManager: ObservableObject {
         case .message:
             guard !isMe, !seenIDs.contains(env.id), let text = env.text else { return }
             seenIDs.insert(env.id)
+            if members[env.senderID] == nil { notice("\(env.sender) joined") }
             members[env.senderID] = (String(env.sender.prefix(32)), .now)
             messages.append(MessengerMessage(id: env.id, senderID: env.senderID, sender: String(env.sender.prefix(32)),
                                              text: String(text.prefix(2000)), date: env.ts, isMine: false))

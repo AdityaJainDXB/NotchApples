@@ -9,24 +9,46 @@
 
 import SwiftUI
 
-/// Notch silhouette: flat top edge, softly rounded bottom corners.
+/// Notch silhouette, like the MacBook's own notch: concave "shoulders" where
+/// it meets the menu bar, straight sides, and continuous rounded bottom corners.
 struct NotchShape: Shape {
+    var topRadius: CGFloat
     var bottomRadius: CGFloat
-    var animatableData: CGFloat {
-        get { bottomRadius }
-        set { bottomRadius = newValue }
+    /// When false the flat top edge is omitted (used for the outline stroke,
+    /// so no line is drawn along the top of the screen).
+    var closed = true
+
+    var animatableData: AnimatablePair<CGFloat, CGFloat> {
+        get { AnimatablePair(topRadius, bottomRadius) }
+        set { topRadius = newValue.first; bottomRadius = newValue.second }
     }
 
     func path(in rect: CGRect) -> Path {
-        let r = min(bottomRadius, rect.height / 2, rect.width / 2)
+        let t = min(topRadius, rect.width / 4, rect.height / 4)
+        let b = min(bottomRadius, (rect.width - 2 * t) / 2, rect.height - t)
+        let k: CGFloat = 0.55   // cubic approximation of a circular arc
         var p = Path()
         p.move(to: CGPoint(x: rect.minX, y: rect.minY))
-        p.addLine(to: CGPoint(x: rect.maxX, y: rect.minY))
-        p.addLine(to: CGPoint(x: rect.maxX, y: rect.maxY - r))
-        p.addQuadCurve(to: CGPoint(x: rect.maxX - r, y: rect.maxY), control: CGPoint(x: rect.maxX, y: rect.maxY))
-        p.addLine(to: CGPoint(x: rect.minX + r, y: rect.maxY))
-        p.addQuadCurve(to: CGPoint(x: rect.minX, y: rect.maxY - r), control: CGPoint(x: rect.minX, y: rect.maxY))
-        p.closeSubpath()
+        // Left shoulder curves down and in.
+        p.addCurve(to: CGPoint(x: rect.minX + t, y: rect.minY + t),
+                   control1: CGPoint(x: rect.minX + t * k, y: rect.minY),
+                   control2: CGPoint(x: rect.minX + t, y: rect.minY + t * (1 - k)))
+        p.addLine(to: CGPoint(x: rect.minX + t, y: rect.maxY - b))
+        // Bottom-left corner.
+        p.addCurve(to: CGPoint(x: rect.minX + t + b, y: rect.maxY),
+                   control1: CGPoint(x: rect.minX + t, y: rect.maxY - b * (1 - k)),
+                   control2: CGPoint(x: rect.minX + t + b * (1 - k), y: rect.maxY))
+        p.addLine(to: CGPoint(x: rect.maxX - t - b, y: rect.maxY))
+        // Bottom-right corner.
+        p.addCurve(to: CGPoint(x: rect.maxX - t, y: rect.maxY - b),
+                   control1: CGPoint(x: rect.maxX - t - b * (1 - k), y: rect.maxY),
+                   control2: CGPoint(x: rect.maxX - t, y: rect.maxY - b * (1 - k)))
+        p.addLine(to: CGPoint(x: rect.maxX - t, y: rect.minY + t))
+        // Right shoulder curves up and out.
+        p.addCurve(to: CGPoint(x: rect.maxX, y: rect.minY),
+                   control1: CGPoint(x: rect.maxX - t, y: rect.minY + t * (1 - k)),
+                   control2: CGPoint(x: rect.maxX - t * k, y: rect.minY))
+        if closed { p.closeSubpath() }
         return p
     }
 }
@@ -36,14 +58,19 @@ struct NotchRootView: View {
     @EnvironmentObject private var settings: SettingsManager
 
     var body: some View {
-        let size = state.isExpanded ? state.expandedSize : state.notchSize
+        let shoulder = state.isExpanded ? Self.expandedShoulder : Self.collapsedShoulder
+        let size = state.isExpanded
+            ? state.expandedSize
+            : CGSize(width: state.notchSize.width + 2 * shoulder, height: state.notchSize.height)
+        let bottom: CGFloat = state.isExpanded ? 32 : 10
         ZStack(alignment: .top) {
-            NotchShape(bottomRadius: state.isExpanded ? 28 : 10)
+            NotchShape(topRadius: shoulder, bottomRadius: bottom)
                 .fill(state.isExpanded ? AnyShapeStyle(Theme.backdrop) : AnyShapeStyle(Color.black))
                 .overlay {
                     if state.isExpanded {
-                        NotchShape(bottomRadius: 28).fill(.ultraThinMaterial).opacity(0.25)
-                        NotchShape(bottomRadius: 28).stroke(Theme.accent.opacity(0.35), lineWidth: 1)
+                        NotchShape(topRadius: shoulder, bottomRadius: bottom).fill(.ultraThinMaterial).opacity(0.25)
+                        NotchShape(topRadius: shoulder, bottomRadius: bottom, closed: false)
+                            .stroke(Theme.accent.opacity(0.35), lineWidth: 1)
                     }
                 }
                 .shadow(color: state.isExpanded ? Theme.accent.opacity(0.35) : .clear, radius: 24, y: 8)
@@ -62,6 +89,10 @@ struct NotchRootView: View {
         .tint(Theme.accent)
     }
 
+    /// Radius of the concave shoulders where the notch meets the menu bar.
+    static let collapsedShoulder: CGFloat = 6
+    static let expandedShoulder: CGFloat = 14
+
     @ViewBuilder
     private var expandedContent: some View {
         if settings.securityEnabled && !state.isUnlocked {
@@ -76,8 +107,8 @@ struct NotchRootView: View {
                     .transition(.asymmetric(insertion: .move(edge: .trailing).combined(with: .opacity),
                                             removal: .opacity))
             }
-            .padding(.horizontal, 18)
-            .padding(.bottom, 16)
+            .padding(.horizontal, 18 + Self.expandedShoulder)
+            .padding(.bottom, 18)
             .onAppear(perform: ensureValidSelection)
             .onChange(of: settings.enabledTabs) { _, _ in ensureValidSelection() }
         }
