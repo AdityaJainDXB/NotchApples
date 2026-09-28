@@ -15,17 +15,24 @@ enum KeychainHelper {
 
     enum Key: String {
         case anthropicAPIKey = "anthropic.apiKey"
+        case faceTemplate = "faceUnlock.template"
     }
 
     /// Saves (or replaces) a string value.
     @discardableResult
     static func set(_ value: String, for key: Key) -> Bool {
+        setData(Data(value.utf8), for: key)
+    }
+
+    /// Saves (or replaces) raw data.
+    @discardableResult
+    static func setData(_ value: Data, for key: Key) -> Bool {
         delete(key)
         let query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: service,
             kSecAttrAccount as String: key.rawValue,
-            kSecValueData as String: Data(value.utf8),
+            kSecValueData as String: value,
             // Only readable while the Mac is unlocked, never synced to other devices.
             kSecAttrAccessible as String: kSecAttrAccessibleWhenUnlockedThisDeviceOnly,
         ]
@@ -33,6 +40,10 @@ enum KeychainHelper {
     }
 
     static func get(_ key: Key) -> String? {
+        getData(key).flatMap { String(data: $0, encoding: .utf8) }
+    }
+
+    static func getData(_ key: Key) -> Data? {
         let query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: service,
@@ -43,7 +54,7 @@ enum KeychainHelper {
         var result: AnyObject?
         guard SecItemCopyMatching(query as CFDictionary, &result) == errSecSuccess,
               let data = result as? Data else { return nil }
-        return String(data: data, encoding: .utf8)
+        return data
     }
 
     @discardableResult

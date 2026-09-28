@@ -17,7 +17,7 @@ import UniformTypeIdentifiers
 
 /// Panes in the Settings window. `selection` lets other code jump to a pane.
 enum SettingsTab: String, CaseIterable, Identifiable, Hashable {
-    case general, modules, claude, messenger, audio, vpn, widget, about
+    case general, authentication, modules, claude, messenger, audio, vpn, widget, about
     static let selection = PassthroughSubject<SettingsTab, Never>()
 
     var id: String { rawValue }
@@ -25,6 +25,7 @@ enum SettingsTab: String, CaseIterable, Identifiable, Hashable {
     var title: String {
         switch self {
         case .general: "General"
+        case .authentication: "Authentication"
         case .modules: "Modules"
         case .claude: "Claude"
         case .messenger: "Messenger"
@@ -38,6 +39,7 @@ enum SettingsTab: String, CaseIterable, Identifiable, Hashable {
     var symbol: String {
         switch self {
         case .general: "gearshape.fill"
+        case .authentication: "faceid"
         case .modules: "square.grid.2x2.fill"
         case .claude: "sparkles"
         case .messenger: "bubble.left.and.bubble.right.fill"
@@ -52,6 +54,7 @@ enum SettingsTab: String, CaseIterable, Identifiable, Hashable {
     var tint: Color {
         switch self {
         case .general: .gray
+        case .authentication: .red
         case .modules: Theme.accent
         case .claude: .orange
         case .messenger: .green
@@ -85,6 +88,7 @@ struct SettingsView: View {
             Group {
                 switch tab {
                 case .general: GeneralSettings()
+                case .authentication: AuthenticationSettings()
                 case .modules: ModulesSettings()
                 case .claude: ClaudeSettings()
                 case .messenger: MessengerSettings()
@@ -135,6 +139,90 @@ private struct GeneralSettings: View {
             }
         }
         .formStyle(.grouped)
+    }
+}
+
+// MARK: - Authentication
+
+private struct AuthenticationSettings: View {
+    @EnvironmentObject private var settings: SettingsManager
+    @StateObject private var engine = FaceUnlockEngine()
+    @State private var enrolled = FaceTemplateStore.isEnrolled
+    @State private var sheet: Sheet?
+    @State private var result: String?
+
+    enum Sheet: Identifiable { case enrol, test; var id: Self { self } }
+
+    var body: some View {
+        Form {
+            Section {
+                Toggle(isOn: $settings.securityEnabled) {
+                    Text("Lock Notch apple")
+                    Text("Ask to unlock every time the notch opens.")
+                }
+            }
+            Section {
+                LabeledContent("Face") {
+                    if enrolled {
+                        Label("Saved in Keychain", systemImage: "checkmark.seal.fill").foregroundStyle(.green)
+                    } else {
+                        Text("Not set up").foregroundStyle(.secondary)
+                    }
+                }
+                Toggle("Unlock Notch apple with my face", isOn: $settings.faceUnlockEnabled)
+                    .disabled(!enrolled)
+                HStack {
+                    Button(enrolled ? "Set up again…" : "Set up face unlock…") { sheet = .enrol }
+                    if enrolled {
+                        Button("Test…") { sheet = .test }
+                        Spacer()
+                        Button("Delete face data…", role: .destructive) { deleteFace() }
+                    }
+                }
+                if let result { Text(result).font(.callout).foregroundStyle(.secondary) }
+            } header: {
+                Text("Face unlock")
+            } footer: {
+                Text("The camera takes a few photos of you and Apple's Vision framework turns them into a face template, saved in your Keychain on this Mac only. Photos are never stored or sent anywhere. To unlock, look at the camera and blink. This uses a regular 2D camera, not Apple's 3D Face ID, so treat it as a convenience. Touch ID and your password always work too, and macOS itself can't be unlocked by third-party apps.")
+            }
+        }
+        .formStyle(.grouped)
+        .sheet(item: $sheet) { which in
+            VStack(spacing: 16) {
+                Text(which == .enrol ? "Set up face unlock" : "Test face unlock").font(.title3.bold())
+                FaceScanView(engine: engine, size: 200)
+                Button("Cancel") { engine.stop(); sheet = nil }
+            }
+            .padding(24)
+            .frame(width: 340)
+            .onAppear {
+                if which == .enrol {
+                    engine.enrol { ok in
+                        enrolled = FaceTemplateStore.isEnrolled
+                        if ok { settings.faceUnlockEnabled = true }
+                        result = ok ? "Face saved. Try Test to check it recognises you." : "Setup didn't finish. Try again in good light."
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) { sheet = nil }
+                    }
+                } else {
+                    engine.verify { ok in
+                        result = ok ? "Recognised you ✓" : "Didn't recognise you. Try better light, or set up again."
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) { sheet = nil }
+                    }
+                }
+            }
+            .onDisappear { engine.stop() }
+        }
+    }
+
+    /// Deleting biometric data needs Touch ID / password first.
+    private func deleteFace() {
+        Task {
+            guard await BiometricAuth.authenticate(reason: "delete your saved face data") else { return }
+            FaceTemplateStore.delete()
+            settings.faceUnlockEnabled = false
+            enrolled = false
+            result = "Face data deleted from the Keychain."
+        }
     }
 }
 

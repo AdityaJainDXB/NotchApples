@@ -35,6 +35,8 @@
 | **Settings**: a sidebar of panes, like System Settings | **Settings → Modules**: every feature is optional |
 | ![Settings: VPN](docs/screenshots/settings-vpn.png) | ![Settings: Audio](docs/screenshots/settings-audio.png) |
 | **Settings → VPN**: free servers and your profiles | **Settings → Audio**: built-in per-app engine |
+| ![Settings: Authentication](docs/screenshots/settings-authentication.png) | |
+| **Settings → Authentication**: face unlock | |
 
 ## Features
 
@@ -49,7 +51,7 @@ Every module is **optional** and can be switched on or off in **Settings → Mod
 | 🔊 **Audio** | Pick the output device, set the master volume, and change **per-app volume (0–150%)** and a **10-band per-app EQ** with presets. It's built in on macOS 14.2+, with nothing to install. |
 | 🛡 **VPN** | A built-in list of **free OpenVPN servers** from [Zoult/.ovpn](https://github.com/Zoult/.ovpn) and [VPN Gate](https://www.vpngate.net), or import your own `.ovpn` / `.conf`. See [Using the VPN](#using-the-vpn). |
 | 🎵 **Now Playing** | Shows the current track from Apple Music or Spotify. |
-| 🔐 **Biometric Lock** | Requires Touch ID, Apple Watch, or your password before the notch opens. |
+| 🔐 **Biometric Lock** | Requires Touch ID, Apple Watch, your password, or **face unlock** (your Mac's camera) before the notch opens. See [Face unlock](#face-unlock). |
 | 🧩 **Widget** | A desktop widget (and Lock Screen widget on newer macOS) showing weather, now playing, and your next calendar events. |
 
 **Open the notch by clicking it, pressing `⌘E` in any app, or dragging a file onto it.** Hovering only highlights the notch; it never opens it. Press `Esc` or `⌘E`, or click anywhere else, to close it.
@@ -75,7 +77,21 @@ On a Mac without a notch, a slim pill appears at the top center of the menu bar 
 | Local Network | PairDrop, Messenger (Nearby Wi-Fi) | The first time either looks for nearby devices |
 | Calendars | Widget | When the widget first loads |
 | Touch ID / password | Biometric Lock | Each time you open the notch while the lock is on |
+| Camera | Face unlock | When you set up or use face unlock. Only a face template is saved, never photos |
 | System audio recording | Audio → per-app volume / EQ | The first time you change an app's volume or EQ. Audio is processed on your Mac and never recorded or sent anywhere |
+
+## Face unlock
+
+Unlock Notch apple by looking at your Mac's camera.
+
+1. Go to **Settings → Authentication** and turn on **Lock Notch apple**.
+2. Click **Set up face unlock…** and allow camera access. Follow the prompts (look straight, turn slightly left and right, tilt up and down) while it takes six photos.
+3. Click **Test…** to check it recognises you. Good, even lighting helps.
+4. Now when you open the notch, it asks you to look at the camera and **blink**. **Use Touch ID** is always there as a fallback.
+
+How it works: Apple's Vision framework finds your face in each photo and turns it into a *feature print* (a list of numbers). Only those numbers and a match threshold calibrated from your own photos are saved, in the **macOS Keychain** (this Mac only, readable only while it's unlocked). The photos themselves are never saved or sent anywhere. Unlocking needs several matching frames **and a blink**, which stops a printed photo from working. **Delete face data…** removes the template; it asks for Touch ID or your password first.
+
+> **Limits:** a regular FaceTime camera is 2D, unlike Apple's Face ID, which uses a 3D depth camera. Someone who looks like you, or a good enough video, might get through, so treat face unlock as a convenience rather than strong security. It unlocks Notch apple only. macOS doesn't let third-party apps unlock the Mac itself or replace its login.
 
 ## Using Messenger
 
@@ -181,7 +197,7 @@ NotchApple/
   Core/       SettingsManager (module toggles), Keychain, Theme
   UI/         NotchRootView (glass shell), SettingsView
   Modules/
-    Biometrics/  LocalAuthentication gate
+    Biometrics/  LocalAuthentication gate + Vision webcam face unlock
     Claude/      Messages API client, ScreenCaptureKit capture, chat UI
     Shelf/       Drop zone + security-scoped bookmarks
     Sharing/     AirDrop + PairDrop (Network.framework / Bonjour)
@@ -216,7 +232,7 @@ Per-app volume and EQ use Core Audio process taps, which arrived in macOS 14.2. 
 - PairDrop and Nearby Wi-Fi chat never leave your local network.
 - Anonymous room messages are end-to-end encrypted before they leave your Mac, and the relay (`ntfy.sh`, or a public MQTT broker as a fallback) stores nothing.
 - Per-app audio is processed in memory on your Mac. Nothing is recorded.
-- Your API key is stored in the macOS Keychain (`WhenUnlockedThisDeviceOnly`).
+- Your API key and face-unlock template are stored in the macOS Keychain (`WhenUnlockedThisDeviceOnly`). Face photos are never saved.
 
 ## License
 

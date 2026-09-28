@@ -83,6 +83,8 @@ final class SettingsManager: ObservableObject {
     @AppStorage("ui.stickyNotch") var stickyNotch = false
     /// Toggle the notch from anywhere with ⌘E (Carbon hot key, no Accessibility permission needed).
     @AppStorage("ui.globalHotkey") var globalHotkeyEnabled = true
+    /// Offer webcam face unlock (enrolled in Settings → Authentication) on the lock screen.
+    @AppStorage("security.faceUnlock") var faceUnlockEnabled = false
     /// Let Messenger find people on the local network (Nearby Wi-Fi mode).
     @AppStorage("messenger.localDiscovery") var messengerLocalDiscovery = true
 

@@ -40,26 +40,56 @@ enum BiometricAuth {
 /// Shown in place of the modules while the biometric gate is locked.
 struct LockView: View {
     @EnvironmentObject private var state: NotchState
+    @EnvironmentObject private var settings: SettingsManager
+    @StateObject private var face = FaceUnlockEngine()
     @State private var failed = false
+    @State private var usingFace = false
+
+    private var faceAvailable: Bool { settings.faceUnlockEnabled && FaceTemplateStore.isEnrolled }
 
     var body: some View {
         VStack(spacing: 14) {
-            Image(systemName: BiometricAuth.symbol)
-                .font(.system(size: 44, weight: .light))
-                .foregroundStyle(Theme.accentGradient)
-                .symbolEffect(.pulse, options: .repeating)
+            if usingFace {
+                FaceScanView(engine: face, size: 130)
+            } else {
+                Image(systemName: BiometricAuth.symbol)
+                    .font(.system(size: 44, weight: .light))
+                    .foregroundStyle(Theme.accentGradient)
+                    .symbolEffect(.pulse, options: .repeating)
+            }
             Text("Notch apple is locked").font(.headline).foregroundStyle(.white)
             if failed {
-                Text("Authentication failed — try again.").font(.caption).foregroundStyle(.red.opacity(0.9))
+                Text("Not recognised. Try again.").font(.caption).foregroundStyle(.red.opacity(0.9))
             }
-            Button("Unlock with \(BiometricAuth.methodName)", action: unlock)
-                .buttonStyle(PurpleButtonStyle())
+            HStack {
+                if faceAvailable && !usingFace {
+                    Button { unlockWithFace() } label: { Label("Unlock with face", systemImage: "faceid") }
+                        .buttonStyle(PurpleButtonStyle())
+                }
+                Button("Use \(BiometricAuth.methodName)", action: unlockWithSystem)
+                    .buttonStyle(PurpleButtonStyle(prominent: !faceAvailable))
+            }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .task { unlock() }
+        .task { faceAvailable ? unlockWithFace() : unlockWithSystem() }
+        .onDisappear { face.stop() }
     }
 
-    private func unlock() {
+    private func unlockWithFace() {
+        failed = false
+        usingFace = true
+        face.verify { ok in
+            withAnimation(Theme.spring) {
+                usingFace = false
+                if ok { state.isUnlocked = true } else { failed = true }
+            }
+        }
+    }
+
+    /// Touch ID / Apple Watch / password: always available as the fallback.
+    private func unlockWithSystem() {
+        face.stop()
+        usingFace = false
         Task { @MainActor in
             let ok = await BiometricAuth.authenticate(reason: "unlock Notch apple")
             withAnimation(Theme.spring) {
