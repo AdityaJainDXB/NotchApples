@@ -60,7 +60,7 @@ final class WebP2PManager: ObservableObject {
     private var key: SymmetricKey?
     private var topic: String?
     private var relayIndex = 0
-    private var relay: Relay { Self.relays[relayIndex] }
+    private var relay: Relay { Self.relays[min(relayIndex, Self.relays.count - 1)] }
     private var buffer = Data()
     private var presenceTimer: Timer?
     private var pingTimer: Timer?
@@ -135,7 +135,9 @@ final class WebP2PManager: ObservableObject {
     private func publish(kind: MessengerEnvelope.Kind, text: String?) -> MessengerEnvelope {
         let env = MessengerEnvelope(kind: kind, id: UUID(), senderID: identity.senderID,
                                     sender: identity.handle, text: text, ts: .now)
-        guard let key, let topic, let json = try? JSONEncoder().encode(env),
+        // Only publish over a live connection (timers can fire during a failover).
+        guard state == .joined || kind == .leave, socket != nil,
+              let key, let topic, let json = try? JSONEncoder().encode(env),
               let sealed = try? AES.GCM.seal(json, using: key).combined else { return env }
         switch relay {
         case .ntfy(let host):
@@ -221,7 +223,16 @@ final class WebP2PManager: ObservableObject {
         if relayIndex < Self.relays.count {
             connect()
         } else {
-            state = .failed("Couldn't reach a relay (\(reason)). Check your internet connection and try again.")
+            state = .failed("Couldn't reach a relay (\(reason)). Retrying in 30 seconds…")
+            presenceTimer?.invalidate(); pingTimer?.invalidate()
+            presenceTimer = nil; pingTimer = nil
+            // Try again later (e.g. after the network comes back), starting from the first relay.
+            let roomAtFailure = room
+            DispatchQueue.main.asyncAfter(deadline: .now() + 30) { [weak self] in
+                guard let self, let room = roomAtFailure, self.room == room, case .failed = self.state else { return }
+                self.relayIndex = 0
+                self.connect()
+            }
         }
     }
 

@@ -28,6 +28,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         NowPlayingMonitor.shared.start()
         startMessengerInBackground()
         applyClipboardPreference()
+        LiveActivityCenter.shared.start()
 
         // Show/hide the status item live as the preference changes.
         applyStatusItemPreference()

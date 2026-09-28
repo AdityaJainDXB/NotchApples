@@ -1,0 +1,149 @@
+//
+//  FocusTimer.swift
+//  Notch apple
+//
+//  A Pomodoro-style focus timer. Work and break sessions alternate; while a
+//  session runs, the closed notch shows the countdown (see LiveActivity.swift),
+//  and a notification + sound mark the end of each session.
+//
+
+import AppKit
+import SwiftUI
+import UserNotifications
+
+@MainActor
+final class FocusTimer: ObservableObject {
+    static let shared = FocusTimer()
+
+    enum Phase: String { case focus = "Focus", shortBreak = "Break", longBreak = "Long break" }
+
+    @AppStorage("focus.workMinutes") var workMinutes = 25
+    @AppStorage("focus.breakMinutes") var breakMinutes = 5
+    @AppStorage("focus.longBreakMinutes") var longBreakMinutes = 15
+    @AppStorage("focus.autoStartNext") var autoStartNext = false
+    @AppStorage("focus.completedToday") private var completedToday = 0
+    @AppStorage("focus.completedDay") private var completedDay = ""
+
+    @Published private(set) var phase: Phase = .focus
+    @Published private(set) var remaining: TimeInterval = 25 * 60
+    @Published private(set) var isRunning = false
+    /// Focus sessions finished today (resets at midnight).
+    @Published private(set) var sessionsToday = 0
+
+    private var endDate: Date?
+    private var ticker: Timer?
+
+    init() {
+        remaining = TimeInterval(workMinutes * 60)
+        sessionsToday = today == completedDay ? completedToday : 0
+    }
+
+    private var today: String { Date.now.formatted(.iso8601.year().month().day()) }
+
+    var duration: TimeInterval {
+        switch phase {
+        case .focus: TimeInterval(workMinutes * 60)
+        case .shortBreak: TimeInterval(breakMinutes * 60)
+        case .longBreak: TimeInterval(longBreakMinutes * 60)
+        }
+    }
+
+    var progress: Double { duration > 0 ? 1 - remaining / duration : 0 }
+
+    static func format(_ t: TimeInterval) -> String {
+        let s = max(0, Int(t.rounded(.up)))
+        return String(format: "%d:%02d", s / 60, s % 60)
+    }
+
+    /// What the closed notch shows while a session is running.
+    var liveActivity: LiveActivity? {
+        guard isRunning else { return nil }
+        return LiveActivity(symbol: phase == .focus ? "timer" : "cup.and.saucer.fill",
+                            label: Self.format(remaining),
+                            tint: phase == .focus ? NSColor(Theme.accentBright) : .systemGreen)
+    }
+
+    // MARK: Controls
+
+    func start() {
+        guard !isRunning else { return }
+        if remaining <= 0 { remaining = duration }
+        endDate = Date.now.addingTimeInterval(remaining)
+        isRunning = true
+        ticker?.invalidate()
+        ticker = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { [weak self] _ in
+            Task { @MainActor in self?.tick() }
+        }
+        LiveActivityCenter.shared.recompute()
+        requestNotificationPermission()
+    }
+
+    func pause() {
+        guard isRunning else { return }
+        tick()
+        isRunning = false
+        ticker?.invalidate()
+        endDate = nil
+        LiveActivityCenter.shared.recompute()
+    }
+
+    func reset() {
+        pause()
+        remaining = duration
+    }
+
+    /// Jump to a phase (e.g. start a break early).
+    func switchTo(_ newPhase: Phase) {
+        pause()
+        phase = newPhase
+        remaining = duration
+    }
+
+    func skip() { finishPhase(notify: false) }
+
+    // MARK: Ticking
+
+    private func tick() {
+        guard let endDate else { return }
+        remaining = max(0, endDate.timeIntervalSinceNow)
+        if remaining <= 0 { finishPhase(notify: true) }
+        LiveActivityCenter.shared.recompute()
+    }
+
+    private func finishPhase(notify: Bool) {
+        let finished = phase
+        ticker?.invalidate()
+        isRunning = false
+        endDate = nil
+        if finished == .focus {
+            if completedDay != today { completedDay = today; completedToday = 0 }
+            completedToday += 1
+            sessionsToday = completedToday
+            // Every 4th focus session earns a long break.
+            phase = completedToday % 4 == 0 ? .longBreak : .shortBreak
+        } else {
+            phase = .focus
+        }
+        remaining = duration
+        if notify { announce(finished) }
+        LiveActivityCenter.shared.recompute()
+        if autoStartNext { start() }
+    }
+
+    private func announce(_ finished: Phase) {
+        NSSound(named: "Glass")?.play()
+        let content = UNMutableNotificationContent()
+        content.title = finished == .focus ? "Focus session done 🎉" : "Break's over"
+        content.body = finished == .focus
+            ? "Time for a \(phase == .longBreak ? "\(longBreakMinutes)" : "\(breakMinutes)")-minute break."
+            : "Ready for another \(workMinutes)-minute focus session?"
+        UNUserNotificationCenter.current().add(UNNotificationRequest(identifier: UUID().uuidString, content: content, trigger: nil))
+    }
+
+    private func requestNotificationPermission() {
+        UNUserNotificationCenter.current().getNotificationSettings { settings in
+            guard settings.authorizationStatus == .notDetermined else { return }
+            UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound]) { _, _ in }
+        }
+    }
+}

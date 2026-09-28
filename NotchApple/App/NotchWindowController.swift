@@ -44,7 +44,7 @@ final class NotchPanel: NSPanel {
 final class NotchState: ObservableObject {
     @Published var isExpanded = false
     @Published var isUnlocked = false
-    @Published var selected: Module = .claude
+    @Published var selected: Module = .today
     /// Size of the physical notch (or a synthetic pill on notch-less Macs).
     @Published var notchSize = CGSize(width: 200, height: 32)
     /// Size of the fully expanded panel.
@@ -68,8 +68,6 @@ final class NotchTriggerView: NSView {
     var onHoverChange: (Bool) -> Void = { _ in }
 
     private var isHovered = false { didSet { needsDisplay = true } }
-    /// Unread Messenger messages; > 0 grows the notch and shows a purple dot.
-    var unread = 0 { didSet { if oldValue != unread { needsDisplay = true } } }
     private var tracking: NSTrackingArea?
 
     override init(frame: NSRect) {
@@ -88,33 +86,60 @@ final class NotchTriggerView: NSView {
         tracking = area
     }
 
+    /// Physical notch width, set by the controller.
+    var notchWidth: CGFloat = 200 { didSet { needsDisplay = true } }
+    /// What to show beside the closed notch (charging, focus timer, unread dot).
+    var activity: LiveActivity? { didSet { if oldValue != activity { needsDisplay = true } } }
+
+    /// Width of each "ear" beside the hardware notch for the current activity.
+    static func earWidth(for activity: LiveActivity?) -> CGFloat {
+        guard let activity else { return 0 }
+        return activity.dotOnly ? 20 : 58
+    }
+
     override func draw(_ dirtyRect: NSRect) {
-        // The visible notch sits in the middle of the padded hit area.
         let pad = Self.hitPadding
-        var notch = bounds.insetBy(dx: pad.width - NotchRootView.collapsedShoulder, dy: 0)
-        notch.origin.y += pad.height
-        notch.size.height -= pad.height
-        if unread > 0 {
-            // The hardware notch has no pixels, so grow "ears" beside it for the dot.
-            notch = notch.insetBy(dx: -(Self.hitPadding.width - NotchRootView.collapsedShoulder - 2), dy: 0)
-        }
+        let shoulder = NotchRootView.collapsedShoulder
+        let ear = Self.earWidth(for: activity)
+        // The visible silhouette, centred: notch + shoulders + ears.
+        let width = notchWidth + 2 * (shoulder + ear)
+        var notch = NSRect(x: bounds.midX - width / 2, y: bounds.minY + pad.height,
+                           width: width, height: bounds.height - pad.height)
         if isHovered {
-            // Hover feedback only — opening still requires a click.
+            // Hover feedback only (unless "Open on hover" is on).
             notch = notch.insetBy(dx: -6, dy: 0)
             notch.origin.y -= 3
             notch.size.height += 3
         }
 
-        let path = Self.notchPath(in: notch, shoulder: NotchRootView.collapsedShoulder, bottom: min(10, notch.height / 2))
+        let path = Self.notchPath(in: notch, shoulder: shoulder, bottom: min(10, notch.height / 2))
         NSColor.black.setFill()
         path.fill()
 
-        if unread > 0 {
-            let d: CGFloat = 8
-            let dot = NSRect(x: notch.maxX - NotchRootView.collapsedShoulder - 8 - d,
-                             y: notch.midY - d / 2, width: d, height: d)
-            NSColor(Theme.accentBright).setFill()
-            NSBezierPath(ovalIn: dot).fill()
+        if let activity {
+            let leftEar = NSRect(x: notch.minX + shoulder + 6, y: notch.minY, width: ear - 10, height: notch.height)
+            let rightEar = NSRect(x: notch.maxX - shoulder - ear + 4, y: notch.minY, width: ear - 10, height: notch.height)
+            if activity.dotOnly {
+                let d: CGFloat = 8
+                activity.tint.setFill()
+                NSBezierPath(ovalIn: NSRect(x: rightEar.maxX - d, y: rightEar.midY - d / 2, width: d, height: d)).fill()
+            } else {
+                if let name = activity.symbol,
+                   let img = NSImage(systemSymbolName: name, accessibilityDescription: nil)?
+                        .withSymbolConfiguration(.init(pointSize: 13, weight: .semibold).applying(.init(paletteColors: [activity.tint]))) {
+                    let size = img.size
+                    img.draw(in: NSRect(x: leftEar.minX + 2, y: leftEar.midY - size.height / 2, width: size.width, height: size.height))
+                }
+                if let label = activity.label {
+                    let attrs: [NSAttributedString.Key: Any] = [
+                        .font: NSFont.monospacedDigitSystemFont(ofSize: 12.5, weight: .semibold),
+                        .foregroundColor: activity.tint,
+                    ]
+                    let str = NSAttributedString(string: label, attributes: attrs)
+                    let size = str.size()
+                    str.draw(at: NSPoint(x: rightEar.maxX - size.width, y: rightEar.midY - size.height / 2))
+                }
+            }
         }
 
         if isHovered {
@@ -221,7 +246,12 @@ final class NotchWindowController {
             self.state.selected = .messenger
             self.expand()
         }
-        notifier.onUnreadChange = { [weak self] n in self?.triggerView.unread = n }
+        notifier.onUnreadChange = { _ in LiveActivityCenter.shared.recompute() }
+        LiveActivityCenter.shared.onChange = { [weak self] activity in
+            guard let self else { return }
+            self.triggerView.activity = activity
+            self.reposition()
+        }
         triggerView.onHoverChange = { [weak self] inside in self?.hoverChanged(inside: inside, overPanel: false) }
         container.onHoverChange = { [weak self] inside in self?.hoverChanged(inside: inside, overPanel: true) }
         state.toggle = { [weak self] in self?.toggle() }
@@ -252,7 +282,10 @@ final class NotchWindowController {
             state.notchSize = CGSize(width: 190, height: max(barHeight, 24))
         }
         let pad = NotchTriggerView.hitPadding
-        let hit = CGSize(width: state.notchSize.width + pad.width * 2, height: state.notchSize.height + pad.height)
+        // Widen the trigger window while a live activity needs room for its ears.
+        let side = max(pad.width, NotchRootView.collapsedShoulder + NotchTriggerView.earWidth(for: triggerView.activity) + 8)
+        let hit = CGSize(width: state.notchSize.width + side * 2, height: state.notchSize.height + pad.height)
+        triggerView.notchWidth = state.notchSize.width
         trigger.setFrame(frame(size: hit, on: screen), display: true)
         panel.setFrame(frame(size: state.expandedSize, on: screen), display: false)
     }

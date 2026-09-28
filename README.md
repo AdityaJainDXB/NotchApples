@@ -35,6 +35,8 @@ brew install --cask notch-apple
 
 | | |
 | --- | --- |
+| ![Today](docs/screenshots/today.png) | ![Focus timer](docs/screenshots/focus.png) |
+| **Today**: weather, next events, battery | **Focus**: Pomodoro timer |
 | ![Messenger](docs/screenshots/messenger.png) | ![AirDrop and PairDrop](docs/screenshots/share.png) |
 | **Messenger**: an anonymous, end-to-end-encrypted room | **Share**: AirDrop and PairDrop |
 | ![File Shelf](docs/screenshots/shelf.png) | ![Audio](docs/screenshots/audio.png) |
@@ -54,6 +56,9 @@ Every module is **optional** and can be switched on or off in **Settings → Mod
 
 | Module | What it does |
 | --- | --- |
+| ☀️ **Today** | The date, current weather, your next calendar events (with a **Now** badge for meetings in progress) and battery at a glance. |
+| ⏱ **Focus** | A Pomodoro timer: 25-minute focus sessions and 5-minute breaks, with a long break every 4th session. While it runs, **the countdown shows beside the closed notch**. You get a notification and a sound when each session ends. Lengths are adjustable in **Settings → Focus**. |
+| 🔋 **Charging** | Plug in or unplug the charger and the notch briefly shows your battery level. Turn it off in **Settings → General**. |
 | ✨ **Claude** | Chat with Claude from the notch using **your own** Anthropic API key, which is stored in the Keychain. Tap **Share Screen** to attach a screenshot so Claude can see what you're looking at. |
 | 💬 **Messenger** | Chat anonymously with **people on the same Wi-Fi** (found automatically, encrypted between Macs), or **create or join an anonymous room** with a code, like `cafe-study` or `8821`. Rooms are end-to-end encrypted, and nothing is stored anywhere. You get a random handle like `PurplePanda#402`, and there are no accounts. See [Using Messenger](#using-messenger). |
 | 📋 **Clipboard** | Everything you copy (text, links, images and files) is saved to a searchable history in the notch. Click an item to copy it again, pin the ones you want to keep, and filter by type. Items that password managers mark as secret are never saved, and history stays on your Mac. Choose how many items to keep in **Settings → Clipboard**. |
@@ -64,6 +69,10 @@ Every module is **optional** and can be switched on or off in **Settings → Mod
 | 🎵 **Now Playing** | Shows the current track from Apple Music or Spotify. |
 | 🔐 **Biometric Lock** | Requires Touch ID, Apple Watch, your password, or **face unlock** (your Mac's camera) before the notch opens. See [Face unlock](#face-unlock). |
 | 🧩 **Widget** | A desktop widget (and Lock Screen widget on newer macOS) showing weather, now playing, and your next calendar events. |
+
+**Live activities:** like the iPhone's Dynamic Island, the closed notch shows small indicators on either side: the focus countdown, battery when charging, and a purple dot for unread messages.
+
+![Focus countdown beside the notch](docs/screenshots/live-activity.png)
 
 **Open the notch by clicking it, pressing `⌘E` in any app, or dragging a file onto it.** Press `Esc` or `⌘E`, or click anywhere else, to close it.
 

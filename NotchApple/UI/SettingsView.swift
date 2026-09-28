@@ -17,7 +17,7 @@ import UniformTypeIdentifiers
 
 /// Panes in the Settings window. `selection` lets other code jump to a pane.
 enum SettingsTab: String, CaseIterable, Identifiable, Hashable {
-    case general, authentication, modules, claude, messenger, clipboard, audio, vpn, widget, about
+    case general, authentication, modules, claude, messenger, clipboard, focus, audio, vpn, widget, about
     static let selection = PassthroughSubject<SettingsTab, Never>()
 
     var id: String { rawValue }
@@ -30,6 +30,7 @@ enum SettingsTab: String, CaseIterable, Identifiable, Hashable {
         case .claude: "Claude"
         case .messenger: "Messenger"
         case .clipboard: "Clipboard"
+        case .focus: "Focus"
         case .audio: "Audio"
         case .vpn: "VPN"
         case .widget: "Widget"
@@ -45,6 +46,7 @@ enum SettingsTab: String, CaseIterable, Identifiable, Hashable {
         case .claude: "sparkles"
         case .messenger: "bubble.left.and.bubble.right.fill"
         case .clipboard: "doc.on.clipboard.fill"
+        case .focus: "timer"
         case .audio: "speaker.wave.2.fill"
         case .vpn: "lock.shield.fill"
         case .widget: "rectangle.3.group.fill"
@@ -61,6 +63,7 @@ enum SettingsTab: String, CaseIterable, Identifiable, Hashable {
         case .claude: .orange
         case .messenger: .green
         case .clipboard: .yellow
+        case .focus: .purple
         case .audio: .pink
         case .vpn: .blue
         case .widget: .teal
@@ -96,6 +99,7 @@ struct SettingsView: View {
                 case .claude: ClaudeSettings()
                 case .messenger: MessengerSettings()
                 case .clipboard: ClipboardSettings()
+                case .focus: FocusSettings()
                 case .audio: AudioSettings()
                 case .vpn: VPNSettings()
                 case .widget: WidgetSettings()
@@ -126,6 +130,10 @@ private struct GeneralSettings: View {
                         try? on ? SMAppService.mainApp.register() : SMAppService.mainApp.unregister()
                     }
                 Toggle("Show icon in menu bar", isOn: $settings.showStatusItem)
+                Toggle(isOn: $settings.showChargingActivity) {
+                    Text("Show battery beside the notch when charging")
+                    Text("Briefly shows the battery level when you plug in or unplug the charger.")
+                }
             }
             Section {
                 Toggle(isOn: $settings.globalHotkeyEnabled) {
@@ -385,6 +393,32 @@ private struct MessengerSettings: View {
         identity.handle = MessengerIdentity.sanitize(handleDraft)
         handleDraft = identity.handle
         LocalP2PManager.shared.restart()
+    }
+}
+
+// MARK: - Focus
+
+private struct FocusSettings: View {
+    @EnvironmentObject private var settings: SettingsManager
+    @StateObject private var timer = FocusTimer.shared
+
+    var body: some View {
+        Form {
+            Section {
+                Toggle("Show Focus in the notch", isOn: $settings.focusEnabled)
+            }
+            Section {
+                Stepper("Focus: \(timer.workMinutes) min", value: $timer.workMinutes, in: 5...90, step: 5)
+                Stepper("Break: \(timer.breakMinutes) min", value: $timer.breakMinutes, in: 1...30)
+                Stepper("Long break: \(timer.longBreakMinutes) min", value: $timer.longBreakMinutes, in: 5...60, step: 5)
+                Toggle("Start the next session automatically", isOn: $timer.autoStartNext)
+            } header: {
+                Text("Session lengths")
+            } footer: {
+                Text("Every 4th focus session is followed by a long break. You'll get a notification and a sound when a session ends.")
+            }
+        }
+        .formStyle(.grouped)
     }
 }
 
