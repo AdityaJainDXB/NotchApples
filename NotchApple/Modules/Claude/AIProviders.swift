@@ -10,6 +10,7 @@
 //   Groq         Free tier, no billing          console.groq.com/keys        Some models
 //   OpenRouter   Free models (":free")          openrouter.ai/keys           Some models
 //   Ollama       Free, runs on this Mac         none (ollama.com)            Vision models
+//   DeepSeek     Paid, low cost (top-up)        platform.deepseek.com        No (text only)
 //   Claude       Paid (your Anthropic account)  console.anthropic.com        Yes
 //   OpenAI       Paid (your OpenAI account)     platform.openai.com          Yes
 //
@@ -23,7 +24,7 @@
 import Foundation
 
 enum AIProvider: String, CaseIterable, Identifiable, Codable {
-    case gemini, groq, openRouter, ollama, claude, openAI
+    case gemini, groq, openRouter, ollama, deepSeek, claude, openAI
 
     var id: String { rawValue }
 
@@ -33,6 +34,7 @@ enum AIProvider: String, CaseIterable, Identifiable, Codable {
         case .groq: "Groq"
         case .openRouter: "OpenRouter"
         case .ollama: "Ollama (on this Mac)"
+        case .deepSeek: "DeepSeek"
         case .claude: "Claude"
         case .openAI: "ChatGPT (OpenAI)"
         }
@@ -44,12 +46,13 @@ enum AIProvider: String, CaseIterable, Identifiable, Codable {
         case .groq: "Free tier, no billing needed"
         case .openRouter: "Free models, no billing needed"
         case .ollama: "Free, private, works offline"
+        case .deepSeek: "Paid, low cost; top up at platform.deepseek.com"
         case .claude: "Paid, billed to your Anthropic account"
         case .openAI: "Paid, billed to your OpenAI account"
         }
     }
 
-    var isFree: Bool { ![.claude, .openAI].contains(self) }
+    var isFree: Bool { ![.claude, .openAI, .deepSeek].contains(self) }
     var needsKey: Bool { self != .ollama }
 
     var keychainKey: KeychainHelper.Key {
@@ -59,6 +62,7 @@ enum AIProvider: String, CaseIterable, Identifiable, Codable {
         case .groq: .groqAPIKey
         case .openRouter: .openRouterAPIKey
         case .openAI: .openAIAPIKey
+        case .deepSeek: .deepSeekAPIKey
         case .ollama: .anthropicAPIKey   // unused (no key)
         }
     }
@@ -69,6 +73,7 @@ enum AIProvider: String, CaseIterable, Identifiable, Codable {
         case .groq: URL(string: "https://console.groq.com/keys")!
         case .openRouter: URL(string: "https://openrouter.ai/keys")!
         case .ollama: URL(string: "https://ollama.com/download")!
+        case .deepSeek: URL(string: "https://platform.deepseek.com/api_keys")!
         case .claude: URL(string: "https://console.anthropic.com/settings/keys")!
         case .openAI: URL(string: "https://platform.openai.com/api-keys")!
         }
@@ -81,6 +86,7 @@ enum AIProvider: String, CaseIterable, Identifiable, Codable {
         case .openRouter: "sk-or-…"
         case .claude: "sk-ant-…"
         case .openAI: "sk-…"
+        case .deepSeek: "sk-…"
         case .ollama: ""
         }
     }
@@ -94,6 +100,7 @@ enum AIProvider: String, CaseIterable, Identifiable, Codable {
         case .ollama: "llama3.2"
         case .claude: "claude-sonnet-5"
         case .openAI: "gpt-4o-mini"
+        case .deepSeek: "deepseek-chat"
         }
     }
 
@@ -102,6 +109,22 @@ enum AIProvider: String, CaseIterable, Identifiable, Codable {
     }
 
     var isConfigured: Bool { !needsKey || apiKey != nil }
+
+    /// Best guess at whether a model accepts images. `false` only when we're
+    /// fairly sure it's text-only, so screenshots aren't sent to models that
+    /// would reject them.
+    func likelySupportsVision(_ model: String) -> Bool {
+        let m = model.lowercased()
+        switch self {
+        case .gemini, .claude: return true
+        case .openAI: return m.hasPrefix("gpt-4o") || m.hasPrefix("gpt-4.1") || m.hasPrefix("gpt-5") || m.hasPrefix("o")
+        case .groq: return m.contains("llama-4") || m.contains("vision") || m.contains("scout") || m.contains("maverick")
+        case .ollama:
+            return ["llava", "vision", "gemma3", "qwen2.5vl", "qwen3-vl", "minicpm-v", "moondream", "bakllava"].contains { m.contains($0) }
+        case .openRouter: return true   // unknown; let the provider decide
+        case .deepSeek: return false    // DeepSeek's API is text-only
+        }
+    }
 }
 
 enum AIError: LocalizedError {
@@ -126,7 +149,7 @@ enum AIClient {
         switch provider {
         case .claude: return try await ClaudeClient.send(history, model: model)
         case .gemini: return try await sendGemini(history, model: model)
-        case .groq, .openRouter, .ollama, .openAI: return try await sendOpenAICompatible(history, provider: provider, model: model)
+        case .groq, .openRouter, .ollama, .openAI, .deepSeek: return try await sendOpenAICompatible(history, provider: provider, model: model)
         }
     }
 
@@ -162,6 +185,7 @@ enum AIClient {
         case .groq: base = "https://api.groq.com/openai/v1"
         case .openRouter: base = "https://openrouter.ai/api/v1"
         case .ollama: base = "http://localhost:11434/v1"
+        case .deepSeek: base = "https://api.deepseek.com/v1"
         default: base = "https://api.openai.com/v1"
         }
         var request = URLRequest(url: URL(string: "\(base)/chat/completions")!)
@@ -227,14 +251,21 @@ enum AIClient {
                 let json = try await perform(URLRequest(url: URL(string: "http://localhost:11434/api/tags")!))
                 return ((json["models"] as? [[String: Any]]) ?? []).compactMap { $0["name"] as? String }
             } catch { throw AIError.ollamaNotRunning }
-        case .groq, .openAI:
+        case .groq, .openAI, .deepSeek:
             guard let key = provider.apiKey else { throw AIError.missingKey(provider) }
-            let base = provider == .groq ? "https://api.groq.com/openai/v1" : "https://api.openai.com/v1"
+            let base = provider == .groq ? "https://api.groq.com/openai/v1"
+                : provider == .deepSeek ? "https://api.deepseek.com/v1" : "https://api.openai.com/v1"
             var r = URLRequest(url: URL(string: "\(base)/models")!)
             r.setValue("Bearer \(key)", forHTTPHeaderField: "Authorization")
             let json = try await perform(r)
             return ((json["data"] as? [[String: Any]]) ?? []).compactMap { $0["id"] as? String }
-                .filter { provider == .groq ? !$0.contains("whisper") && !$0.contains("tts") && !$0.contains("guard") : $0.hasPrefix("gpt") }
+                .filter { m in
+                    switch provider {
+                    case .groq: return !m.contains("whisper") && !m.contains("tts") && !m.contains("guard")
+                    case .openAI: return m.hasPrefix("gpt")
+                    default: return true
+                    }
+                }
                 .sorted()
         }
     }

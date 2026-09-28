@@ -47,6 +47,8 @@ brew install --cask notch-apple
 | **First launch**: every permission in one place | **Face unlock**: Face ID-style |
 | ![Settings](docs/screenshots/settings-general.png) | ![Settings: Modules](docs/screenshots/settings-modules.png) |
 | **Settings**: a sidebar of panes, like System Settings | **Settings → Modules**: every feature is optional |
+| ![Settings: AI History](docs/screenshots/settings-ai-history.png) | ![AI tab](docs/screenshots/claude.png) |
+| **Settings → AI History**: every chat, with the model that answered | **AI**: free providers, switch in the notch |
 | ![Settings: VPN](docs/screenshots/settings-vpn.png) | ![Settings: Audio](docs/screenshots/settings-audio.png) |
 | **Settings → VPN**: free servers and your profiles | **Settings → Audio**: built-in per-app engine |
 
@@ -59,7 +61,8 @@ Every module is **optional** and can be switched on or off in **Settings → Mod
 | ☀️ **Today** | The date, current weather, your next calendar events (with a **Now** badge for meetings in progress) and battery at a glance. |
 | ⏱ **Focus** | A Pomodoro timer: 25-minute focus sessions and 5-minute breaks, with a long break every 4th session. While it runs, **the countdown shows beside the closed notch**. You get a notification and a sound when each session ends. Lengths are adjustable in **Settings → Focus**. |
 | 🔋 **Charging** | Plug in or unplug the charger and the notch briefly shows your battery level. Turn it off in **Settings → General**. |
-| ✨ **AI** | Chat from the notch with **free** AI (Google Gemini, Groq, OpenRouter's free models, or Ollama running on your Mac) or paid Claude / ChatGPT with your own key. Switch provider and model right in the notch. Tap **Share Screen** to attach a screenshot. See [Free AI options](#free-ai-options). |
+| ✨ **AI** | Chat from the notch with **free** AI (Google Gemini, Groq, OpenRouter's free models, or Ollama on your Mac) or with your own key for **DeepSeek**, Claude or ChatGPT. **Ask "what's on my screen?"** and it takes a screenshot and answers about what you're actually looking at. One-click actions summarise, translate or fix what you copied. Every chat is saved in **Settings → AI History** with the model that answered. See [AI in the notch](#ai-in-the-notch). |
+| 📝 **Notes** | Quick notes in the notch: several notes, search, a "new note from clipboard" button, and saved automatically on your Mac. |
 | 💬 **Messenger** | Chat anonymously with **people on the same Wi-Fi** (found automatically, encrypted between Macs), or **create or join an anonymous room** with a code, like `cafe-study` or `8821`. Rooms are end-to-end encrypted, and nothing is stored anywhere. You get a random handle like `PurplePanda#402`, and there are no accounts. See [Using Messenger](#using-messenger). |
 | 📋 **Clipboard** | Everything you copy (text, links, images and files) is saved to a searchable history in the notch. Click an item to copy it again, pin the ones you want to keep, and filter by type. Items that password managers mark as secret are never saved, and history stays on your Mac. Choose how many items to keep in **Settings → Clipboard**. |
 | 🗂 **File Shelf** | Drag a file onto the notch and it opens straight to the shelf. Files stay there across relaunches thanks to security-scoped bookmarks. Double-click to open, or drag them back out. There's also an **Add files…** button. |
@@ -126,7 +129,9 @@ The table below lists when each is asked for.
 | Camera | Face unlock | When you set up or use face unlock. Only a face template is saved, never photos |
 | System audio recording | Audio → per-app volume / EQ | The first time you change an app's volume or EQ. Audio is processed on your Mac and never recorded or sent anywhere |
 
-## Free AI options
+## AI in the notch
+
+### Choose your AI
 
 The AI tab doesn't require a paid account. Pick a provider in the notch or in **Settings → AI**:
 
@@ -136,10 +141,39 @@ The AI tab doesn't require a paid account. Pick a provider in the notch or in **
 | **Groq** | Free tier, no billing | [console.groq.com/keys](https://console.groq.com/keys) | Very fast open models (Llama, Qwen, DeepSeek-distilled and more). |
 | **OpenRouter** | Free models, no billing | [openrouter.ai/keys](https://openrouter.ai/keys) | Only the free models are listed. The selection changes over time. |
 | **Ollama** | Free, runs on your Mac | No key. [Download Ollama](https://ollama.com/download) | Private and offline. Run e.g. `ollama run llama3.2` once. |
+| **DeepSeek** | Paid, low cost (top up a balance) | [platform.deepseek.com](https://platform.deepseek.com/api_keys) | The official DeepSeek API (`deepseek-chat`, `deepseek-reasoner`). Text only. |
 | Claude | Paid (your Anthropic account) | [console.anthropic.com](https://console.anthropic.com/settings/keys) | |
 | ChatGPT (OpenAI) | Paid (your OpenAI account) | [platform.openai.com](https://platform.openai.com/api-keys) | The OpenAI API has no free tier. |
 
-Model lists are loaded live from each provider, so new models appear automatically, and you can type any model ID. The official DeepSeek API also requires billing; DeepSeek models appear in Groq's and OpenRouter's free lists when they're available. Keys are stored in your Keychain and sent only to that provider.
+Model lists are loaded live from each provider, so new models appear automatically, and you can type any model ID. The official DeepSeek API has no free tier; free DeepSeek models sometimes appear in Groq's and OpenRouter's free lists. Keys are stored in your Keychain and sent only to that provider.
+
+### It can see your screen when you ask
+
+Ask something about your screen and Notch apple takes a screenshot for you (leaving the notch itself out) and sends it with your question, so the answer is about what's really there. For example:
+
+- "What's on my screen?" / "What am I looking at?"
+- "Explain this error" / "What does this button do?"
+- "Summarise this page" / "Translate this page"
+
+Questions that aren't about the screen ("What's the capital of France?") are sent as plain text. If the selected model can't see images (DeepSeek, most Groq and Ollama models), no screenshot is sent and the notch suggests switching to a model that can, such as Gemini. Turn this off in **Settings → AI → Share my screen when I ask about it**. The first time, macOS asks for Screen Recording permission.
+
+### One-click actions
+
+On a new chat, one click runs:
+
+- **What's on my screen?**
+- **Summarise what I copied**
+- **Translate what I copied**
+- **Fix grammar of what I copied** (replies with just the corrected text)
+
+### Chat history
+
+Every conversation is saved in **Settings → AI History**:
+
+- your first question, the provider and model(s) used, the date, and the full back-and-forth, with each reply labelled with the model that wrote it;
+- **Continue** a chat in the notch, **Copy** the transcript, search, or delete one or all.
+
+Screenshots aren't stored, only a note that one was attached. History stays on your Mac. Turn saving off with **Save AI chats**.
 
 ## Face unlock
 

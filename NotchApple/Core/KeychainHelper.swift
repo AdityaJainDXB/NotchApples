@@ -19,6 +19,7 @@ enum KeychainHelper {
         case groqAPIKey = "groq.apiKey"
         case openRouterAPIKey = "openrouter.apiKey"
         case openAIAPIKey = "openai.apiKey"
+        case deepSeekAPIKey = "deepseek.apiKey"
         case faceTemplate = "faceUnlock.template"
     }
 

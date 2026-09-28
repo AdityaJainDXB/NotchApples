@@ -261,6 +261,12 @@ final class NotchWindowController {
     func show() {
         reposition()
         trigger.orderFrontRegardless()
+        // Keep the expanded panel on screen but invisible and click-through while
+        // closed. Opening then only has to fade it in and animate — no window has
+        // to be created or drawn from scratch mid-animation, so it's as smooth as closing.
+        panel.alphaValue = 0
+        panel.ignoresMouseEvents = true
+        panel.orderFrontRegardless()
     }
 
     /// The screen that owns the notch: the built-in display if present, else main.
@@ -301,12 +307,13 @@ final class NotchWindowController {
         guard !state.isExpanded else { return }
         openedByHover = false   // the hover path sets this back to true right after
         pinnedByClick = false
+        panel.ignoresMouseEvents = false
+        panel.alphaValue = 1
         panel.orderFrontRegardless()
         panel.makeKey()
-        // Let the panel present one collapsed frame, then spring open.
-        DispatchQueue.main.async { [weak self] in
-            withAnimation(Theme.spring) { self?.state.isExpanded = true }
-        }
+        // The collapsed shape is already drawn, so spring open straight away,
+        // with the same curve that closing uses.
+        withAnimation(Theme.spring) { state.isExpanded = true }
         installMonitors()
     }
 
@@ -361,7 +368,9 @@ final class NotchWindowController {
         removeMonitors()
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) { [weak self] in
             guard let self, !self.state.isExpanded else { return }
-            self.panel.orderOut(nil)
+            // Stay ordered in (see show()), just invisible and click-through.
+            self.panel.alphaValue = 0
+            self.panel.ignoresMouseEvents = true
         }
     }
 

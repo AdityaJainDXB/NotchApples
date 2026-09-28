@@ -23,14 +23,24 @@ final class SettingsWindowController: NSWindowController, NSWindowDelegate {
         let window = NSWindow(contentViewController: hosting)
         window.title = "Notch apple Settings"
         // HIG › Settings: no minimize/zoom for a settings window.
-        window.styleMask = [.titled, .closable, .fullSizeContentView]
+        // Resizable so it always fits smaller or scaled laptop screens.
+        window.styleMask = [.titled, .closable, .resizable, .fullSizeContentView]
+        window.contentMinSize = NSSize(width: 680, height: 440)
         window.toolbarStyle = .unified
         window.isReleasedWhenClosed = false
-        window.setContentSize(NSSize(width: 720, height: 520))
-        window.center()
         super.init(window: window)
+        fitToScreen()
         Self.currentWindow = window
         window.delegate = self
+    }
+
+    /// Preferred 860 × 560, but never larger than the screen's usable area.
+    private func fitToScreen() {
+        guard let window else { return }
+        let visible = (window.screen ?? NSScreen.main)?.visibleFrame.size ?? NSSize(width: 1440, height: 900)
+        let size = NSSize(width: min(860, visible.width - 40), height: min(560, visible.height - 60))
+        window.setContentSize(size)
+        window.center()
     }
 
     required init?(coder: NSCoder) { fatalError("init(coder:) is not supported") }
@@ -43,7 +53,7 @@ final class SettingsWindowController: NSWindowController, NSWindowDelegate {
             SettingsTab.selection.send(tab)
         }
         NSApp.activate(ignoringOtherApps: true)
-        if window?.isVisible == false { window?.center() }
+        if window?.isVisible == false { fitToScreen() }
         window?.level = .floating          // keep above the notch panel's owner app
         window?.makeKeyAndOrderFront(nil)
         window?.orderFrontRegardless()

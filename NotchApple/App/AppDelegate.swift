@@ -21,7 +21,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var statusItem: NSStatusItem?
     private var cancellables = Set<AnyCancellable>()
 
+    /// The running delegate (NSApp.delegate is SwiftUI's proxy, not this object).
+    private(set) static weak var current: AppDelegate?
+
     func applicationDidFinishLaunching(_ notification: Notification) {
+        AppDelegate.current = self
         notchController = NotchWindowController()
         notchController?.show()
 
@@ -127,6 +131,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     @objc func openSettings() {
         notchController?.collapse()
         AppDelegate.openSettingsWindow()
+    }
+
+    /// Opens the notch on a given tab (e.g. to continue an AI chat from Settings).
+    static func showNotch(tab: Module) {
+        // NSApp.delegate is SwiftUI's adaptor proxy, so use our own reference.
+        guard let delegate = AppDelegate.current else { return }
+        delegate.notchController?.state.selected = tab
+        delegate.notchController?.expand()
     }
 
     /// Opens the Settings window. Agent apps can't rely on the SwiftUI `Settings`

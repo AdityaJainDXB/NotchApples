@@ -17,7 +17,7 @@ import UniformTypeIdentifiers
 
 /// Panes in the Settings window. `selection` lets other code jump to a pane.
 enum SettingsTab: String, CaseIterable, Identifiable, Hashable {
-    case general, permissions, authentication, modules, claude, messenger, clipboard, focus, audio, vpn, widget, about
+    case general, permissions, authentication, modules, claude, aiHistory, messenger, clipboard, focus, audio, vpn, widget, about
     static let selection = PassthroughSubject<SettingsTab, Never>()
 
     var id: String { rawValue }
@@ -29,6 +29,7 @@ enum SettingsTab: String, CaseIterable, Identifiable, Hashable {
         case .authentication: "Authentication"
         case .modules: "Modules"
         case .claude: "AI"
+        case .aiHistory: "AI History"
         case .messenger: "Messenger"
         case .clipboard: "Clipboard"
         case .focus: "Focus"
@@ -46,6 +47,7 @@ enum SettingsTab: String, CaseIterable, Identifiable, Hashable {
         case .authentication: "faceid"
         case .modules: "square.grid.2x2.fill"
         case .claude: "sparkles"
+        case .aiHistory: "clock.arrow.circlepath"
         case .messenger: "bubble.left.and.bubble.right.fill"
         case .clipboard: "doc.on.clipboard.fill"
         case .focus: "timer"
@@ -64,6 +66,7 @@ enum SettingsTab: String, CaseIterable, Identifiable, Hashable {
         case .authentication: .red
         case .modules: Theme.accent
         case .claude: .orange
+        case .aiHistory: .indigo
         case .messenger: .green
         case .clipboard: .yellow
         case .focus: .purple
@@ -102,6 +105,7 @@ struct SettingsView: View {
                 case .authentication: AuthenticationSettings()
                 case .modules: ModulesSettings()
                 case .claude: ClaudeSettings()
+                case .aiHistory: AIHistorySettings()
                 case .messenger: MessengerSettings()
                 case .clipboard: ClipboardSettings()
                 case .focus: FocusSettings()
@@ -113,7 +117,7 @@ struct SettingsView: View {
             }
             .navigationTitle(tab.title)
         }
-        .frame(minWidth: 720, minHeight: 520)
+        .frame(minWidth: 680, idealWidth: 860, minHeight: 440, idealHeight: 560)
         .tint(Theme.accent)
         .onReceive(SettingsTab.selection) { tab = $0 }
         .onAppear { SettingsWindowController.currentWindow?.title = tab.title }
@@ -309,6 +313,10 @@ private struct ClaudeSettings: View {
                     }
                     if let e = config.modelError { Text(e).font(.callout).foregroundStyle(.red) }
                 }
+                Toggle(isOn: Binding(get: { ClaudeChatModel.shared.autoScreen }, set: { ClaudeChatModel.shared.autoScreen = $0 })) {
+                    Text("Share my screen when I ask about it")
+                    Text("Questions like \"what's on my screen?\" or \"explain this error\" automatically include a screenshot.")
+                }
             } header: {
                 Text("Provider")
             } footer: {
@@ -360,6 +368,130 @@ private struct ClaudeSettings: View {
                     .disabled((drafts[p] ?? "").isEmpty)
                     Link(p.isFree ? "Free key" : "Get key", destination: p.keyURL)
                 }
+            }
+        }
+    }
+}
+
+// MARK: - AI History
+
+private struct AIHistorySettings: View {
+    @StateObject private var store = ChatHistoryStore.shared
+    @State private var selectedID: UUID?
+    @State private var search = ""
+    @State private var confirmClear = false
+
+    private var filtered: [ChatSession] {
+        search.isEmpty ? store.sessions : store.sessions.filter { s in
+            s.messages.contains { $0.text.localizedCaseInsensitiveContains(search) }
+                || s.modelsUsed.contains { $0.localizedCaseInsensitiveContains(search) }
+                || s.providerTitle.localizedCaseInsensitiveContains(search)
+        }
+    }
+
+    var body: some View {
+        VStack(spacing: 0) {
+            HStack {
+                Toggle("Save AI chats", isOn: $store.isEnabled).toggleStyle(.switch).controlSize(.small)
+                Spacer()
+                Text("\(store.sessions.count) chat\(store.sessions.count == 1 ? "" : "s")").foregroundStyle(.secondary)
+                Button("Delete all…", role: .destructive) { confirmClear = true }.disabled(store.sessions.isEmpty)
+            }
+            .padding(12)
+            Divider()
+            if store.sessions.isEmpty {
+                ContentUnavailableView("No AI chats yet", systemImage: "clock.arrow.circlepath",
+                                       description: Text("Conversations from the notch's AI tab appear here, with the model that answered."))
+            } else {
+                HStack(spacing: 0) {
+                    List(filtered, selection: $selectedID) { s in
+                        VStack(alignment: .leading, spacing: 3) {
+                            Text(s.firstQuestion).lineLimit(2).font(.body.weight(.medium))
+                            Text("\(s.providerTitle) · \(s.modelsUsed.joined(separator: ", "))")
+                                .font(.caption).foregroundStyle(.secondary).lineLimit(1)
+                            Text("\(s.updated.formatted(date: .abbreviated, time: .shortened)) · \(s.messages.count) messages")
+                                .font(.caption2).foregroundStyle(.tertiary)
+                        }
+                        .padding(.vertical, 3)
+                        .tag(s.id)
+                        .contextMenu { Button("Delete", role: .destructive) { store.delete(s.id) } }
+                    }
+                    .safeAreaInset(edge: .top) {
+                        TextField("Search chats", text: $search)
+                            .textFieldStyle(.roundedBorder).padding(.horizontal, 10).padding(.top, 8)
+                    }
+                    .frame(width: 220)
+                    Divider()
+
+                    Group {
+                        if let s = store.sessions.first(where: { $0.id == selectedID }) {
+                            ChatTranscriptView(session: s)
+                        } else {
+                            ContentUnavailableView("Select a chat", systemImage: "text.bubble")
+                        }
+                    }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                }
+            }
+        }
+        .onAppear { if selectedID == nil { selectedID = store.sessions.first?.id } }
+        .confirmationDialog("Delete all AI chat history?", isPresented: $confirmClear) {
+            Button("Delete all", role: .destructive) { store.deleteAll(); selectedID = nil }
+        } message: { Text("This can't be undone.") }
+    }
+}
+
+/// Full conversation: your questions, the AI's answers, and which model wrote each one.
+private struct ChatTranscriptView: View {
+    let session: ChatSession
+    @ObservedObject private var store = ChatHistoryStore.shared
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            VStack(alignment: .leading, spacing: 4) {
+                Text(session.firstQuestion).font(.headline).lineLimit(2)
+                Label("\(session.providerTitle) · \(session.modelsUsed.joined(separator: ", "))", systemImage: "sparkles")
+                    .font(.caption).foregroundStyle(.secondary)
+                Text("Started \(session.started.formatted(date: .complete, time: .shortened))")
+                    .font(.caption).foregroundStyle(.secondary)
+                HStack {
+                    Button {
+                        ClaudeChatModel.shared.resume(session)
+                        AppDelegate.showNotch(tab: .claude)
+                    } label: { Label("Continue", systemImage: "arrow.up.forward.app") }
+                    .help("Reopen this chat in the notch and keep going")
+                    Button {
+                        NSPasteboard.general.clearContents()
+                        NSPasteboard.general.setString(store.transcript(session), forType: .string)
+                    } label: { Label("Copy", systemImage: "doc.on.doc") }
+                    .help("Copy the whole conversation as text")
+                    Spacer()
+                    Button(role: .destructive) { store.delete(session.id) } label: { Label("Delete", systemImage: "trash") }
+                }
+                .padding(.top, 4)
+            }
+            .padding(12)
+            Divider()
+            ScrollView {
+                LazyVStack(alignment: .leading, spacing: 12) {
+                    ForEach(Array(session.messages.enumerated()), id: \.offset) { _, m in
+                        VStack(alignment: m.role == "user" ? .trailing : .leading, spacing: 3) {
+                            HStack(spacing: 4) {
+                                Text(m.role == "user" ? "You" : (m.model ?? "AI")).font(.caption.weight(.semibold))
+                                if m.hadScreenshot { Label("screenshot", systemImage: "camera.viewfinder").font(.caption2) }
+                                Text(m.date.formatted(date: .omitted, time: .shortened)).font(.caption2)
+                            }
+                            .foregroundStyle(.secondary)
+                            Text(LocalizedStringKey(m.text))
+                                .textSelection(.enabled)
+                                .padding(.horizontal, 12).padding(.vertical, 8)
+                                .background(m.role == "user" ? AnyShapeStyle(Theme.accent.opacity(0.25)) : AnyShapeStyle(.quaternary),
+                                            in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                        }
+                        .frame(maxWidth: .infinity, alignment: m.role == "user" ? .trailing : .leading)
+                    }
+                }
+                .padding(12)
             }
         }
     }

@@ -12,7 +12,7 @@ import SwiftUI
 
 /// Every optional feature module in the app.
 enum Module: String, CaseIterable, Identifiable {
-    case today, claude, messenger, clipboard, focus, shelf, share, audio, vpn, nowPlaying, security
+    case today, claude, messenger, clipboard, notes, focus, shelf, share, audio, vpn, nowPlaying, security
 
     var id: String { rawValue }
 
@@ -20,6 +20,7 @@ enum Module: String, CaseIterable, Identifiable {
         switch self {
         case .today: "Today"
         case .focus: "Focus"
+        case .notes: "Notes"
         case .claude: "AI"
         case .messenger: "Messenger"
         case .clipboard: "Clipboard"
@@ -36,6 +37,7 @@ enum Module: String, CaseIterable, Identifiable {
         switch self {
         case .today: "sun.max.fill"
         case .focus: "timer"
+        case .notes: "note.text"
         case .claude: "sparkles"
         case .messenger: "bubble.left.and.bubble.right.fill"
         case .clipboard: "doc.on.clipboard.fill"
@@ -52,6 +54,7 @@ enum Module: String, CaseIterable, Identifiable {
         switch self {
         case .claude: "Chat with AI: free Gemini, Groq, OpenRouter or local Ollama, or paid Claude / ChatGPT. Optionally share your screen."
         case .today: "Weather, your next calendar events and battery at a glance."
+        case .notes: "Quick notes in the notch, saved automatically."
         case .focus: "A Pomodoro focus timer with a countdown beside the notch."
         case .clipboard: "Keeps everything you copy, so you can find and copy it again later."
         case .messenger: "Chat anonymously with people on your Wi-Fi, or in an encrypted room joined by code."
@@ -79,6 +82,7 @@ final class SettingsManager: ObservableObject {
     @AppStorage(Module.messenger.storageKey) var messengerEnabled = true
     @AppStorage(Module.today.storageKey) var todayEnabled = true
     @AppStorage(Module.focus.storageKey) var focusEnabled = true
+    @AppStorage(Module.notes.storageKey) var notesEnabled = true
     /// Briefly show battery level beside the notch when the charger is plugged in or out.
     @AppStorage("ui.chargingActivity") var showChargingActivity = true
     @AppStorage(Module.clipboard.storageKey) var clipboardEnabled = true
@@ -115,6 +119,7 @@ final class SettingsManager: ObservableObject {
         case .messenger: $messengerEnabled
         case .today: $todayEnabled
         case .focus: $focusEnabled
+        case .notes: $notesEnabled
         case .clipboard: $clipboardEnabled
         case .shelf: $shelfEnabled
         case .share: $shareEnabled
