@@ -20,11 +20,22 @@ final class GlobalHotkeyManager {
     enum Key: UInt32 {
         case toggleNotch = 1
         case closeNotch = 2
+        // Window snapping, ⌃⌥ + key.
+        case snapLeft = 10, snapRight, snapTop, snapBottom, snapMaximize, snapCenter, snapRestore
+
+        static let windowKeys: [Key] = [.snapLeft, .snapRight, .snapTop, .snapBottom, .snapMaximize, .snapCenter, .snapRestore]
 
         var keyCode: UInt32 {
             switch self {
             case .toggleNotch: UInt32(kVK_ANSI_E)
             case .closeNotch: UInt32(kVK_Escape)
+            case .snapLeft: UInt32(kVK_LeftArrow)
+            case .snapRight: UInt32(kVK_RightArrow)
+            case .snapTop: UInt32(kVK_UpArrow)
+            case .snapBottom: UInt32(kVK_DownArrow)
+            case .snapMaximize: UInt32(kVK_Return)
+            case .snapCenter: UInt32(kVK_ANSI_C)
+            case .snapRestore: UInt32(kVK_Delete)
             }
         }
 
@@ -32,6 +43,7 @@ final class GlobalHotkeyManager {
             switch self {
             case .toggleNotch: UInt32(cmdKey)
             case .closeNotch: 0
+            default: UInt32(controlKey | optionKey)
             }
         }
     }

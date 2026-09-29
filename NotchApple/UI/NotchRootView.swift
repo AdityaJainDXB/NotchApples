@@ -148,6 +148,7 @@ struct NotchRootView: View {
             case .today: TodayView()
             case .focus: FocusView()
             case .notes: NotesView()
+            case .windows: WindowsView()
             case .clipboard: ClipboardView()
             case .shelf: FileShelfView()
             case .share: ShareView()

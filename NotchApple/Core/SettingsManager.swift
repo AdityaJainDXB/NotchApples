@@ -12,7 +12,7 @@ import SwiftUI
 
 /// Every optional feature module in the app.
 enum Module: String, CaseIterable, Identifiable {
-    case today, claude, messenger, clipboard, notes, focus, shelf, share, audio, vpn, nowPlaying, security
+    case today, claude, windows, messenger, clipboard, notes, focus, shelf, share, audio, vpn, nowPlaying, security
 
     var id: String { rawValue }
 
@@ -21,6 +21,7 @@ enum Module: String, CaseIterable, Identifiable {
         case .today: "Today"
         case .focus: "Focus"
         case .notes: "Notes"
+        case .windows: "Windows"
         case .claude: "AI"
         case .messenger: "Messenger"
         case .clipboard: "Clipboard"
@@ -38,6 +39,7 @@ enum Module: String, CaseIterable, Identifiable {
         case .today: "sun.max.fill"
         case .focus: "timer"
         case .notes: "note.text"
+        case .windows: "rectangle.split.2x2.fill"
         case .claude: "sparkles"
         case .messenger: "bubble.left.and.bubble.right.fill"
         case .clipboard: "doc.on.clipboard.fill"
@@ -54,6 +56,7 @@ enum Module: String, CaseIterable, Identifiable {
         switch self {
         case .claude: "Chat with AI: free Gemini, Groq, OpenRouter or local Ollama, or paid Claude / ChatGPT. Optionally share your screen."
         case .today: "Weather, your next calendar events and battery at a glance."
+        case .windows: "Snap windows into halves, thirds and quarters: drag a window to the notch, use ⌃⌥ shortcuts, or tile everything at once."
         case .notes: "Quick notes in the notch, saved automatically."
         case .focus: "A Pomodoro focus timer with a countdown beside the notch."
         case .clipboard: "Keeps everything you copy, so you can find and copy it again later."
@@ -83,6 +86,13 @@ final class SettingsManager: ObservableObject {
     @AppStorage(Module.today.storageKey) var todayEnabled = true
     @AppStorage(Module.focus.storageKey) var focusEnabled = true
     @AppStorage(Module.notes.storageKey) var notesEnabled = true
+    @AppStorage(Module.windows.storageKey) var windowsEnabled = true
+    /// Show snap zones when a window is dragged up to the notch.
+    @AppStorage("windows.dragToNotch") var windowDragToNotch = true
+    /// ⌃⌥ + arrows / Return / C / Delete snap the front window.
+    @AppStorage("windows.shortcuts") var windowShortcuts = true
+    /// Space between snapped windows, in points.
+    @AppStorage("windows.gap") var windowGap = 8.0
     /// Briefly show battery level beside the notch when the charger is plugged in or out.
     @AppStorage("ui.chargingActivity") var showChargingActivity = true
     @AppStorage(Module.clipboard.storageKey) var clipboardEnabled = true
@@ -120,6 +130,7 @@ final class SettingsManager: ObservableObject {
         case .today: $todayEnabled
         case .focus: $focusEnabled
         case .notes: $notesEnabled
+        case .windows: $windowsEnabled
         case .clipboard: $clipboardEnabled
         case .shelf: $shelfEnabled
         case .share: $shareEnabled

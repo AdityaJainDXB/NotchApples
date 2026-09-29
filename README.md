@@ -50,8 +50,12 @@ brew install --cask notch-apple
 | **Settings**: a sidebar of panes, like System Settings | **Settings → Modules**: every feature is optional |
 | ![Settings: AI History](docs/screenshots/settings-ai-history.png) | ![AI tab](docs/screenshots/claude.png) |
 | **Settings → AI History**: every chat, with the model that answered | **AI**: free providers, switch in the notch |
-| ![Settings: VPN](docs/screenshots/settings-vpn.png) | ![Settings: Audio](docs/screenshots/settings-audio.png) |
-| **Settings → VPN**: free servers and your profiles | **Settings → Audio**: built-in per-app engine |
+| ![Windows](docs/screenshots/windows.png) | ![Snap zones under the notch](docs/screenshots/window-snap-zones.png) |
+| **Windows**: snap, tile and save window layouts | **Drag a window to the notch** and drop it on a zone |
+| ![Settings: Windows](docs/screenshots/settings-windows.png) | ![Settings: VPN](docs/screenshots/settings-vpn.png) |
+| **Settings → Windows**: snap zones, shortcuts, gaps | **Settings → VPN**: free servers and your profiles |
+| ![Settings: Audio](docs/screenshots/settings-audio.png) | |
+| **Settings → Audio**: built-in per-app engine | |
 
 ## Features
 
@@ -63,6 +67,7 @@ Every module is **optional** and can be switched on or off in **Settings → Mod
 | ⏱ **Focus** | A Pomodoro timer: 25-minute focus sessions and 5-minute breaks, with a long break every 4th session. While it runs, **the countdown shows beside the closed notch**. You get a notification and a sound when each session ends. Lengths are adjustable in **Settings → Focus**. |
 | 🔋 **Charging** | Plug in or unplug the charger and the notch briefly shows your battery level. Turn it off in **Settings → General**. |
 | ✨ **AI** | Chat from the notch with **free** AI (Google Gemini, Groq, OpenRouter's free models, or Ollama on your Mac) or with your own key for **DeepSeek**, Claude or ChatGPT. **Ask "what's on my screen?"** and it takes a screenshot and answers about what you're actually looking at. One-click actions summarise, translate or fix what you copied. Every chat is saved in **Settings → AI History** with the model that answered. See [AI in the notch](#ai-in-the-notch). |
+| 🪟 **Windows** | A split-screen window manager. **Drag any window up to the notch** and a strip of snap zones drops down: halves, quarters (4 windows on one screen), thirds, two-thirds, fill and center. Or snap from the Windows tab, or with `⌃⌥` + arrow keys. **Arrange all** tiles every window on the screen at once (split screen, 3 columns, a 4/6/9 grid, main + stack, cascade). Save a whole layout and put every window back in one click. See [Window management](#window-management). |
 | 📝 **Notes** | Quick notes in the notch: several notes, search, a "new note from clipboard" button, and saved automatically on your Mac. |
 | 💬 **Messenger** | Chat anonymously with **people on the same Wi-Fi** (found automatically, encrypted between Macs), or **create or join an anonymous room** with a code, like `cafe-study` or `8821`. Rooms are end-to-end encrypted, and nothing is stored anywhere. You get a random handle like `PurplePanda#402`, and there are no accounts. See [Using Messenger](#using-messenger). |
 | 📋 **Clipboard** | Everything you copy (text, links, images and files) is saved to a searchable history in the notch. Click an item to copy it again, pin the ones you want to keep, and filter by type. Items that password managers mark as secret are never saved, and history stays on your Mac. Choose how many items to keep in **Settings → Clipboard**. |
@@ -85,6 +90,29 @@ Every module is **optional** and can be switched on or off in **Settings → Mod
 `⌘E` is a system-wide shortcut registered through Carbon, so it needs no Accessibility permission. While it's on, other apps won't receive `⌘E` (for example "Use Selection for Find"). You can turn it off in **Settings → General**.
 
 When the VPN module is on, a **VPN On/Off** pill in the notch header shows the tunnel status. The full VPN setup (importing profiles and loading free servers) is under **Settings → VPN**.
+
+## Window management
+
+The **Windows** module arranges your app windows without leaving the notch. It needs one permission: **System Settings → Privacy & Security → Accessibility → Notch apple** (the Windows tab has a button that takes you there).
+
+- **Drag to the notch:** start dragging any window by its title bar and move the pointer up to the notch. Snap zones appear underneath; move onto one (its name lights up) and let go.
+- **Snap from the notch:** open the Windows tab and click a layout. It applies to the window you were just using.
+- **Arrange all windows:** *Split screen* (2 side by side), *3 columns*, *Grid* (4, 6 or 9 windows, depending on how many are open), *Main + stack* (one large window with the rest stacked beside it), or *Cascade*.
+- **Saved layouts:** press **+** to remember where every window is, and click the saved layout later to put them all back. Apps that aren't open are skipped.
+- **Next display** moves the window to your other screen, keeping its relative size and position.
+- **Undo** puts the last snapped window back where it was.
+
+| Shortcut | Action |
+| --- | --- |
+| `⌃⌥←` / `⌃⌥→` | Left / right half |
+| `⌃⌥↑` / `⌃⌥↓` | Top / bottom half |
+| `⌃⌥↩` | Fill the screen |
+| `⌃⌥C` | Center |
+| `⌃⌥⌫` | Undo the last snap |
+
+The gap between windows, the drag-to-notch zones and the shortcuts can be changed in **Settings → Windows**. Accessibility is tied to the app's signature, so after an update macOS may stop honouring it: if snapping stops working, remove Notch apple from the Accessibility list and turn it on again.
+
+Other things new in 1.11: the notch **remembers the last tab** you had open.
 
 ## Install
 
@@ -128,7 +156,8 @@ If you'd rather install an older, smaller build, every version is still availabl
 | [**1.7.0**](https://github.com/AdityaJainDXB/NotchApples/releases/download/v1.7.0/NotchApple-1.7.0.dmg) | 31 MB | **Today** tab (weather, calendar, battery), **Focus** timer, live activities beside the notch, the charging indicator. |  |
 | [**1.8.0**](https://github.com/AdityaJainDXB/NotchApples/releases/download/v1.8.0/NotchApple-1.8.0.dmg) | 31 MB | Local weather (uses your location), a Permissions screen on first launch, Face ID-style face unlock, a large widget, the styled installer. |  |
 | [**1.9.0**](https://github.com/AdityaJainDXB/NotchApples/releases/download/v1.9.0/NotchApple-1.9.0.dmg) | 31 MB | **Free AI choices**: Gemini, Groq, OpenRouter and Ollama, alongside paid Claude and ChatGPT. |  |
-| [**1.10.0**](https://github.com/AdityaJainDXB/NotchApples/releases/download/v1.10.0/NotchApple-1.10.0.dmg) | 31 MB | The AI can **see your screen when you ask**, one-click AI actions, DeepSeek, **AI History**, **Notes**, smoother notch opening. The latest version. |  |
+| [**1.10.0**](https://github.com/AdityaJainDXB/NotchApples/releases/download/v1.10.0/NotchApple-1.10.0.dmg) | 31 MB | The AI can **see your screen when you ask**, one-click AI actions, DeepSeek, **AI History**, **Notes**, smoother notch opening. |  |
+| [**1.11.0**](https://github.com/AdityaJainDXB/NotchApples/releases/download/v1.11.0/NotchApple-1.11.0.dmg) | 31 MB | **Windows**: drag a window to the notch to snap it, split screen, 4-window grid, thirds, tile all windows, saved layouts, `⌃⌥` shortcuts. The notch remembers its last tab. The latest version. |  |
 
 Good to know:
 - **1.4.1 is the last version under 4 MB.** From 1.5.0 on, the app includes the Tunnelblick VPN helper, which accounts for most of the extra size. If you don't use the VPN, 1.4.1 or earlier stays small.
@@ -156,6 +185,7 @@ The table below lists when each is asked for.
 | Touch ID / password | Biometric Lock | Each time you open the notch while the lock is on |
 | Location | Weather | The first time you open Today (approximate location, weather only) |
 | Camera | Face unlock | When you set up or use face unlock. Only a face template is saved, never photos |
+| Accessibility | Windows (snapping and tiling) | When you first use the Windows tab. Only used to move and resize windows |
 | System audio recording | Audio → per-app volume / EQ | The first time you change an app's volume or EQ. Audio is processed on your Mac and never recorded or sent anywhere |
 
 ## AI in the notch
@@ -330,6 +360,7 @@ NotchApple/
     Audio/       CoreAudio routing, native process-tap volume + EQ, BackgroundMusic fallback
     VPN/         NetworkExtension manager, free server library, VPN Gate, profile import
     NowPlaying/  Music / Spotify distributed-notification monitor
+    Windows/     Accessibility window snapping, drag-to-notch snap zones, tiling, saved layouts
 NotchWidget/  WidgetKit extension
 Shared/       Code shared by the app and widget (weather, shared store)
 ```
@@ -364,6 +395,7 @@ Per-app volume and EQ use Core Audio process taps, which arrived in macOS 14.2. 
 - PairDrop and Nearby Wi-Fi chat never leave your local network.
 - Anonymous room messages are end-to-end encrypted before they leave your Mac, and the relay (`ntfy.sh`, or a public MQTT broker as a fallback) stores nothing.
 - Per-app audio is processed in memory on your Mac. Nothing is recorded.
+- Window management only reads window positions, sizes and titles to arrange them. Saved layouts stay on your Mac.
 - Your API key and face-unlock template are stored in the macOS Keychain (`WhenUnlockedThisDeviceOnly`). Face photos are never saved.
 
 ## License

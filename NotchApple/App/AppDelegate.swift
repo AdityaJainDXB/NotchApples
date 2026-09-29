@@ -34,16 +34,26 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         applyClipboardPreference()
         LiveActivityCenter.shared.start()
         showWelcomeOnFirstLaunch()
+        #if DEBUG
+        if ProcessInfo.processInfo.environment["NOTCH_PREVIEW_DROP"] != nil {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1) { SnapDropController.shared.preview(.topLeft) }
+        }
+        if ProcessInfo.processInfo.environment["NOTCH_PREVIEW_SETTINGS"] != nil {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1) { AppDelegate.openSettingsWindow(tab: .windows) }
+        }
+        #endif
 
         // Show/hide the status item live as the preference changes.
         applyStatusItemPreference()
         applyHotkeyPreference()
+        applyWindowPreferences()
         NotificationCenter.default.publisher(for: UserDefaults.didChangeNotification)
             .receive(on: RunLoop.main)
             .sink { [weak self] _ in
                 self?.applyStatusItemPreference()
                 self?.applyHotkeyPreference()
                 self?.applyClipboardPreference()
+                self?.applyWindowPreferences()
             }
             .store(in: &cancellables)
 
@@ -92,6 +102,25 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             GlobalHotkeyManager.shared.register(.toggleNotch) { [weak self] in self?.notchController?.toggle() }
         } else {
             GlobalHotkeyManager.shared.unregister(.toggleNotch)
+        }
+    }
+
+    /// Drag-to-notch snap zones and the ⌃⌥ window shortcuts, when the Windows module is on.
+    private func applyWindowPreferences() {
+        let settings = SettingsManager.shared
+        SnapDropController.shared.setEnabled(settings.windowsEnabled && settings.windowDragToNotch)
+        let shortcuts: [GlobalHotkeyManager.Key: SnapLayout?] = [
+            .snapLeft: .leftHalf, .snapRight: .rightHalf, .snapTop: .topHalf, .snapBottom: .bottomHalf,
+            .snapMaximize: .maximize, .snapCenter: .center, .snapRestore: nil,
+        ]
+        for (key, layout) in shortcuts {
+            if settings.windowsEnabled && settings.windowShortcuts {
+                GlobalHotkeyManager.shared.register(key) {
+                    if let layout { WindowManager.shared.snapFrontWindow(layout) } else { WindowManager.shared.restoreLast() }
+                }
+            } else {
+                GlobalHotkeyManager.shared.unregister(key)
+            }
         }
     }
 

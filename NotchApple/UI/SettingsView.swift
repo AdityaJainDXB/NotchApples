@@ -17,7 +17,7 @@ import UniformTypeIdentifiers
 
 /// Panes in the Settings window. `selection` lets other code jump to a pane.
 enum SettingsTab: String, CaseIterable, Identifiable, Hashable {
-    case general, permissions, authentication, modules, claude, aiHistory, messenger, clipboard, focus, audio, vpn, widget, about
+    case general, permissions, authentication, modules, windows, claude, aiHistory, messenger, clipboard, focus, audio, vpn, widget, about
     static let selection = PassthroughSubject<SettingsTab, Never>()
 
     var id: String { rawValue }
@@ -28,6 +28,7 @@ enum SettingsTab: String, CaseIterable, Identifiable, Hashable {
         case .permissions: "Permissions"
         case .authentication: "Authentication"
         case .modules: "Modules"
+        case .windows: "Windows"
         case .claude: "AI"
         case .aiHistory: "AI History"
         case .messenger: "Messenger"
@@ -46,6 +47,7 @@ enum SettingsTab: String, CaseIterable, Identifiable, Hashable {
         case .permissions: "hand.raised.fill"
         case .authentication: "faceid"
         case .modules: "square.grid.2x2.fill"
+        case .windows: "rectangle.split.2x2.fill"
         case .claude: "sparkles"
         case .aiHistory: "clock.arrow.circlepath"
         case .messenger: "bubble.left.and.bubble.right.fill"
@@ -65,6 +67,7 @@ enum SettingsTab: String, CaseIterable, Identifiable, Hashable {
         case .permissions: .blue
         case .authentication: .red
         case .modules: Theme.accent
+        case .windows: .cyan
         case .claude: .orange
         case .aiHistory: .indigo
         case .messenger: .green
@@ -104,6 +107,7 @@ struct SettingsView: View {
                     .onDisappear { UserDefaults.standard.set(true, forKey: "onboarding.welcomeDismissed") }
                 case .authentication: AuthenticationSettings()
                 case .modules: ModulesSettings()
+                case .windows: WindowsSettings()
                 case .claude: ClaudeSettings()
                 case .aiHistory: AIHistorySettings()
                 case .messenger: MessengerSettings()

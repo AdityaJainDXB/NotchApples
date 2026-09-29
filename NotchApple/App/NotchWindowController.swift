@@ -44,7 +44,10 @@ final class NotchPanel: NSPanel {
 final class NotchState: ObservableObject {
     @Published var isExpanded = false
     @Published var isUnlocked = false
-    @Published var selected: Module = .today
+    /// The open tab; remembered so the notch reopens where you left it.
+    @Published var selected: Module = Module(rawValue: UserDefaults.standard.string(forKey: "ui.lastTab") ?? "") ?? .today {
+        didSet { UserDefaults.standard.set(selected.rawValue, forKey: "ui.lastTab") }
+    }
     /// Size of the physical notch (or a synthetic pill on notch-less Macs).
     @Published var notchSize = CGSize(width: 200, height: 32)
     /// Size of the fully expanded panel.
