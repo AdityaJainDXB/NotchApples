@@ -6,8 +6,9 @@
 //  NSEvent global monitor, a registered hot key needs no Accessibility
 //  permission and never sees any other keystrokes.
 //
-//  Two keys are used:
+//  Keys used:
 //   • ⌘E  — toggles the notch (always registered while the preference is on).
+//   • ⌘O  — hides or reveals the whole notch (invisibility, while the preference is on).
 //   • Esc — closes the notch; registered only while the notch is open, so
 //           other apps get their Escape key back the moment it closes.
 //
@@ -20,6 +21,7 @@ final class GlobalHotkeyManager {
     enum Key: UInt32 {
         case toggleNotch = 1
         case closeNotch = 2
+        case toggleInvisible = 3
         // Window snapping, ⌃⌥ + key.
         case snapLeft = 10, snapRight, snapTop, snapBottom, snapMaximize, snapCenter, snapRestore
 
@@ -29,6 +31,7 @@ final class GlobalHotkeyManager {
             switch self {
             case .toggleNotch: UInt32(kVK_ANSI_E)
             case .closeNotch: UInt32(kVK_Escape)
+            case .toggleInvisible: UInt32(kVK_ANSI_O)
             case .snapLeft: UInt32(kVK_LeftArrow)
             case .snapRight: UInt32(kVK_RightArrow)
             case .snapTop: UInt32(kVK_UpArrow)
@@ -41,7 +44,7 @@ final class GlobalHotkeyManager {
 
         var modifiers: UInt32 {
             switch self {
-            case .toggleNotch: UInt32(cmdKey)
+            case .toggleNotch, .toggleInvisible: UInt32(cmdKey)
             case .closeNotch: 0
             default: UInt32(controlKey | optionKey)
             }

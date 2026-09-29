@@ -11,8 +11,8 @@
 //     cropped, and Vision computes a "feature print": a list of numbers that
 //     describes the image.
 //   • Only those feature prints (plus a match threshold calibrated from how
-//     much your own photos differ) are saved, in the macOS Keychain
-//     (this device only, readable only while the Mac is unlocked). The photos
+//     much your own photos differ) are saved, in a private file on this Mac
+//     that only your user account can read (see KeychainHelper). The photos
 //     themselves are never written to disk.
 //
 //  Unlocking
@@ -158,7 +158,7 @@ final class FaceUnlockEngine: NSObject, ObservableObject {
 
     // MARK: Public API
 
-    /// Takes several photos and saves the face template to the Keychain.
+    /// Takes several photos and saves the face template on this Mac.
     func enrol(completion: @escaping (Bool) -> Void) {
         outcome = nil
         samples = []
@@ -246,7 +246,7 @@ final class FaceUnlockEngine: NSObject, ObservableObject {
                 let ok = FaceTemplateStore.save(samples)
                 let done = onEnrolled
                 onEnrolled = nil
-                prompt = ok ? "Face saved" : "Couldn't save to the Keychain"
+                prompt = ok ? "Face saved" : "Couldn't save the face template"
                 stop()
                 outcome = ok ? .success : .failure
                 Haptics.play(ok)

@@ -12,7 +12,7 @@ import SwiftUI
 
 /// Every optional feature module in the app.
 enum Module: String, CaseIterable, Identifiable {
-    case today, claude, windows, messenger, clipboard, notes, focus, shelf, share, audio, vpn, nowPlaying, security
+    case today, claude, windows, messenger, clipboard, notes, focus, shelf, share, audio, vpn, nowPlaying, search, security
 
     var id: String { rawValue }
 
@@ -30,6 +30,7 @@ enum Module: String, CaseIterable, Identifiable {
         case .audio: "Audio"
         case .vpn: "VPN"
         case .nowPlaying: "Now Playing"
+        case .search: "Search"
         case .security: "Biometric Lock"
         }
     }
@@ -48,6 +49,7 @@ enum Module: String, CaseIterable, Identifiable {
         case .audio: "speaker.wave.2.fill"
         case .vpn: "lock.shield.fill"
         case .nowPlaying: "music.note"
+        case .search: "magnifyingglass"
         case .security: "touchid"
         }
     }
@@ -66,6 +68,7 @@ enum Module: String, CaseIterable, Identifiable {
         case .audio: "Output device, master volume, and per-app volume / EQ via BackgroundMusic."
         case .vpn: "Manage free OpenVPN / WireGuard / IKEv2 profiles."
         case .nowPlaying: "Show the track playing in Music or Spotify."
+        case .search: "Find files, apps and folders instantly with Spotlight, then open, reveal or drag them to the shelf."
         case .security: "Require Touch ID / Apple Watch / password to open the notch."
         }
     }
@@ -101,7 +104,15 @@ final class SettingsManager: ObservableObject {
     @AppStorage(Module.audio.storageKey) var audioEnabled = true
     @AppStorage(Module.vpn.storageKey) var vpnEnabled = false
     @AppStorage(Module.nowPlaying.storageKey) var nowPlayingEnabled = true
+    @AppStorage(Module.search.storageKey) var searchEnabled = true
     @AppStorage(Module.security.storageKey) var securityEnabled = false
+    /// File Search scope: the whole Mac, or just the home folder (plus Applications).
+    @AppStorage("search.wholeMac") var searchWholeMac = false
+    @AppStorage("search.apps") var searchApps = true
+    @AppStorage("search.documents") var searchDocuments = true
+    @AppStorage("search.images") var searchImages = true
+    @AppStorage("search.pdfs") var searchPDFs = true
+    @AppStorage("search.downloads") var searchDownloads = true
 
     /// Claude model used for chat. Users pay for their own usage, so let them choose.
     @AppStorage("claude.model") var claudeModel = "claude-sonnet-5"
@@ -113,6 +124,10 @@ final class SettingsManager: ObservableObject {
     @AppStorage("ui.hoverToOpen") var hoverToOpen = false
     /// Toggle the notch from anywhere with ⌘E (Carbon hot key, no Accessibility permission needed).
     @AppStorage("ui.globalHotkey") var globalHotkeyEnabled = true
+    /// Hide or reveal the whole notch from anywhere with ⌘O.
+    @AppStorage("ui.invisibilityHotkey") var invisibilityHotkeyEnabled = true
+    /// True while ⌘O has made the notch invisible. Not persisted: every launch starts visible.
+    @Published var isNotchHidden = false
     /// Offer webcam face unlock (enrolled in Settings → Authentication) on the lock screen.
     @AppStorage("security.faceUnlock") var faceUnlockEnabled = false
     /// Let Messenger find people on the local network (Nearby Wi-Fi mode).
@@ -137,6 +152,7 @@ final class SettingsManager: ObservableObject {
         case .audio: $audioEnabled
         case .vpn: $vpnEnabled
         case .nowPlaying: $nowPlayingEnabled
+        case .search: $searchEnabled
         case .security: $securityEnabled
         }
     }

@@ -155,6 +155,7 @@ struct NotchRootView: View {
             case .audio: AudioView()
             case .vpn: VPNView()
             case .nowPlaying: NowPlayingView()
+            case .search: FileSearchView()
             case .security: EmptyView()
             }
         }
