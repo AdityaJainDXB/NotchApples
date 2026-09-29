@@ -30,8 +30,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         notchController = NotchWindowController()
         notchController?.show()
 
-        NowPlayingMonitor.shared.start()
-        startMessengerInBackground()
+        // Now Playing and Messenger are gated: they start now if a code is saved, or the moment one is entered.
+        startGatedServices()
+        LicenseState.shared.$isActivated
+            .dropFirst().removeDuplicates()
+            .sink { [weak self] _ in self?.startGatedServices() }
+            .store(in: &cancellables)
+        SystemHUDObserver.shared.start()
+        ScreenRecordingDetector.shared.start()
         applyClipboardPreference()
         LiveActivityCenter.shared.start()
         UpdateChecker.shared.applyPreference()
@@ -58,10 +64,23 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             .sink { [weak self] _ in self?.applyStatusItemPreference() }
             .store(in: &cancellables)
 
+        // Global shortcuts are re-registered after sleep or a fast-user-switch, so they keep working in every app.
+        for name in [NSWorkspace.didWakeNotification, NSWorkspace.sessionDidBecomeActiveNotification] {
+            NSWorkspace.shared.notificationCenter.publisher(for: name)
+                .sink { _ in GlobalHotkeyManager.shared.reregisterAll() }
+                .store(in: &cancellables)
+        }
+
         // Re-anchor when displays are connected, removed or rearranged.
         NotificationCenter.default.publisher(for: NSApplication.didChangeScreenParametersNotification)
             .sink { [weak self] _ in self?.notchController?.reposition() }
             .store(in: &cancellables)
+    }
+
+    private func startGatedServices() {
+        guard LicenseState.shared.isActivated else { return }
+        NowPlayingMonitor.shared.start()
+        startMessengerInBackground()
     }
 
     /// Keeps Messenger listening while the notch is closed, so new messages can notify you:
@@ -112,6 +131,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             notchController?.setInvisible(false)
         }
     }
+
+    var notch: NotchWindowController? { notchController }
 
     /// ⌃⌥O: hide or reveal the notch and its menu-bar icon.
     @objc func toggleInvisible() {
@@ -181,6 +202,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         guard let delegate = AppDelegate.current else { return }
         delegate.notchController?.state.selected = tab
         delegate.notchController?.expand()
+    }
+
+    /// Starts a fresh copy of the app and quits this one.
+    static func relaunch() {
+        let config = NSWorkspace.OpenConfiguration()
+        config.createsNewApplicationInstance = true
+        NSWorkspace.shared.openApplication(at: Bundle.main.bundleURL, configuration: config) { _, _ in
+            DispatchQueue.main.async { NSApp.terminate(nil) }
+        }
     }
 
     /// Opens the Settings window. Agent apps can't rely on the SwiftUI `Settings`

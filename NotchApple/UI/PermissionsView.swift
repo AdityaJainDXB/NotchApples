@@ -104,7 +104,7 @@ struct PermissionsView: View {
                         Image(nsImage: NSApp.applicationIconImage).resizable().frame(width: 56, height: 56)
                         VStack(alignment: .leading, spacing: 4) {
                             Text("Welcome to Notch apple").font(.title2.bold())
-                            Text("Click the notch or press ⌘E to open it. Turn on what you'd like below; everything is optional and can be changed later.")
+                            Text("Click the notch or press \(HotkeyBinding.notch.label) to open it. Turn on what you'd like below; everything is optional and can be changed later.")
                                 .font(.callout).foregroundStyle(.secondary)
                         }
                     }

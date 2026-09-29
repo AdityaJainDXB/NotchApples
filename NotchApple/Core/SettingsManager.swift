@@ -12,7 +12,7 @@ import SwiftUI
 
 /// Every optional feature module in the app.
 enum Module: String, CaseIterable, Identifiable {
-    case today, claude, windows, tools, mirror, worldClock, messenger, clipboard, notes, focus, shelf, share, audio, vpn, nowPlaying, search, security
+    case today, claude, translator, stats, windows, tools, mirror, worldClock, messenger, clipboard, notes, focus, shelf, share, audio, vpn, nowPlaying, search, security
 
     var id: String { rawValue }
 
@@ -34,6 +34,8 @@ enum Module: String, CaseIterable, Identifiable {
         case .vpn: "VPN"
         case .nowPlaying: "Now Playing"
         case .search: "Search"
+        case .translator: "Translator"
+        case .stats: "Mac Stats"
         case .security: "Biometric Lock"
         }
     }
@@ -56,6 +58,8 @@ enum Module: String, CaseIterable, Identifiable {
         case .vpn: "lock.shield.fill"
         case .nowPlaying: "music.note"
         case .search: "magnifyingglass"
+        case .translator: "character.bubble.fill"
+        case .stats: "gauge.with.dots.needle.67percent"
         case .security: "touchid"
         }
     }
@@ -78,6 +82,8 @@ enum Module: String, CaseIterable, Identifiable {
         case .vpn: "Manage free OpenVPN / WireGuard / IKEv2 profiles."
         case .nowPlaying: "Show the track playing in Music or Spotify."
         case .search: "Find files, apps and folders instantly with Spotlight, then open, reveal or drag them to the shelf."
+        case .translator: "Add-on: translate between Arabic, English, French, Spanish, Hindi, Mandarin and German, with pronunciation you can read and hear. Sends the text you type to a free translation service."
+        case .stats: "Add-on: live RAM, CPU, network speed, battery and disk space. The MacBook Center widget shows the same in Notification Center."
         case .security: "Require Touch ID / Apple Watch / password to open the notch."
         }
     }
@@ -86,20 +92,37 @@ enum Module: String, CaseIterable, Identifiable {
     var isTab: Bool { self != .security }
 
     /// The UserDefaults key backing this module's toggle.
-    var storageKey: String { "module.\(rawValue).enabled" }
+    var storageKey: String { self == .translator ? "isTranslatorEnabled" : "module.\(rawValue).enabled" }
 }
 
 /// Observable wrapper around module toggles and app-wide preferences.
 final class SettingsManager: ObservableObject {
     static let shared = SettingsManager()
 
+    /// Registers first-install defaults. A new install shows only Today and AI; Windows, Tools,
+    /// Notes and Focus start off (turn them on in Settings → Modules). People who already
+    /// use the app keep the tabs they have: their untouched modules are saved as "on" first.
+    static func registerDefaults() {
+        let d = UserDefaults.standard
+        let alreadyInstalled = d.bool(forKey: "onboarding.permissionsShown")
+        // New installs open the notch with ⌃⌥N; people already using ⌘E keep it (and can change it in Settings).
+        if alreadyInstalled, d.object(forKey: "hotkey.notch.keyCode") == nil { HotkeyBinding.save(.legacyNotch, for: .notch) }
+        let offByDefault: [Module] = [.windows, .tools, .notes, .focus]
+        if alreadyInstalled {
+            for m in offByDefault where d.object(forKey: m.storageKey) == nil { d.set(true, forKey: m.storageKey) }
+        }
+        var defaults: [String: Any] = [Module.today.storageKey: true, Module.claude.storageKey: true]
+        offByDefault.forEach { defaults[$0.storageKey] = false }
+        d.register(defaults: defaults)
+    }
+
     @AppStorage(Module.claude.storageKey) var claudeEnabled = true
     @AppStorage(Module.messenger.storageKey) var messengerEnabled = true
     @AppStorage(Module.today.storageKey) var todayEnabled = true
-    @AppStorage(Module.focus.storageKey) var focusEnabled = true
-    @AppStorage(Module.notes.storageKey) var notesEnabled = true
-    @AppStorage(Module.windows.storageKey) var windowsEnabled = true
-    @AppStorage(Module.tools.storageKey) var toolsEnabled = true
+    @AppStorage(Module.focus.storageKey) var focusEnabled = false
+    @AppStorage(Module.notes.storageKey) var notesEnabled = false
+    @AppStorage(Module.windows.storageKey) var windowsEnabled = false
+    @AppStorage(Module.tools.storageKey) var toolsEnabled = false
     /// Add-ons are off until you add them in Settings → Modules.
     @AppStorage(Module.mirror.storageKey) var mirrorEnabled = false
     @AppStorage(Module.worldClock.storageKey) var worldClockEnabled = false
@@ -118,6 +141,9 @@ final class SettingsManager: ObservableObject {
     @AppStorage(Module.vpn.storageKey) var vpnEnabled = false
     @AppStorage(Module.nowPlaying.storageKey) var nowPlayingEnabled = true
     @AppStorage(Module.search.storageKey) var searchEnabled = true
+    /// Add-ons: off until you add them in Settings → Modules.
+    @AppStorage(Module.translator.storageKey) var translatorEnabled = false
+    @AppStorage(Module.stats.storageKey) var statsEnabled = false
     @AppStorage(Module.security.storageKey) var securityEnabled = false
     /// File Search scope: the whole Mac, or just the home folder (plus Applications).
     @AppStorage("search.wholeMac") var searchWholeMac = false
@@ -129,13 +155,17 @@ final class SettingsManager: ObservableObject {
 
     /// Claude model used for chat. Users pay for their own usage, so let them choose.
     @AppStorage("claude.model") var claudeModel = "claude-sonnet-5"
+    /// Briefly show a volume / brightness gauge beside the closed notch when either changes.
+    @AppStorage("ui.systemHUD") var showSystemHUD = true
+    /// Show the notch's recording dot while the screen is being recorded.
+    @AppStorage("ui.recordingIndicator") var showRecordingIndicator = true
     /// Show the menu-bar status item in addition to the notch hit area.
     @AppStorage("ui.showStatusItem") var showStatusItem = true
     /// Keep the notch open when it loses focus (useful while dragging files in).
     @AppStorage("ui.stickyNotch") var stickyNotch = false
     /// Open the notch when the pointer hovers over it, and close it when the pointer leaves. Off by default.
     @AppStorage("ui.hoverToOpen") var hoverToOpen = false
-    /// Toggle the notch from anywhere with ⌘E (Carbon hot key, no Accessibility permission needed).
+    /// Toggle the notch from anywhere with a global shortcut (Carbon hot key, no Accessibility permission needed).
     @AppStorage("ui.globalHotkey") var globalHotkeyEnabled = true
     /// Hide or reveal the whole notch from anywhere with ⌃⌥O.
     @AppStorage("ui.invisibilityHotkey") var invisibilityHotkeyEnabled = true
@@ -169,6 +199,8 @@ final class SettingsManager: ObservableObject {
         case .vpn: $vpnEnabled
         case .nowPlaying: $nowPlayingEnabled
         case .search: $searchEnabled
+        case .translator: $translatorEnabled
+        case .stats: $statsEnabled
         case .security: $securityEnabled
         }
     }

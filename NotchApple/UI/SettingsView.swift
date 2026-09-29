@@ -13,11 +13,12 @@ import SwiftUI
 import ServiceManagement
 import WidgetKit
 import Combine
+import Carbon.HIToolbox
 import UniformTypeIdentifiers
 
 /// Panes in the Settings window. `selection` lets other code jump to a pane.
 enum SettingsTab: String, CaseIterable, Identifiable, Hashable {
-    case general, shortcuts, permissions, authentication, modules, windows, claude, aiHistory, messenger, clipboard, fileSearch, focus, audio, vpn, widget, updates, about
+    case general, appearance, license, shortcuts, permissions, authentication, modules, windows, claude, aiHistory, messenger, clipboard, fileSearch, focus, audio, vpn, widget, updates, about
     static let selection = PassthroughSubject<SettingsTab, Never>()
 
     var id: String { rawValue }
@@ -25,6 +26,8 @@ enum SettingsTab: String, CaseIterable, Identifiable, Hashable {
     var title: String {
         switch self {
         case .general: "General"
+        case .appearance: "Appearance"
+        case .license: "License & Activation"
         case .shortcuts: "Shortcuts & Hotkeys"
         case .permissions: "Permissions"
         case .authentication: "Authentication"
@@ -47,6 +50,8 @@ enum SettingsTab: String, CaseIterable, Identifiable, Hashable {
     var symbol: String {
         switch self {
         case .general: "gearshape.fill"
+        case .appearance: "paintpalette.fill"
+        case .license: "key.fill"
         case .shortcuts: "command"
         case .permissions: "hand.raised.fill"
         case .authentication: "faceid"
@@ -70,6 +75,8 @@ enum SettingsTab: String, CaseIterable, Identifiable, Hashable {
     var tint: Color {
         switch self {
         case .general: .gray
+        case .appearance: .pink
+        case .license: .green
         case .shortcuts: .mint
         case .permissions: .blue
         case .authentication: .red
@@ -122,6 +129,8 @@ struct SettingsView: View {
             Group {
                 switch tab {
                 case .general: GeneralSettings()
+                case .appearance: AppearanceSettings()
+                case .license: LicenseSettings()
                 case .shortcuts: ShortcutsSettings()
                 case .permissions: PermissionsView(showsWelcome: !UserDefaults.standard.bool(forKey: "onboarding.welcomeDismissed"))
                     .onDisappear { UserDefaults.standard.set(true, forKey: "onboarding.welcomeDismissed") }
@@ -145,9 +154,58 @@ struct SettingsView: View {
         }
         .frame(minWidth: 680, idealWidth: 860, minHeight: 440, idealHeight: 560)
         .tint(Theme.accent)
+        .id(ThemeManager.shared.currentThemeID)
         .onReceive(SettingsTab.selection) { tab = $0 }
         .onAppear { SettingsWindowController.currentWindow?.title = tab.title }
         .onChange(of: tab) { _, new in SettingsWindowController.currentWindow?.title = new.title }
+    }
+}
+
+// MARK: - License & Activation
+
+private struct LicenseSettings: View {
+    @StateObject private var license = LicenseState.shared
+    @State private var confirmReset = false
+    private var activated: Bool { license.isActivated }
+
+    var body: some View {
+        Form {
+            Section {
+                LabeledContent("Status") {
+                    Label(activated ? "Licensed & Activated" : "Not activated",
+                          systemImage: activated ? "checkmark.seal.fill" : "xmark.seal.fill")
+                        .foregroundStyle(activated ? .green : .orange)
+                }
+                if activated {
+                    LabeledContent("Access code", value: AccessCodeManager.maskedActiveCode)
+                        .monospaced()
+                }
+            } footer: {
+                Text("An access code unlocks AI, Messenger, Audio, Now Playing and VPN. Everything else is free. Activation is saved on this Mac, works offline, and stays if you reinstall or update.")
+            }
+            if !activated {
+                Section {
+                    ActivationModalView(feature: nil, compact: true)
+                } header: {
+                    Text("Unlock AI, Messenger, Audio, Now Playing and VPN")
+                }
+            }
+            Section {
+                Button("Deactivate / Reset License", role: .destructive) { confirmReset = true }
+                    .disabled(!activated)
+            } footer: {
+                Text("For testing: removes the activation and restarts the app. AI, Messenger, Audio, Now Playing and VPN then ask for an access code again.")
+            }
+        }
+        .formStyle(.grouped)
+        .confirmationDialog("Reset the license?", isPresented: $confirmReset) {
+            Button("Reset and restart", role: .destructive) {
+                license.deactivate()
+                AppDelegate.relaunch()
+            }
+        } message: {
+            Text("You'll need to enter an access code again.")
+        }
     }
 }
 
@@ -155,13 +213,30 @@ struct SettingsView: View {
 
 private struct ShortcutsSettings: View {
     @EnvironmentObject private var settings: SettingsManager
+    @State private var binding = HotkeyBinding.invisibility
+    @State private var notchBinding = HotkeyBinding.notch
+    @State private var blocked = GlobalHotkeyManager.shared.isBlocked(.toggleInvisible)
+    @State private var notchBlocked = GlobalHotkeyManager.shared.isBlocked(.toggleNotch)
 
     var body: some View {
         Form {
             Section {
                 Toggle(isOn: $settings.invisibilityHotkeyEnabled) {
-                    Text("Hide the notch with ⌃⌥O")
-                    Text("Press ⌃⌥O from anywhere on your Mac to instantly hide or reveal the notch.")
+                    Text("Hide the notch with \(binding.label)")
+                    Text("Press \(binding.label) from anywhere on your Mac to instantly hide or reveal the notch.")
+                }
+                LabeledContent("Shortcut") {
+                    ShortcutRecorder(slot: .invisibility, binding: $binding, reserved: [notchBinding]) {
+                        // The app re-registers on the next preferences change; check the result shortly after.
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                            blocked = GlobalHotkeyManager.shared.isBlocked(.toggleInvisible)
+                        }
+                    }
+                }
+                if blocked && settings.invisibilityHotkeyEnabled {
+                    Label("macOS didn't accept \(binding.label): another app may already use it. Pick a different shortcut.",
+                          systemImage: "exclamationmark.triangle.fill")
+                        .font(.callout).foregroundStyle(.orange)
                 }
                 LabeledContent("Notch") {
                     Label(settings.isNotchHidden ? "Hidden/Invisible" : "Visible",
@@ -174,15 +249,30 @@ private struct ShortcutsSettings: View {
             } header: {
                 Text("Invisibility")
             } footer: {
-                Text("Everything keeps running while the notch is hidden; ⌘E also brings it back.")
+                Text("Everything keeps running while the notch is hidden; \(notchBinding.label) also brings it back.")
             }
             Section {
                 Toggle(isOn: $settings.globalHotkeyEnabled) {
-                    Text("Open and close with ⌘E")
-                    Text("Works in any app. While on, other apps don't receive ⌘E.")
+                    Text("Open and close with \(notchBinding.label)")
+                    Text("Works in any app. While on, other apps don't receive \(notchBinding.label).")
+                }
+                LabeledContent("Shortcut") {
+                    ShortcutRecorder(slot: .notch, binding: $notchBinding, reserved: [binding]) {
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                            notchBlocked = GlobalHotkeyManager.shared.isBlocked(.toggleNotch)
+                            binding = HotkeyBinding.invisibility
+                        }
+                    }
+                }
+                if notchBlocked && settings.globalHotkeyEnabled {
+                    Label("macOS didn't accept \(notchBinding.label): another app may already use it. Pick a different shortcut.",
+                          systemImage: "exclamationmark.triangle.fill")
+                        .font(.callout).foregroundStyle(.orange)
                 }
             } header: {
                 Text("Notch")
+            } footer: {
+                Text("Shortcuts need ⌘ or ⌃. They use macOS's built-in hot keys, so no Accessibility permission is needed and they work in every app, including full-screen ones.")
             }
         }
         .formStyle(.grouped)
@@ -203,6 +293,14 @@ private struct GeneralSettings: View {
                         on ? PermissionsModel.shared.enableLoginItem() : PermissionsModel.shared.disableLoginItem()
                     }
                 Toggle("Show icon in menu bar", isOn: $settings.showStatusItem)
+                Toggle(isOn: $settings.showSystemHUD) {
+                    Text("Show volume and brightness beside the notch")
+                    Text("When you change either, the closed notch briefly expands with a gauge. Not shown while the notch is hidden.")
+                }
+                Toggle(isOn: $settings.showRecordingIndicator) {
+                    Text("Show a dot on the notch while the screen is recorded")
+                    Text("Works for Notch apple's own recordings and the system recorder (⌘⇧5). Other recording apps can't be detected.")
+                }
                 Toggle(isOn: $settings.showChargingActivity) {
                     Text("Show battery beside the notch when charging")
                     Text("Briefly shows the battery level when you plug in or unplug the charger.")
@@ -210,8 +308,8 @@ private struct GeneralSettings: View {
             }
             Section {
                 Toggle(isOn: $settings.globalHotkeyEnabled) {
-                    Text("Open and close with ⌘E")
-                    Text("Works in any app. While on, other apps don't receive ⌘E.")
+                    Text("Open and close with \(HotkeyBinding.notch.label)")
+                    Text("Works in any app. Change the shortcut in Shortcuts & Hotkeys.")
                 }
                 Toggle(isOn: $settings.hoverToOpen) {
                     Text("Open on hover")
@@ -224,7 +322,7 @@ private struct GeneralSettings: View {
             } header: {
                 Text("Notch")
             } footer: {
-                Text("The notch opens when you click it, press ⌘E, or drag a file onto it. With Open on hover off, hovering only highlights it.")
+                Text("The notch opens when you click it, press \(HotkeyBinding.notch.label), or drag a file onto it. With Open on hover off, hovering only highlights it.")
             }
         }
         .formStyle(.grouped)

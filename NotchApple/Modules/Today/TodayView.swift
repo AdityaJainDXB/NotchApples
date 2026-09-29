@@ -101,6 +101,7 @@ struct TodayView: View {
                     }
 
                     Spacer(minLength: 0)
+                    captureButtons
                     if let b = model.battery {
                         Label("\(b.percent)%\(b.charging ? " · charging" : b.pluggedIn ? " · plugged in" : "")",
                               systemImage: b.charging ? "battery.100percent.bolt" : LiveActivityCenter.batterySymbol(b.percent))
@@ -149,6 +150,32 @@ struct TodayView: View {
             model.refresh()
             // First time: ask for location so weather is local, not Cupertino.
             if location.useCurrentLocation && location.status == .notDetermined { location.requestLocation() }
+        }
+    }
+
+    @StateObject private var capture = ScreenCaptureActions.shared
+
+    /// Screenshot (notch hidden for the shot) and screen recording.
+    private var captureButtons: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            HStack(spacing: 6) {
+                Button { capture.takeScreenshot() } label: { Label("Screenshot", systemImage: "camera.viewfinder") }
+                    .buttonStyle(PurpleButtonStyle(prominent: false))
+                    .help("Take a screenshot of the main display, without the notch")
+                Button { capture.toggleRecording() } label: {
+                    if capture.isRecording, let start = capture.recordingStart {
+                        Label { Text(start, style: .timer).monospacedDigit() } icon: { Image(systemName: "stop.circle.fill") }
+                    } else {
+                        Label("Record", systemImage: "record.circle")
+                    }
+                }
+                .buttonStyle(PurpleButtonStyle(prominent: capture.isRecording))
+                .help(capture.isRecording ? "Stop recording" : "Start recording the screen")
+            }
+            if let message = capture.message {
+                Text(message).font(.system(size: 11)).foregroundStyle(Theme.textSecondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
         }
     }
 

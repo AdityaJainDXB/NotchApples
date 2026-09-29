@@ -7,6 +7,7 @@
 //  "ears" either side of it: an icon on the left, a short label on the right.
 //
 //  Sources, highest priority first:
+//   0. System HUD — volume or brightness gauge for a moment after you change them.
 //   1. Charging — shown for a few seconds when the charger is plugged / unplugged.
 //   2. Focus timer — countdown while a session is running.
 //   3. Unread messages — a purple dot.
@@ -21,6 +22,7 @@ struct LiveActivity: Equatable {
     var label: String?           // short text for the right ear, e.g. "24:13"
     var tint: NSColor
     var dotOnly = false          // just a small dot in the right ear
+    var gauge: Double? = nil     // 0...1: draws a volume/brightness bar in the right ear (system HUD)
 }
 
 @MainActor
@@ -28,8 +30,15 @@ final class LiveActivityCenter: ObservableObject {
     static let shared = LiveActivityCenter()
 
     @Published private(set) var current: LiveActivity?
+    /// True while any app or the system is recording the screen (see ScreenRecordingDetector).
+    @Published private(set) var isScreenRecording = false
     var onChange: (LiveActivity?) -> Void = { _ in }
+    var onRecordingChange: (Bool) -> Void = { _ in }
+    /// Set by the notch controller: HUDs only appear while the notch is closed and not hidden.
+    var canShowHUD: () -> Bool = { true }
 
+    private var hudFlash: LiveActivity?
+    private var hudWork: DispatchWorkItem?
     private var chargingFlash: LiveActivity?
     private var flashWork: DispatchWorkItem?
     private var powerSource: CFRunLoopSource?
@@ -43,7 +52,9 @@ final class LiveActivityCenter: ObservableObject {
     /// Recalculates what the closed notch should show.
     func recompute() {
         var next: LiveActivity?
-        if let flash = chargingFlash {
+        if let hud = hudFlash {
+            next = hud
+        } else if let flash = chargingFlash {
             next = flash
         } else if SettingsManager.shared.focusEnabled, let focus = FocusTimer.shared.liveActivity {
             next = focus
@@ -53,6 +64,28 @@ final class LiveActivityCenter: ObservableObject {
         guard next != current else { return }
         current = next
         onChange(next)
+    }
+
+    // MARK: System HUD (volume / brightness) and recording
+
+    /// Briefly expands the closed notch with a gauge, like the Dynamic Island's volume HUD.
+    func showHUD(symbol: String, value: Double) {
+        guard SettingsManager.shared.showSystemHUD, canShowHUD() else { return }
+        hudFlash = LiveActivity(symbol: symbol, label: nil, tint: NSColor(Theme.accentBright), gauge: min(max(value, 0), 1))
+        recompute()
+        hudWork?.cancel()
+        let work = DispatchWorkItem { [weak self] in
+            self?.hudFlash = nil
+            self?.recompute()
+        }
+        hudWork = work
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.8, execute: work)
+    }
+
+    func setScreenRecording(_ on: Bool) {
+        guard on != isScreenRecording else { return }
+        isScreenRecording = on
+        onRecordingChange(on)
     }
 
     // MARK: Charging

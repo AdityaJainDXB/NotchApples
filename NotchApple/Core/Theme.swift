@@ -14,26 +14,34 @@
 import SwiftUI
 
 enum Theme {
-    /// Primary accent — vivid violet that keeps contrast against the dark notch.
-    static let accent = Color(red: 0.62, green: 0.42, blue: 1.0)
-    static let accentBright = Color(red: 0.78, green: 0.62, blue: 1.0)
-    static let deep = Color(red: 0.12, green: 0.05, blue: 0.24)
-    static let deeper = Color(red: 0.05, green: 0.02, blue: 0.10)
+    /// The active colour theme (Settings → Appearance). Every token below follows it.
+    private static var current: AppTheme { ThemeManager.shared.currentTheme }
 
-    static let textPrimary = Color.white
-    /// ~7:1 on `deep`, comfortably above the 4.5:1 minimum for small text.
-    static let textSecondary = Color.white.opacity(0.74)
+    /// Primary accent, chosen so it keeps contrast against the dark notch.
+    static var accent: Color { current.primaryAccent }
+    static var accentBright: Color { current.secondaryAccent }
+    static var deep: Color { current.backgroundColor }
+    static var deeper: Color { current.backgroundColor }
+
+    static var textPrimary: Color { current.textColor }
+    /// ~7:1 on the backdrop, comfortably above the 4.5:1 minimum for small text.
+    static var textSecondary: Color { current.textColor.opacity(0.74) }
     static let surface = Color.white.opacity(0.07)
     static let surfaceHover = Color.white.opacity(0.13)
-    static let separator = Color.white.opacity(0.10)
+    static var separator: Color { current.id == .notchPurple ? Color.white.opacity(0.10) : current.borderColor }
 
     /// Background gradient behind the expanded notch.
-    static let backdrop = LinearGradient(
-        colors: [deeper, deep, Color(red: 0.22, green: 0.09, blue: 0.42)],
-        startPoint: .top, endPoint: .bottomTrailing)
+    static var backdrop: LinearGradient {
+        let t = current
+        let colors = t.id == .notchPurple
+            ? [Color(red: 0.05, green: 0.02, blue: 0.10), Color(red: 0.12, green: 0.05, blue: 0.24), t.backdropEnd]
+            : [t.backgroundColor, t.backgroundColor, t.backdropEnd]
+        return LinearGradient(colors: colors, startPoint: .top, endPoint: .bottomTrailing)
+    }
 
-    static let accentGradient = LinearGradient(
-        colors: [accentBright, accent], startPoint: .topLeading, endPoint: .bottomTrailing)
+    static var accentGradient: LinearGradient {
+        LinearGradient(colors: [accentBright, accent], startPoint: .topLeading, endPoint: .bottomTrailing)
+    }
 
     static let corner: CGFloat = 14
     /// Minimum pointer target on macOS.

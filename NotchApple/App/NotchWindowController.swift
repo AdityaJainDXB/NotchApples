@@ -28,8 +28,7 @@ final class NotchPanel: NSPanel {
         isOpaque = false
         backgroundColor = .clear
         hasShadow = false
-        level = .statusBar + 1           // above the menu bar so it sits "in" the notch
-        collectionBehavior = [.canJoinAllSpaces, .stationary, .fullScreenAuxiliary, .ignoresCycle]
+        keepAboveEverything(orderFront: false)   // above the menu bar so it sits "in" the notch, on every Space
         isMovable = false
         hidesOnDeactivate = false
         becomesKeyOnlyIfNeeded = false   // take key status on open so typing works immediately
@@ -91,19 +90,69 @@ final class NotchTriggerView: NSView {
 
     /// Physical notch width, set by the controller.
     var notchWidth: CGFloat = 200 { didSet { needsDisplay = true } }
-    /// What to show beside the closed notch (charging, focus timer, unread dot).
-    var activity: LiveActivity? { didSet { if oldValue != activity { needsDisplay = true } } }
+    /// What to show beside the closed notch (charging, focus timer, unread dot, volume/brightness HUD).
+    var activity: LiveActivity? { didSet { if oldValue != activity { startTicker() } } }
+    /// True while the screen is being recorded: adds a glowing dot and a tooltip.
+    var isRecording = false {
+        didSet {
+            guard oldValue != isRecording else { return }
+            toolTip = isRecording ? "Screen is currently being recorded" : nil
+            setAccessibilityLabel(isRecording ? "Screen is currently being recorded" : nil)
+            startTicker()
+        }
+    }
+    /// Called when the ear width has finished animating, so the controller can resize the window.
+    var onEarSettled: () -> Void = {}
 
     /// Width of each "ear" beside the hardware notch for the current activity.
     static func earWidth(for activity: LiveActivity?) -> CGFloat {
         guard let activity else { return 0 }
+        if activity.gauge != nil { return 122 }
         return activity.dotOnly ? 20 : 58
+    }
+
+    private var targetEar: CGFloat { max(Self.earWidth(for: activity), isRecording ? 24 : 0) }
+    /// The ear width currently drawn (it eases toward `targetEar`). The window must be at least this wide.
+    private(set) var displayedEar: CGFloat = 0
+    private var displayedGauge: CGFloat = 0
+    private var pulse: CGFloat = 0
+    private var ticker: Timer?
+
+    private func startTicker() {
+        needsDisplay = true
+        guard ticker == nil else { return }
+        ticker = Timer.scheduledTimer(withTimeInterval: 1 / 60, repeats: true) { [weak self] _ in self?.tick() }
+        RunLoop.main.add(ticker!, forMode: .common)
+    }
+
+    /// Jumps straight to the final ear width. Used as a safety net so the window can never stay oversized
+    /// if the animation timer is delayed (e.g. App Nap on a hidden agent app).
+    func settle() {
+        ticker?.invalidate(); ticker = nil
+        displayedEar = targetEar
+        if let g = activity?.gauge { displayedGauge = CGFloat(g) }
+        needsDisplay = true
+    }
+
+    private func tick() {
+        let reduceMotion = NSWorkspace.shared.accessibilityDisplayShouldReduceMotion
+        let ease: CGFloat = reduceMotion ? 1 : 0.26
+        var moving = false
+        if abs(targetEar - displayedEar) > 0.5 { displayedEar += (targetEar - displayedEar) * ease; moving = true }
+        else if displayedEar != targetEar { displayedEar = targetEar; onEarSettled() }
+        if let g = activity?.gauge.map({ CGFloat($0) }) {
+            if abs(g - displayedGauge) > 0.002 { displayedGauge += (g - displayedGauge) * (reduceMotion ? 1 : 0.3); moving = true }
+            else { displayedGauge = g }
+        }
+        if isRecording { pulse += 0.06; moving = true }
+        needsDisplay = true
+        if !moving { ticker?.invalidate(); ticker = nil }
     }
 
     override func draw(_ dirtyRect: NSRect) {
         let pad = Self.hitPadding
         let shoulder = NotchRootView.collapsedShoulder
-        let ear = Self.earWidth(for: activity)
+        let ear = displayedEar
         // The visible silhouette, centred: notch + shoulders + ears.
         let width = notchWidth + 2 * (shoulder + ear)
         var notch = NSRect(x: bounds.midX - width / 2, y: bounds.minY + pad.height,
@@ -119,10 +168,18 @@ final class NotchTriggerView: NSView {
         NSColor.black.setFill()
         path.fill()
 
-        if let activity {
+        // Content appears once the ears have mostly opened, so text is never squashed.
+        if let activity, ear >= Self.earWidth(for: activity) * 0.85 {
             let leftEar = NSRect(x: notch.minX + shoulder + 6, y: notch.minY, width: ear - 10, height: notch.height)
             let rightEar = NSRect(x: notch.maxX - shoulder - ear + 4, y: notch.minY, width: ear - 10, height: notch.height)
-            if activity.dotOnly {
+            if activity.gauge != nil {
+                Self.drawGauge(value: displayedGauge, in: rightEar, tint: activity.tint)
+                if let name = activity.symbol,
+                   let img = NSImage(systemSymbolName: name, accessibilityDescription: nil)?
+                        .withSymbolConfiguration(.init(pointSize: 14, weight: .semibold).applying(.init(paletteColors: [activity.tint]))) {
+                    img.draw(in: NSRect(x: leftEar.minX + 2, y: leftEar.midY - img.size.height / 2, width: img.size.width, height: img.size.height))
+                }
+            } else if activity.dotOnly {
                 let d: CGFloat = 8
                 activity.tint.setFill()
                 NSBezierPath(ovalIn: NSRect(x: rightEar.maxX - d, y: rightEar.midY - d / 2, width: d, height: d)).fill()
@@ -145,11 +202,51 @@ final class NotchTriggerView: NSView {
             }
         }
 
+        if isRecording, ear >= 20 {
+            // Glowing dot that breathes between orange and purple.
+            let t = (sin(pulse * 2) + 1) / 2
+            let orange = NSColor.systemOrange, purple = NSColor(Theme.accent)
+            let color = orange.blended(withFraction: t, of: purple) ?? orange
+            let d: CGFloat = 7
+            // Left ear when nothing else is drawn there; otherwise tucked in the top-left corner of the ear.
+            let hasLeftIcon = activity?.symbol != nil
+            let center = hasLeftIcon
+                ? NSPoint(x: notch.minX + shoulder + 5, y: notch.maxY - 7)
+                : NSPoint(x: notch.minX + shoulder + ear / 2, y: notch.midY)
+            NSGraphicsContext.saveGraphicsState()
+            let glow = NSShadow()
+            glow.shadowColor = color.withAlphaComponent(0.5 + 0.4 * t)
+            glow.shadowBlurRadius = 5 + 4 * t
+            glow.shadowOffset = .zero
+            glow.set()
+            color.setFill()
+            NSBezierPath(ovalIn: NSRect(x: center.x - d / 2, y: center.y - d / 2, width: d, height: d)).fill()
+            NSGraphicsContext.restoreGraphicsState()
+        }
+
         if isHovered {
             NSColor(Theme.accent).withAlphaComponent(0.9).setStroke()
             path.lineWidth = 1.5
             path.stroke()
         }
+    }
+
+    /// Rounded volume/brightness bar with a percentage, purple-accented.
+    static func drawGauge(value: CGFloat, in rect: NSRect, tint: NSColor) {
+        let label = NSAttributedString(string: "\(Int((value * 100).rounded()))", attributes: [
+            .font: NSFont.monospacedDigitSystemFont(ofSize: 11.5, weight: .semibold), .foregroundColor: NSColor.white])
+        let labelWidth: CGFloat = 26
+        let track = NSRect(x: rect.minX + 2, y: rect.midY - 2.5, width: rect.width - labelWidth - 10, height: 5)
+        NSColor.white.withAlphaComponent(0.18).setFill()
+        NSBezierPath(roundedRect: track, xRadius: 2.5, yRadius: 2.5).fill()
+        var fill = track
+        fill.size.width = max(track.height, track.width * min(max(value, 0), 1))
+        if value <= 0.001 { fill.size.width = 0 }
+        if fill.width > 0 {
+            NSGradient(colors: [NSColor(Theme.accent), tint])?.draw(in: NSBezierPath(roundedRect: fill, xRadius: 2.5, yRadius: 2.5), angle: 0)
+        }
+        let size = label.size()
+        label.draw(at: NSPoint(x: rect.maxX - size.width, y: rect.midY - size.height / 2))
     }
 
     /// AppKit twin of `NotchShape` (AppKit's y axis points up, so top = maxY).
@@ -214,6 +311,7 @@ final class NotchWindowController {
     private let trigger: NotchPanel
     private let triggerView = NotchTriggerView()
     let state = NotchState()
+    private var levelObservers: [NSObjectProtocol] = []
     private var outsideClickMonitor: Any?
     private var keyMonitor: Any?
     private var clickInsideMonitor: Any?
@@ -235,7 +333,7 @@ final class NotchWindowController {
         trigger = NotchPanel(contentRect: .zero)
         trigger.contentView = triggerView
         // The expanded panel always sits above the trigger (and its hover outline).
-        panel.level = .statusBar + 2
+        panel.keepAboveEverything(extraLevels: 1, orderFront: false)
 
         triggerView.onClick = { [weak self] in self?.toggle() }
         triggerView.onDragEnter = { [weak self] in self?.openForDrop() }
@@ -255,10 +353,40 @@ final class NotchWindowController {
             self.triggerView.activity = activity
             self.reposition()
         }
+        LiveActivityCenter.shared.onRecordingChange = { [weak self] on in
+            guard let self else { return }
+            self.triggerView.isRecording = on
+            self.reposition()
+        }
+        triggerView.onEarSettled = { [weak self] in self?.reposition() }
+        // Safety net: 0.6 s after any change the notch is at its final size, even if the animation timer stalled.
+        let settleSoon: () -> Void = { [weak self] in
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
+                self?.triggerView.settle()
+                self?.reposition()
+            }
+        }
+        let previousOnChange = LiveActivityCenter.shared.onChange
+        LiveActivityCenter.shared.onChange = { activity in previousOnChange(activity); settleSoon() }
+        let previousOnRecording = LiveActivityCenter.shared.onRecordingChange
+        LiveActivityCenter.shared.onRecordingChange = { on in previousOnRecording(on); settleSoon() }
+        // Volume and brightness gauges only appear while the notch is closed and not hidden (⌘O).
+        LiveActivityCenter.shared.canShowHUD = { [weak self] in
+            guard let self else { return false }
+            return !self.state.isExpanded && !SettingsManager.shared.isNotchHidden
+        }
         triggerView.onHoverChange = { [weak self] inside in self?.hoverChanged(inside: inside, overPanel: false) }
         container.onHoverChange = { [weak self] inside in self?.hoverChanged(inside: inside, overPanel: true) }
+        levelObservers = observeWindowLevelEvents()
         state.toggle = { [weak self] in self?.toggle() }
         state.close = { [weak self] in self?.collapse() }
+    }
+
+    /// Puts both windows back on top after a Space change, wake or display change.
+    func reassertWindowLevels() {
+        trigger.keepAboveEverything(orderFront: !SettingsManager.shared.isNotchHidden)
+        panel.keepAboveEverything(extraLevels: 1)
+        reposition()
     }
 
     func show() {
@@ -292,7 +420,8 @@ final class NotchWindowController {
         }
         let pad = NotchTriggerView.hitPadding
         // Widen the trigger window while a live activity needs room for its ears.
-        let side = max(pad.width, NotchRootView.collapsedShoulder + NotchTriggerView.earWidth(for: triggerView.activity) + 8)
+        let ear = max(NotchTriggerView.earWidth(for: triggerView.activity), triggerView.isRecording ? 24 : 0, triggerView.displayedEar)
+        let side = max(pad.width, NotchRootView.collapsedShoulder + ear + 8)
         let hit = CGSize(width: state.notchSize.width + side * 2, height: state.notchSize.height + pad.height)
         triggerView.notchWidth = state.notchSize.width
         trigger.setFrame(frame(size: hit, on: screen), display: true)
@@ -325,6 +454,23 @@ final class NotchWindowController {
     }
 
     func toggleInvisible() { setInvisible(!SettingsManager.shared.isNotchHidden) }
+
+    // MARK: Screenshots and recordings
+
+    /// Takes the notch (panel and closed-notch shape) off screen instantly, so a capture doesn't include it.
+    func hideForCapture() {
+        panel.alphaValue = 0
+        trigger.alphaValue = 0
+    }
+
+    /// Puts the notch back the way it was: open panel visible, closed notch shape visible unless hidden with the shortcut.
+    func restoreAfterCapture() {
+        panel.alphaValue = state.isExpanded ? 1 : 0
+        trigger.alphaValue = SettingsManager.shared.isNotchHidden ? 0 : 1
+    }
+
+    var isOpen: Bool { state.isExpanded }
+    func closeNotch() { collapse() }
 
     func expand() {
         guard !state.isExpanded else { return }

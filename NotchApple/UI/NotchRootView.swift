@@ -56,6 +56,7 @@ struct NotchShape: Shape {
 struct NotchRootView: View {
     @EnvironmentObject private var state: NotchState
     @EnvironmentObject private var settings: SettingsManager
+    @StateObject private var license = LicenseState.shared
 
     var body: some View {
         let shoulder = state.isExpanded ? Self.expandedShoulder : Self.collapsedShoulder
@@ -87,6 +88,8 @@ struct NotchRootView: View {
         // hover only shows feedback there and never opens the notch.
         .preferredColorScheme(.dark)
         .tint(Theme.accent)
+        // A new theme rebuilds the notch so every view picks up the new colours.
+        .id(ThemeManager.shared.currentThemeID)
     }
 
     /// Radius of the concave shoulders where the notch meets the menu bar.
@@ -136,11 +139,11 @@ struct NotchRootView: View {
             .layoutPriority(-1)
             Spacer(minLength: 0)
             UpdatePill { state.close(); AppDelegate.openSettingsWindow(tab: .updates) }
-            if settings.vpnEnabled { VPNQuickStatus() }
+            if settings.vpnEnabled && license.isActivated { VPNQuickStatus() }
             IconButton(systemImage: "gearshape.fill", help: "Settings (⌘,)") {
                 state.close(); AppDelegate.openSettingsWindow()
             }
-            IconButton(systemImage: "chevron.up", help: "Close (Esc or ⌘E)") { state.close() }
+            IconButton(systemImage: "chevron.up", help: "Close (Esc or \(HotkeyBinding.notch.label))") { state.close() }
         }
     }
 
@@ -153,6 +156,9 @@ struct NotchRootView: View {
                 Button("Open Settings") { state.close(); AppDelegate.openSettingsWindow() }.buttonStyle(PurpleButtonStyle())
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
+        } else if state.selected.isGated && !license.isActivated {
+            // AI, Messenger, Audio, Now Playing and VPN unlock with an access code.
+            ActivationModalView(feature: state.selected.title)
         } else {
             switch state.selected {
             case .claude: ClaudeChatView()
@@ -171,6 +177,8 @@ struct NotchRootView: View {
             case .vpn: VPNView()
             case .nowPlaying: NowPlayingView()
             case .search: FileSearchView()
+            case .translator: NotchTranslatorView()
+            case .stats: NotchStatsView()
             case .security: EmptyView()
             }
         }

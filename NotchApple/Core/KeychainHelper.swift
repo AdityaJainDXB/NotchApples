@@ -24,6 +24,9 @@ enum KeychainHelper {
         case openAIAPIKey = "openai.apiKey"
         case deepSeekAPIKey = "deepseek.apiKey"
         case faceTemplate = "faceUnlock.template"
+        case activated = "license.activated"
+        case activatedCodeHash = "license.codeHash"
+        case activatedCodeMask = "license.codeMask"
     }
 
     private static let lock = NSLock()
