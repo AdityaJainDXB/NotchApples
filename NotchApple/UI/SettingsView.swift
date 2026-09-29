@@ -17,7 +17,7 @@ import UniformTypeIdentifiers
 
 /// Panes in the Settings window. `selection` lets other code jump to a pane.
 enum SettingsTab: String, CaseIterable, Identifiable, Hashable {
-    case general, permissions, authentication, modules, windows, claude, aiHistory, messenger, clipboard, focus, audio, vpn, widget, about
+    case general, shortcuts, permissions, authentication, modules, windows, claude, aiHistory, messenger, clipboard, fileSearch, focus, audio, vpn, widget, about
     static let selection = PassthroughSubject<SettingsTab, Never>()
 
     var id: String { rawValue }
@@ -25,6 +25,7 @@ enum SettingsTab: String, CaseIterable, Identifiable, Hashable {
     var title: String {
         switch self {
         case .general: "General"
+        case .shortcuts: "Shortcuts & Hotkeys"
         case .permissions: "Permissions"
         case .authentication: "Authentication"
         case .modules: "Modules"
@@ -33,6 +34,7 @@ enum SettingsTab: String, CaseIterable, Identifiable, Hashable {
         case .aiHistory: "AI History"
         case .messenger: "Messenger"
         case .clipboard: "Clipboard"
+        case .fileSearch: "File Search"
         case .focus: "Focus"
         case .audio: "Audio"
         case .vpn: "VPN"
@@ -44,6 +46,7 @@ enum SettingsTab: String, CaseIterable, Identifiable, Hashable {
     var symbol: String {
         switch self {
         case .general: "gearshape.fill"
+        case .shortcuts: "command"
         case .permissions: "hand.raised.fill"
         case .authentication: "faceid"
         case .modules: "square.grid.2x2.fill"
@@ -52,6 +55,7 @@ enum SettingsTab: String, CaseIterable, Identifiable, Hashable {
         case .aiHistory: "clock.arrow.circlepath"
         case .messenger: "bubble.left.and.bubble.right.fill"
         case .clipboard: "doc.on.clipboard.fill"
+        case .fileSearch: "magnifyingglass"
         case .focus: "timer"
         case .audio: "speaker.wave.2.fill"
         case .vpn: "lock.shield.fill"
@@ -64,6 +68,7 @@ enum SettingsTab: String, CaseIterable, Identifiable, Hashable {
     var tint: Color {
         switch self {
         case .general: .gray
+        case .shortcuts: .mint
         case .permissions: .blue
         case .authentication: .red
         case .modules: Theme.accent
@@ -72,6 +77,7 @@ enum SettingsTab: String, CaseIterable, Identifiable, Hashable {
         case .aiHistory: .indigo
         case .messenger: .green
         case .clipboard: .yellow
+        case .fileSearch: .purple
         case .focus: .purple
         case .audio: .pink
         case .vpn: .blue
@@ -103,6 +109,7 @@ struct SettingsView: View {
             Group {
                 switch tab {
                 case .general: GeneralSettings()
+                case .shortcuts: ShortcutsSettings()
                 case .permissions: PermissionsView(showsWelcome: !UserDefaults.standard.bool(forKey: "onboarding.welcomeDismissed"))
                     .onDisappear { UserDefaults.standard.set(true, forKey: "onboarding.welcomeDismissed") }
                 case .authentication: AuthenticationSettings()
@@ -112,6 +119,7 @@ struct SettingsView: View {
                 case .aiHistory: AIHistorySettings()
                 case .messenger: MessengerSettings()
                 case .clipboard: ClipboardSettings()
+                case .fileSearch: FileSearchSettings()
                 case .focus: FocusSettings()
                 case .audio: AudioSettings()
                 case .vpn: VPNSettings()
@@ -126,6 +134,44 @@ struct SettingsView: View {
         .onReceive(SettingsTab.selection) { tab = $0 }
         .onAppear { SettingsWindowController.currentWindow?.title = tab.title }
         .onChange(of: tab) { _, new in SettingsWindowController.currentWindow?.title = new.title }
+    }
+}
+
+// MARK: - Shortcuts & Hotkeys
+
+private struct ShortcutsSettings: View {
+    @EnvironmentObject private var settings: SettingsManager
+
+    var body: some View {
+        Form {
+            Section {
+                Toggle(isOn: $settings.invisibilityHotkeyEnabled) {
+                    Text("Enable Command + O (⌘O) Invisibility Shortcut")
+                    Text("Press ⌘O from anywhere on your Mac to instantly hide or reveal the notch.")
+                }
+                LabeledContent("Notch") {
+                    Label(settings.isNotchHidden ? "Hidden/Invisible" : "Visible",
+                          systemImage: settings.isNotchHidden ? "eye.slash.fill" : "eye.fill")
+                        .foregroundStyle(settings.isNotchHidden ? .orange : .green)
+                }
+                Button(settings.isNotchHidden ? "Show the notch now" : "Hide the notch now") {
+                    AppDelegate.current?.toggleInvisible()
+                }
+            } header: {
+                Text("Invisibility")
+            } footer: {
+                Text("While on, other apps don't receive ⌘O (their Open… shortcut). Everything keeps running while the notch is hidden; ⌘E also brings it back.")
+            }
+            Section {
+                Toggle(isOn: $settings.globalHotkeyEnabled) {
+                    Text("Open and close with ⌘E")
+                    Text("Works in any app. While on, other apps don't receive ⌘E.")
+                }
+            } header: {
+                Text("Notch")
+            }
+        }
+        .formStyle(.grouped)
     }
 }
 
@@ -193,7 +239,7 @@ private struct AuthenticationSettings: View {
             Section {
                 LabeledContent("Face") {
                     if enrolled {
-                        Label("Saved in Keychain", systemImage: "checkmark.seal.fill").foregroundStyle(.green)
+                        Label("Saved on this Mac", systemImage: "checkmark.seal.fill").foregroundStyle(.green)
                     } else {
                         Text("Not set up").foregroundStyle(.secondary)
                     }
@@ -212,7 +258,7 @@ private struct AuthenticationSettings: View {
             } header: {
                 Text("Face unlock")
             } footer: {
-                Text("The camera takes a few photos of you and Apple's Vision framework turns them into a face template, saved in your Keychain on this Mac only. Photos are never stored or sent anywhere. To unlock, look at the camera and blink. This uses a regular 2D camera, not Apple's 3D Face ID, so treat it as a convenience. Touch ID and your password always work too, and macOS itself can't be unlocked by third-party apps.")
+                Text("The camera takes a few photos of you and Apple's Vision framework turns them into a face template, saved in a private file on this Mac only. Photos are never stored or sent anywhere. To unlock, look at the camera and blink. This uses a regular 2D camera, not Apple's 3D Face ID, so treat it as a convenience. Touch ID and your password always work too, and macOS itself can't be unlocked by third-party apps.")
             }
         }
         .formStyle(.grouped)
@@ -250,7 +296,7 @@ private struct AuthenticationSettings: View {
             FaceTemplateStore.delete()
             settings.faceUnlockEnabled = false
             enrolled = false
-            result = "Face data deleted from the Keychain."
+            result = "Face data deleted."
         }
     }
 }
@@ -293,7 +339,7 @@ private struct ClaudeSettings: View {
     @StateObject private var config = AIConfig.shared
     @State private var drafts: [AIProvider: String] = [:]
     @State private var customModel = ""
-    @State private var refresh = 0     // bump to re-read Keychain state
+    @State private var refresh = 0     // bump to re-read saved-key state
 
     var body: some View {
         Form {
@@ -337,7 +383,7 @@ private struct ClaudeSettings: View {
             } header: {
                 Text("API keys")
             } footer: {
-                Text("Keys are stored in your Keychain on this Mac and sent only to that provider.")
+                Text("Keys are stored in a private file on this Mac (only your user account can read it) and sent only to that provider.")
             }
         }
         .formStyle(.grouped)
@@ -597,6 +643,54 @@ private struct FocusSettings: View {
             }
         }
         .formStyle(.grouped)
+    }
+}
+
+// MARK: - File Search
+
+private struct FileSearchSettings: View {
+    @EnvironmentObject private var settings: SettingsManager
+    @StateObject private var search = FileSearchManager.shared
+
+    var body: some View {
+        Form {
+            Section {
+                Toggle("Enable File Search in Notch", isOn: $settings.searchEnabled)
+            }
+            Section {
+                Picker("Search", selection: $settings.searchWholeMac) {
+                    Text("User home folder only").tag(false)
+                    Text("Entire Mac").tag(true)
+                }
+                .pickerStyle(.radioGroup)
+            } header: {
+                Text("Scope")
+            } footer: {
+                Text("Hidden files, caches and system folders are always skipped.")
+            }
+            Section {
+                Toggle("Apps", isOn: $settings.searchApps)
+                Toggle("Documents", isOn: $settings.searchDocuments)
+                Toggle("Images", isOn: $settings.searchImages)
+                Toggle("PDFs", isOn: $settings.searchPDFs)
+                Toggle("Downloads", isOn: $settings.searchDownloads)
+            } header: {
+                Text("File types")
+            } footer: {
+                Text("With everything ticked, folders and all other files are included too.")
+            }
+            Section {
+                if search.needsFullDiskAccess {
+                    Label("Some folders (Downloads, Documents or Desktop) can't be read yet.", systemImage: "exclamationmark.triangle.fill")
+                        .foregroundStyle(.yellow)
+                }
+                Button("Grant Full Disk Access in System Settings") { FileSearchManager.openFullDiskAccessSettings() }
+            } header: {
+                Text("Permissions")
+            }
+        }
+        .formStyle(.grouped)
+        .onAppear { search.checkPermissions() }
     }
 }
 

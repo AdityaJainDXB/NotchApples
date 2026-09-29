@@ -2,17 +2,20 @@
 //  KeychainHelper.swift
 //  Notch apple
 //
-//  Minimal wrapper over the Security framework for storing secrets (the
-//  user's Anthropic API key) in the login Keychain. Secrets never touch
-//  UserDefaults or disk in plain text.
+//  Stores secrets (API keys, the face-unlock template) in a private file in
+//  Application Support, readable only by the current user (0600, in a 0700
+//  folder; FileVault encrypts it at rest).
+//
+//  Why not the login Keychain: the app is ad-hoc signed, so every build has a
+//  new code signature. Keychain items are tied to the signature that created
+//  them, so each update made macOS ask for the login password again, over and
+//  over. The old Keychain items are deliberately never read (reading them is
+//  what triggers the prompt); users re-enter their keys once.
 //
 
 import Foundation
-import Security
 
 enum KeychainHelper {
-    private static let service = "com.notchapple.app"
-
     enum Key: String {
         case anthropicAPIKey = "anthropic.apiKey"
         case geminiAPIKey = "gemini.apiKey"
@@ -23,6 +26,17 @@ enum KeychainHelper {
         case faceTemplate = "faceUnlock.template"
     }
 
+    private static let lock = NSLock()
+
+    private static let fileURL: URL = {
+        let fm = FileManager.default
+        let dir = fm.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
+            .appendingPathComponent("Notch apple", isDirectory: true)
+        try? fm.createDirectory(at: dir, withIntermediateDirectories: true)
+        try? fm.setAttributes([.posixPermissions: 0o700], ofItemAtPath: dir.path)
+        return dir.appendingPathComponent("secrets.json")
+    }()
+
     /// Saves (or replaces) a string value.
     @discardableResult
     static func set(_ value: String, for key: Key) -> Bool {
@@ -32,16 +46,7 @@ enum KeychainHelper {
     /// Saves (or replaces) raw data.
     @discardableResult
     static func setData(_ value: Data, for key: Key) -> Bool {
-        delete(key)
-        let query: [String: Any] = [
-            kSecClass as String: kSecClassGenericPassword,
-            kSecAttrService as String: service,
-            kSecAttrAccount as String: key.rawValue,
-            kSecValueData as String: value,
-            // Only readable while the Mac is unlocked, never synced to other devices.
-            kSecAttrAccessible as String: kSecAttrAccessibleWhenUnlockedThisDeviceOnly,
-        ]
-        return SecItemAdd(query as CFDictionary, nil) == errSecSuccess
+        update { $0[key.rawValue] = value }
     }
 
     static func get(_ key: Key) -> String? {
@@ -49,27 +54,39 @@ enum KeychainHelper {
     }
 
     static func getData(_ key: Key) -> Data? {
-        let query: [String: Any] = [
-            kSecClass as String: kSecClassGenericPassword,
-            kSecAttrService as String: service,
-            kSecAttrAccount as String: key.rawValue,
-            kSecReturnData as String: true,
-            kSecMatchLimit as String: kSecMatchLimitOne,
-        ]
-        var result: AnyObject?
-        guard SecItemCopyMatching(query as CFDictionary, &result) == errSecSuccess,
-              let data = result as? Data else { return nil }
-        return data
+        lock.lock(); defer { lock.unlock() }
+        return load()[key.rawValue]
     }
 
     @discardableResult
     static func delete(_ key: Key) -> Bool {
-        let query: [String: Any] = [
-            kSecClass as String: kSecClassGenericPassword,
-            kSecAttrService as String: service,
-            kSecAttrAccount as String: key.rawValue,
-        ]
-        let status = SecItemDelete(query as CFDictionary)
-        return status == errSecSuccess || status == errSecItemNotFound
+        update { $0[key.rawValue] = nil }
+    }
+
+    // MARK: Storage
+
+    private static func load() -> [String: Data] {
+        guard let data = try? Data(contentsOf: fileURL),
+              let dict = try? JSONDecoder().decode([String: Data].self, from: data) else { return [:] }
+        return dict
+    }
+
+    private static func update(_ change: (inout [String: Data]) -> Void) -> Bool {
+        lock.lock(); defer { lock.unlock() }
+        var dict = load()
+        change(&dict)
+        guard let data = try? JSONEncoder().encode(dict) else { return false }
+        // Create the file owner-only before any secret is written to it.
+        let fm = FileManager.default
+        if !fm.fileExists(atPath: fileURL.path) {
+            fm.createFile(atPath: fileURL.path, contents: nil, attributes: [.posixPermissions: 0o600])
+        }
+        do {
+            try data.write(to: fileURL, options: .atomic)
+            try fm.setAttributes([.posixPermissions: 0o600], ofItemAtPath: fileURL.path)
+            return true
+        } catch {
+            return false
+        }
     }
 }

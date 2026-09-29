@@ -22,7 +22,7 @@
 	<key>NSScreenCaptureUsageDescription</key><string>Lets you share a screenshot with Claude when you tap Share Screen.</string>
 	<key>NSLocationUsageDescription</key><string>Shows the weather where you are. Only your approximate location is used, and only to fetch the weather.</string>
 	<key>NSLocationWhenInUseUsageDescription</key><string>Shows the weather where you are. Only your approximate location is used, and only to fetch the weather.</string>
-	<key>NSCameraUsageDescription</key><string>Face unlock uses the camera to recognise you. Only a face template is saved, in your Keychain on this Mac; photos are never stored or sent anywhere.</string>
+	<key>NSCameraUsageDescription</key><string>Face unlock uses the camera to recognise you. Only a face template is saved, in a private file on this Mac; photos are never stored or sent anywhere.</string>
 	<key>NSAudioCaptureUsageDescription</key><string>Lets you change the volume and EQ of individual apps. Audio is processed on your Mac and never recorded or sent anywhere.</string>
 	<key>NSAppleEventsUsageDescription</key><string>Reads the currently playing track from Music or Spotify.</string>
 </dict>

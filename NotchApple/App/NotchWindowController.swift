@@ -306,8 +306,30 @@ final class NotchWindowController {
 
     func toggle() { state.isExpanded ? collapse() : expand() }
 
+    // MARK: Invisibility (⌘O)
+
+    /// Fades the whole notch out (or back in). Nothing is torn down while hidden,
+    /// so Now Playing, Messenger connections and timers keep running.
+    func setInvisible(_ hidden: Bool) {
+        let settings = SettingsManager.shared
+        guard settings.isNotchHidden != hidden else { return }
+        settings.isNotchHidden = hidden
+        if hidden { collapse() }
+        trigger.ignoresMouseEvents = hidden
+        NSAnimationContext.runAnimationGroup { context in
+            context.duration = NSWorkspace.shared.accessibilityDisplayShouldReduceMotion ? 0.1 : 0.3
+            context.timingFunction = CAMediaTimingFunction(controlPoints: 0.2, 0.9, 0.3, 1)
+            trigger.animator().alphaValue = hidden ? 0 : 1
+            if hidden { panel.animator().alphaValue = 0 }
+        }
+    }
+
+    func toggleInvisible() { setInvisible(!SettingsManager.shared.isNotchHidden) }
+
     func expand() {
         guard !state.isExpanded else { return }
+        // Opening (⌘E, the menu-bar icon) always brings a hidden notch back.
+        if SettingsManager.shared.isNotchHidden { setInvisible(false) }
         openedByHover = false   // the hover path sets this back to true right after
         pinnedByClick = false
         panel.ignoresMouseEvents = false

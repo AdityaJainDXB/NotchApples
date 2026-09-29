@@ -51,6 +51,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             }
             .store(in: &cancellables)
 
+        // The menu-bar icon hides and reappears with the notch (⌘O).
+        SettingsManager.shared.$isNotchHidden
+            .receive(on: RunLoop.main)
+            .sink { [weak self] _ in self?.applyStatusItemPreference() }
+            .store(in: &cancellables)
+
         // Re-anchor when displays are connected, removed or rearranged.
         NotificationCenter.default.publisher(for: NSApplication.didChangeScreenParametersNotification)
             .sink { [weak self] _ in self?.notchController?.reposition() }
@@ -97,6 +103,18 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         } else {
             GlobalHotkeyManager.shared.unregister(.toggleNotch)
         }
+        if SettingsManager.shared.invisibilityHotkeyEnabled {
+            GlobalHotkeyManager.shared.register(.toggleInvisible) { [weak self] in self?.toggleInvisible() }
+        } else {
+            GlobalHotkeyManager.shared.unregister(.toggleInvisible)
+            // Turning the shortcut off must not strand the notch hidden.
+            notchController?.setInvisible(false)
+        }
+    }
+
+    /// ⌘O: hide or reveal the notch and its menu-bar icon.
+    @objc func toggleInvisible() {
+        notchController?.toggleInvisible()
     }
 
     /// Drag-to-notch snap zones and the ⌃⌥ window shortcuts, when the Windows module is on.
@@ -119,7 +137,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func applyStatusItemPreference() {
-        let wanted = SettingsManager.shared.showStatusItem
+        let wanted = SettingsManager.shared.showStatusItem && !SettingsManager.shared.isNotchHidden
         if wanted, statusItem == nil {
             let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
             item.button?.image = NSImage(systemSymbolName: "rectangle.topthird.inset.filled", accessibilityDescription: "Notch apple")

@@ -3,7 +3,7 @@
 //  Notch apple
 //
 //  Minimal client for the Anthropic Messages API (https://docs.anthropic.com).
-//  Uses the user's own API key from the Keychain — the developer pays nothing
+//  Uses the user's own API key (saved on this Mac) — the developer pays nothing
 //  and no proxy server is involved. Requests go straight from the Mac to
 //  api.anthropic.com.
 //

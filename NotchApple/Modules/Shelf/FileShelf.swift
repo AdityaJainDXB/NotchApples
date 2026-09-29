@@ -32,6 +32,8 @@ final class FileShelfStore: ObservableObject {
 
     @Published private(set) var items: [ShelfItem] = []
 
+    var isShelfAvailable: Bool { SettingsManager.shared.shelfEnabled }
+
     init() {
         if let data = UserDefaults.standard.data(forKey: key),
            let saved = try? JSONDecoder().decode([ShelfItem].self, from: data) {
