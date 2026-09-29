@@ -79,6 +79,7 @@ Every module is **optional** and can be switched on or off in **Settings → Mod
 | 📝 **Notes** | Quick notes in the notch: several notes, search, a "new note from clipboard" button, and saved automatically on your Mac. |
 | 💬 **Messenger** | Chat anonymously with **people on the same Wi-Fi** (found automatically, encrypted between Macs), or **create or join an anonymous room** with a code, like `cafe-study` or `8821`. Rooms are end-to-end encrypted, and nothing is stored anywhere. You get a random handle like `PurplePanda#402`, and there are no accounts. See [Using Messenger](#using-messenger). |
 | 📋 **Clipboard** | Everything you copy (text, links, images and files) is saved to a searchable history in the notch. Click an item to copy it again, pin the ones you want to keep, and filter by type. Items that password managers mark as secret are never saved, and history stays on your Mac. Choose how many items to keep in **Settings → Clipboard**. |
+| 🔍 **Search** | Find files, apps and folders from the notch, powered by Spotlight, so results appear instantly with no indexing of its own. Use `↑`/`↓` to choose, `Return` to open, `⌘R` or `⌥`-click to show it in Finder, or drag a result onto the File Shelf or into any app. Choose the scope (your home folder or the whole Mac) and file types (apps, documents, images, PDFs, Downloads) in **Settings → File Search**. See [File Search](#file-search). |
 | 🗂 **File Shelf** | Drag a file onto the notch and it opens straight to the shelf. Files stay there across relaunches thanks to security-scoped bookmarks. Double-click to open, or drag them back out. There's also an **Add files…** button. |
 | 📡 **Share** | Send files with **AirDrop**, or use **PairDrop** between devices on the same Wi-Fi. To receive, just show your 6-digit code. To send, type the other device's code; there's no need to pick the device. No server is involved. |
 | 🔊 **Audio** | Pick the output device, set the master volume, and change **per-app volume (0–150%)** and a **10-band per-app EQ** with presets. It's built in on macOS 14.2+, with nothing to install. |
@@ -96,6 +97,8 @@ Every module is **optional** and can be switched on or off in **Settings → Mod
 **Open on hover (optional, off by default):** turn it on in **Settings → General**. The notch then opens when the pointer rests on it and closes when the pointer moves away. Click inside to keep it open while you type or drag. With the option off, hovering only highlights the notch.
 
 `⌘E` is a system-wide shortcut registered through Carbon, so it needs no Accessibility permission. While it's on, other apps won't receive `⌘E` (for example "Use Selection for Find"). You can turn it off in **Settings → General**.
+
+**Hide the notch with `⌘O`:** press `⌘O` in any app to make the notch and its menu-bar icon disappear, and press it again to bring them back. Everything keeps running while it's hidden (music, timers, Messenger), and `⌘E` also brings it back. **Settings → Shortcuts & Hotkeys** shows whether it's visible or hidden and has the on/off switch. While it's on, other apps won't receive `⌘O` (usually their **Open…** command).
 
 When the VPN module is on, a **VPN On/Off** pill in the notch header shows the tunnel status. The full VPN setup (importing profiles and loading free servers) is under **Settings → VPN**.
 
@@ -121,6 +124,23 @@ The **Windows** module arranges your app windows without leaving the notch. It n
 The gap between windows, the drag-to-notch zones and the shortcuts can be changed in **Settings → Windows**. Accessibility is tied to the app's signature, so after an update macOS may stop honouring it: if snapping stops working, remove Notch apple from the Accessibility list and turn it on again.
 
 Other things new in 1.11: the notch **remembers the last tab** you had open. Notch apple is no longer sandboxed, because macOS only gives Accessibility to sandboxed apps from the App Store. Your settings, notes, clipboard and AI history are moved over automatically the first time 1.11 opens.
+
+## File Search
+
+The **Search** tab searches your Mac with Spotlight, the same index Finder and ⌘Space use, so it's instant and never walks folders on its own. Start typing and it shows the 30 best matches: exact names first, then names that start with what you typed, with apps ranked higher. Hidden files, caches, `node_modules`, build folders and system folders are skipped.
+
+| Key | Action |
+| --- | --- |
+| `↑` / `↓` | Move the highlight |
+| `Return` or click | Open |
+| `⌘R` or `⌥`-click | Reveal in Finder |
+| Drag | Drop onto the File Shelf, or into any app |
+
+**Settings → File Search** turns the tab on or off, sets the scope (**User home folder only**, the default, or **Entire Mac**) and picks the file types to include. With every type ticked, folders and all other files are included too.
+
+If macOS stops Notch apple reading **Downloads**, **Documents** or **Desktop**, a warning appears with a **Grant Full Disk Access in System Settings** button that opens the right page.
+
+Other things new in 1.12: **no more keychain password prompts.** Earlier versions saved API keys and face-unlock data in the login Keychain, and because the app is ad-hoc signed, macOS asked for your login password again after every update. They're now stored in a private file only your user account can read. After updating, paste your AI API keys again and set up face unlock again.
 
 ## Install
 
@@ -165,7 +185,8 @@ If you'd rather install an older, smaller build, every version is still availabl
 | [**1.8.0**](https://github.com/AdityaJainDXB/NotchApples/releases/download/v1.8.0/NotchApple-1.8.0.dmg) | 31 MB | Local weather (uses your location), a Permissions screen on first launch, Face ID-style face unlock, a large widget, the styled installer. |  |
 | [**1.9.0**](https://github.com/AdityaJainDXB/NotchApples/releases/download/v1.9.0/NotchApple-1.9.0.dmg) | 31 MB | **Free AI choices**: Gemini, Groq, OpenRouter and Ollama, alongside paid Claude and ChatGPT. |  |
 | [**1.10.0**](https://github.com/AdityaJainDXB/NotchApples/releases/download/v1.10.0/NotchApple-1.10.0.dmg) | 31 MB | The AI can **see your screen when you ask**, one-click AI actions, DeepSeek, **AI History**, **Notes**, smoother notch opening. |  |
-| [**1.11.0**](https://github.com/AdityaJainDXB/NotchApples/releases/download/v1.11.0/NotchApple-1.11.0.dmg) | 31 MB | **Windows**: drag a window to the notch to snap it, split screen, 4-window grid, thirds, tile all windows, saved layouts, `⌃⌥` shortcuts. The notch remembers its last tab. The latest version. |  |
+| [**1.11.0**](https://github.com/AdityaJainDXB/NotchApples/releases/download/v1.11.0/NotchApple-1.11.0.dmg) | 31 MB | **Windows**: drag a window to the notch to snap it, split screen, 4-window grid, thirds, tile all windows, saved layouts, `⌃⌥` shortcuts. The notch remembers its last tab. |  |
+| [**1.12.0**](https://github.com/AdityaJainDXB/NotchApples/releases/download/v1.12.0/NotchApple-1.12.0.dmg) | 5.3 MB | **Search** tab (Spotlight file search), `⌘O` to hide the notch, no more keychain password prompts. The latest version. | Doesn't include the Tunnelblick VPN helper; install [Tunnelblick](https://tunnelblick.net) yourself to use the VPN. After updating, paste your AI API keys again and set up face unlock again. |
 
 Good to know:
 - **1.4.1 is the last version under 4 MB.** From 1.5.0 on, the app includes the Tunnelblick VPN helper, which accounts for most of the extra size. If you don't use the VPN, 1.4.1 or earlier stays small.
@@ -193,6 +214,7 @@ The table below lists when each is asked for.
 | Touch ID / password | Biometric Lock | Each time you open the notch while the lock is on |
 | Location | Weather | The first time you open Today (approximate location, weather only) |
 | Camera | Face unlock | When you set up or use face unlock. Only a face template is saved, never photos |
+| Full Disk Access (optional) | Search | Never asked automatically. Only if you choose to, so Search can include protected folders |
 | Accessibility | Windows (snapping and tiling) | When you first use the Windows tab. Only used to move and resize windows |
 | System audio recording | Audio → per-app volume / EQ | The first time you change an app's volume or EQ. Audio is processed on your Mac and never recorded or sent anywhere |
 
@@ -212,7 +234,7 @@ The AI tab doesn't require a paid account. Pick a provider in the notch or in **
 | Claude | Paid (your Anthropic account) | [console.anthropic.com](https://console.anthropic.com/settings/keys) | |
 | ChatGPT (OpenAI) | Paid (your OpenAI account) | [platform.openai.com](https://platform.openai.com/api-keys) | The OpenAI API has no free tier. |
 
-Model lists are loaded live from each provider, so new models appear automatically, and you can type any model ID. The official DeepSeek API has no free tier; free DeepSeek models sometimes appear in Groq's and OpenRouter's free lists. Keys are stored in your Keychain and sent only to that provider.
+Model lists are loaded live from each provider, so new models appear automatically, and you can type any model ID. The official DeepSeek API has no free tier; free DeepSeek models sometimes appear in Groq's and OpenRouter's free lists. Keys are stored in a private file on your Mac that only your user account can read, and sent only to that provider.
 
 ### It can see your screen when you ask
 
@@ -251,7 +273,7 @@ Unlock Notch apple by looking at your Mac's camera.
 3. Click **Test…** to check it recognises you. Good, even lighting helps.
 4. Now when you open the notch, a **Face ID-style** animation asks you to look at the camera and **blink**. It turns into a green check with a trackpad tap when it recognises you, and shakes red if it doesn't. **Use Touch ID** is always there as a fallback.
 
-How it works: Apple's Vision framework finds your face in each photo and turns it into a *feature print* (a list of numbers). Only those numbers and a match threshold calibrated from your own photos are saved, in the **macOS Keychain** (this Mac only, readable only while it's unlocked). The photos themselves are never saved or sent anywhere. Unlocking needs several matching frames **and a blink**, which stops a printed photo from working. **Delete face data…** removes the template; it asks for Touch ID or your password first.
+How it works: Apple's Vision framework finds your face in each photo and turns it into a *feature print* (a list of numbers). Only those numbers and a match threshold calibrated from your own photos are saved in a private file on this Mac that only your user account can read. The photos themselves are never saved or sent anywhere. Unlocking needs several matching frames **and a blink**, which stops a printed photo from working. **Delete face data…** removes the template; it asks for Touch ID or your password first.
 
 > **Limits:** a regular FaceTime camera is 2D, unlike Apple's Face ID, which uses a 3D depth camera. Someone who looks like you, or a good enough video, might get through, so treat face unlock as a convenience rather than strong security. It unlocks Notch apple only. macOS doesn't let third-party apps unlock the Mac itself or replace its login.
 
@@ -357,11 +379,12 @@ The DMG is written to `dist/`.
 ```
 NotchApple/
   App/        AppDelegate, NotchPanel + window controller (click-only notch)
-  Core/       SettingsManager (module toggles), Keychain, Theme
+  Core/       SettingsManager (module toggles), secret storage, Theme
   UI/         NotchRootView (glass shell), SettingsView
   Modules/
     Biometrics/  LocalAuthentication gate + Vision webcam face unlock
     Claude/      Messages API client, ScreenCaptureKit capture, chat UI
+    Search/      Spotlight (NSMetadataQuery) file search + results UI
     Shelf/       Drop zone + security-scoped bookmarks
     Sharing/     AirDrop + PairDrop (Network.framework / Bonjour)
     Messenger/   Nearby Wi-Fi chat (MultipeerConnectivity) + encrypted rooms (CryptoKit, ntfy / MQTT relay)
@@ -404,7 +427,8 @@ Per-app volume and EQ use Core Audio process taps, which arrived in macOS 14.2. 
 - Anonymous room messages are end-to-end encrypted before they leave your Mac, and the relay (`ntfy.sh`, or a public MQTT broker as a fallback) stores nothing.
 - Per-app audio is processed in memory on your Mac. Nothing is recorded.
 - Window management only reads window positions, sizes and titles to arrange them. Saved layouts stay on your Mac.
-- Your API key and face-unlock template are stored in the macOS Keychain (`WhenUnlockedThisDeviceOnly`). Face photos are never saved.
+- Your API keys and face-unlock template are stored in `~/Library/Application Support/Notch apple/secrets.json`, readable only by your user account (and encrypted at rest by FileVault if it's on). Face photos are never saved.
+- Search only asks Spotlight's local index. Nothing you search for leaves your Mac.
 
 ## License
 
