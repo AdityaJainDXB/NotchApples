@@ -297,6 +297,13 @@ private struct GeneralSettings: View {
                     Text("Show volume and brightness beside the notch")
                     Text("When you change either, the closed notch briefly expands with a gauge. Not shown while the notch is hidden.")
                 }
+                Toggle(isOn: $settings.replaceSystemHUD) {
+                    Text("Hide the macOS volume and brightness pop-ups")
+                    Text(AXIsProcessTrusted()
+                         ? "Only the notch gauge appears when you press the volume or brightness keys."
+                         : "Needs Accessibility (System Settings → Privacy & Security → Accessibility). Until then, macOS shows its own pop-up too.")
+                }
+                .disabled(!settings.showSystemHUD)
                 Toggle(isOn: $settings.showRecordingIndicator) {
                     Text("Show a dot on the notch while the screen is recorded")
                     Text("Works for Notch apple's own recordings and the system recorder (⌘⇧5). Other recording apps can't be detected.")

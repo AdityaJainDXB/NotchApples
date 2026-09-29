@@ -12,6 +12,7 @@
 import AppKit
 import SwiftUI
 import IOKit.pwr_mgt
+import Vision
 
 // MARK: - Keep Awake
 
@@ -190,6 +191,49 @@ enum QuickMath {
     }
 }
 
+// MARK: - Text Grab
+
+/// Select part of the screen; the text in it is recognised on-device (Vision) and copied.
+@MainActor
+final class TextGrab: ObservableObject {
+    static let shared = TextGrab()
+    @Published private(set) var lastText: String?
+    @Published private(set) var status: String?
+
+    func grab(closeNotch: @escaping () -> Void) {
+        closeNotch()
+        let file = FileManager.default.temporaryDirectory.appendingPathComponent("notchapple-grab-\(UUID().uuidString).png")
+        let task = Process()
+        task.executableURL = URL(fileURLWithPath: "/usr/sbin/screencapture")
+        task.arguments = ["-i", "-x", file.path]   // interactive area selection, no sound
+        task.terminationHandler = { _ in
+            Task { @MainActor in self.recognise(file) }
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { try? task.run() }
+    }
+
+    private func recognise(_ file: URL) {
+        defer { try? FileManager.default.removeItem(at: file) }
+        guard let image = NSImage(contentsOf: file)?.cgImage(forProposedRect: nil, context: nil, hints: nil) else {
+            status = "Cancelled."
+            return
+        }
+        let request = VNRecognizeTextRequest()
+        request.recognitionLevel = .accurate
+        request.usesLanguageCorrection = true
+        try? VNImageRequestHandler(cgImage: image).perform([request])
+        let text = (request.results ?? []).compactMap { $0.topCandidates(1).first?.string }.joined(separator: "\n")
+        if text.isEmpty {
+            status = "No text found in that area."
+        } else {
+            NSPasteboard.general.clearContents()
+            NSPasteboard.general.setString(text, forType: .string)
+            lastText = text
+            status = "Copied \(text.count) characters."
+        }
+    }
+}
+
 // MARK: - View
 
 struct ToolsView: View {
@@ -203,11 +247,32 @@ struct ToolsView: View {
 
     var body: some View {
         HStack(alignment: .top, spacing: 12) {
-            keepAwakeCard
+            VStack(spacing: 12) {
+                keepAwakeCard
+                textGrabCard
+            }
+            .frame(width: 190)
             colorCard
             calculatorCard
         }
         .padding(4)
+    }
+
+    @StateObject private var grab = TextGrab.shared
+    @EnvironmentObject private var notchState: NotchState
+
+    private var textGrabCard: some View {
+        GlassCard {
+            VStack(alignment: .leading, spacing: 8) {
+                Label("Text Grab", systemImage: "text.viewfinder")
+                    .font(.system(size: 13, weight: .semibold)).foregroundStyle(.white)
+                Button("Copy text from screen") { grab.grab { notchState.close() } }
+                    .buttonStyle(PurpleButtonStyle())
+                Text(grab.status ?? "Drag over any text, even in images or videos.")
+                    .font(.system(size: 10)).foregroundStyle(Theme.textSecondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+        }
     }
 
     private var keepAwakeCard: some View {
@@ -233,11 +298,10 @@ struct ToolsView: View {
                 Spacer(minLength: 0)
             }
         }
-        .frame(width: 190)
     }
 
     private var statusText: String {
-        guard awake.isOn else { return "Stop your Mac sleeping or dimming the screen, e.g. during a download or presentation." }
+        guard awake.isOn else { return "Stop your Mac sleeping or dimming." }
         guard let until = awake.until else { return "Your Mac stays awake until you turn this off." }
         return "Awake until \(until.formatted(date: .omitted, time: .shortened))."
     }

@@ -157,6 +157,8 @@ final class SettingsManager: ObservableObject {
     @AppStorage("claude.model") var claudeModel = "claude-sonnet-5"
     /// Briefly show a volume / brightness gauge beside the closed notch when either changes.
     @AppStorage("ui.systemHUD") var showSystemHUD = true
+    /// Hide macOS's own volume/brightness pop-ups so only the notch gauge shows (needs Accessibility).
+    @AppStorage("ui.replaceSystemHUD") var replaceSystemHUD = true
     /// Show the notch's recording dot while the screen is being recorded.
     @AppStorage("ui.recordingIndicator") var showRecordingIndicator = true
     /// Show the menu-bar status item in addition to the notch hit area.
@@ -207,6 +209,25 @@ final class SettingsManager: ObservableObject {
 
     /// Tabs to show in the notch, in display order.
     var enabledTabs: [Module] {
-        Module.allCases.filter { $0.isTab && isEnabled($0) }
+        orderedTabs.filter { isEnabled($0) }
+    }
+
+    /// The user's tab order (Settings → Appearance), as comma-separated raw values.
+    @AppStorage("ui.tabOrder") var tabOrderData = ""
+
+    /// Every tab module, in the user's order; new modules go at the end.
+    var orderedTabs: [Module] {
+        let saved = tabOrderData.split(separator: ",").compactMap { Module(rawValue: String($0)) }.filter(\.isTab)
+        return saved + Module.allCases.filter { $0.isTab && !saved.contains($0) }
+    }
+
+    func setTabOrder(_ tabs: [Module]) {
+        objectWillChange.send()
+        tabOrderData = tabs.map(\.rawValue).joined(separator: ",")
+    }
+
+    func resetTabOrder() {
+        objectWillChange.send()
+        tabOrderData = ""
     }
 }

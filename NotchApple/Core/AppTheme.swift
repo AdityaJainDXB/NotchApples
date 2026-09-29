@@ -204,6 +204,7 @@ struct AppearanceSettings: View {
     var body: some View {
         let current = manager.currentTheme
         Form {
+            TabOrderSection()
             Section {
                 ThemePreview(theme: current)
                     .listRowInsets(EdgeInsets(top: 10, leading: 10, bottom: 10, trailing: 10))
@@ -229,6 +230,64 @@ struct AppearanceSettings: View {
             }
         }
         .formStyle(.grouped)
+    }
+}
+
+/// Drag the notch's tabs (including add-ons) into the order you want.
+private struct TabOrderSection: View {
+    @ObservedObject private var settings = SettingsManager.shared
+
+    var body: some View {
+        let enabled = settings.enabledTabs
+        Section {
+            List {
+                ForEach(enabled) { module in
+                    HStack(spacing: 10) {
+                        Image(systemName: "line.3.horizontal").foregroundStyle(.secondary)
+                        Image(systemName: module.symbol)
+                            .font(.system(size: 11, weight: .semibold)).foregroundStyle(.white)
+                            .frame(width: 22, height: 22)
+                            .background(Theme.accentGradient, in: RoundedRectangle(cornerRadius: 6, style: .continuous))
+                        Text(module.title)
+                        Spacer()
+                        Button { move(module, by: -1) } label: { Image(systemName: "chevron.up") }
+                            .buttonStyle(.borderless).disabled(module == enabled.first).help("Move up")
+                        Button { move(module, by: 1) } label: { Image(systemName: "chevron.down") }
+                            .buttonStyle(.borderless).disabled(module == enabled.last).help("Move down")
+                    }
+                    .padding(.vertical, 2)
+                }
+                .onMove { from, to in
+                    var list = enabled
+                    list.move(fromOffsets: from, toOffset: to)
+                    save(list)
+                }
+            }
+            .frame(height: CGFloat(max(enabled.count, 1)) * 34 + 8)
+            .scrollDisabled(true)
+            HStack {
+                Spacer()
+                Button("Reset to default order") { settings.resetTabOrder() }
+            }
+        } header: {
+            Text("Notch tab order")
+        } footer: {
+            Text("Drag tabs up or down (or use the arrows) to choose their order in the notch. Add-ons you turn on in Settings → Modules appear here too.")
+        }
+    }
+
+    private func move(_ module: Module, by step: Int) {
+        var list = settings.enabledTabs
+        guard let i = list.firstIndex(of: module), list.indices.contains(i + step) else { return }
+        list.swapAt(i, i + step)
+        save(list)
+    }
+
+    /// Keeps turned-off modules in their old relative places.
+    private func save(_ enabledOrder: [Module]) {
+        var queue = enabledOrder
+        let full = settings.orderedTabs.map { settings.isEnabled($0) ? queue.removeFirst() : $0 }
+        settings.setTabOrder(full)
     }
 }
 

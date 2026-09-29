@@ -140,9 +140,7 @@ struct NotchRootView: View {
             Spacer(minLength: 0)
             UpdatePill { state.close(); AppDelegate.openSettingsWindow(tab: .updates) }
             if settings.vpnEnabled && license.isActivated { VPNQuickStatus() }
-            IconButton(systemImage: "gearshape.fill", help: "Settings (⌘,)") {
-                state.close(); AppDelegate.openSettingsWindow()
-            }
+            AppActionsButton { state.close() }
             IconButton(systemImage: "chevron.up", help: "Close (Esc or \(HotkeyBinding.notch.label))") { state.close() }
         }
     }

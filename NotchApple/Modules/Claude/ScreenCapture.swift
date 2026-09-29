@@ -13,9 +13,11 @@ import ScreenCaptureKit
 
 enum ScreenCapture {
     enum CaptureError: LocalizedError {
-        case noDisplay, encode
+        case noDisplay, encode, noPermission
         var errorDescription: String? {
             switch self {
+            case .noPermission: "Notch apple needs Screen Recording to see your screen. Turn it on in System Settings → Privacy & Security → Screen & System Audio Recording, then press Relaunch (macOS only applies it after a restart)."
+
             case .noDisplay: "No display available. Grant Screen Recording in System Settings → Privacy & Security."
             case .encode: "Couldn't encode the screenshot."
             }
@@ -26,6 +28,11 @@ enum ScreenCapture {
     private static let maxEdge: CGFloat = 1568
 
     static func captureBase64JPEG() async throws -> String {
+        // Ask first: without permission ScreenCaptureKit fails with a vague error.
+        if !ScreenPermission.isGranted {
+            await MainActor.run { _ = ScreenPermission.request() }
+            if !ScreenPermission.isGranted { throw CaptureError.noPermission }
+        }
         let content = try await SCShareableContent.excludingDesktopWindows(false, onScreenWindowsOnly: true)
         let screenID = (NSScreen.main?.deviceDescription[NSDeviceDescriptionKey("NSScreenNumber")] as? NSNumber)?.uint32Value
         guard let display = content.displays.first(where: { $0.displayID == screenID }) ?? content.displays.first else {

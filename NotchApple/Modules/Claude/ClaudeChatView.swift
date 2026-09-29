@@ -291,7 +291,16 @@ struct ClaudeChatView: View {
                 Label(notice, systemImage: "camera.viewfinder").font(.caption).foregroundStyle(Theme.textSecondary).lineLimit(2)
             }
             if let error = model.error ?? config.modelError {
-                Text(error).font(.caption).foregroundStyle(.red.opacity(0.9)).lineLimit(2)
+                Text(error).font(.caption).foregroundStyle(.red.opacity(0.9)).lineLimit(3)
+                if error.contains("Screen Recording") {
+                    // Fix it in two clicks: turn the switch on, then relaunch so macOS applies it.
+                    HStack(spacing: 8) {
+                        Button("Open Screen Recording settings") { ScreenPermission.openSettings() }
+                            .buttonStyle(PurpleButtonStyle(prominent: false))
+                        Button("Relaunch Notch apple") { AppRelauncher.relaunch() }
+                            .buttonStyle(PurpleButtonStyle())
+                    }
+                }
             }
 
             HStack(spacing: 8) {

@@ -37,6 +37,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             .sink { [weak self] _ in self?.startGatedServices() }
             .store(in: &cancellables)
         SystemHUDObserver.shared.start()
+        applyMediaKeyPreference()
+        // Accessibility may be granted later; keep trying quietly until the tap is running.
+        Timer.scheduledTimer(withTimeInterval: 10, repeats: true) { _ in
+            MainActor.assumeIsolated { AppDelegate.current?.applyMediaKeyPreference() }
+        }
         ScreenRecordingDetector.shared.start()
         applyClipboardPreference()
         LiveActivityCenter.shared.start()
@@ -54,6 +59,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 self?.applyStatusItemPreference()
                 self?.applyHotkeyPreference()
                 self?.applyClipboardPreference()
+                self?.applyMediaKeyPreference()
                 self?.applyWindowPreferences()
             }
             .store(in: &cancellables)
@@ -178,9 +184,18 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         if NSApp.currentEvent?.type == .rightMouseUp {
             let menu = NSMenu()
             menu.addItem(withTitle: "Open Notch", action: #selector(toggleNotch), keyEquivalent: "").target = self
-            menu.addItem(withTitle: "Settings…", action: #selector(openSettings), keyEquivalent: ",").target = self
+            // Colour-coded like the notch's power menu: purple settings, orange relaunch, red quit.
+            func item(_ title: String, _ symbol: String, _ color: NSColor, _ action: Selector, _ key: String) {
+                let i = NSMenuItem(title: title, action: action, keyEquivalent: key)
+                i.target = self
+                i.image = NSImage(systemSymbolName: symbol, accessibilityDescription: nil)?
+                    .withSymbolConfiguration(.init(paletteColors: [color]))
+                menu.addItem(i)
+            }
+            item("Settings…", "gearshape.fill", .systemPurple, #selector(openSettings), ",")
+            item("Relaunch", "arrow.clockwise", .systemOrange, #selector(relaunchApp), "")
             menu.addItem(.separator())
-            menu.addItem(withTitle: "Quit Notch apple", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
+            item("Quit Notch apple", "xmark.circle.fill", .systemRed, #selector(quitApp), "q")
             statusItem?.menu = menu
             statusItem?.button?.performClick(nil)
             statusItem?.menu = nil
@@ -188,6 +203,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             toggleNotch()
         }
     }
+
+    /// Swallow the volume/brightness keys so only the notch gauge shows.
+    func applyMediaKeyPreference() {
+        let s = SettingsManager.shared
+        MediaKeyInterceptor.shared.setEnabled(s.showSystemHUD && s.replaceSystemHUD)
+    }
+
+    @objc func relaunchApp() { AppRelauncher.relaunch() }
+    @objc func quitApp() { NSApp.terminate(nil) }
 
     @objc func toggleNotch() { notchController?.toggle() }
 
