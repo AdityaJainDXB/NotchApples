@@ -23,14 +23,17 @@ struct WorldClockView: View {
                     Spacer()
                     IconButton(systemImage: adding ? "xmark" : "plus", help: adding ? "Done" : "Add a city") { adding.toggle(); search = "" }
                 }
-                if adding { picker } else { clocks(now: context.date) }
+                if adding { picker } else { ScrollView { clocks(now: context.date) } }
             }
             .padding(4)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         }
+        .clipShape(RoundedRectangle(cornerRadius: Theme.corner, style: .continuous))
     }
 
     private func clocks(now: Date) -> some View {
-        LazyVGrid(columns: [GridItem(.adaptive(minimum: 160), spacing: 10)], spacing: 10) {
+        // Three flexible columns always fit the notch; more cities scroll.
+        LazyVGrid(columns: Array(repeating: GridItem(.flexible(minimum: 0), spacing: 10), count: 3), spacing: 10) {
             ForEach(zones, id: \.self) { id in
                 let zone = TimeZone(identifier: id)!
                 var cal = Calendar.current
@@ -48,6 +51,7 @@ struct WorldClockView: View {
                         }
                         Text(now.formatted(Date.FormatStyle(date: .omitted, time: .shortened, timeZone: zone)))
                             .font(.system(size: 26, weight: .semibold, design: .rounded)).monospacedDigit().foregroundStyle(.white)
+                            .lineLimit(1).minimumScaleFactor(0.6)
                         Text(Self.offset(zone, now: now)).font(.system(size: 11)).foregroundStyle(Theme.textSecondary)
                     }
                 }
