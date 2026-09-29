@@ -120,7 +120,7 @@ The **Windows** module arranges your app windows without leaving the notch. It n
 
 The gap between windows, the drag-to-notch zones and the shortcuts can be changed in **Settings → Windows**. Accessibility is tied to the app's signature, so after an update macOS may stop honouring it: if snapping stops working, remove Notch apple from the Accessibility list and turn it on again.
 
-Other things new in 1.11: the notch **remembers the last tab** you had open.
+Other things new in 1.11: the notch **remembers the last tab** you had open. Notch apple is no longer sandboxed, because macOS only gives Accessibility to sandboxed apps from the App Store. Your settings, notes, clipboard and AI history are moved over automatically the first time 1.11 opens.
 
 ## Install
 

@@ -315,7 +315,7 @@ private struct ClaudeSettings: View {
                         Button("Refresh list") { config.refreshModels() }
                         if config.loadingModels { ProgressView().controlSize(.small) }
                     }
-                    if !DemoMode.isOn, let e = config.modelError { Text(e).font(.callout).foregroundStyle(.red) }
+                    if let e = config.modelError { Text(e).font(.callout).foregroundStyle(.red) }
                 }
                 Toggle(isOn: Binding(get: { ClaudeChatModel.shared.autoScreen }, set: { ClaudeChatModel.shared.autoScreen = $0 })) {
                     Text("Share my screen when I ask about it")
@@ -753,7 +753,7 @@ private struct VPNSettings: View {
 // MARK: - Widget
 
 private struct WidgetSettings: View {
-    @State private var city = DemoMode.isOn ? "Cupertino" : SharedStore.weatherLocation.name
+    @State private var city = SharedStore.weatherLocation.name
     @State private var status: String?
     @StateObject private var location = LocationProvider.shared
 

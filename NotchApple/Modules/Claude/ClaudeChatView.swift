@@ -77,12 +77,6 @@ final class ClaudeChatModel: ObservableObject {
     /// Share the screen automatically when a question is about it (Settings → AI).
     @AppStorage("ai.autoScreen") var autoScreen = true
 
-    init() {
-        if DemoMode.isOn, let chat = DemoMode.chats.first {
-            messages = chat.messages.map { ChatMessage(role: $0.role == "user" ? .user : .assistant, text: $0.text) }
-        }
-    }
-
     func send() {
         let prompt = draft.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !prompt.isEmpty, !isSending else { return }
@@ -296,7 +290,7 @@ struct ClaudeChatView: View {
             if let notice = model.notice {
                 Label(notice, systemImage: "camera.viewfinder").font(.caption).foregroundStyle(Theme.textSecondary).lineLimit(2)
             }
-            if !DemoMode.isOn, let error = model.error ?? config.modelError {
+            if let error = model.error ?? config.modelError {
                 Text(error).font(.caption).foregroundStyle(.red.opacity(0.9)).lineLimit(2)
             }
 

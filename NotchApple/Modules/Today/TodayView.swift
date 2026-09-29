@@ -32,20 +32,6 @@ final class TodayModel: ObservableObject {
 
     func refresh(forceWeather: Bool = false) {
         battery = LiveActivityCenter.battery()
-        if DemoMode.isOn {
-            calendarAccess = .fullAccess
-            let day = Calendar.current.startOfDay(for: .now)
-            func at(_ h: Double) -> Date { day.addingTimeInterval(h * 3600) }
-            events = [
-                Event(id: "1", title: "Design review", start: .now.addingTimeInterval(-600), end: .now.addingTimeInterval(1800), isAllDay: false, color: .purple),
-                Event(id: "2", title: "Lunch with Sam", start: .now.addingTimeInterval(5400), end: .now.addingTimeInterval(9000), isAllDay: false, color: .orange),
-                Event(id: "3", title: "Gym", start: .now.addingTimeInterval(18000), end: .now.addingTimeInterval(21600), isAllDay: false, color: .green),
-            ]
-            if weather == nil || forceWeather {
-                Task { weather = try? await WeatherService.current(for: WeatherLocation(name: "Cupertino", latitude: 37.323, longitude: -122.032)) }
-            }
-            return
-        }
         loadEvents()
         LocationProvider.shared.refreshIfStale()
         // Weather changes slowly; refresh at most every 15 minutes.

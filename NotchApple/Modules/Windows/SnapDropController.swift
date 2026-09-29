@@ -130,13 +130,6 @@ final class SnapDropController {
 
     // MARK: Overlay
 
-    /// Screenshots (demo mode): show the drop zones with one highlighted.
-    func preview(_ layout: SnapLayout) {
-        guard let screen = NSScreen.main else { return }
-        show(on: screen)
-        model.highlighted = layout
-    }
-    
     private func show(on screen: NSScreen) {
         let panel = self.panel ?? makePanel()
         self.panel = panel

@@ -58,7 +58,6 @@ final class ChatHistoryStore: ObservableObject {
     }()
 
     init() {
-        if DemoMode.isOn { sessions = DemoMode.chats; return }
         if let data = try? Data(contentsOf: url),
            let saved = try? JSONDecoder().decode([ChatSession].self, from: data) {
             sessions = saved.sorted { $0.updated > $1.updated }
@@ -103,7 +102,7 @@ final class ChatHistoryStore: ObservableObject {
     }
 
     private func save() {
-        guard !DemoMode.isOn, let data = try? JSONEncoder().encode(sessions) else { return }
+        guard let data = try? JSONEncoder().encode(sessions) else { return }
         try? data.write(to: url, options: .atomic)
     }
 }

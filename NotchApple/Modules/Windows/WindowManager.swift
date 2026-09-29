@@ -171,7 +171,7 @@ final class WindowManager: ObservableObject {
     // MARK: Permission
 
     func refreshTrust() {
-        isTrusted = AXIsProcessTrusted() || DemoMode.isOn
+        isTrusted = AXIsProcessTrusted()
     }
 
     /// Shows the system prompt, which also adds Notch apple to the Accessibility
@@ -486,7 +486,6 @@ final class SavedLayoutStore: ObservableObject {
     }()
 
     private init() {
-        if DemoMode.isOn { layouts = DemoMode.layouts; return }
         if let data = try? Data(contentsOf: url), let saved = try? JSONDecoder().decode([SavedLayout].self, from: data) {
             layouts = saved
         }
@@ -496,6 +495,6 @@ final class SavedLayoutStore: ObservableObject {
     func delete(_ layout: SavedLayout) { layouts.removeAll { $0.id == layout.id }; save() }
 
     private func save() {
-        if !DemoMode.isOn, let data = try? JSONEncoder().encode(layouts) { try? data.write(to: url, options: .atomic) }
+        if let data = try? JSONEncoder().encode(layouts) { try? data.write(to: url, options: .atomic) }
     }
 }

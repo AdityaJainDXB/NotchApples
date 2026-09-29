@@ -104,7 +104,6 @@ final class AudioDeviceController: ObservableObject {
 
     /// Lists regular running apps with their saved levels.
     func refreshAppVolumes() {
-        if DemoMode.isOn { appVolumes = DemoMode.appVolumes; return }
         let saved = savedLevels
         appVolumes = NSWorkspace.shared.runningApplications
             .filter { $0.activationPolicy == .regular && $0.bundleIdentifier != Bundle.main.bundleIdentifier }
