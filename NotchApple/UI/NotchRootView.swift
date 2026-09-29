@@ -116,13 +116,24 @@ struct NotchRootView: View {
 
     private var header: some View {
         HStack(spacing: 2) {
-            ForEach(settings.enabledTabs) { module in
-                // With many tabs, inactive ones collapse to icons so the header fits.
-                TabButton(module: module, active: state.selected == module,
-                          compact: settings.enabledTabs.count > 6 && state.selected != module) {
-                    withAnimation(Theme.spring) { state.selected = module }
+            // With many tabs, inactive ones collapse to icons; if they still don't
+            // fit, the row scrolls sideways instead of pushing the buttons off the notch.
+            ScrollViewReader { proxy in
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 2) {
+                        ForEach(settings.enabledTabs) { module in
+                            TabButton(module: module, active: state.selected == module,
+                                      compact: settings.enabledTabs.count > 6 && state.selected != module) {
+                                withAnimation(Theme.spring) { state.selected = module }
+                            }
+                            .id(module)
+                        }
+                    }
                 }
+                .onAppear { proxy.scrollTo(state.selected, anchor: .center) }
+                .onChange(of: state.selected) { _, new in withAnimation { proxy.scrollTo(new, anchor: .center) } }
             }
+            .layoutPriority(-1)
             Spacer(minLength: 0)
             UpdatePill { state.close(); AppDelegate.openSettingsWindow(tab: .updates) }
             if settings.vpnEnabled { VPNQuickStatus() }

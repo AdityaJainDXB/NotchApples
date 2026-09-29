@@ -44,6 +44,8 @@ All screenshots use sample data.
 | **Windows**: snap, tile and save window layouts | **Drag a window to the notch** and drop it on a zone |
 | ![Tools](docs/screenshots/tools.png) | ![Settings: Updates](docs/screenshots/settings-updates.png) |
 | **Tools**: Keep Awake, colour picker, calculator | **Settings → Updates**: new versions from GitHub, Update or Not now |
+| ![Mirror](docs/screenshots/mirror.png) | ![World Clock](docs/screenshots/world-clock.png) |
+| **Mirror** add-on: flip, zoom, ring light (camera placeholder shown) | **World Clock** add-on: cities, day or night, time difference |
 | ![Clipboard](docs/screenshots/clipboard.png) | ![Notes](docs/screenshots/notes.png) |
 | **Clipboard**: searchable history, pins and filters | **Notes**: quick notes, saved automatically |
 | ![Messenger](docs/screenshots/messenger.png) | ![Focus timer](docs/screenshots/focus.png) |
