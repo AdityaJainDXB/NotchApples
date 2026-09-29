@@ -116,35 +116,50 @@ final class NotchTriggerView: NSView {
     private(set) var displayedEar: CGFloat = 0
     private var displayedGauge: CGFloat = 0
     private var pulse: CGFloat = 0
-    private var ticker: Timer?
+    /// Synced to the display's refresh (up to 120 Hz on ProMotion), so the ears and gauge glide.
+    private var ticker: CADisplayLink?
+    private var lastTick: CFTimeInterval = 0
 
     private func startTicker() {
         needsDisplay = true
         guard ticker == nil else { return }
-        ticker = Timer.scheduledTimer(withTimeInterval: 1 / 60, repeats: true) { [weak self] _ in self?.tick() }
-        RunLoop.main.add(ticker!, forMode: .common)
+        lastTick = CACurrentMediaTime()
+        let link = displayLink(target: self, selector: #selector(frame(_:)))
+        link.add(to: .main, forMode: .common)
+        ticker = link
+    }
+
+    @objc private func frame(_ link: CADisplayLink) {
+        let now = CACurrentMediaTime()
+        let dt = min(max(now - lastTick, 1.0 / 240), 1.0 / 20)
+        lastTick = now
+        tick(dt: CGFloat(dt))
     }
 
     /// Jumps straight to the final ear width. Used as a safety net so the window can never stay oversized
     /// if the animation timer is delayed (e.g. App Nap on a hidden agent app).
     func settle() {
-        ticker?.invalidate(); ticker = nil
+        // Only the ear width matters for sizing the window; leave the gauge to keep gliding.
+        guard displayedEar != targetEar else { return }
         displayedEar = targetEar
-        if let g = activity?.gauge { displayedGauge = CGFloat(g) }
         needsDisplay = true
     }
 
-    private func tick() {
+    private func tick(dt: CGFloat) {
         let reduceMotion = NSWorkspace.shared.accessibilityDisplayShouldReduceMotion
-        let ease: CGFloat = reduceMotion ? 1 : 0.26
+        // Time-based easing: the same speed at 60 or 120 Hz, and no stutter if a frame is late.
+        let earEase: CGFloat = reduceMotion ? 1 : 1 - exp(-dt * 16)
+        let gaugeEase: CGFloat = reduceMotion ? 1 : 1 - exp(-dt * 22)
         var moving = false
-        if abs(targetEar - displayedEar) > 0.5 { displayedEar += (targetEar - displayedEar) * ease; moving = true }
+        if abs(targetEar - displayedEar) > 0.3 { displayedEar += (targetEar - displayedEar) * earEase; moving = true }
         else if displayedEar != targetEar { displayedEar = targetEar; onEarSettled() }
         if let g = activity?.gauge.map({ CGFloat($0) }) {
-            if abs(g - displayedGauge) > 0.002 { displayedGauge += (g - displayedGauge) * (reduceMotion ? 1 : 0.3); moving = true }
+            // While the ears are still opening, start the bar at the real level instead of sliding up from an old one.
+            if displayedEar < targetEar * 0.85 { displayedGauge = g }
+            if abs(g - displayedGauge) > 0.001 { displayedGauge += (g - displayedGauge) * gaugeEase; moving = true }
             else { displayedGauge = g }
         }
-        if isRecording { pulse += 0.06; moving = true }
+        if isRecording { pulse += 3.6 * dt; moving = true }
         needsDisplay = true
         if !moving { ticker?.invalidate(); ticker = nil }
     }
@@ -350,8 +365,10 @@ final class NotchWindowController {
         notifier.onUnreadChange = { _ in LiveActivityCenter.shared.recompute() }
         LiveActivityCenter.shared.onChange = { [weak self] activity in
             guard let self else { return }
+            let sizeChanges = NotchTriggerView.earWidth(for: activity) != NotchTriggerView.earWidth(for: self.triggerView.activity)
             self.triggerView.activity = activity
-            self.reposition()
+            // A new volume/brightness level only moves the bar: don't resize the window for it.
+            if sizeChanges { self.reposition() }
         }
         LiveActivityCenter.shared.onRecordingChange = { [weak self] on in
             guard let self else { return }

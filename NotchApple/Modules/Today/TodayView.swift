@@ -158,16 +158,20 @@ struct TodayView: View {
     /// Screenshot (notch hidden for the shot) and screen recording.
     private var captureButtons: some View {
         VStack(alignment: .leading, spacing: 6) {
-            HStack(spacing: 6) {
-                Button { capture.takeScreenshot() } label: { Label("Screenshot", systemImage: "camera.viewfinder") }
+            // Stacked full-width so the labels never truncate in the narrow card.
+            VStack(spacing: 6) {
+                Button { capture.takeScreenshot() } label: { Label("Screenshot", systemImage: "camera.viewfinder").lineLimit(1).minimumScaleFactor(0.75).frame(maxWidth: .infinity) }
                     .buttonStyle(PurpleButtonStyle(prominent: false))
                     .help("Take a screenshot of the main display, without the notch")
                 Button { capture.toggleRecording() } label: {
-                    if capture.isRecording, let start = capture.recordingStart {
-                        Label { Text(start, style: .timer).monospacedDigit() } icon: { Image(systemName: "stop.circle.fill") }
-                    } else {
-                        Label("Record", systemImage: "record.circle")
+                    Group {
+                        if capture.isRecording, let start = capture.recordingStart {
+                            Label { Text(start, style: .timer).monospacedDigit() } icon: { Image(systemName: "stop.circle.fill") }
+                        } else {
+                            Label("Record", systemImage: "record.circle")
+                        }
                     }
+                    .lineLimit(1).minimumScaleFactor(0.75).frame(maxWidth: .infinity)
                 }
                 .buttonStyle(PurpleButtonStyle(prominent: capture.isRecording))
                 .help(capture.isRecording ? "Stop recording" : "Start recording the screen")

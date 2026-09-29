@@ -163,7 +163,7 @@ final class SystemHUDObserver {
     private func startBrightnessPolling() {
         guard getBrightness != nil else { return }
         lastBrightness = readBrightness()
-        let timer = Timer(timeInterval: 0.2, repeats: true) { [weak self] _ in
+        let timer = Timer(timeInterval: 0.1, repeats: true) { [weak self] _ in
             MainActor.assumeIsolated { self?.pollBrightness() }
         }
         timer.tolerance = 0.1

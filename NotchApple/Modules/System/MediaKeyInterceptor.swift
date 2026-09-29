@@ -88,6 +88,9 @@ final class MediaKeyInterceptor {
                     Self.setVolume(max(0, min(1, now + (key == .soundUp ? step : -step))), device)
                     Self.setMuted(false, device)
                 }
+                // Update the notch gauge straight away instead of waiting for the audio listener.
+                let level = Self.isMuted(device) ? 0 : Double(Self.volume(device) ?? 0)
+                Self.flash(symbol: level <= 0.001 ? "speaker.slash.fill" : level < 0.34 ? "speaker.wave.1.fill" : level < 0.67 ? "speaker.wave.2.fill" : "speaker.wave.3.fill", level)
             }
             return true
         case .brightnessUp, .brightnessDown:
@@ -95,8 +98,18 @@ final class MediaKeyInterceptor {
             let display = CGMainDisplayID()
             var value: Float = 0
             guard getBrightness(display, &value) == 0 else { return false }
-            if isDown { _ = setBrightness(display, max(0, min(1, value + (key == .brightnessUp ? step : -step)))) }
+            if isDown {
+                let next = max(0, min(1, value + (key == .brightnessUp ? step : -step)))
+                _ = setBrightness(display, next)
+                Self.flash(symbol: next < 0.35 ? "sun.min.fill" : "sun.max.fill", Double(next))
+            }
             return true
+        }
+    }
+
+    private static func flash(symbol: String, _ value: Double) {
+        DispatchQueue.main.async {
+            MainActor.assumeIsolated { LiveActivityCenter.shared.showHUD(symbol: symbol, value: value) }
         }
     }
 
