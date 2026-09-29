@@ -10,6 +10,8 @@
 		00DDB2C1BC9ABCAA43C21ADD /* AudioView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB93272E84FBD56F3B4F7BA4 /* AudioView.swift */; };
 		00E0A82DFB418DB5808C68C7 /* VPNView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19CE2857208E57529A83DED6 /* VPNView.swift */; };
 		016F2ADAB254656E793EA5F8 /* ClipboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 21DB33F0188BFD9B3D8FA4C3 /* ClipboardView.swift */; };
+		5EA2C4F1A0B3D2E1F0A1B2C5 /* FileSearchManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5EA2C4F1A0B3D2E1F0A1B2C4 /* FileSearchManager.swift */; };
+		5EA2C4F1A0B3D2E1F0A1B2C7 /* FileSearchView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5EA2C4F1A0B3D2E1F0A1B2C6 /* FileSearchView.swift */; };
 		028C6C33AD6C682F03B0695B /* MessengerNotifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = D953A904B3EF07B407F31F5C /* MessengerNotifier.swift */; };
 		04DA84BD772511B028648D4E /* GlobalHotkeyManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0ECABC7EEC9804BECB1923C7 /* GlobalHotkeyManager.swift */; };
 		0A5DC836B5829FB65956058F /* BiometricAuth.swift in Sources */ = {isa = PBXBuildFile; fileRef = F927A01984BE61BD7A76FA4A /* BiometricAuth.swift */; };
@@ -101,6 +103,8 @@
 		1C5A54FB338D3A1C23699078 /* NotchRootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotchRootView.swift; sourceTree = "<group>"; };
 		1D75D90CD0ED25880BFFC38F /* BackgroundMusic-LICENSE.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = "BackgroundMusic-LICENSE.txt"; sourceTree = "<group>"; };
 		21DB33F0188BFD9B3D8FA4C3 /* ClipboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClipboardView.swift; sourceTree = "<group>"; };
+		5EA2C4F1A0B3D2E1F0A1B2C4 /* FileSearchManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileSearchManager.swift; sourceTree = "<group>"; };
+		5EA2C4F1A0B3D2E1F0A1B2C6 /* FileSearchView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileSearchView.swift; sourceTree = "<group>"; };
 		25B7E1619A5F162E845D012C /* FaceUnlock.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FaceUnlock.swift; sourceTree = "<group>"; };
 		281C97D2743323428F5ACD8F /* VPNManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VPNManager.swift; sourceTree = "<group>"; };
 		295575A04EF33302E9D9A7FE /* AppIcon.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; path = AppIcon.icns; sourceTree = "<group>"; };
@@ -190,6 +194,7 @@
 				928715D8716E7F408FC89AB9 /* Messenger */,
 				B6228F40A5A660988AA1FFF4 /* Notes */,
 				F6710D5F4218F748F7A91024 /* NowPlaying */,
+				5EA2C4F1A0B3D2E1F0A1B2C3 /* Search */,
 				EF1CDB3D3452CF86F3E95240 /* Sharing */,
 				7315137CB02F1CFC434BC2D7 /* Shelf */,
 				78FBD758A1948295D33E4392 /* Today */,
@@ -197,6 +202,15 @@
 				5FBEBD2F24CA136CBA09D39A /* Windows */,
 			);
 			path = Modules;
+			sourceTree = "<group>";
+		};
+		5EA2C4F1A0B3D2E1F0A1B2C3 /* Search */ = {
+			isa = PBXGroup;
+			children = (
+				5EA2C4F1A0B3D2E1F0A1B2C4 /* FileSearchManager.swift */,
+				5EA2C4F1A0B3D2E1F0A1B2C6 /* FileSearchView.swift */,
+			);
+			path = Search;
 			sourceTree = "<group>";
 		};
 		3A55AF15FF270E1FE06C7032 /* Clipboard */ = {
@@ -515,6 +529,8 @@
 				6FE62A468735A640B08A7BD1 /* ClaudeClient.swift in Sources */,
 				BA7765B73DBDA2F91EF640DA /* ClipboardHistory.swift in Sources */,
 				016F2ADAB254656E793EA5F8 /* ClipboardView.swift in Sources */,
+				5EA2C4F1A0B3D2E1F0A1B2C5 /* FileSearchManager.swift in Sources */,
+				5EA2C4F1A0B3D2E1F0A1B2C7 /* FileSearchView.swift in Sources */,
 				442C0FCFC8F3FA259F6BA39A /* FaceUnlock.swift in Sources */,
 				0B1569487E2F135B049C0FBB /* FileShelf.swift in Sources */,
 				260DC3E3C52E0B1023D405F4 /* FocusTimer.swift in Sources */,
