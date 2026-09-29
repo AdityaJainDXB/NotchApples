@@ -34,6 +34,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         startMessengerInBackground()
         applyClipboardPreference()
         LiveActivityCenter.shared.start()
+        UpdateChecker.shared.applyPreference()
         showWelcomeOnFirstLaunch()
         if SettingsManager.shared.windowsEnabled { WindowManager.shared.promptOnceIfNeeded() }
 

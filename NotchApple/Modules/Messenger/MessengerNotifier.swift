@@ -80,8 +80,9 @@ extension MessengerNotifier: UNUserNotificationCenterDelegate {
     /// Clicking a notification opens the notch on Messenger.
     nonisolated func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse,
                                             withCompletionHandler completionHandler: @escaping () -> Void) {
+        let isUpdate = response.notification.request.content.categoryIdentifier == UpdateChecker.notificationCategory
         Task { @MainActor in
-            self.openMessenger()
+            if isUpdate { AppDelegate.openSettingsWindow(tab: .updates) } else { self.openMessenger() }
             completionHandler()
         }
     }

@@ -17,7 +17,7 @@ import UniformTypeIdentifiers
 
 /// Panes in the Settings window. `selection` lets other code jump to a pane.
 enum SettingsTab: String, CaseIterable, Identifiable, Hashable {
-    case general, shortcuts, permissions, authentication, modules, windows, claude, aiHistory, messenger, clipboard, fileSearch, focus, audio, vpn, widget, about
+    case general, shortcuts, permissions, authentication, modules, windows, claude, aiHistory, messenger, clipboard, fileSearch, focus, audio, vpn, widget, updates, about
     static let selection = PassthroughSubject<SettingsTab, Never>()
 
     var id: String { rawValue }
@@ -39,6 +39,7 @@ enum SettingsTab: String, CaseIterable, Identifiable, Hashable {
         case .audio: "Audio"
         case .vpn: "VPN"
         case .widget: "Widget"
+        case .updates: "Updates"
         case .about: "About"
         }
     }
@@ -60,6 +61,7 @@ enum SettingsTab: String, CaseIterable, Identifiable, Hashable {
         case .audio: "speaker.wave.2.fill"
         case .vpn: "lock.shield.fill"
         case .widget: "rectangle.3.group.fill"
+        case .updates: "arrow.down.circle.fill"
         case .about: "info.circle.fill"
         }
     }
@@ -82,19 +84,30 @@ enum SettingsTab: String, CaseIterable, Identifiable, Hashable {
         case .audio: .pink
         case .vpn: .blue
         case .widget: .teal
+        case .updates: .green
         case .about: .indigo
         }
     }
 }
 
 struct SettingsView: View {
+    @ObservedObject private var updater = UpdateChecker.shared
     @AppStorage("settings.lastPane") private var tab: SettingsTab = .general
 
     var body: some View {
         NavigationSplitView {
             List(SettingsTab.allCases, selection: Binding(get: { tab }, set: { if let t = $0 { tab = t } })) { pane in
                 Label {
-                    Text(pane.title)
+                    HStack {
+                        Text(pane.title)
+                        if pane == .updates, updater.pendingUpdate != nil {
+                            Spacer()
+                            Text("1").font(.caption2.bold()).foregroundStyle(.white)
+                                .padding(.horizontal, 6).padding(.vertical, 1)
+                                .background(Capsule().fill(.red))
+                                .accessibilityLabel("Update available")
+                        }
+                    }
                 } icon: {
                     Image(systemName: pane.symbol)
                         .font(.system(size: 11, weight: .semibold))
@@ -124,6 +137,7 @@ struct SettingsView: View {
                 case .audio: AudioSettings()
                 case .vpn: VPNSettings()
                 case .widget: WidgetSettings()
+                case .updates: UpdatesSettings()
                 case .about: AboutSettings()
                 }
             }

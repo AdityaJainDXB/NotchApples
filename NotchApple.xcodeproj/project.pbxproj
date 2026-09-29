@@ -10,8 +10,6 @@
 		00DDB2C1BC9ABCAA43C21ADD /* AudioView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB93272E84FBD56F3B4F7BA4 /* AudioView.swift */; };
 		00E0A82DFB418DB5808C68C7 /* VPNView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19CE2857208E57529A83DED6 /* VPNView.swift */; };
 		016F2ADAB254656E793EA5F8 /* ClipboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 21DB33F0188BFD9B3D8FA4C3 /* ClipboardView.swift */; };
-		5EA2C4F1A0B3D2E1F0A1B2C5 /* FileSearchManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5EA2C4F1A0B3D2E1F0A1B2C4 /* FileSearchManager.swift */; };
-		5EA2C4F1A0B3D2E1F0A1B2C7 /* FileSearchView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5EA2C4F1A0B3D2E1F0A1B2C6 /* FileSearchView.swift */; };
 		028C6C33AD6C682F03B0695B /* MessengerNotifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = D953A904B3EF07B407F31F5C /* MessengerNotifier.swift */; };
 		04DA84BD772511B028648D4E /* GlobalHotkeyManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0ECABC7EEC9804BECB1923C7 /* GlobalHotkeyManager.swift */; };
 		0A5DC836B5829FB65956058F /* BiometricAuth.swift in Sources */ = {isa = PBXBuildFile; fileRef = F927A01984BE61BD7A76FA4A /* BiometricAuth.swift */; };
@@ -37,7 +35,9 @@
 		5DCFF5FAC0FB3C4B22AE8E7B /* NotchMessengerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 643FFB36BCE34E64BBD52883 /* NotchMessengerView.swift */; };
 		5F2E6DC4CD761DFB777B0C6B /* SharedStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9E160C9C8DBBE561F7DD2AD /* SharedStore.swift */; };
 		66F9ECB3DB5740E0CA3A1801 /* NotchWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3ED6813AA8EF7F3F44235A0D /* NotchWindowController.swift */; };
+		68A5D2B46E4A5A70CF45359E /* FileSearchView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6D1D3CB4DD45527CA986357A /* FileSearchView.swift */; };
 		695DD73EF704946DF4FBD01C /* AudioDeviceController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3ABE2D3E36BD860C5C51BF9D /* AudioDeviceController.swift */; };
+		6A45649B04783F57F515062D /* UpdateChecker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 91C60D5E0497858899252D40 /* UpdateChecker.swift */; };
 		6CB3126DF2584324131FE504 /* LICENSE-Tunnelblick.txt in Resources */ = {isa = PBXBuildFile; fileRef = C0762062E088CCC2C44948C8 /* LICENSE-Tunnelblick.txt */; };
 		6D2CC9DC5AA478EFEBAC4D05 /* NowPlayingMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = ACD60817F03707C0A2A93064 /* NowPlayingMonitor.swift */; };
 		6EB4C5BE5A0101A1A21F64D6 /* PermissionsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81150E6B4F5BE3E2EB5CE1A1 /* PermissionsView.swift */; };
@@ -62,6 +62,7 @@
 		C5CB119C0BE108708E65FC9E /* LocalP2PManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 700E54998678B97CA020EA9E /* LocalP2PManager.swift */; };
 		C6704B893CA4C4D32A413A19 /* VPNManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 281C97D2743323428F5ACD8F /* VPNManager.swift */; };
 		C91A005EA4ED8AC410BAF839 /* ClaudeChatView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 76A2AE80E039AD25E2029A03 /* ClaudeChatView.swift */; };
+		CA0E4BF296C64534C899D7F2 /* FileSearchManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75CDCA4D3C86F0827F694E96 /* FileSearchManager.swift */; };
 		CEB54EB841EFFF09AB43ADFE /* BackgroundMusic-LICENSE.txt in Resources */ = {isa = PBXBuildFile; fileRef = 1D75D90CD0ED25880BFFC38F /* BackgroundMusic-LICENSE.txt */; };
 		DC37742E9DC53226546E0A45 /* WindowManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 98A8EB2467586B8A5E087088 /* WindowManager.swift */; };
 		E0E40F939970A6AB282C7437 /* WeatherService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 92FC7E64A4478DE0F57D42E4 /* WeatherService.swift */; };
@@ -103,8 +104,6 @@
 		1C5A54FB338D3A1C23699078 /* NotchRootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotchRootView.swift; sourceTree = "<group>"; };
 		1D75D90CD0ED25880BFFC38F /* BackgroundMusic-LICENSE.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = "BackgroundMusic-LICENSE.txt"; sourceTree = "<group>"; };
 		21DB33F0188BFD9B3D8FA4C3 /* ClipboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClipboardView.swift; sourceTree = "<group>"; };
-		5EA2C4F1A0B3D2E1F0A1B2C4 /* FileSearchManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileSearchManager.swift; sourceTree = "<group>"; };
-		5EA2C4F1A0B3D2E1F0A1B2C6 /* FileSearchView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileSearchView.swift; sourceTree = "<group>"; };
 		25B7E1619A5F162E845D012C /* FaceUnlock.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FaceUnlock.swift; sourceTree = "<group>"; };
 		281C97D2743323428F5ACD8F /* VPNManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VPNManager.swift; sourceTree = "<group>"; };
 		295575A04EF33302E9D9A7FE /* AppIcon.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; path = AppIcon.icns; sourceTree = "<group>"; };
@@ -123,15 +122,18 @@
 		643FFB36BCE34E64BBD52883 /* NotchMessengerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotchMessengerView.swift; sourceTree = "<group>"; };
 		6747ADA828FF1D33683B30C8 /* ClaudeClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClaudeClient.swift; sourceTree = "<group>"; };
 		67D16800EDB504F3DA0705BE /* SnapDropController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SnapDropController.swift; sourceTree = "<group>"; };
+		6D1D3CB4DD45527CA986357A /* FileSearchView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileSearchView.swift; sourceTree = "<group>"; };
 		6E3AACE5DE410E31472973B9 /* PairDropService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PairDropService.swift; sourceTree = "<group>"; };
 		700E54998678B97CA020EA9E /* LocalP2PManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalP2PManager.swift; sourceTree = "<group>"; };
 		70487D33E613C8A9A0DFA36C /* ChatHistory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatHistory.swift; sourceTree = "<group>"; };
+		75CDCA4D3C86F0827F694E96 /* FileSearchManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileSearchManager.swift; sourceTree = "<group>"; };
 		76A2AE80E039AD25E2029A03 /* ClaudeChatView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClaudeChatView.swift; sourceTree = "<group>"; };
 		7E3DB230CD04EC3E1A948E17 /* WindowsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindowsView.swift; sourceTree = "<group>"; };
 		7F0A6971B6F0205B6D174308 /* NotchApple.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = NotchApple.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		7FA95D922A40D6601CCC213A /* AppAudioTap.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppAudioTap.swift; sourceTree = "<group>"; };
 		81150E6B4F5BE3E2EB5CE1A1 /* PermissionsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PermissionsView.swift; sourceTree = "<group>"; };
 		8DD6D3003087F986015A60A7 /* TodayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodayView.swift; sourceTree = "<group>"; };
+		91C60D5E0497858899252D40 /* UpdateChecker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdateChecker.swift; sourceTree = "<group>"; };
 		92FC7E64A4478DE0F57D42E4 /* WeatherService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeatherService.swift; sourceTree = "<group>"; };
 		97CC70FFD067091FDE1231BB /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		98A8EB2467586B8A5E087088 /* WindowManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindowManager.swift; sourceTree = "<group>"; };
@@ -194,7 +196,7 @@
 				928715D8716E7F408FC89AB9 /* Messenger */,
 				B6228F40A5A660988AA1FFF4 /* Notes */,
 				F6710D5F4218F748F7A91024 /* NowPlaying */,
-				5EA2C4F1A0B3D2E1F0A1B2C3 /* Search */,
+				3E9EAA1FF091745774E5B152 /* Search */,
 				EF1CDB3D3452CF86F3E95240 /* Sharing */,
 				7315137CB02F1CFC434BC2D7 /* Shelf */,
 				78FBD758A1948295D33E4392 /* Today */,
@@ -204,15 +206,6 @@
 			path = Modules;
 			sourceTree = "<group>";
 		};
-		5EA2C4F1A0B3D2E1F0A1B2C3 /* Search */ = {
-			isa = PBXGroup;
-			children = (
-				5EA2C4F1A0B3D2E1F0A1B2C4 /* FileSearchManager.swift */,
-				5EA2C4F1A0B3D2E1F0A1B2C6 /* FileSearchView.swift */,
-			);
-			path = Search;
-			sourceTree = "<group>";
-		};
 		3A55AF15FF270E1FE06C7032 /* Clipboard */ = {
 			isa = PBXGroup;
 			children = (
@@ -220,6 +213,15 @@
 				21DB33F0188BFD9B3D8FA4C3 /* ClipboardView.swift */,
 			);
 			path = Clipboard;
+			sourceTree = "<group>";
+		};
+		3E9EAA1FF091745774E5B152 /* Search */ = {
+			isa = PBXGroup;
+			children = (
+				75CDCA4D3C86F0827F694E96 /* FileSearchManager.swift */,
+				6D1D3CB4DD45527CA986357A /* FileSearchView.swift */,
+			);
+			path = Search;
 			sourceTree = "<group>";
 		};
 		406331E011DA1A6501AE44AE /* UI */ = {
@@ -250,6 +252,7 @@
 				E7EE75D24E20F68ED45BAC0A /* SandboxMigration.swift */,
 				EA5B0C58A3CF928A968E10F8 /* SettingsManager.swift */,
 				419A5F6F30DFBF30351906D2 /* Theme.swift */,
+				91C60D5E0497858899252D40 /* UpdateChecker.swift */,
 			);
 			path = Core;
 			sourceTree = "<group>";
@@ -529,9 +532,9 @@
 				6FE62A468735A640B08A7BD1 /* ClaudeClient.swift in Sources */,
 				BA7765B73DBDA2F91EF640DA /* ClipboardHistory.swift in Sources */,
 				016F2ADAB254656E793EA5F8 /* ClipboardView.swift in Sources */,
-				5EA2C4F1A0B3D2E1F0A1B2C5 /* FileSearchManager.swift in Sources */,
-				5EA2C4F1A0B3D2E1F0A1B2C7 /* FileSearchView.swift in Sources */,
 				442C0FCFC8F3FA259F6BA39A /* FaceUnlock.swift in Sources */,
+				CA0E4BF296C64534C899D7F2 /* FileSearchManager.swift in Sources */,
+				68A5D2B46E4A5A70CF45359E /* FileSearchView.swift in Sources */,
 				0B1569487E2F135B049C0FBB /* FileShelf.swift in Sources */,
 				260DC3E3C52E0B1023D405F4 /* FocusTimer.swift in Sources */,
 				537F255A1D69F77CC3D7AF9E /* FocusView.swift in Sources */,
@@ -561,6 +564,7 @@
 				A1B21CB550FFC4A1CC1B692D /* SnapDropController.swift in Sources */,
 				3426BA9EDEDB4808A6BEF8BA /* Theme.swift in Sources */,
 				29BC5405E9AA7A285A647076 /* TodayView.swift in Sources */,
+				6A45649B04783F57F515062D /* UpdateChecker.swift in Sources */,
 				C6704B893CA4C4D32A413A19 /* VPNManager.swift in Sources */,
 				00E0A82DFB418DB5808C68C7 /* VPNView.swift in Sources */,
 				7E8386EF609533C3CF5608D8 /* WeatherService.swift in Sources */,
@@ -663,7 +667,7 @@
 				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Manual;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 16;
+				CURRENT_PROJECT_VERSION = 17;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = "";
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -761,7 +765,7 @@
 				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Manual;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 16;
+				CURRENT_PROJECT_VERSION = 17;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = "";
 				ENABLE_HARDENED_RUNTIME = YES;

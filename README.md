@@ -142,6 +142,17 @@ If macOS stops Notch apple reading **Downloads**, **Documents** or **Desktop**, 
 
 Other things new in 1.12: **no more keychain password prompts.** Earlier versions saved API keys and face-unlock data in the login Keychain, and because the app is ad-hoc signed, macOS asked for your login password again after every update. They're now stored in a private file only your user account can read. After updating, paste your AI API keys again and set up face unlock again.
 
+## Updates
+
+From 1.12.0, Notch apple updates itself from this repository's GitHub releases:
+
+- When a new release is published, you get a notification (**"Update available. Would you like to update?"**), an **Update** button appears in the notch, and **Settings → Updates** shows a badge with the release notes.
+- Press **Update** and it downloads the new DMG, checks the app inside is genuine Notch apple, replaces your copy and reopens. Your settings and data are kept.
+- Press **Not now** to skip that version. You'll only be asked again when a newer one comes out.
+- Don't want updates at all? Turn off **Check for updates automatically** in Settings → Updates. You can still press **Check now** any time.
+
+Checking only asks GitHub for the latest release. Nothing about you is sent.
+
 ## Install
 
 ### With Homebrew
@@ -186,7 +197,7 @@ If you'd rather install an older, smaller build, every version is still availabl
 | [**1.9.0**](https://github.com/AdityaJainDXB/NotchApples/releases/download/v1.9.0/NotchApple-1.9.0.dmg) | 31 MB | **Free AI choices**: Gemini, Groq, OpenRouter and Ollama, alongside paid Claude and ChatGPT. |  |
 | [**1.10.0**](https://github.com/AdityaJainDXB/NotchApples/releases/download/v1.10.0/NotchApple-1.10.0.dmg) | 31 MB | The AI can **see your screen when you ask**, one-click AI actions, DeepSeek, **AI History**, **Notes**, smoother notch opening. |  |
 | [**1.11.0**](https://github.com/AdityaJainDXB/NotchApples/releases/download/v1.11.0/NotchApple-1.11.0.dmg) | 31 MB | **Windows**: drag a window to the notch to snap it, split screen, 4-window grid, thirds, tile all windows, saved layouts, `⌃⌥` shortcuts. The notch remembers its last tab. |  |
-| [**1.12.0**](https://github.com/AdityaJainDXB/NotchApples/releases/download/v1.12.0/NotchApple-1.12.0.dmg) | 5.3 MB | **Search** tab (Spotlight file search), `⌘O` to hide the notch, no more keychain password prompts. The latest version. | Doesn't include the Tunnelblick VPN helper; install [Tunnelblick](https://tunnelblick.net) yourself to use the VPN. After updating, paste your AI API keys again and set up face unlock again. |
+| [**1.12.0**](https://github.com/AdityaJainDXB/NotchApples/releases/download/v1.12.0/NotchApple-1.12.0.dmg) | 31 MB | **Search** tab (Spotlight file search), `⌘O` to hide the notch, no more keychain password prompts, **built-in updates** (Settings → Updates). The latest version. | After updating, paste your AI API keys again and set up face unlock again. |
 
 Good to know:
 - **1.4.1 is the last version under 4 MB.** From 1.5.0 on, the app includes the Tunnelblick VPN helper, which accounts for most of the extra size. If you don't use the VPN, 1.4.1 or earlier stays small.
@@ -421,6 +432,7 @@ Per-app volume and EQ use Core Audio process taps, which arrived in macOS 14.2. 
 
 - Everything runs on your Mac. The only network requests are:
   - the AI provider you chose (Gemini, Groq, OpenRouter, Anthropic or OpenAI), using your own key, when you chat. Ollama stays on your Mac
+  - `api.github.com` to check for updates (can be turned off) and `github.com` to download one you accept
   - `open-meteo.com` for weather
   - `api.github.com` / `raw.githubusercontent.com` for the free VPN server list, and `vpngate.net`, only when you open the VPN tab
 - PairDrop and Nearby Wi-Fi chat never leave your local network.

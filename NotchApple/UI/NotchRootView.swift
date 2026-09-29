@@ -124,6 +124,7 @@ struct NotchRootView: View {
                 }
             }
             Spacer(minLength: 0)
+            UpdatePill { state.close(); AppDelegate.openSettingsWindow(tab: .updates) }
             if settings.vpnEnabled { VPNQuickStatus() }
             IconButton(systemImage: "gearshape.fill", help: "Settings (⌘,)") {
                 state.close(); AppDelegate.openSettingsWindow()
