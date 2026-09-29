@@ -65,8 +65,10 @@
 		C91A005EA4ED8AC410BAF839 /* ClaudeChatView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 76A2AE80E039AD25E2029A03 /* ClaudeChatView.swift */; };
 		CA0E4BF296C64534C899D7F2 /* FileSearchManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75CDCA4D3C86F0827F694E96 /* FileSearchManager.swift */; };
 		CEB54EB841EFFF09AB43ADFE /* BackgroundMusic-LICENSE.txt in Resources */ = {isa = PBXBuildFile; fileRef = 1D75D90CD0ED25880BFFC38F /* BackgroundMusic-LICENSE.txt */; };
+		D14A7182094B0FCB8A57044B /* WorldClockView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BC0266F190CB2E6D5FE2CE7 /* WorldClockView.swift */; };
 		DC37742E9DC53226546E0A45 /* WindowManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 98A8EB2467586B8A5E087088 /* WindowManager.swift */; };
 		E0E40F939970A6AB282C7437 /* WeatherService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 92FC7E64A4478DE0F57D42E4 /* WeatherService.swift */; };
+		EA6A5158CB578D683DE18C94 /* MirrorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB44C1551051FAC38513B591 /* MirrorView.swift */; };
 		EB53320B29FB664836E79985 /* WebP2PManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = E07ED38955AE546C7637D5B9 /* WebP2PManager.swift */; };
 /* End PBXBuildFile section */
 
@@ -130,6 +132,7 @@
 		70487D33E613C8A9A0DFA36C /* ChatHistory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatHistory.swift; sourceTree = "<group>"; };
 		75CDCA4D3C86F0827F694E96 /* FileSearchManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileSearchManager.swift; sourceTree = "<group>"; };
 		76A2AE80E039AD25E2029A03 /* ClaudeChatView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClaudeChatView.swift; sourceTree = "<group>"; };
+		7BC0266F190CB2E6D5FE2CE7 /* WorldClockView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorldClockView.swift; sourceTree = "<group>"; };
 		7E3DB230CD04EC3E1A948E17 /* WindowsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindowsView.swift; sourceTree = "<group>"; };
 		7F0A6971B6F0205B6D174308 /* NotchApple.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = NotchApple.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		7FA95D922A40D6601CCC213A /* AppAudioTap.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppAudioTap.swift; sourceTree = "<group>"; };
@@ -159,6 +162,7 @@
 		EDBEAF142EDDBD8BE070A009 /* Tunnelblick-ABOUT.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = "Tunnelblick-ABOUT.txt"; sourceTree = "<group>"; };
 		F49D3A20C7CFE9C60DB8CBC3 /* LiveActivity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveActivity.swift; sourceTree = "<group>"; };
 		F927A01984BE61BD7A76FA4A /* BiometricAuth.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BiometricAuth.swift; sourceTree = "<group>"; };
+		FB44C1551051FAC38513B591 /* MirrorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MirrorView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
@@ -196,6 +200,7 @@
 				3A55AF15FF270E1FE06C7032 /* Clipboard */,
 				A26703948EEDD51D6AB203C4 /* Focus */,
 				928715D8716E7F408FC89AB9 /* Messenger */,
+				AA4125385CFB57411FC76DF8 /* Mirror */,
 				B6228F40A5A660988AA1FFF4 /* Notes */,
 				F6710D5F4218F748F7A91024 /* NowPlaying */,
 				3E9EAA1FF091745774E5B152 /* Search */,
@@ -205,6 +210,7 @@
 				A58125BCF74A2E93625153B0 /* Tools */,
 				A9957A263FFF8D86EE6B2B2A /* VPN */,
 				5FBEBD2F24CA136CBA09D39A /* Windows */,
+				63B5F483B9A998123FAE1D8E /* WorldClock */,
 			);
 			path = Modules;
 			sourceTree = "<group>";
@@ -268,6 +274,14 @@
 				7E3DB230CD04EC3E1A948E17 /* WindowsView.swift */,
 			);
 			path = Windows;
+			sourceTree = "<group>";
+		};
+		63B5F483B9A998123FAE1D8E /* WorldClock */ = {
+			isa = PBXGroup;
+			children = (
+				7BC0266F190CB2E6D5FE2CE7 /* WorldClockView.swift */,
+			);
+			path = WorldClock;
 			sourceTree = "<group>";
 		};
 		6EA5B9E820B7A9E195FCA295 /* App */ = {
@@ -382,6 +396,14 @@
 				19CE2857208E57529A83DED6 /* VPNView.swift */,
 			);
 			path = VPN;
+			sourceTree = "<group>";
+		};
+		AA4125385CFB57411FC76DF8 /* Mirror */ = {
+			isa = PBXGroup;
+			children = (
+				FB44C1551051FAC38513B591 /* MirrorView.swift */,
+			);
+			path = Mirror;
 			sourceTree = "<group>";
 		};
 		B6228F40A5A660988AA1FFF4 /* Notes */ = {
@@ -556,6 +578,7 @@
 				2451D6C550A6B50F33FB0D88 /* LocationProvider.swift in Sources */,
 				5017D7AB333DCC40EBD7CDBB /* MessengerModels.swift in Sources */,
 				028C6C33AD6C682F03B0695B /* MessengerNotifier.swift in Sources */,
+				EA6A5158CB578D683DE18C94 /* MirrorView.swift in Sources */,
 				4098B0C40272540FC563BC1F /* NotchAppleApp.swift in Sources */,
 				5DCFF5FAC0FB3C4B22AE8E7B /* NotchMessengerView.swift in Sources */,
 				94FE896FD0765E79EB83E825 /* NotchRootView.swift in Sources */,
@@ -583,6 +606,7 @@
 				EB53320B29FB664836E79985 /* WebP2PManager.swift in Sources */,
 				DC37742E9DC53226546E0A45 /* WindowManager.swift in Sources */,
 				72569F25523646AA163A2245 /* WindowsView.swift in Sources */,
+				D14A7182094B0FCB8A57044B /* WorldClockView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

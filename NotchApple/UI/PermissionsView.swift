@@ -47,13 +47,30 @@ final class PermissionsModel: ObservableObject {
         refresh()
     }
 
+    /// Menu-bar apps must be frontmost for macOS to show a permission prompt.
+    private func bringToFront() { NSApp.activate(ignoringOtherApps: true) }
+
+    /// If macOS didn't show a prompt (e.g. it was answered before), open the
+    /// right System Settings page so the switch can be turned on there.
+    private func fallback(after seconds: Double = 2.5, stillUndecided: @escaping @MainActor () -> Bool, anchor: String) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + seconds) {
+            MainActor.assumeIsolated {
+                self.refresh()
+                if stillUndecided() { Self.openPrivacy(anchor) }
+            }
+        }
+    }
+
     func requestNotifications() {
+        bringToFront()
         UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .badge]) { _, _ in
             Task { @MainActor in self.refresh() }
         }
     }
 
     func requestCalendar() {
+        bringToFront()
+        fallback(after: 4, stillUndecided: { EKEventStore.authorizationStatus(for: .event) != .fullAccess }, anchor: "Privacy_Calendars")
         Task {
             _ = try? await EKEventStore().requestFullAccessToEvents()
             refresh()
@@ -62,6 +79,8 @@ final class PermissionsModel: ObservableObject {
     }
 
     func requestCamera() {
+        bringToFront()
+        fallback(after: 4, stillUndecided: { AVCaptureDevice.authorizationStatus(for: .video) == .notDetermined }, anchor: "Privacy_Camera")
         AVCaptureDevice.requestAccess(for: .video) { _ in Task { @MainActor in self.refresh() } }
     }
 
@@ -74,6 +93,8 @@ struct PermissionsView: View {
     @StateObject private var model = PermissionsModel.shared
     @StateObject private var location = LocationProvider.shared
     var showsWelcome = false
+
+    private let poll = Timer.publish(every: 2, on: .main, in: .common).autoconnect()
 
     var body: some View {
         Form {
@@ -147,6 +168,10 @@ struct PermissionsView: View {
             }
         }
         .formStyle(.grouped)
+        .onReceive(poll) { _ in model.refresh(); location.refreshStatus() }
+        .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
+            model.refresh(); location.refreshStatus()
+        }
         .onAppear(perform: model.refresh)
         // Pick up changes made in System Settings when the user comes back.
         .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in model.refresh() }

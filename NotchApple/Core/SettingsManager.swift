@@ -12,7 +12,7 @@ import SwiftUI
 
 /// Every optional feature module in the app.
 enum Module: String, CaseIterable, Identifiable {
-    case today, claude, windows, tools, messenger, clipboard, notes, focus, shelf, share, audio, vpn, nowPlaying, search, security
+    case today, claude, windows, tools, mirror, worldClock, messenger, clipboard, notes, focus, shelf, share, audio, vpn, nowPlaying, search, security
 
     var id: String { rawValue }
 
@@ -23,6 +23,8 @@ enum Module: String, CaseIterable, Identifiable {
         case .notes: "Notes"
         case .windows: "Windows"
         case .tools: "Tools"
+        case .mirror: "Mirror"
+        case .worldClock: "World Clock"
         case .claude: "AI"
         case .messenger: "Messenger"
         case .clipboard: "Clipboard"
@@ -43,6 +45,8 @@ enum Module: String, CaseIterable, Identifiable {
         case .notes: "note.text"
         case .windows: "rectangle.split.2x2.fill"
         case .tools: "wrench.and.screwdriver.fill"
+        case .mirror: "person.crop.square"
+        case .worldClock: "globe"
         case .claude: "sparkles"
         case .messenger: "bubble.left.and.bubble.right.fill"
         case .clipboard: "doc.on.clipboard.fill"
@@ -60,6 +64,8 @@ enum Module: String, CaseIterable, Identifiable {
         switch self {
         case .claude: "Chat with AI: free Gemini, Groq, OpenRouter or local Ollama, or paid Claude / ChatGPT. Optionally share your screen."
         case .today: "Weather, your next calendar events and battery at a glance."
+        case .mirror: "Add-on: a mirror using your camera, to check how you look before a call. Nothing is recorded."
+        case .worldClock: "Add-on: the time in the cities you choose, with day or night and the time difference."
         case .tools: "Keep your Mac awake, pick colours from the screen, and a quick calculator."
         case .windows: "Snap windows into halves, thirds and quarters: drag a window to the notch, use ⌃⌥ shortcuts, or tile everything at once."
         case .notes: "Quick notes in the notch, saved automatically."
@@ -94,6 +100,9 @@ final class SettingsManager: ObservableObject {
     @AppStorage(Module.notes.storageKey) var notesEnabled = true
     @AppStorage(Module.windows.storageKey) var windowsEnabled = true
     @AppStorage(Module.tools.storageKey) var toolsEnabled = true
+    /// Add-ons are off until you add them in Settings → Modules.
+    @AppStorage(Module.mirror.storageKey) var mirrorEnabled = false
+    @AppStorage(Module.worldClock.storageKey) var worldClockEnabled = false
     /// Show snap zones when a window is dragged up to the notch.
     @AppStorage("windows.dragToNotch") var windowDragToNotch = true
     /// ⌃⌥ + arrows / Return / C / Delete snap the front window.
@@ -151,6 +160,8 @@ final class SettingsManager: ObservableObject {
         case .notes: $notesEnabled
         case .windows: $windowsEnabled
         case .tools: $toolsEnabled
+        case .mirror: $mirrorEnabled
+        case .worldClock: $worldClockEnabled
         case .clipboard: $clipboardEnabled
         case .shelf: $shelfEnabled
         case .share: $shareEnabled

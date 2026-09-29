@@ -38,11 +38,22 @@ final class LocationProvider: NSObject, ObservableObject {
     func requestLocation() {
         guard useCurrentLocation else { return }
         switch status {
-        case .notDetermined: manager.requestWhenInUseAuthorization()
+        case .notDetermined:
+            // Menu-bar apps must be frontmost for the prompt to appear.
+            NSApp.activate(ignoringOtherApps: true)
+            manager.requestWhenInUseAuthorization()
+            DispatchQueue.main.asyncAfter(deadline: .now() + 4) { [weak self] in
+                guard let self else { return }
+                self.refreshStatus()
+                if self.status == .notDetermined { self.openSystemSettings() }
+            }
         case .authorizedAlways, .authorized: refreshIfStale(force: true)
         default: break
         }
     }
+
+    /// Re-reads the permission (e.g. after it was changed in System Settings).
+    func refreshStatus() { status = manager.authorizationStatus }
 
     /// Re-reads the location at most once an hour.
     func refreshIfStale(force: Bool = false) {

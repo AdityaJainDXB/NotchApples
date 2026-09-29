@@ -42,6 +42,11 @@ final class TodayModel: ObservableObject {
     }
 
     func requestCalendarAccess() {
+        NSApp.activate(ignoringOtherApps: true)   // menu-bar apps must be frontmost to show the prompt
+        DispatchQueue.main.asyncAfter(deadline: .now() + 4) {
+            if EKEventStore.authorizationStatus(for: .event) != .fullAccess { PermissionsModel.openPrivacy("Privacy_Calendars") }
+            self.refresh()
+        }
         Task {
             _ = try? await store.requestFullAccessToEvents()
             calendarAccess = EKEventStore.authorizationStatus(for: .event)
