@@ -18,7 +18,7 @@ final class LocationProvider: NSObject, ObservableObject {
     /// When on (the default), weather follows your current location.
     @AppStorage("weather.useCurrentLocation") var useCurrentLocation = true
     @Published private(set) var status: CLAuthorizationStatus
-    @Published private(set) var cityName: String = SharedStore.weatherLocation.name
+    @Published private(set) var cityName: String = DemoMode.isOn ? "Cupertino" : SharedStore.weatherLocation.name
 
     private let manager = CLLocationManager()
     private let geocoder = CLGeocoder()
@@ -46,7 +46,7 @@ final class LocationProvider: NSObject, ObservableObject {
 
     /// Re-reads the location at most once an hour.
     func refreshIfStale(force: Bool = false) {
-        guard useCurrentLocation, isAuthorized else { return }
+        guard useCurrentLocation, isAuthorized, !DemoMode.isOn else { return }
         guard force || Date.now.timeIntervalSince(lastUpdate) > 3600 else { return }
         lastUpdate = .now
         manager.requestLocation()

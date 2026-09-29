@@ -11,6 +11,7 @@
 		00E0A82DFB418DB5808C68C7 /* VPNView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19CE2857208E57529A83DED6 /* VPNView.swift */; };
 		016F2ADAB254656E793EA5F8 /* ClipboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 21DB33F0188BFD9B3D8FA4C3 /* ClipboardView.swift */; };
 		028C6C33AD6C682F03B0695B /* MessengerNotifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = D953A904B3EF07B407F31F5C /* MessengerNotifier.swift */; };
+		03180AD7D27C74BB9855998C /* DemoMode.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84C2248DE9B8625366280717 /* DemoMode.swift */; };
 		04DA84BD772511B028648D4E /* GlobalHotkeyManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0ECABC7EEC9804BECB1923C7 /* GlobalHotkeyManager.swift */; };
 		0A5DC836B5829FB65956058F /* BiometricAuth.swift in Sources */ = {isa = PBXBuildFile; fileRef = F927A01984BE61BD7A76FA4A /* BiometricAuth.swift */; };
 		0B1569487E2F135B049C0FBB /* FileShelf.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4E00A819D19DED9CA5D59F0 /* FileShelf.swift */; };
@@ -127,6 +128,7 @@
 		7F0A6971B6F0205B6D174308 /* NotchApple.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = NotchApple.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		7FA95D922A40D6601CCC213A /* AppAudioTap.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppAudioTap.swift; sourceTree = "<group>"; };
 		81150E6B4F5BE3E2EB5CE1A1 /* PermissionsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PermissionsView.swift; sourceTree = "<group>"; };
+		84C2248DE9B8625366280717 /* DemoMode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DemoMode.swift; sourceTree = "<group>"; };
 		8DD6D3003087F986015A60A7 /* TodayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodayView.swift; sourceTree = "<group>"; };
 		92FC7E64A4478DE0F57D42E4 /* WeatherService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeatherService.swift; sourceTree = "<group>"; };
 		97CC70FFD067091FDE1231BB /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
@@ -230,6 +232,7 @@
 		5D7E04F40B89DBA3D483E208 /* Core */ = {
 			isa = PBXGroup;
 			children = (
+				84C2248DE9B8625366280717 /* DemoMode.swift */,
 				1BB3450673E6FC967D2A1F87 /* KeychainHelper.swift */,
 				F49D3A20C7CFE9C60DB8CBC3 /* LiveActivity.swift */,
 				E908464AA33EDC69CFBCDF86 /* LocationProvider.swift */,
@@ -515,6 +518,7 @@
 				6FE62A468735A640B08A7BD1 /* ClaudeClient.swift in Sources */,
 				BA7765B73DBDA2F91EF640DA /* ClipboardHistory.swift in Sources */,
 				016F2ADAB254656E793EA5F8 /* ClipboardView.swift in Sources */,
+				03180AD7D27C74BB9855998C /* DemoMode.swift in Sources */,
 				442C0FCFC8F3FA259F6BA39A /* FaceUnlock.swift in Sources */,
 				0B1569487E2F135B049C0FBB /* FileShelf.swift in Sources */,
 				260DC3E3C52E0B1023D405F4 /* FocusTimer.swift in Sources */,

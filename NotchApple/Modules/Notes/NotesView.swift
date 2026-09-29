@@ -36,6 +36,7 @@ final class NotesStore: ObservableObject {
     private var saveWork: DispatchWorkItem?
 
     init() {
+        if DemoMode.isOn { notes = DemoMode.notes; selectedID = notes.first?.id; return }
         if let data = try? Data(contentsOf: url), let saved = try? JSONDecoder().decode([Note].self, from: data) {
             notes = saved.sorted { $0.updated > $1.updated }
         }
@@ -68,7 +69,7 @@ final class NotesStore: ObservableObject {
     private func scheduleSave() {
         saveWork?.cancel()
         let work = DispatchWorkItem { [weak self] in
-            guard let self, let data = try? JSONEncoder().encode(self.notes) else { return }
+            guard let self, !DemoMode.isOn, let data = try? JSONEncoder().encode(self.notes) else { return }
             try? data.write(to: self.url, options: .atomic)
         }
         saveWork = work

@@ -49,6 +49,8 @@ enum KeychainHelper {
     }
 
     static func getData(_ key: Key) -> Data? {
+        // Screenshots: pretend API keys are set, never touch the real Keychain.
+        if DemoMode.isOn { return key == .faceTemplate ? nil : Data("demo-key".utf8) }
         let query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: service,

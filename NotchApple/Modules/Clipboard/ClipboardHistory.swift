@@ -81,6 +81,7 @@ final class ClipboardHistory: ObservableObject {
     // MARK: Lifecycle
 
     func start() {
+        if DemoMode.isOn { items = DemoMode.clipboard; return }
         guard timer == nil else { return }
         load()
         lastChangeCount = NSPasteboard.general.changeCount
@@ -201,7 +202,7 @@ final class ClipboardHistory: ObservableObject {
     }
 
     private func save() {
-        guard persist, let data = try? JSONEncoder().encode(items) else { return }
+        guard persist, !DemoMode.isOn, let data = try? JSONEncoder().encode(items) else { return }
         try? data.write(to: indexURL, options: .atomic)
     }
 

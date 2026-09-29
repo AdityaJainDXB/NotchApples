@@ -55,7 +55,7 @@ final class PairDropService: ObservableObject {
     private var listener: NWListener?
     private var browser: NWBrowser?
     private let queue = DispatchQueue(label: "pairdrop")
-    private let deviceName = Host.current().localizedName ?? "Mac"
+    private let deviceName = DemoMode.isOn ? DemoMode.deviceName : (Host.current().localizedName ?? "Mac")
 
     static func newCode() -> String { String(format: "%06d", Int.random(in: 0...999_999)) }
 

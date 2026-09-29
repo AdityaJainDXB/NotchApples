@@ -34,28 +34,36 @@ brew install --cask notch-apple
 
 ## Screenshots
 
+All screenshots use sample data.
+
 | | |
 | --- | --- |
-| ![Today](docs/screenshots/today.png) | ![Focus timer](docs/screenshots/focus.png) |
-| **Today**: weather, next events, battery | **Focus**: Pomodoro timer |
-| ![Messenger](docs/screenshots/messenger.png) | ![AirDrop and PairDrop](docs/screenshots/share.png) |
-| **Messenger**: an anonymous, end-to-end-encrypted room | **Share**: AirDrop and PairDrop |
-| ![File Shelf](docs/screenshots/shelf.png) | ![Audio](docs/screenshots/audio.png) |
-| **File Shelf**: drop files into the notch | **Audio**: output, master and per-app volume and EQ |
-| ![VPN](docs/screenshots/vpn.png) | ![Now Playing](docs/screenshots/nowplaying.png) |
-| **VPN**: your profiles and free servers | **Now Playing** |
-| ![Settings: Permissions](docs/screenshots/settings-permissions.png) | ![Settings: Authentication](docs/screenshots/settings-authentication.png) |
-| **First launch**: every permission in one place | **Face unlock**: Face ID-style |
-| ![Settings](docs/screenshots/settings-general.png) | ![Settings: Modules](docs/screenshots/settings-modules.png) |
-| **Settings**: a sidebar of panes, like System Settings | **Settings → Modules**: every feature is optional |
-| ![Settings: AI History](docs/screenshots/settings-ai-history.png) | ![AI tab](docs/screenshots/claude.png) |
-| **Settings → AI History**: every chat, with the model that answered | **AI**: free providers, switch in the notch |
+| ![Today](docs/screenshots/today.png) | ![AI](docs/screenshots/claude.png) |
+| **Today**: weather, next events, battery | **AI**: free providers, switch in the notch |
 | ![Windows](docs/screenshots/windows.png) | ![Snap zones under the notch](docs/screenshots/window-snap-zones.png) |
 | **Windows**: snap, tile and save window layouts | **Drag a window to the notch** and drop it on a zone |
-| ![Settings: Windows](docs/screenshots/settings-windows.png) | ![Settings: VPN](docs/screenshots/settings-vpn.png) |
-| **Settings → Windows**: snap zones, shortcuts, gaps | **Settings → VPN**: free servers and your profiles |
-| ![Settings: Audio](docs/screenshots/settings-audio.png) | |
-| **Settings → Audio**: built-in per-app engine | |
+| ![Clipboard](docs/screenshots/clipboard.png) | ![Notes](docs/screenshots/notes.png) |
+| **Clipboard**: searchable history, pins and filters | **Notes**: quick notes, saved automatically |
+| ![Messenger](docs/screenshots/messenger.png) | ![Focus timer](docs/screenshots/focus.png) |
+| **Messenger**: anonymous, end-to-end-encrypted rooms | **Focus**: Pomodoro timer |
+| ![AirDrop and PairDrop](docs/screenshots/share.png) | ![File Shelf](docs/screenshots/shelf.png) |
+| **Share**: AirDrop and PairDrop | **File Shelf**: drop files into the notch |
+| ![Audio](docs/screenshots/audio.png) | ![VPN](docs/screenshots/vpn.png) |
+| **Audio**: output, master and per-app volume and EQ | **VPN**: your profiles and free servers |
+| ![Now Playing](docs/screenshots/nowplaying.png) | ![Settings: Permissions](docs/screenshots/settings-permissions.png) |
+| **Now Playing** | **First launch**: every permission in one place |
+| ![Settings](docs/screenshots/settings-general.png) | ![Settings: Modules](docs/screenshots/settings-modules.png) |
+| **Settings**: a sidebar of panes, like System Settings | **Settings → Modules**: every feature is optional |
+| ![Settings: AI](docs/screenshots/settings-ai.png) | ![Settings: AI History](docs/screenshots/settings-ai-history.png) |
+| **Settings → AI**: provider, model and keys | **Settings → AI History**: every chat, with the model that answered |
+| ![Settings: Windows](docs/screenshots/settings-windows.png) | ![Settings: Authentication](docs/screenshots/settings-authentication.png) |
+| **Settings → Windows**: snap zones, shortcuts, gaps | **Face unlock**: Face ID-style |
+| ![Settings: Messenger](docs/screenshots/settings-messenger.png) | ![Settings: Clipboard](docs/screenshots/settings-clipboard.png) |
+| **Settings → Messenger** | **Settings → Clipboard** |
+| ![Settings: Focus](docs/screenshots/settings-focus.png) | ![Settings: Audio](docs/screenshots/settings-audio.png) |
+| **Settings → Focus** | **Settings → Audio**: built-in per-app engine |
+| ![Settings: VPN](docs/screenshots/settings-vpn.png) | ![Settings: Widget](docs/screenshots/settings-widget.png) |
+| **Settings → VPN**: free servers and your profiles | **Settings → Widget**: location or a city |
 
 ## Features
 

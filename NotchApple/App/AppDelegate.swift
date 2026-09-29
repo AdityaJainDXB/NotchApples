@@ -35,15 +35,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         applyClipboardPreference()
         LiveActivityCenter.shared.start()
         showWelcomeOnFirstLaunch()
-        if SettingsManager.shared.windowsEnabled { WindowManager.shared.promptOnceIfNeeded() }
-        #if DEBUG
-        if ProcessInfo.processInfo.environment["NOTCH_PREVIEW_DROP"] != nil {
+        if SettingsManager.shared.windowsEnabled, !DemoMode.isOn { WindowManager.shared.promptOnceIfNeeded() }
+        // Screenshots: `-demoMode YES -openSettings <pane>` opens a Settings pane.
+        if DemoMode.isOn, UserDefaults.standard.bool(forKey: "showSnapZones") {
             DispatchQueue.main.asyncAfter(deadline: .now() + 1) { SnapDropController.shared.preview(.topLeft) }
         }
-        if ProcessInfo.processInfo.environment["NOTCH_PREVIEW_SETTINGS"] != nil {
-            DispatchQueue.main.asyncAfter(deadline: .now() + 1) { AppDelegate.openSettingsWindow(tab: .windows) }
+        if DemoMode.isOn, let pane = UserDefaults.standard.string(forKey: "openSettings").flatMap(SettingsTab.init(rawValue:)) {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1) { AppDelegate.openSettingsWindow(tab: pane) }
         }
-        #endif
 
         // Show/hide the status item live as the preference changes.
         applyStatusItemPreference()
@@ -72,7 +71,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         guard SettingsManager.shared.messengerEnabled else { return }
         MessengerNotifier.shared.requestAuthorizationIfNeeded()
         LocalP2PManager.shared.start()
-        if let room = UserDefaults.standard.string(forKey: "messenger.activeRoom") {
+        if !DemoMode.isOn, let room = UserDefaults.standard.string(forKey: "messenger.activeRoom") {
             WebP2PManager.shared.join(room)
         }
     }
