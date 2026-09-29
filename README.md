@@ -42,6 +42,8 @@ All screenshots use sample data.
 | **Today**: weather, next events, battery | **AI**: free providers, switch in the notch |
 | ![Windows](docs/screenshots/windows.png) | ![Snap zones under the notch](docs/screenshots/window-snap-zones.png) |
 | **Windows**: snap, tile and save window layouts | **Drag a window to the notch** and drop it on a zone |
+| ![Tools](docs/screenshots/tools.png) | ![Settings: Updates](docs/screenshots/settings-updates.png) |
+| **Tools**: Keep Awake, colour picker, calculator | **Settings → Updates**: new versions from GitHub, Update or Not now |
 | ![Clipboard](docs/screenshots/clipboard.png) | ![Notes](docs/screenshots/notes.png) |
 | **Clipboard**: searchable history, pins and filters | **Notes**: quick notes, saved automatically |
 | ![Messenger](docs/screenshots/messenger.png) | ![Focus timer](docs/screenshots/focus.png) |
@@ -76,6 +78,7 @@ Every module is **optional** and can be switched on or off in **Settings → Mod
 | 🔋 **Charging** | Plug in or unplug the charger and the notch briefly shows your battery level. Turn it off in **Settings → General**. |
 | ✨ **AI** | Chat from the notch with **free** AI (Google Gemini, Groq, OpenRouter's free models, or Ollama on your Mac) or with your own key for **DeepSeek**, Claude or ChatGPT. **Ask "what's on my screen?"** and it takes a screenshot and answers about what you're actually looking at. One-click actions summarise, translate or fix what you copied. Every chat is saved in **Settings → AI History** with the model that answered. See [AI in the notch](#ai-in-the-notch). |
 | 🪟 **Windows** | A split-screen window manager. **Drag any window up to the notch** and a strip of snap zones drops down: halves, quarters (4 windows on one screen), thirds, two-thirds, fill and center. Or snap from the Windows tab, or with `⌃⌥` + arrow keys. **Arrange all** tiles every window on the screen at once (split screen, 3 columns, a 4/6/9 grid, main + stack, cascade). Save a whole layout and put every window back in one click. See [Window management](#window-management). |
+| 🧰 **Tools** | **Keep Awake** stops your Mac sleeping for 30 minutes, 1 or 2 hours, or until you turn it off. **Color Picker** picks any colour on screen and copies its hex code (right-click a swatch for RGB). **Calculator** answers as you type (`(12.5 + 7) × 3`), and Return copies the result. |
 | 📝 **Notes** | Quick notes in the notch: several notes, search, a "new note from clipboard" button, and saved automatically on your Mac. |
 | 💬 **Messenger** | Chat anonymously with **people on the same Wi-Fi** (found automatically, encrypted between Macs), or **create or join an anonymous room** with a code, like `cafe-study` or `8821`. Rooms are end-to-end encrypted, and nothing is stored anywhere. You get a random handle like `PurplePanda#402`, and there are no accounts. See [Using Messenger](#using-messenger). |
 | 📋 **Clipboard** | Everything you copy (text, links, images and files) is saved to a searchable history in the notch. Click an item to copy it again, pin the ones you want to keep, and filter by type. Items that password managers mark as secret are never saved, and history stays on your Mac. Choose how many items to keep in **Settings → Clipboard**. |
@@ -98,7 +101,7 @@ Every module is **optional** and can be switched on or off in **Settings → Mod
 
 `⌘E` is a system-wide shortcut registered through Carbon, so it needs no Accessibility permission. While it's on, other apps won't receive `⌘E` (for example "Use Selection for Find"). You can turn it off in **Settings → General**.
 
-**Hide the notch with `⌘O`:** press `⌘O` in any app to make the notch and its menu-bar icon disappear, and press it again to bring them back. Everything keeps running while it's hidden (music, timers, Messenger), and `⌘E` also brings it back. **Settings → Shortcuts & Hotkeys** shows whether it's visible or hidden and has the on/off switch. While it's on, other apps won't receive `⌘O` (usually their **Open…** command).
+**Hide the notch with `⌃⌥O`:** press `⌃⌥O` from anywhere to make the notch and its menu-bar icon disappear, and press it again to bring them back. Everything keeps running while it's hidden (music, timers, Messenger), and `⌘E` also brings it back. **Settings → Shortcuts & Hotkeys** shows whether it's visible or hidden and has the on/off switch.
 
 When the VPN module is on, a **VPN On/Off** pill in the notch header shows the tunnel status. The full VPN setup (importing profiles and loading free servers) is under **Settings → VPN**.
 
@@ -197,7 +200,7 @@ If you'd rather install an older, smaller build, every version is still availabl
 | [**1.9.0**](https://github.com/AdityaJainDXB/NotchApples/releases/download/v1.9.0/NotchApple-1.9.0.dmg) | 31 MB | **Free AI choices**: Gemini, Groq, OpenRouter and Ollama, alongside paid Claude and ChatGPT. |  |
 | [**1.10.0**](https://github.com/AdityaJainDXB/NotchApples/releases/download/v1.10.0/NotchApple-1.10.0.dmg) | 31 MB | The AI can **see your screen when you ask**, one-click AI actions, DeepSeek, **AI History**, **Notes**, smoother notch opening. |  |
 | [**1.11.0**](https://github.com/AdityaJainDXB/NotchApples/releases/download/v1.11.0/NotchApple-1.11.0.dmg) | 31 MB | **Windows**: drag a window to the notch to snap it, split screen, 4-window grid, thirds, tile all windows, saved layouts, `⌃⌥` shortcuts. The notch remembers its last tab. |  |
-| [**1.12.0**](https://github.com/AdityaJainDXB/NotchApples/releases/download/v1.12.0/NotchApple-1.12.0.dmg) | 31 MB | **Search** tab (Spotlight file search), `⌘O` to hide the notch, no more keychain password prompts, **built-in updates** (Settings → Updates). The latest version. | After updating, paste your AI API keys again and set up face unlock again. |
+| [**1.12.0**](https://github.com/AdityaJainDXB/NotchApples/releases/download/v1.12.0/NotchApple-1.12.0.dmg) | 31 MB | **Search** tab (Spotlight file search), `⌃⌥O` to hide the notch, no more keychain password prompts, **built-in updates** (Settings → Updates), **Tools** tab (Keep Awake, colour picker, calculator), hide shortcut moved to `⌃⌥O`. The latest version. | After updating, paste your AI API keys again and set up face unlock again. |
 
 Good to know:
 - **1.4.1 is the last version under 4 MB.** From 1.5.0 on, the app includes the Tunnelblick VPN helper, which accounts for most of the extra size. If you don't use the VPN, 1.4.1 or earlier stays small.

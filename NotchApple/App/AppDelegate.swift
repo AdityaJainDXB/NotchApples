@@ -52,7 +52,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             }
             .store(in: &cancellables)
 
-        // The menu-bar icon hides and reappears with the notch (⌘O).
+        // The menu-bar icon hides and reappears with the notch (⌃⌥O).
         SettingsManager.shared.$isNotchHidden
             .receive(on: RunLoop.main)
             .sink { [weak self] _ in self?.applyStatusItemPreference() }
@@ -113,7 +113,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
     }
 
-    /// ⌘O: hide or reveal the notch and its menu-bar icon.
+    /// ⌃⌥O: hide or reveal the notch and its menu-bar icon.
     @objc func toggleInvisible() {
         notchController?.toggleInvisible()
     }

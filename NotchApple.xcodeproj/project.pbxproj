@@ -11,6 +11,7 @@
 		00E0A82DFB418DB5808C68C7 /* VPNView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19CE2857208E57529A83DED6 /* VPNView.swift */; };
 		016F2ADAB254656E793EA5F8 /* ClipboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 21DB33F0188BFD9B3D8FA4C3 /* ClipboardView.swift */; };
 		028C6C33AD6C682F03B0695B /* MessengerNotifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = D953A904B3EF07B407F31F5C /* MessengerNotifier.swift */; };
+		0310ED990FCB271126B822E2 /* ToolsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6DC662D269E6349FC6792A11 /* ToolsView.swift */; };
 		04DA84BD772511B028648D4E /* GlobalHotkeyManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0ECABC7EEC9804BECB1923C7 /* GlobalHotkeyManager.swift */; };
 		0A5DC836B5829FB65956058F /* BiometricAuth.swift in Sources */ = {isa = PBXBuildFile; fileRef = F927A01984BE61BD7A76FA4A /* BiometricAuth.swift */; };
 		0B1569487E2F135B049C0FBB /* FileShelf.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4E00A819D19DED9CA5D59F0 /* FileShelf.swift */; };
@@ -123,6 +124,7 @@
 		6747ADA828FF1D33683B30C8 /* ClaudeClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClaudeClient.swift; sourceTree = "<group>"; };
 		67D16800EDB504F3DA0705BE /* SnapDropController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SnapDropController.swift; sourceTree = "<group>"; };
 		6D1D3CB4DD45527CA986357A /* FileSearchView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileSearchView.swift; sourceTree = "<group>"; };
+		6DC662D269E6349FC6792A11 /* ToolsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToolsView.swift; sourceTree = "<group>"; };
 		6E3AACE5DE410E31472973B9 /* PairDropService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PairDropService.swift; sourceTree = "<group>"; };
 		700E54998678B97CA020EA9E /* LocalP2PManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalP2PManager.swift; sourceTree = "<group>"; };
 		70487D33E613C8A9A0DFA36C /* ChatHistory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatHistory.swift; sourceTree = "<group>"; };
@@ -200,6 +202,7 @@
 				EF1CDB3D3452CF86F3E95240 /* Sharing */,
 				7315137CB02F1CFC434BC2D7 /* Shelf */,
 				78FBD758A1948295D33E4392 /* Today */,
+				A58125BCF74A2E93625153B0 /* Tools */,
 				A9957A263FFF8D86EE6B2B2A /* VPN */,
 				5FBEBD2F24CA136CBA09D39A /* Windows */,
 			);
@@ -352,6 +355,14 @@
 				3C357EE29CC1EB9117F9FD20 /* FocusView.swift */,
 			);
 			path = Focus;
+			sourceTree = "<group>";
+		};
+		A58125BCF74A2E93625153B0 /* Tools */ = {
+			isa = PBXGroup;
+			children = (
+				6DC662D269E6349FC6792A11 /* ToolsView.swift */,
+			);
+			path = Tools;
 			sourceTree = "<group>";
 		};
 		A8F2BA5E81A712C77D12DBBB /* NotchWidget */ = {
@@ -564,6 +575,7 @@
 				A1B21CB550FFC4A1CC1B692D /* SnapDropController.swift in Sources */,
 				3426BA9EDEDB4808A6BEF8BA /* Theme.swift in Sources */,
 				29BC5405E9AA7A285A647076 /* TodayView.swift in Sources */,
+				0310ED990FCB271126B822E2 /* ToolsView.swift in Sources */,
 				6A45649B04783F57F515062D /* UpdateChecker.swift in Sources */,
 				C6704B893CA4C4D32A413A19 /* VPNManager.swift in Sources */,
 				00E0A82DFB418DB5808C68C7 /* VPNView.swift in Sources */,

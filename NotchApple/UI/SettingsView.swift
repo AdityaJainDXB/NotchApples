@@ -160,8 +160,8 @@ private struct ShortcutsSettings: View {
         Form {
             Section {
                 Toggle(isOn: $settings.invisibilityHotkeyEnabled) {
-                    Text("Enable Command + O (⌘O) Invisibility Shortcut")
-                    Text("Press ⌘O from anywhere on your Mac to instantly hide or reveal the notch.")
+                    Text("Hide the notch with ⌃⌥O")
+                    Text("Press ⌃⌥O from anywhere on your Mac to instantly hide or reveal the notch.")
                 }
                 LabeledContent("Notch") {
                     Label(settings.isNotchHidden ? "Hidden/Invisible" : "Visible",
@@ -174,7 +174,7 @@ private struct ShortcutsSettings: View {
             } header: {
                 Text("Invisibility")
             } footer: {
-                Text("While on, other apps don't receive ⌘O (their Open… shortcut). Everything keeps running while the notch is hidden; ⌘E also brings it back.")
+                Text("Everything keeps running while the notch is hidden; ⌘E also brings it back.")
             }
             Section {
                 Toggle(isOn: $settings.globalHotkeyEnabled) {

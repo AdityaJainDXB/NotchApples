@@ -306,7 +306,7 @@ final class NotchWindowController {
 
     func toggle() { state.isExpanded ? collapse() : expand() }
 
-    // MARK: Invisibility (⌘O)
+    // MARK: Invisibility (⌃⌥O)
 
     /// Fades the whole notch out (or back in). Nothing is torn down while hidden,
     /// so Now Playing, Messenger connections and timers keep running.

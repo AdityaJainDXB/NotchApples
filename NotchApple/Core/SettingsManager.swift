@@ -12,7 +12,7 @@ import SwiftUI
 
 /// Every optional feature module in the app.
 enum Module: String, CaseIterable, Identifiable {
-    case today, claude, windows, messenger, clipboard, notes, focus, shelf, share, audio, vpn, nowPlaying, search, security
+    case today, claude, windows, tools, messenger, clipboard, notes, focus, shelf, share, audio, vpn, nowPlaying, search, security
 
     var id: String { rawValue }
 
@@ -22,6 +22,7 @@ enum Module: String, CaseIterable, Identifiable {
         case .focus: "Focus"
         case .notes: "Notes"
         case .windows: "Windows"
+        case .tools: "Tools"
         case .claude: "AI"
         case .messenger: "Messenger"
         case .clipboard: "Clipboard"
@@ -41,6 +42,7 @@ enum Module: String, CaseIterable, Identifiable {
         case .focus: "timer"
         case .notes: "note.text"
         case .windows: "rectangle.split.2x2.fill"
+        case .tools: "wrench.and.screwdriver.fill"
         case .claude: "sparkles"
         case .messenger: "bubble.left.and.bubble.right.fill"
         case .clipboard: "doc.on.clipboard.fill"
@@ -58,6 +60,7 @@ enum Module: String, CaseIterable, Identifiable {
         switch self {
         case .claude: "Chat with AI: free Gemini, Groq, OpenRouter or local Ollama, or paid Claude / ChatGPT. Optionally share your screen."
         case .today: "Weather, your next calendar events and battery at a glance."
+        case .tools: "Keep your Mac awake, pick colours from the screen, and a quick calculator."
         case .windows: "Snap windows into halves, thirds and quarters: drag a window to the notch, use ⌃⌥ shortcuts, or tile everything at once."
         case .notes: "Quick notes in the notch, saved automatically."
         case .focus: "A Pomodoro focus timer with a countdown beside the notch."
@@ -90,6 +93,7 @@ final class SettingsManager: ObservableObject {
     @AppStorage(Module.focus.storageKey) var focusEnabled = true
     @AppStorage(Module.notes.storageKey) var notesEnabled = true
     @AppStorage(Module.windows.storageKey) var windowsEnabled = true
+    @AppStorage(Module.tools.storageKey) var toolsEnabled = true
     /// Show snap zones when a window is dragged up to the notch.
     @AppStorage("windows.dragToNotch") var windowDragToNotch = true
     /// ⌃⌥ + arrows / Return / C / Delete snap the front window.
@@ -124,9 +128,9 @@ final class SettingsManager: ObservableObject {
     @AppStorage("ui.hoverToOpen") var hoverToOpen = false
     /// Toggle the notch from anywhere with ⌘E (Carbon hot key, no Accessibility permission needed).
     @AppStorage("ui.globalHotkey") var globalHotkeyEnabled = true
-    /// Hide or reveal the whole notch from anywhere with ⌘O.
+    /// Hide or reveal the whole notch from anywhere with ⌃⌥O.
     @AppStorage("ui.invisibilityHotkey") var invisibilityHotkeyEnabled = true
-    /// True while ⌘O has made the notch invisible. Not persisted: every launch starts visible.
+    /// True while ⌃⌥O has made the notch invisible. Not persisted: every launch starts visible.
     @Published var isNotchHidden = false
     /// Offer webcam face unlock (enrolled in Settings → Authentication) on the lock screen.
     @AppStorage("security.faceUnlock") var faceUnlockEnabled = false
@@ -146,6 +150,7 @@ final class SettingsManager: ObservableObject {
         case .focus: $focusEnabled
         case .notes: $notesEnabled
         case .windows: $windowsEnabled
+        case .tools: $toolsEnabled
         case .clipboard: $clipboardEnabled
         case .shelf: $shelfEnabled
         case .share: $shareEnabled

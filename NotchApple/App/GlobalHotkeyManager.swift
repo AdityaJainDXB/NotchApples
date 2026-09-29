@@ -8,7 +8,7 @@
 //
 //  Keys used:
 //   • ⌘E  — toggles the notch (always registered while the preference is on).
-//   • ⌘O  — hides or reveals the whole notch (invisibility, while the preference is on).
+//   • ⌃⌥O  — hides or reveals the whole notch (invisibility, while the preference is on).
 //   • Esc — closes the notch; registered only while the notch is open, so
 //           other apps get their Escape key back the moment it closes.
 //
@@ -44,7 +44,8 @@ final class GlobalHotkeyManager {
 
         var modifiers: UInt32 {
             switch self {
-            case .toggleNotch, .toggleInvisible: UInt32(cmdKey)
+            case .toggleNotch: UInt32(cmdKey)
+            case .toggleInvisible: UInt32(controlKey | optionKey)
             case .closeNotch: 0
             default: UInt32(controlKey | optionKey)
             }
