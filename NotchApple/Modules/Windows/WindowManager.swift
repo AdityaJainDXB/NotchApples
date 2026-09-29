@@ -178,12 +178,39 @@ final class WindowManager: ObservableObject {
         #endif
     }
 
-    /// Shows the system prompt (once) and opens the Accessibility list in System Settings.
+    /// Shows the system prompt, which also adds Notch apple to the Accessibility
+    /// list, then opens that list and watches for the switch being turned on.
     func requestAccess() {
         let key = kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String
         isTrusted = AXIsProcessTrustedWithOptions([key: true] as CFDictionary)
         if !isTrusted, let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility") {
             NSWorkspace.shared.open(url)
+        }
+        watchForTrust()
+    }
+
+    /// Asks once per install, at launch, so Notch apple shows up in the list.
+    func promptOnceIfNeeded() {
+        let key = "windows.promptedFor.\(Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "")"
+        guard !AXIsProcessTrusted(), !UserDefaults.standard.bool(forKey: key) else { return }
+        UserDefaults.standard.set(true, forKey: key)
+        let option = kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String
+        _ = AXIsProcessTrustedWithOptions([option: true] as CFDictionary)
+        watchForTrust()
+    }
+
+    private var trustTimer: Timer?
+
+    /// Updates the UI by itself once the switch is turned on (no relaunch needed).
+    private func watchForTrust() {
+        trustTimer?.invalidate()
+        var checks = 0
+        trustTimer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { timer in
+            MainActor.assumeIsolated {
+                checks += 1
+                WindowManager.shared.refreshTrust()
+                if WindowManager.shared.isTrusted || checks > 300 { timer.invalidate() }
+            }
         }
     }
 

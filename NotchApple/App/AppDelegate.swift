@@ -26,6 +26,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         AppDelegate.current = self
+        SandboxMigration.runIfNeeded()
         notchController = NotchWindowController()
         notchController?.show()
 
@@ -34,6 +35,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         applyClipboardPreference()
         LiveActivityCenter.shared.start()
         showWelcomeOnFirstLaunch()
+        if SettingsManager.shared.windowsEnabled { WindowManager.shared.promptOnceIfNeeded() }
         #if DEBUG
         if ProcessInfo.processInfo.environment["NOTCH_PREVIEW_DROP"] != nil {
             DispatchQueue.main.asyncAfter(deadline: .now() + 1) { SnapDropController.shared.preview(.topLeft) }
