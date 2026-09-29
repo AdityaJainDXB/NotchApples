@@ -19,6 +19,14 @@ xcodebuild -project NotchApple.xcodeproj -scheme NotchApple -configuration Relea
 APP="build/dd/Build/Products/Release/Notch apple.app"
 [ -d "$APP" ] || { echo "Build failed"; exit 1; }
 
+# Ad-hoc signatures identify the app by its exact hash, so every new build
+# looks like a different app to macOS and loses its Accessibility permission.
+# Re-sign with a designated requirement based on the bundle ID instead, so a
+# permission granted once keeps working across updates.
+xattr -cr "$APP"
+codesign --force --sign - --preserve-metadata=entitlements,flags,runtime \
+  -r='designated => identifier "com.notchapple.app"' "$APP"
+
 # Optional extras (BackgroundMusic driver, licences) ship inside the app:
 # Settings → Audio installs the driver; licences are in Contents/Resources.
 

@@ -198,11 +198,12 @@ final class UpdateChecker: ObservableObject {
               info["CFBundleShortVersionString"] as? String == expectedVersion else {
             throw UpdateError.message("The downloaded app isn't the expected Notch apple \(expectedVersion).")
         }
-        // Make sure the code signature is intact (not tampered with in transit).
-        try await run("/usr/bin/codesign", ["--verify", "--deep", "--strict", newApp.path])
-
         let staged = fm.temporaryDirectory.appendingPathComponent("NotchApple-staged-\(UUID().uuidString).app")
         try await run("/usr/bin/ditto", [newApp.path, staged.path])
+        // Finder metadata from the disk image isn't part of the app; drop it,
+        // then make sure the code signature is intact (not tampered with in transit).
+        try await run("/usr/bin/xattr", ["-cr", staged.path])
+        try await run("/usr/bin/codesign", ["--verify", "--deep", "--strict", staged.path])
 
         let target = Bundle.main.bundleURL
         guard fm.isWritableFile(atPath: target.deletingLastPathComponent().path) else {
