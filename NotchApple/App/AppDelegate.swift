@@ -27,6 +27,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
         AppDelegate.current = self
         SandboxMigration.runIfNeeded()
+        HotkeyBinding.migrateAwayFromCommandO()
         notchController = NotchWindowController()
         notchController?.show()
 

@@ -108,7 +108,7 @@ Every module is **optional** and can be switched on or off in **Settings → Mod
 
 `⌘E` is a system-wide shortcut registered through Carbon, so it needs no Accessibility permission. While it's on, other apps won't receive `⌘E` (for example "Use Selection for Find"). You can turn it off in **Settings → General**.
 
-**Hide the notch with `⌘O`** (change it in **Settings → Shortcuts & Hotkeys**): press it from anywhere to make the notch and its menu-bar icon disappear, and press it again to bring them back. Everything keeps running while it's hidden (music, timers, Messenger), and `⌘E` also brings it back. **Settings → Shortcuts & Hotkeys** shows whether it's visible or hidden and has the on/off switch.
+**Hide the notch with `⌃⌥O`** (change it in **Settings → Shortcuts & Hotkeys**): press it from anywhere to make the notch and its menu-bar icon disappear, and press it again to bring them back. Everything keeps running while it's hidden (music, timers, Messenger), and `⌘E` also brings it back. **Settings → Shortcuts & Hotkeys** shows whether it's visible or hidden and has the on/off switch.
 
 When the VPN module is on, a **VPN On/Off** pill in the notch header shows the tunnel status. The full VPN setup (importing profiles and loading free servers) is under **Settings → VPN**.
 
