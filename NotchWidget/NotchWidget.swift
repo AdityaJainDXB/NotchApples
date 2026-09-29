@@ -192,7 +192,15 @@ struct NotchWidgetView: View {
     }
 }
 
+/// Both widgets ship in one extension: the original Notch apple widget and MacBook Center.
 @main
+struct NotchWidgets: WidgetBundle {
+    var body: some Widget {
+        NotchAppleWidget()
+        SystemStatsWidget()
+    }
+}
+
 struct NotchAppleWidget: Widget {
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: SharedStore.widgetKind, provider: Provider()) { entry in

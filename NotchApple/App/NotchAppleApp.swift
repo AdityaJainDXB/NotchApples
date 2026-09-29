@@ -13,6 +13,8 @@ import SwiftUI
 struct NotchAppleApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
 
+    init() { SettingsManager.registerDefaults() }
+
     var body: some Scene {
         // Settings live in `SettingsWindowController`; this empty scene only
         // satisfies SwiftUI's requirement that an App declares a Scene.

@@ -7,13 +7,86 @@
 //  permission and never sees any other keystrokes.
 //
 //  Keys used:
-//   • ⌘E  — toggles the notch (always registered while the preference is on).
-//   • ⌃⌥O  — hides or reveals the whole notch (invisibility, while the preference is on).
+//   • ⌃⌥N — toggles the notch (⌘E for people who used it before). User-configurable.
+//   • ⌘O  — hides or reveals the whole notch (invisibility). The combination is user-configurable.
 //   • Esc — closes the notch; registered only while the notch is open, so
 //           other apps get their Escape key back the moment it closes.
 //
 
 import Carbon.HIToolbox
+import AppKit
+
+/// A key combination stored in UserDefaults: Carbon key code + Carbon modifier flags + a label such as "⌘O".
+struct HotkeyBinding: Equatable {
+    var keyCode: UInt32
+    var modifiers: UInt32
+    var label: String
+
+    /// The two shortcuts users can change in Settings → Shortcuts & Hotkeys.
+    enum Slot {
+        case notch, invisibility
+
+        fileprivate var prefix: String { self == .notch ? "hotkey.notch" : "hotkey.invisibility" }
+
+        /// Notch: ⌃⌥N on new installs (⌥Space and other ⌥-only combinations are blocked by macOS for global
+        /// hot keys). People who already used ⌘E keep it, see `SettingsManager.registerDefaults`.
+        var defaultBinding: HotkeyBinding {
+            switch self {
+            case .notch: HotkeyBinding(keyCode: UInt32(kVK_ANSI_N), modifiers: UInt32(controlKey | optionKey), label: "⌃⌥N")
+            case .invisibility: HotkeyBinding(keyCode: UInt32(kVK_ANSI_O), modifiers: UInt32(cmdKey), label: "⌘O")
+            }
+        }
+    }
+
+    static let invisibilityDefault = Slot.invisibility.defaultBinding
+    static let legacyNotch = HotkeyBinding(keyCode: UInt32(kVK_ANSI_E), modifiers: UInt32(cmdKey), label: "⌘E")
+
+    /// The saved combination for `slot`, or its default when none has been chosen.
+    static func current(_ slot: Slot) -> HotkeyBinding {
+        let d = UserDefaults.standard
+        guard d.object(forKey: slot.prefix + ".keyCode") != nil else { return slot.defaultBinding }
+        return HotkeyBinding(keyCode: UInt32(d.integer(forKey: slot.prefix + ".keyCode")),
+                             modifiers: UInt32(d.integer(forKey: slot.prefix + ".modifiers")),
+                             label: d.string(forKey: slot.prefix + ".label") ?? slot.defaultBinding.label)
+    }
+
+    static func save(_ binding: HotkeyBinding, for slot: Slot) {
+        let d = UserDefaults.standard
+        d.set(Int(binding.keyCode), forKey: slot.prefix + ".keyCode")
+        d.set(Int(binding.modifiers), forKey: slot.prefix + ".modifiers")
+        d.set(binding.label, forKey: slot.prefix + ".label")
+    }
+
+    static func reset(_ slot: Slot) {
+        let d = UserDefaults.standard
+        ["keyCode", "modifiers", "label"].forEach { d.removeObject(forKey: slot.prefix + "." + $0) }
+    }
+
+    static var invisibility: HotkeyBinding { current(.invisibility) }
+    static var notch: HotkeyBinding { current(.notch) }
+
+    /// Builds a binding from a key press, or nil if it can't work as a global shortcut
+    /// (needs ⌘ or ⌃; ⌥ or ⇧ alone are ignored by macOS for global hot keys).
+    init?(event: NSEvent) {
+        let flags = event.modifierFlags.intersection(.deviceIndependentFlagsMask)
+        guard flags.contains(.command) || flags.contains(.control) else { return nil }
+        var mods: UInt32 = 0
+        var text = ""
+        if flags.contains(.control) { mods |= UInt32(controlKey); text += "⌃" }
+        if flags.contains(.option) { mods |= UInt32(optionKey); text += "⌥" }
+        if flags.contains(.shift) { mods |= UInt32(shiftKey); text += "⇧" }
+        if flags.contains(.command) { mods |= UInt32(cmdKey); text += "⌘" }
+        let named: [Int: String] = [kVK_Space: "Space", kVK_Return: "↩", kVK_Tab: "⇥", kVK_Delete: "⌫",
+                                    kVK_LeftArrow: "←", kVK_RightArrow: "→", kVK_UpArrow: "↑", kVK_DownArrow: "↓"]
+        let key = named[Int(event.keyCode)] ?? (event.charactersIgnoringModifiers ?? "").uppercased()
+        guard !key.isEmpty else { return nil }
+        self.init(keyCode: UInt32(event.keyCode), modifiers: mods, label: text + key)
+    }
+
+    init(keyCode: UInt32, modifiers: UInt32, label: String) {
+        self.keyCode = keyCode; self.modifiers = modifiers; self.label = label
+    }
+}
 
 final class GlobalHotkeyManager {
     static let shared = GlobalHotkeyManager()
@@ -29,9 +102,9 @@ final class GlobalHotkeyManager {
 
         var keyCode: UInt32 {
             switch self {
-            case .toggleNotch: UInt32(kVK_ANSI_E)
+            case .toggleNotch: HotkeyBinding.notch.keyCode
             case .closeNotch: UInt32(kVK_Escape)
-            case .toggleInvisible: UInt32(kVK_ANSI_O)
+            case .toggleInvisible: HotkeyBinding.invisibility.keyCode
             case .snapLeft: UInt32(kVK_LeftArrow)
             case .snapRight: UInt32(kVK_RightArrow)
             case .snapTop: UInt32(kVK_UpArrow)
@@ -44,8 +117,8 @@ final class GlobalHotkeyManager {
 
         var modifiers: UInt32 {
             switch self {
-            case .toggleNotch: UInt32(cmdKey)
-            case .toggleInvisible: UInt32(controlKey | optionKey)
+            case .toggleNotch: HotkeyBinding.notch.modifiers
+            case .toggleInvisible: HotkeyBinding.invisibility.modifiers
             case .closeNotch: 0
             default: UInt32(controlKey | optionKey)
             }
@@ -53,25 +126,51 @@ final class GlobalHotkeyManager {
     }
 
     private var refs: [Key: EventHotKeyRef] = [:]
+    private var combos: [Key: [UInt32]] = [:]
     private var actions: [Key: () -> Void] = [:]
     private var handlerRef: EventHandlerRef?
+    /// Result of the last registration attempt per key (noErr = working).
+    private(set) var statuses: [Key: OSStatus] = [:]
 
-    /// Registers `key`. Calling again just replaces the action.
-    func register(_ key: Key, action: @escaping () -> Void) {
+    /// Registers `key`. Calling again replaces the action, and re-registers if the key combination has changed.
+    @discardableResult
+    func register(_ key: Key, action: @escaping () -> Void) -> Bool {
         actions[key] = action
         installHandlerIfNeeded()
-        guard refs[key] == nil else { return }
+        let combo = [key.keyCode, key.modifiers]
+        if refs[key] != nil {
+            if combos[key] == combo { return true }
+            UnregisterEventHotKey(refs.removeValue(forKey: key)!)   // the combination was changed in Settings
+        }
         var ref: EventHotKeyRef?
         let id = EventHotKeyID(signature: OSType(0x4E545348), id: key.rawValue)   // 'NTSH'
-        if RegisterEventHotKey(key.keyCode, key.modifiers, id, GetApplicationEventTarget(), 0, &ref) == noErr, let ref {
-            refs[key] = ref
-        }
+        let status = RegisterEventHotKey(key.keyCode, key.modifiers, id, GetApplicationEventTarget(), 0, &ref)
+        statuses[key] = status
+        guard status == noErr, let ref else { return false }
+        refs[key] = ref
+        combos[key] = combo
+        return true
     }
 
     func unregister(_ key: Key) {
         if let ref = refs.removeValue(forKey: key) { UnregisterEventHotKey(ref) }
+        combos[key] = nil
+        statuses[key] = nil
         actions[key] = nil
     }
+
+    /// Drops and re-creates every registered hot key. Used after wake or unlock, when a
+    /// registration could have been lost, so shortcuts keep working in every app.
+    func reregisterAll() {
+        for (key, action) in actions {
+            if let ref = refs.removeValue(forKey: key) { UnregisterEventHotKey(ref) }
+            combos[key] = nil
+            register(key, action: action)
+        }
+    }
+
+    /// True when the last attempt to register `key` failed, e.g. another app already owns the combination.
+    func isBlocked(_ key: Key) -> Bool { (statuses[key] ?? noErr) != noErr }
 
     private func installHandlerIfNeeded() {
         guard handlerRef == nil else { return }
