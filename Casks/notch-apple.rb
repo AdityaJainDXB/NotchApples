@@ -5,7 +5,7 @@ cask "notch-apple" do
   url "https://github.com/AdityaJainDXB/NotchApples/releases/download/v#{version}/NotchApple-#{version}.dmg"
   name "Notch apple"
   desc "Turns the MacBook notch into a productivity hub"
-  homepage "https://virajsinghchadha.github.io/notchapples-site/"
+  homepage "https://notch.cc.cd"
 
   depends_on macos: :sonoma
 
