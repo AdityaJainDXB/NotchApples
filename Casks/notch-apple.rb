@@ -1,11 +1,11 @@
 cask "notch-apple" do
   version "1.14.1"
-  sha256 "39bd49ceda5f4553269d18c458b6493e18a9a3ad43470fb5897062aabff9b5a0"
+  sha256 "eb0e9a469a03adf7f2cfaa48eeafc0286be54ad0654961257c8d33aa6fd6690c"
 
   url "https://github.com/AdityaJainDXB/NotchApples/releases/download/v#{version}/NotchApple-#{version}.dmg"
   name "Notch apple"
   desc "Turns the MacBook notch into a productivity hub"
-  homepage "https://notch.cc.cd"
+  homepage "https://virajsinghchadha.github.io/notchapples-site/"
 
   depends_on macos: :sonoma
 

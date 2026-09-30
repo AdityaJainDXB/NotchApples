@@ -1141,7 +1141,7 @@ private struct AboutSettings: View {
                 .foregroundStyle(.secondary)
             Text("Free, open source, and fully local.").foregroundStyle(.secondary)
             HStack {
-                Link("Website", destination: URL(string: "https://notch.cc.cd")!)
+                Link("Website", destination: URL(string: "https://virajsinghchadha.github.io/notchapples-site/")!)
                 Text("·").foregroundStyle(.secondary)
                 Link("GitHub", destination: URL(string: "https://github.com/AdityaJainDXB/NotchApples")!)
                 Text("·").foregroundStyle(.secondary)
