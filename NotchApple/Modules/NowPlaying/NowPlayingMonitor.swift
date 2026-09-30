@@ -45,7 +45,55 @@ final class NowPlayingMonitor: ObservableObject {
         }
     }
 
-    @Published private(set) var current: NowPlayingSnapshot? = SharedStore.nowPlaying
+    /// Starts empty: a saved snapshot from last time could be long stale (it's only for the widget).
+    @Published private(set) var current: NowPlayingSnapshot?
+
+    // MARK: Default player
+
+    /// Music apps offered as the default player (shown when installed), plus any app picked with "Other…".
+    static let knownPlayers: [(id: String, name: String)] = [
+        ("com.apple.Music", "Apple Music"), ("com.spotify.client", "Spotify"), ("com.anghami.anghami", "Anghami"),
+        ("com.deezer.deezer-desktop", "Deezer"), ("com.tidal.desktop", "TIDAL"), ("com.amazon.music", "Amazon Music"),
+        ("com.apple.podcasts", "Podcasts"),
+    ]
+
+    /// The app Play and Open Player start when nothing is playing.
+    @AppStorage("nowPlaying.defaultPlayer") var defaultPlayer = "com.apple.Music" { didSet { objectWillChange.send() } }
+
+    var installedPlayers: [(id: String, name: String)] {
+        var list = Self.knownPlayers.filter { NSWorkspace.shared.urlForApplication(withBundleIdentifier: $0.id) != nil }
+        if !list.contains(where: { $0.id == defaultPlayer }) { list.append((defaultPlayer, Self.appName(defaultPlayer))) }
+        return list
+    }
+
+    var defaultPlayerName: String { installedPlayers.first { $0.id == defaultPlayer }?.name ?? Self.appName(defaultPlayer) }
+
+    /// Lets you pick any app as the default player.
+    @MainActor func chooseOtherPlayer() {
+        let panel = NSOpenPanel()
+        panel.directoryURL = URL(fileURLWithPath: "/Applications")
+        panel.allowedContentTypes = [.application]
+        panel.prompt = "Use as default player"
+        NSApp.activate(ignoringOtherApps: true)
+        if panel.runModal() == .OK, let url = panel.url, let id = Bundle(url: url)?.bundleIdentifier { defaultPlayer = id }
+    }
+
+    /// Play / pause. With nothing playing, opens your default player and starts it.
+    @MainActor func playPause() {
+        if current != nil, bundleID.map({ !NSRunningApplication.runningApplications(withBundleIdentifier: $0).isEmpty }) ?? true {
+            MediaControl.send(.playPause)
+            return
+        }
+        let id = source.bundleID ?? defaultPlayer
+        let alreadyRunning = !NSRunningApplication.runningApplications(withBundleIdentifier: id).isEmpty
+        guard let url = NSWorkspace.shared.urlForApplication(withBundleIdentifier: id) else { return }
+        let config = NSWorkspace.OpenConfiguration()
+        config.activates = false
+        NSWorkspace.shared.openApplication(at: url, configuration: config) { _, _ in
+            // Give a cold-started player time to load before pressing play.
+            DispatchQueue.main.asyncAfter(deadline: .now() + (alreadyRunning ? 0.3 : 4)) { MediaControl.send(.playPause) }
+        }
+    }
     @Published private(set) var artwork: NSImage?
     @Published private(set) var album: String?
     @Published private(set) var duration: TimeInterval?
@@ -89,6 +137,7 @@ final class NowPlayingMonitor: ObservableObject {
                 self?.handleBroadcast(note.userInfo ?? [:], source: name)
             }
         }
+        SharedStore.nowPlaying = nil
         startBridge()
         DispatchQueue.main.async {
             MainActor.assumeIsolated {
@@ -228,7 +277,7 @@ final class NowPlayingMonitor: ObservableObject {
 
     /// Opens the app that's playing (or the chosen source's app).
     func openPlayer() {
-        let id = bundleID ?? source.bundleID ?? "com.apple.Music"
+        let id = bundleID ?? source.bundleID ?? defaultPlayer
         if let url = NSWorkspace.shared.urlForApplication(withBundleIdentifier: id) {
             NSWorkspace.shared.openApplication(at: url, configuration: NSWorkspace.OpenConfiguration())
         }
@@ -264,10 +313,15 @@ struct NowPlayingView: View {
                     }
                     Spacer(minLength: 4)
                     Menu {
-                        Picker("Source", selection: $monitor.sourceRaw) {
+                        Picker("Show", selection: $monitor.sourceRaw) {
                             ForEach(NowPlayingMonitor.Source.allCases) { Text($0.title).tag($0.rawValue) }
                         }
                         .pickerStyle(.inline)
+                        Picker("Default player", selection: $monitor.defaultPlayer) {
+                            ForEach(monitor.installedPlayers, id: \.id) { Text($0.name).tag($0.id) }
+                        }
+                        .pickerStyle(.inline)
+                        Button("Other app…") { monitor.chooseOtherPlayer() }
                     } label: {
                         Label(monitor.source.title, systemImage: "music.note.list").font(.system(size: 11))
                     }
@@ -281,12 +335,13 @@ struct NowPlayingView: View {
                     ProgressRow()
                 } else {
                     Text("Nothing playing").font(.title3.bold()).foregroundStyle(.white)
-                    Text(monitor.source == .automatic ? "Play something in any app: Music, Spotify, Anghami, a browser…" : "Play something in \(monitor.source.title).")
+                    Text(monitor.source == .automatic ? "Press play to start \(monitor.defaultPlayerName), or play something in any app." : "Play something in \(monitor.source.title).")
                         .foregroundStyle(Theme.textSecondary)
                 }
                 HStack(spacing: 6) {
                     IconButton(systemImage: "backward.fill", help: "Previous track") { MediaControl.send(.previous) }
-                    IconButton(systemImage: monitor.current?.isPlaying == true ? "pause.fill" : "play.fill", help: "Play / pause") { MediaControl.send(.playPause) }
+                    IconButton(systemImage: monitor.current?.isPlaying == true ? "pause.fill" : "play.fill",
+                               help: monitor.current == nil ? "Play in \(monitor.defaultPlayerName)" : "Play / pause") { monitor.playPause() }
                     IconButton(systemImage: "forward.fill", help: "Next track") { MediaControl.send(.next) }
                     Button("Open Player", action: monitor.openPlayer).buttonStyle(PurpleButtonStyle(prominent: false))
                 }

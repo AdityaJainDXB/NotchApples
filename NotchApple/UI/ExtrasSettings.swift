@@ -47,6 +47,13 @@ struct ExtrasSettings: View {
                 Text("Timers, the stopwatch, screen recordings and live scores always show while they run.")
             }
             Section {
+                MusicPlayerPicker()
+            } header: {
+                Text("Music")
+            } footer: {
+                Text("Now Playing shows whatever is playing on your Mac. The default player is what Play and Open Player start when nothing is playing.")
+            }
+            Section {
                 Toggle("Trim recordings when you stop", isOn: $settings.trimAfterRecording)
                 Toggle("Synced lyrics in Now Playing", isOn: $settings.showLyrics)
             } header: {
@@ -56,5 +63,19 @@ struct ExtrasSettings: View {
             }
         }
         .formStyle(.grouped)
+    }
+}
+
+private struct MusicPlayerPicker: View {
+    @ObservedObject private var monitor = NowPlayingMonitor.shared
+
+    var body: some View {
+        Picker("Default music app", selection: $monitor.defaultPlayer) {
+            ForEach(monitor.installedPlayers, id: \.id) { Text($0.name).tag($0.id) }
+        }
+        Picker("Show in Now Playing", selection: $monitor.sourceRaw) {
+            ForEach(NowPlayingMonitor.Source.allCases) { Text($0.title).tag($0.rawValue) }
+        }
+        Button("Choose another app…") { monitor.chooseOtherPlayer() }
     }
 }
