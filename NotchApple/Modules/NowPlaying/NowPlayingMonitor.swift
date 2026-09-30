@@ -197,6 +197,37 @@ final class NowPlayingMonitor: ObservableObject {
     }
 
     private var artCache: [String: NSImage?] = [:]
+    private var artLookups: Set<String> = []
+
+    /// Some players (Anghami, older Electron and web players) don't hand macOS a cover. Find it in
+    /// Apple's free iTunes catalogue by title and artist instead, once per track.
+    private func lookUpArtwork(key: String, title: String, artist: String) {
+        guard !artLookups.contains(key) else { return }
+        artLookups.insert(key)
+        // Give the player a moment to send its own artwork first.
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { [weak self] in
+            guard let self, self.artCache[key] == nil else { return }
+            let clean = { (s: String) in
+                s.replacingOccurrences(of: #"\s*[\(\[][^\)\]]*[\)\]]"#, with: "", options: .regularExpression)
+                    .components(separatedBy: CharacterSet(charactersIn: "&,")).first?.trimmingCharacters(in: .whitespaces) ?? s
+            }
+            var comps = URLComponents(string: "https://itunes.apple.com/search")!
+            comps.queryItems = [.init(name: "term", value: "\(clean(title)) \(clean(artist))"), .init(name: "entity", value: "song"), .init(name: "limit", value: "1")]
+            Task {
+                struct Resp: Decodable { struct R: Decodable { let artworkUrl100: String? }; let results: [R] }
+                guard let (data, _) = try? await URLSession.shared.data(from: comps.url!),
+                      let small = (try? JSONDecoder().decode(Resp.self, from: data))?.results.first?.artworkUrl100,
+                      let big = URL(string: small.replacingOccurrences(of: "100x100bb", with: "600x600bb")),
+                      let (imgData, _) = try? await URLSession.shared.data(from: big),
+                      let image = NSImage(data: imgData) else { return }
+                await MainActor.run {
+                    guard self.artCache[key] == nil else { return }
+                    self.artCache[key] = image
+                    if key == self.trackKey { self.artwork = image; self.refreshActivity() }
+                }
+            }
+        }
+    }
 
     private static func key(_ j: [String: Any]) -> String {
         [j["bundle"], j["title"], j["artist"], j["album"]].map { ($0 as? String) ?? "" }.joined(separator: "|")
@@ -222,6 +253,7 @@ final class NowPlayingMonitor: ObservableObject {
             if artCache.count > 20 { artCache = artCache.filter { $0.key == key } }
         }
         artwork = artCache[key] ?? nil
+        if artCache[key] == nil, !title.isEmpty { lookUpArtwork(key: key, title: title, artist: (j["artist"] as? String) ?? "") }
         album = j["album"] as? String
         duration = j["duration"] as? Double
         elapsed = j["elapsed"] as? Double
