@@ -52,9 +52,7 @@ final class PluginHost: ObservableObject {
     func start() {
         reload()
         guard timer == nil else { return }
-        let t = Timer(timeInterval: 1, repeats: true) { [weak self] _ in MainActor.assumeIsolated { self?.runDue() } }
-        RunLoop.main.add(t, forMode: .common)
-        timer = t
+        timer = Power.timer(1) { [weak self] in self?.runDue() }
     }
 
     func stop() { timer?.invalidate(); timer = nil }

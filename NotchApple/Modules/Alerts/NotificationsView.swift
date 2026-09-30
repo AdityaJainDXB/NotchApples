@@ -38,9 +38,7 @@ final class NotificationMirror: ObservableObject {
 
     func setRunning(_ on: Bool) {
         if on, timer == nil {
-            let t = Timer(timeInterval: 3, repeats: true) { [weak self] _ in MainActor.assumeIsolated { self?.poll() } }
-            RunLoop.main.add(t, forMode: .common)
-            timer = t
+            timer = Power.timer(3) { [weak self] in self?.pollIfChanged() }
             poll()
         } else if !on, timer != nil {
             timer?.invalidate()
@@ -49,6 +47,18 @@ final class NotificationMirror: ObservableObject {
     }
 
     func markSeen() { unseen = 0 }
+
+    private var lastStamp: Date?
+
+    /// Checks the database's modification time (a cheap stat) and only reads it when it changed.
+    private func pollIfChanged() {
+        guard let url = Self.databaseURL else { return }
+        let fm = FileManager.default
+        let stamp = [url.path, url.path + "-wal"].compactMap { (try? fm.attributesOfItem(atPath: $0))?[.modificationDate] as? Date }.max()
+        guard stamp != lastStamp else { return }
+        lastStamp = stamp
+        poll()
+    }
 
     func poll() {
         let since = lastID

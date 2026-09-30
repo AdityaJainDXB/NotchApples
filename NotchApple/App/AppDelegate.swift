@@ -39,9 +39,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         SystemHUDObserver.shared.start()
         applyMediaKeyPreference()
         // Accessibility may be granted later; keep trying quietly until the tap is running.
-        Timer.scheduledTimer(withTimeInterval: 10, repeats: true) { _ in
-            MainActor.assumeIsolated { AppDelegate.current?.applyMediaKeyPreference() }
-        }
+        Timer.scheduledTimer(withTimeInterval: 10, repeats: true) { timer in
+            MainActor.assumeIsolated {
+                AppDelegate.current?.applyMediaKeyPreference()
+                if MediaKeyInterceptor.shared.isRunning { timer.invalidate() }
+            }
+        }.tolerance = 5
         ScreenRecordingDetector.shared.start()
         applyClipboardPreference()
         LiveActivityCenter.shared.start()
@@ -219,7 +222,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     /// Swallow the volume/brightness keys so only the notch gauge shows.
     func applyMediaKeyPreference() {
         let s = SettingsManager.shared
+        let wasRunning = MediaKeyInterceptor.shared.isRunning
         MediaKeyInterceptor.shared.setEnabled(s.showSystemHUD && s.replaceSystemHUD)
+        if wasRunning != MediaKeyInterceptor.shared.isRunning { SystemHUDObserver.shared.retuneBrightnessPolling() }
     }
 
     @objc func relaunchApp() { AppRelauncher.relaunch() }

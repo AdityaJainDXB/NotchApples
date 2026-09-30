@@ -54,9 +54,7 @@ final class KeepAwake: ObservableObject {
             }
         }
         // Refresh the countdown beside the notch once a minute.
-        let t = Timer(timeInterval: 20, repeats: true) { _ in MainActor.assumeIsolated { LiveActivityCenter.shared.recompute() } }
-        RunLoop.main.add(t, forMode: .common)
-        ticker = t
+        ticker = Power.timer(20) { LiveActivityCenter.shared.recompute() }
         LiveActivityCenter.shared.recompute()
     }
 

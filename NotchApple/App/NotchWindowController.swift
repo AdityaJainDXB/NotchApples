@@ -445,18 +445,14 @@ final class NotchWindowController {
     func applyDisplayMode() {
         if SettingsManager.shared.notchDisplayMode == "pointer" {
             if pointerTimer == nil {
-                let t = Timer(timeInterval: 0.4, repeats: true) { [weak self] _ in
-                    MainActor.assumeIsolated {
-                        guard let self, !self.state.isExpanded else { return }
-                        let screen = NSScreen.screens.first { $0.frame.contains(NSEvent.mouseLocation) }
-                        if let screen, screen != self.pointerScreen {
-                            self.pointerScreen = screen
-                            self.reposition()
-                        }
+                pointerTimer = Power.timer(0.5) { [weak self] in
+                    guard let self, !self.state.isExpanded else { return }
+                    let screen = NSScreen.screens.first { $0.frame.contains(NSEvent.mouseLocation) }
+                    if let screen, screen != self.pointerScreen {
+                        self.pointerScreen = screen
+                        self.reposition()
                     }
                 }
-                RunLoop.main.add(t, forMode: .common)
-                pointerTimer = t
             }
         } else {
             pointerTimer?.invalidate()

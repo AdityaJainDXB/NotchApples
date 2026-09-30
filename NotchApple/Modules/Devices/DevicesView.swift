@@ -137,6 +137,8 @@ final class PrivacyMonitor: ObservableObject {
     @Published private(set) var micApps: [String] = []
     @Published private(set) var micMuted = false
     private var timer: Timer?
+    /// True while the Devices tab is visible.
+    var showingDetails = false
 
     var liveActivity: LiveActivity? {
         if cameraInUse { return LiveActivity(symbol: "video.fill", label: nil, tint: .systemGreen, dotOnly: false) }
@@ -146,9 +148,7 @@ final class PrivacyMonitor: ObservableObject {
 
     func setRunning(_ on: Bool) {
         if on, timer == nil {
-            let t = Timer(timeInterval: 2, repeats: true) { [weak self] _ in MainActor.assumeIsolated { self?.poll() } }
-            RunLoop.main.add(t, forMode: .common)
-            timer = t
+            timer = Power.timer(3) { [weak self] in self?.poll() }
             poll()
         } else if !on, timer != nil {
             timer?.invalidate()
@@ -162,7 +162,8 @@ final class PrivacyMonitor: ObservableObject {
         let mic = Self.defaultInput().map { Self.isRunningSomewhere($0) } ?? false
         let cam = Self.anyCameraRunning()
         micMuted = Self.defaultInput().map(Self.isMuted) ?? false
-        micApps = mic ? Self.appsUsingMic() : []
+        // Listing every audio process is heavier: only while the Devices tab is on screen.
+        micApps = mic && showingDetails ? Self.appsUsingMic() : []
         if mic != micInUse || cam != cameraInUse {
             micInUse = mic
             cameraInUse = cam
@@ -326,7 +327,13 @@ struct DevicesView: View {
         }
         .onAppear {
             battery.refreshIfDue(every: 20)
+            privacy.showingDetails = true
             privacy.setRunning(true)
+            privacy.poll()
+        }
+        .onDisappear {
+            privacy.showingDetails = false
+            if !SettingsManager.shared.privacyIndicator { privacy.setRunning(false) }
         }
     }
 

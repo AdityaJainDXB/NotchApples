@@ -37,9 +37,21 @@ enum FeatureHub {
         ]
         DownloadWatcher.shared.setEnabled(settings.downloadProgress)
         registerURLScheme()
-        let t = Timer(timeInterval: 30, repeats: true) { _ in MainActor.assumeIsolated { beat() } }
-        RunLoop.main.add(t, forMode: .common)
-        heartbeat = t
+        Power.start()
+        heartbeat = Power.timer(30) { beat() }
+        Power.onChange.append {
+            heartbeat?.invalidate()
+            heartbeat = Power.timer(30) { beat() }
+            // Stop the pollers while idle; the next heartbeat restarts what's needed.
+            if Power.isIdle {
+                PrivacyMonitor.shared.setRunning(false)
+                NotificationMirror.shared.setRunning(false)
+                pauseMessenger()
+            } else {
+                resumeMessenger()
+                beat()
+            }
+        }
         DispatchQueue.main.asyncAfter(deadline: .now() + 3) { beat() }
     }
 
@@ -58,6 +70,28 @@ enum FeatureHub {
         if s.liveEnabled { ScoresModel.shared.refreshIfDue() }
         DownloadWatcher.shared.setEnabled(s.downloadProgress)
         LiveActivityCenter.shared.recompute()
+    }
+
+    // MARK: Messenger while idle
+
+    /// Nearby discovery keeps Wi-Fi/Bluetooth busy and a room keeps a live connection, so both
+    /// pause while the displays sleep (nobody can read messages then) and come back on wake.
+    private static var messengerPaused = false
+
+    private static func pauseMessenger() {
+        guard !messengerPaused else { return }
+        messengerPaused = true
+        LocalP2PManager.shared.stop()
+        if WebP2PManager.shared.room != nil { WebP2PManager.shared.leave(remember: true) }
+    }
+
+    private static func resumeMessenger() {
+        guard messengerPaused else { return }
+        messengerPaused = false
+        let s = SettingsManager.shared
+        guard s.messengerEnabled, LicenseState.shared.isActivated else { return }
+        if s.messengerLocalDiscovery { LocalP2PManager.shared.start() }
+        if let room = UserDefaults.standard.string(forKey: "messenger.activeRoom") { WebP2PManager.shared.join(room) }
     }
 
     // MARK: notchapple:// URL scheme
@@ -111,6 +145,52 @@ final class URLHandler: NSObject {
     @objc func handle(_ event: NSAppleEventDescriptor, reply: NSAppleEventDescriptor) {
         guard let string = event.paramDescriptor(forKeyword: keyDirectObject)?.stringValue, let url = URL(string: string) else { return }
         DispatchQueue.main.async { MainActor.assumeIsolated { FeatureHub.handle(url) } }
+    }
+}
+
+// MARK: - Power
+
+/// Battery-friendly scheduling. Everything that polls asks here first: nothing polls while the
+/// displays are asleep or the user is switched out, and intervals double in Low Power Mode.
+@MainActor
+enum Power {
+    private(set) static var isIdle = false
+    private static var observers: [NSObjectProtocol] = []
+    /// Called whenever idle / Low Power Mode changes, so pollers can re-tune.
+    static var onChange: [() -> Void] = []
+
+    static var lowPower: Bool { ProcessInfo.processInfo.isLowPowerModeEnabled }
+
+    /// `base` seconds, doubled in Low Power Mode.
+    static func interval(_ base: TimeInterval) -> TimeInterval { lowPower ? base * 2 : base }
+
+    /// A repeating timer on the main run loop with generous tolerance, so macOS can batch wake-ups.
+    static func timer(_ base: TimeInterval, _ block: @escaping () -> Void) -> Timer {
+        let t = Timer(timeInterval: interval(base), repeats: true) { _ in MainActor.assumeIsolated { if !isIdle { block() } } }
+        t.tolerance = interval(base) * 0.3
+        RunLoop.main.add(t, forMode: .common)
+        return t
+    }
+
+    static func start() {
+        guard observers.isEmpty else { return }
+        let ws = NSWorkspace.shared.notificationCenter
+        let set: (Bool) -> (Notification) -> Void = { idle in { _ in
+            MainActor.assumeIsolated {
+                guard isIdle != idle else { return }
+                isIdle = idle
+                onChange.forEach { $0() }
+            }
+        } }
+        for (name, idle) in [(NSWorkspace.screensDidSleepNotification, true), (NSWorkspace.willSleepNotification, true),
+                             (NSWorkspace.sessionDidResignActiveNotification, true),
+                             (NSWorkspace.screensDidWakeNotification, false), (NSWorkspace.didWakeNotification, false),
+                             (NSWorkspace.sessionDidBecomeActiveNotification, false)] {
+            observers.append(ws.addObserver(forName: name, object: nil, queue: .main, using: set(idle)))
+        }
+        observers.append(NotificationCenter.default.addObserver(forName: .NSProcessInfoPowerStateDidChange, object: nil, queue: .main) { _ in
+            MainActor.assumeIsolated { onChange.forEach { $0() } }
+        })
     }
 }
 

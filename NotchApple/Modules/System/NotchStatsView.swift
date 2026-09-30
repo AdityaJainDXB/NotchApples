@@ -24,6 +24,7 @@ final class SystemStatsMonitor: ObservableObject {
         let t = Timer(timeInterval: 1, repeats: true) { [weak self] _ in
             MainActor.assumeIsolated { self?.tick() }
         }
+        t.tolerance = 0.2
         RunLoop.main.add(t, forMode: .common)
         timer = t
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) { [weak self] in self?.tick() }

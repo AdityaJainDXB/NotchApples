@@ -105,6 +105,7 @@ final class FocusTimer: ObservableObject {
         ticker = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { [weak self] _ in
             Task { @MainActor in self?.tick() }
         }
+        ticker?.tolerance = 0.1
         LiveActivityCenter.shared.recompute()
         requestNotificationPermission()
         setDND(phase == .focus)

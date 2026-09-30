@@ -103,7 +103,9 @@ final class CountdownTimer: ObservableObject {
 
     private func ensureTicker() {
         guard ticker == nil else { return }
-        let t = Timer(timeInterval: 0.25, repeats: true) { [weak self] _ in MainActor.assumeIsolated { self?.tick() } }
+        // Twice a second is enough for a seconds display; the end time is exact regardless.
+        let t = Timer(timeInterval: 0.5, repeats: true) { [weak self] _ in MainActor.assumeIsolated { self?.tick() } }
+        t.tolerance = 0.1
         RunLoop.main.add(t, forMode: .common)
         ticker = t
         tick()

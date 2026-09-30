@@ -163,12 +163,20 @@ final class SystemHUDObserver {
     private func startBrightnessPolling() {
         guard getBrightness != nil else { return }
         lastBrightness = readBrightness()
-        let timer = Timer(timeInterval: 0.1, repeats: true) { [weak self] _ in
-            MainActor.assumeIsolated { self?.pollBrightness() }
-        }
-        timer.tolerance = 0.1
-        RunLoop.main.add(timer, forMode: .common)
-        brightnessTimer = timer
+        retuneBrightnessPolling()
+        Power.onChange.append { [weak self] in self?.retuneBrightnessPolling() }
+    }
+
+    /// Brightness has no change notification, so it's polled. When the media-key tap is running, the
+    /// brightness keys already show the gauge directly, so this only needs to catch slow outside
+    /// changes (Control Center) and can run gently. Nothing runs while the Mac is idle.
+    func retuneBrightnessPolling() {
+        guard getBrightness != nil else { return }
+        brightnessTimer?.invalidate()
+        brightnessTimer = nil
+        guard !Power.isIdle, SettingsManager.shared.showSystemHUD else { return }
+        let base: TimeInterval = MediaKeyInterceptor.shared.isRunning ? 1.0 : 0.25
+        brightnessTimer = Power.timer(base) { [weak self] in self?.pollBrightness() }
     }
 
     private func pollBrightness() {

@@ -137,6 +137,7 @@ final class ScreenRecorder: NSObject, ObservableObject {
 
     private func startTicker() {
         let t = Timer(timeInterval: 0.5, repeats: true) { [weak self] _ in MainActor.assumeIsolated { self?.tick() } }
+        t.tolerance = 0.1
         RunLoop.main.add(t, forMode: .common)
         ticker = t
         tick()

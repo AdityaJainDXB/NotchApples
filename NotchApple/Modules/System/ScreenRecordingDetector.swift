@@ -27,12 +27,8 @@ final class ScreenRecordingDetector {
 
     func start() {
         guard timer == nil else { return }
-        let t = Timer(timeInterval: 2, repeats: true) { [weak self] _ in
-            MainActor.assumeIsolated { self?.poll() }
-        }
-        t.tolerance = 0.5
-        RunLoop.main.add(t, forMode: .common)
-        timer = t
+        // Scanning the process list is the costly part, so every 4 s (8 s in Low Power Mode).
+        timer = Power.timer(4) { [weak self] in self?.poll() }
         poll()
     }
 

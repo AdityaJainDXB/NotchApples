@@ -26,6 +26,7 @@ final class LyricsModel: ObservableObject {
     func start() {
         guard timer == nil else { return }
         let t = Timer(timeInterval: 0.5, repeats: true) { [weak self] _ in MainActor.assumeIsolated { self?.tick() } }
+        t.tolerance = 0.1
         RunLoop.main.add(t, forMode: .common)
         timer = t
         tick()
