@@ -32,7 +32,7 @@ final class SettingsBackup: ObservableObject {
     static let fileExtension = "notchsettings"
     private static let excludedPrefixes = ["NS", "Apple", "com.apple", "onboarding.", "migration.", "backup.", "messenger.senderID",
                                            "messenger.activeRoom", "shelf.items", "ui.lastTab", "settings.lastPane", "update.",
-                                           "focus.completed", "focus.history", "hotkey.migrated"]
+                                           "focus.completed", "focus.history", "hotkey.migrated", "account."]
     private var saveWork: DispatchWorkItem?
     private var observer: NSObjectProtocol?
 
@@ -205,6 +205,7 @@ struct BackupSettings: View {
 
     var body: some View {
         Form {
+            AccountSection()
             Section {
                 Toggle(isOn: $backup.iCloudSync) {
                     VStack(alignment: .leading, spacing: 2) {

@@ -217,6 +217,7 @@ Other things new in 1.12: **no more keychain password prompts.** Earlier version
 ## Backup and sync your setup
 
 **Settings → Backup & Sync** keeps your whole notch setup safe:
+- **Notch apple account:** sign in with **Google** or **email and password**, and your setup is saved to your account and restored on any Mac you sign in on. It's stored in Firebase, where only you can read it.
 - **Sync with your Apple ID:** turn on *Keep my notch setup in iCloud* and it's saved to iCloud Drive → Notch apple every time you change something. On a new Mac, install Notch apple, open this page and click **Restore from iCloud**. There's no separate account to create.
 - **Backup file:** **Export settings…** saves a `.notchsettings` file, and **Import settings…** brings it back, on this Mac or another.
 

@@ -50,6 +50,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         LiveActivityCenter.shared.start()
         FeatureHub.start()
         SettingsBackup.shared.startSync()
+        AccountSync.shared.start()
         // Now Playing is free: it runs whether or not an access code is entered.
         NowPlayingMonitor.shared.start()
         notchController?.applyDisplayMode()
