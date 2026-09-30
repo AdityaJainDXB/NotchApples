@@ -48,10 +48,11 @@ struct ExtrasSettings: View {
             }
             Section {
                 MusicPlayerPicker()
+                Toggle("Music bars move with the song", isOn: $settings.musicBarsFollowAudio)
             } header: {
                 Text("Music")
             } footer: {
-                Text("Now Playing shows whatever is playing on your Mac. The default player is what Play and Open Player start when nothing is playing.")
+                Text("Now Playing shows whatever is playing on your Mac. The default player is what Play and Open Player start when nothing is playing. To make the bars move with the song, Notch apple listens to your Mac's sound while music plays (it needs the System Audio Recording permission); nothing is recorded or saved.")
             }
             Section {
                 Toggle("Trim recordings when you stop", isOn: $settings.trimAfterRecording)

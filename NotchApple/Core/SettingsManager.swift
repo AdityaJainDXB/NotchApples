@@ -212,6 +212,8 @@ final class SettingsManager: ObservableObject {
     @AppStorage("extras.lyrics") var showLyrics = true
     /// Album cover and moving bars beside the closed notch while music plays.
     @AppStorage("extras.musicActivity") var musicActivity = true
+    /// The music bars follow the song (listens to system audio; nothing is recorded).
+    @AppStorage("extras.musicBarsFollowAudio") var musicBarsFollowAudio = true
     @AppStorage("alerts.flash") var flashNotifications = true
     /// File Search scope: the whole Mac, or just the home folder (plus Applications).
     @AppStorage("search.wholeMac") var searchWholeMac = false

@@ -98,24 +98,34 @@ final class NotchTriggerView: NSView {
         }
     }
 
-    /// Music bars move at 12 fps on a light timer (not the display link), and only while music shows.
+    /// Music bars redraw 20 times a second on a light timer (not the display link), only while music shows.
+    /// With "Bars follow the music" on, each bar tracks a frequency band of what's playing.
     private var barsTimer: Timer?
     private var barPhase: CGFloat = 0
+    private var barLevels: [CGFloat]?
 
     private func updateBarsTimer() {
         if activity?.musicBars == true {
             guard barsTimer == nil else { return }
-            let t = Timer(timeInterval: 1.0 / 12, repeats: true) { [weak self] _ in
+            let meter = MusicLevelMeter.shared
+            if SettingsManager.shared.musicBarsFollowAudio {
+                meter.resetFailure()
+                meter.start()
+            }
+            let t = Timer(timeInterval: 1.0 / 20, repeats: true) { [weak self] _ in
                 guard let self else { return }
-                self.barPhase += 1.0 / 12
+                self.barPhase += 1.0 / 20
+                self.barLevels = meter.isLive ? meter.nextFrame() : nil
                 self.needsDisplay = true
             }
-            t.tolerance = 0.02
+            t.tolerance = 0.01
             RunLoop.main.add(t, forMode: .common)
             barsTimer = t
         } else {
             barsTimer?.invalidate()
             barsTimer = nil
+            barLevels = nil
+            MusicLevelMeter.shared.stop()
         }
     }
     /// True while the screen is being recorded: adds a glowing dot and a tooltip.
@@ -235,7 +245,12 @@ final class NotchTriggerView: NSView {
                 barColor.setFill()
                 for i in 0..<count {
                     let speed: [CGFloat] = [5.1, 7.3, 6.2, 8.4]
-                    let h = maxH * (0.3 + 0.7 * abs(sin(barPhase * speed[i] + CGFloat(i) * 1.3)))
+                    let h: CGFloat
+                    if let levels = barLevels, i < levels.count {
+                        h = maxH * (0.18 + 0.82 * levels[i])
+                    } else {
+                        h = maxH * (0.3 + 0.7 * abs(sin(barPhase * speed[i] + CGFloat(i) * 1.3)))
+                    }
                     let x = rightEar.maxX - total + CGFloat(i) * (w + gap)
                     NSBezierPath(roundedRect: NSRect(x: x, y: rightEar.midY - h / 2, width: w, height: h), xRadius: 1.5, yRadius: 1.5).fill()
                 }
