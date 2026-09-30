@@ -31,6 +31,7 @@ enum FeatureHub {
             { settings.meetingAlert ? MeetingWatcher.shared.liveActivity : nil },
             { settings.timerEnabled ? CountdownTimer.shared.liveActivity : nil },
             { settings.downloadProgress ? DownloadWatcher.shared.liveActivity : nil },
+            { settings.musicActivity && settings.nowPlayingEnabled && LicenseState.shared.isActivated ? NowPlayingMonitor.shared.liveActivity : nil },
             { settings.devicesEnabled && settings.privacyIndicator ? PrivacyMonitor.shared.liveActivity : nil },
             { settings.liveEnabled ? ScoresModel.shared.liveActivity : nil },
             { settings.toolsEnabled && settings.keepAwakeActivity ? KeepAwake.shared.liveActivity : nil },

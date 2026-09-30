@@ -604,38 +604,81 @@ private struct AIHistorySettings: View {
     }
 
     var body: some View {
-        VStack(spacing: 0) {
-            HStack {
-                Toggle("Save AI chats", isOn: $store.isEnabled).toggleStyle(.switch).controlSize(.small)
+        VStack(spacing: 14) {
+            // Header card: what this page is, the save switch and the count.
+            HStack(spacing: 12) {
+                Image(systemName: "clock.arrow.circlepath")
+                    .font(.system(size: 18, weight: .semibold)).foregroundStyle(.white)
+                    .frame(width: 40, height: 40)
+                    .background(Theme.accentGradient, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("AI chat history").font(.headline)
+                    Text(store.sessions.isEmpty ? "Nothing saved yet" : "\(store.sessions.count) chat\(store.sessions.count == 1 ? "" : "s") saved on this Mac")
+                        .font(.caption).foregroundStyle(.secondary)
+                }
                 Spacer()
-                Text("\(store.sessions.count) chat\(store.sessions.count == 1 ? "" : "s")").foregroundStyle(.secondary)
-                Button("Delete all…", role: .destructive) { confirmClear = true }.disabled(store.sessions.isEmpty)
+                Toggle("Save chats", isOn: $store.isEnabled).toggleStyle(.switch)
+                if !store.sessions.isEmpty {
+                    Button(role: .destructive) { confirmClear = true } label: { Label("Delete all", systemImage: "trash") }
+                }
             }
-            .padding(12)
-            Divider()
+            .padding(14)
+            .background(Theme.surface, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+            .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).strokeBorder(Theme.separator))
+
             if store.sessions.isEmpty {
-                ContentUnavailableView("No AI chats yet", systemImage: "clock.arrow.circlepath",
-                                       description: Text("Conversations from the notch's AI tab appear here, with the model that answered."))
+                VStack(spacing: 14) {
+                    Image(systemName: "sparkles")
+                        .font(.system(size: 34, weight: .semibold)).foregroundStyle(.white)
+                        .frame(width: 76, height: 76)
+                        .background(Theme.accentGradient, in: Circle())
+                        .shadow(color: Theme.accent.opacity(0.5), radius: 18)
+                    Text("No AI chats yet").font(.title3.bold())
+                    Text(store.isEnabled
+                         ? "Ask something in the notch's AI tab. Each conversation is saved here with the model that answered, so you can read it again or pick up where you left off."
+                         : "Saving is off. Turn on Save chats to keep your conversations here.")
+                        .font(.callout).foregroundStyle(.secondary).multilineTextAlignment(.center).frame(maxWidth: 380)
+                    Button { AppDelegate.showNotch(tab: .claude) } label: { Label("Open AI in the notch", systemImage: "arrow.up.forward.app") }
+                        .buttonStyle(PurpleButtonStyle())
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
-                HStack(spacing: 0) {
-                    List(filtered, selection: $selectedID) { s in
-                        VStack(alignment: .leading, spacing: 3) {
-                            Text(s.firstQuestion).lineLimit(2).font(.body.weight(.medium))
-                            Text("\(s.providerTitle) · \(s.modelsUsed.joined(separator: ", "))")
-                                .font(.caption).foregroundStyle(.secondary).lineLimit(1)
-                            Text("\(s.updated.formatted(date: .abbreviated, time: .shortened)) · \(s.messages.count) messages")
-                                .font(.caption2).foregroundStyle(.tertiary)
+                HStack(spacing: 12) {
+                    VStack(spacing: 8) {
+                        HStack(spacing: 6) {
+                            Image(systemName: "magnifyingglass").foregroundStyle(.secondary)
+                            TextField("Search chats", text: $search).textFieldStyle(.plain)
                         }
-                        .padding(.vertical, 3)
-                        .tag(s.id)
-                        .contextMenu { Button("Delete", role: .destructive) { store.delete(s.id) } }
+                        .padding(8)
+                        .background(Theme.surface, in: RoundedRectangle(cornerRadius: 9, style: .continuous))
+                        ScrollView {
+                            LazyVStack(spacing: 6) {
+                                ForEach(filtered) { s in
+                                    let selected = s.id == selectedID
+                                    Button { selectedID = s.id } label: {
+                                        VStack(alignment: .leading, spacing: 3) {
+                                            Text(s.firstQuestion).lineLimit(2).font(.callout.weight(.medium)).foregroundStyle(.primary)
+                                            Text(s.modelsUsed.first ?? s.providerTitle).font(.caption).foregroundStyle(.secondary).lineLimit(1)
+                                            Text(s.updated.formatted(.relative(presentation: .named))).font(.caption2).foregroundStyle(.tertiary)
+                                        }
+                                        .frame(maxWidth: .infinity, alignment: .leading)
+                                        .padding(10)
+                                        .background(selected ? AnyShapeStyle(Theme.accent.opacity(0.28)) : AnyShapeStyle(Theme.surface),
+                                                    in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+                                        .overlay(RoundedRectangle(cornerRadius: 10, style: .continuous)
+                                            .strokeBorder(selected ? Theme.accent.opacity(0.7) : .clear))
+                                        .contentShape(Rectangle())
+                                    }
+                                    .buttonStyle(.plain)
+                                    .contextMenu { Button("Delete", role: .destructive) { store.delete(s.id) } }
+                                }
+                                if filtered.isEmpty {
+                                    Text("No matches").font(.caption).foregroundStyle(.secondary).padding(.top, 12)
+                                }
+                            }
+                        }
                     }
-                    .safeAreaInset(edge: .top) {
-                        TextField("Search chats", text: $search)
-                            .textFieldStyle(.roundedBorder).padding(.horizontal, 10).padding(.top, 8)
-                    }
-                    .frame(width: 220)
-                    Divider()
+                    .frame(width: 240)
 
                     Group {
                         if let s = store.sessions.first(where: { $0.id == selectedID }) {
@@ -645,9 +688,14 @@ private struct AIHistorySettings: View {
                         }
                     }
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .background(Theme.surface.opacity(0.6), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                    .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).strokeBorder(Theme.separator))
+                    .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
                 }
             }
         }
+        .padding(18)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .onAppear { if selectedID == nil { selectedID = store.sessions.first?.id } }
         .confirmationDialog("Delete all AI chat history?", isPresented: $confirmClear) {
             Button("Delete all", role: .destructive) { store.deleteAll(); selectedID = nil }
@@ -699,8 +747,10 @@ private struct ChatTranscriptView: View {
                             Text(LocalizedStringKey(m.text))
                                 .textSelection(.enabled)
                                 .padding(.horizontal, 12).padding(.vertical, 8)
-                                .background(m.role == "user" ? AnyShapeStyle(Theme.accent.opacity(0.25)) : AnyShapeStyle(.quaternary),
-                                            in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                                .background(m.role == "user" ? AnyShapeStyle(Theme.accentGradient) : AnyShapeStyle(Theme.surfaceHover),
+                                            in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                                .foregroundStyle(.white)
+                                .frame(maxWidth: 460, alignment: m.role == "user" ? .trailing : .leading)
                         }
                         .frame(maxWidth: .infinity, alignment: m.role == "user" ? .trailing : .leading)
                     }

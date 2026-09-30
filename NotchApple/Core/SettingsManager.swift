@@ -98,7 +98,7 @@ enum Module: String, CaseIterable, Identifiable {
         case .share: "AirDrop plus PairDrop — local, serverless sharing with a 6-digit code."
         case .audio: "Output device, master volume, and per-app volume / EQ via BackgroundMusic."
         case .vpn: "Manage free OpenVPN / WireGuard / IKEv2 profiles."
-        case .nowPlaying: "Show the track playing in Music or Spotify."
+        case .nowPlaying: "What's playing on your Mac (Music, Spotify, Anghami, browsers…) with album art, controls and lyrics. The cover shows beside the notch while music plays."
         case .launcher: "Add the apps you use most and open them straight from the notch."
         case .browser: "Browse the web and search from the notch, with a start page, back / forward and your choice of search engine."
         case .search: "Find files, apps and folders instantly with Spotlight, then open, reveal or drag them to the shelf."
@@ -198,6 +198,8 @@ final class SettingsManager: ObservableObject {
     @AppStorage("extras.keepAwakeActivity") var keepAwakeActivity = true
     @AppStorage("extras.trimAfterRecording") var trimAfterRecording = true
     @AppStorage("extras.lyrics") var showLyrics = true
+    /// Album cover and moving bars beside the closed notch while music plays.
+    @AppStorage("extras.musicActivity") var musicActivity = true
     @AppStorage("alerts.flash") var flashNotifications = true
     /// File Search scope: the whole Mac, or just the home folder (plus Applications).
     @AppStorage("search.wholeMac") var searchWholeMac = false

@@ -18,6 +18,7 @@
 		0BDD91775E21B5BEDDF33463 /* BackgroundMusic.pkg in Resources */ = {isa = PBXBuildFile; fileRef = 404B8C35377E3958184925BE /* BackgroundMusic.pkg */; };
 		1019743E3C501B599ECAE938 /* FeatureHub.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4DAB6955A36172C93698DDEC /* FeatureHub.swift */; };
 		10AA78BEAE2CFF124E2DDC9F /* SettingsWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC316BD63536E8BD6E9FCD54 /* SettingsWindowController.swift */; };
+		14BB6F024439C7EDE0DCBD2C /* nowplaying.js in Resources */ = {isa = PBXBuildFile; fileRef = FC6F714640D09B5653DF1D9F /* nowplaying.js */; };
 		14DFFBAD9343EABD28237F7C /* OpenRouterFallback.swift in Sources */ = {isa = PBXBuildFile; fileRef = 66DBB35434CEBAA72E675AD4 /* OpenRouterFallback.swift */; };
 		177A1AEC9D972E4C15CC5804 /* AppIcon.icns in Resources */ = {isa = PBXBuildFile; fileRef = 295575A04EF33302E9D9A7FE /* AppIcon.icns */; };
 		1B28E6933512791CD9E4C469 /* TodayExtras.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2254DC7F98860645E6CC2E11 /* TodayExtras.swift */; };
@@ -232,6 +233,7 @@
 		F49D3A20C7CFE9C60DB8CBC3 /* LiveActivity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveActivity.swift; sourceTree = "<group>"; };
 		F927A01984BE61BD7A76FA4A /* BiometricAuth.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BiometricAuth.swift; sourceTree = "<group>"; };
 		FB44C1551051FAC38513B591 /* MirrorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MirrorView.swift; sourceTree = "<group>"; };
+		FC6F714640D09B5653DF1D9F /* nowplaying.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = nowplaying.js; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
@@ -418,6 +420,14 @@
 				EC316BD63536E8BD6E9FCD54 /* SettingsWindowController.swift */,
 			);
 			path = App;
+			sourceTree = "<group>";
+		};
+		718E8EA92709BA7168C47260 /* Scripts */ = {
+			isa = PBXGroup;
+			children = (
+				FC6F714640D09B5653DF1D9F /* nowplaying.js */,
+			);
+			path = Scripts;
 			sourceTree = "<group>";
 		};
 		7315137CB02F1CFC434BC2D7 /* Shelf */ = {
@@ -622,6 +632,7 @@
 				404B8C35377E3958184925BE /* BackgroundMusic.pkg */,
 				97CC70FFD067091FDE1231BB /* Info.plist */,
 				3718F42274C479A025DF477B /* NotchApple.entitlements */,
+				718E8EA92709BA7168C47260 /* Scripts */,
 				D506FAC9BF7EB2007D0D1C92 /* Tunnelblick */,
 			);
 			path = Resources;
@@ -735,6 +746,7 @@
 				6CB3126DF2584324131FE504 /* LICENSE-Tunnelblick.txt in Resources */,
 				29326D872AE0DC306AFD1986 /* Tunnelblick-ABOUT.txt in Resources */,
 				AA519CEBD27CD812DD518136 /* Tunnelblick.dmg in Resources */,
+				14BB6F024439C7EDE0DCBD2C /* nowplaying.js in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

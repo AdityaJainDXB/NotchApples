@@ -39,6 +39,12 @@ final class LyricsModel: ObservableObject {
         let key = "\(now.artist)|\(now.title)"
         if key != loadedKey { load(title: now.title, artist: now.artist, key: key) }
         guard !lines.isEmpty, now.isPlaying else { return }
+        // The Now Playing bridge knows the position; ask the app directly only as a fallback.
+        if let pos = NowPlayingMonitor.shared.position {
+            let idx = lines.lastIndex { $0.time <= pos + 0.3 }
+            if idx != currentIndex { withAnimation(.easeOut(duration: 0.25)) { currentIndex = idx } }
+            return
+        }
         let source = now.source
         Task.detached {
             let position = Self.position(source: source)

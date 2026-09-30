@@ -91,7 +91,33 @@ final class NotchTriggerView: NSView {
     /// Physical notch width, set by the controller.
     var notchWidth: CGFloat = 200 { didSet { needsDisplay = true } }
     /// What to show beside the closed notch (charging, focus timer, unread dot, volume/brightness HUD).
-    var activity: LiveActivity? { didSet { if oldValue != activity { startTicker() } } }
+    var activity: LiveActivity? {
+        didSet {
+            if oldValue != activity { startTicker() }
+            updateBarsTimer()
+        }
+    }
+
+    /// Music bars move at 12 fps on a light timer (not the display link), and only while music shows.
+    private var barsTimer: Timer?
+    private var barPhase: CGFloat = 0
+
+    private func updateBarsTimer() {
+        if activity?.musicBars == true {
+            guard barsTimer == nil else { return }
+            let t = Timer(timeInterval: 1.0 / 12, repeats: true) { [weak self] _ in
+                guard let self else { return }
+                self.barPhase += 1.0 / 12
+                self.needsDisplay = true
+            }
+            t.tolerance = 0.02
+            RunLoop.main.add(t, forMode: .common)
+            barsTimer = t
+        } else {
+            barsTimer?.invalidate()
+            barsTimer = nil
+        }
+    }
     /// True while the screen is being recorded: adds a glowing dot and a tooltip.
     var isRecording = false {
         didSet {
@@ -108,6 +134,7 @@ final class NotchTriggerView: NSView {
     static func earWidth(for activity: LiveActivity?) -> CGFloat {
         guard let activity else { return 0 }
         if activity.gauge != nil { return 122 }
+        if activity.musicBars { return 40 }
         return activity.dotOnly ? 20 : 58
     }
 
@@ -187,7 +214,32 @@ final class NotchTriggerView: NSView {
         if let activity, ear >= Self.earWidth(for: activity) * 0.85 {
             let leftEar = NSRect(x: notch.minX + shoulder + 6, y: notch.minY, width: ear - 10, height: notch.height)
             let rightEar = NSRect(x: notch.maxX - shoulder - ear + 4, y: notch.minY, width: ear - 10, height: notch.height)
-            if activity.gauge != nil {
+            if activity.musicBars {
+                // Dynamic Island music: the album cover on the left, moving bars on the right.
+                let side = min(notch.height - 10, 22)
+                let artRect = NSRect(x: leftEar.minX + 1, y: leftEar.midY - side / 2, width: side, height: side)
+                if let art = activity.artwork {
+                    NSGraphicsContext.saveGraphicsState()
+                    NSBezierPath(roundedRect: artRect, xRadius: 5, yRadius: 5).addClip()
+                    art.draw(in: artRect, from: .zero, operation: .sourceOver, fraction: 1)
+                    NSGraphicsContext.restoreGraphicsState()
+                } else if let img = NSImage(systemSymbolName: "music.note", accessibilityDescription: nil)?
+                            .withSymbolConfiguration(.init(pointSize: 13, weight: .semibold).applying(.init(paletteColors: [activity.tint]))) {
+                    img.draw(in: NSRect(x: artRect.midX - img.size.width / 2, y: artRect.midY - img.size.height / 2,
+                                        width: img.size.width, height: img.size.height))
+                }
+                let barColor = activity.artwork.flatMap(Self.accentColor(of:)) ?? activity.tint
+                let count = 4, w: CGFloat = 3, gap: CGFloat = 2.5
+                let total = CGFloat(count) * w + CGFloat(count - 1) * gap
+                let maxH = min(notch.height - 12, 16)
+                barColor.setFill()
+                for i in 0..<count {
+                    let speed: [CGFloat] = [5.1, 7.3, 6.2, 8.4]
+                    let h = maxH * (0.3 + 0.7 * abs(sin(barPhase * speed[i] + CGFloat(i) * 1.3)))
+                    let x = rightEar.maxX - total + CGFloat(i) * (w + gap)
+                    NSBezierPath(roundedRect: NSRect(x: x, y: rightEar.midY - h / 2, width: w, height: h), xRadius: 1.5, yRadius: 1.5).fill()
+                }
+            } else if activity.gauge != nil {
                 Self.drawGauge(value: displayedGauge, in: rightEar, tint: activity.tint)
                 if let name = activity.symbol,
                    let img = NSImage(systemSymbolName: name, accessibilityDescription: nil)?
@@ -244,6 +296,26 @@ final class NotchTriggerView: NSView {
             path.lineWidth = 1.5
             path.stroke()
         }
+    }
+
+    /// A bright colour from the album cover for the bars (cached per image).
+    private static var colorCache = NSMapTable<NSImage, NSColor>.weakToStrongObjects()
+
+    static func accentColor(of image: NSImage) -> NSColor? {
+        if let c = colorCache.object(forKey: image) { return c }
+        guard let cg = image.cgImage(forProposedRect: nil, context: nil, hints: nil) else { return nil }
+        // Average of a tiny thumbnail, then pushed brighter and more saturated so it reads on black.
+        var px = [UInt8](repeating: 0, count: 4)
+        guard let ctx = CGContext(data: &px, width: 1, height: 1, bitsPerComponent: 8, bytesPerRow: 4,
+                                  space: CGColorSpaceCreateDeviceRGB(), bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue) else { return nil }
+        ctx.interpolationQuality = .medium
+        ctx.draw(cg, in: CGRect(x: 0, y: 0, width: 1, height: 1))
+        let base = NSColor(red: CGFloat(px[0]) / 255, green: CGFloat(px[1]) / 255, blue: CGFloat(px[2]) / 255, alpha: 1)
+        var h: CGFloat = 0, sat: CGFloat = 0, b: CGFloat = 0, a: CGFloat = 0
+        base.usingColorSpace(.deviceRGB)?.getHue(&h, saturation: &sat, brightness: &b, alpha: &a)
+        let color = NSColor(hue: h, saturation: min(1, max(sat, 0.35) * 1.2), brightness: max(b, 0.85), alpha: 1)
+        colorCache.setObject(color, forKey: image)
+        return color
     }
 
     /// Rounded volume/brightness bar with a percentage, purple-accented.
@@ -355,6 +427,8 @@ final class NotchWindowController {
             guard let self else { return }
             // A video call is about to start: open Today, where the Join button is.
             if !self.state.isExpanded, MeetingWatcher.shared.imminent != nil, SettingsManager.shared.todayEnabled { self.state.selected = .today }
+            // Music is showing beside the notch: open Now Playing, like tapping the Dynamic Island.
+            else if !self.state.isExpanded, self.triggerView.activity?.musicBars == true, SettingsManager.shared.nowPlayingEnabled { self.state.selected = .nowPlaying }
             self.toggle()
         }
         triggerView.onDragEnter = { [weak self] in self?.openForDrop() }

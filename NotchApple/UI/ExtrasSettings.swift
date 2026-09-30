@@ -33,6 +33,7 @@ struct ExtrasSettings: View {
             Section {
                 Toggle("Low battery warning at 20% and 10%", isOn: $settings.lowBatteryAlert)
                 Toggle("Charging animation when you plug in", isOn: $settings.showChargingActivity)
+                Toggle("Album cover while music plays (Now Playing)", isOn: $settings.musicActivity)
                 Toggle("Download and copy progress", isOn: $settings.downloadProgress)
                 Toggle("Keep Awake countdown", isOn: $settings.keepAwakeActivity)
                 Toggle("“Join” before video calls in your calendar", isOn: $settings.meetingAlert)

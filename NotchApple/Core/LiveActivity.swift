@@ -26,6 +26,8 @@ struct LiveActivity: Equatable {
     var tint: NSColor
     var dotOnly = false          // just a small dot in the right ear
     var gauge: Double? = nil     // 0...1: draws a volume/brightness bar in the right ear (system HUD)
+    var artwork: NSImage? = nil  // album cover in the left ear (music)
+    var musicBars = false        // animated equaliser bars in the right ear (music)
 }
 
 @MainActor
