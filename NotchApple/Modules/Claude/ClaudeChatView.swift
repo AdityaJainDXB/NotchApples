@@ -115,9 +115,27 @@ final class ClaudeChatModel: ObservableObject {
             history.record(sessionID: sessionID, provider: provider, model: modelID, role: "user",
                            text: prompt, hadScreenshot: message.imageBase64 != nil)
             do {
-                let reply = try await AIClient.send(messages, provider: provider, model: modelID)
+                var reply: String
+                var answeredBy = modelID
+                if provider == .openRouter {
+                    // Free OpenRouter models are often busy or can't read images: retry and fall back to ones that can.
+                    let sent = messages
+                    let outcome = try await OpenRouterFallback.run(
+                        chosen: modelID, needsImages: sent.contains { $0.imageBase64 != nil },
+                        models: await OpenRouterFallback.models()) { candidate in
+                            try await AIClient.send(sent, provider: .openRouter, model: candidate)
+                        }
+                    reply = outcome.reply
+                    answeredBy = outcome.model
+                    if let note = outcome.note {
+                        notice = "\(note), so \(outcome.model) answered."
+                        if outcome.shouldSwitch { config.setModel(outcome.model, for: .openRouter) }
+                    }
+                } else {
+                    reply = try await AIClient.send(messages, provider: provider, model: modelID)
+                }
                 messages.append(ChatMessage(role: .assistant, text: reply))
-                history.record(sessionID: sessionID, provider: provider, model: modelID, role: "assistant",
+                history.record(sessionID: sessionID, provider: provider, model: answeredBy, role: "assistant",
                                text: reply, hadScreenshot: false)
             } catch {
                 self.error = error.localizedDescription

@@ -12,7 +12,7 @@ import SwiftUI
 
 /// Every optional feature module in the app.
 enum Module: String, CaseIterable, Identifiable {
-    case today, claude, translator, stats, windows, tools, mirror, worldClock, messenger, clipboard, notes, focus, shelf, share, audio, vpn, nowPlaying, search, security
+    case today, claude, browser, launcher, translator, stats, windows, tools, mirror, worldClock, messenger, clipboard, notes, focus, shelf, share, audio, vpn, nowPlaying, search, security
 
     var id: String { rawValue }
 
@@ -34,6 +34,8 @@ enum Module: String, CaseIterable, Identifiable {
         case .vpn: "VPN"
         case .nowPlaying: "Now Playing"
         case .search: "Search"
+        case .browser: "Browser"
+        case .launcher: "Launcher"
         case .translator: "Translator"
         case .stats: "Mac Stats"
         case .security: "Biometric Lock"
@@ -58,6 +60,8 @@ enum Module: String, CaseIterable, Identifiable {
         case .vpn: "lock.shield.fill"
         case .nowPlaying: "music.note"
         case .search: "magnifyingglass"
+        case .browser: "globe"
+        case .launcher: "square.grid.3x3.fill"
         case .translator: "character.bubble.fill"
         case .stats: "gauge.with.dots.needle.67percent"
         case .security: "touchid"
@@ -81,6 +85,8 @@ enum Module: String, CaseIterable, Identifiable {
         case .audio: "Output device, master volume, and per-app volume / EQ via BackgroundMusic."
         case .vpn: "Manage free OpenVPN / WireGuard / IKEv2 profiles."
         case .nowPlaying: "Show the track playing in Music or Spotify."
+        case .launcher: "Add the apps you use most and open them straight from the notch."
+        case .browser: "Browse the web and search from the notch, with a start page, back / forward and your choice of search engine."
         case .search: "Find files, apps and folders instantly with Spotlight, then open, reveal or drag them to the shelf."
         case .translator: "Add-on: translate between Arabic, English, French, Spanish, Hindi, Mandarin and German, with pronunciation you can read and hear. Sends the text you type to a free translation service."
         case .stats: "Add-on: live RAM, CPU, network speed, battery and disk space. The MacBook Center widget shows the same in Notification Center."
@@ -107,7 +113,7 @@ final class SettingsManager: ObservableObject {
         let alreadyInstalled = d.bool(forKey: "onboarding.permissionsShown")
         // New installs open the notch with ⌃⌥N; people already using ⌘E keep it (and can change it in Settings).
         if alreadyInstalled, d.object(forKey: "hotkey.notch.keyCode") == nil { HotkeyBinding.save(.legacyNotch, for: .notch) }
-        let offByDefault: [Module] = [.windows, .tools, .notes, .focus]
+        let offByDefault: [Module] = [.windows, .tools, .notes, .focus, .browser, .launcher]
         if alreadyInstalled {
             for m in offByDefault where d.object(forKey: m.storageKey) == nil { d.set(true, forKey: m.storageKey) }
         }
@@ -141,6 +147,8 @@ final class SettingsManager: ObservableObject {
     @AppStorage(Module.vpn.storageKey) var vpnEnabled = false
     @AppStorage(Module.nowPlaying.storageKey) var nowPlayingEnabled = true
     @AppStorage(Module.search.storageKey) var searchEnabled = true
+    @AppStorage(Module.browser.storageKey) var browserEnabled = false
+    @AppStorage(Module.launcher.storageKey) var launcherEnabled = false
     /// Add-ons: off until you add them in Settings → Modules.
     @AppStorage(Module.translator.storageKey) var translatorEnabled = false
     @AppStorage(Module.stats.storageKey) var statsEnabled = false
@@ -169,9 +177,9 @@ final class SettingsManager: ObservableObject {
     @AppStorage("ui.hoverToOpen") var hoverToOpen = false
     /// Toggle the notch from anywhere with a global shortcut (Carbon hot key, no Accessibility permission needed).
     @AppStorage("ui.globalHotkey") var globalHotkeyEnabled = true
-    /// Hide or reveal the whole notch from anywhere with ⌃⌥O.
+    /// Hide or reveal the whole notch from anywhere with ⌘O (changeable in Settings → Shortcuts & Hotkeys).
     @AppStorage("ui.invisibilityHotkey") var invisibilityHotkeyEnabled = true
-    /// True while ⌃⌥O has made the notch invisible. Not persisted: every launch starts visible.
+    /// True while the hide shortcut has made the notch invisible. Not persisted: every launch starts visible.
     @Published var isNotchHidden = false
     /// Offer webcam face unlock (enrolled in Settings → Authentication) on the lock screen.
     @AppStorage("security.faceUnlock") var faceUnlockEnabled = false
@@ -201,6 +209,8 @@ final class SettingsManager: ObservableObject {
         case .vpn: $vpnEnabled
         case .nowPlaying: $nowPlayingEnabled
         case .search: $searchEnabled
+        case .browser: $browserEnabled
+        case .launcher: $launcherEnabled
         case .translator: $translatorEnabled
         case .stats: $statsEnabled
         case .security: $securityEnabled

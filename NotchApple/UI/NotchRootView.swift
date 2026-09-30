@@ -178,6 +178,8 @@ struct NotchRootView: View {
             case .vpn: VPNView()
             case .nowPlaying: NowPlayingView()
             case .search: FileSearchView()
+            case .browser: BrowserView()
+            case .launcher: AppLauncherView()
             case .translator: NotchTranslatorView()
             case .stats: NotchStatsView()
             case .security: EmptyView()

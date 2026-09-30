@@ -27,7 +27,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
         AppDelegate.current = self
         SandboxMigration.runIfNeeded()
-        HotkeyBinding.migrateAwayFromCommandO()
         notchController = NotchWindowController()
         notchController?.show()
 
@@ -65,7 +64,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             }
             .store(in: &cancellables)
 
-        // The menu-bar icon hides and reappears with the notch (⌃⌥O).
+        // The menu-bar icon hides and reappears with the notch (⌘O).
         SettingsManager.shared.$isNotchHidden
             .receive(on: RunLoop.main)
             .sink { [weak self] _ in self?.applyStatusItemPreference() }
@@ -141,7 +140,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     var notch: NotchWindowController? { notchController }
 
-    /// ⌃⌥O: hide or reveal the notch and its menu-bar icon.
+    /// ⌘O: hide or reveal the notch and its menu-bar icon.
     @objc func toggleInvisible() {
         notchController?.toggleInvisible()
     }
