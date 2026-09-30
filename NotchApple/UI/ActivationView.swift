@@ -49,8 +49,8 @@ struct ActivationModalView: View {
                 VStack(alignment: .leading, spacing: 3) {
                     Text(succeeded ? "Unlocked" : (feature.map { "\($0) needs an access code" } ?? "Enter your access code"))
                         .font(.system(size: compact ? 15 : 18, weight: .bold)).foregroundStyle(.white)
-                    Text(succeeded ? "AI, Messenger, Audio, Now Playing and VPN are all unlocked."
-                                   : "Please enter your 12-character access code to unlock AI, Messenger, Audio, Now Playing and VPN.")
+                    Text(succeeded ? "\(Module.proSummary) are all unlocked."
+                                   : "Please enter your 12-character access code to unlock \(Module.proSummary).")
                         .font(.system(size: 12)).foregroundStyle(Theme.textSecondary)
                         .fixedSize(horizontal: false, vertical: true)
                 }

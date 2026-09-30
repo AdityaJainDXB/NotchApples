@@ -49,6 +49,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         applyClipboardPreference()
         LiveActivityCenter.shared.start()
         FeatureHub.start()
+        // Now Playing is free: it runs whether or not an access code is entered.
+        NowPlayingMonitor.shared.start()
         notchController?.applyDisplayMode()
         UpdateChecker.shared.applyPreference()
         showWelcomeOnFirstLaunch()
@@ -67,6 +69,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 self?.applyMediaKeyPreference()
                 self?.applyWindowPreferences()
                 self?.applyDisplayModeIfChanged()
+                self?.applyProPreferences()
             }
             .store(in: &cancellables)
 
@@ -91,8 +94,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     private func startGatedServices() {
         guard LicenseState.shared.isActivated else { return }
-        NowPlayingMonitor.shared.start()
         startMessengerInBackground()
+        applyProPreferences()
     }
 
     /// Keeps Messenger listening while the notch is closed, so new messages can notify you:
@@ -145,6 +148,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     var notch: NotchWindowController? { notchController }
+
+    /// Screen Time counts in the background only with an access code and the module on.
+    private func applyProPreferences() {
+        if LicenseState.shared.isActivated && SettingsManager.shared.screenTimeEnabled { ScreenTimeModel.shared.start() }
+        else { ScreenTimeModel.shared.stop() }
+    }
 
     private var lastDisplayMode = SettingsManager.shared.notchDisplayMode
 

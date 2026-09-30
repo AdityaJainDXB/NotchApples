@@ -72,7 +72,7 @@ All screenshots use sample data.
 
 ## Features
 
-Every module is **optional** and can be switched on or off in **Settings → Modules**.
+Every module is **optional** and can be switched on or off in **Settings → Modules**. **Pro** features (AI, Messenger, Audio, VPN, Voice Notes, Screen Time & Focus Blocker, Quick Add) need an access code; everything else, including Now Playing, is free.
 
 | Module | What it does |
 | --- | --- |
@@ -104,6 +104,9 @@ Every module is **optional** and can be switched on or off in **Settings → Mod
 | 🏟 **Live** *(add-on, new)* | **Live scores** for the Premier League, Champions League, La Liga, MLS, NBA, NFL, MLB and NHL (ESPN's public scoreboard). Follow a team and its score shows beside the notch while it plays. Paste a **parcel or flight number** and it recognises UPS, FedEx, USPS, DHL or a flight and opens the right tracking page. |
 | 🔔 **Notifications** *(add-on, new)* | Notifications from your other apps, in the notch, with a bell and count beside it when new ones arrive. **Reply to iMessages** without opening Messages. It reads Notification Center's own database (read-only, on your Mac), so it needs **Full Disk Access**. |
 | 🧩 **Plugins** *(add-on, new)* | Make your own notch widgets in any language. See [Plugins](#plugins). |
+| 🎙 **Voice Notes** *(Pro)* | Record a voice note from the notch. It's **transcribed on your Mac**, and one click turns it into an **AI summary with action items** (using your AI from Settings → AI). Play, copy or delete each one; the closed notch shows a timer while you record. |
+| ⏳ **Screen Time** *(Pro)* | How long you spend in each app, today and over the week, with **daily limits** that nudge you when you go over. The **Focus Blocker** hides distracting apps you pick whenever a Focus session is running. It counts only while you're at your Mac, and everything stays on it. |
+| 📅 **Quick Add** *(Pro)* | Type naturally, like "Dentist tomorrow 3pm", "Lunch with Sara friday 1pm for 90 min" or "remind me to pay rent on the 1st", and it goes straight into **Calendar or Reminders**, with a preview first. |
 | 🔐 **Biometric Lock** | Requires Touch ID, Apple Watch, your password, or **face unlock** (your Mac's camera) before the notch opens. See [Face unlock](#face-unlock). |
 | 🧩 **Widget** | Small, medium and large desktop widgets with local weather, now playing, and your next calendar events. (macOS has no lock screen widget type yet; Apple's lock screen widget sizes are iPhone and iPad only.) |
 

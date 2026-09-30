@@ -158,7 +158,7 @@ struct NotchRootView: View {
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         } else if state.selected.isGated && !license.isActivated {
-            // AI, Messenger, Audio, Now Playing and VPN unlock with an access code.
+            // AI, Messenger, Audio, VPN and the Pro tabs unlock with an access code.
             ActivationModalView(feature: state.selected.title)
         } else {
             switch state.selected {
@@ -189,6 +189,9 @@ struct NotchRootView: View {
             case .live: LiveView()
             case .alerts: NotificationsView()
             case .plugins: PluginsView()
+            case .voiceNotes: VoiceNotesView()
+            case .screenTime: ScreenTimeView()
+            case .quickAdd: QuickAddView()
             case .security: EmptyView()
             }
         }

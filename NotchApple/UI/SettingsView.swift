@@ -193,20 +193,20 @@ private struct LicenseSettings: View {
                         .monospaced()
                 }
             } footer: {
-                Text("An access code unlocks AI, Messenger, Audio, Now Playing and VPN. Everything else is free. Activation is saved on this Mac, works offline, and stays if you reinstall or update.")
+                Text("An access code unlocks \(Module.proSummary). Everything else is free. Activation is saved on this Mac, works offline, and stays if you reinstall or update.")
             }
             if !activated {
                 Section {
                     ActivationModalView(feature: nil, compact: true)
                 } header: {
-                    Text("Unlock AI, Messenger, Audio, Now Playing and VPN")
+                    Text("Unlock \(Module.proSummary)")
                 }
             }
             Section {
                 Button("Deactivate / Reset License", role: .destructive) { confirmReset = true }
                     .disabled(!activated)
             } footer: {
-                Text("For testing: removes the activation and restarts the app. AI, Messenger, Audio, Now Playing and VPN then ask for an access code again.")
+                Text("For testing: removes the activation and restarts the app. \(Module.proSummary) then ask for an access code again.")
             }
         }
         .formStyle(.grouped)
@@ -482,7 +482,15 @@ private struct ModulesSettings: View {
                                 .foregroundStyle(.white)
                                 .background(Theme.accentGradient, in: RoundedRectangle(cornerRadius: 7, style: .continuous))
                             VStack(alignment: .leading, spacing: 2) {
-                                Text(module.title)
+                                HStack(spacing: 6) {
+                                    Text(module.title)
+                                    if module.isGated {
+                                        Text("PRO").font(.system(size: 9, weight: .heavy)).foregroundStyle(.white)
+                                            .padding(.horizontal, 5).padding(.vertical, 1)
+                                            .background(LinearGradient(colors: [.orange, .pink], startPoint: .leading, endPoint: .trailing), in: Capsule())
+                                            .help("Needs an access code")
+                                    }
+                                }
                                 Text(module.blurb).font(.callout).foregroundStyle(.secondary)
                             }
                         }
