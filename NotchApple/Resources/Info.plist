@@ -24,6 +24,14 @@
 	<key>NSLocationWhenInUseUsageDescription</key><string>Shows the weather where you are. Only your approximate location is used, and only to fetch the weather.</string>
 	<key>NSCameraUsageDescription</key><string>Face unlock uses the camera to recognise you. Only a face template is saved, in a private file on this Mac; photos are never stored or sent anywhere.</string>
 	<key>NSAudioCaptureUsageDescription</key><string>Lets you change the volume and EQ of individual apps. Audio is processed on your Mac and never recorded or sent anywhere.</string>
-	<key>NSAppleEventsUsageDescription</key><string>Reads the currently playing track from Music or Spotify.</string>
+	<key>NSAppleEventsUsageDescription</key><string>Reads the playing track and its position from Music or Spotify (for lyrics), and sends iMessage replies you write in the notch.</string>
+	<key>NSMicrophoneUsageDescription</key><string>Lets the Devices tab show and mute your microphone. Nothing is recorded.</string>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLName</key><string>com.notchapple.app</string>
+			<key>CFBundleURLSchemes</key><array><string>notchapple</string></array>
+		</dict>
+	</array>
 </dict>
 </plist>

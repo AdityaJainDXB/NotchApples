@@ -77,9 +77,19 @@ struct NowPlayingView: View {
                     Text("Nothing playing").font(.title3.bold()).foregroundStyle(.white)
                     Text("Play something in Music or Spotify.").foregroundStyle(Theme.textSecondary)
                 }
-                Button("Open Player", action: monitor.openPlayer).buttonStyle(PurpleButtonStyle(prominent: false)).padding(.top, 6)
+                HStack(spacing: 6) {
+                    IconButton(systemImage: "backward.fill", help: "Previous track") { MediaControl.send(.previous) }
+                    IconButton(systemImage: monitor.current?.isPlaying == true ? "pause.fill" : "play.fill", help: "Play / pause") { MediaControl.send(.playPause) }
+                    IconButton(systemImage: "forward.fill", help: "Next track") { MediaControl.send(.next) }
+                    Button("Open Player", action: monitor.openPlayer).buttonStyle(PurpleButtonStyle(prominent: false))
+                }
+                .padding(.top, 6)
             }
-            Spacer()
+            .frame(maxWidth: 260, alignment: .leading)
+            if SettingsManager.shared.showLyrics, monitor.current?.title.isEmpty == false {
+                LyricsPanel()
+            }
+            Spacer(minLength: 0)
         }
         .frame(maxHeight: .infinity)
     }

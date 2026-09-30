@@ -64,7 +64,26 @@ struct FocusView: View {
                         .font(.system(size: 12)).foregroundStyle(Theme.textSecondary)
                 }
 
-                Text("The countdown also shows beside the notch while it runs. Every 4th session earns a long break.")
+                // This week's focus minutes.
+                HStack(alignment: .bottom, spacing: 6) {
+                    let week = timer.lastWeek
+                    let top = max(week.map(\.minutes).max() ?? 0, 25)
+                    ForEach(week, id: \.day) { entry in
+                        VStack(spacing: 3) {
+                            RoundedRectangle(cornerRadius: 3)
+                                .fill(Calendar.current.isDateInToday(entry.day) ? AnyShapeStyle(Theme.accentGradient) : AnyShapeStyle(Theme.surfaceHover))
+                                .frame(width: 16, height: max(3, 44 * CGFloat(entry.minutes) / CGFloat(top)))
+                                .help("\(entry.minutes) min")
+                            Text(entry.day.formatted(.dateTime.weekday(.narrow))).font(.system(size: 9)).foregroundStyle(Theme.textSecondary)
+                        }
+                    }
+                    let total = week.map(\.minutes).reduce(0, +)
+                    Text("\(total / 60)h \(total % 60)m this week").font(.system(size: 11)).foregroundStyle(Theme.textSecondary)
+                        .padding(.leading, 6)
+                }
+                .frame(height: 60, alignment: .bottom)
+
+                Text("The countdown shows beside the notch while it runs. Every 4th session earns a long break. Settings → Focus can turn Do Not Disturb on during sessions.")
                     .font(.system(size: 11)).foregroundStyle(Theme.textSecondary)
                     .fixedSize(horizontal: false, vertical: true)
             }

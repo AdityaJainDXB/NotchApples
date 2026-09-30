@@ -12,7 +12,7 @@ import SwiftUI
 
 /// Every optional feature module in the app.
 enum Module: String, CaseIterable, Identifiable {
-    case today, claude, browser, launcher, translator, stats, windows, tools, mirror, worldClock, messenger, clipboard, notes, focus, shelf, share, audio, vpn, nowPlaying, search, security
+    case today, claude, browser, launcher, translator, stats, windows, tools, mirror, worldClock, messenger, clipboard, notes, focus, shelf, share, audio, vpn, nowPlaying, search, timer, snippets, shortcuts, devices, live, alerts, plugins, security
 
     var id: String { rawValue }
 
@@ -38,6 +38,13 @@ enum Module: String, CaseIterable, Identifiable {
         case .launcher: "Launcher"
         case .translator: "Translator"
         case .stats: "Mac Stats"
+        case .timer: "Timer"
+        case .snippets: "Snippets"
+        case .shortcuts: "Shortcuts"
+        case .devices: "Devices"
+        case .live: "Live"
+        case .alerts: "Notifications"
+        case .plugins: "Plugins"
         case .security: "Biometric Lock"
         }
     }
@@ -64,6 +71,13 @@ enum Module: String, CaseIterable, Identifiable {
         case .launcher: "square.grid.3x3.fill"
         case .translator: "character.bubble.fill"
         case .stats: "gauge.with.dots.needle.67percent"
+        case .timer: "stopwatch.fill"
+        case .snippets: "text.badge.plus"
+        case .shortcuts: "square.stack.3d.up.fill"
+        case .devices: "airpods"
+        case .live: "sportscourt.fill"
+        case .alerts: "bell.badge.fill"
+        case .plugins: "puzzlepiece.extension.fill"
         case .security: "touchid"
         }
     }
@@ -90,6 +104,13 @@ enum Module: String, CaseIterable, Identifiable {
         case .search: "Find files, apps and folders instantly with Spotlight, then open, reveal or drag them to the shelf."
         case .translator: "Add-on: translate between Arabic, English, French, Spanish, Hindi, Mandarin and German, with pronunciation you can read and hear. Sends the text you type to a free translation service."
         case .stats: "Add-on: live RAM, CPU, network speed, battery and disk space. The MacBook Center widget shows the same in Notification Center."
+        case .timer: "Add-on: a countdown timer and stopwatch with laps. The time left shows beside the closed notch."
+        case .snippets: "Add-on: saved bits of text you paste into any app with one click."
+        case .shortcuts: "Add-on: run your Apple Shortcuts and switch Focus modes from the notch. Shortcuts can also control the notch with notchapple:// links."
+        case .devices: "Add-on: battery for AirPods, Magic Mouse, keyboard and trackpad, what's using your mic or camera (with a mic mute), and Find My iPhone."
+        case .live: "Add-on: live scores for the teams you follow, plus quick tracking for parcels and flights."
+        case .alerts: "Add-on: see notifications from other apps in the notch, and reply to iMessages. Needs Full Disk Access."
+        case .plugins: "Add-on: your own widgets. Any script in the Plugins folder shows its output in the notch."
         case .security: "Require Touch ID / Apple Watch / password to open the notch."
         }
     }
@@ -119,6 +140,8 @@ final class SettingsManager: ObservableObject {
         }
         var defaults: [String: Any] = [Module.today.storageKey: true, Module.claude.storageKey: true]
         offByDefault.forEach { defaults[$0.storageKey] = false }
+        // 1.14 add-ons start off for everyone, new and existing installs.
+        [Module.timer, .snippets, .shortcuts, .devices, .live, .alerts, .plugins].forEach { defaults[$0.storageKey] = false }
         d.register(defaults: defaults)
     }
 
@@ -153,6 +176,29 @@ final class SettingsManager: ObservableObject {
     @AppStorage(Module.translator.storageKey) var translatorEnabled = false
     @AppStorage(Module.stats.storageKey) var statsEnabled = false
     @AppStorage(Module.security.storageKey) var securityEnabled = false
+    @AppStorage(Module.timer.storageKey) var timerEnabled = false
+    @AppStorage(Module.snippets.storageKey) var snippetsEnabled = false
+    @AppStorage(Module.shortcuts.storageKey) var shortcutsEnabled = false
+    @AppStorage(Module.devices.storageKey) var devicesEnabled = false
+    @AppStorage(Module.live.storageKey) var liveEnabled = false
+    @AppStorage(Module.alerts.storageKey) var alertsEnabled = false
+    @AppStorage(Module.plugins.storageKey) var pluginsEnabled = false
+
+    // MARK: Notch extras (Settings → Notch Extras)
+    @AppStorage("extras.lowBatteryAlert") var lowBatteryAlert = true
+    @AppStorage("extras.accessoryBatteryAlert") var accessoryBatteryAlert = true
+    /// Scroll on the closed notch for volume; swipe sideways to change track.
+    @AppStorage("extras.gestures") var notchGestures = true
+    /// Which display shows the notch: "builtin", "pointer" (follows the mouse) or "main".
+    @AppStorage("extras.displayMode") var notchDisplayMode = "builtin"
+    @AppStorage("extras.privacyIndicator") var privacyIndicator = true
+    @AppStorage("extras.rainAlert") var rainAlert = true
+    @AppStorage("extras.meetingAlert") var meetingAlert = true
+    @AppStorage("extras.downloadProgress") var downloadProgress = true
+    @AppStorage("extras.keepAwakeActivity") var keepAwakeActivity = true
+    @AppStorage("extras.trimAfterRecording") var trimAfterRecording = true
+    @AppStorage("extras.lyrics") var showLyrics = true
+    @AppStorage("alerts.flash") var flashNotifications = true
     /// File Search scope: the whole Mac, or just the home folder (plus Applications).
     @AppStorage("search.wholeMac") var searchWholeMac = false
     @AppStorage("search.apps") var searchApps = true
@@ -214,6 +260,13 @@ final class SettingsManager: ObservableObject {
         case .translator: $translatorEnabled
         case .stats: $statsEnabled
         case .security: $securityEnabled
+        case .timer: $timerEnabled
+        case .snippets: $snippetsEnabled
+        case .shortcuts: $shortcutsEnabled
+        case .devices: $devicesEnabled
+        case .live: $liveEnabled
+        case .alerts: $alertsEnabled
+        case .plugins: $pluginsEnabled
         }
     }
 

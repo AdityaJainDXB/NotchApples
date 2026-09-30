@@ -115,6 +115,9 @@ private struct ClipRow: View {
             if copied {
                 Label("Copied", systemImage: "checkmark").font(.system(size: 12, weight: .semibold)).foregroundStyle(.green)
             } else if hovering {
+                if let text = item.text, item.kind == .text || item.kind == .link {
+                    IconButton(systemImage: "arrow.down.doc.fill", help: "Paste into the app in front") { PasteHelper.paste(text) }
+                }
                 IconButton(systemImage: item.pinned ? "pin.slash" : "pin", help: item.pinned ? "Unpin" : "Pin") {
                     withAnimation(Theme.spring) { history.togglePin(item) }
                 }

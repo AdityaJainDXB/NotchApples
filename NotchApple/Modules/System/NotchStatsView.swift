@@ -16,6 +16,7 @@ final class SystemStatsMonitor: ObservableObject {
     /// Recent CPU and download readings for the sparklines.
     @Published private(set) var cpuHistory: [Double] = []
     @Published private(set) var downloadHistory: [Double] = []
+    @Published private(set) var ramHistory: [Double] = []
 
     func start() {
         guard timer == nil else { return }
@@ -34,6 +35,7 @@ final class SystemStatsMonitor: ObservableObject {
         stats = reader.read()
         cpuHistory = Array((cpuHistory + [stats.cpuPercent]).suffix(40))
         downloadHistory = Array((downloadHistory + [stats.downloadRate]).suffix(40))
+        ramHistory = Array((ramHistory + [stats.ramFraction]).suffix(40))
     }
 }
 
@@ -47,11 +49,12 @@ struct NotchStatsView: View {
                 card("Memory", "memorychip") {
                     gauge(fraction: s.ramFraction, big: "\(Int(s.ramFraction * 100))%",
                           small: "\(SystemStats.bytes(s.ramUsed)) of \(SystemStats.bytes(s.ramTotal))")
+                    Sparkline(values: monitor.ramHistory, maxValue: 1).frame(height: 16)
                     Text("Active \(SystemStats.bytes(s.ramActive)) · Wired \(SystemStats.bytes(s.ramWired)) · Compressed \(SystemStats.bytes(s.ramCompressed))")
                         .font(.system(size: 10)).foregroundStyle(Theme.textSecondary).lineLimit(2)
                 }
                 card("CPU", "cpu") {
-                    gauge(fraction: s.cpuPercent / 100, big: "\(Int(s.cpuPercent))%", small: "Overall load")
+                    gauge(fraction: s.cpuPercent / 100, big: "\(Int(s.cpuPercent))%", small: "Overall load · \(thermal)")
                     Sparkline(values: monitor.cpuHistory, maxValue: 100).frame(height: 22)
                 }
             }
@@ -83,6 +86,17 @@ struct NotchStatsView: View {
         }
         .onAppear { monitor.start() }
         .onDisappear { monitor.stop() }
+    }
+
+    /// macOS's own heat reading (Nominal → Critical); exact sensor temperatures need private APIs.
+    private var thermal: String {
+        switch ProcessInfo.processInfo.thermalState {
+        case .nominal: "Cool"
+        case .fair: "Warm"
+        case .serious: "Hot, slowing down"
+        case .critical: "Very hot"
+        @unknown default: "—"
+        }
     }
 
     private func card<Content: View>(_ title: String, _ symbol: String, @ViewBuilder content: () -> Content) -> some View {

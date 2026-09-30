@@ -45,6 +45,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         ScreenRecordingDetector.shared.start()
         applyClipboardPreference()
         LiveActivityCenter.shared.start()
+        FeatureHub.start()
+        notchController?.applyDisplayMode()
         UpdateChecker.shared.applyPreference()
         showWelcomeOnFirstLaunch()
         if SettingsManager.shared.windowsEnabled { WindowManager.shared.promptOnceIfNeeded() }
@@ -61,6 +63,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 self?.applyClipboardPreference()
                 self?.applyMediaKeyPreference()
                 self?.applyWindowPreferences()
+                self?.applyDisplayModeIfChanged()
             }
             .store(in: &cancellables)
 
@@ -139,6 +142,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     var notch: NotchWindowController? { notchController }
+
+    private var lastDisplayMode = SettingsManager.shared.notchDisplayMode
+
+    private func applyDisplayModeIfChanged() {
+        let mode = SettingsManager.shared.notchDisplayMode
+        guard mode != lastDisplayMode else { return }
+        lastDisplayMode = mode
+        notchController?.applyDisplayMode()
+    }
 
     /// ⌘O: hide or reveal the notch and its menu-bar icon.
     @objc func toggleInvisible() {

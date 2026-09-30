@@ -10,7 +10,10 @@
 //   0. System HUD — volume or brightness gauge for a moment after you change them.
 //   1. Charging — shown for a few seconds when the charger is plugged / unplugged.
 //   2. Focus timer — countdown while a session is running.
-//   3. Unread messages — a purple dot.
+//   3. Short flashes from other features (low battery, rain, notifications…).
+//   4. Ongoing activities from other features (timer, recording, downloads…),
+//      registered in `providers`, checked in order.
+//   5. Unread messages — a purple dot.
 //
 
 import AppKit
@@ -43,6 +46,11 @@ final class LiveActivityCenter: ObservableObject {
     private var flashWork: DispatchWorkItem?
     private var powerSource: CFRunLoopSource?
     private var lastPluggedIn: Bool?
+    private var lastLowBatteryAlert = 101
+    private var extraFlash: LiveActivity?
+    private var extraWork: DispatchWorkItem?
+    /// Ongoing activities from other features, highest priority first (see FeatureHub).
+    var providers: [() -> LiveActivity?] = []
 
     func start() {
         startPowerMonitoring()
@@ -56,8 +64,12 @@ final class LiveActivityCenter: ObservableObject {
             next = hud
         } else if let flash = chargingFlash {
             next = flash
+        } else if let flash = extraFlash {
+            next = flash
         } else if SettingsManager.shared.focusEnabled, let focus = FocusTimer.shared.liveActivity {
             next = focus
+        } else if let ongoing = providers.lazy.compactMap({ $0() }).first {
+            next = ongoing
         } else if MessengerNotifier.shared.unread > 0 {
             next = LiveActivity(symbol: nil, label: nil, tint: NSColor(Theme.accentBright), dotOnly: true)
         }
@@ -80,6 +92,19 @@ final class LiveActivityCenter: ObservableObject {
         }
         hudWork = work
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.8, execute: work)
+    }
+
+    /// Shows an activity beside the closed notch for a few seconds (alerts, new notifications…).
+    func flash(_ activity: LiveActivity, seconds: Double = 4) {
+        extraFlash = activity
+        recompute()
+        extraWork?.cancel()
+        let work = DispatchWorkItem { [weak self] in
+            self?.extraFlash = nil
+            self?.recompute()
+        }
+        extraWork = work
+        DispatchQueue.main.asyncAfter(deadline: .now() + seconds, execute: work)
     }
 
     func setScreenRecording(_ on: Bool) {
@@ -106,6 +131,7 @@ final class LiveActivityCenter: ObservableObject {
     private func powerChanged() {
         guard let info = Self.battery() else { return }
         defer { lastPluggedIn = info.pluggedIn }
+        checkLowBattery(info)
         guard let last = lastPluggedIn, last != info.pluggedIn, SettingsManager.shared.showChargingActivity else { return }
         let symbol = info.pluggedIn ? "battery.100percent.bolt" : Self.batterySymbol(info.percent)
         let tint: NSColor = info.pluggedIn ? .systemGreen : (info.percent <= 20 ? .systemRed : .white)
@@ -118,6 +144,20 @@ final class LiveActivityCenter: ObservableObject {
         }
         flashWork = work
         DispatchQueue.main.asyncAfter(deadline: .now() + 4, execute: work)
+    }
+
+    /// Warns once at 20% and again at 10% while on battery.
+    private func checkLowBattery(_ info: (percent: Int, pluggedIn: Bool, charging: Bool)) {
+        if info.pluggedIn { lastLowBatteryAlert = 101; return }
+        guard UserDefaults.standard.object(forKey: "extras.lowBatteryAlert") as? Bool ?? true else { return }
+        for level in [10, 20] where info.percent <= level && lastLowBatteryAlert > level {
+            lastLowBatteryAlert = level
+            flash(LiveActivity(symbol: level == 10 ? "battery.0percent" : "battery.25percent", label: "\(info.percent)%",
+                               tint: level == 10 ? .systemRed : .systemOrange), seconds: 6)
+            Notifier.post(title: "Battery at \(info.percent)%", body: level == 10 ? "Plug in your Mac soon." : "Consider plugging in your Mac.")
+            NSSound(named: "Funk")?.play()
+            break
+        }
     }
 
     /// Current battery level and power state, or nil on Macs without a battery.

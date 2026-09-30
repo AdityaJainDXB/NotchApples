@@ -182,6 +182,13 @@ struct NotchRootView: View {
             case .launcher: AppLauncherView()
             case .translator: NotchTranslatorView()
             case .stats: NotchStatsView()
+            case .timer: TimerView()
+            case .snippets: SnippetsView()
+            case .shortcuts: ShortcutsView()
+            case .devices: DevicesView()
+            case .live: LiveView()
+            case .alerts: NotificationsView()
+            case .plugins: PluginsView()
             case .security: EmptyView()
             }
         }

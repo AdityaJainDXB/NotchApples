@@ -93,6 +93,9 @@ struct FileShelfView: View {
                 Text("Drag files onto the notch to keep them here").font(.system(size: 11)).foregroundStyle(Theme.textSecondary)
                 Spacer()
                 if !store.items.isEmpty {
+                    Button { airDropAll() } label: { Label("AirDrop", systemImage: "airplayaudio") }
+                        .buttonStyle(PurpleButtonStyle(prominent: false))
+                        .help("Send everything on the shelf with AirDrop")
                     Button("Clear all") { withAnimation { store.removeAll() } }
                         .buttonStyle(PurpleButtonStyle(prominent: false))
                 }
@@ -132,6 +135,12 @@ struct FileShelfView: View {
                 return true
             }
         }
+    }
+
+    private func airDropAll() {
+        let urls = store.items.compactMap { $0.resolve() }
+        guard !urls.isEmpty, let service = NSSharingService(named: .sendViaAirDrop), service.canPerform(withItems: urls) else { return }
+        service.perform(withItems: urls)
     }
 
     private func addViaPanel() {

@@ -289,6 +289,7 @@ final class NotchTriggerView: NSView {
     }
 
     override func acceptsFirstMouse(for event: NSEvent?) -> Bool { true }
+    override func scrollWheel(with event: NSEvent) { NotchGestures.shared.handle(event) }
     override func mouseDown(with event: NSEvent) { onClick() }
     override func mouseEntered(with event: NSEvent) { isHovered = true; NSCursor.pointingHand.set(); onHoverChange(true) }
     override func mouseExited(with event: NSEvent) { isHovered = false; NSCursor.arrow.set(); onHoverChange(false) }
@@ -350,7 +351,12 @@ final class NotchWindowController {
         // The expanded panel always sits above the trigger (and its hover outline).
         panel.keepAboveEverything(extraLevels: 1, orderFront: false)
 
-        triggerView.onClick = { [weak self] in self?.toggle() }
+        triggerView.onClick = { [weak self] in
+            guard let self else { return }
+            // A video call is about to start: open Today, where the Join button is.
+            if !self.state.isExpanded, MeetingWatcher.shared.imminent != nil, SettingsManager.shared.todayEnabled { self.state.selected = .today }
+            self.toggle()
+        }
         triggerView.onDragEnter = { [weak self] in self?.openForDrop() }
         let notifier = MessengerNotifier.shared
         notifier.isMessengerVisible = { [weak self] in
@@ -417,9 +423,47 @@ final class NotchWindowController {
         panel.orderFrontRegardless()
     }
 
-    /// The screen that owns the notch: the built-in display if present, else main.
+    /// The screen that shows the notch (Settings → Notch Extras): the built-in display by default,
+    /// or the display with the pointer, or the main display. Screens without a notch get a virtual one.
     private var targetScreen: NSScreen? {
-        NSScreen.screens.first { $0.safeAreaInsets.top > 0 } ?? NSScreen.main
+        switch SettingsManager.shared.notchDisplayMode {
+        case "pointer":
+            if let pinned = pointerScreen, NSScreen.screens.contains(pinned) { return pinned }
+            return NSScreen.screens.first { $0.frame.contains(NSEvent.mouseLocation) } ?? NSScreen.main
+        case "main":
+            return NSScreen.screens.first ?? NSScreen.main
+        default:
+            return NSScreen.screens.first { $0.safeAreaInsets.top > 0 } ?? NSScreen.main
+        }
+    }
+
+    /// In "follow the pointer" mode, the screen the notch is currently on.
+    private var pointerScreen: NSScreen?
+    private var pointerTimer: Timer?
+
+    /// Moves the (closed) notch to whichever display the pointer is on.
+    func applyDisplayMode() {
+        if SettingsManager.shared.notchDisplayMode == "pointer" {
+            if pointerTimer == nil {
+                let t = Timer(timeInterval: 0.4, repeats: true) { [weak self] _ in
+                    MainActor.assumeIsolated {
+                        guard let self, !self.state.isExpanded else { return }
+                        let screen = NSScreen.screens.first { $0.frame.contains(NSEvent.mouseLocation) }
+                        if let screen, screen != self.pointerScreen {
+                            self.pointerScreen = screen
+                            self.reposition()
+                        }
+                    }
+                }
+                RunLoop.main.add(t, forMode: .common)
+                pointerTimer = t
+            }
+        } else {
+            pointerTimer?.invalidate()
+            pointerTimer = nil
+            pointerScreen = nil
+        }
+        reposition()
     }
 
     /// Recomputes the notch size and positions both windows.

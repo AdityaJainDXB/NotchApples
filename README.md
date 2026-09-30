@@ -97,10 +97,48 @@ Every module is **optional** and can be switched on or off in **Settings → Mod
 | 🔊 **Audio** | Pick the output device, set the master volume, and change **per-app volume (0–150%)** and a **10-band per-app EQ** with presets. It's built in on macOS 14.2+, with nothing to install. |
 | 🛡 **VPN** | A built-in list of **free OpenVPN servers** from [Zoult/.ovpn](https://github.com/Zoult/.ovpn) and [VPN Gate](https://www.vpngate.net), or import your own `.ovpn` / `.conf`. See [Using the VPN](#using-the-vpn). |
 | 🎵 **Now Playing** | Shows the current track from Apple Music or Spotify. |
+| ⏲ **Timer** *(add-on, new)* | A countdown timer with one-click presets (1 min to 1 hr, or any length) and a stopwatch with laps. The time left shows **beside the closed notch**, and you get a sound and notification when it ends. |
+| ✂️ **Snippets** *(add-on, new)* | Saved bits of text (addresses, sign-offs, replies, code). Click one and it's **pasted straight into the app you were using** (copied instead if Accessibility is off). |
+| 🧱 **Shortcuts** *(add-on, new)* | Run any of your **Apple Shortcuts** from the notch, with a **Focus modes** row for shortcuts that switch Focus / Do Not Disturb. Shortcuts can drive the notch too, with [`notchapple://` links](#control-the-notch-from-shortcuts). |
+| 🎧 **Devices** *(add-on, new)* | Battery for **AirPods** (left, right, case), **Magic Mouse, Keyboard and Trackpad**, with a low-battery alert at 15%. Shows **which apps are using your mic** and whether a **camera** is on, with a one-click **mic mute**. Shows your **iPhone's battery** when it's connected over Bluetooth, and **Ring my iPhone** opens Find My. |
+| 🏟 **Live** *(add-on, new)* | **Live scores** for the Premier League, Champions League, La Liga, MLS, NBA, NFL, MLB and NHL (ESPN's public scoreboard). Follow a team and its score shows beside the notch while it plays. Paste a **parcel or flight number** and it recognises UPS, FedEx, USPS, DHL or a flight and opens the right tracking page. |
+| 🔔 **Notifications** *(add-on, new)* | Notifications from your other apps, in the notch, with a bell and count beside it when new ones arrive. **Reply to iMessages** without opening Messages. It reads Notification Center's own database (read-only, on your Mac), so it needs **Full Disk Access**. |
+| 🧩 **Plugins** *(add-on, new)* | Make your own notch widgets in any language. See [Plugins](#plugins). |
 | 🔐 **Biometric Lock** | Requires Touch ID, Apple Watch, your password, or **face unlock** (your Mac's camera) before the notch opens. See [Face unlock](#face-unlock). |
 | 🧩 **Widget** | Small, medium and large desktop widgets with local weather, now playing, and your next calendar events. (macOS has no lock screen widget type yet; Apple's lock screen widget sizes are iPhone and iPad only.) |
 
-**Live activities:** like the iPhone's Dynamic Island, the closed notch shows small indicators on either side: the focus countdown, battery when charging, and a purple dot for unread messages.
+**Live activities:** like the iPhone's Dynamic Island, the closed notch shows small indicators on either side:
+- the focus countdown
+- battery when charging, plus a **low battery warning at 20% and 10%**
+- a purple dot for unread messages
+- **timers and the stopwatch**
+- the **screen recording timer**
+- **download and copy progress** (Safari, Chrome, Finder, AirDrop)
+- the **Keep Awake countdown**
+- **"Join"** from 2 minutes before a Zoom, Meet, Teams or Webex call in your calendar (click the notch, then Join)
+- **"rain in 15 min"**
+- the **mic or camera** being in use
+- a followed team's **live score**
+- **new notifications**
+
+Choose which ones show in **Settings → Notch Extras**.
+
+**Gestures:** scroll with two fingers on the closed notch to change the volume, and swipe sideways to skip to the next or previous track.
+
+**External displays:** the notch can live on your built-in display, on the display with the pointer (it follows you from screen to screen), or on the main display. Displays without a notch get a virtual one. Set this in **Settings → Notch Extras**.
+
+**Also new in 1.14:**
+- **Screen recording:**
+  - pause and resume
+  - a live timer beside the notch
+  - the notch is left out of the video
+  - a **trim** step when you stop
+- **Synced lyrics** in Now Playing (from LRCLIB), plus previous, play/pause and next buttons.
+- **Rain alerts** and **Join** buttons for video calls in Today.
+- **Paste** straight from Clipboard history.
+- **AirDrop everything on the File Shelf**.
+- A **7-day focus chart**, and **Do Not Disturb during focus sessions** (via a shortcut; see Settings → Focus).
+- A RAM graph and heat level in Mac Stats.
 
 ![Focus countdown beside the notch](docs/screenshots/live-activity.png)
 
@@ -153,6 +191,36 @@ The **Search** tab searches your Mac with Spotlight, the same index Finder and �
 If macOS stops Notch apple reading **Downloads**, **Documents** or **Desktop**, a warning appears with a **Grant Full Disk Access in System Settings** button that opens the right page.
 
 Other things new in 1.12: **no more keychain password prompts.** Earlier versions saved API keys and face-unlock data in the login Keychain, and because the app is ad-hoc signed, macOS asked for your login password again after every update. They're now stored in a private file only your user account can read. After updating, paste your AI API keys again and set up face unlock again.
+
+## Plugins
+
+Put a script in `~/Library/Application Support/Notch apple/Plugins` (or click **Add example** in the Plugins tab), and its output shows as a card in the notch. Any language works: shell, Python, Ruby, anything with a `#!` line.
+
+- The **first line** of output is the card's headline; the **other lines** are its text.
+- Add `| href=https://…` to a line to make it a link, or `| run=command` to run a shell command when it's clicked.
+- The **file name sets how often it runs**: `weather.10m.sh`, `cpu.5s.py`, `news.1h.rb` (default every 5 minutes). Scripts are stopped after 10 seconds.
+
+```bash
+#!/bin/zsh
+echo "Disk: $(df -h / | awk 'NR==2 {print $4}') free"
+echo "Uptime $(uptime | sed 's/.*up \([^,]*\),.*/\1/')"
+echo "Open GitHub | href=https://github.com"
+```
+
+## Control the notch from Shortcuts
+
+Use the **Open URL** action in Apple Shortcuts (or `open` in Terminal) with these links:
+
+| Link | Does |
+| --- | --- |
+| `notchapple://open/timer` | Opens the notch on a tab (any tab name: `today`, `claude`, `snippets`…) |
+| `notchapple://toggle`, `close`, `hide`, `show` | Opens / closes / hides / shows the notch |
+| `notchapple://timer?minutes=10`, `timer/stop` | Starts or stops a timer |
+| `notchapple://stopwatch`, `stopwatch/stop` | Starts or stops the stopwatch |
+| `notchapple://focus/start`, `focus/stop` | Starts or pauses a focus session |
+| `notchapple://keepawake?minutes=30`, `keepawake/off` | Keep Awake on (optionally for a while) or off |
+| `notchapple://snippet?name=Thanks` | Pastes a saved snippet |
+| `notchapple://record`, `screenshot` | Starts or stops a screen recording, or takes a screenshot |
 
 ## Updates
 
@@ -240,8 +308,10 @@ The table below lists when each is asked for.
 | Touch ID / password | Biometric Lock | Each time you open the notch while the lock is on |
 | Location | Weather | The first time you open Today (approximate location, weather only) |
 | Camera | Face unlock | When you set up or use face unlock. Only a face template is saved, never photos |
-| Full Disk Access (optional) | Search | Never asked automatically. Only if you choose to, so Search can include protected folders |
-| Accessibility | Windows (snapping and tiling) | When you first use the Windows tab. Only used to move and resize windows |
+| Full Disk Access (optional) | Search, Notifications add-on | Never asked automatically. Only if you choose to, so Search can include protected folders, or the Notifications tab can read Notification Center's list |
+| Automation (Music, Spotify, Messages) | Lyrics, iMessage replies | The first time lyrics look up the song position, or you send a reply |
+| Microphone status | Devices add-on | Never asked: it only checks whether the mic is in use, and never records |
+| Accessibility | Windows (snapping and tiling), Snippets and Clipboard paste | When you first use the Windows tab. Used to move and resize windows, and to paste snippets into the app in front |
 | System audio recording | Audio → per-app volume / EQ | The first time you change an app's volume or EQ. Audio is processed on your Mac and never recorded or sent anywhere |
 
 ## AI in the notch

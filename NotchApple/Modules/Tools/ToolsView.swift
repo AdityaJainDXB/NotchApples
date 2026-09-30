@@ -26,6 +26,16 @@ final class KeepAwake: ObservableObject {
 
     private var assertion: IOPMAssertionID = 0
     private var timer: Timer?
+    private var ticker: Timer?
+
+    /// A cup beside the notch, with the time left when there is a limit.
+    var liveActivity: LiveActivity? {
+        guard isOn else { return nil }
+        guard let until else { return LiveActivity(symbol: "cup.and.saucer.fill", label: "∞", tint: .systemBrown) }
+        let left = max(0, until.timeIntervalSinceNow)
+        let label = left >= 3600 ? "\(Int(left / 3600))h\(String(format: "%02d", Int(left) % 3600 / 60))" : "\(Int((left / 60).rounded(.up)))m"
+        return LiveActivity(symbol: "cup.and.saucer.fill", label: label, tint: .systemBrown)
+    }
 
     /// minutes == nil keeps the Mac awake indefinitely.
     func start(minutes: Int?) {
@@ -43,11 +53,19 @@ final class KeepAwake: ObservableObject {
                 MainActor.assumeIsolated { KeepAwake.shared.stop() }
             }
         }
+        // Refresh the countdown beside the notch once a minute.
+        let t = Timer(timeInterval: 20, repeats: true) { _ in MainActor.assumeIsolated { LiveActivityCenter.shared.recompute() } }
+        RunLoop.main.add(t, forMode: .common)
+        ticker = t
+        LiveActivityCenter.shared.recompute()
     }
 
     func stop() {
         timer?.invalidate()
         timer = nil
+        ticker?.invalidate()
+        ticker = nil
+        defer { LiveActivityCenter.shared.recompute() }
         if isOn { IOPMAssertionRelease(assertion) }
         isOn = false
         until = nil

@@ -1,0 +1,227 @@
+//
+//  LiveView.swift
+//  Notch apple
+//
+//  The Live tab:
+//   • Scores: today's games in a league (ESPN's free public scoreboard feed).
+//     Follow a team and its live score shows beside the closed notch.
+//   • Tracking: paste a parcel tracking number or a flight number; it's
+//     recognised (UPS, FedEx, USPS, DHL, flights…) and opens the right page.
+//
+
+import AppKit
+import SwiftUI
+
+@MainActor
+final class ScoresModel: ObservableObject {
+    static let shared = ScoresModel()
+
+    struct League: Hashable, Identifiable {
+        let id: String      // "basketball/nba"
+        let name: String
+        let symbol: String
+    }
+
+    static let leagues: [League] = [
+        League(id: "soccer/eng.1", name: "Premier League", symbol: "soccerball"),
+        League(id: "soccer/uefa.champions", name: "Champions League", symbol: "soccerball"),
+        League(id: "soccer/esp.1", name: "La Liga", symbol: "soccerball"),
+        League(id: "soccer/usa.1", name: "MLS", symbol: "soccerball"),
+        League(id: "basketball/nba", name: "NBA", symbol: "basketball.fill"),
+        League(id: "football/nfl", name: "NFL", symbol: "football.fill"),
+        League(id: "baseball/mlb", name: "MLB", symbol: "baseball.fill"),
+        League(id: "hockey/nhl", name: "NHL", symbol: "hockey.puck.fill"),
+    ]
+
+    struct Game: Identifiable, Equatable {
+        let id: String
+        let home: String, away: String          // abbreviations
+        let homeName: String, awayName: String
+        let homeScore: String, awayScore: String
+        let state: String                        // pre, in, post
+        let detail: String                       // "Q3 4:12", "FT", "7:30 PM"
+    }
+
+    @AppStorage("live.league") var leagueID = "soccer/eng.1" { didSet { games = []; refresh() } }
+    @AppStorage("live.team") var followedTeam = ""
+    @Published private(set) var games: [Game] = []
+    @Published private(set) var error: String?
+    private var lastFetch = Date.distantPast
+
+    var league: League { Self.leagues.first { $0.id == leagueID } ?? Self.leagues[0] }
+
+    var followedGame: Game? {
+        let team = followedTeam.trimmingCharacters(in: .whitespaces)
+        guard !team.isEmpty else { return nil }
+        return games.first { g in
+            [g.home, g.away, g.homeName, g.awayName].contains { $0.localizedCaseInsensitiveContains(team) }
+        }
+    }
+
+    var liveActivity: LiveActivity? {
+        guard let g = followedGame, g.state == "in" else { return nil }
+        return LiveActivity(symbol: league.symbol, label: "\(g.awayScore)-\(g.homeScore)", tint: .systemGreen)
+    }
+
+    /// Every 60 s while a followed game is live, otherwise every 10 minutes.
+    func refreshIfDue() {
+        let interval: TimeInterval = followedGame?.state == "in" ? 55 : 600
+        if Date.now.timeIntervalSince(lastFetch) > interval { refresh() }
+    }
+
+    func refresh() {
+        lastFetch = .now
+        let id = leagueID
+        Task {
+            do {
+                let url = URL(string: "https://site.api.espn.com/apis/site/v2/sports/\(id)/scoreboard")!
+                let (data, _) = try await URLSession.shared.data(from: url)
+                let parsed = Self.parse(data)
+                if id == leagueID { games = parsed; error = nil }
+                LiveActivityCenter.shared.recompute()
+            } catch {
+                self.error = "Couldn't load scores."
+            }
+        }
+    }
+
+    private static func parse(_ data: Data) -> [Game] {
+        guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+              let events = json["events"] as? [[String: Any]] else { return [] }
+        return events.compactMap { e in
+            guard let comp = (e["competitions"] as? [[String: Any]])?.first,
+                  let teams = comp["competitors"] as? [[String: Any]] else { return nil }
+            func side(_ where_: String) -> (String, String, String) {
+                let c = teams.first { ($0["homeAway"] as? String) == where_ } ?? [:]
+                let team = c["team"] as? [String: Any] ?? [:]
+                return ((team["abbreviation"] as? String) ?? "?", (team["displayName"] as? String) ?? "?", (c["score"] as? String) ?? "0")
+            }
+            let h = side("home"), a = side("away")
+            let type = ((e["status"] as? [String: Any])?["type"] as? [String: Any]) ?? [:]
+            return Game(id: (e["id"] as? String) ?? UUID().uuidString, home: h.0, away: a.0, homeName: h.1, awayName: a.1,
+                        homeScore: h.2, awayScore: a.2, state: (type["state"] as? String) ?? "pre",
+                        detail: (type["shortDetail"] as? String) ?? "")
+        }
+    }
+}
+
+// MARK: - Tracking
+
+struct TrackedItem: Codable, Identifiable, Equatable {
+    var id = UUID()
+    var code: String
+    var label: String
+}
+
+enum TrackingLinks {
+    /// Works out what a code is and where to track it.
+    static func resolve(_ raw: String) -> (kind: String, url: URL) {
+        let code = raw.uppercased().replacingOccurrences(of: " ", with: "")
+        let enc = code.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? code
+        func m(_ pattern: String) -> Bool { code.range(of: pattern, options: .regularExpression) != nil }
+        if m("^1Z[0-9A-Z]{16}$") { return ("UPS", URL(string: "https://www.ups.com/track?tracknum=\(enc)")!) }
+        if m("^[A-Z][A-Z0-9]{1,2}[0-9]{1,4}$") {
+            return ("Flight", URL(string: "https://www.flightaware.com/live/flight/\(enc)")!)
+        }
+        if m("^(94|93|92|95)[0-9]{20}$") || m("^[A-Z]{2}[0-9]{9}US$") { return ("USPS", URL(string: "https://tools.usps.com/go/TrackConfirmAction?tLabels=\(enc)")!) }
+        if m("^[0-9]{12}$") || m("^[0-9]{15}$") { return ("FedEx", URL(string: "https://www.fedex.com/fedextrack/?trknbr=\(enc)")!) }
+        if m("^[0-9]{10}$") { return ("DHL", URL(string: "https://www.dhl.com/global-en/home/tracking/tracking-express.html?tracking-id=\(enc)")!) }
+        return ("Parcel", URL(string: "https://parcelsapp.com/en/tracking/\(enc)")!)
+    }
+}
+
+struct LiveView: View {
+    @StateObject private var scores = ScoresModel.shared
+    @AppStorage("live.tracked") private var trackedData = Data()
+    @State private var newCode = ""
+    @State private var newLabel = ""
+
+    private var tracked: [TrackedItem] { (try? JSONDecoder().decode([TrackedItem].self, from: trackedData)) ?? [] }
+
+    var body: some View {
+        HStack(alignment: .top, spacing: 12) {
+            GlassCard {
+                VStack(alignment: .leading, spacing: 8) {
+                    HStack {
+                        Picker("", selection: $scores.leagueID) {
+                            ForEach(ScoresModel.leagues) { Text($0.name).tag($0.id) }
+                        }
+                        .labelsHidden().fixedSize()
+                        TextField("Follow a team (e.g. ARS, Lakers)", text: $scores.followedTeam)
+                            .textFieldStyle(.roundedBorder).font(.system(size: 12))
+                        IconButton(systemImage: "arrow.clockwise", help: "Refresh") { scores.refresh() }
+                    }
+                    if let e = scores.error { Text(e).font(.system(size: 11)).foregroundStyle(.orange) }
+                    ScrollView {
+                        VStack(spacing: 6) {
+                            if scores.games.isEmpty {
+                                Text("No games today in \(scores.league.name).").font(.system(size: 12)).foregroundStyle(Theme.textSecondary).padding(.top, 16)
+                            }
+                            ForEach(scores.games) { g in gameRow(g) }
+                        }
+                    }
+                }
+            }
+
+            GlassCard {
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Track a parcel or flight").sectionTitle()
+                    TextField("Tracking or flight number", text: $newCode).textFieldStyle(.roundedBorder).onSubmit(add)
+                    HStack {
+                        TextField("Label (optional)", text: $newLabel).textFieldStyle(.roundedBorder).onSubmit(add)
+                        Button("Add", action: add).buttonStyle(PurpleButtonStyle()).disabled(newCode.isEmpty)
+                    }
+                    ScrollView {
+                        VStack(spacing: 6) {
+                            ForEach(tracked) { item in
+                                let link = TrackingLinks.resolve(item.code)
+                                HStack(spacing: 6) {
+                                    Image(systemName: link.kind == "Flight" ? "airplane" : "shippingbox.fill").foregroundStyle(Theme.accentBright)
+                                    VStack(alignment: .leading, spacing: 1) {
+                                        Text(item.label.isEmpty ? item.code : item.label).font(.system(size: 12, weight: .medium)).foregroundStyle(.white).lineLimit(1)
+                                        Text("\(link.kind) · \(item.code)").font(.system(size: 10)).foregroundStyle(Theme.textSecondary).lineLimit(1)
+                                    }
+                                    Spacer()
+                                    IconButton(systemImage: "arrow.up.right.square", help: "Open tracking page") {
+                                        NSWorkspace.shared.open(link.url)
+                                        AppDelegate.current?.notch?.closeNotch()
+                                    }
+                                    IconButton(systemImage: "xmark", help: "Remove") { save(tracked.filter { $0.id != item.id }) }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            .frame(width: 260)
+        }
+        .onAppear { scores.refreshIfDue() }
+    }
+
+    private func gameRow(_ g: ScoresModel.Game) -> some View {
+        let followed = scores.followedGame == g
+        return HStack {
+            Text(g.away).frame(width: 44, alignment: .leading)
+            Text(g.state == "pre" ? "–" : g.awayScore).monospacedDigit().bold()
+            Text("@").foregroundStyle(Theme.textSecondary)
+            Text(g.state == "pre" ? "–" : g.homeScore).monospacedDigit().bold()
+            Text(g.home).frame(width: 44, alignment: .trailing)
+            Spacer()
+            if g.state == "in" { Circle().fill(.red).frame(width: 6, height: 6) }
+            Text(g.detail).font(.system(size: 11)).foregroundStyle(Theme.textSecondary).lineLimit(1)
+        }
+        .font(.system(size: 13)).foregroundStyle(.white)
+        .padding(.horizontal, 10).padding(.vertical, 6)
+        .background(followed ? Theme.accent.opacity(0.3) : Theme.surface, in: RoundedRectangle(cornerRadius: 10))
+    }
+
+    private func add() {
+        let code = newCode.trimmingCharacters(in: .whitespaces)
+        guard !code.isEmpty else { return }
+        save([TrackedItem(code: code, label: newLabel)] + tracked)
+        newCode = ""
+        newLabel = ""
+    }
+
+    private func save(_ items: [TrackedItem]) { trackedData = (try? JSONEncoder().encode(items)) ?? Data() }
+}

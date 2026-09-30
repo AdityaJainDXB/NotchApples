@@ -107,6 +107,16 @@ final class MediaKeyInterceptor {
         }
     }
 
+    /// Changes the output volume by `delta` (used by scroll gestures on the notch) and shows the gauge.
+    func nudgeVolume(_ delta: Float) {
+        guard let device = Self.defaultOutput() else { return }
+        let now = Self.isMuted(device) ? 0 : (Self.volume(device) ?? 0.5)
+        Self.setVolume(max(0, min(1, now + delta)), device)
+        if delta > 0 { Self.setMuted(false, device) }
+        let level = Double(Self.volume(device) ?? 0)
+        Self.flash(symbol: level <= 0.001 ? "speaker.slash.fill" : level < 0.34 ? "speaker.wave.1.fill" : level < 0.67 ? "speaker.wave.2.fill" : "speaker.wave.3.fill", level)
+    }
+
     private static func flash(symbol: String, _ value: Double) {
         DispatchQueue.main.async {
             MainActor.assumeIsolated { LiveActivityCenter.shared.showHUD(symbol: symbol, value: value) }

@@ -20,6 +20,7 @@ final class TodayModel: ObservableObject {
         let end: Date
         let isAllDay: Bool
         let color: Color
+        var joinURL: URL? = nil
     }
 
     @Published private(set) var weather: WeatherSnapshot?
@@ -64,13 +65,15 @@ final class TodayModel: ObservableObject {
             .sorted { $0.startDate < $1.startDate }
             .prefix(5)
             .map { Event(id: $0.eventIdentifier ?? UUID().uuidString, title: $0.title ?? "Event", start: $0.startDate,
-                         end: $0.endDate, isAllDay: $0.isAllDay, color: Color(nsColor: $0.calendar.color)) }
+                         end: $0.endDate, isAllDay: $0.isAllDay, color: Color(nsColor: $0.calendar.color),
+                         joinURL: MeetingLinks.find(in: $0)) }
     }
 }
 
 struct TodayView: View {
     @StateObject private var model = TodayModel.shared
     @StateObject private var location = LocationProvider.shared
+    @StateObject private var rain = RainWatcher.shared
 
     var body: some View {
         HStack(alignment: .top, spacing: 12) {
@@ -88,6 +91,9 @@ struct TodayView: View {
                                     .foregroundStyle(.white)
                                 Text("\(w.summary) · \(w.location)").font(.system(size: 12)).foregroundStyle(Theme.textSecondary)
                             }
+                        }
+                        if let rain = rain.summary {
+                            Label(rain, systemImage: "cloud.rain.fill").font(.system(size: 12, weight: .semibold)).foregroundStyle(.cyan)
                         }
                     } else {
                         Label("Loading weather…", systemImage: "cloud").font(.system(size: 12)).foregroundStyle(Theme.textSecondary)
@@ -129,6 +135,15 @@ struct TodayView: View {
                                     Text(timeText(event)).font(.system(size: 11)).foregroundStyle(Theme.textSecondary)
                                 }
                                 Spacer()
+                                if let url = event.joinURL, event.end > .now, event.start.timeIntervalSinceNow < 900 {
+                                    Button("Join") { NSWorkspace.shared.open(url); AppDelegate.current?.notch?.closeNotch() }
+                                        .buttonStyle(PurpleButtonStyle())
+                                        .help("Join the video call")
+                                } else if let url = event.joinURL {
+                                    IconButton(systemImage: "video.fill", help: "Join the video call") {
+                                        NSWorkspace.shared.open(url); AppDelegate.current?.notch?.closeNotch()
+                                    }
+                                }
                                 if event.start <= .now && event.end > .now {
                                     Text("Now").font(.system(size: 10, weight: .bold)).padding(.horizontal, 6).padding(.vertical, 2)
                                         .background(Theme.accent.opacity(0.4), in: Capsule())
@@ -148,12 +163,14 @@ struct TodayView: View {
         }
         .onAppear {
             model.refresh()
+            if SettingsManager.shared.rainAlert { rain.checkIfDue() }
             // First time: ask for location so weather is local, not Cupertino.
             if location.useCurrentLocation && location.status == .notDetermined { location.requestLocation() }
         }
     }
 
     @StateObject private var capture = ScreenCaptureActions.shared
+    @StateObject private var recorder = ScreenRecorder.shared
 
     /// Screenshot (notch hidden for the shot) and screen recording.
     private var captureButtons: some View {
@@ -163,18 +180,31 @@ struct TodayView: View {
                 Button { capture.takeScreenshot() } label: { Label("Screenshot", systemImage: "camera.viewfinder").lineLimit(1).minimumScaleFactor(0.75).frame(maxWidth: .infinity) }
                     .buttonStyle(PurpleButtonStyle(prominent: false))
                     .help("Take a screenshot of the main display, without the notch")
-                Button { capture.toggleRecording() } label: {
-                    Group {
-                        if capture.isRecording, let start = capture.recordingStart {
-                            Label { Text(start, style: .timer).monospacedDigit() } icon: { Image(systemName: "stop.circle.fill") }
-                        } else {
-                            Label("Record", systemImage: "record.circle")
+                if recorder.isRecording {
+                    HStack(spacing: 6) {
+                        Button { recorder.togglePause() } label: {
+                            Image(systemName: recorder.isPaused ? "play.fill" : "pause.fill").frame(maxWidth: .infinity)
                         }
+                        .buttonStyle(PurpleButtonStyle(prominent: false))
+                        .help(recorder.isPaused ? "Resume recording" : "Pause recording")
+                        Button { recorder.stop() } label: {
+                            Label { Text(CountdownTimer.long(recorder.elapsed)).monospacedDigit() } icon: { Image(systemName: "stop.circle.fill") }
+                                .lineLimit(1).minimumScaleFactor(0.75).frame(maxWidth: .infinity)
+                        }
+                        .buttonStyle(PurpleButtonStyle())
+                        .help("Stop recording")
                     }
-                    .lineLimit(1).minimumScaleFactor(0.75).frame(maxWidth: .infinity)
+                } else {
+                    Button { recorder.start() } label: {
+                        Label("Record", systemImage: "record.circle").lineLimit(1).minimumScaleFactor(0.75).frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(PurpleButtonStyle(prominent: false))
+                    .help("Record the screen (the notch is left out). You can pause, and trim when you stop.")
                 }
-                .buttonStyle(PurpleButtonStyle(prominent: capture.isRecording))
-                .help(capture.isRecording ? "Stop recording" : "Start recording the screen")
+            }
+            if let message = recorder.message {
+                Text(message).font(.system(size: 11)).foregroundStyle(Theme.textSecondary)
+                    .fixedSize(horizontal: false, vertical: true)
             }
             if let message = capture.message {
                 Text(message).font(.system(size: 11)).foregroundStyle(Theme.textSecondary)

@@ -23,6 +23,37 @@ final class FocusTimer: ObservableObject {
     @AppStorage("focus.autoStartNext") var autoStartNext = false
     @AppStorage("focus.completedToday") private var completedToday = 0
     @AppStorage("focus.completedDay") private var completedDay = ""
+    /// Shortcuts run when a focus session starts and stops (e.g. turn Do Not Disturb on / off).
+    @AppStorage("focus.dndOnShortcut") var dndOnShortcut = ""
+    @AppStorage("focus.dndOffShortcut") var dndOffShortcut = ""
+    /// Focus minutes per day ("2026-09-30": 75), for the weekly chart.
+    @AppStorage("focus.history") private var historyData = Data()
+    private var dndActive = false
+
+    var history: [String: Int] { (try? JSONDecoder().decode([String: Int].self, from: historyData)) ?? [:] }
+
+    /// The last 7 days, oldest first.
+    var lastWeek: [(day: Date, minutes: Int)] {
+        let h = history
+        return (0..<7).reversed().map { back in
+            let d = Calendar.current.date(byAdding: .day, value: -back, to: .now)!
+            return (d, h[d.formatted(.iso8601.year().month().day())] ?? 0)
+        }
+    }
+
+    private func logMinutes(_ minutes: Int) {
+        var h = history
+        h[today, default: 0] += minutes
+        // Keep about two months.
+        if h.count > 60 { for key in h.keys.sorted().prefix(h.count - 60) { h[key] = nil } }
+        historyData = (try? JSONEncoder().encode(h)) ?? Data()
+    }
+
+    private func setDND(_ on: Bool) {
+        guard on != dndActive else { return }
+        dndActive = on
+        ShortcutsModel.runQuietly(on ? dndOnShortcut : dndOffShortcut)
+    }
 
     @Published private(set) var phase: Phase = .focus
     @Published private(set) var remaining: TimeInterval = 25 * 60
@@ -76,6 +107,7 @@ final class FocusTimer: ObservableObject {
         }
         LiveActivityCenter.shared.recompute()
         requestNotificationPermission()
+        setDND(phase == .focus)
     }
 
     func pause() {
@@ -85,6 +117,7 @@ final class FocusTimer: ObservableObject {
         ticker?.invalidate()
         endDate = nil
         LiveActivityCenter.shared.recompute()
+        setDND(false)
     }
 
     func reset() {
@@ -115,7 +148,9 @@ final class FocusTimer: ObservableObject {
         ticker?.invalidate()
         isRunning = false
         endDate = nil
+        setDND(false)
         if finished == .focus {
+            if notify { logMinutes(workMinutes) }
             if completedDay != today { completedDay = today; completedToday = 0 }
             completedToday += 1
             sessionsToday = completedToday

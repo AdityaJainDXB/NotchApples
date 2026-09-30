@@ -18,7 +18,7 @@ import UniformTypeIdentifiers
 
 /// Panes in the Settings window. `selection` lets other code jump to a pane.
 enum SettingsTab: String, CaseIterable, Identifiable, Hashable {
-    case general, appearance, browser, license, shortcuts, permissions, authentication, modules, windows, claude, aiHistory, messenger, clipboard, fileSearch, focus, audio, vpn, widget, updates, about
+    case general, appearance, extras, browser, license, shortcuts, permissions, authentication, modules, windows, claude, aiHistory, messenger, clipboard, fileSearch, focus, audio, vpn, widget, updates, about
     static let selection = PassthroughSubject<SettingsTab, Never>()
 
     var id: String { rawValue }
@@ -28,6 +28,7 @@ enum SettingsTab: String, CaseIterable, Identifiable, Hashable {
         case .general: "General"
         case .browser: "Browser"
         case .appearance: "Appearance"
+        case .extras: "Notch Extras"
         case .license: "License & Activation"
         case .shortcuts: "Shortcuts & Hotkeys"
         case .permissions: "Permissions"
@@ -53,6 +54,7 @@ enum SettingsTab: String, CaseIterable, Identifiable, Hashable {
         case .general: "gearshape.fill"
         case .browser: "globe"
         case .appearance: "paintpalette.fill"
+        case .extras: "sparkles.rectangle.stack.fill"
         case .license: "key.fill"
         case .shortcuts: "command"
         case .permissions: "hand.raised.fill"
@@ -79,6 +81,7 @@ enum SettingsTab: String, CaseIterable, Identifiable, Hashable {
         case .general: .gray
         case .browser: .blue
         case .appearance: .pink
+        case .extras: .orange
         case .license: .green
         case .shortcuts: .mint
         case .permissions: .blue
@@ -134,6 +137,7 @@ struct SettingsView: View {
                 case .general: GeneralSettings()
                 case .browser: BrowserSettings()
                 case .appearance: AppearanceSettings()
+                case .extras: ExtrasSettings()
                 case .license: LicenseSettings()
                 case .shortcuts: ShortcutsSettings()
                 case .permissions: PermissionsView(showsWelcome: !UserDefaults.standard.bool(forKey: "onboarding.welcomeDismissed"))
@@ -800,6 +804,14 @@ private struct FocusSettings: View {
                 Text("Session lengths")
             } footer: {
                 Text("Every 4th focus session is followed by a long break. You'll get a notification and a sound when a session ends.")
+            }
+            Section {
+                TextField("Shortcut when a session starts", text: $timer.dndOnShortcut, prompt: Text("e.g. Do Not Disturb On"))
+                TextField("Shortcut when it stops", text: $timer.dndOffShortcut, prompt: Text("e.g. Do Not Disturb Off"))
+            } header: {
+                Text("Do Not Disturb during focus")
+            } footer: {
+                Text("macOS doesn't let apps change Focus directly, so make two shortcuts in the Shortcuts app with the “Set Focus” action (Do Not Disturb on / off) and type their names here. Leave empty to skip.")
             }
         }
         .formStyle(.grouped)
