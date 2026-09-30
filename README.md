@@ -17,7 +17,7 @@
 
 <p align="center">
   <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️ Download the latest DMG</b></a>
-  &nbsp;·&nbsp; <a href="https://notch.cc.cd"><b>🌐 Website</b></a>
+  &nbsp;·&nbsp; <a href="https://virajsinghchadha.github.io/notchapples-site/"><b>🌐 Website</b></a>
   &nbsp;·&nbsp; or install with <a href="#with-homebrew"><b>Homebrew</b></a>
   &nbsp;·&nbsp; want it smaller? <a href="#want-a-lighter-version"><b>Lighter versions</b></a>
 </p>
