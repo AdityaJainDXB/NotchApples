@@ -8,7 +8,7 @@
 //
 //  Keys used:
 //   • ⌃⌥N — toggles the notch (⌘E for people who used it before). User-configurable.
-//   • ⌃⌥O — hides or reveals the whole notch (invisibility). The combination is user-configurable.
+//   • ⌘O  — hides or reveals the whole notch (invisibility). The combination is user-configurable.
 //   • Esc — closes the notch; registered only while the notch is open, so
 //           other apps get their Escape key back the moment it closes.
 //
@@ -33,7 +33,7 @@ struct HotkeyBinding: Equatable {
         var defaultBinding: HotkeyBinding {
             switch self {
             case .notch: HotkeyBinding(keyCode: UInt32(kVK_ANSI_N), modifiers: UInt32(controlKey | optionKey), label: "⌃⌥N")
-            case .invisibility: HotkeyBinding(keyCode: UInt32(kVK_ANSI_O), modifiers: UInt32(controlKey | optionKey), label: "⌃⌥O")
+            case .invisibility: HotkeyBinding(keyCode: UInt32(kVK_ANSI_O), modifiers: UInt32(cmdKey), label: "⌘O")
             }
         }
     }
@@ -64,11 +64,6 @@ struct HotkeyBinding: Equatable {
 
     static var invisibility: HotkeyBinding { current(.invisibility) }
 
-    /// ⌘O is every app's Open… command; a saved ⌘O hide shortcut moves to ⌃⌥O.
-    static func migrateAwayFromCommandO() {
-        let b = current(.invisibility)
-        if b.keyCode == UInt32(kVK_ANSI_O), b.modifiers == UInt32(cmdKey) { reset(.invisibility) }
-    }
     static var notch: HotkeyBinding { current(.notch) }
 
     /// Builds a binding from a key press, or nil if it can't work as a global shortcut

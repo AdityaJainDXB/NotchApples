@@ -93,6 +93,7 @@ struct PermissionsView: View {
     @StateObject private var model = PermissionsModel.shared
     @StateObject private var location = LocationProvider.shared
     var showsWelcome = false
+    @State private var screenGranted = ScreenPermission.isGranted
 
     private let poll = Timer.publish(every: 2, on: .main, in: .common).autoconnect()
 
@@ -111,6 +112,34 @@ struct PermissionsView: View {
                     .padding(.vertical, 6)
                 }
             }
+
+            Section {
+                VStack(alignment: .leading, spacing: 6) {
+                    Label("How to turn permissions on", systemImage: "hand.raised.fill").font(.headline)
+                    Text("1. Click **Allow** (or **Open Settings…**) next to a feature below.")
+                    Text("2. If macOS asks, click **Allow**. Otherwise open System Settings → Privacy & Security, find the permission and switch **Notch apple** on.")
+                    Text("3. For **Screen Recording** (the AI's \"what's on my screen?\"), macOS only applies the change after a restart: click **Relaunch** here.")
+                    Text("4. First time opening the app? macOS may say it can't verify it. Right-click Notch apple → **Open** once, or go to Privacy & Security → **Open Anyway**.")
+                }
+                .font(.callout).foregroundStyle(.secondary)
+                .padding(.vertical, 4)
+            }
+
+            Section {
+                row("Screen Recording", "rectangle.dashed.badge.record", .pink,
+                    detail: "Lets the AI see your screen when you ask \"what's on my screen?\" and powers the Screenshot and Record buttons.",
+                    state: screenGranted ? .granted : .notSet) {
+                    if screenGranted {
+                        EmptyView()
+                    } else {
+                        HStack {
+                            Button("Allow") { ScreenPermission.request() }.buttonStyle(.borderedProminent)
+                            Button("Open Settings…") { ScreenPermission.openSettings() }
+                            Button("Relaunch") { AppRelauncher.relaunch() }.help("macOS applies Screen Recording only after the app restarts")
+                        }
+                    }
+                }
+            } header: { Text("Screen") }
 
             Section {
                 row("Open at login", "power", .green,
@@ -168,7 +197,7 @@ struct PermissionsView: View {
             }
         }
         .formStyle(.grouped)
-        .onReceive(poll) { _ in model.refresh(); location.refreshStatus() }
+        .onReceive(poll) { _ in model.refresh(); location.refreshStatus(); screenGranted = ScreenPermission.isGranted }
         .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
             model.refresh(); location.refreshStatus()
         }

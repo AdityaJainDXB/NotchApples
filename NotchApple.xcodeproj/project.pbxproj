@@ -51,6 +51,9 @@
 		6EB4C5BE5A0101A1A21F64D6 /* PermissionsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81150E6B4F5BE3E2EB5CE1A1 /* PermissionsView.swift */; };
 		6FE62A468735A640B08A7BD1 /* ClaudeClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6747ADA828FF1D33683B30C8 /* ClaudeClient.swift */; };
 		71C400496997AA8DF53FAF5D /* KeychainHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1BB3450673E6FC967D2A1F87 /* KeychainHelper.swift */; };
+		6FA3000000000000005A1B01 /* AppLauncher.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6FA3000000000000005A1B00 /* AppLauncher.swift */; };
+		6FA3000000000000005A1A03 /* BrowserView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6FA3000000000000005A1A02 /* BrowserView.swift */; };
+		6FA3000000000000005A1A01 /* BrowserModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6FA3000000000000005A1A00 /* BrowserModel.swift */; };
 		72569F25523646AA163A2245 /* WindowsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E3DB230CD04EC3E1A948E17 /* WindowsView.swift */; };
 		758A59E0A3B0AB8662E95B0D /* ScreenIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = E05A03C9C8BB062C1E2C1DBB /* ScreenIntent.swift */; };
 		7651FFF0A83FB22D9BD7AE4C /* SettingsManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA5B0C58A3CF928A968E10F8 /* SettingsManager.swift */; };
@@ -124,6 +127,9 @@
 		19CE2857208E57529A83DED6 /* VPNView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VPNView.swift; sourceTree = "<group>"; };
 		1AD68AAB70138C11AD1C119D /* ShortcutRecorder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShortcutRecorder.swift; sourceTree = "<group>"; };
 		1BB3450673E6FC967D2A1F87 /* KeychainHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainHelper.swift; sourceTree = "<group>"; };
+		6FA3000000000000005A1B00 /* AppLauncher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppLauncher.swift; sourceTree = "<group>"; };
+		6FA3000000000000005A1A02 /* BrowserView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrowserView.swift; sourceTree = "<group>"; };
+		6FA3000000000000005A1A00 /* BrowserModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrowserModel.swift; sourceTree = "<group>"; };
 		1C5A54FB338D3A1C23699078 /* NotchRootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotchRootView.swift; sourceTree = "<group>"; };
 		1D75D90CD0ED25880BFFC38F /* BackgroundMusic-LICENSE.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = "BackgroundMusic-LICENSE.txt"; sourceTree = "<group>"; };
 		1EC00C3A3694AC867DD418EC /* AccessCodeManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccessCodeManager.swift; sourceTree = "<group>"; };
@@ -242,6 +248,8 @@
 				780F7365BB84DFF804698336 /* System */,
 				78FBD758A1948295D33E4392 /* Today */,
 				A58125BCF74A2E93625153B0 /* Tools */,
+				6FA3000000000000005A1A04 /* Browser */,
+				6FA3000000000000005A1B02 /* Launcher */,
 				51479AF227BF0D1A68FFC380 /* Translator */,
 				A9957A263FFF8D86EE6B2B2A /* VPN */,
 				5FBEBD2F24CA136CBA09D39A /* Windows */,
@@ -289,6 +297,23 @@
 				92FC7E64A4478DE0F57D42E4 /* WeatherService.swift */,
 			);
 			path = Shared;
+			sourceTree = "<group>";
+		};
+		6FA3000000000000005A1A04 /* Browser */ = {
+			isa = PBXGroup;
+			children = (
+				6FA3000000000000005A1A00 /* BrowserModel.swift */,
+				6FA3000000000000005A1A02 /* BrowserView.swift */,
+			);
+			path = Browser;
+			sourceTree = "<group>";
+		};
+		6FA3000000000000005A1B02 /* Launcher */ = {
+			isa = PBXGroup;
+			children = (
+				6FA3000000000000005A1B00 /* AppLauncher.swift */,
+			);
+			path = Launcher;
 			sourceTree = "<group>";
 		};
 		51479AF227BF0D1A68FFC380 /* Translator */ = {
@@ -643,6 +668,9 @@
 				537F255A1D69F77CC3D7AF9E /* FocusView.swift in Sources */,
 				04DA84BD772511B028648D4E /* GlobalHotkeyManager.swift in Sources */,
 				71C400496997AA8DF53FAF5D /* KeychainHelper.swift in Sources */,
+				6FA3000000000000005A1B01 /* AppLauncher.swift in Sources */,
+				6FA3000000000000005A1A03 /* BrowserView.swift in Sources */,
+				6FA3000000000000005A1A01 /* BrowserModel.swift in Sources */,
 				97C87D7865B82ECEB80B9E60 /* LiveActivity.swift in Sources */,
 				C5CB119C0BE108708E65FC9E /* LocalP2PManager.swift in Sources */,
 				2451D6C550A6B50F33FB0D88 /* LocationProvider.swift in Sources */,
@@ -785,7 +813,7 @@
 				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Manual;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 20;
+				CURRENT_PROJECT_VERSION = 21;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = "";
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -800,7 +828,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 1.13.1;
+				MARKETING_VERSION = 1.13.5;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -883,7 +911,7 @@
 				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Manual;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 20;
+				CURRENT_PROJECT_VERSION = 21;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = "";
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -904,7 +932,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 1.13.1;
+				MARKETING_VERSION = 1.13.5;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;

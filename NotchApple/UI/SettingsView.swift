@@ -18,7 +18,7 @@ import UniformTypeIdentifiers
 
 /// Panes in the Settings window. `selection` lets other code jump to a pane.
 enum SettingsTab: String, CaseIterable, Identifiable, Hashable {
-    case general, appearance, license, shortcuts, permissions, authentication, modules, windows, claude, aiHistory, messenger, clipboard, fileSearch, focus, audio, vpn, widget, updates, about
+    case general, appearance, browser, license, shortcuts, permissions, authentication, modules, windows, claude, aiHistory, messenger, clipboard, fileSearch, focus, audio, vpn, widget, updates, about
     static let selection = PassthroughSubject<SettingsTab, Never>()
 
     var id: String { rawValue }
@@ -26,6 +26,7 @@ enum SettingsTab: String, CaseIterable, Identifiable, Hashable {
     var title: String {
         switch self {
         case .general: "General"
+        case .browser: "Browser"
         case .appearance: "Appearance"
         case .license: "License & Activation"
         case .shortcuts: "Shortcuts & Hotkeys"
@@ -50,6 +51,7 @@ enum SettingsTab: String, CaseIterable, Identifiable, Hashable {
     var symbol: String {
         switch self {
         case .general: "gearshape.fill"
+        case .browser: "globe"
         case .appearance: "paintpalette.fill"
         case .license: "key.fill"
         case .shortcuts: "command"
@@ -75,6 +77,7 @@ enum SettingsTab: String, CaseIterable, Identifiable, Hashable {
     var tint: Color {
         switch self {
         case .general: .gray
+        case .browser: .blue
         case .appearance: .pink
         case .license: .green
         case .shortcuts: .mint
@@ -129,6 +132,7 @@ struct SettingsView: View {
             Group {
                 switch tab {
                 case .general: GeneralSettings()
+                case .browser: BrowserSettings()
                 case .appearance: AppearanceSettings()
                 case .license: LicenseSettings()
                 case .shortcuts: ShortcutsSettings()
@@ -151,7 +155,11 @@ struct SettingsView: View {
                 }
             }
             .navigationTitle(tab.title)
+            // The pages follow the colour theme chosen in Settings → Appearance.
+            .scrollContentBackground(.hidden)
+            .background(Theme.backdrop.ignoresSafeArea())
         }
+        .preferredColorScheme(.dark)
         .frame(minWidth: 680, idealWidth: 860, minHeight: 440, idealHeight: 560)
         .tint(Theme.accent)
         .id(ThemeManager.shared.currentThemeID)
@@ -206,6 +214,39 @@ private struct LicenseSettings: View {
         } message: {
             Text("You'll need to enter an access code again.")
         }
+    }
+}
+
+// MARK: - Browser
+
+private struct BrowserSettings: View {
+    @EnvironmentObject private var settings: SettingsManager
+    @AppStorage(SearchEngine.storageKey) private var engine = SearchEngine.duckDuckGo.rawValue
+    @State private var confirmClear = false
+    @State private var cleared = false
+
+    var body: some View {
+        Form {
+            Section {
+                Toggle("Show Browser in the notch", isOn: $settings.browserEnabled)
+            }
+            Section {
+                Picker("Search engine", selection: $engine) {
+                    ForEach(SearchEngine.allCases) { Text($0.name).tag($0.rawValue) }
+                }
+            } footer: {
+                Text("Anything you type in the address bar that isn't a website is searched with this engine.")
+            }
+            Section {
+                Button(cleared ? "Cleared" : "Clear browsing data…", role: .destructive) { confirmClear = true }
+            } footer: {
+                Text("Removes cookies, cache and site data from the notch browser, and signs you out of sites.")
+            }
+        }
+        .formStyle(.grouped)
+        .confirmationDialog("Clear browsing data?", isPresented: $confirmClear) {
+            Button("Clear", role: .destructive) { Task { await BrowserModel.shared.clearBrowsingData(); cleared = true } }
+        } message: { Text("This signs you out of websites you used in the notch browser.") }
     }
 }
 

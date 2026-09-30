@@ -128,12 +128,13 @@ enum AIProvider: String, CaseIterable, Identifiable, Codable {
 }
 
 enum AIError: LocalizedError {
-    case missingKey(AIProvider), http(Int, String), empty, ollamaNotRunning
+    case missingKey(AIProvider), http(Int, String), empty, ollamaNotRunning, allBusy(String)
 
     var errorDescription: String? {
         switch self {
         case .missingKey(let p): "Add your \(p.title) key in Settings → AI."
         case .http(let code, let msg): "Error \(code): \(msg)"
+        case .allBusy(let tried): "Every free model I tried is busy or rate-limited right now (\(tried)). Wait a minute and ask again, add a little credit on openrouter.ai, or use Gemini, which has a free key at aistudio.google.com." 
         case .empty: "The model returned an empty response."
         case .ollamaNotRunning: "Ollama isn't running. Install it from ollama.com and run a model (e.g. `ollama run llama3.2`)."
         }
@@ -287,9 +288,14 @@ enum AIClient {
         let status = (response as? HTTPURLResponse)?.statusCode ?? 0
         let json = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any] ?? [:]
         guard (200..<300).contains(status) else {
-            let message = (json["error"] as? [String: Any])?["message"] as? String
+            let errorObject = json["error"] as? [String: Any]
+            var message = errorObject?["message"] as? String
                 ?? (json["error"] as? String)
                 ?? String(decoding: data.prefix(300), as: UTF8.self)
+            // OpenRouter wraps the real reason from the model's host in error.metadata.raw.
+            if let raw = (errorObject?["metadata"] as? [String: Any])?["raw"] as? String, !raw.isEmpty {
+                message += " (\(raw.prefix(200)))"
+            }
             throw AIError.http(status, message)
         }
         return json
