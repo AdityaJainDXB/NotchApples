@@ -51,6 +51,8 @@ brew install --cask notch-apple
 | **Notifications**: reply to iMessages from the notch | **Plugins**: your own widgets from any script |
 | ![Snippets](docs/screenshots/snippets.png) | ![Notch Extras](docs/screenshots/settings-extras.png) |
 | **Snippets**: paste saved text anywhere | **Settings → Notch Extras** |
+| ![Account sign-in](docs/screenshots/settings-license.png) | ![Backup & Sync](docs/screenshots/settings-backup.png) |
+| **Sign in with Google** to unlock Pro on every Mac | **Backup & Sync**: account, iCloud and backup files |
 
 All screenshots use sample data.
 
@@ -217,7 +219,7 @@ Other things new in 1.12: **no more keychain password prompts.** Earlier version
 ## Backup and sync your setup
 
 **Settings → Backup & Sync** keeps your whole notch setup safe:
-- **Notch apple account:** sign in with **Google** or **email and password**, and your setup is saved to your account and restored on any Mac you sign in on. It's stored in Firebase, where only you can read it.
+- **Notch apple account:** **Continue with Google** (Sign in with Apple is coming) and your setup and access code are saved to your account, then restored on any Mac you sign in on, with Pro unlocked. It's stored in Firebase, where only you can read it; the access code is kept as a secure fingerprint, never the code itself. You'll find it in **Settings → Backup & Sync** and **Settings → License & Activation**.
 - **Sync with your Apple ID:** turn on *Keep my notch setup in iCloud* and it's saved to iCloud Drive → Notch apple every time you change something. On a new Mac, install Notch apple, open this page and click **Restore from iCloud**. There's no separate account to create.
 - **Backup file:** **Export settings…** saves a `.notchsettings` file, and **Import settings…** brings it back, on this Mac or another.
 

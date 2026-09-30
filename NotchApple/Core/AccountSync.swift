@@ -2,16 +2,19 @@
 //  AccountSync.swift
 //  Notch apple
 //
-//  A Notch apple account: sign in with email and password or Google, and your
-//  notch setup is saved to your account (Firebase Auth + Cloud Firestore) and
-//  restored on any Mac you sign in on. It works alongside iCloud sync.
+//  A Notch apple account: sign in with Google (or Apple), and your notch setup
+//  and access code are saved to your account (Firebase Auth + Cloud Firestore)
+//  and restored on any Mac you sign in on. It works alongside iCloud sync.
 //
 //  Talks to Firebase's REST APIs directly instead of bundling the Firebase
 //  SDK: the app stays small, and there's no keychain-sharing entitlement to
 //  sign (which needs a paid developer account). The refresh token is kept in
 //  the app's private store (KeychainHelper), like the AI keys.
 //
-//  Firestore: users/{uid}/settings/notch = { data, updated, mac, version }.
+//  Firestore: users/{uid}/settings/notch = { data, updated, mac, version }
+//             users/{uid}/license/key    = { codeHash, mask, activated, mac }
+//  Only the SHA-256 hash of the access code is stored, never the code itself,
+//  and a restored hash only unlocks if it matches one of the real codes.
 //  Security rules only let a signed-in user read and write their own document.
 //
 //  What's synced is exactly what the backup file holds (see SettingsBackup):
@@ -70,33 +73,6 @@ final class AccountSync: NSObject, ObservableObject {
             MainActor.assumeIsolated { AccountSync.shared.uploadSoon() }
         }
         if isSignedIn { Task { await refreshCloudInfo() } }
-    }
-
-    // MARK: Email and password
-
-    func signIn(email: String, password: String, create: Bool) async {
-        guard let cfg = Config.load else { message = "Account sign-in isn't set up in this build."; return }
-        busy = true
-        defer { busy = false }
-        let endpoint = create ? "accounts:signUp" : "accounts:signInWithPassword"
-        do {
-            let r = try await Self.post("https://identitytoolkit.googleapis.com/v1/\(endpoint)?key=\(cfg.apiKey)",
-                                        json: ["email": email, "password": password, "returnSecureToken": true])
-            try await finishSignIn(r)
-        } catch {
-            message = Self.friendly(error)
-        }
-    }
-
-    func resetPassword(email: String) async {
-        guard let cfg = Config.load, !email.isEmpty else { message = "Type your email first."; return }
-        do {
-            _ = try await Self.post("https://identitytoolkit.googleapis.com/v1/accounts:sendOobCode?key=\(cfg.apiKey)",
-                                    json: ["requestType": "PASSWORD_RESET", "email": email])
-            message = "Password reset email sent to \(email)."
-        } catch {
-            message = Self.friendly(error)
-        }
     }
 
     // MARK: Google (OAuth with PKCE in the system browser sheet)
@@ -164,6 +140,7 @@ final class AccountSync: NSObject, ObservableObject {
         savedUID = id
         savedEmail = email ?? ""
         message = "Signed in as \(email ?? "your account")."
+        await syncLicense()
         // A saved setup in the account? Offer to restore it. Otherwise save this Mac's setup there.
         if let cloud = try? await download() {
             cloudCopy = cloud.date
@@ -292,6 +269,69 @@ final class AccountSync: NSObject, ObservableObject {
         }
     }
 
+    // MARK: Access code
+
+    private var licenseURL: URL? {
+        guard let cfg = Config.load, let uid else { return nil }
+        return URL(string: "https://firestore.googleapis.com/v1/projects/\(cfg.projectID)/databases/(default)/documents/users/\(uid)/license/key")
+    }
+
+    /// Saves this Mac's activation (hash + masked code) to the account.
+    func uploadLicense() async {
+        guard let url = licenseURL, let hash = AccessCodeManager.activeHash else { return }
+        do {
+            var req = URLRequest(url: url)
+            req.httpMethod = "PATCH"
+            req.setValue("Bearer \(try await token())", forHTTPHeaderField: "Authorization")
+            req.setValue("application/json", forHTTPHeaderField: "Content-Type")
+            req.httpBody = try JSONSerialization.data(withJSONObject: ["fields": [
+                "codeHash": ["stringValue": hash],
+                "mask": ["stringValue": AccessCodeManager.maskedActiveCode],
+                "activated": ["timestampValue": ISO8601DateFormatter().string(from: .now)],
+                "mac": ["stringValue": Host.current().localizedName ?? "Mac"],
+            ]])
+            let (data, response) = try await URLSession.shared.data(for: req)
+            try Self.check(data, response)
+        } catch {
+            message = "Couldn't save your access code to your account: \(Self.friendly(error))"
+        }
+    }
+
+    /// On sign-in: unlock this Mac from the account's saved code, or save this Mac's code to the account.
+    func syncLicense() async {
+        guard let url = licenseURL else { return }
+        if LicenseState.shared.isActivated { await uploadLicense(); return }
+        do {
+            var req = URLRequest(url: url)
+            req.setValue("Bearer \(try await token())", forHTTPHeaderField: "Authorization")
+            let (data, response) = try await URLSession.shared.data(for: req)
+            if (response as? HTTPURLResponse)?.statusCode == 404 { return }
+            try Self.check(data, response)
+            let fields = (try JSONSerialization.jsonObject(with: data) as? [String: Any])?["fields"] as? [String: Any]
+            guard let hash = (fields?["codeHash"] as? [String: Any])?["stringValue"] as? String else { return }
+            let mask = ((fields?["mask"] as? [String: Any])?["stringValue"] as? String) ?? "NOTCH-****-****"
+            if LicenseState.shared.activate(hash: hash, mask: mask) {
+                message = "Signed in, and Pro is unlocked from your account."
+            }
+        } catch {
+            message = "Signed in, but couldn't check your access code: \(Self.friendly(error))"
+        }
+    }
+
+    // MARK: Sign in with Apple
+
+    /// Sign in with Apple can only be offered by apps signed with a paid Apple Developer team
+    /// (it needs an App ID with the capability, a Services ID and a key registered in Firebase).
+    func signInWithApple() {
+        let alert = NSAlert()
+        alert.messageText = "Sign in with Apple is coming soon"
+        alert.informativeText = "Apple only allows Sign in with Apple in apps published through the Apple Developer Program. Until Notch apple is, please continue with Google. Your setup and access code sync the same way."
+        alert.addButton(withTitle: "Continue with Google")
+        alert.addButton(withTitle: "Cancel")
+        NSApp.activate(ignoringOtherApps: true)
+        if alert.runModal() == .alertFirstButtonReturn { signInWithGoogle() }
+    }
+
     func deleteCloudData() async {
         guard let url = documentURL else { return }
         do {
@@ -393,9 +433,6 @@ extension ISO8601DateFormatter {
 
 struct AccountSection: View {
     @StateObject private var account = AccountSync.shared
-    @State private var email = ""
-    @State private var password = ""
-    @State private var creating = false
     @State private var confirmDelete = false
 
     var body: some View {
@@ -419,37 +456,49 @@ struct AccountSection: View {
                         Button("Delete", role: .destructive) { Task { await account.deleteCloudData() } }
                     } message: { Text("Settings on this Mac stay as they are.") }
             } else {
-                Button { account.signInWithGoogle() } label: {
-                    Label("Continue with Google", systemImage: "globe").frame(maxWidth: .infinity)
-                }
-                .controlSize(.large)
-                TextField("Email", text: $email).textContentType(.username)
-                SecureField("Password", text: $password).textContentType(creating ? .newPassword : .password)
-                    .onSubmit(submit)
-                HStack {
-                    Button(creating ? "Create account" : "Sign in", action: submit)
-                        .keyboardShortcut(.defaultAction)
-                        .disabled(email.isEmpty || password.count < 6 || account.busy)
-                    Button(creating ? "I already have an account" : "Create an account") { creating.toggle() }
-                        .buttonStyle(.link)
-                    Spacer()
-                    if !creating { Button("Forgot password?") { Task { await account.resetPassword(email: email) } }.buttonStyle(.link) }
-                    if account.busy { ProgressView().controlSize(.small) }
-                }
+                SignInButtons()
             }
             if let m = account.message { Text(m).font(.callout).foregroundStyle(.secondary) }
         } header: {
             Text("Notch apple account")
         } footer: {
-            Text("Sign in on any Mac to get your notch set up the way you like it. Your setup is stored in your account (Google Firebase) and only you can read it. AI keys, your access code and Messenger identity are never uploaded.")
+            Text("Sign in on any Mac to get your notch set up the way you like it, with Pro unlocked. Your setup is stored in your account (Google Firebase) and only you can read it. Your access code is kept as a secure fingerprint, never the code itself; AI keys and your Messenger identity are never uploaded.")
         }
     }
 
-    private func submit() {
-        let e = email.trimmingCharacters(in: .whitespaces), p = password
-        Task {
-            await account.signIn(email: e, password: p, create: creating)
-            if account.isSignedIn { password = "" }
+
+}
+
+/// Continue with Google / Apple, styled like the providers' own buttons.
+struct SignInButtons: View {
+    @ObservedObject private var account = AccountSync.shared
+
+    var body: some View {
+        VStack(spacing: 8) {
+            Button { account.signInWithGoogle() } label: {
+                HStack(spacing: 8) {
+                    Text("G").font(.system(size: 15, weight: .bold, design: .rounded))
+                        .foregroundStyle(LinearGradient(colors: [.blue, .red, .yellow, .green], startPoint: .topLeading, endPoint: .bottomTrailing))
+                    Text("Continue with Google").font(.system(size: 13, weight: .semibold))
+                }
+                .frame(maxWidth: .infinity, minHeight: 30)
+                .foregroundStyle(.black)
+                .background(.white, in: RoundedRectangle(cornerRadius: 8))
+            }
+            .buttonStyle(.plain)
+            Button { account.signInWithApple() } label: {
+                HStack(spacing: 8) {
+                    Image(systemName: "apple.logo").font(.system(size: 14, weight: .semibold))
+                    Text("Continue with Apple").font(.system(size: 13, weight: .semibold))
+                }
+                .frame(maxWidth: .infinity, minHeight: 30)
+                .foregroundStyle(.white)
+                .background(.black, in: RoundedRectangle(cornerRadius: 8))
+                .overlay(RoundedRectangle(cornerRadius: 8).strokeBorder(.white.opacity(0.25)))
+            }
+            .buttonStyle(.plain)
+            if account.busy { ProgressView().controlSize(.small) }
         }
+        .padding(.vertical, 4)
     }
 }

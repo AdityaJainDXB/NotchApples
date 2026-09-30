@@ -199,6 +199,7 @@ private struct LicenseSettings: View {
             } footer: {
                 Text("An access code unlocks \(Module.proSummary). Everything else is free. Activation is saved on this Mac, works offline, and stays if you reinstall or update.")
             }
+            AccountSection()
             if !activated {
                 Section {
                     ActivationModalView(feature: nil, compact: true)

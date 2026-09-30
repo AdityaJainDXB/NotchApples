@@ -118,6 +118,17 @@ enum AccessCodeManager {
             && KeychainHelper.set("true", for: .activated)
     }
 
+    /// Activates from a saved code hash (restored from your Notch apple account). Only hashes of real codes work.
+    @discardableResult
+    static func activate(hash: String, mask: String) -> Bool {
+        guard validHashes.contains(hash) else { return false }
+        return KeychainHelper.set(hash, for: .activatedCodeHash)
+            && KeychainHelper.set(mask, for: .activatedCodeMask)
+            && KeychainHelper.set("true", for: .activated)
+    }
+
+    static var activeHash: String? { isAppActivated() ? KeychainHelper.get(.activatedCodeHash) : nil }
+
     /// Partly hidden code for Settings, e.g. NOTCH-89F1-****.
     static var maskedActiveCode: String { KeychainHelper.get(.activatedCodeMask) ?? "NOTCH-****-****" }
 
@@ -137,6 +148,15 @@ final class LicenseState: ObservableObject {
     /// Validates and saves a code. Returns true when it unlocked the gated features.
     func activate(with code: String) -> Bool {
         guard AccessCodeManager.activate(with: code) else { return false }
+        isActivated = true
+        // Signed in? Keep the activation in the account so other Macs unlock too.
+        Task { await AccountSync.shared.uploadLicense() }
+        return true
+    }
+
+    /// Unlocks from an activation saved in the user's account.
+    func activate(hash: String, mask: String) -> Bool {
+        guard AccessCodeManager.activate(hash: hash, mask: mask) else { return false }
         isActivated = true
         return true
     }
