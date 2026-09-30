@@ -145,7 +145,12 @@ final class NotchTriggerView: NSView {
         guard let activity else { return 0 }
         if activity.gauge != nil { return 122 }
         if activity.musicBars { return 40 }
-        return activity.dotOnly ? 20 : 58
+        if activity.dotOnly { return 20 }
+        // Wider ears for words ("Charging", "85% · 1h 20m to full"): both sides match, so the shape stays centred.
+        let font = NSFont.monospacedDigitSystemFont(ofSize: 12.5, weight: .semibold)
+        let right = activity.label.map { NSAttributedString(string: $0, attributes: [.font: font]).size().width } ?? 0
+        let left = activity.leftText.map { NSAttributedString(string: $0, attributes: [.font: NSFont.systemFont(ofSize: 12.5, weight: .semibold)]).size().width + 22 } ?? 0
+        return max(58, ceil(max(left, right) + 14))
     }
 
     private var targetEar: CGFloat { max(Self.earWidth(for: activity), isRecording ? 24 : 0) }
@@ -271,6 +276,11 @@ final class NotchTriggerView: NSView {
                         .withSymbolConfiguration(.init(pointSize: 13, weight: .semibold).applying(.init(paletteColors: [activity.tint]))) {
                     let size = img.size
                     img.draw(in: NSRect(x: leftEar.minX + 2, y: leftEar.midY - size.height / 2, width: size.width, height: size.height))
+                }
+                if let word = activity.leftText {
+                    let str = NSAttributedString(string: word, attributes: [.font: NSFont.systemFont(ofSize: 12.5, weight: .semibold),
+                                                                            .foregroundColor: activity.tint])
+                    str.draw(at: NSPoint(x: leftEar.minX + 22, y: leftEar.midY - str.size().height / 2))
                 }
                 if let label = activity.label {
                     let attrs: [NSAttributedString.Key: Any] = [

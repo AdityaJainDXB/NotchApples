@@ -28,6 +28,7 @@ struct LiveActivity: Equatable {
     var gauge: Double? = nil     // 0...1: draws a volume/brightness bar in the right ear (system HUD)
     var artwork: NSImage? = nil  // album cover in the left ear (music)
     var musicBars = false        // animated equaliser bars in the right ear (music)
+    var leftText: String? = nil  // a word after the icon in the left ear, e.g. "Charging"
 }
 
 @MainActor
@@ -135,17 +136,67 @@ final class LiveActivityCenter: ObservableObject {
         defer { lastPluggedIn = info.pluggedIn }
         checkLowBattery(info)
         guard let last = lastPluggedIn, last != info.pluggedIn, SettingsManager.shared.showChargingActivity else { return }
-        let symbol = info.pluggedIn ? "battery.100percent.bolt" : Self.batterySymbol(info.percent)
-        let tint: NSColor = info.pluggedIn ? .systemGreen : (info.percent <= 20 ? .systemRed : .white)
-        chargingFlash = LiveActivity(symbol: symbol, label: "\(info.percent)%", tint: tint)
-        recompute()
+        showChargingFlash(pluggedIn: info.pluggedIn)
+    }
+
+    /// "Charging" (or "On battery") beside the notch, with the level and, once macOS has worked it out,
+    /// the time until full. macOS needs a few seconds to estimate, so the label updates while it shows.
+    private func showChargingFlash(pluggedIn: Bool) {
         flashWork?.cancel()
+        chargeTicker?.invalidate()
+        let started = Date()
+        let update = { [weak self] in
+            guard let self, let info = Self.battery() else { return }
+            if pluggedIn {
+                let full = info.percent >= 100 || (!info.charging && info.percent >= 95)
+                var right = "\(info.percent)%"
+                if full { right = "Full" }
+                else if let m = Self.minutesToFull(), m > 0 { right += " · " + (m >= 60 ? "\(m / 60)h \(m % 60)m" : "\(m)m") + " to full" }
+                self.chargingFlash = LiveActivity(symbol: "battery.100percent.bolt", label: right, tint: .systemGreen,
+                                                  leftText: full ? "Charged" : (info.charging ? "Charging" : "Plugged in"))
+            } else {
+                var right = "\(info.percent)%"
+                if let m = Self.minutesLeft(), m > 0 { right += " · " + (m >= 60 ? "\(m / 60)h \(m % 60)m" : "\(m)m") + " left" }
+                self.chargingFlash = LiveActivity(symbol: Self.batterySymbol(info.percent), label: right,
+                                                  tint: info.percent <= 20 ? .systemRed : .white, leftText: "On battery")
+            }
+            self.recompute()
+        }
+        update()
+        // Re-check every second so the time appears as soon as macOS has an estimate.
+        let t = Timer(timeInterval: 1, repeats: true) { [weak self] timer in
+            MainActor.assumeIsolated {
+                update()
+                if Date.now.timeIntervalSince(started) > 7 { timer.invalidate(); self?.chargeTicker = nil }
+            }
+        }
+        RunLoop.main.add(t, forMode: .common)
+        chargeTicker = t
         let work = DispatchWorkItem { [weak self] in
+            self?.chargeTicker?.invalidate()
+            self?.chargeTicker = nil
             self?.chargingFlash = nil
             self?.recompute()
         }
         flashWork = work
-        DispatchQueue.main.asyncAfter(deadline: .now() + 4, execute: work)
+        DispatchQueue.main.asyncAfter(deadline: .now() + 7, execute: work)
+    }
+
+    private var chargeTicker: Timer?
+
+    /// macOS's estimate in minutes, or nil while it's still calculating.
+    static func minutesToFull() -> Int? { powerValue(kIOPSTimeToFullChargeKey) }
+    static func minutesLeft() -> Int? { powerValue(kIOPSTimeToEmptyKey) }
+
+    private static func powerValue(_ key: String) -> Int? {
+        guard let blob = IOPSCopyPowerSourcesInfo()?.takeRetainedValue(),
+              let list = IOPSCopyPowerSourcesList(blob)?.takeRetainedValue() as? [CFTypeRef] else { return nil }
+        for ps in list {
+            guard let d = IOPSGetPowerSourceDescription(blob, ps)?.takeUnretainedValue() as? [String: Any],
+                  (d[kIOPSTypeKey] as? String) == kIOPSInternalBatteryType, let v = d[key] as? Int, v > 0 else { continue }
+            return v
+        }
+        return nil
     }
 
     /// Warns once at 20% and again at 10% while on battery.
