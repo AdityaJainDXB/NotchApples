@@ -149,7 +149,7 @@ final class NotchTriggerView: NSView {
         // Wider ears for words ("Charging", "85% · 1h 20m to full"): both sides match, so the shape stays centred.
         let font = NSFont.monospacedDigitSystemFont(ofSize: 12.5, weight: .semibold)
         let right = activity.label.map { NSAttributedString(string: $0, attributes: [.font: font]).size().width } ?? 0
-        let left = activity.leftText.map { NSAttributedString(string: $0, attributes: [.font: NSFont.systemFont(ofSize: 12.5, weight: .semibold)]).size().width + 22 } ?? 0
+        let left = activity.leftText.map { NSAttributedString(string: $0, attributes: [.font: NSFont.systemFont(ofSize: 12.5, weight: .semibold)]).size().width + 30 } ?? 0
         return max(58, ceil(max(left, right) + 14))
     }
 
@@ -280,7 +280,7 @@ final class NotchTriggerView: NSView {
                 if let word = activity.leftText {
                     let str = NSAttributedString(string: word, attributes: [.font: NSFont.systemFont(ofSize: 12.5, weight: .semibold),
                                                                             .foregroundColor: activity.tint])
-                    str.draw(at: NSPoint(x: leftEar.minX + 22, y: leftEar.midY - str.size().height / 2))
+                    str.draw(at: NSPoint(x: leftEar.minX + 30, y: leftEar.midY - str.size().height / 2))
                 }
                 if let label = activity.label {
                     let attrs: [NSAttributedString.Key: Any] = [

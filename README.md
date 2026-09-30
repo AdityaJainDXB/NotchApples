@@ -35,6 +35,25 @@ brew install --cask notch-apple
 
 ## Screenshots
 
+### New in 1.14.1
+
+| | |
+| --- | --- |
+| ![Now Playing](docs/screenshots/nowplaying.png) | ![Music in the notch](docs/screenshots/island-music.png)<br>![Charging](docs/screenshots/island-charging.png) |
+| **Now Playing**: any app, album cover, progress and controls | **Beside the notch**: album cover with live bars; charging time |
+| ![Voice Notes](docs/screenshots/voice-notes.png) | ![Screen Time](docs/screenshots/screen-time.png) |
+| **Voice Notes** *(Pro)*: transcribed on your Mac, AI summary | **Screen Time** *(Pro)*: time per app, limits, Focus Blocker |
+| ![Quick Add](docs/screenshots/quick-add.png) | ![Timer](docs/screenshots/timer.png) |
+| **Quick Add** *(Pro)*: plain words into Calendar or Reminders | **Timer & stopwatch** |
+| ![Live](docs/screenshots/live.png) | ![Devices](docs/screenshots/devices.png) |
+| **Live**: scores and parcel/flight tracking | **Devices**: accessory battery, mic & camera |
+| ![Notifications](docs/screenshots/notifications.png) | ![Plugins](docs/screenshots/plugins.png) |
+| **Notifications**: reply to iMessages from the notch | **Plugins**: your own widgets from any script |
+| ![Snippets](docs/screenshots/snippets.png) | ![Notch Extras](docs/screenshots/settings-extras.png) |
+| **Snippets**: paste saved text anywhere | **Settings → Notch Extras** |
+
+All screenshots use sample data.
+
 All screenshots use sample data.
 
 | | |
