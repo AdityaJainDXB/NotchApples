@@ -18,7 +18,7 @@ import UniformTypeIdentifiers
 
 /// Panes in the Settings window. `selection` lets other code jump to a pane.
 enum SettingsTab: String, CaseIterable, Identifiable, Hashable {
-    case general, appearance, extras, browser, license, shortcuts, permissions, authentication, modules, windows, claude, aiHistory, messenger, clipboard, fileSearch, focus, audio, vpn, widget, updates, about
+    case general, appearance, extras, backup, browser, license, shortcuts, permissions, authentication, modules, windows, claude, aiHistory, messenger, clipboard, fileSearch, focus, audio, vpn, widget, updates, about
     static let selection = PassthroughSubject<SettingsTab, Never>()
 
     var id: String { rawValue }
@@ -29,6 +29,7 @@ enum SettingsTab: String, CaseIterable, Identifiable, Hashable {
         case .browser: "Browser"
         case .appearance: "Appearance"
         case .extras: "Notch Extras"
+        case .backup: "Backup & Sync"
         case .license: "License & Activation"
         case .shortcuts: "Shortcuts & Hotkeys"
         case .permissions: "Permissions"
@@ -55,6 +56,7 @@ enum SettingsTab: String, CaseIterable, Identifiable, Hashable {
         case .browser: "globe"
         case .appearance: "paintpalette.fill"
         case .extras: "sparkles.rectangle.stack.fill"
+        case .backup: "icloud.fill"
         case .license: "key.fill"
         case .shortcuts: "command"
         case .permissions: "hand.raised.fill"
@@ -82,6 +84,7 @@ enum SettingsTab: String, CaseIterable, Identifiable, Hashable {
         case .browser: .blue
         case .appearance: .pink
         case .extras: .orange
+        case .backup: .blue
         case .license: .green
         case .shortcuts: .mint
         case .permissions: .blue
@@ -138,6 +141,7 @@ struct SettingsView: View {
                 case .browser: BrowserSettings()
                 case .appearance: AppearanceSettings()
                 case .extras: ExtrasSettings()
+                case .backup: BackupSettings()
                 case .license: LicenseSettings()
                 case .shortcuts: ShortcutsSettings()
                 case .permissions: PermissionsView(showsWelcome: !UserDefaults.standard.bool(forKey: "onboarding.welcomeDismissed"))

@@ -214,6 +214,14 @@ If macOS stops Notch apple reading **Downloads**, **Documents** or **Desktop**, 
 
 Other things new in 1.12: **no more keychain password prompts.** Earlier versions saved API keys and face-unlock data in the login Keychain, and because the app is ad-hoc signed, macOS asked for your login password again after every update. They're now stored in a private file only your user account can read. After updating, paste your AI API keys again and set up face unlock again.
 
+## Backup and sync your setup
+
+**Settings → Backup & Sync** keeps your whole notch setup safe:
+- **Sync with your Apple ID:** turn on *Keep my notch setup in iCloud* and it's saved to iCloud Drive → Notch apple every time you change something. On a new Mac, install Notch apple, open this page and click **Restore from iCloud**. There's no separate account to create.
+- **Backup file:** **Export settings…** saves a `.notchsettings` file, and **Import settings…** brings it back, on this Mac or another.
+
+It covers your modules, tab order, theme, shortcuts, Notch Extras, snippets, launcher apps, cities and more. AI keys, your access code and your Messenger identity are never included.
+
 ## Plugins
 
 Put a script in `~/Library/Application Support/Notch apple/Plugins` (or click **Add example** in the Plugins tab), and its output shows as a card in the notch. Any language works: shell, Python, Ruby, anything with a `#!` line.

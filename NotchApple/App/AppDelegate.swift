@@ -49,6 +49,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         applyClipboardPreference()
         LiveActivityCenter.shared.start()
         FeatureHub.start()
+        SettingsBackup.shared.startSync()
         // Now Playing is free: it runs whether or not an access code is entered.
         NowPlayingMonitor.shared.start()
         notchController?.applyDisplayMode()

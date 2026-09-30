@@ -18,6 +18,7 @@
 		0BDD91775E21B5BEDDF33463 /* BackgroundMusic.pkg in Resources */ = {isa = PBXBuildFile; fileRef = 404B8C35377E3958184925BE /* BackgroundMusic.pkg */; };
 		1019743E3C501B599ECAE938 /* FeatureHub.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4DAB6955A36172C93698DDEC /* FeatureHub.swift */; };
 		10AA78BEAE2CFF124E2DDC9F /* SettingsWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC316BD63536E8BD6E9FCD54 /* SettingsWindowController.swift */; };
+		12C051F6E83B0077BEE52E57 /* SettingsBackup.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB841124163B085F8C4FDD78 /* SettingsBackup.swift */; };
 		14BB6F024439C7EDE0DCBD2C /* nowplaying.js in Resources */ = {isa = PBXBuildFile; fileRef = FC6F714640D09B5653DF1D9F /* nowplaying.js */; };
 		14DFFBAD9343EABD28237F7C /* OpenRouterFallback.swift in Sources */ = {isa = PBXBuildFile; fileRef = 66DBB35434CEBAA72E675AD4 /* OpenRouterFallback.swift */; };
 		177A1AEC9D972E4C15CC5804 /* AppIcon.icns in Resources */ = {isa = PBXBuildFile; fileRef = 295575A04EF33302E9D9A7FE /* AppIcon.icns */; };
@@ -213,6 +214,7 @@
 		ACD60817F03707C0A2A93064 /* NowPlayingMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NowPlayingMonitor.swift; sourceTree = "<group>"; };
 		B28853C8C1080D36D2737ECC /* ClipboardHistory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClipboardHistory.swift; sourceTree = "<group>"; };
 		B4E00A819D19DED9CA5D59F0 /* FileShelf.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileShelf.swift; sourceTree = "<group>"; };
+		BB841124163B085F8C4FDD78 /* SettingsBackup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsBackup.swift; sourceTree = "<group>"; };
 		BEF54A340D0BE4A8A19E3BCF /* TimerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimerView.swift; sourceTree = "<group>"; };
 		BF6EF909C581BCC04AAEF2AA /* AppActionsMenu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppActionsMenu.swift; sourceTree = "<group>"; };
 		BFED05958781963B1F7EB56D /* NotchStatsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotchStatsView.swift; sourceTree = "<group>"; };
@@ -393,6 +395,7 @@
 				F49D3A20C7CFE9C60DB8CBC3 /* LiveActivity.swift */,
 				E908464AA33EDC69CFBCDF86 /* LocationProvider.swift */,
 				E7EE75D24E20F68ED45BAC0A /* SandboxMigration.swift */,
+				BB841124163B085F8C4FDD78 /* SettingsBackup.swift */,
 				EA5B0C58A3CF928A968E10F8 /* SettingsManager.swift */,
 				419A5F6F30DFBF30351906D2 /* Theme.swift */,
 				91C60D5E0497858899252D40 /* UpdateChecker.swift */,
@@ -841,6 +844,7 @@
 				1CBAB31C782A4307CEAD9136 /* ScreenRecorder.swift in Sources */,
 				B04F3036E9BBE628D875CCA6 /* ScreenRecordingDetector.swift in Sources */,
 				D6AB6D3B477B7BBBEFB85708 /* ScreenTimeView.swift in Sources */,
+				12C051F6E83B0077BEE52E57 /* SettingsBackup.swift in Sources */,
 				7651FFF0A83FB22D9BD7AE4C /* SettingsManager.swift in Sources */,
 				B7AE66AF8CD816CBD2F23CB5 /* SettingsView.swift in Sources */,
 				10AA78BEAE2CFF124E2DDC9F /* SettingsWindowController.swift in Sources */,
