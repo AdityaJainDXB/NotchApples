@@ -3,7 +3,7 @@ import { el, load, save } from '../store.js';
 import { THEMES, applyTheme, currentThemeId } from '../themes.js';
 import { MODULES, isEnabled, setEnabled, invoke } from '../app.js';
 import { PROVIDERS, setKey } from './ai.js';
-import { isActivated, maskedCode, deactivate } from '../license.js';
+import { isActivated, maskedCode, deactivate, PRO_SUMMARY } from '../license.js';
 
 export function render(root) {
   const body = el('div', { class: 'col', style: 'overflow:auto;flex:1;min-height:0;padding-right:4px' });
@@ -105,8 +105,9 @@ function paneLicence() {
           on ? '✅ Licensed & Activated' : '⚠️ Not activated')),
       on ? el('div', { class: 'mono small dim' }, maskedCode()) : null,
       el('div', { class: 'small dim' },
-        'An access code unlocks AI, Messenger, Audio, Now Playing and VPN. Everything else is free. '
-        + 'The same codes work on the Mac version.')),
+        `An access code unlocks ${PRO_SUMMARY}. Everything else is free. `
+        + 'The same 50 codes work on the Mac app, which also unlocks Voice Notes, '
+        + 'Screen Time and Quick Add there.')),
     on ? el('button', { class: 'btn quiet', style: 'align-self:flex-start',
       onclick: () => { deactivate(); paneRefresh(); } }, 'Deactivate / Reset licence') : null);
 }

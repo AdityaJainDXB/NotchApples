@@ -80,7 +80,7 @@ export async function show(id) {
   currentCleanup = null;
   page.replaceChildren();
 
-  // Gated features show the access-code prompt instead of the module.
+  // Pro features show the access-code prompt instead of the module.
   if (GATED.has(id) && !isActivated()) {
     const mod = MODULES.find((m) => m.id === id);
     page.append(renderActivation(mod?.name ?? id, () => show(id)));

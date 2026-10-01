@@ -55,8 +55,14 @@ const VALID = new Set([
   'f9f5e70844c9eb34aa35830f02f94fad77b0f75b01a5e1be516cfd8f7d3d435a',
 ]);
 
-/// Features that need a code. Everything else is free.
-export const GATED = new Set(['ai', 'messenger', 'audio', 'nowplaying', 'vpn']);
+/// Features that need a code (Pro), matching Module.isGated in the macOS app.
+/// Of these, only AI exists on Windows so far; the rest are listed so the sets
+/// stay in step as more tabs arrive. Now Playing is free on both platforms.
+export const GATED = new Set(['ai', 'messenger', 'audio', 'vpn']);
+
+/// What a code unlocks, worded for Windows. The macOS app adds Voice Notes,
+/// Screen Time and Quick Add, which have no Windows equivalent yet.
+export const PRO_SUMMARY = 'AI (and Messenger, Audio and VPN as they arrive)';
 
 const KEY = 'license.activated';
 const MASK_KEY = 'license.codeMask';

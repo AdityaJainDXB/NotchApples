@@ -25,9 +25,11 @@ way the Mac version opens out of the notch.
 | 🗂 **Shelf** | Drop files to keep them handy |
 | ⚙️ **Settings** | All 14 colour themes, module switches, AI keys, licence, shortcuts |
 
-**Access codes carry over.** The same 50 codes unlock AI, Messenger, Audio,
-Now Playing and VPN on both Windows and macOS — the app ships only their SHA-256
-hashes, exactly like the Mac build.
+**Access codes carry over.** The same 50 codes work on Windows and macOS — the app
+ships only their SHA-256 hashes, exactly like the Mac build. On Windows a code
+unlocks the **AI** tab (Messenger, Audio and VPN are listed too, for when they
+arrive). The Mac app's code additionally unlocks Voice Notes, Screen Time and
+Quick Add, which have no Windows equivalent yet.
 
 ### Shortcuts
 

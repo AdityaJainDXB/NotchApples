@@ -1,6 +1,6 @@
 // The inline access-code prompt shown in place of a gated feature.
 import { el } from '../store.js';
-import { activate, format } from '../license.js';
+import { activate, format, PRO_SUMMARY } from '../license.js';
 
 export function renderActivation(featureName, onUnlocked) {
   const input = el('input', {
@@ -22,7 +22,7 @@ export function renderActivation(featureName, onUnlocked) {
       wrap.replaceChildren(el('div', { class: 'center' },
         el('div', { style: 'font-size:34px' }, '✅'),
         el('div', { style: 'font-size:17px;font-weight:700' }, 'Unlocked'),
-        el('div', { class: 'small dim' }, 'AI, Messenger, Audio, Now Playing and VPN are available.')));
+        el('div', { class: 'small dim' }, 'Pro is unlocked on this PC.')));
       setTimeout(onUnlocked, 900);
     } else {
       error.textContent = 'Invalid Access Code. Please try again.';
@@ -37,7 +37,8 @@ export function renderActivation(featureName, onUnlocked) {
     el('div', { style: 'font-size:34px' }, '🔑'),
     el('div', { style: 'font-size:17px;font-weight:700' }, `${featureName} needs an access code`),
     el('div', { class: 'small dim', style: 'max-width:420px' },
-      'Enter your 12-character access code to unlock AI, Messenger, Audio, Now Playing and VPN. Everything else is free.'),
+      `Enter your 12-character access code to unlock ${PRO_SUMMARY}. Everything else is free. `
+      + 'The same code works on the Mac app.'),
     input, error, button);
   setTimeout(() => input.focus(), 30);
   return wrap;
