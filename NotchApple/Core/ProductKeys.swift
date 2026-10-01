@@ -22,10 +22,8 @@ import IOKit
 
 enum ProductKeys {
     static let wallet = "ltc1qymlmvkdmvpk5f90esthzgwaw6w0tuzq6tdr6kf"
-    /// Lowest accepted payment in US dollars (the site asks for $1; this allows for price moves).
-    static let minimumUSD = 0.7
-    /// Used if the price can't be fetched: 0.005 LTC.
-    static let fallbackMinimumLitoshi: Int64 = 500_000
+    /// Lowest payment the app accepts: 0.005 LTC (well under $1, to allow for price swings).
+    static let minimumLitoshi: Int64 = 500_000
 
     /// SHA-256 of "PROMO" + the 12 code characters.
     static let promoHashes: Set<String> = [
@@ -153,18 +151,9 @@ enum ProductKeys {
               let outs = tx["vout"] as? [[String: Any]] else { return false }
         let paid = outs.filter { $0["scriptpubkey_address"] as? String == wallet }
             .reduce(Int64(0)) { $0 + (($1["value"] as? NSNumber)?.int64Value ?? 0) }
-        guard paid > 0 else { return false }
-        if let price = await ltcPriceUSD() {
-            return Double(paid) / 1e8 * price >= minimumUSD
-        }
-        return paid >= fallbackMinimumLitoshi
-    }
-
-    private static func ltcPriceUSD() async -> Double? {
-        guard let url = URL(string: "https://api.coingecko.com/api/v3/simple/price?ids=litecoin&vs_currencies=usd"),
-              let (data, _) = try? await fetch(url),
-              let json = try? JSONSerialization.jsonObject(with: data) as? [String: [String: Double]] else { return nil }
-        return json["litecoin"]?["usd"]
+        // The website already checked the dollar value when it made the key. Here only a fixed LTC
+        // floor is used, so a genuine key still works months later even if the price of LTC has fallen.
+        return paid >= minimumLitoshi
     }
 
     // MARK: Firestore (public REST, no sign-in needed)
