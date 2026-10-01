@@ -88,23 +88,34 @@ enum AccessCodeManager {
         return validHashes.contains(hash(of: clean))
     }
 
-    /// Formats what the user has typed as NOTCH-XXXX-XXXX while they type.
+    /// Formats what the user has typed as NOTCH-XXXX-XXXX(-XXXX) while they type.
     /// The NOTCH prefix is added for them, so typing just the last 8 characters works too.
     static func format(_ input: String) -> String {
         var s = sanitize(input)
         if !"NOTCH".hasPrefix(s) && !s.hasPrefix("NOTCH") { s = "NOTCH" + s }
-        s = String(s.prefix(13))
+        s = String(s.prefix(17))
         guard s.count > 5 else { return s }
-        let body = s.dropFirst(5)
-        let first = body.prefix(4), second = body.dropFirst(4)
-        return "NOTCH-" + first + (second.isEmpty ? "" : "-" + second)
+        var groups: [Substring] = []
+        var body = s.dropFirst(5)
+        while !body.isEmpty { groups.append(body.prefix(4)); body = body.dropFirst(4) }
+        return "NOTCH-" + groups.joined(separator: "-")
     }
 
     // MARK: Activation state
 
     static func isAppActivated() -> Bool {
         KeychainHelper.get(.activated) == "true"
-            && KeychainHelper.get(.activatedCodeHash).map { validHashes.contains($0) } == true
+            && KeychainHelper.get(.activatedCodeHash).map { validHashes.contains($0) || $0 == KeychainHelper.get(.productKeyHash) } == true
+    }
+
+    /// Saves the activation for a product key that ProductKeys has checked and redeemed online.
+    @discardableResult
+    static func activate(productKeyHash hash: String, sanitized: String) -> Bool {
+        let body = sanitized.dropFirst(5)
+        return KeychainHelper.set(hash, for: .productKeyHash)
+            && KeychainHelper.set(hash, for: .activatedCodeHash)
+            && KeychainHelper.set("NOTCH-\(body.prefix(4))-****-****", for: .activatedCodeMask)
+            && KeychainHelper.set("true", for: .activated)
     }
 
     /// Saves the activation for a code that already passed `validateCode`.
@@ -121,7 +132,7 @@ enum AccessCodeManager {
     /// Activates from a saved code hash (restored from your Notch apple account). Only hashes of real codes work.
     @discardableResult
     static func activate(hash: String, mask: String) -> Bool {
-        guard validHashes.contains(hash) else { return false }
+        guard validHashes.contains(hash) || hash == KeychainHelper.get(.productKeyHash) else { return false }
         return KeychainHelper.set(hash, for: .activatedCodeHash)
             && KeychainHelper.set(mask, for: .activatedCodeMask)
             && KeychainHelper.set("true", for: .activated)
@@ -136,6 +147,7 @@ enum AccessCodeManager {
         KeychainHelper.delete(.activated)
         KeychainHelper.delete(.activatedCodeHash)
         KeychainHelper.delete(.activatedCodeMask)
+        KeychainHelper.delete(.productKeyHash)
     }
 }
 
@@ -155,10 +167,23 @@ final class LicenseState: ObservableObject {
     }
 
     /// Unlocks from an activation saved in the user's account.
-    func activate(hash: String, mask: String) -> Bool {
+    func activate(hash: String, mask: String) async -> Bool {
+        if AccessCodeManager.activate(hash: hash, mask: mask) { isActivated = true; return true }
+        // A product key from the website: check online that it's genuine and redeemed.
+        guard await ProductKeys.verifyRedeemed(hash: hash) else { return false }
+        _ = KeychainHelper.set(hash, for: .productKeyHash)
         guard AccessCodeManager.activate(hash: hash, mask: mask) else { return false }
         isActivated = true
         return true
+    }
+
+    /// Checks a website product key online, redeems it for this Mac and unlocks Pro.
+    func activate(productKey code: String) async throws {
+        let clean = AccessCodeManager.sanitize(code)
+        let hash = try await ProductKeys.redeem(clean)
+        guard AccessCodeManager.activate(productKeyHash: hash, sanitized: clean) else { throw ProductKeys.KeyError.invalid }
+        isActivated = true
+        Task { await AccountSync.shared.uploadLicense() }
     }
 
     func deactivate() {

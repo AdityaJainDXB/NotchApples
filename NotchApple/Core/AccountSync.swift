@@ -310,7 +310,7 @@ final class AccountSync: NSObject, ObservableObject {
             let fields = (try JSONSerialization.jsonObject(with: data) as? [String: Any])?["fields"] as? [String: Any]
             guard let hash = (fields?["codeHash"] as? [String: Any])?["stringValue"] as? String else { return }
             let mask = ((fields?["mask"] as? [String: Any])?["stringValue"] as? String) ?? "NOTCH-****-****"
-            if LicenseState.shared.activate(hash: hash, mask: mask) {
+            if await LicenseState.shared.activate(hash: hash, mask: mask) {
                 message = "Signed in, and Pro is unlocked from your account."
             }
         } catch {

@@ -30,9 +30,11 @@ struct ActivationModalView: View {
     @State private var failures: CGFloat = 0
     @State private var showError = false
     @State private var succeeded = false
+    @State private var checking = false
+    @State private var errorText = "Invalid Access Code. Please try again."
     @FocusState private var focused: Bool
 
-    private var complete: Bool { AccessCodeManager.sanitize(code).count == 13 }
+    private var complete: Bool { [13, 17].contains(AccessCodeManager.sanitize(code).count) && !checking }
 
     var body: some View {
         HStack(spacing: compact ? 14 : 22) {
@@ -50,14 +52,14 @@ struct ActivationModalView: View {
                     Text(succeeded ? "Unlocked" : (feature.map { "\($0) needs an access code" } ?? "Enter your access code"))
                         .font(.system(size: compact ? 15 : 18, weight: .bold)).foregroundStyle(.white)
                     Text(succeeded ? "\(Module.proSummary) are all unlocked."
-                                   : "Please enter your 12-character access code to unlock \(Module.proSummary).")
+                                   : "Enter your access code or product key to unlock \(Module.proSummary).")
                         .font(.system(size: 12)).foregroundStyle(Theme.textSecondary)
                         .fixedSize(horizontal: false, vertical: true)
                 }
 
                 if !succeeded {
                     HStack(spacing: 8) {
-                        TextField("NOTCH-XXXX-XXXX", text: $code)
+                        TextField("NOTCH-XXXX-XXXX-XXXX", text: $code)
                             .textFieldStyle(.plain)
                             .font(.system(size: 16, weight: .semibold, design: .monospaced))
                             .foregroundStyle(.white)
@@ -76,13 +78,19 @@ struct ActivationModalView: View {
                             }
                             .onSubmit(unlock)
                             .accessibilityLabel("Access code")
-                        Button("Unlock", action: unlock)
+                        Button(checking ? "Checking…" : "Unlock", action: unlock)
                             .buttonStyle(PurpleButtonStyle())
                             .disabled(!complete)
                     }
-                    Text("Invalid Access Code. Please try again.")
+                    Text(errorText)
                         .font(.system(size: 12, weight: .medium)).foregroundStyle(Color(red: 1, green: 0.45, blue: 0.5))
+                        .fixedSize(horizontal: false, vertical: true)
                         .opacity(showError ? 1 : 0)
+                    if !showError {
+                        Link("No code? Get a product key for $1 in Litecoin, or with a promo code →",
+                             destination: URL(string: "https://virajsinghchadha.github.io/notchapples-site/pro.html")!)
+                            .font(.system(size: 11)).foregroundStyle(Theme.accent)
+                    }
                 }
             }
             .frame(maxWidth: 420, alignment: .leading)
@@ -95,12 +103,28 @@ struct ActivationModalView: View {
     }
 
     private func unlock() {
-        guard !succeeded else { return }
-        if license.activate(with: code) {
+        guard !succeeded, !checking else { return }
+        if ProductKeys.isProductKey(AccessCodeManager.sanitize(code)) {
+            checking = true
+            Task {
+                do {
+                    try await license.activate(productKey: code)
+                    withAnimation(Theme.spring) { succeeded = true }
+                } catch {
+                    fail(error.localizedDescription)
+                }
+                checking = false
+            }
+        } else if license.activate(with: code) {
             withAnimation(Theme.spring) { succeeded = true }
         } else {
-            withAnimation(.linear(duration: 0.45)) { failures += 1 }
-            withAnimation(.easeIn(duration: 0.15)) { showError = true }
+            fail("Invalid Access Code. Please try again.")
         }
+    }
+
+    private func fail(_ text: String) {
+        errorText = text
+        withAnimation(.linear(duration: 0.45)) { failures += 1 }
+        withAnimation(.easeIn(duration: 0.15)) { showError = true }
     }
 }

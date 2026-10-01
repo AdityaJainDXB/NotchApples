@@ -28,6 +28,7 @@ enum KeychainHelper {
         case activatedCodeHash = "license.codeHash"
         case activatedCodeMask = "license.codeMask"
         case accountRefreshToken = "account.refreshToken"
+        case productKeyHash = "license.productKeyHash"
     }
 
     private static let lock = NSLock()
