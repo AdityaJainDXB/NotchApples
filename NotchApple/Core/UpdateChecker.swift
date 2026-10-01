@@ -97,25 +97,50 @@ final class UpdateChecker: ObservableObject {
         }
     }
 
+    /// The newest release that ships a Mac DMG.
+    ///
+    /// Deliberately not `/releases/latest`: that returns whatever was published
+    /// most recently, which may be a release for another platform (the Windows
+    /// build is tagged `win-v…` and carries only .exe/.msi). Scanning the list
+    /// and keeping only releases with a .dmg means other platforms can never
+    /// stop the Mac app from updating.
     private static func fetchLatest() async throws -> Release {
-        var request = URLRequest(url: URL(string: "https://api.github.com/repos/\(repo)/releases/latest")!)
+        var request = URLRequest(url: URL(string: "https://api.github.com/repos/\(repo)/releases?per_page=20")!)
         request.setValue("application/vnd.github+json", forHTTPHeaderField: "Accept")
         request.setValue("NotchApple", forHTTPHeaderField: "User-Agent")
         request.timeoutInterval = 20
         let (data, response) = try await URLSession.shared.data(for: request)
         guard (response as? HTTPURLResponse)?.statusCode == 200,
-              let json = try JSONSerialization.jsonObject(with: data) as? [String: Any],
+              let list = try JSONSerialization.jsonObject(with: data) as? [[String: Any]]
+        else { throw UpdateError.message("Couldn't reach GitHub to check for updates.") }
+
+        let releases = list.compactMap(parse).sorted { isNewer($0.version, than: $1.version) }
+        guard let newest = releases.first else {
+            throw UpdateError.message("No Mac release with a download was found on GitHub.")
+        }
+        return newest
+    }
+
+    /// One release from the GitHub API, or nil when it isn't a Mac release we can install.
+    private static func parse(_ json: [String: Any]) -> Release? {
+        guard json["draft"] as? Bool != true,
               let tag = json["tag_name"] as? String,
               let page = (json["html_url"] as? String).flatMap(URL.init(string:)),
               let assets = json["assets"] as? [[String: Any]],
               let dmg = assets.first(where: { ($0["name"] as? String)?.hasSuffix(".dmg") == true }),
               let dmgURL = (dmg["browser_download_url"] as? String).flatMap(URL.init(string:)),
-              dmgURL.host == "github.com"
-        else { throw UpdateError.message("Couldn't read the latest release from GitHub.") }
-        let version = tag.hasPrefix("v") ? String(tag.dropFirst()) : tag
+              dmgURL.host == "github.com",
+              let version = versionNumber(from: tag)
+        else { return nil }
         let published = (json["published_at"] as? String).flatMap { ISO8601DateFormatter().date(from: $0) }
         return Release(version: version, title: json["name"] as? String ?? "Notch apple \(version)",
                        notes: json["body"] as? String ?? "", published: published, dmgURL: dmgURL, pageURL: page)
+    }
+
+    /// The dotted number inside a tag: "v1.14.3" and "1.14.3" both give "1.14.3".
+    static func versionNumber(from tag: String) -> String? {
+        guard let range = tag.range(of: "[0-9]+(\\.[0-9]+)*", options: .regularExpression) else { return nil }
+        return String(tag[range])
     }
 
     /// Compares dotted versions numerically ("1.10.0" > "1.9.2").
@@ -199,11 +224,20 @@ final class UpdateChecker: ObservableObject {
             throw UpdateError.message("The downloaded app isn't the expected Notch apple \(expectedVersion).")
         }
         let staged = fm.temporaryDirectory.appendingPathComponent("NotchApple-staged-\(UUID().uuidString).app")
-        try await run("/usr/bin/ditto", [newApp.path, staged.path])
-        // Finder metadata from the disk image isn't part of the app; drop it,
-        // then make sure the code signature is intact (not tampered with in transit).
-        try await run("/usr/bin/xattr", ["-cr", staged.path])
-        try await run("/usr/bin/codesign", ["--verify", "--deep", "--strict", staged.path])
+        // --norsrc --noextattr: a plain copy off the disk image carries Finder
+        // information that makes the signature check reject the app even though
+        // the signature is perfectly good.
+        try await run("/usr/bin/ditto", ["--norsrc", "--noextattr", newApp.path, staged.path])
+        _ = try? await run("/usr/bin/xattr", ["-cr", staged.path])   // best effort: macOS re-adds some itself
+
+        // Check the signature is intact (not tampered with in transit) and that this
+        // really is Notch apple. `--deep` is not used: Apple deprecated it for
+        // verification and it trips over attributes macOS adds on its own.
+        try await run("/usr/bin/codesign", ["--verify", staged.path])
+        let requirement = try await run("/usr/bin/codesign", ["-d", "-r-", staged.path])
+        guard let id = Bundle.main.bundleIdentifier, requirement.contains("identifier \"\(id)\"") else {
+            throw UpdateError.message("The downloaded app isn't signed as Notch apple.")
+        }
 
         let target = Bundle.main.bundleURL
         guard fm.isWritableFile(atPath: target.deletingLastPathComponent().path) else {
@@ -223,22 +257,58 @@ final class UpdateChecker: ObservableObject {
         NSApp.terminate(nil)
     }
 
-    @discardableResult
-    private static func run(_ tool: String, _ args: [String]) async throws -> String {
-        try await withCheckedThrowingContinuation { cont in
-            let p = Process()
-            p.executableURL = URL(fileURLWithPath: tool)
-            p.arguments = args
-            let pipe = Pipe()
-            p.standardOutput = pipe
-            p.standardError = pipe
-            p.terminationHandler = { proc in
-                let out = String(data: pipe.fileHandleForReading.readDataToEndOfFile(), encoding: .utf8) ?? ""
-                if proc.terminationStatus == 0 { cont.resume(returning: out) }
-                else { cont.resume(throwing: UpdateError.message("\((tool as NSString).lastPathComponent) failed: \(out.trimmingCharacters(in: .whitespacesAndNewlines))")) }
-            }
-            do { try p.run() } catch { cont.resume(throwing: error) }
+    /// Collects a tool's output from a background thread.
+    private final class Output: @unchecked Sendable {
+        private let lock = NSLock()
+        private var data = Data()
+        func append(_ chunk: Data) { lock.lock(); data.append(chunk); lock.unlock() }
+        var text: String {
+            lock.lock(); defer { lock.unlock() }
+            return String(data: data, encoding: .utf8) ?? ""
         }
+    }
+
+    @discardableResult
+    private static func run(_ tool: String, _ args: [String], timeout: TimeInterval = 300) async throws -> String {
+        let process = Process()
+        process.executableURL = URL(fileURLWithPath: tool)
+        process.arguments = args
+        process.standardInput = FileHandle.nullDevice   // never block waiting to be typed at
+        let pipe = Pipe()
+        process.standardOutput = pipe
+        process.standardError = pipe
+
+        // Read the pipe while the tool runs. Reading only once it has exited
+        // deadlocks the moment a tool writes more than the pipe buffer holds —
+        // it blocks on write, so it never exits, so we wait for ever.
+        let output = Output()
+        pipe.fileHandleForReading.readabilityHandler = { handle in
+            let chunk = handle.availableData
+            if chunk.isEmpty { handle.readabilityHandler = nil } else { output.append(chunk) }
+        }
+
+        // A tool that somehow never finishes must not leave the update stuck.
+        let watchdog = Task {
+            try? await Task.sleep(for: .seconds(timeout))
+            if process.isRunning { process.terminate() }
+        }
+        defer { watchdog.cancel() }
+
+        let status: Int32 = try await withCheckedThrowingContinuation { cont in
+            process.terminationHandler = { proc in
+                pipe.fileHandleForReading.readabilityHandler = nil
+                cont.resume(returning: proc.terminationStatus)
+            }
+            do { try process.run() } catch { cont.resume(throwing: error) }
+        }
+
+        let text = output.text
+        guard status == 0 else {
+            let detail = text.trimmingCharacters(in: .whitespacesAndNewlines)
+            throw UpdateError.message("\((tool as NSString).lastPathComponent) failed: "
+                + (detail.isEmpty ? "exit code \(status)" : detail))
+        }
+        return text
     }
 
     enum UpdateError: LocalizedError {
@@ -281,11 +351,21 @@ struct UpdatesSettings: View {
                         }
                     }
                     progressRow
+                    // Shown right here, beside the button: at the foot of the window
+                    // it is easy to miss and the update looks like it did nothing.
+                    if case .failed(let message) = updater.phase {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Label(message, systemImage: "exclamationmark.triangle.fill")
+                                .foregroundStyle(.orange).font(.callout)
+                            Text("You can try again, or download it yourself from the release page.")
+                                .font(.caption).foregroundStyle(.secondary)
+                        }
+                    }
                     HStack {
                         Link("Release notes on GitHub", destination: release.pageURL).font(.callout)
                         Spacer()
                         Button("Not now") { updater.skip() }.disabled(isBusy)
-                        Button("Update") { updater.install() }
+                        Button(isFailed ? "Try again" : "Update") { updater.install() }
                             .buttonStyle(.borderedProminent)
                             .disabled(isBusy)
                     }
@@ -307,7 +387,8 @@ struct UpdatesSettings: View {
                 Section { Label("You're up to date.", systemImage: "checkmark.circle.fill").foregroundStyle(.green) }
             }
 
-            if case .failed(let message) = updater.phase {
+            // Only when there is no update section to show it beside.
+            if case .failed(let message) = updater.phase, updater.pendingUpdate == nil {
                 Section { Label(message, systemImage: "exclamationmark.triangle.fill").foregroundStyle(.orange) }
             }
         }
@@ -324,6 +405,11 @@ struct UpdatesSettings: View {
         }.joined(separator: "\n")
     }
 
+    private var isFailed: Bool {
+        if case .failed = updater.phase { return true }
+        return false
+    }
+
     private var isBusy: Bool {
         switch updater.phase {
         case .downloading, .installing: true
@@ -334,7 +420,7 @@ struct UpdatesSettings: View {
     @ViewBuilder private var progressRow: some View {
         switch updater.phase {
         case .downloading(let value): ProgressView("Downloading…", value: value)
-        case .installing: ProgressView("Installing… Notch apple will reopen by itself.").progressViewStyle(.linear)
+        case .installing: ProgressView("Installing… Notch apple will quit and reopen by itself.").progressViewStyle(.linear)
         default: EmptyView()
         }
     }
