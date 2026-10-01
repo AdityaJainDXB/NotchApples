@@ -35,6 +35,11 @@ brew install --cask notch-apple
 
 ## Screenshots
 
+### New in 1.14.2
+
+- **Get Pro on the website**: a product key for $1 in Litecoin (or $2 to cover fees and support a high school developer), or free with a promo code. Keys are made instantly, work once, on one Mac. [Get Pro →](https://virajsinghchadha.github.io/notchapples-site/pro.html)
+- Product keys (NOTCH-XXXX-XXXX-XXXX) are checked online and re-verified against the blockchain; older access codes keep working.
+
 ### New in 1.14.1
 
 | | |
