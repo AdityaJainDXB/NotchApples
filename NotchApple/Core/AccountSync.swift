@@ -300,7 +300,7 @@ final class AccountSync: NSObject, ObservableObject {
     /// On sign-in: unlock this Mac from the account's saved code, or save this Mac's code to the account.
     func syncLicense() async {
         guard let url = licenseURL else { return }
-        if LicenseState.shared.isActivated { await uploadLicense(); return }
+        if LicenseState.shared.isOwned { await uploadLicense(); return }
         do {
             var req = URLRequest(url: url)
             req.setValue("Bearer \(try await token())", forHTTPHeaderField: "Authorization")

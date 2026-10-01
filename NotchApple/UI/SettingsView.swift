@@ -182,22 +182,29 @@ struct SettingsView: View {
 private struct LicenseSettings: View {
     @StateObject private var license = LicenseState.shared
     @State private var confirmReset = false
-    private var activated: Bool { license.isActivated }
+    private var activated: Bool { license.isOwned }
 
     var body: some View {
         Form {
             Section {
                 LabeledContent("Status") {
-                    Label(activated ? "Licensed & Activated" : "Not activated",
-                          systemImage: activated ? "checkmark.seal.fill" : "xmark.seal.fill")
-                        .foregroundStyle(activated ? .green : .orange)
+                    if activated {
+                        Label("Licensed & Activated", systemImage: "checkmark.seal.fill").foregroundStyle(.green)
+                    } else if license.isTrial {
+                        Label("Free Pro trial · \(ProTrial.daysLeft) day\(ProTrial.daysLeft == 1 ? "" : "s") left", systemImage: "gift.fill")
+                            .foregroundStyle(.purple)
+                    } else {
+                        Label("Not activated", systemImage: "xmark.seal.fill").foregroundStyle(.orange)
+                    }
                 }
                 if activated {
                     LabeledContent("Access code", value: AccessCodeManager.maskedActiveCode)
                         .monospaced()
                 }
             } footer: {
-                Text("An access code unlocks \(Module.proSummary). Everything else is free. Activation is saved on this Mac, works offline, and stays if you reinstall or update.")
+                Text(license.isTrial
+                     ? "You can use \(Module.proSummary) free until \(ProTrial.ends.formatted(date: .abbreviated, time: .omitted)). Everything else is always free. To keep Pro after that, get a key for $1 or use a promo code."
+                     : "A product key or access code unlocks \(Module.proSummary). Everything else is free. Activation is saved on this Mac and stays if you reinstall or update.")
             }
             AccountSection()
             if !activated {

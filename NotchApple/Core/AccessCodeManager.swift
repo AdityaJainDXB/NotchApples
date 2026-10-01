@@ -151,16 +151,56 @@ enum AccessCodeManager {
     }
 }
 
+// MARK: Free trial
+
+/// Everyone gets every Pro feature free for 7 days from the first launch of 1.14.2 or later.
+/// The start date lives in the private store, so reinstalling doesn't restart it.
+enum ProTrial {
+    static let length: TimeInterval = 7 * 24 * 3600
+
+    static var start: Date {
+        if let s = KeychainHelper.get(.trialStart), let t = TimeInterval(s) { return Date(timeIntervalSince1970: t) }
+        let now = Date()
+        KeychainHelper.set(String(now.timeIntervalSince1970), for: .trialStart)
+        return now
+    }
+
+    static var ends: Date { start.addingTimeInterval(length) }
+    static var isActive: Bool { Date() < ends }
+    /// Whole days left, rounded up (7 on day one, 1 on the last day).
+    static var daysLeft: Int { max(0, Int(ceil(ends.timeIntervalSinceNow / 86_400))) }
+}
+
 /// Observable activation state, so gated screens unlock the moment a code is accepted.
 @MainActor
 final class LicenseState: ObservableObject {
     static let shared = LicenseState()
-    @Published private(set) var isActivated = AccessCodeManager.isAppActivated()
+    /// Bought or entered a key/code.
+    @Published private(set) var isOwned = AccessCodeManager.isAppActivated()
+    /// Pro is usable right now: owned, or still in the free trial.
+    @Published private(set) var isActivated = AccessCodeManager.isAppActivated() || ProTrial.isActive
+    var isTrial: Bool { !isOwned && isActivated }
+    private var trialTimer: Timer?
+
+    private init() {
+        guard isTrial else { return }
+        // Lock Pro again the moment the trial ends, even if the app stays open.
+        let t = Timer(fire: ProTrial.ends.addingTimeInterval(1), interval: 0, repeats: false) { _ in
+            MainActor.assumeIsolated { LicenseState.shared.refresh() }
+        }
+        RunLoop.main.add(t, forMode: .common)
+        trialTimer = t
+    }
+
+    private func refresh() {
+        isOwned = AccessCodeManager.isAppActivated()
+        isActivated = isOwned || ProTrial.isActive
+    }
 
     /// Validates and saves a code. Returns true when it unlocked the gated features.
     func activate(with code: String) -> Bool {
         guard AccessCodeManager.activate(with: code) else { return false }
-        isActivated = true
+        refresh()
         // Signed in? Keep the activation in the account so other Macs unlock too.
         Task { await AccountSync.shared.uploadLicense() }
         return true
@@ -168,12 +208,12 @@ final class LicenseState: ObservableObject {
 
     /// Unlocks from an activation saved in the user's account.
     func activate(hash: String, mask: String) async -> Bool {
-        if AccessCodeManager.activate(hash: hash, mask: mask) { isActivated = true; return true }
+        if AccessCodeManager.activate(hash: hash, mask: mask) { refresh(); return true }
         // A product key from the website: check online that it's genuine and redeemed.
         guard await ProductKeys.verifyRedeemed(hash: hash) else { return false }
         _ = KeychainHelper.set(hash, for: .productKeyHash)
         guard AccessCodeManager.activate(hash: hash, mask: mask) else { return false }
-        isActivated = true
+        refresh()
         return true
     }
 
@@ -182,13 +222,13 @@ final class LicenseState: ObservableObject {
         let clean = AccessCodeManager.sanitize(code)
         let hash = try await ProductKeys.redeem(clean)
         guard AccessCodeManager.activate(productKeyHash: hash, sanitized: clean) else { throw ProductKeys.KeyError.invalid }
-        isActivated = true
+        refresh()
         Task { await AccountSync.shared.uploadLicense() }
     }
 
     func deactivate() {
         AccessCodeManager.deactivate()
-        isActivated = false
+        refresh()
     }
 }
 
