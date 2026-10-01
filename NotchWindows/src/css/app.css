@@ -1,0 +1,108 @@
+/* Notch apple for Windows — the floating panel, tab bar and shared controls.
+   Windows PCs have no camera notch, so the collapsed state is a slim pill
+   pinned to the top centre of the screen; it expands downward like the Mac notch. */
+
+:root {
+  --bg: #0d0519; --bg-end: #38176b; --surface: rgba(255,255,255,.07);
+  --accent: #9e6bff; --accent-bright: #c79eff; --text: #fff;
+  --text-dim: rgba(255,255,255,.74); --border: rgba(255,255,255,.10);
+  --glow: rgba(158,107,255,.35);
+  --radius: 14px;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  height: 100%; background: transparent; overflow: hidden;
+  font: 13px/1.45 "Segoe UI Variable", "Segoe UI", -apple-system, system-ui, sans-serif;
+  color: var(--text); -webkit-font-smoothing: antialiased;
+  user-select: none; cursor: default;
+}
+
+#shell {
+  height: 100%; display: flex; flex-direction: column;
+  background: linear-gradient(160deg, var(--bg) 0%, var(--bg) 45%, var(--bg-end) 100%);
+  border: 1px solid var(--border); border-top: none;
+  border-radius: 0 0 26px 26px;
+  box-shadow: 0 18px 50px rgba(0,0,0,.55), 0 0 40px -12px var(--glow);
+  overflow: hidden;
+}
+body.collapsed #shell { border-radius: 0 0 12px 12px; background: #000; border-color: transparent; box-shadow: none; }
+
+/* ---- collapsed pill ---- */
+#collapsed { height: 100%; display: none; align-items: center; justify-content: space-between; padding: 0 14px; }
+body.collapsed #collapsed { display: flex; }
+body.collapsed #expanded { display: none; }
+#collapsed .ear { display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: var(--accent-bright); }
+#collapsed .hint { font-size: 11px; color: rgba(255,255,255,.35); letter-spacing: .3px; }
+#rec-dot { width: 8px; height: 8px; border-radius: 50%; background: #ff9f0a; display: none;
+           box-shadow: 0 0 8px #ff9f0a; animation: pulse 1.6s ease-in-out infinite; }
+@keyframes pulse { 0%,100% { opacity: .45 } 50% { opacity: 1 } }
+
+/* ---- expanded ---- */
+#expanded { flex: 1; display: flex; flex-direction: column; min-height: 0; padding: 10px 16px 16px; }
+
+#tabbar { display: flex; align-items: center; gap: 2px; padding-bottom: 8px; overflow-x: auto; scrollbar-width: none; }
+#tabbar::-webkit-scrollbar { display: none; }
+.tab { display: flex; align-items: center; gap: 6px; padding: 6px 11px; border-radius: 999px;
+       background: transparent; border: none; color: var(--text-dim); font: inherit; font-weight: 600;
+       font-size: 12px; white-space: nowrap; cursor: pointer; transition: background .13s, color .13s; }
+.tab:hover { background: var(--surface); color: var(--text); }
+.tab.active { background: var(--accent); color: #0b0b0b; }
+.tab .ico { width: 15px; height: 15px; flex: none; }
+.tab.icon-only span { display: none; }
+#tabbar .spacer { flex: 1 }
+.sys-btn { width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center;
+           background: transparent; border: none; color: var(--text-dim); cursor: pointer; }
+.sys-btn:hover { background: var(--surface); color: var(--text); }
+
+#divider { height: 1px; background: var(--border); margin-bottom: 10px; }
+#page { flex: 1; min-height: 0; overflow: auto; }
+#page::-webkit-scrollbar { width: 8px }
+#page::-webkit-scrollbar-thumb { background: rgba(255,255,255,.16); border-radius: 4px }
+
+/* ---- shared widgets ---- */
+.card { background: rgba(255,255,255,.05); border: 1px solid var(--border);
+        border-radius: var(--radius); padding: 14px; }
+.row { display: flex; gap: 12px; }
+.row > * { flex: 1; min-width: 0; }
+.col { display: flex; flex-direction: column; gap: 10px; }
+.section-title { font-size: 12px; font-weight: 700; color: var(--text-dim); letter-spacing: .2px; }
+.dim { color: var(--text-dim); }
+.small { font-size: 11px; }
+.big { font-size: 26px; font-weight: 700; letter-spacing: -.5px; }
+.mono { font-variant-numeric: tabular-nums; font-family: "Cascadia Mono", Consolas, ui-monospace, monospace; }
+.center { display: grid; place-items: center; height: 100%; text-align: center; gap: 8px; }
+
+button.btn { padding: 7px 13px; border-radius: 9px; border: 1px solid transparent; font: inherit;
+             font-weight: 600; font-size: 12px; cursor: pointer; background: var(--accent); color: #0b0b0b;
+             transition: filter .13s; }
+button.btn:hover { filter: brightness(1.12); }
+button.btn.quiet { background: var(--surface); color: var(--text); border-color: var(--border); }
+button.btn:disabled { opacity: .4; cursor: default; filter: none; }
+
+input.field, textarea.field, select.field {
+  width: 100%; padding: 8px 11px; border-radius: 9px; background: var(--surface);
+  border: 1px solid var(--border); color: var(--text); font: inherit; outline: none; user-select: text;
+}
+input.field:focus, textarea.field:focus { border-color: var(--accent); }
+textarea.field { resize: none; min-height: 90px; line-height: 1.5; }
+select.field { cursor: pointer; }
+select.field option { background: #1a1a22; color: #fff; }
+
+.bar { height: 6px; border-radius: 3px; background: rgba(255,255,255,.14); overflow: hidden; }
+.bar > i { display: block; height: 100%; border-radius: 3px;
+           background: linear-gradient(90deg, var(--accent), var(--accent-bright)); transition: width .3s ease; }
+
+.grid { display: grid; gap: 10px; }
+.tile { background: var(--surface); border: 1px solid transparent; border-radius: 12px; padding: 10px 6px;
+        display: flex; flex-direction: column; align-items: center; gap: 6px; cursor: pointer;
+        transition: transform .12s, background .12s; }
+.tile:hover { background: rgba(255,255,255,.13); transform: translateY(-2px); }
+.tile img { width: 42px; height: 42px; object-fit: contain; }
+.tile .name { font-size: 11px; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.err { color: #ff6b6b; font-size: 12px; }
+.ok { color: #51cf66; }
+.warn { color: #ffa94d; }
+.hidden { display: none !important; }

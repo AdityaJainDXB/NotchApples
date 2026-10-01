@@ -8,3 +8,7 @@ xcuserdata/
 NotchApple/Resources/Tunnelblick/Tunnelblick.dmg
 
 private/
+
+# Tauri / Windows build
+NotchWindows/src-tauri/target/
+NotchWindows/src-tauri/gen/
