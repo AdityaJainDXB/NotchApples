@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy"
+      content="default-src 'self'; img-src 'self' data: blob: https:; style-src 'self' 'unsafe-inline';
+               connect-src 'self' ipc: http://ipc.localhost https:; media-src 'self' blob: mediastream:">
+<title>Notch apple</title>
+<link rel="stylesheet" href="css/app.css">
+</head>
+<body class="collapsed">
+  <div id="shell">
+    <div id="collapsed" title="Click to open">
+      <div class="ear"><span id="ear-left"></span></div>
+      <div class="hint" id="collapsed-hint">Notch apple</div>
+      <div class="ear"><span id="rec-dot"></span><span id="ear-right"></span></div>
+    </div>
+
+    <div id="expanded">
+      <nav id="tabbar"></nav>
+      <div id="divider"></div>
+      <main id="page"></main>
+    </div>
+  </div>
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>

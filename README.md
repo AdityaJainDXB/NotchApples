@@ -276,6 +276,19 @@ From 1.12.0, Notch apple updates itself from this repository's GitHub releases:
 
 Checking only asks GitHub for the latest release. Nothing about you is sent.
 
+## Windows
+
+There is now a **Windows version** in [`NotchWindows/`](NotchWindows/) — a separate
+app built with Tauri (Rust + web UI), not a port of the Swift code, since the macOS
+app is almost entirely SwiftUI and Apple-only frameworks. Windows PCs have no camera
+notch, so the panel is a slim pill pinned to the top centre of the screen.
+
+It covers Today, AI (with the same OpenRouter fallback), Browser, Launcher, Search,
+Clipboard, Notes, Focus, Translator, PC Stats, World Clock, Tools, Shelf and all 14
+colour themes. **The same access codes work on both platforms.** AirDrop, face unlock,
+the Notification Center widget and window snapping don't carry over — see the
+[Windows README](NotchWindows/README.md).
+
 ## Install
 
 ### With Homebrew

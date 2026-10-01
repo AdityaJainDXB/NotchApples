@@ -1,0 +1,61 @@
+# Builds the Windows installers for Notch apple (NotchWindows/, Tauri).
+#
+# A Windows build cannot be cross-compiled from macOS, so this runs on a real
+# Windows runner. Push a tag like `win-v1.13.5` to attach the installers to a
+# GitHub release, or run it by hand from the Actions tab to just get artifacts.
+
+name: Windows build
+
+on:
+  workflow_dispatch:
+  push:
+    tags: ['win-v*']
+    paths-ignore: ['**.md']
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: windows-latest
+    defaults:
+      run:
+        working-directory: NotchWindows/src-tauri
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache cargo
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: NotchWindows/src-tauri
+
+      - name: Install Tauri CLI
+        run: cargo install tauri-cli --version "^2" --locked
+
+      - name: Build installers
+        run: cargo tauri build
+
+      - name: Show what was produced
+        shell: bash
+        run: ls -R target/release/bundle || true
+
+      - name: Upload installers
+        uses: actions/upload-artifact@v4
+        with:
+          name: notch-apple-windows
+          path: |
+            NotchWindows/src-tauri/target/release/bundle/nsis/*.exe
+            NotchWindows/src-tauri/target/release/bundle/msi/*.msi
+          if-no-files-found: error
+
+      - name: Attach to the release
+        if: startsWith(github.ref, 'refs/tags/win-v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            NotchWindows/src-tauri/target/release/bundle/nsis/*.exe
+            NotchWindows/src-tauri/target/release/bundle/msi/*.msi
