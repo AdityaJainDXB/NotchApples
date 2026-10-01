@@ -35,6 +35,10 @@ brew install --cask notch-apple
 
 ## Screenshots
 
+### New in 1.14.3
+
+- Same features as 1.14.2, with the short-lived free trial build replaced. Nothing that was free became paid.
+
 ### New in 1.14.2
 
 - **Nothing that was free became paid.** Now Playing, windows, clipboard, shelf, focus, tools and the rest stay free forever; Pro is the same features as before.
