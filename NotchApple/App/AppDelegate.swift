@@ -38,12 +38,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             .store(in: &cancellables)
         SystemHUDObserver.shared.start()
         applyMediaKeyPreference()
-        // Tell people once that the update gave them Pro for a week.
-        if LicenseState.shared.isTrial, !UserDefaults.standard.bool(forKey: "trial.announced") {
-            UserDefaults.standard.set(true, forKey: "trial.announced")
-            Notifier.post(title: "Pro is free for 7 days 🎁",
-                          body: "Try AI, Messenger, Audio, VPN, Voice Notes, Screen Time and Quick Add. Everything else stays free, always.")
-        }
         // Accessibility may be granted later; keep trying quietly until the tap is running.
         Timer.scheduledTimer(withTimeInterval: 10, repeats: true) { timer in
             MainActor.assumeIsolated {
