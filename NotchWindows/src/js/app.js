@@ -4,8 +4,8 @@
 
 import { applyTheme, currentThemeId } from './themes.js';
 import { load, save, el } from './store.js';
-import { GATED, isActivated } from './license.js';
-import { renderActivation } from './modules/activation.js';
+import { isLocked } from './license.js';
+import { renderLock } from './modules/activation.js';
 
 const tauri = window.__TAURI__;
 export const hasTauri = !!tauri;
@@ -54,17 +54,19 @@ const page = document.getElementById('page');
 
 export function buildTabs() {
   tabbar.replaceChildren();
-  const shown = MODULES.filter((m) => isEnabled(m.id));
-  if (!shown.some((m) => m.id === active)) active = shown[0]?.id ?? 'settings';
+  // Locked: no tabs to browse, only the lock screen.
+  const locked = isLocked();
+  const shown = locked ? [] : MODULES.filter((m) => isEnabled(m.id));
+  if (!locked && !shown.some((m) => m.id === active)) active = shown[0]?.id ?? 'settings';
   const compact = shown.length > 7;
 
+  if (locked) tabbar.append(el('span', { class: 'small dim', style: 'padding:0 8px' }, '🔒 Locked'));
   for (const m of shown) {
-    const locked = GATED.has(m.id) && !isActivated();
     tabbar.append(el('button', {
       class: `tab${m.id === active ? ' active' : ''}${compact && m.id !== active ? ' icon-only' : ''}`,
-      title: m.name + (locked ? ' — needs an access code' : ''),
+      title: m.name,
       onclick: () => show(m.id),
-    }, el('span', { class: 'ico' }, m.icon), el('span', {}, m.name + (locked ? ' 🔒' : ''))));
+    }, el('span', { class: 'ico' }, m.icon), el('span', {}, m.name)));
   }
   tabbar.append(el('div', { class: 'spacer' }));
   tabbar.append(el('button', { class: 'sys-btn', title: 'Hide the notch (Ctrl+Alt+O)', onclick: hideNotch }, '👁'));
@@ -75,15 +77,15 @@ export async function show(id) {
   active = id;
   save('ui.lastTab', id);
   buildTabs();
+  updateHint();
 
   if (typeof currentCleanup === 'function') { try { currentCleanup(); } catch {} }
   currentCleanup = null;
   page.replaceChildren();
 
-  // Pro features show the access-code prompt instead of the module.
-  if (GATED.has(id) && !isActivated()) {
-    const mod = MODULES.find((m) => m.id === id);
-    page.append(renderActivation(mod?.name ?? id, () => show(id)));
+  // Without a valid code nothing loads: every tab shows the lock screen.
+  if (isLocked()) {
+    page.append(renderLock(() => show(active)));
     return;
   }
 
@@ -135,6 +137,10 @@ if (tauri) {
 
 // ---- collapsed-pill live info ------------------------------------------
 
+function updateHint() {
+  document.getElementById('collapsed-hint').textContent = isLocked() ? '🔒 Locked' : 'Notch apple';
+}
+
 function tickPill() {
   const now = new Date();
   document.getElementById('ear-right').textContent =
@@ -143,6 +149,7 @@ function tickPill() {
 
 applyTheme(currentThemeId());
 buildTabs();
+updateHint();
 tickPill();
 setInterval(tickPill, 15000);
 window.addEventListener('theme-changed', buildTabs);

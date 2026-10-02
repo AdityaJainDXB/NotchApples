@@ -60,6 +60,7 @@ Pick your computer. The Windows button starts the download straight away; the Ma
    If a blue **"Windows protected your PC"** window appears, click **More info**, then **Run anyway**. Windows shows this for every app that doesn't pay for a code-signing certificate. The full source code is in this repository.
 3. **Open Notch apple.** If it doesn't open by itself, press the **Windows key**, type `Notch apple` and press **Enter**.
    A slim pill appears at the **top centre of your screen**. Click it to open the panel, or press **`Ctrl + Alt + N`** from any app.
+4. **Enter your access code.** Notch apple for Windows is locked until you do (`NOTCH-XXXX-XXXX`, the same code as the Mac app). To take access away again later, use **Settings → Access → Remove access**.
 
 <details>
 <summary><b>Something not working on Windows?</b></summary>
@@ -68,6 +69,7 @@ Pick your computer. The Windows button starts the download straight away; the Ma
 - **It doesn't start with Windows.** Not yet. Open it from the Start menu when you want it.
 - **My antivirus removed the file.** Restore it from the antivirus quarantine, or [build it yourself](#build-from-source).
 - **Updating.** Download again and run the new installer. It replaces the old version.
+- **Lock it again.** **Settings → Access → Remove access & lock** deletes the code from this PC.
 - **Uninstall.** **Settings → Apps → Installed apps → Notch apple → Uninstall.**
 - **Need an `.msi` instead** (for a work-managed PC)? Get [`NotchApple-Windows.msi`](https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows.msi).
 - **Older Windows versions** are on the [Windows releases page](https://github.com/AdityaJainDXB/NotchApples/releases/tag/windows-latest) and the [all releases list](https://github.com/AdityaJainDXB/NotchApples/releases).
@@ -378,13 +380,11 @@ Windows PCs have no camera notch, so the collapsed state is a slim pill pinned t
 | 🈯 **Translator** | 7 languages with a pronunciation line (pinyin, Latin for Arabic/Hindi) |
 | 📊 **PC Stats** | Live RAM, CPU, network speed, disk and battery |
 | 🗂 **Shelf** | Drop files to keep them handy |
-| ⚙️ **Settings** | All 14 colour themes, module switches, AI keys, licence, shortcuts |
+| ⚙️ **Settings** | All 14 colour themes, module switches, AI keys, access code (with **Remove access**), shortcuts |
 
-**Access codes carry over.** The same 50 codes work on Windows and macOS — the app
-ships only their SHA-256 hashes, exactly like the Mac build. On Windows a code
-unlocks the **AI** tab (Messenger, Audio and VPN are listed too, for when they
-arrive). The Mac app's code additionally unlocks Voice Notes, Screen Time and
-Quick Add, which have no Windows equivalent yet.
+**Notch apple for Windows is locked until you enter an access code.** Nothing opens, and no tab loads, without one: every tab shows the lock screen, and the pill reads **🔒 Locked**. Once a valid code is entered, the whole app unlocks. The same 50 codes work on Windows and macOS; the app ships only their SHA-256 hashes, exactly like the Mac build, so the codes themselves are never stored in it.
+
+**To remove access:** open **Settings → Access → Remove access & lock**, then confirm. That deletes the code from this PC and locks the app straight away. Tick **Also erase everything I saved** to wipe your notes, AI keys, clipboard history and settings too.
 
 ### Windows shortcuts
 
