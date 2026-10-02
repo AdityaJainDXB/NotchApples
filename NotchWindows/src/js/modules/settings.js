@@ -1,15 +1,15 @@
-// Settings: appearance, modules, AI keys, licence and shortcuts.
+// Settings: appearance, modules, AI keys, access code and shortcuts.
 import { el, load, save } from '../store.js';
 import { THEMES, applyTheme, currentThemeId } from '../themes.js';
-import { MODULES, isEnabled, setEnabled, invoke } from '../app.js';
+import { MODULES, isEnabled, setEnabled, invoke, show } from '../app.js';
 import { PROVIDERS, setKey } from './ai.js';
-import { isActivated, maskedCode, deactivate, PRO_SUMMARY } from '../license.js';
+import { isActivated, maskedCode, deactivate } from '../license.js';
 
 export function render(root) {
   const body = el('div', { class: 'col', style: 'overflow:auto;flex:1;min-height:0;padding-right:4px' });
   const panes = {
     Appearance: paneAppearance, Modules: paneModules, AI: paneAI,
-    Licence: paneLicence, Shortcuts: paneShortcuts, About: paneAbout,
+    Access: paneAccess, Shortcuts: paneShortcuts, About: paneAbout,
   };
   let current = load('settings.pane', 'Appearance');
   if (!panes[current]) current = 'Appearance';
@@ -96,20 +96,52 @@ function paneAI() {
     }));
 }
 
-function paneLicence() {
+function paneAccess() {
   const on = isActivated();
+  const erase = el('input', { type: 'checkbox', id: 'erase-all' });
+  const removeBox = el('div', { class: 'card col', style: 'gap:8px' });
+
+  function askFirst() {
+    removeBox.replaceChildren(
+      el('div', { class: 'section-title' }, 'Remove access'),
+      el('div', { class: 'small dim' },
+        'Deletes your access code from this PC and locks Notch apple right now. '
+        + 'You will need to enter a code again to use it.'),
+      el('label', { class: 'small', style: 'display:flex;gap:8px;align-items:center;cursor:pointer' },
+        erase, 'Also erase everything I saved (notes, AI keys, clipboard history, settings)'),
+      el('button', { class: 'btn', style: 'align-self:flex-start', onclick: confirmStep },
+        'Remove access & lock'));
+  }
+  function confirmStep() {
+    removeBox.replaceChildren(
+      el('div', { class: 'section-title warn' }, 'Remove access?'),
+      el('div', { class: 'small dim' }, erase.checked
+        ? 'This deletes your code AND everything you saved, then locks Notch apple.'
+        : 'This deletes your code and locks Notch apple.'),
+      el('div', { style: 'display:flex;gap:8px' },
+        el('button', { class: 'btn', onclick: removeNow }, 'Yes, remove it'),
+        el('button', { class: 'btn quiet', onclick: askFirst }, 'Cancel')));
+  }
+  function removeNow() {
+    deactivate();
+    if (erase.checked) {
+      try { localStorage.clear(); } catch { /* storage unavailable */ }
+      location.reload();           // start clean, straight to the lock screen
+    } else {
+      show('settings');            // re-renders as the lock screen
+    }
+  }
+  askFirst();
+
   return el('div', { class: 'col' },
     el('div', { class: 'card col' },
       el('div', { style: 'display:flex' }, el('div', { class: 'section-title' }, 'Status'),
         el('div', { class: on ? 'ok' : 'warn', style: 'margin-left:auto;font-weight:600' },
-          on ? '✅ Licensed & Activated' : '⚠️ Not activated')),
+          on ? '✅ Unlocked' : '🔒 Locked')),
       on ? el('div', { class: 'mono small dim' }, maskedCode()) : null,
       el('div', { class: 'small dim' },
-        `An access code unlocks ${PRO_SUMMARY}. Everything else is free. `
-        + 'The same 50 codes work on the Mac app, which also unlocks Voice Notes, '
-        + 'Screen Time and Quick Add there.')),
-    on ? el('button', { class: 'btn quiet', style: 'align-self:flex-start',
-      onclick: () => { deactivate(); paneRefresh(); } }, 'Deactivate / Reset licence') : null);
+        'Notch apple for Windows needs an access code to open. The same codes work on the Mac app.')),
+    on ? removeBox : null);
 }
 
 function paneShortcuts() {

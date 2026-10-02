@@ -1,10 +1,10 @@
-// The inline access-code prompt shown in place of a gated feature.
+// The lock screen: shown instead of every tab until a valid access code is entered.
 import { el } from '../store.js';
-import { activate, format, PRO_SUMMARY } from '../license.js';
+import { activate, format } from '../license.js';
 
-export function renderActivation(featureName, onUnlocked) {
+export function renderLock(onUnlocked) {
   const input = el('input', {
-    class: 'field mono', placeholder: 'NOTCH-XXXX-XXXX', spellcheck: 'false',
+    class: 'field mono', placeholder: 'NOTCH-XXXX-XXXX', spellcheck: 'false', autocomplete: 'off',
     style: 'max-width:260px;font-size:16px;font-weight:600;text-align:center',
   });
   const error = el('div', { class: 'err', style: 'min-height:16px' });
@@ -22,7 +22,7 @@ export function renderActivation(featureName, onUnlocked) {
       wrap.replaceChildren(el('div', { class: 'center' },
         el('div', { style: 'font-size:34px' }, '✅'),
         el('div', { style: 'font-size:17px;font-weight:700' }, 'Unlocked'),
-        el('div', { class: 'small dim' }, 'Pro is unlocked on this PC.')));
+        el('div', { class: 'small dim' }, 'Notch apple is unlocked on this PC.')));
       setTimeout(onUnlocked, 900);
     } else {
       error.textContent = 'Invalid Access Code. Please try again.';
@@ -34,11 +34,10 @@ export function renderActivation(featureName, onUnlocked) {
   });
 
   const wrap = el('div', { class: 'center' },
-    el('div', { style: 'font-size:34px' }, '🔑'),
-    el('div', { style: 'font-size:17px;font-weight:700' }, `${featureName} needs an access code`),
+    el('div', { style: 'font-size:34px' }, '🔒'),
+    el('div', { style: 'font-size:17px;font-weight:700' }, 'Notch apple is locked'),
     el('div', { class: 'small dim', style: 'max-width:420px' },
-      `Enter your 12-character access code to unlock ${PRO_SUMMARY}. Everything else is free. `
-      + 'The same code works on the Mac app.'),
+      'Enter your access code to unlock it on this PC. The same code works on the Mac app.'),
     input, error, button);
   setTimeout(() => input.focus(), 30);
   return wrap;

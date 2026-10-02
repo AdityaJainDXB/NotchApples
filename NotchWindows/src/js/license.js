@@ -55,14 +55,9 @@ const VALID = new Set([
   'f9f5e70844c9eb34aa35830f02f94fad77b0f75b01a5e1be516cfd8f7d3d435a',
 ]);
 
-/// Features that need a code (Pro), matching Module.isGated in the macOS app.
-/// Of these, only AI exists on Windows so far; the rest are listed so the sets
-/// stay in step as more tabs arrive. Now Playing is free on both platforms.
-export const GATED = new Set(['ai', 'messenger', 'audio', 'vpn']);
-
-/// What a code unlocks, worded for Windows. The macOS app adds Voice Notes,
-/// Screen Time and Quick Add, which have no Windows equivalent yet.
-export const PRO_SUMMARY = 'AI (and Messenger, Audio and VPN as they arrive)';
+/// Notch apple for Windows is locked as a whole: no tab opens, and no module
+/// loads, until a valid code has been entered on this PC.
+export const isLocked = () => !isActivated();
 
 const KEY = 'license.activated';
 const MASK_KEY = 'license.codeMask';
@@ -97,6 +92,7 @@ export function isActivated() {
 
 export const maskedCode = () => localStorage.getItem(MASK_KEY) || 'NOTCH-****-****';
 
+/// Removes the saved code from this PC. The caller is expected to re-lock the UI.
 export function deactivate() {
   localStorage.removeItem(KEY);
   localStorage.removeItem(MASK_KEY);
