@@ -110,9 +110,12 @@ On a Mac without a notch, a slim pill appears at the top center of the menu bar 
 
 ## Screenshots
 
-### New in 1.14.5
+### New in 1.14.6
 
 - **Sports** (Mac and Windows, on for everyone): follow your team and everything it plays. **Everyone tracks Barcelona by default**, with the next match and a countdown, every competition it plays in (La Liga, Champions League, cups), recent results, and the live score beside the closed notch during the match. Pick any other team in **Change**, or tap a team in the fixtures list. Browse the next two weeks of fixtures and scores in La Liga, the Premier League, Serie A, the Bundesliga, Ligue 1, the Champions League, the Europa League, Liga Portugal, the Eredivisie, MLS, the NBA, NFL, MLB and NHL. Free, no account (ESPN's public feed).
+
+### New in 1.14.5
+
 - **F1** *(add-on)*: Formula 1 in the notch: the live running order during sessions, then the full classification with gaps, tyres, laps and the flag, plus the weekend schedule in your time zone with a countdown, and driver and team standings. Click a driver to follow them, and during a session their position and the lap show beside the closed notch.
 - **Updates**: when a new release is out you get a notification, an **Update** button in the notch and a card in Settings → Updates: choose **Update** or **Not now**. Turn automatic checks off there if you prefer.
 - Donate in Litecoin: see [Donate](#donate-).
