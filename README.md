@@ -16,16 +16,87 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️ Download the latest DMG</b></a>
+  <a href="#download"><b>⬇️ Download</b></a>
+  &nbsp;·&nbsp; <a href="#install-on-mac"><b>🍎 Mac</b></a>
+  &nbsp;·&nbsp; <a href="#install-on-windows"><b>🪟 Windows</b></a>
   &nbsp;·&nbsp; <a href="https://virajsinghchadha.github.io/notchapples-site/"><b>🌐 Website</b></a>
-  &nbsp;·&nbsp; or install with <a href="#with-homebrew"><b>Homebrew</b></a>
-  &nbsp;·&nbsp; want it smaller? <a href="#want-a-lighter-version"><b>Lighter versions</b></a>
+  &nbsp;·&nbsp; <a href="#want-a-lighter-version"><b>Lighter versions</b></a>
 </p>
+
+## Download
+
+Pick your computer. The Windows button starts the download straight away; the Mac button opens the latest release, where you click the `.dmg`.
+
+<table align="center">
+  <tr>
+    <th align="center" width="50%">🍎&nbsp; Mac</th>
+    <th align="center" width="50%">🪟&nbsp; Windows</th>
+  </tr>
+  <tr>
+    <td align="center">
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg)</b></a>
+    </td>
+    <td align="center">
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe)</b></a>
+    </td>
+  </tr>
+  <tr>
+    <td align="center">macOS 14 or newer<br>about 9 MB</td>
+    <td align="center">Windows 10 or 11 (64-bit)<br>about 2 MB</td>
+  </tr>
+  <tr>
+    <td align="center"><a href="#install-on-mac">Mac install steps</a></td>
+    <td align="center"><a href="#install-on-windows">Windows install steps</a></td>
+  </tr>
+</table>
+
+### Install on Windows
+
+**It takes about a minute. You do not need an administrator password.**
+
+1. **Click "Download for Windows" above.** A file called `NotchApple-Windows-Setup.exe` saves to your **Downloads** folder.
+   Chrome or Edge may say the file *isn't commonly downloaded*. That's only because it's a new, uncommon download: click **Keep** (in Edge, open the **…** menu next to the file first).
+2. **Double-click the file** and click through the installer.
+   If a blue **"Windows protected your PC"** window appears, click **More info**, then **Run anyway**. Windows shows this for every app that doesn't pay for a code-signing certificate. The full source code is in this repository.
+3. **Open Notch apple.** If it doesn't open by itself, press the **Windows key**, type `Notch apple` and press **Enter**.
+   A slim pill appears at the **top centre of your screen**. Click it to open the panel, or press **`Ctrl + Alt + N`** from any app.
+
+<details>
+<summary><b>Something not working on Windows?</b></summary>
+
+- **I can't see it.** Look at the very top centre of your screen. Or find the Notch apple icon near the clock (click the **^** arrow if it's hidden), right-click it and choose **Open notch**. If you pressed `Ctrl + Alt + O`, the notch is hidden: press it again.
+- **It doesn't start with Windows.** Not yet. Open it from the Start menu when you want it.
+- **My antivirus removed the file.** Restore it from the antivirus quarantine, or [build it yourself](#build-from-source).
+- **Updating.** Download again and run the new installer. It replaces the old version.
+- **Uninstall.** **Settings → Apps → Installed apps → Notch apple → Uninstall.**
+- **Need an `.msi` instead** (for a work-managed PC)? Get [`NotchApple-Windows.msi`](https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows.msi).
+- **Older Windows versions** are on the [Windows releases page](https://github.com/AdityaJainDXB/NotchApples/releases/tag/windows-latest) and the [all releases list](https://github.com/AdityaJainDXB/NotchApples/releases).
+
+</details>
+
+### Install on Mac
+
+#### With Homebrew
+
+One command:
 
 ```bash
 brew tap adityajaindxb/notchapples https://github.com/AdityaJainDXB/NotchApples
 brew install --cask notch-apple
 ```
+
+Update later with `brew upgrade --cask notch-apple`. The first time you open it, macOS may block it because it isn't notarized: go to **System Settings → Privacy & Security** and click **Open Anyway**.
+
+#### Manually
+
+<p align="center"><img src="docs/screenshots/dmg-installer.png" width="520" alt="The Notch apple installer window: drag the app onto Applications"></p>
+
+1. **Click "Download for Mac" above.** On the page that opens, click the **`NotchApple-x.y.z.dmg`** file under **Assets** to download it.
+2. Open it and drag **Notch apple** into **Applications**.
+3. The app is ad-hoc signed, not notarized, so on first launch right-click the app and choose **Open**, then confirm. (Or run `xattr -dr com.apple.quarantine "/Applications/Notch apple.app"`.)
+4. Click the notch, or the menu-bar icon, to get started.
+
+On a Mac without a notch, a slim pill appears at the top center of the menu bar instead.
 
 <p align="center">
   <img src="docs/screenshots/claude.png" width="720" alt="Notch apple expanded, showing the Claude tab">
@@ -267,7 +338,7 @@ Use the **Open URL** action in Apple Shortcuts (or `open` in Terminal) with thes
 
 ## Updates
 
-From 1.12.0, Notch apple updates itself from this repository's GitHub releases:
+**Mac:** from 1.12.0, Notch apple updates itself from this repository's GitHub releases. (On Windows, download and run the newest installer instead: see [Install on Windows](#install-on-windows).)
 
 - When a new release is published, you get a notification (**"Update available. Would you like to update?"**), an **Update** button appears in the notch, and **Settings → Updates** shows a badge with the release notes.
 - Press **Update** and it downloads the new DMG, checks the app inside is genuine Notch apple, replaces your copy and reopens. Your settings and data are kept.
@@ -276,40 +347,55 @@ From 1.12.0, Notch apple updates itself from this repository's GitHub releases:
 
 Checking only asks GitHub for the latest release. Nothing about you is sent.
 
-## Windows
+## Notch apple for Windows
 
-There is now a **Windows version** in [`NotchWindows/`](NotchWindows/) — a separate
-app built with Tauri (Rust + web UI), not a port of the Swift code, since the macOS
-app is almost entirely SwiftUI and Apple-only frameworks. Windows PCs have no camera
-notch, so the panel is a slim pill pinned to the top centre of the screen.
+The Windows version lives in [`NotchWindows/`](NotchWindows/). It is a **separate app, not a port of the Swift code** (built with [Tauri 2](https://tauri.app): a Rust shell plus a web UI), because the macOS app is almost entirely SwiftUI and AppKit, and none of those exist on Windows.
 
-It covers Today, AI (with the same OpenRouter fallback), Browser, Launcher, Search,
-Clipboard, Notes, Focus, Translator, PC Stats, World Clock, Tools, Shelf and all 14
-colour themes. **The same access codes work on both platforms.** AirDrop, face unlock,
-the Notification Center widget and window snapping don't carry over — see the
-[Windows README](NotchWindows/README.md).
+Windows PCs have no camera notch, so the collapsed state is a slim pill pinned to the **top centre of your screen**. Clicking it drops the panel down, the same way the Mac version opens out of the notch. [Download it here](#download).
 
-## Install
+### What's in it
 
-### With Homebrew
+| Tab | Notes |
+| --- | --- |
+| ☀️ **Today** | Date, clock, local weather (free Open-Meteo, no key), battery, uptime |
+| ✨ **AI** | Gemini, OpenRouter, Groq, Ollama, ChatGPT, Claude. Asks about your screen by taking a screenshot. Carries over the OpenRouter retry/fallback, so a busy free model switches to one that works |
+| 🌐 **Browser** | Address bar + search (DuckDuckGo, Google, Bing, Brave, Ecosia). Pages open in a separate always-on-top window, because the panel is only ~450 px tall |
+| 🚀 **Launcher** | Pick from everything in your Start Menu, click a tile to open it |
+| 🔍 **Search** | Finds files and folders in Desktop, Documents, Downloads, Pictures, Music, Videos and OneDrive |
+| 📋 **Clipboard** | History of what you copy while the app runs |
+| 📝 **Notes** · ⏱ **Focus** · 🕐 **World Clock** · 🛠 **Tools** | Same as macOS |
+| 🈯 **Translator** | 7 languages with a pronunciation line (pinyin, Latin for Arabic/Hindi) |
+| 📊 **PC Stats** | Live RAM, CPU, network speed, disk and battery |
+| 🗂 **Shelf** | Drop files to keep them handy |
+| ⚙️ **Settings** | All 14 colour themes, module switches, AI keys, licence, shortcuts |
 
-```bash
-brew tap adityajaindxb/notchapples https://github.com/AdityaJainDXB/NotchApples
-brew install --cask notch-apple
-```
+**Access codes carry over.** The same 50 codes work on Windows and macOS — the app
+ships only their SHA-256 hashes, exactly like the Mac build. On Windows a code
+unlocks the **AI** tab (Messenger, Audio and VPN are listed too, for when they
+arrive). The Mac app's code additionally unlocks Voice Notes, Screen Time and
+Quick Add, which have no Windows equivalent yet.
 
-Update later with `brew upgrade --cask notch-apple`. The first time you open it, macOS may block it because it isn't notarized: go to **System Settings → Privacy & Security** and click **Open Anyway**.
+### Windows shortcuts
 
-### Manually
+| Keys | What it does |
+| --- | --- |
+| `Ctrl + Alt + N` | Open or close the notch, from any app |
+| `Ctrl + Alt + O` | Hide or show the notch completely |
+| `Esc` | Close the notch while it is open |
 
-<p align="center"><img src="docs/screenshots/dmg-installer.png" width="520" alt="The Notch apple installer window: drag the app onto Applications"></p>
+Windows reserves most Win-key combinations, so `Ctrl + Alt` is used instead of
+the Mac's `⌃⌥N` / `⌘O`.
 
-1. Download the latest `NotchApple-x.y.z.dmg` from [**Releases**](../../releases).
-2. Open it and drag **Notch apple** into **Applications**.
-3. The app is ad-hoc signed, not notarized, so on first launch right-click the app and choose **Open**, then confirm. (Or run `xattr -dr com.apple.quarantine "/Applications/Notch apple.app"`.)
-4. Click the notch, or the menu-bar icon, to get started.
+### What doesn't carry over
 
-On a Mac without a notch, a slim pill appears at the top center of the menu bar instead.
+| Feature | Why |
+| --- | --- |
+| AirDrop | Apple-only. PairDrop could be added later; it is web-based |
+| Face unlock | Built on Apple's Vision framework; Windows Hello is not open to apps the same way |
+| Notification Center widget | Windows widgets are a different system entirely |
+| Window snapping | Windows already has Snap Layouts and PowerToys FancyZones |
+| Per-app volume | Windows has this built into the volume mixer |
+| VPN tab | Tunnelblick is macOS-only; use the OpenVPN GUI for Windows |
 
 ## Want a lighter version?
 
@@ -528,7 +614,26 @@ scripts/build_dmg.sh
 
 The DMG is written to `dist/`.
 
-### Project layout
+### Build the Windows app
+
+The frontend is plain HTML/CSS/ES modules — **no Node, no bundler, no build step**.
+Only Rust is needed.
+
+```bash
+cargo install tauri-cli --version "^2" --locked
+cd NotchWindows/src-tauri
+cargo tauri dev     # run it
+cargo tauri build   # installers in target/release/bundle/
+```
+
+**A Windows build cannot be produced on a Mac.** Push a tag starting with
+`win-v` (or run the *Windows build* workflow by hand from the Actions tab) and
+GitHub Actions builds the `.exe` and `.msi` on a real Windows runner —
+see [.github/workflows/windows-build.yml](.github/workflows/windows-build.yml).
+
+That tag also refreshes the one-click link behind the **Download for Windows** button (the `windows-latest` release, with the fixed file name `NotchApple-Windows-Setup.exe`), so the README never needs editing for a new version.
+
+### Mac project layout
 
 ```
 NotchApple/
@@ -548,6 +653,26 @@ NotchApple/
     Windows/     Accessibility window snapping, drag-to-notch snap zones, tiling, saved layouts
 NotchWidget/  WidgetKit extension
 Shared/       Code shared by the app and widget (weather, shared store)
+```
+
+### Windows project layout
+
+```
+NotchWindows/
+├── src/                     frontend (no build step)
+│   ├── index.html
+│   ├── css/app.css          shell, pill, tab bar, shared widgets
+│   └── js/
+│       ├── app.js           tab routing, collapse/expand, feature gating
+│       ├── themes.js        the 14 colour themes
+│       ├── license.js       access-code hashes, shared with macOS
+│       ├── store.js         persistence + DOM helpers
+│       └── modules/         one file per tab
+└── src-tauri/               Rust
+    ├── src/main.rs          commands, tray, global shortcuts, window placement
+    ├── src/system.rs        RAM, CPU, network, disk, battery
+    ├── src/apps.rs          installed apps (Start Menu on Windows)
+    └── src/files.rs         file search
 ```
 
 ## Why some features need a paid Apple Developer account
