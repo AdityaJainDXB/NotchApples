@@ -12,7 +12,7 @@ import SwiftUI
 
 /// Every optional feature module in the app.
 enum Module: String, CaseIterable, Identifiable {
-    case today, claude, browser, launcher, translator, stats, windows, tools, mirror, worldClock, messenger, clipboard, notes, focus, shelf, share, audio, vpn, nowPlaying, search, timer, snippets, shortcuts, devices, live, f1, alerts, plugins, voiceNotes, screenTime, quickAdd, security
+    case today, claude, browser, launcher, translator, stats, windows, tools, mirror, worldClock, messenger, clipboard, notes, focus, shelf, share, audio, vpn, nowPlaying, search, timer, snippets, shortcuts, devices, live, f1, sports, alerts, plugins, voiceNotes, screenTime, quickAdd, security
 
     var id: String { rawValue }
 
@@ -44,6 +44,7 @@ enum Module: String, CaseIterable, Identifiable {
         case .devices: "Devices"
         case .live: "Live"
         case .f1: "F1"
+        case .sports: "Sports"
         case .alerts: "Notifications"
         case .plugins: "Plugins"
         case .voiceNotes: "Voice Notes"
@@ -81,6 +82,7 @@ enum Module: String, CaseIterable, Identifiable {
         case .devices: "airpods"
         case .live: "sportscourt.fill"
         case .f1: "flag.checkered"
+        case .sports: "sportscourt"
         case .alerts: "bell.badge.fill"
         case .plugins: "puzzlepiece.extension.fill"
         case .voiceNotes: "waveform.badge.mic"
@@ -117,6 +119,7 @@ enum Module: String, CaseIterable, Identifiable {
         case .shortcuts: "Add-on: run your Apple Shortcuts and switch Focus modes from the notch. Shortcuts can also control the notch with notchapple:// links."
         case .devices: "Add-on: battery for AirPods, Magic Mouse, keyboard and trackpad, what's using your mic or camera (with a mic mute), and Find My iPhone."
         case .f1: "Add-on: Formula 1 live timing (order, gaps, tyres, laps, flags), the weekend schedule with a countdown, and standings. Follow a driver to see their position beside the notch."
+        case .sports: "Follow your team (Barcelona unless you pick another): the next match with a countdown, every competition it plays in, recent results and the live score beside the notch. Browse the next two weeks of fixtures in the big football leagues, the NBA, NFL, MLB and NHL."
         case .live: "Add-on: live scores for the teams you follow, plus quick tracking for parcels and flights."
         case .alerts: "Add-on: see notifications from other apps in the notch, and reply to iMessages. Needs Full Disk Access."
         case .plugins: "Add-on: your own widgets. Any script in the Plugins folder shows its output in the notch."
@@ -154,6 +157,7 @@ final class SettingsManager: ObservableObject {
         offByDefault.forEach { defaults[$0.storageKey] = false }
         // 1.14 add-ons start off for everyone, new and existing installs.
         [Module.timer, .snippets, .shortcuts, .devices, .live, .f1, .alerts, .plugins, .voiceNotes, .screenTime, .quickAdd].forEach { defaults[$0.storageKey] = false }
+        defaults[Module.sports.storageKey] = true   // everyone gets Sports, tracking Barcelona
         d.register(defaults: defaults)
     }
 
@@ -194,6 +198,8 @@ final class SettingsManager: ObservableObject {
     @AppStorage(Module.devices.storageKey) var devicesEnabled = false
     @AppStorage(Module.live.storageKey) var liveEnabled = false
     @AppStorage(Module.f1.storageKey) var f1Enabled = false
+    /// On for everyone: Sports follows Barcelona out of the box.
+    @AppStorage(Module.sports.storageKey) var sportsEnabled = true
     @AppStorage(Module.alerts.storageKey) var alertsEnabled = false
     @AppStorage(Module.plugins.storageKey) var pluginsEnabled = false
     @AppStorage(Module.voiceNotes.storageKey) var voiceNotesEnabled = false
@@ -286,6 +292,7 @@ final class SettingsManager: ObservableObject {
         case .devices: $devicesEnabled
         case .live: $liveEnabled
         case .f1: $f1Enabled
+        case .sports: $sportsEnabled
         case .alerts: $alertsEnabled
         case .plugins: $pluginsEnabled
         case .voiceNotes: $voiceNotesEnabled

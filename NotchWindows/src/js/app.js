@@ -21,6 +21,7 @@ export async function invoke(cmd, args) {
 export const MODULES = [
   { id: 'today',      name: 'Today',      icon: '☀️', load: () => import('./modules/today.js') },
   { id: 'ai',         name: 'AI',         icon: '✨', load: () => import('./modules/ai.js') },
+  { id: 'sports',     name: 'Sports',     icon: '⚽', load: () => import('./modules/sports.js') },
   { id: 'browser',    name: 'Browser',    icon: '🌐', load: () => import('./modules/browser.js') },
   { id: 'launcher',   name: 'Launcher',   icon: '🚀', load: () => import('./modules/launcher.js') },
   { id: 'search',     name: 'Search',     icon: '🔍', load: () => import('./modules/search.js') },
@@ -35,7 +36,18 @@ export const MODULES = [
   { id: 'settings',   name: 'Settings',   icon: '⚙️', load: () => import('./modules/settings.js') },
 ];
 
-const DEFAULT_ON = ['today', 'ai', 'browser', 'launcher', 'stats', 'settings'];
+const DEFAULT_ON = ['today', 'ai', 'sports', 'browser', 'launcher', 'stats', 'settings'];
+
+// Sports is on for everyone (it follows Barcelona out of the box), including people who
+// saved their tab choices before it existed.
+try {
+  if (localStorage.getItem('modules.enabled') !== null && !localStorage.getItem('sports.added')) {
+    const list = new Set(JSON.parse(localStorage.getItem('modules.enabled')));
+    list.add('sports');
+    localStorage.setItem('modules.enabled', JSON.stringify([...list]));
+    localStorage.setItem('sports.added', '1');
+  }
+} catch { /* storage unavailable */ }
 
 export const enabledIds = () => load('modules.enabled', DEFAULT_ON);
 export const isEnabled = (id) => id === 'settings' || enabledIds().includes(id);
@@ -139,6 +151,17 @@ if (tauri) {
 
 function updateHint() {
   document.getElementById('collapsed-hint').textContent = isLocked() ? '🔒 Locked' : 'Notch apple';
+  ensureSportsWatcher();
+}
+
+// The live score of your team shows on the closed pill, but only once the app is unlocked.
+let sportsWatching = false;
+function ensureSportsWatcher() {
+  if (sportsWatching || isLocked() || !isEnabled('sports')) return;
+  sportsWatching = true;
+  import('./modules/sports.js').then((m) => m.startWatcher(
+    (text) => { document.getElementById('ear-left').textContent = text; },
+    () => !isLocked() && isEnabled('sports')));
 }
 
 function tickPill() {
