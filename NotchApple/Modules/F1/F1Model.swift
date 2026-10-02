@@ -121,7 +121,7 @@ final class F1Model: ObservableObject {
         let want = live && (viewing || (showActivity && !followedDriver.isEmpty))
         if want, pollTimer == nil {
             pollTimer = Timer.scheduledTimer(withTimeInterval: viewing ? 5 : 15, repeats: true) { _ in
-                MainActor.assumeIsolated { Task { await F1Model.shared.loadTiming() } }
+                MainActor.assumeIsolated { _ = Task { await F1Model.shared.loadTiming() } }
             }
         } else if !want {
             pollTimer?.invalidate(); pollTimer = nil
