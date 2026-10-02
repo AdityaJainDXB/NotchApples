@@ -83,6 +83,8 @@ final class F1Model: ObservableObject {
     @AppStorage("f1.activity") var showActivity = true { didSet { schedulePolling(); LiveActivityCenter.shared.recompute() } }
 
     private var sessionPath: String?
+    /// When the archive's newest session started (to tell if it's behind the schedule).
+    private var archiveStart = Date.distantPast
     private var sessionWindow: ClosedRange<Date>?
     private var pollTimer: Timer?
     private var lastSlowFetch = Date.distantPast
@@ -171,6 +173,7 @@ final class F1Model: ObservableObject {
         } else {
             sessionWindow = best?.window
         }
+        if let best { archiveStart = best.start }
         if let best, best.path != sessionPath { sessionPath = best.path; cars = []; drivers_ = [:] }
     }
 
@@ -183,8 +186,14 @@ final class F1Model: ObservableObject {
         }
     }
 
+    /// The weekend's latest session that has started but isn't in F1's archive yet.
+    private var unarchivedSession: Session? {
+        guard let s = weekend?.sessions.last(where: { $0.start <= .now }), s.start > archiveStart.addingTimeInterval(3600) else { return nil }
+        return s
+    }
+
     func loadTiming() async {
-        if let running = runningSession {
+        if let running = runningSession ?? unarchivedSession {
             // The archive is only written after the session; follow the live order meanwhile.
             if driversNeeded, let path = sessionPath,
                let dl = await Self.json(URL(string: Self.base + path + "DriverList.json")!) {
@@ -265,9 +274,7 @@ final class F1Model: ObservableObject {
         guard let url = URL(string: "https://site.api.espn.com/apis/site/v2/sports/racing/f1/scoreboard"),
               let json = await Self.json(url),
               let event = (json["events"] as? [[String: Any]])?.first,
-              let comp = (event["competitions"] as? [[String: Any]])?.first(where: {
-                  (($0["status"] as? [String: Any])?["type"] as? [String: Any])?["state"] as? String == "in"
-              }),
+              let comp = Self.competition(event, for: running.name),
               let entries = comp["competitors"] as? [[String: Any]] else {
             if cars.isEmpty { error = "Live order isn't available right now." }
             return
@@ -291,9 +298,22 @@ final class F1Model: ObservableObject {
         }.sorted { $0.position < $1.position }
         sessionTitle = "\(weekend?.name ?? "Formula 1") · \(running.name)"
         sessionType = running.name == "Race" || running.name == "Sprint" ? "Race" : running.name
-        status = "Started"; track = ""; lap = nil
-        isLive = true; orderOnly = true; error = nil
+        let state = ((comp["status"] as? [String: Any])?["type"] as? [String: Any])?["state"] as? String
+        isLive = runningSession != nil && state == "in"
+        status = isLive ? "Started" : "Provisional"; track = ""; lap = nil
+        orderOnly = true; error = nil
         LiveActivityCenter.shared.recompute()
+    }
+
+    /// ESPN's entry for a session ("Practice 1" → FP1, "Qualifying" → Qual…), or whichever is running.
+    private static func competition(_ event: [String: Any], for name: String) -> [String: Any]? {
+        let comps = (event["competitions"] as? [[String: Any]]) ?? []
+        let abbr = ["Practice 1": "FP1", "Practice 2": "FP2", "Practice 3": "FP3", "Qualifying": "Qual", "Race": "Race",
+                    "Sprint": "Sprint", "Sprint Qualifying": "SQ"][name] ?? name
+        let match = comps.first { (($0["type"] as? [String: Any])?["abbreviation"] as? String)?.caseInsensitiveCompare(abbr) == .orderedSame }
+        let running = comps.first { (($0["status"] as? [String: Any])?["type"] as? [String: Any])?["state"] as? String == "in" }
+        let found = match ?? running
+        return (found?["competitors"] as? [[String: Any]])?.isEmpty == false ? found : nil
     }
 
     // MARK: Standings (Jolpica)

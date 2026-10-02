@@ -44,7 +44,8 @@ struct F1View: View {
                 IconButton(systemImage: "arrow.clockwise", help: "Refresh") { f1.refreshAll() }
             }
             if f1.orderOnly {
-                Text("Live running order · gaps and tyres appear when the session's timing is published")
+                Text(f1.isLive ? "Live running order · gaps and tyres appear when the session's timing is published"
+                               : "Provisional order · full timing appears when F1 publishes it")
                     .font(.system(size: 10)).foregroundStyle(Theme.textSecondary).lineLimit(1).minimumScaleFactor(0.8)
             } else if !f1.isLive, !f1.status.isEmpty, !f1.cars.isEmpty {
                 Text("Latest session · \(f1.status == "Finalised" || f1.status == "Ends" ? "final classification" : f1.status.lowercased())")
