@@ -35,6 +35,7 @@ enum FeatureHub {
             { settings.musicActivity && settings.nowPlayingEnabled ? NowPlayingMonitor.shared.liveActivity : nil },
             { settings.devicesEnabled && settings.privacyIndicator ? PrivacyMonitor.shared.liveActivity : nil },
             { settings.liveEnabled ? ScoresModel.shared.liveActivity : nil },
+            { settings.f1Enabled ? F1Model.shared.liveActivity : nil },
             { settings.toolsEnabled && settings.keepAwakeActivity ? KeepAwake.shared.liveActivity : nil },
         ]
         DownloadWatcher.shared.setEnabled(settings.downloadProgress)
@@ -70,6 +71,7 @@ enum FeatureHub {
         }
         NotificationMirror.shared.setRunning(s.alertsEnabled)
         if s.liveEnabled { ScoresModel.shared.refreshIfDue() }
+        if s.f1Enabled { F1Model.shared.refreshIfDue() }
         DownloadWatcher.shared.setEnabled(s.downloadProgress)
         LiveActivityCenter.shared.recompute()
     }

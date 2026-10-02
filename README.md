@@ -102,9 +102,17 @@ On a Mac without a notch, a slim pill appears at the top center of the menu bar 
   <img src="docs/screenshots/claude.png" width="720" alt="Notch apple expanded, showing the Claude tab">
 </p>
 
+<p align="center">💜 Like it? <a href="#donate-">Donate in Litecoin</a> to support a high school developer.</p>
+
 ---
 
 ## Screenshots
+
+### New in 1.14.5
+
+- **F1** *(add-on)*: Formula 1 live timing in the notch: the running order, gaps, tyres, laps, flags and safety car, plus the weekend schedule in your time zone with a countdown, and driver and team standings. Click a driver to follow them, and during a session their position and the lap show beside the closed notch.
+- **Updates**: when a new release is out you get a notification, an **Update** button in the notch and a card in Settings → Updates: choose **Update** or **Not now**. Turn automatic checks off there if you prefer.
+- Donate in Litecoin: see [Donate](#donate-).
 
 ### New in 1.14.3
 
@@ -128,6 +136,8 @@ On a Mac without a notch, a slim pill appears at the top center of the menu bar 
 | **Quick Add** *(Pro)*: plain words into Calendar or Reminders | **Timer & stopwatch** |
 | ![Live](docs/screenshots/live.png) | ![Devices](docs/screenshots/devices.png) |
 | **Live**: scores and parcel/flight tracking | **Devices**: accessory battery, mic & camera |
+| ![F1](docs/screenshots/f1.png) | ![Update available](docs/screenshots/settings-updates.png) |
+| **F1**: live timing, schedule and standings | **Updates**: Update or Not now when a new release is out |
 | ![Notifications](docs/screenshots/notifications.png) | ![Plugins](docs/screenshots/plugins.png) |
 | **Notifications**: reply to iMessages from the notch | **Plugins**: your own widgets from any script |
 | ![Snippets](docs/screenshots/snippets.png) | ![Notch Extras](docs/screenshots/settings-extras.png) |
@@ -203,6 +213,7 @@ Every module is **optional** and can be switched on or off in **Settings → Mod
 | ✂️ **Snippets** *(add-on, new)* | Saved bits of text (addresses, sign-offs, replies, code). Click one and it's **pasted straight into the app you were using** (copied instead if Accessibility is off). |
 | 🧱 **Shortcuts** *(add-on, new)* | Run any of your **Apple Shortcuts** from the notch, with a **Focus modes** row for shortcuts that switch Focus / Do Not Disturb. Shortcuts can drive the notch too, with [`notchapple://` links](#control-the-notch-from-shortcuts). |
 | 🎧 **Devices** *(add-on, new)* | Battery for **AirPods** (left, right, case), **Magic Mouse, Keyboard and Trackpad**, with a low-battery alert at 15%. Shows **which apps are using your mic** and whether a **camera** is on, with a one-click **mic mute**. Shows your **iPhone's battery** when it's connected over Bluetooth, and **Ring my iPhone** opens Find My. |
+| 🏁 **F1** *(add-on, new)* | **Formula 1 live timing**: order, gaps, tyres, laps, flags and safety car from F1's public live-timing feed, refreshed every few seconds during a session (the latest session's classification otherwise). The weekend schedule in your time zone with a countdown, and driver and team standings (Jolpica). Click a driver to follow them: their position and the lap show beside the notch while a session runs. |
 | 🏟 **Live** *(add-on, new)* | **Live scores** for the Premier League, Champions League, La Liga, MLS, NBA, NFL, MLB and NHL (ESPN's public scoreboard). Follow a team and its score shows beside the notch while it plays. Paste a **parcel or flight number** and it recognises UPS, FedEx, USPS, DHL or a flight and opens the right tracking page. |
 | 🔔 **Notifications** *(add-on, new)* | Notifications from your other apps, in the notch, with a bell and count beside it when new ones arrive. **Reply to iMessages** without opening Messages. It reads Notification Center's own database (read-only, on your Mac), so it needs **Full Disk Access**. |
 | 🧩 **Plugins** *(add-on, new)* | Make your own notch widgets in any language. See [Plugins](#plugins). |
@@ -709,6 +720,16 @@ Per-app volume and EQ use Core Audio process taps, which arrived in macOS 14.2. 
 - Window management only reads window positions, sizes and titles to arrange them. Saved layouts stay on your Mac.
 - Your API keys and face-unlock template are stored in `~/Library/Application Support/Notch apple/secrets.json`, readable only by your user account (and encrypted at rest by FileVault if it's on). Face photos are never saved.
 - Search only asks Spotlight's local index. Nothing you search for leaves your Mac.
+
+## Donate 💜
+
+Notch apple is free and made by high school developers. If it's useful to you and you'd like to support it, you can donate any amount in **Litecoin (LTC)**:
+
+```
+ltc1qymlmvkdmvpk5f90esthzgwaw6w0tuzq6tdr6kf
+```
+
+Every bit helps and is hugely appreciated. Want Pro too? [Get a product key](https://virajsinghchadha.github.io/notchapples-site/pro.html) for $1 (or $2 to cover fees and support us), and it's made instantly.
 
 ## License
 

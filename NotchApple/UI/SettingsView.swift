@@ -197,7 +197,7 @@ private struct LicenseSettings: View {
                         .monospaced()
                 }
             } footer: {
-                Text("An access code unlocks \(Module.proSummary). Everything else is free. Activation is saved on this Mac, works offline, and stays if you reinstall or update.")
+                Text("A product key or access code unlocks \(Module.proSummary). Everything else is free. Activation is saved on this Mac and stays if you reinstall or update.")
             }
             AccountSection()
             if !activated {

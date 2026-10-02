@@ -59,13 +59,14 @@ struct ActivationModalView: View {
 
                 if !succeeded {
                     HStack(spacing: 8) {
-                        TextField("NOTCH-XXXX-XXXX-XXXX", text: $code)
+                        TextField("Code or key", text: $code)
                             .textFieldStyle(.plain)
-                            .font(.system(size: 16, weight: .semibold, design: .monospaced))
+                            .font(.system(size: 14, weight: .semibold, design: .monospaced))
+                            .lineLimit(1)
                             .foregroundStyle(.white)
                             .autocorrectionDisabled()
                             .focused($focused)
-                            .padding(.horizontal, 12).frame(height: 36)
+                            .padding(.horizontal, 12).frame(minWidth: 215).frame(height: 36)
                             .background(Theme.surface, in: RoundedRectangle(cornerRadius: 10))
                             .overlay(RoundedRectangle(cornerRadius: 10)
                                 .strokeBorder(showError ? Color.red : (focused ? Theme.accent : Theme.separator),

@@ -104,7 +104,9 @@
 		D34F08D32DB7647BCA41C1DC /* SystemHUDObserver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2FDF0D52167C63FBB161D611 /* SystemHUDObserver.swift */; };
 		D6AB6D3B477B7BBBEFB85708 /* ScreenTimeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9428FE6894A084A43909BD76 /* ScreenTimeView.swift */; };
 		DC37742E9DC53226546E0A45 /* WindowManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 98A8EB2467586B8A5E087088 /* WindowManager.swift */; };
+		DCE9CF6CAF6F38227D18150F /* F1Model.swift in Sources */ = {isa = PBXBuildFile; fileRef = 466B2516F7D15E3C623784BC /* F1Model.swift */; };
 		DDDDB7E81AB5751C2D7A3F80 /* ShortcutsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33BEEDB2663AD6544E5061C7 /* ShortcutsView.swift */; };
+		DE787D98D8EB9B7B2E4CB705 /* F1View.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1EFD1D83C7FB4561E3A2CC27 /* F1View.swift */; };
 		E0E40F939970A6AB282C7437 /* WeatherService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 92FC7E64A4478DE0F57D42E4 /* WeatherService.swift */; };
 		E39865B386D35D5DB44EF9D8 /* BrowserModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F23D3171A71FF28676DD18D /* BrowserModel.swift */; };
 		E6AB0BB519CF8FCA9D604EC8 /* SystemStatsReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0261C9487F10782B8FFD351 /* SystemStatsReader.swift */; };
@@ -156,6 +158,7 @@
 		1C5A54FB338D3A1C23699078 /* NotchRootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotchRootView.swift; sourceTree = "<group>"; };
 		1D75D90CD0ED25880BFFC38F /* BackgroundMusic-LICENSE.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = "BackgroundMusic-LICENSE.txt"; sourceTree = "<group>"; };
 		1EC00C3A3694AC867DD418EC /* AccessCodeManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccessCodeManager.swift; sourceTree = "<group>"; };
+		1EFD1D83C7FB4561E3A2CC27 /* F1View.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = F1View.swift; sourceTree = "<group>"; };
 		21DB33F0188BFD9B3D8FA4C3 /* ClipboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClipboardView.swift; sourceTree = "<group>"; };
 		2254DC7F98860645E6CC2E11 /* TodayExtras.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodayExtras.swift; sourceTree = "<group>"; };
 		25B7E1619A5F162E845D012C /* FaceUnlock.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FaceUnlock.swift; sourceTree = "<group>"; };
@@ -173,6 +176,7 @@
 		3F56873F8683487EBE9C958A /* TranslationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TranslationManager.swift; sourceTree = "<group>"; };
 		404B8C35377E3958184925BE /* BackgroundMusic.pkg */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.installer-pkg"; path = BackgroundMusic.pkg; sourceTree = "<group>"; };
 		419A5F6F30DFBF30351906D2 /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
+		466B2516F7D15E3C623784BC /* F1Model.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = F1Model.swift; sourceTree = "<group>"; };
 		46A01968170BB2B7959205B3 /* Tunnelblick.dmg */ = {isa = PBXFileReference; path = Tunnelblick.dmg; sourceTree = "<group>"; };
 		48667860F7FB5AB63EB47043 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		48EF75FD565DB103E4CEEB07 /* MusicLevelMeter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MusicLevelMeter.swift; sourceTree = "<group>"; };
@@ -297,6 +301,7 @@
 				266F4B9D59CAFDD3ED749F99 /* Claude */,
 				3A55AF15FF270E1FE06C7032 /* Clipboard */,
 				4829360DD24F5EAB49DBEDBE /* Devices */,
+				616E4A2F26D340BC606C8FD6 /* F1 */,
 				A26703948EEDD51D6AB203C4 /* Focus */,
 				4A31A1C2CA7DE400C61A8027 /* Launcher */,
 				26DB45DCC02360CD38C22FD3 /* Live */,
@@ -419,6 +424,15 @@
 				7E3DB230CD04EC3E1A948E17 /* WindowsView.swift */,
 			);
 			path = Windows;
+			sourceTree = "<group>";
+		};
+		616E4A2F26D340BC606C8FD6 /* F1 */ = {
+			isa = PBXGroup;
+			children = (
+				466B2516F7D15E3C623784BC /* F1Model.swift */,
+				1EFD1D83C7FB4561E3A2CC27 /* F1View.swift */,
+			);
+			path = F1;
 			sourceTree = "<group>";
 		};
 		63B5F483B9A998123FAE1D8E /* WorldClock */ = {
@@ -813,6 +827,8 @@
 				3DEAFC4359632CB4DF71ECE1 /* DevicesView.swift in Sources */,
 				242C7B0C09B073631A588CBE /* DownloadWatcher.swift in Sources */,
 				30DCFA374C50438319E87754 /* ExtrasSettings.swift in Sources */,
+				DCE9CF6CAF6F38227D18150F /* F1Model.swift in Sources */,
+				DE787D98D8EB9B7B2E4CB705 /* F1View.swift in Sources */,
 				442C0FCFC8F3FA259F6BA39A /* FaceUnlock.swift in Sources */,
 				1019743E3C501B599ECAE938 /* FeatureHub.swift in Sources */,
 				CA0E4BF296C64534C899D7F2 /* FileSearchManager.swift in Sources */,
@@ -981,7 +997,7 @@
 				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Manual;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 26;
+				CURRENT_PROJECT_VERSION = 27;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = "";
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -996,7 +1012,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 1.14.4;
+				MARKETING_VERSION = 1.14.5;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -1079,7 +1095,7 @@
 				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Manual;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 26;
+				CURRENT_PROJECT_VERSION = 27;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = "";
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -1100,7 +1116,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 1.14.4;
+				MARKETING_VERSION = 1.14.5;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;

@@ -183,6 +183,7 @@ struct NotchRootView: View {
             case .translator: NotchTranslatorView()
             case .stats: NotchStatsView()
             case .timer: TimerView()
+            case .f1: F1View()
             case .snippets: SnippetsView()
             case .shortcuts: ShortcutsView()
             case .devices: DevicesView()
