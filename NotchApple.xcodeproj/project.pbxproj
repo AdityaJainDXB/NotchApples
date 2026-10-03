@@ -115,6 +115,7 @@
 		CFAB476520EEBC0E831DF7DE /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 6E8B16EE4068BC4835F8B4C0 /* GoogleService-Info.plist */; };
 		D008BFB60E8F1B1C8CBBFD43 /* LiveView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFADF33A515791B8743E49FB /* LiveView.swift */; };
 		D14A7182094B0FCB8A57044B /* WorldClockView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BC0266F190CB2E6D5FE2CE7 /* WorldClockView.swift */; };
+		D1C210100728BD42DBD406B8 /* GamesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44EC19E1838745C95B5759DF /* GamesView.swift */; };
 		D259A3CCCF1FD276BAD8F02C /* AccountSync.swift in Sources */ = {isa = PBXBuildFile; fileRef = BA53B7D1995BA4D5C0C0B434 /* AccountSync.swift */; };
 		D34F08D32DB7647BCA41C1DC /* SystemHUDObserver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2FDF0D52167C63FBB161D611 /* SystemHUDObserver.swift */; };
 		D6AB6D3B477B7BBBEFB85708 /* ScreenTimeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9428FE6894A084A43909BD76 /* ScreenTimeView.swift */; };
@@ -193,6 +194,7 @@
 		404B8C35377E3958184925BE /* BackgroundMusic.pkg */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.installer-pkg"; path = BackgroundMusic.pkg; sourceTree = "<group>"; };
 		419A5F6F30DFBF30351906D2 /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
 		44CAF8A30126F03D6A230ED7 /* AIModes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIModes.swift; sourceTree = "<group>"; };
+		44EC19E1838745C95B5759DF /* GamesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GamesView.swift; sourceTree = "<group>"; };
 		466B2516F7D15E3C623784BC /* F1Model.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = F1Model.swift; sourceTree = "<group>"; };
 		46A01968170BB2B7959205B3 /* Tunnelblick.dmg */ = {isa = PBXFileReference; path = Tunnelblick.dmg; sourceTree = "<group>"; };
 		48667860F7FB5AB63EB47043 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
@@ -335,6 +337,7 @@
 				4829360DD24F5EAB49DBEDBE /* Devices */,
 				616E4A2F26D340BC606C8FD6 /* F1 */,
 				A26703948EEDD51D6AB203C4 /* Focus */,
+				FFD80C1974A515C07A482D28 /* Games */,
 				4A31A1C2CA7DE400C61A8027 /* Launcher */,
 				26DB45DCC02360CD38C22FD3 /* Live */,
 				928715D8716E7F408FC89AB9 /* Messenger */,
@@ -756,6 +759,14 @@
 			path = NowPlaying;
 			sourceTree = "<group>";
 		};
+		FFD80C1974A515C07A482D28 /* Games */ = {
+			isa = PBXGroup;
+			children = (
+				44EC19E1838745C95B5759DF /* GamesView.swift */,
+			);
+			path = Games;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -916,6 +927,7 @@
 				0B1569487E2F135B049C0FBB /* FileShelf.swift in Sources */,
 				260DC3E3C52E0B1023D405F4 /* FocusTimer.swift in Sources */,
 				537F255A1D69F77CC3D7AF9E /* FocusView.swift in Sources */,
+				D1C210100728BD42DBD406B8 /* GamesView.swift in Sources */,
 				04DA84BD772511B028648D4E /* GlobalHotkeyManager.swift in Sources */,
 				71C400496997AA8DF53FAF5D /* KeychainHelper.swift in Sources */,
 				97C87D7865B82ECEB80B9E60 /* LiveActivity.swift in Sources */,

@@ -15,6 +15,7 @@
 //    -demoFollowUp <question>   ask a follow-up once the first answer is done
 //    -demoOverlay <file>        show the capture overlay over this image (not the real screen)
 //    -demoSelection x,y,w,h     with -demoOverlay, a selection in points from the top-left
+//    -demoSportsDetail YES      open the details of your team's latest result
 //
 
 import AppKit
@@ -45,6 +46,11 @@ enum DemoHooks {
             let chat = ClaudeChatModel.shared
             if let path = d.string(forKey: "demoInput") { chat.load(file: URL(fileURLWithPath: path)) }
             if let text = d.string(forKey: "demoText") { chat.setTextInput(text, source: "Using the text you copied") }
+            if d.bool(forKey: "demoSportsDetail") {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 7) {
+                    if let m = SportsModel.shared.results.first { SportsModel.shared.openDetail(m) }
+                }
+            }
             if let tab = d.string(forKey: "openNotch").flatMap(Module.init(rawValue:)) { AppDelegate.showNotch(tab: tab) }
             if let mode = d.string(forKey: "demoRun").flatMap(AIMode.init(rawValue:)) {
                 DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { chat.run(mode) }

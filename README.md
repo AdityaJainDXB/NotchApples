@@ -40,6 +40,7 @@ Notch apple lives in the black cutout at the top of your MacBook screen (a small
 | 📋 **Any input** | Paste an image or text (<kbd>⌘⇧V</kbd>), drop an image or PDF, or use the text you selected |
 | 🕘 **History** | Local, searchable, with the image, mode and model; reopen and continue |
 | 🔒 **Free or fully local AI** | Gemini, Groq or OpenRouter for free, Ollama on your Mac (offline, no key), or your own Claude, ChatGPT or DeepSeek key |
+| ⚽ **Sports & cricket** | Your team with match alerts, fixtures, league tables and match details (goals, cards, lineups); national teams, India cricket and the IPL |
 | 🏁 **F1** | Live running order, classification with gaps and tyres, schedule countdown, standings, a favourite driver or team beside the notch |
 | 🧰 **30+ more tools** | Now Playing, window snapping, clipboard, file shelf, focus timer, Sports, Messenger, notes, search and more |
 
@@ -200,6 +201,21 @@ All screenshots use sample data.
 
 ## What's new
 
+### 1.15.1 · 3 October 2026 · Match day, cricket and games
+
+- **Sports:** match alerts (a notification 30 minutes before kick-off, and a flash in the notch on goals and at full time), a **league table** next to the fixtures, and **match details** (goalscorers, cards and lineups); click any score.
+- **Cricket:** India's internationals and the IPL. **National teams:** World Cup, qualifiers, Nations League, Euro, Copa América, Asian Cup and friendlies.
+- If ESPN is down or changes, Sports says **unavailable** instead of showing an empty tab.
+- **Notch Games** *(add-on)*: 2048, Snake and a reaction test for short breaks.
+- Fixed: an old "Update available" notification could stay after you'd already updated.
+
+| | |
+| --- | --- |
+| ![Sports](docs/screenshots/sports.png) | ![Match details](docs/screenshots/sports-detail.png) |
+| **Sports**: your team, fixtures and a league table | **Match details**: goals, cards and lineups |
+| ![Games](docs/screenshots/games.png) | |
+| **Notch Games**: 2048, Snake, reaction test | |
+
 ### 1.15.0 · 3 October 2026 · See it, capture it, understand it
 
 - **Capture anything** with <kbd>⌃⌥S</kbd> (change it in Settings → Shortcuts & Hotkeys): a region on the display under the pointer, Retina-sharp with the exact size shown, the whole display, or every display. Esc or right-click cancels.
@@ -271,7 +287,8 @@ Every module is **optional** and can be switched on or off in **Settings → Mod
 | 🧱 **Shortcuts** *(add-on, new)* | Run any of your **Apple Shortcuts** from the notch, with a **Focus modes** row for shortcuts that switch Focus / Do Not Disturb. Shortcuts can drive the notch too, with [`notchapple://` links](#control-the-notch-from-shortcuts). |
 | 🎧 **Devices** *(add-on, new)* | Battery for **AirPods** (left, right, case), **Magic Mouse, Keyboard and Trackpad**, with a low-battery alert at 15%. Shows **which apps are using your mic** and whether a **camera** is on, with a one-click **mic mute**. Shows your **iPhone's battery** when it's connected over Bluetooth, and **Ring my iPhone** opens Find My. |
 | 🏁 **F1** *(add-on, new)* | **Formula 1 live timing**: the live running order during every session (ESPN's free feed; live gaps need a paid F1 account), then the full classification with gaps, tyres, laps and the flag from F1's public timing archive. The weekend schedule in your time zone with a countdown, and driver and team standings (Jolpica). Click a driver to follow them, or pick a favourite team: their position (and the gap when F1 provides it) shows beside the notch while a session runs. |
-| ⚽ **Sports** *(new)* | **Follow your team, Barcelona by default.** The next match with a countdown, all its competitions (league, Champions League, cups), recent results, and the live score beside the closed notch while it plays. Switch team in **Change** or by tapping a team. A league view shows the next two weeks of fixtures and scores for La Liga, the Premier League, Serie A, the Bundesliga, Ligue 1, the Champions League, the Europa League, Liga Portugal, the Eredivisie, MLS, NBA, NFL, MLB and NHL (ESPN's free public feed). On for everyone; turn it off in Settings → Modules. |
+| 🎮 **Games** *(add-on, new)* | Tiny games for a short break: **2048**, **Snake** and a **reaction test**, played with the keyboard in the notch. Best scores stay on your Mac. |
+| ⚽ **Sports** *(new)* | **Follow your team, Barcelona by default.** The next match with a countdown, all its competitions (league, Champions League, cups), recent results, and the live score beside the closed notch while it plays. Switch team in **Change** or by tapping a team. A league view shows the next two weeks of fixtures and scores for La Liga, the Premier League, Serie A, the Bundesliga, Ligue 1, the Champions League, the Europa League, Liga Portugal, the Eredivisie, MLS, NBA, NFL, MLB and NHL (ESPN's free public feed). On for everyone; turn it off in Settings → Modules. **New in 1.15.1:** match alerts (30 minutes before kick-off, a flash on goals and at full time), a **league table** (Fixtures / Table), **match details** (click a score: goalscorers, cards, lineups), **national teams** (World Cup, qualifiers, Nations League, Euro, Copa América, Asian Cup, friendlies) and **cricket** (India's internationals and the IPL). If ESPN is down, it says so instead of showing an empty tab. |
 | 🏟 **Live** *(add-on, new)* | **Live scores** for the Premier League, Champions League, La Liga, MLS, NBA, NFL, MLB and NHL (ESPN's public scoreboard). Follow a team and its score shows beside the notch while it plays. Paste a **parcel or flight number** and it recognises UPS, FedEx, USPS, DHL or a flight and opens the right tracking page. |
 | 🔔 **Notifications** *(add-on, new)* | Notifications from your other apps, in the notch, with a bell and count beside it when new ones arrive. **Reply to iMessages** without opening Messages. It reads Notification Center's own database (read-only, on your Mac), so it needs **Full Disk Access**. |
 | 🧩 **Plugins** *(add-on, new)* | Make your own notch widgets in any language. See [Plugins](#plugins). |

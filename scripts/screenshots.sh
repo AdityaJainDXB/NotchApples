@@ -11,6 +11,7 @@
 #   • Only the app's own windows are captured (screencapture -l), never the whole screen.
 #     The capture-overlay shot shows the overlay over the sample "screen" image, not your real screen.
 #
+# ONLY="f1 sports" scripts/screenshots.sh takes just those shots.
 # Writes docs/screenshots/<name>.png; with --site also <site>/assets/screenshots/<name>.webp.
 # Needs: Xcode, xcodegen, Ollama with `ollama pull gemma3:4b`, Python 3 with Pillow.
 
@@ -61,7 +62,7 @@ swiftc -O "$WORK/wid.swift" -o "$WORK/wid" 2>/dev/null
 
 echo "› Settings for the screenshot copy"
 defaults delete $D >/dev/null 2>&1 || true
-for k in onboarding.permissionsShown onboarding.welcomeDismissed module.f1.enabled module.claude.enabled; do defaults write $D $k -bool true; done
+for k in onboarding.permissionsShown onboarding.welcomeDismissed module.f1.enabled module.claude.enabled module.sports.enabled module.games.enabled; do defaults write $D $k -bool true; done
 defaults write $D updates.autoCheck -bool false
 defaults write $D ai.provider ollama
 defaults write $D ai.models -string '{"ollama":"gemma3:4b"}'
@@ -76,6 +77,7 @@ wait_answers() { local want=$1; for _ in $(seq 1 120); do [ "$(answers)" -ge "$w
 
 shot() {   # shot <name> <window kind> <wait: seconds | answers:N> <args…>
   local name=$1 kind=$2 wait=$3; shift 3
+  if [ -n "${ONLY:-}" ] && [[ " $ONLY " != *" $name "* ]]; then return; fi
   "$APP" "$@" >/dev/null 2>&1 & local pid=$!
   if [[ $wait == answers:* ]]; then sleep 4; wait_answers "${wait#answers:}"; sleep 2; else sleep "$wait"; fi
   local w; w=$("$WORK/wid" $pid "$kind")
@@ -92,6 +94,11 @@ shot follow-up     panel answers:3 -openNotch claude -demoPro YES -demoInput "$I
 shot code-analysis panel answers:4 -openNotch claude -demoPro YES -demoInput "$IN/code.png" -demoRun code
 shot capture-overlay overlay 4 -demoOverlay "$IN/screen.png" -demoSelection 300,228,900,382
 shot f1            panel 12 -openNotch f1
+shot sports        panel 12 -openNotch sports
+shot sports-table  panel 12 -openNotch sports -sports.showTable YES
+shot sports-cricket panel 12 -openNotch sports -sports.league cricket/india
+shot sports-detail panel 14 -openNotch sports -demoSportsDetail YES
+shot games         panel 5 -openNotch games
 shot history       settings 6 -openSettings aiHistory
 shot settings-ai   settings 6 -openSettings claude
 shot pro           panel 6 -openNotch claude
@@ -103,7 +110,7 @@ defaults delete $D >/dev/null 2>&1 || true
 if [ -n "$SITE" ]; then
   echo "› WebP copies for the website"
   mkdir -p "$SITE/assets/screenshots"
-  for f in ai-empty ai-input ai-result follow-up code-analysis capture-overlay f1 history settings-ai pro settings-pro; do
+  for f in ai-empty ai-input ai-result follow-up code-analysis capture-overlay f1 sports sports-table sports-cricket sports-detail games history settings-ai pro settings-pro; do
     [ -f "$OUT/$f.png" ] && python3 -c "
 from PIL import Image; im = Image.open('$OUT/$f.png'); im.thumbnail((1600, 1600)); im.save('$SITE/assets/screenshots/$f.webp', 'WEBP', quality=82, method=6)"
   done

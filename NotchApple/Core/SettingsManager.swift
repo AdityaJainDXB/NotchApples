@@ -12,7 +12,7 @@ import SwiftUI
 
 /// Every optional feature module in the app.
 enum Module: String, CaseIterable, Identifiable {
-    case today, claude, browser, launcher, translator, stats, windows, tools, mirror, worldClock, messenger, clipboard, notes, focus, shelf, share, audio, vpn, nowPlaying, search, timer, snippets, shortcuts, devices, live, f1, sports, alerts, plugins, voiceNotes, screenTime, quickAdd, security
+    case today, claude, browser, launcher, translator, stats, windows, tools, mirror, worldClock, messenger, clipboard, notes, focus, shelf, share, audio, vpn, nowPlaying, search, timer, snippets, shortcuts, devices, live, f1, sports, games, alerts, plugins, voiceNotes, screenTime, quickAdd, security
 
     var id: String { rawValue }
 
@@ -44,6 +44,7 @@ enum Module: String, CaseIterable, Identifiable {
         case .devices: "Devices"
         case .live: "Live"
         case .f1: "F1"
+        case .games: "Games"
         case .sports: "Sports"
         case .alerts: "Notifications"
         case .plugins: "Plugins"
@@ -82,6 +83,7 @@ enum Module: String, CaseIterable, Identifiable {
         case .devices: "airpods"
         case .live: "sportscourt.fill"
         case .f1: "flag.checkered"
+        case .games: "gamecontroller.fill"
         case .sports: "sportscourt"
         case .alerts: "bell.badge.fill"
         case .plugins: "puzzlepiece.extension.fill"
@@ -118,6 +120,7 @@ enum Module: String, CaseIterable, Identifiable {
         case .snippets: "Add-on: saved bits of text you paste into any app with one click."
         case .shortcuts: "Add-on: run your Apple Shortcuts and switch Focus modes from the notch. Shortcuts can also control the notch with notchapple:// links."
         case .devices: "Add-on: battery for AirPods, Magic Mouse, keyboard and trackpad, what's using your mic or camera (with a mic mute), and Find My iPhone."
+        case .games: "Add-on: tiny games for a short break: 2048, Snake and a reaction test. Best scores stay on this Mac."
         case .f1: "Add-on: Formula 1 live timing (order, gaps, tyres, laps, flags), the weekend schedule with a countdown, and standings. Follow a driver to see their position beside the notch."
         case .sports: "Follow your team (Barcelona unless you pick another): the next match with a countdown, every competition it plays in, recent results and the live score beside the notch. Browse the next two weeks of fixtures in the big football leagues, the NBA, NFL, MLB and NHL."
         case .live: "Add-on: live scores for the teams you follow, plus quick tracking for parcels and flights."
@@ -156,7 +159,7 @@ final class SettingsManager: ObservableObject {
         var defaults: [String: Any] = [Module.today.storageKey: true, Module.claude.storageKey: true]
         offByDefault.forEach { defaults[$0.storageKey] = false }
         // 1.14 add-ons start off for everyone, new and existing installs.
-        [Module.timer, .snippets, .shortcuts, .devices, .live, .f1, .alerts, .plugins, .voiceNotes, .screenTime, .quickAdd].forEach { defaults[$0.storageKey] = false }
+        [Module.timer, .snippets, .shortcuts, .devices, .live, .f1, .games, .alerts, .plugins, .voiceNotes, .screenTime, .quickAdd].forEach { defaults[$0.storageKey] = false }
         defaults[Module.sports.storageKey] = true   // everyone gets Sports, tracking Barcelona
         d.register(defaults: defaults)
     }
@@ -198,6 +201,7 @@ final class SettingsManager: ObservableObject {
     @AppStorage(Module.devices.storageKey) var devicesEnabled = false
     @AppStorage(Module.live.storageKey) var liveEnabled = false
     @AppStorage(Module.f1.storageKey) var f1Enabled = false
+    @AppStorage(Module.games.storageKey) var gamesEnabled = false
     /// On for everyone: Sports follows Barcelona out of the box.
     @AppStorage(Module.sports.storageKey) var sportsEnabled = true
     @AppStorage(Module.alerts.storageKey) var alertsEnabled = false
@@ -293,6 +297,7 @@ final class SettingsManager: ObservableObject {
         case .devices: $devicesEnabled
         case .live: $liveEnabled
         case .f1: $f1Enabled
+        case .games: $gamesEnabled
         case .sports: $sportsEnabled
         case .alerts: $alertsEnabled
         case .plugins: $pluginsEnabled

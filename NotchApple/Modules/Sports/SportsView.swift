@@ -10,13 +10,17 @@ import SwiftUI
 
 struct SportsView: View {
     @StateObject private var sports = SportsModel.shared
+    @AppStorage("sports.showTable") private var showTable = false
 
     var body: some View {
         HStack(alignment: .top, spacing: 12) {
             GlassCard { myTeam }
-            GlassCard { leagueCard }.frame(width: 310)
+            GlassCard {
+                if let d = sports.detail { detailCard(d) } else { leagueCard }
+            }
+            .frame(width: 310)
         }
-        .onAppear { sports.viewing = true }
+        .onAppear { sports.viewing = true; if showTable { Task { await sports.loadStandings() } } }
         .onDisappear { sports.viewing = false }
     }
 
@@ -65,6 +69,9 @@ struct SportsView: View {
                         .toggleStyle(.switch).controlSize(.mini)
                         .font(.system(size: 10)).foregroundStyle(Theme.textSecondary)
                         .padding(.top, 2)
+                    Toggle("Match alerts: 30 minutes before kick-off, goals and full time", isOn: $sports.matchAlerts)
+                        .toggleStyle(.switch).controlSize(.mini)
+                        .font(.system(size: 10)).foregroundStyle(Theme.textSecondary)
                 }
             }
         }
@@ -107,6 +114,9 @@ struct SportsView: View {
         }
         .padding(10)
         .background(Theme.surface, in: RoundedRectangle(cornerRadius: 10))
+        .contentShape(Rectangle())
+        .onTapGesture { sports.openDetail(m) }
+        .help("Goals, cards and lineups")
     }
 
     private func nextCard(_ m: SportsModel.Match) -> some View {
@@ -207,7 +217,9 @@ struct SportsView: View {
             Text("\(mine.score)–\(theirs.score)").font(.system(size: 11, weight: .semibold).monospacedDigit()).foregroundStyle(.white)
         }
         .padding(.horizontal, 6).padding(.vertical, 2)
-        .help(m.competition)
+        .contentShape(Rectangle())
+        .onTapGesture { sports.openDetail(m) }
+        .help("\(m.competition) · click for goals, cards and lineups")
     }
 
     // MARK: League
@@ -217,12 +229,25 @@ struct SportsView: View {
             HStack {
                 leagueMenu
                 Spacer()
-                IconButton(systemImage: "arrow.clockwise", help: "Refresh") { Task { await sports.loadLeague() } }
+                IconButton(systemImage: "arrow.clockwise", help: "Refresh") {
+                    Task { await sports.loadLeague(); if showTable { await sports.loadStandings() } }
+                }
             }
+            Picker("", selection: $showTable) {
+                Text("Fixtures").tag(false)
+                Text("Table").tag(true)
+            }
+            .pickerStyle(.segmented).labelsHidden().controlSize(.small)
+            .onChange(of: showTable) { _, on in if on && !sports.standingsLoaded { Task { await sports.loadStandings() } } }
+            .onChange(of: sports.leagueID) { _, _ in if showTable { Task { await sports.loadStandings() } } }
+            if showTable { tableView } else {
             ScrollView {
                 LazyVStack(alignment: .leading, spacing: 2) {
                     if sports.loadingLeague {
                         ProgressView().controlSize(.small).padding(.top, 16).frame(maxWidth: .infinity)
+                    } else if sports.leagueUnavailable {
+                        Label("Sports data is unavailable right now (ESPN didn't answer). It'll try again shortly.", systemImage: "wifi.exclamationmark")
+                            .font(.system(size: 11)).foregroundStyle(.orange).padding(.top, 12)
                     } else if sports.leagueMatches.isEmpty {
                         Text("No upcoming matches found.").font(.system(size: 11)).foregroundStyle(Theme.textSecondary).padding(.top, 12)
                     }
@@ -232,8 +257,112 @@ struct SportsView: View {
                     }
                 }
             }
-            Text("Tap a team to track it.").font(.system(size: 10)).foregroundStyle(Theme.textSecondary)
+            }
+            Text(showTable ? "Tap a team to track it." : "Tap a team to track it, or a score for details.").font(.system(size: 10)).foregroundStyle(Theme.textSecondary)
         }
+    }
+
+    // MARK: Table
+
+    private var tableView: some View {
+        ScrollView {
+            LazyVStack(alignment: .leading, spacing: 1) {
+                if !sports.standingsLoaded {
+                    ProgressView().controlSize(.small).padding(.top, 16).frame(maxWidth: .infinity)
+                } else if sports.standings.isEmpty {
+                    Text(sports.leagueID == SportsModel.indiaCricket ? "International cricket has no league table." : "No table for this competition right now.")
+                        .font(.system(size: 11)).foregroundStyle(Theme.textSecondary).padding(.top, 12)
+                } else {
+                    HStack(spacing: 4) {
+                        Text("#").frame(width: 18, alignment: .trailing)
+                        Text("Team").frame(maxWidth: .infinity, alignment: .leading)
+                        Text("P").frame(width: 22)
+                        Text(sports.leagueID.hasPrefix("cricket") ? "NRR" : "GD").frame(width: 38)
+                        Text("Pts").frame(width: 26)
+                    }
+                    .font(.system(size: 9, weight: .semibold)).foregroundStyle(Theme.textSecondary)
+                    ForEach(sports.standings) { row in
+                        if row.rank == 1, !row.group.isEmpty {
+                            Text(row.group).sectionTitle().padding(.top, 6)
+                        }
+                        let mine = row.teamID == sports.teamID
+                        HStack(spacing: 4) {
+                            Text("\(row.rank)").frame(width: 18, alignment: .trailing).foregroundStyle(Theme.textSecondary)
+                            Button { sports.track(id: row.teamID, name: row.team, fromLeague: sports.leagueID) } label: {
+                                Text(row.team).fontWeight(mine ? .bold : .medium).foregroundStyle(mine ? Theme.accentBright : .white)
+                                    .lineLimit(1).frame(maxWidth: .infinity, alignment: .leading).contentShape(Rectangle())
+                            }
+                            .buttonStyle(.plain).help("Track \(row.team)")
+                            Text(row.played).frame(width: 22).foregroundStyle(Theme.textSecondary)
+                            Text(row.extra).frame(width: 38).foregroundStyle(Theme.textSecondary)
+                            Text(row.points).fontWeight(.bold).frame(width: 26).foregroundStyle(.white)
+                        }
+                        .font(.system(size: 11).monospacedDigit())
+                        .padding(.vertical, 2).padding(.horizontal, 3)
+                        .background(mine ? Theme.accent.opacity(0.22) : .clear, in: RoundedRectangle(cornerRadius: 5))
+                    }
+                }
+            }
+        }
+    }
+
+    // MARK: Match details
+
+    private func detailCard(_ d: SportsModel.MatchDetail) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                Button { sports.closeDetail() } label: { Label("Back", systemImage: "chevron.left").font(.system(size: 11, weight: .semibold)) }
+                    .buttonStyle(.plain).foregroundStyle(Theme.accentBright).keyboardShortcut(.cancelAction)
+                Spacer()
+                Text(d.match.competition).font(.system(size: 10)).foregroundStyle(Theme.textSecondary).lineLimit(1)
+            }
+            scoreLine(d.match)
+            if !d.note.isEmpty || !d.match.detail.isEmpty {
+                Text(d.note.isEmpty ? d.match.detail : d.note).font(.system(size: 10)).foregroundStyle(Theme.textSecondary).lineLimit(2)
+            }
+            ScrollView {
+                VStack(alignment: .leading, spacing: 4) {
+                    if sports.loadingDetail {
+                        ProgressView().controlSize(.small).frame(maxWidth: .infinity).padding(.top, 10)
+                    } else if d.events.isEmpty && d.lineups.isEmpty {
+                        Text(d.match.state == "pre" ? "Lineups appear about an hour before kick-off." : "No goals, cards or lineups available for this match.")
+                            .font(.system(size: 11)).foregroundStyle(Theme.textSecondary)
+                    }
+                    if !d.events.isEmpty {
+                        Text("Goals & cards").sectionTitle()
+                        ForEach(d.events) { e in
+                            HStack(alignment: .top, spacing: 6) {
+                                Text(e.minute).font(.system(size: 10, weight: .semibold).monospacedDigit()).foregroundStyle(Theme.textSecondary).frame(width: 34, alignment: .trailing)
+                                Text(icon(e.kind)).font(.system(size: 11))
+                                VStack(alignment: .leading, spacing: 0) {
+                                    Text(e.players.isEmpty ? e.kind : e.players).font(.system(size: 11, weight: .medium)).foregroundStyle(.white).lineLimit(2)
+                                    Text("\(e.kind) · \(e.team)").font(.system(size: 9)).foregroundStyle(Theme.textSecondary).lineLimit(1)
+                                }
+                            }
+                        }
+                    }
+                    ForEach(d.lineups) { l in
+                        Text("\(l.team)\(l.formation.isEmpty ? "" : " · \(l.formation)")").sectionTitle().padding(.top, 6)
+                        Text(l.starters.joined(separator: " · ")).font(.system(size: 10)).foregroundStyle(.white).fixedSize(horizontal: false, vertical: true)
+                        if !l.subs.isEmpty {
+                            Text("Bench: " + l.subs.joined(separator: " · ")).font(.system(size: 9)).foregroundStyle(Theme.textSecondary).fixedSize(horizontal: false, vertical: true)
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    /// "161/5 (18/20 ov, target 156)" → "161/5" for lists; the full line is in the details.
+    private func short(_ score: String) -> String {
+        score.components(separatedBy: " (").first ?? score
+    }
+
+    private func icon(_ kind: String) -> String {
+        if kind.hasPrefix("Yellow") { return "🟨" }
+        if kind.hasPrefix("Red") { return "🟥" }
+        if kind.hasPrefix("Substitution") { return "🔁" }
+        return "⚽"
     }
 
     private var leagueMenu: some View {
@@ -279,13 +408,17 @@ struct SportsView: View {
                 if m.state == "pre" {
                     Text(m.date.formatted(.dateTime.hour().minute())).font(.system(size: 11).monospacedDigit()).foregroundStyle(Theme.textSecondary)
                 } else {
-                    Text("\(m.home.score)–\(m.away.score)").font(.system(size: 12, weight: .bold).monospacedDigit())
+                    Text("\(short(m.home.score))–\(short(m.away.score))").font(.system(size: 12, weight: .bold).monospacedDigit())
+                        .minimumScaleFactor(0.6).lineLimit(1)
                         .foregroundStyle(m.isLive ? Color.green : .white)
                     Text(m.isLive ? m.detail : "FT").font(.system(size: 8, weight: .semibold))
                         .foregroundStyle(m.isLive ? Color.green : Theme.textSecondary)
                 }
             }
             .frame(width: 50)
+            .contentShape(Rectangle())
+            .onTapGesture { sports.openDetail(m) }
+            .help("Goals, cards and lineups")
             teamButton(m.away, alignment: .leading)
         }
         .padding(.vertical, 3).padding(.horizontal, 4)

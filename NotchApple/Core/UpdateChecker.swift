@@ -62,6 +62,9 @@ final class UpdateChecker: ObservableObject {
 
     /// Starts or stops the automatic checks to match the preference.
     func applyPreference() {
+        clearStaleNotifications()
+        // The screenshot build (DemoHooks) must never check or notify: it isn't a real install.
+        if DemoHooks.isDemo { timer?.invalidate(); timer = nil; return }
         if autoCheck, timer == nil {
             DispatchQueue.main.asyncAfter(deadline: .now() + 8) { [weak self] in self?.check() }
             timer = Timer.scheduledTimer(withTimeInterval: 6 * 3600, repeats: true) { _ in
@@ -76,6 +79,7 @@ final class UpdateChecker: ObservableObject {
     // MARK: Checking
 
     func check(userInitiated: Bool = false) {
+        if DemoHooks.isDemo { return }
         if case .downloading = phase { return }
         guard phase != .checking, phase != .installing else { return }
         phase = .checking
@@ -86,6 +90,7 @@ final class UpdateChecker: ObservableObject {
                 lastChecked = .now
                 if userInitiated, release.version == skippedVersion { skippedVersion = "" }
                 phase = pendingUpdate == nil ? .upToDate : .available
+                if pendingUpdate == nil { clearStaleNotifications() }
                 if let update = pendingUpdate, update.version != notifiedVersion {
                     notifiedVersion = update.version
                     notify(update)
@@ -160,7 +165,22 @@ final class UpdateChecker: ObservableObject {
         phase = .upToDate
     }
 
+    /// Removes "Update available" notifications for versions this Mac already has (or newer),
+    /// so an old alert never says you're out of date after you've updated.
+    func clearStaleNotifications() {
+        let current = currentVersion
+        let center = UNUserNotificationCenter.current()
+        center.getDeliveredNotifications { delivered in
+            let stale = delivered.map(\.request.identifier).filter { id in
+                guard id.hasPrefix("update-") else { return false }
+                return !Self.isNewer(String(id.dropFirst("update-".count)), than: current)
+            }
+            center.removeDeliveredNotifications(withIdentifiers: stale)
+        }
+    }
+
     private func notify(_ release: Release) {
+        guard !DemoHooks.isDemo, Self.isNewer(release.version, than: currentVersion) else { return }
         let content = UNMutableNotificationContent()
         content.title = "Update available"
         content.body = "Notch apple \(release.version) is ready. Would you like to update?"

@@ -21,6 +21,13 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "1.15.1", date: "3 October 2026", headline: "Match day, cricket and games", items: [
+            "Sports: match alerts (30 minutes before kick-off, plus a flash in the notch on goals and at full time), a league table next to the fixtures, and match details with goalscorers, cards and lineups.",
+            "Cricket: India's internationals and the IPL. National teams: the World Cup, qualifiers, Nations League, Euro, Copa América, Asian Cup and friendlies.",
+            "If ESPN is down or changes, Sports says it's unavailable instead of showing an empty tab.",
+            "Notch Games: 2048, Snake and a reaction test for short breaks (Settings → Modules).",
+            "Fixed: an old \"Update available\" notification could stay around after you'd updated.",
+        ]),
         ReleaseNote(version: "1.15.0", date: "3 October 2026", headline: "See it, capture it, understand it", items: [
             "Capture anything with ⌃⌥S: drag a box on the display under the pointer (Retina-sharp), take the whole display, or every display.",
             "Paste or drop an image or PDF onto the AI tab, or use the text you copied or selected.",
