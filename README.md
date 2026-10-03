@@ -221,6 +221,8 @@ All screenshots use sample data.
 | --- | --- |
 | ![Sports](docs/screenshots/sports.png) | ![Match details](docs/screenshots/sports-detail.png) |
 | **Sports**: your team, fixtures and a league table | **Match details**: goals, cards and lineups |
+| ![League table](docs/screenshots/sports-table.png) | ![India cricket](docs/screenshots/sports-cricket.png) |
+| **League table** next to the fixtures | **Cricket**: India's internationals and the IPL |
 | ![Games](docs/screenshots/games.png) | |
 | **Notch Games**: 2048, Snake, reaction test | |
 
