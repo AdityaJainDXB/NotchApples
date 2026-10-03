@@ -141,6 +141,23 @@ struct F1View: View {
 
     private var standings: some View {
         VStack(alignment: .leading, spacing: 6) {
+            HStack(spacing: 6) {
+                Menu {
+                    Button("None") { f1.favouriteTeam = "" }
+                    Divider()
+                    ForEach(f1.teamNames, id: \.self) { t in
+                        Button { f1.favouriteTeam = t } label: { Label(t, systemImage: t == f1.favouriteTeam ? "checkmark" : "") }
+                    }
+                } label: {
+                    Label(f1.favouriteTeam.isEmpty ? "Favourite team" : f1.favouriteTeam, systemImage: "star.fill").font(.system(size: 11, weight: .medium))
+                }
+                .menuStyle(.borderlessButton).fixedSize()
+                .help("Your team's best-placed car shows beside the notch during sessions (unless you follow a driver)")
+                Spacer()
+                if !f1.followedDriver.isEmpty {
+                    Text("Following \(f1.followedDriver)").font(.system(size: 10)).foregroundStyle(Theme.textSecondary)
+                }
+            }
             Picker("", selection: $tab) {
                 Text("Drivers").tag(0)
                 Text("Teams").tag(1)

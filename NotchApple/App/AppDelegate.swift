@@ -37,6 +37,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             .sink { [weak self] _ in self?.startGatedServices() }
             .store(in: &cancellables)
         SystemHUDObserver.shared.start()
+        WhatsNew.noteLaunch()
         applyMediaKeyPreference()
         // Accessibility may be granted later; keep trying quietly until the tap is running.
         Timer.scheduledTimer(withTimeInterval: 10, repeats: true) { timer in

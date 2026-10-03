@@ -79,7 +79,27 @@ final class F1Model: ObservableObject {
     @Published private(set) var orderOnly = false
     @Published var viewing = false { didSet { if viewing { refreshAll() } ; schedulePolling() } }
 
-    @AppStorage("f1.follow") var followedDriver = "" { didSet { LiveActivityCenter.shared.recompute() } }
+    @AppStorage("f1.follow") var followedDriver = "" { didSet { schedulePolling(); LiveActivityCenter.shared.recompute() } }
+    /// Favourite team (as F1 names it, e.g. "Ferrari"): its best-placed car shows when no driver is followed.
+    @AppStorage("f1.team") var favouriteTeam = "" { didSet { schedulePolling(); LiveActivityCenter.shared.recompute() } }
+
+    /// The car to show beside the notch: the followed driver, else the favourite team's best-placed car.
+    var favouriteCar: Car? {
+        if !followedDriver.isEmpty,
+           let car = cars.first(where: { $0.code.caseInsensitiveCompare(followedDriver) == .orderedSame || $0.number == followedDriver }) {
+            return car
+        }
+        guard !favouriteTeam.isEmpty else { return nil }
+        return cars.first { !$0.team.isEmpty && ($0.team.localizedCaseInsensitiveContains(favouriteTeam) || favouriteTeam.localizedCaseInsensitiveContains($0.team)) }
+    }
+
+    /// Teams in the current order, for the favourite-team menu.
+    var teamNames: [String] {
+        var seen: [String] = []
+        for c in cars where !c.team.isEmpty && !seen.contains(c.team) { seen.append(c.team) }
+        for t in teams.map(\.name) where !seen.contains(where: { $0.localizedCaseInsensitiveContains(t) || t.localizedCaseInsensitiveContains($0) }) { seen.append(t) }
+        return seen
+    }
     @AppStorage("f1.activity") var showActivity = true { didSet { schedulePolling(); LiveActivityCenter.shared.recompute() } }
 
     private var sessionPath: String?
@@ -118,7 +138,7 @@ final class F1Model: ObservableObject {
     /// Fast polling only while someone is looking, or while live with the notch activity on.
     private func schedulePolling() {
         let live = runningSession != nil || (sessionWindow.map { $0.contains(.now) } ?? false)
-        let want = live && (viewing || (showActivity && !followedDriver.isEmpty))
+        let want = live && (viewing || (showActivity && (!followedDriver.isEmpty || !favouriteTeam.isEmpty)))
         if want, pollTimer == nil {
             pollTimer = Timer.scheduledTimer(withTimeInterval: viewing ? 5 : 15, repeats: true) { _ in
                 MainActor.assumeIsolated { _ = Task { await F1Model.shared.loadTiming() } }
@@ -350,12 +370,13 @@ final class F1Model: ObservableObject {
     // MARK: Beside the notch
 
     var liveActivity: LiveActivity? {
-        guard showActivity, isLive, !followedDriver.isEmpty,
-              let car = cars.first(where: { $0.code.caseInsensitiveCompare(followedDriver) == .orderedSame || $0.number == followedDriver })
-        else { return nil }
+        // Only during a live session: never show an old result as if it were live.
+        guard showActivity, isLive, let car = favouriteCar else { return nil }
         let lapText = lap.map { $0.total > 0 ? " L\($0.current)/\($0.total)" : "" } ?? ""
+        let gap = orderOnly || car.position == 1 ? "" : (sessionType == "Race" ? car.interval : car.gap)
+        let gapText = gap.isEmpty ? lapText : " \(gap)"
         let flag: NSColor = track.contains("Red") ? .systemRed : (track.contains("Yellow") || track.contains("SC") || track.contains("VSC")) ? .systemYellow : .systemGreen
-        return LiveActivity(symbol: "flag.checkered", label: "P\(car.position) \(car.code)\(lapText)", tint: flag)
+        return LiveActivity(symbol: "flag.checkered", label: "P\(car.position) \(car.code)\(gapText)", tint: flag)
     }
 
     // MARK: Helpers

@@ -109,6 +109,7 @@
 		C91A005EA4ED8AC410BAF839 /* ClaudeChatView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 76A2AE80E039AD25E2029A03 /* ClaudeChatView.swift */; };
 		CA0E4BF296C64534C899D7F2 /* FileSearchManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75CDCA4D3C86F0827F694E96 /* FileSearchManager.swift */; };
 		CA7CEE6CA140974017B3B517 /* SnippetsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C159DF1B14A1D38FD58EC46 /* SnippetsView.swift */; };
+		CAED309713A89A35F4C679CE /* WhatsNew.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE594AA0AF5EFE02B030F414 /* WhatsNew.swift */; };
 		CEB54EB841EFFF09AB43ADFE /* BackgroundMusic-LICENSE.txt in Resources */ = {isa = PBXBuildFile; fileRef = 1D75D90CD0ED25880BFFC38F /* BackgroundMusic-LICENSE.txt */; };
 		CFAB476520EEBC0E831DF7DE /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 6E8B16EE4068BC4835F8B4C0 /* GoogleService-Info.plist */; };
 		D008BFB60E8F1B1C8CBBFD43 /* LiveView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFADF33A515791B8743E49FB /* LiveView.swift */; };
@@ -271,6 +272,7 @@
 		EAAF61A77914CEADECA550D4 /* ScreenRecordingDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenRecordingDetector.swift; sourceTree = "<group>"; };
 		EC316BD63536E8BD6E9FCD54 /* SettingsWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsWindowController.swift; sourceTree = "<group>"; };
 		EDBEAF142EDDBD8BE070A009 /* Tunnelblick-ABOUT.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = "Tunnelblick-ABOUT.txt"; sourceTree = "<group>"; };
+		EE594AA0AF5EFE02B030F414 /* WhatsNew.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WhatsNew.swift; sourceTree = "<group>"; };
 		EE79E1E6EA0B1FB034A48E87 /* LogicTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LogicTests.swift; sourceTree = "<group>"; };
 		EFADF33A515791B8743E49FB /* LiveView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveView.swift; sourceTree = "<group>"; };
 		F49D3A20C7CFE9C60DB8CBC3 /* LiveActivity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveActivity.swift; sourceTree = "<group>"; };
@@ -449,6 +451,7 @@
 				EA5B0C58A3CF928A968E10F8 /* SettingsManager.swift */,
 				419A5F6F30DFBF30351906D2 /* Theme.swift */,
 				91C60D5E0497858899252D40 /* UpdateChecker.swift */,
+				EE594AA0AF5EFE02B030F414 /* WhatsNew.swift */,
 			);
 			path = Core;
 			sourceTree = "<group>";
@@ -973,6 +976,7 @@
 				219D17761C8C9DB4C03DCBCF /* VoiceNotesView.swift in Sources */,
 				7E8386EF609533C3CF5608D8 /* WeatherService.swift in Sources */,
 				EB53320B29FB664836E79985 /* WebP2PManager.swift in Sources */,
+				CAED309713A89A35F4C679CE /* WhatsNew.swift in Sources */,
 				DC37742E9DC53226546E0A45 /* WindowManager.swift in Sources */,
 				72569F25523646AA163A2245 /* WindowsView.swift in Sources */,
 				D14A7182094B0FCB8A57044B /* WorldClockView.swift in Sources */,

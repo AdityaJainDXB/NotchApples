@@ -1252,22 +1252,56 @@ private struct WidgetSettings: View {
 // MARK: - About
 
 private struct AboutSettings: View {
+    @State private var showWhatsNew = WhatsNew.hasUnseen
+    @StateObject private var license = LicenseState.shared
+    @ObservedObject private var updater = UpdateChecker.shared
+
     var body: some View {
         VStack(spacing: 12) {
             Image(nsImage: NSApp.applicationIconImage).resizable().frame(width: 96, height: 96)
             Text("Notch apple").font(.title.bold())
             Text("Version \(Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "—")")
                 .foregroundStyle(.secondary)
-            Text("Free, open source, and fully local.").foregroundStyle(.secondary)
+            Text("Free, open source, and local first.").foregroundStyle(.secondary)
+            HStack(spacing: 14) {
+                Label(license.isActivated ? "Pro unlocked" : "Free (Pro not activated)", systemImage: license.isActivated ? "checkmark.seal.fill" : "seal")
+                    .foregroundStyle(license.isActivated ? .green : .secondary)
+                if updater.pendingUpdate != nil {
+                    Button { AppDelegate.openSettingsWindow(tab: .updates) } label: { Label("Update available", systemImage: "arrow.down.circle.fill") }
+                        .buttonStyle(.link)
+                } else {
+                    Button("Check for updates") { AppDelegate.openSettingsWindow(tab: .updates); updater.check(userInitiated: true) }.buttonStyle(.link)
+                }
+            }
+            .font(.callout)
+            Button { showWhatsNew = true } label: {
+                Label(WhatsNew.hasUnseen ? "What's new in \(WhatsNew.currentVersion)" : "What's New", systemImage: "sparkles")
+            }
+            .buttonStyle(PurpleButtonStyle(prominent: WhatsNew.hasUnseen))
             HStack {
                 Link("Website", destination: URL(string: "https://virajsinghchadha.github.io/notchapples-site/")!)
                 Text("·").foregroundStyle(.secondary)
                 Link("GitHub", destination: URL(string: "https://github.com/AdityaJainDXB/NotchApples")!)
                 Text("·").foregroundStyle(.secondary)
                 Link("Report an issue", destination: URL(string: "https://github.com/AdityaJainDXB/NotchApples/issues")!)
+                Text("·").foregroundStyle(.secondary)
+                Link("Donate", destination: URL(string: "https://github.com/AdityaJainDXB/NotchApples#donate-")!)
             }
+            Text("MIT License").font(.caption).foregroundStyle(.secondary)
             Button("Quit Notch apple") { NSApp.terminate(nil) }.padding(.top, 8)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .sheet(isPresented: $showWhatsNew) {
+            VStack(spacing: 0) {
+                HStack {
+                    Text("What's New").font(.title2.bold())
+                    Spacer()
+                    Button("Done") { showWhatsNew = false }.keyboardShortcut(.defaultAction)
+                }
+                .padding([.horizontal, .top], 20)
+                WhatsNewView()
+            }
+            .frame(width: 520, height: 560)
+        }
     }
 }
