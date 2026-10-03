@@ -4,24 +4,44 @@
 
 <h1 align="center">Notch apple</h1>
 
-<p align="center">
-  Turn your MacBook notch into a sleek, purple productivity hub.<br>
-  Free, open source, and fully local: no accounts, no servers, no tracking.
-</p>
+<p align="center"><b>AI, right where you need it.</b><br>
+Press <kbd>⌃⌥S</kbd>, drag over anything on your Mac's screen, and solve, explain, translate or summarize it in a second, right from the notch.<br>
+Free, open source, with free AI or fully local AI on your Mac. Plus 30 more tools in the notch.</p>
 
 <p align="center">
+  <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><img alt="Latest release" src="https://img.shields.io/github/v/release/AdityaJainDXB/NotchApples?filter=v*&color=8a5cf6&label=release"></a>
   <img alt="macOS 14+" src="https://img.shields.io/badge/macOS-14%2B-8a5cf6">
-  <img alt="Swift" src="https://img.shields.io/badge/Swift-SwiftUI%20%2B%20AppKit-8a5cf6">
-  <img alt="License" src="https://img.shields.io/badge/license-MIT-8a5cf6">
+  <img alt="Windows 10/11" src="https://img.shields.io/badge/Windows-10%20%7C%2011-8a5cf6">
+  <a href="LICENSE"><img alt="MIT license" src="https://img.shields.io/badge/license-MIT-8a5cf6"></a>
 </p>
 
 <p align="center">
   <a href="#download"><b>⬇️ Download</b></a>
-  &nbsp;·&nbsp; <a href="#install-on-mac"><b>🍎 Mac</b></a>
-  &nbsp;·&nbsp; <a href="#install-on-windows"><b>🪟 Windows</b></a>
   &nbsp;·&nbsp; <a href="https://virajsinghchadha.github.io/notchapples-site/"><b>🌐 Website</b></a>
-  &nbsp;·&nbsp; <a href="#want-a-lighter-version"><b>Lighter versions</b></a>
+  &nbsp;·&nbsp; <a href="#whats-new"><b>✨ What's new</b></a>
+  &nbsp;·&nbsp; <a href="#pro"><b>🔑 Pro</b></a>
+  &nbsp;·&nbsp; <a href="#donate-"><b>💜 Donate</b></a>
 </p>
+
+<p align="center">
+  <img src="docs/screenshots/capture-overlay.png" width="49%" alt="The capture overlay selecting a maths question on screen">
+  <img src="docs/screenshots/ai-result.png" width="49%" alt="The answer in the notch: steps solving 3x² − 12 = 0, answered on the Mac with Ollama">
+</p>
+
+## What is Notch apple?
+
+Notch apple lives in the black cutout at the top of your MacBook screen (a small pill on Macs without one). Press <kbd>⌃⌥S</kbd> in any app, drag a box around a maths problem, an error, a paragraph in another language or a chart, and pick what to do: **Solve, Explain, Translate, Summarize, Code**… The answer streams into the notch, and you can keep asking follow-ups about the same capture. It also brings F1 live timing, window snapping, clipboard history, Now Playing and many more tools. Everything is optional, and only the Pro extras need a key.
+
+| | |
+| --- | --- |
+| 📸 **Instant capture** | <kbd>⌃⌥S</kbd> from anywhere, even full screen: a region, the whole display, or all displays. Retina-sharp, on the display under your pointer |
+| 🧠 **AI vision & modes** | Solve (maths), Explain, Explain simply, Answer only, Hint, Summarize, Translate, Extract text (on your Mac), Rewrite, Code, Ask |
+| 💬 **Follow-ups** | Ask "why?" or "explain step 3": the AI still sees your capture. Stop, Retry, Edit, Copy, export |
+| 📋 **Any input** | Paste an image or text (<kbd>⌘⇧V</kbd>), drop an image or PDF, or use the text you selected |
+| 🕘 **History** | Local, searchable, with the image, mode and model; reopen and continue |
+| 🔒 **Free or fully local AI** | Gemini, Groq or OpenRouter for free, Ollama on your Mac (offline, no key), or your own Claude, ChatGPT or DeepSeek key |
+| 🏁 **F1** | Live running order, classification with gaps and tyres, schedule countdown, standings, a favourite driver or team beside the notch |
+| 🧰 **30+ more tools** | Now Playing, window snapping, clipboard, file shelf, focus timer, Sports, Messenger, notes, search and more |
 
 ## Download
 
@@ -41,7 +61,7 @@ Pick your computer. The Windows button starts the download straight away; the Ma
     </td>
   </tr>
   <tr>
-    <td align="center">macOS 14 or newer<br>about 9 MB</td>
+    <td align="center">macOS 14 or newer<br>about 33 MB</td>
     <td align="center">Windows 10 or 11 (64-bit)<br>about 2 MB</td>
   </tr>
   <tr>
@@ -100,37 +120,27 @@ Update later with `brew upgrade --cask notch-apple`. The first time you open it,
 
 On a Mac without a notch, a slim pill appears at the top center of the menu bar instead.
 
-<p align="center">
-  <img src="docs/screenshots/claude.png" width="720" alt="Notch apple expanded, showing the Claude tab">
-</p>
-
-<p align="center">💜 Like it? <a href="#donate-">Donate in Litecoin</a> to support a high school developer.</p>
-
 ---
 
 ## Screenshots
 
-### New in 1.14.6
+Taken from the current app with [`scripts/screenshots.sh`](scripts/screenshots.sh): a separate demo build with sample data, real answers from Ollama on the Mac, and only the app's own windows captured.
 
-- **Sports** (Mac and Windows, on for everyone): follow your team and everything it plays. **Everyone tracks Barcelona by default**, with the next match and a countdown, every competition it plays in (La Liga, Champions League, cups), recent results, and the live score beside the closed notch during the match. Pick any other team in **Change**, or tap a team in the fixtures list. Browse the next two weeks of fixtures and scores in La Liga, the Premier League, Serie A, the Bundesliga, Ligue 1, the Champions League, the Europa League, Liga Portugal, the Eredivisie, MLS, the NBA, NFL, MLB and NHL. Free, no account (ESPN's public feed).
+| | |
+| --- | --- |
+| ![Capture overlay](docs/screenshots/capture-overlay.png) | ![Pick an action](docs/screenshots/ai-input.png) |
+| **Capture**: drag over anything; the exact size shows as you drag | **Pick an action**: suggested from a quick look at the text, on your Mac |
+| ![Answer](docs/screenshots/ai-result.png) | ![Follow-up](docs/screenshots/follow-up.png) |
+| **The answer**: readable maths, streamed in | **Follow-ups** remember the capture |
+| ![Code](docs/screenshots/code-analysis.png) | ![History](docs/screenshots/history.png) |
+| **Code**: explains the error and fixes it | **History**: searchable, with images, modes and models |
+| ![Settings: AI](docs/screenshots/settings-ai.png) | ![F1](docs/screenshots/f1.png) |
+| **Settings → AI**: providers, Test connection, privacy, capture | **F1**: classification, schedule, standings |
+| ![Empty AI tab](docs/screenshots/ai-empty.png) | ![Unlock Pro](docs/screenshots/pro.png) |
+| **The AI tab**: capture, paste, selected text, or ask | **Pro**: enter a code or product key |
 
-### New in 1.14.5
-
-- **F1** *(add-on)*: Formula 1 in the notch: the live running order during sessions, then the full classification with gaps, tyres, laps and the flag, plus the weekend schedule in your time zone with a countdown, and driver and team standings. Click a driver to follow them, and during a session their position and the lap show beside the closed notch.
-- **Updates**: when a new release is out you get a notification, an **Update** button in the notch and a card in Settings → Updates: choose **Update** or **Not now**. Turn automatic checks off there if you prefer.
-- Donate in Litecoin: see [Donate](#donate-).
-
-### New in 1.14.3
-
-- Same features as 1.14.2, with the short-lived free trial build replaced. Nothing that was free became paid.
-
-### New in 1.14.2
-
-- **Nothing that was free became paid.** Now Playing, windows, clipboard, shelf, focus, tools and the rest stay free forever; Pro is the same features as before.
-- **Get Pro on the website**: a product key for $1 in Litecoin (or $2 to cover fees and support a high school developer), or free with a promo code. Keys are made instantly, work once, on one Mac. [Get Pro →](https://virajsinghchadha.github.io/notchapples-site/pro.html)
-- Product keys (NOTCH-XXXX-XXXX-XXXX) are checked online and re-verified against the blockchain; older access codes keep working.
-
-### New in 1.14.1
+<details>
+<summary><b>More screenshots</b> (every module and Settings pane)</summary>
 
 | | |
 | --- | --- |
@@ -150,8 +160,6 @@ On a Mac without a notch, a slim pill appears at the top center of the menu bar 
 | **Snippets**: paste saved text anywhere | **Settings → Notch Extras** |
 | ![Account sign-in](docs/screenshots/settings-license.png) | ![Backup & Sync](docs/screenshots/settings-backup.png) |
 | **Sign in with Google** to unlock Pro on every Mac | **Backup & Sync**: account, iCloud and backup files |
-
-All screenshots use sample data.
 
 All screenshots use sample data.
 
@@ -188,6 +196,49 @@ All screenshots use sample data.
 | ![Settings: VPN](docs/screenshots/settings-vpn.png) | ![Settings: Widget](docs/screenshots/settings-widget.png) |
 | **Settings → VPN**: free servers and your profiles | **Settings → Widget**: location or a city |
 
+</details>
+
+## What's new
+
+### 1.15.0 · 3 October 2026 · See it, capture it, understand it
+
+- **Capture anything** with <kbd>⌃⌥S</kbd> (change it in Settings → Shortcuts & Hotkeys): a region on the display under the pointer, Retina-sharp with the exact size shown, the whole display, or every display. Esc or right-click cancels.
+- **Any input:** paste an image or text (<kbd>⌘⇧V</kbd>), drop an image or PDF on the AI tab, or use the text selected in another app.
+- **Modes:** Solve, Explain, Explain simply, Answer only, Hint, Summarize, Translate, Extract text (on your Mac), Rewrite, Code and Ask, with suggestions from a quick on-device look at the capture.
+- **Streaming answers** with **Stop** (keeps what's written), **Retry** (with a new provider if you switched), **Edit**, **Copy** and export to Markdown or text. Follow-ups remember the image.
+- **Readable maths** instead of raw LaTeX, code blocks with Copy, and tables.
+- **History** keeps the image, mode and model; search it, reopen and continue, export, and pick how long to keep it.
+- **Settings → AI:** Test connection, a "reads images" badge, a Privacy summary and capture defaults. Retired models switch to a current one automatically.
+- **F1:** a favourite team; qualifying gaps and best laps.
+- **What's New** in Settings → About, shown once after updating.
+
+The full list for every release is on the [website](https://virajsinghchadha.github.io/notchapples-site/#new) and in the [GitHub releases](https://github.com/AdityaJainDXB/NotchApples/releases).
+
+<details>
+<summary><b>Earlier releases</b></summary>
+
+#### New in 1.14.6
+
+- **Sports** (Mac and Windows, on for everyone): follow your team and everything it plays. **Everyone tracks Barcelona by default**, with the next match and a countdown, every competition it plays in (La Liga, Champions League, cups), recent results, and the live score beside the closed notch during the match. Pick any other team in **Change**, or tap a team in the fixtures list. Browse the next two weeks of fixtures and scores in La Liga, the Premier League, Serie A, the Bundesliga, Ligue 1, the Champions League, the Europa League, Liga Portugal, the Eredivisie, MLS, the NBA, NFL, MLB and NHL. Free, no account (ESPN's public feed).
+
+#### New in 1.14.5
+
+- **F1** *(add-on)*: Formula 1 in the notch: the live running order during sessions, then the full classification with gaps, tyres, laps and the flag, plus the weekend schedule in your time zone with a countdown, and driver and team standings. Click a driver to follow them, and during a session their position and the lap show beside the closed notch.
+- **Updates**: when a new release is out you get a notification, an **Update** button in the notch and a card in Settings → Updates: choose **Update** or **Not now**. Turn automatic checks off there if you prefer.
+- Donate in Litecoin: see [Donate](#donate-).
+
+#### New in 1.14.3
+
+- Same features as 1.14.2, with the short-lived free trial build replaced. Nothing that was free became paid.
+
+#### New in 1.14.2
+
+- **Nothing that was free became paid.** Now Playing, windows, clipboard, shelf, focus, tools and the rest stay free forever; Pro is the same features as before.
+- **Get Pro on the website**: a product key for $1 in Litecoin (or $2 to cover fees and support a high school developer), or free with a promo code. Keys are made instantly, work once, on one Mac. [Get Pro →](https://virajsinghchadha.github.io/notchapples-site/pro.html)
+- Product keys (NOTCH-XXXX-XXXX-XXXX) are checked online and re-verified against the blockchain; older access codes keep working.
+
+</details>
+
 ## Features
 
 Every module is **optional** and can be switched on or off in **Settings → Modules**. **Pro** features (AI, Messenger, Audio, VPN, Voice Notes, Screen Time & Focus Blocker, Quick Add) need an access code; everything else, including Now Playing, is free.
@@ -197,7 +248,7 @@ Every module is **optional** and can be switched on or off in **Settings → Mod
 | ☀️ **Today** | The date, current weather, your next calendar events (with a **Now** badge for meetings in progress) and battery at a glance. |
 | ⏱ **Focus** | A Pomodoro timer: 25-minute focus sessions and 5-minute breaks, with a long break every 4th session. While it runs, **the countdown shows beside the closed notch**. You get a notification and a sound when each session ends. Lengths are adjustable in **Settings → Focus**. |
 | 🔋 **Charging** | Plug in or unplug the charger and the notch briefly shows your battery level. Turn it off in **Settings → General**. |
-| ✨ **AI** | Chat from the notch with **free** AI (Google Gemini, Groq, OpenRouter's free models, or Ollama on your Mac) or with your own key for **DeepSeek**, Claude or ChatGPT. **Ask "what's on my screen?"** and it takes a screenshot and answers about what you're actually looking at. One-click actions summarise, translate or fix what you copied. Every chat is saved in **Settings → AI History** with the model that answered. See [AI in the notch](#ai-in-the-notch). |
+| ✨ **AI** | Press <kbd>⌃⌥S</kbd> to **capture** part of any screen (or paste, drop an image or PDF, or use selected text) and pick a mode: Solve, Explain, Explain simply, Answer only, Hint, Summarize, Translate, Extract text (on your Mac), Rewrite, Code or Ask. Answers stream in with readable maths; Stop, Retry, Edit, Copy and follow-ups that remember the image. **Free** AI (Gemini, Groq, OpenRouter, or Ollama on your Mac) or your own Claude, ChatGPT or DeepSeek key. See [AI in the notch](#ai-in-the-notch). |
 | 🪟 **Windows** | A split-screen window manager. **Drag any window up to the notch** and a strip of snap zones drops down: halves, quarters (4 windows on one screen), thirds, two-thirds, fill and center. Or snap from the Windows tab, or with `⌃⌥` + arrow keys. **Arrange all** tiles every window on the screen at once (split screen, 3 columns, a 4/6/9 grid, main + stack, cascade). Save a whole layout and put every window back in one click. See [Window management](#window-management). |
 | 🧰 **Tools** | **Text Grab** copies the text from any area of the screen (even images and videos), recognised on your Mac. **Keep Awake** stops your Mac sleeping for 30 minutes, 1 or 2 hours, or until you turn it off. **Color Picker** picks any colour on screen and copies its hex code (right-click a swatch for RGB). **Calculator** answers as you type (`(12.5 + 7) × 3`), and Return copies the result. |
 | 🪞 **Mirror** *(add-on)* | A live mirror from your Mac's camera to check how you look before a call. Flip, zoom, pick a camera, and a white **ring light** frame for dark rooms. The camera only runs while the tab is open, and nothing is recorded. Turn it on in **Settings → Modules**. |
@@ -219,7 +270,7 @@ Every module is **optional** and can be switched on or off in **Settings → Mod
 | ✂️ **Snippets** *(add-on, new)* | Saved bits of text (addresses, sign-offs, replies, code). Click one and it's **pasted straight into the app you were using** (copied instead if Accessibility is off). |
 | 🧱 **Shortcuts** *(add-on, new)* | Run any of your **Apple Shortcuts** from the notch, with a **Focus modes** row for shortcuts that switch Focus / Do Not Disturb. Shortcuts can drive the notch too, with [`notchapple://` links](#control-the-notch-from-shortcuts). |
 | 🎧 **Devices** *(add-on, new)* | Battery for **AirPods** (left, right, case), **Magic Mouse, Keyboard and Trackpad**, with a low-battery alert at 15%. Shows **which apps are using your mic** and whether a **camera** is on, with a one-click **mic mute**. Shows your **iPhone's battery** when it's connected over Bluetooth, and **Ring my iPhone** opens Find My. |
-| 🏁 **F1** *(add-on, new)* | **Formula 1 live timing**: the live running order during every session (ESPN's free feed; live gaps need a paid F1 account), then the full classification with gaps, tyres, laps and the flag from F1's public timing archive. The weekend schedule in your time zone with a countdown, and driver and team standings (Jolpica). Click a driver to follow them: their position and the lap show beside the notch while a session runs. |
+| 🏁 **F1** *(add-on, new)* | **Formula 1 live timing**: the live running order during every session (ESPN's free feed; live gaps need a paid F1 account), then the full classification with gaps, tyres, laps and the flag from F1's public timing archive. The weekend schedule in your time zone with a countdown, and driver and team standings (Jolpica). Click a driver to follow them, or pick a favourite team: their position (and the gap when F1 provides it) shows beside the notch while a session runs. |
 | ⚽ **Sports** *(new)* | **Follow your team, Barcelona by default.** The next match with a countdown, all its competitions (league, Champions League, cups), recent results, and the live score beside the closed notch while it plays. Switch team in **Change** or by tapping a team. A league view shows the next two weeks of fixtures and scores for La Liga, the Premier League, Serie A, the Bundesliga, Ligue 1, the Champions League, the Europa League, Liga Portugal, the Eredivisie, MLS, NBA, NFL, MLB and NHL (ESPN's free public feed). On for everyone; turn it off in Settings → Modules. |
 | 🏟 **Live** *(add-on, new)* | **Live scores** for the Premier League, Champions League, La Liga, MLS, NBA, NFL, MLB and NHL (ESPN's public scoreboard). Follow a team and its score shows beside the notch while it plays. Paste a **parcel or flight number** and it recognises UPS, FedEx, USPS, DHL or a flight and opens the right tracking page. |
 | 🔔 **Notifications** *(add-on, new)* | Notifications from your other apps, in the notch, with a bell and count beside it when new ones arrive. **Reply to iMessages** without opening Messages. It reads Notification Center's own database (read-only, on your Mac), so it needs **Full Disk Access**. |
@@ -461,7 +512,7 @@ The table below lists when each is asked for.
 
 | Permission | Used by | When it's asked |
 | --- | --- | --- |
-| Screen Recording | Claude → Share Screen | The first time you share your screen |
+| Screen Recording | AI capture (<kbd>⌃⌥S</kbd>), "what's on my screen?", Text Grab | The first time you capture. macOS applies it after Notch apple restarts; the AI tab offers **Open System Settings** and **Relaunch** if it's missing |
 | Local Network | PairDrop, Messenger (Nearby Wi-Fi) | The first time either looks for nearby devices |
 | Calendars | Widget | When the widget first loads |
 | Touch ID / password | Biometric Lock | Each time you open the notch while the lock is on |
@@ -470,54 +521,88 @@ The table below lists when each is asked for.
 | Full Disk Access (optional) | Search, Notifications add-on | Never asked automatically. Only if you choose to, so Search can include protected folders, or the Notifications tab can read Notification Center's list |
 | Automation (Music, Spotify, Messages) | Lyrics, iMessage replies | The first time lyrics look up the song position, or you send a reply |
 | Microphone status | Devices add-on | Never asked: it only checks whether the mic is in use, and never records |
-| Accessibility | Windows (snapping and tiling), Snippets and Clipboard paste | When you first use the Windows tab. Used to move and resize windows, and to paste snippets into the app in front |
+| Accessibility | Windows (snapping and tiling), Snippets and Clipboard paste, AI → Use selected text | When you first use the Windows tab. Used to move and resize windows, to paste snippets into the app in front, and to read the text you selected. Copy and paste works without it |
 | System audio recording | Audio → per-app volume / EQ | The first time you change an app's volume or EQ. Audio is processed on your Mac and never recorded or sent anywhere |
 
 ## AI in the notch
 
+### Capture → pick a mode → answer
+
+1. **Capture.** Press <kbd>⌃⌥S</kbd> in any app (or the viewfinder button in the AI tab). The display under the pointer freezes: drag a box, click for the whole display, or press **Esc** / right-click to cancel. Hold the viewfinder button for **whole display** or **all displays**. Or **paste** (<kbd>⌘⇧V</kbd>: an image, copied file or text), **drop** an image or PDF on the AI tab, or **Use selected text**.
+2. **Pick a mode.** The first suggestions come from a quick look at the text on your Mac ("Looks like math", "Looks like an error message"…), never a guess presented as fact:
+
+   | Mode | What you get |
+   | --- | --- |
+   | Solve | Short numbered steps and a final **Answer:** line |
+   | Explain / Explain simply | A clear explanation, or a beginner one with an example |
+   | Answer only | Just the answer |
+   | Hint | One hint, without giving the solution away |
+   | Summarize | A few bullets and what matters most |
+   | Translate | Detects the language and translates into yours |
+   | Extract text | Done **on your Mac** with Apple's text recognition; nothing is sent |
+   | Rewrite | A clearer version of the text |
+   | Code | What the code or error means, then a fixed version |
+   | Ask | Your own question about the input |
+
+3. **Keep going.** Answers stream in with readable maths, code blocks with **Copy**, and tables. **Stop** keeps what's written, **Retry** asks again (with the provider you switched to, if any), **Edit** puts your question back, and follow-ups like "why?" or "explain step 3" still see the capture. **More** copies the whole conversation or exports it as Markdown or text.
+
+Questions not about the screen work too: just type. Ask "what's on my screen?" and a screenshot is attached for you (the notch itself is left out).
+
 ### Choose your AI
 
-The AI tab doesn't require a paid account. Pick a provider in the notch or in **Settings → AI**:
+Pick a provider in the notch or in **Settings → AI**, then press **Test connection**. A badge shows whether the model reads images, and **On this Mac** shows when Ollama is answering locally.
 
 | Provider | Cost | Get a key | Notes |
 | --- | --- | --- | --- |
-| **Google Gemini** | Free tier, no billing | [aistudio.google.com/apikey](https://aistudio.google.com/apikey) | Fast; can see screenshots. The default. |
+| **Google Gemini** | Free tier, no billing | [aistudio.google.com/apikey](https://aistudio.google.com/apikey) | Fast; reads images. The default (`gemini-3.8-flash`). |
 | **Groq** | Free tier, no billing | [console.groq.com/keys](https://console.groq.com/keys) | Very fast open models (Llama, Qwen, DeepSeek-distilled and more). |
 | **OpenRouter** | Free models, no billing | [openrouter.ai/keys](https://openrouter.ai/keys) | Only the free models are listed. The selection changes over time. |
-| **Ollama** | Free, runs on your Mac | No key. [Download Ollama](https://ollama.com/download) | Private and offline. Run e.g. `ollama run llama3.2` once. |
+| **Ollama** | Free, runs on your Mac | No key. [Download Ollama](https://ollama.com/download) | Private and offline. For images run `ollama pull gemma3:4b` once; text-only models like `llama3.2` work for text. |
 | **DeepSeek** | Paid, low cost (top up a balance) | [platform.deepseek.com](https://platform.deepseek.com/api_keys) | The official DeepSeek API (`deepseek-chat`, `deepseek-reasoner`). Text only. |
 | Claude | Paid (your Anthropic account) | [console.anthropic.com](https://console.anthropic.com/settings/keys) | |
 | ChatGPT (OpenAI) | Paid (your OpenAI account) | [platform.openai.com](https://platform.openai.com/api-keys) | The OpenAI API has no free tier. |
 
-Free OpenRouter models are shared and often busy, and many can't read images. When you ask about your screen, Notch apple picks an image-capable free model, retries once if the host is busy, then falls back to other free models and tells you which one answered. Model lists are loaded live from each provider, so new models appear automatically, and you can type any model ID. The official DeepSeek API has no free tier; free DeepSeek models sometimes appear in Groq's and OpenRouter's free lists. Keys are stored in a private file on your Mac that only your user account can read, and sent only to that provider.
+Free OpenRouter models are shared and often busy, and many can't read images: Notch apple picks an image-capable free model, retries once if the host is busy, then falls back to other free models and tells you which one answered. If a saved model is retired by its provider, Notch apple switches to a current one and says so.
 
-### It can see your screen when you ask
+### History
 
-Ask something about your screen and Notch apple takes a screenshot for you (leaving the notch itself out) and sends it with your question, so the answer is about what's really there. For example:
+Every task is saved in **Settings → AI History**, on your Mac only: the image (up to 1600 px, so you can continue later), the mode, your questions, the answers and the model that wrote each one. Search questions, answers, modes and dates; **Continue**, **Copy**, **Export** as Markdown, or delete one or all. In the menu at the top, turn saving off, stop keeping images, or delete chats automatically after 1, 7 or 30 days.
 
-- "What's on my screen?" / "What am I looking at?"
-- "Explain this error" / "What does this button do?"
-- "Summarise this page" / "Translate this page"
+## Keyboard shortcuts
 
-Questions that aren't about the screen ("What's the capital of France?") are sent as plain text. If the selected model can't see images (DeepSeek, most Groq and Ollama models), no screenshot is sent and the notch suggests switching to a model that can, such as Gemini. Turn this off in **Settings → AI → Share my screen when I ask about it**. The first time, macOS asks for Screen Recording permission.
+| Shortcut | Does |
+| --- | --- |
+| <kbd>⌃⌥S</kbd> | Capture for AI, from any app (even with the notch hidden) |
+| <kbd>⌃⌥N</kbd> | Open or close the notch (<kbd>⌘E</kbd> if you've used Notch apple since before 1.13) |
+| <kbd>⌘O</kbd> | Hide or show the whole notch |
+| <kbd>⌃⌥</kbd> + arrows, <kbd>↩</kbd>, <kbd>C</kbd>, <kbd>⌫</kbd> | Snap the front window: halves, maximise, centre, restore |
+| <kbd>Esc</kbd> | Close the notch, or cancel a capture |
+| In the AI tab: <kbd>↩</kbd> | Send / run |
+| <kbd>⌘⇧V</kbd> | Paste an image or text as the input |
+| <kbd>⌘.</kbd> · <kbd>⌘R</kbd> | Stop · Retry |
+| <kbd>⌘⇧C</kbd> · <kbd>⌘N</kbd> | Copy the answer · New task |
 
-### One-click actions
+Change the three global shortcuts in **Settings → Shortcuts & Hotkeys**. They use macOS's built-in hot keys, so they need no Accessibility permission and work in full-screen apps.
 
-On a new chat, one click runs:
+## Pro
 
-- **What's on my screen?**
-- **Summarise what I copied**
-- **Translate what I copied**
-- **Fix grammar of what I copied** (replies with just the corrected text)
+Most of Notch apple is free forever. **Pro** unlocks AI, Messenger, Audio, VPN, Voice Notes, Screen Time & Focus Blocker and Quick Add.
 
-### Chat history
+- **Get a product key** on the [Get Pro page](https://virajsinghchadha.github.io/notchapples-site/pro.html): $1 in Litecoin (or an optional $2, which helps cover transfer fees and supports the developer), or free with a promo code. The key (`NOTCH-XXXX-XXXX-XXXX`) is made instantly.
+- **One key, one Mac.** The app checks the key online, re-checks the payment on the Litecoin blockchain, and marks the key used for that Mac (which can re-activate later). Keys are stored only as hashes.
+- **Older access codes** (`NOTCH-XXXX-XXXX`) keep working offline.
+- **Signed in with Google?** Pro follows you to your other Macs.
+- Paste the key in **Settings → License & Activation**, or open any Pro tab.
 
-Every conversation is saved in **Settings → AI History**:
+## Troubleshooting
 
-- your first question, the provider and model(s) used, the date, and the full back-and-forth, with each reply labelled with the model that wrote it;
-- **Continue** a chat in the notch, **Copy** the transcript, search, or delete one or all.
-
-Screenshots aren't stored, only a note that one was attached. History stays on your Mac. Turn saving off with **Save AI chats**.
+- **Captures show only the wallpaper, or say Screen Recording is needed.** Turn on Notch apple in System Settings → Privacy & Security → Screen & System Audio Recording, then relaunch it (the AI tab has both buttons). After an update, if it still fails, remove Notch apple from that list with **−** and add it again.
+- **⌃⌥S does nothing.** Another app may own the combination: Settings → Shortcuts & Hotkeys shows a warning; pick another shortcut.
+- **"Can't read images".** The selected model is text only. Pick a vision model (any Gemini model, or `gemma3:4b` in Ollama).
+- **"Isn't available" / "rate-limiting you".** The model was retired (Notch apple switches automatically) or the free tier is busy: wait a minute and press Retry, or switch provider.
+- **Ollama isn't running.** Install it from [ollama.com](https://ollama.com/download), open it, and run `ollama pull gemma3:4b`.
+- **macOS says the app can't be opened.** It isn't notarized: right-click → Open, or System Settings → Privacy & Security → Open Anyway.
+- **A payment for Pro couldn't be verified.** Use the **Need help?** link under the error on the Get Pro page; it fills in your transaction ID.
 
 ## Face unlock
 
@@ -631,6 +716,33 @@ scripts/build_dmg.sh
 
 The DMG is written to `dist/`.
 
+Run the tests (pure logic: readable maths, answer parsing, input suggestions, provider errors). They don't launch the app:
+
+```bash
+xcodebuild test -project NotchApple.xcodeproj -scheme NotchAppleTests
+```
+
+Retake the README and website screenshots (needs [Ollama](https://ollama.com/download) with `ollama pull gemma3:4b`; it builds a separate demo copy with sample data and captures only its windows):
+
+```bash
+scripts/screenshots.sh --site ../notchapples-site
+```
+
+Add promo codes for Pro (codes go to the git-ignored `private/` folder; only hashes are published):
+
+```bash
+python3 scripts/promo_codes.py --add 25 --site ../notchapples-site/pro.html
+```
+
+### Contributing
+
+Issues and pull requests are welcome.
+
+1. Open an [issue](https://github.com/AdityaJainDXB/NotchApples/issues) first for anything bigger than a small fix, so we can agree on the approach.
+2. Keep each module optional and off the main thread; follow the surrounding code's style and comments.
+3. Run the tests and build the app before opening a pull request. If you change the UI, run `scripts/screenshots.sh` and include the updated screenshots.
+4. Never commit API keys, promo codes or anything from `private/`.
+
 ### Build the Windows app
 
 The frontend is plain HTML/CSS/ES modules — **no Node, no bundler, no build step**.
@@ -716,7 +828,7 @@ Per-app volume and EQ use Core Audio process taps, which arrived in macOS 14.2. 
 ## Privacy
 
 - Everything runs on your Mac. The only network requests are:
-  - the AI provider you chose (Gemini, Groq, OpenRouter, Anthropic or OpenAI), using your own key, when you chat. Ollama stays on your Mac
+  - the AI provider you chose (Gemini, Groq, OpenRouter, DeepSeek, Anthropic or OpenAI), using your own key, and only when you ask: your question, the image you captured or pasted, and that conversation. With **Ollama** nothing leaves your Mac, and the notch shows **On this Mac**
   - `api.github.com` to check for updates (can be turned off) and `github.com` to download one you accept
   - `open-meteo.com` for weather
   - `api.github.com` / `raw.githubusercontent.com` for the free VPN server list, and `vpngate.net`, only when you open the VPN tab
@@ -726,10 +838,12 @@ Per-app volume and EQ use Core Audio process taps, which arrived in macOS 14.2. 
 - Window management only reads window positions, sizes and titles to arrange them. Saved layouts stay on your Mac.
 - Your API keys and face-unlock template are stored in `~/Library/Application Support/Notch apple/secrets.json`, readable only by your user account (and encrypted at rest by FileVault if it's on). Face photos are never saved.
 - Search only asks Spotlight's local index. Nothing you search for leaves your Mac.
+- Captures are kept in memory while you work. AI history (with captured images, up to 1600 px) is saved only in `~/Library/Application Support/Notch apple/`; turn it off, stop keeping images, or set it to delete old chats in Settings → AI History. **Extract text** runs entirely on your Mac.
+- No telemetry or analytics. Signing in with Google is optional and only syncs your setup and Pro to your other Macs.
 
 ## Donate 💜
 
-Notch apple is free and made by high school developers. If it's useful to you and you'd like to support it, you can donate any amount in **Litecoin (LTC)**:
+Notch apple is free and made by high school developers. Donating is **completely optional**: it doesn't unlock anything, it just supports continued development. If it's useful to you, you can donate any amount in **Litecoin (LTC)**:
 
 ```
 ltc1qymlmvkdmvpk5f90esthzgwaw6w0tuzq6tdr6kf
