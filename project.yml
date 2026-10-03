@@ -39,3 +39,26 @@ targets:
         CODE_SIGN_ENTITLEMENTS: NotchWidget/NotchWidget.entitlements
         GENERATE_INFOPLIST_FILE: NO
         SKIP_INSTALL: YES
+  NotchAppleTests:
+    type: bundle.unit-test
+    platform: macOS
+    sources:
+      - NotchAppleTests
+      - NotchApple/Modules/Claude/MathText.swift
+      - NotchApple/Modules/Claude/AIModes.swift
+      - NotchApple/Modules/Claude/AIProviders.swift
+      - NotchApple/Modules/Claude/AIStreaming.swift
+      - NotchApple/Modules/Claude/ClaudeClient.swift
+      - NotchApple/Core/KeychainHelper.swift
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.notchapple.tests
+        GENERATE_INFOPLIST_FILE: YES
+schemes:
+  NotchAppleTests:
+    build:
+      targets:
+        NotchAppleTests: all
+    test:
+      targets: [NotchAppleTests]
+

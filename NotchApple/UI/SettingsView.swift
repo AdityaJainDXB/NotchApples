@@ -267,6 +267,8 @@ private struct ShortcutsSettings: View {
     @State private var notchBinding = HotkeyBinding.notch
     @State private var blocked = GlobalHotkeyManager.shared.isBlocked(.toggleInvisible)
     @State private var notchBlocked = GlobalHotkeyManager.shared.isBlocked(.toggleNotch)
+    @State private var captureBinding = HotkeyBinding.capture
+    @State private var captureBlocked = GlobalHotkeyManager.shared.isBlocked(.capture)
 
     var body: some View {
         Form {
@@ -276,7 +278,7 @@ private struct ShortcutsSettings: View {
                     Text("Press \(binding.label) from anywhere on your Mac to instantly hide or reveal the notch.")
                 }
                 LabeledContent("Shortcut") {
-                    ShortcutRecorder(slot: .invisibility, binding: $binding, reserved: [notchBinding]) {
+                    ShortcutRecorder(slot: .invisibility, binding: $binding, reserved: [notchBinding, captureBinding]) {
                         // The app re-registers on the next preferences change; check the result shortly after.
                         DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
                             blocked = GlobalHotkeyManager.shared.isBlocked(.toggleInvisible)
@@ -307,7 +309,7 @@ private struct ShortcutsSettings: View {
                     Text("Works in any app. While on, other apps don't receive \(notchBinding.label).")
                 }
                 LabeledContent("Shortcut") {
-                    ShortcutRecorder(slot: .notch, binding: $notchBinding, reserved: [binding]) {
+                    ShortcutRecorder(slot: .notch, binding: $notchBinding, reserved: [binding, captureBinding]) {
                         DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
                             notchBlocked = GlobalHotkeyManager.shared.isBlocked(.toggleNotch)
                             binding = HotkeyBinding.invisibility
@@ -321,6 +323,26 @@ private struct ShortcutsSettings: View {
                 }
             } header: {
                 Text("Notch")
+            }
+            Section {
+                Toggle(isOn: $settings.captureHotkeyEnabled) {
+                    Text("Capture with \(captureBinding.label)")
+                    Text("Select part of the screen from anywhere, even while the notch is hidden, and the AI tab opens with it.")
+                }
+                LabeledContent("Shortcut") {
+                    ShortcutRecorder(slot: .capture, binding: $captureBinding, reserved: [binding, notchBinding]) {
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                            captureBlocked = GlobalHotkeyManager.shared.isBlocked(.capture)
+                        }
+                    }
+                }
+                if captureBlocked && settings.captureHotkeyEnabled {
+                    Label("macOS didn't accept \(captureBinding.label): another app may already use it. Pick a different shortcut.",
+                          systemImage: "exclamationmark.triangle.fill")
+                        .font(.callout).foregroundStyle(.orange)
+                }
+            } header: {
+                Text("Capture for AI")
             } footer: {
                 Text("Shortcuts need ⌘ or ⌃. They use macOS's built-in hot keys, so no Accessibility permission is needed and they work in every app, including full-screen ones.")
             }
@@ -517,6 +539,9 @@ private struct ClaudeSettings: View {
     @State private var drafts: [AIProvider: String] = [:]
     @State private var customModel = ""
     @State private var refresh = 0     // bump to re-read saved-key state
+    @State private var testResult: (ok: Bool, message: String)?
+    @State private var testing = false
+    @AppStorage("capture.defaultMode") private var captureMode = CaptureManager.Mode.region.rawValue
 
     var body: some View {
         Form {
@@ -539,6 +564,25 @@ private struct ClaudeSettings: View {
                         if config.loadingModels { ProgressView().controlSize(.small) }
                     }
                     if let e = config.modelError { Text(e).font(.callout).foregroundStyle(.red) }
+                    LabeledContent("Images") {
+                        Label(config.provider.likelySupportsVision(config.model) ? "This model can read screenshots" : "Text only: pick a vision model to use captures",
+                              systemImage: config.provider.likelySupportsVision(config.model) ? "eye" : "eye.slash")
+                            .foregroundStyle(config.provider.likelySupportsVision(config.model) ? .green : .orange)
+                    }
+                    HStack {
+                        Button(testing ? "Testing…" : "Test connection") {
+                            testing = true; testResult = nil
+                            Task {
+                                testResult = await AIClient.testConnection(provider: config.provider, model: config.model)
+                                testing = false
+                            }
+                        }
+                        .disabled(testing)
+                        if let r = testResult {
+                            Label(r.message, systemImage: r.ok ? "checkmark.circle.fill" : "xmark.octagon.fill")
+                                .foregroundStyle(r.ok ? .green : .orange).font(.callout).lineLimit(3)
+                        }
+                    }
                 }
                 Toggle(isOn: Binding(get: { ClaudeChatModel.shared.autoScreen }, set: { ClaudeChatModel.shared.autoScreen = $0 })) {
                     Text("Share my screen when I ask about it")
@@ -548,6 +592,33 @@ private struct ClaudeSettings: View {
                 Text("Provider")
             } footer: {
                 Text("Free options need no credit card. OpenRouter's free list changes over time (Qwen, Llama, and DeepSeek when available). The official DeepSeek and ChatGPT APIs require billing.")
+            }
+
+            Section {
+                Picker("Capture shortcut takes", selection: $captureMode) {
+                    ForEach(CaptureManager.Mode.allCases) { Text($0.title).tag($0.rawValue) }
+                }
+                LabeledContent("Shortcut", value: HotkeyBinding.capture.label)
+                LabeledContent("Quality") {
+                    Text("Full Retina resolution; sent at up to 2048 px on the long edge").foregroundStyle(.secondary)
+                }
+            } header: {
+                Text("Capture")
+            } footer: {
+                Text("Region capture freezes the display under the pointer: drag a box, click for the whole display, or press Esc or right-click to cancel. Change the shortcut in Shortcuts & Hotkeys.")
+            }
+
+            Section {
+                LabeledContent("Stays on this Mac") {
+                    Text("API keys, chat history, saved images, and Extract text (Apple's on-device text recognition)").foregroundStyle(.secondary).multilineTextAlignment(.trailing)
+                }
+                LabeledContent("Sent to \(config.provider.title)") {
+                    Text(config.provider == .ollama ? "Nothing: Ollama runs on this Mac" : "Only what you ask about: your question, the captured or pasted image, and the conversation so far")
+                        .foregroundStyle(config.provider == .ollama ? .green : .secondary).multilineTextAlignment(.trailing)
+                }
+                LabeledContent("Telemetry") { Text("None").foregroundStyle(.secondary) }
+            } header: {
+                Text("Privacy")
             }
 
             Section {
@@ -608,13 +679,7 @@ private struct AIHistorySettings: View {
     @State private var search = ""
     @State private var confirmClear = false
 
-    private var filtered: [ChatSession] {
-        search.isEmpty ? store.sessions : store.sessions.filter { s in
-            s.messages.contains { $0.text.localizedCaseInsensitiveContains(search) }
-                || s.modelsUsed.contains { $0.localizedCaseInsensitiveContains(search) }
-                || s.providerTitle.localizedCaseInsensitiveContains(search)
-        }
-    }
+    private var filtered: [ChatSession] { store.search(search) }
 
     var body: some View {
         VStack(spacing: 14) {
@@ -630,7 +695,15 @@ private struct AIHistorySettings: View {
                         .font(.caption).foregroundStyle(.secondary)
                 }
                 Spacer()
-                Toggle("Save chats", isOn: $store.isEnabled).toggleStyle(.switch)
+                Menu {
+                    Toggle("Save chats", isOn: $store.isEnabled)
+                    Toggle("Keep captured images (to continue tasks later)", isOn: $store.saveImages)
+                    Picker("Keep chats for", selection: $store.retentionDays) {
+                        Text("Forever").tag(0); Text("30 days").tag(30); Text("7 days").tag(7); Text("1 day").tag(1)
+                    }
+                } label: { Label(store.isEnabled ? "Saving on" : "Saving off", systemImage: store.isEnabled ? "checkmark.circle" : "pause.circle") }
+                .fixedSize()
+                .help("History stays on this Mac. Turn it off, stop keeping images, or delete old chats automatically.")
                 if !store.sessions.isEmpty {
                     Button(role: .destructive) { confirmClear = true } label: { Label("Delete all", systemImage: "trash") }
                 }
@@ -660,7 +733,7 @@ private struct AIHistorySettings: View {
                     VStack(spacing: 8) {
                         HStack(spacing: 6) {
                             Image(systemName: "magnifyingglass").foregroundStyle(.secondary)
-                            TextField("Search chats", text: $search).textFieldStyle(.plain)
+                            TextField("Search questions, answers, modes, dates", text: $search).textFieldStyle(.plain)
                         }
                         .padding(8)
                         .background(Theme.surface, in: RoundedRectangle(cornerRadius: 9, style: .continuous))
@@ -669,10 +742,14 @@ private struct AIHistorySettings: View {
                                 ForEach(filtered) { s in
                                     let selected = s.id == selectedID
                                     Button { selectedID = s.id } label: {
-                                        VStack(alignment: .leading, spacing: 3) {
-                                            Text(s.firstQuestion).lineLimit(2).font(.callout.weight(.medium)).foregroundStyle(.primary)
-                                            Text(s.modelsUsed.first ?? s.providerTitle).font(.caption).foregroundStyle(.secondary).lineLimit(1)
-                                            Text(s.updated.formatted(.relative(presentation: .named))).font(.caption2).foregroundStyle(.tertiary)
+                                        HStack(alignment: .top, spacing: 8) {
+                                            HistoryThumb(session: s)
+                                            VStack(alignment: .leading, spacing: 3) {
+                                                Text(s.firstQuestion).lineLimit(2).font(.callout.weight(.medium)).foregroundStyle(.primary)
+                                                Text([s.modeTitle, s.modelsUsed.first ?? s.providerTitle].compactMap { $0 }.joined(separator: " · "))
+                                                    .font(.caption).foregroundStyle(.secondary).lineLimit(1)
+                                                Text(s.updated.formatted(.relative(presentation: .named))).font(.caption2).foregroundStyle(.tertiary)
+                                            }
                                         }
                                         .frame(maxWidth: .infinity, alignment: .leading)
                                         .padding(10)
@@ -724,8 +801,14 @@ private struct ChatTranscriptView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             VStack(alignment: .leading, spacing: 4) {
-                Text(session.firstQuestion).font(.headline).lineLimit(2)
-                Label("\(session.providerTitle) · \(session.modelsUsed.joined(separator: ", "))", systemImage: "sparkles")
+                HStack(alignment: .top, spacing: 10) {
+                    HistoryThumb(session: session, size: 64)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(session.firstQuestion).font(.headline).lineLimit(2)
+                        if let src = session.inputSource { Text(src).font(.caption).foregroundStyle(.secondary) }
+                    }
+                }
+                Label("\(session.providerTitle) · \(session.modelsUsed.joined(separator: ", "))\(session.modeTitle.map { " · \($0)" } ?? "")", systemImage: "sparkles")
                     .font(.caption).foregroundStyle(.secondary)
                 Text("Started \(session.started.formatted(date: .complete, time: .shortened))")
                     .font(.caption).foregroundStyle(.secondary)
@@ -740,6 +823,14 @@ private struct ChatTranscriptView: View {
                         NSPasteboard.general.setString(store.transcript(session), forType: .string)
                     } label: { Label("Copy", systemImage: "doc.on.doc") }
                     .help("Copy the whole conversation as text")
+                    Button {
+                        let panel = NSSavePanel()
+                        panel.nameFieldStringValue = "\(session.firstQuestion.prefix(40)).md"
+                        if panel.runModal() == .OK, let url = panel.url {
+                            try? store.markdown(session).write(to: url, atomically: true, encoding: .utf8)
+                        }
+                    } label: { Label("Export", systemImage: "square.and.arrow.up") }
+                    .help("Save as a Markdown file")
                     Spacer()
                     Button(role: .destructive) { store.delete(session.id) } label: { Label("Delete", systemImage: "trash") }
                 }
@@ -757,7 +848,9 @@ private struct ChatTranscriptView: View {
                                 Text(m.date.formatted(date: .omitted, time: .shortened)).font(.caption2)
                             }
                             .foregroundStyle(.secondary)
-                            Text(LocalizedStringKey(m.text))
+                            Group {
+                                if m.role == "user" { Text(m.text) } else { RichTextView(markdown: m.text) }
+                            }
                                 .textSelection(.enabled)
                                 .padding(.horizontal, 12).padding(.vertical, 8)
                                 .background(m.role == "user" ? AnyShapeStyle(Theme.accentGradient) : AnyShapeStyle(Theme.surfaceHover),
@@ -771,6 +864,32 @@ private struct ChatTranscriptView: View {
                 .padding(12)
             }
         }
+    }
+}
+
+/// The captured image of a history item (or an icon for its input type).
+private struct HistoryThumb: View {
+    let session: ChatSession
+    var size: CGFloat = 38
+    @State private var image: NSImage?
+
+    var body: some View {
+        Group {
+            if let image {
+                Image(nsImage: image).resizable().scaledToFill()
+            } else {
+                Image(systemName: session.inputKind == "text" ? "text.alignleft" : session.hasImage == true ? "photo" : "bubble.left")
+                    .foregroundStyle(.secondary).frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .background(Theme.surfaceHover)
+            }
+        }
+        .frame(width: size, height: size).clipShape(RoundedRectangle(cornerRadius: 7))
+        .task(id: session.id) {
+            guard session.hasImage == true else { image = nil; return }
+            let url = ChatHistoryStore.shared.imageURL(session.id)
+            image = await Task.detached { NSImage(contentsOf: url) }.value
+        }
+        .accessibilityHidden(true)
     }
 }
 

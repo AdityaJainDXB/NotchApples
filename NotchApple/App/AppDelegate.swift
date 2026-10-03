@@ -140,6 +140,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         } else {
             GlobalHotkeyManager.shared.unregister(.toggleNotch)
         }
+        if SettingsManager.shared.captureHotkeyEnabled {
+            GlobalHotkeyManager.shared.register(.capture) { CaptureManager.shared.captureToAI() }
+        } else {
+            GlobalHotkeyManager.shared.unregister(.capture)
+        }
         if SettingsManager.shared.invisibilityHotkeyEnabled {
             GlobalHotkeyManager.shared.register(.toggleInvisible) { [weak self] in self?.toggleInvisible() }
         } else {

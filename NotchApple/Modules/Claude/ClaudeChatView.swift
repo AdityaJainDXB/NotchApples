@@ -2,12 +2,20 @@
 //  ClaudeChatView.swift
 //  Notch apple
 //
-//  A compact chat UI inside the notch. The "Share Screen" toggle attaches a
-//  fresh screenshot to the next message so Claude can see what you see.
+//  The AI tab: see something → capture it → understand or act on it.
+//
+//   • Input: a capture (⌃⌥S), a pasted or dropped image or PDF, copied or
+//     selected text, or just a question.
+//   • Modes (AIModes.swift) run on the input with one click; suggestions come
+//     from a quick look at the text on this Mac.
+//   • Replies stream in; Stop keeps what arrived, Retry asks again with the
+//     current provider, follow-ups keep the image and earlier answers as context.
+//   • Every task is saved to local history (Settings → AI History) unless off.
 //
 
-import SwiftUI
 import AppKit
+import PDFKit
+import SwiftUI
 
 /// Which AI provider and model the AI tab uses. Persisted; one model per provider.
 @MainActor
@@ -60,6 +68,7 @@ final class AIConfig: ObservableObject {
     }
 }
 
+
 @MainActor
 final class ClaudeChatModel: ObservableObject {
     static let shared = ClaudeChatModel()   // survives notch open/close
@@ -69,17 +78,166 @@ final class ClaudeChatModel: ObservableObject {
     @Published var attachScreen = false
     @Published var isSending = false
     @Published var error: String?
-    /// Shown under the chat when a screenshot was attached automatically.
+    /// Shown under the chat, e.g. when a screenshot was attached automatically.
     @Published var notice: String?
+
+    // The current task's input: a capture / pasted / dropped image, or text.
+    @Published private(set) var input: CapturedInput?
+    @Published private(set) var inputThumbnail: NSImage?
+    @Published private(set) var textInput: String?
+    @Published private(set) var detected: InputClassifier.Result?
+    @AppStorage("ai.lastMode") private var lastModeRaw = AIMode.explain.rawValue
+    var mode: AIMode {
+        get { AIMode(rawValue: lastModeRaw) ?? .explain }
+        set { objectWillChange.send(); lastModeRaw = newValue.rawValue }
+    }
+
     /// The saved-history session this conversation belongs to.
     private(set) var sessionID = UUID()
+    private var running: Task<Void, Never>?
+    /// The request behind the latest reply, for Retry.
+    private var lastRequest: (provider: AIProvider, model: String)?
 
     /// Share the screen automatically when a question is about it (Settings → AI).
     @AppStorage("ai.autoScreen") var autoScreen = true
 
+    var hasTask: Bool { input != nil || textInput != nil || !messages.isEmpty }
+    var lastAnswer: ChatMessage? { messages.last { $0.role == .assistant } }
+
+    // MARK: Input
+
+    /// Starts a new task from a capture, pasted or dropped image.
+    func setInput(_ newInput: CapturedInput) {
+        startNewTask()
+        input = newInput
+        inputThumbnail = ImagePrep.thumbnail(newInput.image)
+        Task {
+            let result = await InputClassifier.classify(newInput.image)
+            if input?.image === newInput.image { detected = result }
+        }
+    }
+
+    /// Starts a new task from text (copied or selected text, or a dropped PDF's text).
+    func setTextInput(_ text: String, source: String) {
+        startNewTask()
+        textInput = String(text.prefix(30_000))
+        detected = InputClassifier.classify(text: text)
+        notice = source
+    }
+
+    func clearInput() { startNewTask() }
+
+    /// The clipboard's image, file or text becomes the input. Returns false if there's nothing usable.
+    @discardableResult
+    func pasteFromClipboard() -> Bool {
+        let pb = NSPasteboard.general
+        if let urls = pb.readObjects(forClasses: [NSURL.self], options: [.urlReadingFileURLsOnly: true]) as? [URL], let url = urls.first,
+           load(file: url) { return true }
+        if let image = NSImage(pasteboard: pb), let cg = image.cgImage(forProposedRect: nil, context: nil, hints: nil) {
+            setInput(CapturedInput(image: cg, source: "Pasted image · \(cg.width) × \(cg.height)", kind: .clipboard))
+            return true
+        }
+        if let text = pb.string(forType: .string)?.trimmingCharacters(in: .whitespacesAndNewlines), !text.isEmpty {
+            setTextInput(text, source: "Using the text you copied")
+            return true
+        }
+        error = "There's no image or text on the clipboard. Copy something first (⌃⇧⌘4 copies part of the screen)."
+        return false
+    }
+
+    /// An image or PDF file (dragged in or copied in Finder).
+    @discardableResult
+    func load(file url: URL) -> Bool {
+        let ext = url.pathExtension.lowercased()
+        if ext == "pdf", let doc = PDFDocument(url: url) {
+            let text = doc.string?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+            if text.count > 40 {
+                setTextInput(text, source: "Using the text of \(url.lastPathComponent) (\(doc.pageCount) page\(doc.pageCount == 1 ? "" : "s"))")
+                return true
+            }
+            if let page = doc.page(at: 0) {
+                let thumb = page.thumbnail(of: NSSize(width: 1600, height: 2200), for: .mediaBox)
+                if let cg = thumb.cgImage(forProposedRect: nil, context: nil, hints: nil) {
+                    setInput(CapturedInput(image: cg, source: "\(url.lastPathComponent) · page 1", kind: .file))
+                    return true
+                }
+            }
+        }
+        if let image = NSImage(contentsOf: url), let cg = image.cgImage(forProposedRect: nil, context: nil, hints: nil) {
+            setInput(CapturedInput(image: cg, source: "\(url.lastPathComponent) · \(cg.width) × \(cg.height)", kind: .file))
+            return true
+        }
+        error = "\(url.lastPathComponent) isn't an image or PDF Notch apple can read. Try PNG, JPEG, WEBP, HEIC or PDF."
+        return false
+    }
+
+    /// Text selected in the front app (needs Accessibility permission).
+    func useSelectedText() {
+        if let text = SelectedText.read(), !text.isEmpty {
+            setTextInput(text, source: "Using the text you selected")
+        } else {
+            error = SelectedText.isTrusted
+                ? "No selected text found. Select some text in an app first (some apps don't share their selection; copy it and use Paste instead)."
+                : "Reading selected text needs Accessibility permission (System Settings → Privacy & Security → Accessibility). You can copy the text and use Paste instead."
+        }
+    }
+
+    // MARK: Running a mode
+
+    /// Runs `mode` on the current input (with an optional note from the draft).
+    func run(_ chosen: AIMode) {
+        guard !isSending else { return }
+        mode = chosen
+        let note = draft
+        draft = ""
+        if chosen == .extract, let input {
+            runLocalExtract(input)
+            return
+        }
+        var instruction = chosen.instruction(extra: note)
+        if let textInput { instruction += "\n\n---\n\(textInput)" }
+        var message = ChatMessage(role: .user, text: instruction, display: note.isEmpty ? chosen.title : "\(chosen.title): \(note)")
+        if let input { message.imageBase64 = ImagePrep.base64(input.image) }
+        messages = [message]
+        sessionID = UUID()
+        request(firstOfTask: true)
+    }
+
+    /// Extract text runs on this Mac, so nothing leaves it.
+    private func runLocalExtract(_ input: CapturedInput) {
+        messages = [ChatMessage(role: .user, text: "Extract text", display: "Extract text")]
+        sessionID = UUID()
+        isSending = true
+        error = nil
+        running = Task {
+            let text = await InputClassifier.recognizeText(input.image, fast: false)
+            if Task.isCancelled { isSending = false; return }
+            if text.isEmpty {
+                notice = "No text found on this Mac, so the image was sent to \(AIConfig.shared.provider.title) instead."
+                var msg = messages[0]
+                msg.text = AIMode.extract.instruction(extra: "")
+                msg.imageBase64 = ImagePrep.base64(input.image)
+                messages[0] = msg
+                isSending = false
+                request(firstOfTask: true)
+                return
+            }
+            notice = "Extracted on this Mac with Apple's text recognition; nothing was sent anywhere."
+            messages.append(ChatMessage(role: .assistant, text: text, model: "On-device text recognition"))
+            record(user: messages[0], reply: messages[1], provider: AIConfig.shared.provider, model: "On-device text recognition")
+            isSending = false
+        }
+    }
+
+    /// Sends the draft: starts a task on the current input, or asks a follow-up.
     func send() {
         let prompt = draft.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !prompt.isEmpty, !isSending else { return }
+        guard !isSending else { return }
+        if messages.isEmpty, input != nil || textInput != nil {
+            run(prompt.isEmpty ? mode : (mode == .ask || mode == .extract ? .ask : mode))
+            return
+        }
+        guard !prompt.isEmpty else { return }
         draft = ""
         send(prompt)
     }
@@ -89,11 +247,10 @@ final class ClaudeChatModel: ObservableObject {
         guard !isSending else { return }
         error = nil
         notice = nil
-        isSending = true
         let config = AIConfig.shared
 
         // "What's on my screen?" → take a screenshot automatically.
-        if !attachScreen && (forceScreen || (autoScreen && ScreenIntent.matches(prompt))) {
+        if !attachScreen && messages.isEmpty && input == nil && (forceScreen || (autoScreen && ScreenIntent.matches(prompt))) {
             if config.provider.likelySupportsVision(config.model) {
                 attachScreen = true
                 notice = "Took a screenshot to answer that (Notch apple itself is left out)."
@@ -101,65 +258,202 @@ final class ClaudeChatModel: ObservableObject {
                 notice = "\(config.model) can't see images, so no screenshot was sent. Switch to Gemini or a vision model to ask about your screen."
             }
         }
-
+        let first = messages.isEmpty
         Task {
             var message = ChatMessage(role: .user, text: prompt)
             if attachScreen {
-                do { message.imageBase64 = try await ScreenCapture.captureBase64JPEG() }
-                catch { self.error = error.localizedDescription }
                 attachScreen = false
+                if let screen = CaptureManager.screenUnderPointer {
+                    do {
+                        let image = try await CaptureManager.captureDisplay(screen)
+                        message.imageBase64 = ImagePrep.base64(image)
+                        if first { input = CapturedInput(image: image, source: "Whole display · \(screen.localizedName)", kind: .display)
+                                   inputThumbnail = ImagePrep.thumbnail(image) }
+                    } catch { self.error = error.localizedDescription }
+                }
             }
             messages.append(message)
-            let provider = config.provider, modelID = config.model
-            let history = ChatHistoryStore.shared
-            history.record(sessionID: sessionID, provider: provider, model: modelID, role: "user",
-                           text: prompt, hadScreenshot: message.imageBase64 != nil)
+            if first { sessionID = UUID() }
+            request(firstOfTask: first)
+        }
+    }
+
+    /// Streams a reply to the conversation so far.
+    private func request(firstOfTask: Bool) {
+        let config = AIConfig.shared
+        let provider = config.provider, model = config.model
+        error = nil
+        if messages.contains(where: { $0.imageBase64 != nil }) && !provider.likelySupportsVision(model) {
+            error = AIFailure.visionUnsupported(model).localizedDescription
+            return
+        }
+        if provider == .ollama { notice = notice ?? "Answered on this Mac with Ollama; nothing leaves your Mac." }
+        isSending = true
+        lastRequest = (provider, model)
+        let userTurn = messages.last { $0.role == .user }
+        let history = messages
+        let reply = ChatMessage(role: .assistant, text: "", model: model)
+        messages.append(reply)
+        let replyID = reply.id
+        let modeNow = firstOfTask ? mode : nil
+
+        running = Task {
             do {
-                var reply: String
-                var answeredBy = modelID
                 if provider == .openRouter {
                     // Free OpenRouter models are often busy or can't read images: retry and fall back to ones that can.
-                    let sent = messages
                     let outcome = try await OpenRouterFallback.run(
-                        chosen: modelID, needsImages: sent.contains { $0.imageBase64 != nil },
+                        chosen: model, needsImages: history.contains { $0.imageBase64 != nil },
                         models: await OpenRouterFallback.models()) { candidate in
-                            try await AIClient.send(sent, provider: .openRouter, model: candidate)
+                            try await AIClient.send(history, provider: .openRouter, model: candidate)
                         }
-                    reply = outcome.reply
-                    answeredBy = outcome.model
+                    update(replyID) { $0.text = outcome.reply; $0.model = outcome.model }
                     if let note = outcome.note {
                         notice = "\(note), so \(outcome.model) answered."
                         if outcome.shouldSwitch { config.setModel(outcome.model, for: .openRouter) }
                     }
                 } else {
-                    reply = try await AIClient.send(messages, provider: provider, model: modelID)
+                    for try await piece in AIClient.stream(history, provider: provider, model: model, system: AIClient.system(for: modeNow)) {
+                        update(replyID) { $0.text += piece }
+                    }
                 }
-                messages.append(ChatMessage(role: .assistant, text: reply))
-                history.record(sessionID: sessionID, provider: provider, model: answeredBy, role: "assistant",
-                               text: reply, hadScreenshot: false)
+                if Task.isCancelled { update(replyID) { $0.stopped = true } }
+            } catch is CancellationError {
+                update(replyID) { $0.stopped = true }
+            } catch AIFailure.modelUnavailable(let gone) {
+                // The saved model was retired: switch to the provider's current one and say so.
+                let live = (try? await AIClient.models(for: provider)) ?? []
+                if let replacement = live.first(where: { $0 != gone }) {
+                    config.setModel(replacement, for: provider)
+                    config.refreshModels()
+                    self.error = "\(gone) isn't available any more, so Notch apple switched to \(replacement). Press Retry."
+                } else {
+                    self.error = AIFailure.modelUnavailable(gone).localizedDescription
+                }
             } catch {
                 self.error = error.localizedDescription
             }
+            // Drop an empty reply (failed before any text arrived).
+            if let r = messages.first(where: { $0.id == replyID }), r.text.isEmpty {
+                messages.removeAll { $0.id == replyID }
+            }
+            if let userTurn, let r = messages.first(where: { $0.id == replyID }) {
+                record(user: userTurn, reply: r, provider: provider, model: r.model ?? model)
+            }
+            if firstOfTask { ChatHistoryStore.shared.describe(sessionID: sessionID, mode: input != nil || textInput != nil ? modeNow : nil,
+                                                              input: input, textInput: textInput != nil) }
             isSending = false
+            running = nil
         }
     }
 
-    /// Starts a new conversation (the old one stays in Settings → AI History).
-    func clear() { messages.removeAll(); error = nil; notice = nil; sessionID = UUID() }
+    private func update(_ id: UUID, _ change: (inout ChatMessage) -> Void) {
+        guard let i = messages.firstIndex(where: { $0.id == id }) else { return }
+        change(&messages[i])
+    }
 
-    /// Reopens a saved conversation in the notch so you can keep going.
+    private func record(user: ChatMessage, reply: ChatMessage, provider: AIProvider, model: String) {
+        let history = ChatHistoryStore.shared
+        history.record(sessionID: sessionID, provider: provider, model: model, role: "user",
+                       text: user.display ?? user.text, hadScreenshot: user.imageBase64 != nil)
+        history.record(sessionID: sessionID, provider: provider, model: model, role: "assistant",
+                       text: reply.text + (reply.stopped ? "\n\n(stopped)" : ""), hadScreenshot: false)
+    }
+
+    // MARK: Actions
+
+    /// Stops the reply being written; whatever arrived stays.
+    func stop() {
+        running?.cancel()
+    }
+
+    /// Asks again: drops the last reply and resends, with whichever provider and model are chosen now.
+    func retry() {
+        guard !isSending, let last = messages.lastIndex(where: { $0.role == .user }) else { return }
+        messages.removeSubrange((last + 1)...)
+        request(firstOfTask: last == 0)
+    }
+
+    /// Puts the last question back in the box to edit and resend.
+    func editLast() {
+        guard !isSending, let last = messages.lastIndex(where: { $0.role == .user }), last > 0 || input == nil else { return }
+        draft = messages[last].display ?? messages[last].text
+        messages.removeSubrange(last...)
+    }
+
+    func copyLastAnswer() {
+        guard let a = lastAnswer else { return }
+        NSPasteboard.general.clearContents()
+        NSPasteboard.general.setString(MathText.plain(a.text), forType: .string)
+        notice = "Copied the answer."
+    }
+
+    var conversationMarkdown: String {
+        messages.map { m in
+            m.role == .user ? "**You:** \(m.display ?? m.text)" : "**AI\(m.model.map { " (\($0))" } ?? ""):**\n\n\(m.text)"
+        }.joined(separator: "\n\n")
+    }
+
+    func copyConversation() {
+        NSPasteboard.general.clearContents()
+        NSPasteboard.general.setString(conversationMarkdown, forType: .string)
+        notice = "Copied the whole conversation."
+    }
+
+    func export(markdown: Bool) {
+        let panel = NSSavePanel()
+        panel.nameFieldStringValue = "Notch apple \(Date.now.formatted(.iso8601.year().month().day())).\(markdown ? "md" : "txt")"
+        NSApp.activate(ignoringOtherApps: true)
+        guard panel.runModal() == .OK, let url = panel.url else { return }
+        let body = markdown ? conversationMarkdown : MathText.plain(conversationMarkdown)
+        try? body.write(to: url, atomically: true, encoding: .utf8)
+        if let input, markdown {
+            let imageURL = url.deletingPathExtension().appendingPathExtension("jpg")
+            try? NSBitmapImageRep(cgImage: input.image).representation(using: .jpeg, properties: [.compressionFactor: 0.9])?.write(to: imageURL)
+        }
+        notice = "Saved \(url.lastPathComponent)."
+    }
+
+    private func startNewTask() {
+        running?.cancel()
+        messages.removeAll()
+        input = nil; inputThumbnail = nil; textInput = nil; detected = nil
+        error = nil; notice = nil
+        sessionID = UUID()
+        isSending = false
+    }
+
+    /// Starts a new conversation (the old one stays in Settings → AI History).
+    func clear() { startNewTask() }
+
+    /// Reopens a saved conversation in the notch so you can keep going, with its image if it was saved.
     func resume(_ session: ChatSession) {
+        startNewTask()
         sessionID = session.id
-        messages = session.messages.map { ChatMessage(role: $0.role == "user" ? .user : .assistant, text: $0.text) }
-        error = nil
-        notice = session.messages.contains(where: \.hadScreenshot) ? "Screenshots from this chat weren't saved, so the AI can't see them again." : nil
+        messages = session.messages.map {
+            ChatMessage(role: $0.role == "user" ? .user : .assistant, text: $0.text, model: $0.model)
+        }
+        if let image = ChatHistoryStore.shared.image(for: session) {
+            let kind = session.inputKind.flatMap(CapturedInput.Kind.init(rawValue:)) ?? .file
+            input = CapturedInput(image: image, source: session.inputSource ?? "Saved image", kind: kind)
+            inputThumbnail = ImagePrep.thumbnail(image)
+            if let first = messages.firstIndex(where: { $0.role == .user }) {
+                // Give the model the image again so follow-ups still see it.
+                let modeInstruction = session.mode.flatMap(AIMode.init(rawValue:))?.instruction(extra: "")
+                messages[first].display = messages[first].text
+                messages[first].text = modeInstruction ?? messages[first].text
+                messages[first].imageBase64 = ImagePrep.base64(image)
+            }
+        } else if session.messages.contains(where: \.hadScreenshot) {
+            notice = "The image from this chat wasn't saved, so the AI can't see it again."
+        }
+        if let m = session.mode.flatMap(AIMode.init(rawValue:)) { mode = m }
         if let p = AIProvider(rawValue: session.provider) {
             AIConfig.shared.provider = p
             AIConfig.shared.setModel(session.model, for: p)
         }
     }
 
-    // MARK: Quick actions
+    // MARK: Quick actions (no input yet)
 
     struct QuickAction: Identifiable {
         let id = UUID()
@@ -170,39 +464,73 @@ final class ClaudeChatModel: ObservableObject {
 
     static var quickActions: [QuickAction] {
         [
+            QuickAction(title: "Capture", symbol: "viewfinder") { _ in CaptureManager.shared.captureToAI(.region) },
+            QuickAction(title: "Paste", symbol: "doc.on.clipboard") { $0.pasteFromClipboard() },
+            QuickAction(title: "Selected text", symbol: "text.cursor") { $0.useSelectedText() },
             QuickAction(title: "What's on my screen?", symbol: "eye") {
                 $0.send("What's on my screen? Describe it briefly and point out anything useful.", forceScreen: true)
             },
-            QuickAction(title: "Summarise what I copied", symbol: "text.append") { $0.sendAboutClipboard("Summarise this in a few bullet points") },
-            QuickAction(title: "Translate what I copied", symbol: "character.bubble") { $0.sendAboutClipboard("Translate this into English (or, if it's already English, into Spanish)") },
-            QuickAction(title: "Fix grammar of what I copied", symbol: "checkmark.bubble") { $0.sendAboutClipboard("Fix the grammar and spelling. Reply with only the corrected text") },
         ]
     }
+}
 
-    private func sendAboutClipboard(_ instruction: String) {
-        guard let text = NSPasteboard.general.string(forType: .string)?.trimmingCharacters(in: .whitespacesAndNewlines),
-              !text.isEmpty else {
-            error = "Copy some text first, then try again."
-            return
-        }
-        send("\(instruction):\n\n\(String(text.prefix(12_000)))")
+// MARK: - Selected text
+
+enum SelectedText {
+    static var isTrusted: Bool { AXIsProcessTrusted() }
+
+    /// The selection in the frontmost app via Accessibility, if it shares it.
+    static func read() -> String? {
+        guard isTrusted else { return nil }
+        let system = AXUIElementCreateSystemWide()
+        var focused: AnyObject?
+        guard AXUIElementCopyAttributeValue(system, kAXFocusedUIElementAttribute as CFString, &focused) == .success,
+              let element = focused else { return nil }
+        var value: AnyObject?
+        guard AXUIElementCopyAttributeValue(element as! AXUIElement, kAXSelectedTextAttribute as CFString, &value) == .success else { return nil }
+        return (value as? String)?.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 }
+
+// MARK: - View
 
 struct ClaudeChatView: View {
     @StateObject private var model = ClaudeChatModel.shared
     @StateObject private var config = AIConfig.shared
     @State private var keyDraft = ""
+    @State private var dropTargeted = false
+    @FocusState private var fieldFocused: Bool
 
     var body: some View {
         VStack(spacing: 8) {
             providerBar
-            if config.provider.isConfigured { chat } else { keyPrompt }
+            if config.provider.isConfigured { content } else { keyPrompt }
         }
         .onAppear { if config.availableModels[config.provider] == nil { config.refreshModels() } }
+        .onDrop(of: [.fileURL, .image], isTargeted: $dropTargeted, perform: handleDrop)
+        .overlay {
+            if dropTargeted {
+                RoundedRectangle(cornerRadius: 14).strokeBorder(Theme.accent, style: StrokeStyle(lineWidth: 2, dash: [6]))
+                    .background(Theme.accent.opacity(0.08), in: RoundedRectangle(cornerRadius: 14))
+                    .overlay(Label("Drop an image or PDF", systemImage: "square.and.arrow.down").font(.headline).foregroundStyle(.white))
+                    .allowsHitTesting(false)
+            }
+        }
+        // Keyboard: ⌘V paste, ⌘. stop, ⌘R retry, ⌘⇧C copy answer, ⌘N new task.
+        .background {
+            Group {
+                Button("") { if !fieldFocused || model.draft.isEmpty { model.pasteFromClipboard() } }.keyboardShortcut("v", modifiers: [.command, .shift])
+                Button("") { model.stop() }.keyboardShortcut(".", modifiers: .command)
+                Button("") { model.retry() }.keyboardShortcut("r", modifiers: .command)
+                Button("") { model.copyLastAnswer() }.keyboardShortcut("c", modifiers: [.command, .shift])
+                Button("") { model.clear() }.keyboardShortcut("n", modifiers: .command)
+            }
+            .opacity(0).allowsHitTesting(false).accessibilityHidden(true)
+        }
     }
 
-    /// Switch provider and model without leaving the notch.
+    // MARK: Provider bar
+
     private var providerBar: some View {
         HStack(spacing: 8) {
             Menu {
@@ -220,6 +548,7 @@ struct ClaudeChatView: View {
                 Label(config.provider.title, systemImage: "sparkles").font(.system(size: 12, weight: .semibold))
             }
             .menuStyle(.borderlessButton).fixedSize()
+            .help("AI provider")
 
             if config.provider.isConfigured {
                 Menu {
@@ -236,18 +565,32 @@ struct ClaudeChatView: View {
                     Text(config.model).font(.system(size: 12)).lineLimit(1)
                 }
                 .menuStyle(.borderlessButton).fixedSize()
+                .help("Model")
             }
             Spacer()
-            Text(config.provider.costNote).font(.system(size: 11))
-                .foregroundStyle(config.provider.isFree ? Color.green.opacity(0.9) : Theme.textSecondary)
+            badge(config.provider.likelySupportsVision(config.model) ? "Sees images" : "Text only",
+                  symbol: config.provider.likelySupportsVision(config.model) ? "eye" : "eye.slash")
+            if config.provider == .ollama {
+                badge("On this Mac", symbol: "lock.fill", tint: .green)
+            } else {
+                Text(config.provider.costNote).font(.system(size: 11)).lineLimit(1)
+                    .foregroundStyle(config.provider.isFree ? Color.green.opacity(0.9) : Theme.textSecondary)
+            }
         }
     }
 
-    /// First run for a provider: explain where to get a free key and save it to the Keychain.
+    private func badge(_ text: String, symbol: String, tint: Color = Theme.textSecondary) -> some View {
+        Label(text, systemImage: symbol).font(.system(size: 10, weight: .semibold)).foregroundStyle(tint)
+            .padding(.horizontal, 6).padding(.vertical, 2)
+            .background(Color.white.opacity(0.07), in: Capsule())
+    }
+
+    // MARK: Key
+
     private var keyPrompt: some View {
         VStack(alignment: .leading, spacing: 10) {
             Label("Add your \(config.provider.title) key", systemImage: "key.fill").font(.headline).foregroundStyle(.white)
-            Text("\(config.provider.costNote). Your key is stored in the macOS Keychain and sent only to \(config.provider.title).")
+            Text("\(config.provider.costNote). Your key stays on this Mac and is sent only to \(config.provider.title).")
                 .font(.caption).foregroundStyle(Theme.textSecondary)
             HStack {
                 SecureField(config.provider.keyPlaceholder, text: $keyDraft)
@@ -257,8 +600,11 @@ struct ClaudeChatView: View {
                     .buttonStyle(PurpleButtonStyle())
                     .disabled(keyDraft.isEmpty)
             }
-            Link(config.provider.isFree ? "Get a free key →" : "Get a key →", destination: config.provider.keyURL)
-                .font(.caption.bold())
+            HStack {
+                Link(config.provider.isFree ? "Get a free key →" : "Get a key →", destination: config.provider.keyURL).font(.caption.bold())
+                Spacer()
+                Button("Use Ollama on this Mac instead") { config.provider = .ollama }.buttonStyle(.link).font(.caption)
+            }
         }
         .frame(maxHeight: .infinity, alignment: .center)
     }
@@ -272,104 +618,251 @@ struct ClaudeChatView: View {
         config.refreshModels()
     }
 
-    private var chat: some View {
+    // MARK: Content
+
+    private var content: some View {
         VStack(spacing: 8) {
-            ScrollViewReader { proxy in
-                ScrollView {
-                    LazyVStack(alignment: .leading, spacing: 8) {
-                        if model.messages.isEmpty {
-                            VStack(spacing: 12) {
-                                Text("Ask anything, or ask about what's on your screen and a screenshot is added for you.")
-                                    .font(.callout).foregroundStyle(Theme.textSecondary)
-                                    .multilineTextAlignment(.center)
-                                // One-click actions that combine AI with your screen and clipboard.
-                                HStack(spacing: 8) {
-                                    ForEach(ClaudeChatModel.quickActions) { action in
-                                        Button { action.run(model) } label: {
-                                            Label(action.title, systemImage: action.symbol).font(.system(size: 12, weight: .medium))
-                                        }
-                                        .buttonStyle(PurpleButtonStyle(prominent: false))
-                                    }
-                                }
-                            }
-                            .frame(maxWidth: .infinity).padding(.top, 20)
-                        }
-                        ForEach(model.messages) { Bubble(message: $0).id($0.id) }
-                        if model.isSending {
-                            ProgressView().controlSize(.small).padding(.leading, 6).id("typing")
-                        }
+            if model.input != nil || model.textInput != nil { inputStrip }
+            if (model.input != nil || model.textInput != nil) && model.messages.isEmpty { modeChips }
+            conversation
+            statusLines
+            if !model.messages.isEmpty { actionRow }
+            inputBar
+        }
+    }
+
+    private var inputStrip: some View {
+        HStack(spacing: 10) {
+            if let thumb = model.inputThumbnail {
+                Image(nsImage: thumb).resizable().scaledToFit().frame(maxWidth: 90, maxHeight: 44)
+                    .clipShape(RoundedRectangle(cornerRadius: 6))
+                    .overlay(RoundedRectangle(cornerRadius: 6).strokeBorder(Color.white.opacity(0.15)))
+                    .accessibilityLabel("Captured image")
+            } else {
+                Image(systemName: "text.alignleft").font(.system(size: 18)).foregroundStyle(Theme.accentBright).frame(width: 44, height: 44)
+                    .background(Color.white.opacity(0.06), in: RoundedRectangle(cornerRadius: 6))
+            }
+            VStack(alignment: .leading, spacing: 2) {
+                Text(model.input?.source ?? (model.textInput.map { "\($0.count) characters of text" } ?? ""))
+                    .font(.system(size: 12, weight: .semibold)).foregroundStyle(.white).lineLimit(1)
+                if let label = model.detected?.label {
+                    Text(label).font(.system(size: 11)).foregroundStyle(Theme.textSecondary)
+                } else if let t = model.textInput {
+                    Text(t.prefix(120)).font(.system(size: 11)).foregroundStyle(Theme.textSecondary).lineLimit(1)
+                }
+            }
+            Spacer()
+            Button { model.clearInput() } label: { Image(systemName: "xmark.circle.fill").font(.system(size: 15)) }
+                .buttonStyle(.plain).foregroundStyle(Theme.textSecondary)
+                .help("New task (⌘N)").accessibilityLabel("Remove input and start a new task")
+        }
+        .padding(8)
+        .background(Color.white.opacity(0.05), in: RoundedRectangle(cornerRadius: 10))
+    }
+
+    private var modeChips: some View {
+        let suggested = model.detected?.suggested ?? []
+        let others = AIMode.allCases.filter { !suggested.contains($0) && $0 != .ask }
+        return ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 6) {
+                ForEach(suggested + others) { m in
+                    Button { model.run(m) } label: {
+                        Label(m.title, systemImage: m.symbol).font(.system(size: 12, weight: .medium))
                     }
+                    .buttonStyle(PurpleButtonStyle(prominent: suggested.first == m))
+                    .help(m.isLocal ? "\(m.title): runs on this Mac" : "\(m.title) with \(config.provider.title)")
                 }
-                .onChange(of: model.messages.count) { _, _ in
-                    withAnimation { proxy.scrollTo(model.messages.last?.id, anchor: .bottom) }
-                }
-            }
-
-            if let notice = model.notice {
-                Label(notice, systemImage: "camera.viewfinder").font(.caption).foregroundStyle(Theme.textSecondary).lineLimit(2)
-            }
-            if let error = model.error ?? config.modelError {
-                Text(error).font(.caption).foregroundStyle(.red.opacity(0.9)).lineLimit(3)
-                if error.contains("Screen Recording") {
-                    // Fix it in two clicks: turn the switch on, then relaunch so macOS applies it.
-                    HStack(spacing: 8) {
-                        Button("Open Screen Recording settings") { ScreenPermission.openSettings() }
-                            .buttonStyle(PurpleButtonStyle(prominent: false))
-                        Button("Relaunch Notch apple") { AppRelauncher.relaunch() }
-                            .buttonStyle(PurpleButtonStyle())
-                    }
-                }
-            }
-
-            HStack(spacing: 8) {
-                Toggle(isOn: $model.attachScreen) {
-                    Image(systemName: model.attachScreen ? "display.and.arrow.down" : "display")
-                }
-                .toggleStyle(.button)
-                .help("Share Screen: attach a screenshot to your next message (needs a model that can see images)")
-
-                TextField("Message \(config.provider == .claude ? "Claude" : "AI")…", text: $model.draft)
-                    .textFieldStyle(.plain)
-                    .padding(.horizontal, 12).padding(.vertical, 8)
-                    .background(Color.white.opacity(0.08), in: Capsule())
-                    .onSubmit(model.send)
-
-                Button(action: model.send) { Image(systemName: "arrow.up") }
-                    .buttonStyle(PurpleButtonStyle())
-                    .disabled(model.draft.isEmpty || model.isSending)
-
-                Menu {
-                    Button("New chat", action: model.clear)
-                    Button("Chat history…") { AppDelegate.openSettingsWindow(tab: .aiHistory) }
-                } label: { Image(systemName: "ellipsis") }
-                .menuStyle(.borderlessButton).fixedSize()
             }
         }
+    }
+
+    private var conversation: some View {
+        ScrollViewReader { proxy in
+            ScrollView {
+                LazyVStack(alignment: .leading, spacing: 8) {
+                    if model.messages.isEmpty && model.input == nil && model.textInput == nil { emptyState }
+                    ForEach(model.messages) { Bubble(message: $0, streaming: model.isSending && $0.id == model.messages.last?.id).id($0.id) }
+                    if model.isSending, model.messages.last?.text.isEmpty ?? true {
+                        ProgressView().controlSize(.small).padding(.leading, 6).id("typing")
+                    }
+                    Color.clear.frame(height: 1).id("bottom")
+                }
+            }
+            .onChange(of: model.messages.last?.text.count) { _, _ in proxy.scrollTo("bottom", anchor: .bottom) }
+            .onChange(of: model.messages.count) { _, _ in withAnimation { proxy.scrollTo("bottom", anchor: .bottom) } }
+        }
+    }
+
+    private var emptyState: some View {
+        VStack(spacing: 12) {
+            Text("Capture anything on screen with \(HotkeyBinding.capture.label), paste or drop an image, or just ask.")
+                .font(.callout).foregroundStyle(Theme.textSecondary).multilineTextAlignment(.center)
+            HStack(spacing: 8) {
+                ForEach(ClaudeChatModel.quickActions) { action in
+                    Button { action.run(model) } label: {
+                        Label(action.title, systemImage: action.symbol).font(.system(size: 12, weight: .medium))
+                    }
+                    .buttonStyle(PurpleButtonStyle(prominent: action.title == "Capture"))
+                }
+            }
+        }
+        .frame(maxWidth: .infinity).padding(.top, 16)
+    }
+
+    @ViewBuilder private var statusLines: some View {
+        if let notice = model.notice {
+            Label(notice, systemImage: "info.circle").font(.caption).foregroundStyle(Theme.textSecondary).lineLimit(2)
+                .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        if let error = model.error ?? config.modelError {
+            VStack(alignment: .leading, spacing: 6) {
+                Label(error, systemImage: "exclamationmark.triangle.fill").font(.caption).foregroundStyle(.orange).lineLimit(3)
+                if error.contains("Screen Recording") {
+                    HStack(spacing: 8) {
+                        Button("Open System Settings") { ScreenPermission.openSettings() }.buttonStyle(PurpleButtonStyle(prominent: false))
+                        Button("Relaunch Notch apple") { AppRelauncher.relaunch() }.buttonStyle(PurpleButtonStyle())
+                    }
+                } else if !model.messages.isEmpty && !model.isSending {
+                    Button("Retry") { model.retry() }.buttonStyle(PurpleButtonStyle(prominent: false))
+                }
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+    }
+
+    private var actionRow: some View {
+        HStack(spacing: 6) {
+            if model.isSending {
+                Button { model.stop() } label: { Label("Stop", systemImage: "stop.fill") }
+                    .help("Stop (⌘.)")
+            } else {
+                Button { model.retry() } label: { Label("Retry", systemImage: "arrow.clockwise") }.help("Ask again with the current provider and model (⌘R)")
+                Button { model.copyLastAnswer() } label: { Label("Copy", systemImage: "doc.on.doc") }.help("Copy the answer (⌘⇧C)")
+                Button { model.editLast() } label: { Label("Edit", systemImage: "pencil") }.help("Edit your last question and send it again")
+                Menu {
+                    Button("Copy whole conversation") { model.copyConversation() }
+                    Button("Export as Markdown…") { model.export(markdown: true) }
+                    Button("Export as plain text…") { model.export(markdown: false) }
+                    Divider()
+                    Button("History…") { AppDelegate.openSettingsWindow(tab: .aiHistory) }
+                } label: { Label("More", systemImage: "ellipsis.circle") }
+                .menuStyle(.borderlessButton).fixedSize()
+            }
+            Spacer()
+            Button { model.clear() } label: { Label("New task", systemImage: "plus") }.help("New task (⌘N)")
+        }
+        .buttonStyle(.plain).font(.system(size: 11, weight: .medium)).foregroundStyle(Theme.accentBright)
+        .labelStyle(.titleAndIcon)
+    }
+
+    private var inputBar: some View {
+        HStack(spacing: 8) {
+            Menu {
+                ForEach(CaptureManager.Mode.allCases) { m in
+                    Button(m.title) { CaptureManager.shared.captureToAI(m) }
+                }
+                Divider()
+                Button("Paste image or text (⌘⇧V)") { model.pasteFromClipboard() }
+                Button("Use selected text") { model.useSelectedText() }
+                Divider()
+                Toggle("Attach a screenshot to the next message", isOn: $model.attachScreen)
+            } label: {
+                Image(systemName: model.attachScreen ? "display.and.arrow.down" : "viewfinder")
+            } primaryAction: {
+                CaptureManager.shared.captureToAI()
+            }
+            .menuStyle(.borderlessButton).fixedSize()
+            .help("Capture (\(HotkeyBinding.capture.label)); hold for more options")
+
+            TextField(placeholder, text: $model.draft)
+                .textFieldStyle(.plain)
+                .focused($fieldFocused)
+                .padding(.horizontal, 12).padding(.vertical, 8)
+                .background(Color.white.opacity(0.08), in: Capsule())
+                .onSubmit(model.send)
+
+            if model.isSending {
+                Button(action: model.stop) { Image(systemName: "stop.fill") }
+                    .buttonStyle(PurpleButtonStyle()).help("Stop (⌘.)").accessibilityLabel("Stop")
+            } else {
+                Button(action: model.send) { Image(systemName: "arrow.up") }
+                    .buttonStyle(PurpleButtonStyle())
+                    .disabled(model.draft.isEmpty && model.input == nil && model.textInput == nil)
+                    .help("Send (Return)").accessibilityLabel("Send")
+            }
+        }
+    }
+
+    private var placeholder: String {
+        if !model.messages.isEmpty { return "Ask a follow-up…" }
+        if model.input != nil || model.textInput != nil { return "Add a note, or pick an action above…" }
+        return "Ask anything…"
+    }
+
+    private func handleDrop(_ providers: [NSItemProvider]) -> Bool {
+        guard let item = providers.first else { return false }
+        if item.canLoadObject(ofClass: URL.self) {
+            _ = item.loadObject(ofClass: URL.self) { url, _ in
+                guard let url else { return }
+                DispatchQueue.main.async { ClaudeChatModel.shared.load(file: url) }
+            }
+            return true
+        }
+        if item.canLoadObject(ofClass: NSImage.self) {
+            _ = item.loadObject(ofClass: NSImage.self) { obj, _ in
+                guard let image = obj as? NSImage, let cg = image.cgImage(forProposedRect: nil, context: nil, hints: nil) else { return }
+                DispatchQueue.main.async {
+                    ClaudeChatModel.shared.setInput(CapturedInput(image: cg, source: "Dropped image · \(cg.width) × \(cg.height)", kind: .file))
+                }
+            }
+            return true
+        }
+        return false
     }
 }
 
 private struct Bubble: View {
     let message: ChatMessage
+    var streaming = false
     var isUser: Bool { message.role == .user }
+    @State private var hovering = false
 
     var body: some View {
-        HStack {
+        HStack(alignment: .top) {
             if isUser { Spacer(minLength: 60) }
             VStack(alignment: .leading, spacing: 4) {
                 if message.imageBase64 != nil {
-                    Label("Screenshot attached", systemImage: "photo").font(.caption2).foregroundStyle(Theme.textSecondary)
+                    Label("Image attached", systemImage: "photo").font(.caption2).foregroundStyle(isUser ? .white.opacity(0.8) : Theme.textSecondary)
                 }
-                Text(LocalizedStringKey(message.text))
-                    .textSelection(.enabled)
-                    .font(.system(size: 13))
-                    .foregroundStyle(.white)
+                if isUser {
+                    Text(message.display ?? message.text).font(.system(size: 13)).foregroundStyle(.white).textSelection(.enabled)
+                        .lineLimit(6)
+                } else {
+                    RichTextView(markdown: message.text)
+                    if message.stopped {
+                        Label("Stopped", systemImage: "stop.circle").font(.caption2).foregroundStyle(Theme.textSecondary)
+                    }
+                    if !streaming, let m = message.model {
+                        HStack(spacing: 8) {
+                            Text(m).font(.system(size: 10)).foregroundStyle(Theme.textSecondary).lineLimit(1)
+                            Spacer()
+                            Button {
+                                NSPasteboard.general.clearContents()
+                                NSPasteboard.general.setString(MathText.plain(message.text), forType: .string)
+                            } label: { Image(systemName: "doc.on.doc").font(.system(size: 10)) }
+                                .buttonStyle(.plain).foregroundStyle(Theme.textSecondary).help("Copy this answer")
+                                .accessibilityLabel("Copy this answer")
+                        }
+                    }
+                }
             }
             .padding(.horizontal, 12).padding(.vertical, 8)
             .background(
                 RoundedRectangle(cornerRadius: 14, style: .continuous)
                     .fill(isUser ? AnyShapeStyle(Theme.accentGradient) : AnyShapeStyle(Color.white.opacity(0.08)))
             )
-            if !isUser { Spacer(minLength: 60) }
+            .onHover { hovering = $0 }
+            if !isUser { Spacer(minLength: 30) }
         }
     }
 }

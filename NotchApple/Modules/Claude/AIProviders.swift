@@ -94,8 +94,8 @@ enum AIProvider: String, CaseIterable, Identifiable, Codable {
     /// Used until the live list loads, or if it can't.
     var fallbackModel: String {
         switch self {
-        case .gemini: "gemini-2.5-flash"
-        case .groq: "llama-3.3-70b-versatile"
+        case .gemini: "gemini-3.8-flash"
+        case .groq: "openai/gpt-oss-120b"
         case .openRouter: "meta-llama/llama-3.3-70b-instruct:free"
         case .ollama: "llama3.2"
         case .claude: "claude-sonnet-5"
@@ -238,7 +238,7 @@ enum AIClient {
             return ((json["models"] as? [[String: Any]]) ?? [])
                 .filter { (($0["supportedGenerationMethods"] as? [String]) ?? []).contains("generateContent") }
                 .compactMap { ($0["name"] as? String)?.replacingOccurrences(of: "models/", with: "") }
-                .filter { $0.hasPrefix("gemini") }
+                .filter { $0.hasPrefix("gemini") && !["tts", "image", "embedding", "live", "audio"].contains(where: $0.contains) }
                 .sorted { rank($0) > rank($1) }
         case .openRouter:
             let json = try await perform(URLRequest(url: URL(string: "https://openrouter.ai/api/v1/models")!))
@@ -262,7 +262,7 @@ enum AIClient {
             return ((json["data"] as? [[String: Any]]) ?? []).compactMap { $0["id"] as? String }
                 .filter { m in
                     switch provider {
-                    case .groq: return !m.contains("whisper") && !m.contains("tts") && !m.contains("guard")
+                    case .groq: return !["whisper", "tts", "guard", "orpheus", "playai"].contains(where: m.contains)
                     case .openAI: return m.hasPrefix("gpt")
                     default: return true
                     }

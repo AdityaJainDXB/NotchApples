@@ -15,8 +15,14 @@ struct ChatMessage: Identifiable, Equatable {
     let id = UUID()
     let role: Role
     var text: String
-    /// Base64 PNG attached to this (user) message, if Share Screen was used.
+    /// Base64 JPEG attached to this (user) message: a capture, pasted image or Share Screen.
     var imageBase64: String?
+    /// What the bubble shows instead of the full instruction, e.g. "Solve".
+    var display: String? = nil
+    /// The reply was stopped part-way.
+    var stopped = false
+    /// The model that wrote this reply.
+    var model: String? = nil
 }
 
 enum ClaudeError: LocalizedError {

@@ -251,6 +251,7 @@ final class SettingsManager: ObservableObject {
     @AppStorage("ui.globalHotkey") var globalHotkeyEnabled = true
     /// Hide or reveal the whole notch from anywhere with ⌘O (changeable in Settings → Shortcuts & Hotkeys).
     @AppStorage("ui.invisibilityHotkey") var invisibilityHotkeyEnabled = true
+    @AppStorage("ui.captureHotkey") var captureHotkeyEnabled = true
     /// True while the hide shortcut has made the notch invisible. Not persisted: every launch starts visible.
     @Published var isNotchHidden = false
     /// Offer webcam face unlock (enrolled in Settings → Authentication) on the lock screen.

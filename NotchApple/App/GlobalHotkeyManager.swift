@@ -9,6 +9,7 @@
 //  Keys used:
 //   • ⌃⌥N — toggles the notch (⌘E for people who used it before). User-configurable.
 //   • ⌘O  — hides or reveals the whole notch (invisibility). The combination is user-configurable.
+//   • ⌃⌥S — captures part of the screen for the AI, even while the notch is hidden. User-configurable.
 //   • Esc — closes the notch; registered only while the notch is open, so
 //           other apps get their Escape key back the moment it closes.
 //
@@ -24,9 +25,15 @@ struct HotkeyBinding: Equatable {
 
     /// The two shortcuts users can change in Settings → Shortcuts & Hotkeys.
     enum Slot {
-        case notch, invisibility
+        case notch, invisibility, capture
 
-        fileprivate var prefix: String { self == .notch ? "hotkey.notch" : "hotkey.invisibility" }
+        fileprivate var prefix: String {
+            switch self {
+            case .notch: "hotkey.notch"
+            case .invisibility: "hotkey.invisibility"
+            case .capture: "hotkey.capture"
+            }
+        }
 
         /// Notch: ⌃⌥N on new installs (⌥Space and other ⌥-only combinations are blocked by macOS for global
         /// hot keys). People who already used ⌘E keep it, see `SettingsManager.registerDefaults`.
@@ -34,6 +41,7 @@ struct HotkeyBinding: Equatable {
             switch self {
             case .notch: HotkeyBinding(keyCode: UInt32(kVK_ANSI_N), modifiers: UInt32(controlKey | optionKey), label: "⌃⌥N")
             case .invisibility: HotkeyBinding(keyCode: UInt32(kVK_ANSI_O), modifiers: UInt32(cmdKey), label: "⌘O")
+            case .capture: HotkeyBinding(keyCode: UInt32(kVK_ANSI_S), modifiers: UInt32(controlKey | optionKey), label: "⌃⌥S")
             }
         }
     }
@@ -66,6 +74,8 @@ struct HotkeyBinding: Equatable {
 
     static var notch: HotkeyBinding { current(.notch) }
 
+    static var capture: HotkeyBinding { current(.capture) }
+
     /// Builds a binding from a key press, or nil if it can't work as a global shortcut
     /// (needs ⌘ or ⌃; ⌥ or ⇧ alone are ignored by macOS for global hot keys).
     init?(event: NSEvent) {
@@ -96,6 +106,7 @@ final class GlobalHotkeyManager {
         case toggleNotch = 1
         case closeNotch = 2
         case toggleInvisible = 3
+        case capture = 4
         // Window snapping, ⌃⌥ + key.
         case snapLeft = 10, snapRight, snapTop, snapBottom, snapMaximize, snapCenter, snapRestore
 
@@ -106,6 +117,7 @@ final class GlobalHotkeyManager {
             case .toggleNotch: HotkeyBinding.notch.keyCode
             case .closeNotch: UInt32(kVK_Escape)
             case .toggleInvisible: HotkeyBinding.invisibility.keyCode
+            case .capture: HotkeyBinding.capture.keyCode
             case .snapLeft: UInt32(kVK_LeftArrow)
             case .snapRight: UInt32(kVK_RightArrow)
             case .snapTop: UInt32(kVK_UpArrow)
@@ -120,6 +132,7 @@ final class GlobalHotkeyManager {
             switch self {
             case .toggleNotch: HotkeyBinding.notch.modifiers
             case .toggleInvisible: HotkeyBinding.invisibility.modifiers
+            case .capture: HotkeyBinding.capture.modifiers
             case .closeNotch: 0
             default: UInt32(controlKey | optionKey)
             }
