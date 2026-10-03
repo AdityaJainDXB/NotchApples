@@ -23,6 +23,15 @@ final class AIConfig: ObservableObject {
     static let shared = AIConfig()
 
     @AppStorage("ai.provider") private var providerRaw = ""
+
+    init() {
+        // People who already use AI (a saved key or chat history) skip the first-run setup card.
+        let d = UserDefaults.standard
+        if !d.bool(forKey: "ai.setupDone"),
+           AIProvider.allCases.contains(where: { $0.needsKey && $0.apiKey != nil }) || !(d.string(forKey: "ai.provider") ?? "").isEmpty {
+            d.set(true, forKey: "ai.setupDone")
+        }
+    }
     @AppStorage("ai.models") private var modelsJSON = "{}"
     @Published private(set) var availableModels: [AIProvider: [String]] = [:]
     @Published private(set) var loadingModels = false
@@ -343,6 +352,7 @@ final class ClaudeChatModel: ObservableObject {
                                                               input: input, textInput: textInput != nil) }
             isSending = false
             running = nil
+            if self.error == nil { UserDefaults.standard.set(true, forKey: "ai.setupDone") }
         }
     }
 
@@ -495,7 +505,10 @@ enum SelectedText {
 // MARK: - View
 
 struct ClaudeChatView: View {
+    /// True in the separate Full View window.
+    var fullView = false
     @StateObject private var model = ClaudeChatModel.shared
+    @AppStorage("ai.setupDone") private var setupDone = false
     @StateObject private var config = AIConfig.shared
     @State private var keyDraft = ""
     @State private var dropTargeted = false
@@ -695,6 +708,7 @@ struct ClaudeChatView: View {
 
     private var emptyState: some View {
         VStack(spacing: 12) {
+            if !setupDone { AISetupCard() }
             Text("Capture anything on screen with \(HotkeyBinding.capture.label), paste or drop an image, or just ask.")
                 .font(.callout).foregroundStyle(Theme.textSecondary).multilineTextAlignment(.center)
             HStack(spacing: 8) {
@@ -744,11 +758,16 @@ struct ClaudeChatView: View {
                     Button("Export as Markdown…") { model.export(markdown: true) }
                     Button("Export as plain text…") { model.export(markdown: false) }
                     Divider()
+                    if !fullView { Button("Open full view") { AIFullView.open() } }
                     Button("History…") { AppDelegate.openSettingsWindow(tab: .aiHistory) }
                 } label: { Label("More", systemImage: "ellipsis.circle") }
                 .menuStyle(.borderlessButton).fixedSize()
             }
             Spacer()
+            if !fullView {
+                Button { AIFullView.open() } label: { Label("Full view", systemImage: "arrow.up.left.and.arrow.down.right") }
+                    .help("Open this conversation in a resizable window")
+            }
             Button { model.clear() } label: { Label("New task", systemImage: "plus") }.help("New task (⌘N)")
         }
         .buttonStyle(.plain).font(.system(size: 11, weight: .medium)).foregroundStyle(Theme.accentBright)
@@ -864,5 +883,99 @@ private struct Bubble: View {
             .onHover { hovering = $0 }
             if !isUser { Spacer(minLength: 30) }
         }
+    }
+}
+
+// MARK: - Full view
+
+/// The AI tab in its own resizable window, for long answers. Same conversation as the notch.
+@MainActor
+enum AIFullView {
+    private static var window: NSWindow?
+
+    static func open() {
+        AppDelegate.current?.notch?.closeNotch()
+        if let window { window.makeKeyAndOrderFront(nil); NSApp.activate(ignoringOtherApps: true); return }
+        let host = NSHostingView(rootView: ClaudeChatView(fullView: true)
+            .padding(16)
+            .frame(minWidth: 560, minHeight: 420)
+            .background(LinearGradient(colors: [Color(red: 0.05, green: 0.03, blue: 0.09), Color(red: 0.1, green: 0.05, blue: 0.2)],
+                                       startPoint: .top, endPoint: .bottom)))
+        let w = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 820, height: 640),
+                         styleMask: [.titled, .closable, .resizable, .miniaturizable, .fullSizeContentView], backing: .buffered, defer: false)
+        w.title = "Notch apple AI"
+        w.titlebarAppearsTransparent = true
+        w.appearance = NSAppearance(named: .darkAqua)
+        w.contentView = host
+        w.isReleasedWhenClosed = false
+        w.center()
+        w.setFrameAutosaveName("AIFullView")
+        window = w
+        w.makeKeyAndOrderFront(nil)
+        NSApp.activate(ignoringOtherApps: true)
+    }
+}
+
+// MARK: - First run
+
+/// Shown in the AI tab until set up: pick a free or local provider, test it, try a capture.
+struct AISetupCard: View {
+    @StateObject private var config = AIConfig.shared
+    @AppStorage("ai.setupDone") private var setupDone = false
+    @State private var key = ""
+    @State private var result: (ok: Bool, message: String)?
+    @State private var testing = false
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack {
+                Label("Set up AI in three steps", systemImage: "sparkles").font(.system(size: 14, weight: .bold)).foregroundStyle(.white)
+                Spacer()
+                Button("Skip") { setupDone = true }.buttonStyle(.plain).font(.system(size: 11)).foregroundStyle(Theme.textSecondary)
+            }
+            Text("1  Choose: free Gemini in the cloud, or Ollama, which runs on this Mac and keeps everything private.")
+                .font(.system(size: 12)).foregroundStyle(Theme.textSecondary)
+            HStack(spacing: 8) {
+                Button { config.provider = .gemini } label: { Label("Google Gemini (free)", systemImage: "cloud") }
+                    .buttonStyle(PurpleButtonStyle(prominent: config.provider == .gemini))
+                Button { config.provider = .ollama } label: { Label("Ollama (on this Mac)", systemImage: "lock.fill") }
+                    .buttonStyle(PurpleButtonStyle(prominent: config.provider == .ollama))
+            }
+            if config.provider.needsKey && !config.provider.isConfigured {
+                HStack {
+                    SecureField(config.provider.keyPlaceholder, text: $key).textFieldStyle(.roundedBorder)
+                    Button("Save") {
+                        KeychainHelper.set(key.trimmingCharacters(in: .whitespaces), for: config.provider.keychainKey)
+                        key = ""; config.objectWillChange.send(); config.refreshModels()
+                    }.disabled(key.isEmpty)
+                    Link("Get a free key", destination: config.provider.keyURL).font(.system(size: 11))
+                }
+            } else if config.provider == .ollama {
+                Text("Install Ollama from ollama.com, then run `ollama pull gemma3:4b` once (it can read images).")
+                    .font(.system(size: 11)).foregroundStyle(Theme.textSecondary)
+            }
+            HStack(spacing: 8) {
+                Text("2").font(.system(size: 12, weight: .bold)).foregroundStyle(Theme.accentBright)
+                Button(testing ? "Testing…" : "Test connection") {
+                    testing = true
+                    Task { result = await AIClient.testConnection(provider: config.provider, model: config.model); testing = false }
+                }
+                .disabled(testing || !config.provider.isConfigured)
+                if let r = result {
+                    Label(r.message, systemImage: r.ok ? "checkmark.circle.fill" : "xmark.octagon.fill")
+                        .font(.system(size: 11)).foregroundStyle(r.ok ? .green : .orange).lineLimit(2)
+                }
+            }
+            HStack(spacing: 8) {
+                Text("3").font(.system(size: 12, weight: .bold)).foregroundStyle(Theme.accentBright)
+                Button { setupDone = true; CaptureManager.shared.captureToAI(.region) } label: {
+                    Label("Try a capture (\(HotkeyBinding.capture.label))", systemImage: "viewfinder")
+                }
+                .buttonStyle(PurpleButtonStyle())
+                .disabled(result?.ok != true)
+            }
+        }
+        .padding(12)
+        .background(Color.white.opacity(0.05), in: RoundedRectangle(cornerRadius: 12))
     }
 }

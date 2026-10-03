@@ -62,6 +62,12 @@ enum AIFailure: LocalizedError {
 }
 
 extension AIClient {
+    /// Settings → AI → Temperature. Negative means "the provider's default".
+    static var temperature: Double? {
+        let t = UserDefaults.standard.object(forKey: "ai.temperature") as? Double ?? -1
+        return t < 0 ? nil : t
+    }
+
     /// System prompt plus the mode's style rules.
     static func system(for mode: AIMode?) -> String {
         var s = systemPrompt + " Use Markdown. Write math in LaTeX ($…$ inline, $$…$$ for display)."
@@ -146,7 +152,9 @@ extension AIClient {
                 parts.append(["text": msg.text])
                 return ["role": msg.role == .user ? "user" : "model", "parts": parts]
             }
-            r.httpBody = try JSONSerialization.data(withJSONObject: ["system_instruction": ["parts": [["text": system]]], "contents": contents])
+            var body: [String: Any] = ["system_instruction": ["parts": [["text": system]]], "contents": contents]
+            if let t = temperature { body["generationConfig"] = ["temperature": t] }
+            r.httpBody = try JSONSerialization.data(withJSONObject: body)
             return r
 
         case .claude:
@@ -165,8 +173,9 @@ extension AIClient {
                 content.append(["type": "text", "text": msg.text])
                 return ["role": msg.role.rawValue, "content": content]
             }
-            r.httpBody = try JSONSerialization.data(withJSONObject: ["model": model, "max_tokens": 4096, "stream": true,
-                                                                     "system": system, "messages": messages])
+            var body: [String: Any] = ["model": model, "max_tokens": 4096, "stream": true, "system": system, "messages": messages]
+            if let t = temperature { body["temperature"] = min(t, 1) }
+            r.httpBody = try JSONSerialization.data(withJSONObject: body)
             return r
 
         default:
@@ -201,7 +210,9 @@ extension AIClient {
                     messages.append(["role": msg.role.rawValue, "content": msg.text])
                 }
             }
-            r.httpBody = try JSONSerialization.data(withJSONObject: ["model": model, "messages": messages, "stream": true])
+            var body: [String: Any] = ["model": model, "messages": messages, "stream": true]
+            if let t = temperature { body["temperature"] = t }
+            r.httpBody = try JSONSerialization.data(withJSONObject: body)
             return r
         }
     }

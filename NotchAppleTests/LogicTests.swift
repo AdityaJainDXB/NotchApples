@@ -94,6 +94,12 @@ final class ClassifierTests: XCTestCase {
         XCTAssertEqual(InputClassifier.classify(text: text).suggested.first, .summarize)
     }
 
+    func testChart() {
+        let r = InputClassifier.classify(text: "Revenue 2022 2023 2024 120 140 175 0 50 100 150 200 Q1 Q2 Q3 Q4")
+        XCTAssertEqual(r.label, "Looks like a chart or table")
+        XCTAssertEqual(r.suggested.first, .explain)
+    }
+
     func testEmptyIsNeverCertain() {
         let r = InputClassifier.classify(text: "")
         XCTAssertNil(r.label)

@@ -200,10 +200,20 @@ final class ThemeManager {
 /// Settings → Appearance: a live preview and swatches for every theme, grouped by category.
 struct AppearanceSettings: View {
     private let manager = ThemeManager.shared
+    @AppStorage("appearance.settingsWindow") private var windowMode = "system"
 
     var body: some View {
         let current = manager.currentTheme
         Form {
+            Section {
+                Picker("Settings window", selection: $windowMode) {
+                    Text("System").tag("system"); Text("Light").tag("light"); Text("Dark").tag("dark")
+                }
+                .pickerStyle(.segmented)
+                .onChange(of: windowMode) { _, _ in SettingsWindowController.applyAppearance() }
+            } footer: {
+                Text("The notch itself is always dark, so it blends with the real notch.")
+            }
             TabOrderSection()
             Section {
                 ThemePreview(theme: current)

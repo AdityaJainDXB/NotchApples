@@ -21,6 +21,13 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "1.15.2", date: "3 October 2026", headline: "Windows, charts and a full view", items: [
+            "Capture a single window: hold the capture button and choose Window under the pointer, or make it the default in Settings → AI.",
+            "Charts and tables are recognised (\"Looks like a chart or table\") with Explain, Summarize and Extract suggested.",
+            "Open full view: the conversation in a resizable window for long answers.",
+            "First-run AI setup in the AI tab: pick free Gemini or private Ollama, test it, then try a capture.",
+            "Settings → AI → Temperature, and Settings → Appearance → Settings window (System, Light or Dark).",
+        ]),
         ReleaseNote(version: "1.15.1", date: "3 October 2026", headline: "Match day, cricket and games", items: [
             "Sports: match alerts (30 minutes before kick-off, plus a flash in the notch on goals and at full time), a league table next to the fixtures, and match details with goalscorers, cards and lineups.",
             "Cricket: India's internationals and the IPL. National teams: the World Cup, qualifiers, Nations League, Euro, Copa América, Asian Cup and friendlies.",

@@ -542,6 +542,7 @@ private struct ClaudeSettings: View {
     @State private var testResult: (ok: Bool, message: String)?
     @State private var testing = false
     @AppStorage("capture.defaultMode") private var captureMode = CaptureManager.Mode.region.rawValue
+    @AppStorage("ai.temperature") private var temperature = -1.0
 
     var body: some View {
         Form {
@@ -584,6 +585,17 @@ private struct ClaudeSettings: View {
                         }
                     }
                 }
+                LabeledContent("Temperature") {
+                    HStack {
+                        Toggle("Provider default", isOn: Binding(get: { temperature < 0 }, set: { temperature = $0 ? -1 : 0.7 }))
+                            .toggleStyle(.checkbox)
+                        if temperature >= 0 {
+                            Slider(value: $temperature, in: 0...1.5, step: 0.1).frame(width: 140)
+                            Text(String(format: "%.1f", temperature)).monospacedDigit().frame(width: 28)
+                        }
+                    }
+                }
+                .help("Lower is more precise and repeatable (good for maths); higher is more varied.")
                 Toggle(isOn: Binding(get: { ClaudeChatModel.shared.autoScreen }, set: { ClaudeChatModel.shared.autoScreen = $0 })) {
                     Text("Share my screen when I ask about it")
                     Text("Questions like \"what's on my screen?\" or \"explain this error\" automatically include a screenshot.")

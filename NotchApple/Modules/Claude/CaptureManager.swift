@@ -10,6 +10,8 @@
 //     Retina selection keeps every pixel.
 //   • Display: the whole display under the pointer.
 //   • All displays: every display, side by side as they're arranged.
+//   • Window: the window under the pointer, on its own (no background, even if
+//     other windows overlap it).
 //
 //  The display is always the one under the pointer, never NSScreen.main (the
 //  screen with the key window), so a capture on display 2 never grabs display 1.
@@ -25,7 +27,7 @@ struct CapturedInput {
     let image: CGImage
     /// Where it came from, e.g. "Region 640 × 412 on Studio Display".
     let source: String
-    enum Kind: String, Codable { case region, display, allDisplays, clipboard, file }
+    enum Kind: String, Codable { case region, window, display, allDisplays, clipboard, file }
     let kind: Kind
 
     var pixelSize: String { "\(image.width) × \(image.height)" }
@@ -36,11 +38,12 @@ final class CaptureManager {
     static let shared = CaptureManager()
 
     enum Mode: String, CaseIterable, Identifiable {
-        case region, display, allDisplays
+        case region, window, display, allDisplays
         var id: String { rawValue }
         var title: String {
             switch self {
             case .region: "Selected region"
+            case .window: "Window under the pointer"
             case .display: "Display under the pointer"
             case .allDisplays: "All displays"
             }
@@ -96,6 +99,8 @@ final class CaptureManager {
         switch mode {
         case .allDisplays:
             return try await captureAllDisplays()
+        case .window:
+            return try await captureWindowUnderPointer()
         case .display, .region:
             guard let screen = Self.screenUnderPointer else { throw CaptureError.noDisplay }
             let image = try await Self.captureDisplay(screen)
@@ -140,6 +145,36 @@ final class CaptureManager {
         config.captureResolution = .best
         do { return try await SCScreenshotManager.captureImage(contentFilter: filter, configuration: config) }
         catch { throw CaptureError.failed(error.localizedDescription) }
+    }
+
+    /// The topmost normal window under the pointer, captured on its own at full resolution.
+    private func captureWindowUnderPointer() async throws -> CapturedInput {
+        let content: SCShareableContent
+        do { content = try await SCShareableContent.excludingDesktopWindows(true, onScreenWindowsOnly: true) }
+        catch { throw CaptureError.noPermission }
+        // NSEvent uses bottom-left coordinates; window frames use top-left of the main display.
+        let p = NSEvent.mouseLocation
+        let flipped = CGPoint(x: p.x, y: (NSScreen.screens.first?.frame.maxY ?? 0) - p.y)
+        let ownPID = ProcessInfo.processInfo.processIdentifier
+        // CGWindowList is front-to-back, so the first match is the window you can see.
+        let order = (CGWindowListCopyWindowInfo([.optionOnScreenOnly, .excludeDesktopElements], kCGNullWindowID) as? [[String: Any]] ?? [])
+            .filter { ($0["kCGWindowLayer"] as? Int) == 0 && ($0["kCGWindowOwnerPID"] as? Int32) != ownPID }
+            .compactMap { $0["kCGWindowNumber"] as? CGWindowID }
+        guard let window = order.lazy.compactMap({ id in content.windows.first { $0.windowID == id && $0.frame.contains(flipped) } }).first else {
+            throw CaptureError.failed("there's no window under the pointer")
+        }
+        let filter = SCContentFilter(desktopIndependentWindow: window)
+        let config = SCStreamConfiguration()
+        let scale = Self.screenUnderPointer?.backingScaleFactor ?? 2
+        config.width = Int(window.frame.width * scale)
+        config.height = Int(window.frame.height * scale)
+        config.showsCursor = false
+        config.captureResolution = .best
+        let image: CGImage
+        do { image = try await SCScreenshotManager.captureImage(contentFilter: filter, configuration: config) }
+        catch { throw CaptureError.failed(error.localizedDescription) }
+        let app = window.owningApplication?.applicationName ?? "window"
+        return CapturedInput(image: image, source: "Window · \(app)\(window.title.map { $0.isEmpty ? "" : " · \($0)" } ?? "")", kind: .window)
     }
 
     /// Every display, placed as arranged in System Settings, at the sharpest display's scale.

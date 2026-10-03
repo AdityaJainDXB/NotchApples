@@ -32,6 +32,13 @@ final class SettingsWindowController: NSWindowController, NSWindowDelegate {
         fitToScreen()
         Self.currentWindow = window
         window.delegate = self
+        Self.applyAppearance()
+    }
+
+    /// Settings → Appearance → Settings window: follow macOS, or always light or dark.
+    static func applyAppearance() {
+        let mode = UserDefaults.standard.string(forKey: "appearance.settingsWindow") ?? "system"
+        currentWindow?.appearance = mode == "light" ? NSAppearance(named: .aqua) : mode == "dark" ? NSAppearance(named: .darkAqua) : nil
     }
 
     /// Preferred 860 × 560, but never larger than the screen's usable area.

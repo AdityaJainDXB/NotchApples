@@ -34,7 +34,7 @@ Notch apple lives in the black cutout at the top of your MacBook screen (a small
 
 | | |
 | --- | --- |
-| 📸 **Instant capture** | <kbd>⌃⌥S</kbd> from anywhere, even full screen: a region, the whole display, or all displays. Retina-sharp, on the display under your pointer |
+| 📸 **Instant capture** | <kbd>⌃⌥S</kbd> from anywhere, even full screen: a region, a single window, the whole display, or all displays. Retina-sharp, on the display under your pointer |
 | 🧠 **AI vision & modes** | Solve (maths), Explain, Explain simply, Answer only, Hint, Summarize, Translate, Extract text (on your Mac), Rewrite, Code, Ask |
 | 💬 **Follow-ups** | Ask "why?" or "explain step 3": the AI still sees your capture. Stop, Retry, Edit, Copy, export |
 | 📋 **Any input** | Paste an image or text (<kbd>⌘⇧V</kbd>), drop an image or PDF, or use the text you selected |
@@ -200,6 +200,14 @@ All screenshots use sample data.
 </details>
 
 ## What's new
+
+### 1.15.2 · 3 October 2026 · Windows, charts and a full view
+
+- **Window capture:** hold the capture button and pick **Window under the pointer** (or make it the default in Settings → AI). Captures just that window, even if others overlap it.
+- **Charts and tables** are recognised ("Looks like a chart or table") and suggest Explain, Summarize and Extract.
+- **Open full view:** the conversation in a resizable window for long answers.
+- **First-run setup** in the AI tab: pick free Gemini or private Ollama, Test connection, then try your first capture.
+- **Settings → AI → Temperature**, and **Settings → Appearance → Settings window** (System, Light or Dark).
 
 ### 1.15.1 · 3 October 2026 · Match day, cricket and games
 
@@ -545,7 +553,7 @@ The table below lists when each is asked for.
 
 ### Capture → pick a mode → answer
 
-1. **Capture.** Press <kbd>⌃⌥S</kbd> in any app (or the viewfinder button in the AI tab). The display under the pointer freezes: drag a box, click for the whole display, or press **Esc** / right-click to cancel. Hold the viewfinder button for **whole display** or **all displays**. Or **paste** (<kbd>⌘⇧V</kbd>: an image, copied file or text), **drop** an image or PDF on the AI tab, or **Use selected text**.
+1. **Capture.** Press <kbd>⌃⌥S</kbd> in any app (or the viewfinder button in the AI tab). The display under the pointer freezes: drag a box, click for the whole display, or press **Esc** / right-click to cancel. Hold the viewfinder button for **the window under the pointer**, the **whole display** or **all displays**. Or **paste** (<kbd>⌘⇧V</kbd>: an image, copied file or text), **drop** an image or PDF on the AI tab, or **Use selected text**.
 2. **Pick a mode.** The first suggestions come from a quick look at the text on your Mac ("Looks like math", "Looks like an error message"…), never a guess presented as fact:
 
    | Mode | What you get |
@@ -561,13 +569,13 @@ The table below lists when each is asked for.
    | Code | What the code or error means, then a fixed version |
    | Ask | Your own question about the input |
 
-3. **Keep going.** Answers stream in with readable maths, code blocks with **Copy**, and tables. **Stop** keeps what's written, **Retry** asks again (with the provider you switched to, if any), **Edit** puts your question back, and follow-ups like "why?" or "explain step 3" still see the capture. **More** copies the whole conversation or exports it as Markdown or text.
+3. **Keep going.** Answers stream in with readable maths, code blocks with **Copy**, and tables. **Stop** keeps what's written, **Retry** asks again (with the provider you switched to, if any), **Edit** puts your question back, and follow-ups like "why?" or "explain step 3" still see the capture. **More** copies the whole conversation, exports it as Markdown or text, or opens it in a resizable **full view** window.
 
 Questions not about the screen work too: just type. Ask "what's on my screen?" and a screenshot is attached for you (the notch itself is left out).
 
 ### Choose your AI
 
-Pick a provider in the notch or in **Settings → AI**, then press **Test connection**. A badge shows whether the model reads images, and **On this Mac** shows when Ollama is answering locally.
+The first time, the AI tab walks you through it: pick free Gemini or private Ollama, **Test connection**, then try a capture. Later, change provider in the notch or in **Settings → AI** (where you can also set the **temperature**). A badge shows whether the model reads images, and **On this Mac** shows when Ollama is answering locally.
 
 | Provider | Cost | Get a key | Notes |
 | --- | --- | --- | --- |

@@ -108,7 +108,9 @@ enum InputClassifier {
         let errors = count(#"\b(error|exception|traceback|failed|fatal|undefined|cannot|warning:|segmentation)\b"#)
         let code = count(#"(\{|\}|;\s*$|=>|::|\bfunc\b|\bdef\b|\bclass\b|\bimport\b|\breturn\b|\bconst\b|\blet\b|\bvar\b|#include|</?\w+>)"#)
         let math = count(#"(\d\s*[\+\-×÷\*/\^=]\s*\d|[=≤≥<>]\s*-?\d|\b[xyz]\s*[\^²³=]|√|∫|∑|π|\bsin\b|\bcos\b|\btan\b|\blog\b|\bsolve\b|\bfind\b|\bderivative\b|\bintegral\b)"#)
-        let words = t.split { $0.isWhitespace }.count
+        let tokens = t.split { $0.isWhitespace }
+        let words = tokens.count
+        let numeric = tokens.filter { $0.contains(where: \.isNumber) && $0.allSatisfy { $0.isNumber || ".,%$€£-:/".contains($0) } }.count
 
         // Another language?
         var foreign = false
@@ -125,6 +127,10 @@ enum InputClassifier {
             return Result(text: t, label: "Looks like an error message", suggested: [.code, .explain, .simple])
         }
         if code >= 4 { return Result(text: t, label: "Looks like code", suggested: [.code, .explain, .extract]) }
+        // Charts and tables: mostly short numeric labels (axes, values), few sentences.
+        if words >= 8, Double(numeric) / Double(words) > 0.45, math < 4 {
+            return Result(text: t, label: "Looks like a chart or table", suggested: [.explain, .summarize, .extract])
+        }
         if math >= 2 && words < 120 { return Result(text: t, label: "Looks like math", suggested: [.solve, .hint, .simple, .answerOnly]) }
         if foreign { return Result(text: t, label: "Looks like another language", suggested: [.translate, .explain, .extract]) }
         if words >= 60 { return Result(text: t, label: "Lots of text", suggested: [.summarize, .rewrite, .translate, .extract]) }
