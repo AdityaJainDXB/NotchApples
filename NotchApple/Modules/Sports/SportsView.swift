@@ -402,27 +402,50 @@ struct SportsView: View {
 
     private func leagueRow(_ m: SportsModel.Match) -> some View {
         let involvesMine = m.home.id == sports.teamID || m.away.id == sports.teamID
-        return HStack(spacing: 4) {
-            teamButton(m.home, alignment: .trailing)
-            VStack(spacing: 0) {
-                if m.state == "pre" {
-                    Text(m.date.formatted(.dateTime.hour().minute())).font(.system(size: 11).monospacedDigit()).foregroundStyle(Theme.textSecondary)
-                } else {
-                    Text("\(short(m.home.score))–\(short(m.away.score))").font(.system(size: 12, weight: .bold).monospacedDigit())
-                        .minimumScaleFactor(0.6).lineLimit(1)
-                        .foregroundStyle(m.isLive ? Color.green : .white)
-                    Text(m.isLive ? m.detail : "FT").font(.system(size: 8, weight: .semibold))
-                        .foregroundStyle(m.isLive ? Color.green : Theme.textSecondary)
+        // Cricket scores ("351/7") and status lines ("West Indies require 175 runs") are long:
+        // a wider score column, each side's score under its name, and the status on its own line.
+        let cricket = m.leaguePath.hasPrefix("cricket")
+        return VStack(spacing: 2) {
+            HStack(spacing: 4) {
+                teamButton(m.home, alignment: .trailing)
+                VStack(spacing: 0) {
+                    if m.state == "pre" {
+                        Text(m.date.formatted(.dateTime.hour().minute())).font(.system(size: 11).monospacedDigit()).foregroundStyle(Theme.textSecondary)
+                    } else if cricket {
+                        Text(m.isLive ? "LIVE" : "Result").font(.system(size: 9, weight: .heavy))
+                            .foregroundStyle(m.isLive ? Color.green : Theme.textSecondary)
+                    } else {
+                        Text("\(short(m.home.score))–\(short(m.away.score))").font(.system(size: 12, weight: .bold).monospacedDigit())
+                            .minimumScaleFactor(0.6).lineLimit(1)
+                            .foregroundStyle(m.isLive ? Color.green : .white)
+                        Text(m.isLive ? m.detail : "FT").font(.system(size: 8, weight: .semibold)).lineLimit(1)
+                            .foregroundStyle(m.isLive ? Color.green : Theme.textSecondary)
+                    }
+                }
+                .frame(width: 50)
+                .contentShape(Rectangle())
+                .onTapGesture { sports.openDetail(m) }
+                .help(cricket ? "Match details" : "Goals, cards and lineups")
+                teamButton(m.away, alignment: .leading)
+            }
+            if cricket && m.state != "pre" {
+                HStack(spacing: 4) {
+                    Text(short(m.home.score)).frame(maxWidth: .infinity, alignment: .trailing)
+                    Color.clear.frame(width: 50, height: 1)
+                    Text(short(m.away.score)).frame(maxWidth: .infinity, alignment: .leading)
+                }
+                .font(.system(size: 12, weight: .bold).monospacedDigit())
+                .foregroundStyle(m.isLive ? Color.green : .white)
+                if !m.detail.isEmpty {
+                    Text(m.detail).font(.system(size: 10)).foregroundStyle(m.isLive ? Color.green : Theme.textSecondary)
+                        .lineLimit(2).multilineTextAlignment(.center).frame(maxWidth: .infinity)
                 }
             }
-            .frame(width: 50)
-            .contentShape(Rectangle())
-            .onTapGesture { sports.openDetail(m) }
-            .help("Goals, cards and lineups")
-            teamButton(m.away, alignment: .leading)
         }
         .padding(.vertical, 3).padding(.horizontal, 4)
         .background(involvesMine ? Theme.accent.opacity(0.22) : .clear, in: RoundedRectangle(cornerRadius: 6))
+        .contentShape(Rectangle())
+        .onTapGesture { if cricket { sports.openDetail(m) } }
     }
 
     private func teamButton(_ s: SportsModel.Side, alignment: Alignment) -> some View {

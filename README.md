@@ -201,6 +201,10 @@ All screenshots use sample data.
 
 ## What's new
 
+### 1.15.3 · 3 October 2026
+
+- **Clearer cricket scores:** each side's score under its name, LIVE or Result between them, and the match status ("West Indies require 166 runs") on its own line.
+
 ### 1.15.2 · 3 October 2026 · Windows, charts and a full view
 
 - **Window capture:** hold the capture button and pick **Window under the pointer** (or make it the default in Settings → AI). Captures just that window, even if others overlap it.
