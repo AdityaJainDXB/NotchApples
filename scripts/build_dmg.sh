@@ -15,7 +15,7 @@ echo "$TB_SHA  $TB_DMG" | shasum -a 256 -c - >/dev/null || { echo "Tunnelblick c
 command -v xcodegen >/dev/null && xcodegen generate >/dev/null
 VERSION=$(grep 'MARKETING_VERSION' project.yml | head -1 | sed -E 's/.*"(.*)".*/\1/')
 xcodebuild -project NotchApple.xcodeproj -scheme NotchApple -configuration Release \
-  -derivedDataPath build/dd build | xcbeautify 2>/dev/null || true
+  -derivedDataPath build/dd ARCHS="arm64 x86_64" ONLY_ACTIVE_ARCH=NO build | xcbeautify 2>/dev/null || true
 APP="build/dd/Build/Products/Release/Notch apple.app"
 [ -d "$APP" ] || { echo "Build failed"; exit 1; }
 
