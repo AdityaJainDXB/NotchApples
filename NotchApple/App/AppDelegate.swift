@@ -38,6 +38,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             .store(in: &cancellables)
         SystemHUDObserver.shared.start()
         WhatsNew.noteLaunch()
+        DemoHooks.run()
         applyMediaKeyPreference()
         // Accessibility may be granted later; keep trying quietly until the tap is running.
         Timer.scheduledTimer(withTimeInterval: 10, repeats: true) { timer in

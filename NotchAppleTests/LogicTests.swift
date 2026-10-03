@@ -31,6 +31,7 @@ final class MathTextTests: XCTestCase {
         XCTAssertEqual(MathText.inline("So $x^2 = 4$ here"), "So x² = 4 here")
         XCTAssertEqual(MathText.inline("It costs $5 and $10 today"), "It costs $5 and $10 today")
         XCTAssertEqual(MathText.inline(#"Then \(a+b\)"#), "Then a+b")
+        XCTAssertEqual(MathText.inline("so $$x^2 = 4$$ has two"), "so x² = 4 has two")
     }
 
     func testBlocks() {

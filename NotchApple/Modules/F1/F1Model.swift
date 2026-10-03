@@ -266,16 +266,24 @@ final class F1Model: ObservableObject {
                 ?? (((stints[number]?["Stints"] as? [String: [String: Any]]).flatMap { s in s.keys.compactMap(Int.init).max().flatMap { s[String($0)] } })?["Compound"] as? String)
                 ?? ""
             // Races show the gap to the leader; practice and qualifying the gap to the fastest lap.
-            let gap = value(l["GapToLeader"]).isEmpty ? value(l["TimeDiffToFastest"]) : value(l["GapToLeader"])
-            let interval = value(l["IntervalToPositionAhead"]).isEmpty ? value(l["TimeDiffToPositionAhead"]) : value(l["IntervalToPositionAhead"])
+            var gap = value(l["GapToLeader"]).isEmpty ? value(l["TimeDiffToFastest"]) : value(l["GapToLeader"])
+            var interval = value(l["IntervalToPositionAhead"]).isEmpty ? value(l["TimeDiffToPositionAhead"]) : value(l["IntervalToPositionAhead"])
+            var best = value(l["BestLapTime"])
+            // Qualifying keeps one set per part (Q1, Q2, Q3): use the latest part this driver set a time in.
+            if let stats = l["Stats"] as? [[String: Any]], let parts = l["BestLapTimes"] as? [[String: Any]],
+               let part = parts.indices.last(where: { !(parts[$0]["Value"] as? String ?? "").isEmpty }), part < stats.count {
+                gap = stats[part]["TimeDiffToFastest"] as? String ?? gap
+                interval = stats[part]["TimeDifftoPositionAhead"] as? String ?? interval
+                best = parts[part]["Value"] as? String ?? best
+            }
             return Car(number: number, position: pos,
                        code: d["Tla"] as? String ?? number,
                        team: d["TeamName"] as? String ?? "",
                        colour: Color(hex: d["TeamColour"] as? String ?? "888888"),
                        gap: gap, interval: interval,
-                       lastLap: value(l["LastLapTime"]), bestLap: value(l["BestLapTime"]),
+                       lastLap: value(l["LastLapTime"]), bestLap: best,
                        tyre: tyre, laps: l["NumberOfLaps"] as? Int ?? 0, pits: l["NumberOfPitStops"] as? Int ?? 0,
-                       inPit: l["InPit"] as? Bool ?? false,
+                       inPit: isLive && (l["InPit"] as? Bool ?? false),   // after a session every car is "in the pit"
                        out: (l["Retired"] as? Bool ?? false) || (l["Stopped"] as? Bool ?? false) || (l["KnockedOut"] as? Bool ?? false))
         }.sorted { $0.position < $1.position }
         LiveActivityCenter.shared.recompute()

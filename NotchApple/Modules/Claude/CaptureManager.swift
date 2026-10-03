@@ -185,13 +185,14 @@ final class CaptureManager {
 
 /// A borderless window over one display showing the frozen screenshot; drag to select.
 final class RegionOverlayWindow: NSWindow {
-    init(screen: NSScreen, image: CGImage, done: @escaping (CGImage?) -> Void) {
+    init(screen: NSScreen, image: CGImage, preset: NSRect? = nil, done: @escaping (CGImage?) -> Void) {
         super.init(contentRect: screen.frame, styleMask: .borderless, backing: .buffered, defer: false)
         level = .screenSaver
         isOpaque = true
         hasShadow = false
         collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .stationary, .ignoresCycle]
         let view = RegionSelectView(frame: NSRect(origin: .zero, size: screen.frame.size), image: image, done: done)
+        if let preset { view.preset(preset) }
         contentView = view
         setFrame(screen.frame, display: true)
         makeFirstResponder(view)
@@ -213,6 +214,13 @@ final class RegionSelectView: NSView {
         setAccessibilityLabel("Drag to select part of the screen. Press Escape to cancel.")
     }
     required init?(coder: NSCoder) { fatalError() }
+
+    /// Shows a selection without dragging (used by the screenshot script).
+    func preset(_ rect: NSRect) {
+        start = rect.origin
+        current = NSPoint(x: rect.maxX, y: rect.maxY)
+        needsDisplay = true
+    }
 
     override var acceptsFirstResponder: Bool { true }
     override func acceptsFirstMouse(for event: NSEvent?) -> Bool { true }

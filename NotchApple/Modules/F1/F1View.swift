@@ -70,11 +70,13 @@ struct F1View: View {
             RoundedRectangle(cornerRadius: 1.5).fill(c.colour).frame(width: 3, height: 14)
             Text(c.code).font(.system(size: 11, weight: .bold, design: .monospaced)).foregroundStyle(c.out ? Theme.textSecondary : .white).frame(width: 34, alignment: .leading)
             tyre(c.tyre)
-            Text(f1.orderOnly ? c.team : c.out ? "OUT" : c.inPit ? "PIT" : (c.position == 1 ? (f1.sessionType == "Race" ? "Leader" : c.bestLap) : (f1.sessionType == "Race" ? c.interval : c.gap)))
+            Text(f1.orderOnly ? c.team : c.out ? "OUT" : c.inPit ? "PIT" : (c.position == 1 ? (f1.sessionType == "Race" ? "Leader" : "Fastest") : (f1.sessionType == "Race" ? c.interval : c.gap)))
                 .font(.system(size: 11, weight: .medium).monospacedDigit())
                 .foregroundStyle(c.inPit ? .yellow : c.out ? .red.opacity(0.8) : .white)
                 .frame(maxWidth: .infinity, alignment: .leading)
-            Text(c.lastLap.isEmpty ? c.bestLap : c.lastLap).font(.system(size: 10).monospacedDigit()).foregroundStyle(Theme.textSecondary)
+            // Races: the last lap. Practice and qualifying: the best lap, which is what decides the order.
+            Text(f1.sessionType == "Race" ? (c.lastLap.isEmpty ? c.bestLap : c.lastLap) : (c.bestLap.isEmpty ? c.lastLap : c.bestLap))
+                .font(.system(size: 10).monospacedDigit()).foregroundStyle(Theme.textSecondary)
         }
         .padding(.horizontal, 6).padding(.vertical, 3)
         .background(followed ? Theme.accent.opacity(0.25) : .clear, in: RoundedRectangle(cornerRadius: 6))

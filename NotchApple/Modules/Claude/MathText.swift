@@ -71,7 +71,8 @@ enum MathText {
 
     /// Replaces inline $…$ and \(…\) math inside a line of Markdown.
     static func inline(_ line: String) -> String {
-        var s = replace(line, #"\\\((.+?)\\\)"#) { readable($0[1]) }
+        var s = replace(line, #"\$\$(.+?)\$\$"#) { readable($0[1]) }   // display math written mid-sentence
+        s = replace(s, #"\\\((.+?)\\\)"#) { readable($0[1]) }
         // Pandoc's rule: no space just inside the dollars and no digit right after, so "$5 and $10" stays money.
         s = replace(s, #"(?<![\\$])\$(?![\s$])([^$\n]+?)(?<!\s)\$(?!\d)"#) { readable($0[1]) }
         return s
