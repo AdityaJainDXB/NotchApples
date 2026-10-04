@@ -105,6 +105,18 @@ await test('Every open order gets its own amount', async () => {
   }
 });
 
+await test('Test payments: only for an order the admin marked, and only with the zeros ID', async () => {
+  const zeros = '0'.repeat(64);
+  const o = await call('/order', { tier: 'pro', email: 'tester@example.com' });
+  assert.equal((await call('/claim', { order: o.order, txid: zeros })).status, 400, 'nobody can claim with zeros by themselves');
+  assert.equal((await call('/admin/test-payment', { order: o.order }, { authorization: 'Bearer wrong' })).status, 401);
+  assert.equal((await call('/admin/test-payment', { order: o.order }, { authorization: 'Bearer admin-test' })).ok, true);
+  const c = await call('/claim', { order: o.order, txid: zeros });
+  assert.match(c.key, /^NTCH-PRO-/);
+  const other = await call('/order', { tier: 'ultimate', email: 'tester@example.com' });
+  assert.equal((await call('/claim', { order: other.order, txid: zeros })).status, 400, 'marking one order never unlocks another');
+});
+
 await test('Ultimate checkout gives a signed Ultimate key', async () => {
   const o = await call('/order', { tier: 'ultimate', email: 'ult@example.com' });
   assert.equal(o.usd, 5);

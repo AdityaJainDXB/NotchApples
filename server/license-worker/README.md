@@ -48,6 +48,11 @@ curl -X POST https://…workers.dev/admin/issue -H "authorization: Bearer $(cat 
 curl -X POST https://…workers.dev/admin/reissue -H "authorization: Bearer $(cat private/admin-token.txt)" \
   -d '{"key":"NTCH-PRO-…","email":"buyer@example.com","reason":"shared publicly"}'
 
+# Test a real purchase with no money: start an order on the website, copy its order ID
+# (localStorage "na.order" in the browser), mark it, then paste 64 zeros as the transaction ID.
+curl -X POST https://…workers.dev/admin/test-payment -H "authorization: Bearer $(cat private/admin-token.txt)" \
+  -d '{"order":"<order id>"}'
+
 # Refund: turn the key off
 curl -X POST https://…workers.dev/admin/revoke -H "authorization: Bearer $(cat private/admin-token.txt)" \
   -d '{"key":"NTCH-PRO-…","reason":"refund"}'

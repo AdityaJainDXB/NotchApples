@@ -18,6 +18,8 @@
 //   GET  /revoked                         signed list of revoked key IDs (the app checks it now and then)
 //   GET  /config                          prices and whether Ultimate is on sale
 //   POST /admin/issue | /admin/revoke | /admin/reissue   (Authorization: Bearer ADMIN_TOKEN)
+//   POST /admin/test-payment {order}      admin-only test mode: lets that one order be claimed with the
+//                                         transaction ID 000…000 (64 zeros), no money needed. Nobody else can.
 //
 // What it stores: orders, keys, a salted hash of the buyer's email (for recovery) and a
 // salted hash per Mac for the device limit. A plain email is kept only on unpaid orders,
@@ -287,9 +289,12 @@ async function claim(env, body) {
     if (o.txid !== txid) throw new HTTPError(409, 'This order is already paid with a different transaction.');
     return { key: o.key, tier: TIER_NAME[o.tier], emailed: o.emailed, again: true };
   }
-  const used = await env.KV.get(`tx:${txid}`);
+  // Admin test mode: only an order the admin marked, and only with the all-zeros transaction ID.
+  const testTx = '0'.repeat(64);
+  if (txid === testTx && !o.testPayment) throw new HTTPError(400, "That isn't a real transaction ID.");
+  const used = txid === testTx ? null : await env.KV.get(`tx:${txid}`);
   if (used) throw new HTTPError(409, 'That payment has already been used for a key.');
-  const pay = await payment(env, txid);
+  const pay = txid === testTx ? { paid: o.litoshi, blockTime: null } : await payment(env, txid);
   if (!pay) return { pending: true, message: 'Waiting for the transaction to appear on the network…' };
   if (pay.paid === 0) throw new HTTPError(400, "That transaction doesn't pay the Notch apple address.");
   if (pay.paid !== o.litoshi) {
@@ -297,8 +302,8 @@ async function claim(env, body) {
       'If an exchange took a fee from it, contact us with the transaction ID and we will sort it out.');
   }
   if (pay.blockTime && pay.blockTime * 1000 < o.created - 600000) throw new HTTPError(400, 'That payment was made before this order.');
-  await env.KV.put(`tx:${txid}`, body.order);
-  const { key, keyId } = await issueKey(env, o.tier, 'ltc', o.email, { order: body.order, txid, upgradeFrom: o.upgradeFrom });
+  if (txid !== testTx) await env.KV.put(`tx:${txid}`, body.order);
+  const { key, keyId } = await issueKey(env, o.tier, txid === testTx ? 'test' : 'ltc', o.email, { order: body.order, txid, upgradeFrom: o.upgradeFrom });
   if (o.upgradeFrom) {
     const old = await getJSON(env, `key:${o.upgradeFrom}`);
     if (old) { old.upgradedTo = keyId; await putJSON(env, `key:${o.upgradeFrom}`, old); }
@@ -383,6 +388,13 @@ async function admin(env, path, body) {
     const r = await issueKey(env, tier, 'admin', body.email || null, { note: String(body.note || '').slice(0, 200) });
     const emailed = body.email ? await sendMail(env, body.email, `Your Notch apple ${TIER_NAME[tier]} key`, keyMail([{ tier, key: r.key }])) : false;
     return { ...r, emailed };
+  }
+  if (path === '/admin/test-payment') {
+    const o = /^[0-9a-f]{32}$/.test(String(body.order)) && await getJSON(env, `order:${body.order}`);
+    if (!o) throw new HTTPError(404, 'No such open order');
+    o.testPayment = true;
+    await putJSON(env, `order:${body.order}`, o, ORDER_TTL);
+    return { ok: true, claimWith: '0'.repeat(64) };
   }
   if (path === '/admin/revoke' || path === '/admin/reissue') {
     const id = String(body.keyId || (body.key && parseKey(body.key)?.keyId) || '');
