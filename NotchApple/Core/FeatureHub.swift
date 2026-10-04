@@ -81,6 +81,7 @@ enum FeatureHub {
         if s.liveEnabled { FlightWatcher.shared.refreshIfDue() }
         if s.marketsEnabled { MarketsModel.shared.refreshIfDue() }
         AIAutomations.shared.checkDue()
+        Profiles.shared.evaluate()
         if s.shelfEnabled { FileShelfStore.shared.pruneExpired() }
         DownloadWatcher.shared.setEnabled(s.downloadProgress && Entitlements.shared.canUse(.downloadProgress))
         LiveActivityCenter.shared.recompute()

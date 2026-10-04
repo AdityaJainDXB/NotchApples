@@ -577,6 +577,7 @@ final class NotchWindowController {
     /// Separate from ⌘O hiding: it comes back by itself, and opening with the hotkey still works.
     func updateAutoHide() {
         let hide = (fullscreen.isFullscreen && NotchPrefs.autoHideFullscreen) || (recordingNow && NotchPrefs.autoHideRecording)
+            || Profiles.shared.ruleHidesNotch
         guard hide != state.isAutoHidden else { return }
         state.isAutoHidden = hide
         if hide && !state.isExpanded { /* stays closed */ }
@@ -754,7 +755,7 @@ final class NotchWindowController {
         let size = NotchPrefs.panelSize
         if state.expandedSize != size { state.expandedSize = size }
         DisplayLayouts.currentScreen = screen
-        let hidden = Entitlements.shared.canUse(.displayLayouts) ? DisplayLayouts.hidden(on: screen) : []
+        let hidden = (Entitlements.shared.canUse(.displayLayouts) ? DisplayLayouts.hidden(on: screen) : []).union(Profiles.shared.hiddenTabs)
         if state.hiddenTabs != hidden { state.hiddenTabs = hidden }
         panel.setFrame(frame(size: state.expandedSize, on: screen), display: false)
     }

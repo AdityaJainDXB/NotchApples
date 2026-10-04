@@ -209,3 +209,27 @@ final class ConverterTests: XCTestCase {
         XCTAssertNil(Converter.convertCurrency(.init(amount: 1, from: "usd", to: "xyz"), rates: rates))
     }
 }
+
+final class CustomizationTests: XCTestCase {
+    func testProfileTimes() {
+        let cal = Calendar.current
+        var p = Profile(name: "Work", from: 9 * 60, to: 17 * 60)
+        XCTAssertTrue(p.matchesTime(cal.date(bySettingHour: 10, minute: 0, second: 0, of: .now)!))
+        XCTAssertFalse(p.matchesTime(cal.date(bySettingHour: 18, minute: 0, second: 0, of: .now)!))
+        p.from = 22 * 60; p.to = 6 * 60   // overnight
+        XCTAssertTrue(p.matchesTime(cal.date(bySettingHour: 23, minute: 30, second: 0, of: .now)!))
+        XCTAssertTrue(p.matchesTime(cal.date(bySettingHour: 2, minute: 0, second: 0, of: .now)!))
+        XCTAssertFalse(p.matchesTime(cal.date(bySettingHour: 12, minute: 0, second: 0, of: .now)!))
+        p.days = []
+        XCTAssertFalse(p.matchesTime(cal.date(bySettingHour: 23, minute: 30, second: 0, of: .now)!))
+        XCTAssertFalse(Profile(name: "No time").matchesTime())
+    }
+
+    func testPluginActivityLine() {
+        let kv = PluginSDK.keyValues(#" text=42% symbol=hammer.fill title="My build" progress=0.4"#)
+        XCTAssertEqual(kv["text"], "42%")
+        XCTAssertEqual(kv["symbol"], "hammer.fill")
+        XCTAssertEqual(kv["title"], "My build")
+        XCTAssertEqual(kv["progress"], "0.4")
+    }
+}

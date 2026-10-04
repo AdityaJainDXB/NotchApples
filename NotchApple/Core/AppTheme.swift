@@ -242,6 +242,12 @@ final class ThemeManager {
         currentTheme = AppTheme.theme(for: id)
     }
 
+    /// Used by profiles: shows a theme without changing the saved choice.
+    func applyTemporarily(_ id: ThemeID) {
+        currentThemeID = id
+        currentTheme = AppTheme.theme(for: id)
+    }
+
     /// Pro themes fall back to Notch Purple on a Mac without Pro (the choice is kept for when Pro returns).
     @MainActor func revalidate() {
         let raw = UserDefaults.standard.string(forKey: Self.storageKey) ?? ""
@@ -305,6 +311,7 @@ struct AppearanceSettings: View {
                 }
             }
             ThemeEditor()
+            StyleSettingsSection()
             TabOrderSection()
         }
         .formStyle(.grouped)

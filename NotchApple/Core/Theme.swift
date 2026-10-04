@@ -56,7 +56,7 @@ enum Theme {
     static var spring: Animation {
         NSWorkspace.shared.accessibilityDisplayShouldReduceMotion
             ? .easeInOut(duration: 0.15)
-            : .spring(response: 0.42, dampingFraction: 0.82)
+            : StylePrefs.spring
     }
 }
 

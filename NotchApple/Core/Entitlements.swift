@@ -137,6 +137,7 @@ extension Module {
         case .screenTime: .screenTime
         case .quickAdd: .quickAdd
         case .markets: .markets
+        case .home: .homeLayout
         case .launcher: .launcher
         case .snippets: .snippets
         case .mirror: .mirror

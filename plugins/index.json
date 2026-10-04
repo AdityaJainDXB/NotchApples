@@ -1,0 +1,6 @@
+[
+  {"name": "Disk space", "description": "Free space on your startup disk, with a bar beside the notch when it runs low.", "author": "Notch apple", "file": "disk-space.10m.sh"},
+  {"name": "Uptime and load", "description": "How long your Mac has been on and how busy it is.", "author": "Notch apple", "file": "uptime.1m.sh"},
+  {"name": "Git status", "description": "Uncommitted changes in a folder you choose (edit REPO at the top).", "author": "Notch apple", "file": "git-status.2m.sh"},
+  {"name": "Countdown", "description": "Days until a date you set (edit TARGET and LABEL), shown beside the notch.", "author": "Notch apple", "file": "countdown.1h.sh"}
+]

@@ -20,6 +20,7 @@
 //    -demoAsk <question>        ask a question (add -demoWeb YES to search the web first)
 //    -demoTodos "a|b|c"         add sample to-dos
 //    -demoPalette <query>       open the command palette (Pro) with a search typed in
+//    -demoHome YES              a sample Home layout (no music or calendar, so nothing personal shows)
 //    -demoTimer <seconds>       start a timer (shows beside the closed notch)
 //    -demoActivity <query>      push a Live Activities API activity, e.g. "id=build&text=42%25&symbol=hammer.fill"
 //
@@ -38,6 +39,13 @@ enum DemoHooks {
         let d = UserDefaults.standard
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
             if d.integer(forKey: "demoOnboarding") > 0 { Onboarding.show() }
+            if d.bool(forKey: "demoHome") {
+                HomeLayout.shared.widgets = [
+                    HomeWidget(kind: .clock, size: .small), HomeWidget(kind: .timer, size: .small),
+                    HomeWidget(kind: .battery, size: .small), HomeWidget(kind: .markets, size: .small),
+                    HomeWidget(kind: .todos, size: .medium), HomeWidget(kind: .markets, size: .medium),
+                ]
+            }
             if let todos = d.string(forKey: "demoTodos") {
                 for t in todos.split(separator: "|").reversed() { TodoStore.shared.add(String(t)) }
                 if let first = TodoStore.shared.items.last { TodoStore.shared.toggle(first) }

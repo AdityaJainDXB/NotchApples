@@ -21,6 +21,14 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "1.21.0", date: "4 October 2026", headline: "Make it yours", items: [
+            "Pro: Home, a dashboard tab of widgets (clock, weather, battery, next event, Now Playing, timer, to-do, markets) in small, medium or large.",
+            "Pro: profiles (Work, Study, Gaming…) that choose your tabs and theme, switching by the app in front or the time of day.",
+            "Pro: per-app rules: hide the notch in an app, or have it open on a tab when an app comes forward.",
+            "Pro: animation styles and speed, your own open/close sounds and haptic feel, rounded/serif/monospaced text and a menu bar icon.",
+            "Ultimate: the plugin SDK. Plugins can show beside the notch (activity: lines), be Home widgets and keep running in the background.",
+            "Ultimate: the plugin gallery: install community plugins in one click, after reading their source.",
+        ]),
         ReleaseNote(version: "1.20.0", date: "4 October 2026", headline: "Get more done", items: [
             "A To-do list in the Notes tab, saved on this Mac.",
             "Pro: Reminders in To-do (tick them off right there), Markdown preview and #tags for notes.",

@@ -12,7 +12,7 @@ import SwiftUI
 
 /// Every optional feature module in the app.
 enum Module: String, CaseIterable, Identifiable {
-    case today, claude, browser, launcher, translator, stats, windows, tools, mirror, worldClock, messenger, clipboard, notes, focus, shelf, share, audio, vpn, nowPlaying, search, timer, snippets, shortcuts, devices, live, f1, sports, games, alerts, plugins, voiceNotes, screenTime, quickAdd, markets, security
+    case today, claude, browser, launcher, translator, stats, windows, tools, mirror, worldClock, messenger, clipboard, notes, focus, shelf, share, audio, vpn, nowPlaying, search, timer, snippets, shortcuts, devices, live, f1, sports, games, alerts, plugins, voiceNotes, screenTime, quickAdd, markets, home, security
 
     var id: String { rawValue }
 
@@ -52,6 +52,7 @@ enum Module: String, CaseIterable, Identifiable {
         case .screenTime: "Screen Time"
         case .quickAdd: "Quick Add"
         case .markets: "Markets"
+        case .home: "Home"
         case .security: "Biometric Lock"
         }
     }
@@ -92,6 +93,7 @@ enum Module: String, CaseIterable, Identifiable {
         case .screenTime: "hourglass"
         case .quickAdd: "calendar.badge.plus"
         case .markets: "chart.line.uptrend.xyaxis"
+        case .home: "square.grid.2x2"
         case .security: "touchid"
         }
     }
@@ -132,6 +134,7 @@ enum Module: String, CaseIterable, Identifiable {
         case .screenTime: "Pro: see how long you spend in each app, set daily limits, and block distracting apps during Focus sessions. Stays on your Mac."
         case .quickAdd: "Pro: type “Dentist tomorrow 3pm” or “remind me to pay rent on the 1st” and it goes straight into Calendar or Reminders."
         case .markets: "Pro: a watchlist of stocks and crypto with today's change; pin one beside the notch."
+        case .home: "Pro: your own dashboard of widgets in small, medium and large sizes."
         case .security: "Require Touch ID / Apple Watch / password to open the notch."
         }
     }
@@ -162,7 +165,7 @@ final class SettingsManager: ObservableObject {
         var defaults: [String: Any] = [Module.today.storageKey: true, Module.claude.storageKey: true]
         offByDefault.forEach { defaults[$0.storageKey] = false }
         // 1.14 add-ons start off for everyone, new and existing installs.
-        [Module.timer, .snippets, .shortcuts, .devices, .live, .f1, .games, .alerts, .plugins, .voiceNotes, .screenTime, .quickAdd, .markets].forEach { defaults[$0.storageKey] = false }
+        [Module.timer, .snippets, .shortcuts, .devices, .live, .f1, .games, .alerts, .plugins, .voiceNotes, .screenTime, .quickAdd, .markets, .home].forEach { defaults[$0.storageKey] = false }
         defaults[Module.sports.storageKey] = true   // everyone gets Sports, tracking Barcelona
         d.register(defaults: defaults)
     }
@@ -213,6 +216,7 @@ final class SettingsManager: ObservableObject {
     @AppStorage(Module.screenTime.storageKey) var screenTimeEnabled = false
     @AppStorage(Module.quickAdd.storageKey) var quickAddEnabled = false
     @AppStorage(Module.markets.storageKey) var marketsEnabled = false
+    @AppStorage(Module.home.storageKey) var homeEnabled = false
 
     // MARK: Notch extras (Settings → Notch Extras)
     @AppStorage("extras.lowBatteryAlert") var lowBatteryAlert = true
@@ -309,6 +313,7 @@ final class SettingsManager: ObservableObject {
         case .screenTime: $screenTimeEnabled
         case .quickAdd: $quickAddEnabled
         case .markets: $marketsEnabled
+        case .home: $homeEnabled
         }
     }
 

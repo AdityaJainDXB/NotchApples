@@ -44,7 +44,9 @@ enum Feature: String, CaseIterable, Identifiable {
     // Pro: notch
     case notchResize, edgeTrigger, displayLayouts, gestureRemap
     // Pro: customization
-    case proThemes, customColors, themeEditor
+    case proThemes, customColors, themeEditor, homeLayout, profiles, appRules, animationStyles, customSounds, fontsAndIcons
+    // Ultimate: customization
+    case pluginGallery
     // Pro: live activities
     case meetingAlert, downloadProgress, markets, flightStatus, multiMatch
     // Ultimate: live activities
@@ -70,14 +72,14 @@ enum Feature: String, CaseIterable, Identifiable {
 
     var tier: Tier {
         switch self {
-        case .liveActivityAPI, .activityStacking, .automations, .scripting, .pluginSDK, .prioritySupport, .betaChannel: .ultimate
+        case .liveActivityAPI, .activityStacking, .automations, .scripting, .pluginSDK, .pluginGallery, .prioritySupport, .betaChannel: .ultimate
         default: .pro
         }
     }
 
     var isReady: Bool {
         switch self {
-        case .pluginSDK, .prioritySupport, .betaChannel: false
+        case .prioritySupport, .betaChannel: false
         default: true
         }
     }
@@ -101,6 +103,13 @@ enum Feature: String, CaseIterable, Identifiable {
         case .proThemes: "Pro themes"
         case .customColors: "Custom colours"
         case .themeEditor: "Theme editor"
+        case .homeLayout: "Home dashboard"
+        case .profiles: "Profiles"
+        case .appRules: "Per-app rules"
+        case .animationStyles: "Animation styles"
+        case .customSounds: "Custom sounds and haptics"
+        case .fontsAndIcons: "Fonts and menu bar icon"
+        case .pluginGallery: "Plugin gallery"
         case .meetingAlert: "Meeting alerts"
         case .downloadProgress: "Download progress"
         case .markets: "Markets"
@@ -156,6 +165,13 @@ enum Feature: String, CaseIterable, Identifiable {
         case .proThemes: "Eight more themes, from Aurora to Rose Gold."
         case .customColors: "Your own accent colour and glow."
         case .themeEditor: "Build a theme, then export it or import one from a friend."
+        case .homeLayout: "A dashboard tab of widgets you arrange, in three sizes."
+        case .profiles: "Work, Study or Gaming setups that switch by app or time of day."
+        case .appRules: "Hide the notch in some apps, or open a tab when an app comes forward."
+        case .animationStyles: "Snappy, smooth, bouncy or calm animations, at the speed you like."
+        case .customSounds: "Pick the sounds and trackpad feel for opening and closing."
+        case .fontsAndIcons: "Rounded, serif or monospaced text in the notch, and your own menu bar icon."
+        case .pluginGallery: "Install community plugins in one click."
         case .meetingAlert: "A heads-up before meetings, with a Join button."
         case .downloadProgress: "Watch downloads fill up beside the notch."
         case .markets: "Stocks and crypto with today's change; pin one beside the notch."
@@ -185,7 +201,7 @@ enum Feature: String, CaseIterable, Identifiable {
         case .lyrics: "Lyrics for what's playing."
         case .sync: "Your setup on every Mac, through iCloud or your account."
         case .liveActivityAPI: "Let your own apps and scripts show live activities."
-        case .pluginSDK: "Build your own widgets."
+        case .pluginSDK: "Your own widgets: plugins can be Home widgets and live activities."
         case .prioritySupport: "Your issues answered first."
         case .betaChannel: "Try new versions early."
         }

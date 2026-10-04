@@ -7,8 +7,8 @@ options:
 settings:
   base:
     SWIFT_VERSION: "5.0"
-    MARKETING_VERSION: "1.20.0"
-    CURRENT_PROJECT_VERSION: "37"
+    MARKETING_VERSION: "1.21.0"
+    CURRENT_PROJECT_VERSION: "38"
     CODE_SIGN_IDENTITY: "-"
     CODE_SIGN_STYLE: Manual
     DEVELOPMENT_TEAM: ""
@@ -54,6 +54,7 @@ targets:
       - NotchApple/Modules/Claude/AIPure.swift
       - NotchApple/Modules/Claude/AppleIntelligence.swift
       - NotchApple/Modules/Tools/Converter.swift
+      - NotchApple/Core/PureModels.swift
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.notchapple.tests

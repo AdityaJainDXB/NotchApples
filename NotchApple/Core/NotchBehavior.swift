@@ -49,12 +49,12 @@ extension Comparable {
 /// Optional sound and trackpad feedback when the notch opens and closes.
 @MainActor
 enum NotchFeedback {
-    static func opened() { cue(sound: "Pop") }
-    static func closed() { cue(sound: "Tink") }
+    static func opened() { cue(sound: StylePrefs.openSound) }
+    static func closed() { cue(sound: StylePrefs.closeSound) }
     static func tick() { if NotchPrefs.haptics { NSHapticFeedbackManager.defaultPerformer.perform(.alignment, performanceTime: .now) } }
 
     private static func cue(sound: String) {
-        if NotchPrefs.haptics { NSHapticFeedbackManager.defaultPerformer.perform(.levelChange, performanceTime: .now) }
+        if NotchPrefs.haptics { NSHapticFeedbackManager.defaultPerformer.perform(StylePrefs.haptic, performanceTime: .now) }
         if NotchPrefs.sounds, let s = NSSound(named: sound) { s.volume = 0.35; s.play() }
     }
 }

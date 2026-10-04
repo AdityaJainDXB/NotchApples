@@ -83,6 +83,7 @@ struct NotchRootView: View {
             }
         }
         .frame(width: size.width, height: size.height, alignment: .top)
+        .fontDesign(StylePrefs.fontDesign)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         // Opening is handled by the notch trigger window (click, ⌘E or file drag);
         // hover only shows feedback there and never opens the notch.
@@ -196,6 +197,7 @@ struct NotchRootView: View {
             case .screenTime: ScreenTimeView()
             case .quickAdd: QuickAddView()
             case .markets: MarketsView()
+            case .home: HomeView()
             case .security: EmptyView()
             }
         }

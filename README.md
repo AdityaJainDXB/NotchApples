@@ -201,6 +201,15 @@ All screenshots use sample data.
 
 ## What's new
 
+### 1.21.0 · 4 October 2026 · Make it yours
+
+- **Pro · Home:** a dashboard tab of widgets (clock, weather, battery, next event, Now Playing, timer, to-do, markets) in small, medium or large.
+- **Pro · Profiles:** Work, Study, Gaming or your own; each chooses your tabs and theme and switches by the app in front or the time of day.
+- **Pro · Per-app rules:** hide the notch in an app, or open a tab when an app comes forward.
+- **Pro · Style:** animation styles and speed, open/close sounds and haptic feel, rounded/serif/monospaced text, menu bar icon.
+- **Ultimate · [Plugin SDK](docs/PLUGINS.md):** plugins show beside the notch (`activity:` lines), become Home widgets and keep running in the background.
+- **Ultimate · Plugin gallery:** install community plugins from [plugins/](plugins) in one click, after reading their source.
+
 ### 1.20.0 · 4 October 2026 · Get more done
 
 - **To-do list** in the Notes tab, saved on this Mac.
@@ -467,6 +476,9 @@ echo "Disk: $(df -h / | awk 'NR==2 {print $4}') free"
 echo "Uptime $(uptime | sed 's/.*up \([^,]*\),.*/\1/')"
 echo "Open GitHub | href=https://github.com"
 ```
+
+
+The full format, the SDK (Ultimate) and how to add a plugin to the gallery: [docs/PLUGINS.md](docs/PLUGINS.md).
 
 ## Live activities API
 

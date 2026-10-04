@@ -15,6 +15,12 @@
 //  news.1h.rb (default 5 minutes). Scripts only run while the tab is open or
 //  when their interval is due, and are stopped after 10 seconds.
 //
+//  Plugin SDK (Ultimate, see docs/PLUGINS.md):
+//    activity: text=42% symbol=hammer.fill progress=0.42 color=34C759
+//                          → shows beside the closed notch (Live Activities API)
+//  Plugins can also be Home widgets, and keep running in the background.
+//  The community gallery installs plugins from the repo's plugins/ folder.
+//
 
 import AppKit
 import SwiftUI
@@ -95,11 +101,24 @@ final class PluginHost: ObservableObject {
 
     private func update(_ url: URL, _ result: (ok: Bool, output: String)) {
         guard let i = plugins.firstIndex(where: { $0.url == url }) else { return }
-        let lines = result.output.split(separator: "\n", omittingEmptySubsequences: false).map(String.init).filter { $0 != "---" }
+        var lines = result.output.split(separator: "\n", omittingEmptySubsequences: false).map(String.init).filter { $0 != "---" }
+        // SDK: "activity: key=value …" lines become a live activity (Ultimate).
+        let activity = lines.filter { $0.hasPrefix("activity:") }
+        lines.removeAll { $0.hasPrefix("activity:") }
+        if let a = activity.last, Entitlements.shared.canUse(.pluginSDK) {
+            var q = PluginSDK.keyValues(String(a.dropFirst("activity:".count)))
+            q["id"] = "plugin-" + url.lastPathComponent
+            q["seconds"] = q["seconds"] ?? String(Int(plugins[i].interval * 2 + 30))
+            ExternalActivities.shared.handle(q, end: q["end"] == "true")
+        }
         plugins[i].failed = !result.ok
         plugins[i].headline = Self.parse(lines.first ?? "").text
         plugins[i].lines = lines.dropFirst().filter { !$0.trimmingCharacters(in: .whitespaces).isEmpty }.map(Self.parse)
     }
+
+    /// Ultimate: keep plugins running while the tab is closed (for Home widgets and activities).
+    @AppStorage("plugins.background") var runInBackground = true
+    var keepRunning: Bool { runInBackground && Entitlements.shared.canUse(.pluginSDK) }
 
     private static func parse(_ raw: String) -> Line {
         let parts = raw.components(separatedBy: " | ")
@@ -168,6 +187,7 @@ final class PluginHost: ObservableObject {
 
 struct PluginsView: View {
     @StateObject private var host = PluginHost.shared
+    @State private var showGallery = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -175,6 +195,9 @@ struct PluginsView: View {
                 Text("Plugins").sectionTitle()
                 Text("Scripts in your Plugins folder").font(.system(size: 11)).foregroundStyle(Theme.textSecondary)
                 Spacer()
+                Button { showGallery = true } label: { Label("Gallery", systemImage: "square.grid.2x2") }
+                    .buttonStyle(PurpleButtonStyle(prominent: false))
+                    .help("Community plugins (Ultimate)")
                 Button("Add example") { host.createExample() }.buttonStyle(PurpleButtonStyle(prominent: false))
                 Button { NSWorkspace.shared.open(PluginHost.folder); AppDelegate.current?.notch?.closeNotch() } label: {
                     Label("Open folder", systemImage: "folder")
@@ -195,7 +218,8 @@ struct PluginsView: View {
             }
         }
         .onAppear { host.start() }
-        .onDisappear { host.stop() }
+        .onDisappear { if !host.keepRunning { host.stop() } }
+        .sheet(isPresented: $showGallery) { PluginGallery() }
     }
 
     private func card(_ plugin: PluginHost.Plugin) -> some View {
@@ -221,5 +245,83 @@ struct PluginsView: View {
         .frame(maxWidth: .infinity, minHeight: 90, alignment: .topLeading)
         .background(Theme.surface, in: RoundedRectangle(cornerRadius: 12))
         .overlay(RoundedRectangle(cornerRadius: 12).strokeBorder(Theme.separator))
+    }
+}
+
+// MARK: - Gallery (Ultimate)
+
+/// Community plugins listed in the repo's plugins/index.json. Installing copies the
+/// script into your Plugins folder; plugins run commands on your Mac, so only
+/// install ones you trust (you can read each one first).
+struct PluginGallery: View {
+    struct Entry: Decodable, Identifiable {
+        var id: String { file }
+        let name: String
+        let description: String
+        let author: String
+        let file: String
+    }
+
+    static let base = "https://raw.githubusercontent.com/AdityaJainDXB/NotchApples/main/plugins/"
+    @Environment(\.dismiss) private var dismiss
+    @ObservedObject private var entitlements = Entitlements.shared
+    @State private var entries: [Entry] = []
+    @State private var status: String?
+    @State private var installed: Set<String> = []
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                Text("Plugin gallery").font(.title2.bold())
+                if !entitlements.canUse(.pluginGallery) { TierBadge(tier: .ultimate) }
+                Spacer()
+                Button("Done") { dismiss() }.keyboardShortcut(.defaultAction)
+            }
+            Text("Plugins run commands on your Mac. Read one before installing it (View source), and only install ones you trust.")
+                .font(.callout).foregroundStyle(.secondary)
+            if let status { Text(status).font(.caption).foregroundStyle(.orange) }
+            List(entries) { e in
+                HStack(alignment: .top) {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(e.name).font(.headline)
+                        Text(e.description).font(.callout).foregroundStyle(.secondary)
+                        Text("by \(e.author) · \(e.file)").font(.caption).foregroundStyle(.tertiary)
+                    }
+                    Spacer()
+                    Link("View source", destination: URL(string: "https://github.com/AdityaJainDXB/NotchApples/blob/main/plugins/\(e.file)")!)
+                        .font(.caption)
+                    Button(installed.contains(e.file) ? "Installed" : "Install") { Task { await install(e) } }
+                        .disabled(installed.contains(e.file) || !entitlements.canUse(.pluginGallery))
+                }
+                .padding(.vertical, 4)
+            }
+        }
+        .padding(20)
+        .frame(width: 560, height: 440)
+        .task { await load() }
+    }
+
+    private func load() async {
+        guard let url = URL(string: Self.base + "index.json"),
+              let (data, _) = try? await URLSession.shared.data(from: url),
+              let list = try? JSONDecoder().decode([Entry].self, from: data) else { status = "Couldn't load the gallery. Check your connection."; return }
+        entries = list
+        installed = Set(list.map(\.file).filter { FileManager.default.fileExists(atPath: PluginHost.folder.appendingPathComponent($0).path) })
+    }
+
+    private func install(_ e: Entry) async {
+        guard entitlements.canUse(.pluginGallery),
+              e.file.range(of: #"^[A-Za-z0-9._-]+$"#, options: .regularExpression) != nil,
+              let url = URL(string: Self.base + e.file),
+              let (data, r) = try? await URLSession.shared.data(from: url), (r as? HTTPURLResponse)?.statusCode == 200, data.count < 200_000
+        else { status = "Couldn't install \(e.name)."; return }
+        let dest = PluginHost.folder.appendingPathComponent(e.file)
+        try? FileManager.default.createDirectory(at: PluginHost.folder, withIntermediateDirectories: true)
+        do {
+            try data.write(to: dest)
+            try FileManager.default.setAttributes([.posixPermissions: 0o755], ofItemAtPath: dest.path)
+            installed.insert(e.file)
+            PluginHost.shared.reload()
+        } catch { status = error.localizedDescription }
     }
 }

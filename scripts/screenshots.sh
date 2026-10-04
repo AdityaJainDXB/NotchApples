@@ -64,7 +64,7 @@ swiftc -O "$WORK/wid.swift" -o "$WORK/wid" 2>/dev/null
 
 echo "› Settings for the screenshot copy"
 defaults delete $D >/dev/null 2>&1 || true
-for k in onboarding.permissionsShown onboarding.welcomeDismissed module.f1.enabled module.claude.enabled module.sports.enabled module.games.enabled module.launcher.enabled module.timer.enabled module.markets.enabled module.notes.enabled module.tools.enabled; do defaults write $D $k -bool true; done
+for k in onboarding.permissionsShown onboarding.welcomeDismissed module.f1.enabled module.claude.enabled module.sports.enabled module.games.enabled module.launcher.enabled module.timer.enabled module.markets.enabled module.notes.enabled module.tools.enabled module.home.enabled; do defaults write $D $k -bool true; done
 defaults write $D updates.autoCheck -bool false
 defaults write $D ai.provider ollama
 defaults write $D ai.models -string '{"ollama":"gemma3:4b"}'
@@ -114,6 +114,8 @@ shot markets       panel 10 -openNotch markets -demoPro YES
 shot notes-todo    panel 6 -openNotch notes -notes.page todo -demoPro YES -demoTodos "Book dentist|Send the slides to Sam|Renew passport|Buy oat milk"
 shot palette       palette 4 -demoPro YES -demoPalette "tim"
 shot tools-convert panel 8 -openNotch tools -demoPro YES -tools.calcInput "250 usd to eur"
+shot home          panel 10 -openNotch home -demoPro YES -demoHome YES -demoTimer 1500 -demoTodos "Book dentist|Send the slides to Sam|Renew passport"
+shot settings-profiles settings 6 -openSettings profiles -demoPro YES
 shot ai-web        panel answers:1 -openNotch claude -demoPro YES -demoWeb YES -demoAsk "Who designed the Eiffel Tower, and how tall is it?"
 
 [ $REAL_RUNNING = 1 ] && open -g -a "/Applications/Notch apple.app"
@@ -122,7 +124,7 @@ defaults delete $D >/dev/null 2>&1 || true
 if [ -n "$SITE" ]; then
   echo "› WebP copies for the website"
   mkdir -p "$SITE/assets/screenshots"
-  for f in ai-empty ai-input ai-result follow-up code-analysis capture-overlay f1 sports sports-table sports-cricket sports-detail games history settings-ai pro settings-pro settings-notch settings-themes onboarding onboarding-tour notch-stacked markets ai-web notes-todo palette tools-convert; do
+  for f in ai-empty ai-input ai-result follow-up code-analysis capture-overlay f1 sports sports-table sports-cricket sports-detail games history settings-ai pro settings-pro settings-notch settings-themes onboarding onboarding-tour notch-stacked markets ai-web notes-todo palette tools-convert home settings-profiles; do
     [ -f "$OUT/$f.png" ] && python3 -c "
 from PIL import Image; im = Image.open('$OUT/$f.png'); im.thumbnail((1600, 1600)); im.save('$SITE/assets/screenshots/$f.webp', 'WEBP', quality=82, method=6)"
   done

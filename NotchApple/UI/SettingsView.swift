@@ -18,7 +18,7 @@ import UniformTypeIdentifiers
 
 /// Panes in the Settings window. `selection` lets other code jump to a pane.
 enum SettingsTab: String, CaseIterable, Identifiable, Hashable {
-    case general, notch, appearance, extras, backup, browser, license, shortcuts, permissions, authentication, modules, windows, claude, aiHistory, messenger, clipboard, fileSearch, focus, audio, vpn, widget, updates, about
+    case general, notch, appearance, profiles, extras, backup, browser, license, shortcuts, permissions, authentication, modules, windows, claude, aiHistory, messenger, clipboard, fileSearch, focus, audio, vpn, widget, updates, about
     static let selection = PassthroughSubject<SettingsTab, Never>()
 
     var id: String { rawValue }
@@ -27,6 +27,7 @@ enum SettingsTab: String, CaseIterable, Identifiable, Hashable {
         switch self {
         case .general: "General"
         case .notch: "Notch"
+        case .profiles: "Profiles & Rules"
         case .browser: "Browser"
         case .appearance: "Appearance"
         case .extras: "Notch Extras"
@@ -55,6 +56,7 @@ enum SettingsTab: String, CaseIterable, Identifiable, Hashable {
         switch self {
         case .general: "gearshape.fill"
         case .notch: "capsule.tophalf.filled"
+        case .profiles: "person.2.crop.square.stack.fill"
         case .browser: "globe"
         case .appearance: "paintpalette.fill"
         case .extras: "sparkles.rectangle.stack.fill"
@@ -84,6 +86,7 @@ enum SettingsTab: String, CaseIterable, Identifiable, Hashable {
         switch self {
         case .general: .gray
         case .notch: .purple
+        case .profiles: .teal
         case .browser: .blue
         case .appearance: .pink
         case .extras: .orange
@@ -115,7 +118,8 @@ extension SettingsTab {
         switch self {
         case .general: "login menu bar volume brightness hud recording dot charging"
         case .notch: "hover delay open click fullscreen hide size width height resize edge trigger zone display monitor gestures swipe pinch long press sound haptics keyboard"
-        case .appearance: "theme colour color dark light accent glow tab order editor import export"
+        case .appearance: "theme colour color dark light accent glow tab order editor import export animation speed sound haptic font menu bar icon style"
+        case .profiles: "profile work study gaming automatic app rules hide per-app time"
         case .extras: "battery music lyrics rain meeting download keep awake album"
         case .backup: "icloud sync google account restore export import file"
         case .license: "pro ultimate key activate upgrade buy price restore lost deactivate terms refund"
@@ -174,6 +178,7 @@ struct SettingsView: View {
                 switch tab {
                 case .general: GeneralSettings()
                 case .notch: NotchSettings()
+                case .profiles: ProfilesSettings()
                 case .browser: BrowserSettings()
                 case .appearance: AppearanceSettings()
                 case .extras: ExtrasSettings()

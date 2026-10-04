@@ -32,15 +32,22 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         // Now Playing and Messenger are gated: they start now if a code is saved, or the moment one is entered.
         startGatedServices()
+        StylePrefs.sync()
         ThemeManager.shared.revalidate()
         TextExpander.shared.apply()
+        Profiles.shared.start()
+        // Ultimate: plugins keep running in the background for Home widgets and activities.
+        if PluginHost.shared.keepRunning { PluginHost.shared.start() }
         Entitlements.shared.$tier
             .dropFirst().removeDuplicates()
             .sink { [weak self] _ in
                 self?.startGatedServices()
                 // Pro themes, sizes, edge zones and per-display tabs follow the tier.
                 DispatchQueue.main.async {
+                    StylePrefs.sync()
                     ThemeManager.shared.revalidate()
+                    Profiles.shared.evaluate()
+                    self?.refreshStatusIcon()
                     TextExpander.shared.apply()
                     self?.applyHotkeyPreference()
                     self?.notchController?.applyEdgeTrigger()
@@ -150,6 +157,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     func reapplyHotkeys() { applyHotkeyPreference() }
 
+    /// Settings → Appearance → Style → Menu bar icon (Pro).
+    func refreshStatusIcon() {
+        statusItem?.button?.image = NSImage(systemSymbolName: StylePrefs.statusSymbol, accessibilityDescription: "Notch apple")
+    }
+
     /// Registers or removes the global ⌘E shortcut to match the preference.
     private func applyHotkeyPreference() {
         if SettingsManager.shared.globalHotkeyEnabled {
@@ -222,7 +234,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let wanted = SettingsManager.shared.showStatusItem && !SettingsManager.shared.isNotchHidden
         if wanted, statusItem == nil {
             let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
-            item.button?.image = NSImage(systemSymbolName: "rectangle.topthird.inset.filled", accessibilityDescription: "Notch apple")
+            item.button?.image = NSImage(systemSymbolName: StylePrefs.statusSymbol, accessibilityDescription: "Notch apple")
             item.button?.target = self
             item.button?.action = #selector(statusItemClicked(_:))
             item.button?.sendAction(on: [.leftMouseUp, .rightMouseUp])
