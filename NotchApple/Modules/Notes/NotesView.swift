@@ -49,6 +49,13 @@ final class NotesStore: ObservableObject {
         selectedID = notes.first?.id
     }
 
+    /// After iCloud sync replaced the file (Ultimate).
+    func reloadFromDisk() {
+        if let data = try? Data(contentsOf: url), let saved = try? JSONDecoder().decode([Note].self, from: data) {
+            notes = saved.sorted { $0.updated > $1.updated }
+        }
+    }
+
     @discardableResult
     func add(_ text: String = "") -> Note {
         let note = Note(text: text)

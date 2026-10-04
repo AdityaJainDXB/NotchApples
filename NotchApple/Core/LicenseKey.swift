@@ -47,6 +47,8 @@ enum Feature: String, CaseIterable, Identifiable {
     case proThemes, customColors, themeEditor, homeLayout, profiles, appRules, animationStyles, customSounds, fontsAndIcons
     // Ultimate: customization
     case pluginGallery
+    // Ultimate: platform
+    case notesSync
     // Pro: live activities
     case meetingAlert, downloadProgress, markets, flightStatus, multiMatch
     // Ultimate: live activities
@@ -62,7 +64,7 @@ enum Feature: String, CaseIterable, Identifiable {
     // Pro: tabs
     case messenger, audio, vpn, voiceNotes, screenTime, quickAdd, launcher, snippets, mirror, focus
     // Pro: system and media
-    case rainAlert, lyrics
+    case rainAlert, lyrics, forecast, meetingPlanner, micMute, topProcesses
     // Pro: sync
     case sync
     // Ultimate (built in later phases; hidden until ready)
@@ -72,14 +74,13 @@ enum Feature: String, CaseIterable, Identifiable {
 
     var tier: Tier {
         switch self {
-        case .liveActivityAPI, .activityStacking, .automations, .scripting, .pluginSDK, .pluginGallery, .prioritySupport, .betaChannel: .ultimate
+        case .liveActivityAPI, .activityStacking, .automations, .scripting, .pluginSDK, .pluginGallery, .notesSync, .prioritySupport, .betaChannel: .ultimate
         default: .pro
         }
     }
 
     var isReady: Bool {
         switch self {
-        case .prioritySupport, .betaChannel: false
         default: true
         }
     }
@@ -110,6 +111,7 @@ enum Feature: String, CaseIterable, Identifiable {
         case .customSounds: "Custom sounds and haptics"
         case .fontsAndIcons: "Fonts and menu bar icon"
         case .pluginGallery: "Plugin gallery"
+        case .notesSync: "Notes and to-dos in iCloud"
         case .meetingAlert: "Meeting alerts"
         case .downloadProgress: "Download progress"
         case .markets: "Markets"
@@ -137,6 +139,10 @@ enum Feature: String, CaseIterable, Identifiable {
         case .focus: "Focus timer"
         case .rainAlert: "Rain alerts"
         case .lyrics: "Lyrics"
+        case .forecast: "Week forecast and more cities"
+        case .meetingPlanner: "Meeting-time planner"
+        case .micMute: "Mic mute"
+        case .topProcesses: "Top apps by CPU"
         case .sync: "Sync across Macs"
         case .liveActivityAPI: "Live Activities API"
         case .pluginSDK: "Plugin SDK"
@@ -172,6 +178,7 @@ enum Feature: String, CaseIterable, Identifiable {
         case .customSounds: "Pick the sounds and trackpad feel for opening and closing."
         case .fontsAndIcons: "Rounded, serif or monospaced text in the notch, and your own menu bar icon."
         case .pluginGallery: "Install community plugins in one click."
+        case .notesSync: "Your notes and to-dos on every Mac, through iCloud Drive."
         case .meetingAlert: "A heads-up before meetings, with a Join button."
         case .downloadProgress: "Watch downloads fill up beside the notch."
         case .markets: "Stocks and crypto with today's change; pin one beside the notch."
@@ -199,6 +206,10 @@ enum Feature: String, CaseIterable, Identifiable {
         case .focus: "Pomodoro sessions in the notch."
         case .rainAlert: "A nudge before it starts raining."
         case .lyrics: "Lyrics for what's playing."
+        case .forecast: "The next 12 hours and 7 days, for up to six cities."
+        case .meetingPlanner: "Slide through the day to find a time that works in every city."
+        case .micMute: "Mute your microphone in one click, with a red mic beside the notch."
+        case .topProcesses: "See which apps are using the most CPU and memory."
         case .sync: "Your setup on every Mac, through iCloud or your account."
         case .liveActivityAPI: "Let your own apps and scripts show live activities."
         case .pluginSDK: "Your own widgets: plugins can be Home widgets and live activities."

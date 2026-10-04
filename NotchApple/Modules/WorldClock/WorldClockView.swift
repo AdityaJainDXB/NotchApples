@@ -12,6 +12,7 @@ struct WorldClockView: View {
     @AppStorage("worldClock.zones") private var zonesData = "Europe/London\nAmerica/New_York\nAsia/Tokyo"
     @State private var adding = false
     @State private var search = ""
+    @State private var planning = false
 
     private var zones: [String] { zonesData.split(separator: "\n").map(String.init).filter { TimeZone(identifier: $0) != nil } }
 
@@ -21,6 +22,12 @@ struct WorldClockView: View {
                 HStack {
                     Text("World clock").sectionTitle()
                     Spacer()
+                    Button { if Entitlements.shared.canUse(.meetingPlanner) { planning = true } } label: {
+                        Label("Plan a meeting", systemImage: Entitlements.shared.canUse(.meetingPlanner) ? "calendar.badge.clock" : "lock.fill")
+                    }
+                    .buttonStyle(.plain).font(.system(size: 11, weight: .semibold)).foregroundStyle(Theme.accentBright)
+                    .help(Entitlements.shared.canUse(.meetingPlanner) ? Feature.meetingPlanner.benefit : "Pro: \(Feature.meetingPlanner.benefit)")
+                    .popover(isPresented: $planning, arrowEdge: .bottom) { MeetingPlanner(zones: zones) }
                     IconButton(systemImage: adding ? "xmark" : "plus", help: adding ? "Done" : "Add a city") { adding.toggle(); search = "" }
                 }
                 if adding { picker } else { ScrollView { clocks(now: context.date) } }

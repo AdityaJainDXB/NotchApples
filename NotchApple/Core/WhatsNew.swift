@@ -21,6 +21,13 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "1.22.0", date: "4 October 2026", headline: "Trust, and a few more extras", items: [
+            "Settings → Privacy: every permission, everywhere Notch apple can connect to and when, and what it keeps on this Mac, with Delete buttons.",
+            "Settings → Help & Feedback: send feedback, and a bug report you read in full before you submit it yourself on GitHub.",
+            "Crash reports, off by default: after a crash you can review the report (name and home folder removed) and send it.",
+            "Pro: a 12-hour and 7-day forecast for up to six cities, a meeting-time planner in World Clock, mic mute, and top apps by CPU.",
+            "Ultimate: the beta channel, priority support, and notes and to-dos synced through iCloud.",
+        ]),
         ReleaseNote(version: "1.21.0", date: "4 October 2026", headline: "Make it yours", items: [
             "Pro: Home, a dashboard tab of widgets (clock, weather, battery, next event, Now Playing, timer, to-do, markets) in small, medium or large.",
             "Pro: profiles (Work, Study, Gaming…) that choose your tabs and theme, switching by the app in front or the time of day.",

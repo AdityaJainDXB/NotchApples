@@ -32,7 +32,9 @@ final class SettingsBackup: ObservableObject {
     static let fileExtension = "notchsettings"
     private static let excludedPrefixes = ["NS", "Apple", "com.apple", "onboarding.", "migration.", "backup.", "messenger.senderID",
                                            "messenger.activeRoom", "shelf.items", "ui.lastTab", "settings.lastPane", "update.",
-                                           "focus.completed", "focus.history", "hotkey.migrated", "account."]
+                                           "focus.completed", "focus.history", "hotkey.migrated", "account.",
+                                           // Entitlement caches are worked out on each Mac, never copied between Macs.
+                                           "license.", "style.proAllowed", "updates.ultimateAllowed"]
     private var saveWork: DispatchWorkItem?
     private var observer: NSObjectProtocol?
 

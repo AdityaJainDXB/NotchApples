@@ -128,6 +128,9 @@ final class UpdateChecker: ObservableObject {
 
     /// One release from the GitHub API, or nil when it isn't a Mac release we can install.
     private static func parse(_ json: [String: Any]) -> Release? {
+        // Betas (GitHub pre-releases) only for Ultimate with Get beta versions on.
+        if json["prerelease"] as? Bool == true,
+           !(UserDefaults.standard.bool(forKey: "updates.beta") && UserDefaults.standard.bool(forKey: "updates.ultimateAllowed")) { return nil }
         guard json["draft"] as? Bool != true,
               let tag = json["tag_name"] as? String,
               let page = (json["html_url"] as? String).flatMap(URL.init(string:)),

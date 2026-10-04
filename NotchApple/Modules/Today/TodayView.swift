@@ -91,6 +91,7 @@ struct TodayView: View {
                                     .foregroundStyle(.white)
                                 Text("\(w.summary) · \(w.location)").font(.system(size: 12)).foregroundStyle(Theme.textSecondary)
                             }
+                            ForecastButton()
                         }
                         if let rain = rain.summary {
                             Label(rain, systemImage: "cloud.rain.fill").font(.system(size: 12, weight: .semibold)).foregroundStyle(.cyan)
@@ -217,5 +218,22 @@ struct TodayView: View {
         let day = Calendar.current.isDateInToday(e.start) ? "Today" : "Tomorrow"
         if e.isAllDay { return "\(day) · All day" }
         return "\(day) · \(e.start.formatted(date: .omitted, time: .shortened)) – \(e.end.formatted(date: .omitted, time: .shortened))"
+    }
+}
+
+/// "Week" next to today's weather (Pro).
+private struct ForecastButton: View {
+    @State private var showing = false
+    var body: some View {
+        Button { if Entitlements.shared.canUse(.forecast) { showing = true } } label: {
+            HStack(spacing: 3) {
+                Text("Week").font(.system(size: 11, weight: .semibold))
+                if !Entitlements.shared.canUse(.forecast) { Image(systemName: "lock.fill").font(.system(size: 8)) }
+            }
+            .foregroundStyle(Theme.accentBright)
+        }
+        .buttonStyle(.plain)
+        .help(Entitlements.shared.canUse(.forecast) ? "Hourly and 7-day forecast" : "Pro: \(Feature.forecast.benefit)")
+        .popover(isPresented: $showing, arrowEdge: .bottom) { ForecastView() }
     }
 }

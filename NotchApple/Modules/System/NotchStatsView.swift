@@ -56,6 +56,7 @@ struct NotchStatsView: View {
                 }
                 card("CPU", "cpu") {
                     gauge(fraction: s.cpuPercent / 100, big: "\(Int(s.cpuPercent))%", small: "Overall load · \(thermal)")
+                    TopAppsButton()
                     Sparkline(values: monitor.cpuHistory, maxValue: 100).frame(height: 22)
                 }
             }
@@ -135,5 +136,19 @@ private struct Sparkline: View {
             }
             .stroke(Theme.accentBright, style: StrokeStyle(lineWidth: 1.5, lineCap: .round, lineJoin: .round))
         }
+    }
+}
+
+/// "Top apps" under the CPU gauge (Pro).
+private struct TopAppsButton: View {
+    @State private var showing = false
+    var body: some View {
+        Button { if Entitlements.shared.canUse(.topProcesses) { showing = true } } label: {
+            Label("Top apps", systemImage: Entitlements.shared.canUse(.topProcesses) ? "list.number" : "lock.fill")
+                .font(.system(size: 10, weight: .semibold)).foregroundStyle(Theme.accentBright)
+        }
+        .buttonStyle(.plain)
+        .help(Entitlements.shared.canUse(.topProcesses) ? Feature.topProcesses.benefit : "Pro: \(Feature.topProcesses.benefit)")
+        .popover(isPresented: $showing) { TopProcessesView() }
     }
 }

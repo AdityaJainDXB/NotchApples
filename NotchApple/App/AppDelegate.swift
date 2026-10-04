@@ -36,6 +36,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         ThemeManager.shared.revalidate()
         TextExpander.shared.apply()
         Profiles.shared.start()
+        CrashReports.shared.checkAtLaunch()
+        NotesCloudSync.shared.syncNow()
         // Ultimate: plugins keep running in the background for Home widgets and activities.
         if PluginHost.shared.keepRunning { PluginHost.shared.start() }
         Entitlements.shared.$tier

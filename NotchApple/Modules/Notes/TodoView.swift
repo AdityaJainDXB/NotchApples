@@ -37,6 +37,9 @@ final class TodoStore: ObservableObject {
         items = (try? JSONDecoder().decode([TodoItem].self, from: Data(contentsOf: url))) ?? []
     }
 
+    /// After iCloud sync replaced the file (Ultimate).
+    func reloadFromDisk() { items = (try? JSONDecoder().decode([TodoItem].self, from: Data(contentsOf: url))) ?? items }
+
     func add(_ text: String) {
         let t = text.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !t.isEmpty else { return }

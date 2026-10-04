@@ -37,6 +37,7 @@ enum FeatureHub {
             { settings.liveEnabled ? ScoresModel.shared.liveActivity : nil },
             { settings.f1Enabled ? F1Model.shared.liveActivity : nil },
             { settings.sportsEnabled ? (SportsModel.shared.liveActivity ?? MoreTeams.shared.rotatingActivity) : nil },
+            { MicMute.shared.liveActivity },
             { ExternalActivities.shared.liveActivity },
             { settings.liveEnabled ? FlightWatcher.shared.liveActivity : nil },
             { settings.marketsEnabled ? MarketsModel.shared.liveActivity : nil },
@@ -82,6 +83,7 @@ enum FeatureHub {
         if s.marketsEnabled { MarketsModel.shared.refreshIfDue() }
         AIAutomations.shared.checkDue()
         Profiles.shared.evaluate()
+        NotesCloudSync.shared.syncNow()
         if s.shelfEnabled { FileShelfStore.shared.pruneExpired() }
         DownloadWatcher.shared.setEnabled(s.downloadProgress && Entitlements.shared.canUse(.downloadProgress))
         LiveActivityCenter.shared.recompute()
@@ -158,7 +160,7 @@ enum FeatureHub {
                 AppDelegate.openSettingsWindow(tab: .license)
             }
         // Scripting (Ultimate): see scripts/notch.
-        case "ask", "palette", "grab", "ruler", "markup", "note", "todo", "theme":
+        case "ask", "palette", "grab", "ruler", "markup", "note", "todo", "theme", "mic":
             guard Entitlements.shared.canUse(.scripting) else {
                 Notifier.post(title: "Scripting needs Ultimate", body: Feature.scripting.benefit); return
             }
@@ -168,6 +170,7 @@ enum FeatureHub {
                 if let q = query["q"], !q.isEmpty { ClaudeChatModel.shared.send(q) }
             case "palette": CommandPalette.toggle()
             case "grab": TextGrab.shared.grab {}
+        case "mic": MicMute.shared.toggle()
             case "ruler": ScreenRuler.show()
             case "markup": ScreenMarkup.captureAndMarkUp()
             case "note": if let t = query["text"] { NotesStore.shared.add(t) }

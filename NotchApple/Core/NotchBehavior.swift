@@ -238,6 +238,9 @@ enum QuickActionsMenu {
         add("Start stopwatch", "stopwatch") { CountdownTimer.shared.startStopwatch() }
         add("Keep awake for 30 minutes", "cup.and.saucer.fill") { KeepAwake.shared.start(minutes: 30) }
         add("Take a screenshot", "camera.viewfinder") { ScreenCaptureActions.shared.takeScreenshot() }
+        if Entitlements.shared.canUse(.micMute) {
+            add(MicMute.shared.isMuted ? "Unmute microphone" : "Mute microphone", "mic.slash") { MicMute.shared.toggle() }
+        }
         if Entitlements.shared.canUse(.aiCapture) {
             add("Ask AI about part of the screen", "sparkles") { CaptureManager.shared.captureToAI() }
         }

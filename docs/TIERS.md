@@ -142,3 +142,28 @@
 | Quick Add | Pro | PRO |
 | Notch Games | Free | FREE |
 | Browser, Translator, Search, Devices, Biometric Lock | Free | FREE |
+
+## What's built (as of 1.22.0)
+
+| Release | Phase | Built |
+|---|---|---|
+| 1.16.0 | 0 | `Entitlements` and signed keys; License screen; recovery; grandfathering; pricing page; license server |
+| 1.17.0 | 1 | Notch behaviour (1–12): hover delay, fullscreen/recording auto-hide, resize, edge zones, per-display tabs, remappable gestures, keyboard control. Onboarding, Settings search, sounds/haptics, Increase Contrast. Themes (81–84): 8 Pro themes and the theme editor |
+| 1.18.0 | 2 | 20 meeting pulse, 26 flight status, 28 Markets, 18 more teams, 25 Live Activities API, 30 two activities at once |
+| 1.19.0 | 3 | 34 Apple Intelligence, 36 voice, 37 personas and saved prompts, 38 clipboard AI, 41 slash commands, 42 automations, 45 web search with sources |
+| 1.20.0 | 4 | 50 to-do, 49 Markdown notes and tags, 51 Reminders, 55 shelf folders/expiry/share, 47 clipboard 5,000 and ignored apps, 57 text expander, 58 markup, 59 ruler, 60 converter, 63 command palette, 65 CLI and scripting |
+| 1.21.0 | 5 | 86 Home dashboard, 87 profiles, 88 per-app rules, 89 animation styles, 90 sounds/haptics, 84 fonts and menu bar icon, 91 plugin SDK, 92 plugin gallery |
+| 1.22.0 | 6 | 100 privacy dashboard, 101 feedback and bug-report bundle, 110 opt-in crash reports, 103 beta channel and priority support, 96 notes/to-do iCloud sync, 69 week forecast and cities, 71 meeting planner, 74 mic mute, 67 top apps |
+
+## Not built yet (hidden, never sold)
+
+| # | Feature | Why |
+|---|---|---|
+| 97, 98 | iPhone and Watch companions | Shipping on iOS/watchOS needs the paid Apple Developer Program ($99/year) |
+| 75 | HomeKit | HomeKit isn't available to a regular Mac app (needs Mac Catalyst and the paid program) |
+| 80 | Reply to notifications | macOS has no public API for other apps' notifications |
+| 74 (camera) | Camera on/off toggle | No public API; mic mute is built |
+| 27 (live status) | Package tracking status | No free universal tracking API; tracking links work |
+| 18 (ball-by-ball) | Cricket ball-by-ball | ESPN's free feed doesn't give reliable commentary |
+| 23 (uploads) | Upload progress | Apps don't expose uploads publicly; downloads are built |
+| 77, 78 | Browser video and podcast speed controls | No public API to set another app's playback speed; play/pause and skip work through Now Playing |

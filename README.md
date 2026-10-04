@@ -201,6 +201,14 @@ All screenshots use sample data.
 
 ## What's new
 
+### 1.22.0 · 4 October 2026 · Trust, and a few more extras
+
+- **Settings → Privacy:** every permission, everywhere Notch apple can connect to and when, and what it keeps on this Mac, with Delete buttons.
+- **Settings → Help & Feedback:** feedback, and a bug report you read in full and submit yourself on GitHub.
+- **Crash reports, off by default:** after a crash, review the macOS report (name and home folder removed) and send it if you like.
+- **Pro:** a 12-hour and 7-day forecast for up to six cities, a meeting-time planner in World Clock, mic mute, and top apps by CPU.
+- **Ultimate:** beta channel, priority support, and notes and to-dos synced through iCloud.
+
 ### 1.21.0 · 4 October 2026 · Make it yours
 
 - **Pro · Home:** a dashboard tab of widgets (clock, weather, battery, next event, Now Playing, timer, to-do, markets) in small, medium or large.
@@ -715,7 +723,8 @@ Notch apple is free, and the free tier is complete. Two one-time upgrades add mo
 | AI about your screen (⌃⌥S), selected text, images and PDFs; AI History | | ✓ | ✓ |
 | Messenger, Audio, VPN, Voice Notes, Screen Time, Quick Add, Launcher, Snippets, Mirror, Focus | | ✓ | ✓ |
 | Meeting alerts, download progress, rain alerts, lyrics, sync across Macs | | ✓ | ✓ |
-| Live Activities API, plugin SDK, priority support, beta channel (arriving in later updates) | | | ✓ |
+| Home, profiles, per-app rules, command palette, text expander, markup, web search, personas, voice, Markets, flight status, more themes | | ✓ | ✓ |
+| Live Activities API, two activities at once, AI automations, plugin SDK and gallery, scripting, notes sync, beta channel, priority support | | | ✓ |
 
 The full feature-by-feature plan is in [docs/TIERS.md](docs/TIERS.md).
 
@@ -960,15 +969,19 @@ Per-app volume and EQ use Core Audio process taps, which arrived in macOS 14.2. 
 
 ## Privacy
 
-- Everything runs on your Mac. The only network requests are:
-  - the AI provider you chose (Gemini, Groq, OpenRouter, DeepSeek, Anthropic or OpenAI), using your own key, and only when you ask: your question, the image you captured or pasted, and that conversation. With **Ollama** nothing leaves your Mac, and the notch shows **On this Mac**
+- Everything runs on your Mac. **Settings → Privacy** shows all of this live. The only network requests are:
+  - the AI provider you chose (Gemini, Groq, OpenRouter, DeepSeek, Anthropic or OpenAI), using your own key, and only when you ask: your question, the image you captured or pasted, and that conversation. With **Ollama** or **Apple Intelligence** nothing leaves your Mac, and the notch shows **On this Mac**
   - `api.github.com` to check for updates (can be turned off) and `github.com` to download one you accept
-  - `open-meteo.com` for weather
+  - `open-meteo.com` for weather (and the cities you add to the forecast, Pro)
+  - the plugin gallery's list and the plugins you choose to install, from `raw.githubusercontent.com` (Ultimate)
+  - iCloud Drive, only for settings, notes and to-dos you choose to sync
   - `api.github.com` / `raw.githubusercontent.com` for the free VPN server list, and `vpngate.net`, only when you open the VPN tab
   - open.er-api.com for currency rates, only when you convert a currency (Pro)
   - DuckDuckGo, only when you turn on web search in the AI tab (Pro): just your question
   - CoinGecko and Yahoo Finance for Markets (Pro), ADSB.lol for live flight status (Pro): only the symbols and flight numbers you add
   - Apple's speech recognition when you dictate (on this Mac when your Mac supports it)
+  - your plugins, which run whatever their scripts do (you install them)
+  - GitHub, only when you choose to send feedback, a bug report or a crash report (you review it and submit it yourself)
   - the license server, only if you activate a signed key: activating or deactivating sends the key and a one-way hash of your Mac (salted per key, so it can't be linked across keys) to enforce the 3-Mac limit, and about once a day it downloads the signed list of turned-off keys (nothing about you is sent). The website's `api.json` says where the server is. Keys are checked offline; without internet, activation still works
 - PairDrop and Nearby Wi-Fi chat never leave your local network.
 - Anonymous room messages are end-to-end encrypted before they leave your Mac, and the relay (`ntfy.sh`, or a public MQTT broker as a fallback) stores nothing.

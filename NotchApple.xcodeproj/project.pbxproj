@@ -108,6 +108,7 @@
 		A358C5DCEA06EB17B99C6907 /* ActivationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2080B6F1BB18CC9E7A42044 /* ActivationView.swift */; };
 		A561FED3D648A2B4BEBC4BB9 /* ExternalActivities.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94617614D11E8110B03EB9F7 /* ExternalActivities.swift */; };
 		A7039DDEBFEE893E0219A6AB /* NotchWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = E56AAC7ADE87A47F1E7862C3 /* NotchWidget.swift */; };
+		A7D1F48F2AC33272CBC6837F /* TrustSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2269398FC9C57443402C81D8 /* TrustSettings.swift */; };
 		A89C797DB626E953AFF87B9E /* MathText.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78B2FB154D159E0F982419C0 /* MathText.swift */; };
 		AA519CEBD27CD812DD518136 /* Tunnelblick.dmg in Resources */ = {isa = PBXBuildFile; fileRef = 46A01968170BB2B7959205B3 /* Tunnelblick.dmg */; };
 		AABC2217E3C2A9F56856E479 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3D5341204537860AAD266BF9 /* AppDelegate.swift */; };
@@ -122,6 +123,7 @@
 		BA7765B73DBDA2F91EF640DA /* ClipboardHistory.swift in Sources */ = {isa = PBXBuildFile; fileRef = B28853C8C1080D36D2737ECC /* ClipboardHistory.swift */; };
 		BB723ACBAA9D4CB614CB840B /* PureModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50CCA2828E5DEA8799BE2ACC /* PureModels.swift */; };
 		BBE41E9A2D18302599E044DC /* PairDropService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E3AACE5DE410E31472973B9 /* PairDropService.swift */; };
+		BD8748CA1F9CA102F5CE6CCE /* ForecastView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BA2C469BADF06F41DC91609C /* ForecastView.swift */; };
 		BFA1CCA183B16AE648A0EA3F /* NotchStatsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFED05958781963B1F7EB56D /* NotchStatsView.swift */; };
 		BFB0FCFCE4AFDF257319FFA4 /* SportsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 768548256973F1C93565E1FB /* SportsView.swift */; };
 		C5CB119C0BE108708E65FC9E /* LocalP2PManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 700E54998678B97CA020EA9E /* LocalP2PManager.swift */; };
@@ -148,6 +150,7 @@
 		E0E40F939970A6AB282C7437 /* WeatherService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 92FC7E64A4478DE0F57D42E4 /* WeatherService.swift */; };
 		E39865B386D35D5DB44EF9D8 /* BrowserModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F23D3171A71FF28676DD18D /* BrowserModel.swift */; };
 		E47F09C13F09C6C35E4DFB7D /* KeychainHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1BB3450673E6FC967D2A1F87 /* KeychainHelper.swift */; };
+		E4C7AF50DFDFF1294A1D65E3 /* SystemExtras.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE8F449DF06A0234C90957EC /* SystemExtras.swift */; };
 		E6AB0BB519CF8FCA9D604EC8 /* SystemStatsReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0261C9487F10782B8FFD351 /* SystemStatsReader.swift */; };
 		E939E90FAF6BDF621DD802D5 /* NotchBehavior.swift in Sources */ = {isa = PBXBuildFile; fileRef = C7C02C79EB9558F42EE15425 /* NotchBehavior.swift */; };
 		EA6A5158CB578D683DE18C94 /* MirrorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB44C1551051FAC38513B591 /* MirrorView.swift */; };
@@ -205,6 +208,7 @@
 		1EFD1D83C7FB4561E3A2CC27 /* F1View.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = F1View.swift; sourceTree = "<group>"; };
 		21DB33F0188BFD9B3D8FA4C3 /* ClipboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClipboardView.swift; sourceTree = "<group>"; };
 		2254DC7F98860645E6CC2E11 /* TodayExtras.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodayExtras.swift; sourceTree = "<group>"; };
+		2269398FC9C57443402C81D8 /* TrustSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrustSettings.swift; sourceTree = "<group>"; };
 		25B7E1619A5F162E845D012C /* FaceUnlock.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FaceUnlock.swift; sourceTree = "<group>"; };
 		2600981443BE101B7F8049FD /* MarketsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarketsView.swift; sourceTree = "<group>"; };
 		281C97D2743323428F5ACD8F /* VPNManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VPNManager.swift; sourceTree = "<group>"; };
@@ -285,6 +289,7 @@
 		B3E33F2560D7769C54AC98C1 /* AIPure.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIPure.swift; sourceTree = "<group>"; };
 		B4E00A819D19DED9CA5D59F0 /* FileShelf.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileShelf.swift; sourceTree = "<group>"; };
 		B9AE3E9758D2882B557A695A /* SportsModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SportsModel.swift; sourceTree = "<group>"; };
+		BA2C469BADF06F41DC91609C /* ForecastView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ForecastView.swift; sourceTree = "<group>"; };
 		BA53B7D1995BA4D5C0C0B434 /* AccountSync.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountSync.swift; sourceTree = "<group>"; };
 		BB841124163B085F8C4FDD78 /* SettingsBackup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsBackup.swift; sourceTree = "<group>"; };
 		BEF54A340D0BE4A8A19E3BCF /* TimerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimerView.swift; sourceTree = "<group>"; };
@@ -320,6 +325,7 @@
 		EDBEAF142EDDBD8BE070A009 /* Tunnelblick-ABOUT.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = "Tunnelblick-ABOUT.txt"; sourceTree = "<group>"; };
 		EE594AA0AF5EFE02B030F414 /* WhatsNew.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WhatsNew.swift; sourceTree = "<group>"; };
 		EE79E1E6EA0B1FB034A48E87 /* LogicTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LogicTests.swift; sourceTree = "<group>"; };
+		EE8F449DF06A0234C90957EC /* SystemExtras.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SystemExtras.swift; sourceTree = "<group>"; };
 		EFADF33A515791B8743E49FB /* LiveView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveView.swift; sourceTree = "<group>"; };
 		F323D82F0AF46D956EA470CA /* Converter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Converter.swift; sourceTree = "<group>"; };
 		F49D3A20C7CFE9C60DB8CBC3 /* LiveActivity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveActivity.swift; sourceTree = "<group>"; };
@@ -446,6 +452,7 @@
 				81150E6B4F5BE3E2EB5CE1A1 /* PermissionsView.swift */,
 				184C7A8AA7E8B37DB1D50EFD /* SettingsView.swift */,
 				1AD68AAB70138C11AD1C119D /* ShortcutRecorder.swift */,
+				2269398FC9C57443402C81D8 /* TrustSettings.swift */,
 			);
 			path = UI;
 			sourceTree = "<group>";
@@ -605,6 +612,7 @@
 				CBF8382AEA6C022EC53D433C /* ScreenCaptureActions.swift */,
 				D47EB2F7C24DD6B0DA17C7B0 /* ScreenRecorder.swift */,
 				EAAF61A77914CEADECA550D4 /* ScreenRecordingDetector.swift */,
+				EE8F449DF06A0234C90957EC /* SystemExtras.swift */,
 				2FDF0D52167C63FBB161D611 /* SystemHUDObserver.swift */,
 			);
 			path = System;
@@ -613,6 +621,7 @@
 		78FBD758A1948295D33E4392 /* Today */ = {
 			isa = PBXGroup;
 			children = (
+				BA2C469BADF06F41DC91609C /* ForecastView.swift */,
 				2254DC7F98860645E6CC2E11 /* TodayExtras.swift */,
 				8DD6D3003087F986015A60A7 /* TodayView.swift */,
 			);
@@ -1016,6 +1025,7 @@
 				0B1569487E2F135B049C0FBB /* FileShelf.swift in Sources */,
 				260DC3E3C52E0B1023D405F4 /* FocusTimer.swift in Sources */,
 				537F255A1D69F77CC3D7AF9E /* FocusView.swift in Sources */,
+				BD8748CA1F9CA102F5CE6CCE /* ForecastView.swift in Sources */,
 				D1C210100728BD42DBD406B8 /* GamesView.swift in Sources */,
 				04DA84BD772511B028648D4E /* GlobalHotkeyManager.swift in Sources */,
 				D0E3852087030F02B39F54DA /* HomeView.swift in Sources */,
@@ -1077,6 +1087,7 @@
 				CA7CEE6CA140974017B3B517 /* SnippetsView.swift in Sources */,
 				8BCB6AEF7F4C85ABA9B85148 /* SportsModel.swift in Sources */,
 				BFB0FCFCE4AFDF257319FFA4 /* SportsView.swift in Sources */,
+				E4C7AF50DFDFF1294A1D65E3 /* SystemExtras.swift in Sources */,
 				D34F08D32DB7647BCA41C1DC /* SystemHUDObserver.swift in Sources */,
 				9A9D1D6D9DD74FC05EDE7D67 /* SystemStatsReader.swift in Sources */,
 				3426BA9EDEDB4808A6BEF8BA /* Theme.swift in Sources */,
@@ -1086,6 +1097,7 @@
 				3357F0168492268B21DE16FB /* TodoView.swift in Sources */,
 				0310ED990FCB271126B822E2 /* ToolsView.swift in Sources */,
 				5AB8124D1C5F0BA91018A820 /* TranslationManager.swift in Sources */,
+				A7D1F48F2AC33272CBC6837F /* TrustSettings.swift in Sources */,
 				6A45649B04783F57F515062D /* UpdateChecker.swift in Sources */,
 				C6704B893CA4C4D32A413A19 /* VPNManager.swift in Sources */,
 				00E0A82DFB418DB5808C68C7 /* VPNView.swift in Sources */,
@@ -1230,7 +1242,7 @@
 				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Manual;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 38;
+				CURRENT_PROJECT_VERSION = 39;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = "";
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -1245,7 +1257,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 1.21.0;
+				MARKETING_VERSION = 1.22.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -1344,7 +1356,7 @@
 				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Manual;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 38;
+				CURRENT_PROJECT_VERSION = 39;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = "";
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -1365,7 +1377,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 1.21.0;
+				MARKETING_VERSION = 1.22.0;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;

@@ -108,7 +108,10 @@ enum StylePrefs {
     static let systemSounds = ["Pop", "Tink", "Glass", "Purr", "Bottle", "Frog", "Funk", "Hero", "Morse", "Ping", "Submarine", "Blow", "Basso", "Sosumi"]
     static let statusSymbols = ["rectangle.topthird.inset.filled", "capsule.tophalf.filled", "sparkles", "apple.logo", "circle.hexagongrid.fill", "moon.stars.fill", "bolt.fill", "leaf.fill", "star.fill", "music.note"]
 
-    @MainActor static func sync() { UserDefaults.standard.set(Entitlements.shared.canUse(.animationStyles), forKey: "style.proAllowed") }
+    @MainActor static func sync() {
+        UserDefaults.standard.set(Entitlements.shared.canUse(.animationStyles), forKey: "style.proAllowed")
+        UserDefaults.standard.set(Entitlements.shared.canUse(.betaChannel), forKey: "updates.ultimateAllowed")
+    }
 }
 
 // MARK: - Settings UI
