@@ -49,11 +49,22 @@ final class NotchState: ObservableObject {
     }
     /// Size of the physical notch (or a synthetic pill on notch-less Macs).
     @Published var notchSize = CGSize(width: 200, height: 32)
-    /// Size of the fully expanded panel.
-    let expandedSize = CGSize(width: 740, height: 420)
+    /// Size of the fully expanded panel (Settings → Notch → Size, Pro).
+    @Published var expandedSize = NotchPrefs.defaultSize
+    /// Tabs hidden on the display the notch is on (Settings → Notch → Displays, Pro).
+    @Published var hiddenTabs: Set<String> = []
+    /// True while the notch steps aside for a fullscreen app or a screen recording.
+    @Published var isAutoHidden = false
 
     var toggle: () -> Void = {}
     var close: () -> Void = {}
+}
+
+extension NotchState {
+    /// The tabs shown in the notch right now, in order.
+    func visibleTabs(_ settings: SettingsManager) -> [Module] {
+        settings.enabledTabs.filter { !hiddenTabs.contains($0.rawValue) }
+    }
 }
 
 /// Draws the collapsed notch and handles click, hover and drag-over.
@@ -387,7 +398,26 @@ final class NotchTriggerView: NSView {
 
     override func acceptsFirstMouse(for event: NSEvent?) -> Bool { true }
     override func scrollWheel(with event: NSEvent) { NotchGestures.shared.handle(event) }
-    override func mouseDown(with event: NSEvent) { onClick() }
+    /// Long-press (½ s) runs the long-press gesture; a normal click opens the notch on release.
+    var onLongPress: () -> Void = {}
+    private var pressTimer: Timer?
+    private var longPressFired = false
+    override func mouseDown(with event: NSEvent) {
+        longPressFired = false
+        pressTimer?.invalidate()
+        pressTimer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: false) { [weak self] _ in
+            MainActor.assumeIsolated {
+                guard let self else { return }
+                self.longPressFired = true
+                self.onLongPress()
+            }
+        }
+    }
+    override func mouseUp(with event: NSEvent) {
+        pressTimer?.invalidate()
+        pressTimer = nil
+        if !longPressFired { onClick() }
+    }
     override func mouseEntered(with event: NSEvent) { isHovered = true; NSCursor.pointingHand.set(); onHoverChange(true) }
     override func mouseExited(with event: NSEvent) { isHovered = false; NSCursor.arrow.set(); onHoverChange(false) }
 
@@ -428,6 +458,12 @@ final class NotchWindowController {
     private var outsideClickMonitor: Any?
     private var keyMonitor: Any?
     private var clickInsideMonitor: Any?
+    private let fullscreen = FullscreenWatcher()
+    private var recordingNow = false
+    private var edgeMonitors: [Any] = []
+    private var gestureMonitor: Any?
+    private var swipeAccumulator = CGSize.zero
+    private var swipeFired = false
 
     init() {
         panel = NotchPanel(contentRect: .zero)
@@ -457,6 +493,18 @@ final class NotchWindowController {
             self.toggle()
         }
         triggerView.onDragEnter = { [weak self] in self?.openForDrop() }
+        triggerView.onLongPress = { [weak self] in
+            guard let self else { return }
+            switch NotchGesture.closedLongPress.action {
+            case .quickActions:
+                QuickActionsMenu.show(at: NSPoint(x: self.triggerView.bounds.midX - 100, y: 0), in: self.triggerView)
+            case .open: self.expand()
+            default: break
+            }
+        }
+        fullscreen.screen = { [weak self] in self?.targetScreen }
+        fullscreen.onChange = { [weak self] _ in self?.updateAutoHide() }
+        fullscreen.start()
         let notifier = MessengerNotifier.shared
         notifier.isMessengerVisible = { [weak self] in
             guard let self else { return false }
@@ -480,6 +528,10 @@ final class NotchWindowController {
             self.triggerView.isRecording = on
             self.reposition()
         }
+        ScreenRecordingDetector.shared.onRawChange = { [weak self] on in
+            self?.recordingNow = on
+            self?.updateAutoHide()
+        }
         triggerView.onEarSettled = { [weak self] in self?.reposition() }
         // Safety net: 0.6 s after any change the notch is at its final size, even if the animation timer stalled.
         let settleSoon: () -> Void = { [weak self] in
@@ -502,6 +554,110 @@ final class NotchWindowController {
         levelObservers = observeWindowLevelEvents()
         state.toggle = { [weak self] in self?.toggle() }
         state.close = { [weak self] in self?.collapse() }
+        applyEdgeTrigger()
+    }
+
+    // MARK: Auto-hide (fullscreen apps, screen recordings)
+
+    /// Steps the closed notch aside while a fullscreen app or a recording is on its screen.
+    /// Separate from ⌘O hiding: it comes back by itself, and opening with the hotkey still works.
+    func updateAutoHide() {
+        let hide = (fullscreen.isFullscreen && NotchPrefs.autoHideFullscreen) || (recordingNow && NotchPrefs.autoHideRecording)
+        guard hide != state.isAutoHidden else { return }
+        state.isAutoHidden = hide
+        if hide && !state.isExpanded { /* stays closed */ }
+        trigger.ignoresMouseEvents = hide || SettingsManager.shared.isNotchHidden
+        NSAnimationContext.runAnimationGroup { context in
+            context.duration = NSWorkspace.shared.accessibilityDisplayShouldReduceMotion ? 0.1 : 0.25
+            trigger.animator().alphaValue = (hide || SettingsManager.shared.isNotchHidden) ? 0 : 1
+        }
+    }
+
+    func recheckFullscreen() { fullscreen.check() }
+
+    // MARK: Edge trigger zones (Pro)
+
+    /// Watches the pointer only while an edge zone is on: resting at the very top of the
+    /// screen inside the zone opens the notch. Clicks on the menu bar are never blocked.
+    func applyEdgeTrigger() {
+        edgeMonitors.forEach(NSEvent.removeMonitor)
+        edgeMonitors = []
+        guard NotchPrefs.edgeTrigger != "off", Entitlements.shared.canUse(.edgeTrigger) else { return }
+        let handler: (NSEvent) -> Void = { [weak self] _ in self?.edgeMoved() }
+        if let g = NSEvent.addGlobalMonitorForEvents(matching: .mouseMoved, handler: handler) { edgeMonitors.append(g) }
+        if let l = NSEvent.addLocalMonitorForEvents(matching: .mouseMoved, handler: { handler($0); return $0 }) { edgeMonitors.append(l) }
+    }
+
+    private var edgeWork: DispatchWorkItem?
+    private func edgeMoved() {
+        guard let screen = targetScreen, !state.isExpanded, !state.isAutoHidden, !SettingsManager.shared.isNotchHidden else { return }
+        let p = NSEvent.mouseLocation
+        let halfWidth = NotchPrefs.edgeTrigger == "edge" ? screen.frame.width / 2 : state.notchSize.width + 100
+        let inZone = p.y >= screen.frame.maxY - 2 && abs(p.x - screen.frame.midX) <= halfWidth && screen.frame.contains(CGPoint(x: p.x, y: p.y - 1))
+        if inZone {
+            guard edgeWork == nil else { return }
+            let work = DispatchWorkItem { [weak self] in
+                guard let self else { return }
+                self.edgeWork = nil
+                let q = NSEvent.mouseLocation
+                guard q.y >= screen.frame.maxY - 2, !self.state.isExpanded else { return }
+                self.expand()
+                self.openedByHover = true
+            }
+            edgeWork = work
+            DispatchQueue.main.asyncAfter(deadline: .now() + max(NotchPrefs.hoverDelay, 0.2), execute: work)
+        } else {
+            edgeWork?.cancel()
+            edgeWork = nil
+        }
+    }
+
+    // MARK: Gestures in the open notch
+
+    /// Swipes on the tab bar (top 56 pt): sideways switches tabs, up closes. Pinch resizes (Pro).
+    private func installGestureMonitor() {
+        gestureMonitor = NSEvent.addLocalMonitorForEvents(matching: [.scrollWheel, .magnify]) { [weak self] event in
+            guard let self, event.window === self.panel else { return event }
+            if event.type == .magnify { self.pinch(event.magnification); return event }
+            let p = event.locationInWindow
+            guard p.y > self.panel.frame.height - 56, event.hasPreciseScrollingDeltas, event.momentumPhase == [] else { return event }
+            if event.phase == .began { self.swipeAccumulator = .zero; self.swipeFired = false }
+            let flip: CGFloat = event.isDirectionInvertedFromDevice ? 1 : -1
+            self.swipeAccumulator.width += event.scrollingDeltaX * flip
+            self.swipeAccumulator.height += event.scrollingDeltaY * flip
+            if !self.swipeFired {
+                let a = self.swipeAccumulator
+                if abs(a.width) > 70, abs(a.width) > abs(a.height) * 1.5 {
+                    self.swipeFired = true
+                    switch NotchGesture.openSwipe.action {
+                    case .switchTab: self.stepTab(a.width < 0 ? 1 : -1)
+                    case .track: MediaControl.send(a.width < 0 ? .next : .previous)
+                    default: break
+                    }
+                } else if a.height < -70, abs(a.height) > abs(a.width) * 1.5, NotchGesture.openSwipeUp.action == .close {
+                    self.swipeFired = true
+                    self.collapse()
+                }
+            }
+            return event
+        }
+    }
+
+    /// Moves to the next or previous visible tab.
+    func stepTab(_ step: Int) {
+        let tabs = state.visibleTabs(SettingsManager.shared)
+        guard !tabs.isEmpty else { return }
+        let i = tabs.firstIndex(of: state.selected) ?? 0
+        let next = tabs[(i + step + tabs.count) % tabs.count]
+        withAnimation(Theme.spring) { state.selected = next }
+        NotchFeedback.tick()
+    }
+
+    private func pinch(_ amount: CGFloat) {
+        guard Entitlements.shared.canUse(.notchResize) else { return }
+        NotchPrefs.panelWidth = (NotchPrefs.panelWidth * (1 + amount)).clamped(to: NotchPrefs.widthRange)
+        NotchPrefs.panelHeight = (NotchPrefs.panelHeight * (1 + amount)).clamped(to: NotchPrefs.heightRange)
+        reposition()
     }
 
     /// Puts both windows back on top after a Space change, wake or display change.
@@ -581,6 +737,11 @@ final class NotchWindowController {
         let hit = CGSize(width: state.notchSize.width + side * 2, height: state.notchSize.height + pad.height)
         triggerView.notchWidth = state.notchSize.width
         trigger.setFrame(frame(size: hit, on: screen), display: true)
+        let size = NotchPrefs.panelSize
+        if state.expandedSize != size { state.expandedSize = size }
+        DisplayLayouts.currentScreen = screen
+        let hidden = Entitlements.shared.canUse(.displayLayouts) ? DisplayLayouts.hidden(on: screen) : []
+        if state.hiddenTabs != hidden { state.hiddenTabs = hidden }
         panel.setFrame(frame(size: state.expandedSize, on: screen), display: false)
     }
 
@@ -600,11 +761,11 @@ final class NotchWindowController {
         guard settings.isNotchHidden != hidden else { return }
         settings.isNotchHidden = hidden
         if hidden { collapse() }
-        trigger.ignoresMouseEvents = hidden
+        trigger.ignoresMouseEvents = hidden || state.isAutoHidden
         NSAnimationContext.runAnimationGroup { context in
             context.duration = NSWorkspace.shared.accessibilityDisplayShouldReduceMotion ? 0.1 : 0.3
             context.timingFunction = CAMediaTimingFunction(controlPoints: 0.2, 0.9, 0.3, 1)
-            trigger.animator().alphaValue = hidden ? 0 : 1
+            trigger.animator().alphaValue = (hidden || state.isAutoHidden) ? 0 : 1
             if hidden { panel.animator().alphaValue = 0 }
         }
     }
@@ -622,7 +783,7 @@ final class NotchWindowController {
     /// Puts the notch back the way it was: open panel visible, closed notch shape visible unless hidden with the shortcut.
     func restoreAfterCapture() {
         panel.alphaValue = state.isExpanded ? 1 : 0
-        trigger.alphaValue = SettingsManager.shared.isNotchHidden ? 0 : 1
+        trigger.alphaValue = (SettingsManager.shared.isNotchHidden || state.isAutoHidden) ? 0 : 1
     }
 
     var isOpen: Bool { state.isExpanded }
@@ -641,6 +802,7 @@ final class NotchWindowController {
         // The collapsed shape is already drawn, so spring open straight away,
         // with the same curve that closing uses.
         withAnimation(Theme.spring) { state.isExpanded = true }
+        NotchFeedback.opened()
         installMonitors()
     }
 
@@ -670,7 +832,7 @@ final class NotchWindowController {
                 self.expand()
                 self.openedByHover = true
             }
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.15, execute: work)
+            DispatchQueue.main.asyncAfter(deadline: .now() + NotchPrefs.hoverDelay, execute: work)
         } else {
             // Leaving the trigger while the panel is opening lands on the panel, so only the
             // panel's own exit closes it; a small grace period allows brief overshoots.
@@ -690,6 +852,7 @@ final class NotchWindowController {
         openedByHover = false
         pinnedByClick = false
         withAnimation(Theme.spring) { state.isExpanded = false }
+        NotchFeedback.closed()
         // Re-lock biometric gate every time the notch closes.
         state.isUnlocked = false
         removeMonitors()
@@ -716,15 +879,28 @@ final class NotchWindowController {
             return event
         }
         keyMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
-            if event.keyCode == 53 { self?.collapse(); return nil }
+            guard let self else { return event }
+            if event.keyCode == 53 { self.collapse(); return nil }
+            // Keyboard control: ⌘1–⌘9 jump to a tab, ⌘[ and ⌘] (or ⌃Tab / ⌃⇧Tab) step through them.
+            let mods = event.modifierFlags.intersection(.deviceIndependentFlagsMask)
+            if mods == .command, let c = event.charactersIgnoringModifiers, let n = Int(c), (1...9).contains(n) {
+                let tabs = self.state.visibleTabs(SettingsManager.shared)
+                if n <= tabs.count { withAnimation(Theme.spring) { self.state.selected = tabs[n - 1] }; return nil }
+            }
+            if mods == .command, event.charactersIgnoringModifiers == "]" { self.stepTab(1); return nil }
+            if mods == .command, event.charactersIgnoringModifiers == "[" { self.stepTab(-1); return nil }
+            if event.keyCode == 48, mods.contains(.control) { self.stepTab(mods.contains(.shift) ? -1 : 1); return nil }
             return event
         }
+        installGestureMonitor()
     }
 
     private func removeMonitors() {
         if let m = outsideClickMonitor { NSEvent.removeMonitor(m) }
         if let m = keyMonitor { NSEvent.removeMonitor(m) }
         if let m = clickInsideMonitor { NSEvent.removeMonitor(m) }
+        if let m = gestureMonitor { NSEvent.removeMonitor(m) }
+        gestureMonitor = nil
         clickInsideMonitor = nil
         outsideClickMonitor = nil
         keyMonitor = nil

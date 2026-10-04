@@ -32,8 +32,13 @@ final class ScreenRecordingDetector {
         poll()
     }
 
+    /// Every change in "is the screen being recorded", whatever the indicator setting (for auto-hide).
+    var onRawChange: (Bool) -> Void = { _ in }
+    private var lastRaw = false
+
     func poll() {
         let recording = ownRecordingActive || Self.systemRecorderRunning()
+        if recording != lastRaw { lastRaw = recording; onRawChange(recording) }
         LiveActivityCenter.shared.setScreenRecording(recording && SettingsManager.shared.showRecordingIndicator)
     }
 

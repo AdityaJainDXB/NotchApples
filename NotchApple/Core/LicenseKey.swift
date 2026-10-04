@@ -42,7 +42,9 @@ enum Tier: Int, Comparable, CaseIterable, Codable {
 /// `isReady == false` keeps a paid feature hidden until it fully works.
 enum Feature: String, CaseIterable, Identifiable {
     // Pro: notch
-    case notchResize
+    case notchResize, edgeTrigger, displayLayouts, gestureRemap
+    // Pro: customization
+    case proThemes, customColors, themeEditor
     // Pro: live activities
     case meetingAlert, downloadProgress
     // Pro: AI
@@ -67,7 +69,7 @@ enum Feature: String, CaseIterable, Identifiable {
 
     var isReady: Bool {
         switch self {
-        case .notchResize, .liveActivityAPI, .pluginSDK, .prioritySupport, .betaChannel: false
+        case .liveActivityAPI, .pluginSDK, .prioritySupport, .betaChannel: false
         default: true
         }
     }
@@ -75,6 +77,12 @@ enum Feature: String, CaseIterable, Identifiable {
     var title: String {
         switch self {
         case .notchResize: "Notch size"
+        case .edgeTrigger: "Edge trigger zones"
+        case .displayLayouts: "Tabs per display"
+        case .gestureRemap: "Custom gestures"
+        case .proThemes: "Pro themes"
+        case .customColors: "Custom colours"
+        case .themeEditor: "Theme editor"
         case .meetingAlert: "Meeting alerts"
         case .downloadProgress: "Download progress"
         case .aiCapture: "Ask about your screen"
@@ -103,7 +111,13 @@ enum Feature: String, CaseIterable, Identifiable {
     /// One line on what you get, shown next to the lock.
     var benefit: String {
         switch self {
-        case .notchResize: "Make the open notch wider or taller."
+        case .notchResize: "Make the open notch wider or taller, with a live preview."
+        case .edgeTrigger: "Open the notch from anywhere along the top of the screen."
+        case .displayLayouts: "Choose which tabs show on each display."
+        case .gestureRemap: "Choose what each swipe, scroll and long-press does."
+        case .proThemes: "Eight more themes, from Aurora to Rose Gold."
+        case .customColors: "Your own accent colour and glow."
+        case .themeEditor: "Build a theme, then export it or import one from a friend."
         case .meetingAlert: "A heads-up before meetings, with a Join button."
         case .downloadProgress: "Watch downloads fill up beside the notch."
         case .aiCapture: "Capture any part of the screen (⌃⌥S) or selected text and ask about it."

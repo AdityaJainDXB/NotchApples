@@ -21,6 +21,13 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "1.17.0", date: "4 October 2026", headline: "A notch that fits how you work", items: [
+            "Settings → Notch: hover delay, hide in fullscreen apps, and (optionally) hide while the screen is recorded.",
+            "Keyboard control: ⌘1–⌘9 jump to a tab, ⌘[ and ⌘] step through them. Long-press the closed notch for quick actions; swipe on the tab bar to change tabs, swipe up to close.",
+            "A four-step welcome for new installs: permissions, your tabs, your look and a quick tour (show it again from Settings → General).",
+            "Search in Settings, optional open/close sounds and trackpad haptics, and stronger contrast when Increase Contrast is on.",
+            "Pro: resize the open notch with a live preview (or pinch it), edge trigger zones along the top of the screen, tabs per display, remappable gestures, eight new themes and a theme editor with import and export.",
+        ]),
         ReleaseNote(version: "1.16.0", date: "4 October 2026", headline: "Free, Pro and Ultimate", items: [
             "Three tiers, each paid once: Free stays complete, Pro is $1 and Ultimate is $5. No subscription, no account, every 1.x update included. See Settings → License → Compare tiers.",
             "AI is free: ask anything and keep asking, with your own free key or Ollama. Asking about your screen (⌃⌥S), selected text, images and PDFs, and AI History are Pro.",

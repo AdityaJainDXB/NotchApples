@@ -16,6 +16,7 @@
 //    -demoOverlay <file>        show the capture overlay over this image (not the real screen)
 //    -demoSelection x,y,w,h     with -demoOverlay, a selection in points from the top-left
 //    -demoSportsDetail YES      open the details of your team's latest result
+//    -demoOnboarding <1…4>      show the welcome window on that page
 //
 
 import AppKit
@@ -31,6 +32,7 @@ enum DemoHooks {
         guard isDemo else { return }
         let d = UserDefaults.standard
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+            if d.integer(forKey: "demoOnboarding") > 0 { Onboarding.show() }
             if let pane = d.string(forKey: "openSettings").flatMap(SettingsTab.init(rawValue:)) {
                 AppDelegate.openSettingsWindow(tab: pane)
             }

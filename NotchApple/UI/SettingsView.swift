@@ -18,7 +18,7 @@ import UniformTypeIdentifiers
 
 /// Panes in the Settings window. `selection` lets other code jump to a pane.
 enum SettingsTab: String, CaseIterable, Identifiable, Hashable {
-    case general, appearance, extras, backup, browser, license, shortcuts, permissions, authentication, modules, windows, claude, aiHistory, messenger, clipboard, fileSearch, focus, audio, vpn, widget, updates, about
+    case general, notch, appearance, extras, backup, browser, license, shortcuts, permissions, authentication, modules, windows, claude, aiHistory, messenger, clipboard, fileSearch, focus, audio, vpn, widget, updates, about
     static let selection = PassthroughSubject<SettingsTab, Never>()
 
     var id: String { rawValue }
@@ -26,6 +26,7 @@ enum SettingsTab: String, CaseIterable, Identifiable, Hashable {
     var title: String {
         switch self {
         case .general: "General"
+        case .notch: "Notch"
         case .browser: "Browser"
         case .appearance: "Appearance"
         case .extras: "Notch Extras"
@@ -53,6 +54,7 @@ enum SettingsTab: String, CaseIterable, Identifiable, Hashable {
     var symbol: String {
         switch self {
         case .general: "gearshape.fill"
+        case .notch: "capsule.tophalf.filled"
         case .browser: "globe"
         case .appearance: "paintpalette.fill"
         case .extras: "sparkles.rectangle.stack.fill"
@@ -81,6 +83,7 @@ enum SettingsTab: String, CaseIterable, Identifiable, Hashable {
     var tint: Color {
         switch self {
         case .general: .gray
+        case .notch: .purple
         case .browser: .blue
         case .appearance: .pink
         case .extras: .orange
@@ -106,13 +109,41 @@ enum SettingsTab: String, CaseIterable, Identifiable, Hashable {
     }
 }
 
+extension SettingsTab {
+    /// Extra words Settings search matches, besides the title.
+    var keywords: String {
+        switch self {
+        case .general: "login menu bar volume brightness hud recording dot charging"
+        case .notch: "hover delay open click fullscreen hide size width height resize edge trigger zone display monitor gestures swipe pinch long press sound haptics keyboard"
+        case .appearance: "theme colour color dark light accent glow tab order editor import export"
+        case .extras: "battery music lyrics rain meeting download keep awake album"
+        case .backup: "icloud sync google account restore export import file"
+        case .license: "pro ultimate key activate upgrade buy price restore lost deactivate terms refund"
+        case .shortcuts: "hotkey keyboard shortcut capture"
+        case .permissions: "accessibility screen recording camera microphone calendar"
+        case .authentication: "face unlock lock password"
+        case .modules: "tabs add-ons widgets enable"
+        case .claude: "ai gemini ollama openai provider model key temperature capture"
+        case .aiHistory: "conversations search export"
+        case .updates: "version homebrew"
+        default: ""
+        }
+    }
+
+    func matches(_ query: String) -> Bool {
+        let q = query.trimmingCharacters(in: .whitespaces).lowercased()
+        return q.isEmpty || title.lowercased().contains(q) || keywords.contains(q)
+    }
+}
+
 struct SettingsView: View {
     @ObservedObject private var updater = UpdateChecker.shared
     @AppStorage("settings.lastPane") private var tab: SettingsTab = .general
+    @State private var query = ""
 
     var body: some View {
         NavigationSplitView {
-            List(SettingsTab.allCases, selection: Binding(get: { tab }, set: { if let t = $0 { tab = t } })) { pane in
+            List(SettingsTab.allCases.filter { $0.matches(query) }, selection: Binding(get: { tab }, set: { if let t = $0 { tab = t } })) { pane in
                 Label {
                     HStack {
                         Text(pane.title)
@@ -134,10 +165,15 @@ struct SettingsView: View {
                 .tag(pane)
             }
             .navigationSplitViewColumnWidth(190)
+            .searchable(text: $query, placement: .sidebar, prompt: "Search settings")
+            .onSubmit(of: .search) {
+                if let first = SettingsTab.allCases.first(where: { $0.matches(query) }) { tab = first }
+            }
         } detail: {
             Group {
                 switch tab {
                 case .general: GeneralSettings()
+                case .notch: NotchSettings()
                 case .browser: BrowserSettings()
                 case .appearance: AppearanceSettings()
                 case .extras: ExtrasSettings()
@@ -439,22 +475,10 @@ private struct GeneralSettings: View {
                 }
             }
             Section {
-                Toggle(isOn: $settings.globalHotkeyEnabled) {
-                    Text("Open and close with \(HotkeyBinding.notch.label)")
-                    Text("Works in any app. Change the shortcut in Shortcuts & Hotkeys.")
-                }
-                Toggle(isOn: $settings.hoverToOpen) {
-                    Text("Open on hover")
-                    Text("Opens when the pointer rests on the notch and closes when it moves away. Click inside to keep it open.")
-                }
-                Toggle(isOn: $settings.stickyNotch) {
-                    Text("Keep open when clicking elsewhere")
-                    Text("Otherwise the notch closes when you click outside it or press Esc.")
-                }
+                Button("Opening, hiding, size and gestures…") { SettingsTab.selection.send(.notch) }
+                Button("Show the welcome tour again") { Onboarding.show() }
             } header: {
                 Text("Notch")
-            } footer: {
-                Text("The notch opens when you click it, press \(HotkeyBinding.notch.label), or drag a file onto it. With Open on hover off, hovering only highlights it.")
             }
         }
         .formStyle(.grouped)

@@ -38,6 +38,8 @@ enum ThemeCategory: String, CaseIterable, Identifiable, Codable {
     case darkCozy = "Dark & Cozy"
     case nature = "Nature & Earthy"
     case pastel = "Modern Pastel"
+    case pro = "Pro collection"
+    case custom = "Your theme"
 
     var id: String { rawValue }
 
@@ -49,6 +51,8 @@ enum ThemeCategory: String, CaseIterable, Identifiable, Codable {
         case .darkCozy: "moon.stars.fill"
         case .nature: "leaf.fill"
         case .pastel: "paintpalette.fill"
+        case .pro: "crown.fill"
+        case .custom: "slider.horizontal.3"
         }
     }
 }
@@ -60,8 +64,21 @@ enum ThemeID: String, CaseIterable, Identifiable, Codable {
     case nordicDusk = "nordic_dusk", draculaVoid = "dracula_void", espressoMocha = "espresso_mocha"
     case deepForest = "deep_forest", sunsetHorizon = "sunset_horizon", oceanicTrench = "oceanic_trench"
     case matchaCream = "matcha_cream", lavenderHaze = "lavender_haze"
+    // Pro collection
+    case aurora = "aurora", roseGold = "rose_gold", midnightBlue = "midnight_blue", crimsonNoir = "crimson_noir"
+    case arcticMint = "arctic_mint", goldenHour = "golden_hour", neonViolet = "neon_violet", cobaltSteel = "cobalt_steel"
+    /// Built in the theme editor (Pro).
+    case custom = "custom"
 
     var id: String { rawValue }
+
+    /// Themes that need Pro. The original 14 stay free.
+    var isPro: Bool {
+        switch self {
+        case .aurora, .roseGold, .midnightBlue, .crimsonNoir, .arcticMint, .goldenHour, .neonViolet, .cobaltSteel, .custom: true
+        default: false
+        }
+    }
 }
 
 // MARK: - Palette
@@ -82,6 +99,13 @@ struct AppTheme: Identifiable, Hashable {
 
     static func == (lhs: AppTheme, rhs: AppTheme) -> Bool { lhs.id == rhs.id }
     func hash(into hasher: inout Hasher) { hasher.combine(id) }
+
+    /// A theme from the editor (Settings → Appearance → Your theme).
+    init(custom c: CustomTheme) {
+        self.init(.custom, c.name.isEmpty ? "My theme" : c.name, .custom, background: c.background,
+                  surface: Color.white.opacity(0.07), primary: c.primary, secondary: c.secondary, text: "#FFFFFF",
+                  border: Color(hex: c.primary, opacity: 0.25), glow: Color(hex: c.primary, opacity: 0.15 + 0.5 * c.glow))
+    }
 
     /// Palette entry; the backdrop's far corner is the background tinted 25% toward the accent.
     fileprivate init(_ id: ThemeID, _ name: String, _ category: ThemeCategory,
@@ -159,11 +183,39 @@ extension AppTheme {
             AppTheme(.lavenderHaze, "Lavender Haze", .pastel, background: "#16131E", surface: Color(hex: "#262035"),
                      primary: "#C77DFF", secondary: "#E0AAFF", text: "#F3EAFF",
                      border: Color(hex: "#3D3054"), glow: Color(hex: "#7B2CBF", opacity: 0.35)),
+            // Pro collection
+            AppTheme(.aurora, "Aurora", .pro, background: "#06121A", surface: Color(hex: "#0E2230"),
+                     primary: "#5EF2B8", secondary: "#9D7BFF", text: "#E8FFF6",
+                     border: Color(hex: "#5EF2B8", opacity: 0.25), glow: Color(hex: "#5EF2B8", opacity: 0.35)),
+            AppTheme(.roseGold, "Rose Gold", .pro, background: "#1A1214", surface: Color(hex: "#2A1D20"),
+                     primary: "#F4B6A6", secondary: "#E8C39E", text: "#FFF4F0",
+                     border: Color(hex: "#F4B6A6", opacity: 0.25), glow: Color(hex: "#F4B6A6", opacity: 0.3)),
+            AppTheme(.midnightBlue, "Midnight Blue", .pro, background: "#050A1F", surface: Color(hex: "#0D1638"),
+                     primary: "#5B8CFF", secondary: "#9FC2FF", text: "#E6EEFF",
+                     border: Color(hex: "#1E2C5C"), glow: Color(hex: "#5B8CFF", opacity: 0.35)),
+            AppTheme(.crimsonNoir, "Crimson Noir", .pro, background: "#0C0506", surface: Color(hex: "#1C0A0D"),
+                     primary: "#FF3B5C", secondary: "#FF8A9E", text: "#FFECEF",
+                     border: Color(hex: "#3D1219"), glow: Color(hex: "#FF3B5C", opacity: 0.35)),
+            AppTheme(.arcticMint, "Arctic Mint", .pro, background: "#081416", surface: Color(hex: "#102326"),
+                     primary: "#7FFFD4", secondary: "#B2F7EF", text: "#F0FFFC",
+                     border: Color(hex: "#1D3A3D"), glow: Color(hex: "#7FFFD4", opacity: 0.3)),
+            AppTheme(.goldenHour, "Golden Hour", .pro, background: "#140E04", surface: Color(hex: "#24190A"),
+                     primary: "#FFC93C", secondary: "#FF9A3C", text: "#FFF8E7",
+                     border: Color(hex: "#3D2C10"), glow: Color(hex: "#FFC93C", opacity: 0.3)),
+            AppTheme(.neonViolet, "Neon Violet", .pro, background: "#0A0414", surface: Color(hex: "#170A2B"),
+                     primary: "#B026FF", secondary: "#FF2BD6", text: "#F7EAFF",
+                     border: Color(hex: "#B026FF", opacity: 0.35), glow: Color(hex: "#B026FF", opacity: 0.45)),
+            AppTheme(.cobaltSteel, "Cobalt Steel", .pro, background: "#0F1419", surface: Color(hex: "#1A222B"),
+                     primary: "#4FC3F7", secondary: "#90A4AE", text: "#ECEFF1",
+                     border: Color(hex: "#263238"), glow: Color(hex: "#4FC3F7", opacity: 0.25)),
         ]
         return Dictionary(uniqueKeysWithValues: list.map { ($0.id, $0) })
     }()
 
-    static func theme(for id: ThemeID) -> AppTheme { allThemes[id] ?? allThemes[.notchPurple]! }
+    static func theme(for id: ThemeID) -> AppTheme {
+        if id == .custom { return AppTheme(custom: CustomTheme.load()) }
+        return allThemes[id] ?? allThemes[.notchPurple]!
+    }
 }
 
 // MARK: - Manager
@@ -178,14 +230,24 @@ final class ThemeManager {
 
     init() {
         let raw = UserDefaults.standard.string(forKey: Self.storageKey) ?? ThemeID.notchPurple.rawValue
-        let id = ThemeID(rawValue: raw).flatMap { AppTheme.allThemes[$0] != nil ? $0 : nil } ?? .notchPurple
+        let id = ThemeID(rawValue: raw).flatMap { AppTheme.allThemes[$0] != nil || $0 == .custom ? $0 : nil } ?? .notchPurple
         currentThemeID = id
         currentTheme = AppTheme.theme(for: id)
     }
 
     func setTheme(_ id: ThemeID) {
-        guard id != currentThemeID else { return }
+        guard id != currentThemeID || id == .custom else { return }
         UserDefaults.standard.set(id.rawValue, forKey: Self.storageKey)
+        currentThemeID = id
+        currentTheme = AppTheme.theme(for: id)
+    }
+
+    /// Pro themes fall back to Notch Purple on a Mac without Pro (the choice is kept for when Pro returns).
+    @MainActor func revalidate() {
+        let raw = UserDefaults.standard.string(forKey: Self.storageKey) ?? ""
+        let saved = ThemeID(rawValue: raw) ?? .notchPurple
+        let allowed = !saved.isPro || Entitlements.shared.canUse(saved == .custom ? .customColors : .proThemes)
+        let id = allowed ? saved : .notchPurple
         currentThemeID = id
         currentTheme = AppTheme.theme(for: id)
     }
@@ -200,6 +262,7 @@ final class ThemeManager {
 /// Settings → Appearance: a live preview and swatches for every theme, grouped by category.
 struct AppearanceSettings: View {
     private let manager = ThemeManager.shared
+    @ObservedObject private var entitlements = Entitlements.shared
     @AppStorage("appearance.settingsWindow") private var windowMode = "system"
 
     var body: some View {
@@ -214,7 +277,6 @@ struct AppearanceSettings: View {
             } footer: {
                 Text("The notch itself is always dark, so it blends with the real notch.")
             }
-            TabOrderSection()
             Section {
                 ThemePreview(theme: current)
                     .listRowInsets(EdgeInsets(top: 10, leading: 10, bottom: 10, trailing: 10))
@@ -227,17 +289,23 @@ struct AppearanceSettings: View {
                     Section {
                         LazyVGrid(columns: [GridItem(.adaptive(minimum: 124), spacing: 10)], alignment: .leading, spacing: 10) {
                             ForEach(themes) { theme in
-                                ThemeSwatchCard(theme: theme, isSelected: current.id == theme.id) {
+                                ThemeSwatchCard(theme: theme, isSelected: current.id == theme.id,
+                                                locked: theme.id.isPro && !entitlements.canUse(.proThemes)) {
                                     withAnimation(.snappy) { manager.setTheme(theme.id) }
                                 }
                             }
                         }
                         .padding(.vertical, 4)
                     } header: {
-                        Label(category.rawValue, systemImage: category.iconName)
+                        HStack(spacing: 6) {
+                            Label(category.rawValue, systemImage: category.iconName)
+                            if category == .pro && !entitlements.canUse(.proThemes) { TierBadge(tier: .pro) }
+                        }
                     }
                 }
             }
+            ThemeEditor()
+            TabOrderSection()
         }
         .formStyle(.grouped)
     }
@@ -342,10 +410,11 @@ private struct ThemePreview: View {
 private struct ThemeSwatchCard: View {
     let theme: AppTheme
     let isSelected: Bool
+    var locked = false
     let action: () -> Void
 
     var body: some View {
-        Button(action: action) {
+        Button(action: { if !locked { action() } }) {
             VStack(spacing: 6) {
                 ZStack {
                     Circle().fill(theme.backgroundColor).frame(width: 38, height: 38)
@@ -357,6 +426,7 @@ private struct ThemeSwatchCard: View {
                     }
                 }
                 .overlay(Circle().stroke(isSelected ? theme.primaryAccent : theme.borderColor, lineWidth: isSelected ? 2 : 1))
+                if locked { Image(systemName: "lock.fill").font(.system(size: 9)).foregroundStyle(.secondary) }
                 Text(theme.name).font(.system(size: 11, weight: isSelected ? .bold : .medium))
                     .lineLimit(1).frame(maxWidth: .infinity)
                     .foregroundStyle(.primary)
@@ -367,7 +437,108 @@ private struct ThemeSwatchCard: View {
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-        .accessibilityLabel(theme.name)
+        .help(locked ? "Pro theme. \(Feature.proThemes.benefit)" : theme.name)
+        .accessibilityLabel(locked ? "\(theme.name), needs Pro" : theme.name)
         .accessibilityAddTraits(isSelected ? [.isButton, .isSelected] : .isButton)
+    }
+}
+
+// MARK: - Custom theme (Pro)
+
+/// The editor's theme. Exported and imported as a small JSON file (.notchtheme).
+struct CustomTheme: Codable, Equatable {
+    var name = "My theme"
+    var background = "#0B0716"
+    var primary = "#A855F7"
+    var secondary = "#F472B6"
+    /// 0…1: how strongly the accent glows.
+    var glow = 0.4
+
+    private static let key = "theme.custom"
+
+    static func load() -> CustomTheme {
+        guard let data = UserDefaults.standard.data(forKey: key), let t = try? JSONDecoder().decode(CustomTheme.self, from: data) else { return CustomTheme() }
+        return t
+    }
+
+    func save() {
+        if let data = try? JSONEncoder().encode(self) { UserDefaults.standard.set(data, forKey: Self.key) }
+    }
+
+    /// Only well-formed #RRGGBB colours are accepted from a file.
+    var isValid: Bool {
+        [background, primary, secondary].allSatisfy { $0.range(of: "^#[0-9A-Fa-f]{6}$", options: .regularExpression) != nil }
+            && (0...1).contains(glow) && name.count <= 40
+    }
+}
+
+extension Color {
+    /// #RRGGBB for the editor's colour wells.
+    var hexString: String {
+        let c = NSColor(self).usingColorSpace(.sRGB) ?? .black
+        return String(format: "#%02X%02X%02X", Int(round(c.redComponent * 255)), Int(round(c.greenComponent * 255)), Int(round(c.blueComponent * 255)))
+    }
+}
+
+/// Settings → Appearance → Your theme: pick colours, see them live, export or import.
+private struct ThemeEditor: View {
+    @State private var theme = CustomTheme.load()
+    @State private var message: String?
+    @ObservedObject private var entitlements = Entitlements.shared
+    private let manager = ThemeManager.shared
+
+    var body: some View {
+        Section {
+            ThemePreview(theme: AppTheme(custom: theme))
+                .listRowInsets(EdgeInsets(top: 10, leading: 10, bottom: 10, trailing: 10))
+            TextField("Name", text: $theme.name)
+            ColorPicker("Background", selection: binding(\.background), supportsOpacity: false)
+            ColorPicker("Accent", selection: binding(\.primary), supportsOpacity: false)
+            ColorPicker("Second accent", selection: binding(\.secondary), supportsOpacity: false)
+            LabeledContent("Glow") { Slider(value: $theme.glow, in: 0...1).frame(width: 180) }
+            HStack {
+                Button("Use this theme") { theme.save(); manager.setTheme(.custom) }
+                    .disabled(!entitlements.canUse(.customColors))
+                Spacer()
+                Button("Import…", action: importTheme).disabled(!entitlements.canUse(.themeEditor))
+                Button("Export…", action: exportTheme).disabled(!entitlements.canUse(.themeEditor))
+            }
+            if let message { Text(message).font(.caption).foregroundStyle(.secondary) }
+        } header: {
+            HStack(spacing: 6) {
+                Label("Your theme", systemImage: "slider.horizontal.3")
+                if !entitlements.canUse(.customColors) { TierBadge(tier: .pro) }
+            }
+        } footer: {
+            Text("Make your own colours, then export them as a .notchtheme file to share, or import one from a friend.")
+        }
+        .onChange(of: theme) { _, new in
+            if manager.currentThemeID == .custom, entitlements.canUse(.customColors) { new.save(); manager.setTheme(.custom) }
+        }
+    }
+
+    private func binding(_ path: WritableKeyPath<CustomTheme, String>) -> Binding<Color> {
+        Binding(get: { Color(hex: theme[keyPath: path]) }, set: { theme[keyPath: path] = $0.hexString })
+    }
+
+    private func exportTheme() {
+        let panel = NSSavePanel()
+        panel.nameFieldStringValue = "\(theme.name).notchtheme"
+        guard panel.runModal() == .OK, let url = panel.url,
+              let data = try? JSONEncoder().encode(theme) else { return }
+        do { try data.write(to: url); message = "Exported to \(url.lastPathComponent)." } catch { message = error.localizedDescription }
+    }
+
+    private func importTheme() {
+        let panel = NSOpenPanel()
+        panel.allowedContentTypes = [.json, .data]
+        panel.allowsOtherFileTypes = true
+        guard panel.runModal() == .OK, let url = panel.url,
+              let data = try? Data(contentsOf: url, options: .mappedIfSafe), data.count < 10_000 else { return }
+        guard let t = try? JSONDecoder().decode(CustomTheme.self, from: data), t.isValid else {
+            message = "That file isn't a Notch apple theme."; return
+        }
+        theme = t
+        message = "Imported \(t.name). Press Use this theme to apply it."
     }
 }

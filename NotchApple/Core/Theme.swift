@@ -25,10 +25,15 @@ enum Theme {
 
     static var textPrimary: Color { current.textColor }
     /// ~7:1 on the backdrop, comfortably above the 4.5:1 minimum for small text.
-    static var textSecondary: Color { current.textColor.opacity(0.74) }
+    static var textSecondary: Color { current.textColor.opacity(highContrast ? 0.92 : 0.74) }
+    /// System Settings → Accessibility → Display → Increase contrast.
+    static var highContrast: Bool { NSWorkspace.shared.accessibilityDisplayShouldIncreaseContrast }
     static let surface = Color.white.opacity(0.07)
     static let surfaceHover = Color.white.opacity(0.13)
-    static var separator: Color { current.id == .notchPurple ? Color.white.opacity(0.10) : current.borderColor }
+    static var separator: Color {
+        if highContrast { return Color.white.opacity(0.45) }
+        return current.id == .notchPurple ? Color.white.opacity(0.10) : current.borderColor
+    }
 
     /// Background gradient behind the expanded notch.
     static var backdrop: LinearGradient {

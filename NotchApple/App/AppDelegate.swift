@@ -32,9 +32,18 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         // Now Playing and Messenger are gated: they start now if a code is saved, or the moment one is entered.
         startGatedServices()
+        ThemeManager.shared.revalidate()
         Entitlements.shared.$tier
             .dropFirst().removeDuplicates()
-            .sink { [weak self] _ in self?.startGatedServices() }
+            .sink { [weak self] _ in
+                self?.startGatedServices()
+                // Pro themes, sizes, edge zones and per-display tabs follow the tier.
+                DispatchQueue.main.async {
+                    ThemeManager.shared.revalidate()
+                    self?.notchController?.applyEdgeTrigger()
+                    self?.notchController?.reposition()
+                }
+            }
             .store(in: &cancellables)
         SystemHUDObserver.shared.start()
         WhatsNew.noteLaunch()
@@ -121,13 +130,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         LocalP2PManager.shared.stop()
     }
 
-    /// First launch: open Settings on the Permissions pane with a short welcome.
+    /// First launch: the four-step welcome (permissions, tabs, theme, tour).
     private func showWelcomeOnFirstLaunch() {
         let key = "onboarding.permissionsShown"
         guard !UserDefaults.standard.bool(forKey: key) else { return }
         UserDefaults.standard.set(true, forKey: key)
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
-            AppDelegate.openSettingsWindow(tab: .permissions)
+            Onboarding.show()
         }
     }
 

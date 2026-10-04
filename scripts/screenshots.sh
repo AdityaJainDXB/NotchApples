@@ -103,6 +103,10 @@ shot history       settings 6 -openSettings aiHistory
 shot settings-ai   settings 6 -openSettings claude
 shot pro           panel 6 -openNotch launcher
 shot settings-pro  settings 6 -openSettings license
+shot settings-notch settings 6 -openSettings notch
+shot settings-themes settings 6 -openSettings appearance -demoPro YES
+shot onboarding    settings 6 -demoOnboarding 2
+shot onboarding-tour settings 6 -demoOnboarding 4
 
 [ $REAL_RUNNING = 1 ] && open -g -a "/Applications/Notch apple.app"
 defaults delete $D >/dev/null 2>&1 || true
@@ -110,7 +114,7 @@ defaults delete $D >/dev/null 2>&1 || true
 if [ -n "$SITE" ]; then
   echo "› WebP copies for the website"
   mkdir -p "$SITE/assets/screenshots"
-  for f in ai-empty ai-input ai-result follow-up code-analysis capture-overlay f1 sports sports-table sports-cricket sports-detail games history settings-ai pro settings-pro; do
+  for f in ai-empty ai-input ai-result follow-up code-analysis capture-overlay f1 sports sports-table sports-cricket sports-detail games history settings-ai pro settings-pro settings-notch settings-themes onboarding onboarding-tour; do
     [ -f "$OUT/$f.png" ] && python3 -c "
 from PIL import Image; im = Image.open('$OUT/$f.png'); im.thumbnail((1600, 1600)); im.save('$SITE/assets/screenshots/$f.webp', 'WEBP', quality=82, method=6)"
   done

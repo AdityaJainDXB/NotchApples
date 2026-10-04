@@ -13,24 +13,6 @@ struct ExtrasSettings: View {
     var body: some View {
         Form {
             Section {
-                Picker("Show the notch on", selection: $settings.notchDisplayMode) {
-                    Text("Built-in display").tag("builtin")
-                    Text("The display with the pointer").tag("pointer")
-                    Text("Main display (menu bar)").tag("main")
-                }
-            } header: {
-                Text("Displays")
-            } footer: {
-                Text("On displays without a notch (like an external monitor), Notch apple draws a virtual one in the middle of the menu bar.")
-            }
-            Section {
-                Toggle("Scroll on the notch to change volume, swipe to skip tracks", isOn: $settings.notchGestures)
-            } header: {
-                Text("Gestures")
-            } footer: {
-                Text("Two fingers up or down over the closed notch changes the volume; a sideways swipe plays the next or previous track.")
-            }
-            Section {
                 Toggle("Low battery warning at 20% and 10%", isOn: $settings.lowBatteryAlert)
                 Toggle("Charging animation when you plug in", isOn: $settings.showChargingActivity)
                 Toggle("Album cover while music plays (Now Playing)", isOn: $settings.musicActivity)

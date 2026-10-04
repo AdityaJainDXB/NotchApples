@@ -201,6 +201,14 @@ All screenshots use sample data.
 
 ## What's new
 
+### 1.17.0 · 4 October 2026 · A notch that fits how you work
+
+- **Settings → Notch:** hover delay, **hide in fullscreen apps** (videos, games, presentations), and optionally hide while the screen is recorded.
+- **Keyboard and gestures:** ⌘1–⌘9 jump to a tab, ⌘[ / ⌘] step through them; long-press the closed notch for quick actions; swipe on the tab bar to change tabs, swipe up to close.
+- **Welcome tour** for new installs in four steps: permissions, your tabs, your look, quick tour.
+- **Search in Settings**, optional sounds and trackpad haptics (off by default), stronger contrast with Increase Contrast.
+- **Pro:** resize the open notch with a live preview (or pinch it), edge trigger zones, tabs per display, remappable gestures, eight new themes (22 in all) and a theme editor with import/export (`.notchtheme`).
+
 ### 1.16.0 · 4 October 2026 · Free, Pro and Ultimate
 
 - **Three tiers, each paid once.** Free stays complete. **Pro is $1** and **Ultimate is $5**, with no subscription, no account and every 1.x update included. [Compare tiers](https://virajsinghchadha.github.io/notchapples-site/pro.html).

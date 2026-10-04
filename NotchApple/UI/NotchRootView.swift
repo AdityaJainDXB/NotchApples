@@ -113,7 +113,7 @@ struct NotchRootView: View {
             .padding(.horizontal, 18 + Self.expandedShoulder)
             .padding(.bottom, 18)
             .onAppear(perform: ensureValidSelection)
-            .onChange(of: settings.enabledTabs) { _, _ in ensureValidSelection() }
+            .onChange(of: state.visibleTabs(settings)) { _, _ in ensureValidSelection() }
         }
     }
 
@@ -124,9 +124,9 @@ struct NotchRootView: View {
             ScrollViewReader { proxy in
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 2) {
-                        ForEach(settings.enabledTabs) { module in
+                        ForEach(state.visibleTabs(settings)) { module in
                             TabButton(module: module, active: state.selected == module,
-                                      compact: settings.enabledTabs.count > 6 && state.selected != module) {
+                                      compact: state.visibleTabs(settings).count > 6 && state.selected != module) {
                                 withAnimation(Theme.spring) { state.selected = module }
                             }
                             .id(module)
@@ -150,7 +150,7 @@ struct NotchRootView: View {
 
     @ViewBuilder
     private var moduleBody: some View {
-        if settings.enabledTabs.isEmpty {
+        if state.visibleTabs(settings).isEmpty {
             VStack(spacing: 8) {
                 Image(systemName: "square.dashed").font(.largeTitle).foregroundStyle(Theme.accent)
                 Text("All modules are turned off").foregroundStyle(.white)
@@ -201,7 +201,7 @@ struct NotchRootView: View {
     }
 
     private func ensureValidSelection() {
-        let tabs = settings.enabledTabs
+        let tabs = state.visibleTabs(settings)
         if !tabs.contains(state.selected), let first = tabs.first { state.selected = first }
     }
 }
