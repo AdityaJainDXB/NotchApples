@@ -18,10 +18,9 @@ DEVICE_LIMIT = "3"
 ULTIMATE_ON = "1"
 # "brevo" (works with a verified Gmail sender, 300 emails/day free) or "resend" (needs your own domain).
 MAIL_PROVIDER = "brevo"
-# MAIL_FROM is the sender address, e.g. your Gmail verified in Brevo.
-MAIL_FROM = ""
 
-# Secrets (never in this file): SIGNING_KEY, ADMIN_TOKEN, EMAIL_PEPPER, MAIL_API_KEY.
+# Secrets (never in this file): SIGNING_KEY, ADMIN_TOKEN, EMAIL_PEPPER, MAIL_API_KEY, and MAIL_FROM
+# (the sender address verified in Brevo; a secret so it isn't published in this repo).
 # Set them with scripts/setup.sh or `npx wrangler secret put NAME`.
 
 # Testnet copy for the sandbox test: `npx wrangler deploy --env testnet`

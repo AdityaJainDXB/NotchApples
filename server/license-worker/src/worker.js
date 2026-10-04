@@ -226,6 +226,7 @@ async function sendMail(env, to, subject, text) {
       body: JSON.stringify({ sender: { email: env.MAIL_FROM, name: 'Notch apple' }, to: [{ email: to }], subject, textContent: text }),
     });
   }
+  if (!r.ok) console.error('Email not sent', env.MAIL_PROVIDER, r.status, (await r.text()).slice(0, 300));
   return r.ok;
 }
 

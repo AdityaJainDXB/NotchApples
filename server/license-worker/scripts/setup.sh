@@ -44,11 +44,8 @@ echo "Email: create a free Brevo account (brevo.com), verify your sender email u
 echo "then make an API key under SMTP & API → API Keys."
 read -rp "Sender email (MAIL_FROM, leave empty to skip email for now): " FROM
 if [ -n "$FROM" ]; then
-  if [ -n "$ENV_NAME" ]; then
-    awk -v f="$FROM" '/^\[env.testnet.vars\]/{t=1} t&&/^MAIL_FROM/{$0="MAIL_FROM = \"" f "\""} {print}' wrangler.toml > wrangler.tmp && mv wrangler.tmp wrangler.toml
-  else
-    awk -v f="$FROM" '!done&&/^MAIL_FROM/{$0="MAIL_FROM = \"" f "\"";done=1} {print}' wrangler.toml > wrangler.tmp && mv wrangler.tmp wrangler.toml
-  fi
+  # A secret, so the address isn't published in the repo.
+  printf '%s' "$FROM" | $W secret put MAIL_FROM "${ENVFLAG[@]}"
   $W secret put MAIL_API_KEY "${ENVFLAG[@]}"
 fi
 

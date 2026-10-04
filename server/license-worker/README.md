@@ -25,6 +25,16 @@ This runs the whole flow (Pro, Ultimate, the $4 upgrade, promo codes, recovery, 
 
 Ultimate stays off sale (`ULTIMATE_ON = "0"` in `wrangler.toml`) until its first features ship.
 
+## Status
+
+Live since 4 October 2026 at the Worker URL in the website's `api.json`. Email is sent through Brevo.
+
+The signing key and admin token are backed up in the login Keychain as **Notch apple license signing key** and **Notch apple license admin token** (account `notchapple`). To read them:
+
+```bash
+security find-generic-password -a notchapple -s "Notch apple license signing key" -w
+```
+
 ## Admin
 
 Use the token in `private/admin-token.txt`:
