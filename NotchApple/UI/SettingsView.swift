@@ -1078,6 +1078,7 @@ private struct MessengerSettings: View {
 private struct FocusSettings: View {
     @EnvironmentObject private var settings: SettingsManager
     @StateObject private var timer = FocusTimer.shared
+    @State private var todoistToken = KeychainHelper.get(.todoistToken) ?? ""
 
     var body: some View {
         Form {
@@ -1100,8 +1101,19 @@ private struct FocusSettings: View {
             } header: {
                 Text("Do Not Disturb during focus")
             } footer: {
-                Text("macOS doesn't let apps change Focus directly, so make two shortcuts in the Shortcuts app with the “Set Focus” action (Do Not Disturb on / off) and type their names here. Leave empty to skip.")
+                Text("macOS doesn't let apps change Focus directly, so make two shortcuts in the Shortcuts app with the “Set Focus” action (Do Not Disturb on / off) and type their names here. Leave empty to skip. With Pro, the same shortcuts power the Do Not Disturb toggle in quick actions and the command palette.")
             }
+            Section {
+                SecureField("Todoist API token", text: $todoistToken)
+                    .onSubmit { KeychainHelper.set(todoistToken.trimmingCharacters(in: .whitespaces), for: .todoistToken) }
+                    .onChange(of: todoistToken) { _, t in KeychainHelper.set(t.trimmingCharacters(in: .whitespaces), for: .todoistToken) }
+                Link("Where do I find it?", destination: URL(string: "https://todoist.com/help/articles/find-your-api-token-Jpzx9IIlB")!)
+            } header: {
+                HStack(spacing: 6) { Text("To-do apps"); if !Entitlements.shared.canUse(.remindersSync) { TierBadge(tier: .pro) } }
+            } footer: {
+                Text("Send to-dos to Things (no setup) or Todoist (your token, stored privately on this Mac and sent only to Todoist).")
+            }
+            .disabled(!Entitlements.shared.canUse(.remindersSync))
         }
         .formStyle(.grouped)
     }

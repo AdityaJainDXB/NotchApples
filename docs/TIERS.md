@@ -153,6 +153,7 @@
 | 1.19.0 | 3 | 34 Apple Intelligence, 36 voice, 37 personas and saved prompts, 38 clipboard AI, 41 slash commands, 42 automations, 45 web search with sources |
 | 1.20.0 | 4 | 50 to-do, 49 Markdown notes and tags, 51 Reminders, 55 shelf folders/expiry/share, 47 clipboard 5,000 and ignored apps, 57 text expander, 58 markup, 59 ruler, 60 converter, 63 command palette, 65 CLI and scripting |
 | 1.21.0 | 5 | 86 Home dashboard, 87 profiles, 88 per-app rules, 89 animation styles, 90 sounds/haptics, 84 fonts and menu bar icon, 91 plugin SDK, 92 plugin gallery |
+| 1.23.0 | Gaps | Peek state, swipe down to open, 19 next-event countdown, undo, Focus via Shortcuts (87 profiles by Focus), 65 AppleScript, 72 Do Not Disturb toggle, 51 Things and Todoist, 86 drag-and-drop Home, one widget protocol with lifecycle tests, measured idle CPU |
 | 1.22.0 | 6 | 100 privacy dashboard, 101 feedback and bug-report bundle, 110 opt-in crash reports, 103 beta channel and priority support, 96 notes/to-do iCloud sync, 69 week forecast and cities, 71 meeting planner, 74 mic mute, 67 top apps |
 
 ## Not built yet (hidden, never sold)

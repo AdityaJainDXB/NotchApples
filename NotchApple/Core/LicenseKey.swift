@@ -64,7 +64,7 @@ enum Feature: String, CaseIterable, Identifiable {
     // Pro: tabs
     case messenger, audio, vpn, voiceNotes, screenTime, quickAdd, launcher, snippets, mirror, focus
     // Pro: system and media
-    case rainAlert, lyrics, forecast, meetingPlanner, micMute, topProcesses
+    case rainAlert, lyrics, forecast, meetingPlanner, micMute, topProcesses, dndToggle
     // Pro: sync
     case sync
     // Ultimate (built in later phases; hidden until ready)
@@ -89,7 +89,7 @@ enum Feature: String, CaseIterable, Identifiable {
         switch self {
         case .notchResize: "Notch size"
         case .richNotes: "Markdown notes and tags"
-        case .remindersSync: "Reminders sync"
+        case .remindersSync: "Reminders, Things and Todoist"
         case .clipboardUnlimited: "Longer clipboard history"
         case .shelfPlus: "Shelf folders, expiry and sharing"
         case .textExpander: "Text expander"
@@ -143,6 +143,7 @@ enum Feature: String, CaseIterable, Identifiable {
         case .meetingPlanner: "Meeting-time planner"
         case .micMute: "Mic mute"
         case .topProcesses: "Top apps by CPU"
+        case .dndToggle: "Do Not Disturb toggle"
         case .sync: "Sync across Macs"
         case .liveActivityAPI: "Live Activities API"
         case .pluginSDK: "Plugin SDK"
@@ -156,7 +157,7 @@ enum Feature: String, CaseIterable, Identifiable {
         switch self {
         case .notchResize: "Make the open notch wider or taller, with a live preview."
         case .richNotes: "Preview notes as Markdown and filter them by #tags."
-        case .remindersSync: "See and tick off your Apple Reminders in To-do."
+        case .remindersSync: "See and tick off your Apple Reminders in To-do, and send to-dos to Things or Todoist."
         case .clipboardUnlimited: "Keep up to 5,000 clipboard items, and ignore apps you choose."
         case .shelfPlus: "Group shelf files into folders, let them expire, and share them in one click."
         case .textExpander: "Type an abbreviation like ;sig anywhere and it becomes your snippet."
@@ -210,6 +211,7 @@ enum Feature: String, CaseIterable, Identifiable {
         case .meetingPlanner: "Slide through the day to find a time that works in every city."
         case .micMute: "Mute your microphone in one click, with a red mic beside the notch."
         case .topProcesses: "See which apps are using the most CPU and memory."
+        case .dndToggle: "Turn Do Not Disturb on and off from the notch, the palette or quick actions."
         case .sync: "Your setup on every Mac, through iCloud or your account."
         case .liveActivityAPI: "Let your own apps and scripts show live activities."
         case .pluginSDK: "Your own widgets: plugins can be Home widgets and live activities."

@@ -111,9 +111,14 @@ struct NotchRootView: View {
                     .transition(.asymmetric(insertion: .move(edge: .trailing).combined(with: .opacity),
                                             removal: .opacity))
             }
+            .overlay(alignment: .bottom) { UndoToast().padding(.bottom, 4) }
             .padding(.horizontal, 18 + Self.expandedShoulder)
             .padding(.bottom, 18)
             .onAppear(perform: ensureValidSelection)
+            .onAppear { NotchWidgetCenter.shared.update(selected: state.selected, open: true) }
+            .onDisappear { NotchWidgetCenter.shared.update(selected: state.selected, open: false) }
+            .onChange(of: state.selected) { _, new in NotchWidgetCenter.shared.update(selected: new, open: state.isExpanded) }
+            .onChange(of: state.isExpanded) { _, open in NotchWidgetCenter.shared.update(selected: state.selected, open: open) }
             .onChange(of: state.visibleTabs(settings)) { _, _ in ensureValidSelection() }
         }
     }

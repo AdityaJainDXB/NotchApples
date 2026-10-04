@@ -10,6 +10,7 @@ import SwiftUI
 struct ExtrasSettings: View {
     @EnvironmentObject private var settings: SettingsManager
     @AppStorage("notch.stackActivities") private var stack = true
+    @AppStorage("extras.eventCountdown") private var eventCountdown = true
 
     var body: some View {
         Form {
@@ -19,6 +20,7 @@ struct ExtrasSettings: View {
                 Toggle("Album cover while music plays (Now Playing)", isOn: $settings.musicActivity)
                 Toggle("Download and copy progress", isOn: $settings.downloadProgress).requires(.downloadProgress)
                 Toggle("Keep Awake countdown", isOn: $settings.keepAwakeActivity)
+                Toggle("Countdown to your next event (15 minutes before)", isOn: $eventCountdown)
                 Toggle("“Join” before video calls in your calendar", isOn: $settings.meetingAlert).requires(.meetingAlert)
                 Toggle("Rain alert (“rain in 15 min”)", isOn: $settings.rainAlert).requires(.rainAlert)
                 Toggle("Microphone and camera in use (Devices add-on)", isOn: $settings.privacyIndicator)

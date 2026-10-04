@@ -80,12 +80,18 @@ final class FileShelfStore: ObservableObject {
         if items.count != before { save() }
     }
 
-    func remove(_ item: ShelfItem) {
+    @MainActor func remove(_ item: ShelfItem) {
+        let before = items
         items.removeAll { $0.id == item.id }
         save()
+        UndoCenter.shared.offer("Removed from Shelf") { [weak self] in self?.items = before; self?.save() }
     }
 
-    func removeAll() { items.removeAll(); save() }
+    @MainActor func removeAll() {
+        let before = items
+        items.removeAll(); save()
+        UndoCenter.shared.offer("Shelf cleared") { [weak self] in self?.items = before; self?.save() }
+    }
 
     fileprivate func refresh(_ item: ShelfItem, url: URL) {
         guard let idx = items.firstIndex(of: item),

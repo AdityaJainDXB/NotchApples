@@ -21,6 +21,14 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "1.23.0", date: "4 October 2026", headline: "The finishing touches", items: [
+            "Peek: rest the pointer on the closed notch for a one-line glance (what's playing, your next event or the weather). Click to open.",
+            "Swipe down on the notch to open it (Settings → Notch), and a countdown beside the notch 15 minutes before your next event.",
+            "Undo: deleting a note, to-do, clipboard item, shelf file or Home widget shows Undo for a few seconds (⌘Z works too).",
+            "Focus: with a Shortcuts automation, the notch stays quiet or steps aside while a Focus is on; with Pro it switches to the matching profile.",
+            "AppleScript: tell application \"Notch apple\" to run notch command \"timer?minutes=5\".",
+            "Pro: a Do Not Disturb toggle, send to-dos to Things or Todoist, and drag-and-drop in Home.",
+        ]),
         ReleaseNote(version: "1.22.0", date: "4 October 2026", headline: "Trust, and a few more extras", items: [
             "Settings → Privacy: every permission, everywhere Notch apple can connect to and when, and what it keeps on this Mac, with Delete buttons.",
             "Settings → Help & Feedback: send feedback, and a bug report you read in full before you submit it yourself on GitHub.",

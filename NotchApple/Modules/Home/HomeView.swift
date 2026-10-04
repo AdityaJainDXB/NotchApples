@@ -66,6 +66,14 @@ final class HomeLayout: ObservableObject {
         ]
     }
 
+    /// Drag-and-drop: puts the dragged widget where the target is.
+    func move(id: UUID, before target: UUID) {
+        guard id != target, let from = widgets.firstIndex(where: { $0.id == id }) else { return }
+        let item = widgets.remove(at: from)
+        let to = widgets.firstIndex(where: { $0.id == target }) ?? widgets.count
+        widgets.insert(item, at: to)
+    }
+
     func move(_ w: HomeWidget, by step: Int) {
         guard let i = widgets.firstIndex(of: w), widgets.indices.contains(i + step) else { return }
         widgets.swapAt(i, i + step)
@@ -96,6 +104,7 @@ struct HomeView: View {
                     } label: { Label("Add widget", systemImage: "plus") }
                     .menuStyle(.borderlessButton).fixedSize()
                 }
+                if layout.editing { Text("Drag to reorder").font(.system(size: 11)).foregroundStyle(Theme.textSecondary) }
                 Button(layout.editing ? "Done" : "Edit") { withAnimation(Theme.spring) { layout.editing.toggle() } }
                     .buttonStyle(PurpleButtonStyle(prominent: layout.editing))
             }
@@ -103,6 +112,16 @@ struct HomeView: View {
                 // A four-column grid: small = 1, medium = 2, large = 4 columns.
                 FlowGrid(widgets: layout.widgets) { w in
                     WidgetCard(widget: w, editing: layout.editing)
+                        // Edit mode: drag a widget onto another to move it there.
+                        .onDrag { layout.editing ? NSItemProvider(object: w.id.uuidString as NSString) : NSItemProvider() }
+                        .onDrop(of: [.text], isTargeted: nil) { providers in
+                            guard layout.editing, let p = providers.first else { return false }
+                            _ = p.loadObject(ofClass: NSString.self) { obj, _ in
+                                guard let s = obj as? String, let id = UUID(uuidString: s) else { return }
+                                DispatchQueue.main.async { withAnimation(Theme.spring) { layout.move(id: id, before: w.id) } }
+                            }
+                            return true
+                        }
                 }
             }
         }
@@ -170,7 +189,11 @@ private struct WidgetCard: View {
                     .menuStyle(.borderlessButton).fixedSize()
                     Button { layout.move(widget, by: -1) } label: { Image(systemName: "chevron.left") }
                     Button { layout.move(widget, by: 1) } label: { Image(systemName: "chevron.right") }
-                    Button { layout.widgets.removeAll { $0.id == widget.id } } label: { Image(systemName: "minus.circle.fill").foregroundStyle(.red) }
+                    Button {
+                        let before = layout.widgets
+                        layout.widgets.removeAll { $0.id == widget.id }
+                        UndoCenter.shared.offer("Widget removed") { layout.widgets = before }
+                    } label: { Image(systemName: "minus.circle.fill").foregroundStyle(.red) }
                 }
                 .buttonStyle(.plain).font(.system(size: 11)).padding(4)
                 .background(.black.opacity(0.5), in: Capsule()).padding(4)

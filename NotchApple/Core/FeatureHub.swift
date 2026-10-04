@@ -30,6 +30,7 @@ enum FeatureHub {
             { ScreenRecorder.shared.liveActivity },
             { VoiceNotesModel.shared.liveActivity },
             { settings.meetingAlert && Entitlements.shared.canUse(.meetingAlert) ? MeetingWatcher.shared.liveActivity : nil },
+            { EventCountdown.shared.liveActivity },
             { settings.timerEnabled ? CountdownTimer.shared.liveActivity : nil },
             { settings.downloadProgress && Entitlements.shared.canUse(.downloadProgress) ? DownloadWatcher.shared.liveActivity : nil },
             { settings.musicActivity && settings.nowPlayingEnabled ? NowPlayingMonitor.shared.liveActivity : nil },
@@ -68,6 +69,7 @@ enum FeatureHub {
     private static func beat() {
         let s = SettingsManager.shared
         if s.meetingAlert && s.todayEnabled && Entitlements.shared.canUse(.meetingAlert) { MeetingWatcher.shared.check() }
+        EventCountdown.shared.check()
         if s.rainAlert && s.todayEnabled && Entitlements.shared.canUse(.rainAlert) { RainWatcher.shared.checkIfDue() }
         if s.devicesEnabled {
             PrivacyMonitor.shared.setRunning(s.privacyIndicator)
@@ -159,8 +161,17 @@ enum FeatureHub {
                 Entitlements.shared.pendingKey = key
                 AppDelegate.openSettingsWindow(tab: .license)
             }
+        case "focus":
+            // From a Shortcuts Focus automation: notchapple://focus?on=1&profile=Work
+            FocusBridge.handle(query)
+        case "profile":
+            // notchapple://profile?name=Work (or name=auto), Pro
+            if Entitlements.shared.canUse(.profiles), let name = query["name"] {
+                let store = Profiles.shared
+                store.manual = name.lowercased() == "auto" ? "auto" : (store.profiles.first { $0.name.caseInsensitiveCompare(name) == .orderedSame }?.id.uuidString ?? store.manual)
+            }
         // Scripting (Ultimate): see scripts/notch.
-        case "ask", "palette", "grab", "ruler", "markup", "note", "todo", "theme", "mic":
+        case "ask", "palette", "grab", "ruler", "markup", "note", "todo", "theme", "mic", "dnd":
             guard Entitlements.shared.canUse(.scripting) else {
                 Notifier.post(title: "Scripting needs Ultimate", body: Feature.scripting.benefit); return
             }
@@ -171,6 +182,7 @@ enum FeatureHub {
             case "palette": CommandPalette.toggle()
             case "grab": TextGrab.shared.grab {}
         case "mic": MicMute.shared.toggle()
+        case "dnd": DNDToggle.toggle()
             case "ruler": ScreenRuler.show()
             case "markup": ScreenMarkup.captureAndMarkUp()
             case "note": if let t = query["text"] { NotesStore.shared.add(t) }

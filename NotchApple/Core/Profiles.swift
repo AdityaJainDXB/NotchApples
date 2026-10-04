@@ -49,6 +49,8 @@ final class Profiles: ObservableObject {
         var next: Profile?
         if pro.canUse(.profiles) {
             if manual != "auto" { next = profiles.first { $0.id.uuidString == manual } }
+            else if FocusBridge.isOn, !FocusBridge.profileName.isEmpty,
+                    let p = profiles.first(where: { $0.name.caseInsensitiveCompare(FocusBridge.profileName) == .orderedSame }) { next = p }
             else if let front, let p = profiles.first(where: { $0.apps.contains(front) }) { next = p }
             else { next = profiles.first { $0.matchesTime() } }
         }

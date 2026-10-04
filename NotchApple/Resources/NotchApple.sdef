@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE dictionary SYSTEM "file://localhost/System/Library/DTDs/sdef.dtd">
+<dictionary title="Notch apple Terminology">
+    <suite name="Notch apple Suite" code="Ntch" description="Control Notch apple from AppleScript.">
+        <command name="run notch command" code="NtchRunC" description="Runs a notchapple:// command, e.g. &quot;open/ai&quot;, &quot;timer?minutes=5&quot;, &quot;ask?q=hello&quot; (some commands need Ultimate).">
+            <cocoa class="NotchScriptCommand"/>
+            <direct-parameter type="text" description="The command, without notchapple://"/>
+        </command>
+        <command name="toggle notch" code="NtchTogl" description="Opens or closes the notch.">
+            <cocoa class="NotchToggleCommand"/>
+        </command>
+    </suite>
+</dictionary>

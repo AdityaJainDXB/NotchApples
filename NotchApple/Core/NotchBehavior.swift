@@ -238,6 +238,9 @@ enum QuickActionsMenu {
         add("Start stopwatch", "stopwatch") { CountdownTimer.shared.startStopwatch() }
         add("Keep awake for 30 minutes", "cup.and.saucer.fill") { KeepAwake.shared.start(minutes: 30) }
         add("Take a screenshot", "camera.viewfinder") { ScreenCaptureActions.shared.takeScreenshot() }
+        if Entitlements.shared.canUse(.dndToggle) {
+            add(DNDToggle.isOn ? "Turn Do Not Disturb off" : "Turn Do Not Disturb on", "moon") { DNDToggle.toggle() }
+        }
         if Entitlements.shared.canUse(.micMute) {
             add(MicMute.shared.isMuted ? "Unmute microphone" : "Mute microphone", "mic.slash") { MicMute.shared.toggle() }
         }
@@ -254,5 +257,30 @@ enum QuickActionsMenu {
     private final class MenuTarget: NSObject {
         static let shared = MenuTarget()
         @objc func run(_ sender: NSMenuItem) { (sender.representedObject as? () -> Void)?() }
+    }
+}
+
+// MARK: - Focus (through Shortcuts)
+
+/// macOS doesn't tell apps when a Focus turns on, so a Shortcuts automation does:
+/// "When Work Focus turns on → Open URL notchapple://focus?on=1&profile=Work" (and on=0 when it turns off).
+/// While a Focus is on, the notch can stay quiet (no alerts or flashes) or step aside entirely,
+/// and with Pro it can switch to the matching profile.
+@MainActor
+enum FocusBridge {
+    @AppStorage("focus.active") static var isOn = false
+    @AppStorage("focus.profile") static var profileName = ""
+    /// "nothing", "hush" (default) or "hide".
+    @AppStorage("focus.behavior") static var behavior = "hush"
+
+    static var hushes: Bool { isOn && behavior != "nothing" }
+    static var hides: Bool { isOn && behavior == "hide" }
+
+    static func handle(_ q: [String: String]) {
+        isOn = ["1", "true", "on", "yes"].contains((q["on"] ?? "1").lowercased())
+        profileName = isOn ? (q["profile"] ?? "") : ""
+        Profiles.shared.evaluate()
+        AppDelegate.current?.notch?.updateAutoHide()
+        LiveActivityCenter.shared.recompute()
     }
 }

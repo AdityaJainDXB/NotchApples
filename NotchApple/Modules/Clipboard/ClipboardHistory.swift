@@ -185,16 +185,28 @@ final class ClipboardHistory: ObservableObject {
     }
 
     func delete(_ item: ClipItem) {
-        removeFiles(of: item)
+        let before = items
         items.removeAll { $0.id == item.id }
         save()
+        offerUndo("Clipboard item deleted", restoring: before, removed: [item])
     }
 
     /// Clears everything except pinned items.
     func clearUnpinned() {
-        items.filter { !$0.pinned }.forEach(removeFiles)
+        let before = items
+        let removed = items.filter { !$0.pinned }
         items.removeAll { !$0.pinned }
         save()
+        offerUndo("Clipboard history cleared", restoring: before, removed: removed)
+    }
+
+    /// Images are only deleted from disk once the Undo has expired.
+    private func offerUndo(_ message: String, restoring before: [ClipItem], removed: [ClipItem]) {
+        UndoCenter.shared.offer(message) { [weak self] in self?.items = before; self?.save() }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 7) { [weak self] in
+            guard let self else { return }
+            for item in removed where !self.items.contains(where: { $0.id == item.id }) { self.removeFiles(of: item) }
+        }
     }
 
     func image(for item: ClipItem) -> NSImage? {

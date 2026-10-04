@@ -45,7 +45,8 @@ final class NotchGestures {
                                                              label: nil, tint: .white), seconds: 1.2)
             }
         } else if abs(dy) > 0 {
-            let action = NotchGesture.closedScroll.action
+            // Free: "Swipe down to open" (Settings → Notch) turns the scroll gesture into opening.
+            let action = UserDefaults.standard.bool(forKey: "notch.swipeDownOpens") ? .open : NotchGesture.closedScroll.action
             if action == .none { return }
             if action == .open {
                 // Swipe down (fingers down) on the closed notch opens it.

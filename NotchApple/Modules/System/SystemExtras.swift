@@ -132,3 +132,24 @@ struct MeetingPlanner: View {
         switch hour { case 9..<18: .green; case 7..<9, 18..<21: .yellow; default: .red }
     }
 }
+
+/// Do Not Disturb on/off (Pro). macOS only lets Shortcuts change Focus, so this runs the two
+/// shortcuts chosen in Settings → Focus ("Turn Do Not Disturb on/off"); without them it explains how.
+@MainActor
+enum DNDToggle {
+    @AppStorage("dnd.on") static var isOn = false
+
+    static func toggle() {
+        guard Entitlements.shared.canUse(.dndToggle) else { return }
+        let timer = FocusTimer.shared
+        let name = isOn ? timer.dndOffShortcut : timer.dndOnShortcut
+        guard !name.isEmpty else {
+            Notifier.post(title: "Choose your Do Not Disturb shortcuts", body: "Settings → Focus: pick a shortcut that turns Do Not Disturb on and one that turns it off.")
+            AppDelegate.openSettingsWindow(tab: .focus)
+            return
+        }
+        ShortcutsModel.runQuietly(name)
+        isOn.toggle()
+        LiveActivityCenter.shared.flash(LiveActivity(symbol: isOn ? "moon.fill" : "moon", label: isOn ? "DND on" : "DND off", tint: .systemIndigo), seconds: 1.5)
+    }
+}

@@ -54,3 +54,67 @@ enum PluginSDK {
     }
 
 }
+
+// MARK: - Versions (update flow)
+
+enum VersionMath {
+    /// The dotted number inside a tag: "v1.14.3" and "1.14.3" both give "1.14.3"; "win-v2.0" gives "2.0".
+    static func number(from tag: String) -> String? {
+        guard let range = tag.range(of: "[0-9]+(\\.[0-9]+)*", options: .regularExpression) else { return nil }
+        return String(tag[range])
+    }
+
+    /// Compares dotted versions numerically ("1.10.0" > "1.9.2").
+    static func isNewer(_ a: String, than b: String) -> Bool {
+        let x = a.split(separator: ".").map { Int($0) ?? 0 }, y = b.split(separator: ".").map { Int($0) ?? 0 }
+        for i in 0..<max(x.count, y.count) {
+            let l = i < x.count ? x[i] : 0, r = i < y.count ? y[i] : 0
+            if l != r { return l > r }
+        }
+        return false
+    }
+
+    /// Whether a release should be offered: newer than what's installed, not skipped,
+    /// and a pre-release only for people on the beta channel.
+    static func shouldOffer(version: String, installed: String, skipped: String?, prerelease: Bool, beta: Bool) -> Bool {
+        if prerelease && !beta { return false }
+        guard isNewer(version, than: installed) else { return false }
+        return version != skipped
+    }
+}
+
+// MARK: - Widgets
+
+/// Every tab in the notch is a widget: one protocol, one entitlement gate, one lifecycle.
+/// `WidgetLifecycle` decides which widget is live; widgets start their work in `activate()`
+/// (e.g. polling prices or scores) and stop it in `deactivate()`, so a hidden tab costs nothing.
+@MainActor
+protocol NotchWidget: AnyObject {
+    var widgetID: String { get }
+    /// The paid feature this widget needs, or nil when it's free.
+    var requiredFeature: Feature? { get }
+    func activate()
+    func deactivate()
+}
+
+@MainActor
+final class WidgetLifecycle {
+    private(set) var active: NotchWidget?
+    private let canUse: (Feature) -> Bool
+
+    init(canUse: @escaping (Feature) -> Bool) { self.canUse = canUse }
+
+    /// Shows `widget` (nil when the notch closes). Returns false if it's locked, in which
+    /// case nothing is activated and the upsell is shown instead.
+    @discardableResult
+    func show(_ widget: NotchWidget?) -> Bool {
+        if let widget, widget === active { return true }
+        active?.deactivate()
+        active = nil
+        guard let widget else { return true }
+        if let f = widget.requiredFeature, !canUse(f) { return false }
+        widget.activate()
+        active = widget
+        return true
+    }
+}

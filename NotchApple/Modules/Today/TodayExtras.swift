@@ -125,3 +125,32 @@ final class RainWatcher: ObservableObject {
         }
     }
 }
+
+// MARK: - Next-event countdown (free)
+
+/// "Standup in 12m" beside the closed notch for the 15 minutes before an event
+/// (Settings → Notch Extras). Read on this Mac with EventKit every 30 seconds.
+@MainActor
+final class EventCountdown {
+    static let shared = EventCountdown()
+    private let store = EKEventStore()
+    private(set) var next: (title: String, start: Date)?
+
+    func check() {
+        guard UserDefaults.standard.object(forKey: "extras.eventCountdown") as? Bool ?? true,
+              EKEventStore.authorizationStatus(for: .event) == .fullAccess else { next = nil; return }
+        let events = store.events(matching: store.predicateForEvents(withStart: .now, end: .now.addingTimeInterval(15 * 60), calendars: nil))
+        let found = events.compactMap { e -> (title: String, start: Date)? in
+            guard !e.isAllDay, let start = e.startDate as Date?, start > .now else { return nil }
+            return (e.title ?? "Event", start)
+        }.min { $0.start < $1.start }
+        let value = found
+        if value?.start != next?.start || value?.title != next?.title { next = value; LiveActivityCenter.shared.recompute() }
+    }
+
+    var liveActivity: LiveActivity? {
+        guard let n = next, n.start > .now else { return nil }
+        let minutes = max(1, Int(ceil(n.start.timeIntervalSinceNow / 60)))
+        return LiveActivity(symbol: "calendar", label: "in \(minutes)m", tint: .systemTeal, leftText: String(n.title.prefix(12)))
+    }
+}

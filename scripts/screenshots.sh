@@ -55,7 +55,7 @@ var best: (Int, Double)? = nil
 for w in list where (w["kCGWindowOwnerPID"] as? Int) == pid {
     let b = w["kCGWindowBounds"] as! [String: Any], h = b["Height"] as! Double, area = h * (b["Width"] as! Double)
     let layer = w["kCGWindowLayer"] as! Int, n = w["kCGWindowNumber"] as! Int
-    let ok = (want == "panel" && layer > 0 && layer < 1000 && h > 100) || (want == "trigger" && layer > 0 && layer < 1000 && h < 100) || (want == "palette" && layer == 8) || (want == "settings" && layer == 0 && h > 200) || (want == "overlay" && layer >= 1000)
+    let ok = (want == "panel" && layer > 0 && layer < 1000 && h > 100) || (want == "trigger" && layer > 0 && layer < 1000 && h < 100) || (want == "palette" && layer == 8) || (want == "peek" && layer > 0 && layer < 1000 && h == 34) || (want == "settings" && layer == 0 && h > 200) || (want == "overlay" && layer >= 1000)
     if ok, best == nil || area > best!.1 { best = (n, area) }
 }
 if let best { print(best.0) }
@@ -116,6 +116,7 @@ shot palette       palette 4 -demoPro YES -demoPalette "tim"
 shot tools-convert panel 8 -openNotch tools -demoPro YES -tools.calcInput "250 usd to eur"
 shot home          panel 10 -openNotch home -demoPro YES -demoHome YES -demoTimer 1500 -demoTodos "Book dentist|Send the slides to Sam|Renew passport"
 shot settings-profiles settings 6 -openSettings profiles -demoPro YES
+shot notch-peek    peek 5 -demoPeek YES
 shot settings-privacy settings 6 -openSettings privacy
 shot settings-help settings 6 -openSettings help -demoTier ultimate
 shot ai-web        panel answers:1 -openNotch claude -demoPro YES -demoWeb YES -demoAsk "Who designed the Eiffel Tower, and how tall is it?"
@@ -126,7 +127,7 @@ defaults delete $D >/dev/null 2>&1 || true
 if [ -n "$SITE" ]; then
   echo "› WebP copies for the website"
   mkdir -p "$SITE/assets/screenshots"
-  for f in ai-empty ai-input ai-result follow-up code-analysis capture-overlay f1 sports sports-table sports-cricket sports-detail games history settings-ai pro settings-pro settings-notch settings-themes onboarding onboarding-tour notch-stacked markets ai-web notes-todo palette tools-convert home settings-profiles settings-privacy settings-help; do
+  for f in ai-empty ai-input ai-result follow-up code-analysis capture-overlay f1 sports sports-table sports-cricket sports-detail games history settings-ai pro settings-pro settings-notch settings-themes onboarding onboarding-tour notch-stacked markets ai-web notes-todo palette tools-convert home settings-profiles settings-privacy settings-help notch-peek; do
     [ -f "$OUT/$f.png" ] && python3 -c "
 from PIL import Image; im = Image.open('$OUT/$f.png'); im.thumbnail((1600, 1600)); im.save('$SITE/assets/screenshots/$f.webp', 'WEBP', quality=82, method=6)"
   done

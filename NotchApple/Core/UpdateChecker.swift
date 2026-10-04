@@ -51,7 +51,7 @@ final class UpdateChecker: ObservableObject {
 
     /// A newer release the user hasn't skipped.
     var pendingUpdate: Release? {
-        guard let latest, Self.isNewer(latest.version, than: currentVersion), latest.version != skippedVersion else { return nil }
+        guard let latest, VersionMath.shouldOffer(version: latest.version, installed: currentVersion, skipped: skippedVersion, prerelease: false, beta: false) else { return nil }
         return latest
     }
 
@@ -145,21 +145,8 @@ final class UpdateChecker: ObservableObject {
                        notes: json["body"] as? String ?? "", published: published, dmgURL: dmgURL, pageURL: page)
     }
 
-    /// The dotted number inside a tag: "v1.14.3" and "1.14.3" both give "1.14.3".
-    static func versionNumber(from tag: String) -> String? {
-        guard let range = tag.range(of: "[0-9]+(\\.[0-9]+)*", options: .regularExpression) else { return nil }
-        return String(tag[range])
-    }
-
-    /// Compares dotted versions numerically ("1.10.0" > "1.9.2").
-    static func isNewer(_ a: String, than b: String) -> Bool {
-        let x = a.split(separator: ".").map { Int($0) ?? 0 }, y = b.split(separator: ".").map { Int($0) ?? 0 }
-        for i in 0..<max(x.count, y.count) {
-            let l = i < x.count ? x[i] : 0, r = i < y.count ? y[i] : 0
-            if l != r { return l > r }
-        }
-        return false
-    }
+    static func versionNumber(from tag: String) -> String? { VersionMath.number(from: tag) }
+    static func isNewer(_ a: String, than b: String) -> Bool { VersionMath.isNewer(a, than: b) }
 
     // MARK: Choices
 

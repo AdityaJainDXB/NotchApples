@@ -577,7 +577,7 @@ final class NotchWindowController {
     /// Separate from ⌘O hiding: it comes back by itself, and opening with the hotkey still works.
     func updateAutoHide() {
         let hide = (fullscreen.isFullscreen && NotchPrefs.autoHideFullscreen) || (recordingNow && NotchPrefs.autoHideRecording)
-            || Profiles.shared.ruleHidesNotch
+            || Profiles.shared.ruleHidesNotch || FocusBridge.hides
         guard hide != state.isAutoHidden else { return }
         state.isAutoHidden = hide
         if hide && !state.isExpanded { /* stays closed */ }
@@ -816,6 +816,7 @@ final class NotchWindowController {
         panel.makeKey()
         // The collapsed shape is already drawn, so spring open straight away,
         // with the same curve that closing uses.
+        hidePeek()
         withAnimation(Theme.spring) { state.isExpanded = true }
         NotchFeedback.opened()
         installMonitors()
@@ -835,7 +836,53 @@ final class NotchWindowController {
     private var pinnedByClick = false
     private var hoverWork: DispatchWorkItem?
 
+    // MARK: Peek (hover without opening)
+
+    private var peekPanel: NotchPanel?
+    private var peekWork: DispatchWorkItem?
+
+    private func peekChanged(inside: Bool) {
+        peekWork?.cancel()
+        guard inside, UserDefaults.standard.object(forKey: "notch.peek") as? Bool ?? true,
+              !state.isExpanded, !state.isAutoHidden, !SettingsManager.shared.isNotchHidden else { hidePeek(); return }
+        let work = DispatchWorkItem { [weak self] in self?.showPeek() }
+        peekWork = work
+        DispatchQueue.main.asyncAfter(deadline: .now() + max(NotchPrefs.hoverDelay, 0.35), execute: work)
+    }
+
+    private func showPeek() {
+        guard let screen = targetScreen, !state.isExpanded else { return }
+        let info = PeekView.current()
+        let panel = peekPanel ?? {
+            let p = NotchPanel(contentRect: .zero)
+            p.ignoresMouseEvents = true
+            p.keepAboveEverything(orderFront: false)
+            peekPanel = p
+            return p
+        }()
+        panel.contentView = NSHostingView(rootView: PeekView(symbol: info.symbol, text: info.text))
+        let size = CGSize(width: max(state.notchSize.width + 160, 320), height: 34)
+        panel.setFrame(NSRect(x: screen.frame.midX - size.width / 2, y: screen.frame.maxY - state.notchSize.height - size.height - 4,
+                              width: size.width, height: size.height), display: true)
+        panel.alphaValue = 0
+        panel.orderFrontRegardless()
+        NSAnimationContext.runAnimationGroup { c in
+            c.duration = NSWorkspace.shared.accessibilityDisplayShouldReduceMotion ? 0.05 : 0.18
+            panel.animator().alphaValue = 1
+        }
+    }
+
+    /// For the screenshot build.
+    func demoPeek() { showPeek() }
+
+    private func hidePeek() {
+        peekWork?.cancel()
+        guard let panel = peekPanel, panel.alphaValue > 0 else { return }
+        NSAnimationContext.runAnimationGroup({ c in c.duration = 0.12; panel.animator().alphaValue = 0 }) { panel.orderOut(nil) }
+    }
+
     private func hoverChanged(inside: Bool, overPanel: Bool) {
+        if !SettingsManager.shared.hoverToOpen, !overPanel { peekChanged(inside: inside) }
         guard SettingsManager.shared.hoverToOpen else { return }
         hoverWork?.cancel()
         let work: DispatchWorkItem

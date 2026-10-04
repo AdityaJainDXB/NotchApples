@@ -233,3 +233,61 @@ final class CustomizationTests: XCTestCase {
         XCTAssertEqual(kv["progress"], "0.4")
     }
 }
+
+final class UpdateFlowTests: XCTestCase {
+    func testVersions() {
+        XCTAssertEqual(VersionMath.number(from: "v1.22.0"), "1.22.0")
+        XCTAssertEqual(VersionMath.number(from: "win-v2.0"), "2.0")
+        XCTAssertNil(VersionMath.number(from: "latest"))
+        XCTAssertTrue(VersionMath.isNewer("1.10.0", than: "1.9.9"))
+        XCTAssertTrue(VersionMath.isNewer("1.22.1", than: "1.22"))
+        XCTAssertFalse(VersionMath.isNewer("1.22.0", than: "1.22.0"))
+        XCTAssertFalse(VersionMath.isNewer("1.2", than: "1.10"))
+    }
+
+    func testWhatGetsOffered() {
+        XCTAssertTrue(VersionMath.shouldOffer(version: "1.23.0", installed: "1.22.0", skipped: nil, prerelease: false, beta: false))
+        XCTAssertFalse(VersionMath.shouldOffer(version: "1.22.0", installed: "1.22.0", skipped: nil, prerelease: false, beta: false), "never says you're out of date on the same version")
+        XCTAssertFalse(VersionMath.shouldOffer(version: "1.21.0", installed: "1.22.0", skipped: nil, prerelease: false, beta: false), "never offers a downgrade")
+        XCTAssertFalse(VersionMath.shouldOffer(version: "1.23.0", installed: "1.22.0", skipped: "1.23.0", prerelease: false, beta: false), "respects Skip")
+        XCTAssertFalse(VersionMath.shouldOffer(version: "1.24.0", installed: "1.22.0", skipped: nil, prerelease: true, beta: false), "betas only on the beta channel")
+        XCTAssertTrue(VersionMath.shouldOffer(version: "1.24.0", installed: "1.22.0", skipped: nil, prerelease: true, beta: true))
+    }
+}
+
+@MainActor
+final class WidgetLifecycleTests: XCTestCase {
+    final class FakeWidget: NotchWidget {
+        let widgetID: String
+        let requiredFeature: Feature?
+        var log: [String] = []
+        init(_ id: String, _ f: Feature? = nil) { widgetID = id; requiredFeature = f }
+        func activate() { log.append("on") }
+        func deactivate() { log.append("off") }
+    }
+
+    func testSwitchingTabsStartsAndStopsWork() {
+        let life = WidgetLifecycle { $0.isAllowed(at: .free) }
+        let a = FakeWidget("today"), b = FakeWidget("sports")
+        XCTAssertTrue(life.show(a))
+        XCTAssertTrue(life.show(a))      // same tab again: no restart
+        XCTAssertTrue(life.show(b))
+        life.show(nil)                   // notch closed
+        XCTAssertEqual(a.log, ["on", "off"])
+        XCTAssertEqual(b.log, ["on", "off"])
+        XCTAssertNil(life.active)
+    }
+
+    func testLockedWidgetNeverRuns() {
+        let free = WidgetLifecycle { $0.isAllowed(at: .free) }
+        let markets = FakeWidget("markets", .markets)
+        XCTAssertFalse(free.show(markets))
+        XCTAssertEqual(markets.log, [])
+        let pro = WidgetLifecycle { $0.isAllowed(at: .pro) }
+        XCTAssertTrue(pro.show(markets))
+        XCTAssertEqual(markets.log, ["on"])
+        let ultimateOnly = FakeWidget("api", .liveActivityAPI)
+        XCTAssertFalse(pro.show(ultimateOnly))
+        XCTAssertEqual(markets.log, ["on", "off"], "the previous widget still stops")
+    }
+}

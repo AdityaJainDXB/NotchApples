@@ -115,6 +115,8 @@ final class LiveActivityCenter: ObservableObject {
 
     /// Shows an activity beside the closed notch for a few seconds (alerts, new notifications…).
     func flash(_ activity: LiveActivity, seconds: Double = 4) {
+        // A Focus is on: stay quiet (Settings → Notch → Focus).
+        if FocusBridge.hushes { return }
         extraFlash = activity
         recompute()
         extraWork?.cancel()

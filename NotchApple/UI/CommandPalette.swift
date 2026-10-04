@@ -65,6 +65,7 @@ enum CommandPalette {
             PaletteCommand(title: "Ruler", subtitle: "Tools · Pro", symbol: "ruler") { ScreenRuler.show() },
             PaletteCommand(title: "Mark up part of the screen", subtitle: "Tools · Pro", symbol: "pencil.tip.crop.circle") { ScreenMarkup.captureAndMarkUp() },
             PaletteCommand(title: "Ask AI about part of the screen", subtitle: "AI · Pro", symbol: "sparkles") { CaptureManager.shared.captureToAI() },
+            PaletteCommand(title: DNDToggle.isOn ? "Turn Do Not Disturb off" : "Turn Do Not Disturb on", subtitle: "System · Pro", symbol: "moon") { DNDToggle.toggle() },
             PaletteCommand(title: MicMute.shared.isMuted ? "Unmute microphone" : "Mute microphone", subtitle: "System · Pro", symbol: "mic.slash") { MicMute.shared.toggle() },
             PaletteCommand(title: "Hide the notch", subtitle: "Notch", symbol: "eye.slash") { notch?.setInvisible(true) },
             PaletteCommand(title: "Show the notch", subtitle: "Notch", symbol: "eye") { notch?.setInvisible(false) },

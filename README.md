@@ -201,6 +201,15 @@ All screenshots use sample data.
 
 ## What's new
 
+### 1.23.0 · 4 October 2026 · The finishing touches
+
+- **Peek:** rest the pointer on the closed notch for a one-line glance (what's playing, your next event or the weather). Click to open.
+- **Swipe down to open** (Settings → Notch), and a **countdown** beside the notch 15 minutes before your next event.
+- **Undo** for deleting notes, to-dos, clipboard items, shelf files and Home widgets (⌘Z works too).
+- **Focus:** with a Shortcuts automation the notch stays quiet or steps aside while a Focus is on; with Pro it switches to the matching profile. [How](#focus).
+- **AppleScript:** `tell application "Notch apple" to run notch command "timer?minutes=5"`.
+- **Pro:** Do Not Disturb toggle, send to-dos to Things or Todoist, drag-and-drop in Home.
+
 ### 1.22.0 · 4 October 2026 · Trust, and a few more extras
 
 - **Settings → Privacy:** every permission, everywhere Notch apple can connect to and when, and what it keeps on this Mac, with Delete buttons.
@@ -487,6 +496,38 @@ echo "Open GitHub | href=https://github.com"
 
 
 The full format, the SDK (Ultimate) and how to add a plugin to the gallery: [docs/PLUGINS.md](docs/PLUGINS.md).
+
+## Focus
+
+macOS doesn't tell apps when a Focus turns on, so a Shortcuts automation does it:
+
+1. Open **Shortcuts → Automation → New Automation → Focus**, pick a Focus (say Work) and **When Turning On**.
+2. Add **Open URLs** with `notchapple://focus?on=1&profile=Work`.
+3. Make a second automation for **When Turning Off** with `notchapple://focus?on=0`.
+
+Choose what happens in **Settings → Notch → Focus**:
+- carry on as usual,
+- stay quiet (no alerts or flashes),
+- or hide the notch.
+
+With Pro, the profile with that name (Settings → Profiles & Rules) switches on too.
+
+## AppleScript
+
+```applescript
+tell application "Notch apple" to toggle notch
+tell application "Notch apple" to run notch command "open/ai"
+tell application "Notch apple" to run notch command "timer?minutes=25"
+tell application "Notch apple" to run notch command "ask?q=What's on today?" -- Ultimate
+```
+
+Any `notchapple://` command works, with the same tier rules as links and [scripts/notch](scripts/notch).
+
+## Performance
+
+Measured on Apple silicon with the notch closed and Sports, F1 and Timer on: **0.05% CPU on average (0.3% peak) over a minute, about 80 MB of memory**. There's no polling while idle:
+- Live tabs only fetch while they're open, or on a slow heartbeat (every 30 seconds, slower in Low Power Mode).
+- Animations follow the display (up to 120 Hz on ProMotion) and stop when nothing moves.
 
 ## Live activities API
 

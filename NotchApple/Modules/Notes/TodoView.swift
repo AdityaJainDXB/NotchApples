@@ -55,8 +55,16 @@ final class TodoStore: ObservableObject {
         save()
     }
 
-    func delete(_ item: TodoItem) { items.removeAll { $0.id == item.id }; save() }
-    func clearDone() { items.removeAll(where: \.done); save() }
+    func delete(_ item: TodoItem) {
+        let before = items
+        items.removeAll { $0.id == item.id }; save()
+        UndoCenter.shared.offer("To-do deleted") { [weak self] in self?.items = before; self?.save() }
+    }
+    func clearDone() {
+        let before = items
+        items.removeAll(where: \.done); save()
+        UndoCenter.shared.offer("Done items cleared") { [weak self] in self?.items = before; self?.save() }
+    }
 
     private func save() { try? JSONEncoder().encode(items).write(to: url, options: .atomic) }
 
@@ -120,6 +128,14 @@ struct TodoView: View {
                             Text(item.text).strikethrough(item.done).foregroundStyle(item.done ? Theme.textSecondary : .white)
                                 .font(.system(size: 13)).lineLimit(2)
                             Spacer()
+                            if entitlements.canUse(.remindersSync) {
+                                Menu {
+                                    Button("Send to Things") { TodoIntegrations.things(item.text) }
+                                    Button("Send to Todoist") { TodoIntegrations.todoist(item.text) }
+                                    Button("Send to Reminders") { todos.addReminder(item.text) }
+                                } label: { Image(systemName: "paperplane") }
+                                .menuStyle(.borderlessButton).fixedSize().help("Send to another app")
+                            }
                             IconButton(systemImage: "xmark", help: "Delete") { todos.delete(item) }
                         }
                         .padding(.horizontal, 8).padding(.vertical, 3)
@@ -165,5 +181,36 @@ struct TodoView: View {
     private func add() {
         if toReminders && entitlements.canUse(.remindersSync) && todos.showReminders { todos.addReminder(new) } else { todos.add(new) }
         new = ""
+    }
+}
+
+/// Send a to-do to Things (its URL scheme) or Todoist (your own API token, Settings → Focus). Pro.
+@MainActor
+enum TodoIntegrations {
+    static func things(_ text: String) {
+        guard let q = text.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed),
+              let url = URL(string: "things:///add?title=\(q)") else { return }
+        if NSWorkspace.shared.urlForApplication(toOpen: url) == nil {
+            Notifier.post(title: "Things isn't installed", body: "Install Things 3 to send to-dos to it."); return
+        }
+        NSWorkspace.shared.open(url)
+    }
+
+    static func todoist(_ text: String) {
+        guard let token = KeychainHelper.get(.todoistToken), !token.isEmpty else {
+            Notifier.post(title: "Add your Todoist token", body: "Settings → Focus → Todoist API token (todoist.com → Settings → Integrations → Developer).")
+            AppDelegate.openSettingsWindow(tab: .focus)
+            return
+        }
+        var r = URLRequest(url: URL(string: "https://api.todoist.com/rest/v2/tasks")!)
+        r.httpMethod = "POST"
+        r.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        r.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        r.httpBody = try? JSONSerialization.data(withJSONObject: ["content": text])
+        Task {
+            let ok = ((try? await URLSession.shared.data(for: r))?.1 as? HTTPURLResponse).map { (200..<300).contains($0.statusCode) } ?? false
+            LiveActivityCenter.shared.flash(LiveActivity(symbol: ok ? "checkmark.circle.fill" : "exclamationmark.triangle.fill",
+                                                         label: ok ? "Sent to Todoist" : "Todoist failed", tint: ok ? .systemGreen : .systemOrange), seconds: 2)
+        }
     }
 }

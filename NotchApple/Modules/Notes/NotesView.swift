@@ -73,6 +73,13 @@ final class NotesStore: ObservableObject {
     }
 
     func delete(_ id: UUID) {
+        if let i = notes.firstIndex(where: { $0.id == id }) {
+            let note = notes[i]
+            UndoCenter.shared.offer("Note deleted") { [weak self] in
+                guard let self else { return }
+                self.notes.insert(note, at: min(i, self.notes.count)); self.selectedID = note.id; self.scheduleSave()
+            }
+        }
         notes.removeAll { $0.id == id }
         if selectedID == id { selectedID = notes.first?.id }
         scheduleSave()

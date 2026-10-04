@@ -21,6 +21,11 @@ struct NotchSettings: View {
     @AppStorage("notch.sounds") private var sounds = false
     @AppStorage("notch.haptics") private var haptics = false
     @AppStorage("ui.paletteHotkey") private var palette = true
+    @AppStorage("notch.swipeDownOpens") private var swipeDownOpens = false
+    @AppStorage("notch.peek") private var peek = true
+    @AppStorage("focus.behavior") private var focusBehavior = "hush"
+    @AppStorage("focus.active") private var focusOn = false
+    @AppStorage("focus.profile") private var focusProfile = ""
 
     private var notch: NotchWindowController? { AppDelegate.current?.notch }
 
@@ -42,6 +47,15 @@ struct NotchSettings: View {
                     }
                 }
                 .disabled(!settings.hoverToOpen && edgeTrigger == "off")
+                Toggle(isOn: $swipeDownOpens) {
+                    Text("Swipe down on the notch to open it")
+                    Text("Two fingers down over the closed notch opens it, instead of changing the volume.")
+                }
+                Toggle(isOn: $peek) {
+                    Text("Peek on hover")
+                    Text("Resting the pointer on the closed notch shows a one-line glance (what's playing, your next event or the weather). Click to open.")
+                }
+                .disabled(settings.hoverToOpen)
                 Toggle(isOn: $settings.stickyNotch) {
                     Text("Keep open when clicking elsewhere")
                     Text("Otherwise the notch closes when you click outside it or press Esc.")
@@ -112,6 +126,21 @@ struct NotchSettings: View {
                 Text("Push the pointer against the top of the screen to open the notch, without aiming for it. Menu bar clicks still work.")
             }
             .disabled(!entitlements.canUse(.edgeTrigger))
+
+            Section {
+                Picker("While a Focus is on", selection: $focusBehavior) {
+                    Text("Carry on as usual").tag("nothing")
+                    Text("Stay quiet (no alerts or flashes)").tag("hush")
+                    Text("Hide the notch").tag("hide")
+                }
+                .onChange(of: focusBehavior) { _, _ in notch?.updateAutoHide() }
+                LabeledContent("Focus is") { Text(focusOn ? "On\(focusProfile.isEmpty ? "" : " · \(focusProfile)")" : "Off").foregroundStyle(.secondary) }
+                Button("Set it up in Shortcuts…") { NSWorkspace.shared.open(URL(fileURLWithPath: "/System/Applications/Shortcuts.app")) }
+            } header: {
+                Text("Focus")
+            } footer: {
+                Text("macOS doesn't tell apps about Focus, so let Shortcuts do it: Automation → New → Focus → your Focus → When turning on → Open URL notchapple://focus?on=1&profile=Work. Add another for turning off with notchapple://focus?on=0. With Pro, the profile with that name switches on too.")
+            }
 
             DisplayTabsSection()
             GestureSection()
