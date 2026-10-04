@@ -21,6 +21,11 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "1.23.1", date: "4 October 2026", headline: "Pro and Ultimate are on sale", items: [
+            "Buy Pro ($1) or Ultimate ($5) on the website: your signed key is shown and emailed, and works on up to 3 Macs.",
+            "Every future update is included for buyers, 2.0 and beyond. Add an optional tip at checkout if you'd like.",
+            "Students can ask for a free Pro promo code.",
+        ]),
         ReleaseNote(version: "1.23.0", date: "4 October 2026", headline: "The finishing touches", items: [
             "Peek: rest the pointer on the closed notch for a one-line glance (what's playing, your next event or the weather). Click to open.",
             "Swipe down on the notch to open it (Settings → Notch), and a countdown beside the notch 15 minutes before your next event.",

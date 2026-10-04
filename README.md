@@ -201,6 +201,12 @@ All screenshots use sample data.
 
 ## What's new
 
+### 1.23.1 · 4 October 2026 · Pro and Ultimate are on sale
+
+- Buy **Pro ($1)** or **Ultimate ($5)** on the [pricing page](https://virajsinghchadha.github.io/notchapples-site/pro.html). Your signed key is shown and emailed, and works on up to 3 Macs.
+- **Every future update is included** for buyers, 2.0 and beyond. Add an optional tip at checkout if you'd like.
+- Students can ask for a free Pro promo code.
+
 ### 1.23.0 · 4 October 2026 · The finishing touches
 
 - **Peek:** rest the pointer on the closed notch for a one-line glance (what's playing, your next event or the weather). Click to open.
