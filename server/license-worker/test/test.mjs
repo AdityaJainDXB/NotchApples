@@ -26,6 +26,7 @@ const env = {
 // Fake blockchain: txid -> { paid litoshi to our wallet, confirmed? }
 const chain = new Map();
 globalThis.fetch = async (url) => {
+  if (String(url).includes('litecoinblockexplorer')) return new Response('', { status: 400 });
   const m = String(url).match(/\/tx\/([0-9a-f]{64})$/);
   if (m) {
     const tx = chain.get(m[1]);
@@ -111,6 +112,15 @@ await test('Ultimate checkout gives a signed Ultimate key', async () => {
   const c = await call('/claim', { order: o.order, txid: txid(4) });
   assert.match(c.key, /^NTCH-ULTM-/);
   assert.equal((await verifyKey(env, c.key)).tier, 2);
+});
+
+await test('An optional tip is added to the price and capped', async () => {
+  const o = await call('/order', { tier: 'ultimate', email: 'fan@example.com', tip: 3 });
+  assert.equal(o.usd, 8);
+  const big = await call('/order', { tier: 'pro', email: 'fan@example.com', tip: 500 });
+  assert.equal(big.usd, 51);
+  const bad = await call('/order', { tier: 'pro', email: 'fan@example.com', tip: -4 });
+  assert.equal(bad.usd, 1);
 });
 
 await test('Ultimate is refused while not on sale', async () => {

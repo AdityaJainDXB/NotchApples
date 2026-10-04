@@ -12,3 +12,6 @@ private/
 # Tauri / Windows build
 NotchWindows/src-tauri/target/
 NotchWindows/src-tauri/gen/
+
+# Wrangler local cache (has the Cloudflare account name)
+.wrangler/

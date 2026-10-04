@@ -5,7 +5,7 @@ compatibility_date = "2026-09-01"
 # Filled in by scripts/setup.sh (npx wrangler kv namespace create LICENSES).
 [[kv_namespaces]]
 binding = "KV"
-id = "REPLACE_WITH_KV_ID"
+id = "8632410ec3864461b124c4522607275d"
 
 [vars]
 WALLET = "ltc1qymlmvkdmvpk5f90esthzgwaw6w0tuzq6tdr6kf"
@@ -14,8 +14,8 @@ PRICE_PRO = "1"
 PRICE_ULTIMATE = "5"
 PRICE_UPGRADE = "4"
 DEVICE_LIMIT = "3"
-# Ultimate stays off sale until its first features ship ("never sell a half-working paid feature").
-ULTIMATE_ON = "0"
+# Ultimate is on sale (approved 4 October 2026); set to "0" to stop selling it.
+ULTIMATE_ON = "1"
 # "brevo" (works with a verified Gmail sender, 300 emails/day free) or "resend" (needs your own domain).
 MAIL_PROVIDER = "brevo"
 # MAIL_FROM is the sender address, e.g. your Gmail verified in Brevo.

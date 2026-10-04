@@ -266,7 +266,7 @@ All screenshots use sample data.
 
 ### 1.16.0 · 4 October 2026 · Free, Pro and Ultimate
 
-- **Three tiers, each paid once.** Free stays complete. **Pro is $1** and **Ultimate is $5**, with no subscription, no account and every 1.x update included. [Compare tiers](https://virajsinghchadha.github.io/notchapples-site/pro.html).
+- **Three tiers, each paid once.** Free stays complete. **Pro is $1** and **Ultimate is $5**, with no subscription, no account and every future update included. [Compare tiers](https://virajsinghchadha.github.io/notchapples-site/pro.html).
 - **AI is free now:** ask anything, follow-ups, Markdown/math/code rendering, with your own free key or on-device Ollama. Asking about your screen (⌃⌥S), selected text, images and PDFs, and AI History are Pro.
 - **Signed product keys** (`NTCH-PRO-…` / `NTCH-ULTM-…`), checked on your Mac, offline. They're shown at checkout and emailed to you, work on up to 3 Macs, and can be activated with one click (`notchapple://activate?key=…`).
 - **Settings → License:** your tier, the key, Deactivate this Mac, Lost my key?, Upgrade to Ultimate ($4), Compare tiers, Terms and refunds.

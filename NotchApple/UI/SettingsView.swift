@@ -255,8 +255,8 @@ private struct LicenseSettings: View {
                 }
             } footer: {
                 Text(entitlements.tier == .free
-                     ? "Everything not marked PRO or ULTIMATE is free, for good. A key is a one-time purchase: no subscription, no account, and every 1.x update is included."
-                     : "Yours for life: no renewals, and every 1.x update is included. The key is checked on this Mac, offline.")
+                     ? "Everything not marked PRO or ULTIMATE is free, for good. A key is a one-time purchase: no subscription, no account, and every future update is included."
+                     : "Yours for life: no renewals, and every future update is included. The key is checked on this Mac, offline.")
             }
 
             if entitlements.tier < .ultimate {

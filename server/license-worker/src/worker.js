@@ -5,7 +5,7 @@
 // never in the app, the repo or the website.
 //
 // Checkout (Litecoin, paid straight to the developer's wallet):
-//   POST /order  {tier, email, upgradeFrom?}   reserves a unique LTC amount for this order
+//   POST /order  {tier, email, upgradeFrom?, tip?}  reserves a unique LTC amount (tip = optional extra dollars)
 //   POST /claim  {order, txid}                 checks the payment on the blockchain and issues the key
 // Only the person holding the secret order ID can claim. Each order has its own exact amount,
 // so a payment seen on the public blockchain can't be claimed by anyone else.
@@ -92,14 +92,20 @@ function randomBytes(n) { return crypto.getRandomValues(new Uint8Array(n)); }
 let keyCache = null;
 async function keys(env) {
   if (keyCache?.raw === env.SIGNING_KEY) return keyCache;
-  const jwk = JSON.parse(env.SIGNING_KEY);
-  const priv = await crypto.subtle.importKey('jwk', jwk, { name: 'Ed25519' }, false, ['sign']);
-  const pub = await crypto.subtle.importKey('jwk', { kty: jwk.kty, crv: jwk.crv, x: jwk.x }, { name: 'Ed25519' }, false, ['verify']);
-  keyCache = { raw: env.SIGNING_KEY, priv, pub };
-  return keyCache;
+  const { kty, crv, d, x } = JSON.parse(env.SIGNING_KEY);
+  // Standard name first; Cloudflare's older runtime calls the same algorithm NODE-ED25519.
+  for (const algo of [{ name: 'Ed25519' }, { name: 'NODE-ED25519', namedCurve: 'NODE-ED25519' }]) {
+    try {
+      const priv = await crypto.subtle.importKey('jwk', { kty, crv, d, x }, algo, false, ['sign']);
+      const pub = await crypto.subtle.importKey('jwk', { kty, crv, x }, algo, false, ['verify']);
+      keyCache = { raw: env.SIGNING_KEY, priv, pub, algo };
+      return keyCache;
+    } catch (e) { console.error('Ed25519 import failed with', algo.name, e && e.message); }
+  }
+  throw new Error('Could not load the signing key');
 }
 
-async function sign(env, bytes) { return new Uint8Array(await crypto.subtle.sign({ name: 'Ed25519' }, (await keys(env)).priv, bytes)); }
+async function sign(env, bytes) { const k = await keys(env); return new Uint8Array(await crypto.subtle.sign(k.algo, k.priv, bytes)); }
 
 /** Makes a new signed key. Returns { key, keyId }. */
 export async function mintKey(env, tier, now = Date.now()) {
@@ -117,7 +123,8 @@ export async function mintKey(env, tier, now = Date.now()) {
 export async function verifyKey(env, input) {
   const k = parseKey(input);
   if (!k) return null;
-  const ok = await crypto.subtle.verify({ name: 'Ed25519' }, (await keys(env)).pub, k.sig, k.payload);
+  const keyset = await keys(env);
+  const ok = await crypto.subtle.verify(keyset.algo, keyset.pub, k.sig, k.payload);
   return ok ? k : null;
 }
 
@@ -149,12 +156,12 @@ async function ltcPrice(env) {
   if (priceCache && Date.now() - priceCache.at < 60000) return priceCache.usd;
   let usd = null;
   try {
-    const r = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=litecoin&vs_currencies=usd');
+    const r = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=litecoin&vs_currencies=usd', { signal: timeout(6000) });
     usd = (await r.json()).litecoin.usd;
   } catch {}
   if (!usd) {
     try {
-      const r = await fetch('https://api.kraken.com/0/public/Ticker?pair=LTCUSD');
+      const r = await fetch('https://api.kraken.com/0/public/Ticker?pair=LTCUSD', { signal: timeout(6000) });
       const j = await r.json();
       usd = Number(Object.values(j.result)[0].c[0]);
     } catch {}
@@ -172,14 +179,32 @@ function prices(env) {
 
 function explorer(env) { return env.NETWORK === 'testnet' ? 'https://litecoinspace.org/testnet/api' : 'https://litecoinspace.org/api'; }
 
-/** Litoshi paid to our wallet by a transaction, and when it was confirmed (null = still unconfirmed). */
+const timeout = (ms) => AbortSignal.timeout(ms);
+
+/** Litoshi paid to our wallet by a transaction, and when it was confirmed (null = still unconfirmed).
+ *  Asks litecoinspace.org first and falls back to a Blockbook explorer, so one explorer being
+ *  down never blocks a purchase. null = not on the network yet. */
 async function payment(env, txid) {
-  const r = await fetch(`${explorer(env)}/tx/${txid}`);
-  if (r.status === 404 || r.status === 400) return null;
-  if (!r.ok) throw new HTTPError(502, `Couldn't reach the Litecoin explorer (${r.status}). Try again in a minute.`);
-  const tx = await r.json();
-  const paid = (tx.vout || []).filter((o) => o.scriptpubkey_address === env.WALLET).reduce((a, o) => a + o.value, 0);
-  return { paid, blockTime: tx.status?.confirmed ? tx.status.block_time : null };
+  try {
+    const r = await fetch(`${explorer(env)}/tx/${txid}`, { signal: timeout(6000) });
+    if (r.status === 404 || r.status === 400) { if (env.NETWORK === 'testnet') return null; }
+    else if (r.ok) {
+      const tx = await r.json();
+      const paid = (tx.vout || []).filter((o) => o.scriptpubkey_address === env.WALLET).reduce((a, o) => a + o.value, 0);
+      return { paid, blockTime: tx.status?.confirmed ? tx.status.block_time : null };
+    }
+  } catch {}
+  if (env.NETWORK === 'testnet') throw new HTTPError(502, "Couldn't reach the Litecoin explorer. Try again in a minute.");
+  try {
+    const r = await fetch(`https://litecoinblockexplorer.net/api/v2/tx/${txid}`, { signal: timeout(8000), headers: { 'user-agent': 'Notch apple license server' } });
+    if (r.status === 404 || r.status === 400) return null;
+    if (r.ok) {
+      const tx = await r.json();
+      const paid = (tx.vout || []).filter((o) => (o.addresses || []).includes(env.WALLET)).reduce((a, o) => a + Number(o.value || 0), 0);
+      return { paid, blockTime: tx.confirmations > 0 ? tx.blockTime : null };
+    }
+  } catch {}
+  throw new HTTPError(502, "Couldn't reach the Litecoin explorers. Try again in a minute; your order stays open for 48 hours.");
 }
 
 const ltc = (litoshi) => (litoshi / 1e8).toFixed(6);
@@ -233,6 +258,9 @@ async function order(env, body) {
     if ((await revokedIds(env)).includes(k.keyId)) throw new HTTPError(400, 'That Pro key has been revoked.');
     usd = p.upgrade; upgradeFrom = k.keyId;
   }
+  // Pay what you want: an optional tip on top (whole dollars, up to $50).
+  const tip = Math.max(0, Math.min(50, Math.floor(Number(body.tip) || 0)));
+  usd += tip;
   const price = await ltcPrice(env);
   const base = Math.ceil((usd / price) * 1e4) * 1e4;       // round up to 0.0001 LTC
   // A unique amount per open order: the last two of six decimals.
@@ -408,6 +436,7 @@ export default {
       throw new HTTPError(404, 'Not found');
     } catch (e) {
       if (e instanceof HTTPError) return json({ error: e.message, ...e.extra }, e.status);
+      console.error('Unhandled error', e && e.stack || e);
       return json({ error: 'Something went wrong. Please try again.' }, 500);
     }
   },
