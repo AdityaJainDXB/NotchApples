@@ -34,10 +34,10 @@ struct ExtrasSettings: View {
                 Toggle("Low battery warning at 20% and 10%", isOn: $settings.lowBatteryAlert)
                 Toggle("Charging animation when you plug in", isOn: $settings.showChargingActivity)
                 Toggle("Album cover while music plays (Now Playing)", isOn: $settings.musicActivity)
-                Toggle("Download and copy progress", isOn: $settings.downloadProgress)
+                Toggle("Download and copy progress", isOn: $settings.downloadProgress).requires(.downloadProgress)
                 Toggle("Keep Awake countdown", isOn: $settings.keepAwakeActivity)
-                Toggle("“Join” before video calls in your calendar", isOn: $settings.meetingAlert)
-                Toggle("Rain alert (“rain in 15 min”)", isOn: $settings.rainAlert)
+                Toggle("“Join” before video calls in your calendar", isOn: $settings.meetingAlert).requires(.meetingAlert)
+                Toggle("Rain alert (“rain in 15 min”)", isOn: $settings.rainAlert).requires(.rainAlert)
                 Toggle("Microphone and camera in use (Devices add-on)", isOn: $settings.privacyIndicator)
                 Toggle("Accessory low battery (Devices add-on)", isOn: $settings.accessoryBatteryAlert)
                 Toggle("New notifications (Notifications add-on)", isOn: $settings.flashNotifications)
@@ -56,7 +56,7 @@ struct ExtrasSettings: View {
             }
             Section {
                 Toggle("Trim recordings when you stop", isOn: $settings.trimAfterRecording)
-                Toggle("Synced lyrics in Now Playing", isOn: $settings.showLyrics)
+                Toggle("Synced lyrics in Now Playing", isOn: $settings.showLyrics).requires(.lyrics)
             } header: {
                 Text("Recording and music")
             } footer: {

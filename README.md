@@ -19,7 +19,7 @@ Free, open source, with free AI or fully local AI on your Mac. Plus 30 more tool
   <a href="#download"><b>⬇️ Download</b></a>
   &nbsp;·&nbsp; <a href="https://virajsinghchadha.github.io/notchapples-site/"><b>🌐 Website</b></a>
   &nbsp;·&nbsp; <a href="#whats-new"><b>✨ What's new</b></a>
-  &nbsp;·&nbsp; <a href="#pro"><b>🔑 Pro</b></a>
+  &nbsp;·&nbsp; <a href="#pro-and-ultimate"><b>🔑 Pro and Ultimate</b></a>
   &nbsp;·&nbsp; <a href="#donate-"><b>💜 Donate</b></a>
 </p>
 
@@ -200,6 +200,16 @@ All screenshots use sample data.
 </details>
 
 ## What's new
+
+### 1.16.0 · 4 October 2026 · Free, Pro and Ultimate
+
+- **Three tiers, each paid once.** Free stays complete. **Pro is $1** and **Ultimate is $5**, with no subscription, no account and every 1.x update included. [Compare tiers](https://virajsinghchadha.github.io/notchapples-site/pro.html).
+- **AI is free now:** ask anything, follow-ups, Markdown/math/code rendering, with your own free key or on-device Ollama. Asking about your screen (⌃⌥S), selected text, images and PDFs, and AI History are Pro.
+- **Signed product keys** (`NTCH-PRO-…` / `NTCH-ULTM-…`), checked on your Mac, offline. They're shown at checkout and emailed to you, work on up to 3 Macs, and can be activated with one click (`notchapple://activate?key=…`).
+- **Settings → License:** your tier, the key, Deactivate this Mac, Lost my key?, Upgrade to Ultimate ($4), Compare tiers, Terms and refunds.
+- **Locked features say what they do** and which tier they need, with a small 🔒 PRO badge, and never block anything free.
+- **Moved to Pro:** Launcher, Snippets, Mirror, Focus timer, meeting alerts, download progress, rain alerts, lyrics, and automatic sync across Macs. Backup and restore, F1, sports, clipboard history, window snapping, AirDrop, screenshots, Shortcuts and the world clock stay free.
+- **Already bought Pro?** Your `NOTCH-…` key or access code keeps working as Pro. Donors and anyone who paid $2 get Ultimate free; [ask here](https://github.com/AdityaJainDXB/NotchApples/issues/new?labels=payment&title=Early%20supporter%20Ultimate).
 
 ### 1.15.3 · 3 October 2026
 
@@ -615,15 +625,28 @@ Every task is saved in **Settings → AI History**, on your Mac only: the image 
 
 Change the three global shortcuts in **Settings → Shortcuts & Hotkeys**. They use macOS's built-in hot keys, so they need no Accessibility permission and work in full-screen apps.
 
-## Pro
+## Pro and Ultimate
 
-Most of Notch apple is free forever. **Pro** unlocks AI, Messenger, Audio, VPN, Voice Notes, Screen Time & Focus Blocker and Quick Add.
+Notch apple is free, and the free tier is complete. Two one-time upgrades add more:
 
-- **Get a product key** on the [Get Pro page](https://virajsinghchadha.github.io/notchapples-site/pro.html): $1 in Litecoin (or an optional $2, which helps cover transfer fees and supports the developer), or free with a promo code. The key (`NOTCH-XXXX-XXXX-XXXX`) is made instantly.
-- **One key, one Mac.** The app checks the key online, re-checks the payment on the Litecoin blockchain, and marks the key used for that Mac (which can re-activate later). Keys are stored only as hashes.
-- **Older access codes** (`NOTCH-XXXX-XXXX`) keep working offline.
-- **Signed in with Google?** Pro follows you to your other Macs.
-- Paste the key in **Settings → License & Activation**, or open any Pro tab.
+| | Free | Pro · $1 once | Ultimate · $5 once |
+|---|---|---|---|
+| The notch, Now Playing, timers, calendar, weather, clipboard, shelf, F1, sports, games, window snapping, backup | ✓ | ✓ | ✓ |
+| AI: ask anything with your own free key or Ollama | ✓ | ✓ | ✓ |
+| AI about your screen (⌃⌥S), selected text, images and PDFs; AI History | | ✓ | ✓ |
+| Messenger, Audio, VPN, Voice Notes, Screen Time, Quick Add, Launcher, Snippets, Mirror, Focus | | ✓ | ✓ |
+| Meeting alerts, download progress, rain alerts, lyrics, sync across Macs | | ✓ | ✓ |
+| Live Activities API, plugin SDK, priority support, beta channel (arriving in later updates) | | | ✓ |
+
+The full feature-by-feature plan is in [docs/TIERS.md](docs/TIERS.md).
+
+- **Buy** on the [pricing page](https://virajsinghchadha.github.io/notchapples-site/pro.html), in Litecoin. Each order gets its own exact amount, which is how the payment is matched to you. Your key is shown straight away and emailed.
+- **Activate** in **Settings → License** (paste the key) or with the **Activate in Notch apple** link. The key is checked on your Mac against a public key built into the app, so it works offline. It works on up to 3 of your Macs; **Deactivate this Mac** frees a slot.
+- **Upgrade** from Pro to Ultimate for the $4 difference. Your Pro key keeps working until you activate the new one.
+- **Lost your key?** Use **Lost my key?** on the pricing page; it's emailed to the address you bought with.
+- **Keys from before tiers** (`NOTCH-XXXX-XXXX-XXXX` and access codes) keep working as Pro.
+- Refunds are case by case; see the [terms](https://virajsinghchadha.github.io/notchapples-site/terms.html).
+- The license server is open source too: [server/license-worker](server/license-worker).
 
 ## Troubleshooting
 
@@ -759,7 +782,7 @@ Retake the README and website screenshots (needs [Ollama](https://ollama.com/dow
 scripts/screenshots.sh --site ../notchapples-site
 ```
 
-Add promo codes for Pro (codes go to the git-ignored `private/` folder; only hashes are published):
+Add promo codes for Pro (codes go to the git-ignored `private/` folder; only hashes are published). Add the new hashes to `PROMOS` in `server/license-worker/src/worker.js` too, then redeploy the license server:
 
 ```bash
 python3 scripts/promo_codes.py --add 25 --site ../notchapples-site/pro.html
@@ -863,6 +886,7 @@ Per-app volume and EQ use Core Audio process taps, which arrived in macOS 14.2. 
   - `api.github.com` to check for updates (can be turned off) and `github.com` to download one you accept
   - `open-meteo.com` for weather
   - `api.github.com` / `raw.githubusercontent.com` for the free VPN server list, and `vpngate.net`, only when you open the VPN tab
+  - the license server, only if you activate a signed key: activating or deactivating sends the key and a one-way hash of your Mac (salted per key, so it can't be linked across keys) to enforce the 3-Mac limit, and about once a day it downloads the signed list of turned-off keys (nothing about you is sent). The website's `api.json` says where the server is. Keys are checked offline; without internet, activation still works
 - PairDrop and Nearby Wi-Fi chat never leave your local network.
 - Anonymous room messages are end-to-end encrypted before they leave your Mac, and the relay (`ntfy.sh`, or a public MQTT broker as a fallback) stores nothing.
 - Per-app audio is processed in memory on your Mac. Nothing is recorded.
@@ -870,6 +894,7 @@ Per-app volume and EQ use Core Audio process taps, which arrived in macOS 14.2. 
 - Your API keys and face-unlock template are stored in `~/Library/Application Support/Notch apple/secrets.json`, readable only by your user account (and encrypted at rest by FileVault if it's on). Face photos are never saved.
 - Search only asks Spotlight's local index. Nothing you search for leaves your Mac.
 - Captures are kept in memory while you work. AI history (with captured images, up to 1600 px) is saved only in `~/Library/Application Support/Notch apple/`; turn it off, stop keeping images, or set it to delete old chats in Settings → AI History. **Extract text** runs entirely on your Mac.
+- At checkout your email is used only to send your key and for "Lost my key?"; once you've paid, the server keeps only a salted hash of it.
 - No telemetry or analytics. Signing in with Google is optional and only syncs your setup and Pro to your other Macs.
 
 ## Donate 💜
@@ -880,7 +905,7 @@ Notch apple is free and made by high school developers. Donating is **completely
 ltc1qymlmvkdmvpk5f90esthzgwaw6w0tuzq6tdr6kf
 ```
 
-Every bit helps and is hugely appreciated. Want Pro too? [Get a product key](https://virajsinghchadha.github.io/notchapples-site/pro.html) for $1 (or $2 to cover fees and support us), and it's made instantly.
+Every bit helps and is hugely appreciated. Want more too? [Pro is $1 and Ultimate $5](https://virajsinghchadha.github.io/notchapples-site/pro.html), each paid once. Donated already? Ask for a free Ultimate key.
 
 ## License
 

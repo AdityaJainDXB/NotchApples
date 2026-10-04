@@ -161,7 +161,7 @@ final class SettingsBackup: ObservableObject {
 
     /// Settings change in bursts (dragging a slider), so wait until they settle before writing.
     func saveToICloudSoon() {
-        guard iCloudSync else { return }
+        guard iCloudSync, Entitlements.shared.canUse(.sync) else { return }
         saveWork?.cancel()
         let work = DispatchWorkItem { [weak self] in self?.saveToICloudNow() }
         saveWork = work
@@ -214,6 +214,7 @@ struct BackupSettings: View {
                     }
                 }
                 .toggleStyle(.switch)
+                .requires(.sync)
                 LabeledContent("Copy in iCloud Drive") {
                     Text(backup.iCloudCopyDate.map { $0.formatted(date: .abbreviated, time: .shortened) } ?? (SettingsBackup.iCloudFolder == nil ? "iCloud Drive is off" : "None yet"))
                         .foregroundStyle(.secondary)

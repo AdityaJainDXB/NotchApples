@@ -32,12 +32,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         // Now Playing and Messenger are gated: they start now if a code is saved, or the moment one is entered.
         startGatedServices()
-        LicenseState.shared.$isActivated
+        Entitlements.shared.$tier
             .dropFirst().removeDuplicates()
             .sink { [weak self] _ in self?.startGatedServices() }
             .store(in: &cancellables)
         SystemHUDObserver.shared.start()
         WhatsNew.noteLaunch()
+        Task { await Entitlements.shared.checkRevocationIfDue() }
         DemoHooks.run()
         applyMediaKeyPreference()
         // Accessibility may be granted later; keep trying quietly until the tap is running.
@@ -97,7 +98,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func startGatedServices() {
-        guard LicenseState.shared.isActivated else { return }
+        guard Entitlements.shared.tier >= .pro else { return }
         startMessengerInBackground()
         applyProPreferences()
     }
@@ -160,7 +161,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     /// Screen Time counts in the background only with an access code and the module on.
     private func applyProPreferences() {
-        if LicenseState.shared.isActivated && SettingsManager.shared.screenTimeEnabled { ScreenTimeModel.shared.start() }
+        if Entitlements.shared.canUse(Feature.screenTime) && SettingsManager.shared.screenTimeEnabled { ScreenTimeModel.shared.start() }
         else { ScreenTimeModel.shared.stop() }
     }
 

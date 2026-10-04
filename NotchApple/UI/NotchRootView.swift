@@ -56,7 +56,7 @@ struct NotchShape: Shape {
 struct NotchRootView: View {
     @EnvironmentObject private var state: NotchState
     @EnvironmentObject private var settings: SettingsManager
-    @StateObject private var license = LicenseState.shared
+    @StateObject private var entitlements = Entitlements.shared
 
     var body: some View {
         let shoulder = state.isExpanded ? Self.expandedShoulder : Self.collapsedShoulder
@@ -139,7 +139,7 @@ struct NotchRootView: View {
             .layoutPriority(-1)
             Spacer(minLength: 0)
             UpdatePill { state.close(); AppDelegate.openSettingsWindow(tab: .updates) }
-            if settings.vpnEnabled && license.isActivated { VPNQuickStatus() }
+            if settings.vpnEnabled && entitlements.canUse(Feature.vpn) { VPNQuickStatus() }
             IconButton(systemImage: "gearshape.fill", help: "Settings (⌘,)") {
                 state.close(); AppDelegate.openSettingsWindow()
             }
@@ -157,9 +157,9 @@ struct NotchRootView: View {
                 Button("Open Settings") { state.close(); AppDelegate.openSettingsWindow() }.buttonStyle(PurpleButtonStyle())
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
-        } else if state.selected.isGated && !license.isActivated {
-            // AI, Messenger, Audio, VPN and the Pro tabs unlock with an access code.
-            ActivationModalView(feature: state.selected.title)
+        } else if let feature = state.selected.feature, !entitlements.canUse(feature) {
+            // Pro tabs show what they do and how to unlock them.
+            ActivationModalView(feature: feature)
         } else {
             switch state.selected {
             case .claude: ClaudeChatView()

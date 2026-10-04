@@ -21,6 +21,14 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "1.16.0", date: "4 October 2026", headline: "Free, Pro and Ultimate", items: [
+            "Three tiers, each paid once: Free stays complete, Pro is $1 and Ultimate is $5. No subscription, no account, every 1.x update included. See Settings → License → Compare tiers.",
+            "AI is free: ask anything and keep asking, with your own free key or Ollama. Asking about your screen (⌃⌥S), selected text, images and PDFs, and AI History are Pro.",
+            "Signed product keys, checked on your Mac, offline. They're emailed to you, work on up to 3 Macs, and activate with one click from the checkout page.",
+            "Settings → License: your tier, Deactivate this Mac, Lost my key?, Upgrade to Ultimate for $4, and Terms.",
+            "Moved to Pro: Launcher, Snippets, Mirror, Focus timer, meeting alerts, download progress, rain alerts, lyrics and automatic sync. Backup, F1, sports, clipboard, window snapping, AirDrop, screenshots, Shortcuts and the world clock stay free.",
+            "Already bought Pro? Your key or access code keeps working as Pro. Donors and $2 supporters get Ultimate free; ask on GitHub.",
+        ]),
         ReleaseNote(version: "1.15.3", date: "3 October 2026", headline: "Clearer cricket scores", items: [
             "Cricket fixtures show each side's score under its name, LIVE or Result between them, and the match status (\"West Indies require 166 runs\") on its own line instead of squeezed into the score column.",
         ]),

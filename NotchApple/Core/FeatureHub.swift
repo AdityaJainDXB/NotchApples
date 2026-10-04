@@ -29,9 +29,9 @@ enum FeatureHub {
         center.providers = [
             { ScreenRecorder.shared.liveActivity },
             { VoiceNotesModel.shared.liveActivity },
-            { settings.meetingAlert ? MeetingWatcher.shared.liveActivity : nil },
+            { settings.meetingAlert && Entitlements.shared.canUse(.meetingAlert) ? MeetingWatcher.shared.liveActivity : nil },
             { settings.timerEnabled ? CountdownTimer.shared.liveActivity : nil },
-            { settings.downloadProgress ? DownloadWatcher.shared.liveActivity : nil },
+            { settings.downloadProgress && Entitlements.shared.canUse(.downloadProgress) ? DownloadWatcher.shared.liveActivity : nil },
             { settings.musicActivity && settings.nowPlayingEnabled ? NowPlayingMonitor.shared.liveActivity : nil },
             { settings.devicesEnabled && settings.privacyIndicator ? PrivacyMonitor.shared.liveActivity : nil },
             { settings.liveEnabled ? ScoresModel.shared.liveActivity : nil },
@@ -39,7 +39,7 @@ enum FeatureHub {
             { settings.sportsEnabled ? SportsModel.shared.liveActivity : nil },
             { settings.toolsEnabled && settings.keepAwakeActivity ? KeepAwake.shared.liveActivity : nil },
         ]
-        DownloadWatcher.shared.setEnabled(settings.downloadProgress)
+        DownloadWatcher.shared.setEnabled(settings.downloadProgress && Entitlements.shared.canUse(.downloadProgress))
         registerURLScheme()
         Power.start()
         heartbeat = Power.timer(30) { beat() }
@@ -62,8 +62,8 @@ enum FeatureHub {
     /// Cheap periodic checks; anything slow runs off the main thread inside each feature.
     private static func beat() {
         let s = SettingsManager.shared
-        if s.meetingAlert && s.todayEnabled { MeetingWatcher.shared.check() }
-        if s.rainAlert && s.todayEnabled { RainWatcher.shared.checkIfDue() }
+        if s.meetingAlert && s.todayEnabled && Entitlements.shared.canUse(.meetingAlert) { MeetingWatcher.shared.check() }
+        if s.rainAlert && s.todayEnabled && Entitlements.shared.canUse(.rainAlert) { RainWatcher.shared.checkIfDue() }
         if s.devicesEnabled {
             PrivacyMonitor.shared.setRunning(s.privacyIndicator)
             if s.accessoryBatteryAlert { DeviceBatteryModel.shared.refreshIfDue(every: 600) }
@@ -74,7 +74,7 @@ enum FeatureHub {
         if s.liveEnabled { ScoresModel.shared.refreshIfDue() }
         if s.f1Enabled { F1Model.shared.refreshIfDue() }
         if s.sportsEnabled { SportsModel.shared.refreshIfDue() }
-        DownloadWatcher.shared.setEnabled(s.downloadProgress)
+        DownloadWatcher.shared.setEnabled(s.downloadProgress && Entitlements.shared.canUse(.downloadProgress))
         LiveActivityCenter.shared.recompute()
     }
 
@@ -95,7 +95,7 @@ enum FeatureHub {
         guard messengerPaused else { return }
         messengerPaused = false
         let s = SettingsManager.shared
-        guard s.messengerEnabled, LicenseState.shared.isActivated else { return }
+        guard s.messengerEnabled, Entitlements.shared.canUse(Feature.messenger) else { return }
         if s.messengerLocalDiscovery { LocalP2PManager.shared.start() }
         if let room = UserDefaults.standard.string(forKey: "messenger.activeRoom") { WebP2PManager.shared.join(room) }
     }
@@ -108,7 +108,7 @@ enum FeatureHub {
     }
 
     /// notchapple://open/<tab>, toggle, close, hide, show, timer?minutes=5, stopwatch, focus/start, focus/stop,
-    /// keepawake?minutes=30, keepawake/off, snippet?name=…, record, screenshot
+    /// keepawake?minutes=30, keepawake/off, snippet?name=…, record, screenshot, activate?key=…
     static func handle(_ url: URL) {
         guard url.scheme == "notchapple" else { return }
         let parts = ([url.host ?? ""] + url.pathComponents.filter { $0 != "/" }).filter { !$0.isEmpty }
@@ -138,6 +138,12 @@ enum FeatureHub {
         case "snippet":
             if let name = query["name"], let s = SnippetStore.shared.items.first(where: { $0.title.caseInsensitiveCompare(name) == .orderedSame }) {
                 PasteHelper.paste(s.text)
+            }
+        case "activate":
+            // notchapple://activate?key=NTCH-…: fills in Settings → License; the user presses Unlock.
+            if let key = query["key"], LicenseKey.looksLikeKey(key) {
+                Entitlements.shared.pendingKey = key
+                AppDelegate.openSettingsWindow(tab: .license)
             }
         case "record": ScreenRecorder.shared.toggle()
         case "screenshot": ScreenCaptureActions.shared.takeScreenshot()

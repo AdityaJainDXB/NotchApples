@@ -7,8 +7,8 @@ options:
 settings:
   base:
     SWIFT_VERSION: "5.0"
-    MARKETING_VERSION: "1.15.3"
-    CURRENT_PROJECT_VERSION: "32"
+    MARKETING_VERSION: "1.16.0"
+    CURRENT_PROJECT_VERSION: "33"
     CODE_SIGN_IDENTITY: "-"
     CODE_SIGN_STYLE: Manual
     DEVELOPMENT_TEAM: ""
@@ -50,6 +50,7 @@ targets:
       - NotchApple/Modules/Claude/AIStreaming.swift
       - NotchApple/Modules/Claude/ClaudeClient.swift
       - NotchApple/Core/KeychainHelper.swift
+      - NotchApple/Core/LicenseKey.swift
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.notchapple.tests

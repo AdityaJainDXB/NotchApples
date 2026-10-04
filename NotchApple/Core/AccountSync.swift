@@ -183,7 +183,7 @@ final class AccountSync: NSObject, ObservableObject {
     }
 
     func uploadSoon() {
-        guard isSignedIn, autoSync else { return }
+        guard isSignedIn, autoSync, Entitlements.shared.canUse(.sync) else { return }
         saveWork?.cancel()
         let work = DispatchWorkItem { Task { await AccountSync.shared.upload(quietly: true) } }
         saveWork = work
@@ -441,7 +441,7 @@ struct AccountSection: View {
                 LabeledContent("Signed in as") {
                     Label(account.email ?? "Account", systemImage: "person.crop.circle.fill.badge.checkmark").foregroundStyle(.green)
                 }
-                Toggle("Save changes to my account automatically", isOn: $account.autoSync).toggleStyle(.switch)
+                Toggle("Save changes to my account automatically", isOn: $account.autoSync).toggleStyle(.switch).requires(.sync)
                 LabeledContent("Saved in account") {
                     Text(account.cloudCopy.map { $0.formatted(date: .abbreviated, time: .shortened) } ?? "Not yet").foregroundStyle(.secondary)
                 }

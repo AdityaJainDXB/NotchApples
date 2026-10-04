@@ -380,7 +380,7 @@ struct NowPlayingView: View {
                 .padding(.top, 4)
             }
             .frame(maxWidth: 300, alignment: .leading)
-            if SettingsManager.shared.showLyrics, monitor.current?.title.isEmpty == false {
+            if SettingsManager.shared.showLyrics, Entitlements.shared.canUse(.lyrics), monitor.current?.title.isEmpty == false {
                 LyricsPanel()
             }
             Spacer(minLength: 0)

@@ -62,7 +62,7 @@ swiftc -O "$WORK/wid.swift" -o "$WORK/wid" 2>/dev/null
 
 echo "› Settings for the screenshot copy"
 defaults delete $D >/dev/null 2>&1 || true
-for k in onboarding.permissionsShown onboarding.welcomeDismissed module.f1.enabled module.claude.enabled module.sports.enabled module.games.enabled; do defaults write $D $k -bool true; done
+for k in onboarding.permissionsShown onboarding.welcomeDismissed module.f1.enabled module.claude.enabled module.sports.enabled module.games.enabled module.launcher.enabled; do defaults write $D $k -bool true; done
 defaults write $D updates.autoCheck -bool false
 defaults write $D ai.provider ollama
 defaults write $D ai.models -string '{"ollama":"gemma3:4b"}'
@@ -101,7 +101,7 @@ shot sports-detail panel 14 -openNotch sports -demoSportsDetail YES
 shot games         panel 5 -openNotch games
 shot history       settings 6 -openSettings aiHistory
 shot settings-ai   settings 6 -openSettings claude
-shot pro           panel 6 -openNotch claude
+shot pro           panel 6 -openNotch launcher
 shot settings-pro  settings 6 -openSettings license
 
 [ $REAL_RUNNING = 1 ] && open -g -a "/Applications/Notch apple.app"

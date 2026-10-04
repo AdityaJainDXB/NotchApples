@@ -150,7 +150,7 @@ struct SettingsView: View {
                 case .modules: ModulesSettings()
                 case .windows: WindowsSettings()
                 case .claude: ClaudeSettings()
-                case .aiHistory: AIHistorySettings()
+                case .aiHistory: Entitlements.shared.canUse(.aiHistory) ? AnyView(AIHistorySettings()) : AnyView(ActivationModalView(feature: .aiHistory).padding())
                 case .messenger: MessengerSettings()
                 case .clipboard: ClipboardSettings()
                 case .fileSearch: FileSearchSettings()
@@ -181,47 +181,100 @@ struct SettingsView: View {
 
 private struct LicenseSettings: View {
     @StateObject private var license = LicenseState.shared
-    @State private var confirmReset = false
-    private var activated: Bool { license.isActivated }
+    @StateObject private var entitlements = Entitlements.shared
+    @State private var confirmDeactivate = false
 
     var body: some View {
         Form {
             Section {
-                LabeledContent("Status") {
-                    Label(activated ? "Licensed & Activated" : "Not activated",
-                          systemImage: activated ? "checkmark.seal.fill" : "xmark.seal.fill")
-                        .foregroundStyle(activated ? .green : .orange)
+                LabeledContent("This Mac") {
+                    HStack(spacing: 6) {
+                        if entitlements.tier == .free { Text("Free").foregroundStyle(.secondary) }
+                        else { TierBadge(tier: entitlements.tier, locked: false) }
+                    }
                 }
-                if activated {
-                    LabeledContent("Access code", value: AccessCodeManager.maskedActiveCode)
-                        .monospaced()
+                if let key = entitlements.key {
+                    LabeledContent("Key", value: key.masked).monospaced().textSelection(.enabled)
+                    LabeledContent("Bought", value: key.issued.formatted(date: .abbreviated, time: .omitted))
+                } else if license.isActivated {
+                    LabeledContent("Activated with", value: AccessCodeManager.maskedActiveCode).monospaced()
+                }
+                if let notice = entitlements.notice {
+                    Label(notice, systemImage: "exclamationmark.triangle.fill").foregroundStyle(.orange)
                 }
             } footer: {
-                Text("A product key or access code unlocks \(Module.proSummary). Everything else is free. Activation is saved on this Mac and stays if you reinstall or update.")
+                Text(entitlements.tier == .free
+                     ? "Everything not marked PRO or ULTIMATE is free, for good. A key is a one-time purchase: no subscription, no account, and every 1.x update is included."
+                     : "Yours for life: no renewals, and every 1.x update is included. The key is checked on this Mac, offline.")
             }
-            AccountSection()
-            if !activated {
+
+            if entitlements.tier < .ultimate {
                 Section {
-                    ActivationModalView(feature: nil, compact: true)
+                    ActivationModalView(feature: nil, prefill: entitlements.pendingKey ?? "", compact: true)
+                        .id(entitlements.pendingKey ?? "")
                 } header: {
-                    Text("Unlock \(Module.proSummary)")
+                    Text(entitlements.tier == .pro ? "Activate an Ultimate key" : "Activate or restore a purchase")
+                } footer: {
+                    Text("Paste the key from your email or the checkout page. Reinstalled or new Mac? Paste the same key again (up to 3 Macs).")
                 }
             }
+
             Section {
-                Button("Deactivate / Reset License", role: .destructive) { confirmReset = true }
-                    .disabled(!activated)
+                if entitlements.tier == .pro {
+                    Link("Upgrade to Ultimate for $4 →", destination: URL(string: LicenseServer.site + "#upgrade")!)
+                } else if entitlements.tier == .free {
+                    Link("Get Pro ($1) or Ultimate ($5) →", destination: URL(string: LicenseServer.site)!)
+                }
+                Link("Lost my key?", destination: URL(string: LicenseServer.site + "#recover")!)
+                Link("Terms and refunds", destination: URL(string: "https://virajsinghchadha.github.io/notchapples-site/terms.html")!)
+                Button("Deactivate this Mac…", role: .destructive) { confirmDeactivate = true }
+                    .disabled(entitlements.tier == .free)
             } footer: {
-                Text("For testing: removes the activation and restarts the app. \(Module.proSummary) then ask for an access code again.")
+                Text("Deactivating frees this Mac's slot so you can use the key on another one.")
             }
+
+            CompareTiers()
+            AccountSection()
         }
         .formStyle(.grouped)
-        .confirmationDialog("Reset the license?", isPresented: $confirmReset) {
-            Button("Reset and restart", role: .destructive) {
-                license.deactivate()
-                AppDelegate.relaunch()
-            }
+        .confirmationDialog("Deactivate this Mac?", isPresented: $confirmDeactivate) {
+            Button("Deactivate", role: .destructive) { Task { await entitlements.deactivateThisMac() } }
         } message: {
-            Text("You'll need to enter an access code again.")
+            Text("Pro features lock on this Mac until you paste your key again. Your key keeps working on your other Macs.")
+        }
+        .onDisappear { entitlements.pendingKey = nil }
+    }
+}
+
+/// Settings → License: what each tier includes. Paid features that aren't finished yet stay hidden.
+private struct CompareTiers: View {
+    @StateObject private var entitlements = Entitlements.shared
+
+    var body: some View {
+        Section {
+            row(.free, "The whole notch: Now Playing, timers, calendar, weather, world clock, clipboard, shelf, F1, sports, games, window snapping, AI with your own free key or Ollama, and more.")
+            row(.pro, Feature.allCases.filter { $0.tier == .pro && $0.isReady }.map(\.title).joined(separator: ", ") + ".")
+            let ultimate = Feature.allCases.filter { $0.tier == .ultimate && $0.isReady }
+            row(.ultimate, ultimate.isEmpty
+                ? "Everything in Pro, plus the Live Activities API, plugin SDK, priority support and the beta channel as they arrive in later updates."
+                : "Everything in Pro, plus " + ultimate.map(\.title).joined(separator: ", ") + ".")
+        } header: {
+            Text("Compare tiers")
+        } footer: {
+            Text("One-time prices. The app has no ads and no tracking in every tier.")
+        }
+    }
+
+    private func row(_ tier: Tier, _ text: String) -> some View {
+        HStack(alignment: .top, spacing: 10) {
+            VStack(alignment: .leading, spacing: 2) {
+                Text(tier.name).font(.headline)
+                Text(tier.price).font(.caption).foregroundStyle(.secondary)
+            }
+            .frame(width: 70, alignment: .leading)
+            Text(text).font(.callout).fixedSize(horizontal: false, vertical: true)
+            Spacer(minLength: 0)
+            if entitlements.tier == tier { Text("You").font(.caption.weight(.semibold)).foregroundStyle(.green) }
         }
     }
 }
@@ -600,6 +653,7 @@ private struct ClaudeSettings: View {
                     Text("Share my screen when I ask about it")
                     Text("Questions like \"what's on my screen?\" or \"explain this error\" automatically include a screenshot.")
                 }
+                .requires(.aiCapture)
             } header: {
                 Text("Provider")
             } footer: {
@@ -1276,8 +1330,8 @@ private struct AboutSettings: View {
                 .foregroundStyle(.secondary)
             Text("Free, open source, and local first.").foregroundStyle(.secondary)
             HStack(spacing: 14) {
-                Label(license.isActivated ? "Pro unlocked" : "Free (Pro not activated)", systemImage: license.isActivated ? "checkmark.seal.fill" : "seal")
-                    .foregroundStyle(license.isActivated ? .green : .secondary)
+                Label(Entitlements.shared.tier == .free ? "Free" : "\(Entitlements.shared.tier.name) unlocked", systemImage: Entitlements.shared.tier == .free ? "seal" : "checkmark.seal.fill")
+                    .foregroundStyle(Entitlements.shared.tier != .free ? .green : .secondary)
                 if updater.pendingUpdate != nil {
                     Button { AppDelegate.openSettingsWindow(tab: .updates) } label: { Label("Update available", systemImage: "arrow.down.circle.fill") }
                         .buttonStyle(.link)

@@ -1,0 +1,42 @@
+name = "notchapple-licenses"
+main = "src/worker.js"
+compatibility_date = "2026-09-01"
+
+# Filled in by scripts/setup.sh (npx wrangler kv namespace create LICENSES).
+[[kv_namespaces]]
+binding = "KV"
+id = "REPLACE_WITH_KV_ID"
+
+[vars]
+WALLET = "ltc1qymlmvkdmvpk5f90esthzgwaw6w0tuzq6tdr6kf"
+NETWORK = "mainnet"
+PRICE_PRO = "1"
+PRICE_ULTIMATE = "5"
+PRICE_UPGRADE = "4"
+DEVICE_LIMIT = "3"
+# Ultimate stays off sale until its first features ship ("never sell a half-working paid feature").
+ULTIMATE_ON = "0"
+# "brevo" (works with a verified Gmail sender, 300 emails/day free) or "resend" (needs your own domain).
+MAIL_PROVIDER = "brevo"
+# MAIL_FROM is the sender address, e.g. your Gmail verified in Brevo.
+MAIL_FROM = ""
+
+# Secrets (never in this file): SIGNING_KEY, ADMIN_TOKEN, EMAIL_PEPPER, MAIL_API_KEY.
+# Set them with scripts/setup.sh or `npx wrangler secret put NAME`.
+
+# Testnet copy for the sandbox test: `npx wrangler deploy --env testnet`
+[env.testnet]
+name = "notchapple-licenses-testnet"
+kv_namespaces = [{ binding = "KV", id = "REPLACE_WITH_TESTNET_KV_ID" }]
+[env.testnet.vars]
+WALLET = "REPLACE_WITH_TESTNET_ADDRESS"
+NETWORK = "testnet"
+PRICE_PRO = "1"
+PRICE_ULTIMATE = "5"
+PRICE_UPGRADE = "4"
+DEVICE_LIMIT = "3"
+ULTIMATE_ON = "1"
+MAIL_PROVIDER = "brevo"
+MAIL_FROM = ""
+# Testnet coins have no price: pretend 1 tLTC = $70.
+TEST_LTC_PRICE = "70"

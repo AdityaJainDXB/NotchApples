@@ -191,18 +191,3 @@ final class LicenseState: ObservableObject {
         isActivated = false
     }
 }
-
-extension Module {
-    /// Features that need an access code (Pro). Everything else is free to use.
-    static let proSummary = "AI, Messenger, Audio, VPN, Voice Notes, Screen Time & Focus Blocker, and Quick Add"
-
-    var isPro: Bool { [.voiceNotes, .screenTime, .quickAdd].contains(self) }
-
-    /// Features that need an access code. Everything else is free to use.
-    var isGated: Bool {
-        switch self {
-        case .claude, .messenger, .audio, .vpn, .voiceNotes, .screenTime, .quickAdd: true
-        default: false
-        }
-    }
-}

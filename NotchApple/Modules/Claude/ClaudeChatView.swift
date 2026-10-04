@@ -89,6 +89,8 @@ final class ClaudeChatModel: ObservableObject {
     @Published var error: String?
     /// Shown under the chat, e.g. when a screenshot was attached automatically.
     @Published var notice: String?
+    /// A Pro feature someone tried (capture, files, history); shows what it does and how to unlock it.
+    @Published var locked: Feature?
 
     // The current task's input: a capture / pasted / dropped image, or text.
     @Published private(set) var input: CapturedInput?
@@ -117,6 +119,7 @@ final class ClaudeChatModel: ObservableObject {
 
     /// Starts a new task from a capture, pasted or dropped image.
     func setInput(_ newInput: CapturedInput) {
+        guard allowed(.aiFileDrop) else { return }
         startNewTask()
         input = newInput
         inputThumbnail = ImagePrep.thumbnail(newInput.image)
@@ -143,6 +146,7 @@ final class ClaudeChatModel: ObservableObject {
         if let urls = pb.readObjects(forClasses: [NSURL.self], options: [.urlReadingFileURLsOnly: true]) as? [URL], let url = urls.first,
            load(file: url) { return true }
         if let image = NSImage(pasteboard: pb), let cg = image.cgImage(forProposedRect: nil, context: nil, hints: nil) {
+            guard allowed(.aiFileDrop) else { return false }
             setInput(CapturedInput(image: cg, source: "Pasted image · \(cg.width) × \(cg.height)", kind: .clipboard))
             return true
         }
@@ -157,6 +161,7 @@ final class ClaudeChatModel: ObservableObject {
     /// An image or PDF file (dragged in or copied in Finder).
     @discardableResult
     func load(file url: URL) -> Bool {
+        guard allowed(.aiFileDrop) else { return false }
         let ext = url.pathExtension.lowercased()
         if ext == "pdf", let doc = PDFDocument(url: url) {
             let text = doc.string?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
@@ -182,6 +187,7 @@ final class ClaudeChatModel: ObservableObject {
 
     /// Text selected in the front app (needs Accessibility permission).
     func useSelectedText() {
+        guard allowed(.aiCapture) else { return }
         if let text = SelectedText.read(), !text.isEmpty {
             setTextInput(text, source: "Using the text you selected")
         } else {
@@ -189,6 +195,13 @@ final class ClaudeChatModel: ObservableObject {
                 ? "No selected text found. Select some text in an app first (some apps don't share their selection; copy it and use Paste instead)."
                 : "Reading selected text needs Accessibility permission (System Settings → Privacy & Security → Accessibility). You can copy the text and use Paste instead."
         }
+    }
+
+    /// True if this Mac has `feature`; otherwise shows the upsell for it instead.
+    func allowed(_ feature: Feature) -> Bool {
+        if Entitlements.shared.canUse(feature) { return true }
+        locked = feature
+        return false
     }
 
     // MARK: Running a mode
@@ -259,7 +272,8 @@ final class ClaudeChatModel: ObservableObject {
         let config = AIConfig.shared
 
         // "What's on my screen?" → take a screenshot automatically.
-        if !attachScreen && messages.isEmpty && input == nil && (forceScreen || (autoScreen && ScreenIntent.matches(prompt))) {
+        if !attachScreen && messages.isEmpty && input == nil && (forceScreen || (autoScreen && ScreenIntent.matches(prompt))),
+           forceScreen ? allowed(.aiCapture) : Entitlements.shared.canUse(.aiCapture) {
             if config.provider.likelySupportsVision(config.model) {
                 attachScreen = true
                 notice = "Took a screenshot to answer that (Notch apple itself is left out)."
@@ -724,6 +738,22 @@ struct ClaudeChatView: View {
     }
 
     @ViewBuilder private var statusLines: some View {
+        if let feature = model.locked {
+            HStack(alignment: .top, spacing: 8) {
+                TierBadge(tier: feature.tier)
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("\(feature.title): \(feature.benefit)").font(.caption).foregroundStyle(.white)
+                        .fixedSize(horizontal: false, vertical: true)
+                    HStack(spacing: 10) {
+                        Link("Get \(feature.tier.name), \(feature.tier.price) →", destination: URL(string: LicenseServer.site)!)
+                        Button("I have a key") { AppDelegate.openSettingsWindow(tab: .license) }.buttonStyle(.plain)
+                        Button("Not now") { model.locked = nil }.buttonStyle(.plain).foregroundStyle(Theme.textSecondary)
+                    }
+                    .font(.caption).foregroundStyle(Theme.accent)
+                }
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
         if let notice = model.notice {
             Label(notice, systemImage: "info.circle").font(.caption).foregroundStyle(Theme.textSecondary).lineLimit(2)
                 .frame(maxWidth: .infinity, alignment: .leading)

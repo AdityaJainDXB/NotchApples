@@ -74,6 +74,7 @@ final class CaptureManager {
     /// Returns quietly if the user cancels.
     func captureToAI(_ mode: Mode? = nil) {
         guard !isCapturing else { return }
+        guard ClaudeChatModel.shared.allowed(.aiCapture) else { AppDelegate.showNotch(tab: .claude); return }
         Task {
             do {
                 guard let input = try await capture(mode ?? defaultMode) else { return }

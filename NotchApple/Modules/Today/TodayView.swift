@@ -163,7 +163,7 @@ struct TodayView: View {
         }
         .onAppear {
             model.refresh()
-            if SettingsManager.shared.rainAlert { rain.checkIfDue() }
+            if SettingsManager.shared.rainAlert && Entitlements.shared.canUse(.rainAlert) { rain.checkIfDue() }
             // First time: ask for location so weather is local, not Cupertino.
             if location.useCurrentLocation && location.status == .notDetermined { location.requestLocation() }
         }
