@@ -328,6 +328,12 @@ All screenshots use sample data.
 - **F1:** a favourite team; qualifying gaps and best laps.
 - **What's New** in Settings → About, shown once after updating.
 
+#### Windows 1.24.0
+
+- **Free, Pro and Ultimate on Windows too.** The Windows app no longer needs a code to open. Free covers Today, AI, Sports, Browser, Search, To-do, Notes, World Clock and Tools; Pro adds Launcher, Clipboard, Focus, Translator, PC Stats and Shelf.
+- **One key for Mac and Windows:** `NTCH-PRO-…` / `NTCH-ULTM-…` keys from the website work in Settings → Access (3 devices per key). Old `NOTCH-XXXX-XXXX` codes still work as Pro.
+- **New:** a To-do tab, a unit converter in Tools, and a **Ctrl + K** command palette.
+
 The full list for every release is on the [website](https://virajsinghchadha.github.io/notchapples-site/#new) and in the [GitHub releases](https://github.com/AdityaJainDXB/NotchApples/releases).
 
 <details>
