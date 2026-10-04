@@ -52,6 +52,7 @@ export function render(root) {
 
   if (activeId) editor.value = activeNote().text;
   refreshList();
+  if (load('notes.newOnOpen', false)) { save('notes.newOnOpen', false); addNote(); }
   search.addEventListener('input', refreshList);
 
   root.append(el('div', { class: 'row', style: 'height:100%' },

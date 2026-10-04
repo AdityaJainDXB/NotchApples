@@ -3,7 +3,8 @@ import { el, load, save } from '../store.js';
 import { THEMES, applyTheme, currentThemeId } from '../themes.js';
 import { MODULES, isEnabled, setEnabled, invoke, show } from '../app.js';
 import { PROVIDERS, setKey } from './ai.js';
-import { isActivated, maskedCode, deactivate } from '../license.js';
+import { tier, TIERS, maskedCode, deactivate } from '../license.js';
+import { keyField, BUY_URL } from './activation.js';
 
 export function render(root) {
   const body = el('div', { class: 'col', style: 'overflow:auto;flex:1;min-height:0;padding-right:4px' });
@@ -97,51 +98,41 @@ function paneAI() {
 }
 
 function paneAccess() {
-  const on = isActivated();
-  const erase = el('input', { type: 'checkbox', id: 'erase-all' });
+  const t = tier();
   const removeBox = el('div', { class: 'card col', style: 'gap:8px' });
 
   function askFirst() {
     removeBox.replaceChildren(
-      el('div', { class: 'section-title' }, 'Remove access'),
+      el('div', { class: 'section-title' }, 'Remove the key from this PC'),
       el('div', { class: 'small dim' },
-        'Deletes your access code from this PC and locks Notch apple right now. '
-        + 'You will need to enter a code again to use it.'),
-      el('label', { class: 'small', style: 'display:flex;gap:8px;align-items:center;cursor:pointer' },
-        erase, 'Also erase everything I saved (notes, AI keys, clipboard history, settings)'),
-      el('button', { class: 'btn', style: 'align-self:flex-start', onclick: confirmStep },
-        'Remove access & lock'));
+        'Notch apple goes back to Free here and this PC no longer counts towards your 3 devices. '
+        + 'You can enter the key again any time.'),
+      el('button', { class: 'btn quiet', style: 'align-self:flex-start', onclick: confirmStep }, 'Remove key…'));
   }
   function confirmStep() {
     removeBox.replaceChildren(
-      el('div', { class: 'section-title warn' }, 'Remove access?'),
-      el('div', { class: 'small dim' }, erase.checked
-        ? 'This deletes your code AND everything you saved, then locks Notch apple.'
-        : 'This deletes your code and locks Notch apple.'),
+      el('div', { class: 'section-title warn' }, 'Remove the key?'),
       el('div', { style: 'display:flex;gap:8px' },
-        el('button', { class: 'btn', onclick: removeNow }, 'Yes, remove it'),
+        el('button', { class: 'btn', onclick: async () => { await deactivate(); paneRefresh(); } }, 'Yes, remove it'),
         el('button', { class: 'btn quiet', onclick: askFirst }, 'Cancel')));
-  }
-  function removeNow() {
-    deactivate();
-    if (erase.checked) {
-      try { localStorage.clear(); } catch { /* storage unavailable */ }
-      location.reload();           // start clean, straight to the lock screen
-    } else {
-      show('settings');            // re-renders as the lock screen
-    }
   }
   askFirst();
 
   return el('div', { class: 'col' },
     el('div', { class: 'card col' },
-      el('div', { style: 'display:flex' }, el('div', { class: 'section-title' }, 'Status'),
-        el('div', { class: on ? 'ok' : 'warn', style: 'margin-left:auto;font-weight:600' },
-          on ? '✅ Unlocked' : '🔒 Locked')),
-      on ? el('div', { class: 'mono small dim' }, maskedCode()) : null,
+      el('div', { style: 'display:flex' }, el('div', { class: 'section-title' }, 'Your plan'),
+        el('div', { class: t ? 'ok' : 'dim', style: 'margin-left:auto;font-weight:600' }, TIERS[t])),
+      t ? el('div', { class: 'mono small dim' }, maskedCode()) : null,
       el('div', { class: 'small dim' },
-        'Notch apple for Windows needs an access code to open. The same codes work on the Mac app.')),
-    on ? removeBox : null);
+        'Free has Today, AI, Sports, Browser, Search, To-do, Notes, World Clock and Tools. '
+        + 'Pro ($1, one time) adds Launcher, Clipboard, Focus, Translator, PC Stats and Shelf. '
+        + 'Keys work on the Mac app too, on up to 3 devices.')),
+    t < 2 ? el('div', { class: 'card col', style: 'align-items:center' },
+      el('div', { class: 'section-title', style: 'align-self:flex-start' }, t ? 'Enter a different key' : 'Enter a key'),
+      keyField(() => paneRefresh()),
+      el('button', { class: 'btn quiet', onclick: () => invoke('open_url', { url: BUY_URL }) }, 'Buy or recover a key →')) : null,
+    t ? removeBox : null,
+    el('div', { class: 'small dim' }, 'Lost your key or need help? notchapples.support@gmail.com'));
 }
 
 function paneShortcuts() {
@@ -150,6 +141,7 @@ function paneShortcuts() {
       el('div', { class: 'section-title' }, 'Global shortcuts'),
       row('Ctrl + Alt + N', 'Open or close the notch from any app'),
       row('Ctrl + Alt + O', 'Hide or show the notch completely'),
+      row('Ctrl + K', 'Command palette: jump to any tab or action'),
       row('Esc', 'Close the notch when it is open')),
     el('div', { class: 'small dim' },
       'Windows reserves most Win-key combinations, so Notch apple uses Ctrl + Alt. '
@@ -167,10 +159,19 @@ function paneAbout() {
   return el('div', { class: 'col' },
     el('div', { class: 'card col' },
       el('div', { class: 'big' }, 'Notch apple for Windows'),
-      el('div', { class: 'small dim' }, 'A port of the macOS Notch apple. Free, open source and local.'),
+      el('div', { class: 'small dim' }, 'A port of the macOS Notch apple. Version 1.24.0. Open source; your notes, to-dos and keys stay on this PC.'),
       el('div', { class: 'small dim' }, 'Windows PCs have no camera notch, so the panel sits at the top centre of your screen.'),
       el('button', { class: 'btn quiet', style: 'align-self:flex-start',
-        onclick: () => invoke('open_url', { url: 'https://github.com/AdityaJainDXB/NotchApples' }) }, 'GitHub →')),
+        onclick: () => invoke('open_url', { url: 'https://github.com/AdityaJainDXB/NotchApples' }) }, 'GitHub →'),
+      el('div', { class: 'small dim' }, 'Support: notchapples.support@gmail.com')),
+    el('div', { class: 'card col' },
+      el('div', { class: 'section-title' }, "What's new in 1.24"),
+      el('div', { class: 'small dim' }, '• Free, Pro and Ultimate plans; the app no longer needs a code to open.'),
+      el('div', { class: 'small dim' }, '• Keys bought on the website (NTCH-PRO-… / NTCH-ULTM-…) work here and on the Mac.'),
+      el('div', { class: 'small dim' }, '• New To-do tab, unit converter in Tools, and a Ctrl+K command palette.')),
+    el('div', { class: 'card col' },
+      el('div', { class: 'section-title' }, 'Privacy'),
+      el('div', { class: 'small dim' }, 'No accounts and no tracking. Entering a key sends only the key and a random ID for this PC to the license server, to enforce the 3-device limit.')),
     el('button', { class: 'btn quiet', style: 'align-self:flex-start',
       onclick: () => invoke('quit_app') }, 'Quit Notch apple'));
 }

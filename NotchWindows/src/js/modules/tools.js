@@ -1,4 +1,4 @@
-// Tools: keep the PC awake, a quick calculator, and a colour converter.
+// Tools: keep the PC awake, a quick calculator, a colour picker and a unit converter.
 import { el, load, save } from '../store.js';
 import { invoke } from '../app.js';
 
@@ -45,11 +45,44 @@ export function render(root) {
   colorIn.addEventListener('input', paintColor);
   paintColor();
 
-  root.append(el('div', { class: 'col', style: 'height:100%' },
+  // --- unit converter
+  const UNITS = {
+    Length: { m: 1, km: 1000, cm: 0.01, mm: 0.001, mi: 1609.344, yd: 0.9144, ft: 0.3048, in: 0.0254 },
+    Weight: { kg: 1, g: 0.001, lb: 0.45359237, oz: 0.028349523125, t: 1000 },
+    Data: { B: 1, KB: 1e3, MB: 1e6, GB: 1e9, TB: 1e12, KiB: 1024, MiB: 1048576, GiB: 1073741824 },
+    Temperature: { '°C': 'c', '°F': 'f', K: 'k' },
+  };
+  const kind = el('select', { class: 'field', style: 'flex:0 0 auto;width:auto' }, ...Object.keys(UNITS).map((k) => el('option', {}, k)));
+  const amount = el('input', { class: 'field mono', value: '1', style: 'width:90px;flex:0 0 auto' });
+  const from = el('select', { class: 'field', style: 'width:auto;flex:0 0 auto' });
+  const to = el('select', { class: 'field', style: 'width:auto;flex:0 0 auto' });
+  const convOut = el('div', { class: 'big mono' }, '—');
+  const fillUnits = () => {
+    const names = Object.keys(UNITS[kind.value]);
+    from.replaceChildren(...names.map((n) => el('option', {}, n)));
+    to.replaceChildren(...names.map((n) => el('option', {}, n)));
+    to.selectedIndex = 1;
+  };
+  const toC = (v, u) => (u === '°C' ? v : u === '°F' ? (v - 32) * 5 / 9 : v - 273.15);
+  const fromC = (c, u) => (u === '°C' ? c : u === '°F' ? c * 9 / 5 + 32 : c + 273.15);
+  const convert = () => {
+    const v = parseFloat(amount.value);
+    if (!Number.isFinite(v)) { convOut.textContent = '—'; return; }
+    const t = UNITS[kind.value];
+    const r = kind.value === 'Temperature' ? fromC(toC(v, from.value), to.value) : v * t[from.value] / t[to.value];
+    convOut.textContent = `${Math.round(r * 1e6) / 1e6} ${to.value}`;
+  };
+  kind.addEventListener('change', () => { fillUnits(); convert(); });
+  for (const x of [amount, from, to]) x.addEventListener('input', convert);
+  fillUnits(); convert();
+
+  root.append(el('div', { class: 'col', style: 'height:100%;overflow:auto' },
     el('div', { class: 'row' },
       el('div', { class: 'card col' }, el('div', { class: 'section-title' }, '☕ Keep awake'),
         el('div', { class: 'small dim' }, 'Stops the screen sleeping while this is on.'), awakeBtn),
       el('div', { class: 'card col' }, el('div', { class: 'section-title' }, '🎨 Colour'),
         el('div', { style: 'display:flex;gap:10px;align-items:center' }, colorIn, swatch))),
-    el('div', { class: 'card col' }, el('div', { class: 'section-title' }, '🔢 Calculator'), calcIn, calcOut)));
+    el('div', { class: 'card col' }, el('div', { class: 'section-title' }, '🔢 Calculator'), calcIn, calcOut),
+    el('div', { class: 'card col' }, el('div', { class: 'section-title' }, '📏 Convert'),
+      el('div', { style: 'display:flex;gap:6px;flex-wrap:wrap;align-items:center' }, kind, amount, from, el('span', {}, '→'), to), convOut)));
 }

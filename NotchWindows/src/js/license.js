@@ -1,6 +1,8 @@
-// Offline access-code gating, ported from AccessCodeManager.swift so the same
-// 50 codes work on Windows and macOS. Only SHA-256 hashes of the codes ship here;
-// the codes themselves are never stored in the app.
+// Tiers, ported from LicenseKey.swift / Entitlements.swift.
+// Free works without any key. A signed key (NTCH-PRO-… or NTCH-ULTM-…) unlocks Pro or
+// Ultimate: its Ed25519 signature is checked offline with the public key below, the same
+// one the Mac app uses, so one key works on both. The old NOTCH-XXXX-XXXX access codes
+// still work and count as Pro. Only SHA-256 hashes of those codes ship here.
 
 const VALID = new Set([
   '8c71d5c4d8df7b252f3cc6543476019524361c9cc0619a4bac9ae97b030d14dc',
@@ -55,12 +57,16 @@ const VALID = new Set([
   'f9f5e70844c9eb34aa35830f02f94fad77b0f75b01a5e1be516cfd8f7d3d435a',
 ]);
 
-/// Notch apple for Windows is locked as a whole: no tab opens, and no module
-/// loads, until a valid code has been entered on this PC.
-export const isLocked = () => !isActivated();
+export const TIERS = ['Free', 'Pro', 'Ultimate'];
+export const WORKER = 'https://notchapple-licenses.adityajain1225.workers.dev';
+const PUBLIC_KEY = 'HmCtNtd+sFaJO+8TQ57od7pptH3dhEx00SO16I1fhvs=';
+const ALPHABET = '0123456789ABCDEFGHJKMNPQRSTVWXYZ';
+const EPOCH = Date.UTC(2026, 0, 1);
 
-const KEY = 'license.activated';
+const KEY = 'license.activated';      // hash of an old access code
 const MASK_KEY = 'license.codeMask';
+const SIGNED = 'license.key';         // a signed key, as typed (normalised)
+const REVOKED = 'license.revoked';
 
 export const sanitize = (s) =>
   (s || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
@@ -71,36 +77,162 @@ export async function hashOf(clean) {
   return [...new Uint8Array(digest)].map((b) => b.toString(16).padStart(2, '0')).join('');
 }
 
+// ---- old access codes (count as Pro) ----
+
 export async function validate(input) {
   const clean = sanitize(input);
   if (clean.length !== 13 || !clean.startsWith('NOTCH')) return false;
   return VALID.has(await hashOf(clean));
 }
 
+const hasOldCode = () => { const h = localStorage.getItem(KEY); return !!h && VALID.has(h); };
+
+// ---- signed keys ----
+
+export const looksLikeKey = (s) => (s || '').trim().toUpperCase().startsWith('NTCH');
+
+function decode(text) {
+  const out = []; let bits = 0, value = 0;
+  for (let c of text) {
+    if (c === 'O') c = '0'; else if (c === 'I' || c === 'L') c = '1';
+    const i = ALPHABET.indexOf(c);
+    if (i < 0) return null;
+    value = (value << 5) | i; bits += 5;
+    if (bits >= 8) { out.push((value >> (bits - 8)) & 255); bits -= 8; value &= (1 << bits) - 1; }
+  }
+  return new Uint8Array(out);
+}
+
+let pubKey;
+async function publicKey() {
+  pubKey ??= crypto.subtle.importKey('raw', Uint8Array.from(atob(PUBLIC_KEY), (c) => c.charCodeAt(0)),
+    { name: 'Ed25519' }, false, ['verify']);
+  return pubKey;
+}
+
+/// { tier: 1|2, id, issued, text } or { error } — checks the signature offline.
+export async function parseKey(input) {
+  const s = (input || '').toUpperCase().replace(/\s/g, '');
+  let label, rest;
+  if (s.startsWith('NTCH-PRO-')) { label = 'PRO'; rest = s.slice(9); }
+  else if (s.startsWith('NTCH-ULTM-')) { label = 'ULTM'; rest = s.slice(10); }
+  else return { error: "That doesn't look like a Notch apple key. Copy the whole key, from NTCH- to the end." };
+  const body = rest.replace(/-/g, '');
+  const bytes = decode(body);
+  if (!bytes || bytes.length !== 76 || bytes[0] !== 1) return { error: "This key has been changed or wasn't copied completely." };
+  let ok = false;
+  try { ok = await crypto.subtle.verify('Ed25519', await publicKey(), bytes.slice(12), bytes.slice(0, 12)); }
+  catch { return { error: "This version of Windows can't check keys yet. Update Microsoft Edge WebView2 and try again." }; }
+  if (!ok) return { error: "This key has been changed or wasn't copied completely." };
+  const tier = bytes[1];
+  if (tier !== 1 && tier !== 2) return { error: "This key has been changed or wasn't copied completely." };
+  if ((tier === 1 ? 'PRO' : 'ULTM') !== label) return { error: 'The start of this key doesn\'t match its tier.' };
+  const id = [...bytes.slice(2, 10)].map((b) => b.toString(16).padStart(2, '0')).join('');
+  const groups = body.match(/.{1,6}/g);
+  return { tier, id, issued: new Date(EPOCH + ((bytes[10] << 8) | bytes[11]) * 86400000),
+    text: `NTCH-${label}-${groups.join('-')}` };
+}
+
+/// A random ID for this PC, used only for the 3-device limit. Never anything about you.
+function deviceId() {
+  let d = localStorage.getItem('license.device');
+  if (!d) {
+    d = [...crypto.getRandomValues(new Uint8Array(32))].map((b) => b.toString(16).padStart(2, '0')).join('');
+    localStorage.setItem('license.device', d);
+  }
+  return d;
+}
+
+async function post(path, body) {
+  const ctl = new AbortController(); const t = setTimeout(() => ctl.abort(), 8000);
+  try {
+    const r = await fetch(WORKER + path, { method: 'POST', headers: { 'content-type': 'application/json' },
+      body: JSON.stringify(body), signal: ctl.signal });
+    return await r.json();
+  } finally { clearTimeout(t); }
+}
+
+// ---- current tier ----
+
+let cached = null;   // { tier, id, text } for a signed key
+
+/// Reads the saved key at startup (and checks the signed revocation list when online).
+export async function loadSaved() {
+  const text = localStorage.getItem(SIGNED);
+  cached = null;
+  if (text) {
+    const k = await parseKey(text);
+    if (!k.error && !revokedIds().includes(k.id)) cached = k;
+  }
+  refreshRevoked();
+  return tier();
+}
+
+const revokedIds = () => { try { return JSON.parse(localStorage.getItem(REVOKED) || '[]'); } catch { return []; } };
+
+async function refreshRevoked() {
+  try {
+    const r = await (await fetch(WORKER + '/revoked')).json();
+    const sig = Uint8Array.from(atob(r.sig), (c) => c.charCodeAt(0));
+    if (!(await crypto.subtle.verify('Ed25519', await publicKey(), sig, new TextEncoder().encode(r.list)))) return;
+    const ids = JSON.parse(r.list).ids || [];
+    localStorage.setItem(REVOKED, JSON.stringify(ids));
+    if (cached && ids.includes(cached.id)) { cached = null; localStorage.removeItem(SIGNED); dispatchEvent(new Event('tierchange')); }
+  } catch { /* offline: keep the last list */ }
+}
+
+/// 0 Free, 1 Pro, 2 Ultimate.
+export const tier = () => Math.max(cached?.tier ?? 0, hasOldCode() ? 1 : 0);
+export const tierName = () => TIERS[tier()];
+export const can = (needed) => tier() >= needed;
+
+/// Activates a signed key or an old code. Returns { ok, tier } or { error }.
 export async function activate(input) {
+  if (looksLikeKey(input)) {
+    const k = await parseKey(input);
+    if (k.error) return k;
+    if (revokedIds().includes(k.id)) return { error: 'This key has been turned off. Email notchapples.support@gmail.com if that seems wrong.' };
+    try {
+      const r = await post('/activate', { key: k.text, device: deviceId() });
+      if (r && r.ok === false && r.reason === 'limit') return { error: `This key is already on ${r.limit} devices. Remove it from one in Settings → Access first.` };
+      if (r && r.ok === false && r.reason === 'revoked') return { error: 'This key has been turned off. Email notchapples.support@gmail.com if that seems wrong.' };
+    } catch { /* offline: the signature is enough, activation is retried never — that's fine */ }
+    localStorage.setItem(SIGNED, k.text);
+    cached = k;
+    dispatchEvent(new Event('tierchange'));
+    return { ok: true, tier: k.tier };
+  }
   const clean = sanitize(input);
-  if (!(await validate(clean))) return false;
-  localStorage.setItem(KEY, (await hashOf(clean)));
+  if (!(await validate(clean))) return { error: 'Invalid key or access code. Please try again.' };
+  localStorage.setItem(KEY, await hashOf(clean));
   localStorage.setItem(MASK_KEY, `NOTCH-${clean.slice(5, 9)}-****`);
-  return true;
+  dispatchEvent(new Event('tierchange'));
+  return { ok: true, tier: tier() };
 }
 
-export function isActivated() {
-  const saved = localStorage.getItem(KEY);
-  return !!saved && VALID.has(saved);
+export function maskedCode() {
+  if (cached) {
+    const p = cached.text.split('-');
+    return p.length > 4 ? `${p[0]}-${p[1]}-${p[2]}-…-${p[p.length - 2]}` : cached.text;
+  }
+  return hasOldCode() ? (localStorage.getItem(MASK_KEY) || 'NOTCH-****-****') : '';
 }
 
-export const maskedCode = () => localStorage.getItem(MASK_KEY) || 'NOTCH-****-****';
-
-/// Removes the saved code from this PC. The caller is expected to re-lock the UI.
-export function deactivate() {
+/// Removes the key from this PC (and frees its device slot when online). Back to Free.
+export async function deactivate() {
+  if (cached) { try { await post('/deactivate', { key: cached.text, device: deviceId() }); } catch {} }
+  cached = null;
+  localStorage.removeItem(SIGNED);
   localStorage.removeItem(KEY);
   localStorage.removeItem(MASK_KEY);
+  dispatchEvent(new Event('tierchange'));
 }
 
-/// Formats as NOTCH-XXXX-XXXX while typing; the NOTCH prefix is added for you.
+/// Formats old codes as NOTCH-XXXX-XXXX while typing; signed keys are left alone.
 export function format(input) {
+  if (looksLikeKey(input)) return input;
   let s = sanitize(input);
+  if (!s) return '';
   if (!'NOTCH'.startsWith(s) && !s.startsWith('NOTCH')) s = 'NOTCH' + s;
   s = s.slice(0, 13);
   if (s.length <= 5) return s;
