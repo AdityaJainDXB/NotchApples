@@ -478,10 +478,10 @@ final class SportsModel: ObservableObject {
 
     // MARK: Parsing
 
-    nonisolated private static let base = "https://site.api.espn.com/apis/site/v2/sports/"
+    nonisolated static let base = "https://site.api.espn.com/apis/site/v2/sports/"
     nonisolated private static let standingsBase = "https://site.api.espn.com/apis/v2/sports/"
 
-    nonisolated private static func json(_ path: String, base: String = base) async -> [String: Any]? {
+    nonisolated static func json(_ path: String, base: String = base) async -> [String: Any]? {
         guard let url = URL(string: base + path),
               let (data, response) = try? await URLSession.shared.data(for: URLRequest(url: url, cachePolicy: .reloadIgnoringLocalCacheData, timeoutInterval: 15)),
               (response as? HTTPURLResponse)?.statusCode == 200 else { return nil }
@@ -506,7 +506,7 @@ final class SportsModel: ObservableObject {
         return ISO8601DateFormatter().date(from: s)
     }
 
-    nonisolated private static func matches(_ json: [String: Any]?, fallback: String) -> [Match] {
+    nonisolated static func matches(_ json: [String: Any]?, fallback: String) -> [Match] {
         ((json?["events"] as? [[String: Any]]) ?? []).compactMap { match($0, fallback: fallback) }
     }
 

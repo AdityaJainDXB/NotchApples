@@ -136,6 +136,7 @@ extension Module {
         case .voiceNotes: .voiceNotes
         case .screenTime: .screenTime
         case .quickAdd: .quickAdd
+        case .markets: .markets
         case .launcher: .launcher
         case .snippets: .snippets
         case .mirror: .mirror

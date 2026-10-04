@@ -195,6 +195,7 @@ struct NotchRootView: View {
             case .voiceNotes: VoiceNotesView()
             case .screenTime: ScreenTimeView()
             case .quickAdd: QuickAddView()
+            case .markets: MarketsView()
             case .security: EmptyView()
             }
         }

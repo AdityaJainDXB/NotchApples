@@ -36,11 +36,15 @@ enum FeatureHub {
             { settings.devicesEnabled && settings.privacyIndicator ? PrivacyMonitor.shared.liveActivity : nil },
             { settings.liveEnabled ? ScoresModel.shared.liveActivity : nil },
             { settings.f1Enabled ? F1Model.shared.liveActivity : nil },
-            { settings.sportsEnabled ? SportsModel.shared.liveActivity : nil },
+            { settings.sportsEnabled ? (SportsModel.shared.liveActivity ?? MoreTeams.shared.rotatingActivity) : nil },
+            { ExternalActivities.shared.liveActivity },
+            { settings.liveEnabled ? FlightWatcher.shared.liveActivity : nil },
+            { settings.marketsEnabled ? MarketsModel.shared.liveActivity : nil },
             { settings.toolsEnabled && settings.keepAwakeActivity ? KeepAwake.shared.liveActivity : nil },
         ]
         DownloadWatcher.shared.setEnabled(settings.downloadProgress && Entitlements.shared.canUse(.downloadProgress))
         registerURLScheme()
+        ExternalActivities.shared.start()
         Power.start()
         heartbeat = Power.timer(30) { beat() }
         Power.onChange.append {
@@ -73,7 +77,9 @@ enum FeatureHub {
         NotificationMirror.shared.setRunning(s.alertsEnabled)
         if s.liveEnabled { ScoresModel.shared.refreshIfDue() }
         if s.f1Enabled { F1Model.shared.refreshIfDue() }
-        if s.sportsEnabled { SportsModel.shared.refreshIfDue() }
+        if s.sportsEnabled { SportsModel.shared.refreshIfDue(); MoreTeams.shared.refreshIfDue() }
+        if s.liveEnabled { FlightWatcher.shared.refreshIfDue() }
+        if s.marketsEnabled { MarketsModel.shared.refreshIfDue() }
         DownloadWatcher.shared.setEnabled(s.downloadProgress && Entitlements.shared.canUse(.downloadProgress))
         LiveActivityCenter.shared.recompute()
     }
@@ -108,12 +114,14 @@ enum FeatureHub {
     }
 
     /// notchapple://open/<tab>, toggle, close, hide, show, timer?minutes=5, stopwatch, focus/start, focus/stop,
-    /// keepawake?minutes=30, keepawake/off, snippet?name=…, record, screenshot, activate?key=…
+    /// keepawake?minutes=30, keepawake/off, snippet?name=…, record, screenshot, activate?key=…,
+    /// activity?id=…&title=…&text=…&symbol=…&progress=…&color=…&seconds=… and activity/end?id=… (Ultimate)
     static func handle(_ url: URL) {
         guard url.scheme == "notchapple" else { return }
         let parts = ([url.host ?? ""] + url.pathComponents.filter { $0 != "/" }).filter { !$0.isEmpty }
-        let query = Dictionary(uniqueKeysWithValues: (URLComponents(url: url, resolvingAgainstBaseURL: false)?.queryItems ?? [])
-            .map { ($0.name, $0.value ?? "") })
+        // Links can come from any app or script, so repeated keys keep the first value instead of crashing.
+        let query = Dictionary((URLComponents(url: url, resolvingAgainstBaseURL: false)?.queryItems ?? [])
+            .map { ($0.name, $0.value ?? "") }, uniquingKeysWith: { first, _ in first })
         let delegate = AppDelegate.current
         switch parts.first ?? "" {
         case "open":
@@ -145,6 +153,9 @@ enum FeatureHub {
                 Entitlements.shared.pendingKey = key
                 AppDelegate.openSettingsWindow(tab: .license)
             }
+        case "activity":
+            // Live Activities API (Ultimate): notchapple://activity?id=…&text=…, notchapple://activity/end?id=…
+            ExternalActivities.shared.handle(query, end: parts.dropFirst().first == "end")
         case "record": ScreenRecorder.shared.toggle()
         case "screenshot": ScreenCaptureActions.shared.takeScreenshot()
         default: delegate?.toggleNotch()

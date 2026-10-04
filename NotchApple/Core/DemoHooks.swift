@@ -17,6 +17,8 @@
 //    -demoSelection x,y,w,h     with -demoOverlay, a selection in points from the top-left
 //    -demoSportsDetail YES      open the details of your team's latest result
 //    -demoOnboarding <1…4>      show the welcome window on that page
+//    -demoTimer <seconds>       start a timer (shows beside the closed notch)
+//    -demoActivity <query>      push a Live Activities API activity, e.g. "id=build&text=42%25&symbol=hammer.fill"
 //
 
 import AppKit
@@ -33,6 +35,10 @@ enum DemoHooks {
         let d = UserDefaults.standard
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
             if d.integer(forKey: "demoOnboarding") > 0 { Onboarding.show() }
+            if d.double(forKey: "demoTimer") > 0 { CountdownTimer.shared.startTimer(seconds: d.double(forKey: "demoTimer")) }
+            if let q = d.string(forKey: "demoActivity"), let items = URLComponents(string: "x://y?" + q)?.queryItems {
+                ExternalActivities.shared.handle(Dictionary(items.map { ($0.name, $0.value ?? "") }, uniquingKeysWith: { a, _ in a }), end: false)
+            }
             if let pane = d.string(forKey: "openSettings").flatMap(SettingsTab.init(rawValue:)) {
                 AppDelegate.openSettingsWindow(tab: pane)
             }

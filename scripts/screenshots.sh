@@ -40,6 +40,8 @@ sed -i '' 's/    static func runIfNeeded() {/    static func runIfNeeded() { if 
 # throwaway build; the real app is never changed. The "pro" shot runs without it (the real unlock screen).
 sed -i '' 's/    static func isAppActivated() -> Bool {/    static func isAppActivated() -> Bool { UserDefaults.standard.bool(forKey: "demoPro") || realIsAppActivated() }\
     static func realIsAppActivated() -> Bool {/' NotchApple/Core/AccessCodeManager.swift
+# Ultimate-only shots pass -demoTier ultimate (again, only in this throwaway build).
+sed -i '' 's/let t = LicenseKey.tier(key: key, revoked: revoked, legacyActivated: hasLegacyActivation)/let t: Tier = UserDefaults.standard.string(forKey: "demoTier") == "ultimate" ? .ultimate : LicenseKey.tier(key: key, revoked: revoked, legacyActivated: hasLegacyActivation)/' NotchApple/Core/Entitlements.swift
 sed -i '' 's/PRODUCT_BUNDLE_IDENTIFIER: com.notchapple.app$/PRODUCT_BUNDLE_IDENTIFIER: com.notchapple.demo/; s/com.notchapple.app.widget/com.notchapple.demo.widget/' project.yml
 xcodegen generate -q
 xcodebuild -project NotchApple.xcodeproj -scheme NotchApple -configuration Release -derivedDataPath "$WORK/dd" build 2>&1 | grep -E "error:|BUILD" | sort -u
@@ -53,7 +55,7 @@ var best: (Int, Double)? = nil
 for w in list where (w["kCGWindowOwnerPID"] as? Int) == pid {
     let b = w["kCGWindowBounds"] as! [String: Any], h = b["Height"] as! Double, area = h * (b["Width"] as! Double)
     let layer = w["kCGWindowLayer"] as! Int, n = w["kCGWindowNumber"] as! Int
-    let ok = (want == "panel" && layer > 0 && layer < 1000 && h > 100) || (want == "settings" && layer == 0 && h > 200) || (want == "overlay" && layer >= 1000)
+    let ok = (want == "panel" && layer > 0 && layer < 1000 && h > 100) || (want == "trigger" && layer > 0 && layer < 1000 && h < 100) || (want == "settings" && layer == 0 && h > 200) || (want == "overlay" && layer >= 1000)
     if ok, best == nil || area > best!.1 { best = (n, area) }
 }
 if let best { print(best.0) }
@@ -62,7 +64,7 @@ swiftc -O "$WORK/wid.swift" -o "$WORK/wid" 2>/dev/null
 
 echo "› Settings for the screenshot copy"
 defaults delete $D >/dev/null 2>&1 || true
-for k in onboarding.permissionsShown onboarding.welcomeDismissed module.f1.enabled module.claude.enabled module.sports.enabled module.games.enabled module.launcher.enabled; do defaults write $D $k -bool true; done
+for k in onboarding.permissionsShown onboarding.welcomeDismissed module.f1.enabled module.claude.enabled module.sports.enabled module.games.enabled module.launcher.enabled module.timer.enabled module.markets.enabled; do defaults write $D $k -bool true; done
 defaults write $D updates.autoCheck -bool false
 defaults write $D ai.provider ollama
 defaults write $D ai.models -string '{"ollama":"gemma3:4b"}'
@@ -107,6 +109,8 @@ shot settings-notch settings 6 -openSettings notch
 shot settings-themes settings 6 -openSettings appearance -demoPro YES
 shot onboarding    settings 6 -demoOnboarding 2
 shot onboarding-tour settings 6 -demoOnboarding 4
+shot notch-stacked trigger 5 -demoTier ultimate -demoTimer 1500 -demoActivity "id=build&title=Build&text=42%25&symbol=hammer.fill&color=34C759"
+shot markets       panel 10 -openNotch markets -demoPro YES
 
 [ $REAL_RUNNING = 1 ] && open -g -a "/Applications/Notch apple.app"
 defaults delete $D >/dev/null 2>&1 || true
@@ -114,7 +118,7 @@ defaults delete $D >/dev/null 2>&1 || true
 if [ -n "$SITE" ]; then
   echo "› WebP copies for the website"
   mkdir -p "$SITE/assets/screenshots"
-  for f in ai-empty ai-input ai-result follow-up code-analysis capture-overlay f1 sports sports-table sports-cricket sports-detail games history settings-ai pro settings-pro settings-notch settings-themes onboarding onboarding-tour; do
+  for f in ai-empty ai-input ai-result follow-up code-analysis capture-overlay f1 sports sports-table sports-cricket sports-detail games history settings-ai pro settings-pro settings-notch settings-themes onboarding onboarding-tour notch-stacked markets; do
     [ -f "$OUT/$f.png" ] && python3 -c "
 from PIL import Image; im = Image.open('$OUT/$f.png'); im.thumbnail((1600, 1600)); im.save('$SITE/assets/screenshots/$f.webp', 'WEBP', quality=82, method=6)"
   done

@@ -76,8 +76,9 @@ final class LicenseTests: XCTestCase {
             XCTAssertTrue(f.isAllowed(at: .ultimate), "Ultimate includes \(f)")
         }
         XCTAssertTrue(Tier.ultimate > Tier.pro && Tier.pro > Tier.free)
-        // Nothing unfinished is sold: every Ultimate feature is hidden until it's ready.
-        XCTAssertFalse(Feature.allCases.contains { $0.tier == .ultimate && $0.isReady })
+        // Ultimate has shipped features of its own, and unfinished ones stay hidden.
+        XCTAssertTrue(Feature.allCases.contains { $0.tier == .ultimate && $0.isReady })
+        XCTAssertTrue(Feature.allCases.allSatisfy { $0.tier != .free })
     }
 
     func testRevocationListMustBeSigned() {

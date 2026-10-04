@@ -28,6 +28,7 @@
 		177A1AEC9D972E4C15CC5804 /* AppIcon.icns in Resources */ = {isa = PBXBuildFile; fileRef = 295575A04EF33302E9D9A7FE /* AppIcon.icns */; };
 		1B28E6933512791CD9E4C469 /* TodayExtras.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2254DC7F98860645E6CC2E11 /* TodayExtras.swift */; };
 		1CBAB31C782A4307CEAD9136 /* ScreenRecorder.swift in Sources */ = {isa = PBXBuildFile; fileRef = D47EB2F7C24DD6B0DA17C7B0 /* ScreenRecorder.swift */; };
+		1DA0B71A05D5AA548E158EE8 /* MarketsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2600981443BE101B7F8049FD /* MarketsView.swift */; };
 		1E02BE7CA6FA7A27CDFB4B1D /* AppTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5F7CF2FFE504D781512227C /* AppTheme.swift */; };
 		219D17761C8C9DB4C03DCBCF /* VoiceNotesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34E21597A89BA509A323CB7C /* VoiceNotesView.swift */; };
 		2386441F130CA43774F8A976 /* ShortcutRecorder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1AD68AAB70138C11AD1C119D /* ShortcutRecorder.swift */; };
@@ -95,6 +96,7 @@
 		A1B21CB550FFC4A1CC1B692D /* SnapDropController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 67D16800EDB504F3DA0705BE /* SnapDropController.swift */; };
 		A26267A7F5F6222E17F6D2B3 /* BrowserView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 774C33C70EBDEB708A71DBC1 /* BrowserView.swift */; };
 		A358C5DCEA06EB17B99C6907 /* ActivationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2080B6F1BB18CC9E7A42044 /* ActivationView.swift */; };
+		A561FED3D648A2B4BEBC4BB9 /* ExternalActivities.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94617614D11E8110B03EB9F7 /* ExternalActivities.swift */; };
 		A7039DDEBFEE893E0219A6AB /* NotchWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = E56AAC7ADE87A47F1E7862C3 /* NotchWidget.swift */; };
 		A89C797DB626E953AFF87B9E /* MathText.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78B2FB154D159E0F982419C0 /* MathText.swift */; };
 		AA519CEBD27CD812DD518136 /* Tunnelblick.dmg in Resources */ = {isa = PBXBuildFile; fileRef = 46A01968170BB2B7959205B3 /* Tunnelblick.dmg */; };
@@ -118,6 +120,7 @@
 		CAED309713A89A35F4C679CE /* WhatsNew.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE594AA0AF5EFE02B030F414 /* WhatsNew.swift */; };
 		CD90A054724EB2DEDC4FEE75 /* DemoHooks.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6FFA9D604A028F627FC52A01 /* DemoHooks.swift */; };
 		CEB54EB841EFFF09AB43ADFE /* BackgroundMusic-LICENSE.txt in Resources */ = {isa = PBXBuildFile; fileRef = 1D75D90CD0ED25880BFFC38F /* BackgroundMusic-LICENSE.txt */; };
+		CF18C9EA57286EB1C27AB45F /* MoreTeams.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3B881CB7581853FDB9B13F1F /* MoreTeams.swift */; };
 		CFAB476520EEBC0E831DF7DE /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 6E8B16EE4068BC4835F8B4C0 /* GoogleService-Info.plist */; };
 		D008BFB60E8F1B1C8CBBFD43 /* LiveView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFADF33A515791B8743E49FB /* LiveView.swift */; };
 		D14A7182094B0FCB8A57044B /* WorldClockView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BC0266F190CB2E6D5FE2CE7 /* WorldClockView.swift */; };
@@ -186,6 +189,7 @@
 		21DB33F0188BFD9B3D8FA4C3 /* ClipboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClipboardView.swift; sourceTree = "<group>"; };
 		2254DC7F98860645E6CC2E11 /* TodayExtras.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodayExtras.swift; sourceTree = "<group>"; };
 		25B7E1619A5F162E845D012C /* FaceUnlock.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FaceUnlock.swift; sourceTree = "<group>"; };
+		2600981443BE101B7F8049FD /* MarketsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarketsView.swift; sourceTree = "<group>"; };
 		281C97D2743323428F5ACD8F /* VPNManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VPNManager.swift; sourceTree = "<group>"; };
 		295575A04EF33302E9D9A7FE /* AppIcon.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; path = AppIcon.icns; sourceTree = "<group>"; };
 		2FDF0D52167C63FBB161D611 /* SystemHUDObserver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SystemHUDObserver.swift; sourceTree = "<group>"; };
@@ -193,6 +197,7 @@
 		34E21597A89BA509A323CB7C /* VoiceNotesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceNotesView.swift; sourceTree = "<group>"; };
 		3718F42274C479A025DF477B /* NotchApple.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = NotchApple.entitlements; sourceTree = "<group>"; };
 		3ABE2D3E36BD860C5C51BF9D /* AudioDeviceController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioDeviceController.swift; sourceTree = "<group>"; };
+		3B881CB7581853FDB9B13F1F /* MoreTeams.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoreTeams.swift; sourceTree = "<group>"; };
 		3C357EE29CC1EB9117F9FD20 /* FocusView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FocusView.swift; sourceTree = "<group>"; };
 		3D5341204537860AAD266BF9 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		3ED6813AA8EF7F3F44235A0D /* NotchWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotchWindowController.swift; sourceTree = "<group>"; };
@@ -248,6 +253,7 @@
 		92FC7E64A4478DE0F57D42E4 /* WeatherService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeatherService.swift; sourceTree = "<group>"; };
 		93AC47229DA13D09C39B7BBA /* LyricsModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LyricsModel.swift; sourceTree = "<group>"; };
 		9428FE6894A084A43909BD76 /* ScreenTimeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenTimeView.swift; sourceTree = "<group>"; };
+		94617614D11E8110B03EB9F7 /* ExternalActivities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExternalActivities.swift; sourceTree = "<group>"; };
 		97CC70FFD067091FDE1231BB /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		98A8EB2467586B8A5E087088 /* WindowManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindowManager.swift; sourceTree = "<group>"; };
 		99DF8E198CA571FF54F70A9B /* DevicesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DevicesView.swift; sourceTree = "<group>"; };
@@ -353,6 +359,7 @@
 				FFD80C1974A515C07A482D28 /* Games */,
 				4A31A1C2CA7DE400C61A8027 /* Launcher */,
 				26DB45DCC02360CD38C22FD3 /* Live */,
+				5F0C73E4FBAF7B85EF28C088 /* Markets */,
 				928715D8716E7F408FC89AB9 /* Messenger */,
 				AA4125385CFB57411FC76DF8 /* Mirror */,
 				B6228F40A5A660988AA1FFF4 /* Notes */,
@@ -464,6 +471,7 @@
 				C5F7CF2FFE504D781512227C /* AppTheme.swift */,
 				6FFA9D604A028F627FC52A01 /* DemoHooks.swift */,
 				FBF521DE52E4227ABF0CCC29 /* Entitlements.swift */,
+				94617614D11E8110B03EB9F7 /* ExternalActivities.swift */,
 				4DAB6955A36172C93698DDEC /* FeatureHub.swift */,
 				1BB3450673E6FC967D2A1F87 /* KeychainHelper.swift */,
 				B16F24E7C42EBCCB3F46202A /* LicenseKey.swift */,
@@ -479,6 +487,14 @@
 				EE594AA0AF5EFE02B030F414 /* WhatsNew.swift */,
 			);
 			path = Core;
+			sourceTree = "<group>";
+		};
+		5F0C73E4FBAF7B85EF28C088 /* Markets */ = {
+			isa = PBXGroup;
+			children = (
+				2600981443BE101B7F8049FD /* MarketsView.swift */,
+			);
+			path = Markets;
 			sourceTree = "<group>";
 		};
 		5FBEBD2F24CA136CBA09D39A /* Windows */ = {
@@ -753,6 +769,7 @@
 		E618A3E398B08451A1D59A88 /* Sports */ = {
 			isa = PBXGroup;
 			children = (
+				3B881CB7581853FDB9B13F1F /* MoreTeams.swift */,
 				B9AE3E9758D2882B557A695A /* SportsModel.swift */,
 				768548256973F1C93565E1FB /* SportsView.swift */,
 			);
@@ -937,6 +954,7 @@
 				3DEAFC4359632CB4DF71ECE1 /* DevicesView.swift in Sources */,
 				242C7B0C09B073631A588CBE /* DownloadWatcher.swift in Sources */,
 				305D3067C2952F9CDCE2C833 /* Entitlements.swift in Sources */,
+				A561FED3D648A2B4BEBC4BB9 /* ExternalActivities.swift in Sources */,
 				30DCFA374C50438319E87754 /* ExtrasSettings.swift in Sources */,
 				DCE9CF6CAF6F38227D18150F /* F1Model.swift in Sources */,
 				DE787D98D8EB9B7B2E4CB705 /* F1View.swift in Sources */,
@@ -956,11 +974,13 @@
 				C5CB119C0BE108708E65FC9E /* LocalP2PManager.swift in Sources */,
 				2451D6C550A6B50F33FB0D88 /* LocationProvider.swift in Sources */,
 				8F8A7D3944B4A343BEAE8C0C /* LyricsModel.swift in Sources */,
+				1DA0B71A05D5AA548E158EE8 /* MarketsView.swift in Sources */,
 				A89C797DB626E953AFF87B9E /* MathText.swift in Sources */,
 				559DB140309458EAB8AD6BFF /* MediaKeyInterceptor.swift in Sources */,
 				5017D7AB333DCC40EBD7CDBB /* MessengerModels.swift in Sources */,
 				028C6C33AD6C682F03B0695B /* MessengerNotifier.swift in Sources */,
 				EA6A5158CB578D683DE18C94 /* MirrorView.swift in Sources */,
+				CF18C9EA57286EB1C27AB45F /* MoreTeams.swift in Sources */,
 				874BC0D84B434A3CE5910FCD /* MusicLevelMeter.swift in Sources */,
 				4098B0C40272540FC563BC1F /* NotchAppleApp.swift in Sources */,
 				E939E90FAF6BDF621DD802D5 /* NotchBehavior.swift in Sources */,
@@ -1150,7 +1170,7 @@
 				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Manual;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 34;
+				CURRENT_PROJECT_VERSION = 35;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = "";
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -1165,7 +1185,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 1.17.0;
+				MARKETING_VERSION = 1.18.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -1264,7 +1284,7 @@
 				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Manual;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 34;
+				CURRENT_PROJECT_VERSION = 35;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = "";
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -1285,7 +1305,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 1.17.0;
+				MARKETING_VERSION = 1.18.0;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;

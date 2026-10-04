@@ -21,6 +21,14 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "1.18.0", date: "4 October 2026", headline: "More live activities", items: [
+            "A soft pulse beside the notch when a video call is about to start, with Join one click away.",
+            "Pro: Markets, a watchlist of stocks and crypto with today's change and a chart; pin one beside the notch.",
+            "Pro: live flight status in Live (altitude and speed while it's in the air), pinned beside the notch.",
+            "Pro: follow up to five more teams in Sports; their live scores take turns beside the notch.",
+            "Ultimate: the Live Activities API. Show your own builds, uploads or anything else beside the notch from Terminal, Shortcuts or an app.",
+            "Ultimate: two activities at once, one in each ear (say a timer and a live score).",
+        ]),
         ReleaseNote(version: "1.17.0", date: "4 October 2026", headline: "A notch that fits how you work", items: [
             "Settings → Notch: hover delay, hide in fullscreen apps, and (optionally) hide while the screen is recorded.",
             "Keyboard control: ⌘1–⌘9 jump to a tab, ⌘[ and ⌘] step through them. Long-press the closed notch for quick actions; swipe on the tab bar to change tabs, swipe up to close.",

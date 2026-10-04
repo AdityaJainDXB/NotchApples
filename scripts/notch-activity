@@ -1,0 +1,23 @@
+#!/bin/bash
+# Show a live activity beside the Notch apple notch (needs Notch apple Ultimate).
+#
+#   notch-activity <id> [--title T] [--text T] [--symbol sf.symbol] [--progress 0.5] [--color 34C759] [--seconds 600]
+#   notch-activity <id> --end
+#
+# Example, a build that reports progress:
+#   notch-activity build --title Build --symbol hammer.fill --progress 0.3
+#   ...
+#   notch-activity build --end
+set -euo pipefail
+[ $# -ge 1 ] || { sed -n 2,9p "$0"; exit 1; }
+id="$1"; shift
+enc() { python3 -c 'import sys,urllib.parse;print(urllib.parse.quote(sys.argv[1],safe=""))' "$1"; }
+q="id=$(enc "$id")"; path="activity"
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --end) path="activity/end"; shift ;;
+    --title|--text|--symbol|--progress|--color|--seconds) q="$q&${1#--}=$(enc "$2")"; shift 2 ;;
+    *) echo "Unknown option $1"; exit 1 ;;
+  esac
+done
+open -g "notchapple://$path?$q"

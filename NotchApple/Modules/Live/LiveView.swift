@@ -133,6 +133,8 @@ enum TrackingLinks {
 struct LiveView: View {
     @StateObject private var scores = ScoresModel.shared
     @AppStorage("live.tracked") private var trackedData = Data()
+    @StateObject private var flights = FlightWatcher.shared
+    @ObservedObject private var entitlements = Entitlements.shared
     @State private var newCode = ""
     @State private var newLabel = ""
 
@@ -180,8 +182,22 @@ struct LiveView: View {
                                     VStack(alignment: .leading, spacing: 1) {
                                         Text(item.label.isEmpty ? item.code : item.label).font(.system(size: 12, weight: .medium)).foregroundStyle(.white).lineLimit(1)
                                         Text("\(link.kind) · \(item.code)").font(.system(size: 10)).foregroundStyle(Theme.textSecondary).lineLimit(1)
+                                        if link.kind == "Flight", let s = flights.describe(item.code) {
+                                            Text(s).font(.system(size: 10, weight: .semibold)).foregroundStyle(.cyan).lineLimit(1)
+                                        }
                                     }
                                     Spacer()
+                                    if link.kind == "Flight" {
+                                        if entitlements.canUse(.flightStatus) {
+                                            IconButton(systemImage: flights.pinned.uppercased() == item.code.uppercased() ? "pin.fill" : "pin",
+                                                       help: "Show this flight beside the notch while it's in the air") {
+                                                flights.pinned = flights.pinned.uppercased() == item.code.uppercased() ? "" : item.code
+                                                flights.check(item.code, force: true)
+                                            }
+                                        } else {
+                                            TierBadge(tier: .pro).help(Feature.flightStatus.benefit)
+                                        }
+                                    }
                                     IconButton(systemImage: "arrow.up.right.square", help: "Open tracking page") {
                                         NSWorkspace.shared.open(link.url)
                                         AppDelegate.current?.notch?.closeNotch()
@@ -195,7 +211,10 @@ struct LiveView: View {
             }
             .frame(width: 260)
         }
-        .onAppear { scores.refreshIfDue() }
+        .onAppear {
+            scores.refreshIfDue()
+            for item in tracked where TrackingLinks.resolve(item.code).kind == "Flight" { flights.check(item.code) }
+        }
     }
 
     private func gameRow(_ g: ScoresModel.Game) -> some View {
@@ -224,4 +243,78 @@ struct LiveView: View {
     }
 
     private func save(_ items: [TrackedItem]) { trackedData = (try? JSONEncoder().encode(items)) ?? Data() }
+}
+
+// MARK: - Live flight status (Pro)
+
+/// Where a flight is right now, from ADSB.lol's free public feed of aircraft
+/// transponders (no key). Only the flight's call sign is sent. Pin a flight to
+/// see its altitude and speed beside the notch while it's in the air.
+@MainActor
+final class FlightWatcher: ObservableObject {
+    static let shared = FlightWatcher()
+
+    struct Status: Equatable {
+        let airborne: Bool
+        let altitude: Int?      // feet
+        let speed: Int?         // knots
+        let checked: Date
+    }
+
+    @AppStorage("live.pinnedFlight") var pinned = ""
+    @Published private(set) var status: [String: Status] = [:]
+    private var lastFetch: [String: Date] = [:]
+
+    /// IATA airline code → ICAO, because transponders broadcast ICAO call signs (EK202 → UAE202).
+    static let airlines: [String: String] = [
+        "EK": "UAE", "QR": "QTR", "EY": "ETD", "FZ": "FDB", "G9": "ABY", "BA": "BAW", "VS": "VIR", "AA": "AAL", "UA": "UAL",
+        "DL": "DAL", "WN": "SWA", "B6": "JBU", "AS": "ASA", "AC": "ACA", "LH": "DLH", "AF": "AFR", "KL": "KLM", "TK": "THY",
+        "SQ": "SIA", "CX": "CPA", "QF": "QFA", "NH": "ANA", "JL": "JAL", "AI": "AIC", "6E": "IGO", "UK": "VTI", "SV": "SVA",
+        "MS": "MSR", "FR": "RYR", "U2": "EZY", "W6": "WZZ", "IB": "IBE", "LX": "SWR", "OS": "AUA", "SK": "SAS", "AY": "FIN",
+        "EI": "EIN", "KE": "KAL", "OZ": "AAR", "CA": "CCA", "MU": "CES", "CZ": "CSN", "ET": "ETH", "KQ": "KQA", "WY": "OMA",
+        "GF": "GFA", "PK": "PIA", "TG": "THA", "MH": "MAS", "GA": "GIA", "VN": "HVN", "NZ": "ANZ", "LA": "LAN", "AV": "AVA",
+    ]
+
+    static func callsign(_ flight: String) -> String {
+        let f = flight.uppercased().replacingOccurrences(of: " ", with: "")
+        guard f.count >= 3 else { return f }
+        let prefix = String(f.prefix(2)), rest = f.dropFirst(2)
+        if let icao = airlines[prefix], rest.allSatisfy(\.isNumber) { return icao + rest }
+        return f
+    }
+
+    func check(_ flight: String, force: Bool = false) {
+        guard Entitlements.shared.canUse(.flightStatus) else { return }
+        let key = flight.uppercased()
+        guard force || Date.now.timeIntervalSince(lastFetch[key] ?? .distantPast) > 90 else { return }
+        lastFetch[key] = .now
+        let cs = Self.callsign(flight)
+        Task {
+            guard let url = URL(string: "https://api.adsb.lol/v2/callsign/\(cs)"),
+                  let (data, r) = try? await URLSession.shared.data(for: URLRequest(url: url, timeoutInterval: 15)),
+                  (r as? HTTPURLResponse)?.statusCode == 200,
+                  let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else { return }
+            let ac = (json["ac"] as? [[String: Any]])?.first
+            let alt = ac?["alt_baro"] as? Int ?? (ac?["alt_baro"] as? Double).map { Int($0) }
+            let gs = (ac?["gs"] as? Double).map { Int($0) }
+            status[key] = Status(airborne: ac != nil && (alt ?? 0) > 0, altitude: alt, speed: gs, checked: .now)
+            LiveActivityCenter.shared.recompute()
+        }
+    }
+
+    /// Heartbeat: keep the pinned flight fresh (every 90 s).
+    func refreshIfDue() { if !pinned.isEmpty { check(pinned) } }
+
+    var liveActivity: LiveActivity? {
+        guard Entitlements.shared.canUse(.flightStatus), !pinned.isEmpty,
+              let s = status[pinned.uppercased()], s.airborne else { return nil }
+        let alt = s.altitude.map { $0 >= 1000 ? "\($0 / 1000)k ft" : "\($0) ft" } ?? ""
+        return LiveActivity(symbol: "airplane", label: "\(pinned.uppercased()) \(alt)", tint: .systemCyan)
+    }
+
+    func describe(_ flight: String) -> String? {
+        guard let s = status[flight.uppercased()] else { return nil }
+        guard s.airborne else { return "Not in the air right now" }
+        return ["In the air", s.altitude.map { "\($0.formatted()) ft" }, s.speed.map { "\($0) kt" }].compactMap { $0 }.joined(separator: " · ")
+    }
 }

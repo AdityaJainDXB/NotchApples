@@ -43,7 +43,7 @@ final class MeetingWatcher: ObservableObject {
 
     var liveActivity: LiveActivity? {
         guard let m = imminent else { return nil }
-        return LiveActivity(symbol: "video.fill", label: m.start > .now ? "Join" : "Now", tint: .systemGreen)
+        return LiveActivity(symbol: "video.fill", label: m.start > .now ? "Join" : "Now", tint: .systemGreen, pulse: m.start > .now)
     }
 
     func check() {

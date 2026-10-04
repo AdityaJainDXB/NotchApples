@@ -159,7 +159,8 @@ final class NotchTriggerView: NSView {
         if activity.dotOnly { return 20 }
         // Wider ears for words ("Charging", "85% · 1h 20m to full"): both sides match, so the shape stays centred.
         let font = NSFont.monospacedDigitSystemFont(ofSize: 12.5, weight: .semibold)
-        let right = activity.label.map { NSAttributedString(string: $0, attributes: [.font: font]).size().width } ?? 0
+        let right = (activity.label.map { NSAttributedString(string: $0, attributes: [.font: font]).size().width } ?? 0)
+            + (activity.rightSymbol != nil ? 22 : 0)
         let left = activity.leftText.map { NSAttributedString(string: $0, attributes: [.font: NSFont.systemFont(ofSize: 12.5, weight: .semibold)]).size().width + 30 } ?? 0
         return max(58, ceil(max(left, right) + 14))
     }
@@ -212,7 +213,7 @@ final class NotchTriggerView: NSView {
             if abs(g - displayedGauge) > 0.001 { displayedGauge += (g - displayedGauge) * gaugeEase; moving = true }
             else { displayedGauge = g }
         }
-        if isRecording { pulse += 3.6 * dt; moving = true }
+        if isRecording || activity?.pulse == true { pulse += 3.6 * dt; moving = true }
         needsDisplay = true
         if !moving { ticker?.invalidate(); ticker = nil }
     }
@@ -286,7 +287,20 @@ final class NotchTriggerView: NSView {
                    let img = NSImage(systemSymbolName: name, accessibilityDescription: nil)?
                         .withSymbolConfiguration(.init(pointSize: 13, weight: .semibold).applying(.init(paletteColors: [activity.tint]))) {
                     let size = img.size
-                    img.draw(in: NSRect(x: leftEar.minX + 2, y: leftEar.midY - size.height / 2, width: size.width, height: size.height))
+                    let iconRect = NSRect(x: leftEar.minX + 2, y: leftEar.midY - size.height / 2, width: size.width, height: size.height)
+                    if activity.pulse {
+                        // Breathing glow: a meeting is about to start.
+                        let t = (sin(pulse * 2) + 1) / 2
+                        activity.tint.withAlphaComponent(0.18 + 0.3 * t).setFill()
+                        NSBezierPath(ovalIn: iconRect.insetBy(dx: -4 - 2 * t, dy: -4 - 2 * t)).fill()
+                    }
+                    img.draw(in: iconRect)
+                }
+                if let name = activity.rightSymbol, let label = activity.label,
+                   let img = NSImage(systemSymbolName: name, accessibilityDescription: nil)?
+                        .withSymbolConfiguration(.init(pointSize: 12, weight: .semibold).applying(.init(paletteColors: [activity.rightTint ?? activity.tint]))) {
+                    let w = NSAttributedString(string: label, attributes: [.font: NSFont.monospacedDigitSystemFont(ofSize: 12.5, weight: .semibold)]).size().width
+                    img.draw(in: NSRect(x: rightEar.maxX - w - img.size.width - 5, y: rightEar.midY - img.size.height / 2, width: img.size.width, height: img.size.height))
                 }
                 if let word = activity.leftText {
                     let str = NSAttributedString(string: word, attributes: [.font: NSFont.systemFont(ofSize: 12.5, weight: .semibold),
@@ -296,7 +310,7 @@ final class NotchTriggerView: NSView {
                 if let label = activity.label {
                     let attrs: [NSAttributedString.Key: Any] = [
                         .font: NSFont.monospacedDigitSystemFont(ofSize: 12.5, weight: .semibold),
-                        .foregroundColor: activity.tint,
+                        .foregroundColor: activity.rightTint ?? activity.tint,
                     ]
                     let str = NSAttributedString(string: label, attributes: attrs)
                     let size = str.size()

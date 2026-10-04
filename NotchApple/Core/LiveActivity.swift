@@ -29,6 +29,12 @@ struct LiveActivity: Equatable {
     var artwork: NSImage? = nil  // album cover in the left ear (music)
     var musicBars = false        // animated equaliser bars in the right ear (music)
     var leftText: String? = nil  // a word after the icon in the left ear, e.g. "Charging"
+    var rightSymbol: String? = nil  // a second activity's icon in the right ear (Ultimate stacking)
+    var rightTint: NSColor? = nil
+    var pulse = false            // a soft breathing glow behind the left icon (meeting about to start)
+
+    /// Icon and short text only (no gauge, bars, artwork or dot), so two can share the ears.
+    var isSimple: Bool { gauge == nil && !musicBars && !dotOnly && artwork == nil && rightSymbol == nil }
 }
 
 @MainActor
@@ -60,6 +66,15 @@ final class LiveActivityCenter: ObservableObject {
         recompute()
     }
 
+    /// Ultimate: the two most important activities share the notch, one per ear
+    /// (e.g. a timer on the left and a live score on the right).
+    static func stacked(_ a: LiveActivity, _ b: LiveActivity?) -> LiveActivity {
+        guard let b, a.isSimple, b.isSimple, UserDefaults.standard.object(forKey: "notch.stackActivities") as? Bool ?? true,
+              MainActor.assumeIsolated({ Entitlements.shared.canUse(.activityStacking) }) else { return a }
+        return LiveActivity(symbol: a.symbol, label: b.label, tint: a.tint, leftText: a.label ?? a.leftText,
+                            rightSymbol: b.symbol ?? "circle.fill", rightTint: b.tint, pulse: a.pulse)
+    }
+
     /// Recalculates what the closed notch should show.
     func recompute() {
         var next: LiveActivity?
@@ -69,11 +84,12 @@ final class LiveActivityCenter: ObservableObject {
             next = flash
         } else if let flash = extraFlash {
             next = flash
-        } else if SettingsManager.shared.focusEnabled, let focus = FocusTimer.shared.liveActivity {
-            next = focus
-        } else if let ongoing = providers.lazy.compactMap({ $0() }).first {
-            next = ongoing
-        } else if MessengerNotifier.shared.unread > 0 {
+        } else {
+            let focus = SettingsManager.shared.focusEnabled ? FocusTimer.shared.liveActivity : nil
+            let ongoing = [focus].compactMap { $0 } + providers.compactMap { $0() }
+            if let first = ongoing.first { next = Self.stacked(first, ongoing.dropFirst().first) }
+        }
+        if next == nil, MessengerNotifier.shared.unread > 0 {
             next = LiveActivity(symbol: nil, label: nil, tint: NSColor(Theme.accentBright), dotOnly: true)
         }
         guard next != current else { return }

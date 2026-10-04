@@ -36,6 +36,7 @@ struct SportsView: View {
                         .font(.system(size: 10)).foregroundStyle(Theme.textSecondary)
                 }
                 Spacer()
+                MoreTeamsMenu()
                 changeTeamMenu
                 IconButton(systemImage: "arrow.clockwise", help: "Refresh") { sports.refreshAll() }
             }

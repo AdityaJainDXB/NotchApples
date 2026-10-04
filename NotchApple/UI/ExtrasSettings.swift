@@ -9,6 +9,7 @@ import SwiftUI
 
 struct ExtrasSettings: View {
     @EnvironmentObject private var settings: SettingsManager
+    @AppStorage("notch.stackActivities") private var stack = true
 
     var body: some View {
         Form {
@@ -23,10 +24,25 @@ struct ExtrasSettings: View {
                 Toggle("Microphone and camera in use (Devices add-on)", isOn: $settings.privacyIndicator)
                 Toggle("Accessory low battery (Devices add-on)", isOn: $settings.accessoryBatteryAlert)
                 Toggle("New notifications (Notifications add-on)", isOn: $settings.flashNotifications)
+                Toggle("Show two activities at once, one in each ear", isOn: $stack).requires(.activityStacking)
             } header: {
                 Text("Beside the closed notch")
             } footer: {
                 Text("Timers, the stopwatch, screen recordings and live scores always show while they run.")
+            }
+            Section {
+                Text(verbatim: "open -g \"notchapple://activity?id=build&title=Build&text=42%&symbol=hammer.fill&progress=0.42\"")
+                    .font(.system(.caption, design: .monospaced)).textSelection(.enabled)
+                Text(verbatim: "open -g \"notchapple://activity/end?id=build\"")
+                    .font(.system(.caption, design: .monospaced)).textSelection(.enabled)
+                Link("How to use it (README) →", destination: URL(string: "https://github.com/AdityaJainDXB/NotchApples#live-activities-api")!)
+            } header: {
+                HStack(spacing: 6) {
+                    Text("Activities from your apps and scripts")
+                    if !Entitlements.shared.canUse(.liveActivityAPI) { TierBadge(tier: .ultimate).help(Feature.liveActivityAPI.benefit) }
+                }
+            } footer: {
+                Text("Builds, uploads, deploys, anything: show its progress beside the notch from Terminal, Shortcuts or your own app. It stays on this Mac.")
             }
             Section {
                 MusicPlayerPicker()

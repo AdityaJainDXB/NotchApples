@@ -46,7 +46,9 @@ enum Feature: String, CaseIterable, Identifiable {
     // Pro: customization
     case proThemes, customColors, themeEditor
     // Pro: live activities
-    case meetingAlert, downloadProgress
+    case meetingAlert, downloadProgress, markets, flightStatus, multiMatch
+    // Ultimate: live activities
+    case activityStacking
     // Pro: AI
     case aiCapture, aiHistory, aiFileDrop
     // Pro: tabs
@@ -62,14 +64,14 @@ enum Feature: String, CaseIterable, Identifiable {
 
     var tier: Tier {
         switch self {
-        case .liveActivityAPI, .pluginSDK, .prioritySupport, .betaChannel: .ultimate
+        case .liveActivityAPI, .activityStacking, .pluginSDK, .prioritySupport, .betaChannel: .ultimate
         default: .pro
         }
     }
 
     var isReady: Bool {
         switch self {
-        case .liveActivityAPI, .pluginSDK, .prioritySupport, .betaChannel: false
+        case .pluginSDK, .prioritySupport, .betaChannel: false
         default: true
         }
     }
@@ -85,6 +87,10 @@ enum Feature: String, CaseIterable, Identifiable {
         case .themeEditor: "Theme editor"
         case .meetingAlert: "Meeting alerts"
         case .downloadProgress: "Download progress"
+        case .markets: "Markets"
+        case .flightStatus: "Live flight status"
+        case .multiMatch: "More teams"
+        case .activityStacking: "Two activities at once"
         case .aiCapture: "Ask about your screen"
         case .aiHistory: "AI history"
         case .aiFileDrop: "Images and PDFs in AI"
@@ -120,6 +126,10 @@ enum Feature: String, CaseIterable, Identifiable {
         case .themeEditor: "Build a theme, then export it or import one from a friend."
         case .meetingAlert: "A heads-up before meetings, with a Join button."
         case .downloadProgress: "Watch downloads fill up beside the notch."
+        case .markets: "Stocks and crypto with today's change; pin one beside the notch."
+        case .flightStatus: "Altitude and speed of a flight in the air, beside the notch."
+        case .multiMatch: "Follow up to five more teams; live scores take turns beside the notch."
+        case .activityStacking: "Show two live activities at once, one in each ear."
         case .aiCapture: "Capture any part of the screen (⌃⌥S) or selected text and ask about it."
         case .aiHistory: "Search, reopen and export past AI conversations."
         case .aiFileDrop: "Drop or paste images and PDFs into the AI tab."

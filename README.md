@@ -201,6 +201,15 @@ All screenshots use sample data.
 
 ## What's new
 
+### 1.18.0 · 4 October 2026 · More live activities
+
+- **Meeting pulse:** a soft glow beside the notch when a video call is about to start, with Join one click away.
+- **Pro · Markets:** a watchlist of stocks and crypto with today's change and a chart; pin one beside the notch.
+- **Pro · Live flight status:** altitude and speed of a tracked flight while it's in the air, pinned beside the notch.
+- **Pro · More teams:** follow up to five more teams in Sports; live scores take turns beside the notch.
+- **Ultimate · [Live Activities API](#live-activities-api):** show your own builds, uploads or anything else beside the notch from Terminal, Shortcuts or an app.
+- **Ultimate · Two at once:** two activities share the notch, one in each ear.
+
 ### 1.17.0 · 4 October 2026 · A notch that fits how you work
 
 - **Settings → Notch:** hover delay, **hide in fullscreen apps** (videos, games, presentations), and optionally hide while the screen is recorded.
@@ -438,6 +447,36 @@ echo "Disk: $(df -h / | awk 'NR==2 {print $4}') free"
 echo "Uptime $(uptime | sed 's/.*up \([^,]*\),.*/\1/')"
 echo "Open GitHub | href=https://github.com"
 ```
+
+## Live activities API
+
+*Ultimate.* Show your own live activity beside the closed notch, from Terminal, Shortcuts or your own app. Activities only exist on your Mac, in memory.
+
+```bash
+open -g "notchapple://activity?id=build&title=Build&text=42%25&symbol=hammer.fill&progress=0.42&color=34C759&seconds=600"
+open -g "notchapple://activity/end?id=build"
+```
+
+Or use the helper in [scripts/notch-activity](scripts/notch-activity):
+
+```bash
+scripts/notch-activity build --title Build --symbol hammer.fill --progress 0.3
+scripts/notch-activity build --end
+```
+
+From an app, post a distributed notification named `com.notchapple.activity` with the same keys in `userInfo` (add `end: true` to remove it).
+
+| Key | Meaning |
+|---|---|
+| `id` | Required. Updating the same id replaces it |
+| `title` | Up to 14 characters, left ear |
+| `text` | Up to 16 characters, right ear |
+| `symbol` | Any SF Symbol name |
+| `progress` | 0 to 1; without `text` it draws a bar |
+| `color` | `RRGGBB` |
+| `seconds` | How long it stays (default 10 minutes, up to 12 hours) |
+
+Up to five at a time; the most recently updated one shows (two with **Two activities at once**).
 
 ## Control the notch from Shortcuts
 
