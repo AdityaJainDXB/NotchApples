@@ -225,7 +225,7 @@ async function sendMail(env, to, subject, text) {
   } else {
     r = await fetch('https://api.brevo.com/v3/smtp/email', {
       method: 'POST', headers: { 'api-key': env.MAIL_API_KEY, 'content-type': 'application/json' },
-      body: JSON.stringify({ sender: { email: env.MAIL_FROM, name: 'Notch apple' }, to: [{ email: to }], subject, textContent: text }),
+      body: JSON.stringify({ sender: { email: env.MAIL_FROM, name: 'Notch Apples' }, to: [{ email: to }], subject, textContent: text }),
     });
   }
   if (!r.ok) console.error('Email not sent', env.MAIL_PROVIDER, r.status, (await r.text()).slice(0, 300));
@@ -237,7 +237,7 @@ function keyMail(keys) {
   return `Thanks for supporting Notch apple!\n\n${lines.join('\n\n')}\n\n` +
     'Or open Notch apple → Settings → License, paste the key and press Activate.\n' +
     "It's yours for life: every 1.x update is included. Keep this email; if you lose the key, use \"Lost my key?\" on the website.\n\n" +
-    'Help: https://github.com/AdityaJainDXB/NotchApples/issues';
+    'Questions? Just reply to this email, or write to notchapples.support@gmail.com.';
 }
 
 // MARK: Routes

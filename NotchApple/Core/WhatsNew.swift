@@ -21,6 +21,13 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "1.24.0", date: "4 October 2026", headline: "Notch apple on your iPhone", items: [
+            "Ultimate: the iPhone companion. Send text and links to the notch, see the Mac's battery and music, and control music, timers and Keep Awake. It works over your Wi-Fi with no server, and every message is encrypted.",
+            "Get NotchAppleCompanion.ipa from the release and install it with Sideloadly. With a free Apple ID, reinstall it every 7 days. Pair it in Settings → iPhone.",
+            "Shortcuts on iPhone: “Send to Mac notch” and “Get Mac status”, including from the share sheet.",
+            "Pro: speed (0.5× to 3×) and skip 10 seconds for video and podcasts playing in Safari, Chrome, Arc, Brave or Edge.",
+            "Questions about a purchase? Write to notchapples.support@gmail.com.",
+        ]),
         ReleaseNote(version: "1.23.1", date: "4 October 2026", headline: "Pro and Ultimate are on sale", items: [
             "Buy Pro ($1) or Ultimate ($5) on the website: your signed key is shown and emailed, and works on up to 3 Macs.",
             "Every future update is included for buyers, 2.0 and beyond. Add an optional tip at checkout if you'd like.",

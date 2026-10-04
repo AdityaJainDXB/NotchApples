@@ -3,12 +3,13 @@ options:
   bundleIdPrefix: com.notchapple
   deploymentTarget:
     macOS: "14.0"
+    iOS: "17.0"
   createIntermediateGroups: true
 settings:
   base:
     SWIFT_VERSION: "5.0"
-    MARKETING_VERSION: "1.23.1"
-    CURRENT_PROJECT_VERSION: "41"
+    MARKETING_VERSION: "1.24.0"
+    CURRENT_PROJECT_VERSION: "42"
     CODE_SIGN_IDENTITY: "-"
     CODE_SIGN_STYLE: Manual
     DEVELOPMENT_TEAM: ""
@@ -17,7 +18,7 @@ targets:
   NotchApple:
     type: application
     platform: macOS
-    sources: [NotchApple, Shared]
+    sources: [NotchApple, Shared, CompanionKit]
     dependencies:
       - target: NotchWidget
         embed: true
@@ -39,6 +40,20 @@ targets:
         CODE_SIGN_ENTITLEMENTS: NotchWidget/NotchWidget.entitlements
         GENERATE_INFOPLIST_FILE: NO
         SKIP_INSTALL: YES
+  NotchCompanion:
+    type: application
+    platform: iOS
+    sources: [NotchCompanion, CompanionKit]
+    settings:
+      base:
+        PRODUCT_NAME: "NotchCompanion"
+        PRODUCT_BUNDLE_IDENTIFIER: com.notchapple.companion
+        INFOPLIST_FILE: NotchCompanion/Info.plist
+        GENERATE_INFOPLIST_FILE: NO
+        TARGETED_DEVICE_FAMILY: "1"
+        CODE_SIGNING_ALLOWED: NO
+        ENABLE_HARDENED_RUNTIME: NO
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
   NotchAppleTests:
     type: bundle.unit-test
     platform: macOS
@@ -55,6 +70,7 @@ targets:
       - NotchApple/Modules/Claude/AppleIntelligence.swift
       - NotchApple/Modules/Tools/Converter.swift
       - NotchApple/Core/PureModels.swift
+      - CompanionKit
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.notchapple.tests

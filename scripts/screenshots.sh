@@ -29,7 +29,9 @@ echo "› Preparing the screenshot build"
 rm -rf "$WORK"; mkdir -p "$WORK" "$DATA"
 git -C "$ROOT" worktree add -q --detach "$WORK/src" HEAD
 trap 'git -C "$ROOT" worktree remove --force "$WORK/src" >/dev/null 2>&1 || true' EXIT
-rsync -a --exclude .git "$ROOT/NotchApple/" "$WORK/src/NotchApple/"   # include uncommitted work
+for dir in NotchApple CompanionKit NotchCompanion NotchAppleTests; do   # include uncommitted work
+  [ -d "$ROOT/$dir" ] && rsync -a --exclude .git "$ROOT/$dir/" "$WORK/src/$dir/"
+done
 cp "$ROOT/project.yml" "$WORK/src/"
 cd "$WORK/src"
 grep -rl "applicationSupportDirectory, in: .userDomainMask)\[0\]" NotchApple Shared | xargs sed -i '' \

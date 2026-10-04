@@ -22,6 +22,7 @@
 //    -demoPalette <query>       open the command palette (Pro) with a search typed in
 //    -demoHome YES              a sample Home layout (no music or calendar, so nothing personal shows)
 //    -demoPeek YES              show the hover peek under the closed notch
+//    -demoCompanion <code>      turn on the iPhone companion with a fixed pairing code (for tests)
 //    -demoTimer <seconds>       start a timer (shows beside the closed notch)
 //    -demoActivity <query>      push a Live Activities API activity, e.g. "id=build&text=42%25&symbol=hammer.fill"
 //
@@ -40,6 +41,10 @@ enum DemoHooks {
         let d = UserDefaults.standard
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
             if d.integer(forKey: "demoOnboarding") > 0 { Onboarding.show() }
+            if let code = d.string(forKey: "demoCompanion") {
+                CompanionServer.shared.enabled = true
+                CompanionServer.shared.startPairing(code: code)
+            }
             if d.bool(forKey: "demoPeek") { DispatchQueue.main.asyncAfter(deadline: .now() + 1) { AppDelegate.current?.notch?.demoPeek() } }
             if d.bool(forKey: "demoHome") {
                 HomeLayout.shared.widgets = [

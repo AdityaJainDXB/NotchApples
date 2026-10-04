@@ -291,3 +291,32 @@ final class WidgetLifecycleTests: XCTestCase {
         XCTAssertEqual(markets.log, ["on", "off"], "the previous widget still stops")
     }
 }
+
+final class CompanionProtocolTests: XCTestCase {
+    func testSealOpenAndTamper() throws {
+        let key = Companion.key(token: Companion.newToken())
+        let msg = Companion.Message(type: .push, text: "hello", url: nil)
+        let frame = try Companion.seal(msg, from: "dev1", key: key)
+        XCTAssertEqual(Companion.frameLength(frame), frame.count)
+        let env = try XCTUnwrap(Companion.envelope(from: frame))
+        XCTAssertEqual(env.d, "dev1")
+        XCTAssertEqual(Companion.open(env, key: key), msg)
+        // Another key (someone else on the Wi-Fi) can't read it.
+        XCTAssertNil(Companion.open(env, key: Companion.key(token: Companion.newToken())))
+        // A changed byte is rejected.
+        var bad = env
+        var bytes = Array(Data(base64Encoded: env.b)!)
+        bytes[bytes.count / 2] ^= 0xFF
+        bad.b = Data(bytes).base64EncodedString()
+        XCTAssertNil(Companion.open(bad, key: key))
+    }
+
+    func testPairingCodeKeys() {
+        XCTAssertEqual(Companion.newCode().count, 6)
+        let a = Companion.pairingKey(code: "123456"), b = Companion.pairingKey(code: "123457")
+        let frame = try! Companion.seal(.init(type: .pair, name: "iPhone"), from: "pair", key: a)
+        let env = Companion.envelope(from: frame)!
+        XCTAssertNotNil(Companion.open(env, key: a))
+        XCTAssertNil(Companion.open(env, key: b), "a wrong code never pairs")
+    }
+}

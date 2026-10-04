@@ -26,7 +26,7 @@
 	<key>NSLocationWhenInUseUsageDescription</key><string>Shows the weather where you are. Only your approximate location is used, and only to fetch the weather.</string>
 	<key>NSCameraUsageDescription</key><string>Face unlock uses the camera to recognise you. Only a face template is saved, in a private file on this Mac; photos are never stored or sent anywhere.</string>
 	<key>NSAudioCaptureUsageDescription</key><string>Lets you change the volume and EQ of individual apps. Audio is processed on your Mac and never recorded or sent anywhere.</string>
-	<key>NSAppleEventsUsageDescription</key><string>Reads the playing track and its position from Music or Spotify (for lyrics), and sends iMessage replies you write in the notch.</string>
+	<key>NSAppleEventsUsageDescription</key><string>Reads the playing track and its position from Music or Spotify (for lyrics), sends iMessage replies you write in the notch, and (Pro) changes the speed of video playing in your browser when you ask.</string>
 	<key>NSMicrophoneUsageDescription</key><string>Records Voice Notes when you press record, and lets the Devices tab show and mute your microphone. Nothing is recorded otherwise.</string>
 	<key>NSSpeechRecognitionUsageDescription</key><string>Transcribes your Voice Notes. On-device recognition is used whenever your language supports it.</string>
 	<key>NSRemindersFullAccessUsageDescription</key><string>Quick Add creates the reminders you type in the notch.</string>

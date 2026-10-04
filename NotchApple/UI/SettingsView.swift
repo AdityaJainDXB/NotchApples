@@ -18,7 +18,7 @@ import UniformTypeIdentifiers
 
 /// Panes in the Settings window. `selection` lets other code jump to a pane.
 enum SettingsTab: String, CaseIterable, Identifiable, Hashable {
-    case general, notch, appearance, profiles, extras, backup, browser, license, shortcuts, permissions, authentication, modules, windows, claude, aiHistory, messenger, clipboard, fileSearch, focus, audio, vpn, widget, updates, privacy, help, about
+    case general, notch, appearance, profiles, extras, backup, browser, license, shortcuts, permissions, authentication, modules, windows, claude, aiHistory, messenger, clipboard, fileSearch, focus, audio, vpn, widget, iphone, updates, privacy, help, about
     static let selection = PassthroughSubject<SettingsTab, Never>()
 
     var id: String { rawValue }
@@ -49,6 +49,7 @@ enum SettingsTab: String, CaseIterable, Identifiable, Hashable {
         case .widget: "Widget"
         case .updates: "Updates"
         case .privacy: "Privacy"
+        case .iphone: "iPhone"
         case .help: "Help & Feedback"
         case .about: "About"
         }
@@ -80,6 +81,7 @@ enum SettingsTab: String, CaseIterable, Identifiable, Hashable {
         case .widget: "rectangle.3.group.fill"
         case .updates: "arrow.down.circle.fill"
         case .privacy: "hand.raised.square.fill"
+        case .iphone: "iphone"
         case .help: "questionmark.bubble.fill"
         case .about: "info.circle.fill"
         }
@@ -112,6 +114,7 @@ enum SettingsTab: String, CaseIterable, Identifiable, Hashable {
         case .widget: .teal
         case .updates: .green
         case .privacy: .blue
+        case .iphone: .gray
         case .help: .orange
         case .about: .indigo
         }
@@ -137,6 +140,7 @@ extension SettingsTab {
         case .aiHistory: "conversations search export"
         case .updates: "version homebrew beta"
         case .privacy: "privacy data network permissions delete tracking analytics"
+        case .iphone: "iphone companion phone pair send link sideload"
         case .help: "feedback bug report crash support beta translate donate icloud notes sync"
         default: ""
         }
@@ -209,6 +213,7 @@ struct SettingsView: View {
                 case .widget: WidgetSettings()
                 case .updates: UpdatesSettings()
                 case .privacy: PrivacyDashboard()
+                case .iphone: CompanionSettings()
                 case .help: HelpSettings()
                 case .about: AboutSettings()
                 }

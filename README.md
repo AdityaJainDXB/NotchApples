@@ -201,6 +201,13 @@ All screenshots use sample data.
 
 ## What's new
 
+### 1.24.0 · 4 October 2026 · Notch apple on your iPhone
+
+- **Ultimate · [iPhone companion](#iphone-companion):** send text and links to the notch, see the Mac's battery and music, and control music, timers and Keep Awake. It works over your Wi-Fi with no server, and every message is encrypted.
+- **Shortcuts on iPhone:** "Send to Mac notch" and "Get Mac status", including from the share sheet.
+- **Pro · Browser video:** speed (0.5× to 3×) and skip 10 seconds for video and podcasts in Safari, Chrome, Arc, Brave or Edge.
+- Support email: **notchapples.support@gmail.com**.
+
 ### 1.23.1 · 4 October 2026 · Pro and Ultimate are on sale
 
 - Buy **Pro ($1)** or **Ultimate ($5)** on the [pricing page](https://virajsinghchadha.github.io/notchapples-site/pro.html). Your signed key is shown and emailed, and works on up to 3 Macs.
@@ -503,6 +510,30 @@ echo "Open GitHub | href=https://github.com"
 
 The full format, the SDK (Ultimate) and how to add a plugin to the gallery: [docs/PLUGINS.md](docs/PLUGINS.md).
 
+## iPhone companion
+
+*Ultimate.* An iPhone app that talks to your Mac over Wi-Fi, with no server in between.
+
+From the iPhone you can:
+- send text and links to the notch (text lands on the Mac's clipboard),
+- see the Mac's battery and what's playing,
+- play, pause or skip music,
+- start a timer or Keep Awake,
+- open the notch.
+
+**Install** (it isn't on the App Store, which needs the paid developer program):
+1. Download `NotchAppleCompanion.ipa` from the [latest release](https://github.com/AdityaJainDXB/NotchApples/releases/latest).
+2. Install it with [Sideloadly](https://sideloadly.io) and your Apple ID. With a free Apple ID, iOS asks you to reinstall it every 7 days.
+3. On the Mac: **Settings → iPhone**, turn on the iPhone companion, press **Pair an iPhone**, and type the 6-digit code on the phone.
+
+**How it works:**
+- Both devices need to be on the same Wi-Fi.
+- Pairing uses a code that lasts 2 minutes.
+- After that, every message is sealed with a key only your phone and Mac have.
+- In Shortcuts you get **Send to Mac notch** and **Get Mac status**.
+
+![iPhone companion](docs/screenshots/iphone-companion.png)
+
 ## Focus
 
 macOS doesn't tell apps when a Focus turns on, so a Shortcuts automation does it:
@@ -781,6 +812,7 @@ The full feature-by-feature plan is in [docs/TIERS.md](docs/TIERS.md).
 - **Lost your key?** Use **Lost my key?** on the pricing page; it's emailed to the address you bought with.
 - **Keys from before tiers** (`NOTCH-XXXX-XXXX-XXXX` and access codes) keep working as Pro.
 - Refunds are case by case; see the [terms](https://virajsinghchadha.github.io/notchapples-site/terms.html).
+- Questions about a purchase: **notchapples.support@gmail.com**.
 - The license server is open source too: [server/license-worker](server/license-worker).
 
 ## Troubleshooting
@@ -1022,6 +1054,7 @@ Per-app volume and EQ use Core Audio process taps, which arrived in macOS 14.2. 
   - `open-meteo.com` for weather (and the cities you add to the forecast, Pro)
   - the plugin gallery's list and the plugins you choose to install, from `raw.githubusercontent.com` (Ultimate)
   - iCloud Drive, only for settings, notes and to-dos you choose to sync
+  - your own iPhone on your local Wi-Fi, only if you turn on the iPhone companion (Ultimate); nothing leaves your network
   - `api.github.com` / `raw.githubusercontent.com` for the free VPN server list, and `vpngate.net`, only when you open the VPN tab
   - open.er-api.com for currency rates, only when you convert a currency (Pro)
   - DuckDuckGo, only when you turn on web search in the AI tab (Pro): just your question

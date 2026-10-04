@@ -378,6 +378,7 @@ struct NowPlayingView: View {
                     Button("Open Player", action: monitor.openPlayer).buttonStyle(PurpleButtonStyle(prominent: false))
                 }
                 .padding(.top, 4)
+                BrowserMediaBar()
             }
             .frame(maxWidth: 300, alignment: .leading)
             if SettingsManager.shared.showLyrics, Entitlements.shared.canUse(.lyrics), monitor.current?.title.isEmpty == false {
