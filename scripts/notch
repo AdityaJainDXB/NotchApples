@@ -1,0 +1,33 @@
+#!/bin/bash
+# Control Notch apple from Terminal (scripting needs Notch apple Ultimate; open/toggle/timer work for everyone).
+#
+#   notch open <tab>            open the notch on a tab (ai, today, notes, …)
+#   notch toggle | close | hide | show
+#   notch timer <minutes>       start a timer;  notch timer stop
+#   notch stopwatch [stop]
+#   notch awake <minutes|off>   keep the Mac awake
+#   notch ask "question"        ask the AI (opens the AI tab)            [Ultimate]
+#   notch note "text"           add a note                               [Ultimate]
+#   notch todo "text"           add a to-do                              [Ultimate]
+#   notch theme "Name"          switch theme                             [Ultimate]
+#   notch palette | grab | ruler | markup                                [Ultimate]
+#   notch activity <id> …       live activity, see scripts/notch-activity [Ultimate]
+#
+# Copy it onto your PATH:  cp scripts/notch /usr/local/bin/notch
+set -euo pipefail
+enc() { python3 -c 'import sys,urllib.parse;print(urllib.parse.quote(sys.argv[1],safe=""))' "$1"; }
+go() { open -g "notchapple://$1"; }
+cmd="${1:-help}"; shift || true
+case "$cmd" in
+  open) go "open/${1:-}" ;;
+  toggle|close|hide|show|palette|grab|ruler|markup|record|screenshot) go "$cmd" ;;
+  timer) [ "${1:-}" = stop ] && go "timer/stop" || go "timer?minutes=${1:-5}" ;;
+  stopwatch) [ "${1:-}" = stop ] && go "stopwatch/stop" || go "stopwatch" ;;
+  awake) [ "${1:-}" = off ] && go "keepawake/off" || go "keepawake?minutes=${1:-30}" ;;
+  ask) go "ask?q=$(enc "$*")" ;;
+  note) go "note?text=$(enc "$*")" ;;
+  todo) go "todo?text=$(enc "$*")" ;;
+  theme) go "theme?name=$(enc "$*")" ;;
+  activity) exec "$(dirname "$0")/notch-activity" "$@" ;;
+  *) sed -n 2,16p "$0" ;;
+esac

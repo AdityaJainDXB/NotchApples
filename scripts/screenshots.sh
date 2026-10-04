@@ -55,7 +55,7 @@ var best: (Int, Double)? = nil
 for w in list where (w["kCGWindowOwnerPID"] as? Int) == pid {
     let b = w["kCGWindowBounds"] as! [String: Any], h = b["Height"] as! Double, area = h * (b["Width"] as! Double)
     let layer = w["kCGWindowLayer"] as! Int, n = w["kCGWindowNumber"] as! Int
-    let ok = (want == "panel" && layer > 0 && layer < 1000 && h > 100) || (want == "trigger" && layer > 0 && layer < 1000 && h < 100) || (want == "settings" && layer == 0 && h > 200) || (want == "overlay" && layer >= 1000)
+    let ok = (want == "panel" && layer > 0 && layer < 1000 && h > 100) || (want == "trigger" && layer > 0 && layer < 1000 && h < 100) || (want == "palette" && layer == 8) || (want == "settings" && layer == 0 && h > 200) || (want == "overlay" && layer >= 1000)
     if ok, best == nil || area > best!.1 { best = (n, area) }
 }
 if let best { print(best.0) }
@@ -64,7 +64,7 @@ swiftc -O "$WORK/wid.swift" -o "$WORK/wid" 2>/dev/null
 
 echo "› Settings for the screenshot copy"
 defaults delete $D >/dev/null 2>&1 || true
-for k in onboarding.permissionsShown onboarding.welcomeDismissed module.f1.enabled module.claude.enabled module.sports.enabled module.games.enabled module.launcher.enabled module.timer.enabled module.markets.enabled; do defaults write $D $k -bool true; done
+for k in onboarding.permissionsShown onboarding.welcomeDismissed module.f1.enabled module.claude.enabled module.sports.enabled module.games.enabled module.launcher.enabled module.timer.enabled module.markets.enabled module.notes.enabled module.tools.enabled; do defaults write $D $k -bool true; done
 defaults write $D updates.autoCheck -bool false
 defaults write $D ai.provider ollama
 defaults write $D ai.models -string '{"ollama":"gemma3:4b"}'
@@ -111,6 +111,9 @@ shot onboarding    settings 6 -demoOnboarding 2
 shot onboarding-tour settings 6 -demoOnboarding 4
 shot notch-stacked trigger 5 -demoTier ultimate -demoTimer 1500 -demoActivity "id=build&title=Build&text=42%25&symbol=hammer.fill&color=34C759"
 shot markets       panel 10 -openNotch markets -demoPro YES
+shot notes-todo    panel 6 -openNotch notes -notes.page todo -demoPro YES -demoTodos "Book dentist|Send the slides to Sam|Renew passport|Buy oat milk"
+shot palette       palette 4 -demoPro YES -demoPalette "tim"
+shot tools-convert panel 8 -openNotch tools -demoPro YES -tools.calcInput "250 usd to eur"
 shot ai-web        panel answers:1 -openNotch claude -demoPro YES -demoWeb YES -demoAsk "Who designed the Eiffel Tower, and how tall is it?"
 
 [ $REAL_RUNNING = 1 ] && open -g -a "/Applications/Notch apple.app"
@@ -119,7 +122,7 @@ defaults delete $D >/dev/null 2>&1 || true
 if [ -n "$SITE" ]; then
   echo "› WebP copies for the website"
   mkdir -p "$SITE/assets/screenshots"
-  for f in ai-empty ai-input ai-result follow-up code-analysis capture-overlay f1 sports sports-table sports-cricket sports-detail games history settings-ai pro settings-pro settings-notch settings-themes onboarding onboarding-tour notch-stacked markets ai-web; do
+  for f in ai-empty ai-input ai-result follow-up code-analysis capture-overlay f1 sports sports-table sports-cricket sports-detail games history settings-ai pro settings-pro settings-notch settings-themes onboarding onboarding-tour notch-stacked markets ai-web notes-todo palette tools-convert; do
     [ -f "$OUT/$f.png" ] && python3 -c "
 from PIL import Image; im = Image.open('$OUT/$f.png'); im.thumbnail((1600, 1600)); im.save('$SITE/assets/screenshots/$f.webp', 'WEBP', quality=82, method=6)"
   done

@@ -15,6 +15,10 @@ struct ShelfItem: Identifiable, Codable, Equatable {
     var id = UUID()
     var bookmark: Data
     var name: String
+    /// When it was added (for Pro auto-expiry). Older items have none and never expire.
+    var added: Date? = nil
+    /// Pro: the folder it's grouped in.
+    var folder: String? = nil
 
     /// Resolves the bookmark and refreshes it if macOS reports it as stale.
     func resolve() -> URL? {
@@ -49,8 +53,31 @@ final class FileShelfStore: ObservableObject {
                                                includingResourceValuesForKeys: nil, relativeTo: nil),
               !items.contains(where: { $0.name == url.lastPathComponent && $0.resolve() == url })
         else { return }
-        items.append(ShelfItem(bookmark: data, name: url.lastPathComponent))
+        items.append(ShelfItem(bookmark: data, name: url.lastPathComponent, added: .now, folder: currentFolder))
         save()
+    }
+
+    // MARK: Pro: folders, expiry, sharing
+
+    /// The folder new files go into (the one being viewed).
+    @Published var currentFolder: String?
+    var folders: [String] { Array(Set(items.compactMap(\.folder))).sorted() }
+    func visible(in folder: String?) -> [ShelfItem] { folder == nil ? items : items.filter { $0.folder == folder } }
+
+    func move(_ item: ShelfItem, to folder: String?) {
+        guard let i = items.firstIndex(of: item) else { return }
+        items[i].folder = folder
+        save()
+    }
+
+    /// Removes items older than Settings → Shelf → Keep for (0 = forever). Called on open and by the heartbeat.
+    @MainActor func pruneExpired() {
+        let days = UserDefaults.standard.integer(forKey: "shelf.expiryDays")
+        guard days > 0, Entitlements.shared.canUse(.shelfPlus) else { return }
+        let cutoff = Date.now.addingTimeInterval(-Double(days) * 86_400)
+        let before = items.count
+        items.removeAll { ($0.added ?? .distantFuture) < cutoff }
+        if items.count != before { save() }
     }
 
     func remove(_ item: ShelfItem) {
@@ -84,7 +111,11 @@ final class FileShelfStore: ObservableObject {
 
 struct FileShelfView: View {
     @StateObject private var store = FileShelfStore.shared
+    @ObservedObject private var entitlements = Entitlements.shared
     @State private var targeted = false
+    @State private var newFolder = ""
+    @AppStorage("shelf.expiryDays") private var expiryDays = 0
+    private var shown: [ShelfItem] { entitlements.canUse(.shelfPlus) ? store.visible(in: store.currentFolder) : store.items }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
@@ -92,6 +123,9 @@ struct FileShelfView: View {
                 Text("File shelf").sectionTitle()
                 Text("Drag files onto the notch to keep them here").font(.system(size: 11)).foregroundStyle(Theme.textSecondary)
                 Spacer()
+                if !store.items.isEmpty && entitlements.canUse(.shelfPlus) {
+                    ShareButton(urls: shown.compactMap { $0.resolve() })
+                }
                 if !store.items.isEmpty {
                     Button { airDropAll() } label: { Label("AirDrop", systemImage: "airplayaudio") }
                         .buttonStyle(PurpleButtonStyle(prominent: false))
@@ -104,13 +138,26 @@ struct FileShelfView: View {
                     .buttonStyle(PurpleButtonStyle())
             }
 
+            if entitlements.canUse(.shelfPlus) {
+                HStack(spacing: 4) {
+                    folderChip(nil, "All")
+                    ForEach(store.folders, id: \.self) { folderChip($0, $0) }
+                    TextField("New folder", text: $newFolder).textFieldStyle(.roundedBorder).font(.system(size: 11)).frame(width: 110)
+                        .onSubmit { if !newFolder.isEmpty { store.currentFolder = newFolder; newFolder = "" } }
+                    Spacer()
+                    Picker("", selection: $expiryDays) {
+                        Text("Keep forever").tag(0); Text("Keep 1 day").tag(1); Text("Keep 7 days").tag(7); Text("Keep 30 days").tag(30)
+                    }.labelsHidden().fixedSize().font(.system(size: 11))
+                    .onChange(of: expiryDays) { _, _ in store.pruneExpired() }
+                }
+            }
             ZStack {
                 RoundedRectangle(cornerRadius: Theme.corner, style: .continuous)
                     .strokeBorder(targeted ? Theme.accentBright : Color.white.opacity(0.18),
                                   style: StrokeStyle(lineWidth: targeted ? 2 : 1.2, dash: [6, 5]))
                     .background(RoundedRectangle(cornerRadius: Theme.corner).fill(targeted ? Theme.accent.opacity(0.15) : .clear))
 
-                if store.items.isEmpty {
+                if shown.isEmpty {
                     VStack(spacing: 6) {
                         Image(systemName: "tray.and.arrow.down.fill").font(.system(size: 30)).foregroundStyle(Theme.accentGradient)
                         Text(targeted ? "Release to add" : "Drop files or folders here")
@@ -119,7 +166,7 @@ struct FileShelfView: View {
                 } else {
                     ScrollView(.horizontal, showsIndicators: false) {
                         HStack(spacing: 12) {
-                            ForEach(store.items) { ShelfTile(item: $0) }
+                            ForEach(shown) { ShelfTile(item: $0) }
                         }
                         .padding(12)
                     }
@@ -135,6 +182,13 @@ struct FileShelfView: View {
                 return true
             }
         }
+    }
+
+    private func folderChip(_ folder: String?, _ title: String) -> some View {
+        Button(title) { store.currentFolder = folder }
+            .buttonStyle(.plain).font(.system(size: 11, weight: .semibold)).foregroundStyle(.white)
+            .padding(.horizontal, 8).padding(.vertical, 3)
+            .background(Capsule().fill(store.currentFolder == folder ? Theme.accent : Theme.surface))
     }
 
     private func airDropAll() {
@@ -173,12 +227,19 @@ private struct ShelfTile: View {
         .contextMenu {
             Button("Open") { FileShelfStore.shared.withAccess(item) { NSWorkspace.shared.open($0) } }
             Button("Reveal in Finder") { FileShelfStore.shared.withAccess(item) { NSWorkspace.shared.activateFileViewerSelecting([$0]) } }
+            if Entitlements.shared.canUse(.shelfPlus) {
+                Menu("Move to folder") {
+                    Button("No folder") { FileShelfStore.shared.move(item, to: nil) }
+                    ForEach(FileShelfStore.shared.folders, id: \.self) { f in Button(f) { FileShelfStore.shared.move(item, to: f) } }
+                }
+            }
             Divider()
             Button("Remove from Shelf", role: .destructive) { withAnimation { FileShelfStore.shared.remove(item) } }
         }
         .help("Double-click to open · drag out to use · right-click for more")
         .task { await loadThumbnail() }
     }
+
 
     private func loadThumbnail() async {
         guard let url = item.resolve() else { return }
@@ -190,6 +251,26 @@ private struct ShelfTile: View {
             thumbnail = rep.nsImage
         } else {
             thumbnail = NSWorkspace.shared.icon(forFile: url.path)
+        }
+    }
+}
+
+/// Share sheet (Mail, Messages, AirDrop, Notes…) for the shelf's files.
+private struct ShareButton: NSViewRepresentable {
+    let urls: [URL]
+    func makeNSView(context: Context) -> NSButton {
+        let b = NSButton(image: NSImage(systemSymbolName: "square.and.arrow.up", accessibilityDescription: "Share")!, target: context.coordinator, action: #selector(Coordinator.share(_:)))
+        b.bezelStyle = .texturedRounded
+        b.toolTip = "Share these files"
+        return b
+    }
+    func updateNSView(_ v: NSButton, context: Context) { context.coordinator.urls = urls }
+    func makeCoordinator() -> Coordinator { Coordinator(urls: urls) }
+    final class Coordinator: NSObject {
+        var urls: [URL]
+        init(urls: [URL]) { self.urls = urls }
+        @objc func share(_ sender: NSButton) {
+            NSSharingServicePicker(items: urls).show(relativeTo: sender.bounds, of: sender, preferredEdge: .minY)
         }
     }
 }

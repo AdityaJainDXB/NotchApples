@@ -81,6 +81,7 @@ enum FeatureHub {
         if s.liveEnabled { FlightWatcher.shared.refreshIfDue() }
         if s.marketsEnabled { MarketsModel.shared.refreshIfDue() }
         AIAutomations.shared.checkDue()
+        if s.shelfEnabled { FileShelfStore.shared.pruneExpired() }
         DownloadWatcher.shared.setEnabled(s.downloadProgress && Entitlements.shared.canUse(.downloadProgress))
         LiveActivityCenter.shared.recompute()
     }
@@ -116,7 +117,8 @@ enum FeatureHub {
 
     /// notchapple://open/<tab>, toggle, close, hide, show, timer?minutes=5, stopwatch, focus/start, focus/stop,
     /// keepawake?minutes=30, keepawake/off, snippet?name=…, record, screenshot, activate?key=…,
-    /// activity?id=…&title=…&text=…&symbol=…&progress=…&color=…&seconds=… and activity/end?id=… (Ultimate)
+    /// activity?id=…&title=…&text=…&symbol=…&progress=…&color=…&seconds=… and activity/end?id=… (Ultimate),
+    /// ask?q=…, palette, grab, ruler, markup, note?text=…, todo?text=…, theme?name=… (Ultimate scripting)
     static func handle(_ url: URL) {
         guard url.scheme == "notchapple" else { return }
         let parts = ([url.host ?? ""] + url.pathComponents.filter { $0 != "/" }).filter { !$0.isEmpty }
@@ -153,6 +155,26 @@ enum FeatureHub {
             if let key = query["key"], LicenseKey.looksLikeKey(key) {
                 Entitlements.shared.pendingKey = key
                 AppDelegate.openSettingsWindow(tab: .license)
+            }
+        // Scripting (Ultimate): see scripts/notch.
+        case "ask", "palette", "grab", "ruler", "markup", "note", "todo", "theme":
+            guard Entitlements.shared.canUse(.scripting) else {
+                Notifier.post(title: "Scripting needs Ultimate", body: Feature.scripting.benefit); return
+            }
+            switch parts.first ?? "" {
+            case "ask":
+                AppDelegate.showNotch(tab: .claude)
+                if let q = query["q"], !q.isEmpty { ClaudeChatModel.shared.send(q) }
+            case "palette": CommandPalette.toggle()
+            case "grab": TextGrab.shared.grab {}
+            case "ruler": ScreenRuler.show()
+            case "markup": ScreenMarkup.captureAndMarkUp()
+            case "note": if let t = query["text"] { NotesStore.shared.add(t) }
+            case "todo": if let t = query["text"] { TodoStore.shared.add(t) }
+            case "theme":
+                if let id = query["id"].flatMap(ThemeID.init(rawValue:)) ?? ThemeID.allCases.first(where: { AppTheme.theme(for: $0).name.lowercased() == query["name"]?.lowercased() }),
+                   !id.isPro || Entitlements.shared.canUse(.proThemes) { ThemeManager.shared.setTheme(id) }
+            default: break
             }
         case "activity":
             // Live Activities API (Ultimate): notchapple://activity?id=…&text=…, notchapple://activity/end?id=…

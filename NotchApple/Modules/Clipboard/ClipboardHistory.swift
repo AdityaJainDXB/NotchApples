@@ -54,6 +54,12 @@ final class ClipboardHistory: ObservableObject {
 
     @AppStorage("clipboard.limit") var limit = 200
     @AppStorage("clipboard.persist") var persist = true
+    /// Pro: apps whose copies are never saved (bundle IDs, comma-separated).
+    @AppStorage("clipboard.ignoredApps") var ignoredAppsRaw = ""
+
+    var ignoredApps: [String] { ignoredAppsRaw.split(separator: ",").map(String.init) }
+    /// Over 1,000 items needs Pro; without it the list keeps 1,000.
+    var effectiveLimit: Int { limit > 1000 && !Entitlements.shared.canUse(.clipboardUnlimited) ? 1000 : limit }
 
     @Published private(set) var items: [ClipItem] = []
 
@@ -103,7 +109,9 @@ final class ClipboardHistory: ObservableObject {
 
         let types = Set((pb.types ?? []).map(\.rawValue))
         guard types.isDisjoint(with: Self.privateTypes) else { return }   // passwords & secrets
-        let source = NSWorkspace.shared.frontmostApplication?.localizedName
+        let front = NSWorkspace.shared.frontmostApplication
+        if Entitlements.shared.canUse(.clipboardUnlimited), let id = front?.bundleIdentifier, ignoredApps.contains(id) { return }
+        let source = front?.localizedName
 
         if let urls = pb.readObjects(forClasses: [NSURL.self], options: [.urlReadingFileURLsOnly: true]) as? [URL], !urls.isEmpty {
             add(ClipItem(kind: .files, filePaths: urls.map(\.path), sourceApp: source))
@@ -142,7 +150,7 @@ final class ClipboardHistory: ObservableObject {
         items = items.filter { item in
             if item.pinned { return true }
             unpinned += 1
-            if unpinned > limit { removeFiles(of: item); return false }
+            if unpinned > effectiveLimit { removeFiles(of: item); return false }
             return true
         }
     }

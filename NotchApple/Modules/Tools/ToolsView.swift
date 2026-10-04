@@ -287,6 +287,16 @@ struct ToolsView: View {
                 Text(grab.status ?? "Drag over any text, even in images or videos.")
                     .font(.system(size: 10)).foregroundStyle(Theme.textSecondary)
                     .fixedSize(horizontal: false, vertical: true)
+                HStack(spacing: 6) {
+                    Button { notchState.close(); ScreenRuler.show() } label: { Label("Ruler", systemImage: "ruler") }
+                        .disabled(!Entitlements.shared.canUse(.ruler))
+                        .help(Entitlements.shared.canUse(.ruler) ? "Measure anything on screen" : "Pro: \(Feature.ruler.benefit)")
+                    Button { notchState.close(); ScreenMarkup.captureAndMarkUp() } label: { Label("Mark up", systemImage: "pencil.tip.crop.circle") }
+                        .disabled(!Entitlements.shared.canUse(.annotate))
+                        .help(Entitlements.shared.canUse(.annotate) ? "Select part of the screen and draw on it" : "Pro: \(Feature.annotate.benefit)")
+                    if !Entitlements.shared.canUse(.ruler) { TierBadge(tier: .pro) }
+                }
+                .buttonStyle(.plain).font(.system(size: 11, weight: .semibold)).foregroundStyle(Theme.accentBright)
             }
         }
     }
@@ -383,7 +393,10 @@ struct ToolsView: View {
                     .padding(8)
                     .background(Theme.surface, in: RoundedRectangle(cornerRadius: 8, style: .continuous))
                     .onSubmit(commit)
-                Text(result.map { "= " + QuickMath.format($0) } ?? (input.isEmpty ? " " : "…"))
+                if let q = Converter.parse(input) {
+                    ConversionLine(query: q)
+                }
+                Text(result.map { "= " + QuickMath.format($0) } ?? (input.isEmpty || Converter.parse(input) != nil ? " " : "…"))
                     .font(.system(size: 22, weight: .semibold, design: .rounded))
                     .foregroundStyle(result == nil ? Theme.textSecondary : .white)
                     .lineLimit(1).minimumScaleFactor(0.5)
@@ -410,5 +423,56 @@ struct ToolsView: View {
         ColorPickerModel.shared.copy(answer)
         let line = "\(input) = \(answer)"
         historyData = ([line] + history.filter { $0 != line }).prefix(8).joined(separator: "\n")
+    }
+}
+
+/// "5 km to mi" / "100 usd to eur" under the calculator (Pro).
+private struct ConversionLine: View {
+    let query: Converter.Query
+    @ObservedObject private var rates = CurrencyRates.shared
+    @ObservedObject private var entitlements = Entitlements.shared
+
+    var body: some View {
+        Group {
+            if !entitlements.canUse(.currency) {
+                HStack(spacing: 6) { TierBadge(tier: .pro); Text("Unit and currency conversion").font(.system(size: 11)).foregroundStyle(Theme.textSecondary) }
+            } else if let v = Converter.convertUnits(query) {
+                Text("= \(QuickMath.format(v)) \(query.to)").font(.system(size: 18, weight: .semibold, design: .rounded)).foregroundStyle(Theme.accentBright)
+            } else if let v = Converter.convertCurrency(query, rates: rates.rates) {
+                VStack(alignment: .leading, spacing: 1) {
+                    Text("= \(String(format: "%.2f", v)) \(Converter.currencyCode(query.to) ?? "")").font(.system(size: 18, weight: .semibold, design: .rounded)).foregroundStyle(Theme.accentBright)
+                    if let u = rates.updated { Text("Rates from open.er-api.com, \(u.formatted(.relative(presentation: .named)))").font(.system(size: 9)).foregroundStyle(Theme.textSecondary) }
+                }
+            } else if Converter.currencyCode(query.from) != nil {
+                Text("Getting today's rates…").font(.system(size: 11)).foregroundStyle(Theme.textSecondary)
+            } else {
+                Text("Unknown units").font(.system(size: 11)).foregroundStyle(Theme.textSecondary)
+            }
+        }
+        .onAppear { if Converter.convertUnits(query) == nil { rates.loadIfNeeded() } }
+    }
+}
+
+/// Today's exchange rates for the converter (Pro), from open.er-api.com (free, no key), cached 12 hours.
+@MainActor
+final class CurrencyRates: ObservableObject {
+    static let shared = CurrencyRates()
+    @Published private(set) var rates: [String: Double] = [:]
+    @Published private(set) var updated: Date?
+    private var loading = false
+
+    func loadIfNeeded() {
+        if let updated, Date.now.timeIntervalSince(updated) < 12 * 3600 { return }
+        guard !loading, Entitlements.shared.canUse(.currency) else { return }
+        loading = true
+        Task {
+            defer { loading = false }
+            guard let url = URL(string: "https://open.er-api.com/v6/latest/USD"),
+                  let (data, _) = try? await URLSession.shared.data(from: url),
+                  let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+                  let r = json["rates"] as? [String: Double] else { return }
+            rates = r
+            updated = .now
+        }
     }
 }

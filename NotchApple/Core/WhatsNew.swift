@@ -21,6 +21,15 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "1.20.0", date: "4 October 2026", headline: "Get more done", items: [
+            "A To-do list in the Notes tab, saved on this Mac.",
+            "Pro: Reminders in To-do (tick them off right there), Markdown preview and #tags for notes.",
+            "Pro: the command palette (⌃⌥P): search and run tabs, timers, snippets, saved prompts, apps and Settings, or ask the AI.",
+            "Pro: a text expander: give a snippet an abbreviation like ;sig and type it anywhere.",
+            "Pro: screenshot markup (arrows, boxes, highlights, text), a screen ruler, and unit and currency conversion in the calculator.",
+            "Pro: shelf folders, auto-expiry and a Share button; up to 5,000 clipboard items and apps whose copies are never saved.",
+            "Ultimate: a notch command for Terminal and more notchapple:// commands (ask, note, todo, theme, palette…).",
+        ]),
         ReleaseNote(version: "1.19.0", date: "4 October 2026", headline: "A smarter assistant", items: [
             "Apple Intelligence as an AI provider: free, private and on this Mac (macOS 26 or newer with Apple Intelligence on).",
             "Pro: web search with sources. Turn on the globe and answers search DuckDuckGo first and cite what they used.",

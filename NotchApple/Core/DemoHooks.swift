@@ -18,6 +18,8 @@
 //    -demoSportsDetail YES      open the details of your team's latest result
 //    -demoOnboarding <1…4>      show the welcome window on that page
 //    -demoAsk <question>        ask a question (add -demoWeb YES to search the web first)
+//    -demoTodos "a|b|c"         add sample to-dos
+//    -demoPalette <query>       open the command palette (Pro) with a search typed in
 //    -demoTimer <seconds>       start a timer (shows beside the closed notch)
 //    -demoActivity <query>      push a Live Activities API activity, e.g. "id=build&text=42%25&symbol=hammer.fill"
 //
@@ -36,6 +38,13 @@ enum DemoHooks {
         let d = UserDefaults.standard
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
             if d.integer(forKey: "demoOnboarding") > 0 { Onboarding.show() }
+            if let todos = d.string(forKey: "demoTodos") {
+                for t in todos.split(separator: "|").reversed() { TodoStore.shared.add(String(t)) }
+                if let first = TodoStore.shared.items.last { TodoStore.shared.toggle(first) }
+            }
+            if let q = d.string(forKey: "demoPalette") {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 1) { CommandPalette.toggle(query: q) }
+            }
             if d.double(forKey: "demoTimer") > 0 { CountdownTimer.shared.startTimer(seconds: d.double(forKey: "demoTimer")) }
             if let q = d.string(forKey: "demoActivity"), let items = URLComponents(string: "x://y?" + q)?.queryItems {
                 ExternalActivities.shared.handle(Dictionary(items.map { ($0.name, $0.value ?? "") }, uniquingKeysWith: { a, _ in a }), end: false)

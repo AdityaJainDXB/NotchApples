@@ -53,6 +53,10 @@ enum Feature: String, CaseIterable, Identifiable {
     case aiCapture, aiHistory, aiFileDrop, personas, slashCommands, webSearch, voice, clipboardAI
     // Ultimate: AI
     case automations
+    // Pro: productivity
+    case richNotes, remindersSync, clipboardUnlimited, shelfPlus, textExpander, annotate, ruler, currency, commandPalette
+    // Ultimate: scripting
+    case scripting
     // Pro: tabs
     case messenger, audio, vpn, voiceNotes, screenTime, quickAdd, launcher, snippets, mirror, focus
     // Pro: system and media
@@ -66,7 +70,7 @@ enum Feature: String, CaseIterable, Identifiable {
 
     var tier: Tier {
         switch self {
-        case .liveActivityAPI, .activityStacking, .automations, .pluginSDK, .prioritySupport, .betaChannel: .ultimate
+        case .liveActivityAPI, .activityStacking, .automations, .scripting, .pluginSDK, .prioritySupport, .betaChannel: .ultimate
         default: .pro
         }
     }
@@ -81,6 +85,16 @@ enum Feature: String, CaseIterable, Identifiable {
     var title: String {
         switch self {
         case .notchResize: "Notch size"
+        case .richNotes: "Markdown notes and tags"
+        case .remindersSync: "Reminders sync"
+        case .clipboardUnlimited: "Longer clipboard history"
+        case .shelfPlus: "Shelf folders, expiry and sharing"
+        case .textExpander: "Text expander"
+        case .annotate: "Screenshot markup"
+        case .ruler: "Screen ruler"
+        case .currency: "Unit and currency converter"
+        case .commandPalette: "Command palette"
+        case .scripting: "Command-line and scripting"
         case .edgeTrigger: "Edge trigger zones"
         case .displayLayouts: "Tabs per display"
         case .gestureRemap: "Custom gestures"
@@ -126,6 +140,16 @@ enum Feature: String, CaseIterable, Identifiable {
     var benefit: String {
         switch self {
         case .notchResize: "Make the open notch wider or taller, with a live preview."
+        case .richNotes: "Preview notes as Markdown and filter them by #tags."
+        case .remindersSync: "See and tick off your Apple Reminders in To-do."
+        case .clipboardUnlimited: "Keep up to 5,000 clipboard items, and ignore apps you choose."
+        case .shelfPlus: "Group shelf files into folders, let them expire, and share them in one click."
+        case .textExpander: "Type an abbreviation like ;sig anywhere and it becomes your snippet."
+        case .annotate: "Draw arrows, boxes, highlights and text on a screenshot."
+        case .ruler: "Measure anything on screen in points."
+        case .currency: "Type 5 km to mi or 100 usd to eur in the calculator."
+        case .commandPalette: "One shortcut to search and run everything Notch apple can do."
+        case .scripting: "A `notch` command for Terminal and more notchapple:// commands for scripts."
         case .edgeTrigger: "Open the notch from anywhere along the top of the screen."
         case .displayLayouts: "Choose which tabs show on each display."
         case .gestureRemap: "Choose what each swipe, scroll and long-press does."

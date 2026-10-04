@@ -1155,6 +1155,9 @@ private struct ClipboardSettings: View {
             Section {
                 Picker("Keep the last", selection: $history.limit) {
                     ForEach([50, 100, 200, 500, 1000], id: \.self) { Text("\($0) items").tag($0) }
+                    ForEach([2500, 5000], id: \.self) { n in
+                        Text(Entitlements.shared.canUse(.clipboardUnlimited) ? "\(n) items" : "\(n) items (Pro)").tag(n)
+                    }
                 }
                 Toggle(isOn: $history.persist) {
                     Text("Keep history after restart")
@@ -1170,6 +1173,31 @@ private struct ClipboardSettings: View {
             } footer: {
                 Text("Pinned items are never removed automatically. Anything a password manager marks as secret is never saved, and nothing leaves your Mac.")
             }
+            Section {
+                ForEach(history.ignoredApps, id: \.self) { id in
+                    HStack {
+                        Text(NSWorkspace.shared.urlForApplication(withBundleIdentifier: id).map { FileManager.default.displayName(atPath: $0.path) } ?? id)
+                        Spacer()
+                        Button(role: .destructive) { history.ignoredAppsRaw = history.ignoredApps.filter { $0 != id }.joined(separator: ",") } label: { Image(systemName: "minus.circle") }
+                            .buttonStyle(.borderless)
+                    }
+                }
+                Button("Add an app…") {
+                    let panel = NSOpenPanel()
+                    panel.directoryURL = URL(fileURLWithPath: "/Applications")
+                    panel.allowedContentTypes = [.application]
+                    guard panel.runModal() == .OK, let url = panel.url, let id = Bundle(url: url)?.bundleIdentifier, !history.ignoredApps.contains(id) else { return }
+                    history.ignoredAppsRaw = (history.ignoredApps + [id]).joined(separator: ",")
+                }
+            } header: {
+                HStack(spacing: 6) {
+                    Text("Never save copies from")
+                    if !Entitlements.shared.canUse(.clipboardUnlimited) { TierBadge(tier: .pro) }
+                }
+            } footer: {
+                Text("For example your banking app or a work tool. Password managers are always skipped.")
+            }
+            .disabled(!Entitlements.shared.canUse(.clipboardUnlimited))
         }
         .formStyle(.grouped)
     }

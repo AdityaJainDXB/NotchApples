@@ -184,3 +184,28 @@ final class AIExtrasTests: XCTestCase {
         XCTAssertFalse(a.isDue(now: nineAM))
     }
 }
+
+final class ConverterTests: XCTestCase {
+    func testParse() {
+        XCTAssertEqual(Converter.parse("5 km to mi"), Converter.Query(amount: 5, from: "km", to: "mi"))
+        XCTAssertEqual(Converter.parse("72 F in C"), Converter.Query(amount: 72, from: "f", to: "c"))
+        XCTAssertEqual(Converter.parse("12 in to cm"), Converter.Query(amount: 12, from: "in", to: "cm"))
+        XCTAssertEqual(Converter.parse("100 usd = eur"), Converter.Query(amount: 100, from: "usd", to: "eur"))
+        XCTAssertNil(Converter.parse("2 + 2"))
+        XCTAssertNil(Converter.parse("km to mi"))
+    }
+
+    func testUnits() {
+        XCTAssertEqual(Converter.convertUnits(.init(amount: 1, from: "mi", to: "km"))!, 1.609344, accuracy: 0.0001)
+        XCTAssertEqual(Converter.convertUnits(.init(amount: 212, from: "f", to: "c"))!, 100, accuracy: 0.001)
+        XCTAssertEqual(Converter.convertUnits(.init(amount: 1, from: "kg", to: "lb"))!, 2.20462, accuracy: 0.001)
+        XCTAssertNil(Converter.convertUnits(.init(amount: 1, from: "km", to: "kg")), "length to mass makes no sense")
+    }
+
+    func testCurrency() {
+        let rates = ["USD": 1, "EUR": 0.5, "GBP": 0.25]
+        XCTAssertEqual(Converter.convertCurrency(.init(amount: 10, from: "usd", to: "eur"), rates: rates)!, 5, accuracy: 0.0001)
+        XCTAssertEqual(Converter.convertCurrency(.init(amount: 10, from: "€", to: "£"), rates: rates)!, 5, accuracy: 0.0001)
+        XCTAssertNil(Converter.convertCurrency(.init(amount: 1, from: "usd", to: "xyz"), rates: rates))
+    }
+}

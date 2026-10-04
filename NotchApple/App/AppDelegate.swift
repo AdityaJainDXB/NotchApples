@@ -33,6 +33,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         // Now Playing and Messenger are gated: they start now if a code is saved, or the moment one is entered.
         startGatedServices()
         ThemeManager.shared.revalidate()
+        TextExpander.shared.apply()
         Entitlements.shared.$tier
             .dropFirst().removeDuplicates()
             .sink { [weak self] _ in
@@ -40,6 +41,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 // Pro themes, sizes, edge zones and per-display tabs follow the tier.
                 DispatchQueue.main.async {
                     ThemeManager.shared.revalidate()
+                    TextExpander.shared.apply()
+                    self?.applyHotkeyPreference()
                     self?.notchController?.applyEdgeTrigger()
                     self?.notchController?.reposition()
                 }
@@ -145,6 +148,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         SettingsManager.shared.clipboardEnabled ? ClipboardHistory.shared.start() : ClipboardHistory.shared.stop()
     }
 
+    func reapplyHotkeys() { applyHotkeyPreference() }
+
     /// Registers or removes the global ⌘E shortcut to match the preference.
     private func applyHotkeyPreference() {
         if SettingsManager.shared.globalHotkeyEnabled {
@@ -156,6 +161,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             GlobalHotkeyManager.shared.register(.capture) { CaptureManager.shared.captureToAI() }
         } else {
             GlobalHotkeyManager.shared.unregister(.capture)
+        }
+        // Command palette (Pro), ⌃⌥P by default.
+        if UserDefaults.standard.object(forKey: "ui.paletteHotkey") as? Bool ?? true, Entitlements.shared.canUse(.commandPalette) {
+            GlobalHotkeyManager.shared.register(.palette) { CommandPalette.toggle() }
+        } else {
+            GlobalHotkeyManager.shared.unregister(.palette)
         }
         if SettingsManager.shared.invisibilityHotkeyEnabled {
             GlobalHotkeyManager.shared.register(.toggleInvisible) { [weak self] in self?.toggleInvisible() }

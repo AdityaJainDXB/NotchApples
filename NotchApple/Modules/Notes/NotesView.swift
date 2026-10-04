@@ -14,6 +14,13 @@ struct Note: Identifiable, Codable, Equatable {
     var text: String
     var updated = Date()
 
+    /// #tags written anywhere in the note (Pro shows them as filters).
+    var tags: [String] {
+        let re = try? NSRegularExpression(pattern: "(?:^|\\s)#([\\p{L}\\p{N}_-]{1,30})")
+        let range = NSRange(text.startIndex..., in: text)
+        return Array(Set((re?.matches(in: text, range: range) ?? []).compactMap { Range($0.range(at: 1), in: text).map { String(text[$0]).lowercased() } })).sorted()
+    }
+
     /// First non-empty line, used as the title.
     var title: String {
         text.split(whereSeparator: \.isNewline).first.map { String($0).trimmingCharacters(in: .whitespaces) } ?? ""
@@ -78,13 +85,36 @@ final class NotesStore: ObservableObject {
 
 struct NotesView: View {
     @StateObject private var store = NotesStore.shared
+    @ObservedObject private var entitlements = Entitlements.shared
     @State private var search = ""
+    @State private var tag: String?
+    @State private var preview = false
+    @AppStorage("notes.page") private var page = "notes"
 
     private var filtered: [Note] {
-        search.isEmpty ? store.notes : store.notes.filter { $0.text.localizedCaseInsensitiveContains(search) }
+        store.notes.filter { n in
+            (search.isEmpty || n.text.localizedCaseInsensitiveContains(search)) && (tag == nil || n.tags.contains(tag!))
+        }
     }
 
+    private var allTags: [String] { Array(Set(store.notes.flatMap(\.tags))).sorted() }
+
     var body: some View {
+        VStack(spacing: 8) {
+            Picker("", selection: $page) {
+                Text("Notes").tag("notes")
+                Text("To-do").tag("todo")
+            }
+            .pickerStyle(.segmented).labelsHidden().frame(width: 200)
+            if page == "todo" {
+                GlassCard { TodoView() }
+            } else {
+                notes
+            }
+        }
+    }
+
+    private var notes: some View {
         HStack(spacing: 12) {
             GlassCard {
                 VStack(alignment: .leading, spacing: 8) {
@@ -94,6 +124,19 @@ struct NotesView: View {
                         IconButton(systemImage: "square.and.pencil", help: "New note") { store.add() }
                         IconButton(systemImage: "doc.on.clipboard", help: "New note from clipboard") {
                             store.add(NSPasteboard.general.string(forType: .string) ?? "")
+                        }
+                    }
+                    if entitlements.canUse(.richNotes), !allTags.isEmpty {
+                        ScrollView(.horizontal, showsIndicators: false) {
+                            HStack(spacing: 4) {
+                                ForEach(allTags, id: \.self) { t in
+                                    Button("#\(t)") { tag = tag == t ? nil : t }
+                                        .buttonStyle(.plain).font(.system(size: 10, weight: .semibold))
+                                        .padding(.horizontal, 6).padding(.vertical, 2)
+                                        .background(Capsule().fill(tag == t ? Theme.accent : Theme.surface))
+                                        .foregroundStyle(.white)
+                                }
+                            }
                         }
                     }
                     ScrollView {
@@ -117,16 +160,25 @@ struct NotesView: View {
                             Text("Edited \(note.updated.formatted(.relative(presentation: .named)))")
                                 .font(.system(size: 11)).foregroundStyle(Theme.textSecondary)
                             Spacer()
+                            if entitlements.canUse(.richNotes) {
+                                IconButton(systemImage: preview ? "pencil" : "eye", help: preview ? "Edit" : "Preview Markdown") { preview.toggle() }
+                            } else {
+                                TierBadge(tier: .pro).help(Feature.richNotes.benefit)
+                            }
                             IconButton(systemImage: "doc.on.doc", help: "Copy note") {
                                 NSPasteboard.general.clearContents()
                                 NSPasteboard.general.setString(note.text, forType: .string)
                             }
                             IconButton(systemImage: "trash", help: "Delete note") { withAnimation { store.delete(id) } }
                         }
-                        TextEditor(text: Binding(get: { note.text }, set: { store.update(id, text: $0) }))
-                            .font(.system(size: 13))
-                            .scrollContentBackground(.hidden)
-                            .foregroundStyle(.white)
+                        if preview && entitlements.canUse(.richNotes) {
+                            ScrollView { RichTextView(markdown: note.text).frame(maxWidth: .infinity, alignment: .leading) }
+                        } else {
+                            TextEditor(text: Binding(get: { note.text }, set: { store.update(id, text: $0) }))
+                                .font(.system(size: 13))
+                                .scrollContentBackground(.hidden)
+                                .foregroundStyle(.white)
+                        }
                     }
                 } else {
                     VStack(spacing: 8) {

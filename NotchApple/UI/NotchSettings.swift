@@ -20,6 +20,7 @@ struct NotchSettings: View {
     @AppStorage("notch.edgeTrigger") private var edgeTrigger = "off"
     @AppStorage("notch.sounds") private var sounds = false
     @AppStorage("notch.haptics") private var haptics = false
+    @AppStorage("ui.paletteHotkey") private var palette = true
 
     private var notch: NotchWindowController? { AppDelegate.current?.notch }
 
@@ -44,6 +45,15 @@ struct NotchSettings: View {
                 Toggle(isOn: $settings.stickyNotch) {
                     Text("Keep open when clicking elsewhere")
                     Text("Otherwise the notch closes when you click outside it or press Esc.")
+                }
+                HStack {
+                    Toggle(isOn: $palette) {
+                        Text("Command palette with \(HotkeyBinding.palette.label)")
+                        Text("Search and run everything: tabs, timers, snippets, saved prompts, apps, Settings, or ask the AI.")
+                    }
+                    .disabled(!entitlements.canUse(.commandPalette))
+                    .onChange(of: palette) { _, _ in AppDelegate.current?.reapplyHotkeys() }
+                    if !entitlements.canUse(.commandPalette) { TierBadge(tier: .pro).help(Feature.commandPalette.benefit) }
                 }
             } header: {
                 Text("Opening")

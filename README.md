@@ -201,6 +201,16 @@ All screenshots use sample data.
 
 ## What's new
 
+### 1.20.0 · 4 October 2026 · Get more done
+
+- **To-do list** in the Notes tab, saved on this Mac.
+- **Pro · Notes and Reminders:** Markdown preview and `#tags`; your Apple Reminders in To-do, ticked off right there.
+- **Pro · Command palette (⌃⌥P):** search and run tabs, timers, snippets, saved prompts, apps and Settings, or ask the AI.
+- **Pro · Text expander:** give a snippet an abbreviation like `;sig` and type it in any app (off until you turn it on; needs Accessibility).
+- **Pro · Screen tools:** screenshot markup, a screen ruler, and unit and currency conversion in the calculator (`5 km to mi`, `100 usd to eur`).
+- **Pro · Shelf and clipboard:** shelf folders, auto-expiry and Share; up to 5,000 clipboard items and apps whose copies are never saved.
+- **Ultimate · Scripting:** [`scripts/notch`](scripts/notch) for Terminal and more `notchapple://` commands.
+
 ### 1.19.0 · 4 October 2026 · A smarter assistant
 
 - **Apple Intelligence** as an AI provider: free, private, on this Mac (macOS 26+ with Apple Intelligence on).
@@ -467,7 +477,7 @@ open -g "notchapple://activity?id=build&title=Build&text=42%25&symbol=hammer.fil
 open -g "notchapple://activity/end?id=build"
 ```
 
-Or use the helper in [scripts/notch-activity](scripts/notch-activity):
+Or use the helper in [scripts/notch-activity](scripts/notch-activity) (also `notch activity …` in [scripts/notch](scripts/notch), which can open tabs, start timers, ask the AI, add notes and to-dos, and switch themes):
 
 ```bash
 scripts/notch-activity build --title Build --symbol hammer.fill --progress 0.3
@@ -943,6 +953,7 @@ Per-app volume and EQ use Core Audio process taps, which arrived in macOS 14.2. 
   - `api.github.com` to check for updates (can be turned off) and `github.com` to download one you accept
   - `open-meteo.com` for weather
   - `api.github.com` / `raw.githubusercontent.com` for the free VPN server list, and `vpngate.net`, only when you open the VPN tab
+  - open.er-api.com for currency rates, only when you convert a currency (Pro)
   - DuckDuckGo, only when you turn on web search in the AI tab (Pro): just your question
   - CoinGecko and Yahoo Finance for Markets (Pro), ADSB.lol for live flight status (Pro): only the symbols and flight numbers you add
   - Apple's speech recognition when you dictate (on this Mac when your Mac supports it)

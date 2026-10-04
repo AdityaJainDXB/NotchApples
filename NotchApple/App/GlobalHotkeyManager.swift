@@ -25,13 +25,14 @@ struct HotkeyBinding: Equatable {
 
     /// The two shortcuts users can change in Settings → Shortcuts & Hotkeys.
     enum Slot {
-        case notch, invisibility, capture
+        case notch, invisibility, capture, palette
 
         fileprivate var prefix: String {
             switch self {
             case .notch: "hotkey.notch"
             case .invisibility: "hotkey.invisibility"
             case .capture: "hotkey.capture"
+            case .palette: "hotkey.palette"
             }
         }
 
@@ -42,6 +43,7 @@ struct HotkeyBinding: Equatable {
             case .notch: HotkeyBinding(keyCode: UInt32(kVK_ANSI_N), modifiers: UInt32(controlKey | optionKey), label: "⌃⌥N")
             case .invisibility: HotkeyBinding(keyCode: UInt32(kVK_ANSI_O), modifiers: UInt32(cmdKey), label: "⌘O")
             case .capture: HotkeyBinding(keyCode: UInt32(kVK_ANSI_S), modifiers: UInt32(controlKey | optionKey), label: "⌃⌥S")
+            case .palette: HotkeyBinding(keyCode: UInt32(kVK_ANSI_P), modifiers: UInt32(controlKey | optionKey), label: "⌃⌥P")
             }
         }
     }
@@ -76,6 +78,8 @@ struct HotkeyBinding: Equatable {
 
     static var capture: HotkeyBinding { current(.capture) }
 
+    static var palette: HotkeyBinding { current(.palette) }
+
     /// Builds a binding from a key press, or nil if it can't work as a global shortcut
     /// (needs ⌘ or ⌃; ⌥ or ⇧ alone are ignored by macOS for global hot keys).
     init?(event: NSEvent) {
@@ -107,6 +111,7 @@ final class GlobalHotkeyManager {
         case closeNotch = 2
         case toggleInvisible = 3
         case capture = 4
+        case palette = 5
         // Window snapping, ⌃⌥ + key.
         case snapLeft = 10, snapRight, snapTop, snapBottom, snapMaximize, snapCenter, snapRestore
 
@@ -118,6 +123,7 @@ final class GlobalHotkeyManager {
             case .closeNotch: UInt32(kVK_Escape)
             case .toggleInvisible: HotkeyBinding.invisibility.keyCode
             case .capture: HotkeyBinding.capture.keyCode
+            case .palette: HotkeyBinding.palette.keyCode
             case .snapLeft: UInt32(kVK_LeftArrow)
             case .snapRight: UInt32(kVK_RightArrow)
             case .snapTop: UInt32(kVK_UpArrow)
@@ -133,6 +139,7 @@ final class GlobalHotkeyManager {
             case .toggleNotch: HotkeyBinding.notch.modifiers
             case .toggleInvisible: HotkeyBinding.invisibility.modifiers
             case .capture: HotkeyBinding.capture.modifiers
+            case .palette: HotkeyBinding.palette.modifiers
             case .closeNotch: 0
             default: UInt32(controlKey | optionKey)
             }
