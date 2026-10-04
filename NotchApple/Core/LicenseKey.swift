@@ -50,7 +50,9 @@ enum Feature: String, CaseIterable, Identifiable {
     // Ultimate: live activities
     case activityStacking
     // Pro: AI
-    case aiCapture, aiHistory, aiFileDrop
+    case aiCapture, aiHistory, aiFileDrop, personas, slashCommands, webSearch, voice, clipboardAI
+    // Ultimate: AI
+    case automations
     // Pro: tabs
     case messenger, audio, vpn, voiceNotes, screenTime, quickAdd, launcher, snippets, mirror, focus
     // Pro: system and media
@@ -64,7 +66,7 @@ enum Feature: String, CaseIterable, Identifiable {
 
     var tier: Tier {
         switch self {
-        case .liveActivityAPI, .activityStacking, .pluginSDK, .prioritySupport, .betaChannel: .ultimate
+        case .liveActivityAPI, .activityStacking, .automations, .pluginSDK, .prioritySupport, .betaChannel: .ultimate
         default: .pro
         }
     }
@@ -94,6 +96,12 @@ enum Feature: String, CaseIterable, Identifiable {
         case .aiCapture: "Ask about your screen"
         case .aiHistory: "AI history"
         case .aiFileDrop: "Images and PDFs in AI"
+        case .personas: "Personas and saved prompts"
+        case .slashCommands: "Slash commands"
+        case .webSearch: "Web search with sources"
+        case .voice: "Voice input and read aloud"
+        case .clipboardAI: "AI on your clipboard"
+        case .automations: "AI automations"
         case .messenger: "Messenger"
         case .audio: "Audio"
         case .vpn: "VPN"
@@ -133,6 +141,12 @@ enum Feature: String, CaseIterable, Identifiable {
         case .aiCapture: "Capture any part of the screen (⌃⌥S) or selected text and ask about it."
         case .aiHistory: "Search, reopen and export past AI conversations."
         case .aiFileDrop: "Drop or paste images and PDFs into the AI tab."
+        case .personas: "Standing instructions for every answer, and your favourite prompts one click away."
+        case .slashCommands: "Type /summarize, /fix, /translate fr: … or /web in the AI box."
+        case .webSearch: "Answers that search the web first and cite their sources."
+        case .voice: "Dictate questions and have answers read aloud."
+        case .clipboardAI: "Summarise, translate or fix what you copied; the result is copied back."
+        case .automations: "Prompts that run on a schedule, like a morning summary of your calendar."
         case .messenger: "Your chats in the notch."
         case .audio: "Per-app volume and output switching."
         case .vpn: "Connect your VPN from the notch."

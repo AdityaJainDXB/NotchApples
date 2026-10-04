@@ -77,7 +77,8 @@ extension AIClient {
 
     /// Streams the reply as text chunks. Cancelling the task stops the request.
     static func stream(_ history: [ChatMessage], provider: AIProvider, model: String, system: String) -> AsyncThrowingStream<String, Error> {
-        AsyncThrowingStream { continuation in
+        if provider == .apple { return AppleIntelligence.stream(history, system: system) }
+        return AsyncThrowingStream { continuation in
             let task = Task {
                 do {
                     let request = try makeStreamRequest(history, provider: provider, model: model, system: system)

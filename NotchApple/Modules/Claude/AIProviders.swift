@@ -24,7 +24,7 @@
 import Foundation
 
 enum AIProvider: String, CaseIterable, Identifiable, Codable {
-    case gemini, groq, openRouter, ollama, deepSeek, claude, openAI
+    case gemini, groq, openRouter, ollama, apple, deepSeek, claude, openAI
 
     var id: String { rawValue }
 
@@ -34,6 +34,7 @@ enum AIProvider: String, CaseIterable, Identifiable, Codable {
         case .groq: "Groq"
         case .openRouter: "OpenRouter"
         case .ollama: "Ollama (on this Mac)"
+        case .apple: "Apple Intelligence (on this Mac)"
         case .deepSeek: "DeepSeek"
         case .claude: "Claude"
         case .openAI: "ChatGPT (OpenAI)"
@@ -46,6 +47,7 @@ enum AIProvider: String, CaseIterable, Identifiable, Codable {
         case .groq: "Free tier, no billing needed"
         case .openRouter: "Free models, no billing needed"
         case .ollama: "Free, private, works offline"
+        case .apple: "Free, private, built into macOS 26 and newer"
         case .deepSeek: "Paid, low cost; top up at platform.deepseek.com"
         case .claude: "Paid, billed to your Anthropic account"
         case .openAI: "Paid, billed to your OpenAI account"
@@ -53,7 +55,7 @@ enum AIProvider: String, CaseIterable, Identifiable, Codable {
     }
 
     var isFree: Bool { ![.claude, .openAI, .deepSeek].contains(self) }
-    var needsKey: Bool { self != .ollama }
+    var needsKey: Bool { self != .ollama && self != .apple }
 
     var keychainKey: KeychainHelper.Key {
         switch self {
@@ -63,7 +65,7 @@ enum AIProvider: String, CaseIterable, Identifiable, Codable {
         case .openRouter: .openRouterAPIKey
         case .openAI: .openAIAPIKey
         case .deepSeek: .deepSeekAPIKey
-        case .ollama: .anthropicAPIKey   // unused (no key)
+        case .ollama, .apple: .anthropicAPIKey   // unused (no key)
         }
     }
 
@@ -73,6 +75,7 @@ enum AIProvider: String, CaseIterable, Identifiable, Codable {
         case .groq: URL(string: "https://console.groq.com/keys")!
         case .openRouter: URL(string: "https://openrouter.ai/keys")!
         case .ollama: URL(string: "https://ollama.com/download")!
+        case .apple: URL(string: "https://support.apple.com/apple-intelligence")!
         case .deepSeek: URL(string: "https://platform.deepseek.com/api_keys")!
         case .claude: URL(string: "https://console.anthropic.com/settings/keys")!
         case .openAI: URL(string: "https://platform.openai.com/api-keys")!
@@ -87,7 +90,7 @@ enum AIProvider: String, CaseIterable, Identifiable, Codable {
         case .claude: "sk-ant-…"
         case .openAI: "sk-…"
         case .deepSeek: "sk-…"
-        case .ollama: ""
+        case .ollama, .apple: ""
         }
     }
 
@@ -98,6 +101,7 @@ enum AIProvider: String, CaseIterable, Identifiable, Codable {
         case .groq: "openai/gpt-oss-120b"
         case .openRouter: "meta-llama/llama-3.3-70b-instruct:free"
         case .ollama: "llama3.2"
+        case .apple: "on-device"
         case .claude: "claude-sonnet-5"
         case .openAI: "gpt-4o-mini"
         case .deepSeek: "deepseek-chat"
@@ -123,6 +127,7 @@ enum AIProvider: String, CaseIterable, Identifiable, Codable {
             return ["llava", "vision", "gemma3", "qwen2.5vl", "qwen3-vl", "minicpm-v", "moondream", "bakllava"].contains { m.contains($0) }
         case .openRouter: return true   // unknown; let the provider decide
         case .deepSeek: return false    // DeepSeek's API is text-only
+        case .apple: return false       // the on-device model reads text only
         }
     }
 }
@@ -150,6 +155,10 @@ enum AIClient {
         switch provider {
         case .claude: return try await ClaudeClient.send(history, model: model)
         case .gemini: return try await sendGemini(history, model: model)
+        case .apple:
+            var out = ""
+            for try await piece in AppleIntelligence.stream(history, system: systemPrompt) { out += piece }
+            return out
         case .groq, .openRouter, .ollama, .openAI, .deepSeek: return try await sendOpenAICompatible(history, provider: provider, model: model)
         }
     }
@@ -240,6 +249,8 @@ enum AIClient {
                 .compactMap { ($0["name"] as? String)?.replacingOccurrences(of: "models/", with: "") }
                 .filter { $0.hasPrefix("gemini") && !["tts", "image", "embedding", "live", "audio"].contains(where: $0.contains) }
                 .sorted { rank($0) > rank($1) }
+        case .apple:
+            return ["on-device"]
         case .openRouter:
             let json = try await perform(URLRequest(url: URL(string: "https://openrouter.ai/api/v1/models")!))
             return ((json["data"] as? [[String: Any]]) ?? []).compactMap { m -> String? in

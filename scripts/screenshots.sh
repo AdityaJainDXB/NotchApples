@@ -111,6 +111,7 @@ shot onboarding    settings 6 -demoOnboarding 2
 shot onboarding-tour settings 6 -demoOnboarding 4
 shot notch-stacked trigger 5 -demoTier ultimate -demoTimer 1500 -demoActivity "id=build&title=Build&text=42%25&symbol=hammer.fill&color=34C759"
 shot markets       panel 10 -openNotch markets -demoPro YES
+shot ai-web        panel answers:1 -openNotch claude -demoPro YES -demoWeb YES -demoAsk "Who designed the Eiffel Tower, and how tall is it?"
 
 [ $REAL_RUNNING = 1 ] && open -g -a "/Applications/Notch apple.app"
 defaults delete $D >/dev/null 2>&1 || true
@@ -118,7 +119,7 @@ defaults delete $D >/dev/null 2>&1 || true
 if [ -n "$SITE" ]; then
   echo "› WebP copies for the website"
   mkdir -p "$SITE/assets/screenshots"
-  for f in ai-empty ai-input ai-result follow-up code-analysis capture-overlay f1 sports sports-table sports-cricket sports-detail games history settings-ai pro settings-pro settings-notch settings-themes onboarding onboarding-tour notch-stacked markets; do
+  for f in ai-empty ai-input ai-result follow-up code-analysis capture-overlay f1 sports sports-table sports-cricket sports-detail games history settings-ai pro settings-pro settings-notch settings-themes onboarding onboarding-tour notch-stacked markets ai-web; do
     [ -f "$OUT/$f.png" ] && python3 -c "
 from PIL import Image; im = Image.open('$OUT/$f.png'); im.thumbnail((1600, 1600)); im.save('$SITE/assets/screenshots/$f.webp', 'WEBP', quality=82, method=6)"
   done

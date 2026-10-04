@@ -132,3 +132,55 @@ final class ModeAndErrorTests: XCTestCase {
         XCTAssertFalse(AIProvider.ollama.likelySupportsVision("llama3.2"))
     }
 }
+
+final class AIExtrasTests: XCTestCase {
+    func testSlashCommands() {
+        guard case .mode(let m, let text, _)? = SlashCommand.parse("/summarize The quick brown fox") else { return XCTFail() }
+        XCTAssertEqual(m, .summarize); XCTAssertEqual(text, "The quick brown fox")
+        guard case .mode(.translate, let t2, let note)? = SlashCommand.parse("/translate fr: good morning") else { return XCTFail() }
+        XCTAssertEqual(t2, "good morning"); XCTAssertEqual(note, "into fr")
+        guard case .mode(.rewrite, _, let fixNote)? = SlashCommand.parse("/fix i has a apple") else { return XCTFail() }
+        XCTAssertTrue(fixNote.contains("grammar"))
+        guard case .web(let q)? = SlashCommand.parse("/web who won the race") else { return XCTFail() }
+        XCTAssertEqual(q, "who won the race")
+        guard case .help? = SlashCommand.parse("/help") else { return XCTFail() }
+        guard case .mode(.summarize, let empty, _)? = SlashCommand.parse("/tldr") else { return XCTFail() }
+        XCTAssertEqual(empty, "")
+        XCTAssertNil(SlashCommand.parse("what is 1/2"))
+        XCTAssertNil(SlashCommand.parse("/unknowncommand hi"))
+    }
+
+    func testWebResultsParsing() {
+        let html = """
+        <div class="result results_links"><div class="links_main links_deep result__body">
+        <h2 class="result__title"><a rel="nofollow" class="result__a" href="//duckduckgo.com/l/?uddg=https%3A%2F%2Fexample.com%2Fpage&amp;rut=abc">Example &amp; Co</a></h2>
+        <a class="result__snippet" href="x">A <b>short</b> snippet.</a></div></div>
+        <div class="result"><div class="result__body"><a class="result__a" href="https://second.org/">Second</a>
+        <a class="result__snippet" href="y">Two</a></div></div>
+        """
+        let r = WebSearch.parse(html, limit: 5)
+        XCTAssertEqual(r.count, 2)
+        XCTAssertEqual(r[0].url, "https://example.com/page")
+        XCTAssertEqual(r[0].title, "Example & Co")
+        XCTAssertEqual(r[0].snippet, "A short snippet.")
+        XCTAssertTrue(WebSearch.prompt("q", r).contains("[2] Second — https://second.org/"))
+        XCTAssertTrue(WebSearch.sourcesMarkdown(r).contains("1. [Example & Co](https://example.com/page)"))
+    }
+
+    func testAutomationSchedule() {
+        var a = Automation()
+        a.hour = 8; a.minute = 0; a.weekdays = Set(1...7)
+        let cal = Calendar.current
+        let nineAM = cal.date(bySettingHour: 9, minute: 0, second: 0, of: .now)!
+        XCTAssertTrue(a.isDue(now: nineAM))
+        a.lastRun = cal.date(bySettingHour: 8, minute: 1, second: 0, of: .now)!
+        XCTAssertFalse(a.isDue(now: nineAM), "already ran today")
+        a.lastRun = nil
+        let twoPM = cal.date(bySettingHour: 14, minute: 30, second: 0, of: .now)!
+        XCTAssertFalse(a.isDue(now: twoPM), "missed by more than 6 hours")
+        a.weekdays = []
+        XCTAssertFalse(a.isDue(now: nineAM))
+        a.weekdays = Set(1...7); a.enabled = false
+        XCTAssertFalse(a.isDue(now: nineAM))
+    }
+}

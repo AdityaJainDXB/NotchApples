@@ -201,6 +201,16 @@ All screenshots use sample data.
 
 ## What's new
 
+### 1.19.0 · 4 October 2026 · A smarter assistant
+
+- **Apple Intelligence** as an AI provider: free, private, on this Mac (macOS 26+ with Apple Intelligence on).
+- **Pro · Web search with sources:** turn on the globe and answers search DuckDuckGo first, then cite what they used. Only your question is sent to DuckDuckGo.
+- **Pro · Personas and saved prompts:** Tutor, Concise, Code reviewer, Writing coach, or your own.
+- **Pro · Slash commands:** `/summarize`, `/explain`, `/eli5`, `/fix`, `/translate fr: …`, `/code`, `/web`, `/persona`, `/help`.
+- **Pro · Voice:** dictate questions (on this Mac when supported) and have answers read aloud.
+- **Pro · Clipboard AI:** summarise, fix, translate or explain a copied item; the result is copied back.
+- **Ultimate · Automations:** prompts that run on a schedule (say a weekday-morning calendar summary), delivered as a notification and saved in History.
+
 ### 1.18.0 · 4 October 2026 · More live activities
 
 - **Meeting pulse:** a soft glow beside the notch when a video call is about to start, with Join one click away.
@@ -933,6 +943,9 @@ Per-app volume and EQ use Core Audio process taps, which arrived in macOS 14.2. 
   - `api.github.com` to check for updates (can be turned off) and `github.com` to download one you accept
   - `open-meteo.com` for weather
   - `api.github.com` / `raw.githubusercontent.com` for the free VPN server list, and `vpngate.net`, only when you open the VPN tab
+  - DuckDuckGo, only when you turn on web search in the AI tab (Pro): just your question
+  - CoinGecko and Yahoo Finance for Markets (Pro), ADSB.lol for live flight status (Pro): only the symbols and flight numbers you add
+  - Apple's speech recognition when you dictate (on this Mac when your Mac supports it)
   - the license server, only if you activate a signed key: activating or deactivating sends the key and a one-way hash of your Mac (salted per key, so it can't be linked across keys) to enforce the 3-Mac limit, and about once a day it downloads the signed list of turned-off keys (nothing about you is sent). The website's `api.json` says where the server is. Keys are checked offline; without internet, activation still works
 - PairDrop and Nearby Wi-Fi chat never leave your local network.
 - Anonymous room messages are end-to-end encrypted before they leave your Mac, and the relay (`ntfy.sh`, or a public MQTT broker as a fallback) stores nothing.

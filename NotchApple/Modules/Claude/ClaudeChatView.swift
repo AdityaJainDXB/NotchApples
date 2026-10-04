@@ -91,6 +91,8 @@ final class ClaudeChatModel: ObservableObject {
     @Published var notice: String?
     /// A Pro feature someone tried (capture, files, history); shows what it does and how to unlock it.
     @Published var locked: Feature?
+    /// Search the web before answering (Pro).
+    @Published var webSearch = false
 
     // The current task's input: a capture / pasted / dropped image, or text.
     @Published private(set) var input: CapturedInput?
@@ -269,6 +271,11 @@ final class ClaudeChatModel: ObservableObject {
         guard !isSending else { return }
         error = nil
         notice = nil
+        if let command = SlashCommand.parse(prompt) {
+            guard allowed(.slashCommands) else { return }
+            handle(command)
+            return
+        }
         let config = AIConfig.shared
 
         // "What's on my screen?" → take a screenshot automatically.
@@ -301,6 +308,39 @@ final class ClaudeChatModel: ObservableObject {
         }
     }
 
+    /// Runs a slash command typed in the box.
+    private func handle(_ command: SlashCommand) {
+        switch command {
+        case .help:
+            notice = "Commands: \(SlashCommand.helpText)"
+        case .persona(let name):
+            let extras = AIExtras.shared
+            if name.isEmpty || name.lowercased() == "off" { extras.activePersonaID = ""; notice = "Persona off." }
+            else if let p = extras.personas.first(where: { $0.name.localizedCaseInsensitiveContains(name) }) {
+                extras.activePersonaID = p.id.uuidString; notice = "Persona: \(p.name)."
+            } else { notice = "No persona called \(name). Add one in Settings → AI." }
+        case .web(let question):
+            guard allowed(.webSearch), !question.isEmpty else { return }
+            let was = webSearch
+            webSearch = true
+            send(question)
+            webSearchOnce = !was
+        case .mode(let mode, let text, let note):
+            var body = text
+            // No text after the command: use the clipboard, or what's already loaded.
+            if body.isEmpty, input == nil, textInput == nil {
+                body = NSPasteboard.general.string(forType: .string)?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+                if body.isEmpty { notice = "Type some text after the command, or copy some first."; return }
+            }
+            if !body.isEmpty { setTextInput(body, source: "/\(mode.rawValue)") }
+            draft = note
+            run(mode)
+        }
+    }
+
+    /// Set when /web turned search on for just one question.
+    private var webSearchOnce = false
+
     /// Streams a reply to the conversation so far.
     private func request(firstOfTask: Bool) {
         let config = AIConfig.shared
@@ -311,6 +351,7 @@ final class ClaudeChatModel: ObservableObject {
             return
         }
         if provider == .ollama { notice = notice ?? "Answered on this Mac with Ollama; nothing leaves your Mac." }
+        if provider == .apple { notice = notice ?? "Answered on this Mac by Apple Intelligence; nothing leaves your Mac." }
         isSending = true
         lastRequest = (provider, model)
         let userTurn = messages.last { $0.role == .user }
@@ -319,8 +360,26 @@ final class ClaudeChatModel: ObservableObject {
         messages.append(reply)
         let replyID = reply.id
         let modeNow = firstOfTask ? mode : nil
+        let system = AIClient.system(for: modeNow) + AIExtras.shared.systemSuffix
+        let searching = webSearch && Entitlements.shared.canUse(.webSearch)
+        if webSearchOnce { webSearch = false; webSearchOnce = false }
 
         running = Task {
+            var history = history
+            var sources: [WebSearch.Result] = []
+            if searching, let i = history.lastIndex(where: { $0.role == .user }) {
+                notice = "Searching the web…"
+                sources = await WebSearch.search(history[i].display ?? history[i].text)
+                if sources.isEmpty {
+                    notice = "The web search found nothing, so this answer is from the model alone."
+                } else {
+                    notice = "Searched the web (DuckDuckGo): \(sources.count) results."
+                    var m = history[i]
+                    if m.display == nil { m.display = m.text }
+                    m.text = WebSearch.prompt(m.text, sources)
+                    history[i] = m
+                }
+            }
             do {
                 if provider == .openRouter {
                     // Free OpenRouter models are often busy or can't read images: retry and fall back to ones that can.
@@ -335,7 +394,7 @@ final class ClaudeChatModel: ObservableObject {
                         if outcome.shouldSwitch { config.setModel(outcome.model, for: .openRouter) }
                     }
                 } else {
-                    for try await piece in AIClient.stream(history, provider: provider, model: model, system: AIClient.system(for: modeNow)) {
+                    for try await piece in AIClient.stream(history, provider: provider, model: model, system: system) {
                         update(replyID) { $0.text += piece }
                     }
                 }
@@ -358,6 +417,11 @@ final class ClaudeChatModel: ObservableObject {
             // Drop an empty reply (failed before any text arrived).
             if let r = messages.first(where: { $0.id == replyID }), r.text.isEmpty {
                 messages.removeAll { $0.id == replyID }
+            } else {
+                if !sources.isEmpty { update(replyID) { $0.text += WebSearch.sourcesMarkdown(sources) } }
+                if AIExtras.shared.speakAnswers, Entitlements.shared.canUse(.voice), let r = messages.first(where: { $0.id == replyID }) {
+                    Speaker.shared.speak(r.text)
+                }
             }
             if let userTurn, let r = messages.first(where: { $0.id == replyID }) {
                 record(user: userTurn, reply: r, provider: provider, model: r.model ?? model)
@@ -597,7 +661,7 @@ struct ClaudeChatView: View {
             Spacer()
             badge(config.provider.likelySupportsVision(config.model) ? "Sees images" : "Text only",
                   symbol: config.provider.likelySupportsVision(config.model) ? "eye" : "eye.slash")
-            if config.provider == .ollama {
+            if config.provider == .ollama || config.provider == .apple {
                 badge("On this Mac", symbol: "lock.fill", tint: .green)
             } else {
                 Text(config.provider.costNote).font(.system(size: 11)).lineLimit(1)
@@ -823,6 +887,8 @@ struct ClaudeChatView: View {
             .menuStyle(.borderlessButton).fixedSize()
             .help("Capture (\(HotkeyBinding.capture.label)); hold for more options")
 
+            AIExtrasBar(model: model)
+
             TextField(placeholder, text: $model.draft)
                 .textFieldStyle(.plain)
                 .focused($fieldFocused)
@@ -970,6 +1036,10 @@ struct AISetupCard: View {
                     .buttonStyle(PurpleButtonStyle(prominent: config.provider == .gemini))
                 Button { config.provider = .ollama } label: { Label("Ollama (on this Mac)", systemImage: "lock.fill") }
                     .buttonStyle(PurpleButtonStyle(prominent: config.provider == .ollama))
+                if AppleIntelligence.isAvailable {
+                    Button { config.provider = .apple } label: { Label("Apple Intelligence", systemImage: "apple.intelligence") }
+                        .buttonStyle(PurpleButtonStyle(prominent: config.provider == .apple))
+                }
             }
             if config.provider.needsKey && !config.provider.isConfigured {
                 HStack {
@@ -980,6 +1050,9 @@ struct AISetupCard: View {
                     }.disabled(key.isEmpty)
                     Link("Get a free key", destination: config.provider.keyURL).font(.system(size: 11))
                 }
+            } else if config.provider == .apple {
+                Text(AppleIntelligence.unavailableReason ?? "Ready: Apple's on-device model, free and private. It reads text only.")
+                    .font(.system(size: 11)).foregroundStyle(Theme.textSecondary)
             } else if config.provider == .ollama {
                 Text("Install Ollama from ollama.com, then run `ollama pull gemma3:4b` once (it can read images).")
                     .font(.system(size: 11)).foregroundStyle(Theme.textSecondary)

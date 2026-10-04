@@ -17,6 +17,7 @@
 //    -demoSelection x,y,w,h     with -demoOverlay, a selection in points from the top-left
 //    -demoSportsDetail YES      open the details of your team's latest result
 //    -demoOnboarding <1…4>      show the welcome window on that page
+//    -demoAsk <question>        ask a question (add -demoWeb YES to search the web first)
 //    -demoTimer <seconds>       start a timer (shows beside the closed notch)
 //    -demoActivity <query>      push a Live Activities API activity, e.g. "id=build&text=42%25&symbol=hammer.fill"
 //
@@ -60,6 +61,10 @@ enum DemoHooks {
                 }
             }
             if let tab = d.string(forKey: "openNotch").flatMap(Module.init(rawValue:)) { AppDelegate.showNotch(tab: tab) }
+            if let q = d.string(forKey: "demoAsk") {
+                chat.webSearch = d.bool(forKey: "demoWeb")
+                DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { chat.send(q) }
+            }
             if let mode = d.string(forKey: "demoRun").flatMap(AIMode.init(rawValue:)) {
                 DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { chat.run(mode) }
                 if let follow = d.string(forKey: "demoFollowUp") {

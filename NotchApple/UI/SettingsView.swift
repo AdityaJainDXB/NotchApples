@@ -703,8 +703,8 @@ private struct ClaudeSettings: View {
                     Text("API keys, chat history, saved images, and Extract text (Apple's on-device text recognition)").foregroundStyle(.secondary).multilineTextAlignment(.trailing)
                 }
                 LabeledContent("Sent to \(config.provider.title)") {
-                    Text(config.provider == .ollama ? "Nothing: Ollama runs on this Mac" : "Only what you ask about: your question, the captured or pasted image, and the conversation so far")
-                        .foregroundStyle(config.provider == .ollama ? .green : .secondary).multilineTextAlignment(.trailing)
+                    Text(config.provider == .ollama || config.provider == .apple ? "Nothing: the model runs on this Mac" : "Only what you ask about: your question, the captured or pasted image, and the conversation so far")
+                        .foregroundStyle(config.provider == .ollama || config.provider == .apple ? .green : .secondary).multilineTextAlignment(.trailing)
                 }
                 LabeledContent("Telemetry") { Text("None").foregroundStyle(.secondary) }
             } header: {
@@ -723,6 +723,8 @@ private struct ClaudeSettings: View {
             } footer: {
                 Text("Keys are stored in a private file on this Mac (only your user account can read it) and sent only to that provider.")
             }
+            PersonasSettings()
+            AutomationsSettings()
         }
         .formStyle(.grouped)
         .id(refresh)

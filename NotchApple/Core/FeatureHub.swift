@@ -80,6 +80,7 @@ enum FeatureHub {
         if s.sportsEnabled { SportsModel.shared.refreshIfDue(); MoreTeams.shared.refreshIfDue() }
         if s.liveEnabled { FlightWatcher.shared.refreshIfDue() }
         if s.marketsEnabled { MarketsModel.shared.refreshIfDue() }
+        AIAutomations.shared.checkDue()
         DownloadWatcher.shared.setEnabled(s.downloadProgress && Entitlements.shared.canUse(.downloadProgress))
         LiveActivityCenter.shared.recompute()
     }

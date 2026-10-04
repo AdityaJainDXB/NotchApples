@@ -117,6 +117,12 @@ private struct ClipRow: View {
             } else if hovering {
                 if let text = item.text, item.kind == .text || item.kind == .link {
                     IconButton(systemImage: "arrow.down.doc.fill", help: "Paste into the app in front") { PasteHelper.paste(text) }
+                    Menu {
+                        ForEach(ClipboardAI.Action.allCases) { a in Button(a.title) { ClipboardAI.run(a, on: text) } }
+                    } label: { Image(systemName: "sparkles") }
+                    .menuStyle(.borderlessButton).fixedSize()
+                    .disabled(!Entitlements.shared.canUse(.clipboardAI))
+                    .help(Entitlements.shared.canUse(.clipboardAI) ? "AI: summarise, fix, translate or explain (result is copied)" : "Pro: \(Feature.clipboardAI.benefit)")
                 }
                 IconButton(systemImage: item.pinned ? "pin.slash" : "pin", help: item.pinned ? "Unpin" : "Pin") {
                     withAnimation(Theme.spring) { history.togglePin(item) }
