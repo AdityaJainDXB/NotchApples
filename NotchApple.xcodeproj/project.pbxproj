@@ -51,11 +51,13 @@
 		3426BA9EDEDB4808A6BEF8BA /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 419A5F6F30DFBF30351906D2 /* Theme.swift */; };
 		367C11150D33702915B466C8 /* CompanionClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 326EBD11D0EF6CA885B78559 /* CompanionClient.swift */; };
 		3888F2C886F863B101353A2C /* NotesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0335700922F2B064E7FC742F /* NotesView.swift */; };
+		39F8CFD0D65ADD94D2E6405F /* HotCorners.swift in Sources */ = {isa = PBXBuildFile; fileRef = C35C9FA48E930832266322C0 /* HotCorners.swift */; };
 		3ACB2F6BF173A4F2E45D42B7 /* NotchWidget.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 5D272CF7B938DCD55B7EF450 /* NotchWidget.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		3C8B09105E0E24C6D4231047 /* NotchWidgetCenter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7F6EACC9E26C6695BA7C5724 /* NotchWidgetCenter.swift */; };
 		3DEAFC4359632CB4DF71ECE1 /* DevicesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99DF8E198CA571FF54F70A9B /* DevicesView.swift */; };
 		3EFFED94F8F614109390BB82 /* BrowserMedia.swift in Sources */ = {isa = PBXBuildFile; fileRef = 878D1B5C95884945FA120D5E /* BrowserMedia.swift */; };
 		4098B0C40272540FC563BC1F /* NotchAppleApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9B61EC777F0D6D3611243246 /* NotchAppleApp.swift */; };
+		4132D2810197CE3A0F8A6429 /* HotCornerLogic.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C151FE67E6474F51CD20219 /* HotCornerLogic.swift */; };
 		41E54A41341FD1F30BD93E0A /* CaptureManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7F021540CB1F33FB8A5938B4 /* CaptureManager.swift */; };
 		442C0FCFC8F3FA259F6BA39A /* FaceUnlock.swift in Sources */ = {isa = PBXBuildFile; fileRef = 25B7E1619A5F162E845D012C /* FaceUnlock.swift */; };
 		4A3A2D8CD5D19945AFF5381A /* LicenseKey.swift in Sources */ = {isa = PBXBuildFile; fileRef = B16F24E7C42EBCCB3F46202A /* LicenseKey.swift */; };
@@ -101,6 +103,7 @@
 		874BC0D84B434A3CE5910FCD /* MusicLevelMeter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48EF75FD565DB103E4CEEB07 /* MusicLevelMeter.swift */; };
 		8BCB6AEF7F4C85ABA9B85148 /* SportsModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9AE3E9758D2882B557A695A /* SportsModel.swift */; };
 		8F8A7D3944B4A343BEAE8C0C /* LyricsModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 93AC47229DA13D09C39B7BBA /* LyricsModel.swift */; };
+		92D6E8322DCEC6A2AE6A5795 /* HotCornerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 60D028DAE4C9C74C6193B75F /* HotCornerTests.swift */; };
 		92FA1F0A869CEDCC1DD5584D /* ChatHistory.swift in Sources */ = {isa = PBXBuildFile; fileRef = 70487D33E613C8A9A0DFA36C /* ChatHistory.swift */; };
 		94FE896FD0765E79EB83E825 /* NotchRootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C5A54FB338D3A1C23699078 /* NotchRootView.swift */; };
 		95F0DCA7EC7ADAF67E355EC3 /* ShareView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF3138F3979E5F005365A41F /* ShareView.swift */; };
@@ -119,7 +122,6 @@
 		A7039DDEBFEE893E0219A6AB /* NotchWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = E56AAC7ADE87A47F1E7862C3 /* NotchWidget.swift */; };
 		A7D1F48F2AC33272CBC6837F /* TrustSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2269398FC9C57443402C81D8 /* TrustSettings.swift */; };
 		A89C797DB626E953AFF87B9E /* MathText.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78B2FB154D159E0F982419C0 /* MathText.swift */; };
-		AA519CEBD27CD812DD518136 /* Tunnelblick.dmg in Resources */ = {isa = PBXBuildFile; fileRef = 46A01968170BB2B7959205B3 /* Tunnelblick.dmg */; };
 		AABC2217E3C2A9F56856E479 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3D5341204537860AAD266BF9 /* AppDelegate.swift */; };
 		AB69ACF80582BCE7DCBFD8CB /* AppRelauncher.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0AAD6AEBA1965B0D8839F58A /* AppRelauncher.swift */; };
 		AF81D61FB4970C8D89EE00D1 /* AppleIntelligence.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAD3012040BD25D1B90DFD5E /* AppleIntelligence.swift */; };
@@ -171,6 +173,7 @@
 		EB53320B29FB664836E79985 /* WebP2PManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = E07ED38955AE546C7637D5B9 /* WebP2PManager.swift */; };
 		F3C7A9A25D260F232F140B77 /* Converter.swift in Sources */ = {isa = PBXBuildFile; fileRef = F323D82F0AF46D956EA470CA /* Converter.swift */; };
 		F6E3BFD260D3182D21C66E29 /* ScreenTools.swift in Sources */ = {isa = PBXBuildFile; fileRef = 052621B0F73FFEA23C93C8B2 /* ScreenTools.swift */; };
+		F8B6F02D08FC1FB3D04286FC /* HotCornerLogic.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C151FE67E6474F51CD20219 /* HotCornerLogic.swift */; };
 		FAB1EFFAB5CBA5F0A84E1C3B /* NotchGestures.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15E4C40B0E52107163ADD5B8 /* NotchGestures.swift */; };
 		FD3C4D12C2C02652A4D6A729 /* TimerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BEF54A340D0BE4A8A19E3BCF /* TimerView.swift */; };
 		FD551020755C9139D9226CF7 /* CompanionProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8945C0BF0272BD283A250BDC /* CompanionProtocol.swift */; };
@@ -245,7 +248,6 @@
 		44CAF8A30126F03D6A230ED7 /* AIModes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIModes.swift; sourceTree = "<group>"; };
 		44EC19E1838745C95B5759DF /* GamesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GamesView.swift; sourceTree = "<group>"; };
 		466B2516F7D15E3C623784BC /* F1Model.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = F1Model.swift; sourceTree = "<group>"; };
-		46A01968170BB2B7959205B3 /* Tunnelblick.dmg */ = {isa = PBXFileReference; path = Tunnelblick.dmg; sourceTree = "<group>"; };
 		48667860F7FB5AB63EB47043 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		48EF75FD565DB103E4CEEB07 /* MusicLevelMeter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MusicLevelMeter.swift; sourceTree = "<group>"; };
 		4C159DF1B14A1D38FD58EC46 /* SnippetsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SnippetsView.swift; sourceTree = "<group>"; };
@@ -254,9 +256,11 @@
 		4F23D3171A71FF28676DD18D /* BrowserModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrowserModel.swift; sourceTree = "<group>"; };
 		50CCA2828E5DEA8799BE2ACC /* PureModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PureModels.swift; sourceTree = "<group>"; };
 		52100BA17131CE56EF103F79 /* NotchWidget.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = NotchWidget.entitlements; sourceTree = "<group>"; };
+		5C151FE67E6474F51CD20219 /* HotCornerLogic.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HotCornerLogic.swift; sourceTree = "<group>"; };
 		5D272CF7B938DCD55B7EF450 /* NotchWidget.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = NotchWidget.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		5D5440E6913CD26F8F12FBAE /* NotchTranslatorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotchTranslatorView.swift; sourceTree = "<group>"; };
 		5E45CA4DA23D38E6A1DBA06F /* NotificationsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationsView.swift; sourceTree = "<group>"; };
+		60D028DAE4C9C74C6193B75F /* HotCornerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HotCornerTests.swift; sourceTree = "<group>"; };
 		643FFB36BCE34E64BBD52883 /* NotchMessengerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotchMessengerView.swift; sourceTree = "<group>"; };
 		66DBB35434CEBAA72E675AD4 /* OpenRouterFallback.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenRouterFallback.swift; sourceTree = "<group>"; };
 		6747ADA828FF1D33683B30C8 /* ClaudeClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClaudeClient.swift; sourceTree = "<group>"; };
@@ -321,6 +325,7 @@
 		C0762062E088CCC2C44948C8 /* LICENSE-Tunnelblick.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = "LICENSE-Tunnelblick.txt"; sourceTree = "<group>"; };
 		C2397F7A422C289191CBD379 /* AIAutomations.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIAutomations.swift; sourceTree = "<group>"; };
 		C2B877B3FC56AA179FD7FEAE /* CommandPalette.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommandPalette.swift; sourceTree = "<group>"; };
+		C35C9FA48E930832266322C0 /* HotCorners.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HotCorners.swift; sourceTree = "<group>"; };
 		C5F7CF2FFE504D781512227C /* AppTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppTheme.swift; sourceTree = "<group>"; };
 		C7C02C79EB9558F42EE15425 /* NotchBehavior.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotchBehavior.swift; sourceTree = "<group>"; };
 		CB93272E84FBD56F3B4F7BA4 /* AudioView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioView.swift; sourceTree = "<group>"; };
@@ -525,6 +530,7 @@
 		4FDBD7B4BACFA5DD0D5BABBF /* NotchAppleTests */ = {
 			isa = PBXGroup;
 			children = (
+				60D028DAE4C9C74C6193B75F /* HotCornerTests.swift */,
 				8436033AA85EDE8B497C3BE6 /* LicenseTests.swift */,
 				EE79E1E6EA0B1FB034A48E87 /* LogicTests.swift */,
 			);
@@ -561,6 +567,8 @@
 				FBF521DE52E4227ABF0CCC29 /* Entitlements.swift */,
 				94617614D11E8110B03EB9F7 /* ExternalActivities.swift */,
 				4DAB6955A36172C93698DDEC /* FeatureHub.swift */,
+				5C151FE67E6474F51CD20219 /* HotCornerLogic.swift */,
+				C35C9FA48E930832266322C0 /* HotCorners.swift */,
 				1BB3450673E6FC967D2A1F87 /* KeychainHelper.swift */,
 				B16F24E7C42EBCCB3F46202A /* LicenseKey.swift */,
 				F49D3A20C7CFE9C60DB8CBC3 /* LiveActivity.swift */,
@@ -845,7 +853,6 @@
 			children = (
 				C0762062E088CCC2C44948C8 /* LICENSE-Tunnelblick.txt */,
 				EDBEAF142EDDBD8BE070A009 /* Tunnelblick-ABOUT.txt */,
-				46A01968170BB2B7959205B3 /* Tunnelblick.dmg */,
 			);
 			path = Tunnelblick;
 			sourceTree = "<group>";
@@ -1056,7 +1063,6 @@
 				6CB3126DF2584324131FE504 /* LICENSE-Tunnelblick.txt in Resources */,
 				8360703F9BC1E35F13FEFE5C /* NotchApple.sdef in Resources */,
 				29326D872AE0DC306AFD1986 /* Tunnelblick-ABOUT.txt in Resources */,
-				AA519CEBD27CD812DD518136 /* Tunnelblick.dmg in Resources */,
 				14BB6F024439C7EDE0DCBD2C /* nowplaying.js in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1120,6 +1126,8 @@
 				D1C210100728BD42DBD406B8 /* GamesView.swift in Sources */,
 				04DA84BD772511B028648D4E /* GlobalHotkeyManager.swift in Sources */,
 				D0E3852087030F02B39F54DA /* HomeView.swift in Sources */,
+				4132D2810197CE3A0F8A6429 /* HotCornerLogic.swift in Sources */,
+				39F8CFD0D65ADD94D2E6405F /* HotCorners.swift in Sources */,
 				71C400496997AA8DF53FAF5D /* KeychainHelper.swift in Sources */,
 				835CDB73E281F0B112F35B85 /* LicenseKey.swift in Sources */,
 				97C87D7865B82ECEB80B9E60 /* LiveActivity.swift in Sources */,
@@ -1239,6 +1247,8 @@
 				9F9EC854E119ACE78147C2FE /* ClaudeClient.swift in Sources */,
 				7558F51D18A2B382FFD6BAE9 /* CompanionProtocol.swift in Sources */,
 				F3C7A9A25D260F232F140B77 /* Converter.swift in Sources */,
+				F8B6F02D08FC1FB3D04286FC /* HotCornerLogic.swift in Sources */,
+				92D6E8322DCEC6A2AE6A5795 /* HotCornerTests.swift in Sources */,
 				E47F09C13F09C6C35E4DFB7D /* KeychainHelper.swift in Sources */,
 				4A3A2D8CD5D19945AFF5381A /* LicenseKey.swift in Sources */,
 				169F563939728B794CAD518C /* LicenseTests.swift in Sources */,

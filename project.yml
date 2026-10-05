@@ -8,7 +8,7 @@ options:
 settings:
   base:
     SWIFT_VERSION: "5.0"
-    MARKETING_VERSION: "1.24.3"
+    MARKETING_VERSION: "1.25.0"
     CURRENT_PROJECT_VERSION: "42"
     CODE_SIGN_IDENTITY: "-"
     CODE_SIGN_STYLE: Manual
@@ -70,6 +70,7 @@ targets:
       - NotchApple/Modules/Claude/AppleIntelligence.swift
       - NotchApple/Modules/Tools/Converter.swift
       - NotchApple/Core/PureModels.swift
+      - NotchApple/Core/HotCornerLogic.swift
       - CompanionKit
     settings:
       base:

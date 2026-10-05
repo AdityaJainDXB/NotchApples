@@ -144,6 +144,7 @@ struct NotchSettings: View {
 
             DisplayTabsSection()
             GestureSection()
+            HotCornersSection()
 
             Section {
                 Toggle("Sound when the notch opens and closes", isOn: $sounds)

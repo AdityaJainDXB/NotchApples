@@ -21,6 +21,11 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "1.25.0", date: "5 October 2026", headline: "Your own hot corners", items: [
+            "Settings → Notch → Hot corners: push the pointer into any screen corner to open a website, an app, a file or folder, run a Shortcut, open Mission Control, or open and close the notch.",
+            "Pick a different action for each corner, how long the pointer must rest there, and optionally a key to hold (⌥, ⌘, ⌃ or ⇧) so it never fires by accident.",
+            "Works next to macOS's own hot corners. In System Settings → Desktop & Dock → Hot Corners, set a corner to “–” if you give it to Notch apple. Free for everyone.",
+        ]),
         ReleaseNote(version: "1.24.0", date: "4 October 2026", headline: "Notch apple on your iPhone", items: [
             "Ultimate: the iPhone companion. Send text and links to the notch, see the Mac's battery and music, and control music, timers and Keep Awake. It works over your Wi-Fi with no server, and every message is encrypted.",
             "Get NotchAppleCompanion.ipa from the release and install it with Sideloadly. With a free Apple ID, reinstall it every 7 days. Pair it in Settings → iPhone.",

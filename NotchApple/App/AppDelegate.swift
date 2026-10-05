@@ -62,6 +62,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             }
             .store(in: &cancellables)
         SystemHUDObserver.shared.start()
+        HotCornerManager.shared.apply()
         WhatsNew.noteLaunch()
         Task { await Entitlements.shared.checkRevocationIfDue() }
         DemoHooks.run()

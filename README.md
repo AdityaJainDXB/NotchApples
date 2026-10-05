@@ -328,6 +328,10 @@ All screenshots use sample data.
 - **F1:** a favourite team; qualifying gaps and best laps.
 - **What's New** in Settings → About, shown once after updating.
 
+#### New in 1.25.0
+
+- **Your own hot corners.** Settings → Notch → Hot corners: push the pointer into any corner of the screen to open a **website**, an **app**, a **file or folder**, run a **Shortcut**, open **Mission Control**, or open and close the notch. Choose a different action for each corner, how long the pointer must rest there, and optionally a key to hold (⌥, ⌘, ⌃ or ⇧) so you never trigger one by accident. A corner fires once per visit; move out and back to fire it again. Corners where two displays meet are ignored. They work next to macOS's own hot corners: in System Settings → Desktop & Dock → Hot Corners, set a corner to “–” if you give it to Notch apple. Free for everyone.
+
 #### New in 1.24.3
 
 - **Anonymous rooms work again.** The free public relays were refusing messages (ntfy.sh's daily quota) or unreachable on many networks. Rooms now go through Notch apple's own relay (a Cloudflare Worker that forwards encrypted messages live and stores nothing), with the public relays as backups. Everyone in a room should update.
