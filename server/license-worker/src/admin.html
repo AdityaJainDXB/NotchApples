@@ -215,14 +215,25 @@ function paint() {
   const q = $('q').value.trim().toLowerCase(), t = $('fTier').value, st = $('fStat').value;
   const shown = all.filter((r) => (!t || r.tier === t)
     && (!st || (st === 'susp' ? r.suspended : st === 'active' ? !r.suspended && r.devices > 0 : !r.suspended && r.devices === 0))
-    && (!q || r.keyId.includes(q) || (r.note || '').toLowerCase().includes(q) || (r.source || '').includes(q)));
+    && (!q || /^ntch/.test(q) || r.keyId.includes(q) || (r.note || '').toLowerCase().includes(q) || (r.source || '').includes(q)));
   $('rows').innerHTML = shown.slice(0, 500).map((r) => '<tr class="k" data-id="' + esc(r.keyId) + '"><td class="mono">' + esc(r.keyId) + '</td><td>' + tierPill(r.tier)
     + '</td><td>' + status(r) + '</td><td>' + r.devices + '</td><td class="dim small">' + esc(r.source) + '</td><td class="dim small">' + fmtDate(r.created)
     + '</td><td class="small">' + esc(r.note) + '</td></tr>').join('') || '<tr><td colspan="7" class="dim">No keys match.</td></tr>';
   $('count').textContent = shown.length + ' of ' + all.length + ' keys' + (cursor ? ' loaded' : '');
 }
-$('q').oninput = paint; $('fTier').onchange = paint; $('fStat').onchange = paint;
-$('q').onkeydown = (e) => { if (e.key === 'Enter' && /^NTCH/i.test($('q').value.trim())) openKey({ key: $('q').value.trim() }); };
+// A pasted full key (NTCH-…) opens that key's record straight away; no Enter needed. Spaces and line breaks
+// from copying are ignored. Anything else filters the table by key ID, note or source.
+let lastLookup = '';
+const pasted = () => $('q').value.replace(/\s+/g, '').toUpperCase();
+const looksLikeKey = (v) => /^NTCH-?(PRO|ULTM)-?[0-9A-Z-]{60,}$/.test(v);
+function lookupPasted() {
+  const v = pasted();
+  if (looksLikeKey(v) && v !== lastLookup) { lastLookup = v; openKey({ key: v }); }
+}
+$('q').oninput = () => { lookupPasted(); paint(); };
+$('q').onpaste = () => setTimeout(() => { lookupPasted(); paint(); }, 0);
+$('fTier').onchange = paint; $('fStat').onchange = paint;
+$('q').onkeydown = (e) => { if (e.key === 'Enter' && /^NTCH/i.test(pasted())) { lastLookup = ''; lookupPasted(); } };
 $('rows').onclick = (e) => { const tr = e.target.closest('tr.k'); if (tr) openKey({ keyId: tr.dataset.id }); };
 
 // ---- generate
