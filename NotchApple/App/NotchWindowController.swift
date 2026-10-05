@@ -818,7 +818,7 @@ final class NotchWindowController {
         // The collapsed shape is already drawn, so spring open straight away,
         // with the same curve that closing uses.
         hidePeek()
-        withAnimation(Duo.animation) { state.isExpanded = true }
+        withAnimation(Duo.open) { state.isExpanded = true }
         NotchFeedback.opened()
         installMonitors()
     }
@@ -914,7 +914,7 @@ final class NotchWindowController {
         hoverWork?.cancel()
         openedByHover = false
         pinnedByClick = false
-        withAnimation(Duo.animation) { state.isExpanded = false }
+        withAnimation(Duo.close) { state.isExpanded = false }
         NotchFeedback.closed()
         // Re-lock biometric gate every time the notch closes.
         state.isUnlocked = false

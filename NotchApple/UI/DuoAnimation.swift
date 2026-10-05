@@ -24,9 +24,30 @@ enum Duo {
         return enabled ? .spring(response: 0.42, dampingFraction: 0.68) : Theme.spring
     }
 
-    /// The panel growing out of (and shrinking back into) the notch.
+    /// Opening: the shape grows out of the notch with a soft overshoot. Closing: it tucks back in with no bounce.
+    static var open: Animation { reduceMotion ? .easeInOut(duration: 0.15) : (enabled ? .spring(response: 0.5, dampingFraction: 0.74) : Theme.spring) }
+    static var close: Animation { reduceMotion ? .easeInOut(duration: 0.15) : (enabled ? .spring(response: 0.34, dampingFraction: 0.95) : Theme.spring) }
+
+    /// What's inside the panel, Dynamic Island style: it comes into focus out of a blur as the shape grows
+    /// (a hair after it starts, so the shape leads), and blurs away quickly as the shape shrinks back.
     static var panelTransition: AnyTransition {
-        active ? .scale(scale: 0.55, anchor: .top).combined(with: .opacity) : .opacity.combined(with: .scale(scale: 0.96, anchor: .top))
+        guard active else { return .opacity.combined(with: .scale(scale: 0.96, anchor: .top)) }
+        return .asymmetric(
+            insertion: AnyTransition.modifier(active: IslandBlur(amount: 1), identity: IslandBlur(amount: 0))
+                .animation(.spring(response: 0.5, dampingFraction: 0.82).delay(0.05)),
+            removal: AnyTransition.modifier(active: IslandBlur(amount: 1), identity: IslandBlur(amount: 0))
+                .animation(.easeIn(duration: 0.16)))
+    }
+
+    /// 0 = in focus, 1 = small, blurred and see-through.
+    struct IslandBlur: ViewModifier {
+        var amount: Double
+        func body(content: Content) -> some View {
+            content
+                .scaleEffect(1 - 0.4 * amount, anchor: .top)
+                .blur(radius: 22 * amount)
+                .opacity(1 - min(1, amount * 1.25))
+        }
     }
 
     /// The page you switch to: it pops in from slightly small and blurred, the old one softens away.
