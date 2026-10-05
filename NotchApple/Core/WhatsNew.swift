@@ -21,6 +21,11 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "1.28.0", date: "5 October 2026", headline: "Arrange your tabs by dragging", items: [
+            "The welcome tour now asks which tabs you want and lets you put them in order by dragging cards, with no up and down arrows. Click + to add a tab, ✕ to remove one, or drag it up to the exact spot you want. The other cards make room as you drag.",
+            "The same drag-and-drop organizer replaces the arrows in Settings → Appearance (“Notch tabs and order”), and it uses the same switches as Settings → Modules, so there is only one list.",
+            "The Purge tab is now a small menu: “Free up space” opens Purge, “Review removed apps” opens Purge's leftovers review, and if Purge isn't installed the tab asks whether you want to install it.",
+        ]),
         ReleaseNote(version: "1.27.3", date: "5 October 2026", headline: "The Duo animation, done properly", items: [
             "The iPhone Duo open and close animation now works the way the Dynamic Island does: the notch grows out with a soft overshoot while what's inside comes into focus out of a blur, and on closing it blurs away quickly as the notch tucks back in with no bounce.",
         ]),

@@ -36,6 +36,7 @@
 		1DA0B71A05D5AA548E158EE8 /* MarketsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2600981443BE101B7F8049FD /* MarketsView.swift */; };
 		1DFBDF1634055E59A1AF201C /* Converter.swift in Sources */ = {isa = PBXBuildFile; fileRef = F323D82F0AF46D956EA470CA /* Converter.swift */; };
 		1E02BE7CA6FA7A27CDFB4B1D /* AppTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5F7CF2FFE504D781512227C /* AppTheme.swift */; };
+		21586C0BF170E4B586EF009A /* ModuleOrganizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4894C776E7909EF42A1F97E9 /* ModuleOrganizer.swift */; };
 		219D17761C8C9DB4C03DCBCF /* VoiceNotesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34E21597A89BA509A323CB7C /* VoiceNotesView.swift */; };
 		2386441F130CA43774F8A976 /* ShortcutRecorder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1AD68AAB70138C11AD1C119D /* ShortcutRecorder.swift */; };
 		23DEAFF7A9EA628D504552A1 /* AppLauncher.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B4A357F34CF825E961ADEF4 /* AppLauncher.swift */; };
@@ -261,6 +262,7 @@
 		44EC19E1838745C95B5759DF /* GamesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GamesView.swift; sourceTree = "<group>"; };
 		466B2516F7D15E3C623784BC /* F1Model.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = F1Model.swift; sourceTree = "<group>"; };
 		48667860F7FB5AB63EB47043 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		4894C776E7909EF42A1F97E9 /* ModuleOrganizer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModuleOrganizer.swift; sourceTree = "<group>"; };
 		48EF75FD565DB103E4CEEB07 /* MusicLevelMeter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MusicLevelMeter.swift; sourceTree = "<group>"; };
 		4A2294A11AF6369D10835393 /* GameEngines.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameEngines.swift; sourceTree = "<group>"; };
 		4C159DF1B14A1D38FD58EC46 /* SnippetsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SnippetsView.swift; sourceTree = "<group>"; };
@@ -498,6 +500,7 @@
 				C2B877B3FC56AA179FD7FEAE /* CommandPalette.swift */,
 				69FFE07B5C8CD7AE23B2DDA7 /* DuoAnimation.swift */,
 				880D308A931930DF080834D9 /* ExtrasSettings.swift */,
+				4894C776E7909EF42A1F97E9 /* ModuleOrganizer.swift */,
 				1C5A54FB338D3A1C23699078 /* NotchRootView.swift */,
 				68B9FDCF64AD3B173A4D3440 /* NotchSettings.swift */,
 				9A7251824E64423A2B944890 /* OnboardingView.swift */,
@@ -1182,6 +1185,7 @@
 				5017D7AB333DCC40EBD7CDBB /* MessengerModels.swift in Sources */,
 				028C6C33AD6C682F03B0695B /* MessengerNotifier.swift in Sources */,
 				EA6A5158CB578D683DE18C94 /* MirrorView.swift in Sources */,
+				21586C0BF170E4B586EF009A /* ModuleOrganizer.swift in Sources */,
 				CF18C9EA57286EB1C27AB45F /* MoreTeams.swift in Sources */,
 				874BC0D84B434A3CE5910FCD /* MusicLevelMeter.swift in Sources */,
 				4098B0C40272540FC563BC1F /* NotchAppleApp.swift in Sources */,
@@ -1439,7 +1443,7 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 1.27.3;
+				MARKETING_VERSION = 1.28.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -1579,7 +1583,7 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 1.27.3;
+				MARKETING_VERSION = 1.28.0;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;

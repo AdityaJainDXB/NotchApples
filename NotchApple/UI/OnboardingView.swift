@@ -102,39 +102,14 @@ private struct OnboardingPermissions: View {
 }
 
 private struct OnboardingTabs: View {
-    @EnvironmentObject private var settings: SettingsManager
-    @ObservedObject private var entitlements = Entitlements.shared
-    private let picks: [Module] = [.today, .claude, .nowPlaying, .clipboard, .shelf, .timer, .worldClock, .sports, .f1, .notes, .windows, .games, .launcher, .focus, .messenger, .snippets, .translator, .stats, .cacheCleaner]
-
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text("Pick your tabs").font(.title.bold())
-            Text("These appear in the open notch. You can add, remove and reorder them any time in Settings → Modules and Appearance.")
+        VStack(alignment: .leading, spacing: 10) {
+            Text("Choose and arrange your tabs").font(.title.bold())
+            Text("Pick what you want in the notch, then drag the cards into the order you like. You can change all of this any time in Settings → Modules and Appearance.")
                 .foregroundStyle(.secondary)
             ScrollView {
-                LazyVGrid(columns: [GridItem(.adaptive(minimum: 250), spacing: 10)], spacing: 10) {
-                    ForEach(picks) { m in
-                        let on = settings.binding(for: m)
-                        Button { on.wrappedValue.toggle() } label: {
-                            HStack(spacing: 10) {
-                                Image(systemName: m.symbol).font(.system(size: 13, weight: .semibold)).foregroundStyle(.white)
-                                    .frame(width: 28, height: 28)
-                                    .background(Theme.accentGradient, in: RoundedRectangle(cornerRadius: 7, style: .continuous))
-                                Text(m.title).foregroundStyle(.white)
-                                Spacer()
-                                if let f = m.feature, !entitlements.canUse(f) { TierBadge(tier: f.tier) }
-                                Image(systemName: on.wrappedValue ? "checkmark.circle.fill" : "circle")
-                                    .foregroundStyle(on.wrappedValue ? Theme.accent : .secondary)
-                            }
-                            .padding(10)
-                            .background(RoundedRectangle(cornerRadius: 10).fill(Color.white.opacity(on.wrappedValue ? 0.1 : 0.04)))
-                            .contentShape(Rectangle())
-                        }
-                        .buttonStyle(.plain)
-                        .accessibilityLabel(m.title)
-                        .accessibilityValue(on.wrappedValue ? "On" : "Off")
-                    }
-                }
+                ModuleOrganizer()
+                    .padding(.vertical, 4)
             }
         }
         .padding(28)

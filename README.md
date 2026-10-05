@@ -328,6 +328,11 @@ All screenshots use sample data.
 - **F1:** a favourite team; qualifying gaps and best laps.
 - **What's New** in Settings → About, shown once after updating.
 
+#### New in 1.28.0
+
+- **Choose and arrange your tabs by dragging.** The welcome tour asks which tabs you want and lets you put them in order by **dragging cards**: the other cards make room as you drag, **+** adds a tab, **✕** removes one, and a card dragged up into the row lands exactly where you drop it. No up and down arrows. The same organizer replaces the arrows in **Settings → Appearance → Notch tabs and order**, and it is the same list as Settings → Modules.
+- **Purge menu.** The Purge tab is now a small menu: *Free up space* opens Purge, *Review removed apps* opens Purge's leftovers review, and if Purge isn't installed the tab asks *Do you want to install Purge?* Cleaning itself still happens inside Purge (it has no way for other apps to start a clean).
+
 #### New in 1.27.3
 
 - **Duo animation fixed.** Opening and closing the notch now has the Dynamic Island blur-morph: the shape grows out of the notch with a soft overshoot while its contents come into focus out of a blur, and on closing the contents blur away quickly as the notch tucks back in (no bounce). Reduce Motion still gives a plain fade.
