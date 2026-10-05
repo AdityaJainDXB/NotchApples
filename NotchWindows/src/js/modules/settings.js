@@ -82,9 +82,11 @@ function Appearance(repaint) {
   for (const [cat, list] of Object.entries(groups)) {
     out.push(el('div', { class: 'section-title hstack' }, cat, cat === 'Pro' && !canUse('proThemes') ? badge('proThemes') : null));
     out.push(el('div', { class: 'grid', style: 'grid-template-columns:repeat(auto-fill,minmax(110px,1fr))' }, ...list.map((t) => el('div', {
-      class: `tile ${t.id === currentThemeId() ? 'selected' : ''}`, onclick: () => {
+      class: `tile ${t.id === currentThemeId() ? 'selected' : ''}`, onclick: (ev) => {
         if (t.pro && !canUse(t.custom ? 'customColors' : 'proThemes')) return toast(`${t.name} is a Pro theme.`);
-        applyTheme(t.id); repaint();
+        applyTheme(t.id);
+        document.querySelectorAll('.tile.selected').forEach((n) => n.classList.remove('selected'));
+        ev.currentTarget.classList.add('selected');
       } }, el('div', { style: `width:32px;height:32px;border-radius:50%;background:${t.bg};border:3px solid ${t.primary};box-shadow:inset 0 0 0 4px ${t.secondary}` }), el('div', { class: 'name' }, t.name)))));
   }
   if (canUse('customColors')) {

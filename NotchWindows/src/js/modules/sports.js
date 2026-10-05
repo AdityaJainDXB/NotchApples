@@ -159,6 +159,22 @@ export function render(root) {
     const sel = el('select', { class: 'field auto' }, ...Object.entries(groups).map(([sport, list]) => el('optgroup', { label: sport },
       ...list.map((l) => el('option', { value: l.id, selected: l.id === leagueId }, l.name)))));
     sel.addEventListener('change', () => { leagueId = sel.value; save('sports.league', leagueId); loadLeagueView(); });
+    if (S.isBadminton(leagueId)) {
+      right.append(el('div', { class: 'hstack' }, sel));
+      if (fixtures === null) { right.append(el('div', { class: 'skel', style: 'height:200px' })); return; }
+      if (!fixtures.length) { right.append(el('div', { class: 'small dim' }, 'Couldn’t load the badminton calendar. Check your connection.')); return; }
+      const now = fixtures.filter((t) => t.state === 'in'), next = fixtures.filter((t) => t.state === 'pre'), done = fixtures.filter((t) => t.state === 'post').reverse().slice(0, 5);
+      const row = (t) => el('div', { class: 'hstack small', style: 'gap:8px;padding:3px 4px' },
+        el('span', { style: 'font-size:16px' }, '🏸'),
+        el('div', { class: 'grow', style: 'min-width:0' }, el('div', { class: 'ellipsis', style: 'font-weight:600' }, t.name), el('div', { class: 'tiny dim ellipsis' }, t.city || 'Venue to be announced')),
+        t.state === 'in' ? el('span', { class: 'badge live' }, 'ON NOW') : t.state === 'cancelled' ? el('span', { class: 'badge quiet' }, 'Cancelled')
+          : el('span', { class: 'dim num' }, t.date.toLocaleDateString([], { day: 'numeric', month: 'short' })));
+      if (now.length) right.append(el('div', { class: 'section-title' }, 'On now'), ...now.map(row));
+      right.append(el('div', { class: 'section-title', style: 'margin-top:6px' }, 'Coming up'), ...(next.length ? next.slice(0, 8).map(row) : [el('div', { class: 'small dim' }, 'No upcoming tournaments listed.')]));
+      if (done.length) right.append(el('div', { class: 'section-title', style: 'margin-top:6px' }, 'Recently played'), ...done.map(row));
+      right.append(el('div', { class: 'tiny dim', style: 'margin-top:4px' }, 'Tournament calendar for the BWF World Tour. Live scores aren’t available for badminton.'));
+      return;
+    }
     right.append(el('div', { class: 'hstack' }, sel, el('div', { class: 'spacer' }),
       segmented([{ value: 'fixtures', label: 'Fixtures' }, { value: 'table', label: 'Table' }], leagueView, (v) => { leagueView = v; save('sports.leagueView', v); paintRight(); })));
 
@@ -210,6 +226,7 @@ export function render(root) {
   async function loadLeagueView() {
     const id = leagueId;
     fixtures = null; table = null; paintRight();
+    if (S.isBadminton(id)) { const f = await S.loadBadminton(); if (!alive || id !== leagueId) return; fixtures = f; table = []; paintRight(); return; }
     const [f, t] = await Promise.all([S.loadLeague(id), S.loadStandings(id)]);
     if (!alive || id !== leagueId) return;
     fixtures = f; table = t;

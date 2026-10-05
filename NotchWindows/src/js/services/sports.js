@@ -26,10 +26,13 @@ export const LEAGUES = [
   { id: 'football/nfl', name: 'NFL', sport: 'American football' },
   { id: 'baseball/mlb', name: 'MLB', sport: 'Baseball' },
   { id: 'hockey/nhl', name: 'NHL', sport: 'Hockey' },
+  { id: 'badminton/bwf', name: 'BWF World Tour', sport: 'Badminton' },
 ];
 
+export const isBadminton = (id = '') => id.startsWith('badminton/');
+
 export const sportIcon = (path = '') =>
-  path.startsWith('basketball') ? '🏀' : path.startsWith('football') ? '🏈' : path.startsWith('baseball') ? '⚾' : path.startsWith('hockey') ? '🏒' : '⚽';
+  path.startsWith('basketball') ? '🏀' : path.startsWith('football') ? '🏈' : path.startsWith('baseball') ? '⚾' : path.startsWith('hockey') ? '🏒' : path.startsWith('badminton') ? '🏸' : '⚽';
 
 // ---- teams you follow ----
 
@@ -124,6 +127,24 @@ export async function loadLeague(leagueId) {
   const pages = await Promise.all([...days.map((d) => get(`${leagueId}/scoreboard?dates=${ymd(d)}`)), get(`${leagueId}/scoreboard`)]);
   const all = new Map();
   for (const p of pages) for (const m of parseList(p, leagueId)) if (!all.has(m.id)) all.set(m.id, m);
+  return [...all.values()].sort((a, b) => a.date - b.date);
+}
+
+/// Badminton: the BWF World Tour calendar (TheSportsDB's free feed lists tournaments,
+/// not live scores). Past results, what's on now and what's next.
+export async function loadBadminton() {
+  const T = 'https://www.thesportsdb.com/api/v1/json/3/';
+  const year = new Date().getFullYear();
+  const pages = await Promise.all([`eventsnextleague.php?id=5646`, `eventspastleague.php?id=5646`,
+    `eventsseason.php?id=5646&s=${year}`, `eventsseason.php?id=5646&s=${year + 1}`].map((p) => getJSON(T + p, { timeout: 15000 }).catch(() => null)));
+  const all = new Map();
+  for (const p of pages) for (const e of (p?.events || [])) {
+    if (!e.idEvent || !e.dateEvent) continue;
+    const start = new Date(`${e.dateEvent}T12:00:00`);
+    const cancelled = /canc|postp/i.test(e.strStatus || '');
+    all.set(e.idEvent, { id: e.idEvent, name: e.strEvent, date: start, city: [e.strCity, e.strCountry].filter(Boolean).join(', '),
+      state: cancelled ? 'cancelled' : (Date.now() - start > 7 * 864e5 ? 'post' : Date.now() >= start - 12 * 3600e3 ? 'in' : 'pre') });
+  }
   return [...all.values()].sort((a, b) => a.date - b.date);
 }
 
