@@ -240,6 +240,10 @@ private struct GestureSection: View {
     var body: some View {
         Section {
             Toggle("Gestures on the closed notch", isOn: $settings.notchGestures)
+            Toggle(isOn: Binding(get: { !settings.disableSwipeModuleSwitch }, set: { settings.disableSwipeModuleSwitch = !$0 })) {
+                Text("Swipe on the tab bar switches tabs")
+                Text("Off by default, so a two-finger swipe only scrolls through the tabs. Turn on to also change tab as you swipe.")
+            }
             ForEach(NotchGesture.allCases) { g in
                 Picker(g.title, selection: Binding(
                     get: { entitlements.canUse(.gestureRemap) ? g.storedAction() : g.defaultAction },
@@ -255,7 +259,7 @@ private struct GestureSection: View {
                 if !entitlements.canUse(.gestureRemap) { TierBadge(tier: .pro).help(Feature.gestureRemap.benefit) }
             }
         } footer: {
-            Text("Defaults: scroll for volume, swipe for tracks, long-press for quick actions, swipe on the tab bar to change tabs, swipe up to close.")
+            Text("Defaults: scroll for volume, swipe for tracks, long-press for quick actions, swipe up to close. A sideways swipe on the tab bar scrolls the tabs (it changes tab too only if you turn that on).")
         }
     }
 }

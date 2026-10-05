@@ -328,6 +328,11 @@ All screenshots use sample data.
 - **F1:** a favourite team; qualifying gaps and best laps.
 - **What's New** in Settings → About, shown once after updating.
 
+#### New in 1.26.1
+
+- **Purge instead of our own cleaner.** The Ultimate *Cache Cleaner* tab from 1.26.0 is now the **Purge** tab: it opens the [Purge](https://github.com/jithin-sabu/purge-app) app (a separate disk cleaner) from the notch, or links you to it if it isn't installed. Notch apple no longer scans or deletes anything itself.
+- **Tab-bar swipe fixed.** A two-finger sideways swipe over the tab bar used to scroll the tabs *and* switch to the next one. It now only scrolls. Prefer the old behaviour? Settings → Notch → *Swipe on the tab bar switches tabs*.
+
 #### New in 1.26.0
 
 - **iPhone Duo animations** (on by default). The open panel springs out of the notch with a soft bounce, the highlight slides between tabs as one shape, and the page you switch to scales and de-blurs into place, like the Dynamic Island. Turn them off in Settings → Notch → *Use iPhone Duo animations*. With Reduce Motion on, everything is a short fade.

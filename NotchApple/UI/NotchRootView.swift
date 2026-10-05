@@ -205,7 +205,7 @@ struct NotchRootView: View {
             case .quickAdd: QuickAddView()
             case .markets: MarketsView()
             case .home: HomeView()
-            case .cacheCleaner: CacheCleanerView()
+            case .cacheCleaner: PurgeView()
             case .security: EmptyView()
             }
         }

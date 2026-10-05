@@ -127,7 +127,7 @@
 | 101 | Feedback + bug-report bundle | FREE | Partial (payment help link) | FREE |
 | 102 | Donate + Compare tiers | FREE | Partial (Donate) | FREE |
 | 103 | Priority support + beta channel | ULTIMATE | — | ULTIMATE |
-| 104 | Cache Cleaner and Storage Saver (1.26.0) | ULTIMATE | — (built in 1.26.0) | ULTIMATE |
+| 104 | Purge disk cleaner tab (opens the Purge app) (1.26.1) | ULTIMATE | — (built in 1.26.0) | ULTIMATE |
 | **H** | **Licensing** | | | |
 | 104–110 | License screen, recovery, grandfathering, restore, terms, upgrade, crash reports | FREE | Partial (License pane) | FREE |
 

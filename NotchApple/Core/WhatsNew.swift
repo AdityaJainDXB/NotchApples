@@ -21,9 +21,13 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "1.26.1", date: "5 October 2026", headline: "Purge instead of our own cleaner", items: [
+            "The Ultimate Cache Cleaner tab is now the Purge tab. It opens the Purge app (a separate disk cleaner) from the notch, and links you to it if it isn't installed. Notch apple no longer scans or deletes anything itself.",
+            "Fixed: a two-finger sideways swipe over the tab bar used to scroll the tabs and also switch to the next one. It now only scrolls. If you liked switching by swipe, turn on Settings → Notch → Swipe on the tab bar switches tabs.",
+        ]),
         ReleaseNote(version: "1.26.0", date: "5 October 2026", headline: "Duo animations, Cache Cleaner and full-screen notch", items: [
             "iPhone Duo animations (on by default): the panel springs out of the notch, the highlight slides between tabs as one shape and pages scale into place, like the Dynamic Island. Turn them off in Settings → Notch → Use iPhone Duo animations. Reduce Motion always wins.",
-            "Ultimate: Cache Cleaner. Scans app caches, Xcode derived data, logs and old temporary files, shows what each takes, and clears them in one click, with a running total of the space you freed. Turn it on in Settings → Modules or in the welcome tour.",
+            "Ultimate: Cache Cleaner. Scans app caches, Xcode derived data, logs and old temporary files and clears them in one click. (Replaced by the Purge tab in 1.26.1.)",
             "Keep the notch visible in full-screen apps (Settings → Notch → Stepping aside): for Macs without a hardware notch, like the base M1, where the notch used to vanish when an app went full screen.",
             "The welcome tour's tab picker now also offers Translator, Mac Stats and Cache Cleaner, and what you pick there is what Settings → Modules shows.",
         ]),

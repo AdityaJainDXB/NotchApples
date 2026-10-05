@@ -645,7 +645,8 @@ final class NotchWindowController {
                 if abs(a.width) > 70, abs(a.width) > abs(a.height) * 1.5 {
                     self.swipeFired = true
                     switch NotchGesture.openSwipe.action {
-                    case .switchTab: self.stepTab(a.width < 0 ? 1 : -1)
+                    // A sideways swipe over the tab bar scrolls the tab list; it only also switches tab when you've turned that on.
+                    case .switchTab: if !SettingsManager.shared.disableSwipeModuleSwitch { self.stepTab(a.width < 0 ? 1 : -1) }
                     case .track: MediaControl.send(a.width < 0 ? .next : .previous)
                     default: break
                     }

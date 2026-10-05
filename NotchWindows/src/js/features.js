@@ -30,7 +30,7 @@ export const FEATURES = {
   fontsAndIcons: {"title": "Fonts and menu bar icon", "detail": "Choose the notch font.", "tier": 1},
   pluginGallery: {"title": "Plugin gallery", "detail": "Install community plugins in one click.", "tier": 2},
   notesSync: {"title": "Notes and to-dos in iCloud", "detail": "Your notes and to-dos on every Mac, through iCloud Drive.", "tier": 2, "mac": "Uses iCloud."},
-  cacheCleaner: {"title": "Cache Cleaner", "detail": "Free up disk space in one click: app caches, Xcode derived data, logs and temporary files, with a dashboard of what you saved.", "tier": 2, "mac": "Clears the Mac's cache folders; a Windows version is planned."},
+  cacheCleaner: {"title": "Purge disk cleaner", "detail": "Open the Purge app from the notch to free up disk space.", "tier": 2, "mac": "Purge is a Mac app."},
   iphoneCompanion: {"title": "iPhone companion", "detail": "Send text and links from your iPhone to the notch, and control the Mac from it.", "tier": 2, "mac": "Uses the iPhone app."},
   meetingAlert: {"title": "Meeting alerts", "detail": "A heads-up before meetings, with a Join button.", "tier": 1},
   downloadProgress: {"title": "Download progress", "detail": "Watch downloads fill up beside the notch.", "tier": 1},

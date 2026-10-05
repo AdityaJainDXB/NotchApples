@@ -54,7 +54,7 @@ enum Module: String, CaseIterable, Identifiable {
         case .markets: "Markets"
         case .home: "Home"
         case .security: "Biometric Lock"
-        case .cacheCleaner: "Cache Cleaner"
+        case .cacheCleaner: "Purge"
         }
     }
 
@@ -138,7 +138,7 @@ enum Module: String, CaseIterable, Identifiable {
         case .markets: "Pro: a watchlist of stocks and crypto with today's change; pin one beside the notch."
         case .home: "Pro: your own dashboard of widgets in small, medium and large sizes."
         case .security: "Require Touch ID / Apple Watch / password to open the notch."
-        case .cacheCleaner: "Ultimate: scan and clear app caches, Xcode derived data, logs and temporary files in one click, with a dashboard of the space you freed."
+        case .cacheCleaner: "Ultimate: open the Purge app from the notch to free up disk space. Purge does the cleaning; Notch apple deletes nothing itself."
         }
     }
 
@@ -223,6 +223,8 @@ final class SettingsManager: ObservableObject {
     @AppStorage(Module.cacheCleaner.storageKey) var cacheCleanerEnabled = false
     /// The iPhone Duo pop-and-morph animations (on by default).
     @AppStorage(Duo.key) var useDuoAnimations = true
+    /// On (default): a two-finger sideways swipe over the tab bar only scrolls the tabs. Off: it also switches tab.
+    @AppStorage("disableSwipeModuleSwitch") var disableSwipeModuleSwitch = true
 
     // MARK: Notch extras (Settings → Notch Extras)
     @AppStorage("extras.lowBatteryAlert") var lowBatteryAlert = true

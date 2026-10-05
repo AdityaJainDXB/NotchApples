@@ -189,7 +189,7 @@ private struct OnboardingTour: View {
     private let tips: [(String, String, String)] = [
         ("cursorarrow.click", "Open the notch", "Click it, or press \(HotkeyBinding.notch.label) in any app. Esc or a click outside closes it."),
         ("sparkles", "Ask AI", "Use the AI tab with a free Gemini key or Ollama on your Mac. With Pro, \(HotkeyBinding.capture.label) asks about any part of the screen."),
-        ("hand.draw", "Gestures", "Scroll on the closed notch for volume, swipe for tracks, long-press for quick actions. Swipe on the tab bar to change tabs."),
+        ("hand.draw", "Gestures", "Scroll on the closed notch for volume, swipe for tracks, long-press for quick actions. Swipe on the tab bar to scroll through your tabs."),
         ("keyboard", "Keyboard", "⌘1–⌘9 jump to a tab, ⌘[ and ⌘] step through them."),
         ("tray.and.arrow.down", "Drop files", "Drag a file onto the notch to keep it on the shelf for later."),
         ("magnifyingglass", "Settings", "Everything is in Settings, with a search field. Right-click the menu bar icon for quick options."),
