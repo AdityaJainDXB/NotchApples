@@ -35,6 +35,6 @@ export async function install() {
 export function start() {
   setTimeout(() => { if (pref('updates.auto')) check(); }, 30_000);
   setInterval(() => { if (pref('updates.auto')) check(); }, 6 * 3600e3);
-  provide('update', 5, () => (available && load('updates.pill', true)
+  provide('update', 5, () => (available && pref('updates.pill')
     ? { icon: '⬆', label: 'Update', tab: 'settings', title: `Notch apple ${available.version} is ready` } : null));
 }

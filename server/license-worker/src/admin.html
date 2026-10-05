@@ -69,8 +69,8 @@ tr.k:hover td{background:rgba(255,255,255,.025)}
 
 <section id="login" class="card">
   <div class="row" style="margin-bottom:14px"><div class="logo">N</div><h1>Notch apple Admin</h1></div>
-  <p class="dim small">Sign in with your admin token. It stays in this tab only and is forgotten when you close it.</p>
-  <label for="tok">Admin token</label>
+  <p class="dim small">Sign in with your access code. It stays in this tab only and is forgotten when you close it.</p>
+  <label for="tok">Access code</label>
   <input id="tok" class="field" type="password" autocomplete="current-password" style="width:100%">
   <div class="err" id="loginErr"></div>
   <button class="btn pri" id="loginBtn" style="width:100%;margin-top:6px">Sign in</button>
@@ -126,6 +126,20 @@ tr.k:hover td{background:rgba(255,255,255,.025)}
       </div>
       <div class="row" style="margin-top:10px"><span class="dim small" id="count"></span><div class="sp"></div><button class="btn sm" id="more" style="display:none">Load more</button></div>
     </section>
+
+    <section class="card" id="promoCard" style="grid-column:1/-1">
+      <h2>Promo codes</h2>
+      <p class="dim small" style="margin-bottom:8px">Each code gives one free Pro key, once. The code is shown only when you create it; only a hash is stored.</p>
+      <div class="row" style="gap:8px;flex-wrap:wrap;margin-bottom:8px">
+        <input id="pCount" class="field" type="number" min="1" max="50" value="1" style="width:90px" title="How many codes">
+        <input id="pNote" class="field" maxlength="200" placeholder="Note (e.g. giveaway)" style="flex:1;min-width:180px">
+        <button class="btn pri" id="pBtn">Create codes</button>
+      </div>
+      <div class="err" id="pErr"></div>
+      <div class="out" id="pOut"></div>
+      <div class="row" id="pActs" style="display:none;margin:8px 0"><button class="btn sm" id="pCopy">Copy all</button></div>
+      <div class="tablewrap"><table><thead><tr><th>Code ID</th><th>Status</th><th>Key</th><th>Created</th><th>Note</th><th></th></tr></thead><tbody id="pRows"><tr><td colspan="6" class="dim">Loading…</td></tr></tbody></table></div>
+    </section>
   </div>
 </main>
 </div>
@@ -143,7 +157,7 @@ let all = [], cursor = null, genTier = 'pro', lastKeys = [];
 
 function toast(t) { const el = $('toast'); el.textContent = t; el.style.display = 'block'; clearTimeout(toast.t); toast.t = setTimeout(() => el.style.display = 'none', 2200); }
 async function api(path, body) {
-  const r = await fetch('/admin/' + path, { method: 'POST', headers: { 'content-type': 'application/json', authorization: 'Bearer ' + token }, body: JSON.stringify(body || {}) });
+  const r = await fetch((window.NOTCH_API || '') + '/admin/' + path, { method: 'POST', headers: { 'content-type': 'application/json', authorization: 'Bearer ' + token }, body: JSON.stringify(body || {}) });
   const j = await r.json().catch(() => ({}));
   if (r.status === 401) { signOut(); throw new Error('Signed out: wrong token'); }
   if (!r.ok) throw new Error(j.error || ('Error ' + r.status));
@@ -158,7 +172,7 @@ async function copy(t) { try { await navigator.clipboard.writeText(t); toast('Co
 async function signIn() {
   token = $('tok').value.trim();
   $('loginErr').textContent = '';
-  try { await api('stats'); } catch (e) { $('loginErr').textContent = e.message === 'Signed out: wrong token' ? 'Wrong token.' : e.message; return; }
+  try { await api('stats'); } catch (e) { $('loginErr').textContent = e.message === 'Signed out: wrong token' ? 'Wrong access code.' : e.message; return; }
   try { sessionStorage.setItem('na.admin', token); } catch (e) {}
   $('tok').value = '';
   start();
@@ -173,7 +187,7 @@ $('logout').onclick = signOut;
 
 async function start() {
   $('login').style.display = 'none'; $('app').style.display = 'block';
-  await Promise.all([loadStats(), loadKeys(true)]);
+  await Promise.all([loadStats(), loadKeys(true), loadPromos()]);
 }
 $('refresh').onclick = () => { loadStats(); loadKeys(true); };
 
@@ -280,6 +294,25 @@ async function openKey(ref) {
     loadStats(); loadKeys(true);
   });
 }
+
+// ---- promo codes
+async function loadPromos() {
+  try {
+    const r = await api('promo-list');
+    $('pRows').innerHTML = r.rows.length ? r.rows.map((x) => '<tr><td class="mono">' + esc(x.id) + '</td><td>' + (x.used ? '<span class="st-ok">Used</span>' : '<span class="dim">Unused</span>') + '</td><td class="mono">' + esc(x.keyId || '–') + '</td><td>' + fmtDate(x.created) + '</td><td>' + esc(x.note) + '</td><td>' + (x.used ? '' : '<button class="btn sm bad" data-del="' + esc(x.hash) + '">Delete</button>') + '</td></tr>').join('') : '<tr><td colspan="6" class="dim">No panel-made codes yet.</td></tr>';
+  } catch (e) { $('pRows').innerHTML = '<tr><td colspan="6" class="st-bad">' + esc(e.message) + '</td></tr>'; }
+}
+$('pRows').onclick = async (e) => { const b = e.target.closest('button[data-del]'); if (!b || !confirm('Delete this unused promo code?')) return; try { await api('promo-delete', { hash: b.dataset.del }); toast('Deleted'); loadPromos(); } catch (er) { toast(er.message); } };
+let lastPromos = [];
+$('pBtn').onclick = async () => {
+  $('pErr').textContent = ''; $('pBtn').disabled = true;
+  try {
+    const r = await api('promo-create', { count: Number($('pCount').value) || 1, note: $('pNote').value.trim() });
+    lastPromos = r.codes; $('pOut').textContent = r.codes.join('\n'); $('pOut').style.display = 'block'; $('pActs').style.display = 'flex'; loadPromos();
+  } catch (e) { $('pErr').textContent = e.message; }
+  $('pBtn').disabled = false;
+};
+$('pCopy').onclick = () => copy(lastPromos.join('\n'));
 
 if (token) start().catch(signOut);
 </script>

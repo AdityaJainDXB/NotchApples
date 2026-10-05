@@ -223,7 +223,7 @@ document.addEventListener('keydown', (e) => {
 listen('toggle-notch', () => toggle());
 listen('tray', (what) => {
   if (what === 'settings') expand('settings');
-  if (what === 'updates') expand('settings', { pane: 'General', checkUpdates: true });
+  if (what === 'updates') expand('settings', { pane: 'Updates' });
 });
 listen('shortcut', (action) => {
   if (action === 'palette') { expand().then(() => openPalette()); return; }

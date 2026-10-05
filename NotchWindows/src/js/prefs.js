@@ -29,6 +29,7 @@ export const DEFAULTS = {
   'lock.enabled': false,            // Windows Hello before the notch opens
   'lock.grace': 300,                // seconds after unlocking before asking again
   'updates.auto': true,
+  'updates.pill': true,
 };
 
 export const pref = (key) => {

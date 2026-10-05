@@ -7,14 +7,15 @@ import { pref, setPref, SHORTCUT_NAMES, DEFAULTS } from '../prefs.js';
 import { canUse, FEATURES, tierLabel } from '../features.js';
 import { tier, TIERS, maskedCode, deactivate } from '../license.js';
 import { isEnabled, setEnabled, tabOrder, setTabOrder, appInfo, registerShortcuts } from '../app.js';
-import { setting, toggle, select, segmented, toast, confirm, button, prompt } from '../ui.js';
+import { setting, toggle, select, segmented, toast, confirm, button, prompt, markdown } from '../ui.js';
 import { icon } from '../icons.js';
 import { keyField, BUY_URL, badge } from './activation.js';
 
-export const PANES = { General, Appearance, Tabs, Shortcuts, AI, Calendar, Weather, Clipboard, Security, Rules, Automations, Access, About };
-const NAV = { General: ['settings', '#8e8e93'], Appearance: ['appearance', '#bf5af2'], Tabs: ['home', '#5e5ce6'], Shortcuts: ['shortcuts', '#64d2ff'], AI: ['ai', '#ff9f0a'],
+export const PANES = { General, Updates, Appearance, Tabs, Shortcuts, AI, Calendar, Weather, Clipboard, Security, Rules, Automations, Access, About };
+const NAV = { General: ['settings', '#8e8e93'], Updates: ['share', '#30d158'], Appearance: ['appearance', '#bf5af2'], Tabs: ['home', '#5e5ce6'], Shortcuts: ['shortcuts', '#64d2ff'], AI: ['ai', '#ff9f0a'],
   Calendar: ['calendar', '#ff453a'], Weather: ['weather', '#32ade6'], Clipboard: ['clipboard', '#ffd60a'], Security: ['security', '#ff6b6b'], Rules: ['rules', '#30d158'],
   Automations: ['automations', '#bf5af2'], Access: ['access', '#0a84ff'], About: ['about', '#5e5ce6'] };
+const ICONS_UPDATES = 1;
 const ICONS = { General: '⚙', Appearance: '🎨', Tabs: '🗂', Shortcuts: '⌨', AI: '✨', Calendar: '📅', Weather: '⛅', Clipboard: '📋', Security: '🔒', Rules: '🧭', Automations: '🤖', Access: '🔑', About: 'ℹ' };
 
 export function render(root, opts = {}) {
@@ -37,21 +38,11 @@ const prefToggle = (key, gate) => toggle(pref(key), (v) => { if (gate && !canUse
 function General(repaint, opts) {
   const auto = toggle(false, (v) => invoke('set_autostart', { on: v }).catch((e) => toast(e.message, { error: true })));
   invoke('get_autostart').then((on) => { auto.querySelector('input').checked = on; });
-  const upd = el('div', { class: 'small dim' }, '');
-  const check = async () => {
-    upd.textContent = 'Checking…';
-    const U = await import('../services/updates.js'); const s = await U.check();
-    if (s.error) upd.textContent = `Couldn't check: ${s.error}`;
-    else if (s.available) upd.replaceChildren(`Version ${s.available.version} is ready. `, el('button', { class: 'btn small', onclick: async () => { upd.textContent = 'Downloading and checking the update…'; try { await U.install(); } catch (e) { upd.textContent = e.message; } } }, 'Install update'));
-    else upd.textContent = 'You have the latest version.';
-  };
-  if (opts.checkUpdates) check();
   const sizeSel = segmented([{ value: 'compact', label: 'Small' }, { value: 'standard', label: 'Standard' }, { value: 'large', label: 'Large' }], pref('ui.size'), (v) => { if (v !== 'standard' && !canUse('notchResize')) { toast('Notch size is part of Pro.'); sizeSel.setValue('standard'); return; } setPref('ui.size', v); });
   return [
-    card('Startup and updates',
+    card('Startup',
       setting('Start with Windows', 'Notch apple opens quietly when you sign in.', auto),
-      setting('Check for updates automatically', 'You’re told when a new version is out.', prefToggle('updates.auto')),
-      el('div', { class: 'hstack', style: 'padding:8px 0' }, button('Check now', check, { kind: 'quiet', small: true }), upd)),
+      el('div', { class: 'tiny dim', style: 'padding-top:6px' }, 'Updates now have their own section.')),
     card('The notch',
       setting('Position', 'Where the pill sits on the top edge.', segmented([{ value: 'left', label: 'Left' }, { value: 'center', label: 'Centre' }, { value: 'right', label: 'Right' }], pref('ui.position'), (v) => setPref('ui.position', v))),
       setting('Size', canUse('notchResize') ? '' : 'Small and Large are part of Pro.', sizeSel),
@@ -78,6 +69,34 @@ function General(repaint, opts) {
         localStorage.clear(); for (const [k, v] of Object.entries(keep)) localStorage.setItem(k, v); location.reload();
       }, { kind: 'danger', small: true }))),
   ];
+}
+
+function Updates() {
+  const status = el('div', { class: 'small dim' }, '');
+  const notes = el('div', { class: 'md small', style: 'max-height:150px;overflow:auto' });
+  const actions = el('div', { class: 'hstack' });
+  const version = el('b', {}, '…');
+  appInfo.then((i) => { version.textContent = i.version; }).catch(() => {});
+  const check = async () => {
+    status.textContent = 'Checking…'; notes.replaceChildren(); actions.replaceChildren(checkBtn);
+    const U = await import('../services/updates.js'); const s = await U.check();
+    if (s.error) { status.textContent = `Couldn’t check: ${s.error}`; return; }
+    if (!s.available) { status.textContent = 'You have the latest version.'; return; }
+    status.textContent = `Version ${s.available.version} is ready.`;
+    notes.replaceChildren(markdown(s.available.notes || '', { onLink: (u) => invoke('open_browser', { url: u }) }));
+    actions.replaceChildren(button('Install and restart', async () => {
+      status.textContent = 'Downloading and checking the update…';
+      try { await U.install(); status.textContent = 'Installing… Notch apple will restart.'; } catch (e) { status.textContent = e.message; }
+    }), checkBtn);
+  };
+  const checkBtn = button('Check now', check, { kind: 'quiet' });
+  actions.append(checkBtn);
+  setTimeout(check, 50);
+  return [card('Software update',
+    el('div', { class: 'hstack' }, el('div', { class: 'grow' }, el('div', {}, 'Notch apple for Windows ', version), status), actions),
+    notes,
+    setting('Check for updates automatically', 'Checked at startup and every six hours; you’re told once per version.', prefToggle('updates.auto')),
+    setting('Show “Update” on the pill', 'A small badge when a new version is ready.', prefToggle('updates.pill')))];
 }
 
 function Appearance(repaint) {

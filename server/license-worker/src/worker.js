@@ -326,7 +326,8 @@ async function promo(env, body) {
   if (code.length !== 17 || !code.startsWith('PROMO')) throw new HTTPError(400, 'Enter the full promo code: PROMO-XXXX-XXXX-XXXX.');
   if (!validEmail(body.email)) throw new HTTPError(400, 'Enter a valid email address. Your key is sent there.');
   const h = await sha256(code);
-  if (!PROMOS.has(h) && !String(env.TEST_PROMOS || '').split(',').includes(h)) throw new HTTPError(400, "That promo code isn't valid.");
+  const made = await getJSON(env, `promocode:${h}`);
+  if (!PROMOS.has(h) && !made && !String(env.TEST_PROMOS || '').split(',').includes(h)) throw new HTTPError(400, "That promo code isn't valid.");
   if (PROMOS_USED_BEFORE.has(h) || (await env.KV.get(`promo:${h}`))) throw new HTTPError(409, 'That promo code has already been used.');
   await env.KV.put(`promo:${h}`, 'claiming');
   const { key, keyId } = await issueKey(env, TIER.pro, 'promo', body.email.trim(), { promo: h });
@@ -380,12 +381,16 @@ async function revokedList(env) {
 
 // MARK: Admin
 
-function isAdmin(env, request) {
-  const got = request.headers.get('authorization') || '', want = `Bearer ${env.ADMIN_TOKEN || ''}`;
-  if (!env.ADMIN_TOKEN || got.length !== want.length) return false;
-  let diff = 0;
-  for (let i = 0; i < got.length; i++) diff |= got.charCodeAt(i) ^ want.charCodeAt(i);
-  return diff === 0;
+// Access codes: the single ADMIN_TOKEN, and/or ADMIN_TOKENS = comma-separated SHA-256 hashes of up to
+// several personal access codes (so the secret never holds a usable code). Any one of them signs in.
+async function isAdmin(env, request) {
+  const got = (request.headers.get('authorization') || '').replace(/^Bearer /, '');
+  if (!got) return false;
+  const eq = (a, b) => { if (a.length !== b.length) return false; let d = 0; for (let i = 0; i < a.length; i++) d |= a.charCodeAt(i) ^ b.charCodeAt(i); return d === 0; };
+  let ok = !!env.ADMIN_TOKEN && eq(got, env.ADMIN_TOKEN);
+  const h = await sha256(got);
+  for (const x of String(env.ADMIN_TOKENS || '').split(',').map((t) => t.trim().toLowerCase()).filter(Boolean)) if (eq(h, x)) ok = true;
+  return ok;
 }
 
 const keyIdFrom = (body) => {
@@ -486,6 +491,36 @@ async function admin(env, path, body) {
     const sent = await sendMail(env, body.email, `Your Notch apple ${TIER_NAME[rec.tier]} key`, keyMail([{ tier: rec.tier, key: rec.key }]));
     return { emailed: sent };
   }
+  if (path === '/admin/promo-create') {
+    const n = Math.min(50, Math.max(1, Math.floor(Number(body.count) || 1)));
+    const note = String(body.note || '').slice(0, 200);
+    const A = 'ABCDEFGHJKMNPQRSTVWXYZ23456789';
+    const codes = [];
+    for (let i = 0; i < n; i++) {
+      const r = crypto.getRandomValues(new Uint8Array(12));
+      const c = [...r].map((b) => A[b % A.length]).join('');
+      const code = `PROMO-${c.slice(0, 4)}-${c.slice(4, 8)}-${c.slice(8, 12)}`;
+      await putJSON(env, `promocode:${await sha256(code.replace(/-/g, ''))}`, { created: Date.now(), note });
+      codes.push(code);
+    }
+    return { codes };   // shown once: only a hash is stored
+  }
+  if (path === '/admin/promo-list') {
+    const page = await env.KV.list({ prefix: 'promocode:', cursor: body.cursor || undefined, limit: 200 });
+    const rows = [];
+    for (const { name } of page.keys) {
+      const h = name.slice(10), r = await getJSON(env, name);
+      const used = await env.KV.get(`promo:${h}`);
+      rows.push({ id: h.slice(0, 12), hash: h, created: r?.created, note: r?.note || '', used: !!used, keyId: used && used !== 'claiming' ? used : null });
+    }
+    return { rows: rows.sort((a, b) => (b.created || 0) - (a.created || 0)), cursor: page.list_complete ? null : page.cursor };
+  }
+  if (path === '/admin/promo-delete') {
+    const h = String(body.hash || '');
+    if (!/^[0-9a-f]{64}$/.test(h)) throw new HTTPError(400, 'hash needed');
+    await env.KV.delete(`promocode:${h}`);
+    return { deleted: true };
+  }
   if (path === '/admin/test-payment') {
     const o = /^[0-9a-f]{32}$/.test(String(body.order)) && await getJSON(env, `order:${body.order}`);
     if (!o) throw new HTTPError(404, 'No such open order');
@@ -545,7 +580,7 @@ export default {
         const ip = request.headers.get('cf-connecting-ip') || 'unknown';
         const fails = Number(await env.KV.get(`adminfail:${ip}`)) || 0;
         if (fails >= 10) throw new HTTPError(429, 'Too many wrong tries. Wait an hour.');
-        if (!isAdmin(env, request)) {
+        if (!(await isAdmin(env, request))) {
           await env.KV.put(`adminfail:${ip}`, String(fails + 1), { expirationTtl: 3600 });
           throw new HTTPError(401, 'Unauthorized');
         }

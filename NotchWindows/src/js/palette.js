@@ -47,7 +47,7 @@ export async function paletteActions(query) {
     { icon: '🎨', label: 'Change theme', run: () => show('settings', { pane: 'Appearance' }) },
     { icon: '🔑', label: 'Enter a key', run: () => show('settings', { pane: 'Access' }) },
     { icon: '⌨', label: 'Shortcuts', run: () => show('settings', { pane: 'Shortcuts' }) },
-    { icon: '⬆', label: 'Check for updates', run: () => show('settings', { pane: 'General', checkUpdates: true }) },
+    { icon: '⬆', label: 'Check for updates', run: () => show('settings', { pane: 'Updates' }) },
     { icon: '🙈', label: 'Hide the pill', run: async () => { await collapse(); invoke('set_hidden', { hidden: true }); } },
     { icon: '⏏', label: 'Quit Notch apple', run: () => invoke('quit_app') },
   ];

@@ -17,6 +17,7 @@ const meta = new Map();
 const KV = {
   async get(k) { return store.has(k) ? store.get(k) : null; },
   async put(k, v, o) { store.set(k, v); if (o?.metadata) meta.set(k, o.metadata); },
+  async delete(k) { store.delete(k); meta.delete(k); },
   async list({ prefix, cursor, limit = 1000 }) {
     const names = [...store.keys()].filter((k) => k.startsWith(prefix)).sort();
     const from = Number(cursor || 0), page = names.slice(from, from + limit);
@@ -240,6 +241,32 @@ await test('Admin can issue a key for a donor (grandfathering)', async () => {
 await test('Nothing stores a plain email once an order is paid', async () => {
   for (const [k, v] of store) if (k.startsWith('order:') && JSON.parse(v).status === 'paid') assert.ok(!v.includes('@'));
   for (const [k, v] of store) if (k.startsWith('key:') || k.startsWith('email:')) assert.ok(!v.includes('@'), k);
+});
+
+await test('Three personal access codes sign in (only their hashes are stored); a wrong code does not', async () => {
+  const sha = async (t) => [...new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(t)))].map((b) => b.toString(16).padStart(2, '0')).join('');
+  const codes = ['NA-ADMIN-AAAA-1111', 'NA-ADMIN-BBBB-2222', 'NA-ADMIN-CCCC-3333'];
+  env.ADMIN_TOKENS = (await Promise.all(codes.map(sha))).join(',');
+  for (const c of codes) assert.equal((await call('/admin/stats', {}, { authorization: 'Bearer ' + c })).status, 200, c);
+  assert.equal((await call('/admin/stats', {}, { authorization: 'Bearer NA-ADMIN-ZZZZ-9999', 'cf-connecting-ip': '9.9.9.9' })).status, 401);
+  assert.equal((await call('/admin/stats', {}, { authorization: 'Bearer ' + env.ADMIN_TOKENS.split(',')[0], 'cf-connecting-ip': '9.9.9.9' })).status, 401, 'the hash itself is not a code');
+});
+
+await test('Promo codes made in the panel: create, redeem once, see them used, delete unused', async () => {
+  const H = { authorization: 'Bearer admin-test' };
+  const made = await call('/admin/promo-create', { count: 2, note: 'giveaway' }, H);
+  assert.equal(made.codes.length, 2);
+  assert.match(made.codes[0], /^PROMO-[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}$/);
+  const r = await call('/promo', { code: made.codes[0], email: 'winner@example.com' });
+  assert.equal(r.status, 200); assert.equal(r.tier, 'Pro');
+  assert.equal((await call('/promo', { code: made.codes[0], email: 'again@example.com' })).status, 409, 'only once');
+  const list = await call('/admin/promo-list', {}, H);
+  assert.equal(list.rows.length >= 2, true);
+  assert.equal(list.rows.filter((x) => x.used).length >= 1, true);
+  const unused = list.rows.find((x) => !x.used);
+  assert.equal((await call('/admin/promo-delete', { hash: unused.hash }, H)).deleted, true);
+  assert.equal((await call('/promo', { code: made.codes[1], email: 'late@example.com' })).status, 400, 'a deleted code no longer works');
+  assert.equal((await call('/admin/promo-create', { count: 1 })).status, 401);
 });
 
 await test('Admin panel: batch issue, list, suspend, unsuspend, notes, devices, lockout', async () => {

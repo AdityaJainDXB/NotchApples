@@ -73,7 +73,7 @@ pub async fn update_check() -> Result<Option<Update>, String> {
 
     let best = releases
         .into_iter()
-        .filter(|r| !r.draft && !r.prerelease)
+        .filter(|r| !r.draft)   // Windows builds are still marked BETA (pre-release), so those count too
         .filter_map(|r| version_of(&r.tag_name).map(|v| (v, r)))
         .filter(|(v, _)| newer(v, &current))
         .max_by(|(a, _), (b, _)| if newer(a, b) { std::cmp::Ordering::Greater } else { std::cmp::Ordering::Less });
