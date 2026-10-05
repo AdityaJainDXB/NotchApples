@@ -21,8 +21,10 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
-        ReleaseNote(version: "1.27.2", date: "5 October 2026", headline: "Duo animations fixed, and in Modules", items: [
+        ReleaseNote(version: "1.27.3", date: "5 October 2026", headline: "The Duo animation, done properly", items: [
             "The iPhone Duo open and close animation now works the way the Dynamic Island does: the notch grows out with a soft overshoot while what's inside comes into focus out of a blur, and on closing it blurs away quickly as the notch tucks back in with no bounce.",
+        ]),
+        ReleaseNote(version: "1.27.2", date: "5 October 2026", headline: "Duo animations and full-screen in Modules", items: [
             "“Use iPhone Duo animations” and “Keep the notch visible in full-screen apps” are now also at the top of Settings → Modules, so the notch's switches are in one place. They're still in Settings → Notch too, and both are on by default.",
         ]),
         ReleaseNote(version: "1.27.1", date: "5 October 2026", headline: "The notch stays visible in full-screen apps", items: [

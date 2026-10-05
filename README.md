@@ -328,9 +328,12 @@ All screenshots use sample data.
 - **F1:** a favourite team; qualifying gaps and best laps.
 - **What's New** in Settings → About, shown once after updating.
 
-#### New in 1.27.2
+#### New in 1.27.3
 
 - **Duo animation fixed.** Opening and closing the notch now has the Dynamic Island blur-morph: the shape grows out of the notch with a soft overshoot while its contents come into focus out of a blur, and on closing the contents blur away quickly as the notch tucks back in (no bounce). Reduce Motion still gives a plain fade.
+
+#### New in 1.27.2
+
 - **Notch switches in Settings → Modules.** *Use iPhone Duo animations* and *Keep the notch visible in full-screen apps* are now at the top of Settings → Modules as well as in Settings → Notch, so they're easy to find. Both are on by default.
 
 #### New in 1.27.1
