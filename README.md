@@ -328,6 +328,10 @@ All screenshots use sample data.
 - **F1:** a favourite team; qualifying gaps and best laps.
 - **What's New** in Settings → About, shown once after updating.
 
+#### New in 1.24.2
+
+- **Messenger rooms fix:** everyone in a room now sees everyone's messages, even when their networks block different relays. Each Mac connects to all relays at once and drops duplicates. Works with people still on older versions too.
+
 #### New in 1.24.1
 
 - **Bug fix:** Messenger and AI chat now open scrolled to the latest message instead of the oldest.

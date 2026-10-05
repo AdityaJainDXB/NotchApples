@@ -15,7 +15,8 @@
 //          networks that block other ports). Every publish sends
 //          `Cache: no`, so the relay forwards it live and stores nothing.
 //       2. Public MQTT brokers (QoS 0, never retained) as fallbacks.
-//     If one relay is unreachable we try the next.
+//     Every Mac connects to all of them at once and sends through each (duplicates are
+//     dropped), so people whose networks block different relays still reach each other.
 //   • Presence: every client announces itself (encrypted) every 30 s, which
 //     builds the "online in this room" list.
 //
@@ -56,12 +57,13 @@ final class WebP2PManager: ObservableObject {
     @Published private(set) var memberCount = 0
     @Published private(set) var messages: [MessengerMessage] = []
 
-    private var socket: URLSessionWebSocketTask?
     private var key: SymmetricKey?
     private var topic: String?
-    private var relayIndex = 0
-    private var relay: Relay { Self.relays[min(relayIndex, Self.relays.count - 1)] }
-    private var buffer = Data()
+    /// One live connection per relay. Every Mac connects to all relays it can reach, sends
+    /// through each and drops duplicates, so two people on different networks (where one
+    /// relay is blocked) still end up talking to each other.
+    private var links: [Int: Link] = [:]
+    private var generation = 0
     private var presenceTimer: Timer?
     private var pingTimer: Timer?
     private var seenIDs = Set<UUID>()
@@ -100,8 +102,10 @@ final class WebP2PManager: ObservableObject {
             .map { String(format: "%02x", $0) }.joined()
         UserDefaults.standard.set(room, forKey: "messenger.activeRoom")
         topic = "notchapple-v1-\(topicHash.prefix(40))"    // valid for both ntfy and MQTT
-        relayIndex = 0
-        connect()
+        state = .connecting
+        generation += 1
+        for i in Self.relays.indices { connect(i) }
+        scheduleGiveUpCheck()
     }
 
     /// Leaves the room. `remember: false` is used on quit so the room is rejoined next launch.
@@ -110,9 +114,9 @@ final class WebP2PManager: ObservableObject {
         if state == .joined { publish(kind: .leave, text: nil) }
         presenceTimer?.invalidate(); pingTimer?.invalidate()
         presenceTimer = nil; pingTimer = nil
-        socket?.cancel(with: .normalClosure, reason: nil)
-        socket = nil
-        buffer.removeAll()
+        generation += 1
+        for link in links.values { link.socket.cancel(with: .normalClosure, reason: nil) }
+        links = [:]
         members = [:]
         state = .idle
         room = nil
@@ -135,21 +139,24 @@ final class WebP2PManager: ObservableObject {
     private func publish(kind: MessengerEnvelope.Kind, text: String?) -> MessengerEnvelope {
         let env = MessengerEnvelope(kind: kind, id: UUID(), senderID: identity.senderID,
                                     sender: identity.handle, text: text, ts: .now)
-        // Only publish over a live connection (timers can fire during a failover).
-        guard state == .joined || kind == .leave, socket != nil,
+        // Only publish once at least one relay is live (timers can fire while reconnecting).
+        guard state == .joined || kind == .leave,
               let key, let topic, let json = try? JSONEncoder().encode(env),
               let sealed = try? AES.GCM.seal(json, using: key).combined else { return env }
-        switch relay {
-        case .ntfy(let host):
-            // Publish over HTTPS. `Cache: no` = forward live, store nothing.
-            var request = URLRequest(url: URL(string: "https://\(host)/\(topic)")!)
-            request.httpMethod = "POST"
-            request.setValue("no", forHTTPHeaderField: "Cache")
-            request.setValue("no", forHTTPHeaderField: "Firebase")
-            request.httpBody = Data(sealed.base64EncodedString().utf8)
-            URLSession.shared.dataTask(with: request).resume()
-        case .mqtt:
-            sendPacket(MQTT.publish(topic: topic, payload: sealed))
+        // Send through every relay we're connected to; receivers drop the duplicates by ID.
+        for (i, link) in links where link.joined {
+            switch Self.relays[i] {
+            case .ntfy(let host):
+                // Publish over HTTPS. `Cache: no` = forward live, store nothing.
+                var request = URLRequest(url: URL(string: "https://\(host)/\(topic)")!)
+                request.httpMethod = "POST"
+                request.setValue("no", forHTTPHeaderField: "Cache")
+                request.setValue("no", forHTTPHeaderField: "Firebase")
+                request.httpBody = Data(sealed.base64EncodedString().utf8)
+                URLSession.shared.dataTask(with: request).resume()
+            case .mqtt:
+                send(MQTT.publish(topic: topic, payload: sealed), on: i)
+            }
         }
         return env
     }
@@ -159,11 +166,14 @@ final class WebP2PManager: ObservableObject {
               let json = try? AES.GCM.open(box, using: key),
               let env = try? JSONDecoder().decode(MessengerEnvelope.self, from: json) else { return }  // not for us / tampered
         // Ignore stale or replayed traffic.
-        guard abs(env.ts.timeIntervalSinceNow) < 600 else { return }
+        guard abs(env.ts.timeIntervalSinceNow) < 3600 else { return }   // allows for Macs whose clocks differ
         let isMe = env.senderID == identity.senderID
 
         switch env.kind {
         case .presence:
+            // The same envelope arrives once per relay; handle it once.
+            guard !seenIDs.contains(env.id) else { return }
+            seenIDs.insert(env.id)
             if !isMe {
                 if members[env.senderID] == nil {
                     notice("\(env.sender) joined")
@@ -173,6 +183,8 @@ final class WebP2PManager: ObservableObject {
                 members[env.senderID] = (String(env.sender.prefix(32)), .now)
             }
         case .leave:
+            guard !seenIDs.contains(env.id) else { return }
+            seenIDs.insert(env.id)
             if let m = members.removeValue(forKey: env.senderID) { notice("\(m.handle) left") }
         case .message:
             guard !isMe, !seenIDs.contains(env.id), let text = env.text else { return }
@@ -192,84 +204,99 @@ final class WebP2PManager: ObservableObject {
 
     // MARK: Transport
 
-    private func connect() {
+    private final class Link {
+        let socket: URLSessionWebSocketTask
+        var buffer = Data()
+        var joined = false
+        init(_ socket: URLSessionWebSocketTask) { self.socket = socket }
+    }
+
+    private func connect(_ i: Int) {
         guard let topic else { return }
-        state = .connecting
         let task: URLSessionWebSocketTask
-        switch relay {
+        switch Self.relays[i] {
         case .ntfy(let host):
             task = URLSession.shared.webSocketTask(with: URL(string: "wss://\(host)/\(topic)/ws")!)
         case .mqtt(let url):
             task = URLSession.shared.webSocketTask(with: url, protocols: ["mqtt"])
         }
-        socket = task
+        let link = Link(task)
+        links[i] = link
         task.resume()
-        if case .mqtt = relay { sendPacket(MQTT.connect(clientID: "na-\(UUID().uuidString.prefix(12))")) }
-        receiveLoop(task)
-        // Give each relay a few seconds before moving on.
-        let attempt = relayIndex
+        if case .mqtt = Self.relays[i] { send(MQTT.connect(clientID: "na-\(UUID().uuidString.prefix(12))"), on: i) }
+        receiveLoop(task, relay: i)
+        // A relay that doesn't answer in 8 seconds is dropped and retried later.
+        let gen = generation
         DispatchQueue.main.asyncAfter(deadline: .now() + 8) { [weak self] in
-            guard let self, self.state == .connecting, self.relayIndex == attempt else { return }
-            self.failover("timed out")
+            guard let self, self.generation == gen, let l = self.links[i], l === link, !l.joined else { return }
+            self.drop(i)
         }
     }
 
-    private func failover(_ reason: String) {
+    /// Closes one relay and tries it again in 30 seconds (e.g. after the network comes back).
+    private func drop(_ i: Int) {
+        guard room != nil, let link = links.removeValue(forKey: i) else { return }
+        link.socket.cancel(with: .goingAway, reason: nil)
+        updateState()
+        let gen = generation
+        DispatchQueue.main.asyncAfter(deadline: .now() + 30) { [weak self] in
+            guard let self, self.generation == gen, self.room != nil, self.links[i] == nil else { return }
+            self.connect(i)
+        }
+    }
+
+    private func scheduleGiveUpCheck() {
+        let gen = generation
+        DispatchQueue.main.asyncAfter(deadline: .now() + 9) { [weak self] in
+            guard let self, self.generation == gen else { return }
+            self.updateState()
+        }
+    }
+
+    private func updateState() {
         guard room != nil else { return }
-        socket?.cancel(with: .goingAway, reason: nil)
-        socket = nil
-        buffer.removeAll()
-        relayIndex += 1
-        if relayIndex < Self.relays.count {
-            connect()
-        } else {
-            state = .failed("Couldn't reach a relay (\(reason)). Retrying in 30 seconds…")
-            presenceTimer?.invalidate(); pingTimer?.invalidate()
-            presenceTimer = nil; pingTimer = nil
-            // Try again later (e.g. after the network comes back), starting from the first relay.
-            let roomAtFailure = room
-            DispatchQueue.main.asyncAfter(deadline: .now() + 30) { [weak self] in
-                guard let self, let room = roomAtFailure, self.room == room, case .failed = self.state else { return }
-                self.relayIndex = 0
-                self.connect()
-            }
+        if links.values.contains(where: \.joined) {
+            if state != .joined { state = .joined; publish(kind: .presence, text: nil); startTimers() }
+        } else if links.isEmpty {
+            state = .failed("Couldn't reach a relay. Retrying in 30 seconds…")
         }
     }
 
-    private func sendPacket(_ data: Data) {
-        socket?.send(.data(data)) { [weak self] error in
-            if let error { Task { @MainActor in self?.failover(error.localizedDescription) } }
+    private func send(_ data: Data, on i: Int) {
+        guard let task = links[i]?.socket else { return }
+        task.send(.data(data)) { [weak self] error in
+            if error != nil { Task { @MainActor in if self?.links[i]?.socket === task { self?.drop(i) } } }
         }
     }
 
-    private func receiveLoop(_ task: URLSessionWebSocketTask) {
+    private func receiveLoop(_ task: URLSessionWebSocketTask, relay i: Int) {
         task.receive { [weak self] result in
             Task { @MainActor in
-                guard let self, task === self.socket else { return }
+                guard let self, let link = self.links[i], link.socket === task else { return }
                 switch result {
                 case .success(.data(let data)):
-                    self.buffer.append(data)
-                    self.drainPackets()
-                    self.receiveLoop(task)
+                    link.buffer.append(data)
+                    self.drainPackets(i)
+                    self.receiveLoop(task, relay: i)
                 case .success(.string(let text)):
-                    self.handleNtfyEvent(text)
-                    self.receiveLoop(task)
+                    self.handleNtfyEvent(text, relay: i)
+                    self.receiveLoop(task, relay: i)
                 case .success:
-                    self.receiveLoop(task)
-                case .failure(let error):
-                    self.failover(error.localizedDescription)
+                    self.receiveLoop(task, relay: i)
+                case .failure:
+                    self.drop(i)
                 }
             }
         }
     }
 
     /// ntfy sends one JSON event per WebSocket text frame.
-    private func handleNtfyEvent(_ text: String) {
+    private func handleNtfyEvent(_ text: String, relay i: Int) {
         struct Event: Decodable { let event: String; let message: String? }
         guard let event = try? JSONDecoder().decode(Event.self, from: Data(text.utf8)) else { return }
         switch event.event {
         case "open":
-            didJoin()
+            didJoin(i)
         case "message":
             if let b64 = event.message, let payload = Data(base64Encoded: b64) { receive(payload: payload) }
         default:
@@ -277,24 +304,26 @@ final class WebP2PManager: ObservableObject {
         }
     }
 
-    private func didJoin() {
-        state = .joined
-        publish(kind: .presence, text: nil)
-        startTimers()
+    private func didJoin(_ i: Int) {
+        guard let link = links[i], !link.joined else { return }
+        link.joined = true
+        if state == .joined {
+            publish(kind: .presence, text: nil)   // let people on this relay see us right away
+        } else {
+            updateState()
+        }
     }
 
-    /// Parses every complete MQTT packet in `buffer`.
-    private func drainPackets() {
-        while let (type, body, used) = MQTT.nextPacket(in: buffer) {
-            buffer.removeFirst(used)
+    /// Parses every complete MQTT packet received on relay `i`.
+    private func drainPackets(_ i: Int) {
+        while let link = links[i], let (type, body, used) = MQTT.nextPacket(in: link.buffer) {
+            link.buffer.removeFirst(used)
             switch type {
             case 0x20:  // CONNACK
-                guard body.count >= 2, body[body.startIndex + 1] == 0, let topic else {
-                    failover("refused"); return
-                }
-                sendPacket(MQTT.subscribe(topic: topic, packetID: 1))
+                guard body.count >= 2, body[body.startIndex + 1] == 0, let topic else { drop(i); return }
+                send(MQTT.subscribe(topic: topic, packetID: 1), on: i)
             case 0x90:  // SUBACK
-                didJoin()
+                didJoin(i)
             case 0x30:  // PUBLISH
                 if let payload = MQTT.publishPayload(body) { receive(payload: payload) }
             default:
@@ -316,8 +345,10 @@ final class WebP2PManager: ObservableObject {
         }
         pingTimer = Timer.scheduledTimer(withTimeInterval: 30, repeats: true) { [weak self] _ in
             Task { @MainActor in
-                guard let self, case .mqtt = self.relay else { return }
-                self.sendPacket(MQTT.pingRequest)
+                guard let self else { return }
+                for (i, link) in self.links where link.joined {
+                    if case .mqtt = Self.relays[i] { self.send(MQTT.pingRequest, on: i) }
+                }
             }
         }
     }
