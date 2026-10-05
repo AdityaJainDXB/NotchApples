@@ -156,6 +156,12 @@ struct NotchMessengerView: View {
                 }
                 .padding(.vertical, 4)
             }
+            // Open on the latest message, not the oldest.
+            .defaultScrollAnchor(.bottom)
+            .onAppear {
+                proxy.scrollTo(messages.last?.id, anchor: .bottom)
+                DispatchQueue.main.async { proxy.scrollTo(messages.last?.id, anchor: .bottom) }
+            }
             .onChange(of: messages.count) { _, _ in
                 withAnimation(Theme.spring) { proxy.scrollTo(messages.last?.id, anchor: .bottom) }
             }

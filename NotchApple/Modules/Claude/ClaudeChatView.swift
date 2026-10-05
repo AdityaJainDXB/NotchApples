@@ -779,6 +779,12 @@ struct ClaudeChatView: View {
                     Color.clear.frame(height: 1).id("bottom")
                 }
             }
+            // Open on the latest message, not the oldest.
+            .defaultScrollAnchor(.bottom)
+            .onAppear {
+                proxy.scrollTo("bottom", anchor: .bottom)
+                DispatchQueue.main.async { proxy.scrollTo("bottom", anchor: .bottom) }
+            }
             .onChange(of: model.messages.last?.text.count) { _, _ in proxy.scrollTo("bottom", anchor: .bottom) }
             .onChange(of: model.messages.count) { _, _ in withAnimation { proxy.scrollTo("bottom", anchor: .bottom) } }
         }

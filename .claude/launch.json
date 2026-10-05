@@ -1,0 +1,1 @@
+{"version":"0.0.1","configurations":[{"name":"windows-ui","runtimeExecutable":"/bin/sh","runtimeArgs":["-c","cd /private/tmp/claude-501/-Users-aditya-Documents-Software-Projects-NotchApples/3deffde4-ef2b-440c-a0ee-32079bc1e541/scratchpad/winui && exec python3 -m http.server 5178"],"port":5178}]}

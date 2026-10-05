@@ -328,6 +328,10 @@ All screenshots use sample data.
 - **F1:** a favourite team; qualifying gaps and best laps.
 - **What's New** in Settings → About, shown once after updating.
 
+#### New in 1.24.1
+
+- **Bug fix:** Messenger and AI chat now open scrolled to the latest message instead of the oldest.
+
 #### Windows 1.24.0
 
 - **Free, Pro and Ultimate on Windows too.** The Windows app no longer needs a code to open. Free covers Today, AI, Sports, Browser, Search, To-do, Notes, World Clock and Tools; Pro adds Launcher, Clipboard, Focus, Translator, PC Stats and Shelf.
