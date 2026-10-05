@@ -143,6 +143,7 @@ struct NotchSettings: View {
                 .onChange(of: focusBehavior) { _, _ in notch?.updateAutoHide() }
                 LabeledContent("Focus is") { Text(focusOn ? "On\(focusProfile.isEmpty ? "" : " · \(focusProfile)")" : "Off").foregroundStyle(.secondary) }
                 Button("Set it up in Shortcuts…") { NSWorkspace.shared.open(URL(fileURLWithPath: "/System/Applications/Shortcuts.app")) }
+                Button("Focus timer settings…") { SettingsRouter.shared.showFocus = true }
             } header: {
                 Text("Focus")
             } footer: {

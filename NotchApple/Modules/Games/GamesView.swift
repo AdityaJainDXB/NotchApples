@@ -4,7 +4,9 @@
 //
 //  Notch Games: tiny games for a short break, right in the panel.
 //   • 2048: arrow keys (or WASD) slide the tiles; merge to 2048.
-//   • Snake: arrow keys steer; eat to grow, don't hit yourself or the wall.
+//   • Snake: arrow keys steer; quick taps are queued in order (SnakeGameView).
+//   • Breakout: the mouse or ← → moves the paddle; click or Space launches (BreakoutGameView).
+//   • Memory: repeat the pattern of lights, one more each round (MemoryGameView).
 //   • Reaction: wait for green, then click (or press Space) as fast as you can.
 //  Best scores are kept on this Mac. Nothing runs while the tab is closed.
 //
@@ -13,18 +15,21 @@ import SwiftUI
 
 struct GamesView: View {
     enum Game: String, CaseIterable, Identifiable {
-        case g2048 = "2048", snake = "Snake", reaction = "Reaction"
+        case g2048 = "2048", snake = "Snake", breakout = "Breakout", memory = "Memory", reaction = "Reaction"
         var id: String { rawValue }
         var symbol: String {
             switch self {
             case .g2048: "square.grid.4x3.fill"
             case .snake: "scribble.variable"
+            case .breakout: "rectangle.split.3x1.fill"
+            case .memory: "circle.grid.2x2.fill"
             case .reaction: "bolt.fill"
             }
         }
     }
 
     @AppStorage("games.last") private var lastRaw = Game.g2048.rawValue
+    @AppStorage(GameSound.key) private var soundOn = true
     private var game: Game { Game(rawValue: lastRaw) ?? .g2048 }
 
     var body: some View {
@@ -38,13 +43,17 @@ struct GamesView: View {
                     .buttonStyle(PurpleButtonStyle(prominent: g == game))
                 }
                 Spacer()
+                Toggle(isOn: $soundOn) { Label("Sound", systemImage: soundOn ? "speaker.wave.2.fill" : "speaker.slash.fill").font(.system(size: 11)) }
+                    .toggleStyle(.switch).controlSize(.mini)
                 Text(hint).font(.system(size: 10)).foregroundStyle(Theme.textSecondary).fixedSize(horizontal: false, vertical: true)
             }
             .frame(width: 130)
             GlassCard {
                 switch game {
                 case .g2048: Game2048View()
-                case .snake: SnakeView()
+                case .snake: SnakeGameView()
+                case .breakout: BreakoutGameView()
+                case .memory: MemoryGameView()
                 case .reaction: ReactionView()
                 }
             }
@@ -55,7 +64,9 @@ struct GamesView: View {
     private var hint: String {
         switch game {
         case .g2048: "Arrow keys or WASD. Same numbers merge."
-        case .snake: "Arrow keys steer. Space pauses."
+        case .snake: "Arrow keys or WASD steer; fast taps are queued. Space pauses."
+        case .breakout: "Mouse or ← → moves the paddle. Click or Space launches."
+        case .memory: "Watch the lights, repeat them with a click or the arrow keys."
         case .reaction: "Wait for green, then click or press Space."
         }
     }
@@ -215,89 +226,6 @@ struct Game2048View: View {
                         : level <= 2 ? Color(white: 0.92 - Double(level) * 0.06)
                         : Theme.accent.opacity(min(1, 0.35 + Double(level) * 0.07)),
                         in: RoundedRectangle(cornerRadius: 7))
-    }
-}
-
-// MARK: - Snake
-
-struct SnakeView: View {
-    private static let cols = 22, rows = 12
-    @State private var snake: [CGPoint] = [CGPoint(x: 5, y: 6), CGPoint(x: 4, y: 6), CGPoint(x: 3, y: 6)]
-    @State private var dir = CGPoint(x: 1, y: 0)
-    @State private var nextDir = CGPoint(x: 1, y: 0)
-    @State private var food = CGPoint(x: 14, y: 6)
-    @State private var running = false
-    @State private var dead = false
-    @AppStorage("games.snake.best") private var best = 0
-    private let tick = Timer.publish(every: 0.11, on: .main, in: .common).autoconnect()
-
-    var score: Int { snake.count - 3 }
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            HStack {
-                Text("Score \(score)").font(.system(size: 12, weight: .bold).monospacedDigit()).foregroundStyle(.white)
-                Text("Best \(best)").font(.system(size: 11).monospacedDigit()).foregroundStyle(Theme.textSecondary)
-                Spacer()
-                Button(dead ? "Play again" : running ? "Pause" : "Start") { dead ? restart() : running.toggle() }
-                    .buttonStyle(PurpleButtonStyle(prominent: !running))
-            }
-            GeometryReader { geo in
-                let cell = min(geo.size.width / CGFloat(Self.cols), geo.size.height / CGFloat(Self.rows))
-                ZStack(alignment: .topLeading) {
-                    RoundedRectangle(cornerRadius: 8).fill(Color.white.opacity(0.05))
-                        .frame(width: cell * CGFloat(Self.cols), height: cell * CGFloat(Self.rows))
-                    Circle().fill(Color.red).frame(width: cell * 0.8, height: cell * 0.8)
-                        .offset(x: food.x * cell + cell * 0.1, y: food.y * cell + cell * 0.1)
-                    ForEach(Array(snake.enumerated()), id: \.offset) { i, p in
-                        RoundedRectangle(cornerRadius: cell * 0.25)
-                            .fill(i == 0 ? Theme.accentBright : Theme.accent)
-                            .frame(width: cell - 1, height: cell - 1)
-                            .offset(x: p.x * cell, y: p.y * cell)
-                    }
-                    if dead || !running {
-                        Text(dead ? "Game over · \(score)" : "Press an arrow key or Start")
-                            .font(.system(size: 12, weight: .semibold)).foregroundStyle(.white)
-                            .padding(8).background(.black.opacity(0.6), in: Capsule())
-                            .frame(width: cell * CGFloat(Self.cols), height: cell * CGFloat(Self.rows))
-                    }
-                }
-            }
-        }
-        .onReceive(tick) { _ in step() }
-        .modifier(KeyCatcher { key in
-            if key.key == .space { if dead { restart() } else { running.toggle() }; return .handled }
-            guard let d = Dir(key) else { return .ignored }
-            let v: CGPoint = switch d { case .up: CGPoint(x: 0, y: -1); case .down: CGPoint(x: 0, y: 1)
-                                        case .left: CGPoint(x: -1, y: 0); case .right: CGPoint(x: 1, y: 0) }
-            if v.x != -dir.x || v.y != -dir.y { nextDir = v }   // no reversing into yourself
-            if !running && !dead { running = true }
-            if dead { restart() }
-            return .handled
-        })
-        .accessibilityLabel("Snake. Score \(score). Use the arrow keys.")
-    }
-
-    private func step() {
-        guard running, !dead else { return }
-        dir = nextDir
-        let head = CGPoint(x: snake[0].x + dir.x, y: snake[0].y + dir.y)
-        if head.x < 0 || head.y < 0 || head.x >= CGFloat(Self.cols) || head.y >= CGFloat(Self.rows) || snake.dropLast().contains(head) {
-            dead = true; running = false; best = max(best, score); return
-        }
-        snake.insert(head, at: 0)
-        if head == food { placeFood() } else { snake.removeLast() }
-    }
-
-    private func placeFood() {
-        var p: CGPoint
-        repeat { p = CGPoint(x: Int.random(in: 0..<Self.cols), y: Int.random(in: 0..<Self.rows)) } while snake.contains(p)
-        food = p
-    }
-
-    private func restart() {
-        snake = [CGPoint(x: 5, y: 6), CGPoint(x: 4, y: 6), CGPoint(x: 3, y: 6)]
-        dir = CGPoint(x: 1, y: 0); nextDir = dir; dead = false; running = true; placeFood()
     }
 }
 

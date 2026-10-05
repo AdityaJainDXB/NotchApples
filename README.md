@@ -328,6 +328,12 @@ All screenshots use sample data.
 - **F1:** a favourite team; qualifying gaps and best laps.
 - **What's New** in Settings → About, shown once after updating.
 
+#### New in 1.27.0
+
+- **Tidier Settings.** **Permissions** and **Privacy** are now one entry, **Privacy & Permissions**: choose it and pick which one to open (a switch at the top moves between them). **Focus** timer settings moved into **Notch → Focus**, so there is one sidebar row fewer to scroll past. Old links still open the right page.
+- **Snake without the lag.** Quick taps are queued in order (two turns per move) instead of dropped, keys are read directly from the system, the game ticks off the main thread, and the board is one fast canvas.
+- **Two new games:** **Breakout** (mouse or ← → moves the paddle, click or Space launches, three lives, faster levels) and **Memory** (repeat the pattern of lights, one more each round). Every game keeps its best score, and one **Sound** switch in the Games sidebar covers them all.
+
 #### New in 1.26.1
 
 - **Purge instead of our own cleaner.** The Ultimate *Cache Cleaner* tab from 1.26.0 is now the **Purge** tab: it opens the [Purge](https://github.com/jithin-sabu/purge-app) app (a separate disk cleaner) from the notch, or links you to it if it isn't installed. Notch apple no longer scans or deletes anything itself.

@@ -126,7 +126,7 @@ extension SettingsTab {
     var keywords: String {
         switch self {
         case .general: "login menu bar volume brightness hud recording dot charging"
-        case .notch: "hover delay open click fullscreen hide size width height resize edge trigger zone display monitor gestures swipe pinch long press sound haptics keyboard"
+        case .notch: "hover delay open click fullscreen hide size width height resize edge trigger zone display monitor gestures swipe pinch long press sound haptics keyboard focus pomodoro timer hot corners"
         case .appearance: "theme colour color dark light accent glow tab order editor import export animation speed sound haptic font menu bar icon style"
         case .profiles: "profile work study gaming automatic app rules hide per-app time"
         case .extras: "battery music lyrics rain meeting download keep awake album"
@@ -150,19 +150,55 @@ extension SettingsTab {
         let q = query.trimmingCharacters(in: .whitespaces).lowercased()
         return q.isEmpty || title.lowercased().contains(q) || keywords.contains(q)
     }
+
+    // MARK: Grouped sidebar
+    //
+    // Related panes share one sidebar entry, so the list stays short:
+    //  • Permissions and Privacy → "Privacy & Permissions" (a chooser asks which one to open).
+    //  • Focus is no longer its own entry: its settings are in Notch → Focus.
+    // All the cases still exist, so anything that opens a pane by name (a link, a shortcut) keeps working.
+
+    /// The panes that get a sidebar row.
+    static var sidebar: [SettingsTab] { allCases.filter { $0 != .privacy && $0 != .focus } }
+
+    /// The sidebar row this pane belongs to.
+    var sidebarRow: SettingsTab { self == .privacy ? .permissions : self }
+
+    var sidebarTitle: String { self == .permissions ? "Privacy & Permissions" : title }
+
+    /// The two panes behind "Privacy & Permissions".
+    static let privacyGroup: [SettingsTab] = [.permissions, .privacy]
+    var inPrivacyGroup: Bool { Self.privacyGroup.contains(self) }
+
+    func sidebarMatches(_ query: String) -> Bool {
+        self == .permissions ? (matches(query) || SettingsTab.privacy.matches(query) || "privacy & permissions".contains(query.lowercased())) : matches(query)
+    }
+}
+
+/// Lets other screens ask Settings to open the Focus timer sheet.
+@MainActor
+final class SettingsRouter: ObservableObject {
+    static let shared = SettingsRouter()
+    @Published var showFocus = false
 }
 
 struct SettingsView: View {
     @ObservedObject private var updater = UpdateChecker.shared
     @AppStorage("settings.lastPane") private var tab: SettingsTab = .general
     @State private var query = ""
+    @State private var chooseGroup = false
+    @ObservedObject private var router = SettingsRouter.shared
 
     var body: some View {
         NavigationSplitView {
-            List(SettingsTab.allCases.filter { $0.matches(query) }, selection: Binding(get: { tab }, set: { if let t = $0 { tab = t } })) { pane in
+            List(SettingsTab.sidebar.filter { $0.sidebarMatches(query) }, selection: Binding(get: { tab.sidebarRow }, set: { picked in
+                guard let t = picked else { return }
+                // "Privacy & Permissions" asks which of its two panes to open (unless you're already in one).
+                if t == .permissions && !tab.inPrivacyGroup { chooseGroup = true } else if t != .permissions { tab = t }
+            })) { pane in
                 Label {
                     HStack {
-                        Text(pane.title)
+                        Text(pane.sidebarTitle)
                         if pane == .updates, updater.pendingUpdate != nil {
                             Spacer()
                             Text("1").font(.caption2.bold()).foregroundStyle(.white)
@@ -183,7 +219,9 @@ struct SettingsView: View {
             .navigationSplitViewColumnWidth(190)
             .searchable(text: $query, placement: .sidebar, prompt: "Search settings")
             .onSubmit(of: .search) {
-                if let first = SettingsTab.allCases.first(where: { $0.matches(query) }) { tab = first }
+                if let first = SettingsTab.sidebar.first(where: { $0.sidebarMatches(query) }) {
+                    if first == .permissions { chooseGroup = true } else { tab = first }
+                }
             }
         } detail: {
             Group {
@@ -197,8 +235,11 @@ struct SettingsView: View {
                 case .backup: BackupSettings()
                 case .license: LicenseSettings()
                 case .shortcuts: ShortcutsSettings()
-                case .permissions: PermissionsView(showsWelcome: !UserDefaults.standard.bool(forKey: "onboarding.welcomeDismissed"))
-                    .onDisappear { UserDefaults.standard.set(true, forKey: "onboarding.welcomeDismissed") }
+                case .permissions:
+                    PrivacyPermissionsPane(tab: $tab) {
+                        PermissionsView(showsWelcome: !UserDefaults.standard.bool(forKey: "onboarding.welcomeDismissed"))
+                            .onDisappear { UserDefaults.standard.set(true, forKey: "onboarding.welcomeDismissed") }
+                    }
                 case .authentication: AuthenticationSettings()
                 case .modules: ModulesSettings()
                 case .windows: WindowsSettings()
@@ -207,18 +248,18 @@ struct SettingsView: View {
                 case .messenger: MessengerSettings()
                 case .clipboard: ClipboardSettings()
                 case .fileSearch: FileSearchSettings()
-                case .focus: FocusSettings()
+                case .focus: NotchSettings()   // Focus lives in Notch → Focus now; this only keeps old links working
                 case .audio: AudioSettings()
                 case .vpn: VPNSettings()
                 case .widget: WidgetSettings()
                 case .updates: UpdatesSettings()
-                case .privacy: PrivacyDashboard()
+                case .privacy: PrivacyPermissionsPane(tab: $tab) { PrivacyDashboard() }
                 case .iphone: CompanionSettings()
                 case .help: HelpSettings()
                 case .about: AboutSettings()
                 }
             }
-            .navigationTitle(tab.title)
+            .navigationTitle(tab.inPrivacyGroup ? "Privacy & Permissions" : tab.title)
             // The pages follow the colour theme chosen in Settings → Appearance.
             .scrollContentBackground(.hidden)
             .background(Theme.backdrop.ignoresSafeArea())
@@ -227,9 +268,94 @@ struct SettingsView: View {
         .frame(minWidth: 680, idealWidth: 860, minHeight: 440, idealHeight: 560)
         .tint(Theme.accent)
         .id(ThemeManager.shared.currentThemeID)
-        .onReceive(SettingsTab.selection) { tab = $0 }
-        .onAppear { SettingsWindowController.currentWindow?.title = tab.title }
-        .onChange(of: tab) { _, new in SettingsWindowController.currentWindow?.title = new.title }
+        .onReceive(SettingsTab.selection) { picked in
+            // Old links to the Focus pane open it as a sheet over Notch settings.
+            if picked == .focus { tab = .notch; router.showFocus = true } else { tab = picked }
+        }
+        .onAppear {
+            if tab == .focus { tab = .notch }
+            SettingsWindowController.currentWindow?.title = tab.inPrivacyGroup ? "Privacy & Permissions" : tab.title
+        }
+        .onChange(of: tab) { _, new in SettingsWindowController.currentWindow?.title = new.inPrivacyGroup ? "Privacy & Permissions" : new.title }
+        .sheet(isPresented: $chooseGroup) {
+            PrivacyChooser { picked in
+                chooseGroup = false
+                if let picked { tab = picked }
+            }
+        }
+        .sheet(isPresented: $router.showFocus) {
+            VStack(spacing: 0) {
+                HStack {
+                    Text("Focus timer").font(.headline)
+                    Spacer()
+                    Button("Done") { router.showFocus = false }.keyboardShortcut(.defaultAction)
+                }
+                .padding([.horizontal, .top], 16)
+                FocusSettings()
+            }
+            .frame(width: 560, height: 520)
+            .environmentObject(SettingsManager.shared)
+            .preferredColorScheme(.dark)
+        }
+    }
+}
+
+// MARK: - Privacy & Permissions
+
+/// "Which one?": the picker shown when you choose Privacy & Permissions in the sidebar.
+private struct PrivacyChooser: View {
+    let done: (SettingsTab?) -> Void
+
+    var body: some View {
+        VStack(spacing: 14) {
+            Image(systemName: "hand.raised.fill").font(.system(size: 30)).foregroundStyle(.blue)
+            Text("Privacy & Permissions").font(.title3.bold())
+            Text("Which would you like to open?").foregroundStyle(.secondary)
+            HStack(spacing: 12) {
+                choice("Permissions", "What macOS lets Notch apple use: accessibility, screen, camera and more.", "checkmark.shield.fill", .permissions)
+                choice("Privacy", "What stays on your Mac, what goes online, and how to delete your data.", "eye.slash.fill", .privacy)
+            }
+            Button("Cancel") { done(nil) }.keyboardShortcut(.cancelAction).buttonStyle(.plain).foregroundStyle(.secondary)
+        }
+        .padding(24)
+        .frame(width: 480)
+        .preferredColorScheme(.dark)
+    }
+
+    private func choice(_ title: String, _ detail: String, _ symbol: String, _ tab: SettingsTab) -> some View {
+        Button { done(tab) } label: {
+            VStack(spacing: 8) {
+                Image(systemName: symbol).font(.system(size: 22)).foregroundStyle(Theme.accent)
+                Text("[ \(title) ]").font(.headline)
+                Text(detail).font(.caption).foregroundStyle(.secondary).multilineTextAlignment(.center)
+            }
+            .frame(maxWidth: .infinity, minHeight: 130)
+            .padding(12)
+            .background(RoundedRectangle(cornerRadius: 12).fill(Color.white.opacity(0.06)))
+            .overlay(RoundedRectangle(cornerRadius: 12).stroke(Theme.accent.opacity(0.25)))
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+    }
+}
+
+/// Permissions and Privacy share one sidebar row; this switch at the top moves between them.
+private struct PrivacyPermissionsPane<Content: View>: View {
+    @Binding var tab: SettingsTab
+    @ViewBuilder var content: Content
+
+    var body: some View {
+        VStack(spacing: 0) {
+            Picker("", selection: $tab) {
+                Text("Permissions").tag(SettingsTab.permissions)
+                Text("Privacy").tag(SettingsTab.privacy)
+            }
+            .pickerStyle(.segmented)
+            .labelsHidden()
+            .frame(maxWidth: 320)
+            .padding(.vertical, 10)
+            content
+        }
     }
 }
 

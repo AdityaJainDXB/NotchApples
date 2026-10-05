@@ -21,6 +21,12 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "1.27.0", date: "5 October 2026", headline: "Tidier Settings, a faster Snake and two new games", items: [
+            "Settings is shorter. Permissions and Privacy share one entry, “Privacy & Permissions”: choose it and pick which one to open. Focus timer settings moved into Notch → Focus.",
+            "Snake no longer drops or ignores quick taps: turns are queued in order (two per move), keys are read directly, the game runs off the main thread and the board is drawn as one fast canvas.",
+            "New games: Breakout (mouse or ← → to move the paddle, three lives, faster levels) and Memory (repeat the pattern of lights, one more each round).",
+            "Every game keeps its best score, and there is one Sound switch for all of them in the Games sidebar.",
+        ]),
         ReleaseNote(version: "1.26.1", date: "5 October 2026", headline: "Purge instead of our own cleaner", items: [
             "The Ultimate Cache Cleaner tab is now the Purge tab. It opens the Purge app (a separate disk cleaner) from the notch, and links you to it if it isn't installed. Notch apple no longer scans or deletes anything itself.",
             "Fixed: a two-finger sideways swipe over the tab bar used to scroll the tabs and also switch to the next one. It now only scrolls. If you liked switching by swipe, turn on Settings → Notch → Swipe on the tab bar switches tabs.",
