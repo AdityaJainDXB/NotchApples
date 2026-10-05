@@ -1,0 +1,13 @@
+name = "notchapple-rooms"
+main = "src/relay.js"
+compatibility_date = "2026-09-01"
+
+# One Durable Object per room topic. It only forwards live frames between the
+# people connected right now; nothing is stored (no storage API is used).
+[[durable_objects.bindings]]
+name = "ROOM"
+class_name = "Room"
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["Room"]

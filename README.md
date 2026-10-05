@@ -328,6 +328,10 @@ All screenshots use sample data.
 - **F1:** a favourite team; qualifying gaps and best laps.
 - **What's New** in Settings → About, shown once after updating.
 
+#### New in 1.24.3
+
+- **Anonymous rooms work again.** The free public relays were refusing messages (ntfy.sh's daily quota) or unreachable on many networks. Rooms now go through Notch apple's own relay (a Cloudflare Worker that forwards encrypted messages live and stores nothing), with the public relays as backups. Everyone in a room should update.
+
 #### New in 1.24.2
 
 - **Messenger rooms fix:** everyone in a room now sees everyone's messages, even when their networks block different relays. Each Mac connects to all relays at once and drops duplicates. Works with people still on older versions too.

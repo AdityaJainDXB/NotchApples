@@ -10,7 +10,9 @@
 //       – one hash becomes the relay topic,
 //       – the other becomes a 256-bit AES-GCM key.
 //     The relay therefore never sees the room name, and can't read messages.
-//   • Messages travel through a free, public relay over TLS WebSockets:
+//   • Messages travel over TLS WebSockets through Notch apple's own relay
+//     (server/room-relay: a Cloudflare Worker that forwards live and stores nothing),
+//     plus free public relays as backups:
 //       1. ntfy.sh (open source, port 443, so it works on school and office
 //          networks that block other ports). Every publish sends
 //          `Cache: no`, so the relay forwards it live and stores nothing.
@@ -37,10 +39,13 @@ final class WebP2PManager: ObservableObject {
 
     /// Free public relays, tried in order.
     enum Relay {
+        /// Notch apple's own relay (server/room-relay, a free Cloudflare Worker).
+        case own(host: String)
         case ntfy(host: String)
         case mqtt(URL)
     }
     static let relays: [Relay] = [
+        .own(host: "notchapple-rooms.adityajain1225.workers.dev"),
         .ntfy(host: "ntfy.sh"),
         .mqtt(URL(string: "wss://broker.emqx.io:8084/mqtt")!),
         .mqtt(URL(string: "wss://broker.hivemq.com:8884/mqtt")!),
@@ -146,6 +151,10 @@ final class WebP2PManager: ObservableObject {
         // Send through every relay we're connected to; receivers drop the duplicates by ID.
         for (i, link) in links where link.joined {
             switch Self.relays[i] {
+            case .own:
+                // Same shape as ntfy's events, so both are read by handleNtfyEvent.
+                let frame = #"{"event":"message","message":"\#(sealed.base64EncodedString())"}"#
+                link.socket.send(.string(frame)) { _ in }
             case .ntfy(let host):
                 // Publish over HTTPS. `Cache: no` = forward live, store nothing.
                 var request = URLRequest(url: URL(string: "https://\(host)/\(topic)")!)
@@ -153,7 +162,11 @@ final class WebP2PManager: ObservableObject {
                 request.setValue("no", forHTTPHeaderField: "Cache")
                 request.setValue("no", forHTTPHeaderField: "Firebase")
                 request.httpBody = Data(sealed.base64EncodedString().utf8)
-                URLSession.shared.dataTask(with: request).resume()
+                // ntfy.sh has a daily free quota; once it's used up (429) stop counting on it.
+                URLSession.shared.dataTask(with: request) { _, response, _ in
+                    guard (response as? HTTPURLResponse)?.statusCode == 429 else { return }
+                    Task { @MainActor [weak self] in self?.drop(i) }
+                }.resume()
             case .mqtt:
                 send(MQTT.publish(topic: topic, payload: sealed), on: i)
             }
@@ -215,7 +228,7 @@ final class WebP2PManager: ObservableObject {
         guard let topic else { return }
         let task: URLSessionWebSocketTask
         switch Self.relays[i] {
-        case .ntfy(let host):
+        case .own(let host), .ntfy(let host):
             task = URLSession.shared.webSocketTask(with: URL(string: "wss://\(host)/\(topic)/ws")!)
         case .mqtt(let url):
             task = URLSession.shared.webSocketTask(with: url, protocols: ["mqtt"])
@@ -290,7 +303,7 @@ final class WebP2PManager: ObservableObject {
         }
     }
 
-    /// ntfy sends one JSON event per WebSocket text frame.
+    /// ntfy (and our own relay) send one JSON event per WebSocket text frame.
     private func handleNtfyEvent(_ text: String, relay i: Int) {
         struct Event: Decodable { let event: String; let message: String? }
         guard let event = try? JSONDecoder().decode(Event.self, from: Data(text.utf8)) else { return }
@@ -347,7 +360,11 @@ final class WebP2PManager: ObservableObject {
             Task { @MainActor in
                 guard let self else { return }
                 for (i, link) in self.links where link.joined {
-                    if case .mqtt = Self.relays[i] { self.send(MQTT.pingRequest, on: i) }
+                    switch Self.relays[i] {
+                    case .mqtt: self.send(MQTT.pingRequest, on: i)
+                    case .own: link.socket.send(.string("ping")) { _ in }
+                    case .ntfy: break
+                    }
                 }
             }
         }
