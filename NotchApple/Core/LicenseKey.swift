@@ -49,6 +49,8 @@ enum Feature: String, CaseIterable, Identifiable {
     case pluginGallery
     // Ultimate: platform
     case notesSync, iphoneCompanion
+    // Ultimate: storage
+    case cacheCleaner
     // Pro: live activities
     case meetingAlert, downloadProgress, markets, flightStatus, multiMatch
     // Ultimate: live activities
@@ -74,7 +76,7 @@ enum Feature: String, CaseIterable, Identifiable {
 
     var tier: Tier {
         switch self {
-        case .liveActivityAPI, .activityStacking, .automations, .scripting, .pluginSDK, .pluginGallery, .notesSync, .iphoneCompanion, .prioritySupport, .betaChannel: .ultimate
+        case .liveActivityAPI, .activityStacking, .automations, .scripting, .pluginSDK, .pluginGallery, .notesSync, .iphoneCompanion, .cacheCleaner, .prioritySupport, .betaChannel: .ultimate
         default: .pro
         }
     }
@@ -113,6 +115,7 @@ enum Feature: String, CaseIterable, Identifiable {
         case .pluginGallery: "Plugin gallery"
         case .notesSync: "Notes and to-dos in iCloud"
         case .iphoneCompanion: "iPhone companion"
+        case .cacheCleaner: "Cache Cleaner"
         case .meetingAlert: "Meeting alerts"
         case .downloadProgress: "Download progress"
         case .markets: "Markets"
@@ -183,6 +186,7 @@ enum Feature: String, CaseIterable, Identifiable {
         case .pluginGallery: "Install community plugins in one click."
         case .notesSync: "Your notes and to-dos on every Mac, through iCloud Drive."
         case .iphoneCompanion: "Send text and links from your iPhone to the notch, and control the Mac from it."
+        case .cacheCleaner: "Free up disk space in one click: app caches, Xcode derived data, logs and temporary files, with a dashboard of what you saved."
         case .meetingAlert: "A heads-up before meetings, with a Join button."
         case .downloadProgress: "Watch downloads fill up beside the notch."
         case .markets: "Stocks and crypto with today's change; pin one beside the notch."

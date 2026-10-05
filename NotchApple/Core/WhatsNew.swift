@@ -21,6 +21,12 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "1.26.0", date: "5 October 2026", headline: "Duo animations, Cache Cleaner and full-screen notch", items: [
+            "iPhone Duo animations (on by default): the panel springs out of the notch, the highlight slides between tabs as one shape and pages scale into place, like the Dynamic Island. Turn them off in Settings → Notch → Use iPhone Duo animations. Reduce Motion always wins.",
+            "Ultimate: Cache Cleaner. Scans app caches, Xcode derived data, logs and old temporary files, shows what each takes, and clears them in one click, with a running total of the space you freed. Turn it on in Settings → Modules or in the welcome tour.",
+            "Keep the notch visible in full-screen apps (Settings → Notch → Stepping aside): for Macs without a hardware notch, like the base M1, where the notch used to vanish when an app went full screen.",
+            "The welcome tour's tab picker now also offers Translator, Mac Stats and Cache Cleaner, and what you pick there is what Settings → Modules shows.",
+        ]),
         ReleaseNote(version: "1.25.0", date: "5 October 2026", headline: "Your own hot corners", items: [
             "Settings → Notch → Hot corners: push the pointer into any screen corner to open a website, an app, a file or folder, run a Shortcut, open Mission Control, or open and close the notch.",
             "Pick a different action for each corner, how long the pointer must rest there, and optionally a key to hold (⌥, ⌘, ⌃ or ⇧) so it never fires by accident.",

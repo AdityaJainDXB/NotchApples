@@ -138,6 +138,7 @@ extension Module {
         case .quickAdd: .quickAdd
         case .markets: .markets
         case .home: .homeLayout
+        case .cacheCleaner: .cacheCleaner
         case .launcher: .launcher
         case .snippets: .snippets
         case .mirror: .mirror

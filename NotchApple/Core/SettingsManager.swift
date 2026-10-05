@@ -12,7 +12,7 @@ import SwiftUI
 
 /// Every optional feature module in the app.
 enum Module: String, CaseIterable, Identifiable {
-    case today, claude, browser, launcher, translator, stats, windows, tools, mirror, worldClock, messenger, clipboard, notes, focus, shelf, share, audio, vpn, nowPlaying, search, timer, snippets, shortcuts, devices, live, f1, sports, games, alerts, plugins, voiceNotes, screenTime, quickAdd, markets, home, security
+    case today, claude, browser, launcher, translator, stats, windows, tools, mirror, worldClock, messenger, clipboard, notes, focus, shelf, share, audio, vpn, nowPlaying, search, timer, snippets, shortcuts, devices, live, f1, sports, games, alerts, plugins, voiceNotes, screenTime, quickAdd, markets, home, security, cacheCleaner
 
     var id: String { rawValue }
 
@@ -54,6 +54,7 @@ enum Module: String, CaseIterable, Identifiable {
         case .markets: "Markets"
         case .home: "Home"
         case .security: "Biometric Lock"
+        case .cacheCleaner: "Cache Cleaner"
         }
     }
 
@@ -95,6 +96,7 @@ enum Module: String, CaseIterable, Identifiable {
         case .markets: "chart.line.uptrend.xyaxis"
         case .home: "square.grid.2x2"
         case .security: "touchid"
+        case .cacheCleaner: "internaldrive.fill"
         }
     }
 
@@ -136,6 +138,7 @@ enum Module: String, CaseIterable, Identifiable {
         case .markets: "Pro: a watchlist of stocks and crypto with today's change; pin one beside the notch."
         case .home: "Pro: your own dashboard of widgets in small, medium and large sizes."
         case .security: "Require Touch ID / Apple Watch / password to open the notch."
+        case .cacheCleaner: "Ultimate: scan and clear app caches, Xcode derived data, logs and temporary files in one click, with a dashboard of the space you freed."
         }
     }
 
@@ -165,7 +168,7 @@ final class SettingsManager: ObservableObject {
         var defaults: [String: Any] = [Module.today.storageKey: true, Module.claude.storageKey: true]
         offByDefault.forEach { defaults[$0.storageKey] = false }
         // 1.14 add-ons start off for everyone, new and existing installs.
-        [Module.timer, .snippets, .shortcuts, .devices, .live, .f1, .games, .alerts, .plugins, .voiceNotes, .screenTime, .quickAdd, .markets, .home].forEach { defaults[$0.storageKey] = false }
+        [Module.timer, .snippets, .shortcuts, .devices, .live, .f1, .games, .alerts, .plugins, .voiceNotes, .screenTime, .quickAdd, .markets, .home, .cacheCleaner].forEach { defaults[$0.storageKey] = false }
         defaults[Module.sports.storageKey] = true   // everyone gets Sports, tracking Barcelona
         d.register(defaults: defaults)
     }
@@ -217,6 +220,9 @@ final class SettingsManager: ObservableObject {
     @AppStorage(Module.quickAdd.storageKey) var quickAddEnabled = false
     @AppStorage(Module.markets.storageKey) var marketsEnabled = false
     @AppStorage(Module.home.storageKey) var homeEnabled = false
+    @AppStorage(Module.cacheCleaner.storageKey) var cacheCleanerEnabled = false
+    /// The iPhone Duo pop-and-morph animations (on by default).
+    @AppStorage(Duo.key) var useDuoAnimations = true
 
     // MARK: Notch extras (Settings → Notch Extras)
     @AppStorage("extras.lowBatteryAlert") var lowBatteryAlert = true
@@ -314,6 +320,7 @@ final class SettingsManager: ObservableObject {
         case .quickAdd: $quickAddEnabled
         case .markets: $marketsEnabled
         case .home: $homeEnabled
+        case .cacheCleaner: $cacheCleanerEnabled
         }
     }
 

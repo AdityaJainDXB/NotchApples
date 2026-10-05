@@ -8,7 +8,7 @@ options:
 settings:
   base:
     SWIFT_VERSION: "5.0"
-    MARKETING_VERSION: "1.25.0"
+    MARKETING_VERSION: "1.26.0"
     CURRENT_PROJECT_VERSION: "42"
     CODE_SIGN_IDENTITY: "-"
     CODE_SIGN_STYLE: Manual
@@ -71,6 +71,7 @@ targets:
       - NotchApple/Modules/Tools/Converter.swift
       - NotchApple/Core/PureModels.swift
       - NotchApple/Core/HotCornerLogic.swift
+      - NotchApple/Modules/CacheCleaner/CacheCleanerManager.swift
       - CompanionKit
     settings:
       base:

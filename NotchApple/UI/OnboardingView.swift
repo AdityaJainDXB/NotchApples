@@ -104,7 +104,7 @@ private struct OnboardingPermissions: View {
 private struct OnboardingTabs: View {
     @EnvironmentObject private var settings: SettingsManager
     @ObservedObject private var entitlements = Entitlements.shared
-    private let picks: [Module] = [.today, .claude, .nowPlaying, .clipboard, .shelf, .timer, .worldClock, .sports, .f1, .notes, .windows, .games, .launcher, .focus, .messenger, .snippets]
+    private let picks: [Module] = [.today, .claude, .nowPlaying, .clipboard, .shelf, .timer, .worldClock, .sports, .f1, .notes, .windows, .games, .launcher, .focus, .messenger, .snippets, .translator, .stats, .cacheCleaner]
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {

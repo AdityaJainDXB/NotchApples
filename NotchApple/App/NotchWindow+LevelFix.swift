@@ -18,7 +18,11 @@ extension NSPanel {
 
     /// Re-applies level, Space behaviour and ordering. Safe to call at any time.
     func keepAboveEverything(extraLevels: Int = 0, orderFront: Bool = true) {
-        level = NSWindow.Level(rawValue: Self.notchLevel.rawValue + extraLevels)
+        // "Keep the notch visible in full-screen apps" raises the window to screen-saver level, which
+        // sits above full-screen Spaces and their menu bar, so it isn't hidden by the Space change.
+        level = NotchPrefs.keepInFullscreen
+            ? NSWindow.Level(rawValue: NSWindow.Level.screenSaver.rawValue + extraLevels)
+            : NSWindow.Level(rawValue: Self.notchLevel.rawValue + extraLevels)
         collectionBehavior = [.canJoinAllSpaces, .stationary, .fullScreenAuxiliary, .ignoresCycle]
         hidesOnDeactivate = false
         if orderFront { orderFrontRegardless() }

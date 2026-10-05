@@ -6,16 +6,16 @@ Tests: see `xcodebuild test -scheme NotchAppleTests` and `node server/license-wo
 
 | # | Tier | Feature | Code | How it was checked |
 |---|---|---|---|---|
-| 1 | FREE | Spring expand/collapse | ✅ `NotchApple/App/NotchWindowController.swift:820` | screenshots of the open notch every release |
+| 1 | FREE | Spring expand/collapse | ⚠️ not found `None` | screenshots of the open notch every release |
 | 2 | FREE | Hover-to-open, adjustable delay | ✅ `NotchApple/UI/NotchSettings.swift:15` | Settings → Notch screenshot |
 | 3 | FREE | Click-to-open | ✅ `NotchApple/App/NotchWindowController.swift:430` | in daily use |
-| 4 | FREE | Global hotkey | ✅ `NotchApple/App/AppDelegate.swift:174` | Carbon hot key, Settings → Shortcuts |
+| 4 | FREE | Global hotkey | ✅ `NotchApple/App/AppDelegate.swift:175` | Carbon hot key, Settings → Shortcuts |
 | 5 | FREE | Virtual notch on non-notch Macs | ✅ `NotchApple/App/NotchWindowController.swift:744` | code path; external displays |
 | 6 | FREE | Launch at login | ✅ `NotchApple/UI/PermissionsView.swift:40` | Settings → General |
-| 7 | FREE | Menu bar icon + quick menu | ✅ `NotchApple/App/AppDelegate.swift:245` | right-click menu |
-| 8 | FREE | Auto-hide in fullscreen | ✅ `NotchApple/Core/NotchBehavior.swift:85` | Settings → Notch |
-| 9 | PRO | Multi-display, per-screen layouts | ✅ `NotchApple/UI/NotchSettings.swift:196` | Settings → Notch → Displays |
-| 10 | PRO | Remappable gestures | ✅ `NotchApple/Core/NotchBehavior.swift:152` | Settings → Notch → Gestures |
+| 7 | FREE | Menu bar icon + quick menu | ✅ `NotchApple/App/AppDelegate.swift:246` | right-click menu |
+| 8 | FREE | Auto-hide in fullscreen | ✅ `NotchApple/Core/NotchBehavior.swift:88` | Settings → Notch |
+| 9 | PRO | Multi-display, per-screen layouts | ✅ `NotchApple/UI/NotchSettings.swift:208` | Settings → Notch → Displays |
+| 10 | PRO | Remappable gestures | ✅ `NotchApple/Core/NotchBehavior.swift:155` | Settings → Notch → Gestures |
 | 11 | PRO | Notch resize, live preview | ✅ `NotchApple/App/NotchWindowController.swift:755` | Settings → Notch → Size; pinch |
 | 12 | PRO | Mouse-edge trigger zones | ✅ `NotchApple/App/NotchWindowController.swift:597` | Settings → Notch |
 | 13 | FREE | Now Playing + album art | ✅ `NotchApple/Modules/NowPlaying/NowPlayingMonitor.swift:24` | screenshot |
@@ -61,7 +61,7 @@ Tests: see `xcodebuild test -scheme NotchAppleTests` and `node server/license-wo
 | 53 | FREE | File shelf | ✅ `NotchApple/Modules/Shelf/FileShelf.swift:33` | Shelf tab |
 | 54 | PRO* | AirDrop drop zone | ✅ `NotchApple/Modules/Sharing/ShareView.swift:55` | kept free |
 | 55 | PRO | Shelf expiry, folders, share | ✅ `NotchApple/Modules/Shelf/FileShelf.swift:74` | Shelf tab |
-| 56 | PRO | App launcher | ✅ `NotchApple/Core/Entitlements.swift:141` | pro screenshot |
+| 56 | PRO | App launcher | ✅ `NotchApple/Core/Entitlements.swift:142` | pro screenshot |
 | 57 | PRO | Text expander / snippets | ✅ `NotchApple/Modules/Snippets/SnippetsView.swift:139` | Snippets tab |
 | 58 | PRO | Screenshot/record + annotate | ✅ `NotchApple/Modules/Tools/ScreenTools.swift:88` | Tools → Mark up |
 | 59 | PRO | Colour picker + ruler | ✅ `NotchApple/Modules/Tools/ScreenTools.swift:18` | Tools |
@@ -99,7 +99,7 @@ Tests: see `xcodebuild test -scheme NotchAppleTests` and `node server/license-wo
 | 91 | ULTIMATE | Plugin SDK | ✅ `NotchApple/Core/PureModels.swift:43` | unit tests, docs/PLUGINS.md |
 | 92 | ULTIMATE | Community gallery | ✅ `NotchApple/Modules/Plugins/PluginsView.swift:256` | index.json live on GitHub |
 | 93 | FREE | In-app updates + Homebrew | ✅ `NotchApple/Core/UpdateChecker.swift:22` | unit tests (update flow); cask |
-| 94 | FREE | What's New | ✅ `NotchApple/Core/WhatsNew.swift:168` | every release |
+| 94 | FREE | What's New | ✅ `NotchApple/Core/WhatsNew.swift:173` | every release |
 | 95 | FREE | English UI, translations welcome | ✅ `NotchApple/UI/TrustSettings.swift:314` | CONTRIBUTING.md |
 | 96 | ULTIMATE | iCloud sync settings/notes/themes | ✅ `NotchApple/UI/TrustSettings.swift:349` | Help & Feedback |
 | 97 | ULTIMATE | iPhone companion | ✅ `NotchApple/Core/CompanionServer.swift:34` | paired and tested in the iOS Simulator + live protocol test; .ipa for Sideloadly |
@@ -110,8 +110,8 @@ Tests: see `xcodebuild test -scheme NotchAppleTests` and `node server/license-wo
 | 102 | FREE | Donate + Compare tiers | ✅ `NotchApple/UI/SettingsView.swift:306` | License screen |
 | 103 | ULTIMATE | Priority support + beta channel | ✅ `NotchApple/UI/TrustSettings.swift:249` | Help & Feedback; unit tests (betas) |
 | 104 | FREE | License screen | ✅ `NotchApple/UI/SettingsView.swift:238` | settings-pro screenshot |
-| 105 | FREE | Lost my key | ✅ `server/license-worker/src/worker.js:331` | live server test (email sent) |
-| 106 | FREE | Grandfathering | ✅ `NotchApple/Core/LicenseKey.swift:315` | unit tests |
+| 105 | FREE | Lost my key | ✅ `server/license-worker/src/worker.js:339` | live server test (email sent) |
+| 106 | FREE | Grandfathering | ✅ `NotchApple/Core/LicenseKey.swift:319` | unit tests |
 | 107 | FREE | Restore purchase | ✅ `NotchApple/UI/SettingsView.swift:272` | License screen |
 | 108 | FREE | Terms and refunds | ✅ `NotchApple/UI/SettingsView.swift:285` | live page |
 | 109 | FREE | Upgrade Pro → Ultimate $4 | ✅ `NotchApple/UI/SettingsView.swift:280` | live end-to-end test |
@@ -125,18 +125,18 @@ Tests: see `xcodebuild test -scheme NotchAppleTests` and `node server/license-wo
 | Principle 2 | Under 1% idle CPU | ✅ `NotchApple/Core/FeatureHub.swift:51` | measured 0.05% avg / 0.3% peak |
 | Principle 4 | Notch and non-notch Macs | ✅ `NotchApple/App/NotchWindowController.swift:744` | virtual pill |
 | Principle 5 | VoiceOver, Reduce Motion, contrast, keyboard | ✅ `NotchApple/Core/Theme.swift:30` | labels, Reduce Motion fades, Increase Contrast, ⌘1–9 |
-| Principle 7 | Unfinished paid features hidden | ✅ `NotchApple/Core/LicenseKey.swift:82` | Feature.isReady + canUse |
+| Principle 7 | Unfinished paid features hidden | ✅ `NotchApple/Core/LicenseKey.swift:84` | Feature.isReady + canUse |
 | UI | Peek state on hover | ✅ `NotchApple/UI/PeekView.swift:13` | peek panel |
 | UI | Ears for live info | ✅ `NotchApple/Core/LiveActivity.swift:32` | left/right ears, stacking |
-| UI | Haptics + sounds, off by default | ✅ `NotchApple/Core/NotchBehavior.swift:51` | Settings → Notch → Feedback |
-| UX | Swipe down to open | ✅ `NotchApple/UI/NotchSettings.swift:24` | Settings → Notch |
+| UI | Haptics + sounds, off by default | ✅ `NotchApple/Core/NotchBehavior.swift:54` | Settings → Notch → Feedback |
+| UX | Swipe down to open | ✅ `NotchApple/UI/NotchSettings.swift:25` | Settings → Notch |
 | UX | Swipe tabs, pinch, swipe up, long-press | ✅ `NotchApple/App/NotchWindowController.swift:633` | gesture monitor |
-| UX | Auto-hide during screen recording; respects Focus | ✅ `NotchApple/Core/NotchBehavior.swift:270` | Shortcuts automation |
+| UX | Auto-hide during screen recording; respects Focus | ✅ `NotchApple/Core/NotchBehavior.swift:273` | Shortcuts automation |
 | UX | 4-screen onboarding | ✅ `NotchApple/UI/OnboardingView.swift:40` | welcome window |
 | UX | Settings search, live preview, import/export | ✅ `NotchApple/UI/SettingsView.swift:149` | search field, size preview, backup files |
 | UX | Undo for destructive actions | ✅ `NotchApple/UI/UndoToast.swift:13` | undo toast |
 | UX | Lock badge with tier and benefit | ✅ `NotchApple/UI/ActivationView.swift:166` | TierBadge |
-| Keys | Ed25519 signed, offline check, no expiry | ✅ `NotchApple/Core/LicenseKey.swift:273` | LicenseKey.parse |
+| Keys | Ed25519 signed, offline check, no expiry | ✅ `NotchApple/Core/LicenseKey.swift:277` | LicenseKey.parse |
 | Keys | 3-Mac limit, revoke list, deactivate | ✅ `server/license-worker/src/worker.js:16` | server + app |
 | Keys | Deep-link activation | ✅ `NotchApple/Core/FeatureHub.swift:158` | notchapple://activate |
 | Keys | Revoke and reissue leaked keys | ✅ `server/license-worker/src/worker.js:20` | /admin/reissue |

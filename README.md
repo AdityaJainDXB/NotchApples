@@ -328,6 +328,13 @@ All screenshots use sample data.
 - **F1:** a favourite team; qualifying gaps and best laps.
 - **What's New** in Settings → About, shown once after updating.
 
+#### New in 1.26.0
+
+- **iPhone Duo animations** (on by default). The open panel springs out of the notch with a soft bounce, the highlight slides between tabs as one shape, and the page you switch to scales and de-blurs into place, like the Dynamic Island. Turn them off in Settings → Notch → *Use iPhone Duo animations*. With Reduce Motion on, everything is a short fade.
+- **Cache Cleaner** (Ultimate). A new tab that scans **app caches, Xcode derived data, logs and old temporary files**, shows a storage bar split by category, and clears what you tick in one click, keeping a running total of the **space freed**. It only touches those four places in your own folders, and never Apple's own caches. Switch it on in Settings → Modules or in the welcome tour. Without Ultimate the tab shows what it does and how to unlock it.
+- **Keep the notch visible in full-screen apps** (Settings → Notch → Stepping aside). For Macs without a hardware notch, like the base M1, where the notch used to disappear when an app went full screen: it now stays on top of full-screen Spaces.
+- **Welcome tour:** the tab picker also offers Translator, Mac Stats and Cache Cleaner, and your choices are the same switches as Settings → Modules.
+
 #### New in 1.25.0
 
 - **Your own hot corners.** Settings → Notch → Hot corners: push the pointer into any corner of the screen to open a **website**, an **app**, a **file or folder**, run a **Shortcut**, open **Mission Control**, or open and close the notch. Choose a different action for each corner, how long the pointer must rest there, and optionally a key to hold (⌥, ⌘, ⌃ or ⇧) so you never trigger one by accident. A corner fires once per visit; move out and back to fire it again. Corners where two displays meet are ignored. They work next to macOS's own hot corners: in System Settings → Desktop & Dock → Hot Corners, set a corner to “–” if you give it to Notch apple. Free for everyone.

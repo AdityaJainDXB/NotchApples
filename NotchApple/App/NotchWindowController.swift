@@ -664,7 +664,7 @@ final class NotchWindowController {
         guard !tabs.isEmpty else { return }
         let i = tabs.firstIndex(of: state.selected) ?? 0
         let next = tabs[(i + step + tabs.count) % tabs.count]
-        withAnimation(Theme.spring) { state.selected = next }
+        withAnimation(Duo.animation) { state.selected = next }
         NotchFeedback.tick()
     }
 
@@ -817,7 +817,7 @@ final class NotchWindowController {
         // The collapsed shape is already drawn, so spring open straight away,
         // with the same curve that closing uses.
         hidePeek()
-        withAnimation(Theme.spring) { state.isExpanded = true }
+        withAnimation(Duo.animation) { state.isExpanded = true }
         NotchFeedback.opened()
         installMonitors()
     }
@@ -913,7 +913,7 @@ final class NotchWindowController {
         hoverWork?.cancel()
         openedByHover = false
         pinnedByClick = false
-        withAnimation(Theme.spring) { state.isExpanded = false }
+        withAnimation(Duo.animation) { state.isExpanded = false }
         NotchFeedback.closed()
         // Re-lock biometric gate every time the notch closes.
         state.isUnlocked = false
@@ -947,7 +947,7 @@ final class NotchWindowController {
             let mods = event.modifierFlags.intersection(.deviceIndependentFlagsMask)
             if mods == .command, let c = event.charactersIgnoringModifiers, let n = Int(c), (1...9).contains(n) {
                 let tabs = self.state.visibleTabs(SettingsManager.shared)
-                if n <= tabs.count { withAnimation(Theme.spring) { self.state.selected = tabs[n - 1] }; return nil }
+                if n <= tabs.count { withAnimation(Duo.animation) { self.state.selected = tabs[n - 1] }; return nil }
             }
             if mods == .command, event.charactersIgnoringModifiers == "]" { self.stepTab(1); return nil }
             if mods == .command, event.charactersIgnoringModifiers == "[" { self.stepTab(-1); return nil }

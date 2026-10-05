@@ -14,6 +14,7 @@ struct NotchSettings: View {
     @ObservedObject private var entitlements = Entitlements.shared
     @AppStorage("notch.hoverDelay") private var hoverDelay = 0.15
     @AppStorage("notch.autoHideFullscreen") private var autoHideFullscreen = true
+    @AppStorage("notch.keepInFullscreen") private var keepInFullscreen = false
     @AppStorage("notch.autoHideRecording") private var autoHideRecording = false
     @AppStorage("notch.panelWidth") private var panelWidth = 740.0
     @AppStorage("notch.panelHeight") private var panelHeight = 420.0
@@ -80,7 +81,13 @@ struct NotchSettings: View {
                     Text("Hide in fullscreen apps")
                     Text("Videos, games and presentations get the whole screen. The hotkey still opens the notch.")
                 }
+                .disabled(keepInFullscreen)
                 .onChange(of: autoHideFullscreen) { _, _ in notch?.recheckFullscreen(); notch?.updateAutoHide() }
+                Toggle(isOn: $keepInFullscreen) {
+                    Text("Keep the notch visible in full-screen apps")
+                    Text("For Macs without a hardware notch (like the base M1), where the notch would otherwise disappear when an app goes full screen. Overrides “Hide in fullscreen apps”.")
+                }
+                .onChange(of: keepInFullscreen) { _, _ in notch?.reassertWindowLevels(); notch?.recheckFullscreen(); notch?.updateAutoHide() }
                 Toggle(isOn: $autoHideRecording) {
                     Text("Hide while the screen is recorded")
                     Text("While Notch apple's recorder or the system recorder (⌘⇧5) is running. Other apps' screen sharing can't be detected.")
@@ -147,6 +154,10 @@ struct NotchSettings: View {
             HotCornersSection()
 
             Section {
+                Toggle(isOn: $settings.useDuoAnimations) {
+                    Text("Use iPhone Duo animations")
+                    Text("The notch pops out and morphs like the Dynamic Island: the panel springs open, the highlight slides between tabs and pages scale into place. Off for the plain animations. Reduce Motion always wins.")
+                }
                 Toggle("Sound when the notch opens and closes", isOn: $sounds)
                 Toggle("Trackpad haptics", isOn: $haptics)
             } header: {

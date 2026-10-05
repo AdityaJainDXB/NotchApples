@@ -58,6 +58,8 @@ struct NotchRootView: View {
     @EnvironmentObject private var settings: SettingsManager
     @StateObject private var entitlements = Entitlements.shared
 
+    @Namespace private var duoSpace
+
     var body: some View {
         let shoulder = state.isExpanded ? Self.expandedShoulder : Self.collapsedShoulder
         let size = state.isExpanded
@@ -79,7 +81,7 @@ struct NotchRootView: View {
             if state.isExpanded {
                 expandedContent
                     .padding(.top, state.notchSize.height + 4)
-                    .transition(.opacity.combined(with: .scale(scale: 0.96, anchor: .top)))
+                    .transition(Duo.panelTransition)
             }
         }
         .frame(width: size.width, height: size.height, alignment: .top)
@@ -108,8 +110,7 @@ struct NotchRootView: View {
                 moduleBody
                     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
                     .id(state.selected)
-                    .transition(.asymmetric(insertion: .move(edge: .trailing).combined(with: .opacity),
-                                            removal: .opacity))
+                    .transition(Duo.pageTransition)
             }
             .overlay(alignment: .bottom) { UndoToast().padding(.bottom, 4) }
             .padding(.horizontal, 18 + Self.expandedShoulder)
@@ -132,8 +133,9 @@ struct NotchRootView: View {
                     HStack(spacing: 2) {
                         ForEach(state.visibleTabs(settings)) { module in
                             TabButton(module: module, active: state.selected == module,
-                                      compact: state.visibleTabs(settings).count > 6 && state.selected != module) {
-                                withAnimation(Theme.spring) { state.selected = module }
+                                      compact: state.visibleTabs(settings).count > 6 && state.selected != module,
+                                      pillSpace: settings.useDuoAnimations ? duoSpace : nil) {
+                                withAnimation(Duo.animation) { state.selected = module }
                             }
                             .id(module)
                         }
@@ -203,6 +205,7 @@ struct NotchRootView: View {
             case .quickAdd: QuickAddView()
             case .markets: MarketsView()
             case .home: HomeView()
+            case .cacheCleaner: CacheCleanerView()
             case .security: EmptyView()
             }
         }
@@ -220,6 +223,8 @@ private struct TabButton: View {
     let module: Module
     let active: Bool
     var compact = false
+    /// When set (Duo animations), the highlight is one shape that slides between tabs.
+    var pillSpace: Namespace.ID? = nil
     let action: () -> Void
     @State private var hovering = false
 
@@ -235,7 +240,12 @@ private struct TabButton: View {
                 .frame(height: Theme.minTarget + 2)
                 .background {
                     if active {
-                        Capsule().fill(Theme.accentGradient).shadow(color: Theme.accent.opacity(0.5), radius: 8)
+                        if let pillSpace {
+                            Capsule().fill(Theme.accentGradient).shadow(color: Theme.accent.opacity(0.5), radius: 8)
+                                .matchedGeometryEffect(id: "duoPill", in: pillSpace)
+                        } else {
+                            Capsule().fill(Theme.accentGradient).shadow(color: Theme.accent.opacity(0.5), radius: 8)
+                        }
                     } else if hovering {
                         Capsule().fill(Theme.surfaceHover)
                     }
