@@ -719,9 +719,27 @@ private struct AuthenticationSettings: View {
 
 private struct ModulesSettings: View {
     @EnvironmentObject private var settings: SettingsManager
+    @AppStorage("notch.keepInFullscreen") private var keepInFullscreen = true
 
     var body: some View {
         Form {
+            // The notch's own switches, here as well as in Notch, so everything is toggled in one place.
+            Section {
+                Toggle(isOn: $settings.useDuoAnimations) {
+                    Text("Use iPhone Duo animations")
+                    Text("The panel springs out of the notch, the highlight slides between tabs and pages morph into place.")
+                }
+                Toggle(isOn: $keepInFullscreen) {
+                    Text("Keep the notch visible in full-screen apps")
+                    Text("The notch stays on screen when an app goes full screen, including on Macs without a hardware notch.")
+                }
+                .onChange(of: keepInFullscreen) { _, _ in
+                    let n = AppDelegate.current?.notch
+                    n?.reassertWindowLevels(); n?.recheckFullscreen(); n?.updateAutoHide()
+                }
+            } header: {
+                Text("Notch")
+            }
             Section {
                 ForEach(Module.allCases) { module in
                     Toggle(isOn: settings.binding(for: module)) {

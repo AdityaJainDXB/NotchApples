@@ -21,6 +21,9 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "1.27.2", date: "5 October 2026", headline: "Duo animations and full-screen in Modules", items: [
+            "“Use iPhone Duo animations” and “Keep the notch visible in full-screen apps” are now also at the top of Settings → Modules, so the notch's switches are in one place. They're still in Settings → Notch too, and both are on by default.",
+        ]),
         ReleaseNote(version: "1.27.1", date: "5 October 2026", headline: "The notch stays visible in full-screen apps", items: [
             "“Keep the notch visible in full-screen apps” is now on by default, so the notch stays where it is when an app goes full screen (including on Macs without a hardware notch, like the base M1). Turn it off in Settings → Notch → Stepping aside if you'd rather it step aside.",
         ]),

@@ -328,6 +328,10 @@ All screenshots use sample data.
 - **F1:** a favourite team; qualifying gaps and best laps.
 - **What's New** in Settings → About, shown once after updating.
 
+#### New in 1.27.2
+
+- **Notch switches in Settings → Modules.** *Use iPhone Duo animations* and *Keep the notch visible in full-screen apps* are now at the top of Settings → Modules as well as in Settings → Notch, so they're easy to find. Both are on by default.
+
 #### New in 1.27.1
 
 - **The notch stays visible in full-screen apps, by default.** *Keep the notch visible in full-screen apps* (Settings → Notch → Stepping aside) is now on out of the box, so the notch stays put when an app goes full screen, including on Macs without a hardware notch like the base M1. Turn it off there if you'd rather it step aside.
