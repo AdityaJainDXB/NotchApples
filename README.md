@@ -328,6 +328,10 @@ All screenshots use sample data.
 - **F1:** a favourite team; qualifying gaps and best laps.
 - **What's New** in Settings → About, shown once after updating.
 
+#### New in 1.28.1
+
+- **Smoother window switching.** Switching tabs now has the Duo blur-morph: the new page slides in from the side it sits on in the tab bar, coming into focus out of a blur, while the old page blurs and fades away. The two overlap while they swap, so nothing jumps. (Duo animations off or Reduce Motion on keeps the plain switch.)
+
 #### New in 1.28.0
 
 - **Choose and arrange your tabs by dragging.** The welcome tour asks which tabs you want and lets you put them in order by **dragging cards**: the other cards make room as you drag, **+** adds a tab, **✕** removes one, and a card dragged up into the row lands exactly where you drop it. No up and down arrows. The same organizer replaces the arrows in **Settings → Appearance → Notch tabs and order**, and it is the same list as Settings → Modules.

@@ -50,21 +50,31 @@ enum Duo {
         }
     }
 
-    /// The page you switch to: it pops in from slightly small and blurred, the old one softens away.
-    static var pageTransition: AnyTransition {
-        active
-            ? .asymmetric(insertion: .modifier(active: Morph(amount: 1), identity: Morph(amount: 0)),
-                          removal: .modifier(active: Morph(amount: 1), identity: Morph(amount: 0)))
-            : .asymmetric(insertion: .move(edge: .trailing).combined(with: .opacity), removal: .opacity)
+    /// The page you switch to. It slides in from the side it sits on in the tab bar (`direction` is +1 when the
+    /// new tab is to the right of the old one, -1 when to the left), coming into focus out of a blur, while the
+    /// old page blurs away, faster, so the two never pile up.
+    static func pageTransition(direction: CGFloat) -> AnyTransition {
+        guard active else {
+            return .asymmetric(insertion: .move(edge: .trailing).combined(with: .opacity), removal: .opacity)
+        }
+        let d = direction == 0 ? 1 : direction
+        return .asymmetric(
+            insertion: AnyTransition.modifier(active: Morph(amount: 1, dx: 34 * d), identity: Morph(amount: 0, dx: 34 * d))
+                .animation(.spring(response: 0.42, dampingFraction: 0.82).delay(0.04)),
+            // The old page only blurs and fades: it was drawn before we knew which way you were going.
+            removal: AnyTransition.modifier(active: Morph(amount: 1), identity: Morph(amount: 0))
+                .animation(.easeIn(duration: 0.14)))
     }
 
-    /// 0 = settled, 1 = fully popped out.
+    /// 0 = settled, 1 = out of focus: blurred, slightly smaller, see-through and shifted sideways by `dx`.
     struct Morph: ViewModifier {
         var amount: Double
+        var dx: CGFloat = 0
         func body(content: Content) -> some View {
             content
-                .scaleEffect(1 - 0.07 * amount, anchor: .top)
-                .blur(radius: 9 * amount)
+                .scaleEffect(1 - 0.05 * amount, anchor: .top)
+                .offset(x: dx * amount)
+                .blur(radius: 10 * amount)
                 .opacity(1 - amount)
         }
     }

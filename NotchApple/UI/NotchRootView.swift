@@ -59,6 +59,15 @@ struct NotchRootView: View {
     @StateObject private var entitlements = Entitlements.shared
 
     @Namespace private var duoSpace
+    /// The tab that was showing before this switch, so the new page knows which side to slide in from.
+    @State private var previousSelected: Module?
+
+    /// +1 when the new tab sits to the right of the old one in the tab bar, -1 when to the left.
+    private var slideDirection: CGFloat {
+        let tabs = state.visibleTabs(settings)
+        guard let old = previousSelected, let a = tabs.firstIndex(of: old), let b = tabs.firstIndex(of: state.selected), a != b else { return 1 }
+        return b > a ? 1 : -1
+    }
 
     var body: some View {
         let shoulder = state.isExpanded ? Self.expandedShoulder : Self.collapsedShoulder
@@ -107,18 +116,26 @@ struct NotchRootView: View {
             VStack(spacing: 10) {
                 header
                 Divider().overlay(Theme.separator)
-                moduleBody
-                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-                    .id(state.selected)
-                    .transition(Duo.pageTransition)
+                // A ZStack so the outgoing and incoming pages overlap while they cross-fade instead of stacking.
+                ZStack(alignment: .top) {
+                    moduleBody
+                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+                        .id(state.selected)
+                        .transition(Duo.pageTransition(direction: slideDirection))
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
             }
             .overlay(alignment: .bottom) { UndoToast().padding(.bottom, 4) }
             .padding(.horizontal, 18 + Self.expandedShoulder)
             .padding(.bottom, 18)
             .onAppear(perform: ensureValidSelection)
+            .onAppear { previousSelected = state.selected }
             .onAppear { NotchWidgetCenter.shared.update(selected: state.selected, open: true) }
             .onDisappear { NotchWidgetCenter.shared.update(selected: state.selected, open: false) }
-            .onChange(of: state.selected) { _, new in NotchWidgetCenter.shared.update(selected: new, open: state.isExpanded) }
+            .onChange(of: state.selected) { _, new in
+                previousSelected = new
+                NotchWidgetCenter.shared.update(selected: new, open: state.isExpanded)
+            }
             .onChange(of: state.isExpanded) { _, open in NotchWidgetCenter.shared.update(selected: state.selected, open: open) }
             .onChange(of: state.visibleTabs(settings)) { _, _ in ensureValidSelection() }
         }

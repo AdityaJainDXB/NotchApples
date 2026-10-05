@@ -21,6 +21,9 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "1.28.1", date: "5 October 2026", headline: "Smoother window switching", items: [
+            "Switching tabs now has the Duo blur-morph too: the new page slides in from the side it sits on in the tab bar, coming into focus out of a blur, while the old page blurs and fades away. The pages overlap while they swap, so nothing jumps.",
+        ]),
         ReleaseNote(version: "1.28.0", date: "5 October 2026", headline: "Arrange your tabs by dragging", items: [
             "The welcome tour now asks which tabs you want and lets you put them in order by dragging cards, with no up and down arrows. Click + to add a tab, ✕ to remove one, or drag it up to the exact spot you want. The other cards make room as you drag.",
             "The same drag-and-drop organizer replaces the arrows in Settings → Appearance (“Notch tabs and order”), and it uses the same switches as Settings → Modules, so there is only one list.",
