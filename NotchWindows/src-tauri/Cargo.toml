@@ -1,6 +1,6 @@
 [package]
 name = "notch-apple"
-version = "1.24.0"
+version = "1.25.0"
 description = "Notch apple for Windows — a productivity hub pinned to the top of your screen"
 authors = ["AdityaJainDXB"]
 license = "MIT"
@@ -16,6 +16,9 @@ tauri-plugin-global-shortcut = "2"
 tauri-plugin-dialog = "2"
 tauri-plugin-clipboard-manager = "2"
 tauri-plugin-opener = "2"
+tauri-plugin-notification = "2"
+tauri-plugin-autostart = "2"
+tauri-plugin-single-instance = "2"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 sysinfo = "0.33"
@@ -24,13 +27,47 @@ any_ascii = "0.3"
 base64 = "0.22"
 xcap = "0.9"
 image = { version = "0.25", default-features = false, features = ["jpeg", "png"] }
+arboard = { version = "3", default-features = false, features = ["image-data"] }
+# Every web request goes through Rust, so no site can block the app with CORS.
+# native-tls uses Windows' own SChannel: nothing extra to build.
+reqwest = { version = "0.13", default-features = false, features = ["native-tls", "charset", "http2", "system-proxy", "gzip", "json"] }
+sha2 = "0.10"
+tokio = { version = "1", features = ["time"] }
 
 [target.'cfg(windows)'.dependencies]
-windows-sys = { version = "0.59", features = ["Win32_System_Power", "Win32_Foundation"] }
+windows-future = "0.3"
+windows = { version = "0.62", features = [
+    "Foundation",
+    "Media_Control",
+    "Storage_Streams",
+    "Security_Credentials_UI",
+    "Win32_Foundation",
+    "Win32_Graphics_Dwm",
+    "Win32_Graphics_Gdi",
+    "Win32_Media_Audio",
+    "Win32_Media_Audio_Endpoints",
+    "Win32_Devices_FunctionDiscovery",
+    "Win32_Storage_FileSystem",
+    "Win32_System_Com",
+    "Win32_System_Com_StructuredStorage",
+    "Win32_System_DataExchange",
+    "Win32_System_Power",
+    "Win32_System_ProcessStatus",
+    "Win32_System_Registry",
+    "Win32_System_SystemInformation",
+    "Win32_System_Threading",
+    "Win32_System_Variant",
+    "Win32_System_WinRT",
+    "Win32_UI_Input_KeyboardAndMouse",
+    "Win32_UI_Shell",
+    "Win32_UI_Shell_Common",
+    "Win32_UI_Shell_PropertiesSystem",
+    "Win32_UI_WindowsAndMessaging",
+] }
 
 [profile.release]
 opt-level = "s"
 lto = true
 codegen-units = 1
-panic = "abort"
+# No panic = "abort": a failing background task must never take the whole app down.
 strip = true

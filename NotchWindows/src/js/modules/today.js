@@ -1,89 +1,127 @@
-// Today: date, local weather (free Open-Meteo, no key), battery and uptime.
-import { el } from '../store.js';
-import { invoke } from '../app.js';
+// Today: the date and time, the weather (with the next 12 hours and 7 days for
+// Pro, as on the Mac), your next calendar events, and your PC at a glance.
 
-const CODES = {
-  0: ['Clear', '☀️'], 1: ['Mainly clear', '🌤'], 2: ['Partly cloudy', '⛅'], 3: ['Overcast', '☁️'],
-  45: ['Fog', '🌫'], 48: ['Rime fog', '🌫'], 51: ['Light drizzle', '🌦'], 53: ['Drizzle', '🌦'],
-  55: ['Heavy drizzle', '🌦'], 61: ['Light rain', '🌧'], 63: ['Rain', '🌧'], 65: ['Heavy rain', '🌧'],
-  71: ['Light snow', '🌨'], 73: ['Snow', '🌨'], 75: ['Heavy snow', '❄️'], 80: ['Showers', '🌦'],
-  81: ['Showers', '🌦'], 82: ['Violent showers', '⛈'], 95: ['Thunderstorm', '⛈'], 96: ['Thunderstorm', '⛈'],
-};
+import { el, fmtDuration, fmtTime, dayLabel } from '../store.js';
+import { invoke } from '../native.js';
+import { canUse } from '../features.js';
+import { proNote } from './activation.js';
+import { show } from '../app.js';
+
+/// The day's low-to-high span within the week's range, like a weather app.
+function rangeBar(d, week) {
+  const lo = Math.min(...week.map((x) => x.min)), hi = Math.max(...week.map((x) => x.max));
+  const span = Math.max(1, hi - lo);
+  const left = ((d.min - lo) / span) * 100, width = Math.max(6, ((d.max - d.min) / span) * 100);
+  return el('div', { class: 'bar thin', style: 'width:70px;position:relative' },
+    el('i', { style: `position:absolute;left:${left}%;width:${width}%` }));
+}
 
 export function render(root) {
-  const weather = el('div', { class: 'col' }, el('div', { class: 'small dim' }, 'Loading weather…'));
-  const battery = el('div', { class: 'small dim' }, '');
-  const clock = el('div', { class: 'big mono' }, '');
-  const dateLine = el('div', { class: 'section-title' }, '');
+  const clock = el('div', { class: 'huge num' });
+  const dateLine = el('div', { class: 'dim' });
+  const weather = el('div', { class: 'col gap-6' }, el('div', { class: 'skel', style: 'height:58px' }));
+  const forecastBox = el('div', { class: 'col gap-6' });
+  const events = el('div', { class: 'col gap-4' });
+  const sys = el('div', { class: 'col gap-4' }, el('div', { class: 'small dim' }, 'Reading…'));
 
-  const left = el('div', { class: 'card col' },
-    dateLine,
-    el('div', { class: 'big' }, new Date().toLocaleDateString([], { day: 'numeric', month: 'long' })),
-    clock, weather, el('div', { style: 'flex:1' }), battery);
-
-  const right = el('div', { class: 'card col' },
-    el('div', { class: 'section-title' }, 'At a glance'),
-    el('div', { id: 'today-sys', class: 'col' }, el('div', { class: 'small dim' }, 'Reading system info…')));
-
-  root.append(el('div', { class: 'row', style: 'height:100%' }, left, right));
+  const left = el('div', { class: 'card col', style: 'flex:1.15;min-width:0' },
+    el('div', {}, dateLine, clock), weather, forecastBox);
+  const right = el('div', { class: 'col', style: 'flex:1;min-width:0' },
+    el('div', { class: 'card col gap-6', style: 'flex:1;min-height:0;overflow:auto' },
+      el('div', { class: 'hstack' }, el('div', { class: 'section-title grow' }, 'Up next'),
+        el('button', { class: 'btn small ghost', onclick: () => show('settings', { pane: 'Calendar' }) }, 'Calendars')), events),
+    el('div', { class: 'card col gap-6' }, el('div', { class: 'section-title' }, 'This PC'), sys));
+  root.append(el('div', { class: 'row fill' }, left, right));
 
   const tick = () => {
     const now = new Date();
-    dateLine.textContent = now.toLocaleDateString([], { weekday: 'long' });
     clock.textContent = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    dateLine.textContent = now.toLocaleDateString([], { weekday: 'long', day: 'numeric', month: 'long' });
   };
   tick();
-  const timer = setInterval(tick, 10000);
+  const t1 = setInterval(tick, 5000);
 
-  loadWeather(weather);
-  loadSystem(right.querySelector('#today-sys'), battery);
-  const sysTimer = setInterval(() => loadSystem(right.querySelector('#today-sys'), battery), 30000);
+  // ---- weather ----
+  (async () => {
+    const W = await import('../services/weather.js');
+    try {
+      const w = await W.here();
+      const now = W.describe(w.current.code, w.current.day);
+      const u = W.tempUnit();
+      weather.replaceChildren(el('div', { class: 'hstack', style: 'gap:12px' },
+        el('div', { style: 'font-size:40px;line-height:1' }, now.icon),
+        el('div', { class: 'grow' },
+          el('div', { class: 'big num' }, `${Math.round(w.current.temp)}${u}`),
+          el('div', { class: 'small dim' }, `${now.text}${w.place ? ` · ${w.place}` : ''}`)),
+        el('div', { class: 'small dim', style: 'text-align:right' },
+          el('div', {}, `Feels ${Math.round(w.current.feels)}°`),
+          el('div', {}, `💧 ${w.current.humidity ?? '—'}%`),
+          el('div', {}, `↑${Math.round(w.daily[0]?.max ?? 0)}° ↓${Math.round(w.daily[0]?.min ?? 0)}°`))));
+      if (canUse('forecast')) {
+        forecastBox.replaceChildren(
+          el('div', { class: 'hstack scroll', style: 'gap:4px;overflow-x:auto;padding-bottom:2px' },
+            ...w.hourly.map((h, i) => el('div', { class: 'col', style: 'align-items:center;gap:2px;min-width:44px', title: `${h.rain}% chance of rain` },
+              el('div', { class: 'tiny dim' }, i === 0 ? 'Now' : h.time.toLocaleTimeString([], { hour: 'numeric' })),
+              el('div', { style: 'font-size:16px' }, W.describe(h.code, h.day).icon),
+              el('div', { class: 'small num' }, `${Math.round(h.temp)}°`)))),
+          el('div', { class: 'col gap-4' }, ...w.daily.slice(1, 7).map((d, _, week) => el('div', { class: 'hstack small' },
+            el('span', { style: 'width:42px' }, d.date.toLocaleDateString([], { weekday: 'short' })),
+            el('span', { style: 'width:22px' }, W.describe(d.code).icon),
+            el('span', { class: 'dim', style: 'width:42px' }, d.rain ? `💧${d.rain}%` : ''),
+            el('span', { class: 'grow' }),
+            el('span', { class: 'num dim' }, `${Math.round(d.min)}°`),
+            rangeBar(d, week),
+            el('span', { class: 'num' }, `${Math.round(d.max)}°`)))));
+      } else {
+        forecastBox.replaceChildren(proNote('forecast', 'The next 12 hours and 7 days, for up to six cities.'));
+      }
+    } catch (e) {
+      weather.replaceChildren(el('div', { class: 'small dim' }, `Weather unavailable. ${e.message}`),
+        el('button', { class: 'btn small quiet', style: 'align-self:flex-start', onclick: () => show('settings', { pane: 'Weather' }) }, 'Choose your city'));
+    }
+  })();
 
-  return () => { clearInterval(timer); clearInterval(sysTimer); };
-}
+  // ---- calendar ----
+  let unsub = null;
+  (async () => {
+    const C = await import('../services/calendar.js');
+    const paint = () => {
+      if (!C.hasCalendars()) {
+        events.replaceChildren(el('div', { class: 'small dim' }, 'Add your calendar to see what’s next: paste its private iCal (.ics) address from Outlook, Google Calendar or iCloud.'),
+          el('button', { class: 'btn small quiet', style: 'align-self:flex-start', onclick: () => show('settings', { pane: 'Calendar' }) }, 'Add a calendar'));
+        return;
+      }
+      const list = C.upcoming(3).slice(0, 6);
+      events.replaceChildren(
+        ...(C.error() ? [el('div', { class: 'small warn' }, C.error())] : []),
+        ...list.map((e) => {
+          const now = e.start <= Date.now() && e.end > Date.now();
+          return el('div', { class: 'item', style: 'padding:5px 6px' },
+            el('div', { style: `width:3px;align-self:stretch;border-radius:2px;background:${now ? 'var(--live)' : 'var(--accent)'}` }),
+            el('div', { class: 'main' },
+              el('div', { class: 'ellipsis', style: 'font-weight:600' }, e.title, now ? el('span', { class: 'badge live', style: 'margin-left:6px' }, 'NOW') : null),
+              el('div', { class: 'small dim ellipsis' }, e.allDay ? `${dayLabel(e.start)} · all day` : `${dayLabel(e.start)} · ${fmtTime(e.start)}–${fmtTime(e.end)}`, e.location ? ` · ${e.location}` : '')),
+            e.join ? el('button', { class: 'btn small', onclick: () => C.join(e) }, 'Join') : null);
+        }));
+      if (!list.length) events.append(el('div', { class: 'small dim' }, 'Nothing in the next three days.'));
+    };
+    paint();
+    unsub = C.subscribe(paint);
+  })();
 
-async function loadWeather(target) {
-  try {
-    // Approximate location from IP, then the free Open-Meteo forecast. No key, no account.
-    const loc = await fetch('https://ipapi.co/json/').then((r) => r.json());
-    const url = `https://api.open-meteo.com/v1/forecast?latitude=${loc.latitude}&longitude=${loc.longitude}`
-              + '&current=temperature_2m,weather_code&timezone=auto';
-    const w = await fetch(url).then((r) => r.json());
-    const code = w.current?.weather_code ?? 0;
-    const [text, icon] = CODES[code] || ['—', '🌡'];
-    target.replaceChildren(
-      el('div', { style: 'display:flex;align-items:center;gap:10px' },
-        el('div', { style: 'font-size:30px' }, icon),
-        el('div', {},
-          el('div', { class: 'big mono' }, `${Math.round(w.current?.temperature_2m ?? 0)}°`),
-          el('div', { class: 'small dim' }, `${text} · ${loc.city ?? ''}`))));
-  } catch {
-    target.replaceChildren(el('div', { class: 'small dim' }, 'Weather unavailable (no connection).'));
+  // ---- this PC ----
+  async function loadSystem() {
+    const s = await invoke('system_stats').catch(() => null);
+    if (!s) { sys.replaceChildren(el('div', { class: 'small dim' }, 'Unavailable.')); return; }
+    const row = (k, v) => el('div', { class: 'hstack small' }, el('span', { class: 'dim grow' }, k), el('span', { class: 'num' }, v));
+    sys.replaceChildren(
+      row('Battery', s.battery_percent == null ? 'Plugged in' : `${s.battery_percent}%${s.battery_charging ? ' · charging' : ''}`),
+      row('Memory', `${Math.round((s.ram_used / s.ram_total) * 100)}% used`),
+      row('CPU', `${Math.round(s.cpu_percent)}%`),
+      row('Up for', fmtDuration(s.uptime_seconds)));
   }
-}
+  loadSystem();
+  const t2 = setInterval(loadSystem, 20000);
 
-async function loadSystem(target, batteryLine) {
-  const s = await invoke('system_stats').catch(() => null);
-  if (!s) { target.replaceChildren(el('div', { class: 'small dim' }, 'System info needs the app window.')); return; }
-
-  const rows = [
-    ['Memory', `${Math.round((s.ram_used / s.ram_total) * 100)}% used`],
-    ['CPU', `${Math.round(s.cpu_percent)}%`],
-    ['Uptime', formatUptime(s.uptime_seconds)],
-    ['Computer', s.host_name || '—'],
-  ];
-  target.replaceChildren(...rows.map(([k, v]) =>
-    el('div', { style: 'display:flex;justify-content:space-between' },
-      el('span', { class: 'dim small' }, k), el('span', { class: 'small mono' }, v))));
-
-  if (s.battery_percent !== null && s.battery_percent !== undefined) {
-    batteryLine.textContent = `🔋 ${s.battery_percent}%${s.battery_charging ? ' · charging' : ''}`;
-  } else {
-    batteryLine.textContent = '🔌 Plugged in (no battery)';
-  }
-}
-
-function formatUptime(seconds) {
-  const h = Math.floor((seconds || 0) / 3600), m = Math.floor(((seconds || 0) % 3600) / 60);
-  return h ? `${h} h ${m} min` : `${m} min`;
+  return () => { clearInterval(t1); clearInterval(t2); unsub?.(); };
 }

@@ -1,33 +1,109 @@
-// To-do: a simple checklist saved on this PC. Done items sink to the bottom.
-import { el, load, save } from '../store.js';
+// To-do, from the Mac's TodoView: lists, due dates with reminders (a Windows
+// notification and a flash on the pill), notes, and done items that sink.
+// Type naturally: "Call mum tomorrow 6pm" sets the due time for you.
 
-const KEY = 'todo.items';
+import { el, load, save, dayLabel, fmtTime } from '../store.js';
+import { iconBtn, menu, toast, prompt, empty } from '../ui.js';
+import * as R from '../services/reminders.js';
+import { parseWhen } from './quickadd.js';
 
-export function render(root) {
-  let items = load(KEY, []);
-  const list = el('div', { class: 'col', style: 'overflow:auto;flex:1;min-height:0;gap:4px' });
-  const input = el('input', { class: 'field', placeholder: 'Add a to-do and press Enter' });
-  const persist = () => save(KEY, items);
+export function render(root, opts = {}) {
+  let list = load('todo.list', 'All');
+  let showDone = load('todo.showDone', true);
+  const input = el('input', { class: 'field', placeholder: 'Add a to-do… e.g. “Pay rent on the 1st” or “Call mum tomorrow 6pm”' });
+  const hint = el('div', { class: 'tiny faint', style: 'min-height:14px' });
+  const listsBox = el('div', { class: 'col gap-4' });
+  const items = el('div', { class: 'col gap-4 scroll', style: 'flex:1' });
 
-  function paint() {
-    const sorted = [...items.filter((i) => !i.done), ...items.filter((i) => i.done)];
-    list.replaceChildren(...sorted.map((item) => el('div', { class: 'card', style: 'display:flex;gap:10px;align-items:center;padding:7px 12px' },
-      el('input', { type: 'checkbox', checked: item.done, style: 'cursor:pointer',
-        onchange: () => { item.done = !item.done; persist(); paint(); } }),
-      el('div', { style: `flex:1;${item.done ? 'text-decoration:line-through;opacity:.5' : ''}` }, item.text),
-      el('button', { class: 'btn quiet', title: 'Delete', onclick: () => { items = items.filter((i) => i !== item); persist(); paint(); } }, '✕'))));
-    if (!items.length) list.append(el('div', { class: 'small dim', style: 'padding:6px' }, 'Nothing to do. Nice.'));
+  const lists = () => ['All', 'Today', 'Upcoming', ...new Set(['Inbox', ...load('todo.lists', []), ...R.todos().map((t) => t.list || 'Inbox')])];
+
+  function visible() {
+    const now = new Date(); const endOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1).getTime();
+    return R.todos().filter((t) => {
+      if (!showDone && t.done) return false;
+      if (list === 'All') return true;
+      if (list === 'Today') return t.due && t.due < endOfDay;
+      if (list === 'Upcoming') return t.due && t.due >= endOfDay;
+      return (t.list || 'Inbox') === list;
+    }).sort((a, b) => Number(a.done) - Number(b.done) || (a.due || Infinity) - (b.due || Infinity) || b.created - a.created);
   }
 
+  function paintLists() {
+    const all = R.todos();
+    listsBox.replaceChildren(...lists().map((name) => {
+      const count = name === 'All' ? all.filter((t) => !t.done).length : name === 'Today' || name === 'Upcoming' ? null : all.filter((t) => !t.done && (t.list || 'Inbox') === name).length;
+      return el('div', { class: `item clickable ${list === name ? 'selected' : ''}`, style: 'padding:5px 8px', onclick: () => { list = name; save('todo.list', list); paint(); } },
+        el('span', {}, { All: '📋', Today: '📅', Upcoming: '🗓', Inbox: '📥' }[name] || '•'), el('span', { class: 'main ellipsis' }, name),
+        count ? el('span', { class: 'tiny faint' }, count) : null);
+    }), el('button', { class: 'btn small ghost', onclick: async () => {
+      const name = await prompt('New list', { placeholder: 'e.g. Shopping', ok: 'Add' });
+      if (name && !lists().includes(name)) { save('todo.lists', [...load('todo.lists', []), name]); list = name; save('todo.list', list); paint(); }
+    } }, '+ New list'));
+  }
+
+  function due(t) {
+    if (!t.due) return null;
+    const late = !t.done && t.due < Date.now();
+    return el('span', { class: `tiny ${late ? 'bad' : 'faint'}` }, `${t.remind ? '🔔 ' : ''}${dayLabel(t.due)} ${fmtTime(t.due)}`);
+  }
+
+  function paintItems() {
+    const shown = visible();
+    items.replaceChildren(...shown.map((t) => {
+      const row = el('div', { class: 'item', style: 'padding:6px 10px' },
+        el('input', { type: 'checkbox', checked: t.done, onchange: () => update(t.id, { done: !t.done, doneAt: Date.now() }) }),
+        el('div', { class: 'main', ondblclick: () => rename(t) },
+          el('div', { style: `${t.done ? 'text-decoration:line-through;opacity:.5' : ''}` }, t.text),
+          el('div', { class: 'hstack', style: 'gap:8px' }, due(t), list === 'All' && t.list && t.list !== 'Inbox' ? el('span', { class: 'tiny faint' }, t.list) : null,
+            t.notes ? el('span', { class: 'tiny faint ellipsis' }, t.notes) : null)),
+        el('div', { class: 'actions' }, iconBtn('⏰', 'Due date', () => setDue(t)), iconBtn('🗑', 'Delete', () => del(t.id))));
+      row.addEventListener('contextmenu', (e) => menu(e, [
+        { label: 'Rename', run: () => rename(t) },
+        { label: t.due ? 'Change due date' : 'Add a due date', run: () => setDue(t) },
+        t.due ? { label: 'Remove due date', run: () => update(t.id, { due: null, remind: false }) } : null,
+        { label: 'Add a note', run: async () => { const n = await prompt('Note', { value: t.notes || '' }); if (n !== null) update(t.id, { notes: n }); } },
+        'sep',
+        ...lists().filter((l) => !['All', 'Today', 'Upcoming', t.list || 'Inbox'].includes(l)).map((l) => ({ label: `Move to ${l}`, run: () => update(t.id, { list: l }) })),
+        { label: 'Delete', danger: true, run: () => del(t.id) },
+      ]));
+      return row;
+    }));
+    if (!shown.length) items.append(empty('✅', list === 'Today' ? 'Nothing due today' : 'All done', 'Add a to-do above. Give it a time to get a reminder.'));
+  }
+
+  function paint() { paintLists(); paintItems(); }
+  const update = (id, patch) => { R.saveTodos(R.todos().map((t) => (t.id === id ? { ...t, ...patch, ...(patch.due !== undefined ? { notified: false } : {}) } : t))); paint(); };
+  const del = (id) => { const before = R.todos(); R.saveTodos(before.filter((t) => t.id !== id)); paint(); toast('Deleted'); };
+  async function rename(t) { const v = await prompt('Rename', { value: t.text }); if (v) update(t.id, { text: v }); }
+  async function setDue(t) {
+    const v = await prompt('When is it due?', { value: t.due ? `${dayLabel(t.due)} ${fmtTime(t.due)}` : '', placeholder: 'e.g. tomorrow 9am, Friday, 12 March 5pm' });
+    if (v === null) return;
+    const when = parseWhen(v);
+    if (!when.date) return toast('I couldn’t understand that date. Try “tomorrow 9am”.', { error: true });
+    update(t.id, { due: when.date.getTime(), remind: true });
+  }
+
+  input.addEventListener('input', () => {
+    const w = parseWhen(input.value);
+    hint.textContent = w.date ? `📅 Due ${dayLabel(w.date)}${w.hasTime ? ` at ${fmtTime(w.date)}` : ''} · reminder on` : '';
+  });
   input.addEventListener('keydown', (e) => {
     if (e.key !== 'Enter' || !input.value.trim()) return;
-    items.unshift({ id: crypto.randomUUID(), text: input.value.trim().slice(0, 300), done: false });
-    input.value = ''; persist(); paint();
+    const w = parseWhen(input.value);
+    const target = ['All', 'Today', 'Upcoming'].includes(list) ? 'Inbox' : list;
+    let due = w.date ? w.date.getTime() : null;
+    if (!due && list === 'Today') { const d = new Date(); d.setHours(18, 0, 0, 0); due = d.getTime(); }
+    R.addTodo(w.date ? w.text : input.value.trim(), { due, remind: !!w.date, list: target });
+    input.value = ''; hint.textContent = '';
+    paint();
   });
-  const clearDone = el('button', { class: 'btn quiet', onclick: () => { items = items.filter((i) => !i.done); persist(); paint(); } }, 'Clear done');
 
+  root.append(el('div', { class: 'row fill' },
+    el('div', { class: 'col scroll', style: 'flex:0 0 170px;gap:4px' }, listsBox,
+      el('label', { class: 'hstack tiny dim', style: 'margin-top:6px;cursor:pointer' }, el('input', { type: 'checkbox', checked: showDone, onchange: (e) => { showDone = e.target.checked; save('todo.showDone', showDone); paint(); } }), 'Show done'),
+      el('button', { class: 'btn small ghost', onclick: () => { R.saveTodos(R.todos().filter((t) => !t.done)); paint(); } }, 'Clear done')),
+    el('div', { class: 'col', style: 'flex:1;min-width:0;gap:6px' }, input, hint, items)));
   paint();
-  setTimeout(() => input.focus(), 30);
-  root.append(el('div', { class: 'col', style: 'height:100%' },
-    el('div', { style: 'display:flex;gap:6px' }, el('div', { style: 'flex:1' }, input), clearDone), list));
+  setTimeout(() => input.focus(), 40);
+  return () => {};
 }

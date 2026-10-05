@@ -1,177 +1,232 @@
-// Settings: appearance, modules, AI keys, access code and shortcuts.
+// Settings.
 import { el, load, save } from '../store.js';
-import { THEMES, applyTheme, currentThemeId } from '../themes.js';
-import { MODULES, isEnabled, setEnabled, invoke, show } from '../app.js';
-import { PROVIDERS, setKey } from './ai.js';
+import { invoke, openUrl } from '../native.js';
+import { THEMES, applyTheme, currentThemeId, customTheme, saveCustom } from '../themes.js';
+import { MODULES } from '../modules.js';
+import { pref, setPref, SHORTCUT_NAMES, DEFAULTS } from '../prefs.js';
+import { canUse, FEATURES, tierLabel } from '../features.js';
 import { tier, TIERS, maskedCode, deactivate } from '../license.js';
-import { keyField, BUY_URL } from './activation.js';
+import { isEnabled, setEnabled, tabOrder, setTabOrder, appInfo, registerShortcuts } from '../app.js';
+import { setting, toggle, select, segmented, toast, confirm, button, prompt } from '../ui.js';
+import { keyField, BUY_URL, badge } from './activation.js';
 
-export function render(root) {
-  const body = el('div', { class: 'col', style: 'overflow:auto;flex:1;min-height:0;padding-right:4px' });
-  const panes = {
-    Appearance: paneAppearance, Modules: paneModules, AI: paneAI,
-    Access: paneAccess, Shortcuts: paneShortcuts, About: paneAbout,
-  };
-  let current = load('settings.pane', 'Appearance');
-  if (!panes[current]) current = 'Appearance';
+export const PANES = { General, Appearance, Tabs, Shortcuts, AI, Calendar, Weather, Clipboard, Security, Rules, Automations, Access, About };
+const ICONS = { General: '⚙', Appearance: '🎨', Tabs: '🗂', Shortcuts: '⌨', AI: '✨', Calendar: '📅', Weather: '⛅', Clipboard: '📋', Security: '🔒', Rules: '🧭', Automations: '🤖', Access: '🔑', About: 'ℹ' };
 
-  const nav = el('div', { style: 'display:flex;gap:4px;flex-wrap:wrap' },
-    ...Object.keys(panes).map((name) => el('button', {
-      class: `tab${name === current ? ' active' : ''}`,
-      onclick: () => { current = name; save('settings.pane', name); paint(); },
-    }, name)));
-
+export function render(root, opts = {}) {
+  let current = opts.pane || load('settings.pane', 'General');
+  if (!PANES[current]) current = 'General';
+  const nav = el('div', { class: 'col gap-4 scroll', style: 'flex:0 0 150px' });
+  const body = el('div', { class: 'scroll', style: 'flex:1;padding-right:6px' });
   function paint() {
-    [...nav.children].forEach((b) => b.classList.toggle('active', b.textContent === current));
-    body.replaceChildren(panes[current]());
+    nav.replaceChildren(...Object.keys(PANES).map((n) => el('div', { class: `item clickable ${n === current ? 'selected' : ''}`, style: 'padding:5px 8px', onclick: () => { current = n; save('settings.pane', n); paint(); } }, el('span', {}, ICONS[n]), el('span', { class: 'main' }, n))));
+    body.replaceChildren(el('div', { class: 'col' }, ...[].concat(PANES[current](paint, opts))));
+    opts = {};
   }
-
+  root.append(el('div', { class: 'row fill' }, nav, body));
   paint();
-  root.append(el('div', { class: 'col', style: 'height:100%' }, nav, body));
+}
+const card = (title, ...rows) => el('div', { class: 'card col', style: 'gap:0' }, title ? el('div', { class: 'section-title', style: 'margin-bottom:4px' }, title) : null, ...rows);
+const prefToggle = (key, gate) => toggle(pref(key), (v) => { if (gate && !canUse(gate)) { toast(`${FEATURES[gate].title} is part of ${tierLabel(FEATURES[gate].tier)}.`); return; } setPref(key, v); });
+
+function General(repaint, opts) {
+  const auto = toggle(false, (v) => invoke('set_autostart', { on: v }).catch((e) => toast(e.message, { error: true })));
+  invoke('get_autostart').then((on) => { auto.querySelector('input').checked = on; });
+  const upd = el('div', { class: 'small dim' }, '');
+  const check = async () => {
+    upd.textContent = 'Checking…';
+    const U = await import('../services/updates.js'); const s = await U.check();
+    if (s.error) upd.textContent = `Couldn't check: ${s.error}`;
+    else if (s.available) upd.replaceChildren(`Version ${s.available.version} is ready. `, el('button', { class: 'btn small', onclick: async () => { upd.textContent = 'Downloading and checking the update…'; try { await U.install(); } catch (e) { upd.textContent = e.message; } } }, 'Install update'));
+    else upd.textContent = 'You have the latest version.';
+  };
+  if (opts.checkUpdates) check();
+  const sizeSel = segmented([{ value: 'compact', label: 'Small' }, { value: 'standard', label: 'Standard' }, { value: 'large', label: 'Large' }], pref('ui.size'), (v) => { if (v !== 'standard' && !canUse('notchResize')) { toast('Notch size is part of Pro.'); sizeSel.setValue('standard'); return; } setPref('ui.size', v); });
+  return [
+    card('Startup and updates',
+      setting('Start with Windows', 'Notch apple opens quietly when you sign in.', auto),
+      setting('Check for updates automatically', 'You’re told when a new version is out.', prefToggle('updates.auto')),
+      el('div', { class: 'hstack', style: 'padding:8px 0' }, button('Check now', check, { kind: 'quiet', small: true }), upd)),
+    card('The notch',
+      setting('Position', 'Where the pill sits on the top edge.', segmented([{ value: 'left', label: 'Left' }, { value: 'center', label: 'Centre' }, { value: 'right', label: 'Right' }], pref('ui.position'), (v) => setPref('ui.position', v))),
+      setting('Size', canUse('notchResize') ? '' : 'Small and Large are part of Pro.', sizeSel),
+      setting('Open when the mouse rests on the pill', '', prefToggle('ui.hoverOpen')),
+      setting('Open by pushing the mouse to the top edge', 'Pro', prefToggle('ui.edgeTrigger', 'edgeTrigger')),
+      setting('Close when I click somewhere else', '', prefToggle('ui.closeOnBlur')),
+      setting('Hide over fullscreen videos and games', '', prefToggle('ui.hideFullscreen')),
+      setting('Show the time on the pill', '', prefToggle('ui.showClock'))),
+    card('Your data',
+      setting('Back up your setup', 'Tabs, settings, notes, to-dos, snippets… (not keys).', button('Export…', async () => {
+        const data = {}; for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); if (!/^(ai\.key\.|license\.)/.test(k)) data[k] = localStorage.getItem(k); }
+        const p = await invoke('save_file_as', { name: `NotchApple-backup-${new Date().toISOString().slice(0, 10)}.json`, base64: btoa(unescape(encodeURIComponent(JSON.stringify(data)))) });
+        if (p) toast('Backup saved');
+      }, { kind: 'quiet', small: true })),
+      setting('Restore a backup', '', button('Import…', async () => {
+        const p = await invoke('pick_file'); if (!p) return;
+        try { const f = await invoke('read_file_base64', { path: p }); const data = JSON.parse(decodeURIComponent(escape(atob(f.data))));
+          if (!(await confirm('Restore this backup?', { ok: 'Restore', detail: 'Your current settings, notes and to-dos are replaced.' }))) return;
+          for (const [k, v] of Object.entries(data)) localStorage.setItem(k, v); location.reload(); } catch (e) { toast(`That isn't a Notch apple backup (${e.message}).`, { error: true }); }
+      }, { kind: 'quiet', small: true })),
+      setting('Reset everything', 'Back to a fresh install (your key stays).', button('Reset…', async () => {
+        if (!(await confirm('Reset Notch apple?', { ok: 'Reset', danger: true, detail: 'Removes all settings, notes, to-dos, clipboard history and snippets on this PC.' }))) return;
+        const keep = {}; for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); if (/^license\./.test(k)) keep[k] = localStorage.getItem(k); }
+        localStorage.clear(); for (const [k, v] of Object.entries(keep)) localStorage.setItem(k, v); location.reload();
+      }, { kind: 'danger', small: true }))),
+  ];
 }
 
-// ---- panes ----
-
-function paneAppearance() {
-  const wrap = el('div', { class: 'col' });
-  const byCategory = new Map();
-  for (const t of THEMES) {
-    if (!byCategory.has(t.category)) byCategory.set(t.category, []);
-    byCategory.get(t.category).push(t);
+function Appearance(repaint) {
+  const groups = {};
+  for (const t of [...THEMES, customTheme()]) (groups[t.category] ||= []).push(t);
+  const out = [];
+  for (const [cat, list] of Object.entries(groups)) {
+    out.push(el('div', { class: 'section-title hstack' }, cat, cat === 'Pro' && !canUse('proThemes') ? badge('proThemes') : null));
+    out.push(el('div', { class: 'grid', style: 'grid-template-columns:repeat(auto-fill,minmax(110px,1fr))' }, ...list.map((t) => el('div', {
+      class: `tile ${t.id === currentThemeId() ? 'selected' : ''}`, onclick: () => {
+        if (t.pro && !canUse(t.custom ? 'customColors' : 'proThemes')) return toast(`${t.name} is a Pro theme.`);
+        applyTheme(t.id); repaint();
+      } }, el('div', { style: `width:32px;height:32px;border-radius:50%;background:${t.bg};border:3px solid ${t.primary};box-shadow:inset 0 0 0 4px ${t.secondary}` }), el('div', { class: 'name' }, t.name)))));
   }
-  for (const [category, list] of byCategory) {
-    wrap.append(el('div', { class: 'section-title' }, category));
-    wrap.append(el('div', { class: 'grid', style: 'grid-template-columns:repeat(auto-fill,minmax(120px,1fr))' },
-      ...list.map((t) => {
-        const active = t.id === currentThemeId();
-        return el('div', {
-          class: 'tile', style: active ? 'border-color:var(--accent);background:rgba(255,255,255,.13)' : '',
-          onclick: () => { applyTheme(t.id); paneRefresh(); },
-        },
-          el('div', { style: `width:34px;height:34px;border-radius:50%;background:${t.bg};`
-            + `border:2px solid ${t.primary};display:grid;place-items:center` },
-            el('div', { style: `width:13px;height:13px;border-radius:50%;background:${t.primary}` })),
-          el('div', { class: 'name' }, t.name));
-      })));
+  if (canUse('customColors')) {
+    const c = { ...customTheme(), ...JSON.parse(localStorage.getItem('theme.custom') || '{}') };
+    const col = (k, label) => el('label', { class: 'hstack small' }, el('input', { type: 'color', value: c[k], oninput: (e) => { c[k] = e.target.value; saveCustom({ name: c.name, bg: c.bg, primary: c.primary, secondary: c.secondary, glow: c.glow ?? 0.4 }); } }), label);
+    out.push(card('Your theme (pick it above)', el('div', { class: 'hstack wrap', style: 'gap:14px;padding:6px 0' }, col('bg', 'Background'), col('primary', 'Accent'), col('secondary', 'Second accent'))));
   }
-  return wrap;
+  out.push(card('Style',
+    setting('Font', canUse('fontsAndIcons') ? '' : 'Pro', select([{ value: 'system', label: 'Segoe UI' }, { value: 'rounded', label: 'Rounded' }, { value: 'mono', label: 'Monospace' }], pref('ui.font'), (v) => (canUse('fontsAndIcons') ? setPref('ui.font', v) : toast('Fonts are part of Pro.')), { cls: 'auto' })),
+    setting('Animations', canUse('animationStyles') ? '' : 'Pro', select([{ value: 'smooth', label: 'Smooth' }, { value: 'fast', label: 'Fast' }, { value: 'off', label: 'Off' }], pref('ui.animation'), (v) => (canUse('animationStyles') ? setPref('ui.animation', v) : toast('Animation styles are part of Pro.')), { cls: 'auto' })),
+    setting('Sounds', 'When the notch opens and timers finish (Pro).', prefToggle('ui.sounds', 'customSounds')),
+    setting('Tab names', '', select([{ value: 'auto', label: 'When they fit' }, { value: 'always', label: 'Icons only' }], pref('ui.compactTabs'), (v) => setPref('ui.compactTabs', v), { cls: 'auto' }))));
+  return out;
 }
 
-function paneRefresh() {
-  // Re-render the whole Settings page so swatches and colours update.
-  const page = document.getElementById('page');
-  page.replaceChildren();
-  render(page);
+function Tabs(repaint) {
+  const order = tabOrder();
+  return [el('div', { class: 'small dim' }, 'Turn tabs on or off. Drag tabs in the bar to reorder them.'),
+    ...order.filter((id) => id !== 'settings').map((id) => MODULES.find((m) => m.id === id)).map((m, i, arr) => el('div', { class: 'item', style: 'border:1px solid var(--border)' },
+      el('span', { style: 'font-size:18px;width:24px' }, m.icon),
+      el('div', { class: 'main' }, el('div', { class: 'hstack', style: 'gap:6px' }, el('b', {}, m.name), m.feature ? badge(m.feature) : null), el('div', { class: 'tiny dim' }, m.blurb)),
+      el('button', { class: 'icon-btn', title: 'Move up', onclick: () => { if (i) { const o = tabOrder(); const a = o.indexOf(m.id), b = o.indexOf(arr[i - 1].id); [o[a], o[b]] = [o[b], o[a]]; setTabOrder(o); repaint(); } } }, '↑'),
+      toggle(isEnabled(m.id), (v) => setEnabled(m.id, v))))];
 }
 
-function paneModules() {
-  return el('div', { class: 'col' },
-    el('div', { class: 'small dim' }, 'Every module is optional. Turning one off removes its tab straight away.'),
-    ...MODULES.filter((m) => m.id !== 'settings').map((m) => {
-      const on = isEnabled(m.id);
-      return el('div', { class: 'card', style: 'display:flex;gap:10px;align-items:center;padding:9px 12px' },
-        el('div', { style: 'font-size:17px' }, m.icon),
-        el('div', { style: 'flex:1' }, m.name),
-        el('button', { class: `btn ${on ? '' : 'quiet'}`, onclick: (e) => {
-          setEnabled(m.id, !on);
-          paneRefresh();
-        } }, on ? 'On' : 'Off'));
+function Shortcuts(repaint) {
+  const s = pref('shortcuts');
+  const gate = { palette: 'commandPalette', 'ai:screen': 'aiCapture', 'tab:quickadd': 'quickAdd', 'focus:toggle': 'focus' };
+  return [card('Global shortcuts (work in any app)', ...Object.keys(SHORTCUT_NAMES).map((k) => {
+    const f = el('input', { class: 'field mono auto', style: 'width:170px', value: s[k] || '', placeholder: 'Click, then press keys', readonly: true });
+    f.addEventListener('keydown', (e) => {
+      e.preventDefault();
+      if (e.key === 'Escape') return f.blur();
+      if (e.key === 'Backspace' || e.key === 'Delete') { f.value = ''; } else {
+        if (['Control', 'Alt', 'Shift', 'Meta'].includes(e.key)) return;
+        const keyName = e.code.startsWith('Key') ? e.code.slice(3) : e.code.startsWith('Digit') ? e.code.slice(5) : e.code.replace('Arrow', '');
+        f.value = [e.ctrlKey && 'Ctrl', e.altKey && 'Alt', e.shiftKey && 'Shift', e.metaKey && 'Super', keyName].filter(Boolean).join('+');
+        if (!e.ctrlKey && !e.altKey && !e.metaKey) { toast('Use Ctrl or Alt with the key.', { error: true }); f.value = s[k] || ''; return; }
+      }
+      setPref('shortcuts', { ...pref('shortcuts'), [k]: f.value });
+    });
+    return setting(SHORTCUT_NAMES[k], gate[k] && !canUse(gate[k]) ? 'Pro' : '', f);
+  }), el('div', { class: 'hstack', style: 'padding-top:8px' }, button('Restore defaults', () => { setPref('shortcuts', DEFAULTS.shortcuts); repaint(); }, { kind: 'quiet', small: true }))),
+  card('Inside the notch', setting('Command palette', '', el('kbd', {}, 'Ctrl+K')), setting('Switch tab', '', el('kbd', {}, 'Ctrl+1…9')), setting('Close', '', el('kbd', {}, 'Esc')))];
+}
+
+function AI() {
+  return import('../services/ai.js').then(() => []), aiPane();
+}
+function aiPane() {
+  const box = el('div', { class: 'col' }, el('div', { class: 'small dim' }, 'Keys stay on this PC and go only to that provider. Gemini and OpenRouter have free tiers.'));
+  import('../services/ai.js').then((AIs) => {
+    box.append(...Object.entries(AIs.PROVIDERS).map(([id, p]) => {
+      const f = el('input', { class: 'field', type: 'password', placeholder: p.noKey ? 'No key needed' : 'Paste key…', value: AIs.keyOf(id), disabled: !!p.noKey });
+      f.onchange = () => { AIs.setKey(id, f.value); toast(`${p.name} key saved`); };
+      return el('div', { class: 'card col gap-6' }, el('div', { class: 'hstack' }, el('b', { class: 'grow' }, p.name), el('span', { class: 'tiny dim' }, p.free), el('a', { onclick: () => openUrl(p.keyUrl) }, p.noKey ? 'Get Ollama →' : 'Get a key →')), f);
     }));
+  });
+  return box;
 }
 
-function paneAI() {
-  return el('div', { class: 'col' },
-    el('div', { class: 'small dim' },
-      'Keys are stored on this PC only and sent only to that provider. Gemini and OpenRouter have free tiers.'),
-    ...Object.entries(PROVIDERS).filter(([id]) => id !== 'ollama').map(([id, p]) => {
-      const field = el('input', { class: 'field', type: 'password', placeholder: 'Paste key…',
-        value: load(`ai.key.${id}`, '') });
-      field.addEventListener('change', () => { setKey(id, field.value.trim()); });
-      return el('div', { class: 'card col', style: 'gap:6px' },
-        el('div', { style: 'display:flex;align-items:center' },
-          el('div', { class: 'section-title' }, p.name),
-          el('div', { class: 'small dim', style: 'margin-left:auto' }, p.free)),
-        field,
-        el('button', { class: 'btn quiet', style: 'align-self:flex-start',
-          onclick: () => invoke('open_url', { url: p.keyUrl }) }, 'Get a key →'));
-    }));
+function Calendar(repaint) {
+  const url = el('input', { class: 'field', placeholder: 'https://… .ics (or webcal://…)' }), name = el('input', { class: 'field', placeholder: 'Name (e.g. Work)', style: 'width:140px' });
+  const status = el('div', { class: 'small dim' });
+  return [card('Calendars', el('div', { class: 'small dim', style: 'padding-bottom:6px' }, 'Paste the private iCal address of your calendar. Outlook: Settings → Calendar → Shared calendars → Publish. Google: Calendar settings → “Secret address in iCal format”. iCloud: share as Public Calendar.'),
+    ...load('calendar.urls', []).map((c) => setting(c.name, c.url.replace(/^(https?:\/\/[^/]+).*/, '$1/…'), button('Remove', async () => { (await import('../services/calendar.js')).removeCalendar(c.url); repaint(); }, { kind: 'quiet', small: true }))),
+    el('div', { class: 'hstack', style: 'padding-top:8px' }, name, url, button('Add', async () => {
+      if (!/^(https|webcal):\/\//i.test(url.value.trim())) return toast('Paste an https:// or webcal:// address.', { error: true });
+      status.textContent = 'Loading…'; const C = await import('../services/calendar.js'); await C.addCalendar(url.value, name.value || 'Calendar');
+      status.textContent = C.error() || `Added: ${C.upcoming(7).length} events in the next week.`; repaint();
+    })), status),
+  card('Alerts', setting('Meeting alerts', 'A countdown on the pill and a notification 5 minutes before, with a Join button for Teams, Zoom and Meet (Pro).', toggle(load('calendar.alerts', true), (v) => (canUse('meetingAlert') ? save('calendar.alerts', v) : toast('Meeting alerts are part of Pro.')))))];
 }
 
-function paneAccess() {
+function Weather(repaint) {
+  const q = el('input', { class: 'field', placeholder: 'Search a city' }), results = el('div', { class: 'col gap-4' });
+  q.onkeydown = async (e) => { if (e.key !== 'Enter') return; const W = await import('../services/weather.js'); const r = await W.searchCity(q.value).catch(() => []);
+    results.replaceChildren(...r.map((c) => el('div', { class: 'item clickable', onclick: () => { save('weather.city', c); toast(`Weather for ${c.name}`); repaint(); } }, el('span', { class: 'main' }, `${c.name}, ${c.region}`)))); };
+  const city = load('weather.city', null);
+  return [card('Location', setting('Your city', city ? city.name : 'Worked out from your internet connection', city ? button('Use my connection', () => { save('weather.city', null); repaint(); }, { kind: 'quiet', small: true }) : el('span')), el('div', { style: 'padding-top:6px' }, q), results),
+    card('Units and alerts', setting('Temperature', '', segmented([{ value: 'auto', label: 'Auto' }, { value: 'c', label: '°C' }, { value: 'f', label: '°F' }], load('weather.units', 'auto'), (v) => save('weather.units', v))),
+      setting('Rain alerts', 'A nudge before it starts raining (Pro).', toggle(load('weather.rainAlert', true), (v) => (canUse('rainAlert') ? save('weather.rainAlert', v) : toast('Rain alerts are part of Pro.')))))];
+}
+
+function Clipboard(repaint) {
+  const limits = [50, 100, 200, 500, 1000, 2500, 5000];
+  return [card('History', setting('Keep up to', '2,500 and 5,000 are Pro.', select(limits.map((n) => ({ value: n, label: `${n.toLocaleString()} items${n > 1000 && !canUse('clipboardUnlimited') ? ' (Pro)' : ''}` })), load('clipboard.limit', 200), (v) => {
+    if (Number(v) > 1000 && !canUse('clipboardUnlimited')) { toast('Longer history is part of Pro.'); return repaint(); } save('clipboard.limit', Number(v)); }, { cls: 'auto' })),
+    setting('Record what I copy', 'Password managers are always skipped.', toggle(!load('clipboard.paused', false), async (on) => (await import('../services/clipboard.js')).setPaused(!on)))),
+  card('Never save copies from (Pro)', el('div', { class: 'small dim' }, (load('clipboard.ignoreApps', []).join(', ') || 'No apps.')),
+    el('div', { class: 'hstack', style: 'padding-top:6px' }, button('Add an app…', async () => { if (!canUse('clipboardUnlimited')) return toast('This is part of Pro.'); const a = await prompt('App name, as Windows shows it', { placeholder: 'e.g. Microsoft Teams' }); if (a) { save('clipboard.ignoreApps', [...load('clipboard.ignoreApps', []), a]); repaint(); } }, { kind: 'quiet', small: true }),
+      button('Clear list', () => { save('clipboard.ignoreApps', []); repaint(); }, { kind: 'ghost', small: true })))];
+}
+
+function Security(repaint) {
+  const avail = el('span', { class: 'tiny dim' }, 'Checking Windows Hello…');
+  invoke('hello_available').then((ok) => { avail.textContent = ok ? 'Windows Hello is set up on this PC.' : 'Windows Hello isn’t set up. Set it up in Windows Settings → Accounts → Sign-in options.'; });
+  return [card('Lock', setting('Require Windows Hello to open the notch', 'Face, fingerprint or PIN.', toggle(pref('lock.enabled'), async (v) => {
+    if (v && !(await invoke('hello_available').catch(() => false))) { toast('Set up Windows Hello first.', { error: true }); return repaint(); }
+    if (v && !(await invoke('hello_verify', { message: 'Turn on the Notch apple lock' }).catch(() => false))) return repaint();
+    setPref('lock.enabled', v);
+  })), setting('Ask again after', '', select([{ value: 0, label: 'Every time' }, { value: 60, label: '1 minute' }, { value: 300, label: '5 minutes' }, { value: 3600, label: '1 hour' }], pref('lock.grace'), (v) => setPref('lock.grace', Number(v)), { cls: 'auto' })), avail)];
+}
+
+function Rules(repaint) {
+  if (!canUse('appRules')) return [card('Per-app rules', el('div', { class: 'small dim' }, FEATURES.appRules.detail), el('div', { class: 'hstack', style: 'padding-top:6px' }, badge('appRules')))];
+  const list = load('rules.list', []);
+  const app = el('input', { class: 'field', placeholder: 'App name, e.g. PowerPoint' });
+  let action = 'hide';
+  return [card('When an app comes to the front', ...list.map((r, i) => setting(r.app, r.action === 'hide' ? 'Hide the pill' : `Switch to ${r.action.slice(4)}`, button('Remove', () => { list.splice(i, 1); save('rules.list', list); repaint(); }, { kind: 'quiet', small: true }))),
+    el('div', { class: 'hstack', style: 'padding-top:8px' }, app, select([{ value: 'hide', label: 'Hide the pill' }, ...MODULES.map((m) => ({ value: `tab:${m.id}`, label: `Switch to ${m.name}` }))], action, (v) => { action = v; }, { cls: 'auto' }),
+      button('Add', () => { if (!app.value.trim()) return; save('rules.list', [...list, { app: app.value.trim(), action }]); repaint(); })))];
+}
+
+function Automations(repaint) {
+  if (!canUse('automations')) return [card('AI automations', el('div', { class: 'small dim' }, FEATURES.automations.detail), el('div', { style: 'padding-top:6px' }, badge('automations')))];
+  const box = el('div', { class: 'col' });
+  import('../services/automations.js').then((A) => {
+    const name = el('input', { class: 'field', placeholder: 'Name, e.g. Morning briefing' }), p = el('textarea', { class: 'field', placeholder: 'What to ask, e.g. Give me one motivating quote and a tip for focus.', style: 'min-height:60px' }), time = el('input', { class: 'field auto', type: 'time', value: '08:00' });
+    box.append(...A.list().map((a) => card(a.name, el('div', { class: 'tiny dim' }, `${a.time} · ${a.prompt}`), a.lastAnswer ? el('div', { class: 'small', style: 'padding:6px 0' }, a.lastAnswer.slice(0, 300)) : null,
+      el('div', { class: 'hstack' }, button('Run now', async () => { toast('Running…'); try { await A.runNow(a); repaint(); } catch (e) { toast(e.message, { error: true }); } }, { kind: 'quiet', small: true }), button('Delete', () => { A.remove(a.id); repaint(); }, { kind: 'ghost', small: true })))),
+      card('New automation (weekdays)', name, p, el('div', { class: 'hstack', style: 'padding-top:6px' }, time, button('Add', () => { if (!p.value.trim()) return; A.add({ name: name.value || 'Automation', prompt: p.value.trim(), time: time.value }); repaint(); }))));
+  });
+  return box;
+}
+
+function Access(repaint) {
   const t = tier();
-  const removeBox = el('div', { class: 'card col', style: 'gap:8px' });
-
-  function askFirst() {
-    removeBox.replaceChildren(
-      el('div', { class: 'section-title' }, 'Remove the key from this PC'),
-      el('div', { class: 'small dim' },
-        'Notch apple goes back to Free here and this PC no longer counts towards your 3 devices. '
-        + 'You can enter the key again any time.'),
-      el('button', { class: 'btn quiet', style: 'align-self:flex-start', onclick: confirmStep }, 'Remove key…'));
-  }
-  function confirmStep() {
-    removeBox.replaceChildren(
-      el('div', { class: 'section-title warn' }, 'Remove the key?'),
-      el('div', { style: 'display:flex;gap:8px' },
-        el('button', { class: 'btn', onclick: async () => { await deactivate(); paneRefresh(); } }, 'Yes, remove it'),
-        el('button', { class: 'btn quiet', onclick: askFirst }, 'Cancel')));
-  }
-  askFirst();
-
-  return el('div', { class: 'col' },
-    el('div', { class: 'card col' },
-      el('div', { style: 'display:flex' }, el('div', { class: 'section-title' }, 'Your plan'),
-        el('div', { class: t ? 'ok' : 'dim', style: 'margin-left:auto;font-weight:600' }, TIERS[t])),
-      t ? el('div', { class: 'mono small dim' }, maskedCode()) : null,
-      el('div', { class: 'small dim' },
-        'Free has Today, AI, Sports, Browser, Search, To-do, Notes, World Clock and Tools. '
-        + 'Pro ($1, one time) adds Launcher, Clipboard, Focus, Translator, PC Stats and Shelf. '
-        + 'Keys work on the Mac app too, on up to 3 devices.')),
-    t < 2 ? el('div', { class: 'card col', style: 'align-items:center' },
-      el('div', { class: 'section-title', style: 'align-self:flex-start' }, t ? 'Enter a different key' : 'Enter a key'),
-      keyField(() => paneRefresh()),
-      el('button', { class: 'btn quiet', onclick: () => invoke('open_url', { url: BUY_URL }) }, 'Buy or recover a key →')) : null,
-    t ? removeBox : null,
-    el('div', { class: 'small dim' }, 'Lost your key or need help? notchapples.support@gmail.com'));
+  const feats = Object.entries(FEATURES);
+  return [card('Your plan', el('div', { class: 'hstack', style: 'padding:4px 0' }, el('div', { class: 'big grow' }, TIERS[t]), t ? el('span', { class: 'mono small dim' }, maskedCode()) : null),
+    el('div', { class: 'small dim' }, 'Pro is a one-time $1 and Ultimate $5, every future update included. One key works on up to 3 devices, Mac or Windows.')),
+  t < 2 ? card(t ? 'Enter a different key' : 'Enter a key', el('div', { style: 'padding:6px 0' }, keyField(() => repaint())), el('div', { class: 'hstack' }, button('Get Pro or Ultimate →', () => openUrl(BUY_URL), { kind: 'quiet' }))) : null,
+  t ? card('', setting('Remove the key from this PC', 'Back to Free here; frees one of your 3 devices.', button('Remove…', async () => { if (await confirm('Remove the key from this PC?', { ok: 'Remove', danger: true })) { await deactivate(); repaint(); } }, { kind: 'danger', small: true }))) : null,
+  card('What’s included', ...feats.map(([id, f]) => el('div', { class: 'hstack small', style: 'padding:3px 0' },
+    el('span', { style: 'width:16px' }, canUse(id) ? '✓' : ''), el('span', { class: 'grow' }, f.title, el('span', { class: 'tiny faint' }, ` — ${f.mac ? `Mac only: ${f.mac}` : f.detail}`)), badge(id)))),
+  el('div', { class: 'small dim' }, 'Lost your key? notchapples.support@gmail.com')].filter(Boolean);
 }
 
-function paneShortcuts() {
-  return el('div', { class: 'col' },
-    el('div', { class: 'card col' },
-      el('div', { class: 'section-title' }, 'Global shortcuts'),
-      row('Ctrl + Alt + N', 'Open or close the notch from any app'),
-      row('Ctrl + Alt + O', 'Hide or show the notch completely'),
-      row('Ctrl + K', 'Command palette: jump to any tab or action'),
-      row('Esc', 'Close the notch when it is open')),
-    el('div', { class: 'small dim' },
-      'Windows reserves most Win-key combinations, so Notch apple uses Ctrl + Alt. '
-      + 'These are registered system-wide and need no extra permission.'));
-
-  function row(keys, what) {
-    return el('div', { style: 'display:flex;gap:10px;align-items:center' },
-      el('kbd', { class: 'mono', style: 'background:var(--surface);border:1px solid var(--border);'
-        + 'border-radius:6px;padding:3px 8px;font-size:12px' }, keys),
-      el('div', { class: 'small dim' }, what));
-  }
-}
-
-function paneAbout() {
-  return el('div', { class: 'col' },
-    el('div', { class: 'card col' },
-      el('div', { class: 'big' }, 'Notch apple for Windows'),
-      el('div', { class: 'small dim' }, 'A port of the macOS Notch apple. Version 1.24.0. Open source; your notes, to-dos and keys stay on this PC.'),
-      el('div', { class: 'small dim' }, 'Windows PCs have no camera notch, so the panel sits at the top centre of your screen.'),
-      el('button', { class: 'btn quiet', style: 'align-self:flex-start',
-        onclick: () => invoke('open_url', { url: 'https://github.com/AdityaJainDXB/NotchApples' }) }, 'GitHub →'),
-      el('div', { class: 'small dim' }, 'Support: notchapples.support@gmail.com')),
-    el('div', { class: 'card col' },
-      el('div', { class: 'section-title' }, "What's new in 1.24"),
-      el('div', { class: 'small dim' }, '• Free, Pro and Ultimate plans; the app no longer needs a code to open.'),
-      el('div', { class: 'small dim' }, '• Keys bought on the website (NTCH-PRO-… / NTCH-ULTM-…) work here and on the Mac.'),
-      el('div', { class: 'small dim' }, '• New To-do tab, unit converter in Tools, and a Ctrl+K command palette.')),
-    el('div', { class: 'card col' },
-      el('div', { class: 'section-title' }, 'Privacy'),
-      el('div', { class: 'small dim' }, 'No accounts and no tracking. Entering a key sends only the key and a random ID for this PC to the license server, to enforce the 3-device limit.')),
-    el('button', { class: 'btn quiet', style: 'align-self:flex-start',
-      onclick: () => invoke('quit_app') }, 'Quit Notch apple'));
+function About() {
+  const v = el('span', {});
+  appInfo.then((i) => { v.textContent = i.version; });
+  return [card('', el('div', { class: 'big' }, 'Notch apple for Windows'), el('div', { class: 'small dim' }, 'Version ', v, '. Open source. Your notes, to-dos, clipboard and keys stay on this PC.'),
+    el('div', { class: 'hstack', style: 'padding-top:8px' }, button('GitHub', () => openUrl('https://github.com/AdityaJainDXB/NotchApples'), { kind: 'quiet', small: true }), button('Website', () => openUrl('https://virajsinghchadha.github.io/notchapples-site/'), { kind: 'quiet', small: true }), button('Quit Notch apple', () => invoke('quit_app'), { kind: 'danger', small: true }))),
+  card('Privacy', el('div', { class: 'small dim' }, 'No accounts and no tracking. Web requests go only to the services a feature needs (weather, sports, the AI provider you pick…). Entering a key sends only the key and a random ID for this PC to the license server.'))];
 }

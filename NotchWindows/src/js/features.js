@@ -1,0 +1,81 @@
+// Everything that needs Pro or Ultimate, from the Mac app's Feature list (LicenseKey.swift),
+// with what each one does. `mac` marks the few that depend on Apple services and so
+// aren't on Windows; Settings → Access lists them honestly instead of hiding them.
+
+import { can } from './license.js';
+
+export const FEATURES = {
+  notchResize: {"title": "Notch size", "detail": "Make the pill and the open notch smaller or larger, and move it left or right.", "tier": 1},
+  richNotes: {"title": "Markdown notes and tags", "detail": "Preview notes as Markdown and filter them by #tags.", "tier": 1},
+  remindersSync: {"title": "Reminders, Things and Todoist", "detail": "See and tick off your Apple Reminders in To-do, and send to-dos to Things or Todoist.", "tier": 1, "mac": "Uses Apple Reminders and Things."},
+  clipboardUnlimited: {"title": "Longer clipboard history", "detail": "Keep up to 5,000 clipboard items, and ignore apps you choose.", "tier": 1},
+  shelfPlus: {"title": "Shelf folders, expiry and sharing", "detail": "Group shelf files into folders, let them expire, and share them in one click.", "tier": 1},
+  textExpander: {"title": "Text expander", "detail": "Type an abbreviation like ;sig anywhere and it becomes your snippet.", "tier": 1},
+  annotate: {"title": "Screenshot markup", "detail": "Draw arrows, boxes, highlights and text on a screenshot.", "tier": 1},
+  ruler: {"title": "Screen ruler", "detail": "Measure anything on screen in points.", "tier": 1, "mac": "Needs a full-screen overlay the Mac draws natively."},
+  currency: {"title": "Unit and currency converter", "detail": "Type 5 km to mi or 100 usd to eur in the calculator.", "tier": 1},
+  commandPalette: {"title": "Command palette", "detail": "One shortcut to search and run everything Notch apple can do.", "tier": 1},
+  scripting: {"title": "Command-line and scripting", "detail": "A `notch` command for Terminal and more notchapple:// commands for scripts.", "tier": 2},
+  edgeTrigger: {"title": "Edge trigger zones", "detail": "Open the notch by pushing the mouse to the top edge of the screen.", "tier": 1},
+  displayLayouts: {"title": "Tabs per display", "detail": "Choose which tabs show on each display.", "tier": 1, "mac": "Uses the Mac notch on each display."},
+  gestureRemap: {"title": "Custom gestures", "detail": "Choose what each swipe, scroll and long-press does.", "tier": 1, "mac": "Uses Mac trackpad gestures."},
+  proThemes: {"title": "Pro themes", "detail": "Eight more themes, from Aurora to Rose Gold.", "tier": 1},
+  customColors: {"title": "Custom colours", "detail": "Your own accent colour and glow.", "tier": 1},
+  themeEditor: {"title": "Theme editor", "detail": "Build a theme, then export it or import one from a friend.", "tier": 1},
+  homeLayout: {"title": "Home dashboard", "detail": "A dashboard tab of widgets you arrange, in three sizes.", "tier": 1},
+  profiles: {"title": "Profiles", "detail": "Work, Study or Gaming setups that switch by app or time of day.", "tier": 1},
+  appRules: {"title": "Per-app rules", "detail": "Hide the notch in some apps, or open a tab when an app comes forward.", "tier": 1},
+  animationStyles: {"title": "Animation styles", "detail": "Snappy, smooth, bouncy or calm animations, at the speed you like.", "tier": 1},
+  customSounds: {"title": "Custom sounds and haptics", "detail": "Sounds when the notch opens and when a timer finishes.", "tier": 1},
+  fontsAndIcons: {"title": "Fonts and menu bar icon", "detail": "Choose the notch font.", "tier": 1},
+  pluginGallery: {"title": "Plugin gallery", "detail": "Install community plugins in one click.", "tier": 2},
+  notesSync: {"title": "Notes and to-dos in iCloud", "detail": "Your notes and to-dos on every Mac, through iCloud Drive.", "tier": 2, "mac": "Uses iCloud."},
+  iphoneCompanion: {"title": "iPhone companion", "detail": "Send text and links from your iPhone to the notch, and control the Mac from it.", "tier": 2, "mac": "Uses the iPhone app."},
+  meetingAlert: {"title": "Meeting alerts", "detail": "A heads-up before meetings, with a Join button.", "tier": 1},
+  downloadProgress: {"title": "Download progress", "detail": "Watch downloads fill up beside the notch.", "tier": 1},
+  markets: {"title": "Markets", "detail": "Stocks and crypto with today's change; pin one beside the notch.", "tier": 1},
+  flightStatus: {"title": "Live flight status", "detail": "Altitude and speed of a flight in the air, beside the notch.", "tier": 1},
+  multiMatch: {"title": "More teams", "detail": "Follow up to five more teams; live scores take turns beside the notch.", "tier": 1},
+  activityStacking: {"title": "Two activities at once", "detail": "Show two live activities at once, one in each ear.", "tier": 2},
+  aiCapture: {"title": "Ask about your screen", "detail": "Attach a screenshot to an AI question, or ask about what's on screen.", "tier": 1},
+  aiHistory: {"title": "AI history", "detail": "Search, reopen and export past AI conversations.", "tier": 1},
+  aiFileDrop: {"title": "Images and PDFs in AI", "detail": "Drop or paste images and PDFs into the AI tab.", "tier": 1},
+  personas: {"title": "Personas and saved prompts", "detail": "Standing instructions for every answer, and your favourite prompts one click away.", "tier": 1},
+  slashCommands: {"title": "Slash commands", "detail": "Type /summarize, /fix, /translate fr: … or /web in the AI box.", "tier": 1},
+  webSearch: {"title": "Web search with sources", "detail": "Answers that search the web first and cite their sources.", "tier": 1},
+  voice: {"title": "Voice input and read aloud", "detail": "Read answers aloud, and dictate with Windows voice typing (Win + H).", "tier": 1},
+  clipboardAI: {"title": "AI on your clipboard", "detail": "Summarise, translate or fix what you copied; the result is copied back.", "tier": 1},
+  automations: {"title": "AI automations", "detail": "Prompts that run on a schedule, like a morning summary of your calendar.", "tier": 2},
+  messenger: {"title": "Messenger", "detail": "Chat in an end-to-end encrypted room joined by a code; Mac and Windows users can talk in the same room.", "tier": 1},
+  audio: {"title": "Audio", "detail": "Per-app volume and output switching.", "tier": 1},
+  vpn: {"title": "VPN", "detail": "Connect to free VPN Gate servers with Windows' built-in VPN, or open your own .ovpn file in OpenVPN.", "tier": 1},
+  voiceNotes: {"title": "Voice Notes", "detail": "Record and transcribe voice notes.", "tier": 1},
+  screenTime: {"title": "Screen Time", "detail": "See where your time goes and block distractions.", "tier": 1},
+  quickAdd: {"title": "Quick Add", "detail": "Add reminders and events in plain English.", "tier": 1},
+  launcher: {"title": "Launcher", "detail": "Your apps in a grid, one click away.", "tier": 1},
+  snippets: {"title": "Snippets", "detail": "Saved text you can paste anywhere.", "tier": 1},
+  mirror: {"title": "Mirror", "detail": "A quick camera check before calls.", "tier": 1},
+  focus: {"title": "Focus timer", "detail": "Pomodoro sessions in the notch.", "tier": 1},
+  rainAlert: {"title": "Rain alerts", "detail": "A nudge before it starts raining.", "tier": 1},
+  lyrics: {"title": "Lyrics", "detail": "Lyrics for what's playing.", "tier": 1},
+  forecast: {"title": "Week forecast and more cities", "detail": "The next 12 hours and 7 days, for up to six cities.", "tier": 1},
+  meetingPlanner: {"title": "Meeting-time planner", "detail": "Slide through the day to find a time that works in every city.", "tier": 1},
+  micMute: {"title": "Mic mute", "detail": "Mute your microphone in one click, with a red mic beside the notch.", "tier": 1},
+  topProcesses: {"title": "Top apps by CPU", "detail": "See which apps are using the most CPU and memory.", "tier": 1},
+  dndToggle: {"title": "Do Not Disturb toggle", "detail": "Turn Do Not Disturb on and off from the notch, the palette or quick actions.", "tier": 1, "mac": "Windows has no public switch for Do Not Disturb; the Focus tab can open its settings."},
+  browserMedia: {"title": "Browser video controls", "detail": "Speed (0.5× to 3×) and skip 10 seconds for video and podcasts playing in your browser.", "tier": 1},
+  sync: {"title": "Sync across Macs", "detail": "Your setup on every Mac, through iCloud or your account.", "tier": 1, "mac": "Uses your Apple or Google account on the Mac. On Windows, back up and restore your setup in Settings → General."},
+  liveActivityAPI: {"title": "Live Activities API", "detail": "Let your own apps and scripts show live activities.", "tier": 2},
+  pluginSDK: {"title": "Plugin SDK", "detail": "Your own widgets: plugins can be Home widgets and live activities.", "tier": 2},
+  prioritySupport: {"title": "Priority support", "detail": "Your issues answered first.", "tier": 2},
+  betaChannel: {"title": "Beta channel", "detail": "Try new versions early.", "tier": 2},
+};
+
+/// True when the current plan includes this feature (anything unlisted is free).
+export function canUse(id) {
+  const f = FEATURES[id];
+  return !f || can(f.tier);
+}
+
+export const tierOf = (id) => FEATURES[id]?.tier ?? 0;
+export const tierLabel = (t) => (t >= 2 ? 'Ultimate' : t >= 1 ? 'Pro' : 'Free');
