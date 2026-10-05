@@ -58,12 +58,12 @@ Pick your computer. The Windows button starts the download straight away; the Ma
       <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg)</b></a>
     </td>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe)</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 1.25.0 BETA</b></a>
     </td>
   </tr>
   <tr>
     <td align="center">macOS 14 or newer<br>about 33 MB</td>
-    <td align="center">Windows 10 or 11 (64-bit)<br>about 2 MB</td>
+    <td align="center">Windows 10 or 11 (64-bit)<br>Beta: please report problems</td>
   </tr>
   <tr>
     <td align="center"><a href="#install-on-mac">Mac install steps</a></td>
@@ -335,6 +335,16 @@ All screenshots use sample data.
 #### New in 1.24.1
 
 - **Bug fix:** Messenger and AI chat now open scrolled to the latest message instead of the oldest.
+
+#### Windows 1.25.0 BETA
+
+The Windows app is **rebuilt from scratch** to match the Mac app. It's a beta: please report anything that doesn't work to notchapples.support@gmail.com.
+
+- **New tabs:** Now Playing (with lyrics), F1, Timer, Games, Markets, Home, Audio (volume per app), Snippets, Voice Notes, Screen Time, Quick Add, Messenger (encrypted rooms that work with the Mac app), Mirror, VPN, Devices, Live, Actions, Plugins, Share and window snapping.
+- **Like the Mac:** live activities on the closed pill (timer, music, live scores, meetings, downloads), the Windows Hello lock, the Ctrl+K command palette, 22 themes plus your own, in-app updates, and backup and restore.
+- **Fixed:** clipboard history now records in the background (text, images and files); Focus and Timer keep running when the notch is closed; Keep Awake holds; the pill hides over fullscreen videos and games and can sit left, centre or right; clicking elsewhere closes the panel; opening the app twice no longer makes a second pill; AI, weather and sports are no longer blocked; real app icons and Store apps in the Launcher; instant search.
+- **Free, Pro and Ultimate match the Mac.** Clipboard, Translator, PC Stats and Shelf are now free on Windows too.
+- **Mac only:** iCloud and Apple Reminders sync, trackpad gestures, the screen ruler and the iPhone companion.
 
 #### Windows 1.24.0
 
