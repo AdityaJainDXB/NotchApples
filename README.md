@@ -58,7 +58,7 @@ Pick your computer. The Windows button starts the download straight away; the Ma
       <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg)</b></a>
     </td>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 1.25.0 BETA</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 1.26.0 BETA</b></a>
     </td>
   </tr>
   <tr>
@@ -339,6 +339,14 @@ All screenshots use sample data.
 #### New in 1.24.1
 
 - **Bug fix:** Messenger and AI chat now open scrolled to the latest message instead of the oldest.
+
+#### Windows 1.26.0 BETA
+
+- **Looks like the Mac app:** a new tab bar with one consistent icon set (the open tab shows its name), a Settings sidebar with coloured section tiles, rounder cards, and 20 tabs on by default instead of 9.
+- **Updates have their own section** (Settings → Updates): current version, Check now, release notes and **Install and restart**. Beta builds now count as updates, so you'll be offered every new Windows build automatically.
+- **Sports:** cricket (India's internationals and the IPL) and badminton (the BWF World Tour calendar). The "Next match" card no longer squashes over the fixture list.
+- **Smoother start:** background services now start one at a time instead of all at once. The theme picker no longer jumps back to the top when you pick a colour.
+- **Mac only:** iCloud and Apple Reminders sync, trackpad gestures, the screen ruler and the iPhone companion (7 of the 64 Pro and Ultimate features need Apple services).
 
 #### Windows 1.25.0 BETA
 
