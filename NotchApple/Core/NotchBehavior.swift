@@ -22,7 +22,7 @@ enum NotchPrefs {
     @AppStorage("notch.autoHideFullscreen") static var autoHideFullscreen = true
     /// Keep the notch on screen over full-screen apps (for Macs without a hardware notch, where it would
     /// otherwise vanish): overrides "Hide in fullscreen apps" and raises the window above full-screen Spaces.
-    @AppStorage("notch.keepInFullscreen") static var keepInFullscreen = false
+    @AppStorage("notch.keepInFullscreen") static var keepInFullscreen = true
     @AppStorage("notch.autoHideRecording") static var autoHideRecording = false
     /// Expanded panel size (Pro). Defaults match the original fixed size.
     @AppStorage("notch.panelWidth") static var panelWidth = 740.0

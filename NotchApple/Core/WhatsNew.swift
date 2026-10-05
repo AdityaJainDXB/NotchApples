@@ -21,6 +21,9 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "1.27.1", date: "5 October 2026", headline: "The notch stays visible in full-screen apps", items: [
+            "“Keep the notch visible in full-screen apps” is now on by default, so the notch stays where it is when an app goes full screen (including on Macs without a hardware notch, like the base M1). Turn it off in Settings → Notch → Stepping aside if you'd rather it step aside.",
+        ]),
         ReleaseNote(version: "1.27.0", date: "5 October 2026", headline: "Tidier Settings, a faster Snake and two new games", items: [
             "Settings is shorter. Permissions and Privacy share one entry, “Privacy & Permissions”: choose it and pick which one to open. Focus timer settings moved into Notch → Focus.",
             "Snake no longer drops or ignores quick taps: turns are queued in order (two per move), keys are read directly, the game runs off the main thread and the board is drawn as one fast canvas.",

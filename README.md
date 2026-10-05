@@ -328,6 +328,10 @@ All screenshots use sample data.
 - **F1:** a favourite team; qualifying gaps and best laps.
 - **What's New** in Settings → About, shown once after updating.
 
+#### New in 1.27.1
+
+- **The notch stays visible in full-screen apps, by default.** *Keep the notch visible in full-screen apps* (Settings → Notch → Stepping aside) is now on out of the box, so the notch stays put when an app goes full screen, including on Macs without a hardware notch like the base M1. Turn it off there if you'd rather it step aside.
+
 #### New in 1.27.0
 
 - **Tidier Settings.** **Permissions** and **Privacy** are now one entry, **Privacy & Permissions**: choose it and pick which one to open (a switch at the top moves between them). **Focus** timer settings moved into **Notch → Focus**, so there is one sidebar row fewer to scroll past. Old links still open the right page.

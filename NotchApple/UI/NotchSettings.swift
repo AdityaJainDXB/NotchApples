@@ -14,7 +14,7 @@ struct NotchSettings: View {
     @ObservedObject private var entitlements = Entitlements.shared
     @AppStorage("notch.hoverDelay") private var hoverDelay = 0.15
     @AppStorage("notch.autoHideFullscreen") private var autoHideFullscreen = true
-    @AppStorage("notch.keepInFullscreen") private var keepInFullscreen = false
+    @AppStorage("notch.keepInFullscreen") private var keepInFullscreen = true
     @AppStorage("notch.autoHideRecording") private var autoHideRecording = false
     @AppStorage("notch.panelWidth") private var panelWidth = 740.0
     @AppStorage("notch.panelHeight") private var panelHeight = 420.0
