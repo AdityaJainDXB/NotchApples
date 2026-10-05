@@ -3,6 +3,7 @@
 // Modules are plain ES modules loaded on demand; there is no build step.
 
 import { applyTheme, currentThemeId, enforceTheme } from './themes.js';
+import { icon } from './icons.js';
 import { load, save, el, watch } from './store.js';
 import { invoke, listen } from './native.js';
 import { loadSaved, tierName, setTierOverride } from './license.js';
@@ -58,7 +59,7 @@ export function buildTabs() {
   if (!order.some((m) => m.id === active)) active = order[0]?.id ?? 'settings';
   const mode = pref('ui.compactTabs');
   // "auto": names when they fit, icons only (except the active tab) when they don't.
-  const compact = mode === 'always' || (mode === 'auto' && buildTabs.overflowed);
+  const compact = mode !== 'names';  // like the Mac: icons, with the name on the open tab
 
   tabbar.replaceChildren(...order.map((m, i) => {
     const locked = !allowed(m);
@@ -67,7 +68,7 @@ export function buildTabs() {
       title: `${m.name}${locked ? ' (Pro)' : ''}${i < 9 ? ` — Ctrl+${i + 1}` : ''}`,
       draggable: 'true', dataset: { id: m.id },
       onclick: () => show(m.id),
-    }, el('span', { class: 'ico' }, m.icon), el('span', { class: 'name' }, m.name));
+    }, el('span', { class: 'ico' }, icon(m.id, 22, m.icon)), el('span', { class: 'name' }, m.name));
     // Drag a tab to reorder.
     b.addEventListener('dragstart', (e) => { e.dataTransfer.setData('text/tab', m.id); b.classList.add('dragging'); });
     b.addEventListener('dragend', () => b.classList.remove('dragging'));
@@ -83,19 +84,15 @@ export function buildTabs() {
     });
     return b;
   }));
-  if (mode === 'auto' && !compact && expanded) {
-    requestAnimationFrame(() => {
-      if (tabbar.scrollWidth > tabbar.clientWidth + 2) { buildTabs.overflowed = true; buildTabs(); }
-    });
-  }
   tabbar.querySelector('.tab.active')?.scrollIntoView({ block: 'nearest', inline: 'nearest' });
 
   tools.replaceChildren(
-    el('button', { class: 'icon-btn', title: 'Command palette (Ctrl+K)', onclick: () => openPalette() }, '⌕'),
+    el('button', { class: 'icon-btn', title: 'Command palette (Ctrl+K)', onclick: () => openPalette() }, icon('search', 20)),
     el('button', { class: `icon-btn ${pinned ? 'on' : ''}`, title: pinned ? 'Pinned open — click to unpin' : 'Keep open when I click elsewhere',
-      onclick: () => { pinned = !pinned; buildTabs(); } }, '📌'),
-    el('button', { class: 'icon-btn', title: 'Hide the pill (Ctrl+Alt+O)', onclick: () => { collapse(); invoke('set_hidden', { hidden: true }); } }, '👁'),
-    el('button', { class: 'icon-btn', title: 'Close (Esc)', onclick: () => collapse() }, '⌃'));
+      onclick: () => { pinned = !pinned; buildTabs(); } }, icon('pin', 20)),
+    el('button', { class: 'icon-btn', title: 'Hide the pill (Ctrl+Alt+O)', onclick: () => { collapse(); invoke('set_hidden', { hidden: true }); } }, icon('hide', 20)),
+    el('button', { class: 'icon-btn', title: 'Quit Notch apple', onclick: () => invoke('quit_app') }, icon('power', 20)),
+    el('button', { class: 'icon-btn', title: 'Close (Esc)', onclick: () => collapse() }, icon('up', 22)));
 }
 
 /// Shows a tab. `opts` are passed to the module (e.g. a search query).

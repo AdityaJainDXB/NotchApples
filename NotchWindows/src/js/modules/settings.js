@@ -8,18 +8,23 @@ import { canUse, FEATURES, tierLabel } from '../features.js';
 import { tier, TIERS, maskedCode, deactivate } from '../license.js';
 import { isEnabled, setEnabled, tabOrder, setTabOrder, appInfo, registerShortcuts } from '../app.js';
 import { setting, toggle, select, segmented, toast, confirm, button, prompt } from '../ui.js';
+import { icon } from '../icons.js';
 import { keyField, BUY_URL, badge } from './activation.js';
 
 export const PANES = { General, Appearance, Tabs, Shortcuts, AI, Calendar, Weather, Clipboard, Security, Rules, Automations, Access, About };
+const NAV = { General: ['settings', '#8e8e93'], Appearance: ['appearance', '#bf5af2'], Tabs: ['home', '#5e5ce6'], Shortcuts: ['shortcuts', '#64d2ff'], AI: ['ai', '#ff9f0a'],
+  Calendar: ['calendar', '#ff453a'], Weather: ['weather', '#32ade6'], Clipboard: ['clipboard', '#ffd60a'], Security: ['security', '#ff6b6b'], Rules: ['rules', '#30d158'],
+  Automations: ['automations', '#bf5af2'], Access: ['access', '#0a84ff'], About: ['about', '#5e5ce6'] };
 const ICONS = { General: '⚙', Appearance: '🎨', Tabs: '🗂', Shortcuts: '⌨', AI: '✨', Calendar: '📅', Weather: '⛅', Clipboard: '📋', Security: '🔒', Rules: '🧭', Automations: '🤖', Access: '🔑', About: 'ℹ' };
 
 export function render(root, opts = {}) {
   let current = opts.pane || load('settings.pane', 'General');
   if (!PANES[current]) current = 'General';
-  const nav = el('div', { class: 'col gap-4 scroll', style: 'flex:0 0 150px' });
+  const nav = el('div', { class: 'col gap-4 scroll', style: 'flex:0 0 172px;padding-right:8px;border-right:1px solid var(--border)' });
   const body = el('div', { class: 'scroll', style: 'flex:1;padding-right:6px' });
   function paint() {
-    nav.replaceChildren(...Object.keys(PANES).map((n) => el('div', { class: `item clickable ${n === current ? 'selected' : ''}`, style: 'padding:5px 8px', onclick: () => { current = n; save('settings.pane', n); paint(); } }, el('span', {}, ICONS[n]), el('span', { class: 'main' }, n))));
+    nav.replaceChildren(...Object.keys(PANES).map((n) => el('div', { class: `navrow ${n === current ? 'selected' : ''}`, onclick: () => { current = n; save('settings.pane', n); paint(); } },
+      el('span', { class: 'tile-ico', style: `background:${NAV[n][1]}` }, icon(NAV[n][0], 17)), el('span', { class: 'main' }, n))));
     body.replaceChildren(el('div', { class: 'col' }, ...[].concat(PANES[current](paint, opts))));
     opts = {};
   }
@@ -98,7 +103,7 @@ function Appearance(repaint) {
     setting('Font', canUse('fontsAndIcons') ? '' : 'Pro', select([{ value: 'system', label: 'Segoe UI' }, { value: 'rounded', label: 'Rounded' }, { value: 'mono', label: 'Monospace' }], pref('ui.font'), (v) => (canUse('fontsAndIcons') ? setPref('ui.font', v) : toast('Fonts are part of Pro.')), { cls: 'auto' })),
     setting('Animations', canUse('animationStyles') ? '' : 'Pro', select([{ value: 'smooth', label: 'Smooth' }, { value: 'fast', label: 'Fast' }, { value: 'off', label: 'Off' }], pref('ui.animation'), (v) => (canUse('animationStyles') ? setPref('ui.animation', v) : toast('Animation styles are part of Pro.')), { cls: 'auto' })),
     setting('Sounds', 'When the notch opens and timers finish (Pro).', prefToggle('ui.sounds', 'customSounds')),
-    setting('Tab names', '', select([{ value: 'auto', label: 'When they fit' }, { value: 'always', label: 'Icons only' }], pref('ui.compactTabs'), (v) => setPref('ui.compactTabs', v), { cls: 'auto' }))));
+    setting('Tab names', '', select([{ value: 'auto', label: 'Icons, name on the open tab' }, { value: 'names', label: 'Always show names' }], pref('ui.compactTabs'), (v) => setPref('ui.compactTabs', v), { cls: 'auto' }))));
   return out;
 }
 

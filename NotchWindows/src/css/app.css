@@ -10,7 +10,7 @@
   --text: #fff; --text-dim: rgba(255,255,255,.74); --text-faint: rgba(255,255,255,.5);
   --border: rgba(255,255,255,.10); --glow: rgba(158,107,255,.35);
   --ok: #3ddc84; --warn: #ffb347; --bad: #ff6b6b; --live: #ff453a;
-  --radius: 14px; --radius-sm: 9px;
+  --radius: 20px; --radius-sm: 9px;
   --ease: cubic-bezier(.2,.8,.2,1);
   --font: "Segoe UI Variable Text", "Segoe UI Variable", "Segoe UI", -apple-system, system-ui, sans-serif;
   --mono: "Cascadia Mono", "Cascadia Code", Consolas, ui-monospace, monospace;
@@ -19,7 +19,7 @@
 * { box-sizing: border-box; margin: 0; padding: 0; }
 html, body { height: 100%; background: transparent; overflow: hidden; }
 body {
-  font: 13px/1.45 var(--font); color: var(--text);
+  font: 14px/1.45 var(--font); color: var(--text);
   -webkit-font-smoothing: antialiased; user-select: none; cursor: default;
 }
 button, input, select, textarea { font: inherit; color: inherit; }
@@ -58,19 +58,21 @@ body.collapsed #panel { display: none; }
 @keyframes pulse { 0%,100% { opacity: .45 } 50% { opacity: 1 } }
 
 /* expanded panel */
-#panel { flex: 1; display: flex; flex-direction: column; min-height: 0; padding: 10px 14px 14px; animation: drop .22s var(--ease); }
+#panel { flex: 1; display: flex; flex-direction: column; min-height: 0; padding: 14px 20px 16px; animation: drop .22s var(--ease); }
 @keyframes drop { from { opacity: 0; transform: translateY(-6px) } to { opacity: 1; transform: none } }
-#topbar { display: flex; align-items: center; gap: 6px; padding-bottom: 8px; }
-#tabbar { flex: 1; display: flex; align-items: center; gap: 2px; overflow-x: auto; scrollbar-width: none; min-width: 0; }
+#topbar { display: flex; align-items: center; gap: 4px; padding-bottom: 10px; margin-bottom: 12px; border-bottom: 1px solid var(--border); }
+#tabbar { flex: 1; display: flex; align-items: center; gap: 4px; overflow-x: auto; scrollbar-width: none; min-width: 0; }
 #tabbar::-webkit-scrollbar { display: none; }
 .tab {
-  display: flex; align-items: center; gap: 6px; padding: 6px 11px; border-radius: 999px; flex: none;
-  background: transparent; border: none; color: var(--text-dim); font-weight: 600; font-size: 12px;
-  white-space: nowrap; cursor: pointer; transition: background .13s, color .13s;
+  display: flex; align-items: center; gap: 8px; padding: 8px 11px; border-radius: 999px; flex: none;
+  background: transparent; border: none; color: var(--text-dim); font-weight: 700; font-size: 15px;
+  white-space: nowrap; cursor: pointer; transition: background .15s var(--ease), color .15s, padding .15s;
 }
 .tab:hover { background: var(--surface); color: var(--text); }
-.tab.active { background: var(--accent); color: var(--on-accent); }
-.tab .ico { font-size: 13px; line-height: 1; }
+.tab.active { background: linear-gradient(180deg, var(--accent-bright), var(--accent)); color: var(--on-accent); padding: 8px 15px 8px 12px;
+  box-shadow: 0 0 22px var(--glow); }
+.tab .ico { display: grid; place-items: center; line-height: 1; }
+.svgicon { display: inline-grid; place-items: center; flex: none; } .svgicon svg { display: block; }
 .tab.icon-only .name { display: none; }
 .tab.locked { opacity: .55; }
 .tab.dragging { opacity: .4; }
@@ -121,7 +123,7 @@ kbd { font-family: var(--mono); font-size: 11px; background: var(--surface); bor
 
 /* --------------------------------------------------------------- cards */
 
-.card { background: rgba(255,255,255,.05); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px 14px; min-width: 0; }
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px 18px; min-width: 0; }
 .card.tight { padding: 8px 11px; }
 .card.flat { background: transparent; }
 .card.accent-edge { border-color: var(--accent); }
@@ -303,3 +305,14 @@ body[data-anim="off"] *, body[data-anim="off"] *::before, body[data-anim="off"] 
 body[data-anim="fast"] #panel, body[data-anim="fast"] #page.fade { animation-duration: .08s; }
 body[data-font="rounded"] { --font: "Segoe UI Variable Display", "Nunito", "Segoe UI", system-ui, sans-serif; letter-spacing: .1px; }
 body[data-font="mono"] { --font: var(--mono); }
+
+/* Cards inside a scrolling column keep their height (they used to squash and overlap). */
+.card .card, .card > .item, .col > .item { flex-shrink: 0; }
+.col.scrollable > * { flex-shrink: 0; }
+
+/* Settings sidebar, like the Mac's: a coloured tile per section, solid highlight on the open one. */
+.navrow { display: flex; align-items: center; gap: 10px; padding: 6px 8px; border-radius: 12px; cursor: pointer; font-weight: 600; font-size: 14px; flex-shrink: 0; transition: background .12s; }
+.navrow:hover { background: var(--surface); }
+.navrow.selected { background: var(--accent); color: var(--on-accent); }
+.tile-ico { width: 28px; height: 28px; border-radius: 8px; display: grid; place-items: center; color: #fff; flex: none; }
+.setting { padding: 12px 0; } .setting .text .name { font-size: 14px; } .setting .text .desc { font-size: 12px; margin-top: 1px; }

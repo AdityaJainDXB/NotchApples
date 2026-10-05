@@ -156,7 +156,7 @@ export function render(root) {
     right.replaceChildren();
     const groups = {};
     for (const l of S.LEAGUES) (groups[l.sport] ||= []).push(l);
-    const sel = el('select', { class: 'field auto' }, ...Object.entries(groups).map(([sport, list]) => el('optgroup', { label: sport },
+    const sel = el('select', { class: 'field auto', style: 'min-width:0;flex:1;max-width:70%' }, ...Object.entries(groups).map(([sport, list]) => el('optgroup', { label: sport },
       ...list.map((l) => el('option', { value: l.id, selected: l.id === leagueId }, l.name)))));
     sel.addEventListener('change', () => { leagueId = sel.value; save('sports.league', leagueId); loadLeagueView(); });
     if (S.isBadminton(leagueId)) {
@@ -211,6 +211,7 @@ export function render(root) {
         el('div', { class: 'num small', style: 'width:64px;text-align:center;white-space:nowrap' },
           m.state === 'pre' ? fmtTime(m.date) : el('span', { style: `font-weight:700;${m.live ? 'color:var(--live)' : ''}` }, `${m.home.score}–${m.away.score}`)),
         el('div', { class: 'hstack', style: 'flex:1;min-width:0;gap:4px' }, logo(m.away.logo, 16), teamName(m.away))));
+      if (m.leaguePath?.startsWith('cricket') && m.detail) right.append(el('div', { class: 'tiny dim', style: 'text-align:center;margin-bottom:4px' }, m.detail));
     }
     right.append(el('div', { class: 'tiny dim', style: 'margin-top:4px' }, 'Click a team to follow it.'));
   }
@@ -227,7 +228,7 @@ export function render(root) {
     const id = leagueId;
     fixtures = null; table = null; paintRight();
     if (S.isBadminton(id)) { const f = await S.loadBadminton(); if (!alive || id !== leagueId) return; fixtures = f; table = []; paintRight(); return; }
-    const [f, t] = await Promise.all([S.loadLeague(id), S.loadStandings(id)]);
+    const [f, t] = await Promise.all([S.loadLeague(id), id === 'cricket/india' ? [] : S.loadStandings(id)]);
     if (!alive || id !== leagueId) return;
     fixtures = f; table = t;
     teams = (t.flatMap((g) => g.rows).length ? t.flatMap((g) => g.rows) : f.flatMap((m) => [m.home, m.away]))

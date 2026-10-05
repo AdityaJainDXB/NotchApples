@@ -26,13 +26,15 @@ export const LEAGUES = [
   { id: 'football/nfl', name: 'NFL', sport: 'American football' },
   { id: 'baseball/mlb', name: 'MLB', sport: 'Baseball' },
   { id: 'hockey/nhl', name: 'NHL', sport: 'Hockey' },
+  { id: 'cricket/india', name: 'India (international cricket)', sport: 'Cricket' },
+  { id: 'cricket/8048', name: 'IPL', sport: 'Cricket' },
   { id: 'badminton/bwf', name: 'BWF World Tour', sport: 'Badminton' },
 ];
 
 export const isBadminton = (id = '') => id.startsWith('badminton/');
 
 export const sportIcon = (path = '') =>
-  path.startsWith('basketball') ? '🏀' : path.startsWith('football') ? '🏈' : path.startsWith('baseball') ? '⚾' : path.startsWith('hockey') ? '🏒' : path.startsWith('badminton') ? '🏸' : '⚽';
+  path.startsWith('basketball') ? '🏀' : path.startsWith('football') ? '🏈' : path.startsWith('baseball') ? '⚾' : path.startsWith('hockey') ? '🏒' : path.startsWith('badminton') ? '🏸' : path.startsWith('cricket') ? '🏏' : '⚽';
 
 // ---- teams you follow ----
 
@@ -123,11 +125,31 @@ async function refreshOngoing(upcoming, results) {
 /// A league's fixtures for the next two weeks, plus ESPN's own "current matchday",
 /// so an international break doesn't leave the list empty.
 export async function loadLeague(leagueId) {
+  if (leagueId === 'cricket/india') return loadIndiaCricket();
   const days = Array.from({ length: 14 }, (_, i) => new Date(Date.now() + i * 864e5));
   const pages = await Promise.all([...days.map((d) => get(`${leagueId}/scoreboard?dates=${ymd(d)}`)), get(`${leagueId}/scoreboard`)]);
   const all = new Map();
   for (const p of pages) for (const m of parseList(p, leagueId)) if (!all.has(m.id)) all.set(m.id, m);
   return [...all.values()].sort((a, b) => a.date - b.date);
+}
+
+/// India's men's internationals, from ESPN's all-cricket feed (the same one the Mac app reads).
+async function loadIndiaCricket() {
+  const j = await getJSON('https://site.web.api.espn.com/apis/v2/scoreboard/header?sport=cricket&lang=en&region=in', { timeout: 15000 }).catch(() => null);
+  const out = [];
+  for (const league of (j?.sports || []).flatMap((x) => x.leagues || [])) {
+    for (const e of league.events || []) {
+      const sides = e.competitors || [];
+      if (!sides.some((c) => c.displayName === 'India' && (c.isNational ?? true)) || !e.id || !e.date) continue;
+      const side = (ha) => { const c = sides.find((x) => x.homeAway === ha) || {};
+        return { id: String(c.id ?? ''), name: c.displayName || '?', full: c.displayName || '?', abbr: c.abbreviation || '?', logo: c.logo || '', score: c.score || '', winner: c.winner === true || c.winner === 'true' }; };
+      const state = e.status || 'pre';
+      out.push({ id: String(e.id), date: new Date(e.date), state, detail: state === 'pre' ? '' : (e.fullStatus?.summary || e.summary || ''),
+        competition: [e.title, league.name].filter(Boolean).join(' · '), leaguePath: `cricket/${league.id}`, venue: e.location || '',
+        home: side('home'), away: side('away'), live: state === 'in' });
+    }
+  }
+  return out.sort((a, b) => a.date - b.date);
 }
 
 /// Badminton: the BWF World Tour calendar (TheSportsDB's free feed lists tournaments,
