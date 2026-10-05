@@ -1,88 +1,76 @@
-// Tools: keep the PC awake, a quick calculator, a colour picker and a unit converter.
-import { el, load, save } from '../store.js';
-import { invoke } from '../app.js';
+// Tools: Keep Awake, colour picker (from anywhere on screen), calculator, and a
+// unit converter with currencies (Pro, open.er-api.com).
+import { el, load } from '../store.js';
+import { invoke, getJSON } from '../native.js';
+import { canUse } from '../features.js';
+import { toast, toggle, select } from '../ui.js';
+import { calculate } from '../palette.js';
+import * as A from '../services/awake.js';
+
+const UNITS = {
+  Length: { m: 1, km: 1000, cm: 0.01, mm: 0.001, mi: 1609.344, yd: 0.9144, ft: 0.3048, in: 0.0254 },
+  Weight: { kg: 1, g: 0.001, lb: 0.45359237, oz: 0.028349523125, t: 1000, st: 6.35029318 },
+  Volume: { L: 1, mL: 0.001, gal: 3.785411784, qt: 0.946352946, cup: 0.2365882365, 'fl oz': 0.0295735296 },
+  Speed: { 'km/h': 1, mph: 1.609344, 'm/s': 3.6, knot: 1.852 },
+  Data: { B: 1, KB: 1e3, MB: 1e6, GB: 1e9, TB: 1e12, KiB: 1024, MiB: 1048576, GiB: 1073741824 },
+  Temperature: { '°C': 0, '°F': 0, K: 0 },
+  Currency: {},
+};
+let rates = null;
 
 export function render(root) {
-  // --- keep awake
-  let awake = false;
-  const awakeBtn = el('button', { class: 'btn quiet' }, 'Keep PC awake: Off');
-  awakeBtn.addEventListener('click', async () => {
-    awake = !awake;
-    try {
-      await invoke('set_keep_awake', { on: awake });
-      awakeBtn.textContent = `Keep PC awake: ${awake ? 'On' : 'Off'}`;
-      awakeBtn.style.background = awake ? 'var(--accent)' : '';
-      awakeBtn.style.color = awake ? '#0b0b0b' : '';
-    } catch { awake = !awake; awakeBtn.textContent = 'Keep PC awake: unavailable'; }
-  });
-
-  // --- calculator
-  const calcIn = el('input', { class: 'field mono', placeholder: '12 * (3 + 4) / 2' });
-  const calcOut = el('div', { class: 'big mono' }, '—');
-  calcIn.addEventListener('input', () => {
-    const expr = calcIn.value.trim();
-    if (!expr) { calcOut.textContent = '—'; calcOut.className = 'big mono'; return; }
-    // Only arithmetic is accepted; anything else is rejected rather than evaluated.
-    if (!/^[0-9+\-*/%(). ]+$/.test(expr)) { calcOut.textContent = 'Numbers and + - * / % ( ) only'; calcOut.className = 'small err'; return; }
-    try {
-      const value = Function(`"use strict";return (${expr})`)();
-      calcOut.textContent = Number.isFinite(value) ? String(Math.round(value * 1e10) / 1e10) : '—';
-      calcOut.className = 'big mono';
-    } catch { calcOut.textContent = '—'; calcOut.className = 'big mono'; }
-  });
-
-  // --- colour
-  const colorIn = el('input', { type: 'color', value: '#9e6bff', style: 'width:52px;height:34px;border:none;background:none;cursor:pointer' });
-  const swatch = el('div', { class: 'col', style: 'gap:2px' });
-  const paintColor = () => {
-    const hex = colorIn.value;
-    const n = parseInt(hex.slice(1), 16);
-    const [r, g, b] = [(n >> 16) & 255, (n >> 8) & 255, n & 255];
-    swatch.replaceChildren(
-      el('div', { class: 'mono', style: 'font-weight:600' }, hex.toUpperCase()),
-      el('div', { class: 'small mono dim' }, `rgb(${r}, ${g}, ${b})`));
-  };
-  colorIn.addEventListener('input', paintColor);
-  paintColor();
-
-  // --- unit converter
-  const UNITS = {
-    Length: { m: 1, km: 1000, cm: 0.01, mm: 0.001, mi: 1609.344, yd: 0.9144, ft: 0.3048, in: 0.0254 },
-    Weight: { kg: 1, g: 0.001, lb: 0.45359237, oz: 0.028349523125, t: 1000 },
-    Data: { B: 1, KB: 1e3, MB: 1e6, GB: 1e9, TB: 1e12, KiB: 1024, MiB: 1048576, GiB: 1073741824 },
-    Temperature: { '°C': 'c', '°F': 'f', K: 'k' },
-  };
-  const kind = el('select', { class: 'field', style: 'flex:0 0 auto;width:auto' }, ...Object.keys(UNITS).map((k) => el('option', {}, k)));
-  const amount = el('input', { class: 'field mono', value: '1', style: 'width:90px;flex:0 0 auto' });
-  const from = el('select', { class: 'field', style: 'width:auto;flex:0 0 auto' });
-  const to = el('select', { class: 'field', style: 'width:auto;flex:0 0 auto' });
-  const convOut = el('div', { class: 'big mono' }, '—');
-  const fillUnits = () => {
-    const names = Object.keys(UNITS[kind.value]);
-    from.replaceChildren(...names.map((n) => el('option', {}, n)));
-    to.replaceChildren(...names.map((n) => el('option', {}, n)));
-    to.selectedIndex = 1;
-  };
-  const toC = (v, u) => (u === '°C' ? v : u === '°F' ? (v - 32) * 5 / 9 : v - 273.15);
-  const fromC = (c, u) => (u === '°C' ? c : u === '°F' ? c * 9 / 5 + 32 : c + 273.15);
-  const convert = () => {
+  // keep awake
+  const s = A.state();
+  const mins = select([{ value: 0, label: 'Until I turn it off' }, { value: 30, label: '30 minutes' }, { value: 60, label: '1 hour' }, { value: 120, label: '2 hours' }, { value: 480, label: '8 hours' }], 0, () => {});
+  const awake = toggle(s.on, async (on) => { try { await A.set(on, { display: disp.querySelector('input').checked, minutes: Number(mins.value) }); toast(on ? 'Keeping your PC awake' : 'Keep Awake is off'); } catch (e) { toast(e.message, { error: true }); } });
+  const disp = toggle(s.display, () => {});
+  // colour
+  const swatch = el('div', { style: 'width:44px;height:44px;border-radius:10px;border:1px solid var(--border);background:#9e6bff' });
+  const codes = el('div', { class: 'col gap-4 small mono selectable' });
+  const show = (hex) => { swatch.style.background = hex; const n = parseInt(hex.slice(1), 16); codes.replaceChildren(el('div', {}, hex.toUpperCase()), el('div', { class: 'dim' }, `rgb(${n >> 16 & 255}, ${n >> 8 & 255}, ${n & 255})`)); };
+  const picker = el('input', { type: 'color', value: '#9e6bff', oninput: (e) => show(e.target.value) });
+  const eye = el('button', { class: 'btn quiet small', onclick: async () => {
+    if (!window.EyeDropper) return toast('Picking from the screen needs a newer WebView2.', { error: true });
+    try { const r = await new window.EyeDropper().open(); show(r.sRGBHex); picker.value = r.sRGBHex; await invoke('clipboard_copy_text', { text: r.sRGBHex.toUpperCase() }); toast(`${r.sRGBHex.toUpperCase()} copied`); } catch {}
+  } }, '💧 Pick from screen');
+  // calculator
+  const calcIn = el('input', { class: 'field mono', placeholder: '12 * (3 + 4) / 2' }), calcOut = el('div', { class: 'big num selectable' }, '—');
+  calcIn.oninput = () => { const v = calculate(calcIn.value); calcOut.textContent = v === null ? '—' : v.toLocaleString(undefined, { maximumFractionDigits: 10 }); };
+  calcIn.onkeydown = (e) => { if (e.key === 'Enter' && calcOut.textContent !== '—') invoke('clipboard_copy_text', { text: calcOut.textContent.replace(/,/g, '') }).then(() => toast('Copied')); };
+  // converter
+  const kind = el('select', { class: 'field auto' }, ...Object.keys(UNITS).map((k) => el('option', {}, k)));
+  const amount = el('input', { class: 'field mono', value: '1', style: 'width:100px' });
+  const from = el('select', { class: 'field auto' }), to = el('select', { class: 'field auto' });
+  const out = el('div', { class: 'big num selectable' }, '—');
+  async function fill() {
+    let names = Object.keys(UNITS[kind.value]);
+    if (kind.value === 'Currency') {
+      if (!canUse('currency')) { out.textContent = 'Currencies are part of Pro'; from.replaceChildren(); to.replaceChildren(); return; }
+      if (!rates) { out.textContent = 'Loading rates…'; try { rates = (await getJSON('https://open.er-api.com/v6/latest/USD')).rates; } catch { out.textContent = 'Rates unavailable'; return; } }
+      names = Object.keys(rates);
+    }
+    from.replaceChildren(...names.map((n) => el('option', {}, n))); to.replaceChildren(...names.map((n) => el('option', {}, n)));
+    if (kind.value === 'Currency') { from.value = 'USD'; to.value = 'EUR'; } else to.selectedIndex = 1;
+    convert();
+  }
+  const toC = (v, u) => (u === '°C' ? v : u === '°F' ? (v - 32) * 5 / 9 : v - 273.15), fromC = (c, u) => (u === '°C' ? c : u === '°F' ? c * 9 / 5 + 32 : c + 273.15);
+  function convert() {
     const v = parseFloat(amount.value);
-    if (!Number.isFinite(v)) { convOut.textContent = '—'; return; }
-    const t = UNITS[kind.value];
-    const r = kind.value === 'Temperature' ? fromC(toC(v, from.value), to.value) : v * t[from.value] / t[to.value];
-    convOut.textContent = `${Math.round(r * 1e6) / 1e6} ${to.value}`;
-  };
-  kind.addEventListener('change', () => { fillUnits(); convert(); });
-  for (const x of [amount, from, to]) x.addEventListener('input', convert);
-  fillUnits(); convert();
-
-  root.append(el('div', { class: 'col', style: 'height:100%;overflow:auto' },
+    if (!Number.isFinite(v) || !from.value) return;
+    let r;
+    if (kind.value === 'Temperature') r = fromC(toC(v, from.value), to.value);
+    else if (kind.value === 'Currency') r = v / rates[from.value] * rates[to.value];
+    else r = v * UNITS[kind.value][from.value] / UNITS[kind.value][to.value];
+    out.textContent = `${r.toLocaleString(undefined, { maximumFractionDigits: kind.value === 'Currency' ? 2 : 6 })} ${to.value}`;
+  }
+  kind.onchange = fill; amount.oninput = convert; from.onchange = convert; to.onchange = convert;
+  root.append(el('div', { class: 'col fill scroll' },
     el('div', { class: 'row' },
-      el('div', { class: 'card col' }, el('div', { class: 'section-title' }, '☕ Keep awake'),
-        el('div', { class: 'small dim' }, 'Stops the screen sleeping while this is on.'), awakeBtn),
-      el('div', { class: 'card col' }, el('div', { class: 'section-title' }, '🎨 Colour'),
-        el('div', { style: 'display:flex;gap:10px;align-items:center' }, colorIn, swatch))),
-    el('div', { class: 'card col' }, el('div', { class: 'section-title' }, '🔢 Calculator'), calcIn, calcOut),
-    el('div', { class: 'card col' }, el('div', { class: 'section-title' }, '📏 Convert'),
-      el('div', { style: 'display:flex;gap:6px;flex-wrap:wrap;align-items:center' }, kind, amount, from, el('span', {}, '→'), to), convOut)));
+      el('div', { class: 'card col gap-6' }, el('div', { class: 'section-title' }, '☕ Keep awake'),
+        el('div', { class: 'hstack' }, el('span', { class: 'grow' }, 'Keep the PC awake'), awake),
+        el('div', { class: 'hstack' }, el('span', { class: 'grow small dim' }, 'Keep the screen on too'), disp), mins),
+      el('div', { class: 'card col gap-6' }, el('div', { class: 'section-title' }, '🎨 Colour'), el('div', { class: 'hstack' }, swatch, codes, el('div', { class: 'spacer' }), picker), eye)),
+    el('div', { class: 'card col gap-6' }, el('div', { class: 'section-title' }, '🔢 Calculator · Enter copies'), calcIn, calcOut),
+    el('div', { class: 'card col gap-6' }, el('div', { class: 'section-title' }, '📏 Convert'), el('div', { class: 'hstack wrap' }, kind, amount, from, el('span', {}, '→'), to), out)));
+  show('#9e6bff'); fill();
 }

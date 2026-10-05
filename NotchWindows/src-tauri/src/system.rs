@@ -106,11 +106,41 @@ impl Monitor {
 
 pub static MONITOR: Mutex<Option<Monitor>> = Mutex::new(None);
 
+#[derive(Serialize)]
+pub struct Proc {
+    pub name: String,
+    pub cpu: f32,
+    pub memory: u64,
+}
+
+impl Monitor {
+    /// The busiest apps right now, by CPU (then memory). Like Activity Monitor's top rows.
+    pub fn processes(&mut self, limit: usize) -> Vec<Proc> {
+        self.system.refresh_processes(sysinfo::ProcessesToUpdate::All, true);
+        let cores = self.system.cpus().len().max(1) as f32;
+        // Group helper processes (browsers run dozens) under their app name.
+        let mut by_name: std::collections::HashMap<String, Proc> = std::collections::HashMap::new();
+        for p in self.system.processes().values() {
+            let name = p.name().to_string_lossy().trim_end_matches(".exe").to_string();
+            if name.is_empty() || name == "System Idle Process" || name == "Idle" {
+                continue;
+            }
+            let e = by_name.entry(name.clone()).or_insert(Proc { name, cpu: 0.0, memory: 0 });
+            e.cpu += p.cpu_usage() / cores;
+            e.memory += p.memory();
+        }
+        let mut list: Vec<Proc> = by_name.into_values().collect();
+        list.sort_by(|a, b| b.cpu.partial_cmp(&a.cpu).unwrap_or(std::cmp::Ordering::Equal).then(b.memory.cmp(&a.memory)));
+        list.truncate(limit);
+        list
+    }
+}
+
 #[cfg(windows)]
 fn battery() -> (Option<u8>, bool) {
-    use windows_sys::Win32::System::Power::{GetSystemPowerStatus, SYSTEM_POWER_STATUS};
-    let mut status: SYSTEM_POWER_STATUS = unsafe { std::mem::zeroed() };
-    if unsafe { GetSystemPowerStatus(&mut status) } == 0 {
+    use windows::Win32::System::Power::{GetSystemPowerStatus, SYSTEM_POWER_STATUS};
+    let mut status = SYSTEM_POWER_STATUS::default();
+    if unsafe { GetSystemPowerStatus(&mut status) }.is_err() {
         return (None, false);
     }
     // 255 means "unknown"; a desktop PC with no battery reports that.

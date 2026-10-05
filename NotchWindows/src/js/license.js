@@ -181,8 +181,12 @@ async function refreshRevoked() {
   } catch { /* offline: keep the last list */ }
 }
 
+let override = null;
+/// The automated UI check (CI) opens every tab, so it runs as Ultimate. Nothing else calls this.
+export function setTierOverride(t) { override = t; dispatchEvent(new Event('tierchange')); }
+
 /// 0 Free, 1 Pro, 2 Ultimate.
-export const tier = () => Math.max(cached?.tier ?? 0, hasOldCode() ? 1 : 0);
+export const tier = () => override ?? Math.max(cached?.tier ?? 0, hasOldCode() ? 1 : 0);
 export const tierName = () => TIERS[tier()];
 export const can = (needed) => tier() >= needed;
 

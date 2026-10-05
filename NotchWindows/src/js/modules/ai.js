@@ -1,257 +1,323 @@
-// AI chat, ported from AIProviders.swift + OpenRouterFallback.swift.
-// Your key is stored on this PC only and sent only to the provider you pick.
-import { el, load, save } from '../store.js';
-import { invoke } from '../app.js';
+// The AI tab, ported from ClaudeChatView.swift and AIExtras.swift: chat with a
+// free or paid model, answers in Markdown, and (Pro) ask about your screen,
+// attach images and PDFs, search the web with sources, personas, slash commands,
+// saved chats, read aloud and voice typing.
 
-export const PROVIDERS = {
-  gemini:     { name: 'Google Gemini', free: 'Free key',            base: null, keyUrl: 'https://aistudio.google.com/apikey',  def: 'gemini-2.0-flash' },
-  openRouter: { name: 'OpenRouter',    free: 'Free models',          base: 'https://openrouter.ai/api/v1',  keyUrl: 'https://openrouter.ai/keys',       def: 'google/gemma-4-31b-it:free' },
-  groq:       { name: 'Groq',          free: 'Free tier',            base: 'https://api.groq.com/openai/v1', keyUrl: 'https://console.groq.com/keys',   def: 'llama-3.3-70b-versatile' },
-  ollama:     { name: 'Ollama (local)',free: 'Runs on this PC',      base: 'http://localhost:11434/v1',     keyUrl: 'https://ollama.com',               def: 'llama3.2' },
-  openAI:     { name: 'ChatGPT',       free: 'Paid',                 base: 'https://api.openai.com/v1',     keyUrl: 'https://platform.openai.com/api-keys', def: 'gpt-4o-mini' },
-  claude:     { name: 'Claude',        free: 'Paid',                 base: null, keyUrl: 'https://console.anthropic.com/settings/keys', def: 'claude-sonnet-5' },
-};
+import { el, load, save, timeAgo } from '../store.js';
+import { invoke, listen, openUrl } from '../native.js';
+import { canUse } from '../features.js';
+import { markdown, toast, menu, iconBtn, modal, button, confirm, empty } from '../ui.js';
+import { keepOpen, collapse, show } from '../app.js';
+import * as AI from '../services/ai.js';
 
-const SYSTEM = "You are a helpful assistant living in the user's notch. Be concise. "
-             + 'When given a screenshot, describe or reason about what is on screen as asked.';
+const SCREEN_WORDS = /\b(my screen|on screen|on my screen|this screen|screenshot|what('?s| is) (on|in) (my|the) screen|look at (my|the) screen)\b/i;
 
-const keyOf = (p) => load(`ai.key.${p}`, '');
-export const setKey = (p, v) => save(`ai.key.${p}`, v);
-const modelOf = (p) => load(`ai.model.${p}`, PROVIDERS[p].def);
-const setModel = (p, v) => save(`ai.model.${p}`, v);
+export function render(root, opts = {}) {
+  let chat = { id: null, messages: [] };   // [{ role, text, model, images, pdf, sources }]
+  let attachments = [];                     // [{ kind: 'image'|'pdf', name, mime, data }]
+  let web = canUse('webSearch') && load('ai.web', false);
+  let speak = canUse('voice') && load('ai.speak', false);
+  let busy = false;
 
-// ---- OpenRouter model list + fallback (ported from OpenRouterFallback.swift) ----
+  const log = el('div', { class: 'col scroll', style: 'flex:1;gap:10px;padding:2px 4px 2px 0' });
+  const input = el('textarea', { class: 'field', rows: 1, placeholder: 'Ask anything…  (Shift+Enter for a new line)', style: 'min-height:36px;max-height:120px;flex:1' });
+  const sendBtn = el('button', { class: 'icon-btn solid', title: 'Send (Enter)' }, '↑');
+  const notice = el('div', { class: 'small dim', style: 'min-height:14px' });
+  const chips = el('div', { class: 'hstack wrap', style: 'gap:4px' });
+  const slashBox = el('div', { class: 'col gap-4 hidden', style: 'max-height:150px;overflow:auto' });
 
-let modelCache = null, modelCacheAt = 0;
+  // ---- toolbar ----
+  const providerSel = el('select', { class: 'field auto', title: 'Provider' },
+    ...Object.entries(AI.PROVIDERS).map(([id, p]) => el('option', { value: id, selected: id === AI.provider() }, p.name)));
+  const modelSel = el('select', { class: 'field auto', title: 'Model', style: 'max-width:220px' });
 
-export async function openRouterModels() {
-  if (modelCache && Date.now() - modelCacheAt < 600000) return modelCache;
-  try {
-    const json = await fetch('https://openrouter.ai/api/v1/models').then((r) => r.json());
-    modelCache = (json.data || []).map((m) => ({
-      id: m.id,
-      free: m.pricing?.prompt === '0' && m.pricing?.completion === '0',
-      images: (m.architecture?.input_modalities || []).includes('image'),
-      textOut: JSON.stringify(m.architecture?.output_modalities || ['text']) === '["text"]',
-    }));
-    modelCacheAt = Date.now();
-  } catch { modelCache = modelCache || []; }
-  return modelCache;
-}
-
-const isChat = (id) => !['safety', 'guard', 'embed', 'moderation', 'rerank'].some((w) => id.toLowerCase().includes(w));
-const rank = (id) => { const s = id.toLowerCase();
-  return s.includes('gemma') ? 0 : s.includes('qwen') ? 1 : s.includes('llama') ? 2 : 3; };
-
-export function candidates(chosen, needsImages, models) {
-  if (!models.length) return [chosen];
-  const known = models.find((m) => m.id === chosen);
-  const out = [];
-  if (!known || !needsImages || known.images) out.push(chosen);
-  out.push(...models
-    .filter((m) => m.free && m.textOut && m.id !== chosen && isChat(m.id) && (!needsImages || m.images))
-    .map((m) => m.id)
-    .sort((a, b) => rank(a) - rank(b) || a.localeCompare(b)));
-  return out.slice(0, 5);
-}
-
-const isBusy = (e) => {
-  const c = e?.status ?? 0;
-  return c === 429 || c === 408 || c >= 500 || (c === 404 && /no endpoints/i.test(e?.message || ''));
-};
-
-// ---- sending ----
-
-async function sendOnce(provider, model, history) {
-  const key = keyOf(provider);
-  if (provider === 'gemini') {
-    if (!key) throw err(0, 'Add your Google Gemini key in Settings → AI.');
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`;
-    const body = {
-      system_instruction: { parts: [{ text: SYSTEM }] },
-      contents: history.map((m) => ({
-        role: m.role === 'user' ? 'user' : 'model',
-        parts: [...(m.image ? [{ inline_data: { mime_type: 'image/jpeg', data: m.image } }] : []), { text: m.text }],
-      })),
-    };
-    const json = await post(url, body, { 'x-goog-api-key': key });
-    const text = (json.candidates?.[0]?.content?.parts || []).map((p) => p.text).filter(Boolean).join('');
-    if (!text) throw err(0, 'The model returned an empty response.');
-    return text;
+  async function paintModels() {
+    const p = AI.provider();
+    const current = AI.modelOf(p);
+    modelSel.replaceChildren(el('option', { value: current, selected: true }, current));
+    const list = await AI.listModels(p);
+    const ids = new Set();
+    const opts2 = [];
+    for (const m of [{ id: current, label: current }, ...(p === 'openRouter' ? list.filter((x) => x.free) : list)]) {
+      if (ids.has(m.id)) continue; ids.add(m.id);
+      opts2.push(el('option', { value: m.id, selected: m.id === current }, p === 'openRouter' && m.free ? `${m.id}` : m.label || m.id));
+    }
+    opts2.push(el('option', { value: '__custom' }, 'Other model…'));
+    modelSel.replaceChildren(...opts2);
   }
-  if (provider === 'claude') {
-    if (!key) throw err(0, 'Add your Claude key in Settings → AI.');
-    const body = { model, max_tokens: 2048, system: SYSTEM,
-      messages: history.map((m) => ({ role: m.role,
-        content: m.image ? [{ type: 'text', text: m.text },
-                            { type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: m.image } }]
-                         : m.text })) };
-    const json = await post('https://api.anthropic.com/v1/messages', body,
-      { 'x-api-key': key, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' });
-    const text = (json.content || []).map((c) => c.text).filter(Boolean).join('');
-    if (!text) throw err(0, 'The model returned an empty response.');
-    return text;
-  }
-  // OpenAI-compatible: OpenRouter, Groq, Ollama, OpenAI
-  const base = PROVIDERS[provider].base;
-  if (provider !== 'ollama' && !key) throw err(0, `Add your ${PROVIDERS[provider].name} key in Settings → AI.`);
-  const messages = [{ role: 'system', content: SYSTEM }, ...history.map((m) => m.image
-    ? { role: m.role, content: [{ type: 'text', text: m.text },
-                                { type: 'image_url', image_url: { url: `data:image/jpeg;base64,${m.image}` } }] }
-    : { role: m.role, content: m.text })];
-  const headers = { ...(key ? { Authorization: `Bearer ${key}` } : {}) };
-  if (provider === 'openRouter') { headers['HTTP-Referer'] = 'https://github.com/AdityaJainDXB/NotchApples'; headers['X-Title'] = 'Notch apple'; }
-  const json = await post(`${base}/chat/completions`, { model, messages }, headers);
-  const text = json.choices?.[0]?.message?.content || '';
-  if (!text) throw err(0, 'The model returned an empty response.');
-  return text;
-}
-
-function err(status, message) { const e = new Error(message); e.status = status; return e; }
-
-async function post(url, body, headers = {}) {
-  const res = await fetch(url, {
-    method: 'POST', headers: { 'content-type': 'application/json', ...headers }, body: JSON.stringify(body),
+  providerSel.addEventListener('change', () => { AI.setProvider(providerSel.value); paintModels(); keyHint(); });
+  modelSel.addEventListener('change', async () => {
+    if (modelSel.value === '__custom') {
+      const { prompt } = await import('../ui.js');
+      const id = await prompt('Model name', { placeholder: 'e.g. gemini-3.8-pro', value: AI.modelOf(AI.provider()) });
+      if (id) AI.setModel(AI.provider(), id);
+      paintModels();
+    } else AI.setModel(AI.provider(), modelSel.value);
   });
-  const json = await res.json().catch(() => ({}));
-  if (!res.ok) {
-    let msg = json.error?.message || json.error || `Request failed (${res.status}).`;
-    const raw = json.error?.metadata?.raw;
-    if (raw) msg += ` (${String(raw).slice(0, 200)})`;
-    throw err(res.status, msg);
+
+  const webBtn = iconBtn('🌐', 'Search the web for answers (Pro)', () => {
+    if (!canUse('webSearch')) return locked('webSearch');
+    web = !web; save('ai.web', web); webBtn.classList.toggle('on', web);
+    toast(web ? 'Web search on: answers cite their sources' : 'Web search off');
+  }, { on: web });
+  const shotBtn = iconBtn('📸', 'Ask about your screen (Pro)', () => attachScreen());
+  const fileBtn = iconBtn('📎', 'Attach an image or PDF (Pro)', () => pickFile());
+  const voiceBtn = iconBtn('🎙', 'Voice typing (Win + H)', () => {
+    if (!canUse('voice')) return locked('voice');
+    input.focus(); invoke('dictate').catch(() => {});
+  });
+  const speakBtn = iconBtn('🔊', 'Read answers aloud (Pro)', () => {
+    if (!canUse('voice')) return locked('voice');
+    speak = !speak; save('ai.speak', speak); speakBtn.classList.toggle('on', speak);
+    if (!speak) speechSynthesis.cancel();
+  }, { on: speak });
+  const moreBtn = iconBtn('⋯', 'More', (e) => menu(e, [
+    { label: '🆕  New chat', run: newChat },
+    { label: '🕘  Chat history', run: historyDialog },
+    { label: `🎭  Persona: ${AI.activePersona()?.name || 'none'}`, run: personaMenu },
+    { label: '⭐  Saved prompts', run: promptsDialog },
+    'sep',
+    { label: '🔑  Keys and providers', run: () => show('settings', { pane: 'AI' }) },
+  ]));
+
+  function locked(feature) {
+    toast(`${{ webSearch: 'Web search', voice: 'Voice', aiCapture: 'Asking about your screen', aiFileDrop: 'Attachments', aiHistory: 'Chat history', personas: 'Personas' }[feature] || 'This'} is part of Pro.`);
   }
-  return json;
-}
 
-/// Sends with retry + fallback on OpenRouter, straight through elsewhere.
-export async function send(provider, model, history) {
-  if (provider !== 'openRouter') return { text: await sendOnce(provider, model, history), model, note: null };
-
-  const needsImages = history.some((m) => m.image);
-  const models = await openRouterModels();
-  const order = candidates(model, needsImages, models);
-  const chosenCanSee = models.find((m) => m.id === model)?.images ?? true;
-  const busy = [];
-  let last;
-
-  for (let i = 0; i < order.length; i++) {
-    const tries = i === 0 ? 2 : 1;
-    for (let t = 0; t < tries; t++) {
-      try {
-        const text = await sendOnce('openRouter', order[i], history);
-        const note = order[i] === model ? null
-          : (needsImages && !chosenCanSee && !busy.includes(model))
-            ? `${model} can't read images, so ${order[i]} answered.`
-            : `${model} was busy, so ${order[i]} answered.`;
-        if (order[i] !== model && needsImages && !chosenCanSee) setModel('openRouter', order[i]);
-        return { text, model: order[i], note };
-      } catch (e) {
-        last = e;
-        if (!isBusy(e)) throw e;
-        if (t === 0 && i === 0) await new Promise((r) => setTimeout(r, 2000));
-        else busy.push(order[i]);
-      }
+  function keyHint() {
+    const p = AI.provider();
+    notice.replaceChildren();
+    if (!AI.ready(p)) {
+      notice.append(`Add your ${AI.PROVIDERS[p].name} key to start (${AI.PROVIDERS[p].free}). `,
+        el('a', { onclick: () => show('settings', { pane: 'AI' }) }, 'Add key'), ' · ',
+        el('a', { onclick: () => openUrl(AI.PROVIDERS[p].keyUrl) }, 'Get one'));
     }
   }
-  if (order.length <= 1 && last) throw last;
-  throw err(429, `Every free model I tried is busy or rate-limited (${busy.slice(0, 3).join(', ')}). `
-    + 'Wait a minute and ask again, add a little credit on openrouter.ai, or use Gemini — its key is free.');
-}
 
-// ---- UI ----
+  // ---- messages ----
 
-const SCREEN_WORDS = /\b(my screen|on screen|this screen|screenshot|what('?s| is) (on|in) (my|the) screen|look at (my|the) screen)\b/i;
-
-export function render(root) {
-  let provider = load('ai.provider', 'gemini');
-  let messages = [];
-
-  const log = el('div', { class: 'col', style: 'flex:1;overflow:auto;gap:8px;padding-right:4px' });
-  const input = el('input', { class: 'field', placeholder: 'Message AI…', style: 'flex:1' });
-  const sendBtn = el('button', { class: 'btn' }, '↑');
-  const notice = el('div', { class: 'small dim', style: 'min-height:15px' });
-  const shotToggle = el('button', { class: 'btn quiet', title: 'Attach a screenshot to the next message' }, '🖥');
-  let attachScreen = false;
-
-  const providerSel = el('select', { class: 'field', style: 'max-width:150px' },
-    ...Object.entries(PROVIDERS).map(([id, p]) => el('option', { value: id, selected: id === provider }, p.name)));
-  const modelField = el('input', { class: 'field', style: 'max-width:240px', value: modelOf(provider) });
-
-  providerSel.addEventListener('change', () => {
-    provider = providerSel.value; save('ai.provider', provider);
-    modelField.value = modelOf(provider);
-    notice.textContent = keyOf(provider) || provider === 'ollama' ? '' : `Add your ${PROVIDERS[provider].name} key in Settings → AI.`;
-  });
-  modelField.addEventListener('change', () => setModel(provider, modelField.value.trim()));
-
-  shotToggle.addEventListener('click', () => {
-    attachScreen = !attachScreen;
-    shotToggle.style.background = attachScreen ? 'var(--accent)' : '';
-    shotToggle.style.color = attachScreen ? '#0b0b0b' : '';
-  });
-
-  function bubble(role, text, extra) {
-    const mine = role === 'user';
-    return el('div', { style: `display:flex;justify-content:${mine ? 'flex-end' : 'flex-start'}` },
-      el('div', {
-        style: `max-width:78%;padding:9px 13px;border-radius:14px;white-space:pre-wrap;user-select:text;`
-             + (mine ? 'background:var(--accent);color:#0b0b0b;font-weight:500'
-                     : 'background:rgba(255,255,255,.08);border:1px solid var(--border)'),
-      }, extra ? el('div', { class: 'small', style: 'opacity:.75;margin-bottom:3px' }, extra) : null, text));
+  function bubble(m, i) {
+    const mine = m.role === 'user';
+    const body = mine
+      ? el('div', { class: 'selectable', style: 'white-space:pre-wrap' }, m.display || m.text)
+      : markdown(m.text, { onLink: openUrl });
+    const extras = [];
+    if (m.images?.length) extras.push(el('div', { class: 'hstack wrap gap-4' }, ...m.images.map((img) => el('img', { src: `data:${img.mime};base64,${img.data}`, style: 'max-width:120px;max-height:70px;border-radius:6px' }))));
+    if (m.pdf) extras.push(el('div', { class: 'chip' }, `📄 ${m.pdf.name}`));
+    const actions = mine ? [] : [
+      iconBtn('⧉', 'Copy', () => invoke('clipboard_copy_text', { text: m.text }).then(() => toast('Copied'))),
+      iconBtn('⤵', 'Paste into the app you were using', async () => { await collapse(); invoke('paste_text', { text: m.text }); }),
+      iconBtn('🔊', 'Read aloud', () => say(m.text)),
+      i === chat.messages.length - 1 ? iconBtn('↻', 'Try again', retry) : null,
+    ];
+    return el('div', { style: `display:flex;flex-direction:column;align-items:${mine ? 'flex-end' : 'flex-start'};gap:3px` },
+      el('div', { style: `max-width:86%;padding:9px 13px;border-radius:14px;${mine
+        ? 'background:var(--accent);color:var(--on-accent)'
+        : 'background:rgba(255,255,255,.07);border:1px solid var(--border)'}` }, ...extras, body),
+      (!mine && (m.model || m.sources?.length)) ? el('div', { class: 'tiny faint' }, m.note || m.model || '') : null,
+      actions.length ? el('div', { class: 'hstack', style: 'gap:0' }, ...actions) : null);
   }
+
+  function paint() {
+    if (!chat.messages.length) {
+      log.replaceChildren(empty('✨', 'Ask anything', 'Ask a question, paste text to summarise or translate, or ask "what’s on my screen?". Type / for commands.', chips));
+      paintChips();
+      return;
+    }
+    log.replaceChildren(...chat.messages.map(bubble));
+    log.scrollTop = log.scrollHeight;
+  }
+
+  function paintChips() {
+    const prompts = canUse('personas') ? AI.savedPrompts() : [{ title: 'Summarise my clipboard', text: '/summarize' }, { title: 'What’s on my screen?', text: "What's on my screen?" }];
+    chips.replaceChildren(...prompts.slice(0, 6).map((p) => el('button', { class: 'chip clickable', onclick: () => { input.value = p.text; input.focus(); if (!p.text.endsWith(': ') && !p.text.endsWith(' ')) submit(); } }, p.title)));
+  }
+
+  function say(text) {
+    speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text.replace(/[#*_`>|]/g, '').slice(0, 4000));
+    speechSynthesis.speak(u);
+  }
+
+  // ---- attachments ----
+
+  const tray = el('div', { class: 'hstack wrap gap-4 hidden' });
+  function paintTray() {
+    tray.classList.toggle('hidden', !attachments.length);
+    tray.replaceChildren(...attachments.map((a, i) => el('span', { class: 'chip' },
+      a.kind === 'image' ? el('img', { src: `data:${a.mime};base64,${a.data}`, style: 'height:18px;border-radius:3px' }) : '📄',
+      a.name, el('a', { onclick: () => { attachments.splice(i, 1); paintTray(); } }, ' ✕'))));
+  }
+
+  async function attachScreen() {
+    if (!canUse('aiCapture')) return locked('aiCapture');
+    notice.textContent = 'Taking a screenshot…';
+    try {
+      const data = await keepOpen(() => invoke('capture_screen'));
+      attachments.push({ kind: 'image', name: 'Screenshot', mime: 'image/jpeg', data });
+      notice.textContent = 'Screenshot attached. Ask about it.';
+      paintTray();
+      input.focus();
+    } catch (e) { notice.textContent = `Couldn't take a screenshot: ${e.message}`; }
+  }
+
+  async function addFile(path) {
+    if (!canUse('aiFileDrop')) return locked('aiFileDrop');
+    try {
+      const f = await invoke('read_file_base64', { path });
+      if (f.mime.startsWith('image/')) attachments.push({ kind: 'image', name: f.name, mime: f.mime, data: f.data });
+      else if (f.mime === 'application/pdf') attachments.push({ kind: 'pdf', name: f.name, mime: f.mime, data: f.data });
+      else if (f.mime === 'text/plain') { input.value += `\n\n${f.name}:\n${atob(f.data).slice(0, 30000)}`; }
+      else { toast('Attach images, PDFs or text files.', { error: true }); return; }
+      paintTray();
+    } catch (e) { toast(e.message, { error: true }); }
+  }
+
+  async function pickFile() {
+    if (!canUse('aiFileDrop')) return locked('aiFileDrop');
+    const path = await keepOpen(() => invoke('pick_file'));
+    if (path) addFile(path);
+  }
+
+  // Dropping files onto the notch while this tab is open attaches them.
+  let unlistenDrop = null;
+  listen('tauri://drag-drop', (e) => { for (const p of e?.paths || []) addFile(p); }).then((u) => { unlistenDrop = u; });
+
+  // ---- sending ----
 
   async function submit() {
-    const prompt = input.value.trim();
-    if (!prompt) return;
+    let text = input.value.trim();
+    if ((!text && !attachments.length) || busy) return;
     input.value = '';
-    notice.textContent = '';
+    input.style.height = '';
+    slashBox.classList.add('hidden');
+    if (!text) text = 'What is this?';
 
-    let image = null;
-    const wantsScreen = attachScreen || SCREEN_WORDS.test(prompt);
-    if (wantsScreen) {
-      try {
-        image = await invoke('capture_screen');
-        notice.textContent = 'Took a screenshot to answer that.';
-      } catch (e) {
-        notice.textContent = 'Couldn\'t take a screenshot: ' + (e?.message ?? e);
-      }
-      attachScreen = false; shotToggle.style.background = ''; shotToggle.style.color = '';
-    }
+    // "What's on my screen?" attaches a screenshot automatically (Pro).
+    if (SCREEN_WORDS.test(text) && !attachments.some((a) => a.kind === 'image') && canUse('aiCapture')) await attachScreen();
 
-    messages.push({ role: 'user', text: prompt, image });
-    log.append(bubble('user', prompt, image ? '📎 Screenshot attached' : null));
-    log.scrollTop = log.scrollHeight;
+    const { prompt, web: slashWeb, command } = await AI.expandSlash(text);
+    const useWeb = (web || slashWeb) && canUse('webSearch');
+    const images = attachments.filter((a) => a.kind === 'image').map(({ mime, data }) => ({ mime, data }));
+    const pdf = attachments.find((a) => a.kind === 'pdf') || null;
+    attachments = []; paintTray();
 
-    sendBtn.disabled = true;
-    const thinking = bubble('assistant', '…');
+    chat.messages.push({ role: 'user', text: prompt, display: command ? text : undefined, images, pdf });
+    paint();
+    await answer(useWeb, command === '/web' ? text.replace(/^\/web\s*/, '') : text);
+  }
+
+  async function answer(useWeb, question) {
+    busy = true; sendBtn.disabled = true;
+    const thinking = el('div', { class: 'hstack small dim' }, el('span', { class: 'spin' }), useWeb ? ' Searching the web…' : ' Thinking…');
     log.append(thinking); log.scrollTop = log.scrollHeight;
-
+    notice.textContent = '';
     try {
-      const { text, note } = await send(provider, modelField.value.trim() || modelOf(provider), messages);
-      messages.push({ role: 'assistant', text });
-      thinking.replaceWith(bubble('assistant', text));
-      if (note) notice.textContent = note;
+      const history = chat.messages.map(({ role, text, images, pdf }) => ({ role, text, images, pdf }));
+      const r = useWeb
+        ? await AI.askWithWeb(question, history.slice(0, -1))
+        : await AI.send(history);
+      chat.messages.push({ role: 'assistant', text: r.text, model: r.model, note: r.note, sources: r.sources });
+      if (r.note) notice.textContent = r.note;
+      if (speak) say(r.text);
+      chat = AI.saveChat(chat);
     } catch (e) {
-      thinking.replaceWith(el('div', { class: 'err', style: 'padding:4px' }, String(e?.message ?? e)));
+      notice.replaceChildren(el('span', { class: 'err' }, e.message));
+      if (/key in Settings/.test(e.message)) notice.append(' ', el('a', { onclick: () => show('settings', { pane: 'AI' }) }, 'Open Settings'));
     } finally {
-      sendBtn.disabled = false;
-      log.scrollTop = log.scrollHeight;
+      busy = false; sendBtn.disabled = false;
+      paint();
       input.focus();
     }
   }
 
+  function retry() {
+    if (busy) return;
+    if (chat.messages.at(-1)?.role === 'assistant') chat.messages.pop();
+    paint();
+    answer(web && canUse('webSearch'), chat.messages.at(-1)?.text || '');
+  }
+
+  function newChat() { chat = { id: null, messages: [] }; attachments = []; paintTray(); paint(); input.focus(); }
+
+  // ---- slash commands ----
+
+  input.addEventListener('input', () => {
+    input.style.height = 'auto';
+    input.style.height = `${Math.min(120, input.scrollHeight)}px`;
+    const v = input.value;
+    if (v.startsWith('/') && !v.includes(' ') && canUse('slashCommands')) {
+      const list = Object.entries(AI.SLASH).filter(([k]) => k.startsWith(v));
+      slashBox.replaceChildren(...list.map(([k, c]) => el('div', { class: 'item clickable', onclick: () => { input.value = `${k} `; input.focus(); slashBox.classList.add('hidden'); } },
+        el('span', { class: 'mono accent' }, k), el('span', { class: 'small dim' }, c.help))));
+      slashBox.classList.toggle('hidden', !list.length);
+    } else slashBox.classList.add('hidden');
+  });
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); submit(); }
+  });
   sendBtn.addEventListener('click', submit);
-  input.addEventListener('keydown', (e) => { if (e.key === 'Enter') submit(); });
 
-  if (!keyOf(provider) && provider !== 'ollama') notice.textContent = `Add your ${PROVIDERS[provider].name} key in Settings → AI.`;
-  log.append(el('div', { class: 'center dim small' }, 'Ask anything, or ask what\'s on your screen and a screenshot is added for you.'));
+  // ---- history, personas, saved prompts (Pro) ----
 
-  root.append(el('div', { class: 'col', style: 'height:100%' },
-    el('div', { style: 'display:flex;gap:8px;align-items:center' },
-      providerSel, modelField,
-      el('div', { class: 'small dim', style: 'margin-left:auto' }, PROVIDERS[provider].free)),
-    log, notice,
-    el('div', { style: 'display:flex;gap:8px' }, shotToggle, input, sendBtn)));
+  function historyDialog() {
+    if (!canUse('aiHistory')) return locked('aiHistory');
+    const list = el('div', { class: 'col gap-4 scroll', style: 'max-height:320px' });
+    const paintList = () => {
+      const chats = AI.chats();
+      list.replaceChildren(...chats.map((c) => el('div', { class: 'item clickable', onclick: () => { chat = { ...c, messages: c.messages.map((m) => ({ ...m })) }; m.close(); paint(); } },
+        el('div', { class: 'main' }, el('div', { class: 'ellipsis' }, c.title), el('div', { class: 'tiny faint' }, `${timeAgo(c.at)} · ${c.messages.length} messages`)),
+        el('div', { class: 'actions' }, iconBtn('🗑', 'Delete', (e) => { e.stopPropagation(); AI.deleteChat(c.id); paintList(); })))));
+      if (!chats.length) list.append(el('div', { class: 'small dim' }, 'Chats you have are saved here.'));
+    };
+    const m = modal('Chat history', [list]);
+    paintList();
+  }
 
-  setTimeout(() => input.focus(), 40);
+  function personaMenu() {
+    if (!canUse('personas')) return locked('personas');
+    const current = load('ai.activePersona', '');
+    const list = el('div', { class: 'col gap-4' },
+      el('div', { class: `item clickable ${!current ? 'selected' : ''}`, onclick: () => { save('ai.activePersona', ''); m.close(); toast('No persona'); } }, el('div', { class: 'main' }, 'No persona')),
+      ...AI.personas().map((p) => el('div', { class: `item clickable ${current === p.id ? 'selected' : ''}`, onclick: () => { save('ai.activePersona', p.id); m.close(); toast(`Persona: ${p.name}`); } },
+        el('div', { class: 'main' }, el('div', {}, p.name), el('div', { class: 'tiny faint' }, p.instructions)))));
+    const name = el('input', { class: 'field', placeholder: 'New persona name' });
+    const instr = el('textarea', { class: 'field', placeholder: 'Standing instructions, e.g. "Answer like a friendly maths teacher"', style: 'min-height:60px' });
+    const m = modal('Persona', [list, el('div', { class: 'section-title' }, 'Add your own'), name, instr], {
+      actions: [button('Add', () => {
+        if (!name.value.trim() || !instr.value.trim()) return;
+        const p = { id: `p-${Date.now()}`, name: name.value.trim(), instructions: instr.value.trim() };
+        save('ai.personas', [...AI.personas(), p]); save('ai.activePersona', p.id); m.close(); toast(`Persona: ${p.name}`);
+      })] });
+  }
+
+  function promptsDialog() {
+    if (!canUse('personas')) return locked('personas');
+    const list = el('div', { class: 'col gap-4' });
+    const paintList = () => list.replaceChildren(...AI.savedPrompts().map((p, i) => el('div', { class: 'item clickable', onclick: () => { input.value = p.text; m.close(); input.focus(); } },
+      el('div', { class: 'main' }, el('div', {}, p.title), el('div', { class: 'tiny faint ellipsis' }, p.text)),
+      el('div', { class: 'actions' }, iconBtn('🗑', 'Delete', async (e) => { e.stopPropagation(); if (await confirm(`Delete "${p.title}"?`, { ok: 'Delete', danger: true })) { const l = AI.savedPrompts(); l.splice(i, 1); save('ai.savedPrompts', l); paintList(); } })))));
+    const title = el('input', { class: 'field', placeholder: 'Title' });
+    const text = el('input', { class: 'field', placeholder: 'Prompt (end with a space to fill in the rest)' });
+    const m = modal('Saved prompts', [list, el('div', { class: 'hstack' }, title, text)], {
+      actions: [button('Save', () => { if (!title.value.trim() || !text.value) return; save('ai.savedPrompts', [...AI.savedPrompts(), { title: title.value.trim(), text: text.value }]); title.value = ''; text.value = ''; paintList(); paintChips(); })] });
+    paintList();
+  }
+
+  // ---- layout ----
+
+  root.append(el('div', { class: 'col fill', style: 'gap:8px' },
+    el('div', { class: 'hstack' }, providerSel, modelSel, el('div', { class: 'spacer' }), webBtn, shotBtn, fileBtn, voiceBtn, speakBtn, moreBtn),
+    log, slashBox, tray, notice,
+    el('div', { class: 'hstack', style: 'align-items:flex-end' }, input, sendBtn)));
+
+  paintModels();
+  keyHint();
+  paint();
+
+  if (opts.screen) attachScreen();
+  if (opts.ask) { input.value = opts.ask; submit(); }
+  setTimeout(() => input.focus(), 50);
+
+  return () => { unlistenDrop?.(); speechSynthesis.cancel(); };
 }

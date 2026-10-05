@@ -1,0 +1,43 @@
+# Checks the Windows app on a real Windows machine: native unit tests, then the
+# app itself runs an automated pass over every tab (NOTCH_SELFTEST) and saves a
+# screenshot of each, uploaded as an artifact.
+name: Windows CI
+
+on:
+  workflow_dispatch:
+  push:
+    branches: ['windows-rebuild']
+    paths: ['NotchWindows/**', '.github/workflows/windows-ci.yml']
+
+jobs:
+  test:
+    runs-on: windows-latest
+    defaults:
+      run:
+        working-directory: NotchWindows/src-tauri
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: NotchWindows/src-tauri
+      - name: Unit tests on Windows
+        run: cargo test -- --nocapture --test-threads=1
+      - name: Build the app
+        run: cargo build
+      - name: Run the app's self-test
+        shell: pwsh
+        run: |
+          $dir = "$env:RUNNER_TEMP\selftest"
+          New-Item -ItemType Directory -Force $dir | Out-Null
+          $env:NOTCH_SELFTEST = "1"; $env:NOTCH_SELFTEST_DIR = $dir
+          $p = Start-Process -FilePath target\debug\notch-apple.exe -PassThru
+          if (-not $p.WaitForExit(300000)) { Stop-Process $p -Force; throw "self-test timed out" }
+          Get-Content "$dir\report.json"
+          $r = Get-Content "$dir\report.json" | ConvertFrom-Json
+          if (-not $r.ok) { throw "self-test found problems" }
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: selftest
+          path: ${{ runner.temp }}/selftest
