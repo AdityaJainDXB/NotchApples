@@ -133,7 +133,14 @@ export async function verifyKey(env, input) {
 // MARK: Storage
 
 const getJSON = async (env, k) => { const v = await env.KV.get(k); return v ? JSON.parse(v) : null; };
-const putJSON = (env, k, v, ttl) => env.KV.put(k, JSON.stringify(v), ttl ? { expirationTtl: ttl } : undefined);
+const putJSON = (env, k, v, ttl) => {
+  const opts = ttl ? { expirationTtl: ttl } : {};
+  // Key records carry a small summary as KV metadata, so the admin list needs no extra reads.
+  if (k.startsWith('key:')) opts.metadata = keyMeta(v);
+  return env.KV.put(k, JSON.stringify(v), opts);
+};
+const keyMeta = (r) => ({ t: r.tier, s: r.source, c: r.created, d: (r.devices || []).length, r: r.revoked ? 1 : 0,
+  n: String(r.note || '').slice(0, 60), e: r.emailHash ? 1 : 0 });
 const emailHash = (env, email) => sha256((env.EMAIL_PEPPER || '') + '|' + email.trim().toLowerCase());
 async function revokedIds(env) { return (await getJSON(env, 'revoked')) || []; }
 
@@ -381,13 +388,103 @@ function isAdmin(env, request) {
   return diff === 0;
 }
 
+const keyIdFrom = (body) => {
+  const id = String(body.keyId || (body.key && parseKey(body.key)?.keyId) || '').toLowerCase();
+  if (!/^[0-9a-f]{16}$/.test(id)) throw new HTTPError(400, 'keyId or key needed');
+  return id;
+};
+const publicRecord = (id, r, revokedList) => ({
+  keyId: id, key: r.key || null, tier: TIER_NAME[r.tier] || '?', source: r.source || 'unknown', created: r.created || null,
+  devices: r.devices || [], deviceLimit: null, note: r.note || '', hasEmail: !!r.emailHash,
+  suspended: !!r.revoked || revokedList.includes(id), suspendedAt: r.revoked?.at || null, reason: r.revoked?.reason || '',
+  replaces: r.replaces || null,
+});
+
 async function admin(env, path, body) {
   if (path === '/admin/issue') {
     const tier = TIER[body.tier];
     if (!tier) throw new HTTPError(400, 'tier must be pro or ultimate');
-    const r = await issueKey(env, tier, 'admin', body.email || null, { note: String(body.note || '').slice(0, 200) });
-    const emailed = body.email ? await sendMail(env, body.email, `Your Notch apple ${TIER_NAME[tier]} key`, keyMail([{ tier, key: r.key }])) : false;
-    return { ...r, emailed };
+    const count = Math.max(1, Math.min(50, Number(body.count) || 1));
+    if (count > 1 && body.email) throw new HTTPError(400, 'Email can only be sent for a single key');
+    const note = String(body.note || '').slice(0, 200);
+    const keys = [];
+    for (let i = 0; i < count; i++) keys.push(await issueKey(env, tier, 'admin', body.email || null, { note }));
+    const emailed = body.email ? await sendMail(env, body.email, `Your Notch apple ${TIER_NAME[tier]} key`, keyMail([{ tier, key: keys[0].key }])) : false;
+    return count === 1 ? { ...keys[0], emailed } : { keys };
+  }
+  if (path === '/admin/list') {
+    const page = await env.KV.list({ prefix: 'key:', cursor: body.cursor || undefined, limit: 1000 });
+    const revoked = await revokedIds(env);
+    const rows = [];
+    for (const k of page.keys) {
+      const id = k.name.slice(4);
+      let m = k.metadata;
+      if (!m) {   // records from before metadata: add it once so later lists are a single read
+        const r = await getJSON(env, k.name); if (!r) continue;
+        m = keyMeta(r); await putJSON(env, k.name, r);
+      }
+      rows.push({ keyId: id, tier: TIER_NAME[m.t] || '?', source: m.s, created: m.c, devices: m.d,
+        suspended: !!m.r || revoked.includes(id), note: m.n, hasEmail: !!m.e });
+    }
+    return { rows, cursor: page.list_complete ? null : page.cursor };
+  }
+  if (path === '/admin/get') {
+    const id = keyIdFrom(body);
+    const r = await getJSON(env, `key:${id}`);
+    if (!r) throw new HTTPError(404, 'No key with that ID on the server');
+    return { ...publicRecord(id, r, await revokedIds(env)), deviceLimit: Number(env.DEVICE_LIMIT || 3) };
+  }
+  if (path === '/admin/stats') {
+    let cursor, total = 0, pro = 0, ult = 0, susp = 0, active = 0;
+    const revoked = await revokedIds(env);
+    do {
+      const page = await env.KV.list({ prefix: 'key:', cursor, limit: 1000 });
+      for (const k of page.keys) {
+        const m = k.metadata || keyMeta((await getJSON(env, k.name)) || {});
+        total++; m.t === 2 ? ult++ : pro++;
+        if (m.r || revoked.includes(k.name.slice(4))) susp++; else if (m.d > 0) active++;
+      }
+      cursor = page.list_complete ? null : page.cursor;
+    } while (cursor);
+    return { total, pro, ultimate: ult, suspended: susp, inUse: active, deviceLimit: Number(env.DEVICE_LIMIT || 3) };
+  }
+  if (path === '/admin/suspend' || path === '/admin/unsuspend') {
+    const id = keyIdFrom(body);
+    const rec = await getJSON(env, `key:${id}`);
+    let ids = await revokedIds(env);
+    if (path === '/admin/suspend') {
+      if (!ids.includes(id)) { ids.push(id); await putJSON(env, 'revoked', ids); }
+      if (rec) { rec.revoked = { at: Date.now(), reason: String(body.reason || '').slice(0, 200) }; await putJSON(env, `key:${id}`, rec); }
+      return { suspended: id };
+    }
+    if (ids.includes(id)) { ids = ids.filter((x) => x !== id); await putJSON(env, 'revoked', ids); }
+    if (rec?.revoked) { delete rec.revoked; await putJSON(env, `key:${id}`, rec); }
+    return { unsuspended: id };
+  }
+  if (path === '/admin/note') {
+    const id = keyIdFrom(body);
+    const rec = await getJSON(env, `key:${id}`);
+    if (!rec) throw new HTTPError(404, 'No key with that ID on the server');
+    rec.note = String(body.note || '').slice(0, 200);
+    await putJSON(env, `key:${id}`, rec);
+    return { ok: true };
+  }
+  if (path === '/admin/devices') {
+    // Frees device slots: one device (by its hash) or all of them.
+    const id = keyIdFrom(body);
+    const rec = await getJSON(env, `key:${id}`);
+    if (!rec) throw new HTTPError(404, 'No key with that ID on the server');
+    rec.devices = body.device ? (rec.devices || []).filter((d) => d !== body.device) : [];
+    await putJSON(env, `key:${id}`, rec);
+    return { devices: rec.devices };
+  }
+  if (path === '/admin/email') {
+    const id = keyIdFrom(body);
+    const rec = await getJSON(env, `key:${id}`);
+    if (!rec?.key) throw new HTTPError(404, 'No key with that ID on the server');
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(String(body.email || ''))) throw new HTTPError(400, 'Enter a valid email');
+    const sent = await sendMail(env, body.email, `Your Notch apple ${TIER_NAME[rec.tier]} key`, keyMail([{ tier: rec.tier, key: rec.key }]));
+    return { emailed: sent };
   }
   if (path === '/admin/test-payment') {
     const o = /^[0-9a-f]{32}$/.test(String(body.order)) && await getJSON(env, `order:${body.order}`);
@@ -396,14 +493,14 @@ async function admin(env, path, body) {
     await putJSON(env, `order:${body.order}`, o, ORDER_TTL);
     return { ok: true, claimWith: '0'.repeat(64) };
   }
-  if (path === '/admin/revoke' || path === '/admin/reissue') {
+  if (path === '/admin/revoke') return { revoked: (await admin(env, '/admin/suspend', body)).suspended };
+  if (path === '/admin/reissue') {
     const id = String(body.keyId || (body.key && parseKey(body.key)?.keyId) || '');
     if (!/^[0-9a-f]{16}$/.test(id)) throw new HTTPError(400, 'keyId or key needed');
     const rec = await getJSON(env, `key:${id}`);
     const ids = await revokedIds(env);
     if (!ids.includes(id)) { ids.push(id); await putJSON(env, 'revoked', ids); }
     if (rec) { rec.revoked = { at: Date.now(), reason: String(body.reason || '').slice(0, 200) }; await putJSON(env, `key:${id}`, rec); }
-    if (path === '/admin/revoke') return { revoked: id };
     // Reissue: same tier, to the real buyer. Their other keys and everyone else's keep working.
     const tier = rec?.tier || parseKey(body.key)?.tier;
     if (!tier) throw new HTTPError(400, 'Unknown key; pass the full key to reissue');
@@ -416,6 +513,14 @@ async function admin(env, path, body) {
 
 // MARK: Entry
 
+import { ADMIN_PAGE } from './admin-page.js';
+// The panel holds no data: everything comes from /admin/* with the token, which lives only in this tab.
+const ADMIN_HEADERS = {
+  'content-type': 'text/html; charset=utf-8', 'x-robots-tag': 'noindex', 'x-frame-options': 'DENY',
+  'referrer-policy': 'no-referrer', 'cache-control': 'no-store',
+  'content-security-policy': "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; img-src data:; base-uri 'none'; form-action 'none'; frame-ancestors 'none'",
+};
+
 const CORS = { 'access-control-allow-origin': '*', 'access-control-allow-methods': 'GET, POST, OPTIONS', 'access-control-allow-headers': 'content-type, authorization' };
 const json = (data, status = 200, headers = {}) => new Response(JSON.stringify(data), { status, headers: { 'content-type': 'application/json', ...CORS, ...headers } });
 
@@ -427,6 +532,7 @@ export default {
       if (request.method === 'GET') {
         if (path === '/') return json({ ok: true, service: 'Notch apple licenses' });
         if (path === '/config') return json({ prices: prices(env), ultimate: env.ULTIMATE_ON === '1', network: env.NETWORK || 'mainnet', wallet: env.WALLET });
+        if (path === '/admin') return new Response(ADMIN_PAGE, { headers: ADMIN_HEADERS });
         if (path === '/revoked') return json(await revokedList(env), 200, { 'cache-control': 'public, max-age=3600' });
         throw new HTTPError(404, 'Not found');
       }
@@ -435,7 +541,14 @@ export default {
       if (text.length > 4096) throw new HTTPError(413, 'Too large');
       let body; try { body = JSON.parse(text || '{}'); } catch { throw new HTTPError(400, 'Bad JSON'); }
       if (path.startsWith('/admin/')) {
-        if (!isAdmin(env, request)) throw new HTTPError(401, 'Unauthorized');
+        // Only the one admin token works; 10 wrong tries from an address lock it out for an hour.
+        const ip = request.headers.get('cf-connecting-ip') || 'unknown';
+        const fails = Number(await env.KV.get(`adminfail:${ip}`)) || 0;
+        if (fails >= 10) throw new HTTPError(429, 'Too many wrong tries. Wait an hour.');
+        if (!isAdmin(env, request)) {
+          await env.KV.put(`adminfail:${ip}`, String(fails + 1), { expirationTtl: 3600 });
+          throw new HTTPError(401, 'Unauthorized');
+        }
         return json(await admin(env, path, body));
       }
       switch (path) {

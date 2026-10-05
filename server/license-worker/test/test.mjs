@@ -13,9 +13,15 @@ const jwk = await crypto.subtle.exportKey('jwk', pair.privateKey);
 const pubRaw = new Uint8Array(await crypto.subtle.exportKey('raw', pair.publicKey));
 
 const store = new Map();
+const meta = new Map();
 const KV = {
   async get(k) { return store.has(k) ? store.get(k) : null; },
-  async put(k, v) { store.set(k, v); },
+  async put(k, v, o) { store.set(k, v); if (o?.metadata) meta.set(k, o.metadata); },
+  async list({ prefix, cursor, limit = 1000 }) {
+    const names = [...store.keys()].filter((k) => k.startsWith(prefix)).sort();
+    const from = Number(cursor || 0), page = names.slice(from, from + limit);
+    return { keys: page.map((name) => ({ name, metadata: meta.get(name) })), list_complete: from + limit >= names.length, cursor: String(from + limit) };
+  },
 };
 const mails = [];
 const env = {
@@ -234,6 +240,41 @@ await test('Admin can issue a key for a donor (grandfathering)', async () => {
 await test('Nothing stores a plain email once an order is paid', async () => {
   for (const [k, v] of store) if (k.startsWith('order:') && JSON.parse(v).status === 'paid') assert.ok(!v.includes('@'));
   for (const [k, v] of store) if (k.startsWith('key:') || k.startsWith('email:')) assert.ok(!v.includes('@'), k);
+});
+
+await test('Admin panel: batch issue, list, suspend, unsuspend, notes, devices, lockout', async () => {
+  const A = { authorization: 'Bearer admin-test' };
+  const page = await worker.fetch(new Request('https://x/admin'), env);
+  assert.equal(page.status, 200);
+  assert.match(page.headers.get('content-security-policy'), /frame-ancestors 'none'/);
+  const batch = await call('/admin/issue', { tier: 'pro', count: 5, note: 'cash batch' }, A);
+  assert.equal(batch.keys.length, 5);
+  assert.equal((await call('/admin/issue', { tier: 'pro', count: 2, email: 'a@b.co' }, A)).status, 400);
+  const list = await call('/admin/list', {}, A);
+  assert.ok(list.rows.filter((r) => r.note === 'cash batch').length === 5);
+  const id = batch.keys[0].keyId, key = batch.keys[0].key;
+  // A device activates, then the admin suspends for non-payment.
+  assert.equal((await call('/activate', { key, device: 'a'.repeat(64) })).ok, true);
+  assert.equal((await call('/admin/get', { keyId: id }, A)).devices.length, 1);
+  await call('/admin/suspend', { keyId: id, reason: 'did not pay' }, A);
+  assert.equal((await call('/activate', { key, device: 'b'.repeat(64) })).reason, 'revoked');
+  const rl = await call('/revoked');
+  assert.ok(JSON.parse(rl.list).ids.includes(id));
+  assert.equal((await call('/admin/get', { key }, A)).suspended, true);
+  // Paid after all: unsuspend makes it work again.
+  await call('/admin/unsuspend', { keyId: id }, A);
+  assert.ok(!JSON.parse((await call('/revoked')).list).ids.includes(id));
+  assert.equal((await call('/activate', { key, device: 'b'.repeat(64) })).ok, true);
+  await call('/admin/note', { keyId: id, note: 'paid late' }, A);
+  assert.equal((await call('/admin/list', {}, A)).rows.find((r) => r.keyId === id).note, 'paid late');
+  await call('/admin/devices', { keyId: id, device: 'a'.repeat(64) }, A);
+  assert.deepEqual((await call('/admin/get', { keyId: id }, A)).devices, ['b'.repeat(64)]);
+  const st = await call('/admin/stats', {}, A);
+  assert.ok(st.total >= 5 && st.pro + st.ultimate === st.total);
+  // Wrong tokens lock the address out after 10 tries, even for the right token.
+  const ip = { 'cf-connecting-ip': '203.0.113.9' };
+  for (let i = 0; i < 10; i++) assert.equal((await call('/admin/stats', {}, { ...ip, authorization: 'Bearer guess' + i })).status, 401);
+  assert.equal((await call('/admin/stats', {}, { ...ip, ...A })).status, 429);
 });
 
 // Fixture for the Swift tests: a Pro and an Ultimate key from this run, with this run's public key.
