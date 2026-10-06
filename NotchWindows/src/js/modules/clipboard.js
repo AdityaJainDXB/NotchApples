@@ -6,7 +6,11 @@
 import { el, load, save, timeAgo, fmtBytes, watch } from '../store.js';
 import { canUse } from '../features.js';
 import { menu, toast, toggle, segmented, empty, iconBtn, confirm, modal, markdown } from '../ui.js';
+import { icon } from '../icons.js';
 import * as C from '../services/clipboard.js';
+
+const isLink = (i) => i.kind === 'text' && /^https?:\/\/\S+$/i.test((i.text || '').trim());
+const glyphOf = (i) => (i.kind === 'image' ? 'image' : i.kind === 'files' ? 'file' : isLink(i) ? 'link' : 'align-left');
 
 export function render(root) {
   let filter = '', kind = 'all', selected = 0, shown = [];
@@ -17,18 +21,20 @@ export function render(root) {
   function paint() {
     const q = filter.toLowerCase();
     const items = C.items();
-    shown = items.filter((i) => (kind === 'all' || (kind === 'pinned' ? i.pinned : i.kind === kind))
+    shown = items.filter((i) => (kind === 'all' || (kind === 'pinned' ? i.pinned : kind === 'links' ? isLink(i) : kind === 'text' ? i.kind === 'text' && !isLink(i) : i.kind === kind))
       && (!q || (i.text || '').toLowerCase().includes(q) || (i.files || []).join(' ').toLowerCase().includes(q) || (i.app || '').toLowerCase().includes(q)));
     // Pinned first.
     shown.sort((a, b) => Number(b.pinned) - Number(a.pinned) || b.at - a.at);
     selected = Math.min(selected, Math.max(0, shown.length - 1));
     list.replaceChildren(...shown.slice(0, 300).map((item, idx) => {
+      const tile = item.kind === 'image' && item.thumb
+        ? el('div', { class: 'tile-ico', style: 'width:40px;height:40px;border-radius:11px;background:rgba(255,255,255,.07);overflow:hidden' }, el('img', { src: `data:image/png;base64,${item.thumb}`, style: 'width:100%;height:100%;object-fit:cover' }))
+        : el('div', { class: 'tile-ico', style: 'width:40px;height:40px;border-radius:11px;background:rgba(255,255,255,.07);color:var(--accent-bright)' }, icon(glyphOf(item), 20));
       const preview = item.kind === 'image'
-        ? el('div', { class: 'hstack' }, el('img', { src: `data:image/png;base64,${item.thumb}`, style: 'max-height:54px;max-width:160px;border-radius:6px;border:1px solid var(--border)' }),
-          el('span', { class: 'tiny faint' }, `${item.width}×${item.height}`))
+        ? el('div', { class: 'ellipsis' }, `Image · ${item.width}×${item.height}`)
         : item.kind === 'files'
-          ? el('div', { class: 'ellipsis' }, `📁 ${item.files.map((f) => f.split(/[\\/]/).pop()).join(', ')}`)
-          : el('div', { class: 'ellipsis', style: 'white-space:pre;max-height:36px' }, (item.text || '').replace(/\s+\n/g, '\n').slice(0, 300));
+          ? el('div', { class: 'ellipsis' }, item.files.map((f) => f.split(/[\\/]/).pop()).join(', '))
+          : el('div', { class: 'ellipsis', style: 'font-size:15px' }, (item.text || '').replace(/\s+/g, ' ').trim().slice(0, 200));
       const row = el('div', {
         class: `item clickable ${idx === selected ? 'selected' : ''}`,
         title: 'Click to copy · double-click to paste · right-click for more',
@@ -36,13 +42,13 @@ export function render(root) {
         ondblclick: () => C.paste(item),
         onmouseenter: () => { selected = idx; },
       },
+        tile,
         el('div', { class: 'main' }, preview,
-          el('div', { class: 'tiny faint' }, [item.pinned ? '📌 Pinned' : null, item.app || null, timeAgo(item.at),
-            item.kind === 'text' ? `${item.text.length.toLocaleString()} characters${item.truncated ? ' (shortened)' : ''}` : null].filter(Boolean).join(' · '))),
+          el('div', { class: 'small dim hstack', style: 'gap:5px' }, item.pinned ? icon('pin', 13) : null, el('span', {}, [item.app || null, timeAgo(item.at)].filter(Boolean).join(' · ')))),
         el('div', { class: 'actions' },
-          iconBtn(item.pinned ? '📍' : '📌', item.pinned ? 'Unpin' : 'Pin', (e) => { e.stopPropagation(); C.togglePin(item.id); }),
+          iconBtn(icon('pin', 16, '📌'), item.pinned ? 'Unpin' : 'Pin', (e) => { e.stopPropagation(); C.togglePin(item.id); }),
           iconBtn('⤵', 'Paste into the app you were using', (e) => { e.stopPropagation(); C.paste(item); }),
-          iconBtn('🗑', 'Delete', (e) => { e.stopPropagation(); C.removeItem(item.id); })));
+          iconBtn(icon('trash-2', 16, '🗑'), 'Delete', (e) => { e.stopPropagation(); C.removeItem(item.id); })));
       row.addEventListener('contextmenu', (e) => menu(e, [
         { label: 'Copy', run: () => C.copy(item).then(() => toast('Copied')) },
         { label: 'Paste into the app you were using', run: () => C.paste(item) },
@@ -85,10 +91,12 @@ export function render(root) {
     else if (e.key === 'Enter' && shown[selected]) { e.preventDefault(); e.ctrlKey ? C.copy(shown[selected]).then(() => toast('Copied')) : C.paste(shown[selected]); }
   });
 
+  search.style.paddingLeft = '38px';
+  const searchBox = el('div', { style: 'position:relative;flex:1;min-width:0' }, el('span', { style: 'position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--text-dim);display:grid', 'aria-hidden': 'true' }, icon('search', 17)), search);
   root.append(el('div', { class: 'col fill' },
-    el('div', { class: 'hstack' }, search,
-      segmented([{ value: 'all', label: 'All' }, { value: 'text', label: 'Text' }, { value: 'image', label: 'Images' }, { value: 'files', label: 'Files' }, { value: 'pinned', label: '📌' }], kind, (v) => { kind = v; paint(); }),
-      el('button', { class: 'btn quiet small', onclick: async () => { if (await confirm('Clear clipboard history?', { ok: 'Clear', danger: true, detail: 'Pinned items are kept.' })) { C.clearAll(); paint(); } } }, 'Clear')),
+    el('div', { class: 'hstack' }, searchBox,
+      segmented([{ value: 'all', label: 'All' }, { value: 'pinned', label: 'Pinned' }, { value: 'text', label: 'Text' }, { value: 'links', label: 'Links' }, { value: 'image', label: 'Images' }, { value: 'files', label: 'Files' }], kind, (v) => { kind = v; paint(); }),
+      iconBtn(icon('trash-2', 19, '🗑'), 'Clear clipboard history', async () => { if (await confirm('Clear clipboard history?', { ok: 'Clear', danger: true, detail: 'Pinned items are kept.' })) { C.clearAll(); paint(); } })),
     list, footer));
   paint();
   const unwatch = watch('clipboard.items', () => paint());
