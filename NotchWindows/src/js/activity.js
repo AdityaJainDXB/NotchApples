@@ -42,12 +42,14 @@ export function refresh() {
 /// Builds the pill's left ear (icon or art) and right ear (label, gauge or bars).
 export function earsFor(a) {
   const left = [];
+  if (a.dot) left.push(el('span', { class: 'dot status', style: `background:${a.dot};box-shadow:0 0 10px ${a.dot}` }));
   if (a.live) left.push(el('span', { class: 'dot live' }));
   if (a.art) left.push(el('img', { src: a.art, alt: '' }));
   else if (a.icon) left.push(el('span', { class: 'sym' }, a.icon));
   if (a.leftText) left.push(el('span', { class: 'label' }, a.leftText));
   let right;
-  if (a.gauge !== undefined && a.gauge !== null) right = el('span', { class: 'gauge' }, el('i', { style: `width:${Math.round(a.gauge * 100)}%` }));
+  if (a.dot) right = el('span', { class: 'label' });
+  else if (a.gauge !== undefined && a.gauge !== null) right = el('span', { class: 'gauge' }, el('i', { style: `width:${Math.round(a.gauge * 100)}%` }));
   else if (a.bars) right = el('span', { class: 'bars' }, el('i'), el('i'), el('i'));
   else right = el('span', { class: 'label num' }, a.label ?? '');
   return { left, right };

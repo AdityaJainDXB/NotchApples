@@ -32,6 +32,18 @@ export function render(root, opts = {}) {
   root.append(el('div', { class: 'row fill' }, nav, body));
   paint();
 }
+function claudeCard() {
+  const C = () => import('../services/claudecode.js');
+  return card('Claude Code',
+    setting('Status dot', 'A green dot for 4 seconds when a Claude Code task finishes; yellow when it needs your input or approval. Shows on the pill and in the open notch.',
+      toggle(load('claudecode.on', true), (v) => save('claudecode.on', v))),
+    setting('Add to Claude Code', 'Copies two hooks. Paste them into %USERPROFILE%\\.claude\\settings.json (merge with any "hooks" already there).', el('div', { class: 'hstack' },
+      button('Copy hooks', async () => { const c = await C(); await navigator.clipboard.writeText(c.hooksJSON()); toast('Hooks copied'); }, { kind: 'quiet', small: true }),
+      button('Open file', async () => { const info = await appInfo; const home = (info.data_dir || '').replace(/\\AppData\\.*$/, ''); invoke('open_path', { path: `${home}\\.claude\\settings.json` }).catch(() => toast('Claude Code settings not found yet. Run Claude Code once first.', { error: true })); }, { kind: 'quiet', small: true }))),
+    setting('Try it', 'See what each dot looks like.', el('div', { class: 'hstack' },
+      button('Green', async () => (await C()).show('green'), { kind: 'quiet', small: true }),
+      button('Yellow', async () => (await C()).show('yellow'), { kind: 'quiet', small: true }))));
+}
 const card = (title, ...rows) => el('div', { class: 'card col', style: 'gap:0' }, title ? el('div', { class: 'section-title', style: 'margin-bottom:4px' }, title) : null, ...rows);
 const prefToggle = (key, gate) => toggle(pref(key), (v) => { if (gate && !canUse(gate)) { toast(`${FEATURES[gate].title} is part of ${tierLabel(FEATURES[gate].tier)}.`); return; } setPref(key, v); });
 
@@ -51,6 +63,7 @@ function General(repaint, opts) {
       setting('Close when I click somewhere else', '', prefToggle('ui.closeOnBlur')),
       setting('Hide over fullscreen videos and games', '', prefToggle('ui.hideFullscreen')),
       setting('Show the time on the pill', '', prefToggle('ui.showClock'))),
+    claudeCard(),
     card('Your data',
       setting('Back up your setup', 'Tabs, settings, notes, to-dos, snippets… (not keys).', button('Export…', async () => {
         const data = {}; for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); if (!/^(ai\.key\.|license\.)/.test(k)) data[k] = localStorage.getItem(k); }

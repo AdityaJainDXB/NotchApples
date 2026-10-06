@@ -4,6 +4,7 @@
 
 import { applyTheme, currentThemeId, enforceTheme } from './themes.js';
 import { icon } from './icons.js';
+import { current as claudeDot, COLOURS as DOT_COLOURS } from './services/claudecode.js';
 import { load, save, el, watch } from './store.js';
 import { invoke, listen } from './native.js';
 import { loadSaved, tierName, setTierOverride } from './license.js';
@@ -89,6 +90,8 @@ export function buildTabs() {
 
   tools.replaceChildren(
     ...(updateReady ? [updateButton()] : []),
+    ...(claudeDot() ? [el('span', { class: 'dot status', title: claudeDot() === 'green' ? 'Claude Code finished' : 'Claude Code needs you',
+      style: `background:${DOT_COLOURS[claudeDot()]};box-shadow:0 0 10px ${DOT_COLOURS[claudeDot()]};margin:0 6px` })] : []),
     el('button', { class: 'icon-btn', title: 'Command palette (Ctrl+K)', onclick: () => openPalette() }, icon('search', 20)),
     el('button', { class: `icon-btn ${pinned ? 'on' : ''}`, title: pinned ? 'Pinned open — click to unpin' : 'Keep open when I click elsewhere',
       onclick: () => { pinned = !pinned; buildTabs(); } }, icon('pin', 20)),
@@ -526,3 +529,4 @@ window.addEventListener('theme-changed', () => buildTabs());
     expand('today');
   }
 })();
+addEventListener('claude-dot', () => { if (expanded) buildTabs(); });

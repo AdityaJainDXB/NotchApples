@@ -444,3 +444,7 @@ body[data-perf="lite"] .ws-step { animation: none; }
   background: radial-gradient(circle at 35% 30%, rgba(255,255,255,.12), transparent 60%); transition: transform .06s; }
 .cookie-btn:active { transform: scale(.93); }
 @keyframes cookie-pop { from { opacity: 1; transform: translateY(0) } to { opacity: 0; transform: translateY(-46px) } }
+
+/* status dots (Claude Code) */
+.dot.status { width: 10px; height: 10px; border-radius: 50%; flex: none; animation: dotin .2s var(--ease); }
+@keyframes dotin { from { transform: scale(.4); opacity: 0 } to { transform: none; opacity: 1 } }
