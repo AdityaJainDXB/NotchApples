@@ -17,6 +17,7 @@ export const limit = () => {
 };
 
 let lastApp = '';
+let secretTimer = null;
 
 export function start() {
   // The app in front when something was copied (for "copied from" and the ignore list).
@@ -27,10 +28,25 @@ export function start() {
   listen('clipboard', (clip) => {
     const ignored = canUse('clipboardUnlimited') ? load('clipboard.ignoreApps', []) : [];
     if (lastApp && ignored.some((a) => a.toLowerCase() === lastApp.toLowerCase())) return;
-    add({ ...clip, app: lastApp });
-    // Clipboard Link (Ultimate, off until you turn it on): share copied text with your other devices.
-    if (clip.kind === 'text' && clip.text) import('./clipsync.js').then((m) => m.onLocalCopy(clip.text)).catch(() => {});
+    // Any newer copy cancels a pending clear, so we never wipe something you copied after the secret.
+    clearTimeout(secretTimer);
+    if (clip.kind === 'text' && !String(clip.text || '').trim()) return;   // our own clearing of the clipboard
+    // Protect secrets (off by default): kept out of the history, and the clipboard is cleared a little later.
+    if (clip.kind === 'text' && load('clipboard.protectSecrets', false)) {
+      import('./secrets.js').then(({ looksSecret }) => {
+        if (looksSecret(clip.text)) { clearTimeout(secretTimer); secretTimer = setTimeout(() => invoke('clipboard_copy_text', { text: '' }).catch(() => {}), load('clipboard.secretSeconds', 30) * 1000); }
+        else record(clip);
+      });
+      return;
+    }
+    record(clip);
   });
+}
+
+function record(clip) {
+  add({ ...clip, app: lastApp });
+  // Clipboard Link (Ultimate, off until you turn it on): share copied text with your other devices.
+  if (clip.kind === 'text' && clip.text) import('./clipsync.js').then((m) => m.onLocalCopy(clip.text)).catch(() => {});
 }
 
 function sameContent(a, b) {

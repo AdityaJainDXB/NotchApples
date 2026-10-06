@@ -140,6 +140,8 @@ function Appearance(repaint) {
   out.push(card('Style',
     setting('Font', canUse('fontsAndIcons') ? '' : 'Pro', select([{ value: 'system', label: 'Segoe UI' }, { value: 'rounded', label: 'Rounded' }, { value: 'mono', label: 'Monospace' }], pref('ui.font'), (v) => (canUse('fontsAndIcons') ? setPref('ui.font', v) : toast('Fonts are part of Pro.')), { cls: 'auto' })),
     setting('Animations', canUse('animationStyles') ? '' : 'Pro', select([{ value: 'smooth', label: 'Smooth' }, { value: 'fast', label: 'Fast' }, { value: 'off', label: 'Off' }], pref('ui.animation'), (v) => (canUse('animationStyles') ? setPref('ui.animation', v) : toast('Animation styles are part of Pro.')), { cls: 'auto' })),
+    setting('Text size', 'Makes the text in the open notch larger; it scrolls if it no longer fits.', select([{ value: 0.9, label: 'Smaller' }, { value: 1, label: 'Normal' }, { value: 1.15, label: 'Large' }, { value: 1.3, label: 'Extra large' }], pref('ui.textScale'), (v) => setPref('ui.textScale', Number(v)), { cls: 'auto' })),
+    setting('Skin', 'How the open notch looks: solid, a thin outline, or a glowing edge.', select([{ value: 'solid', label: 'Solid' }, { value: 'outline', label: 'Outline' }, { value: 'neon', label: 'Neon edge' }], pref('ui.skin'), (v) => setPref('ui.skin', v), { cls: 'auto' })),
     setting('Glass (experimental)', 'Lets your desktop show through behind the open notch. Only looks right on PCs where Windows blurs it; on others it is clear, not blurred, so it is off by default.', select([{ value: true, label: 'On' }, { value: false, label: 'Off' }], pref('ui.glass'), (v) => setPref('ui.glass', v === true || v === 'true'), { cls: 'auto' })),
     setting('Performance', 'Auto switches to Lite on slow graphics (no glows or looping animations).', select([{ value: 'auto', label: 'Auto' }, { value: 'full', label: 'Full' }, { value: 'lite', label: 'Lite' }], pref('ui.performance'), (v) => setPref('ui.performance', v), { cls: 'auto' })),
     setting('Sounds', 'When the notch opens and timers finish (Pro).', prefToggle('ui.sounds', 'customSounds')),
@@ -221,6 +223,9 @@ function Clipboard(repaint) {
   return [card('History', setting('Keep up to', '2,500 and 5,000 are Pro.', select(limits.map((n) => ({ value: n, label: `${n.toLocaleString()} items${n > 1000 && !canUse('clipboardUnlimited') ? ' (Pro)' : ''}` })), load('clipboard.limit', 200), (v) => {
     if (Number(v) > 1000 && !canUse('clipboardUnlimited')) { toast('Longer history is part of Pro.'); return repaint(); } save('clipboard.limit', Number(v)); }, { cls: 'auto' })),
     setting('Record what I copy', 'Password managers are always skipped.', toggle(!load('clipboard.paused', false), async (on) => (await import('../services/clipboard.js')).setPaused(!on)))),
+  card('Secrets',
+    setting('Protect secrets', 'API keys, tokens, one-time codes and card numbers are left out of the history and cleared from the clipboard a little later. A best guess from what the text looks like, not a promise.', toggle(load('clipboard.protectSecrets', false), (v) => { save('clipboard.protectSecrets', v); repaint(); })),
+    ...(load('clipboard.protectSecrets', false) ? [setting('Clear the clipboard after', '', select([15, 30, 60, 120].map((n) => ({ value: n, label: `${n} seconds` })), load('clipboard.secretSeconds', 30), (v) => save('clipboard.secretSeconds', Number(v)), { cls: 'auto' })) ] : [])),
   clipLinkCard(repaint),
   card('Never save copies from (Pro)', el('div', { class: 'small dim' }, (load('clipboard.ignoreApps', []).join(', ') || 'No apps.')),
     el('div', { class: 'hstack', style: 'padding-top:6px' }, button('Add an app…', async () => { if (!canUse('clipboardUnlimited')) return toast('This is part of Pro.'); const a = await prompt('App name, as Windows shows it', { placeholder: 'e.g. Microsoft Teams' }); if (a) { save('clipboard.ignoreApps', [...load('clipboard.ignoreApps', []), a]); repaint(); } }, { kind: 'quiet', small: true }),
@@ -251,10 +256,17 @@ function clipLinkCard(repaint) {
     el('div', { class: 'tiny dim', style: 'padding-top:6px' }, 'Anything a password manager marks as secret is never sent. Text only, up to 100,000 characters.'));
 }
 
+function panicCard() {
+  const P = () => import('../services/panic.js');
+  return card('Panic hide',
+    setting('Panic hide shortcut', 'Ctrl+Alt+Shift+P closes the notch, hides it completely and empties the clipboard. Bring it back with Ctrl+Alt+O. Change the keys in Settings → Shortcuts.', button('Panic hide now', async () => (await P()).panic(), { kind: 'danger', small: true })),
+    setting('Also wipe the clipboard history', 'Pinned items stay.', toggle(load('panic.wipeHistory', true), (v) => save('panic.wipeHistory', v))));
+}
+
 function Security(repaint) {
   const avail = el('span', { class: 'tiny dim' }, 'Checking Windows Hello…');
   invoke('hello_available').then((ok) => { avail.textContent = ok ? 'Windows Hello is set up on this PC.' : 'Windows Hello isn’t set up. Set it up in Windows Settings → Accounts → Sign-in options.'; });
-  return [card('Lock', setting('Require Windows Hello to open the notch', 'Face, fingerprint or PIN.', toggle(pref('lock.enabled'), async (v) => {
+  return [panicCard(), card('Lock', setting('Require Windows Hello to open the notch', 'Face, fingerprint or PIN.', toggle(pref('lock.enabled'), async (v) => {
     if (v && !(await invoke('hello_available').catch(() => false))) { toast('Set up Windows Hello first.', { error: true }); return repaint(); }
     if (v && !(await invoke('hello_verify', { message: 'Turn on the Notch apple lock' }).catch(() => false))) return repaint();
     setPref('lock.enabled', v);

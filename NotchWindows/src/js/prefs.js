@@ -16,6 +16,8 @@ export const DEFAULTS = {
   'ui.glass': false,                // experimental: let the desktop show through behind the open notch (off: solid material)
   'ui.performance': 'auto',         // auto | full | lite: lite drops glows and looping animations on slow graphics
   'ui.sounds': false,               // Pro: sounds on open and when timers end
+  'ui.textScale': 1,                // 0.9 | 1 | 1.15 | 1.3: the size of text in the open notch
+  'ui.skin': 'solid',               // solid | outline | neon: how the open notch looks
   'ui.font': 'system',              // Pro: system | rounded | mono
   'ui.compactTabs': 'auto',         // auto | always | never
   'shortcuts': {
@@ -23,6 +25,7 @@ export const DEFAULTS = {
     hide: 'Ctrl+Alt+O',
     'tab:clipboard': 'Ctrl+Alt+V',
     palette: 'Ctrl+Alt+K',
+    panic: 'Ctrl+Alt+Shift+P',
     'ai:screen': '',
     'tab:quickadd': '',
     'focus:toggle': '',
@@ -52,6 +55,7 @@ export const SHORTCUT_NAMES = {
   hide: 'Hide or show the pill',
   'tab:clipboard': 'Open Clipboard',
   palette: 'Command palette',
+  panic: 'Panic hide (hides everything, empties the clipboard)',
   'ai:screen': 'Ask AI about your screen',
   'tab:quickadd': 'Quick Add',
   'focus:toggle': 'Start or pause Focus',

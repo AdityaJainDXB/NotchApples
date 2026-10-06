@@ -60,6 +60,10 @@ struct PrivacyDashboard: View {
             Destination(host: "Google / Firebase", what: "Your settings and activation", when: "Only if you sign in (Backup & Sync)", active: AccountSync.shared.isSignedIn),
             Destination(host: "iCloud Drive", what: "Settings, notes and to-dos you choose to sync", when: "Only if sync is on", active: SettingsBackup.shared.iCloudSync || NotesCloudSync.shared.enabled),
             Destination(host: "Your plugins", what: "Whatever your plugin scripts do", when: "Plugins tab", active: settings.pluginsEnabled),
+            Destination(host: "apple.com", what: "Nothing about you: a tiny test page, to see if you're online", when: "Every 20 seconds, only if “Tell me when the internet drops” is on", active: SystemWatch.shared.internetAlert),
+            Destination(host: "Cloudflare (speed.cloudflare.com)", what: "Nothing about you: about 20 MB to measure your speed", when: "Only when you press Speed test in Stats", active: false),
+            Destination(host: "Notch apple room relay (Cloudflare)", what: "Scrambled clipboard text only your devices can read, and Messenger room traffic", when: "Clipboard Link or Messenger rooms, when on", active: ClipboardLink.shared.enabled || WebP2PManager.shared.state == .joined),
+            Destination(host: "Your Home Assistant", what: "Your device states and the commands you press", when: "Smart Home, once you connect it (your own server)", active: SmartHomeStore.shared.configured),
         ]
     }
 
@@ -73,6 +77,9 @@ struct PrivacyDashboard: View {
             DataItem(title: "Voice notes", path: support.appendingPathComponent("Voice Notes").path, note: "Recordings and transcripts"),
         ]
     }
+
+    @AppStorage(PanicHide.hotkeyKey) private var panicOn = true
+    @AppStorage(PanicHide.wipeKey) private var panicWipe = true
 
     var body: some View {
         Form {
@@ -107,6 +114,16 @@ struct PrivacyDashboard: View {
                 Text("Where it connects")
             } footer: {
                 Text("Green means the feature that uses it is on. No analytics, no tracking and no ads, ever. The app never sends anything in the background except what's listed here.")
+            }
+
+            Section {
+                Toggle("Panic hide shortcut (⌃⌥⇧P)", isOn: Binding(get: { panicOn }, set: { panicOn = $0; AppDelegate.current?.reapplyHotkeys() }))
+                Toggle("Also wipe the clipboard history (pinned items stay)", isOn: $panicWipe)
+                Button("Panic hide now") { PanicHide.run() }
+            } header: {
+                Text("Panic hide")
+            } footer: {
+                Text("One key for “someone just walked up”: it closes the notch, hides it completely, and empties the clipboard. Bring the notch back with the hide shortcut (⌘O by default).")
             }
 
             Section {

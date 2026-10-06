@@ -1331,6 +1331,8 @@ private struct ClipboardSettings: View {
     @EnvironmentObject private var settings: SettingsManager
     @StateObject private var history = ClipboardHistory.shared
     @State private var cleared = false
+    @AppStorage("clipboard.protectSecrets") private var protectSecrets = false
+    @AppStorage("clipboard.secretSeconds") private var secretSeconds = 30
 
     var body: some View {
         Form {
@@ -1383,6 +1385,22 @@ private struct ClipboardSettings: View {
                 Text("For example your banking app or a work tool. Password managers are always skipped.")
             }
             .disabled(!Entitlements.shared.canUse(.clipboardUnlimited))
+
+            Section {
+                Toggle(isOn: $protectSecrets) {
+                    Text("Protect secrets")
+                    Text("API keys, tokens, one-time codes and card numbers are left out of the history and cleared from the clipboard a little later.")
+                }
+                if protectSecrets {
+                    Picker("Clear the clipboard after", selection: $secretSeconds) {
+                        ForEach([15, 30, 60, 120], id: \.self) { Text("\($0) seconds").tag($0) }
+                    }
+                }
+            } header: {
+                Text("Secrets")
+            } footer: {
+                Text("A best guess from what the text looks like, not a promise. Nothing is sent anywhere. Anything a password manager marks as secret is always skipped.")
+            }
 
             ClipboardLinkSettings()
         }

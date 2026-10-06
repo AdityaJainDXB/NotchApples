@@ -334,6 +334,7 @@ listen('tray', (what) => {
 });
 listen('shortcut', (action) => {
   if (action === 'palette') { expand().then(() => openPalette()); return; }
+  if (action === 'panic') { import('./services/panic.js').then((m) => m.panic()); return; }
   if (action === 'ai:screen') { expand('ai', { screen: true }); return; }
   if (action === 'focus:toggle') { import('./services/focus.js').then((f) => f.toggle()); return; }
   if (action.startsWith('tab:')) { const id = action.slice(4); expanded ? show(id) : expand(id); }
@@ -445,10 +446,23 @@ export function applyLayout() {
   invoke('set_layout', { layout: { position: pref('ui.position'), inset: pref('ui.inset'), ...size } }).catch(console.error);
   invoke('set_hide_in_fullscreen', { on: pref('ui.hideFullscreen') }).catch(() => {});
   invoke('set_edge_trigger', { on: pref('ui.edgeTrigger') && canUse('edgeTrigger') }).catch(() => {});
-  body.dataset.anim = canUse('animationStyles') ? pref('ui.animation') : 'smooth';
-  body.dataset.font = canUse('fontsAndIcons') ? pref('ui.font') : 'system';
+  applyLook();
   applyPerf();
 }
+
+/// Appearance options that need no restart: animation (and the system's "reduce motion"), font, text size, skin, contrast.
+const mq = (q) => (window.matchMedia ? matchMedia(q) : { matches: false, addEventListener() {} });
+export function applyLook() {
+  const wanted = canUse('animationStyles') ? pref('ui.animation') : 'smooth';
+  // Windows' "Show animations" off (the system's reduce-motion setting) wins over Smooth.
+  body.dataset.anim = mq('(prefers-reduced-motion: reduce)').matches && wanted === 'smooth' ? 'off' : wanted;
+  body.dataset.font = canUse('fontsAndIcons') ? pref('ui.font') : 'system';
+  body.dataset.skin = ['outline', 'neon'].includes(pref('ui.skin')) ? pref('ui.skin') : 'solid';
+  body.dataset.contrast = mq('(prefers-contrast: more)').matches || mq('(forced-colors: active)').matches ? 'more' : '';
+  body.style.setProperty('--text-scale', String([0.9, 1, 1.15, 1.3].includes(Number(pref('ui.textScale'))) ? Number(pref('ui.textScale')) : 1));
+}
+for (const q of ['(prefers-reduced-motion: reduce)', '(prefers-contrast: more)', '(forced-colors: active)']) mq(q).addEventListener?.('change', applyLook);
+watch('ui.textScale', applyLook); watch('ui.skin', applyLook);
 
 let warnedShortcuts = false;
 export async function registerShortcuts() {

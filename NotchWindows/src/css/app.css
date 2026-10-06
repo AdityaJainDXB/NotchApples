@@ -361,6 +361,29 @@ body[data-anim="fast"] #panel, body[data-anim="fast"] #page.fade { animation-dur
 body[data-font="rounded"] { --font: "Segoe UI Variable Display", "Nunito", "Segoe UI", system-ui, sans-serif; letter-spacing: .1px; }
 body[data-font="mono"] { --font: var(--mono); }
 
+/* Text size (Settings → Appearance): only the open notch's content scales, and it scrolls if it grows. */
+#page { zoom: var(--text-scale, 1); }
+
+/* Skins */
+body[data-skin="outline"] #shell {
+  background: linear-gradient(160deg, color-mix(in srgb, var(--bg) 72%, transparent) 0%, color-mix(in srgb, var(--bg-end) 60%, transparent) 100%) padding-box,
+              linear-gradient(var(--accent), var(--accent)) border-box;
+}
+body[data-skin="neon"] #shell {
+  background: linear-gradient(160deg, var(--bg) 0%, var(--bg) 45%, var(--bg-end) 100%) padding-box,
+              linear-gradient(135deg, var(--accent-bright), var(--accent), var(--accent-bright)) border-box;
+  box-shadow: inset 0 0 26px -6px color-mix(in srgb, var(--accent) 70%, transparent), inset 0 -18px 34px -18px var(--accent-bright);
+}
+body.collapsed[data-skin] #shell { box-shadow: none; }
+
+/* High contrast: follows the system's "Increase contrast" or a Windows contrast theme. */
+body[data-contrast="more"] {
+  --text-dim: rgba(255,255,255,.96); --text-faint: rgba(255,255,255,.84);
+  --border: rgba(255,255,255,.62); --card-line: rgba(255,255,255,.62); --surface: rgba(255,255,255,.15); --surface-2: rgba(255,255,255,.22);
+}
+body[data-contrast="more"] .btn.quiet { border-color: rgba(255,255,255,.7); }
+body[data-contrast="more"] .field { border-color: rgba(255,255,255,.62); }
+
 /* Cards inside a scrolling column keep their height (they used to squash and overlap). */
 .card .card, .card > .item, .col > .item { flex-shrink: 0; }
 .col.scrollable > * { flex-shrink: 0; }

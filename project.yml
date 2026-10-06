@@ -91,6 +91,7 @@ targets:
       - NotchApple/Core/DevToolkitLogic.swift
       - NotchApple/Core/WellbeingLogic.swift
       - NotchApple/Core/SystemWatchLogic.swift
+      - NotchApple/Core/SecretLogic.swift
       - NotchApple/Core/VPNTunnel.swift
       - CompanionKit
     settings:

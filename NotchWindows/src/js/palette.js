@@ -32,6 +32,7 @@ export async function paletteActions(query) {
   const low = q.toLowerCase();
   const actions = [
     ...MODULES.filter((m) => allowed(m)).map((m) => ({ icon: m.icon, label: m.name, hint: isEnabled(m.id) ? 'Tab' : 'Tab (off)', run: () => show(m.id) })),
+    { icon: '🙈', label: 'Panic hide', hint: 'Hides everything', run: () => import('./services/panic.js').then((m) => m.panic()) },
     { icon: '📝', label: 'New note', run: () => show('notes', { newNote: true }) },
     { icon: '✅', label: 'New to-do', run: () => show('todo', { focusInput: true }) },
     { icon: '⏱', label: 'Start a 5-minute timer', run: async () => { (await import('./services/timer.js')).startTimer(300); toast('Timer started: 5 minutes'); } },

@@ -203,6 +203,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         } else {
             GlobalHotkeyManager.shared.unregister(.palette)
         }
+        if PanicHide.hotkeyEnabled { GlobalHotkeyManager.shared.register(.panic) { PanicHide.run() } } else { GlobalHotkeyManager.shared.unregister(.panic) }
         if SettingsManager.shared.invisibilityHotkeyEnabled {
             GlobalHotkeyManager.shared.register(.toggleInvisible) { [weak self] in self?.toggleInvisible() }
         } else {

@@ -113,6 +113,21 @@ final class ClipboardHistory: ObservableObject {
         if Entitlements.shared.canUse(.clipboardUnlimited), let id = front?.bundleIdentifier, ignoredApps.contains(id) { return }
         let source = front?.localizedName
 
+        // Protect secrets (off by default): API keys, tokens, one-time codes and card numbers are kept out of the history and
+        // cleared from the clipboard a little later, but only if nothing else has been copied since.
+        if UserDefaults.standard.bool(forKey: "clipboard.protectSecrets"), let text = pb.string(forType: .string), SecretLogic.looksSecret(text) {
+            let stamp = pb.changeCount
+            let wait = Double(UserDefaults.standard.object(forKey: "clipboard.secretSeconds") as? Int ?? 30)
+            DispatchQueue.main.asyncAfter(deadline: .now() + wait) { [weak self] in
+                guard NSPasteboard.general.changeCount == stamp else { return }
+                self?.ignoreNextChange = true
+                NSPasteboard.general.clearContents()
+                self?.lastChangeCount = NSPasteboard.general.changeCount
+                self?.ignoreNextChange = false
+            }
+            return
+        }
+
         if let urls = pb.readObjects(forClasses: [NSURL.self], options: [.urlReadingFileURLsOnly: true]) as? [URL], !urls.isEmpty {
             add(ClipItem(kind: .files, filePaths: urls.map(\.path), sourceApp: source))
         } else if let image = NSImage(pasteboard: pb), types.contains(NSPasteboard.PasteboardType.png.rawValue)
@@ -206,6 +221,15 @@ final class ClipboardHistory: ObservableObject {
     }
 
     /// Clears everything except pinned items.
+    /// Panic hide: empties the system clipboard and (optionally) the unpinned history, with no undo toast.
+    func panicWipe(history wipe: Bool) {
+        ignoreNextChange = true
+        NSPasteboard.general.clearContents()
+        lastChangeCount = NSPasteboard.general.changeCount
+        ignoreNextChange = false
+        if wipe { items.removeAll { !$0.pinned }; save() }
+    }
+
     func clearUnpinned() {
         let before = items
         let removed = items.filter { !$0.pinned }

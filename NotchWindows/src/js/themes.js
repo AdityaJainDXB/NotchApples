@@ -17,6 +17,10 @@ export const THEMES = [
   { id: 'oceanic_trench', name: 'Oceanic Trench', category: 'Nature & Earthy', bg: '#0a192f', surface: '#112240', primary: '#64ffda', secondary: '#57cbde', text: '#ccd6f6', border: '#233554', glow: 'rgba(100,255,218,.25)' },
   { id: 'matcha_cream', name: 'Matcha & Cream', category: 'Modern Pastel', bg: '#192019', surface: '#253325', primary: '#a8dadc', secondary: '#e2f0d9', text: '#f4f9f4', border: '#364a36', glow: 'rgba(244,162,97,.3)' },
   { id: 'lavender_haze', name: 'Lavender Haze', category: 'Modern Pastel', bg: '#16131e', surface: '#262035', primary: '#c77dff', secondary: '#e0aaff', text: '#f3eaff', border: '#3d3054', glow: 'rgba(123,44,191,.35)' },
+  // Colour-blind friendly: Okabe-Ito colours on dark backgrounds, WCAG AA contrast or better, all free
+  { id: 'okabe_sky', name: 'Okabe Sky', category: 'Colour-blind friendly', bg: '#0b1620', surface: '#14283a', primary: '#56b4e9', secondary: '#f0e442', text: '#f4f8fb', border: '#24425c', glow: 'rgba(86,180,233,.3)' },
+  { id: 'okabe_amber', name: 'Okabe Amber', category: 'Colour-blind friendly', bg: '#17110a', surface: '#2a1f10', primary: '#e69f00', secondary: '#56b4e9', text: '#fff8ec', border: '#4a3716', glow: 'rgba(230,159,0,.3)' },
+  { id: 'okabe_violet', name: 'Okabe Violet', category: 'Colour-blind friendly', bg: '#150d18', surface: '#281830', primary: '#cc79a7', secondary: '#f0e442', text: '#fbf3f9', border: '#4a2a5a', glow: 'rgba(204,121,167,.3)' },
   // Pro collection
   { id: 'aurora', name: 'Aurora', category: 'Pro', pro: true, bg: '#06121a', surface: '#0e2230', primary: '#5ef2b8', secondary: '#9d7bff', text: '#e8fff6', border: 'rgba(94,242,184,.25)', glow: 'rgba(94,242,184,.35)' },
   { id: 'rose_gold', name: 'Rose Gold', category: 'Pro', pro: true, bg: '#1a1214', surface: '#2a1d20', primary: '#f4b6a6', secondary: '#e8c39e', text: '#fff4f0', border: 'rgba(244,182,166,.25)', glow: 'rgba(244,182,166,.3)' },

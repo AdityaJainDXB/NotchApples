@@ -38,6 +38,7 @@ enum ThemeCategory: String, CaseIterable, Identifiable, Codable {
     case darkCozy = "Dark & Cozy"
     case nature = "Nature & Earthy"
     case pastel = "Modern Pastel"
+    case accessible = "Colour-blind friendly"
     case pro = "Pro collection"
     case custom = "Your theme"
 
@@ -51,6 +52,7 @@ enum ThemeCategory: String, CaseIterable, Identifiable, Codable {
         case .darkCozy: "moon.stars.fill"
         case .nature: "leaf.fill"
         case .pastel: "paintpalette.fill"
+        case .accessible: "eye.fill"
         case .pro: "crown.fill"
         case .custom: "slider.horizontal.3"
         }
@@ -64,6 +66,8 @@ enum ThemeID: String, CaseIterable, Identifiable, Codable {
     case nordicDusk = "nordic_dusk", draculaVoid = "dracula_void", espressoMocha = "espresso_mocha"
     case deepForest = "deep_forest", sunsetHorizon = "sunset_horizon", oceanicTrench = "oceanic_trench"
     case matchaCream = "matcha_cream", lavenderHaze = "lavender_haze"
+    // Colour-blind friendly (Okabe-Ito colours, all free)
+    case okabeSky = "okabe_sky", okabeAmber = "okabe_amber", okabeViolet = "okabe_violet"
     // Pro collection
     case aurora = "aurora", roseGold = "rose_gold", midnightBlue = "midnight_blue", crimsonNoir = "crimson_noir"
     case arcticMint = "arctic_mint", goldenHour = "golden_hour", neonViolet = "neon_violet", cobaltSteel = "cobalt_steel"
@@ -146,6 +150,17 @@ extension AppTheme {
             AppTheme(.graphiteTitanium, "Graphite & Titanium", .minimal, background: "#1E1E24", surface: Color(hex: "#2A2A32"),
                      primary: "#007AFF", secondary: "#5E5CE6", text: "#F2F2F7",
                      border: Color(hex: "#3A3A46"), glow: Color(hex: "#007AFF", opacity: 0.25)),
+            // Colour-blind friendly: Okabe-Ito colours, which stay distinct for the common kinds of colour blindness,
+            // on dark backgrounds with WCAG AA contrast or better.
+            AppTheme(.okabeSky, "Okabe Sky", .accessible, background: "#0B1620", surface: Color(hex: "#14283A"),
+                     primary: "#56B4E9", secondary: "#F0E442", text: "#F4F8FB",
+                     border: Color(hex: "#24425C"), glow: Color(hex: "#56B4E9", opacity: 0.3)),
+            AppTheme(.okabeAmber, "Okabe Amber", .accessible, background: "#17110A", surface: Color(hex: "#2A1F10"),
+                     primary: "#E69F00", secondary: "#56B4E9", text: "#FFF8EC",
+                     border: Color(hex: "#4A3716"), glow: Color(hex: "#E69F00", opacity: 0.3)),
+            AppTheme(.okabeViolet, "Okabe Violet", .accessible, background: "#150D18", surface: Color(hex: "#281830"),
+                     primary: "#CC79A7", secondary: "#F0E442", text: "#FBF3F9",
+                     border: Color(hex: "#4A2A5A"), glow: Color(hex: "#CC79A7", opacity: 0.3)),
             // Cyberpunk & Neon
             AppTheme(.tokyoMidnight, "Tokyo Midnight", .cyberpunk, background: "#0B0C10", surface: Color(hex: "#1F2833"),
                      primary: "#66FCF1", secondary: "#45A29E", text: "#C5C6C7",
