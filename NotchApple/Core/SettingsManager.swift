@@ -12,7 +12,7 @@ import SwiftUI
 
 /// Every optional feature module in the app.
 enum Module: String, CaseIterable, Identifiable {
-    case today, claude, browser, launcher, translator, stats, windows, tools, mirror, worldClock, messenger, clipboard, notes, focus, shelf, share, audio, vpn, nowPlaying, search, timer, snippets, shortcuts, devices, live, f1, sports, games, alerts, plugins, voiceNotes, screenTime, quickAdd, markets, home, security, cacheCleaner, claudeUsage, smartHome
+    case today, claude, browser, launcher, translator, stats, windows, tools, mirror, worldClock, messenger, clipboard, notes, focus, shelf, share, audio, vpn, nowPlaying, search, timer, snippets, shortcuts, devices, live, f1, sports, games, alerts, plugins, voiceNotes, screenTime, quickAdd, markets, home, security, cacheCleaner, claudeUsage, smartHome, devTools
 
     var id: String { rawValue }
 
@@ -57,6 +57,7 @@ enum Module: String, CaseIterable, Identifiable {
         case .cacheCleaner: "Purge"
         case .claudeUsage: "Claude Usage"
         case .smartHome: "Smart Home"
+        case .devTools: "Dev Tools"
         }
     }
 
@@ -101,6 +102,7 @@ enum Module: String, CaseIterable, Identifiable {
         case .cacheCleaner: "internaldrive.fill"
         case .claudeUsage: "gauge.with.dots.needle.50percent"
         case .smartHome: "lightbulb.fill"
+        case .devTools: "hammer.fill"
         }
     }
 
@@ -142,6 +144,7 @@ enum Module: String, CaseIterable, Identifiable {
         case .markets: "Pro: a watchlist of stocks and crypto with today's change; pin one beside the notch."
         case .home: "Pro: your own dashboard of widgets in small, medium and large sizes."
         case .security: "Require Touch ID / Apple Watch / password to open the notch."
+        case .devTools: "Format JSON, encode and decode, read a JWT, hash, make a UUID, convert timestamps, test a regex, check colour contrast and make a QR code. Free, and everything stays on this Mac."
         case .smartHome: "Ultimate: lights, switches, scenes and more from your own Home Assistant (which also connects Hue, IKEA, Zigbee and Matter). The access token stays on this Mac."
         case .claudeUsage: "Ultimate: how many tokens Claude Code has used in your 5-hour window, today and this week, with budgets you set yourself. Read from ~/.claude on this Mac."
         case .cacheCleaner: "Ultimate: open the Purge app from the notch to free up disk space. Purge does the cleaning; Notch apple deletes nothing itself."
@@ -174,7 +177,7 @@ final class SettingsManager: ObservableObject {
         var defaults: [String: Any] = [Module.today.storageKey: true, Module.claude.storageKey: true]
         offByDefault.forEach { defaults[$0.storageKey] = false }
         // 1.14 add-ons start off for everyone, new and existing installs.
-        [Module.timer, .snippets, .shortcuts, .devices, .live, .f1, .games, .alerts, .plugins, .voiceNotes, .screenTime, .quickAdd, .markets, .home, .cacheCleaner, .claudeUsage, .smartHome].forEach { defaults[$0.storageKey] = false }
+        [Module.timer, .snippets, .shortcuts, .devices, .live, .f1, .games, .alerts, .plugins, .voiceNotes, .screenTime, .quickAdd, .markets, .home, .cacheCleaner, .claudeUsage, .smartHome, .devTools].forEach { defaults[$0.storageKey] = false }
         defaults[Module.sports.storageKey] = true   // everyone gets Sports, tracking Barcelona
         d.register(defaults: defaults)
     }
@@ -231,6 +234,7 @@ final class SettingsManager: ObservableObject {
     @AppStorage(Module.cacheCleaner.storageKey) var cacheCleanerEnabled = false
     @AppStorage(Module.claudeUsage.storageKey) var claudeUsageEnabled = false
     @AppStorage(Module.smartHome.storageKey) var smartHomeEnabled = false
+    @AppStorage(Module.devTools.storageKey) var devToolsEnabled = false
     /// The iPhone Duo pop-and-morph animations (on by default).
     @AppStorage(Duo.key) var useDuoAnimations = true
     /// On (default): a two-finger sideways swipe over the tab bar only scrolls the tabs. Off: it also switches tab.
@@ -335,6 +339,7 @@ final class SettingsManager: ObservableObject {
         case .cacheCleaner: $cacheCleanerEnabled
         case .claudeUsage: $claudeUsageEnabled
         case .smartHome: $smartHomeEnabled
+        case .devTools: $devToolsEnabled
         }
     }
 

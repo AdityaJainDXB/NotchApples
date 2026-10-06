@@ -73,6 +73,8 @@ export const MODULES = [
     blurb: 'Your own widgets: any script in the Plugins folder shows its output in the notch.' },
   { id: 'share', name: 'Share', icon: '📤', load: () => import('./modules/share.js'),
     blurb: 'Send files to phones and other computers nearby with PairDrop, or with Windows Nearby sharing.' },
+  { id: 'devtools', name: 'Dev Tools', icon: '🛠', load: () => import('./modules/devtools.js'),
+    blurb: 'Format JSON, encode and decode, read a JWT, hash, make a UUID, convert timestamps, test a regex, check colour contrast and make a QR code. Everything stays on this PC.' },
   { id: 'smarthome', name: 'Smart Home', icon: '💡', feature: 'smartHome', load: () => import('./modules/smarthome.js'),
     blurb: 'Control your Home Assistant lights, switches, scenes and more. Works with Hue, IKEA, Zigbee and Matter through Home Assistant.' },
   { id: 'claudeusage', name: 'Claude Usage', icon: '📟', feature: 'claudeUsage', load: () => import('./modules/claudeusage.js'),
