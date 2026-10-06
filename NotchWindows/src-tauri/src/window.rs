@@ -35,6 +35,10 @@ impl Default for Layout {
     }
 }
 
+/// The open notch has a transparent margin this wide on its left, right and bottom, so its soft shadow has
+/// room to draw (the page's --pad must match). The closed pill has none.
+const SHADOW_PAD: f64 = 30.0;
+
 static LAYOUT: Mutex<Option<Layout>> = Mutex::new(None);
 /// The last bounds applied, in physical pixels (x, y, width, height). Placing the window again with the
 /// same bounds does nothing, so repeated calls cost nothing and cannot make the window flicker.
@@ -56,7 +60,8 @@ pub fn place(app: &AppHandle) -> Result<(), String> {
     let window = app.get_webview_window("notch").ok_or("no notch window")?;
     let l = layout();
     let expanded = EXPANDED.load(Ordering::Relaxed);
-    let (w, h) = if expanded { (l.width, l.height) } else { (l.pill_width, l.pill_height) };
+    let pad = if expanded { SHADOW_PAD } else { 0.0 };
+    let (w, h) = if expanded { (l.width + 2.0 * pad, l.height + pad) } else { (l.pill_width, l.pill_height) };
 
     let monitor = window
         .primary_monitor()
@@ -71,8 +76,9 @@ pub fn place(app: &AppHandle) -> Result<(), String> {
     // Never wider than the screen.
     let w = w.min(screen.width - 16.0);
     let x = match l.position.as_str() {
-        "left" => origin.x + l.inset.min(screen.width - w),
-        "right" => origin.x + (screen.width - w - l.inset).max(0.0),
+        // The shadow margin is transparent, so the visible notch sits `pad` in from the window's edge.
+        "left" => origin.x + l.inset.min(screen.width - w) - pad,
+        "right" => origin.x + (screen.width - w - l.inset).max(0.0) + pad,
         _ => origin.x + (screen.width - w) / 2.0,
     };
 

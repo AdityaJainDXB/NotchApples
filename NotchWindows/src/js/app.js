@@ -56,8 +56,8 @@ export const isExpanded = () => expanded;
 export const activeTab = () => active;
 
 export function buildTabs() {
-  const order = tabOrder().map(byId).filter((m) => m && isEnabled(m.id));
-  if (!order.some((m) => m.id === active)) active = order[0]?.id ?? 'settings';
+  const order = tabOrder().map(byId).filter((m) => m && isEnabled(m.id) && m.id !== 'settings');   // Settings is pinned at the right of the header
+  if (active !== 'settings' && !order.some((m) => m.id === active)) active = order[0]?.id ?? 'settings';
   const mode = pref('ui.compactTabs');
   // "auto": names when they fit, icons only (except the active tab) when they don't.
   const compact = mode !== 'names';  // like the Mac: icons, with the name on the open tab
@@ -88,13 +88,30 @@ export function buildTabs() {
   tabbar.querySelector('.tab.active')?.scrollIntoView({ block: 'nearest', inline: 'nearest' });
 
   tools.replaceChildren(
+    ...(updateReady ? [updateButton()] : []),
     el('button', { class: 'icon-btn', title: 'Command palette (Ctrl+K)', onclick: () => openPalette() }, icon('search', 20)),
     el('button', { class: `icon-btn ${pinned ? 'on' : ''}`, title: pinned ? 'Pinned open — click to unpin' : 'Keep open when I click elsewhere',
       onclick: () => { pinned = !pinned; buildTabs(); } }, icon('pin', 20)),
     el('button', { class: 'icon-btn', title: 'Hide the pill (Ctrl+Alt+O)', onclick: () => { collapse(); invoke('set_hidden', { hidden: true }); } }, icon('hide', 20)),
     el('button', { class: 'icon-btn', title: 'Quit Notch apple', onclick: () => invoke('quit_app') }, icon('power', 20)),
-    el('button', { class: 'icon-btn', title: 'Close (Esc)', onclick: () => collapse() }, icon('up', 22)));
+    el('button', { class: 'icon-btn', title: 'Close (Esc)', onclick: () => collapse() }, icon('up', 22)),
+    el('button', { class: `icon-btn gear${active === 'settings' ? ' on' : ''}`, title: 'Settings (Ctrl+,)', onclick: () => show('settings') }, icon('settings', 20)));
 }
+
+// ---- update prompt, like the Mac: an Update button in the open notch, or Not now for this version
+
+let updateReady = false;
+function updateButton() {
+  return el('span', { class: 'btn small accent update-btn', title: 'A new version is ready' },
+    el('span', { onclick: () => show('settings', { pane: 'Updates' }) }, '⬆ Update'),
+    el('span', { class: 'later', title: 'Not now', onclick: () => { save('updates.dismissed', updateVersion); updateReady = false; buildTabs(); refreshPill(); } }, 'Not now'));
+}
+let updateVersion = '';
+document.addEventListener('update-available', (e) => {
+  updateVersion = e.detail?.version ?? '';
+  updateReady = !!updateVersion && load('updates.dismissed', '') !== updateVersion;
+  if (expanded) buildTabs();
+});
 
 /// Shows a tab. `opts` are passed to the module (e.g. a search query).
 export async function show(id, opts) {
@@ -196,6 +213,11 @@ listen('notch-blur', () => {
   setTimeout(() => { if (!document.hasFocus() && expanded && !pinned && busy === 0) collapse(); }, 150);
 });
 
+// The window has a transparent margin around the open notch (room for its shadow). Clicking it is clicking outside.
+document.addEventListener('mousedown', (e) => {
+  if ((e.target === document.documentElement || e.target === document.body) && expanded && !pinned && busy === 0 && pref('ui.closeOnBlur')) collapse();
+});
+
 // Hover to open (optional), and close again when the mouse leaves if it opened that way.
 let hoverTimer;
 pill.addEventListener('mouseenter', () => {
@@ -287,10 +309,12 @@ setRenderer((list) => {
       hint.replaceChildren();
     }
     pill.title = topActivity.title || 'Open Notch apple (Ctrl+Alt+N)';
+    pill.classList.remove('idle');
   } else {
+    pill.classList.add('idle');
     earLeft.replaceChildren();
     hint.style.color = '';
-    hint.textContent = tierName() === 'Free' ? 'Notch apple' : `Notch apple ${tierName()}`;
+    hint.textContent = pref('ui.showClock') ? '' : (tierName() === 'Free' ? 'Notch apple' : `Notch apple ${tierName()}`);
     earRight.replaceChildren(pref('ui.showClock')
       ? el('span', { class: 'label num' }, new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }))
       : '');

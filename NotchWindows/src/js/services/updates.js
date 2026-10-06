@@ -1,6 +1,8 @@
 // Updates, like the Mac app's: check GitHub for a newer Windows release at
 // startup and every six hours, tell you once per version, and install it from
-// Settings → General (the download is checked against GitHub's SHA-256).
+// Settings → Updates (the download is checked against GitHub's SHA-256).
+// Like the Mac: a notification once per version, an Update button in the open notch (Not now hides it for
+// that version), and Install and restart in Settings → Updates.
 
 import { load, save } from '../store.js';
 import { invoke, notify } from '../native.js';
@@ -23,6 +25,7 @@ export async function check() {
     save('updates.notified', available.version);
     notify('Notch apple update', `Version ${available.version} is ready. Open Settings → Updates to install it.`);
   }
+  document.dispatchEvent(new CustomEvent('update-available', { detail: available ? { version: available.version } : null }));
   refresh();
   return status();
 }

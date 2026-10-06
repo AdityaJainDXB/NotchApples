@@ -58,7 +58,7 @@ Pick your computer. The Windows button starts the download straight away; the Ma
       <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg)</b></a>
     </td>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 1.26.2 BETA</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 1.26.3 BETA</b></a>
     </td>
   </tr>
   <tr>
@@ -387,6 +387,14 @@ All screenshots use sample data.
 #### New in 1.24.1
 
 - **Bug fix:** Messenger and AI chat now open scrolled to the latest message instead of the oldest.
+
+#### Windows 1.26.3 BETA
+
+- **A proper notch.** The closed pill now has squircle bottom corners and concave "ears" that flow into the top edge of the screen, and the time is crisp white, semibold and exactly centred. When something is playing or running, it shows on the left and right as before.
+- **Settings stays put.** The Settings gear is pinned at the top right of a fixed header, so it never scrolls away with the tabs. The tab strip scrolls on its own and fades at the edges.
+- **Softer, rounder look.** Cards, buttons and menus use larger continuous (squircle) corners, the open notch has a layered material with a top highlight, and a soft diffused shadow separates it from the desktop. Margins are roomier (24 px).
+- **Update button, like the Mac.** When a new version is ready, an **Update** button (and **Not now**, which hides it for that version) appears in the open notch, next to the notification and the card in Settings → Updates.
+- Windows cannot blur your desktop behind a rounded, shadowed window the way macOS does, so the material is drawn in layers instead of using Mica or Acrylic.
 
 #### Windows 1.26.2 BETA
 
