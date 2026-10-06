@@ -304,6 +304,30 @@ await test('Admin panel: batch issue, list, suspend, unsuspend, notes, devices, 
   assert.equal((await call('/admin/stats', {}, { ...ip, ...A })).status, 429);
 });
 
+await test('Admin: audit log, device names and per-day stats', async () => {
+  const A = { authorization: 'Bearer admin-test' };
+  const k = await call('/admin/issue', { tier: 'pro', note: 'audit test' }, A);
+  await call('/admin/note', { keyId: k.keyId, note: 'x' }, A);
+  await call('/admin/suspend', { keyId: k.keyId, reason: 'testing' }, A);
+  const log = await call('/admin/audit', {}, A);
+  assert.ok(log.rows.some((r) => r.action === 'suspend' && r.target === k.keyId && r.detail === 'testing'));
+  assert.ok(log.rows.some((r) => r.action === 'issue' && r.detail.includes('audit test')));
+  assert.ok(!JSON.stringify(log).includes(k.key), 'full keys are never logged');
+  assert.equal((await call('/admin/audit', {})).status, 401);
+  // Device names: stored when given, added later by a device that did not send one, and removed with the device.
+  const k2 = await call('/admin/issue', { tier: 'pro' }, A), dev = 'c'.repeat(64);
+  await call('/activate', { key: k2.key, device: dev });
+  assert.deepEqual((await call('/admin/get', { keyId: k2.keyId }, A)).deviceNames, {});
+  await call('/activate', { key: k2.key, device: dev, name: "Aditya's <b>MacBook</b>\n" });
+  assert.equal((await call('/admin/get', { keyId: k2.keyId }, A)).deviceNames[dev], "Aditya's bMacBook/b");
+  await call('/admin/devices', { keyId: k2.keyId, device: dev }, A);
+  assert.deepEqual((await call('/admin/get', { keyId: k2.keyId }, A)).deviceNames, {});
+  const st = await call('/admin/stats', {}, A);
+  assert.equal(st.byDay.length, 30);
+  assert.ok(st.byDay.at(-1).pro >= 2);
+  assert.ok(st.bySource.admin >= 2);
+});
+
 // Fixture for the Swift tests: a Pro and an Ultimate key from this run, with this run's public key.
 const fx = { publicKey: btoa(String.fromCharCode(...pubRaw)), pro: leaked, ultimate: (await call('/admin/issue', { tier: 'ultimate' }, { authorization: 'Bearer admin-test' })).key };
 writeFileSync(new URL('./fixture.json', import.meta.url), JSON.stringify(fx, null, 2) + '\n');

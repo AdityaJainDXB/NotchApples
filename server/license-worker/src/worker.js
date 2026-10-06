@@ -363,16 +363,29 @@ async function activate(env, body, add) {
   const rec = (await getJSON(env, `key:${k.keyId}`)) || { tier: k.tier, source: 'unknown', devices: [] };
   const has = rec.devices.includes(body.device);
   if (!add) {
-    if (has) { rec.devices = rec.devices.filter((d) => d !== body.device); await putJSON(env, `key:${k.keyId}`, rec); }
+    if (has) {
+      rec.devices = rec.devices.filter((d) => d !== body.device);
+      if (rec.deviceNames) delete rec.deviceNames[body.device];
+      await putJSON(env, `key:${k.keyId}`, rec);
+    }
     return { ok: true };
   }
-  if (has) return { ok: true, tier: TIER_NAME[k.tier] };
+  const name = deviceName(body.name);
+  if (has) {
+    // A device may tell us its name later (older apps did not), so the panel can show "Aditya's MacBook" instead of a hash.
+    if (name && rec.deviceNames?.[body.device] !== name) { rec.deviceNames = { ...rec.deviceNames, [body.device]: name }; await putJSON(env, `key:${k.keyId}`, rec); }
+    return { ok: true, tier: TIER_NAME[k.tier] };
+  }
   const limit = Number(env.DEVICE_LIMIT || 3);
   if (rec.devices.length >= limit) return { ok: false, reason: 'limit', limit };
   rec.devices.push(body.device);
+  if (name) rec.deviceNames = { ...rec.deviceNames, [body.device]: name };
   await putJSON(env, `key:${k.keyId}`, rec);
   return { ok: true, tier: TIER_NAME[k.tier] };
 }
+
+/// The device's own label ("Aditya's MacBook Pro"): plain text, 40 characters, no control characters. Never required.
+export const deviceName = (v) => (typeof v === 'string' ? v.replace(/[\u0000-\u001f\u007f<>]/g, '').trim().slice(0, 40) : '');
 
 async function revokedList(env) {
   const list = JSON.stringify({ ids: await revokedIds(env), at: Date.now() });
@@ -400,10 +413,35 @@ const keyIdFrom = (body) => {
 };
 const publicRecord = (id, r, revokedList) => ({
   keyId: id, key: r.key || null, tier: TIER_NAME[r.tier] || '?', source: r.source || 'unknown', created: r.created || null,
-  devices: r.devices || [], deviceLimit: null, note: r.note || '', hasEmail: !!r.emailHash,
+  devices: r.devices || [], deviceNames: r.deviceNames || {}, deviceLimit: null, note: r.note || '', hasEmail: !!r.emailHash,
   suspended: !!r.revoked || revokedList.includes(id), suspendedAt: r.revoked?.at || null, reason: r.revoked?.reason || '',
   replaces: r.replaces || null,
 });
+
+// MARK: Audit log
+// Every change made in the panel is written down: when, what, which key. Never an email address, a full key
+// or the admin token. Entries live in KV metadata (newest first) and are kept for 180 days.
+const AUDITED = new Set(['/admin/issue', '/admin/suspend', '/admin/unsuspend', '/admin/revoke', '/admin/reissue', '/admin/note',
+  '/admin/devices', '/admin/email', '/admin/promo-create', '/admin/promo-delete', '/admin/test-payment']);
+
+async function audit(env, path, body, result) {
+  try {
+    const at = Date.now();
+    const target = String(result?.keyId || result?.keys?.[0]?.keyId || result?.suspended || result?.unsuspended || result?.revoked || body.keyId || '').slice(0, 16);
+    const detail = {
+      '/admin/issue': () => `${result?.keys ? result.keys.length : 1} × ${body.tier}${body.note ? ` · ${String(body.note).slice(0, 60)}` : ''}`,
+      '/admin/suspend': () => String(body.reason || '').slice(0, 80),
+      '/admin/revoke': () => String(body.reason || '').slice(0, 80),
+      '/admin/reissue': () => `replaced by ${result?.keyId || '?'}`,
+      '/admin/devices': () => (body.device ? 'one device freed' : 'all devices freed'),
+      '/admin/email': () => 'key emailed',
+      '/admin/note': () => 'note changed',
+      '/admin/promo-create': () => `${result?.codes?.length || 0} promo codes`,
+    }[path]?.() || '';
+    const id = `audit:${String(9e12 - at).padStart(13, '0')}-${[...crypto.getRandomValues(new Uint8Array(3))].map((b) => b.toString(16).padStart(2, '0')).join('')}`;
+    await env.KV.put(id, '1', { expirationTtl: 180 * 86400, metadata: { at, a: path.slice(7), k: target, d: detail.slice(0, 120) } });
+  } catch (e) { console.error('audit failed', e && e.message); }
+}
 
 async function admin(env, path, body) {
   if (path === '/admin/issue') {
@@ -442,16 +480,23 @@ async function admin(env, path, body) {
   if (path === '/admin/stats') {
     let cursor, total = 0, pro = 0, ult = 0, susp = 0, active = 0;
     const revoked = await revokedIds(env);
+    // Keys made per day for the last 30 days (UTC), and where every key came from, for the panel's charts.
+    const day = (ms) => new Date(ms).toISOString().slice(0, 10);
+    const byDay = {}, bySource = {};
+    for (let i = 29; i >= 0; i--) byDay[day(Date.now() - i * 86400e3)] = { pro: 0, ultimate: 0 };
     do {
       const page = await env.KV.list({ prefix: 'key:', cursor, limit: 1000 });
       for (const k of page.keys) {
         const m = k.metadata || keyMeta((await getJSON(env, k.name)) || {});
         total++; m.t === 2 ? ult++ : pro++;
+        bySource[m.s || 'unknown'] = (bySource[m.s || 'unknown'] || 0) + 1;
+        const d = m.c && byDay[day(m.c)]; if (d) d[m.t === 2 ? 'ultimate' : 'pro']++;
         if (m.r || revoked.includes(k.name.slice(4))) susp++; else if (m.d > 0) active++;
       }
       cursor = page.list_complete ? null : page.cursor;
     } while (cursor);
-    return { total, pro, ultimate: ult, suspended: susp, inUse: active, deviceLimit: Number(env.DEVICE_LIMIT || 3) };
+    return { total, pro, ultimate: ult, suspended: susp, inUse: active, deviceLimit: Number(env.DEVICE_LIMIT || 3),
+      byDay: Object.entries(byDay).map(([date, v]) => ({ date, ...v })), bySource };
   }
   if (path === '/admin/suspend' || path === '/admin/unsuspend') {
     const id = keyIdFrom(body);
@@ -480,6 +525,7 @@ async function admin(env, path, body) {
     const rec = await getJSON(env, `key:${id}`);
     if (!rec) throw new HTTPError(404, 'No key with that ID on the server');
     rec.devices = body.device ? (rec.devices || []).filter((d) => d !== body.device) : [];
+    if (body.device && rec.deviceNames) delete rec.deviceNames[body.device]; else delete rec.deviceNames;
     await putJSON(env, `key:${id}`, rec);
     return { devices: rec.devices };
   }
@@ -527,6 +573,11 @@ async function admin(env, path, body) {
     o.testPayment = true;
     await putJSON(env, `order:${body.order}`, o, ORDER_TTL);
     return { ok: true, claimWith: '0'.repeat(64) };
+  }
+  if (path === '/admin/audit') {
+    const page = await env.KV.list({ prefix: 'audit:', cursor: body.cursor || undefined, limit: 100 });
+    const rows = page.keys.map((k) => ({ at: k.metadata?.at, action: k.metadata?.a, target: k.metadata?.k || '', detail: k.metadata?.d || '' }));
+    return { rows, cursor: page.list_complete ? null : page.cursor };
   }
   if (path === '/admin/revoke') return { revoked: (await admin(env, '/admin/suspend', body)).suspended };
   if (path === '/admin/reissue') {
@@ -584,7 +635,9 @@ export default {
           await env.KV.put(`adminfail:${ip}`, String(fails + 1), { expirationTtl: 3600 });
           throw new HTTPError(401, 'Unauthorized');
         }
-        return json(await admin(env, path, body));
+        const result = await admin(env, path, body);
+        if (AUDITED.has(path)) await audit(env, path, body, result);
+        return json(result);
       }
       switch (path) {
         case '/order': return json(await order(env, body));
