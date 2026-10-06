@@ -6,7 +6,7 @@ import { MODULES } from '../modules.js';
 import { pref, setPref, SHORTCUT_NAMES, DEFAULTS } from '../prefs.js';
 import { canUse, FEATURES, tierLabel } from '../features.js';
 import { tier, TIERS, maskedCode, deactivate } from '../license.js';
-import { isEnabled, setEnabled, tabOrder, setTabOrder, appInfo, registerShortcuts } from '../app.js';
+import { isEnabled, setEnabled, tabOrder, setTabOrder, appInfo, registerShortcuts, show } from '../app.js';
 import { setting, toggle, select, segmented, toast, confirm, button, prompt, markdown } from '../ui.js';
 import { icon } from '../icons.js';
 import { keyField, BUY_URL, badge } from './activation.js';
@@ -130,7 +130,7 @@ function Appearance(repaint) {
 
 function Tabs(repaint) {
   const order = tabOrder();
-  return [el('div', { class: 'small dim' }, 'Turn tabs on or off. Drag tabs in the bar to reorder them.'),
+  return [el('div', { class: 'hstack' }, el('div', { class: 'small dim grow' }, 'Turn tabs on or off. Drag tabs in the bar to reorder them.'), button('Choose with pictures…', () => show('welcome'), { kind: 'quiet' })),
     ...order.filter((id) => id !== 'settings').map((id) => MODULES.find((m) => m.id === id)).map((m, i, arr) => el('div', { class: 'item', style: 'border:1px solid var(--border)' },
       el('span', { style: 'font-size:18px;width:24px' }, m.icon),
       el('div', { class: 'main' }, el('div', { class: 'hstack', style: 'gap:6px' }, el('b', {}, m.name), m.feature ? badge(m.feature) : null), el('div', { class: 'tiny dim' }, m.blurb)),

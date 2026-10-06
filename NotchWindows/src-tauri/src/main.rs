@@ -469,6 +469,14 @@ fn main() {
             window::place(&handle)?;
             build_tray(app)?;
 
+            // Safety net: if the page never gets to apply its layout, show the notch anyway after a few seconds.
+            let late = handle.clone();
+            std::thread::spawn(move || {
+                std::thread::sleep(std::time::Duration::from_secs(4));
+                let again = late.clone();
+                let _ = late.run_on_main_thread(move || window::reveal(&again));
+            });
+
             clip::start(handle.clone());
             watch::start(handle.clone());
             media::start(handle.clone());

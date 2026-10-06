@@ -58,7 +58,7 @@ Pick your computer. The Windows button starts the download straight away; the Ma
       <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg)</b></a>
     </td>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 1.26.4 BETA</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 1.26.5 BETA</b></a>
     </td>
   </tr>
   <tr>
@@ -387,6 +387,12 @@ All screenshots use sample data.
 #### New in 1.24.1
 
 - **Bug fix:** Messenger and AI chat now open scrolled to the latest message instead of the oldest.
+
+#### Windows 1.26.5 BETA
+
+- **Choose your features on first launch.** A new welcome screen shows every tab with a picture of what it does and a switch. Free tabs switch on; Pro and Ultimate tabs are shown too, and switching one on tells you it has to be bought, with the price, the flyer and a link to the website (and a box for your key if you already have one). Run it again any time from Settings → Tabs → *Choose with pictures…*.
+- **No more jumping at startup.** The notch used to appear at Windows' default spot and move twice before settling. It now stays hidden until its final position is applied.
+- Glass (see-through notch) stays off by default.
 
 #### Windows 1.26.4 BETA
 

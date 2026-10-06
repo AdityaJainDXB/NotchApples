@@ -57,7 +57,7 @@ export const activeTab = () => active;
 
 export function buildTabs() {
   const order = tabOrder().map(byId).filter((m) => m && isEnabled(m.id) && m.id !== 'settings');   // Settings is pinned at the right of the header
-  if (active !== 'settings' && !order.some((m) => m.id === active)) active = order[0]?.id ?? 'settings';
+  if (active !== 'settings' && active !== 'welcome' && !order.some((m) => m.id === active)) active = order[0]?.id ?? 'settings';
   const mode = pref('ui.compactTabs');
   // "auto": names when they fit, icons only (except the active tab) when they don't.
   const compact = mode !== 'names';  // like the Mac: icons, with the name on the open tab
@@ -116,11 +116,12 @@ document.addEventListener('update-available', (e) => {
 /// Shows a tab. `opts` are passed to the module (e.g. a search query).
 let switching = 0;
 export async function show(id, opts) {
-  if (!byId(id)) id = 'today';
-  if (!isEnabled(id) && id !== 'settings') setEnabled(id, true);
+  const welcome = id === 'welcome';   // the feature chooser: not a tab, never remembered as the last tab
+  if (!welcome && !byId(id)) id = 'today';
+  if (!welcome && !isEnabled(id) && id !== 'settings') setEnabled(id, true);
   const wasActive = active;
   active = id;
-  save('ui.lastTab', id);
+  if (!welcome) save('ui.lastTab', id);
   buildTabs();
   // The outgoing module fades out, then the incoming one fades in (a quick tap on another tab just restarts it).
   const turn = ++switching;
@@ -135,7 +136,7 @@ export async function show(id, opts) {
   page.replaceChildren();
   page.classList.remove('fade'); void page.offsetWidth; page.classList.add('fade');
 
-  const m = byId(id);
+  const m = welcome ? { id: 'welcome', name: 'Welcome', icon: '👋', load: () => import('./modules/welcome.js') } : byId(id);
   if (!allowed(m)) {
     const { renderUpgrade } = await import('./modules/activation.js');
     if (active === id) page.append(renderUpgrade(m, () => show(id)));
@@ -212,7 +213,9 @@ export async function expand(tab, opts) {
   body.classList.remove('collapsed', 'closing', 'growing');
   if (animate) { pillClip(); body.classList.add('opening'); }
   buildTabs.overflowed = false;
-  show(tab || active, opts);
+  // A first launch starts with the feature chooser (an existing setup that already has tabs chosen skips it).
+  const firstRun = !load('onboarding.done', false) && load('modules.enabled', null) === null;
+  show(firstRun ? 'welcome' : (tab || active), opts);
   await nextFrame();
   body.classList.remove('swap');
   if (animate) {

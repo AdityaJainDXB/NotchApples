@@ -398,3 +398,24 @@ body.glass #shell {
 body:not([data-perf="lite"]) .menu, body:not([data-perf="lite"]) .toast, body:not([data-perf="lite"]) .overlay > * {
   backdrop-filter: blur(22px) saturate(1.4); -webkit-backdrop-filter: blur(22px) saturate(1.4); background-color: rgba(23,23,29,.78);
 }
+
+/* First-run feature chooser */
+.wc-head { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+.wc-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 14px; padding-bottom: 6px; }
+.wc { background: var(--surface); border: 1px solid var(--border); border-radius: 20px; overflow: hidden; display: flex; flex-direction: column; cursor: pointer;
+      transition: background .15s var(--ease), transform .15s var(--ease); }
+.wc:hover { background: var(--surface-hover); transform: translateY(-1px); }
+.wc-art { position: relative; aspect-ratio: 16 / 9; background: rgba(255,255,255,.04); display: grid; place-items: center; overflow: hidden; }
+.wc-art img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.wc.locked .wc-art img, .wc.locked .wc-emoji { opacity: .72; }
+.wc-emoji { font-size: 40px; line-height: 1; }
+.wc-body { padding: 10px 14px 14px; display: flex; flex-direction: column; gap: 6px; }
+.wc-top { display: flex; align-items: center; gap: 8px; }
+.wc-blurb { font-size: 11px; color: var(--text-dim); display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.tier { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 10px; font-weight: 800; letter-spacing: .4px; text-transform: uppercase; }
+.tier.pro { background: linear-gradient(180deg, #d870ff, #a04bd8); color: #fff; }
+.tier.ultimate { background: linear-gradient(180deg, #ff8fa8, #ff5b86); color: #fff; }
+.tier.on-art { position: absolute; top: 8px; right: 8px; }
+.upgrade-dlg { display: flex; gap: 20px; align-items: flex-start; }
+.upgrade-dlg .flyer { width: 170px; flex: none; border-radius: 18px; box-shadow: 0 10px 30px rgba(0,0,0,.5); }
+.upgrade-dlg .tier { align-self: flex-start; }

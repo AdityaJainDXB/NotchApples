@@ -44,6 +44,9 @@ static LAYOUT: Mutex<Option<Layout>> = Mutex::new(None);
 /// same bounds does nothing, so repeated calls cost nothing and cannot make the window flicker.
 static LAST_BOUNDS: Mutex<Option<(i32, i32, i32, i32)>> = Mutex::new(None);
 static TOPMOST_SET: AtomicBool = AtomicBool::new(false);
+/// The window starts hidden and is shown once, after the page has applied its saved size and position, so it
+/// never appears at Windows' default spot and then jumps (it used to move three times before settling).
+static REVEALED: AtomicBool = AtomicBool::new(false);
 /// Glass: Windows blurs whatever is behind the open notch (inside its rounded shape only).
 static GLASS: AtomicBool = AtomicBool::new(false);
 pub static EXPANDED: AtomicBool = AtomicBool::new(false);
@@ -208,6 +211,15 @@ pub fn set_expanded(app: AppHandle, expanded: bool) -> Result<(), String> {
     Ok(())
 }
 
+/// Shows the window for the first time (unless the user hid it). Safe to call any number of times.
+pub fn reveal(app: &AppHandle) {
+    if !REVEALED.swap(true, Ordering::Relaxed) {
+        if let Ok(mut last) = LAST_BOUNDS.lock() { *last = None; }
+        let _ = place(app);
+        apply_visibility(app);
+    }
+}
+
 #[tauri::command]
 pub fn set_glass(app: AppHandle, on: bool) -> Result<(), String> {
     GLASS.store(on, Ordering::Relaxed);
@@ -228,7 +240,9 @@ pub fn set_layout(app: AppHandle, layout: Layout) -> Result<(), String> {
     if let Ok(mut l) = LAYOUT.lock() {
         *l = Some(clean);
     }
-    place(&app)
+    let placed = place(&app);
+    reveal(&app);
+    placed
 }
 
 #[tauri::command]
