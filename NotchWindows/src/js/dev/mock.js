@@ -25,6 +25,12 @@ const hits = (q) => [
 ];
 
 const commands = {
+  claude_usage: () => {
+    const now = Date.now(), rows = [];
+    for (let k = 0; k < 60; k++) rows.push({ t: now - k * 4 * 60000 - 600000, m: k % 7 ? 'claude-opus-5-5' : 'claude-sonnet-5-5', i: 900 + k * 7, o: 400 + k * 11, cw: 1200, cr: 30000 });
+    for (let d = 1; d < 6; d++) for (let k = 0; k < 20; k++) rows.push({ t: now - d * 86400000 - k * 600000, m: 'claude-opus-5-5', i: 1500, o: 700, cw: 900, cr: 25000 });
+    return ok({ found: true, entries: rows });
+  },
   app_info: () => ({ version: '1.25.0', dataDir: 'C:\\Users\\you\\AppData\\Roaming\\com.notchapple.windows', autostarted: false, selftest: false, platform: 'windows' }),
   set_expanded: ({ expanded }) => { state.expanded = expanded; },
   set_layout: () => {}, set_hidden: ({ hidden }) => { state.hidden = hidden; }, set_hide_in_fullscreen: () => {}, set_edge_trigger: () => {},

@@ -73,6 +73,8 @@ export const MODULES = [
     blurb: 'Your own widgets: any script in the Plugins folder shows its output in the notch.' },
   { id: 'share', name: 'Share', icon: '📤', load: () => import('./modules/share.js'),
     blurb: 'Send files to phones and other computers nearby with PairDrop, or with Windows Nearby sharing.' },
+  { id: 'claudeusage', name: 'Claude Usage', icon: '📟', feature: 'claudeUsage', load: () => import('./modules/claudeusage.js'),
+    blurb: 'How many tokens Claude Code has used in your 5-hour window, today and this week, with budgets you set yourself. Read from your .claude folder on this PC.' },
   { id: 'settings', name: 'Settings', icon: '⚙', load: () => import('./modules/settings.js'),
     blurb: '' },
 ];

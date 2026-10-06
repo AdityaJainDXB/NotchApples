@@ -11,6 +11,7 @@
 mod apps;
 mod audio;
 mod awake;
+mod claude_usage;
 mod clip;
 mod extras;
 mod files;
@@ -453,6 +454,7 @@ fn main() {
             update::update_check, update::update_install,
             extras::downloads_progress, extras::save_temp_file, extras::save_file_as, extras::read_file_base64,
             extras::vpn_status, extras::vpn_connect, extras::vpn_disconnect,
+        claude_usage::claude_usage,
             selftest_capture, selftest_finish,
         ])
         .on_window_event(|window, event| {

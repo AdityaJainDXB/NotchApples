@@ -15,6 +15,7 @@ export const FEATURES = {
   ruler: {"title": "Screen ruler", "detail": "Measure anything on screen in points.", "tier": 1, "mac": "Needs a full-screen overlay the Mac draws natively."},
   currency: {"title": "Unit and currency converter", "detail": "Type 5 km to mi or 100 usd to eur in the calculator.", "tier": 1},
   commandPalette: {"title": "Command palette", "detail": "One shortcut to search and run everything Notch apple can do.", "tier": 1},
+  claudeUsage: {"title": "Claude usage tracker", "detail": "How many tokens Claude Code has used in your 5-hour window, today and this week, with your own budgets.", "tier": 2},
   scripting: {"title": "Command-line and scripting", "detail": "A `notch` command for Terminal and more notchapple:// commands for scripts.", "tier": 2},
   edgeTrigger: {"title": "Edge trigger zones", "detail": "Open the notch by pushing the mouse to the top edge of the screen.", "tier": 1},
   displayLayouts: {"title": "Tabs per display", "detail": "Choose which tabs show on each display.", "tier": 1, "mac": "Uses the Mac notch on each display."},
