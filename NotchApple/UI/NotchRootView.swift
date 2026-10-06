@@ -244,6 +244,7 @@ struct NotchRootView: View {
             case .home: HomeView()
             case .cacheCleaner: PurgeView()
             case .claudeUsage: ClaudeUsageView()
+            case .smartHome: SmartHomeView()
             case .security: EmptyView()
             }
         }

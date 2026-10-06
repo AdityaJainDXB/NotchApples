@@ -86,6 +86,7 @@ targets:
       - NotchApple/Modules/Games/GameEngines.swift
       - NotchApple/Core/ClaudeCodeStatusLogic.swift
       - NotchApple/Core/ClaudeUsageLogic.swift
+      - NotchApple/Core/SmartHomeLogic.swift
       - NotchApple/Core/VPNTunnel.swift
       - CompanionKit
     settings:

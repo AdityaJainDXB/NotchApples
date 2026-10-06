@@ -18,6 +18,7 @@
 	<key>LSUIElement</key><true/>
 	<key>LSApplicationCategoryType</key><string>public.app-category.productivity</string>
 	<key>NSHumanReadableCopyright</key><string>MIT License</string>
+	<key>NSAppTransportSecurity</key><dict><key>NSAllowsLocalNetworking</key><true/></dict>
 	<key>NSLocalNetworkUsageDescription</key><string>Notch apple discovers nearby devices on your Wi-Fi for PairDrop file sharing and Messenger chat. Nothing leaves your local network.</string>
 	<key>NSBonjourServices</key><array><string>_notchapple._tcp</string><string>_notch-chat._tcp</string><string>_notch-chat._udp</string></array>
 	<key>NSCalendarsFullAccessUsageDescription</key><string>Shows your upcoming events in the notch and widget.</string>

@@ -51,11 +51,13 @@
 		29326D872AE0DC306AFD1986 /* Tunnelblick-ABOUT.txt in Resources */ = {isa = PBXBuildFile; fileRef = EDBEAF142EDDBD8BE070A009 /* Tunnelblick-ABOUT.txt */; };
 		29BC5405E9AA7A285A647076 /* TodayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DD6D3003087F986015A60A7 /* TodayView.swift */; };
 		305D3067C2952F9CDCE2C833 /* Entitlements.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBF521DE52E4227ABF0CCC29 /* Entitlements.swift */; };
+		308B02A5703FF92FD435BE97 /* SmartHomeLogic.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99A4B06A001F63424485AE1E /* SmartHomeLogic.swift */; };
 		30DCFA374C50438319E87754 /* ExtrasSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 880D308A931930DF080834D9 /* ExtrasSettings.swift */; };
 		32D7F8B5B7C8D2AF4821EB1D /* ScreenCapture.swift in Sources */ = {isa = PBXBuildFile; fileRef = D95BC205F9AD85B9383E0C9D /* ScreenCapture.swift */; };
 		32E6B4D47E39327BF494D2E5 /* AIStreaming.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6D5AC53B65AF61688CD0A628 /* AIStreaming.swift */; };
 		3357F0168492268B21DE16FB /* TodoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 109E43BCE08792C473471623 /* TodoView.swift */; };
 		3426BA9EDEDB4808A6BEF8BA /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 419A5F6F30DFBF30351906D2 /* Theme.swift */; };
+		3672CD76860F3046F7DE4D1E /* SmartHomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01CAAECC14FFA955E98BC7DB /* SmartHomeView.swift */; };
 		367C11150D33702915B466C8 /* CompanionClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 326EBD11D0EF6CA885B78559 /* CompanionClient.swift */; };
 		3888F2C886F863B101353A2C /* NotesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0335700922F2B064E7FC742F /* NotesView.swift */; };
 		39F8CFD0D65ADD94D2E6405F /* HotCorners.swift in Sources */ = {isa = PBXBuildFile; fileRef = C35C9FA48E930832266322C0 /* HotCorners.swift */; };
@@ -105,6 +107,7 @@
 		5DA036B0487FEFE1B56816D4 /* Purge-MIT.txt in Resources */ = {isa = PBXBuildFile; fileRef = 8AFC7FE5E490233091CC0AC2 /* Purge-MIT.txt */; };
 		5DCFF5FAC0FB3C4B22AE8E7B /* NotchMessengerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 643FFB36BCE34E64BBD52883 /* NotchMessengerView.swift */; };
 		5F2E6DC4CD761DFB777B0C6B /* SharedStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9E160C9C8DBBE561F7DD2AD /* SharedStore.swift */; };
+		6411DBA270E4594DD6E7E500 /* SmartHomeLogic.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99A4B06A001F63424485AE1E /* SmartHomeLogic.swift */; };
 		665D37222F33D194EE9EB74E /* ClaudeUsageLogic.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7765304556C50213C9EC28B5 /* ClaudeUsageLogic.swift */; };
 		66F9ECB3DB5740E0CA3A1801 /* NotchWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3ED6813AA8EF7F3F44235A0D /* NotchWindowController.swift */; };
 		68A5D2B46E4A5A70CF45359E /* FileSearchView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6D1D3CB4DD45527CA986357A /* FileSearchView.swift */; };
@@ -118,6 +121,7 @@
 		710669E0D8B0E602B1A7EBAE /* AIProviders.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A2A98A73E13E924C3E3852B /* AIProviders.swift */; };
 		71C400496997AA8DF53FAF5D /* KeychainHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1BB3450673E6FC967D2A1F87 /* KeychainHelper.swift */; };
 		72569F25523646AA163A2245 /* WindowsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E3DB230CD04EC3E1A948E17 /* WindowsView.swift */; };
+		74FEA245D44F4164AE1D4761 /* SmartHomeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3D60DFF8D29CE5938A540D8E /* SmartHomeTests.swift */; };
 		7558F51D18A2B382FFD6BAE9 /* CompanionProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8945C0BF0272BD283A250BDC /* CompanionProtocol.swift */; };
 		758A59E0A3B0AB8662E95B0D /* ScreenIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = E05A03C9C8BB062C1E2C1DBB /* ScreenIntent.swift */; };
 		7651FFF0A83FB22D9BD7AE4C /* SettingsManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA5B0C58A3CF928A968E10F8 /* SettingsManager.swift */; };
@@ -246,6 +250,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		01CAAECC14FFA955E98BC7DB /* SmartHomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmartHomeView.swift; sourceTree = "<group>"; };
 		023AF917ACD38E560C4DD67B /* NotchWindow+LevelFix.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "NotchWindow+LevelFix.swift"; sourceTree = "<group>"; };
 		0335700922F2B064E7FC742F /* NotesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotesView.swift; sourceTree = "<group>"; };
 		033E65EDFD61BEE79967253B /* MessengerModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessengerModels.swift; sourceTree = "<group>"; };
@@ -290,6 +295,7 @@
 		3B881CB7581853FDB9B13F1F /* MoreTeams.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoreTeams.swift; sourceTree = "<group>"; };
 		3C357EE29CC1EB9117F9FD20 /* FocusView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FocusView.swift; sourceTree = "<group>"; };
 		3D5341204537860AAD266BF9 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		3D60DFF8D29CE5938A540D8E /* SmartHomeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmartHomeTests.swift; sourceTree = "<group>"; };
 		3ED6813AA8EF7F3F44235A0D /* NotchWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotchWindowController.swift; sourceTree = "<group>"; };
 		3F22844E48EEA4FEBD1273E0 /* DownloadWatcher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DownloadWatcher.swift; sourceTree = "<group>"; };
 		3F56873F8683487EBE9C958A /* TranslationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TranslationManager.swift; sourceTree = "<group>"; };
@@ -367,6 +373,7 @@
 		9522FA22D9EFEFD71C994587 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		97CC70FFD067091FDE1231BB /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		98A8EB2467586B8A5E087088 /* WindowManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindowManager.swift; sourceTree = "<group>"; };
+		99A4B06A001F63424485AE1E /* SmartHomeLogic.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmartHomeLogic.swift; sourceTree = "<group>"; };
 		99DF8E198CA571FF54F70A9B /* DevicesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DevicesView.swift; sourceTree = "<group>"; };
 		9A7251824E64423A2B944890 /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
 		9B61EC777F0D6D3611243246 /* NotchAppleApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotchAppleApp.swift; sourceTree = "<group>"; };
@@ -460,6 +467,14 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		0F2C6688ECB5B4AB737795E3 /* SmartHome */ = {
+			isa = PBXGroup;
+			children = (
+				01CAAECC14FFA955E98BC7DB /* SmartHomeView.swift */,
+			);
+			path = SmartHome;
+			sourceTree = "<group>";
+		};
 		266F4B9D59CAFDD3ED749F99 /* Claude */ = {
 			isa = PBXGroup;
 			children = (
@@ -533,6 +548,7 @@
 				EF1CDB3D3452CF86F3E95240 /* Sharing */,
 				7315137CB02F1CFC434BC2D7 /* Shelf */,
 				C79A761B20FCEB0BF90BB60B /* Shortcuts */,
+				0F2C6688ECB5B4AB737795E3 /* SmartHome */,
 				E3DA8C920BE91231055BDB72 /* Snippets */,
 				E618A3E398B08451A1D59A88 /* Sports */,
 				780F7365BB84DFF804698336 /* System */,
@@ -643,6 +659,7 @@
 				60D028DAE4C9C74C6193B75F /* HotCornerTests.swift */,
 				8436033AA85EDE8B497C3BE6 /* LicenseTests.swift */,
 				EE79E1E6EA0B1FB034A48E87 /* LogicTests.swift */,
+				3D60DFF8D29CE5938A540D8E /* SmartHomeTests.swift */,
 				A7241EE0C2D1B5C9875023CE /* VPNTunnelTests.swift */,
 			);
 			path = NotchAppleTests;
@@ -697,6 +714,7 @@
 				E7EE75D24E20F68ED45BAC0A /* SandboxMigration.swift */,
 				BB841124163B085F8C4FDD78 /* SettingsBackup.swift */,
 				EA5B0C58A3CF928A968E10F8 /* SettingsManager.swift */,
+				99A4B06A001F63424485AE1E /* SmartHomeLogic.swift */,
 				419A5F6F30DFBF30351906D2 /* Theme.swift */,
 				91C60D5E0497858899252D40 /* UpdateChecker.swift */,
 				D6446A004FCDC55C0BF6957C /* VPNTunnel.swift */,
@@ -1390,6 +1408,8 @@
 				5F2E6DC4CD761DFB777B0C6B /* SharedStore.swift in Sources */,
 				2386441F130CA43774F8A976 /* ShortcutRecorder.swift in Sources */,
 				DDDDB7E81AB5751C2D7A3F80 /* ShortcutsView.swift in Sources */,
+				6411DBA270E4594DD6E7E500 /* SmartHomeLogic.swift in Sources */,
+				3672CD76860F3046F7DE4D1E /* SmartHomeView.swift in Sources */,
 				430792296B037623A8B89EB9 /* SnakeGameView.swift in Sources */,
 				D915CB7B0060ED6128415BF9 /* SnakeGameViewModel.swift in Sources */,
 				A1B21CB550FFC4A1CC1B692D /* SnapDropController.swift in Sources */,
@@ -1470,6 +1490,8 @@
 				11C631948F567411F64386EA /* LogicTests.swift in Sources */,
 				B050F8E38385A23666F48F72 /* MathText.swift in Sources */,
 				BB723ACBAA9D4CB614CB840B /* PureModels.swift in Sources */,
+				308B02A5703FF92FD435BE97 /* SmartHomeLogic.swift in Sources */,
+				74FEA245D44F4164AE1D4761 /* SmartHomeTests.swift in Sources */,
 				953C24EAF0E356448322CD23 /* VPNTunnel.swift in Sources */,
 				5407D4ABDA3E4DC27FD48811 /* VPNTunnelTests.swift in Sources */,
 			);

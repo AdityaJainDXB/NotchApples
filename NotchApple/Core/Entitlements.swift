@@ -140,6 +140,7 @@ extension Module {
         case .home: .homeLayout
         case .cacheCleaner: .cacheCleaner
         case .claudeUsage: .claudeUsage
+        case .smartHome: .smartHome
         case .launcher: .launcher
         case .snippets: .snippets
         case .mirror: .mirror
