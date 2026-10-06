@@ -292,6 +292,9 @@ struct CookieEngine: Codable, Equatable {
     static let costGrowth = 1.15
 
     func count(_ b: Building) -> Int { owned[b] ?? 0 }
+
+    /// A building is unlocked once you own one, or have baked 60% of its first price in total (so it shows up as a goal).
+    func isUnlocked(_ b: Building) -> Bool { count(b) > 0 || baked >= b.baseCost * 0.6 }
     func cost(_ b: Building) -> Double { (b.baseCost * pow(Self.costGrowth, Double(count(b)))).rounded() }
     var clickValue: Double { pow(2, Double(clickLevel)) }
     var cps: Double { Building.allCases.reduce(0) { $0 + Double(count($1)) * $1.cps } }
@@ -314,7 +317,7 @@ struct CookieEngine: Codable, Equatable {
     @discardableResult
     mutating func buy(_ b: Building) -> Bool {
         let price = cost(b)
-        guard cookies >= price else { return false }
+        guard isUnlocked(b), cookies >= price else { return false }
         cookies -= price
         owned[b, default: 0] += 1
         return true

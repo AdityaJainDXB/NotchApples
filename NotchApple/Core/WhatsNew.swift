@@ -21,6 +21,9 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "1.30.1", date: "6 October 2026", headline: "Cookie Clicker unlocks", items: [
+            "Cookie Clicker buildings now unlock as you bake: they show as locked goals first and open up as your total baked cookies grows.",
+        ]),
         ReleaseNote(version: "1.30.0", date: "6 October 2026", headline: "A huge update", items: [
             "Claude Code status dot: a small dot beside the notch, green for 4 seconds when a Claude Code task finishes and yellow for 4 seconds when it needs your input or finishes with warnings or errors. Set it up in Settings → Notch Extras → Claude Code.",
             "A pin in the notch header keeps the notch open while you drag files in from Finder or the Desktop.",

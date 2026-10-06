@@ -152,7 +152,7 @@ final class CookieEngineTests: XCTestCase {
     func testBuyingNeedsEnoughCookiesAndRaisesThePrice() {
         var c = CookieEngine()
         XCTAssertFalse(c.buy(.cursor), "no cookies yet")
-        c.cookies = 1000
+        c.cookies = 1000; c.baked = 1000
         let first = c.cost(.cursor)
         XCTAssertEqual(first, 15)
         XCTAssertTrue(c.buy(.cursor))
@@ -163,13 +163,13 @@ final class CookieEngineTests: XCTestCase {
 
     func testAutoClickersBakeOverTime() {
         var c = CookieEngine()
-        c.cookies = 10_000
+        c.cookies = 10_000; c.baked = 10_000
         XCTAssertTrue(c.buy(.grandma))
         XCTAssertEqual(c.cps, 1, accuracy: 1e-9)
-        let before = c.cookies
+        let before = c.cookies, bakedBefore = c.baked
         c.tick(10)
         XCTAssertEqual(c.cookies - before, 10, accuracy: 1e-9)
-        XCTAssertEqual(c.baked, 10, accuracy: 1e-9, "baked counts only what was made, not what was spent")
+        XCTAssertEqual(c.baked - bakedBefore, 10, accuracy: 1e-9, "baked counts what was made, not what was spent")
     }
 
     func testClickUpgradesDoubleEachClickInOrder() {
@@ -186,9 +186,20 @@ final class CookieEngineTests: XCTestCase {
         XCTAssertEqual(c.clickValue, pow(2, Double(CookieEngine.clickUpgradeCosts.count)))
     }
 
+    func testBuildingsUnlockAsYouBakeAndCannotBeBoughtEarly() {
+        var c = CookieEngine()
+        XCTAssertFalse(c.isUnlocked(.farm))
+        c.cookies = 100_000                              // rich, but never baked that many
+        XCTAssertFalse(c.buy(.farm), "a locked building can't be bought")
+        c.baked = CookieEngine.Building.farm.baseCost * 0.6
+        XCTAssertTrue(c.isUnlocked(.farm))
+        XCTAssertTrue(c.buy(.farm))
+        XCTAssertTrue(c.isUnlocked(.farm), "once owned it stays unlocked")
+    }
+
     func testBadTimeStepsAreIgnored() {
         var c = CookieEngine()
-        c.cookies = 10_000; c.buy(.grandma)
+        c.cookies = 10_000; c.baked = 10_000; c.buy(.grandma)
         let before = c.cookies
         c.tick(-5); c.tick(.nan); c.tick(0)
         XCTAssertEqual(c.cookies, before)
@@ -196,7 +207,7 @@ final class CookieEngineTests: XCTestCase {
 
     func testAwayTimeIsCappedAtAnHourAtHalfSpeed() {
         var c = CookieEngine()
-        c.cookies = 10_000; c.buy(.grandma)
+        c.cookies = 10_000; c.baked = 10_000; c.buy(.grandma)
         let start = c.cookies
         let saved = Date(timeIntervalSince1970: 1_000_000)
         c.savedAt = saved
@@ -206,7 +217,7 @@ final class CookieEngineTests: XCTestCase {
 
     func testSaveAndLoadKeepProgress() throws {
         var c = CookieEngine()
-        c.cookies = 5_000; c.buy(.farm); c.click()
+        c.cookies = 5_000; c.baked = 5_000; c.buy(.farm); c.click()
         let data = try JSONEncoder().encode(c)
         XCTAssertEqual(try JSONDecoder().decode(CookieEngine.self, from: data), c)
     }

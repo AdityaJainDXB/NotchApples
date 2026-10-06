@@ -328,6 +328,10 @@ All screenshots use sample data.
 - **F1:** a favourite team; qualifying gaps and best laps.
 - **What's New** in Settings → About, shown once after updating.
 
+#### New in 1.30.1
+
+- **Cookie Clicker buildings unlock as you bake** (locked goals first, like the original).
+
 #### New in 1.30.0 — a huge update
 
 - **Claude Code status dot.** Green for 4 seconds when a Claude Code task finishes; yellow for 4 seconds when it needs your input or approval, or finishes with warnings or errors. Beside the closed notch and in the open notch's header. Settings → Notch Extras → Claude Code adds the two hooks to `~/.claude/settings.json` (after saving a copy); scripts can use `open -g "notchapple://claude-code?status=done"` or `status=attention`.

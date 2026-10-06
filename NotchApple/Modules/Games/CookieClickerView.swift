@@ -106,8 +106,12 @@ struct CookieClickerView: View {
                         Text("Clicks are fully upgraded").font(.system(size: 11)).foregroundStyle(Theme.textSecondary)
                     }
                     ForEach(CookieEngine.Building.allCases) { b in
-                        row(symbol: b.symbol, title: b.name, detail: "+\(b.cps.formatted()) /s each", owned: e.count(b),
-                            cost: e.cost(b), affordable: e.cookies >= e.cost(b)) { model.buy(b) }
+                        if e.isUnlocked(b) {
+                            row(symbol: b.symbol, title: b.name, detail: "+\(b.cps.formatted()) /s each", owned: e.count(b),
+                                cost: e.cost(b), affordable: e.cookies >= e.cost(b)) { model.buy(b) }
+                        } else {
+                            lockedRow(b)
+                        }
                     }
                     Button("Start over…", role: .destructive) { confirmReset = true }
                         .buttonStyle(.plain).font(.system(size: 10)).foregroundStyle(Theme.textSecondary).padding(.top, 4)
@@ -130,6 +134,20 @@ struct CookieClickerView: View {
                 Circle().fill(Color(red: 0.25, green: 0.14, blue: 0.08)).frame(width: 12, height: 12).offset(x: CGFloat(p.0), y: CGFloat(p.1))
             }
         }
+    }
+
+    /// Shown until you've baked enough to reveal it.
+    private func lockedRow(_ b: CookieEngine.Building) -> some View {
+        HStack(spacing: 8) {
+            Image(systemName: "lock.fill").frame(width: 22).foregroundStyle(Theme.textSecondary)
+            VStack(alignment: .leading, spacing: 1) {
+                Text("???").font(.system(size: 12, weight: .semibold)).foregroundStyle(Theme.textSecondary)
+                Text("Unlocks after \(CookieEngine.format((b.baseCost * 0.6).rounded())) cookies baked").font(.system(size: 10)).foregroundStyle(Theme.textSecondary)
+            }
+            Spacer()
+        }
+        .padding(.horizontal, 8).padding(.vertical, 6)
+        .background(Theme.surface.opacity(0.5), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
     }
 
     private func row(symbol: String, title: String, detail: String, owned: Int?, cost: Double, affordable: Bool, action: @escaping () -> Void) -> some View {
