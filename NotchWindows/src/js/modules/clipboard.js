@@ -5,6 +5,7 @@
 
 import { el, load, save, timeAgo, fmtBytes, watch } from '../store.js';
 import { canUse } from '../features.js';
+import { openUrl } from '../native.js';
 import { menu, toast, toggle, segmented, empty, iconBtn, confirm, modal, markdown } from '../ui.js';
 import { icon } from '../icons.js';
 import * as C from '../services/clipboard.js';
@@ -13,7 +14,10 @@ const isLink = (i) => i.kind === 'text' && /^https?:\/\/\S+$/i.test((i.text || '
 const glyphOf = (i) => (i.kind === 'image' ? 'image' : i.kind === 'files' ? 'file' : isLink(i) ? 'link' : 'align-left');
 
 export function render(root) {
-  let filter = '', kind = 'all', selected = 0, shown = [];
+  let filter = '', kind = 'all', selected = 0, shown = [], slots = [];
+  /// Alt+1 to Alt+9 paste the first nine pinned text items, in the order they're listed.
+  const onSlot = (e) => { if (e.altKey && !e.ctrlKey && /^[1-9]$/.test(e.key) && slots[Number(e.key) - 1]) { e.preventDefault(); C.paste(slots[Number(e.key) - 1]); } };
+  document.addEventListener('keydown', onSlot);
   const search = el('input', { class: 'field', placeholder: 'Search clipboard history' });
   const list = el('div', { class: 'col gap-4 scroll', style: 'flex:1' });
   const footer = el('div', { class: 'hstack tiny faint' });
@@ -26,6 +30,7 @@ export function render(root) {
     // Pinned first.
     shown.sort((a, b) => Number(b.pinned) - Number(a.pinned) || b.at - a.at);
     selected = Math.min(selected, Math.max(0, shown.length - 1));
+    slots = shown.filter((i) => i.pinned && (i.kind === 'text')).slice(0, 9);
     list.replaceChildren(...shown.slice(0, 300).map((item, idx) => {
       const tile = item.kind === 'image' && item.thumb
         ? el('div', { class: 'tile-ico', style: 'width:40px;height:40px;border-radius:11px;background:rgba(255,255,255,.07);overflow:hidden' }, el('img', { src: `data:image/png;base64,${item.thumb}`, style: 'width:100%;height:100%;object-fit:cover' }))
@@ -44,8 +49,10 @@ export function render(root) {
       },
         tile,
         el('div', { class: 'main' }, preview,
-          el('div', { class: 'small dim hstack', style: 'gap:5px' }, item.pinned ? icon('pin', 13) : null, el('span', {}, [item.app || null, timeAgo(item.at)].filter(Boolean).join(' · ')))),
+          el('div', { class: 'small dim hstack', style: 'gap:5px' }, item.pinned ? icon('pin', 13) : null, slots.includes(item) ? el('span', { class: 'chip', style: 'padding:0 6px', title: `Alt+${slots.indexOf(item) + 1} pastes this` }, `Alt+${slots.indexOf(item) + 1}`) : null, el('span', {}, [item.app || null, timeAgo(item.at)].filter(Boolean).join(' · ')))),
         el('div', { class: 'actions' },
+          item.kind === 'text' ? iconBtn(icon('todo', 16, '✅'), 'Add as a to-do', (e) => { e.stopPropagation(); addTodo(item.text); }) : null,
+          item.kind === 'text' && /^https?:\/\/\S+$/i.test(item.text.trim()) ? iconBtn(icon('external-link', 16, '↗'), 'Open the link', (e) => { e.stopPropagation(); openUrl(item.text.trim()); }) : null,
           iconBtn(icon('pin', 16, '📌'), item.pinned ? 'Unpin' : 'Pin', (e) => { e.stopPropagation(); C.togglePin(item.id); }),
           iconBtn('⤵', 'Paste into the app you were using', (e) => { e.stopPropagation(); C.paste(item); }),
           iconBtn(icon('trash-2', 16, '🗑'), 'Delete', (e) => { e.stopPropagation(); C.removeItem(item.id); })));
@@ -53,6 +60,7 @@ export function render(root) {
         { label: 'Copy', run: () => C.copy(item).then(() => toast('Copied')) },
         { label: 'Paste into the app you were using', run: () => C.paste(item) },
         { label: item.pinned ? 'Unpin' : 'Pin', run: () => C.togglePin(item.id) },
+        item.kind === 'text' ? { label: 'Add as a to-do', run: () => addTodo(item.text) } : null,
         item.kind === 'text' ? 'sep' : null,
         ...(item.kind === 'text' ? Object.entries(aiActions()).map(([id, a]) => ({ label: `✨ ${a.label}${canUse('clipboardAI') ? '' : ' (Pro)'}`, run: () => runAI(item, id) })) : []),
         item.kind === 'text' ? { label: '🈯 Translate in Translator', run: async () => (await import('../app.js')).show('translator', { text: item.text }) } : null,
@@ -66,6 +74,13 @@ export function render(root) {
     const paused = load('clipboard.paused', false);
     footer.replaceChildren(el('span', { class: 'grow' }, `${items.length.toLocaleString()} of ${C.limit().toLocaleString()} items${paused ? ' · paused' : ''}`),
       el('label', { class: 'hstack', style: 'gap:6px;cursor:pointer' }, toggle(!paused, (on) => { C.setPaused(!on); paint(); }), 'Recording'));
+  }
+
+  /// Turns the copied text into a to-do (its first line, up to 140 characters).
+  function addTodo(text) {
+    const line = String(text).split(/\r?\n/).find((l) => l.trim())?.trim().slice(0, 140);
+    if (!line) return;
+    import('../services/reminders.js').then((R) => { R.addTodo(line); toast('Added to your to-dos'); });
   }
 
   const aiActions = () => ({ summarize: { label: 'Summarise' }, fix: { label: 'Fix grammar' }, translate: { label: 'Translate to English' }, explain: { label: 'Explain' } });
@@ -101,7 +116,7 @@ export function render(root) {
   paint();
   const unwatch = watch('clipboard.items', () => paint());
   setTimeout(() => search.focus(), 40);
-  return () => unwatch();
+  return () => { unwatch(); document.removeEventListener('keydown', onSlot); };
 }
 
 export { fmtBytes };

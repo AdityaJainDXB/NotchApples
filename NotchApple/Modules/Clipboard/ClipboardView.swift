@@ -35,6 +35,9 @@ struct ClipboardView: View {
         return searched.sorted { ($0.pinned ? 1 : 0, $0.date) > ($1.pinned ? 1 : 0, $1.date) }
     }
 
+    /// The first nine pinned text items, in the order they're listed: ⌥1 to ⌥9 paste them.
+    private var slots: [ClipItem] { visible.filter { $0.pinned && ($0.kind == .text || $0.kind == .link) }.prefix(9).map { $0 } }
+
     var body: some View {
         VStack(spacing: 10) {
             HStack(spacing: 8) {
@@ -70,7 +73,7 @@ struct ClipboardView: View {
                 ScrollView {
                     LazyVStack(spacing: 4) {
                         ForEach(visible) { item in
-                            ClipRow(item: item, copied: copiedID == item.id) {
+                            ClipRow(item: item, copied: copiedID == item.id, slot: slots.firstIndex(of: item).map { $0 + 1 }) {
                                 history.copy(item)
                                 withAnimation { copiedID = item.id }
                                 DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) {
@@ -82,12 +85,20 @@ struct ClipboardView: View {
                 }
             }
         }
+        // ⌥1 … ⌥9 paste the numbered pinned items, while the notch is open.
+        .background(
+            ForEach(Array(slots.enumerated()), id: \.element.id) { i, item in
+                Button("") { if let t = item.text { PasteHelper.paste(t) } }
+                    .keyboardShortcut(KeyEquivalent(Character("\(i + 1)")), modifiers: .option).opacity(0).frame(width: 0, height: 0)
+            }
+        )
     }
 }
 
 private struct ClipRow: View {
     let item: ClipItem
     let copied: Bool
+    var slot: Int? = nil
     let onCopy: () -> Void
     @ObservedObject private var history = ClipboardHistory.shared
     @State private var hovering = false
@@ -105,6 +116,7 @@ private struct ClipRow: View {
                     .foregroundStyle(.white).lineLimit(2)
                 HStack(spacing: 4) {
                     if item.pinned { Image(systemName: "pin.fill").font(.system(size: 9)).foregroundStyle(Theme.accentBright) }
+                    if let slot { Text("⌥\(slot)").font(.system(size: 9, weight: .bold)).padding(.horizontal, 4).background(Theme.surface, in: Capsule()).help("⌥\(slot) pastes this") }
                     Text([item.sourceApp, item.date.formatted(.relative(presentation: .named))]
                         .compactMap { $0 }.joined(separator: " · "))
                         .font(.system(size: 11)).foregroundStyle(Theme.textSecondary).lineLimit(1)
@@ -117,6 +129,13 @@ private struct ClipRow: View {
             } else if hovering {
                 if let text = item.text, item.kind == .text || item.kind == .link {
                     IconButton(systemImage: "arrow.down.doc.fill", help: "Paste into the app in front") { PasteHelper.paste(text) }
+                    IconButton(systemImage: "checklist", help: "Add as a to-do (its first line)") {
+                        let line = text.split(whereSeparator: \.isNewline).first.map { String($0).trimmingCharacters(in: .whitespaces) } ?? ""
+                        TodoStore.shared.add(String(line.prefix(140)))
+                    }
+                    if item.kind == .link, let url = URL(string: text.trimmingCharacters(in: .whitespacesAndNewlines)), ["http", "https"].contains(url.scheme) {
+                        IconButton(systemImage: "arrow.up.right", help: "Open the link") { NSWorkspace.shared.open(url) }
+                    }
                     Menu {
                         ForEach(ClipboardAI.Action.allCases) { a in Button(a.title) { ClipboardAI.run(a, on: text) } }
                     } label: { Image(systemName: "sparkles") }
