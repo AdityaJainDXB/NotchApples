@@ -114,12 +114,22 @@ document.addEventListener('update-available', (e) => {
 });
 
 /// Shows a tab. `opts` are passed to the module (e.g. a search query).
+let switching = 0;
 export async function show(id, opts) {
   if (!byId(id)) id = 'today';
   if (!isEnabled(id) && id !== 'settings') setEnabled(id, true);
+  const wasActive = active;
   active = id;
   save('ui.lastTab', id);
   buildTabs();
+  // The outgoing module fades out, then the incoming one fades in (a quick tap on another tab just restarts it).
+  const turn = ++switching;
+  if (expanded && motion() && page.firstChild && wasActive !== id) {
+    page.classList.add('leaving');
+    await new Promise((r) => setTimeout(r, 90));
+    if (turn !== switching) return;
+  }
+  page.classList.remove('leaving');
   if (typeof cleanup === 'function') { try { cleanup(); } catch (e) { console.error(e); } }
   cleanup = null;
   page.replaceChildren();
@@ -178,6 +188,19 @@ function pillClip() {
   shellEl.style.setProperty('--pill-h', `${size.pillHeight}px`);
 }
 
+/// Windows' blur-behind for the open notch, only once it has finished growing (the blurred area is the full
+/// shape, so it must not appear while the panel is still a pill). Off on slow graphics.
+function wantGlass() { return pref('ui.glass') === true && body.dataset.perf !== 'lite' && body.dataset.anim !== 'off'; }
+function applyGlass() {
+  if (!wantGlass()) { dropGlass(); return; }
+  invoke('set_glass', { on: true }).then(() => { if (expanded) body.classList.add('glass'); }).catch(() => {});
+}
+function dropGlass() {
+  if (!body.classList.contains('glass')) return;
+  body.classList.remove('glass');
+  invoke('set_glass', { on: false }).catch(() => {});
+}
+
 export async function expand(tab, opts) {
   if (expanded) { if (tab) show(tab, opts); return; }
   if (!(await unlock())) return;
@@ -198,6 +221,7 @@ export async function expand(tab, opts) {
     body.classList.remove('opening');
     setTimeout(() => body.classList.remove('growing'), 500);   // always ends, even if the browser skips the transition
   }
+  setTimeout(() => { if (expanded) applyGlass(); }, animate ? 420 : 60);
   probeOnce();
 }
 
@@ -206,6 +230,7 @@ export async function collapse() {
   expanded = false;
   openedByHover = false;
   document.querySelectorAll('.overlay, .menu').forEach((n) => n.remove());
+  dropGlass();
   if (motion()) {
     pillClip();
     body.classList.remove('growing', 'opening');
@@ -460,6 +485,7 @@ buildTabs();
 refreshPill();
 
 for (const key of ['ui.position', 'ui.inset', 'ui.size', 'ui.hideFullscreen', 'ui.animation', 'ui.performance', 'ui.font', 'ui.edgeTrigger']) watch(key, applyLayout);
+watch('ui.glass', () => { if (expanded) applyGlass(); });
 watch('shortcuts', registerShortcuts);
 watch('ui.showClock', refreshPill);
 watch('ui.compactTabs', buildTabs);

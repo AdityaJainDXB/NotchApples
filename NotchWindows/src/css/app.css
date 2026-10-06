@@ -46,14 +46,15 @@ body.collapsed #shell { clip-path: none; }
 body.opening #shell, body.closing #shell {
   clip-path: inset(0 calc(50% - var(--pill-half)) calc(100% - var(--pill-h)) calc(50% - var(--pill-half)) round 0 0 22px 22px);
 }
+body.opening #shell, body.closing #shell { opacity: 0; transform: scale(.965); transform-origin: 50% 0; }
 body.opening #shell { transition: none; }
 body.opening #veil, body.closing #veil { opacity: 1; }
 body.opening #shadow, body.closing #shadow { opacity: 0; }
 body.closing #veil { transition-duration: .2s; }
-body.growing #shell { transition: clip-path .36s cubic-bezier(.2,1.05,.32,1); }
+body.growing #shell { transition: clip-path .36s cubic-bezier(.2,1.05,.32,1), opacity .24s ease-out, transform .36s cubic-bezier(.2,1.05,.32,1); }
 body.growing #veil { opacity: 0; transition-duration: .34s; transition-delay: .06s; }
 body.growing #shadow { opacity: 1; transition-delay: .12s; }
-body.closing #shell { transition: clip-path .22s cubic-bezier(.4,0,.2,1); }
+body.closing #shell { transition: clip-path .22s cubic-bezier(.4,0,.2,1), opacity .2s ease-in, transform .22s cubic-bezier(.4,0,.2,1); }
 body[data-perf="lite"] #veil, body[data-perf="lite"] #shadow { transition: none; }
 /* Open: the window has a transparent margin (the shadow's room); the notch itself sits inside it. */
 body:not(.collapsed) #shell { margin: 0 var(--pad) var(--pad); height: calc(100% - var(--pad)); }
@@ -126,7 +127,9 @@ body.collapsed #panel { display: none; }
 .tab.dragging { opacity: .4; }
 .tab.drop-before { box-shadow: -2px 0 0 var(--accent); }
 #page { flex: 1; min-height: 0; overflow: auto; position: relative; }
-#page.fade { animation: fadein .18s var(--ease); }
+#page.fade { animation: pagein .22s var(--ease); }
+#page.leaving { opacity: 0; transform: scale(.985); transition: opacity .09s ease-in, transform .09s ease-in; }
+@keyframes pagein { from { opacity: 0; transform: translateY(6px) scale(.99) } to { opacity: 1; transform: none } }
 @keyframes fadein { from { opacity: 0 } to { opacity: 1 } }
 
 /* scrollbars */
@@ -381,3 +384,12 @@ body[data-perf="lite"] * { transition-duration: .06s !important; }
            padding: 4px 8px; border-radius: 6px; pointer-events: none; }
 
 body[data-perf="lite"]:not(.collapsed) #shadow { box-shadow: 0 8px 18px rgba(0,0,0,.45); }
+
+/* Glass: Windows blurs the desktop behind the open notch, so the notch itself becomes a tint over it. */
+body.glass #shell {
+  background: linear-gradient(160deg, color-mix(in srgb, var(--bg) 60%, transparent) 0%, color-mix(in srgb, var(--bg) 54%, transparent) 42%, color-mix(in srgb, var(--bg-end) 64%, transparent) 100%);
+}
+/* Floating layers get a real backdrop blur (cheap: they are small and short-lived). */
+body:not([data-perf="lite"]) .menu, body:not([data-perf="lite"]) .toast, body:not([data-perf="lite"]) .overlay > * {
+  backdrop-filter: blur(22px) saturate(1.4); -webkit-backdrop-filter: blur(22px) saturate(1.4); background-color: rgba(23,23,29,.78);
+}

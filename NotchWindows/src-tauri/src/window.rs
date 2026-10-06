@@ -44,6 +44,8 @@ static LAYOUT: Mutex<Option<Layout>> = Mutex::new(None);
 /// same bounds does nothing, so repeated calls cost nothing and cannot make the window flicker.
 static LAST_BOUNDS: Mutex<Option<(i32, i32, i32, i32)>> = Mutex::new(None);
 static TOPMOST_SET: AtomicBool = AtomicBool::new(false);
+/// Glass: Windows blurs whatever is behind the open notch (inside its rounded shape only).
+static GLASS: AtomicBool = AtomicBool::new(false);
 pub static EXPANDED: AtomicBool = AtomicBool::new(false);
 /// Hidden with Ctrl+Alt+O or the eye button.
 pub static USER_HIDDEN: AtomicBool = AtomicBool::new(false);
@@ -95,6 +97,10 @@ pub fn place(app: &AppHandle) -> Result<(), String> {
     }).unwrap_or(true);
     if changed {
         set_bounds(&window, bounds, (x, origin.y, w, h))?;
+        // The blurred area follows the window's size (and goes away when it shrinks back to the pill).
+        if GLASS.load(Ordering::Relaxed) {
+            let _ = apply_glass(&window, expanded);
+        }
     }
     // Always-on-top only needs asking for once; asking every time re-stacks the window for nothing.
     if !TOPMOST_SET.swap(true, Ordering::Relaxed) {
@@ -121,6 +127,42 @@ fn set_bounds(window: &WebviewWindow, px: (i32, i32, i32, i32), _logical: (f64, 
 fn set_bounds(window: &WebviewWindow, _px: (i32, i32, i32, i32), logical: (f64, f64, f64, f64)) -> Result<(), String> {
     window.set_size(LogicalSize::new(logical.2, logical.3)).map_err(|e| e.to_string())?;
     window.set_position(LogicalPosition::new(logical.0, logical.1)).map_err(|e| e.to_string())
+}
+
+/// Turns Windows' blur-behind on for the open notch's rounded shape, or off. Only the shape is blurred, not
+/// the transparent margin around it, so the soft shadow stays a shadow. The shape is inset a pixel from the
+/// page's squircle so the blur never pokes out past its edge.
+#[cfg(windows)]
+fn apply_glass(window: &WebviewWindow, on: bool) -> Result<(), String> {
+    use windows::Win32::Foundation::HWND;
+    use windows::Win32::Graphics::Dwm::{DwmEnableBlurBehindWindow, DWM_BB_BLURREGION, DWM_BB_ENABLE, DWM_BLURBEHIND};
+    use windows::Win32::Graphics::Gdi::{CreateRoundRectRgn, DeleteObject, HGDIOBJ, HRGN};
+    let hwnd = window.hwnd().map_err(|e| e.to_string())?.0 as isize;
+    let scale = window.scale_factor().map_err(|e| e.to_string())?;
+    let size = window.inner_size().map_err(|e| e.to_string())?;
+    let pad = (SHADOW_PAD * scale).round() as i32;
+    let r = (28.0 * scale).round() as i32;
+    let (w, h) = (size.width as i32, size.height as i32);
+    unsafe {
+        // Starts above the window so only the bottom corners are rounded.
+        let region = if on { CreateRoundRectRgn(pad + 1, -2 * r, w - pad - 1, h - pad - 1, 2 * r, 2 * r) } else { HRGN(std::ptr::null_mut()) };
+        let blur = DWM_BLURBEHIND {
+            dwFlags: DWM_BB_ENABLE | DWM_BB_BLURREGION,
+            fEnable: on.into(),
+            hRgnBlur: region,
+            fTransitionOnMaximized: false.into(),
+        };
+        let result = DwmEnableBlurBehindWindow(HWND(hwnd as _), &blur);
+        if on {
+            let _ = DeleteObject(HGDIOBJ(region.0));
+        }
+        result.map_err(|e| e.to_string())
+    }
+}
+
+#[cfg(not(windows))]
+fn apply_glass(_window: &WebviewWindow, _on: bool) -> Result<(), String> {
+    Ok(())
 }
 
 /// Shows or hides the window from the two reasons it can be hidden.
@@ -159,6 +201,13 @@ pub fn set_expanded(app: AppHandle, expanded: bool) -> Result<(), String> {
     place(&app)?;
     apply_visibility(&app);
     Ok(())
+}
+
+#[tauri::command]
+pub fn set_glass(app: AppHandle, on: bool) -> Result<(), String> {
+    GLASS.store(on, Ordering::Relaxed);
+    let window = app.get_webview_window("notch").ok_or("no notch window")?;
+    apply_glass(&window, on && EXPANDED.load(Ordering::Relaxed))
 }
 
 #[tauri::command]

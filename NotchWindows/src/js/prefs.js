@@ -13,6 +13,7 @@ export const DEFAULTS = {
   'ui.hideFullscreen': true,        // hide over fullscreen videos and games
   'ui.showClock': true,             // the time on the pill when nothing is happening
   'ui.animation': 'smooth',         // smooth | fast | off (Pro: other than smooth)
+  'ui.glass': true,                 // blur the desktop behind the open notch
   'ui.performance': 'auto',         // auto | full | lite: lite drops glows and looping animations on slow graphics
   'ui.sounds': false,               // Pro: sounds on open and when timers end
   'ui.font': 'system',              // Pro: system | rounded | mono

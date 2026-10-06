@@ -391,6 +391,7 @@ All screenshots use sample data.
 #### Windows 1.26.3 BETA
 
 - **It grows out of the notch.** Opening now morphs the panel out of the pill's own shape (and closing shrinks it back in), instead of the window just jumping to full size. Performance mode *Lite* and Animations *Off* skip the motion.
+- **Fades and blur.** Opening fades and scales the notch in (and closing fades it out), and switching tabs fades the old page out as the new one fades in, all in about a quarter of a second. On Windows 10 and 11 the open notch now blurs your desktop behind it (Settings → Appearance → Style → Glass blur); menus, toasts and dialogs get a blur too. Glass turns itself off on slow graphics.
 - **A proper notch.** The closed pill now has squircle bottom corners and concave "ears" that flow into the top edge of the screen, and the time is crisp white, semibold and exactly centred. When something is playing or running, it shows on the left and right as before.
 - **Settings stays put.** The Settings gear is pinned at the top right of a fixed header, so it never scrolls away with the tabs. The tab strip scrolls on its own and fades at the edges.
 - **Softer, rounder look.** Cards, buttons and menus use larger continuous (squircle) corners, the open notch has a layered material with a top highlight, and a soft diffused shadow separates it from the desktop. Margins are roomier (24 px).

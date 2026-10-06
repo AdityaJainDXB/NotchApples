@@ -434,7 +434,7 @@ fn main() {
         )
         .invoke_handler(tauri::generate_handler![
             app_info, quit_app, notify, set_autostart, get_autostart, register_shortcuts,
-            window::set_expanded, window::set_layout, window::set_hidden, window::set_hide_in_fullscreen,
+            window::set_expanded, window::set_glass, window::set_layout, window::set_hidden, window::set_hide_in_fullscreen,
             net::http,
             clip::clipboard_pause, clip::clipboard_copy_text, clip::clipboard_copy_image, clip::clipboard_forget,
             awake::set_keep_awake, awake::keep_awake_state,
