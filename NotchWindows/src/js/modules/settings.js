@@ -63,6 +63,9 @@ function General(repaint, opts) {
       setting('Close when I click somewhere else', '', prefToggle('ui.closeOnBlur')),
       setting('Hide over fullscreen videos and games', '', prefToggle('ui.hideFullscreen')),
       setting('Show the time on the pill', '', prefToggle('ui.showClock'))),
+    card('On the pill',
+      setting('Low battery warning', 'A warning on the pill, and a notification, at 20% and 10% when you are not charging.', toggle(load('hud.battery', true), (v) => save('hud.battery', v))),
+      setting('Volume gauge', 'Shows the volume on the pill for a moment when it changes. Off by default because Windows shows its own volume pop-up.', toggle(load('hud.volume', false), (v) => save('hud.volume', v)))),
     claudeCard(),
     card('Your data',
       setting('Back up your setup', 'Tabs, settings, notes, to-dos, snippets… (not keys).', button('Export…', async () => {
@@ -146,7 +149,7 @@ function Tabs(repaint) {
   return [el('div', { class: 'hstack' }, el('div', { class: 'small dim grow' }, 'Turn tabs on or off. Drag tabs in the bar to reorder them.'), button('Choose with pictures…', () => show('welcome'), { kind: 'quiet' })),
     ...order.filter((id) => id !== 'settings').map((id) => MODULES.find((m) => m.id === id)).map((m, i, arr) => el('div', { class: 'item', style: 'border:1px solid var(--border)' },
       el('span', { style: 'font-size:18px;width:24px' }, m.icon),
-      el('div', { class: 'main' }, el('div', { class: 'hstack', style: 'gap:6px' }, el('b', {}, m.name), m.feature ? badge(m.feature) : null), el('div', { class: 'tiny dim' }, m.blurb)),
+      el('div', { class: 'main' }, el('div', { class: 'hstack', style: 'gap:6px' }, el('b', {}, m.name), m.feature ? badge(m.feature) : null), el('div', { class: 'tiny dim' }, m.blurb), m.note ? el('div', { class: 'tiny warn', style: 'font-weight:600' }, `(${m.note})`) : null),
       el('button', { class: 'icon-btn', title: 'Move up', onclick: () => { if (i) { const o = tabOrder(); const a = o.indexOf(m.id), b = o.indexOf(arr[i - 1].id); [o[a], o[b]] = [o[b], o[a]]; setTabOrder(o); repaint(); } } }, '↑'),
       toggle(isEnabled(m.id), (v) => setEnabled(m.id, v))))];
 }

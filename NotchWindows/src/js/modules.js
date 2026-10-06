@@ -65,7 +65,7 @@ export const MODULES = [
     blurb: "Free VPN Gate servers through Windows' built-in VPN, or your own OpenVPN profile." },
   { id: 'devices', name: 'Devices', icon: '🎧', load: () => import('./modules/devices.js'),
     blurb: "What's using your microphone or camera (with a mic mute), your battery and connected devices." },
-  { id: 'live', name: 'Live', icon: '📦', load: () => import('./modules/live.js'),
+  { id: 'live', name: 'Parcels & Flights', icon: '📦', note: 'Not recommended: limited usefulness for most situations, low compatibility.', load: () => import('./modules/live.js'),
     blurb: 'Track parcels and flights from the notch, with live flight status.' },
   { id: 'actions', name: 'Actions', icon: '⚙️', load: () => import('./modules/actions.js'),
     blurb: 'One-click actions you set up: open apps, files and sites, run commands, and system shortcuts.' },

@@ -1,4 +1,5 @@
-// Live: track parcels and flights; live flight status (Pro) on the pill.
+// Parcels & Flights: track parcels and flights; live flight status (Pro) on the pill.
+// Not recommended for most people: limited usefulness, low compatibility (the Mac app says the same).
 import { el, load, save, uid, timeAgo } from '../store.js';
 import { openUrl } from '../native.js';
 import { canUse } from '../features.js';
@@ -30,7 +31,7 @@ export function render(root) {
     }));
     if (!items().length) list.append(empty('📦', 'Track a parcel or a flight', 'Paste a UPS, FedEx, DHL, USPS or other tracking number, or a flight like BA117.'));
   }
-  root.append(el('div', { class: 'col fill' }, input, list));
+  root.append(el('div', { class: 'col fill' }, el('div', { class: 'small warn', style: 'font-weight:600' }, '(Not recommended: limited usefulness for most situations, low compatibility)'), input, list));
   paint();
   if (canUse('flightStatus')) Promise.all(items().filter((i) => i.kind === 'Flight').map((i) => FL.check(i.code))).then(paint);
 }
