@@ -37,6 +37,10 @@ final class NotchPanel: NSPanel {
 
     override var canBecomeKey: Bool { true }
     override var canBecomeMain: Bool { false }
+
+    /// The notch must sit flush at the very top of the screen. By default macOS nudges a window that overlaps the
+    /// menu bar down below it; returning the frame unchanged keeps the notch exactly where the controller put it.
+    override func constrainFrameRect(_ frameRect: NSRect, to screen: NSScreen?) -> NSRect { frameRect }
 }
 
 /// Shared UI state for the notch.

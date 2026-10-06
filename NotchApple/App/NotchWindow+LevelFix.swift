@@ -18,17 +18,20 @@ extension NSPanel {
 
     /// Re-applies level, Space behaviour and ordering. Safe to call at any time.
     func keepAboveEverything(extraLevels: Int = 0, orderFront: Bool = true) {
-        // "Keep the notch visible in full-screen apps" raises the window to screen-saver level, which
-        // sits above full-screen Spaces and their menu bar, so it isn't hidden by the Space change.
-        level = NotchPrefs.keepInFullscreen
-            ? NSWindow.Level(rawValue: NSWindow.Level.screenSaver.rawValue + extraLevels)
-            : NSWindow.Level(rawValue: Self.notchLevel.rawValue + extraLevels)
         // The vetted pattern for a menu-bar-style overlay: on every Space (including full-screen ones), as an
         // auxiliary window beside full-screen apps, never part of Exposé or ⌘-Tab, and never hidden when the app is.
         collectionBehavior = [.canJoinAllSpaces, .stationary, .fullScreenAuxiliary, .ignoresCycle]
         hidesOnDeactivate = false
         canHide = false
-        isFloatingPanel = true
+        // NOTE: do not set `isFloatingPanel` here. It looks harmless, but it resets `level` to the ordinary
+        // floating level, which is BELOW the menu bar, and macOS then pushes the notch down under the bar
+        // (this was the bug in 1.30.0 and 1.30.1). The level is set last so nothing can undo it.
+        //
+        // "Keep the notch visible in full-screen apps" raises the window to screen-saver level, which
+        // sits above full-screen Spaces and their menu bar, so it isn't hidden by the Space change.
+        level = NotchPrefs.keepInFullscreen
+            ? NSWindow.Level(rawValue: NSWindow.Level.screenSaver.rawValue + extraLevels)
+            : NSWindow.Level(rawValue: Self.notchLevel.rawValue + extraLevels)
         if orderFront { orderFrontRegardless() }
     }
 }

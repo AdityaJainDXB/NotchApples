@@ -328,6 +328,10 @@ All screenshots use sample data.
 - **F1:** a favourite team; qualifying gaps and best laps.
 - **What's New** in Settings → About, shown once after updating.
 
+#### New in 1.30.2
+
+- **Fixed the notch sitting below the top of the screen** (1.30.0 and 1.30.1). A window-level change made for full-screen apps had lowered it under the menu bar; it is flush at the top again.
+
 #### New in 1.30.1
 
 - **Cookie Clicker buildings unlock as you bake** (locked goals first, like the original).
