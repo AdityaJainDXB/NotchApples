@@ -70,6 +70,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         Task { await Entitlements.shared.checkRevocationIfDue() }
         DemoHooks.run()
         applyMediaKeyPreference()
+        // The required permission: ask now, and open the notch on the setup screen so nobody is left wondering why
+        // the volume gauge and other features don't work.
+        RequiredSetup.shared.start()
+        if !RequiredSetup.shared.isComplete {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { [weak self] in
+                guard let self, !RequiredSetup.shared.isComplete, self.notchController?.state.isExpanded == false else { return }
+                self.notchController?.toggle()
+            }
+        }
         // Accessibility may be granted later; keep trying quietly until the tap is running.
         Timer.scheduledTimer(withTimeInterval: 10, repeats: true) { timer in
             MainActor.assumeIsolated {

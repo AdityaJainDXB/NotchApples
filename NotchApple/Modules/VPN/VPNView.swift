@@ -3,8 +3,8 @@
 //  Notch apple
 //
 //  One big power button in the middle: tap it to connect to the chosen server, tap again to disconnect.
-//  The server picker sits discreetly on the right (your own VPNs, the free library, VPN Gate), with a
-//  way to add a VPN by hand. The VPN status stays on this page and no longer shows in the notch header.
+//  The server picker sits discreetly on the right (your VPN app, the free library, VPN Gate). To use your own VPN
+//  you only add its app: no addresses, passwords or config files. The VPN status stays on this page and no longer shows in the notch header.
 //
 
 import SwiftUI
@@ -15,11 +15,11 @@ struct VPNView: View {
     @StateObject private var vpn = VPNManager.shared
     @State private var importing = false
     @State private var picking = false
-    @State private var editing: VPNProfile?
-    @State private var addingCustom = false
+    @State private var addingApp = false
 
-    private var connected: Bool { vpn.status == .connected }
-    private var busy: Bool { vpn.status == .connecting || vpn.status == .reasserting || vpn.status == .disconnecting }
+    /// For a VPN app, "connected" means the Mac has a VPN tunnel up (the app itself isn't something Notch apple can ask).
+    private var connected: Bool { vpn.selected?.kind == .app ? vpn.tunnelActive : vpn.status == .connected }
+    private var busy: Bool { vpn.selected?.kind != .app && (vpn.status == .connecting || vpn.status == .reasserting || vpn.status == .disconnecting) }
 
     var body: some View {
         HStack(alignment: .center, spacing: 16) {
@@ -27,7 +27,7 @@ struct VPNView: View {
                 if let client = vpn.needsVPNClient { clientBanner(client) }
                 Spacer(minLength: 0)
                 PowerButton(connected: connected, busy: busy, enabled: vpn.selected != nil || connected || busy) { toggle() }
-                Text(vpn.selected == nil && !connected && !busy ? "Pick a server to connect" : (connected || busy ? vpn.status.label : "Not connected"))
+                Text(vpn.selected == nil && !connected && !busy ? "Pick a server or add your VPN app" : (connected ? "Connected" : (busy ? vpn.status.label : "Not connected")))
                     .font(.system(size: 15, weight: .semibold)).foregroundStyle(connected ? Color.green : .white)
                 if let s = vpn.selected {
                     Text(s.name).font(.system(size: 12)).foregroundStyle(Theme.textSecondary).lineLimit(1)
@@ -55,25 +55,25 @@ struct VPNView: View {
                     .buttonStyle(.plain)
                     .popover(isPresented: $picking, arrowEdge: .leading) { ServerPicker(isPresented: $picking) }
                     HStack(spacing: 6) {
-                        Button { addingCustom = true } label: { Label("Custom", systemImage: "plus") }
+                        Button { addingApp = true } label: { Label("VPN app", systemImage: "plus.app") }
                         Button { importing = true } label: { Label("Import", systemImage: "square.and.arrow.down") }
                     }
                     .buttonStyle(PurpleButtonStyle(prominent: false)).font(.system(size: 11))
                     if let s = vpn.selected, vpn.profiles.contains(where: { $0.id == s.id }) {
-                        HStack(spacing: 6) {
-                            if s.isCustom == true { Button("Edit") { editing = s }.buttonStyle(PurpleButtonStyle(prominent: false)) }
-                            Button("Remove", role: .destructive) { vpn.remove(s) }.buttonStyle(PurpleButtonStyle(prominent: false))
-                        }
-                        .font(.system(size: 11))
+                        Button("Remove", role: .destructive) { vpn.remove(s) }
+                            .buttonStyle(PurpleButtonStyle(prominent: false)).font(.system(size: 11))
                     }
                     Spacer(minLength: 0)
                 }
             }
             .frame(width: 190)
         }
-        .onAppear { if vpn.library.isEmpty { Task { await vpn.loadLibrary() } } }
-        .sheet(isPresented: $addingCustom) { CustomVPNSheet(profile: nil) }
-        .sheet(item: $editing) { CustomVPNSheet(profile: $0) }
+        .onAppear {
+            vpn.startWatchingTunnel()
+            if vpn.library.isEmpty { Task { await vpn.loadLibrary() } }
+        }
+        .onDisappear { vpn.stopWatchingTunnel() }
+        .sheet(isPresented: $addingApp) { AddVPNAppSheet() }
         .fileImporter(isPresented: $importing, allowedContentTypes: [.data, .plainText], allowsMultipleSelection: true) { result in
             if case .success(let urls) = result { urls.forEach(vpn.importProfile) }
         }
@@ -200,74 +200,59 @@ private struct ServerPicker: View {
     }
 }
 
-/// Add or edit a VPN by hand. The password and shared secret go to Notch apple's private secrets file.
-private struct CustomVPNSheet: View {
-    let profile: VPNProfile?
+/// Adds your VPN app in one click. No server addresses, usernames, passwords or config files: the app does the connecting.
+private struct AddVPNAppSheet: View {
     @Environment(\.dismiss) private var dismiss
     @StateObject private var vpn = VPNManager.shared
-    @State private var name = ""
-    @State private var kind: VPNProfile.Kind = .ikev2
-    @State private var server = ""
-    @State private var username = ""
-    @State private var password = ""
-    @State private var sharedSecret = ""
-    @State private var config = ""
 
-    private var valid: Bool {
-        !name.trimmingCharacters(in: .whitespaces).isEmpty
-            && (kind == .ikev2 ? !server.trimmingCharacters(in: .whitespaces).isEmpty : !config.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+    private struct Found: Identifiable { let id: String; let name: String; let url: URL }
+
+    /// The known VPN apps that are installed on this Mac.
+    private var found: [Found] {
+        KnownVPNApps.all.compactMap { app in
+            NSWorkspace.shared.urlForApplication(withBundleIdentifier: app.bundleID).map { Found(id: app.bundleID, name: app.name, url: $0) }
+        }
     }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text(profile == nil ? "Add a custom VPN" : "Edit VPN").font(.title3.bold())
-            Form {
-                TextField("Name", text: $name)
-                Picker("Type", selection: $kind) {
-                    Text("IKEv2").tag(VPNProfile.Kind.ikev2)
-                    Text("OpenVPN").tag(VPNProfile.Kind.openVPN)
-                    Text("WireGuard").tag(VPNProfile.Kind.wireGuard)
+            Text("Add your VPN app").font(.title3.bold())
+            Text("Pick the VPN app you already use. Notch apple opens it for you and shows whether your Mac is connected. You don't type any addresses or passwords.")
+                .font(.callout).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+            if found.isEmpty {
+                Text("No well-known VPN apps found. Choose yours below.").font(.callout).foregroundStyle(.secondary).padding(.vertical, 6)
+            } else {
+                ScrollView {
+                    VStack(spacing: 4) {
+                        ForEach(found) { app in
+                            HStack(spacing: 10) {
+                                Image(nsImage: NSWorkspace.shared.icon(forFile: app.url.path)).resizable().frame(width: 28, height: 28)
+                                Text(app.name).font(.system(size: 13, weight: .medium))
+                                Spacer()
+                                Button("Add") { vpn.addApp(at: app.url); dismiss() }
+                            }
+                            .padding(.horizontal, 8).padding(.vertical, 4)
+                        }
+                    }
                 }
-                if kind == .ikev2 {
-                    TextField("Server address", text: $server)
-                    TextField("Username", text: $username)
-                    SecureField("Password", text: $password)
-                    SecureField("Shared secret (optional)", text: $sharedSecret)
-                } else {
-                    TextField("Username (optional)", text: $username)
-                    SecureField("Password (optional)", text: $password)
-                    Text(kind == .openVPN ? "Paste the .ovpn file's contents:" : "Paste the WireGuard .conf file's contents:").font(.caption).foregroundStyle(.secondary)
-                    TextEditor(text: $config).font(.system(size: 11, design: .monospaced)).frame(height: 110)
-                        .overlay(RoundedRectangle(cornerRadius: 6).stroke(.secondary.opacity(0.3)))
-                }
+                .frame(maxHeight: 220)
             }
-            .formStyle(.columns)
-            Text("Your password stays on this Mac, in Notch apple's private file (readable only by you).")
-                .font(.caption).foregroundStyle(.secondary)
             HStack {
+                Button("Choose another app…") { chooseApp() }
                 Spacer()
                 Button("Cancel") { dismiss() }.keyboardShortcut(.cancelAction)
-                Button("Save") { save() }.keyboardShortcut(.defaultAction).disabled(!valid)
             }
         }
-        .padding(20).frame(width: 440)
-        .onAppear {
-            guard let p = profile else { return }
-            name = p.name; kind = p.kind; server = p.server; username = p.username ?? ""; config = p.config
-            let s = vpn.secret(for: p.id); password = s.password; sharedSecret = s.sharedSecret
-        }
+        .padding(20).frame(width: 420)
     }
 
-    private func save() {
-        let isWG = kind == .wireGuard
-        let parsed = kind == .ikev2 ? server : (VPNManager.parseServer(config, wireGuard: isWG) ?? "custom")
-        var p = profile ?? VPNProfile(name: name, kind: kind, server: parsed, config: "")
-        p.name = name.trimmingCharacters(in: .whitespaces)
-        p.kind = kind
-        p.server = parsed
-        p.config = kind == .ikev2 ? "" : config
-        p.username = username.isEmpty ? nil : username
-        vpn.saveCustom(p, secret: VPNSecret(password: password, sharedSecret: sharedSecret))
-        dismiss()
+    private func chooseApp() {
+        let panel = NSOpenPanel()
+        panel.allowedContentTypes = [.application]
+        panel.directoryURL = URL(fileURLWithPath: "/Applications")
+        panel.allowsMultipleSelection = false
+        panel.message = "Choose your VPN app"
+        NSApp.activate(ignoringOtherApps: true)
+        if panel.runModal() == .OK, let url = panel.url { vpn.addApp(at: url); dismiss() }
     }
 }

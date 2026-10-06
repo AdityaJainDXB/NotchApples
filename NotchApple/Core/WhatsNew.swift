@@ -21,6 +21,10 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "1.30.3", date: "6 October 2026", headline: "Add your VPN app, and a required setup step", items: [
+            "Your own VPN is now just \"add the app\": click VPN app in the VPN tab and pick Proton VPN, NordVPN, Mullvad, WireGuard or any other app. The power button opens it and turns green when your Mac has a VPN tunnel up. No addresses or passwords.",
+            "The Accessibility permission is now a required first step. Until it is on, the open notch shows a short setup screen; the moment it is granted, the volume and brightness gauge starts, with no relaunch.",
+        ]),
         ReleaseNote(version: "1.30.2", date: "6 October 2026", headline: "The notch is back at the top, and one pop-up at a time", items: [
             "Fixed the notch sitting below the top of the screen in 1.30.0 and 1.30.1. It is flush with the top edge again, and macOS can no longer push it under the menu bar.",
             "Fixed two volume or brightness pop-ups showing on top of each other: until Accessibility is allowed only the macOS pop-up shows; once it is, only the notch gauge shows.",

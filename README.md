@@ -328,6 +328,11 @@ All screenshots use sample data.
 - **F1:** a favourite team; qualifying gaps and best laps.
 - **What's New** in Settings → About, shown once after updating.
 
+#### New in 1.30.3
+
+- **Add your VPN app, nothing else.** In the VPN tab click **VPN app** and pick the app you already use (Proton VPN, NordVPN, ExpressVPN, Mullvad, Surfshark, WireGuard, Tunnelblick, Tailscale… or any app). The power button opens it and turns green when your Mac has a VPN tunnel up. The custom address/username/password form is gone.
+- **A required setup step.** Notch apple needs the Accessibility permission (the volume and brightness gauge, window snapping, snippets and selected text depend on it). Until it is on, the open notch shows a setup screen; once granted, the gauge starts straight away.
+
 #### New in 1.30.2
 
 - **Fixed the notch sitting below the top of the screen** (1.30.0 and 1.30.1). A window-level change made for full-screen apps had lowered it under the menu bar; it is flush at the top again.

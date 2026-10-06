@@ -13,8 +13,8 @@ packages:
 settings:
   base:
     SWIFT_VERSION: "5.0"
-    MARKETING_VERSION: "1.30.2"
-    CURRENT_PROJECT_VERSION: "46"
+    MARKETING_VERSION: "1.30.3"
+    CURRENT_PROJECT_VERSION: "47"
     CODE_SIGN_IDENTITY: "-"
     CODE_SIGN_STYLE: Manual
     DEVELOPMENT_TEAM: ""
@@ -85,6 +85,7 @@ targets:
       - NotchApple/Core/HotCornerLogic.swift
       - NotchApple/Modules/Games/GameEngines.swift
       - NotchApple/Core/ClaudeCodeStatusLogic.swift
+      - NotchApple/Core/VPNTunnel.swift
       - CompanionKit
     settings:
       base:

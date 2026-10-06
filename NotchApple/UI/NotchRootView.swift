@@ -72,6 +72,7 @@ struct NotchRootView: View {
     @EnvironmentObject private var state: NotchState
     @EnvironmentObject private var settings: SettingsManager
     @StateObject private var entitlements = Entitlements.shared
+    @ObservedObject private var setup = RequiredSetup.shared
 
     @Namespace private var duoSpace
     /// The tab that was showing before this switch, so the new page knows which side to slide in from.
@@ -127,6 +128,9 @@ struct NotchRootView: View {
     private var expandedContent: some View {
         if settings.securityEnabled && !state.isUnlocked {
             LockView()
+        } else if !setup.isComplete {
+            // The permission Notch apple needs is not on yet: show the one required step instead of the tabs.
+            RequiredSetupView()
         } else {
             VStack(spacing: 10) {
                 header
