@@ -58,7 +58,7 @@ Pick your computer. The Windows button starts the download straight away; the Ma
       <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg)</b></a>
     </td>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 1.26.1 BETA</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 1.26.2 BETA</b></a>
     </td>
   </tr>
   <tr>
@@ -387,6 +387,11 @@ All screenshots use sample data.
 #### New in 1.24.1
 
 - **Bug fix:** Messenger and AI chat now open scrolled to the latest message instead of the oldest.
+
+#### Windows 1.26.2 BETA
+
+- **Updates install in one step.** *Install and restart* now runs the installer with just a progress bar and reopens Notch apple when it finishes, instead of walking you through the installer pages again. The "update ready" notification now points to Settings → Updates.
+- **Lighter on small machines.** On a PC with 6 GB of memory or less (including small virtual machines), Notch apple starts its web engine in a low-memory mode: smaller caches and a cap on the page's JavaScript heap. Site isolation stays on.
 
 #### Windows 1.26.1 BETA
 

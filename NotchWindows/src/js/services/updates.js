@@ -21,7 +21,7 @@ export async function check() {
   checkedAt = Date.now();
   if (available && load('updates.notified', '') !== available.version) {
     save('updates.notified', available.version);
-    notify('Notch apple update', `Version ${available.version} is ready. Open Settings → General to install it.`);
+    notify('Notch apple update', `Version ${available.version} is ready. Open Settings → Updates to install it.`);
   }
   refresh();
   return status();

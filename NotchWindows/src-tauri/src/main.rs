@@ -385,7 +385,28 @@ fn build_tray(app: &tauri::App) -> tauri::Result<()> {
     Ok(())
 }
 
+/// Machines with 6 GB of memory or less (small laptops, virtual machines) get a leaner WebView2: Chromium's
+/// low-end device mode (smaller caches, fewer raster threads) and a cap on each page's JavaScript heap.
+/// Site isolation stays on, because the Browser tab opens real websites. A value already set in the
+/// environment is left alone, so it can still be overridden.
+fn lean_webview_on_small_machines() {
+    if !cfg!(windows) || std::env::var_os("WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS").is_some() {
+        return;
+    }
+    let mut system = sysinfo::System::new();
+    system.refresh_memory();
+    let gib = system.total_memory() as f64 / 1_073_741_824.0;
+    if gib > 0.0 && gib <= 6.2 {
+        // Includes the three features Tauri turns off by default, because the last --disable-features wins.
+        std::env::set_var(
+            "WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS",
+            "--disable-features=msWebOOUI,msPdfOOUI,msSmartScreenProtection --enable-low-end-device-mode --js-flags=--max-old-space-size=256",
+        );
+    }
+}
+
 fn main() {
+    lean_webview_on_small_machines();
     tauri::Builder::default()
         // A second launch (e.g. clicking the Start menu entry again) opens the
         // existing notch instead of starting another one.

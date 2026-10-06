@@ -106,7 +106,12 @@ pub async fn update_install(app: AppHandle, url: String, sha256: Option<String>,
         let _ = std::fs::remove_file(&path);
         return Err("The download didn't match the published file, so it wasn't installed. Try again.".into());
     }
-    std::process::Command::new(&path).spawn().map_err(|e| format!("Couldn't start the installer: {e}"))?;
+    // /P shows only a progress bar (no wizard pages), /R starts the app again when it's done, and /UPDATE tells
+    // the installer this is an upgrade, so it replaces the old version without asking.
+    std::process::Command::new(&path)
+        .args(["/P", "/R", "/UPDATE"])
+        .spawn()
+        .map_err(|e| format!("Couldn't start the installer: {e}"))?;
     // Quit so the installer can replace the app.
     let handle = app.clone();
     std::thread::spawn(move || {
