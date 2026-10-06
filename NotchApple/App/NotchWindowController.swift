@@ -899,9 +899,9 @@ final class NotchWindowController {
         } else {
             // Leaving the trigger while the panel is opening lands on the panel, so only the
             // panel's own exit closes it; a small grace period allows brief overshoots.
-            guard overPanel, state.isExpanded, openedByHover, !pinnedByClick else { return }
+            guard overPanel, state.isExpanded, openedByHover, !pinnedByClick, !SettingsManager.shared.stickyNotch else { return }
             work = DispatchWorkItem { [weak self] in
-                guard let self, self.openedByHover, !self.pinnedByClick else { return }
+                guard let self, self.openedByHover, !self.pinnedByClick, !SettingsManager.shared.stickyNotch else { return }
                 self.collapse()
             }
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.35, execute: work)

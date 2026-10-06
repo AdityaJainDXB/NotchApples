@@ -8,6 +8,8 @@
 //   • Breakout: the mouse or ← → moves the paddle; click or Space launches (BreakoutGameView).
 //   • Memory: repeat the pattern of lights, one more each round (MemoryGameView).
 //   • Reaction: wait for green, then click (or press Space) as fast as you can.
+//   • Cookie Clicker: click, buy multipliers and auto-clickers; progress is saved (CookieClickerView).
+//   • Runner: jump over spikes and blocks, a little Geometry Dash (RunnerGameView).
 //  Best scores are kept on this Mac. Nothing runs while the tab is closed.
 //
 
@@ -15,7 +17,7 @@ import SwiftUI
 
 struct GamesView: View {
     enum Game: String, CaseIterable, Identifiable {
-        case g2048 = "2048", snake = "Snake", breakout = "Breakout", memory = "Memory", reaction = "Reaction"
+        case g2048 = "2048", snake = "Snake", breakout = "Breakout", memory = "Memory", reaction = "Reaction", cookies = "Cookies", runner = "Runner"
         var id: String { rawValue }
         var symbol: String {
             switch self {
@@ -24,6 +26,8 @@ struct GamesView: View {
             case .breakout: "rectangle.split.3x1.fill"
             case .memory: "circle.grid.2x2.fill"
             case .reaction: "bolt.fill"
+            case .cookies: "circle.hexagongrid.fill"
+            case .runner: "figure.run"
             }
         }
     }
@@ -55,6 +59,8 @@ struct GamesView: View {
                 case .breakout: BreakoutGameView()
                 case .memory: MemoryGameView()
                 case .reaction: ReactionView()
+                case .cookies: CookieClickerView()
+                case .runner: RunnerGameView()
                 }
             }
             .id(game)
@@ -68,6 +74,8 @@ struct GamesView: View {
         case .breakout: "Mouse or ← → moves the paddle. Click or Space launches."
         case .memory: "Watch the lights, repeat them with a click or the arrow keys."
         case .reaction: "Wait for green, then click or press Space."
+        case .cookies: "Click the cookie. Buy stronger clicks and auto-clickers; it keeps baking while you work."
+        case .runner: "Space, ↑, W or a click jumps. Spikes and blocks end the run; it speeds up."
         }
     }
 }

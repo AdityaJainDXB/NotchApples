@@ -328,6 +328,16 @@ All screenshots use sample data.
 - **F1:** a favourite team; qualifying gaps and best laps.
 - **What's New** in Settings → About, shown once after updating.
 
+#### New in 1.30.0 — a huge update
+
+- **Claude Code status dot.** Green for 4 seconds when a Claude Code task finishes; yellow for 4 seconds when it needs your input or approval, or finishes with warnings or errors. Beside the closed notch and in the open notch's header. Settings → Notch Extras → Claude Code adds the two hooks to `~/.claude/settings.json` (after saving a copy); scripts can use `open -g "notchapple://claude-code?status=done"` or `status=attention`.
+- **Pin** in the notch header: keeps it open while you drag files in.
+- **A new VPN page:** one big power button, a discreet server picker, your own custom VPNs (IKEv2, OpenVPN, WireGuard) with passwords kept in Notch apple's private file. The VPN badge is removed from the header.
+- **AirDrop:** drops work anywhere on the card, files from Finder and the Desktop are read correctly, errors are shown, and a new **Text / code** tab sends strings and snippets (as text or a file).
+- **Two new games:** Cookie Clicker (click multipliers, auto-clickers, saved progress) and an arcade Runner.
+- **Live scores** are now inside the Sports tab; the Live tab is now **Parcels & Flights** (off by default; "Not recommended - limited usefulness for most situations, low compatibility").
+- **Full-screen apps:** the notch is re-asserted as a full-screen transition settles and can't be hidden with the app, including on Macs without a hardware notch.
+
 #### New in 1.29.0
 
 - **Lid Fold (off by default).** Fold your desktop like a closing laptop lid: it tilts, frosts and dims, then returns. Settings → Lid Fold has **Preview**, a **timed demo** and a **⌃⌥F** fold-and-hold hotkey; on MacBooks with a lid-angle sensor, **Follow the lid** folds as you close the screen. Click, **Esc** or the hotkey always removes it; folds end by themselves (Preview about 4 s, demo 12 s, hotkey 30 s); errors, sleep, lock and display changes remove it too. It takes one still snapshot per display (needs Screen Recording; without it Preview uses a plain backdrop) and nothing leaves your Mac.

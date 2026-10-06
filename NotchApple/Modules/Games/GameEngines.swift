@@ -6,6 +6,8 @@
 //   • SnakeEngine: a FIFO queue of up to 2 turns per tick, so quick arrow-key taps are kept in order.
 //   • BreakoutEngine: ball, paddle and bricks in a fixed 360×220 field, stepped by elapsed time.
 //   • MemoryEngine: the Simon-style pattern game: watch the lights, repeat them, one more each round.
+//   • CookieEngine: Cookie Clicker. Click for cookies, buy click multipliers and auto-clicker buildings.
+//   • RunnerEngine: an arcade runner. Jump over spikes and blocks at a speed that keeps rising.
 //
 
 import CoreGraphics
@@ -229,4 +231,219 @@ struct MemoryEngine {
     var score: Int { max(0, round - 1) }
 
     mutating func reset() { sequence = []; position = 0 }
+}
+
+
+// MARK: - Cookie Clicker
+
+struct CookieEngine: Codable, Equatable {
+    enum Building: String, CaseIterable, Codable, Identifiable {
+        case cursor, grandma, farm, mine, factory
+        var id: String { rawValue }
+        var name: String {
+            switch self {
+            case .cursor: "Auto-clicker"
+            case .grandma: "Grandma"
+            case .farm: "Cookie farm"
+            case .mine: "Cookie mine"
+            case .factory: "Factory"
+            }
+        }
+        var symbol: String {
+            switch self {
+            case .cursor: "cursorarrow.click.2"
+            case .grandma: "figure.stand.dress"
+            case .farm: "leaf.fill"
+            case .mine: "mountain.2.fill"
+            case .factory: "building.2.fill"
+            }
+        }
+        var baseCost: Double {
+            switch self {
+            case .cursor: 15
+            case .grandma: 100
+            case .farm: 1_100
+            case .mine: 12_000
+            case .factory: 130_000
+            }
+        }
+        /// Cookies per second each one makes.
+        var cps: Double {
+            switch self {
+            case .cursor: 0.2
+            case .grandma: 1
+            case .farm: 8
+            case .mine: 47
+            case .factory: 260
+            }
+        }
+    }
+
+    /// Each upgrade doubles what one click is worth. They are bought in order.
+    static let clickUpgradeCosts: [Double] = [100, 500, 5_000, 50_000, 500_000, 5_000_000]
+
+    var cookies: Double = 0
+    var baked: Double = 0                    // every cookie ever made
+    var clicks: Int = 0
+    var owned: [Building: Int] = [:]
+    var clickLevel = 0                       // click upgrades bought
+    var savedAt: Date?
+
+    static let costGrowth = 1.15
+
+    func count(_ b: Building) -> Int { owned[b] ?? 0 }
+    func cost(_ b: Building) -> Double { (b.baseCost * pow(Self.costGrowth, Double(count(b)))).rounded() }
+    var clickValue: Double { pow(2, Double(clickLevel)) }
+    var cps: Double { Building.allCases.reduce(0) { $0 + Double(count($1)) * $1.cps } }
+    var nextClickUpgradeCost: Double? { clickLevel < Self.clickUpgradeCosts.count ? Self.clickUpgradeCosts[clickLevel] : nil }
+
+    /// One click. Returns how many cookies it made.
+    @discardableResult
+    mutating func click() -> Double {
+        let gain = clickValue
+        cookies += gain; baked += gain; clicks += 1
+        return gain
+    }
+
+    mutating func tick(_ dt: Double) {
+        guard dt > 0, dt.isFinite else { return }
+        let gain = cps * min(dt, 3600)
+        cookies += gain; baked += gain
+    }
+
+    @discardableResult
+    mutating func buy(_ b: Building) -> Bool {
+        let price = cost(b)
+        guard cookies >= price else { return false }
+        cookies -= price
+        owned[b, default: 0] += 1
+        return true
+    }
+
+    @discardableResult
+    mutating func buyClickUpgrade() -> Bool {
+        guard let price = nextClickUpgradeCost, cookies >= price else { return false }
+        cookies -= price
+        clickLevel += 1
+        return true
+    }
+
+    /// Cookies made while the game was closed: at most an hour's worth, at half speed.
+    mutating func applyOffline(now: Date = .now) {
+        guard let saved = savedAt else { return }
+        let away = min(max(now.timeIntervalSince(saved), 0), 3600)
+        let gain = cps * away * 0.5
+        cookies += gain; baked += gain
+        savedAt = now
+    }
+
+    /// 1,234 · 12.3K · 4.56M · 7.8B · 9.1T
+    static func format(_ value: Double) -> String {
+        let v = max(0, value)
+        switch v {
+        case ..<10_000: return Int(v).formatted()
+        case ..<1_000_000: return String(format: "%.1fK", v / 1_000)
+        case ..<1_000_000_000: return String(format: "%.2fM", v / 1_000_000)
+        case ..<1_000_000_000_000: return String(format: "%.2fB", v / 1_000_000_000)
+        default: return String(format: "%.2fT", v / 1_000_000_000_000)
+        }
+    }
+}
+
+// MARK: - Arcade runner
+
+struct RunnerEngine {
+    enum Kind: Equatable { case spike, block, doubleSpike }
+
+    struct Obstacle: Equatable {
+        var x: CGFloat
+        var kind: Kind
+        var width: CGFloat {
+            switch kind { case .spike: 18; case .block: 26; case .doubleSpike: 38 }
+        }
+        var height: CGFloat {
+            switch kind { case .spike, .doubleSpike: 20; case .block: 28 }
+        }
+    }
+
+    enum Event: Equatable { case none, jumped, died }
+
+    static let width: CGFloat = 360, height: CGFloat = 180
+    static let groundY: CGFloat = 150           // the top of the floor
+    static let playerX: CGFloat = 60
+    static let playerSize: CGFloat = 22
+    static let gravity: CGFloat = 1_900
+    static let jumpSpeed: CGFloat = 640
+
+    private(set) var obstacles: [Obstacle] = []
+    private(set) var playerY: CGFloat = RunnerEngine.groundY - RunnerEngine.playerSize   // top of the cube
+    private(set) var velocity: CGFloat = 0
+    private(set) var rotation: CGFloat = 0          // degrees, spins while in the air
+    private(set) var distance: CGFloat = 0
+    private(set) var over = false
+    private(set) var started = false
+    private var untilNext: CGFloat = 220            // distance until the next obstacle
+
+    var onGround: Bool { playerY >= Self.groundY - Self.playerSize - 0.01 }
+    var score: Int { Int(distance / 10) }
+    /// Pixels per second; creeps up the longer you survive, up to a ceiling.
+    var speed: CGFloat { min(150 + distance * 0.035, 330) }
+
+    mutating func start() { started = true }
+    mutating func restart() { self = RunnerEngine(); started = true }
+
+    @discardableResult
+    mutating func jump() -> Event {
+        guard !over, onGround else { return .none }
+        started = true
+        velocity = -Self.jumpSpeed
+        return .jumped
+    }
+
+    mutating func step<G: RandomNumberGenerator>(_ rawDT: Double, _ rng: inout G) -> Event {
+        guard started, !over else { return .none }
+        let dt = CGFloat(min(max(rawDT, 0), 1.0 / 30))
+        let dx = speed * dt
+        distance += dx
+        // Physics.
+        velocity += Self.gravity * dt
+        playerY += velocity * dt
+        let floor = Self.groundY - Self.playerSize
+        if playerY >= floor { playerY = floor; velocity = 0; rotation = (rotation / 90).rounded() * 90 }
+        else { rotation += 360 * dt }                // roughly one turn per jump
+        // World.
+        for i in obstacles.indices { obstacles[i].x -= dx }
+        obstacles.removeAll { $0.x + $0.width < -10 }
+        untilNext -= dx
+        if untilNext <= 0 {
+            let kind: Kind = [.spike, .spike, .block, .doubleSpike].randomElement(using: &rng) ?? .spike
+            obstacles.append(Obstacle(x: Self.width + 10, kind: kind))
+            // Always leaves room to land and jump again: the faster it goes, the wider the minimum gap.
+            untilNext = Self.minimumGap(speed: speed) + CGFloat.random(in: 40...150, using: &rng)
+        }
+        if collides() { over = true; return .died }
+        return .none
+    }
+
+    mutating func step(_ dt: Double) -> Event { var g = SystemRandomNumberGenerator(); return step(dt, &g) }
+
+    /// The shortest distance between two obstacles that still lets a jump clear the first and land before the next.
+    static func minimumGap(speed: CGFloat) -> CGFloat {
+        let airTime = 2 * jumpSpeed / gravity       // seconds in the air
+        return speed * airTime * 0.9 + 40
+    }
+
+    /// The cube against each obstacle, with a couple of pixels of forgiveness (the cube is a square, spikes are triangles).
+    func collides() -> Bool {
+        let p = CGRect(x: Self.playerX + 2, y: playerY + 2, width: Self.playerSize - 4, height: Self.playerSize - 4)
+        for o in obstacles {
+            let r = CGRect(x: o.x + (o.kind == .block ? 0 : 3), y: Self.groundY - o.height + (o.kind == .block ? 0 : 5),
+                           width: o.width - (o.kind == .block ? 0 : 6), height: o.height - (o.kind == .block ? 0 : 5))
+            if p.intersects(r) { return true }
+        }
+        return false
+    }
+
+    /// Test hook: put an obstacle at a position.
+    mutating func place(_ kind: Kind, at x: CGFloat) { obstacles.append(Obstacle(x: x, kind: kind)) }
 }

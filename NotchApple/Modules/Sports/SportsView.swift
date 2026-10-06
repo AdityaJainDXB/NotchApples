@@ -11,12 +11,24 @@ import SwiftUI
 struct SportsView: View {
     @StateObject private var sports = SportsModel.shared
     @AppStorage("sports.showTable") private var showTable = false
+    enum RightMode: String { case leagues, scores }
+    @AppStorage("sports.rightMode") private var rightMode = RightMode.leagues
 
     var body: some View {
         HStack(alignment: .top, spacing: 12) {
             GlassCard { myTeam }
             GlassCard {
-                if let d = sports.detail { detailCard(d) } else { leagueCard }
+                VStack(alignment: .leading, spacing: 8) {
+                    Picker("", selection: $rightMode) {
+                        Text("Leagues").tag(RightMode.leagues)
+                        Text("Live scores").tag(RightMode.scores)
+                    }
+                    .pickerStyle(.segmented).labelsHidden()
+                    switch rightMode {
+                    case .scores: ScoresPanel()
+                    case .leagues: if let d = sports.detail { detailCard(d) } else { leagueCard }
+                    }
+                }
             }
             .frame(width: 310)
         }

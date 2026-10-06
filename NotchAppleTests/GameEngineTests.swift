@@ -140,3 +140,171 @@ final class MemoryEngineTests: XCTestCase {
         XCTAssertEqual(m.round, 0)
     }
 }
+
+final class CookieEngineTests: XCTestCase {
+    func testClickingMakesCookiesAndCounts() {
+        var c = CookieEngine()
+        XCTAssertEqual(c.click(), 1)
+        XCTAssertEqual(c.cookies, 1)
+        XCTAssertEqual(c.clicks, 1)
+    }
+
+    func testBuyingNeedsEnoughCookiesAndRaisesThePrice() {
+        var c = CookieEngine()
+        XCTAssertFalse(c.buy(.cursor), "no cookies yet")
+        c.cookies = 1000
+        let first = c.cost(.cursor)
+        XCTAssertEqual(first, 15)
+        XCTAssertTrue(c.buy(.cursor))
+        XCTAssertEqual(c.count(.cursor), 1)
+        XCTAssertEqual(c.cookies, 985)
+        XCTAssertGreaterThan(c.cost(.cursor), first, "each one costs more")
+    }
+
+    func testAutoClickersBakeOverTime() {
+        var c = CookieEngine()
+        c.cookies = 10_000
+        XCTAssertTrue(c.buy(.grandma))
+        XCTAssertEqual(c.cps, 1, accuracy: 1e-9)
+        let before = c.cookies
+        c.tick(10)
+        XCTAssertEqual(c.cookies - before, 10, accuracy: 1e-9)
+        XCTAssertEqual(c.baked, 10, accuracy: 1e-9, "baked counts only what was made, not what was spent")
+    }
+
+    func testClickUpgradesDoubleEachClickInOrder() {
+        var c = CookieEngine()
+        XCTAssertFalse(c.buyClickUpgrade())
+        c.cookies = 100
+        XCTAssertTrue(c.buyClickUpgrade())
+        XCTAssertEqual(c.clickValue, 2)
+        XCTAssertEqual(c.click(), 2)
+        XCTAssertEqual(c.nextClickUpgradeCost, 500)
+        c.cookies = 1e9
+        while c.buyClickUpgrade() {}
+        XCTAssertNil(c.nextClickUpgradeCost, "there is a last upgrade")
+        XCTAssertEqual(c.clickValue, pow(2, Double(CookieEngine.clickUpgradeCosts.count)))
+    }
+
+    func testBadTimeStepsAreIgnored() {
+        var c = CookieEngine()
+        c.cookies = 10_000; c.buy(.grandma)
+        let before = c.cookies
+        c.tick(-5); c.tick(.nan); c.tick(0)
+        XCTAssertEqual(c.cookies, before)
+    }
+
+    func testAwayTimeIsCappedAtAnHourAtHalfSpeed() {
+        var c = CookieEngine()
+        c.cookies = 10_000; c.buy(.grandma)
+        let start = c.cookies
+        let saved = Date(timeIntervalSince1970: 1_000_000)
+        c.savedAt = saved
+        c.applyOffline(now: saved.addingTimeInterval(10 * 3600))    // ten hours away
+        XCTAssertEqual(c.cookies - start, 1800, accuracy: 1e-6, "one grandma, an hour, half speed")
+    }
+
+    func testSaveAndLoadKeepProgress() throws {
+        var c = CookieEngine()
+        c.cookies = 5_000; c.buy(.farm); c.click()
+        let data = try JSONEncoder().encode(c)
+        XCTAssertEqual(try JSONDecoder().decode(CookieEngine.self, from: data), c)
+    }
+
+    func testNumbersAreShortened() {
+        XCTAssertEqual(CookieEngine.format(999), "999")
+        XCTAssertEqual(CookieEngine.format(12_300), "12.3K")
+        XCTAssertEqual(CookieEngine.format(4_560_000), "4.56M")
+        XCTAssertEqual(CookieEngine.format(-5), "0")
+    }
+}
+
+final class RunnerEngineTests: XCTestCase {
+    private func settle(_ r: inout RunnerEngine, seconds: Double) {
+        var g = SystemRandomNumberGenerator()
+        var t = 0.0
+        while t < seconds { _ = r.step(1.0 / 60, &g); t += 1.0 / 60 }
+    }
+
+    func testNothingMovesUntilItStarts() {
+        var r = RunnerEngine()
+        XCTAssertEqual(r.step(0.1), .none)
+        XCTAssertEqual(r.distance, 0)
+    }
+
+    func testJumpingLeavesTheGroundAndLandsAgain() {
+        var r = RunnerEngine()
+        XCTAssertEqual(r.jump(), .jumped)
+        var g = SystemRandomNumberGenerator()
+        _ = r.step(1.0 / 60, &g)
+        XCTAssertFalse(r.onGround, "one step after the jump the cube is in the air")
+        var sawAir = false
+        for _ in 0..<120 { _ = r.step(1.0 / 60, &g); if !r.onGround { sawAir = true }; if r.over { break } }
+        XCTAssertTrue(sawAir)
+        // Whatever happened, the cube never sinks below the floor.
+        XCTAssertLessThanOrEqual(r.playerY, RunnerEngine.groundY - RunnerEngine.playerSize + 0.001)
+    }
+
+    func testYouCannotJumpTwiceInTheAir() {
+        var r = RunnerEngine()
+        XCTAssertEqual(r.jump(), .jumped)
+        var g = SystemRandomNumberGenerator()
+        _ = r.step(0.05, &g)
+        XCTAssertEqual(r.jump(), .none)
+    }
+
+    func testRunningIntoASpikeEndsTheRun() {
+        var r = RunnerEngine()
+        r.start()
+        r.place(.spike, at: RunnerEngine.playerX + 4)
+        var g = SystemRandomNumberGenerator()
+        XCTAssertEqual(r.step(1.0 / 60, &g), .died)
+        XCTAssertTrue(r.over)
+        XCTAssertEqual(r.step(1.0 / 60, &g), .none, "nothing moves after the end")
+    }
+
+    func testJumpingOverASpikeSurvivesIt() {
+        var r = RunnerEngine()
+        r.start()
+        r.place(.spike, at: RunnerEngine.playerX + 70)
+        var g = SystemRandomNumberGenerator()
+        var jumped = false
+        for _ in 0..<90 {
+            if !jumped, let o = r.obstacles.first, o.x - (RunnerEngine.playerX + RunnerEngine.playerSize) < 40 { _ = r.jump(); jumped = true }
+            _ = r.step(1.0 / 60, &g)
+        }
+        XCTAssertFalse(r.over, "a well-timed jump clears a spike")
+    }
+
+    func testSpeedRisesButIsCapped() {
+        var r = RunnerEngine()
+        let slow = r.speed
+        r.restart()
+        var g = SystemRandomNumberGenerator()
+        for _ in 0..<5 { _ = r.step(1.0 / 60, &g) }
+        XCTAssertGreaterThanOrEqual(r.speed, slow)
+        XCTAssertLessThanOrEqual(r.speed, 330)
+    }
+
+    func testTheMinimumGapAlwaysLeavesRoomForAJump() {
+        for speed in stride(from: CGFloat(150), through: 330, by: 20) {
+            let gap = RunnerEngine.minimumGap(speed: speed)
+            let airTime = 2 * RunnerEngine.jumpSpeed / RunnerEngine.gravity
+            XCTAssertGreaterThan(gap, speed * airTime * 0.8, "at \(speed) px/s the next obstacle must not come before the cube lands")
+        }
+    }
+
+    func testObstaclesAreGeneratedAndOldOnesRemoved() {
+        var r = RunnerEngine()
+        r.start()
+        var g = SystemRandomNumberGenerator()
+        var seen = 0
+        for _ in 0..<600 {
+            _ = r.step(1.0 / 60, &g)
+            if r.over { r.restart() }
+            seen = max(seen, r.obstacles.count)
+        }
+        XCTAssertGreaterThan(seen, 0)
+        XCTAssertLessThan(seen, 8, "off-screen obstacles are dropped")
+    }
+}

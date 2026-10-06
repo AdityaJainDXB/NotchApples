@@ -163,8 +163,14 @@ struct NotchRootView: View {
             }
             .layoutPriority(-1)
             Spacer(minLength: 0)
+            ClaudeCodeDotView()
             UpdatePill { state.close(); AppDelegate.openSettingsWindow(tab: .updates) }
-            if settings.vpnEnabled && entitlements.canUse(Feature.vpn) { VPNQuickStatus() }
+            // Pin: keeps the notch open (clicking elsewhere no longer closes it), e.g. while you drag files in from Finder.
+            IconButton(systemImage: settings.stickyNotch ? "pin.fill" : "pin",
+                       help: settings.stickyNotch ? "Pinned open. Click to let it close again." : "Keep open while I drag files in") {
+                settings.stickyNotch.toggle()
+            }
+            .foregroundStyle(settings.stickyNotch ? Theme.accentBright : Theme.textSecondary)
             IconButton(systemImage: "gearshape.fill", help: "Settings (⌘,)") {
                 state.close(); AppDelegate.openSettingsWindow()
             }

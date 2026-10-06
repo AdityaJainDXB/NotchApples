@@ -23,8 +23,12 @@ extension NSPanel {
         level = NotchPrefs.keepInFullscreen
             ? NSWindow.Level(rawValue: NSWindow.Level.screenSaver.rawValue + extraLevels)
             : NSWindow.Level(rawValue: Self.notchLevel.rawValue + extraLevels)
+        // The vetted pattern for a menu-bar-style overlay: on every Space (including full-screen ones), as an
+        // auxiliary window beside full-screen apps, never part of Exposé or ⌘-Tab, and never hidden when the app is.
         collectionBehavior = [.canJoinAllSpaces, .stationary, .fullScreenAuxiliary, .ignoresCycle]
         hidesOnDeactivate = false
+        canHide = false
+        isFloatingPanel = true
         if orderFront { orderFrontRegardless() }
     }
 }
@@ -36,6 +40,8 @@ extension NotchWindowController {
         let workspace = NSWorkspace.shared.notificationCenter
         let names: [(NotificationCenter, Notification.Name)] = [
             (workspace, NSWorkspace.activeSpaceDidChangeNotification),
+            // Switching to or from a full-screen app (it becomes the active app as its Space slides in).
+            (workspace, NSWorkspace.didActivateApplicationNotification),
             (workspace, NSWorkspace.didWakeNotification),
             (workspace, NSWorkspace.screensDidWakeNotification),
             (.default, NSApplication.didChangeScreenParametersNotification),
@@ -43,6 +49,11 @@ extension NotchWindowController {
         return names.map { center, name in
             center.addObserver(forName: name, object: nil, queue: .main) { [weak self] _ in
                 MainActor.assumeIsolated { self?.reassertWindowLevels() }
+                // A full-screen transition takes about a second, and macOS can reorder windows at its end,
+                // so put the notch back on top again once it has settled (notch-less Macs showed the gap most).
+                for delay in [0.35, 0.9, 1.6] {
+                    DispatchQueue.main.asyncAfter(deadline: .now() + delay) { MainActor.assumeIsolated { self?.reassertWindowLevels() } }
+                }
             }
         }
     }

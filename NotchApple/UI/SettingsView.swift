@@ -765,6 +765,10 @@ private struct ModulesSettings: View {
                                     }
                                 }
                                 Text(module.blurb).font(.callout).foregroundStyle(.secondary)
+                                if module == .live {
+                                    Text("(Not recommended - limited usefulness for most situations, low compatibility)")
+                                        .font(.caption.weight(.semibold)).foregroundStyle(.orange)
+                                }
                             }
                         }
                     }

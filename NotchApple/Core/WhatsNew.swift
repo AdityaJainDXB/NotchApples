@@ -21,6 +21,15 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "1.30.0", date: "6 October 2026", headline: "A huge update", items: [
+            "Claude Code status dot: a small dot beside the notch, green for 4 seconds when a Claude Code task finishes and yellow for 4 seconds when it needs your input or finishes with warnings or errors. Set it up in Settings → Notch Extras → Claude Code.",
+            "A pin in the notch header keeps the notch open while you drag files in from Finder or the Desktop.",
+            "A new VPN page: one big power button to connect or disconnect, a discreet server picker on the right, and your own custom VPNs (IKEv2, OpenVPN, WireGuard). The VPN badge is gone from the header.",
+            "AirDrop drops now work anywhere on the AirDrop card, and Share can AirDrop text and code snippets (as text or as a file).",
+            "Two new games: Cookie Clicker (click multipliers and auto-clickers, saved progress) and Runner, a fast arcade jumper.",
+            "Live scores moved into the Sports tab. The old Live tab is now Parcels & Flights and is off by default.",
+            "The notch stays put in full-screen apps, including on Macs without a hardware notch.",
+        ]),
         ReleaseNote(version: "1.29.0", date: "6 October 2026", headline: "Lid Fold", items: [
             "Lid Fold folds your desktop like a closing laptop lid: it tilts, frosts and dims, then comes back. It is off by default. Turn it on in Settings → Lid Fold, then try Preview, the timed demo, or press ⌃⌥F to fold and hold.",
             "On a MacBook with a lid-angle sensor, “Follow the lid” folds the desktop as you close the screen and unfolds it as you reopen it. Macs without the sensor can still use Preview, the demo and the hotkey.",

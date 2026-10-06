@@ -32,6 +32,7 @@ enum KeychainHelper {
         case licenseKey = "license.key"
         case todoistToken = "todoist.token"
         case companionPhones = "companion.phones"
+        case vpnSecrets = "vpn.secrets"
     }
 
     private static let lock = NSLock()

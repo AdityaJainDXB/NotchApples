@@ -37,6 +37,16 @@ struct VPNProfile: Identifiable, Codable, Hashable {
     var credentialsURL: URL?
     /// Free-text login hint, e.g. "vpn / vpn" for VPN Gate.
     var credentialsHint: String?
+    /// A VPN the user typed in themselves (see `VPNSecret` for its password).
+    var isCustom: Bool?
+    /// Shown in the UI; the password itself is never stored here.
+    var username: String?
+}
+
+/// The private parts of a custom VPN. Kept in Notch apple's private secrets file (0600), never in the profile list.
+struct VPNSecret: Codable, Equatable {
+    var password = ""
+    var sharedSecret = ""
 }
 
 @MainActor
@@ -56,11 +66,19 @@ final class VPNManager: ObservableObject {
     @Published private(set) var loadingLibrary = false
 
     private let key = "vpn.profiles"
+    private let selectedKey = "vpn.selected"
     private var observer: NSObjectProtocol?
+
+    /// The server the big power button connects to.
+    @Published var selected: VPNProfile? {
+        didSet { UserDefaults.standard.set(selected.flatMap { try? JSONEncoder().encode($0) }, forKey: selectedKey) }
+    }
 
     init() {
         if let data = UserDefaults.standard.data(forKey: key),
            let saved = try? JSONDecoder().decode([VPNProfile].self, from: data) { profiles = saved }
+        if let data = UserDefaults.standard.data(forKey: selectedKey),
+           let pick = try? JSONDecoder().decode(VPNProfile.self, from: data) { selected = pick }
         observer = NotificationCenter.default.addObserver(forName: .NEVPNStatusDidChange, object: nil, queue: .main) { [weak self] n in
             let status = (n.object as? NEVPNConnection)?.status
             Task { @MainActor in if let status { self?.status = status } }
@@ -87,7 +105,33 @@ final class VPNManager: ObservableObject {
 
     func remove(_ profile: VPNProfile) {
         profiles.removeAll { $0.id == profile.id }
+        if selected?.id == profile.id { selected = nil }
+        setSecret(nil, for: profile.id)
         persist()
+    }
+
+    /// Adds or replaces a VPN the user configured by hand.
+    func saveCustom(_ profile: VPNProfile, secret: VPNSecret) {
+        var p = profile
+        p.isCustom = true
+        if let i = profiles.firstIndex(where: { $0.id == p.id }) { profiles[i] = p } else { profiles.append(p) }
+        setSecret(secret, for: p.id)
+        persist()
+        selected = p
+    }
+
+    // MARK: Secrets
+
+    private static func allSecrets() -> [String: VPNSecret] {
+        KeychainHelper.getData(.vpnSecrets).flatMap { try? JSONDecoder().decode([String: VPNSecret].self, from: $0) } ?? [:]
+    }
+
+    func secret(for id: UUID) -> VPNSecret { Self.allSecrets()[id.uuidString] ?? VPNSecret() }
+
+    private func setSecret(_ secret: VPNSecret?, for id: UUID) {
+        var all = Self.allSecrets()
+        all[id.uuidString] = secret
+        if let data = try? JSONEncoder().encode(all) { KeychainHelper.setData(data, for: .vpnSecrets) }
     }
 
     private func persist() {
@@ -295,6 +339,15 @@ final class VPNManager: ObservableObject {
             proto.serverAddress = profile.server
             proto.remoteIdentifier = profile.server
             proto.useExtendedAuthentication = true
+            let secret = secret(for: profile.id)
+            if let user = profile.username, !user.isEmpty {
+                proto.username = user
+                if !secret.password.isEmpty { proto.passwordReference = Self.keychainReference("pw.\(profile.id.uuidString)", secret.password) }
+            }
+            if !secret.sharedSecret.isEmpty {
+                proto.authenticationMethod = .sharedSecret
+                proto.sharedSecretReference = Self.keychainReference("psk.\(profile.id.uuidString)", secret.sharedSecret)
+            }
             manager.protocolConfiguration = proto
             manager.localizedDescription = "Notch apple · \(profile.name)"
             manager.isEnabled = true
@@ -303,6 +356,20 @@ final class VPNManager: ObservableObject {
         } catch {
             message = "IKEv2 needs a build signed with the Personal VPN entitlement. (\(error.localizedDescription))"
         }
+    }
+
+    /// IKEv2 reads its password and shared secret through persistent Keychain references, so these two are put in the
+    /// login Keychain (only the system's VPN agent reads them back; the app itself never does).
+    private static func keychainReference(_ account: String, _ value: String) -> Data? {
+        let base: [String: Any] = [kSecClass as String: kSecClassGenericPassword,
+                                   kSecAttrService as String: "Notch apple VPN", kSecAttrAccount as String: account]
+        SecItemDelete(base as CFDictionary)
+        var add = base
+        add[kSecValueData as String] = Data(value.utf8)
+        add[kSecReturnPersistentRef as String] = true
+        var out: CFTypeRef?
+        guard SecItemAdd(add as CFDictionary, &out) == errSecSuccess else { return nil }
+        return out as? Data
     }
 
     /// Uses a Packet Tunnel Provider if this build ships one. Returns false if unavailable.
@@ -345,6 +412,7 @@ final class VPNManager: ObservableObject {
                 NSWorkspace.shared.open([url], withApplicationAt: app, configuration: NSWorkspace.OpenConfiguration())
                 message = "Opened in \(app.deletingPathExtension().lastPathComponent). Approve the import there, then click Connect."
                     + (profile.credentialsHint.map { " Login: \($0)." } ?? "")
+                    + (profile.isCustom == true && profile.username?.isEmpty == false ? " Your username is \(profile.username!); your password is saved in Notch apple." : "")
                 if let page = profile.credentialsURL {
                     NSWorkspace.shared.open(page)
                     message = (message ?? "") + " The username and password are on the page that just opened in your browser."

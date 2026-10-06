@@ -35,7 +35,7 @@ enum FeatureHub {
             { settings.downloadProgress && Entitlements.shared.canUse(.downloadProgress) ? DownloadWatcher.shared.liveActivity : nil },
             { settings.musicActivity && settings.nowPlayingEnabled ? NowPlayingMonitor.shared.liveActivity : nil },
             { settings.devicesEnabled && settings.privacyIndicator ? PrivacyMonitor.shared.liveActivity : nil },
-            { settings.liveEnabled ? ScoresModel.shared.liveActivity : nil },
+            { (settings.sportsEnabled || settings.liveEnabled) ? ScoresModel.shared.liveActivity : nil },
             { settings.f1Enabled ? F1Model.shared.liveActivity : nil },
             { settings.sportsEnabled ? (SportsModel.shared.liveActivity ?? MoreTeams.shared.rotatingActivity) : nil },
             { MicMute.shared.liveActivity },
@@ -78,7 +78,7 @@ enum FeatureHub {
             PrivacyMonitor.shared.setRunning(false)
         }
         NotificationMirror.shared.setRunning(s.alertsEnabled)
-        if s.liveEnabled { ScoresModel.shared.refreshIfDue() }
+        if s.sportsEnabled || s.liveEnabled { ScoresModel.shared.refreshIfDue() }
         if s.f1Enabled { F1Model.shared.refreshIfDue() }
         if s.sportsEnabled { SportsModel.shared.refreshIfDue(); MoreTeams.shared.refreshIfDue() }
         if s.liveEnabled { FlightWatcher.shared.refreshIfDue() }
@@ -195,6 +195,7 @@ enum FeatureHub {
         case "activity":
             // Live Activities API (Ultimate): notchapple://activity?id=…&text=…, notchapple://activity/end?id=…
             ExternalActivities.shared.handle(query, end: parts.dropFirst().first == "end")
+        case "claude-code": ClaudeCodeStatus.shared.handle(query["status"])
         case "record": ScreenRecorder.shared.toggle()
         case "screenshot": ScreenCaptureActions.shared.takeScreenshot()
         default: delegate?.toggleNotch()

@@ -130,8 +130,55 @@ enum TrackingLinks {
     }
 }
 
-struct LiveView: View {
+/// Live scores, shown inside the Sports tab (they used to be a tab of their own).
+struct ScoresPanel: View {
     @StateObject private var scores = ScoresModel.shared
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                Picker("", selection: $scores.leagueID) {
+                    ForEach(ScoresModel.leagues) { Text($0.name).tag($0.id) }
+                }
+                .labelsHidden().fixedSize()
+                TextField("Follow a team", text: $scores.followedTeam)
+                    .textFieldStyle(.roundedBorder).font(.system(size: 12))
+                IconButton(systemImage: "arrow.clockwise", help: "Refresh") { scores.refresh() }
+            }
+            if let e = scores.error { Text(e).font(.system(size: 11)).foregroundStyle(.orange) }
+            ScrollView {
+                VStack(spacing: 6) {
+                    if scores.games.isEmpty {
+                        Text("No games today in \(scores.league.name).").font(.system(size: 12)).foregroundStyle(Theme.textSecondary).padding(.top, 16)
+                    }
+                    ForEach(scores.games) { g in gameRow(g) }
+                }
+            }
+        }
+        .onAppear { scores.refreshIfDue() }
+    }
+
+    private func gameRow(_ g: ScoresModel.Game) -> some View {
+        let followed = scores.followedGame == g
+        return HStack {
+            Text(g.away).frame(width: 44, alignment: .leading)
+            Text(g.state == "pre" ? "–" : g.awayScore).monospacedDigit().bold()
+            Text("@").foregroundStyle(Theme.textSecondary)
+            Text(g.state == "pre" ? "–" : g.homeScore).monospacedDigit().bold()
+            Text(g.home).frame(width: 44, alignment: .trailing)
+            Spacer()
+            if g.state == "in" { Circle().fill(.red).frame(width: 6, height: 6) }
+            Text(g.detail).font(.system(size: 11)).foregroundStyle(Theme.textSecondary).lineLimit(1)
+        }
+        .font(.system(size: 13)).foregroundStyle(.white)
+        .padding(.horizontal, 10).padding(.vertical, 6)
+        .background(followed ? Theme.accent.opacity(0.3) : Theme.surface, in: RoundedRectangle(cornerRadius: 10))
+    }
+
+}
+
+/// Parcels & Flights: paste a tracking or flight number and it opens the right page.
+struct LiveView: View {
     @AppStorage("live.tracked") private var trackedData = Data()
     @StateObject private var flights = FlightWatcher.shared
     @ObservedObject private var entitlements = Entitlements.shared
@@ -141,30 +188,7 @@ struct LiveView: View {
     private var tracked: [TrackedItem] { (try? JSONDecoder().decode([TrackedItem].self, from: trackedData)) ?? [] }
 
     var body: some View {
-        HStack(alignment: .top, spacing: 12) {
-            GlassCard {
-                VStack(alignment: .leading, spacing: 8) {
-                    HStack {
-                        Picker("", selection: $scores.leagueID) {
-                            ForEach(ScoresModel.leagues) { Text($0.name).tag($0.id) }
-                        }
-                        .labelsHidden().fixedSize()
-                        TextField("Follow a team (e.g. ARS, Lakers)", text: $scores.followedTeam)
-                            .textFieldStyle(.roundedBorder).font(.system(size: 12))
-                        IconButton(systemImage: "arrow.clockwise", help: "Refresh") { scores.refresh() }
-                    }
-                    if let e = scores.error { Text(e).font(.system(size: 11)).foregroundStyle(.orange) }
-                    ScrollView {
-                        VStack(spacing: 6) {
-                            if scores.games.isEmpty {
-                                Text("No games today in \(scores.league.name).").font(.system(size: 12)).foregroundStyle(Theme.textSecondary).padding(.top, 16)
-                            }
-                            ForEach(scores.games) { g in gameRow(g) }
-                        }
-                    }
-                }
-            }
-
+        VStack(alignment: .leading, spacing: 8) {
             GlassCard {
                 VStack(alignment: .leading, spacing: 8) {
                     Text("Track a parcel or flight").sectionTitle()
@@ -209,29 +233,10 @@ struct LiveView: View {
                     }
                 }
             }
-            .frame(width: 260)
         }
         .onAppear {
-            scores.refreshIfDue()
             for item in tracked where TrackingLinks.resolve(item.code).kind == "Flight" { flights.check(item.code) }
         }
-    }
-
-    private func gameRow(_ g: ScoresModel.Game) -> some View {
-        let followed = scores.followedGame == g
-        return HStack {
-            Text(g.away).frame(width: 44, alignment: .leading)
-            Text(g.state == "pre" ? "–" : g.awayScore).monospacedDigit().bold()
-            Text("@").foregroundStyle(Theme.textSecondary)
-            Text(g.state == "pre" ? "–" : g.homeScore).monospacedDigit().bold()
-            Text(g.home).frame(width: 44, alignment: .trailing)
-            Spacer()
-            if g.state == "in" { Circle().fill(.red).frame(width: 6, height: 6) }
-            Text(g.detail).font(.system(size: 11)).foregroundStyle(Theme.textSecondary).lineLimit(1)
-        }
-        .font(.system(size: 13)).foregroundStyle(.white)
-        .padding(.horizontal, 10).padding(.vertical, 6)
-        .background(followed ? Theme.accent.opacity(0.3) : Theme.surface, in: RoundedRectangle(cornerRadius: 10))
     }
 
     private func add() {

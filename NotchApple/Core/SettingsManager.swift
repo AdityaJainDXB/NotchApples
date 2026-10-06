@@ -42,7 +42,7 @@ enum Module: String, CaseIterable, Identifiable {
         case .snippets: "Snippets"
         case .shortcuts: "Shortcuts"
         case .devices: "Devices"
-        case .live: "Live"
+        case .live: "Parcels & Flights"
         case .f1: "F1"
         case .games: "Games"
         case .sports: "Sports"
@@ -84,7 +84,7 @@ enum Module: String, CaseIterable, Identifiable {
         case .snippets: "text.badge.plus"
         case .shortcuts: "square.stack.3d.up.fill"
         case .devices: "airpods"
-        case .live: "sportscourt.fill"
+        case .live: "shippingbox.fill"
         case .f1: "flag.checkered"
         case .games: "gamecontroller.fill"
         case .sports: "sportscourt"
@@ -129,7 +129,7 @@ enum Module: String, CaseIterable, Identifiable {
         case .games: "Add-on: tiny games for a short break: 2048, Snake and a reaction test. Best scores stay on this Mac."
         case .f1: "Add-on: Formula 1 live timing (order, gaps, tyres, laps, flags), the weekend schedule with a countdown, and standings. Follow a driver to see their position beside the notch."
         case .sports: "Follow your team (Barcelona unless you pick another): the next match with a countdown, every competition it plays in, recent results and the live score beside the notch. Browse the next two weeks of fixtures in the big football leagues, the NBA, NFL, MLB and NHL."
-        case .live: "Add-on: live scores for the teams you follow, plus quick tracking for parcels and flights."
+        case .live: "Add-on: quick tracking for parcels and flights. (Not recommended - limited usefulness for most situations, low compatibility). Live scores now live in the Sports tab."
         case .alerts: "Add-on: see notifications from other apps in the notch, and reply to iMessages. Needs Full Disk Access."
         case .plugins: "Add-on: your own widgets. Any script in the Plugins folder shows its output in the notch."
         case .voiceNotes: "Pro: record a voice note from the notch. It's transcribed on your Mac, and one click turns it into an AI summary with action items."
@@ -209,6 +209,8 @@ final class SettingsManager: ObservableObject {
     @AppStorage(Module.shortcuts.storageKey) var shortcutsEnabled = false
     @AppStorage(Module.devices.storageKey) var devicesEnabled = false
     @AppStorage(Module.live.storageKey) var liveEnabled = false
+    /// The Claude Code status dot (green when a task finishes, yellow when it needs you).
+    @AppStorage("claudeCode.dot") var claudeCodeDot = true
     @AppStorage(Module.f1.storageKey) var f1Enabled = false
     @AppStorage(Module.games.storageKey) var gamesEnabled = false
     /// On for everyone: Sports follows Barcelona out of the box.
