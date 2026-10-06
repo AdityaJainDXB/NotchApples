@@ -27,7 +27,7 @@ struct VPNView: View {
                 if let client = vpn.needsVPNClient { clientBanner(client) }
                 Spacer(minLength: 0)
                 PowerButton(connected: connected, busy: busy, enabled: vpn.selected != nil || connected || busy) { toggle() }
-                Text(vpn.status == .invalid && vpn.selected == nil ? "Pick a server to connect" : vpn.status.label)
+                Text(vpn.selected == nil && !connected && !busy ? "Pick a server to connect" : (connected || busy ? vpn.status.label : "Not connected"))
                     .font(.system(size: 15, weight: .semibold)).foregroundStyle(connected ? Color.green : .white)
                 if let s = vpn.selected {
                     Text(s.name).font(.system(size: 12)).foregroundStyle(Theme.textSecondary).lineLimit(1)
@@ -175,23 +175,20 @@ private struct ServerPicker: View {
                             .font(.system(size: 12)).foregroundStyle(.secondary).padding(.top, 20)
                     }
                     ForEach(list) { p in
-                        Button {
-                            vpn.selected = p
-                            isPresented = false
-                        } label: {
-                            HStack {
-                                Text(p.kind.rawValue).font(.system(size: 9, weight: .bold)).padding(.horizontal, 5).padding(.vertical, 2)
-                                    .background(Theme.accent.opacity(0.3), in: Capsule())
-                                Text(p.name).font(.system(size: 12)).lineLimit(1)
-                                Spacer()
-                                if vpn.selected?.id == p.id { Image(systemName: "checkmark").font(.system(size: 11, weight: .bold)) }
-                                if source != .mine {
-                                    Button { vpn.add(p) } label: { Image(systemName: "star") }.buttonStyle(.plain).help("Save to Mine")
-                                }
+                        // Not a Button wrapping a Button: the row picks the server, the star saves it.
+                        HStack {
+                            Text(p.kind.rawValue).font(.system(size: 9, weight: .bold)).padding(.horizontal, 5).padding(.vertical, 2)
+                                .background(Theme.accent.opacity(0.3), in: Capsule())
+                            Text(p.name).font(.system(size: 12)).lineLimit(1)
+                            Spacer()
+                            if vpn.selected?.id == p.id { Image(systemName: "checkmark").font(.system(size: 11, weight: .bold)) }
+                            if source != .mine {
+                                Button { vpn.add(p) } label: { Image(systemName: "star") }.buttonStyle(.plain).help("Save to Mine")
                             }
-                            .padding(.horizontal, 8).padding(.vertical, 5).contentShape(Rectangle())
                         }
-                        .buttonStyle(.plain)
+                        .padding(.horizontal, 8).padding(.vertical, 5)
+                        .contentShape(Rectangle())
+                        .onTapGesture { vpn.selected = p; isPresented = false }
                     }
                 }
             }

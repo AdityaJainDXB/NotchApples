@@ -129,7 +129,7 @@ enum Module: String, CaseIterable, Identifiable {
         case .games: "Add-on: tiny games for a short break: 2048, Snake and a reaction test. Best scores stay on this Mac."
         case .f1: "Add-on: Formula 1 live timing (order, gaps, tyres, laps, flags), the weekend schedule with a countdown, and standings. Follow a driver to see their position beside the notch."
         case .sports: "Follow your team (Barcelona unless you pick another): the next match with a countdown, every competition it plays in, recent results and the live score beside the notch. Browse the next two weeks of fixtures in the big football leagues, the NBA, NFL, MLB and NHL."
-        case .live: "Add-on: quick tracking for parcels and flights. (Not recommended - limited usefulness for most situations, low compatibility). Live scores now live in the Sports tab."
+        case .live: "Add-on: quick tracking for parcels and flights. Live scores now live in the Sports tab."
         case .alerts: "Add-on: see notifications from other apps in the notch, and reply to iMessages. Needs Full Disk Access."
         case .plugins: "Add-on: your own widgets. Any script in the Plugins folder shows its output in the notch."
         case .voiceNotes: "Pro: record a voice note from the notch. It's transcribed on your Mac, and one click turns it into an AI summary with action items."

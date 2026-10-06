@@ -53,6 +53,21 @@ struct NotchShape: Shape {
     }
 }
 
+/// Keeps the notch open (clicking elsewhere no longer closes it), e.g. while you drag files in from Finder.
+/// It reads the setting itself, so the icon always follows it.
+struct PinButton: View {
+    @AppStorage("ui.stickyNotch") private var pinned = false
+
+    var body: some View {
+        IconButton(systemImage: pinned ? "pin.fill" : "pin",
+                   help: pinned ? "Pinned open. Click to let it close again." : "Keep open while I drag files in") {
+            pinned.toggle()
+        }
+        .foregroundStyle(pinned ? Theme.accentBright : Theme.textSecondary)
+        .accessibilityLabel(pinned ? "Unpin the notch" : "Pin the notch open")
+    }
+}
+
 struct NotchRootView: View {
     @EnvironmentObject private var state: NotchState
     @EnvironmentObject private var settings: SettingsManager
@@ -165,12 +180,7 @@ struct NotchRootView: View {
             Spacer(minLength: 0)
             ClaudeCodeDotView()
             UpdatePill { state.close(); AppDelegate.openSettingsWindow(tab: .updates) }
-            // Pin: keeps the notch open (clicking elsewhere no longer closes it), e.g. while you drag files in from Finder.
-            IconButton(systemImage: settings.stickyNotch ? "pin.fill" : "pin",
-                       help: settings.stickyNotch ? "Pinned open. Click to let it close again." : "Keep open while I drag files in") {
-                settings.stickyNotch.toggle()
-            }
-            .foregroundStyle(settings.stickyNotch ? Theme.accentBright : Theme.textSecondary)
+            PinButton()
             IconButton(systemImage: "gearshape.fill", help: "Settings (⌘,)") {
                 state.close(); AppDelegate.openSettingsWindow()
             }

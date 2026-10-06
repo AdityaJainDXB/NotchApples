@@ -67,12 +67,6 @@ struct ExtrasSettings: View {
             } footer: {
                 Text("A green dot for 4 seconds when a Claude Code task finishes; a yellow one for 4 seconds when it needs your input or approval, or finishes with warnings or errors. It shows beside the closed notch and in the open notch's header. “Add to Claude Code” adds two hooks to ~/.claude/settings.json (after saving a copy); or run open -g \"notchapple://claude-code?status=done\" (or attention) from any script.")
             }
-            .alert("Add the hooks to Claude Code?", isPresented: $confirmAddHooks) {
-                Button("Add") { hookMessage = ClaudeCodeStatus.installHooks() }
-                Button("Cancel", role: .cancel) {}
-            } message: {
-                Text("This edits ~/.claude/settings.json to run a tiny command when Claude Code finishes or needs you. A backup copy is saved next to it.")
-            }
             Section {
                 MusicPlayerPicker()
                 Toggle("Music bars move with the song", isOn: $settings.musicBarsFollowAudio)
@@ -91,6 +85,12 @@ struct ExtrasSettings: View {
             }
         }
         .formStyle(.grouped)
+        .alert("Add the hooks to Claude Code?", isPresented: $confirmAddHooks) {
+                Button("Add") { hookMessage = ClaudeCodeStatus.installHooks() }
+                Button("Cancel", role: .cancel) {}
+            } message: {
+                Text("This edits ~/.claude/settings.json to run a tiny command when Claude Code finishes or needs you. A backup copy is saved next to it.")
+            }
     }
 }
 
