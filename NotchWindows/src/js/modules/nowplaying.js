@@ -5,6 +5,7 @@
 import { el, load, save, fmtClock } from '../store.js';
 import { canUse } from '../features.js';
 import { empty, toggle } from '../ui.js';
+import { icon } from '../icons.js';
 import { proNote } from './activation.js';
 import * as M from '../services/media.js';
 
@@ -12,27 +13,29 @@ export function render(root) {
   let alive = true;
   let lines = null, lyricsFor = '';
 
-  const art = el('div', { style: 'width:150px;height:150px;border-radius:14px;flex:none;background:var(--surface);display:grid;place-items:center;font-size:52px;overflow:hidden;box-shadow:0 10px 30px rgba(0,0,0,.4)' }, '🎵');
-  const title = el('div', { class: 'title ellipsis', style: 'font-size:18px' });
-  const artist = el('div', { class: 'dim ellipsis' });
-  const source = el('div', { class: 'tiny faint ellipsis' });
+  const art = el('div', { style: 'width:190px;height:190px;border-radius:24px;flex:none;background:var(--surface);display:grid;place-items:center;font-size:60px;overflow:hidden;box-shadow:0 12px 36px color-mix(in srgb, var(--accent) 35%, transparent)' }, '🎵');
+  const title = el('div', { class: 'big ellipsis', style: 'font-size:28px' });
+  const artist = el('div', { class: 'dim ellipsis', style: 'font-size:16px' });
+  const source = el('div', { class: 'caps ellipsis' });
   const fill = el('i');
-  const bar = el('div', { class: 'bar', style: 'height:6px;cursor:pointer' }, fill);
-  const pos = el('span', { class: 'tiny num dim' }), dur = el('span', { class: 'tiny num dim' });
-  const playBtn = el('button', { class: 'icon-btn big solid', title: 'Play or pause', onclick: () => M.control('toggle') }, '⏯');
-  const prevBtn = el('button', { class: 'icon-btn big', title: 'Previous', onclick: () => M.control('previous') }, '⏮');
-  const nextBtn = el('button', { class: 'icon-btn big', title: 'Next', onclick: () => M.control('next') }, '⏭');
+  const bar = el('div', { class: 'bar', style: 'height:8px;cursor:pointer' }, fill);
+  const pos = el('span', { class: 'small num dim' }), dur = el('span', { class: 'small num dim' });
+  const playBtn = el('button', { class: 'icon-btn big solid', title: 'Play or pause', onclick: () => M.control('toggle') }, icon('pause', 22, '⏸'));
+  const prevBtn = el('button', { class: 'icon-btn big', title: 'Previous', onclick: () => M.control('previous') }, icon('skip-back', 24, '⏮'));
+  const nextBtn = el('button', { class: 'icon-btn big', title: 'Next', onclick: () => M.control('next') }, icon('skip-forward', 24, '⏭'));
   const lyricBox = el('div', { class: 'col scroll', style: 'flex:1;min-height:0;gap:6px;padding-right:4px' });
-  const player = el('div', { class: 'card col', style: 'flex:1;min-width:0;gap:10px' },
-    el('div', { class: 'hstack', style: 'gap:16px;align-items:flex-start' }, art,
-      el('div', { class: 'col grow', style: 'gap:4px;min-width:0' }, title, artist, source,
-        el('div', { style: 'flex:1;min-height:30px' }),
+  const player = el('div', { class: 'card col', style: 'flex:1.7;min-width:0;gap:10px' },
+    el('div', { class: 'hstack', style: 'gap:20px;align-items:center;flex:1' }, art,
+      el('div', { class: 'col grow', style: 'gap:6px;min-width:0' }, source, title, artist,
+        el('div', { style: 'height:8px' }),
         bar, el('div', { class: 'hstack' }, pos, el('div', { class: 'spacer' }), dur),
-        el('div', { class: 'hstack', style: 'justify-content:center;gap:14px' }, prevBtn, playBtn, nextBtn))),
+        el('div', { class: 'hstack', style: 'gap:10px' }, prevBtn, playBtn, nextBtn))),
     el('label', { class: 'hstack small dim', style: 'cursor:pointer' },
       toggle(load('media.pill', true), (v) => save('media.pill', v)), 'Show the cover on the closed notch while music plays'));
   const lyricsCard = el('div', { class: 'card col', style: 'flex:1;min-width:0;gap:6px' }, el('div', { class: 'section-title' }, 'Lyrics'), lyricBox);
-  const wrap = el('div', { class: 'row fill' }, player, lyricsCard);
+  // The lyrics panel only appears when lyrics are unlocked (Pro), so Free users get the full-width player, as on the Mac.
+  const cards = () => (canUse('lyrics') ? [player, lyricsCard] : [player]);
+  const wrap = el('div', { class: 'row fill', style: 'gap:16px' }, ...cards());
   root.append(wrap);
 
   bar.addEventListener('click', (e) => {
@@ -76,7 +79,7 @@ export function render(root) {
       lyricsFor = '';
       return;
     }
-    if (!wrap.contains(player)) wrap.replaceChildren(player, lyricsCard);
+    if (!wrap.contains(player) || wrap.contains(lyricsCard) !== canUse('lyrics')) wrap.replaceChildren(...cards());
     // Only swap the cover when it changes (this runs twice a second).
     if (art.dataset.src !== (m.art || '')) {
       art.dataset.src = m.art || '';
@@ -84,11 +87,12 @@ export function render(root) {
     }
     title.textContent = m.title;
     artist.textContent = [m.artist, m.album].filter(Boolean).join(' — ');
-    source.textContent = M.appName(m.app) ? `Playing in ${M.appName(m.app)}` : '';
-    playBtn.textContent = m.playing ? '⏸' : '▶';
+    source.textContent = M.appName(m.app) ? `Now playing · ${M.appName(m.app)}` : 'Now playing';
+    const want = m.playing ? 'pause' : 'play';
+    if (playBtn.dataset.k !== want) { playBtn.dataset.k = want; playBtn.replaceChildren(icon(want, 22, m.playing ? '⏸' : '▶')); }
     prevBtn.disabled = !m.can_previous; nextBtn.disabled = !m.can_next;
     fill.style.width = m.duration ? `${(m.position / m.duration) * 100}%` : '0%';
-    pos.textContent = fmtClock(m.position); dur.textContent = m.duration ? fmtClock(m.duration) : '';
+    pos.textContent = fmtClock(m.position); dur.textContent = m.duration ? `-${fmtClock(Math.max(0, m.duration - m.position))}` : '';
     loadLyrics(m);
     paintLyrics(m);
   }

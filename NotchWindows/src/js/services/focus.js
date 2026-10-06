@@ -35,6 +35,9 @@ export function reset() { set({ ...get(), running: false, remaining: lengthOf(ge
 
 export function skip() { advance(false); }
 
+/// Switch between Focus, Break and Long break (stops the clock, like the Mac's picker).
+export function setMode(mode) { const s = get(); set({ ...s, mode, running: false, endsAt: 0, remaining: lengthOf(mode) }); }
+
 /// Minutes focused per day, for the stats.
 export const history = () => load('focus.history', {});
 
