@@ -58,7 +58,7 @@ Pick your computer. The Windows button starts the download straight away; the Ma
       <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg)</b></a>
     </td>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 1.26.0 BETA</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 1.26.1 BETA</b></a>
     </td>
   </tr>
   <tr>
@@ -387,6 +387,12 @@ All screenshots use sample data.
 #### New in 1.24.1
 
 - **Bug fix:** Messenger and AI chat now open scrolled to the latest message instead of the oldest.
+
+#### Windows 1.26.1 BETA
+
+- **Smoother and lighter.** The notch opens and closes without the jump: the window now resizes in one step, and the pill and panel are hidden while it does, so neither is ever drawn at the wrong size. Switching tabs no longer animates layout, and the playing-bars animation no longer re-lays out the page every frame.
+- **Performance mode** (Settings → Appearance → Style). *Auto* measures how fast your screen draws right after the first open and, on slow graphics (a virtual machine, an old laptop), turns off the glows and looping animations by itself. Choose *Full* or *Lite* to force it.
+- **Frame readout:** press **Ctrl+Shift+F** to show frames per second, the slowest recent frame, long tasks and memory, so slowness can be measured and reported.
 
 #### Windows 1.26.0 BETA
 

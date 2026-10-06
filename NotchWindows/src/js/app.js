@@ -12,6 +12,7 @@ import { MODULES, DEFAULT_ON, byId } from './modules.js';
 import { pref, SIZES } from './prefs.js';
 import { setRenderer, earsFor, refresh as refreshPill } from './activity.js';
 import { toast } from './ui.js';
+import { applyPerf, probeOnce, toggleHud } from './perf.js';
 
 export { invoke };
 
@@ -146,21 +147,30 @@ async function unlock() {
   } finally { busy--; }
 }
 
+/// The two layouts (pill and panel) are hidden while the native window changes size and revealed on the
+/// next painted frame, so neither is ever drawn at the wrong size (no oversized pill, no squashed panel).
+const nextFrame = () => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+
 export async function expand(tab, opts) {
   if (expanded) { if (tab) show(tab, opts); return; }
   if (!(await unlock())) return;
   expanded = true;
-  body.classList.remove('collapsed');
+  body.classList.add('swap');
   playSound('open');
   try { await invoke('set_expanded', { expanded: true }); } catch (e) { console.error(e); }
+  body.classList.remove('collapsed');
   buildTabs.overflowed = false;
   show(tab || active, opts);
+  await nextFrame();
+  body.classList.remove('swap');
+  probeOnce();
 }
 
 export async function collapse() {
   if (!expanded) return;
   expanded = false;
   openedByHover = false;
+  body.classList.add('swap');
   document.querySelectorAll('.overlay, .menu').forEach((n) => n.remove());
   if (typeof cleanup === 'function') { try { cleanup(); } catch {} }
   cleanup = null;
@@ -168,6 +178,8 @@ export async function collapse() {
   body.classList.add('collapsed');
   try { await invoke('set_expanded', { expanded: false }); } catch {}
   refreshPill();
+  await nextFrame();
+  body.classList.remove('swap');
 }
 
 export const toggle = () => (expanded ? collapse() : expand());
@@ -207,6 +219,7 @@ pill.addEventListener('click', () => {
 // ---------------------------------------------------------------- keyboard
 
 document.addEventListener('keydown', (e) => {
+  if (e.ctrlKey && e.shiftKey && !e.altKey && e.key.toLowerCase() === 'f') { e.preventDefault(); toggleHud(); return; }
   if (e.key === 'Escape' && expanded && !document.querySelector('.overlay, .menu')) { collapse(); return; }
   if (!expanded) return;
   if (e.ctrlKey && !e.altKey && e.key.toLowerCase() === 'k') { e.preventDefault(); openPalette(); }
@@ -338,6 +351,7 @@ export function applyLayout() {
   invoke('set_edge_trigger', { on: pref('ui.edgeTrigger') && canUse('edgeTrigger') }).catch(() => {});
   body.dataset.anim = canUse('animationStyles') ? pref('ui.animation') : 'smooth';
   body.dataset.font = canUse('fontsAndIcons') ? pref('ui.font') : 'system';
+  applyPerf();
 }
 
 let warnedShortcuts = false;
@@ -396,7 +410,7 @@ applyLayout();
 buildTabs();
 refreshPill();
 
-for (const key of ['ui.position', 'ui.inset', 'ui.size', 'ui.hideFullscreen', 'ui.animation', 'ui.font', 'ui.edgeTrigger']) watch(key, applyLayout);
+for (const key of ['ui.position', 'ui.inset', 'ui.size', 'ui.hideFullscreen', 'ui.animation', 'ui.performance', 'ui.font', 'ui.edgeTrigger']) watch(key, applyLayout);
 watch('shortcuts', registerShortcuts);
 watch('ui.showClock', refreshPill);
 watch('ui.compactTabs', buildTabs);

@@ -7,7 +7,7 @@
 use serde::Deserialize;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Mutex;
-use tauri::{AppHandle, LogicalPosition, LogicalSize, Manager};
+use tauri::{AppHandle, LogicalPosition, LogicalSize, Manager, WebviewWindow};
 
 #[derive(Deserialize, Clone, Debug)]
 #[serde(rename_all = "camelCase")]
@@ -36,6 +36,10 @@ impl Default for Layout {
 }
 
 static LAYOUT: Mutex<Option<Layout>> = Mutex::new(None);
+/// The last bounds applied, in physical pixels (x, y, width, height). Placing the window again with the
+/// same bounds does nothing, so repeated calls cost nothing and cannot make the window flicker.
+static LAST_BOUNDS: Mutex<Option<(i32, i32, i32, i32)>> = Mutex::new(None);
+static TOPMOST_SET: AtomicBool = AtomicBool::new(false);
 pub static EXPANDED: AtomicBool = AtomicBool::new(false);
 /// Hidden with Ctrl+Alt+O or the eye button.
 pub static USER_HIDDEN: AtomicBool = AtomicBool::new(false);
@@ -72,13 +76,45 @@ pub fn place(app: &AppHandle) -> Result<(), String> {
         _ => origin.x + (screen.width - w) / 2.0,
     };
 
-    window.set_size(LogicalSize::new(w, h)).map_err(|e| e.to_string())?;
-    window.set_position(LogicalPosition::new(x, origin.y)).map_err(|e| e.to_string())?;
-    let _ = window.set_always_on_top(true);
+    let bounds = (
+        (x * scale).round() as i32,
+        (origin.y * scale).round() as i32,
+        (w * scale).round() as i32,
+        (h * scale).round() as i32,
+    );
+    let changed = LAST_BOUNDS.lock().map(|mut last| {
+        let changed = *last != Some(bounds);
+        *last = Some(bounds);
+        changed
+    }).unwrap_or(true);
+    if changed {
+        set_bounds(&window, bounds, (x, origin.y, w, h))?;
+    }
+    // Always-on-top only needs asking for once; asking every time re-stacks the window for nothing.
+    if !TOPMOST_SET.swap(true, Ordering::Relaxed) {
+        let _ = window.set_always_on_top(true);
+    }
     if expanded {
         let _ = window.set_focus();
     }
     Ok(())
+}
+
+/// Moves and resizes the window in ONE native call. Doing it as two calls (size, then position) draws the
+/// window once at the new size in the old place, which shows as a jump while the notch opens.
+#[cfg(windows)]
+fn set_bounds(window: &WebviewWindow, px: (i32, i32, i32, i32), _logical: (f64, f64, f64, f64)) -> Result<(), String> {
+    use windows::Win32::Foundation::HWND;
+    use windows::Win32::UI::WindowsAndMessaging::{SetWindowPos, SWP_NOACTIVATE, SWP_NOZORDER};
+    let hwnd = window.hwnd().map_err(|e| e.to_string())?.0 as isize;
+    let result = unsafe { SetWindowPos(HWND(hwnd as _), None, px.0, px.1, px.2, px.3, SWP_NOZORDER | SWP_NOACTIVATE) };
+    result.map_err(|e| e.to_string())
+}
+
+#[cfg(not(windows))]
+fn set_bounds(window: &WebviewWindow, _px: (i32, i32, i32, i32), logical: (f64, f64, f64, f64)) -> Result<(), String> {
+    window.set_size(LogicalSize::new(logical.2, logical.3)).map_err(|e| e.to_string())?;
+    window.set_position(LogicalPosition::new(logical.0, logical.1)).map_err(|e| e.to_string())
 }
 
 /// Shows or hides the window from the two reasons it can be hidden.
@@ -91,6 +127,7 @@ pub fn apply_visibility(app: &AppHandle) {
         let _ = window.hide();
     } else if !hidden && !visible {
         let _ = window.show();
+        if let Ok(mut last) = LAST_BOUNDS.lock() { *last = None; }
         let _ = place(app);
     }
 }

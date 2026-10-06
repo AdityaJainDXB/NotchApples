@@ -121,6 +121,7 @@ function Appearance(repaint) {
   out.push(card('Style',
     setting('Font', canUse('fontsAndIcons') ? '' : 'Pro', select([{ value: 'system', label: 'Segoe UI' }, { value: 'rounded', label: 'Rounded' }, { value: 'mono', label: 'Monospace' }], pref('ui.font'), (v) => (canUse('fontsAndIcons') ? setPref('ui.font', v) : toast('Fonts are part of Pro.')), { cls: 'auto' })),
     setting('Animations', canUse('animationStyles') ? '' : 'Pro', select([{ value: 'smooth', label: 'Smooth' }, { value: 'fast', label: 'Fast' }, { value: 'off', label: 'Off' }], pref('ui.animation'), (v) => (canUse('animationStyles') ? setPref('ui.animation', v) : toast('Animation styles are part of Pro.')), { cls: 'auto' })),
+    setting('Performance', 'Auto switches to Lite on slow graphics (no glows or looping animations).', select([{ value: 'auto', label: 'Auto' }, { value: 'full', label: 'Full' }, { value: 'lite', label: 'Lite' }], pref('ui.performance'), (v) => setPref('ui.performance', v), { cls: 'auto' })),
     setting('Sounds', 'When the notch opens and timers finish (Pro).', prefToggle('ui.sounds', 'customSounds')),
     setting('Tab names', '', select([{ value: 'auto', label: 'Icons, name on the open tab' }, { value: 'names', label: 'Always show names' }], pref('ui.compactTabs'), (v) => setPref('ui.compactTabs', v), { cls: 'auto' }))));
   return out;
