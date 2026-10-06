@@ -136,7 +136,7 @@ fn set_bounds(window: &WebviewWindow, _px: (i32, i32, i32, i32), logical: (f64, 
 fn apply_glass(window: &WebviewWindow, on: bool) -> Result<(), String> {
     use windows::Win32::Foundation::HWND;
     use windows::Win32::Graphics::Dwm::{DwmEnableBlurBehindWindow, DWM_BB_BLURREGION, DWM_BB_ENABLE, DWM_BLURBEHIND};
-    use windows::Win32::Graphics::Gdi::{CreateRoundRectRgn, DeleteObject, HGDIOBJ, HRGN};
+    use windows::Win32::Graphics::Gdi::{CreateRectRgn, CreateRoundRectRgn, DeleteObject, HGDIOBJ};
     let hwnd = window.hwnd().map_err(|e| e.to_string())?.0 as isize;
     let scale = window.scale_factor().map_err(|e| e.to_string())?;
     let size = window.inner_size().map_err(|e| e.to_string())?;
@@ -144,18 +144,23 @@ fn apply_glass(window: &WebviewWindow, on: bool) -> Result<(), String> {
     let r = (28.0 * scale).round() as i32;
     let (w, h) = (size.width as i32, size.height as i32);
     unsafe {
-        // Starts above the window so only the bottom corners are rounded.
-        let region = if on { CreateRoundRectRgn(pad + 1, -2 * r, w - pad - 1, h - pad - 1, 2 * r, 2 * r) } else { HRGN(std::ptr::null_mut()) };
+        // Blur-behind must stay ENABLED even when "off": the window library makes the window see-through by
+        // enabling it with an empty region, and disabling it turns every transparent pixel black. So "off"
+        // is the same empty region, and "on" is the rounded shape (it starts above the window, so only the
+        // bottom corners are rounded).
+        let region = if on {
+            CreateRoundRectRgn(pad + 1, -2 * r, w - pad - 1, h - pad - 1, 2 * r, 2 * r)
+        } else {
+            CreateRectRgn(0, 0, -1, -1)
+        };
         let blur = DWM_BLURBEHIND {
             dwFlags: DWM_BB_ENABLE | DWM_BB_BLURREGION,
-            fEnable: on.into(),
+            fEnable: true.into(),
             hRgnBlur: region,
             fTransitionOnMaximized: false.into(),
         };
         let result = DwmEnableBlurBehindWindow(HWND(hwnd as _), &blur);
-        if on {
-            let _ = DeleteObject(HGDIOBJ(region.0));
-        }
+        let _ = DeleteObject(HGDIOBJ(region.0));
         result.map_err(|e| e.to_string())
     }
 }

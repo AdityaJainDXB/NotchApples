@@ -58,7 +58,7 @@ Pick your computer. The Windows button starts the download straight away; the Ma
       <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg)</b></a>
     </td>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 1.26.3 BETA</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 1.26.4 BETA</b></a>
     </td>
   </tr>
   <tr>
@@ -388,10 +388,15 @@ All screenshots use sample data.
 
 - **Bug fix:** Messenger and AI chat now open scrolled to the latest message instead of the oldest.
 
+#### Windows 1.26.4 BETA
+
+- Fixes 1.26.3: the pill could turn into a solid black rectangle after the notch closed, and the open notch could look see-through without being blurred. Glass is now an opt-in experiment, and turning it off keeps the window transparent.
+- Adds the blur-to-focus transition when opening and switching tabs.
+
 #### Windows 1.26.3 BETA
 
 - **It grows out of the notch.** Opening now morphs the panel out of the pill's own shape (and closing shrinks it back in), instead of the window just jumping to full size. Performance mode *Lite* and Animations *Off* skip the motion.
-- **Fades and blur.** Opening fades and scales the notch in (and closing fades it out), and switching tabs fades the old page out as the new one fades in, all in about a quarter of a second. On Windows 10 and 11 the open notch now blurs your desktop behind it (Settings → Appearance → Style → Glass blur); menus, toasts and dialogs get a blur too. Glass turns itself off on slow graphics.
+- **Fades and blur.** Opening fades and scales the notch in (and closing fades it out), and switching tabs fades the old page out as the new one fades in, all in about a quarter of a second. Content also comes into focus out of a soft blur as the notch opens and as you switch tabs, like the Mac, and menus, toasts and dialogs get a real backdrop blur. **Glass** (the desktop showing through behind the open notch, Settings → Appearance → Style) is experimental and off by default: Windows does not let an app blur the desktop behind a custom rounded window the way macOS does.
 - **A proper notch.** The closed pill now has squircle bottom corners and concave "ears" that flow into the top edge of the screen, and the time is crisp white, semibold and exactly centred. When something is playing or running, it shows on the left and right as before.
 - **Settings stays put.** The Settings gear is pinned at the top right of a fixed header, so it never scrolls away with the tabs. The tab strip scrolls on its own and fades at the edges.
 - **Softer, rounder look.** Cards, buttons and menus use larger continuous (squircle) corners, the open notch has a layered material with a top highlight, and a soft diffused shadow separates it from the desktop. Margins are roomier (24 px).
