@@ -147,6 +147,24 @@ enum ClaudeUsageLogic {
         return digits.isEmpty ? family.capitalized : "\(family.capitalized) \(digits.joined(separator: "."))"
     }
 
+    /// Time to warn about a budget? True once per period (`key` names the window or week) when `used` reaches `threshold` of it.
+    static func alertDue(used: Int, budget: Int, threshold: Double = 0.9, alertedKey: String, key: String) -> Bool {
+        budget > 0 && alertedKey != key && Double(used) >= Double(budget) * threshold
+    }
+
+    /// The daily summary is due from `at` (minutes since midnight) until the end of the day, once per day.
+    static func summaryDue(minuteOfDay: Int, at: Int, lastDayKey: String, todayKey: String) -> Bool {
+        lastDayKey != todayKey && minuteOfDay >= at
+    }
+
+    /// "108K tokens in 107 replies today · 1.64M this week · mostly Opus 5.5"
+    static func summaryText(today: ClaudeTokens, week: ClaudeTokens, topModel: String?) -> String {
+        guard today.messages > 0 else { return "No Claude Code use today. This week: \(format(week.tokens)) tokens." }
+        var text = "\(format(today.tokens)) tokens in \(today.messages) repl\(today.messages == 1 ? "y" : "ies") today · \(format(week.tokens)) this week"
+        if let m = topModel { text += " · mostly \(friendlyModel(m))" }
+        return text
+    }
+
     /// 0…1 of a budget used, or nil when no budget is set.
     static func fraction(_ used: Int, budget: Int) -> Double? { budget > 0 ? min(1, Double(used) / Double(budget)) : nil }
 

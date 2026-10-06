@@ -123,4 +123,31 @@ final class ClaudeUsageTests: XCTestCase {
         XCTAssertEqual(ClaudeUsageLogic.remaining(until: now.addingTimeInterval(45 * 60), now: now), "45m")
         XCTAssertEqual(ClaudeUsageLogic.remaining(until: now.addingTimeInterval(10), now: now), "now")
     }
+
+    // MARK: Alerts and the daily summary
+
+    func testBudgetAlertFiresOncePerPeriodAtNinetyPercent() {
+        XCTAssertFalse(ClaudeUsageLogic.alertDue(used: 899, budget: 1000, alertedKey: "", key: "w1"))
+        XCTAssertTrue(ClaudeUsageLogic.alertDue(used: 900, budget: 1000, alertedKey: "", key: "w1"))
+        XCTAssertFalse(ClaudeUsageLogic.alertDue(used: 950, budget: 1000, alertedKey: "w1", key: "w1"), "already told you this period")
+        XCTAssertTrue(ClaudeUsageLogic.alertDue(used: 950, budget: 1000, alertedKey: "w1", key: "w2"), "a new period re-arms it")
+        XCTAssertFalse(ClaudeUsageLogic.alertDue(used: 5000, budget: 0, alertedKey: "", key: "w1"), "no budget, no alert")
+        XCTAssertTrue(ClaudeUsageLogic.alertDue(used: 500, budget: 1000, threshold: 0.5, alertedKey: "", key: "w1"))
+    }
+
+    func testDailySummaryOncePerDayAfterYourTime() {
+        XCTAssertFalse(ClaudeUsageLogic.summaryDue(minuteOfDay: 1000, at: 1080, lastDayKey: "", todayKey: "2026-10-06"))
+        XCTAssertTrue(ClaudeUsageLogic.summaryDue(minuteOfDay: 1080, at: 1080, lastDayKey: "2026-10-05", todayKey: "2026-10-06"))
+        XCTAssertTrue(ClaudeUsageLogic.summaryDue(minuteOfDay: 1300, at: 1080, lastDayKey: "", todayKey: "2026-10-06"), "late is better than never")
+        XCTAssertFalse(ClaudeUsageLogic.summaryDue(minuteOfDay: 1300, at: 1080, lastDayKey: "2026-10-06", todayKey: "2026-10-06"))
+    }
+
+    func testSummaryWording() {
+        var today = ClaudeTokens(), week = ClaudeTokens()
+        XCTAssertEqual(ClaudeUsageLogic.summaryText(today: today, week: week, topModel: nil), "No Claude Code use today. This week: 0 tokens.")
+        today.add(entry("2026-10-06T10:00:00Z", tokens: 1000)); week.add(entry("2026-10-06T10:00:00Z", tokens: 1000)); week.add(entry("2026-10-05T10:00:00Z", tokens: 20_000))
+        XCTAssertEqual(ClaudeUsageLogic.summaryText(today: today, week: week, topModel: "claude-opus-5-5"), "1,000 tokens in 1 reply today · 21.0K this week · mostly Opus 5.5")
+        today.add(entry("2026-10-06T11:00:00Z", tokens: 500))
+        XCTAssertEqual(ClaudeUsageLogic.summaryText(today: today, week: week, topModel: nil), "1,500 tokens in 2 replies today · 21.0K this week")
+    }
 }

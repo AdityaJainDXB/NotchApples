@@ -32,7 +32,13 @@ export function render(root) {
         el('div', {}, `Resets in ${U.remaining(blk.end)}`),
         el('div', { class: 'small dim' }, `${blk.totals.messages} replies · ${U.format(blk.totals.input)} in · ${U.format(blk.totals.output)} out · ${U.format(blk.totals.cacheRead + blk.totals.cacheWrite)} cached`));
     } else windowCard.append(el('div', { class: 'big' }, 'No active window'), el('div', { class: 'small dim' }, 'A new 5-hour window starts with your next Claude Code message.'));
-    windowCard.append(el('div', { class: 'spacer' }), budgetRow('Budget per window', 'block', b.block, paint));
+    const pr = U.prefs();
+    const tog = (label, on, onchange, disabled = false) => el('label', { class: 'hstack small dim', style: `gap:8px;cursor:pointer;${disabled ? 'opacity:.5' : ''}` }, el('input', { type: 'checkbox', checked: on, disabled, onchange: (e) => onchange(e.target.checked) }), label);
+    const at = el('input', { class: 'field auto', type: 'time', value: `${String(Math.floor(pr.summaryAt / 60)).padStart(2, '0')}:${String(pr.summaryAt % 60).padStart(2, '0')}`, style: 'width:100px', disabled: !pr.summary });
+    at.onchange = () => { const [h, m] = at.value.split(':').map(Number); if (Number.isFinite(h)) U.setPref('summaryAt', h * 60 + (m || 0)); };
+    windowCard.append(el('div', { class: 'spacer' }), budgetRow('Budget per window', 'block', b.block, paint),
+      tog('Alert at 90% of the weekly budget', pr.weekAlert, (v) => { U.setPref('weekAlert', v); }, b.week === 0),
+      el('div', { class: 'hstack' }, tog('Daily summary at', pr.summary, (v) => { U.setPref('summary', v); paint(); }), at));
 
     totalsCard.replaceChildren(el('div', { class: 'section-title' }, 'Usage'));
     if (state?.found) {

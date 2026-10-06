@@ -72,7 +72,27 @@ final class ClaudeUsageStore: ObservableObject {
     @AppStorage("claudeUsage.blockBudget") var blockBudget = 0
     @AppStorage("claudeUsage.weekBudget") var weekBudget = 0
     @AppStorage("claudeUsage.alert") var alertAt90 = true
+    @AppStorage("claudeUsage.weekAlert") var weekAlert = true
+    @AppStorage("claudeUsage.summary") var dailySummary = false
+    @AppStorage("claudeUsage.summaryAt") var summaryAt = 1080            // 18:00
+    @AppStorage("claudeUsage.weekAlertKey") private var weekAlertKey = ""
+    @AppStorage("claudeUsage.summaryDay") private var summaryDay = ""
     private var alertedBlock: Date?
+    private var background: Timer?
+
+    /// Alerts and the summary need a fresh look now and then even when the tab is closed (cheap: files are cached).
+    var wantsBackground: Bool { (blockBudget > 0 && alertAt90) || (weekBudget > 0 && weekAlert) || dailySummary }
+
+    func startBackground() {
+        background?.invalidate()
+        background = Timer.scheduledTimer(withTimeInterval: 300, repeats: true) { [weak self] _ in
+            Task { @MainActor in
+                guard let self, Entitlements.shared.canUse(Feature.claudeUsage), self.wantsBackground else { return }
+                await self.refresh()
+            }
+        }
+        background?.tolerance = 30
+    }
 
     func refresh() async {
         loading = true
@@ -87,6 +107,19 @@ final class ClaudeUsageStore: ObservableObject {
            Double(b.totals.tokens) >= Double(blockBudget) * 0.9 {
             alertedBlock = b.start
             if SettingsManager.shared.claudeCodeDot { ClaudeCodeStatus.shared.show(.yellow) }
+        }
+        guard Entitlements.shared.canUse(Feature.claudeUsage) else { return }
+        let cal = Calendar.current
+        let weekKey = cal.dateInterval(of: .weekOfYear, for: Date()).map { $0.start.formatted(.iso8601.year().month().day()) } ?? ""
+        if weekAlert, ClaudeUsageLogic.alertDue(used: s.week.tokens, budget: weekBudget, alertedKey: weekAlertKey, key: weekKey) {
+            weekAlertKey = weekKey
+            if SettingsManager.shared.claudeCodeDot { ClaudeCodeStatus.shared.show(.yellow) }
+            Notifier.post(title: "Claude usage: 90% of your weekly budget", body: "\(ClaudeUsageLogic.format(s.week.tokens)) of \(ClaudeUsageLogic.format(weekBudget)) tokens in the last 7 days.")
+        }
+        let c = cal.dateComponents([.hour, .minute], from: Date()), today = Date().formatted(.iso8601.year().month().day())
+        if dailySummary, ClaudeUsageLogic.summaryDue(minuteOfDay: (c.hour ?? 0) * 60 + (c.minute ?? 0), at: summaryAt, lastDayKey: summaryDay, todayKey: today) {
+            summaryDay = today
+            Notifier.post(title: "Claude Code today", body: ClaudeUsageLogic.summaryText(today: s.today, week: s.week, topModel: s.byModel.first?.model))
         }
     }
 }
@@ -159,6 +192,16 @@ struct ClaudeUsageView: View {
             Toggle("Yellow dot at 90% of the window budget", isOn: $store.alertAt90)
                 .font(.system(size: 12)).toggleStyle(.switch).foregroundStyle(Theme.textSecondary)
                 .disabled(store.blockBudget == 0)
+            Toggle("Alert at 90% of the weekly budget", isOn: $store.weekAlert)
+                .font(.system(size: 12)).toggleStyle(.switch).foregroundStyle(Theme.textSecondary)
+                .disabled(store.weekBudget == 0)
+            HStack {
+                Toggle("Daily summary at", isOn: $store.dailySummary).font(.system(size: 12)).toggleStyle(.switch).foregroundStyle(Theme.textSecondary)
+                DatePicker("", selection: Binding(
+                    get: { Calendar.current.date(bySettingHour: store.summaryAt / 60, minute: store.summaryAt % 60, second: 0, of: Date()) ?? Date() },
+                    set: { let c = Calendar.current.dateComponents([.hour, .minute], from: $0); store.summaryAt = (c.hour ?? 18) * 60 + (c.minute ?? 0) }),
+                           displayedComponents: .hourAndMinute).labelsHidden().disabled(!store.dailySummary)
+            }
         }
     }
 

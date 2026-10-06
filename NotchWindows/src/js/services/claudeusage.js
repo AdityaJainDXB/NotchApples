@@ -72,6 +72,20 @@ export function friendlyModel(id) {
   return digits.length ? `${name} ${digits.join('.')}` : name;
 }
 
+/// Time to warn about a budget? True once per period (`key` names the window or week) when `used` reaches `threshold` of it.
+export const alertDue = (used, budget, threshold, alertedKey, key) => budget > 0 && alertedKey !== key && used >= budget * (threshold ?? 0.9);
+
+/// The daily summary is due from `at` (minutes since midnight) until the end of the day, once per day.
+export const summaryDue = (minuteOfDay, at, lastDayKey, todayKey) => lastDayKey !== todayKey && minuteOfDay >= at;
+
+/// "108K tokens in 107 replies today · 1.64M this week · mostly Opus 5.5"
+export function summaryText(today, week, topModel) {
+  if (today.messages === 0) return `No Claude Code use today. This week: ${format(tokens(week))} tokens.`;
+  let t = `${format(tokens(today))} tokens in ${today.messages} repl${today.messages === 1 ? 'y' : 'ies'} today · ${format(tokens(week))} this week`;
+  if (topModel) t += ` · mostly ${friendlyModel(topModel)}`;
+  return t;
+}
+
 export const fraction = (used, budget) => (budget > 0 ? Math.min(1, used / budget) : null);
 
 export function remaining(end, now = Date.now()) {
@@ -86,6 +100,39 @@ export function remaining(end, now = Date.now()) {
 export const budgets = () => ({ block: load('claudeusage.block', 0), week: load('claudeusage.week', 0) });
 export const setBudget = (key, v) => save(`claudeusage.${key}`, Math.max(0, Math.floor(Number(v) || 0)));
 export const alertOn = () => load('claudeusage.alert', true);
+export const prefs = () => ({ weekAlert: load('claudeusage.weekAlert', true), summary: load('claudeusage.summary', false), summaryAt: load('claudeusage.summaryAt', 1080) });
+export const setPref = (k, v) => save(`claudeusage.${k}`, v);
+
+// ---- background: alerts and the daily summary, even while the tab is closed ----
+
+const isoWeekKey = (d = new Date()) => { const x = new Date(d); x.setHours(0, 0, 0, 0); x.setDate(x.getDate() - ((x.getDay() + 6) % 7)); return `${x.getFullYear()}-${String(x.getMonth() + 1).padStart(2, '0')}-${String(x.getDate()).padStart(2, '0')}`; };
+const dayKey = (d = new Date()) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+
+export async function check() {
+  const b = budgets(), p = prefs();
+  if (!(b.week > 0 && p.weekAlert) && !(b.block > 0 && alertOn()) && !p.summary) return;
+  const { canUse } = await import('../features.js');
+  if (!canUse('claudeUsage')) return;
+  const { found, summary: s } = await read();
+  if (!found) return;
+  const { notify } = await import('../native.js');
+  const dot = await import('./claudecode.js');
+  const blk = s.block;
+  if (alertOn() && blk && alertDue(tokens(blk.totals), b.block, 0.9, load('claudeusage.blockKey', ''), String(blk.start))) {
+    save('claudeusage.blockKey', String(blk.start)); dot.show('yellow');
+  }
+  if (p.weekAlert && alertDue(tokens(s.week), b.week, 0.9, load('claudeusage.weekKey', ''), isoWeekKey())) {
+    save('claudeusage.weekKey', isoWeekKey()); dot.show('yellow');
+    notify('Claude usage: 90% of your weekly budget', `${format(tokens(s.week))} of ${format(b.week)} tokens in the last 7 days.`);
+  }
+  const now = new Date();
+  if (p.summary && summaryDue(now.getHours() * 60 + now.getMinutes(), p.summaryAt, load('claudeusage.summaryDay', ''), dayKey())) {
+    save('claudeusage.summaryDay', dayKey());
+    notify('Claude Code today', summaryText(s.today, s.week, s.byModel[0]?.model));
+  }
+}
+
+export function start() { setInterval(() => check().catch(() => {}), 300000); }
 
 /// { found, summary } from the transcripts on this PC.
 export async function read() {
