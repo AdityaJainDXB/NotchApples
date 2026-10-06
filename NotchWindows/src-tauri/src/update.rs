@@ -106,19 +106,37 @@ pub async fn update_install(app: AppHandle, url: String, sha256: Option<String>,
         let _ = std::fs::remove_file(&path);
         return Err("The download didn't match the published file, so it wasn't installed. Try again.".into());
     }
-    // The installer must start AFTER this app has exited: if it starts while we are still running it cannot
-    // close us ("Failed to kill Notch apple"). So hand it to a small detached shell that waits two seconds
-    // first, then quit right away. /P shows only a progress bar, /R starts the app again when it's done, and
-    // /UPDATE tells the installer this is an upgrade, so it replaces the old version without asking.
+    // The installer must start only AFTER this app has really exited: while it still runs, the installer can't
+    // replace notch-apple.exe ("Failed to kill Notch apple" / "Error opening file for writing"). Closing a WebView2
+    // app can take several seconds on a slow PC, so a fixed delay isn't enough. A small script waits until the
+    // process is gone (with a hard stop after about 50 seconds), then runs the installer: /P shows only a progress
+    // bar, /R starts the app again when it's done, and /UPDATE tells the installer this is an upgrade.
     #[cfg(windows)]
     {
         use std::os::windows::process::CommandExt;
         const CREATE_NO_WINDOW: u32 = 0x0800_0000;
         const DETACHED_PROCESS: u32 = 0x0000_0008;
-        let line = format!("\"ping -n 3 127.0.0.1 >nul & \"{}\" /P /R /UPDATE\"", path.display());
+        let script_path = std::env::temp_dir().join("NotchApple-Update.cmd");
+        let script = format!(
+            "@echo off\r\n\
+             set /a tries=0\r\n\
+             :wait\r\n\
+             tasklist /fi \"imagename eq notch-apple.exe\" 2>nul | find /i \"notch-apple.exe\" >nul\r\n\
+             if errorlevel 1 goto go\r\n\
+             set /a tries+=1\r\n\
+             if %tries% geq 40 taskkill /f /im notch-apple.exe >nul 2>&1\r\n\
+             if %tries% geq 50 goto go\r\n\
+             ping -n 2 127.0.0.1 >nul\r\n\
+             goto wait\r\n\
+             :go\r\n\
+             ping -n 3 127.0.0.1 >nul\r\n\
+             \"{}\" /P /R /UPDATE\r\n",
+            path.display()
+        );
+        std::fs::write(&script_path, script).map_err(|e| format!("Couldn't prepare the installer: {e}"))?;
         std::process::Command::new("cmd.exe")
             .arg("/C")
-            .raw_arg(line)
+            .arg(&script_path)
             .creation_flags(CREATE_NO_WINDOW | DETACHED_PROCESS)
             .spawn()
             .map_err(|e| format!("Couldn't start the installer: {e}"))?;
