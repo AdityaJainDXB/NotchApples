@@ -331,6 +331,7 @@ All screenshots use sample data.
 #### New in 1.30.2
 
 - **Fixed the notch sitting below the top of the screen** (1.30.0 and 1.30.1). A window-level change made for full-screen apps had lowered it under the menu bar; it is flush at the top again.
+- **Fixed double volume and brightness pop-ups.** Notch apple's gauge no longer shows on top of the macOS pop-up when "Hide the macOS pop-ups" is on but Accessibility isn't allowed yet.
 
 #### New in 1.30.1
 

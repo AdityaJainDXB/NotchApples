@@ -21,8 +21,9 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
-        ReleaseNote(version: "1.30.2", date: "6 October 2026", headline: "The notch is back at the top", items: [
+        ReleaseNote(version: "1.30.2", date: "6 October 2026", headline: "The notch is back at the top, and one pop-up at a time", items: [
             "Fixed the notch sitting below the top of the screen in 1.30.0 and 1.30.1. It is flush with the top edge again, and macOS can no longer push it under the menu bar.",
+            "Fixed two volume or brightness pop-ups showing on top of each other: until Accessibility is allowed only the macOS pop-up shows; once it is, only the notch gauge shows.",
         ]),
         ReleaseNote(version: "1.30.1", date: "6 October 2026", headline: "Cookie Clicker unlocks", items: [
             "Cookie Clicker buildings now unlock as you bake: they show as locked goals first and open up as your total baked cookies grows.",

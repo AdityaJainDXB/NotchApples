@@ -102,6 +102,11 @@ final class LiveActivityCenter: ObservableObject {
     /// Briefly expands the closed notch with a gauge, like the Dynamic Island's volume HUD.
     func showHUD(symbol: String, value: Double) {
         guard SettingsManager.shared.showSystemHUD, canShowHUD() else { return }
+        // This one gate covers volume AND brightness (every gauge comes through here).
+        // "Hide the macOS pop-ups" works by intercepting the volume and brightness keys, which needs Accessibility.
+        // Without it macOS still shows its own pop-up, and ours on top of it overlapped (two HUDs stacked at the top
+        // of the screen). So when the pop-ups are meant to be hidden but can't be, show only macOS's.
+        if SettingsManager.shared.replaceSystemHUD && !MediaKeyInterceptor.shared.isRunning { return }
         hudFlash = LiveActivity(symbol: symbol, label: nil, tint: NSColor(Theme.accentBright), gauge: min(max(value, 0), 1))
         recompute()
         hudWork?.cancel()

@@ -613,7 +613,7 @@ private struct GeneralSettings: View {
                     Text("Hide the macOS volume and brightness pop-ups")
                     Text(AXIsProcessTrusted()
                          ? "Only the notch gauge appears when you press the volume or brightness keys."
-                         : "Needs Accessibility (System Settings → Privacy & Security → Accessibility). Until then, macOS shows its own pop-up too.")
+                         : "Needs Accessibility (System Settings → Privacy & Security → Accessibility). Until you allow it, only the macOS pop-up shows, so the two never overlap.")
                 }
                 .disabled(!settings.showSystemHUD)
                 Toggle(isOn: $settings.showRecordingIndicator) {
