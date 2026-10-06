@@ -180,6 +180,20 @@ async function unlock() {
 /// Then the panel grows out of the pill's shape: the window is already full size (and transparent), and the
 /// panel is clipped to the pill's rectangle and released, so the browser animates the clip.
 const nextFrame = () => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+/// Windows resizes the web view a moment AFTER the window. Revealing before that lays the page out in the old
+/// (tiny or huge) viewport for a frame or two, which shows as a glitch. So wait until the page has the new size.
+const viewportIs = (open) => {
+  const size = SIZES[canUse('notchResize') ? pref('ui.size') : 'standard'] || SIZES.standard;
+  const near = (a, b) => Math.abs(a - b) <= 6;
+  const wantW = open ? Math.min(size.width + 60, screen.availWidth - 16 + 60) : size.pillWidth;
+  return open ? innerWidth >= wantW - 8 : near(innerWidth, wantW);
+};
+async function viewportReady(open, limit = 400) {
+  if (!window.__TAURI__) return;   // a plain browser (the dev server) never resizes
+  const t0 = performance.now();
+  while (!viewportIs(open) && performance.now() - t0 < limit) await new Promise((r) => requestAnimationFrame(r));
+}
+
 const motion = () => body.dataset.anim !== 'off' && body.dataset.perf !== 'lite';
 const shellEl = document.getElementById('shell');
 
@@ -210,6 +224,7 @@ export async function expand(tab, opts) {
   body.classList.add('swap');
   playSound('open');
   try { await invoke('set_expanded', { expanded: true }); } catch (e) { console.error(e); }
+  await viewportReady(true);
   body.classList.remove('collapsed', 'closing', 'growing');
   if (animate) { pillClip(); body.classList.add('opening'); }
   buildTabs.overflowed = false;
@@ -247,6 +262,7 @@ export async function collapse() {
   body.classList.add('collapsed');
   body.classList.remove('closing');
   try { await invoke('set_expanded', { expanded: false }); } catch {}
+  await viewportReady(false);
   refreshPill();
   await nextFrame();
   body.classList.remove('swap');

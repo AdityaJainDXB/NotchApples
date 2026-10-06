@@ -106,16 +106,30 @@ pub async fn update_install(app: AppHandle, url: String, sha256: Option<String>,
         let _ = std::fs::remove_file(&path);
         return Err("The download didn't match the published file, so it wasn't installed. Try again.".into());
     }
-    // /P shows only a progress bar (no wizard pages), /R starts the app again when it's done, and /UPDATE tells
-    // the installer this is an upgrade, so it replaces the old version without asking.
-    std::process::Command::new(&path)
-        .args(["/P", "/R", "/UPDATE"])
-        .spawn()
-        .map_err(|e| format!("Couldn't start the installer: {e}"))?;
-    // Quit so the installer can replace the app.
+    // The installer must start AFTER this app has exited: if it starts while we are still running it cannot
+    // close us ("Failed to kill Notch apple"). So hand it to a small detached shell that waits two seconds
+    // first, then quit right away. /P shows only a progress bar, /R starts the app again when it's done, and
+    // /UPDATE tells the installer this is an upgrade, so it replaces the old version without asking.
+    #[cfg(windows)]
+    {
+        use std::os::windows::process::CommandExt;
+        const CREATE_NO_WINDOW: u32 = 0x0800_0000;
+        const DETACHED_PROCESS: u32 = 0x0000_0008;
+        let line = format!("\"ping -n 3 127.0.0.1 >nul & \"{}\" /P /R /UPDATE\"", path.display());
+        std::process::Command::new("cmd.exe")
+            .arg("/C")
+            .raw_arg(line)
+            .creation_flags(CREATE_NO_WINDOW | DETACHED_PROCESS)
+            .spawn()
+            .map_err(|e| format!("Couldn't start the installer: {e}"))?;
+    }
+    #[cfg(not(windows))]
+    {
+        std::process::Command::new(&path).spawn().map_err(|e| format!("Couldn't start the installer: {e}"))?;
+    }
     let handle = app.clone();
     std::thread::spawn(move || {
-        std::thread::sleep(std::time::Duration::from_millis(700));
+        std::thread::sleep(std::time::Duration::from_millis(250));
         handle.exit(0);
     });
     Ok(())

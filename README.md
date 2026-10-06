@@ -392,6 +392,8 @@ All screenshots use sample data.
 
 - **Choose your features on first launch, one at a time.** A welcome flow goes through the tabs one by one: a picture of what it does, what plan it needs, and **Turn on** or **Not now** (with a progress bar and a Back button). Pro and Ultimate tabs are shown too; turning one on tells you it has to be bought, with the price, the flyer and a link to the website (and a box for your key if you already have one). Run it again any time from Settings → Tabs → *Choose with pictures…*.
 - **No more jumping at startup.** The notch used to appear at Windows' default spot and move twice before settling. It now stays hidden until its final position is applied.
+- **Opening no longer flashes the wrong size.** The notch now waits until the page has actually reached its new size before showing the content, on opening and closing.
+- **Updates are more reliable.** The installer now starts a couple of seconds after the app closes, so it can no longer fail with "Failed to kill Notch apple".
 - Glass (see-through notch) stays off by default.
 
 #### Windows 1.26.4 BETA
