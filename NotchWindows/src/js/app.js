@@ -166,20 +166,38 @@ async function unlock() {
 
 /// The two layouts (pill and panel) are hidden while the native window changes size and revealed on the
 /// next painted frame, so neither is ever drawn at the wrong size (no oversized pill, no squashed panel).
+/// Then the panel grows out of the pill's shape: the window is already full size (and transparent), and the
+/// panel is clipped to the pill's rectangle and released, so the browser animates the clip.
 const nextFrame = () => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+const motion = () => body.dataset.anim !== 'off' && body.dataset.perf !== 'lite';
+const shellEl = document.getElementById('shell');
+
+function pillClip() {
+  const size = SIZES[canUse('notchResize') ? pref('ui.size') : 'standard'] || SIZES.standard;
+  shellEl.style.setProperty('--pill-half', `${(size.pillWidth - 28) / 2}px`);
+  shellEl.style.setProperty('--pill-h', `${size.pillHeight}px`);
+}
 
 export async function expand(tab, opts) {
   if (expanded) { if (tab) show(tab, opts); return; }
   if (!(await unlock())) return;
   expanded = true;
+  const animate = motion();
   body.classList.add('swap');
   playSound('open');
   try { await invoke('set_expanded', { expanded: true }); } catch (e) { console.error(e); }
-  body.classList.remove('collapsed');
+  body.classList.remove('collapsed', 'closing', 'growing');
+  if (animate) { pillClip(); body.classList.add('opening'); }
   buildTabs.overflowed = false;
   show(tab || active, opts);
   await nextFrame();
   body.classList.remove('swap');
+  if (animate) {
+    void shellEl.offsetWidth;
+    body.classList.add('growing');
+    body.classList.remove('opening');
+    setTimeout(() => body.classList.remove('growing'), 500);   // always ends, even if the browser skips the transition
+  }
   probeOnce();
 }
 
@@ -187,12 +205,19 @@ export async function collapse() {
   if (!expanded) return;
   expanded = false;
   openedByHover = false;
-  body.classList.add('swap');
   document.querySelectorAll('.overlay, .menu').forEach((n) => n.remove());
+  if (motion()) {
+    pillClip();
+    body.classList.remove('growing', 'opening');
+    body.classList.add('closing');
+    await new Promise((r) => setTimeout(r, 230));
+  }
+  body.classList.add('swap');
   if (typeof cleanup === 'function') { try { cleanup(); } catch {} }
   cleanup = null;
   page.replaceChildren();
   body.classList.add('collapsed');
+  body.classList.remove('closing');
   try { await invoke('set_expanded', { expanded: false }); } catch {}
   refreshPill();
   await nextFrame();
