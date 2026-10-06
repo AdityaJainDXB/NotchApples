@@ -94,6 +94,7 @@ targets:
       - NotchApple/Core/SecretLogic.swift
       - NotchApple/Core/QuickAnswerLogic.swift
       - NotchApple/Core/SnippetVariables.swift
+      - NotchApple/Core/HabitLogic.swift
       - NotchApple/Modules/Tools/Converter.swift
       - NotchApple/Core/VPNTunnel.swift
       - CompanionKit

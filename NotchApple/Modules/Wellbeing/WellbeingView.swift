@@ -70,13 +70,22 @@ struct WellbeingView: View {
     @StateObject private var service = WellbeingService.shared
     @AppStorage("wellbeing.pattern") private var patternID = "box"
     @State private var breathingSince: Date?
+    @AppStorage("wellbeing.page") private var page = "calm"
 
     private var pattern: WellbeingLogic.Pattern { WellbeingLogic.Pattern.all.first { $0.id == patternID } ?? .box }
 
     var body: some View {
-        HStack(spacing: 12) {
-            GlassCard { breathing }.frame(width: 250)
-            GlassCard { reminders }
+        VStack(spacing: 8) {
+            Picker("", selection: $page) { Text("Breathe & reminders").tag("calm"); Text("Habits").tag("habits") }
+                .pickerStyle(.segmented).labelsHidden().frame(width: 260)
+            if page == "habits" {
+                GlassCard { HabitsView() }.requires(.habits)
+            } else {
+                HStack(spacing: 12) {
+                    GlassCard { breathing }.frame(width: 250)
+                    GlassCard { reminders }
+                }
+            }
         }
     }
 

@@ -17,6 +17,7 @@
 		07D699E3624DBDC3C40D3A6D /* AIExtras.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED43344457B89969F8103870 /* AIExtras.swift */; };
 		09AFE68E8FB4460E02198C74 /* WellbeingLogic.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A7687E5F02BA5A9C7ECCC75 /* WellbeingLogic.swift */; };
 		0A5DC836B5829FB65956058F /* BiometricAuth.swift in Sources */ = {isa = PBXBuildFile; fileRef = F927A01984BE61BD7A76FA4A /* BiometricAuth.swift */; };
+		0AE52D370DC0C9F3226321C6 /* HabitsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 03F5574ACA9594C95D90C1CB /* HabitsView.swift */; };
 		0B1569487E2F135B049C0FBB /* FileShelf.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4E00A819D19DED9CA5D59F0 /* FileShelf.swift */; };
 		0BDD91775E21B5BEDDF33463 /* BackgroundMusic.pkg in Resources */ = {isa = PBXBuildFile; fileRef = 404B8C35377E3958184925BE /* BackgroundMusic.pkg */; };
 		0C739FEE55B9BD34556750D1 /* SnippetVariablesTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4ACC8DF8A2FA28D337D2DC0F /* SnippetVariablesTests.swift */; };
@@ -110,6 +111,7 @@
 		551145056941A04D36C2B5A2 /* AIPure.swift in Sources */ = {isa = PBXBuildFile; fileRef = B3E33F2560D7769C54AC98C1 /* AIPure.swift */; };
 		559ACE16871EEAB029D13015 /* NotchSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 68B9FDCF64AD3B173A4D3440 /* NotchSettings.swift */; };
 		559DB140309458EAB8AD6BFF /* MediaKeyInterceptor.swift in Sources */ = {isa = PBXBuildFile; fileRef = D27AA020801BE2A842BE0732 /* MediaKeyInterceptor.swift */; };
+		5620DB3F7A5024CD341EF8E4 /* HabitTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA59C313AC0C841D4808F558 /* HabitTests.swift */; };
 		56C4E2E053ED2358442D87C7 /* AccessCodeManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1EC00C3A3694AC867DD418EC /* AccessCodeManager.swift */; };
 		5AA91607B79AC951AF761EAC /* AppAudioTap.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7FA95D922A40D6601CCC213A /* AppAudioTap.swift */; };
 		5AB8124D1C5F0BA91018A820 /* TranslationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F56873F8683487EBE9C958A /* TranslationManager.swift */; };
@@ -145,6 +147,7 @@
 		7CCB2190EF8F817D6DDFC3A5 /* ClipboardLink.swift in Sources */ = {isa = PBXBuildFile; fileRef = 59BC3F5D6F85A5FDFC39D94F /* ClipboardLink.swift */; };
 		7E59E9FB95878ACFAF45A095 /* NotificationsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E45CA4DA23D38E6A1DBA06F /* NotificationsView.swift */; };
 		7E8386EF609533C3CF5608D8 /* WeatherService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 92FC7E64A4478DE0F57D42E4 /* WeatherService.swift */; };
+		82B26CB254E6E3A4E2CAD077 /* HabitLogic.swift in Sources */ = {isa = PBXBuildFile; fileRef = AADA082C5E44226B4E0DE49F /* HabitLogic.swift */; };
 		835CDB73E281F0B112F35B85 /* LicenseKey.swift in Sources */ = {isa = PBXBuildFile; fileRef = B16F24E7C42EBCCB3F46202A /* LicenseKey.swift */; };
 		8360703F9BC1E35F13FEFE5C /* NotchApple.sdef in Resources */ = {isa = PBXBuildFile; fileRef = D151A71D3F7B4B4F846173CD /* NotchApple.sdef */; };
 		8364E6132EE5D1467B0AE042 /* PureModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50CCA2828E5DEA8799BE2ACC /* PureModels.swift */; };
@@ -225,6 +228,7 @@
 		D1C210100728BD42DBD406B8 /* GamesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44EC19E1838745C95B5759DF /* GamesView.swift */; };
 		D259A3CCCF1FD276BAD8F02C /* AccountSync.swift in Sources */ = {isa = PBXBuildFile; fileRef = BA53B7D1995BA4D5C0C0B434 /* AccountSync.swift */; };
 		D34F08D32DB7647BCA41C1DC /* SystemHUDObserver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2FDF0D52167C63FBB161D611 /* SystemHUDObserver.swift */; };
+		D4584E673298C2EF396AC2B9 /* HabitLogic.swift in Sources */ = {isa = PBXBuildFile; fileRef = AADA082C5E44226B4E0DE49F /* HabitLogic.swift */; };
 		D6AB6D3B477B7BBBEFB85708 /* ScreenTimeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9428FE6894A084A43909BD76 /* ScreenTimeView.swift */; };
 		D915CB7B0060ED6128415BF9 /* SnakeGameViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 264A2A3E4ADCB8D6919DC502 /* SnakeGameViewModel.swift */; };
 		DC37742E9DC53226546E0A45 /* WindowManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 98A8EB2467586B8A5E087088 /* WindowManager.swift */; };
@@ -282,6 +286,7 @@
 		023AF917ACD38E560C4DD67B /* NotchWindow+LevelFix.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "NotchWindow+LevelFix.swift"; sourceTree = "<group>"; };
 		0335700922F2B064E7FC742F /* NotesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotesView.swift; sourceTree = "<group>"; };
 		033E65EDFD61BEE79967253B /* MessengerModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessengerModels.swift; sourceTree = "<group>"; };
+		03F5574ACA9594C95D90C1CB /* HabitsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HabitsView.swift; sourceTree = "<group>"; };
 		052621B0F73FFEA23C93C8B2 /* ScreenTools.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenTools.swift; sourceTree = "<group>"; };
 		06B519562B43BC0E7646A8A7 /* WellbeingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WellbeingView.swift; sourceTree = "<group>"; };
 		08FCD39C305D6997D25CE2CB /* NotchKit */ = {isa = PBXFileReference; lastKnownFileType = folder; name = NotchKit; path = Packages/NotchKit; sourceTree = SOURCE_ROOT; };
@@ -427,6 +432,7 @@
 		A7241EE0C2D1B5C9875023CE /* VPNTunnelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VPNTunnelTests.swift; sourceTree = "<group>"; };
 		A86F7ABE9C93935F6764DF17 /* SecretLogic.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SecretLogic.swift; sourceTree = "<group>"; };
 		A9E160C9C8DBBE561F7DD2AD /* SharedStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedStore.swift; sourceTree = "<group>"; };
+		AADA082C5E44226B4E0DE49F /* HabitLogic.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HabitLogic.swift; sourceTree = "<group>"; };
 		ABF7BDDF60590D89D51048A8 /* SystemWatchTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SystemWatchTests.swift; sourceTree = "<group>"; };
 		ACD60817F03707C0A2A93064 /* NowPlayingMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NowPlayingMonitor.swift; sourceTree = "<group>"; };
 		AD19B5322ACB9565E2C06FBB /* IOKitLidAngleProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IOKitLidAngleProvider.swift; sourceTree = "<group>"; };
@@ -452,6 +458,7 @@
 		C5F7CF2FFE504D781512227C /* AppTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppTheme.swift; sourceTree = "<group>"; };
 		C7C02C79EB9558F42EE15425 /* NotchBehavior.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotchBehavior.swift; sourceTree = "<group>"; };
 		C86E0E03E20CFF1088A55F6E /* ClaudeUsageView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClaudeUsageView.swift; sourceTree = "<group>"; };
+		CA59C313AC0C841D4808F558 /* HabitTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HabitTests.swift; sourceTree = "<group>"; };
 		CB93272E84FBD56F3B4F7BA4 /* AudioView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioView.swift; sourceTree = "<group>"; };
 		CBF8382AEA6C022EC53D433C /* ScreenCaptureActions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenCaptureActions.swift; sourceTree = "<group>"; };
 		CCE0CCD6C5E28321639259CE /* PeekView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PeekView.swift; sourceTree = "<group>"; };
@@ -527,6 +534,7 @@
 		112C476CF3AD2D4B68464A68 /* Wellbeing */ = {
 			isa = PBXGroup;
 			children = (
+				03F5574ACA9594C95D90C1CB /* HabitsView.swift */,
 				06B519562B43BC0E7646A8A7 /* WellbeingView.swift */,
 			);
 			path = Wellbeing;
@@ -725,6 +733,7 @@
 				26224581D5D211D4749547E8 /* ClipboardLinkTests.swift */,
 				7CC31FE35B8BD0245C7DD53D /* DevToolkitTests.swift */,
 				B22EB539126F68B13E0CA3CB /* GameEngineTests.swift */,
+				CA59C313AC0C841D4808F558 /* HabitTests.swift */,
 				60D028DAE4C9C74C6193B75F /* HotCornerTests.swift */,
 				8436033AA85EDE8B497C3BE6 /* LicenseTests.swift */,
 				EE79E1E6EA0B1FB034A48E87 /* LogicTests.swift */,
@@ -775,6 +784,7 @@
 				FBF521DE52E4227ABF0CCC29 /* Entitlements.swift */,
 				94617614D11E8110B03EB9F7 /* ExternalActivities.swift */,
 				4DAB6955A36172C93698DDEC /* FeatureHub.swift */,
+				AADA082C5E44226B4E0DE49F /* HabitLogic.swift */,
 				5C151FE67E6474F51CD20219 /* HotCornerLogic.swift */,
 				C35C9FA48E930832266322C0 /* HotCorners.swift */,
 				1BB3450673E6FC967D2A1F87 /* KeychainHelper.swift */,
@@ -1429,6 +1439,8 @@
 				A9A33B021A874F5F59E85D96 /* GameSupport.swift in Sources */,
 				D1C210100728BD42DBD406B8 /* GamesView.swift in Sources */,
 				04DA84BD772511B028648D4E /* GlobalHotkeyManager.swift in Sources */,
+				D4584E673298C2EF396AC2B9 /* HabitLogic.swift in Sources */,
+				0AE52D370DC0C9F3226321C6 /* HabitsView.swift in Sources */,
 				D0E3852087030F02B39F54DA /* HomeView.swift in Sources */,
 				4132D2810197CE3A0F8A6429 /* HotCornerLogic.swift in Sources */,
 				39F8CFD0D65ADD94D2E6405F /* HotCorners.swift in Sources */,
@@ -1586,6 +1598,8 @@
 				9F68FFA4EE2970516B9AA33A /* DevToolkitTests.swift in Sources */,
 				53143763DB98EBC85B4B0BA2 /* GameEngineTests.swift in Sources */,
 				5D7F5D766A349C34E27672E2 /* GameEngines.swift in Sources */,
+				82B26CB254E6E3A4E2CAD077 /* HabitLogic.swift in Sources */,
+				5620DB3F7A5024CD341EF8E4 /* HabitTests.swift in Sources */,
 				F8B6F02D08FC1FB3D04286FC /* HotCornerLogic.swift in Sources */,
 				92D6E8322DCEC6A2AE6A5795 /* HotCornerTests.swift in Sources */,
 				E47F09C13F09C6C35E4DFB7D /* KeychainHelper.swift in Sources */,

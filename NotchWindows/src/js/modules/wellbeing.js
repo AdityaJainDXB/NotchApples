@@ -4,6 +4,9 @@
 import { el, load, save } from '../store.js';
 import { segmented, toggle, select, setting } from '../ui.js';
 import * as W from '../services/wellbeing.js';
+import * as H from '../services/habits.js';
+import { canUse } from '../features.js';
+import { proNote } from './activation.js';
 
 const hhmm = (m) => `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`;
 const minutes = (s) => { const [h, m] = String(s).split(':').map(Number); return Number.isFinite(h) ? h * 60 + (m || 0) : null; };
@@ -45,11 +48,37 @@ export function render(root) {
       el('div', { class: 'hstack', style: 'padding-top:8px' }, el('button', { class: 'btn small quiet', onclick: () => { W.snooze(60); } }, 'Snooze all for an hour')));
   }
 
-  root.append(el('div', { class: 'row fill', style: 'gap:16px' },
+  // ---- habits (Pro) ----
+  const habitBox = el('div', { class: 'card col', style: 'flex:1;min-width:0;min-height:0;gap:8px' });
+  function paintHabits() {
+    if (!canUse('habits')) { habitBox.replaceChildren(proNote('habits', 'Build streaks: tick a habit each day and watch the run grow.')); return; }
+    const today = H.todayKey();
+    const input = el('input', { class: 'field', placeholder: 'A habit to build, e.g. Read 10 pages', maxlength: 40 });
+    const add = () => { H.addHabit(input.value); paintHabits(); };
+    input.onkeydown = (e) => { if (e.key === 'Enter') add(); };
+    const rows = H.habits().map((h) => {
+      const done = new Set(h.done), streak = H.currentStreak(done, today);
+      return el('div', { class: 'item', style: 'gap:10px' },
+        el('div', { class: 'main' }, el('div', { class: 'ellipsis', style: 'font-weight:600' }, h.name), el('div', { class: 'tiny dim' }, `Best ${H.bestStreak(done)} · ${H.thisWeek(done, today)} of the last 7 days`)),
+        el('div', { class: 'hstack', style: 'gap:5px' }, ...H.lastDays(7, today).map((d) => el('button', { title: d === today ? 'Today' : d, class: 'icon-btn', style: `width:18px;height:18px;border-radius:50%;padding:0;background:${done.has(d) ? 'var(--accent)' : 'var(--surface-2, rgba(255,255,255,.12))'};${d === today ? 'box-shadow:0 0 0 1.5px var(--accent-bright)' : ''}`, onclick: () => { H.toggle(h.id, d); paintHabits(); } }))),
+        el('b', { class: 'num', style: `width:46px;text-align:right;color:${streak ? '#ff9f0a' : 'var(--text-dim)'}`, title: 'Days in a row' }, `🔥 ${streak}`),
+        el('button', { class: 'icon-btn', style: 'width:22px;height:22px', title: 'Delete', onclick: () => { H.removeHabit(h.id); paintHabits(); } }, '✕'));
+    });
+    habitBox.replaceChildren(el('div', { class: 'hstack' }, input, el('button', { class: 'btn', onclick: add }, 'Add')),
+      ...(rows.length ? [el('div', { class: 'col gap-4 scroll', style: 'flex:1;min-height:0' }, ...rows)] : [el('div', { class: 'small dim' }, 'Nothing yet. Add a habit and tick it each day to build a streak.')]));
+  }
+
+  const calm = el('div', { class: 'row', style: 'gap:16px;flex:1;min-height:0' },
     el('div', { class: 'card col', style: 'flex:1;min-width:0;align-items:center;gap:8px' },
       el('div', { class: 'section-title', style: 'align-self:flex-start' }, 'Breathe'),
       el('div', { style: 'height:124px;display:grid;place-items:center' }, circle), label, sub, el('div', { class: 'hstack', style: 'flex-wrap:wrap;justify-content:center' }, go), pick),
-    el('div', { class: 'card col', style: 'flex:1.6;min-width:0;min-height:0' }, el('div', { class: 'section-title' }, 'Reminders'), rem)));
+    el('div', { class: 'card col', style: 'flex:1.6;min-width:0;min-height:0' }, el('div', { class: 'section-title' }, 'Reminders'), rem));
+  let page = load('wellbeing.page', 'calm');
+  const body = el('div', { class: 'row', style: 'flex:1;min-height:0' });
+  const tabs = segmented([{ value: 'calm', label: 'Breathe & reminders' }, { value: 'habits', label: 'Habits' }], page, (v) => { page = v; save('wellbeing.page', v); showPage(); });
+  function showPage() { if (page === 'habits') { paintHabits(); body.replaceChildren(habitBox); } else body.replaceChildren(calm); }
+  root.append(el('div', { class: 'col fill', style: 'gap:10px' }, tabs, body));
+  showPage();
   paintReminders();
   return () => { running = false; cancelAnimationFrame(raf); };
 }

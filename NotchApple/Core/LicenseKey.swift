@@ -41,6 +41,8 @@ enum Tier: Int, Comparable, CaseIterable, Codable {
 /// Everything that needs Pro or Ultimate. Anything not listed here is free.
 /// `isReady == false` keeps a paid feature hidden until it fully works.
 enum Feature: String, CaseIterable, Identifiable {
+    // Pro: wellbeing
+    case habits
     // Pro: notch
     case notchResize, edgeTrigger, displayLayouts, gestureRemap
     // Pro: customization
@@ -123,6 +125,7 @@ enum Feature: String, CaseIterable, Identifiable {
         case .iphoneCompanion: "iPhone companion"
         case .cacheCleaner: "Purge disk cleaner"
         case .claudeUsage: "Claude usage tracker"
+        case .habits: "Habit tracker"
         case .smartHome: "Smart Home"
         case .clipboardLink: "Clipboard Link"
         case .meetingAlert: "Meeting alerts"
@@ -197,6 +200,7 @@ enum Feature: String, CaseIterable, Identifiable {
         case .iphoneCompanion: "Send text and links from your iPhone to the notch, and control the Mac from it."
         case .cacheCleaner: "Open the Purge app from the notch to free up disk space. Purge does the cleaning."
         case .claudeUsage: "How many tokens Claude Code has used in your 5-hour window, today and this week, with your own budgets."
+        case .habits: "Build streaks: tick a habit each day and watch the run grow."
         case .clipboardLink: "Copy on one device and paste on another, between your Macs and PCs. Encrypted with a code only your devices know."
         case .smartHome: "Control your Home Assistant lights, switches, scenes and more from the notch. Works with Hue, IKEA, Zigbee and Matter through Home Assistant."
         case .meetingAlert: "A heads-up before meetings, with a Join button."
