@@ -57,7 +57,7 @@ struct SnippetsView: View {
                     VStack(spacing: 6) {
                         ForEach(filtered) { snippet in
                             HStack(spacing: 8) {
-                                Button { PasteHelper.paste(snippet.text) } label: {
+                                Button { PasteHelper.paste(SnippetVariables.render(snippet.text)) } label: {
                                     VStack(alignment: .leading, spacing: 2) {
                                         Text(snippet.title).font(.system(size: 13, weight: .semibold)).foregroundStyle(.white)
                                         Text(snippet.text).font(.system(size: 11)).foregroundStyle(Theme.textSecondary).lineLimit(1)
@@ -169,7 +169,7 @@ final class TextExpander: ObservableObject {
             return buffer.hasSuffix(a)
         }), let abbr = match.abbreviation else { return }
         buffer = ""
-        expand(deleting: abbr.count, with: match.text)
+        expand(deleting: abbr.count, with: SnippetVariables.render(match.text))
     }
 
     private func expand(deleting count: Int, with text: String) {

@@ -19,6 +19,7 @@
 		0A5DC836B5829FB65956058F /* BiometricAuth.swift in Sources */ = {isa = PBXBuildFile; fileRef = F927A01984BE61BD7A76FA4A /* BiometricAuth.swift */; };
 		0B1569487E2F135B049C0FBB /* FileShelf.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4E00A819D19DED9CA5D59F0 /* FileShelf.swift */; };
 		0BDD91775E21B5BEDDF33463 /* BackgroundMusic.pkg in Resources */ = {isa = PBXBuildFile; fileRef = 404B8C35377E3958184925BE /* BackgroundMusic.pkg */; };
+		0C739FEE55B9BD34556750D1 /* SnippetVariablesTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4ACC8DF8A2FA28D337D2DC0F /* SnippetVariablesTests.swift */; };
 		0CFED797153391AA6CC40B8C /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 9522FA22D9EFEFD71C994587 /* Assets.xcassets */; };
 		0D4B0F11E881D4BBB4E941AE /* FoldCapture.swift in Sources */ = {isa = PBXBuildFile; fileRef = 90503DA53EA8A9669CE5AFA7 /* FoldCapture.swift */; };
 		0D4F28291AFFD278E9E3F512 /* ClipboardLinkLogic.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E30AC01CF48D89F98A97E0E /* ClipboardLinkLogic.swift */; };
@@ -159,6 +160,7 @@
 		94FE896FD0765E79EB83E825 /* NotchRootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C5A54FB338D3A1C23699078 /* NotchRootView.swift */; };
 		953C24EAF0E356448322CD23 /* VPNTunnel.swift in Sources */ = {isa = PBXBuildFile; fileRef = D6446A004FCDC55C0BF6957C /* VPNTunnel.swift */; };
 		95F0DCA7EC7ADAF67E355EC3 /* ShareView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF3138F3979E5F005365A41F /* ShareView.swift */; };
+		974248CDF1FAA3E6952359D8 /* SnippetVariables.swift in Sources */ = {isa = PBXBuildFile; fileRef = A22CAB6FA5F9EADB1A7E3B86 /* SnippetVariables.swift */; };
 		97C87D7865B82ECEB80B9E60 /* LiveActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = F49D3A20C7CFE9C60DB8CBC3 /* LiveActivity.swift */; };
 		9888DB8995D4D32CCCA80B7A /* AIModes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44CAF8A30126F03D6A230ED7 /* AIModes.swift */; };
 		9A2C6A4BDCB6FDE201E61B4D /* RequiredSetup.swift in Sources */ = {isa = PBXBuildFile; fileRef = E333C9ABF7AC014274F64237 /* RequiredSetup.swift */; };
@@ -193,6 +195,7 @@
 		B069F2308D10FC9D1865F86E /* AppActionsMenu.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF6EF909C581BCC04AAEF2AA /* AppActionsMenu.swift */; };
 		B1AF23B59772849977B2E69C /* PluginsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 908CD072D0A46C818B89DD0D /* PluginsView.swift */; };
 		B3D4300884C5014B30FC14AF /* PeekView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCE0CCD6C5E28321639259CE /* PeekView.swift */; };
+		B5B462664BB58BFF717E09E3 /* SnippetVariables.swift in Sources */ = {isa = PBXBuildFile; fileRef = A22CAB6FA5F9EADB1A7E3B86 /* SnippetVariables.swift */; };
 		B6BBBF5A2BD8214916C71BBF /* VPNTunnel.swift in Sources */ = {isa = PBXBuildFile; fileRef = D6446A004FCDC55C0BF6957C /* VPNTunnel.swift */; };
 		B7AE66AF8CD816CBD2F23CB5 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 184C7A8AA7E8B37DB1D50EFD /* SettingsView.swift */; };
 		B8E72ADD6BBCC83BECFC1FD3 /* SharedStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9E160C9C8DBBE561F7DD2AD /* SharedStore.swift */; };
@@ -339,6 +342,7 @@
 		4894C776E7909EF42A1F97E9 /* ModuleOrganizer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModuleOrganizer.swift; sourceTree = "<group>"; };
 		48EF75FD565DB103E4CEEB07 /* MusicLevelMeter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MusicLevelMeter.swift; sourceTree = "<group>"; };
 		4A2294A11AF6369D10835393 /* GameEngines.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameEngines.swift; sourceTree = "<group>"; };
+		4ACC8DF8A2FA28D337D2DC0F /* SnippetVariablesTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SnippetVariablesTests.swift; sourceTree = "<group>"; };
 		4C159DF1B14A1D38FD58EC46 /* SnippetsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SnippetsView.swift; sourceTree = "<group>"; };
 		4C191B301A7AE40F175BA044 /* FocusTimer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FocusTimer.swift; sourceTree = "<group>"; };
 		4DAB6955A36172C93698DDEC /* FeatureHub.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeatureHub.swift; sourceTree = "<group>"; };
@@ -416,6 +420,7 @@
 		9A7251824E64423A2B944890 /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
 		9B61EC777F0D6D3611243246 /* NotchAppleApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotchAppleApp.swift; sourceTree = "<group>"; };
 		9C96FDC91C63EFDECAAA8BA3 /* SecretLogicTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SecretLogicTests.swift; sourceTree = "<group>"; };
+		A22CAB6FA5F9EADB1A7E3B86 /* SnippetVariables.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SnippetVariables.swift; sourceTree = "<group>"; };
 		A259F6D85DF7D7125ED8DA20 /* RichText.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RichText.swift; sourceTree = "<group>"; };
 		A7241EE0C2D1B5C9875023CE /* VPNTunnelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VPNTunnelTests.swift; sourceTree = "<group>"; };
 		A86F7ABE9C93935F6764DF17 /* SecretLogic.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SecretLogic.swift; sourceTree = "<group>"; };
@@ -724,6 +729,7 @@
 				CD271EAF0A5B1BCB0FD00CF7 /* QuickAnswerTests.swift */,
 				9C96FDC91C63EFDECAAA8BA3 /* SecretLogicTests.swift */,
 				3D60DFF8D29CE5938A540D8E /* SmartHomeTests.swift */,
+				4ACC8DF8A2FA28D337D2DC0F /* SnippetVariablesTests.swift */,
 				ABF7BDDF60590D89D51048A8 /* SystemWatchTests.swift */,
 				A7241EE0C2D1B5C9875023CE /* VPNTunnelTests.swift */,
 				1477CCE52DD2917B95D907D7 /* WellbeingTests.swift */,
@@ -787,6 +793,7 @@
 				BB841124163B085F8C4FDD78 /* SettingsBackup.swift */,
 				EA5B0C58A3CF928A968E10F8 /* SettingsManager.swift */,
 				99A4B06A001F63424485AE1E /* SmartHomeLogic.swift */,
+				A22CAB6FA5F9EADB1A7E3B86 /* SnippetVariables.swift */,
 				2BDB8BD41E7ADF271C9499F9 /* SystemWatch.swift */,
 				43B0A5F7BE05C3F95C4B2A08 /* SystemWatchLogic.swift */,
 				419A5F6F30DFBF30351906D2 /* Theme.swift */,
@@ -1496,6 +1503,7 @@
 				430792296B037623A8B89EB9 /* SnakeGameView.swift in Sources */,
 				D915CB7B0060ED6128415BF9 /* SnakeGameViewModel.swift in Sources */,
 				A1B21CB550FFC4A1CC1B692D /* SnapDropController.swift in Sources */,
+				974248CDF1FAA3E6952359D8 /* SnippetVariables.swift in Sources */,
 				CA7CEE6CA140974017B3B517 /* SnippetsView.swift in Sources */,
 				8BCB6AEF7F4C85ABA9B85148 /* SportsModel.swift in Sources */,
 				BFB0FCFCE4AFDF257319FFA4 /* SportsView.swift in Sources */,
@@ -1588,6 +1596,8 @@
 				40EA84F2B3F7DA5A6424D3E6 /* SecretLogicTests.swift in Sources */,
 				308B02A5703FF92FD435BE97 /* SmartHomeLogic.swift in Sources */,
 				74FEA245D44F4164AE1D4761 /* SmartHomeTests.swift in Sources */,
+				B5B462664BB58BFF717E09E3 /* SnippetVariables.swift in Sources */,
+				0C739FEE55B9BD34556750D1 /* SnippetVariablesTests.swift in Sources */,
 				35A93E3A5F735227ED691332 /* SystemWatchLogic.swift in Sources */,
 				A9A0F9DA61106AE2ABAD71CC /* SystemWatchTests.swift in Sources */,
 				953C24EAF0E356448322CD23 /* VPNTunnel.swift in Sources */,

@@ -1,4 +1,5 @@
 // Snippets (Pro): saved text you paste into any app with one click.
+import { render as fillVariables } from '../services/snippetvars.js';
 import { el, load, save, uid } from '../store.js';
 import { invoke } from '../native.js';
 import { collapse } from '../app.js';
@@ -11,7 +12,7 @@ export function render(root) {
     const t = el('input', { class: 'field', placeholder: 'Title', value: s.title }), x = el('textarea', { class: 'field', placeholder: 'Text to paste', value: s.text, style: 'min-height:120px' });
     const m = modal(s.title ? 'Edit snippet' : 'New snippet', [t, x], { actions: [button('Save', () => { if (!x.value) return; save('snippets.items', [...items().filter((i) => i.id !== s.id), { ...s, title: t.value || x.value.slice(0, 30), text: x.value }]); m.close(); paint(); })] });
   };
-  const paste = async (s) => { await collapse(); invoke('paste_text', { text: s.text.replace(/\{date\}/g, new Date().toLocaleDateString()).replace(/\{time\}/g, new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })) }); };
+  const paste = async (s) => { const text = await fillVariables(s.text); await collapse(); invoke('paste_text', { text }); };
   function paint() {
     const q = search.value.toLowerCase(), l = items().filter((s) => !q || (s.title + s.text).toLowerCase().includes(q));
     list.replaceChildren(...l.map((s) => el('div', { class: 'item clickable', onclick: () => paste(s), title: 'Click to paste into the app you were using' },
