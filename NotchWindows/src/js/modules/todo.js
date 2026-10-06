@@ -2,10 +2,11 @@
 // notification and a flash on the pill), notes, and done items that sink.
 // Type naturally: "Call mum tomorrow 6pm" sets the due time for you.
 
-import { el, load, save, dayLabel, fmtTime } from '../store.js';
+import { el, load, save, uid, dayLabel, fmtTime } from '../store.js';
 import { iconBtn, menu, toast, prompt, empty } from '../ui.js';
 import * as R from '../services/reminders.js';
 import { parseWhen } from './quickadd.js';
+import { RULES, nextDue, ruleLabel } from '../services/recur.js';
 
 export function render(root, opts = {}) {
   let list = load('todo.list', 'All');
@@ -44,14 +45,14 @@ export function render(root, opts = {}) {
   function due(t) {
     if (!t.due) return null;
     const late = !t.done && t.due < Date.now();
-    return el('span', { class: `tiny ${late ? 'bad' : 'faint'}` }, `${t.remind ? '🔔 ' : ''}${dayLabel(t.due)} ${fmtTime(t.due)}`);
+    return el('span', { class: `tiny ${late ? 'bad' : 'faint'}` }, `${t.remind ? '🔔 ' : ''}${dayLabel(t.due)} ${fmtTime(t.due)}${t.repeat ? ` · ↻ ${ruleLabel(t.repeat).toLowerCase()}` : ''}`);
   }
 
   function paintItems() {
     const shown = visible();
     items.replaceChildren(...shown.map((t) => {
       const row = el('div', { class: 'item', style: 'padding:6px 10px' },
-        el('input', { type: 'checkbox', checked: t.done, onchange: () => update(t.id, { done: !t.done, doneAt: Date.now() }) }),
+        el('input', { type: 'checkbox', checked: t.done, onchange: () => tick(t) }),
         el('div', { class: 'main', ondblclick: () => rename(t) },
           el('div', { style: `${t.done ? 'text-decoration:line-through;opacity:.5' : ''}` }, t.text),
           el('div', { class: 'hstack', style: 'gap:8px' }, due(t), list === 'All' && t.list && t.list !== 'Inbox' ? el('span', { class: 'tiny faint' }, t.list) : null,
@@ -60,7 +61,8 @@ export function render(root, opts = {}) {
       row.addEventListener('contextmenu', (e) => menu(e, [
         { label: 'Rename', run: () => rename(t) },
         { label: t.due ? 'Change due date' : 'Add a due date', run: () => setDue(t) },
-        t.due ? { label: 'Remove due date', run: () => update(t.id, { due: null, remind: false }) } : null,
+        t.due ? { label: t.repeat ? `Repeats: ${ruleLabel(t.repeat).toLowerCase()} (change)` : 'Repeat…', run: () => setRepeat(t) } : null,
+        t.due ? { label: 'Remove due date', run: () => update(t.id, { due: null, remind: false, repeat: null }) } : null,
         { label: 'Add a note', run: async () => { const n = await prompt('Note', { value: t.notes || '' }); if (n !== null) update(t.id, { notes: n }); } },
         'sep',
         ...lists().filter((l) => !['All', 'Today', 'Upcoming', t.list || 'Inbox'].includes(l)).map((l) => ({ label: `Move to ${l}`, run: () => update(t.id, { list: l }) })),
@@ -75,6 +77,23 @@ export function render(root, opts = {}) {
   const update = (id, patch) => { R.saveTodos(R.todos().map((t) => (t.id === id ? { ...t, ...patch, ...(patch.due !== undefined ? { notified: false } : {}) } : t))); paint(); };
   const del = (id) => { const before = R.todos(); R.saveTodos(before.filter((t) => t.id !== id)); paint(); toast('Deleted'); };
   async function rename(t) { const v = await prompt('Rename', { value: t.text }); if (v) update(t.id, { text: v }); }
+  // Ticking a repeating to-do off makes the next one, so the list never runs dry.
+  function tick(t) {
+    const next = !t.done && t.repeat && t.due ? nextDue(t.due, t.repeat, Date.now(), t.anchor) : null;
+    if (!next) return update(t.id, { done: !t.done, doneAt: Date.now() });
+    R.saveTodos(R.todos().flatMap((x) => (x.id === t.id
+      ? [{ ...x, done: true, doneAt: Date.now() }, { ...x, id: uid(), due: next, done: false, doneAt: undefined, notified: false, created: Date.now() }]
+      : [x])));
+    paint(); toast(`Done. Next one: ${dayLabel(next)} ${fmtTime(next)}`);
+  }
+  async function setRepeat(t) {
+    const v = await prompt('Repeat how often?', { value: t.repeat || '', placeholder: 'daily, weekdays, weekly or monthly (blank to stop)', ok: 'Set' });
+    if (v === null) return;
+    const rule = v.trim().toLowerCase().replace(/^every\s*/, '').replace(/^day$/, 'daily').replace(/^week$/, 'weekly').replace(/^month$/, 'monthly').replace(/^weekday$/, 'weekdays');
+    if (!rule) return update(t.id, { repeat: null });
+    if (!RULES.some((r) => r.value === rule)) return toast('Try daily, weekdays, weekly or monthly.', { error: true });
+    update(t.id, { repeat: rule, anchor: new Date(t.due).getDate() });
+  }
   async function setDue(t) {
     const v = await prompt('When is it due?', { value: t.due ? `${dayLabel(t.due)} ${fmtTime(t.due)}` : '', placeholder: 'e.g. tomorrow 9am, Friday, 12 March 5pm' });
     if (v === null) return;

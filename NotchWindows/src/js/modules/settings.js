@@ -64,6 +64,7 @@ function General(repaint, opts) {
       setting('Hide over fullscreen videos and games', '', prefToggle('ui.hideFullscreen')),
       setting('Show the time on the pill', '', prefToggle('ui.showClock'))),
     card('On the pill',
+      setting('Show how many to-dos are due', 'A small “3 due” on the pill for to-dos due today or overdue.', toggle(load('todo.pill', true), (v) => save('todo.pill', v))),
       setting('Low battery warning', 'A warning on the pill, and a notification, at 20% and 10% when you are not charging.', toggle(load('hud.battery', true), (v) => save('hud.battery', v))),
       setting('Remind me to unplug', 'At the charge level you choose, to be gentler on the battery.', el('div', { class: 'hstack' }, select([50, 60, 70, 75, 80, 85, 90, 95, 100].map((n) => ({ value: n, label: `at ${n}%` })), load('watch.batteryLimit', 80), (v) => save('watch.batteryLimit', Number(v)), { cls: 'auto' }), toggle(load('watch.batteryCare', false), (v) => save('watch.batteryCare', v)))),
       setting('Warn when disk space is low', 'A notice and a note on the pill.', el('div', { class: 'hstack' }, select([5, 10, 20, 50].map((n) => ({ value: n, label: `under ${n} GB` })), load('watch.diskGB', 10), (v) => save('watch.diskGB', Number(v)), { cls: 'auto' }), toggle(load('watch.diskLow', false), (v) => save('watch.diskLow', v)))),

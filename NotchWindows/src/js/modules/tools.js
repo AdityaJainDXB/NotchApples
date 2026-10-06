@@ -4,7 +4,7 @@ import { percent } from '../services/answers.js';
 import { el, load } from '../store.js';
 import { invoke, getJSON } from '../native.js';
 import { canUse } from '../features.js';
-import { toast, toggle, select } from '../ui.js';
+import { toast, toggle, segmented } from '../ui.js';
 import { calculate } from '../palette.js';
 import * as A from '../services/awake.js';
 
@@ -22,8 +22,10 @@ let rates = null;
 export function render(root) {
   // keep awake
   const s = A.state();
-  const mins = select([{ value: 0, label: 'Until I turn it off' }, { value: 30, label: '30 minutes' }, { value: 60, label: '1 hour' }, { value: 120, label: '2 hours' }, { value: 480, label: '8 hours' }], 0, () => {});
-  const awake = toggle(s.on, async (on) => { try { await A.set(on, { display: disp.querySelector('input').checked, minutes: Number(mins.value) }); toast(on ? 'Keeping your PC awake' : 'Keep Awake is off'); } catch (e) { toast(e.message, { error: true }); } });
+  let minutes = 0;
+  const apply = async (on) => { try { await A.set(on, { display: disp.querySelector('input').checked, minutes }); toast(on ? 'Keeping your PC awake' : 'Keep Awake is off'); } catch (e) { toast(e.message, { error: true }); } };
+  const mins = segmented([{ value: 30, label: '30 min' }, { value: 60, label: '1 hour' }, { value: 120, label: '2 hours' }, { value: 0, label: 'Always' }], 0, (v) => { minutes = v; if (awake.querySelector('input').checked) apply(true); });
+  const awake = toggle(s.on, apply);
   const disp = toggle(s.display, () => {});
   // colour
   const swatch = el('div', { style: 'width:44px;height:44px;border-radius:10px;border:1px solid var(--border);background:#9e6bff' });

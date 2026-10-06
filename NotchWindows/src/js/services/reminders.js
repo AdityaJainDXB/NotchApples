@@ -40,4 +40,11 @@ export function start() {
   provide('reminder', 85, () => (flash && flash.until > Date.now()
     ? { icon: '🔔', label: flash.text.length > 22 ? `${flash.text.slice(0, 21)}…` : flash.text, tab: 'todo', title: flash.text }
     : null));
+  // "3 due": to-dos due today or overdue, shown on the pill when nothing more urgent is (Settings → On the pill).
+  provide('duetoday', 30, () => {
+    if (!load('todo.pill', true)) return null;
+    const end = new Date(); end.setHours(23, 59, 59, 999);
+    const n = todos().filter((t) => !t.done && t.due && t.due <= end.getTime()).length;
+    return n ? { icon: '✅', label: `${n} due`, tab: 'todo', title: `${n} to-do${n === 1 ? ' is' : 's are'} due today or overdue` } : null;
+  });
 }
