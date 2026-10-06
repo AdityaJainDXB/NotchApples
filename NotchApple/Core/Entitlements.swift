@@ -139,6 +139,7 @@ extension Module {
         case .markets: .markets
         case .home: .homeLayout
         case .cacheCleaner: .cacheCleaner
+        case .claudeUsage: .claudeUsage
         case .launcher: .launcher
         case .snippets: .snippets
         case .mirror: .mirror

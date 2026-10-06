@@ -243,6 +243,7 @@ struct NotchRootView: View {
             case .markets: MarketsView()
             case .home: HomeView()
             case .cacheCleaner: PurgeView()
+            case .claudeUsage: ClaudeUsageView()
             case .security: EmptyView()
             }
         }

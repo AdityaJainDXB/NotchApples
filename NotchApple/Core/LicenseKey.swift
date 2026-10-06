@@ -51,6 +51,8 @@ enum Feature: String, CaseIterable, Identifiable {
     case notesSync, iphoneCompanion
     // Ultimate: storage
     case cacheCleaner
+    // Ultimate: developers
+    case claudeUsage
     // Pro: live activities
     case meetingAlert, downloadProgress, markets, flightStatus, multiMatch
     // Ultimate: live activities
@@ -76,7 +78,7 @@ enum Feature: String, CaseIterable, Identifiable {
 
     var tier: Tier {
         switch self {
-        case .liveActivityAPI, .activityStacking, .automations, .scripting, .pluginSDK, .pluginGallery, .notesSync, .iphoneCompanion, .cacheCleaner, .prioritySupport, .betaChannel: .ultimate
+        case .liveActivityAPI, .activityStacking, .automations, .scripting, .pluginSDK, .pluginGallery, .notesSync, .iphoneCompanion, .cacheCleaner, .claudeUsage, .prioritySupport, .betaChannel: .ultimate
         default: .pro
         }
     }
@@ -116,6 +118,7 @@ enum Feature: String, CaseIterable, Identifiable {
         case .notesSync: "Notes and to-dos in iCloud"
         case .iphoneCompanion: "iPhone companion"
         case .cacheCleaner: "Purge disk cleaner"
+        case .claudeUsage: "Claude usage tracker"
         case .meetingAlert: "Meeting alerts"
         case .downloadProgress: "Download progress"
         case .markets: "Markets"
@@ -187,6 +190,7 @@ enum Feature: String, CaseIterable, Identifiable {
         case .notesSync: "Your notes and to-dos on every Mac, through iCloud Drive."
         case .iphoneCompanion: "Send text and links from your iPhone to the notch, and control the Mac from it."
         case .cacheCleaner: "Open the Purge app from the notch to free up disk space. Purge does the cleaning."
+        case .claudeUsage: "How many tokens Claude Code has used in your 5-hour window, today and this week, with your own budgets."
         case .meetingAlert: "A heads-up before meetings, with a Join button."
         case .downloadProgress: "Watch downloads fill up beside the notch."
         case .markets: "Stocks and crypto with today's change; pin one beside the notch."
