@@ -140,6 +140,11 @@ private struct PaletteView: View {
     private var results: [PaletteCommand] {
         var scored = all.compactMap { c in CommandPalette.score(c.title, query).map { (c, $0) } }
             .sorted { $0.1 > $1.1 }.prefix(9).map(\.0)
+        if let a = QuickAnswerLogic.answer(query) {
+            scored.insert(PaletteCommand(title: a.text, subtitle: "Answer · Return copies it", symbol: "equal.circle.fill") {
+                NSPasteboard.general.clearContents(); NSPasteboard.general.setString(a.copy, forType: .string)
+            }, at: 0)
+        }
         if !query.trimmingCharacters(in: .whitespaces).isEmpty {
             let q = query
             scored.append(PaletteCommand(title: "Ask AI: \(q)", subtitle: "AI", symbol: "sparkles") {

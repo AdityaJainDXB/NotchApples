@@ -2,6 +2,7 @@
 // actions, plus whatever you type turned into "Ask AI", "Search files",
 // "Translate", "Search the web" or a quick calculation.
 
+import { answer } from './services/answers.js';
 import { invoke } from './native.js';
 import { MODULES } from './modules.js';
 import { allowed, show, collapse, isEnabled } from './app.js';
@@ -59,6 +60,8 @@ export async function paletteActions(query) {
 
   if (q) {
     const extra = [];
+    const quick = answer(q);
+    if (quick) extra.push({ icon: '=', label: quick.text, hint: 'Copy', run: () => invoke('clipboard_copy_text', { text: quick.copy }).then(() => toast(`Copied ${quick.copy}`)) });
     const value = calculate(q.replace(/^=/, ''));
     if (value !== null) extra.push({ icon: '=', label: `${q.replace(/^=/, '')} = ${value.toLocaleString()}`, hint: 'Copy', run: () => invoke('clipboard_copy_text', { text: String(value) }).then(() => toast(`Copied ${value}`)) });
     extra.push(
@@ -67,7 +70,8 @@ export async function paletteActions(query) {
       { icon: '🈯', label: `Translate: ${q}`, run: () => show('translator', { text: q }) },
       { icon: '🌐', label: `Search the web: ${q}`, run: async () => { const { resolve } = await import('./modules/browser.js'); invoke('open_browser', { url: resolve(q) }); } },
     );
-    matches = value !== null ? [extra[0], ...matches, ...extra.slice(1)] : [...matches, ...extra];
+    const top = extra.filter((e) => e.icon === '=');
+    matches = [...top, ...matches, ...extra.filter((e) => e.icon !== '=')];
   }
   return matches.slice(0, 60);
 }

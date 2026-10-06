@@ -259,7 +259,9 @@ struct ToolsView: View {
     @AppStorage("tools.calcHistory") private var historyData = ""
 
     private var history: [String] { historyData.split(separator: "\n").map(String.init) }
-    private var result: Double? { QuickMath.evaluate(input) }
+    /// "12% of 80", "200 + 15%"… (QuickMath treats % as a remainder, so these are read first).
+    private var percentAnswer: QuickAnswerLogic.Answer? { QuickAnswerLogic.percent(input.trimmingCharacters(in: .whitespaces).lowercased()) }
+    private var result: Double? { percentAnswer.flatMap { Double($0.copy) } ?? QuickMath.evaluate(input) }
 
     var body: some View {
         HStack(alignment: .top, spacing: 12) {
@@ -396,7 +398,7 @@ struct ToolsView: View {
                 if let q = Converter.parse(input) {
                     ConversionLine(query: q)
                 }
-                Text(result.map { "= " + QuickMath.format($0) } ?? (input.isEmpty || Converter.parse(input) != nil ? " " : "…"))
+                Text(percentAnswer.map { "= " + $0.text } ?? result.map { "= " + QuickMath.format($0) } ?? (input.isEmpty || Converter.parse(input) != nil ? " " : "…"))
                     .font(.system(size: 22, weight: .semibold, design: .rounded))
                     .foregroundStyle(result == nil ? Theme.textSecondary : .white)
                     .lineLimit(1).minimumScaleFactor(0.5)
@@ -419,7 +421,7 @@ struct ToolsView: View {
 
     private func commit() {
         guard let result else { return }
-        let answer = QuickMath.format(result)
+        let answer = percentAnswer?.text ?? QuickMath.format(result)
         ColorPickerModel.shared.copy(answer)
         let line = "\(input) = \(answer)"
         historyData = ([line] + history.filter { $0 != line }).prefix(8).joined(separator: "\n")

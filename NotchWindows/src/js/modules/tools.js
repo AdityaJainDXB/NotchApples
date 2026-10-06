@@ -1,5 +1,6 @@
 // Tools: Keep Awake, colour picker (from anywhere on screen), calculator, and a
 // unit converter with currencies (Pro, open.er-api.com).
+import { percent } from '../services/answers.js';
 import { el, load } from '../store.js';
 import { invoke, getJSON } from '../native.js';
 import { canUse } from '../features.js';
@@ -35,7 +36,7 @@ export function render(root) {
   } }, '💧 Pick from screen');
   // calculator
   const calcIn = el('input', { class: 'field mono', placeholder: '12 * (3 + 4) / 2' }), calcOut = el('div', { class: 'big num selectable' }, '—');
-  calcIn.oninput = () => { const v = calculate(calcIn.value); calcOut.textContent = v === null ? '—' : v.toLocaleString(undefined, { maximumFractionDigits: 10 }); };
+  calcIn.oninput = () => { const pa = percent(calcIn.value.trim().toLowerCase()); if (pa) { calcOut.textContent = pa.text; return; } const v = calculate(calcIn.value); calcOut.textContent = v === null ? '—' : v.toLocaleString(undefined, { maximumFractionDigits: 10 }); };
   calcIn.onkeydown = (e) => { if (e.key === 'Enter' && calcOut.textContent !== '—') invoke('clipboard_copy_text', { text: calcOut.textContent.replace(/,/g, '') }).then(() => toast('Copied')); };
   // converter
   const kind = el('select', { class: 'field auto' }, ...Object.keys(UNITS).map((k) => el('option', {}, k)));

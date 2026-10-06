@@ -128,11 +128,13 @@
 		6EB4C5BE5A0101A1A21F64D6 /* PermissionsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81150E6B4F5BE3E2EB5CE1A1 /* PermissionsView.swift */; };
 		6FE62A468735A640B08A7BD1 /* ClaudeClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6747ADA828FF1D33683B30C8 /* ClaudeClient.swift */; };
 		710669E0D8B0E602B1A7EBAE /* AIProviders.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A2A98A73E13E924C3E3852B /* AIProviders.swift */; };
+		71AFDBFC2EDD78D160371170 /* QuickAnswerLogic.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E7257E185D98B4E05674B7F /* QuickAnswerLogic.swift */; };
 		71C400496997AA8DF53FAF5D /* KeychainHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1BB3450673E6FC967D2A1F87 /* KeychainHelper.swift */; };
 		72569F25523646AA163A2245 /* WindowsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E3DB230CD04EC3E1A948E17 /* WindowsView.swift */; };
 		74FEA245D44F4164AE1D4761 /* SmartHomeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3D60DFF8D29CE5938A540D8E /* SmartHomeTests.swift */; };
 		7558F51D18A2B382FFD6BAE9 /* CompanionProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8945C0BF0272BD283A250BDC /* CompanionProtocol.swift */; };
 		758A59E0A3B0AB8662E95B0D /* ScreenIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = E05A03C9C8BB062C1E2C1DBB /* ScreenIntent.swift */; };
+		7599ED4F616A10F8200382DF /* QuickAnswerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD271EAF0A5B1BCB0FD00CF7 /* QuickAnswerTests.swift */; };
 		7651FFF0A83FB22D9BD7AE4C /* SettingsManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA5B0C58A3CF928A968E10F8 /* SettingsManager.swift */; };
 		7692E3EA74EEE6D464BFA6F2 /* ClaudeCodeStatusLogic.swift in Sources */ = {isa = PBXBuildFile; fileRef = EAD839322181D4146F3C658C /* ClaudeCodeStatusLogic.swift */; };
 		76F9AA1BB00ED5DD56E9B2BB /* SystemWatch.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BDB8BD41E7ADF271C9499F9 /* SystemWatch.swift */; };
@@ -151,6 +153,7 @@
 		8DBF9A93F2E74BE25D8C3741 /* PanicHide.swift in Sources */ = {isa = PBXBuildFile; fileRef = 47E065BB9B31FD505442E472 /* PanicHide.swift */; };
 		8F8A7D3944B4A343BEAE8C0C /* LyricsModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 93AC47229DA13D09C39B7BBA /* LyricsModel.swift */; };
 		8FFB80DA4806007F641ABDFD /* GameEngines.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A2294A11AF6369D10835393 /* GameEngines.swift */; };
+		91AE275CB3750107932271A9 /* QuickAnswerLogic.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E7257E185D98B4E05674B7F /* QuickAnswerLogic.swift */; };
 		92D6E8322DCEC6A2AE6A5795 /* HotCornerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 60D028DAE4C9C74C6193B75F /* HotCornerTests.swift */; };
 		92FA1F0A869CEDCC1DD5584D /* ChatHistory.swift in Sources */ = {isa = PBXBuildFile; fileRef = 70487D33E613C8A9A0DFA36C /* ChatHistory.swift */; };
 		94FE896FD0765E79EB83E825 /* NotchRootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C5A54FB338D3A1C23699078 /* NotchRootView.swift */; };
@@ -363,6 +366,7 @@
 		6D5AC53B65AF61688CD0A628 /* AIStreaming.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIStreaming.swift; sourceTree = "<group>"; };
 		6DC662D269E6349FC6792A11 /* ToolsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToolsView.swift; sourceTree = "<group>"; };
 		6E3AACE5DE410E31472973B9 /* PairDropService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PairDropService.swift; sourceTree = "<group>"; };
+		6E7257E185D98B4E05674B7F /* QuickAnswerLogic.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuickAnswerLogic.swift; sourceTree = "<group>"; };
 		6E8B16EE4068BC4835F8B4C0 /* GoogleService-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 		6FFA9D604A028F627FC52A01 /* DemoHooks.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DemoHooks.swift; sourceTree = "<group>"; };
 		700E54998678B97CA020EA9E /* LocalP2PManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalP2PManager.swift; sourceTree = "<group>"; };
@@ -444,6 +448,7 @@
 		CB93272E84FBD56F3B4F7BA4 /* AudioView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioView.swift; sourceTree = "<group>"; };
 		CBF8382AEA6C022EC53D433C /* ScreenCaptureActions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenCaptureActions.swift; sourceTree = "<group>"; };
 		CCE0CCD6C5E28321639259CE /* PeekView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PeekView.swift; sourceTree = "<group>"; };
+		CD271EAF0A5B1BCB0FD00CF7 /* QuickAnswerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuickAnswerTests.swift; sourceTree = "<group>"; };
 		D03274B71DE9E1F3D3567E7E /* SystemStatsWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SystemStatsWidget.swift; sourceTree = "<group>"; };
 		D077F8329BD06B571E7C0A86 /* FoldSurface.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoldSurface.swift; sourceTree = "<group>"; };
 		D151A71D3F7B4B4F846173CD /* NotchApple.sdef */ = {isa = PBXFileReference; path = NotchApple.sdef; sourceTree = "<group>"; };
@@ -716,6 +721,7 @@
 				60D028DAE4C9C74C6193B75F /* HotCornerTests.swift */,
 				8436033AA85EDE8B497C3BE6 /* LicenseTests.swift */,
 				EE79E1E6EA0B1FB034A48E87 /* LogicTests.swift */,
+				CD271EAF0A5B1BCB0FD00CF7 /* QuickAnswerTests.swift */,
 				9C96FDC91C63EFDECAAA8BA3 /* SecretLogicTests.swift */,
 				3D60DFF8D29CE5938A540D8E /* SmartHomeTests.swift */,
 				ABF7BDDF60590D89D51048A8 /* SystemWatchTests.swift */,
@@ -774,6 +780,7 @@
 				13BA89CC14259A92057EDFDC /* ProductKeys.swift */,
 				DBB5D5B8C80009365348035A /* Profiles.swift */,
 				50CCA2828E5DEA8799BE2ACC /* PureModels.swift */,
+				6E7257E185D98B4E05674B7F /* QuickAnswerLogic.swift */,
 				E333C9ABF7AC014274F64237 /* RequiredSetup.swift */,
 				E7EE75D24E20F68ED45BAC0A /* SandboxMigration.swift */,
 				A86F7ABE9C93935F6764DF17 /* SecretLogic.swift */,
@@ -1462,6 +1469,7 @@
 				8364E6132EE5D1467B0AE042 /* PureModels.swift in Sources */,
 				0E660E7247D927D8585B8973 /* PurgeView.swift in Sources */,
 				EADE473BE2A43DB53FDBF7CE /* QuickAddView.swift in Sources */,
+				71AFDBFC2EDD78D160371170 /* QuickAnswerLogic.swift in Sources */,
 				9A2C6A4BDCB6FDE201E61B4D /* RequiredSetup.swift in Sources */,
 				CA8007BDF0D679F40C05B2F3 /* RequiredSetupView.swift in Sources */,
 				126E862C2EE9FB25FD0AE754 /* RichText.swift in Sources */,
@@ -1574,6 +1582,8 @@
 				11C631948F567411F64386EA /* LogicTests.swift in Sources */,
 				B050F8E38385A23666F48F72 /* MathText.swift in Sources */,
 				BB723ACBAA9D4CB614CB840B /* PureModels.swift in Sources */,
+				91AE275CB3750107932271A9 /* QuickAnswerLogic.swift in Sources */,
+				7599ED4F616A10F8200382DF /* QuickAnswerTests.swift in Sources */,
 				13A990C6CA3F55B655C3D818 /* SecretLogic.swift in Sources */,
 				40EA84F2B3F7DA5A6424D3E6 /* SecretLogicTests.swift in Sources */,
 				308B02A5703FF92FD435BE97 /* SmartHomeLogic.swift in Sources */,
