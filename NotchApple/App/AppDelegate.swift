@@ -43,6 +43,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         Profiles.shared.start()
         CrashReports.shared.checkAtLaunch()
         CompanionServer.shared.apply()
+        ClipboardLink.shared.apply()
         NotesCloudSync.shared.syncNow()
         // Ultimate: plugins keep running in the background for Home widgets and activities.
         if PluginHost.shared.keepRunning { PluginHost.shared.start() }
@@ -56,6 +57,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                     ThemeManager.shared.revalidate()
                     Profiles.shared.evaluate()
                     CompanionServer.shared.apply()
+                    ClipboardLink.shared.apply()
                     self?.refreshStatusIcon()
                     TextExpander.shared.apply()
                     self?.applyHotkeyPreference()

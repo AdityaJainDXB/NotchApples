@@ -218,9 +218,34 @@ function Clipboard(repaint) {
   return [card('History', setting('Keep up to', '2,500 and 5,000 are Pro.', select(limits.map((n) => ({ value: n, label: `${n.toLocaleString()} items${n > 1000 && !canUse('clipboardUnlimited') ? ' (Pro)' : ''}` })), load('clipboard.limit', 200), (v) => {
     if (Number(v) > 1000 && !canUse('clipboardUnlimited')) { toast('Longer history is part of Pro.'); return repaint(); } save('clipboard.limit', Number(v)); }, { cls: 'auto' })),
     setting('Record what I copy', 'Password managers are always skipped.', toggle(!load('clipboard.paused', false), async (on) => (await import('../services/clipboard.js')).setPaused(!on)))),
+  clipLinkCard(repaint),
   card('Never save copies from (Pro)', el('div', { class: 'small dim' }, (load('clipboard.ignoreApps', []).join(', ') || 'No apps.')),
     el('div', { class: 'hstack', style: 'padding-top:6px' }, button('Add an app…', async () => { if (!canUse('clipboardUnlimited')) return toast('This is part of Pro.'); const a = await prompt('App name, as Windows shows it', { placeholder: 'e.g. Microsoft Teams' }); if (a) { save('clipboard.ignoreApps', [...load('clipboard.ignoreApps', []), a]); repaint(); } }, { kind: 'quiet', small: true }),
       button('Clear list', () => { save('clipboard.ignoreApps', []); repaint(); }, { kind: 'ghost', small: true })))];
+}
+
+function clipLinkCard(repaint) {
+  const allowed = canUse('clipboardLink');
+  const S = () => import('../services/clipsync.js');
+  const rows = [setting('Share my clipboard with my other devices', 'Text you copy here appears on your other PCs and Macs, and the other way round. It is scrambled with your code before it leaves, so only your devices can read it.',
+    toggle(load('clipsync.on', false), async (v) => { if (!allowed) { toast('Clipboard Link is part of Ultimate.'); return repaint(); } (await S()).setEnabled(v); repaint(); }))];
+  if (allowed && load('clipsync.on', false)) {
+    const c = load('clipsync.code', '');
+    if (!c) {
+      const typed = el('input', { class: 'field', placeholder: '…or type the code from another device' }), msg = el('div', { class: 'small warn' });
+      rows.push(el('div', { class: 'hstack', style: 'padding-top:8px' }, button('Make a link code for my devices', async () => { (await S()).setCode(null); repaint(); }, { small: true })),
+        el('div', { class: 'hstack', style: 'padding-top:6px' }, typed, button('Use it', async () => { if (!(await S()).setCode(typed.value)) msg.textContent = 'That isn’t a valid code. It has 20 letters and numbers.'; else repaint(); }, { small: true, kind: 'quiet' })), msg);
+    } else {
+      const status = el('span', { class: 'small dim' }, '…');
+      const paintState = async () => { const m = await S(); status.textContent = { off: 'Off', connecting: 'Connecting…', live: 'Linked', reconnecting: 'Reconnecting…' }[m.state] || ''; };
+      paintState(); addEventListener('clipsync-state', paintState);
+      rows.push(setting('Your link code', 'Enter this same code on each device.', el('div', { class: 'hstack' }, el('code', { class: 'mono selectable' }, c), button('Copy', () => { navigator.clipboard.writeText(c); toast('Code copied'); }, { small: true, kind: 'quiet' }))),
+        setting('Status', '', status),
+        el('div', { class: 'hstack', style: 'padding-top:6px' }, button('Make a new code (the old one stops working)', async () => { (await S()).setCode(null); repaint(); }, { small: true, kind: 'quiet' })));
+    }
+  }
+  return card(allowed ? 'Clipboard Link' : 'Clipboard Link (Ultimate)', ...rows,
+    el('div', { class: 'tiny dim', style: 'padding-top:6px' }, 'Anything a password manager marks as secret is never sent. Text only, up to 100,000 characters.'));
 }
 
 function Security(repaint) {

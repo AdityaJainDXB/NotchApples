@@ -55,6 +55,8 @@ enum Feature: String, CaseIterable, Identifiable {
     case claudeUsage
     // Ultimate: home
     case smartHome
+    // Ultimate: devices
+    case clipboardLink
     // Pro: live activities
     case meetingAlert, downloadProgress, markets, flightStatus, multiMatch
     // Ultimate: live activities
@@ -80,7 +82,7 @@ enum Feature: String, CaseIterable, Identifiable {
 
     var tier: Tier {
         switch self {
-        case .liveActivityAPI, .activityStacking, .automations, .scripting, .pluginSDK, .pluginGallery, .notesSync, .iphoneCompanion, .cacheCleaner, .claudeUsage, .smartHome, .prioritySupport, .betaChannel: .ultimate
+        case .liveActivityAPI, .activityStacking, .automations, .scripting, .pluginSDK, .pluginGallery, .notesSync, .iphoneCompanion, .cacheCleaner, .claudeUsage, .smartHome, .clipboardLink, .prioritySupport, .betaChannel: .ultimate
         default: .pro
         }
     }
@@ -122,6 +124,7 @@ enum Feature: String, CaseIterable, Identifiable {
         case .cacheCleaner: "Purge disk cleaner"
         case .claudeUsage: "Claude usage tracker"
         case .smartHome: "Smart Home"
+        case .clipboardLink: "Clipboard Link"
         case .meetingAlert: "Meeting alerts"
         case .downloadProgress: "Download progress"
         case .markets: "Markets"
@@ -194,6 +197,7 @@ enum Feature: String, CaseIterable, Identifiable {
         case .iphoneCompanion: "Send text and links from your iPhone to the notch, and control the Mac from it."
         case .cacheCleaner: "Open the Purge app from the notch to free up disk space. Purge does the cleaning."
         case .claudeUsage: "How many tokens Claude Code has used in your 5-hour window, today and this week, with your own budgets."
+        case .clipboardLink: "Copy on one device and paste on another, between your Macs and PCs. Encrypted with a code only your devices know."
         case .smartHome: "Control your Home Assistant lights, switches, scenes and more from the notch. Works with Hue, IKEA, Zigbee and Matter through Home Assistant."
         case .meetingAlert: "A heads-up before meetings, with a Join button."
         case .downloadProgress: "Watch downloads fill up beside the notch."

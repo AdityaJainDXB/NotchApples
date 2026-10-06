@@ -87,6 +87,7 @@ targets:
       - NotchApple/Core/ClaudeCodeStatusLogic.swift
       - NotchApple/Core/ClaudeUsageLogic.swift
       - NotchApple/Core/SmartHomeLogic.swift
+      - NotchApple/Core/ClipboardLinkLogic.swift
       - NotchApple/Core/VPNTunnel.swift
       - CompanionKit
     settings:

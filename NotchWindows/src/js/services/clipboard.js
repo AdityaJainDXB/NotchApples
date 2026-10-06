@@ -28,6 +28,8 @@ export function start() {
     const ignored = canUse('clipboardUnlimited') ? load('clipboard.ignoreApps', []) : [];
     if (lastApp && ignored.some((a) => a.toLowerCase() === lastApp.toLowerCase())) return;
     add({ ...clip, app: lastApp });
+    // Clipboard Link (Ultimate, off until you turn it on): share copied text with your other devices.
+    if (clip.kind === 'text' && clip.text) import('./clipsync.js').then((m) => m.onLocalCopy(clip.text)).catch(() => {});
   });
 }
 

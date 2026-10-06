@@ -1356,7 +1356,7 @@ private struct ClipboardSettings: View {
             } header: {
                 Text("History")
             } footer: {
-                Text("Pinned items are never removed automatically. Anything a password manager marks as secret is never saved, and nothing leaves your Mac.")
+                Text("Pinned items are never removed automatically. Anything a password manager marks as secret is never saved, and nothing leaves your Mac unless you turn on Clipboard Link below.")
             }
             Section {
                 ForEach(history.ignoredApps, id: \.self) { id in
@@ -1383,6 +1383,8 @@ private struct ClipboardSettings: View {
                 Text("For example your banking app or a work tool. Password managers are always skipped.")
             }
             .disabled(!Entitlements.shared.canUse(.clipboardUnlimited))
+
+            ClipboardLinkSettings()
         }
         .formStyle(.grouped)
     }

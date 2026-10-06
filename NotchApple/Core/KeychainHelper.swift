@@ -33,6 +33,7 @@ enum KeychainHelper {
         case todoistToken = "todoist.token"
         case companionPhones = "companion.phones"
         case homeAssistantToken = "homeassistant.token"
+        case clipboardLinkCode = "clipboardlink.code"
     }
 
     private static let lock = NSLock()

@@ -127,7 +127,21 @@ final class ClipboardHistory: ObservableObject {
             let isLink = URL(string: trimmed).map { $0.scheme == "http" || $0.scheme == "https" } ?? false
                 && !trimmed.contains(" ")
             add(ClipItem(kind: isLink ? .link : .text, text: String(string.prefix(100_000)), sourceApp: source))
+            ClipboardLink.shared.send(String(string.prefix(ClipboardLinkLogic.maxText)))   // only if you turned Clipboard Link on
         }
+    }
+
+    /// Text that arrived from another device: put it on this Mac's clipboard and in the history, without sending it back.
+    func applyRemote(_ text: String, from device: String) {
+        let pb = NSPasteboard.general
+        ignoreNextChange = true
+        pb.clearContents()
+        pb.setString(text, forType: .string)
+        lastChangeCount = pb.changeCount
+        ignoreNextChange = false
+        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        let isLink = URL(string: trimmed).map { $0.scheme == "http" || $0.scheme == "https" } ?? false && !trimmed.contains(" ")
+        add(ClipItem(kind: isLink ? .link : .text, text: text, sourceApp: device))
     }
 
     private func add(_ item: ClipItem) {
