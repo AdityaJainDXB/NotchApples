@@ -69,7 +69,9 @@ public final class NotchArbiter {
             holder = entry
             return Claim(id: entry.id, priority: priority)
         }
-        if priority == .badge { return nil }          // passive: drop, never queue
+        // Passive badges are dropped, and a second lid fold while one is showing is refused (the first
+        // one owns the overlay). Only cleaning waits its turn.
+        if priority == .badge || priority == .lidFold { return nil }
         enqueue(entry)
         return nil
     }

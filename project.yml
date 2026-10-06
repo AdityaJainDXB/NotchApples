@@ -8,6 +8,8 @@ options:
 packages:
   NotchKit:
     path: Packages/NotchKit
+  FoldCore:
+    path: Packages/FoldCore
 settings:
   base:
     SWIFT_VERSION: "5.0"
@@ -31,6 +33,7 @@ targets:
       - target: NotchWidget
         embed: true
       - package: NotchKit
+      - package: FoldCore
     settings:
       base:
         PRODUCT_NAME: "Notch apple"

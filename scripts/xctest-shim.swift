@@ -37,3 +37,24 @@ public func XCTAssertNotNil(_ e: @autoclosure () -> Any?, _ m: @autoclosure () -
     __xctAssertions += 1; if e() == nil { report("XCTAssertNotNil failed", m(), file, line) }
 }
 public func XCTFail(_ m: String = "", file: StaticString = #filePath, line: UInt = #line) { __xctAssertions += 1; report("XCTFail", m, file, line) }
+
+public struct XCTSkip: Error { public init(_ m: String = "") {} }
+struct XCTUnwrapFailure: Error {}
+public func XCTUnwrap<T>(_ e: @autoclosure () throws -> T?, _ m: @autoclosure () -> String = "", file: StaticString = #filePath, line: UInt = #line) throws -> T {
+    __xctAssertions += 1
+    if let v = try e() { return v }
+    report("XCTUnwrap failed: expected non-nil", m(), file, line)
+    throw XCTUnwrapFailure()
+}
+public func XCTAssertLessThan<T: Comparable>(_ a: @autoclosure () -> T, _ b: @autoclosure () -> T, _ m: @autoclosure () -> String = "", file: StaticString = #filePath, line: UInt = #line) {
+    __xctAssertions += 1; let x = a(), y = b(); if !(x < y) { report("XCTAssertLessThan failed: \(x) !< \(y)", m(), file, line) }
+}
+public func XCTAssertGreaterThan<T: Comparable>(_ a: @autoclosure () -> T, _ b: @autoclosure () -> T, _ m: @autoclosure () -> String = "", file: StaticString = #filePath, line: UInt = #line) {
+    __xctAssertions += 1; let x = a(), y = b(); if !(x > y) { report("XCTAssertGreaterThan failed: \(x) !> \(y)", m(), file, line) }
+}
+public func XCTAssertLessThanOrEqual<T: Comparable>(_ a: @autoclosure () -> T, _ b: @autoclosure () -> T, _ m: @autoclosure () -> String = "", file: StaticString = #filePath, line: UInt = #line) {
+    __xctAssertions += 1; let x = a(), y = b(); if !(x <= y) { report("XCTAssertLessThanOrEqual failed: \(x) !<= \(y)", m(), file, line) }
+}
+public func XCTAssertGreaterThanOrEqual<T: Comparable>(_ a: @autoclosure () -> T, _ b: @autoclosure () -> T, _ m: @autoclosure () -> String = "", file: StaticString = #filePath, line: UInt = #line) {
+    __xctAssertions += 1; let x = a(), y = b(); if !(x >= y) { report("XCTAssertGreaterThanOrEqual failed: \(x) !>= \(y)", m(), file, line) }
+}

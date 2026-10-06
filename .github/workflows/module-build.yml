@@ -1,0 +1,35 @@
+# Builds an UNSIGNED-for-distribution test DMG from a module-* branch and keeps it as a workflow artifact.
+# It never creates a release or a tag, never touches the Homebrew cask, and never publishes anything.
+name: Module test build
+
+on:
+  workflow_dispatch:
+  push:
+    branches: ['module-**']
+    paths: ['Packages/**', 'project.yml', 'NotchApple/**', 'LICENSES/**', 'scripts/build_dmg.sh', '.github/workflows/module-build.yml']
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install build tools
+        run: brew install xcodegen xcbeautify
+      - name: Build the DMG
+        run: ./scripts/build_dmg.sh
+      - name: Name it after the commit
+        id: n
+        run: |
+          v=$(grep MARKETING_VERSION project.yml | head -1 | sed -E 's/.*"(.*)".*/\1/')
+          out="NotchApple-${v}-test-${GITHUB_SHA::7}.dmg"
+          mv "dist/NotchApple-${v}.dmg" "dist/${out}"
+          echo "file=dist/${out}" >> "$GITHUB_OUTPUT"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: notch-apple-test-build
+          path: ${{ steps.n.outputs.file }}
+          if-no-files-found: error
+          retention-days: 14

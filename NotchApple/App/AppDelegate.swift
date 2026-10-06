@@ -29,6 +29,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         SandboxMigration.runIfNeeded()
         notchController = NotchWindowController()
         notchController?.show()
+        // Optional feature modules: registered always, started only if the user turned them on.
+        ModuleRegistry.shared.register(LidFoldModule.shared)
+        if LidFoldModule.shared.enabled { LidFoldModule.shared.start() }
 
         // Now Playing and Messenger are gated: they start now if a code is saved, or the moment one is entered.
         startGatedServices()

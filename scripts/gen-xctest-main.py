@@ -9,6 +9,7 @@ for path in sys.argv[1:]:
         cls, start = m.group(1), m.end()
         nxt = re.search(r'\nclass |\nfinal class |\nprivate final class |\nstruct |\nextension ', src[start:])
         body = src[start:start + (nxt.start() if nxt else len(src))]
-        for t in re.findall(r'func\s+(test\w+)\s*\(\s*\)\s*(?:throws\s*)?\{', body):
-            print(f'do {{ let before = __xctFailures; MainActor.assumeIsolated {{ let o = {cls}(); o.setUp(); o.{t}(); o.tearDown() }}; ran += 1; print(__xctFailures == before ? "PASS" : "FAIL", "  {cls}.{t}") }}')
+        for t, thr in re.findall(r'func\s+(test\w+)\s*\(\s*\)\s*(throws\s*)?\{', body):
+            call = f'try o.{t}()' if thr else f'o.{t}()'
+            print(f'do {{ let before = __xctFailures; do {{ try MainActor.assumeIsolated {{ let o = {cls}(); o.setUp(); {call}; o.tearDown() }} }} catch {{ if !(error is XCTSkip) {{ __xctFailures += (__xctFailures == before ? 1 : 0); print("  threw", error) }} }}; ran += 1; print(__xctFailures == before ? "PASS" : "FAIL", "  {cls}.{t}") }}')
 print('print("\\n\\(ran) tests, \\(__xctAssertions) assertions, \\(__xctFailures) failures")\nexit(__xctFailures == 0 && ran > 0 ? 0 : 1)')

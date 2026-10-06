@@ -25,7 +25,7 @@ struct HotkeyBinding: Equatable {
 
     /// The two shortcuts users can change in Settings → Shortcuts & Hotkeys.
     enum Slot {
-        case notch, invisibility, capture, palette
+        case notch, invisibility, capture, palette, lidFold
 
         fileprivate var prefix: String {
             switch self {
@@ -33,6 +33,7 @@ struct HotkeyBinding: Equatable {
             case .invisibility: "hotkey.invisibility"
             case .capture: "hotkey.capture"
             case .palette: "hotkey.palette"
+            case .lidFold: "hotkey.lidFold"
             }
         }
 
@@ -44,6 +45,7 @@ struct HotkeyBinding: Equatable {
             case .invisibility: HotkeyBinding(keyCode: UInt32(kVK_ANSI_O), modifiers: UInt32(cmdKey), label: "⌘O")
             case .capture: HotkeyBinding(keyCode: UInt32(kVK_ANSI_S), modifiers: UInt32(controlKey | optionKey), label: "⌃⌥S")
             case .palette: HotkeyBinding(keyCode: UInt32(kVK_ANSI_P), modifiers: UInt32(controlKey | optionKey), label: "⌃⌥P")
+            case .lidFold: HotkeyBinding(keyCode: UInt32(kVK_ANSI_F), modifiers: UInt32(controlKey | optionKey), label: "⌃⌥F")
             }
         }
     }
@@ -80,6 +82,8 @@ struct HotkeyBinding: Equatable {
 
     static var palette: HotkeyBinding { current(.palette) }
 
+    static var lidFold: HotkeyBinding { current(.lidFold) }
+
     /// Builds a binding from a key press, or nil if it can't work as a global shortcut
     /// (needs ⌘ or ⌃; ⌥ or ⇧ alone are ignored by macOS for global hot keys).
     init?(event: NSEvent) {
@@ -112,6 +116,7 @@ final class GlobalHotkeyManager {
         case toggleInvisible = 3
         case capture = 4
         case palette = 5
+        case foldToggle = 6, foldDismiss = 7   // Lid Fold: fold-and-hold, and Esc while a fold is showing
         // Window snapping, ⌃⌥ + key.
         case snapLeft = 10, snapRight, snapTop, snapBottom, snapMaximize, snapCenter, snapRestore
 
@@ -124,6 +129,8 @@ final class GlobalHotkeyManager {
             case .toggleInvisible: HotkeyBinding.invisibility.keyCode
             case .capture: HotkeyBinding.capture.keyCode
             case .palette: HotkeyBinding.palette.keyCode
+            case .foldToggle: HotkeyBinding.lidFold.keyCode
+            case .foldDismiss: UInt32(kVK_Escape)
             case .snapLeft: UInt32(kVK_LeftArrow)
             case .snapRight: UInt32(kVK_RightArrow)
             case .snapTop: UInt32(kVK_UpArrow)
@@ -140,7 +147,8 @@ final class GlobalHotkeyManager {
             case .toggleInvisible: HotkeyBinding.invisibility.modifiers
             case .capture: HotkeyBinding.capture.modifiers
             case .palette: HotkeyBinding.palette.modifiers
-            case .closeNotch: 0
+            case .foldToggle: HotkeyBinding.lidFold.modifiers
+            case .closeNotch, .foldDismiss: 0
             default: UInt32(controlKey | optionKey)
             }
         }

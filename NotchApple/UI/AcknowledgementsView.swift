@@ -18,7 +18,7 @@ struct AcknowledgementsView: View {
     private let credits = [
         Credit(id: "still", name: "Still", author: "Akshay Sharma and Kavish Shah", license: "MIT",
                use: "Lid Fold: projection math, gesture state, screen snapshot and Metal shader.",
-               file: "Still-MIT", url: "https://github.com/kavishshahh/iphone-duo-animation"),
+               file: "Still-MIT", url: "https://github.com/kavishshahh"),
         Credit(id: "lid", name: "LidAngleSensor", author: "Sam Henri Gold", license: "Apache 2.0",
                use: "Lid Fold: how the lid-angle sensor is found and read.",
                file: "LidAngleSensor-Apache-2.0", url: "https://github.com/samhenrigold/LidAngleSensor"),

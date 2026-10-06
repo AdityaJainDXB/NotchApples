@@ -18,7 +18,7 @@ import UniformTypeIdentifiers
 
 /// Panes in the Settings window. `selection` lets other code jump to a pane.
 enum SettingsTab: String, CaseIterable, Identifiable, Hashable {
-    case general, notch, appearance, profiles, extras, backup, browser, license, shortcuts, permissions, authentication, modules, windows, claude, aiHistory, messenger, clipboard, fileSearch, focus, audio, vpn, widget, iphone, updates, privacy, help, about
+    case general, notch, appearance, profiles, extras, backup, browser, license, shortcuts, permissions, authentication, modules, lidFold, windows, claude, aiHistory, messenger, clipboard, fileSearch, focus, audio, vpn, widget, iphone, updates, privacy, help, about
     static let selection = PassthroughSubject<SettingsTab, Never>()
 
     var id: String { rawValue }
@@ -37,6 +37,7 @@ enum SettingsTab: String, CaseIterable, Identifiable, Hashable {
         case .permissions: "Permissions"
         case .authentication: "Authentication"
         case .modules: "Modules"
+        case .lidFold: "Lid Fold"
         case .windows: "Windows"
         case .claude: "AI"
         case .aiHistory: "AI History"
@@ -69,6 +70,7 @@ enum SettingsTab: String, CaseIterable, Identifiable, Hashable {
         case .permissions: "hand.raised.fill"
         case .authentication: "faceid"
         case .modules: "square.grid.2x2.fill"
+        case .lidFold: "laptopcomputer"
         case .windows: "rectangle.split.2x2.fill"
         case .claude: "sparkles"
         case .aiHistory: "clock.arrow.circlepath"
@@ -117,6 +119,7 @@ enum SettingsTab: String, CaseIterable, Identifiable, Hashable {
         case .iphone: .gray
         case .help: .orange
         case .about: .indigo
+        case .lidFold: .cyan
         }
     }
 }
@@ -136,6 +139,7 @@ extension SettingsTab {
         case .permissions: "accessibility screen recording camera microphone calendar"
         case .authentication: "face unlock lock password"
         case .modules: "tabs add-ons widgets enable"
+        case .lidFold: "fold frost tilt lid close laptop screen recording desktop preview demo sensor angle blur"
         case .claude: "ai gemini ollama openai provider model key temperature capture"
         case .aiHistory: "conversations search export"
         case .updates: "version homebrew beta"
@@ -242,6 +246,7 @@ struct SettingsView: View {
                     }
                 case .authentication: AuthenticationSettings()
                 case .modules: ModulesSettings()
+                case .lidFold: LidFoldSettings()
                 case .windows: WindowsSettings()
                 case .claude: ClaudeSettings()
                 case .aiHistory: Entitlements.shared.canUse(.aiHistory) ? AnyView(AIHistorySettings()) : AnyView(ActivationModalView(feature: .aiHistory).padding())
