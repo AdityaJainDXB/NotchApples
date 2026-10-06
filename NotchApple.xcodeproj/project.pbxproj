@@ -50,6 +50,7 @@
 		23DEAFF7A9EA628D504552A1 /* AppLauncher.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B4A357F34CF825E961ADEF4 /* AppLauncher.swift */; };
 		242C7B0C09B073631A588CBE /* DownloadWatcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F22844E48EEA4FEBD1273E0 /* DownloadWatcher.swift */; };
 		2451D6C550A6B50F33FB0D88 /* LocationProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = E908464AA33EDC69CFBCDF86 /* LocationProvider.swift */; };
+		24F83028F1AEB920C645968B /* MusicSleepTimer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 426F46C6AD7DEAFB4B5D938E /* MusicSleepTimer.swift */; };
 		260DC3E3C52E0B1023D405F4 /* FocusTimer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C191B301A7AE40F175BA044 /* FocusTimer.swift */; };
 		26D09B0E866D702D64C68CEB /* AcknowledgementsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E215AC0F99CCC1E81AC1732 /* AcknowledgementsView.swift */; };
 		29326D872AE0DC306AFD1986 /* Tunnelblick-ABOUT.txt in Resources */ = {isa = PBXBuildFile; fileRef = EDBEAF142EDDBD8BE070A009 /* Tunnelblick-ABOUT.txt */; };
@@ -332,6 +333,7 @@
 		3F56873F8683487EBE9C958A /* TranslationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TranslationManager.swift; sourceTree = "<group>"; };
 		404B8C35377E3958184925BE /* BackgroundMusic.pkg */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.installer-pkg"; path = BackgroundMusic.pkg; sourceTree = "<group>"; };
 		419A5F6F30DFBF30351906D2 /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
+		426F46C6AD7DEAFB4B5D938E /* MusicSleepTimer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MusicSleepTimer.swift; sourceTree = "<group>"; };
 		43B0A5F7BE05C3F95C4B2A08 /* SystemWatchLogic.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SystemWatchLogic.swift; sourceTree = "<group>"; };
 		44CAF8A30126F03D6A230ED7 /* AIModes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIModes.swift; sourceTree = "<group>"; };
 		44EC19E1838745C95B5759DF /* GamesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GamesView.swift; sourceTree = "<group>"; };
@@ -1169,6 +1171,7 @@
 				878D1B5C95884945FA120D5E /* BrowserMedia.swift */,
 				93AC47229DA13D09C39B7BBA /* LyricsModel.swift */,
 				48EF75FD565DB103E4CEEB07 /* MusicLevelMeter.swift */,
+				426F46C6AD7DEAFB4B5D938E /* MusicSleepTimer.swift */,
 				ACD60817F03707C0A2A93064 /* NowPlayingMonitor.swift */,
 			);
 			path = NowPlaying;
@@ -1450,6 +1453,7 @@
 				41EAE8424A153B98E9F676F0 /* ModuleRegistry.swift in Sources */,
 				CF18C9EA57286EB1C27AB45F /* MoreTeams.swift in Sources */,
 				874BC0D84B434A3CE5910FCD /* MusicLevelMeter.swift in Sources */,
+				24F83028F1AEB920C645968B /* MusicSleepTimer.swift in Sources */,
 				4098B0C40272540FC563BC1F /* NotchAppleApp.swift in Sources */,
 				E939E90FAF6BDF621DD802D5 /* NotchBehavior.swift in Sources */,
 				FAB1EFFAB5CBA5F0A84E1C3B /* NotchGestures.swift in Sources */,

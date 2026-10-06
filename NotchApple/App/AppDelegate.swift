@@ -203,6 +203,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         } else {
             GlobalHotkeyManager.shared.unregister(.palette)
         }
+        // Quick capture (⌃⌥J): a new note, ready to type in, from any app.
+        if UserDefaults.standard.object(forKey: "ui.quickCaptureHotkey") as? Bool ?? true {
+            GlobalHotkeyManager.shared.register(.quickCapture) {
+                UserDefaults.standard.set("notes", forKey: "notes.page")
+                _ = NotesStore.shared.add()
+                AppDelegate.showNotch(tab: .notes)
+            }
+        } else { GlobalHotkeyManager.shared.unregister(.quickCapture) }
         if PanicHide.hotkeyEnabled { GlobalHotkeyManager.shared.register(.panic) { PanicHide.run() } } else { GlobalHotkeyManager.shared.unregister(.panic) }
         if SettingsManager.shared.invisibilityHotkeyEnabled {
             GlobalHotkeyManager.shared.register(.toggleInvisible) { [weak self] in self?.toggleInvisible() }

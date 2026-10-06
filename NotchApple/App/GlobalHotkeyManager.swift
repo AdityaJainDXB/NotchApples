@@ -118,6 +118,7 @@ final class GlobalHotkeyManager {
         case palette = 5
         case foldToggle = 6, foldDismiss = 7   // Lid Fold: fold-and-hold, and Esc while a fold is showing
         case panic = 8                         // Panic hide, ⌃⌥⇧P
+        case quickCapture = 9                  // Quick note from anywhere, ⌃⌥J
         // Window snapping, ⌃⌥ + key.
         case snapLeft = 10, snapRight, snapTop, snapBottom, snapMaximize, snapCenter, snapRestore
 
@@ -133,6 +134,7 @@ final class GlobalHotkeyManager {
             case .foldToggle: HotkeyBinding.lidFold.keyCode
             case .foldDismiss: UInt32(kVK_Escape)
             case .panic: UInt32(kVK_ANSI_P)
+            case .quickCapture: UInt32(kVK_ANSI_J)
             case .snapLeft: UInt32(kVK_LeftArrow)
             case .snapRight: UInt32(kVK_RightArrow)
             case .snapTop: UInt32(kVK_UpArrow)
@@ -152,6 +154,7 @@ final class GlobalHotkeyManager {
             case .foldToggle: HotkeyBinding.lidFold.modifiers
             case .closeNotch, .foldDismiss: 0
             case .panic: UInt32(controlKey | optionKey | shiftKey)
+            case .quickCapture: UInt32(controlKey | optionKey)
             default: UInt32(controlKey | optionKey)
             }
         }

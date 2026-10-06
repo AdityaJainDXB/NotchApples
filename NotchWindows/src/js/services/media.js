@@ -4,7 +4,7 @@
 // from lrclib.net, the free lyrics database the Mac app uses.
 
 import { load } from '../store.js';
-import { invoke, listen, getJSON } from '../native.js';
+import { invoke, listen, getJSON, notify } from '../native.js';
 import { provide, refresh } from '../activity.js';
 
 let current = null;
@@ -27,6 +27,19 @@ function set(media) {
   refresh();
   for (const fn of subscribers) { try { fn(now()); } catch (e) { console.error(e); } }
 }
+
+// ---- sleep timer: pause the music after a while (only if something is playing, so it never starts music) ----
+let sleepEnd = 0, sleepTimer = null;
+export const sleepLeft = () => (sleepEnd ? Math.max(0, Math.round((sleepEnd - Date.now()) / 1000)) : 0);
+export function startSleepTimer(minutes) {
+  cancelSleepTimer();
+  sleepEnd = Date.now() + minutes * 60000;
+  sleepTimer = setTimeout(async () => {
+    sleepEnd = 0; sleepTimer = null;
+    if (now()?.playing) { await control('toggle'); notify('Music paused', 'Your sleep timer ended.'); }
+  }, minutes * 60000);
+}
+export function cancelSleepTimer() { clearTimeout(sleepTimer); sleepTimer = null; sleepEnd = 0; }
 
 export const control = (action, position) => invoke('media_control', { action, position }).catch(() => {});
 

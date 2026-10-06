@@ -319,6 +319,7 @@ final class NowPlayingMonitor: ObservableObject {
 
 struct NowPlayingView: View {
     @StateObject private var monitor = NowPlayingMonitor.shared
+    @StateObject private var sleep = MusicSleepTimer.shared
 
     var body: some View {
         HStack(spacing: 18) {
@@ -376,6 +377,14 @@ struct NowPlayingView: View {
                                help: monitor.current == nil ? "Play in \(monitor.defaultPlayerName)" : "Play / pause") { monitor.playPause() }
                     IconButton(systemImage: "forward.fill", help: "Next track") { MediaControl.send(.next) }
                     Button("Open Player", action: monitor.openPlayer).buttonStyle(PurpleButtonStyle(prominent: false))
+                    Menu {
+                        ForEach([15, 30, 45, 60, 90], id: \.self) { m in Button("Pause in \(m) minutes") { sleep.start(minutes: m) } }
+                        if sleep.endsAt != nil { Divider(); Button("Cancel the sleep timer") { sleep.cancel() } }
+                    } label: {
+                        if let end = sleep.endsAt { Label { Text(end, style: .timer).monospacedDigit() } icon: { Image(systemName: "moon.zzz.fill") } }
+                        else { Image(systemName: "moon.zzz") }
+                    }
+                    .menuStyle(.borderlessButton).fixedSize().help("Sleep timer: pause the music after a while")
                 }
                 .padding(.top, 4)
                 BrowserMediaBar()

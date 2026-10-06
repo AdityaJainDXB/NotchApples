@@ -334,6 +334,7 @@ listen('tray', (what) => {
 });
 listen('shortcut', (action) => {
   if (action === 'palette') { expand().then(() => openPalette()); return; }
+  if (action === 'quickcapture') { expand('notes', { newNote: true }); return; }
   if (action === 'panic') { import('./services/panic.js').then((m) => m.panic()); return; }
   if (action === 'ai:screen') { expand('ai', { screen: true }); return; }
   if (action === 'focus:toggle') { import('./services/focus.js').then((f) => f.toggle()); return; }

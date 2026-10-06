@@ -4,7 +4,7 @@
 
 import { el, load, save, fmtClock } from '../store.js';
 import { canUse } from '../features.js';
-import { empty, toggle } from '../ui.js';
+import { empty, toggle, select } from '../ui.js';
 import { icon } from '../icons.js';
 import { proNote } from './activation.js';
 import * as M from '../services/media.js';
@@ -23,13 +23,16 @@ export function render(root) {
   const playBtn = el('button', { class: 'icon-btn big solid', title: 'Play or pause', onclick: () => M.control('toggle') }, icon('pause', 22, '⏸'));
   const prevBtn = el('button', { class: 'icon-btn big', title: 'Previous', onclick: () => M.control('previous') }, icon('skip-back', 24, '⏮'));
   const nextBtn = el('button', { class: 'icon-btn big', title: 'Next', onclick: () => M.control('next') }, icon('skip-forward', 24, '⏭'));
+  // Sleep timer: pause the music after a while (only if something is playing).
+  const sleepNote = el('span', { class: 'tiny dim num' });
+  const sleepSel = select([0, 15, 30, 45, 60, 90].map((n) => ({ value: n, label: n ? `Pause in ${n} min` : 'Sleep timer' })), 0, (v) => { Number(v) ? M.startSleepTimer(Number(v)) : M.cancelSleepTimer(); }, { cls: 'auto', title: 'Pause the music after a while' });
   const lyricBox = el('div', { class: 'col scroll', style: 'flex:1;min-height:0;gap:6px;padding-right:4px' });
   const player = el('div', { class: 'card col', style: 'flex:1.7;min-width:0;gap:10px' },
     el('div', { class: 'hstack', style: 'gap:20px;align-items:center;flex:1' }, art,
       el('div', { class: 'col grow', style: 'gap:6px;min-width:0' }, source, title, artist,
         el('div', { style: 'height:8px' }),
         bar, el('div', { class: 'hstack' }, pos, el('div', { class: 'spacer' }), dur),
-        el('div', { class: 'hstack', style: 'gap:10px' }, prevBtn, playBtn, nextBtn))),
+        el('div', { class: 'hstack', style: 'gap:10px;flex-wrap:wrap' }, prevBtn, playBtn, nextBtn, sleepSel, sleepNote))),
     el('label', { class: 'hstack small dim', style: 'cursor:pointer' },
       toggle(load('media.pill', true), (v) => save('media.pill', v)), 'Show the cover on the closed notch while music plays'));
   const lyricsCard = el('div', { class: 'card col', style: 'flex:1;min-width:0;gap:6px' }, el('div', { class: 'section-title' }, 'Lyrics'), lyricBox);
@@ -85,6 +88,9 @@ export function render(root) {
       art.dataset.src = m.art || '';
       art.replaceChildren(m.art ? el('img', { src: m.art, style: 'width:100%;height:100%;object-fit:cover' }) : '🎵');
     }
+    const left = M.sleepLeft();
+    sleepNote.textContent = left ? `${Math.floor(left / 60)}:${String(left % 60).padStart(2, '0')}` : '';
+    if (!left && sleepSel.value !== '0') sleepSel.value = '0';
     title.textContent = m.title;
     artist.textContent = [m.artist, m.album].filter(Boolean).join(' — ');
     source.textContent = M.appName(m.app) ? `Now playing · ${M.appName(m.app)}` : 'Now playing';
