@@ -89,6 +89,7 @@ targets:
       - NotchApple/Core/SmartHomeLogic.swift
       - NotchApple/Core/ClipboardLinkLogic.swift
       - NotchApple/Core/DevToolkitLogic.swift
+      - NotchApple/Core/WellbeingLogic.swift
       - NotchApple/Core/VPNTunnel.swift
       - CompanionKit
     settings:

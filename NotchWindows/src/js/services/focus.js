@@ -40,13 +40,22 @@ export function setMode(mode) { const s = get(); set({ ...s, mode, running: fals
 
 /// Minutes focused per day, for the stats.
 export const history = () => load('focus.history', {});
+/// Minutes of focus you want each day (0 = no goal).
+export const dailyGoal = () => load('focus.goal', 0);
+export const setDailyGoal = (m) => save('focus.goal', Math.max(0, Math.min(1440, Math.floor(Number(m) || 0))));
+export const minutesToday = () => history()[todayKey()] || 0;
 
 function advance(finished) {
   const s = get();
   const c = cfg();
   let { mode, round } = s;
   if (mode === 'focus') {
-    if (finished) update('focus.history', {}, (h) => ({ ...h, [todayKey()]: (h[todayKey()] || 0) + Math.round(lengthOf('focus') / 60) }));
+    if (finished) {
+      const before = history()[todayKey()] || 0;
+      update('focus.history', {}, (h) => ({ ...h, [todayKey()]: (h[todayKey()] || 0) + Math.round(lengthOf('focus') / 60) }));
+      const goal = dailyGoal();
+      if (goal > 0 && before < goal && before + Math.round(lengthOf('focus') / 60) >= goal) notify('Daily focus goal reached', `${goal} minutes of focus today. Nice work.`);
+    }
     mode = round % c.rounds === 0 ? 'long' : 'short';
   } else {
     mode = 'focus';

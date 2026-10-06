@@ -1,7 +1,9 @@
 // Today: the date and time, the weather (with the next 12 hours and 7 days for
 // Pro, as on the Mac), your next calendar events, and your PC at a glance.
 
-import { el, fmtTime, dayLabel } from '../store.js';
+import { el, fmtTime, dayLabel, load, save, todayKey } from '../store.js';
+import { modal, button } from '../ui.js';
+import * as WB from '../services/wellbeing.js';
 import { invoke } from '../native.js';
 import { canUse } from '../features.js';
 import { proNote } from './activation.js';
@@ -38,11 +40,39 @@ export function render(root) {
   const events = el('div', { class: 'col gap-4' });
   const sys = el('div', { class: 'hstack dim', style: 'gap:8px;margin-top:auto' });
 
+  // Countdowns to dates you care about (an exam, a trip, a launch). Past ones disappear after a day.
+  const countdownBox = el('div', { class: 'col gap-4', style: 'margin-top:auto' });
+  function paintCountdowns() {
+    const today = todayKey();
+    const all = load('today.countdowns', []);
+    const items = all.map((c) => ({ ...c, days: WB.daysBetween(today, c.date) })).filter((c) => c.days !== null && c.days >= -1).sort((a, b) => a.days - b.days).slice(0, 3);
+    countdownBox.replaceChildren(
+      el('div', { class: 'hstack' }, el('div', { class: 'section-title grow' }, 'Countdowns'), el('button', { class: 'btn small ghost', onclick: addCountdown }, '+ Add')),
+      ...items.map((c) => el('div', { class: 'hstack item', style: 'padding:3px 0' }, el('span', { class: 'grow ellipsis' }, c.title), el('b', { class: 'num' }, WB.countdownLabel(c.days)),
+        el('button', { class: 'icon-btn', style: 'width:22px;height:22px', title: 'Remove', onclick: () => { save('today.countdowns', load('today.countdowns', []).filter((x) => !(x.title === c.title && x.date === c.date))); paintCountdowns(); } }, '✕'))),
+      ...(items.length ? [] : [el('div', { class: 'small dim' }, 'Add a date to count down to.')]));
+  }
+  function addCountdown() {
+    const name = el('input', { class: 'field', placeholder: 'What is it? (Exam, Trip, Launch…)', maxlength: 40 });
+    const date = el('input', { class: 'field', type: 'date', min: todayKey() });
+    const m = modal('New countdown', [name, date], { actions: [button('Cancel', () => m.close(), { kind: 'quiet' }), button('Add', () => {
+      if (!name.value.trim() || WB.daysBetween(todayKey(), date.value) === null) return;
+      save('today.countdowns', [...load('today.countdowns', []), { title: name.value.trim(), date: date.value }]); m.close(); paintCountdowns();
+    })] });
+  }
+  paintCountdowns();
+
+  // One thing today: a single line that clears itself tomorrow. It can also sit on the closed pill (off by default).
+  const oneNow = () => { const v = load('today.oneThing', null); return v && v.day === todayKey() ? v.text : ''; };
+  const oneInput = el('input', { class: 'field', placeholder: 'The one thing today…', maxlength: 90, value: oneNow(), style: 'min-height:30px' });
+  oneInput.onchange = () => { save('today.oneThing', { day: todayKey(), text: oneInput.value.trim() }); import('../activity.js').then((a) => a.refresh()); };
+  const onePill = el('input', { type: 'checkbox', checked: load('today.onePill', false), onchange: (e) => { save('today.onePill', e.target.checked); import('../activity.js').then((a) => a.refresh()); } });
+  const oneRow = el('div', { class: 'col', style: 'gap:4px' }, oneInput, el('label', { class: 'hstack tiny dim', style: 'gap:6px;cursor:pointer' }, onePill, 'Show on the pill'));
   const left = el('div', { class: 'card col', style: 'flex:0 0 42%;min-width:0;overflow:auto;gap:12px' },
-    el('div', { class: 'col', style: 'gap:2px' }, dayName, dateBig), weather, forecastBox, sys);
+    el('div', { class: 'col', style: 'gap:2px' }, dayName, dateBig), oneRow, weather, forecastBox, sys);
   const right = el('div', { class: 'card col gap-6', style: 'flex:1;min-width:0;min-height:0;overflow:auto' },
     el('div', { class: 'hstack' }, el('div', { class: 'section-title grow' }, 'Up next'),
-      el('button', { class: 'btn small ghost', onclick: () => show('settings', { pane: 'Calendar' }) }, 'Calendars')), events);
+      el('button', { class: 'btn small ghost', onclick: () => show('settings', { pane: 'Calendar' }) }, 'Calendars')), events, countdownBox);
   root.append(el('div', { class: 'row fill', style: 'gap:16px' }, left, right));
 
   const tick = () => {

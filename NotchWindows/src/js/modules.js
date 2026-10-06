@@ -73,6 +73,8 @@ export const MODULES = [
     blurb: 'Your own widgets: any script in the Plugins folder shows its output in the notch.' },
   { id: 'share', name: 'Share', icon: '📤', load: () => import('./modules/share.js'),
     blurb: 'Send files to phones and other computers nearby with PairDrop, or with Windows Nearby sharing.' },
+  { id: 'wellbeing', name: 'Wellbeing', icon: '🌿', load: () => import('./modules/wellbeing.js'),
+    blurb: 'A breathing exercise, break reminders (eyes, water, stretch, posture) and a bedtime nudge.' },
   { id: 'devtools', name: 'Dev Tools', icon: '🛠', load: () => import('./modules/devtools.js'),
     blurb: 'Format JSON, encode and decode, read a JWT, hash, make a UUID, convert timestamps, test a regex, check colour contrast and make a QR code. Everything stays on this PC.' },
   { id: 'smarthome', name: 'Smart Home', icon: '💡', feature: 'smartHome', load: () => import('./modules/smarthome.js'),
