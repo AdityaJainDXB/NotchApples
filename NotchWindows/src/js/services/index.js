@@ -6,7 +6,7 @@
 
 const NOW = ['clipboard', 'focus', 'timer', 'media', 'rules'];
 const LATER = ['sports', 'reminders', 'calendar', 'weather', 'markets', 'screentime', 'privacy', 'awake',
-  'downloads', 'messenger', 'plugins', 'automations', 'updates', 'flights', 'f1', 'claudecode', 'hud', 'clipsync', 'wellbeing'];
+  'downloads', 'messenger', 'plugins', 'automations', 'updates', 'flights', 'f1', 'claudecode', 'hud', 'clipsync', 'wellbeing', 'syswatch'];
 
 async function run(name) {
   try {

@@ -67,6 +67,7 @@ struct NotchStatsView: View {
                     Label(SystemStats.speed(s.uploadRate), systemImage: "arrow.up.circle.fill")
                         .font(.system(size: 15, weight: .semibold, design: .rounded)).foregroundStyle(.pink)
                     Sparkline(values: monitor.downloadHistory, maxValue: max(monitor.downloadHistory.max() ?? 1, 1)).frame(height: 18)
+                    NetworkTools()
                 }
                 card("Battery", s.batteryCharging ? "battery.100percent.bolt" : "battery.75percent") {
                     if let percent = s.batteryPercent {
@@ -116,6 +117,22 @@ struct NotchStatsView: View {
             Text(big).font(.system(size: 22, weight: .bold, design: .rounded)).foregroundStyle(.white).monospacedDigit()
             ProgressView(value: min(max(fraction, 0), 1)).tint(Theme.accent)
             Text(small).font(.system(size: 11)).foregroundStyle(Theme.textSecondary).lineLimit(1)
+        }
+    }
+}
+
+/// Latency (when the internet alert is on) and a one-tap speed test, under the network speeds.
+private struct NetworkTools: View {
+    @StateObject private var watch = SystemWatch.shared
+    @StateObject private var test = SpeedTest.shared
+    var body: some View {
+        HStack(spacing: 8) {
+            Button { Task { await test.run() } } label: { Label(test.result ?? "Speed test", systemImage: "speedometer") }
+                .buttonStyle(.plain).font(.system(size: 10, weight: .semibold)).foregroundStyle(Theme.accentBright).disabled(test.running)
+                .help("Downloads about 20 MB from Cloudflare to measure your speed")
+            if watch.internetAlert, let ms = watch.latency {
+                Text("\(Int(ms)) ms").font(.system(size: 10)).foregroundStyle(watch.state == .online ? Theme.textSecondary : .orange).monospacedDigit()
+            }
         }
     }
 }

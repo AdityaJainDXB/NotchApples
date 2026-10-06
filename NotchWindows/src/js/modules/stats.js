@@ -1,4 +1,6 @@
 // PC Stats: live memory, CPU, network, battery and disk; top apps (Pro).
+import * as SW from '../services/syswatch.js';
+import { toast, confirm } from '../ui.js';
 import { el, fmtBytes, fmtSpeed } from '../store.js';
 import { invoke } from '../native.js';
 import { canUse } from '../features.js';
@@ -8,6 +10,10 @@ export function render(root) {
   const cards = {};
   const mk = (id, title) => { cards[id] = el('div', { class: 'col gap-4' }); return el('div', { class: 'card col gap-6' }, el('div', { class: 'section-title' }, title), cards[id]); };
   const top = el('div', { class: 'col gap-4' });
+  // Speed test + latency under the network speeds.
+  const speed = el('button', { class: 'btn small quiet', title: 'Downloads about 20 MB from Cloudflare to measure your speed' }, '⚡ Speed test');
+  const lat = el('span', { class: 'tiny dim num' });
+  speed.onclick = async () => { speed.disabled = true; speed.textContent = 'Testing…'; try { speed.textContent = `⚡ ${await SW.speedTest()}`; } catch { speed.textContent = '⚡ Couldn’t run the test'; } speed.disabled = false; };
   root.append(el('div', { class: 'row fill' },
     el('div', { class: 'col', style: 'flex:1.3' }, el('div', { class: 'row' }, mk('ram', '🧠 Memory'), mk('cpu', '⚙️ CPU')), el('div', { class: 'row' }, mk('net', '📶 Network'), mk('bat', '🔋 Battery'), mk('disk', '💾 Disk'))),
     el('div', { class: 'card col', style: 'flex:1' }, el('div', { class: 'section-title' }, 'Busiest apps'), top)));
@@ -17,14 +23,21 @@ export function render(root) {
     if (!s) return;
     cards.ram.replaceChildren(...g(`${Math.round(s.ram_used / s.ram_total * 100)}%`, `${fmtBytes(s.ram_used)} of ${fmtBytes(s.ram_total)}`, s.ram_used / s.ram_total));
     cards.cpu.replaceChildren(...g(`${Math.round(s.cpu_percent)}%`, `${s.cpu_cores} cores · ${s.cpu_name}`, s.cpu_percent / 100));
-    cards.net.replaceChildren(el('div', { class: 'num' }, `⬇ ${fmtSpeed(s.down_bytes_per_sec)}`), el('div', { class: 'num' }, `⬆ ${fmtSpeed(s.up_bytes_per_sec)}`));
+    lat.textContent = SW.prefs().internet && SW.latency != null ? `${Math.round(SW.latency)} ms` : '';
+    lat.style.color = SW.linkState === 'online' ? '' : 'var(--warn)';
+    cards.net.replaceChildren(el('div', { class: 'num' }, `⬇ ${fmtSpeed(s.down_bytes_per_sec)}`), el('div', { class: 'num' }, `⬆ ${fmtSpeed(s.up_bytes_per_sec)}`), el('div', { class: 'hstack', style: 'gap:6px;flex-wrap:wrap' }, speed, lat));
     cards.bat.replaceChildren(...(s.battery_percent == null ? [el('div', { class: 'small dim' }, 'No battery')] : g(`${s.battery_percent}%`, s.battery_charging ? 'Charging' : 'On battery', s.battery_percent / 100)));
     cards.disk.replaceChildren(...g(fmtBytes(s.disk_free), `free of ${fmtBytes(s.disk_total)}`, 1 - s.disk_free / s.disk_total));
   }
   async function procs() {
     if (!canUse('topProcesses')) { top.replaceChildren(proNote('topProcesses')); return; }
     const list = await invoke('top_processes', { limit: 9 }).catch(() => []);
-    top.replaceChildren(...list.map((p) => el('div', { class: 'hstack small' }, el('span', { class: 'grow ellipsis' }, p.name), el('span', { class: 'num dim' }, fmtBytes(p.memory)), el('span', { class: 'num', style: 'width:52px;text-align:right' }, `${p.cpu.toFixed(1)}%`))));
+    const close = async (name) => {
+      if (!(await confirm(`Close ${name}?`, { ok: 'Close', danger: true, detail: 'Every window of it is asked to close, like clicking ✕. If it has unsaved work it will ask you first.' }))) return;
+      try { await invoke('run_command', { command: `taskkill /IM "${name}.exe"` }); toast(`Asked ${name} to close`); } catch (e) { toast(`${name} didn’t close: ${e.message}`, { error: true }); }
+    };
+    top.replaceChildren(...list.map((p) => el('div', { class: 'hstack small' }, el('span', { class: 'grow ellipsis' }, p.name), el('span', { class: 'num dim' }, fmtBytes(p.memory)), el('span', { class: 'num', style: 'width:52px;text-align:right' }, `${p.cpu.toFixed(1)}%`),
+      SW.closable(p.name) ? el('button', { class: 'icon-btn', style: 'width:22px;height:22px;font-size:11px', title: `Close ${p.name}`, onclick: () => close(p.name) }, '✕') : el('span', { style: 'width:22px' }))));
   }
   tick(); procs();
   const a = setInterval(tick, 1000), b = setInterval(procs, 3000);

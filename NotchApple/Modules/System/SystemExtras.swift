@@ -43,6 +43,7 @@ final class MicMute: ObservableObject {
 
 struct TopProcess: Identifiable {
     var id: String { name + cpu.description }
+    let pid: Int32
     let name: String
     let cpu: Double
     let memMB: Double
@@ -54,15 +55,15 @@ enum TopProcesses {
         await Task.detached {
             let p = Process()
             p.executableURL = URL(fileURLWithPath: "/bin/ps")
-            p.arguments = ["-Aceo", "pcpu=,rss=,comm=", "-r"]
+            p.arguments = ["-Aceo", "pid=,pcpu=,rss=,comm=", "-r"]
             let pipe = Pipe(); p.standardOutput = pipe
             guard (try? p.run()) != nil else { return [] }
             let data = pipe.fileHandleForReading.readDataToEndOfFile()
             p.waitUntilExit()
             return String(decoding: data, as: UTF8.self).split(separator: "\n").prefix(limit).compactMap { line -> TopProcess? in
-                let parts = line.split(separator: " ", maxSplits: 2, omittingEmptySubsequences: true)
-                guard parts.count == 3, let cpu = Double(parts[0]), let rss = Double(parts[1]) else { return nil }
-                return TopProcess(name: String(parts[2]), cpu: cpu, memMB: rss / 1024)
+                let parts = line.split(separator: " ", maxSplits: 3, omittingEmptySubsequences: true)
+                guard parts.count == 4, let pid = Int32(parts[0]), let cpu = Double(parts[1]), let rss = Double(parts[2]) else { return nil }
+                return TopProcess(pid: pid, name: String(parts[3]), cpu: cpu, memMB: rss / 1024)
             }
         }.value
     }
@@ -70,6 +71,7 @@ enum TopProcesses {
 
 struct TopProcessesView: View {
     @State private var list: [TopProcess] = []
+    @State private var asking: TopProcess?
     let timer = Timer.publish(every: 3, on: .main, in: .common).autoconnect()
 
     var body: some View {
@@ -81,15 +83,30 @@ struct TopProcessesView: View {
                     Spacer()
                     Text(String(format: "%.0f%%", p.cpu)).monospacedDigit().foregroundStyle(p.cpu > 50 ? .orange : .primary).frame(width: 50, alignment: .trailing)
                     Text(String(format: "%.0f MB", p.memMB)).monospacedDigit().foregroundStyle(.secondary).frame(width: 70, alignment: .trailing)
+                    // Only real apps can be quit (asked politely, like ⌘Q); background processes just show.
+                    if let app = Self.quittable(p) {
+                        Button { asking = p } label: { Image(systemName: "xmark.circle") }.buttonStyle(.plain).foregroundStyle(.secondary)
+                            .help("Quit \(app.localizedName ?? p.name)")
+                    } else { Color.clear.frame(width: 14) }
                 }
                 .font(.callout)
             }
             Button("Open Activity Monitor") { NSWorkspace.shared.open(URL(fileURLWithPath: "/System/Applications/Utilities/Activity Monitor.app")) }
                 .buttonStyle(.link)
         }
-        .padding(14).frame(width: 320)
+        .padding(14).frame(width: 340)
+        .confirmationDialog("Quit \(asking?.name ?? "this app")?", isPresented: Binding(get: { asking != nil }, set: { if !$0 { asking = nil } })) {
+            Button("Quit", role: .destructive) { if let p = asking { Self.quittable(p)?.terminate() }; asking = nil }
+        } message: { Text("It will be asked to quit like ⌘Q. If it has unsaved work it will ask you first.") }
         .task { list = await TopProcesses.load() }
         .onReceive(timer) { _ in Task { list = await TopProcesses.load() } }
+    }
+
+    /// A normal app you can quit (never this app, Finder or the Dock), or nil.
+    static func quittable(_ p: TopProcess) -> NSRunningApplication? {
+        guard let app = NSRunningApplication(processIdentifier: p.pid), app.activationPolicy == .regular,
+              app.bundleIdentifier != Bundle.main.bundleIdentifier, !["com.apple.finder", "com.apple.dock"].contains(app.bundleIdentifier ?? "") else { return nil }
+        return app
     }
 }
 

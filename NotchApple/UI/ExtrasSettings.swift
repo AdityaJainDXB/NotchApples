@@ -11,6 +11,7 @@ struct ExtrasSettings: View {
     @EnvironmentObject private var settings: SettingsManager
     @AppStorage("notch.stackActivities") private var stack = true
     @AppStorage("extras.eventCountdown") private var eventCountdown = true
+    @StateObject private var watch = SystemWatch.shared
     @State private var confirmAddHooks = false
     @State private var hookMessage: String?
 
@@ -33,6 +34,17 @@ struct ExtrasSettings: View {
                 Text("Beside the closed notch")
             } footer: {
                 Text("Timers, the stopwatch, screen recordings and live scores always show while they run.")
+            }
+            Section {
+                Toggle("Remind me to unplug", isOn: $watch.batteryCare)
+                if watch.batteryCare { Stepper("When charging reaches \(watch.batteryLimit)%", value: $watch.batteryLimit, in: 50...100, step: 5) }
+                Toggle("Warn when disk space is low", isOn: $watch.diskAlert)
+                if watch.diskAlert { Stepper("Below \(watch.diskGB) GB free", value: $watch.diskGB, in: 2...200, step: 2) }
+                Toggle("Tell me when the internet drops", isOn: $watch.internetAlert)
+            } header: {
+                Text("Guards")
+            } footer: {
+                Text("Battery care and the disk warning only read this Mac. The internet alert fetches a tiny Apple page every 20 seconds to check you're online and how fast it answers; nothing else is sent. The speed test in the Stats tab downloads about 20 MB from Cloudflare when you press it.")
             }
             Section {
                 Text(verbatim: "open -g \"notchapple://activity?id=build&title=Build&text=42%&symbol=hammer.fill&progress=0.42\"")
