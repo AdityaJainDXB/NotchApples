@@ -48,6 +48,10 @@ body.opening #shell, body.closing #shell {
 }
 body.opening #shell, body.closing #shell { opacity: 0; transform: scale(.965); transform-origin: 50% 0; }
 body.opening #shell { transition: none; }
+body.opening #panel, body.closing #panel { filter: blur(14px); opacity: 0; }
+body.opening #panel { transition: none; }
+body.growing #panel { transition: filter .34s var(--ease) .04s, opacity .26s ease-out .04s; }
+body.closing #panel { transition: filter .18s ease-in, opacity .16s ease-in; }
 body.opening #veil, body.closing #veil { opacity: 1; }
 body.opening #shadow, body.closing #shadow { opacity: 0; }
 body.closing #veil { transition-duration: .2s; }
@@ -128,8 +132,8 @@ body.collapsed #panel { display: none; }
 .tab.drop-before { box-shadow: -2px 0 0 var(--accent); }
 #page { flex: 1; min-height: 0; overflow: auto; position: relative; }
 #page.fade { animation: pagein .22s var(--ease); }
-#page.leaving { opacity: 0; transform: scale(.985); transition: opacity .09s ease-in, transform .09s ease-in; }
-@keyframes pagein { from { opacity: 0; transform: translateY(6px) scale(.99) } to { opacity: 1; transform: none } }
+#page.leaving { opacity: 0; transform: scale(.985); filter: blur(8px); transition: opacity .09s ease-in, transform .09s ease-in, filter .09s ease-in; }
+@keyframes pagein { from { opacity: 0; transform: translateY(6px) scale(.99); filter: blur(8px) } to { opacity: 1; transform: none; filter: blur(0) } }
 @keyframes fadein { from { opacity: 0 } to { opacity: 1 } }
 
 /* scrollbars */
@@ -377,6 +381,7 @@ body[data-perf="lite"] .dot.live { box-shadow: none; animation: none; opacity: 1
 body[data-perf="lite"] #pill .bars i { animation: none; transform: scaleY(.7); }
 body[data-perf="lite"] .skel, body[data-perf="lite"] .spinner { animation-duration: 2.4s; }
 body[data-perf="lite"] #panel, body[data-perf="lite"] #page.fade { animation-duration: .08s; }
+body[data-perf="lite"] #page.leaving, body[data-perf="lite"] #panel { filter: none !important; }
 body[data-perf="lite"] .toast, body[data-perf="lite"] .menu, body[data-perf="lite"] .overlay { animation: none; }
 body[data-perf="lite"] * { transition-duration: .06s !important; }
 
