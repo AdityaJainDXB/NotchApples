@@ -1,7 +1,7 @@
-// The first-run feature chooser (and "Choose features again" in Settings → Tabs): every tab with a picture of
-// what it does, what plan it needs, and a switch. Free tabs switch on. A Pro or Ultimate tab shows up too,
-// so you can see what you'd get, but its switch opens a note saying it has to be bought, with a link to the
-// website and the flyer. The pictures are the Mac app's screenshots (the Windows tabs look and work the same).
+// The first-run feature chooser (and "Choose with pictures…" in Settings → Tabs). It goes through the tabs one at a
+// time: a picture of what it does, what plan it needs, and Turn on / Not now. A Pro or Ultimate tab is shown
+// too, so you can see what you'd get, but turning it on opens a note saying it has to be bought, with a link to
+// the website and the flyer. The pictures are the Mac app's screenshots (the Windows tabs look and work the same).
 
 import { el, load, save } from '../store.js';
 import { openUrl } from '../native.js';
@@ -40,8 +40,9 @@ export function upgradeDialog(m, onUnlocked) {
 export function render(page) {
   const first = !load('onboarding.done', false);
   const chosen = new Set(load('modules.enabled', DEFAULT_ON).filter((id) => { const m = byId(id); return m && id !== 'settings' && !locked(m); }));
-  const count = el('span', { class: 'small dim' });
-  const paint = () => { count.textContent = `${chosen.size} on`; };
+  // Free ones first, then Pro, then Ultimate; each group keeps the app's own order.
+  const steps = MODULES.filter((m) => m.id !== 'settings').sort((a, b) => planOf(a) - planOf(b));
+  let i = 0;
 
   const finish = () => {
     save('modules.enabled', [...chosen, 'settings']);
@@ -50,40 +51,55 @@ export function render(page) {
     show([...chosen][0] || 'today');
   };
 
-  const cards = MODULES.filter((m) => m.id !== 'settings').map((m) => {
+  const go = (n, dir = 1) => { i = n; paint(dir); };
+  const decide = (m, on) => {
+    if (on && locked(m)) {
+      upgradeDialog(m, () => { chosen.add(m.id); go(i + 1); });   // bought: it's on, carry on
+      return;
+    }
+    on ? chosen.add(m.id) : chosen.delete(m.id);
+    go(i + 1);
+  };
+
+  function paint(dir = 1) {
+    page.replaceChildren();
+    if (i >= steps.length) { page.append(summary()); return; }
+    const m = steps[i];
     const plan = planOf(m);
     const isLocked = locked(m);
-    const sw = toggle(chosen.has(m.id), (on) => {
-      const input = sw.querySelector('input');
-      if (on && isLocked) {                       // not bought: say so instead of switching it on
-        input.checked = false;
-        upgradeDialog(m, () => { chosen.add(m.id); input.checked = true; card.classList.remove('locked'); paint(); });
-        return;
-      }
-      on ? chosen.add(m.id) : chosen.delete(m.id);
-      paint();
-    });
-    const art = el('div', { class: 'wc-art' },
-      PICTURES.has(m.id)
-        ? el('img', { src: `img/features/${m.id}.webp`, alt: '', loading: 'lazy', onerror: (e) => e.target.replaceWith(el('span', { class: 'wc-emoji' }, m.icon)) })
-        : el('span', { class: 'wc-emoji' }, m.icon),
-      plan ? el('span', { class: `tier on-art ${tierLabel(plan).toLowerCase()}` }, tierLabel(plan)) : null);
-    const card = el('div', { class: `wc${isLocked ? ' locked' : ''}`, onclick: (e) => { if (!e.target.closest('.switch')) sw.querySelector('input').click(); } },
-      art,
-      el('div', { class: 'wc-body' },
-        el('div', { class: 'wc-top' }, el('b', { class: 'grow' }, m.name), sw),
-        el('div', { class: 'wc-blurb' }, m.blurb)));
-    return card;
-  });
-  paint();
+    const on = chosen.has(m.id);
+    const art = PICTURES.has(m.id)
+      ? el('img', { class: 'ws-img', src: `img/features/${m.id}.webp`, alt: '', onerror: (e) => e.target.replaceWith(el('span', { class: 'wc-emoji big' }, m.icon)) })
+      : el('span', { class: 'wc-emoji big' }, m.icon);
+    page.append(
+      el('div', { class: 'ws-top' },
+        el('div', { class: 'ws-bar' }, el('i', { style: `width:${Math.round((i / steps.length) * 100)}%` })),
+        el('span', { class: 'small dim' }, `${i + 1} of ${steps.length}`),
+        first ? button('Skip the rest', () => go(steps.length), { kind: 'quiet' }) : button('Close', () => show('settings'), { kind: 'quiet' })),
+      el('div', { class: `ws-step ${dir > 0 ? 'fwd' : 'back'}` },
+        el('div', { class: 'ws-art' }, art, plan ? el('span', { class: `tier on-art ${tierLabel(plan).toLowerCase()}` }, tierLabel(plan)) : null),
+        el('div', { class: 'ws-copy' },
+          el('div', { class: 'ws-name' }, m.icon, ' ', m.name),
+          el('div', { class: 'ws-blurb' }, m.blurb),
+          isLocked ? el('div', { class: 'small faint' }, `Needs ${tierLabel(plan)}. You can see what it does here; turning it on takes a purchase.`) : null,
+          on ? el('div', { class: 'small', style: 'color:var(--ok)' }, '✓ On right now') : null,
+          el('div', { class: 'ws-actions' },
+            button(isLocked ? `Turn on (needs ${tierLabel(plan)})` : on ? 'Keep on' : 'Turn on', () => decide(m, true)),
+            button(on ? 'Turn off' : 'Not now', () => decide(m, false), { kind: 'quiet' }),
+            i > 0 ? button('← Back', () => go(i - 1, -1), { kind: 'ghost' }) : null))));
+  }
 
-  page.append(
-    el('div', { class: 'wc-head' },
-      el('div', { class: 'col grow' },
-        el('div', { class: 'title' }, first ? 'Welcome! Choose what you want in your notch' : 'Choose your features'),
-        el('div', { class: 'small dim' }, 'Switch tabs on or off. Pro and Ultimate ones are shown so you can see what they do. You can change this any time in Settings → Tabs.')),
-      count,
-      first ? button('Skip', () => { save('onboarding.done', true); show('today'); }, { kind: 'quiet' }) : null,
-      button(first ? 'Start' : 'Done', finish)),
-    el('div', { class: 'wc-grid' }, ...cards));
+  function summary() {
+    const names = [...chosen].map((id) => byId(id)?.name).filter(Boolean);
+    return el('div', { class: 'ws-step fwd ws-done' },
+      el('div', { style: 'font-size:46px' }, '🎉'),
+      el('div', { class: 'title' }, "You're all set"),
+      el('div', { class: 'small dim', style: 'max-width:520px;text-align:center' }, names.length ? `In your notch: ${names.join(', ')}.` : 'Nothing is switched on yet.'),
+      el('div', { class: 'small faint' }, 'Change any of this in Settings → Tabs.'),
+      el('div', { class: 'ws-actions', style: 'justify-content:center' },
+        button('Start', finish),
+        button('← Back', () => go(steps.length - 1, -1), { kind: 'quiet' })));
+  }
+
+  paint();
 }

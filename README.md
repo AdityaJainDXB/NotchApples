@@ -390,7 +390,7 @@ All screenshots use sample data.
 
 #### Windows 1.26.5 BETA
 
-- **Choose your features on first launch.** A new welcome screen shows every tab with a picture of what it does and a switch. Free tabs switch on; Pro and Ultimate tabs are shown too, and switching one on tells you it has to be bought, with the price, the flyer and a link to the website (and a box for your key if you already have one). Run it again any time from Settings → Tabs → *Choose with pictures…*.
+- **Choose your features on first launch, one at a time.** A welcome flow goes through the tabs one by one: a picture of what it does, what plan it needs, and **Turn on** or **Not now** (with a progress bar and a Back button). Pro and Ultimate tabs are shown too; turning one on tells you it has to be bought, with the price, the flyer and a link to the website (and a box for your key if you already have one). Run it again any time from Settings → Tabs → *Choose with pictures…*.
 - **No more jumping at startup.** The notch used to appear at Windows' default spot and move twice before settling. It now stays hidden until its final position is applied.
 - Glass (see-through notch) stays off by default.
 

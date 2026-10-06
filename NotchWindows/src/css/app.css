@@ -419,3 +419,22 @@ body:not([data-perf="lite"]) .menu, body:not([data-perf="lite"]) .toast, body:no
 .upgrade-dlg { display: flex; gap: 20px; align-items: flex-start; }
 .upgrade-dlg .flyer { width: 170px; flex: none; border-radius: 18px; box-shadow: 0 10px 30px rgba(0,0,0,.5); }
 .upgrade-dlg .tier { align-self: flex-start; }
+
+/* First-run chooser, one feature at a time */
+.ws-top { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+.ws-bar { flex: 1; height: 5px; border-radius: 3px; background: rgba(255,255,255,.12); overflow: hidden; }
+.ws-bar > i { display: block; height: 100%; border-radius: 3px; background: linear-gradient(90deg, var(--accent), var(--accent-bright)); transition: width .3s var(--ease); }
+.ws-step { display: flex; gap: 26px; align-items: center; min-height: 300px; animation: ws-in .3s var(--ease); }
+.ws-step.back { animation-name: ws-in-back; }
+@keyframes ws-in { from { opacity: 0; transform: translateX(22px); filter: blur(6px) } to { opacity: 1; transform: none; filter: blur(0) } }
+@keyframes ws-in-back { from { opacity: 0; transform: translateX(-22px); filter: blur(6px) } to { opacity: 1; transform: none; filter: blur(0) } }
+.ws-art { position: relative; flex: none; width: 380px; aspect-ratio: 16 / 9; border-radius: 22px; overflow: hidden; background: rgba(255,255,255,.05);
+          border: 1px solid var(--border); display: grid; place-items: center; box-shadow: 0 12px 30px -10px rgba(0,0,0,.6); }
+.ws-img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.wc-emoji.big { font-size: 78px; }
+.ws-copy { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 10px; }
+.ws-name { font-size: 24px; font-weight: 800; letter-spacing: -.3px; }
+.ws-blurb { font-size: 14px; color: var(--text-dim); line-height: 1.5; }
+.ws-actions { display: flex; align-items: center; gap: 10px; margin-top: 8px; flex-wrap: wrap; }
+.ws-done { flex-direction: column; justify-content: center; text-align: center; min-height: 300px; }
+body[data-perf="lite"] .ws-step { animation: none; }
