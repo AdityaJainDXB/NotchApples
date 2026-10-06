@@ -170,3 +170,22 @@ enum DNDToggle {
         LiveActivityCenter.shared.flash(LiveActivity(symbol: isOn ? "moon.fill" : "moon", label: isOn ? "DND on" : "DND off", tint: .systemIndigo), seconds: 1.5)
     }
 }
+
+/// Light ↔ dark for all of macOS, in one click (free). It asks System Events, so macOS asks once
+/// whether Notch apple may control it; if you say no, a note explains where to change that.
+@MainActor
+enum DarkModeToggle {
+    static var isDark: Bool { UserDefaults.standard.string(forKey: "AppleInterfaceStyle") == "Dark" }
+
+    static func toggle() {
+        var error: NSDictionary?
+        NSAppleScript(source: "tell application \"System Events\" to tell appearance preferences to set dark mode to not dark mode")?.executeAndReturnError(&error)
+        if error != nil {
+            Notifier.post(title: "Couldn't switch the appearance", body: "Allow Notch apple to control System Events in System Settings → Privacy & Security → Automation.")
+            return
+        }
+        // The preference is written a moment later, so show what we just switched to rather than re-reading it.
+        let nowDark = !isDark
+        LiveActivityCenter.shared.flash(LiveActivity(symbol: nowDark ? "moon.stars.fill" : "sun.max.fill", label: nowDark ? "Dark" : "Light", tint: nowDark ? .systemIndigo : .systemYellow), seconds: 1.5)
+    }
+}

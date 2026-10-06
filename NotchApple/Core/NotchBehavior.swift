@@ -244,6 +244,7 @@ enum QuickActionsMenu {
         if Entitlements.shared.canUse(.dndToggle) {
             add(DNDToggle.isOn ? "Turn Do Not Disturb off" : "Turn Do Not Disturb on", "moon") { DNDToggle.toggle() }
         }
+        add(DarkModeToggle.isDark ? "Switch to light mode" : "Switch to dark mode", DarkModeToggle.isDark ? "sun.max" : "moon.stars") { DarkModeToggle.toggle() }
         if Entitlements.shared.canUse(.micMute) {
             add(MicMute.shared.isMuted ? "Unmute microphone" : "Mute microphone", "mic.slash") { MicMute.shared.toggle() }
         }
