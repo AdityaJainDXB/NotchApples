@@ -438,3 +438,9 @@ body:not([data-perf="lite"]) .menu, body:not([data-perf="lite"]) .toast, body:no
 .ws-actions { display: flex; align-items: center; gap: 10px; margin-top: 8px; flex-wrap: wrap; }
 .ws-done { flex-direction: column; justify-content: center; text-align: center; min-height: 300px; }
 body[data-perf="lite"] .ws-step { animation: none; }
+
+/* Cookie Clicker */
+.cookie-btn { font-size: 88px; line-height: 1; width: 150px; height: 150px; border-radius: 50%; border: none; cursor: pointer; margin: 8px 0;
+  background: radial-gradient(circle at 35% 30%, rgba(255,255,255,.12), transparent 60%); transition: transform .06s; }
+.cookie-btn:active { transform: scale(.93); }
+@keyframes cookie-pop { from { opacity: 1; transform: translateY(0) } to { opacity: 0; transform: translateY(-46px) } }

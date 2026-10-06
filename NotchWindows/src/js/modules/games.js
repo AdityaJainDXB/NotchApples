@@ -1,12 +1,14 @@
-// Games: 2048, Snake and a reaction test. Best scores stay on this PC.
+// Games: 2048, Snake, a reaction test, and (as on the Mac) Cookie Clicker, Runner, Breakout and Memory.
+// Best scores stay on this PC.
 import { el, load, save } from '../store.js';
 import { segmented } from '../ui.js';
+import { cookie, runner, breakout, memory } from './games-extra.js';
 
 export function render(root) {
   let game = load('games.last', '2048'), stop = () => {};
   const board = el('div', { class: 'center', style: 'flex:1' });
-  const pick = (g) => { stop(); game = g; save('games.last', g); stop = ({ 2048: g2048, snake, reaction })[g](board) || (() => {}); };
-  root.append(el('div', { class: 'col fill' }, segmented([{ value: '2048', label: '2048' }, { value: 'snake', label: 'Snake' }, { value: 'reaction', label: 'Reaction' }], game, pick), board));
+  const pick = (g) => { stop(); game = g; save('games.last', g); stop = ({ 2048: g2048, snake, reaction, cookie, runner, breakout, memory })[g](board) || (() => {}); };
+  root.append(el('div', { class: 'col fill' }, segmented([{ value: '2048', label: '2048' }, { value: 'snake', label: 'Snake' }, { value: 'reaction', label: 'Reaction' }, { value: 'cookie', label: 'Cookie Clicker' }, { value: 'runner', label: 'Runner' }, { value: 'breakout', label: 'Breakout' }, { value: 'memory', label: 'Memory' }], game, pick), board));
   pick(game);
   return () => stop();
 }
