@@ -43,6 +43,7 @@
 		242C7B0C09B073631A588CBE /* DownloadWatcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F22844E48EEA4FEBD1273E0 /* DownloadWatcher.swift */; };
 		2451D6C550A6B50F33FB0D88 /* LocationProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = E908464AA33EDC69CFBCDF86 /* LocationProvider.swift */; };
 		260DC3E3C52E0B1023D405F4 /* FocusTimer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C191B301A7AE40F175BA044 /* FocusTimer.swift */; };
+		26D09B0E866D702D64C68CEB /* AcknowledgementsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E215AC0F99CCC1E81AC1732 /* AcknowledgementsView.swift */; };
 		29326D872AE0DC306AFD1986 /* Tunnelblick-ABOUT.txt in Resources */ = {isa = PBXBuildFile; fileRef = EDBEAF142EDDBD8BE070A009 /* Tunnelblick-ABOUT.txt */; };
 		29BC5405E9AA7A285A647076 /* TodayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DD6D3003087F986015A60A7 /* TodayView.swift */; };
 		305D3067C2952F9CDCE2C833 /* Entitlements.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBF521DE52E4227ABF0CCC29 /* Entitlements.swift */; };
@@ -57,10 +58,12 @@
 		3ACB2F6BF173A4F2E45D42B7 /* NotchWidget.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 5D272CF7B938DCD55B7EF450 /* NotchWidget.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		3C8B09105E0E24C6D4231047 /* NotchWidgetCenter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7F6EACC9E26C6695BA7C5724 /* NotchWidgetCenter.swift */; };
 		3DEAFC4359632CB4DF71ECE1 /* DevicesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99DF8E198CA571FF54F70A9B /* DevicesView.swift */; };
+		3DF5E21ACEFE3B997230D098 /* LidAngleSensor-Apache-2.0.txt in Resources */ = {isa = PBXBuildFile; fileRef = 2322D56CD828DF3443E53CC5 /* LidAngleSensor-Apache-2.0.txt */; };
 		3EFFED94F8F614109390BB82 /* BrowserMedia.swift in Sources */ = {isa = PBXBuildFile; fileRef = 878D1B5C95884945FA120D5E /* BrowserMedia.swift */; };
 		4098B0C40272540FC563BC1F /* NotchAppleApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9B61EC777F0D6D3611243246 /* NotchAppleApp.swift */; };
 		4132D2810197CE3A0F8A6429 /* HotCornerLogic.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C151FE67E6474F51CD20219 /* HotCornerLogic.swift */; };
 		41E54A41341FD1F30BD93E0A /* CaptureManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7F021540CB1F33FB8A5938B4 /* CaptureManager.swift */; };
+		41EAE8424A153B98E9F676F0 /* ModuleRegistry.swift in Sources */ = {isa = PBXBuildFile; fileRef = E9BC705D2AB9550EE9339978 /* ModuleRegistry.swift */; };
 		430792296B037623A8B89EB9 /* SnakeGameView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6284BA6BCADE6A64DB75D681 /* SnakeGameView.swift */; };
 		4397402231128D19451B4D3B /* BreakoutGameView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7A6010DC875A7E233DADA89 /* BreakoutGameView.swift */; };
 		442C0FCFC8F3FA259F6BA39A /* FaceUnlock.swift in Sources */ = {isa = PBXBuildFile; fileRef = 25B7E1619A5F162E845D012C /* FaceUnlock.swift */; };
@@ -77,6 +80,7 @@
 		5355AB8F0AAFABC40D778C04 /* SandboxMigration.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7EE75D24E20F68ED45BAC0A /* SandboxMigration.swift */; };
 		5357AD94F379A579A17BE07D /* DuoAnimation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 69FFE07B5C8CD7AE23B2DDA7 /* DuoAnimation.swift */; };
 		537F255A1D69F77CC3D7AF9E /* FocusView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C357EE29CC1EB9117F9FD20 /* FocusView.swift */; };
+		54CD01E3A05200B4078306CB /* Still-MIT.txt in Resources */ = {isa = PBXBuildFile; fileRef = F626925A0B733CB3009A7B57 /* Still-MIT.txt */; };
 		551145056941A04D36C2B5A2 /* AIPure.swift in Sources */ = {isa = PBXBuildFile; fileRef = B3E33F2560D7769C54AC98C1 /* AIPure.swift */; };
 		559ACE16871EEAB029D13015 /* NotchSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 68B9FDCF64AD3B173A4D3440 /* NotchSettings.swift */; };
 		559DB140309458EAB8AD6BFF /* MediaKeyInterceptor.swift in Sources */ = {isa = PBXBuildFile; fileRef = D27AA020801BE2A842BE0732 /* MediaKeyInterceptor.swift */; };
@@ -85,6 +89,7 @@
 		5AB8124D1C5F0BA91018A820 /* TranslationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F56873F8683487EBE9C958A /* TranslationManager.swift */; };
 		5B0455BCC42E04EAF3366727 /* AIProviders.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A2A98A73E13E924C3E3852B /* AIProviders.swift */; };
 		5D7F5D766A349C34E27672E2 /* GameEngines.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A2294A11AF6369D10835393 /* GameEngines.swift */; };
+		5DA036B0487FEFE1B56816D4 /* Purge-MIT.txt in Resources */ = {isa = PBXBuildFile; fileRef = 8AFC7FE5E490233091CC0AC2 /* Purge-MIT.txt */; };
 		5DCFF5FAC0FB3C4B22AE8E7B /* NotchMessengerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 643FFB36BCE34E64BBD52883 /* NotchMessengerView.swift */; };
 		5F2E6DC4CD761DFB777B0C6B /* SharedStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9E160C9C8DBBE561F7DD2AD /* SharedStore.swift */; };
 		66F9ECB3DB5740E0CA3A1801 /* NotchWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3ED6813AA8EF7F3F44235A0D /* NotchWindowController.swift */; };
@@ -102,6 +107,7 @@
 		7558F51D18A2B382FFD6BAE9 /* CompanionProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8945C0BF0272BD283A250BDC /* CompanionProtocol.swift */; };
 		758A59E0A3B0AB8662E95B0D /* ScreenIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = E05A03C9C8BB062C1E2C1DBB /* ScreenIntent.swift */; };
 		7651FFF0A83FB22D9BD7AE4C /* SettingsManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA5B0C58A3CF928A968E10F8 /* SettingsManager.swift */; };
+		785EFD70B29DAD7A9C3F1257 /* NotchKit in Frameworks */ = {isa = PBXBuildFile; productRef = 5B0AB45D19903FF148FD7B3B /* NotchKit */; };
 		7AD5B26CCD47C4B789FA217F /* AIModes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44CAF8A30126F03D6A230ED7 /* AIModes.swift */; };
 		7E59E9FB95878ACFAF45A095 /* NotificationsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E45CA4DA23D38E6A1DBA06F /* NotificationsView.swift */; };
 		7E8386EF609533C3CF5608D8 /* WeatherService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 92FC7E64A4478DE0F57D42E4 /* WeatherService.swift */; };
@@ -182,6 +188,7 @@
 		EA8BCEA5F012BD96146FA293 /* NotchTranslatorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5D5440E6913CD26F8F12FBAE /* NotchTranslatorView.swift */; };
 		EADE473BE2A43DB53FDBF7CE /* QuickAddView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 709B6D7DF73EDC5126DF68D8 /* QuickAddView.swift */; };
 		EB53320B29FB664836E79985 /* WebP2PManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = E07ED38955AE546C7637D5B9 /* WebP2PManager.swift */; };
+		F2926A7C184BC3088FA41CB1 /* NOTICE.md in Resources */ = {isa = PBXBuildFile; fileRef = 831411156E1371B3FCF69187 /* NOTICE.md */; };
 		F3C7A9A25D260F232F140B77 /* Converter.swift in Sources */ = {isa = PBXBuildFile; fileRef = F323D82F0AF46D956EA470CA /* Converter.swift */; };
 		F6E3BFD260D3182D21C66E29 /* ScreenTools.swift in Sources */ = {isa = PBXBuildFile; fileRef = 052621B0F73FFEA23C93C8B2 /* ScreenTools.swift */; };
 		F8B6F02D08FC1FB3D04286FC /* HotCornerLogic.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C151FE67E6474F51CD20219 /* HotCornerLogic.swift */; };
@@ -219,6 +226,7 @@
 		0335700922F2B064E7FC742F /* NotesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotesView.swift; sourceTree = "<group>"; };
 		033E65EDFD61BEE79967253B /* MessengerModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessengerModels.swift; sourceTree = "<group>"; };
 		052621B0F73FFEA23C93C8B2 /* ScreenTools.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenTools.swift; sourceTree = "<group>"; };
+		08FCD39C305D6997D25CE2CB /* NotchKit */ = {isa = PBXFileReference; lastKnownFileType = folder; name = NotchKit; path = Packages/NotchKit; sourceTree = SOURCE_ROOT; };
 		0918F482C2DF3A150F375D22 /* CompanionServer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompanionServer.swift; sourceTree = "<group>"; };
 		0A2A98A73E13E924C3E3852B /* AIProviders.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIProviders.swift; sourceTree = "<group>"; };
 		0AAD6AEBA1965B0D8839F58A /* AppRelauncher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppRelauncher.swift; sourceTree = "<group>"; };
@@ -239,6 +247,7 @@
 		21DB33F0188BFD9B3D8FA4C3 /* ClipboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClipboardView.swift; sourceTree = "<group>"; };
 		2254DC7F98860645E6CC2E11 /* TodayExtras.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodayExtras.swift; sourceTree = "<group>"; };
 		2269398FC9C57443402C81D8 /* TrustSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrustSettings.swift; sourceTree = "<group>"; };
+		2322D56CD828DF3443E53CC5 /* LidAngleSensor-Apache-2.0.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = "LidAngleSensor-Apache-2.0.txt"; sourceTree = "<group>"; };
 		25B7E1619A5F162E845D012C /* FaceUnlock.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FaceUnlock.swift; sourceTree = "<group>"; };
 		2600981443BE101B7F8049FD /* MarketsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarketsView.swift; sourceTree = "<group>"; };
 		264A2A3E4ADCB8D6919DC502 /* SnakeGameViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SnakeGameViewModel.swift; sourceTree = "<group>"; };
@@ -306,11 +315,14 @@
 		7F6EACC9E26C6695BA7C5724 /* NotchWidgetCenter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotchWidgetCenter.swift; sourceTree = "<group>"; };
 		7FA95D922A40D6601CCC213A /* AppAudioTap.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppAudioTap.swift; sourceTree = "<group>"; };
 		81150E6B4F5BE3E2EB5CE1A1 /* PermissionsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PermissionsView.swift; sourceTree = "<group>"; };
+		831411156E1371B3FCF69187 /* NOTICE.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = NOTICE.md; sourceTree = "<group>"; };
 		8436033AA85EDE8B497C3BE6 /* LicenseTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LicenseTests.swift; sourceTree = "<group>"; };
 		878D1B5C95884945FA120D5E /* BrowserMedia.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrowserMedia.swift; sourceTree = "<group>"; };
 		880D308A931930DF080834D9 /* ExtrasSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExtrasSettings.swift; sourceTree = "<group>"; };
 		8945C0BF0272BD283A250BDC /* CompanionProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompanionProtocol.swift; sourceTree = "<group>"; };
+		8AFC7FE5E490233091CC0AC2 /* Purge-MIT.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = "Purge-MIT.txt"; sourceTree = "<group>"; };
 		8DD6D3003087F986015A60A7 /* TodayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodayView.swift; sourceTree = "<group>"; };
+		8E215AC0F99CCC1E81AC1732 /* AcknowledgementsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AcknowledgementsView.swift; sourceTree = "<group>"; };
 		908CD072D0A46C818B89DD0D /* PluginsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PluginsView.swift; sourceTree = "<group>"; };
 		91C60D5E0497858899252D40 /* UpdateChecker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdateChecker.swift; sourceTree = "<group>"; };
 		92FC7E64A4478DE0F57D42E4 /* WeatherService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeatherService.swift; sourceTree = "<group>"; };
@@ -369,6 +381,7 @@
 		E6FBB87EB9AFEA3906A669FC /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
 		E7EE75D24E20F68ED45BAC0A /* SandboxMigration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SandboxMigration.swift; sourceTree = "<group>"; };
 		E908464AA33EDC69CFBCDF86 /* LocationProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationProvider.swift; sourceTree = "<group>"; };
+		E9BC705D2AB9550EE9339978 /* ModuleRegistry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModuleRegistry.swift; sourceTree = "<group>"; };
 		EA5B0C58A3CF928A968E10F8 /* SettingsManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsManager.swift; sourceTree = "<group>"; };
 		EAAF61A77914CEADECA550D4 /* ScreenRecordingDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenRecordingDetector.swift; sourceTree = "<group>"; };
 		EC316BD63536E8BD6E9FCD54 /* SettingsWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsWindowController.swift; sourceTree = "<group>"; };
@@ -381,12 +394,24 @@
 		F323D82F0AF46D956EA470CA /* Converter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Converter.swift; sourceTree = "<group>"; };
 		F49D3A20C7CFE9C60DB8CBC3 /* LiveActivity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveActivity.swift; sourceTree = "<group>"; };
 		F5ADCED15F89DDEB6FD1BC44 /* PurgeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PurgeView.swift; sourceTree = "<group>"; };
+		F626925A0B733CB3009A7B57 /* Still-MIT.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = "Still-MIT.txt"; sourceTree = "<group>"; };
 		F927A01984BE61BD7A76FA4A /* BiometricAuth.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BiometricAuth.swift; sourceTree = "<group>"; };
 		FAD3012040BD25D1B90DFD5E /* AppleIntelligence.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppleIntelligence.swift; sourceTree = "<group>"; };
 		FB44C1551051FAC38513B591 /* MirrorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MirrorView.swift; sourceTree = "<group>"; };
 		FBF521DE52E4227ABF0CCC29 /* Entitlements.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Entitlements.swift; sourceTree = "<group>"; };
 		FC6F714640D09B5653DF1D9F /* nowplaying.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = nowplaying.js; sourceTree = "<group>"; };
 /* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		BB77451A02C5CC641817CCB1 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				785EFD70B29DAD7A9C3F1257 /* NotchKit in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
 		266F4B9D59CAFDD3ED749F99 /* Claude */ = {
@@ -495,6 +520,7 @@
 		406331E011DA1A6501AE44AE /* UI */ = {
 			isa = PBXGroup;
 			children = (
+				8E215AC0F99CCC1E81AC1732 /* AcknowledgementsView.swift */,
 				D2080B6F1BB18CC9E7A42044 /* ActivationView.swift */,
 				BF6EF909C581BCC04AAEF2AA /* AppActionsMenu.swift */,
 				C2B877B3FC56AA179FD7FEAE /* CommandPalette.swift */,
@@ -606,6 +632,7 @@
 				B16F24E7C42EBCCB3F46202A /* LicenseKey.swift */,
 				F49D3A20C7CFE9C60DB8CBC3 /* LiveActivity.swift */,
 				E908464AA33EDC69CFBCDF86 /* LocationProvider.swift */,
+				E9BC705D2AB9550EE9339978 /* ModuleRegistry.swift */,
 				C7C02C79EB9558F42EE15425 /* NotchBehavior.swift */,
 				7F6EACC9E26C6695BA7C5724 /* NotchWidgetCenter.swift */,
 				13BA89CC14259A92057EDFDC /* ProductKeys.swift */,
@@ -726,10 +753,12 @@
 			isa = PBXGroup;
 			children = (
 				C33DEF549EC465E249139727 /* CompanionKit */,
+				D12E7801259160045F46AB13 /* LICENSES */,
 				2F5C7398FBC0799B93E71E2E /* NotchApple */,
 				4FDBD7B4BACFA5DD0D5BABBF /* NotchAppleTests */,
 				456DB99898D5E95C40B8C097 /* NotchCompanion */,
 				A8F2BA5E81A712C77D12DBBB /* NotchWidget */,
+				CBAFBC87CE140C26DE6530F0 /* Packages */,
 				44C7D9547E8772A958F00E13 /* Shared */,
 				8220110CEF8E0785D5DB4011 /* Products */,
 			);
@@ -881,6 +910,25 @@
 			path = Shortcuts;
 			sourceTree = "<group>";
 		};
+		CBAFBC87CE140C26DE6530F0 /* Packages */ = {
+			isa = PBXGroup;
+			children = (
+				08FCD39C305D6997D25CE2CB /* NotchKit */,
+			);
+			path = Packages;
+			sourceTree = "<group>";
+		};
+		D12E7801259160045F46AB13 /* LICENSES */ = {
+			isa = PBXGroup;
+			children = (
+				2322D56CD828DF3443E53CC5 /* LidAngleSensor-Apache-2.0.txt */,
+				831411156E1371B3FCF69187 /* NOTICE.md */,
+				8AFC7FE5E490233091CC0AC2 /* Purge-MIT.txt */,
+				F626925A0B733CB3009A7B57 /* Still-MIT.txt */,
+			);
+			path = LICENSES;
+			sourceTree = "<group>";
+		};
 		D506FAC9BF7EB2007D0D1C92 /* Tunnelblick */ = {
 			isa = PBXGroup;
 			children = (
@@ -967,6 +1015,7 @@
 			buildPhases = (
 				0CAC0EF7F721D46EC8D4DD34 /* Sources */,
 				E4C0656A704ACBDC5CCE3694 /* Resources */,
+				BB77451A02C5CC641817CCB1 /* Frameworks */,
 				963F10E61B0D376DEF5A82E1 /* Embed Foundation Extensions */,
 			);
 			buildRules = (
@@ -976,6 +1025,7 @@
 			);
 			name = NotchApple;
 			packageProductDependencies = (
+				5B0AB45D19903FF148FD7B3B /* NotchKit */,
 			);
 			productName = NotchApple;
 			productReference = 7F0A6971B6F0205B6D174308 /* NotchApple.app */;
@@ -1069,6 +1119,9 @@
 			);
 			mainGroup = 8C41903580F1849D76F1722D;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				7644682C346A3465203B44C4 /* XCLocalSwiftPackageReference "Packages/NotchKit" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 8220110CEF8E0785D5DB4011 /* Products */;
 			projectDirPath = "";
@@ -1100,7 +1153,11 @@
 				0BDD91775E21B5BEDDF33463 /* BackgroundMusic.pkg in Resources */,
 				CFAB476520EEBC0E831DF7DE /* GoogleService-Info.plist in Resources */,
 				6CB3126DF2584324131FE504 /* LICENSE-Tunnelblick.txt in Resources */,
+				3DF5E21ACEFE3B997230D098 /* LidAngleSensor-Apache-2.0.txt in Resources */,
+				F2926A7C184BC3088FA41CB1 /* NOTICE.md in Resources */,
 				8360703F9BC1E35F13FEFE5C /* NotchApple.sdef in Resources */,
+				5DA036B0487FEFE1B56816D4 /* Purge-MIT.txt in Resources */,
+				54CD01E3A05200B4078306CB /* Still-MIT.txt in Resources */,
 				29326D872AE0DC306AFD1986 /* Tunnelblick-ABOUT.txt in Resources */,
 				14BB6F024439C7EDE0DCBD2C /* nowplaying.js in Resources */,
 			);
@@ -1121,6 +1178,7 @@
 				32E6B4D47E39327BF494D2E5 /* AIStreaming.swift in Sources */,
 				56C4E2E053ED2358442D87C7 /* AccessCodeManager.swift in Sources */,
 				D259A3CCCF1FD276BAD8F02C /* AccountSync.swift in Sources */,
+				26D09B0E866D702D64C68CEB /* AcknowledgementsView.swift in Sources */,
 				A358C5DCEA06EB17B99C6907 /* ActivationView.swift in Sources */,
 				B069F2308D10FC9D1865F86E /* AppActionsMenu.swift in Sources */,
 				5AA91607B79AC951AF761EAC /* AppAudioTap.swift in Sources */,
@@ -1186,6 +1244,7 @@
 				028C6C33AD6C682F03B0695B /* MessengerNotifier.swift in Sources */,
 				EA6A5158CB578D683DE18C94 /* MirrorView.swift in Sources */,
 				21586C0BF170E4B586EF009A /* ModuleOrganizer.swift in Sources */,
+				41EAE8424A153B98E9F676F0 /* ModuleRegistry.swift in Sources */,
 				CF18C9EA57286EB1C27AB45F /* MoreTeams.swift in Sources */,
 				874BC0D84B434A3CE5910FCD /* MusicLevelMeter.swift in Sources */,
 				4098B0C40272540FC563BC1F /* NotchAppleApp.swift in Sources */,
@@ -1643,6 +1702,20 @@
 			defaultConfigurationName = Debug;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		7644682C346A3465203B44C4 /* XCLocalSwiftPackageReference "Packages/NotchKit" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = Packages/NotchKit;
+		};
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		5B0AB45D19903FF148FD7B3B /* NotchKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = NotchKit;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = AA6ADF38C0DEF3FDA72D7F8D /* Project object */;
 }

@@ -1549,6 +1549,7 @@ private struct WidgetSettings: View {
 
 private struct AboutSettings: View {
     @State private var showWhatsNew = WhatsNew.hasUnseen
+    @State private var showAcknowledgements = false
     @StateObject private var license = LicenseState.shared
     @ObservedObject private var updater = UpdateChecker.shared
 
@@ -1584,9 +1585,11 @@ private struct AboutSettings: View {
                 Link("Donate", destination: URL(string: "https://github.com/AdityaJainDXB/NotchApples#donate-")!)
             }
             Text("MIT License").font(.caption).foregroundStyle(.secondary)
+            Button("Acknowledgements") { showAcknowledgements = true }.buttonStyle(.link).font(.caption)
             Button("Quit Notch apple") { NSApp.terminate(nil) }.padding(.top, 8)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .sheet(isPresented: $showAcknowledgements) { AcknowledgementsView() }
         .sheet(isPresented: $showWhatsNew) {
             VStack(spacing: 0) {
                 HStack {

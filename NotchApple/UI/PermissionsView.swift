@@ -13,6 +13,7 @@ import UserNotifications
 import EventKit
 import AVFoundation
 import CoreLocation
+import NotchKit
 
 @MainActor
 final class PermissionsModel: ObservableObject {
@@ -94,6 +95,8 @@ struct PermissionsView: View {
     @StateObject private var location = LocationProvider.shared
     var showsWelcome = false
     @State private var screenGranted = ScreenPermission.isGranted
+    @ObservedObject private var registry = ModuleRegistry.shared
+    @State private var fullDiskGranted = ModulePermissionState.hasFullDiskAccess
 
     private let poll = Timer.publish(every: 2, on: .main, in: .common).autoconnect()
 
@@ -140,6 +143,21 @@ struct PermissionsView: View {
                     }
                 }
             } header: { Text("Screen") }
+
+            // Permissions the optional modules (Lid Fold, Cleaner) can use. Empty until one is installed.
+            if registry.requestedPermissions.contains(.fullDiskAccess) {
+                Section {
+                    row("Full Disk Access", "internaldrive.fill", .gray,
+                        detail: ModulePermission.fullDiskAccess.explanation,
+                        state: fullDiskGranted ? .granted : .notSet) {
+                        if !fullDiskGranted {
+                            Button("Open Settings…") { ModulePermissionState.open(.fullDiskAccess) }
+                        }
+                    }
+                } header: { Text("Optional modules") } footer: {
+                    Text("Optional. Without it the Cleaner still works on the folders your account can open, and shows which protected locations it could not check.")
+                }
+            }
 
             Section {
                 row("Open at login", "power", .green,
@@ -197,7 +215,7 @@ struct PermissionsView: View {
             }
         }
         .formStyle(.grouped)
-        .onReceive(poll) { _ in model.refresh(); location.refreshStatus(); screenGranted = ScreenPermission.isGranted }
+        .onReceive(poll) { _ in model.refresh(); location.refreshStatus(); screenGranted = ScreenPermission.isGranted; fullDiskGranted = ModulePermissionState.hasFullDiskAccess }
         .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
             model.refresh(); location.refreshStatus()
         }

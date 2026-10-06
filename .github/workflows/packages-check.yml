@@ -1,0 +1,28 @@
+# Checks the local Swift packages (Packages/*) on a real Xcode: they must build, their XCTest suites must
+# pass, and the app must still build with them linked in through xcodegen. Never publishes anything.
+name: Packages check
+
+on:
+  workflow_dispatch:
+  push:
+    branches: ['module-**']
+    paths: ['Packages/**', 'project.yml', 'NotchApple/**', '.github/workflows/packages-check.yml']
+
+jobs:
+  check:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: xcodebuild -version && swift --version
+      - run: brew install xcodegen
+      - name: Package tests
+        run: |
+          for p in Packages/*/; do
+            echo "== $p"
+            swift test --package-path "$p"
+          done
+      - name: App builds with the packages (xcodegen local packages)
+        run: |
+          xcodegen generate
+          xcodebuild -project NotchApple.xcodeproj -scheme NotchApple -destination 'platform=macOS' \
+            CODE_SIGN_IDENTITY=- CODE_SIGNING_ALLOWED=NO build | tail -30

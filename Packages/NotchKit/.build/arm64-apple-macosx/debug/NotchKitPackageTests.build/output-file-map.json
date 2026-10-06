@@ -1,0 +1,12 @@
+{
+  "": {
+    "swift-dependencies": "/Users/suminsethi/Library/Application Support/Claude/scratch-workspaces/71688280-2f4c-42f4-b049-12c3b7bbd008/0d87d925-e510-4558-bba7-43e90f113e58/scratch-2026-09-29-7ca63f/NotchApples/Packages/NotchKit/.build/arm64-apple-macosx/debug/NotchKitPackageTests.build/master.swiftdeps"
+  },
+  "/Users/suminsethi/Library/Application Support/Claude/scratch-workspaces/71688280-2f4c-42f4-b049-12c3b7bbd008/0d87d925-e510-4558-bba7-43e90f113e58/scratch-2026-09-29-7ca63f/NotchApples/Packages/NotchKit/.build/arm64-apple-macosx/debug/NotchKitPackageTests.derived/runner.swift": {
+    "dependencies": "/Users/suminsethi/Library/Application Support/Claude/scratch-workspaces/71688280-2f4c-42f4-b049-12c3b7bbd008/0d87d925-e510-4558-bba7-43e90f113e58/scratch-2026-09-29-7ca63f/NotchApples/Packages/NotchKit/.build/arm64-apple-macosx/debug/NotchKitPackageTests.build/runner.d",
+    "object": "/Users/suminsethi/Library/Application Support/Claude/scratch-workspaces/71688280-2f4c-42f4-b049-12c3b7bbd008/0d87d925-e510-4558-bba7-43e90f113e58/scratch-2026-09-29-7ca63f/NotchApples/Packages/NotchKit/.build/arm64-apple-macosx/debug/NotchKitPackageTests.build/runner.swift.o",
+    "swiftmodule": "/Users/suminsethi/Library/Application Support/Claude/scratch-workspaces/71688280-2f4c-42f4-b049-12c3b7bbd008/0d87d925-e510-4558-bba7-43e90f113e58/scratch-2026-09-29-7ca63f/NotchApples/Packages/NotchKit/.build/arm64-apple-macosx/debug/NotchKitPackageTests.build/runner~partial.swiftmodule",
+    "swift-dependencies": "/Users/suminsethi/Library/Application Support/Claude/scratch-workspaces/71688280-2f4c-42f4-b049-12c3b7bbd008/0d87d925-e510-4558-bba7-43e90f113e58/scratch-2026-09-29-7ca63f/NotchApples/Packages/NotchKit/.build/arm64-apple-macosx/debug/NotchKitPackageTests.build/runner.swiftdeps",
+    "diagnostics": "/Users/suminsethi/Library/Application Support/Claude/scratch-workspaces/71688280-2f4c-42f4-b049-12c3b7bbd008/0d87d925-e510-4558-bba7-43e90f113e58/scratch-2026-09-29-7ca63f/NotchApples/Packages/NotchKit/.build/arm64-apple-macosx/debug/NotchKitPackageTests.build/runner.dia"
+  }
+}

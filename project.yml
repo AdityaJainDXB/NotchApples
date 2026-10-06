@@ -5,6 +5,9 @@ options:
     macOS: "14.0"
     iOS: "17.0"
   createIntermediateGroups: true
+packages:
+  NotchKit:
+    path: Packages/NotchKit
 settings:
   base:
     SWIFT_VERSION: "5.0"
@@ -18,10 +21,16 @@ targets:
   NotchApple:
     type: application
     platform: macOS
-    sources: [NotchApple, Shared, CompanionKit]
+    sources:
+      - NotchApple
+      - Shared
+      - CompanionKit
+      - path: LICENSES
+        buildPhase: resources
     dependencies:
       - target: NotchWidget
         embed: true
+      - package: NotchKit
     settings:
       base:
         PRODUCT_NAME: "Notch apple"
