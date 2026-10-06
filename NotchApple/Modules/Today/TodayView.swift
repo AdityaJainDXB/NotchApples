@@ -82,6 +82,7 @@ struct TodayView: View {
                     Text(Date.now.formatted(.dateTime.weekday(.wide))).sectionTitle()
                     Text(Date.now.formatted(.dateTime.day().month(.wide)))
                         .font(.system(size: 26, weight: .bold, design: .rounded)).foregroundStyle(.white)
+                    OneThingToday()
 
                     if let w = model.weather {
                         HStack(spacing: 8) {
@@ -159,6 +160,7 @@ struct TodayView: View {
                             .font(.system(size: 12)).foregroundStyle(Theme.textSecondary)
                     }
                     Spacer(minLength: 0)
+                    CountdownsList()
                 }
             }
         }

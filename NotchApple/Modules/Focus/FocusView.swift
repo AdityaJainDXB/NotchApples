@@ -64,6 +64,17 @@ struct FocusView: View {
                         .font(.system(size: 12)).foregroundStyle(Theme.textSecondary)
                 }
 
+                // Daily goal: a bar that fills as you focus.
+                HStack(spacing: 8) {
+                    if timer.dailyGoal > 0 {
+                        let f = WellbeingLogic.goalFraction(minutes: timer.minutesToday, goal: timer.dailyGoal)
+                        ProgressView(value: f).tint(f >= 1 ? .green : Theme.accent).frame(width: 130)
+                        Text("\(timer.minutesToday) of \(timer.dailyGoal) min").font(.system(size: 11)).foregroundStyle(Theme.textSecondary)
+                    }
+                    Stepper(timer.dailyGoal > 0 ? "Goal" : "Set a daily goal", value: $timer.dailyGoal, in: 0...600, step: 15)
+                        .font(.system(size: 11)).foregroundStyle(Theme.textSecondary).fixedSize()
+                }
+
                 // This week's focus minutes.
                 HStack(alignment: .bottom, spacing: 6) {
                     let week = timer.lastWeek

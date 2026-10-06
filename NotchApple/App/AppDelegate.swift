@@ -44,6 +44,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         CrashReports.shared.checkAtLaunch()
         CompanionServer.shared.apply()
         ClipboardLink.shared.apply()
+        WellbeingService.shared.start()
         NotesCloudSync.shared.syncNow()
         // Ultimate: plugins keep running in the background for Home widgets and activities.
         if PluginHost.shared.keepRunning { PluginHost.shared.start() }

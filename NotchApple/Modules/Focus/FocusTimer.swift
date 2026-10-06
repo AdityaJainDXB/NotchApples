@@ -41,9 +41,15 @@ final class FocusTimer: ObservableObject {
         }
     }
 
+    /// Minutes of focus you want each day (0 = no goal), and how many you've done today.
+    @AppStorage("focus.goal") var dailyGoal = 0
+    var minutesToday: Int { history[today] ?? 0 }
+
     private func logMinutes(_ minutes: Int) {
         var h = history
+        let before = h[today] ?? 0
         h[today, default: 0] += minutes
+        if dailyGoal > 0, before < dailyGoal, before + minutes >= dailyGoal { Notifier.post(title: "Daily focus goal reached", body: "\(dailyGoal) minutes of focus today. Nice work.") }
         // Keep about two months.
         if h.count > 60 { for key in h.keys.sorted().prefix(h.count - 60) { h[key] = nil } }
         historyData = (try? JSONEncoder().encode(h)) ?? Data()
