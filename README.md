@@ -328,6 +328,11 @@ All screenshots use sample data.
 - **F1:** a favourite team; qualifying gaps and best laps.
 - **What's New** in Settings → About, shown once after updating.
 
+#### New in 1.29.0
+
+- **Lid Fold (off by default).** Fold your desktop like a closing laptop lid: it tilts, frosts and dims, then returns. Settings → Lid Fold has **Preview**, a **timed demo** and a **⌃⌥F** fold-and-hold hotkey; on MacBooks with a lid-angle sensor, **Follow the lid** folds as you close the screen. Click, **Esc** or the hotkey always removes it; folds end by themselves (Preview about 4 s, demo 12 s, hotkey 30 s); errors, sleep, lock and display changes remove it too. It takes one still snapshot per display (needs Screen Recording; without it Preview uses a plain backdrop) and nothing leaves your Mac.
+- **Acknowledgements** in Settings → About, with the licences of the projects Lid Fold builds on: Still (MIT) and LidAngleSensor (Apache 2.0). See `LICENSES/`.
+
 #### New in 1.28.1
 
 - **Smoother window switching.** Switching tabs now has the Duo blur-morph: the new page slides in from the side it sits on in the tab bar, coming into focus out of a blur, while the old page blurs and fades away. The two overlap while they swap, so nothing jumps. (Duo animations off or Reduce Motion on keeps the plain switch.)

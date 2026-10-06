@@ -21,6 +21,12 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "1.29.0", date: "6 October 2026", headline: "Lid Fold", items: [
+            "Lid Fold folds your desktop like a closing laptop lid: it tilts, frosts and dims, then comes back. It is off by default. Turn it on in Settings → Lid Fold, then try Preview, the timed demo, or press ⌃⌥F to fold and hold.",
+            "On a MacBook with a lid-angle sensor, “Follow the lid” folds the desktop as you close the screen and unfolds it as you reopen it. Macs without the sensor can still use Preview, the demo and the hotkey.",
+            "A fold is always dismissible: click anywhere, press Esc or the hotkey. Every fold except the lid-following one also ends by itself, and any error, sleep, lock or display change removes it. Without Screen Recording it previews on a plain backdrop and captures nothing.",
+            "Settings → About → Acknowledgements credits the open-source projects Lid Fold builds on, with their licences.",
+        ]),
         ReleaseNote(version: "1.28.1", date: "5 October 2026", headline: "Smoother window switching", items: [
             "Switching tabs now has the Duo blur-morph too: the new page slides in from the side it sits on in the tab bar, coming into focus out of a blur, while the old page blurs and fades away. The pages overlap while they swap, so nothing jumps.",
         ]),
