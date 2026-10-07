@@ -109,4 +109,32 @@ final class ClaudeLimitsTests: XCTestCase {
         XCTAssertEqual(ClaudeLimitsLogic.duration(4800), "1h 20m")
         XCTAssertEqual(ClaudeLimitsLogic.duration(2700), "45m")
     }
+
+    func testHistoryKeepsThirtyDaysAndSkipsCloseSamples() {
+        typealias H = ClaudeHistoryLogic
+        let now = Date(timeIntervalSince1970: 1_790_000_000)
+        let old = ClaudeUsageSample(account: "a", time: now.addingTimeInterval(-31 * 86_400), fiveHour: 0.5, sevenDay: 0.5)
+        let first = ClaudeUsageSample(account: "a", time: now.addingTimeInterval(-3600), fiveHour: 0.2, sevenDay: 0.4)
+        var list = H.appended([old, first], ClaudeUsageSample(account: "a", time: now.addingTimeInterval(-3500), fiveHour: 0.3, sevenDay: 0.4), now: now)
+        XCTAssertEqual(list, [first])                       // too close to the last one, and the old one is gone
+        list = H.appended(list, ClaudeUsageSample(account: "b", time: now.addingTimeInterval(-3500), fiveHour: 0.3, sevenDay: 0.4), now: now)
+        XCTAssertEqual(list.count, 2)                       // another account is its own series
+        let days = H.dailyPeaks(list, account: "a", days: 30, now: now)
+        XCTAssertEqual(days.count, 30)
+        XCTAssertEqual(days.last?.sevenDayPeak, 0.4)
+        XCTAssertNil(days.first?.sevenDayPeak)
+    }
+
+    func testAccountsAreNamedAndPicked() {
+        let home = "/Users/x"
+        XCTAssertEqual(ClaudeAccountLogic.service(forConfigDir: home + "/.claude", home: home), "Claude Code-credentials")
+        let hashed = ClaudeAccountLogic.service(forConfigDir: home + "/.claude-work", home: home)
+        XCTAssertTrue(hashed.hasPrefix("Claude Code-credentials-"))
+        XCTAssertEqual(hashed.count, "Claude Code-credentials-".count + 8)
+        let list = ClaudeAccountLogic.accounts(services: ["Claude Code-credentials", hashed], emails: [hashed: "me@work.com"])
+        XCTAssertEqual(list.map(\.label), ["Account 1", "me@work.com"])
+        XCTAssertEqual(ClaudeAccountLogic.active(list, picked: hashed)?.label, "me@work.com")
+        XCTAssertEqual(ClaudeAccountLogic.active(list, picked: "gone")?.label, "Account 1")
+        XCTAssertEqual(ClaudeAccountLogic.accounts(services: ["Claude Code-credentials"], emails: [:]).first?.label, "Claude account")
+    }
 }

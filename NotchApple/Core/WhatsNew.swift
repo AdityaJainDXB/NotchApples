@@ -20,6 +20,11 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "1.34.5", date: "7 October 2026", headline: "Search finds features, and a better Claude usage tab", items: [
+            "Settings search now finds features: type \"windows\" and Modules & Layout opens showing only Windows, highlighted, with a button to show everything again.",
+            "Claude usage has a new look: a ring for each limit, Opus and Sonnet bars when Claude reports them, and a 30-day chart of your busiest point each day.",
+            "Several Claude accounts: if Claude Code is signed in under more than one account, pick which to show and see the others at a glance.",
+        ]),
         ReleaseNote(version: "1.34.4", date: "7 October 2026", headline: "Claude usage alerts and a run-out forecast", items: [
             "A notification when your real 5-hour session or week reaches 80% and again at 95% (Claude usage tab, on by default once connected).",
             "A line under each limit tells you when you would hit it at your current pace, if that is before it resets.",

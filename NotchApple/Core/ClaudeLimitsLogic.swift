@@ -9,6 +9,7 @@
 //
 
 import Foundation
+import CryptoKit
 
 struct ClaudeLimit: Equatable {
     /// 0…1 of the limit used (can pass 1 if Claude says so).
@@ -94,7 +95,7 @@ enum ClaudeLimitsLogic {
             }
             return ClaudeLimit(fraction: u, resetsAt: reset)
         }
-        let result = ClaudeLimits(fiveHour: limit("5h"), sevenDay: limit("7d"))
+        let result = ClaudeLimits(fiveHour: limit("5h"), sevenDay: limit("7d"), sevenDayOpus: limit("7d_opus"), sevenDaySonnet: limit("7d_sonnet"))
         return result.isEmpty ? nil : result
     }
 
@@ -164,5 +165,77 @@ enum ClaudeLimitsLogic {
         if calendar.isDate(date, inSameDayAs: now) { return "Today \(time)" }
         if let tomorrow = calendar.date(byAdding: .day, value: 1, to: now), calendar.isDate(date, inSameDayAs: tomorrow) { return "Tomorrow \(time)" }
         return date.formatted(.dateTime.month(.abbreviated).day()) + ", " + time
+    }
+}
+
+
+// MARK: - History (the last 30 days of your limits)
+
+struct ClaudeUsageSample: Codable, Equatable {
+    var account: String
+    var time: Date
+    var fiveHour: Double?      // 0…1
+    var sevenDay: Double?
+}
+
+struct ClaudeUsageDay: Equatable, Identifiable {
+    var id: Date { day }
+    let day: Date
+    let fiveHourPeak: Double?
+    let sevenDayPeak: Double?
+}
+
+enum ClaudeHistoryLogic {
+    static let keepDays = 30
+    static let minGap: TimeInterval = 10 * 60
+
+    /// Adds a sample at most every 10 minutes per account and drops anything older than 30 days.
+    static func appended(_ samples: [ClaudeUsageSample], _ new: ClaudeUsageSample, now: Date = Date()) -> [ClaudeUsageSample] {
+        var list = samples.filter { now.timeIntervalSince($0.time) < Double(keepDays) * 86_400 }
+        if let last = list.last(where: { $0.account == new.account }), new.time.timeIntervalSince(last.time) < minGap { return list }
+        list.append(new)
+        return list
+    }
+
+    /// One entry per calendar day, oldest first, for the last `days` days (days with no samples are nil peaks).
+    static func dailyPeaks(_ samples: [ClaudeUsageSample], account: String, days: Int = keepDays, now: Date = Date(), calendar: Calendar = .current) -> [ClaudeUsageDay] {
+        let today = calendar.startOfDay(for: now)
+        let mine = samples.filter { $0.account == account }
+        return (0..<days).reversed().compactMap { back in
+            guard let day = calendar.date(byAdding: .day, value: -back, to: today) else { return nil }
+            let of = mine.filter { calendar.isDate($0.time, inSameDayAs: day) }
+            return ClaudeUsageDay(day: day, fiveHourPeak: of.compactMap(\.fiveHour).max(), sevenDayPeak: of.compactMap(\.sevenDay).max())
+        }
+    }
+}
+
+// MARK: - Several Claude accounts
+
+struct ClaudeAccount: Identifiable, Equatable {
+    /// The keychain service name that holds this account's sign-in.
+    let service: String
+    var label: String
+    var id: String { service }
+}
+
+enum ClaudeAccountLogic {
+    /// Claude Code keeps the default `~/.claude` sign-in under the plain name and any other config folder under
+    /// `Claude Code-credentials-<first 8 hex of SHA-256 of the folder path>`.
+    static func service(forConfigDir path: String, home: String) -> String {
+        if path == home + "/.claude" { return ClaudeLimitsLogic.keychainService }
+        let hex = SHA256.hash(data: Data(path.utf8)).map { String(format: "%02x", $0) }.joined()
+        return ClaudeLimitsLogic.keychainService + "-" + String(hex.prefix(8))
+    }
+
+    /// A name for each service: the email Claude Code recorded for it, else "Account 2", "Account 3"…
+    static func accounts(services: [String], emails: [String: String]) -> [ClaudeAccount] {
+        services.enumerated().map { i, svc in
+            ClaudeAccount(service: svc, label: emails[svc] ?? (services.count == 1 ? "Claude account" : "Account \(i + 1)"))
+        }
+    }
+
+    /// The account to show: your pick if it still exists, else the first.
+    static func active(_ accounts: [ClaudeAccount], picked: String) -> ClaudeAccount? {
+        accounts.first { $0.service == picked } ?? accounts.first
     }
 }

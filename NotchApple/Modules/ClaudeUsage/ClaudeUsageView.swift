@@ -11,6 +11,7 @@
 
 import AppKit
 import SwiftUI
+import Charts
 
 /// Reads the transcript files off the main thread and remembers what it has already parsed.
 actor ClaudeUsageScanner {
@@ -220,6 +221,7 @@ struct ClaudeUsageView: View {
     @StateObject private var limits = ClaudeLimitsService.shared
     @ObservedObject private var layout = ModuleLayout.shared
     @State private var showDetails = false
+    @State private var showHistory = false
 
     var body: some View {
         HStack(spacing: 12) {
@@ -252,13 +254,30 @@ struct ClaudeUsageView: View {
             ConnectBanner()
             if let real = limits.limits {
                 // Your real limits, as Claude reports them.
-                PaceRow(title: "5-hour session", pace: store.blockPace, resets: "Resets " + ClaudeLimitsLogic.resetText(real.fiveHour?.resetsAt))
-                runOutLine(real.fiveHour, length: ClaudeLimitsLogic.fiveHourLength)
-                PaceRow(title: "Weekly limit", pace: store.weekPace, resets: "Resets " + ClaudeLimitsLogic.resetText(real.sevenDay?.resetsAt))
-                runOutLine(real.sevenDay, length: ClaudeLimitsLogic.sevenDayLength)
+                accountPicker
+                if showHistory {
+                    ClaudeHistoryChart(days: limits.days())
+                } else {
+                    HStack(spacing: 10) {
+                        LimitCard(title: "5-hour session", pace: store.blockPace, resets: ClaudeLimitsLogic.resetText(real.fiveHour?.resetsAt))
+                        LimitCard(title: "Weekly limit", pace: store.weekPace, resets: ClaudeLimitsLogic.resetText(real.sevenDay?.resetsAt))
+                    }
+                    runOutLine(real.fiveHour, length: ClaudeLimitsLogic.fiveHourLength)
+                    runOutLine(real.sevenDay, length: ClaudeLimitsLogic.sevenDayLength)
+                    modelBars(real)
+                    otherAccounts
+                }
                 if showDetails { realDetails(real) }
-                if let t = limits.fetched {
-                    Text("From your Claude account · updated \(t.formatted(date: .omitted, time: .shortened))").font(.system(size: 10)).foregroundStyle(Theme.textSecondary)
+                HStack {
+                    if let t = limits.fetched {
+                        Text("From your Claude account · updated \(t.formatted(date: .omitted, time: .shortened))").font(.system(size: 10)).foregroundStyle(Theme.textSecondary)
+                    }
+                    Spacer()
+                    Picker("", selection: $showHistory) {
+                        Text("Now").tag(false)
+                        Text("30 days").tag(true)
+                    }
+                    .pickerStyle(.segmented).labelsHidden().frame(width: 130)
                 }
             } else if !store.found {
                 Text("Claude Code hasn't been used on this Mac yet.").foregroundStyle(.white)
@@ -277,6 +296,62 @@ struct ClaudeUsageView: View {
                 if showDetails { details }
             }
             Spacer(minLength: 0)
+        }
+    }
+
+    /// Which Claude account is shown, when this Mac has more than one.
+    @ViewBuilder private var accountPicker: some View {
+        if limits.accounts.count > 1 {
+            Menu {
+                ForEach(limits.accounts) { a in
+                    Button { limits.select(a) } label: {
+                        if a.service == limits.active?.service { Label(a.label, systemImage: "checkmark") } else { Text(a.label) }
+                    }
+                }
+            } label: {
+                Label(limits.active?.label ?? "Account", systemImage: "person.crop.circle").font(.system(size: 11, weight: .semibold))
+            }
+            .menuStyle(.borderlessButton).fixedSize()
+        }
+    }
+
+    /// The other accounts at a glance.
+    @ViewBuilder private var otherAccounts: some View {
+        let others = limits.accounts.filter { $0.service != limits.active?.service }
+        if !others.isEmpty {
+            VStack(alignment: .leading, spacing: 4) {
+                ForEach(others) { a in
+                    Button { withAnimation(.snappy) { limits.select(a) } } label: {
+                        HStack(spacing: 6) {
+                            Image(systemName: "person.crop.circle").foregroundStyle(Theme.textSecondary)
+                            Text(a.label).lineLimit(1)
+                            Spacer()
+                            Text("5h \(limits.byAccount[a.service]?.fiveHour?.percent.description ?? "–")% · week \(limits.byAccount[a.service]?.sevenDay?.percent.description ?? "–")%")
+                                .monospacedDigit().foregroundStyle(Theme.textSecondary)
+                        }
+                        .font(.system(size: 11))
+                        .padding(.horizontal, 8).padding(.vertical, 5)
+                        .background(Theme.surface.opacity(0.6), in: RoundedRectangle(cornerRadius: 8))
+                    }
+                    .buttonStyle(.plain).foregroundStyle(.white)
+                }
+            }
+        }
+    }
+
+    /// Opus and Sonnet weekly bars, when Claude reports them.
+    @ViewBuilder private func modelBars(_ real: ClaudeLimits) -> some View {
+        let rows = [("Opus", real.sevenDayOpus), ("Sonnet", real.sevenDaySonnet)].compactMap { name, l in l.map { (name, $0) } }
+        if !rows.isEmpty {
+            VStack(spacing: 5) {
+                ForEach(rows, id: \.0) { name, l in
+                    HStack(spacing: 8) {
+                        Text("\(name) this week").font(.system(size: 11)).foregroundStyle(Theme.textSecondary).frame(width: 100, alignment: .leading)
+                        UsageBar(fraction: min(1, l.fraction))
+                        Text("\(l.percent)%").font(.system(size: 11, weight: .semibold)).monospacedDigit().foregroundStyle(.white).frame(width: 34, alignment: .trailing)
+                    }
+                }
+            }
         }
     }
 
@@ -480,5 +555,97 @@ struct ClaudePaceCard: View {
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
+    }
+}
+
+
+// MARK: - Look
+
+/// A ring that fills with how much of a limit is used, in the pace colour, with the percentage inside.
+struct UsageRing: View {
+    let pace: UsagePace?
+    var size: CGFloat = 64
+    var lineWidth: CGFloat = 8
+
+    var body: some View {
+        let colour = pace?.light.colour ?? Theme.textSecondary
+        let fraction = min(1, pace?.fraction ?? 0)
+        ZStack {
+            Circle().stroke(Color.white.opacity(0.1), lineWidth: lineWidth)
+            Circle().trim(from: 0, to: max(0.012, fraction))
+                .stroke(AngularGradient(colors: [colour.opacity(0.55), colour], center: .center, startAngle: .degrees(0), endAngle: .degrees(360 * max(0.05, fraction))),
+                        style: StrokeStyle(lineWidth: lineWidth, lineCap: .round))
+                .rotationEffect(.degrees(-90))
+                .shadow(color: colour.opacity(0.55), radius: 6)
+            Text(pace.map { "\($0.percent)%" } ?? "–")
+                .font(.system(size: size * 0.27, weight: .bold, design: .rounded)).monospacedDigit().foregroundStyle(.white)
+        }
+        .frame(width: size, height: size)
+        .animation(.snappy(duration: 0.6), value: fraction)
+    }
+}
+
+/// One limit as a card: the ring, its name, how it is going and when it resets.
+struct LimitCard: View {
+    let title: String
+    let pace: UsagePace?
+    let resets: String
+
+    var body: some View {
+        let colour = pace?.light.colour ?? Theme.textSecondary
+        HStack(spacing: 12) {
+            UsageRing(pace: pace)
+            VStack(alignment: .leading, spacing: 3) {
+                Text(title).font(.system(size: 13, weight: .semibold)).foregroundStyle(.white)
+                Text(pace?.light.word ?? "Not enough to measure yet").font(.system(size: 11, weight: .medium)).foregroundStyle(colour)
+                Text("Resets \(resets)").font(.system(size: 10)).foregroundStyle(Theme.textSecondary).lineLimit(1).minimumScaleFactor(0.8)
+            }
+            Spacer(minLength: 0)
+        }
+        .padding(12)
+        .frame(maxWidth: .infinity)
+        .background(LinearGradient(colors: [colour.opacity(0.14), Theme.surface.opacity(0.5)], startPoint: .topLeading, endPoint: .bottomTrailing),
+                    in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).strokeBorder(colour.opacity(0.25)))
+    }
+}
+
+/// The busiest point of each day over the last 30 days, for the 5-hour session and the week.
+struct ClaudeHistoryChart: View {
+    let days: [ClaudeUsageDay]
+
+    var body: some View {
+        let hasData = days.contains { $0.fiveHourPeak != nil || $0.sevenDayPeak != nil }
+        VStack(alignment: .leading, spacing: 6) {
+            Text("Last 30 days · highest point each day").font(.system(size: 11, weight: .semibold)).foregroundStyle(Theme.textSecondary)
+            if hasData {
+                Chart {
+                    ForEach(days) { d in
+                        if let w = d.sevenDayPeak {
+                            AreaMark(x: .value("Day", d.day, unit: .day), y: .value("Used", w * 100), series: .value("Limit", "Week"))
+                                .foregroundStyle(LinearGradient(colors: [Theme.accent.opacity(0.35), .clear], startPoint: .top, endPoint: .bottom))
+                            LineMark(x: .value("Day", d.day, unit: .day), y: .value("Used", w * 100), series: .value("Limit", "Week"))
+                                .foregroundStyle(Theme.accentBright).interpolationMethod(.monotone)
+                        }
+                        if let f = d.fiveHourPeak {
+                            LineMark(x: .value("Day", d.day, unit: .day), y: .value("Used", f * 100), series: .value("Limit", "5-hour"))
+                                .foregroundStyle(Color.orange).interpolationMethod(.monotone)
+                        }
+                    }
+                    RuleMark(y: .value("Limit", 100)).foregroundStyle(Color.red.opacity(0.35)).lineStyle(StrokeStyle(lineWidth: 1, dash: [4, 3]))
+                }
+                .chartYScale(domain: 0...105)
+                .chartYAxis { AxisMarks(values: [0, 50, 100]) { v in AxisGridLine().foregroundStyle(Color.white.opacity(0.08)); AxisValueLabel { if let n = v.as(Int.self) { Text("\(n)%") } } } }
+                .chartXAxis { AxisMarks(values: .stride(by: .day, count: 7)) { _ in AxisValueLabel(format: .dateTime.month(.abbreviated).day()) } }
+                .chartLegend(position: .bottom, alignment: .leading)
+                .chartForegroundStyleScale(["Week": Theme.accentBright, "5-hour": Color.orange])
+                .frame(minHeight: 130)
+            } else {
+                Text("The chart fills in as Notch apple reads your limits. Keep it connected and check back tomorrow.")
+                    .font(.system(size: 12)).foregroundStyle(Theme.textSecondary).frame(maxWidth: .infinity, minHeight: 100, alignment: .center).multilineTextAlignment(.center)
+            }
+        }
+        .padding(12)
+        .background(Theme.surface.opacity(0.5), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
     }
 }

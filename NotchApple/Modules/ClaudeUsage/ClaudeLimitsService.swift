@@ -20,12 +20,18 @@ final class ClaudeLimitsService: ObservableObject {
     enum State: Equatable { case notConnected, connecting, connected, failed(String) }
 
     @Published private(set) var state: State
+    /// The limits of the account being shown.
     @Published private(set) var limits: ClaudeLimits?
     @Published private(set) var fetched: Date?
+    /// Every Claude account found on this Mac, and the latest limits of each.
+    @Published private(set) var accounts: [ClaudeAccount] = []
+    @Published private(set) var byAccount: [String: ClaudeLimits] = [:]
+    /// The account you picked to show (empty: the first).
+    @AppStorage("claudeUsage.account") private var pickedService = ""
     /// True once you have connected; refreshes then happen quietly in the background.
     @AppStorage("claudeUsage.connected") private var wantsConnection = false
 
-    private var credential: ClaudeLimitsLogic.Credential?
+    private var credentials: [String: ClaudeLimitsLogic.Credential] = [:]
     private var lastAttempt = Date.distantPast
     private var backoffUntil = Date.distantPast
     private var busy = false
@@ -33,6 +39,14 @@ final class ClaudeLimitsService: ObservableObject {
     private init() { state = UserDefaults.standard.bool(forKey: "claudeUsage.connected") ? .connected : .notConnected }
 
     var isConnected: Bool { wantsConnection }
+
+    var active: ClaudeAccount? { ClaudeAccountLogic.active(accounts, picked: pickedService) }
+
+    func select(_ account: ClaudeAccount) {
+        pickedService = account.service
+        limits = byAccount[account.service]
+        objectWillChange.send()
+    }
 
     enum Failure: Error, Equatable {
         case signedOut, denied, rejected, offline, unreadable, http(Int)
@@ -55,7 +69,7 @@ final class ClaudeLimitsService: ObservableObject {
 
     func disconnect() {
         wantsConnection = false
-        credential = nil; limits = nil; fetched = nil
+        credentials = [:]; limits = nil; fetched = nil; byAccount = [:]; accounts = []
         state = .notConnected
     }
 
@@ -72,62 +86,126 @@ final class ClaudeLimitsService: ObservableObject {
         busy = true; defer { busy = false }
         lastAttempt = Date()
         if userInitiated { state = .connecting; backoffUntil = .distantPast }
-        do {
-            var cred = credential
-            if cred == nil || cred?.isExpired() == true { cred = try await Self.readSignIn() }
-            guard var current = cred else { throw Failure.signedOut }
-            credential = current
-            let parsed: ClaudeLimits
-            do { parsed = try await Self.fetchLimits(token: current.token) }
-            catch Failure.rejected {
-                // The token may have been refreshed by Claude Code since: read it once more.
-                current = try await Self.readSignIn()
-                credential = current
-                parsed = try await Self.fetchLimits(token: current.token)
+        if accounts.isEmpty || userInitiated { accounts = await Self.discoverAccounts() }
+        let targets = accounts.isEmpty ? [ClaudeAccount(service: ClaudeLimitsLogic.keychainService, label: "Claude account")] : accounts
+        if accounts.isEmpty { accounts = targets }
+        var firstFailure: Failure?
+        var anySuccess = false
+        for account in targets {
+            do {
+                byAccount[account.service] = try await limits(for: account)
+                anySuccess = true
+            } catch let failure as Failure {
+                credentials[account.service] = nil
+                firstFailure = firstFailure ?? failure
+            } catch {
+                firstFailure = firstFailure ?? .offline
             }
-            limits = parsed; fetched = Date(); state = .connected; wantsConnection = true
-        } catch let failure as Failure {
-            credential = nil
+        }
+        if anySuccess {
+            limits = active.flatMap { byAccount[$0.service] } ?? byAccount.values.first
+            fetched = Date(); state = .connected; wantsConnection = true
+            for (service, l) in byAccount { recordHistory(service, l) }
+        } else if let failure = firstFailure {
             // Keep showing the last good numbers; only say something when asked, or when nothing was ever read.
             if userInitiated || limits == nil { state = .failed(failure.message) }
             if !userInitiated { backoffUntil = Date().addingTimeInterval(600) }   // never nag the keychain every minute
-        } catch {
-            if userInitiated { state = .failed(Failure.offline.message) }
         }
+    }
+
+    private func limits(for account: ClaudeAccount) async throws -> ClaudeLimits {
+        var cred = credentials[account.service]
+        if cred == nil || cred?.isExpired() == true { cred = try await Self.readSignIn(service: account.service) }
+        guard var current = cred else { throw Failure.signedOut }
+        credentials[account.service] = current
+        do { return try await Self.fetchLimits(token: current.token) }
+        catch Failure.rejected {
+            // The token may have been refreshed by Claude Code since: read it once more.
+            current = try await Self.readSignIn(service: account.service)
+            credentials[account.service] = current
+            return try await Self.fetchLimits(token: current.token)
+        }
+    }
+
+    private func recordHistory(_ service: String, _ l: ClaudeLimits) {
+        let sample = ClaudeUsageSample(account: service, time: Date(), fiveHour: l.fiveHour?.fraction, sevenDay: l.sevenDay?.fraction)
+        Self.history = ClaudeHistoryLogic.appended(Self.history, sample)
+        Self.saveHistory()
+        objectWillChange.send()
+    }
+
+    // MARK: History on disk (this Mac only)
+
+    private static var historyURL: URL {
+        let dir = (FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first ?? FileManager.default.temporaryDirectory)
+            .appendingPathComponent("Notch apple", isDirectory: true)
+        try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        return dir.appendingPathComponent("claude-usage-history.json")
+    }
+    private static var loaded = false
+    static var history: [ClaudeUsageSample] = {
+        let d = JSONDecoder(); d.dateDecodingStrategy = .secondsSince1970
+        return (try? Data(contentsOf: historyURL)).flatMap { try? d.decode([ClaudeUsageSample].self, from: $0) } ?? []
+    }()
+    private static func saveHistory() {
+        let e = JSONEncoder(); e.dateEncodingStrategy = .secondsSince1970
+        if let data = try? e.encode(history) { try? data.write(to: historyURL, options: .atomic) }
+    }
+
+    /// The last 30 days for the account being shown.
+    func days() -> [ClaudeUsageDay] {
+        ClaudeHistoryLogic.dailyPeaks(Self.history, account: active?.service ?? ClaudeLimitsLogic.keychainService)
     }
 
     // MARK: Keychain and network
 
     /// Finds Claude Code's sign-in: its credentials file, then the keychain (plain name, then `-<hash>` names).
     /// macOS shows its own permission prompt for the keychain.
-    nonisolated private static func readSignIn() async throws -> ClaudeLimitsLogic.Credential {
+    nonisolated private static func readSignIn(service: String) async throws -> ClaudeLimitsLogic.Credential {
         try await withCheckedThrowingContinuation { cont in
             DispatchQueue.global(qos: .userInitiated).async {
-                cont.resume(with: Result { try readSignInNow() })
+                cont.resume(with: Result { try readSignInNow(service: service) })
             }
         }
     }
 
-    nonisolated private static func readSignInNow() throws -> ClaudeLimitsLogic.Credential {
-        let file = FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent(".claude/.credentials.json")
-        if let data = try? Data(contentsOf: file), let c = ClaudeLimitsLogic.credential(from: data), !c.isExpired() { return c }
+    /// Every Claude Code account on this Mac: the plain keychain name and each `-<hash>` name, labelled with the
+    /// email Claude Code recorded for its config folder when there is one.
+    nonisolated private static func discoverAccounts() async -> [ClaudeAccount] {
+        await withCheckedContinuation { cont in
+            DispatchQueue.global(qos: .userInitiated).async {
+                var services: [String] = []
+                if let dump = security(["dump-keychain"], timeout: 8), dump.status == 0 {
+                    services = ClaudeLimitsLogic.credentialServices(fromDump: String(decoding: dump.out, as: UTF8.self))
+                }
+                let fm = FileManager.default
+                let home = fm.homeDirectoryForCurrentUser.path
+                var dirs = [home + "/.claude"]
+                dirs += ((try? fm.contentsOfDirectory(atPath: home)) ?? []).filter { $0.hasPrefix(".claude-") }.map { home + "/" + $0 }
+                var emails: [String: String] = [:]
+                for dir in dirs {
+                    // The default folder keeps its settings in ~/.claude.json, the others inside the folder.
+                    let file = dir == home + "/.claude" ? home + "/.claude.json" : dir + "/.claude.json"
+                    guard let data = fm.contents(atPath: file),
+                          let root = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any],
+                          let email = (root["oauthAccount"] as? [String: Any])?["emailAddress"] as? String else { continue }
+                    emails[ClaudeAccountLogic.service(forConfigDir: dir, home: home)] = email
+                }
+                cont.resume(returning: ClaudeAccountLogic.accounts(services: services, emails: emails))
+            }
+        }
+    }
 
-        var services = [ClaudeLimitsLogic.keychainService]
-        if let dump = security(["dump-keychain"], timeout: 8), dump.status == 0 {
-            for name in ClaudeLimitsLogic.credentialServices(fromDump: String(decoding: dump.out, as: UTF8.self)) where !services.contains(name) { services.append(name) }
+    nonisolated private static func readSignInNow(service: String) throws -> ClaudeLimitsLogic.Credential {
+        if service == ClaudeLimitsLogic.keychainService {
+            let file = FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent(".claude/.credentials.json")
+            if let data = try? Data(contentsOf: file), let c = ClaudeLimitsLogic.credential(from: data), !c.isExpired() { return c }
         }
-        var denied = false
-        var best: ClaudeLimitsLogic.Credential?
-        for service in services {
-            guard let r = security(["find-generic-password", "-s", service, "-w"], timeout: 60) else { denied = true; continue }
-            // 44: no such item. Anything else: the person said no, or the keychain is locked.
-            if r.status != 0 { if r.status != 44 { denied = true }; continue }
-            guard let c = ClaudeLimitsLogic.credential(from: r.out) else { continue }
-            if !c.isExpired() { return c }
-            best = best ?? c
-        }
-        if let best { return best }          // expired: the usage call will say so and we ask to open Claude Code
-        throw denied ? Failure.denied : Failure.signedOut
+        guard let r = security(["find-generic-password", "-s", service, "-w"], timeout: 60) else { throw Failure.denied }
+        // 44: no such item. Anything else: the person said no, or the keychain is locked.
+        if r.status != 0 { throw r.status == 44 ? Failure.signedOut : Failure.denied }
+        guard let c = ClaudeLimitsLogic.credential(from: r.out) else { throw Failure.signedOut }
+        return c      // maybe expired: the usage call will say so and we ask to open Claude Code
     }
 
     /// Runs `/usr/bin/security`, giving up after `timeout` seconds (nil on failure to start or on timeout).

@@ -184,6 +184,18 @@ extension SettingsTab {
 final class SettingsRouter: ObservableObject {
     static let shared = SettingsRouter()
     @Published var showFocus = false
+    /// Set by Settings search: Modules & Layout shows only this feature, highlighted.
+    @Published var isolatedModule: Module?
+}
+
+extension Module {
+    /// Modules whose name or description matches a Settings search.
+    static func matching(_ query: String) -> [Module] {
+        let q = query.trimmingCharacters(in: .whitespaces).lowercased()
+        guard q.count >= 2 else { return [] }
+        return allCases.filter { $0 != .nonNecessities && $0 != .translator && ($0.title.lowercased().contains(q) || $0.blurb.lowercased().contains(q)) }
+            .sorted { ($0.title.lowercased().hasPrefix(q) ? 0 : 1) < ($1.title.lowercased().hasPrefix(q) ? 0 : 1) }
+    }
 }
 
 struct SettingsView: View {
@@ -193,13 +205,37 @@ struct SettingsView: View {
     @State private var chooseGroup = false
     @ObservedObject private var router = SettingsRouter.shared
 
+    private func openFeature(_ m: Module) {
+        router.isolatedModule = m
+        tab = .modules
+    }
+
     var body: some View {
         NavigationSplitView {
-            List(SettingsTab.sidebar.filter { $0.sidebarMatches(query) }, selection: Binding(get: { tab.sidebarRow }, set: { picked in
+            List(selection: Binding(get: { tab.sidebarRow }, set: { picked in
                 guard let t = picked else { return }
+                router.isolatedModule = nil
                 // "Privacy & Permissions" asks which of its two panes to open (unless you're already in one).
                 if t == .permissions && !tab.inPrivacyGroup { chooseGroup = true } else if t != .permissions { tab = t }
-            })) { pane in
+            })) {
+                // Features that match: open their settings on their own, highlighted.
+                let features = Module.matching(query)
+                if !features.isEmpty {
+                    Section("Features") {
+                        ForEach(features) { m in
+                            Button { openFeature(m) } label: {
+                                Label {
+                                    Text(m.title)
+                                } icon: {
+                                    Image(systemName: m.symbol).font(.system(size: 11, weight: .semibold)).foregroundStyle(.white)
+                                        .frame(width: 22, height: 22).background(Theme.accentGradient, in: RoundedRectangle(cornerRadius: 6, style: .continuous))
+                                }
+                            }
+                            .buttonStyle(.plain)
+                        }
+                    }
+                }
+                ForEach(SettingsTab.sidebar.filter { $0.sidebarMatches(query) }) { pane in
                 Label {
                     HStack {
                         Text(pane.sidebarTitle)
@@ -219,10 +255,13 @@ struct SettingsView: View {
                         .background(pane.tint.gradient, in: RoundedRectangle(cornerRadius: 6, style: .continuous))
                 }
                 .tag(pane)
+                }
             }
             .navigationSplitViewColumnWidth(190)
             .searchable(text: $query, placement: .sidebar, prompt: "Search settings")
             .onSubmit(of: .search) {
+                // A feature match comes first: "windows" opens the Windows feature's settings, on its own.
+                if let feature = Module.matching(query).first { openFeature(feature); return }
                 if let first = SettingsTab.sidebar.first(where: { $0.sidebarMatches(query) }) {
                     if first == .permissions { chooseGroup = true } else { tab = first }
                 }
@@ -773,12 +812,13 @@ private struct HomeScreenSettings: View {
 
 private struct ModulesSettings: View {
     @EnvironmentObject private var settings: SettingsManager
+    @ObservedObject private var router = SettingsRouter.shared
     @AppStorage("notch.keepInFullscreen") private var keepInFullscreen = true
 
     var body: some View {
         Form {
             // The notch's own switches, here as well as in Notch, so everything is toggled in one place.
-            Section {
+            if router.isolatedModule == nil { Section {
                 Toggle(isOn: $settings.useDuoAnimations) {
                     Text("Use iPhone Duo animations")
                     Text("The panel springs out of the notch, the highlight slides between tabs and pages morph into place.")
@@ -793,10 +833,21 @@ private struct ModulesSettings: View {
                 }
             } header: {
                 Text("Notch")
+            } }
+            if let only = router.isolatedModule {
+                Section {
+                    HStack {
+                        Label("Showing only \(only.title)", systemImage: "scope").foregroundStyle(Theme.accentBright)
+                        Spacer()
+                        Button("Show all features") { withAnimation { router.isolatedModule = nil } }
+                    }
+                }
+            } else {
+                HomeScreenSettings()
             }
-            HomeScreenSettings()
             Section {
-                ForEach(Module.allCases.filter { $0 != .nonNecessities && $0 != .translator }) { module in
+                ForEach(Module.allCases.filter { $0 != .nonNecessities && $0 != .translator && (router.isolatedModule == nil || $0 == router.isolatedModule) }) { module in
+                    Group {
                     if ModuleLayoutLogic.isManaged(module.rawValue) {
                         // Reorganised features: pick where they live instead of an on/off switch.
                         HStack(spacing: 12) {
@@ -845,6 +896,8 @@ private struct ModulesSettings: View {
                     }
                     .toggleStyle(.switch)
                     }
+                    }
+                    .listRowBackground(router.isolatedModule == module ? Theme.accent.opacity(0.22) : nil)
                 }
             } footer: {
                 Text("Every module is optional. Features marked with a place (Home, its own tab, Non-Necessities, Off) can be moved any time; Home is the first tab and the Translator lives inside Tools.")
