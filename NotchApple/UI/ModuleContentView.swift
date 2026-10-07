@@ -25,7 +25,7 @@ struct ModuleContentView: View {
         switch module {
         case .claude: ClaudeChatView()
         case .messenger: NotchMessengerView()
-        case .today: HomeScreenView()
+        case .today: HomeRouterView()
         case .focus: FocusView()
         case .notes: NotesView()
         case .windows: WindowsView()
@@ -66,5 +66,14 @@ struct ModuleContentView: View {
         case .nonNecessities: NonNecessitiesView()
         case .security: EmptyView()
         }
+    }
+}
+
+/// Home: the classic page or the widget page, whichever Settings → Modules & Layout picked.
+struct HomeRouterView: View {
+    @ObservedObject private var layout = ModuleLayout.shared
+
+    var body: some View {
+        if layout.homeStyle == .widgets { HomeScreenView() } else { TodayView() }
     }
 }

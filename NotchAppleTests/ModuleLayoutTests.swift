@@ -68,4 +68,28 @@ final class ModuleLayoutTests: XCTestCase {
         XCTAssertTrue(ModuleLayoutLogic.nonNecessitiesTabNeeded(["timer": .nonNecessities, "notes": .homeHidden]))
         XCTAssertFalse(ModuleLayoutLogic.nonNecessitiesTabNeeded(["timer": .standalone]))
     }
+
+    func testHomeStyleDefaultsToClassicAndFallsBackWhenEmpty() {
+        typealias L = ModuleLayoutLogic
+        XCTAssertEqual(L.effectiveStyle(saved: nil, onHomeCount: 5), .classic)
+        XCTAssertEqual(L.effectiveStyle(saved: .classic, onHomeCount: 5), .classic)
+        XCTAssertEqual(L.effectiveStyle(saved: .widgets, onHomeCount: 3), .widgets)
+        XCTAssertEqual(L.effectiveStyle(saved: .widgets, onHomeCount: 0), .classic)
+    }
+
+    func testHomeOrderKeepsSavedOrderThenDefaults() {
+        let names = ["devices", "alerts", "quickAdd", "claudeUsage"]
+        XCTAssertEqual(ModuleLayoutLogic.ordered(names, by: []), names)
+        XCTAssertEqual(ModuleLayoutLogic.ordered(names, by: ["quickAdd", "devices"]), ["quickAdd", "devices", "alerts", "claudeUsage"])
+        // Unknown names in the saved order are ignored.
+        XCTAssertEqual(ModuleLayoutLogic.ordered(names, by: ["gone", "alerts"]), ["alerts", "devices", "quickAdd", "claudeUsage"])
+    }
+
+    func testMovingWithinHomeStopsAtTheEnds() {
+        let cur = ["a", "b", "c"]
+        XCTAssertEqual(ModuleLayoutLogic.moved("b", by: -1, in: cur), ["b", "a", "c"])
+        XCTAssertEqual(ModuleLayoutLogic.moved("c", by: 1, in: cur), cur)
+        XCTAssertEqual(ModuleLayoutLogic.moved("a", by: -1, in: cur), cur)
+        XCTAssertEqual(ModuleLayoutLogic.moved("zzz", by: 1, in: cur), cur)
+    }
 }

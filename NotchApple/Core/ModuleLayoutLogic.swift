@@ -85,4 +85,40 @@ enum ModuleLayoutLogic {
     static func nonNecessitiesTabNeeded(_ choices: [String: LayoutChoice]) -> Bool {
         choices.values.contains(.nonNecessities)
     }
+
+    // MARK: Home screen style and order
+
+    /// Which Home page shows. Classic is the page up to 1.33 (weather, battery, up next); Widgets is the 1.34 page.
+    enum HomeStyle: String, CaseIterable, Identifiable {
+        case classic, widgets
+        var id: String { rawValue }
+        var title: String { self == .classic ? "Classic" : "Widgets" }
+    }
+
+    /// Nothing chosen means Classic. Widgets with nothing added to Home falls back to Classic rather than an empty page.
+    static func effectiveStyle(saved: HomeStyle?, onHomeCount: Int) -> HomeStyle {
+        (saved ?? .classic) == .widgets && onHomeCount > 0 ? .widgets : .classic
+    }
+
+    /// `names` in the person's saved order; anything not in the order keeps its default place after those that are.
+    static func ordered(_ names: [String], by order: [String]) -> [String] {
+        let rank = Dictionary(order.enumerated().map { ($1, $0) }, uniquingKeysWith: { a, _ in a })
+        return names.enumerated().sorted { l, r in
+            switch (rank[l.element], rank[r.element]) {
+            case let (a?, b?): return a < b
+            case (.some, nil): return true
+            case (nil, .some): return false
+            default: return l.offset < r.offset
+            }
+        }.map(\.element)
+    }
+
+    /// The new saved order after moving `name` up (-1) or down (+1) within `current` (what Home shows now).
+    static func moved(_ name: String, by step: Int, in current: [String]) -> [String] {
+        guard let i = current.firstIndex(of: name) else { return current }
+        let j = min(max(i + step, 0), current.count - 1)
+        var list = current
+        list.swapAt(i, j)
+        return list
+    }
 }

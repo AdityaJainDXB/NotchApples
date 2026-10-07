@@ -727,6 +727,50 @@ private struct AuthenticationSettings: View {
 
 // MARK: - Modules
 
+/// Which Home page shows, and the order of the widgets on it.
+private struct HomeScreenSettings: View {
+    @ObservedObject private var layout = ModuleLayout.shared
+
+    var body: some View {
+        let items = layout.homeItems
+        Section {
+            Picker("Home screen", selection: Binding(get: { layout.savedHomeStyle ?? .classic }, set: { layout.setHomeStyle($0) })) {
+                Text("Classic").tag(ModuleLayoutLogic.HomeStyle.classic)
+                Text("Widgets").tag(ModuleLayoutLogic.HomeStyle.widgets)
+            }
+            .pickerStyle(.segmented)
+            Text(layout.savedHomeStyle == .widgets
+                 ? (items.isEmpty ? "No widgets are on Home yet, so the Classic page shows. Place a feature on Home below." : "Cards you placed on Home, in the order below.")
+                 : "The page from 1.33 and earlier: today's weather, battery and your next events.")
+                .font(.callout).foregroundStyle(.secondary)
+        } header: {
+            Text("Home screen")
+        }
+        if !items.isEmpty {
+            Section {
+                ForEach(Array(items.enumerated()), id: \.element) { index, module in
+                    HStack(spacing: 10) {
+                        Image(systemName: module.symbol).frame(width: 20).foregroundStyle(Theme.accentBright)
+                        Text(module.title)
+                        Spacer()
+                        Button { withAnimation { layout.moveHome(module, by: -1) } } label: { Image(systemName: "chevron.up") }
+                            .disabled(index == 0).help("Move up")
+                        Button { withAnimation { layout.moveHome(module, by: 1) } } label: { Image(systemName: "chevron.down") }
+                            .disabled(index == items.count - 1).help("Move down")
+                        Button { withAnimation { layout.removeFromHome(module) } } label: { Image(systemName: "minus.circle") }
+                            .help("Take off Home (it gets its own tab)")
+                    }
+                    .buttonStyle(.borderless)
+                }
+            } header: {
+                Text("Home widgets")
+            } footer: {
+                Text("Reorder the widgets you added. They show in this order on the Widgets Home.")
+            }
+        }
+    }
+}
+
 private struct ModulesSettings: View {
     @EnvironmentObject private var settings: SettingsManager
     @AppStorage("notch.keepInFullscreen") private var keepInFullscreen = true
@@ -750,6 +794,7 @@ private struct ModulesSettings: View {
             } header: {
                 Text("Notch")
             }
+            HomeScreenSettings()
             Section {
                 ForEach(Module.allCases.filter { $0 != .nonNecessities && $0 != .translator }) { module in
                     if ModuleLayoutLogic.isManaged(module.rawValue) {

@@ -50,15 +50,50 @@ final class ModuleLayout: ObservableObject {
         names.compactMap(Module.init(rawValue:)).filter { match(choice($0)) }
     }
 
-    /// Home accordions, in a fixed order, that are shown (open or closed).
+    /// Home accordions that are shown (open or closed), in the order set in Settings.
     var homeAccordions: [(module: Module, expanded: Bool)] {
-        modules(ModuleLayoutLogic.homeAccordions, where: \.onHome).map { ($0, choice($0) == .homeExpanded) }
+        modules(homeOrdered(ModuleLayoutLogic.homeAccordions), where: \.onHome).map { ($0, choice($0) == .homeExpanded) }
     }
 
-    /// Always-visible Home cards that are on.
+    /// Always-visible Home cards that are on, in the order set in Settings.
     var homeWidgets: [(module: Module, expanded: Bool)] {
-        modules(ModuleLayoutLogic.homeWidgets, where: \.onHome).map { ($0, choice($0) == .homeExpanded) }
+        modules(homeOrdered(ModuleLayoutLogic.homeWidgets), where: \.onHome).map { ($0, choice($0) == .homeExpanded) }
     }
+
+    // MARK: Home page style and order
+
+    private static let styleKey = prefix + "homeStyle"
+    private static let orderKey = prefix + "homeOrder"
+
+    private var homeOrder: [String] { UserDefaults.standard.stringArray(forKey: Self.orderKey) ?? [] }
+    private func homeOrdered(_ names: [String]) -> [String] { ModuleLayoutLogic.ordered(names, by: homeOrder) }
+
+    /// What the person picked in Settings (nil until they do).
+    var savedHomeStyle: ModuleLayoutLogic.HomeStyle? {
+        UserDefaults.standard.string(forKey: Self.styleKey).flatMap(ModuleLayoutLogic.HomeStyle.init(rawValue:))
+    }
+
+    func setHomeStyle(_ style: ModuleLayoutLogic.HomeStyle) {
+        UserDefaults.standard.set(style.rawValue, forKey: Self.styleKey)
+        notify()
+    }
+
+    /// The Home page that shows now.
+    var homeStyle: ModuleLayoutLogic.HomeStyle {
+        ModuleLayoutLogic.effectiveStyle(saved: savedHomeStyle, onHomeCount: homeItems.count)
+    }
+
+    /// Everything on the widget Home, in the order it appears (the list Settings lets you rearrange).
+    var homeItems: [Module] { homeOrdered((homeWidgets + homeAccordions).map(\.module.rawValue)).compactMap(Module.init(rawValue:)) }
+
+    func moveHome(_ m: Module, by step: Int) {
+        let next = ModuleLayoutLogic.moved(m.rawValue, by: step, in: homeItems.map(\.rawValue))
+        UserDefaults.standard.set(next, forKey: Self.orderKey)
+        notify()
+    }
+
+    /// Takes a widget off Home. It gets its own tab so nothing becomes unreachable.
+    func removeFromHome(_ m: Module) { set(.standalone, for: m) }
 
     /// Everything shown inside the Non-Necessities tab.
     var nonNecessities: [Module] {
@@ -73,6 +108,8 @@ final class ModuleLayout: ObservableObject {
         if m == .nonNecessities { return hasNonNecessities }
         if m == .translator { return false }          // the Translator lives inside Tools now
         guard ModuleLayoutLogic.isManaged(m.rawValue) else { return true }
+        // The Classic Home has no cards, so a feature placed on Home gets its own tab there (if it was switched on).
+        if homeStyle == .classic, choice(m).onHome { return SettingsManager.shared.isEnabled(m) }
         return ModuleLayoutLogic.showsAsTab(choice(m))
     }
 
