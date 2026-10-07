@@ -79,6 +79,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         // the volume gauge and other features don't work.
         RequiredSetup.shared.start()
         // After an update: once, offer the new optional things to switch on.
+        ModuleLayout.shared.migrateIfNeeded()
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2) { MainActor.assumeIsolated { TourModel.shared.startIfNeeded() } }
         DispatchQueue.main.asyncAfter(deadline: .now() + 3) { MainActor.assumeIsolated { PatchLog.shared.showAfterUpdateIfNeeded() } }
         // Accessibility may be granted later; keep trying quietly until the tap is running.
         Timer.scheduledTimer(withTimeInterval: 10, repeats: true) { timer in

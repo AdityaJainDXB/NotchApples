@@ -87,7 +87,7 @@ final class ModuleLayout: ObservableObject {
         let d = UserDefaults.standard
         guard !d.bool(forKey: Self.migratedKey) else { return }
         d.set(true, forKey: Self.migratedKey)
-        let fresh = !d.bool(forKey: "onboarding.permissionsShown")
+        let fresh = d.bool(forKey: "v2.freshInstall")
         for m in Self.managedModules where saved(m) == nil {
             let wasOn = SettingsManager.shared.isEnabled(m)
             d.set(ModuleLayoutLogic.defaultChoice(m.rawValue, wasOn: wasOn).rawValue, forKey: Self.prefix + m.rawValue)

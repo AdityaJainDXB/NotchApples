@@ -36,7 +36,7 @@ enum SettingsTab: String, CaseIterable, Identifiable, Hashable {
         case .shortcuts: "Shortcuts & Hotkeys"
         case .permissions: "Permissions"
         case .authentication: "Authentication"
-        case .modules: "Modules"
+        case .modules: "Modules & Layout"
         case .lidFold: "Lid Fold"
         case .windows: "Windows"
         case .claude: "AI"
@@ -138,7 +138,7 @@ extension SettingsTab {
         case .shortcuts: "hotkey keyboard shortcut capture"
         case .permissions: "accessibility screen recording camera microphone calendar"
         case .authentication: "face unlock lock password"
-        case .modules: "tabs add-ons widgets enable"
+        case .modules: "tabs add-ons widgets enable layout home non-necessities accordion"
         case .lidFold: "fold frost tilt lid close laptop screen recording desktop preview demo sensor angle blur"
         case .claude: "ai gemini ollama openai provider model key temperature capture"
         case .aiHistory: "conversations search export"
@@ -751,7 +751,28 @@ private struct ModulesSettings: View {
                 Text("Notch")
             }
             Section {
-                ForEach(Module.allCases) { module in
+                ForEach(Module.allCases.filter { $0 != .nonNecessities && $0 != .translator }) { module in
+                    if ModuleLayoutLogic.isManaged(module.rawValue) {
+                        // Reorganised features: pick where they live instead of an on/off switch.
+                        HStack(spacing: 12) {
+                            Image(systemName: module.symbol)
+                                .font(.system(size: 13, weight: .semibold)).frame(width: 28, height: 28).foregroundStyle(.white)
+                                .background(Theme.accentGradient, in: RoundedRectangle(cornerRadius: 7, style: .continuous))
+                            VStack(alignment: .leading, spacing: 2) {
+                                HStack(spacing: 6) {
+                                    Text(module.title)
+                                    if module.isGated {
+                                        Text("PRO").font(.system(size: 9, weight: .heavy)).foregroundStyle(.white)
+                                            .padding(.horizontal, 5).padding(.vertical, 1)
+                                            .background(LinearGradient(colors: [.orange, .pink], startPoint: .leading, endPoint: .trailing), in: Capsule())
+                                    }
+                                }
+                                Text(module.blurb).font(.callout).foregroundStyle(.secondary)
+                            }
+                            Spacer()
+                            LayoutPicker(module: module)
+                        }
+                    } else {
                     Toggle(isOn: settings.binding(for: module)) {
                         HStack(spacing: 12) {
                             Image(systemName: module.symbol)
@@ -778,9 +799,10 @@ private struct ModulesSettings: View {
                         }
                     }
                     .toggleStyle(.switch)
+                    }
                 }
             } footer: {
-                Text("Every module is optional. Turned-off modules disappear from the notch straight away.")
+                Text("Every module is optional. Features marked with a place (Home, its own tab, Non-Necessities, Off) can be moved any time; Home is the first tab and the Translator lives inside Tools.")
             }
         }
         .formStyle(.grouped)
@@ -1608,6 +1630,7 @@ private struct AboutSettings: View {
                 Label(WhatsNew.hasUnseen ? "What's new in \(WhatsNew.currentVersion)" : "What's New", systemImage: "sparkles")
             }
             .buttonStyle(PurpleButtonStyle(prominent: WhatsNew.hasUnseen))
+            Button("Replay the 2.0 tour") { TourModel.shared.replay() }.buttonStyle(.link).font(.caption)
             HStack {
                 Link("Website", destination: URL(string: "https://virajsinghchadha.github.io/notchapples-site/")!)
                 Text("·").foregroundStyle(.secondary)

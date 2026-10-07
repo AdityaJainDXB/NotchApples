@@ -174,6 +174,8 @@ final class SettingsManager: ObservableObject {
     static func registerDefaults() {
         let d = UserDefaults.standard
         let alreadyInstalled = d.bool(forKey: "onboarding.permissionsShown")
+        // Remembered before the first-run welcome sets that flag: was Notch apple already installed when 2.0 arrived?
+        if d.object(forKey: "v2.freshInstall") == nil { d.set(!alreadyInstalled, forKey: "v2.freshInstall") }
         // New installs open the notch with ⌃⌥N; people already using ⌘E keep it (and can change it in Settings).
         if alreadyInstalled, d.object(forKey: "hotkey.notch.keyCode") == nil { HotkeyBinding.save(.legacyNotch, for: .notch) }
         let offByDefault: [Module] = [.windows, .tools, .notes, .focus, .browser, .launcher]

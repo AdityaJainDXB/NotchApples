@@ -24,7 +24,7 @@ final class PatchLog: ObservableObject {
 
     /// Called at launch: after an update (or with features not yet offered), open the notch on the patch log, once.
     func showAfterUpdateIfNeeded() {
-        guard !DemoHooks.isDemo, WhatsNew.hasUnseen || !WhatsNew.pendingOffers().isEmpty else { return }
+        guard !DemoHooks.isDemo, !TourModel.shared.isShowing, WhatsNew.hasUnseen || !WhatsNew.pendingOffers().isEmpty else { return }
         guard !WhatsNew.seenVersion.isEmpty, WhatsNew.releases.contains(where: { $0.version == WhatsNew.currentVersion }) else { WhatsNew.markOffered(); return }
         open()
     }

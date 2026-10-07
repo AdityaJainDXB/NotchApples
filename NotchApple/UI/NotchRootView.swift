@@ -74,6 +74,7 @@ struct NotchRootView: View {
     @StateObject private var entitlements = Entitlements.shared
     @ObservedObject private var updater = UpdateChecker.shared
     @ObservedObject private var patchLog = PatchLog.shared
+    @ObservedObject private var tour = TourModel.shared
 
     @Namespace private var duoSpace
     /// The tab that was showing before this switch, so the new page knows which side to slide in from.
@@ -132,6 +133,9 @@ struct NotchRootView: View {
             LockView()
         } else if let required = updater.requiredUpdate {
             RequiredUpdateView(release: required)
+        } else if tour.isShowing {
+            // Compulsory after the 2.0 update: no skip, it returns until finished.
+            TourView()
         } else if patchLog.isShowing {
             PatchLogView()
         } else if updater.reminderDue, let release = updater.reminderRelease {
