@@ -20,6 +20,9 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "1.34.1", date: "7 October 2026", headline: "PairDrop transfers fixed", items: [
+            "File transfers in PairDrop now complete. 1.34.0 closed the connection after the first piece of every file.",
+        ]),
         ReleaseNote(version: "1.34.0", date: "7 October 2026", headline: "A huge update for efficiency and a modular notch", items: [
             "Home replaces Today: Devices, Notifications and Quick Add always there; Clipboard, Now Playing and Quick Notes open on click.",
             "Claude usage as green, yellow and red lights for your 5-hour window and week, with a 5-second notch badge and Pin to Home.",
