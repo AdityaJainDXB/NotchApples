@@ -4,7 +4,7 @@
 //
 //  The one permission Notch apple needs to do its job: Accessibility. It is what lets the notch show the volume and
 //  brightness gauge when you press the keys (and keep macOS's own pop-up from stacking on top), snap windows,
-//  paste snippets and read selected text. Until it's on, the open notch shows a setup screen instead of its tabs.
+//  paste snippets and read selected text. It never blocks the notch.
 //  The moment macOS reports it as granted, the volume and brightness gauge starts, with no relaunch.
 //
 
@@ -21,12 +21,11 @@ final class RequiredSetup: ObservableObject {
 
     var isComplete: Bool { accessibilityGranted }
 
-    /// Called at launch: asks macOS to show its own prompt (which also lists Notch apple), then watches until it's granted.
+    /// Called at launch: quietly watches until Accessibility is granted (turn it on in Settings → Permissions).
     func start() {
         refresh()
         guard !isComplete else { return }
         clearStaleEntryOncePerBuild()
-        _ = AXIsProcessTrustedWithOptions([kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String: true] as CFDictionary)
         if timer == nil {
             timer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] _ in
                 MainActor.assumeIsolated { self?.refresh() }

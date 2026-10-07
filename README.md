@@ -360,6 +360,10 @@ Claude Code dot, Claude usage tracker, Smart Home, clipboard link, developer too
 - **F1:** a favourite team; qualifying gaps and best laps.
 - **What's New** in Settings → About, shown once after updating.
 
+#### New in 1.32.4
+
+- **No more locked screen.** The required-permission screen is removed; the notch always shows your tabs. Turn Accessibility on in Settings → Permissions for the volume and brightness gauge, ⌥A and window snapping.
+
 #### New in 1.32.3
 
 - **Update reminders.** With an update waiting, every 4th or 5th time you open the notch it offers Update or Skip for now. Required updates have no skip.

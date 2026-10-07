@@ -75,7 +75,7 @@ enum NewFeaturesWindow {
 
     /// Shows the window if this update has offers the person hasn't been asked about yet.
     static func showIfNeeded() {
-        guard window == nil, RequiredSetup.shared.isComplete, !DemoHooks.isDemo else { return }
+        guard window == nil, !DemoHooks.isDemo else { return }
         let offers = WhatsNew.pendingOffers()
         guard !offers.isEmpty else { WhatsNew.markOffered(); return }
         WhatsNew.markOffered()   // asked once: never nag

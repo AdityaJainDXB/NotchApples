@@ -72,7 +72,6 @@ struct NotchRootView: View {
     @EnvironmentObject private var state: NotchState
     @EnvironmentObject private var settings: SettingsManager
     @StateObject private var entitlements = Entitlements.shared
-    @ObservedObject private var setup = RequiredSetup.shared
     @ObservedObject private var updater = UpdateChecker.shared
 
     @Namespace private var duoSpace
@@ -132,9 +131,6 @@ struct NotchRootView: View {
             LockView()
         } else if let required = updater.requiredUpdate {
             RequiredUpdateView(release: required)
-        } else if !setup.isComplete {
-            // The permission Notch apple needs is not on yet: show the one required step instead of the tabs.
-            RequiredSetupView()
         } else if updater.reminderDue, let release = updater.reminderRelease {
             // Every 4th or 5th time the notch is opened while an update is waiting.
             RequiredUpdateView(release: release, skippable: true)
