@@ -201,6 +201,12 @@ All screenshots use sample data.
 
 ## What's new
 
+### Windows 1.29.0 BETA · 7 October 2026 · Brightness gauge and notification peek
+
+- **Brightness gauge** (laptop screens, off by default): shows the brightness on the pill when it changes.
+- **Notification peek** (experimental, off by default): flashes the newest Windows notification beside the pill. It reads Windows' own notification list on your PC, read-only, and stores or sends nothing. It may not work on every PC; if it can't, it turns itself off and says why.
+Both are in Settings → General → On the pill.
+
 ### Mac 1.32.0 · Windows 1.28.0 BETA · 7 October 2026 · Pinned notes, emoji search, named timers
 
 - **Pinned notes on Today:** pin a note in Notes and it shows on Today (up to three).
