@@ -2,9 +2,8 @@
 //  WhatsNew.swift
 //  Notch apple
 //
-//  Release notes inside the app. After an update, About shows a small
-//  "What's new" badge once; opening it (or dismissing it) marks that version
-//  as seen, so it never nags again. Older releases stay listed below.
+//  Release notes inside the app. After an update the notch opens once on the patch log (PatchLogView); Got it
+//  marks that version as seen, so it never nags again.
 //
 //  Keep this in step with the website's What's New and the GitHub release notes.
 //
@@ -21,6 +20,10 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "1.32.6", date: "7 October 2026", headline: "The patch log in the notch, and Gemini that switches model", items: [
+            "After an update the notch opens on what changed, with a switch for each new optional feature and a Got it button. No separate window.",
+            "If a Gemini request fails before answering, Notch apple retries on the next Gemini model (up to four) and tells you with a short notice.",
+        ]),
         ReleaseNote(version: "1.32.5", date: "7 October 2026", headline: "Option+A, update reminders, and no locked screen", items: [
             "Includes everything from 1.32.1 to 1.32.4, which never built. Option+A blacks out the screen and brings it back; update reminders come every 4th or 5th notch open; a window after updating lets you switch on new features; and the permission screen no longer blocks the notch.",
         ]),
@@ -274,38 +277,4 @@ enum WhatsNew {
     static func markOffered() { offeredVersion = currentVersion }
 
     static func markSeen() { seenVersion = currentVersion }
-}
-
-struct WhatsNewView: View {
-    var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 18) {
-                ForEach(WhatsNew.releases) { r in
-                    VStack(alignment: .leading, spacing: 6) {
-                        HStack(alignment: .firstTextBaseline) {
-                            Text("Notch apple \(r.version)").font(.headline)
-                            if r.version == WhatsNew.currentVersion {
-                                Text("This version").font(.caption.weight(.semibold)).foregroundStyle(Theme.accent)
-                            }
-                            Spacer()
-                            Text(r.date).font(.caption).foregroundStyle(.secondary)
-                        }
-                        Text(r.headline).font(.subheadline.weight(.semibold)).foregroundStyle(.secondary)
-                        ForEach(r.items, id: \.self) { item in
-                            HStack(alignment: .firstTextBaseline, spacing: 6) {
-                                Text("•").foregroundStyle(.secondary)
-                                Text(item).fixedSize(horizontal: false, vertical: true)
-                            }
-                            .font(.callout)
-                        }
-                    }
-                    if r.id != WhatsNew.releases.last?.id { Divider() }
-                }
-                Link("All release notes on GitHub →", destination: URL(string: "https://github.com/AdityaJainDXB/NotchApples/releases")!)
-                    .font(.callout)
-            }
-            .padding(20)
-        }
-        .onAppear { WhatsNew.markSeen() }
-    }
 }

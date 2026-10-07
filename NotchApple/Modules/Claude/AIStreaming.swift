@@ -77,6 +77,13 @@ extension AIClient {
 
     /// Streams the reply as text chunks. Cancelling the task stops the request.
     static func stream(_ history: [ChatMessage], provider: AIProvider, model: String, system: String) -> AsyncThrowingStream<String, Error> {
+        // Gemini: if this model fails before answering, try the next Gemini model (see GeminiFallback).
+        if provider == .gemini { return GeminiFallback.stream(history, model: model, system: system) }
+        return streamOnce(history, provider: provider, model: model, system: system)
+    }
+
+    /// One attempt on exactly this model.
+    static func streamOnce(_ history: [ChatMessage], provider: AIProvider, model: String, system: String) -> AsyncThrowingStream<String, Error> {
         if provider == .apple { return AppleIntelligence.stream(history, system: system) }
         return AsyncThrowingStream { continuation in
             let task = Task {

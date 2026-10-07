@@ -365,6 +365,11 @@ Claude Code dot, Claude usage tracker, Smart Home, clipboard link, developer too
 - **F1:** a favourite team; qualifying gaps and best laps.
 - **What's New** in Settings → About, shown once after updating.
 
+#### New in 1.32.6
+
+- **Patch log in the notch.** After an update the notch opens on what changed, with switches for new optional features and a Got it button. No separate window.
+- **Gemini fallback.** A failed Gemini request is retried on the next Gemini model (up to four), with a short notice in the chat and a toast in the notch.
+
 #### New in 1.32.5 (includes 1.32.1 to 1.32.4, which never built)
 
 - **⌥A** blacks out the screen and brings it back; **update reminders** every 4th or 5th notch open; a **what's new window** with switches after updating; and **no more locked permission screen**.

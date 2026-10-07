@@ -152,6 +152,12 @@ enum AIClient {
     // MARK: Chat
 
     static func send(_ history: [ChatMessage], provider: AIProvider, model: String) async throws -> String {
+        if provider == .gemini { return try await GeminiFallback.send(history, model: model) }
+        return try await sendOnce(history, provider: provider, model: model)
+    }
+
+    /// One attempt on exactly this model.
+    static func sendOnce(_ history: [ChatMessage], provider: AIProvider, model: String) async throws -> String {
         switch provider {
         case .claude: return try await ClaudeClient.send(history, model: model)
         case .gemini: return try await sendGemini(history, model: model)

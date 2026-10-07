@@ -79,7 +79,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         // the volume gauge and other features don't work.
         RequiredSetup.shared.start()
         // After an update: once, offer the new optional things to switch on.
-        DispatchQueue.main.asyncAfter(deadline: .now() + 5) { MainActor.assumeIsolated { NewFeaturesWindow.showIfNeeded() } }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 3) { MainActor.assumeIsolated { PatchLog.shared.showAfterUpdateIfNeeded() } }
         // Accessibility may be granted later; keep trying quietly until the tap is running.
         Timer.scheduledTimer(withTimeInterval: 10, repeats: true) { timer in
             MainActor.assumeIsolated {
@@ -316,6 +316,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     @objc func relaunchApp() { AppRelauncher.relaunch() }
     @objc func quitApp() { NSApp.terminate(nil) }
+
+    /// Opens the notch (used to show the patch log).
+    func openNotch() { notchController?.expand() }
 
     @objc func toggleNotch() { notchController?.toggle() }
 

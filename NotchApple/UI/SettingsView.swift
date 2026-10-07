@@ -1582,7 +1582,6 @@ private struct WidgetSettings: View {
 // MARK: - About
 
 private struct AboutSettings: View {
-    @State private var showWhatsNew = WhatsNew.hasUnseen
     @State private var showAcknowledgements = false
     @StateObject private var license = LicenseState.shared
     @ObservedObject private var updater = UpdateChecker.shared
@@ -1605,7 +1604,7 @@ private struct AboutSettings: View {
                 }
             }
             .font(.callout)
-            Button { showWhatsNew = true } label: {
+            Button { PatchLog.shared.open() } label: {
                 Label(WhatsNew.hasUnseen ? "What's new in \(WhatsNew.currentVersion)" : "What's New", systemImage: "sparkles")
             }
             .buttonStyle(PurpleButtonStyle(prominent: WhatsNew.hasUnseen))
@@ -1624,17 +1623,5 @@ private struct AboutSettings: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .sheet(isPresented: $showAcknowledgements) { AcknowledgementsView() }
-        .sheet(isPresented: $showWhatsNew) {
-            VStack(spacing: 0) {
-                HStack {
-                    Text("What's New").font(.title2.bold())
-                    Spacer()
-                    Button("Done") { showWhatsNew = false }.keyboardShortcut(.defaultAction)
-                }
-                .padding([.horizontal, .top], 20)
-                WhatsNewView()
-            }
-            .frame(width: 520, height: 560)
-        }
     }
 }

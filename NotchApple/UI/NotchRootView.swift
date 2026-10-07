@@ -73,6 +73,7 @@ struct NotchRootView: View {
     @EnvironmentObject private var settings: SettingsManager
     @StateObject private var entitlements = Entitlements.shared
     @ObservedObject private var updater = UpdateChecker.shared
+    @ObservedObject private var patchLog = PatchLog.shared
 
     @Namespace private var duoSpace
     /// The tab that was showing before this switch, so the new page knows which side to slide in from.
@@ -131,6 +132,8 @@ struct NotchRootView: View {
             LockView()
         } else if let required = updater.requiredUpdate {
             RequiredUpdateView(release: required)
+        } else if patchLog.isShowing {
+            PatchLogView()
         } else if updater.reminderDue, let release = updater.reminderRelease {
             // Every 4th or 5th time the notch is opened while an update is waiting.
             RequiredUpdateView(release: release, skippable: true)
