@@ -61,4 +61,26 @@ final class ClaudeLimitsTests: XCTestCase {
         // 100%: red whenever.
         XCTAssertEqual(ClaudeLimitsLogic.pace(ClaudeLimit(fraction: 1, resetsAt: nil), length: 5 * 3600, now: now).light, .red)
     }
+
+    func testHeadersAreRead() {
+        let l = ClaudeLimitsLogic.parse(headers: [
+            "Anthropic-Ratelimit-Unified-5h-Utilization": "0.34", "anthropic-ratelimit-unified-5h-reset": "1790000000",
+            "anthropic-ratelimit-unified-7d-utilization": "0.78", "anthropic-ratelimit-unified-7d-reset": "1790400000000"])
+        XCTAssertEqual(l?.fiveHour?.percent, 34)
+        XCTAssertEqual(l?.sevenDay?.percent, 78)
+        XCTAssertEqual(l?.fiveHour?.resetsAt, Date(timeIntervalSince1970: 1_790_000_000))
+        XCTAssertEqual(l?.sevenDay?.resetsAt, Date(timeIntervalSince1970: 1_790_400_000))
+        XCTAssertNil(ClaudeLimitsLogic.parse(headers: ["content-type": "json"]))
+    }
+
+    func testHashedKeychainNamesAreFound() {
+        let dump = """
+        keychain: "/Users/x/Library/Keychains/login.keychain-db"
+            "svce"<blob>="Claude Code-credentials-11e1b79e"
+            "svce"<blob>="Other"
+            "svce"<blob>="Claude Code-credentials"
+            "svce"<blob>="Claude Code-credentials-11e1b79e"
+        """
+        XCTAssertEqual(ClaudeLimitsLogic.credentialServices(fromDump: dump), ["Claude Code-credentials", "Claude Code-credentials-11e1b79e"])
+    }
 }

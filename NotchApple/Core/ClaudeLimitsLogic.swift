@@ -80,6 +80,40 @@ enum ClaudeLimitsLogic {
         return Credential(token: token, expiresAt: expires)
     }
 
+    // MARK: The usage headers (when the usage endpoint is unavailable)
+
+    /// Every Claude reply carries the account's limits as headers: `anthropic-ratelimit-unified-5h-utilization`
+    /// (0…1) and `-5h-reset` (Unix seconds), and the same for `7d`. Names are matched ignoring case.
+    static func parse(headers: [String: String]) -> ClaudeLimits? {
+        let lower = Dictionary(headers.map { ($0.key.lowercased(), $0.value) }, uniquingKeysWith: { a, _ in a })
+        func limit(_ window: String) -> ClaudeLimit? {
+            guard let raw = lower["anthropic-ratelimit-unified-\(window)-utilization"], let u = Double(raw), u.isFinite, u >= 0 else { return nil }
+            var reset: Date?
+            if let r = lower["anthropic-ratelimit-unified-\(window)-reset"], let t = Double(r), t > 0 {
+                reset = Date(timeIntervalSince1970: t > 1e11 ? t / 1000 : t)
+            }
+            return ClaudeLimit(fraction: u, resetsAt: reset)
+        }
+        let result = ClaudeLimits(fiveHour: limit("5h"), sevenDay: limit("7d"))
+        return result.isEmpty ? nil : result
+    }
+
+    // MARK: Where Claude Code keeps its sign-in
+
+    static let keychainService = "Claude Code-credentials"
+
+    /// Claude Code 2.1.52+ may store the sign-in as `Claude Code-credentials-<hash>`. Reads the service names out of
+    /// `security dump-keychain` output (names only, no secrets), the plain name first.
+    static func credentialServices(fromDump dump: String) -> [String] {
+        var found: [String] = []
+        for line in dump.split(separator: "\n") where line.contains("\"svce\"") {
+            guard let open = line.range(of: "=\""), let close = line.range(of: "\"", range: open.upperBound..<line.endIndex) else { continue }
+            let name = String(line[open.upperBound..<close.lowerBound])
+            if name.hasPrefix(keychainService), !found.contains(name) { found.append(name) }
+        }
+        return found.sorted { ($0 == keychainService ? 0 : 1, $0) < ($1 == keychainService ? 0 : 1, $1) }
+    }
+
     // MARK: Pace and wording
 
     /// Green / yellow / red for a real limit, using how far through its period you are.

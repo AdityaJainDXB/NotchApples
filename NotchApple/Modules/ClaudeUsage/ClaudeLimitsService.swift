@@ -77,15 +77,14 @@ final class ClaudeLimitsService: ObservableObject {
             if cred == nil || cred?.isExpired() == true { cred = try await Self.readSignIn() }
             guard var current = cred else { throw Failure.signedOut }
             credential = current
-            var data: Data
-            do { data = try await Self.fetch(token: current.token) }
+            let parsed: ClaudeLimits
+            do { parsed = try await Self.fetchLimits(token: current.token) }
             catch Failure.rejected {
                 // The token may have been refreshed by Claude Code since: read it once more.
                 current = try await Self.readSignIn()
                 credential = current
-                data = try await Self.fetch(token: current.token)
+                parsed = try await Self.fetchLimits(token: current.token)
             }
-            guard let parsed = ClaudeLimitsLogic.parse(data) else { throw Failure.unreadable }
             limits = parsed; fetched = Date(); state = .connected; wantsConnection = true
         } catch let failure as Failure {
             credential = nil
@@ -99,28 +98,92 @@ final class ClaudeLimitsService: ObservableObject {
 
     // MARK: Keychain and network
 
-    /// Reads Claude Code's sign-in with the system `security` tool. macOS shows its own permission prompt.
+    /// Finds Claude Code's sign-in: its credentials file, then the keychain (plain name, then `-<hash>` names).
+    /// macOS shows its own permission prompt for the keychain.
     nonisolated private static func readSignIn() async throws -> ClaudeLimitsLogic.Credential {
         try await withCheckedThrowingContinuation { cont in
             DispatchQueue.global(qos: .userInitiated).async {
-                let p = Process()
-                p.executableURL = URL(fileURLWithPath: "/usr/bin/security")
-                p.arguments = ["find-generic-password", "-s", "Claude Code-credentials", "-w"]
-                let out = Pipe()
-                p.standardOutput = out
-                p.standardError = Pipe()
-                p.standardInput = FileHandle.nullDevice
-                do { try p.run() } catch { cont.resume(throwing: Failure.denied); return }
-                let data = out.fileHandleForReading.readDataToEndOfFile()
-                p.waitUntilExit()
-                guard p.terminationStatus == 0 else {
-                    // 44: no such item. Anything else: the person said no, or the keychain is locked.
-                    cont.resume(throwing: p.terminationStatus == 44 ? Failure.signedOut : Failure.denied)
-                    return
-                }
-                guard let credential = ClaudeLimitsLogic.credential(from: data) else { cont.resume(throwing: Failure.signedOut); return }
-                cont.resume(returning: credential)
+                cont.resume(with: Result { try readSignInNow() })
             }
+        }
+    }
+
+    nonisolated private static func readSignInNow() throws -> ClaudeLimitsLogic.Credential {
+        let file = FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent(".claude/.credentials.json")
+        if let data = try? Data(contentsOf: file), let c = ClaudeLimitsLogic.credential(from: data), !c.isExpired() { return c }
+
+        var services = [ClaudeLimitsLogic.keychainService]
+        if let dump = security(["dump-keychain"], timeout: 8), dump.status == 0 {
+            for name in ClaudeLimitsLogic.credentialServices(fromDump: String(decoding: dump.out, as: UTF8.self)) where !services.contains(name) { services.append(name) }
+        }
+        var denied = false
+        var best: ClaudeLimitsLogic.Credential?
+        for service in services {
+            guard let r = security(["find-generic-password", "-s", service, "-w"], timeout: 60) else { denied = true; continue }
+            // 44: no such item. Anything else: the person said no, or the keychain is locked.
+            if r.status != 0 { if r.status != 44 { denied = true }; continue }
+            guard let c = ClaudeLimitsLogic.credential(from: r.out) else { continue }
+            if !c.isExpired() { return c }
+            best = best ?? c
+        }
+        if let best { return best }          // expired: the usage call will say so and we ask to open Claude Code
+        throw denied ? Failure.denied : Failure.signedOut
+    }
+
+    /// Runs `/usr/bin/security`, giving up after `timeout` seconds (nil on failure to start or on timeout).
+    nonisolated private static func security(_ args: [String], timeout: TimeInterval) -> (status: Int32, out: Data)? {
+        let p = Process()
+        p.executableURL = URL(fileURLWithPath: "/usr/bin/security")
+        p.arguments = args
+        let out = Pipe()
+        p.standardOutput = out; p.standardError = Pipe(); p.standardInput = FileHandle.nullDevice
+        do { try p.run() } catch { return nil }
+        var data = Data()
+        let reader = DispatchGroup()
+        reader.enter()
+        DispatchQueue.global().async { data = out.fileHandleForReading.readDataToEndOfFile(); reader.leave() }
+        let done = DispatchSemaphore(value: 0)
+        DispatchQueue.global().async { p.waitUntilExit(); done.signal() }
+        if done.wait(timeout: .now() + timeout) == .timedOut { p.terminate(); return nil }
+        reader.wait()
+        return (p.terminationStatus, data)
+    }
+
+    /// The usage endpoint first; if Anthropic has turned it off, read the same limits from the headers of a
+    /// one-token reply (a request that costs almost nothing).
+    nonisolated private static func fetchLimits(token: String) async throws -> ClaudeLimits {
+        do {
+            let data = try await fetch(token: token)
+            if let parsed = ClaudeLimitsLogic.parse(data) { return parsed }
+        } catch Failure.rejected {
+            // A rejected token may only mean the endpoint is off; the headers path settles it.
+        } catch Failure.offline { throw Failure.offline }
+        catch {}
+        return try await fetchFromHeaders(token: token)
+    }
+
+    nonisolated private static func fetchFromHeaders(token: String) async throws -> ClaudeLimits {
+        var request = URLRequest(url: URL(string: "https://api.anthropic.com/v1/messages")!)
+        request.httpMethod = "POST"
+        request.timeoutInterval = 30
+        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        request.setValue("oauth-2025-04-20", forHTTPHeaderField: "anthropic-beta")
+        request.setValue("2023-06-01", forHTTPHeaderField: "anthropic-version")
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.setValue("claude-code/2.1.5", forHTTPHeaderField: "User-Agent")
+        request.httpBody = try? JSONSerialization.data(withJSONObject: [
+            "model": "claude-haiku-4-5-20251001", "max_tokens": 1,
+            "messages": [["role": "user", "content": "hi"]]] as [String: Any])
+        let response: URLResponse
+        do { (_, response) = try await URLSession.shared.data(for: request) } catch { throw Failure.offline }
+        guard let http = response as? HTTPURLResponse else { throw Failure.unreadable }
+        // A 429 still carries the headers, and is exactly when the numbers matter.
+        let headers = http.allHeaderFields.reduce(into: [String: String]()) { if let k = $1.key as? String, let v = $1.value as? String { $0[k] = v } }
+        if let limits = ClaudeLimitsLogic.parse(headers: headers) { return limits }
+        switch http.statusCode {
+        case 401, 403: throw Failure.rejected
+        case 200..<300: throw Failure.unreadable
+        default: throw Failure.http(http.statusCode)
         }
     }
 
