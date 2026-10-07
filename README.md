@@ -46,7 +46,7 @@ Notch apple lives in the black cutout at the top of your MacBook screen (a small
 
 ## Download
 
-Pick your computer. Both buttons start the download straight away. The Mac button is pinned to version 1.34.0.
+Pick your computer. Both buttons start the download straight away. The Mac button is pinned to version 1.34.1.
 
 <table align="center">
   <tr>
@@ -55,7 +55,7 @@ Pick your computer. Both buttons start the download straight away. The Mac butto
   </tr>
   <tr>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/v1.34.0/NotchApple-1.34.0.dmg"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 1.34.0</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/v1.34.1/NotchApple-1.34.1.dmg"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 1.34.1</b></a>
     </td>
     <td align="center">
       <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 1.26.5 BETA</b></a>
@@ -364,6 +364,10 @@ Claude Code dot, Claude usage tracker, Smart Home, clipboard link, developer too
 - **Settings → AI:** Test connection, a "reads images" badge, a Privacy summary and capture defaults. Retired models switch to a current one automatically.
 - **F1:** a favourite team; qualifying gaps and best laps.
 - **What's New** in Settings → About, shown once after updating.
+
+#### New in 1.34.1
+
+- **PairDrop transfers complete** (1.34.0 dropped every file partway). Tested over real loopback connections, and the release pipeline now runs that test.
 
 #### New in 1.34.0 — HUGE UPDATE for Efficiency & Modular Design
 

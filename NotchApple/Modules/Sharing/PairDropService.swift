@@ -207,9 +207,9 @@ final class PairDropService: ObservableObject {
     private func transfer(_ header: PairDropHeader, fileURL: URL?, to peer: PairDropPeer) async -> SendOutcome {
         guard let intro = PairDropLogic.encode(header) else { return .failed("That's too long to send.") }
         let job = OutgoingTransfer(conn: NWConnection(to: peer.endpoint, using: .tcp), queue: queue, intro: intro,
-                                   fileURL: fileURL, size: header.size) { [weak self] value in
+                                   fileURL: fileURL, size: header.size, report: { [weak self] value in
             Task { @MainActor in self?.progress = value }
-        }
+        })
         switch await job.run() {
         case .delivered: return .delivered
         case .wrongCode: return .wrongCode
@@ -284,19 +284,17 @@ final class PairDropService: ObservableObject {
     // MARK: Receiving
 
     private func accept(_ conn: NWConnection) {
-        let transfer = IncomingTransfer(conn: conn, queue: queue, service: self)
+        let transfer = IncomingTransfer(conn: conn, queue: queue, receiver: ServiceReceiver(service: self))
         let key = ObjectIdentifier(transfer)
         incoming[key] = transfer
         transfer.onFinish = { [weak self] in Task { @MainActor in self?.incoming[key] = nil } }
         transfer.start()
     }
 
-    fileprivate enum Decision { case acceptFile, acceptMessage, reject, locked }
-
     /// Decides what to do with an offer, on the main actor where the code, the limiter and the chats live.
-    fileprivate func evaluate(_ h: PairDropHeader) -> Decision {
+    fileprivate func evaluate(_ h: PairDropHeader) -> PairDropDecision {
         if limiter.isLocked() { return .locked }
-        func wrong() -> Decision { limiter.recordFailure(); return .reject }
+        func wrong() -> PairDropDecision { limiter.recordFailure(); return .reject }
         switch h.kind {
         case .file:
             guard h.code == pairingCode, h.size >= 0 else { return wrong() }
@@ -345,248 +343,18 @@ final class PairDropService: ObservableObject {
     }
 }
 
-// MARK: - One outgoing connection
-
-/// Sends the header, waits for the answer, streams the file, then waits for "saved". The timeout is for silence,
-/// not for the whole transfer, so a big file on a slow network still gets through.
-private final class OutgoingTransfer: @unchecked Sendable {
-    enum Result: Equatable { case delivered, wrongCode, locked, unreachable(String), failed(String) }
-
-    private let conn: NWConnection
-    private let queue: DispatchQueue
-    private let intro: Data
-    private let fileURL: URL?
-    private let size: Int
-    private let report: @Sendable (Double) -> Void
-    private var continuation: CheckedContinuation<Result, Never>?
-    private var finished = false
-    private var sent = 0
-    private var handle: FileHandle?
-    private var watchdog: DispatchWorkItem?
-    private static let chunk = 256 * 1024
-
-    init(conn: NWConnection, queue: DispatchQueue, intro: Data, fileURL: URL?, size: Int, report: @escaping @Sendable (Double) -> Void) {
-        self.conn = conn; self.queue = queue; self.intro = intro; self.fileURL = fileURL; self.size = size; self.report = report
-    }
-
-    func run() async -> Result {
-        await withCheckedContinuation { cont in
-            queue.async {
-                self.continuation = cont
-                self.begin()
-            }
-        }
-    }
-
-    private func begin() {
-        arm(15, "The other device didn't answer.")
-        conn.stateUpdateHandler = { [weak self] state in
-            guard let self else { return }
-            switch state {
-            case .ready: self.sendIntro()
-            case .failed(let e): self.finish(.unreachable("Couldn't connect: \(e.localizedDescription)"))
-            case .cancelled: self.finish(.unreachable("The connection closed."))
-            default: break
-            }
-        }
-        conn.start(queue: queue)
-    }
-
-    private func arm(_ seconds: TimeInterval, _ message: String) {
-        watchdog?.cancel()
-        let w = DispatchWorkItem { [weak self] in self?.finish(.unreachable(message)) }
-        watchdog = w
-        queue.asyncAfter(deadline: .now() + seconds, execute: w)
-    }
-
-    private func finish(_ r: Result) {
-        guard !finished else { return }
-        finished = true
-        watchdog?.cancel()
-        try? handle?.close()
-        conn.cancel()
-        continuation?.resume(returning: r)
-        continuation = nil
-    }
-
-    private func sendIntro() {
-        conn.send(content: intro, contentContext: .defaultStream, isComplete: true, completion: .contentProcessed { [weak self] error in
-            guard let self else { return }
-            if let error { self.finish(.unreachable("Send failed: \(error.localizedDescription)")); return }
-            self.awaitAnswer()
-        })
-    }
-
-    private func awaitAnswer() {
-        conn.receive(minimumIncompleteLength: 1, maximumLength: 1) { [weak self] data, _, _, _ in
-            guard let self else { return }
-            switch data?.first {
-            case 1:
-                guard self.fileURL != nil else { self.finish(.delivered); return }   // a chat frame: accepted means delivered
-                self.startStreaming()
-            case 2: self.finish(.locked)
-            case 0: self.finish(.wrongCode)
-            default: self.finish(.unreachable("No answer from the other device."))
-            }
-        }
-    }
-
-    private func startStreaming() {
-        guard let url = fileURL, let h = try? FileHandle(forReadingFrom: url) else { finish(.failed("Couldn't read the file.")); return }
-        handle = h
-        arm(30, "The transfer stalled.")
-        pump()
-    }
-
-    private func pump() {
-        guard !finished, let handle else { return }
-        let piece = (try? handle.read(upToCount: Self.chunk)) ?? Data()
-        if piece.isEmpty {
-            guard sent == size else { finish(.failed("The file changed while it was being sent.")); return }
-            arm(60, "The other device didn't confirm it saved the file.")
-            awaitSaved()
-            return
-        }
-        conn.send(content: piece, contentContext: .defaultStream, isComplete: true, completion: .contentProcessed { [weak self] error in
-            guard let self else { return }
-            if let error { self.finish(.failed("Send failed: \(error.localizedDescription)")); return }
-            self.sent += piece.count
-            self.report(self.size > 0 ? min(1, Double(self.sent) / Double(self.size)) : 1)
-            self.arm(30, "The transfer stalled.")
-            self.pump()
-        })
-    }
-
-    private func awaitSaved() {
-        conn.receive(minimumIncompleteLength: 1, maximumLength: 1) { [weak self] data, _, _, _ in
-            guard let self else { return }
-            // An explicit 0 means the receiver failed. Older versions just close the connection once they have saved
-            // the file, so a closed connection after every byte was sent counts as delivered.
-            self.finish(data?.first == 0 ? .failed("The other device couldn't save the file.") : .delivered)
-        }
-    }
-}
-
-// MARK: - One incoming connection
-
-private final class IncomingTransfer: @unchecked Sendable {
-    private let conn: NWConnection
-    private let queue: DispatchQueue
+/// Lets the transport ask the service what to do without the transport knowing about the app.
+private final class ServiceReceiver: PairDropReceiving, @unchecked Sendable {
     private weak var service: PairDropService?
-    var onFinish: () -> Void = {}
+    init(service: PairDropService) { self.service = service }
 
-    private var finished = false
-    private var watchdog: DispatchWorkItem?
-    private var header: PairDropHeader?
-    private var handle: FileHandle?
-    private var tempURL: URL?
-    private var written = 0
-    private static let chunk = 256 * 1024
-
-    init(conn: NWConnection, queue: DispatchQueue, service: PairDropService) {
-        self.conn = conn; self.queue = queue; self.service = service
+    func decide(_ header: PairDropHeader) async -> PairDropDecision {
+        await MainActor.run { service?.evaluate(header) ?? .reject }
     }
-
-    func start() {
-        arm(15)
-        conn.stateUpdateHandler = { [weak self] state in
-            if case .failed = state { self?.finish() }
-            if case .cancelled = state { self?.finish() }
-        }
-        conn.start(queue: queue)
-        readLength()
+    func saved(_ temp: URL, header: PairDropHeader) async -> Bool {
+        await MainActor.run { service?.saved(temp, header: header) ?? false }
     }
-
-    private func arm(_ seconds: TimeInterval) {
-        watchdog?.cancel()
-        let w = DispatchWorkItem { [weak self] in self?.abort("The sender went quiet.") }
-        watchdog = w
-        queue.asyncAfter(deadline: .now() + seconds, execute: w)
-    }
-
-    private func finish() {
-        guard !finished else { return }
-        finished = true
-        watchdog?.cancel()
-        try? handle?.close()
-        conn.cancel()
-        onFinish()
-    }
-
-    private func abort(_ why: String) {
-        if let header, header.kind == .file, let service { Task { @MainActor in service.receiveFailed(header, why) } }
-        if let tempURL { try? FileManager.default.removeItem(at: tempURL) }
-        finish()
-    }
-
-    private func readLength() {
-        conn.receive(minimumIncompleteLength: 4, maximumLength: 4) { [weak self] data, _, _, _ in
-            guard let self else { return }
-            guard let data, let n = PairDropLogic.frameLength(data) else { self.finish(); return }
-            self.readHeader(n)
-        }
-    }
-
-    private func readHeader(_ n: Int) {
-        conn.receive(minimumIncompleteLength: n, maximumLength: n) { [weak self] data, _, _, _ in
-            guard let self, let data, let h = PairDropLogic.decode(data) else { self?.finish(); return }
-            self.header = h
-            guard let service = self.service else { self.finish(); return }
-            Task { @MainActor in
-                let decision = service.evaluate(h)
-                self.queue.async { self.respond(decision, h) }
-            }
-        }
-    }
-
-    private func respond(_ decision: PairDropService.Decision, _ h: PairDropHeader) {
-        switch decision {
-        case .reject: reply(0) { self.finish() }
-        case .locked: reply(2) { self.finish() }
-        case .acceptMessage: reply(1) { self.finish() }
-        case .acceptFile: reply(1) { self.beginBody(h) }
-        }
-    }
-
-    private func reply(_ byte: UInt8, then next: @escaping () -> Void) {
-        conn.send(content: Data([byte]), contentContext: .defaultStream, isComplete: true, completion: .contentProcessed { _ in next() })
-    }
-
-    private func beginBody(_ h: PairDropHeader) {
-        let url = FileManager.default.temporaryDirectory.appendingPathComponent("notchapple-\(UUID().uuidString).part")
-        guard FileManager.default.createFile(atPath: url.path, contents: nil), let fh = try? FileHandle(forWritingTo: url) else {
-            reply(0) { self.abort("Couldn't make room for the file.") }
-            return
-        }
-        tempURL = url; handle = fh
-        arm(30)
-        if h.size == 0 { complete(h); return }
-        readBody(h)
-    }
-
-    private func readBody(_ h: PairDropHeader) {
-        conn.receive(minimumIncompleteLength: 1, maximumLength: min(Self.chunk, max(1, h.size - written))) { [weak self] data, _, isComplete, error in
-            guard let self else { return }
-            if let data, !data.isEmpty {
-                do { try self.handle?.write(contentsOf: data) } catch { self.reply(0) { self.abort("The disk is full or not writable.") }; return }
-                self.written += data.count
-            }
-            if self.written >= h.size { self.complete(h); return }
-            if error != nil || isComplete { self.abort("The connection dropped before the file finished."); return }
-            self.arm(30)
-            self.readBody(h)
-        }
-    }
-
-    private func complete(_ h: PairDropHeader) {
-        try? handle?.close(); handle = nil
-        guard let temp = tempURL, let service else { abort("Couldn't save it."); return }
-        Task { @MainActor in
-            let ok = service.saved(temp, header: h)
-            self.queue.async {
-                self.tempURL = nil
-                self.reply(ok ? 1 : 0) { self.finish() }
-            }
-        }
+    func receiveFailed(_ header: PairDropHeader, _ why: String) async {
+        await MainActor.run { service?.receiveFailed(header, why) }
     }
 }

@@ -25,6 +25,13 @@ jobs:
       - name: Install build tools
         run: brew install xcodegen xcbeautify
 
+      # A release only goes out if the logic and the real PairDrop transfers pass first.
+      - name: Logic tests
+        run: ./scripts/run-app-tests.sh
+
+      - name: PairDrop transfers over loopback
+        run: ./scripts/run-pairdrop-loopback.sh
+
       - name: Build the DMG
         env:
           FIREBASE_PLIST_B64: ${{ secrets.FIREBASE_PLIST_B64 }}
