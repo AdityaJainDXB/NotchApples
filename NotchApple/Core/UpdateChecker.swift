@@ -65,6 +65,31 @@ final class UpdateChecker: ObservableObject {
         return latest
     }
 
+    // MARK: Reminders: every 4th or 5th time the notch is opened while an update is waiting
+
+    @AppStorage("updates.opensSinceReminder") private var opensSinceReminder = 0
+    @AppStorage("updates.reminderEvery") private var reminderEvery = 4
+    @Published private(set) var reminderDue = false
+
+    /// Any newer release. "Not now" in Settings does not silence the reminders.
+    var reminderRelease: Release? {
+        guard let latest, Self.isNewer(latest.version, than: currentVersion), requiredUpdate == nil else { return nil }
+        return latest
+    }
+
+    func noteNotchOpened() {
+        guard reminderRelease != nil, !reminderDue, !DemoHooks.isDemo else { return }
+        opensSinceReminder += 1
+        if opensSinceReminder >= max(4, reminderEvery) { reminderDue = true }
+    }
+
+    /// "Skip for now": back to the tabs; it returns after another 4 or 5 opens.
+    func snoozeReminder() {
+        reminderDue = false
+        opensSinceReminder = 0
+        reminderEvery = Int.random(in: 4...5)
+    }
+
     private var timer: Timer?
     private var downloadObservation: NSKeyValueObservation?
 

@@ -119,6 +119,7 @@ struct NotchRootView: View {
         .tint(Theme.accent)
         // A new theme rebuilds the notch so every view picks up the new colours.
         .id(ThemeManager.shared.currentThemeID)
+        .onChange(of: state.isExpanded) { _, open in if open { updater.noteNotchOpened() } }
     }
 
     /// Radius of the concave shoulders where the notch meets the menu bar.
@@ -134,6 +135,9 @@ struct NotchRootView: View {
         } else if !setup.isComplete {
             // The permission Notch apple needs is not on yet: show the one required step instead of the tabs.
             RequiredSetupView()
+        } else if updater.reminderDue, let release = updater.reminderRelease {
+            // Every 4th or 5th time the notch is opened while an update is waiting.
+            RequiredUpdateView(release: release, skippable: true)
         } else {
             VStack(spacing: 10) {
                 header

@@ -21,6 +21,9 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "1.32.3", date: "7 October 2026", headline: "Update reminders", items: [
+            "While an update is waiting, every 4th or 5th time you open the notch it offers Update or Skip for now. Required updates can't be skipped.",
+        ]),
         ReleaseNote(version: "1.32.2", date: "7 October 2026", headline: "Required updates, and choose what to switch on", items: [
             "A release can be marked required: the open notch then shows only an Update now screen until you update. Settings and the menu bar still work.",
             "After updating, a window lists the new optional features with a switch for each, once.",

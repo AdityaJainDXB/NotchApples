@@ -360,6 +360,10 @@ Claude Code dot, Claude usage tracker, Smart Home, clipboard link, developer too
 - **F1:** a favourite team; qualifying gaps and best laps.
 - **What's New** in Settings → About, shown once after updating.
 
+#### New in 1.32.3
+
+- **Update reminders.** With an update waiting, every 4th or 5th time you open the notch it offers Update or Skip for now. Required updates have no skip.
+
 #### New in 1.32.2
 
 - **Required updates.** A release can be marked required; the open notch then shows only an Update now screen until you update. Settings and the menu bar keep working, and being offline never blocks you.
