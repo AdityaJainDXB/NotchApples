@@ -50,7 +50,7 @@ enum EmojiLogic {
                 else if e.extra.split(separator: " ").contains(where: { $0.hasPrefix(t) }) { total += 1 }
                 else { total = -1; break }
             }
-            if total > 0 { scored.append((e, total, i)) }
+            if total > 0 { scored.append((e, total + (popular.contains(e.emoji) ? 5 : 0), i)) }   // everyday ones first
         }
         scored.sort { a, b in
             a.score != b.score ? a.score > b.score : a.entry.name.count != b.entry.name.count ? a.entry.name.count < b.entry.name.count : a.index < b.index

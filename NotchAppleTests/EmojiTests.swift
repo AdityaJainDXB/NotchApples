@@ -10,6 +10,7 @@ final class EmojiTests: XCTestCase {
         XCTAssertEqual(EmojiLogic.search("eyes").first?.emoji, "👀")
         XCTAssertEqual(EmojiLogic.search("fire").first?.emoji, "🔥")
         XCTAssertEqual(EmojiLogic.search("red heart").first?.emoji, "❤️")
+        XCTAssertEqual(EmojiLogic.search("heart").first?.emoji, "❤️")   // popular ones rank first
     }
 
     func testEverydayWordsAndSymbols() {

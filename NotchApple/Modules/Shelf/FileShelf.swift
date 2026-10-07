@@ -123,7 +123,20 @@ struct FileShelfView: View {
     @AppStorage("shelf.expiryDays") private var expiryDays = 0
     private var shown: [ShelfItem] { entitlements.canUse(.shelfPlus) ? store.visible(in: store.currentFolder) : store.items }
 
+    @AppStorage("shelf.page") private var page = "files"
+
     var body: some View {
+        VStack(spacing: 8) {
+            Picker("", selection: $page) {
+                Text("Files").tag("files")
+                Text("Links").tag("links")
+            }
+            .pickerStyle(.segmented).labelsHidden().frame(width: 200)
+            if page == "links" { GlassCard { LinksShelfView() } } else { files }
+        }
+    }
+
+    private var files: some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack {
                 Text("File shelf").sectionTitle()

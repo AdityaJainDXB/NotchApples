@@ -99,6 +99,7 @@ targets:
       - NotchApple/Core/NamedTimerLogic.swift
       - NotchApple/Core/EmojiLogic.swift
       - NotchApple/Core/MeetingNotesLogic.swift
+      - NotchApple/Core/LinkShelfLogic.swift
       - NotchApple/Core/EmojiData.swift
       - NotchApple/Modules/Tools/Converter.swift
       - NotchApple/Core/VPNTunnel.swift

@@ -1,9 +1,10 @@
 // Shelf: drop files and folders onto the notch to keep them handy. Click to open,
 // right-click for more. Shelf+ (Pro): group into folders.
 import { el, load, save, uid } from '../store.js';
-import { invoke, listen } from '../native.js';
+import { invoke, listen, openUrl } from '../native.js';
 import { canUse } from '../features.js';
 import { menu, toast, prompt, empty, segmented } from '../ui.js';
+import { normalize, label } from '../services/linkshelf.js';
 import { withIcons, iconEl } from './launcher.js';
 
 const KEY = 'shelf.items';
@@ -42,9 +43,46 @@ export function render(root) {
   }
   let un;
   listen('tauri://drag-drop', async (e) => { await addPaths(e?.paths || [], group); paint(); }).then((u) => { un = u; });
-  root.append(el('div', { class: 'col fill' }, el('div', { class: 'hstack' }, el('div', { class: 'section-title grow' }, 'Shelf'), groupsBar,
+  const files = (el('div', { class: 'col fill' }, el('div', { class: 'hstack' }, el('div', { class: 'section-title grow' }, 'Shelf'), groupsBar,
     el('button', { class: 'btn small quiet', onclick: async () => { const p = await invoke('pick_file'); if (p) { await addPaths([p], group); paint(); } } }, '+ Add file'),
     el('button', { class: 'btn small ghost', onclick: () => { save(KEY, []); paint(); } }, 'Clear')), zone));
-  paint();
+
+  // Links: save a link now, read it later. Nothing is fetched; a saved link shows its address.
+  const LKEY = 'shelf.links';
+  const linkIn = el('input', { class: 'field', placeholder: 'Paste a link to read later', style: 'flex:1' });
+  const linkMsg = el('div', { class: 'tiny', style: 'color:var(--warn,#ffb547);min-height:14px' });
+  const linkList = el('div', { class: 'col gap-4 scroll', style: 'flex:1;min-height:0' });
+  function saveLink(text) {
+    const url = normalize(text);
+    if (!url) return linkMsg.textContent = 'That doesn’t look like a web address.';
+    const all = load(LKEY, []);
+    if (all.some((l) => l.url === url)) return linkMsg.textContent = 'Already saved.';
+    save(LKEY, [{ id: uid(), url, added: Date.now(), read: false }, ...all]);
+    linkMsg.textContent = ''; linkIn.value = ''; paintLinks();
+  }
+  const patchLink = (id, change) => { save(LKEY, load(LKEY, []).map((l) => (l.id === id ? { ...l, ...change } : l))); paintLinks(); };
+  function paintLinks() {
+    const all = load(LKEY, []), ordered = [...all.filter((l) => !l.read), ...all.filter((l) => l.read)];
+    linkList.replaceChildren(...(ordered.length ? ordered.map((l) => el('div', { class: 'item hstack', style: 'padding:5px 10px;gap:8px' },
+      el('span', {}, l.read ? '✅' : '🔗'), el('div', { class: 'grow', style: 'min-width:0' },
+        el('div', { class: 'ellipsis', style: `font-weight:600;${l.read ? 'opacity:.5' : ''}` }, label(l.url)), el('div', { class: 'tiny faint' }, `Saved ${new Date(l.added).toLocaleDateString()}`)),
+      el('button', { class: 'btn small quiet', onclick: async () => { await openUrl(l.url).catch(() => toast('Couldn’t open that link.', { error: true })); patchLink(l.id, { read: true }); } }, 'Open'),
+      el('button', { class: 'icon-btn', style: 'width:24px;height:24px', title: l.read ? 'Mark unread' : 'Mark read', onclick: () => patchLink(l.id, { read: !l.read }) }, l.read ? '↩' : '✓'),
+      el('button', { class: 'icon-btn', style: 'width:24px;height:24px', title: 'Remove', onclick: () => { save(LKEY, load(LKEY, []).filter((x) => x.id !== l.id)); paintLinks(); } }, '🗑')))
+      : [el('div', { class: 'small dim' }, 'Nothing saved. Paste a link above and read it when you have time.')]));
+  }
+  linkIn.addEventListener('keydown', (e) => { if (e.key === 'Enter') saveLink(linkIn.value); });
+  const linksView = el('div', { class: 'col fill', style: 'gap:8px' },
+    el('div', { class: 'hstack' }, linkIn, el('button', { class: 'btn', onclick: () => saveLink(linkIn.value) }, 'Save'),
+      el('button', { class: 'btn quiet', onclick: async () => { const t = await navigator.clipboard.readText().catch(() => ''); saveLink(t); } }, 'From clipboard'),
+      el('button', { class: 'btn quiet', onclick: () => { save(LKEY, load(LKEY, []).filter((l) => !l.read)); paintLinks(); } }, 'Clear read')), linkMsg, linkList);
+
+  let page = load('shelf.page', 'files');
+  const body = el('div', { class: 'col fill' });
+  const seg = segmented([{ value: 'files', label: 'Files' }, { value: 'links', label: 'Links' }], page, (v) => { page = v; save('shelf.page', v); showPage(); });
+  seg.style.alignSelf = 'flex-start';
+  function showPage() { body.replaceChildren(page === 'links' ? linksView : files); if (page === 'links') paintLinks(); else paint(); }
+  root.append(el('div', { class: 'col fill', style: 'gap:8px' }, seg, body));
+  showPage();
   return () => un?.();
 }

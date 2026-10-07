@@ -32,7 +32,7 @@ export function search(query, limit = 12) {
       else if (e.extra.split(' ').some((w) => w.startsWith(t))) total += 1;
       else { total = -1; break; }
     }
-    if (total > 0) scored.push({ e, total, index });
+    if (total > 0) scored.push({ e, total: total + (POPULAR.includes(e.emoji) ? 5 : 0), index });   // everyday ones first
   });
   scored.sort((a, b) => b.total - a.total || a.e.name.length - b.e.name.length || a.index - b.index);
   return scored.slice(0, limit).map((s) => s.e);
