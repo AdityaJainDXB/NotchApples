@@ -197,7 +197,7 @@ export async function activate(input) {
     if (k.error) return k;
     if (revokedIds().includes(k.id)) return { error: 'This key has been turned off. Email notchapples.support@gmail.com if that seems wrong.' };
     try {
-      const r = await post('/activate', { key: k.text, device: deviceId() });
+      const r = await post('/activate', { key: k.text, device: deviceId(), name: 'Windows PC' });
       if (r && r.ok === false && r.reason === 'limit') return { error: `This key is already on ${r.limit} devices. Remove it from one in Settings → Access first.` };
       if (r && r.ok === false && r.reason === 'revoked') return { error: 'This key has been turned off. Email notchapples.support@gmail.com if that seems wrong.' };
     } catch { /* offline: the signature is enough, activation is retried never — that's fine */ }

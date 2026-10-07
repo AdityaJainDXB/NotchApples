@@ -30,6 +30,13 @@ final class Entitlements: ObservableObject {
     @Published private(set) var key: LicenseKey?
     /// Shown once in Settings → License, e.g. when a key was revoked.
     @Published var notice: String?
+    /// What the license server shows beside this device in the admin panel. Deliberately generic: the Mac's own
+    /// name (often "Someone's MacBook") is never sent.
+    static var deviceLabel: String {
+        let v = ProcessInfo.processInfo.operatingSystemVersion
+        return "Mac (macOS \(v.majorVersion).\(v.minorVersion))"
+    }
+
     /// A key from a notchapple://activate link, waiting in Settings → License for the user to confirm.
     @Published var pendingKey: String?
 
@@ -69,7 +76,7 @@ final class Entitlements: ObservableObject {
         }
         if revoked.contains(k.keyID) { throw LicenseKey.Problem.revoked }
         if let server = await LicenseServer.url() {
-            switch await LicenseServer.post(server, "activate", ["key": k.text, "device": Self.deviceHash(for: k)]) {
+            switch await LicenseServer.post(server, "activate", ["key": k.text, "device": Self.deviceHash(for: k), "name": Self.deviceLabel]) {
             case .some(let r) where r["ok"] as? Bool == false:
                 if r["reason"] as? String == "revoked" { throw LicenseKey.Problem.revoked }
                 if r["reason"] as? String == "limit" { throw LicenseKey.Problem.tooManyMacs(r["limit"] as? Int ?? 3) }

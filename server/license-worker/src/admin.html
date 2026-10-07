@@ -91,6 +91,12 @@ tr.k:hover td{background:rgba(255,255,255,.025)}
     <div class="card stat"><div class="n st-bad" id="sSusp">–</div><div class="l">Suspended</div></div>
   </div>
 
+  <section class="card" id="chartCard" style="margin-bottom:14px">
+    <div class="row"><h2 style="margin:0">Keys made, last 30 days</h2><div class="sp"></div><span class="dim small" id="chartSum"></span></div>
+    <div id="chart" style="margin-top:10px"></div>
+    <div class="row small dim" style="gap:14px;margin-top:6px"><span><i style="display:inline-block;width:10px;height:10px;border-radius:3px;background:var(--p);vertical-align:-1px"></i> Pro</span><span><i style="display:inline-block;width:10px;height:10px;border-radius:3px;background:var(--warn);vertical-align:-1px"></i> Ultimate</span><div class="sp"></div><span id="srcSum"></span></div>
+  </section>
+
   <div class="grid">
     <section class="card">
       <h2>Generate keys</h2>
@@ -140,6 +146,11 @@ tr.k:hover td{background:rgba(255,255,255,.025)}
       <div class="row" id="pActs" style="display:none;margin:8px 0"><button class="btn sm" id="pCopy">Copy all</button></div>
       <div class="tablewrap"><table><thead><tr><th>Code ID</th><th>Status</th><th>Key</th><th>Created</th><th>Note</th><th></th></tr></thead><tbody id="pRows"><tr><td colspan="6" class="dim">Loading…</td></tr></tbody></table></div>
     </section>
+    <section class="card" id="auditCard" style="grid-column:1/-1">
+      <h2>Activity</h2>
+      <p class="dim small" style="margin-bottom:8px">What was changed in this panel, newest first. Kept for 180 days. Emails, full keys and the access code are never written here.</p>
+      <div class="tablewrap"><table><thead><tr><th>When</th><th>Action</th><th>Key</th><th>Detail</th></tr></thead><tbody id="aRows"><tr><td colspan="4" class="dim">Loading…</td></tr></tbody></table></div>
+    </section>
   </div>
 </main>
 </div>
@@ -187,16 +198,41 @@ $('logout').onclick = signOut;
 
 async function start() {
   $('login').style.display = 'none'; $('app').style.display = 'block';
-  await Promise.all([loadStats(), loadKeys(true), loadPromos()]);
+  await Promise.all([loadStats(), loadKeys(true), loadPromos(), loadAudit()]);
 }
-$('refresh').onclick = () => { loadStats(); loadKeys(true); };
+$('refresh').onclick = () => { loadStats(); loadKeys(true); loadAudit(); };
 
 async function loadStats() {
   try {
     const s = await api('stats');
     $('sTotal').textContent = s.total; $('sPro').textContent = s.pro; $('sUlt').textContent = s.ultimate;
     $('sUse').textContent = s.inUse; $('sSusp').textContent = s.suspended;
+    drawChart(s.byDay || [], s.bySource || {});
   } catch (e) { toast(e.message); }
+}
+
+// ---- charts and activity
+function drawChart(days, src) {
+  const W = 720, H = 120, pad = 18, bw = W / Math.max(1, days.length);
+  const max = Math.max(1, ...days.map((d) => d.pro + d.ultimate));
+  const bars = days.map((d, i) => {
+    const hp = (d.pro / max) * (H - pad), hu = (d.ultimate / max) * (H - pad), x = i * bw + 2, w = Math.max(2, bw - 4);
+    return '<g><title>' + esc(d.date) + ': ' + d.pro + ' Pro, ' + d.ultimate + ' Ultimate</title>'
+      + '<rect x="' + x + '" y="' + (H - hp) + '" width="' + w + '" height="' + hp + '" rx="2" fill="#9e6bff"/>'
+      + '<rect x="' + x + '" y="' + (H - hp - hu) + '" width="' + w + '" height="' + hu + '" rx="2" fill="#ffb547"/></g>';
+  }).join('');
+  $('chart').innerHTML = '<svg viewBox="0 0 ' + W + ' ' + (H + 14) + '" style="width:100%;height:auto" role="img" aria-label="Keys made per day">' + bars
+    + '<text x="0" y="' + (H + 12) + '" fill="#aaa" font-size="10">' + esc((days[0] || {}).date || '') + '</text>'
+    + '<text x="' + W + '" y="' + (H + 12) + '" fill="#aaa" font-size="10" text-anchor="end">' + esc((days[days.length - 1] || {}).date || '') + '</text></svg>';
+  const n = days.reduce((a, d) => a + d.pro + d.ultimate, 0);
+  $('chartSum').textContent = n + ' key' + (n === 1 ? '' : 's') + ' in 30 days';
+  $('srcSum').textContent = Object.entries(src).sort((a, b) => b[1] - a[1]).map(([k, v]) => k + ' ' + v).join(' · ');
+}
+async function loadAudit() {
+  try {
+    const r = await api('audit');
+    $('aRows').innerHTML = r.rows.length ? r.rows.map((x) => '<tr><td>' + (x.at ? new Date(x.at).toLocaleString(undefined, { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : '–') + '</td><td>' + esc(x.action) + '</td><td class="mono">' + esc(x.target) + '</td><td class="dim">' + esc(x.detail) + '</td></tr>').join('') : '<tr><td colspan="4" class="dim">Nothing yet.</td></tr>';
+  } catch (e) { $('aRows').innerHTML = '<tr><td colspan="4" class="st-bad">' + esc(e.message) + '</td></tr>'; }
 }
 
 // ---- list
@@ -269,7 +305,7 @@ async function openKey(ref) {
   $('dp').innerHTML = '<p class="dim">Loading…</p>';
   let r;
   try { r = await api('get', ref); } catch (e) { $('dp').innerHTML = '<p class="st-bad">' + esc(e.message) + '</p>'; return; }
-  const dev = r.devices.length ? r.devices.map((d, i) => '<div class="row" style="margin:4px 0"><span class="mono dim">Device ' + (i + 1) + ' · ' + esc(d.slice(0, 12)) + '…</span><div class="sp"></div><button class="btn sm" data-dev="' + esc(d) + '">Remove</button></div>').join('') : '<p class="dim small">Not activated on any device yet.</p>';
+  const dev = r.devices.length ? r.devices.map((d, i) => '<div class="row" style="margin:4px 0"><span class="mono dim">' + (r.deviceNames && r.deviceNames[d] ? esc(r.deviceNames[d]) + ' · ' : 'Device ' + (i + 1) + ' · ') + esc(d.slice(0, 12)) + '…</span><div class="sp"></div><button class="btn sm" data-dev="' + esc(d) + '">Remove</button></div>').join('') : '<p class="dim small">Not activated on any device yet.</p>';
   $('dp').innerHTML =
     '<div class="row"><h2 style="margin:0">Key ' + esc(r.keyId) + '</h2><div class="sp"></div><button class="btn sm" id="dClose">Close</button></div>'
     + '<div class="kv"><div>Tier</div><div>' + tierPill(r.tier) + '</div><div>Status</div><div>' + (r.suspended ? '<span class="st-bad">Suspended</span>' + (r.reason ? ' · ' + esc(r.reason) : '') : '<span class="st-ok">Valid</span>') + '</div>'
