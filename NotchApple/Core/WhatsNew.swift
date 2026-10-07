@@ -20,6 +20,10 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "1.34.7", date: "7 October 2026", headline: "Faster license suspension", items: [
+            "A suspended license is noticed within about 10 minutes online (checked at launch, after sleep and every 10 minutes).",
+            "A Mac that can't verify its license for 3 days pauses paid features until it is online again.",
+        ]),
         ReleaseNote(version: "1.34.6", date: "7 October 2026", headline: "Suspended licenses stop within hours", items: [
             "A suspended or revoked license key is now noticed within hours, with no update needed: Notch apple checks at launch, after sleep and every hour (at most every 6 hours).",
             "A Mac that has not been able to check for 30 days pauses paid features until it is online again.",

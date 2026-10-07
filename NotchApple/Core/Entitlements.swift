@@ -61,7 +61,7 @@ final class Entitlements: ObservableObject {
 
     private var revoked: Set<String> { Set(defaults.stringArray(forKey: "license.revoked") ?? []) }
 
-    /// When the revoked list was last fetched successfully. A key not verified for 30 days pauses until it is.
+    /// When the revoked list was last fetched successfully. A key not verified for 3 days pauses until it is.
     private var lastVerified: Date? {
         get { (defaults.object(forKey: "license.verifiedAt") as? Double).map { Date(timeIntervalSince1970: $0) } }
         set { defaults.set(newValue?.timeIntervalSince1970, forKey: "license.verifiedAt") }
@@ -71,7 +71,7 @@ final class Entitlements: ObservableObject {
         var usable = key
         if key != nil, LicenseKey.verificationLapsed(lastVerified: lastVerified) {
             usable = nil
-            notice = "Notch apple couldn't check your license for over \(LicenseKey.verificationGraceDays) days. Connect to the internet and it comes back on its own."
+            notice = "Notch apple couldn't check your license for over \(LicenseKey.verificationGraceHours / 24) days. Connect to the internet and it comes back on its own."
         }
         let t = LicenseKey.tier(key: usable, revoked: revoked, legacyActivated: hasLegacyActivation)
         if t != tier { tier = t }
@@ -118,12 +118,12 @@ final class Entitlements: ObservableObject {
 
     // MARK: Revocation
 
-    /// At most every 6 hours (launch, wake and an hourly timer all call it), and only while a signed key is active.
-    /// A suspended key stops working at the next check; no update is needed.
-    func checkRevocationIfDue() async {
+    /// At most every 10 minutes (launch and wake always check; a 10-minute timer calls it too), and only while a
+    /// signed key is active. A suspended key stops working at the next check; no update is needed.
+    func checkRevocationIfDue(force: Bool = false) async {
         guard let k = key else { return }
         let last = defaults.double(forKey: "license.revokedCheckedAt")
-        guard Date().timeIntervalSince1970 - last > 6 * 3600, let server = await LicenseServer.url(),
+        guard force || Date().timeIntervalSince1970 - last > 600, let server = await LicenseServer.url(),
               let r = await LicenseServer.get(server, "revoked"),
               let list = r["list"] as? String, let sig = r["sig"] as? String,
               let ids = LicenseKey.revokedIDs(list: list, signature: sig) else { return }

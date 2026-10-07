@@ -340,11 +340,11 @@ struct LicenseKey: Equatable {
 
     /// A key that has not been checked against the server's revoked list for this long stops counting until the
     /// Mac is online again. It keeps a suspended key from working for ever on a Mac that never connects.
-    static let verificationGraceDays = 30
+    static let verificationGraceHours = 72
 
-    static func verificationLapsed(lastVerified: Date?, now: Date = Date(), graceDays: Int = verificationGraceDays) -> Bool {
+    static func verificationLapsed(lastVerified: Date?, now: Date = Date(), graceHours: Int = verificationGraceHours) -> Bool {
         guard let lastVerified else { return false }
-        return now.timeIntervalSince(lastVerified) > Double(graceDays) * 86_400
+        return now.timeIntervalSince(lastVerified) > Double(graceHours) * 3600
     }
 
     /// The tier this Mac is entitled to: a valid signed key wins; an older activation

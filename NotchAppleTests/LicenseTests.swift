@@ -92,10 +92,10 @@ final class LicenseTests: XCTestCase {
         XCTAssertLessThan(pro.masked.count, 40)
     }
 
-    func testAKeyNotVerifiedForThirtyDaysLapses() {
+    func testAKeyNotVerifiedForThreeDaysLapses() {
         let now = Date()
         XCTAssertFalse(LicenseKey.verificationLapsed(lastVerified: nil, now: now))
-        XCTAssertFalse(LicenseKey.verificationLapsed(lastVerified: now.addingTimeInterval(-29 * 86_400), now: now))
-        XCTAssertTrue(LicenseKey.verificationLapsed(lastVerified: now.addingTimeInterval(-31 * 86_400), now: now))
+        XCTAssertFalse(LicenseKey.verificationLapsed(lastVerified: now.addingTimeInterval(-71 * 3600), now: now))
+        XCTAssertTrue(LicenseKey.verificationLapsed(lastVerified: now.addingTimeInterval(-73 * 3600), now: now))
     }
 }
