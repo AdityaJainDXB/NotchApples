@@ -19,6 +19,8 @@ jobs:
       - name: Install build tools
         run: brew install xcodegen xcbeautify
       - name: Build the DMG
+        env:
+          FIREBASE_PLIST_B64: ${{ secrets.FIREBASE_PLIST_B64 }}
         run: ./scripts/build_dmg.sh
       - name: Name it after the commit
         id: n

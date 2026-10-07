@@ -15,3 +15,6 @@ NotchWindows/src-tauri/gen/
 
 # Wrangler local cache (has the Cloudflare account name)
 .wrangler/
+
+# Firebase client config: kept out of git (scripts/ensure_firebase_config.sh restores it for builds)
+NotchApple/Resources/GoogleService-Info.plist

@@ -3,6 +3,7 @@
 # Usage: scripts/build_dmg.sh            → dist/NotchApple-<version>.dmg
 set -euo pipefail
 cd "$(dirname "$0")/.."
+scripts/ensure_firebase_config.sh
 
 # Tunnelblick's notarized installer is bundled (GPL-2.0, unmodified) but not kept in git.
 TB_DMG=NotchApple/Resources/Tunnelblick/Tunnelblick.dmg
