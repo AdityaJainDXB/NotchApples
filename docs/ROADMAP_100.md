@@ -16,56 +16,56 @@ Cheap, useful, two-platform ideas rise to the top. The top 50 are the build list
 
 | # | Idea | Area | Platform | Tier | Impact | Effort | Score | Status |
 |---:|---|---|---|---|---:|---:|---:|---|
-| 1 | Break reminders: 20-20-20 eyes, water, stretch, posture _(Also covers posture reminders)_ | Productivity | Mac + Windows | Free | 5 | 1 | 37.5 | Planned |
-| 2 | Clipboard transforms: format/minify JSON, base64, URL encode, case _(Pure functions)_ | Developers | Mac + Windows | Free | 4 | 1 | 30.0 | Planned |
-| 3 | Countdowns to dates (exam, trip, launch) on Today | Productivity | Mac + Windows | Free | 4 | 1 | 30.0 | Planned |
-| 4 | Daily focus goal ring (minutes) | Productivity | Mac + Windows | Free | 4 | 1 | 30.0 | Planned |
-| 5 | Turn the copied text into a to-do | Productivity | Mac + Windows | Free | 4 | 1 | 30.0 | Planned |
-| 6 | Type '5 km in mi' or '12% of 80' in the command palette _(Reuses the converter)_ | Productivity | Mac + Windows | Free | 4 | 1 | 30.0 | Planned |
-| 7 | Battery care: reminder to unplug at 80% _(Extends the low-battery warning)_ | System | Mac + Windows | Free | 4 | 1 | 30.0 | Planned |
-| 8 | Music sleep timer: pause after N minutes | System | Mac + Windows | Free | 4 | 1 | 30.0 | Planned |
-| 9 | Breathing exercise (box and 4-7-8) with an animation | Wellbeing | Mac + Windows | Free | 4 | 1 | 30.0 | Planned |
-| 10 | Text size scale (accessibility) | Customization | Mac + Windows | Free | 4 | 1 | 30.0 | Planned |
-| 11 | Reduced motion follows the system setting | Customization | Mac + Windows | Free | 4 | 1 | 30.0 | Planned |
-| 12 | Panic hide: one hotkey hides everything and clears the clipboard | Privacy | Mac + Windows | Free | 4 | 1 | 30.0 | Planned |
-| 13 | Clipboard auto-clear for sensitive items after 30 seconds | Privacy | Mac + Windows | Free | 4 | 1 | 30.0 | Planned |
-| 14 | Claude usage: weekly alert and a daily summary _(Extends the 90% alert)_ | Developers | Mac + Windows | Ultimate | 3 | 1 | 22.5 | Planned |
-| 15 | JWT decoder for the copied token _(Local decode only)_ | Developers | Mac + Windows | Free | 3 | 1 | 22.5 | Planned |
-| 16 | Hash, UUID and lorem ipsum generator | Developers | Mac + Windows | Free | 3 | 1 | 22.5 | Planned |
-| 17 | Unix timestamp and ISO date converter _(In Tools)_ | Developers | Mac + Windows | Free | 3 | 1 | 22.5 | Planned |
-| 18 | One thing today: a daily intention shown on the pill | Productivity | Mac + Windows | Free | 3 | 1 | 22.5 | Planned |
-| 19 | Pinned notes on the Today tab | Productivity | Mac + Windows | Free | 3 | 1 | 22.5 | Planned |
-| 20 | Due-today badge for To-do on the pill | Productivity | Mac + Windows | Free | 3 | 1 | 22.5 | Planned |
-| 21 | Calculator history and percentage mode | Productivity | Mac + Windows | Free | 3 | 1 | 22.5 | Planned |
-| 22 | Low disk space alert | System | Mac + Windows | Free | 3 | 1 | 22.5 | Planned |
-| 23 | Stay-awake presets: 30 min, 1 h, 2 h, until I turn it off | System | Mac + Windows | Free | 3 | 1 | 22.5 | Planned |
-| 24 | Bedtime wind-down reminder | Wellbeing | Mac + Windows | Free | 3 | 1 | 22.5 | Planned |
-| 25 | Colour-blind friendly themes | Customization | Mac + Windows | Free | 3 | 1 | 22.5 | Planned |
-| 26 | High-contrast theme | Customization | Mac + Windows | Free | 3 | 1 | 22.5 | Planned |
-| 27 | QR code for a link or text, to scan with your phone | Productivity | Mac + Windows | Free | 3 | 1 | 22.5 | Planned |
-| 28 | Habit tracker with streaks | Productivity | Mac + Windows | Pro | 4 | 2 | 20.0 | Planned |
-| 29 | Quick-capture hotkey: type a note from anywhere | Productivity | Mac + Windows | Free | 4 | 2 | 20.0 | Planned |
-| 30 | Recurring to-dos | Productivity | Mac + Windows | Free | 4 | 2 | 20.0 | Planned |
-| 31 | Snippet variables: {date}, {time}, {clipboard} _(Extends Snippets)_ | Productivity | Mac + Windows | Pro | 4 | 2 | 20.0 | Planned |
-| 32 | Emoji and symbol picker with search | Productivity | Mac + Windows | Free | 4 | 2 | 20.0 | Planned |
-| 33 | Internet-down alert (yellow dot) and live latency | System | Mac + Windows | Free | 4 | 2 | 20.0 | Planned |
-| 34 | One-click network speed test | System | Mac + Windows | Pro | 4 | 2 | 20.0 | Planned |
-| 35 | Top processes with a Quit button | System | Mac + Windows | Pro | 4 | 2 | 20.0 | Planned |
-| 36 | Notch skins: glass, solid, outline, neon rim | Customization | Mac + Windows | Pro | 4 | 2 | 20.0 | Planned |
-| 37 | Several named timers at once _(In the original plan (#24); neither app has it yet)_ | Productivity | Mac + Windows | Pro | 4 | 2 | 20.0 | Planned |
-| 38 | Clipboard quick-paste slots (Ctrl+1 to 9) | Productivity | Mac + Windows | Pro | 4 | 2 | 20.0 | Planned |
-| 39 | Admin: resend a key email and show device names | Admin | Server / admin | Admin | 3 | 1 | 18.0 | Planned |
-| 40 | Admin: audit log of every suspend, issue and reissue | Admin | Server / admin | Admin | 4 | 2 | 16.0 | Planned |
-| 41 | Admin: sales and activation charts by day | Admin | Server / admin | Admin | 4 | 2 | 16.0 | Planned |
-| 42 | Dark mode and Night Shift toggle | System | Mac | Free | 3 | 1 | 15.0 | Planned |
-| 43 | Claude usage: estimated cost in dollars _(Public per-token prices, clearly labelled an estimate)_ | Developers | Mac + Windows | Ultimate | 3 | 2 | 15.0 | Planned |
-| 44 | Regex tester | Developers | Mac + Windows | Free | 3 | 2 | 15.0 | Planned |
-| 45 | Colour contrast checker (WCAG) with the colour picker | Developers | Mac + Windows | Free | 3 | 2 | 15.0 | Planned |
-| 46 | Focus time logged per project _(Tags on Focus sessions)_ | Developers | Mac + Windows | Pro | 3 | 2 | 15.0 | Planned |
-| 47 | Meeting notes started from a calendar event | Productivity | Mac + Windows | Pro | 3 | 2 | 15.0 | Planned |
-| 48 | Links shelf: save a link now, read it later | Productivity | Mac + Windows | Free | 3 | 2 | 15.0 | Planned |
-| 49 | Snooze a reminder from its notification | Productivity | Mac + Windows | Free | 3 | 2 | 15.0 | Planned |
-| 50 | Full-screen lyrics view | System | Mac + Windows | Pro | 3 | 2 | 15.0 | Planned |
+| 1 | Break reminders: 20-20-20 eyes, water, stretch, posture _(Also covers posture reminders)_ | Productivity | Mac + Windows | Free | 5 | 1 | 37.5 | Built, not released |
+| 2 | Clipboard transforms: format/minify JSON, base64, URL encode, case _(Pure functions)_ | Developers | Mac + Windows | Free | 4 | 1 | 30.0 | Built, not released |
+| 3 | Countdowns to dates (exam, trip, launch) on Today | Productivity | Mac + Windows | Free | 4 | 1 | 30.0 | Built, not released |
+| 4 | Daily focus goal ring (minutes) | Productivity | Mac + Windows | Free | 4 | 1 | 30.0 | Built, not released |
+| 5 | Turn the copied text into a to-do | Productivity | Mac + Windows | Free | 4 | 1 | 30.0 | Built, not released |
+| 6 | Type '5 km in mi' or '12% of 80' in the command palette _(Reuses the converter)_ | Productivity | Mac + Windows | Free | 4 | 1 | 30.0 | Built, not released |
+| 7 | Battery care: reminder to unplug at 80% _(Extends the low-battery warning)_ | System | Mac + Windows | Free | 4 | 1 | 30.0 | Built, not released |
+| 8 | Music sleep timer: pause after N minutes | System | Mac + Windows | Free | 4 | 1 | 30.0 | Built, not released |
+| 9 | Breathing exercise (box and 4-7-8) with an animation | Wellbeing | Mac + Windows | Free | 4 | 1 | 30.0 | Built, not released |
+| 10 | Text size scale (accessibility) | Customization | Mac + Windows | Free | 4 | 1 | 30.0 | Built, not released |
+| 11 | Reduced motion follows the system setting | Customization | Mac + Windows | Free | 4 | 1 | 30.0 | Built, not released |
+| 12 | Panic hide: one hotkey hides everything and clears the clipboard | Privacy | Mac + Windows | Free | 4 | 1 | 30.0 | Built, not released |
+| 13 | Clipboard auto-clear for sensitive items after 30 seconds | Privacy | Mac + Windows | Free | 4 | 1 | 30.0 | Built, not released |
+| 14 | Claude usage: weekly alert and a daily summary _(Extends the 90% alert)_ | Developers | Mac + Windows | Ultimate | 3 | 1 | 22.5 | Built, not released |
+| 15 | JWT decoder for the copied token _(Local decode only)_ | Developers | Mac + Windows | Free | 3 | 1 | 22.5 | Built, not released |
+| 16 | Hash, UUID and lorem ipsum generator | Developers | Mac + Windows | Free | 3 | 1 | 22.5 | Built, not released |
+| 17 | Unix timestamp and ISO date converter _(In Tools)_ | Developers | Mac + Windows | Free | 3 | 1 | 22.5 | Built, not released |
+| 18 | One thing today: a daily intention shown on the pill | Productivity | Mac + Windows | Free | 3 | 1 | 22.5 | Built, not released |
+| 19 | Pinned notes on the Today tab | Productivity | Mac + Windows | Free | 3 | 1 | 22.5 | Not built yet |
+| 20 | Due-today badge for To-do on the pill | Productivity | Mac + Windows | Free | 3 | 1 | 22.5 | Built, not released |
+| 21 | Calculator history and percentage mode | Productivity | Mac + Windows | Free | 3 | 1 | 22.5 | Built, not released |
+| 22 | Low disk space alert | System | Mac + Windows | Free | 3 | 1 | 22.5 | Built, not released |
+| 23 | Stay-awake presets: 30 min, 1 h, 2 h, until I turn it off | System | Mac + Windows | Free | 3 | 1 | 22.5 | Built, not released |
+| 24 | Bedtime wind-down reminder | Wellbeing | Mac + Windows | Free | 3 | 1 | 22.5 | Built, not released |
+| 25 | Colour-blind friendly themes | Customization | Mac + Windows | Free | 3 | 1 | 22.5 | Built, not released |
+| 26 | High-contrast theme | Customization | Mac + Windows | Free | 3 | 1 | 22.5 | Built, not released |
+| 27 | QR code for a link or text, to scan with your phone | Productivity | Mac + Windows | Free | 3 | 1 | 22.5 | Built, not released |
+| 28 | Habit tracker with streaks | Productivity | Mac + Windows | Pro | 4 | 2 | 20.0 | Built, not released |
+| 29 | Quick-capture hotkey: type a note from anywhere | Productivity | Mac + Windows | Free | 4 | 2 | 20.0 | Built, not released |
+| 30 | Recurring to-dos | Productivity | Mac + Windows | Free | 4 | 2 | 20.0 | Built, not released |
+| 31 | Snippet variables: {date}, {time}, {clipboard} _(Extends Snippets)_ | Productivity | Mac + Windows | Pro | 4 | 2 | 20.0 | Built, not released |
+| 32 | Emoji and symbol picker with search | Productivity | Mac + Windows | Free | 4 | 2 | 20.0 | Not built yet |
+| 33 | Internet-down alert (yellow dot) and live latency | System | Mac + Windows | Free | 4 | 2 | 20.0 | Built, not released |
+| 34 | One-click network speed test | System | Mac + Windows | Pro | 4 | 2 | 20.0 | Built, not released |
+| 35 | Top processes with a Quit button | System | Mac + Windows | Pro | 4 | 2 | 20.0 | Built, not released |
+| 36 | Notch skins: glass, solid, outline, neon rim | Customization | Mac + Windows | Pro | 4 | 2 | 20.0 | Built, not released |
+| 37 | Several named timers at once _(In the original plan (#24); neither app has it yet)_ | Productivity | Mac + Windows | Pro | 4 | 2 | 20.0 | Not built yet |
+| 38 | Clipboard quick-paste slots (Ctrl+1 to 9) | Productivity | Mac + Windows | Pro | 4 | 2 | 20.0 | Built, not released |
+| 39 | Admin: resend a key email and show device names | Admin | Server / admin | Admin | 3 | 1 | 18.0 | Partly (device names; email resend already existed) |
+| 40 | Admin: audit log of every suspend, issue and reissue | Admin | Server / admin | Admin | 4 | 2 | 16.0 | Built, not released |
+| 41 | Admin: sales and activation charts by day | Admin | Server / admin | Admin | 4 | 2 | 16.0 | Partly (keys made per day and by source; no activation chart) |
+| 42 | Dark mode and Night Shift toggle | System | Mac | Free | 3 | 1 | 15.0 | Built, not released |
+| 43 | Claude usage: estimated cost in dollars _(Public per-token prices, clearly labelled an estimate)_ | Developers | Mac + Windows | Ultimate | 3 | 2 | 15.0 | Built, not released |
+| 44 | Regex tester | Developers | Mac + Windows | Free | 3 | 2 | 15.0 | Built, not released |
+| 45 | Colour contrast checker (WCAG) with the colour picker | Developers | Mac + Windows | Free | 3 | 2 | 15.0 | Built, not released |
+| 46 | Focus time logged per project _(Tags on Focus sessions)_ | Developers | Mac + Windows | Pro | 3 | 2 | 15.0 | Not built yet |
+| 47 | Meeting notes started from a calendar event | Productivity | Mac + Windows | Pro | 3 | 2 | 15.0 | Not built yet |
+| 48 | Links shelf: save a link now, read it later | Productivity | Mac + Windows | Free | 3 | 2 | 15.0 | Partly (links on Today only) |
+| 49 | Snooze a reminder from its notification | Productivity | Mac + Windows | Free | 3 | 2 | 15.0 | Not built yet |
+| 50 | Full-screen lyrics view | System | Mac + Windows | Pro | 3 | 2 | 15.0 | Not built yet |
 | 51 | Mood check-in log with a weekly chart | Wellbeing | Mac + Windows | Pro | 3 | 2 | 15.0 | Later |
 | 52 | Accent colour per tab | Customization | Mac + Windows | Pro | 3 | 2 | 15.0 | Later |
 | 53 | Tab bar position and size options | Customization | Mac + Windows | Pro | 3 | 2 | 15.0 | Later |

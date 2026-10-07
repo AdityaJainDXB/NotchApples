@@ -1,4 +1,4 @@
-# Status audit (6 October 2026)
+# Status audit (6 October 2026, updated 7 October)
 
 What is built, what is not, checked against the code at Mac 1.30.3 and Windows 1.26.5 BETA. Evidence is the repo, not the README (the README was out of date: it still described the 1.14-era Windows app and its release notes stopped at 1.24.0).
 
@@ -45,3 +45,13 @@ Can exist, not built yet: Claude Code dot, the four Mac games, notification peek
 ## README
 
 Stale: "locked until you enter an access code", the 1.14-era Windows tab table, "What's new" ending at 1.24.0, and the "doesn't carry over" table. To be rewritten with this release.
+
+## Update, 7 October 2026 (built on `main`, not yet released)
+
+Built since the audit above. Nothing here is released, and the license server changes are **not deployed**.
+
+- **Windows now has:** the Claude Code dot, Cookie Clicker plus Runner, Breakout and Memory, the low-battery and disk warnings, internet drop notice, speed test, secret protection on the clipboard, panic hide, Claude usage tracker, Smart Home (Home Assistant), clipboard link between devices, dev tools, wellbeing (breathe, reminders, habits), snippet variables, quick answers, text size and skins, repeating to-dos, a "3 due" badge on the pill, and stay-awake presets.
+- **Mac now has:** the same Claude usage tracker, Smart Home, clipboard link, dev tools, wellbeing and habits, panic hide, quick answers, snippet variables, accessible colour themes, and a light/dark switch for macOS.
+- **Admin panel:** keys made per day (30 days) and by source, an activity log of every change (no emails, no full keys), and device names. The apps send only a generic label ("Mac (macOS 26.0)", "Windows PC"), never the computer's own name. Needs a deploy of `server/license-worker` to go live.
+- **Still not built:** pinned notes on Today (#19), emoji picker (#32), named timers (#37), focus per project (#46), meeting notes from an event (#47), snooze (#49), full-screen lyrics (#50). Windows notification peek and brightness gauge need native work.
+- **Impossible or skipped:** mirroring iPhone notifications and step counts (no public API); a dollar-cost estimate for Claude usage (prices not verified).
