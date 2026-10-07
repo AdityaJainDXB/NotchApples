@@ -79,6 +79,9 @@ final class ClaudeUsageStore: ObservableObject {
     @AppStorage("claudeUsage.summaryDay") private var summaryDay = ""
     /// A 5-second badge in the closed notch when the colour changes, usage jumps, or the window or week resets.
     @AppStorage("claudeUsage.toasts") var toasts = true
+    /// A notification when your real 5-hour session or week reaches 80% and again at 95%.
+    @AppStorage("claudeUsage.realAlert") var realAlert = true
+    @AppStorage("claudeUsage.realAlertState") private var realAlertState = ""     // "window|resetEpoch|level;…"
     @Published private(set) var blockPace: UsagePace?
     @Published private(set) var weekPace: UsagePace?
     /// True when the pacing is measured against your busiest window and week because you set no budget.
@@ -88,7 +91,7 @@ final class ClaudeUsageStore: ObservableObject {
     private var background: Timer?
 
     /// Alerts and the summary need a fresh look now and then even when the tab is closed (cheap: files are cached).
-    var wantsBackground: Bool { toasts || (blockBudget > 0 && alertAt90) || (weekBudget > 0 && weekAlert) || dailySummary }
+    var wantsBackground: Bool { toasts || realAlert || (blockBudget > 0 && alertAt90) || (weekBudget > 0 && weekAlert) || dailySummary }
 
     func startBackground() {
         background?.invalidate()
@@ -111,6 +114,7 @@ final class ClaudeUsageStore: ObservableObject {
         summary = s
         loading = false
         updatePaces(s)
+        alertOnRealLimits()
         // A yellow dot (the same one Claude Code uses) when this window passes 90% of your budget.
         if alertAt90, blockBudget > 0, let b = s.block, alertedBlock != b.start,
            Double(b.totals.tokens) >= Double(blockBudget) * 0.9 {
@@ -134,6 +138,28 @@ final class ClaudeUsageStore: ObservableObject {
 }
 
 extension ClaudeUsageStore {
+    /// Tells you when a real limit reaches 80% and 95%, once per window.
+    fileprivate func alertOnRealLimits() {
+        guard realAlert, Entitlements.shared.canUse(Feature.claudeUsage), let real = ClaudeLimitsService.shared.limits else { return }
+        var state: [String: (reset: Date?, level: Int)] = [:]
+        for part in realAlertState.split(separator: ";") {
+            let f = part.split(separator: "|", omittingEmptySubsequences: false)
+            if f.count == 3, let level = Int(f[2]) { state[String(f[0])] = (Double(f[1]).map { Date(timeIntervalSince1970: $0) }, level) }
+        }
+        for (key, name, limit) in [("5h", "5-hour session", real.fiveHour), ("7d", "weekly limit", real.sevenDay)] {
+            guard let limit else { continue }
+            let level = ClaudeLimitsLogic.alertLevel(limit.fraction)
+            let last = state[key]
+            if ClaudeLimitsLogic.alertDue(level: level, lastLevel: last?.level ?? 0, lastReset: last?.reset, reset: limit.resetsAt) {
+                let reset = ClaudeLimitsLogic.resetText(limit.resetsAt)
+                Notifier.post(title: "Claude: \(limit.percent)% of your \(name)", body: "Resets \(reset).")
+                if SettingsManager.shared.claudeCodeDot { ClaudeCodeStatus.shared.show(.yellow) }
+            }
+            state[key] = (limit.resetsAt, level)
+        }
+        realAlertState = state.map { "\($0.key)|\($0.value.reset?.timeIntervalSince1970 ?? 0)|\($0.value.level)" }.joined(separator: ";")
+    }
+
     /// The yardsticks: your own budgets, or your busiest window and week when none is set.
     var blockYardstick: Int { blockBudget > 0 ? blockBudget : max(summary?.peakBlock ?? 0, 1) }
     var weekYardstick: Int { weekBudget > 0 ? weekBudget : max(summary?.peakWeek ?? 0, 1) }
@@ -227,7 +253,9 @@ struct ClaudeUsageView: View {
             if let real = limits.limits {
                 // Your real limits, as Claude reports them.
                 PaceRow(title: "5-hour session", pace: store.blockPace, resets: "Resets " + ClaudeLimitsLogic.resetText(real.fiveHour?.resetsAt))
+                runOutLine(real.fiveHour, length: ClaudeLimitsLogic.fiveHourLength)
                 PaceRow(title: "Weekly limit", pace: store.weekPace, resets: "Resets " + ClaudeLimitsLogic.resetText(real.sevenDay?.resetsAt))
+                runOutLine(real.sevenDay, length: ClaudeLimitsLogic.sevenDayLength)
                 if showDetails { realDetails(real) }
                 if let t = limits.fetched {
                     Text("From your Claude account · updated \(t.formatted(date: .omitted, time: .shortened))").font(.system(size: 10)).foregroundStyle(Theme.textSecondary)
@@ -249,6 +277,14 @@ struct ClaudeUsageView: View {
                 if showDetails { details }
             }
             Spacer(minLength: 0)
+        }
+    }
+
+    /// "At this pace you hit it in 1h 20m", only when that is before the reset.
+    @ViewBuilder private func runOutLine(_ limit: ClaudeLimit?, length: TimeInterval) -> some View {
+        if let limit, let t = ClaudeLimitsLogic.timeToLimit(limit, length: length) {
+            Label("At this pace you hit it in \(ClaudeLimitsLogic.duration(t)), before it resets", systemImage: "hourglass")
+                .font(.system(size: 11, weight: .medium)).foregroundStyle(.orange)
         }
     }
 
@@ -318,6 +354,10 @@ struct ClaudeUsageView: View {
             Toggle("Badge in the notch when it changes", isOn: $store.toasts)
                 .font(.system(size: 12)).toggleStyle(.switch).foregroundStyle(Theme.textSecondary)
                 .help("Five seconds, in the closed notch: the colour and percentage after a colour change, a jump of 10 points, or a reset")
+            Toggle("Alert at 80% and 95% of your real limits", isOn: $store.realAlert)
+                .font(.system(size: 12)).toggleStyle(.switch).foregroundStyle(Theme.textSecondary)
+                .disabled(!limits.isConnected)
+                .help("A notification (and the Claude Code dot) when your 5-hour session or week reaches 80%, and again at 95%. Needs Connect to Claude.")
             Toggle("Yellow dot at 90% of the window budget", isOn: $store.alertAt90)
                 .font(.system(size: 12)).toggleStyle(.switch).foregroundStyle(Theme.textSecondary)
                 .disabled(store.blockBudget == 0 || limits.isConnected)

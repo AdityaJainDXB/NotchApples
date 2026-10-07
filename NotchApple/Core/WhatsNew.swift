@@ -20,6 +20,10 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "1.34.4", date: "7 October 2026", headline: "Claude usage alerts and a run-out forecast", items: [
+            "A notification when your real 5-hour session or week reaches 80% and again at 95% (Claude usage tab, on by default once connected).",
+            "A line under each limit tells you when you would hit it at your current pace, if that is before it resets.",
+        ]),
         ReleaseNote(version: "1.34.3", date: "7 October 2026", headline: "A notch that closes, and What's New that fits", items: [
             "The notch now closes when you swipe to another desktop or open Settings, instead of staying stuck open.",
             "What's New, the tour and update screens now stay inside the notch's edges instead of running out of space.",

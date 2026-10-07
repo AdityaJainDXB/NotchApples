@@ -114,6 +114,39 @@ enum ClaudeLimitsLogic {
         return found.sorted { ($0 == keychainService ? 0 : 1, $0) < ($1 == keychainService ? 0 : 1, $1) }
     }
 
+    // MARK: Alerts and projection
+
+    /// Percent levels that raise an alert, lowest first.
+    static let alertLevels = [80, 95]
+
+    /// How many alert levels `fraction` has reached (0, 1 or 2).
+    static func alertLevel(_ fraction: Double) -> Int {
+        alertLevels.filter { fraction * 100 >= Double($0) }.count
+    }
+
+    /// Alert only when the level rose, and start again from zero once the window has reset (a new reset time).
+    static func alertDue(level: Int, lastLevel: Int, lastReset: Date?, reset: Date?) -> Bool {
+        let sameWindow = lastReset == nil || reset == nil || abs(lastReset!.timeIntervalSince(reset!)) < 120
+        return level > (sameWindow ? lastLevel : 0)
+    }
+
+    /// Seconds until the limit is full at the pace so far, only if that happens before the reset.
+    static func timeToLimit(_ limit: ClaudeLimit, length: TimeInterval, now: Date = Date()) -> TimeInterval? {
+        guard let reset = limit.resetsAt, limit.fraction > 0.02, limit.fraction < 1 else { return nil }
+        let untilReset = reset.timeIntervalSince(now)
+        let elapsed = length - untilReset
+        guard untilReset > 0, elapsed > 60 else { return nil }
+        let left = (1 - limit.fraction) / (limit.fraction / elapsed)
+        return left < untilReset ? left : nil
+    }
+
+    /// "1h 20m", "45m".
+    static func duration(_ seconds: TimeInterval) -> String {
+        let m = max(1, Int((seconds / 60).rounded()))
+        if m >= 1440 { return "\(m / 1440)d \((m % 1440) / 60)h" }
+        return m >= 60 ? "\(m / 60)h \(m % 60)m" : "\(m)m"
+    }
+
     // MARK: Pace and wording
 
     /// Green / yellow / red for a real limit, using how far through its period you are.

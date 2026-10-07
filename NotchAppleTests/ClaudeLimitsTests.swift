@@ -83,4 +83,30 @@ final class ClaudeLimitsTests: XCTestCase {
         """
         XCTAssertEqual(ClaudeLimitsLogic.credentialServices(fromDump: dump), ["Claude Code-credentials", "Claude Code-credentials-11e1b79e"])
     }
+
+    func testAlertsFireOncePerLevelAndWindow() {
+        typealias L = ClaudeLimitsLogic
+        let r = Date(timeIntervalSince1970: 1_790_000_000)
+        XCTAssertEqual(L.alertLevel(0.5), 0)
+        XCTAssertEqual(L.alertLevel(0.8), 1)
+        XCTAssertEqual(L.alertLevel(0.97), 2)
+        XCTAssertTrue(L.alertDue(level: 1, lastLevel: 0, lastReset: r, reset: r))
+        XCTAssertFalse(L.alertDue(level: 1, lastLevel: 1, lastReset: r, reset: r))
+        XCTAssertTrue(L.alertDue(level: 2, lastLevel: 1, lastReset: r, reset: r))
+        // A new window (later reset time) starts over.
+        XCTAssertTrue(L.alertDue(level: 1, lastLevel: 2, lastReset: r, reset: r.addingTimeInterval(5 * 3600)))
+    }
+
+    func testTimeToLimitOnlyWhenItBeatsTheReset() {
+        let now = Date(timeIntervalSince1970: 1_790_000_000)
+        let len = ClaudeLimitsLogic.fiveHourLength
+        // 2h in, 50% used: full in 2 more hours, reset in 3h.
+        let fast = ClaudeLimit(fraction: 0.5, resetsAt: now.addingTimeInterval(3 * 3600))
+        XCTAssertEqual(ClaudeLimitsLogic.timeToLimit(fast, length: len, now: now) ?? 0, 2 * 3600, accuracy: 1)
+        // 2h in, 10% used: would last past the reset.
+        XCTAssertNil(ClaudeLimitsLogic.timeToLimit(ClaudeLimit(fraction: 0.1, resetsAt: now.addingTimeInterval(3 * 3600)), length: len, now: now))
+        XCTAssertNil(ClaudeLimitsLogic.timeToLimit(ClaudeLimit(fraction: 0.5, resetsAt: nil), length: len, now: now))
+        XCTAssertEqual(ClaudeLimitsLogic.duration(4800), "1h 20m")
+        XCTAssertEqual(ClaudeLimitsLogic.duration(2700), "45m")
+    }
 }
