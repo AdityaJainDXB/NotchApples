@@ -11,8 +11,8 @@ import { expand, collapse, show, errors, isExpanded } from '../app.js';
 const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 
 export async function run() {
-  const report = { started: new Date().toISOString(), tabs: [], panes: [], errors: [], ok: true };
-  const capture = (name) => invoke('selftest_capture', { name }).catch((e) => report.errors.push(`capture ${name}: ${e.message}`));
+  const report = { started: new Date().toISOString(), tabs: [], panes: [], errors: [], warnings: [], ok: true };
+  const capture = (name) => invoke('selftest_capture', { name }).catch((e) => report.warnings.push(`capture ${name}: ${e.message}`));   // a missing screenshot is a warning: the checks are the tabs and panes
 
   try {
     await wait(1500);

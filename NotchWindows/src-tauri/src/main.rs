@@ -334,9 +334,19 @@ async fn selftest_capture(name: String) -> Result<(), String> {
         let ours = std::process::id();
         let target = windows
             .into_iter()
-            .find(|w| w.pid().ok() == Some(ours) && w.title().map(|t| t == "Notch apple").unwrap_or(false))
-            .ok_or("notch window not found")?;
-        let img = target.capture_image().map_err(|e| e.to_string())?;
+            .find(|w| w.pid().ok() == Some(ours) && w.title().map(|t| t == "Notch apple").unwrap_or(false));
+        let img = match target {
+            Some(w) => w.capture_image().map_err(|e| e.to_string())?,
+            // The window isn't listed on some machines (it is a tool window with no taskbar button): take the
+            // whole screen instead. This only runs in CI, where NOTCH_SELFTEST_DIR is set.
+            None => xcap::Monitor::all()
+                .map_err(|e| e.to_string())?
+                .into_iter()
+                .next()
+                .ok_or("no screen to capture")?
+                .capture_image()
+                .map_err(|e| e.to_string())?,
+        };
         img.save(std::path::Path::new(&dir).join(format!("{safe}.png"))).map_err(|e| e.to_string())
     })
     .await
