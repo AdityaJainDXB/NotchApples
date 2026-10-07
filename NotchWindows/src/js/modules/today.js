@@ -1,7 +1,8 @@
 // Today: the date and time, the weather (with the next 12 hours and 7 days for
 // Pro, as on the Mac), your next calendar events, and your PC at a glance.
 
-import { el, fmtTime, dayLabel, load, save, todayKey } from '../store.js';
+import { el, fmtTime, dayLabel, load, save, todayKey, uid } from '../store.js';
+import * as MN from '../services/meetingnotes.js';
 import { modal, button } from '../ui.js';
 import * as WB from '../services/wellbeing.js';
 import { invoke } from '../native.js';
@@ -157,6 +158,7 @@ export function render(root) {
               el('div', { class: 'ellipsis', style: 'font-weight:600;font-size:15px' }, e.title),
               el('div', { class: 'dim ellipsis' }, e.allDay ? `${dayLabel(e.start)} · all day` : `${dayLabel(e.start)} · ${fmtTime(e.start)}–${fmtTime(e.end)}`, e.location ? ` · ${e.location}` : '')),
             now ? el('span', { class: 'chip', style: 'background:color-mix(in srgb, var(--accent) 45%, transparent);color:#fff;border:0' }, 'Now') : null,
+            canUse('meetingNotes') && !e.allDay ? el('button', { class: 'icon-btn', title: 'Start notes for this meeting', onclick: () => startNotes(e) }, '📝') : null,
             e.join ? el('button', { class: 'btn small', onclick: () => C.join(e) }, 'Join') : null);
         }));
       if (!list.length) events.append(el('div', { class: 'small dim' }, 'Nothing in the next three days.'));
@@ -164,6 +166,15 @@ export function render(root) {
     paint();
     unsub = C.subscribe(paint);
   })();
+
+  // Opens the note for a meeting (making it on first use) in the Notes tab.
+  function startNotes(e) {
+    const day = new Date(e.start).toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short' }), time = `${fmtTime(e.start)} – ${fmtTime(e.end)}`;
+    const notes = load('notes.items', []);
+    let i = MN.existing(notes.map((n) => n.text), e.title, day);
+    if (i < 0) { notes.unshift({ id: uid(), text: MN.template(e.title, day, time), updated: Date.now() }); save('notes.items', notes); i = 0; }
+    show('notes', { open: notes[i].id });
+  }
 
   // ---- this PC ----
   async function loadSystem() {

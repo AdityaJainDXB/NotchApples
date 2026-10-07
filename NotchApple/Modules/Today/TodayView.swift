@@ -74,6 +74,7 @@ struct TodayView: View {
     @StateObject private var model = TodayModel.shared
     @StateObject private var location = LocationProvider.shared
     @StateObject private var rain = RainWatcher.shared
+    @EnvironmentObject private var state: NotchState
 
     var body: some View {
         HStack(alignment: .top, spacing: 12) {
@@ -146,6 +147,9 @@ struct TodayView: View {
                                         NSWorkspace.shared.open(url); AppDelegate.current?.notch?.closeNotch()
                                     }
                                 }
+                                if Entitlements.shared.canUse(.meetingNotes), !event.isAllDay {
+                                    IconButton(systemImage: "note.text.badge.plus", help: "Start notes for this meeting") { startNotes(for: event) }
+                                }
                                 if event.start <= .now && event.end > .now {
                                     Text("Now").font(.system(size: 10, weight: .bold)).padding(.horizontal, 6).padding(.vertical, 2)
                                         .background(Theme.accent.opacity(0.4), in: Capsule())
@@ -215,6 +219,15 @@ struct TodayView: View {
                     .fixedSize(horizontal: false, vertical: true)
             }
         }
+    }
+
+    /// Opens the note for this meeting (making it on first use) in the Notes tab.
+    private func startNotes(for e: TodayModel.Event) {
+        let day = e.start.formatted(.dateTime.weekday(.abbreviated).day().month(.abbreviated))
+        let time = "\(e.start.formatted(date: .omitted, time: .shortened)) – \(e.end.formatted(date: .omitted, time: .shortened))"
+        NotesStore.shared.noteForMeeting(title: e.title, day: day, time: time)
+        UserDefaults.standard.set("notes", forKey: "notes.page")
+        state.selected = .notes
     }
 
     private func timeText(_ e: TodayModel.Event) -> String {

@@ -75,6 +75,16 @@ final class NotesStore: ObservableObject {
         scheduleSave()
     }
 
+    /// The note for a meeting: the one already made for it, or a new one with the Agenda / Notes / Actions template.
+    @discardableResult
+    func noteForMeeting(title: String, day: String, time: String) -> Note {
+        if let i = MeetingNotesLogic.existing(in: notes.map(\.text), title: title, day: day) {
+            selectedID = notes[i].id
+            return notes[i]
+        }
+        return add(MeetingNotesLogic.template(title: title, day: day, time: time))
+    }
+
     func togglePin(_ id: UUID) {
         guard let i = notes.firstIndex(where: { $0.id == id }) else { return }
         notes[i].pinned = notes[i].isPinned ? nil : true

@@ -68,7 +68,7 @@ enum Feature: String, CaseIterable, Identifiable {
     // Ultimate: AI
     case automations
     // Pro: productivity
-    case namedTimers, focusProjects, richNotes, remindersSync, clipboardUnlimited, shelfPlus, textExpander, annotate, ruler, currency, commandPalette
+    case meetingNotes, namedTimers, focusProjects, richNotes, remindersSync, clipboardUnlimited, shelfPlus, textExpander, annotate, ruler, currency, commandPalette
     // Ultimate: scripting
     case scripting
     // Pro: tabs
@@ -98,6 +98,7 @@ enum Feature: String, CaseIterable, Identifiable {
     var title: String {
         switch self {
         case .notchResize: "Notch size"
+        case .meetingNotes: "Meeting notes"
         case .namedTimers: "Named timers"
         case .focusProjects: "Focus by project"
         case .richNotes: "Markdown notes and tags"
@@ -175,6 +176,7 @@ enum Feature: String, CaseIterable, Identifiable {
     var benefit: String {
         switch self {
         case .notchResize: "Make the open notch wider or taller, with a live preview."
+        case .meetingNotes: "Start a note from any calendar event, with the time, an agenda and action items ready."
         case .namedTimers: "Run several timers at once, each with its own name: “Pasta 10m”, “Egg 1:30”."
         case .focusProjects: "Name what you are working on and see this week's focus time split by project."
         case .richNotes: "Preview notes as Markdown and filter them by #tags."
