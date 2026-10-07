@@ -87,6 +87,6 @@ export const MODULES = [
 
 /// What a fresh install shows. Everything else is one click away in Settings → Tabs.
 export const DEFAULT_ON = ['today', 'ai', 'sports', 'f1', 'nowplaying', 'search', 'clipboard', 'notes', 'todo', 'timer', 'shelf', 'windows', 'tools',
-  'stats', 'worldclock', 'games', 'markets', 'home', 'audio', 'settings'];
+  'stats', 'worldclock', 'games', 'markets', 'home', 'audio', 'messenger', 'settings'];
 
 export const byId = (id) => MODULES.find((m) => m.id === id);

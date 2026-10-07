@@ -355,10 +355,18 @@ final class AccountSync: NSObject, ObservableObject {
         var errorDescription: String? { if case .message(let m) = self { return m }; return nil }
     }
 
+    /// Calls that carry the Firebase API key say which app they come from. That lets the key be restricted to this
+    /// app's bundle ID in Google Cloud without breaking sign-in (Google checks this header against the restriction).
+    private static func identify(_ req: inout URLRequest) {
+        guard req.url?.absoluteString.contains("key=") == true else { return }
+        req.setValue(Bundle.main.bundleIdentifier ?? "com.notchapple.app", forHTTPHeaderField: "X-Ios-Bundle-Identifier")
+    }
+
     private static func post(_ url: String, json: [String: Any]) async throws -> [String: Any] {
         var req = URLRequest(url: URL(string: url)!)
         req.httpMethod = "POST"
         req.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        identify(&req)
         req.httpBody = try JSONSerialization.data(withJSONObject: json)
         let (data, response) = try await URLSession.shared.data(for: req)
         try check(data, response)
@@ -369,6 +377,7 @@ final class AccountSync: NSObject, ObservableObject {
         var req = URLRequest(url: URL(string: url)!)
         req.httpMethod = "POST"
         req.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
+        identify(&req)
         var comps = URLComponents()
         comps.queryItems = form.map { URLQueryItem(name: $0.key, value: $0.value) }
         req.httpBody = comps.percentEncodedQuery?.replacingOccurrences(of: "+", with: "%2B").data(using: .utf8)
