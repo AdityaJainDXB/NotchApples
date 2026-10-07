@@ -88,6 +88,7 @@ targets:
       - NotchApple/Modules/Claude/GeminiFallbackLogic.swift
       - NotchApple/Modules/Tools/MathEngine.swift
       - NotchApple/Core/ModuleLayoutLogic.swift
+      - NotchApple/Modules/Sharing/PairDropLogic.swift
       - NotchApple/Core/ClaudeUsageLogic.swift
       - NotchApple/Core/SmartHomeLogic.swift
       - NotchApple/Core/ClipboardLinkLogic.swift

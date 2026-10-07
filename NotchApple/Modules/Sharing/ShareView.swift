@@ -5,10 +5,11 @@
 //  Two ways to share: Apple AirDrop via `NSSharingService`, and PairDrop for
 //  local sharing with a 6-digit code.
 //
-//  PairDrop has two clear modes:
+//  PairDrop has three modes:
 //   • Receive — shows your code. Read it out to the sender. That's it.
-//   • Send    — type the other device's code and pick files. No need to pick
+//   • Send    — type the other device's code and pick files or folders. No need to pick
 //               a device; the right one is found automatically.
+//   • Chat    — type the code once to open a private chat with that device.
 //
 
 import SwiftUI
@@ -149,36 +150,69 @@ private struct PairDropCard: View {
     @State private var codeEntry = ""
     @State private var dropTargeted = false
     @State private var chosenPeer: PairDropPeer?
+    @State private var nameDraft = ""
+    @State private var editingName = false
+    @State private var openThread: String?
+    @State private var messageDraft = ""
 
-    enum Mode: String, CaseIterable { case receive = "Receive", send = "Send" }
+    enum Mode: String, CaseIterable { case receive = "Receive", send = "Send", chat = "Chat" }
 
     var body: some View {
         GlassCard {
-            VStack(alignment: .leading, spacing: 12) {
-                HStack {
+            VStack(alignment: .leading, spacing: 10) {
+                HStack(spacing: 8) {
                     Text("PairDrop").sectionTitle()
-                    Text("Same Wi-Fi, no internet needed").font(.system(size: 11)).foregroundStyle(Theme.textSecondary)
+                    nameField
                     Spacer()
                     Picker("", selection: $mode) {
-                        ForEach(Mode.allCases, id: \.self) { Text($0.rawValue).tag($0) }
+                        ForEach(Mode.allCases, id: \.self) { m in
+                            Text(m == .chat && pairDrop.unreadChats > 0 ? "Chat (\(pairDrop.unreadChats))" : m.rawValue).tag(m)
+                        }
                     }
-                    .pickerStyle(.segmented).labelsHidden().frame(width: 170)
+                    .pickerStyle(.segmented).labelsHidden().frame(width: 220)
                 }
 
-                if mode == .receive { receiveView } else { sendView }
+                switch mode {
+                case .receive: receiveView
+                case .send: sendView
+                case .chat: chatView
+                }
 
                 Spacer(minLength: 0)
+                if let p = pairDrop.progress, pairDrop.isSending {
+                    ProgressView(value: p).tint(Theme.accentBright)
+                }
                 Label(pairDrop.status, systemImage: pairDrop.isSending ? "arrow.up.circle" : "info.circle")
                     .font(.system(size: 11)).foregroundStyle(Theme.textSecondary).lineLimit(2)
             }
         }
+        .onAppear { nameDraft = pairDrop.username }
+    }
+
+    // MARK: Your name
+
+    private var nameField: some View {
+        HStack(spacing: 4) {
+            Image(systemName: "person.crop.circle").font(.system(size: 11)).foregroundStyle(Theme.textSecondary)
+            if editingName {
+                TextField("Your name", text: $nameDraft)
+                    .textFieldStyle(.plain).font(.system(size: 11)).frame(width: 110)
+                    .onSubmit { pairDrop.setUsername(nameDraft); editingName = false }
+                IconButton(systemImage: "checkmark", help: "Save name") { pairDrop.setUsername(nameDraft); editingName = false }
+            } else {
+                Text(pairDrop.deviceName).font(.system(size: 11)).foregroundStyle(Theme.textSecondary).lineLimit(1)
+                IconButton(systemImage: "pencil", help: "Change the name other people see") { nameDraft = pairDrop.username.isEmpty ? pairDrop.deviceName : pairDrop.username; editingName = true }
+            }
+        }
+        .padding(.horizontal, 8).frame(height: 24)
+        .background(Theme.surface, in: Capsule())
     }
 
     // MARK: Receive
 
     private var receiveView: some View {
         VStack(alignment: .leading, spacing: 10) {
-            Text("Give this code to the person sending you files:")
+            Text("Give this code to the person sending you files, or starting a chat:")
                 .font(.system(size: 13)).foregroundStyle(.white)
             HStack(spacing: 8) {
                 Text(pairDrop.pairingCode.map(String.init).joined(separator: " "))
@@ -195,16 +229,20 @@ private struct PairDropCard: View {
 
     // MARK: Send
 
+    private var codeField: some View {
+        TextField("Their 6-digit code", text: $codeEntry)
+            .textFieldStyle(.plain)
+            .font(.system(size: 18, weight: .semibold, design: .monospaced))
+            .padding(.horizontal, 12).frame(height: 36)
+            .background(Theme.surface, in: RoundedRectangle(cornerRadius: 10))
+            .frame(width: 200)
+            .onChange(of: codeEntry) { _, v in codeEntry = String(v.filter(\.isNumber).prefix(6)) }
+    }
+
     private var sendView: some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack(spacing: 10) {
-                TextField("Their 6-digit code", text: $codeEntry)
-                    .textFieldStyle(.plain)
-                    .font(.system(size: 18, weight: .semibold, design: .monospaced))
-                    .padding(.horizontal, 12).frame(height: 36)
-                    .background(Theme.surface, in: RoundedRectangle(cornerRadius: 10))
-                    .frame(width: 200)
-                    .onChange(of: codeEntry) { _, v in codeEntry = String(v.filter(\.isNumber).prefix(6)) }
+                codeField
                 Button {
                     pickFiles { pairDrop.send($0, code: codeEntry, to: chosenPeer) }
                 } label: { Label("Choose files…", systemImage: "paperplane.fill") }
@@ -212,32 +250,114 @@ private struct PairDropCard: View {
                 .disabled(codeEntry.count != 6 || pairDrop.isSending)
             }
 
-            // Drop zone — drag files here once the code is entered.
+            // Drop zone: drag files or folders here once the code is entered.
             RoundedRectangle(cornerRadius: 10, style: .continuous)
                 .strokeBorder(dropTargeted ? Theme.accentBright : Theme.separator,
                               style: StrokeStyle(lineWidth: dropTargeted ? 2 : 1, dash: [5, 4]))
                 .background(RoundedRectangle(cornerRadius: 10).fill(dropTargeted ? Theme.accent.opacity(0.15) : .clear))
-                .overlay(Text(codeEntry.count == 6 ? "…or drop files here to send" : "Enter the code, then drop files here")
+                .overlay(Text(codeEntry.count == 6 ? "…or drop files or folders here to send" : "Enter the code, then drop files here")
                     .font(.system(size: 12)).foregroundStyle(Theme.textSecondary))
                 .frame(height: 56)
                 .onDrop(of: [.fileURL], isTargeted: $dropTargeted) { providers in
-                    guard codeEntry.count == 6 else { return false }
+                    guard codeEntry.count == 6 else { pairDrop.status = "Type their 6-digit code first, then drop the files."; return false }
                     loadURLs(providers) { pairDrop.send($0, code: codeEntry, to: chosenPeer) }
                     return true
                 }
 
-            // Optional: pick a specific device instead of auto-finding by code.
-            Menu {
-                Button("Find automatically by code") { chosenPeer = nil }
-                if !pairDrop.peers.isEmpty { Divider() }
-                ForEach(pairDrop.peers) { peer in Button(peer.displayName) { chosenPeer = peer } }
-            } label: {
-                Label(chosenPeer?.displayName ?? "\(pairDrop.peers.count) nearby device\(pairDrop.peers.count == 1 ? "" : "s") · automatic",
-                      systemImage: "laptopcomputer.and.iphone")
-                    .font(.system(size: 12))
-            }
-            .menuStyle(.borderlessButton).fixedSize()
+            peerMenu
         }
+    }
+
+    private var peerMenu: some View {
+        // Optional: pick a specific device instead of auto-finding by code.
+        Menu {
+            Button("Find automatically by code") { chosenPeer = nil }
+            if !pairDrop.peers.isEmpty { Divider() }
+            ForEach(pairDrop.peers) { peer in Button(peer.displayName) { chosenPeer = peer } }
+        } label: {
+            Label(chosenPeer?.displayName ?? "\(pairDrop.peers.count) nearby device\(pairDrop.peers.count == 1 ? "" : "s") · automatic",
+                  systemImage: "laptopcomputer.and.iphone")
+                .font(.system(size: 12))
+        }
+        .menuStyle(.borderlessButton).fixedSize()
+    }
+
+    // MARK: Chat
+
+    private var chatView: some View {
+        HStack(alignment: .top, spacing: 10) {
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Start a private chat").font(.system(size: 12, weight: .semibold)).foregroundStyle(.white)
+                codeField.frame(width: 170)
+                Button { pairDrop.startChat(code: codeEntry, with: chosenPeer) } label: { Label("Connect", systemImage: "bubble.left.and.bubble.right.fill") }
+                    .buttonStyle(PurpleButtonStyle()).disabled(codeEntry.count != 6)
+                peerMenu
+                Text("Chats live only while Notch apple is open and both of you are on this Wi-Fi.")
+                    .font(.system(size: 10)).foregroundStyle(Theme.textSecondary).fixedSize(horizontal: false, vertical: true)
+            }
+            .frame(width: 190, alignment: .leading)
+            Divider().overlay(Theme.separator)
+            VStack(spacing: 6) {
+                if pairDrop.threads.isEmpty {
+                    Text("No chats yet. Type someone's code and press Connect, or give yours and let them connect.")
+                        .font(.system(size: 12)).foregroundStyle(Theme.textSecondary).multilineTextAlignment(.center)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                } else {
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 6) {
+                            ForEach(pairDrop.threads) { t in
+                                Button { openThread = t.id; pairDrop.markRead(t.id) } label: {
+                                    Text(t.unread > 0 ? "\(t.peerName) (\(t.unread))" : t.peerName)
+                                        .font(.system(size: 11, weight: .semibold)).padding(.horizontal, 10).frame(height: 24)
+                                        .background(Capsule().fill(t.id == (openThread ?? pairDrop.threads.first?.id) ? AnyShapeStyle(Theme.accent.opacity(0.45)) : AnyShapeStyle(Theme.surface)))
+                                        .foregroundStyle(.white)
+                                }
+                                .buttonStyle(.plain)
+                            }
+                        }
+                    }
+                    if let t = pairDrop.threads.first(where: { $0.id == (openThread ?? pairDrop.threads.first?.id) }) { thread(t) }
+                }
+            }
+        }
+    }
+
+    private func thread(_ t: PairDropChatThread) -> some View {
+        VStack(spacing: 6) {
+            ScrollViewReader { proxy in
+                ScrollView {
+                    VStack(spacing: 4) {
+                        ForEach(t.messages) { m in
+                            HStack {
+                                if m.fromMe { Spacer(minLength: 40) }
+                                Text(m.text).font(.system(size: 12)).foregroundStyle(.white).textSelection(.enabled)
+                                    .padding(.horizontal, 10).padding(.vertical, 5)
+                                    .background(m.fromMe ? Theme.accent.opacity(0.55) : Theme.surface, in: RoundedRectangle(cornerRadius: 12))
+                                if !m.fromMe { Spacer(minLength: 40) }
+                            }
+                            .id(m.id)
+                        }
+                    }
+                }
+                .onChange(of: t.messages.count) { _, _ in if let last = t.messages.last { proxy.scrollTo(last.id, anchor: .bottom) } }
+            }
+            HStack(spacing: 6) {
+                TextField("Message \(t.peerName)", text: $messageDraft)
+                    .textFieldStyle(.plain).font(.system(size: 12)).padding(.horizontal, 10).frame(height: 28)
+                    .background(Theme.surface, in: Capsule())
+                    .onSubmit { send(to: t) }
+                Button { send(to: t) } label: { Image(systemName: "arrow.up.circle.fill").font(.system(size: 20)) }
+                    .buttonStyle(.plain).foregroundStyle(Theme.accentBright).disabled(messageDraft.trimmingCharacters(in: .whitespaces).isEmpty)
+                IconButton(systemImage: "xmark.circle", help: "End this chat") { pairDrop.closeChat(t.id); openThread = nil }
+            }
+        }
+        .onAppear { pairDrop.markRead(t.id) }
+    }
+
+    private func send(to t: PairDropChatThread) {
+        let text = messageDraft
+        messageDraft = ""
+        pairDrop.sendMessage(text, in: t.id)
     }
 }
 
@@ -246,7 +366,7 @@ private struct PairDropCard: View {
 private func pickFiles(_ completion: @escaping ([URL]) -> Void) {
     let panel = NSOpenPanel()
     panel.allowsMultipleSelection = true
-    panel.canChooseDirectories = false
+    panel.canChooseDirectories = true      // a folder is zipped and sent as one file
     NSApp.activate(ignoringOtherApps: true)
     if panel.runModal() == .OK { completion(panel.urls) }
 }
