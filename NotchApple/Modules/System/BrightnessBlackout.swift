@@ -42,7 +42,7 @@ final class BrightnessBlackout {
                 if let tap = me.tap { CGEvent.tapEnable(tap: tap, enable: true) }
                 return Unmanaged.passUnretained(event)
             }
-            guard type == .keyDown, Self.isOptionA(event) else { return Unmanaged.passUnretained(event) }
+            guard type == .keyDown, BrightnessBlackout.isOptionA(event) else { return Unmanaged.passUnretained(event) }
             if event.getIntegerValueField(.keyboardEventAutorepeat) == 0 {
                 DispatchQueue.main.async { me.toggle() }
             }

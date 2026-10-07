@@ -21,6 +21,9 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "1.32.5", date: "7 October 2026", headline: "Option+A, update reminders, and no locked screen", items: [
+            "Includes everything from 1.32.1 to 1.32.4, which never built. Option+A blacks out the screen and brings it back; update reminders come every 4th or 5th notch open; a window after updating lets you switch on new features; and the permission screen no longer blocks the notch.",
+        ]),
         ReleaseNote(version: "1.32.4", date: "7 October 2026", headline: "No more locked screen", items: [
             "The required-permission screen is gone and the notch always shows your tabs. Turn on Accessibility in Settings → Permissions for the volume gauge, ⌥A and window snapping.",
         ]),
