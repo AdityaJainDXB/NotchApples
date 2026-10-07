@@ -12,7 +12,7 @@ const tagsOf = (text) => [...new Set((text.match(/(^|\s)#([\p{L}\p{N}_-]{2,30})/
 
 export function render(root, opts = {}) {
   let notes = load(KEY, []);
-  let activeId = notes.find((n) => n.pinned)?.id ?? notes[0]?.id ?? null;
+  let activeId = (opts.open && notes.some((n) => n.id === opts.open) ? opts.open : null) ?? notes.find((n) => n.pinned)?.id ?? notes[0]?.id ?? null;
   let preview = false, tag = null;
 
   const list = el('div', { class: 'col gap-4 scroll', style: 'flex:1' });

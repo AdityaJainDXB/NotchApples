@@ -152,9 +152,36 @@ struct TimerView: View {
     @StateObject private var timer = CountdownTimer.shared
     @State private var customMinutes = 20
 
+    @AppStorage("timer.page") private var page = "timer"
+    @ObservedObject private var entitlements = Entitlements.shared
+
     private let presets: [(String, Double)] = [("1 min", 1), ("3 min", 3), ("5 min", 5), ("10 min", 10), ("15 min", 15), ("30 min", 30), ("45 min", 45), ("1 hr", 60)]
 
     var body: some View {
+        VStack(spacing: 8) {
+            Picker("", selection: $page) {
+                Text("Timer").tag("timer")
+                Text("Named").tag("named")
+            }
+            .pickerStyle(.segmented).labelsHidden().frame(width: 200)
+            if page == "named" {
+                GlassCard {
+                    if entitlements.canUse(.namedTimers) {
+                        NamedTimersView()
+                    } else {
+                        HStack(spacing: 8) {
+                            TierBadge(tier: .pro)
+                            Text(Feature.namedTimers.benefit).font(.system(size: 12)).foregroundStyle(Theme.textSecondary)
+                        }
+                    }
+                }
+            } else {
+                classic
+            }
+        }
+    }
+
+    private var classic: some View {
         HStack(spacing: 12) {
             GlassCard {
                 HStack(spacing: 18) {

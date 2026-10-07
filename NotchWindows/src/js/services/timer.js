@@ -1,7 +1,8 @@
 // Timer and stopwatch, from the Mac's Timer add-on. Both keep running when the
 // notch is closed or the app restarts; the time left shows on the pill.
 
-import { load, save, fmtClock } from '../store.js';
+import { load, save, fmtClock, uid } from '../store.js';
+import * as NT from './namedtimers.js';
 import { notify } from '../native.js';
 import { provide, refresh } from '../activity.js';
 
@@ -49,8 +50,31 @@ export const fmtMs = (ms) => {
   return `${fmtClock(Math.floor(ms / 1000))}.${String(cs).padStart(2, '0')}`;
 };
 
+// ---- named timers (Pro): several at once, each ending at a fixed time ----
+export const MAX_NAMED = 8;
+export const named = () => load('timer.named', []);
+const setNamed = (list) => { save('timer.named', list); refresh(); };
+export const namedLeft = (t) => (t.done ? 0 : Math.max(0, Math.ceil((t.endsAt - Date.now()) / 1000)));
+/// Adds a timer from text like "Pasta 10m". Returns an explanation when it can't, otherwise null.
+export function addNamed(input) {
+  const p = NT.parse(input);
+  if (!p) return 'Add a time: “Pasta 10m”, “Egg 1:30” or “Tea 3 min”.';
+  const list = named();
+  if (list.filter((t) => !t.done).length >= MAX_NAMED) return `That's ${MAX_NAMED} running. Remove one first.`;
+  setNamed([...list, { id: uid(), name: p.name, seconds: p.seconds, endsAt: Date.now() + p.seconds * 1000, done: false }]);
+  return null;
+}
+export const removeNamed = (id) => setNamed(named().filter((t) => t.id !== id));
+export const clearDoneNamed = () => setNamed(named().filter((t) => !t.done));
+
 export function start() {
   setInterval(() => {
+    const due = named().filter((t) => !t.done && t.endsAt <= Date.now());
+    if (due.length) {
+      setNamed(named().map((t) => (due.some((d) => d.id === t.id) ? { ...t, done: true, doneAt: Date.now() } : t)));
+      for (const t of due) notify(`${t.name} is done`, `Your ${NT.clock(t.seconds)} timer has finished.`);
+      import('../app.js').then((a) => a.playSound('done'));
+    }
     const t = timer();
     if (t.running && Date.now() >= t.endsAt) {
       setTimer({ ...t, running: false, remaining: 0, doneAt: Date.now() });
@@ -64,6 +88,12 @@ export function start() {
     if (t.doneAt && Date.now() - t.doneAt < 60_000) return { icon: '⏰', label: 'Done', live: true, tab: 'timer' };
     if (!t.running && !t.remaining) return null;
     return { icon: '⏱', label: `${t.running ? '' : '⏸ '}${fmtClock(timerLeft(t))}`, tab: 'timer', title: t.label || 'Timer' };
+  });
+  provide('namedtimers', 60, () => {
+    const list = named(), fresh = list.find((t) => t.done && t.doneAt && Date.now() - t.doneAt < 30_000);
+    if (fresh) return { icon: '🔔', label: fresh.name.slice(0, 12), live: true, tab: 'timer', title: `${fresh.name} is done` };
+    const next = list.filter((t) => !t.done).sort((a, b) => a.endsAt - b.endsAt)[0];
+    return next ? { icon: '⏲', label: `${next.name.slice(0, 8)} ${NT.clock(namedLeft(next))}`, tab: 'timer', title: `${next.name} (${list.filter((t) => !t.done).length} running)` } : null;
   });
   provide('stopwatch', 40, () => {
     const w = stopwatch();

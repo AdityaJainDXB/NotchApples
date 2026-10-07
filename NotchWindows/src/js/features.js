@@ -6,6 +6,8 @@ import { can } from './license.js';
 
 export const FEATURES = {
   notchResize: {"title": "Notch size", "detail": "Make the pill and the open notch smaller or larger, and move it left or right.", "tier": 1},
+  namedTimers: {"title": "Named timers", "detail": "Run several timers at once, each with its own name: “Pasta 10m”, “Egg 1:30”.", "tier": 1},
+  focusProjects: {"title": "Focus by project", "detail": "Name what you are working on and see this week's focus time split by project.", "tier": 1},
   richNotes: {"title": "Markdown notes and tags", "detail": "Preview notes as Markdown and filter them by #tags.", "tier": 1},
   remindersSync: {"title": "Reminders, Things and Todoist", "detail": "See and tick off your Apple Reminders in To-do, and send to-dos to Things or Todoist.", "tier": 1, "mac": "Uses Apple Reminders and Things."},
   clipboardUnlimited: {"title": "Longer clipboard history", "detail": "Keep up to 5,000 clipboard items, and ignore apps you choose.", "tier": 1},

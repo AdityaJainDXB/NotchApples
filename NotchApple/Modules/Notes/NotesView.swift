@@ -13,6 +13,9 @@ struct Note: Identifiable, Codable, Equatable {
     var id = UUID()
     var text: String
     var updated = Date()
+    /// Pinned notes show on Today. Optional so notes saved before pinning existed still load.
+    var pinned: Bool?
+    var isPinned: Bool { pinned == true }
 
     /// #tags written anywhere in the note (Pro shows them as filters).
     var tags: [String] {
@@ -72,6 +75,12 @@ final class NotesStore: ObservableObject {
         scheduleSave()
     }
 
+    func togglePin(_ id: UUID) {
+        guard let i = notes.firstIndex(where: { $0.id == id }) else { return }
+        notes[i].pinned = notes[i].isPinned ? nil : true
+        scheduleSave()
+    }
+
     func delete(_ id: UUID) {
         if let i = notes.firstIndex(where: { $0.id == id }) {
             let note = notes[i]
@@ -106,9 +115,10 @@ struct NotesView: View {
     @AppStorage("notes.page") private var page = "notes"
 
     private var filtered: [Note] {
-        store.notes.filter { n in
+        let matches = store.notes.filter { n in
             (search.isEmpty || n.text.localizedCaseInsensitiveContains(search)) && (tag == nil || n.tags.contains(tag!))
         }
+        return matches.filter(\.isPinned) + matches.filter { !$0.isPinned }   // pinned notes stay on top
     }
 
     private var allTags: [String] { Array(Set(store.notes.flatMap(\.tags))).sorted() }
@@ -179,6 +189,7 @@ struct NotesView: View {
                             } else {
                                 TierBadge(tier: .pro).help(Feature.richNotes.benefit)
                             }
+                            IconButton(systemImage: note.isPinned ? "pin.slash" : "pin", help: note.isPinned ? "Unpin from Today" : "Pin to Today") { store.togglePin(id) }
                             IconButton(systemImage: "doc.on.doc", help: "Copy note") {
                                 NSPasteboard.general.clearContents()
                                 NSPasteboard.general.setString(note.text, forType: .string)
@@ -215,8 +226,11 @@ private struct NoteRow: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 1) {
-            Text(note.title.isEmpty ? "New note" : note.title)
-                .font(.system(size: 12, weight: .semibold)).foregroundStyle(.white).lineLimit(1)
+            HStack(spacing: 4) {
+                if note.isPinned { Image(systemName: "pin.fill").font(.system(size: 9)).foregroundStyle(Theme.accentBright) }
+                Text(note.title.isEmpty ? "New note" : note.title)
+                    .font(.system(size: 12, weight: .semibold)).foregroundStyle(.white).lineLimit(1)
+            }
             Text(note.updated.formatted(date: .abbreviated, time: .shortened))
                 .font(.system(size: 10)).foregroundStyle(Theme.textSecondary)
         }

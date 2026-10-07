@@ -45,7 +45,24 @@ final class FocusTimer: ObservableObject {
     @AppStorage("focus.goal") var dailyGoal = 0
     var minutesToday: Int { history[today] ?? 0 }
 
+    /// What you are working on now (Pro). Finished focus sessions are added to it.
+    @AppStorage("focus.project") var project = ""
+    @AppStorage("focus.projectLog") private var projectLogData = Data()
+    var projectLog: [String: Int] { (try? JSONDecoder().decode([String: Int].self, from: projectLogData)) ?? [:] }
+    var projectNames: [String] { ProjectFocusLogic.names(projectLog) }
+
+    /// This week's minutes per project, biggest first.
+    var weekByProject: [(project: String, minutes: Int)] {
+        let days = lastWeek.map { $0.day.formatted(.iso8601.year().month().day()) }
+        return ProjectFocusLogic.totals(projectLog, days: days)
+    }
+
     private func logMinutes(_ minutes: Int) {
+        if Entitlements.shared.canUse(.focusProjects) {
+            let cutoff = Calendar.current.date(byAdding: .day, value: -60, to: .now)!.formatted(.iso8601.year().month().day())
+            let log = ProjectFocusLogic.prune(ProjectFocusLogic.add(projectLog, day: today, project: project, minutes: minutes), before: cutoff)
+            projectLogData = (try? JSONEncoder().encode(log)) ?? Data()
+        }
         var h = history
         let before = h[today] ?? 0
         h[today, default: 0] += minutes

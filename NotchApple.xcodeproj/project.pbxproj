@@ -12,6 +12,7 @@
 		016F2ADAB254656E793EA5F8 /* ClipboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 21DB33F0188BFD9B3D8FA4C3 /* ClipboardView.swift */; };
 		028C6C33AD6C682F03B0695B /* MessengerNotifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = D953A904B3EF07B407F31F5C /* MessengerNotifier.swift */; };
 		0310ED990FCB271126B822E2 /* ToolsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6DC662D269E6349FC6792A11 /* ToolsView.swift */; };
+		035650D735E7B4C68380B632 /* NamedTimerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0F548E2157A119D180EAC46E /* NamedTimerTests.swift */; };
 		04DA84BD772511B028648D4E /* GlobalHotkeyManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0ECABC7EEC9804BECB1923C7 /* GlobalHotkeyManager.swift */; };
 		05C365A595AA0926BE9B5BB9 /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A7251824E64423A2B944890 /* OnboardingView.swift */; };
 		07D699E3624DBDC3C40D3A6D /* AIExtras.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED43344457B89969F8103870 /* AIExtras.swift */; };
@@ -47,6 +48,7 @@
 		1E02BE7CA6FA7A27CDFB4B1D /* AppTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5F7CF2FFE504D781512227C /* AppTheme.swift */; };
 		21586C0BF170E4B586EF009A /* ModuleOrganizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4894C776E7909EF42A1F97E9 /* ModuleOrganizer.swift */; };
 		219D17761C8C9DB4C03DCBCF /* VoiceNotesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34E21597A89BA509A323CB7C /* VoiceNotesView.swift */; };
+		221FEC324BD888DEBD975CB3 /* ProjectFocusTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 18329B6DF3C3AF37BA61B8B4 /* ProjectFocusTests.swift */; };
 		2386441F130CA43774F8A976 /* ShortcutRecorder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1AD68AAB70138C11AD1C119D /* ShortcutRecorder.swift */; };
 		23DEAFF7A9EA628D504552A1 /* AppLauncher.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B4A357F34CF825E961ADEF4 /* AppLauncher.swift */; };
 		242C7B0C09B073631A588CBE /* DownloadWatcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F22844E48EEA4FEBD1273E0 /* DownloadWatcher.swift */; };
@@ -56,6 +58,7 @@
 		26D09B0E866D702D64C68CEB /* AcknowledgementsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E215AC0F99CCC1E81AC1732 /* AcknowledgementsView.swift */; };
 		29326D872AE0DC306AFD1986 /* Tunnelblick-ABOUT.txt in Resources */ = {isa = PBXBuildFile; fileRef = EDBEAF142EDDBD8BE070A009 /* Tunnelblick-ABOUT.txt */; };
 		29BC5405E9AA7A285A647076 /* TodayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DD6D3003087F986015A60A7 /* TodayView.swift */; };
+		2CBA8151266305CFFA637D9F /* NamedTimers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A4853F4F991B88D8892FD18 /* NamedTimers.swift */; };
 		2F00F4820CC8D8244358FD73 /* WellbeingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1477CCE52DD2917B95D907D7 /* WellbeingTests.swift */; };
 		305D3067C2952F9CDCE2C833 /* Entitlements.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBF521DE52E4227ABF0CCC29 /* Entitlements.swift */; };
 		308B02A5703FF92FD435BE97 /* SmartHomeLogic.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99A4B06A001F63424485AE1E /* SmartHomeLogic.swift */; };
@@ -182,6 +185,7 @@
 		A358C5DCEA06EB17B99C6907 /* ActivationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2080B6F1BB18CC9E7A42044 /* ActivationView.swift */; };
 		A4F72615CBBF12DE8EA12022 /* WellbeingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 06B519562B43BC0E7646A8A7 /* WellbeingView.swift */; };
 		A561FED3D648A2B4BEBC4BB9 /* ExternalActivities.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94617614D11E8110B03EB9F7 /* ExternalActivities.swift */; };
+		A6C6C5E596E381B65F1FE6E3 /* ProjectFocusLogic.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3047710BA5AC2CDBD910608B /* ProjectFocusLogic.swift */; };
 		A7039DDEBFEE893E0219A6AB /* NotchWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = E56AAC7ADE87A47F1E7862C3 /* NotchWidget.swift */; };
 		A731D2F9608345B56F3EC5A9 /* ClipboardLinkTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 26224581D5D211D4749547E8 /* ClipboardLinkTests.swift */; };
 		A7D1F48F2AC33272CBC6837F /* TrustSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2269398FC9C57443402C81D8 /* TrustSettings.swift */; };
@@ -198,7 +202,9 @@
 		B050F8E38385A23666F48F72 /* MathText.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78B2FB154D159E0F982419C0 /* MathText.swift */; };
 		B069F2308D10FC9D1865F86E /* AppActionsMenu.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF6EF909C581BCC04AAEF2AA /* AppActionsMenu.swift */; };
 		B1AF23B59772849977B2E69C /* PluginsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 908CD072D0A46C818B89DD0D /* PluginsView.swift */; };
+		B2E85A05E78CE3693B591FB6 /* ProjectFocusLogic.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3047710BA5AC2CDBD910608B /* ProjectFocusLogic.swift */; };
 		B3D4300884C5014B30FC14AF /* PeekView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCE0CCD6C5E28321639259CE /* PeekView.swift */; };
+		B49D7DD495557CD121470026 /* NamedTimerLogic.swift in Sources */ = {isa = PBXBuildFile; fileRef = 869FA0DCFB5761CB6BB319C2 /* NamedTimerLogic.swift */; };
 		B5B462664BB58BFF717E09E3 /* SnippetVariables.swift in Sources */ = {isa = PBXBuildFile; fileRef = A22CAB6FA5F9EADB1A7E3B86 /* SnippetVariables.swift */; };
 		B6BBBF5A2BD8214916C71BBF /* VPNTunnel.swift in Sources */ = {isa = PBXBuildFile; fileRef = D6446A004FCDC55C0BF6957C /* VPNTunnel.swift */; };
 		B7AE66AF8CD816CBD2F23CB5 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 184C7A8AA7E8B37DB1D50EFD /* SettingsView.swift */; };
@@ -210,6 +216,7 @@
 		BFA1CCA183B16AE648A0EA3F /* NotchStatsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFED05958781963B1F7EB56D /* NotchStatsView.swift */; };
 		BFB0FCFCE4AFDF257319FFA4 /* SportsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 768548256973F1C93565E1FB /* SportsView.swift */; };
 		C5CB119C0BE108708E65FC9E /* LocalP2PManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 700E54998678B97CA020EA9E /* LocalP2PManager.swift */; };
+		C66AB6DBBE6A8C411CA73585 /* NamedTimerLogic.swift in Sources */ = {isa = PBXBuildFile; fileRef = 869FA0DCFB5761CB6BB319C2 /* NamedTimerLogic.swift */; };
 		C6704B893CA4C4D32A413A19 /* VPNManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 281C97D2743323428F5ACD8F /* VPNManager.swift */; };
 		C8D6BA93557B9964E383EA8F /* CompanionProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8945C0BF0272BD283A250BDC /* CompanionProtocol.swift */; };
 		C91A005EA4ED8AC410BAF839 /* ClaudeChatView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 76A2AE80E039AD25E2029A03 /* ClaudeChatView.swift */; };
@@ -296,12 +303,14 @@
 		0D6E9B42DF5F2A2A2C87FC38 /* MemoryGameView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemoryGameView.swift; sourceTree = "<group>"; };
 		0DF352A799B96D3FE708E1D5 /* RunnerGameView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RunnerGameView.swift; sourceTree = "<group>"; };
 		0ECABC7EEC9804BECB1923C7 /* GlobalHotkeyManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlobalHotkeyManager.swift; sourceTree = "<group>"; };
+		0F548E2157A119D180EAC46E /* NamedTimerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NamedTimerTests.swift; sourceTree = "<group>"; };
 		0FBA49869D2CF49A82686504 /* RequiredSetupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RequiredSetupView.swift; sourceTree = "<group>"; };
 		109E43BCE08792C473471623 /* TodoView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodoView.swift; sourceTree = "<group>"; };
 		13BA89CC14259A92057EDFDC /* ProductKeys.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProductKeys.swift; sourceTree = "<group>"; };
 		1477CCE52DD2917B95D907D7 /* WellbeingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WellbeingTests.swift; sourceTree = "<group>"; };
 		148943D5BC3CFA31B2C52E23 /* UndoToast.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UndoToast.swift; sourceTree = "<group>"; };
 		15E4C40B0E52107163ADD5B8 /* NotchGestures.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotchGestures.swift; sourceTree = "<group>"; };
+		18329B6DF3C3AF37BA61B8B4 /* ProjectFocusTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectFocusTests.swift; sourceTree = "<group>"; };
 		184C7A8AA7E8B37DB1D50EFD /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		19CE2857208E57529A83DED6 /* VPNView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VPNView.swift; sourceTree = "<group>"; };
 		1AD68AAB70138C11AD1C119D /* ShortcutRecorder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShortcutRecorder.swift; sourceTree = "<group>"; };
@@ -323,11 +332,13 @@
 		295575A04EF33302E9D9A7FE /* AppIcon.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; path = AppIcon.icns; sourceTree = "<group>"; };
 		2BDB8BD41E7ADF271C9499F9 /* SystemWatch.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SystemWatch.swift; sourceTree = "<group>"; };
 		2FDF0D52167C63FBB161D611 /* SystemHUDObserver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SystemHUDObserver.swift; sourceTree = "<group>"; };
+		3047710BA5AC2CDBD910608B /* ProjectFocusLogic.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectFocusLogic.swift; sourceTree = "<group>"; };
 		326EBD11D0EF6CA885B78559 /* CompanionClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompanionClient.swift; sourceTree = "<group>"; };
 		32AC64225D56273C94C4F18F /* LidFoldSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LidFoldSettings.swift; sourceTree = "<group>"; };
 		33BEEDB2663AD6544E5061C7 /* ShortcutsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShortcutsView.swift; sourceTree = "<group>"; };
 		34E21597A89BA509A323CB7C /* VoiceNotesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceNotesView.swift; sourceTree = "<group>"; };
 		3718F42274C479A025DF477B /* NotchApple.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = NotchApple.entitlements; sourceTree = "<group>"; };
+		3A4853F4F991B88D8892FD18 /* NamedTimers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NamedTimers.swift; sourceTree = "<group>"; };
 		3ABE2D3E36BD860C5C51BF9D /* AudioDeviceController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioDeviceController.swift; sourceTree = "<group>"; };
 		3B881CB7581853FDB9B13F1F /* MoreTeams.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoreTeams.swift; sourceTree = "<group>"; };
 		3C357EE29CC1EB9117F9FD20 /* FocusView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FocusView.swift; sourceTree = "<group>"; };
@@ -403,6 +414,7 @@
 		831411156E1371B3FCF69187 /* NOTICE.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = NOTICE.md; sourceTree = "<group>"; };
 		8436033AA85EDE8B497C3BE6 /* LicenseTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LicenseTests.swift; sourceTree = "<group>"; };
 		85CA8FE61A7F037A9E9A3142 /* LidFoldModule.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LidFoldModule.swift; sourceTree = "<group>"; };
+		869FA0DCFB5761CB6BB319C2 /* NamedTimerLogic.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NamedTimerLogic.swift; sourceTree = "<group>"; };
 		878D1B5C95884945FA120D5E /* BrowserMedia.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrowserMedia.swift; sourceTree = "<group>"; };
 		880D308A931930DF080834D9 /* ExtrasSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExtrasSettings.swift; sourceTree = "<group>"; };
 		89130463E24D5E70FA663230 /* ClaudeCodeStatus.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClaudeCodeStatus.swift; sourceTree = "<group>"; };
@@ -737,6 +749,8 @@
 				60D028DAE4C9C74C6193B75F /* HotCornerTests.swift */,
 				8436033AA85EDE8B497C3BE6 /* LicenseTests.swift */,
 				EE79E1E6EA0B1FB034A48E87 /* LogicTests.swift */,
+				0F548E2157A119D180EAC46E /* NamedTimerTests.swift */,
+				18329B6DF3C3AF37BA61B8B4 /* ProjectFocusTests.swift */,
 				CD271EAF0A5B1BCB0FD00CF7 /* QuickAnswerTests.swift */,
 				9C96FDC91C63EFDECAAA8BA3 /* SecretLogicTests.swift */,
 				3D60DFF8D29CE5938A540D8E /* SmartHomeTests.swift */,
@@ -792,11 +806,13 @@
 				F49D3A20C7CFE9C60DB8CBC3 /* LiveActivity.swift */,
 				E908464AA33EDC69CFBCDF86 /* LocationProvider.swift */,
 				E9BC705D2AB9550EE9339978 /* ModuleRegistry.swift */,
+				869FA0DCFB5761CB6BB319C2 /* NamedTimerLogic.swift */,
 				C7C02C79EB9558F42EE15425 /* NotchBehavior.swift */,
 				7F6EACC9E26C6695BA7C5724 /* NotchWidgetCenter.swift */,
 				47E065BB9B31FD505442E472 /* PanicHide.swift */,
 				13BA89CC14259A92057EDFDC /* ProductKeys.swift */,
 				DBB5D5B8C80009365348035A /* Profiles.swift */,
+				3047710BA5AC2CDBD910608B /* ProjectFocusLogic.swift */,
 				50CCA2828E5DEA8799BE2ACC /* PureModels.swift */,
 				6E7257E185D98B4E05674B7F /* QuickAnswerLogic.swift */,
 				E333C9ABF7AC014274F64237 /* RequiredSetup.swift */,
@@ -988,6 +1004,7 @@
 		95686BCA80C78371FE131AE1 /* Timer */ = {
 			isa = PBXGroup;
 			children = (
+				3A4853F4F991B88D8892FD18 /* NamedTimers.swift */,
 				BEF54A340D0BE4A8A19E3BCF /* TimerView.swift */,
 			);
 			path = Timer;
@@ -1466,6 +1483,8 @@
 				CF18C9EA57286EB1C27AB45F /* MoreTeams.swift in Sources */,
 				874BC0D84B434A3CE5910FCD /* MusicLevelMeter.swift in Sources */,
 				24F83028F1AEB920C645968B /* MusicSleepTimer.swift in Sources */,
+				C66AB6DBBE6A8C411CA73585 /* NamedTimerLogic.swift in Sources */,
+				2CBA8151266305CFFA637D9F /* NamedTimers.swift in Sources */,
 				4098B0C40272540FC563BC1F /* NotchAppleApp.swift in Sources */,
 				E939E90FAF6BDF621DD802D5 /* NotchBehavior.swift in Sources */,
 				FAB1EFFAB5CBA5F0A84E1C3B /* NotchGestures.swift in Sources */,
@@ -1489,6 +1508,7 @@
 				B1AF23B59772849977B2E69C /* PluginsView.swift in Sources */,
 				9EF85961675894ED65B9F776 /* ProductKeys.swift in Sources */,
 				5303088458F813A24BF0B34D /* Profiles.swift in Sources */,
+				A6C6C5E596E381B65F1FE6E3 /* ProjectFocusLogic.swift in Sources */,
 				8364E6132EE5D1467B0AE042 /* PureModels.swift in Sources */,
 				0E660E7247D927D8585B8973 /* PurgeView.swift in Sources */,
 				EADE473BE2A43DB53FDBF7CE /* QuickAddView.swift in Sources */,
@@ -1607,6 +1627,10 @@
 				169F563939728B794CAD518C /* LicenseTests.swift in Sources */,
 				11C631948F567411F64386EA /* LogicTests.swift in Sources */,
 				B050F8E38385A23666F48F72 /* MathText.swift in Sources */,
+				B49D7DD495557CD121470026 /* NamedTimerLogic.swift in Sources */,
+				035650D735E7B4C68380B632 /* NamedTimerTests.swift in Sources */,
+				B2E85A05E78CE3693B591FB6 /* ProjectFocusLogic.swift in Sources */,
+				221FEC324BD888DEBD975CB3 /* ProjectFocusTests.swift in Sources */,
 				BB723ACBAA9D4CB614CB840B /* PureModels.swift in Sources */,
 				91AE275CB3750107932271A9 /* QuickAnswerLogic.swift in Sources */,
 				7599ED4F616A10F8200382DF /* QuickAnswerTests.swift in Sources */,

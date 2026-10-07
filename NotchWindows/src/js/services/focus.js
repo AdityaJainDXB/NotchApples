@@ -6,6 +6,8 @@ import { load, save, todayKey, update } from '../store.js';
 import { notify } from '../native.js';
 import { provide, refresh } from '../activity.js';
 import { canUse } from '../features.js';
+import * as PF from './projectfocus.js';
+import { lastDays, addDays } from './habits.js';
 
 const KEY = 'focus.state';
 export const DEFAULT_CFG = { focus: 25, short: 5, long: 15, rounds: 4, autoStart: false, block: false };
@@ -43,6 +45,13 @@ export const history = () => load('focus.history', {});
 /// Minutes of focus you want each day (0 = no goal).
 export const dailyGoal = () => load('focus.goal', 0);
 export const setDailyGoal = (m) => save('focus.goal', Math.max(0, Math.min(1440, Math.floor(Number(m) || 0))));
+/// What you are working on now (Pro). Finished focus sessions are added to it.
+export const project = () => load('focus.project', '');
+export const setProject = (p) => save('focus.project', PF.clean(p));
+export const projectLog = () => load('focus.projectLog', {});
+export const projectNames = () => PF.names(projectLog());
+/// This week's minutes per project, biggest first.
+export const weekByProject = () => PF.totals(projectLog(), lastDays(7, todayKey()));
 export const minutesToday = () => history()[todayKey()] || 0;
 
 function advance(finished) {
@@ -52,6 +61,7 @@ function advance(finished) {
   if (mode === 'focus') {
     if (finished) {
       const before = history()[todayKey()] || 0;
+      if (canUse('focusProjects')) save('focus.projectLog', PF.prune(PF.add(projectLog(), todayKey(), project(), Math.round(lengthOf('focus') / 60)), addDays(todayKey(), -60)));
       update('focus.history', {}, (h) => ({ ...h, [todayKey()]: (h[todayKey()] || 0) + Math.round(lengthOf('focus') / 60) }));
       const goal = dailyGoal();
       if (goal > 0 && before < goal && before + Math.round(lengthOf('focus') / 60) >= goal) notify('Daily focus goal reached', `${goal} minutes of focus today. Nice work.`);

@@ -160,6 +160,7 @@ struct TodayView: View {
                             .font(.system(size: 12)).foregroundStyle(Theme.textSecondary)
                     }
                     Spacer(minLength: 0)
+                    PinnedNotesToday()
                     CountdownsList()
                 }
             }

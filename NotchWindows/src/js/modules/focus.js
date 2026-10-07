@@ -5,6 +5,7 @@ import { segmented, toggle as sw } from '../ui.js';
 import { icon } from '../icons.js';
 import * as F from '../services/focus.js';
 import { goalFraction } from '../services/wellbeing.js';
+import { canUse } from '../features.js';
 
 const MODE_LABEL = { focus: 'Focus', short: 'Break', long: 'Long break' };
 
@@ -18,6 +19,11 @@ export function render(root) {
   const dots = el('div', { class: 'hstack', style: 'gap:8px' });
   const stats = el('span', { class: 'dim' });
   const goalBar = el('div', { class: 'col', style: 'gap:4px' });
+  // Project (Pro): what this session counts towards, and this week split by project.
+  const projectIn = el('input', { class: 'field', style: 'width:170px', placeholder: 'Project (optional)', value: F.project(), list: 'focus-projects', onchange: (e) => { F.setProject(e.target.value); e.target.value = F.project(); paint(); } });
+  const projectList = el('datalist', { id: 'focus-projects' });
+  const projectSum = el('div', { class: 'tiny dim' });
+  const projectRow = canUse('focusProjects') ? el('div', { class: 'col', style: 'gap:4px' }, el('div', { class: 'hstack', style: 'gap:6px' }, el('span', { class: 'dim' }, '📁'), projectIn, projectList), projectSum) : null;
   const c = F.cfg();
   const num = (k, v, lo, hi) => { const i = el('input', { type: 'number', class: 'field', min: lo, max: hi, value: v, style: 'width:64px' }); i.onchange = () => { F.setCfg({ [k]: Math.max(lo, Math.min(hi, Number(i.value) || v)) }); paint(); }; return i; };
   const num0 = () => { const i = el('input', { type: 'number', class: 'field', min: 0, max: 1440, value: F.dailyGoal(), style: 'width:72px' }); i.onchange = () => { F.setDailyGoal(i.value); paint(); }; return i; };
@@ -39,6 +45,10 @@ export function render(root) {
     dots.replaceChildren(...Array.from({ length: per }, (_, i) => el('span', { style: `width:14px;height:14px;border-radius:50%;background:${i < n % per || (n > 0 && n % per === 0) ? 'var(--accent-bright)' : 'rgba(255,255,255,.14)'}` })));
     stats.textContent = `${n} focus session${n === 1 ? '' : 's'} today`;
     const goal = F.dailyGoal(), mins = F.minutesToday();
+    if (projectRow) {
+      projectList.replaceChildren(...F.projectNames().map((n) => el('option', { value: n })));
+      projectSum.textContent = F.weekByProject().slice(0, 3).map((p) => `${p.project} ${Math.floor(p.minutes / 60)}h ${p.minutes % 60}m`).join(' · ');
+    }
     goalBar.replaceChildren(...(goal > 0 ? [el('div', { class: 'hstack small' }, el('span', { class: 'dim grow' }, `Daily goal: ${mins} of ${goal} min`), el('b', { class: goalFraction(mins, goal) >= 1 ? 'ok' : '' }, `${Math.round(goalFraction(mins, goal) * 100)}%`)),
       el('div', { class: 'bar' }, el('i', { style: `width:${Math.round(goalFraction(mins, goal) * 100)}%` }))] : []));
   }
@@ -47,7 +57,7 @@ export function render(root) {
       el('div', { class: 'hstack' }, main,
         el('button', { class: 'btn quiet', onclick: () => { F.reset(); paint(); } }, 'Reset'),
         el('button', { class: 'btn quiet', onclick: () => { F.skip(); paint(); } }, 'Skip')),
-      el('div', { class: 'hstack' }, dots, stats), goalBar,
+      el('div', { class: 'hstack' }, dots, stats), goalBar, projectRow,
       el('div', { class: 'dim' }, `The countdown also shows beside the notch while it runs. Every ${F.cfg().rounds}th session earns a long break.`),
       el('button', { class: 'btn small ghost', style: 'align-self:flex-start', onclick: () => settings.classList.toggle('hidden') }, 'Durations…'),
       settings)));

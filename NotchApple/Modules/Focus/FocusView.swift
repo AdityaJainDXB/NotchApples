@@ -75,6 +75,26 @@ struct FocusView: View {
                         .font(.system(size: 11)).foregroundStyle(Theme.textSecondary).fixedSize()
                 }
 
+                // Project (Pro): what this session counts towards, and this week split by project.
+                if Entitlements.shared.canUse(.focusProjects) {
+                    HStack(spacing: 6) {
+                        Image(systemName: "folder").foregroundStyle(Theme.textSecondary).font(.system(size: 11))
+                        TextField("Project (optional)", text: $timer.project).textFieldStyle(.plain).font(.system(size: 12)).frame(width: 150)
+                            .onSubmit { timer.project = ProjectFocusLogic.clean(timer.project) }
+                        if !timer.projectNames.isEmpty {
+                            Menu {
+                                ForEach(timer.projectNames, id: \.self) { n in Button(n) { timer.project = n } }
+                            } label: { Image(systemName: "chevron.down") }
+                            .menuStyle(.borderlessButton).fixedSize()
+                        }
+                    }
+                    let byProject = Array(timer.weekByProject.prefix(3))
+                    if !byProject.isEmpty {
+                        Text(byProject.map { "\($0.project) \($0.minutes / 60)h \($0.minutes % 60)m" }.joined(separator: " · "))
+                            .font(.system(size: 11)).foregroundStyle(Theme.textSecondary).lineLimit(1)
+                    }
+                }
+
                 // This week's focus minutes.
                 HStack(alignment: .bottom, spacing: 6) {
                     let week = timer.lastWeek

@@ -68,7 +68,7 @@ enum Feature: String, CaseIterable, Identifiable {
     // Ultimate: AI
     case automations
     // Pro: productivity
-    case richNotes, remindersSync, clipboardUnlimited, shelfPlus, textExpander, annotate, ruler, currency, commandPalette
+    case namedTimers, focusProjects, richNotes, remindersSync, clipboardUnlimited, shelfPlus, textExpander, annotate, ruler, currency, commandPalette
     // Ultimate: scripting
     case scripting
     // Pro: tabs
@@ -98,6 +98,8 @@ enum Feature: String, CaseIterable, Identifiable {
     var title: String {
         switch self {
         case .notchResize: "Notch size"
+        case .namedTimers: "Named timers"
+        case .focusProjects: "Focus by project"
         case .richNotes: "Markdown notes and tags"
         case .remindersSync: "Reminders, Things and Todoist"
         case .clipboardUnlimited: "Longer clipboard history"
@@ -173,6 +175,8 @@ enum Feature: String, CaseIterable, Identifiable {
     var benefit: String {
         switch self {
         case .notchResize: "Make the open notch wider or taller, with a live preview."
+        case .namedTimers: "Run several timers at once, each with its own name: “Pasta 10m”, “Egg 1:30”."
+        case .focusProjects: "Name what you are working on and see this week's focus time split by project."
         case .richNotes: "Preview notes as Markdown and filter them by #tags."
         case .remindersSync: "See and tick off your Apple Reminders in To-do, and send to-dos to Things or Todoist."
         case .clipboardUnlimited: "Keep up to 5,000 clipboard items, and ignore apps you choose."

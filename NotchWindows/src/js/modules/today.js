@@ -40,8 +40,20 @@ export function render(root) {
   const events = el('div', { class: 'col gap-4' });
   const sys = el('div', { class: 'hstack dim', style: 'gap:8px;margin-top:auto' });
 
+  // Notes pinned in Notes (up to three). Click one to open it.
+  const pinnedBox = el('div', { class: 'col gap-4', style: 'margin-top:auto' });
+  const pinned = load('notes.items', []).filter((n) => n.pinned).sort((a, b) => b.updated - a.updated).slice(0, 3);
+  if (pinned.length) {
+    pinnedBox.append(el('div', { class: 'section-title' }, 'Pinned notes'), ...pinned.map((n) => {
+      const lines = n.text.trim().split('\n');
+      return el('div', { class: 'item clickable', style: 'padding:4px 6px', onclick: () => show('notes', { open: n.id }) },
+        el('div', { class: 'main' }, el('div', { class: 'ellipsis', style: 'font-weight:600' }, lines[0].replace(/^#+\s*/, '').slice(0, 50) || 'New note'),
+          lines[1] ? el('div', { class: 'tiny faint ellipsis' }, lines.slice(1).join(' ').trim().slice(0, 70)) : null));
+    }));
+  }
+
   // Countdowns to dates you care about (an exam, a trip, a launch). Past ones disappear after a day.
-  const countdownBox = el('div', { class: 'col gap-4', style: 'margin-top:auto' });
+  const countdownBox = el('div', { class: 'col gap-4', style: 'margin-top:8px' });
   function paintCountdowns() {
     const today = todayKey();
     const all = load('today.countdowns', []);
@@ -72,7 +84,7 @@ export function render(root) {
     el('div', { class: 'col', style: 'gap:2px' }, dayName, dateBig), oneRow, weather, forecastBox, sys);
   const right = el('div', { class: 'card col gap-6', style: 'flex:1;min-width:0;min-height:0;overflow:auto' },
     el('div', { class: 'hstack' }, el('div', { class: 'section-title grow' }, 'Up next'),
-      el('button', { class: 'btn small ghost', onclick: () => show('settings', { pane: 'Calendar' }) }, 'Calendars')), events, countdownBox);
+      el('button', { class: 'btn small ghost', onclick: () => show('settings', { pane: 'Calendar' }) }, 'Calendars')), events, pinnedBox, countdownBox);
   root.append(el('div', { class: 'row fill', style: 'gap:16px' }, left, right));
 
   const tick = () => {

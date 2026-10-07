@@ -95,6 +95,8 @@ targets:
       - NotchApple/Core/QuickAnswerLogic.swift
       - NotchApple/Core/SnippetVariables.swift
       - NotchApple/Core/HabitLogic.swift
+      - NotchApple/Core/ProjectFocusLogic.swift
+      - NotchApple/Core/NamedTimerLogic.swift
       - NotchApple/Modules/Tools/Converter.swift
       - NotchApple/Core/VPNTunnel.swift
       - CompanionKit

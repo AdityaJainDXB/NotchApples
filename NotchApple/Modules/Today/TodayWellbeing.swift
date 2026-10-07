@@ -89,3 +89,35 @@ struct CountdownsList: View {
         }
     }
 }
+
+
+/// Notes you pinned in Notes, up to three, on Today. Click one to open it.
+struct PinnedNotesToday: View {
+    @ObservedObject private var store = NotesStore.shared
+    @EnvironmentObject private var state: NotchState
+
+    var body: some View {
+        let pinned = Array(store.notes.filter(\.isPinned).prefix(3))
+        if !pinned.isEmpty {
+            VStack(alignment: .leading, spacing: 4) {
+                Text("Pinned notes").sectionTitle()
+                ForEach(pinned) { note in
+                    Button {
+                        store.selectedID = note.id
+                        UserDefaults.standard.set("notes", forKey: "notes.page")
+                        state.selected = .notes
+                    } label: {
+                        VStack(alignment: .leading, spacing: 1) {
+                            Text(note.title.isEmpty ? "New note" : note.title).font(.system(size: 13, weight: .semibold)).foregroundStyle(.white).lineLimit(1)
+                            if let line = note.text.split(whereSeparator: \.isNewline).dropFirst().first {
+                                Text(String(line)).font(.system(size: 11)).foregroundStyle(Theme.textSecondary).lineLimit(1)
+                            }
+                        }
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+        }
+    }
+}
