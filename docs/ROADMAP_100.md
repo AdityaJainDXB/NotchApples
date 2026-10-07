@@ -64,7 +64,7 @@ Cheap, useful, two-platform ideas rise to the top. The top 50 are the build list
 | 46 | Focus time logged per project _(Tags on Focus sessions)_ | Developers | Mac + Windows | Pro | 3 | 2 | 15.0 | Not built yet |
 | 47 | Meeting notes started from a calendar event | Productivity | Mac + Windows | Pro | 3 | 2 | 15.0 | Not built yet |
 | 48 | Links shelf: save a link now, read it later | Productivity | Mac + Windows | Free | 3 | 2 | 15.0 | Partly (links on Today only) |
-| 49 | Snooze a reminder from its notification | Productivity | Mac + Windows | Free | 3 | 2 | 15.0 | Not built yet |
+| 49 | Snooze a reminder from its notification | Productivity | Mac + Windows | Free | 3 | 2 | 15.0 | Built, not released (Windows) |
 | 50 | Full-screen lyrics view | System | Mac + Windows | Pro | 3 | 2 | 15.0 | Not built yet |
 | 51 | Mood check-in log with a weekly chart | Wellbeing | Mac + Windows | Pro | 3 | 2 | 15.0 | Later |
 | 52 | Accent colour per tab | Customization | Mac + Windows | Pro | 3 | 2 | 15.0 | Later |
