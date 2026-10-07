@@ -201,6 +201,11 @@ All screenshots use sample data.
 
 ## What's new
 
+### Mac 1.33.0 · Windows 1.31.0 BETA · 7 October 2026 · Meeting summaries
+
+- **Meeting summaries (Ultimate):** record a calendar meeting from Today, get it transcribed, and an AI summary with Decisions, Action items and Open questions. One click adds it to the meeting's note. It records your microphone only (not other people's audio on a call), shows a reminder to tell everyone, and sends only the transcript to the AI you chose on the Mac (the audio to Gemini on Windows).
+- **Windows:** Messenger now shows by default, like on the Mac.
+
 ### Windows 1.30.0 BETA · 7 October 2026 · Smoother tab switching and screen fixes
 
 - **Smoother tab switching:** the highlight glides between tabs, the tab name opens and closes smoothly, and the page slides in from the direction you're going. It also works in Lite mode. (Issue #6.)
