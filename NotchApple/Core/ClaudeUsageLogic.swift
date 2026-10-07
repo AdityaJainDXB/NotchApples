@@ -176,3 +176,46 @@ enum ClaudeUsageLogic {
         return h > 0 ? "\(h)h \(m)m" : "\(m)m"
     }
 }
+
+// MARK: - Pacing (green / yellow / red) and notch toasts
+
+enum UsageLight: String, Equatable { case green, yellow, red }
+
+struct UsagePace: Equatable {
+    let light: UsageLight
+    /// Share of the budget used so far, 0…1+ (can pass 1).
+    let fraction: Double
+    /// Where the current speed would end the period, as a share of the budget (nil until enough time has passed).
+    let projected: Double?
+    var percent: Int { Int((fraction * 100).rounded()) }
+}
+
+extension ClaudeUsageLogic {
+    /// How you're doing against a budget. Red: the limit is reached, or you're on course to pass it well before the
+    /// period ends. Yellow: close to the limit, or on course to reach it. Green: comfortably inside the pace.
+    /// Nil when no budget is set.
+    static func pace(used: Int, budget: Int, elapsed: TimeInterval, length: TimeInterval) -> UsagePace? {
+        guard budget > 0, length > 0 else { return nil }
+        let fraction = Double(used) / Double(budget)
+        // Projecting from the first minutes of a period gives nonsense, so wait until a tenth has passed.
+        let share = min(1, max(0, elapsed / length))
+        let projected: Double? = share >= 0.1 ? fraction / share : nil
+        let light: UsageLight
+        if fraction >= 1 || (projected ?? 0) >= 1.5 && fraction >= 0.5 { light = .red }
+        else if fraction >= 0.75 || (projected ?? 0) >= 1.0 && fraction >= 0.3 { light = .yellow }
+        else { light = .green }
+        return UsagePace(light: light, fraction: fraction, projected: projected)
+    }
+
+    /// What the notch should announce, if anything: a colour change, a jump of 10 points or more, or a new period
+    /// (the window or week reset, so usage fell back).
+    enum ToastReason: Equatable { case colour, spike, reset }
+
+    static func toastReason(previous: (light: UsageLight, fraction: Double)?, now: UsagePace) -> ToastReason? {
+        guard let p = previous else { return nil }          // first reading: nothing changed yet
+        if now.fraction + 0.2 < p.fraction { return .reset }
+        if now.light != p.light { return .colour }
+        if now.fraction - p.fraction >= 0.10 { return .spike }
+        return nil
+    }
+}
