@@ -86,6 +86,8 @@ targets:
       - NotchApple/Modules/Games/GameEngines.swift
       - NotchApple/Core/ClaudeCodeStatusLogic.swift
       - NotchApple/Modules/Claude/GeminiFallbackLogic.swift
+      - NotchApple/Modules/Tools/MathEngine.swift
+      - NotchApple/Core/ModuleLayoutLogic.swift
       - NotchApple/Core/ClaudeUsageLogic.swift
       - NotchApple/Core/SmartHomeLogic.swift
       - NotchApple/Core/ClipboardLinkLogic.swift
