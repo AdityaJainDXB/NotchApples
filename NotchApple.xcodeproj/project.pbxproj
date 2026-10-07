@@ -66,6 +66,7 @@
 		305D3067C2952F9CDCE2C833 /* Entitlements.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBF521DE52E4227ABF0CCC29 /* Entitlements.swift */; };
 		308B02A5703FF92FD435BE97 /* SmartHomeLogic.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99A4B06A001F63424485AE1E /* SmartHomeLogic.swift */; };
 		30DCFA374C50438319E87754 /* ExtrasSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 880D308A931930DF080834D9 /* ExtrasSettings.swift */; };
+		31CE56D4D039F1A9A207587A /* NewFeaturesWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 487ED4977D6FD5BFB8C2C5E6 /* NewFeaturesWindow.swift */; };
 		32D7F8B5B7C8D2AF4821EB1D /* ScreenCapture.swift in Sources */ = {isa = PBXBuildFile; fileRef = D95BC205F9AD85B9383E0C9D /* ScreenCapture.swift */; };
 		32E6B4D47E39327BF494D2E5 /* AIStreaming.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6D5AC53B65AF61688CD0A628 /* AIStreaming.swift */; };
 		3357F0168492268B21DE16FB /* TodoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 109E43BCE08792C473471623 /* TodoView.swift */; };
@@ -93,8 +94,10 @@
 		4421130FB0811259BCC31168 /* ClaudeCodeStatusTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D1C64F3F921E34B6F6E3B22 /* ClaudeCodeStatusTests.swift */; };
 		442C0FCFC8F3FA259F6BA39A /* FaceUnlock.swift in Sources */ = {isa = PBXBuildFile; fileRef = 25B7E1619A5F162E845D012C /* FaceUnlock.swift */; };
 		44AA1315926A7EB7858B9E73 /* MemoryGameView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D6E9B42DF5F2A2A2C87FC38 /* MemoryGameView.swift */; };
+		44EC11F43A710DD3413C3795 /* RequiredUpdateView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83C44AF689790EE02BABEAD5 /* RequiredUpdateView.swift */; };
 		47EDA92EE30A36DFA8BB4C16 /* ClaudeUsageTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB032195DAEF1B929D59A828 /* ClaudeUsageTests.swift */; };
 		47F3262131C954B32DF79D99 /* CookieClickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 702334063347B78DDA56DB8A /* CookieClickerView.swift */; };
+		488CD0BEB4F2C16BCAF627F2 /* BrightnessBlackout.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4885DCE3ACCF1FF623E1D25F /* BrightnessBlackout.swift */; };
 		499529CC2C4C7885D964686F /* MeetingNotesLogic.swift in Sources */ = {isa = PBXBuildFile; fileRef = 813CF5ACE0591AF47CA5C5F6 /* MeetingNotesLogic.swift */; };
 		4A233680E7FADB441B86E878 /* ClaudeCodeStatus.swift in Sources */ = {isa = PBXBuildFile; fileRef = 89130463E24D5E70FA663230 /* ClaudeCodeStatus.swift */; };
 		4A3A2D8CD5D19945AFF5381A /* LicenseKey.swift in Sources */ = {isa = PBXBuildFile; fileRef = B16F24E7C42EBCCB3F46202A /* LicenseKey.swift */; };
@@ -235,12 +238,10 @@
 		C91A005EA4ED8AC410BAF839 /* ClaudeChatView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 76A2AE80E039AD25E2029A03 /* ClaudeChatView.swift */; };
 		CA0E4BF296C64534C899D7F2 /* FileSearchManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75CDCA4D3C86F0827F694E96 /* FileSearchManager.swift */; };
 		CA7CEE6CA140974017B3B517 /* SnippetsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C159DF1B14A1D38FD58EC46 /* SnippetsView.swift */; };
-		CA8007BDF0D679F40C05B2F3 /* RequiredSetupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0FBA49869D2CF49A82686504 /* RequiredSetupView.swift */; };
 		CAED309713A89A35F4C679CE /* WhatsNew.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE594AA0AF5EFE02B030F414 /* WhatsNew.swift */; };
 		CD90A054724EB2DEDC4FEE75 /* DemoHooks.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6FFA9D604A028F627FC52A01 /* DemoHooks.swift */; };
 		CEB54EB841EFFF09AB43ADFE /* BackgroundMusic-LICENSE.txt in Resources */ = {isa = PBXBuildFile; fileRef = 1D75D90CD0ED25880BFFC38F /* BackgroundMusic-LICENSE.txt */; };
 		CF18C9EA57286EB1C27AB45F /* MoreTeams.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3B881CB7581853FDB9B13F1F /* MoreTeams.swift */; };
-		CFAB476520EEBC0E831DF7DE /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 6E8B16EE4068BC4835F8B4C0 /* GoogleService-Info.plist */; };
 		D008BFB60E8F1B1C8CBBFD43 /* LiveView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFADF33A515791B8743E49FB /* LiveView.swift */; };
 		D06C969F43875E0C40B785B1 /* AppleScriptSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = 787C9A5D12155E3598FF1E83 /* AppleScriptSupport.swift */; };
 		D0E3852087030F02B39F54DA /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E6FBB87EB9AFEA3906A669FC /* HomeView.swift */; };
@@ -317,7 +318,6 @@
 		0DF352A799B96D3FE708E1D5 /* RunnerGameView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RunnerGameView.swift; sourceTree = "<group>"; };
 		0ECABC7EEC9804BECB1923C7 /* GlobalHotkeyManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlobalHotkeyManager.swift; sourceTree = "<group>"; };
 		0F548E2157A119D180EAC46E /* NamedTimerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NamedTimerTests.swift; sourceTree = "<group>"; };
-		0FBA49869D2CF49A82686504 /* RequiredSetupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RequiredSetupView.swift; sourceTree = "<group>"; };
 		109E43BCE08792C473471623 /* TodoView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodoView.swift; sourceTree = "<group>"; };
 		13BA89CC14259A92057EDFDC /* ProductKeys.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProductKeys.swift; sourceTree = "<group>"; };
 		13FC643EA773D7A3D0B5AE0A /* EmojiLogic.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmojiLogic.swift; sourceTree = "<group>"; };
@@ -375,6 +375,8 @@
 		47ACBF89621DF199C9208518 /* LinkShelfTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LinkShelfTests.swift; sourceTree = "<group>"; };
 		47E065BB9B31FD505442E472 /* PanicHide.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PanicHide.swift; sourceTree = "<group>"; };
 		48667860F7FB5AB63EB47043 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		487ED4977D6FD5BFB8C2C5E6 /* NewFeaturesWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewFeaturesWindow.swift; sourceTree = "<group>"; };
+		4885DCE3ACCF1FF623E1D25F /* BrightnessBlackout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrightnessBlackout.swift; sourceTree = "<group>"; };
 		4894C776E7909EF42A1F97E9 /* ModuleOrganizer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModuleOrganizer.swift; sourceTree = "<group>"; };
 		48EF75FD565DB103E4CEEB07 /* MusicLevelMeter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MusicLevelMeter.swift; sourceTree = "<group>"; };
 		4A2294A11AF6369D10835393 /* GameEngines.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameEngines.swift; sourceTree = "<group>"; };
@@ -407,7 +409,6 @@
 		6DC662D269E6349FC6792A11 /* ToolsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToolsView.swift; sourceTree = "<group>"; };
 		6E3AACE5DE410E31472973B9 /* PairDropService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PairDropService.swift; sourceTree = "<group>"; };
 		6E7257E185D98B4E05674B7F /* QuickAnswerLogic.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuickAnswerLogic.swift; sourceTree = "<group>"; };
-		6E8B16EE4068BC4835F8B4C0 /* GoogleService-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 		6FFA9D604A028F627FC52A01 /* DemoHooks.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DemoHooks.swift; sourceTree = "<group>"; };
 		700E54998678B97CA020EA9E /* LocalP2PManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalP2PManager.swift; sourceTree = "<group>"; };
 		702334063347B78DDA56DB8A /* CookieClickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CookieClickerView.swift; sourceTree = "<group>"; };
@@ -431,6 +432,7 @@
 		81150E6B4F5BE3E2EB5CE1A1 /* PermissionsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PermissionsView.swift; sourceTree = "<group>"; };
 		813CF5ACE0591AF47CA5C5F6 /* MeetingNotesLogic.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeetingNotesLogic.swift; sourceTree = "<group>"; };
 		831411156E1371B3FCF69187 /* NOTICE.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = NOTICE.md; sourceTree = "<group>"; };
+		83C44AF689790EE02BABEAD5 /* RequiredUpdateView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RequiredUpdateView.swift; sourceTree = "<group>"; };
 		8436033AA85EDE8B497C3BE6 /* LicenseTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LicenseTests.swift; sourceTree = "<group>"; };
 		85CA8FE61A7F037A9E9A3142 /* LidFoldModule.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LidFoldModule.swift; sourceTree = "<group>"; };
 		869FA0DCFB5761CB6BB319C2 /* NamedTimerLogic.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NamedTimerLogic.swift; sourceTree = "<group>"; };
@@ -700,12 +702,13 @@
 				69FFE07B5C8CD7AE23B2DDA7 /* DuoAnimation.swift */,
 				880D308A931930DF080834D9 /* ExtrasSettings.swift */,
 				4894C776E7909EF42A1F97E9 /* ModuleOrganizer.swift */,
+				487ED4977D6FD5BFB8C2C5E6 /* NewFeaturesWindow.swift */,
 				1C5A54FB338D3A1C23699078 /* NotchRootView.swift */,
 				68B9FDCF64AD3B173A4D3440 /* NotchSettings.swift */,
 				9A7251824E64423A2B944890 /* OnboardingView.swift */,
 				CCE0CCD6C5E28321639259CE /* PeekView.swift */,
 				81150E6B4F5BE3E2EB5CE1A1 /* PermissionsView.swift */,
-				0FBA49869D2CF49A82686504 /* RequiredSetupView.swift */,
+				83C44AF689790EE02BABEAD5 /* RequiredUpdateView.swift */,
 				184C7A8AA7E8B37DB1D50EFD /* SettingsView.swift */,
 				1AD68AAB70138C11AD1C119D /* ShortcutRecorder.swift */,
 				2269398FC9C57443402C81D8 /* TrustSettings.swift */,
@@ -944,6 +947,7 @@
 		780F7365BB84DFF804698336 /* System */ = {
 			isa = PBXGroup;
 			children = (
+				4885DCE3ACCF1FF623E1D25F /* BrightnessBlackout.swift */,
 				3F22844E48EEA4FEBD1273E0 /* DownloadWatcher.swift */,
 				D27AA020801BE2A842BE0732 /* MediaKeyInterceptor.swift */,
 				15E4C40B0E52107163ADD5B8 /* NotchGestures.swift */,
@@ -1193,7 +1197,6 @@
 				295575A04EF33302E9D9A7FE /* AppIcon.icns */,
 				1D75D90CD0ED25880BFFC38F /* BackgroundMusic-LICENSE.txt */,
 				404B8C35377E3958184925BE /* BackgroundMusic.pkg */,
-				6E8B16EE4068BC4835F8B4C0 /* GoogleService-Info.plist */,
 				97CC70FFD067091FDE1231BB /* Info.plist */,
 				3718F42274C479A025DF477B /* NotchApple.entitlements */,
 				D151A71D3F7B4B4F846173CD /* NotchApple.sdef */,
@@ -1398,7 +1401,6 @@
 				177A1AEC9D972E4C15CC5804 /* AppIcon.icns in Resources */,
 				CEB54EB841EFFF09AB43ADFE /* BackgroundMusic-LICENSE.txt in Resources */,
 				0BDD91775E21B5BEDDF33463 /* BackgroundMusic.pkg in Resources */,
-				CFAB476520EEBC0E831DF7DE /* GoogleService-Info.plist in Resources */,
 				6CB3126DF2584324131FE504 /* LICENSE-Tunnelblick.txt in Resources */,
 				3DF5E21ACEFE3B997230D098 /* LidAngleSensor-Apache-2.0.txt in Resources */,
 				F2926A7C184BC3088FA41CB1 /* NOTICE.md in Resources */,
@@ -1440,6 +1442,7 @@
 				00DDB2C1BC9ABCAA43C21ADD /* AudioView.swift in Sources */,
 				0A5DC836B5829FB65956058F /* BiometricAuth.swift in Sources */,
 				4397402231128D19451B4D3B /* BreakoutGameView.swift in Sources */,
+				488CD0BEB4F2C16BCAF627F2 /* BrightnessBlackout.swift in Sources */,
 				3EFFED94F8F614109390BB82 /* BrowserMedia.swift in Sources */,
 				E39865B386D35D5DB44EF9D8 /* BrowserModel.swift in Sources */,
 				A26267A7F5F6222E17F6D2B3 /* BrowserView.swift in Sources */,
@@ -1522,6 +1525,7 @@
 				24F83028F1AEB920C645968B /* MusicSleepTimer.swift in Sources */,
 				C66AB6DBBE6A8C411CA73585 /* NamedTimerLogic.swift in Sources */,
 				2CBA8151266305CFFA637D9F /* NamedTimers.swift in Sources */,
+				31CE56D4D039F1A9A207587A /* NewFeaturesWindow.swift in Sources */,
 				4098B0C40272540FC563BC1F /* NotchAppleApp.swift in Sources */,
 				E939E90FAF6BDF621DD802D5 /* NotchBehavior.swift in Sources */,
 				FAB1EFFAB5CBA5F0A84E1C3B /* NotchGestures.swift in Sources */,
@@ -1551,7 +1555,7 @@
 				EADE473BE2A43DB53FDBF7CE /* QuickAddView.swift in Sources */,
 				71AFDBFC2EDD78D160371170 /* QuickAnswerLogic.swift in Sources */,
 				9A2C6A4BDCB6FDE201E61B4D /* RequiredSetup.swift in Sources */,
-				CA8007BDF0D679F40C05B2F3 /* RequiredSetupView.swift in Sources */,
+				44EC11F43A710DD3413C3795 /* RequiredUpdateView.swift in Sources */,
 				126E862C2EE9FB25FD0AE754 /* RichText.swift in Sources */,
 				3F7C4BE3C38EF2FC14E0B0FA /* RunnerGameView.swift in Sources */,
 				5355AB8F0AAFABC40D778C04 /* SandboxMigration.swift in Sources */,
@@ -1812,7 +1816,7 @@
 				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Manual;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 49;
+				CURRENT_PROJECT_VERSION = 54;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = "";
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -1828,7 +1832,7 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 1.32.0;
+				MARKETING_VERSION = 1.32.5;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -1946,7 +1950,7 @@
 				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Manual;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 49;
+				CURRENT_PROJECT_VERSION = 54;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = "";
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -1968,7 +1972,7 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 1.32.0;
+				MARKETING_VERSION = 1.32.5;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
