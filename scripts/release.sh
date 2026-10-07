@@ -14,8 +14,9 @@ ARCHS=$(lipo -archs "$M/Notch apple.app/Contents/MacOS/Notch apple"); V=$(/usr/l
 hdiutil detach -quiet "$M"
 [ "$V" = "$VERSION" ] && [[ "$ARCHS" == *x86_64* && "$ARCHS" == *arm64* ]] || { echo "Bad DMG: $V $ARCHS"; exit 1; }
 git add -A -- . ':!Casks'
-git commit -q -m "$MSG"
+# Nothing to commit is fine (the work may already be committed); the script used to stop here.
+git diff --cached --quiet || git commit -q -m "$MSG"
 git push -q origin main
 gh release create "v$VERSION" "$DMG" --latest --title "Notch apple $VERSION · $TITLE" --notes-file "$NOTES"
-git add Casks && git commit -q -m "Cask: $VERSION" -m "Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>" && git push -q origin main
+git add Casks && git commit -q -m "Cask: $VERSION" -m "Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>" && git push -q origin main
 echo "Released $VERSION ($ARCHS)"
