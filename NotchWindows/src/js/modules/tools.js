@@ -67,13 +67,14 @@ export function render(root) {
     out.textContent = `${r.toLocaleString(undefined, { maximumFractionDigits: kind.value === 'Currency' ? 2 : 6 })} ${to.value}`;
   }
   kind.onchange = fill; amount.oninput = convert; from.onchange = convert; to.onchange = convert;
+  // Each block keeps its natural height (flex:none) and the page scrolls, instead of the cards being squeezed on top of each other.
   root.append(el('div', { class: 'col fill scroll' },
-    el('div', { class: 'row' },
+    el('div', { class: 'row', style: 'flex:none' },
       el('div', { class: 'card col gap-6' }, el('div', { class: 'section-title' }, '☕ Keep awake'),
         el('div', { class: 'hstack' }, el('span', { class: 'grow' }, 'Keep the PC awake'), awake),
         el('div', { class: 'hstack' }, el('span', { class: 'grow small dim' }, 'Keep the screen on too'), disp), mins),
       el('div', { class: 'card col gap-6' }, el('div', { class: 'section-title' }, '🎨 Colour'), el('div', { class: 'hstack' }, swatch, codes, el('div', { class: 'spacer' }), picker), eye)),
-    el('div', { class: 'card col gap-6' }, el('div', { class: 'section-title' }, '🔢 Calculator · Enter copies'), calcIn, calcOut),
-    el('div', { class: 'card col gap-6' }, el('div', { class: 'section-title' }, '📏 Convert'), el('div', { class: 'hstack wrap' }, kind, amount, from, el('span', {}, '→'), to), out)));
+    el('div', { class: 'card col gap-6', style: 'flex:none' }, el('div', { class: 'section-title' }, '🔢 Calculator · Enter copies'), calcIn, calcOut),
+    el('div', { class: 'card col gap-6', style: 'flex:none' }, el('div', { class: 'section-title' }, '📏 Convert'), el('div', { class: 'hstack wrap' }, kind, amount, from, el('span', {}, '→'), to), out)));
   show('#9e6bff'); fill();
 }

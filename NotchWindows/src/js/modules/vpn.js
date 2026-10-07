@@ -10,7 +10,7 @@ export function render(root) {
   async function paintStatus() {
     const s = await invoke('vpn_status').catch(() => ({ connected: false }));
     status.replaceChildren(el('span', { class: `badge ${s.connected ? '' : 'quiet'}` }, s.connected ? 'CONNECTED' : 'NOT CONNECTED'), el('span', { class: 'grow' }),
-      s.connected ? el('button', { class: 'btn small danger', onclick: async () => { await invoke('vpn_disconnect').catch((e) => toast(e.message, { error: true })); paintStatus(); } }, 'Disconnect') : null);
+      ...(s.connected ? [el('button', { class: 'btn small danger', onclick: async () => { await invoke('vpn_disconnect').catch((e) => toast(e.message, { error: true })); paintStatus(); } }, 'Disconnect')] : []));
   }
   async function load() {
     try {
