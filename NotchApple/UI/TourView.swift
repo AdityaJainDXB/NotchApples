@@ -2,7 +2,7 @@
 //  TourView.swift
 //  Notch apple
 //
-//  The compulsory walkthrough after the 2.0 update, shown inside the notch (no pop-up, no separate window). One
+//  The compulsory walkthrough after the 1.34 update, shown inside the notch (no pop-up, no separate window). One
 //  step per big change, each with a drawn picture and, where it makes sense, a live control to try. The last step
 //  asks where each reorganised feature should live. There is no Skip: the notch returns here until it is finished.
 //
@@ -89,6 +89,7 @@ struct TourView: View {
         case 4: NonNecessitiesStep()
         case 5: SharingStep()
         case 6: FullScreenStep()
+        case 7: LidFoldStep()
         default: LayoutStep(draft: $draft)
         }
     }
@@ -133,7 +134,7 @@ private struct Welcome: View {
         VStack(spacing: 10) {
             Spacer(minLength: 0)
             Image(systemName: "sparkles").font(.system(size: 38)).foregroundStyle(Theme.accentGradient)
-            Text("Notch apple 2.0").font(.system(size: 26, weight: .bold)).foregroundStyle(.white)
+            Text("What's new in 1.34").font(.system(size: 26, weight: .bold)).foregroundStyle(.white)
             Text("A huge update for efficiency and a more modular notch").font(.system(size: 14, weight: .semibold)).foregroundStyle(Theme.accentBright)
             Text("A new Home page, a smarter Claude usage tracker, an algebra calculator, fewer tabs, and a PairDrop that works. This short tour shows each change, lets you try the ones you can, and ends by asking where you want things to live.")
                 .font(.system(size: 12)).foregroundStyle(Theme.textSecondary).multilineTextAlignment(.center).frame(maxWidth: 520)
@@ -280,6 +281,31 @@ private struct FullScreenStep: View {
     }
 }
 
+private struct LidFoldStep: View {
+    @ObservedObject private var fold = LidFoldModule.shared
+    @EnvironmentObject private var state: NotchState
+
+    var body: some View {
+        StepLayout(title: "Lid Fold", text: "Close the lid a little and your desktop folds away like a book, then opens again. It is off until you switch it on, it can always be dismissed with Esc or a click, and it never takes focus. Turn it on and press Preview to see it now.") {
+            ZStack {
+                RoundedRectangle(cornerRadius: 8).fill(.white.opacity(0.14)).frame(width: 150, height: 90).offset(y: -22)
+                RoundedRectangle(cornerRadius: 8).fill(Theme.accent.opacity(0.45)).frame(width: 150, height: 90)
+                    .rotation3DEffect(.degrees(58), axis: (x: 1, y: 0, z: 0), anchor: .bottom).offset(y: 24)
+                Image(systemName: "laptopcomputer").font(.system(size: 22)).foregroundStyle(.white.opacity(0.7)).offset(y: 70)
+            }
+        } live: {
+            Toggle("Turn on Lid Fold", isOn: $fold.enabled).toggleStyle(.switch).font(.system(size: 12)).foregroundStyle(.white)
+            Button("Preview it now") {
+                state.close()
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { LidFoldModule.shared.preview() }
+            }
+            .buttonStyle(PurpleButtonStyle(prominent: false)).disabled(!fold.enabled)
+            Text(fold.enabled ? fold.status : "Switch it on to preview. The preview closes the notch for a few seconds; open it again to carry on.")
+                .font(.system(size: 10)).foregroundStyle(Theme.textSecondary).fixedSize(horizontal: false, vertical: true)
+        }
+    }
+}
+
 private struct LayoutStep: View {
     @Binding var draft: [Module: LayoutChoice]
 
@@ -289,19 +315,22 @@ private struct LayoutStep: View {
             Text("Pick a place for each reorganised feature. Nothing is lost: you can change any of this later in Settings → Modules & Layout.")
                 .font(.system(size: 11)).foregroundStyle(Theme.textSecondary)
             ScrollView {
-                LazyVGrid(columns: [GridItem(.flexible(), spacing: 14), GridItem(.flexible(), spacing: 14)], spacing: 6) {
+                LazyVGrid(columns: [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)], spacing: 6) {
                     ForEach(ModuleLayout.managedModules) { m in
                         HStack(spacing: 8) {
                             Image(systemName: m.symbol).frame(width: 18).foregroundStyle(Theme.accentBright)
                             Text(m.title).font(.system(size: 12, weight: .medium)).foregroundStyle(.white).lineLimit(1)
                             Spacer(minLength: 4)
-                            LayoutPicker(module: m, draft: Binding(get: { draft[m] ?? .disabled }, set: { draft[m] = $0 }))
+                            LayoutPicker(module: m, draft: Binding(get: { draft[m] ?? .disabled }, set: { draft[m] = $0 }), compact: true)
                         }
                         .padding(.horizontal, 10).frame(height: 32)
                         .background(Theme.surface, in: RoundedRectangle(cornerRadius: 9))
                     }
                 }
+                .padding(.bottom, 10)
             }
+            .scrollIndicators(.hidden)
+            .mask(LinearGradient(stops: [.init(color: .black, location: 0), .init(color: .black, location: 0.92), .init(color: .clear, location: 1)], startPoint: .top, endPoint: .bottom))
         }
     }
 }

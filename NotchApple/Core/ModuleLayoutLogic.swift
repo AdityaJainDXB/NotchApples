@@ -23,6 +23,17 @@ enum LayoutChoice: String, CaseIterable, Identifiable {
         }
     }
 
+    /// A shorter name for tight places (the tour's chooser).
+    var shortTitle: String {
+        switch self {
+        case .homeExpanded: "Home, open"
+        case .homeHidden: "Home, closed"
+        case .standalone: "Own tab"
+        case .nonNecessities: "Non-Necessities"
+        case .disabled: "Off"
+        }
+    }
+
     var onHome: Bool { self == .homeExpanded || self == .homeHidden }
 }
 

@@ -13,8 +13,8 @@ packages:
 settings:
   base:
     SWIFT_VERSION: "5.0"
-    MARKETING_VERSION: "2.0.0"
-    CURRENT_PROJECT_VERSION: "58"
+    MARKETING_VERSION: "1.34.0"
+    CURRENT_PROJECT_VERSION: "59"
     CODE_SIGN_IDENTITY: "-"
     CODE_SIGN_STYLE: Manual
     DEVELOPMENT_TEAM: ""
@@ -90,6 +90,7 @@ targets:
       - NotchApple/Core/ModuleLayoutLogic.swift
       - NotchApple/Modules/Sharing/PairDropLogic.swift
       - NotchApple/Core/TourLogic.swift
+      - NotchApple/Core/ClaudeLimitsLogic.swift
       - NotchApple/Core/ClaudeUsageLogic.swift
       - NotchApple/Core/SmartHomeLogic.swift
       - NotchApple/Core/ClipboardLinkLogic.swift

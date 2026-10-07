@@ -34,12 +34,22 @@ enum GeminiFallback {
         return GeminiFallbackLogic.candidates(chosen: chosen, live: live)
     }
 
+    /// Tells the AI tab (and only the AI tab, never the closed notch) that another Gemini model is being tried.
     private static func announce(from old: String, to new: String) {
         Task { @MainActor in
-            let text = "Module error encountered, switching Gemini module to \(new)…"
-            ClaudeChatModel.shared.notice = text
-            LiveActivityCenter.shared.flash(LiveActivity(symbol: "arrow.triangle.2.circlepath", label: new, tint: .systemOrange, leftText: "Switching"), seconds: 3)
+            guard ClaudeChatModel.shared.isSending else { return }    // a background caller: stay quiet
+            ClaudeChatModel.shared.notice = "Module error encountered, switching Gemini module to \(new)…"
         }
+    }
+
+    /// How long a model gets to start answering before the next one is tried.
+    static let firstAnswerDeadline: TimeInterval = 25
+
+    private final class Flag: @unchecked Sendable {
+        private let lock = NSLock()
+        private var on = false
+        func set() { lock.lock(); on = true; lock.unlock() }
+        var isSet: Bool { lock.lock(); defer { lock.unlock() }; return on }
     }
 
     /// Streaming: moves on only while nothing has been shown yet, so a half-written answer is never replaced.
@@ -49,17 +59,29 @@ enum GeminiFallback {
                 let models = await candidates(model)
                 var lastError: Error = AIError.empty
                 for (i, candidate) in models.enumerated() {
-                    var gotAny = false
+                    let started = Flag()
                     do {
-                        for try await piece in AIClient.streamOnce(history, provider: .gemini, model: candidate, system: system) {
-                            gotAny = true
-                            continuation.yield(piece)
+                        try await withThrowingTaskGroup(of: Void.self) { group in
+                            group.addTask {
+                                for try await piece in AIClient.streamOnce(history, provider: .gemini, model: candidate, system: system) {
+                                    started.set()
+                                    continuation.yield(piece)
+                                }
+                            }
+                            // A model that never starts answering must not freeze the chat: give up on it and move on.
+                            group.addTask {
+                                try await Task.sleep(for: .seconds(firstAnswerDeadline))
+                                if !started.isSet { throw AIFailure.timedOut }
+                                try await Task.sleep(for: .seconds(3600))   // answering: wait to be cancelled
+                            }
+                            try await group.next()
+                            group.cancelAll()
                         }
                         continuation.finish()
                         return
                     } catch {
                         lastError = error
-                        if gotAny || !isRetryable(error) || i == models.count - 1 { break }
+                        if started.isSet || !isRetryable(error) || i == models.count - 1 { break }
                         announce(from: candidate, to: models[i + 1])
                     }
                 }
@@ -74,8 +96,15 @@ enum GeminiFallback {
         let models = await candidates(model)
         var lastError: Error = AIError.empty
         for (i, candidate) in models.enumerated() {
-            do { return try await AIClient.sendOnce(history, provider: .gemini, model: candidate) }
-            catch {
+            do {
+                return try await withThrowingTaskGroup(of: String.self) { group in
+                    group.addTask { try await AIClient.sendOnce(history, provider: .gemini, model: candidate) }
+                    group.addTask { try await Task.sleep(for: .seconds(45)); throw AIFailure.timedOut }
+                    let first = try await group.next() ?? ""
+                    group.cancelAll()
+                    return first
+                }
+            } catch {
                 lastError = error
                 if !isRetryable(error) || i == models.count - 1 { break }
                 announce(from: candidate, to: models[i + 1])

@@ -12,6 +12,8 @@ struct LayoutPicker: View {
     let module: Module
     /// When set, the choice is held here until the person confirms (the chooser), instead of applied at once.
     var draft: Binding<LayoutChoice>?
+    /// Use the short names where space is tight.
+    var compact = false
     @ObservedObject private var layout = ModuleLayout.shared
 
     private var current: LayoutChoice { draft?.wrappedValue ?? layout.choice(module) }
@@ -26,7 +28,7 @@ struct LayoutPicker: View {
                 }
             }
         } label: {
-            Text(current.title).font(.system(size: 12)).lineLimit(1)
+            Text(compact ? current.shortTitle : current.title).font(.system(size: 12)).lineLimit(1)
         }
         .menuStyle(.borderlessButton).fixedSize()
     }

@@ -1630,7 +1630,7 @@ private struct AboutSettings: View {
                 Label(WhatsNew.hasUnseen ? "What's new in \(WhatsNew.currentVersion)" : "What's New", systemImage: "sparkles")
             }
             .buttonStyle(PurpleButtonStyle(prominent: WhatsNew.hasUnseen))
-            Button("Replay the 2.0 tour") { TourModel.shared.replay() }.buttonStyle(.link).font(.caption)
+            Button("Replay the tour") { TourModel.shared.replay() }.buttonStyle(.link).font(.caption)
             HStack {
                 Link("Website", destination: URL(string: "https://virajsinghchadha.github.io/notchapples-site/")!)
                 Text("·").foregroundStyle(.secondary)

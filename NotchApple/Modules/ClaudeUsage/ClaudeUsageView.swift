@@ -102,6 +102,7 @@ final class ClaudeUsageStore: ObservableObject {
     }
 
     func refresh() async {
+        await ClaudeLimitsService.shared.refresh()
         loading = true
         let since = Date().addingTimeInterval(-30 * 86400)   // a month of history, to know your busiest window and week
         let result = await ClaudeUsageScanner.shared.scan(since: since)
@@ -142,9 +143,14 @@ extension ClaudeUsageStore {
         let now = Date()
         let b = s.block
         let blockUsed = b?.totals.tokens ?? 0
-        let bp = ClaudeUsageLogic.pace(used: blockUsed, budget: blockYardstick, elapsed: b.map { now.timeIntervalSince($0.start) } ?? 0, length: ClaudeUsageLogic.blockLength)
+        var bp = ClaudeUsageLogic.pace(used: blockUsed, budget: blockYardstick, elapsed: b.map { now.timeIntervalSince($0.start) } ?? 0, length: ClaudeUsageLogic.blockLength)
         // The week is a rolling 7 days, so there is no "elapsed" share: the pace is simply how full it is.
-        let wp = ClaudeUsageLogic.pace(used: s.week.tokens, budget: weekYardstick, elapsed: 7 * 86_400, length: 7 * 86_400)
+        var wp = ClaudeUsageLogic.pace(used: s.week.tokens, budget: weekYardstick, elapsed: 7 * 86_400, length: 7 * 86_400)
+        // Your real limits, when connected, replace the estimate.
+        if let real = ClaudeLimitsService.shared.limits {
+            if let f = real.fiveHour { bp = ClaudeLimitsLogic.pace(f, length: ClaudeLimitsLogic.fiveHourLength, now: now) }
+            if let w = real.sevenDay { wp = ClaudeLimitsLogic.pace(w, length: ClaudeLimitsLogic.sevenDayLength, now: now) }
+        }
         blockPace = bp; weekPace = wp
         guard toasts, Entitlements.shared.canUse(Feature.claudeUsage) else { return }
         for (key, label, pace) in [("block", "5h", bp), ("week", "Week", wp)] {
@@ -185,6 +191,7 @@ private struct UsageBar: View {
 
 struct ClaudeUsageView: View {
     @StateObject private var store = ClaudeUsageStore.shared
+    @StateObject private var limits = ClaudeLimitsService.shared
     @ObservedObject private var layout = ModuleLayout.shared
     @State private var showDetails = false
 
@@ -216,23 +223,48 @@ struct ClaudeUsageView: View {
                 .buttonStyle(.plain).foregroundStyle(Theme.accentBright)
                 .help("Percentages, token counts and when each limit resets")
             }
-            if !store.found {
+            ConnectBanner()
+            if let real = limits.limits {
+                // Your real limits, as Claude reports them.
+                PaceRow(title: "5-hour session", pace: store.blockPace, resets: "Resets " + ClaudeLimitsLogic.resetText(real.fiveHour?.resetsAt))
+                PaceRow(title: "Weekly limit", pace: store.weekPace, resets: "Resets " + ClaudeLimitsLogic.resetText(real.sevenDay?.resetsAt))
+                if showDetails { realDetails(real) }
+                if let t = limits.fetched {
+                    Text("From your Claude account · updated \(t.formatted(date: .omitted, time: .shortened))").font(.system(size: 10)).foregroundStyle(Theme.textSecondary)
+                }
+            } else if !store.found {
                 Text("Claude Code hasn't been used on this Mac yet.").foregroundStyle(.white)
-                Text("This tab reads the conversations Claude Code keeps in ~/.claude/projects. Use Claude Code once and the lights appear here.")
+                Text("Connect to Claude above for your real limits, or use Claude Code once and an estimate appears here.")
                     .font(.system(size: 12)).foregroundStyle(Theme.textSecondary)
             } else if store.summary == nil {
                 ProgressView().controlSize(.small)
             } else {
+                Text("Estimated from Claude Code on this Mac").font(.system(size: 10, weight: .semibold)).foregroundStyle(Theme.textSecondary)
                 PaceRow(title: "5-hour window", pace: store.blockPace, resets: store.summary?.block.map { "Resets in \(ClaudeUsageLogic.remaining(until: $0.end))" } ?? "Starts with your next message")
                 PaceRow(title: "Weekly (last 7 days)", pace: store.weekPace, resets: "Rolling 7 days")
                 if store.usingOwnPeaks {
-                    Text("No budget set for one of these, so it is measured against your busiest window and week. Set your own on the right.")
+                    Text("No budget set for one of these, so it is measured against your busiest window and week. Set your own on the right, or connect to Claude for the real limits.")
                         .font(.system(size: 10)).foregroundStyle(Theme.textSecondary)
                 }
                 if showDetails { details }
             }
             Spacer(minLength: 0)
         }
+    }
+
+    private func realDetails(_ real: ClaudeLimits) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Divider().overlay(Theme.separator)
+            detailLine("5-hour session", "\(real.fiveHour?.percent ?? 0)% used · resets \(real.fiveHour?.resetsAt?.formatted(date: .abbreviated, time: .shortened) ?? "unknown")")
+            detailLine("Weekly, all models", "\(real.sevenDay?.percent ?? 0)% used · resets \(real.sevenDay?.resetsAt?.formatted(date: .abbreviated, time: .shortened) ?? "unknown")")
+            if let o = real.sevenDayOpus { detailLine("Weekly, Opus", "\(o.percent)% used") }
+            if let so = real.sevenDaySonnet { detailLine("Weekly, Sonnet", "\(so.percent)% used") }
+            if let b = store.summary?.block {
+                detailLine("This window on this Mac", "\(ClaudeUsageLogic.format(b.totals.tokens)) tokens · \(b.totals.messages) replies")
+            }
+            detailLine("Today on this Mac", "\(ClaudeUsageLogic.format(store.summary?.today.tokens ?? 0)) tokens · \(store.summary?.today.messages ?? 0) replies")
+        }
+        .transition(.opacity)
     }
 
     private var details: some View {
@@ -268,8 +300,17 @@ struct ClaudeUsageView: View {
     private var settingsCard: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("Limits and alerts").sectionTitle()
-            budgetRow(title: "Budget per window", value: $store.blockBudget)
-            budgetRow(title: "Weekly budget", value: $store.weekBudget)
+            if limits.isConnected {
+                HStack {
+                    Label("Connected to Claude", systemImage: "checkmark.circle.fill").font(.system(size: 12, weight: .semibold)).foregroundStyle(.green)
+                    Spacer()
+                    Button("Disconnect") { limits.disconnect() }.buttonStyle(.plain).font(.system(size: 11)).foregroundStyle(Theme.textSecondary)
+                }
+            } else {
+                Text("Budgets below only shape the estimate. Connect to Claude for your real limits.").font(.system(size: 10)).foregroundStyle(Theme.textSecondary)
+                budgetRow(title: "Budget per window", value: $store.blockBudget)
+                budgetRow(title: "Weekly budget", value: $store.weekBudget)
+            }
             Toggle("Pin to Home", isOn: Binding(
                 get: { layout.choice(.claudeUsage).onHome },
                 set: { layout.set($0 ? .homeExpanded : .standalone, for: .claudeUsage) }))
@@ -279,10 +320,10 @@ struct ClaudeUsageView: View {
                 .help("Five seconds, in the closed notch: the colour and percentage after a colour change, a jump of 10 points, or a reset")
             Toggle("Yellow dot at 90% of the window budget", isOn: $store.alertAt90)
                 .font(.system(size: 12)).toggleStyle(.switch).foregroundStyle(Theme.textSecondary)
-                .disabled(store.blockBudget == 0)
+                .disabled(store.blockBudget == 0 || limits.isConnected)
             Toggle("Alert at 90% of the weekly budget", isOn: $store.weekAlert)
                 .font(.system(size: 12)).toggleStyle(.switch).foregroundStyle(Theme.textSecondary)
-                .disabled(store.weekBudget == 0)
+                .disabled(store.weekBudget == 0 || limits.isConnected)
             HStack {
                 Toggle("Daily summary at", isOn: $store.dailySummary).font(.system(size: 12)).toggleStyle(.switch).foregroundStyle(Theme.textSecondary)
                 DatePicker("", selection: Binding(
@@ -301,6 +342,32 @@ struct ClaudeUsageView: View {
             TextField("Auto", value: value, format: .number)
                 .textFieldStyle(.roundedBorder).frame(width: 90).multilineTextAlignment(.trailing)
             Text("tokens").font(.system(size: 11)).foregroundStyle(Theme.textSecondary)
+        }
+    }
+}
+
+/// "Connect to Claude" while there is no real data, with what it does and any error.
+struct ConnectBanner: View {
+    @StateObject private var limits = ClaudeLimitsService.shared
+
+    var body: some View {
+        if limits.limits == nil || !limits.isConnected {
+            VStack(alignment: .leading, spacing: 6) {
+                switch limits.state {
+                case .connecting:
+                    HStack(spacing: 8) { ProgressView().controlSize(.small); Text("Waiting for you to allow access in the macOS prompt…").font(.system(size: 12)).foregroundStyle(.white) }
+                case .failed(let message):
+                    Label(message, systemImage: "exclamationmark.triangle.fill").font(.system(size: 11)).foregroundStyle(.orange).fixedSize(horizontal: false, vertical: true)
+                    Button(limits.isConnected ? "Retry" : "Connect to Claude") { limits.connect() }.buttonStyle(PurpleButtonStyle())
+                default:
+                    Text("See your real limits").font(.system(size: 13, weight: .semibold)).foregroundStyle(.white)
+                    Text("Connect to Claude and these lights follow the same percentages Claude shows you. Notch apple reads the sign-in Claude Code already keeps on this Mac (macOS asks you to allow it) and asks Anthropic for your usage; nothing else is sent or saved.")
+                        .font(.system(size: 11)).foregroundStyle(Theme.textSecondary).fixedSize(horizontal: false, vertical: true)
+                    Button("Connect to Claude") { limits.connect() }.buttonStyle(PurpleButtonStyle())
+                }
+            }
+            .padding(10)
+            .background(Theme.accent.opacity(0.15), in: RoundedRectangle(cornerRadius: 12))
         }
     }
 }
@@ -332,6 +399,7 @@ struct PaceRow: View {
 /// The compact version for the Home page: two lights side by side, tap the arrow for the full tab.
 struct ClaudePaceCard: View {
     @StateObject private var store = ClaudeUsageStore.shared
+    @StateObject private var limits = ClaudeLimitsService.shared
     @EnvironmentObject private var state: NotchState
 
     var body: some View {
@@ -343,7 +411,10 @@ struct ClaudePaceCard: View {
                     .buttonStyle(.plain).foregroundStyle(Theme.accentBright)
                     .help("Details")
             }
-            if !store.found {
+            if !limits.isConnected {
+                Text("Connect to see your real limits.").font(.system(size: 11)).foregroundStyle(Theme.textSecondary)
+                Button("Connect to Claude") { limits.connect() }.buttonStyle(PurpleButtonStyle(prominent: false))
+            } else if !store.found && limits.limits == nil {
                 Text("Use Claude Code once to see your usage.").font(.system(size: 11)).foregroundStyle(Theme.textSecondary)
             } else {
                 HStack(spacing: 12) {

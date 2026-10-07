@@ -20,11 +20,12 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
-        ReleaseNote(version: "2.0.0", date: "7 October 2026", headline: "A huge update for efficiency and a modular notch", items: [
+        ReleaseNote(version: "1.34.0", date: "7 October 2026", headline: "A huge update for efficiency and a modular notch", items: [
             "Home replaces Today: Devices, Notifications and Quick Add always there; Clipboard, Now Playing and Quick Notes open on click.",
             "Claude usage as green, yellow and red lights for your 5-hour window and week, with a 5-second notch badge and Pin to Home.",
             "An algebra calculator and the Translator inside Tools; ten rarely-used tabs merged into Non-Necessities, placed your way in Settings → Modules & Layout.",
             "PairDrop rebuilt (any size, folders, progress, confirmed delivery), with private chat and a custom name.",
+            "Connect to Claude in the Claude usage tab to see your real session and weekly limits.",
         ]),
         ReleaseNote(version: "1.33.2", date: "7 October 2026", headline: "Updating works from anywhere", items: [
             "Fixed the \"Can't write to …/AppTranslocation/…\" error: if Notch apple was opened from the DMG or Downloads, the update now installs into Applications.",

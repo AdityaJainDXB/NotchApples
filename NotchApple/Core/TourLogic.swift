@@ -10,7 +10,7 @@
 import Foundation
 
 enum TourLogic {
-    static let stepCount = 8
+    static let stepCount = 9
 
     /// Shown to anyone who has not finished it, except a fresh install.
     static func needed(done: Bool, freshInstall: Bool) -> Bool { !done && !freshInstall }
