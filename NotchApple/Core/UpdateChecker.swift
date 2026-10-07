@@ -58,15 +58,26 @@ final class UpdateChecker: ObservableObject {
     /// The release notes line that makes an update compulsory in the notch.
     static let requiredMarker = "[required-update]"
 
-    /// A newer release flagged as required. It ignores "Not now", and the notch shows only the update screen.
+    /// Every release is required: a copy that is not the newest release must update. (Set to false to go back
+    /// to requiring only releases whose notes carry `[required-update]`.)
+    static let everyReleaseIsRequired = true
+
+    static func isRequired(_ r: Release, installed: String) -> Bool {
+        isNewer(r.version, than: installed) && (everyReleaseIsRequired || r.notes.localizedCaseInsensitiveContains(requiredMarker))
+    }
+
+    /// A newer release that must be installed. It ignores "Not now", and the notch shows only the update screen.
     /// Once seen it is remembered, so blocking the network afterwards does not lift it.
     var requiredUpdate: Release? {
-        if let latest {
-            guard latest.notes.localizedCaseInsensitiveContains(Self.requiredMarker),
-                  Self.isNewer(latest.version, than: currentVersion) else { return nil }
-            return latest
-        }
+        if let latest { return Self.isRequired(latest, installed: currentVersion) ? latest : nil }
         return Self.rememberedRequired()
+    }
+
+    /// The line after `[security]` in the release notes, if the release is a security fix.
+    static func securityNote(_ notes: String) -> String? {
+        notes.split(separator: "\n").lazy.map { $0.trimmingCharacters(in: .whitespaces) }
+            .first { $0.lowercased().hasPrefix("[security]") }
+            .map { String($0.dropFirst("[security]".count)).trimmingCharacters(in: .whitespaces) }
     }
 
     // MARK: Remembering a required update
@@ -131,14 +142,16 @@ final class UpdateChecker: ObservableObject {
         clearStaleNotifications()
         // The screenshot build (DemoHooks) must never check or notify: it isn't a real install.
         if DemoHooks.isDemo { timer?.invalidate(); timer = nil; return }
-        if autoCheck, timer == nil {
+        // The background check always runs, whatever the notification switch says: an out-of-date copy is
+        // required to update (see `requiredUpdate`), so it has to learn about the newest release.
+        if timer == nil {
             DispatchQueue.main.asyncAfter(deadline: .now() + 8) { [weak self] in self?.check() }
-            timer = Timer.scheduledTimer(withTimeInterval: 6 * 3600, repeats: true) { _ in
+            timer = Timer.scheduledTimer(withTimeInterval: 15 * 60, repeats: true) { _ in
                 MainActor.assumeIsolated { UpdateChecker.shared.check() }
             }
-        } else if !autoCheck {
-            timer?.invalidate()
-            timer = nil
+            NSWorkspace.shared.notificationCenter.addObserver(forName: NSWorkspace.didWakeNotification, object: nil, queue: .main) { _ in
+                MainActor.assumeIsolated { UpdateChecker.shared.check() }
+            }
         }
     }
 
@@ -153,12 +166,12 @@ final class UpdateChecker: ObservableObject {
             do {
                 let release = try await Self.fetchLatest()
                 latest = release
-                Self.remember(release.notes.localizedCaseInsensitiveContains(Self.requiredMarker) && Self.isNewer(release.version, than: currentVersion) ? release : nil)
+                Self.remember(Self.isRequired(release, installed: currentVersion) ? release : nil)
                 lastChecked = .now
                 if userInitiated, release.version == skippedVersion { skippedVersion = "" }
                 phase = pendingUpdate == nil ? .upToDate : .available
                 if pendingUpdate == nil { clearStaleNotifications() }
-                if let update = pendingUpdate, update.version != notifiedVersion {
+                if autoCheck, let update = pendingUpdate, update.version != notifiedVersion {
                     notifiedVersion = update.version
                     notify(update)
                 }
@@ -409,7 +422,7 @@ struct UpdatesSettings: View {
     var body: some View {
         Form {
             Section {
-                Toggle("Check for updates automatically", isOn: $updater.autoCheck)
+                Toggle("Notify me about updates", isOn: $updater.autoCheck)
                     .onChange(of: updater.autoCheck) { _, _ in updater.applyPreference() }
                 LabeledContent("Current version", value: updater.currentVersion)
                 LabeledContent("Last checked") {

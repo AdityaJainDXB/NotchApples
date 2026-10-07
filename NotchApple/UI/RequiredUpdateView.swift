@@ -21,8 +21,13 @@ struct RequiredUpdateView: View {
         VStack(spacing: 14) {
             Spacer(minLength: 0)
             Image(systemName: "arrow.down.circle.fill").font(.system(size: 34)).foregroundStyle(Theme.accentGradient)
-            Text(skippable ? "A new Notch apple is ready" : "Update Notch apple to keep using it").font(.system(size: 18, weight: .bold)).foregroundStyle(.white)
-            Text("Version \(release.version) is \(skippable ? "available" : "a required update"). It takes under a minute; your settings and data are kept and Notch apple reopens by itself.")
+            let security = UpdateChecker.securityNote(release.notes)
+            Text(skippable ? "A new Notch apple is ready" : security != nil ? "Critical security update" : "Update Notch apple to keep using it").font(.system(size: 18, weight: .bold)).foregroundStyle(.white)
+            if let security, !skippable {
+                Text(security.isEmpty ? "This version has security problems that are fixed in the update." : security)
+                    .font(.system(size: 12, weight: .semibold)).foregroundStyle(.orange).multilineTextAlignment(.center).frame(maxWidth: 520)
+            }
+            Text("Version \(release.version) is \(skippable ? "available" : "required: this copy is out of date"). It takes under a minute; your settings and data are kept and Notch apple reopens by itself.")
                 .font(.system(size: 12)).foregroundStyle(Theme.textSecondary).multilineTextAlignment(.center).frame(maxWidth: 520)
             switch updater.phase {
             case .downloading(let v): ProgressView("Downloading…", value: v).frame(maxWidth: 280)
