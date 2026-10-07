@@ -1201,6 +1201,7 @@ Per-app volume and EQ use Core Audio process taps, which arrived in macOS 14.2. 
   - your own Home Assistant on your local network, only if you set up Smart Home (Ultimate): the token is kept in the Keychain
   - the clipboard link relay (`notchapple-rooms`, Cloudflare), only if you set a link code: it forwards sealed bytes it cannot read and stores nothing; secrets are never sent
   - `speed.cloudflare.com` for the speed test and a tiny Cloudflare page for the internet-drop check, only when you run them or turn the check on
+  - Windows only, if you turn on the experimental notification peek: Windows' own notification list on this PC is read (read-only) to flash the newest notification beside the pill. It stays on the PC: nothing is stored or sent, and the temporary copy used when Windows has the list locked is deleted straight away
   - the license server, only if you activate a signed key: activating or deactivating sends the key and a one-way hash of your Mac (salted per key, so it can't be linked across keys) to enforce the 3-Mac limit, and about once a day it downloads the signed list of turned-off keys (nothing about you is sent). The website's `api.json` says where the server is. Keys are checked offline; without internet, activation still works
 - PairDrop and Nearby Wi-Fi chat never leave your local network.
 - Anonymous room messages are end-to-end encrypted before they leave your Mac, and the relay (`ntfy.sh`, or a public MQTT broker as a fallback) stores nothing.
