@@ -36,6 +36,8 @@ tokio = { version = "1", features = ["time"] }
 
 [target.'cfg(windows)'.dependencies]
 windows-future = "0.3"
+# Notification peek reads Windows' own notification list (read-only). Bundled SQLite: nothing extra to install.
+rusqlite = { version = "0.32", features = ["bundled"] }
 windows = { version = "0.62", features = [
     "Foundation",
     "Media_Control",
@@ -51,6 +53,7 @@ windows = { version = "0.62", features = [
     "Win32_System_Com",
     "Win32_System_Com_StructuredStorage",
     "Win32_System_DataExchange",
+    "Win32_System_IO",
     "Win32_System_Power",
     "Win32_System_ProcessStatus",
     "Win32_System_Registry",

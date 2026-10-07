@@ -45,6 +45,28 @@ function claudeCard() {
       button('Yellow', async () => (await C()).show('yellow'), { kind: 'quiet', small: true }))));
 }
 const card = (title, ...rows) => el('div', { class: 'card col', style: 'gap:0' }, title ? el('div', { class: 'section-title', style: 'margin-bottom:4px' }, title) : null, ...rows);
+// Brightness gauge: only offered a switch that works on this PC (laptop screens); says so when it can't.
+function brightnessToggle() {
+  const t = toggle(load('hud.brightness', false), async (on) => {
+    const hud = await import('../services/hud.js');
+    if (on && !(await hud.brightnessAvailable())) {
+      hud.setBrightnessGauge(false); t.querySelector('input').checked = false;
+      return toast('This screen’s brightness can’t be read here (it works on laptop screens).', { error: true });
+    }
+    hud.setBrightnessGauge(on);
+  });
+  return t;
+}
+// Notification peek: experimental; turns itself back off with a reason if this PC's notification list can't be read.
+function notificationToggle() {
+  const t = toggle(load('notif.peek', false), async (on) => {
+    const N = await import('../services/winnotifs.js');
+    const st = await N.setEnabled(on);
+    if (on && st.available === false) { t.querySelector('input').checked = false; toast(st.reason || 'Notification peek can’t read notifications on this PC.', { error: true }); }
+    else if (on) toast('Notification peek is on. New notifications will show beside the pill.');
+  });
+  return t;
+}
 const prefToggle = (key, gate) => toggle(pref(key), (v) => { if (gate && !canUse(gate)) { toast(`${FEATURES[gate].title} is part of ${tierLabel(FEATURES[gate].tier)}.`); return; } setPref(key, v); });
 
 function General(repaint, opts) {
@@ -69,6 +91,8 @@ function General(repaint, opts) {
       setting('Remind me to unplug', 'At the charge level you choose, to be gentler on the battery.', el('div', { class: 'hstack' }, select([50, 60, 70, 75, 80, 85, 90, 95, 100].map((n) => ({ value: n, label: `at ${n}%` })), load('watch.batteryLimit', 80), (v) => save('watch.batteryLimit', Number(v)), { cls: 'auto' }), toggle(load('watch.batteryCare', false), (v) => save('watch.batteryCare', v)))),
       setting('Warn when disk space is low', 'A notice and a note on the pill.', el('div', { class: 'hstack' }, select([5, 10, 20, 50].map((n) => ({ value: n, label: `under ${n} GB` })), load('watch.diskGB', 10), (v) => save('watch.diskGB', Number(v)), { cls: 'auto' }), toggle(load('watch.diskLow', false), (v) => save('watch.diskLow', v)))),
       setting('Tell me when the internet drops', 'Fetches a tiny Cloudflare page every 20 seconds to check you’re online and how fast it answers. Nothing else is sent.', toggle(load('watch.internet', false), (v) => save('watch.internet', v))),
+      setting('Brightness gauge', 'Shows the screen brightness on the pill for a moment when it changes (laptop screens). Off by default because Windows shows its own pop-up.', brightnessToggle()),
+      setting('Show notifications on the pill (experimental)', 'Flashes the newest Windows notification beside the pill. It reads Windows’ own notification list on this PC, read-only; nothing is stored or sent. Windows has no official way to do this, so it may not work on every PC.', notificationToggle()),
       setting('Volume gauge', 'Shows the volume on the pill for a moment when it changes. Off by default because Windows shows its own volume pop-up.', toggle(load('hud.volume', false), (v) => save('hud.volume', v)))),
     claudeCard(),
     card('Your data',

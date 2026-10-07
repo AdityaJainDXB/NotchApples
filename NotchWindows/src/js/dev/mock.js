@@ -5,7 +5,7 @@
 const listeners = new Map();
 const state = {
   hidden: false, expanded: false, awake: 0,
-  volume: 0.42, muted: false, micMuted: false,
+  volume: 0.42, muted: false, micMuted: false, brightness: 0.6, notifs: [],
   apps: [{ name: 'Spotify', volume: 0.8, muted: false, active: true }, { name: 'Google Chrome', volume: 1, muted: false, active: true },
     { name: 'Microsoft Teams', volume: 0.6, muted: false, active: false }, { name: 'System sounds', volume: 0.5, muted: false, active: false }],
   media: { title: 'Blinding Lights', artist: 'The Weeknd', album: 'After Hours', app: 'Spotify.exe', playing: true, position: 61, duration: 200, art: null, can_next: true, can_previous: true },
@@ -25,6 +25,9 @@ const hits = (q) => [
 ];
 
 const commands = {
+  brightness_state: () => ok({ available: true, level: state.brightness }),
+  notifications_recent: ({ since }) => ok({ available: true, reason: '', latest: Math.max(0, ...state.notifs.map((n) => n.id)),
+    items: since == null ? [] : state.notifs.filter((n) => n.id > since) }),
   claude_usage: () => {
     const now = Date.now(), rows = [];
     for (let k = 0; k < 60; k++) rows.push({ t: now - k * 4 * 60000 - 600000, m: k % 7 ? 'claude-opus-5-5' : 'claude-sonnet-5-5', i: 900 + k * 7, o: 400 + k * 11, cw: 1200, cr: 30000 });

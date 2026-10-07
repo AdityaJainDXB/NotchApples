@@ -10,6 +10,8 @@
 
 mod apps;
 mod audio;
+mod brightness;
+mod notifications;
 mod awake;
 mod claude_usage;
 mod clip;
@@ -455,6 +457,8 @@ fn main() {
             extras::downloads_progress, extras::save_temp_file, extras::save_file_as, extras::read_file_base64,
             extras::vpn_status, extras::vpn_connect, extras::vpn_disconnect,
         claude_usage::claude_usage,
+        brightness::brightness_state,
+        notifications::notifications_recent,
             selftest_capture, selftest_finish,
         ])
         .on_window_event(|window, event| {
