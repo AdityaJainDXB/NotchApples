@@ -81,7 +81,7 @@ Pick your computer. The Windows button starts the download straight away; the Ma
    If a blue **"Windows protected your PC"** window appears, click **More info**, then **Run anyway**. Windows shows this for every app that doesn't pay for a code-signing certificate. The full source code is in this repository.
 3. **Open Notch apple.** If it doesn't open by itself, press the **Windows key**, type `Notch apple` and press **Enter**.
    A slim pill appears at the **top centre of your screen**. Click it to open the panel, or press **`Ctrl + Alt + N`** from any app.
-4. **Enter your access code.** Notch apple for Windows is locked until you do (`NOTCH-XXXX-XXXX`, the same code as the Mac app). To take access away again later, use **Settings → Access → Remove access**.
+4. **Free to start.** Everything free works straight away. If you bought Pro or Ultimate, open **Settings → License** and enter your key (`NTCH-…`, the same key as the Mac app, valid on up to 3 devices).
 
 <details>
 <summary><b>Something not working on Windows?</b></summary>
@@ -90,7 +90,7 @@ Pick your computer. The Windows button starts the download straight away; the Ma
 - **It doesn't start with Windows.** Not yet. Open it from the Start menu when you want it.
 - **My antivirus removed the file.** Restore it from the antivirus quarantine, or [build it yourself](#build-from-source).
 - **Updating.** Download again and run the new installer. It replaces the old version.
-- **Lock it again.** **Settings → Access → Remove access & lock** deletes the code from this PC.
+- **Remove your key from this PC.** **Settings → License → Remove the key from this PC** frees the device slot.
 - **Uninstall.** **Settings → Apps → Installed apps → Notch apple → Uninstall.**
 - **Need an `.msi` instead** (for a work-managed PC)? Get [`NotchApple-Windows.msi`](https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows.msi).
 - **Older Windows versions** are on the [Windows releases page](https://github.com/AdityaJainDXB/NotchApples/releases/tag/windows-latest) and the [all releases list](https://github.com/AdityaJainDXB/NotchApples/releases).
@@ -200,6 +200,20 @@ All screenshots use sample data.
 </details>
 
 ## What's new
+
+### Mac 1.31.0 · 7 October 2026 · Claude usage, Smart Home and more
+
+- **Claude usage tracker (Ultimate):** your current 5-hour window, today and this week, read from Claude Code's own logs on your Mac. Weekly budget alert and a daily summary.
+- **Smart Home (Ultimate):** lights, switches and scenes from Home Assistant on your own network.
+- **Clipboard link:** send copied text between your Mac and Windows PC with a shared code, sealed end to end. Anything that looks like a secret is never sent.
+- **Developer tools**, **wellbeing** (breaks, breathing, bedtime) with a **habit tracker (Pro)**, **daily focus goal**, **countdowns**, **music sleep timer**, **quick capture** (⌃⌥J), **panic hide** (⌃⌥⇧P) and **quick answers** in the command palette.
+- **Light/dark switch** for macOS in the notch menu and command palette.
+- **Optional screen flash for Claude Code** (Settings → Extras → Claude Code, off by default): a half-second green or yellow wash over every screen.
+- Keys record a generic device label ("Mac (macOS 26.0)") so the admin panel can tell devices apart. Your computer's own name is never sent.
+
+### Windows 1.27.0 BETA · 7 October 2026
+
+Claude Code dot, Claude usage tracker, Smart Home, clipboard link, developer tools, wellbeing and habits, panic hide, quick capture, Cookie Clicker, Runner, Breakout and Memory, repeating to-dos with snooze and a "3 due" badge, stay-awake presets, snippet variables, quick answers, text size and skins, and low-battery, low-disk and internet warnings.
 
 ### 1.24.0 · 4 October 2026 · Notch apple on your iPhone
 
@@ -1177,6 +1191,9 @@ Per-app volume and EQ use Core Audio process taps, which arrived in macOS 14.2. 
   - Apple's speech recognition when you dictate (on this Mac when your Mac supports it)
   - your plugins, which run whatever their scripts do (you install them)
   - GitHub, only when you choose to send feedback, a bug report or a crash report (you review it and submit it yourself)
+  - your own Home Assistant on your local network, only if you set up Smart Home (Ultimate): the token is kept in the Keychain
+  - the clipboard link relay (`notchapple-rooms`, Cloudflare), only if you set a link code: it forwards sealed bytes it cannot read and stores nothing; secrets are never sent
+  - `speed.cloudflare.com` for the speed test and a tiny Cloudflare page for the internet-drop check, only when you run them or turn the check on
   - the license server, only if you activate a signed key: activating or deactivating sends the key and a one-way hash of your Mac (salted per key, so it can't be linked across keys) to enforce the 3-Mac limit, and about once a day it downloads the signed list of turned-off keys (nothing about you is sent). The website's `api.json` says where the server is. Keys are checked offline; without internet, activation still works
 - PairDrop and Nearby Wi-Fi chat never leave your local network.
 - Anonymous room messages are end-to-end encrypted before they leave your Mac, and the relay (`ntfy.sh`, or a public MQTT broker as a fallback) stores nothing.
