@@ -284,7 +284,13 @@ final class UpdateChecker: ObservableObject {
             throw UpdateError.message("The downloaded app isn't signed as Notch apple.")
         }
 
-        let target = Bundle.main.bundleURL
+        // Opened straight from the DMG or Downloads, macOS runs a temporary read-only copy ("App Translocation").
+        // Replacing that copy is impossible, so the update goes into Applications instead and opens from there.
+        var target = Bundle.main.bundleURL
+        let path = target.path
+        if path.contains("/AppTranslocation/") || path.hasPrefix("/Volumes/") {
+            target = URL(fileURLWithPath: "/Applications").appendingPathComponent(appName)
+        }
         guard fm.isWritableFile(atPath: target.deletingLastPathComponent().path) else {
             throw UpdateError.message("Can't write to \(target.deletingLastPathComponent().path). Download the DMG from GitHub instead.")
         }
@@ -292,7 +298,8 @@ final class UpdateChecker: ObservableObject {
         let backup = fm.temporaryDirectory.appendingPathComponent("NotchApple-previous-\(UUID().uuidString).app")
         let script = """
         while kill -0 \(ProcessInfo.processInfo.processIdentifier) 2>/dev/null; do sleep 0.2; done
-        mv "$1" "$3" && mv "$2" "$1" && xattr -dr com.apple.quarantine "$1" 2>/dev/null
+        [ -e "$1" ] && mv "$1" "$3"
+        mv "$2" "$1" && xattr -dr com.apple.quarantine "$1" 2>/dev/null
         open "$1"
         """
         let process = Process()

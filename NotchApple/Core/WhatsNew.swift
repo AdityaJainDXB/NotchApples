@@ -20,6 +20,9 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "1.33.2", date: "7 October 2026", headline: "Updating works from anywhere", items: [
+            "Fixed the \"Can't write to …/AppTranslocation/…\" error: if Notch apple was opened from the DMG or Downloads, the update now installs into Applications.",
+        ]),
         ReleaseNote(version: "1.33.1", date: "7 October 2026", headline: "The patch log in the notch, and Gemini that switches model", items: [
             "After an update the notch opens on what changed, with a switch for each new optional feature and a Got it button. No separate window.",
             "If a Gemini request fails before answering, Notch apple retries on the next Gemini model (up to four) and tells you with a short notice.",

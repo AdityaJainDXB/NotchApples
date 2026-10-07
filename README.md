@@ -365,6 +365,10 @@ Claude Code dot, Claude usage tracker, Smart Home, clipboard link, developer too
 - **F1:** a favourite team; qualifying gaps and best laps.
 - **What's New** in Settings → About, shown once after updating.
 
+#### New in 1.33.2
+
+- **Update works from anywhere.** Fixed "Can't write to …/AppTranslocation/…": when Notch apple is opened from the DMG or Downloads, the update now installs into Applications.
+
 #### New in 1.33.1
 
 - **Patch log in the notch.** After an update the notch opens on what changed, with switches for new optional features and a Got it button. No separate window.
