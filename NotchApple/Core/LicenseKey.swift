@@ -68,7 +68,7 @@ enum Feature: String, CaseIterable, Identifiable {
     // Ultimate: AI
     case automations
     // Pro: productivity
-    case meetingNotes, namedTimers, focusProjects, richNotes, remindersSync, clipboardUnlimited, shelfPlus, textExpander, annotate, ruler, currency, commandPalette
+    case meetingSummaries, meetingNotes, namedTimers, focusProjects, richNotes, remindersSync, clipboardUnlimited, shelfPlus, textExpander, annotate, ruler, currency, commandPalette
     // Ultimate: scripting
     case scripting
     // Pro: tabs
@@ -84,7 +84,7 @@ enum Feature: String, CaseIterable, Identifiable {
 
     var tier: Tier {
         switch self {
-        case .liveActivityAPI, .activityStacking, .automations, .scripting, .pluginSDK, .pluginGallery, .notesSync, .iphoneCompanion, .cacheCleaner, .claudeUsage, .smartHome, .clipboardLink, .prioritySupport, .betaChannel: .ultimate
+        case .liveActivityAPI, .activityStacking, .automations, .scripting, .pluginSDK, .pluginGallery, .notesSync, .iphoneCompanion, .cacheCleaner, .claudeUsage, .smartHome, .meetingSummaries, .clipboardLink, .prioritySupport, .betaChannel: .ultimate
         default: .pro
         }
     }
@@ -98,6 +98,7 @@ enum Feature: String, CaseIterable, Identifiable {
     var title: String {
         switch self {
         case .notchResize: "Notch size"
+        case .meetingSummaries: "Meeting summaries"
         case .meetingNotes: "Meeting notes"
         case .namedTimers: "Named timers"
         case .focusProjects: "Focus by project"
@@ -176,6 +177,7 @@ enum Feature: String, CaseIterable, Identifiable {
     var benefit: String {
         switch self {
         case .notchResize: "Make the open notch wider or taller, with a live preview."
+        case .meetingSummaries: "Record a meeting from your calendar, get it transcribed on your Mac, and an AI summary with decisions and action items."
         case .meetingNotes: "Start a note from any calendar event, with the time, an agenda and action items ready."
         case .namedTimers: "Run several timers at once, each with its own name: “Pasta 10m”, “Egg 1:30”."
         case .focusProjects: "Name what you are working on and see this week's focus time split by project."

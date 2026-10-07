@@ -147,6 +147,12 @@ struct TodayView: View {
                                         NSWorkspace.shared.open(url); AppDelegate.current?.notch?.closeNotch()
                                     }
                                 }
+                                if Entitlements.shared.canUse(.meetingSummaries), !event.isAllDay {
+                                    IconButton(systemImage: "record.circle", help: "Record this meeting and summarise it") {
+                                        VoiceNotesModel.shared.startMeeting(title: event.title)
+                                        state.selected = .voiceNotes
+                                    }
+                                }
                                 if Entitlements.shared.canUse(.meetingNotes), !event.isAllDay {
                                     IconButton(systemImage: "note.text.badge.plus", help: "Start notes for this meeting") { startNotes(for: event) }
                                 }

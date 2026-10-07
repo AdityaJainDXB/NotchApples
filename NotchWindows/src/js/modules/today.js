@@ -158,6 +158,7 @@ export function render(root) {
               el('div', { class: 'ellipsis', style: 'font-weight:600;font-size:15px' }, e.title),
               el('div', { class: 'dim ellipsis' }, e.allDay ? `${dayLabel(e.start)} · all day` : `${dayLabel(e.start)} · ${fmtTime(e.start)}–${fmtTime(e.end)}`, e.location ? ` · ${e.location}` : '')),
             now ? el('span', { class: 'chip', style: 'background:color-mix(in srgb, var(--accent) 45%, transparent);color:#fff;border:0' }, 'Now') : null,
+            canUse('meetingSummaries') && !e.allDay ? el('button', { class: 'icon-btn', title: 'Record this meeting and summarise it', onclick: () => show('voicenotes', { meeting: e.title }) }, '⏺') : null,
             canUse('meetingNotes') && !e.allDay ? el('button', { class: 'icon-btn', title: 'Start notes for this meeting', onclick: () => startNotes(e) }, '📝') : null,
             e.join ? el('button', { class: 'btn small', onclick: () => C.join(e) }, 'Join') : null);
         }));

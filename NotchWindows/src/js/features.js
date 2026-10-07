@@ -6,6 +6,7 @@ import { can } from './license.js';
 
 export const FEATURES = {
   notchResize: {"title": "Notch size", "detail": "Make the pill and the open notch smaller or larger, and move it left or right.", "tier": 1},
+  meetingSummaries: {"title": "Meeting summaries", "detail": "Record a meeting from your calendar, transcribe it, and get an AI summary with decisions and action items.", "tier": 2},
   meetingNotes: {"title": "Meeting notes", "detail": "Start a note from any calendar event, with the time, an agenda and action items ready.", "tier": 1},
   namedTimers: {"title": "Named timers", "detail": "Run several timers at once, each with its own name: “Pasta 10m”, “Egg 1:30”.", "tier": 1},
   focusProjects: {"title": "Focus by project", "detail": "Name what you are working on and see this week's focus time split by project.", "tier": 1},

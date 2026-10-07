@@ -21,7 +21,9 @@ struct VoiceNote: Codable, Identifiable, Equatable {
     var fileName: String
     var transcript: String?
     var summary: String?
-    var title: String { transcript.map { String($0.prefix(60)) } ?? "Voice note" }
+    /// The calendar meeting this was recorded for (Ultimate). Optional so older notes still load.
+    var meeting: String?
+    var title: String { meeting ?? transcript.map { String($0.prefix(60)) } ?? "Voice note" }
 }
 
 @MainActor
@@ -34,6 +36,8 @@ final class VoiceNotesModel: NSObject, ObservableObject, AVAudioRecorderDelegate
     @Published private(set) var elapsed: TimeInterval = 0
     @Published private(set) var busy: Set<UUID> = []
     @Published var message: String?
+    /// Set when a recording is started from a calendar event; the note made from it remembers the meeting.
+    @Published private(set) var meetingTitle: String?
 
     private var recorder: AVAudioRecorder?
     private var meter: Timer?
@@ -62,6 +66,14 @@ final class VoiceNotesModel: NSObject, ObservableObject, AVAudioRecorderDelegate
     // MARK: Recording
 
     func toggle() { isRecording ? stop() : start() }
+
+    /// Starts recording for a calendar meeting (Ultimate). The note is named after it and gets a meeting-style summary.
+    func startMeeting(title: String) {
+        guard !isRecording, Entitlements.shared.canUse(.meetingSummaries) else { return }
+        meetingTitle = title
+        start()
+        if !isRecording { meetingTitle = nil }
+    }
 
     func start() {
         switch AVCaptureDevice.authorizationStatus(for: .audio) {
@@ -117,7 +129,8 @@ final class VoiceNotesModel: NSObject, ObservableObject, AVAudioRecorderDelegate
         isRecording = false
         level = 0
         LiveActivityCenter.shared.recompute()
-        let note = VoiceNote(duration: duration, fileName: name)
+        let note = VoiceNote(duration: duration, fileName: name, meeting: meetingTitle)
+        meetingTitle = nil
         notes.insert(note, at: 0)
         save()
         transcribe(note)
@@ -164,7 +177,7 @@ final class VoiceNotesModel: NSObject, ObservableObject, AVAudioRecorderDelegate
     func summarise(_ note: VoiceNote) {
         guard let text = note.transcript, !text.isEmpty else { return }
         busy.insert(note.id)
-        let prompt = """
+        let prompt = note.meeting.map { MeetingSummaryLogic.prompt(title: $0, transcript: text) } ?? """
         Summarise this voice note. Reply with a one-line title, then 2–4 short bullet points, then "Action items:" with any to-dos (or "none").
 
         \(text)
@@ -198,6 +211,17 @@ final class VoiceNotesModel: NSObject, ObservableObject, AVAudioRecorderDelegate
         try? FileManager.default.removeItem(at: Self.folder.appendingPathComponent(note.fileName))
         notes.removeAll { $0.id == note.id }
         save()
+    }
+
+    /// Adds a meeting's summary to its note in Notes (making the note if there isn't one yet).
+    func addToMeetingNotes(_ note: VoiceNote) {
+        guard let title = note.meeting, let summary = note.summary, !summary.isEmpty else { return }
+        let day = note.date.formatted(.dateTime.weekday(.abbreviated).day().month(.abbreviated))
+        let time = note.date.formatted(date: .omitted, time: .shortened)
+        let meetingNote = NotesStore.shared.noteForMeeting(title: title, day: day, time: time)
+        if meetingNote.text.contains(summary.trimmingCharacters(in: .whitespacesAndNewlines)) { message = "Already in your meeting notes"; return }
+        NotesStore.shared.update(meetingNote.id, text: meetingNote.text + MeetingSummaryLogic.noteSection(summary: summary))
+        message = "Added to your meeting notes"
     }
 
     func copy(_ note: VoiceNote) {
@@ -235,7 +259,10 @@ struct VoiceNotesView: View {
                     .help(model.isRecording ? "Stop and transcribe" : "Start a voice note")
                     Text(model.isRecording ? CountdownTimer.long(model.elapsed) : "Tap to record")
                         .font(.system(size: 15, weight: .semibold, design: .rounded)).monospacedDigit().foregroundStyle(.white)
-                    Text("Transcribed on your Mac. Summaries use your AI from Settings → AI.")
+                    if model.isRecording, model.meetingTitle != nil {
+                        Text(MeetingSummaryLogic.consentReminder).font(.system(size: 10, weight: .semibold)).foregroundStyle(.yellow).multilineTextAlignment(.center)
+                    }
+                    Text("Transcribed on your Mac. Summaries use your AI from Settings → AI. It records your microphone.")
                         .font(.system(size: 10)).foregroundStyle(Theme.textSecondary).multilineTextAlignment(.center)
                     if let m = model.message { Text(m).font(.system(size: 10)).foregroundStyle(.orange).multilineTextAlignment(.center) }
                 }
@@ -269,6 +296,9 @@ struct VoiceNotesView: View {
                 if model.busy.contains(note.id) { ProgressView().controlSize(.small) }
                 IconButton(systemImage: "sparkles", help: "Summarise with AI") { model.summarise(note); selected = note.id }
                     .disabled(note.transcript?.isEmpty ?? true)
+                if note.meeting != nil, note.summary != nil {
+                    IconButton(systemImage: "note.text.badge.plus", help: "Add the summary to this meeting's note") { model.addToMeetingNotes(note) }
+                }
                 IconButton(systemImage: "doc.on.doc", help: "Copy transcript and summary") { model.copy(note) }
                 IconButton(systemImage: open ? "chevron.up" : "chevron.down", help: "Show text") { selected = open ? nil : note.id }
                 IconButton(systemImage: "trash", help: "Delete") { model.delete(note) }
