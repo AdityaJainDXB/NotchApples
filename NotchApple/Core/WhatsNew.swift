@@ -20,6 +20,12 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "1.34.6", date: "7 October 2026", headline: "Suspended licenses stop within hours", items: [
+            "A suspended or revoked license key is now noticed within hours, with no update needed: Notch apple checks at launch, after sleep and every hour (at most every 6 hours).",
+            "A Mac that has not been able to check for 30 days pauses paid features until it is online again.",
+            "A brand-new install starts on the widget Home; people updating keep the Classic page until they choose in Settings → Modules & Layout.",
+            "This is a required update: it brings the whole 1.34 set of changes to everyone.",
+        ]),
         ReleaseNote(version: "1.34.5", date: "7 October 2026", headline: "Search finds features, and a better Claude usage tab", items: [
             "Settings search now finds features: type \"windows\" and Modules & Layout opens showing only Windows, highlighted, with a button to show everything again.",
             "Claude usage has a new look: a ring for each limit, Opus and Sonnet bars when Claude reports them, and a 30-day chart of your busiest point each day.",

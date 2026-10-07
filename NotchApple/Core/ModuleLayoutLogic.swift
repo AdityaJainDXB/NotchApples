@@ -95,9 +95,9 @@ enum ModuleLayoutLogic {
         var title: String { self == .classic ? "Classic" : "Widgets" }
     }
 
-    /// Nothing chosen means Classic. Widgets with nothing added to Home falls back to Classic rather than an empty page.
-    static func effectiveStyle(saved: HomeStyle?, onHomeCount: Int) -> HomeStyle {
-        (saved ?? .classic) == .widgets && onHomeCount > 0 ? .widgets : .classic
+    /// Nothing chosen means `fallback` (Widgets on a brand-new install, Classic for people updating). Widgets with nothing added to Home falls back to Classic rather than an empty page.
+    static func effectiveStyle(saved: HomeStyle?, fallback: HomeStyle = .classic, onHomeCount: Int) -> HomeStyle {
+        (saved ?? fallback) == .widgets && onHomeCount > 0 ? .widgets : .classic
     }
 
     /// `names` in the person's saved order; anything not in the order keeps its default place after those that are.

@@ -773,12 +773,12 @@ private struct HomeScreenSettings: View {
     var body: some View {
         let items = layout.homeItems
         Section {
-            Picker("Home screen", selection: Binding(get: { layout.savedHomeStyle ?? .classic }, set: { layout.setHomeStyle($0) })) {
+            Picker("Home screen", selection: Binding(get: { layout.savedHomeStyle ?? layout.defaultHomeStyle }, set: { layout.setHomeStyle($0) })) {
                 Text("Classic").tag(ModuleLayoutLogic.HomeStyle.classic)
                 Text("Widgets").tag(ModuleLayoutLogic.HomeStyle.widgets)
             }
             .pickerStyle(.segmented)
-            Text(layout.savedHomeStyle == .widgets
+            Text((layout.savedHomeStyle ?? layout.defaultHomeStyle) == .widgets
                  ? (items.isEmpty ? "No widgets are on Home yet, so the Classic page shows. Place a feature on Home below." : "Cards you placed on Home, in the order below.")
                  : "The page from 1.33 and earlier: today's weather, battery and your next events.")
                 .font(.callout).foregroundStyle(.secondary)

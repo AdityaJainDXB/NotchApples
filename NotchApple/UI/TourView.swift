@@ -54,7 +54,7 @@ struct TourView: View {
     @ObservedObject private var tour = TourModel.shared
     @EnvironmentObject private var state: NotchState
     @State private var draft: [Module: LayoutChoice] = [:]
-    @State private var homeStyle: ModuleLayoutLogic.HomeStyle = ModuleLayout.shared.savedHomeStyle ?? .classic
+    @State private var homeStyle: ModuleLayoutLogic.HomeStyle = ModuleLayout.shared.savedHomeStyle ?? ModuleLayout.shared.defaultHomeStyle
 
     var body: some View {
         VStack(spacing: 10) {

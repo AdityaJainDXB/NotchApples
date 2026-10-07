@@ -45,6 +45,8 @@ final class Entitlements: ObservableObject {
 
     private init() {
         if let text = KeychainHelper.get(.licenseKey), case .success(let k) = LicenseKey.parse(text) { key = k }
+        // Keys from before this check started: the 30 days begin now.
+        if key != nil, lastVerified == nil { lastVerified = Date() }
         recompute()
         LicenseState.shared.$isActivated.dropFirst().sink { [weak self] _ in
             DispatchQueue.main.async { self?.recompute() }
@@ -59,8 +61,19 @@ final class Entitlements: ObservableObject {
 
     private var revoked: Set<String> { Set(defaults.stringArray(forKey: "license.revoked") ?? []) }
 
+    /// When the revoked list was last fetched successfully. A key not verified for 30 days pauses until it is.
+    private var lastVerified: Date? {
+        get { (defaults.object(forKey: "license.verifiedAt") as? Double).map { Date(timeIntervalSince1970: $0) } }
+        set { defaults.set(newValue?.timeIntervalSince1970, forKey: "license.verifiedAt") }
+    }
+
     private func recompute() {
-        let t = LicenseKey.tier(key: key, revoked: revoked, legacyActivated: hasLegacyActivation)
+        var usable = key
+        if key != nil, LicenseKey.verificationLapsed(lastVerified: lastVerified) {
+            usable = nil
+            notice = "Notch apple couldn't check your license for over \(LicenseKey.verificationGraceDays) days. Connect to the internet and it comes back on its own."
+        }
+        let t = LicenseKey.tier(key: usable, revoked: revoked, legacyActivated: hasLegacyActivation)
         if t != tier { tier = t }
     }
 
@@ -87,6 +100,7 @@ final class Entitlements: ObservableObject {
         guard KeychainHelper.set(k.text, for: .licenseKey) else { throw LicenseKey.Problem.server("Couldn't save the key on this Mac.") }
         key = k
         notice = nil
+        lastVerified = Date()
         recompute()
     }
 
@@ -104,18 +118,22 @@ final class Entitlements: ObservableObject {
 
     // MARK: Revocation
 
-    /// At most once a day, and only while a signed key is active.
+    /// At most every 6 hours (launch, wake and an hourly timer all call it), and only while a signed key is active.
+    /// A suspended key stops working at the next check; no update is needed.
     func checkRevocationIfDue() async {
         guard let k = key else { return }
         let last = defaults.double(forKey: "license.revokedCheckedAt")
-        guard Date().timeIntervalSince1970 - last > 86_400, let server = await LicenseServer.url(),
+        guard Date().timeIntervalSince1970 - last > 6 * 3600, let server = await LicenseServer.url(),
               let r = await LicenseServer.get(server, "revoked"),
               let list = r["list"] as? String, let sig = r["sig"] as? String,
               let ids = LicenseKey.revokedIDs(list: list, signature: sig) else { return }
         defaults.set(ids, forKey: "license.revoked")
         defaults.set(Date().timeIntervalSince1970, forKey: "license.revokedCheckedAt")
+        lastVerified = Date()
         if ids.contains(k.keyID) {
             notice = LicenseKey.Problem.revoked.errorDescription
+        } else if notice?.hasPrefix("Notch apple couldn't check") == true {
+            notice = nil
         }
         recompute()
     }

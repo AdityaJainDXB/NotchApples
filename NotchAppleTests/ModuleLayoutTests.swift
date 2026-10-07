@@ -75,6 +75,8 @@ final class ModuleLayoutTests: XCTestCase {
         XCTAssertEqual(L.effectiveStyle(saved: .classic, onHomeCount: 5), .classic)
         XCTAssertEqual(L.effectiveStyle(saved: .widgets, onHomeCount: 3), .widgets)
         XCTAssertEqual(L.effectiveStyle(saved: .widgets, onHomeCount: 0), .classic)
+        XCTAssertEqual(L.effectiveStyle(saved: nil, fallback: .widgets, onHomeCount: 4), .widgets)
+        XCTAssertEqual(L.effectiveStyle(saved: .classic, fallback: .widgets, onHomeCount: 4), .classic)
     }
 
     func testHomeOrderKeepsSavedOrderThenDefaults() {

@@ -78,9 +78,14 @@ final class ModuleLayout: ObservableObject {
         notify()
     }
 
+    /// Brand-new installs start on the widget Home; people updating keep the page they know until they choose.
+    var defaultHomeStyle: ModuleLayoutLogic.HomeStyle {
+        UserDefaults.standard.bool(forKey: "v2.freshInstall") ? .widgets : .classic
+    }
+
     /// The Home page that shows now.
     var homeStyle: ModuleLayoutLogic.HomeStyle {
-        ModuleLayoutLogic.effectiveStyle(saved: savedHomeStyle, onHomeCount: homeItems.count)
+        ModuleLayoutLogic.effectiveStyle(saved: savedHomeStyle, fallback: defaultHomeStyle, onHomeCount: homeItems.count)
     }
 
     /// Everything on the widget Home, in the order it appears (the list Settings lets you rearrange).

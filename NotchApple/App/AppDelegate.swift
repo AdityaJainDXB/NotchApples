@@ -73,6 +73,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         HotCornerManager.shared.apply()
         WhatsNew.noteLaunch()
         Task { await Entitlements.shared.checkRevocationIfDue() }
+        // A suspended key is noticed within hours even if the Mac is never restarted.
+        Timer.scheduledTimer(withTimeInterval: 3600, repeats: true) { _ in Task { @MainActor in await Entitlements.shared.checkRevocationIfDue() } }
         DemoHooks.run()
         applyMediaKeyPreference()
         // Accessibility: watch quietly (and clear a stale entry once per version); the notch is never blocked by it.
@@ -128,7 +130,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         // Global shortcuts are re-registered after sleep or a fast-user-switch, so they keep working in every app.
         for name in [NSWorkspace.didWakeNotification, NSWorkspace.sessionDidBecomeActiveNotification] {
             NSWorkspace.shared.notificationCenter.publisher(for: name)
-                .sink { _ in GlobalHotkeyManager.shared.reregisterAll() }
+                .sink { _ in
+                    GlobalHotkeyManager.shared.reregisterAll()
+                    Task { @MainActor in await Entitlements.shared.checkRevocationIfDue() }
+                }
                 .store(in: &cancellables)
         }
 

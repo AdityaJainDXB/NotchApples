@@ -338,6 +338,15 @@ struct LicenseKey: Equatable {
         return json["ids"] as? [String] ?? []
     }
 
+    /// A key that has not been checked against the server's revoked list for this long stops counting until the
+    /// Mac is online again. It keeps a suspended key from working for ever on a Mac that never connects.
+    static let verificationGraceDays = 30
+
+    static func verificationLapsed(lastVerified: Date?, now: Date = Date(), graceDays: Int = verificationGraceDays) -> Bool {
+        guard let lastVerified else { return false }
+        return now.timeIntervalSince(lastVerified) > Double(graceDays) * 86_400
+    }
+
     /// The tier this Mac is entitled to: a valid signed key wins; an older activation
     /// (access code or website key from before tiers) counts as Pro.
     static func tier(key: LicenseKey?, revoked: Set<String>, legacyActivated: Bool) -> Tier {
