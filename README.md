@@ -360,6 +360,11 @@ Claude Code dot, Claude usage tracker, Smart Home, clipboard link, developer too
 - **F1:** a favourite team; qualifying gaps and best laps.
 - **What's New** in Settings → About, shown once after updating.
 
+#### New in 1.32.2
+
+- **Required updates.** A release can be marked required; the open notch then shows only an Update now screen until you update. Settings and the menu bar keep working, and being offline never blocks you.
+- **"What's new" window after updating** with a switch for each new optional feature, shown once.
+
 #### New in 1.32.1
 
 - **⌥A blacks out the screen and brings it back.** Option+A takes the built-in display's brightness to zero; press it again to restore the previous level. Switch it off in Settings if you type "å".

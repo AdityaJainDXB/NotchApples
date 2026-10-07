@@ -21,6 +21,10 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "1.32.2", date: "7 October 2026", headline: "Required updates, and choose what to switch on", items: [
+            "A release can be marked required: the open notch then shows only an Update now screen until you update. Settings and the menu bar still work.",
+            "After updating, a window lists the new optional features with a switch for each, once.",
+        ]),
         ReleaseNote(version: "1.32.1", date: "7 October 2026", headline: "Option+A screen blackout, and the Accessibility prompt fixed", items: [
             "Press Option+A to take the screen brightness to zero and again to bring it back. Switch it off in Settings if you type å.",
             "macOS keeps a stale Accessibility entry after each update, so Notch apple kept asking even when it was switched on. It now clears that entry once per version and asks again, and the setup screen has an \"It's already on: fix it\" button.",
@@ -228,7 +232,37 @@ enum WhatsNew {
     }
 
     /// First launch ever: nothing to announce, just remember the version.
-    static func noteLaunch() { if seenVersion.isEmpty { seenVersion = currentVersion } }
+    static func noteLaunch() {
+        if seenVersion.isEmpty { seenVersion = currentVersion; markOffered() }
+    }
+
+    // MARK: Offers after an update
+
+    /// Optional things introduced in a release, offered once after updating. Only free, safe-to-try settings.
+    static let offers: [(version: String, items: [NewFeatureOffer])] = [
+        ("1.31.0", [
+            NewFeatureOffer(id: "devtools", title: "Dev Tools tab", detail: "JSON, Base64, JWT, hashes, timestamps, regex and a QR code maker, right in the notch.", key: Module.devTools.storageKey),
+            NewFeatureOffer(id: "wellbeing", title: "Wellbeing tab", detail: "Breathing, break reminders and a bedtime nudge.", key: Module.wellbeing.storageKey),
+            NewFeatureOffer(id: "claudeflash", title: "Flash the screen when Claude Code needs you", detail: "A brief whole-screen colour flash along with the status dot.", key: "claudeCode.screenFlash"),
+        ]),
+        ("1.32.1", [
+            NewFeatureOffer(id: "blackout", title: "⌥A blacks out the screen", detail: "Press Option+A to take the brightness to zero and again to bring it back. The key stops typing å while this is on.", key: "ui.brightnessBlackout", defaultOn: true),
+        ]),
+    ]
+
+    private static var offeredVersion: String {
+        get { UserDefaults.standard.string(forKey: "whatsNew.offeredVersion") ?? "" }
+        set { UserDefaults.standard.set(newValue, forKey: "whatsNew.offeredVersion") }
+    }
+
+    /// Offers newer than the last time the person was asked, up to this version.
+    static func pendingOffers() -> [NewFeatureOffer] {
+        let last = offeredVersion
+        return offers.filter { VersionMath.isNewer($0.version, than: last.isEmpty ? "0" : last) && !VersionMath.isNewer($0.version, than: currentVersion) }
+            .flatMap(\.items)
+    }
+
+    static func markOffered() { offeredVersion = currentVersion }
 
     static func markSeen() { seenVersion = currentVersion }
 }

@@ -50,6 +50,7 @@ final class RequiredSetup: ObservableObject {
             // Start everything that was waiting for it, right now.
             AppDelegate.current?.applyMediaKeyPreference()
             WindowManager.shared.refreshTrust()
+            NewFeaturesWindow.showIfNeeded()
         } else {
             start()    // switched off again: ask and watch again
         }

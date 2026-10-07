@@ -55,6 +55,16 @@ final class UpdateChecker: ObservableObject {
         return latest
     }
 
+    /// The release notes line that makes an update compulsory in the notch.
+    static let requiredMarker = "[required-update]"
+
+    /// A newer release flagged as required. It ignores "Not now", and the notch shows only the update screen.
+    var requiredUpdate: Release? {
+        guard let latest, latest.notes.localizedCaseInsensitiveContains(Self.requiredMarker),
+              Self.isNewer(latest.version, than: currentVersion) else { return nil }
+        return latest
+    }
+
     private var timer: Timer?
     private var downloadObservation: NSKeyValueObservation?
 
@@ -408,7 +418,8 @@ struct UpdatesSettings: View {
     /// GitHub release notes are Markdown; SwiftUI shows inline styles but not
     /// headings, so turn "## Heading" lines into bold text.
     static func readable(_ markdown: String) -> String {
-        markdown.split(separator: "\n", omittingEmptySubsequences: false).map { line in
+        markdown.split(separator: "\n", omittingEmptySubsequences: false)
+            .filter { !$0.localizedCaseInsensitiveContains(UpdateChecker.requiredMarker) }.map { line in
             let t = line.trimmingCharacters(in: .whitespaces)
             guard t.hasPrefix("#") else { return String(line) }
             return "**" + t.drop(while: { $0 == "#" }).trimmingCharacters(in: .whitespaces) + "**"
