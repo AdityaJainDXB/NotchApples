@@ -114,7 +114,7 @@ export function render(root) {
           el('div', {}, `H ${Math.round(w.daily[0]?.max ?? 0)}° · L ${Math.round(w.daily[0]?.min ?? 0)}°`))));
       if (canUse('forecast')) {
         forecastBox.replaceChildren(
-          el('div', { class: 'hstack scroll', style: 'gap:4px;overflow-x:auto;padding-bottom:2px' },
+          el('div', { class: 'hstack scroll', style: 'gap:4px;overflow-x:auto;padding-bottom:6px;flex:none' },
             ...w.hourly.map((h, i) => el('div', { class: 'col', style: 'align-items:center;gap:2px;min-width:44px', title: `${h.rain}% chance of rain` },
               el('div', { class: 'tiny dim' }, i === 0 ? 'Now' : h.time.toLocaleTimeString([], { hour: 'numeric' })),
               icon(weatherGlyph(h.code, h.day), 17, W.describe(h.code, h.day).icon),

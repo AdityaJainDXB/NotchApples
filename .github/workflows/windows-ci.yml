@@ -39,5 +39,10 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: always()
         with:
+          name: cargo-lock
+          path: NotchWindows/src-tauri/Cargo.lock
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
           name: selftest
           path: ${{ runner.temp }}/selftest

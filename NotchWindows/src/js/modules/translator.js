@@ -38,7 +38,7 @@ export function render(root, opts = {}) {
       el('div', { class: 'spacer' }),
       el('button', { class: 'icon-btn', title: 'Read aloud', onclick: () => { speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(out.textContent); u.lang = LANGS[to].voice; speechSynthesis.speak(u); } }, '🔊'),
       el('button', { class: 'icon-btn', title: 'Copy', onclick: () => invoke('clipboard_copy_text', { text: out.textContent }).then(() => toast('Copied')) }, '⧉')),
-    el('div', { class: 'row', style: 'flex:1' }, el('div', { class: 'card col' }, input), el('div', { class: 'card col' }, out, phon)), status));
+    el('div', { class: 'row', style: 'flex:1;min-height:0' }, el('div', { class: 'card col', style: 'flex:1;min-width:0' }, input), el('div', { class: 'card col', style: 'flex:1;min-width:0' }, out, phon)), status));
   if (opts.text) run(0);
   setTimeout(() => input.focus(), 40);
 }
