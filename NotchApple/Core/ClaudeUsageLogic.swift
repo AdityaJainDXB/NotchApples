@@ -46,10 +46,14 @@ struct ClaudeUsageSummary: Equatable {
     var today = ClaudeTokens()
     var week = ClaudeTokens()
     var byModel: [(model: String, tokens: Int)] = []
+    /// Your busiest 5-hour window and busiest 7 days in the history read, used as the yardstick when no budget is set.
+    var peakBlock = 0
+    var peakWeek = 0
     var generated = Date()
 
     static func == (a: Self, b: Self) -> Bool {
         a.block == b.block && a.today == b.today && a.week == b.week && a.generated == b.generated
+            && a.peakBlock == b.peakBlock && a.peakWeek == b.peakWeek
             && a.byModel.map(\.model) == b.byModel.map(\.model) && a.byModel.map(\.tokens) == b.byModel.map(\.tokens)
     }
 }
@@ -121,7 +125,26 @@ enum ClaudeUsageLogic {
             if e.time >= weekStart { s.week.add(e); perModel[e.model, default: 0] += e.tokens }
         }
         s.byModel = perModel.map { (model: $0.key, tokens: $0.value) }.sorted { $0.tokens > $1.tokens }
+        s.peakBlock = peakBlock(entries)
+        s.peakWeek = peakWeek(entries, calendar: calendar)
         return s
+    }
+
+    /// The most tokens used in any one 5-hour window.
+    static func peakBlock(_ entries: [ClaudeUsageEntry]) -> Int {
+        blocks(entries).map { $0.totals.tokens }.max() ?? 0
+    }
+
+    /// The most tokens used in any 7 days in a row (ending on a day you used Claude).
+    static func peakWeek(_ entries: [ClaudeUsageEntry], calendar: Calendar = .current) -> Int {
+        var perDay: [Date: Int] = [:]
+        for e in entries { perDay[calendar.startOfDay(for: e.time), default: 0] += e.tokens }
+        var best = 0
+        for end in perDay.keys {
+            let start = calendar.date(byAdding: .day, value: -6, to: end) ?? end
+            best = max(best, perDay.filter { $0.key >= start && $0.key <= end }.values.reduce(0, +))
+        }
+        return best
     }
 
     /// 1,234 · 12.3K · 4.56M

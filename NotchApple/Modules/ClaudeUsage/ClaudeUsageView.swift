@@ -77,11 +77,18 @@ final class ClaudeUsageStore: ObservableObject {
     @AppStorage("claudeUsage.summaryAt") var summaryAt = 1080            // 18:00
     @AppStorage("claudeUsage.weekAlertKey") private var weekAlertKey = ""
     @AppStorage("claudeUsage.summaryDay") private var summaryDay = ""
+    /// A 5-second badge in the closed notch when the colour changes, usage jumps, or the window or week resets.
+    @AppStorage("claudeUsage.toasts") var toasts = true
+    @Published private(set) var blockPace: UsagePace?
+    @Published private(set) var weekPace: UsagePace?
+    /// True when the pacing is measured against your busiest window and week because you set no budget.
+    var usingOwnPeaks: Bool { blockBudget == 0 || weekBudget == 0 }
+    private var lastPace: [String: (light: UsageLight, fraction: Double)] = [:]
     private var alertedBlock: Date?
     private var background: Timer?
 
     /// Alerts and the summary need a fresh look now and then even when the tab is closed (cheap: files are cached).
-    var wantsBackground: Bool { (blockBudget > 0 && alertAt90) || (weekBudget > 0 && weekAlert) || dailySummary }
+    var wantsBackground: Bool { toasts || (blockBudget > 0 && alertAt90) || (weekBudget > 0 && weekAlert) || dailySummary }
 
     func startBackground() {
         background?.invalidate()
@@ -96,12 +103,13 @@ final class ClaudeUsageStore: ObservableObject {
 
     func refresh() async {
         loading = true
-        let since = Date().addingTimeInterval(-8 * 86400)
+        let since = Date().addingTimeInterval(-30 * 86400)   // a month of history, to know your busiest window and week
         let result = await ClaudeUsageScanner.shared.scan(since: since)
         found = result.found
         let s = ClaudeUsageLogic.summary(result.entries)
         summary = s
         loading = false
+        updatePaces(s)
         // A yellow dot (the same one Claude Code uses) when this window passes 90% of your budget.
         if alertAt90, blockBudget > 0, let b = s.block, alertedBlock != b.start,
            Double(b.totals.tokens) >= Double(blockBudget) * 0.9 {
@@ -124,14 +132,50 @@ final class ClaudeUsageStore: ObservableObject {
     }
 }
 
+extension ClaudeUsageStore {
+    /// The yardsticks: your own budgets, or your busiest window and week when none is set.
+    var blockYardstick: Int { blockBudget > 0 ? blockBudget : max(summary?.peakBlock ?? 0, 1) }
+    var weekYardstick: Int { weekBudget > 0 ? weekBudget : max(summary?.peakWeek ?? 0, 1) }
+
+    /// Works out the green / yellow / red pace for the window and the week, and announces changes in the notch.
+    fileprivate func updatePaces(_ s: ClaudeUsageSummary) {
+        let now = Date()
+        let b = s.block
+        let blockUsed = b?.totals.tokens ?? 0
+        let bp = ClaudeUsageLogic.pace(used: blockUsed, budget: blockYardstick, elapsed: b.map { now.timeIntervalSince($0.start) } ?? 0, length: ClaudeUsageLogic.blockLength)
+        // The week is a rolling 7 days, so there is no "elapsed" share: the pace is simply how full it is.
+        let wp = ClaudeUsageLogic.pace(used: s.week.tokens, budget: weekYardstick, elapsed: 7 * 86_400, length: 7 * 86_400)
+        blockPace = bp; weekPace = wp
+        guard toasts, Entitlements.shared.canUse(Feature.claudeUsage) else { return }
+        for (key, label, pace) in [("block", "5h", bp), ("week", "Week", wp)] {
+            guard let pace else { continue }
+            let reason = ClaudeUsageLogic.toastReason(previous: lastPace[key], now: pace)
+            lastPace[key] = (pace.light, pace.fraction)
+            if reason != nil { announce(label: label, pace: pace, reset: reason == .reset) }
+        }
+    }
+
+    private func announce(label: String, pace: UsagePace, reset: Bool) {
+        let colour: NSColor = pace.light == .green ? .systemGreen : pace.light == .yellow ? .systemYellow : .systemRed
+        let symbol = reset ? "arrow.counterclockwise" : "gauge.with.dots.needle.67percent"
+        LiveActivityCenter.shared.flash(LiveActivity(symbol: symbol, label: "\(min(pace.percent, 999))%", tint: colour, leftText: reset ? "\(label) reset" : label), seconds: 5)
+    }
+}
+
+extension UsageLight {
+    var colour: Color { self == .green ? .green : self == .yellow ? .yellow : .red }
+    var word: String { self == .green ? "On pace" : self == .yellow ? "Nearing the limit" : "Limit reached or burning fast" }
+}
+
 private struct UsageBar: View {
     let fraction: Double
+    var colour: Color? = nil
     var body: some View {
         GeometryReader { g in
             ZStack(alignment: .leading) {
                 Capsule().fill(Theme.surface)
                 Capsule()
-                    .fill(fraction >= 1 ? AnyShapeStyle(Color.red) : fraction >= 0.8 ? AnyShapeStyle(Color.orange) : AnyShapeStyle(Theme.accentGradient))
+                    .fill(colour.map { AnyShapeStyle($0) } ?? (fraction >= 1 ? AnyShapeStyle(Color.red) : fraction >= 0.8 ? AnyShapeStyle(Color.orange) : AnyShapeStyle(Theme.accentGradient)))
                     .frame(width: max(8, g.size.width * fraction))
             }
         }
@@ -141,11 +185,13 @@ private struct UsageBar: View {
 
 struct ClaudeUsageView: View {
     @StateObject private var store = ClaudeUsageStore.shared
+    @ObservedObject private var layout = ModuleLayout.shared
+    @State private var showDetails = false
 
     var body: some View {
         HStack(spacing: 12) {
-            GlassCard { windowCard }
-            GlassCard { totalsCard }.frame(width: 270)
+            GlassCard { overviewCard }
+            GlassCard { settingsCard }.frame(width: 290)
         }
         .task {
             while !Task.isCancelled {
@@ -155,40 +201,82 @@ struct ClaudeUsageView: View {
         }
     }
 
-    // MARK: Current window
+    // MARK: The simple view: two lights, optional details
 
-    private var windowCard: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text("Current 5-hour window").sectionTitle()
+    private var overviewCard: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack {
+                Text("Claude usage").sectionTitle()
+                Spacer()
+                Button { withAnimation(.snappy) { showDetails.toggle() } } label: {
+                    Label(showDetails ? "Hide details" : "Details", systemImage: "chevron.right")
+                        .labelStyle(.titleAndIcon).font(.system(size: 11, weight: .semibold))
+                        .rotationEffect(.zero)
+                }
+                .buttonStyle(.plain).foregroundStyle(Theme.accentBright)
+                .help("Percentages, token counts and when each limit resets")
+            }
             if !store.found {
-                Text("Claude Code hasn't been used on this Mac yet.")
-                    .foregroundStyle(.white)
-                Text("This tab reads the conversations Claude Code keeps in ~/.claude/projects. Use Claude Code once and the numbers appear here.")
+                Text("Claude Code hasn't been used on this Mac yet.").foregroundStyle(.white)
+                Text("This tab reads the conversations Claude Code keeps in ~/.claude/projects. Use Claude Code once and the lights appear here.")
                     .font(.system(size: 12)).foregroundStyle(Theme.textSecondary)
             } else if store.summary == nil {
                 ProgressView().controlSize(.small)
-            } else if let b = store.summary?.block {
-                let used = b.totals.tokens
-                HStack(alignment: .firstTextBaseline, spacing: 6) {
-                    Text(ClaudeUsageLogic.format(used)).font(.system(size: 38, weight: .bold, design: .rounded)).monospacedDigit().foregroundStyle(.white)
-                    Text("tokens").foregroundStyle(Theme.textSecondary)
-                }
-                if let f = ClaudeUsageLogic.fraction(used, budget: store.blockBudget) {
-                    UsageBar(fraction: f)
-                    Text("\(Int(f * 100))% of your \(ClaudeUsageLogic.format(store.blockBudget)) budget")
-                        .font(.system(size: 12)).foregroundStyle(f >= 0.8 ? Color.orange : Theme.textSecondary)
-                }
-                Text("Resets in \(ClaudeUsageLogic.remaining(until: b.end))")
-                    .foregroundStyle(.white)
-                Text("\(b.totals.messages) replies · \(ClaudeUsageLogic.format(b.totals.input)) in · \(ClaudeUsageLogic.format(b.totals.output)) out · \(ClaudeUsageLogic.format(b.totals.cacheRead + b.totals.cacheWrite)) cached")
-                    .font(.system(size: 12)).foregroundStyle(Theme.textSecondary)
             } else {
-                Text("No active window").font(.system(size: 20, weight: .bold, design: .rounded)).foregroundStyle(.white)
-                Text("A new 5-hour window starts with your next Claude Code message.")
-                    .font(.system(size: 12)).foregroundStyle(Theme.textSecondary)
+                PaceRow(title: "5-hour window", pace: store.blockPace, resets: store.summary?.block.map { "Resets in \(ClaudeUsageLogic.remaining(until: $0.end))" } ?? "Starts with your next message")
+                PaceRow(title: "Weekly (last 7 days)", pace: store.weekPace, resets: "Rolling 7 days")
+                if store.usingOwnPeaks {
+                    Text("No budget set for one of these, so it is measured against your busiest window and week. Set your own on the right.")
+                        .font(.system(size: 10)).foregroundStyle(Theme.textSecondary)
+                }
+                if showDetails { details }
             }
             Spacer(minLength: 0)
+        }
+    }
+
+    private var details: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Divider().overlay(Theme.separator)
+            if let b = store.summary?.block {
+                detailLine("5-hour window", "\(ClaudeUsageLogic.format(b.totals.tokens)) of \(ClaudeUsageLogic.format(store.blockYardstick)) tokens · \(store.blockPace?.percent ?? 0)%")
+                detailLine("   in / out / cached", "\(ClaudeUsageLogic.format(b.totals.input)) / \(ClaudeUsageLogic.format(b.totals.output)) / \(ClaudeUsageLogic.format(b.totals.cacheRead + b.totals.cacheWrite))")
+                detailLine("   started · resets", "\(b.start.formatted(date: .omitted, time: .shortened)) · \(b.end.formatted(date: .omitted, time: .shortened))")
+            } else {
+                detailLine("5-hour window", "No active window")
+            }
+            detailLine("Last 7 days", "\(ClaudeUsageLogic.format(store.summary?.week.tokens ?? 0)) of \(ClaudeUsageLogic.format(store.weekYardstick)) tokens · \(store.weekPace?.percent ?? 0)%")
+            detailLine("Today", "\(ClaudeUsageLogic.format(store.summary?.today.tokens ?? 0)) tokens · \(store.summary?.today.messages ?? 0) replies")
+            if let top = store.summary?.byModel.first {
+                detailLine("Most used model", "\(ClaudeUsageLogic.friendlyModel(top.model)) · \(ClaudeUsageLogic.format(top.tokens))")
+            }
+            Text("Read from ~/.claude on this Mac. Nothing is sent anywhere.").font(.system(size: 10)).foregroundStyle(Theme.textSecondary)
+        }
+        .transition(.opacity)
+    }
+
+    private func detailLine(_ title: String, _ value: String) -> some View {
+        HStack(alignment: .firstTextBaseline) {
+            Text(title).font(.system(size: 11)).foregroundStyle(Theme.textSecondary)
+            Spacer()
+            Text(value).font(.system(size: 11, weight: .medium)).monospacedDigit().foregroundStyle(.white)
+        }
+    }
+
+    // MARK: Settings
+
+    private var settingsCard: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Limits and alerts").sectionTitle()
             budgetRow(title: "Budget per window", value: $store.blockBudget)
+            budgetRow(title: "Weekly budget", value: $store.weekBudget)
+            Toggle("Pin to Home", isOn: Binding(
+                get: { layout.choice(.claudeUsage).onHome },
+                set: { layout.set($0 ? .homeExpanded : .standalone, for: .claudeUsage) }))
+                .font(.system(size: 12)).toggleStyle(.switch).foregroundStyle(Theme.textSecondary)
+            Toggle("Badge in the notch when it changes", isOn: $store.toasts)
+                .font(.system(size: 12)).toggleStyle(.switch).foregroundStyle(Theme.textSecondary)
+                .help("Five seconds, in the closed notch: the colour and percentage after a colour change, a jump of 10 points, or a reset")
             Toggle("Yellow dot at 90% of the window budget", isOn: $store.alertAt90)
                 .font(.system(size: 12)).toggleStyle(.switch).foregroundStyle(Theme.textSecondary)
                 .disabled(store.blockBudget == 0)
@@ -202,43 +290,7 @@ struct ClaudeUsageView: View {
                     set: { let c = Calendar.current.dateComponents([.hour, .minute], from: $0); store.summaryAt = (c.hour ?? 18) * 60 + (c.minute ?? 0) }),
                            displayedComponents: .hourAndMinute).labelsHidden().disabled(!store.dailySummary)
             }
-        }
-    }
-
-    // MARK: Today and the week
-
-    private var totalsCard: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text("Usage").sectionTitle()
-            row("Today", tokens: store.summary?.today)
-            row("Last 7 days", tokens: store.summary?.week)
-            if let f = ClaudeUsageLogic.fraction(store.summary?.week.tokens ?? 0, budget: store.weekBudget) {
-                UsageBar(fraction: f)
-            }
-            if let models = store.summary?.byModel, !models.isEmpty {
-                Text("By model").sectionTitle().padding(.top, 4)
-                ForEach(Array(models.prefix(4).enumerated()), id: \.offset) { _, m in
-                    HStack {
-                        Text(ClaudeUsageLogic.friendlyModel(m.model)).foregroundStyle(.white)
-                        Spacer()
-                        Text(ClaudeUsageLogic.format(m.tokens)).monospacedDigit().foregroundStyle(Theme.textSecondary)
-                    }
-                    .font(.system(size: 12))
-                }
-            }
             Spacer(minLength: 0)
-            budgetRow(title: "Weekly budget", value: $store.weekBudget)
-            Text("Read from ~/.claude on this Mac. Nothing is sent anywhere.")
-                .font(.system(size: 10)).foregroundStyle(Theme.textSecondary)
-        }
-    }
-
-    private func row(_ title: String, tokens: ClaudeTokens?) -> some View {
-        HStack(alignment: .firstTextBaseline) {
-            Text(title).foregroundStyle(Theme.textSecondary)
-            Spacer()
-            Text(ClaudeUsageLogic.format(tokens?.tokens ?? 0)).font(.system(size: 18, weight: .bold, design: .rounded)).monospacedDigit().foregroundStyle(.white)
-            Text("\(tokens?.messages ?? 0) replies").font(.system(size: 11)).foregroundStyle(Theme.textSecondary)
         }
     }
 
@@ -246,9 +298,76 @@ struct ClaudeUsageView: View {
         HStack(spacing: 8) {
             Text(title).font(.system(size: 12)).foregroundStyle(Theme.textSecondary)
             Spacer()
-            TextField("None", value: value, format: .number)
-                .textFieldStyle(.roundedBorder).frame(width: 96).multilineTextAlignment(.trailing)
+            TextField("Auto", value: value, format: .number)
+                .textFieldStyle(.roundedBorder).frame(width: 90).multilineTextAlignment(.trailing)
             Text("tokens").font(.system(size: 11)).foregroundStyle(Theme.textSecondary)
         }
+    }
+}
+
+/// One limit as a coloured light, a percentage and a thin bar.
+struct PaceRow: View {
+    let title: String
+    let pace: UsagePace?
+    let resets: String
+
+    var body: some View {
+        HStack(spacing: 10) {
+            Circle().fill(pace?.light.colour ?? Theme.textSecondary).frame(width: 14, height: 14)
+                .shadow(color: (pace?.light.colour ?? .clear).opacity(0.6), radius: 4)
+            VStack(alignment: .leading, spacing: 3) {
+                HStack(alignment: .firstTextBaseline) {
+                    Text(title).font(.system(size: 13, weight: .semibold)).foregroundStyle(.white)
+                    Spacer()
+                    Text(pace.map { "\($0.percent)%" } ?? "–").font(.system(size: 18, weight: .bold, design: .rounded)).monospacedDigit()
+                        .foregroundStyle(pace?.light.colour ?? Theme.textSecondary)
+                }
+                UsageBar(fraction: min(1, pace?.fraction ?? 0), colour: pace?.light.colour)
+                Text("\(pace?.light.word ?? "Not enough to measure yet") · \(resets)").font(.system(size: 10)).foregroundStyle(Theme.textSecondary)
+            }
+        }
+    }
+}
+
+/// The compact version for the Home page: two lights side by side, tap the arrow for the full tab.
+struct ClaudePaceCard: View {
+    @StateObject private var store = ClaudeUsageStore.shared
+    @EnvironmentObject private var state: NotchState
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                Text("Claude usage").sectionTitle()
+                Spacer()
+                Button { state.selected = .claudeUsage } label: { Image(systemName: "chevron.right").font(.system(size: 11, weight: .bold)) }
+                    .buttonStyle(.plain).foregroundStyle(Theme.accentBright)
+                    .help("Details")
+            }
+            if !store.found {
+                Text("Use Claude Code once to see your usage.").font(.system(size: 11)).foregroundStyle(Theme.textSecondary)
+            } else {
+                HStack(spacing: 12) {
+                    mini("5h", store.blockPace)
+                    mini("Week", store.weekPace)
+                }
+            }
+        }
+        .task {
+            while !Task.isCancelled {
+                await store.refresh()
+                try? await Task.sleep(for: .seconds(30))
+            }
+        }
+    }
+
+    private func mini(_ title: String, _ pace: UsagePace?) -> some View {
+        HStack(spacing: 6) {
+            Circle().fill(pace?.light.colour ?? Theme.textSecondary).frame(width: 12, height: 12)
+            VStack(alignment: .leading, spacing: 0) {
+                Text(pace.map { "\($0.percent)%" } ?? "–").font(.system(size: 17, weight: .bold, design: .rounded)).monospacedDigit().foregroundStyle(.white)
+                Text(title).font(.system(size: 10)).foregroundStyle(Theme.textSecondary)
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 }

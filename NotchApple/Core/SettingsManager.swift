@@ -12,13 +12,13 @@ import SwiftUI
 
 /// Every optional feature module in the app.
 enum Module: String, CaseIterable, Identifiable {
-    case today, claude, browser, launcher, translator, stats, windows, tools, mirror, worldClock, messenger, clipboard, notes, focus, shelf, share, audio, vpn, nowPlaying, search, timer, snippets, shortcuts, devices, live, f1, sports, games, alerts, plugins, voiceNotes, screenTime, quickAdd, markets, home, security, cacheCleaner, claudeUsage, smartHome, devTools, wellbeing
+    case today, claude, browser, launcher, translator, stats, windows, tools, mirror, worldClock, messenger, clipboard, notes, focus, shelf, share, audio, vpn, nowPlaying, search, timer, snippets, shortcuts, devices, live, f1, sports, games, alerts, plugins, voiceNotes, screenTime, quickAdd, markets, home, security, cacheCleaner, claudeUsage, smartHome, devTools, wellbeing, nonNecessities
 
     var id: String { rawValue }
 
     var title: String {
         switch self {
-        case .today: "Today"
+        case .today: "Home"
         case .focus: "Focus"
         case .notes: "Notes"
         case .windows: "Windows"
@@ -52,19 +52,20 @@ enum Module: String, CaseIterable, Identifiable {
         case .screenTime: "Screen Time"
         case .quickAdd: "Quick Add"
         case .markets: "Markets"
-        case .home: "Home"
+        case .home: "Dashboard"
         case .security: "Biometric Lock"
         case .cacheCleaner: "Purge"
         case .claudeUsage: "Claude Usage"
         case .smartHome: "Smart Home"
         case .devTools: "Dev Tools"
         case .wellbeing: "Wellbeing"
+        case .nonNecessities: "Non-Necessities"
         }
     }
 
     var symbol: String {
         switch self {
-        case .today: "sun.max.fill"
+        case .today: "house.fill"
         case .focus: "timer"
         case .notes: "note.text"
         case .windows: "rectangle.split.2x2.fill"
@@ -105,13 +106,14 @@ enum Module: String, CaseIterable, Identifiable {
         case .smartHome: "lightbulb.fill"
         case .devTools: "hammer.fill"
         case .wellbeing: "leaf.fill"
+        case .nonNecessities: "ellipsis.circle.fill"
         }
     }
 
     var blurb: String {
         switch self {
         case .claude: "Chat with AI: free Gemini, Groq, OpenRouter or local Ollama, or paid Claude / ChatGPT. Optionally share your screen."
-        case .today: "Weather, your next calendar events and battery at a glance."
+        case .today: "Your central page: clipboard, now playing and notes one click away, plus devices, notifications, quick add and Claude usage at a glance."
         case .mirror: "Add-on: a mirror using your camera, to check how you look before a call. Nothing is recorded."
         case .worldClock: "Add-on: the time in the cities you choose, with day or night and the time difference."
         case .tools: "Keep your Mac awake, pick colours from the screen, and a quick calculator."
@@ -149,6 +151,7 @@ enum Module: String, CaseIterable, Identifiable {
         case .wellbeing: "A breathing exercise, break reminders (eyes, water, stretch, posture) and a bedtime nudge. Free; the reminders keep running while the notch is closed."
         case .devTools: "Format JSON, encode and decode, read a JWT, hash, make a UUID, convert timestamps, test a regex, check colour contrast and make a QR code. Free, and everything stays on this Mac."
         case .smartHome: "Ultimate: lights, switches, scenes and more from your own Home Assistant (which also connects Hue, IKEA, Zigbee and Matter). The access token stays on this Mac."
+        case .nonNecessities: "Everything you use now and then in one tab: Focus, World Clock, Audio, Snippets, Shortcuts, Timers, Plugins, Voice Notes, Screen Time and Smart Home."
         case .claudeUsage: "Ultimate: how many tokens Claude Code has used in your 5-hour window, today and this week, with budgets you set yourself. Read from ~/.claude on this Mac."
         case .cacheCleaner: "Ultimate: open the Purge app from the notch to free up disk space. Purge does the cleaning; Notch apple deletes nothing itself."
         }
@@ -349,12 +352,13 @@ final class SettingsManager: ObservableObject {
         case .smartHome: $smartHomeEnabled
         case .devTools: $devToolsEnabled
         case .wellbeing: $wellbeingEnabled
+        case .nonNecessities: .constant(true)
         }
     }
 
     /// Tabs to show in the notch, in display order.
     var enabledTabs: [Module] {
-        orderedTabs.filter { isEnabled($0) }
+        orderedTabs.filter { isEnabled($0) && ModuleLayout.shared.showsTab($0) }
     }
 
     /// The user's tab order (Settings → Appearance), as comma-separated raw values.

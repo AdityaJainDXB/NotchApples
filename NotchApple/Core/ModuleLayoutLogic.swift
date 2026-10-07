@@ -57,12 +57,15 @@ enum ModuleLayoutLogic {
     /// Where it goes when it is switched on without a saved choice (the old Settings toggle, a plugin…).
     static func onChoice(_ module: String) -> LayoutChoice { defaultChoice(module, wasOn: true) }
 
-    /// The choice that applies right now: the saved one, unless the module's own switch says otherwise.
+    /// The choice that applies right now. A saved choice wins while the module is on (the Home cards that are
+    /// native to Home, like Devices, stay where they were put even if their own switch was never turned on).
     static func effective(_ module: String, saved: LayoutChoice?, isOn: Bool) -> LayoutChoice {
         guard isManaged(module) else { return isOn ? .standalone : .disabled }
-        guard isOn else { return .disabled }
-        guard let saved, saved != .disabled else { return onChoice(module) }
-        return allowed(module).contains(saved) ? saved : onChoice(module)
+        guard let saved else { return defaultChoice(module, wasOn: isOn) }
+        if saved == .disabled { return isOn ? onChoice(module) : .disabled }   // switched back on in Settings
+        guard allowed(module).contains(saved) else { return isOn ? onChoice(module) : .disabled }
+        if homeWidgets.contains(module) && module != "claudeUsage" { return saved }
+        return isOn ? saved : .disabled
     }
 
     static func showsAsTab(_ choice: LayoutChoice) -> Bool { choice == .standalone }

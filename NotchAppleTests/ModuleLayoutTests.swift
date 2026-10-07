@@ -45,6 +45,14 @@ final class ModuleLayoutTests: XCTestCase {
         XCTAssertEqual(ModuleLayoutLogic.effective("notes", saved: nil, isOn: true), .homeHidden)
     }
 
+    func testNativeHomeCardsStayEvenIfTheirOwnSwitchWasNeverOn() {
+        XCTAssertEqual(ModuleLayoutLogic.effective("devices", saved: .homeExpanded, isOn: false), .homeExpanded)
+        XCTAssertEqual(ModuleLayoutLogic.effective("devices", saved: nil, isOn: false), .homeExpanded)
+        XCTAssertEqual(ModuleLayoutLogic.effective("devices", saved: .disabled, isOn: false), .disabled)
+        // Claude usage is opt-in.
+        XCTAssertEqual(ModuleLayoutLogic.effective("claudeUsage", saved: .homeExpanded, isOn: false), .disabled)
+    }
+
     func testAChoiceTheModuleCannotHaveFallsBack() {
         // Timer has no Home widget.
         XCTAssertEqual(ModuleLayoutLogic.effective("timer", saved: .homeExpanded, isOn: true), .nonNecessities)

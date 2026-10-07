@@ -52,4 +52,16 @@ final class ClaudeUsagePaceTests: XCTestCase {
         XCTAssertEqual(ClaudeUsageLogic.toastReason(previous: (.yellow, 0.30), now: green), .colour)
         XCTAssertEqual(ClaudeUsageLogic.toastReason(previous: (.red, 1.0), now: green), .reset)
     }
+
+    func testPeaksAreTheBusiestWindowAndWeek() {
+        var cal = Calendar(identifier: .gregorian); cal.timeZone = TimeZone(identifier: "UTC")!
+        let day0 = Date(timeIntervalSince1970: 1_760_000_000)
+        func entry(_ t: TimeInterval, _ out: Int) -> ClaudeUsageEntry {
+            ClaudeUsageEntry(time: day0.addingTimeInterval(t), model: "m", input: 0, output: out, cacheWrite: 0, cacheRead: 0)
+        }
+        // Window one: 300 + 200. Window two (a day later): 900. Ten days after that: 50.
+        let entries = [entry(0, 300), entry(600, 200), entry(86_400, 900), entry(11 * 86_400, 50)]
+        XCTAssertEqual(ClaudeUsageLogic.peakBlock(entries), 900)
+        XCTAssertEqual(ClaudeUsageLogic.peakWeek(entries, calendar: cal), 1400)
+    }
 }
