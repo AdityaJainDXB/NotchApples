@@ -227,6 +227,7 @@
 		BD8748CA1F9CA102F5CE6CCE /* ForecastView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BA2C469BADF06F41DC91609C /* ForecastView.swift */; };
 		BFA1CCA183B16AE648A0EA3F /* NotchStatsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFED05958781963B1F7EB56D /* NotchStatsView.swift */; };
 		BFB0FCFCE4AFDF257319FFA4 /* SportsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 768548256973F1C93565E1FB /* SportsView.swift */; };
+		C25F856CABCC1156DF674B6D /* FullScreenLyrics.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4649C21487D880C8DF7A14F8 /* FullScreenLyrics.swift */; };
 		C5CB119C0BE108708E65FC9E /* LocalP2PManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 700E54998678B97CA020EA9E /* LocalP2PManager.swift */; };
 		C66AB6DBBE6A8C411CA73585 /* NamedTimerLogic.swift in Sources */ = {isa = PBXBuildFile; fileRef = 869FA0DCFB5761CB6BB319C2 /* NamedTimerLogic.swift */; };
 		C6704B893CA4C4D32A413A19 /* VPNManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 281C97D2743323428F5ACD8F /* VPNManager.swift */; };
@@ -368,6 +369,7 @@
 		43B0A5F7BE05C3F95C4B2A08 /* SystemWatchLogic.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SystemWatchLogic.swift; sourceTree = "<group>"; };
 		44CAF8A30126F03D6A230ED7 /* AIModes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIModes.swift; sourceTree = "<group>"; };
 		44EC19E1838745C95B5759DF /* GamesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GamesView.swift; sourceTree = "<group>"; };
+		4649C21487D880C8DF7A14F8 /* FullScreenLyrics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FullScreenLyrics.swift; sourceTree = "<group>"; };
 		466B2516F7D15E3C623784BC /* F1Model.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = F1Model.swift; sourceTree = "<group>"; };
 		46A01968170BB2B7959205B3 /* Tunnelblick.dmg */ = {isa = PBXFileReference; path = Tunnelblick.dmg; sourceTree = "<group>"; };
 		47ACBF89621DF199C9208518 /* LinkShelfTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LinkShelfTests.swift; sourceTree = "<group>"; };
@@ -1224,6 +1226,7 @@
 			isa = PBXGroup;
 			children = (
 				878D1B5C95884945FA120D5E /* BrowserMedia.swift */,
+				4649C21487D880C8DF7A14F8 /* FullScreenLyrics.swift */,
 				93AC47229DA13D09C39B7BBA /* LyricsModel.swift */,
 				48EF75FD565DB103E4CEEB07 /* MusicLevelMeter.swift */,
 				426F46C6AD7DEAFB4B5D938E /* MusicSleepTimer.swift */,
@@ -1482,6 +1485,7 @@
 				DFC0C10C61F488FC1CE273A4 /* FoldShader.swift in Sources */,
 				1420BEF1F9AE0A256FD141B3 /* FoldSurface.swift in Sources */,
 				BD8748CA1F9CA102F5CE6CCE /* ForecastView.swift in Sources */,
+				C25F856CABCC1156DF674B6D /* FullScreenLyrics.swift in Sources */,
 				8FFB80DA4806007F641ABDFD /* GameEngines.swift in Sources */,
 				A9A33B021A874F5F59E85D96 /* GameSupport.swift in Sources */,
 				D1C210100728BD42DBD406B8 /* GamesView.swift in Sources */,

@@ -72,6 +72,7 @@ enum CommandPalette {
             PaletteCommand(title: DNDToggle.isOn ? "Turn Do Not Disturb off" : "Turn Do Not Disturb on", subtitle: "System · Pro", symbol: "moon") { DNDToggle.toggle() },
             PaletteCommand(title: DarkModeToggle.isDark ? "Switch to light mode" : "Switch to dark mode", subtitle: "System", symbol: DarkModeToggle.isDark ? "sun.max" : "moon.stars") { DarkModeToggle.toggle() },
             PaletteCommand(title: MicMute.shared.isMuted ? "Unmute microphone" : "Mute microphone", subtitle: "System · Pro", symbol: "mic.slash") { MicMute.shared.toggle() },
+            PaletteCommand(title: "Full-screen lyrics", subtitle: "Media · Pro", symbol: "text.quote") { FullScreenLyrics.toggle() },
             PaletteCommand(title: "Hide the notch", subtitle: "Notch", symbol: "eye.slash") { notch?.setInvisible(true) },
             PaletteCommand(title: "Show the notch", subtitle: "Notch", symbol: "eye") { notch?.setInvisible(false) },
         ]

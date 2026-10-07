@@ -35,9 +35,13 @@ export function render(root) {
         el('div', { class: 'hstack', style: 'gap:10px;flex-wrap:wrap' }, prevBtn, playBtn, nextBtn, sleepSel, sleepNote))),
     el('label', { class: 'hstack small dim', style: 'cursor:pointer' },
       toggle(load('media.pill', true), (v) => save('media.pill', v)), 'Show the cover on the closed notch while music plays'));
-  const lyricsCard = el('div', { class: 'card col', style: 'flex:1;min-width:0;gap:6px' }, el('div', { class: 'section-title' }, 'Lyrics'), lyricBox);
+  // The lyrics can fill the whole notch (like the Mac's full-screen view): big centred lines, the current one in white.
+  let big = load('lyrics.big', false);
+  const bigBtn = el('button', { class: 'icon-btn', style: 'width:26px;height:26px', onclick: () => { big = !big; save('lyrics.big', big); lastIdx = -2; wrap.replaceChildren(...cards()); bigBtn.title = big ? 'Back to the player' : 'Lyrics fill the notch'; bigBtn.textContent = big ? '⤡' : '⤢'; paintLyrics(M.now()); } }, big ? '⤡' : '⤢');
+  bigBtn.title = big ? 'Back to the player' : 'Lyrics fill the notch';
+  const lyricsCard = el('div', { class: 'card col', style: 'flex:1;min-width:0;gap:6px' }, el('div', { class: 'hstack' }, el('div', { class: 'section-title grow' }, 'Lyrics'), canUse('lyrics') ? bigBtn : null), lyricBox);
   // The lyrics panel only appears when lyrics are unlocked (Pro), so Free users get the full-width player, as on the Mac.
-  const cards = () => (canUse('lyrics') ? [player, lyricsCard] : [player]);
+  const cards = () => (canUse('lyrics') ? (big ? [lyricsCard] : [player, lyricsCard]) : [player]);
   const wrap = el('div', { class: 'row fill', style: 'gap:16px' }, ...cards());
   root.append(wrap);
 
@@ -69,7 +73,7 @@ export function render(root) {
     if (lyricBox.childElementCount && idx === lastIdx) return;
     lastIdx = idx;
     lyricBox.replaceChildren(...lines.map((l, i) => el('div', {
-      style: `font-size:${i === idx ? 15 : 13}px;font-weight:${i === idx ? 700 : 500};color:${i === idx ? 'var(--text)' : 'var(--text-dim)'};transition:all .2s;${l.t !== null ? 'cursor:pointer' : ''}`,
+      style: `font-size:${big ? (i === idx ? 30 : 22) : (i === idx ? 15 : 13)}px;font-weight:${i === idx ? 700 : 500};color:${i === idx ? 'var(--text)' : 'var(--text-dim)'};${big ? 'text-align:center;line-height:1.3;' : ''}transition:all .2s;${l.t !== null ? 'cursor:pointer' : ''}`,
       onclick: () => l.t !== null && M.control('seek', l.t),
     }, l.line || '♪')));
     const cur = lyricBox.children[idx];
@@ -82,7 +86,8 @@ export function render(root) {
       lyricsFor = '';
       return;
     }
-    if (!wrap.contains(player) || wrap.contains(lyricsCard) !== canUse('lyrics')) wrap.replaceChildren(...cards());
+    const shown = cards();
+    if (shown.length !== wrap.children.length || shown.some((c) => !wrap.contains(c))) wrap.replaceChildren(...shown);
     // Only swap the cover when it changes (this runs twice a second).
     if (art.dataset.src !== (m.art || '')) {
       art.dataset.src = m.art || '';

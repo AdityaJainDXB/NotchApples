@@ -122,7 +122,13 @@ struct LyricsPanel: View {
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
+        .overlay(alignment: .topTrailing) {
+            IconButton(systemImage: "arrow.up.left.and.arrow.down.right", help: "Full-screen lyrics") {
+                AppDelegate.current?.notch?.closeNotch()
+                FullScreenLyrics.toggle()
+            }
+        }
         .onAppear { lyrics.start() }
-        .onDisappear { lyrics.stop() }
+        .onDisappear { if !FullScreenLyrics.isOpen { lyrics.stop() } }
     }
 }

@@ -34,7 +34,7 @@ Cheap, useful, two-platform ideas rise to the top. The top 50 are the build list
 | 16 | Hash, UUID and lorem ipsum generator | Developers | Mac + Windows | Free | 3 | 1 | 22.5 | Built, not released |
 | 17 | Unix timestamp and ISO date converter _(In Tools)_ | Developers | Mac + Windows | Free | 3 | 1 | 22.5 | Built, not released |
 | 18 | One thing today: a daily intention shown on the pill | Productivity | Mac + Windows | Free | 3 | 1 | 22.5 | Built, not released |
-| 19 | Pinned notes on the Today tab | Productivity | Mac + Windows | Free | 3 | 1 | 22.5 | Not built yet |
+| 19 | Pinned notes on the Today tab | Productivity | Mac + Windows | Free | 3 | 1 | 22.5 | Built, not released |
 | 20 | Due-today badge for To-do on the pill | Productivity | Mac + Windows | Free | 3 | 1 | 22.5 | Built, not released |
 | 21 | Calculator history and percentage mode | Productivity | Mac + Windows | Free | 3 | 1 | 22.5 | Built, not released |
 | 22 | Low disk space alert | System | Mac + Windows | Free | 3 | 1 | 22.5 | Built, not released |
@@ -47,12 +47,12 @@ Cheap, useful, two-platform ideas rise to the top. The top 50 are the build list
 | 29 | Quick-capture hotkey: type a note from anywhere | Productivity | Mac + Windows | Free | 4 | 2 | 20.0 | Built, not released |
 | 30 | Recurring to-dos | Productivity | Mac + Windows | Free | 4 | 2 | 20.0 | Built, not released |
 | 31 | Snippet variables: {date}, {time}, {clipboard} _(Extends Snippets)_ | Productivity | Mac + Windows | Pro | 4 | 2 | 20.0 | Built, not released |
-| 32 | Emoji and symbol picker with search | Productivity | Mac + Windows | Free | 4 | 2 | 20.0 | Not built yet |
+| 32 | Emoji and symbol picker with search | Productivity | Mac + Windows | Free | 4 | 2 | 20.0 | Built, not released (in the command palette: "emoji heart") |
 | 33 | Internet-down alert (yellow dot) and live latency | System | Mac + Windows | Free | 4 | 2 | 20.0 | Built, not released |
 | 34 | One-click network speed test | System | Mac + Windows | Pro | 4 | 2 | 20.0 | Built, not released |
 | 35 | Top processes with a Quit button | System | Mac + Windows | Pro | 4 | 2 | 20.0 | Built, not released |
 | 36 | Notch skins: glass, solid, outline, neon rim | Customization | Mac + Windows | Pro | 4 | 2 | 20.0 | Built, not released |
-| 37 | Several named timers at once _(In the original plan (#24); neither app has it yet)_ | Productivity | Mac + Windows | Pro | 4 | 2 | 20.0 | Not built yet |
+| 37 | Several named timers at once _(In the original plan (#24); neither app has it yet)_ | Productivity | Mac + Windows | Pro | 4 | 2 | 20.0 | Built, not released |
 | 38 | Clipboard quick-paste slots (Ctrl+1 to 9) | Productivity | Mac + Windows | Pro | 4 | 2 | 20.0 | Built, not released |
 | 39 | Admin: resend a key email and show device names | Admin | Server / admin | Admin | 3 | 1 | 18.0 | Partly (device names; email resend already existed) |
 | 40 | Admin: audit log of every suspend, issue and reissue | Admin | Server / admin | Admin | 4 | 2 | 16.0 | Built, not released |
@@ -61,11 +61,11 @@ Cheap, useful, two-platform ideas rise to the top. The top 50 are the build list
 | 43 | Claude usage: estimated cost in dollars _(Public per-token prices, clearly labelled an estimate)_ | Developers | Mac + Windows | Ultimate | 3 | 2 | 15.0 | Built, not released |
 | 44 | Regex tester | Developers | Mac + Windows | Free | 3 | 2 | 15.0 | Built, not released |
 | 45 | Colour contrast checker (WCAG) with the colour picker | Developers | Mac + Windows | Free | 3 | 2 | 15.0 | Built, not released |
-| 46 | Focus time logged per project _(Tags on Focus sessions)_ | Developers | Mac + Windows | Pro | 3 | 2 | 15.0 | Not built yet |
-| 47 | Meeting notes started from a calendar event | Productivity | Mac + Windows | Pro | 3 | 2 | 15.0 | Not built yet |
-| 48 | Links shelf: save a link now, read it later | Productivity | Mac + Windows | Free | 3 | 2 | 15.0 | Partly (links on Today only) |
+| 46 | Focus time logged per project _(Tags on Focus sessions)_ | Developers | Mac + Windows | Pro | 3 | 2 | 15.0 | Built, not released |
+| 47 | Meeting notes started from a calendar event | Productivity | Mac + Windows | Pro | 3 | 2 | 15.0 | Built, not released |
+| 48 | Links shelf: save a link now, read it later | Productivity | Mac + Windows | Free | 3 | 2 | 15.0 | Built, not released (Links page in the Shelf) |
 | 49 | Snooze a reminder from its notification | Productivity | Mac + Windows | Free | 3 | 2 | 15.0 | Built, not released (Windows) |
-| 50 | Full-screen lyrics view | System | Mac + Windows | Pro | 3 | 2 | 15.0 | Not built yet |
+| 50 | Full-screen lyrics view | System | Mac + Windows | Pro | 3 | 2 | 15.0 | Built, not released (Mac full screen; Windows fills the notch) |
 | 51 | Mood check-in log with a weekly chart | Wellbeing | Mac + Windows | Pro | 3 | 2 | 15.0 | Later |
 | 52 | Accent colour per tab | Customization | Mac + Windows | Pro | 3 | 2 | 15.0 | Later |
 | 53 | Tab bar position and size options | Customization | Mac + Windows | Pro | 3 | 2 | 15.0 | Later |
