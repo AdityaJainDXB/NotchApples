@@ -119,21 +119,26 @@ body.collapsed #panel { display: none; }
 .tab {
   display: flex; align-items: center; gap: 8px; padding: 8px 11px; border-radius: 999px; flex: none;
   background: transparent; border: none; color: var(--text-dim); font-weight: 700; font-size: 15px;
-  white-space: nowrap; cursor: pointer; transition: background .15s var(--ease), color .15s;
+  white-space: nowrap; cursor: pointer; transition: background .15s var(--ease), color .2s, padding .26s var(--ease);
+  position: relative; z-index: 1; gap: 0;
 }
+#tabbar { position: relative; }
+.tab-pill { position: absolute; left: 0; top: 0; width: 0; height: 0; opacity: 0; border-radius: 999px; pointer-events: none; z-index: 0;
+  background: linear-gradient(180deg, var(--accent-bright), var(--accent)); box-shadow: 0 0 22px var(--glow); will-change: transform, width; }
+/* The name opens and closes smoothly instead of popping in. */
+.tab .name { margin-left: 8px; max-width: 220px; overflow: hidden; opacity: 1; transition: max-width .26s var(--ease), margin-left .26s var(--ease), opacity .2s; }
+.tab.icon-only .name { max-width: 0; margin-left: 0; opacity: 0; }
 .tab:hover { background: var(--surface); color: var(--text); }
-.tab.active { background: linear-gradient(180deg, var(--accent-bright), var(--accent)); color: var(--on-accent); padding: 8px 15px 8px 12px;
-  box-shadow: 0 0 22px var(--glow); }
+.tab.active { background: transparent; color: var(--on-accent); padding: 8px 15px 8px 12px; }
 .tab .ico { display: grid; place-items: center; line-height: 1; }
 .svgicon { display: inline-grid; place-items: center; flex: none; } .svgicon svg { display: block; }
-.tab.icon-only .name { display: none; }
 .tab.locked { opacity: .55; }
 .tab.dragging { opacity: .4; }
 .tab.drop-before { box-shadow: -2px 0 0 var(--accent); }
 #page { flex: 1; min-height: 0; overflow: auto; position: relative; }
-#page.fade { animation: pagein .22s var(--ease); }
-#page.leaving { opacity: 0; transform: scale(.985); filter: blur(8px); transition: opacity .09s ease-in, transform .09s ease-in, filter .09s ease-in; }
-@keyframes pagein { from { opacity: 0; transform: translateY(6px) scale(.99); filter: blur(8px) } to { opacity: 1; transform: none; filter: blur(0) } }
+#page.fade { animation: pagein .3s var(--ease); }
+#page.leaving { opacity: 0; transform: translateX(var(--dxo, 0px)) scale(.99); transition: opacity .1s ease-in, transform .1s ease-in; }
+@keyframes pagein { from { opacity: 0; transform: translateX(var(--dx, 0px)) scale(.985); filter: blur(4px) } to { opacity: 1; transform: none; filter: blur(0) } }
 @keyframes fadein { from { opacity: 0 } to { opacity: 1 } }
 
 /* scrollbars */
@@ -399,14 +404,18 @@ body[data-contrast="more"] .field { border-color: rgba(255,255,255,.62); }
 body.swap #pill, body.swap #panel { visibility: hidden; }
 
 /* Lite: slow graphics (a virtual machine, an old laptop). No glows, no looping animations. */
-body[data-perf="lite"] .tab.active { box-shadow: none; }
+body[data-perf="lite"] .tab-pill { box-shadow: none; }
 body[data-perf="lite"] .dot.live { box-shadow: none; animation: none; opacity: 1; }
 body[data-perf="lite"] #pill .bars i { animation: none; transform: scaleY(.7); }
 body[data-perf="lite"] .skel, body[data-perf="lite"] .spinner { animation-duration: 2.4s; }
-body[data-perf="lite"] #panel, body[data-perf="lite"] #page.fade { animation-duration: .08s; }
+body[data-perf="lite"] #panel { animation-duration: .08s; }
+/* Lite drops glows, blur and looping animations, not the tab switch: a cheap slide and fade (only opacity and position) keeps it smooth. */
+body[data-perf="lite"] #page.fade { animation-name: pagein-lite; animation-duration: .18s; }
+@keyframes pagein-lite { from { opacity: 0; transform: translateX(var(--dx, 0px)) } to { opacity: 1; transform: none } }
 body[data-perf="lite"] #page.leaving, body[data-perf="lite"] #panel { filter: none !important; }
 body[data-perf="lite"] .toast, body[data-perf="lite"] .menu, body[data-perf="lite"] .overlay { animation: none; }
 body[data-perf="lite"] * { transition-duration: .06s !important; }
+body[data-perf="lite"] .tab, body[data-perf="lite"] .tab .name { transition-duration: .2s !important; }
 
 #perfhud { position: fixed; left: 8px; bottom: 8px; z-index: 99999; font: 11px/1.3 var(--mono, Consolas, monospace); color: #9f9; background: rgba(0,0,0,.78);
            padding: 4px 8px; border-radius: 6px; pointer-events: none; }

@@ -21,6 +21,42 @@ export const appInfo = invoke('app_info').catch(() => ({ version: '1.24.0', self
 
 const body = document.body;
 const tabbar = document.getElementById('tabbar');
+// The highlight behind the open tab is one element that glides to the next tab (like the Mac's), instead of the
+// whole bar being rebuilt with the highlight jumping.
+const tabPill = el('span', { class: 'tab-pill' });
+let pillRaf = 0, pillBox = null;
+function pillTarget() {
+  const a = tabbar.querySelector('.tab.active');
+  return a ? { x: a.offsetLeft, y: a.offsetTop, w: a.offsetWidth, h: a.offsetHeight } : null;
+}
+function paintPill() {
+  if (!pillBox) { tabPill.style.opacity = '0'; return; }
+  tabPill.style.opacity = '1';
+  tabPill.style.width = `${pillBox.w}px`; tabPill.style.height = `${pillBox.h}px`;
+  tabPill.style.transform = `translate(${pillBox.x}px, ${pillBox.y}px)`;
+}
+/// animate: glide from where the highlight is to the open tab (following the tabs as they open and close); otherwise jump.
+function slidePill(animate) {
+  cancelAnimationFrame(pillRaf); pillRaf = 0;
+  const first = pillTarget();
+  if (!first) { pillBox = null; paintPill(); return; }
+  if (!animate || !pillBox) { pillBox = first; paintPill(); return; }
+  const until = performance.now() + 420;   // the tabs finish opening and closing in about 0.3 s
+  let last = performance.now();
+  const step = (now) => {
+    const t = pillTarget(); if (!t) { pillRaf = 0; return; }
+    const k = 1 - Math.exp(-(now - last) / 60); last = now;
+    for (const key of ['x', 'y', 'w', 'h']) pillBox[key] += (t[key] - pillBox[key]) * k;
+    paintPill();
+    const near = Math.abs(t.x - pillBox.x) + Math.abs(t.w - pillBox.w) < 0.6;
+    if (now < until || !near) pillRaf = requestAnimationFrame(step);
+    else { pillBox = t; paintPill(); pillRaf = 0; }
+  };
+  pillRaf = requestAnimationFrame(step);
+}
+// When the bar or any tab changes size (the panel opens, a tab name opens or closes) the highlight follows, unless it is already gliding.
+const tabSizes = new ResizeObserver(() => { if (!pillRaf) slidePill(false); });
+tabSizes.observe(tabbar);
 const tools = document.getElementById('tools');
 const page = document.getElementById('page');
 const pill = document.getElementById('pill');
@@ -63,7 +99,17 @@ export function buildTabs() {
   // "auto": names when they fit, icons only (except the active tab) when they don't.
   const compact = mode !== 'names';  // like the Mac: icons, with the name on the open tab
 
-  tabbar.replaceChildren(...order.map((m, i) => {
+  // Only rebuild the tabs when they change (added, removed, reordered, locked). Switching tab just moves the highlight.
+  const sig = `${compact}|${order.map((m) => m.id + (allowed(m) ? '' : 'L')).join()}`;
+  const unchanged = tabbar.dataset.sig === sig;
+  if (unchanged) {
+    for (const b of tabbar.querySelectorAll('.tab')) {
+      b.classList.toggle('active', b.dataset.id === active);
+      b.classList.toggle('icon-only', compact && b.dataset.id !== active);
+    }
+  } else {
+    tabbar.dataset.sig = sig;
+    tabbar.replaceChildren(tabPill, ...order.map((m, i) => {
     const locked = !allowed(m);
     const b = el('button', {
       class: `tab${m.id === active ? ' active' : ''}${compact && m.id !== active ? ' icon-only' : ''}${locked ? ' locked' : ''}`,
@@ -85,7 +131,10 @@ export function buildTabs() {
       setTabOrder(ids);
     });
     return b;
-  }));
+    }));
+  }
+  if (!unchanged) { tabSizes.disconnect(); tabSizes.observe(tabbar); tabbar.querySelectorAll('.tab').forEach((t) => tabSizes.observe(t)); }
+  slidePill(unchanged && body.dataset.anim !== 'off');   // Lite keeps the glide: it only moves and resizes one element
   tabbar.querySelector('.tab.active')?.scrollIntoView({ block: 'nearest', inline: 'nearest' });
 
   tools.replaceChildren(
@@ -128,9 +177,14 @@ export async function show(id, opts) {
   buildTabs();
   // The outgoing module fades out, then the incoming one fades in (a quick tap on another tab just restarts it).
   const turn = ++switching;
+  // Which way you are going, like the Mac: the new page slides in from that side, the old one slips away the other way.
+  const rank = (t) => (t === 'settings' ? 1e6 : [...tabbar.querySelectorAll('.tab')].findIndex((b) => b.dataset.id === t));
+  const dir = rank(id) >= rank(wasActive) ? 1 : -1;
+  page.style.setProperty('--dx', `${30 * dir}px`);
+  page.style.setProperty('--dxo', `${-14 * dir}px`);
   if (expanded && motion() && page.firstChild && wasActive !== id) {
     page.classList.add('leaving');
-    await new Promise((r) => setTimeout(r, 90));
+    await new Promise((r) => setTimeout(r, 100));
     if (turn !== switching) return;
   }
   page.classList.remove('leaving');
