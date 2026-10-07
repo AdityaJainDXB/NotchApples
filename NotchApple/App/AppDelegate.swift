@@ -132,6 +132,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 .store(in: &cancellables)
         }
 
+        // Swiping to another desktop (Space) closes the notch, which would otherwise stay open on the old one.
+        NSWorkspace.shared.notificationCenter.publisher(for: NSWorkspace.activeSpaceDidChangeNotification)
+            .receive(on: RunLoop.main)
+            .sink { [weak self] _ in
+                guard !SettingsManager.shared.stickyNotch else { return }
+                self?.notchController?.collapse()
+            }
+            .store(in: &cancellables)
+
         // Re-anchor when displays are connected, removed or rearranged.
         NotificationCenter.default.publisher(for: NSApplication.didChangeScreenParametersNotification)
             .sink { [weak self] _ in self?.notchController?.reposition() }
@@ -349,6 +358,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     /// Opens the Settings window. Agent apps can't rely on the SwiftUI `Settings`
     /// scene, so this goes through our own `SettingsWindowController`.
     static func openSettingsWindow(tab: SettingsTab? = nil) {
+        // Clicks in our own Settings window never reach the notch's click-outside monitor, so close it here.
+        AppDelegate.current?.notchController?.collapse()
         SettingsWindowController.shared.show(tab: tab)
     }
 }

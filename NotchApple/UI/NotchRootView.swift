@@ -130,17 +130,17 @@ struct NotchRootView: View {
     @ViewBuilder
     private var expandedContent: some View {
         if settings.securityEnabled && !state.isUnlocked {
-            LockView()
+            LockView().insetInNotch()
         } else if let required = updater.requiredUpdate {
-            RequiredUpdateView(release: required)
+            RequiredUpdateView(release: required).insetInNotch()
         } else if tour.isShowing {
             // Compulsory after the 2.0 update: no skip, it returns until finished.
-            TourView()
+            TourView().insetInNotch()
         } else if patchLog.isShowing {
-            PatchLogView()
+            PatchLogView().insetInNotch()
         } else if updater.reminderDue, let release = updater.reminderRelease {
             // Every 4th or 5th time the notch is opened while an update is waiting.
-            RequiredUpdateView(release: release, skippable: true)
+            RequiredUpdateView(release: release, skippable: true).insetInNotch()
         } else {
             VStack(spacing: 10) {
                 header
@@ -284,5 +284,14 @@ private struct TabLabelStyle: LabelStyle {
             configuration.icon
             if !compact { configuration.title }
         }
+    }
+}
+
+
+extension View {
+    /// Keeps a full-panel screen (tour, What's New, update, lock) inside the notch's rounded corners and bottom edge,
+    /// with the same margins as the tab pages, so nothing runs out of the shape.
+    func insetInNotch() -> some View {
+        padding(.horizontal, 18 + NotchRootView.expandedShoulder).padding(.bottom, 18)
     }
 }

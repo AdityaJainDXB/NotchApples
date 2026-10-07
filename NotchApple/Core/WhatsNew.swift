@@ -20,7 +20,15 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
-        ReleaseNote(version: "1.34.1", date: "7 October 2026", headline: "PairDrop transfers fixed", items: [
+        ReleaseNote(version: "1.34.3", date: "7 October 2026", headline: "A notch that closes, and What's New that fits", items: [
+            "The notch now closes when you swipe to another desktop or open Settings, instead of staying stuck open.",
+            "What's New, the tour and update screens now stay inside the notch's edges instead of running out of space.",
+        ]),
+        ReleaseNote(version: "1.34.2", date: "7 October 2026", headline: "Claude usage connects again", items: [
+            "Claude usage finds Claude Code's newer sign-in and reads your limits even when Anthropic's usage endpoint is off. Press Connect once after updating.",
+        ]),
+        ReleaseNote(version: "1.34.1", date: "7 October 2026", headline: "Classic Home is back, and PairDrop fixed", items: [
+            "Settings → Modules & Layout → Home screen switches between Classic (weather, battery, next events) and Widgets, and you can reorder your Home widgets.",
             "File transfers in PairDrop now complete. 1.34.0 closed the connection after the first piece of every file.",
         ]),
         ReleaseNote(version: "1.34.0", date: "7 October 2026", headline: "A huge update for efficiency and a modular notch", items: [
