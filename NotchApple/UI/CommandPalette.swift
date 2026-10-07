@@ -141,6 +141,15 @@ private struct PaletteView: View {
     private var results: [PaletteCommand] {
         var scored = all.compactMap { c in CommandPalette.score(c.title, query).map { (c, $0) } }
             .sorted { $0.1 > $1.1 }.prefix(9).map(\.0)
+        if let word = EmojiLogic.trigger(query) {
+            // "emoji heart" or ":fire": matching emoji and symbols; Return copies the highlighted one.
+            let rows = EmojiLogic.search(word, limit: 9).map { e in
+                PaletteCommand(title: e.title, subtitle: "Emoji · Return copies it", symbol: "face.smiling") {
+                    NSPasteboard.general.clearContents(); NSPasteboard.general.setString(e.emoji, forType: .string)
+                }
+            }
+            return rows.isEmpty ? [PaletteCommand(title: "No emoji for “\(word)”", subtitle: "Try another word", symbol: "face.dashed") {}] : rows
+        }
         if let a = QuickAnswerLogic.answer(query) {
             scored.insert(PaletteCommand(title: a.text, subtitle: "Answer · Return copies it", symbol: "equal.circle.fill") {
                 NSPasteboard.general.clearContents(); NSPasteboard.general.setString(a.copy, forType: .string)
@@ -160,7 +169,7 @@ private struct PaletteView: View {
         VStack(spacing: 0) {
             HStack(spacing: 10) {
                 Image(systemName: "command").foregroundStyle(Theme.accent)
-                TextField("Search actions, tabs, snippets, apps or ask AI…", text: $query)
+                TextField("Search actions, tabs, snippets, apps, “emoji heart”, or ask AI…", text: $query)
                     .textFieldStyle(.plain).font(.system(size: 18)).focused($focused)
                     .onSubmit(runSelected)
                     .onChange(of: query) { _, _ in selected = 0 }

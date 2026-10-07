@@ -408,7 +408,7 @@ export async function openPalette(initial = '') {
   if (document.getElementById('palette')) return;
   if (!expanded) await expand();
   const { paletteActions } = await import('./palette.js');
-  const input = el('input', { class: 'field', placeholder: 'Type a tab, an action, or anything to ask, search or translate…', value: initial });
+  const input = el('input', { class: 'field', placeholder: 'Type a tab, an action, “emoji heart”, or anything to ask, search or translate…', value: initial });
   const list = el('div', { class: 'col gap-4 scroll', style: 'max-height:280px' });
   let picked = 0, matches = [];
   const close = () => box.remove();

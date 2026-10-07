@@ -3,6 +3,7 @@
 // "Translate", "Search the web" or a quick calculation.
 
 import { answer } from './services/answers.js';
+import * as Emoji from './services/emoji.js';
 import { invoke } from './native.js';
 import { MODULES } from './modules.js';
 import { allowed, show, collapse, isEnabled } from './app.js';
@@ -53,6 +54,13 @@ export async function paletteActions(query) {
     { icon: '🙈', label: 'Hide the pill', run: async () => { await collapse(); invoke('set_hidden', { hidden: true }); } },
     { icon: '⏏', label: 'Quit Notch apple', run: () => invoke('quit_app') },
   ];
+
+  // "emoji heart" or ":fire": matching emoji and symbols; Enter copies the highlighted one.
+  const emojiWord = Emoji.trigger(q);
+  if (emojiWord !== null) {
+    const rows = Emoji.search(emojiWord, 12).map((e) => ({ icon: e.emoji, label: e.name, hint: 'Copy', run: () => invoke('clipboard_copy_text', { text: e.emoji }).then(() => toast(`Copied ${e.emoji}`)) }));
+    return rows.length ? rows : [{ icon: '🫥', label: `No emoji for “${emojiWord}”`, run: () => {} }];
+  }
 
   let matches = q ? actions.filter((a) => a.label.toLowerCase().includes(low)) : actions.slice(0, 40);
   // Words that start a label rank first.
