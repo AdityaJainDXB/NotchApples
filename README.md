@@ -201,6 +201,11 @@ All screenshots use sample data.
 
 ## What's new
 
+### Windows 1.30.0 BETA · 7 October 2026 · Smoother tab switching and screen fixes
+
+- **Smoother tab switching:** the highlight glides between tabs, the tab name opens and closes smoothly, and the page slides in from the direction you're going. It also works in Lite mode. (Issue #6.)
+- **Fixed:** overlapping cards in Tools, a stray "null" in VPN, a squeezed output box in Translator, and cut-off hourly weather labels in Today.
+
 ### Windows 1.29.0 BETA · 7 October 2026 · Brightness gauge and notification peek
 
 - **Brightness gauge** (laptop screens, off by default): shows the brightness on the pill when it changes.
