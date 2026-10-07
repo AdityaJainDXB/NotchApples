@@ -61,6 +61,9 @@ export function render(root, opts = {}) {
       row.addEventListener('contextmenu', (e) => menu(e, [
         { label: 'Rename', run: () => rename(t) },
         { label: t.due ? 'Change due date' : 'Add a due date', run: () => setDue(t) },
+        t.due ? { label: 'Snooze 10 minutes', run: () => snooze(t, Date.now() + 10 * 60e3) } : null,
+        t.due ? { label: 'Snooze 1 hour', run: () => snooze(t, Date.now() + 60 * 60e3) } : null,
+        t.due ? { label: 'Snooze until tomorrow 9am', run: () => { const d = new Date(); d.setDate(d.getDate() + 1); d.setHours(9, 0, 0, 0); snooze(t, d.getTime()); } } : null,
         t.due ? { label: t.repeat ? `Repeats: ${ruleLabel(t.repeat).toLowerCase()} (change)` : 'Repeat…', run: () => setRepeat(t) } : null,
         t.due ? { label: 'Remove due date', run: () => update(t.id, { due: null, remind: false, repeat: null }) } : null,
         { label: 'Add a note', run: async () => { const n = await prompt('Note', { value: t.notes || '' }); if (n !== null) update(t.id, { notes: n }); } },
@@ -77,6 +80,7 @@ export function render(root, opts = {}) {
   const update = (id, patch) => { R.saveTodos(R.todos().map((t) => (t.id === id ? { ...t, ...patch, ...(patch.due !== undefined ? { notified: false } : {}) } : t))); paint(); };
   const del = (id) => { const before = R.todos(); R.saveTodos(before.filter((t) => t.id !== id)); paint(); toast('Deleted'); };
   async function rename(t) { const v = await prompt('Rename', { value: t.text }); if (v) update(t.id, { text: v }); }
+  function snooze(t, when) { update(t.id, { due: when, remind: true }); toast(`Snoozed to ${dayLabel(when)} ${fmtTime(when)}`); }
   // Ticking a repeating to-do off makes the next one, so the list never runs dry.
   function tick(t) {
     const next = !t.done && t.repeat && t.due ? nextDue(t.due, t.repeat, Date.now(), t.anchor) : null;
