@@ -81,7 +81,7 @@ Pick your computer. The Windows button starts the download straight away; the Ma
    If a blue **"Windows protected your PC"** window appears, click **More info**, then **Run anyway**. Windows shows this for every app that doesn't pay for a code-signing certificate. The full source code is in this repository.
 3. **Open Notch apple.** If it doesn't open by itself, press the **Windows key**, type `Notch apple` and press **Enter**.
    A slim pill appears at the **top centre of your screen**. Click it to open the panel, or press **`Ctrl + Alt + N`** from any app.
-4. **Free to start.** Everything free works straight away. If you bought Pro or Ultimate, open **Settings → License** and enter your key (`NTCH-…`, the same key as the Mac app, valid on up to 3 devices).
+4. **Free to start.** Everything free works straight away. If you bought Pro or Ultimate, open **Settings → Access** and enter your key (`NTCH-…`, the same key as the Mac app, valid on up to 3 devices).
 
 <details>
 <summary><b>Something not working on Windows?</b></summary>
@@ -90,7 +90,7 @@ Pick your computer. The Windows button starts the download straight away; the Ma
 - **It doesn't start with Windows.** Not yet. Open it from the Start menu when you want it.
 - **My antivirus removed the file.** Restore it from the antivirus quarantine, or [build it yourself](#build-from-source).
 - **Updating.** Download again and run the new installer. It replaces the old version.
-- **Remove your key from this PC.** **Settings → License → Remove the key from this PC** frees the device slot.
+- **Remove your key from this PC.** **Settings → Access → Remove the key from this PC** frees the device slot.
 - **Uninstall.** **Settings → Apps → Installed apps → Notch apple → Uninstall.**
 - **Need an `.msi` instead** (for a work-managed PC)? Get [`NotchApple-Windows.msi`](https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows.msi).
 - **Older Windows versions** are on the [Windows releases page](https://github.com/AdityaJainDXB/NotchApples/releases/tag/windows-latest) and the [all releases list](https://github.com/AdityaJainDXB/NotchApples/releases).
