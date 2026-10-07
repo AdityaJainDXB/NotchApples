@@ -140,7 +140,7 @@ struct HomeScreenView: View {
             } label: {
                 HStack(spacing: 10) {
                     Image(systemName: m.symbol).frame(width: 20).foregroundStyle(Theme.accentBright)
-                    Text(m.title).font(.system(size: 13, weight: .semibold)).foregroundStyle(.white)
+                    Text(m == .notes ? "Quick Notes" : m.title).font(.system(size: 13, weight: .semibold)).foregroundStyle(.white)
                     Spacer()
                     Image(systemName: "chevron.right").font(.system(size: 11, weight: .bold)).foregroundStyle(Theme.textSecondary)
                         .rotationEffect(.degrees(isOpen ? 90 : 0))
@@ -219,8 +219,24 @@ private struct DevicesCard: View {
 
 private struct NotificationsCard: View {
     @StateObject private var mirror = NotificationMirror.shared
+    /// Reading other apps' notifications is opt-in, as it always was: the card waits until it is switched on.
+    @AppStorage(Module.alerts.storageKey) private var on = false
 
     var body: some View {
+        if !on {
+            VStack(alignment: .leading, spacing: 6) {
+                Text("Notifications").sectionTitle()
+                Text("See notifications from other apps here. Needs Full Disk Access; it only reads them, on this Mac.")
+                    .font(.system(size: 11)).foregroundStyle(Theme.textSecondary).fixedSize(horizontal: false, vertical: true)
+                Button("Turn on") { on = true }.buttonStyle(PurpleButtonStyle(prominent: false))
+                Spacer(minLength: 0)
+            }
+        } else {
+            list
+        }
+    }
+
+    private var list: some View {
         VStack(alignment: .leading, spacing: 5) {
             HStack {
                 Text("Notifications").sectionTitle()

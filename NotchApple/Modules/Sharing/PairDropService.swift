@@ -460,7 +460,9 @@ private final class OutgoingTransfer: @unchecked Sendable {
     private func awaitSaved() {
         conn.receive(minimumIncompleteLength: 1, maximumLength: 1) { [weak self] data, _, _, _ in
             guard let self else { return }
-            self.finish(data?.first == 1 ? .delivered : .failed("The other device couldn't save the file."))
+            // An explicit 0 means the receiver failed. Older versions just close the connection once they have saved
+            // the file, so a closed connection after every byte was sent counts as delivered.
+            self.finish(data?.first == 0 ? .failed("The other device couldn't save the file.") : .delivered)
         }
     }
 }

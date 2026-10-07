@@ -365,6 +365,15 @@ Claude Code dot, Claude usage tracker, Smart Home, clipboard link, developer too
 - **F1:** a favourite team; qualifying gaps and best laps.
 - **What's New** in Settings → About, shown once after updating.
 
+#### New in 2.0.0 — HUGE UPDATE for Efficiency & Modular Design
+
+- **Home** replaces Today: always-on Devices, Notifications and Quick Add, optional Claude usage, and Clipboard, Now Playing and Quick Notes that open on click.
+- **Claude usage** as green / yellow / red lights for the 5-hour window and the week, a detail arrow, a 5-second notch badge, and Pin to Home.
+- **Algebra calculator** (equations, systems, factor, diff, variables) and the **Translator** inside Tools.
+- **Non-Necessities**: ten rarely-used tabs in one; **Settings → Modules & Layout** to place every feature.
+- **PairDrop rebuilt** (any size, folders, progress, confirmed delivery, wrong-code limit), plus **private chat** and a custom name.
+- A **compulsory guided tour** after updating, ending with the layout chooser.
+
 #### New in 1.33.2
 
 - **Update works from anywhere.** Fixed "Can't write to …/AppTranslocation/…": when Notch apple is opened from the DMG or Downloads, the update now installs into Applications.
