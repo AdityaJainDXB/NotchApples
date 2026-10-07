@@ -201,6 +201,13 @@ All screenshots use sample data.
 
 ## What's new
 
+### Mac 1.32.0 · Windows 1.28.0 BETA · 7 October 2026 · Pinned notes, emoji search, named timers
+
+- **Pinned notes on Today:** pin a note in Notes and it shows on Today (up to three).
+- **Emoji and symbol search:** in the command palette type `emoji heart` or `:fire`; Return (Enter on Windows) copies it.
+- **Pro:** **named timers** (`Pasta 10m`, `Egg 1:30`), **focus time by project**, **meeting notes** started from a calendar event, and **full-screen lyrics** (a full-screen window on the Mac; on Windows the lyrics fill the notch).
+- **Links shelf:** Shelf → Links saves a link to read later. Only web addresses are accepted and nothing is fetched.
+
 ### Mac 1.31.0 · 7 October 2026 · Claude usage, Smart Home and more
 
 - **Claude usage tracker (Ultimate):** your current 5-hour window, today and this week, read from Claude Code's own logs on your Mac. Weekly budget alert and a daily summary.
