@@ -25,6 +25,7 @@ final class ClaudeCodeStatus: ObservableObject {
     }
 
     func show(_ new: ClaudeCodeDot) {
+        if SettingsManager.shared.claudeCodeScreenFlash { ScreenFlash.show(new.nsColor) }
         withAnimation(.easeOut(duration: 0.2)) { dot = new }
         // Beside the closed notch: the notch's own "ear" dot.
         LiveActivityCenter.shared.flash(LiveActivity(symbol: nil, label: nil, tint: new.nsColor, dotOnly: true), seconds: ClaudeCodeStatusLogic.seconds)
@@ -87,5 +88,42 @@ struct ClaudeCodeDotView: View {
                 .help(dot == .green ? "Claude Code finished" : "Claude Code needs you")
                 .accessibilityLabel(dot == .green ? "Claude Code finished" : "Claude Code needs your attention")
         }
+    }
+}
+
+
+/// An optional wash of colour over every screen for about half a second, so a finished (green) or waiting
+/// (yellow) Claude Code task is hard to miss while you are in another window. It never takes focus or clicks,
+/// does not capture the screen, and is off unless you turn it on in Settings → Extras → Claude Code.
+@MainActor
+enum ScreenFlash {
+    private static var windows: [NSWindow] = []
+
+    static func show(_ color: NSColor, seconds: TimeInterval = 0.6) {
+        hide()
+        windows = NSScreen.screens.map { screen in
+            let w = NSWindow(contentRect: screen.frame, styleMask: .borderless, backing: .buffered, defer: false, screen: screen)
+            w.backgroundColor = color.withAlphaComponent(0.4)
+            w.isOpaque = false
+            w.hasShadow = false
+            w.level = .screenSaver
+            w.ignoresMouseEvents = true
+            w.isReleasedWhenClosed = false
+            w.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .stationary, .ignoresCycle]
+            w.orderFrontRegardless()
+            return w
+        }
+        let shown = windows
+        NSAnimationContext.runAnimationGroup({ ctx in
+            ctx.duration = seconds
+            shown.forEach { $0.animator().alphaValue = 0 }
+        }, completionHandler: {
+            Task { @MainActor in if windows == shown { hide() } }
+        })
+    }
+
+    private static func hide() {
+        windows.forEach { $0.orderOut(nil) }
+        windows = []
     }
 }

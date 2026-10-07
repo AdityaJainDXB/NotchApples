@@ -223,6 +223,8 @@ final class SettingsManager: ObservableObject {
     @AppStorage(Module.live.storageKey) var liveEnabled = false
     /// The Claude Code status dot (green when a task finishes, yellow when it needs you).
     @AppStorage("claudeCode.dot") var claudeCodeDot = true
+    /// Off by default: a brief colour wash over every screen when the dot shows (green done, yellow needs you).
+    @AppStorage("claudeCode.screenFlash") var claudeCodeScreenFlash = false
     @AppStorage(Module.f1.storageKey) var f1Enabled = false
     @AppStorage(Module.games.storageKey) var gamesEnabled = false
     /// On for everyone: Sports follows Barcelona out of the box.

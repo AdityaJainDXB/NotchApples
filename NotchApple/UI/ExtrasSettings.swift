@@ -62,6 +62,9 @@ struct ExtrasSettings: View {
             }
             Section {
                 Toggle("Claude Code status dot", isOn: $settings.claudeCodeDot)
+                Toggle("Also flash the whole screen", isOn: $settings.claudeCodeScreenFlash)
+                    .disabled(!settings.claudeCodeDot)
+                    .help("A half-second wash of green or yellow over every screen. It never takes focus or clicks.")
                 HStack {
                     Button(ClaudeCodeStatus.hooksInstalled ? "Hooks added ✓" : "Add to Claude Code…") { confirmAddHooks = true }
                         .disabled(ClaudeCodeStatus.hooksInstalled)
