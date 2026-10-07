@@ -59,10 +59,41 @@ final class UpdateChecker: ObservableObject {
     static let requiredMarker = "[required-update]"
 
     /// A newer release flagged as required. It ignores "Not now", and the notch shows only the update screen.
+    /// Once seen it is remembered, so blocking the network afterwards does not lift it.
     var requiredUpdate: Release? {
-        guard let latest, latest.notes.localizedCaseInsensitiveContains(Self.requiredMarker),
-              Self.isNewer(latest.version, than: currentVersion) else { return nil }
-        return latest
+        if let latest {
+            guard latest.notes.localizedCaseInsensitiveContains(Self.requiredMarker),
+                  Self.isNewer(latest.version, than: currentVersion) else { return nil }
+            return latest
+        }
+        return Self.rememberedRequired()
+    }
+
+    // MARK: Remembering a required update
+
+    private static let requiredKeys = ["version", "title", "notes", "dmg", "page"].map { "updates.required." + $0 }
+
+    private static var installedVersion: String { Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "0" }
+
+    private static func remember(_ r: Release?) {
+        let d = UserDefaults.standard
+        guard let r else { requiredKeys.forEach { d.removeObject(forKey: $0) }; return }
+        for (key, value) in zip(requiredKeys, [r.version, r.title, r.notes, r.dmgURL.absoluteString, r.pageURL.absoluteString]) { d.set(value, forKey: key) }
+    }
+
+    fileprivate static func rememberedRequired() -> Release? {
+        let d = UserDefaults.standard
+        guard let version = d.string(forKey: requiredKeys[0]), isNewer(version, than: installedVersion),
+              let dmg = d.string(forKey: requiredKeys[3]).flatMap(URL.init(string:)), let page = d.string(forKey: requiredKeys[4]).flatMap(URL.init(string:)) else { return nil }
+        return Release(version: version, title: d.string(forKey: requiredKeys[1]) ?? "", notes: d.string(forKey: requiredKeys[2]) ?? "", published: nil, dmgURL: dmg, pageURL: page)
+    }
+
+    /// True while a required update is waiting, even offline. Paid features, most shortcuts and notch badges
+    /// stop until the update is installed; the notch itself shows only the update screen.
+    nonisolated static var isLocked: Bool {
+        let d = UserDefaults.standard
+        guard let version = d.string(forKey: "updates.required.version") else { return false }
+        return isNewer(version, than: Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "0")
     }
 
     // MARK: Reminders: every 4th or 5th time the notch is opened while an update is waiting
@@ -122,6 +153,7 @@ final class UpdateChecker: ObservableObject {
             do {
                 let release = try await Self.fetchLatest()
                 latest = release
+                Self.remember(release.notes.localizedCaseInsensitiveContains(Self.requiredMarker) && Self.isNewer(release.version, than: currentVersion) ? release : nil)
                 lastChecked = .now
                 if userInitiated, release.version == skippedVersion { skippedVersion = "" }
                 phase = pendingUpdate == nil ? .upToDate : .available
@@ -181,7 +213,7 @@ final class UpdateChecker: ObservableObject {
     }
 
     static func versionNumber(from tag: String) -> String? { VersionMath.number(from: tag) }
-    static func isNewer(_ a: String, than b: String) -> Bool { VersionMath.isNewer(a, than: b) }
+    nonisolated static func isNewer(_ a: String, than b: String) -> Bool { VersionMath.isNewer(a, than: b) }
 
     // MARK: Choices
 
@@ -216,7 +248,7 @@ final class UpdateChecker: ObservableObject {
     // MARK: Installing
 
     func install() {
-        guard let release = pendingUpdate ?? latest else { return }
+        guard let release = pendingUpdate ?? requiredUpdate ?? latest else { return }
         phase = .downloading(0)
         let task = URLSession.shared.downloadTask(with: release.dmgURL) { [weak self] file, response, error in
             // The temporary file is deleted when this handler returns, so move it now.

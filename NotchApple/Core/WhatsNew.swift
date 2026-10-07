@@ -20,6 +20,10 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "1.34.8", date: "7 October 2026", headline: "A required update that can't be dodged", items: [
+            "When a release is marked required, Notch apple remembers it, so blocking the internet afterwards does not lift it.",
+            "Until the update is installed: the notch shows only the Update screen, paid features and most shortcuts are off, and notch badges stop.",
+        ]),
         ReleaseNote(version: "1.34.7", date: "7 October 2026", headline: "Faster license suspension", items: [
             "A suspended license is noticed within about 10 minutes online (checked at launch, after sleep and every 10 minutes).",
             "A Mac that can't verify its license for 3 days pauses paid features until it is online again.",

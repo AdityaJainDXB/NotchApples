@@ -53,8 +53,8 @@ final class Entitlements: ObservableObject {
         }.store(in: &cancellables)
     }
 
-    func canUse(_ feature: Feature) -> Bool { feature.isReady && feature.isAllowed(at: tier) }
-    func canUse(_ module: Module) -> Bool { module.feature.map(canUse) ?? true }
+    func canUse(_ feature: Feature) -> Bool { !UpdateChecker.isLocked && feature.isReady && feature.isAllowed(at: tier) }
+    func canUse(_ module: Module) -> Bool { !UpdateChecker.isLocked && (module.feature.map(canUse) ?? true) }
 
     /// What's legacy-activated (access code or pre-tier website key) counts as Pro.
     var hasLegacyActivation: Bool { LicenseState.shared.isActivated }

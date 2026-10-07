@@ -167,9 +167,15 @@ final class GlobalHotkeyManager {
     /// Result of the last registration attempt per key (noErr = working).
     private(set) var statuses: [Key: OSStatus] = [:]
 
+    /// While a required update is waiting only opening and closing the notch (which shows the update) still work.
+    static func blockedByRequiredUpdate(_ key: Key) -> Bool {
+        UpdateChecker.isLocked && key != .toggleNotch && key != .closeNotch
+    }
+
     /// Registers `key`. Calling again replaces the action, and re-registers if the key combination has changed.
     @discardableResult
     func register(_ key: Key, action: @escaping () -> Void) -> Bool {
+        if Self.blockedByRequiredUpdate(key) { return false }
         actions[key] = action
         installHandlerIfNeeded()
         let combo = [key.keyCode, key.modifiers]
@@ -217,7 +223,7 @@ final class GlobalHotkeyManager {
                               nil, MemoryLayout<EventHotKeyID>.size, nil, &hotKeyID)
             let manager = Unmanaged<GlobalHotkeyManager>.fromOpaque(userData).takeUnretainedValue()
             if let key = Key(rawValue: hotKeyID.id) {
-                DispatchQueue.main.async { manager.actions[key]?() }
+                DispatchQueue.main.async { if !GlobalHotkeyManager.blockedByRequiredUpdate(key) { manager.actions[key]?() } }
             }
             return noErr
         }, 1, &eventType, Unmanaged.passUnretained(self).toOpaque(), &handlerRef)
