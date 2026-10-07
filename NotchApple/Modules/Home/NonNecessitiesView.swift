@@ -19,21 +19,7 @@ struct NonNecessitiesView: View {
 
     var body: some View {
         VStack(spacing: 8) {
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 6) {
-                    ForEach(pages) { m in
-                        let on = m == current
-                        Button { pageRaw = m.rawValue } label: {
-                            Label(m.title, systemImage: m.symbol)
-                                .font(.system(size: 11, weight: .semibold)).lineLimit(1)
-                                .padding(.horizontal, 10).frame(height: 26)
-                                .background(Capsule().fill(on ? AnyShapeStyle(Theme.accent.opacity(0.45)) : AnyShapeStyle(Theme.surface)))
-                                .foregroundStyle(.white)
-                        }
-                        .buttonStyle(.plain)
-                    }
-                }
-            }
+            PageChips(items: pages, selected: current, title: \.title, symbol: \.symbol) { pageRaw = $0.rawValue }
             if let m = current {
                 ModuleContentView(module: m).id(m)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)

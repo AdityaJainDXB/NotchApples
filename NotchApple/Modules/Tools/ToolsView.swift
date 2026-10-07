@@ -252,28 +252,36 @@ final class TextGrab: ObservableObject {
 
 // MARK: - View
 
+enum ToolsPage: String, CaseIterable, Identifiable {
+    case utilities, calculator, translator
+    var id: String { rawValue }
+    var title: String { self == .utilities ? "Utilities" : self == .calculator ? "Calculator" : "Translator" }
+    var symbol: String { self == .utilities ? "wrench.and.screwdriver" : self == .calculator ? "plusminus" : "character.bubble" }
+}
+
 struct ToolsView: View {
     @StateObject private var awake = KeepAwake.shared
     @StateObject private var colors = ColorPickerModel.shared
-    @AppStorage("tools.calcInput") private var input = ""
-    @AppStorage("tools.calcHistory") private var historyData = ""
+    @AppStorage("tools.page") private var pageRaw = ToolsPage.utilities.rawValue
 
-    private var history: [String] { historyData.split(separator: "\n").map(String.init) }
-    /// "12% of 80", "200 + 15%"… (QuickMath treats % as a remainder, so these are read first).
-    private var percentAnswer: QuickAnswerLogic.Answer? { QuickAnswerLogic.percent(input.trimmingCharacters(in: .whitespaces).lowercased()) }
-    private var result: Double? { percentAnswer.flatMap { Double($0.copy) } ?? QuickMath.evaluate(input) }
+    private var page: ToolsPage { ToolsPage(rawValue: pageRaw) ?? .utilities }
 
     var body: some View {
-        HStack(alignment: .top, spacing: 12) {
-            VStack(spacing: 12) {
-                keepAwakeCard
-                textGrabCard
+        VStack(alignment: .leading, spacing: Theme.gap) {
+            PageChips(items: ToolsPage.allCases, selected: page, title: \.title, symbol: \.symbol) { pageRaw = $0.rawValue }
+            switch page {
+            case .utilities:
+                HStack(alignment: .top, spacing: Theme.gap) {
+                    keepAwakeCard.frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+                    textGrabCard.frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+                    colorCard.frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+                }
+            case .calculator:
+                CalculatorView()
+            case .translator:
+                NotchTranslatorView()
             }
-            .frame(width: 190)
-            colorCard
-            calculatorCard
         }
-        .padding(4)
     }
 
     @StateObject private var grab = TextGrab.shared
@@ -381,55 +389,11 @@ struct ToolsView: View {
                 Spacer(minLength: 0)
             }
         }
-        .frame(width: 236)
-    }
-
-    private var calculatorCard: some View {
-        GlassCard {
-            VStack(alignment: .leading, spacing: 8) {
-                Label("Calculator", systemImage: "plusminus")
-                    .font(.system(size: 13, weight: .semibold)).foregroundStyle(.white)
-                TextField("e.g. (12.5 + 7) × 3", text: $input)
-                    .textFieldStyle(.plain)
-                    .font(.system(size: 14, design: .monospaced))
-                    .padding(8)
-                    .background(Theme.surface, in: RoundedRectangle(cornerRadius: 8, style: .continuous))
-                    .onSubmit(commit)
-                if let q = Converter.parse(input) {
-                    ConversionLine(query: q)
-                }
-                Text(percentAnswer.map { "= " + $0.text } ?? result.map { "= " + QuickMath.format($0) } ?? (input.isEmpty || Converter.parse(input) != nil ? " " : "…"))
-                    .font(.system(size: 22, weight: .semibold, design: .rounded))
-                    .foregroundStyle(result == nil ? Theme.textSecondary : .white)
-                    .lineLimit(1).minimumScaleFactor(0.5)
-                    .textSelection(.enabled)
-                Text("Return copies the answer.").font(.system(size: 10)).foregroundStyle(Theme.textSecondary)
-                ScrollView {
-                    VStack(alignment: .leading, spacing: 3) {
-                        ForEach(history, id: \.self) { line in
-                            Button { input = String(line.split(separator: "=").first ?? "").trimmingCharacters(in: .whitespaces) } label: {
-                                Text(line).font(.system(size: 11, design: .monospaced)).foregroundStyle(Theme.textSecondary)
-                                    .frame(maxWidth: .infinity, alignment: .leading)
-                            }
-                            .buttonStyle(.plain)
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    private func commit() {
-        guard let result else { return }
-        let answer = percentAnswer?.text ?? QuickMath.format(result)
-        ColorPickerModel.shared.copy(answer)
-        let line = "\(input) = \(answer)"
-        historyData = ([line] + history.filter { $0 != line }).prefix(8).joined(separator: "\n")
     }
 }
 
 /// "5 km to mi" / "100 usd to eur" under the calculator (Pro).
-private struct ConversionLine: View {
+struct ConversionLine: View {
     let query: Converter.Query
     @ObservedObject private var rates = CurrencyRates.shared
     @ObservedObject private var entitlements = Entitlements.shared

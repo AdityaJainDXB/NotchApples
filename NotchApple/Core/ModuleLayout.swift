@@ -71,6 +71,7 @@ final class ModuleLayout: ObservableObject {
     /// Does this module get its own tab? (Modules this system doesn't manage always do while they are on.)
     func showsTab(_ m: Module) -> Bool {
         if m == .nonNecessities { return hasNonNecessities }
+        if m == .translator { return false }          // the Translator lives inside Tools now
         guard ModuleLayoutLogic.isManaged(m.rawValue) else { return true }
         return ModuleLayoutLogic.showsAsTab(choice(m))
     }

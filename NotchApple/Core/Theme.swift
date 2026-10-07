@@ -49,6 +49,8 @@ enum Theme {
     }
 
     static let corner: CGFloat = 14
+    /// The space between cards and between a page's header row and its content.
+    static let gap: CGFloat = 10
     /// Minimum pointer target on macOS.
     static let minTarget: CGFloat = 28
 
