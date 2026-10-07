@@ -11,7 +11,9 @@ DMG="dist/NotchApple-$VERSION.dmg"
 [ -f "$DMG" ] || { echo "No $DMG"; exit 1; }
 M=$(hdiutil attach -nobrowse -readonly "$DMG" 2>/dev/null | grep -o '/Volumes/.*' | head -1)
 ARCHS=$(lipo -archs "$M/Notch apple.app/Contents/MacOS/Notch apple"); V=$(/usr/libexec/PlistBuddy -c "Print CFBundleShortVersionString" "$M/Notch apple.app/Contents/Info.plist")
+KEY=$(/usr/libexec/PlistBuddy -c "Print API_KEY" "$M/Notch apple.app/Contents/Resources/GoogleService-Info.plist" 2>/dev/null || true)
 hdiutil detach -quiet "$M"
+[ -n "$KEY" ] || { echo "This DMG has no Firebase config, so account sign-in would be off. Put NotchApple/Resources/GoogleService-Info.plist back (it is git-ignored; git pull can delete it) and rebuild."; exit 1; }
 [ "$V" = "$VERSION" ] && [[ "$ARCHS" == *x86_64* && "$ARCHS" == *arm64* ]] || { echo "Bad DMG: $V $ARCHS"; exit 1; }
 git add -A -- . ':!Casks'
 # Nothing to commit is fine (the work may already be committed); the script used to stop here.
