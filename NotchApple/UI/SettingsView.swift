@@ -616,6 +616,11 @@ private struct GeneralSettings: View {
                          : "Needs Accessibility (System Settings → Privacy & Security → Accessibility). Until you allow it, only the macOS pop-up shows, so the two never overlap.")
                 }
                 .disabled(!settings.showSystemHUD)
+                Toggle(isOn: $settings.brightnessBlackout) {
+                    Text("⌥A turns the screen brightness to zero and back")
+                    Text("Press Option+A to black out the built-in display, press it again to restore the level it had. Needs Accessibility. The key no longer types \"å\" while this is on.")
+                }
+                .onChange(of: settings.brightnessBlackout) { _, _ in AppDelegate.current?.applyBrightnessBlackoutPreference() }
                 Toggle(isOn: $settings.showRecordingIndicator) {
                     Text("Show a dot on the notch while the screen is recorded")
                     Text("Works for Notch apple's own recordings and the system recorder (⌘⇧5). Other recording apps can't be detected.")

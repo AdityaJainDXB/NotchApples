@@ -21,6 +21,10 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "1.32.1", date: "7 October 2026", headline: "Option+A screen blackout, and the Accessibility prompt fixed", items: [
+            "Press Option+A to take the screen brightness to zero and again to bring it back. Switch it off in Settings if you type å.",
+            "macOS keeps a stale Accessibility entry after each update, so Notch apple kept asking even when it was switched on. It now clears that entry once per version and asks again, and the setup screen has an \"It's already on: fix it\" button.",
+        ]),
         ReleaseNote(version: "1.30.3", date: "6 October 2026", headline: "Add your VPN app, and a required setup step", items: [
             "Your own VPN is now just \"add the app\": click VPN app in the VPN tab and pick Proton VPN, NordVPN, Mullvad, WireGuard or any other app. The power button opens it and turns green when your Mac has a VPN tunnel up. No addresses or passwords.",
             "The Accessibility permission is now a required first step. Until it is on, the open notch shows a short setup screen; the moment it is granted, the volume and brightness gauge starts, with no relaunch.",

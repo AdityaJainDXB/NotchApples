@@ -20,14 +20,16 @@ struct RequiredSetupView: View {
                 .font(.system(size: 12)).foregroundStyle(Theme.textSecondary).multilineTextAlignment(.center).frame(maxWidth: 560)
             VStack(alignment: .leading, spacing: 4) {
                 step("1", "Click **Open Accessibility Settings** below.")
-                step("2", "Switch **Notch apple** on in the list (if it isn't there, click + and add it from Applications).")
+                step("2", "Switch **Notch apple** on in the list. If it already looks on, click **It's already on: fix it** and switch it on again.")
                 step("3", "Come back here. This screen continues by itself.")
             }
             HStack(spacing: 10) {
                 Button("Open Accessibility Settings") { setup.openSettings() }.buttonStyle(PurpleButtonStyle())
-                Button("Relaunch Notch apple") { AppRelauncher.relaunch() }
+                Button("It's already on: fix it") { setup.repair() }
                     .buttonStyle(PurpleButtonStyle(prominent: false))
-                    .help("If it's already switched on but this screen stays, switch it off and on again, then relaunch.")
+                    .help("Clears the out-of-date entry macOS keeps after an update, then asks again. Switch Notch apple on when it appears.")
+                Button("Relaunch") { AppRelauncher.relaunch() }
+                    .buttonStyle(PurpleButtonStyle(prominent: false))
                 Button("Quit") { NSApp.terminate(nil) }.buttonStyle(.plain).font(.system(size: 11)).foregroundStyle(Theme.textSecondary)
             }
             HStack(spacing: 6) {

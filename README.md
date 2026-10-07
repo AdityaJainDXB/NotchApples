@@ -360,6 +360,11 @@ Claude Code dot, Claude usage tracker, Smart Home, clipboard link, developer too
 - **F1:** a favourite team; qualifying gaps and best laps.
 - **What's New** in Settings → About, shown once after updating.
 
+#### New in 1.32.1
+
+- **⌥A blacks out the screen and brings it back.** Option+A takes the built-in display's brightness to zero; press it again to restore the previous level. Switch it off in Settings if you type "å".
+- **Fixed "Accessibility needed" when it was already on.** After an update macOS kept a stale entry; Notch apple now clears it once per version and asks again. There is also an **It's already on: fix it** button on the setup screen.
+
 #### New in 1.30.3
 
 - **Add your VPN app, nothing else.** In the VPN tab click **VPN app** and pick the app you already use (Proton VPN, NordVPN, ExpressVPN, Mullvad, Surfshark, WireGuard, Tunnelblick, Tailscale… or any app). The power button opens it and turns green when your Mac has a VPN tunnel up. The custom address/username/password form is gone.

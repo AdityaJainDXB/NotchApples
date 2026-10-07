@@ -159,6 +159,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func applicationWillTerminate(_ notification: Notification) {
+        BrightnessBlackout.shared.restore()   // never leave the screen dark behind
         // Say goodbye to the room but remember it for next launch.
         WebP2PManager.shared.leave(remember: true)
         LocalP2PManager.shared.stop()
@@ -309,6 +310,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let wasRunning = MediaKeyInterceptor.shared.isRunning
         MediaKeyInterceptor.shared.setEnabled(s.showSystemHUD && s.replaceSystemHUD)
         if wasRunning != MediaKeyInterceptor.shared.isRunning { SystemHUDObserver.shared.retuneBrightnessPolling() }
+        applyBrightnessBlackoutPreference()
+    }
+
+    /// ⌥A toggles the screen to zero brightness and back.
+    func applyBrightnessBlackoutPreference() {
+        BrightnessBlackout.shared.setEnabled(SettingsManager.shared.brightnessBlackout)
     }
 
     @objc func relaunchApp() { AppRelauncher.relaunch() }

@@ -279,6 +279,8 @@ final class SettingsManager: ObservableObject {
     @AppStorage("ui.systemHUD") var showSystemHUD = true
     /// Hide macOS's own volume/brightness pop-ups so only the notch gauge shows (needs Accessibility).
     @AppStorage("ui.replaceSystemHUD") var replaceSystemHUD = true
+    /// ⌥A takes the screen brightness to zero and back (needs Accessibility; it swallows the "å" the key would type).
+    @AppStorage("ui.brightnessBlackout") var brightnessBlackout = true
     /// Show the notch's recording dot while the screen is being recorded.
     @AppStorage("ui.recordingIndicator") var showRecordingIndicator = true
     /// Show the menu-bar status item in addition to the notch hit area.

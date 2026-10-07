@@ -25,6 +25,7 @@ final class RequiredSetup: ObservableObject {
     func start() {
         refresh()
         guard !isComplete else { return }
+        clearStaleEntryOncePerBuild()
         _ = AXIsProcessTrustedWithOptions([kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String: true] as CFDictionary)
         if timer == nil {
             timer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] _ in
@@ -52,6 +53,32 @@ final class RequiredSetup: ObservableObject {
         } else {
             start()    // switched off again: ask and watch again
         }
+    }
+
+    /// macOS ties the permission to the exact signature of the build, so after an update the old "on" entry in the list
+    /// no longer matches this app. Clearing it (no admin rights needed) lets macOS add a fresh one that does.
+    private func clearStaleEntryOncePerBuild() {
+        let build = Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "0"
+        let key = "accessibilityResetForBuild"
+        guard UserDefaults.standard.string(forKey: key) != build else { return }
+        UserDefaults.standard.set(build, forKey: key)
+        resetEntry()
+    }
+
+    @discardableResult
+    private func resetEntry() -> Bool {
+        guard let id = Bundle.main.bundleIdentifier else { return false }
+        let p = Process()
+        p.executableURL = URL(fileURLWithPath: "/usr/bin/tccutil")
+        p.arguments = ["reset", "Accessibility", id]
+        p.standardOutput = FileHandle.nullDevice; p.standardError = FileHandle.nullDevice
+        do { try p.run(); p.waitUntilExit(); return p.terminationStatus == 0 } catch { return false }
+    }
+
+    /// For the "already on but still asking" case: removes the stale entry, then asks again.
+    func repair() {
+        resetEntry()
+        openSettings()
     }
 
     func openSettings() {
