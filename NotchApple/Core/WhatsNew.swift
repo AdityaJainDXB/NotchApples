@@ -20,6 +20,15 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.0.12", date: "8 October 2026", headline: "Plane: crashes, failures and a bigger world", items: [
+            "Fixed: the plane kept rolling right when the cursor rested off-centre. The mouse is now a self-centring stick, and hands off the wings level themselves.",
+            "Wings tear off when they hit trees, buildings or the ground; big impacts break the plane apart. Engine failures, bird strikes, overspeed, over-G and belly landings.",
+            "Hills, forests, snowy mountains, a river canyon, a plateau strip, a wind farm and a town, plus five new challenges.",
+        ]),
+        ReleaseNote(version: "2.0.11", date: "8 October 2026", headline: "Fly the plane with the mouse", items: [
+            "Mouse steering, a bigger Controls tab, and new aircraft: Cessna 172, Piper PA-28 and Boeing 737, 747 and 777.",
+            "The notch grows while the Plane game is open.",
+        ]),
         ReleaseNote(version: "2.0.9", date: "8 October 2026", headline: "Fly a plane, pan your music", items: [
             "Games → Plane: a 3D flight game. Pick one of four planes and fly Hoop Rush, a Time Trial, a Landing challenge or Free Flight, with challenges and a leaderboard.",
             "Now Playing has a speaker balance slider: slide left for the left speaker, right for the right.",

@@ -36,10 +36,18 @@ enum NotchPrefs {
     static let widthRange: ClosedRange<Double> = 620...1000
     static let heightRange: ClosedRange<Double> = 360...600
 
+    /// Set while a game that needs room (the Plane game) is open: the panel grows to at least this size.
+    @MainActor static var bigGameOpen = false
+    static let bigGameSize = CGSize(width: 960, height: 600)
+
     /// The panel size this Mac may use: custom sizes need Pro.
     @MainActor static var panelSize: CGSize {
-        guard Entitlements.shared.canUse(.notchResize) else { return defaultSize }
-        return CGSize(width: panelWidth.clamped(to: widthRange), height: panelHeight.clamped(to: heightRange))
+        var size = defaultSize
+        if Entitlements.shared.canUse(.notchResize) {
+            size = CGSize(width: panelWidth.clamped(to: widthRange), height: panelHeight.clamped(to: heightRange))
+        }
+        if bigGameOpen { size = CGSize(width: max(size.width, bigGameSize.width), height: max(size.height, bigGameSize.height)) }
+        return size
     }
 }
 

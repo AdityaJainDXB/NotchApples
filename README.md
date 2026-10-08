@@ -47,7 +47,7 @@ Notch apple lives in the black cutout at the top of your MacBook screen (a small
 
 ## Download
 
-Pick your computer. Both buttons start the download straight away. The Mac button is pinned to version 2.0.9
+Pick your computer. Both buttons start the download straight away. The Mac button is pinned to version 2.0.12
 
 <table align="center">
   <tr>
@@ -56,10 +56,10 @@ Pick your computer. Both buttons start the download straight away. The Mac butto
   </tr>
   <tr>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/v2.0.9/NotchApple-2.0.9.dmg"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.0.9</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/v2.0.12/NotchApple-2.0.12.dmg"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.0.12</b></a>
     </td>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 1.33.0 BETA</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 1.34.0 BETA</b></a>
     </td>
   </tr>
   <tr>
@@ -201,6 +201,19 @@ All screenshots use sample data.
 </details>
 
 ## What's new
+
+### Mac 2.0.12 · Windows 1.34.0 BETA · 8 October 2026 · ✈️ Plane: crashes, failures and a bigger world
+
+- **Fixed: the plane kept rolling to the right by itself.** Mouse steering read where the cursor *rested*, so a cursor left off-centre (often after clicking Take off) kept the plane banking. The mouse is now a **self-centring stick**: move it to roll or pitch, and it springs back to the middle when you stop. Hands off, the **wings roll back to level** on their own. Keys can no longer get stuck "held" when the game loses focus.
+- **Realistic damage.** Clip a tree, a building, a wind-turbine blade or the ground with a wingtip and **that wing tears off**; the plane rolls hard towards the stump. Hit something with the nose or tail, or the ground too hard, and the plane **breaks up**: the wings, tail and fuselage tumble, bounce and burn, and the camera follows the wreck.
+- **Failures.** **Engine failure** (glide to a field) or a **bird strike** that leaves it running rough, with smoke trailing behind. Too fast and the wings come off (**overspeed**); pull far too hard and one snaps (**over-G**). A hard landing **collapses the undercarriage** into a belly slide with sparks. A damage panel shows what still works, and failures can be set to off, rare or often in Controls.
+- **A much bigger world.** Real terrain: rolling hills and forests, a ring of snowy mountains, a **river canyon** to fly down, a **strip on a plateau** in the hills, a **wind farm** with turning blades, a radio mast, a **town** with streets and taller blocks, and a **bridge** to fly under. Land in the lake and you ditch.
+- **New challenges:** Canyon run, Mountain strip, Glider pilot, One-winged and Walked away.
+
+### Mac 2.0.11 · Windows 1.33.1 BETA · 8 October 2026 · ✈️ Plane: mouse flying and new aircraft
+
+- **Fly with the mouse.** Move the cursor left or right to bank and turn, down to pull the nose up (up pushes it down). **W** and **S** are throttle. Games → Plane → **Controls** lists every key and has a mouse **sensitivity** slider, **Invert Y** and a switch to turn mouse steering off.
+- **New hangar:** Cessna 172, Piper PA-28, Boeing 737, 747 and 777 (replacing the earlier four). Airliners turn slowly, so plan ahead.
 
 ### Mac 2.0.9 · Windows 1.33.0 BETA · 8 October 2026 · ✈️ Plane, speaker balance and a lyrics view
 

@@ -757,7 +757,9 @@ final class NotchWindowController {
         let hit = CGSize(width: state.notchSize.width + side * 2, height: state.notchSize.height + pad.height)
         triggerView.notchWidth = state.notchSize.width
         trigger.setFrame(frame(size: hit, on: screen), display: true)
-        let size = NotchPrefs.panelSize
+        var size = NotchPrefs.panelSize
+        // Never taller or wider than the screen (the Plane game asks for a big panel).
+        size = CGSize(width: min(size.width, screen.frame.width - 40), height: min(size.height, screen.frame.height - 80))
         if state.expandedSize != size { state.expandedSize = size }
         DisplayLayouts.currentScreen = screen
         let hidden = (Entitlements.shared.canUse(.displayLayouts) ? DisplayLayouts.hidden(on: screen) : []).union(Profiles.shared.hiddenTabs)
