@@ -593,7 +593,7 @@ The full list for every release is on the [website](https://virajsinghchadha.git
 #### New in 1.14.2
 
 - **Nothing that was free became paid.** Now Playing, windows, clipboard, shelf, focus, tools and the rest stay free forever; Pro is the same features as before.
-- **Get Pro on the website**: a product key for $1 in Litecoin (or $2 to cover fees and support a high school developer), or free with a promo code. Keys are made instantly, work once, on one Mac. [Get Pro →](https://virajsinghchadha.github.io/notchapples-site/pro.html)
+- **Get Pro on the website**: a product key for $1 in Litecoin (or $2 to cover fees and support the high school developers), or free with a promo code. Keys are made instantly, work once, on one Mac. [Get Pro →](https://virajsinghchadha.github.io/notchapples-site/pro.html)
 - Product keys (NOTCH-XXXX-XXXX-XXXX) are checked online and re-verified against the blockchain; older access codes keep working.
 
 </details>
@@ -1298,7 +1298,7 @@ Per-app volume and EQ use Core Audio process taps, which arrived in macOS 14.2. 
 
 ## Donate 💜
 
-Notch apple is free and made by high school developers. Donating is **completely optional**: it doesn't unlock anything, it just supports continued development. If it's useful to you, you can donate any amount in **Litecoin (LTC)**:
+Notch apple is free and made by three high school developers. Donating is **completely optional**: it doesn't unlock anything, it just supports continued development. If it's useful to you, you can donate any amount in **Litecoin (LTC)**:
 
 ```
 ltc1qymlmvkdmvpk5f90esthzgwaw6w0tuzq6tdr6kf
