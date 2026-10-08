@@ -42,6 +42,8 @@ final class UpdateChecker: ObservableObject {
     /// A version the user said "Not now" to; it won't be offered again.
     @AppStorage("updates.skippedVersion") var skippedVersion = ""
     @AppStorage("updates.notifiedVersion") private var notifiedVersion = ""
+    /// The newest version the request screen has already been shown for.
+    @AppStorage("updates.requestedVersion") private var requestedVersion = ""
 
     @Published private(set) var latest: Release?
     @Published private(set) var phase: Phase = .idle
@@ -58,9 +60,9 @@ final class UpdateChecker: ObservableObject {
     /// The release notes line that makes an update compulsory in the notch.
     static let requiredMarker = "[required-update]"
 
-    /// Every release is required: a copy that is not the newest release must update. (Set to false to go back
-    /// to requiring only releases whose notes carry `[required-update]`.)
-    static let everyReleaseIsRequired = true
+    /// Off: an update is a request ("Update" or "Skip for now") that shows what is in it. Only a release whose notes
+    /// carry `[required-update]`, added when the developer asks for a forced update, is compulsory.
+    static let everyReleaseIsRequired = false
 
     static func isRequired(_ r: Release, installed: String) -> Bool {
         isNewer(r.version, than: installed) && (everyReleaseIsRequired || r.notes.localizedCaseInsensitiveContains(requiredMarker))
@@ -174,6 +176,12 @@ final class UpdateChecker: ObservableObject {
                 if autoCheck, let update = pendingUpdate, update.version != notifiedVersion {
                     notifiedVersion = update.version
                     notify(update)
+                }
+                // A new, optional release: ask once, the next time the notch opens ("Update" or "Skip for now"),
+                // then again every few opens (see `noteNotchOpened`).
+                if requiredUpdate == nil, let fresh = reminderRelease, fresh.version != requestedVersion {
+                    requestedVersion = fresh.version
+                    reminderDue = true
                 }
             } catch {
                 lastChecked = .now

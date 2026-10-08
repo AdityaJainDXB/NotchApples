@@ -2,7 +2,9 @@
 //  RequiredUpdateView.swift
 //  Notch apple
 //
-//  (With skippable: true it is the gentler reminder shown every 4th or 5th time the notch is opened.)
+//  (With skippable: true it is the request shown when a new version comes out and every 4th or 5th time the notch
+//  is opened after that: it lists what is in the update and has "Skip for now". Updates are only compulsory when
+//  the developer asks for it.)
 //
 //  Shown in the open notch instead of the tabs when the newest release is marked as required (its GitHub release
 //  notes contain the line `[required-update]`). The only way forward is Update; Settings and the menu bar stay
@@ -27,8 +29,22 @@ struct RequiredUpdateView: View {
                 Text(security.isEmpty ? "This version has security problems that are fixed in the update." : security)
                     .font(.system(size: 12, weight: .semibold)).foregroundStyle(.orange).multilineTextAlignment(.center).frame(maxWidth: 520)
             }
-            Text("Version \(release.version) is \(skippable ? "available" : "required: this copy is out of date"). It takes under a minute; your settings and data are kept and Notch apple reopens by itself.")
+            Text(skippable ? "Version \(release.version) is ready. It takes under a minute; your settings and data are kept and Notch apple reopens by itself." : "Version \(release.version) is required: this copy is out of date. It takes under a minute; your settings and data are kept and Notch apple reopens by itself.")
                 .font(.system(size: 12)).foregroundStyle(Theme.textSecondary).multilineTextAlignment(.center).frame(maxWidth: 520)
+            let inside = ReleaseNotesLogic.whatsInside(release.notes)
+            if !inside.isEmpty {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("What's in this update").font(.system(size: 11, weight: .semibold)).foregroundStyle(Theme.textSecondary)
+                    ScrollView {
+                        Text(LocalizedStringKey(UpdatesSettings.readable(inside)))
+                            .font(.system(size: 11)).foregroundStyle(.white)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                    }
+                    .frame(maxHeight: 96)
+                }
+                .padding(10).frame(maxWidth: 520, alignment: .leading)
+                .background(Theme.surface, in: RoundedRectangle(cornerRadius: 10))
+            }
             switch updater.phase {
             case .downloading(let v): ProgressView("Downloading…", value: v).frame(maxWidth: 280)
             case .installing: ProgressView("Installing… Notch apple will quit and reopen.").progressViewStyle(.linear).frame(maxWidth: 320)

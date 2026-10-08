@@ -20,6 +20,9 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.0.4", date: "8 October 2026", headline: "Updates ask first", items: [
+            "A new version is now a request with Update or Skip for now, and the screen lists what is in it. Only a release marked compulsory forces the update.",
+        ]),
         ReleaseNote(version: "2.0.3", date: "8 October 2026", headline: "Connect to Claude renews an expired sign-in", items: [
             "When Claude Code\'s saved sign-in has expired, Connect asks Claude Code to renew it and connects by itself.",
         ]),
