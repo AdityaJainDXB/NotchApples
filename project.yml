@@ -29,6 +29,9 @@ targets:
       - CompanionKit
       - path: LICENSES
         buildPhase: resources
+      # The Plane game's engine is shared with the Windows app.
+      - path: NotchWindows/src/js/games/plane-sim.js
+        buildPhase: resources
     dependencies:
       - target: NotchWidget
         embed: true

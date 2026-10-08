@@ -10,6 +10,7 @@
 //   • Reaction: wait for green, then click (or press Space) as fast as you can.
 //   • Cookie Clicker: click, buy multipliers and auto-clickers; progress is saved (CookieClickerView).
 //   • Runner: jump over spikes and blocks, a little Geometry Dash (RunnerGameView).
+//   • Plane: a 3D flight game with four planes, hoops, a time trial, landings and a leaderboard (PlaneGameView).
 //  Best scores are kept on this Mac. Nothing runs while the tab is closed.
 //
 
@@ -17,7 +18,7 @@ import SwiftUI
 
 struct GamesView: View {
     enum Game: String, CaseIterable, Identifiable {
-        case g2048 = "2048", snake = "Snake", breakout = "Breakout", memory = "Memory", reaction = "Reaction", cookies = "Cookies", runner = "Runner"
+        case g2048 = "2048", snake = "Snake", breakout = "Breakout", memory = "Memory", reaction = "Reaction", cookies = "Cookies", runner = "Runner", plane = "Plane"
         var id: String { rawValue }
         var symbol: String {
             switch self {
@@ -28,6 +29,7 @@ struct GamesView: View {
             case .reaction: "bolt.fill"
             case .cookies: "circle.hexagongrid.fill"
             case .runner: "figure.run"
+            case .plane: "airplane"
             }
         }
     }
@@ -61,6 +63,7 @@ struct GamesView: View {
                 case .reaction: ReactionView()
                 case .cookies: CookieClickerView()
                 case .runner: RunnerGameView()
+                case .plane: PlaneGameView()
                 }
             }
             .id(game)
@@ -76,6 +79,7 @@ struct GamesView: View {
         case .reaction: "Wait for green, then click or press Space."
         case .cookies: "Click the cookie. Buy stronger clicks and auto-clickers; it keeps baking while you work."
         case .runner: "Space, ↑, W or a click jumps. Spikes and blocks end the run; it speeds up."
+        case .plane: "3D flying. ↑ ↓ pitch, ← → roll, A D rudder, W S throttle, F flaps, Space brakes, C camera, P pause."
         }
     }
 }

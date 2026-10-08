@@ -30,6 +30,10 @@ pub struct AudioState {
     pub input: String,
     pub mic_muted: bool,
     pub apps: Vec<AppVolume>,
+    /// Left/right balance: 0 all left, 0.5 centre, 1 all right (from the two channel levels).
+    pub balance: f32,
+    /// False for a mono output, where there is nothing to pan.
+    pub balance_ok: bool,
 }
 
 #[tauri::command]
@@ -148,6 +152,14 @@ mod imp {
             let endpoint: IAudioEndpointVolume = output.Activate(CLSCTX_ALL, None)?;
             s.volume = endpoint.GetMasterVolumeLevelScalar()?;
             s.muted = endpoint.GetMute()?.as_bool();
+            s.balance = 0.5;
+            if endpoint.GetChannelCount().unwrap_or(0) >= 2 {
+                if let (Ok(l), Ok(r)) = (endpoint.GetChannelVolumeLevelScalar(0), endpoint.GetChannelVolumeLevelScalar(1)) {
+                    let top = l.max(r);
+                    s.balance = if top <= 0.0 { 0.5 } else if l >= r { r / top * 0.5 } else { 1.0 - l / top * 0.5 };
+                    s.balance_ok = true;
+                }
+            }
             s.output = name_of(&output);
             let default_id = id_of(&output);
 
@@ -197,6 +209,18 @@ mod imp {
                         }
                     } else {
                         endpoint.SetMute(value > 0.5, nothing)?;
+                    }
+                }
+                "balance" => {
+                    // Pan by scaling the left and right channels around the master level, as Windows' own
+                    // Sound settings do (Levels → Balance). Changing the volume later keeps the balance.
+                    let output = en.GetDefaultAudioEndpoint(eRender, eConsole)?;
+                    let endpoint: IAudioEndpointVolume = output.Activate(CLSCTX_ALL, None)?;
+                    if endpoint.GetChannelCount()? >= 2 {
+                        let master = endpoint.GetMasterVolumeLevelScalar()?.max(0.01);
+                        let b = value.clamp(0.0, 1.0);
+                        endpoint.SetChannelVolumeLevelScalar(0, master * (2.0 * (1.0 - b)).min(1.0), nothing)?;
+                        endpoint.SetChannelVolumeLevelScalar(1, master * (2.0 * b).min(1.0), nothing)?;
                     }
                 }
                 "mic-mute" => {

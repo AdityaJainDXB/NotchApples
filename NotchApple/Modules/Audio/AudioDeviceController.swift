@@ -42,6 +42,10 @@ final class AudioDeviceController: ObservableObject {
     @Published var appVolumes: [AppVolume] = []
     /// Last per-app audio error to show in the UI, if any.
     @Published private(set) var appAudioError: String?
+    /// Left/right balance of the output: 0 is all left, 0.5 the middle, 1 all right (Now Playing's slider).
+    @Published private(set) var balance: Float = 0.5
+    /// False when the output can't be panned (a mono speaker, or a device without either control).
+    @Published private(set) var balanceSupported = false
 
     /// Which per-app backend is active.
     enum Backend { case native, backgroundMusic, unavailable }
@@ -70,6 +74,7 @@ final class AudioDeviceController: ObservableObject {
         outputs = Self.allDevices().filter { Self.hasOutput($0.id) }
         defaultOutput = Self.getDefaultOutput()
         volume = Self.getVolume(defaultOutput) ?? volume
+        refreshBalance()
         backgroundMusicDevice = Self.allDevices().first { $0.uid == Self.bgmUID }?.id
         refreshAppVolumes()
     }
@@ -97,6 +102,67 @@ final class AudioDeviceController: ObservableObject {
                 AudioObjectSetPropertyData(defaultOutput, &addr, 0, nil, UInt32(MemoryLayout<Float>.size), &v)
                 if element == kAudioObjectPropertyElementMain { return }
             }
+        }
+    }
+
+    // MARK: Balance (left / right)
+
+    /// kAudioHardwareServiceDeviceProperty_VirtualMainBalance ('bmbl'): the same balance as System Settings → Sound.
+    private static let virtualBalance: AudioObjectPropertySelector = 0x626D_626C
+
+    private func balanceAddress() -> AudioObjectPropertyAddress {
+        AudioObjectPropertyAddress(mSelector: Self.virtualBalance, mScope: kAudioDevicePropertyScopeOutput, mElement: kAudioObjectPropertyElementMain)
+    }
+
+    private func channelAddress(_ channel: UInt32) -> AudioObjectPropertyAddress {
+        AudioObjectPropertyAddress(mSelector: kAudioDevicePropertyVolumeScalar, mScope: kAudioDevicePropertyScopeOutput, mElement: channel)
+    }
+
+    private func settable(_ addr: AudioObjectPropertyAddress) -> Bool {
+        var a = addr
+        var ok: DarwinBoolean = false
+        return AudioObjectHasProperty(defaultOutput, &a) && AudioObjectIsPropertySettable(defaultOutput, &a, &ok) == noErr && ok.boolValue
+    }
+
+    private func readFloat(_ addr: AudioObjectPropertyAddress) -> Float? {
+        var a = addr
+        var v: Float32 = 0
+        var size = UInt32(MemoryLayout<Float32>.size)
+        guard AudioObjectHasProperty(defaultOutput, &a), AudioObjectGetPropertyData(defaultOutput, &a, 0, nil, &size, &v) == noErr else { return nil }
+        return v
+    }
+
+    /// Reads the balance of the current output.
+    func refreshBalance() {
+        if settable(balanceAddress()), let b = readFloat(balanceAddress()) {
+            balance = b; balanceSupported = true
+        } else if settable(channelAddress(1)), settable(channelAddress(2)), let l = readFloat(channelAddress(1)), let r = readFloat(channelAddress(2)) {
+            // No balance control: work it out from the two channel volumes.
+            let top = max(l, r)
+            balance = top > 0 ? (l >= r ? r / top * 0.5 : 1 - l / top * 0.5) : 0.5
+            balanceSupported = true
+        } else {
+            balance = 0.5; balanceSupported = false
+        }
+    }
+
+    /// Pans the output: 0 sends everything to the left speaker, 1 to the right, 0.5 is the middle.
+    func setBalance(_ value: Float) {
+        let b = min(max(value, 0), 1)
+        balance = b
+        var addr = balanceAddress()
+        if settable(addr) {
+            var v = Float32(b)
+            AudioObjectSetPropertyData(defaultOutput, &addr, 0, nil, UInt32(MemoryLayout<Float32>.size), &v)
+            return
+        }
+        // Fallback: scale the left and right channels around the current volume.
+        guard settable(channelAddress(1)), settable(channelAddress(2)) else { return }
+        let top = max(readFloat(channelAddress(1)) ?? volume, readFloat(channelAddress(2)) ?? volume, 0.05)
+        for (channel, level) in [(UInt32(1), top * min(1, 2 * (1 - b))), (UInt32(2), top * min(1, 2 * b))] {
+            var a = channelAddress(channel)
+            var v = Float32(level)
+            AudioObjectSetPropertyData(defaultOutput, &a, 0, nil, UInt32(MemoryLayout<Float32>.size), &v)
         }
     }
 

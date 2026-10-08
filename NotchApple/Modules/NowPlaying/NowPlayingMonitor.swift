@@ -320,8 +320,19 @@ final class NowPlayingMonitor: ObservableObject {
 struct NowPlayingView: View {
     @StateObject private var monitor = NowPlayingMonitor.shared
     @StateObject private var sleep = MusicSleepTimer.shared
+    /// The lyrics view (cover, progress and big scrolling lyrics), opened by clicking the song's title.
+    @State private var showLyrics = false
 
     var body: some View {
+        if showLyrics, monitor.current?.title.isEmpty == false {
+            NowPlayingLyricsView { withAnimation(.easeInOut(duration: 0.2)) { showLyrics = false } }
+                .transition(.opacity)
+        } else {
+            player
+        }
+    }
+
+    private var player: some View {
         HStack(spacing: 18) {
             ZStack {
                 if let art = monitor.artwork {
@@ -362,9 +373,15 @@ struct NowPlayingView: View {
                     .help("Show anything playing on your Mac, or only one app")
                 }
                 if let now = monitor.current, !now.title.isEmpty {
-                    Text(now.title).font(.title2.bold()).foregroundStyle(.white).lineLimit(2)
-                    Text([now.artist, monitor.album].compactMap { $0 }.filter { !$0.isEmpty }.joined(separator: " · "))
-                        .font(.title3).foregroundStyle(Theme.textSecondary).lineLimit(1)
+                    // Click the song to see its lyrics, Spotify-style.
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text(now.title).font(.title2.bold()).foregroundStyle(.white).lineLimit(2)
+                        Text([now.artist, monitor.album].compactMap { $0 }.filter { !$0.isEmpty }.joined(separator: " · "))
+                            .font(.title3).foregroundStyle(Theme.textSecondary).lineLimit(1)
+                    }
+                    .contentShape(Rectangle())
+                    .onTapGesture { withAnimation(.easeInOut(duration: 0.2)) { showLyrics = true } }
+                    .help("Show the lyrics")
                     ProgressRow()
                 } else {
                     Text("Nothing playing").font(.title3.bold()).foregroundStyle(.white)
@@ -377,6 +394,9 @@ struct NowPlayingView: View {
                                help: monitor.current == nil ? "Play in \(monitor.defaultPlayerName)" : "Play / pause") { monitor.playPause() }
                     IconButton(systemImage: "forward.fill", help: "Next track") { MediaControl.send(.next) }
                     Button("Open Player", action: monitor.openPlayer).buttonStyle(PurpleButtonStyle(prominent: false))
+                    if monitor.current?.title.isEmpty == false {
+                        IconButton(systemImage: "quote.bubble.fill", help: "Lyrics") { withAnimation(.easeInOut(duration: 0.2)) { showLyrics = true } }
+                    }
                     Menu {
                         ForEach([15, 30, 45, 60, 90], id: \.self) { m in Button("Pause in \(m) minutes") { sleep.start(minutes: m) } }
                         if sleep.endsAt != nil { Divider(); Button("Cancel the sleep timer") { sleep.cancel() } }
@@ -387,6 +407,7 @@ struct NowPlayingView: View {
                     .menuStyle(.borderlessButton).fixedSize().help("Sleep timer: pause the music after a while")
                 }
                 .padding(.top, 4)
+                if monitor.current?.title.isEmpty == false { BalanceRow() }
                 BrowserMediaBar()
             }
             .frame(maxWidth: 300, alignment: .leading)
@@ -396,6 +417,144 @@ struct NowPlayingView: View {
             Spacer(minLength: 0)
         }
         .frame(maxHeight: .infinity)
+    }
+}
+
+/// Left / right speaker balance for whatever is playing: slide left and all the sound goes to the left speaker.
+/// It snaps to the middle near the centre. Uses the output's own balance (as in System Settings → Sound).
+private struct BalanceRow: View {
+    @ObservedObject private var audio = AudioDeviceController.shared
+
+    var body: some View {
+        if audio.balanceSupported {
+            HStack(spacing: 6) {
+                Image(systemName: "speaker.wave.1.fill").font(.system(size: 9)).foregroundStyle(Theme.textSecondary)
+                Text("L").font(.system(size: 10, weight: .bold)).foregroundStyle(audio.balance < 0.45 ? .white : Theme.textSecondary)
+                Slider(value: Binding(get: { Double(audio.balance) },
+                                      set: { v in audio.setBalance(Float(abs(v - 0.5) < 0.04 ? 0.5 : v)) }), in: 0...1)
+                    .controlSize(.mini).frame(width: 130)
+                Text("R").font(.system(size: 10, weight: .bold)).foregroundStyle(audio.balance > 0.55 ? .white : Theme.textSecondary)
+                Text(label).font(.system(size: 10).monospacedDigit()).foregroundStyle(Theme.textSecondary).frame(width: 62, alignment: .leading)
+                if abs(audio.balance - 0.5) > 0.01 {
+                    Button("Centre") { audio.setBalance(0.5) }.buttonStyle(.plain)
+                        .font(.system(size: 10, weight: .semibold)).foregroundStyle(Theme.accentBright)
+                }
+            }
+            .help("Speaker balance: slide left to send the sound to the left speaker, right for the right")
+        } else {
+            Color.clear.frame(height: 0).onAppear { audio.refreshBalance() }
+        }
+    }
+
+    private var label: String {
+        let b = audio.balance
+        if abs(b - 0.5) < 0.01 { return "Centre" }
+        if b <= 0.005 { return "All left" }
+        if b >= 0.995 { return "All right" }
+        return b < 0.5 ? "\(Int(((0.5 - b) * 200).rounded()))% left" : "\(Int(((b - 0.5) * 200).rounded()))% right"
+    }
+}
+
+/// Spotify-style lyrics inside the notch: the cover and the song on the left with a progress bar and controls,
+/// big synced lyrics on the right that scroll with the song, over a blurred copy of the cover.
+private struct NowPlayingLyricsView: View {
+    let close: () -> Void
+    @ObservedObject private var monitor = NowPlayingMonitor.shared
+    @StateObject private var lyrics = LyricsModel.shared
+    @ObservedObject private var entitlements = Entitlements.shared
+
+    var body: some View {
+        ZStack {
+            if let art = monitor.artwork {
+                Image(nsImage: art).resizable().aspectRatio(contentMode: .fill).blur(radius: 40).opacity(0.6)
+            } else {
+                Theme.accentGradient.opacity(0.5)
+            }
+            LinearGradient(colors: [.black.opacity(0.25), .black.opacity(0.6)], startPoint: .top, endPoint: .bottom)
+            HStack(alignment: .top, spacing: 20) {
+                song.frame(width: 210)
+                lyricsColumn.frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+            }
+            .padding(16)
+        }
+        .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+        .onAppear { lyrics.start() }
+        .onDisappear { if !FullScreenLyrics.isOpen { lyrics.stop() } }
+    }
+
+    private var song: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            HStack {
+                Button(action: close) { Label("Player", systemImage: "chevron.left").font(.system(size: 11, weight: .semibold)) }
+                    .buttonStyle(.plain).foregroundStyle(.white.opacity(0.85)).help("Back to the player")
+                Spacer()
+                IconButton(systemImage: "arrow.up.left.and.arrow.down.right", help: "Full-screen lyrics") {
+                    AppDelegate.current?.notch?.closeNotch()
+                    FullScreenLyrics.toggle()
+                }
+            }
+            Group {
+                if let art = monitor.artwork {
+                    Image(nsImage: art).resizable().aspectRatio(contentMode: .fill)
+                } else {
+                    ZStack { Theme.accentGradient; Image(systemName: "music.note").font(.system(size: 34, weight: .semibold)).foregroundStyle(.white) }
+                }
+            }
+            .frame(width: 96, height: 96)
+            .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+            .shadow(color: .black.opacity(0.4), radius: 10, y: 4)
+            if let now = monitor.current {
+                Text(now.title).font(.system(size: 15, weight: .bold)).foregroundStyle(.white).lineLimit(2)
+                Text(now.artist).font(.system(size: 12)).foregroundStyle(.white.opacity(0.75)).lineLimit(1)
+            }
+            ProgressRow()
+            HStack(spacing: 4) {
+                IconButton(systemImage: "backward.fill", help: "Previous track") { MediaControl.send(.previous) }
+                IconButton(systemImage: monitor.current?.isPlaying == true ? "pause.fill" : "play.fill", help: "Play / pause") { monitor.playPause() }
+                IconButton(systemImage: "forward.fill", help: "Next track") { MediaControl.send(.next) }
+            }
+        }
+    }
+
+    @ViewBuilder private var lyricsColumn: some View {
+        if !entitlements.canUse(.lyrics) {
+            VStack(alignment: .leading, spacing: 8) {
+                Image(systemName: "quote.bubble.fill").font(.system(size: 26)).foregroundStyle(.white.opacity(0.8))
+                Text("Synced lyrics are part of Pro").font(.system(size: 16, weight: .bold)).foregroundStyle(.white)
+                Text("They scroll with the song, line by line. The cover, progress and controls here are free.")
+                    .font(.system(size: 12)).foregroundStyle(.white.opacity(0.75))
+            }
+        } else if !lyrics.lines.isEmpty {
+            ScrollViewReader { proxy in
+                ScrollView(showsIndicators: false) {
+                    VStack(alignment: .leading, spacing: 12) {
+                        ForEach(lyrics.lines.indices, id: \.self) { i in
+                            let current = i == (lyrics.currentIndex ?? -1)
+                            let past = i < (lyrics.currentIndex ?? -1)
+                            Text(lyrics.lines[i].text.isEmpty ? "♪" : lyrics.lines[i].text)
+                                .font(.system(size: current ? 22 : 19, weight: .heavy))
+                                .foregroundStyle(current ? Color.white : Color.white.opacity(past ? 0.5 : 0.32))
+                                .fixedSize(horizontal: false, vertical: true)
+                                .id(i)
+                        }
+                    }
+                    .padding(.vertical, 60)
+                }
+                .onAppear { if let i = lyrics.currentIndex { proxy.scrollTo(i, anchor: .center) } }
+                .onChange(of: lyrics.currentIndex) { _, new in
+                    if let new { withAnimation(.easeInOut(duration: 0.35)) { proxy.scrollTo(new, anchor: .center) } }
+                }
+            }
+            .mask(LinearGradient(colors: [.clear, .black, .black, .clear], startPoint: .top, endPoint: .bottom))
+        } else if let plain = lyrics.plain {
+            ScrollView(showsIndicators: false) {
+                Text(plain).font(.system(size: 16, weight: .bold)).foregroundStyle(.white.opacity(0.85))
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
+        } else {
+            Text(lyrics.status.isEmpty ? "Finding lyrics…" : lyrics.status)
+                .font(.system(size: 16, weight: .bold)).foregroundStyle(.white.opacity(0.7))
+        }
     }
 }
 

@@ -1,4 +1,5 @@
-// Games: 2048, Snake, a reaction test, and (as on the Mac) Cookie Clicker, Runner, Breakout and Memory.
+// Games: 2048, Snake, a reaction test, (as on the Mac) Cookie Clicker, Runner, Breakout and Memory, and Plane, a
+// 3D flight game shared with the Mac (games/plane-sim.js).
 // Best scores stay on this PC.
 import { el, load, save } from '../store.js';
 import { segmented } from '../ui.js';
@@ -7,8 +8,8 @@ import { cookie, runner, breakout, memory } from './games-extra.js';
 export function render(root) {
   let game = load('games.last', '2048'), stop = () => {};
   const board = el('div', { class: 'center', style: 'flex:1' });
-  const pick = (g) => { stop(); game = g; save('games.last', g); stop = ({ 2048: g2048, snake, reaction, cookie, runner, breakout, memory })[g](board) || (() => {}); };
-  root.append(el('div', { class: 'col fill' }, segmented([{ value: '2048', label: '2048' }, { value: 'snake', label: 'Snake' }, { value: 'reaction', label: 'Reaction' }, { value: 'cookie', label: 'Cookie Clicker' }, { value: 'runner', label: 'Runner' }, { value: 'breakout', label: 'Breakout' }, { value: 'memory', label: 'Memory' }], game, pick), board));
+  const pick = (g) => { stop(); game = g; save('games.last', g); stop = ({ 2048: g2048, snake, reaction, cookie, runner, breakout, memory, plane })[g](board) || (() => {}); };
+  root.append(el('div', { class: 'col fill' }, segmented([{ value: '2048', label: '2048' }, { value: 'snake', label: 'Snake' }, { value: 'reaction', label: 'Reaction' }, { value: 'cookie', label: 'Cookie Clicker' }, { value: 'runner', label: 'Runner' }, { value: 'breakout', label: 'Breakout' }, { value: 'memory', label: 'Memory' }, { value: 'plane', label: '✈️ Plane' }], game, pick), board));
   pick(game);
   return () => stop();
 }
@@ -70,4 +71,14 @@ function reaction(host) {
   };
   host.replaceChildren(pad);
   return () => clearTimeout(timer);
+}
+
+/// Plane: the 3D flight game. The same script runs in the Mac app's web view.
+function plane(host) {
+  const box = el('div', { style: 'position:absolute;inset:0' });
+  host.style.position = 'relative';
+  host.replaceChildren(box);
+  let stop = () => {}, gone = false;
+  import('../games/plane-sim.js').then(() => { if (!gone) stop = window.NotchPlaneGame.mount(box); });
+  return () => { gone = true; stop(); host.style.position = ''; };
 }
