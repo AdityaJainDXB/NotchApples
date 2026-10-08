@@ -56,7 +56,7 @@ Pick your computer. Both buttons start the download straight away. The Mac butto
   </tr>
   <tr>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/v2.0.14/NotchApple-2.0.14.dmg"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.0.14</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/v2.0.15/NotchApple-2.0.15.dmg"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.0.15</b></a>
     </td>
     <td align="center">
       <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 1.36.0 BETA</b></a>
@@ -203,6 +203,12 @@ All screenshots use sample data.
 ## What's new
 
 > **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is still in the repository's tags.
+
+### Mac 2.0.15 · 9 October 2026 · Edit Home in the notch, AirDrop rebuilt
+
+- **Edit Home in the notch:** the sliders button on Home lets you move, resize (Small / Medium / Large), collapse, remove and add widgets without opening Settings.
+- **AirDrop rebuilt:** it now opens from its own anchor window, reports progress, and offers "Open AirDrop window instead" if the system picker still won't show.
+- **Up/down scrolling now matches left/right** on the closed notch and the tab bar.
 
 ### Mac 2.0.14 · Windows 1.36.0 BETA · 9 October 2026 · PairDrop between Mac and Windows
 

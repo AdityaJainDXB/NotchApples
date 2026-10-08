@@ -28,8 +28,10 @@ final class NotchGestures {
         }
         // Work in finger directions whatever the natural-scrolling setting: negative = fingers left / up.
         let flip: CGFloat = event.isDirectionInvertedFromDevice ? 1 : -1
-        let dx = event.scrollingDeltaX * flip
-        let dy = event.scrollingDeltaY * flip
+        var dx = event.scrollingDeltaX * flip
+        var dy = event.scrollingDeltaY * flip
+        // Up/down scrolling does the same as left/right (down = right), unless "swipe down to open" is on.
+        if abs(dy) > abs(dx), !UserDefaults.standard.bool(forKey: "notch.swipeDownOpens") { dx = dy; dy = 0 }
         let precise = event.hasPreciseScrollingDeltas
 
         if abs(dx) > abs(dy) * 1.5 {

@@ -212,8 +212,7 @@ struct FileShelfView: View {
 
     private func airDropAll() {
         let urls = store.items.compactMap { $0.resolve() }
-        guard !urls.isEmpty, let service = NSSharingService(named: .sendViaAirDrop), service.canPerform(withItems: urls) else { return }
-        service.perform(withItems: urls)
+        AirDropSender.shared.send(urls)
     }
 
     private func addViaPanel() {

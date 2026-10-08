@@ -27,23 +27,15 @@ struct HomeScreenView: View {
         ScrollView {
             VStack(spacing: 10) {
                 glance
-                // The To-Do widget (Quick Add is built into it) goes first and spans the page.
-                if layout.homeItems.contains(.todo), layout.choice(.todo) == .homeExpanded {
-                    GlassCard { TodoView() }.frame(height: 250)
-                }
+                if editing { editBar }
                 todayCard
-                let cards = layout.homeItems.filter { $0 != .todo && layout.choice($0) == .homeExpanded }
-                if !cards.isEmpty {
-                    LazyVGrid(columns: [GridItem(.flexible(), spacing: 10), GridItem(.flexible(), spacing: 10)], spacing: 10) {
-                        ForEach(cards) { m in
-                            GlassCard { HomeWidgetCard(module: m) }
-                                .frame(height: [.alerts, .clipboard, .nowPlaying, .notes].contains(m) ? 150 : 124)
+                ForEach(rows, id: \.self) { row in
+                    HStack(alignment: .top, spacing: 10) {
+                        ForEach(row, id: \.self) { name in
+                            if let m = Module(rawValue: name) { homeItem(m) }
                         }
+                        if row.count == 1, let m = Module(rawValue: row[0]), !isFull(m) { Color.clear.frame(maxWidth: .infinity) }
                     }
-                }
-                // Anything you chose to keep closed stays a row you click to open.
-                ForEach(layout.homeItems.filter { layout.choice($0) == .homeHidden }) { m in
-                    accordion(m)
                 }
             }
             .padding(.bottom, 4)
@@ -54,6 +46,73 @@ struct HomeScreenView: View {
             if SettingsManager.shared.rainAlert && Entitlements.shared.canUse(.rainAlert) { rain.checkIfDue() }
             if location.useCurrentLocation && location.status == .notDetermined { location.requestLocation() }
             seeded = true
+        }
+    }
+
+    // MARK: Editing Home from the notch
+
+    @State private var editing = false
+
+    private var rows: [[String]] {
+        ModuleLayoutLogic.packRows(layout.homeItems.map { (name: $0.rawValue, size: layout.size($0), closed: layout.choice($0) == .homeHidden) })
+    }
+
+    private func isFull(_ m: Module) -> Bool { layout.choice(m) == .homeHidden || layout.size(m).fullWidth }
+
+    @ViewBuilder private func homeItem(_ m: Module) -> some View {
+        VStack(spacing: 4) {
+            if editing { editControls(m) }
+            if layout.choice(m) == .homeHidden {
+                accordion(m)
+            } else {
+                GlassCard { m == .todo ? AnyView(TodoView()) : AnyView(HomeWidgetCard(module: m)) }
+                    .frame(height: layout.size(m).height)
+            }
+        }
+        .frame(maxWidth: .infinity)
+    }
+
+    private func editControls(_ m: Module) -> some View {
+        HStack(spacing: 6) {
+            IconButton(systemImage: "chevron.up", help: "Move up") { withAnimation(Theme.spring) { layout.moveHome(m, by: -1) } }
+            IconButton(systemImage: "chevron.down", help: "Move down") { withAnimation(Theme.spring) { layout.moveHome(m, by: 1) } }
+            Picker("", selection: Binding(get: { layout.size(m) }, set: { layout.setSize($0, for: m) })) {
+                ForEach(ModuleLayoutLogic.WidgetSize.allCases) { Text($0.title).tag($0) }
+            }
+            .pickerStyle(.segmented).labelsHidden().controlSize(.mini).frame(width: 130)
+            .disabled(layout.choice(m) == .homeHidden)
+            Spacer(minLength: 0)
+            IconButton(systemImage: layout.choice(m) == .homeHidden ? "rectangle.expand.vertical" : "rectangle.compress.vertical",
+                       help: layout.choice(m) == .homeHidden ? "Show the card" : "Collapse to a row") {
+                withAnimation(Theme.spring) { layout.setHomeClosed(layout.choice(m) != .homeHidden, for: m) }
+            }
+            IconButton(systemImage: "xmark.circle.fill", help: "Remove from Home (it moves to its own tab)") {
+                withAnimation(Theme.spring) { layout.removeFromHome(m) }
+            }
+        }
+        .padding(.horizontal, 6)
+    }
+
+    private var editBar: some View {
+        GlassCard {
+            VStack(alignment: .leading, spacing: 8) {
+                HStack {
+                    Text("Editing Home").sectionTitle()
+                    Spacer()
+                    Button("Done") { withAnimation(Theme.spring) { editing = false } }.buttonStyle(PurpleButtonStyle())
+                }
+                if layout.addableToHome.isEmpty {
+                    Text("Everything that can live on Home is already here.").font(.system(size: 11)).foregroundStyle(Theme.textSecondary)
+                } else {
+                    Text("Add to Home").font(.system(size: 11)).foregroundStyle(Theme.textSecondary)
+                    HStack(spacing: 6) {
+                        ForEach(layout.addableToHome) { m in
+                            Button { withAnimation(Theme.spring) { layout.addToHome(m) } } label: { Label(m.title, systemImage: m.symbol) }
+                                .buttonStyle(PurpleButtonStyle(prominent: false))
+                        }
+                    }
+                }
+            }
         }
     }
 
@@ -155,6 +214,10 @@ struct HomeScreenView: View {
                 }
                 Spacer(minLength: 0)
                 ScreenCaptureButtons()
+                IconButton(systemImage: editing ? "checkmark.circle.fill" : "slider.horizontal.3",
+                           help: editing ? "Done editing" : "Edit Home: move, resize, add or remove widgets") {
+                    withAnimation(Theme.spring) { editing.toggle() }
+                }
                 if let b = model.battery {
                     Label("\(b.percent)%", systemImage: b.charging ? "battery.100percent.bolt" : LiveActivityCenter.batterySymbol(b.percent))
                         .font(.system(size: 12, weight: .medium))

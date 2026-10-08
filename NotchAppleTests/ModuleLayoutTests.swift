@@ -110,4 +110,17 @@ final class ModuleLayoutTests: XCTestCase {
         XCTAssertEqual(ModuleLayoutLogic.moved("a", by: -1, in: cur), cur)
         XCTAssertEqual(ModuleLayoutLogic.moved("zzz", by: 1, in: cur), cur)
     }
+
+    func testPackRowsPairsSmallCardsAndIsolatesLargeAndClosed() {
+        typealias S = ModuleLayoutLogic.WidgetSize
+        let rows = ModuleLayoutLogic.packRows([("a", S.small, false), ("b", S.medium, false), ("c", S.large, false),
+                                               ("d", S.small, false), ("e", S.small, true), ("f", S.small, false)])
+        XCTAssertEqual(rows, [["a", "b"], ["c"], ["d"], ["e"], ["f"]])
+    }
+
+    func testDefaultSizes() {
+        XCTAssertEqual(ModuleLayoutLogic.defaultSize("todo"), .large)
+        XCTAssertEqual(ModuleLayoutLogic.defaultSize("devices"), .small)
+        XCTAssertEqual(ModuleLayoutLogic.defaultSize("notes"), .medium)
+    }
 }

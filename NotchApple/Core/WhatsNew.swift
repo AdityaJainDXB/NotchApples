@@ -20,6 +20,11 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.0.15", date: "9 October 2026", headline: "Edit Home in the notch, AirDrop rebuilt", items: [
+            "Tap the sliders button on Home to move, resize, collapse, remove or add widgets without going to Settings.",
+            "AirDrop was rebuilt so its picker opens reliably, with an Open AirDrop window fallback.",
+            "Scrolling up and down now does the same as scrolling left and right.",
+        ]),
         ReleaseNote(version: "2.0.14", date: "9 October 2026", headline: "PairDrop can be found, and talks to Windows", items: [
             "PairDrop now runs from launch, so other devices can send to this Mac without the Share tab being open, and a notification says when something arrives.",
             "The Windows app has a matching PairDrop: Mac and Windows can send files and chat to each other.",

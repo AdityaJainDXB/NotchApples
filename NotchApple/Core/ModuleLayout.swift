@@ -95,6 +95,30 @@ final class ModuleLayout: ObservableObject {
         notify()
     }
 
+    // MARK: Widget sizes and editing from the notch
+
+    private static let sizePrefix = prefix + "size."
+
+    func size(_ m: Module) -> ModuleLayoutLogic.WidgetSize {
+        UserDefaults.standard.string(forKey: Self.sizePrefix + m.rawValue).flatMap(ModuleLayoutLogic.WidgetSize.init(rawValue:))
+            ?? ModuleLayoutLogic.defaultSize(m.rawValue)
+    }
+
+    func setSize(_ size: ModuleLayoutLogic.WidgetSize, for m: Module) {
+        UserDefaults.standard.set(size.rawValue, forKey: Self.sizePrefix + m.rawValue)
+        notify()
+    }
+
+    /// Modules that can be added to Home but aren't there now.
+    var addableToHome: [Module] {
+        (ModuleLayoutLogic.homeWidgets + ModuleLayoutLogic.homeAccordions).compactMap(Module.init(rawValue:)).filter { !choice($0).onHome }
+    }
+
+    func addToHome(_ m: Module) { set(.homeExpanded, for: m) }
+
+    /// Keeps a widget on Home but shows it as a closed row (or opens it again).
+    func setHomeClosed(_ closed: Bool, for m: Module) { set(closed ? .homeHidden : .homeExpanded, for: m) }
+
     /// Takes a widget off Home. It gets its own tab so nothing becomes unreachable.
     func removeFromHome(_ m: Module) { set(.standalone, for: m) }
 

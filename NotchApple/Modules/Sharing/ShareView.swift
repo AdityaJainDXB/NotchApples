@@ -36,6 +36,18 @@ struct ShareView: View {
 final class AirDropSender: NSObject, ObservableObject, NSSharingServiceDelegate {
     static let shared = AirDropSender()
     @Published var status: String?
+    @Published var canFallback = false
+
+    /// Real, key-able window the share service anchors to. AirDrop refuses to show its picker when the only
+    /// window is the notch's non-activating panel, which is why sending used to do nothing.
+    private var anchor: NSWindow?
+    private var service: NSSharingService?
+    private var staged: [URL] = []
+
+    private final class AnchorWindow: NSWindow {
+        override var canBecomeKey: Bool { true }
+        override var canBecomeMain: Bool { true }
+    }
 
     func send(_ items: [Any]) {
         guard !items.isEmpty else { return }
@@ -43,24 +55,72 @@ final class AirDropSender: NSObject, ObservableObject, NSSharingServiceDelegate 
             status = "AirDrop isn't available on this Mac."
             return
         }
-        service.delegate = self
         guard service.canPerform(withItems: items) else {
             status = "AirDrop can't send that. Turn on Wi-Fi and Bluetooth, and set AirDrop to Contacts Only or Everyone in Finder."
+            canFallback = true
+            staged = items.compactMap { $0 as? URL }
             return
         }
+        staged = items.compactMap { $0 as? URL }
+        service.delegate = self
+        self.service = service
         status = "Choose who to send it to…"
-        NSApp.activate(ignoringOtherApps: true)
+        canFallback = !staged.isEmpty
+        showAnchor()
         service.perform(withItems: items)
     }
 
+    /// Backup route: opens Finder's own AirDrop window and shows the files, so they can be dragged onto a person.
+    func openAirDropWindow() {
+        let finderAirDrop = URL(fileURLWithPath: "/System/Library/CoreServices/Finder.app/Contents/Applications/AirDrop.app")
+        NSWorkspace.shared.open(finderAirDrop)
+        if !staged.isEmpty { NSWorkspace.shared.activateFileViewerSelecting(staged) }
+        status = "Drag the selected files onto a person in the AirDrop window."
+    }
+
+    private func showAnchor() {
+        hideAnchor()
+        let screen = NSScreen.main ?? NSScreen.screens[0]
+        let size = NSSize(width: 260, height: 24)
+        let origin = NSPoint(x: screen.frame.midX - size.width / 2, y: screen.frame.maxY - 80)
+        let w = AnchorWindow(contentRect: NSRect(origin: origin, size: size), styleMask: [.borderless], backing: .buffered, defer: false)
+        w.isOpaque = false
+        w.backgroundColor = .clear
+        w.hasShadow = false
+        w.level = .floating
+        w.ignoresMouseEvents = true
+        w.isReleasedWhenClosed = false
+        anchor = w
+        NSApp.activate(ignoringOtherApps: true)
+        w.makeKeyAndOrderFront(nil)
+    }
+
+    private func hideAnchor() { anchor?.orderOut(nil); anchor = nil }
+
+    nonisolated func sharingService(_ service: NSSharingService, sourceWindowForShareItems items: [Any], sharingContentScope: UnsafeMutablePointer<NSSharingService.SharingContentScope>) -> NSWindow? {
+        MainActor.assumeIsolated { anchor }
+    }
+
+    nonisolated func sharingService(_ service: NSSharingService, sourceFrameOnScreenForShareItem item: Any) -> NSRect {
+        MainActor.assumeIsolated { anchor?.frame ?? .zero }
+    }
+
+    nonisolated func sharingService(_ service: NSSharingService, willShareItems items: [Any]) {
+        Task { @MainActor in self.status = "Sending…" }
+    }
+
     nonisolated func sharingService(_ service: NSSharingService, didShareItems items: [Any]) {
-        Task { @MainActor in self.status = "Sent." }
+        Task { @MainActor in self.status = "Sent."; self.canFallback = false; self.hideAnchor() }
     }
 
     nonisolated func sharingService(_ service: NSSharingService, didFailToShareItems items: [Any], error: Error) {
         let ns = error as NSError
         // Closing AirDrop's window without choosing anyone is not a failure.
-        Task { @MainActor in self.status = ns.code == NSUserCancelledError ? nil : "AirDrop failed: \(error.localizedDescription)" }
+        Task { @MainActor in
+            self.hideAnchor()
+            if ns.code == NSUserCancelledError { self.status = nil; self.canFallback = false }
+            else { self.status = "AirDrop failed: \(error.localizedDescription)"; self.canFallback = true }
+        }
     }
 }
 
@@ -87,6 +147,9 @@ private struct AirDropCard: View {
                 if mode == .files { filesView } else { textView }
                 if let status = sender.status {
                     Text(status).font(.system(size: 11)).foregroundStyle(Theme.textSecondary).multilineTextAlignment(.center).lineLimit(3)
+                }
+                if sender.canFallback {
+                    Button("Open AirDrop window instead") { sender.openAirDropWindow() }.buttonStyle(PurpleButtonStyle(prominent: false))
                 }
                 Spacer(minLength: 0)
             }

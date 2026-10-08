@@ -136,4 +136,38 @@ enum ModuleLayoutLogic {
         list.swapAt(i, j)
         return list
     }
+
+    // MARK: Widget sizes on Home (edited in the notch)
+
+    enum WidgetSize: String, CaseIterable, Identifiable {
+        case small, medium, large
+        var id: String { rawValue }
+        var title: String { rawValue.capitalized }
+        /// Card height in points.
+        var height: Double { self == .small ? 104 : self == .medium ? 150 : 250 }
+        /// Large cards take the whole row; small and medium share it two to a row.
+        var fullWidth: Bool { self == .large }
+    }
+
+    /// Size a widget has until the person changes it (the To-Do list has always been full width).
+    static func defaultSize(_ module: String) -> WidgetSize {
+        switch module {
+        case "todo": return .large
+        case "clipboard", "nowPlaying", "notes", "alerts": return .medium
+        default: return .small
+        }
+    }
+
+    /// Rows for the Home page. Closed rows (accordions) and large cards sit alone; the rest pair up in order.
+    static func packRows(_ items: [(name: String, size: WidgetSize, closed: Bool)]) -> [[String]] {
+        var rows: [[String]] = []
+        var pending: String?
+        func flush() { if let p = pending { rows.append([p]); pending = nil } }
+        for item in items {
+            if item.closed || item.size.fullWidth { flush(); rows.append([item.name]); continue }
+            if let p = pending { rows.append([p, item.name]); pending = nil } else { pending = item.name }
+        }
+        flush()
+        return rows
+    }
 }
