@@ -37,6 +37,7 @@ enum FeatureHub {
             { settings.devicesEnabled && settings.privacyIndicator ? PrivacyMonitor.shared.liveActivity : nil },
             { (settings.sportsEnabled || settings.liveEnabled) ? ScoresModel.shared.liveActivity : nil },
             { settings.f1Enabled ? F1Model.shared.liveActivity : nil },
+            { settings.tennisEnabled ? TennisModel.shared.liveActivity : nil },
             { settings.sportsEnabled ? (SportsModel.shared.liveActivity ?? MoreTeams.shared.rotatingActivity) : nil },
             { MicMute.shared.liveActivity },
             { ExternalActivities.shared.liveActivity },
@@ -80,6 +81,7 @@ enum FeatureHub {
         NotificationMirror.shared.setRunning(s.alertsEnabled)
         if s.sportsEnabled || s.liveEnabled { ScoresModel.shared.refreshIfDue() }
         if s.f1Enabled { F1Model.shared.refreshIfDue() }
+        if s.tennisEnabled { TennisModel.shared.refreshIfDue() }
         if s.sportsEnabled { SportsModel.shared.refreshIfDue(); MoreTeams.shared.refreshIfDue() }
         if s.liveEnabled { FlightWatcher.shared.refreshIfDue() }
         if s.marketsEnabled { MarketsModel.shared.refreshIfDue() }

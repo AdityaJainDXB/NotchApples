@@ -45,6 +45,7 @@ struct ModuleContentView: View {
         case .stats: NotchStatsView()
         case .timer: TimerView()
         case .f1: F1View()
+        case .tennis: TennisView()
         case .games: GamesView()
         case .sports: SportsView()
         case .snippets: SnippetsView()

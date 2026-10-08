@@ -42,6 +42,7 @@ final class NotchWidgetCenter {
         case .sports: w = ModuleWidget(module, activate: { SportsModel.shared.viewing = true }, deactivate: { SportsModel.shared.viewing = false })
         case .markets: w = ModuleWidget(module, activate: { MarketsModel.shared.viewing = true }, deactivate: { MarketsModel.shared.viewing = false })
         case .f1: w = ModuleWidget(module, activate: { F1Model.shared.viewing = true }, deactivate: { F1Model.shared.viewing = false })
+        case .tennis: w = ModuleWidget(module, activate: { TennisModel.shared.viewing = true }, deactivate: { TennisModel.shared.viewing = false })
         case .plugins: w = ModuleWidget(module, activate: { PluginHost.shared.start() },
                                         deactivate: { if !PluginHost.shared.keepRunning { PluginHost.shared.stop() } })
         default: w = ModuleWidget(module)

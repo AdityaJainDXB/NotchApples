@@ -51,7 +51,7 @@ struct PrivacyDashboard: View {
             Destination(host: "DuckDuckGo", what: "The question, when web search is on", when: "Only with the globe turned on (Pro)", active: Entitlements.shared.canUse(.webSearch)),
             Destination(host: "api.github.com, github.com", what: "Nothing about you: the release list", when: "Update checks (can be turned off)", active: true),
             Destination(host: "open-meteo.com", what: "Your approximate location", when: "Weather", active: settings.todayEnabled),
-            Destination(host: "ESPN, Jolpica, F1 live timing", what: "Nothing about you: public scores", when: "Sports, Live and F1 tabs", active: settings.sportsEnabled || settings.f1Enabled || settings.liveEnabled),
+            Destination(host: "ESPN, Jolpica, F1 live timing", what: "Nothing about you: public scores", when: "Sports, Live, F1 and Tennis tabs", active: settings.sportsEnabled || settings.f1Enabled || settings.tennisEnabled || settings.liveEnabled),
             Destination(host: "LRCLIB", what: "Song title and artist", when: "Lyrics (Pro)", active: settings.showLyrics && Entitlements.shared.canUse(.lyrics)),
             Destination(host: "CoinGecko, Yahoo Finance", what: "Symbols you add", when: "Markets (Pro)", active: settings.marketsEnabled),
             Destination(host: "ADSB.lol", what: "Flight numbers you pin", when: "Live flight status (Pro)", active: !FlightWatcher.shared.pinned.isEmpty),

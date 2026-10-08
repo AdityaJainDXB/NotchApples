@@ -13,8 +13,8 @@ packages:
 settings:
   base:
     SWIFT_VERSION: "5.0"
-    MARKETING_VERSION: "2.0.4"
-    CURRENT_PROJECT_VERSION: "73"
+    MARKETING_VERSION: "2.0.5"
+    CURRENT_PROJECT_VERSION: "74"
     CODE_SIGN_IDENTITY: "-"
     CODE_SIGN_STYLE: Manual
     DEVELOPMENT_TEAM: ""
@@ -93,6 +93,7 @@ targets:
       - NotchApple/Core/ClaudeLimitsLogic.swift
       - NotchApple/Core/TodoLogic.swift
       - NotchApple/Core/ReleaseNotesLogic.swift
+      - NotchApple/Modules/Tennis/TennisLogic.swift
       - NotchApple/Core/ClaudeUsageLogic.swift
       - NotchApple/Core/SmartHomeLogic.swift
       - NotchApple/Core/ClipboardLinkLogic.swift

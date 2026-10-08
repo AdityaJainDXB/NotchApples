@@ -30,7 +30,7 @@ Free, open source, with free AI or fully local AI on your Mac. Plus 30 more tool
 
 ## What is Notch apple?
 
-Notch apple lives in the black cutout at the top of your MacBook screen (a small pill on Macs without one). Press <kbd>⌃⌥S</kbd> in any app, drag a box around a maths problem, an error, a paragraph in another language or a chart, and pick what to do: **Solve, Explain, Translate, Summarize, Code**… The answer streams into the notch, and you can keep asking follow-ups about the same capture. It also brings F1 live timing, window snapping, clipboard history, Now Playing and many more tools. Everything is optional, and only the Pro extras need a key.
+Notch apple lives in the black cutout at the top of your MacBook screen (a small pill on Macs without one). Press <kbd>⌃⌥S</kbd> in any app, drag a box around a maths problem, an error, a paragraph in another language or a chart, and pick what to do: **Solve, Explain, Translate, Summarize, Code**… The answer streams into the notch, and you can keep asking follow-ups about the same capture. It also brings F1 live timing, live tennis from every ATP and WTA tournament, window snapping, clipboard history, Now Playing and many more tools. Everything is optional, and only the Pro extras need a key.
 
 | | |
 | --- | --- |
@@ -42,11 +42,12 @@ Notch apple lives in the black cutout at the top of your MacBook screen (a small
 | 🔒 **Free or fully local AI** | Gemini, Groq or OpenRouter for free, Ollama on your Mac (offline, no key), or your own Claude, ChatGPT or DeepSeek key |
 | ⚽ **Sports & cricket** | Your team with match alerts, fixtures, league tables and match details (goals, cards, lineups); national teams, India cricket and the IPL |
 | 🏁 **F1** | Live running order, classification with gaps and tyres, schedule countdown, standings, a favourite driver or team beside the notch |
+| 🎾 **Tennis** *(new)* | Every ATP and WTA match with live set scores in **Men, Women and Mixed** tabs, **Grand Slams in red**, earlier weeks and past Slams one click back, the **ATP and WTA top 20**, and your favourite players' live score beside the notch |
 | 🧰 **30+ more tools** | Now Playing, window snapping, clipboard, file shelf, focus timer, Sports, Messenger, notes, search and more |
 
 ## Download
 
-Pick your computer. Both buttons start the download straight away. The Mac button is pinned to version 2.0.4
+Pick your computer. Both buttons start the download straight away. The Mac button is pinned to version 2.0.5
 
 <table align="center">
   <tr>
@@ -55,10 +56,10 @@ Pick your computer. Both buttons start the download straight away. The Mac butto
   </tr>
   <tr>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/v2.0.4/NotchApple-2.0.4.dmg"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.0.4</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/v2.0.5/NotchApple-2.0.5.dmg"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.0.5</b></a>
     </td>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 1.26.5 BETA</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 1.32.0 BETA</b></a>
     </td>
   </tr>
   <tr>
@@ -200,6 +201,16 @@ All screenshots use sample data.
 </details>
 
 ## What's new
+
+### Mac 2.0.5 · Windows 1.32.0 BETA · 8 October 2026 · 🎾 Tennis
+
+- **A new Tennis tab, on for everyone (Mac and Windows).** Every ATP and WTA match of the week, live, coming up and finished, with set-by-set scores, tiebreaks and who's serving.
+- **Men, Women and Mixed** tabs, each with All, Singles and Doubles. Several tournaments in a week? Pick one from the row of chips.
+- **Grand Slams go red:** the Australian Open, Roland Garros, Wimbledon and the US Open get a red banner, a 🏆 Grand Slam badge and a red glow.
+- **Go back in time:** ‹ and › move a week at a time, and **🏆 Slams** jumps to any of the last four Grand Slams (or the next one).
+- **ATP and WTA top 20** with points and how many places each player moved. If ESPN's rankings can't be reached, a saved list is shown instead.
+- **Favourite players:** star them in the top 20, click them in any match, or type a name. Their matches come first, and while one of them plays, their live score shows beside the closed notch (or on the Windows pill), in red during a Grand Slam.
+- Free, no account: ESPN's public feed, like Sports and F1. Turn it off in Settings → Modules (Mac) or Settings → Tabs (Windows).
 
 ### Mac 1.33.0 · Windows 1.31.0 BETA · 7 October 2026 · Meeting summaries
 
@@ -609,6 +620,7 @@ Every module is **optional** and can be switched on or off in **Settings → Mod
 | ✂️ **Snippets** *(add-on, new)* | Saved bits of text (addresses, sign-offs, replies, code). Click one and it's **pasted straight into the app you were using** (copied instead if Accessibility is off). |
 | 🧱 **Shortcuts** *(add-on, new)* | Run any of your **Apple Shortcuts** from the notch, with a **Focus modes** row for shortcuts that switch Focus / Do Not Disturb. Shortcuts can drive the notch too, with [`notchapple://` links](#control-the-notch-from-shortcuts). |
 | 🎧 **Devices** *(add-on, new)* | Battery for **AirPods** (left, right, case), **Magic Mouse, Keyboard and Trackpad**, with a low-battery alert at 15%. Shows **which apps are using your mic** and whether a **camera** is on, with a one-click **mic mute**. Shows your **iPhone's battery** when it's connected over Bluetooth, and **Ring my iPhone** opens Find My. |
+| 🎾 **Tennis** *(new in 2.0.5)* | **Every ATP and WTA match of the week** (ESPN's free public feed): live, coming up and results, with set scores, tiebreaks and who's serving, in **Men**, **Women** and **Mixed** tabs (each with All, Singles and Doubles). **Grand Slams are painted red** with a 🏆 badge. ‹ and › step back and forward a week, and **🏆 Slams** jumps to any of the last four Grand Slams. The right side has the **ATP and WTA top 20** with points and movement, and your **favourite players**: star them in the rankings, click one in a match, or type a name. A favourite's matches come first, and their live score shows beside the closed notch. On for everyone. |
 | 🏁 **F1** *(add-on, new)* | **Formula 1 live timing**: the live running order during every session (ESPN's free feed; live gaps need a paid F1 account), then the full classification with gaps, tyres, laps and the flag from F1's public timing archive. The weekend schedule in your time zone with a countdown, and driver and team standings (Jolpica). Click a driver to follow them, or pick a favourite team: their position (and the gap when F1 provides it) shows beside the notch while a session runs. |
 | 🎮 **Games** *(add-on, new)* | Tiny games for a short break: **2048**, **Snake** and a **reaction test**, played with the keyboard in the notch. Best scores stay on your Mac. |
 | ⚽ **Sports** *(new)* | **Follow your team, Barcelona by default.** The next match with a countdown, all its competitions (league, Champions League, cups), recent results, and the live score beside the closed notch while it plays. Switch team in **Change** or by tapping a team. A league view shows the next two weeks of fixtures and scores for La Liga, the Premier League, Serie A, the Bundesliga, Ligue 1, the Champions League, the Europa League, Liga Portugal, the Eredivisie, MLS, NBA, NFL, MLB and NHL (ESPN's free public feed). On for everyone; turn it off in Settings → Modules. **New in 1.15.1:** match alerts (30 minutes before kick-off, a flash on goals and at full time), a **league table** (Fixtures / Table), **match details** (click a score: goalscorers, cards, lineups), **national teams** (World Cup, qualifiers, Nations League, Euro, Copa América, Asian Cup, friendlies) and **cricket** (India's internationals and the IPL). If ESPN is down, it says so instead of showing an empty tab. |
@@ -857,6 +869,7 @@ Windows PCs have no camera notch, so the collapsed state is a slim pill pinned t
 | --- | --- |
 | ☀️ **Today** | Date, clock, local weather (free Open-Meteo, no key), battery, uptime |
 | ✨ **AI** | Gemini, OpenRouter, Groq, Ollama, ChatGPT, Claude. Asks about your screen by taking a screenshot. Carries over the OpenRouter retry/fallback, so a busy free model switches to one that works |
+| 🎾 **Tennis** | Same as macOS: every ATP and WTA match in Men, Women and Mixed, Grand Slams in red, earlier weeks, the top 20, and favourite players' live scores on the pill |
 | ⚽ **Sports** | Your team (**Barcelona by default**): next match with a countdown, every competition it plays in, recent results, and the live score on the closed pill while it's on. A league picker shows the next two weeks of fixtures for the big football leagues, NBA, NFL, MLB and NHL; tap any team to track it |
 | 🌐 **Browser** | Address bar + search (DuckDuckGo, Google, Bing, Brave, Ecosia). Pages open in a separate always-on-top window, because the panel is only ~450 px tall |
 | 🚀 **Launcher** | Pick from everything in your Start Menu, click a tile to open it |
@@ -1248,6 +1261,7 @@ Per-app volume and EQ use Core Audio process taps, which arrived in macOS 14.2. 
   - the AI provider you chose (Gemini, Groq, OpenRouter, DeepSeek, Anthropic or OpenAI), using your own key, and only when you ask: your question, the image you captured or pasted, and that conversation. With **Ollama** or **Apple Intelligence** nothing leaves your Mac, and the notch shows **On this Mac**
   - `api.github.com` to check for updates (can be turned off) and `github.com` to download one you accept
   - `open-meteo.com` for weather (and the cities you add to the forecast, Pro)
+  - `site.api.espn.com` for public scores in Sports, Live, F1 and Tennis, and `api.jolpi.ca` / F1's public timing archive for F1: nothing about you is sent
   - the plugin gallery's list and the plugins you choose to install, from `raw.githubusercontent.com` (Ultimate)
   - iCloud Drive, only for settings, notes and to-dos you choose to sync
   - your own iPhone on your local Wi-Fi, only if you turn on the iPhone companion (Ultimate); nothing leaves your network

@@ -20,6 +20,11 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.0.5", date: "8 October 2026", headline: "Tennis in the notch", items: [
+            "A new Tennis tab, on for everyone: every ATP and WTA match of the week with live set scores, in Men, Women and Mixed tabs.",
+            "Grand Slams are painted red. Step back a week at a time, or jump to any of the last four Grand Slams.",
+            "The ATP and WTA top 20, and favourite players: star them and their live score shows beside the notch while they play.",
+        ]),
         ReleaseNote(version: "2.0.4", date: "8 October 2026", headline: "Updates ask first", items: [
             "A new version is now a request with Update or Skip for now, and the screen lists what is in it. Only a release marked compulsory forces the update.",
         ]),

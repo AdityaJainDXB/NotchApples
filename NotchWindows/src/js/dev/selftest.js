@@ -23,7 +23,7 @@ export async function run() {
     for (const [i, m] of MODULES.entries()) {
       const before = errors.length;
       await show(m.id);
-      await wait(m.id === 'today' || m.id === 'sports' || m.id === 'f1' || m.id === 'markets' ? 4500 : 2200);
+      await wait(m.id === 'today' || m.id === 'sports' || m.id === 'f1' || m.id === 'tennis' || m.id === 'markets' ? 4500 : 2200);
       const page = document.getElementById('page');
       const text = page.innerText.trim();
       const failed = errors.slice(before).map((e) => e.message);

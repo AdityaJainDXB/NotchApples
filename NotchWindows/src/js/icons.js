@@ -6,6 +6,7 @@ const P = {
   ai: '<path d="M11 3l1.9 5.4L18.3 10l-5.4 1.9L11 17.3 9.1 11.9 3.7 10l5.4-1.6z"/><path d="M19 15l.8 2.2 2.2.8-2.2.8-.8 2.2-.8-2.2-2.2-.8 2.2-.8z"/>',
   sports: '<rect x="2" y="5" width="20" height="14" rx="3.5"/><path d="M12 5v14"/><circle cx="12" cy="12" r="2.8"/>',
   f1: '<path d="M5 22V3"/><path d="M5 4h14l-2.2 4 2.2 4H5"/><path d="M10 4v8M14.5 4v8"/>',
+  tennis: '<circle cx="12" cy="12" r="9"/><path d="M5.6 5.1c3.2 3.6 3.2 10.2 0 13.8M18.4 5.1c-3.2 3.6-3.2 10.2 0 13.8"/>',
   nowplaying: '<path d="M9 18V5.5l11-2V16"/><circle cx="6" cy="18" r="3"/><circle cx="17" cy="16" r="3"/>',
   browser: '<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3.2 3.2 3.2 14.8 0 18M12 3c-3.2 3.2-3.2 14.8 0 18"/>',
   launcher: '<rect x="3" y="3" width="7.5" height="7.5" rx="2"/><rect x="13.5" y="3" width="7.5" height="7.5" rx="2"/><rect x="3" y="13.5" width="7.5" height="7.5" rx="2"/><path d="M17.2 13.5v7.5M13.5 17.2H21"/>',

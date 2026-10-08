@@ -11,6 +11,8 @@ export const MODULES = [
     blurb: 'Follow your team (Barcelona unless you pick another): next match, every competition, results and the live score on the pill.' },
   { id: 'f1', name: 'F1', icon: '🏁', load: () => import('./modules/f1.js'),
     blurb: 'Formula 1: the running order during sessions, the weekend schedule with a countdown, and standings.' },
+  { id: 'tennis', name: 'Tennis', icon: '🎾', load: () => import('./modules/tennis.js'),
+    blurb: "Every ATP and WTA match with live scores, in Men, Women and Mixed. Grand Slams in red, earlier weeks one click back, the top 20, and favourite players on the pill." },
   { id: 'nowplaying', name: 'Now Playing', icon: '🎵', load: () => import('./modules/nowplaying.js'),
     blurb: "What's playing on your PC (Spotify, browsers, Media Player…) with the cover, controls and lyrics. The cover shows on the pill." },
   { id: 'browser', name: 'Browser', icon: '🌐', load: () => import('./modules/browser.js'),
@@ -86,7 +88,7 @@ export const MODULES = [
 ];
 
 /// What a fresh install shows. Everything else is one click away in Settings → Tabs.
-export const DEFAULT_ON = ['today', 'ai', 'sports', 'f1', 'nowplaying', 'search', 'clipboard', 'notes', 'todo', 'timer', 'shelf', 'windows', 'tools',
+export const DEFAULT_ON = ['today', 'ai', 'sports', 'f1', 'tennis', 'nowplaying', 'search', 'clipboard', 'notes', 'todo', 'timer', 'shelf', 'windows', 'tools',
   'stats', 'worldclock', 'games', 'markets', 'home', 'audio', 'messenger', 'settings'];
 
 export const byId = (id) => MODULES.find((m) => m.id === id);
