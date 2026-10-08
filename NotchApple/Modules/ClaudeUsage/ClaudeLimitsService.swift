@@ -79,6 +79,13 @@ final class ClaudeLimitsService: ObservableObject {
         await run(userInitiated: false)
     }
 
+    /// The refresh button: fetch now, ignoring the once-a-minute limit and any earlier back-off.
+    func refreshNow() async {
+        guard wantsConnection else { return }
+        backoffUntil = .distantPast
+        await run(userInitiated: false)
+    }
+
     // MARK: Work
 
     private func run(userInitiated: Bool) async {

@@ -105,8 +105,8 @@ final class ClaudeUsageStore: ObservableObject {
         background?.tolerance = 30
     }
 
-    func refresh() async {
-        await ClaudeLimitsService.shared.refresh()
+    func refresh(force: Bool = false) async {
+        if force { await ClaudeLimitsService.shared.refreshNow() } else { await ClaudeLimitsService.shared.refresh() }
         loading = true
         let since = Date().addingTimeInterval(-30 * 86400)   // a month of history, to know your busiest window and week
         let result = await ClaudeUsageScanner.shared.scan(since: since)
@@ -222,6 +222,7 @@ struct ClaudeUsageView: View {
     @ObservedObject private var layout = ModuleLayout.shared
     @State private var showDetails = false
     @State private var showHistory = false
+    @State private var refreshing = false
 
     var body: some View {
         HStack(spacing: 12) {
@@ -243,6 +244,17 @@ struct ClaudeUsageView: View {
             HStack {
                 Text("Claude usage").sectionTitle()
                 Spacer()
+                Button {
+                    guard !refreshing else { return }
+                    refreshing = true
+                    Task { await store.refresh(force: true); refreshing = false }
+                } label: {
+                    if refreshing { ProgressView().controlSize(.mini) }
+                    else { Image(systemName: "arrow.clockwise").font(.system(size: 11, weight: .semibold)) }
+                }
+                .buttonStyle(.plain).foregroundStyle(Theme.accentBright).frame(width: 16, height: 16)
+                .disabled(refreshing)
+                .help("Refresh your usage now")
                 Button { withAnimation(.snappy) { showDetails.toggle() } } label: {
                     Label(showDetails ? "Hide details" : "Details", systemImage: "chevron.right")
                         .labelStyle(.titleAndIcon).font(.system(size: 11, weight: .semibold))
