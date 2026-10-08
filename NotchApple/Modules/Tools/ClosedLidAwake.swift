@@ -20,6 +20,8 @@ final class ClosedLidAwake: ObservableObject {
     @Published var message: String?
 
     private var watch: Timer?
+    /// Set when the low-battery prompt was cancelled, so it is not asked again until the switch is flipped.
+    private var declinedAutoOff = false
 
     init() { refresh() }
 
@@ -50,6 +52,7 @@ final class ClosedLidAwake: ObservableObject {
             return
         }
         busy = true
+        declinedAutoOff = false
         message = on ? batteryWarning : nil
         DispatchQueue.global(qos: .userInitiated).async {
             let error = Self.pmset(on)
@@ -58,6 +61,7 @@ final class ClosedLidAwake: ObservableObject {
                     self.busy = false
                     if let error {
                         self.message = error
+                        if !on { self.declinedAutoOff = true }
                     }
                     self.refresh()   // whatever happened, show what the system says
                 }
@@ -65,10 +69,10 @@ final class ClosedLidAwake: ObservableObject {
         }
     }
 
-    /// Called as the app quits so the Mac can sleep again. Asks for authorization if the system has forgotten it.
+    /// Called as the app quits so the Mac can sleep again. Asks for authorization if macOS has forgotten it.
     func restoreOnQuit() {
         guard isOn || Self.parseSleepDisabled(Self.run("/usr/bin/pmset", ["-g"])) else { return }
-        _ = Self.pmset(false)
+        _ = Self.pmset(false)   // one prompt at most; if cancelled it stays on and shows as on next launch
     }
 
     private func updateWatch() {
@@ -80,7 +84,7 @@ final class ClosedLidAwake: ObservableObject {
                 let me = ClosedLidAwake.shared
                 if let b = LiveActivityCenter.battery(), !b.pluggedIn, b.percent < ClosedLidAwake.lowBatteryPercent {
                     me.message = "Turned off: battery under \(ClosedLidAwake.lowBatteryPercent)%."
-                    me.set(false)
+                    if !me.declinedAutoOff { me.set(false) }
                 }
             }
         }
@@ -94,13 +98,15 @@ final class ClosedLidAwake: ObservableObject {
     // MARK: System calls
 
     /// nil on success, otherwise a short error.
-    nonisolated private static func pmset(_ on: Bool) -> String? {
+    nonisolated private static func pmset(_ on: Bool, allowPrompt: Bool = true) -> String? {
+        // Only a person flipping the switch ever sees the password prompt.
+        guard allowPrompt else { return "Needs your password. Flip the switch to retry." }
         var error: NSDictionary?
         let script = NSAppleScript(source: "do shell script \"pmset -a disablesleep \(on ? 1 : 0)\" with administrator privileges")
         script?.executeAndReturnError(&error)
         guard let error else { return nil }
         let code = (error[NSAppleScript.errorNumber] as? Int) ?? 0
-        return code == -128 ? "Cancelled. Nothing changed." : "Couldn't change it: \((error[NSAppleScript.errorMessage] as? String) ?? "unknown error")"
+        return code == -128 ? "Cancelled. Nothing changed. Flip the switch again to retry." : "Couldn't change it: \((error[NSAppleScript.errorMessage] as? String) ?? "unknown error")"
     }
 
     nonisolated private static func run(_ path: String, _ args: [String]) -> String {

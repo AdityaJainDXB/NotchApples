@@ -20,6 +20,9 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.0.18", date: "9 October 2026", headline: "Lid-closed Keep Awake asks only when used", items: [
+            "The password prompt appears only when you flip the lid-closed switch, and cancelling doesn't bring it back until you flip it again.",
+        ]),
         ReleaseNote(version: "2.0.17", date: "9 October 2026", headline: "Keep Awake with the lid closed", items: [
             "New tool: Keep Awake (Lid Closed) keeps your Mac running with the lid shut. It asks for your password, turns off under 15% battery and when Notch apple quits.",
         ]),
