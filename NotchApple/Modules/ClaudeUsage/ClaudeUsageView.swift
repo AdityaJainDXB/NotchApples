@@ -485,6 +485,9 @@ struct ConnectBanner: View {
                 case .connecting:
                     HStack(spacing: 8) { ProgressView().controlSize(.small); Text("Waiting for you to allow access in the macOS prompt…").font(.system(size: 12)).foregroundStyle(.white) }
                     Text("Choose Allow (or Always Allow) near the top of your screen.").font(.system(size: 10)).foregroundStyle(Theme.textSecondary)
+                case .refreshing:
+                    HStack(spacing: 8) { ProgressView().controlSize(.small); Text("Asking Claude Code to renew the sign-in…").font(.system(size: 12)).foregroundStyle(.white) }
+                    Text("This takes a few seconds, then Notch apple connects by itself.").font(.system(size: 10)).foregroundStyle(Theme.textSecondary)
                 case .signingIn:
                     HStack(spacing: 8) { ProgressView().controlSize(.small); Text("Finish signing in to Claude Code in Terminal…").font(.system(size: 12)).foregroundStyle(.white) }
                     Text("This connects by itself once you are signed in.").font(.system(size: 10)).foregroundStyle(Theme.textSecondary)
@@ -494,7 +497,10 @@ struct ConnectBanner: View {
                     }
                 case .failed(let message):
                     Label(message, systemImage: "exclamationmark.triangle.fill").font(.system(size: 11)).foregroundStyle(.orange).fixedSize(horizontal: false, vertical: true)
-                    if limits.needsSignIn {
+                    if limits.needsRefresh {
+                        Button("Refresh sign-in") { limits.refreshSignIn() }.buttonStyle(PurpleButtonStyle())
+                        Button("Sign in again instead") { limits.signInWithClaudeCode() }.buttonStyle(.plain).font(.system(size: 11)).foregroundStyle(Theme.accentBright)
+                    } else if limits.needsSignIn {
                         Button("Sign in with Claude Code") { limits.signInWithClaudeCode() }.buttonStyle(PurpleButtonStyle())
                         Button("Connect again") { limits.connect() }.buttonStyle(.plain).font(.system(size: 11)).foregroundStyle(Theme.accentBright)
                     } else {

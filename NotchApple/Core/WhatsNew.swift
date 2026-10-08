@@ -20,6 +20,9 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.0.3", date: "8 October 2026", headline: "Connect to Claude renews an expired sign-in", items: [
+            "When Claude Code\'s saved sign-in has expired, Connect asks Claude Code to renew it and connects by itself.",
+        ]),
         ReleaseNote(version: "2.0.2", date: "8 October 2026", headline: "A To-Do widget, widget Home by default, and Connect to Claude fixed", items: [
             "A To-Do widget on Home with Quick Add built in: type a task and a time, add !!! for high priority. High priority is red and sits at the top.",
             "Home opens as the widget page for everyone, with Clipboard, Now Playing and Notes cards.",

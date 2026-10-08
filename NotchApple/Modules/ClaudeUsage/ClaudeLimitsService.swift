@@ -17,7 +17,7 @@ final class ClaudeLimitsService: ObservableObject {
     static let shared = ClaudeLimitsService()
     static let endpoint = URL(string: "https://api.anthropic.com/api/oauth/usage")!
 
-    enum State: Equatable { case notConnected, connecting, signingIn, connected, failed(String) }
+    enum State: Equatable { case notConnected, connecting, signingIn, refreshing, connected, failed(String) }
 
     @Published private(set) var state: State
     /// The limits of the account being shown.
@@ -33,10 +33,14 @@ final class ClaudeLimitsService: ObservableObject {
 
     /// True when the last attempt found no Claude Code sign-in at all: the screens then offer to sign in.
     @Published private(set) var needsSignIn = false
+    /// True when Claude Code's saved sign-in has expired: it renews itself whenever Claude Code runs.
+    @Published private(set) var needsRefresh = false
 
     private var credentials: [String: ClaudeLimitsLogic.Credential] = [:]
     private var signInWatcher: Task<Void, Never>?
     private var closedNotchForPrompt = false
+    /// One automatic renewal per problem, so an expired sign-in fixes itself without looping.
+    private var autoRefreshed = false
     private var lastAttempt = Date.distantPast
     private var backoffUntil = Date.distantPast
     private var busy = false
@@ -59,7 +63,7 @@ final class ClaudeLimitsService: ObservableObject {
             switch self {
             case .signedOut: "Claude Code isn't signed in on this Mac. Open Terminal, run `claude`, sign in, then press Connect again."
             case .denied: "macOS didn't let Notch apple read Claude Code's sign-in. Press Connect and choose Allow (or Always Allow)."
-            case .rejected: "Claude didn't accept the saved sign-in. Open Claude Code once so it refreshes, then press Retry."
+            case .rejected: "The saved Claude Code sign-in has expired. Press Refresh sign-in and Claude Code will renew it."
             case .offline: "Couldn't reach Claude. Check your internet connection and press Retry."
             case .unreadable: "Claude answered, but not in a form Notch apple understands. Your estimate is still shown."
             case .http(let code): "Claude's usage service answered with an error (\(code)). Try again in a minute."
@@ -71,14 +75,65 @@ final class ClaudeLimitsService: ObservableObject {
 
     /// Press Connect: read Claude Code's sign-in (macOS asks for permission) and fetch the limits.
     func connect() {
-        needsSignIn = false
+        needsSignIn = false; needsRefresh = false
         signInWatcher?.cancel(); signInWatcher = nil
         state = .connecting
         // The macOS permission prompt must not sit behind the notch: step aside, and come back with the result.
         if let notch = AppDelegate.current?.notch, notch.isOpen { notch.closeNotch(); closedNotchForPrompt = true }
         Task {
             await run(userInitiated: true)
+            if needsRefresh && !autoRefreshed {
+                autoRefreshed = true
+                refreshSignIn()          // an expired sign-in: have Claude Code renew it, then connect again
+                return
+            }
             reopenNotchIfWeClosedIt()
+        }
+    }
+
+    /// An expired sign-in renews when Claude Code runs. Runs it once, headless, with a one-word question (a request that
+    /// costs almost nothing), then reads the renewed sign-in and connects. Nothing is changed by Notch apple itself.
+    func refreshSignIn() {
+        needsRefresh = false; needsSignIn = false
+        state = .refreshing
+        Task {
+            let outcome = await Self.runClaudeCodeOnce()
+            switch outcome {
+            case .notInstalled:
+                reopenNotchIfWeClosedIt()
+                needsSignIn = true
+                state = .failed("Claude Code isn't installed on this Mac. Install it from claude.com/claude-code, or sign in with it, then press Connect.")
+            case .failed(let why):
+                reopenNotchIfWeClosedIt()
+                needsRefresh = true
+                state = .failed("Claude Code couldn't refresh the sign-in (\(why)). Open Terminal, run `claude`, type /login, then press Connect.")
+            case .ok:
+                connect()
+            }
+        }
+    }
+
+    private enum ClaudeRun { case ok, notInstalled, failed(String) }
+
+    nonisolated private static func runClaudeCodeOnce() async -> ClaudeRun {
+        await withCheckedContinuation { cont in
+            DispatchQueue.global(qos: .userInitiated).async {
+                let p = Process()
+                p.executableURL = URL(fileURLWithPath: "/bin/zsh")
+                // A login shell, so claude is found the way it is in Terminal.
+                p.arguments = ["-ilc", "command -v claude >/dev/null 2>&1 || exit 127; claude -p 'Reply with the single word ok' </dev/null"]
+                let out = Pipe(), err = Pipe()
+                p.standardOutput = out; p.standardError = err; p.standardInput = FileHandle.nullDevice
+                do { try p.run() } catch { cont.resume(returning: .failed("couldn't start it")); return }
+                let done = DispatchSemaphore(value: 0)
+                DispatchQueue.global().async { p.waitUntilExit(); done.signal() }
+                if done.wait(timeout: .now() + 90) == .timedOut { p.terminate(); cont.resume(returning: .failed("it took too long")); return }
+                switch p.terminationStatus {
+                case 0: cont.resume(returning: .ok)
+                case 127: cont.resume(returning: .notInstalled)
+                default: cont.resume(returning: .failed("it exited with code \(p.terminationStatus)"))
+                }
+            }
         }
     }
 
@@ -191,11 +246,13 @@ final class ClaudeLimitsService: ObservableObject {
             }
         }
         if anySuccess {
+            autoRefreshed = false
             limits = active.flatMap { byAccount[$0.service] } ?? byAccount.values.first
             fetched = Date(); state = .connected; wantsConnection = true
             for (service, l) in byAccount { recordHistory(service, l) }
         } else if let failure = firstFailure {
             needsSignIn = failure == .signedOut
+            needsRefresh = failure == .rejected
             // Keep showing the last good numbers; only say something when asked, or when nothing was ever read.
             if userInitiated || limits == nil { state = .failed(failure.message) }
             if !userInitiated { backoffUntil = Date().addingTimeInterval(600) }   // never nag the keychain every minute
@@ -206,6 +263,8 @@ final class ClaudeLimitsService: ObservableObject {
         var cred = credentials[account.service]
         if cred == nil || cred?.isExpired() == true { cred = try await Self.readSignIn(service: account.service) }
         guard var current = cred else { throw Failure.signedOut }
+        // Still expired after reading it fresh: Claude would only say no. Say so now, and offer to renew it.
+        if current.isExpired() { credentials[account.service] = nil; throw Failure.rejected }
         credentials[account.service] = current
         do { return try await Self.fetchLimits(token: current.token) }
         catch Failure.rejected {
