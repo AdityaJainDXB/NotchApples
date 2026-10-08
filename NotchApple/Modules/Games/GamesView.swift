@@ -68,6 +68,16 @@ struct GamesView: View {
             }
             .id(game)
         }
+        // The Plane game is drawn for a bigger panel: grow the notch while it is open, and shrink it back after.
+        .onAppear { setBig(game == .plane) }
+        .onChange(of: lastRaw) { _, _ in setBig(game == .plane) }
+        .onDisappear { setBig(false) }
+    }
+
+    private func setBig(_ on: Bool) {
+        guard NotchPrefs.bigGameOpen != on else { return }
+        NotchPrefs.bigGameOpen = on
+        AppDelegate.current?.notch?.reposition()
     }
 
     private var hint: String {
