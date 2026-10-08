@@ -94,7 +94,7 @@ Pick your computer. Both buttons start the download straight away. The Mac butto
 - **Remove your key from this PC.** **Settings → Access → Remove the key from this PC** frees the device slot.
 - **Uninstall.** **Settings → Apps → Installed apps → Notch apple → Uninstall.**
 - **Need an `.msi` instead** (for a work-managed PC)? Get [`NotchApple-Windows.msi`](https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows.msi).
-- **Older Windows versions** are on the [Windows releases page](https://github.com/AdityaJainDXB/NotchApples/releases/tag/windows-latest) and the [all releases list](https://github.com/AdityaJainDXB/NotchApples/releases).
+- **Other Windows versions:** the [releases list](https://github.com/AdityaJainDXB/NotchApples/releases) keeps the recent Windows builds (1.31.0 and newer). Older downloads were removed to keep the list short; the app updates itself to the newest one.
 
 </details>
 
@@ -201,6 +201,8 @@ All screenshots use sample data.
 </details>
 
 ## What's new
+
+> **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is still in the repository's tags.
 
 ### Mac 2.0.13 · Windows 1.34.1 BETA · 8 October 2026 · ⌨️ Plane: M switches the mouse off
 
