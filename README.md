@@ -47,7 +47,7 @@ Notch apple lives in the black cutout at the top of your MacBook screen (a small
 
 ## Download
 
-Pick your computer. Both buttons start the download straight away. The Mac button is pinned to version 2.0.7
+Pick your computer. Both buttons start the download straight away. The Mac button is pinned to version 2.0.9
 
 <table align="center">
   <tr>
@@ -56,7 +56,7 @@ Pick your computer. Both buttons start the download straight away. The Mac butto
   </tr>
   <tr>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/v2.0.7/NotchApple-2.0.7.dmg"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.0.7</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/v2.0.9/NotchApple-2.0.9.dmg"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.0.9</b></a>
     </td>
     <td align="center">
       <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 1.33.0 BETA</b></a>
@@ -202,7 +202,7 @@ All screenshots use sample data.
 
 ## What's new
 
-### Mac 2.0.7 · Windows 1.33.0 BETA · 8 October 2026 · ✈️ Plane, speaker balance and a lyrics view
+### Mac 2.0.9 · Windows 1.33.0 BETA · 8 October 2026 · ✈️ Plane, speaker balance and a lyrics view
 
 - **Plane, a 3D flight game (Games → Plane).** Pick a plane: the **Sparrow** trainer, the **Mustang** warbird, the **Falcon** jet or the **Stunt Bipe**. Each flies differently. Then choose a challenge:
   - **Hoop Rush:** 90 seconds, 1 point for every hoop you fly through, and the hoops keep coming.
@@ -605,7 +605,7 @@ The full list for every release is on the [website](https://virajsinghchadha.git
 #### New in 1.14.2
 
 - **Nothing that was free became paid.** Now Playing, windows, clipboard, shelf, focus, tools and the rest stay free forever; Pro is the same features as before.
-- **Get Pro on the website**: a product key for $1 in Litecoin (or $2 to cover fees and support a high school developer), or free with a promo code. Keys are made instantly, work once, on one Mac. [Get Pro →](https://virajsinghchadha.github.io/notchapples-site/pro.html)
+- **Get Pro on the website**: a product key for $1 in Litecoin (or $2 to cover fees and support the high school developers), or free with a promo code. Keys are made instantly, work once, on one Mac. [Get Pro →](https://virajsinghchadha.github.io/notchapples-site/pro.html)
 - Product keys (NOTCH-XXXX-XXXX-XXXX) are checked online and re-verified against the blockchain; older access codes keep working.
 
 </details>
@@ -636,14 +636,14 @@ Every module is **optional** and can be switched on or off in **Settings → Mod
 | 📡 **Share** | Send files with **AirDrop**, or use **PairDrop** between devices on the same Wi-Fi. To receive, just show your 6-digit code. To send, type the other device's code; there's no need to pick the device. No server is involved. |
 | 🔊 **Audio** | Pick the output device, set the master volume, and change **per-app volume (0–150%)** and a **10-band per-app EQ** with presets. It's built in on macOS 14.2+, with nothing to install. |
 | 🛡 **VPN** | A built-in list of **free OpenVPN servers** from [Zoult/.ovpn](https://github.com/Zoult/.ovpn) and [VPN Gate](https://www.vpngate.net), or import your own `.ovpn` / `.conf`. See [Using the VPN](#using-the-vpn). |
-| 🎵 **Now Playing** | Shows what's playing on your Mac: **Apple Music, Spotify, Anghami, browsers, podcasts**, anything in Control Center's Now Playing. Or pick one app to follow. Includes the **album cover**, a progress bar, previous / play / next and synced lyrics. While music plays, the closed notch shows the **album cover and moving bars**, like the iPhone's Dynamic Island; click it to open Now Playing. **New in 2.0.7:** a left / right **speaker balance** slider, and click the song for a **Spotify-style lyrics view** with the cover and a progress bar. |
+| 🎵 **Now Playing** | Shows what's playing on your Mac: **Apple Music, Spotify, Anghami, browsers, podcasts**, anything in Control Center's Now Playing. Or pick one app to follow. Includes the **album cover**, a progress bar, previous / play / next and synced lyrics. While music plays, the closed notch shows the **album cover and moving bars**, like the iPhone's Dynamic Island; click it to open Now Playing. **New in 2.0.9:** a left / right **speaker balance** slider, and click the song for a **Spotify-style lyrics view** with the cover and a progress bar. |
 | ⏲ **Timer** *(add-on, new)* | A countdown timer with one-click presets (1 min to 1 hr, or any length) and a stopwatch with laps. The time left shows **beside the closed notch**, and you get a sound and notification when it ends. |
 | ✂️ **Snippets** *(add-on, new)* | Saved bits of text (addresses, sign-offs, replies, code). Click one and it's **pasted straight into the app you were using** (copied instead if Accessibility is off). |
 | 🧱 **Shortcuts** *(add-on, new)* | Run any of your **Apple Shortcuts** from the notch, with a **Focus modes** row for shortcuts that switch Focus / Do Not Disturb. Shortcuts can drive the notch too, with [`notchapple://` links](#control-the-notch-from-shortcuts). |
 | 🎧 **Devices** *(add-on, new)* | Battery for **AirPods** (left, right, case), **Magic Mouse, Keyboard and Trackpad**, with a low-battery alert at 15%. Shows **which apps are using your mic** and whether a **camera** is on, with a one-click **mic mute**. Shows your **iPhone's battery** when it's connected over Bluetooth, and **Ring my iPhone** opens Find My. |
 | 🎾 **Tennis** *(new in 2.0.5)* | **Every ATP and WTA match of the week** (ESPN's free public feed): live, coming up and results, with set scores, tiebreaks and who's serving, in **Men**, **Women** and **Mixed** tabs (each with All, Singles and Doubles). **Grand Slams are painted red** with a 🏆 badge. ‹ and › step back and forward a week, and **🏆 Slams** jumps to any of the last four Grand Slams. The right side has the **ATP and WTA top 20** with points and movement, and your **favourite players**: star them in the rankings, click one in a match, or type a name. A favourite's matches come first, and their live score shows beside the closed notch. On for everyone. |
 | 🏁 **F1** *(add-on, new)* | **Formula 1 live timing**: the live running order during every session (ESPN's free feed; live gaps need a paid F1 account), then the full classification with gaps, tyres, laps and the flag from F1's public timing archive. The weekend schedule in your time zone with a countdown, and driver and team standings (Jolpica). Click a driver to follow them, or pick a favourite team: their position (and the gap when F1 provides it) shows beside the notch while a session runs. |
-| 🎮 **Games** *(add-on, new)* | Tiny games for a short break: **2048**, **Snake** and a **reaction test**, played with the keyboard in the notch. Best scores stay on your Mac. **New in 2.0.7: ✈️ Plane**, a 3D flight game with four planes, Hoop Rush, Time Trial, Landing and Free Flight, 14 challenges and a leaderboard. |
+| 🎮 **Games** *(add-on, new)* | Tiny games for a short break: **2048**, **Snake** and a **reaction test**, played with the keyboard in the notch. Best scores stay on your Mac. **New in 2.0.9: ✈️ Plane**, a 3D flight game with four planes, Hoop Rush, Time Trial, Landing and Free Flight, 14 challenges and a leaderboard. |
 | ⚽ **Sports** *(new)* | **Follow your team, Barcelona by default.** The next match with a countdown, all its competitions (league, Champions League, cups), recent results, and the live score beside the closed notch while it plays. Switch team in **Change** or by tapping a team. A league view shows the next two weeks of fixtures and scores for La Liga, the Premier League, Serie A, the Bundesliga, Ligue 1, the Champions League, the Europa League, Liga Portugal, the Eredivisie, MLS, NBA, NFL, MLB and NHL (ESPN's free public feed). On for everyone; turn it off in Settings → Modules. **New in 1.15.1:** match alerts (30 minutes before kick-off, a flash on goals and at full time), a **league table** (Fixtures / Table), **match details** (click a score: goalscorers, cards, lineups), **national teams** (World Cup, qualifiers, Nations League, Euro, Copa América, Asian Cup, friendlies) and **cricket** (India's internationals and the IPL). If ESPN is down, it says so instead of showing an empty tab. |
 | 🏟 **Live** *(add-on, new)* | **Live scores** for the Premier League, Champions League, La Liga, MLS, NBA, NFL, MLB and NHL (ESPN's public scoreboard). Follow a team and its score shows beside the notch while it plays. Paste a **parcel or flight number** and it recognises UPS, FedEx, USPS, DHL or a flight and opens the right tracking page. |
 | 🔔 **Notifications** *(add-on, new)* | Notifications from your other apps, in the notch, with a bell and count beside it when new ones arrive. **Reply to iMessages** without opening Messages. It reads Notification Center's own database (read-only, on your Mac), so it needs **Full Disk Access**. |
@@ -1310,7 +1310,7 @@ Per-app volume and EQ use Core Audio process taps, which arrived in macOS 14.2. 
 
 ## Donate 💜
 
-Notch apple is free and made by high school developers. Donating is **completely optional**: it doesn't unlock anything, it just supports continued development. If it's useful to you, you can donate any amount in **Litecoin (LTC)**:
+Notch apple is free and made by three high school developers. Donating is **completely optional**: it doesn't unlock anything, it just supports continued development. If it's useful to you, you can donate any amount in **Litecoin (LTC)**:
 
 ```
 ltc1qymlmvkdmvpk5f90esthzgwaw6w0tuzq6tdr6kf

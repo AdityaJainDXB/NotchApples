@@ -1,6 +1,6 @@
 # Contributing to Notch apple
 
-Thanks for helping! Notch apple is MIT-licensed and built by a high school developer, so every issue, idea and pull request helps.
+Thanks for helping! Notch apple is MIT-licensed and built by three high school developers, so every issue, idea and pull request helps.
 
 ## Reporting a bug
 
