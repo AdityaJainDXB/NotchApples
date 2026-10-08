@@ -27,6 +27,7 @@ struct HomeScreenView: View {
         ScrollView {
             VStack(spacing: 10) {
                 glance
+                todayCard
                 let widgets = layout.homeWidgets.filter(\.expanded).map(\.module)
                 if !widgets.isEmpty {
                     LazyVGrid(columns: [GridItem(.flexible(), spacing: 10), GridItem(.flexible(), spacing: 10)], spacing: 10) {
@@ -53,6 +54,76 @@ struct HomeScreenView: View {
                 open = Set((layout.homeAccordions + layout.homeWidgets).filter(\.expanded).map(\.module))
             }
         }
+    }
+
+    // MARK: Today: your calendar, the one thing, countdowns and pinned notes
+
+    private var todayCard: some View {
+        GlassCard {
+            HStack(alignment: .top, spacing: 16) {
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Up next").sectionTitle()
+                    switch model.calendarAccess {
+                    case .fullAccess:
+                        if model.events.isEmpty {
+                            Text("Nothing else on your calendar today or tomorrow.").font(.system(size: 12)).foregroundStyle(Theme.textSecondary)
+                        }
+                        ForEach(model.events.prefix(4)) { event in eventRow(event) }
+                    case .notDetermined:
+                        Text("See your next events here.").font(.system(size: 12)).foregroundStyle(Theme.textSecondary)
+                        Button("Allow calendar access", action: model.requestCalendarAccess).buttonStyle(PurpleButtonStyle())
+                    default:
+                        Text("Calendar access is off. Turn it on in System Settings → Privacy & Security → Calendars.")
+                            .font(.system(size: 11)).foregroundStyle(Theme.textSecondary)
+                    }
+                }
+                .frame(maxWidth: .infinity, alignment: .topLeading)
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Today").sectionTitle()
+                    OneThingToday()
+                    CountdownsList()
+                    PinnedNotesToday()
+                }
+                .frame(width: 250, alignment: .topLeading)
+            }
+        }
+    }
+
+    private func eventRow(_ event: TodayModel.Event) -> some View {
+        HStack(spacing: 8) {
+            Capsule().fill(event.color).frame(width: 4, height: 30)
+            VStack(alignment: .leading, spacing: 1) {
+                Text(event.title).font(.system(size: 12, weight: .medium)).foregroundStyle(.white).lineLimit(1)
+                Text(eventTime(event)).font(.system(size: 10)).foregroundStyle(Theme.textSecondary)
+            }
+            Spacer(minLength: 4)
+            if let url = event.joinURL, event.end > .now, event.start.timeIntervalSinceNow < 900 {
+                Button("Join") { NSWorkspace.shared.open(url); AppDelegate.current?.notch?.closeNotch() }.buttonStyle(PurpleButtonStyle())
+            } else if let url = event.joinURL {
+                IconButton(systemImage: "video.fill", help: "Join the video call") { NSWorkspace.shared.open(url); AppDelegate.current?.notch?.closeNotch() }
+            }
+            if Entitlements.shared.canUse(.meetingSummaries), !event.isAllDay {
+                IconButton(systemImage: "record.circle", help: "Record this meeting and summarise it") {
+                    VoiceNotesModel.shared.startMeeting(title: event.title)
+                    state.selected = .voiceNotes
+                }
+            }
+            if Entitlements.shared.canUse(.meetingNotes), !event.isAllDay {
+                IconButton(systemImage: "note.text.badge.plus", help: "Start notes for this meeting") { startNotes(for: event) }
+            }
+            if event.start <= .now && event.end > .now {
+                Text("Now").font(.system(size: 10, weight: .bold)).padding(.horizontal, 6).padding(.vertical, 2).background(Theme.accent.opacity(0.4), in: Capsule())
+            }
+        }
+    }
+
+    /// Opens the note for this meeting (making it on first use) in the Notes tab.
+    private func startNotes(for e: TodayModel.Event) {
+        let day = e.start.formatted(.dateTime.weekday(.abbreviated).day().month(.abbreviated))
+        let time = "\(e.start.formatted(date: .omitted, time: .shortened)) – \(e.end.formatted(date: .omitted, time: .shortened))"
+        NotesStore.shared.noteForMeeting(title: e.title, day: day, time: time)
+        UserDefaults.standard.set("notes", forKey: "notes.page")
+        state.selected = .notes
     }
 
     private var accordionItems: [(module: Module, expanded: Bool)] {
@@ -86,8 +157,6 @@ struct HomeScreenView: View {
                 } else {
                     Label("Loading weather…", systemImage: "cloud").font(.system(size: 11)).foregroundStyle(Theme.textSecondary)
                 }
-                Divider().frame(height: 34).overlay(Theme.separator)
-                nextEvent
                 Spacer(minLength: 0)
                 ScreenCaptureButtons()
                 if let b = model.battery {

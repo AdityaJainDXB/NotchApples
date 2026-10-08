@@ -20,6 +20,9 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "1.34.10", date: "8 October 2026", headline: "Your day is back on Home", items: [
+            "One thing today, pinned notes, countdowns and the full Up next list are back, in a Today card on Home.",
+        ]),
         ReleaseNote(version: "1.34.9", date: "7 October 2026", headline: "Out-of-date copies must update", items: [
             "Notch apple checks for the newest release in the background every 15 minutes, even with update notifications off. A copy that is not the newest must update before it works.",
             "A release can carry a security message that the update screen shows.",
