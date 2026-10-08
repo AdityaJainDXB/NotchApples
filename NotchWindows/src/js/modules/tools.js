@@ -1,11 +1,11 @@
-// Tools: Keep Awake, colour picker (from anywhere on screen), calculator, and a
-// unit converter with currencies (Pro, open.er-api.com).
-import { percent } from '../services/answers.js';
-import { el, load } from '../store.js';
+// Tools, in three pages: Utilities (Keep Awake, the colour picker), Calculator (algebra that solves for letters,
+// plus a unit and currency converter, Pro) and the Translator.
+import { percent, unitConversion } from '../services/answers.js';
+import { el, load, save } from '../store.js';
 import { invoke, getJSON } from '../native.js';
 import { canUse } from '../features.js';
 import { toast, toggle, segmented } from '../ui.js';
-import { calculate } from '../palette.js';
+import { MathSession } from '../services/mathengine.js';
 import * as A from '../services/awake.js';
 
 const UNITS = {
@@ -19,7 +19,7 @@ const UNITS = {
 };
 let rates = null;
 
-export function render(root) {
+function utilitiesAndConverter() {
   // keep awake
   const s = A.state();
   let minutes = 0;
@@ -36,10 +36,6 @@ export function render(root) {
     if (!window.EyeDropper) return toast('Picking from the screen needs a newer WebView2.', { error: true });
     try { const r = await new window.EyeDropper().open(); show(r.sRGBHex); picker.value = r.sRGBHex; await invoke('clipboard_copy_text', { text: r.sRGBHex.toUpperCase() }); toast(`${r.sRGBHex.toUpperCase()} copied`); } catch {}
   } }, '💧 Pick from screen');
-  // calculator
-  const calcIn = el('input', { class: 'field mono', placeholder: '12 * (3 + 4) / 2' }), calcOut = el('div', { class: 'big num selectable' }, '—');
-  calcIn.oninput = () => { const pa = percent(calcIn.value.trim().toLowerCase()); if (pa) { calcOut.textContent = pa.text; return; } const v = calculate(calcIn.value); calcOut.textContent = v === null ? '—' : v.toLocaleString(undefined, { maximumFractionDigits: 10 }); };
-  calcIn.onkeydown = (e) => { if (e.key === 'Enter' && calcOut.textContent !== '—') invoke('clipboard_copy_text', { text: calcOut.textContent.replace(/,/g, '') }).then(() => toast('Copied')); };
   // converter
   const kind = el('select', { class: 'field auto' }, ...Object.keys(UNITS).map((k) => el('option', {}, k)));
   const amount = el('input', { class: 'field mono', value: '1', style: 'width:100px' });
@@ -67,14 +63,65 @@ export function render(root) {
     out.textContent = `${r.toLocaleString(undefined, { maximumFractionDigits: kind.value === 'Currency' ? 2 : 6 })} ${to.value}`;
   }
   kind.onchange = fill; amount.oninput = convert; from.onchange = convert; to.onchange = convert;
-  // Each block keeps its natural height (flex:none) and the page scrolls, instead of the cards being squeezed on top of each other.
-  root.append(el('div', { class: 'col fill scroll' },
+  const utilities = el('div', { class: 'col fill scroll' },
     el('div', { class: 'row', style: 'flex:none' },
       el('div', { class: 'card col gap-6' }, el('div', { class: 'section-title' }, '☕ Keep awake'),
         el('div', { class: 'hstack' }, el('span', { class: 'grow' }, 'Keep the PC awake'), awake),
         el('div', { class: 'hstack' }, el('span', { class: 'grow small dim' }, 'Keep the screen on too'), disp), mins),
-      el('div', { class: 'card col gap-6' }, el('div', { class: 'section-title' }, '🎨 Colour'), el('div', { class: 'hstack' }, swatch, codes, el('div', { class: 'spacer' }), picker), eye)),
-    el('div', { class: 'card col gap-6', style: 'flex:none' }, el('div', { class: 'section-title' }, '🔢 Calculator · Enter copies'), calcIn, calcOut),
-    el('div', { class: 'card col gap-6', style: 'flex:none' }, el('div', { class: 'section-title' }, '📏 Convert'), el('div', { class: 'hstack wrap' }, kind, amount, from, el('span', {}, '→'), to), out)));
+      el('div', { class: 'card col gap-6' }, el('div', { class: 'section-title' }, '🎨 Colour'), el('div', { class: 'hstack' }, swatch, codes, el('div', { class: 'spacer' }), picker), eye)));
+  const converter = el('div', { class: 'card col gap-6', style: 'flex:none' }, el('div', { class: 'section-title' }, '📏 Convert'), el('div', { class: 'hstack wrap' }, kind, amount, from, el('span', {}, '→'), to), out);
   show('#9e6bff'); fill();
+  return { utilities, converter };
+}
+
+/// Calculator page: one step per line, each worked out in order, so later lines can use earlier ones
+/// (a = 5, then 2a + 1). Equations, systems, factor and diff work too (services/mathengine.js).
+function calculatorPage(converter) {
+  const input = el('textarea', { class: 'field mono', style: 'flex:1;min-height:120px;resize:none', spellcheck: false,
+    placeholder: 'a = 5\n2a + 1\n2x + 3 = 11\nx^2 - 5x + 6 = 0\nfactor(x^2 - 1)\ndiff(x^3, x)' });
+  input.value = load('tools.calcInput', '');
+  const answers = el('div', { class: 'col gap-6 scroll selectable', style: 'flex:1;min-height:0' });
+  const copy = el('button', { class: 'btn quiet small', onclick: () => { const t = answers.dataset.last; if (t) invoke('clipboard_copy_text', { text: t }).then(() => toast('Copied')); } }, 'Copy last answer');
+  function paint() {
+    save('tools.calcInput', input.value);
+    const session = new MathSession();
+    const lines = input.value.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+    let last = '';
+    answers.replaceChildren(...lines.map((raw) => {
+      const pa = percent(raw.toLowerCase()) || unitConversion(raw);   // "12% of 80", "200 + 15%", "5 km to mi"
+      const r = pa ? { output: [pa.text], kind: 'value' } : session.runLine(raw);
+      const usable = r.kind !== 'error' && r.output.length;
+      if (usable) last = (r.output[0] || '').replace(/^\w+ = /, '').replace(/,/g, '');
+      return el('div', { class: 'col', style: 'gap:1px' },
+        el('div', { class: 'tiny faint mono ellipsis' }, raw),
+        ...r.output.map((o) => el('div', { class: r.kind === 'value' ? 'big num' : '', style: r.kind === 'value' ? '' : `font-weight:600;${r.kind === 'error' ? 'color:var(--warn,#ff9f43)' : ''}` }, r.kind === 'value' ? `= ${o}` : o)));
+    }));
+    if (!lines.length) answers.append(el('div', { class: 'small dim' }, 'Answers appear here as you type.'));
+    answers.dataset.last = last;
+  }
+  input.oninput = paint;
+  paint();
+  return el('div', { class: 'col fill scroll' },
+    el('div', { class: 'row', style: 'flex:none;min-height:230px' },
+      el('div', { class: 'card col gap-6', style: 'flex:1;min-width:0' }, el('div', { class: 'section-title' }, '🔢 Calculator'), input,
+        el('div', { class: 'tiny faint' }, 'One step per line: a = 5, then 2a + 1. Try 2x + 3 = 11, x^2 - 5x + 6 = 0, factor(x^2 - 1), diff(x^3, x).')),
+      el('div', { class: 'card col gap-6', style: 'flex:1;min-width:0' }, el('div', { class: 'hstack' }, el('div', { class: 'section-title grow' }, 'Answers'), copy), answers)),
+    converter);
+}
+
+export function render(root) {
+  let page = load('tools.page', 'utilities');
+  if (!['utilities', 'calculator', 'translator'].includes(page)) page = 'utilities';
+  const { utilities, converter } = utilitiesAndConverter();
+  const calc = calculatorPage(converter);
+  const host = el('div', { class: 'col fill', style: 'min-height:0' });
+  let translatorBuilt = false;
+  const translator = el('div', { class: 'col fill' });
+  function paint() {
+    host.replaceChildren(page === 'utilities' ? utilities : page === 'calculator' ? calc : translator);
+    if (page === 'translator' && !translatorBuilt) { translatorBuilt = true; import('./translator.js').then((m) => m.render(translator)); }
+  }
+  const pages = segmented([{ value: 'utilities', label: 'Utilities' }, { value: 'calculator', label: 'Calculator' }, { value: 'translator', label: 'Translator' }], page, (v) => { page = v; save('tools.page', v); paint(); });
+  root.append(el('div', { class: 'col fill', style: 'gap:8px' }, el('div', { class: 'hstack', style: 'flex:none' }, pages), host));
+  paint();
 }

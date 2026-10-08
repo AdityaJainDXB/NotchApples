@@ -11,9 +11,9 @@ let flash = null; // { text, until }
 export const todos = () => load(KEY, []);
 export const saveTodos = (list) => save(KEY, list);
 
-/// { text, due (ms or null), remind (bool), list ('Inbox' | name), notes }
-export function addTodo(text, { due = null, remind = !!due, list = 'Inbox', notes = '' } = {}) {
-  const item = { id: uid(), text: text.trim().slice(0, 500), done: false, created: Date.now(), due, remind, list, notes, notified: false };
+/// { text, due (ms or null), remind (bool), list ('Inbox' | name), notes, priority ('high' | 'medium' | 'low') }
+export function addTodo(text, { due = null, remind = !!due, list = 'Inbox', notes = '', priority = 'medium' } = {}) {
+  const item = { id: uid(), text: text.trim().slice(0, 500), done: false, created: Date.now(), due, remind, list, notes, priority, notified: false };
   update(KEY, [], (l) => [item, ...l]);
   return item;
 }

@@ -26,6 +26,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # A release only goes out if the logic tests and the screen smoke test pass first.
+      - name: Logic tests and screen smoke test
+        working-directory: .
+        shell: bash
+        run: ./scripts/run-windows-smoke.sh
+
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
 

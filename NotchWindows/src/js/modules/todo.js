@@ -1,16 +1,20 @@
 // To-do, from the Mac's TodoView: lists, due dates with reminders (a Windows
 // notification and a flash on the pill), notes, and done items that sink.
-// Type naturally: "Call mum tomorrow 6pm" sets the due time for you.
+// Type naturally: "Call mum tomorrow 6pm !!!" sets the due time and the priority for you. High priority is red and,
+// with priority sorting on (the default), sits at the top.
 
 import { el, load, save, uid, dayLabel, fmtTime } from '../store.js';
 import { iconBtn, menu, toast, prompt, empty } from '../ui.js';
 import * as R from '../services/reminders.js';
 import { parseWhen } from './quickadd.js';
 import { RULES, nextDue, ruleLabel } from '../services/recur.js';
+import { PRIORITIES, PRIORITY_COLOUR, PRIORITY_NAME, orderTodos, priorityOf, splitPriority } from '../services/todologic.js';
 
 export function render(root, opts = {}) {
   let list = load('todo.list', 'All');
   let showDone = load('todo.showDone', true);
+  let sortByPriority = load('todo.sortByPriority', true);
+  let chosen = load('todo.priority', 'medium');
   const input = el('input', { class: 'field', placeholder: 'Add a to-do… e.g. “Pay rent on the 1st” or “Call mum tomorrow 6pm”' });
   const hint = el('div', { class: 'tiny faint', style: 'min-height:14px' });
   const listsBox = el('div', { class: 'col gap-4' });
@@ -26,7 +30,7 @@ export function render(root, opts = {}) {
       if (list === 'Today') return t.due && t.due < endOfDay;
       if (list === 'Upcoming') return t.due && t.due >= endOfDay;
       return (t.list || 'Inbox') === list;
-    }).sort((a, b) => Number(a.done) - Number(b.done) || (a.due || Infinity) - (b.due || Infinity) || b.created - a.created);
+    });
   }
 
   function paintLists() {
@@ -49,17 +53,20 @@ export function render(root, opts = {}) {
   }
 
   function paintItems() {
-    const shown = visible();
+    const shown = orderTodos(visible(), sortByPriority);
     items.replaceChildren(...shown.map((t) => {
-      const row = el('div', { class: 'item', style: 'padding:6px 10px' },
+      const pr = priorityOf(t), high = pr === 'high' && !t.done;
+      const row = el('div', { class: 'item', style: `padding:6px 10px;border-left:3px solid ${t.done ? 'transparent' : PRIORITY_COLOUR[pr]};${high ? 'background:rgba(255,85,85,.12);' : ''}` },
         el('input', { type: 'checkbox', checked: t.done, onchange: () => tick(t) }),
         el('div', { class: 'main', ondblclick: () => rename(t) },
-          el('div', { style: `${t.done ? 'text-decoration:line-through;opacity:.5' : ''}` }, t.text),
+          el('div', { style: `${t.done ? 'text-decoration:line-through;opacity:.5' : high ? `color:${PRIORITY_COLOUR.high};font-weight:600` : ''}` }, t.text),
           el('div', { class: 'hstack', style: 'gap:8px' }, due(t), list === 'All' && t.list && t.list !== 'Inbox' ? el('span', { class: 'tiny faint' }, t.list) : null,
             t.notes ? el('span', { class: 'tiny faint ellipsis' }, t.notes) : null)),
-        el('div', { class: 'actions' }, iconBtn('⏰', 'Due date', () => setDue(t)), iconBtn('🗑', 'Delete', () => del(t.id))));
+        el('div', { class: 'actions' }, t.done ? null : flagBtn(pr, (e) => priorityMenu(e, t)), iconBtn('⏰', 'Due date', () => setDue(t)), iconBtn('🗑', 'Delete', () => del(t.id))));
       row.addEventListener('contextmenu', (e) => menu(e, [
         { label: 'Rename', run: () => rename(t) },
+        ...PRIORITIES.map((p) => ({ label: `${priorityOf(t) === p ? '✓ ' : ''}${PRIORITY_NAME[p]} priority`, run: () => update(t.id, { priority: p }) })),
+        'sep',
         { label: t.due ? 'Change due date' : 'Add a due date', run: () => setDue(t) },
         t.due ? { label: 'Snooze 10 minutes', run: () => snooze(t, Date.now() + 10 * 60e3) } : null,
         t.due ? { label: 'Snooze 1 hour', run: () => snooze(t, Date.now() + 60 * 60e3) } : null,
@@ -76,6 +83,8 @@ export function render(root, opts = {}) {
     if (!shown.length) items.append(empty('✅', list === 'Today' ? 'Nothing due today' : 'All done', 'Add a to-do above. Give it a time to get a reminder.'));
   }
 
+  const flagBtn = (p, onclick) => el('button', { class: 'icon-btn', title: `${PRIORITY_NAME[p]} priority: click to change`, style: `color:${PRIORITY_COLOUR[p]}`, onclick }, '⚑');
+  const priorityMenu = (e, t) => menu(e, PRIORITIES.map((p) => ({ label: `${priorityOf(t) === p ? '✓ ' : ''}${PRIORITY_NAME[p]}`, run: () => update(t.id, { priority: p }) })));
   function paint() { paintLists(); paintItems(); }
   const update = (id, patch) => { R.saveTodos(R.todos().map((t) => (t.id === id ? { ...t, ...patch, ...(patch.due !== undefined ? { notified: false } : {}) } : t))); paint(); };
   const del = (id) => { const before = R.todos(); R.saveTodos(before.filter((t) => t.id !== id)); paint(); toast('Deleted'); };
@@ -106,17 +115,25 @@ export function render(root, opts = {}) {
     update(t.id, { due: when.date.getTime(), remind: true });
   }
 
+  const chosenBtn = el('button', { class: 'icon-btn', onclick: (e) => menu(e, PRIORITIES.map((p) => ({ label: `${chosen === p ? '✓ ' : ''}${PRIORITY_NAME[p]} priority`, run: () => { chosen = p; save('todo.priority', p); paintChosen(); } }))) }, '⚑');
+  const paintChosen = () => { chosenBtn.style.color = PRIORITY_COLOUR[chosen]; chosenBtn.title = `Priority for the next to-do: ${PRIORITY_NAME[chosen]}`; };
+  paintChosen();
   input.addEventListener('input', () => {
-    const w = parseWhen(input.value);
-    hint.textContent = w.date ? `📅 Due ${dayLabel(w.date)}${w.hasTime ? ` at ${fmtTime(w.date)}` : ''} · reminder on` : '';
+    const sp = splitPriority(input.value), w = parseWhen(sp.text);
+    const bits = [];
+    if (sp.priority) bits.push(`⚑ ${PRIORITY_NAME[sp.priority]} priority`);
+    if (w.date) bits.push(`📅 Due ${dayLabel(w.date)}${w.hasTime ? ` at ${fmtTime(w.date)}` : ''} · reminder on`);
+    hint.textContent = bits.join(' · ');
   });
   input.addEventListener('keydown', (e) => {
     if (e.key !== 'Enter' || !input.value.trim()) return;
-    const w = parseWhen(input.value);
+    const sp = splitPriority(input.value);
+    if (!sp.text) return;
+    const w = parseWhen(sp.text);
     const target = ['All', 'Today', 'Upcoming'].includes(list) ? 'Inbox' : list;
     let due = w.date ? w.date.getTime() : null;
     if (!due && list === 'Today') { const d = new Date(); d.setHours(18, 0, 0, 0); due = d.getTime(); }
-    R.addTodo(w.date ? w.text : input.value.trim(), { due, remind: !!w.date, list: target });
+    R.addTodo(w.date ? w.text : sp.text, { due, remind: !!w.date, list: target, priority: sp.priority || chosen });
     input.value = ''; hint.textContent = '';
     paint();
   });
@@ -124,8 +141,9 @@ export function render(root, opts = {}) {
   root.append(el('div', { class: 'row fill' },
     el('div', { class: 'col scroll', style: 'flex:0 0 170px;gap:4px' }, listsBox,
       el('label', { class: 'hstack tiny dim', style: 'margin-top:6px;cursor:pointer' }, el('input', { type: 'checkbox', checked: showDone, onchange: (e) => { showDone = e.target.checked; save('todo.showDone', showDone); paint(); } }), 'Show done'),
+      el('label', { class: 'hstack tiny dim', style: 'cursor:pointer', title: 'High priority (red) first, then medium, then low' }, el('input', { type: 'checkbox', checked: sortByPriority, onchange: (e) => { sortByPriority = e.target.checked; save('todo.sortByPriority', sortByPriority); paint(); } }), 'Sort by priority'),
       el('button', { class: 'btn small ghost', onclick: () => { R.saveTodos(R.todos().filter((t) => !t.done)); paint(); } }, 'Clear done')),
-    el('div', { class: 'col', style: 'flex:1;min-width:0;gap:6px' }, input, hint, items)));
+    el('div', { class: 'col', style: 'flex:1;min-width:0;gap:6px' }, el('div', { class: 'hstack' }, chosenBtn, input), hint, items)));
   paint();
   setTimeout(() => input.focus(), 40);
   return () => {};

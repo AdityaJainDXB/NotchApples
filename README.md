@@ -59,7 +59,7 @@ Pick your computer. Both buttons start the download straight away. The Mac butto
       <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/v2.0.12/NotchApple-2.0.12.dmg"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.0.12</b></a>
     </td>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 1.34.0 BETA</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 1.35.0 BETA</b></a>
     </td>
   </tr>
   <tr>
@@ -203,6 +203,13 @@ All screenshots use sample data.
 ## What's new
 
 > **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is still in the repository's tags.
+
+### Windows 1.35.0 BETA · 9 October 2026 · The Mac 2.0 calculator and to-do priorities
+
+- **An algebra calculator** in Tools → Calculator (ported from the Mac): one step per line, values and functions you define (`a = 5`, `f(x) = x^2 + 1`), equations (`2x + 3 = 11`), quadratics with exact or complex answers, higher degrees, systems (`x + y = 5; x - y = 1`), `solve(a x + b = c, x)`, `expand`, `factor` and `diff`.
+- **Tools has three pages:** Utilities, Calculator and the Translator (which used to be its own tab; the tab still works).
+- **To-do priorities.** Pick High, Medium or Low with the flag, or type `!!!` / `!!` / `!` or `high:` / `med:` / `low:`. **High priority is red and pinned to the top** (switch "Sort by priority" off for the old order). Your existing tasks keep working as Medium.
+- The release pipeline now runs the calculator and to-do tests, and a smoke test of the real screens, before it builds.
 
 ### Mac 2.0.13 · Windows 1.34.1 BETA · 8 October 2026 · ⌨️ Plane: M switches the mouse off
 
