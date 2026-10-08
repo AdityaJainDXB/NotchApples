@@ -33,6 +33,8 @@ jobs:
         uses: Swatinem/rust-cache@v2
         with:
           workspaces: NotchWindows/src-tauri
+          # Tagged releases only read the cache. Saving a new ~600 MB copy on every release filled the 10 GB limit.
+          save-if: ${{ github.event_name == 'workflow_dispatch' }}
 
       - name: Install Tauri CLI
         run: cargo install tauri-cli --version "^2" --locked
