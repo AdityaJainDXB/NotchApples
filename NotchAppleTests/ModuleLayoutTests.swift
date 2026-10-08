@@ -16,14 +16,14 @@ final class ModuleLayoutTests: XCTestCase {
     }
 
     func testHomeFeaturesOfferAllFiveChoices() {
-        for m in ["clipboard", "nowPlaying", "notes", "devices", "alerts", "quickAdd", "claudeUsage"] {
+        for m in ["clipboard", "nowPlaying", "notes", "devices", "alerts", "todo", "claudeUsage"] {
             XCTAssertEqual(ModuleLayoutLogic.allowed(m).count, 5, m)
             XCTAssertTrue(ModuleLayoutLogic.allowed(m).contains(.homeHidden), m)
         }
     }
 
     func testDefaults() {
-        XCTAssertEqual(ModuleLayoutLogic.defaultChoice("clipboard", wasOn: true), .homeHidden)
+        XCTAssertEqual(ModuleLayoutLogic.defaultChoice("clipboard", wasOn: true), .homeExpanded)
         XCTAssertEqual(ModuleLayoutLogic.defaultChoice("clipboard", wasOn: false), .disabled)
         XCTAssertEqual(ModuleLayoutLogic.defaultChoice("timer", wasOn: true), .nonNecessities)
         XCTAssertEqual(ModuleLayoutLogic.defaultChoice("timer", wasOn: false), .disabled)
@@ -42,7 +42,7 @@ final class ModuleLayoutTests: XCTestCase {
 
     func testSwitchingAnOldToggleOnPutsItInItsDefaultPlace() {
         XCTAssertEqual(ModuleLayoutLogic.effective("timer", saved: .disabled, isOn: true), .nonNecessities)
-        XCTAssertEqual(ModuleLayoutLogic.effective("notes", saved: nil, isOn: true), .homeHidden)
+        XCTAssertEqual(ModuleLayoutLogic.effective("notes", saved: nil, isOn: true), .homeExpanded)
     }
 
     func testNativeHomeCardsStayEvenIfTheirOwnSwitchWasNeverOn() {
@@ -69,9 +69,10 @@ final class ModuleLayoutTests: XCTestCase {
         XCTAssertFalse(ModuleLayoutLogic.nonNecessitiesTabNeeded(["timer": .standalone]))
     }
 
-    func testHomeStyleDefaultsToClassicAndFallsBackWhenEmpty() {
+    func testHomeStyleDefaultsToWidgetsAndFallsBackWhenEmpty() {
         typealias L = ModuleLayoutLogic
-        XCTAssertEqual(L.effectiveStyle(saved: nil, onHomeCount: 5), .classic)
+        XCTAssertEqual(L.effectiveStyle(saved: nil, onHomeCount: 5), .widgets)
+        XCTAssertEqual(L.effectiveStyle(saved: nil, onHomeCount: 0), .classic, "an empty widget Home falls back")
         XCTAssertEqual(L.effectiveStyle(saved: .classic, onHomeCount: 5), .classic)
         XCTAssertEqual(L.effectiveStyle(saved: .widgets, onHomeCount: 3), .widgets)
         XCTAssertEqual(L.effectiveStyle(saved: .widgets, onHomeCount: 0), .classic)
@@ -80,11 +81,11 @@ final class ModuleLayoutTests: XCTestCase {
     }
 
     func testHomeOrderKeepsSavedOrderThenDefaults() {
-        let names = ["devices", "alerts", "quickAdd", "claudeUsage"]
+        let names = ["devices", "alerts", "todo", "claudeUsage"]
         XCTAssertEqual(ModuleLayoutLogic.ordered(names, by: []), names)
-        XCTAssertEqual(ModuleLayoutLogic.ordered(names, by: ["quickAdd", "devices"]), ["quickAdd", "devices", "alerts", "claudeUsage"])
+        XCTAssertEqual(ModuleLayoutLogic.ordered(names, by: ["todo", "devices"]), ["todo", "devices", "alerts", "claudeUsage"])
         // Unknown names in the saved order are ignored.
-        XCTAssertEqual(ModuleLayoutLogic.ordered(names, by: ["gone", "alerts"]), ["alerts", "devices", "quickAdd", "claudeUsage"])
+        XCTAssertEqual(ModuleLayoutLogic.ordered(names, by: ["gone", "alerts"]), ["alerts", "devices", "todo", "claudeUsage"])
     }
 
     func testMovingWithinHomeStopsAtTheEnds() {

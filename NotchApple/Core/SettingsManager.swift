@@ -12,7 +12,7 @@ import SwiftUI
 
 /// Every optional feature module in the app.
 enum Module: String, CaseIterable, Identifiable {
-    case today, claude, browser, launcher, translator, stats, windows, tools, mirror, worldClock, messenger, clipboard, notes, focus, shelf, share, audio, vpn, nowPlaying, search, timer, snippets, shortcuts, devices, live, f1, sports, games, alerts, plugins, voiceNotes, screenTime, quickAdd, markets, home, security, cacheCleaner, claudeUsage, smartHome, devTools, wellbeing, nonNecessities
+    case today, claude, browser, launcher, translator, stats, windows, tools, mirror, worldClock, messenger, clipboard, notes, focus, shelf, share, audio, vpn, nowPlaying, search, timer, snippets, shortcuts, devices, live, f1, sports, games, alerts, plugins, voiceNotes, screenTime, quickAdd, markets, home, security, cacheCleaner, claudeUsage, smartHome, devTools, wellbeing, nonNecessities, todo
 
     var id: String { rawValue }
 
@@ -60,6 +60,7 @@ enum Module: String, CaseIterable, Identifiable {
         case .devTools: "Dev Tools"
         case .wellbeing: "Wellbeing"
         case .nonNecessities: "Non-Necessities"
+        case .todo: "To-Do"
         }
     }
 
@@ -107,6 +108,7 @@ enum Module: String, CaseIterable, Identifiable {
         case .devTools: "hammer.fill"
         case .wellbeing: "leaf.fill"
         case .nonNecessities: "ellipsis.circle.fill"
+        case .todo: "checklist"
         }
     }
 
@@ -151,6 +153,7 @@ enum Module: String, CaseIterable, Identifiable {
         case .wellbeing: "A breathing exercise, break reminders (eyes, water, stretch, posture) and a bedtime nudge. Free; the reminders keep running while the notch is closed."
         case .devTools: "Format JSON, encode and decode, read a JWT, hash, make a UUID, convert timestamps, test a regex, check colour contrast and make a QR code. Free, and everything stays on this Mac."
         case .smartHome: "Ultimate: lights, switches, scenes and more from your own Home Assistant (which also connects Hue, IKEA, Zigbee and Matter). The access token stays on this Mac."
+        case .todo: "A to-do list with quick add built in: type a task (and a time, and !!! for high priority) and it goes straight in. High priority shows red and sits at the top."
         case .nonNecessities: "Everything you use now and then in one tab: Focus, World Clock, Audio, Snippets, Shortcuts, Timers, Plugins, Voice Notes, Screen Time and Smart Home."
         case .claudeUsage: "Ultimate: how many tokens Claude Code has used in your 5-hour window, today and this week, with budgets you set yourself. Read from ~/.claude on this Mac."
         case .cacheCleaner: "Ultimate: open the Purge app from the notch to free up disk space. Purge does the cleaning; Notch apple deletes nothing itself."
@@ -246,6 +249,7 @@ final class SettingsManager: ObservableObject {
     @AppStorage(Module.smartHome.storageKey) var smartHomeEnabled = false
     @AppStorage(Module.devTools.storageKey) var devToolsEnabled = false
     @AppStorage(Module.wellbeing.storageKey) var wellbeingEnabled = false
+    @AppStorage(Module.todo.storageKey) var todoEnabled = false
     /// The iPhone Duo pop-and-morph animations (on by default).
     @AppStorage(Duo.key) var useDuoAnimations = true
     /// On (default): a two-finger sideways swipe over the tab bar only scrolls the tabs. Off: it also switches tab.
@@ -355,6 +359,7 @@ final class SettingsManager: ObservableObject {
         case .devTools: $devToolsEnabled
         case .wellbeing: $wellbeingEnabled
         case .nonNecessities: .constant(true)
+        case .todo: $todoEnabled
         }
     }
 

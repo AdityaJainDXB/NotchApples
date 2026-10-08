@@ -64,6 +64,7 @@ struct ModuleContentView: View {
         case .devTools: DevToolsView()
         case .wellbeing: WellbeingView()
         case .nonNecessities: NonNecessitiesView()
+        case .todo: TodoView()
         case .security: EmptyView()
         }
     }

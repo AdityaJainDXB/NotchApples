@@ -17,7 +17,7 @@ final class ClaudeLimitsService: ObservableObject {
     static let shared = ClaudeLimitsService()
     static let endpoint = URL(string: "https://api.anthropic.com/api/oauth/usage")!
 
-    enum State: Equatable { case notConnected, connecting, connected, failed(String) }
+    enum State: Equatable { case notConnected, connecting, signingIn, connected, failed(String) }
 
     @Published private(set) var state: State
     /// The limits of the account being shown.
@@ -31,7 +31,12 @@ final class ClaudeLimitsService: ObservableObject {
     /// True once you have connected; refreshes then happen quietly in the background.
     @AppStorage("claudeUsage.connected") private var wantsConnection = false
 
+    /// True when the last attempt found no Claude Code sign-in at all: the screens then offer to sign in.
+    @Published private(set) var needsSignIn = false
+
     private var credentials: [String: ClaudeLimitsLogic.Credential] = [:]
+    private var signInWatcher: Task<Void, Never>?
+    private var closedNotchForPrompt = false
     private var lastAttempt = Date.distantPast
     private var backoffUntil = Date.distantPast
     private var busy = false
@@ -65,9 +70,85 @@ final class ClaudeLimitsService: ObservableObject {
     // MARK: What the person does
 
     /// Press Connect: read Claude Code's sign-in (macOS asks for permission) and fetch the limits.
-    func connect() { Task { await run(userInitiated: true) } }
+    func connect() {
+        needsSignIn = false
+        signInWatcher?.cancel(); signInWatcher = nil
+        state = .connecting
+        // The macOS permission prompt must not sit behind the notch: step aside, and come back with the result.
+        if let notch = AppDelegate.current?.notch, notch.isOpen { notch.closeNotch(); closedNotchForPrompt = true }
+        Task {
+            await run(userInitiated: true)
+            reopenNotchIfWeClosedIt()
+        }
+    }
+
+    private func reopenNotchIfWeClosedIt() {
+        guard closedNotchForPrompt else { return }
+        closedNotchForPrompt = false
+        AppDelegate.current?.openNotch()
+    }
+
+    /// Not signed in to Claude Code? Opens its own sign-in in Terminal (Claude's login belongs to Claude Code), then
+    /// notices when the sign-in is done and connects by itself.
+    func signInWithClaudeCode() {
+        let script = """
+        #!/bin/zsh -il
+        clear
+        if ! command -v claude >/dev/null 2>&1; then
+          echo "Claude Code isn't installed on this Mac."
+          echo "Install it from https://claude.com/claude-code, then press Connect in Notch apple again."
+          echo
+          read -k 1 "?Press any key to close."
+          exit 0
+        fi
+        echo "Sign in to Claude. If Claude Code asks, type /login and follow the steps in your browser."
+        echo "When you are signed in, Notch apple connects by itself. You can close this window."
+        echo
+        claude
+        """
+        let url = FileManager.default.temporaryDirectory.appendingPathComponent("Sign in to Claude.command")
+        do {
+            try script.write(to: url, atomically: true, encoding: .utf8)
+            try FileManager.default.setAttributes([.posixPermissions: 0o755], ofItemAtPath: url.path)
+        } catch { state = .failed("Couldn't open Terminal: \(error.localizedDescription)"); return }
+        let started = Date()
+        state = .signingIn
+        needsSignIn = false
+        if let notch = AppDelegate.current?.notch, notch.isOpen { notch.closeNotch() }
+        NSWorkspace.shared.open(url)
+        signInWatcher?.cancel()
+        signInWatcher = Task { [weak self] in
+            // Up to five minutes: connect as soon as Claude Code records a fresh sign-in.
+            for _ in 0..<100 {
+                try? await Task.sleep(for: .seconds(3))
+                if Task.isCancelled { return }
+                if Self.signedInSince(started) { await MainActor.run { self?.connect() }; return }
+            }
+            await MainActor.run { if self?.state == .signingIn { self?.state = .failed("Still waiting for Claude Code to finish signing in. Press Connect when you are done.") } }
+        }
+    }
+
+    func cancelSignIn() {
+        signInWatcher?.cancel(); signInWatcher = nil
+        if state == .signingIn { state = .notConnected }
+    }
+
+    /// Claude Code writes its account into ~/.claude.json (and a credentials file in some versions) when you sign in.
+    nonisolated private static func signedInSince(_ date: Date) -> Bool {
+        let home = FileManager.default.homeDirectoryForCurrentUser
+        func modified(_ name: String) -> Date? {
+            (try? FileManager.default.attributesOfItem(atPath: home.appendingPathComponent(name).path))?[.modificationDate] as? Date
+        }
+        if let m = modified(".claude/.credentials.json"), m > date { return true }
+        if let m = modified(".claude.json"), m > date,
+           let data = try? Data(contentsOf: home.appendingPathComponent(".claude.json")),
+           let root = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any], root["oauthAccount"] != nil { return true }
+        return false
+    }
 
     func disconnect() {
+        signInWatcher?.cancel(); signInWatcher = nil
+        needsSignIn = false
         wantsConnection = false
         credentials = [:]; limits = nil; fetched = nil; byAccount = [:]; accounts = []
         state = .notConnected
@@ -114,6 +195,7 @@ final class ClaudeLimitsService: ObservableObject {
             fetched = Date(); state = .connected; wantsConnection = true
             for (service, l) in byAccount { recordHistory(service, l) }
         } else if let failure = firstFailure {
+            needsSignIn = failure == .signedOut
             // Keep showing the last good numbers; only say something when asked, or when nothing was ever read.
             if userInitiated || limits == nil { state = .failed(failure.message) }
             if !userInitiated { backoffUntil = Date().addingTimeInterval(600) }   // never nag the keychain every minute

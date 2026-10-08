@@ -78,10 +78,8 @@ final class ModuleLayout: ObservableObject {
         notify()
     }
 
-    /// Brand-new installs start on the widget Home; people updating keep the page they know until they choose.
-    var defaultHomeStyle: ModuleLayoutLogic.HomeStyle {
-        UserDefaults.standard.bool(forKey: "v2.freshInstall") ? .widgets : .classic
-    }
+    /// The widget Home is the default for everyone; only someone who picked Classic keeps it.
+    var defaultHomeStyle: ModuleLayoutLogic.HomeStyle { .widgets }
 
     /// The Home page that shows now.
     var homeStyle: ModuleLayoutLogic.HomeStyle {

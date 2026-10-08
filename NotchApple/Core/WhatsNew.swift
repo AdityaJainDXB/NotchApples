@@ -20,6 +20,11 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.0.2", date: "8 October 2026", headline: "A To-Do widget, widget Home by default, and Connect to Claude fixed", items: [
+            "A To-Do widget on Home with Quick Add built in: type a task and a time, add !!! for high priority. High priority is red and sits at the top.",
+            "Home opens as the widget page for everyone, with Clipboard, Now Playing and Notes cards.",
+            "Connect to Claude shows progress and errors, keeps the macOS prompt visible, and can sign you in to Claude Code.",
+        ]),
         ReleaseNote(version: "2.0.1", date: "8 October 2026", headline: "One clear latest version", items: [
             "A withdrawn 2.0.0 had muddled the version order. 2.0.1 is above every earlier release, so every copy updates normally. Everything from 1.34.0 to 1.34.10 is included.",
         ]),

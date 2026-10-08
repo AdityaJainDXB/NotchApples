@@ -43,7 +43,7 @@ enum ModuleLayoutLogic {
     /// Shown on Home as an accordion that is closed until you click it.
     static let homeAccordions = ["clipboard", "nowPlaying", "notes"]
     /// Shown on Home as a small card that is always visible (Claude usage only when you add it).
-    static let homeWidgets = ["devices", "alerts", "quickAdd", "claudeUsage"]
+    static let homeWidgets = ["todo", "devices", "alerts", "claudeUsage"]
 
     static var managed: [String] { homeAccordions + homeWidgets + nonNecessities }
 
@@ -59,7 +59,7 @@ enum ModuleLayoutLogic {
 
     /// Where a module goes if you never chose. `wasOn` is whether it was switched on before the reorganisation.
     static func defaultChoice(_ module: String, wasOn: Bool) -> LayoutChoice {
-        if homeAccordions.contains(module) { return wasOn ? .homeHidden : .disabled }
+        if homeAccordions.contains(module) { return wasOn ? .homeExpanded : .disabled }
         if module == "claudeUsage" { return wasOn ? .homeExpanded : .disabled }
         if homeWidgets.contains(module) { return .homeExpanded }
         return wasOn ? .nonNecessities : .disabled
@@ -95,8 +95,8 @@ enum ModuleLayoutLogic {
         var title: String { self == .classic ? "Classic" : "Widgets" }
     }
 
-    /// Nothing chosen means `fallback` (Widgets on a brand-new install, Classic for people updating). Widgets with nothing added to Home falls back to Classic rather than an empty page.
-    static func effectiveStyle(saved: HomeStyle?, fallback: HomeStyle = .classic, onHomeCount: Int) -> HomeStyle {
+    /// Nothing chosen means `fallback`: the widget Home, for everyone, unless they picked Classic. Widgets with nothing added to Home falls back to Classic rather than an empty page.
+    static func effectiveStyle(saved: HomeStyle?, fallback: HomeStyle = .widgets, onHomeCount: Int) -> HomeStyle {
         (saved ?? fallback) == .widgets && onHomeCount > 0 ? .widgets : .classic
     }
 

@@ -476,6 +476,7 @@ struct ClaudeUsageView: View {
 /// "Connect to Claude" while there is no real data, with what it does and any error.
 struct ConnectBanner: View {
     @StateObject private var limits = ClaudeLimitsService.shared
+    var compact = false
 
     var body: some View {
         if limits.limits == nil || !limits.isConnected {
@@ -483,18 +484,37 @@ struct ConnectBanner: View {
                 switch limits.state {
                 case .connecting:
                     HStack(spacing: 8) { ProgressView().controlSize(.small); Text("Waiting for you to allow access in the macOS prompt…").font(.system(size: 12)).foregroundStyle(.white) }
+                    Text("Choose Allow (or Always Allow) near the top of your screen.").font(.system(size: 10)).foregroundStyle(Theme.textSecondary)
+                case .signingIn:
+                    HStack(spacing: 8) { ProgressView().controlSize(.small); Text("Finish signing in to Claude Code in Terminal…").font(.system(size: 12)).foregroundStyle(.white) }
+                    Text("This connects by itself once you are signed in.").font(.system(size: 10)).foregroundStyle(Theme.textSecondary)
+                    HStack {
+                        Button("Open Terminal again") { limits.signInWithClaudeCode() }.buttonStyle(PurpleButtonStyle(prominent: false))
+                        Button("Cancel") { limits.cancelSignIn() }.buttonStyle(.plain).font(.system(size: 11)).foregroundStyle(Theme.textSecondary)
+                    }
                 case .failed(let message):
                     Label(message, systemImage: "exclamationmark.triangle.fill").font(.system(size: 11)).foregroundStyle(.orange).fixedSize(horizontal: false, vertical: true)
-                    Button(limits.isConnected ? "Retry" : "Connect to Claude") { limits.connect() }.buttonStyle(PurpleButtonStyle())
+                    if limits.needsSignIn {
+                        Button("Sign in with Claude Code") { limits.signInWithClaudeCode() }.buttonStyle(PurpleButtonStyle())
+                        Button("Connect again") { limits.connect() }.buttonStyle(.plain).font(.system(size: 11)).foregroundStyle(Theme.accentBright)
+                    } else {
+                        Button(limits.isConnected ? "Retry" : "Connect to Claude") { limits.connect() }.buttonStyle(PurpleButtonStyle())
+                    }
                 default:
-                    Text("See your real limits").font(.system(size: 13, weight: .semibold)).foregroundStyle(.white)
-                    Text("Connect to Claude and these lights follow the same percentages Claude shows you. Notch apple reads the sign-in Claude Code already keeps on this Mac (macOS asks you to allow it) and asks Anthropic for your usage; nothing else is sent or saved.")
-                        .font(.system(size: 11)).foregroundStyle(Theme.textSecondary).fixedSize(horizontal: false, vertical: true)
-                    Button("Connect to Claude") { limits.connect() }.buttonStyle(PurpleButtonStyle())
+                    if !compact {
+                        Text("See your real limits").font(.system(size: 13, weight: .semibold)).foregroundStyle(.white)
+                        Text("Connect to Claude and these lights follow the same percentages Claude shows you. Notch apple reads the sign-in Claude Code already keeps on this Mac (macOS asks you to allow it) and asks Anthropic for your usage; nothing else is sent or saved.")
+                            .font(.system(size: 11)).foregroundStyle(Theme.textSecondary).fixedSize(horizontal: false, vertical: true)
+                    } else {
+                        Text("Connect to see your real limits.").font(.system(size: 11)).foregroundStyle(Theme.textSecondary)
+                    }
+                    Button("Connect to Claude") { limits.connect() }.buttonStyle(PurpleButtonStyle(prominent: compact ? false : true))
+                    Button("Not signed in to Claude Code? Sign in…") { limits.signInWithClaudeCode() }
+                        .buttonStyle(.plain).font(.system(size: 10)).foregroundStyle(Theme.accentBright)
                 }
             }
-            .padding(10)
-            .background(Theme.accent.opacity(0.15), in: RoundedRectangle(cornerRadius: 12))
+            .padding(compact ? 0 : 10)
+            .background(compact ? Color.clear : Theme.accent.opacity(0.15), in: RoundedRectangle(cornerRadius: 12))
         }
     }
 }
@@ -538,9 +558,9 @@ struct ClaudePaceCard: View {
                     .buttonStyle(.plain).foregroundStyle(Theme.accentBright)
                     .help("Details")
             }
-            if !limits.isConnected {
-                Text("Connect to see your real limits.").font(.system(size: 11)).foregroundStyle(Theme.textSecondary)
-                Button("Connect to Claude") { limits.connect() }.buttonStyle(PurpleButtonStyle(prominent: false))
+            if limits.limits == nil && (!limits.isConnected || limits.state != .connected) {
+                // Not connected yet, or the last attempt is in progress or failed: always say where things stand.
+                ConnectBanner(compact: true)
             } else if !store.found && limits.limits == nil {
                 Text("Use Claude Code once to see your usage.").font(.system(size: 11)).foregroundStyle(Theme.textSecondary)
             } else {

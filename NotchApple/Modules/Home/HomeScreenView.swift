@@ -27,19 +27,23 @@ struct HomeScreenView: View {
         ScrollView {
             VStack(spacing: 10) {
                 glance
+                // The To-Do widget (Quick Add is built into it) goes first and spans the page.
+                if layout.homeItems.contains(.todo), layout.choice(.todo) == .homeExpanded {
+                    GlassCard { TodoView() }.frame(height: 250)
+                }
                 todayCard
-                let widgets = layout.homeWidgets.filter(\.expanded).map(\.module)
-                if !widgets.isEmpty {
+                let cards = layout.homeItems.filter { $0 != .todo && layout.choice($0) == .homeExpanded }
+                if !cards.isEmpty {
                     LazyVGrid(columns: [GridItem(.flexible(), spacing: 10), GridItem(.flexible(), spacing: 10)], spacing: 10) {
-                        ForEach(widgets) { m in
+                        ForEach(cards) { m in
                             GlassCard { HomeWidgetCard(module: m) }
-                                .frame(height: m == .alerts ? 150 : 124)
+                                .frame(height: [.alerts, .clipboard, .nowPlaying, .notes].contains(m) ? 150 : 124)
                         }
                     }
                 }
-                // Accordions: the three that start closed, plus any card the person chose to keep closed.
-                ForEach(accordionItems, id: \.module) { item in
-                    accordion(item.module)
+                // Anything you chose to keep closed stays a row you click to open.
+                ForEach(layout.homeItems.filter { layout.choice($0) == .homeHidden }) { m in
+                    accordion(m)
                 }
             }
             .padding(.bottom, 4)
@@ -49,10 +53,7 @@ struct HomeScreenView: View {
             model.refresh()
             if SettingsManager.shared.rainAlert && Entitlements.shared.canUse(.rainAlert) { rain.checkIfDue() }
             if location.useCurrentLocation && location.status == .notDetermined { location.requestLocation() }
-            if !seeded {
-                seeded = true
-                open = Set((layout.homeAccordions + layout.homeWidgets).filter(\.expanded).map(\.module))
-            }
+            seeded = true
         }
     }
 
@@ -124,11 +125,6 @@ struct HomeScreenView: View {
         NotesStore.shared.noteForMeeting(title: e.title, day: day, time: time)
         UserDefaults.standard.set("notes", forKey: "notes.page")
         state.selected = .notes
-    }
-
-    private var accordionItems: [(module: Module, expanded: Bool)] {
-        let all = layout.homeAccordions + layout.homeWidgets.filter { !$0.expanded }
-        return all
     }
 
     // MARK: Glance
@@ -243,9 +239,12 @@ struct HomeWidgetCard: View {
             }
         } else {
             switch module {
+            case .todo: TodoView()
             case .devices: DevicesCard()
             case .alerts: NotificationsCard()
-            case .quickAdd: QuickAddCard()
+            case .clipboard: ClipboardCard()
+            case .nowPlaying: NowPlayingCard()
+            case .notes: NotesCard()
             case .claudeUsage: ClaudePaceCard()
             default: EmptyView()
             }
@@ -335,29 +334,99 @@ private struct NotificationsCard: View {
     }
 }
 
-private struct QuickAddCard: View {
-    @StateObject private var model = QuickAddModel.shared
+private struct ClipboardCard: View {
+    @StateObject private var history = ClipboardHistory.shared
+    @State private var copied: UUID?
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            Text("Quick add").sectionTitle()
-            HStack(spacing: 6) {
-                TextField("Dentist tomorrow 3pm", text: $model.text)
-                    .textFieldStyle(.plain).font(.system(size: 12)).foregroundStyle(.white)
-                    .onSubmit(model.add)
-                Button("Add", action: model.add).buttonStyle(PurpleButtonStyle()).disabled(model.parsed == nil)
+        VStack(alignment: .leading, spacing: 5) {
+            Text("Clipboard").sectionTitle()
+            let recent = Array(history.items.prefix(4))
+            if recent.isEmpty {
+                Text("Things you copy show up here.").font(.system(size: 11)).foregroundStyle(Theme.textSecondary)
             }
-            .padding(8).background(Theme.surface, in: RoundedRectangle(cornerRadius: 10))
-            if let p = model.parsed {
-                Text("\(p.kind.rawValue): \(p.title)\(p.date.map { " · " + $0.formatted(date: .abbreviated, time: p.hasTime ? .shortened : .omitted) } ?? "")")
-                    .font(.system(size: 10)).foregroundStyle(Theme.textSecondary).lineLimit(1)
-            } else if let m = model.message {
-                Text(m).font(.system(size: 10)).foregroundStyle(Theme.textSecondary).lineLimit(2)
-            } else {
-                Text("An event or a reminder, in plain words.").font(.system(size: 10)).foregroundStyle(Theme.textSecondary)
+            ForEach(recent) { item in
+                Button {
+                    history.copy(item)
+                    copied = item.id
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) { if copied == item.id { copied = nil } }
+                } label: {
+                    HStack(spacing: 6) {
+                        Image(systemName: item.kind == .image ? "photo" : item.kind == .files ? "doc" : item.kind == .link ? "link" : "text.alignleft")
+                            .font(.system(size: 10)).frame(width: 14).foregroundStyle(Theme.accentBright)
+                        Text(copied == item.id ? "Copied" : item.title).font(.system(size: 11)).foregroundStyle(copied == item.id ? Color.green : .white).lineLimit(1)
+                        Spacer(minLength: 0)
+                    }
+                    .padding(.horizontal, 6).frame(height: 22)
+                    .background(Theme.surface, in: RoundedRectangle(cornerRadius: 6))
+                }
+                .buttonStyle(.plain).help("Copy it again")
             }
             Spacer(minLength: 0)
         }
+    }
+}
+
+private struct NowPlayingCard: View {
+    @StateObject private var monitor = NowPlayingMonitor.shared
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text("Now playing").sectionTitle()
+            HStack(spacing: 10) {
+                Group {
+                    if let art = monitor.artwork { Image(nsImage: art).resizable().scaledToFill() }
+                    else { Image(systemName: "music.note").font(.system(size: 18)).foregroundStyle(Theme.textSecondary) }
+                }
+                .frame(width: 52, height: 52).background(Theme.surface).clipShape(RoundedRectangle(cornerRadius: 8))
+                VStack(alignment: .leading, spacing: 1) {
+                    Text(monitor.current?.title ?? "Nothing playing").font(.system(size: 12, weight: .semibold)).foregroundStyle(.white).lineLimit(1)
+                    Text(monitor.current?.artist ?? "Press play to start your player").font(.system(size: 10)).foregroundStyle(Theme.textSecondary).lineLimit(1)
+                }
+                Spacer(minLength: 0)
+            }
+            Spacer(minLength: 0)
+            HStack(spacing: 18) {
+                Spacer()
+                IconButton(systemImage: "backward.fill", help: "Previous") { MediaControl.send(.previous) }
+                Button { monitor.playPause() } label: {
+                    Image(systemName: monitor.current?.isPlaying == true ? "pause.circle.fill" : "play.circle.fill").font(.system(size: 28))
+                }
+                .buttonStyle(.plain).foregroundStyle(Theme.accentBright).help("Play or pause")
+                IconButton(systemImage: "forward.fill", help: "Next") { MediaControl.send(.next) }
+                Spacer()
+            }
+        }
+    }
+}
+
+private struct NotesCard: View {
+    @StateObject private var store = NotesStore.shared
+    @State private var draft = ""
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 5) {
+            Text("Quick notes").sectionTitle()
+            HStack(spacing: 6) {
+                TextField("Jot something down…", text: $draft).textFieldStyle(.plain).font(.system(size: 11)).foregroundStyle(.white)
+                    .onSubmit(save)
+                Button("Save", action: save).buttonStyle(PurpleButtonStyle()).disabled(draft.trimmingCharacters(in: .whitespaces).isEmpty)
+            }
+            .padding(6).background(Theme.surface, in: RoundedRectangle(cornerRadius: 8))
+            let recent = Array(store.notes.sorted { $0.updated > $1.updated }.prefix(3))
+            ForEach(recent) { note in
+                Text(note.title.isEmpty ? "New note" : note.title).font(.system(size: 11)).foregroundStyle(.white).lineLimit(1)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
+            Spacer(minLength: 0)
+        }
+    }
+
+    private func save() {
+        let t = draft.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !t.isEmpty else { return }
+        _ = store.add(t)
+        draft = ""
     }
 }
 
