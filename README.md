@@ -56,7 +56,7 @@ Pick your computer. Both buttons start the download straight away. The Mac butto
   </tr>
   <tr>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/v2.0.16/NotchApple-2.0.16.dmg"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.0.16</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/v2.0.17/NotchApple-2.0.17.dmg"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.0.17</b></a>
     </td>
     <td align="center">
       <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 1.36.0 BETA</b></a>
@@ -203,6 +203,10 @@ All screenshots use sample data.
 ## What's new
 
 > **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is still in the repository's tags.
+
+### Mac 2.0.17 · 9 October 2026 · Keep Awake (Lid Closed)
+
+- New tool in Tools: **Keep Awake (Lid Closed)** keeps the Mac running with the lid shut (`pmset disablesleep`). Asks for your password, auto-off under 15% battery, restored on quit.
 
 ### Mac 2.0.16 · 9 October 2026 · ⌥A turns the keyboard light off too
 

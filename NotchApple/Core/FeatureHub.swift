@@ -44,6 +44,7 @@ enum FeatureHub {
             { settings.liveEnabled ? FlightWatcher.shared.liveActivity : nil },
             { settings.marketsEnabled ? MarketsModel.shared.liveActivity : nil },
             { settings.toolsEnabled && settings.keepAwakeActivity ? KeepAwake.shared.liveActivity : nil },
+            { settings.toolsEnabled ? ClosedLidAwake.shared.liveActivity : nil },
         ]
         DownloadWatcher.shared.setEnabled(settings.downloadProgress && Entitlements.shared.canUse(.downloadProgress))
         registerURLScheme()

@@ -275,6 +275,7 @@ struct ToolsView: View {
                     keepAwakeCard.frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
                     textGrabCard.frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
                     colorCard.frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+                    lidCard.frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
                 }
             case .calculator:
                 CalculatorView()
@@ -309,6 +310,28 @@ struct ToolsView: View {
                 .buttonStyle(.plain).font(.system(size: 11, weight: .semibold)).foregroundStyle(Theme.accentBright)
             }
         }
+    }
+
+    @StateObject private var lid = ClosedLidAwake.shared
+
+    private var lidCard: some View {
+        GlassCard {
+            VStack(alignment: .leading, spacing: 10) {
+                Label("Keep Awake (Lid Closed)", systemImage: "laptopcomputer")
+                    .font(.system(size: 13, weight: .semibold)).foregroundStyle(.white)
+                Text(lid.isOn ? "Your Mac keeps running with the lid shut." : "Keep running with the lid closed, no external display needed.")
+                    .font(.system(size: 11)).foregroundStyle(Theme.textSecondary).fixedSize(horizontal: false, vertical: true)
+                Toggle("", isOn: Binding(get: { lid.isOn }, set: { lid.set($0) }))
+                    .toggleStyle(.switch).labelsHidden().disabled(lid.busy)
+                if let m = lid.message {
+                    Text(m).font(.system(size: 10)).foregroundStyle(.orange).fixedSize(horizontal: false, vertical: true)
+                } else if !lid.isOn, lid.batteryWarning != nil {
+                    Text("Needs your password. Uses battery fast if unplugged.").font(.system(size: 10)).foregroundStyle(Theme.textSecondary)
+                }
+                Spacer(minLength: 0)
+            }
+        }
+        .onAppear { lid.refresh() }
     }
 
     private var keepAwakeCard: some View {

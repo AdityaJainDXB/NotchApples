@@ -20,6 +20,9 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.0.17", date: "9 October 2026", headline: "Keep Awake with the lid closed", items: [
+            "New tool: Keep Awake (Lid Closed) keeps your Mac running with the lid shut. It asks for your password, turns off under 15% battery and when Notch apple quits.",
+        ]),
         ReleaseNote(version: "2.0.16", date: "9 October 2026", headline: "⌥A turns the keyboard light off too", items: [
             "Option+A now takes the keyboard backlight to zero with the screen, and restores both.",
             "Settings has a Reset keyboard brightness button in case the backlight is ever left dark.",
