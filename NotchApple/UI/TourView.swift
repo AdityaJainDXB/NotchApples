@@ -146,7 +146,7 @@ private struct Welcome: View {
         VStack(spacing: 10) {
             Spacer(minLength: 0)
             Image(systemName: "sparkles").font(.system(size: 38)).foregroundStyle(Theme.accentGradient)
-            Text("What's new in 1.34").font(.system(size: 26, weight: .bold)).foregroundStyle(.white)
+            Text("What's new in this update").font(.system(size: 26, weight: .bold)).foregroundStyle(.white)
             Text("A huge update for efficiency and a more modular notch").font(.system(size: 14, weight: .semibold)).foregroundStyle(Theme.accentBright)
             Text("A new Home page, a smarter Claude usage tracker, an algebra calculator, fewer tabs, and a PairDrop that works. This short tour shows each change, lets you try the ones you can, and ends by asking where you want things to live.")
                 .font(.system(size: 12)).foregroundStyle(Theme.textSecondary).multilineTextAlignment(.center).frame(maxWidth: 520)

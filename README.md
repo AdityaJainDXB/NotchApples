@@ -46,7 +46,7 @@ Notch apple lives in the black cutout at the top of your MacBook screen (a small
 
 ## Download
 
-Pick your computer. Both buttons start the download straight away. The Mac button is pinned to version 1.34.1.
+Pick your computer. Both buttons start the download straight away. The Mac button is pinned to version 2.0.1
 
 <table align="center">
   <tr>
@@ -55,7 +55,7 @@ Pick your computer. Both buttons start the download straight away. The Mac butto
   </tr>
   <tr>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/v1.34.10/NotchApple-1.34.10.dmg"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 1.34.10</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/v2.0.1/NotchApple-2.0.1.dmg"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.0.1</b></a>
     </td>
     <td align="center">
       <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 1.26.5 BETA</b></a>

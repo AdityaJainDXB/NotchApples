@@ -20,6 +20,9 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.0.1", date: "8 October 2026", headline: "One clear latest version", items: [
+            "A withdrawn 2.0.0 had muddled the version order. 2.0.1 is above every earlier release, so every copy updates normally. Everything from 1.34.0 to 1.34.10 is included.",
+        ]),
         ReleaseNote(version: "1.34.10", date: "8 October 2026", headline: "Your day is back on Home", items: [
             "One thing today, pinned notes, countdowns and the full Up next list are back, in a Today card on Home.",
         ]),
