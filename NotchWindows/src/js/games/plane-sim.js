@@ -129,13 +129,17 @@
   // Performance numbers drive the flight model (see Flight): speeds in m/s, rates in rad/s.
   const PLANES = [
     { id: 'sparrow', name: 'Sparrow', kind: 'Trainer', blurb: 'Gentle, slow and forgiving. Lands itself, almost.',
-      stall: 21, cruise: 42, max: 62, thrust: 3.4, authority: 0.8, pitch: 1.3, roll: 1.9, yaw: 0.55, stability: 2.6, gear: 1.3, scale: 1 },
+      stall: 21, cruise: 42, max: 62, thrust: 3.4, authority: 0.8, pitch: 1.3, roll: 1.9, yaw: 0.55, stability: 2.6, gear: 1.3, scale: 1,
+      span: 5.6, wingY: 1.1, wingZ: -1.1, nose: -3.4, tail: 5.2, gLimit: 5.5, wingX: 1.0, tailZ: 3.9 },
     { id: 'mustang', name: 'Mustang', kind: 'Warbird', blurb: 'Fast and punchy. Lots of power, needs a careful landing.',
-      stall: 34, cruise: 75, max: 125, thrust: 6.5, authority: 0.95, pitch: 1.6, roll: 2.6, yaw: 0.5, stability: 2.1, gear: 1.6, scale: 1 },
+      stall: 34, cruise: 75, max: 125, thrust: 6.5, authority: 0.95, pitch: 1.6, roll: 2.6, yaw: 0.5, stability: 2.1, gear: 1.6, scale: 1,
+      span: 5.8, wingY: -0.2, wingZ: -0.4, nose: -4.4, tail: 5.7, gLimit: 8, wingX: 1.0, tailZ: 4.5 },
     { id: 'falcon', name: 'Falcon', kind: 'Jet', blurb: 'Very fast and very slippery. Plan your turns early.',
-      stall: 55, cruise: 150, max: 240, thrust: 11, authority: 0.9, pitch: 1.0, roll: 3.4, yaw: 0.35, stability: 1.7, gear: 1.7, scale: 1.1 },
+      stall: 55, cruise: 150, max: 240, thrust: 11, authority: 0.9, pitch: 1.0, roll: 3.4, yaw: 0.35, stability: 1.7, gear: 1.7, scale: 1.1,
+      span: 5.2, wingY: -0.2, wingZ: 3.1, nose: -6.5, tail: 5.6, gLimit: 9.5, wingX: 1.45, tailZ: 3.95 },
     { id: 'bipe', name: 'Stunt Bipe', kind: 'Aerobatic', blurb: 'Rolls on a coin and loops in no time. Made for hoops.',
-      stall: 22, cruise: 48, max: 80, thrust: 5.2, authority: 1.05, pitch: 2.3, roll: 4.2, yaw: 0.9, stability: 2.2, gear: 1.3, scale: 1 },
+      stall: 22, cruise: 48, max: 80, thrust: 5.2, authority: 1.05, pitch: 2.3, roll: 4.2, yaw: 0.9, stability: 2.2, gear: 1.3, scale: 1,
+      span: 4.4, wingY: 1.6, wingZ: -1.3, nose: -2.95, tail: 4.5, gLimit: 10, wingX: 1.0, tailZ: 3.3 },
   ];
 
   function buildPlane(id) {
@@ -205,94 +209,185 @@
 
   // ------------------------------------------------------------------ the world
 
-  const RUNWAY = { x: 0, z0: 0, z1: -1400, half: 22 };   // the runway runs from z = 0 towards -z
-  const WORLD = 9000;
+  const RUNWAY = { x: 0, z0: 0, z1: -1400, half: 22 };   // the main runway runs from z = 0 towards -z
+  /// A second, shorter strip on a plateau in the hills.
+  const RIDGE = { x: -2300, z0: 1250, z1: 550, half: 16, y: 120 };
+  const WORLD = 9000, WATER = -2;
+  const VALLEY = [0, -700];                                // the middle of the valley the airfield sits in
+  const LAKE = { x: -1500, z: -2200, r: 520 };
+  /// The river runs from the lake into the mountains, where it has cut a canyon.
+  const RIVER = [[-1500, -2200], [-2600, -3400], [-3500, -4700], [-4100, -6400], [-4300, -8800]];
+  const BRIDGE = { x: -2050, z: -2800 };
+
+  // Smooth value noise for the hills and the mountain ridges.
+  function hash2(i, j) { let h = (Math.imul(i, 374761393) + Math.imul(j, 668265263)) | 0; h = Math.imul(h ^ (h >>> 13), 1274126177); return ((h ^ (h >>> 16)) >>> 0) / 4294967296; }
+  function vnoise(x, z) {
+    const i = Math.floor(x), j = Math.floor(z), fx = x - i, fz = z - j, u = fx * fx * (3 - 2 * fx), v = fz * fz * (3 - 2 * fz);
+    const a = hash2(i, j), b = hash2(i + 1, j), c = hash2(i, j + 1), d = hash2(i + 1, j + 1);
+    return a + (b - a) * u + (c - a) * v + (a - b - c + d) * u * v;
+  }
+  const fbm = (x, z, oct = 4) => { let s = 0, a = 0.5, f = 1; for (let k = 0; k < oct; k++) { s += vnoise(x * f, z * f) * a; f *= 2.03; a *= 0.5; } return s; };
+  const ridged = (x, z) => { let s = 0, a = 0.55, f = 1; for (let k = 0; k < 4; k++) { const n = 1 - Math.abs(vnoise(x * f, z * f) * 2 - 1); s += n * n * a; f *= 2.1; a *= 0.5; } return s; };
+  const smooth = (e0, e1, x) => { const t = clamp((x - e0) / (e1 - e0), 0, 1); return t * t * (3 - 2 * t); };
+  function distSeg(px, pz, a, b) {
+    const dx = b[0] - a[0], dz = b[1] - a[1], t = clamp(((px - a[0]) * dx + (pz - a[1]) * dz) / (dx * dx + dz * dz), 0, 1);
+    return Math.hypot(px - a[0] - dx * t, pz - a[1] - dz * t);
+  }
+  const riverDist = (x, z) => { let d = Infinity; for (let i = 0; i < RIVER.length - 1; i++) d = Math.min(d, distSeg(x, z, RIVER[i], RIVER[i + 1])); return d; };
+
+  /// The terrain's shape before it is sampled into the grid: a flat valley for the airfield and the town, rolling
+  /// hills around it, a ring of ridged mountains, a plateau for the second strip, the lake and the river's canyon.
+  function terrainShape(x, z) {
+    const d = Math.hypot(x - VALLEY[0], z - VALLEY[1]);
+    let h = (fbm(x / 900, z / 900) - 0.32) * 260 * smooth(1300, 2300, d);                 // rolling hills
+    h += ridged(x / 1500, z / 1500) * 1150 * smooth(2900, 4600, d);                        // the mountains
+    h = Math.max(h, 0);
+    const pd = Math.hypot(x - RIDGE.x, z - (RIDGE.z0 + RIDGE.z1) / 2);
+    h += (RIDGE.y - h) * (1 - smooth(420, 720, pd));                                       // the plateau
+    const ld = Math.hypot(x - LAKE.x, z - LAKE.z);
+    h += (-14 - h) * (1 - smooth(LAKE.r - 160, LAKE.r + 80, ld));                           // the lake
+    const rd = riverDist(x, z), wide = 150 + 170 * smooth(2600, 4800, d);                    // the river: a canyon wide enough to fly
+    h += (-10 - h) * (1 - smooth(wide * 0.45, wide, rd));
+    // Keep the airfield and the town perfectly flat.
+    const air = Math.max(Math.abs(x) - 160, 0) + Math.max(z - 260, RUNWAY.z1 - 260 - z, 0);
+    const town = Math.hypot(Math.max(Math.abs(x - 1250) - 450, 0), Math.max(Math.abs(z + 1350) - 550, 0));
+    h *= smooth(0, 220, Math.min(air, town));
+    return h;
+  }
 
   function makeWorld() {
     const r = rng(7), b = new Builder();
-    const mountains = [];
-    for (let i = 0; i < 26; i++) {
-      const a = (i / 26) * Math.PI * 2 + r() * 0.2, d = 3200 + r() * 1800;
-      mountains.push({ x: Math.cos(a) * d, z: Math.sin(a) * d - 700, r: 500 + r() * 500, h: 380 + r() * 700 });
+    // ---- terrain grid (the ground the plane collides with is exactly these triangles)
+    const N = 240, CELL = (WORLD * 2) / N;
+    const H = new Float32Array((N + 1) * (N + 1));
+    for (let j = 0; j <= N; j++) for (let i = 0; i <= N; i++) H[j * (N + 1) + i] = terrainShape(-WORLD + i * CELL, -WORLD + j * CELL);
+    const world = { N, CELL, H, colliders: [], grid: new Map(), turbines: [] };
+    const fields = ['#5a8f3c', '#6aa84f', '#4e7d32', '#8bb34a', '#b5a642', '#7c9c3b', '#a1b856', '#c9b458'].map(hex);
+    const rock = hex('#7a7266'), rock2 = hex('#6e7f80'), snow = hex('#f4f6f7'), sand = hex('#c2b280'), forest = hex('#3f6b2c');
+    const colour = (x, y, z, slope) => {
+      if (y < WATER + 1) return sand;
+      if (y > 760 - vnoise(x / 300, z / 300) * 140) return snow;
+      if (slope > 0.9 || y > 420) return y > 300 ? rock2 : rock;
+      if (y > 40) return vnoise(x / 400, z / 400) > 0.55 ? forest : hex('#5f8a3a');
+      return fields[Math.floor(hash2(Math.floor(x / 260), Math.floor(z / 260)) * fields.length)];
+    };
+    const P = (i, j) => [-WORLD + i * CELL, H[j * (N + 1) + i], -WORLD + j * CELL];
+    for (let j = 0; j < N; j++) for (let i = 0; i < N; i++) {
+      const a = P(i, j), c = P(i + 1, j), e = P(i, j + 1), f = P(i + 1, j + 1);
+      for (const [p, q, t] of [[a, c, e], [c, f, e]]) {
+        const n = norm(cross(sub(t, p), sub(q, p)));
+        const m = mul(add(add(p, q), t), 1 / 3);
+        const col = colour(m[0], m[1], m[2], 1 - Math.abs(n[1]));
+        b.tri(p, q, t, col.map((v) => v * (0.94 + hash2(i * 7 + j, j * 3 - i) * 0.08)), add(m, [0, -10, 0]));
+      }
     }
-    // A few hills inside the valley make low flying interesting.
-    for (let i = 0; i < 6; i++) mountains.push({ x: (r() - 0.5) * 3600, z: -2600 + (r() - 0.5) * 3000, r: 260 + r() * 200, h: 90 + r() * 140 });
-    mountains.forEach((m) => { if (Math.abs(m.x) < 260 && m.z > -1700 && m.z < 300) m.x += 700; });
-
-    const lake = { x: -1500, z: -2200, r: 520 };
-    // Fields: a patchwork of greens and golds, darker far away.
-    const greens = ['#5a8f3c', '#6aa84f', '#4e7d32', '#8bb34a', '#b5a642', '#7c9c3b', '#a1b856', '#c9b458'].map(hex);
-    const T = 300;
-    for (let x = -WORLD; x < WORLD; x += T) for (let z = -WORLD; z < WORLD; z += T) {
-      const c = greens[Math.floor(r() * greens.length)];
-      b.quad([x, 0, z], [x + T, 0, z], [x + T, 0, z + T], [x, 0, z + T], c.map((v) => v * (0.92 + r() * 0.1)));
-    }
-    // Lake.
+    // Water: one sheet at the water level; the dry land sits above it.
     const water = hex('#3a7bd5');
-    for (let i = 0; i < 28; i++) {
-      const a0 = (i / 28) * Math.PI * 2, a1 = ((i + 1) / 28) * Math.PI * 2;
-      b.tri([lake.x, 0.25, lake.z], [lake.x + Math.cos(a0) * lake.r, 0.25, lake.z + Math.sin(a0) * lake.r], [lake.x + Math.cos(a1) * lake.r, 0.25, lake.z + Math.sin(a1) * lake.r], water);
-    }
-    // Runway with centre-line dashes, threshold bars and numbers' stand-ins.
+    b.quad([-WORLD, WATER, -WORLD], [WORLD, WATER, -WORLD], [WORLD, WATER, WORLD], [-WORLD, WATER, WORLD], water, [0, -100, 0]);
+
+    // ---- solid things: drawn, and added to a coarse grid of boxes the plane can hit
+    const solid = (min, max, kind) => {
+      const c = { min, max, kind };
+      world.colliders.push(c);
+      for (let gx = Math.floor(min[0] / 200); gx <= Math.floor(max[0] / 200); gx++) for (let gz = Math.floor(min[2] / 200); gz <= Math.floor(max[2] / 200); gz++) {
+        const k = `${gx},${gz}`; if (!world.grid.has(k)) world.grid.set(k, []); world.grid.get(k).push(c);
+      }
+    };
+    const block = (c, s, col, kind) => { b.box(c, s, col); if (kind) solid(sub(c, mul(s, 0.5)), add(c, mul(s, 0.5)), kind); };
+    const gAt = (x, z) => groundAt(world, x, z);
+
+    // Main runway with centre-line dashes, threshold bars and edge lights.
     const asphalt = hex('#3b3f45'), paint = hex('#f2f2f2'), grass = hex('#4b7a2e');
     b.quad([-60, 0.1, 80], [60, 0.1, 80], [60, 0.1, RUNWAY.z1 - 80], [-60, 0.1, RUNWAY.z1 - 80], grass);
     b.quad([-RUNWAY.half, 0.2, RUNWAY.z0], [RUNWAY.half, 0.2, RUNWAY.z0], [RUNWAY.half, 0.2, RUNWAY.z1], [-RUNWAY.half, 0.2, RUNWAY.z1], asphalt);
     for (let z = -40; z > RUNWAY.z1 + 40; z -= 60) b.quad([-0.8, 0.3, z], [0.8, 0.3, z], [0.8, 0.3, z - 30], [-0.8, 0.3, z - 30], paint);
     for (const z0 of [-6, RUNWAY.z1 + 30]) for (let x = -18; x <= 18; x += 4) if (Math.abs(x) > 2) b.quad([x - 1, 0.3, z0], [x + 1, 0.3, z0], [x + 1, 0.3, z0 - 24], [x - 1, 0.3, z0 - 24], paint);
-    // Edge lights.
     for (let z = 0; z > RUNWAY.z1; z -= 70) for (const x of [-RUNWAY.half - 1, RUNWAY.half + 1]) b.box([x, 0.5, z], [0.6, 0.8, 0.6], hex('#ffe066'));
-    // Airfield: hangars and a tower beside the runway.
-    b.box([110, 9, -300], [50, 18, 36], hex('#95a5a6')); b.box([110, 19, -300], [50, 2, 38], hex('#c0392b'));
-    b.box([110, 9, -380], [50, 18, 36], hex('#95a5a6')); b.box([110, 19, -380], [50, 2, 38], hex('#2980b9'));
-    b.box([90, 14, -520], [10, 28, 10], hex('#ecf0f1')); b.box([90, 31, -520], [14, 6, 14], hex('#34495e'));
+    // The mountain strip on its plateau.
+    const ry = RIDGE.y;
+    b.quad([RIDGE.x - RIDGE.half, ry + 0.2, RIDGE.z0], [RIDGE.x + RIDGE.half, ry + 0.2, RIDGE.z0], [RIDGE.x + RIDGE.half, ry + 0.2, RIDGE.z1], [RIDGE.x - RIDGE.half, ry + 0.2, RIDGE.z1], hex('#6d5a46'));
+    for (let z = RIDGE.z0 - 30; z > RIDGE.z1 + 30; z -= 50) b.quad([RIDGE.x - 0.7, ry + 0.3, z], [RIDGE.x + 0.7, ry + 0.3, z], [RIDGE.x + 0.7, ry + 0.3, z - 22], [RIDGE.x - 0.7, ry + 0.3, z - 22], paint);
+    block([RIDGE.x + 60, ry + 6, 900], [30, 12, 24], hex('#b5651d'), 'hangar');
+    block([RIDGE.x + 60, ry + 13, 900], [32, 2, 26], hex('#7f3f00'));
+    // Airfield buildings.
+    block([110, 9, -300], [50, 18, 36], hex('#95a5a6'), 'hangar'); b.box([110, 19, -300], [50, 2, 38], hex('#c0392b'));
+    block([110, 9, -380], [50, 18, 36], hex('#95a5a6'), 'hangar'); b.box([110, 19, -380], [50, 2, 38], hex('#2980b9'));
+    block([90, 14, -520], [10, 28, 10], hex('#ecf0f1'), 'tower'); block([90, 31, -520], [14, 6, 14], hex('#34495e'), 'tower');
     b.box([80, 0.15, -340], [40, 0.2, 200], hex('#555b61'));
-    // A little town.
-    for (let i = 0; i < 40; i++) {
-      const x = 900 + r() * 700, z = -900 - r() * 900, h = 8 + r() * 35;
-      b.box([x, h / 2, z], [18 + r() * 20, h, 18 + r() * 20], hex(['#d5d8dc', '#e8d8c3', '#c39b77', '#aab7b8', '#f5cba7'][Math.floor(r() * 5)]));
+    // The town: streets of houses and a few taller blocks in the middle.
+    const walls = ['#d5d8dc', '#e8d8c3', '#c39b77', '#aab7b8', '#f5cba7', '#e6b0aa'].map(hex), roofs = ['#a04000', '#7b241c', '#5d6d7e'].map(hex);
+    for (let gx = 0; gx < 9; gx++) for (let gz = 0; gz < 10; gz++) {
+      if (r() < 0.2) continue;
+      const x = 850 + gx * 95 + (r() - 0.5) * 20, z = -850 - gz * 100 + (r() - 0.5) * 20;
+      const centre = Math.hypot(x - 1250, z + 1350) < 250, h = centre ? 30 + r() * 60 : 8 + r() * 14;
+      const w = 22 + r() * 22, d = 22 + r() * 22;
+      block([x, h / 2, z], [w, h, d], walls[Math.floor(r() * walls.length)], 'building');
+      if (!centre) b.cone([x, h, z], Math.min(w, d) * 0.62, 0, 6 + r() * 4, roofs[Math.floor(r() * roofs.length)], 4);
     }
-    // Trees, kept off the runway and the lake.
+    // The bridge over the river (fly under it!).
+    const deckY = 30, rdir = norm([RIVER[1][0] - RIVER[0][0], 0, RIVER[1][1] - RIVER[0][1]]), across = [-rdir[2], 0, rdir[0]];
+    for (let k = -6; k <= 6; k++) {
+      const c = add([BRIDGE.x, deckY, BRIDGE.z], mul(across, k * 18));
+      block(c, [16, 3, 16], hex('#a04000'), 'bridge');
+      if (Math.abs(k) === 2 || Math.abs(k) === 6) block([c[0], (deckY - 1.5 + WATER) / 2, c[2]], [6, deckY - WATER, 6], hex('#784212'), 'bridge');
+    }
+    // A radio mast on a hill, with a red light.
+    const mx = -700, mz = 1700, mg = gAt(mx, mz);
+    block([mx, mg + 110, mz], [3, 220, 3], hex('#c0392b'), 'mast'); b.box([mx, mg + 221, mz], [4, 3, 4], hex('#ff3b30'));
+    // A wind farm on the eastern hills; the blades turn (drawn each frame), and flying into a rotor is a crash.
+    for (let k = 0; k < 7; k++) {
+      const x = 2500 + (k % 4) * 260 + (r() - 0.5) * 60, z = 500 + Math.floor(k / 4) * 380 + (r() - 0.5) * 60, g = gAt(x, z);
+      block([x, g + 40, z], [3, 80, 3], hex('#ecf0f1'), 'turbine');
+      b.box([x, g + 80, z + 2], [4, 4, 8], hex('#dfe6e9'));
+      world.turbines.push({ hub: [x, g + 80, z - 2.5], phase: r() * 6 });
+      solid([x - 26, g + 54, z - 4], [x + 26, g + 106, z - 1], 'turbine');
+    }
+    // Forests on the hills, single trees in the valley; none on runways, roads, water or bare rock.
     const leaf = [hex('#2e6b30'), hex('#3c7d3a'), hex('#285e2a')], bark = hex('#6b4f2a');
-    for (let i = 0; i < 700; i++) {
-      const x = (r() - 0.5) * 7000, z = (r() - 0.5) * 7000 - 700;
-      if (Math.abs(x) < 120 && z < 150 && z > RUNWAY.z1 - 150) continue;
-      if (Math.hypot(x - lake.x, z - lake.z) < lake.r + 30) continue;
-      if (x > 850 && x < 1650 && z < -850 && z > -1850) continue;
+    for (let i = 0; i < 1800; i++) {
+      const x = (r() - 0.5) * 9000, z = (r() - 0.5) * 9000 - 700;
+      const g = gAt(x, z);
+      if (g < WATER + 2 || g > 380) continue;
+      if (g < 1 && r() < 0.65) continue;                                            // fewer trees in the flat valley
+      if (Math.abs(x) < 140 && z < 200 && z > RUNWAY.z1 - 200) continue;
+      if (Math.hypot(x - RIDGE.x, z - (RIDGE.z0 + RIDGE.z1) / 2) < 450) continue;
+      if (x > 780 && x < 1720 && z < -780 && z > -1900) continue;
+      if (Math.abs(x - 110) < 90 && z < -200 && z > -600) continue;
       const h = 10 + r() * 14;
-      b.cone([x, 0, z], 0.8, 0.8, h * 0.3, bark, 5);
-      b.cone([x, h * 0.25, z], h * 0.35, 0, h * 0.8, leaf[i % 3], 6);
+      b.cone([x, g - 1, z], 0.8, 0.8, h * 0.3 + 1, bark, 5);
+      b.cone([x, g + h * 0.25, z], h * 0.35, 0, h * 0.8, leaf[i % 3], 6);
+      solid([x - h * 0.22, g - 1, z - h * 0.22], [x + h * 0.22, g + h, z + h * 0.22], 'tree');
     }
-    // Mountains with snow on the tall ones.
-    const rock = hex('#7d6b5d'), rock2 = hex('#6e7f80'), snow = hex('#f4f6f7');
-    for (const m of mountains) {
-      b.cone([m.x, 0, m.z], m.r, 0, m.h, m.h > 300 ? rock2 : hex('#6b8e3a'), 12);
-      if (m.h > 600) b.cone([m.x, m.h * 0.72, m.z], m.r * 0.28 + 1, 0, m.h * 0.28 + 1, snow, 12);
-      else if (m.h > 300) b.cone([m.x, m.h * 0.5, m.z], m.r * 0.5, 0, m.h * 0.5 + 0.5, rock, 12);
-    }
-    // A bridge over the river-coloured strip near the lake (fly under it!).
-    b.quad([-2600, 0.3, -3200], [-400, 0.3, -1600], [-370, 0.3, -1640], [-2570, 0.3, -3240], water);
-    b.box([-1400, 34, -2350], [12, 4, 160], hex('#a04000'));
-    b.box([-1400, 17, -2290], [8, 34, 8], hex('#784212')); b.box([-1400, 17, -2410], [8, 34, 8], hex('#784212'));
 
     // Clouds: flat-bottomed puffs.
     const cl = new Builder();
-    for (let i = 0; i < 60; i++) {
-      const x = (r() - 0.5) * 9000, z = (r() - 0.5) * 9000, y = 380 + r() * 380;
+    for (let i = 0; i < 70; i++) {
+      const x = (r() - 0.5) * 12000, z = (r() - 0.5) * 12000, y = 520 + r() * 520;
       for (let k = 0; k < 4; k++) cl.box([x + (r() - 0.5) * 120, y + r() * 20, z + (r() - 0.5) * 120], [60 + r() * 70, 18 + r() * 22, 50 + r() * 60], [1, 1, 1]);
     }
-    return { world: b, clouds: cl, mountains, lake };
+    return Object.assign(world, { world: b, clouds: cl });
   }
 
-  /// Ground height under (x, z): flat, except the mountains and hills.
-  function groundAt(world, x, z) {
-    let h = 0;
-    for (const m of world.mountains) {
-      const d = Math.hypot(x - m.x, z - m.z);
-      if (d < m.r) h = Math.max(h, m.h * (1 - d / m.r));
-    }
-    return h;
+  /// Ground height under (x, z), matching the drawn terrain triangles exactly (water counts as the surface).
+  function terrainAt(world, x, z) {
+    const { N, CELL, H } = world;
+    const gx = clamp((x + WORLD) / CELL, 0, N - 1e-6), gz = clamp((z + WORLD) / CELL, 0, N - 1e-6);
+    const i = Math.floor(gx), j = Math.floor(gz), fx = gx - i, fz = gz - j, row = N + 1;
+    const h00 = H[j * row + i], h10 = H[j * row + i + 1], h01 = H[(j + 1) * row + i], h11 = H[(j + 1) * row + i + 1];
+    return fx + fz < 1 ? h00 + (h10 - h00) * fx + (h01 - h00) * fz : h11 + (h01 - h11) * (1 - fx) + (h10 - h11) * (1 - fz);
   }
-  const onRunway = (p) => Math.abs(p[0] - RUNWAY.x) < RUNWAY.half && p[2] < RUNWAY.z0 + 5 && p[2] > RUNWAY.z1 - 5;
+  function groundAt(world, x, z) { return Math.max(terrainAt(world, x, z), WATER); }
+  const overWater = (world, x, z) => terrainAt(world, x, z) < WATER;
+  /// The solid thing (tree, building, bridge…) a point is inside, if any.
+  function hitObject(world, p) {
+    const list = world.grid.get(`${Math.floor(p[0] / 200)},${Math.floor(p[2] / 200)}`);
+    if (!list) return null;
+    for (const c of list) if (p[0] > c.min[0] && p[0] < c.max[0] && p[1] > c.min[1] && p[1] < c.max[1] && p[2] > c.min[2] && p[2] < c.max[2]) return c;
+    return null;
+  }
+  const onRunway = (p) => (Math.abs(p[0] - RUNWAY.x) < RUNWAY.half && p[2] < RUNWAY.z0 + 5 && p[2] > RUNWAY.z1 - 5)
+    || (Math.abs(p[0] - RIDGE.x) < RIDGE.half && p[2] < RIDGE.z0 + 5 && p[2] > RIDGE.z1 - 5);
+  const onRidge = (p) => Math.abs(p[0] - RIDGE.x) < RIDGE.half && p[2] < RIDGE.z0 + 5 && p[2] > RIDGE.z1 - 5;
 
   // ------------------------------------------------------------------ flight model
 
@@ -314,12 +409,28 @@
       this.pos = pos; this.q = qheading(heading, onGround ? 0 : 0.02); this.vel = mul(qrot(this.q, [0, 0, -1]), speed);
       this.w = v3(); this.throttle = onGround ? 0 : 0.7; this.flaps = 0; this.brake = false; this.onGround = onGround;
       this.crashed = false; this.stalled = false; this.aoa = 0; this.gload = 1; this.touch = null; this.sinkAtTouch = 0;
+      // What still works: each wing, the engine (and how much power it still makes), the undercarriage.
+      this.damage = { L: true, R: true, engine: true, power: 1, gear: true };
+      this.events = []; this.overT = 0; this.ogT = 0; this.why = ''; this.impactVel = v3();
     }
     axes() { return { f: qrot(this.q, [0, 0, -1]), u: qrot(this.q, [0, 1, 0]), r: qrot(this.q, [1, 0, 0]) }; }
     get speed() { return len(this.vel); }
     get pitchAngle() { return Math.asin(clamp(this.axes().f[1], -1, 1)); }
     get bank() { const a = this.axes(); return Math.atan2(-a.r[1], a.u[1]); }
     get heading() { const f = this.axes().f; return Math.atan2(f[0], -f[2]); }
+    get wings() { return (this.damage.L ? 0.5 : 0) + (this.damage.R ? 0.5 : 0); }
+
+    /// The engine stops (or, partly, runs rough at a fraction of its power).
+    failEngine(partial = false) {
+      if (!this.damage.engine && !partial) return;
+      if (partial) this.damage.power = Math.min(this.damage.power, 0.35);
+      else { this.damage.engine = false; this.damage.power = 0; }
+    }
+    loseWing(side, cause) {
+      if (!this.damage[side]) return;
+      this.damage[side] = false;
+      this.events.push({ type: 'wing', side, cause });
+    }
 
     step(dt, input, world) {
       if (this.crashed) return;
@@ -335,16 +446,18 @@
       if (Math.abs(this.aoa) > stallAoa) cl = Math.sign(this.aoa) * Math.max(0.35, this.clMax + this.flaps * 0.35 - (Math.abs(this.aoa) - stallAoa) * 4);
       cl = clamp(cl, -this.clMax, this.clMax + this.flaps * 0.4);
       const q = this.k * V * V;
-      // Lift is perpendicular to the airflow, in the plane of the wings' "up".
+      const wings = this.wings;
+      // Lift is perpendicular to the airflow, in the plane of the wings' "up"; a missing wing takes its half away.
       let liftDir = sub(u, mul(vhat, dot(u, vhat)));
       liftDir = len(liftDir) > 1e-4 ? norm(liftDir) : u;
-      const lift = mul(liftDir, q * cl);
-      const cd = this.cd0 * (1 + this.flaps * 1.6) + this.ki * cl * cl + (this.brake && !this.onGround ? 0.06 : 0);
+      const lift = mul(liftDir, q * cl * wings);
+      const cd = this.cd0 * (1 + this.flaps * 1.6) + this.ki * cl * cl * wings + (this.brake && !this.onGround ? 0.06 : 0) + (wings < 1 ? 0.02 : 0);
       const drag = mul(vhat, -q * cd);
       const side = mul(r, -q * Math.sin(beta) * 0.6);         // the fuselage resists skidding
-      // Thrust fades a little with speed, like a propeller.
-      const thrust = mul(f, this.throttle * s.thrust * (1.15 - 0.3 * clamp(V / s.max, 0, 1)));
-      let acc = add(add(add(lift, drag), add(side, thrust)), [0, -G, 0]);
+      // Thrust fades a little with speed, like a propeller; a failed engine gives none.
+      const power = this.damage.engine ? this.damage.power : 0;
+      const thrust = mul(f, this.throttle * power * s.thrust * (1.15 - 0.3 * clamp(V / s.max, 0, 1)));
+      const acc = add(add(add(lift, drag), add(side, thrust)), [0, -G, 0]);
       this.gload = dot(add(acc, [0, G, 0]), u) / G;
 
       // Rotation: what you ask for (weaker when slow) plus the aircraft's own stability pulling the nose into the wind.
@@ -354,19 +467,28 @@
       // every speed: the nose comes round quickly when fast and mushes when slow, and over-pulling still stalls.
       // Hands off, it keeps its current climb or descent, and holds height in a bank (a friendly autotrim). On the
       // wheels there is no trim: the nose only comes up when you pull.
-      const stabT = stab * 0.9 + 0.4, path = this.k * V * this.clSlope;
+      const stabT = stab * 0.9 + 0.4, path = this.k * V * this.clSlope * Math.max(wings, 0.05);
       const aMax = stallAoa * s.authority;
       const gamma = Math.asin(clamp(vhat[1], -1, 1));
       const need = G * Math.cos(gamma) / Math.max(Math.cos(this.bank), 0.5);
-      const trim = V > 1 && !this.onGround ? clamp((need / (this.k * V * V) - this.flaps * 0.35) / this.clSlope, -0.05, aMax * 0.85) : 0;
+      const trim = V > 1 && !this.onGround && wings > 0 ? clamp((need / (this.k * V * V * wings) - this.flaps * 0.35) / this.clSlope, -0.05, aMax * 0.85) : 0;
       const aCmd = input.pitch >= 0 ? trim + input.pitch * (aMax - trim) : trim + input.pitch * (trim + aMax * 0.55);
+      const intact = wings === 1;
       const target = [
         clamp(aCmd * (stabT + path) - this.aoa * stabT + (V > 5 && !this.onGround ? this.k * V * this.flaps * 0.35 - G * Math.cos(gamma) / V : 0), -s.pitch * 1.6, s.pitch * 1.6),
         -input.yaw * s.yaw * eff - beta * stab,
-        // Dihedral: with the roll keys released the wings drift gently back towards level.
-        -input.roll * s.roll * eff + (input.roll === 0 && !this.onGround ? this.bank * 0.3 * clamp(V / s.cruise, 0, 1) : 0),
+        -input.roll * s.roll * eff * Math.max(wings, 0.3),
       ];
-      if (this.stalled) { target[0] -= 0.35; target[2] += Math.sin(performance.now() / 300) * 0.4; }
+      // Wing leveller: with the roll keys released, the wings roll back to level by themselves (positive roll
+      // rate is to the left, and a positive bank is right wing down, so the bank itself is the correction).
+      // Only hands off and not upside down, so loops and inverted flight still work.
+      if (input.roll === 0 && input.pitch === 0 && Math.abs(this.bank) < 100 * DEG && !this.onGround && intact && !this.stalled) {
+        target[2] += Math.sin(this.bank) * 1.3 * clamp(V / s.cruise, 0.3, 1);
+      }
+      // A missing wing: all the lift is on the other side, so it rolls hard towards the stump.
+      if (!intact && wings > 0) target[2] += (this.damage.L ? -1 : 1) * clamp(q * Math.abs(cl) / G, 0.3, 2.5) * 2.2;
+      // A stall drops the nose, and whichever wing is already low drops further (never a random roll).
+      if (this.stalled) { target[0] -= 0.35; target[2] += this.bank * 0.6; }
       if (this.onGround) {
         target[2] = this.bank * 4;                              // wheels keep the wings level
         target[1] = -input.yaw * 0.6 - input.roll * 0.3;        // steer with rudder (or the arrows) on the ground
@@ -377,34 +499,48 @@
       const angle = len(this.w) * dt;
       if (angle > 1e-6) this.q = qnorm(qmul(this.q, qaxis(norm(this.w), angle)));
 
-      // Throttle, flaps and brakes.
       this.throttle = clamp(this.throttle + input.throttle * dt * 0.6, 0, 1);
-
       this.vel = add(this.vel, mul(acc, dt));
       this.pos = add(this.pos, mul(this.vel, dt));
 
-      // Ground contact.
+      // Structure: too fast, and the wings come off; pulling far past the limit breaks one.
+      if (V > s.max * 1.22 && wings > 0) { this.overT += dt; if (this.overT > 0.4) { this.loseWing('L', 'overspeed'); this.loseWing('R', 'overspeed'); } } else this.overT = 0;
+      if ((this.gload > s.gLimit || this.gload < -s.gLimit * 0.5) && intact) {
+        this.ogT += dt;
+        if (this.ogT > 0.25) this.loseWing(this.bank > 0 ? 'R' : 'L', 'overg');
+      } else this.ogT = 0;
+
+      if (this.collide(world, V)) return;
+
+      // Wheels on the ground.
       const gh = groundAt(world, this.pos[0], this.pos[2]);
-      const bottom = this.pos[1] - s.gear;
+      const gear = this.damage.gear ? s.gear : 0.55;
+      const bottom = this.pos[1] - gear;
       if (bottom <= gh) {
         const sink = -this.vel[1];
+        if (overWater(world, this.pos[0], this.pos[2])) { this.crash('water'); return; }
         const level = Math.abs(this.bank) < 22 * DEG && this.pitchAngle > -10 * DEG && this.pitchAngle < 22 * DEG;
-        const flat = gh < 1.5;                                   // no landing on a mountainside
+        const slope = Math.abs(terrainAt(world, this.pos[0] + 4, this.pos[2]) - terrainAt(world, this.pos[0] - 4, this.pos[2]))
+          + Math.abs(terrainAt(world, this.pos[0], this.pos[2] + 4) - terrainAt(world, this.pos[0], this.pos[2] - 4));
+        const flat = slope < 1.2;                                 // no landing on a hillside
         if (!this.onGround) {
-          if (sink > 7.5 || !level || !flat || V > s.max * 0.9) { this.crash(sink > 7.5 ? 'hard' : !level ? 'attitude' : !flat ? 'terrain' : 'fast'); return; }
+          if (sink > 12 || !level || !flat || V > s.max * 0.9 || wings < 1) { this.crash(!flat ? 'terrain' : 'ground'); return; }
           this.onGround = true; this.touch = [this.pos[0], this.pos[2]]; this.sinkAtTouch = sink;
+          // Hard, but not fatal: the undercarriage gives way and it slides on its belly.
+          if (sink > 7.5 && this.damage.gear) { this.damage.gear = false; this.events.push({ type: 'gear' }); }
         }
-        this.pos[1] = gh + s.gear;
-        // Rolling on the wheels: the velocity follows the nose, with rolling friction, and brakes.
+        this.pos[1] = gh + gear;
+        // Rolling on the wheels: the velocity follows the nose, with rolling friction, and brakes. On the belly
+        // it scrapes to a stop.
         const fh = norm([f[0], 0, f[2]]);
         let along = dot(this.vel, fh);
         const rough = onRunway(this.pos) ? 1 : 3.2;
-        const decel = (this.brake ? 7 : 0.25 * rough) * dt;
+        const decel = (!this.damage.gear ? 4.5 : this.brake ? 7 : 0.25 * rough) * dt;
         along = Math.sign(along) * Math.max(0, Math.abs(along) - decel);
-        const up = Math.max(0, this.vel[1]);
+        const up = this.damage.gear ? Math.max(0, this.vel[1]) : 0;
         this.vel = add(mul(fh, along), [0, up, 0]);
-        if (!onRunway(this.pos) && along > s.stall * 1.6) { this.crash('grass'); return; }   // too fast for the grass
-        if (up > 0.5 && this.pos[1] - s.gear > gh + 0.3) this.onGround = false;
+        if (this.damage.gear && !onRunway(this.pos) && along > s.stall * 1.6) { this.damage.gear = false; this.events.push({ type: 'gear' }); }
+        if (up > 0.5 && this.pos[1] - gear > gh + 0.3) this.onGround = false;
       } else if (this.onGround && bottom > gh + 0.6) {
         this.onGround = false;
       }
@@ -412,7 +548,31 @@
       const edge = WORLD - 600;
       if (Math.abs(this.pos[0]) > edge || Math.abs(this.pos[2]) > edge) this.pos = [clamp(this.pos[0], -edge, edge), this.pos[1], clamp(this.pos[2], -edge, edge)];
     }
-    crash(why = 'crash') { this.why = why; this.crashed = true; this.vel = v3(); this.w = v3(); }
+
+    /// Wingtips, nose and tail against trees, buildings, the bridge, turbines and the ground. A wingtip strike
+    /// tears that wing off; the nose or tail hitting something solid is the end.
+    collide(world, V) {
+      const s = this.s, k = s.scale;
+      const pts = [['L', [-s.span * k, s.wingY * k, s.wingZ * k]], ['R', [s.span * k, s.wingY * k, s.wingZ * k]],
+        ['N', [0, 0, s.nose * k]], ['T', [0, 0.5 * k, s.tail * k]]];
+      for (const [part, local] of pts) {
+        if ((part === 'L' || part === 'R') && !this.damage[part]) continue;
+        const p = add(this.pos, qrot(this.q, local));
+        const obj = hitObject(world, p);
+        const under = p[1] < groundAt(world, p[0], p[2]) - 0.05;
+        if (!obj && !under) continue;
+        const what = obj ? obj.kind : overWater(world, p[0], p[2]) ? 'water' : 'ground';
+        if (part === 'L' || part === 'R') {
+          if (obj || V > 14) { this.loseWing(part, what); this.vel = mul(this.vel, obj ? 0.8 : 0.9); }
+        } else if (obj || !this.onGround) {
+          // Scraping the tail on take-off is fine; hitting anything at speed is not.
+          if (!obj && part === 'T' && -this.vel[1] < 3) continue;
+          this.crash(what); return true;
+        }
+      }
+      return false;
+    }
+    crash(why = 'crash') { this.why = why; this.crashed = true; this.impactVel = this.vel.slice(); this.events.push({ type: 'crash', why }); this.vel = v3(); this.w = v3(); }
   }
 
   // ------------------------------------------------------------------ saved data
@@ -425,7 +585,7 @@
     { id: 'hoops', name: 'Hoop Rush', icon: '⭕', desc: '90 seconds. Every hoop you fly through is 1 point. Hoops keep coming.', unit: 'hoops', better: 'high' },
     { id: 'trial', name: 'Time Trial', icon: '⏱', desc: '12 hoops in order around the valley. Fastest time wins.', unit: 's', better: 'low' },
     { id: 'landing', name: 'Landing', icon: '🛬', desc: 'You are on final approach. Land softly on the centre line and stop.', unit: 'pts', better: 'high' },
-    { id: 'free', name: 'Free Flight', icon: '🌤', desc: 'Start on the runway, take off, and explore. Fly under the bridge!', unit: '', better: 'high' },
+    { id: 'free', name: 'Free Flight', icon: '🌤', desc: 'Take off and explore: hills, a canyon, a mountain strip. Watch for engine failures!', unit: '', better: 'high' },
   ];
 
   const CHALLENGES = [
@@ -443,6 +603,11 @@
     { id: 'low', name: 'Low pass', desc: 'Below 15 m at over 60 m/s for 3 s' },
     { id: 'fast', name: 'Top speed', desc: 'Reach your plane\'s top speed' },
     { id: 'all', name: 'Hangar tour', desc: 'Fly every plane' },
+    { id: 'canyon', name: 'Canyon run', desc: 'Fly down the river canyon in the mountains for 4 s' },
+    { id: 'ridge', name: 'Mountain strip', desc: 'Land and stop on the plateau strip' },
+    { id: 'glider', name: 'Glider pilot', desc: 'Land on a runway after an engine failure' },
+    { id: 'onewing', name: 'One-winged', desc: 'Keep flying 10 s after losing a wing' },
+    { id: 'survivor', name: 'Walked away', desc: 'Survive a belly landing' },
   ];
 
   // ------------------------------------------------------------------ styles
@@ -502,14 +667,15 @@
       varying vec3 vc; varying float vd; varying float vl;
       void main(){ vec4 w = m * vec4(p,1.0); gl_Position = vp * w; vec3 nn = normalize(mat3(m) * n);
         float l = max(dot(nn, normalize(vec3(0.45, 0.85, 0.3))), 0.0); vl = 0.42 + 0.68 * l + glow; vc = c * tint; vd = gl_Position.w; }`;
-    const fs = `precision mediump float; varying vec3 vc; varying float vd; varying float vl; uniform vec3 fog; uniform float fogFar;
-      void main(){ float f = clamp((vd - fogFar * 0.25) / (fogFar * 0.75), 0.0, 1.0); gl_FragColor = vec4(mix(vc * vl, fog, f * f), 1.0); }`;
+    const fs = `precision mediump float; varying vec3 vc; varying float vd; varying float vl; uniform vec3 fog; uniform float fogFar; uniform float alpha;
+      void main(){ float f = clamp((vd - fogFar * 0.25) / (fogFar * 0.75), 0.0, 1.0); gl_FragColor = vec4(mix(vc * vl, fog, f * f), alpha); }`;
     const sh = (type, src) => { const s = gl.createShader(type); gl.shaderSource(s, src); gl.compileShader(s); return s; };
     const prog = gl.createProgram(); gl.attachShader(prog, sh(gl.VERTEX_SHADER, vs)); gl.attachShader(prog, sh(gl.FRAGMENT_SHADER, fs)); gl.linkProgram(prog); gl.useProgram(prog);
     const loc = { p: gl.getAttribLocation(prog, 'p'), n: gl.getAttribLocation(prog, 'n'), c: gl.getAttribLocation(prog, 'c') };
     const uni = (name) => gl.getUniformLocation(prog, name);
-    const U = { vp: uni('vp'), m: uni('m'), tint: uni('tint'), glow: uni('glow'), fog: uni('fog'), fogFar: uni('fogFar') };
+    const U = { vp: uni('vp'), m: uni('m'), tint: uni('tint'), glow: uni('glow'), fog: uni('fog'), fogFar: uni('fogFar'), alpha: uni('alpha') };
     gl.enable(gl.DEPTH_TEST);
+    gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
     const upload = (builder) => {
       if (!builder) return null;
       const buf = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, buf); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(builder.d), gl.STATIC_DRAW);
@@ -531,8 +697,36 @@
     const hoopB = new Builder(); hoopB.torus(14, 1.3, [1, 1, 1]); const hoopMesh = upload(hoopB);
     const arrowB = new Builder(); arrowB.cone([0, 0, 0], 2.2, 0, 5, [1, 1, 1], 8); const arrowMesh = upload(arrowB);
     const smokeB = new Builder(); smokeB.box([0, 0, 0], [1, 1, 1], [1, 1, 1]); const smokeMesh = upload(smokeB);
+    // Each plane is split into its body (F), wings (L, R) and tail (T), each centred on itself, so a part can break
+    // off and tumble on its own.
+    function splitPlane(spec, m) {
+      const d = m.body.d, buckets = { F: [], L: [], R: [], T: [] };
+      for (let i = 0; i < d.length; i += 27) {
+        const cx = (d[i] + d[i + 9] + d[i + 18]) / 3, cz = (d[i + 2] + d[i + 11] + d[i + 20]) / 3;
+        const k = cz >= spec.tailZ ? 'T' : cx < -spec.wingX ? 'L' : cx > spec.wingX ? 'R' : 'F';
+        for (let j = 0; j < 27; j++) buckets[k].push(d[i + j]);
+      }
+      const parts = {};
+      for (const [k, arr] of Object.entries(buckets)) {
+        if (!arr.length) continue;
+        const c = v3(), n = arr.length / 9;
+        for (let i = 0; i < arr.length; i += 9) { c[0] += arr[i] / n; c[1] += arr[i + 1] / n; c[2] += arr[i + 2] / n; }
+        for (let i = 0; i < arr.length; i += 9) { arr[i] -= c[0]; arr[i + 1] -= c[1]; arr[i + 2] -= c[2]; }
+        parts[k] = { mesh: upload({ d: arr }), center: c };
+      }
+      return { parts, prop: upload(m.prop), propAt: m.propAt };
+    }
     const planeMeshes = {};
-    for (const p of PLANES) { const m = buildPlane(p.id); planeMeshes[p.id] = { body: upload(m.body), prop: upload(m.prop), propAt: m.propAt }; }
+    for (const p of PLANES) planeMeshes[p.id] = splitPlane(p, buildPlane(p.id));
+    // Wind-turbine rotor: three blades round the hub, turning about z.
+    const rotorB = new Builder();
+    for (let k = 0; k < 3; k++) {
+      const a = (k / 3) * Math.PI * 2, ca = Math.cos(a), sa = Math.sin(a);
+      const P = (x, y, z) => [x * ca - y * sa, x * sa + y * ca, z];
+      rotorB.hexa([P(-1.2, 1, -0.3), P(1.2, 1, -0.3), P(0.5, 26, -0.3), P(-0.5, 26, -0.3), P(-1.2, 1, 0.3), P(1.2, 1, 0.3), P(0.5, 26, 0.3), P(-0.5, 26, 0.3)], [0.94, 0.95, 0.96]);
+    }
+    const rotorMesh = upload(rotorB);
+    const ALL_PARTS = ['F', 'L', 'R', 'T', 'P'];
 
     // ---- state
     let plane = PLANES.find((p) => p.id === read('plane', 'sparrow')) || PLANES[0];
@@ -542,7 +736,11 @@
     let hoops = [], nextHoop = 0, score = 0, timeLeft = 0, elapsed = 0, streak = 0, hoopsMade = 0;
     let camMode = 0, camPos = [0, 30, 60], paused = false, result = null, propAngle = 0, toastTimer = 0;
     let rollAcc = 0, rollT = 0, loopAcc = 0, loopT = 0, lowT = 0, hadTakeoff = false, stoppedT = 0;
-    const smoke = [];
+    const smoke = [];              // particles: fire, smoke, dust, sparks, spray
+    const debris = [];             // parts that have come off and are tumbling on their own
+    let attached = new Set(ALL_PARTS);
+    let wreckT = 0, failAt = Infinity, hadFailure = false, engineSmokeT = 0, wingLostAt = -1, canyonT = 0;
+    let failures = read('failures', 'rare');
     const keys = new Set();
     const done = new Set(read('done', []));
     let invert = read('invert', false), sound = read('sound', true), units = read('units', 'kmh');
@@ -570,6 +768,15 @@
       o.connect(g); g.connect(a.destination); o.start(); o.stop(a.currentTime + t);
     }
     const chime = () => { beep(880, 0.15); setTimeout(() => beep(1320, 0.22), 90); };
+    /// Filtered noise: a boom (low), a crack (high), a scrape (long, middling).
+    function noise(t = 0.8, vol = 0.4, freq = 400) {
+      const a = audio(); if (!a) return;
+      const buf = a.createBuffer(1, Math.floor(a.sampleRate * t), a.sampleRate), d = buf.getChannelData(0);
+      for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / d.length, 2);
+      const src = a.createBufferSource(), f = a.createBiquadFilter(), g = a.createGain();
+      src.buffer = buf; f.type = 'lowpass'; f.frequency.value = freq; g.gain.value = vol;
+      src.connect(f); f.connect(g); g.connect(a.destination); src.start();
+    }
 
     // ---- achievements and toasts
     const toastEl = document.createElement('div'); toastEl.className = 'pg-toast'; toastEl.style.opacity = 0; root.append(toastEl);
@@ -617,6 +824,12 @@
     function start() {
       flight = new Flight(plane);
       score = 0; elapsed = 0; streak = 0; hoopsMade = 0; result = null; paused = false; smoke.length = 0;
+      debris.length = 0; attached = new Set(ALL_PARTS); wreckT = 0; hadFailure = false; engineSmokeT = 0; wingLostAt = -1; canyonT = 0;
+      // Random failures (Settings): mostly in Free Flight and Landing; "often" means every mode.
+      const rate = failures === 'often' ? 1 / 75 : failures === 'rare' ? 1 / 360 : 0;
+      const applies = failures === 'often' || mode.id === 'free' || mode.id === 'landing';
+      failAt = rate && applies ? (mode.id === 'landing' ? 20 + Math.random() * 40 : -Math.log(Math.random()) / rate + 20) : Infinity;
+      if (mode.id === 'landing' && failures === 'rare' && Math.random() > 0.25) failAt = Infinity;
       rollAcc = 0; loopAcc = 0; lowT = 0; stoppedT = 0; hadTakeoff = false;
       hoops = []; nextHoop = 0;
       if (mode.id === 'free') flight.reset([0, plane.gear, -30], 0, 0, true);
@@ -684,7 +897,11 @@
     };
     const kd = (e) => onKey(e, true), ku = (e) => onKey(e, false);
     window.addEventListener('keydown', kd); window.addEventListener('keyup', ku);
+    // Forget held keys whenever the game loses the keyboard: a key released while focus was elsewhere never sends
+    // its key-up here, and would otherwise stay "held" (a plane that keeps rolling by itself).
     const blur = () => keys.clear(); window.addEventListener('blur', blur);
+    root.addEventListener('focusout', (e) => { if (!root.contains(e.relatedTarget)) keys.clear(); });
+    const hidden = () => { if (document.hidden) keys.clear(); }; document.addEventListener('visibilitychange', hidden);
     root.addEventListener('mousedown', () => { if (document.activeElement?.tagName !== 'INPUT') root.focus(); });
 
     function input() {
@@ -700,6 +917,67 @@
     }
 
     // ---- per-frame game rules
+    // ---- particles: fire, smoke, engine smoke, dust, sparks and spray
+    const PUFF = {
+      fire: { life: [0.6, 1.4], size: [2, 5], col: (k) => [1, 0.55 - k * 0.4, 0.1], glow: 0.7, rise: 6, grav: 0, a: 0.85 },
+      smoke: { life: [3, 6], size: [3, 14], col: (k) => [0.3 + k * 0.35, 0.3 + k * 0.35, 0.31 + k * 0.35], glow: 0, rise: 4, grav: 0, a: 0.55 },
+      dark: { life: [0.8, 1.4], size: [0.7, 2.6], col: (k) => [0.1 + k * 0.35, 0.1 + k * 0.35, 0.11 + k * 0.35], glow: 0, rise: 1, grav: 0, a: 0.6 },
+      haze: { life: [0.6, 1.1], size: [0.5, 1.8], col: () => [0.75, 0.75, 0.75], glow: 0.2, rise: 0.5, grav: 0, a: 0.35 },
+      dust: { life: [1, 2.5], size: [2, 7], col: () => [0.55, 0.45, 0.32], glow: 0, rise: 1, grav: 0, a: 0.5 },
+      spark: { life: [0.3, 0.8], size: [0.3, 0.1], col: () => [1, 0.85, 0.3], glow: 1, rise: 0, grav: 9.8 },
+      spray: { life: [0.8, 1.6], size: [1.5, 3], col: () => [0.85, 0.92, 1], glow: 0.3, rise: 0, grav: 9.8, a: 0.7 },
+    };
+    function puff(kind, p, v = v3()) {
+      if (smoke.length > 450) smoke.shift();
+      const k = PUFF[kind];
+      smoke.push({ kind, p: p.slice(), v: v.slice(), t: 0, life: k.life[0] + Math.random() * (k.life[1] - k.life[0]),
+        q: qnorm([Math.random() - 0.5, Math.random() - 0.5, Math.random() - 0.5, Math.random()]) });
+    }
+    const jitter = (s) => [(Math.random() - 0.5) * s, (Math.random() - 0.5) * s, (Math.random() - 0.5) * s];
+    /// Where a part of the plane is right now (its centre, in the world).
+    function partPos(k) {
+      const pm = planeMeshes[plane.id];
+      const c = k === 'P' ? pm.propAt : pm.parts[k]?.center;
+      return c ? add(flight.pos, qrot(flight.q, mul(c, plane.scale))) : flight.pos;
+    }
+    /// A part breaks off and flies on by itself.
+    function detach(k, push = v3(), spin = 3) {
+      if (!attached.has(k)) return;
+      attached.delete(k);
+      const pm = planeMeshes[plane.id], mesh = k === 'P' ? pm.prop : pm.parts[k]?.mesh;
+      if (!mesh) return;
+      const base = flight.crashed ? flight.impactVel : flight.vel;
+      debris.push({ mesh, part: k, pos: partPos(k), q: flight.q.slice(), vel: add(mul(base, k === 'F' ? 0.5 : 0.7), push),
+        w: jitter(spin * 2), fire: k === 'F' ? 14 : 0, rest: false, sink: 0 });
+    }
+    const CRASH_TEXT = { ground: 'Flew into the ground', terrain: 'Hit the hillside', water: 'Ditched in the water', tree: 'Hit a tree',
+      building: 'Flew into a building', bridge: 'Hit the bridge', turbine: 'Flew into a wind turbine', mast: 'Hit the radio mast',
+      hangar: 'Hit a hangar', tower: 'Hit the control tower' };
+    const WING_TEXT = { overspeed: 'Overspeed!', overg: 'Over-G!', ground: 'Wingtip hit the ground!', water: 'Wingtip in the water!',
+      tree: 'Clipped a tree!', building: 'Clipped a building!', bridge: 'Clipped the bridge!', turbine: 'Hit a turbine blade!',
+      mast: 'Hit the radio mast!', hangar: 'Clipped a hangar!', tower: 'Clipped the tower!' };
+    function crashEffects(why) {
+      const at = flight.pos.slice(), v = flight.impactVel;
+      for (const k of ALL_PARTS) detach(k, add(jitter(14), [0, 4 + Math.random() * 6, 0]), 5);
+      if (why === 'water') {
+        for (let i = 0; i < 60; i++) puff('spray', add(at, jitter(4)), add(mul(v, 0.2), [(Math.random() - 0.5) * 16, 6 + Math.random() * 14, (Math.random() - 0.5) * 16]));
+        noise(1.2, 0.35, 900);
+      } else {
+        for (let i = 0; i < 45; i++) puff('fire', add(at, jitter(4)), add(mul(v, 0.15), jitter(18)));
+        for (let i = 0; i < 25; i++) puff('smoke', add(at, jitter(6)), add(mul(v, 0.1), jitter(8)));
+        for (let i = 0; i < 30; i++) puff('spark', at, add(mul(v, 0.3), [(Math.random() - 0.5) * 30, Math.random() * 20, (Math.random() - 0.5) * 30]));
+        noise(1.6, 0.6, 260); beep(60, 0.9, 'sawtooth', 0.25);
+      }
+      if (engGain) engGain.gain.value = 0;
+    }
+    function crashResult() {
+      const why = CRASH_TEXT[flight.why] || 'Crashed';
+      if (mode.id === 'hoops') finish('crash', score, `${why} with ${score} hoop${score === 1 ? '' : 's'}`);
+      else if (mode.id === 'trial') finish('crash', null, `${why} at hoop ${nextHoop + 1} of ${hoops.length}`);
+      else if (mode.id === 'landing') finish('crash', 0, why);
+      else finish('crash', null, why);
+    }
+
     function update(dt) {
       if (toastTimer > 0) { toastTimer -= dt; if (toastTimer <= 0) toastEl.style.opacity = 0; }
       if (screen !== 'fly' || paused) return;
@@ -709,16 +987,49 @@
       const wasGround = flight.onGround;
       flight.step(dt, inp, W);
       elapsed += dt;
-      propAngle += dt * (8 + flight.throttle * 60);
+      // A dead engine's propeller only windmills in the airflow.
+      propAngle += dt * (flight.damage.engine ? 8 + flight.throttle * 60 * flight.damage.power : flight.speed * 0.12);
 
+      // What broke this step.
+      for (const ev of flight.events.splice(0)) {
+        if (ev.type === 'wing') {
+          const { r } = flight.axes(), out = ev.side === 'L' ? -1 : 1;
+          const at = partPos(ev.side);
+          detach(ev.side, add(mul(r, out * (5 + Math.random() * 4)), [0, 3, 0]), 4);
+          for (let i = 0; i < 14; i++) puff(ev.cause === 'water' ? 'spray' : 'dust', at, add(mul(flight.vel, 0.4), jitter(10)));
+          for (let i = 0; i < 10; i++) puff('spark', at, add(mul(flight.vel, 0.5), jitter(16)));
+          toast(`💥 ${WING_TEXT[ev.cause] || 'Damage!'} ${ev.side === 'L' ? 'Left' : 'Right'} wing torn off`, 2600);
+          noise(0.35, 0.5, 2200); wingLostAt = elapsed;
+        } else if (ev.type === 'gear') {
+          toast('💥 The undercarriage collapsed! Sliding on the belly…', 2400);
+          noise(2.2, 0.3, 700);
+        } else if (ev.type === 'crash') {
+          crashEffects(ev.why);
+        }
+      }
       if (flight.crashed) {
-        beep(90, 0.6, 'sawtooth', 0.3); beep(60, 0.9, 'square', 0.2);
-        for (let i = 0; i < 40; i++) smoke.push({ p: flight.pos.slice(), v: [(Math.random() - 0.5) * 20, Math.random() * 18, (Math.random() - 0.5) * 20], t: 0, life: 2 + Math.random() * 2, fire: i < 20 });
-        if (mode.id === 'hoops') finish('crash', score, `Crashed with ${score} hoop${score === 1 ? '' : 's'}`);
-        else if (mode.id === 'trial') finish('crash', null, `Crashed at hoop ${nextHoop + 1} of ${hoops.length}`);
-        else if (mode.id === 'landing') finish('crash', 0, flight.speed > 0 ? 'Crashed on landing' : 'Crashed');
-        else finish('crash', null, 'Crashed');
+        // Let the wreck tumble and burn for a few seconds before the result.
+        wreckT += dt;
+        if (wreckT > 3.2) crashResult();
         return;
+      }
+
+      // Random engine trouble: a full failure, or a bird strike that leaves it running rough.
+      if (elapsed > failAt && flight.damage.engine && !flight.onGround) {
+        const partial = Math.random() < 0.3;
+        flight.failEngine(partial);
+        hadFailure = true; failAt = Infinity; engineSmokeT = partial ? 25 : 12;
+        toast(partial ? '🐦 Bird strike! The engine is running rough' : '⚠️ ENGINE FAILURE! Pick a field and glide down', 3200);
+        noise(0.5, 0.4, 500); beep(140, 0.4, 'square', 0.15);
+      }
+      // Engine smoke, and sparks from a belly slide.
+      if (engineSmokeT > 0 && attached.has('F')) {
+        engineSmokeT -= dt;
+        if (Math.random() < dt * 10) puff(flight.damage.engine ? 'haze' : 'dark', add(partPos('F'), qrot(flight.q, [0, 0.4, plane.nose * 0.6])), add(mul(flight.vel, 0.92), jitter(1.2)));
+      }
+      if (flight.onGround && !flight.damage.gear && flight.speed > 3 && Math.random() < dt * 40) {
+        puff('spark', add(flight.pos, [0, -0.4, 0]), add(mul(flight.vel, 0.5), [(Math.random() - 0.5) * 6, 2 + Math.random() * 3, (Math.random() - 0.5) * 6]));
+        if (Math.random() < 0.3) puff('dust', flight.pos, jitter(3));
       }
 
       // Hoops: passing through the ring's plane inside its radius.
@@ -763,11 +1074,14 @@
         toast(`Touchdown · ${sink.toFixed(1)} m/s${sink < 1 ? ' · butter!' : sink < 2.5 ? ' · nice' : sink < 4.5 ? ' · firm' : ' · ouch'}`, 1500);
         if (sink < 1 && onRunway(flight.pos)) achieve('butter');
       }
-      if (flight.onGround && flight.speed < 1.5 && (hadTakeoff || mode.id === 'landing')) {
+      if (flight.onGround && flight.speed < 1.5 && !flight.damage.gear) {
+        stoppedT += dt;
+        if (stoppedT > 0.8) { achieve('survivor'); finish('crash', mode.id === 'landing' ? 0 : mode.id === 'hoops' ? score : null, 'Belly landing · the plane is scrap, but you walked away'); return; }
+      } else if (flight.onGround && flight.speed < 1.5 && (hadTakeoff || mode.id === 'landing')) {
         stoppedT += dt;
         if (stoppedT > 0.6) {
           const on = onRunway(flight.pos);
-          if (on) achieve('landed');
+          if (on && stoppedT < 0.7) { achieve('landed'); if (onRidge(flight.pos)) achieve('ridge'); if (hadFailure) achieve('glider'); }
           if (mode.id === 'landing') {
             const sink = flight.sinkAtTouch, centre = Math.abs(flight.touch[0]), zone = Math.abs(flight.touch[1] - (-300));
             const pts = on ? Math.max(0, Math.round(1000 - sink * 140 - centre * 12 - zone * 0.5)) : 0;
@@ -786,12 +1100,19 @@
       if (!flight.onGround && agl < 15 && flight.speed > 60) { lowT += dt; if (lowT > 3) achieve('low'); } else lowT = 0;
       if (flight.speed > plane.max * 0.97) achieve('fast');
       const bp = flight.pos;
-      if (Math.abs(bp[0] + 1400) < 8 && Math.abs(bp[2] + 2350) < 75 && bp[1] < 32 && !flight.onGround) achieve('bridge');
+      if (Math.hypot(bp[0] - BRIDGE.x, bp[2] - BRIDGE.z) < 30 && bp[1] < 27 && bp[1] > WATER && !flight.onGround) achieve('bridge');
+      if (flight.wings === 0.5 && !flight.onGround && wingLostAt >= 0 && elapsed - wingLostAt > 10) achieve('onewing');
+      // The canyon: down by the river in the mountains, with rock higher than you on both sides.
+      if (!flight.onGround && Math.hypot(bp[0] - VALLEY[0], bp[2] - VALLEY[1]) > 3300 && riverDist(bp[0], bp[2]) < 90) {
+        const walls = [[220, 0], [-220, 0], [0, 220], [0, -220]].filter(([dx, dz]) => groundAt(W, bp[0] + dx, bp[2] + dz) > bp[1]).length;
+        if (walls >= 2) { canyonT += dt; if (canyonT > 4) achieve('canyon'); } else canyonT = Math.max(0, canyonT - dt);
+      }
 
       // Engine sound follows the throttle and airspeed.
       if (engGain && ac) {
-        eng.frequency.setTargetAtTime(45 + flight.throttle * 70 + flight.speed * 0.25, ac.currentTime, 0.1);
-        engGain.gain.setTargetAtTime(sound ? 0.035 + flight.throttle * 0.05 : 0, ac.currentTime, 0.1);
+        const run = flight.damage.engine ? (flight.damage.power < 1 ? (Math.random() < 0.15 ? 0.2 : 1) : 1) : 0;
+        eng.frequency.setTargetAtTime(45 + flight.throttle * 70 * run + flight.speed * 0.25, ac.currentTime, 0.1);
+        engGain.gain.setTargetAtTime(sound ? (0.035 + flight.throttle * 0.05) * run : 0, ac.currentTime, 0.05);
       }
     }
 
@@ -809,7 +1130,7 @@
       gl.viewport(0, 0, w, h);
       const sky = [0.55, 0.76, 0.96];
       gl.clearColor(...sky, 1); gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-      gl.uniform3fv(U.fog, sky); gl.uniform1f(U.fogFar, 5200);
+      gl.uniform3fv(U.fog, sky); gl.uniform1f(U.fogFar, 7500); gl.uniform1f(U.alpha, 1);
 
       // Camera.
       let eye, at, up;
@@ -826,9 +1147,12 @@
         const { f, u } = flight.axes();
         if (camMode === 1) {
           eye = add(add(flight.pos, mul(u, 1.1)), mul(f, -0.4)); at = add(eye, f); up = u;
-        } else if (camMode === 2 || screen === 'result') {
-          const a = t * 0.0004;
-          eye = add(flight.pos, [Math.sin(a) * 28, 9, Math.cos(a) * 28]); at = flight.pos; up = [0, 1, 0];
+        } else if (camMode === 2 || screen === 'result' || flight.crashed) {
+          // Orbit the plane, or after a crash the wreck (the fuselage, wherever it ended up).
+          const a = t * 0.0004, wreck = debris.find((d) => d.part === 'F'), c = flight.crashed && wreck ? wreck.pos : flight.pos;
+          const r = flight.crashed ? 38 : 28;
+          eye = [c[0] + Math.sin(a) * r, Math.max(c[1] + 12, groundAt(W, c[0] + Math.sin(a) * r, c[2] + Math.cos(a) * r) + 4), c[2] + Math.cos(a) * r];
+          at = c; up = [0, 1, 0];
         } else {
           const back = 20 * plane.scale, high = 5 * plane.scale;
           const want = add(add(flight.pos, mul(f, -back)), add(mul(u, high * 0.6), [0, high * 0.6, 0]));
@@ -844,6 +1168,7 @@
       if (screen !== 'menu') {
         draw(worldMesh);
         draw(cloudMesh, I, [1, 1, 1], 0.25);
+        for (const tb of W.turbines) draw(rotorMesh, model(qaxis([0, 0, 1], t * 0.0012 + tb.phase), tb.hub));
         // Hoops: the next one glows gold, the rest orange, passed ones turn green.
         const nextIdx = mode.id === 'trial' ? nextHoop : hoops.findIndex((x) => !x.passed);
         hoops.forEach((hp, i) => {
@@ -859,20 +1184,27 @@
         draw(worldMesh, model([0, 0, 0, 1], [0, -0.2, 300]));
       }
 
-      if (showPlane && !(flight.crashed && screen === 'result')) {
-        const pm = planeMeshes[plane.id];
-        const m = model(flight.q, flight.pos, plane.scale);
-        draw(pm.body, m);
-        if (pm.prop) {
+      if (showPlane) {
+        const pm = planeMeshes[plane.id], parts = screen === 'menu' ? new Set(ALL_PARTS) : attached;
+        for (const k of ['F', 'L', 'R', 'T']) {
+          const part = pm.parts[k];
+          if (part && parts.has(k)) draw(part.mesh, model(flight.q, add(flight.pos, qrot(flight.q, mul(part.center, plane.scale))), plane.scale));
+        }
+        if (pm.prop && parts.has('P')) {
           const pq = qmul(flight.q, qaxis([0, 0, 1], propAngle));
           draw(pm.prop, model(pq, add(flight.pos, qrot(flight.q, mul(pm.propAt, plane.scale))), plane.scale), [1, 1, 1], 0);
         }
       }
-      // Smoke and fire after a crash.
-      for (const s of smoke) {
-        const k = s.t / s.life;
-        draw(smokeMesh, model([0, 0, 0, 1], s.p, 2 + k * 8), s.fire && k < 0.4 ? [1, 0.5 - k, 0.1] : [0.3 + k * 0.3, 0.3 + k * 0.3, 0.3 + k * 0.3], s.fire ? 0.6 : 0);
+      // Broken-off parts; the burnt ones darker.
+      for (const d of debris) draw(d.mesh, model(d.q, d.pos, plane.scale), d.part === 'F' && flight.crashed && flight.why !== 'water' ? [0.45, 0.42, 0.4] : [1, 1, 1]);
+      // Fire, smoke, dust, sparks and spray.
+      gl.enable(gl.BLEND); gl.depthMask(false);
+      for (const p of smoke) {
+        const k = p.t / p.life, def = PUFF[p.kind];
+        gl.uniform1f(U.alpha, (def.a ?? 1) * (1 - k * k));
+        draw(smokeMesh, model(p.q, p.p, def.size[0] + (def.size[1] - def.size[0]) * k), def.col(k), def.glow);
       }
+      gl.uniform1f(U.alpha, 1); gl.depthMask(true); gl.disable(gl.BLEND);
       // A 3D arrow ahead of the plane pointing at the next hoop.
       const target = hoops.find((x, i) => !x.passed && (mode.id !== 'trial' || i === nextHoop));
       if (screen === 'fly' && target && camMode === 0) {
@@ -939,7 +1271,9 @@
       // Warnings.
       h2.font = `900 ${Math.round(16 * s + 4)}px system-ui`;
       const blink = Math.floor(performance.now() / 300) % 2;
-      if (flight.stalled && blink) { h2.fillStyle = '#ff4d4d'; h2.fillText('STALL', cx, 56 * s + 10); }
+      if (!flight.damage.engine && blink) { h2.fillStyle = '#ff4d4d'; h2.fillText('ENGINE FAILURE', cx, 56 * s + 10); }
+      else if (flight.wings < 1 && blink) { h2.fillStyle = '#ff4d4d'; h2.fillText(flight.wings === 0 ? 'NO WINGS' : 'WING LOST', cx, 56 * s + 10); }
+      else if (flight.stalled && blink) { h2.fillStyle = '#ff4d4d'; h2.fillText('STALL', cx, 56 * s + 10); }
       else if (!flight.onGround && agl < 40 && flight.vel[1] < -9 && blink) { h2.fillStyle = '#ffd166'; h2.fillText('PULL UP', cx, 56 * s + 10); }
       else if (!flight.onGround && Math.abs(flight.gload) > 5.5) { h2.fillStyle = '#ffd166'; h2.fillText(`${flight.gload.toFixed(1)} G`, cx, 56 * s + 10); }
       // Next hoop distance (and direction when it's off-screen).
@@ -947,6 +1281,18 @@
         const d = len(sub(target.pos, flight.pos));
         h2.font = `700 ${Math.round(11 * s + 2)}px system-ui`; h2.fillStyle = '#ffd166';
         h2.fillText(`next hoop ${Math.round(d)} m`, cx, 34 * s + 30);
+      }
+      // Damage panel (top right) once anything is wrong.
+      const dmg = flight.damage;
+      if (!dmg.engine || dmg.power < 1 || !dmg.L || !dmg.R || !dmg.gear) {
+        const rows = [['ENGINE', !dmg.engine ? 'FAILED' : dmg.power < 1 ? 'ROUGH' : 'OK', !dmg.engine ? '#ff4d4d' : dmg.power < 1 ? '#ffd166' : '#5ee08a'],
+          ['L WING', dmg.L ? 'OK' : 'GONE', dmg.L ? '#5ee08a' : '#ff4d4d'], ['R WING', dmg.R ? 'OK' : 'GONE', dmg.R ? '#5ee08a' : '#ff4d4d'],
+          ['GEAR', dmg.gear ? 'OK' : 'BROKEN', dmg.gear ? '#5ee08a' : '#ff4d4d']];
+        const bw = 120 * s + 14, bx = W2 - bw - 8, by0 = 8;
+        box(bx, by0, bw, rows.length * 16 * s + 12);
+        h2.font = `700 ${Math.round(9 * s + 2)}px system-ui`; h2.textAlign = 'left';
+        rows.forEach(([n, v, c], i) => { const y = by0 + 12 + i * 16 * s; h2.fillStyle = 'rgba(255,255,255,.65)'; h2.fillText(n, bx + 8, y); h2.fillStyle = c; h2.fillText(v, bx + 8 + 62 * s, y); });
+        h2.textAlign = 'center';
       }
       if (paused) { h2.fillStyle = 'rgba(0,0,0,.3)'; h2.fillRect(0, 0, W2, H2); }
     }
@@ -1000,7 +1346,11 @@
           <h2>Settings</h2><div class="pg-row">
           <button data-a="invert">${invert ? '✓ ' : ''}↑ pulls up (arcade)</button>
           <button data-a="sound">${sound ? '🔊 Sound on' : '🔇 Sound off'}</button>
-          <button data-a="units">${units === 'kmh' ? 'km/h · m' : 'knots · feet'}</button></div>`;
+          <button data-a="units">${units === 'kmh' ? 'km/h · m' : 'knots · feet'}</button>
+          <button data-a="failures">Failures: ${failures === 'off' ? 'off' : failures === 'often' ? 'often (every mode)' : 'rare (Free Flight, Landing)'}</button></div>
+          <h2>Damage</h2><div class="pg-hint">Clip a tree, a building or the ground with a wingtip and that wing tears off: the plane rolls hard towards the stump.
+          Hit something with the nose or tail, or the ground too hard, and it breaks up. Too fast and the wings come off; pulling far too hard snaps one.
+          A hard landing can collapse the undercarriage into a belly slide. With failures on, the engine can quit (glide to a field) or run rough after a bird strike.</div>`;
       }
       ui.innerHTML = `<div class="pg-menu pg-side"><div class="pg-row"><h1>✈️ Plane</h1><div class="pg-tabs">${tabs.map(([id, n]) => `<button data-tab="${id}" class="${id === menuTab ? 'pg-on' : ''}">${n}</button>`).join('')}</div></div>${body}</div>`;
       bind();
@@ -1022,8 +1372,57 @@
         else if (a === 'invert') { invert = !invert; write('invert', invert); renderUI(); }
         else if (a === 'sound') { sound = !sound; write('sound', sound); if (!sound && engGain) engGain.gain.value = 0; renderUI(); }
         else if (a === 'units') { units = units === 'kmh' ? 'kt' : 'kmh'; write('units', units); renderUI(); }
+        else if (a === 'failures') { failures = failures === 'rare' ? 'often' : failures === 'often' ? 'off' : 'rare'; write('failures', failures); renderUI(); }
         else if (a === 'clear') { if (window.confirm ? window.confirm('Clear every leaderboard on this computer?') : true) { MODES.forEach((m) => write(`board.${m.id}`, [])); renderUI(); } }
       });
+    }
+
+    // ---- particles and debris, every frame (also while the wreck settles and on the result screen)
+    function stepParticles(dt) {
+      for (const p of smoke) {
+        const def = PUFF[p.kind];
+        p.t += dt; p.v[1] += (def.rise - def.grav) * dt; p.v = mul(p.v, 1 - Math.min(1, dt * (def.grav ? 0.2 : 1.2)));
+        p.p = add(p.p, mul(p.v, dt));
+        const g = groundAt(W, p.p[0], p.p[2]);
+        if (p.p[1] < g) { p.p[1] = g; p.v = mul(p.v, 0.3); }
+      }
+      for (let i = smoke.length - 1; i >= 0; i--) if (smoke[i].t > smoke[i].life) smoke.splice(i, 1);
+    }
+    /// Broken parts: gravity, air drag, tumbling, bouncing and scraping along the ground, floating then sinking in water.
+    function stepDebris(dt) {
+      for (const d of debris) {
+        if (d.fire > 0) {
+          d.fire -= dt;
+          if (Math.random() < dt * 25) puff('fire', add(d.pos, jitter(3)), [0, 2, 0]);
+          if (Math.random() < dt * 12) puff('smoke', add(d.pos, jitter(3)), [0, 3, 0]);
+        }
+        if (d.rest) continue;
+        const sp = len(d.vel);
+        d.vel[1] -= G * dt;
+        d.vel = mul(d.vel, 1 - Math.min(0.5, 0.0025 * sp * dt));
+        d.pos = add(d.pos, mul(d.vel, dt));
+        const ang = len(d.w) * dt;
+        if (ang > 1e-6) d.q = qnorm(qmul(d.q, qaxis(norm(d.w), ang)));
+        const water = overWater(W, d.pos[0], d.pos[2]), g = groundAt(W, d.pos[0], d.pos[2]) + 0.5 - d.sink;
+        if (d.pos[1] < g) {
+          const impact = -d.vel[1];
+          d.pos[1] = g;
+          if (water) {
+            if (impact > 4) for (let i = 0; i < 6; i++) puff('spray', d.pos, [(Math.random() - 0.5) * 8, 4 + Math.random() * 6, (Math.random() - 0.5) * 8]);
+            d.vel = [d.vel[0] * 0.9, 0, d.vel[2] * 0.9]; d.w = mul(d.w, 0.9); d.fire = 0;
+            d.sink += dt * 0.25;                                   // slowly goes under
+          } else {
+            d.vel[1] = impact * 0.3; d.vel[0] *= 0.72; d.vel[2] *= 0.72; d.w = mul(d.w, 0.65);
+            if (impact > 5) {
+              noise(0.25, Math.min(0.35, impact * 0.02), 300);
+              for (let i = 0; i < 4; i++) puff('dust', d.pos, [(Math.random() - 0.5) * 6, 1 + Math.random() * 3, (Math.random() - 0.5) * 6]);
+              for (let i = 0; i < 5; i++) puff('spark', d.pos, add(mul(d.vel, 0.5), jitter(10)));
+            }
+          }
+          if (len(d.vel) < 0.8 && !water) { d.rest = true; d.vel = v3(); }
+          if (d.sink > 6) d.rest = true;
+        }
+      }
     }
 
     // ---- main loop
@@ -1033,22 +1432,26 @@
       const dt = Math.min(0.05, (t - last) / 1000); last = t;
       // Physics in small fixed steps so fast planes stay stable.
       let left = dt; while (left > 1e-4) { const h = Math.min(left, 1 / 120); update(h); left -= h; }
-      for (const s of smoke) { s.t += dt; s.p = add(s.p, mul(s.v, dt)); s.v[1] += 2 * dt; }
-      for (let i = smoke.length - 1; i >= 0; i--) if (smoke[i].t > smoke[i].life) smoke.splice(i, 1);
+      if (!paused) { stepParticles(dt); stepDebris(dt); }
       render(t);
       raf = requestAnimationFrame(frame);
     }
     renderUI();
     raf = requestAnimationFrame(frame);
     root.focus();
+    // For tests: the live flight state.
+    window.NotchPlaneGame._state = () => ({ screen, keys: [...keys], bank: flight.bank, pitch: flight.pitchAngle, pos: flight.pos, w: flight.w, onGround: flight.onGround,
+      speed: flight.speed, damage: flight.damage, crashed: flight.crashed, why: flight.why, debris: debris.length, particles: smoke.length });
+    window.NotchPlaneGame._poke = { failEngine: (p) => { failAt = elapsed; }, flight: () => flight };
 
     return () => {
       alive = false; cancelAnimationFrame(raf);
       window.removeEventListener('keydown', kd); window.removeEventListener('keyup', ku); window.removeEventListener('blur', blur);
+      document.removeEventListener('visibilitychange', hidden);
       try { ac?.close(); } catch { /* already closed */ }
       root.remove();
     };
   }
 
-  window.NotchPlaneGame = { mount, PLANES, MODES, CHALLENGES, Flight, _test: { groundAt, makeWorld, qheading, qrot } };
+  window.NotchPlaneGame = { mount, PLANES, MODES, CHALLENGES, Flight, _test: { groundAt, makeWorld, qheading, qrot, hitObject, terrainAt } };
 })();
