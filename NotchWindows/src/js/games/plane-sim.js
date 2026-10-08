@@ -128,26 +128,70 @@
 
   // Performance numbers drive the flight model (see Flight): speeds in m/s, rates in rad/s.
   const PLANES = [
-    { id: 'sparrow', name: 'Sparrow', kind: 'Trainer', blurb: 'Gentle, slow and forgiving. Lands itself, almost.',
-      stall: 21, cruise: 42, max: 62, thrust: 3.4, authority: 0.8, pitch: 1.3, roll: 1.9, yaw: 0.55, stability: 2.6, gear: 1.3, scale: 1 },
-    { id: 'mustang', name: 'Mustang', kind: 'Warbird', blurb: 'Fast and punchy. Lots of power, needs a careful landing.',
-      stall: 34, cruise: 75, max: 125, thrust: 6.5, authority: 0.95, pitch: 1.6, roll: 2.6, yaw: 0.5, stability: 2.1, gear: 1.6, scale: 1 },
-    { id: 'falcon', name: 'Falcon', kind: 'Jet', blurb: 'Very fast and very slippery. Plan your turns early.',
-      stall: 55, cruise: 150, max: 240, thrust: 11, authority: 0.9, pitch: 1.0, roll: 3.4, yaw: 0.35, stability: 1.7, gear: 1.7, scale: 1.1 },
-    { id: 'bipe', name: 'Stunt Bipe', kind: 'Aerobatic', blurb: 'Rolls on a coin and loops in no time. Made for hoops.',
-      stall: 22, cruise: 48, max: 80, thrust: 5.2, authority: 1.05, pitch: 2.3, roll: 4.2, yaw: 0.9, stability: 2.2, gear: 1.3, scale: 1 },
+    { id: 'c172', name: 'Cessna 172', kind: 'Skyhawk', blurb: 'The classic trainer: slow, stable and forgiving. Lands itself, almost.',
+      stall: 24, cruise: 52, max: 78, thrust: 3.3, authority: 0.8, pitch: 1.3, roll: 1.9, yaw: 0.55, stability: 2.6, gear: 1.3, scale: 1, cam: 1 },
+    { id: 'pa28', name: 'Piper PA-28', kind: 'Cherokee', blurb: 'A low-wing tourer. A little quicker than the Cessna and just as friendly.',
+      stall: 25, cruise: 58, max: 86, thrust: 3.7, authority: 0.85, pitch: 1.4, roll: 2.1, yaw: 0.55, stability: 2.4, gear: 1.3, scale: 1, cam: 1 },
+    { id: 'b737', name: 'Boeing 737', kind: 'Airliner', blurb: 'Twin-engine jet. Heavy and calm: turn early and land with flaps.',
+      stall: 62, cruise: 140, max: 215, thrust: 7.5, authority: 0.8, pitch: 1.0, roll: 0.75, yaw: 0.25, stability: 2.3, gear: 1.9, scale: 1, cam: 1.9 },
+    { id: 'b747', name: 'Boeing 747', kind: 'Jumbo', blurb: 'Four engines and a hump. The biggest and slowest to turn: plan well ahead.',
+      stall: 68, cruise: 150, max: 225, thrust: 6.8, authority: 0.8, pitch: 0.9, roll: 0.55, yaw: 0.2, stability: 2.4, gear: 2.5, scale: 1, cam: 3.0 },
+    { id: 'b777', name: 'Boeing 777', kind: 'Airliner', blurb: 'Huge twin-jet with big engines. Powerful, smooth and a little nimbler than the 747.',
+      stall: 66, cruise: 160, max: 240, thrust: 8.0, authority: 0.8, pitch: 0.95, roll: 0.65, yaw: 0.22, stability: 2.3, gear: 2.4, scale: 1, cam: 2.8 },
   ];
+
+  /// A simple airliner built from boxes, nose towards -z. Sizes are about 40% of the real aircraft so the game's
+  /// hoops and runway still suit it.
+  function airliner(c) {
+    const b = new Builder();
+    const L = c.L, D = c.D, h = L / 2;
+    const hull = hex(c.body), trim = hex(c.trim), tailc = hex(c.tail), dark = hex('#2a2f36'), glass = hex('#24313f'), eng = hex(c.engine || '#aeb6bf');
+    const zNose = -h, zA = -h + L * 0.13, zB = h - L * 0.27, zT = h;
+    b.taper(0, 0, zNose, D * 0.3, D * 0.3, zA, D, D, hull);                         // nose
+    b.taper(0, 0, zA, D, D, zB, D, D, hull);                                         // barrel
+    b.taper(0, 0, zB, D, D, zT, D * 0.22, D * 0.28, hull, D * 0.28);                 // tail cone
+    b.taper(0, -D * 0.3, zA, D * 1.02, D * 0.4, zB, D * 1.02, D * 0.4, trim);        // belly colour
+    b.box([0, D * 0.42, zA - L * 0.035], [D * 0.5, D * 0.1, L * 0.05], glass);       // cockpit windows
+    for (const sx of [-1, 1]) b.box([sx * (D / 2 + 0.02), D * 0.14, (zA + zB) / 2], [0.05, D * 0.1, zB - zA - L * 0.03], glass);
+    if (c.hump) b.taper(0, D * 0.52, zA - L * 0.01, D * 0.66, D * 0.4, zA + L * 0.24, D * 0.5, D * 0.2, hull);   // the 747's upper deck
+    // Wings: swept, low, with the engines slung underneath.
+    const wz = c.wingZ, wy = -D * 0.3;
+    for (const sx of [-1, 1]) {
+      b.wing(0, wz, wz + c.root, sx * c.span / 2, wz + c.sweep, wz + c.sweep + c.tip, wy, D * 0.09, hull, c.dihedral);
+      if (c.winglets) b.box([sx * c.span / 2, wy + c.dihedral + 0.35, wz + c.sweep + c.tip * 0.5], [0.06, 0.8, c.tip * 0.9], trim);
+    }
+    for (const e of c.engines) {
+      const ey = wy - e.d * 0.55 + c.dihedral * Math.abs(e.x) / (c.span / 2);
+      b.taper(e.x, ey, e.z, e.d, e.d, e.z + e.len, e.d * 0.82, e.d * 0.82, eng);
+      b.box([e.x, ey, e.z - 0.02], [e.d * 0.7, e.d * 0.7, 0.06], dark);
+    }
+    // Tail.
+    const finH = c.fin;
+    b.taper(0, D * 0.45 + finH * 0.5, zT - L * 0.2, 0.22, finH, zT - 0.03, 0.12, finH * 0.7, tailc, finH * 0.3);
+    for (const sx of [-1, 1]) b.wing(0, zT - L * 0.16, zT - L * 0.05, sx * L * 0.2, zT - L * 0.09, zT - 0.02, D * 0.1, D * 0.06, hull, 0.15);
+    // Landing gear: two main legs under the wing roots and a nose leg.
+    const gb = -D / 2, gh = c.gearH;
+    for (const sx of [-1, 1]) {
+      b.box([sx * D * 0.55, gb - gh / 2, wz + c.root * 1.1], [0.14, gh, 0.14], dark);
+      b.box([sx * D * 0.55, gb - gh + 0.25, wz + c.root * 1.1], [0.42, 0.5, 1.0], dark);
+    }
+    b.box([0, gb - gh / 2, zNose + L * 0.11], [0.12, gh, 0.12], dark);
+    b.box([0, gb - gh + 0.25, zNose + L * 0.11], [0.32, 0.5, 0.5], dark);
+    return { body: b, prop: null, propAt: null };
+  }
 
   function buildPlane(id) {
     const b = new Builder();
     const prop = new Builder();
-    if (id === 'sparrow') {
-      const body = hex('#f4c430'), trim = hex('#c0392b'), glass = hex('#2c3e50'), dark = hex('#333333');
+    if (id === 'c172') {
+      const body = hex('#f5f6fa'), trim = hex('#1f5fb5'), glass = hex('#2c3e50'), dark = hex('#333333');
       b.taper(0, 0, -3.2, 1.2, 1.3, 0.5, 1.2, 1.5, body);          // nose to cabin
       b.taper(0, 0.1, 0.5, 1.2, 1.5, 5.2, 0.35, 0.5, body, 0.35);  // tail cone
       b.box([0, 0.75, -1.2], [1.1, 0.55, 1.6], glass);             // cabin windows
+      b.taper(0, -0.2, -2.0, 1.22, 0.16, 4.6, 0.4, 0.14, trim);     // stripe along the side
       b.wing(0, -1.8, -0.4, 5.6, -1.6, -0.6, 1.05, 0.14, body, 0.15); b.wing(0, -1.8, -0.4, -5.6, -1.6, -0.6, 1.05, 0.14, body, 0.15);
-      b.box([5.1, 1.2, -1.1], [0.9, 0.16, 1.05], trim); b.box([-5.1, 1.2, -1.1], [0.9, 0.16, 1.05], trim);
+      b.box([5.5, 1.2, -1.1], [0.5, 0.16, 1.05], trim); b.box([-5.5, 1.2, -1.1], [0.5, 0.16, 1.05], trim);
+      b.box([2.3, 0.15, -0.95], [0.09, 1.7, 0.12], dark); b.box([-2.3, 0.15, -0.95], [0.09, 1.7, 0.12], dark);   // wing struts
       b.wing(0, 4.4, 5.3, 2.0, 4.7, 5.3, 0.4, 0.08, body); b.wing(0, 4.4, 5.3, -2.0, 4.7, 5.3, 0.4, 0.08, body);
       b.taper(0, 0.9, 4.2, 0.1, 0.2, 5.3, 0.1, 1.6, trim, 0.6);   // fin
       b.box([0.8, -1.0, -1.0], [0.12, 0.8, 0.12], dark); b.box([-0.8, -1.0, -1.0], [0.12, 0.8, 0.12], dark);
@@ -157,50 +201,29 @@
       prop.box([0, 0, 0], [0.18, 2.1, 0.06], dark);
       return { body: b, prop, propAt: [0, 0, -3.5] };
     }
-    if (id === 'mustang') {
-      const body = hex('#b8c2cc'), olive = hex('#3d5a40'), glass = hex('#89c2d9'), yellow = hex('#f1c40f'), dark = hex('#2b2b2b');
-      b.taper(0, 0, -4.2, 1.1, 1.1, 0, 1.3, 1.5, body);
-      b.taper(0, 0, 0, 1.3, 1.5, 5.6, 0.3, 0.6, body, 0.3);
-      b.taper(0, 0.85, -1.4, 0.7, 0.3, 1.0, 0.75, 0.7, glass, 0.1);
-      b.wing(0, -1.9, 0.5, 5.8, -0.8, 0.2, -0.35, 0.18, body, 0.35); b.wing(0, -1.9, 0.5, -5.8, -0.8, 0.2, -0.35, 0.18, body, 0.35);
-      b.box([5.4, 0.02, -0.35], [0.7, 0.2, 1.0], olive); b.box([-5.4, 0.02, -0.35], [0.7, 0.2, 1.0], olive);
-      b.wing(0, 4.8, 5.7, 2.2, 5.2, 5.7, 0.35, 0.1, body); b.wing(0, 4.8, 5.7, -2.2, 5.2, 5.7, 0.35, 0.1, body);
-      b.taper(0, 0.8, 4.3, 0.1, 0.2, 5.8, 0.1, 1.8, olive, 0.7);
-      b.box([0, -0.85, 0.6], [0.6, 0.4, 1.6], body);            // radiator scoop
-      b.box([0, 0, -4.3], [0.6, 0.6, 0.35], yellow);
-      b.box([1.6, -1.0, -1.0], [0.14, 1.1, 0.14], dark); b.box([-1.6, -1.0, -1.0], [0.14, 1.1, 0.14], dark);
-      b.box([1.6, -1.5, -1.0], [0.22, 0.6, 0.6], dark); b.box([-1.6, -1.5, -1.0], [0.22, 0.6, 0.6], dark);
-      prop.box([0, 0, 0], [0.2, 3.0, 0.08], dark); prop.box([0, 0, 0], [3.0, 0.2, 0.08], dark);
-      return { body: b, prop, propAt: [0, 0, -4.55] };
+    if (id === 'pa28') {
+      const body = hex('#f2f3f5'), trim = hex('#c0392b'), glass = hex('#34495e'), dark = hex('#2d3436');
+      b.taper(0, 0, -3.0, 1.15, 1.25, 0.6, 1.15, 1.4, body);
+      b.taper(0, 0.05, 0.6, 1.15, 1.4, 4.9, 0.3, 0.45, body, 0.25);
+      b.box([0, 0.72, -0.9], [1.0, 0.45, 1.5], glass);
+      b.taper(0, -0.15, -2.0, 1.17, 0.14, 4.3, 0.34, 0.12, trim);
+      b.wing(0, -0.5, 0.9, 5.4, -0.5, 0.9, -0.75, 0.15, body, 0.35); b.wing(0, -0.5, 0.9, -5.4, -0.5, 0.9, -0.75, 0.15, body, 0.35);
+      b.box([5.3, -0.45, 0.2], [0.5, 0.17, 1.3], trim); b.box([-5.3, -0.45, 0.2], [0.5, 0.17, 1.3], trim);
+      b.wing(0, 4.1, 5.1, 2.2, 4.3, 5.1, 0.1, 0.1, body); b.wing(0, 4.1, 5.1, -2.2, 4.3, 5.1, 0.1, 0.1, body);   // stabilator
+      b.taper(0, 0.8, 3.6, 0.12, 0.2, 5.0, 0.1, 1.5, trim, 0.7);                                                // fin
+      for (const x of [-1.0, 1.0]) { b.box([x, -0.95, -0.4], [0.1, 0.7, 0.1], dark); b.box([x, -1.05, -0.4], [0.22, 0.5, 0.5], dark); }
+      b.box([0, -0.9, -2.3], [0.1, 0.7, 0.1], dark); b.box([0, -1.05, -2.3], [0.2, 0.5, 0.45], dark);
+      b.box([0, 0, -3.05], [0.4, 0.4, 0.3], trim);
+      prop.box([0, 0, 0], [0.18, 2.0, 0.06], dark);
+      return { body: b, prop, propAt: [0, 0, -3.3] };
     }
-    if (id === 'falcon') {
-      const body = hex('#7f8c8d'), dark = hex('#4a5459'), glass = hex('#f39c12'), red = hex('#e74c3c'), black = hex('#222222');
-      b.taper(0, 0, -6.5, 0.15, 0.15, -3.5, 1.1, 1.0, body);
-      b.taper(0, 0, -3.5, 1.1, 1.0, 4.5, 1.5, 1.0, body);
-      b.taper(0, 0, 4.5, 1.5, 1.0, 5.6, 1.1, 0.8, black);
-      b.taper(0, 0.6, -4.2, 0.4, 0.2, -1.0, 0.75, 0.6, glass, 0.15);
-      b.wing(0.6, -1.0, 3.6, 5.2, 2.6, 3.6, -0.1, 0.16, body, -0.15); b.wing(-0.6, -1.0, 3.6, -5.2, 2.6, 3.6, -0.1, 0.16, body, -0.15);
-      b.wing(0.6, 3.6, 5.3, 2.8, 4.9, 5.4, 0, 0.1, dark); b.wing(-0.6, 3.6, 5.3, -2.8, 4.9, 5.4, 0, 0.1, dark);
-      b.taper(0, 0.7, 2.6, 0.12, 0.3, 5.3, 0.12, 2.6, dark, 1.0);
-      b.box([0, 2.3, 5.0], [0.14, 0.3, 0.5], red);
-      b.box([1.1, -0.25, -1.5], [0.6, 0.6, 2.2], dark); b.box([-1.1, -0.25, -1.5], [0.6, 0.6, 2.2], dark); // intakes
-      b.box([0, -0.9, -3.5], [0.14, 0.9, 0.14], black); b.box([1.2, -0.9, 1.0], [0.14, 0.9, 0.14], black); b.box([-1.2, -0.9, 1.0], [0.14, 0.9, 0.14], black);
-      return { body: b, prop: null, propAt: null };
-    }
-    const red = hex('#d63031'), white = hex('#f5f6fa'), dark = hex('#2d3436'), blue = hex('#0984e3');
-    b.taper(0, 0, -2.8, 1.0, 1.0, 0.4, 1.05, 1.1, red);
-    b.taper(0, 0.05, 0.4, 1.05, 1.1, 4.4, 0.3, 0.45, red, 0.3);
-    b.box([0, 0.6, -0.2], [0.8, 0.3, 0.8], dark);
-    b.wing(0, -1.9, -0.6, 4.4, -1.9, -0.7, 1.6, 0.12, white, 0.1); b.wing(0, -1.9, -0.6, -4.4, -1.9, -0.7, 1.6, 0.12, white, 0.1);
-    b.wing(0, -1.4, -0.1, 4.2, -1.4, -0.2, -0.45, 0.12, white, 0.25); b.wing(0, -1.4, -0.1, -4.2, -1.4, -0.2, -0.45, 0.12, white, 0.25);
-    for (const x of [-3, 3]) { b.box([x, 0.6, -1.0], [0.1, 2.1, 0.1], dark); b.box([x, 0.6, -1.6], [0.1, 2.1, 0.1], dark); }
-    b.box([4.0, 1.66, -1.3], [0.7, 0.14, 1.25], blue); b.box([-4.0, 1.66, -1.3], [0.7, 0.14, 1.25], blue);
-    b.wing(0, 3.6, 4.4, 1.7, 3.9, 4.4, 0.3, 0.08, white); b.wing(0, 3.6, 4.4, -1.7, 3.9, 4.4, 0.3, 0.08, white);
-    b.taper(0, 0.8, 3.5, 0.1, 0.2, 4.5, 0.1, 1.4, blue, 0.55);
-    b.box([0.7, -0.95, -1.4], [0.12, 0.8, 0.12], dark); b.box([-0.7, -0.95, -1.4], [0.12, 0.8, 0.12], dark);
-    b.box([0.7, -1.3, -1.4], [0.2, 0.45, 0.45], dark); b.box([-0.7, -1.3, -1.4], [0.2, 0.45, 0.45], dark);
-    prop.box([0, 0, 0], [0.16, 2.0, 0.06], dark);
-    return { body: b, prop, propAt: [0, 0, -2.95] };
+    if (id === 'b737') return airliner({ L: 15.6, D: 1.5, span: 13.7, wingZ: -1.1, root: 2.3, tip: 0.6, sweep: 2.6, dihedral: 0.5, winglets: true, fin: 2.4, gearH: 1.15,
+      body: '#f4f6f8', trim: '#1e6bd6', tail: '#1e6bd6', engines: [-1, 1].map((sx) => ({ x: sx * 3.0, z: -2.0, d: 0.85, len: 1.9 })) });
+    if (id === 'b747') return airliner({ L: 28, D: 2.6, span: 25.6, wingZ: -2.0, root: 3.9, tip: 1.0, sweep: 5.6, dihedral: 0.9, hump: true, fin: 4.2, gearH: 1.9,
+      body: '#f4f6f8', trim: '#b5322a', tail: '#b5322a', engines: [-1, 1].flatMap((sx) => [{ x: sx * 4.4, z: -3.0, d: 1.0, len: 2.4 }, { x: sx * 8.4, z: -1.1, d: 1.0, len: 2.4 }]) });
+    if (id === 'b777') return airliner({ L: 26, D: 2.5, span: 24.4, wingZ: -2.0, root: 3.9, tip: 0.9, sweep: 4.7, dihedral: 0.6, fin: 3.7, gearH: 1.8,
+      body: '#f4f6f8', trim: '#223a66', tail: '#0b7d63', engines: [-1, 1].map((sx) => ({ x: sx * 4.9, z: -3.0, d: 1.45, len: 3.0 })) });
+    return { body: b, prop: null, propAt: null };
   }
 
   // ------------------------------------------------------------------ the world
@@ -461,7 +484,7 @@
   .pg button:hover { background: rgba(255,255,255,.18); }
   .pg button.pg-on { background: linear-gradient(180deg, #ffb347, #ff7e2d); border-color: transparent; color: #1a1205; }
   .pg button.pg-go { background: linear-gradient(180deg, #5ee08a, #22b35a); color: #062b13; border: none; font-size: 14px; padding: 8px 18px; font-weight: 800; }
-  .pg .pg-planes { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+  .pg .pg-planes { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
   @media (max-width: 720px) { .pg .pg-planes, .pg .pg-modes { grid-template-columns: repeat(2, 1fr); } }
   .pg .pg-card { background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.1); border-radius: 11px; padding: 7px 8px; cursor: pointer; }
   .pg .pg-card.pg-on { border-color: #ffb347; background: rgba(255,179,71,.14); box-shadow: 0 0 0 1px #ffb347 inset; }
@@ -535,7 +558,7 @@
     for (const p of PLANES) { const m = buildPlane(p.id); planeMeshes[p.id] = { body: upload(m.body), prop: upload(m.prop), propAt: m.propAt }; }
 
     // ---- state
-    let plane = PLANES.find((p) => p.id === read('plane', 'sparrow')) || PLANES[0];
+    let plane = PLANES.find((p) => p.id === read('plane', 'c172')) || PLANES[0];
     let mode = MODES.find((m) => m.id === read('mode', 'hoops')) || MODES[0];
     let screen = 'menu', menuTab = read('menuTab', 'play');
     let flight = new Flight(plane);
@@ -544,8 +567,9 @@
     let rollAcc = 0, rollT = 0, loopAcc = 0, loopT = 0, lowT = 0, hadTakeoff = false, stoppedT = 0;
     const smoke = [];
     const keys = new Set();
+    const mouse = { x: 0, y: 0, in: false };   // the cursor's place in the game view, -1..1 from the centre
     const done = new Set(read('done', []));
-    let invert = read('invert', false), sound = read('sound', true), units = read('units', 'kmh');
+    let invert = read('invert', false), mouseOn = read('mouse', true), sens = read('sens', 1), sound = read('sound', true), units = read('units', 'kmh');
     let playerName = read('name', '');
 
     // ---- sound (Web Audio): engine drone, a chime for hoops, a thud for crashes
@@ -666,7 +690,7 @@
     const onKey = (e, down) => {
       if (!root.isConnected) return;
       const k = e.key.length === 1 ? e.key.toLowerCase() : e.key;
-      const typing = e.target && e.target.tagName === 'INPUT';
+      const typing = e.target && e.target.tagName === 'INPUT' && e.target.type !== 'range';
       if (typing) { if (down && k === 'Enter' && result?.qualifies) saveScore(); return; }
       const game = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' ', 'w', 's', 'a', 'd', 'q', 'e', 'f', 'b', 'c', 'p', 'r', 'Shift', 'Control', 'g'];
       if (game.includes(k) && screen === 'fly') e.preventDefault();
@@ -685,15 +709,29 @@
     const kd = (e) => onKey(e, true), ku = (e) => onKey(e, false);
     window.addEventListener('keydown', kd); window.addEventListener('keyup', ku);
     const blur = () => keys.clear(); window.addEventListener('blur', blur);
+    root.addEventListener('pointermove', (e) => {
+      const r = root.getBoundingClientRect();
+      mouse.x = clamp(((e.clientX - r.left) / r.width - 0.5) * 2, -1, 1); mouse.y = clamp(((e.clientY - r.top) / r.height - 0.5) * 2, -1, 1); mouse.in = true;
+    });
+    root.addEventListener('pointerleave', () => { mouse.x = 0; mouse.y = 0; mouse.in = false; });
     root.addEventListener('mousedown', () => { if (document.activeElement?.tagName !== 'INPUT') root.focus(); });
 
+    // The cursor's distance from the centre of the view steers: left and right bank, down pulls the nose up, up pushes
+    // it down (like a stick). A small dead zone in the middle keeps the plane steady, and the curve is gentle near the
+    // centre so small moves are fine adjustments. The arrow keys still work too.
+    const stick = (v) => {
+      const dead = 0.06, a = Math.abs(v);
+      if (a < dead) return 0;
+      return Math.sign(v) * Math.min(1, Math.pow((a - dead) / (1 - dead), 1.25) * sens * 1.5);
+    };
     function input() {
       const has = (k) => keys.has(k);
-      let pitch = (has('ArrowDown') ? 1 : 0) - (has('ArrowUp') ? 1 : 0);
+      const m = mouseOn && mouse.in;
+      let pitch = clamp((has('ArrowDown') ? 1 : 0) - (has('ArrowUp') ? 1 : 0) + (m ? stick(mouse.y) : 0), -1, 1);
       if (invert) pitch = -pitch;
       return {
         pitch,
-        roll: (has('ArrowRight') ? 1 : 0) - (has('ArrowLeft') ? 1 : 0),
+        roll: clamp((has('ArrowRight') ? 1 : 0) - (has('ArrowLeft') ? 1 : 0) + (m ? stick(mouse.x) : 0), -1, 1),
         yaw: (has('d') || has('e') ? 1 : 0) - (has('a') || has('q') ? 1 : 0),
         throttle: (has('w') || has('Shift') ? 1 : 0) - (has('s') || has('Control') ? 1 : 0),
       };
@@ -817,11 +855,11 @@
       if (screen === 'menu') {
         const a = t * 0.0003;
         flight.pos = [0, plane.gear, 0]; flight.q = qheading(0, 0); flight.crashed = false;
-        const r = 15 * plane.scale;
+        const r = 15 * (plane.cam || plane.scale);
         eye = [Math.sin(a) * r, 4.5, Math.cos(a) * r]; up = [0, 1, 0];
         // Aim left of the plane so it turns in the free space to the right of the menu.
         const side = norm(cross(norm(sub([0, 1.6, 0], eye)), up));
-        at = sub([0, 1.6, 0], mul(side, 6.5 * plane.scale));
+        at = sub([0, 1.6, 0], mul(side, 6.5 * (plane.cam || plane.scale)));
       } else {
         const { f, u } = flight.axes();
         if (camMode === 1) {
@@ -830,7 +868,7 @@
           const a = t * 0.0004;
           eye = add(flight.pos, [Math.sin(a) * 28, 9, Math.cos(a) * 28]); at = flight.pos; up = [0, 1, 0];
         } else {
-          const back = 20 * plane.scale, high = 5 * plane.scale;
+          const back = 20 * (plane.cam || plane.scale), high = 5 * (plane.cam || plane.scale);
           const want = add(add(flight.pos, mul(f, -back)), add(mul(u, high * 0.6), [0, high * 0.6, 0]));
           camPos = lerp(camPos, want, 0.12);
           const gh = groundAt(W, camPos[0], camPos[2]) + 1.5; if (camPos[1] < gh) camPos[1] = gh;
@@ -927,13 +965,20 @@
       h2.restore();
       h2.strokeStyle = '#ffd166'; h2.lineWidth = 2.5; h2.beginPath(); h2.moveTo(cx - R * 0.6, cy); h2.lineTo(cx - R * 0.2, cy); h2.lineTo(cx, cy + 5); h2.lineTo(cx + R * 0.2, cy); h2.lineTo(cx + R * 0.6, cy); h2.stroke();
       h2.strokeStyle = 'rgba(255,255,255,.5)'; h2.lineWidth = 1; h2.beginPath(); h2.arc(cx, cy, R, 0, Math.PI * 2); h2.stroke();
+      // Mouse steering: a ring for the centre and a dot where the cursor is.
+      if (mouseOn && mouse.in && !paused) {
+        const ax = W2 / 2, ay = H2 / 2, ar = 22 * s + 6;
+        h2.strokeStyle = 'rgba(255,255,255,.35)'; h2.lineWidth = 1.2; h2.beginPath(); h2.arc(ax, ay, ar, 0, Math.PI * 2); h2.stroke();
+        h2.fillStyle = 'rgba(255,255,255,.8)'; h2.beginPath(); h2.arc(ax + mouse.x * W2 / 2, ay + mouse.y * H2 / 2, 4, 0, Math.PI * 2); h2.fill();
+        h2.strokeStyle = 'rgba(255,209,102,.55)'; h2.beginPath(); h2.moveTo(ax, ay); h2.lineTo(ax + mouse.x * W2 / 2, ay + mouse.y * H2 / 2); h2.stroke();
+      }
       // Top: mode status.
       h2.textAlign = 'center'; h2.font = `800 ${Math.round(15 * s + 3)}px system-ui`;
       let status = '';
       if (mode.id === 'hoops') status = `⭕ ${score}    ⏱ ${Math.max(0, Math.ceil(timeLeft))}s`;
       else if (mode.id === 'trial') status = `Hoop ${Math.min(nextHoop + 1, hoops.length)}/${hoops.length}    ⏱ ${elapsed.toFixed(1)}s`;
       else if (mode.id === 'landing') status = 'Land on the runway and stop';
-      else status = flight.onGround && !hadTakeoff ? 'W for throttle · ↓ to lift off at speed' : 'Free flight';
+      else status = flight.onGround && !hadTakeoff ? 'Hold W for throttle · cursor down to lift off at speed' : 'Free flight';
       const tw = h2.measureText(status).width + 24;
       box(cx - tw / 2, 8, tw, 26 * s + 6); h2.fillStyle = '#fff'; h2.fillText(status, cx, 8 + (26 * s + 6) / 2);
       // Warnings.
@@ -991,14 +1036,19 @@
       } else if (menuTab === 'ach') {
         body = `<h2>Challenges · ${[...done].filter((d) => CHALLENGES.some((c) => c.id === d)).length} / ${CHALLENGES.length}</h2><div class="pg-ach">${CHALLENGES.map((c) => `<div class="${done.has(c.id) ? 'pg-done' : ''}">${done.has(c.id) ? '🏅' : '🔒'} ${c.name} <small>${c.desc}</small></div>`).join('')}</div>`;
       } else {
-        body = `<h2>Flying</h2><div class="pg-hint">
-          <kbd>↑</kbd> <kbd>↓</kbd> pitch (${invert ? '↑ pulls up' : '↓ pulls up, like a real stick'}) · <kbd>←</kbd> <kbd>→</kbd> roll · <kbd>A</kbd> <kbd>D</kbd> rudder (and steering on the ground)<br>
-          <kbd>W</kbd> <kbd>S</kbd> throttle · <kbd>F</kbd> flaps · <kbd>Space</kbd> brakes / airbrake · <kbd>C</kbd> camera (chase, cockpit, orbit) · <kbd>P</kbd> pause · <kbd>R</kbd> restart · <kbd>M</kbd> menu</div>
-          <h2>Tips</h2><div class="pg-hint">Bank with ← → and pull gently to turn: the wings turn the plane, the rudder only tidies up. Too slow or pulling too hard
+        const pull = invert ? 'up' : 'down';
+        body = `<h2>Mouse steering ${mouseOn ? '' : '(off)'}</h2><div class="pg-hint">Move the cursor away from the middle of the view: <b>left / right</b> banks and turns the plane,
+          <b>${pull}</b> pulls the nose up and the opposite pushes it down. Keep it in the middle to fly straight. Leaving the game view lets go of the stick.</div>
+          <div class="pg-row" style="margin-top:6px"><label class="pg-hint">Sensitivity <input type="range" min="0.3" max="2.5" step="0.1" value="${sens}" data-range="sens" style="width:170px;padding:0"> <b data-sensval>${Number(sens).toFixed(1)}×</b></label>
+          <button data-a="mouse">${mouseOn ? '✓ ' : ''}Mouse steering</button>
+          <button data-a="invert">${invert ? '✓ ' : ''}Invert Y (cursor up pulls up)</button></div>
+          <h2>Keys</h2><div class="pg-hint">
+          <kbd>W</kbd> more throttle · <kbd>S</kbd> less throttle · <kbd>←</kbd> <kbd>→</kbd> <kbd>↑</kbd> <kbd>↓</kbd> steer without the mouse · <kbd>A</kbd> <kbd>D</kbd> rudder (and steering on the ground)<br>
+          <kbd>F</kbd> flaps · <kbd>Space</kbd> brakes / airbrake · <kbd>C</kbd> camera (chase, cockpit, orbit) · <kbd>P</kbd> pause · <kbd>R</kbd> restart · <kbd>M</kbd> menu</div>
+          <h2>Tips</h2><div class="pg-hint">Bank by moving the cursor sideways and ease it ${pull === 'down' ? 'down' : 'up'} to turn: the wings turn the plane, the rudder only tidies up. Too slow or pulling too hard
           stalls the wing (STALL): push the nose down and add power. To land: slow down, flaps down, line up with the runway, and touch down gently (watch V/S).
-          To take off: full throttle on the runway, then ${invert ? '↑' : '↓'} at about ${Math.round(plane.stall * 1.3 * 3.6)} km/h.</div>
+          To take off: full throttle (hold W) on the runway, then ease the cursor ${pull} at about ${Math.round(plane.stall * 1.3 * 3.6)} km/h. Airliners turn slowly, so start turns early.</div>
           <h2>Settings</h2><div class="pg-row">
-          <button data-a="invert">${invert ? '✓ ' : ''}↑ pulls up (arcade)</button>
           <button data-a="sound">${sound ? '🔊 Sound on' : '🔇 Sound off'}</button>
           <button data-a="units">${units === 'kmh' ? 'km/h · m' : 'knots · feet'}</button></div>`;
       }
@@ -1011,6 +1061,10 @@
     }
     function bind() {
       ui.querySelectorAll('[data-plane]').forEach((n) => n.onclick = () => { plane = PLANES.find((p) => p.id === n.dataset.plane); write('plane', plane.id); flight = new Flight(plane); renderUI(); });
+      ui.querySelectorAll('[data-range]').forEach((n) => {
+        n.oninput = () => { sens = Number(n.value); write('sens', sens); const v = ui.querySelector('[data-sensval]'); if (v) v.textContent = `${sens.toFixed(1)}×`; };
+        n.onchange = () => root.focus();
+      });
       ui.querySelectorAll('[data-mode]').forEach((n) => n.onclick = () => { mode = MODES.find((m) => m.id === n.dataset.mode); write('mode', mode.id); renderUI(); });
       ui.querySelectorAll('[data-tab]').forEach((n) => n.onclick = () => { menuTab = n.dataset.tab; write('menuTab', menuTab); renderUI(); });
       ui.querySelectorAll('[data-a]').forEach((n) => n.onclick = () => {
@@ -1020,6 +1074,7 @@
         else if (a === 'menu') { screen = 'menu'; paused = false; if (engGain) engGain.gain.value = 0; renderUI(); }
         else if (a === 'save') saveScore();
         else if (a === 'invert') { invert = !invert; write('invert', invert); renderUI(); }
+        else if (a === 'mouse') { mouseOn = !mouseOn; write('mouse', mouseOn); renderUI(); }
         else if (a === 'sound') { sound = !sound; write('sound', sound); if (!sound && engGain) engGain.gain.value = 0; renderUI(); }
         else if (a === 'units') { units = units === 'kmh' ? 'kt' : 'kmh'; write('units', units); renderUI(); }
         else if (a === 'clear') { if (window.confirm ? window.confirm('Clear every leaderboard on this computer?') : true) { MODES.forEach((m) => write(`board.${m.id}`, [])); renderUI(); } }

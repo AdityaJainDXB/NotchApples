@@ -202,6 +202,11 @@ All screenshots use sample data.
 
 ## What's new
 
+### Mac 2.0.11 · Windows 1.33.1 BETA · 8 October 2026 · ✈️ Plane: mouse flying and new aircraft
+
+- **Fly with the mouse.** Move the cursor left or right to bank and turn, down to pull the nose up (up pushes it down). **W** and **S** are throttle. Games → Plane → **Controls** lists every key and has a mouse **sensitivity** slider, **Invert Y** and a switch to turn mouse steering off.
+- **New hangar:** Cessna 172, Piper PA-28, Boeing 737, 747 and 777 (replacing the earlier four). Airliners turn slowly, so plan ahead.
+
 ### Mac 2.0.9 · Windows 1.33.0 BETA · 8 October 2026 · ✈️ Plane, speaker balance and a lyrics view
 
 - **Plane, a 3D flight game (Games → Plane).** Pick a plane: the **Sparrow** trainer, the **Mustang** warbird, the **Falcon** jet or the **Stunt Bipe**. Each flies differently. Then choose a challenge:
