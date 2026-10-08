@@ -20,6 +20,11 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.0.7", date: "8 October 2026", headline: "Fly a plane, pan your music", items: [
+            "Games → Plane: a 3D flight game. Pick one of four planes and fly Hoop Rush, a Time Trial, a Landing challenge or Free Flight, with challenges and a leaderboard.",
+            "Now Playing has a speaker balance slider: slide left for the left speaker, right for the right.",
+            "Click the song in Now Playing for a Spotify-style lyrics view with the cover and a progress bar.",
+        ]),
         ReleaseNote(version: "2.0.6", date: "8 October 2026", headline: "Required fix: the notch always closes", items: [
             "Pinning no longer keeps the notch open for good: the pin lasts until you close it, so clicking outside closes the notch again.",
             "Every notch screen has a close button, including the lock, update and tour screens. Clicking in Settings closes the notch too.",
