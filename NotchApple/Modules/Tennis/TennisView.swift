@@ -26,14 +26,20 @@ struct TennisView: View {
     private var event: TennisEvent? { tennis.events.first { $0.id == eventID } ?? tennis.events.first }
 
     var body: some View {
-        HStack(alignment: .top, spacing: 12) {
-            GlassCard { main }
-                .frame(minWidth: 0, maxWidth: .infinity)
-                .overlay(RoundedRectangle(cornerRadius: Theme.corner, style: .continuous)
-                    .strokeBorder(event?.slam == true ? Self.slamRed.opacity(0.8) : .clear, lineWidth: 1.5))
-                .shadow(color: event?.slam == true ? Self.slamRed.opacity(0.35) : .clear, radius: 12)
-            GlassCard { side }
-                .frame(minWidth: 200, idealWidth: 260, maxWidth: 260)
+        // Widths are set from the space the notch really gives this tab, so nothing inside can push the page wider.
+        GeometryReader { geo in
+            let sideWidth = min(260, max(190, geo.size.width * 0.34))
+            let mainWidth = max(geo.size.width - sideWidth - 12, 0)
+            HStack(alignment: .top, spacing: 12) {
+                GlassCard { main }
+                    .frame(width: mainWidth)
+                    .overlay(RoundedRectangle(cornerRadius: Theme.corner, style: .continuous)
+                        .strokeBorder(event?.slam == true ? Self.slamRed.opacity(0.8) : .clear, lineWidth: 1.5))
+                    .shadow(color: event?.slam == true ? Self.slamRed.opacity(0.35) : .clear, radius: 12)
+                GlassCard { side }
+                    .frame(width: sideWidth)
+            }
+            .frame(width: geo.size.width, height: geo.size.height, alignment: .topLeading)
         }
         .onAppear { tennis.viewing = true }
         .onDisappear { tennis.viewing = false }
