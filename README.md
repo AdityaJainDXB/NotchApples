@@ -56,10 +56,10 @@ Pick your computer. Both buttons start the download straight away. The Mac butto
   </tr>
   <tr>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/v2.0.12/NotchApple-2.0.12.dmg"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.0.12</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/v2.0.14/NotchApple-2.0.14.dmg"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.0.14</b></a>
     </td>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 1.35.0 BETA</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 1.36.0 BETA</b></a>
     </td>
   </tr>
   <tr>
@@ -203,6 +203,12 @@ All screenshots use sample data.
 ## What's new
 
 > **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is still in the repository's tags.
+
+### Mac 2.0.14 · Windows 1.36.0 BETA · 9 October 2026 · PairDrop between Mac and Windows
+
+- **Fixed: PairDrop could not be found.** The Mac only listened while its Share tab was open. It now runs from launch (while the Share module is on), so another device can always send to it or start a chat, and a notification says when something arrives.
+- **Windows has a real PairDrop now** (it used to just open a website): Receive shows your 6-digit code, Send takes theirs plus files or folders (any size, with a progress bar, drag and drop, or Choose a file/folder), and Chat opens a private conversation. You can set the name others see. It speaks the same protocol as the Mac and finds it over Bonjour, so **Mac and Windows can send to each other.**
+- Tested with the real code on both sides, both ways (up to 30 MB, empty files, wrong codes, chat), and the release pipelines now run those tests. Windows may ask about its firewall the first time: allow private networks.
 
 ### Windows 1.35.0 BETA · 9 October 2026 · The Mac 2.0 calculator and to-do priorities
 

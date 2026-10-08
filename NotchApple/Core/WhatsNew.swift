@@ -20,6 +20,10 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.0.14", date: "9 October 2026", headline: "PairDrop can be found, and talks to Windows", items: [
+            "PairDrop now runs from launch, so other devices can send to this Mac without the Share tab being open, and a notification says when something arrives.",
+            "The Windows app has a matching PairDrop: Mac and Windows can send files and chat to each other.",
+        ]),
         ReleaseNote(version: "2.0.12", date: "8 October 2026", headline: "Plane: crashes, failures and a bigger world", items: [
             "Fixed: the plane kept rolling right when the cursor rested off-centre. The mouse is now a self-centring stick, and hands off the wings level themselves.",
             "Wings tear off when they hit trees, buildings or the ground; big impacts break the plane apart. Engine failures, bird strikes, overspeed, over-G and belly landings.",

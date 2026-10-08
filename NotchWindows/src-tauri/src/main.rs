@@ -12,6 +12,7 @@ mod apps;
 mod audio;
 mod brightness;
 mod notifications;
+mod pairdrop;
 mod awake;
 mod claude_usage;
 mod clip;
@@ -469,6 +470,8 @@ fn main() {
         claude_usage::claude_usage,
         brightness::brightness_state,
         notifications::notifications_recent,
+        pairdrop::pd_start, pairdrop::pd_stop, pairdrop::pd_state, pairdrop::pd_set_username, pairdrop::pd_regenerate_code,
+        pairdrop::pd_send, pairdrop::pd_chat_start, pairdrop::pd_chat_send, pairdrop::pd_chat_read, pairdrop::pd_chat_close,
             selftest_capture, selftest_finish,
         ])
         .on_window_event(|window, event| {

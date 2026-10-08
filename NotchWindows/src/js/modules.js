@@ -74,7 +74,7 @@ export const MODULES = [
   { id: 'plugins', name: 'Plugins', icon: '🧩', load: () => import('./modules/plugins.js'),
     blurb: 'Your own widgets: any script in the Plugins folder shows its output in the notch.' },
   { id: 'share', name: 'Share', icon: '📤', load: () => import('./modules/share.js'),
-    blurb: 'Send files to phones and other computers nearby with PairDrop, or with Windows Nearby sharing.' },
+    blurb: 'Send files and folders to nearby Macs and PCs with a 6-digit code, and chat privately. Works with Notch apple on Mac, in the background, with Windows Nearby sharing as a backup.' },
   { id: 'wellbeing', name: 'Wellbeing', icon: '🌿', load: () => import('./modules/wellbeing.js'),
     blurb: 'A breathing exercise, break reminders (eyes, water, stretch, posture) and a bedtime nudge.' },
   { id: 'devtools', name: 'Dev Tools', icon: '🛠', load: () => import('./modules/devtools.js'),

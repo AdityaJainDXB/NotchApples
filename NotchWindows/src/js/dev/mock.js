@@ -24,7 +24,25 @@ const hits = (q) => [
   { name: `${q} photos`, path: `C:\\Users\\you\\Pictures\\${q} photos`, parent: 'C:\\Users\\you\\Pictures', is_dir: true, size: 0, kind: 'folder', modified: 1789000000 },
 ];
 
+// A stand-in for the PairDrop engine: same commands and the same snapshot shape as src-tauri/pairdrop-core.
+const pd = { running: false, code: '482915', status: 'PairDrop is off', deviceName: 'Dev PC', username: '', peers: [{ id: 'Sam-ab12', name: 'Sam' }], threads: [], unread: 0, sending: false, progress: null };
+const pdCalls = [];
+window.__pdCalls = pdCalls;
+const pdPush = () => { emit('pairdrop', JSON.parse(JSON.stringify(pd))); return JSON.parse(JSON.stringify(pd)); };
+const pdCommands = {
+  pd_start: ({ username }) => { pd.running = true; pd.username = username || ''; pd.deviceName = username || 'Dev PC'; pd.status = `Ready to receive as ${pd.deviceName}`; return pdPush(); },
+  pd_stop: () => { pd.running = false; pd.peers = []; pd.status = 'PairDrop is off'; return pdPush(); },
+  pd_state: () => JSON.parse(JSON.stringify(pd)),
+  pd_set_username: ({ name }) => { pd.username = name.trim(); pd.deviceName = pd.username || 'Dev PC'; return pdPush(); },
+  pd_regenerate_code: () => { pd.code = String(Math.floor(Math.random() * 1e6)).padStart(6, '0'); return pdPush(); },
+  pd_send: (a) => { pdCalls.push(['pd_send', a]); pd.sending = true; pd.progress = 0.5; pd.status = `Sending ${String(a.paths[0]).split(/[\\/]/).pop()}…`; pdPush(); setTimeout(() => { pd.sending = false; pd.progress = null; pd.status = 'Sent to Sam.'; pdPush(); }, 20); },
+  pd_chat_start: (a) => { pdCalls.push(['pd_chat_start', a]); pd.threads = [{ id: 'Sam-ab12', peerName: 'Sam', unread: 0, messages: [] }]; pd.status = 'Chat with Sam is open.'; pdPush(); },
+  pd_chat_send: (a) => { pdCalls.push(['pd_chat_send', a]); const t = pd.threads.find((x) => x.id === a.thread); if (t) t.messages.push({ fromMe: true, text: a.text, at: 1 }); pdPush(); },
+  pd_chat_read: () => {}, pd_chat_close: ({ thread }) => { pd.threads = pd.threads.filter((t) => t.id !== thread); pdPush(); },
+};
+
 const commands = {
+  ...pdCommands,
   brightness_state: () => ok({ available: true, level: state.brightness }),
   notifications_recent: ({ since }) => ok({ available: true, reason: '', latest: Math.max(0, ...state.notifs.map((n) => n.id)),
     items: since == null ? [] : state.notifs.filter((n) => n.id > since) }),

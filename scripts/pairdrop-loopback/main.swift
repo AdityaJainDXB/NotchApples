@@ -239,5 +239,50 @@ final class Ticks: @unchecked Sendable {
 }
 final class Box: @unchecked Sendable { var value = 0 }
 
+// Interop mode: the Mac's real transfer code against another implementation (the Windows engine in Rust).
+//   serve <downloadsDir>                      listens, prints "PORT <n>" and "CODE 123456", saves files into the folder
+//   send <port> <code> <file>                 sends a file to 127.0.0.1:<port>
+//   hello <port> <code>                       opens a chat (reply code 654321)
+//   message <port> <chatCode> <text>          sends a chat message as service "Mac-0001"
+if CommandLine.arguments.count > 1 {
+    let a = CommandLine.arguments
+    switch a[1] {
+    case "serve":
+        let r = TestReceiver()
+        let server = try! Server(receiver: r)
+        Task {
+            await server.start()
+            print("PORT \(server.port.rawValue)"); print("CODE \(r.code)"); fflush(stdout)
+            // Copy anything received into the folder so the caller can look at it (each file once).
+            var written = 0
+            while true {
+                try? await Task.sleep(nanoseconds: 200_000_000)
+                while written < r.files.count { let f = r.files[written]; try? f.data.write(to: URL(fileURLWithPath: a[2]).appendingPathComponent(f.name)); written += 1 }
+                if !r.messages.isEmpty { try? r.messages.joined(separator: "\n").write(toFile: a[2] + "/messages.txt", atomically: true, encoding: .utf8) }
+                if !r.sessions.isEmpty { try? r.sessions.keys.sorted().joined(separator: "\n").write(toFile: a[2] + "/sessions.txt", atomically: true, encoding: .utf8) }
+            }
+        }
+    case "send":
+        let url = URL(fileURLWithPath: a[4])
+        let size = (try? FileManager.default.attributesOfItem(atPath: url.path)[.size] as? Int) ?? 0
+        Task {
+            let res = await send(fileHeader(url.lastPathComponent, size, code: a[3]), file: url, to: NWEndpoint.Port(rawValue: UInt16(a[2])!)!, handshake: 10, stall: 20)
+            print("RESULT \(res)"); exit(res == .delivered ? 0 : 1)
+        }
+    case "hello":
+        Task {
+            let res = await send(PairDropHeader(kind: .hello, code: a[3], sender: "Mac", senderService: "Mac-0001", replyCode: "654321"), file: nil, to: NWEndpoint.Port(rawValue: UInt16(a[2])!)!)
+            print("RESULT \(res)"); exit(res == .delivered ? 0 : 1)
+        }
+    case "message":
+        Task {
+            let res = await send(PairDropHeader(kind: .message, code: a[3], sender: "Mac", senderService: "Mac-0001", text: a[4]), file: nil, to: NWEndpoint.Port(rawValue: UInt16(a[2])!)!)
+            print("RESULT \(res)"); exit(res == .delivered ? 0 : 1)
+        }
+    default: print("unknown mode"); exit(2)
+    }
+    dispatchMain()
+}
+
 Task { await run() }
 dispatchMain()

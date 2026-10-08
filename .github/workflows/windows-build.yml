@@ -35,6 +35,12 @@ jobs:
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
 
+      # PairDrop's engine: real file transfers over TCP between two copies, wrong codes, chat, and more.
+      - name: PairDrop engine tests
+        working-directory: .
+        shell: bash
+        run: ./scripts/run-pairdrop-core-tests.sh
+
       - name: Cache cargo
         uses: Swatinem/rust-cache@v2
         with:

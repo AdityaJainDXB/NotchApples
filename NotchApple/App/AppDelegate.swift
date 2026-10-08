@@ -95,6 +95,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         applyClipboardPreference()
         LiveActivityCenter.shared.start()
         FeatureHub.start()
+        // PairDrop listens from launch, so another device can find this Mac without anyone opening the Share tab.
+        applyPairDropPreference()
         SettingsBackup.shared.startSync()
         AccountSync.shared.start()
         // Now Playing is free: it runs whether or not an access code is entered.
@@ -115,6 +117,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 self?.applyHotkeyPreference()
                 self?.applyClipboardPreference()
                 self?.applyMediaKeyPreference()
+                self?.applyPairDropPreference()
                 self?.applyWindowPreferences()
                 self?.applyDisplayModeIfChanged()
                 self?.applyProPreferences()
@@ -332,6 +335,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     @objc func relaunchApp() { AppRelauncher.relaunch() }
     @objc func quitApp() { NSApp.terminate(nil) }
+
+    /// PairDrop runs in the background while the Share module is on, so devices on the Wi-Fi can find this Mac and
+    /// send it files or start a chat with it, whatever tab is open.
+    func applyPairDropPreference() {
+        if SettingsManager.shared.shareEnabled { PairDropService.shared.start() } else { PairDropService.shared.stop() }
+    }
 
     /// Opens the notch (used to show the patch log).
     func openNotch() { notchController?.expand() }

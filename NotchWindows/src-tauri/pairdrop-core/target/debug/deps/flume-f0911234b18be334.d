@@ -1,0 +1,9 @@
+/Users/suminsethi/Library/Application Support/Claude/scratch-workspaces/71688280-2f4c-42f4-b049-12c3b7bbd008/0d87d925-e510-4558-bba7-43e90f113e58/scratch-2026-09-29-7ca63f/NotchApples/NotchWindows/src-tauri/pairdrop-core/target/debug/deps/flume-f0911234b18be334.d: /Users/suminsethi/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/flume-0.11.1/src/lib.rs /Users/suminsethi/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/flume-0.11.1/src/async.rs /Users/suminsethi/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/flume-0.11.1/src/signal.rs
+
+/Users/suminsethi/Library/Application Support/Claude/scratch-workspaces/71688280-2f4c-42f4-b049-12c3b7bbd008/0d87d925-e510-4558-bba7-43e90f113e58/scratch-2026-09-29-7ca63f/NotchApples/NotchWindows/src-tauri/pairdrop-core/target/debug/deps/libflume-f0911234b18be334.rlib: /Users/suminsethi/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/flume-0.11.1/src/lib.rs /Users/suminsethi/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/flume-0.11.1/src/async.rs /Users/suminsethi/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/flume-0.11.1/src/signal.rs
+
+/Users/suminsethi/Library/Application Support/Claude/scratch-workspaces/71688280-2f4c-42f4-b049-12c3b7bbd008/0d87d925-e510-4558-bba7-43e90f113e58/scratch-2026-09-29-7ca63f/NotchApples/NotchWindows/src-tauri/pairdrop-core/target/debug/deps/libflume-f0911234b18be334.rmeta: /Users/suminsethi/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/flume-0.11.1/src/lib.rs /Users/suminsethi/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/flume-0.11.1/src/async.rs /Users/suminsethi/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/flume-0.11.1/src/signal.rs
+
+/Users/suminsethi/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/flume-0.11.1/src/lib.rs:
+/Users/suminsethi/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/flume-0.11.1/src/async.rs:
+/Users/suminsethi/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/flume-0.11.1/src/signal.rs:

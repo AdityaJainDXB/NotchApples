@@ -64,6 +64,41 @@ ok('sorting off keeps newest first', /pay rent/.test(rows()[0] || ''), rows().jo
 sortBox.checked = true; sortBox.dispatchEvent(new dom.window.Event('change'));
 await tick(20);
 
+// ---- Share (PairDrop)
+const PDsvc = await import('./js/services/pairdrop.js');
+await PDsvc.start();
+const share = await import('./js/modules/share.js');
+const sh = root();
+await share.render(sh);
+await tick(40);
+ok('Share shows my code, spaced', sh.textContent.includes('4 8 2 9 1 5'), sh.textContent.slice(0, 200));
+ok('Share shows the name and the ready status', sh.textContent.includes('Dev PC') && sh.textContent.includes('Ready to receive'));
+const modeBtn = (name) => [...sh.querySelector('.seg').querySelectorAll('button')].find((b) => b.textContent === name);
+modeBtn('Send').click(); await tick(20);
+const code = sh.querySelector('input[placeholder="Their 6-digit code"]');
+ok('Send: the file button waits for a full code', [...sh.querySelectorAll('button')].find((b) => b.textContent === 'Choose a file…').disabled === true);
+code.value = '12ab345678'; code.dispatchEvent(new dom.window.Event('input')); await tick(20);
+ok('Send: the code box keeps only six digits', code.value === '123456', code.value);
+const pick = [...sh.querySelectorAll('button')].find((b) => b.textContent === 'Choose a file…');
+ok('Send: the file button is ready with a full code', pick.disabled === false);
+pick.click(); await tick(80);
+const sendCall = (globalThis.window.__pdCalls || []).find((c) => c[0] === 'pd_send');
+ok('Send: asks the engine to send the chosen file with the code', sendCall && sendCall[1].code === '123456' && sendCall[1].paths[0].endsWith('notes.txt'), JSON.stringify(sendCall));
+await tick(60);
+ok('Send: the result is shown', sh.textContent.includes('Sent to Sam'), sh.textContent.slice(0, 300));
+modeBtn('Chat').click(); await tick(20);
+[...sh.querySelectorAll('button')].find((b) => b.textContent === 'Connect').click(); await tick(40);
+ok('Chat: connecting opens a conversation', sh.textContent.includes('Sam') && sh.textContent.includes('Chat with Sam is open'), sh.textContent.slice(0, 300));
+const msg = sh.querySelector('input[placeholder="Message…"]');
+msg.value = 'hello from the PC'; msg.dispatchEvent(new dom.window.KeyboardEvent('keydown', { key: 'Enter' })); await tick(40);
+ok('Chat: a sent message appears in the thread', sh.textContent.includes('hello from the PC'), sh.textContent.slice(0, 300));
+// the name can be changed
+modeBtn('Receive').click(); await tick(20);
+[...sh.querySelectorAll('button')].find((b) => b.getAttribute('title')?.startsWith('Change the name')).click(); await tick(10);
+const nameBox = sh.querySelector('input[placeholder="Your name"]'); nameBox.value = 'Sam’s laptop';
+[...sh.querySelectorAll('button')].find((b) => b.textContent === 'Save').click(); await tick(60);
+ok('The name can be changed', sh.textContent.includes('Sam’s laptop'), sh.textContent.slice(0, 200));
+
 ok('no errors were thrown', errors.length === 0, errors.join('\n'));
 console.log(fails ? `\n${fails} FAILED` : '\nall smoke checks passed');
 process.exit(fails ? 1 : 0);

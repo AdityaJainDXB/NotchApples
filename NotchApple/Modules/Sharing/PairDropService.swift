@@ -315,6 +315,7 @@ final class PairDropService: ObservableObject {
             guard !text.isEmpty else { return .acceptMessage }
             append(PairDropChatMessage(fromMe: false, text: text, date: .now), to: h.senderService, peerName: h.sender, unread: true)
             LiveActivityCenter.shared.flash(LiveActivity(symbol: "bubble.left.fill", label: h.sender, tint: .systemTeal), seconds: 4)
+            Notifier.post(title: h.sender, body: String(text.prefix(140)))
             return .acceptMessage
         }
     }
@@ -329,6 +330,7 @@ final class PairDropService: ObservableObject {
             try FileManager.default.moveItem(at: temp, to: dest)
             status = "Received \(name) from \(header.sender). Saved to Downloads."
             LiveActivityCenter.shared.flash(LiveActivity(symbol: "arrow.down.circle.fill", label: "Received", tint: .systemGreen), seconds: 4)
+            Notifier.post(title: "PairDrop: file received", body: "\(name) from \(header.sender), saved to Downloads.")
             NSWorkspace.shared.activateFileViewerSelecting([dest])
             return true
         } catch {

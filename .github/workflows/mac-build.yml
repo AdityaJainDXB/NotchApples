@@ -32,6 +32,10 @@ jobs:
       - name: PairDrop transfers over loopback
         run: ./scripts/run-pairdrop-loopback.sh
 
+      # The Mac's PairDrop code and the Windows engine must understand each other, in both directions.
+      - name: PairDrop interop (Mac and Windows engines)
+        run: ./scripts/run-pairdrop-interop.sh
+
       - name: Build the DMG
         env:
           FIREBASE_PLIST_B64: ${{ secrets.FIREBASE_PLIST_B64 }}
