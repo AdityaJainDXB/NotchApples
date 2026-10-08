@@ -20,6 +20,10 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.0.16", date: "9 October 2026", headline: "⌥A turns the keyboard light off too", items: [
+            "Option+A now takes the keyboard backlight to zero with the screen, and restores both.",
+            "Settings has a Reset keyboard brightness button in case the backlight is ever left dark.",
+        ]),
         ReleaseNote(version: "2.0.15", date: "9 October 2026", headline: "Edit Home in the notch, AirDrop rebuilt", items: [
             "Tap the sliders button on Home to move, resize, collapse, remove or add widgets without going to Settings.",
             "AirDrop was rebuilt so its picker opens reliably, with an Open AirDrop window fallback.",
@@ -363,7 +367,7 @@ enum WhatsNew {
             NewFeatureOffer(id: "claudeflash", title: "Flash the screen when Claude Code needs you", detail: "A brief whole-screen colour flash along with the status dot.", key: "claudeCode.screenFlash"),
         ]),
         ("1.32.1", [
-            NewFeatureOffer(id: "blackout", title: "⌥A blacks out the screen", detail: "Press Option+A to take the brightness to zero and again to bring it back. The key stops typing å while this is on.", key: "ui.brightnessBlackout", defaultOn: true),
+            NewFeatureOffer(id: "blackout", title: "⌥A blacks out the screen", detail: "Press Option+A to take the screen and keyboard brightness to zero and again to bring it back. The key stops typing å while this is on.", key: "ui.brightnessBlackout", defaultOn: true),
         ]),
     ]
 
