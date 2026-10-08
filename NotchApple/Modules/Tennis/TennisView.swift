@@ -28,11 +28,12 @@ struct TennisView: View {
     var body: some View {
         HStack(alignment: .top, spacing: 12) {
             GlassCard { main }
+                .frame(minWidth: 0, maxWidth: .infinity)
                 .overlay(RoundedRectangle(cornerRadius: Theme.corner, style: .continuous)
                     .strokeBorder(event?.slam == true ? Self.slamRed.opacity(0.8) : .clear, lineWidth: 1.5))
                 .shadow(color: event?.slam == true ? Self.slamRed.opacity(0.35) : .clear, radius: 12)
             GlassCard { side }
-                .frame(width: 260)
+                .frame(minWidth: 200, idealWidth: 260, maxWidth: 260)
         }
         .onAppear { tennis.viewing = true }
         .onDisappear { tennis.viewing = false }
@@ -62,25 +63,33 @@ struct TennisView: View {
                     }
                 }
             }
-            HStack(spacing: 8) {
-                Picker("", selection: $drawRaw) {
-                    ForEach(TennisDraw.allCases) { d in
-                        let n = event?.matches.filter { $0.draw == d }.count ?? 0
-                        Text(n > 0 ? "\(d.title) \(n)" : d.title).tag(d.rawValue)
-                    }
-                }
-                .pickerStyle(.segmented).labelsHidden().fixedSize()
-                Spacer()
-                if draw != .mixed {
-                    Picker("", selection: $kind) {
-                        Text("All").tag("all")
-                        Text("Singles").tag("singles")
-                        Text("Doubles").tag("doubles")
-                    }
-                    .pickerStyle(.segmented).labelsHidden().fixedSize()
-                }
+            // One row when it fits, two when the card is narrow, so the pickers never push the page wider than the notch.
+            ViewThatFits(in: .horizontal) {
+                HStack(spacing: 8) { drawPicker; Spacer(minLength: 4); kindPicker }
+                VStack(alignment: .leading, spacing: 6) { drawPicker; kindPicker }
             }
             matchList
+        }
+    }
+
+    private var drawPicker: some View {
+        Picker("", selection: $drawRaw) {
+            ForEach(TennisDraw.allCases) { d in
+                let n = event?.matches.filter { $0.draw == d }.count ?? 0
+                Text(n > 0 ? "\(d.title) \(n)" : d.title).tag(d.rawValue)
+            }
+        }
+        .pickerStyle(.segmented).labelsHidden().fixedSize()
+    }
+
+    @ViewBuilder private var kindPicker: some View {
+        if draw != .mixed {
+            Picker("", selection: $kind) {
+                Text("All").tag("all")
+                Text("Singles").tag("singles")
+                Text("Doubles").tag("doubles")
+            }
+            .pickerStyle(.segmented).labelsHidden().fixedSize()
         }
     }
 
