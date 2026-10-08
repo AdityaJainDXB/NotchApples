@@ -31,6 +31,21 @@ final class ModuleLayoutTests: XCTestCase {
         XCTAssertEqual(ModuleLayoutLogic.defaultChoice("claudeUsage", wasOn: false), .disabled)
     }
 
+    func testReorderingNeverWritesATabTwice() {
+        // "timer" is on but lives inside Non-Necessities, so it is not a tab. The old code gave its slot to the
+        // queue too, ran out early and saved "nonNecessities" twice.
+        let full = ["today", "timer", "claude", "nonNecessities", "todo"]
+        let shown: Set<String> = ["today", "claude", "nonNecessities", "todo"]
+        let order = ModuleLayoutLogic.applyTabOrder(full: full, isShown: { shown.contains($0) },
+                                                    shownOrder: ["todo", "today", "claude", "nonNecessities"])
+        XCTAssertEqual(order, ["todo", "timer", "today", "claude", "nonNecessities"])
+        XCTAssertEqual(Set(order).count, order.count)
+    }
+
+    func testASavedOrderWithDuplicatesKeepsTheFirst() {
+        XCTAssertEqual(ModuleLayoutLogic.unique(["today", "nonNecessities", "todo", "nonNecessities"]), ["today", "nonNecessities", "todo"])
+    }
+
     func testTheSavedChoiceWinsWhileTheModuleIsOn() {
         XCTAssertEqual(ModuleLayoutLogic.effective("timer", saved: .standalone, isOn: true), .standalone)
         XCTAssertEqual(ModuleLayoutLogic.effective("clipboard", saved: .homeExpanded, isOn: true), .homeExpanded)

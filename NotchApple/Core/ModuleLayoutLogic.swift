@@ -81,6 +81,21 @@ enum ModuleLayoutLogic {
 
     static func showsAsTab(_ choice: LayoutChoice) -> Bool { choice == .standalone }
 
+    /// Each tab once, in its first place. A tab saved twice showed up twice in the notch (2.0.6 fix).
+    static func unique(_ order: [String]) -> [String] {
+        var seen = Set<String>()
+        return order.filter { seen.insert($0).inserted }
+    }
+
+    /// The full tab order after the visible tabs were rearranged into `shownOrder`. Only the slots of tabs that are
+    /// shown take the new order; features that are on but live on Home or in Non-Necessities keep their places.
+    /// (Filling every switched-on slot made the queue run out early and wrote some tabs, often Non-Necessities, twice.)
+    static func applyTabOrder(full: [String], isShown: (String) -> Bool, shownOrder: [String]) -> [String] {
+        var queue = shownOrder
+        let merged = full.map { isShown($0) && !queue.isEmpty ? queue.removeFirst() : $0 }
+        return unique(merged + queue)
+    }
+
     /// Is the Non-Necessities tab needed at all?
     static func nonNecessitiesTabNeeded(_ choices: [String: LayoutChoice]) -> Bool {
         choices.values.contains(.nonNecessities)

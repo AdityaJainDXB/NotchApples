@@ -562,7 +562,7 @@ final class NotchWindowController {
         LiveActivityCenter.shared.onChange = { activity in previousOnChange(activity); settleSoon() }
         let previousOnRecording = LiveActivityCenter.shared.onRecordingChange
         LiveActivityCenter.shared.onRecordingChange = { on in previousOnRecording(on); settleSoon() }
-        // Volume and brightness gauges only appear while the notch is closed and not hidden (⌘O).
+        // Volume and brightness gauges only appear while the notch is closed and not hidden (⌃⌥O).
         LiveActivityCenter.shared.canShowHUD = { [weak self] in
             guard let self else { return false }
             return !self.state.isExpanded && !SettingsManager.shared.isNotchHidden
@@ -578,7 +578,7 @@ final class NotchWindowController {
     // MARK: Auto-hide (fullscreen apps, screen recordings)
 
     /// Steps the closed notch aside while a fullscreen app or a recording is on its screen.
-    /// Separate from ⌘O hiding: it comes back by itself, and opening with the hotkey still works.
+    /// Separate from ⌃⌥O hiding: it comes back by itself, and opening with the hotkey still works.
     func updateAutoHide() {
         let hide = (fullscreen.isFullscreen && NotchPrefs.autoHideFullscreen) || (recordingNow && NotchPrefs.autoHideRecording)
             || Profiles.shared.ruleHidesNotch || FocusBridge.hides
@@ -772,7 +772,7 @@ final class NotchWindowController {
 
     func toggle() { state.isExpanded ? collapse() : expand() }
 
-    // MARK: Invisibility (⌘O by default)
+    // MARK: Invisibility (⌃⌥O by default)
 
     /// Fades the whole notch out (or back in). Nothing is torn down while hidden,
     /// so Now Playing, Messenger connections and timers keep running.
@@ -918,6 +918,9 @@ final class NotchWindowController {
         hoverWork?.cancel()
         openedByHover = false
         pinnedByClick = false
+        // The pin keeps the notch open only until it is closed (Esc, the close button, the shortcut). It used to
+        // stay on for good, so clicking outside never closed the notch again and people were stuck (2.0.6 fix).
+        if SettingsManager.shared.stickyNotch { SettingsManager.shared.stickyNotch = false }
         withAnimation(Duo.close) { state.isExpanded = false }
         NotchFeedback.closed()
         // Re-lock biometric gate every time the notch closes.
@@ -942,7 +945,14 @@ final class NotchWindowController {
         GlobalHotkeyManager.shared.register(.closeNotch) { [weak self] in self?.collapse() }
         // …and as a local fallback when the panel itself has focus.
         clickInsideMonitor = NSEvent.addLocalMonitorForEvents(matching: [.leftMouseDown, .rightMouseDown]) { [weak self] event in
-            if let self, event.window === self.panel { self.pinnedByClick = true }
+            guard let self else { return event }
+            if event.window === self.panel {
+                self.pinnedByClick = true
+            } else if let w = event.window, w.styleMask.contains(.titled), !SettingsManager.shared.stickyNotch {
+                // A click in one of our own windows (Settings, a sheet…) is outside the notch too. The global
+                // monitor never sees these, so the notch used to stay open over them.
+                self.collapse()
+            }
             return event
         }
         keyMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in

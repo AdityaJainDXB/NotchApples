@@ -8,7 +8,7 @@
 //
 //  Keys used:
 //   • ⌃⌥N — toggles the notch (⌘E for people who used it before). User-configurable.
-//   • ⌘O  — hides or reveals the whole notch (invisibility). The combination is user-configurable.
+//   • ⌃⌥O — hides or reveals the whole notch (invisibility). The combination is user-configurable. (⌘O until 2.0.6.)
 //   • ⌃⌥S — captures part of the screen for the AI, even while the notch is hidden. User-configurable.
 //   • Esc — closes the notch; registered only while the notch is open, so
 //           other apps get their Escape key back the moment it closes.
@@ -42,7 +42,7 @@ struct HotkeyBinding: Equatable {
         var defaultBinding: HotkeyBinding {
             switch self {
             case .notch: HotkeyBinding(keyCode: UInt32(kVK_ANSI_N), modifiers: UInt32(controlKey | optionKey), label: "⌃⌥N")
-            case .invisibility: HotkeyBinding(keyCode: UInt32(kVK_ANSI_O), modifiers: UInt32(cmdKey), label: "⌘O")
+            case .invisibility: HotkeyBinding(keyCode: UInt32(kVK_ANSI_O), modifiers: UInt32(controlKey | optionKey), label: "⌃⌥O")
             case .capture: HotkeyBinding(keyCode: UInt32(kVK_ANSI_S), modifiers: UInt32(controlKey | optionKey), label: "⌃⌥S")
             case .palette: HotkeyBinding(keyCode: UInt32(kVK_ANSI_P), modifiers: UInt32(controlKey | optionKey), label: "⌃⌥P")
             case .lidFold: HotkeyBinding(keyCode: UInt32(kVK_ANSI_F), modifiers: UInt32(controlKey | optionKey), label: "⌃⌥F")
@@ -52,6 +52,17 @@ struct HotkeyBinding: Equatable {
 
     static let invisibilityDefault = Slot.invisibility.defaultBinding
     static let legacyNotch = HotkeyBinding(keyCode: UInt32(kVK_ANSI_E), modifiers: UInt32(cmdKey), label: "⌘E")
+    /// The hide shortcut up to 2.0.5. As a global hot key it took ⌘O (Open…) away from every other app.
+    static let legacyInvisibility = HotkeyBinding(keyCode: UInt32(kVK_ANSI_O), modifiers: UInt32(cmdKey), label: "⌘O")
+
+    /// 2.0.6: anyone whose hide shortcut is still ⌘O moves to ⌃⌥O, once, so ⌘O opens files again everywhere.
+    static func migrateInvisibilityOffCommandO() {
+        let d = UserDefaults.standard
+        guard !d.bool(forKey: "hotkey.invisibility.migratedOffCmdO") else { return }
+        d.set(true, forKey: "hotkey.invisibility.migratedOffCmdO")
+        let saved = current(.invisibility)
+        if saved.keyCode == legacyInvisibility.keyCode && saved.modifiers == legacyInvisibility.modifiers { reset(.invisibility) }
+    }
 
     /// The saved combination for `slot`, or its default when none has been chosen.
     static func current(_ slot: Slot) -> HotkeyBinding {

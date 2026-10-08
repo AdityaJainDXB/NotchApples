@@ -20,6 +20,12 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.0.6", date: "8 October 2026", headline: "Required fix: the notch always closes", items: [
+            "Pinning no longer keeps the notch open for good: the pin lasts until you close it, so clicking outside closes the notch again.",
+            "Every notch screen has a close button, including the lock, update and tour screens. Clicking in Settings closes the notch too.",
+            "The hide shortcut is now ⌃⌥O instead of ⌘O, so ⌘O opens files in other apps again.",
+            "The Non-Necessities tab no longer shows twice.",
+        ]),
         ReleaseNote(version: "2.0.5", date: "8 October 2026", headline: "Tennis in the notch", items: [
             "A new Tennis tab, on for everyone: every ATP and WTA match of the week with live set scores, in Men, Women and Mixed tabs.",
             "Grand Slams are painted red. Step back a week at a time, or jump to any of the last four Grand Slams.",

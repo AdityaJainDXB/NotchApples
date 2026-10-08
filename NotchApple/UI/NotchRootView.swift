@@ -60,7 +60,7 @@ struct PinButton: View {
 
     var body: some View {
         IconButton(systemImage: pinned ? "pin.fill" : "pin",
-                   help: pinned ? "Pinned open. Click to let it close again." : "Keep open while I drag files in") {
+                   help: pinned ? "Pinned open until you close it. Click to unpin." : "Keep open while I drag files in (until you close it)") {
             pinned.toggle()
         }
         .foregroundStyle(pinned ? Theme.accentBright : Theme.textSecondary)
@@ -127,20 +127,28 @@ struct NotchRootView: View {
     static let collapsedShoulder: CGFloat = 6
     static let expandedShoulder: CGFloat = 14
 
+    /// Screens that replace the header (lock, update, tour, patch log) still need a way out with the mouse.
+    /// Closing only closes the notch: a compulsory update or the tour comes back the next time it opens.
+    private var closeButton: some View {
+        IconButton(systemImage: "xmark", help: "Close (Esc)") { state.close() }
+            .padding(.trailing, 4 + Self.expandedShoulder)
+            .accessibilityLabel("Close the notch")
+    }
+
     @ViewBuilder
     private var expandedContent: some View {
         if settings.securityEnabled && !state.isUnlocked {
-            LockView().insetInNotch()
+            LockView().insetInNotch().overlay(alignment: .topTrailing) { closeButton }
         } else if let required = updater.requiredUpdate {
-            RequiredUpdateView(release: required).insetInNotch()
+            RequiredUpdateView(release: required).insetInNotch().overlay(alignment: .topTrailing) { closeButton }
         } else if tour.isShowing {
             // Compulsory after the 2.0 update: no skip, it returns until finished.
-            TourView().insetInNotch()
+            TourView().insetInNotch().overlay(alignment: .topTrailing) { closeButton }
         } else if patchLog.isShowing {
-            PatchLogView().insetInNotch()
+            PatchLogView().insetInNotch().overlay(alignment: .topTrailing) { closeButton }
         } else if updater.reminderDue, let release = updater.reminderRelease {
             // Every 4th or 5th time the notch is opened while an update is waiting.
-            RequiredUpdateView(release: release, skippable: true).insetInNotch()
+            RequiredUpdateView(release: release, skippable: true).insetInNotch().overlay(alignment: .topTrailing) { closeButton }
         } else {
             VStack(spacing: 10) {
                 header

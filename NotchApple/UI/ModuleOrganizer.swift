@@ -155,8 +155,10 @@ private struct CardDrop: DropDelegate {
 extension SettingsManager {
     /// Saves the order of the tabs that are on; turned-off modules keep their old places.
     func setEnabledTabOrder(_ enabledOrder: [Module]) {
-        var queue = enabledOrder
-        let full = orderedTabs.map { isEnabled($0) && !queue.isEmpty ? queue.removeFirst() : $0 }
-        setTabOrder(full)
+        let shown = Set(enabledTabs)
+        let full = ModuleLayoutLogic.applyTabOrder(full: orderedTabs.map(\.rawValue),
+                                                   isShown: { id in Module(rawValue: id).map { shown.contains($0) } ?? false },
+                                                   shownOrder: enabledOrder.map(\.rawValue))
+        setTabOrder(full.compactMap(Module.init(rawValue:)))
     }
 }

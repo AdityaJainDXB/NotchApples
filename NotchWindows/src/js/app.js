@@ -75,7 +75,8 @@ export function setEnabled(id, on) {
 
 /// The user's tab order, with tabs added in later versions at the end.
 export function tabOrder() {
-  const saved = load('ui.tabOrder', []).filter((id) => byId(id));
+  // Each tab once: a tab saved twice would otherwise show twice.
+  const saved = [...new Set(load('ui.tabOrder', []))].filter((id) => byId(id));
   return [...saved, ...MODULES.map((m) => m.id).filter((id) => !saved.includes(id))];
 }
 export function setTabOrder(ids) { save('ui.tabOrder', ids); buildTabs(); }
@@ -304,6 +305,7 @@ export async function collapse() {
   if (!expanded) return;
   expanded = false;
   openedByHover = false;
+  pinned = false;   // the pin lasts until the notch is closed, so clicking outside always works again next time
   document.querySelectorAll('.overlay, .menu').forEach((n) => n.remove());
   dropGlass();
   if (motion()) {

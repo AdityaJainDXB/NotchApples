@@ -3,7 +3,7 @@
 //  Notch apple
 //
 //  One key (⌃⌥⇧P) for "someone just walked up": close the notch, hide it completely, empty the clipboard and, if
-//  you like, wipe the clipboard history (pinned items stay). Bring the notch back with the hide shortcut (⌘O).
+//  you like, wipe the clipboard history (pinned items stay). Bring the notch back with the hide shortcut (⌃⌥O).
 //  Nothing is sent anywhere.
 //
 

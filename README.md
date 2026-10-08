@@ -47,7 +47,7 @@ Notch apple lives in the black cutout at the top of your MacBook screen (a small
 
 ## Download
 
-Pick your computer. Both buttons start the download straight away. The Mac button is pinned to version 2.0.5
+Pick your computer. Both buttons start the download straight away. The Mac button is pinned to version 2.0.6
 
 <table align="center">
   <tr>
@@ -56,10 +56,10 @@ Pick your computer. Both buttons start the download straight away. The Mac butto
   </tr>
   <tr>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/v2.0.5/NotchApple-2.0.5.dmg"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.0.5</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/v2.0.6/NotchApple-2.0.6.dmg"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.0.6</b></a>
     </td>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 1.32.0 BETA</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 1.32.1 BETA</b></a>
     </td>
   </tr>
   <tr>
@@ -201,6 +201,15 @@ All screenshots use sample data.
 </details>
 
 ## What's new
+
+### Mac 2.0.6 · Windows 1.32.1 BETA · 8 October 2026 · Required bug-fix and security update
+
+This is a **compulsory** update: every Mac on an earlier version is asked to install it.
+
+- **The notch can always be closed with the mouse again.** Pinning it kept it open for good, so clicking outside never closed it, even after a restart. The pin now lasts only until you close the notch (Mac and Windows).
+- **A close button on every notch screen,** including the lock, update, tour and what's-new screens, which hide the tab bar. Clicking in Settings or another Notch apple window also closes the notch now.
+- **Security: the hide shortcut moved from `⌘O` to `⌃⌥O`.** As a global shortcut, `⌘O` took "Open…" away from every other app, and pressing it to open a file could hide the notch instead. If you were on `⌘O`, you're moved over once. Change it in Settings → Shortcuts & Hotkeys.
+- **The Non-Necessities tab no longer shows twice.** Rearranging tabs could save a tab twice. Saved orders are cleaned up, and a tab can't be saved twice any more.
 
 ### Mac 2.0.5 · Windows 1.32.0 BETA · 8 October 2026 · 🎾 Tennis
 
@@ -674,7 +683,7 @@ Choose which ones show in **Settings → Notch Extras**.
 
 `⌘E` is a system-wide shortcut registered through Carbon, so it needs no Accessibility permission. While it's on, other apps won't receive `⌘E` (for example "Use Selection for Find"). You can turn it off in **Settings → General**.
 
-**Hide the notch with `⌘O`** (change it in **Settings → Shortcuts & Hotkeys**): press it from anywhere to make the notch and its menu-bar icon disappear, and press it again to bring them back. Everything keeps running while it's hidden (music, timers, Messenger), and `⌘E` also brings it back. **Settings → Shortcuts & Hotkeys** shows whether it's visible or hidden and has the on/off switch.
+**Hide the notch with `⌃⌥O`** (change it in **Settings → Shortcuts & Hotkeys**): press it from anywhere to make the notch and its menu-bar icon disappear, and press it again to bring them back. Everything keeps running while it's hidden (music, timers, Messenger), and `⌘E` also brings it back. **Settings → Shortcuts & Hotkeys** shows whether it's visible or hidden and has the on/off switch.
 
 When the VPN module is on, a **VPN On/Off** pill in the notch header shows the tunnel status. The full VPN setup (importing profiles and loading free servers) is under **Settings → VPN**.
 
@@ -894,7 +903,7 @@ Windows PCs have no camera notch, so the collapsed state is a slim pill pinned t
 | `Esc` | Close the notch while it is open |
 
 Windows reserves most Win-key combinations, so `Ctrl + Alt` is used instead of
-the Mac's `⌃⌥N` / `⌘O`.
+the Mac's `⌃⌥N` / `⌃⌥O`.
 
 ### What doesn't carry over
 
@@ -989,7 +998,7 @@ Every task is saved in **Settings → AI History**, on your Mac only: the image 
 | --- | --- |
 | <kbd>⌃⌥S</kbd> | Capture for AI, from any app (even with the notch hidden) |
 | <kbd>⌃⌥N</kbd> | Open or close the notch (<kbd>⌘E</kbd> if you've used Notch apple since before 1.13) |
-| <kbd>⌘O</kbd> | Hide or show the whole notch |
+| <kbd>⌃⌥O</kbd> | Hide or show the whole notch (`⌘O` before 2.0.6) |
 | <kbd>⌃⌥</kbd> + arrows, <kbd>↩</kbd>, <kbd>C</kbd>, <kbd>⌫</kbd> | Snap the front window: halves, maximise, centre, restore |
 | <kbd>Esc</kbd> | Close the notch, or cancel a capture |
 | In the AI tab: <kbd>↩</kbd> | Send / run |

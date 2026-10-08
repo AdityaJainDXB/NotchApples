@@ -184,6 +184,7 @@ final class SettingsManager: ObservableObject {
         if d.object(forKey: "v2.freshInstall") == nil { d.set(!alreadyInstalled, forKey: "v2.freshInstall") }
         // New installs open the notch with ⌃⌥N; people already using ⌘E keep it (and can change it in Settings).
         if alreadyInstalled, d.object(forKey: "hotkey.notch.keyCode") == nil { HotkeyBinding.save(.legacyNotch, for: .notch) }
+        HotkeyBinding.migrateInvisibilityOffCommandO()
         let offByDefault: [Module] = [.windows, .tools, .notes, .focus, .browser, .launcher]
         if alreadyInstalled {
             for m in offByDefault where d.object(forKey: m.storageKey) == nil { d.set(true, forKey: m.storageKey) }
@@ -305,7 +306,7 @@ final class SettingsManager: ObservableObject {
     @AppStorage("ui.hoverToOpen") var hoverToOpen = false
     /// Toggle the notch from anywhere with a global shortcut (Carbon hot key, no Accessibility permission needed).
     @AppStorage("ui.globalHotkey") var globalHotkeyEnabled = true
-    /// Hide or reveal the whole notch from anywhere with ⌘O (changeable in Settings → Shortcuts & Hotkeys).
+    /// Hide or reveal the whole notch from anywhere with ⌃⌥O (changeable in Settings → Shortcuts & Hotkeys).
     @AppStorage("ui.invisibilityHotkey") var invisibilityHotkeyEnabled = true
     @AppStorage("ui.captureHotkey") var captureHotkeyEnabled = true
     /// True while the hide shortcut has made the notch invisible. Not persisted: every launch starts visible.
@@ -379,13 +380,15 @@ final class SettingsManager: ObservableObject {
 
     /// Every tab module, in the user's order; new modules go at the end.
     var orderedTabs: [Module] {
-        let saved = tabOrderData.split(separator: ",").compactMap { Module(rawValue: String($0)) }.filter(\.isTab)
+        // Each tab once: an order saved by 2.0.5 or earlier could list a tab twice, and it then rendered twice.
+        let ids = ModuleLayoutLogic.unique(tabOrderData.split(separator: ",").map(String.init))
+        let saved = ids.compactMap { Module(rawValue: $0) }.filter(\.isTab)
         return saved + Module.allCases.filter { $0.isTab && !saved.contains($0) }
     }
 
     func setTabOrder(_ tabs: [Module]) {
         objectWillChange.send()
-        tabOrderData = tabs.map(\.rawValue).joined(separator: ",")
+        tabOrderData = ModuleLayoutLogic.unique(tabs.map(\.rawValue)).joined(separator: ",")
     }
 
     func resetTabOrder() {

@@ -123,7 +123,7 @@ struct PrivacyDashboard: View {
             } header: {
                 Text("Panic hide")
             } footer: {
-                Text("One key for “someone just walked up”: it closes the notch, hides it completely, and empties the clipboard. Bring the notch back with the hide shortcut (⌘O by default).")
+                Text("One key for “someone just walked up”: it closes the notch, hides it completely, and empties the clipboard. Bring the notch back with the hide shortcut (⌃⌥O by default).")
             }
 
             Section {
