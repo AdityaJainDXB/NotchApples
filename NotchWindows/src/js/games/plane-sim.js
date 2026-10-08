@@ -915,7 +915,7 @@
           if (k === 'c') camMode = (camMode + 1) % 3;
           if (k === 'f') { flight.flaps = flight.flaps ? 0 : 1; toast(flight.flaps ? 'Flaps down' : 'Flaps up', 800); }
           if (k === 'r') start();
-          if (k === 'm') { screen = 'menu'; renderUI(); }
+          if (k === 'm') { mouseOn = !mouseOn; write('mouse', mouseOn); toast(mouseOn ? 'Mouse steering on' : 'Mouse steering off: use the keys', 1400); }
         } else if (screen === 'result' && (k === 'r' || k === ' ')) { e.preventDefault(); start(); }
         else if (screen === 'menu' && k === 'Enter') start();
         keys.add(k);
@@ -1318,7 +1318,7 @@
       if (mode.id === 'hoops') status = `⭕ ${score}    ⏱ ${Math.max(0, Math.ceil(timeLeft))}s`;
       else if (mode.id === 'trial') status = `Hoop ${Math.min(nextHoop + 1, hoops.length)}/${hoops.length}    ⏱ ${elapsed.toFixed(1)}s`;
       else if (mode.id === 'landing') status = 'Land on the runway and stop';
-      else status = flight.onGround && !hadTakeoff ? 'Hold W for throttle · cursor down to lift off at speed' : 'Free flight';
+      else status = flight.onGround && !hadTakeoff ? 'Hold W for throttle · pull back (cursor down or ↓) to lift off' : 'Free flight';
       const tw = h2.measureText(status).width + 24;
       box(cx - tw / 2, 8, tw, 26 * s + 6); h2.fillStyle = '#fff'; h2.fillText(status, cx, 8 + (26 * s + 6) / 2);
       // Warnings.
@@ -1399,7 +1399,7 @@
           <button data-a="invert">${invert ? '✓ ' : ''}Invert Y (cursor up pulls up)</button></div>
           <h2>Keys</h2><div class="pg-hint">
           <kbd>W</kbd> more throttle · <kbd>S</kbd> less throttle · <kbd>←</kbd> <kbd>→</kbd> <kbd>↑</kbd> <kbd>↓</kbd> steer without the mouse · <kbd>A</kbd> <kbd>D</kbd> rudder (and steering on the ground)<br>
-          <kbd>F</kbd> flaps · <kbd>Space</kbd> brakes / airbrake · <kbd>C</kbd> camera (chase, cockpit, orbit) · <kbd>P</kbd> pause · <kbd>R</kbd> restart · <kbd>M</kbd> menu</div>
+          <kbd>F</kbd> flaps · <kbd>Space</kbd> brakes / airbrake · <kbd>C</kbd> camera (chase, cockpit, orbit) · <kbd>P</kbd> pause (and the menu) · <kbd>R</kbd> restart · <kbd>M</kbd> mouse steering on / off</div>
           <h2>Tips</h2><div class="pg-hint">Bank by moving the cursor sideways and ease it ${pull === 'down' ? 'down' : 'up'} to turn: the wings turn the plane, the rudder only tidies up. Too slow or pulling too hard
           stalls the wing (STALL): push the nose down and add power. To land: slow down, flaps down, line up with the runway, and touch down gently (watch V/S).
           To take off: full throttle (hold W) on the runway, then ease the cursor ${pull} at about ${Math.round(plane.stall * 1.3 * 3.6)} km/h. Airliners turn slowly, so start turns early.</div>

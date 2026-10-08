@@ -202,6 +202,10 @@ All screenshots use sample data.
 
 ## What's new
 
+### Mac 2.0.13 · Windows 1.34.1 BETA · 8 October 2026 · ⌨️ Plane: M switches the mouse off
+
+- In the Plane game, press **M** to turn mouse steering off and fly with the keys only (arrows, **A**/**D** rudder, **W**/**S** throttle); press it again to turn the mouse back on. The menu is on the pause screen (**P**).
+
 ### Mac 2.0.12 · Windows 1.34.0 BETA · 8 October 2026 · ✈️ Plane: crashes, failures and a bigger world
 
 - **Fixed: the plane kept rolling to the right by itself.** Mouse steering read where the cursor *rested*, so a cursor left off-centre (often after clicking Take off) kept the plane banking. The mouse is now a **self-centring stick**: move it to roll or pitch, and it springs back to the middle when you stop. Hands off, the **wings roll back to level** on their own. Keys can no longer get stuck "held" when the game loses focus.
