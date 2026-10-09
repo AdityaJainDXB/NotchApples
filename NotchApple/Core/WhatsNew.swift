@@ -20,6 +20,9 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.0.19", date: "9 October 2026", headline: "Notch apple opens again", items: [
+            "Fixed a crash at launch in 2.0.17 and 2.0.18.",
+        ]),
         ReleaseNote(version: "2.0.18", date: "9 October 2026", headline: "Lid-closed Keep Awake asks only when used", items: [
             "The password prompt appears only when you flip the lid-closed switch, and cancelling doesn't bring it back until you flip it again.",
         ]),
