@@ -20,6 +20,9 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.0.38", date: "10 October 2026", headline: "Dragging files to the notch", items: [
+            "Dragging a file to the top centre of the screen now opens the notch even when its own drop area is hidden or covered, so the file can be dropped straight onto the Shelf.",
+        ]),
         ReleaseNote(version: "2.0.37", date: "10 October 2026", headline: "A nicer feel, and two card games", items: [
             "Drop zones lean towards your file like a magnet: the Shelf, Convert, Share, Launcher, Wallpaper and the AI tab.",
             "Clearing the Shelf or finished to-dos is now press-and-hold, with an Undo that counts down.",

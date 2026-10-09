@@ -690,6 +690,7 @@ final class NotchWindowController {
     func show() {
         reposition()
         trigger.orderFrontRegardless()
+        installDragWatcher()
         // Keep the expanded panel on screen but invisible and click-through while
         // closed. Opening then only has to fade it in and animate — no window has
         // to be created or drawn from scratch mid-animation, so it's as smooth as closing.
@@ -827,6 +828,32 @@ final class NotchWindowController {
         withAnimation(Duo.open) { state.isExpanded = true }
         NotchFeedback.opened()
         installMonitors()
+    }
+
+    // MARK: Drags from anywhere
+
+    private var dragMonitor: Any?
+    private var dragOpened = false
+
+    /// Opens the notch when a file is dragged to the top centre of the screen, whatever is under the pointer.
+    /// The collapsed notch's own drop target can't be relied on: it can be hidden, covered by the menu bar or a full-screen
+    /// app, or sit under another window, and then the drag just carries on across the desktop.
+    private func installDragWatcher() {
+        guard dragMonitor == nil else { return }
+        dragMonitor = NSEvent.addGlobalMonitorForEvents(matching: [.leftMouseDragged, .leftMouseUp]) { [weak self] event in
+            let up = event.type == .leftMouseUp
+            MainActor.assumeIsolated { self?.dragMoved(ended: up) }
+        }
+    }
+
+    private func dragMoved(ended: Bool) {
+        if ended { dragOpened = false; return }
+        guard !dragOpened, !state.isExpanded, let screen = targetScreen else { return }
+        let p = NSEvent.mouseLocation, f = screen.frame
+        guard p.y > f.maxY - 70, abs(p.x - f.midX) < 240 else { return }
+        guard NSPasteboard(name: .drag).types?.contains(.fileURL) == true else { return }
+        dragOpened = true
+        openForDrop()
     }
 
     /// Opens straight to the File Shelf while a file is being dragged.

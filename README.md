@@ -212,6 +212,10 @@ All screenshots use sample data.
 
 > **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is still in the repository's tags.
 
+### Mac 2.0.38 · 10 October 2026 · Dragging files to the notch
+
+- **Drag a file to the top centre of the screen and the notch opens** for the drop, even when its closed shape is hidden, covered by a full-screen app or under another window (before, the drag just carried on across the desktop).
+
 ### Mac 2.0.37 · Windows 1.48.0 BETA · 10 October 2026 · 🧲 A nicer feel, and two card games
 
 - **Magnetic drop zones** (Shelf, Convert, Share, Launcher, Wallpaper, AI tab): the target leans towards the file you drag, with a glow and a label.
