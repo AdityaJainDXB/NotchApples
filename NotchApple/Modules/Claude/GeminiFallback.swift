@@ -34,12 +34,11 @@ enum GeminiFallback {
         return GeminiFallbackLogic.candidates(chosen: chosen, live: live)
     }
 
-    /// Tells the AI tab (and only the AI tab, never the closed notch) that another Gemini model is being tried.
+    /// Set by the AI tab's model, which decides whether to show the notice (and only in the AI tab, never the closed notch).
+    @MainActor static var onSwitch: ((_ newModel: String) -> Void)?
+
     private static func announce(from old: String, to new: String) {
-        Task { @MainActor in
-            guard ClaudeChatModel.shared.isSending else { return }    // a background caller: stay quiet
-            ClaudeChatModel.shared.notice = "Module error encountered, switching Gemini module to \(new)…"
-        }
+        Task { @MainActor in onSwitch?(new) }
     }
 
     /// How long a model gets to start answering before the next one is tried.

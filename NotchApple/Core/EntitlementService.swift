@@ -82,3 +82,10 @@ final class EntitlementService {
         }
     }
 }
+
+/// The real licensing behind `HostedAI`; installed at launch.
+struct LiveAIAuth: AIAuthProvider {
+    func serverURL() async -> URL? { await LicenseServer.url() }
+    @MainActor func hasKey() -> Bool { Entitlements.shared.key != nil }
+    @MainActor func token() async -> String? { await EntitlementService.shared.token() }
+}

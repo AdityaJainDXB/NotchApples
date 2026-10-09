@@ -83,6 +83,7 @@
 		32D7F8B5B7C8D2AF4821EB1D /* ScreenCapture.swift in Sources */ = {isa = PBXBuildFile; fileRef = D95BC205F9AD85B9383E0C9D /* ScreenCapture.swift */; };
 		32E6B4D47E39327BF494D2E5 /* AIStreaming.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6D5AC53B65AF61688CD0A628 /* AIStreaming.swift */; };
 		3357F0168492268B21DE16FB /* TodoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 109E43BCE08792C473471623 /* TodoView.swift */; };
+		33AE80C833DF9AB630A77619 /* GeminiFallback.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3E027F4B2B51B24BE31C8AA /* GeminiFallback.swift */; };
 		3426BA9EDEDB4808A6BEF8BA /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 419A5F6F30DFBF30351906D2 /* Theme.swift */; };
 		35A93E3A5F735227ED691332 /* SystemWatchLogic.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43B0A5F7BE05C3F95C4B2A08 /* SystemWatchLogic.swift */; };
 		3672CD76860F3046F7DE4D1E /* SmartHomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01CAAECC14FFA955E98BC7DB /* SmartHomeView.swift */; };
@@ -2068,6 +2069,7 @@
 				8DC3D3DA6C4A3F780C50B4FE /* EntitlementLogicTests.swift in Sources */,
 				53143763DB98EBC85B4B0BA2 /* GameEngineTests.swift in Sources */,
 				5D7F5D766A349C34E27672E2 /* GameEngines.swift in Sources */,
+				33AE80C833DF9AB630A77619 /* GeminiFallback.swift in Sources */,
 				1B67EF769B1FFADFB7A31A6A /* GeminiFallbackLogic.swift in Sources */,
 				E7029682EAC6B561E5AFF3E9 /* GeminiFallbackTests.swift in Sources */,
 				82B26CB254E6E3A4E2CAD077 /* HabitLogic.swift in Sources */,

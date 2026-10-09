@@ -26,6 +26,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         AppDelegate.current = self
+        HostedAI.auth = LiveAIAuth()
         PremiumRegistry.load()          // the Ultimate modules, present only in official builds
         SandboxMigration.runIfNeeded()
         notchController = NotchWindowController()

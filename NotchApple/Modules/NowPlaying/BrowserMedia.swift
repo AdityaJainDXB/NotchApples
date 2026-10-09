@@ -56,8 +56,6 @@ enum BrowserMedia {
 
     static func setSpeed(_ rate: Double) -> String { run("m.playbackRate=\(rate);return m.playbackRate+'×'") }
     static func skip(_ seconds: Double) -> String { run("m.currentTime=Math.max(0,m.currentTime+(\(seconds)));return 'ok'") }
-    static func togglePlay() -> String { run("if(m.paused){m.play()}else{m.pause()};return m.paused?'paused':'playing'") }
-    static func currentSpeed() -> String { run("return m.playbackRate+'×'") }
 }
 
 /// Under Now Playing: speed and ±10 s for the browser tab (Pro).
