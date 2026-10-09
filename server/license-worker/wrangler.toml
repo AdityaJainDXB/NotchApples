@@ -12,9 +12,22 @@ id = "8632410ec3864461b124c4522607275d"
 name = "AI_QUOTA"
 class_name = "AiQuota"
 
+# The Plane game's world leaderboard (a board per mode) and its posting limit (per address).
+[[durable_objects.bindings]]
+name = "PLANE_BOARD"
+class_name = "PlaneBoard"
+
+[[durable_objects.bindings]]
+name = "PLANE_RATE"
+class_name = "PlaneRate"
+
 [[migrations]]
 tag = "v1"
 new_sqlite_classes = ["AiQuota"]
+
+[[migrations]]
+tag = "v2"
+new_sqlite_classes = ["PlaneBoard", "PlaneRate"]
 
 [vars]
 WALLET = "ltc1qymlmvkdmvpk5f90esthzgwaw6w0tuzq6tdr6kf"

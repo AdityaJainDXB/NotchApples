@@ -25,6 +25,8 @@
 //                                         Bearer <token>) that the server forwards to an AI provider with the project's own key,
 //                                         with a daily limit per key. Off until the AI_API_KEY secret is set.
 //   GET  /ai/status                       whether Notch apple AI is switched on, and the daily limits
+//   GET  /plane/board?mode=&period=       the world leaderboard of the Plane game (hoops | trial | landing; all | week)
+//   POST /plane/score {mode,name,plane,score,region}   posts a score (open to everyone; plausibility checks and a rate limit)
 //   GET  /revoked                         signed list of revoked key IDs (the app checks it now and then)
 //   GET  /config                          prices and whether Ultimate is on sale
 //   POST /admin/issue | /admin/revoke | /admin/reissue   (Authorization: Bearer ADMIN_TOKEN)
@@ -432,7 +434,7 @@ const publicRecord = (id, r, revokedList) => ({
 // Every change made in the panel is written down: when, what, which key. Never an email address, a full key
 // or the admin token. Entries live in KV metadata (newest first) and are kept for 180 days.
 const AUDITED = new Set(['/admin/issue', '/admin/suspend', '/admin/unsuspend', '/admin/revoke', '/admin/reissue', '/admin/note',
-  '/admin/devices', '/admin/email', '/admin/promo-create', '/admin/promo-delete', '/admin/test-payment', '/admin/asset-put', '/admin/asset-delete']);
+  '/admin/devices', '/admin/email', '/admin/promo-create', '/admin/promo-delete', '/admin/test-payment', '/admin/asset-put', '/admin/asset-delete', '/admin/plane-clear']);
 
 async function audit(env, path, body, result) {
   try {
@@ -488,6 +490,11 @@ async function admin(env, path, body) {
     const r = await getJSON(env, `key:${id}`);
     if (!r) throw new HTTPError(404, 'No key with that ID on the server');
     return { ...publicRecord(id, r, await revokedIds(env)), deviceLimit: Number(env.DEVICE_LIMIT || 3) };
+  }
+  if (path === '/admin/plane-clear') {
+    if (!PLANE_MODES[body.mode]) throw new HTTPError(400, 'Unknown mode.');
+    await env.PLANE_BOARD.get(env.PLANE_BOARD.idFromName(body.mode)).fetch('https://board/?clear=1');
+    return { cleared: body.mode };
   }
   if (path === '/admin/asset-list') {
     const out = []; let cursor;
@@ -758,6 +765,87 @@ async function aiChat(env, request) {
   return new Response(r.body, { headers: { 'content-type': r.headers.get('content-type') || 'application/json', 'x-ai-remaining': String(Math.max(0, limit - q.used)), 'cache-control': 'no-store', ...CORS } });
 }
 
+// MARK: The Plane game's world leaderboard
+//
+// Open to everyone (the game is free): a name, a plane, a score and a mode, nothing else (no key, no device, no address
+// is stored). One Durable Object per mode keeps the best 100; another per address (hashed) limits posting. The game
+// runs on the player's computer, so a determined cheat can post anything: the plausibility ranges below only stop silly
+// numbers, and the board can be cleared by the owner (admin).
+
+const PLANE_MODES = { hoops: { high: true, min: 1, max: 200, int: true }, trial: { high: false, min: 15, max: 900 }, landing: { high: true, min: 1, max: 1000, int: true } };
+export const PLANE_NAMES = { c172: 'Cessna 172', pa28: 'Piper PA-28', b737: 'Boeing 737', b747: 'Boeing 747', b777: 'Boeing 777', a320: 'Airbus A320', a350: 'Airbus A350', a380: 'Airbus A380' };
+const BAD_WORDS = ['fuck', 'shit', 'cunt', 'nigg', 'fag', 'rape', 'nazi', 'hitler', 'bitch', 'whore', 'slut', 'dick', 'cock', 'pussy', 'porn', 'sex'];
+
+export function cleanPilotName(raw) {
+  const name = String(raw || '').replace(/[^\p{L}\p{N} _.-]/gu, '').replace(/\s+/g, ' ').trim().slice(0, 16);
+  const flat = name.toLowerCase().replace(/[^a-z]/g, '').replace(/1/g, 'i');
+  return !name || BAD_WORDS.some((w) => flat.includes(w)) ? 'Pilot' : name;
+}
+
+/** Returns a clean entry, or throws a 400. */
+export function cleanPlaneScore(body) {
+  const rule = PLANE_MODES[body?.mode];
+  if (!rule) throw new HTTPError(400, 'Unknown mode.');
+  const score = Number(body.score);
+  if (!Number.isFinite(score) || score < rule.min || score > rule.max || (rule.int && !Number.isInteger(score))) throw new HTTPError(400, 'That score is not possible.');
+  const plane = PLANE_NAMES[body.plane];
+  if (!plane) throw new HTTPError(400, 'Unknown plane.');
+  return { mode: body.mode, name: cleanPilotName(body.name), plane, score: rule.int ? score : Math.round(score * 10) / 10, region: String(body.region || '').replace(/[^a-z]/g, '').slice(0, 20) };
+}
+
+/** The best scores of one mode, newest wins ties. */
+export class PlaneBoard {
+  constructor(state) { this.state = state; }
+  async fetch(request) {
+    const url = new URL(request.url);
+    let top = (await this.state.storage.get('top')) || [];
+    if (request.method === 'POST') {
+      const e = await request.json(), high = PLANE_MODES[e.mode].high;
+      const same = top.find((t) => t.name === e.name && t.score === e.score && t.plane === e.plane && Date.now() - t.at < 3600e3);
+      if (!same) {
+        top.push({ name: e.name, plane: e.plane, score: e.score, region: e.region, at: Date.now() });
+        top.sort((a, b) => (high ? b.score - a.score : a.score - b.score) || b.at - a.at);
+        top = top.slice(0, 100);
+        await this.state.storage.put('top', top);
+      }
+      const rank = top.findIndex((t) => t.name === e.name && t.score === e.score && t.plane === e.plane) + 1;
+      return Response.json({ ok: true, rank: rank || null });
+    }
+    if (url.searchParams.get('clear') === '1') { await this.state.storage.put('top', []); return Response.json({ ok: true }); }
+    const since = url.searchParams.get('period') === 'week' ? Date.now() - 7 * 86400e3 : 0;
+    return Response.json({ entries: top.filter((t) => t.at >= since).slice(0, 20) });
+  }
+}
+
+/** At most 10 scores a minute from one address. */
+export class PlaneRate {
+  constructor(state) { this.state = state; }
+  async fetch() {
+    const now = Date.now();
+    const times = ((await this.state.storage.get('t')) || []).filter((t) => now - t < 60000);
+    if (times.length >= 10) return Response.json({ ok: false });
+    times.push(now);
+    await this.state.storage.put('t', times);
+    return Response.json({ ok: true });
+  }
+}
+
+async function planePost(env, request, body) {
+  const ip = request.headers.get('cf-connecting-ip') || 'unknown';
+  const rate = await (await env.PLANE_RATE.get(env.PLANE_RATE.idFromName(await sha256(`plane|${ip}`))).fetch('https://rate/', { method: 'POST' })).json();
+  if (!rate.ok) throw new HTTPError(429, 'Too many scores at once. Try again in a minute.');
+  const entry = cleanPlaneScore(body);
+  const r = await env.PLANE_BOARD.get(env.PLANE_BOARD.idFromName(entry.mode)).fetch('https://board/', { method: 'POST', body: JSON.stringify(entry) });
+  return await r.json();
+}
+
+async function planeBoard(env, url) {
+  const mode = url.searchParams.get('mode');
+  if (!PLANE_MODES[mode]) throw new HTTPError(400, 'Unknown mode.');
+  const r = await env.PLANE_BOARD.get(env.PLANE_BOARD.idFromName(mode)).fetch(`https://board/?period=${url.searchParams.get('period') === 'week' ? 'week' : 'all'}`);
+  return json({ mode, ...(await r.json()) }, 200, { 'cache-control': 'public, max-age=20' });
+}
+
 // MARK: Entry
 
 import { ADMIN_PAGE } from './admin-page.js';
@@ -793,6 +881,7 @@ export default {
         if (path === '/admin') return new Response(ADMIN_PAGE, { headers: ADMIN_HEADERS });
         if (path === '/revoked') return json(await revokedList(env), 200, { 'cache-control': 'public, max-age=3600' });
         if (path.startsWith('/asset/')) return await assetGet(env, request, path.slice('/asset/'.length));
+        if (path === '/plane/board') return await planeBoard(env, new URL(request.url));
         if (path === '/ai/status') return json({ on: aiOn(env), model: aiOn(env) ? 'notch-fast' : null, limits: { pro: aiLimit(env, 1), ultimate: aiLimit(env, 2) } });
         throw new HTTPError(404, 'Not found');
       }
@@ -822,6 +911,7 @@ export default {
         case '/activate': return json(await activate(env, body, true));
         case '/deactivate': return json(await activate(env, body, false));
         case '/entitle': return json(await entitle(env, body));
+        case '/plane/score': return json(await planePost(env, request, body));
       }
       throw new HTTPError(404, 'Not found');
     } catch (e) {

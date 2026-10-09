@@ -885,6 +885,31 @@
     let flight = new Flight(plane);
     let hoops = [], nextHoop = 0, score = 0, timeLeft = 0, elapsed = 0, streak = 0, hoopsMade = 0;
     let camMode = 0, camPos = [0, 30, 60], paused = false, result = null, propAngle = 0, toastTimer = 0;
+    let regionId = read('region', '');    // the place the world is set in (see REGIONS)
+    // ---- the world leaderboard (on the licence server): a name, a plane and a score, nothing else
+    const WORLD_SERVER = window.NotchPlaneServer || 'https://notchapple-licenses.adityajain1225.workers.dev';
+    let shareWorld = read('shareWorld', true), boardScope = read('boardScope', 'local'), boardPeriod = read('boardPeriod', 'all');
+    const worldCache = {};          // "mode|period" → { at, entries, error }
+    async function postWorld(modeId, name, score) {
+      try {
+        const r = await fetch(`${WORLD_SERVER}/plane/score`, { method: 'POST', headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ mode: modeId, name, plane: plane.id, score, region: regionId || '' }) });
+        const j = await r.json();
+        delete worldCache[`${modeId}|all`]; delete worldCache[`${modeId}|week`];
+        return r.ok && j.ok ? { ok: true, rank: j.rank } : { ok: false, error: j.error || 'The world board is busy.' };
+      } catch { return { ok: false, error: "Couldn't reach the world board." }; }
+    }
+    async function loadWorld(modeId, period) {
+      const key = `${modeId}|${period}`, hit = worldCache[key];
+      if (hit && Date.now() - hit.at < 20000) return hit;
+      let out;
+      try {
+        const r = await fetch(`${WORLD_SERVER}/plane/board?mode=${modeId}&period=${period}`);
+        out = { at: Date.now(), entries: (await r.json()).entries || [] };
+      } catch { out = { at: Date.now(), entries: [], error: true }; }
+      worldCache[key] = out;
+      return out;
+    }
     let gpwsOn = read('gpws', true), gpwsText = '', gpwsLevel = 0, gpwsT = 0, gpwsLastFt = null, gpwsAt = {}, hundredCalled = false, wasAirborne = false;
     let gearWarn = false, gearBeepAt = 0, tailScrapeT = 0, rotateCalled = false, v1Called = false, lowFuelWarned = false, flapSoundT = 0;
     let rollAcc = 0, rollT = 0, loopAcc = 0, loopT = 0, lowT = 0, hadTakeoff = false, stoppedT = 0;
@@ -1181,6 +1206,8 @@
       renderUI();
     }
 
+    // A test page can set window.NotchPlaneDebug = {} before mounting to end a run with a chosen result.
+    if (window.NotchPlaneDebug) window.NotchPlaneDebug.finish = (kind, value, label) => finish(kind, value, label);
     function saveScore() {
       const name = (ui.querySelector('input')?.value || playerName || 'Pilot').trim().slice(0, 16) || 'Pilot';
       playerName = name; write('name', name);
@@ -1190,7 +1217,18 @@
       write(`board.${mode.id}`, board.slice(0, 10));
       result.rank = board.findIndex((e) => e.name === name && e.score === result.value) + 1;
       result.qualifies = false; result.saved = true;
+      const wantWorld = ui.querySelector('#pg-world')?.checked ?? shareWorld;
+      shareWorld = wantWorld; write('shareWorld', wantWorld);
       renderUI();
+      if (wantWorld) postToWorld(name);
+    }
+    /// Posts this result to the world board (name, plane and score only) and shows where it came.
+    async function postToWorld(name) {
+      if (!result || result.posted || result.value == null || mode.id === 'free') return;
+      result.posted = 'sending'; renderUI();
+      const r = await postWorld(mode.id, name, result.value);
+      result.posted = r.ok ? 'done' : 'failed'; result.worldRank = r.rank; result.worldError = r.error;
+      if (screen === 'result') renderUI();
     }
 
     // ---- input
@@ -1811,8 +1849,10 @@
           <h1 style="justify-content:center">${r.kind === 'crash' ? '💥 Crashed' : m.id === 'trial' ? '🏁 Finished' : m.id === 'landing' ? '🛬 Landed' : '🎉 Time!'}</h1>
           <div class="pg-hint">${r.label}</div>
           ${r.value != null && m.id !== 'free' ? `<div class="pg-big">${fmtScore(m, r.value)}${m.id === 'hoops' ? ' <span style="font-size:16px">hoops</span>' : m.id === 'landing' ? ' <span style="font-size:16px">points</span>' : ''}</div>` : ''}
-          ${r.qualifies ? `<div class="pg-row" style="justify-content:center;margin:6px 0">🏆 New leaderboard score! <input maxlength="16" placeholder="Your name" value="${escapeHtml(playerName)}"><button data-a="save" class="pg-go" style="padding:5px 12px;font-size:12px">Save</button></div>` : ''}
+          ${r.qualifies ? `<div class="pg-row" style="justify-content:center;margin:6px 0">🏆 New leaderboard score! <input maxlength="16" placeholder="Your name" value="${escapeHtml(playerName)}"><label class="pg-hint" style="display:flex;align-items:center;gap:4px"><input type="checkbox" id="pg-world" ${shareWorld ? 'checked' : ''}>🌍 world board</label><button data-a="save" class="pg-go" style="padding:5px 12px;font-size:12px">Save</button></div>` : ''}
+          ${!r.qualifies && !r.posted && m.id !== 'free' && r.value >= 1 ? `<div class="pg-row" style="justify-content:center;margin:6px 0"><input maxlength="16" placeholder="Your name" value="${escapeHtml(playerName)}"><button data-a="post" style="padding:5px 12px;font-size:12px">🌍 Post to the world board</button></div>` : ''}
           ${r.saved ? `<div class="pg-hint">Saved at #${r.rank} on the ${m.name} leaderboard.</div>` : ''}
+          ${r.posted === 'sending' ? '<div class="pg-hint">Posting to the world board…</div>' : r.posted === 'done' ? `<div class="pg-hint">🌍 On the world board${r.worldRank ? ` at #${r.worldRank}` : ''}.</div>` : r.posted === 'failed' ? `<div class="pg-hint" style="color:#ffb347">${escapeHtml(r.worldError || 'Could not post.')}</div>` : ''}
           ${board.length ? `<h2>${m.name} leaderboard</h2>${table(m, board.slice(0, 5))}` : ''}
           <div class="pg-row" style="justify-content:center;margin-top:10px"><button data-a="again" class="pg-go">Fly again (R)</button><button data-a="menu">Menu</button></div>
         </div>`;
@@ -1830,8 +1870,20 @@
           <div class="pg-row" style="margin-top:10px"><button class="pg-go" data-a="start">✈️ Take off (Enter)</button>
             <span class="pg-hint">Best: ${(() => { const b = read(`board.${mode.id}`, [])[0]; return b && mode.id !== 'free' ? `${fmtScore(mode, b.score)} by ${escapeHtml(b.name)}` : '—'; })()}</span></div>`;
       } else if (menuTab === 'board') {
-        body = MODES.filter((m) => m.id !== 'free').map((m) => { const b = read(`board.${m.id}`, []); return `<h2>${m.icon} ${m.name}</h2>${b.length ? table(m, b) : '<div class="pg-hint">No scores yet. Be the first!</div>'}`; }).join('')
-          + '<div class="pg-row" style="margin-top:8px"><button data-a="clear">Clear leaderboards</button><span class="pg-hint">Scores are kept on this computer.</span></div>';
+        const scopes = `<div class="pg-row"><button data-scope="local" class="${boardScope === 'local' ? 'pg-on' : ''}">This computer</button><button data-scope="world" class="${boardScope === 'world' ? 'pg-on' : ''}">🌍 World</button>${boardScope === 'world' ? `<button data-period="all" class="${boardPeriod === 'all' ? 'pg-on' : ''}">All time</button><button data-period="week" class="${boardPeriod === 'week' ? 'pg-on' : ''}">This week</button>` : ''}</div>`;
+        if (boardScope === 'world') {
+          const parts = MODES.filter((m) => m.id !== 'free').map((m) => {
+            const c = worldCache[`${m.id}|${boardPeriod}`];
+            if (!c) { loadWorld(m.id, boardPeriod).then(() => { if (screen === 'menu' && menuTab === 'board' && boardScope === 'world') renderUI(); }); return `<h2>${m.icon} ${m.name}</h2><div class="pg-hint">Loading the world board…</div>`; }
+            if (c.error) return `<h2>${m.icon} ${m.name}</h2><div class="pg-hint" style="color:#ffb347">Couldn't reach the world board. Check your connection.</div>`;
+            const rows = c.entries.slice(0, 10).map((e) => ({ ...e, date: new Date(e.at).toISOString().slice(0, 10) }));
+            return `<h2>${m.icon} ${m.name}</h2>${rows.length ? table(m, rows, true) : '<div class="pg-hint">No scores yet. Be the first!</div>'}`;
+          });
+          body = scopes + parts.join('') + `<div class="pg-hint" style="margin-top:6px">Everyone who posts a score appears here: only a name, the plane and the score are sent. You choose when you save a score.</div>`;
+        } else {
+          body = scopes + MODES.filter((m) => m.id !== 'free').map((m) => { const b = read(`board.${m.id}`, []); return `<h2>${m.icon} ${m.name}</h2>${b.length ? table(m, b) : '<div class="pg-hint">No scores yet. Be the first!</div>'}`; }).join('')
+            + '<div class="pg-row" style="margin-top:8px"><button data-a="clear">Clear leaderboards</button><span class="pg-hint">These scores are kept on this computer. The 🌍 World tab shows everyone\'s.</span></div>';
+        }
       } else if (menuTab === 'ach') {
         body = `<h2>Challenges · ${[...done].filter((d) => CHALLENGES.some((c) => c.id === d)).length} / ${CHALLENGES.length}</h2><div class="pg-ach">${CHALLENGES.map((c) => `<div class="${done.has(c.id) ? 'pg-done' : ''}">${done.has(c.id) ? '🏅' : '🔒'} ${c.name} <small>${c.desc}</small></div>`).join('')}</div>`;
       } else {
@@ -1865,8 +1917,8 @@
       bind();
     }
     const escapeHtml = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-    function table(m, rows) {
-      return `<table><tr><th>#</th><th>Pilot</th><th>Plane</th><th style="text-align:right">${m.id === 'trial' ? 'Time' : m.id === 'hoops' ? 'Hoops' : 'Points'}</th><th>Date</th></tr>${rows.map((e, i) => `<tr><td>${i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : i + 1}</td><td>${escapeHtml(e.name)}</td><td>${escapeHtml(e.plane)}</td><td class="pg-n">${fmtScore(m, e.score)}</td><td>${e.date}</td></tr>`).join('')}</table>`;
+    function table(m, rows, world = false) {
+      return `<table><tr><th>#</th><th>Pilot</th><th>Plane</th><th style="text-align:right">${m.id === 'trial' ? 'Time' : m.id === 'hoops' ? 'Hoops' : 'Points'}</th><th>Date</th></tr>${rows.map((e, i) => `<tr${world && playerName && e.name === playerName ? ' style="background:rgba(255,179,71,.18)"' : ''}><td>${i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : i + 1}</td><td>${escapeHtml(e.name)}</td><td>${escapeHtml(e.plane)}</td><td class="pg-n">${fmtScore(m, e.score)}</td><td>${e.date}</td></tr>`).join('')}</table>`;
     }
     function bind() {
       ui.querySelectorAll('[data-plane]').forEach((n) => n.onclick = () => { plane = PLANES.find((p) => p.id === n.dataset.plane); write('plane', plane.id); flight = new Flight(plane); renderUI(); });
@@ -1874,6 +1926,8 @@
         n.oninput = () => { sens = Number(n.value); write('sens', sens); const v = ui.querySelector('[data-sensval]'); if (v) v.textContent = `${sens.toFixed(1)}×`; };
         n.onchange = () => root.focus();
       });
+      ui.querySelectorAll('[data-scope]').forEach((n) => n.onclick = () => { boardScope = n.dataset.scope; write('boardScope', boardScope); renderUI(); });
+      ui.querySelectorAll('[data-period]').forEach((n) => n.onclick = () => { boardPeriod = n.dataset.period; write('boardPeriod', boardPeriod); renderUI(); });
       ui.querySelectorAll('[data-mode]').forEach((n) => n.onclick = () => { mode = MODES.find((m) => m.id === n.dataset.mode); write('mode', mode.id); renderUI(); });
       ui.querySelectorAll('[data-tab]').forEach((n) => n.onclick = () => { menuTab = n.dataset.tab; write('menuTab', menuTab); renderUI(); });
       ui.querySelectorAll('[data-a]').forEach((n) => n.onclick = () => {
@@ -1882,6 +1936,11 @@
         else if (a === 'resume') { paused = false; renderUI(); root.focus(); }
         else if (a === 'menu') { screen = 'menu'; paused = false; if (engGain) engGain.gain.value = 0; renderUI(); }
         else if (a === 'save') saveScore();
+        else if (a === 'post') {
+          const name = (ui.querySelector('input')?.value || playerName || 'Pilot').trim().slice(0, 16) || 'Pilot';
+          playerName = name; write('name', name); shareWorld = true; write('shareWorld', true);
+          postToWorld(name);
+        }
         else if (a === 'invert') { invert = !invert; write('invertY', invert); renderUI(); }
         else if (a === 'gpws') { gpwsOn = !gpwsOn; write('gpws', gpwsOn); if (!gpwsOn) cancelSpeech(); renderUI(); }
         else if (a === 'mouse') { mouseOn = !mouseOn; write('mouse', mouseOn); renderUI(); }
