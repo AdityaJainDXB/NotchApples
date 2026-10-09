@@ -351,7 +351,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     @objc func toggleNotch() { notchController?.toggle() }
 
     @objc func openSettings() {
-        notchController?.collapse()
+        notchController?.collapse(force: true)
         AppDelegate.openSettingsWindow()
     }
 
@@ -376,7 +376,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     /// scene, so this goes through our own `SettingsWindowController`.
     static func openSettingsWindow(tab: SettingsTab? = nil) {
         // Clicks in our own Settings window never reach the notch's click-outside monitor, so close it here.
-        AppDelegate.current?.notchController?.collapse()
+        AppDelegate.current?.notchController?.collapse(force: true)
         SettingsWindowController.shared.show(tab: tab)
     }
 }

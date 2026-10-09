@@ -301,6 +301,8 @@ final class SettingsManager: ObservableObject {
     @AppStorage("extras.keepAwakeActivity") var keepAwakeActivity = true
     @AppStorage("extras.trimAfterRecording") var trimAfterRecording = true
     @AppStorage("extras.lyrics") var showLyrics = true
+    /// Cassette mode for the music player: stays on or off until you change it here (or with the tape button).
+    @AppStorage("nowPlaying.cassette") var cassetteMode = false
     /// Album cover and moving bars beside the closed notch while music plays.
     @AppStorage("extras.musicActivity") var musicActivity = true
     /// The music bars follow the song (listens to system audio; nothing is recorded).

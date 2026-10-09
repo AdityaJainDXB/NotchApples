@@ -20,6 +20,10 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.0.41", date: "10 October 2026", headline: "Cassette mode redone, and a pin that holds", items: [
+            "Cassette mode: the tape is now the big centre of the Now Playing tab with the controls beside it, and Settings → Extras has a switch so it stays on (or off) until you change it.",
+            "A pinned notch now only closes when you close it (Esc, the close button, the shortcut): clicking the desktop, switching apps or swiping no longer closes it.",
+        ]),
         ReleaseNote(version: "2.0.40", date: "10 October 2026", headline: "The AI provider picker", items: [
             "The AI tab's provider list is now a searchable picker with a preview of each provider, like the model picker beside it.",
         ]),

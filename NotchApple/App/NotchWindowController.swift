@@ -571,7 +571,7 @@ final class NotchWindowController {
         container.onHoverChange = { [weak self] inside in self?.hoverChanged(inside: inside, overPanel: true) }
         levelObservers = observeWindowLevelEvents()
         state.toggle = { [weak self] in self?.toggle() }
-        state.close = { [weak self] in self?.collapse() }
+        state.close = { [weak self] in self?.collapse(force: true) }
         applyEdgeTrigger()
     }
 
@@ -773,7 +773,7 @@ final class NotchWindowController {
                width: size.width, height: size.height)
     }
 
-    func toggle() { state.isExpanded ? collapse() : expand() }
+    func toggle() { state.isExpanded ? collapse(force: true) : expand() }
 
     // MARK: Invisibility (⌃⌥O by default)
 
@@ -810,7 +810,7 @@ final class NotchWindowController {
     }
 
     var isOpen: Bool { state.isExpanded }
-    func closeNotch() { collapse() }
+    func closeNotch() { collapse(force: true) }
 
     func expand() {
         guard !state.isExpanded else { return }
@@ -944,8 +944,11 @@ final class NotchWindowController {
         hoverWork = work
     }
 
-    func collapse() {
+    /// `force` is for something you did on purpose (Esc, the close button, the shortcut, opening Settings). Anything automatic
+    /// (a click elsewhere, a Space change, hover, a swipe) leaves a pinned notch open.
+    func collapse(force: Bool = false) {
         guard state.isExpanded else { return }
+        if SettingsManager.shared.stickyNotch && !force { return }
         hoverWork?.cancel()
         openedByHover = false
         pinnedByClick = false
@@ -973,7 +976,7 @@ final class NotchWindowController {
             self.collapse()
         }
         // Esc works even when another app is frontmost (Carbon hot key, active only while open)…
-        GlobalHotkeyManager.shared.register(.closeNotch) { [weak self] in self?.collapse() }
+        GlobalHotkeyManager.shared.register(.closeNotch) { [weak self] in self?.collapse(force: true) }
         // …and as a local fallback when the panel itself has focus.
         clickInsideMonitor = NSEvent.addLocalMonitorForEvents(matching: [.leftMouseDown, .rightMouseDown]) { [weak self] event in
             guard let self else { return event }
@@ -988,7 +991,7 @@ final class NotchWindowController {
         }
         keyMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
             guard let self else { return event }
-            if event.keyCode == 53 { self.collapse(); return nil }
+            if event.keyCode == 53 { self.collapse(force: true); return nil }
             // Keyboard control: ⌘1–⌘9 jump to a tab, ⌘[ and ⌘] (or ⌃Tab / ⌃⇧Tab) step through them.
             let mods = event.modifierFlags.intersection(.deviceIndependentFlagsMask)
             if mods == .command, let c = event.charactersIgnoringModifiers, let n = Int(c), (1...9).contains(n) {

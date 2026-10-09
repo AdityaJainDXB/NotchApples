@@ -11,6 +11,8 @@ import SwiftUI
 
 struct CassetteView: View {
     @ObservedObject var monitor: NowPlayingMonitor
+    /// The Now Playing tab puts the controls beside the tape; the small Home card keeps them on the front.
+    var showControls = true
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     private var playing: Bool { monitor.current?.isPlaying == true }
@@ -25,30 +27,31 @@ struct CassetteView: View {
                 GeometryReader { g in
                     let w = g.size.width, h = g.size.height
                     ZStack {
-                        RoundedRectangle(cornerRadius: 10).fill(LinearGradient(colors: [Color(white: 0.24), Color(white: 0.09)], startPoint: .topLeading, endPoint: .bottomTrailing))
-                        RoundedRectangle(cornerRadius: 10).strokeBorder(.white.opacity(0.14))
-                        // Label
-                        RoundedRectangle(cornerRadius: 5).fill(Color(red: 0.93, green: 0.9, blue: 0.82))
-                            .frame(width: w * 0.86, height: h * 0.52).offset(y: -h * 0.12)
-                        VStack(alignment: .leading, spacing: 0) {
-                            Text(monitor.current?.title ?? "Nothing playing").font(.system(size: 11, weight: .bold)).lineLimit(1)
-                            Text(monitor.current?.artist ?? "Press play").font(.system(size: 9)).lineLimit(1).opacity(0.7)
+                        RoundedRectangle(cornerRadius: 12).fill(LinearGradient(colors: [Color(white: 0.26), Color(white: 0.08)], startPoint: .topLeading, endPoint: .bottomTrailing))
+                        RoundedRectangle(cornerRadius: 12).strokeBorder(.white.opacity(0.16))
+                        // Label, with the title and artist at the top of it
+                        RoundedRectangle(cornerRadius: 6).fill(Color(red: 0.93, green: 0.9, blue: 0.82))
+                            .frame(width: w * 0.88, height: h * 0.56).position(x: w / 2, y: h * 0.07 + h * 0.28)
+                        VStack(alignment: .leading, spacing: 1) {
+                            Text(monitor.current?.title ?? "Nothing playing").font(.system(size: max(11, w * 0.05), weight: .bold)).lineLimit(1)
+                            Text(monitor.current?.artist ?? "Press play").font(.system(size: max(9, w * 0.038))).lineLimit(1).opacity(0.7)
                         }
                         .foregroundStyle(Color(white: 0.12))
-                        .frame(width: w * 0.8, alignment: .leading).offset(y: -h * 0.3)
-                        // Reel window
-                        Capsule().fill(Color(white: 0.1)).frame(width: w * 0.62, height: h * 0.24).offset(y: -h * 0.04)
-                        reel(size: h * 0.2 + h * 0.07 * (1 - progress), angle: angle).offset(x: -w * 0.2, y: -h * 0.04)
-                        reel(size: h * 0.2 + h * 0.07 * progress, angle: angle).offset(x: w * 0.2, y: -h * 0.04)
-                        // Bottom trapezoid with the deck buttons
-                        HStack(spacing: 14) {
-                            deckButton("backward.fill", "Previous") { MediaControl.send(.previous) }
-                            deckButton(playing ? "pause.fill" : "play.fill", playing ? "Pause" : "Play", big: true) { monitor.playPause() }
-                            deckButton("forward.fill", "Next") { MediaControl.send(.next) }
+                        .frame(width: w * 0.8, alignment: .leading).position(x: w / 2, y: h * 0.07 + h * 0.1)
+                        // Tape window with the two reels
+                        Capsule().fill(Color(white: 0.1)).frame(width: w * 0.66, height: h * 0.27).position(x: w / 2, y: h * 0.4)
+                        reel(size: h * 0.2 + h * 0.07 * (1 - progress), angle: angle).position(x: w * 0.3, y: h * 0.4)
+                        reel(size: h * 0.2 + h * 0.07 * progress, angle: angle).position(x: w * 0.7, y: h * 0.4)
+                        // Bottom of the cassette
+                        Capsule().fill(Color.white.opacity(0.07)).frame(width: w * 0.5, height: h * 0.18).position(x: w / 2, y: h * 0.85)
+                        if showControls {
+                            HStack(spacing: 14) {
+                                deckButton("backward.fill", "Previous") { MediaControl.send(.previous) }
+                                deckButton(playing ? "pause.fill" : "play.fill", playing ? "Pause" : "Play", big: true) { monitor.playPause() }
+                                deckButton("forward.fill", "Next") { MediaControl.send(.next) }
+                            }
+                            .position(x: w / 2, y: h * 0.85)
                         }
-                        .padding(.horizontal, 18).padding(.vertical, 4)
-                        .background(Color.white.opacity(0.08), in: Capsule())
-                        .offset(y: h * 0.34)
                     }
                 }
                 .aspectRatio(1.58, contentMode: .fit)

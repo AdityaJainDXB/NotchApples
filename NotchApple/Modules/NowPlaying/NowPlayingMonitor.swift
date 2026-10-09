@@ -336,7 +336,7 @@ struct NowPlayingView: View {
     private var player: some View {
         HStack(spacing: 18) {
             if cassette {
-                CassetteView(monitor: monitor).frame(width: 200)
+                CassetteView(monitor: monitor, showControls: false).frame(width: 270)
             } else {
             ZStack {
                 if let art = monitor.artwork {
@@ -398,7 +398,8 @@ struct NowPlayingView: View {
                     IconButton(systemImage: monitor.current?.isPlaying == true ? "pause.fill" : "play.fill",
                                help: monitor.current == nil ? "Play in \(monitor.defaultPlayerName)" : "Play / pause") { monitor.playPause() }
                     IconButton(systemImage: "forward.fill", help: "Next track") { MediaControl.send(.next) }
-                    Button("Open Player", action: monitor.openPlayer).buttonStyle(PurpleButtonStyle(prominent: false))
+                    if cassette { IconButton(systemImage: "arrow.up.forward.app", help: "Open the player", action: monitor.openPlayer) }
+                    else { Button("Open Player", action: monitor.openPlayer).buttonStyle(PurpleButtonStyle(prominent: false)) }
                     IconButton(systemImage: cassette ? "photo.fill" : "recordingtape", help: cassette ? "Back to the cover" : "Cassette mode") { withAnimation(Theme.spring) { cassette.toggle() } }
                     if monitor.current?.title.isEmpty == false {
                         IconButton(systemImage: "quote.bubble.fill", help: "Lyrics") { withAnimation(.easeInOut(duration: 0.2)) { showLyrics = true } }
