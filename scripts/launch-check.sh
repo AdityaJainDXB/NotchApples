@@ -3,9 +3,19 @@
 # (2.0.17 and 2.0.18 did) never gets published. Usage: scripts/launch-check.sh
 set -uo pipefail
 cd "$(dirname "$0")/.."
-APP="build/dd/Build/Products/Release/Notch apple.app"
+# build_dmg.sh removes the built app once it's in the DMG, so check the app inside the DMG: the one people install.
+VERSION=$(grep 'MARKETING_VERSION' project.yml | head -1 | sed -E 's/.*"(.*)".*/\1/')
+DMG="dist/NotchApple-$VERSION.dmg"
+[ -f "$DMG" ] || { echo "launch-check: no DMG at $DMG"; exit 1; }
+MNT=$(mktemp -d)
+hdiutil attach -nobrowse -readonly -mountpoint "$MNT" "$DMG" >/dev/null || { echo "launch-check: couldn't open $DMG"; exit 1; }
+WORK=$(mktemp -d)
+cp -R "$MNT/Notch apple.app" "$WORK/"
+hdiutil detach "$MNT" >/dev/null 2>&1 || true
+trap 'rm -rf "$WORK"' EXIT
+APP="$WORK/Notch apple.app"
 BIN="$APP/Contents/MacOS/Notch apple"
-[ -x "$BIN" ] || { echo "launch-check: no built app at $BIN"; exit 1; }
+[ -x "$BIN" ] || { echo "launch-check: no app inside $DMG"; exit 1; }
 "$BIN" >/tmp/notch-launch.log 2>&1 &
 pid=$!
 for _ in $(seq 1 15); do
