@@ -85,7 +85,7 @@ struct PrivacyDashboard: View {
         Form {
             Section {
                 row("Screen Recording", ScreenPermission.isGranted, "Capturing for AI, Text Grab, recordings")
-                row("Accessibility", AXIsProcessTrusted(), "Volume keys, selected text, pasting snippets, text expander")
+                row("Accessibility", AXIsProcessTrusted(), "Volume keys, selected text, pasting snippets, text expander, Klick sounds")
                 row("Calendar", permissions.calendar == .fullAccess, "Today, meeting alerts, automations")
                 row("Reminders", EKEventStore.authorizationStatus(for: .reminder) == .fullAccess, "To-do sync (Pro)")
                 row("Camera", permissions.camera == .authorized, "Mirror, face unlock")

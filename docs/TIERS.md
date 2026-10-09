@@ -12,6 +12,7 @@
   - —: not built.
 - **Proposed** is my recommendation. ⚠️ marks the features that are free today but marked Pro in the spec. You chose a 50/50 split:
   - **10 stay free (kept):** sports, privacy indicators, F1, clipboard, AirDrop, screenshot/record, window snapping, Shortcuts, world clock, backup.
+  - **Klick** (2.0.19): mechanical keyboard sounds as you type, Pro.
   - **9 move to Pro** (notch resize turned out not to exist yet, so it's simply a future Pro feature): meeting alert and join button, download progress, Focus/Pomodoro, launcher, snippets, rain alert, lyrics, Mirror, iCloud/Google sync.
   - What's New for that release will say which features moved.
 

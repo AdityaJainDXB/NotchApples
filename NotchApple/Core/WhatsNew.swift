@@ -20,6 +20,10 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.0.19", date: "9 October 2026", headline: "Klick, and Plane controls that climb when you go up", items: [
+            "Klick (Pro): mechanical keyboard sounds as you type, in any app. Eight sounds, each with its own volume, and an on / off switch.",
+            "Plane: cursor up (or ↑) now climbs, the mouse steers inside a small ring so it never runs off the notch, and keys always reach the game.",
+        ]),
         ReleaseNote(version: "2.0.18", date: "9 October 2026", headline: "Lid-closed Keep Awake asks only when used", items: [
             "The password prompt appears only when you flip the lid-closed switch, and cancelling doesn't bring it back until you flip it again.",
         ]),

@@ -766,9 +766,10 @@
     let wreckT = 0, failAt = Infinity, hadFailure = false, engineSmokeT = 0, wingLostAt = -1, canyonT = 0;
     let failures = read('failures', 'rare');
     const keys = new Set();
-    const mouse = { x: 0, y: 0, in: false, movedAt: 0 };   // the mouse stick, -1..1 each way; it centres itself
+    const mouse = { x: 0, y: 0, in: false, engaged: false };   // the cursor in the steering ring, -1..1 each way
     const done = new Set(read('done', []));
-    let invert = read('invert', false), mouseOn = read('mouse', true), sens = read('sens', 1), sound = read('sound', true), units = read('units', 'kmh');
+    // invertY false (the default): up climbs, for the mouse and the ↑ key. True: flight-stick style, down climbs.
+    let invert = read('invertY', false), mouseOn = read('mouse', true), sens = read('sens', 1), sound = read('sound', true), units = read('units', 'kmh');
     let playerName = read('name', '');
 
     // ---- sound (Web Audio): engine drone, a chime for hoops, a thud for crashes
@@ -849,7 +850,7 @@
     function start() {
       flight = new Flight(plane);
       score = 0; elapsed = 0; streak = 0; hoopsMade = 0; result = null; paused = false; smoke.length = 0;
-      mouse.x = 0; mouse.y = 0; mouse.movedAt = 0;
+      mouse.engaged = false;   // move the cursor to the middle to take control
       debris.length = 0; attached = new Set(ALL_PARTS); wreckT = 0; hadFailure = false; engineSmokeT = 0; wingLostAt = -1; canyonT = 0;
       // Random failures (Settings): mostly in Free Flight and Landing; "often" means every mode.
       const rate = failures === 'often' ? 1 / 75 : failures === 'rare' ? 1 / 360 : 0;
@@ -905,10 +906,11 @@
     const onKey = (e, down) => {
       if (!root.isConnected) return;
       const k = e.key.length === 1 ? e.key.toLowerCase() : e.key;
+      if (down && e.repeat && keys.has(k)) { if (screen === 'fly') e.preventDefault?.(); return; }   // held keys repeat: toggles fire once
       const typing = e.target && e.target.tagName === 'INPUT' && e.target.type !== 'range';
       if (typing) { if (down && k === 'Enter' && result?.qualifies) saveScore(); return; }
       const game = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' ', 'w', 's', 'a', 'd', 'q', 'e', 'f', 'b', 'c', 'p', 'r', 'Shift', 'Control', 'g'];
-      if (game.includes(k) && screen === 'fly') e.preventDefault();
+      if (game.includes(k) && screen === 'fly') e.preventDefault?.();
       if (down) {
         if (screen === 'fly') {
           if (k === 'p') { paused = !paused; renderUI(); }
@@ -916,7 +918,7 @@
           if (k === 'f') { flight.flaps = flight.flaps ? 0 : 1; toast(flight.flaps ? 'Flaps down' : 'Flaps up', 800); }
           if (k === 'r') start();
           if (k === 'm') { mouseOn = !mouseOn; write('mouse', mouseOn); toast(mouseOn ? 'Mouse steering on' : 'Mouse steering off: use the keys', 1400); }
-        } else if (screen === 'result' && (k === 'r' || k === ' ')) { e.preventDefault(); start(); }
+        } else if (screen === 'result' && (k === 'r' || k === ' ')) { e.preventDefault?.(); start(); }
         else if (screen === 'menu' && k === 'Enter') start();
         keys.add(k);
       } else keys.delete(k);
@@ -928,30 +930,32 @@
     const blur = () => keys.clear(); window.addEventListener('blur', blur);
     root.addEventListener('focusout', (e) => { if (!root.contains(e.relatedTarget)) keys.clear(); });
     const hidden = () => { if (document.hidden) keys.clear(); }; document.addEventListener('visibilitychange', hidden);
-    // The mouse is a stick that centres itself: moving it deflects the stick, and it springs back to the middle when
-    // the mouse stops. (Steering by where the cursor rests kept the plane banking whenever it sat off-centre.)
+    // The mouse steers by where the cursor is inside a small ring in the middle of the view: the ring's edge is full
+    // stick, so a short move is enough and the cursor never has to leave the notch. It only takes control once the
+    // cursor has been in the middle (a cursor left anywhere after clicking Take off can't bank the plane), and lets
+    // go when the cursor leaves the game.
+    const ringRadius = () => { const r = root.getBoundingClientRect(); return Math.max(40, Math.min(r.width, r.height) * 0.2) / clamp(sens, 0.3, 2.5); };
     root.addEventListener('pointermove', (e) => {
-      if (screen !== 'fly' || paused) return;
-      const r = root.getBoundingClientRect();
-      mouse.x = clamp(mouse.x + (e.movementX || 0) / (r.width * 0.25), -1, 1);
-      mouse.y = clamp(mouse.y + (e.movementY || 0) / (r.height * 0.25), -1, 1);
-      mouse.in = true; mouse.movedAt = performance.now();
+      const r = root.getBoundingClientRect(), R = ringRadius();
+      const dx = (e.clientX - r.left - r.width / 2) / R, dy = (e.clientY - r.top - r.height / 2) / R;
+      const d = Math.hypot(dx, dy), k = d > 1 ? 1 / d : 1;
+      mouse.x = dx * k; mouse.y = dy * k; mouse.in = true;
+      if (d < 0.3) mouse.engaged = true;
     });
-    root.addEventListener('pointerleave', () => { mouse.x = 0; mouse.y = 0; mouse.in = false; });
+    root.addEventListener('pointerleave', () => { mouse.x = 0; mouse.y = 0; mouse.in = false; mouse.engaged = false; });
     root.addEventListener('mousedown', () => { if (document.activeElement?.tagName !== 'INPUT') root.focus(); });
 
-    // The cursor's distance from the centre of the view steers: left and right bank, down pulls the nose up, up pushes
-    // it down (like a stick). A small dead zone in the middle keeps the plane steady, and the curve is gentle near the
-    // centre so small moves are fine adjustments. The arrow keys still work too.
+    // A small dead zone in the middle keeps the plane steady, and the curve is gentle near the centre so small moves
+    // are fine adjustments. Up climbs (cursor up or ↑) unless Invert is on. The arrow keys always work too.
     const stick = (v) => {
-      const dead = 0.06, a = Math.abs(v);
+      const dead = 0.1, a = Math.abs(v);
       if (a < dead) return 0;
-      return Math.sign(v) * Math.min(1, Math.pow((a - dead) / (1 - dead), 1.25) * sens * 1.5);
+      return Math.sign(v) * Math.min(1, Math.pow((a - dead) / (1 - dead), 1.3));
     };
     function input() {
       const has = (k) => keys.has(k);
-      const m = mouseOn && mouse.in;
-      let pitch = clamp((has('ArrowDown') ? 1 : 0) - (has('ArrowUp') ? 1 : 0) + (m ? stick(mouse.y) : 0), -1, 1);
+      const m = mouseOn && mouse.in && mouse.engaged;
+      let pitch = clamp((has('ArrowUp') ? 1 : 0) - (has('ArrowDown') ? 1 : 0) - (m ? stick(mouse.y) : 0), -1, 1);
       if (invert) pitch = -pitch;
       return {
         pitch,
@@ -1305,12 +1309,20 @@
       h2.strokeStyle = '#ffd166'; h2.lineWidth = 2.5; h2.beginPath(); h2.moveTo(cx - R * 0.6, cy); h2.lineTo(cx - R * 0.2, cy); h2.lineTo(cx, cy + 5); h2.lineTo(cx + R * 0.2, cy); h2.lineTo(cx + R * 0.6, cy); h2.stroke();
       h2.strokeStyle = 'rgba(255,255,255,.5)'; h2.lineWidth = 1; h2.beginPath(); h2.arc(cx, cy, R, 0, Math.PI * 2); h2.stroke();
       // Mouse steering: a ring for the centre and a dot where the cursor is.
-      if (mouseOn && mouse.in && !paused) {
-        const ax = W2 / 2, ay = H2 / 2, ar = 22 * s + 6;
-        h2.strokeStyle = 'rgba(255,255,255,.35)'; h2.lineWidth = 1.2; h2.beginPath(); h2.arc(ax, ay, ar, 0, Math.PI * 2); h2.stroke();
-        const dx = mouse.x * ar * 2.4, dy = mouse.y * ar * 2.4;
-        h2.fillStyle = 'rgba(255,255,255,.8)'; h2.beginPath(); h2.arc(ax + dx, ay + dy, 4, 0, Math.PI * 2); h2.fill();
-        h2.strokeStyle = 'rgba(255,209,102,.55)'; h2.beginPath(); h2.moveTo(ax, ay); h2.lineTo(ax + dx, ay + dy); h2.stroke();
+      if (mouseOn && !paused) {
+        const ax = W2 / 2, ay = H2 / 2, ar = ringRadius();
+        h2.lineWidth = 1.2;
+        if (mouse.in && mouse.engaged) {
+          h2.strokeStyle = 'rgba(255,255,255,.3)'; h2.beginPath(); h2.arc(ax, ay, ar, 0, Math.PI * 2); h2.stroke();
+          h2.strokeStyle = 'rgba(255,255,255,.18)'; h2.beginPath(); h2.arc(ax, ay, ar * 0.1, 0, Math.PI * 2); h2.stroke();
+          const dx = mouse.x * ar, dy = mouse.y * ar;
+          h2.strokeStyle = 'rgba(255,209,102,.6)'; h2.beginPath(); h2.moveTo(ax, ay); h2.lineTo(ax + dx, ay + dy); h2.stroke();
+          h2.fillStyle = '#ffd166'; h2.beginPath(); h2.arc(ax + dx, ay + dy, 4.5, 0, Math.PI * 2); h2.fill();
+        } else if (screen === 'fly') {
+          h2.setLineDash([4, 5]); h2.strokeStyle = 'rgba(255,255,255,.55)'; h2.beginPath(); h2.arc(ax, ay, ar * 0.3, 0, Math.PI * 2); h2.stroke(); h2.setLineDash([]);
+          h2.font = `700 ${Math.round(10 * s + 2)}px system-ui`; h2.fillStyle = 'rgba(255,255,255,.8)';
+          h2.fillText('Move the cursor here to steer with the mouse', ax, ay + ar * 0.3 + 14);
+        }
       }
       // Top: mode status.
       h2.textAlign = 'center'; h2.font = `800 ${Math.round(15 * s + 3)}px system-ui`;
@@ -1318,7 +1330,7 @@
       if (mode.id === 'hoops') status = `⭕ ${score}    ⏱ ${Math.max(0, Math.ceil(timeLeft))}s`;
       else if (mode.id === 'trial') status = `Hoop ${Math.min(nextHoop + 1, hoops.length)}/${hoops.length}    ⏱ ${elapsed.toFixed(1)}s`;
       else if (mode.id === 'landing') status = 'Land on the runway and stop';
-      else status = flight.onGround && !hadTakeoff ? 'Hold W for throttle · pull back (cursor down or ↓) to lift off' : 'Free flight';
+      else status = flight.onGround && !hadTakeoff ? (invert ? 'Hold W for throttle · cursor down or ↓ to lift off' : 'Hold W for throttle · cursor up or ↑ to lift off') : 'Free flight';
       const tw = h2.measureText(status).width + 24;
       box(cx - tw / 2, 8, tw, 26 * s + 6); h2.fillStyle = '#fff'; h2.fillText(status, cx, 8 + (26 * s + 6) / 2);
       // Warnings.
@@ -1390,19 +1402,20 @@
       } else if (menuTab === 'ach') {
         body = `<h2>Challenges · ${[...done].filter((d) => CHALLENGES.some((c) => c.id === d)).length} / ${CHALLENGES.length}</h2><div class="pg-ach">${CHALLENGES.map((c) => `<div class="${done.has(c.id) ? 'pg-done' : ''}">${done.has(c.id) ? '🏅' : '🔒'} ${c.name} <small>${c.desc}</small></div>`).join('')}</div>`;
       } else {
-        const pull = invert ? 'up' : 'down';
-        body = `<h2>Mouse steering ${mouseOn ? '' : '(off)'}</h2><div class="pg-hint">The mouse is a stick that centres itself: move it <b>left / right</b> to roll the plane into a bank (it then turns),
-          <b>${pull}</b> to pull the nose up and the other way to push it down. Stop moving and the stick springs back to the middle;
-          let go of everything and the wings roll back to level by themselves. Leaving the game view lets go of the stick.</div>
+        const climb = invert ? 'down' : 'up';
+        body = `<h2>Mouse steering ${mouseOn ? '' : '(off)'}</h2><div class="pg-hint">Move the cursor into the ring in the middle of the view to take control. Then move it
+          <b>left / right</b> to roll into a bank and turn, and <b>${climb}</b> to climb (the other way to dive). The edge of the ring is full stick, so small moves are enough;
+          bring it back to the middle to fly straight. Let go of everything and the wings roll back to level. Leaving the game view lets go.
+          Higher sensitivity makes the ring smaller.</div>
           <div class="pg-row" style="margin-top:6px"><label class="pg-hint">Sensitivity <input type="range" min="0.3" max="2.5" step="0.1" value="${sens}" data-range="sens" style="width:170px;padding:0"> <b data-sensval>${Number(sens).toFixed(1)}×</b></label>
           <button data-a="mouse">${mouseOn ? '✓ ' : ''}Mouse steering</button>
-          <button data-a="invert">${invert ? '✓ ' : ''}Invert Y (cursor up pulls up)</button></div>
+          <button data-a="invert">${invert ? '✓ ' : ''}Invert (down climbs, like a flight stick)</button></div>
           <h2>Keys</h2><div class="pg-hint">
-          <kbd>W</kbd> more throttle · <kbd>S</kbd> less throttle · <kbd>←</kbd> <kbd>→</kbd> <kbd>↑</kbd> <kbd>↓</kbd> steer without the mouse · <kbd>A</kbd> <kbd>D</kbd> rudder (and steering on the ground)<br>
+          <kbd>W</kbd> more throttle · <kbd>S</kbd> less throttle · <kbd>↑</kbd> climb · <kbd>↓</kbd> dive · <kbd>←</kbd> <kbd>→</kbd> roll · <kbd>A</kbd> <kbd>D</kbd> rudder (and steering on the ground)<br>
           <kbd>F</kbd> flaps · <kbd>Space</kbd> brakes / airbrake · <kbd>C</kbd> camera (chase, cockpit, orbit) · <kbd>P</kbd> pause (and the menu) · <kbd>R</kbd> restart · <kbd>M</kbd> mouse steering on / off</div>
           <h2>Tips</h2><div class="pg-hint">Bank by moving the cursor sideways and ease it ${pull === 'down' ? 'down' : 'up'} to turn: the wings turn the plane, the rudder only tidies up. Too slow or pulling too hard
           stalls the wing (STALL): push the nose down and add power. To land: slow down, flaps down, line up with the runway, and touch down gently (watch V/S).
-          To take off: full throttle (hold W) on the runway, then ease the cursor ${pull} at about ${Math.round(plane.stall * 1.3 * 3.6)} km/h. Airliners turn slowly, so start turns early.</div>
+          To take off: full throttle (hold W) on the runway, then ease the cursor ${climb} (or hold ${invert ? "↓" : "↑"}) at about ${Math.round(plane.stall * 1.3 * 3.6)} km/h. Airliners turn slowly, so start turns early.</div>
           <h2>Settings</h2><div class="pg-row">
           <button data-a="sound">${sound ? '🔊 Sound on' : '🔇 Sound off'}</button>
           <button data-a="units">${units === 'kmh' ? 'km/h · m' : 'knots · feet'}</button>
@@ -1432,7 +1445,7 @@
         else if (a === 'resume') { paused = false; renderUI(); root.focus(); }
         else if (a === 'menu') { screen = 'menu'; paused = false; if (engGain) engGain.gain.value = 0; renderUI(); }
         else if (a === 'save') saveScore();
-        else if (a === 'invert') { invert = !invert; write('invert', invert); renderUI(); }
+        else if (a === 'invert') { invert = !invert; write('invertY', invert); renderUI(); }
         else if (a === 'mouse') { mouseOn = !mouseOn; write('mouse', mouseOn); renderUI(); }
         else if (a === 'sound') { sound = !sound; write('sound', sound); if (!sound && engGain) engGain.gain.value = 0; renderUI(); }
         else if (a === 'units') { units = units === 'kmh' ? 'kt' : 'kmh'; write('units', units); renderUI(); }
@@ -1497,8 +1510,6 @@
       // Physics in small fixed steps so fast planes stay stable.
       let left = dt; while (left > 1e-4) { const h = Math.min(left, 1 / 120); update(h); left -= h; }
       if (!paused) { stepParticles(dt); stepDebris(dt); }
-      // The mouse stick springs back to the middle once the mouse has been still for a moment.
-      if (t - mouse.movedAt > 120) { const k = Math.exp(-dt * 3.5); mouse.x *= k; mouse.y *= k; }
       render(t);
       raf = requestAnimationFrame(frame);
     }
@@ -1506,6 +1517,7 @@
     raf = requestAnimationFrame(frame);
     root.focus();
     // For tests: the live flight state.
+    window.NotchPlaneGame.key = (key, down) => onKey({ key, repeat: false, target: null }, down);
     window.NotchPlaneGame._state = () => ({ screen, keys: [...keys], bank: flight.bank, pitch: flight.pitchAngle, pos: flight.pos, w: flight.w, onGround: flight.onGround,
       speed: flight.speed, damage: flight.damage, crashed: flight.crashed, why: flight.why, debris: debris.length, particles: smoke.length });
     window.NotchPlaneGame._poke = { failEngine: (p) => { failAt = elapsed; }, flight: () => flight };

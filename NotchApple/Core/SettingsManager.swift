@@ -12,7 +12,7 @@ import SwiftUI
 
 /// Every optional feature module in the app.
 enum Module: String, CaseIterable, Identifiable {
-    case today, claude, browser, launcher, translator, stats, windows, tools, mirror, worldClock, messenger, clipboard, notes, focus, shelf, share, audio, vpn, nowPlaying, search, timer, snippets, shortcuts, devices, live, f1, tennis, sports, games, alerts, plugins, voiceNotes, screenTime, quickAdd, markets, home, security, cacheCleaner, claudeUsage, smartHome, devTools, wellbeing, nonNecessities, todo
+    case today, claude, browser, launcher, translator, stats, windows, tools, mirror, worldClock, messenger, clipboard, notes, focus, shelf, share, audio, vpn, nowPlaying, search, timer, snippets, shortcuts, devices, live, f1, tennis, sports, games, alerts, plugins, voiceNotes, screenTime, quickAdd, markets, home, security, cacheCleaner, claudeUsage, smartHome, devTools, wellbeing, nonNecessities, todo, klick
 
     var id: String { rawValue }
 
@@ -45,6 +45,7 @@ enum Module: String, CaseIterable, Identifiable {
         case .live: "Parcels & Flights"
         case .f1: "F1"
         case .tennis: "Tennis"
+        case .klick: "Klick"
         case .games: "Games"
         case .sports: "Sports"
         case .alerts: "Notifications"
@@ -94,6 +95,7 @@ enum Module: String, CaseIterable, Identifiable {
         case .live: "shippingbox.fill"
         case .f1: "flag.checkered"
         case .tennis: "tennisball.fill"
+        case .klick: "keyboard.fill"
         case .games: "gamecontroller.fill"
         case .sports: "sportscourt"
         case .alerts: "bell.badge.fill"
@@ -142,6 +144,7 @@ enum Module: String, CaseIterable, Identifiable {
         case .devices: "Add-on: battery for AirPods, Magic Mouse, keyboard and trackpad, what's using your mic or camera (with a mic mute), and Find My iPhone."
         case .games: "Add-on: tiny games for a short break: 2048, Snake and a reaction test. Best scores stay on this Mac."
         case .f1: "Add-on: Formula 1 live timing (order, gaps, tyres, laps, flags), the weekend schedule with a countdown, and standings. Follow a driver to see their position beside the notch."
+        case .klick: "Pro: your keyboard sounds like a mechanical one, in any app. Eight sounds (Cream, Holy Panda, Blue, Red, Brown, Topre, Typewriter, Bubble), each with its own volume, and an on / off switch."
         case .tennis: "Every ATP and WTA match with live scores, in Men, Women and Mixed. Grand Slams show in red, earlier weeks and recent Grand Slams are a click away, plus the ATP and WTA top 20. Star your favourite players and their live score shows beside the notch."
         case .sports: "Follow your team (Barcelona unless you pick another): the next match with a countdown, every competition it plays in, recent results and the live score beside the notch. Browse the next two weeks of fixtures in the big football leagues, the NBA, NFL, MLB and NHL."
         case .live: "Add-on: quick tracking for parcels and flights. Live scores now live in the Sports tab."
@@ -195,6 +198,7 @@ final class SettingsManager: ObservableObject {
         [Module.timer, .snippets, .shortcuts, .devices, .live, .f1, .games, .alerts, .plugins, .voiceNotes, .screenTime, .quickAdd, .markets, .home, .cacheCleaner, .claudeUsage, .smartHome, .devTools, .wellbeing].forEach { defaults[$0.storageKey] = false }
         defaults[Module.sports.storageKey] = true   // everyone gets Sports, tracking Barcelona
         defaults[Module.tennis.storageKey] = true   // 2.0.5: Tennis is on for everyone
+        defaults[Module.klick.storageKey] = true    // 2.0.19: the Klick tab shows (it explains Pro until unlocked)
         d.register(defaults: defaults)
     }
 
@@ -240,6 +244,7 @@ final class SettingsManager: ObservableObject {
     @AppStorage("claudeCode.screenFlash") var claudeCodeScreenFlash = false
     @AppStorage(Module.f1.storageKey) var f1Enabled = false
     @AppStorage(Module.tennis.storageKey) var tennisEnabled = true
+    @AppStorage(Module.klick.storageKey) var klickEnabled = true
     @AppStorage(Module.games.storageKey) var gamesEnabled = false
     /// On for everyone: Sports follows Barcelona out of the box.
     @AppStorage(Module.sports.storageKey) var sportsEnabled = true
@@ -351,6 +356,7 @@ final class SettingsManager: ObservableObject {
         case .live: $liveEnabled
         case .f1: $f1Enabled
         case .tennis: $tennisEnabled
+        case .klick: $klickEnabled
         case .games: $gamesEnabled
         case .sports: $sportsEnabled
         case .alerts: $alertsEnabled

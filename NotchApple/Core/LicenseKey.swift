@@ -74,7 +74,7 @@ enum Feature: String, CaseIterable, Identifiable {
     // Pro: tabs
     case messenger, audio, vpn, voiceNotes, screenTime, quickAdd, launcher, snippets, mirror, focus
     // Pro: system and media
-    case rainAlert, lyrics, forecast, meetingPlanner, micMute, topProcesses, dndToggle, browserMedia
+    case rainAlert, lyrics, forecast, meetingPlanner, micMute, topProcesses, dndToggle, browserMedia, klick
     // Pro: sync
     case sync
     // Ultimate (built in later phases; hidden until ready)
@@ -159,6 +159,7 @@ enum Feature: String, CaseIterable, Identifiable {
         case .focus: "Focus timer"
         case .rainAlert: "Rain alerts"
         case .lyrics: "Lyrics"
+        case .klick: "Klick"
         case .forecast: "Week forecast and more cities"
         case .meetingPlanner: "Meeting-time planner"
         case .micMute: "Mic mute"
@@ -238,6 +239,7 @@ enum Feature: String, CaseIterable, Identifiable {
         case .focus: "Pomodoro sessions in the notch."
         case .rainAlert: "A nudge before it starts raining."
         case .lyrics: "Lyrics for what's playing."
+        case .klick: "Mechanical keyboard sounds as you type, in any app."
         case .forecast: "The next 12 hours and 7 days, for up to six cities."
         case .meetingPlanner: "Slide through the day to find a time that works in every city."
         case .micMute: "Mute your microphone in one click, with a red mic beside the notch."

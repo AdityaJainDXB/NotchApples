@@ -22,6 +22,7 @@ mod hello;
 mod icons;
 mod index;
 mod input;
+mod klick;
 mod media;
 mod net;
 mod phonetic;
@@ -463,6 +464,7 @@ fn main() {
             audio::audio_state, audio::audio_set,
             hello::hello_available, hello::hello_verify,
             input::paste_text, input::paste_now, input::dictate,
+            klick::klick_set,
             plugins::plugins_list, plugins::plugins_dir, plugins::plugin_run, plugins::run_command,
             update::update_check, update::update_install,
             extras::downloads_progress, extras::save_temp_file, extras::save_file_as, extras::read_file_base64,

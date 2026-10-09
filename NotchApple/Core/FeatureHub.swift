@@ -83,6 +83,8 @@ enum FeatureHub {
         if s.sportsEnabled || s.liveEnabled { ScoresModel.shared.refreshIfDue() }
         if s.f1Enabled { F1Model.shared.refreshIfDue() }
         if s.tennisEnabled { TennisModel.shared.refreshIfDue() }
+        KlickEngine.shared.apply()             // follows the switch and the license (stops if Pro lapses)
+        KlickEngine.shared.refreshPermission()
         if s.sportsEnabled { SportsModel.shared.refreshIfDue(); MoreTeams.shared.refreshIfDue() }
         if s.liveEnabled { FlightWatcher.shared.refreshIfDue() }
         if s.marketsEnabled { MarketsModel.shared.refreshIfDue() }

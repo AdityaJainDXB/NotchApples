@@ -170,6 +170,7 @@ extension Module {
         case .snippets: .snippets
         case .mirror: .mirror
         case .focus: .focus
+        case .klick: .klick
         default: nil
         }
     }

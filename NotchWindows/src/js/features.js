@@ -67,6 +67,7 @@ export const FEATURES = {
   focus: {"title": "Focus timer", "detail": "Pomodoro sessions in the notch.", "tier": 1},
   rainAlert: {"title": "Rain alerts", "detail": "A nudge before it starts raining.", "tier": 1},
   lyrics: {"title": "Lyrics", "detail": "Lyrics for what's playing.", "tier": 1},
+  klick: {"title": "Klick", "detail": "Mechanical keyboard sounds as you type, in any app.", "tier": 1},
   forecast: {"title": "Week forecast and more cities", "detail": "The next 12 hours and 7 days, for up to six cities.", "tier": 1},
   meetingPlanner: {"title": "Meeting-time planner", "detail": "Slide through the day to find a time that works in every city.", "tier": 1},
   micMute: {"title": "Mic mute", "detail": "Mute your microphone in one click, with a red mic beside the notch.", "tier": 1},

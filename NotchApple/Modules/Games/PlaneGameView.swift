@@ -36,6 +36,29 @@ final class PlaneWKWebView: WKWebView {
 private struct PlaneWebView: NSViewRepresentable {
     let url: URL
 
+    /// Forwards the game's keys to the page whenever the web view doesn't have the keyboard itself (the notch is a
+    /// non-activating panel, and focus can sit elsewhere in it), so the arrows, W/S and the rest always fly the plane.
+    @MainActor final class Coordinator {
+        weak var web: PlaneWKWebView?
+        var monitor: Any?
+
+        /// True when the key went to the game (and should go no further).
+        func forward(_ e: NSEvent) -> Bool {
+            guard let web, let window = web.window, e.window === window,
+                  !e.modifierFlags.contains(.command), e.keyCode != 53 else { return false }   // ⌘ shortcuts and Esc stay the notch's
+            if let responder = window.firstResponder as? NSView, responder === web || responder.isDescendant(of: web) { return false }
+            if NSApp.keyWindow?.firstResponder is NSText { return false }                // typing in a text field elsewhere
+            let named: [UInt16: String] = [126: "ArrowUp", 125: "ArrowDown", 123: "ArrowLeft", 124: "ArrowRight", 49: " ", 36: "Enter"]
+            let key = named[e.keyCode] ?? (e.charactersIgnoringModifiers ?? "").lowercased()
+            guard !key.isEmpty, let data = try? JSONSerialization.data(withJSONObject: [key]), let arg = String(data: data, encoding: .utf8) else { return false }
+            if e.type == .keyDown && e.isARepeat { return true }
+            web.evaluateJavaScript("window.NotchPlaneGame && window.NotchPlaneGame.key && window.NotchPlaneGame.key(\(arg)[0], \(e.type == .keyDown))")
+            return true
+        }
+    }
+
+    func makeCoordinator() -> Coordinator { Coordinator() }
+
     func makeNSView(context: Context) -> PlaneWKWebView {
         let config = WKWebViewConfiguration()
         config.mediaTypesRequiringUserActionForPlayback = []
@@ -43,12 +66,20 @@ private struct PlaneWebView: NSViewRepresentable {
         view.setValue(false, forKey: "drawsBackground")
         view.loadFileURL(url, allowingReadAccessTo: url.deletingLastPathComponent())
         DispatchQueue.main.async { view.window?.makeFirstResponder(view) }
+        let coordinator = context.coordinator
+        coordinator.web = view
+        coordinator.monitor = NSEvent.addLocalMonitorForEvents(matching: [.keyDown, .keyUp]) { [weak coordinator] event in
+            let consumed = MainActor.assumeIsolated { coordinator?.forward(event) ?? false }
+            return consumed ? nil : event
+        }
         return view
     }
 
     func updateNSView(_ nsView: PlaneWKWebView, context: Context) {}
 
-    static func dismantleNSView(_ nsView: PlaneWKWebView, coordinator: ()) {
+    static func dismantleNSView(_ nsView: PlaneWKWebView, coordinator: Coordinator) {
+        if let m = coordinator.monitor { NSEvent.removeMonitor(m) }
+        coordinator.monitor = nil
         // Stop the game loop and the engine sound straight away.
         nsView.loadHTMLString("", baseURL: nil)
     }

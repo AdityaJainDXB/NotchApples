@@ -89,6 +89,7 @@ const commands = {
   audio_state: () => ({ available: true, volume: state.volume, muted: state.muted, output: 'Speakers (Realtek Audio)',
     outputs: [{ id: 'a', name: 'Speakers (Realtek Audio)', default: true }, { id: 'b', name: 'Headphones (WH-1000XM4)', default: false }],
     input: 'Microphone Array (Intel)', mic_muted: state.micMuted, apps: state.apps, balance: state.balance ?? 0.5, balance_ok: true }),
+  klick_set: () => {},
   audio_set: ({ what, value, app }) => {
     if (what === 'balance') state.balance = value;
     if (what === 'volume') state.volume = value; if (what === 'mute') state.muted = value > 0.5; if (what === 'mic-mute') state.micMuted = value > 0.5;

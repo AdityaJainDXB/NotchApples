@@ -13,8 +13,8 @@ packages:
 settings:
   base:
     SWIFT_VERSION: "5.0"
-    MARKETING_VERSION: "2.0.18"
-    CURRENT_PROJECT_VERSION: "87"
+    MARKETING_VERSION: "2.0.19"
+    CURRENT_PROJECT_VERSION: "88"
     CODE_SIGN_IDENTITY: "-"
     CODE_SIGN_STYLE: Manual
     DEVELOPMENT_TEAM: ""
@@ -31,6 +31,10 @@ targets:
         buildPhase: resources
       # The Plane game's engine is shared with the Windows app.
       - path: NotchWindows/src/js/games/plane-sim.js
+        buildPhase: resources
+      # Klick's keyboard sounds, shared with the Windows app (scripts/klick_sounds.py makes them).
+      - path: NotchWindows/src/sounds/klick
+        type: folder
         buildPhase: resources
     dependencies:
       - target: NotchWidget
