@@ -45,7 +45,11 @@ Notch apple lives in the black cutout at the top of your MacBook screen (a small
 | 🎾 **Tennis** *(new)* | Every ATP and WTA match with live set scores in **Men, Women and Mixed** tabs, **Grand Slams in red**, earlier weeks and past Slams one click back, the **ATP and WTA top 20**, and your favourite players' live score beside the notch |
 | 🪄 **Do It** *(Ultimate)* | Tell the AI what to do (a worksheet, a form, a task) and it does it on your screen, step by step, with a Start button, a Stop button that works from any app, and questions before anything risky |
 | 🔁 **Convert** *(Ultimate)* | Drop any file and turn it into another kind: PPTX → PDF, HEIC → JPG, DOCX → PDF, MOV → MP4, PNG → ICO, XLSX → CSV, PDF → pictures, pictures → one PDF, zip and unzip. Saved next to the original |
-| ⌨️ **Klick** *(Pro)* | Mechanical keyboard sounds as you type, in any app: Mechanical, Cream, Holy Panda, Blue, Red, Brown, Topre, Typewriter or Bubble, each with its own volume, and an on / off switch |
+| ⌨️ **Klick** *(Pro)* | Mechanical keyboard sounds as you type, in any app: Mechanical, Cream, Holy Panda, Blue, Red, Brown, Topre, Typewriter or Bubble, plus four premium sounds downloaded with your key (Cherry MX Black, Gateron Ink, Alps, Buckling spring), each with its own volume, and an on / off switch |
+| 📡 **Flight Radar** *(new)* | Every aircraft around you, live, on a round radar with callsign, type, height and speed (the free adsb.lol feed; your location is rounded to about 1 km and only sent while the tab is open) |
+| ✈️ **Plane game** *(new)* | A 3D flight sim in Games: Cessna, Piper, Boeing 737, 747, 777 and Airbus A320, A350, A380, with real airspeed and altimeter dials, engine sounds, flaps in notches, retractable gear, tail strikes, damage and spoken GPWS callouts. Fly with the mouse (**M** switches it off) |
+| 🤖 **Notch apple AI** *(included with Pro)* | Ask without setting up any key: the request goes to Notch apple's server, which checks your key and answers with the project's own AI account (Pro 60 messages a day, Ultimate 200). Your own keys still work with no limit |
+| 🗓 **Updates once a week** | Optional and off by default: be asked about updates once a week instead of for every release |
 | 🧰 **30+ more tools** | Now Playing, window snapping, clipboard, file shelf, focus timer, Sports, Messenger, notes, search and more |
 
 ## Download
@@ -59,7 +63,7 @@ Pick your computer. Both buttons start the download straight away. The Mac butto
   </tr>
   <tr>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/v2.0.31/NotchApple-2.0.31.dmg"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.0.31</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/v2.0.34/NotchApple-2.0.34.dmg"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.0.34</b></a>
     </td>
     <td align="center">
       <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 1.43.0 BETA</b></a>
@@ -207,11 +211,6 @@ All screenshots use sample data.
 
 > **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is still in the repository's tags.
 
-### Mac 2.0.31 · Windows 1.43.0 BETA · 9 October 2026 · 🪄 Do It, and lyrics on your screen
-
-- **Do It (Ultimate): the AI does the task on your screen.** A new **Do It** tab: describe what you want ("fill in this worksheet", "find the cheapest option"), press **Start**, and the AI looks at your screen and clicks, types, scrolls and presses keys, one step at a time, telling you what it's doing. A bar at the bottom of the screen shows progress with a **Stop** button, and **Ctrl+Option+Esc** (Mac) / **Ctrl+Alt+Esc** (Windows) stops it from any app. It **asks first** before anything that sends, buys, deletes, posts, or involves passwords and payment, and never types passwords or card numbers; **Confirm every step** lets you approve each action; it stops after 40 steps. It needs a vision-capable model chosen in Settings → AI (Gemini, Claude, ChatGPT…) and, on the Mac, **Screen Recording** and **Accessibility**. Screenshots go to your chosen AI provider while it works, and only then.
-- **Lyrics on the side of your screen (Pro).** In **Now Playing**, switch on **Lyrics on screen**: synced lyrics float along the left or right edge of your screen, Spotify-style (the current line big and bright, the lines around it dimmer), above your other apps and ignoring the mouse, fading away when nothing plays. Off by default.
-
 ### Mac 2.0.34 · Windows 1.46.0 BETA · 9 October 2026 · Notch apple AI, included with Pro and Ultimate
 
 - **Notch apple AI (included)**: choose it in Settings → AI and ask, with no API key to set up. The request goes to Notch apple's licence server, which checks your key and answers with the project's own AI account (Pro 60 messages a day, Ultimate 200). Your own keys still work with no limit. A copy of the app without a real key can't use it. It needs the server's AI key to be switched on first.
@@ -225,6 +224,11 @@ All screenshots use sample data.
 
 - **Source-available licence.** The code is now under the Notch apple Source-Available License (copyright Aditya Jain): read it, build it, help improve it; no reselling or redistributing it and no unlocking paid features without a key. Versions before 9 October 2026 were MIT and stay MIT for those who have them.
 - **Server-held content.** A real key on a registered device gets short-lived signed tokens from the licence server. They unlock **four premium Klick sounds** (Cherry MX Black, Gateron Ink, Alps, Buckling spring), downloaded on demand and never in the repository, and are required for **Clipboard Link** on the relay. Both devices need this update to link. How it works and what is and isn't protected: [docs/PROTECTING_PAID_FEATURES.md](docs/PROTECTING_PAID_FEATURES.md).
+
+### Mac 2.0.31 · Windows 1.43.0 BETA · 9 October 2026 · 🪄 Do It, and lyrics on your screen
+
+- **Do It (Ultimate): the AI does the task on your screen.** A new **Do It** tab: describe what you want ("fill in this worksheet", "find the cheapest option"), press **Start**, and the AI looks at your screen and clicks, types, scrolls and presses keys, one step at a time, telling you what it's doing. A bar at the bottom of the screen shows progress with a **Stop** button, and **Ctrl+Option+Esc** (Mac) / **Ctrl+Alt+Esc** (Windows) stops it from any app. It **asks first** before anything that sends, buys, deletes, posts, or involves passwords and payment, and never types passwords or card numbers; **Confirm every step** lets you approve each action; it stops after 40 steps. It needs a vision-capable model chosen in Settings → AI (Gemini, Claude, ChatGPT…) and, on the Mac, **Screen Recording** and **Accessibility**. Screenshots go to your chosen AI provider while it works, and only then.
+- **Lyrics on the side of your screen (Pro).** In **Now Playing**, switch on **Lyrics on screen**: synced lyrics float along the left or right edge of your screen, Spotify-style (the current line big and bright, the lines around it dimmer), above your other apps and ignoring the mouse, fading away when nothing plays. Off by default.
 
 ### Mac 2.0.30 · Windows 1.42.0 BETA · 9 October 2026 · GPWS callouts, and games that fit
 
@@ -1137,6 +1141,7 @@ The first time, the AI tab walks you through it: pick free Gemini or private Oll
 
 | Provider | Cost | Get a key | Notes |
 | --- | --- | --- | --- |
+| **Notch apple AI** | Included with Pro and Ultimate (Pro 60 messages a day, Ultimate 200) | No key: choose it in Settings → AI | Answered by Notch apple's server with the project's own AI account; reads images. Your own keys below have no limit. |
 | **Google Gemini** | Free tier, no billing | [aistudio.google.com/apikey](https://aistudio.google.com/apikey) | Fast; reads images. The default (`gemini-3.8-flash`). |
 | **Groq** | Free tier, no billing | [console.groq.com/keys](https://console.groq.com/keys) | Very fast open models (Llama, Qwen, DeepSeek-distilled and more). |
 | **OpenRouter** | Free models, no billing | [openrouter.ai/keys](https://openrouter.ai/keys) | Only the free models are listed. The selection changes over time. |
