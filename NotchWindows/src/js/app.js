@@ -399,7 +399,7 @@ listen('shortcut', (action) => {
 listen('edge', () => { if (pref('ui.edgeTrigger') && canUse('edgeTrigger')) expand(); });
 listen('second-instance', (args) => handleArgs(args));
 // Dragging files onto the notch (even closed) opens the Shelf; dropping adds them.
-listen('tauri://drag-enter', () => { if (!expanded) expand('shelf'); });
+listen('tauri://drag-enter', () => { if (!expanded) expand(active === 'convert' ? 'convert' : 'shelf'); });
 listen('tauri://drag-drop', async (e) => {
   if (active === 'ai' || active === 'shelf' || active === 'convert') return; // those tabs handle drops themselves
   const { addPaths } = await import('./modules/shelf.js');

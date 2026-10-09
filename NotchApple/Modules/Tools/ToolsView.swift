@@ -275,7 +275,6 @@ struct ToolsView: View {
                     keepAwakeCard.frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
                     textGrabCard.frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
                     colorCard.frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-                    lidCard.frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
                 }
             case .calculator:
                 CalculatorView()
@@ -313,50 +312,68 @@ struct ToolsView: View {
     }
 
     @StateObject private var lid = ClosedLidAwake.shared
+    @AppStorage("tools.keepAwakeOptions") private var optionsOpen = false
 
-    private var lidCard: some View {
+    /// One Keep Awake card: the switch on top; the time limits and the lid-closed switch fold out underneath.
+    private var keepAwakeCard: some View {
         GlassCard {
             VStack(alignment: .leading, spacing: 10) {
-                Label("Keep Awake (Lid Closed)", systemImage: "laptopcomputer")
-                    .font(.system(size: 13, weight: .semibold)).foregroundStyle(.white)
-                Text(lid.isOn ? "Your Mac keeps running with the lid shut." : "Keep running with the lid closed, no external display needed.")
-                    .font(.system(size: 11)).foregroundStyle(Theme.textSecondary).fixedSize(horizontal: false, vertical: true)
-                Toggle("", isOn: Binding(get: { lid.isOn }, set: { lid.set($0) }))
-                    .toggleStyle(.switch).labelsHidden().disabled(lid.busy)
-                if let m = lid.message {
-                    Text(m).font(.system(size: 10)).foregroundStyle(.orange).fixedSize(horizontal: false, vertical: true)
-                } else if !lid.isOn, lid.batteryWarning != nil {
-                    Text("Needs your password. Uses battery fast if unplugged.").font(.system(size: 10)).foregroundStyle(Theme.textSecondary)
+                HStack(spacing: 8) {
+                    Label("Keep Awake", systemImage: awake.isOn ? "cup.and.saucer.fill" : "cup.and.saucer")
+                        .font(.system(size: 13, weight: .semibold)).foregroundStyle(.white).lineLimit(1)
+                    Spacer(minLength: 4)
+                    Toggle("", isOn: Binding(get: { awake.isOn }, set: { on in
+                        if on { awake.start(minutes: selectedMinutes) } else { awake.stop() }
+                    }))
+                    .toggleStyle(.switch).labelsHidden()
+                }
+                Text(statusText).font(.system(size: 11)).foregroundStyle(Theme.textSecondary)
+                    .fixedSize(horizontal: false, vertical: true)
+                Button {
+                    withAnimation(Theme.spring) { optionsOpen.toggle() }
+                } label: {
+                    HStack(spacing: 4) {
+                        Text(optionsOpen ? "Hide options" : "Options")
+                        Image(systemName: "chevron.down").rotationEffect(.degrees(optionsOpen ? 180 : 0))
+                    }
+                    .font(.system(size: 11, weight: .semibold)).foregroundStyle(Theme.accentBright)
+                }
+                .buttonStyle(.plain)
+                if optionsOpen {
+                    VStack(alignment: .leading, spacing: 10) {
+                        VStack(spacing: 6) {
+                            HStack(spacing: 6) {
+                                durationButton("30 min", 30)
+                                durationButton("1 hour", 60)
+                            }
+                            HStack(spacing: 6) {
+                                durationButton("2 hours", 120)
+                                durationButton("Always", nil)
+                            }
+                        }
+                        Divider().overlay(Theme.separator)
+                        HStack(alignment: .top, spacing: 8) {
+                            VStack(alignment: .leading, spacing: 3) {
+                                Text("Allow lid-closed running").font(.system(size: 12, weight: .semibold)).foregroundStyle(.white)
+                                Text(lid.isOn ? "Your Mac keeps running with the lid shut." : "Keep running with the lid closed, no external display needed.")
+                                    .font(.system(size: 10)).foregroundStyle(Theme.textSecondary).fixedSize(horizontal: false, vertical: true)
+                            }
+                            Spacer(minLength: 4)
+                            Toggle("", isOn: Binding(get: { lid.isOn }, set: { lid.set($0) }))
+                                .toggleStyle(.switch).labelsHidden().disabled(lid.busy)
+                        }
+                        if let m = lid.message {
+                            Text(m).font(.system(size: 10)).foregroundStyle(.orange).fixedSize(horizontal: false, vertical: true)
+                        } else if !lid.isOn, lid.batteryWarning != nil {
+                            Text("Needs your password. Uses battery fast if unplugged.").font(.system(size: 10)).foregroundStyle(Theme.textSecondary)
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
+                    }
                 }
                 Spacer(minLength: 0)
             }
         }
         .onAppear { lid.refresh() }
-    }
-
-    private var keepAwakeCard: some View {
-        GlassCard {
-            VStack(alignment: .leading, spacing: 10) {
-                Label("Keep Awake", systemImage: awake.isOn ? "cup.and.saucer.fill" : "cup.and.saucer")
-                    .font(.system(size: 13, weight: .semibold)).foregroundStyle(.white)
-                Text(statusText).font(.system(size: 11)).foregroundStyle(Theme.textSecondary)
-                    .fixedSize(horizontal: false, vertical: true)
-                VStack(spacing: 6) {
-                    HStack(spacing: 6) {
-                        durationButton("30 min", 30)
-                        durationButton("1 hour", 60)
-                    }
-                    HStack(spacing: 6) {
-                        durationButton("2 hours", 120)
-                        durationButton("Always", nil)
-                    }
-                }
-                if awake.isOn {
-                    Button("Turn off") { awake.stop() }.buttonStyle(PurpleButtonStyle(prominent: false))
-                }
-                Spacer(minLength: 0)
-            }
-        }
     }
 
     private var statusText: String {

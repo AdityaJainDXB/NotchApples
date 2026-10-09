@@ -226,6 +226,7 @@ struct FileShelfView: View {
 
 private struct ShelfTile: View {
     let item: ShelfItem
+    @EnvironmentObject private var notchState: NotchState
     @State private var thumbnail: NSImage?
 
     var body: some View {
@@ -245,6 +246,11 @@ private struct ShelfTile: View {
         .contextMenu {
             Button("Open") { FileShelfStore.shared.withAccess(item) { NSWorkspace.shared.open($0) } }
             Button("Reveal in Finder") { FileShelfStore.shared.withAccess(item) { NSWorkspace.shared.activateFileViewerSelecting([$0]) } }
+            if SettingsManager.shared.convertEnabled {
+                Button("Convert…") {
+                    if let url = item.resolve() { ConvertStore.shared.add([url]); notchState.selected = .convert }
+                }
+            }
             if Entitlements.shared.canUse(.shelfPlus) {
                 Menu("Move to folder") {
                     Button("No folder") { FileShelfStore.shared.move(item, to: nil) }

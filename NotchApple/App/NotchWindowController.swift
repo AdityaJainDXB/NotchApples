@@ -832,7 +832,9 @@ final class NotchWindowController {
 
     /// Opens straight to the File Shelf while a file is being dragged.
     private func openForDrop() {
-        if SettingsManager.shared.shelfEnabled { state.selected = .shelf }
+        // A file dragged onto the notch lands in the Shelf, unless you were on Convert (then it's there to convert).
+        let convert = state.selected == .convert && SettingsManager.shared.convertEnabled
+        if !convert, SettingsManager.shared.shelfEnabled { state.selected = .shelf }
         expand()
     }
 

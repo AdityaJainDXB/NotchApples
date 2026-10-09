@@ -20,6 +20,11 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.0.23", date: "9 October 2026", headline: "Coffee button, tidier Tools, Convert drops", items: [
+            "New coffee button beside the pin: click it to keep your Mac awake until you click it again.",
+            "Tools: the two Keep Awake cards are one, with a switch and the time limits and lid-closed option under Options. Three roomy cards instead of four.",
+            "Convert: dragging a file onto the notch now keeps the Convert tab (it used to jump to the Shelf), and a Shelf file has Convert… in its menu.",
+        ]),
         ReleaseNote(version: "2.0.22", date: "9 October 2026", headline: "Convert: turn any file into another kind", items: [
             "Convert (Ultimate): drop files and turn them into another kind: PPTX to PDF, HEIC to JPG, Word to PDF, MOV to MP4, Excel to CSV, PDF to pictures and more. Saved next to the original.",
             "Pictures can be combined into one PDF, and Make them all sets the same target for every file.",

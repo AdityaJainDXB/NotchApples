@@ -58,7 +58,7 @@ Pick your computer. Both buttons start the download straight away. The Mac butto
   </tr>
   <tr>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/v2.0.22/NotchApple-2.0.22.dmg"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.0.22</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/v2.0.23/NotchApple-2.0.23.dmg"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.0.23</b></a>
     </td>
     <td align="center">
       <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 1.38.0 BETA</b></a>
@@ -205,6 +205,12 @@ All screenshots use sample data.
 ## What's new
 
 > **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is still in the repository's tags.
+
+### Mac 2.0.23 · 9 October 2026 · ☕ Coffee button, tidier Tools
+
+- **Coffee button.** A cup beside the pin: click it to keep your Mac awake until you click it again (the same Keep Awake as in Tools).
+- **Tools is tidier.** The two Keep Awake cards became one (a switch, with **Options** for the time limits and **Allow lid-closed running**), leaving three roomy cards.
+- **Convert accepts drops from the notch.** Dragging a file onto the notch while on Convert stays on Convert, the whole tab takes drops, and Shelf files have **Convert…** in their menu. Windows 1.38.0 has the same fix.
 
 ### Mac 2.0.22 · Windows 1.38.0 BETA · 9 October 2026 · 🔁 Convert
 

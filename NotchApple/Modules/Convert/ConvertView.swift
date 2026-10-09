@@ -127,6 +127,8 @@ struct ConvertView: View {
                 footer
             }
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        .contentShape(Rectangle())
         .onDrop(of: [.fileURL], isTargeted: $targeted) { providers in
             for provider in providers {
                 _ = provider.loadObject(ofClass: URL.self) { url, _ in

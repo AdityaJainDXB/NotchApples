@@ -53,6 +53,20 @@ struct NotchShape: Shape {
     }
 }
 
+/// Keeps the Mac awake until you click it again. The same Keep Awake as the Tools tab, with no time limit.
+struct CoffeeButton: View {
+    @ObservedObject private var awake = KeepAwake.shared
+
+    var body: some View {
+        IconButton(systemImage: awake.isOn ? "cup.and.saucer.fill" : "cup.and.saucer",
+                   help: awake.isOn ? "Mac is staying awake. Click to let it sleep." : "Keep the Mac awake until I click again") {
+            if awake.isOn { awake.stop() } else { awake.start(minutes: nil) }
+        }
+        .foregroundStyle(awake.isOn ? Color.brown : Theme.textSecondary)
+        .accessibilityLabel(awake.isOn ? "Let the Mac sleep" : "Keep the Mac awake")
+    }
+}
+
 /// Keeps the notch open (clicking elsewhere no longer closes it), e.g. while you drag files in from Finder.
 /// It reads the setting itself, so the icon always follows it.
 struct PinButton: View {
@@ -202,6 +216,7 @@ struct NotchRootView: View {
             Spacer(minLength: 0)
             ClaudeCodeDotView()
             UpdatePill { state.close(); AppDelegate.openSettingsWindow(tab: .updates) }
+            CoffeeButton()
             PinButton()
             IconButton(systemImage: "gearshape.fill", help: "Settings (⌘,)") {
                 state.close(); AppDelegate.openSettingsWindow()
