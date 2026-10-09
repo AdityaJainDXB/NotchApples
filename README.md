@@ -64,10 +64,10 @@ Pick your computer. Both buttons start the download straight away. The Mac butto
   </tr>
   <tr>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/v2.0.34/NotchApple-2.0.34.dmg"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.0.34</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/v2.0.34/NotchApple-2.0.34.dmg"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.0.47</b></a>
     </td>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 1.43.0 BETA</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 1.50.0 BETA</b></a>
     </td>
   </tr>
   <tr>
@@ -211,6 +211,16 @@ All screenshots use sample data.
 ## What's new
 
 > **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is still in the repository's tags.
+
+### Mac 2.0.47 · Windows 1.50.0 BETA · 10 October 2026 · ✈️ Plane Sim: far more realistic
+
+- **Flying that behaves.** A proper **stall** (buffet, then a wing drops), **spins** in the light planes, **ground effect**, induced drag, **wind, gusts and turbulence** (worse near the ground and over hills, with a wind arrow), thinner air with height (true versus indicated speed), and heavy planes that respond slowly. Pull too hard or go too fast and the **g-limit** matters: a g readout with a vignette, and wings that fail past it.
+- **Real landings.** Each wheel has a **spring and damper**: a hard landing bounces, the nose gear can collapse, tyres can burst, tails can strike, and crosswinds push you sideways. Different surfaces (runway, grass, mud, sand) grip differently.
+- **Crashes like real life.** What happens depends on speed, angle and what you hit: gear damage, **belly slides** with sparks, wings and tail **shearing off** on a rough field, a **fireball**, scattered **debris** and a burning **wreck** after a fast impact, **ditching** in water. The wreck keeps its momentum and tumbles until it stops. A **crash report** says what went wrong and whether it was survivable.
+- **A new world.** A much **bigger island**: mountains to 1.9 km with snow, a lake, rivers, beaches, farmland, **forests**, villages, a town, a city, roads, pylons, **wind turbines**, a lighthouse and the bridge; detailed rock and snow, a real **sky** with haze and a sun, clouds, and **water** with sun glint and shore foam.
+- **A real airfield.** Runway markings and numbers, edge, threshold and approach lights, **PAPI lights** that turn red or white with your glide angle, taxiways, hangars, a tower, a terminal and windsocks.
+- **Better models and seven new aircraft.** Rebuilt planes with rounded fuselages, swept wings, engines with fans, **moving flaps, ailerons and rudders**, folding gear and working lights. New: **Cirrus SR22**, **Pilatus PC-12**, **Cessna Citation**, **Embraer E175**, **Airbus A220**, **Boeing 787** and the **F-35 Lightning** (afterburner, 9 g). 15 planes in all, sorted by kind.
+- The fly-over cities (Dubai, London, Paris, New York, Tokyo, Sydney, Cairo, San Francisco, or your location) and the leaderboard work in the new world.
 
 ### Mac 2.0.46 · Windows 1.49.0 BETA · 10 October 2026 · Drop zones as cards
 

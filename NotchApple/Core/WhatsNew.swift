@@ -20,6 +20,12 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.0.47", date: "10 October 2026", headline: "Plane Sim: far more realistic", items: [
+            "Realistic flying: stalls and spins, wind and turbulence, g-limits, gear that bounces on a hard landing.",
+            "Crashes like real life: gear collapse, belly slides, wings shearing off, fireballs, debris and a wreck that tumbles, with a crash report.",
+            "A new, bigger island world with mountains, forests, towns and a proper airfield with approach and PAPI lights.",
+            "Seven new modern aircraft: SR22, PC-12, Citation, E175, A220, 787 and the F-35. Better models for all planes.",
+        ]),
         ReleaseNote(version: "2.0.46", date: "10 October 2026", headline: "Drop zones as cards", items: [
             "The Shelf, Convert and Share drop zones are now cards with an icon, \"Drop a file here\" and \"or click to browse\". As you drag a file near they lean towards it and say \"Bring it closer\", then \"Let go to add it\" when you are over them.",
         ]),
