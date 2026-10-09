@@ -40,20 +40,27 @@ struct GamesView: View {
 
     var body: some View {
         HStack(alignment: .top, spacing: 12) {
+            // Eight games no longer fit in the notch one above the other, so the list scrolls and the sound switch and
+            // the hint stay put at the bottom, always in view.
             VStack(alignment: .leading, spacing: 6) {
-                ForEach(Game.allCases) { g in
-                    Button { lastRaw = g.rawValue } label: {
-                        Label(g.rawValue, systemImage: g.symbol).font(.system(size: 12, weight: .semibold))
-                            .frame(maxWidth: .infinity, alignment: .leading)
+                ScrollView(.vertical, showsIndicators: false) {
+                    VStack(spacing: 5) {
+                        ForEach(Game.allCases) { g in
+                            Button { lastRaw = g.rawValue } label: {
+                                Label(g.rawValue, systemImage: g.symbol).font(.system(size: 12, weight: .semibold))
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                            }
+                            .buttonStyle(PurpleButtonStyle(prominent: g == game))
+                        }
                     }
-                    .buttonStyle(PurpleButtonStyle(prominent: g == game))
                 }
-                Spacer()
                 Toggle(isOn: $soundOn) { Label("Sound", systemImage: soundOn ? "speaker.wave.2.fill" : "speaker.slash.fill").font(.system(size: 11)) }
                     .toggleStyle(.switch).controlSize(.mini)
-                Text(hint).font(.system(size: 10)).foregroundStyle(Theme.textSecondary).fixedSize(horizontal: false, vertical: true)
+                Text(hint).font(.system(size: 9.5)).foregroundStyle(Theme.textSecondary).lineLimit(3).minimumScaleFactor(0.85)
+                    .help(hint).fixedSize(horizontal: false, vertical: true)
             }
             .frame(width: 130)
+            .frame(maxHeight: .infinity, alignment: .top)
             GlassCard {
                 switch game {
                 case .g2048: Game2048View()

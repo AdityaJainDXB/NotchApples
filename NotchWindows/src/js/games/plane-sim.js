@@ -170,6 +170,38 @@
     b777: { retract: true, gearTime: 5, tailPitch: 9.5, engine: 'jet', engines: 2, n1Idle: 20, dial: 'AIRLINER', flapNotches: [0, 0.2, 0.4, 0.6, 0.8, 1], flapLabels: ['UP', '1', '5', '15', '20', '30'], fuel: 2000, vr: 1.2, vfe: 1.45, vno: 1.25 },
   };
   PLANES.forEach((p) => Object.assign(p, AIRCRAFT[p.id]));
+  // ------------------------------------------------------------------ GPWS and callouts
+
+  /// The radio-altimeter calls an airliner makes on the way down (feet above the ground).
+  const RA_CALLS = [[1000, 'One thousand'], [500, 'Five hundred'], [300, 'Approaching minimums'], [200, 'Minimums'], [100, 'One hundred'],
+    [50, 'Fifty'], [40, 'Forty'], [30, 'Thirty'], [20, 'Twenty'], [10, 'Ten']];
+  /// The call for passing down through a height between two readings, or null.
+  function raCallout(prevFt, ft, descending) {
+    if (!descending || prevFt == null) return null;
+    for (const [h, text] of RA_CALLS) if (prevFt > h && ft <= h) return text;
+    return null;
+  }
+  /// Ground proximity warnings from what the aircraft is doing. `s`: ft (above the ground), sink (feet per minute
+  /// down), bank (degrees), gearDown, flapNotch and landingFlaps, terrainSec (seconds to rising terrain ahead, or
+  /// null), belowGlide, nearRunway, airborne. Returns [{ text, level, every }], worst first (level 2 is a warning,
+  /// 1 a caution; `every` is the least number of seconds between repeats).
+  function gpwsWarnings(s) {
+    const out = [];
+    if (!s.airborne) return out;
+    if (s.terrainSec != null) out.push(s.terrainSec <= 6 ? { text: 'Pull up', level: 2, every: 1.4 } : { text: 'Terrain, terrain', level: 1, every: 3 });
+    // Sink rate: how fast is too fast grows with height; a very high rate close to the ground is a warning.
+    if (s.ft < 2500 && s.ft > 30) {
+      const limit = 1100 + s.ft;
+      if (s.sink > limit * 1.6) out.push({ text: 'Pull up', level: 2, every: 1.4 });
+      else if (s.sink > limit) out.push({ text: 'Sink rate', level: 1, every: 2.6 });
+    }
+    if (!s.gearDown && s.ft < 500 && s.sink > 150) out.push({ text: s.nearRunway ? 'Too low, gear' : 'Too low, terrain', level: 1, every: 3 });
+    if (s.gearDown && s.ft < 200 && s.ft > 50 && s.flapNotch < s.landingFlaps && s.sink > 150) out.push({ text: 'Too low, flaps', level: 1, every: 4 });
+    if (s.belowGlide && s.ft < 1000) out.push({ text: 'Glideslope', level: 1, every: 2.6 });
+    if (s.bank > 35 && s.ft < 1000) out.push({ text: 'Bank angle', level: 1, every: 2.6 });
+    return out.sort((a, b) => b.level - a.level);
+  }
+
   /// The speeds on this aircraft's airspeed indicator, in m/s: flaps-down stall, clean stall, flaps limit, the end of the
   /// green arc, and the never-exceed line.
   const speedsOf = (p) => ({ vs0: p.stall * 0.88, vs1: p.stall, vfe: p.stall * p.vfe, vno: p.cruise * p.vno, vne: p.max, vr: p.stall * p.vr });
@@ -853,6 +885,7 @@
     let flight = new Flight(plane);
     let hoops = [], nextHoop = 0, score = 0, timeLeft = 0, elapsed = 0, streak = 0, hoopsMade = 0;
     let camMode = 0, camPos = [0, 30, 60], paused = false, result = null, propAngle = 0, toastTimer = 0;
+    let gpwsOn = read('gpws', true), gpwsText = '', gpwsLevel = 0, gpwsT = 0, gpwsLastFt = null, gpwsAt = {}, hundredCalled = false, wasAirborne = false;
     let gearWarn = false, gearBeepAt = 0, tailScrapeT = 0, rotateCalled = false, v1Called = false, lowFuelWarned = false, flapSoundT = 0;
     let rollAcc = 0, rollT = 0, loopAcc = 0, loopT = 0, lowT = 0, hadTakeoff = false, stoppedT = 0;
     const smoke = [];              // particles: fire, smoke, dust, sparks, spray
@@ -897,6 +930,12 @@
       const w = { f: filt('bandpass', 500, 0.5), g: gain(0) }; noiseSrc().connect(w.f); w.f.connect(w.g); w.g.connect(out);
       const r = { f: filt('lowpass', 160, 0.8), g: gain(0), scrape: filt('highpass', 1800, 0.7), sg: gain(0) };
       const rn = noiseSrc(); rn.connect(r.f); r.f.connect(r.g); r.g.connect(out); rn.connect(r.scrape); r.scrape.connect(r.sg); r.sg.connect(out);
+      // GPWS: what the voice just said, red for a warning and amber for a caution.
+      if (gpwsT > 0) {
+        h2.font = `900 ${Math.round(18 * s + 4)}px system-ui`; const gt = gpwsText.toUpperCase(), gw = h2.measureText(gt).width + 28;
+        h2.fillStyle = gpwsLevel >= 2 ? 'rgba(200,20,20,.88)' : 'rgba(210,140,10,.88)'; h2.beginPath(); h2.roundRect ? h2.roundRect(cx - gw / 2, 98 * s + 2, gw, 30 * s + 6, 9) : h2.rect(cx - gw / 2, 98 * s + 2, gw, 30 * s + 6); h2.fill();
+        h2.fillStyle = '#fff'; h2.textAlign = 'center'; h2.fillText(gt, cx, 98 * s + 2 + (30 * s + 6) / 2);
+      }
       // Warnings.
       const horn = { o: osc('square', 760), g: gain(0) }; horn.o.connect(horn.g); horn.g.connect(out);
       const clack = { o: osc('square', 480), g: gain(0) }; clack.o.connect(clack.g); clack.g.connect(out);
@@ -965,6 +1004,80 @@
       const o = a.createOscillator(), g = a.createGain(); o.type = type; o.frequency.value = freq;
       g.gain.setValueAtTime(vol, a.currentTime); g.gain.exponentialRampToValueAtTime(0.001, a.currentTime + t);
       o.connect(g); g.connect(a.destination); o.start(); o.stop(a.currentTime + t);
+    }
+    // ---- GPWS: the airliner's ground proximity warnings and radio-altimeter calls, spoken (the browser's own voices) and
+    // shown on the panel. Off with the switch in Controls; the light aircraft have none, like the real ones.
+    let voiceCache = null;
+    function pickVoice() {
+      if (voiceCache) return voiceCache;
+      const list = window.speechSynthesis?.getVoices?.() || [];
+      if (!list.length) return null;
+      const en = list.filter((v) => /^en/i.test(v.lang));
+      voiceCache = en.find((v) => /Samantha|Karen|Moira|Tessa|Zira|Hazel|Susan|Google US English/i.test(v.name)) || en[0] || list[0];
+      return voiceCache;
+    }
+    function speak(text, level) {
+      const synth = window.speechSynthesis;
+      if (!synth || typeof SpeechSynthesisUtterance === 'undefined') { beep(level >= 2 ? 1100 : 760, 0.25, 'square', 0.1); return; }
+      try {
+        if (level >= 2) synth.cancel();                         // a warning cuts through whatever is being said
+        else if (synth.speaking && synth.pending) return;       // don't pile cautions up
+        const u = new SpeechSynthesisUtterance(text);
+        u.rate = level >= 2 ? 1.12 : 1.0; u.pitch = 0.9; u.volume = 1;
+        const v = pickVoice(); if (v) u.voice = v;
+        synth.speak(u);
+      } catch { /* no speech on this computer: the panel still shows it */ }
+    }
+    /// Says (and shows) one call; the same key is not repeated before `every` seconds.
+    function say(text, { level = 1, every = 2.5, key = text } = {}) {
+      if (gpwsAt[key] != null && elapsed - gpwsAt[key] < every) return;
+      gpwsAt[key] = elapsed;
+      gpwsText = text; gpwsLevel = level; gpwsT = level >= 2 ? 2 : 1.4;
+      if (sound && gpwsOn) speak(text, level);
+    }
+    const cancelSpeech = () => { try { window.speechSynthesis?.cancel(); } catch { /* ignore */ } };
+    /// Looks ahead along the flight path for ground that is rising above you: seconds until it, or null.
+    function terrainAhead() {
+      const alt = flight.pos[1] - plane.gear, g0 = groundAt(W, flight.pos[0], flight.pos[2]);
+      for (const t of [3, 5, 7, 9, 11, 14]) {
+        const x = flight.pos[0] + flight.vel[0] * t, z = flight.pos[2] + flight.vel[2] * t, gh = groundAt(W, x, z);
+        if (gh - g0 > 12 && gh > alt - 30) return t;
+      }
+      return null;
+    }
+    function gpwsTick(dt) {
+      if (gpwsT > 0) gpwsT -= dt;
+      if (!plane.retract || flight.crashed || !gpwsOn) { gpwsLastFt = null; return; }
+      const alt = flight.pos[1] - plane.gear, ft = (alt - groundAt(W, flight.pos[0], flight.pos[2])) * 3.281, sink = -flight.vel[1] * 196.85;
+      const airborne = !flight.onGround, arcade = mode.id === 'hoops' || mode.id === 'trial';
+      const [x, z] = [flight.pos[0], flight.pos[2]];
+      // Take-off: a hundred knots, V1, rotate, positive rate.
+      if (flight.onGround && flight.throttle > 0.6) {
+        const sp = speedsOf(plane);
+        if (!hundredCalled && flight.speed >= 51.4) { hundredCalled = true; say('One hundred knots', { every: 99 }); }
+        if (!v1Called && flight.speed >= sp.vr * 0.96) { v1Called = true; say('V one', { every: 99 }); }
+        if (!rotateCalled && flight.speed >= sp.vr) { rotateCalled = true; say('Rotate', { every: 99 }); chime(); }
+      }
+      if (airborne && !wasAirborne && flight.vel[1] > 1) say('Positive rate', { every: 99 });
+      wasAirborne = airborne;
+      if (airborne) {
+        // Radio altimeter calls on the way down, with the gear down (the call-outs a crew hears on an approach).
+        if (flight.gearDown) {
+          const c = raCallout(gpwsLastFt, ft, flight.vel[1] < -0.3);
+          if (c) say(c, { every: 0, key: `ra-${c}` });
+          if (ft <= 22 && ft > 4 && flight.vel[1] < -0.3 && flight.throttle > 0.12) say('Retard', { every: 1.6 });
+        }
+        gpwsLastFt = ft;
+        if (!arcade) {
+          const glideAlt = z * Math.tan(3 * DEG);
+          const s = { airborne, ft, sink, bank: Math.abs(flight.bank) / DEG, gearDown: flight.gearDown, flapNotch: flight.flapNotch, landingFlaps: 3,
+            terrainSec: flight.speed > plane.stall * 0.9 ? terrainAhead() : null,
+            belowGlide: z > 150 && z < 4500 && Math.abs(x) < 350 && flight.gearDown && alt < glideAlt * 0.6 - 6,
+            nearRunway: Math.abs(x) < 500 && z > -1700 && z < 4000 };
+          const w = gpwsWarnings(s)[0];
+          if (w) say(w.text, { level: w.level, every: w.every });
+        }
+      } else gpwsLastFt = null;
     }
     const chime = () => { beep(880, 0.15); setTimeout(() => beep(1320, 0.22), 90); };
     /// Filtered noise: a boom (low), a crack (high), a scrape (long, middling).
@@ -1049,7 +1162,7 @@
       const flown = new Set(read('flown', [])); flown.add(plane.id); write('flown', [...flown]);
       if (flown.size >= PLANES.length) achieve('all');
       camPos = add(flight.pos, [0, 12, 40]);
-      rotateCalled = false; lowFuelWarned = false; tailScrapeT = 0; const up = flight.throttle;
+      rotateCalled = false; hundredCalled = false; v1Called = false; wasAirborne = false; gpwsLastFt = null; gpwsAt = {}; gpwsText = ''; gpwsT = 0; cancelSpeech(); lowFuelWarned = false; tailScrapeT = 0; const up = flight.throttle;
       engState.rpm = plane.engine === 'jet' ? 0 : plane.rpmIdle + (plane.rpmMax - plane.rpmIdle) * up;
       engState.n1 = plane.engine === 'jet' ? plane.n1Idle + (100 - plane.n1Idle) * up : 0;
       screen = 'fly'; renderUI(); root.focus();
@@ -1061,6 +1174,7 @@
       screen = 'result';
       result = { kind, value, label, best: false, rank: 0 };
       if (engGain) engGain.gain.value = 0;
+      cancelSpeech();
       const board = read(`board.${mode.id}`, []);
       const qualifies = value != null && (board.length < 10 || (mode.better === 'high' ? value > board[board.length - 1].score : value < board[board.length - 1].score));
       result.qualifies = qualifies && mode.id !== 'free' && (mode.id === 'trial' || value > 0);
@@ -1370,16 +1484,17 @@
       // Engine state (for the gauges), then every flight sound.
       updateEngineState(dt);
       updateSound();
+      gpwsTick(dt);
       if (tailScrapeT > 0) tailScrapeT -= dt;
       // Take-off calls, like an airliner: rotate at Vr (and a chime), and a low-fuel warning.
-      if (flight.onGround && !rotateCalled && flight.throttle > 0.6 && flight.speed >= speedsOf(plane).vr) {
+      if (!plane.retract && flight.onGround && !rotateCalled && flight.throttle > 0.6 && flight.speed >= speedsOf(plane).vr) {
         rotateCalled = true; toast('ROTATE', 1400); chime();
       }
       if (!flight.onGround) rotateCalled = true;
       // "Too low, gear": an airliner low and slow with its wheels still up.
       const aglNow = flight.pos[1] - plane.gear - groundAt(W, flight.pos[0], flight.pos[2]);
       gearWarn = !!plane.retract && !flight.onGround && flight.gearPos < 0.99 && !flight.gearDown && aglNow < 200 && flight.speed < plane.stall * 1.8 && flight.throttle < 0.85;
-      if (gearWarn && elapsed - gearBeepAt > 1.2) { gearBeepAt = elapsed; beep(900, 0.12, 'square', 0.1); setTimeout(() => beep(700, 0.12, 'square', 0.1), 150); }
+      if (gearWarn && !gpwsOn && elapsed - gearBeepAt > 1.2) { gearBeepAt = elapsed; beep(900, 0.12, 'square', 0.1); setTimeout(() => beep(700, 0.12, 'square', 0.1), 150); }
       if (!lowFuelWarned && flight.fuel < (plane.fuel || 1800) * 0.12 && flight.damage.engine) { lowFuelWarned = true; toast('⛽ LOW FUEL', 2200); beep(660, 0.2, 'square', 0.12); setTimeout(() => beep(660, 0.2, 'square', 0.12), 260); }
     }
 
@@ -1638,7 +1753,7 @@
       // Warnings.
       h2.font = `900 ${Math.round(16 * s + 4)}px system-ui`;
       const blink = Math.floor(performance.now() / 300) % 2;
-      if (gearWarn && blink) { h2.fillStyle = '#ff4d4d'; h2.fillText('TOO LOW · GEAR', cx, 78 * s + 10); }
+      if (gearWarn && !gpwsOn && blink) { h2.fillStyle = '#ff4d4d'; h2.fillText('TOO LOW · GEAR', cx, 78 * s + 10); }
       if (!flight.damage.engine && blink) { h2.fillStyle = '#ff4d4d'; h2.fillText('ENGINE FAILURE', cx, 56 * s + 10); }
       else if (flight.wings < 1 && blink) { h2.fillStyle = '#ff4d4d'; h2.fillText(flight.wings === 0 ? 'NO WINGS' : 'WING LOST', cx, 56 * s + 10); }
       else if (flight.stalled && blink) { h2.fillStyle = '#ff4d4d'; h2.fillText('STALL', cx, 56 * s + 10); }
@@ -1736,8 +1851,12 @@
           To take off: full throttle (hold W) on the runway, then ease the cursor ${climb} (or hold ${invert ? "↓" : "↑"}) at about ${Math.round(plane.stall * 1.3 * 3.6)} km/h. Airliners turn slowly, so start turns early.</div>
           <h2>Settings</h2><div class="pg-row">
           <button data-a="sound">${sound ? '🔊 Sound on' : '🔇 Sound off'}</button>
+          <button data-a="gpws" title="Spoken ground proximity warnings and radio-altimeter calls on the airliners">${gpwsOn ? '✓ ' : ''}GPWS voice (airliners)</button>
           <button data-a="units">${units === 'kmh' ? 'km/h · m' : 'knots · feet'}</button>
           <button data-a="failures">Failures: ${failures === 'off' ? 'off' : failures === 'often' ? 'often (every mode)' : 'rare (Free Flight, Landing)'}</button></div>
+          <h2>GPWS (airliners)</h2><div class="pg-hint">Like a real cockpit, the airliners speak: <b>One hundred knots, V one, Rotate, Positive rate</b> on take-off; <b>One thousand, Five hundred, Approaching minimums,
+          Minimums, One hundred, Fifty, Forty, Thirty, Twenty, Ten</b> and <b>Retard</b> on the way down with the gear down; and warnings: <b>Sink rate</b>, <b>Terrain, terrain</b> and <b>Pull up</b>, <b>Too low, gear</b>, <b>Too low, terrain</b>,
+          <b>Too low, flaps</b>, <b>Glideslope</b> (below the 3° path to the runway) and <b>Bank angle</b>. They use your computer's own voice, and show on the panel too. The Hoop Rush and Time Trial challenges skip the warnings.</div>
           <h2>Damage</h2><div class="pg-hint">Clip a tree, a building or the ground with a wingtip and that wing tears off: the plane rolls hard towards the stump.
           Keep the nose down near the runway: past your aircraft's limit (about 14° in the Cessna, 10° in a 747) the tail scrapes, which damages it and weakens the elevator, and a hard enough scrape breaks it off. Watch the fuel gauge too. Hit something with the nose or tail, or the ground too hard, and it breaks up. Too fast and the wings come off; pulling far too hard snaps one.
           A hard landing can collapse the undercarriage into a belly slide. With failures on, the engine can quit (glide to a field) or run rough after a bird strike.</div>`;
@@ -1764,6 +1883,7 @@
         else if (a === 'menu') { screen = 'menu'; paused = false; if (engGain) engGain.gain.value = 0; renderUI(); }
         else if (a === 'save') saveScore();
         else if (a === 'invert') { invert = !invert; write('invertY', invert); renderUI(); }
+        else if (a === 'gpws') { gpwsOn = !gpwsOn; write('gpws', gpwsOn); if (!gpwsOn) cancelSpeech(); renderUI(); }
         else if (a === 'mouse') { mouseOn = !mouseOn; write('mouse', mouseOn); renderUI(); }
         else if (a === 'sound') { sound = !sound; write('sound', sound); if (!sound && engGain) engGain.gain.value = 0; renderUI(); }
         else if (a === 'units') { units = units === 'kmh' ? 'kt' : 'kmh'; write('units', units); renderUI(); }
@@ -1841,7 +1961,7 @@
     window.NotchPlaneGame._poke = { failEngine: (p) => { failAt = elapsed; }, flight: () => flight };
 
     return () => {
-      alive = false; cancelAnimationFrame(raf);
+      alive = false; cancelAnimationFrame(raf); cancelSpeech();
       window.removeEventListener('keydown', kd); window.removeEventListener('keyup', ku); window.removeEventListener('blur', blur);
       document.removeEventListener('visibilitychange', hidden);
       try { ac?.close(); } catch { /* already closed */ }
@@ -1849,5 +1969,5 @@
     };
   }
 
-  window.NotchPlaneGame = { mount, PLANES, MODES, CHALLENGES, Flight, _test: { groundAt, makeWorld, qheading, qrot, hitObject, terrainAt } };
+  window.NotchPlaneGame = { mount, PLANES, MODES, CHALLENGES, Flight, _test: { raCallout, gpwsWarnings, groundAt, makeWorld, qheading, qrot, hitObject, terrainAt } };
 })();

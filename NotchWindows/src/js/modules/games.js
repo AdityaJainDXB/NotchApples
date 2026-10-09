@@ -7,11 +7,24 @@ import { cookie, runner, breakout, memory } from './games-extra.js';
 
 export function render(root) {
   let game = load('games.last', '2048'), stop = () => {};
-  const board = el('div', { class: 'center', style: 'flex:1' });
-  const pick = (g) => { stop(); game = g; save('games.last', g); stop = ({ 2048: g2048, snake, reaction, cookie, runner, breakout, memory, plane })[g](board) || (() => {}); };
+  // min-height:0 and overflow:hidden so the board is the space left under the picker, not the size of the game.
+  const board = el('div', { class: 'center', style: 'flex:1;min-height:0;overflow:hidden' });
+  // A game that is bigger than that space (2048, Snake, Memory and Breakout at the standard notch size) is scaled down
+  // to fit instead of being cut off. Plane fills the space itself.
+  const fit = () => {
+    const inner = board.firstElementChild;
+    if (!inner || game === 'plane') return;
+    inner.style.transform = ''; inner.style.marginBottom = ''; inner.style.transformOrigin = 'center top';
+    const w = inner.offsetWidth, h = inner.offsetHeight;
+    if (!w || !h) return;
+    const k = Math.min(1, board.clientWidth / w, (board.clientHeight - 2) / h);
+    if (k < 1) { inner.style.transform = `scale(${k})`; inner.style.marginBottom = `${-h * (1 - k)}px`; }
+  };
+  const ro = new ResizeObserver(fit); ro.observe(board);
+  const pick = (g) => { stop(); game = g; save('games.last', g); stop = ({ 2048: g2048, snake, reaction, cookie, runner, breakout, memory, plane })[g](board) || (() => {}); requestAnimationFrame(fit); setTimeout(fit, 120); };
   root.append(el('div', { class: 'col fill' }, segmented([{ value: '2048', label: '2048' }, { value: 'snake', label: 'Snake' }, { value: 'reaction', label: 'Reaction' }, { value: 'cookie', label: 'Cookie Clicker' }, { value: 'runner', label: 'Runner' }, { value: 'breakout', label: 'Breakout' }, { value: 'memory', label: 'Memory' }, { value: 'plane', label: '✈️ Plane' }], game, pick), board));
   pick(game);
-  return () => stop();
+  return () => { ro.disconnect(); stop(); };
 }
 function best(key, v) { const b = load(`games.best.${key}`, 0); if (v !== undefined && v > b) { save(`games.best.${key}`, v); return v; } return b; }
 

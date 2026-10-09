@@ -59,10 +59,10 @@ Pick your computer. Both buttons start the download straight away. The Mac butto
   </tr>
   <tr>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/v2.0.30/NotchApple-2.0.30.dmg"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.0.30</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/v2.0.31/NotchApple-2.0.31.dmg"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.0.31</b></a>
     </td>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 1.42.0 BETA</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 1.43.0 BETA</b></a>
     </td>
   </tr>
   <tr>
@@ -207,6 +207,16 @@ All screenshots use sample data.
 
 > **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is still in the repository's tags.
 
+### Mac 2.0.31 · Windows 1.43.0 BETA · 9 October 2026 · 🪄 Do It, and lyrics on your screen
+
+- **Do It (Ultimate): the AI does the task on your screen.** A new **Do It** tab: describe what you want ("fill in this worksheet", "find the cheapest option"), press **Start**, and the AI looks at your screen and clicks, types, scrolls and presses keys, one step at a time, telling you what it's doing. A bar at the bottom of the screen shows progress with a **Stop** button, and **Ctrl+Option+Esc** (Mac) / **Ctrl+Alt+Esc** (Windows) stops it from any app. It **asks first** before anything that sends, buys, deletes, posts, or involves passwords and payment, and never types passwords or card numbers; **Confirm every step** lets you approve each action; it stops after 40 steps. It needs a vision-capable model chosen in Settings → AI (Gemini, Claude, ChatGPT…) and, on the Mac, **Screen Recording** and **Accessibility**. Screenshots go to your chosen AI provider while it works, and only then.
+- **Lyrics on the side of your screen (Pro).** In **Now Playing**, switch on **Lyrics on screen**: synced lyrics float along the left or right edge of your screen, Spotify-style (the current line big and bright, the lines around it dimmer), above your other apps and ignoring the mouse, fading away when nothing plays. Off by default.
+
+### Mac 2.0.30 · Windows 1.42.0 BETA · 9 October 2026 · GPWS callouts, and games that fit
+
+- **Realistic GPWS and callouts for the airliners in the Plane game**, spoken with your computer's own voice: take-off calls (One hundred knots, V one, Rotate, Positive rate), radio-altimeter calls on the approach (One thousand … Ten, Minimums, Retard) and warnings (Sink rate, Terrain terrain, Pull up, Too low gear / terrain / flaps, Glideslope, Bank angle). A **GPWS voice** switch is in Controls.
+- **Games no longer cut off in the notch:** the Mac list scrolls and keeps Sound in view; on Windows every game scales to fit.
+
 ### Mac 2.0.29 · Windows 1.41.0 BETA · 9 October 2026 · Flight Radar, Airbus aircraft and retractable gear
 
 - **Flight Radar** tab: a round radar centred on you with every aircraft around you, live (adsb.lol's free feed). Ranges of 25 to 200 nm, click a plane for callsign, type, registration, height, speed and heading. Your location is rounded to about 1 km, and it only asks while the tab is open.
@@ -217,11 +227,6 @@ All screenshots use sample data.
 - **Round airspeed and altimeter dials** that change with the aircraft (coloured arcs for flaps, normal flying, caution and the never-exceed line; three altimeter hands), an engine gauge (rpm or jet N1 %), fuel and flaps position.
 - **Engines that sound like engines:** a piston with a propeller beat on the Cessna and Piper, a spooling jet on the 737, 747 and 777, plus wind, tyres, a stall horn and an overspeed warning.
 - **Tail strikes:** rotating too steeply scrapes and damages the tail (weaker pitch and rudder; a hard scrape breaks it off). Flaps go down in notches (**F** / **V**), fuel runs out, and airliners call **ROTATE**.
-
-### Mac 2.0.30 · Windows 1.42.0 BETA · 9 October 2026 · 🪄 Do It, and lyrics on your screen
-
-- **Do It (Ultimate): the AI does the task on your screen.** A new **Do It** tab: describe what you want ("fill in this worksheet", "find the cheapest option"), press **Start**, and the AI looks at your screen and clicks, types, scrolls and presses keys, one step at a time, telling you what it's doing. A bar at the bottom of the screen shows progress with a **Stop** button, and **Ctrl+Option+Esc** (Mac) / **Ctrl+Alt+Esc** (Windows) stops it from any app. It **asks first** before anything that sends, buys, deletes, posts, or involves passwords and payment, and never types passwords or card numbers; **Confirm every step** lets you approve each action; it stops after 40 steps. It needs a vision-capable model chosen in Settings → AI (Gemini, Claude, ChatGPT…) and, on the Mac, **Screen Recording** and **Accessibility**. Screenshots go to your chosen AI provider while it works, and only then.
-- **Lyrics on the side of your screen (Pro).** In **Now Playing**, switch on **Lyrics on screen**: synced lyrics float along the left or right edge of your screen, Spotify-style (the current line big and bright, the lines around it dimmer), above your other apps and ignoring the mouse, fading away when nothing plays. Off by default.
 
 ### Windows 1.39.0 BETA · 9 October 2026 · Updates once a week, if you want
 
