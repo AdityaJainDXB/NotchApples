@@ -212,6 +212,10 @@ All screenshots use sample data.
 
 > **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is still in the repository's tags.
 
+### Mac 2.0.40 · 10 October 2026 · The AI provider picker
+
+- The AI tab's **provider** list is now a searchable picker with a hover preview (free or paid, on this Mac, ready or needs a key), matching the model picker.
+
 ### Mac 2.0.39 · 10 October 2026 · Cassette mode on the Now Playing tab
 
 - The **Now Playing** tab has a tape button next to Open Player (and Home's card has one too): it swaps the cover for a cassette.
