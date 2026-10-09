@@ -38,6 +38,7 @@ if [ -z "$src" ] || [ ! -d "$src/mac" ]; then
   exit 0
 fi
 
-rsync -a "$src/mac/" "$root/NotchApple/"
-rsync -a "$src/windows/" "$root/NotchWindows/src/js/"
+# cp, not rsync: the Windows runner has no rsync.
+cp -R "$src/mac/." "$root/NotchApple/"
+cp -R "$src/windows/." "$root/NotchWindows/src/js/"
 echo "Ultimate modules fetched from $repo."
