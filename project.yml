@@ -102,6 +102,7 @@ targets:
       - NotchApple/Core/TodoLogic.swift
       - NotchApple/Core/ReleaseNotesLogic.swift
       - NotchApple/Core/UpdateCadenceLogic.swift
+      - NotchApple/Core/UpdateSigning.swift
       - NotchApple/Modules/Radar/RadarLogic.swift
       - NotchApple/Core/EntitlementLogic.swift
       - NotchApple/Modules/Wallpaper/WallpaperLogic.swift
