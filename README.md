@@ -212,6 +212,10 @@ All screenshots use sample data.
 
 > **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is still in the repository's tags.
 
+### Mac 2.0.42 · 10 October 2026 · Drops work again
+
+- **Dropping files onto the notch works again** (Shelf, Convert, Share, Launcher, Wallpaper, AI). 2.0.37's new drop handling stopped drops registering; the glow and label stay, on the standard handler.
+
 ### Mac 2.0.41 · 10 October 2026 · Cassette mode redone, and a pin that holds
 
 - **Cassette mode** is now the big tape on the Now Playing tab with the controls beside it, and a **Cassette mode in Now Playing** switch in Settings → Extras keeps it on or off for good.
