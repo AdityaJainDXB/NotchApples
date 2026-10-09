@@ -20,6 +20,9 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.0.46", date: "10 October 2026", headline: "Drop zones as cards", items: [
+            "The Shelf, Convert and Share drop zones are now cards with an icon, \"Drop a file here\" and \"or click to browse\". As you drag a file near they lean towards it and say \"Bring it closer\", then \"Let go to add it\" when you are over them.",
+        ]),
         ReleaseNote(version: "2.0.45", date: "10 October 2026", headline: "Files can reach the notch", items: [
             "Dragging a file no longer slides underneath the notch: while you drag, the notch steps below the dragging layer so it can take the drop (it goes back up when you let go).",
         ]),

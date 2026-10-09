@@ -314,14 +314,11 @@ private struct PairDropCard: View {
             }
 
             // Drop zone: drag files or folders here once the code is entered.
-            RoundedRectangle(cornerRadius: 10, style: .continuous)
-                .strokeBorder(dropTargeted ? Theme.accentBright : Theme.separator,
-                              style: StrokeStyle(lineWidth: dropTargeted ? 2 : 1, dash: [5, 4]))
-                .background(RoundedRectangle(cornerRadius: 10).fill(dropTargeted ? Theme.accent.opacity(0.15) : .clear))
-                .overlay(Text(codeEntry.count == 6 ? "…or drop files or folders here to send" : "Enter the code, then drop files here")
-                    .font(.system(size: 12)).foregroundStyle(Theme.textSecondary))
-                .frame(height: 56)
-                .magneticDrop(of: [.fileURL], label: "Let go to share", isTargeted: $dropTargeted) { providers in
+            MagneticDropZone(icon: "paperplane.fill", idle: codeEntry.count == 6 ? "Drop files or folders here to send" : "Enter the code, then drop files",
+                             over: "Let go to send", subtitle: codeEntry.count == 6 ? "or use Choose files…" : "the 6-digit code from the other device",
+                             isOver: dropTargeted, compact: true, onBrowse: nil)
+                .frame(height: 64)
+                .magneticDrop(of: [.fileURL], label: "", isTargeted: $dropTargeted) { providers in
                     guard codeEntry.count == 6 else { pairDrop.status = "Type their 6-digit code first, then drop the files."; return false }
                     loadURLs(providers) { pairDrop.send($0, code: codeEntry, to: chosenPeer) }
                     return true

@@ -878,6 +878,7 @@ final class NotchWindowController {
         if down && !buttonWasDown { dragChangeCountAtPress = board.changeCount; dragOpened = false }
         let fileDrag = down && board.changeCount != dragChangeCountAtPress && board.types?.contains(.fileURL) == true
         if fileDrag != loweredForDrag { setDragLevels(fileDrag) }
+        DragState.shared.update(dragging: fileDrag, pointer: NSEvent.mouseLocation)
         guard down else { dragOpened = false; return }
         guard !dragOpened, !state.isExpanded, board.changeCount != dragChangeCountAtPress,
               board.types?.contains(.fileURL) == true, let screen = targetScreen else { return }

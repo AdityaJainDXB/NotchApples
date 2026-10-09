@@ -212,6 +212,10 @@ All screenshots use sample data.
 
 > **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is still in the repository's tags.
 
+### Mac 2.0.46 · Windows 1.49.0 BETA · 10 October 2026 · Drop zones as cards
+
+- **The Shelf, Convert and Share drop zones are now cards**: an icon tile, "Drop a file here" and "or click to browse". Drag a file within about 180 points and the card leans towards it, glows and says "Bring it closer"; over it, "Let go to add it".
+
 ### Mac 2.0.45 · 10 October 2026 · Files can reach the notch
 
 - **A dragged file no longer slides underneath the notch.** With *Keep the notch visible in full-screen apps* on, the notch sat above the layer macOS draws dragged files on, so it never received them. While you drag a file the notch now steps below that layer, then goes back up when you let go.

@@ -59,6 +59,7 @@
 		21586C0BF170E4B586EF009A /* ModuleOrganizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4894C776E7909EF42A1F97E9 /* ModuleOrganizer.swift */; };
 		219D17761C8C9DB4C03DCBCF /* VoiceNotesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34E21597A89BA509A323CB7C /* VoiceNotesView.swift */; };
 		221FEC324BD888DEBD975CB3 /* ProjectFocusTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 18329B6DF3C3AF37BA61B8B4 /* ProjectFocusTests.swift */; };
+		2257C6B3EE6E3A5CA537C51E /* MagneticDropZone.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9E934112FC7E1F768777E6F5 /* MagneticDropZone.swift */; };
 		22E6064B9B045D8365F1A2A9 /* SolitaireView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0C3A6E52CAC2AAC502D9AD8 /* SolitaireView.swift */; };
 		2386441F130CA43774F8A976 /* ShortcutRecorder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1AD68AAB70138C11AD1C119D /* ShortcutRecorder.swift */; };
 		23DEAFF7A9EA628D504552A1 /* AppLauncher.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B4A357F34CF825E961ADEF4 /* AppLauncher.swift */; };
@@ -593,6 +594,7 @@
 		9B61EC777F0D6D3611243246 /* NotchAppleApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotchAppleApp.swift; sourceTree = "<group>"; };
 		9C96FDC91C63EFDECAAA8BA3 /* SecretLogicTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SecretLogicTests.swift; sourceTree = "<group>"; };
 		9C9C5CFC1A5B7BA40FD049F1 /* CalculatorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalculatorView.swift; sourceTree = "<group>"; };
+		9E934112FC7E1F768777E6F5 /* MagneticDropZone.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MagneticDropZone.swift; sourceTree = "<group>"; };
 		9F05BAECF9EDAF2F5A745F05 /* TodoLogic.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodoLogic.swift; sourceTree = "<group>"; };
 		A22CAB6FA5F9EADB1A7E3B86 /* SnippetVariables.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SnippetVariables.swift; sourceTree = "<group>"; };
 		A259F6D85DF7D7125ED8DA20 /* RichText.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RichText.swift; sourceTree = "<group>"; };
@@ -897,6 +899,7 @@
 				880D308A931930DF080834D9 /* ExtrasSettings.swift */,
 				6030017749EA1C8346BCA6DF /* HoldToConfirm.swift */,
 				0EE2E453CA2D381EA8DC3001 /* LayoutPicker.swift */,
+				9E934112FC7E1F768777E6F5 /* MagneticDropZone.swift */,
 				321AEDF869EDFDD140BAC7F0 /* ModuleContentView.swift */,
 				4894C776E7909EF42A1F97E9 /* ModuleOrganizer.swift */,
 				1C5A54FB338D3A1C23699078 /* NotchRootView.swift */,
@@ -1873,6 +1876,7 @@
 				2451D6C550A6B50F33FB0D88 /* LocationProvider.swift in Sources */,
 				8F8A7D3944B4A343BEAE8C0C /* LyricsModel.swift in Sources */,
 				D442F62588EAFE9B1C318E33 /* MagneticDrop.swift in Sources */,
+				2257C6B3EE6E3A5CA537C51E /* MagneticDropZone.swift in Sources */,
 				1DA0B71A05D5AA548E158EE8 /* MarketsView.swift in Sources */,
 				971BE20BFA381D487A601FC5 /* MathEngine.swift in Sources */,
 				A89C797DB626E953AFF87B9E /* MathText.swift in Sources */,
@@ -2258,7 +2262,7 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 2.0.45;
+				MARKETING_VERSION = 2.0.46;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -2398,7 +2402,7 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 2.0.45;
+				MARKETING_VERSION = 2.0.46;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;

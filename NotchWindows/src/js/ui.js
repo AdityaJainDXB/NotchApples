@@ -82,6 +82,18 @@ export function toast(message, { error = false, ms = 2200 } = {}) {
   setTimeout(() => t.remove(), error ? Math.max(ms, 4000) : ms);
 }
 
+/// A drop zone drawn as a card: an icon tile, a title that changes as a dragged file comes closer ("Bring it closer",
+/// "Let go to add it") and a line about clicking to browse. services/magnet.js drives the states while a file is dragged.
+export function dropCard({ icon = '📥', idle = 'Drop a file here', near = 'Bring it closer', over = 'Let go to add it', sub = 'or click to browse', onclick } = {}) {
+  const title = el('div', { class: 'dc-title' }, idle);
+  const card = el('div', { class: 'drop-card', role: 'button', tabindex: '0', 'aria-label': `${idle}. ${sub}`, onclick },
+    el('i', { class: 'dc-glow', 'aria-hidden': 'true' }),
+    el('div', { class: 'dc-tile', 'aria-hidden': 'true' }, icon), title, el('div', { class: 'dc-sub' }, sub));
+  card.dataset.idle = idle; card.dataset.near = near; card.dataset.over = over;
+  card.addEventListener('keydown', (e) => { if ((e.key === 'Enter' || e.key === ' ') && onclick) { e.preventDefault(); onclick(); } });
+  return card;
+}
+
 /// A destructive button you press and hold: a fill sweeps across, and only when it is full does onConfirm run.
 /// Letting go early or sliding off cancels. Enter or Space held does the same, so keyboards work.
 export function holdButton(label, onConfirm, { ms = 1200, hint = 'Press and hold to confirm' } = {}) {

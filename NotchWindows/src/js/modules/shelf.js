@@ -40,7 +40,7 @@ export function render(root) {
       ]));
       return t;
     }));
-    if (!items.length) grid.replaceChildren(el('div', { style: 'grid-column:1/-1' }, empty('🗂', 'Drop files here', 'Drag files or folders onto the notch (even when it’s closed) to keep them handy.')));
+    if (!items.length) grid.replaceChildren(el('div', { style: 'grid-column:1/-1' }, dropCard({ icon: '🗂', idle: 'Drop files or folders here', over: 'Let go to add them', sub: 'or click to browse · drag onto the notch even when it’s closed', onclick: async () => { const p = await invoke('pick_file'); if (p) { await addPaths([p], group); paint(); } } })));
   }
   let un;
   listen('tauri://drag-drop', async (e) => { await addPaths(e?.paths || [], group); paint(); }).then((u) => { un = u; });

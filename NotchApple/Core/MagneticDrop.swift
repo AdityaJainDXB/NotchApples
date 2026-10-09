@@ -30,11 +30,11 @@ struct MagneticDropModifier: ViewModifier {
                         Circle().fill(Theme.accent.opacity(0.28)).blur(radius: 40).padding(30)
                         VStack {
                             Spacer()
-                            Text(label)
+                            if !label.isEmpty { Text(label)
                                 .font(.system(size: 11, weight: .semibold)).foregroundStyle(.white)
                                 .padding(.horizontal, 10).padding(.vertical, 5)
                                 .background(Capsule().fill(Theme.accent))
-                                .padding(.bottom, 10)
+                                .padding(.bottom, 10) }
                         }
                     }
                     .allowsHitTesting(false).transition(.opacity)
