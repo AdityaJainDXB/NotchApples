@@ -26,6 +26,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         AppDelegate.current = self
+        PremiumRegistry.load()          // the Ultimate modules, present only in official builds
         SandboxMigration.runIfNeeded()
         notchController = NotchWindowController()
         notchController?.show()
@@ -46,7 +47,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         ClipboardLink.shared.apply()
         WellbeingService.shared.start()
         SystemWatch.shared.start()
-        ClaudeUsageStore.shared.startBackground()
+        PremiumRegistry.claudeStart?()
         NotesCloudSync.shared.syncNow()
         // Ultimate: plugins keep running in the background for Home widgets and activities.
         if PluginHost.shared.keepRunning { PluginHost.shared.start() }

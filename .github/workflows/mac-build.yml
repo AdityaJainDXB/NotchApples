@@ -36,9 +36,13 @@ jobs:
       - name: PairDrop interop (Mac and Windows engines)
         run: ./scripts/run-pairdrop-interop.sh
 
+      # The Ultimate modules are in a private repository, fetched with a read-only deploy key. An official build fails
+      # rather than ship without them.
       - name: Build the DMG
         env:
           FIREBASE_PLIST_B64: ${{ secrets.FIREBASE_PLIST_B64 }}
+          PREMIUM_DEPLOY_KEY: ${{ secrets.PREMIUM_DEPLOY_KEY }}
+          REQUIRE_PREMIUM: "1"
         run: ./scripts/build_dmg.sh
 
       - name: Launch check (the app must start and stay running)

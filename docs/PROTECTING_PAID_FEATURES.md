@@ -47,13 +47,28 @@ admin panel's audit log.
   feature that runs locally) stays readable. Only content added from now on, and kept out of the repository, is protected.
 - Messenger's anonymous rooms still use `/<topic>/ws` without a pass, because Messenger also falls back to public brokers.
 
+## Open core: the Ultimate modules are private
+
+From 2.0.33 the code of the Ultimate-only modules is no longer in this repository. It lives in a private repository
+(`NotchApples-Premium`) and is built into the official releases only:
+
+- Mac: Convert, Smart Home, Claude usage, Do It and the Purge launcher.
+- Windows: Convert, Smart Home, Claude Usage and Do It (and their services).
+
+A build made from the public source compiles and runs fine, with free and Pro features as before, but those five tabs show
+"this is in the official Ultimate build". The two halves connect through `PremiumRegistry` (Mac) and the `premium()` loader
+(Windows). `scripts/fetch-premium.sh` copies the private files into places this repository ignores: from a local clone next to
+it, from a read-only deploy key in GitHub Actions, or from your own GitHub login. Official releases use `--require`, and
+`release.sh` checks the finished DMG, so a release can't go out without the modules.
+
+What this does **not** do: the old versions of those files are still in this repository's history, so anyone can read the code as
+it was up to 2.0.32 (and rebuild an old, unlocked copy of it). Only changes from now on stay private. Rewriting the history to
+remove them would break every clone and fork, and copies that already exist can't be taken back.
+
 ## Next steps (in order of value)
 
-1. **Open core.** Move the code of the Ultimate-only modules (Convert, Smart Home, Claude usage, Do It…) into a private
-   repository that only the official release build pulls in. A build from the public repository then simply does not
-   contain them. This is the strongest protection for local features.
-2. **Hosted AI for Pro and Ultimate.** A Worker endpoint that calls an AI provider with the project's own key for entitled
+1. **Hosted AI for Pro and Ultimate.** A Worker endpoint that calls an AI provider with the project's own key for entitled
    devices, rate-limited per key. Real, ongoing value that exists only behind a valid token (it costs API usage).
-3. **Premium content, regularly.** New themes, sound packs and aircraft added through `assets.mjs` never touch the
-   repository.
+2. **Move more Ultimate work private** as it is written, and the Pro modules that are large and self-contained.
+3. **Premium content, regularly.** New themes, sound packs and aircraft added through `assets.mjs` never touch the repository.
 4. **Close the open relay path** for Messenger once it sends a pass too.

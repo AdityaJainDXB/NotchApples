@@ -64,7 +64,7 @@ struct PrivacyDashboard: View {
             Destination(host: "apple.com", what: "Nothing about you: a tiny test page, to see if you're online", when: "Every 20 seconds, only if “Tell me when the internet drops” is on", active: SystemWatch.shared.internetAlert),
             Destination(host: "Cloudflare (speed.cloudflare.com)", what: "Nothing about you: about 20 MB to measure your speed", when: "Only when you press Speed test in Stats", active: false),
             Destination(host: "Notch apple room relay (Cloudflare)", what: "Scrambled clipboard text only your devices can read, and Messenger room traffic", when: "Clipboard Link or Messenger rooms, when on", active: ClipboardLink.shared.enabled || WebP2PManager.shared.state == .joined),
-            Destination(host: "Your Home Assistant", what: "Your device states and the commands you press", when: "Smart Home, once you connect it (your own server)", active: SmartHomeStore.shared.configured),
+            Destination(host: "Your Home Assistant", what: "Your device states and the commands you press", when: "Smart Home, once you connect it (your own server)", active: PremiumRegistry.smartHomeConfigured?() ?? false),
         ]
     }
 

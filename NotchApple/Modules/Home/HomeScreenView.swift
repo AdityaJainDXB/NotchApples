@@ -308,7 +308,7 @@ struct HomeWidgetCard: View {
             case .clipboard: ClipboardCard()
             case .nowPlaying: NowPlayingCard()
             case .notes: NotesCard()
-            case .claudeUsage: ClaudePaceCard()
+            case .claudeUsage: PremiumRegistry.claudePace?() ?? AnyView(EmptyView())
             default: EmptyView()
             }
         }

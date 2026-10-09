@@ -248,7 +248,7 @@ private struct ShelfTile: View {
             Button("Reveal in Finder") { FileShelfStore.shared.withAccess(item) { NSWorkspace.shared.activateFileViewerSelecting([$0]) } }
             if SettingsManager.shared.convertEnabled {
                 Button("Convert…") {
-                    if let url = item.resolve() { ConvertStore.shared.add([url]); notchState.selected = .convert }
+                    if let url = item.resolve() { PremiumRegistry.convertAdd?([url]); notchState.selected = .convert }
                 }
             }
             if Entitlements.shared.canUse(.shelfPlus) {
