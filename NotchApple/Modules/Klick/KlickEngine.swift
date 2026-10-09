@@ -28,6 +28,7 @@ final class KlickEngine: ObservableObject {
     }
 
     static let packs: [Pack] = [
+        Pack(id: "mechanical", name: "Mechanical", blurb: "The classic clacky keyboard: a sharp click, a hard clack and a crisp release.", symbol: "keyboard"),
         Pack(id: "cream", name: "Cream", blurb: "Deep, smooth thock. Linear, like NovelKeys Creams.", symbol: "drop.fill"),
         Pack(id: "holypanda", name: "Holy Panda", blurb: "Bassy and tactile, with a bump on the way down.", symbol: "pawprint.fill"),
         Pack(id: "blue", name: "Blue", blurb: "Loud and clicky. Everyone will know you're typing.", symbol: "bolt.fill"),

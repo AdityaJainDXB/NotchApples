@@ -44,7 +44,7 @@ Notch apple lives in the black cutout at the top of your MacBook screen (a small
 | 🏁 **F1** | Live running order, classification with gaps and tyres, schedule countdown, standings, a favourite driver or team beside the notch |
 | 🎾 **Tennis** *(new)* | Every ATP and WTA match with live set scores in **Men, Women and Mixed** tabs, **Grand Slams in red**, earlier weeks and past Slams one click back, the **ATP and WTA top 20**, and your favourite players' live score beside the notch |
 | 🔁 **Convert** *(Ultimate)* | Drop any file and turn it into another kind: PPTX → PDF, HEIC → JPG, DOCX → PDF, MOV → MP4, PNG → ICO, XLSX → CSV, PDF → pictures, pictures → one PDF, zip and unzip. Saved next to the original |
-| ⌨️ **Klick** *(Pro)* | Mechanical keyboard sounds as you type, in any app: Cream, Holy Panda, Blue, Red, Brown, Topre, Typewriter or Bubble, each with its own volume, and an on / off switch |
+| ⌨️ **Klick** *(Pro)* | Mechanical keyboard sounds as you type, in any app: Mechanical, Cream, Holy Panda, Blue, Red, Brown, Topre, Typewriter or Bubble, each with its own volume, and an on / off switch |
 | 🧰 **30+ more tools** | Now Playing, window snapping, clipboard, file shelf, focus timer, Sports, Messenger, notes, search and more |
 
 ## Download
@@ -58,7 +58,7 @@ Pick your computer. Both buttons start the download straight away. The Mac butto
   </tr>
   <tr>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/v2.0.23/NotchApple-2.0.23.dmg"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.0.23</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/v2.0.24/NotchApple-2.0.24.dmg"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.0.24</b></a>
     </td>
     <td align="center">
       <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 1.38.0 BETA</b></a>
@@ -205,6 +205,10 @@ All screenshots use sample data.
 ## What's new
 
 > **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is still in the repository's tags.
+
+### Mac 2.0.24 · 9 October 2026 · ⌨️ Klick: a Mechanical sound
+
+- **Klick has a Mechanical sound.** The classic clacky keyboard: a sharp click, a hard clack as the key bottoms out, a ring from the case and a crisp click on release. First in the list, with its own volume. Windows 1.38.0 has it too.
 
 ### Mac 2.0.23 · 9 October 2026 · ☕ Coffee button, tidier Tools
 

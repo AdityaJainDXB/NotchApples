@@ -75,6 +75,11 @@ def place(total, part, at):
 #   up     key-up level, and how bright it is
 #   big    extra low resonance for the space bar and Enter (stabiliser thock)
 PACKS = {
+    # The classic clacky mechanical keyboard: a sharp click-bar "tick", then the key bottoming out with a hard plastic
+    # clack, a ring from the case and a metallic spring ping, and a crisp click on the way up.
+    "mechanical": dict(name="Mechanical", body=[(300, 0.024, 0.85), (780, 0.016, 0.65), (1900, 0.009, 0.4), (3300, 0.006, 0.22)],
+                       tick=("bp", 2400, 0.9, 0.85), click=(0.0085, "bp", 4000, 0.6), up=(0.62, 4800), big=(150, 0.06, 0.8),
+                       ping=(1250, 0.05, 0.35), click2=0.0035),
     "cream": dict(name="Cream", body=[(165, 0.045, 1.0), (390, 0.03, 0.55), (880, 0.018, 0.3)], tick=("bp", 2300, 1.2, 0.35),
                   click=None, up=(0.32, 1800), big=(110, 0.07, 0.9)),
     "holypanda": dict(name="Holy Panda", body=[(140, 0.05, 1.0), (330, 0.035, 0.5), (760, 0.02, 0.28)], tick=("bp", 1900, 1.0, 0.3),
@@ -107,6 +112,12 @@ def key_down(p, variant, big=False):
         place(out, burst(0.012, 0.002, kind, f * pitch, 2.5, a, rng), 0)       # click jacket / tactile bump
         place(out, damped(f * 0.9 * pitch, 0.004, a * 0.5, 0.03), 0)
         shift = d
+    if p.get("click2"):
+        place(out, burst(0.008, 0.0012, "bp", 5200 * pitch, 3.0, 0.45, rng), p["click2"])     # the click bar springing back
+    if p.get("ping"):
+        f, dec, a = p["ping"]
+        place(out, damped(f * pitch, dec, a, 0.2, phase=rng.random()), shift)                # a metallic ring from the case
+        place(out, damped(f * pitch * 2.31, dec * 0.5, a * 0.4, 0.1), shift)
     kind, f, q, a = p["tick"]
     place(out, burst(0.02, 0.0025, kind, f * pitch, q, a, rng), shift)        # stem bottoming out
     for f, dec, a in p["body"]:
@@ -128,6 +139,8 @@ def key_up(p):
     if p.get("bubble"):
         place(out, damped(900, 0.015, 0.6, 0.06, sweep=-200), 0)
     place(out, burst(0.012, 0.0015, "bp", bright, 1.2, 1.0, rng), 0)
+    if p.get("click2"):
+        place(out, burst(0.01, 0.0015, "bp", bright * 1.3, 3.0, 0.8, rng), 0.002)          # the click on release
     for f, dec, a in p["body"][:2]:
         place(out, damped(f * 1.6, dec * 0.4, a * 0.5, 0.08), 0)
     return out * lvl

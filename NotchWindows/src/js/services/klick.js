@@ -7,6 +7,7 @@ import { invoke, listen } from '../native.js';
 import { canUse } from '../features.js';
 
 export const PACKS = [
+  { id: 'mechanical', name: 'Mechanical', blurb: 'The classic clacky keyboard: a sharp click, a hard clack and a crisp release.', icon: '⌨️' },
   { id: 'cream', name: 'Cream', blurb: 'Deep, smooth thock. Linear, like NovelKeys Creams.', icon: '💧' },
   { id: 'holypanda', name: 'Holy Panda', blurb: 'Bassy and tactile, with a bump on the way down.', icon: '🐼' },
   { id: 'blue', name: 'Blue', blurb: "Loud and clicky. Everyone will know you're typing.", icon: '⚡' },
