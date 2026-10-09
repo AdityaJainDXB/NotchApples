@@ -65,10 +65,23 @@ What this does **not** do: the old versions of those files are still in this rep
 it was up to 2.0.32 (and rebuild an old, unlocked copy of it). Only changes from now on stay private. Rewriting the history to
 remove them would break every clone and fork, and copies that already exist can't be taken back.
 
+## Notch apple AI (hosted)
+
+Pro and Ultimate include **Notch apple AI**: the app sends an OpenAI-style chat request with its token to the licence server
+(`POST /ai/v1/chat/completions`). The server checks the key, counts a daily allowance per key (a Durable Object per key, so no KV
+writes; Pro 60, Ultimate 200 a day by default), cleans the request (text and embedded images only; the server chooses the model)
+and calls an AI provider with the project's own key (the `AI_API_KEY` secret, never in the app or repository). Without a real
+key there is nothing to call, however the app is modified. It stays off ("isn't switched on yet") until the secret is set:
+
+```
+cd server/license-worker && npx wrangler secret put AI_API_KEY      # paste a provider key, e.g. a Gemini key from aistudio.google.com/apikey
+```
+
+`AI_BASE` can point at any OpenAI-compatible provider, `AI_MODEL` picks the model, and `AI_LIMIT_PRO` / `AI_LIMIT_ULTIMATE` the daily
+allowance (in `wrangler.toml`). A free provider tier is shared by every user, so watch it and raise the limits only with a paid key.
+
 ## Next steps (in order of value)
 
-1. **Hosted AI for Pro and Ultimate.** A Worker endpoint that calls an AI provider with the project's own key for entitled
-   devices, rate-limited per key. Real, ongoing value that exists only behind a valid token (it costs API usage).
-2. **Move more Ultimate work private** as it is written, and the Pro modules that are large and self-contained.
-3. **Premium content, regularly.** New themes, sound packs and aircraft added through `assets.mjs` never touch the repository.
-4. **Close the open relay path** for Messenger once it sends a pass too.
+1. **Move more Ultimate work private** as it is written, and the Pro modules that are large and self-contained.
+2. **Premium content, regularly.** New themes, sound packs and aircraft added through `assets.mjs` never touch the repository.
+3. **Close the open relay path** for Messenger once it sends a pass too.

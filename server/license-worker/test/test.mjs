@@ -6,7 +6,7 @@
 
 import assert from 'node:assert/strict';
 import { writeFileSync } from 'node:fs';
-import worker, { parseKey, verifyKey, verifyToken, mintToken, b32encode, b32decode } from '../src/worker.js';
+import worker, { parseKey, verifyKey, verifyToken, mintToken, b32encode, b32decode, AiQuota, cleanAiRequest } from '../src/worker.js';
 
 const pair = await crypto.subtle.generateKey({ name: 'Ed25519' }, true, ['sign', 'verify']);
 const jwk = await crypto.subtle.exportKey('jwk', pair.privateKey);
@@ -405,6 +405,87 @@ await test('Assets: a token from a revoked key stops working at once', async () 
   assert.equal((await getAsset('gallery/pro.txt', tok)).status, 200);
   await call('/admin/revoke', { keyId: parseKey(k).keyId, reason: 'leak' }, { authorization: 'Bearer admin-test' });
   assert.equal((await getAsset('gallery/pro.txt', tok)).status, 403);
+});
+
+// ---- Notch apple AI (hosted)
+
+const quotaObjects = new Map();
+env.AI_QUOTA = {
+  idFromName: (n) => n,
+  get: (id) => { if (!quotaObjects.has(id)) { const m = new Map(); quotaObjects.set(id, new AiQuota({ storage: { get: async (k) => m.get(k), put: async (k, v) => { m.set(k, v); }, delete: async (k) => { m.delete(k); } } })); } const o = quotaObjects.get(id); return { fetch: (url, init) => o.fetch(new Request(url, init)) }; },
+};
+let upstreamSeen = null, upstreamStatus = 200;
+const realFetch = globalThis.fetch;
+globalThis.fetch = async (url, init) => {
+  if (String(url).includes('ai.test/v1/chat/completions')) {
+    upstreamSeen = { url: String(url), headers: init.headers, body: JSON.parse(init.body) };
+    if (upstreamStatus !== 200) return new Response('provider says: key AIza-secret over quota', { status: upstreamStatus });
+    return new Response(JSON.stringify({ choices: [{ message: { role: 'assistant', content: 'hello from the provider' } }] }), { headers: { 'content-type': 'application/json' } });
+  }
+  return realFetch(url, init);
+};
+const aiCall = async (token, body) => {
+  const r = await worker.fetch(new Request('https://w.test/ai/v1/chat/completions', { method: 'POST', body: JSON.stringify(body), headers: token ? { authorization: 'Bearer ' + token } : {} }), env);
+  return { status: r.status, remaining: r.headers.get('x-ai-remaining'), text: await r.text() };
+};
+const chatBody = { model: 'evil-model', messages: [{ role: 'user', content: 'hi' }], tools: [{ type: 'function' }], stream: false };
+
+await test('AI is off until the server has its key', async () => {
+  assert.equal((await call('/ai/status')).on, false);
+  assert.equal((await aiCall('x', chatBody)).status, 503);
+});
+
+env.AI_API_KEY = 'server-secret-key'; env.AI_BASE = 'https://ai.test/v1'; env.AI_MODEL = 'server-chosen-model'; env.AI_LIMIT_PRO = '3'; env.AI_LIMIT_ULTIMATE = '5';
+const aiToken = async (tier, n) => (await call('/entitle', { key: (await call('/admin/issue', { tier }, { authorization: 'Bearer admin-test' })).key, device: devn(n) })).token;
+
+await test('AI: needs a real token; the server picks the model and key; extra fields are dropped', async () => {
+  assert.equal((await call('/ai/status')).on, true);
+  assert.equal((await aiCall('', chatBody)).status, 401);
+  assert.equal((await aiCall('ent1.x.y', chatBody)).status, 401);
+  const tok = await aiToken('pro', 601);
+  const r = await aiCall(tok, chatBody);
+  assert.equal(r.status, 200); assert.ok(r.text.includes('hello from the provider'));
+  assert.equal(upstreamSeen.body.model, 'server-chosen-model', "the app can't pick the model");
+  assert.equal(upstreamSeen.body.tools, undefined, 'unknown fields are dropped');
+  assert.equal(upstreamSeen.headers.authorization, 'Bearer server-secret-key');
+  assert.ok(!r.text.includes('server-secret-key'), 'the provider key is never sent to the app');
+  assert.equal(upstreamSeen.url, 'https://ai.test/v1/chat/completions');
+});
+
+await test('AI: a daily allowance per key, and Ultimate gets more', async () => {
+  const pro = await aiToken('pro', 602), ult = await aiToken('ultimate', 603);
+  for (let i = 0; i < 3; i++) assert.equal((await aiCall(pro, chatBody)).status, 200);
+  const over = await aiCall(pro, chatBody);
+  assert.equal(over.status, 429); assert.ok(over.text.includes("today's 3"));
+  for (let i = 0; i < 5; i++) assert.equal((await aiCall(ult, chatBody)).status, 200);
+  assert.equal((await aiCall(ult, chatBody)).status, 429);
+  const other = await aiToken('pro', 604);
+  const r = await aiCall(other, chatBody);
+  assert.equal(r.status, 200); assert.equal(r.remaining, '2');
+});
+
+await test('AI: refuses odd requests (remote images, empty, huge, bad roles)', async () => {
+  const tok = await aiToken('ultimate', 605);
+  const bad = (messages) => aiCall(tok, { messages });
+  assert.equal((await bad([{ role: 'user', content: [{ type: 'image_url', image_url: { url: 'https://evil.example/x.png' } }] }])).status, 400);
+  assert.equal((await bad([])).status, 400);
+  assert.equal((await bad([{ role: 'tool', content: 'x' }])).status, 400);
+  assert.equal((await bad([{ role: 'user', content: 'x'.repeat(500000) }])).status, 413);
+  assert.equal((await bad([{ role: 'user', content: [{ type: 'text', text: 'what is this' }, { type: 'image_url', image_url: { url: 'data:image/jpeg;base64,AAAA' } }] }])).status, 200);
+  assert.equal(cleanAiRequest({ messages: [{ role: 'user', content: 'a' }], max_tokens: 999999, temperature: 9 }, env).max_tokens, 4096);
+  assert.equal(cleanAiRequest({ messages: [{ role: 'user', content: 'a' }], temperature: 9 }, env).temperature, 2);
+});
+
+await test('AI: a revoked key stops at once, and provider trouble is reported without leaking anything', async () => {
+  const k = (await call('/admin/issue', { tier: 'pro' }, { authorization: 'Bearer admin-test' })).key;
+  const tok = (await call('/entitle', { key: k, device: devn(606) })).token;
+  assert.equal((await aiCall(tok, chatBody)).status, 200);
+  upstreamStatus = 429;
+  const busy = await aiCall(tok, chatBody);
+  assert.equal(busy.status, 503); assert.ok(!busy.text.includes('AIza') && !busy.text.includes('provider says'));
+  upstreamStatus = 200;
+  await call('/admin/revoke', { keyId: parseKey(k).keyId, reason: 'test' }, { authorization: 'Bearer admin-test' });
+  assert.equal((await aiCall(tok, chatBody)).status, 403);
 });
 
 // Fixture for the Swift tests: a Pro and an Ultimate key from this run, with this run's public key.

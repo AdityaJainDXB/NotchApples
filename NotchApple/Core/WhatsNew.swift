@@ -20,6 +20,9 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.0.34", date: "9 October 2026", headline: "Notch apple AI, included with Pro", items: [
+            "Settings → AI → Notch apple AI (included): ask without setting up any key. Pro gets 60 messages a day, Ultimate 200. Your own keys still work with no limit.",
+        ]),
         ReleaseNote(version: "2.0.33", date: "9 October 2026", headline: "Ultimate modules go private, radar fits", items: [
             "The Ultimate modules (Convert, Smart Home, Claude usage, Do It, Purge) are built into official releases only; nothing changes for you.",
             "Flight Radar's header fits on the Mac: the range is a small menu beside Refresh.",

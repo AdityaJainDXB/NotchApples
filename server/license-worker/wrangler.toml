@@ -7,6 +7,15 @@ compatibility_date = "2026-09-01"
 binding = "KV"
 id = "8632410ec3864461b124c4522607275d"
 
+# Notch apple AI's daily allowance per key (one Durable Object per key; no KV writes).
+[[durable_objects.bindings]]
+name = "AI_QUOTA"
+class_name = "AiQuota"
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["AiQuota"]
+
 [vars]
 WALLET = "ltc1qymlmvkdmvpk5f90esthzgwaw6w0tuzq6tdr6kf"
 NETWORK = "mainnet"
@@ -18,8 +27,12 @@ DEVICE_LIMIT = "3"
 ULTIMATE_ON = "1"
 # "brevo" (works with a verified Gmail sender, 300 emails/day free) or "resend" (needs your own domain).
 MAIL_PROVIDER = "brevo"
+# Notch apple AI (Pro and Ultimate): leave off until the AI_API_KEY secret is set. AI_BASE is any OpenAI-compatible endpoint.
+AI_MODEL = "gemini-2.5-flash"
+AI_LIMIT_PRO = "60"
+AI_LIMIT_ULTIMATE = "200"
 
-# Secrets (never in this file): SIGNING_KEY, ADMIN_TOKEN, EMAIL_PEPPER, MAIL_API_KEY, and MAIL_FROM
+# Secrets (never in this file): AI_API_KEY (Notch apple AI), SIGNING_KEY, ADMIN_TOKEN, EMAIL_PEPPER, MAIL_API_KEY, and MAIL_FROM
 # (the sender address verified in Brevo; a secret so it isn't published in this repo).
 # Set them with scripts/setup.sh or `npx wrangler secret put NAME`.
 

@@ -21,6 +21,10 @@
 //   GET  /asset/<id>                      paid content kept only on this server (Authorization: Bearer <token>); the tier
 //                                         needed is stored with the file. A modified app without a real key gets nothing.
 //   POST /admin/asset-put?id=&tier=       upload that content (admin only); /admin/asset-list, /admin/asset-delete
+//   POST /ai/v1/chat/completions          Notch apple AI, included with Pro and Ultimate: an OpenAI-style chat request (Authorization:
+//                                         Bearer <token>) that the server forwards to an AI provider with the project's own key,
+//                                         with a daily limit per key. Off until the AI_API_KEY secret is set.
+//   GET  /ai/status                       whether Notch apple AI is switched on, and the daily limits
 //   GET  /revoked                         signed list of revoked key IDs (the app checks it now and then)
 //   GET  /config                          prices and whether Ultimate is on sale
 //   POST /admin/issue | /admin/revoke | /admin/reissue   (Authorization: Bearer ADMIN_TOKEN)
@@ -680,6 +684,76 @@ async function assetPut(env, request, url) {
   return { ok: true, id, tier, size: bytes.length, sha };
 }
 
+// MARK: Notch apple AI (hosted)
+//
+// The one paid feature that can only exist here: the app sends a chat request with its token, the server checks the key and
+// a daily allowance, and calls the AI provider with the project's own key (the secret AI_API_KEY, never in the app or repo).
+// Provider-agnostic: AI_BASE is any OpenAI-compatible endpoint (default Google Gemini's), AI_MODEL the model. A copy of the
+// app modified to skip its licence checks has no token, so the server refuses it.
+
+const AI_DEFAULT_BASE = 'https://generativelanguage.googleapis.com/v1beta/openai';
+const AI_DEFAULT_MODEL = 'gemini-2.5-flash';
+const aiLimit = (env, tier) => Number(tier === 2 ? env.AI_LIMIT_ULTIMATE || 200 : env.AI_LIMIT_PRO || 60);
+export const aiOn = (env) => !!env.AI_API_KEY;
+
+/** Counts requests per key per UTC day (one Durable Object per key, so it needs no KV writes). */
+export class AiQuota {
+  constructor(state) { this.state = state; }
+  async fetch(request) {
+    const { limit } = await request.json();
+    const day = new Date().toISOString().slice(0, 10);
+    const used = (await this.state.storage.get(day)) || 0;
+    if (used >= limit) return Response.json({ ok: false, used, limit });
+    await this.state.storage.put(day, used + 1);
+    await this.state.storage.delete(new Date(Date.now() - 3 * 86400000).toISOString().slice(0, 10));
+    return Response.json({ ok: true, used: used + 1, limit });
+  }
+}
+
+/** Keeps only what the AI needs, and refuses anything odd (remote images, huge conversations). */
+export function cleanAiRequest(body, env) {
+  const msgs = body?.messages;
+  if (!Array.isArray(msgs) || !msgs.length || msgs.length > 60) throw new HTTPError(400, 'Send between 1 and 60 messages.');
+  let chars = 0;
+  const messages = msgs.map((m) => {
+    if (!['system', 'user', 'assistant'].includes(m?.role)) throw new HTTPError(400, 'Bad message role.');
+    if (typeof m.content === 'string') { chars += m.content.length; return { role: m.role, content: m.content }; }
+    if (!Array.isArray(m.content)) throw new HTTPError(400, 'Bad message content.');
+    return { role: m.role, content: m.content.map((part) => {
+      if (part?.type === 'text' && typeof part.text === 'string') { chars += part.text.length; return { type: 'text', text: part.text }; }
+      if (part?.type === 'image_url' && typeof part.image_url?.url === 'string' && /^data:image\/(jpeg|png|webp);base64,/.test(part.image_url.url)) { chars += 1000; return { type: 'image_url', image_url: { url: part.image_url.url } }; }
+      throw new HTTPError(400, 'Only text and embedded images are allowed.');
+    }) };
+  });
+  if (chars > 400000) throw new HTTPError(413, 'That conversation is too long.');
+  const out = { model: env.AI_MODEL || AI_DEFAULT_MODEL, messages, stream: body.stream === true };
+  if (typeof body.temperature === 'number') out.temperature = Math.min(2, Math.max(0, body.temperature));
+  out.max_tokens = Math.min(4096, Math.max(1, Number(body.max_tokens) || 2048));
+  return out;
+}
+
+async function aiChat(env, request) {
+  if (!aiOn(env)) throw new HTTPError(503, "Notch apple AI isn't switched on yet.");
+  const token = (request.headers.get('authorization') || '').replace(/^Bearer /, '');
+  const p = await verifyToken(env, 'ent1', token);
+  if (!p) throw new HTTPError(401, 'Notch apple AI needs a valid Pro or Ultimate key. Open the app and try again.');
+  if ((await revokedIds(env)).includes(p.k)) throw new HTTPError(403, 'This licence has been revoked.');
+  const text = await request.text();
+  if (text.length > 3 * 1024 * 1024) throw new HTTPError(413, 'Too large.');
+  let body; try { body = JSON.parse(text); } catch { throw new HTTPError(400, 'Bad JSON'); }
+  const upstream = cleanAiRequest(body, env);
+  const limit = aiLimit(env, p.t);
+  const q = await (await env.AI_QUOTA.get(env.AI_QUOTA.idFromName(p.k)).fetch('https://quota/', { method: 'POST', body: JSON.stringify({ limit }) })).json();
+  if (!q.ok) throw new HTTPError(429, `You've used today's ${limit} Notch apple AI messages. They reset at midnight UTC; you can also use your own key in Settings → AI.`, { limit });
+  let r;
+  try {
+    r = await fetch(`${(env.AI_BASE || AI_DEFAULT_BASE).replace(/\/+$/, '')}/chat/completions`, {
+      method: 'POST', headers: { 'content-type': 'application/json', authorization: `Bearer ${env.AI_API_KEY}` }, body: JSON.stringify(upstream) });
+  } catch { throw new HTTPError(503, 'Notch apple AI is busy. Try again in a minute.'); }
+  if (!r.ok) throw new HTTPError(r.status === 429 || r.status >= 500 ? 503 : 502, 'Notch apple AI is busy. Try again in a minute.');
+  return new Response(r.body, { headers: { 'content-type': r.headers.get('content-type') || 'application/json', 'x-ai-remaining': String(Math.max(0, limit - q.used)), 'cache-control': 'no-store', ...CORS } });
+}
+
 // MARK: Entry
 
 import { ADMIN_PAGE } from './admin-page.js';
@@ -715,9 +789,11 @@ export default {
         if (path === '/admin') return new Response(ADMIN_PAGE, { headers: ADMIN_HEADERS });
         if (path === '/revoked') return json(await revokedList(env), 200, { 'cache-control': 'public, max-age=3600' });
         if (path.startsWith('/asset/')) return await assetGet(env, request, path.slice('/asset/'.length));
+        if (path === '/ai/status') return json({ on: aiOn(env), model: aiOn(env) ? 'notch-fast' : null, limits: { pro: aiLimit(env, 1), ultimate: aiLimit(env, 2) } });
         throw new HTTPError(404, 'Not found');
       }
       if (request.method !== 'POST') throw new HTTPError(405, 'Method not allowed');
+      if (path === '/ai/v1/chat/completions') return await aiChat(env, request);   // its own body limit, bigger than the small JSON path below
       if (path === '/admin/asset-put') {
         // A raw binary upload, so it can't go through the small JSON path below. Same admin sign-in and lock-out.
         await adminGate(env, request);
