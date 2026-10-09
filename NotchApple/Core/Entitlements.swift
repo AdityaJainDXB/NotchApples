@@ -171,6 +171,7 @@ extension Module {
         case .mirror: .mirror
         case .focus: .focus
         case .klick: .klick
+        case .convert: .convert
         default: nil
         }
     }

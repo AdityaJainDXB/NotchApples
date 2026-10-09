@@ -47,6 +47,7 @@ struct ModuleContentView: View {
         case .f1: F1View()
         case .tennis: TennisView()
         case .klick: KlickView()
+        case .convert: ConvertView()
         case .games: GamesView()
         case .sports: SportsView()
         case .snippets: SnippetsView()

@@ -90,6 +90,13 @@ const commands = {
     outputs: [{ id: 'a', name: 'Speakers (Realtek Audio)', default: true }, { id: 'b', name: 'Headphones (WH-1000XM4)', default: false }],
     input: 'Microphone Array (Intel)', mic_muted: state.micMuted, apps: state.apps, balance: state.balance ?? 0.5, balance_ok: true }),
   klick_set: () => {},
+  convert_tools: () => ({ word: false, powerpoint: false, excel: false, libreoffice: false, ffmpeg: false }),
+  convert_pick: () => ['C:\\Users\\you\\Pictures\\holiday.heic', 'C:\\Users\\you\\Documents\\Report.pptx'],
+  convert_temp_dir: () => 'C:\\Temp',
+  convert_target: ({ input, ext, suffix }) => input.replace(/\.[^.\\]+$/, '') + (suffix || '') + (ext ? `.${ext}` : ''),
+  convert_read: ({ path }) => (window.__convertFiles?.[path] ?? ''),
+  convert_write: ({ path, data }) => { (window.__convertOut ??= {})[path] = data; },
+  convert_run: ({ engine, output }) => { if (engine === 'wic') throw new Error('Windows can’t open this picture in the browser preview.'); return output; },
   audio_set: ({ what, value, app }) => {
     if (what === 'balance') state.balance = value;
     if (what === 'volume') state.volume = value; if (what === 'mute') state.muted = value > 0.5; if (what === 'mic-mute') state.micMuted = value > 0.5;

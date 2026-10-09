@@ -5,7 +5,7 @@
 // the app doesn't make twenty things start (and the window stutter) at the same moment.
 
 const NOW = ['clipboard', 'focus', 'timer', 'media', 'rules'];
-const LATER = ['klick', 'pairdrop', 'sports', 'reminders', 'calendar', 'weather', 'markets', 'screentime', 'privacy', 'awake',
+const LATER = ['klick', 'convert', 'pairdrop', 'sports', 'reminders', 'calendar', 'weather', 'markets', 'screentime', 'privacy', 'awake',
   'downloads', 'messenger', 'plugins', 'automations', 'updates', 'flights', 'f1', 'tennis', 'claudecode', 'hud', 'clipsync', 'wellbeing', 'syswatch', 'claudeusage', 'winnotifs'];
 
 async function run(name) {

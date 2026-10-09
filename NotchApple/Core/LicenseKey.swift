@@ -71,6 +71,8 @@ enum Feature: String, CaseIterable, Identifiable {
     case meetingSummaries, meetingNotes, namedTimers, focusProjects, richNotes, remindersSync, clipboardUnlimited, shelfPlus, textExpander, annotate, ruler, currency, commandPalette
     // Ultimate: scripting
     case scripting
+    // Ultimate: files
+    case convert
     // Pro: tabs
     case messenger, audio, vpn, voiceNotes, screenTime, quickAdd, launcher, snippets, mirror, focus
     // Pro: system and media
@@ -84,7 +86,7 @@ enum Feature: String, CaseIterable, Identifiable {
 
     var tier: Tier {
         switch self {
-        case .liveActivityAPI, .activityStacking, .automations, .scripting, .pluginSDK, .pluginGallery, .notesSync, .iphoneCompanion, .cacheCleaner, .claudeUsage, .smartHome, .meetingSummaries, .clipboardLink, .prioritySupport, .betaChannel: .ultimate
+        case .liveActivityAPI, .activityStacking, .automations, .scripting, .pluginSDK, .pluginGallery, .notesSync, .iphoneCompanion, .cacheCleaner, .claudeUsage, .smartHome, .meetingSummaries, .clipboardLink, .convert, .prioritySupport, .betaChannel: .ultimate
         default: .pro
         }
     }
@@ -160,6 +162,7 @@ enum Feature: String, CaseIterable, Identifiable {
         case .rainAlert: "Rain alerts"
         case .lyrics: "Lyrics"
         case .klick: "Klick"
+        case .convert: "Convert"
         case .forecast: "Week forecast and more cities"
         case .meetingPlanner: "Meeting-time planner"
         case .micMute: "Mic mute"
@@ -240,6 +243,7 @@ enum Feature: String, CaseIterable, Identifiable {
         case .rainAlert: "A nudge before it starts raining."
         case .lyrics: "Lyrics for what's playing."
         case .klick: "Mechanical keyboard sounds as you type, in any app."
+        case .convert: "Turn any file into another kind: PPTX to PDF, HEIC to JPG, Word to PDF, MOV to MP4, Excel to CSV and more."
         case .forecast: "The next 12 hours and 7 days, for up to six cities."
         case .meetingPlanner: "Slide through the day to find a time that works in every city."
         case .micMute: "Mute your microphone in one click, with a red mic beside the notch."

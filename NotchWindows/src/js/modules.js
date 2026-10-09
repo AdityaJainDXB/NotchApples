@@ -15,6 +15,8 @@ export const MODULES = [
     blurb: "Every ATP and WTA match with live scores, in Men, Women and Mixed. Grand Slams in red, earlier weeks one click back, the top 20, and favourite players on the pill." },
   { id: 'klick', name: 'Klick', icon: '⌨️', feature: 'klick', load: () => import('./modules/klick.js'),
     blurb: 'Your keyboard sounds like a mechanical one, in any app: Cream, Holy Panda, Blue, Red, Brown, Topre, Typewriter or Bubble, each with its own volume.' },
+  { id: 'convert', name: 'Convert', icon: '🔁', feature: 'convert', load: () => import('./modules/convert.js'),
+    blurb: 'Drop a file and turn it into another kind: PPTX to PDF, HEIC to JPG, Word to PDF, MOV to MP4, Excel to CSV, PDF to pictures and more. Saved next to the original.' },
   { id: 'nowplaying', name: 'Now Playing', icon: '🎵', load: () => import('./modules/nowplaying.js'),
     blurb: "What's playing on your PC (Spotify, browsers, Media Player…) with the cover, controls and lyrics. The cover shows on the pill." },
   { id: 'browser', name: 'Browser', icon: '🌐', load: () => import('./modules/browser.js'),
@@ -90,7 +92,7 @@ export const MODULES = [
 ];
 
 /// What a fresh install shows. Everything else is one click away in Settings → Tabs.
-export const DEFAULT_ON = ['today', 'ai', 'sports', 'f1', 'tennis', 'klick', 'nowplaying', 'search', 'clipboard', 'notes', 'todo', 'timer', 'shelf', 'windows', 'tools',
+export const DEFAULT_ON = ['today', 'ai', 'sports', 'f1', 'tennis', 'klick', 'convert', 'nowplaying', 'search', 'clipboard', 'notes', 'todo', 'timer', 'shelf', 'windows', 'tools',
   'stats', 'worldclock', 'games', 'markets', 'home', 'audio', 'messenger', 'settings'];
 
 export const byId = (id) => MODULES.find((m) => m.id === id);

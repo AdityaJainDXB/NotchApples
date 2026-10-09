@@ -20,6 +20,10 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.0.21", date: "9 October 2026", headline: "Convert: turn any file into another kind", items: [
+            "Convert (Ultimate): drop files and turn them into another kind: PPTX to PDF, HEIC to JPG, Word to PDF, MOV to MP4, Excel to CSV, PDF to pictures and more. Saved next to the original.",
+            "Pictures can be combined into one PDF, and Make them all sets the same target for every file.",
+        ]),
         ReleaseNote(version: "2.0.20", date: "9 October 2026", headline: "Klick, and Plane controls that climb when you go up", items: [
             "Klick (Pro): mechanical keyboard sounds as you type, in any app. Eight sounds, each with its own volume, and an on / off switch.",
             "Plane: cursor up (or ↑) now climbs, the mouse steers inside a small ring so it never runs off the notch, and keys always reach the game.",

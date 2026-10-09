@@ -43,6 +43,7 @@ Notch apple lives in the black cutout at the top of your MacBook screen (a small
 | ⚽ **Sports & cricket** | Your team with match alerts, fixtures, league tables and match details (goals, cards, lineups); national teams, India cricket and the IPL |
 | 🏁 **F1** | Live running order, classification with gaps and tyres, schedule countdown, standings, a favourite driver or team beside the notch |
 | 🎾 **Tennis** *(new)* | Every ATP and WTA match with live set scores in **Men, Women and Mixed** tabs, **Grand Slams in red**, earlier weeks and past Slams one click back, the **ATP and WTA top 20**, and your favourite players' live score beside the notch |
+| 🔁 **Convert** *(Ultimate)* | Drop any file and turn it into another kind: PPTX → PDF, HEIC → JPG, DOCX → PDF, MOV → MP4, PNG → ICO, XLSX → CSV, PDF → pictures, pictures → one PDF, zip and unzip. Saved next to the original |
 | ⌨️ **Klick** *(Pro)* | Mechanical keyboard sounds as you type, in any app: Cream, Holy Panda, Blue, Red, Brown, Topre, Typewriter or Bubble, each with its own volume, and an on / off switch |
 | 🧰 **30+ more tools** | Now Playing, window snapping, clipboard, file shelf, focus timer, Sports, Messenger, notes, search and more |
 
@@ -57,10 +58,10 @@ Pick your computer. Both buttons start the download straight away. The Mac butto
   </tr>
   <tr>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/v2.0.20/NotchApple-2.0.20.dmg"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.0.20</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/v2.0.21/NotchApple-2.0.21.dmg"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.0.21</b></a>
     </td>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 1.37.0 BETA</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 1.38.0 BETA</b></a>
     </td>
   </tr>
   <tr>
@@ -204,6 +205,20 @@ All screenshots use sample data.
 ## What's new
 
 > **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is still in the repository's tags.
+
+### Mac 2.0.21 · Windows 1.38.0 BETA · 9 October 2026 · 🔁 Convert
+
+- **Convert (Ultimate): turn any file into another kind.** A new **Convert** tab: drop files on it (or click **Choose files**). Each file gets a **From** picker (what it is, worked out from its name, and changeable) and a **To** picker (what it should become). Click **Convert**, or **Convert all**. The result is saved **next to the original** ("Report.pdf"), never over anything, with **Open** and **Show** buttons.
+  - **Pictures:** PNG, JPEG, HEIC, WebP, GIF, BMP, TIFF, ICO, SVG, AVIF → PNG, JPG, HEIC (Mac), WebP, GIF, BMP, TIFF, ICO or PDF, and several pictures → **one combined PDF**.
+  - **PDF** → a PNG or JPG of every page, or its text as Word, RTF, a web page, Markdown or text.
+  - **Documents:** Word, Pages (Mac), RTF, OpenDocument, web pages, Markdown and text → PDF, Word, RTF, a web page, Markdown, text or Pages (Mac).
+  - **Presentations:** PowerPoint and Keynote (Mac) → PDF, PowerPoint, Keynote (Mac), or a picture of every slide.
+  - **Tables:** Excel, Numbers (Mac), CSV, TSV and JSON → Excel, CSV, JSON, TSV, a web page, PDF or Numbers (Mac).
+  - **Audio and video:** MP3, M4A, WAV, FLAC, AIFF, Ogg, Opus; MP4, MOV, MKV, WebM, AVI; the sound of a video on its own; a video as a GIF.
+  - **Zip** any file or folder, or unzip one. **Make them all** sets one target for every file in the list.
+- **How it converts.** As much as possible is done by the computer itself. On the Mac that means Image I/O, PDFKit, the macOS text system, afconvert and AVFoundation, plus Keynote, Pages and Numbers when they're installed. On Windows it's done right in the app (pictures, text, Markdown, Word text, CSV/JSON/Excel tables, audio to WAV), plus Windows' own PDF and picture readers, and Word, PowerPoint and Excel when they're installed. **LibreOffice** (free) and **FFmpeg** (free) add old Office formats and every audio and video format. The tab shows which of these your computer has. When a file needs one, it says so, with a link (and on the Mac, `brew install ffmpeg`; on Windows, `winget install Gyan.FFmpeg`).
+- **Windows 1.38.0 also includes 1.37.0's changes** (Klick and the Plane fixes, below).
+- **Mac release check fixed.** The new launch check now starts the app from inside the DMG people download, so releases go out again.
 
 ### Mac 2.0.20 · Windows 1.37.0 BETA · 9 October 2026 · ⌨️ Klick, and Plane controls that make sense
 
