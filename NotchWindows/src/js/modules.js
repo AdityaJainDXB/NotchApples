@@ -11,6 +11,8 @@ export const MODULES = [
     blurb: 'Follow your team (Barcelona unless you pick another): next match, every competition, results and the live score on the pill.' },
   { id: 'f1', name: 'F1', icon: '🏁', load: () => import('./modules/f1.js'),
     blurb: 'Formula 1: the running order during sessions, the weekend schedule with a countdown, and standings.' },
+  { id: 'radar', name: 'Flight Radar', icon: '✈️', load: () => import('./modules/radar.js'),
+    blurb: 'Every aircraft flying around you right now on a round radar, with callsign, type, height and speed, from the free adsb.lol feed. It uses your location (the same as the weather) rounded to about 1 km, and only asks while the tab is open.' },
   { id: 'tennis', name: 'Tennis', icon: '🎾', load: () => import('./modules/tennis.js'),
     blurb: "Every ATP and WTA match with live scores, in Men, Women and Mixed. Grand Slams in red, earlier weeks one click back, the top 20, and favourite players on the pill." },
   { id: 'klick', name: 'Klick', icon: '⌨️', feature: 'klick', load: () => import('./modules/klick.js'),
@@ -94,7 +96,7 @@ export const MODULES = [
 ];
 
 /// What a fresh install shows. Everything else is one click away in Settings → Tabs.
-export const DEFAULT_ON = ['today', 'ai', 'sports', 'f1', 'tennis', 'klick', 'convert', 'doit', 'nowplaying', 'search', 'clipboard', 'notes', 'todo', 'timer', 'shelf', 'windows', 'tools',
+export const DEFAULT_ON = ['today', 'ai', 'sports', 'f1', 'tennis', 'radar', 'klick', 'convert', 'doit', 'nowplaying', 'search', 'clipboard', 'notes', 'todo', 'timer', 'shelf', 'windows', 'tools',
   'stats', 'worldclock', 'games', 'markets', 'home', 'audio', 'messenger', 'settings'];
 
 export const byId = (id) => MODULES.find((m) => m.id === id);

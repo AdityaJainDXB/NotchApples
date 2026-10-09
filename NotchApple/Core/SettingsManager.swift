@@ -12,7 +12,7 @@ import SwiftUI
 
 /// Every optional feature module in the app.
 enum Module: String, CaseIterable, Identifiable {
-    case today, claude, browser, launcher, translator, stats, windows, tools, mirror, worldClock, messenger, clipboard, notes, focus, shelf, share, audio, vpn, nowPlaying, search, timer, snippets, shortcuts, devices, live, f1, tennis, sports, games, alerts, plugins, voiceNotes, screenTime, quickAdd, markets, home, security, cacheCleaner, claudeUsage, smartHome, devTools, wellbeing, nonNecessities, todo, klick, convert, doIt
+    case today, claude, browser, launcher, translator, stats, windows, tools, mirror, worldClock, messenger, clipboard, notes, focus, shelf, share, audio, vpn, nowPlaying, search, timer, snippets, shortcuts, devices, live, f1, tennis, radar, sports, games, alerts, plugins, voiceNotes, screenTime, quickAdd, markets, home, security, cacheCleaner, claudeUsage, smartHome, devTools, wellbeing, nonNecessities, todo, klick, convert, doIt
 
     var id: String { rawValue }
 
@@ -45,6 +45,7 @@ enum Module: String, CaseIterable, Identifiable {
         case .live: "Parcels & Flights"
         case .f1: "F1"
         case .tennis: "Tennis"
+        case .radar: "Flight Radar"
         case .klick: "Klick"
         case .convert: "Convert"
         case .doIt: "Do It"
@@ -97,6 +98,7 @@ enum Module: String, CaseIterable, Identifiable {
         case .live: "shippingbox.fill"
         case .f1: "flag.checkered"
         case .tennis: "tennisball.fill"
+        case .radar: "airplane"
         case .klick: "keyboard.fill"
         case .convert: "arrow.triangle.2.circlepath"
         case .doIt: "wand.and.stars"
@@ -152,6 +154,7 @@ enum Module: String, CaseIterable, Identifiable {
         case .convert: "Ultimate: drop a file and turn it into another kind. PPTX to PDF, HEIC to JPG, Word to PDF, MOV to MP4, Excel to CSV, PDF to pictures and more, saved next to the original."
         case .doIt: "Ultimate: tell the AI what to do (a worksheet, a form, a task) and it does it on your screen, step by step. You press Start, can stop it any time, and it asks before anything risky."
         case .tennis: "Every ATP and WTA match with live scores, in Men, Women and Mixed. Grand Slams show in red, earlier weeks and recent Grand Slams are a click away, plus the ATP and WTA top 20. Star your favourite players and their live score shows beside the notch."
+        case .radar: "Every aircraft flying around you right now on a round radar, with its callsign, type, height and speed, from the free adsb.lol feed. It uses your location (the same as the weather) rounded to about 1 km, and only asks while the tab is open."
         case .sports: "Follow your team (Barcelona unless you pick another): the next match with a countdown, every competition it plays in, recent results and the live score beside the notch. Browse the next two weeks of fixtures in the big football leagues, the NBA, NFL, MLB and NHL."
         case .live: "Add-on: quick tracking for parcels and flights. Live scores now live in the Sports tab."
         case .alerts: "Add-on: see notifications from other apps in the notch, and reply to iMessages. Needs Full Disk Access."
@@ -205,6 +208,7 @@ final class SettingsManager: ObservableObject {
         [Module.timer, .snippets, .shortcuts, .devices, .live, .f1, .games, .alerts, .plugins, .voiceNotes, .screenTime, .quickAdd, .markets, .home, .cacheCleaner, .claudeUsage, .smartHome, .devTools, .wellbeing].forEach { defaults[$0.storageKey] = false }
         defaults[Module.sports.storageKey] = true   // everyone gets Sports, tracking Barcelona
         defaults[Module.tennis.storageKey] = true   // 2.0.5: Tennis is on for everyone
+        defaults[Module.radar.storageKey] = true    // Flight Radar is on for everyone
         defaults[Module.klick.storageKey] = true    // 2.0.19: the Klick tab shows (it explains Pro until unlocked)
         defaults[Module.convert.storageKey] = true  // 2.0.22: the Convert tab shows (it explains Ultimate until unlocked)
         defaults[Module.doIt.storageKey] = true     // 2.0.26: the Do It tab shows (it explains Ultimate until unlocked)
@@ -253,6 +257,7 @@ final class SettingsManager: ObservableObject {
     @AppStorage("claudeCode.screenFlash") var claudeCodeScreenFlash = false
     @AppStorage(Module.f1.storageKey) var f1Enabled = false
     @AppStorage(Module.tennis.storageKey) var tennisEnabled = true
+    @AppStorage(Module.radar.storageKey) var radarEnabled = true
     @AppStorage(Module.klick.storageKey) var klickEnabled = true
     @AppStorage(Module.convert.storageKey) var convertEnabled = true
     @AppStorage(Module.doIt.storageKey) var doItEnabled = true
@@ -367,6 +372,7 @@ final class SettingsManager: ObservableObject {
         case .live: $liveEnabled
         case .f1: $f1Enabled
         case .tennis: $tennisEnabled
+        case .radar: $radarEnabled
         case .klick: $klickEnabled
         case .convert: $convertEnabled
         case .doIt: $doItEnabled
