@@ -692,7 +692,7 @@ async function assetPut(env, request, url) {
 // app modified to skip its licence checks has no token, so the server refuses it.
 
 const AI_DEFAULT_BASE = 'https://generativelanguage.googleapis.com/v1beta/openai';
-const AI_DEFAULT_MODEL = 'gemini-2.5-flash';
+const AI_DEFAULT_MODEL = 'gemini-3.8-flash';
 const aiLimit = (env, tier) => Number(tier === 2 ? env.AI_LIMIT_ULTIMATE || 200 : env.AI_LIMIT_PRO || 60);
 export const aiOn = (env) => !!env.AI_API_KEY;
 
@@ -750,7 +750,11 @@ async function aiChat(env, request) {
     r = await fetch(`${(env.AI_BASE || AI_DEFAULT_BASE).replace(/\/+$/, '')}/chat/completions`, {
       method: 'POST', headers: { 'content-type': 'application/json', authorization: `Bearer ${env.AI_API_KEY}` }, body: JSON.stringify(upstream) });
   } catch { throw new HTTPError(503, 'Notch apple AI is busy. Try again in a minute.'); }
-  if (!r.ok) throw new HTTPError(r.status === 429 || r.status >= 500 ? 503 : 502, 'Notch apple AI is busy. Try again in a minute.');
+  if (!r.ok) {
+    // The provider's reason goes to the server log (never to the app, which only hears "busy"), so a wrong model or key can be found.
+    console.error('AI provider answered', r.status, (await r.text()).slice(0, 300));
+    throw new HTTPError(r.status === 429 || r.status >= 500 ? 503 : 502, 'Notch apple AI is busy. Try again in a minute.');
+  }
   return new Response(r.body, { headers: { 'content-type': r.headers.get('content-type') || 'application/json', 'x-ai-remaining': String(Math.max(0, limit - q.used)), 'cache-control': 'no-store', ...CORS } });
 }
 

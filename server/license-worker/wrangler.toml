@@ -28,7 +28,7 @@ ULTIMATE_ON = "1"
 # "brevo" (works with a verified Gmail sender, 300 emails/day free) or "resend" (needs your own domain).
 MAIL_PROVIDER = "brevo"
 # Notch apple AI (Pro and Ultimate): leave off until the AI_API_KEY secret is set. AI_BASE is any OpenAI-compatible endpoint.
-AI_MODEL = "gemini-2.5-flash"
+AI_MODEL = "gemini-3.8-flash"
 AI_LIMIT_PRO = "60"
 AI_LIMIT_ULTIMATE = "200"
 
