@@ -1,11 +1,6 @@
 cask "notch-apple" do
-<<<<<<< Updated upstream
-  version "2.0.35"
-  sha256 "2c345eabe0a71cca4dd4fc585cb858189d15e2f7f075408ced886ba53e34d882"
-=======
   version "2.0.36"
   sha256 "37059b7181d349a6772b5683e7a0179ba10b1a5bec48e9d8cd5e2ead09dd00b8"
->>>>>>> Stashed changes
 
   url "https://github.com/AdityaJainDXB/NotchApples/releases/download/v#{version}/NotchApple-#{version}.dmg"
   name "Notch apple"
