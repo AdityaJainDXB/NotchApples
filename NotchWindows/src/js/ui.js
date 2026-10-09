@@ -87,7 +87,7 @@ export function toast(message, { error = false, ms = 2200 } = {}) {
 export function holdButton(label, onConfirm, { ms = 1200, hint = 'Press and hold to confirm' } = {}) {
   const fill = el('span', { class: 'hold-fill', 'aria-hidden': 'true' }, label);
   const b = el('button', { class: 'btn small hold-btn', type: 'button', title: hint, 'aria-label': `${label}. ${hint}` }, el('span', {}, label), fill);
-  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const reduce = (typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches);
   let timer = null;
   const start = () => {
     if (timer) return;
@@ -117,7 +117,7 @@ export function undoToast(message, undo, ms = 5000) {
   const btn = el('button', { class: 'undo-btn', type: 'button' }, el('span', {}, 'Undo'), fill);
   const t = el('div', { class: 'toast undo-toast', role: 'status' }, el('span', { class: 'undo-ok' }, '✓'), el('span', {}, message), btn);
   host.append(t);
-  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const reduce = (typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches);
   requestAnimationFrame(() => { fill.style.transition = reduce ? 'none' : `clip-path ${ms}ms linear`; fill.style.clipPath = 'inset(0 100% 0 0)'; });
   const gone = setTimeout(() => t.remove(), ms);
   btn.onclick = () => { clearTimeout(gone); t.remove(); undo(); };

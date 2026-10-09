@@ -8,7 +8,7 @@ export function magnet(host, label = 'Let go to add it') {
   const pill = document.createElement('div'); pill.className = 'mag-pill'; pill.textContent = label;
   host.classList.add('mag-host');
   host.append(glow, pill);
-  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const reduce = (typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches);
   const off = [];
   function at(e) {
     const r = host.getBoundingClientRect(), k = window.devicePixelRatio || 1;
