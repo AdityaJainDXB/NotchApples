@@ -35,3 +35,11 @@ NotchWindows/src/js/services/convert.js
 NotchWindows/src/js/services/doit.js
 NotchWindows/src/js/services/smarthome.js
 NotchWindows/src/js/services/claudeusage.js
+
+# build output, scratch and local tool state
+**/target/
+.dragtest/
+brag-output/
+.agents/
+.codex/
+.impeccable/

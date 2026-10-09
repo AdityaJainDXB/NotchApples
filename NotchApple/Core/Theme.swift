@@ -65,13 +65,22 @@ enum Theme {
 /// A frosted card used to group content inside modules.
 struct GlassCard<Content: View>: View {
     @ViewBuilder var content: Content
+    /// Opt-in Liquid Glass on macOS 26 and later: `defaults write com.notchapple.app ui.liquidGlass -bool true`.
+    /// Off by default, and macOS 14 and 15 always use the material below.
+    @AppStorage("ui.liquidGlass") private var liquidGlass = false
+
     var body: some View {
-        content
+        let shape = RoundedRectangle(cornerRadius: Theme.corner, style: .continuous)
+        let card = content
             .padding(14)
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-            .background(.ultraThinMaterial.opacity(0.5), in: RoundedRectangle(cornerRadius: Theme.corner, style: .continuous))
-            .overlay(RoundedRectangle(cornerRadius: Theme.corner, style: .continuous)
-                .strokeBorder(Theme.separator))
+        if #available(macOS 26, *), liquidGlass {
+            card.glassEffect(.regular, in: shape)
+        } else {
+            card
+                .background(.ultraThinMaterial.opacity(0.5), in: shape)
+                .overlay(shape.strokeBorder(Theme.separator))
+        }
     }
 }
 

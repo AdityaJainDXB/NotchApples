@@ -312,8 +312,8 @@ final class CompanionProtocolTests: XCTestCase {
     }
 
     func testPairingCodeKeys() {
-        XCTAssertEqual(Companion.newCode().count, 6)
-        let a = Companion.pairingKey(code: "123456"), b = Companion.pairingKey(code: "123457")
+        XCTAssertEqual(Companion.newCode().count, Companion.codeLength)
+        let a = Companion.pairingKey(code: "ABCD-EFGH-JKMN"), b = Companion.pairingKey(code: "ABCD-EFGH-JKMP")
         let frame = try! Companion.seal(.init(type: .pair, name: "iPhone"), from: "pair", key: a)
         let env = Companion.envelope(from: frame)!
         XCTAssertNotNil(Companion.open(env, key: a))

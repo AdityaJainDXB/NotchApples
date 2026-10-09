@@ -119,8 +119,25 @@ final class NotchTriggerView: NSView {
     private var barPhase: CGFloat = 0
     private var barLevels: [CGFloat]?
 
+    private var barsPowerHooked = false
+
+    /// The right ear, where the bars are, with room for the hover inflation. Only this much needs repainting per tick.
+    private var barsDirtyRect: NSRect {
+        let pad = Self.hitPadding
+        let shoulder = NotchRootView.collapsedShoulder
+        let ear = displayedEar
+        let width = notchWidth + 2 * (shoulder + ear)
+        let notch = NSRect(x: bounds.midX - width / 2, y: bounds.minY + pad.height, width: width, height: bounds.height - pad.height)
+        return NSRect(x: notch.maxX - shoulder - ear, y: notch.minY, width: ear + shoulder, height: notch.height).insetBy(dx: -8, dy: -8)
+    }
+
     private func updateBarsTimer() {
-        if activity?.musicBars == true {
+        // Stops with the displays asleep or the session switched out, and starts again when Power says so.
+        if !barsPowerHooked {
+            barsPowerHooked = true
+            Power.onChange.append { [weak self] in self?.updateBarsTimer() }
+        }
+        if activity?.musicBars == true, !Power.isIdle {
             guard barsTimer == nil else { return }
             let meter = MusicLevelMeter.shared
             if SettingsManager.shared.musicBarsFollowAudio {
@@ -131,7 +148,7 @@ final class NotchTriggerView: NSView {
                 guard let self else { return }
                 self.barPhase += 1.0 / 20
                 self.barLevels = meter.isLive ? meter.nextFrame() : nil
-                self.needsDisplay = true
+                self.setNeedsDisplay(self.barsDirtyRect)
             }
             t.tolerance = 0.01
             RunLoop.main.add(t, forMode: .common)
@@ -599,10 +616,19 @@ final class NotchWindowController {
 
     /// Watches the pointer only while an edge zone is on: resting at the very top of the
     /// screen inside the zone opens the notch. Clicks on the menu bar are never blocked.
+    /// Top edge of every screen, so a pointer move far from any of them costs a comparison and no screen lookup.
+    private var edgeTops: [CGFloat] = []
+    private var edgeScreenObserver: NSObjectProtocol?
+
     func applyEdgeTrigger() {
         edgeMonitors.forEach(NSEvent.removeMonitor)
         edgeMonitors = []
+        if let o = edgeScreenObserver { NotificationCenter.default.removeObserver(o); edgeScreenObserver = nil }
         guard NotchPrefs.edgeTrigger != "off", Entitlements.shared.canUse(.edgeTrigger) else { return }
+        edgeTops = NSScreen.screens.map { $0.frame.maxY }
+        edgeScreenObserver = NotificationCenter.default.addObserver(forName: NSApplication.didChangeScreenParametersNotification, object: nil, queue: .main) { [weak self] _ in
+            MainActor.assumeIsolated { self?.edgeTops = NSScreen.screens.map { $0.frame.maxY } }
+        }
         let handler: (NSEvent) -> Void = { [weak self] _ in self?.edgeMoved() }
         if let g = NSEvent.addGlobalMonitorForEvents(matching: .mouseMoved, handler: handler) { edgeMonitors.append(g) }
         if let l = NSEvent.addLocalMonitorForEvents(matching: .mouseMoved, handler: { handler($0); return $0 }) { edgeMonitors.append(l) }
@@ -610,6 +636,11 @@ final class NotchWindowController {
 
     private var edgeWork: DispatchWorkItem?
     private func edgeMoved() {
+        let y = NSEvent.mouseLocation.y
+        guard edgeTops.contains(where: { y >= $0 - 2 }) else {
+            if edgeWork != nil { edgeWork?.cancel(); edgeWork = nil }
+            return
+        }
         guard let screen = targetScreen, !state.isExpanded, !state.isAutoHidden, !SettingsManager.shared.isNotchHidden else { return }
         let p = NSEvent.mouseLocation
         let halfWidth = NotchPrefs.edgeTrigger == "edge" ? screen.frame.width / 2 : state.notchSize.width + 100
@@ -835,6 +866,8 @@ final class NotchWindowController {
     // MARK: Drags from anywhere
 
     private var dragTimer: Timer?
+    private var dragPressMonitors: [Any] = []
+    private var dragHeartbeat: Timer?
     private var dragOpened = false
     private var buttonWasDown = false
     private var dragChangeCountAtPress = 0
@@ -845,12 +878,32 @@ final class NotchWindowController {
     /// changing after the button went down. The collapsed notch's own drop target can't be relied on either: it can be
     /// hidden, covered by the menu bar or a full-screen app, or under another window.
     private func installDragWatcher() {
+        guard dragPressMonitors.isEmpty else { return }
+        // The fast poll only runs while the left button is down, so an idle notch costs no wake-ups. A mouse-down
+        // monitor starts it at the instant of the press, which matters: a drag is recognised by the drag clipboard
+        // changing after the press, and the first poll is what reads the count at the press.
+        let pressed: (NSEvent) -> Void = { [weak self] _ in MainActor.assumeIsolated { self?.startDragPolling() } }
+        if let m = NSEvent.addGlobalMonitorForEvents(matching: .leftMouseDown, handler: pressed) { dragPressMonitors.append(m) }
+        if let m = NSEvent.addLocalMonitorForEvents(matching: .leftMouseDown, handler: { e in pressed(e); return e }) { dragPressMonitors.append(m) }
+        // Safety net for a press the monitors missed: the watcher then starts late, which only costs the start of that drag.
+        dragHeartbeat = Power.timer(1) { [weak self] in
+            if NSEvent.pressedMouseButtons & 1 == 1 { self?.startDragPolling() }
+        }
+    }
+
+    private func startDragPolling() {
         guard dragTimer == nil else { return }
         let timer = Timer(timeInterval: 0.05, repeats: true) { [weak self] _ in
             MainActor.assumeIsolated { self?.pollDrag() }
         }
         RunLoop.main.add(timer, forMode: .common)
         dragTimer = timer
+        pollDrag()
+    }
+
+    private func stopDragPolling() {
+        dragTimer?.invalidate()
+        dragTimer = nil
     }
 
     /// A dragged file is drawn at the system's dragging level (500), and macOS only offers a drop to windows below it. The
@@ -879,7 +932,7 @@ final class NotchWindowController {
         let fileDrag = down && board.changeCount != dragChangeCountAtPress && board.types?.contains(.fileURL) == true
         if fileDrag != loweredForDrag { setDragLevels(fileDrag) }
         DragState.shared.update(dragging: fileDrag, pointer: NSEvent.mouseLocation)
-        guard down else { dragOpened = false; return }
+        guard down else { dragOpened = false; stopDragPolling(); return }
         guard !dragOpened, !state.isExpanded, board.changeCount != dragChangeCountAtPress,
               board.types?.contains(.fileURL) == true, let screen = targetScreen else { return }
         let p = NSEvent.mouseLocation, f = screen.frame

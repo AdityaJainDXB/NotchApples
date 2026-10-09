@@ -15,7 +15,7 @@ jobs:
   build:
     runs-on: macos-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
       - name: Install build tools
         run: brew install xcodegen xcbeautify
       - name: Build the DMG
@@ -30,7 +30,7 @@ jobs:
           out="NotchApple-${v}-test-${GITHUB_SHA::7}.dmg"
           mv "dist/NotchApple-${v}.dmg" "dist/${out}"
           echo "file=dist/${out}" >> "$GITHUB_OUTPUT"
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: notch-apple-test-build
           path: ${{ steps.n.outputs.file }}

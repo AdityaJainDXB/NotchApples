@@ -94,7 +94,8 @@ enum ScreenMarkup {
         Task {
             do {
                 guard let input = try await CaptureManager.shared.capture(.region) else { return }
-                let scale = NSScreen.main?.backingScaleFactor ?? 2
+                // The region was captured on the display under the pointer, which isn't always the main one.
+                let scale = (NSScreen.screens.first { $0.frame.contains(NSEvent.mouseLocation) } ?? NSScreen.main)?.backingScaleFactor ?? 2
                 open(NSImage(cgImage: input.image, size: NSSize(width: CGFloat(input.image.width) / scale, height: CGFloat(input.image.height) / scale)))
             } catch {
                 Notifier.post(title: "Couldn't capture the screen", body: error.localizedDescription)

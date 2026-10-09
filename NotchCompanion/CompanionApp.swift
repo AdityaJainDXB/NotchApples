@@ -59,21 +59,23 @@ struct PairView: View {
             NavigationStack {
                 Form {
                     Section {
-                        TextField("6-digit code", text: $code).keyboardType(.numberPad).font(.system(size: 28, weight: .bold, design: .monospaced))
+                        TextField("12-character code", text: $code).keyboardType(.asciiCapable).textInputAutocapitalization(.characters)
+                            .autocorrectionDisabled().font(.system(size: 24, weight: .bold, design: .monospaced))
                             .focused($codeFocused)
                             .onChange(of: code) { _, new in
-                                // Pairs by itself once all six digits are in.
-                                let digits = String(new.filter(\.isNumber).prefix(6))
-                                if digits != new { code = digits }
-                                if digits.count == 6, !client.busy {
-                                    Task { await client.pair(with: c.name, code: digits); if client.pairing != nil { chosen = nil } }
+                                // Keeps only what can be in a code, in groups of four, and pairs by itself once all twelve are in.
+                                let typed = String(new.uppercased().filter { Companion.codeAlphabet.contains($0) || "OIL".contains($0) }.prefix(Companion.codeLength))
+                                let shown = Companion.displayCode(typed)
+                                if shown != new { code = shown }
+                                if typed.count == Companion.codeLength, !client.busy {
+                                    Task { await client.pair(with: c.name, code: typed); if client.pairing != nil { chosen = nil } }
                                 }
                             }
-                    } footer: { Text("The code is shown on \(c.name). Pairing starts as soon as you've typed it.") }
+                    } footer: { Text("The code is shown on \(c.name): 12 letters and numbers. Pairing starts as soon as you've typed it.") }
                     Button(client.busy ? "Pairing…" : "Pair") {
                         Task { await client.pair(with: c.name, code: code); if client.pairing != nil { chosen = nil } }
                     }
-                    .disabled(code.count != 6 || client.busy)
+                    .disabled(Companion.normalizedCode(code) == nil || client.busy)
                     if let m = client.message { Text(m).foregroundStyle(.orange) }
                 }
                 .navigationTitle("Pair with \(c.name)")

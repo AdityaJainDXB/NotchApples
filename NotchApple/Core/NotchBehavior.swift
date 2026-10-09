@@ -119,28 +119,6 @@ final class FullscreenWatcher {
     }
 }
 
-// MARK: - Edge trigger zone (Pro)
-
-/// A thin invisible strip along the top of the screen: resting the pointer there opens the notch,
-/// so you don't have to hit the notch exactly.
-final class EdgeTriggerView: NSView {
-    var onEnter: () -> Void = {}
-    var onExit: () -> Void = {}
-    private var tracking: NSTrackingArea?
-
-    override func updateTrackingAreas() {
-        super.updateTrackingAreas()
-        if let tracking { removeTrackingArea(tracking) }
-        let area = NSTrackingArea(rect: bounds, options: [.mouseEnteredAndExited, .activeAlways, .inVisibleRect], owner: self, userInfo: nil)
-        addTrackingArea(area)
-        tracking = area
-    }
-    override func mouseEntered(with event: NSEvent) { onEnter() }
-    override func mouseExited(with event: NSEvent) { onExit() }
-    // Clicks fall through to the menu bar.
-    override func hitTest(_ point: NSPoint) -> NSView? { nil }
-}
-
 // MARK: - Gestures
 
 /// What a gesture does. The defaults are free; changing them needs Pro.

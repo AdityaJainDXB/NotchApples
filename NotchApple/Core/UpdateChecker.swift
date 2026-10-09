@@ -123,7 +123,9 @@ final class UpdateChecker: ObservableObject {
     fileprivate static func rememberedRequired() -> Release? {
         let d = UserDefaults.standard
         guard let version = d.string(forKey: requiredKeys[0]), isNewer(version, than: installedVersion),
-              let dmg = d.string(forKey: requiredKeys[3]).flatMap(URL.init(string:)), let page = d.string(forKey: requiredKeys[4]).flatMap(URL.init(string:)) else { return nil }
+              // These defaults are plain and editable, so the same host rule as a fresh release applies here too.
+              let dmg = d.string(forKey: requiredKeys[3]).flatMap(URL.init(string:)), dmg.host == "github.com",
+              let page = d.string(forKey: requiredKeys[4]).flatMap(URL.init(string:)) else { return nil }
         return Release(version: version, title: d.string(forKey: requiredKeys[1]) ?? "", notes: d.string(forKey: requiredKeys[2]) ?? "", published: nil, dmgURL: dmg, pageURL: page)
     }
 
@@ -316,6 +318,16 @@ final class UpdateChecker: ObservableObject {
                 }
                 self.phase = .installing
                 do {
+                    // Before anything is mounted or opened: was this signed with the release key?
+                    let outcome: UpdateSigning.Outcome
+                    switch await Self.fetchSignature(for: release.dmgURL) {
+                    case .success(let text): outcome = UpdateSigning.outcome(file: dmg, version: release.version, signatureText: text)
+                    case .failure: outcome = .invalid("Couldn't fetch the update's signature to check it. Try again when you're online.")
+                    }
+                    guard UpdateSigning.allows(outcome) else {
+                        try? FileManager.default.removeItem(at: dmg)
+                        throw UpdateError.message(UpdateSigning.refusal(outcome))
+                    }
                     try await Self.installApp(from: dmg, expectedVersion: release.version)
                 } catch {
                     self.phase = .failed(error.localizedDescription)
@@ -329,6 +341,28 @@ final class UpdateChecker: ObservableObject {
             }
         }
         task.resume()
+    }
+
+    /// The signature published next to a DMG: its text, nil when the release has none (a clean 404), or a failure.
+    /// Anything other than a clean answer is a failure, so blocking this request can't downgrade an update to "unsigned".
+    private static func fetchSignature(for dmg: URL) async -> Result<String?, Error> {
+        guard let url = UpdateSigning.signatureURL(for: dmg), url.host == "github.com" else {
+            return .failure(UpdateError.message("The update's address isn't one this app trusts."))
+        }
+        var request = URLRequest(url: url)
+        request.setValue("NotchApple", forHTTPHeaderField: "User-Agent")
+        request.timeoutInterval = 20
+        do {
+            let (data, response) = try await URLSession.shared.data(for: request)
+            let status = (response as? HTTPURLResponse)?.statusCode
+            if status == 404 { return .success(nil) }
+            guard status == 200, data.count <= 1024, let text = String(data: data, encoding: .utf8) else {
+                return .failure(UpdateError.message("The update's signature couldn't be read."))
+            }
+            return .success(text)
+        } catch {
+            return .failure(error)
+        }
     }
 
     /// Mounts the DMG, checks the app, stages a copy, then hands off to a tiny

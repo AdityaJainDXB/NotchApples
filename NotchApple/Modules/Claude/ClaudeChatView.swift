@@ -80,7 +80,14 @@ final class AIConfig: ObservableObject {
 
 @MainActor
 final class ClaudeChatModel: ObservableObject {
-    static let shared = ClaudeChatModel()   // survives notch open/close
+    static let shared: ClaudeChatModel = {   // survives notch open/close
+        let m = ClaudeChatModel()
+        GeminiFallback.onSwitch = { [weak m] new in
+            guard let m, m.isSending else { return }    // a background caller: stay quiet
+            m.notice = "Module error encountered, switching Gemini module to \(new)…"
+        }
+        return m
+    }()
 
     @Published var messages: [ChatMessage] = []
     @Published var draft = ""

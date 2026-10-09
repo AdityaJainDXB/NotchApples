@@ -26,6 +26,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         AppDelegate.current = self
+        HostedAI.auth = LiveAIAuth()
         PremiumRegistry.load()          // the Ultimate modules, present only in official builds
         SandboxMigration.runIfNeeded()
         notchController = NotchWindowController()
@@ -112,8 +113,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         applyStatusItemPreference()
         applyHotkeyPreference()
         applyWindowPreferences()
+        // Every defaults write posts this, and a slider drag writes many times a second. The first change applies at once,
+        // the rest collapse to the latest within 150 ms, so the eight apply calls below run a handful of times a second at most.
         NotificationCenter.default.publisher(for: UserDefaults.didChangeNotification)
-            .receive(on: RunLoop.main)
+            .throttle(for: .milliseconds(150), scheduler: RunLoop.main, latest: true)
             .sink { [weak self] _ in
                 self?.applyStatusItemPreference()
                 self?.applyHotkeyPreference()

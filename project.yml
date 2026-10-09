@@ -92,6 +92,7 @@ targets:
       - NotchApple/Core/HotCornerLogic.swift
       - NotchApple/Modules/Games/GameEngines.swift
       - NotchApple/Core/ClaudeCodeStatusLogic.swift
+      - NotchApple/Modules/Claude/GeminiFallback.swift
       - NotchApple/Modules/Claude/GeminiFallbackLogic.swift
       - NotchApple/Modules/Tools/MathEngine.swift
       - NotchApple/Core/ModuleLayoutLogic.swift
@@ -101,6 +102,8 @@ targets:
       - NotchApple/Core/TodoLogic.swift
       - NotchApple/Core/ReleaseNotesLogic.swift
       - NotchApple/Core/UpdateCadenceLogic.swift
+      - NotchApple/Core/UpdateSigning.swift
+      - NotchApple/Modules/Plugins/PluginPinning.swift
       - NotchApple/Modules/Radar/RadarLogic.swift
       - NotchApple/Core/EntitlementLogic.swift
       - NotchApple/Modules/Wallpaper/WallpaperLogic.swift
@@ -123,7 +126,6 @@ targets:
       - NotchApple/Core/LinkShelfLogic.swift
       - NotchApple/Core/MeetingSummaryLogic.swift
       - NotchApple/Core/EmojiData.swift
-      - NotchApple/Modules/Tools/Converter.swift
       - NotchApple/Core/VPNTunnel.swift
       - CompanionKit
     settings:

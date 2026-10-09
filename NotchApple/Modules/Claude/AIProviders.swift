@@ -156,16 +156,26 @@ enum AIError: LocalizedError {
 /// Notch apple AI: where it lives and the token it needs. Answers come from the licence server, which checks the key
 /// and a daily allowance and uses the project's own AI key, so a copy of the app without a real key gets nothing.
 enum HostedAI {
+    /// Set once at launch (`LiveAIAuth`); tests set a stub. Nil means no licensing is available.
+    static var auth: AIAuthProvider?
+
     static func base() async throws -> String {
-        guard let server = await LicenseServer.url() else { throw AIError.http(0, "Couldn't reach Notch apple's server. Check your connection.") }
+        guard let server = await auth?.serverURL() else { throw AIError.http(0, "Couldn't reach Notch apple's server. Check your connection.") }
         return server.absoluteString.trimmingCharacters(in: CharacterSet(charactersIn: "/")) + "/ai/v1"
     }
 
     @MainActor static func token() async throws -> String {
-        guard Entitlements.shared.key != nil else { throw AIError.http(401, "Notch apple AI is included with Pro and Ultimate. Add your key in Settings → License.") }
-        guard let t = await EntitlementService.shared.token() else { throw AIError.http(0, "Couldn't check your key with the server. Connect to the internet and try again.") }
+        guard let auth, auth.hasKey() else { throw AIError.http(401, "Notch apple AI is included with Pro and Ultimate. Add your key in Settings → License.") }
+        guard let t = await auth.token() else { throw AIError.http(0, "Couldn't check your key with the server. Connect to the internet and try again.") }
         return t
     }
+}
+
+/// What the hosted AI needs from licensing, so the AI layer doesn't depend on the licensing code.
+protocol AIAuthProvider {
+    func serverURL() async -> URL?
+    @MainActor func hasKey() -> Bool
+    @MainActor func token() async -> String?
 }
 
 enum AIClient {
