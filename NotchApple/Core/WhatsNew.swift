@@ -20,6 +20,10 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.0.36", date: "10 October 2026", headline: "A bigger Plane world, and the world leaderboard", items: [
+            "Plane: the map is about three times bigger, with plains, ranges and sea. Pick where in the world you fly (Dubai, London, Paris, New York, Tokyo, Sydney, Cairo, San Francisco) or press My location, or type a city or country. Each place has its landmark beside the runway.",
+            "Plane: a World leaderboard. Tick 🌍 when you save a score to share your name, plane and score; see everyone's by challenge, all time or this week.",
+        ]),
         ReleaseNote(version: "2.0.35", date: "10 October 2026", headline: "Live wallpaper", items: [
             "New Wallpaper tab (Pro): play your own video (up to 60 seconds, up to 4K) or a free NASA clip as your desktop wallpaper, on every display.",
             "It pauses on battery, in Low Power Mode, on sleep or lock, and when windows cover it. The lock screen shows a still from the video.",

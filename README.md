@@ -48,7 +48,7 @@ Notch apple lives in the black cutout at the top of your MacBook screen (a small
 | ⌨️ **Klick** *(Pro)* | Mechanical keyboard sounds as you type, in any app: Mechanical, Cream, Holy Panda, Blue, Red, Brown, Topre, Typewriter or Bubble, plus four premium sounds downloaded with your key (Cherry MX Black, Gateron Ink, Alps, Buckling spring), each with its own volume, and an on / off switch |
 | 🖼 **Live wallpaper** *(Pro, new)* | Play a video as your desktop wallpaper: your own (up to 60 s, up to 4K) or a free NASA clip. Pauses on battery and when windows cover it; the lock screen shows a still |
 | 📡 **Flight Radar** *(new)* | Every aircraft around you, live, on a round radar with callsign, type, height and speed (the free adsb.lol feed; your location is rounded to about 1 km and only sent while the tab is open) |
-| ✈️ **Plane game** *(new)* | A 3D flight sim in Games: Cessna, Piper, Boeing 737, 747, 777 and Airbus A320, A350, A380, with real airspeed and altimeter dials, engine sounds, flaps in notches, retractable gear, tail strikes, damage and spoken GPWS callouts. Fly with the mouse (**M** switches it off) |
+| ✈️ **Plane game** *(new)* | A 3D flight sim in Games: Cessna, Piper, Boeing 737, 747, 777 and Airbus A320, A350, A380, with real airspeed and altimeter dials, engine sounds, flaps in notches, retractable gear, tail strikes, damage and spoken GPWS callouts. Fly with the mouse (**M** switches it off). Fly over Dubai, London, Paris, New York, Tokyo, Sydney, Cairo or San Francisco (or your own location) with their landmarks, and compete on a world leaderboard |
 | 🤖 **Notch apple AI** *(included with Pro)* | Ask without setting up any key: the request goes to Notch apple's server, which checks your key and answers with the project's own AI account (Pro 60 messages a day, Ultimate 200). Your own keys still work with no limit |
 | 🗓 **Updates once a week** | Optional and off by default: be asked about updates once a week instead of for every release |
 | 🧰 **30+ more tools** | Now Playing, window snapping, clipboard, file shelf, focus timer, Sports, Messenger, notes, search and more |
@@ -211,6 +211,12 @@ All screenshots use sample data.
 ## What's new
 
 > **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is still in the repository's tags.
+
+### Mac 2.0.36 · Windows 1.47.0 BETA · 10 October 2026 · ✈️ A bigger Plane world and a world leaderboard
+
+- **About three times more map**, with plains, ranges and a sea beyond the valley.
+- **Fly somewhere real.** On the Fly tab pick Dubai, London, Paris, New York, Tokyo, Sydney, Cairo or San Francisco, press **My location**, or type a city or country (matched to the nearest scenery we have). Each has its landmark beside the runway: Burj Khalifa, Tower Bridge and Big Ben, the Eiffel Tower, the Empire State Building, Tokyo Tower, the Opera House and Harbour Bridge, the pyramids, the Golden Gate Bridge.
+- **World leaderboard.** Tick 🌍 when you save a score to post your name, plane and score to a shared top 100 per challenge (all time or this week). Only those three things (and the place you flew) are sent, and only when you choose; the server keeps nothing else. Scores are checked for plausibility, not proven.
 
 ### Mac 2.0.35 · 10 October 2026 · 🖼 Live wallpaper (Pro)
 

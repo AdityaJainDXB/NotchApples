@@ -56,6 +56,8 @@ struct PrivacyDashboard: View {
             Destination(host: "CoinGecko, Yahoo Finance", what: "Symbols you add", when: "Markets (Pro)", active: settings.marketsEnabled),
             Destination(host: "ADSB.lol", what: "Flight numbers you pin", when: "Live flight status (Pro)", active: !FlightWatcher.shared.pinned.isEmpty),
             Destination(host: "images-assets.nasa.gov", what: "Nothing about you: the clip you chose to get", when: "Wallpaper tab, free library (Pro)", active: settings.wallpaperEnabled),
+            Destination(host: "Notch apple licence server", what: "Your pilot name, plane and score, only when you tick the world box and save", when: "Games → Plane, world leaderboard", active: settings.gamesEnabled),
+            Destination(host: "open-meteo.com, ipwho.is", what: "A city name you type, or your approximate location", when: "Games → Plane, only when you press Go or My location", active: settings.gamesEnabled),
             Destination(host: "ADSB.lol", what: "Your approximate location (rounded to about 1 km)", when: "Flight Radar tab, only while it is open", active: settings.radarEnabled),
             Destination(host: "open.er-api.com", what: "Nothing about you: today's rates", when: "Currency conversion (Pro)", active: Entitlements.shared.canUse(.currency)),
             Destination(host: "License server", what: "Your key and a one-way hash of this Mac", when: "Activating or deactivating a key; a daily signed revocation list; renewing the 72-hour tokens that unlock server-held content (premium Klick sounds, Clipboard Link)", active: Entitlements.shared.key != nil),

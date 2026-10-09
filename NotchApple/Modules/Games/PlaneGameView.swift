@@ -62,6 +62,14 @@ private struct PlaneWebView: NSViewRepresentable {
     func makeNSView(context: Context) -> PlaneWKWebView {
         let config = WKWebViewConfiguration()
         config.mediaTypesRequiringUserActionForPlayback = []
+        // Where the user is (their Weather location), so the Plane game can pick the nearest scenery.
+        let here = SharedStore.weatherLocation
+        if here.latitude != 0 || here.longitude != 0 {
+            let name = here.name.replacingOccurrences(of: "\\", with: "").replacingOccurrences(of: "\"", with: "")
+            config.userContentController.addUserScript(WKUserScript(
+                source: "window.NotchDeviceLocation={lat:\(here.latitude),lon:\(here.longitude),name:\"\(name)\"};",
+                injectionTime: .atDocumentStart, forMainFrameOnly: true))
+        }
         let view = PlaneWKWebView(frame: .zero, configuration: config)
         view.setValue(false, forKey: "drawsBackground")
         view.loadFileURL(url, allowingReadAccessTo: url.deletingLastPathComponent())

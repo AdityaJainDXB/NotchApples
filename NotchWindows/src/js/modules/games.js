@@ -92,6 +92,7 @@ function plane(host) {
   host.style.position = 'relative';
   host.replaceChildren(box);
   let stop = () => {}, gone = false;
+  import('../services/weather.js').then((w) => w.location()).then((l) => { window.NotchDeviceLocation = { lat: l.lat, lon: l.lon, name: l.name }; }).catch(() => {});
   import('../games/plane-sim.js').then(() => { if (!gone) stop = window.NotchPlaneGame.mount(box); });
   return () => { gone = true; stop(); host.style.position = ''; };
 }
