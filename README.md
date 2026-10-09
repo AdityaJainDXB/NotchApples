@@ -43,6 +43,7 @@ Notch apple lives in the black cutout at the top of your MacBook screen (a small
 | ⚽ **Sports & cricket** | Your team with match alerts, fixtures, league tables and match details (goals, cards, lineups); national teams, India cricket and the IPL |
 | 🏁 **F1** | Live running order, classification with gaps and tyres, schedule countdown, standings, a favourite driver or team beside the notch |
 | 🎾 **Tennis** *(new)* | Every ATP and WTA match with live set scores in **Men, Women and Mixed** tabs, **Grand Slams in red**, earlier weeks and past Slams one click back, the **ATP and WTA top 20**, and your favourite players' live score beside the notch |
+| 🪄 **Do It** *(Ultimate)* | Tell the AI what to do (a worksheet, a form, a task) and it does it on your screen, step by step, with a Start button, a Stop button that works from any app, and questions before anything risky |
 | 🔁 **Convert** *(Ultimate)* | Drop any file and turn it into another kind: PPTX → PDF, HEIC → JPG, DOCX → PDF, MOV → MP4, PNG → ICO, XLSX → CSV, PDF → pictures, pictures → one PDF, zip and unzip. Saved next to the original |
 | ⌨️ **Klick** *(Pro)* | Mechanical keyboard sounds as you type, in any app: Mechanical, Cream, Holy Panda, Blue, Red, Brown, Topre, Typewriter or Bubble, each with its own volume, and an on / off switch |
 | 🧰 **30+ more tools** | Now Playing, window snapping, clipboard, file shelf, focus timer, Sports, Messenger, notes, search and more |
@@ -58,10 +59,10 @@ Pick your computer. Both buttons start the download straight away. The Mac butto
   </tr>
   <tr>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/v2.0.27/NotchApple-2.0.27.dmg"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.0.27</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/v2.0.30/NotchApple-2.0.30.dmg"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.0.30</b></a>
     </td>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 1.38.0 BETA</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 1.42.0 BETA</b></a>
     </td>
   </tr>
   <tr>
@@ -216,6 +217,11 @@ All screenshots use sample data.
 - **Round airspeed and altimeter dials** that change with the aircraft (coloured arcs for flaps, normal flying, caution and the never-exceed line; three altimeter hands), an engine gauge (rpm or jet N1 %), fuel and flaps position.
 - **Engines that sound like engines:** a piston with a propeller beat on the Cessna and Piper, a spooling jet on the 737, 747 and 777, plus wind, tyres, a stall horn and an overspeed warning.
 - **Tail strikes:** rotating too steeply scrapes and damages the tail (weaker pitch and rudder; a hard scrape breaks it off). Flaps go down in notches (**F** / **V**), fuel runs out, and airliners call **ROTATE**.
+
+### Mac 2.0.30 · Windows 1.42.0 BETA · 9 October 2026 · 🪄 Do It, and lyrics on your screen
+
+- **Do It (Ultimate): the AI does the task on your screen.** A new **Do It** tab: describe what you want ("fill in this worksheet", "find the cheapest option"), press **Start**, and the AI looks at your screen and clicks, types, scrolls and presses keys, one step at a time, telling you what it's doing. A bar at the bottom of the screen shows progress with a **Stop** button, and **Ctrl+Option+Esc** (Mac) / **Ctrl+Alt+Esc** (Windows) stops it from any app. It **asks first** before anything that sends, buys, deletes, posts, or involves passwords and payment, and never types passwords or card numbers; **Confirm every step** lets you approve each action; it stops after 40 steps. It needs a vision-capable model chosen in Settings → AI (Gemini, Claude, ChatGPT…) and, on the Mac, **Screen Recording** and **Accessibility**. Screenshots go to your chosen AI provider while it works, and only then.
+- **Lyrics on the side of your screen (Pro).** In **Now Playing**, switch on **Lyrics on screen**: synced lyrics float along the left or right edge of your screen, Spotify-style (the current line big and bright, the lines around it dimmer), above your other apps and ignoring the mouse, fading away when nothing plays. Off by default.
 
 ### Windows 1.39.0 BETA · 9 October 2026 · Updates once a week, if you want
 

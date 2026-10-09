@@ -20,6 +20,10 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.0.30", date: "9 October 2026", headline: "Do It, and lyrics on the side of your screen", items: [
+            "Do It (Ultimate): tell the AI what to do and it does it on your screen, step by step. Start and Stop, asks before anything risky, Ctrl+Option+Esc stops it from any app.",
+            "Now Playing: Lyrics on screen (Pro) floats the synced lyrics along the side of your screen while music plays.",
+        ]),
         ReleaseNote(version: "2.0.29", date: "9 October 2026", headline: "Flight Radar, Airbus and landing gear", items: [
             "New Flight Radar tab: a round radar of every aircraft around you, live, with callsign, type, height and speed. It uses your location rounded to about 1 km and only asks while the tab is open.",
             "Plane game: Airbus A320, A350 and A380, and a gear lever (G) on the airliners with gear lights, a too-low warning and belly landings if you forget.",
