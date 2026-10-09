@@ -206,6 +206,11 @@ All screenshots use sample data.
 
 > **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is still in the repository's tags.
 
+### Mac 2.0.30 · Windows 1.42.0 BETA · 9 October 2026 · GPWS callouts, and games that fit
+
+- **Realistic GPWS and callouts for the airliners in the Plane game**, spoken with your computer's own voice: take-off calls (One hundred knots, V one, Rotate, Positive rate), radio-altimeter calls on the approach (One thousand … Ten, Minimums, Retard) and warnings (Sink rate, Terrain terrain, Pull up, Too low gear / terrain / flaps, Glideslope, Bank angle). A **GPWS voice** switch is in Controls.
+- **Games no longer cut off in the notch:** the Mac list scrolls and keeps Sound in view; on Windows every game scales to fit.
+
 ### Mac 2.0.29 · Windows 1.41.0 BETA · 9 October 2026 · Flight Radar, Airbus aircraft and retractable gear
 
 - **Flight Radar** tab: a round radar centred on you with every aircraft around you, live (adsb.lol's free feed). Ranges of 25 to 200 nm, click a plane for callsign, type, registration, height, speed and heading. Your location is rounded to about 1 km, and it only asks while the tab is open.

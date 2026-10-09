@@ -20,6 +20,10 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.0.30", date: "9 October 2026", headline: "GPWS callouts, and games that fit", items: [
+            "Plane: the airliners now speak realistic GPWS warnings and radio-altimeter callouts (Sink rate, Terrain, Pull up, Minimums, Retard…). Switch it off in Games → Plane → Controls.",
+            "The Games list scrolls and keeps the Sound switch in view, so nothing is cut off in the notch.",
+        ]),
         ReleaseNote(version: "2.0.29", date: "9 October 2026", headline: "Flight Radar, Airbus and landing gear", items: [
             "New Flight Radar tab: a round radar of every aircraft around you, live, with callsign, type, height and speed. It uses your location rounded to about 1 km and only asks while the tab is open.",
             "Plane game: Airbus A320, A350 and A380, and a gear lever (G) on the airliners with gear lights, a too-low warning and belly landings if you forget.",
