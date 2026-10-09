@@ -41,6 +41,9 @@ jobs:
           FIREBASE_PLIST_B64: ${{ secrets.FIREBASE_PLIST_B64 }}
         run: ./scripts/build_dmg.sh
 
+      - name: Launch check (the app must start and stay running)
+        run: ./scripts/launch-check.sh
+
       - name: Read the version
         id: v
         run: echo "version=$(grep MARKETING_VERSION project.yml | head -1 | sed -E 's/.*\"(.*)\".*/\1/')" >> "$GITHUB_OUTPUT"

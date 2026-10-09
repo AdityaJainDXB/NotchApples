@@ -48,7 +48,7 @@ Notch apple lives in the black cutout at the top of your MacBook screen (a small
 
 ## Download
 
-Pick your computer. Both buttons start the download straight away. The Mac button is pinned to version 2.0.19
+Pick your computer. Both buttons start the download straight away. The Mac button is pinned to version 2.0.20
 
 <table align="center">
   <tr>
@@ -57,7 +57,7 @@ Pick your computer. Both buttons start the download straight away. The Mac butto
   </tr>
   <tr>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/v2.0.19/NotchApple-2.0.19.dmg"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.0.19</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/v2.0.20/NotchApple-2.0.20.dmg"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.0.20</b></a>
     </td>
     <td align="center">
       <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 1.37.0 BETA</b></a>
@@ -205,12 +205,16 @@ All screenshots use sample data.
 
 > **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is still in the repository's tags.
 
-### Mac 2.0.19 · Windows 1.37.0 BETA · 9 October 2026 · ⌨️ Klick, and Plane controls that make sense
+### Mac 2.0.20 · Windows 1.37.0 BETA · 9 October 2026 · ⌨️ Klick, and Plane controls that make sense
 
 - **Klick (Pro): your keyboard sounds like a mechanical one.** A new **Klick** tab: switch it on and every key you type, in any app, plays a switch sound. Choose from **Cream** (deep, smooth thock), **Holy Panda** (bassy, tactile), **Blue** (loud and clicky), **Red** (light and linear), **Brown** (gentle bump), **Topre** (muted rubber-dome thock), **Typewriter** (metal clack, with a bell on Enter) and **Bubble** (playful pops). Click a sound to choose it and hear it, and the chosen one gets its own **volume slider** (each sound remembers its own volume). The space bar and Enter sound bigger, like real stabilised keys, and there is an optional key-up sound. Hearing keys in other apps needs Accessibility on the Mac; only the fact that a key was pressed is used, never what you type, and nothing leaves your computer. The sounds are made by `scripts/klick_sounds.py` and shared by both apps.
 - **Plane: up climbs.** Moving the cursor **up now climbs** and down dives, and **↑** climbs too. **Invert** in Controls brings back the flight-stick way.
 - **Plane: the mouse stays on the notch.** It steers inside a **small ring** in the middle of the view: the edge of the ring is full stick, so a short move is enough (higher sensitivity makes the ring smaller). It takes control once you move the cursor into the middle, so a cursor left anywhere after Take off can't tip the plane, and it lets go when the cursor leaves the game.
 - **Plane: keys always work on the Mac.** The arrows, W/S and the rest reach the game even when the notch's keyboard focus is somewhere else.
+
+### Mac 2.0.19 · 9 October 2026 · Fixes the app not opening
+
+- **Fixed:** 2.0.17 and 2.0.18 crashed at launch (the lid-closed Keep Awake tool). If Notch apple won't open, download this DMG and replace the app.
 
 ### Mac 2.0.18 · 9 October 2026 · Lid-closed Keep Awake asks only when used
 

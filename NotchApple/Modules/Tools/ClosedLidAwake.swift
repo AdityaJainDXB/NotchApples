@@ -23,7 +23,9 @@ final class ClosedLidAwake: ObservableObject {
     /// Set when the low-battery prompt was cancelled, so it is not asked again until the switch is flipped.
     private var declinedAutoOff = false
 
-    init() { refresh() }
+    /// Only reads the state: refreshing from here would call back into the notch while this object is still being
+    /// created, which crashed the app at launch in 2.0.17 and 2.0.18.
+    init() { isOn = Self.parseSleepDisabled(Self.run("/usr/bin/pmset", ["-g"])); updateWatch() }
 
     /// Reads the real setting from the system.
     func refresh() {
