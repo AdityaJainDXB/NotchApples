@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Do It</title>
+<style>
+  html, body { margin: 0; height: 100%; overflow: hidden; background: #16161a; color: #f2f2f5; font: 13px/1 "Segoe UI", system-ui, sans-serif; user-select: none; }
+  body { display: flex; align-items: center; gap: 10px; padding: 0 8px 0 14px; box-sizing: border-box; border: 1px solid #34343c; border-radius: 12px; }
+  .dot { width: 9px; height: 9px; border-radius: 50%; background: #5ac8fa; flex: none; animation: p 1.2s ease-in-out infinite; }
+  .dot.wait { background: #ffb340; animation: none; }
+  @keyframes p { 50% { opacity: .3; } }
+  #t { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  button { flex: none; border: 0; border-radius: 8px; padding: 7px 14px; background: #e5484d; color: #fff; font: 600 12px "Segoe UI", system-ui, sans-serif; cursor: pointer; }
+  button:hover { background: #f0585d; }
+</style>
+</head>
+<body>
+<span class="dot" id="d"></span>
+<span id="t">Do It · starting…</span>
+<button id="s" title="Stop (Ctrl+Alt+Esc)">Stop</button>
+<script>
+  const T = window.__TAURI__;
+  const text = document.getElementById('t'), dot = document.getElementById('d');
+  T?.event.listen('doit-status', (e) => {
+    const p = e.payload || {};
+    text.textContent = String(p.text || '');
+    text.title = text.textContent;
+    dot.classList.toggle('wait', !!p.waiting);
+  });
+  document.getElementById('s').addEventListener('click', () => T?.event.emit('doit-stop', {}));
+</script>
+</body>
+</html>
