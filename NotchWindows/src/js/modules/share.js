@@ -1,6 +1,7 @@
 // Share: PairDrop between this PC and nearby Macs and PCs, and private chat. Receive shows your code; Send takes
 // theirs and your files or folders; Chat opens a private conversation with a device by its code. It runs in the
 // background (services/pairdrop.js), so this tab only shows it. Works with Notch apple on Mac.
+import { magnet } from '../services/magnet.js';
 import { el, load, save } from '../store.js';
 import { invoke, listen, openUrl } from '../native.js';
 import { segmented, toast } from '../ui.js';
@@ -109,5 +110,6 @@ export function render(root) {
   let unDrop = null;
   listen('tauri://drag-drop', (e) => { if (mode === 'send') send(e?.paths || []); else toast('Open the Send tab and type their code first.'); }).then((u) => { unDrop = u; });
   paint();
-  return () => { stopWatching(); unDrop?.(); };
+  const offMag = magnet(root, 'Let go to share');
+  return () => { stopWatching(); unDrop?.(); offMag(); };
 }

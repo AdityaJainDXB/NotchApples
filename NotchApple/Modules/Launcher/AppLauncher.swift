@@ -132,7 +132,7 @@ struct AppLauncherView: View {
                 }
             }
             .animation(Theme.spring, value: targeted)
-            .onDrop(of: [.fileURL], isTargeted: $targeted) { providers in
+            .magneticDrop(of: [.fileURL], label: "Let go to add the app", isTargeted: $targeted) { providers in
                 for provider in providers {
                     _ = provider.loadObject(ofClass: URL.self) { url, _ in
                         if let url { DispatchQueue.main.async { withAnimation(Theme.spring) { _ = store.add(url) } } }

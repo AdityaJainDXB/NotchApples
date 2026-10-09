@@ -308,7 +308,7 @@ struct HomeWidgetCard: View {
             case .clipboard: ClipboardCard()
             case .nowPlaying: NowPlayingCard()
             case .notes: NotesCard()
-            case .claudeUsage: ClaudePaceCard()
+            case .claudeUsage: PremiumRegistry.claudePace?() ?? AnyView(EmptyView())
             default: EmptyView()
             }
         }
@@ -432,10 +432,23 @@ private struct ClipboardCard: View {
 
 private struct NowPlayingCard: View {
     @StateObject private var monitor = NowPlayingMonitor.shared
+    @AppStorage("nowPlaying.cassette") private var cassette = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
-            Text("Now playing").sectionTitle()
+            HStack {
+                Text("Now playing").sectionTitle()
+                Spacer()
+                Button { withAnimation(Theme.spring) { cassette.toggle() } } label: {
+                    Image(systemName: cassette ? "rectangle.stack.fill" : "recordingtape").font(.system(size: 11))
+                }
+                .buttonStyle(.plain).foregroundStyle(Theme.accentBright)
+                .help(cassette ? "Back to the normal player" : "Cassette mode")
+                .accessibilityLabel(cassette ? "Switch to the normal player" : "Switch to cassette mode")
+            }
+            if cassette {
+                CassetteView(monitor: monitor)
+            } else {
             HStack(spacing: 10) {
                 Group {
                     if let art = monitor.artwork { Image(nsImage: art).resizable().scaledToFill() }
@@ -458,6 +471,7 @@ private struct NowPlayingCard: View {
                 .buttonStyle(.plain).foregroundStyle(Theme.accentBright).help("Play or pause")
                 IconButton(systemImage: "forward.fill", help: "Next") { MediaControl.send(.next) }
                 Spacer()
+            }
             }
         }
     }

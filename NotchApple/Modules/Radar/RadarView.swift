@@ -35,15 +35,17 @@ struct RadarView: View {
             HStack(spacing: 8) {
                 Image(systemName: "airplane").foregroundStyle(Theme.accentBright)
                 VStack(alignment: .leading, spacing: 0) {
-                    Text("Flight Radar").font(.system(size: 14, weight: .bold)).foregroundStyle(.white)
+                    Text("Flight Radar").font(.system(size: 14, weight: .bold)).foregroundStyle(.white).lineLimit(1).fixedSize()
                     Text("Near \(location.cityName.isEmpty ? model.place.name : location.cityName) · \(model.visible.count) aircraft")
                         .font(.system(size: 10)).foregroundStyle(Theme.textSecondary).lineLimit(1)
                 }
+                .layoutPriority(1)
                 Spacer(minLength: 4)
+                // A menu instead of four segments: the segments were wider than the card and ran into the refresh button.
                 Picker("", selection: $model.range) {
                     ForEach(RadarLogic.ranges, id: \.self) { Text("\($0) nm").tag($0) }
                 }
-                .pickerStyle(.segmented).labelsHidden().frame(width: 190)
+                .pickerStyle(.menu).labelsHidden().fixedSize()
                 IconButton(systemImage: "arrow.clockwise", help: "Refresh") { model.refresh() }
             }
             GeometryReader { geo in

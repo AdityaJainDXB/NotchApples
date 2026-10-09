@@ -442,6 +442,7 @@ final class NotchTriggerView: NSView {
     // Spring-loading: dragging a file onto the notch opens it on the File Shelf,
     // and the drop itself lands in the shelf's drop zone.
     override func draggingEntered(_ sender: NSDraggingInfo) -> NSDragOperation {
+        DragLog.log.notice("closed notch: drag entered")
         onDragEnter()
         return .copy
     }
@@ -571,7 +572,7 @@ final class NotchWindowController {
         container.onHoverChange = { [weak self] inside in self?.hoverChanged(inside: inside, overPanel: true) }
         levelObservers = observeWindowLevelEvents()
         state.toggle = { [weak self] in self?.toggle() }
-        state.close = { [weak self] in self?.collapse() }
+        state.close = { [weak self] in self?.collapse(force: true) }
         applyEdgeTrigger()
     }
 
@@ -654,7 +655,7 @@ final class NotchWindowController {
                     case .track: MediaControl.send(a.width < 0 ? .next : .previous)
                     default: break
                     }
-                } else if a.height < -40, abs(a.height) > abs(a.width) * 1.2, NotchGesture.openSwipeUp.action == .close {
+                } else if a.height < -40, abs(a.height) > abs(a.width) * 1.2, NotchGesture.openSwipeUp.action == .close, !SettingsManager.shared.stickyNotch {
                     self.swipeFired = true
                     self.collapse()
                 }
@@ -682,6 +683,7 @@ final class NotchWindowController {
 
     /// Puts both windows back on top after a Space change, wake or display change.
     func reassertWindowLevels() {
+        if loweredForDrag { setDragLevels(true); return }
         trigger.keepAboveEverything(orderFront: !SettingsManager.shared.isNotchHidden)
         panel.keepAboveEverything(extraLevels: 1)
         reposition()
@@ -690,6 +692,7 @@ final class NotchWindowController {
     func show() {
         reposition()
         trigger.orderFrontRegardless()
+        installDragWatcher()
         // Keep the expanded panel on screen but invisible and click-through while
         // closed. Opening then only has to fade it in and animate — no window has
         // to be created or drawn from scratch mid-animation, so it's as smooth as closing.
@@ -772,7 +775,7 @@ final class NotchWindowController {
                width: size.width, height: size.height)
     }
 
-    func toggle() { state.isExpanded ? collapse() : expand() }
+    func toggle() { state.isExpanded ? collapse(force: true) : expand() }
 
     // MARK: Invisibility (⌃⌥O by default)
 
@@ -809,7 +812,7 @@ final class NotchWindowController {
     }
 
     var isOpen: Bool { state.isExpanded }
-    func closeNotch() { collapse() }
+    func closeNotch() { collapse(force: true) }
 
     func expand() {
         guard !state.isExpanded else { return }
@@ -827,6 +830,63 @@ final class NotchWindowController {
         withAnimation(Duo.open) { state.isExpanded = true }
         NotchFeedback.opened()
         installMonitors()
+    }
+
+    // MARK: Drags from anywhere
+
+    private var dragTimer: Timer?
+    private var dragOpened = false
+    private var buttonWasDown = false
+    private var dragChangeCountAtPress = 0
+
+    /// Opens the notch when a file is dragged to the top centre of the screen, whatever is under the pointer.
+    /// macOS doesn't send mouse-drag events to other apps while a drag is under way, so an event monitor never sees
+    /// it; instead the pointer and the drag clipboard are polled. A new drag is recognised by the drag clipboard
+    /// changing after the button went down. The collapsed notch's own drop target can't be relied on either: it can be
+    /// hidden, covered by the menu bar or a full-screen app, or under another window.
+    private func installDragWatcher() {
+        guard dragTimer == nil else { return }
+        let timer = Timer(timeInterval: 0.05, repeats: true) { [weak self] _ in
+            MainActor.assumeIsolated { self?.pollDrag() }
+        }
+        RunLoop.main.add(timer, forMode: .common)
+        dragTimer = timer
+    }
+
+    /// A dragged file is drawn at the system's dragging level (500), and macOS only offers a drop to windows below it. The
+    /// notch sits at level 1000 when "keep the notch visible in full-screen apps" is on, so the file slid underneath it
+    /// and nothing accepted the drop. While a file is being dragged the notch drops below the dragging layer, and goes
+    /// back up when the button is released.
+    private var loweredForDrag = false
+
+    private func setDragLevels(_ lower: Bool) {
+        loweredForDrag = lower
+        if lower {
+            trigger.level = NSWindow.Level(rawValue: NSWindow.Level.statusBar.rawValue + 1)
+            panel.level = NSWindow.Level(rawValue: NSWindow.Level.statusBar.rawValue + 2)
+        } else {
+            trigger.keepAboveEverything(orderFront: false)
+            panel.keepAboveEverything(extraLevels: 1, orderFront: false)
+        }
+        DragLog.log.notice("notch levels for drag: \(lower ? "lowered" : "restored", privacy: .public)")
+    }
+
+    private func pollDrag() {
+        let down = NSEvent.pressedMouseButtons & 1 == 1
+        defer { buttonWasDown = down }
+        let board = NSPasteboard(name: .drag)
+        if down && !buttonWasDown { dragChangeCountAtPress = board.changeCount; dragOpened = false }
+        let fileDrag = down && board.changeCount != dragChangeCountAtPress && board.types?.contains(.fileURL) == true
+        if fileDrag != loweredForDrag { setDragLevels(fileDrag) }
+        DragState.shared.update(dragging: fileDrag, pointer: NSEvent.mouseLocation)
+        guard down else { dragOpened = false; return }
+        guard !dragOpened, !state.isExpanded, board.changeCount != dragChangeCountAtPress,
+              board.types?.contains(.fileURL) == true, let screen = targetScreen else { return }
+        let p = NSEvent.mouseLocation, f = screen.frame
+        guard p.y > f.maxY - 70, abs(p.x - f.midX) < 240 else { return }
+        dragOpened = true
+        DragLog.log.notice("drag near the notch: opening")
+        openForDrop()
     }
 
     /// Opens straight to the File Shelf while a file is being dragged.
@@ -917,8 +977,11 @@ final class NotchWindowController {
         hoverWork = work
     }
 
-    func collapse() {
+    /// `force` is for something you did on purpose (Esc, the close button, the shortcut, opening Settings). Anything automatic
+    /// (a click elsewhere, a Space change, hover, a swipe) leaves a pinned notch open.
+    func collapse(force: Bool = false) {
         guard state.isExpanded else { return }
+        if SettingsManager.shared.stickyNotch && !force { return }
         hoverWork?.cancel()
         openedByHover = false
         pinnedByClick = false
@@ -946,7 +1009,7 @@ final class NotchWindowController {
             self.collapse()
         }
         // Esc works even when another app is frontmost (Carbon hot key, active only while open)…
-        GlobalHotkeyManager.shared.register(.closeNotch) { [weak self] in self?.collapse() }
+        GlobalHotkeyManager.shared.register(.closeNotch) { [weak self] in self?.collapse(force: true) }
         // …and as a local fallback when the panel itself has focus.
         clickInsideMonitor = NSEvent.addLocalMonitorForEvents(matching: [.leftMouseDown, .rightMouseDown]) { [weak self] event in
             guard let self else { return event }
@@ -961,7 +1024,7 @@ final class NotchWindowController {
         }
         keyMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
             guard let self else { return event }
-            if event.keyCode == 53 { self.collapse(); return nil }
+            if event.keyCode == 53 { self.collapse(force: true); return nil }
             // Keyboard control: ⌘1–⌘9 jump to a tab, ⌘[ and ⌘] (or ⌃Tab / ⌃⇧Tab) step through them.
             let mods = event.modifierFlags.intersection(.deviceIndependentFlagsMask)
             if mods == .command, let c = event.charactersIgnoringModifiers, let n = Int(c), (1...9).contains(n) {

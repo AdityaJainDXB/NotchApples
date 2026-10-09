@@ -322,6 +322,7 @@ struct NowPlayingView: View {
     @StateObject private var sleep = MusicSleepTimer.shared
     /// The lyrics view (cover, progress and big scrolling lyrics), opened by clicking the song's title.
     @State private var showLyrics = false
+    @AppStorage("nowPlaying.cassette") private var cassette = false
 
     var body: some View {
         if showLyrics, monitor.current?.title.isEmpty == false {
@@ -334,6 +335,9 @@ struct NowPlayingView: View {
 
     private var player: some View {
         HStack(spacing: 18) {
+            if cassette {
+                CassetteView(monitor: monitor, showControls: false).frame(width: 270)
+            } else {
             ZStack {
                 if let art = monitor.artwork {
                     Image(nsImage: art).resizable().aspectRatio(contentMode: .fill)
@@ -349,6 +353,7 @@ struct NowPlayingView: View {
             .shadow(color: Theme.accent.opacity(0.5), radius: 16)
             .onTapGesture(perform: monitor.openPlayer)
             .help("Open the player")
+            }
 
             VStack(alignment: .leading, spacing: 6) {
                 HStack {
@@ -393,7 +398,9 @@ struct NowPlayingView: View {
                     IconButton(systemImage: monitor.current?.isPlaying == true ? "pause.fill" : "play.fill",
                                help: monitor.current == nil ? "Play in \(monitor.defaultPlayerName)" : "Play / pause") { monitor.playPause() }
                     IconButton(systemImage: "forward.fill", help: "Next track") { MediaControl.send(.next) }
-                    Button("Open Player", action: monitor.openPlayer).buttonStyle(PurpleButtonStyle(prominent: false))
+                    if cassette { IconButton(systemImage: "arrow.up.forward.app", help: "Open the player", action: monitor.openPlayer) }
+                    else { Button("Open Player", action: monitor.openPlayer).buttonStyle(PurpleButtonStyle(prominent: false)) }
+                    IconButton(systemImage: cassette ? "photo.fill" : "recordingtape", help: cassette ? "Back to the cover" : "Cassette mode") { withAnimation(Theme.spring) { cassette.toggle() } }
                     if monitor.current?.title.isEmpty == false {
                         IconButton(systemImage: "quote.bubble.fill", help: "Lyrics") { withAnimation(.easeInOut(duration: 0.2)) { showLyrics = true } }
                     }

@@ -583,3 +583,72 @@ body[data-perf="lite"] .ws-step { animation: none; }
 .di-msg.error { align-self: flex-start; background: color-mix(in srgb, var(--bad) 16%, var(--surface)); color: var(--bad); }
 .di-notice:empty { display: none; }
 .di-approve { gap: 8px; padding: 6px 8px; border-radius: 10px; background: var(--surface); }
+
+/* Magnetic drop target (services/magnet.js) */
+.mag-host { position: relative; transition: transform .28s cubic-bezier(.23, 1, .32, 1); }
+.mag-host.mag-on { transform: translate(var(--mag-x, 0), var(--mag-y, 0)) scale(1.012); }
+.mag-glow { position: absolute; width: 130px; height: 130px; margin: -65px 0 0 -65px; border-radius: 50%; background: var(--accent); opacity: 0; filter: blur(28px); pointer-events: none; transition: opacity .2s; z-index: 5; }
+.mag-pill { position: absolute; left: 50%; bottom: 14px; transform: translateX(-50%); padding: 5px 10px; border-radius: 999px; background: var(--accent); color: #fff; font-size: 11px; font-weight: 600; opacity: 0; pointer-events: none; transition: opacity .2s; z-index: 6; white-space: nowrap; }
+.mag-on > .mag-glow { opacity: .35; }
+.mag-on > .mag-pill { opacity: 1; }
+@media (prefers-reduced-motion: reduce) { .mag-host, .mag-host.mag-on { transition: none; transform: none; } }
+
+/* Hold to confirm, undo toast (ui.js) */
+.hold-btn { position: relative; overflow: hidden; color: #ff7373; background: rgba(255, 70, 70, .14); border: 1px solid rgba(255, 70, 70, .55); border-radius: 999px; touch-action: none; user-select: none; }
+.hold-btn.holding { transform: scale(.98); }
+.hold-fill { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: #e53935; color: #fff; clip-path: inset(0 100% 0 0); pointer-events: none; }
+.undo-toast { display: flex; align-items: center; gap: 10px; }
+.undo-ok { color: #4cd964; }
+.undo-btn { position: relative; overflow: hidden; border: 0; border-radius: 999px; padding: 4px 12px; font-weight: 700; color: var(--accent); background: rgba(255, 255, 255, .08); cursor: pointer; }
+.undo-fill { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: var(--accent); color: #000; clip-path: inset(0 0 0 0); pointer-events: none; }
+
+/* Model picker (modules/ai.js) */
+.model-pop { position: fixed; z-index: 1000; display: flex; gap: 10px; padding: 10px; border-radius: 12px; background: var(--panel, #1c1c1e); border: 1px solid rgba(255,255,255,.12); box-shadow: 0 12px 32px rgba(0,0,0,.5); }
+.model-list { display: flex; flex-direction: column; gap: 2px; max-height: 240px; overflow: auto; }
+.model-row { text-align: left; border: 0; background: none; color: inherit; padding: 6px 8px; border-radius: 6px; cursor: pointer; font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.model-row:hover, .model-row:focus-visible { background: rgba(255,255,255,.1); outline: none; }
+.model-row.on::after { content: ' ✓'; }
+.model-card { width: 190px; padding-left: 10px; border-left: 1px solid rgba(255,255,255,.1); display: flex; flex-direction: column; gap: 6px; font-size: 12px; }
+
+/* Cassette mode (modules/nowplaying.js) */
+.tape { position: relative; width: 250px; height: 158px; border-radius: 12px; background: linear-gradient(160deg, #3a3a38, #151514); border: 1px solid rgba(255,255,255,.14); box-shadow: 0 10px 26px rgba(0,0,0,.45); }
+.tape-label { position: absolute; left: 7%; right: 7%; top: 9%; height: 46%; border-radius: 6px; background: #ede6d2; color: #1d1c1a; padding: 8px 10px; overflow: hidden; }
+.tape-title { font-weight: 800; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tape-artist { font-size: 11px; opacity: .7; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tape-window { position: absolute; left: 19%; right: 19%; top: 50%; height: 26%; border-radius: 999px; background: #1a1918; overflow: hidden; }
+.tape-reel { position: absolute; top: 50%; width: calc(var(--r, 34) * 1px); height: calc(var(--r, 34) * 1px); margin-top: calc(var(--r, 34) * -.5px); border-radius: 50%; background: radial-gradient(circle, #eee 0 28%, #0a0a0a 30%); }
+.tape-reel::after { content: ''; position: absolute; inset: 0; border-radius: 50%; background: repeating-conic-gradient(#222 0 10deg, transparent 10deg 60deg); mask: radial-gradient(circle, transparent 0 30%, #000 31%); }
+.tape-reel:first-child { left: 8%; } .tape-reel:last-child { right: 8%; }
+.tape.spin .tape-reel { animation: tape-spin 2.4s linear infinite; }
+@keyframes tape-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .tape.spin .tape-reel { animation: none; } }
+
+/* Playing cards (games/cardui.js) */
+.pcard { position: relative; flex: none; border-radius: .9em; background: #fff; border: 1px solid rgba(0,0,0,.12); box-shadow: 0 1px 2px rgba(0,0,0,.08), 0 4px 10px rgba(0,0,0,.14); user-select: none; overflow: hidden; }
+.pcard.back { background-color: #9d2c35; background-image: repeating-linear-gradient(45deg, rgba(255,255,255,.16) 0 1.5px, transparent 1.5px 7px), repeating-linear-gradient(-45deg, rgba(255,255,255,.16) 0 1.5px, transparent 1.5px 7px); }
+.pcard.back::after { content: ''; position: absolute; inset: .55em; border-radius: .5em; border: 1px solid rgba(255,255,255,.35); }
+.pc-corner { position: absolute; top: .6em; left: .65em; display: flex; flex-direction: column; align-items: center; gap: .2em; line-height: 1; }
+.pc-corner b { font-size: 1.55em; font-weight: 700; letter-spacing: -.02em; }
+.pc-corner.flip { top: auto; left: auto; right: .65em; bottom: .6em; transform: rotate(180deg); }
+.pc-pips { position: absolute; left: 24%; right: 24%; top: 15%; bottom: 15%; }
+.pc-pips span { position: absolute; transform: translate(-50%, -50%); line-height: 0; }
+.pc-ace { position: absolute; inset: 0; display: grid; place-items: center; }
+.pc-court { position: absolute; left: 24%; right: 24%; top: 16%; bottom: 16%; border: 1px solid currentColor; border-radius: .4em; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: .3em; background: linear-gradient(160deg, rgba(0,0,0,.03), rgba(0,0,0,.09)); }
+.pc-court span { font-size: 3.2em; font-weight: 700; font-family: Georgia, serif; line-height: 1; }
+.pfan { position: relative; margin: 0 auto; }
+.pfan-card { position: absolute; left: 50%; bottom: 0; margin-left: -28px; transform: translate(var(--x, 0), var(--y, 0)) rotate(var(--r, 0)); transition: transform .28s cubic-bezier(.23, 1, .32, 1); }
+.pfan:hover .pfan-card:hover { transform: translate(var(--x, 0), -14px) rotate(calc(var(--r, 0) * .3)) scale(1.06); z-index: 60 !important; }
+.sol-card { cursor: pointer; } .sol-card.sel { outline: 2px solid var(--accent); outline-offset: 1px; }
+@media (prefers-reduced-motion: reduce) { .pfan-card { transition: none; } }
+
+/* Drop card (ui.js dropCard, driven by services/magnet.js) */
+.drop-card { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; min-height: 150px; padding: 18px; text-align: center; border-radius: 16px; border: 1px solid rgba(255,255,255,.16); background: rgba(255,255,255,.04); cursor: pointer; overflow: hidden; outline: none; transform: translate(var(--dc-x, 0), var(--dc-y, 0)); transition: transform .28s cubic-bezier(.23,1,.32,1), border-color .2s, background-color .2s; }
+.drop-card:focus-visible { box-shadow: 0 0 0 2px var(--accent); }
+.drop-card.near { border-color: color-mix(in srgb, var(--accent) 70%, transparent); background: color-mix(in srgb, var(--accent) 8%, transparent); transform: translate(var(--dc-x, 0), var(--dc-y, 0)) scale(1.01); }
+.drop-card.over { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 16%, transparent); transform: scale(1.025); }
+.dc-tile { width: 46px; height: 46px; display: grid; place-items: center; font-size: 22px; border-radius: 12px; background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.14); }
+.dc-title { font-weight: 700; font-size: 14px; }
+.dc-sub { font-size: 11px; opacity: .65; max-width: 360px; }
+.dc-glow { position: absolute; width: 150px; height: 150px; margin: -75px 0 0 -75px; border-radius: 50%; background: var(--accent); filter: blur(36px); opacity: 0; pointer-events: none; transition: opacity .2s; }
+.drop-card.near .dc-glow { opacity: .3; }
+@media (prefers-reduced-motion: reduce) { .drop-card, .drop-card.near, .drop-card.over { transition: none; transform: none; } }

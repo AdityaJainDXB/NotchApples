@@ -45,7 +45,12 @@ Notch apple lives in the black cutout at the top of your MacBook screen (a small
 | 🎾 **Tennis** *(new)* | Every ATP and WTA match with live set scores in **Men, Women and Mixed** tabs, **Grand Slams in red**, earlier weeks and past Slams one click back, the **ATP and WTA top 20**, and your favourite players' live score beside the notch |
 | 🪄 **Do It** *(Ultimate)* | Tell the AI what to do (a worksheet, a form, a task) and it does it on your screen, step by step, with a Start button, a Stop button that works from any app, and questions before anything risky |
 | 🔁 **Convert** *(Ultimate)* | Drop any file and turn it into another kind: PPTX → PDF, HEIC → JPG, DOCX → PDF, MOV → MP4, PNG → ICO, XLSX → CSV, PDF → pictures, pictures → one PDF, zip and unzip. Saved next to the original |
-| ⌨️ **Klick** *(Pro)* | Mechanical keyboard sounds as you type, in any app: Mechanical, Cream, Holy Panda, Blue, Red, Brown, Topre, Typewriter or Bubble, each with its own volume, and an on / off switch |
+| ⌨️ **Klick** *(Pro)* | Mechanical keyboard sounds as you type, in any app: Mechanical, Cream, Holy Panda, Blue, Red, Brown, Topre, Typewriter or Bubble, plus four premium sounds downloaded with your key (Cherry MX Black, Gateron Ink, Alps, Buckling spring), each with its own volume, and an on / off switch |
+| 🖼 **Live wallpaper** *(Pro, new)* | Play a video as your desktop wallpaper: your own (up to 60 s, up to 4K) or a free NASA clip. Pauses on battery and when windows cover it; the lock screen shows a still |
+| 📡 **Flight Radar** *(new)* | Every aircraft around you, live, on a round radar with callsign, type, height and speed (the free adsb.lol feed; your location is rounded to about 1 km and only sent while the tab is open) |
+| ✈️ **Plane game** *(new)* | A 3D flight sim in Games: Cessna, Piper, Boeing 737, 747, 777 and Airbus A320, A350, A380, with real airspeed and altimeter dials, engine sounds, flaps in notches, retractable gear, tail strikes, damage and spoken GPWS callouts. Fly with the mouse (**M** switches it off). Fly over Dubai, London, Paris, New York, Tokyo, Sydney, Cairo or San Francisco (or your own location) with their landmarks, and compete on a world leaderboard |
+| 🤖 **Notch apple AI** *(included with Pro)* | Ask without setting up any key: the request goes to Notch apple's server, which checks your key and answers with the project's own AI account (Pro 60 messages a day, Ultimate 200). Your own keys still work with no limit |
+| 🗓 **Updates once a week** | Optional and off by default: be asked about updates once a week instead of for every release |
 | 🧰 **30+ more tools** | Now Playing, window snapping, clipboard, file shelf, focus timer, Sports, Messenger, notes, search and more |
 
 ## Download
@@ -59,7 +64,7 @@ Pick your computer. Both buttons start the download straight away. The Mac butto
   </tr>
   <tr>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/v2.0.31/NotchApple-2.0.31.dmg"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.0.31</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/v2.0.34/NotchApple-2.0.34.dmg"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.0.34</b></a>
     </td>
     <td align="center">
       <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 1.43.0 BETA</b></a>
@@ -207,15 +212,80 @@ All screenshots use sample data.
 
 > **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is still in the repository's tags.
 
-### Mac 2.0.31 · Windows 1.43.0 BETA · 9 October 2026 · 🪄 Do It, and lyrics on your screen
+### Mac 2.0.46 · Windows 1.49.0 BETA · 10 October 2026 · Drop zones as cards
 
-- **Do It (Ultimate): the AI does the task on your screen.** A new **Do It** tab: describe what you want ("fill in this worksheet", "find the cheapest option"), press **Start**, and the AI looks at your screen and clicks, types, scrolls and presses keys, one step at a time, telling you what it's doing. A bar at the bottom of the screen shows progress with a **Stop** button, and **Ctrl+Option+Esc** (Mac) / **Ctrl+Alt+Esc** (Windows) stops it from any app. It **asks first** before anything that sends, buys, deletes, posts, or involves passwords and payment, and never types passwords or card numbers; **Confirm every step** lets you approve each action; it stops after 40 steps. It needs a vision-capable model chosen in Settings → AI (Gemini, Claude, ChatGPT…) and, on the Mac, **Screen Recording** and **Accessibility**. Screenshots go to your chosen AI provider while it works, and only then.
-- **Lyrics on the side of your screen (Pro).** In **Now Playing**, switch on **Lyrics on screen**: synced lyrics float along the left or right edge of your screen, Spotify-style (the current line big and bright, the lines around it dimmer), above your other apps and ignoring the mouse, fading away when nothing plays. Off by default.
+- **The Shelf, Convert and Share drop zones are now cards**: an icon tile, "Drop a file here" and "or click to browse". Drag a file within about 180 points and the card leans towards it, glows and says "Bring it closer"; over it, "Let go to add it".
+
+### Mac 2.0.45 · 10 October 2026 · Files can reach the notch
+
+- **A dragged file no longer slides underneath the notch.** With *Keep the notch visible in full-screen apps* on, the notch sat above the layer macOS draws dragged files on, so it never received them. While you drag a file the notch now steps below that layer, then goes back up when you let go.
+
+### Mac 2.0.44 · 10 October 2026 · Drop anywhere on the open notch
+
+- **A file dropped anywhere on the open notch** goes to the Shelf (or Convert when that tab is showing), not only inside a tab's own drop area. Drag events are now logged so a drop that fails can be traced.
+
+### Mac 2.0.43 · 10 October 2026 · Dragging a file to the notch, for real
+
+- **Drag a file to the top centre of the screen and the notch opens** for the drop, from a Finder window or the desktop. The 2.0.38 attempt never fired (macOS sends no mouse events to other apps during a drag); it now watches the pointer.
+
+### Mac 2.0.42 · 10 October 2026 · Drops work again
+
+- **Dropping files onto the notch works again** (Shelf, Convert, Share, Launcher, Wallpaper, AI). 2.0.37's new drop handling stopped drops registering; the glow and label stay, on the standard handler.
+
+### Mac 2.0.41 · 10 October 2026 · Cassette mode redone, and a pin that holds
+
+- **Cassette mode** is now the big tape on the Now Playing tab with the controls beside it, and a **Cassette mode in Now Playing** switch in Settings → Extras keeps it on or off for good.
+- **The pin holds:** a pinned notch stays open when you click the desktop or another app; only Esc, the close button or the shortcut close it.
+
+### Mac 2.0.40 · 10 October 2026 · The AI provider picker
+
+- The AI tab's **provider** list is now a searchable picker with a hover preview (free or paid, on this Mac, ready or needs a key), matching the model picker.
+
+### Mac 2.0.39 · 10 October 2026 · Cassette mode on the Now Playing tab
+
+- The **Now Playing** tab has a tape button next to Open Player (and Home's card has one too): it swaps the cover for a cassette.
+
+### Mac 2.0.38 · 10 October 2026 · Dragging files to the notch
+
+- **Drag a file to the top centre of the screen and the notch opens** for the drop, even when its closed shape is hidden, covered by a full-screen app or under another window (before, the drag just carried on across the desktop).
+
+### Mac 2.0.37 · Windows 1.48.0 BETA · 10 October 2026 · 🧲 A nicer feel, and two card games
+
+- **Magnetic drop zones** (Shelf, Convert, Share, Launcher, Wallpaper, AI tab): the target leans towards the file you drag, with a glow and a label.
+- **Hold to clear** the Shelf or finished to-dos, with an **Undo** that counts down.
+- **Searchable model picker** in the AI tab, with a preview card for each model.
+- **Cassette mode** for the music player.
+- **Blackjack and Solitaire** in Games.
+- The pricing page now prints a **receipt** after a confirmed payment.
+
+### Mac 2.0.36 · Windows 1.47.0 BETA · 10 October 2026 · ✈️ A bigger Plane world and a world leaderboard
+
+- **About three times more map**, with plains, ranges and a sea beyond the valley.
+- **Fly somewhere real.** On the Fly tab pick Dubai, London, Paris, New York, Tokyo, Sydney, Cairo or San Francisco, press **My location**, or type a city or country (matched to the nearest scenery we have). Each has its landmark beside the runway: Burj Khalifa, Tower Bridge and Big Ben, the Eiffel Tower, the Empire State Building, Tokyo Tower, the Opera House and Harbour Bridge, the pyramids, the Golden Gate Bridge.
+- **World leaderboard.** Tick 🌍 when you save a score to post your name, plane and score to a shared top 100 per challenge (all time or this week). Only those three things (and the place you flew) are sent, and only when you choose; the server keeps nothing else. Scores are checked for plausibility, not proven.
+
+### Mac 2.0.35 · 10 October 2026 · 🖼 Live wallpaper (Pro)
+
+- **A video as your wallpaper.** The new **Wallpaper** tab plays a video behind your desktop icons on every display and every desktop. Add your own (up to 60 seconds, up to 4K, drop it on the tab) or get one of six free NASA clips (public domain, downloaded from NASA only when you press Get). It pauses on battery, in Low Power Mode, on sleep or lock, and when windows cover it; it is silent. macOS can't play video on the lock screen, so a still from the video becomes the system wallpaper, and your old wallpaper comes back when you turn it off.
+
+### Mac 2.0.34 · Windows 1.46.0 BETA · 9 October 2026 · Notch apple AI, included with Pro and Ultimate
+
+- **Notch apple AI (included)**: choose it in Settings → AI and ask, with no API key to set up. The request goes to Notch apple's licence server, which checks your key and answers with the project's own AI account (Pro 60 messages a day, Ultimate 200). Your own keys still work with no limit. A copy of the app without a real key can't use it. It needs the server's AI key to be switched on first.
+
+### Mac 2.0.33 · Windows 1.45.0 BETA · 9 October 2026 · Ultimate modules go private
+
+- The Ultimate modules (Mac: Convert, Smart Home, Claude usage, Do It, Purge; Windows: Convert, Smart Home, Claude Usage, Do It) now live in a private repository and are built into the official releases only; they work as before for you. A build from the public source runs without them and those tabs say so. See [docs/PROTECTING_PAID_FEATURES.md](docs/PROTECTING_PAID_FEATURES.md).
+- Flight Radar's header fits on the Mac.
 
 ### Mac 2.0.32 · Windows 1.44.0 BETA · 9 October 2026 · A new licence, and more of the paid value on the server
 
 - **Source-available licence.** The code is now under the Notch apple Source-Available License (copyright Aditya Jain): read it, build it, help improve it; no reselling or redistributing it and no unlocking paid features without a key. Versions before 9 October 2026 were MIT and stay MIT for those who have them.
 - **Server-held content.** A real key on a registered device gets short-lived signed tokens from the licence server. They unlock **four premium Klick sounds** (Cherry MX Black, Gateron Ink, Alps, Buckling spring), downloaded on demand and never in the repository, and are required for **Clipboard Link** on the relay. Both devices need this update to link. How it works and what is and isn't protected: [docs/PROTECTING_PAID_FEATURES.md](docs/PROTECTING_PAID_FEATURES.md).
+
+### Mac 2.0.31 · Windows 1.43.0 BETA · 9 October 2026 · 🪄 Do It, and lyrics on your screen
+
+- **Do It (Ultimate): the AI does the task on your screen.** A new **Do It** tab: describe what you want ("fill in this worksheet", "find the cheapest option"), press **Start**, and the AI looks at your screen and clicks, types, scrolls and presses keys, one step at a time, telling you what it's doing. A bar at the bottom of the screen shows progress with a **Stop** button, and **Ctrl+Option+Esc** (Mac) / **Ctrl+Alt+Esc** (Windows) stops it from any app. It **asks first** before anything that sends, buys, deletes, posts, or involves passwords and payment, and never types passwords or card numbers; **Confirm every step** lets you approve each action; it stops after 40 steps. It needs a vision-capable model chosen in Settings → AI (Gemini, Claude, ChatGPT…) and, on the Mac, **Screen Recording** and **Accessibility**. Screenshots go to your chosen AI provider while it works, and only then.
+- **Lyrics on the side of your screen (Pro).** In **Now Playing**, switch on **Lyrics on screen**: synced lyrics float along the left or right edge of your screen, Spotify-style (the current line big and bright, the lines around it dimmer), above your other apps and ignoring the mouse, fading away when nothing plays. Off by default.
 
 ### Mac 2.0.30 · Windows 1.42.0 BETA · 9 October 2026 · GPWS callouts, and games that fit
 
@@ -1128,6 +1198,7 @@ The first time, the AI tab walks you through it: pick free Gemini or private Oll
 
 | Provider | Cost | Get a key | Notes |
 | --- | --- | --- | --- |
+| **Notch apple AI** | Included with Pro and Ultimate (Pro 60 messages a day, Ultimate 200) | No key: choose it in Settings → AI | Answered by Notch apple's server with the project's own AI account; reads images. Your own keys below have no limit. |
 | **Google Gemini** | Free tier, no billing | [aistudio.google.com/apikey](https://aistudio.google.com/apikey) | Fast; reads images. The default (`gemini-3.8-flash`). |
 | **Groq** | Free tier, no billing | [console.groq.com/keys](https://console.groq.com/keys) | Very fast open models (Llama, Qwen, DeepSeek-distilled and more). |
 | **OpenRouter** | Free models, no billing | [openrouter.ai/keys](https://openrouter.ai/keys) | Only the free models are listed. The selection changes over time. |
@@ -1332,6 +1403,8 @@ Issues and pull requests are welcome.
 2. Keep each module optional and off the main thread; follow the surrounding code's style and comments.
 3. Run the tests and build the app before opening a pull request. If you change the UI, run `scripts/screenshots.sh` and include the updated screenshots.
 4. Never commit API keys, promo codes or anything from `private/`.
+
+> **Building from the public source:** the Ultimate modules are not in this repository (they are in a private one and built into official releases only). Everything else builds and runs; the Convert, Smart Home, Claude usage, Do It and Purge tabs show a note saying they are in the official build.
 
 ### Build the Windows app
 

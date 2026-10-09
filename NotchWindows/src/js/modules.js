@@ -2,6 +2,11 @@
 // whole tab belongs to (as Module.feature does on the Mac); tabs without one are
 // free. The blurbs are the Mac app's, adjusted where Windows does it differently.
 
+/// The Ultimate modules (Convert, Do It, Smart Home, Claude Usage) are not in the public source: they live in a private
+/// repository and are built into the official releases only. In a build from the public source the file is missing, and
+/// the tab shows a short note instead of an error.
+const premium = (name) => import(`./modules/${name}.js`).catch(() => import('./modules/premium-missing.js').then((m) => ({ render: (root) => m.render(root, name) })));
+
 export const MODULES = [
   { id: 'today', name: 'Today', icon: '☀️', load: () => import('./modules/today.js'),
     blurb: 'Weather with the hourly and week forecast, your next calendar events, and your PC at a glance.' },
@@ -17,9 +22,9 @@ export const MODULES = [
     blurb: "Every ATP and WTA match with live scores, in Men, Women and Mixed. Grand Slams in red, earlier weeks one click back, the top 20, and favourite players on the pill." },
   { id: 'klick', name: 'Klick', icon: '⌨️', feature: 'klick', load: () => import('./modules/klick.js'),
     blurb: 'Your keyboard sounds like a mechanical one, in any app: Cream, Holy Panda, Blue, Red, Brown, Topre, Typewriter or Bubble, each with its own volume.' },
-  { id: 'convert', name: 'Convert', icon: '🔁', feature: 'convert', load: () => import('./modules/convert.js'),
+  { id: 'convert', name: 'Convert', icon: '🔁', feature: 'convert', load: () => premium('convert'),
     blurb: 'Drop a file and turn it into another kind: PPTX to PDF, HEIC to JPG, Word to PDF, MOV to MP4, Excel to CSV, PDF to pictures and more. Saved next to the original.' },
-  { id: 'doit', name: 'Do It', icon: '🪄', feature: 'doit', load: () => import('./modules/doit.js'),
+  { id: 'doit', name: 'Do It', icon: '🪄', feature: 'doit', load: () => premium('doit'),
     blurb: 'Tell the AI what to do on your screen (a worksheet, a form, a task) and it does it for you, step by step. You press Start, can stop it any time, and it asks before anything risky.' },
   { id: 'nowplaying', name: 'Now Playing', icon: '🎵', load: () => import('./modules/nowplaying.js'),
     blurb: "What's playing on your PC (Spotify, browsers, Media Player…) with the cover, controls and lyrics. The cover shows on the pill." },
@@ -87,9 +92,9 @@ export const MODULES = [
     blurb: 'A breathing exercise, break reminders (eyes, water, stretch, posture) and a bedtime nudge.' },
   { id: 'devtools', name: 'Dev Tools', icon: '🛠', load: () => import('./modules/devtools.js'),
     blurb: 'Format JSON, encode and decode, read a JWT, hash, make a UUID, convert timestamps, test a regex, check colour contrast and make a QR code. Everything stays on this PC.' },
-  { id: 'smarthome', name: 'Smart Home', icon: '💡', feature: 'smartHome', load: () => import('./modules/smarthome.js'),
+  { id: 'smarthome', name: 'Smart Home', icon: '💡', feature: 'smartHome', load: () => premium('smarthome'),
     blurb: 'Control your Home Assistant lights, switches, scenes and more. Works with Hue, IKEA, Zigbee and Matter through Home Assistant.' },
-  { id: 'claudeusage', name: 'Claude Usage', icon: '📟', feature: 'claudeUsage', load: () => import('./modules/claudeusage.js'),
+  { id: 'claudeusage', name: 'Claude Usage', icon: '📟', feature: 'claudeUsage', load: () => premium('claudeusage'),
     blurb: 'How many tokens Claude Code has used in your 5-hour window, today and this week, with budgets you set yourself. Read from your .claude folder on this PC.' },
   { id: 'settings', name: 'Settings', icon: '⚙', load: () => import('./modules/settings.js'),
     blurb: '' },

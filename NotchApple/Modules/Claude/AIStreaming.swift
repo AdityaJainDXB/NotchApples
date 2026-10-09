@@ -88,7 +88,7 @@ extension AIClient {
         return AsyncThrowingStream { continuation in
             let task = Task {
                 do {
-                    let request = try makeStreamRequest(history, provider: provider, model: model, system: system)
+                    let request = try await makeStreamRequest(history, provider: provider, model: model, system: system)
                     let (bytes, response) = try await URLSession.shared.bytes(for: request)
                     let status = (response as? HTTPURLResponse)?.statusCode ?? 0
                     if !(200..<300).contains(status) {
@@ -144,7 +144,7 @@ extension AIClient {
         }
     }
 
-    private static func makeStreamRequest(_ history: [ChatMessage], provider: AIProvider, model: String, system: String) throws -> URLRequest {
+    private static func makeStreamRequest(_ history: [ChatMessage], provider: AIProvider, model: String, system: String) async throws -> URLRequest {
         switch provider {
         case .gemini:
             guard let key = AIProvider.gemini.apiKey else { throw AIError.missingKey(.gemini) }
@@ -193,12 +193,14 @@ extension AIClient {
             case .openRouter: base = "https://openrouter.ai/api/v1"
             case .ollama: base = "http://localhost:11434/v1"
             case .deepSeek: base = "https://api.deepseek.com/v1"
+            case .hosted: base = try await HostedAI.base()
             default: base = "https://api.openai.com/v1"
             }
             var r = URLRequest(url: URL(string: "\(base)/chat/completions")!)
             r.httpMethod = "POST"
             r.timeoutInterval = provider == .ollama ? 300 : 120
             r.setValue("application/json", forHTTPHeaderField: "content-type")
+            if provider == .hosted { r.setValue("Bearer \(try await HostedAI.token())", forHTTPHeaderField: "Authorization") }
             if provider.needsKey {
                 guard let key = provider.apiKey else { throw AIError.missingKey(provider) }
                 r.setValue("Bearer \(key)", forHTTPHeaderField: "Authorization")

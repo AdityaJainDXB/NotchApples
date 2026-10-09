@@ -82,6 +82,59 @@ export function toast(message, { error = false, ms = 2200 } = {}) {
   setTimeout(() => t.remove(), error ? Math.max(ms, 4000) : ms);
 }
 
+/// A drop zone drawn as a card: an icon tile, a title that changes as a dragged file comes closer ("Bring it closer",
+/// "Let go to add it") and a line about clicking to browse. services/magnet.js drives the states while a file is dragged.
+export function dropCard({ icon = '📥', idle = 'Drop a file here', near = 'Bring it closer', over = 'Let go to add it', sub = 'or click to browse', onclick } = {}) {
+  const title = el('div', { class: 'dc-title' }, idle);
+  const card = el('div', { class: 'drop-card', role: 'button', tabindex: '0', 'aria-label': `${idle}. ${sub}`, onclick },
+    el('i', { class: 'dc-glow', 'aria-hidden': 'true' }),
+    el('div', { class: 'dc-tile', 'aria-hidden': 'true' }, icon), title, el('div', { class: 'dc-sub' }, sub));
+  card.dataset.idle = idle; card.dataset.near = near; card.dataset.over = over;
+  card.addEventListener('keydown', (e) => { if ((e.key === 'Enter' || e.key === ' ') && onclick) { e.preventDefault(); onclick(); } });
+  return card;
+}
+
+/// A destructive button you press and hold: a fill sweeps across, and only when it is full does onConfirm run.
+/// Letting go early or sliding off cancels. Enter or Space held does the same, so keyboards work.
+export function holdButton(label, onConfirm, { ms = 1200, hint = 'Press and hold to confirm' } = {}) {
+  const fill = el('span', { class: 'hold-fill', 'aria-hidden': 'true' }, label);
+  const b = el('button', { class: 'btn small hold-btn', type: 'button', title: hint, 'aria-label': `${label}. ${hint}` }, el('span', {}, label), fill);
+  const reduce = (typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches);
+  let timer = null;
+  const start = () => {
+    if (timer) return;
+    b.classList.add('holding');
+    fill.style.transition = reduce ? 'none' : `clip-path ${ms}ms linear`;
+    fill.style.clipPath = 'inset(0 0 0 0)';
+    timer = setTimeout(() => { timer = null; reset(true); onConfirm(); }, ms);
+  };
+  const reset = (instant) => {
+    if (timer) { clearTimeout(timer); timer = null; }
+    b.classList.remove('holding');
+    fill.style.transition = instant ? 'none' : 'clip-path .18s cubic-bezier(.23,1,.32,1)';
+    fill.style.clipPath = 'inset(0 100% 0 0)';
+  };
+  b.addEventListener('pointerdown', (e) => { if (e.button === 0) { b.setPointerCapture(e.pointerId); start(); } });
+  for (const t of ['pointerup', 'pointercancel', 'pointerleave', 'blur']) b.addEventListener(t, () => reset(false));
+  b.addEventListener('keydown', (e) => { if ((e.key === 'Enter' || e.key === ' ') && !e.repeat) { e.preventDefault(); start(); } });
+  b.addEventListener('keyup', (e) => { if (e.key === 'Enter' || e.key === ' ') reset(false); });
+  reset(true);
+  return b;
+}
+
+/// "Deleted. Undo" for five seconds, with the Undo button's fill draining as the time runs out.
+export function undoToast(message, undo, ms = 5000) {
+  host ??= document.body.appendChild(el('div', { class: 'toast-host' }));
+  const fill = el('span', { class: 'undo-fill', 'aria-hidden': 'true' }, 'Undo');
+  const btn = el('button', { class: 'undo-btn', type: 'button' }, el('span', {}, 'Undo'), fill);
+  const t = el('div', { class: 'toast undo-toast', role: 'status' }, el('span', { class: 'undo-ok' }, '✓'), el('span', {}, message), btn);
+  host.append(t);
+  const reduce = (typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches);
+  requestAnimationFrame(() => { fill.style.transition = reduce ? 'none' : `clip-path ${ms}ms linear`; fill.style.clipPath = 'inset(0 100% 0 0)'; });
+  const gone = setTimeout(() => t.remove(), ms);
+  btn.onclick = () => { clearTimeout(gone); t.remove(); undo(); };
+}
+
 // ---- dialogs ----
 
 /// Opens a dialog. Returns { close, box }. Esc or clicking outside closes it.

@@ -83,6 +83,7 @@ enum FeatureHub {
         if s.sportsEnabled || s.liveEnabled { ScoresModel.shared.refreshIfDue() }
         if s.f1Enabled { F1Model.shared.refreshIfDue() }
         if s.tennisEnabled { TennisModel.shared.refreshIfDue() }
+        WallpaperEngine.shared.apply()         // stops if Pro lapses
         KlickEngine.shared.apply()             // follows the switch and the license (stops if Pro lapses)
         KlickEngine.shared.refreshPermission()
         SideLyrics.shared.apply()

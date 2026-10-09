@@ -26,6 +26,15 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # The Ultimate modules are in a private repository, fetched with a read-only deploy key. An official build fails
+      # rather than ship without them.
+      - name: Fetch the Ultimate modules
+        working-directory: .
+        shell: bash
+        env:
+          PREMIUM_DEPLOY_KEY: ${{ secrets.PREMIUM_DEPLOY_KEY }}
+        run: ./scripts/fetch-premium.sh --require
+
       # A release only goes out if the logic tests and the screen smoke test pass first.
       - name: Logic tests and screen smoke test
         working-directory: .

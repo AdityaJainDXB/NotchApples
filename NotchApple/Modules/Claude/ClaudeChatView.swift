@@ -598,7 +598,7 @@ struct ClaudeChatView: View {
             if config.provider.isConfigured { content } else { keyPrompt }
         }
         .onAppear { if config.availableModels[config.provider] == nil { config.refreshModels() } }
-        .onDrop(of: [.fileURL, .image], isTargeted: $dropTargeted, perform: handleDrop)
+        .magneticDrop(of: [.fileURL, .image], label: "Let go to attach", isTargeted: $dropTargeted, perform: handleDrop)
         .overlay {
             if dropTargeted {
                 RoundedRectangle(cornerRadius: 14).strokeBorder(Theme.accent, style: StrokeStyle(lineWidth: 2, dash: [6]))
@@ -624,39 +624,10 @@ struct ClaudeChatView: View {
 
     private var providerBar: some View {
         HStack(spacing: 8) {
-            Menu {
-                Section("Free") {
-                    ForEach(AIProvider.allCases.filter(\.isFree)) { p in
-                        Button { config.provider = p } label: { Label(p.title, systemImage: p == config.provider ? "checkmark" : "") }
-                    }
-                }
-                Section("Paid (your own account)") {
-                    ForEach(AIProvider.allCases.filter { !$0.isFree }) { p in
-                        Button { config.provider = p } label: { Label(p.title, systemImage: p == config.provider ? "checkmark" : "") }
-                    }
-                }
-            } label: {
-                Label(config.provider.title, systemImage: "sparkles").font(.system(size: 12, weight: .semibold))
-            }
-            .menuStyle(.borderlessButton).fixedSize()
-            .help("AI provider")
+            ProviderPicker(config: config)
 
             if config.provider.isConfigured {
-                Menu {
-                    let models = config.availableModels[config.provider] ?? []
-                    if models.isEmpty { Text(config.loadingModels ? "Loading models…" : "No models found") }
-                    ForEach(models, id: \.self) { m in
-                        Button { config.setModel(m, for: config.provider) } label: {
-                            Label(m, systemImage: m == config.model ? "checkmark" : "")
-                        }
-                    }
-                    Divider()
-                    Button("Refresh model list") { config.refreshModels() }
-                } label: {
-                    Text(config.model).font(.system(size: 12)).lineLimit(1)
-                }
-                .menuStyle(.borderlessButton).fixedSize()
-                .help("Model")
+                ModelPicker(config: config)
             }
             Spacer()
             badge(config.provider.likelySupportsVision(config.model) ? "Sees images" : "Text only",

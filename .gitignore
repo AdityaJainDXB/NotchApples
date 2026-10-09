@@ -18,3 +18,20 @@ NotchWindows/src-tauri/gen/
 
 # Firebase client config: kept out of git (scripts/ensure_firebase_config.sh restores it for builds)
 NotchApple/Resources/GoogleService-Info.plist
+
+# The Ultimate modules live in the private repository (AdityaJainDXB/NotchApples-Premium); scripts/fetch-premium.sh copies them
+# into these places for official builds, and they are never committed to this repository.
+NotchApple/Modules/Convert/
+NotchApple/Modules/SmartHome/
+NotchApple/Modules/ClaudeUsage/
+NotchApple/Modules/Purge/
+NotchApple/Modules/DoIt/
+NotchApple/Modules/PremiumEntry/
+NotchWindows/src/js/modules/convert.js
+NotchWindows/src/js/modules/doit.js
+NotchWindows/src/js/modules/smarthome.js
+NotchWindows/src/js/modules/claudeusage.js
+NotchWindows/src/js/services/convert.js
+NotchWindows/src/js/services/doit.js
+NotchWindows/src/js/services/smarthome.js
+NotchWindows/src/js/services/claudeusage.js

@@ -12,6 +12,7 @@ import SwiftUI
 @MainActor
 final class UndoCenter: ObservableObject {
     static let shared = UndoCenter()
+    static let duration: Double = 5
     struct Offer: Identifiable { let id = UUID(); let message: String; let undo: () -> Void }
     @Published private(set) var current: Offer?
     private var work: DispatchWorkItem?
@@ -21,7 +22,7 @@ final class UndoCenter: ObservableObject {
         current = Offer(message: message, undo: undo)
         let w = DispatchWorkItem { [weak self] in self?.current = nil }
         work = w
-        DispatchQueue.main.asyncAfter(deadline: .now() + 6, execute: w)
+        DispatchQueue.main.asyncAfter(deadline: .now() + Self.duration, execute: w)
     }
 
     func undo() {
@@ -37,9 +38,9 @@ struct UndoToast: View {
     var body: some View {
         if let offer = center.current {
             HStack(spacing: 12) {
+                Image(systemName: "checkmark.circle.fill").foregroundStyle(.green).accessibilityHidden(true)
                 Text(offer.message).font(.system(size: 12, weight: .medium)).foregroundStyle(.white)
-                Button("Undo") { withAnimation(Theme.spring) { center.undo() } }
-                    .buttonStyle(.plain).font(.system(size: 12, weight: .bold)).foregroundStyle(Theme.accentBright)
+                UndoCountdownButton(id: offer.id) { withAnimation(Theme.spring) { center.undo() } }
                     .keyboardShortcut("z", modifiers: .command)
             }
             .padding(.horizontal, 14).padding(.vertical, 8)
@@ -49,5 +50,31 @@ struct UndoToast: View {
             .accessibilityElement(children: .combine)
             .accessibilityAddTraits(.updatesFrequently)
         }
+    }
+}
+
+/// "Undo" with a fill that drains over the time left to undo.
+private struct UndoCountdownButton: View {
+    let id: UUID
+    let action: () -> Void
+    @State private var left: CGFloat = 1
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    private var content: some View {
+        Label("Undo", systemImage: "arrow.counterclockwise").font(.system(size: 12, weight: .bold)).padding(.horizontal, 10).padding(.vertical, 4)
+    }
+
+    var body: some View {
+        Button(action: action) {
+            content.foregroundStyle(Theme.accentBright)
+                .background(Capsule().fill(Color.white.opacity(0.08)))
+                .overlay(alignment: .leading) {
+                    content.foregroundStyle(.black).background(Capsule().fill(Theme.accentBright))
+                        .mask(alignment: .leading) { GeometryReader { g in Rectangle().frame(width: g.size.width * left) } }
+                }
+        }
+        .buttonStyle(.plain)
+        .id(id)
+        .onAppear { left = 1; withAnimation(reduceMotion ? nil : .linear(duration: UndoCenter.duration)) { left = 0 } }
     }
 }

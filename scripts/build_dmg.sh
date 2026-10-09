@@ -4,6 +4,8 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 scripts/ensure_firebase_config.sh
+# The Ultimate modules (private repository). REQUIRE_PREMIUM=1 (official releases) makes a missing fetch an error.
+scripts/fetch-premium.sh ${REQUIRE_PREMIUM:+--require}
 
 # Tunnelblick's notarized installer is bundled (GPL-2.0, unmodified) but not kept in git.
 TB_DMG=NotchApple/Resources/Tunnelblick/Tunnelblick.dmg

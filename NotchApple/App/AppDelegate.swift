@@ -26,6 +26,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         AppDelegate.current = self
+        PremiumRegistry.load()          // the Ultimate modules, present only in official builds
         SandboxMigration.runIfNeeded()
         notchController = NotchWindowController()
         notchController?.show()
@@ -46,7 +47,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         ClipboardLink.shared.apply()
         WellbeingService.shared.start()
         SystemWatch.shared.start()
-        ClaudeUsageStore.shared.startBackground()
+        PremiumRegistry.claudeStart?()
+        WallpaperEngine.shared.apply()      // a live wallpaper you left on starts again
         NotesCloudSync.shared.syncNow()
         // Ultimate: plugins keep running in the background for Home widgets and activities.
         if PluginHost.shared.keepRunning { PluginHost.shared.start() }
@@ -349,7 +351,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     @objc func toggleNotch() { notchController?.toggle() }
 
     @objc func openSettings() {
-        notchController?.collapse()
+        notchController?.collapse(force: true)
         AppDelegate.openSettingsWindow()
     }
 
@@ -374,7 +376,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     /// scene, so this goes through our own `SettingsWindowController`.
     static func openSettingsWindow(tab: SettingsTab? = nil) {
         // Clicks in our own Settings window never reach the notch's click-outside monitor, so close it here.
-        AppDelegate.current?.notchController?.collapse()
+        AppDelegate.current?.notchController?.collapse(force: true)
         SettingsWindowController.shared.show(tab: tab)
     }
 }

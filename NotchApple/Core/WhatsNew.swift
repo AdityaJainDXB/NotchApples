@@ -20,6 +20,56 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.0.46", date: "10 October 2026", headline: "Drop zones as cards", items: [
+            "The Shelf, Convert and Share drop zones are now cards with an icon, \"Drop a file here\" and \"or click to browse\". As you drag a file near they lean towards it and say \"Bring it closer\", then \"Let go to add it\" when you are over them.",
+        ]),
+        ReleaseNote(version: "2.0.45", date: "10 October 2026", headline: "Files can reach the notch", items: [
+            "Dragging a file no longer slides underneath the notch: while you drag, the notch steps below the dragging layer so it can take the drop (it goes back up when you let go).",
+        ]),
+        ReleaseNote(version: "2.0.44", date: "10 October 2026", headline: "Drop anywhere on the open notch", items: [
+            "A file dropped anywhere on the open notch (not only inside a tab's drop area) goes to the Shelf, or to Convert when that tab is showing.",
+        ]),
+        ReleaseNote(version: "2.0.43", date: "10 October 2026", headline: "Dragging a file to the notch, for real", items: [
+            "Drag any file (from a Finder window or the desktop) to the top centre of the screen and the notch opens for the drop. The 2.0.38 version never fired, because macOS doesn't send mouse events to other apps during a drag; it now watches the pointer instead.",
+        ]),
+        ReleaseNote(version: "2.0.42", date: "10 October 2026", headline: "Drops work again", items: [
+            "Dropping files on the Shelf, Convert and the other drop areas works again (2.0.37's new drop handling stopped them registering).",
+        ]),
+        ReleaseNote(version: "2.0.41", date: "10 October 2026", headline: "Cassette mode redone, and a pin that holds", items: [
+            "Cassette mode: the tape is now the big centre of the Now Playing tab with the controls beside it, and Settings → Extras has a switch so it stays on (or off) until you change it.",
+            "A pinned notch now only closes when you close it (Esc, the close button, the shortcut): clicking the desktop, switching apps or swiping no longer closes it.",
+        ]),
+        ReleaseNote(version: "2.0.40", date: "10 October 2026", headline: "The AI provider picker", items: [
+            "The AI tab's provider list is now a searchable picker with a preview of each provider, like the model picker beside it.",
+        ]),
+        ReleaseNote(version: "2.0.39", date: "10 October 2026", headline: "Cassette mode on the Now Playing tab", items: [
+            "The Now Playing tab has a tape button beside Open Player: it swaps the cover for a cassette whose reels turn while it plays.",
+        ]),
+        ReleaseNote(version: "2.0.38", date: "10 October 2026", headline: "Dragging files to the notch", items: [
+            "Dragging a file to the top centre of the screen now opens the notch even when its own drop area is hidden or covered, so the file can be dropped straight onto the Shelf.",
+        ]),
+        ReleaseNote(version: "2.0.37", date: "10 October 2026", headline: "A nicer feel, and two card games", items: [
+            "Drop zones lean towards your file like a magnet: the Shelf, Convert, Share, Launcher, Wallpaper and the AI tab.",
+            "Clearing the Shelf or finished to-dos is now press-and-hold, with an Undo that counts down.",
+            "AI tab: a searchable model picker with a preview of each model.",
+            "Music: cassette mode, a tape whose reels turn while it plays.",
+            "Games: Blackjack and Solitaire.",
+        ]),
+        ReleaseNote(version: "2.0.36", date: "10 October 2026", headline: "A bigger Plane world, and the world leaderboard", items: [
+            "Plane: the map is about three times bigger, with plains, ranges and sea. Pick where in the world you fly (Dubai, London, Paris, New York, Tokyo, Sydney, Cairo, San Francisco) or press My location, or type a city or country. Each place has its landmark beside the runway.",
+            "Plane: a World leaderboard. Tick 🌍 when you save a score to share your name, plane and score; see everyone's by challenge, all time or this week.",
+        ]),
+        ReleaseNote(version: "2.0.35", date: "10 October 2026", headline: "Live wallpaper", items: [
+            "New Wallpaper tab (Pro): play your own video (up to 60 seconds, up to 4K) or a free NASA clip as your desktop wallpaper, on every display.",
+            "It pauses on battery, in Low Power Mode, on sleep or lock, and when windows cover it. The lock screen shows a still from the video.",
+        ]),
+        ReleaseNote(version: "2.0.34", date: "9 October 2026", headline: "Notch apple AI, included with Pro", items: [
+            "Settings → AI → Notch apple AI (included): ask without setting up any key. Pro gets 60 messages a day, Ultimate 200. Your own keys still work with no limit.",
+        ]),
+        ReleaseNote(version: "2.0.33", date: "9 October 2026", headline: "Ultimate modules go private, radar fits", items: [
+            "The Ultimate modules (Convert, Smart Home, Claude usage, Do It, Purge) are built into official releases only; nothing changes for you.",
+            "Flight Radar's header fits on the Mac: the range is a small menu beside Refresh.",
+        ]),
         ReleaseNote(version: "2.0.32", date: "9 October 2026", headline: "A new licence, and premium sounds from the server", items: [
             "Notch apple's code is now source-available (copyright Aditya Jain): you can read and build it, but not resell it or unlock the paid features without a key. Earlier versions stay MIT.",
             "Four premium Klick sounds (Pro) download from the licence server with your key: Cherry MX Black, Gateron Ink, Alps and Buckling spring.",

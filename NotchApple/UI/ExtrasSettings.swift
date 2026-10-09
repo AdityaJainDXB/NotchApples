@@ -93,6 +93,8 @@ struct ExtrasSettings: View {
             Section {
                 Toggle("Trim recordings when you stop", isOn: $settings.trimAfterRecording)
                 Toggle("Synced lyrics in Now Playing", isOn: $settings.showLyrics).requires(.lyrics)
+                Toggle("Cassette mode in Now Playing", isOn: $settings.cassetteMode)
+                Text("Shows the song as a tape with the controls beside it. It stays this way until you change it.").font(.caption).foregroundStyle(.secondary)
             } header: {
                 Text("Recording and music")
             } footer: {

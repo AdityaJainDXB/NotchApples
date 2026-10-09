@@ -1,5 +1,6 @@
 // Shelf: drop files and folders onto the notch to keep them handy. Click to open,
 // right-click for more. Shelf+ (Pro): group into folders.
+import { magnet } from '../services/magnet.js';
 import { el, load, save, uid } from '../store.js';
 import { invoke, listen, openUrl } from '../native.js';
 import { canUse } from '../features.js';
@@ -39,13 +40,13 @@ export function render(root) {
       ]));
       return t;
     }));
-    if (!items.length) grid.replaceChildren(el('div', { style: 'grid-column:1/-1' }, empty('🗂', 'Drop files here', 'Drag files or folders onto the notch (even when it’s closed) to keep them handy.')));
+    if (!items.length) grid.replaceChildren(el('div', { style: 'grid-column:1/-1' }, dropCard({ icon: '🗂', idle: 'Drop files or folders here', over: 'Let go to add them', sub: 'or click to browse · drag onto the notch even when it’s closed', onclick: async () => { const p = await invoke('pick_file'); if (p) { await addPaths([p], group); paint(); } } })));
   }
   let un;
   listen('tauri://drag-drop', async (e) => { await addPaths(e?.paths || [], group); paint(); }).then((u) => { un = u; });
   const files = (el('div', { class: 'col fill' }, el('div', { class: 'hstack' }, el('div', { class: 'section-title grow' }, 'Shelf'), groupsBar,
     el('button', { class: 'btn small quiet', onclick: async () => { const p = await invoke('pick_file'); if (p) { await addPaths([p], group); paint(); } } }, '+ Add file'),
-    el('button', { class: 'btn small ghost', onclick: () => { save(KEY, []); paint(); } }, 'Clear')), zone));
+    holdButton('Hold to clear', () => { const before = load(KEY, []); save(KEY, []); paint(); undoToast('Shelf cleared', () => { save(KEY, before); paint(); }); }, { hint: 'Press and hold to clear the whole shelf. You can undo it.' })), zone));
 
   // Links: save a link now, read it later. Nothing is fetched; a saved link shows its address.
   const LKEY = 'shelf.links';
@@ -84,5 +85,6 @@ export function render(root) {
   function showPage() { body.replaceChildren(page === 'links' ? linksView : files); if (page === 'links') paintLinks(); else paint(); }
   root.append(el('div', { class: 'col fill', style: 'gap:8px' }, seg, body));
   showPage();
-  return () => un?.();
+  const offMag = magnet(root, 'Let go to add to the Shelf');
+  return () => { un?.(); offMag(); };
 }

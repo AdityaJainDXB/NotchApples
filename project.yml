@@ -13,8 +13,8 @@ packages:
 settings:
   base:
     SWIFT_VERSION: "5.0"
-    MARKETING_VERSION: "2.0.32"
-    CURRENT_PROJECT_VERSION: "101"
+    MARKETING_VERSION: "2.0.46"
+    CURRENT_PROJECT_VERSION: "104"
     CODE_SIGN_IDENTITY: "-"
     CODE_SIGN_STYLE: Manual
     DEVELOPMENT_TEAM: ""
@@ -103,6 +103,8 @@ targets:
       - NotchApple/Core/UpdateCadenceLogic.swift
       - NotchApple/Modules/Radar/RadarLogic.swift
       - NotchApple/Core/EntitlementLogic.swift
+      - NotchApple/Modules/Wallpaper/WallpaperLogic.swift
+      - NotchApple/Modules/Games/CardsLogic.swift
       - NotchApple/Modules/Tennis/TennisLogic.swift
       - NotchApple/Core/ClaudeUsageLogic.swift
       - NotchApple/Core/SmartHomeLogic.swift

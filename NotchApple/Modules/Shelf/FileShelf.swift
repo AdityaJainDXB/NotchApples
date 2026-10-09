@@ -149,8 +149,9 @@ struct FileShelfView: View {
                     Button { airDropAll() } label: { Label("AirDrop", systemImage: "airplayaudio") }
                         .buttonStyle(PurpleButtonStyle(prominent: false))
                         .help("Send everything on the shelf with AirDrop")
-                    Button("Clear all") { withAnimation { store.removeAll() } }
-                        .buttonStyle(PurpleButtonStyle(prominent: false))
+                    HoldToConfirmButton(hint: "Press and hold to clear the whole shelf. You can undo it afterwards.") { withAnimation { store.removeAll() } } label: {
+                        Label("Hold to clear", systemImage: "trash")
+                    }
                 }
                 // Keyboard/pointer alternative to drag and drop (HIG › Drag and drop).
                 Button { addViaPanel() } label: { Label("Add files…", systemImage: "plus") }
@@ -171,18 +172,14 @@ struct FileShelfView: View {
                 }
             }
             ZStack {
-                RoundedRectangle(cornerRadius: Theme.corner, style: .continuous)
-                    .strokeBorder(targeted ? Theme.accentBright : Color.white.opacity(0.18),
-                                  style: StrokeStyle(lineWidth: targeted ? 2 : 1.2, dash: [6, 5]))
-                    .background(RoundedRectangle(cornerRadius: Theme.corner).fill(targeted ? Theme.accent.opacity(0.15) : .clear))
-
                 if shown.isEmpty {
-                    VStack(spacing: 6) {
-                        Image(systemName: "tray.and.arrow.down.fill").font(.system(size: 30)).foregroundStyle(Theme.accentGradient)
-                        Text(targeted ? "Release to add" : "Drop files or folders here")
-                            .font(.system(size: 13)).foregroundStyle(Theme.textSecondary)
-                    }
+                    MagneticDropZone(icon: "tray.and.arrow.down.fill", idle: "Drop files or folders here", over: "Let go to add them",
+                                     subtitle: "or click to browse", isOver: targeted, onBrowse: addViaPanel)
                 } else {
+                    RoundedRectangle(cornerRadius: Theme.corner, style: .continuous)
+                        .strokeBorder(targeted ? Theme.accentBright : Color.white.opacity(0.18),
+                                      style: StrokeStyle(lineWidth: targeted ? 2 : 1.2, dash: [6, 5]))
+                        .background(RoundedRectangle(cornerRadius: Theme.corner).fill(targeted ? Theme.accent.opacity(0.15) : .clear))
                     ScrollView(.horizontal, showsIndicators: false) {
                         HStack(spacing: 12) {
                             ForEach(shown) { ShelfTile(item: $0) }
@@ -192,7 +189,7 @@ struct FileShelfView: View {
                 }
             }
             .animation(Theme.spring, value: targeted)
-            .onDrop(of: [.fileURL], isTargeted: $targeted) { providers in
+            .magneticDrop(of: [.fileURL], label: "", isTargeted: $targeted) { providers in
                 for provider in providers {
                     _ = provider.loadObject(ofClass: URL.self) { url, _ in
                         if let url { DispatchQueue.main.async { withAnimation(Theme.spring) { store.add(url) } } }
@@ -248,7 +245,7 @@ private struct ShelfTile: View {
             Button("Reveal in Finder") { FileShelfStore.shared.withAccess(item) { NSWorkspace.shared.activateFileViewerSelecting([$0]) } }
             if SettingsManager.shared.convertEnabled {
                 Button("Convert…") {
-                    if let url = item.resolve() { ConvertStore.shared.add([url]); notchState.selected = .convert }
+                    if let url = item.resolve() { PremiumRegistry.convertAdd?([url]); notchState.selected = .convert }
                 }
             }
             if Entitlements.shared.canUse(.shelfPlus) {

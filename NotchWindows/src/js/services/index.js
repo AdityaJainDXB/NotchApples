@@ -8,10 +8,13 @@ const NOW = ['clipboard', 'focus', 'timer', 'media', 'rules'];
 const LATER = ['klick', 'convert', 'pairdrop', 'sports', 'reminders', 'calendar', 'weather', 'markets', 'screentime', 'privacy', 'awake',
   'downloads', 'messenger', 'plugins', 'automations', 'updates', 'flights', 'f1', 'tennis', 'claudecode', 'hud', 'clipsync', 'wellbeing', 'syswatch', 'claudeusage', 'winnotifs', 'sidelyrics'];
 
+// The Ultimate services are in the private repository: a build from the public source simply doesn't have them.
+const PREMIUM = new Set(['convert', 'claudeusage']);
+
 async function run(name) {
   try {
-    const mod = await import(`./${name}.js`);
-    await mod.start?.();
+    const mod = PREMIUM.has(name) ? await import(`./${name}.js`).catch(() => null) : await import(`./${name}.js`);
+    await mod?.start?.();
   } catch (e) {
     console.error(`service ${name} failed to start`, e);
     (await import('../app.js')).reportError(`service ${name}: ${e?.message ?? e}`);

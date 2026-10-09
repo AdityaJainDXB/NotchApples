@@ -7,6 +7,7 @@
 //  purple, glassmorphic hub with a tab bar of the enabled modules.
 //
 
+import os
 import SwiftUI
 
 /// Notch silhouette, like the MacBook's own notch: concave "shoulders" where
@@ -127,6 +128,25 @@ struct NotchRootView: View {
             }
         }
         .frame(width: size.width, height: size.height, alignment: .top)
+        // A file dropped anywhere on the open notch (not just inside a tab's own drop area) goes to the Shelf, or to
+        // Convert when that is the tab showing. The tabs' own drop areas still take their drops first.
+        .onDrop(of: [.fileURL], isTargeted: nil) { providers in
+            guard state.isExpanded else { return false }
+            DragLog.log.notice("root drop: \(providers.count, privacy: .public) item(s), tab \(state.selected.rawValue, privacy: .public)")
+            let convert = state.selected == .convert && settings.convertEnabled
+            if !convert, !settings.shelfEnabled { return false }
+            for provider in providers {
+                _ = provider.loadObject(ofClass: URL.self) { url, _ in
+                    guard let url else { return }
+                    DispatchQueue.main.async {
+                        if convert { NotificationCenter.default.post(name: DragLog.convertDrop, object: nil, userInfo: ["url": url]) }
+                        else { withAnimation(Theme.spring) { FileShelfStore.shared.add(url) } }
+                    }
+                }
+            }
+            if !convert { withAnimation(Theme.spring) { state.selected = .shelf } }
+            return true
+        }
         .fontDesign(StylePrefs.fontDesign)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         // Opening is handled by the notch trigger window (click, ⌘E or file drag);

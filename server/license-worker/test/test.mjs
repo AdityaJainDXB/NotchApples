@@ -6,7 +6,7 @@
 
 import assert from 'node:assert/strict';
 import { writeFileSync } from 'node:fs';
-import worker, { parseKey, verifyKey, verifyToken, mintToken, b32encode, b32decode } from '../src/worker.js';
+import worker, { parseKey, verifyKey, verifyToken, mintToken, b32encode, b32decode, AiQuota, cleanAiRequest, PlaneBoard, PlaneRate, cleanPilotName, cleanPlaneScore } from '../src/worker.js';
 
 const pair = await crypto.subtle.generateKey({ name: 'Ed25519' }, true, ['sign', 'verify']);
 const jwk = await crypto.subtle.exportKey('jwk', pair.privateKey);
@@ -405,6 +405,144 @@ await test('Assets: a token from a revoked key stops working at once', async () 
   assert.equal((await getAsset('gallery/pro.txt', tok)).status, 200);
   await call('/admin/revoke', { keyId: parseKey(k).keyId, reason: 'leak' }, { authorization: 'Bearer admin-test' });
   assert.equal((await getAsset('gallery/pro.txt', tok)).status, 403);
+});
+
+// ---- Notch apple AI (hosted)
+
+const quotaObjects = new Map();
+env.AI_QUOTA = {
+  idFromName: (n) => n,
+  get: (id) => { if (!quotaObjects.has(id)) { const m = new Map(); quotaObjects.set(id, new AiQuota({ storage: { get: async (k) => m.get(k), put: async (k, v) => { m.set(k, v); }, delete: async (k) => { m.delete(k); } } })); } const o = quotaObjects.get(id); return { fetch: (url, init) => o.fetch(new Request(url, init)) }; },
+};
+let upstreamSeen = null, upstreamStatus = 200;
+const realFetch = globalThis.fetch;
+globalThis.fetch = async (url, init) => {
+  if (String(url).includes('ai.test/v1/chat/completions')) {
+    upstreamSeen = { url: String(url), headers: init.headers, body: JSON.parse(init.body) };
+    if (upstreamStatus !== 200) return new Response('provider says: key AIza-secret over quota', { status: upstreamStatus });
+    return new Response(JSON.stringify({ choices: [{ message: { role: 'assistant', content: 'hello from the provider' } }] }), { headers: { 'content-type': 'application/json' } });
+  }
+  return realFetch(url, init);
+};
+const aiCall = async (token, body) => {
+  const r = await worker.fetch(new Request('https://w.test/ai/v1/chat/completions', { method: 'POST', body: JSON.stringify(body), headers: token ? { authorization: 'Bearer ' + token } : {} }), env);
+  return { status: r.status, remaining: r.headers.get('x-ai-remaining'), text: await r.text() };
+};
+const chatBody = { model: 'evil-model', messages: [{ role: 'user', content: 'hi' }], tools: [{ type: 'function' }], stream: false };
+
+await test('AI is off until the server has its key', async () => {
+  assert.equal((await call('/ai/status')).on, false);
+  assert.equal((await aiCall('x', chatBody)).status, 503);
+});
+
+env.AI_API_KEY = 'server-secret-key'; env.AI_BASE = 'https://ai.test/v1'; env.AI_MODEL = 'server-chosen-model'; env.AI_LIMIT_PRO = '3'; env.AI_LIMIT_ULTIMATE = '5';
+const aiToken = async (tier, n) => (await call('/entitle', { key: (await call('/admin/issue', { tier }, { authorization: 'Bearer admin-test' })).key, device: devn(n) })).token;
+
+await test('AI: needs a real token; the server picks the model and key; extra fields are dropped', async () => {
+  assert.equal((await call('/ai/status')).on, true);
+  assert.equal((await aiCall('', chatBody)).status, 401);
+  assert.equal((await aiCall('ent1.x.y', chatBody)).status, 401);
+  const tok = await aiToken('pro', 601);
+  const r = await aiCall(tok, chatBody);
+  assert.equal(r.status, 200); assert.ok(r.text.includes('hello from the provider'));
+  assert.equal(upstreamSeen.body.model, 'server-chosen-model', "the app can't pick the model");
+  assert.equal(upstreamSeen.body.tools, undefined, 'unknown fields are dropped');
+  assert.equal(upstreamSeen.headers.authorization, 'Bearer server-secret-key');
+  assert.ok(!r.text.includes('server-secret-key'), 'the provider key is never sent to the app');
+  assert.equal(upstreamSeen.url, 'https://ai.test/v1/chat/completions');
+});
+
+await test('AI: a daily allowance per key, and Ultimate gets more', async () => {
+  const pro = await aiToken('pro', 602), ult = await aiToken('ultimate', 603);
+  for (let i = 0; i < 3; i++) assert.equal((await aiCall(pro, chatBody)).status, 200);
+  const over = await aiCall(pro, chatBody);
+  assert.equal(over.status, 429); assert.ok(over.text.includes("today's 3"));
+  for (let i = 0; i < 5; i++) assert.equal((await aiCall(ult, chatBody)).status, 200);
+  assert.equal((await aiCall(ult, chatBody)).status, 429);
+  const other = await aiToken('pro', 604);
+  const r = await aiCall(other, chatBody);
+  assert.equal(r.status, 200); assert.equal(r.remaining, '2');
+});
+
+await test('AI: refuses odd requests (remote images, empty, huge, bad roles)', async () => {
+  const tok = await aiToken('ultimate', 605);
+  const bad = (messages) => aiCall(tok, { messages });
+  assert.equal((await bad([{ role: 'user', content: [{ type: 'image_url', image_url: { url: 'https://evil.example/x.png' } }] }])).status, 400);
+  assert.equal((await bad([])).status, 400);
+  assert.equal((await bad([{ role: 'tool', content: 'x' }])).status, 400);
+  assert.equal((await bad([{ role: 'user', content: 'x'.repeat(500000) }])).status, 413);
+  assert.equal((await bad([{ role: 'user', content: [{ type: 'text', text: 'what is this' }, { type: 'image_url', image_url: { url: 'data:image/jpeg;base64,AAAA' } }] }])).status, 200);
+  assert.equal(cleanAiRequest({ messages: [{ role: 'user', content: 'a' }], max_tokens: 999999, temperature: 9 }, env).max_tokens, 4096);
+  assert.equal(cleanAiRequest({ messages: [{ role: 'user', content: 'a' }], temperature: 9 }, env).temperature, 2);
+});
+
+await test('AI: a revoked key stops at once, and provider trouble is reported without leaking anything', async () => {
+  const k = (await call('/admin/issue', { tier: 'pro' }, { authorization: 'Bearer admin-test' })).key;
+  const tok = (await call('/entitle', { key: k, device: devn(606) })).token;
+  assert.equal((await aiCall(tok, chatBody)).status, 200);
+  upstreamStatus = 429;
+  const busy = await aiCall(tok, chatBody);
+  assert.equal(busy.status, 503); assert.ok(!busy.text.includes('AIza') && !busy.text.includes('provider says'));
+  upstreamStatus = 200;
+  await call('/admin/revoke', { keyId: parseKey(k).keyId, reason: 'test' }, { authorization: 'Bearer admin-test' });
+  assert.equal((await aiCall(tok, chatBody)).status, 403);
+});
+
+// ---- The Plane game's world leaderboard
+
+const fakeDO = (Cls) => { const objs = new Map(); return { idFromName: (n) => n, get: (id) => { if (!objs.has(id)) { const m = new Map(); objs.set(id, new Cls({ storage: { get: async (k) => m.get(k), put: async (k, v) => { m.set(k, v); } } })); } const o = objs.get(id); return { fetch: (url, init) => o.fetch(new Request(url, init)) }; } }; };
+env.PLANE_BOARD = fakeDO(PlaneBoard); env.PLANE_RATE = fakeDO(PlaneRate);
+const post = (body, ip = '1.1.1.1') => call('/plane/score', body, { 'cf-connecting-ip': ip });
+const board = async (mode, period = 'all') => (await worker.fetch(new Request(`https://w.test/plane/board?mode=${mode}&period=${period}`), env)).json();
+
+await test('World board: scores are accepted, sorted the right way for each mode and shown top first', async () => {
+  for (const [name, score] of [['Ana', 12], ['Ben', 30], ['Cy', 21]]) assert.equal((await post({ mode: 'hoops', name, plane: 'c172', score }, `10.0.0.${score}`)).ok, true);
+  const h = (await board('hoops')).entries;
+  assert.deepEqual(h.map((e) => e.name), ['Ben', 'Cy', 'Ana']);
+  for (const [name, score] of [['Slow', 90.4], ['Fast', 41.25], ['Mid', 60]]) await post({ mode: 'trial', name, plane: 'a320', score }, `10.0.1.${Math.floor(score)}`);
+  const t = (await board('trial')).entries;
+  assert.deepEqual(t.map((e) => e.name), ['Fast', 'Mid', 'Slow'], 'the fastest time is first');
+  assert.equal(t[0].score, 41.3, 'rounded to a tenth');
+  assert.equal(t[0].plane, 'Airbus A320');
+  const r = await post({ mode: 'landing', name: 'Lee', plane: 'b777', score: 250 }, '10.0.2.1');
+  assert.equal(r.rank, 1);
+});
+
+await test('World board: impossible scores, unknown modes and planes are refused', async () => {
+  assert.equal((await post({ mode: 'hoops', name: 'X', plane: 'c172', score: 5000 }, '10.1.0.1')).status, 400);
+  assert.equal((await post({ mode: 'hoops', name: 'X', plane: 'c172', score: 2.5 }, '10.1.0.2')).status, 400);
+  assert.equal((await post({ mode: 'trial', name: 'X', plane: 'c172', score: 3 }, '10.1.0.3')).status, 400, 'a time that is too fast');
+  assert.equal((await post({ mode: 'trial', name: 'X', plane: 'c172', score: -1 }, '10.1.0.4')).status, 400);
+  assert.equal((await post({ mode: 'free', name: 'X', plane: 'c172', score: 5 }, '10.1.0.5')).status, 400);
+  assert.equal((await post({ mode: 'hoops', name: 'X', plane: 'nope', score: 5 }, '10.1.0.6')).status, 400);
+  assert.equal((await post({ mode: 'hoops', name: 'X', plane: 'c172', score: 'abc' }, '10.1.0.7')).status, 400);
+  assert.equal((await worker.fetch(new Request('https://w.test/plane/board?mode=free'), env)).status, 400);
+});
+
+await test('World board: names are cleaned, rude ones become Pilot, and nothing else is stored', async () => {
+  assert.equal(cleanPilotName('  Aditya <script>alert(1)</script>  '), 'Aditya scriptale');
+  assert.equal(cleanPilotName('x'.repeat(40)).length, 16);
+  assert.equal(cleanPilotName('f.u.c.k'), 'Pilot'); assert.equal(cleanPilotName('Nazi pilot'), 'Pilot'); assert.equal(cleanPilotName(''), 'Pilot');
+  assert.equal(cleanPilotName('Zoë 3'), 'Zoë 3');
+  const e = cleanPlaneScore({ mode: 'hoops', name: 'Q', plane: 'c172', score: 4, region: 'London!!', extra: 'x', ip: '1.2.3.4' });
+  assert.deepEqual(Object.keys(e).sort(), ['mode', 'name', 'plane', 'region', 'score']);
+  assert.equal(e.region, 'ondon', 'letters only');
+});
+
+await test('World board: ten posts a minute from one address, then a pause; duplicates are not added twice', async () => {
+  let last;
+  for (let i = 0; i < 11; i++) last = await post({ mode: 'hoops', name: 'Spam' + i, plane: 'c172', score: 5 }, '9.9.9.9');
+  assert.equal(last.status, 429);
+  const again = await post({ mode: 'hoops', name: 'Ana', plane: 'c172', score: 12 }, '8.8.8.8');
+  assert.equal(again.ok, true);
+  assert.equal((await board('hoops')).entries.filter((e) => e.name === 'Ana' && e.score === 12).length, 1, 'the same score twice in an hour is one entry');
+});
+
+await test('World board: the weekly board only has recent scores; the admin can clear a board', async () => {
+  assert.ok((await board('hoops', 'week')).entries.length > 0);
+  assert.equal((await call('/admin/plane-clear', { mode: 'hoops' }, { authorization: 'Bearer admin-test' })).cleared, 'hoops');
+  assert.equal((await board('hoops')).entries.length, 0);
+  assert.equal((await call('/admin/plane-clear', { mode: 'hoops' }, { authorization: 'Bearer wrong' })).status, 401);
 });
 
 // Fixture for the Swift tests: a Pro and an Ultimate key from this run, with this run's public key.

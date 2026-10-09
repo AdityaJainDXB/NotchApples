@@ -48,6 +48,18 @@ export function render(root) {
         toggle(SL.isOn(), (on) => SL.setOn(on)), el('span', { class: 'dim' }, 'Lyrics on the side of your screen'),
         select([{ value: 'left', label: 'Left' }, { value: 'right', label: 'Right' }], SL.side(), (v) => SL.setSide(v), { cls: 'auto', title: 'Which edge of the screen' }))
     : proNote('lyrics', 'Lyrics on the side of your screen.');
+  // Cassette mode: the cover becomes a tape whose reels turn while it plays and whose tape moves across as the song goes on.
+  let cassette = load('media.cassette', false);
+  const tapeTitle = el('div', { class: 'tape-title' }), tapeArtist = el('div', { class: 'tape-artist' });
+  const reelL = el('i', { class: 'tape-reel' }), reelR = el('i', { class: 'tape-reel' });
+  const tape = el('div', { class: 'tape', role: 'img', 'aria-label': 'Cassette' }, el('div', { class: 'tape-label' }, tapeTitle, tapeArtist), el('div', { class: 'tape-window' }, reelL, reelR));
+  const cassetteBtn = el('button', { class: 'icon-btn', title: cassette ? 'Back to the cover' : 'Cassette mode', onclick: () => { cassette = !cassette; save('media.cassette', cassette); cassetteBtn.title = cassette ? 'Back to the cover' : 'Cassette mode'; art.dataset.src = '\u0000'; const m = M.now(); if (m) paint(m); } }, '📼');
+  function paintTape(m) {
+    tapeTitle.textContent = m.title || ''; tapeArtist.textContent = m.artist || '';
+    tape.classList.toggle('spin', !!m.playing);
+    const p = m.duration ? Math.min(Math.max(m.position / m.duration, 0), 1) : 0;
+    reelL.style.setProperty('--r', 30 + 12 * (1 - p)); reelR.style.setProperty('--r', 30 + 12 * p);
+  }
   const lyricBox = el('div', { class: 'col scroll', style: 'flex:1;min-height:0;gap:6px;padding-right:4px' });
   const player = el('div', { class: 'card col', style: 'flex:1.7;min-width:0;gap:10px' },
     el('div', { class: 'hstack', style: 'gap:20px;align-items:center;flex:1' }, art,
@@ -55,7 +67,8 @@ export function render(root) {
         el('div', { style: 'height:8px' }),
         bar, el('div', { class: 'hstack' }, pos, el('div', { class: 'spacer' }), dur),
         el('div', { class: 'hstack', style: 'gap:10px;flex-wrap:wrap' }, prevBtn, playBtn, nextBtn, sleepSel, sleepNote,
-          el('button', { class: 'icon-btn', title: 'Lyrics', onclick: () => setSpot(true) }, '❝')),
+          el('button', { class: 'icon-btn', title: 'Lyrics', onclick: () => setSpot(true) }, '❝'),
+          cassetteBtn),
         balRow, sideRow)),
     el('label', { class: 'hstack small dim', style: 'cursor:pointer' },
       toggle(load('media.pill', true), (v) => save('media.pill', v)), 'Show the cover on the closed notch while music plays'));
@@ -156,8 +169,12 @@ export function render(root) {
     const shown = cards();
     if (shown.length !== wrap.children.length || shown.some((c) => !wrap.contains(c))) wrap.replaceChildren(...shown);
     // Only swap the cover when it changes (this runs twice a second).
-    if (art.dataset.src !== (m.art || '')) {
+    if (cassette) {
+      if (art.dataset.src !== '\u0001') { art.dataset.src = '\u0001'; art.style.cssText += ';width:250px;height:158px;border-radius:12px;background:none;box-shadow:none'; art.replaceChildren(tape); }
+      paintTape(m);
+    } else if (art.dataset.src !== (m.art || '')) {
       art.dataset.src = m.art || '';
+      art.style.width = '190px'; art.style.height = '190px'; art.style.borderRadius = '24px'; art.style.background = 'var(--surface)';
       art.replaceChildren(m.art ? el('img', { src: m.art, style: 'width:100%;height:100%;object-fit:cover' }) : '🎵');
     }
     if (spot) {

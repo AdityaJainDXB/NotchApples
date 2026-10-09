@@ -1022,7 +1022,7 @@
   const RIVER2 = [[-1500, -2200], [-1250, -1500], [-1000, -600], [-1150, 400], [-950, 1500], [-1200, 2600], [-900, 3600], [-1000, 4700], [-1050, 6200]];
   const BRIDGE = { x: -2050, z: -2800 };
   /// Places kept perfectly level: [centre x, centre z, half width, half depth] (airfield, town, three villages, the city).
-  const FLATS = [[0, -700, 160, 960], [1250, -1350, 450, 550], [600, 1300, 240, 240], [-300, 2800, 240, 240], [2300, -250, 240, 240], [2900, 3100, 560, 560]];
+  const FLATS = [[0, -700, 160, 960], [1250, -1350, 450, 550], [600, 1300, 240, 240], [-300, 2800, 240, 240], [2300, -250, 240, 240], [2900, 3100, 560, 560], [520, -1050, 420, 330]];
   const CITY = { x: 2900, z: 3100 };
   const ROADS = [
     [[160, -660], [300, -730], [560, -850], [780, -1000], [850, -1100]],                 // airfield to the town
@@ -1092,6 +1092,136 @@
     return Math.max(h, -70);
   }
 
+  // ------------------------------------------------------------------ places
+  // The valley is always the same shape; a place adds its famous landmark beside the runway (and the desert, for the
+  // dry ones). `cc` is the country code used to match what someone types or where they are.
+  const LM = [420, -1050];
+  const stepTower = (ctx, x, z, tiers, col) => {   // stacked blocks that narrow as they climb
+    let y = ctx.g(x, z);
+    for (const [w, h] of tiers) { ctx.block([x, y + h / 2, z], [w, h, w], col, 'landmark'); y += h; }
+    return y;
+  };
+  const frustum = (ctx, x, z, r0, r1, h, y0, col, seg = 4) => {   // a solid cone-ish tier, with a box collider
+    ctx.b.cone([x, y0, z], r0, r1, h, col, seg);
+    const k = (r0 + r1) / 2 * 0.72;
+    ctx.solid([x - k, y0, z - k], [x + k, y0 + h, z + k], 'landmark');
+    return y0 + h;
+  };
+  const LANDMARKS = {
+    dubai(ctx) {   // Burj Khalifa and two neighbours
+      const [x, z] = LM, c = ctx.hex('#a9c4d8'), c2 = ctx.hex('#7f9db5');
+      const top = stepTower(ctx, x, z, [[44, 90], [38, 80], [32, 70], [26, 60], [20, 50], [15, 40]], c);
+      ctx.b.cone([x, top, z], 3, 0.4, 70, c2, 6);
+      ctx.solid([x - 1.5, top, z - 1.5], [x + 1.5, top + 70, z + 1.5], 'landmark');
+      stepTower(ctx, x + 120, z - 60, [[34, 120], [28, 40]], c2);
+      stepTower(ctx, x - 110, z + 50, [[30, 100], [24, 50]], c);
+    },
+    london(ctx) {   // Tower Bridge over the Thames, and the Elizabeth Tower
+      const [x, z] = LM, stone = ctx.hex('#8d99a5'), blue = ctx.hex('#3d79c4'), roof = ctx.hex('#3b5b7a');
+      ctx.b.quad([x - 80, 0.35, z - 240], [x + 80, 0.35, z - 240], [x + 80, 0.35, z + 240], [x - 80, 0.35, z + 240], blue);
+      for (const dx of [-45, 45]) { const t = stepTower(ctx, x + dx, z, [[24, 62]], stone); ctx.b.cone([x + dx, t, z], 15, 0, 22, roof, 4); }
+      ctx.block([x, 24, z], [70, 3, 12], ctx.hex('#2f5d8c'), 'landmark');
+      ctx.block([x, 62, z], [66, 3, 8], blue, 'landmark');
+      const bx = x - 160, bz = z + 150, bt = stepTower(ctx, bx, bz, [[16, 80]], ctx.hex('#c9b48a'));
+      ctx.b.cone([bx, bt, bz], 10, 0, 26, ctx.hex('#4f6b5d'), 4);
+    },
+    paris(ctx) {   // the Eiffel Tower
+      const [x, z] = LM, iron = ctx.hex('#6b5b4b'), g = ctx.g(x, z);
+      let y = frustum(ctx, x, z, 62, 26, 110, g, iron);
+      y = frustum(ctx, x, z, 26, 11, 90, y, iron);
+      y = frustum(ctx, x, z, 11, 3, 80, y, iron);
+      ctx.b.cone([x, y, z], 1.6, 0.2, 40, iron, 5);
+      ctx.b.cone([x, g + 108, z], 40, 40, 4, ctx.hex('#7d6e5d'), 4);
+    },
+    newyork(ctx) {   // the Empire State Building among the towers
+      const [x, z] = LM, st = ctx.hex('#b8bfc6'), glass = ctx.hex('#8fa6b8'), r = ctx.r;
+      const top = stepTower(ctx, x, z, [[64, 110], [52, 70], [38, 50], [26, 40], [14, 26]], st);
+      ctx.b.cone([x, top, z], 3, 0.3, 55, ctx.hex('#9aa3ab'), 6);
+      ctx.solid([x - 1.5, top, z - 1.5], [x + 1.5, top + 55, z + 1.5], 'landmark');
+      for (let i = 0; i < 9; i++) {
+        const a = i * 0.7, d = 140 + (i % 3) * 40, h = 90 + r() * 140;
+        ctx.block([x + Math.cos(a) * d, ctx.g(x, z) + h / 2, z + Math.sin(a) * d], [34 + r() * 20, h, 34 + r() * 20], i % 2 ? glass : st, 'landmark');
+      }
+    },
+    tokyo(ctx) {   // Tokyo Tower, red and white
+      const [x, z] = LM, red = ctx.hex('#e2402a'), white = ctx.hex('#f2f2f2'), g = ctx.g(x, z);
+      let y = frustum(ctx, x, z, 50, 22, 100, g, red);
+      y = frustum(ctx, x, z, 22, 12, 70, y, white);
+      y = frustum(ctx, x, z, 12, 6, 70, y, red);
+      ctx.b.cone([x, y, z], 3, 0.3, 60, white, 5);
+      ctx.b.cone([x, g + 98, z], 34, 34, 4, red, 4);
+    },
+    sydney(ctx) {   // the Opera House sails and the Harbour Bridge
+      const [x, z] = LM, sail = ctx.hex('#f4f1ea'), g = ctx.g(x, z);
+      ctx.b.quad([x - 200, 0.35, z - 260], [x + 200, 0.35, z - 260], [x + 200, 0.35, z + 260], [x - 200, 0.35, z + 260], ctx.hex('#2f8fd6'));
+      ctx.block([x, 4, z], [120, 8, 80], ctx.hex('#d9d2c2'), 'landmark');
+      for (let i = 0; i < 5; i++) {
+        const sx = x - 44 + i * 22, h = 46 - Math.abs(i - 2) * 7;
+        ctx.b.cone([sx, g + 8, z - 10 + (i % 2) * 8], 15, 0, h, sail, 3);
+      }
+      for (let k = -9; k <= 9; k++) {
+        const bx = x + 40, bz = z + 150 + k * 16, arch = 78 * (1 - (k / 9) ** 2) + 26;
+        ctx.block([bx, g + arch, bz], [10, 4, 17], ctx.hex('#7f8a93'), 'landmark');
+        if (k % 3 === 0) ctx.b.box([bx, g + (arch + 26) / 2, bz], [2, arch - 26, 2], ctx.hex('#7f8a93'));
+        ctx.block([bx, g + 24, bz], [18, 3, 17], ctx.hex('#4a4f55'), 'landmark');
+      }
+    },
+    cairo(ctx) {   // the pyramids of Giza
+      const [x, z] = LM, gold = ctx.hex('#d8b66a'), gold2 = ctx.hex('#caa55a');
+      for (const [dx, dz, r0, h, col] of [[0, 0, 125, 150, gold], [220, 130, 115, 138, gold2], [400, 250, 58, 70, gold]]) {
+        const px = x + dx, pz = z + dz, g = ctx.g(px, pz);
+        ctx.b.cone([px, g, pz], r0, 0, h, col, 4);
+        for (let k = 0; k < 5; k++) {   // the box colliders follow the slope
+          const f = 1 - k / 5, rr = r0 * f * 0.7;
+          ctx.solid([px - rr, g + h * k / 5, pz - rr], [px + rr, g + h * (k + 1) / 5, pz + rr], 'landmark');
+        }
+      }
+    },
+    sanfrancisco(ctx) {   // the Golden Gate Bridge
+      const [x, z] = LM, red = ctx.hex('#c0392b'), g = ctx.g(x, z);
+      ctx.b.quad([x - 330, 0.35, z - 130], [x + 330, 0.35, z - 130], [x + 330, 0.35, z + 130], [x - 330, 0.35, z + 130], ctx.hex('#2a74c0'));
+      for (const dx of [-170, 170]) {
+        for (const o of [-9, 9]) ctx.block([x + dx, g + 80, z + o], [7, 160, 7], red, 'landmark');
+        ctx.b.box([x + dx, g + 110, z], [8, 5, 28], red); ctx.b.box([x + dx, g + 70, z], [8, 5, 28], red);
+      }
+      for (let k = -20; k <= 20; k++) {
+        const bx = x + k * 16;
+        ctx.block([bx, g + 42, z], [17, 3, 20], red, 'landmark');
+        if (Math.abs(k * 16) <= 170) ctx.b.box([bx, g + 42 + (160 - 42) * (1 - ((k * 16) / 170) ** 2) * 0.55 + 14, z + 9], [17, 1.6, 1.6], red);
+      }
+    },
+  };
+  const REGIONS = [
+    { id: '', name: 'Home valley', lm: 'the hills and the airfield', lat: 0, lon: 0, aliases: ['home', 'valley', 'default'] },
+    { id: 'dubai', name: 'Dubai', lm: 'Burj Khalifa', lat: 25.2, lon: 55.27, cc: 'AE', desert: true, aliases: ['uae', 'united arab emirates', 'abu dhabi', 'sharjah', 'emirates'] },
+    { id: 'london', name: 'London', lm: 'Tower Bridge', lat: 51.51, lon: -0.12, cc: 'GB', aliases: ['uk', 'united kingdom', 'england', 'britain', 'great britain', 'scotland', 'wales', 'manchester', 'birmingham'] },
+    { id: 'paris', name: 'Paris', lm: 'the Eiffel Tower', lat: 48.86, lon: 2.35, cc: 'FR', aliases: ['france'] },
+    { id: 'newyork', name: 'New York', lm: 'the Empire State Building', lat: 40.71, lon: -74.0, cc: 'US', aliases: ['nyc', 'usa', 'united states', 'america', 'new york city', 'manhattan'] },
+    { id: 'tokyo', name: 'Tokyo', lm: 'Tokyo Tower', lat: 35.68, lon: 139.69, cc: 'JP', aliases: ['japan', 'osaka', 'kyoto'] },
+    { id: 'sydney', name: 'Sydney', lm: 'the Opera House and Harbour Bridge', lat: -33.87, lon: 151.21, cc: 'AU', aliases: ['australia', 'melbourne', 'brisbane'] },
+    { id: 'cairo', name: 'Cairo', lm: 'the pyramids of Giza', lat: 30.04, lon: 31.24, cc: 'EG', desert: true, aliases: ['egypt', 'giza', 'pyramids'] },
+    { id: 'sanfrancisco', name: 'San Francisco', lm: 'the Golden Gate Bridge', lat: 37.77, lon: -122.42, cc: 'US', aliases: ['sf', 'california', 'golden gate', 'los angeles', 'la'] },
+  ];
+  const regionOf = (id) => REGIONS.find((x) => x.id === id) || REGIONS[0];
+  const haversine = (a, b, c, d) => {
+    const R = Math.PI / 180, x = Math.sin((c - a) * R / 2) ** 2 + Math.cos(a * R) * Math.cos(c * R) * Math.sin((d - b) * R / 2) ** 2;
+    return 12742 * Math.asin(Math.sqrt(x));
+  };
+  /// The scenery for a place: the country's own landmark if there is one (the nearer of the two for the US), else the nearest.
+  function nearestRegion(lat, lon, cc) {
+    const list = REGIONS.filter((x) => x.id);
+    const same = cc ? list.filter((x) => x.cc === cc) : [];
+    const pool = same.length ? same : list;
+    return pool.reduce((best, x) => (haversine(lat, lon, x.lat, x.lon) < haversine(lat, lon, best.lat, best.lon) ? x : best));
+  }
+  /// Matches typed text against the catalogue (names, countries, nicknames); null if it isn't one we know.
+  function matchRegion(text) {
+    const t = String(text || '').trim().toLowerCase();
+    if (!t) return null;
+    return REGIONS.find((x) => x.name.toLowerCase() === t || x.id === t || (x.aliases || []).includes(t)) || null;
+  }
+
+
   // ---- the heightfield, generated chunk by chunk as it is needed
 
   const chunkOf = (world, ci, cj) => world.chunks[cj * TNC + ci] || (world.chunks[cj * TNC + ci] = {
@@ -1129,6 +1259,7 @@
 
   const GC = { grass: hex('#5b9a3b'), grass2: hex('#78a843'), dry: hex('#9aa755'), forest: hex('#38632b'), alp: hex('#80905a'), rock: hex('#7d7569'), rock2: hex('#6c7170'),
     sand: hex("#e3d2a4"), wet: hex("#b8a47a"), bed: hex('#7f9a84') };
+  const DUNE = ['#d9c08a', '#cfb57c', '#e0c993', '#c9ad74'].map(hex);
   const mix3 = (a, b, t) => [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t];
   /// 1 near the sea, the lake and the rivers (where low ground is beach), 0 inland.
   const shoreNear = (x, z) => Math.max(smooth(3200, 3600, z), 1 - smooth(LAKE.r + 100, LAKE.r + 450, Math.hypot(x - LAKE.x, z - LAKE.z)), 1 - smooth(150, 400, Math.min(riverDist(x, z), polyDist(x, z, RIVER2))));
@@ -1144,7 +1275,7 @@
   }
   /// How much of the ground here is patchwork farmland (0..1): flat, low, dry land away from the built-up places.
   function farmAt(world, x, z, y, ny) {
-    if (y < WATER + 5 || y > 90 || ny < 0.955) return 0;
+    if (world.desert || y < WATER + 5 || y > 90 || ny < 0.955) return 0;
     const f = smooth(0.50, 0.60, fbm(x / 1500 + 60, z / 1500 - 30, 3)) * (1 - smooth(25, 90, y));
     return f > 0.01 && !blocked(world, x, z) ? f : 0;
   }
@@ -1154,7 +1285,8 @@
     let c = mix3(GC.grass, GC.grass2, smooth(0.35, 0.7, n1));
     c = mix3(GC.dry, c, smooth(0.30, 0.56, moist));
     c = mix3(c, GC.alp, smooth(450, 900, y + (n1 - 0.5) * 160));
-    const f = forestP(x, z, y, ny);
+    const f = world.desert ? 0 : forestP(x, z, y, ny);
+    if (world.desert && y < 90) c = mix3(c, DUNE[Math.floor(hash2(Math.floor(x / 220), Math.floor(z / 220)) * DUNE.length)], 0.9 * (1 - smooth(60, 90, y)));
     if (f > 0) c = mix3(c, GC.forest, Math.min(f * 1.3, 1) * 0.85);
     const rk = Math.max(smooth(0.82, 0.66, ny), smooth(900, 1400, y + (n1 - 0.5) * 200) * 0.7);
     c = mix3(c, mix3(GC.rock, GC.rock2, vnoise(x / 140, z / 140)), rk);
@@ -1255,10 +1387,10 @@
     for (let a = 0; a < n; a++) for (let q = 0; q < n; q++) {
       const x = c.x0 + (a + rr()) * step, z = c.z0 + (q + rr()) * step, roll = rr(), y = terrainAt(world, x, z);
       if (y < WATER + 1.5 || y > 760) continue;
-      const fb = forestBase(x, z, y);
+      const fb = forestBase(x, z, y) * (world.desert && y < 80 ? 0.06 : 1);
       if (!(roll < fb * 0.8 || (fb < 0.12 && roll > 0.994))) continue;
       if (blocked(world, x, z)) continue;
-      const nrm = normalAt(world, x, z, 6), fp = forestP(x, z, y, nrm[1]);
+      const nrm = normalAt(world, x, z, 6), fp = forestP(x, z, y, nrm[1]) * (world.desert && y < 80 ? 0.06 : 1);
       if (!(roll < fp * 0.8 || (nrm[1] > 0.93 && roll > 0.994))) continue;
       const conifer = rr() < smooth(80, 420, y + (vnoise(x / 220, z / 220) - 0.5) * 260) + 0.08, h = conifer ? 12 + rr() * 12 : 9 + rr() * 9, w = h * 0.22;
       plantTree(near, far, x, y, z, h, conifer, rr);
@@ -1326,9 +1458,9 @@
   }
   const SEG7 = { 0: 'abcdef', 1: 'bc', 2: 'abged', 3: 'abgcd', 4: 'fgbc', 5: 'afgcd', 6: 'afgedc', 7: 'abc', 8: 'abcdefg', 9: 'abcdfg' };
 
-  function makeWorld() {
+  function makeWorld(region = REGIONS[0]) {
     const r = rng(7), b = new Builder(), lights = new Builder(), ground = new Builder(), decal = new Builder(), marks = new Builder(), beacon = new Builder(), lampB = new Builder();
-    const world = { chunks: new Array(TNC * TNC), colliders: [], grid: new Map(), turbines: [], keep: [], papi: [], socks: [], wind: null, lighthouse: null };
+    const world = { chunks: new Array(TNC * TNC), colliders: [], grid: new Map(), turbines: [], keep: [[LM[0], LM[1], 460]], papi: [], socks: [], wind: null, lighthouse: null, region: region.id, desert: !!region.desert };
     const gAt = (x, z) => groundAt(world, x, z);
     const solid = (min, max, kind) => addSolid(world, min, max, kind);
     const block = (c, s, col, kind) => { b.box(c, s, col); if (kind) solid(sub(c, mul(s, 0.5)), add(c, mul(s, 0.5)), kind); };
@@ -1510,6 +1642,7 @@
       }
       for (let t = -0.95; t < 0.95; t += 0.1) { const c0 = add(A, mul(along, t)), c1 = add(A, mul(along, t + 0.05)); marks.quad(add(c0, mul(rdir, 0.25)), add(c1, mul(rdir, 0.25)), add(c1, mul(rdir, -0.25)), add(c0, mul(rdir, -0.25)), paint, [A[0], -200, A[2]]); }
     }
+    if (LANDMARKS[region.id]) LANDMARKS[region.id]({ b, block, solid, hex, r, g: gAt });
     // A radio mast on a hill, striped red and white, with a red light.
     const mx = -700, mz = 1700, mg = gAt(mx, mz);
     solid([mx - 1.5, mg, mz - 1.5], [mx + 1.5, mg + 220, mz + 1.5], 'mast');
@@ -1709,7 +1842,8 @@
 
   /// Everything the plane flies over: sky, level-of-detail ground chunks, trees, painted ground, buildings, lights, clouds, water.
   /// G: the host's GL helpers { prog, U, draw, upload, I, rotorMesh }. Returns { draw(ctx), prime(x, z) }.
-  function makeWorldRenderer(gl, W, G) {
+  function makeWorldRenderer(gl, W0, G) {
+    let W = W0;
     const { prog, U, draw, upload, I, rotorMesh } = G;
     const sh = (type, src) => { const s = gl.createShader(type); gl.shaderSource(s, src); gl.compileShader(s); if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) console.error('world shader:', gl.getShaderInfoLog(s)); return s; };
     const mk = (vs, fs) => {
@@ -1749,7 +1883,8 @@
     }
 
     // Static meshes, small helper meshes, the shared index buffers.
-    const M = { world: upload(W.world), ground: upload(W.ground), decal: upload(W.decal), marks: upload(W.marks), lights: upload(W.lights), beacon: upload(W.beacon), lamp: upload(W.lampB), clouds: upload(W.clouds) };
+    const meshesOf = (W) => ({ world: upload(W.world), ground: upload(W.ground), decal: upload(W.decal), marks: upload(W.marks), lights: upload(W.lights), beacon: upload(W.beacon), lamp: upload(W.lampB), clouds: upload(W.clouds) });
+    let M = meshesOf(W);
     const unit = new Builder(); unit.box([0, 0, 0], [1, 1, 1], [1, 1, 1]); const boxMesh = upload(unit);
     const dsc = new Builder(); for (let i = 0; i < 14; i++) { const a0 = (i / 14) * 6.2832, a1 = ((i + 1) / 14) * 6.2832; dsc.tri([0, 0, 0], [Math.cos(a0), 0, Math.sin(a0)], [Math.cos(a1), 0, Math.sin(a1)], [1, 1, 1], [0, -1, 0]); }
     const discMesh = upload(dsc);
@@ -1928,7 +2063,18 @@
       gl.depthMask(true); gl.disable(gl.BLEND);
       gl.useProgram(prog);
     }
-    return { draw: drawWorld, prime };
+    /// Swaps in another world (a different place): frees the old one's buffers and builds the new one's.
+    function setWorld(nw) {
+      const del = (m) => { if (m && m.buf) gl.deleteBuffer(m.buf); };
+      Object.values(M).forEach(del);
+      for (const c of W.chunks) {
+        if (!c) continue;
+        for (const l of c.lod) if (l) { if (l.vb) gl.deleteBuffer(l.vb); if (l.wb) gl.deleteBuffer(l.wb); }
+        if (c.treesGL) { del(c.treesGL.near); del(c.treesGL.far); }
+      }
+      W = nw; M = meshesOf(W); prime(0, -300);
+    }
+    return { draw: drawWorld, prime, setWorld };
   }
 
   // ------------------------------------------------------------------ flight model
@@ -2789,7 +2935,36 @@
       gl.drawArrays(gl.TRIANGLES, 0, mesh.count);
     }
 
-    const W = makeWorld();
+    let regionId = read('region', '');    // the place the world is set in (see REGIONS)
+    if (!REGIONS.some((x) => x.id === regionId)) regionId = '';
+    let W = makeWorld(regionOf(regionId));
+    let placeNote = '';
+    /// Rebuilds the scenery for another place (only from the menu).
+    function setRegion(id) {
+      regionId = id; write('region', id);
+      W = makeWorld(regionOf(id)); WR.setWorld(W);
+    }
+    async function lookupPlace(text) {
+      const known = matchRegion(text);
+      if (known) { placeNote = known.id ? `${known.name}: ${known.lm}.` : 'The home valley.'; return known; }
+      const j = await (await fetch(`https://geocoding-api.open-meteo.com/v1/search?count=1&language=en&name=${encodeURIComponent(text)}`)).json();
+      const hit = (j.results || [])[0];
+      if (!hit) throw new Error('nothing found');
+      const reg = nearestRegion(hit.latitude, hit.longitude, hit.country_code);
+      placeNote = `${hit.name}${hit.country ? ', ' + hit.country : ''}: the closest scenery we have is ${reg.name} (${reg.lm}).`;
+      return reg;
+    }
+    async function myPlace() {
+      let loc = window.NotchDeviceLocation;
+      if (!loc || !Number.isFinite(loc.lat)) {
+        const j = await (await fetch('https://ipwho.is/')).json();
+        if (!j.success) throw new Error('no location');
+        loc = { lat: j.latitude, lon: j.longitude, name: j.city, cc: j.country_code };
+      }
+      const reg = nearestRegion(loc.lat, loc.lon, loc.cc);
+      placeNote = `Near ${loc.name || 'you'}: showing ${reg.name} (${reg.lm}).`;
+      return reg;
+    }
     const hoopB = new Builder(); hoopB.torus(14, 1.3, [1, 1, 1]); const hoopMesh = upload(hoopB);
     const arrowB = new Builder(); arrowB.cone([0, 0, 0], 2.2, 0, 5, [1, 1, 1], 8); const arrowMesh = upload(arrowB);
     const smokeB = new Builder(); smokeB.box([0, 0, 0], [1, 1, 1], [1, 1, 1]); const smokeMesh = upload(smokeB);
@@ -2854,6 +3029,30 @@
     let flight = new Flight(plane);
     let hoops = [], nextHoop = 0, score = 0, timeLeft = 0, elapsed = 0, streak = 0, hoopsMade = 0;
     let camMode = 0, camPos = [0, 30, 60], paused = false, result = null, propAngle = 0, toastTimer = 0;
+    // ---- the world leaderboard (on the licence server): a name, a plane and a score, nothing else
+    const WORLD_SERVER = window.NotchPlaneServer || 'https://notchapple-licenses.adityajain1225.workers.dev';
+    let shareWorld = read('shareWorld', true), boardScope = read('boardScope', 'local'), boardPeriod = read('boardPeriod', 'all');
+    const worldCache = {};          // "mode|period" → { at, entries, error }
+    async function postWorld(modeId, name, score) {
+      try {
+        const r = await fetch(`${WORLD_SERVER}/plane/score`, { method: 'POST', headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ mode: modeId, name, plane: plane.id, score, region: regionId || '' }) });
+        const j = await r.json();
+        delete worldCache[`${modeId}|all`]; delete worldCache[`${modeId}|week`];
+        return r.ok && j.ok ? { ok: true, rank: j.rank } : { ok: false, error: j.error || 'The world board is busy.' };
+      } catch { return { ok: false, error: "Couldn't reach the world board." }; }
+    }
+    async function loadWorld(modeId, period) {
+      const key = `${modeId}|${period}`, hit = worldCache[key];
+      if (hit && Date.now() - hit.at < 20000) return hit;
+      let out;
+      try {
+        const r = await fetch(`${WORLD_SERVER}/plane/board?mode=${modeId}&period=${period}`);
+        out = { at: Date.now(), entries: (await r.json()).entries || [] };
+      } catch { out = { at: Date.now(), entries: [], error: true }; }
+      worldCache[key] = out;
+      return out;
+    }
     let gpwsOn = read('gpws', true), gpwsText = '', gpwsLevel = 0, gpwsT = 0, gpwsLastFt = null, gpwsAt = {}, hundredCalled = false, wasAirborne = false;
     let gearWarn = false, gearBeepAt = 0, tailScrapeT = 0, rotateCalled = false, v1Called = false, lowFuelWarned = false, flapSoundT = 0;
     let rollAcc = 0, rollT = 0, loopAcc = 0, loopT = 0, lowT = 0, hadTakeoff = false, stoppedT = 0;
@@ -3166,6 +3365,10 @@
       renderUI();
     }
 
+    // A test page can set window.NotchPlaneDebug = {} before mounting to end a run with a chosen result.
+    if (window.NotchPlaneDebug) window.NotchPlaneDebug.finish = (kind, value, label) => finish(kind, value, label);
+    if (window.NotchPlaneDebug) window.NotchPlaneDebug.state = () => ({ pos: flight.pos, region: regionId, colliders: W.colliders.filter((c) => c.kind === 'landmark').length });
+    if (window.NotchPlaneDebug) window.NotchPlaneDebug.tp = (pos, heading = 0, speed = 60) => { flight.reset(pos, heading, speed, false); };
     function saveScore() {
       const name = (ui.querySelector('input')?.value || playerName || 'Pilot').trim().slice(0, 16) || 'Pilot';
       playerName = name; write('name', name);
@@ -3175,7 +3378,18 @@
       write(`board.${mode.id}`, board.slice(0, 10));
       result.rank = board.findIndex((e) => e.name === name && e.score === result.value) + 1;
       result.qualifies = false; result.saved = true;
+      const wantWorld = ui.querySelector('#pg-world')?.checked ?? shareWorld;
+      shareWorld = wantWorld; write('shareWorld', wantWorld);
       renderUI();
+      if (wantWorld) postToWorld(name);
+    }
+    /// Posts this result to the world board (name, plane and score only) and shows where it came.
+    async function postToWorld(name) {
+      if (!result || result.posted || result.value == null || mode.id === 'free') return;
+      result.posted = 'sending'; renderUI();
+      const r = await postWorld(mode.id, name, result.value);
+      result.posted = r.ok ? 'done' : 'failed'; result.worldRank = r.rank; result.worldError = r.error;
+      if (screen === 'result') renderUI();
     }
 
     // ---- input
@@ -3997,8 +4211,10 @@
           <div class="pg-hint">${r.label}</div>
           ${r.report ? `<div class="pg-report ${/^Not/.test(r.report.surv) ? 'pg-bad' : /^Barely/.test(r.report.surv) ? 'pg-warn' : 'pg-ok'}"><b>${r.report.surv}</b>${r.report.lines.map((l) => `<div>${l}</div>`).join('')}</div>` : ''}
           ${r.value != null && m.id !== 'free' ? `<div class="pg-big">${fmtScore(m, r.value)}${m.id === 'hoops' ? ' <span style="font-size:16px">hoops</span>' : m.id === 'landing' ? ' <span style="font-size:16px">points</span>' : ''}</div>` : ''}
-          ${r.qualifies ? `<div class="pg-row" style="justify-content:center;margin:6px 0">🏆 New leaderboard score! <input maxlength="16" placeholder="Your name" value="${escapeHtml(playerName)}"><button data-a="save" class="pg-go" style="padding:5px 12px;font-size:12px">Save</button></div>` : ''}
+          ${r.qualifies ? `<div class="pg-row" style="justify-content:center;margin:6px 0">🏆 New leaderboard score! <input maxlength="16" placeholder="Your name" value="${escapeHtml(playerName)}"><label class="pg-hint" style="display:flex;align-items:center;gap:4px"><input type="checkbox" id="pg-world" ${shareWorld ? 'checked' : ''}>🌍 world board</label><button data-a="save" class="pg-go" style="padding:5px 12px;font-size:12px">Save</button></div>` : ''}
+          ${!r.qualifies && !r.posted && m.id !== 'free' && r.value >= 1 ? `<div class="pg-row" style="justify-content:center;margin:6px 0"><input maxlength="16" placeholder="Your name" value="${escapeHtml(playerName)}"><button data-a="post" style="padding:5px 12px;font-size:12px">🌍 Post to the world board</button></div>` : ''}
           ${r.saved ? `<div class="pg-hint">Saved at #${r.rank} on the ${m.name} leaderboard.</div>` : ''}
+          ${r.posted === 'sending' ? '<div class="pg-hint">Posting to the world board…</div>' : r.posted === 'done' ? `<div class="pg-hint">🌍 On the world board${r.worldRank ? ` at #${r.worldRank}` : ''}.</div>` : r.posted === 'failed' ? `<div class="pg-hint" style="color:#ffb347">${escapeHtml(r.worldError || 'Could not post.')}</div>` : ''}
           ${board.length ? `<h2>${m.name} leaderboard</h2>${table(m, board.slice(0, 5))}` : ''}
           <div class="pg-row" style="justify-content:center;margin-top:10px"><button data-a="again" class="pg-go">Fly again (R)</button><button data-a="menu">Menu</button></div>
         </div>`;
@@ -4012,12 +4228,28 @@
         body = `<h2>1 · Pick your plane <small style="font-weight:500;opacity:.6">${PLANES.length} aircraft · scroll for more</small></h2><div class="pg-planewrap"><div class="pg-planes">${CATS.map(([cid, cname]) => `<div class="pg-cat">${cname}</div>${PLANES.filter((p) => p.cat === cid).map((p) => `<div class="pg-card ${p === plane ? 'pg-on' : ''}" data-plane="${p.id}" title="${p.blurb.replace(/"/g, '&quot;')}">
             <b>${p.name}</b><i>${p.kind}</i>${statBar('Speed', p.max / 300)}${statBar('Agility', p.roll / 4.2)}${statBar('Easy', (p.stability - 1.5) / 1.2)}</div>`).join('')}`).join('')}</div></div>
           <div class="pg-hint" style="margin-top:4px"><b>${plane.name}</b> · ${plane.blurb}</div>
-          <h2>2 · Pick a challenge</h2><div class="pg-modes">${MODES.map((m) => `<button class="pg-mode ${m === mode ? 'pg-on' : ''}" data-mode="${m.id}">${m.icon} ${m.name}<small>${m.desc}</small></button>`).join('')}</div>
+          <h2>2 · Where in the world?</h2><div class="pg-row"><select data-region>${REGIONS.map((x) => `<option value="${x.id}" ${x.id === regionId ? 'selected' : ''}>${x.id ? x.name + ' · ' + x.lm : '🏔️ Home valley'}</option>`).join('')}</select>
+            <button data-a="mine" title="Pick the scenery nearest to where you are">📍 My location</button>
+            <input data-place maxlength="40" placeholder="Type a city or country" style="width:150px"><button data-a="goplace">Go</button></div>
+          <div class="pg-hint" style="margin-top:3px">${escapeHtml(placeNote || `Now flying over: ${regionOf(regionId).id ? regionOf(regionId).name + ' (' + regionOf(regionId).lm + ')' : 'the home valley'}. The landmark stands just off the runway.`)}</div>
+          <h2>3 · Pick a challenge</h2><div class="pg-modes">${MODES.map((m) => `<button class="pg-mode ${m === mode ? 'pg-on' : ''}" data-mode="${m.id}">${m.icon} ${m.name}<small>${m.desc}</small></button>`).join('')}</div>
           <div class="pg-row" style="margin-top:10px"><button class="pg-go" data-a="start">✈️ Take off (Enter)</button>
             <span class="pg-hint">Best: ${(() => { const b = read(`board.${mode.id}`, [])[0]; return b && mode.id !== 'free' ? `${fmtScore(mode, b.score)} by ${escapeHtml(b.name)}` : '—'; })()}</span></div>`;
       } else if (menuTab === 'board') {
-        body = MODES.filter((m) => m.id !== 'free').map((m) => { const b = read(`board.${m.id}`, []); return `<h2>${m.icon} ${m.name}</h2>${b.length ? table(m, b) : '<div class="pg-hint">No scores yet. Be the first!</div>'}`; }).join('')
-          + '<div class="pg-row" style="margin-top:8px"><button data-a="clear">Clear leaderboards</button><span class="pg-hint">Scores are kept on this computer.</span></div>';
+        const scopes = `<div class="pg-row"><button data-scope="local" class="${boardScope === 'local' ? 'pg-on' : ''}">This computer</button><button data-scope="world" class="${boardScope === 'world' ? 'pg-on' : ''}">🌍 World</button>${boardScope === 'world' ? `<button data-period="all" class="${boardPeriod === 'all' ? 'pg-on' : ''}">All time</button><button data-period="week" class="${boardPeriod === 'week' ? 'pg-on' : ''}">This week</button>` : ''}</div>`;
+        if (boardScope === 'world') {
+          const parts = MODES.filter((m) => m.id !== 'free').map((m) => {
+            const c = worldCache[`${m.id}|${boardPeriod}`];
+            if (!c) { loadWorld(m.id, boardPeriod).then(() => { if (screen === 'menu' && menuTab === 'board' && boardScope === 'world') renderUI(); }); return `<h2>${m.icon} ${m.name}</h2><div class="pg-hint">Loading the world board…</div>`; }
+            if (c.error) return `<h2>${m.icon} ${m.name}</h2><div class="pg-hint" style="color:#ffb347">Couldn't reach the world board. Check your connection.</div>`;
+            const rows = c.entries.slice(0, 10).map((e) => ({ ...e, date: new Date(e.at).toISOString().slice(0, 10) }));
+            return `<h2>${m.icon} ${m.name}</h2>${rows.length ? table(m, rows, true) : '<div class="pg-hint">No scores yet. Be the first!</div>'}`;
+          });
+          body = scopes + parts.join('') + `<div class="pg-hint" style="margin-top:6px">Everyone who posts a score appears here: only a name, the plane and the score are sent. You choose when you save a score.</div>`;
+        } else {
+          body = scopes + MODES.filter((m) => m.id !== 'free').map((m) => { const b = read(`board.${m.id}`, []); return `<h2>${m.icon} ${m.name}</h2>${b.length ? table(m, b) : '<div class="pg-hint">No scores yet. Be the first!</div>'}`; }).join('')
+            + '<div class="pg-row" style="margin-top:8px"><button data-a="clear">Clear leaderboards</button><span class="pg-hint">These scores are kept on this computer. The 🌍 World tab shows everyone\'s.</span></div>';
+        }
       } else if (menuTab === 'ach') {
         body = `<h2>Challenges · ${[...done].filter((d) => CHALLENGES.some((c) => c.id === d)).length} / ${CHALLENGES.length}</h2><div class="pg-ach">${CHALLENGES.map((c) => `<div class="${done.has(c.id) ? 'pg-done' : ''}">${done.has(c.id) ? '🏅' : '🔒'} ${c.name} <small>${c.desc}</small></div>`).join('')}</div>`;
       } else {
@@ -4052,8 +4284,8 @@
       { const sel = ui.querySelector('.pg-card.pg-on'), wr = ui.querySelector('.pg-planewrap'); if (sel && wr) wr.scrollTop = Math.max(0, sel.offsetTop - 70); }   // show the chosen plane
     }
     const escapeHtml = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-    function table(m, rows) {
-      return `<table><tr><th>#</th><th>Pilot</th><th>Plane</th><th style="text-align:right">${m.id === 'trial' ? 'Time' : m.id === 'hoops' ? 'Hoops' : 'Points'}</th><th>Date</th></tr>${rows.map((e, i) => `<tr><td>${i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : i + 1}</td><td>${escapeHtml(e.name)}</td><td>${escapeHtml(e.plane)}</td><td class="pg-n">${fmtScore(m, e.score)}</td><td>${e.date}</td></tr>`).join('')}</table>`;
+    function table(m, rows, world = false) {
+      return `<table><tr><th>#</th><th>Pilot</th><th>Plane</th><th style="text-align:right">${m.id === 'trial' ? 'Time' : m.id === 'hoops' ? 'Hoops' : 'Points'}</th><th>Date</th></tr>${rows.map((e, i) => `<tr${world && playerName && e.name === playerName ? ' style="background:rgba(255,179,71,.18)"' : ''}><td>${i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : i + 1}</td><td>${escapeHtml(e.name)}</td><td>${escapeHtml(e.plane)}</td><td class="pg-n">${fmtScore(m, e.score)}</td><td>${e.date}</td></tr>`).join('')}</table>`;
     }
     function bind() {
       ui.querySelectorAll('[data-plane]').forEach((n) => n.onclick = () => { plane = PLANES.find((p) => p.id === n.dataset.plane); write('plane', plane.id); flight = new Flight(plane);
@@ -4062,6 +4294,15 @@
         n.oninput = () => { sens = Number(n.value); write('sens', sens); const v = ui.querySelector('[data-sensval]'); if (v) v.textContent = `${sens.toFixed(1)}×`; };
         n.onchange = () => root.focus();
       });
+      ui.querySelectorAll('[data-scope]').forEach((n) => n.onclick = () => { boardScope = n.dataset.scope; write('boardScope', boardScope); renderUI(); });
+      ui.querySelectorAll('[data-period]').forEach((n) => n.onclick = () => { boardPeriod = n.dataset.period; write('boardPeriod', boardPeriod); renderUI(); });
+      ui.querySelectorAll('[data-region]').forEach((n) => n.onchange = () => { placeNote = ''; setRegion(n.value); renderUI(); });
+      const goPlace = async (fn) => {
+        placeNote = 'Looking…'; renderUI();
+        try { const reg = await fn(); setRegion(reg.id); } catch { placeNote = 'Could not find that place. Try a city, a country, or pick one from the list.'; }
+        renderUI();
+      };
+      ui.querySelectorAll('[data-place]').forEach((n) => n.onkeydown = (e) => { e.stopPropagation(); if (e.key === 'Enter') { const v = n.value.trim(); if (v) goPlace(() => lookupPlace(v)); } });
       ui.querySelectorAll('[data-mode]').forEach((n) => n.onclick = () => { mode = MODES.find((m) => m.id === n.dataset.mode); write('mode', mode.id); renderUI(); });
       ui.querySelectorAll('[data-tab]').forEach((n) => n.onclick = () => { menuTab = n.dataset.tab; write('menuTab', menuTab); renderUI(); });
       ui.querySelectorAll('[data-a]').forEach((n) => n.onclick = () => {
@@ -4070,6 +4311,13 @@
         else if (a === 'resume') { paused = false; renderUI(); root.focus(); }
         else if (a === 'menu') { screen = 'menu'; paused = false; if (engGain) engGain.gain.value = 0; renderUI(); }
         else if (a === 'save') saveScore();
+        else if (a === 'mine') goPlace(myPlace);
+        else if (a === 'goplace') { const v = (ui.querySelector('[data-place]')?.value || '').trim(); if (v) goPlace(() => lookupPlace(v)); }
+        else if (a === 'post') {
+          const name = (ui.querySelector('input')?.value || playerName || 'Pilot').trim().slice(0, 16) || 'Pilot';
+          playerName = name; write('name', name); shareWorld = true; write('shareWorld', true);
+          postToWorld(name);
+        }
         else if (a === 'invert') { invert = !invert; write('invertY', invert); renderUI(); }
         else if (a === 'gpws') { gpwsOn = !gpwsOn; write('gpws', gpwsOn); if (!gpwsOn) cancelSpeech(); renderUI(); }
         else if (a === 'mouse') { mouseOn = !mouseOn; write('mouse', mouseOn); renderUI(); }
@@ -4172,5 +4420,5 @@
     };
   }
 
-  window.NotchPlaneGame = { mount, PLANES, MODES, CHALLENGES, Flight, _test: { buildPlane, raCallout, gpwsWarnings, groundAt, makeWorld, qheading, qrot, hitObject, terrainAt, surfaceAt, roughnessAt, normalAt } };
+  window.NotchPlaneGame = { mount, PLANES, MODES, CHALLENGES, Flight, _test: { buildPlane, REGIONS, nearestRegion, matchRegion, raCallout, gpwsWarnings, groundAt, makeWorld, qheading, qrot, hitObject, terrainAt, surfaceAt, roughnessAt, normalAt } };
 })();

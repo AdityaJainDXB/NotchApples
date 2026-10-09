@@ -171,6 +171,7 @@ extension Module {
         case .mirror: .mirror
         case .focus: .focus
         case .klick: .klick
+        case .wallpaper: .liveWallpaper
         case .convert: .convert
         case .doIt: .doIt
         default: nil

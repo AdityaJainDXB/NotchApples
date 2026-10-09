@@ -25,6 +25,8 @@ import Foundation
 
 enum AIProvider: String, CaseIterable, Identifiable, Codable {
     case gemini, groq, openRouter, ollama, apple, deepSeek, claude, openAI
+    /// Notch apple AI: included with Pro and Ultimate, answered by the licence server with the project's own AI key.
+    case hosted
 
     var id: String { rawValue }
 
@@ -38,6 +40,7 @@ enum AIProvider: String, CaseIterable, Identifiable, Codable {
         case .deepSeek: "DeepSeek"
         case .claude: "Claude"
         case .openAI: "ChatGPT (OpenAI)"
+        case .hosted: "Notch apple AI (included)"
         }
     }
 
@@ -51,11 +54,12 @@ enum AIProvider: String, CaseIterable, Identifiable, Codable {
         case .deepSeek: "Paid, low cost; top up at platform.deepseek.com"
         case .claude: "Paid, billed to your Anthropic account"
         case .openAI: "Paid, billed to your OpenAI account"
+        case .hosted: "Included with Pro and Ultimate: no key to set up, a daily allowance"
         }
     }
 
     var isFree: Bool { ![.claude, .openAI, .deepSeek].contains(self) }
-    var needsKey: Bool { self != .ollama && self != .apple }
+    var needsKey: Bool { self != .ollama && self != .apple && self != .hosted }
 
     var keychainKey: KeychainHelper.Key {
         switch self {
@@ -65,7 +69,7 @@ enum AIProvider: String, CaseIterable, Identifiable, Codable {
         case .openRouter: .openRouterAPIKey
         case .openAI: .openAIAPIKey
         case .deepSeek: .deepSeekAPIKey
-        case .ollama, .apple: .anthropicAPIKey   // unused (no key)
+        case .ollama, .apple, .hosted: .anthropicAPIKey   // unused (no key)
         }
     }
 
@@ -79,6 +83,7 @@ enum AIProvider: String, CaseIterable, Identifiable, Codable {
         case .deepSeek: URL(string: "https://platform.deepseek.com/api_keys")!
         case .claude: URL(string: "https://console.anthropic.com/settings/keys")!
         case .openAI: URL(string: "https://platform.openai.com/api-keys")!
+        case .hosted: URL(string: "https://virajsinghchadha.github.io/notchapples-site/pro.html")!
         }
     }
 
@@ -90,7 +95,7 @@ enum AIProvider: String, CaseIterable, Identifiable, Codable {
         case .claude: "sk-ant-…"
         case .openAI: "sk-…"
         case .deepSeek: "sk-…"
-        case .ollama, .apple: ""
+        case .ollama, .apple, .hosted: ""
         }
     }
 
@@ -105,6 +110,7 @@ enum AIProvider: String, CaseIterable, Identifiable, Codable {
         case .claude: "claude-sonnet-5"
         case .openAI: "gpt-4o-mini"
         case .deepSeek: "deepseek-chat"
+        case .hosted: "notch-fast"
         }
     }
 
@@ -128,6 +134,7 @@ enum AIProvider: String, CaseIterable, Identifiable, Codable {
         case .openRouter: return true   // unknown; let the provider decide
         case .deepSeek: return false    // DeepSeek's API is text-only
         case .apple: return false       // the on-device model reads text only
+        case .hosted: return true
         }
     }
 }
@@ -143,6 +150,21 @@ enum AIError: LocalizedError {
         case .empty: "The model returned an empty response."
         case .ollamaNotRunning: "Ollama isn't running. Install it from ollama.com and run a model (e.g. `ollama run llama3.2`)."
         }
+    }
+}
+
+/// Notch apple AI: where it lives and the token it needs. Answers come from the licence server, which checks the key
+/// and a daily allowance and uses the project's own AI key, so a copy of the app without a real key gets nothing.
+enum HostedAI {
+    static func base() async throws -> String {
+        guard let server = await LicenseServer.url() else { throw AIError.http(0, "Couldn't reach Notch apple's server. Check your connection.") }
+        return server.absoluteString.trimmingCharacters(in: CharacterSet(charactersIn: "/")) + "/ai/v1"
+    }
+
+    @MainActor static func token() async throws -> String {
+        guard Entitlements.shared.key != nil else { throw AIError.http(401, "Notch apple AI is included with Pro and Ultimate. Add your key in Settings → License.") }
+        guard let t = await EntitlementService.shared.token() else { throw AIError.http(0, "Couldn't check your key with the server. Connect to the internet and try again.") }
+        return t
     }
 }
 
@@ -165,7 +187,7 @@ enum AIClient {
             var out = ""
             for try await piece in AppleIntelligence.stream(history, system: systemPrompt) { out += piece }
             return out
-        case .groq, .openRouter, .ollama, .openAI, .deepSeek: return try await sendOpenAICompatible(history, provider: provider, model: model)
+        case .groq, .openRouter, .ollama, .openAI, .deepSeek, .hosted: return try await sendOpenAICompatible(history, provider: provider, model: model)
         }
     }
 
@@ -202,12 +224,14 @@ enum AIClient {
         case .openRouter: base = "https://openrouter.ai/api/v1"
         case .ollama: base = "http://localhost:11434/v1"
         case .deepSeek: base = "https://api.deepseek.com/v1"
+        case .hosted: base = try await HostedAI.base()
         default: base = "https://api.openai.com/v1"
         }
         var request = URLRequest(url: URL(string: "\(base)/chat/completions")!)
         request.httpMethod = "POST"
         request.timeoutInterval = provider == .ollama ? 300 : 120
         request.setValue("application/json", forHTTPHeaderField: "content-type")
+        if provider == .hosted { request.setValue("Bearer \(try await HostedAI.token())", forHTTPHeaderField: "Authorization") }
         if provider.needsKey {
             guard let key = provider.apiKey else { throw AIError.missingKey(provider) }
             request.setValue("Bearer \(key)", forHTTPHeaderField: "Authorization")
@@ -257,6 +281,8 @@ enum AIClient {
                 .sorted { rank($0) > rank($1) }
         case .apple:
             return ["on-device"]
+        case .hosted:
+            return ["notch-fast"]
         case .openRouter:
             let json = try await perform(URLRequest(url: URL(string: "https://openrouter.ai/api/v1/models")!))
             return ((json["data"] as? [[String: Any]]) ?? []).compactMap { m -> String? in

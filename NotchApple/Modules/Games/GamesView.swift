@@ -18,7 +18,7 @@ import SwiftUI
 
 struct GamesView: View {
     enum Game: String, CaseIterable, Identifiable {
-        case g2048 = "2048", snake = "Snake", breakout = "Breakout", memory = "Memory", reaction = "Reaction", cookies = "Cookies", runner = "Runner", plane = "Plane"
+        case g2048 = "2048", snake = "Snake", breakout = "Breakout", memory = "Memory", reaction = "Reaction", cookies = "Cookies", runner = "Runner", plane = "Plane", blackjack = "Blackjack", solitaire = "Solitaire"
         var id: String { rawValue }
         var symbol: String {
             switch self {
@@ -30,6 +30,8 @@ struct GamesView: View {
             case .cookies: "circle.hexagongrid.fill"
             case .runner: "figure.run"
             case .plane: "airplane"
+            case .blackjack: "suit.spade.fill"
+            case .solitaire: "rectangle.on.rectangle.angled"
             }
         }
     }
@@ -71,6 +73,8 @@ struct GamesView: View {
                 case .cookies: CookieClickerView()
                 case .runner: RunnerGameView()
                 case .plane: PlaneGameView()
+                case .blackjack: BlackjackView()
+                case .solitaire: SolitaireView()
                 }
             }
             .id(game)
@@ -96,6 +100,8 @@ struct GamesView: View {
         case .reaction: "Wait for green, then click or press Space."
         case .cookies: "Click the cookie. Buy stronger clicks and auto-clickers; it keeps baking while you work."
         case .runner: "Space, ↑, W or a click jumps. Spikes and blocks end the run; it speeds up."
+        case .blackjack: "Hit or stand. Blackjack pays 3:2, the dealer stands on 17. Play money."
+        case .solitaire: "Click a card, then where it goes. Double-click sends it to a foundation."
         case .plane: "3D flying. ↑ ↓ pitch, ← → roll, A D rudder, W S throttle, F flaps, Space brakes, C camera, P pause."
         }
     }

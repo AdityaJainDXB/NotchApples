@@ -284,7 +284,7 @@ struct TodoView: View {
 
     private var footer: some View {
         HStack {
-            if todos.items.contains(where: \.done) { Button("Clear done") { todos.clearDone() }.buttonStyle(.plain).font(.system(size: 11)).foregroundStyle(Theme.accentBright) }
+            if todos.items.contains(where: \.done) { HoldToConfirmButton(hint: "Press and hold to clear the finished to-dos. You can undo it afterwards.") { todos.clearDone() } label: { Label("Hold to clear done", systemImage: "trash") } }
             Spacer()
             if entitlements.canUse(.remindersSync) {
                 Toggle("Show Reminders", isOn: $todos.showReminders).toggleStyle(.switch).controlSize(.mini).font(.system(size: 11))
