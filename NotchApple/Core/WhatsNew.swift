@@ -20,6 +20,11 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.0.28", date: "9 October 2026", headline: "Plane: a proper cockpit", items: [
+            "Round airspeed and altimeter dials that change with the aircraft, plus an engine gauge (rpm or jet N1), fuel and flaps position.",
+            "Engines sound like what they are: piston, or a spooling jet. Wind, tyres, stall horn and overspeed warning too.",
+            "Tail strikes: rotate too steeply and the tail scrapes, damaging it. Flaps step in notches, you can run out of fuel, and airliners call out Rotate.",
+        ]),
         ReleaseNote(version: "2.0.27", date: "9 October 2026", headline: "Updates once a week, if you want", items: [
             "New option: Update at most once a week. Off by default. On, Notch apple stops announcing every release and asks about the newest update once a week; required security updates still appear straight away.",
             "It is switched on or off in this card, in Settings → Notch and in Settings → Updates.",

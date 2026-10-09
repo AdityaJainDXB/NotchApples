@@ -147,6 +147,21 @@
 
   /// A simple airliner built from boxes, nose towards -z. Sizes are about 40% of the real aircraft so the game's
   /// hoops and runway still suit it.
+  /// Per-aircraft cockpit data: what kind of engine it has (for the sound and the engine gauge), the speeds painted on its
+  /// airspeed indicator (m/s), how its flaps step, how much fuel it carries (seconds at full power) and the ticks it
+  /// calls out on take-off. `vr` is the rotation speed.
+  const AIRCRAFT = {
+    c172: { tailPitch: 14, engine: 'piston', cyl: 4, rpmIdle: 700, rpmMax: 2700, dial: 'GA', flapNotches: [0, 0.33, 0.67, 1], flapLabels: ['UP', '10°', '20°', '30°'], fuel: 2100, vr: 1.12, vfe: 1.6, vno: 1.25 },
+    pa28: { tailPitch: 13, engine: 'piston', cyl: 4, rpmIdle: 650, rpmMax: 2700, dial: 'GA', flapNotches: [0, 0.33, 0.67, 1], flapLabels: ['UP', '10°', '25°', '40°'], fuel: 2400, vr: 1.12, vfe: 1.55, vno: 1.25 },
+    b737: { tailPitch: 11, engine: 'jet', engines: 2, n1Idle: 22, dial: 'AIRLINER', flapNotches: [0, 0.2, 0.4, 0.6, 0.8, 1], flapLabels: ['UP', '1', '5', '15', '30', '40'], fuel: 1700, vr: 1.2, vfe: 1.45, vno: 1.25 },
+    b747: { tailPitch: 10, engine: 'jet', engines: 4, n1Idle: 24, dial: 'AIRLINER', flapNotches: [0, 0.2, 0.4, 0.6, 0.8, 1], flapLabels: ['UP', '1', '5', '10', '20', '30'], fuel: 2000, vr: 1.2, vfe: 1.45, vno: 1.25 },
+    b777: { tailPitch: 9.5, engine: 'jet', engines: 2, n1Idle: 20, dial: 'AIRLINER', flapNotches: [0, 0.2, 0.4, 0.6, 0.8, 1], flapLabels: ['UP', '1', '5', '15', '20', '30'], fuel: 2000, vr: 1.2, vfe: 1.45, vno: 1.25 },
+  };
+  PLANES.forEach((p) => Object.assign(p, AIRCRAFT[p.id]));
+  /// The speeds on this aircraft's airspeed indicator, in m/s: flaps-down stall, clean stall, flaps limit, the end of the
+  /// green arc, and the never-exceed line.
+  const speedsOf = (p) => ({ vs0: p.stall * 0.88, vs1: p.stall, vfe: p.stall * p.vfe, vno: p.cruise * p.vno, vne: p.max, vr: p.stall * p.vr });
+
   function airliner(c) {
     const b = new Builder();
     const L = c.L, D = c.D, h = L / 2;
@@ -434,7 +449,8 @@
       this.w = v3(); this.throttle = onGround ? 0 : 0.7; this.flaps = 0; this.brake = false; this.onGround = onGround;
       this.crashed = false; this.stalled = false; this.aoa = 0; this.gload = 1; this.touch = null; this.sinkAtTouch = 0;
       // What still works: each wing, the engine (and how much power it still makes), the undercarriage.
-      this.damage = { L: true, R: true, engine: true, power: 1, gear: true };
+      this.damage = { L: true, R: true, engine: true, power: 1, gear: true, tail: 1 };
+      this.fuel = this.s.fuel || 1800; this.tailT = 0; this.flapNotch = 0;
       this.events = []; this.overT = 0; this.ogT = 0; this.why = ''; this.impactVel = v3();
     }
     axes() { return { f: qrot(this.q, [0, 0, -1]), u: qrot(this.q, [0, 1, 0]), r: qrot(this.q, [1, 0, 0]) }; }
@@ -498,11 +514,13 @@
       const trim = V > 1 && !this.onGround && wings > 0 ? clamp((need / (this.k * V * V * wings) - this.flaps * 0.35) / this.clSlope, -0.05, aMax * 0.85) : 0;
       const aCmd = input.pitch >= 0 ? trim + input.pitch * (aMax - trim) : trim + input.pitch * (trim + aMax * 0.55);
       const intact = wings === 1;
+      const tailF = 0.3 + 0.7 * this.damage.tail;      // a scraped tail makes the elevator and rudder weaker
       const target = [
         clamp(aCmd * (stabT + path) - this.aoa * stabT + (V > 5 && !this.onGround ? this.k * V * this.flaps * 0.35 - G * Math.cos(gamma) / V : 0), -s.pitch * 1.6, s.pitch * 1.6),
         -input.yaw * s.yaw * eff - beta * stab,
         -input.roll * s.roll * eff * Math.max(wings, 0.3),
       ];
+      if (this.damage.tail < 1) { target[0] *= tailF; target[1] *= tailF; if (this.damage.tail <= 0) target[0] -= 0.3; }
       // Wing leveller: with the roll keys released, the wings roll back to level by themselves (positive roll
       // rate is to the left, and a positive bank is right wing down, so the bank itself is the correction).
       // Only hands off and not upside down, so loops and inverted flight still work.
@@ -524,6 +542,12 @@
       if (angle > 1e-6) this.q = qnorm(qmul(this.q, qaxis(norm(this.w), angle)));
 
       this.throttle = clamp(this.throttle + input.throttle * dt * 0.6, 0, 1);
+      // Fuel: burnt with the throttle, and the engine stops when the tank is dry.
+      if (this.damage.engine && power > 0) {
+        this.fuel = Math.max(0, this.fuel - this.throttle * dt - 0.04 * dt);
+        if (this.fuel <= 0) { this.failEngine(); this.events.push({ type: 'fuel' }); }
+      }
+      this.tailT = Math.max(0, this.tailT - dt);
       this.vel = add(this.vel, mul(acc, dt));
       this.pos = add(this.pos, mul(this.vel, dt));
 
@@ -568,6 +592,9 @@
       } else if (this.onGround && bottom > gh + 0.6) {
         this.onGround = false;
       }
+      // Tail strike: close to the runway with the nose higher than this aircraft's limit scrapes the tail.
+      const tailLimit = (s.tailPitch || 12) * DEG, heightAbove = this.pos[1] - gear - gh;
+      if (heightAbove < 0.8 && this.pitchAngle > tailLimit && V > 5) this.tailStrike(V, (this.pitchAngle - tailLimit) * 3, this.pitchAngle - tailLimit);
       if (this.pos[1] > 3000) { this.vel[1] = Math.min(this.vel[1], 0); }                  // ceiling
       const edge = WORLD - 600;
       if (Math.abs(this.pos[0]) > edge || Math.abs(this.pos[2]) > edge) this.pos = [clamp(this.pos[0], -edge, edge), this.pos[1], clamp(this.pos[2], -edge, edge)];
@@ -588,13 +615,27 @@
         const what = obj ? obj.kind : overWater(world, p[0], p[2]) ? 'water' : 'ground';
         if (part === 'L' || part === 'R') {
           if (obj || V > 14) { this.loseWing(part, what); this.vel = mul(this.vel, obj ? 0.8 : 0.9); }
+        } else if (part === 'T' && !obj && -this.vel[1] < 3) {
+          // The tail scraping the runway (nose too high on take-off or landing): damage, but not the end.
+          this.tailStrike(V, under ? groundAt(world, p[0], p[2]) - p[1] : 0);
         } else if (obj || !this.onGround) {
-          // Scraping the tail on take-off is fine; hitting anything at speed is not.
-          if (!obj && part === 'T' && -this.vel[1] < 3) continue;
           this.crash(what); return true;
         }
       }
       return false;
+    }
+    /// The tail dragging on the ground: each scrape costs some of its health, faster and harder ones more, and it
+    /// slows the plane and pushes the nose down. At nothing left the tail breaks off.
+    tailStrike(V, depth, excess = 0.05) {
+      if (this.damage.tail <= 0) return;
+      // Hold the tail up out of the ground, nose down.
+      this.w[0] -= clamp(depth * 4 + 0.3, 0, 1.2);
+      this.vel = mul(this.vel, 1 - Math.min(0.01, V * 0.0002));
+      if (this.tailT > 0) return;
+      this.tailT = 0.5;
+      const sev = clamp(0.08 + V / 300 + excess * 1.2 + Math.max(0, -this.vel[1]) / 60, 0.08, 0.6);
+      this.damage.tail = Math.max(0, this.damage.tail - sev);
+      this.events.push({ type: 'tail', health: this.damage.tail, sev });
     }
     crash(why = 'crash') { this.why = why; this.crashed = true; this.impactVel = this.vel.slice(); this.events.push({ type: 'crash', why }); this.vel = v3(); this.w = v3(); }
   }
@@ -759,6 +800,7 @@
     let flight = new Flight(plane);
     let hoops = [], nextHoop = 0, score = 0, timeLeft = 0, elapsed = 0, streak = 0, hoopsMade = 0;
     let camMode = 0, camPos = [0, 30, 60], paused = false, result = null, propAngle = 0, toastTimer = 0;
+    let tailScrapeT = 0, rotateCalled = false, v1Called = false, lowFuelWarned = false, flapSoundT = 0;
     let rollAcc = 0, rollT = 0, loopAcc = 0, loopT = 0, lowT = 0, hadTakeoff = false, stoppedT = 0;
     const smoke = [];              // particles: fire, smoke, dust, sparks, spray
     const debris = [];             // parts that have come off and are tumbling on their own
@@ -773,19 +815,97 @@
     let playerName = read('name', '');
 
     // ---- sound (Web Audio): engine drone, a chime for hoops, a thud for crashes
-    let ac = null, eng = null, engGain = null;
+    let ac = null, eng = null, engGain = null, snd = null;
+    /// Builds the always-running sounds of the flight: a piston engine (firing pulses and a propeller beat), a jet
+    /// (spooling roar, whine and rumble), wind noise, the tyres rolling, the stall horn and the overspeed clacker. They
+    /// start silent; `updateSound` sets their levels every frame from the engine, the speed and the aircraft.
+    function buildSounds(a, out) {
+      const nb = a.createBuffer(1, a.sampleRate * 2, a.sampleRate), nd = nb.getChannelData(0);
+      for (let i = 0; i < nd.length; i++) nd[i] = Math.random() * 2 - 1;
+      const noiseSrc = () => { const n = a.createBufferSource(); n.buffer = nb; n.loop = true; n.start(); return n; };
+      const gain = (v = 0) => { const g = a.createGain(); g.gain.value = v; return g; };
+      const filt = (type, f, q = 0.7) => { const x = a.createBiquadFilter(); x.type = type; x.frequency.value = f; x.Q.value = q; return x; };
+      const osc = (type, f = 100) => { const o = a.createOscillator(); o.type = type; o.frequency.value = f; o.start(); return o; };
+      // Piston: three oscillators (the fundamental, a slightly detuned copy and a sub-octave), low-passed, with the
+      // propeller's blade beat as a fast tremolo and a little exhaust crackle.
+      const p = { o1: osc('sawtooth'), o2: osc('sawtooth'), o3: osc('square'), lp: filt('lowpass', 800, 0.9), am: gain(0.75), lfo: osc('sine', 40), lfoDepth: gain(0.3), out: gain(0),
+        crackle: filt('bandpass', 320, 1.2), crackleGain: gain(0) };
+      [p.o1, p.o2, p.o3].forEach((o, i) => { const g = gain([0.5, 0.35, 0.3][i]); o.connect(g); g.connect(p.lp); });
+      p.lp.connect(p.am); p.am.connect(p.out); p.lfo.connect(p.lfoDepth); p.lfoDepth.connect(p.am.gain); p.out.connect(out);
+      noiseSrc().connect(p.crackle); p.crackle.connect(p.crackleGain); p.crackleGain.connect(out);
+      // Jet: band-passed noise for the roar, a low rumble, and two close whine tones that beat against each other.
+      const j = { roar: filt('bandpass', 900, 0.6), roarGain: gain(0), rumble: filt('lowpass', 220, 0.7), rumbleGain: gain(0),
+        w1: osc('triangle', 3000), w2: osc('triangle', 3040), whine: gain(0), n1: 0 };
+      const jn = noiseSrc(), jn2 = noiseSrc();
+      jn.connect(j.roar); j.roar.connect(j.roarGain); j.roarGain.connect(out);
+      jn2.connect(j.rumble); j.rumble.connect(j.rumbleGain); j.rumbleGain.connect(out);
+      j.w1.connect(j.whine); j.w2.connect(j.whine); j.whine.connect(out);
+      // Wind and tyres.
+      const w = { f: filt('bandpass', 500, 0.5), g: gain(0) }; noiseSrc().connect(w.f); w.f.connect(w.g); w.g.connect(out);
+      const r = { f: filt('lowpass', 160, 0.8), g: gain(0), scrape: filt('highpass', 1800, 0.7), sg: gain(0) };
+      const rn = noiseSrc(); rn.connect(r.f); r.f.connect(r.g); r.g.connect(out); rn.connect(r.scrape); r.scrape.connect(r.sg); r.sg.connect(out);
+      // Warnings.
+      const horn = { o: osc('square', 760), g: gain(0) }; horn.o.connect(horn.g); horn.g.connect(out);
+      const clack = { o: osc('square', 480), g: gain(0) }; clack.o.connect(clack.g); clack.g.connect(out);
+      return { p, j, w, r, horn, clack };
+    }
     function audio() {
       if (!sound) return null;
       if (!ac) {
         try {
           ac = new (window.AudioContext || window.webkitAudioContext)();
-          eng = ac.createOscillator(); eng.type = 'sawtooth';
-          const lp = ac.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 500;
-          engGain = ac.createGain(); engGain.gain.value = 0;
-          eng.connect(lp); lp.connect(engGain); engGain.connect(ac.destination); eng.start();
+          // The master for every looping flight sound: setting its gain to 0 silences them all.
+          engGain = ac.createGain(); engGain.gain.value = 1; engGain.connect(ac.destination);
+          snd = buildSounds(ac, engGain);
         } catch { ac = null; }
       }
       return ac;
+    }
+    /// What the engine is doing right now, for the gauges and the sound: rpm (piston) or N1 % (jet), 0..1 of the way up.
+    const engState = { rpm: 0, n1: 0, level: 0 };
+    function updateEngineState(dt) {
+      const run = flight.damage.engine ? (flight.damage.power < 1 ? (Math.random() < 0.15 ? 0.2 : 1) : 1) : 0;
+      if (plane.engine === 'jet') {
+        // The fans spool up and down slowly.
+        const target = run ? plane.n1Idle + (100 - plane.n1Idle) * flight.throttle * (flight.damage.power) : clamp(flight.speed * 0.08, 0, 12);
+        engState.n1 += (target - engState.n1) * (1 - Math.exp(-dt * (target > engState.n1 ? 0.8 : 0.5)));
+        engState.level = engState.n1 / 100;
+      } else {
+        const target = run ? plane.rpmIdle + (plane.rpmMax - plane.rpmIdle) * flight.throttle : clamp(flight.speed * 14, 0, 900);
+        engState.rpm += (target - engState.rpm) * (1 - Math.exp(-dt * 6));
+        engState.level = engState.rpm / plane.rpmMax;
+      }
+    }
+    /// Sets the level of every looping sound from the engine, speed, ground contact and warnings.
+    function updateSound() {
+      if (!snd || !ac || !sound) return;
+      const t = ac.currentTime, set = (param, v, tc = 0.08) => param.setTargetAtTime(v, t, tc);
+      const V = flight.speed, run = flight.damage.engine ? 1 : 0, thr = flight.throttle, fast = clamp(V / plane.max, 0, 1.3);
+      const piston = plane.engine !== 'jet', jet = !piston;
+      // Piston.
+      const f0 = Math.max(24, (engState.rpm / 60) * (plane.cyl || 4) / 2);
+      set(snd.p.o1.frequency, f0); set(snd.p.o2.frequency, f0 * 1.006); set(snd.p.o3.frequency, f0 / 2);
+      set(snd.p.lp.frequency, 450 + engState.level * 1500 + (flight.onGround ? 0 : 200));
+      set(snd.p.lfo.frequency, (engState.rpm / 60) * 2); set(snd.p.lfoDepth.gain, 0.25 + 0.2 * (1 - thr));
+      set(snd.p.out.gain, piston ? (0.03 + engState.level * 0.075) * (run ? 1 : 0.15) : 0, 0.06);
+      set(snd.p.crackleGain.gain, piston && run && thr < 0.3 ? 0.012 : 0, 0.1);
+      // Jet.
+      const n = clamp(engState.n1 / 100, 0, 1), many = 1 + 0.12 * ((plane.engines || 2) - 1);
+      set(snd.j.roar.frequency, 450 + n * 2300); set(snd.j.roar.Q, 0.5 + n * 0.4);
+      set(snd.j.roarGain.gain, jet ? (0.015 + 0.2 * Math.pow(n, 1.6)) * many : 0, 0.15);
+      set(snd.j.rumbleGain.gain, jet ? (0.04 + 0.16 * n) * many : 0, 0.2);
+      set(snd.j.w1.frequency, 1800 + n * 3400); set(snd.j.w2.frequency, 1800 + n * 3400 + 25 + (plane.engines || 2) * 8);
+      set(snd.j.whine.gain, jet ? 0.003 + 0.011 * n * n : 0, 0.2);
+      // Wind and the wheels.
+      set(snd.w.f.frequency, 300 + V * 9); set(snd.w.g.gain, Math.pow(fast, 1.6) * 0.12 + (flight.damage.L && flight.damage.R ? 0 : 0.04 * fast), 0.15);
+      const rolling = flight.onGround ? clamp(V / 40, 0, 1) : 0;
+      set(snd.r.g.gain, flight.damage.gear ? rolling * 0.08 : 0.04 * rolling, 0.1);
+      set(snd.r.sg.gain, !flight.damage.gear && flight.onGround ? clamp(V / 20, 0, 1) * 0.1 : (flight.damage.tail < 1 && tailScrapeT > 0 ? 0.08 : 0), 0.05);
+      // Stall horn (pulsing) and the overspeed clacker.
+      const stallWarn = !flight.onGround && (flight.stalled || V < plane.stall * 1.06) && V > 3 && !flight.crashed;
+      set(snd.horn.g.gain, stallWarn && Math.floor(t * 5) % 2 === 0 ? 0.05 : 0, 0.01);
+      const over = V > plane.max * 1.0 && !flight.crashed;
+      set(snd.clack.g.gain, over && Math.floor(t * 9) % 2 === 0 ? 0.045 : 0, 0.005);
     }
     function beep(freq, t = 0.18, type = 'sine', vol = 0.18) {
       const a = audio(); if (!a) return;
@@ -864,7 +984,7 @@
         const dist = 1600 + Math.random() * 400, side = (Math.random() - 0.5) * 120;
         // On the extended centre line behind the threshold, a 3–4° glide slope, at approach speed.
         flight.reset([side, dist * Math.tan(3.5 * DEG) + 4, dist], 0, plane.stall * 1.35, false);
-        flight.throttle = 0.3; flight.flaps = 1;
+        flight.throttle = 0.3; flight.flapNotch = Math.min(2, (plane.flapNotches || [0, 1]).length - 1); flight.flaps = (plane.flapNotches || [0, 1])[flight.flapNotch];
       } else {
         flight.reset([0, 160, -200], 0, plane.cruise, false);
         if (mode.id === 'hoops') {
@@ -876,8 +996,12 @@
       const flown = new Set(read('flown', [])); flown.add(plane.id); write('flown', [...flown]);
       if (flown.size >= PLANES.length) achieve('all');
       camPos = add(flight.pos, [0, 12, 40]);
+      rotateCalled = false; lowFuelWarned = false; tailScrapeT = 0; const up = flight.throttle;
+      engState.rpm = plane.engine === 'jet' ? 0 : plane.rpmIdle + (plane.rpmMax - plane.rpmIdle) * up;
+      engState.n1 = plane.engine === 'jet' ? plane.n1Idle + (100 - plane.n1Idle) * up : 0;
       screen = 'fly'; renderUI(); root.focus();
       if (audio()?.state === 'suspended') ac.resume();
+      if (engGain) engGain.gain.value = 1;
     }
 
     function finish(kind, value, label) {
@@ -909,13 +1033,20 @@
       if (down && e.repeat && keys.has(k)) { if (screen === 'fly') e.preventDefault?.(); return; }   // held keys repeat: toggles fire once
       const typing = e.target && e.target.tagName === 'INPUT' && e.target.type !== 'range';
       if (typing) { if (down && k === 'Enter' && result?.qualifies) saveScore(); return; }
-      const game = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' ', 'w', 's', 'a', 'd', 'q', 'e', 'f', 'b', 'c', 'p', 'r', 'Shift', 'Control', 'g'];
+      const game = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' ', 'w', 's', 'a', 'd', 'q', 'e', 'f', 'v', 'b', 'c', 'p', 'r', 'Shift', 'Control', 'g'];
       if (game.includes(k) && screen === 'fly') e.preventDefault?.();
       if (down) {
         if (screen === 'fly') {
           if (k === 'p') { paused = !paused; renderUI(); }
           if (k === 'c') camMode = (camMode + 1) % 3;
-          if (k === 'f') { flight.flaps = flight.flaps ? 0 : 1; toast(flight.flaps ? 'Flaps down' : 'Flaps up', 800); }
+          if (k === 'f' || k === 'v') {
+            const n = plane.flapNotches || [0, 1], to = clamp(flight.flapNotch + (k === 'f' ? 1 : -1), 0, n.length - 1);
+            if (to !== flight.flapNotch) {
+              flight.flapNotch = to; flight.flaps = n[to];
+              toast(`Flaps ${(plane.flapLabels || ['UP', 'DOWN'])[to]}`, 900); noise(0.5, 0.12, 700);
+              if (to > 0 && flight.speed > speedsOf(plane).vfe * 1.05) toast('⚠ FLAPS OVERSPEED', 1600);
+            }
+          }
           if (k === 'r') start();
           if (k === 'm') { mouseOn = !mouseOn; write('mouse', mouseOn); toast(mouseOn ? 'Mouse steering on' : 'Mouse steering off: use the keys', 1400); }
         } else if (screen === 'result' && (k === 'r' || k === ' ')) { e.preventDefault?.(); start(); }
@@ -1049,6 +1180,17 @@
           for (let i = 0; i < 10; i++) puff('spark', at, add(mul(flight.vel, 0.5), jitter(16)));
           toast(`💥 ${WING_TEXT[ev.cause] || 'Damage!'} ${ev.side === 'L' ? 'Left' : 'Right'} wing torn off`, 2600);
           noise(0.35, 0.5, 2200); wingLostAt = elapsed;
+        } else if (ev.type === 'tail') {
+          const at = partPos('T');
+          for (let i = 0; i < 10; i++) puff('spark', at, add(mul(flight.vel, 0.3), [(Math.random() - 0.5) * 8, 2 + Math.random() * 4, (Math.random() - 0.5) * 8]));
+          puff('dust', at, jitter(3));
+          noise(0.7, 0.35, 1600); tailScrapeT = 0.7;
+          if (ev.health <= 0) {
+            detach('T', [0, 2, 3], 5);
+            toast('💥 TAIL STRIKE! The tail broke off: you have almost no pitch control', 3000);
+          } else toast(`⚠ TAIL STRIKE! Tail ${ev.health < 0.35 ? 'badly ' : ''}damaged (${Math.round(ev.health * 100)}%): weaker elevator and rudder. Keep the nose lower.`, 2800);
+        } else if (ev.type === 'fuel') {
+          toast('⛽ Out of fuel: the engine has stopped. Glide and land!', 3000);
         } else if (ev.type === 'gear') {
           toast('💥 The undercarriage collapsed! Sliding on the belly…', 2400);
           noise(2.2, 0.3, 700);
@@ -1120,6 +1262,8 @@
       if (wasGround && !flight.onGround && flight.pos[1] - groundAt(W, flight.pos[0], flight.pos[2]) > 2) { hadTakeoff = true; if (onRunway(prev)) achieve('takeoff'); }
       if (!wasGround && flight.onGround) {
         const sink = flight.sinkAtTouch;
+        // The tyres: a chirp, louder for a harder landing, and a thump of the gear taking the weight.
+        noise(0.12, clamp(0.12 + sink * 0.05, 0.12, 0.5), 1500); noise(0.3, clamp(0.1 + sink * 0.04, 0.1, 0.4), 160);
         toast(`Touchdown · ${sink.toFixed(1)} m/s${sink < 1 ? ' · butter!' : sink < 2.5 ? ' · nice' : sink < 4.5 ? ' · firm' : ' · ouch'}`, 1500);
         if (sink < 1 && onRunway(flight.pos)) achieve('butter');
       }
@@ -1157,12 +1301,16 @@
         if (walls >= 2) { canyonT += dt; if (canyonT > 4) achieve('canyon'); } else canyonT = Math.max(0, canyonT - dt);
       }
 
-      // Engine sound follows the throttle and airspeed.
-      if (engGain && ac) {
-        const run = flight.damage.engine ? (flight.damage.power < 1 ? (Math.random() < 0.15 ? 0.2 : 1) : 1) : 0;
-        eng.frequency.setTargetAtTime(45 + flight.throttle * 70 * run + flight.speed * 0.25, ac.currentTime, 0.1);
-        engGain.gain.setTargetAtTime(sound ? (0.035 + flight.throttle * 0.05) * run : 0, ac.currentTime, 0.05);
+      // Engine state (for the gauges), then every flight sound.
+      updateEngineState(dt);
+      updateSound();
+      if (tailScrapeT > 0) tailScrapeT -= dt;
+      // Take-off calls, like an airliner: rotate at Vr (and a chime), and a low-fuel warning.
+      if (flight.onGround && !rotateCalled && flight.throttle > 0.6 && flight.speed >= speedsOf(plane).vr) {
+        rotateCalled = true; toast('ROTATE', 1400); chime();
       }
+      if (!flight.onGround) rotateCalled = true;
+      if (!lowFuelWarned && flight.fuel < (plane.fuel || 1800) * 0.12 && flight.damage.engine) { lowFuelWarned = true; toast('⛽ LOW FUEL', 2200); beep(660, 0.2, 'square', 0.12); setTimeout(() => beep(660, 0.2, 'square', 0.12), 260); }
     }
 
     // ---- drawing
@@ -1280,14 +1428,71 @@
       const agl = alt - groundAt(W, flight.pos[0], flight.pos[2]);
       h2.font = `700 ${Math.round(12 * s + 2)}px system-ui, sans-serif`; h2.textBaseline = 'middle';
       const box = (x, y, bw, bh) => { h2.fillStyle = 'rgba(8,12,24,.55)'; h2.beginPath(); h2.roundRect ? h2.roundRect(x, y, bw, bh, 8) : h2.rect(x, y, bw, bh); h2.fill(); };
-      // Left: speed, altitude, vertical speed.
-      box(8, H2 - 76 * s - 10, 128 * s + 20, 76 * s);
-      h2.fillStyle = '#fff'; h2.textAlign = 'left';
-      const line = (y, label, val, col = '#fff') => { h2.fillStyle = 'rgba(255,255,255,.6)'; h2.fillText(label, 18, y); h2.fillStyle = col; h2.fillText(val, 18 + 54 * s, y); };
-      const by = H2 - 76 * s;
-      line(by + 4, 'SPD', kmh ? `${Math.round(spd * 3.6)} km/h` : `${Math.round(spd * 1.944)} kt`, spd < plane.stall * 1.1 && !flight.onGround ? '#ff6b6b' : '#fff');
-      line(by + 4 + 20 * s, 'ALT', kmh ? `${Math.max(0, Math.round(agl))} m` : `${Math.max(0, Math.round(agl * 3.28))} ft`, agl < 20 && !flight.onGround ? '#ffd166' : '#fff');
-      line(by + 4 + 40 * s, 'V/S', `${flight.vel[1] >= 0 ? '+' : ''}${flight.vel[1].toFixed(1)} m/s`);
+      // Left: an airspeed indicator and an altimeter, round and with needles, like the real thing. The indicator's
+      // scale and coloured arcs follow the aircraft: white for the flap range, green for normal flying, yellow
+      // for caution and a red line you must not pass. The altimeter reads feet above the runway.
+      const DR = Math.round(58 * s + 6), dy = H2 - DR - 16;
+      const ring = (cx, cy, r) => {
+        const g = h2.createRadialGradient(cx - r * 0.3, cy - r * 0.35, r * 0.1, cx, cy, r);
+        g.addColorStop(0, '#1c2029'); g.addColorStop(1, '#07080c');
+        h2.fillStyle = g; h2.beginPath(); h2.arc(cx, cy, r, 0, Math.PI * 2); h2.fill();
+        h2.strokeStyle = '#5b6372'; h2.lineWidth = 3; h2.stroke();
+      };
+      const tick = (cx, cy, a, r0, r1, w, col) => {
+        h2.strokeStyle = col; h2.lineWidth = w; h2.beginPath();
+        h2.moveTo(cx + Math.cos(a) * r0, cy + Math.sin(a) * r0); h2.lineTo(cx + Math.cos(a) * r1, cy + Math.sin(a) * r1); h2.stroke();
+      };
+      const label = (cx, cy, text, a, r, size = 9, col = '#e8ebf0') => {
+        h2.font = `700 ${Math.round(size * s + 2)}px system-ui`; h2.fillStyle = col; h2.textAlign = 'center'; h2.textBaseline = 'middle';
+        h2.fillText(text, cx + Math.cos(a) * r, cy + Math.sin(a) * r);
+      };
+      const arc = (cx, cy, r, a0, a1, col, w) => { h2.strokeStyle = col; h2.lineWidth = w; h2.beginPath(); h2.arc(cx, cy, r, a0, a1); h2.stroke(); };
+      const needle = (cx, cy, a, len, w, col, tail = 0.18) => {
+        h2.strokeStyle = col; h2.lineWidth = w; h2.lineCap = 'round'; h2.beginPath();
+        h2.moveTo(cx - Math.cos(a) * len * tail, cy - Math.sin(a) * len * tail); h2.lineTo(cx + Math.cos(a) * len, cy + Math.sin(a) * len); h2.stroke(); h2.lineCap = 'butt';
+      };
+      // Airspeed indicator.
+      {
+        const cx = 8 + DR + 4, cy = dy, sp = speedsOf(plane), unit = kmh ? 3.6 : 1.944;
+        const top = plane.max * 1.28 * unit, steps = [10, 20, 25, 40, 50, 100], step = steps.find((x) => top / x <= 11) || 100, vmax = Math.ceil(top / step) * step;
+        const A = (v) => (0.75 + 1.5 * clamp(v * unit / vmax, 0, 1)) * Math.PI;
+        ring(cx, cy, DR);
+        arc(cx, cy, DR * 0.9, A(sp.vs0), A(sp.vfe), '#f2f2f2', 3);                 // white: flaps down
+        arc(cx, cy, DR * 0.8, A(sp.vs1), A(sp.vno), '#38d26a', 5);                   // green: normal
+        arc(cx, cy, DR * 0.8, A(sp.vno), A(sp.vne), '#ffd23f', 5);                   // yellow: caution
+        tick(cx, cy, A(sp.vne), DR * 0.68, DR * 0.95, 3, '#ff3b30');                  // red: never exceed
+        for (let v = 0; v <= vmax; v += step / 2) {
+          const a = (0.75 + 1.5 * v / vmax) * Math.PI, major = Math.round(v / (step / 2)) % 2 === 0;
+          tick(cx, cy, a, DR * (major ? 0.64 : 0.7), DR * 0.76, major ? 1.6 : 1, '#e8ebf0');
+          if (major && v > 0 && (vmax / step <= 8 || Math.round(v / step) % 2 === 0)) label(cx, cy, `${v}`, a, DR * 0.5, 8);
+        }
+        label(cx, cy + DR * 0.66, kmh ? 'KM/H' : 'KNOTS', -Math.PI / 2, 0, 6, '#9aa3b2');
+        const live = flight.speed, warn = (live < plane.stall * 1.06 && !flight.onGround) || live > plane.max;
+        needle(cx, cy, A(live), DR * 0.82, 2.4, warn ? '#ff6b6b' : '#fff');
+        h2.fillStyle = '#2b303b'; h2.beginPath(); h2.arc(cx, cy, 4, 0, Math.PI * 2); h2.fill();
+      }
+      // Altimeter.
+      {
+        const cx = 8 + DR * 3 + 14, cy = dy, ft = (flight.pos[1] - plane.gear) * 3.281, mb = 1013;
+        ring(cx, cy, DR);
+        for (let i = 0; i < 50; i++) {
+          const a = -Math.PI / 2 + (i / 50) * Math.PI * 2, major = i % 5 === 0;
+          tick(cx, cy, a, DR * (major ? 0.7 : 0.8), DR * 0.88, major ? 1.8 : 0.9, '#e8ebf0');
+          if (major) label(cx, cy, `${i / 5}`, a, DR * 0.56, 9);
+        }
+        label(cx, cy - DR * 0.34, 'ALT', -Math.PI / 2, 0, 6, '#9aa3b2');
+        h2.fillStyle = '#0a0c11'; h2.fillRect(cx + DR * 0.18, cy - DR * 0.09, DR * 0.46, DR * 0.18);
+        label(cx + DR * 0.41, cy, `${mb}`, 0, 0, 6, '#ffd23f');
+        const m = Math.max(0, ft);
+        needle(cx, cy, -Math.PI / 2 + ((m % 100000) / 100000) * Math.PI * 2, DR * 0.38, 1.3, '#cfd5df', 0);   // 10,000 ft
+        needle(cx, cy, -Math.PI / 2 + ((m % 10000) / 10000) * Math.PI * 2, DR * 0.5, 3.4, '#f4f6fa', 0);      // 1,000 ft (short, fat)
+        needle(cx, cy, -Math.PI / 2 + ((m % 1000) / 1000) * Math.PI * 2, DR * 0.8, 2, '#fff', 0.2);           // 100 ft (long)
+        h2.fillStyle = '#2b303b'; h2.beginPath(); h2.arc(cx, cy, 3.5, 0, Math.PI * 2); h2.fill();
+        h2.font = `700 ${Math.round(8 * s + 2)}px system-ui`; h2.textAlign = 'center'; h2.fillStyle = '#c3cad6'; h2.textBaseline = 'middle';
+        const vs = flight.vel[1] * 196.85;   // ft per minute
+        h2.fillStyle = vs < -1500 && agl < 300 ? '#ff6b6b' : '#c3cad6';
+        h2.fillText(`${Math.round(ft)} ft · ${vs >= 0 ? '+' : ''}${Math.round(vs / 10) * 10} fpm`, cx, cy + DR + 8);
+      }
       // Throttle and flaps.
       const tx = W2 - 34, ty = H2 - 96 * s - 10;
       box(tx - 8, ty - 6, 34, 96 * s + 12);
@@ -1295,7 +1500,24 @@
       h2.fillStyle = flight.throttle > 0.95 ? '#ff7e2d' : '#5ee08a'; h2.fillRect(tx, ty + 80 * s * (1 - flight.throttle), 18, 80 * s * flight.throttle);
       h2.fillStyle = '#fff'; h2.textAlign = 'center'; h2.font = `700 ${Math.round(9 * s + 2)}px system-ui`;
       h2.fillText(`${Math.round(flight.throttle * 100)}%`, tx + 9, ty + 80 * s + 9);
-      if (flight.flaps) { h2.fillStyle = '#89c2ff'; h2.fillText('FLAPS', tx - 30, ty + 80 * s + 9); }
+      {
+        // Flaps position, fuel, and the engine gauge: rpm on a propeller plane, N1 % on a jet.
+        const lab = (plane.flapLabels || ['UP', 'DOWN'])[flight.flapNotch] || 'UP';
+        h2.textAlign = 'right'; h2.font = `700 ${Math.round(9 * s + 2)}px system-ui`;
+        h2.fillStyle = flight.flaps ? '#89c2ff' : '#7c8594'; h2.fillText(`FLAPS ${lab}`, tx - 12, ty + 80 * s + 9);
+        const fuelPct = clamp(flight.fuel / (plane.fuel || 1800), 0, 1);
+        h2.fillStyle = fuelPct < 0.12 ? '#ff6b6b' : fuelPct < 0.3 ? '#ffd166' : '#7c8594';
+        h2.fillText(`FUEL ${Math.round(fuelPct * 100)}%`, tx - 12, ty + 80 * s - 6);
+        const jet = plane.engine === 'jet', er = 24 * s + 8, ecx = tx - 24 - er, ecy = ty + 80 * s - er - 22;
+        ring(ecx, ecy, er);
+        const full = jet ? 100 : plane.rpmMax * 1.1, val = jet ? engState.n1 : engState.rpm, EA = (v) => (0.75 + 1.5 * clamp(v / full, 0, 1)) * Math.PI;
+        if (jet) { arc(ecx, ecy, er * 0.8, EA(25), EA(95), '#38d26a', 4); arc(ecx, ecy, er * 0.8, EA(95), EA(100), '#ff3b30', 4); }
+        else { arc(ecx, ecy, er * 0.8, EA(plane.rpmMax * 0.78), EA(plane.rpmMax * 0.93), '#38d26a', 4); arc(ecx, ecy, er * 0.8, EA(plane.rpmMax * 0.93), EA(full), '#ff3b30', 4); }
+        needle(ecx, ecy, EA(val), er * 0.78, 2, flight.damage.engine ? '#fff' : '#ff6b6b');
+        label(ecx, ecy + er * 0.45, jet ? 'N1 %' : 'RPM', -Math.PI / 2, 0, 6, '#9aa3b2');
+        label(ecx, ecy + er * 0.2, jet ? `${Math.round(val)}` : `${Math.round(val / 10) * 10}`, -Math.PI / 2, 0, 7, '#e8ebf0');
+        h2.textAlign = 'center';
+      }
       if (flight.brake && flight.onGround) { h2.fillStyle = '#ffd166'; h2.fillText('BRAKE', tx - 30, ty + 80 * s - 8); }
       // Attitude: a little horizon ball.
       const cx = W2 / 2, cy = H2 - 44 * s - 8, R = 34 * s;
@@ -1349,10 +1571,11 @@
       }
       // Damage panel (top right) once anything is wrong.
       const dmg = flight.damage;
-      if (!dmg.engine || dmg.power < 1 || !dmg.L || !dmg.R || !dmg.gear) {
+      if (!dmg.engine || dmg.power < 1 || !dmg.L || !dmg.R || !dmg.gear || dmg.tail < 1) {
         const rows = [['ENGINE', !dmg.engine ? 'FAILED' : dmg.power < 1 ? 'ROUGH' : 'OK', !dmg.engine ? '#ff4d4d' : dmg.power < 1 ? '#ffd166' : '#5ee08a'],
           ['L WING', dmg.L ? 'OK' : 'GONE', dmg.L ? '#5ee08a' : '#ff4d4d'], ['R WING', dmg.R ? 'OK' : 'GONE', dmg.R ? '#5ee08a' : '#ff4d4d'],
-          ['GEAR', dmg.gear ? 'OK' : 'BROKEN', dmg.gear ? '#5ee08a' : '#ff4d4d']];
+          ['GEAR', dmg.gear ? 'OK' : 'BROKEN', dmg.gear ? '#5ee08a' : '#ff4d4d'],
+          ['TAIL', dmg.tail >= 1 ? 'OK' : dmg.tail <= 0 ? 'GONE' : `${Math.round(dmg.tail * 100)}%`, dmg.tail >= 1 ? '#5ee08a' : dmg.tail <= 0 ? '#ff4d4d' : '#ffd166']];
         const bw = 120 * s + 14, bx = W2 - bw - 8, by0 = 8;
         box(bx, by0, bw, rows.length * 16 * s + 12);
         h2.font = `700 ${Math.round(9 * s + 2)}px system-ui`; h2.textAlign = 'left';
@@ -1412,7 +1635,7 @@
           <button data-a="invert">${invert ? '✓ ' : ''}Invert (down climbs, like a flight stick)</button></div>
           <h2>Keys</h2><div class="pg-hint">
           <kbd>W</kbd> more throttle · <kbd>S</kbd> less throttle · <kbd>↑</kbd> climb · <kbd>↓</kbd> dive · <kbd>←</kbd> <kbd>→</kbd> roll · <kbd>A</kbd> <kbd>D</kbd> rudder (and steering on the ground)<br>
-          <kbd>F</kbd> flaps · <kbd>Space</kbd> brakes / airbrake · <kbd>C</kbd> camera (chase, cockpit, orbit) · <kbd>P</kbd> pause (and the menu) · <kbd>R</kbd> restart · <kbd>M</kbd> mouse steering on / off</div>
+          <kbd>F</kbd> flaps down a notch · <kbd>V</kbd> flaps up · <kbd>Space</kbd> brakes / airbrake · <kbd>C</kbd> camera (chase, cockpit, orbit) · <kbd>P</kbd> pause (and the menu) · <kbd>R</kbd> restart · <kbd>M</kbd> mouse steering on / off</div>
           <h2>Tips</h2><div class="pg-hint">Bank by moving the cursor sideways and ease it ${pull === 'down' ? 'down' : 'up'} to turn: the wings turn the plane, the rudder only tidies up. Too slow or pulling too hard
           stalls the wing (STALL): push the nose down and add power. To land: slow down, flaps down, line up with the runway, and touch down gently (watch V/S).
           To take off: full throttle (hold W) on the runway, then ease the cursor ${climb} (or hold ${invert ? "↓" : "↑"}) at about ${Math.round(plane.stall * 1.3 * 3.6)} km/h. Airliners turn slowly, so start turns early.</div>
@@ -1421,7 +1644,7 @@
           <button data-a="units">${units === 'kmh' ? 'km/h · m' : 'knots · feet'}</button>
           <button data-a="failures">Failures: ${failures === 'off' ? 'off' : failures === 'often' ? 'often (every mode)' : 'rare (Free Flight, Landing)'}</button></div>
           <h2>Damage</h2><div class="pg-hint">Clip a tree, a building or the ground with a wingtip and that wing tears off: the plane rolls hard towards the stump.
-          Hit something with the nose or tail, or the ground too hard, and it breaks up. Too fast and the wings come off; pulling far too hard snaps one.
+          Keep the nose down near the runway: past your aircraft's limit (about 14° in the Cessna, 10° in a 747) the tail scrapes, which damages it and weakens the elevator, and a hard enough scrape breaks it off. Watch the fuel gauge too. Hit something with the nose or tail, or the ground too hard, and it breaks up. Too fast and the wings come off; pulling far too hard snaps one.
           A hard landing can collapse the undercarriage into a belly slide. With failures on, the engine can quit (glide to a field) or run rough after a bird strike.</div>`;
       }
       ui.innerHTML = `<div class="pg-menu pg-side"><div class="pg-row"><h1>✈️ Plane</h1><div class="pg-tabs">${tabs.map(([id, n]) => `<button data-tab="${id}" class="${id === menuTab ? 'pg-on' : ''}">${n}</button>`).join('')}</div></div>${body}</div>`;

@@ -206,6 +206,12 @@ All screenshots use sample data.
 
 > **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is still in the repository's tags.
 
+### Mac 2.0.28 · Windows 1.40.0 BETA · 9 October 2026 · Plane: a proper cockpit
+
+- **Round airspeed and altimeter dials** that change with the aircraft (coloured arcs for flaps, normal flying, caution and the never-exceed line; three altimeter hands), an engine gauge (rpm or jet N1 %), fuel and flaps position.
+- **Engines that sound like engines:** a piston with a propeller beat on the Cessna and Piper, a spooling jet on the 737, 747 and 777, plus wind, tyres, a stall horn and an overspeed warning.
+- **Tail strikes:** rotating too steeply scrapes and damages the tail (weaker pitch and rudder; a hard scrape breaks it off). Flaps go down in notches (**F** / **V**), fuel runs out, and airliners call **ROTATE**.
+
 ### Windows 1.39.0 BETA · 9 October 2026 · Updates once a week, if you want
 
 - **Update at most once a week**, like the Mac: off by default, and after updating the notch opens once on a card with the switch so you can turn it on or leave it off. With it on, the notification and the Update button/pill come once a week for the newest version; required security updates still appear straight away and **Check now** always shows the latest. Change it any time in **Settings → Updates**.
