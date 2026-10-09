@@ -98,15 +98,20 @@ final class KlickEngine: ObservableObject {
 
     /// Rechecks Accessibility (the heartbeat calls this every 30 s).
     func refreshPermission() {
-        let need = isOn && globalMonitor != nil && !AXIsProcessTrusted()
+        let need = isOn && globalMonitor != nil && !Self.hasKeyAccess
         if need != needsAccessibility { needsAccessibility = need }
     }
+
+    /// Hearing keys in other apps needs Accessibility, and recent macOS versions also want Input Monitoring.
+    /// Either one lets a global key monitor receive events, so the note stays away once both are granted.
+    static var hasKeyAccess: Bool { AXIsProcessTrusted() && CGPreflightListenEventAccess() }
 
     private func start() {
         if globalMonitor == nil {
             if !AXIsProcessTrusted() {
                 AXIsProcessTrustedWithOptions([kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String: true] as CFDictionary)
             }
+            if !CGPreflightListenEventAccess() { CGRequestListenEventAccess() }
             globalMonitor = NSEvent.addGlobalMonitorForEvents(matching: [.keyDown, .keyUp]) { event in
                 MainActor.assumeIsolated { KlickEngine.shared.handle(event) }
             }
@@ -116,7 +121,7 @@ final class KlickEngine: ObservableObject {
                 return event
             }
         }
-        needsAccessibility = !AXIsProcessTrusted()
+        needsAccessibility = !Self.hasKeyAccess
         startAudio()
     }
 
@@ -157,6 +162,7 @@ final class KlickEngine: ObservableObject {
         guard let list = sounds[kind] ?? sounds["down"], !list.isEmpty, !players.isEmpty else { return }
         let buffer: AVAudioPCMBuffer
         if kind == "down" { variant = (variant + 1 + Int.random(in: 0...1)) % list.count; buffer = list[variant] } else { buffer = list[0] }
+        guard engine.isRunning else { return }       // the output device is busy or changed: skip the click rather than crash
         let player = players[nextPlayer]
         nextPlayer = (nextPlayer + 1) % players.count
         player.volume = Float(volume(for: packID))

@@ -59,11 +59,16 @@ struct KlickView: View {
     private var permissionNote: some View {
         HStack(spacing: 8) {
             Image(systemName: "lock.shield").foregroundStyle(.orange)
-            Text("To hear keys in other apps, allow Notch apple in Privacy & Security → Accessibility. Until then only keys typed in Notch apple click.")
+            Text("To hear keys in other apps, allow Notch apple in Privacy & Security → Accessibility and Input Monitoring. Already on but silent after an update? Select Notch apple there, press −, then add it again. Until then only keys typed in Notch apple click.")
                 .font(.system(size: 11)).foregroundStyle(Theme.textSecondary).fixedSize(horizontal: false, vertical: true)
             Spacer(minLength: 4)
-            Button("Open") {
-                if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility") { NSWorkspace.shared.open(url) }
+            VStack(spacing: 4) {
+                Button("Accessibility") {
+                    if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility") { NSWorkspace.shared.open(url) }
+                }
+                Button("Input Monitoring") {
+                    if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_ListenEvent") { NSWorkspace.shared.open(url) }
+                }
             }
             .buttonStyle(PurpleButtonStyle(prominent: false))
         }
