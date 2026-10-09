@@ -57,7 +57,7 @@ Pick your computer. Both buttons start the download straight away. The Mac butto
   </tr>
   <tr>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/v2.0.20/NotchApple-2.0.20.dmg"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.0.20</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/v2.0.19/NotchApple-2.0.19.dmg"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.0.19</b></a>
     </td>
     <td align="center">
       <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 1.37.0 BETA</b></a>
