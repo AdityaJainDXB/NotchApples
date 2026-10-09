@@ -172,6 +172,7 @@ extension Module {
         case .focus: .focus
         case .klick: .klick
         case .convert: .convert
+        case .doIt: .doIt
         default: nil
         }
     }
