@@ -27,6 +27,7 @@ struct NotchSettings: View {
     @AppStorage("focus.behavior") private var focusBehavior = "hush"
     @AppStorage("focus.active") private var focusOn = false
     @AppStorage("focus.profile") private var focusProfile = ""
+    @AppStorage("updates.weekly") private var weeklyUpdates = false
 
     private var notch: NotchWindowController? { AppDelegate.current?.notch }
 
@@ -34,6 +35,14 @@ struct NotchSettings: View {
         Form {
             Section("Top bar") {
                 TopBarSwitches()
+            }
+            Section {
+                Toggle(isOn: $weeklyUpdates) {
+                    Text("Update at most once a week")
+                    Text("Off: you hear about every release. On: Notch apple asks about the newest update once a week instead of announcing each one. Required security updates still appear straight away. Also in Settings → Updates.")
+                }
+            } header: {
+                Text("Updates")
             }
             Section {
                 Toggle(isOn: $settings.globalHotkeyEnabled) {

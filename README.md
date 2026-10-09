@@ -206,6 +206,10 @@ All screenshots use sample data.
 
 > **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is still in the repository's tags.
 
+### Mac 2.0.27 · 9 October 2026 · Updates once a week, if you want
+
+- **Update at most once a week.** Releases have been coming often, so there is now an option to be asked about updates only once a week instead of for every release. **It is off by default**; after updating, the notch shows it on the "What's new" card so you can switch it on or leave it off, and you can change it any time in **Settings → Notch → Updates** or **Settings → Updates**. With it on, the notification, the Update button and the reminders in the notch appear once a week for the newest version. Required security updates still appear straight away, and **Check now** always shows the latest.
+
 ### Mac 2.0.26 · 9 October 2026 · Top bar, ⌘E / ⌘J, calmer Tools
 
 - Bordered group for the always-there header buttons, and a **Choose your top bar** step after installing or updating (also in Settings → Notch).

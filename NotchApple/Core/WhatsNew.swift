@@ -20,6 +20,10 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.0.27", date: "9 October 2026", headline: "Updates once a week, if you want", items: [
+            "New option: Update at most once a week. Off by default. On, Notch apple stops announcing every release and asks about the newest update once a week; required security updates still appear straight away.",
+            "It is switched on or off in this card, in Settings → Notch and in Settings → Updates.",
+        ]),
         ReleaseNote(version: "2.0.26", date: "9 October 2026", headline: "Top bar you choose, ⌘E and ⌘J", items: [
             "The always-there buttons sit in a bordered group, and you choose which to keep (Settings → Notch).",
             "⌘E opens and closes the notch; ⌘J hides and shows it. Swipe up on the top bar closes it.",
@@ -394,6 +398,9 @@ enum WhatsNew {
 
     /// Optional things introduced in a release, offered once after updating. Only free, safe-to-try settings.
     static let offers: [(version: String, items: [NewFeatureOffer])] = [
+        ("2.0.27", [
+            NewFeatureOffer(id: "weeklyupdates", title: "Update at most once a week", detail: "Instead of hearing about every release, get one update prompt a week. Required security updates still appear straight away. You can change this in Settings → Notch or Updates.", key: "updates.weekly"),
+        ]),
         ("1.31.0", [
             NewFeatureOffer(id: "devtools", title: "Dev Tools tab", detail: "JSON, Base64, JWT, hashes, timestamps, regex and a QR code maker, right in the notch.", key: Module.devTools.storageKey),
             NewFeatureOffer(id: "wellbeing", title: "Wellbeing tab", detail: "Breathing, break reminders and a bedtime nudge.", key: Module.wellbeing.storageKey),

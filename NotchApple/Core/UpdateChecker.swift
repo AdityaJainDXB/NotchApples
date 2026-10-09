@@ -39,6 +39,10 @@ final class UpdateChecker: ObservableObject {
     }
 
     @AppStorage("updates.autoCheck") var autoCheck = true
+    /// Off by default. On: announce updates (notification, Update button, reminders) at most once a week.
+    @AppStorage("updates.weekly") var weekly = false
+    @AppStorage("updates.lastOfferedAt") private var lastOfferedAt = 0.0
+    @AppStorage("updates.weeklyOfferedVersion") private var weeklyOfferedVersion = ""
     /// A version the user said "Not now" to; it won't be offered again.
     @AppStorage("updates.skippedVersion") var skippedVersion = ""
     @AppStorage("updates.notifiedVersion") private var notifiedVersion = ""
@@ -55,6 +59,28 @@ final class UpdateChecker: ObservableObject {
     var pendingUpdate: Release? {
         guard let latest, VersionMath.shouldOffer(version: latest.version, installed: currentVersion, skipped: skippedVersion, prerelease: false, beta: false) else { return nil }
         return latest
+    }
+
+    /// May this release be announced now? Always yes unless "once a week" is on (see UpdateCadenceLogic).
+    func mayAnnounce(_ release: Release) -> Bool {
+        UpdateCadenceLogic.mayAnnounce(weekly: weekly, lastOffer: lastOfferedAt > 0 ? Date(timeIntervalSince1970: lastOfferedAt) : nil,
+                                       offeredVersion: weeklyOfferedVersion, version: release.version, now: .now,
+                                       required: Self.isRequired(release, installed: currentVersion))
+    }
+
+    /// Remembers that this release was announced, so the next announcement waits a week.
+    private func noteAnnounced(_ release: Release) {
+        lastOfferedAt = Date.now.timeIntervalSince1970
+        weeklyOfferedVersion = release.version
+    }
+
+    /// When "once a week" is on: the day the next update will be announced.
+    var nextAnnouncement: Date? { UpdateCadenceLogic.nextOffer(lastOffer: lastOfferedAt > 0 ? Date(timeIntervalSince1970: lastOfferedAt) : nil) }
+
+    /// The update to show as the Update button in the notch: always the newest, but with "once a week" on only when it may be announced.
+    var announcedUpdate: Release? {
+        guard let release = pendingUpdate, mayAnnounce(release) else { return nil }
+        return release
     }
 
     /// The release notes line that makes an update compulsory in the notch.
@@ -122,9 +148,9 @@ final class UpdateChecker: ObservableObject {
     }
 
     func noteNotchOpened() {
-        guard reminderRelease != nil, !reminderDue, !DemoHooks.isDemo else { return }
+        guard let release = reminderRelease, !reminderDue, !DemoHooks.isDemo, mayAnnounce(release) else { return }
         opensSinceReminder += 1
-        if opensSinceReminder >= max(4, reminderEvery) { reminderDue = true }
+        if opensSinceReminder >= max(4, reminderEvery) { reminderDue = true; noteAnnounced(release) }
     }
 
     /// "Skip for now": back to the tabs; it returns after another 4 or 5 opens.
@@ -173,14 +199,16 @@ final class UpdateChecker: ObservableObject {
                 if userInitiated, release.version == skippedVersion { skippedVersion = "" }
                 phase = pendingUpdate == nil ? .upToDate : .available
                 if pendingUpdate == nil { clearStaleNotifications() }
-                if autoCheck, let update = pendingUpdate, update.version != notifiedVersion {
+                if autoCheck, let update = pendingUpdate, update.version != notifiedVersion, mayAnnounce(update) {
                     notifiedVersion = update.version
+                    noteAnnounced(update)
                     notify(update)
                 }
                 // A new, optional release: ask once, the next time the notch opens ("Update" or "Skip for now"),
                 // then again every few opens (see `noteNotchOpened`).
-                if requiredUpdate == nil, let fresh = reminderRelease, fresh.version != requestedVersion {
+                if requiredUpdate == nil, let fresh = reminderRelease, fresh.version != requestedVersion, mayAnnounce(fresh) {
                     requestedVersion = fresh.version
+                    noteAnnounced(fresh)
                     reminderDue = true
                 }
             } catch {
@@ -432,6 +460,13 @@ struct UpdatesSettings: View {
             Section {
                 Toggle("Notify me about updates", isOn: $updater.autoCheck)
                     .onChange(of: updater.autoCheck) { _, _ in updater.applyPreference() }
+                Toggle(isOn: $updater.weekly) {
+                    Text("Update at most once a week")
+                    Text(updater.weekly
+                         ? "Notch apple tells you about the newest update once a week, not for every release. Required security updates still appear straight away. Check now always shows the latest."
+                         : "Off: you hear about every release. Turn this on to be asked about updates once a week.")
+                }
+                .onChange(of: updater.weekly) { _, _ in updater.objectWillChange.send() }
                 LabeledContent("Current version", value: updater.currentVersion)
                 LabeledContent("Last checked") {
                     Text(updater.lastChecked.map { $0.formatted(date: .abbreviated, time: .shortened) } ?? "Not yet")
@@ -538,7 +573,7 @@ struct UpdatePill: View {
     let open: () -> Void
 
     var body: some View {
-        if let release = updater.pendingUpdate {
+        if let release = updater.announcedUpdate {
             Button(action: open) {
                 Label("Update", systemImage: "arrow.down.circle.fill")
                     .font(.system(size: 12, weight: .semibold))
