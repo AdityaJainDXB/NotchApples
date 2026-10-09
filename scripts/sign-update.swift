@@ -54,6 +54,31 @@ func pinnedKeys() -> [String] {
     }
 }
 
+/// The private key from UPDATE_SIGNING_KEY. Refuses one whose public half the app doesn't pin, since the app would reject what it signs.
+func signingKey() -> Curve25519.Signing.PrivateKey {
+    guard let b64 = ProcessInfo.processInfo.environment["UPDATE_SIGNING_KEY"], !b64.isEmpty,
+          let raw = Data(base64Encoded: b64.trimmingCharacters(in: .whitespacesAndNewlines)),
+          let key = try? Curve25519.Signing.PrivateKey(rawRepresentation: raw) else { fail("UPDATE_SIGNING_KEY is missing or isn't a base64 private key.") }
+    let pub = key.publicKey.rawRepresentation.base64EncodedString()
+    guard pinnedKeys().contains(pub) else { fail("This key's public half (\(pub)) isn't in UpdateSigning.publicKeys, so the app would reject the signature.") }
+    return key
+}
+
+func hex(_ data: Data) -> String { SHA256.hash(data: data).map { String(format: "%02x", $0) }.joined() }
+
+/// What the gallery signs: the digest of index.json's exact bytes (must match PluginPinning.message in the app).
+func pluginMessage(_ index: Data) -> Data { Data("notchapple-plugins-v1\n\(hex(index))\n".utf8) }
+
+func jsonString(_ s: String) -> String {
+    String(data: try! JSONSerialization.data(withJSONObject: s, options: [.fragmentsAllowed, .withoutEscapingSlashes]), encoding: .utf8)!
+}
+
+func readPluginIndex(_ dir: URL) -> [[String: String]] {
+    guard let data = try? Data(contentsOf: dir.appendingPathComponent("index.json")),
+          let list = try? JSONSerialization.jsonObject(with: data) as? [[String: String]] else { fail("Can't read \(dir.path)/index.json") }
+    return list
+}
+
 func verify(signature: Data, version: String, digest: String) -> Bool {
     let msg = message(version: version, digest: digest)
     return pinnedKeys().contains { b64 in
@@ -71,11 +96,7 @@ case "keygen":
 
 case "sign":
     guard args.count == 3 else { fail("Usage: sign <file.dmg> <version>") }
-    guard let b64 = ProcessInfo.processInfo.environment["UPDATE_SIGNING_KEY"], !b64.isEmpty,
-          let raw = Data(base64Encoded: b64.trimmingCharacters(in: .whitespacesAndNewlines)),
-          let key = try? Curve25519.Signing.PrivateKey(rawRepresentation: raw) else { fail("UPDATE_SIGNING_KEY is missing or isn't a base64 private key.") }
-    let pub = key.publicKey.rawRepresentation.base64EncodedString()
-    guard pinnedKeys().contains(pub) else { fail("This key's public half (\(pub)) isn't in UpdateSigning.publicKeys, so the app would reject the signature.") }
+    let key = signingKey()
     let file = URL(fileURLWithPath: args[1]), version = args[2]
     let digest = sha256Hex(file)
     guard let signature = try? key.signature(for: message(version: version, digest: digest)) else { fail("Signing failed.") }
@@ -91,6 +112,45 @@ case "verify":
           let signature = Data(base64Encoded: text.trimmingCharacters(in: .whitespacesAndNewlines)) else { fail("Can't read a base64 signature from \(sigPath)") }
     if verify(signature: signature, version: args[2], digest: sha256Hex(URL(fileURLWithPath: args[1]))) { print("Signature OK") } else { fail("Signature does NOT match") }
 
+case "pin-plugins":
+    // Writes every plugin's SHA-256 into plugins/index.json, then signs the finished index (index.json.sig).
+    guard args.count == 2 else { fail("Usage: pin-plugins <plugins folder>") }
+    let key = signingKey()
+    let dir = URL(fileURLWithPath: args[1])
+    var lines: [String] = []
+    for entry in readPluginIndex(dir) {
+        guard let name = entry["name"], let description = entry["description"], let author = entry["author"], let file = entry["file"],
+              file.range(of: #"^[A-Za-z0-9][A-Za-z0-9._-]*$"#, options: .regularExpression) != nil, !file.contains("..") else { fail("A gallery entry is missing a field or has an unsafe file name: \(entry)") }
+        guard let content = try? Data(contentsOf: dir.appendingPathComponent(file)) else { fail("Can't read \(file)") }
+        lines.append("  {\"name\": \(jsonString(name)), \"description\": \(jsonString(description)), \"author\": \(jsonString(author)), \"file\": \(jsonString(file)), \"sha256\": \"\(hex(content))\"}")
+    }
+    let index = Data(("[\n" + lines.joined(separator: ",\n") + "\n]\n").utf8)
+    try! index.write(to: dir.appendingPathComponent("index.json"))
+    guard let signature = try? key.signature(for: pluginMessage(index)) else { fail("Signing failed.") }
+    try! Data((signature.base64EncodedString() + "\n").utf8).write(to: dir.appendingPathComponent("index.json.sig"))
+    print("Pinned \(lines.count) plugin(s) and signed index.json")
+
+case "verify-plugins":
+    // Checks the signature on plugins/index.json and that every plugin file still matches its listed hash.
+    guard args.count == 2 else { fail("Usage: verify-plugins <plugins folder>") }
+    let dir = URL(fileURLWithPath: args[1])
+    guard let index = try? Data(contentsOf: dir.appendingPathComponent("index.json")),
+          let text = try? String(contentsOf: dir.appendingPathComponent("index.json.sig"), encoding: .utf8),
+          let signature = Data(base64Encoded: text.trimmingCharacters(in: .whitespacesAndNewlines)) else { fail("index.json or index.json.sig is missing or unreadable") }
+    let message = pluginMessage(index)
+    let good = pinnedKeys().contains { b64 in
+        guard let raw = Data(base64Encoded: b64), let pub = try? Curve25519.Signing.PublicKey(rawRepresentation: raw) else { return false }
+        return pub.isValidSignature(signature, for: message)
+    }
+    if !good { fail("index.json's signature does NOT match. Run pin-plugins after changing a plugin or the index.") }
+    var bad = 0
+    for entry in readPluginIndex(dir) {
+        guard let file = entry["file"], let want = entry["sha256"], let content = try? Data(contentsOf: dir.appendingPathComponent(file)) else { print("MISSING hash or file: \(entry["file"] ?? "?")"); bad += 1; continue }
+        if hex(content) == want.lowercased() { print("ok   \(file)") } else { print("DIFF \(file) no longer matches the signed hash"); bad += 1 }
+    }
+    if bad > 0 { fail("\(bad) plugin(s) don't match. Run pin-plugins to re-pin and re-sign.") }
+    print("Gallery signature OK")
+
 default:
-    fail("Usage: sign-update.swift keygen | sign <file> <version> | verify <file> <version> [<sig>]")
+    fail("Usage: sign-update.swift keygen | sign <file> <version> | verify <file> <version> [<sig>] | pin-plugins <folder> | verify-plugins <folder>")
 }

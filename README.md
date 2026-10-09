@@ -988,11 +988,12 @@ From the iPhone you can:
 **Install** (it isn't on the App Store, which needs the paid developer program):
 1. Download `NotchAppleCompanion.ipa` from the [latest release](https://github.com/AdityaJainDXB/NotchApples/releases/latest).
 2. Install it with [Sideloadly](https://sideloadly.io) and your Apple ID. With a free Apple ID, iOS asks you to reinstall it every 7 days.
-3. On the Mac: **Settings → iPhone**, turn on the iPhone companion, press **Pair an iPhone**, and type the 6-digit code on the phone.
+3. On the Mac: **Settings → iPhone**, turn on the iPhone companion, press **Pair an iPhone**, and type the 12-character code (letters and numbers) on the phone. Use the iPhone app from the same release as the Mac app: phones paired before keep working, but a new pairing needs the new app.
 
 **How it works:**
 - Both devices need to be on the same Wi-Fi.
-- Pairing uses a code that lasts 2 minutes.
+- Pairing uses a code that works once, lasts 2 minutes and stops working after 5 wrong tries. It is long enough that a recording of the pairing can't be cracked later, and the key exchange uses fresh keys, so learning the code afterwards doesn't help either.
+- Every request after that carries a counter, so a captured request can't be played back.
 - After that, every message is sealed with a key only your phone and Mac have.
 - In Shortcuts you get **Send to Mac notch** and **Get Mac status**.
 

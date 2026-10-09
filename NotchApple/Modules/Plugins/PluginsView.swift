@@ -260,6 +260,8 @@ struct PluginGallery: View {
         let description: String
         let author: String
         let file: String
+        /// SHA-256 of the file, lowercase hex. The index is signed, so this is what the downloaded file has to match.
+        let sha256: String?
     }
 
     static let base = "https://raw.githubusercontent.com/AdityaJainDXB/NotchApples/main/plugins/"
@@ -301,20 +303,55 @@ struct PluginGallery: View {
         .task { await load() }
     }
 
+    /// The list is only trusted if it carries a valid signature from the release key (see PluginPinning). A branch
+    /// anyone with write access can change isn't a reason to trust it, so an unsigned or altered list shows nothing.
     private func load() async {
-        guard let url = URL(string: Self.base + "index.json"),
-              let (data, _) = try? await URLSession.shared.data(from: url),
-              let list = try? JSONDecoder().decode([Entry].self, from: data) else { status = "Couldn't load the gallery. Check your connection."; return }
+        guard let url = URL(string: Self.base + "index.json"), let sigURL = PluginPinning.signatureURL(for: url),
+              let (data, response) = try? await URLSession.shared.data(from: url), (response as? HTTPURLResponse)?.statusCode == 200
+        else { status = "Couldn't load the gallery. Check your connection."; return }
+        // A clean 404 means no signature file; any other failure is a failure, not "unsigned".
+        var signature: String?
+        if let (sig, r) = try? await URLSession.shared.data(from: sigURL), let code = (r as? HTTPURLResponse)?.statusCode {
+            if code == 200, sig.count <= 1024 { signature = String(data: sig, encoding: .utf8) }
+            else if code != 404 { status = "Couldn't check the gallery's signature. Try again later."; return }
+        } else { status = "Couldn't check the gallery's signature. Try again later."; return }
+        switch PluginPinning.verifyIndex(data, signatureText: signature) {
+        case .verified: break
+        case .unsigned: status = "The gallery isn't signed, so it isn't shown."; return
+        case .invalid(let reason): status = reason; return
+        }
+        guard let list = try? JSONDecoder().decode([Entry].self, from: data) else { status = "Couldn't read the gallery."; return }
         entries = list
         installed = Set(list.map(\.file).filter { FileManager.default.fileExists(atPath: PluginHost.folder.appendingPathComponent($0).path) })
     }
 
+    /// Shows the script and asks before it is installed: it will run commands on this Mac.
+    @MainActor private func confirm(_ e: Entry, source: String) -> Bool {
+        let alert = NSAlert()
+        alert.messageText = "Install \(e.name)?"
+        alert.informativeText = "This script will run on your Mac, on the schedule in its file name (\(e.file)), and can do anything you can. This is the whole script:"
+        let text = NSTextView(frame: NSRect(x: 0, y: 0, width: 480, height: 220))
+        text.string = source
+        text.isEditable = false
+        text.font = .monospacedSystemFont(ofSize: 11, weight: .regular)
+        let scroll = NSScrollView(frame: text.frame)
+        scroll.documentView = text
+        scroll.hasVerticalScroller = true
+        alert.accessoryView = scroll
+        alert.addButton(withTitle: "Install")
+        alert.addButton(withTitle: "Cancel")
+        return alert.runModal() == .alertFirstButtonReturn
+    }
+
     private func install(_ e: Entry) async {
         guard entitlements.canUse(.pluginGallery),
-              e.file.range(of: #"^[A-Za-z0-9._-]+$"#, options: .regularExpression) != nil,
+              PluginPinning.isSafeFileName(e.file),
               let url = URL(string: Self.base + e.file),
               let (data, r) = try? await URLSession.shared.data(from: url), (r as? HTTPURLResponse)?.statusCode == 200, data.count < 200_000
         else { status = "Couldn't install \(e.name)."; return }
+        // The signed index lists this file's hash; anything else, including a file changed since, is refused.
+        guard PluginPinning.fileMatches(data, sha256: e.sha256) else { status = "\(e.name) doesn't match the gallery's signed copy, so it wasn't installed."; return }
+        guard confirm(e, source: String(decoding: data.prefix(20_000), as: UTF8.self)) else { return }
         let dest = PluginHost.folder.appendingPathComponent(e.file)
         try? FileManager.default.createDirectory(at: PluginHost.folder, withIntermediateDirectories: true)
         do {

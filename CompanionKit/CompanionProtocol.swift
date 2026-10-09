@@ -4,11 +4,13 @@
 //
 //  How the iPhone talks to the Mac, with no server in between:
 //   • The Mac advertises `_notchapple._tcp` on the local network (Bonjour).
-//   • Pairing: the Mac shows a 6-digit code for 2 minutes; the phone sends
-//     {type: pair} sealed with a key derived from that code, and gets back a
-//     random 32-byte token sealed the same way.
+//   • Pairing: the Mac shows a 12-character code for 2 minutes; the phone sends
+//     {type: pair, epk} sealed with a key derived from that code, and gets back a
+//     random 32-byte token sealed with a key that mixes the code and a fresh
+//     X25519 exchange (see CompanionPairing.swift for why).
 //   • After that every request is sealed with the token (ChaChaPoly), so
-//     nobody else on the Wi-Fi can read or forge it.
+//     nobody else on the Wi-Fi can read or forge it, and carries a rising
+//     counter so a captured request can't be played back.
 //   • One request per connection: [4-byte length][JSON envelope], answered the same way.
 //
 
@@ -23,6 +25,9 @@ enum Companion {
     struct Envelope: Codable {
         var d: String
         var b: String
+        /// Pairing only: the sender's ephemeral X25519 public key (base64). Unauthenticated on its own, but both sides
+        /// mix it into the key the token is sealed with, so changing it just stops the pairing.
+        var e: String? = nil
     }
 
     /// Everything the phone can ask. Unused fields are nil.
@@ -37,6 +42,8 @@ enum Companion {
         var action: String? = nil        // control: playPause, next, previous, toggleNotch, timer5, timer25, keepAwake, stopTimer
         var status: Status? = nil        // status reply
         var version: Int? = Companion.protocolVersion
+        var epk: String? = nil           // pair: the phone's ephemeral public key (base64)
+        var seq: Int64? = nil            // every request after pairing: a rising counter (see checkSequence)
     }
 
     struct Status: Codable, Equatable {
@@ -59,22 +66,19 @@ enum Companion {
 
     // MARK: Keys
 
-    static func pairingKey(code: String) -> SymmetricKey {
-        SymmetricKey(data: SHA256.hash(data: Data("notchapple-pair-v1|\(code)".utf8)))
-    }
+    // The pairing code and its keys are in CompanionPairing.swift.
 
     static func key(token: Data) -> SymmetricKey {
         HKDF<SHA256>.deriveKey(inputKeyMaterial: SymmetricKey(data: token), info: Data("notchapple-companion-v1".utf8), outputByteCount: 32)
     }
 
-    static func newCode() -> String { String(format: "%06d", Int.random(in: 0...999_999)) }
     static func newToken() -> Data { Data(SymmetricKey(size: .bits256).withUnsafeBytes { Array($0) }) }
 
     // MARK: Sealing
 
-    static func seal(_ message: Message, from device: String, key: SymmetricKey) throws -> Data {
+    static func seal(_ message: Message, from device: String, key: SymmetricKey, ephemeral: Data? = nil) throws -> Data {
         let body = try ChaChaPoly.seal(JSONEncoder().encode(message), using: key).combined
-        let env = try JSONEncoder().encode(Envelope(d: device, b: body.base64EncodedString()))
+        let env = try JSONEncoder().encode(Envelope(d: device, b: body.base64EncodedString(), e: ephemeral?.base64EncodedString()))
         var length = UInt32(env.count).bigEndian
         return Data(bytes: &length, count: 4) + env
     }

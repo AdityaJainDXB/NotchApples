@@ -20,6 +20,8 @@ struct PairedPhone: Codable, Identifiable, Equatable {
     var token: String   // base64
     var added: Date
     var lastSeen: Date?
+    /// The newest request counter this phone has sent; nil for a phone whose app doesn't send one yet.
+    var lastSeq: Int64?
 }
 
 struct CompanionItem: Identifiable, Equatable {
@@ -43,9 +45,13 @@ final class CompanionServer: ObservableObject {
     @Published private(set) var inbox: [CompanionItem] = []
     @Published private(set) var listening = false
     @Published private(set) var problem: String?
+    /// Why the current code stopped working (too many wrong tries), shown beside the pairing controls.
+    @Published private(set) var pairingNote: String?
 
     private var listener: NWListener?
     private var codeTimer: Timer?
+    /// Wrong pairing attempts against the current code; five and it is dead.
+    private var attempts = Companion.PairingAttempts()
 
     private init() {
         if let data = KeychainHelper.get(.companionPhones)?.data(using: .utf8),
@@ -82,6 +88,8 @@ final class CompanionServer: ObservableObject {
     // MARK: Pairing
 
     func startPairing(code fixed: String? = nil) {
+        attempts = Companion.PairingAttempts()
+        pairingNote = nil
         code = fixed ?? Companion.newCode()
         codeExpires = .now.addingTimeInterval(120)
         codeTimer?.invalidate()
@@ -128,31 +136,66 @@ final class CompanionServer: ObservableObject {
         guard let env = Companion.envelope(from: frame) else { conn.cancel(); return }
         let reply: Companion.Message
         let key: SymmetricKey
-        if env.d == "pair" {
-            guard let code, let codeExpires, codeExpires > .now,
-                  let msg = Companion.open(env, key: Companion.pairingKey(code: code)), msg.type == .pair else { conn.cancel(); return }
-            key = Companion.pairingKey(code: code)
-            let token = Companion.newToken()
-            let phone = PairedPhone(id: UUID().uuidString, name: String((msg.name ?? "iPhone").prefix(40)), token: token.base64EncodedString(), added: .now)
-            phones.append(phone)
-            save()
-            self.code = nil
-            self.codeExpires = nil
-            reply = Companion.Message(type: .paired, name: Host.current().localizedName ?? "Mac", device: phone.id, token: phone.token)
-            LiveActivityCenter.shared.flash(LiveActivity(symbol: "iphone", label: "Paired", tint: .systemGreen), seconds: 2)
+        var ephemeral: Data?
+        if env.d == Companion.pairDevice {
+            guard let result = pair(env) else { conn.cancel(); return }
+            (reply, key, ephemeral) = result
+        } else if env.d == "pair" {
+            // The old numeric pairing: its key could be guessed offline from one captured exchange, so it isn't accepted.
+            conn.cancel()
+            return
         } else {
             guard allowed, let i = phones.firstIndex(where: { $0.id == env.d }),
                   let token = Data(base64Encoded: phones[i].token) else { conn.cancel(); return }
             key = Companion.key(token: token)
             guard let msg = Companion.open(env, key: key) else { conn.cancel(); return }
             phones[i].lastSeen = .now
-            reply = handle(msg, from: phones[i])
+            // A captured request can't be played back: its counter must be higher than the last one, and near our clock.
+            let decision = Companion.checkSequence(last: phones[i].lastSeq, seq: msg.seq, now: .now)
+            if decision.accepted {
+                if decision.newLast != phones[i].lastSeq { phones[i].lastSeq = decision.newLast; save() }
+                reply = handle(msg, from: phones[i])
+            } else {
+                reply = Companion.Message(type: .error, text: decision.reason ?? "That request was refused.")
+            }
         }
-        if let data = try? Companion.seal(reply, from: "mac", key: key) {
+        if let data = try? Companion.seal(reply, from: "mac", key: key, ephemeral: ephemeral) {
             conn.send(content: data, completion: .contentProcessed { _ in conn.cancel() })
         } else {
             conn.cancel()
         }
+    }
+
+    /// Answers a pairing request, or nil to drop the connection. A wrong guess counts against the code, and after five it is dead,
+    /// so the code can't be guessed over the network. The reply (with the token) is sealed with a key that needs both the code
+    /// and a fresh key exchange, so a recording of this can't be opened later even by someone who learns the code.
+    private func pair(_ env: Companion.Envelope) -> (Companion.Message, SymmetricKey, Data)? {
+        guard let code, let codeExpires, codeExpires > .now else { return nil }
+        let codeKey = Companion.pairingKey(code: code)
+        guard let msg = Companion.open(env, key: codeKey), msg.type == .pair,
+              let phonePublic = msg.epk.flatMap({ Data(base64Encoded: $0) }), phonePublic.count == 32 else {
+            attempts.recordFailure()
+            if attempts.burned {
+                self.code = nil
+                self.codeExpires = nil
+                codeTimer?.invalidate()
+                pairingNote = "The code was locked after too many wrong tries. Press Pair an iPhone to get a new one."
+            }
+            return nil
+        }
+        let mine = Curve25519.KeyAgreement.PrivateKey()
+        let macPublic = mine.publicKey.rawRepresentation
+        guard let session = try? Companion.pairingSessionKey(code: codeKey, mine: mine, theirs: phonePublic, phonePublic: phonePublic, macPublic: macPublic) else { return nil }
+        let token = Companion.newToken()
+        let phone = PairedPhone(id: UUID().uuidString, name: String((msg.name ?? "iPhone").prefix(40)), token: token.base64EncodedString(), added: .now)
+        phones.append(phone)
+        save()
+        self.code = nil
+        self.codeExpires = nil
+        codeTimer?.invalidate()
+        attempts = Companion.PairingAttempts()
+        LiveActivityCenter.shared.flash(LiveActivity(symbol: "iphone", label: "Paired", tint: .systemGreen), seconds: 2)
+        return (Companion.Message(type: .paired, name: Host.current().localizedName ?? "Mac", device: phone.id, token: phone.token), session, macPublic)
     }
 
     private func handle(_ msg: Companion.Message, from phone: PairedPhone) -> Companion.Message {
@@ -235,13 +278,14 @@ struct CompanionSettings: View {
                 Section {
                     if let code = server.code, let expires = server.codeExpires {
                         HStack {
-                            Text(code).font(.system(size: 34, weight: .bold, design: .monospaced)).kerning(6)
+                            Text(Companion.displayCode(code)).font(.system(size: 26, weight: .bold, design: .monospaced)).kerning(2).textSelection(.enabled)
                             Spacer()
                             Text(expires, style: .timer).foregroundStyle(.secondary).monospacedDigit()
                         }
-                        Text("On your iPhone, open Notch apple, tap this Mac and type the code.").font(.caption).foregroundStyle(.secondary)
+                        Text("On your iPhone, open Notch apple, tap this Mac and type the code. It works once, for 2 minutes, and stops after 5 wrong tries.").font(.caption).foregroundStyle(.secondary)
                     } else {
                         Button("Pair an iPhone…") { server.startPairing() }
+                        if let note = server.pairingNote { Text(note).font(.caption).foregroundStyle(.orange) }
                     }
                     ForEach(server.phones) { p in
                         HStack {

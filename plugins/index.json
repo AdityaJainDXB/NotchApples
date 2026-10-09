@@ -1,6 +1,6 @@
 [
-  {"name": "Disk space", "description": "Free space on your startup disk, with a bar beside the notch when it runs low.", "author": "Notch apple", "file": "disk-space.10m.sh"},
-  {"name": "Uptime and load", "description": "How long your Mac has been on and how busy it is.", "author": "Notch apple", "file": "uptime.1m.sh"},
-  {"name": "Git status", "description": "Uncommitted changes in a folder you choose (edit REPO at the top).", "author": "Notch apple", "file": "git-status.2m.sh"},
-  {"name": "Countdown", "description": "Days until a date you set (edit TARGET and LABEL), shown beside the notch.", "author": "Notch apple", "file": "countdown.1h.sh"}
+  {"name": "Disk space", "description": "Free space on your startup disk, with a bar beside the notch when it runs low.", "author": "Notch apple", "file": "disk-space.10m.sh", "sha256": "c7e7601738ff55fbd0316a7f60c04c285076d2bed0d432ec0a738df68829f6b8"},
+  {"name": "Uptime and load", "description": "How long your Mac has been on and how busy it is.", "author": "Notch apple", "file": "uptime.1m.sh", "sha256": "5068b129ca18a405a27b5b46aa69713e2af4dca16a7c702d0d93cc4e448e5ce8"},
+  {"name": "Git status", "description": "Uncommitted changes in a folder you choose (edit REPO at the top).", "author": "Notch apple", "file": "git-status.2m.sh", "sha256": "1ceb5c376d864202ec4149ab3b41750961d43fd7b17c1a60c7cab014c8005232"},
+  {"name": "Countdown", "description": "Days until a date you set (edit TARGET and LABEL), shown beside the notch.", "author": "Notch apple", "file": "countdown.1h.sh", "sha256": "7eb8696ba63a3730c69a520ef7b1613856116922f23873085509587bce3c1e53"}
 ]

@@ -3,7 +3,7 @@
 //  Notch apple companion (iPhone)
 //
 //  Finds Macs running Notch apple on the same Wi-Fi (Bonjour), pairs with the
-//  6-digit code the Mac shows, and sends sealed requests (CompanionKit).
+//  12-character code the Mac shows, and sends sealed requests (CompanionKit).
 //  The pairing token is kept in this iPhone's Keychain.
 //
 
@@ -51,9 +51,18 @@ final class CompanionClient: ObservableObject {
 
     func pair(with service: String, code: String) async {
         busy = true; defer { busy = false }
-        let key = Companion.pairingKey(code: code)
+        guard let code = Companion.normalizedCode(code) else { message = "A pairing code has 12 letters and numbers."; return }
+        let codeKey = Companion.pairingKey(code: code)
+        // A fresh key pair for this pairing only. The Mac's reply is sealed with a key that needs it and the code, so a
+        // recording of this exchange can't be opened later, even by someone who learns the code.
+        let mine = Curve25519.KeyAgreement.PrivateKey()
+        let phonePublic = mine.publicKey.rawRepresentation
         do {
-            let reply = try await Self.send(Companion.Message(type: .pair, name: deviceName), device: "pair", key: key, service: service)
+            let reply = try await Self.send(Companion.Message(type: .pair, name: deviceName, epk: phonePublic.base64EncodedString()),
+                                            device: Companion.pairDevice, key: codeKey, service: service) { env in
+                guard let macPublic = env.e.flatMap({ Data(base64Encoded: $0) }) else { return nil }
+                return try? Companion.pairingSessionKey(code: codeKey, mine: mine, theirs: macPublic, phonePublic: phonePublic, macPublic: macPublic)
+            }
             guard reply.type == .paired, let device = reply.device, let token = reply.token else { message = "The Mac didn't accept that code."; return }
             let p = Pairing(macName: reply.name ?? service, service: service, device: device, token: token)
             Keychain.save(p)
@@ -61,7 +70,7 @@ final class CompanionClient: ObservableObject {
             message = nil
             await refresh()
         } catch {
-            message = "Couldn't pair: check the code (it lasts 2 minutes) and that both are on the same Wi-Fi."
+            message = "Couldn't pair: check the code (it works once, for 2 minutes, and stops after 5 wrong tries) and that both are on the same Wi-Fi."
         }
     }
 
@@ -73,6 +82,9 @@ final class CompanionClient: ObservableObject {
     func request(_ msg: Companion.Message) async -> Companion.Message? {
         guard let p = pairing, let token = Data(base64Encoded: p.token) else { message = "Pair with your Mac first."; return nil }
         busy = true; defer { busy = false }
+        // A rising counter, so the Mac can tell a fresh request from a recording of an old one.
+        var msg = msg
+        msg.seq = nextSequence()
         do {
             let reply = try await Self.send(msg, device: p.device, key: Companion.key(token: token), service: p.service)
             if let s = reply.status { status = s }
@@ -95,8 +107,18 @@ final class CompanionClient: ObservableObject {
 
     private var deviceName: String { "iPhone" }
 
-    /// One request per connection; gives up after 8 seconds.
-    nonisolated static func send(_ msg: Companion.Message, device: String, key: SymmetricKey, service: String) async throws -> Companion.Message {
+    /// The clock in milliseconds, kept rising even if the clock goes back. Stored so it survives the app restarting.
+    private func nextSequence() -> Int64 {
+        let defaults = UserDefaults.standard
+        let next = Companion.nextSequence(after: Int64(defaults.integer(forKey: "companion.seq")))
+        defaults.set(Int(next), forKey: "companion.seq")
+        return next
+    }
+
+    /// One request per connection; gives up after 8 seconds. `replyKey` works the key out from the reply when it isn't the
+    /// one the request was sealed with (pairing); otherwise the reply is opened with `key`.
+    nonisolated static func send(_ msg: Companion.Message, device: String, key: SymmetricKey, service: String,
+                                 replyKey: ((Companion.Envelope) -> SymmetricKey?)? = nil) async throws -> Companion.Message {
         let frame = try Companion.seal(msg, from: device, key: key)
         let conn = NWConnection(to: .service(name: service, type: Companion.serviceType, domain: "local.", interface: nil), using: .tcp)
         return try await withCheckedThrowingContinuation { cont in
@@ -110,7 +132,7 @@ final class CompanionClient: ObservableObject {
                 switch state {
                 case .ready:
                     conn.send(content: frame, completion: .contentProcessed { error in if let error { finish(.failure(error)) } })
-                    receive(conn, Data(), key: key, finish: finish)
+                    receive(conn, Data(), resolve: replyKey ?? { _ in key }, finish: finish)
                 case .failed(let e), .waiting(let e): finish(.failure(e))
                 default: break
                 }
@@ -120,17 +142,18 @@ final class CompanionClient: ObservableObject {
         }
     }
 
-    nonisolated private static func receive(_ conn: NWConnection, _ buf: Data, key: SymmetricKey, finish: @escaping (Result<Companion.Message, Error>) -> Void) {
+    nonisolated private static func receive(_ conn: NWConnection, _ buf: Data, resolve: @escaping (Companion.Envelope) -> SymmetricKey?,
+                                            finish: @escaping (Result<Companion.Message, Error>) -> Void) {
         conn.receive(minimumIncompleteLength: 1, maximumLength: 65_536) { data, _, isDone, error in
             var b = buf
             if let data { b.append(data) }
             if let need = Companion.frameLength(b), b.count >= need {
-                if let env = Companion.envelope(from: b), let msg = Companion.open(env, key: key) { finish(.success(msg)) }
+                if let env = Companion.envelope(from: b), let key = resolve(env), let msg = Companion.open(env, key: key) { finish(.success(msg)) }
                 else { finish(.failure(URLError(.cannotDecodeContentData))) }
             } else if error != nil || isDone {
                 finish(.failure(error ?? URLError(.networkConnectionLost)))
             } else {
-                receive(conn, b, key: key, finish: finish)
+                receive(conn, b, resolve: resolve, finish: finish)
             }
         }
     }

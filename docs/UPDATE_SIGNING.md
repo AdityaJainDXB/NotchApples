@@ -39,6 +39,23 @@ Once at least one signed release is out and the next update from it has been tes
 
 Older apps, which have no check at all, can't be protected retroactively.
 
+## The plugin gallery uses the same key
+
+The gallery installs scripts that then run on someone's Mac, so it is pinned too. `plugins/index.json` lists the SHA-256 of
+every plugin and `plugins/index.json.sig` signs that index (a different signed message from the updater's, so one can never
+pass as the other). The app shows nothing from a gallery whose signature is missing or wrong, refuses a plugin that doesn't
+match its listed hash, and shows the script and asks before installing it.
+
+After adding or changing a plugin, re-pin and re-sign, then commit both files:
+
+```
+UPDATE_SIGNING_KEY="$(cat private/update-signing-key.b64)" swift scripts/sign-update.swift pin-plugins plugins
+swift scripts/sign-update.swift verify-plugins plugins
+```
+
+The release workflow runs the unit tests first, and one of them checks the committed gallery, so a release can't go out with an
+unsigned change. Apps from before this change have no check at all, so they still install from the gallery unpinned.
+
 ## Rotating the key
 
 Add the new public key to `UpdateSigning.publicKeys` next to the old one, ship that version (signed with the old key), then
