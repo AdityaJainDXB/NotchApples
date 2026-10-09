@@ -91,7 +91,7 @@ final class KlickEngine: ObservableObject {
 
     /// Starts or stops listening to match the switch and the license. Safe to call often.
     func apply() {
-        let want = isOn && Entitlements.shared.canUse(.klick)
+        let want = isOn && Entitlements.shared.canUse(Feature.klick)
         if want { start() } else { stop() }
         objectWillChange.send()
     }
