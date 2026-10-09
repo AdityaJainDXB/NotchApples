@@ -832,26 +832,35 @@ final class NotchWindowController {
 
     // MARK: Drags from anywhere
 
-    private var dragMonitor: Any?
+    private var dragTimer: Timer?
     private var dragOpened = false
+    private var buttonWasDown = false
+    private var dragChangeCountAtPress = 0
 
     /// Opens the notch when a file is dragged to the top centre of the screen, whatever is under the pointer.
-    /// The collapsed notch's own drop target can't be relied on: it can be hidden, covered by the menu bar or a full-screen
-    /// app, or sit under another window, and then the drag just carries on across the desktop.
+    /// macOS doesn't send mouse-drag events to other apps while a drag is under way, so an event monitor never sees
+    /// it; instead the pointer and the drag clipboard are polled. A new drag is recognised by the drag clipboard
+    /// changing after the button went down. The collapsed notch's own drop target can't be relied on either: it can be
+    /// hidden, covered by the menu bar or a full-screen app, or under another window.
     private func installDragWatcher() {
-        guard dragMonitor == nil else { return }
-        dragMonitor = NSEvent.addGlobalMonitorForEvents(matching: [.leftMouseDragged, .leftMouseUp]) { [weak self] event in
-            let up = event.type == .leftMouseUp
-            MainActor.assumeIsolated { self?.dragMoved(ended: up) }
+        guard dragTimer == nil else { return }
+        let timer = Timer(timeInterval: 0.05, repeats: true) { [weak self] _ in
+            MainActor.assumeIsolated { self?.pollDrag() }
         }
+        RunLoop.main.add(timer, forMode: .common)
+        dragTimer = timer
     }
 
-    private func dragMoved(ended: Bool) {
-        if ended { dragOpened = false; return }
-        guard !dragOpened, !state.isExpanded, let screen = targetScreen else { return }
+    private func pollDrag() {
+        let down = NSEvent.pressedMouseButtons & 1 == 1
+        defer { buttonWasDown = down }
+        let board = NSPasteboard(name: .drag)
+        if down && !buttonWasDown { dragChangeCountAtPress = board.changeCount; dragOpened = false }
+        guard down else { dragOpened = false; return }
+        guard !dragOpened, !state.isExpanded, board.changeCount != dragChangeCountAtPress,
+              board.types?.contains(.fileURL) == true, let screen = targetScreen else { return }
         let p = NSEvent.mouseLocation, f = screen.frame
         guard p.y > f.maxY - 70, abs(p.x - f.midX) < 240 else { return }
-        guard NSPasteboard(name: .drag).types?.contains(.fileURL) == true else { return }
         dragOpened = true
         openForDrop()
     }

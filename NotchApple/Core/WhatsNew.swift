@@ -20,6 +20,9 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.0.43", date: "10 October 2026", headline: "Dragging a file to the notch, for real", items: [
+            "Drag any file (from a Finder window or the desktop) to the top centre of the screen and the notch opens for the drop. The 2.0.38 version never fired, because macOS doesn't send mouse events to other apps during a drag; it now watches the pointer instead.",
+        ]),
         ReleaseNote(version: "2.0.42", date: "10 October 2026", headline: "Drops work again", items: [
             "Dropping files on the Shelf, Convert and the other drop areas works again (2.0.37's new drop handling stopped them registering).",
         ]),
