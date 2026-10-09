@@ -140,7 +140,8 @@ function Updates() {
     el('div', { class: 'hstack' }, el('div', { class: 'grow' }, el('div', {}, 'Notch apple for Windows ', version), status), actions),
     notes,
     setting('Check for updates automatically', 'Checked at startup and every six hours; you’re told once per version.', prefToggle('updates.auto')),
-    setting('Show “Update” on the pill', 'A small badge when a new version is ready.', prefToggle('updates.pill')))];
+    setting('Show “Update” on the pill', 'A small badge when a new version is ready.', prefToggle('updates.pill')),
+    setting('Update at most once a week', 'Off: you hear about every release. On: one update prompt a week for the newest version. Required security updates still appear straight away, and Check now always shows the latest.', prefToggle('updates.weekly')))];
 }
 
 function Appearance(repaint) {

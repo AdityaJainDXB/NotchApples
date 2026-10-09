@@ -36,6 +36,7 @@ export const DEFAULTS = {
   'lock.grace': 300,                // seconds after unlocking before asking again
   'updates.auto': true,
   'updates.pill': true,
+  'updates.weekly': false,          // off: you hear about every release; on: one update prompt a week
 };
 
 export const pref = (key) => {
