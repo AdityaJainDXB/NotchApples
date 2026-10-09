@@ -204,26 +204,42 @@ enum ConvertTable {
         func val(_ c: String) -> String { c == "TRUE" ? "true" : c == "FALSE" ? "false" : isNumber(c) ? c : str(c) }
         let head = rows.first ?? []
         let keyed = rows.count > 1 && !head.isEmpty && head.allSatisfy { !$0.isEmpty } && Set(head).count == head.count
+        var items: [String] = []
         if keyed {
-            let objects = rows.dropFirst().map { r in
-                "  {\n" + head.enumerated().map { i, k in "    \(str(k)): \(val(i < r.count ? r[i] : ""))" }.joined(separator: ",\n") + "\n  }"
+            for r in rows.dropFirst() {
+                var fields: [String] = []
+                for (i, k) in head.enumerated() {
+                    let v = i < r.count ? r[i] : ""
+                    fields.append("    \(str(k)): \(val(v))")
+                }
+                items.append("  {\n" + fields.joined(separator: ",\n") + "\n  }")
             }
-            return "[\n" + objects.joined(separator: ",\n") + "\n]\n"
+        } else {
+            for r in rows {
+                let values: [String] = r.map { val($0) }
+                items.append("  [" + values.joined(separator: ", ") + "]")
+            }
         }
-        return "[\n" + rows.map { "  [" + $0.map(val).joined(separator: ", ") + "]" }.joined(separator: ",\n") + "\n]\n"
+        return "[\n" + items.joined(separator: ",\n") + "\n]\n"
     }
 
     private static func xlsx(_ rows: [[String]], _ out: URL) async throws {
         let fm = FileManager.default
         let dir = fm.temporaryDirectory.appendingPathComponent("notch-xlsx-\(UUID().uuidString)", isDirectory: true)
         defer { try? fm.removeItem(at: dir) }
-        let sheet = rows.enumerated().map { y, r in
-            "<row r=\"\(y + 1)\">" + r.enumerated().map { x, c -> String in
-                if c.isEmpty { return "" }
+        var sheet = ""
+        for (y, r) in rows.enumerated() {
+            sheet += "<row r=\"\(y + 1)\">"
+            for (x, c) in r.enumerated() where !c.isEmpty {
                 let ref = "\(colName(x))\(y + 1)"
-                return isNumber(c) ? "<c r=\"\(ref)\"><v>\(c)</v></c>" : "<c r=\"\(ref)\" t=\"inlineStr\"><is><t xml:space=\"preserve\">\(ConvertText.escape(c))</t></is></c>"
-            }.joined() + "</row>"
-        }.joined()
+                if isNumber(c) {
+                    sheet += "<c r=\"\(ref)\"><v>\(c)</v></c>"
+                } else {
+                    sheet += "<c r=\"\(ref)\" t=\"inlineStr\"><is><t xml:space=\"preserve\">\(ConvertText.escape(c))</t></is></c>"
+                }
+            }
+            sheet += "</row>"
+        }
         let head = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>"
         let files: [String: String] = [
             "[Content_Types].xml": head + "<Types xmlns=\"http://schemas.openxmlformats.org/package/2006/content-types\"><Default Extension=\"rels\" ContentType=\"application/vnd.openxmlformats-package.relationships+xml\"/><Default Extension=\"xml\" ContentType=\"application/xml\"/><Override PartName=\"/xl/workbook.xml\" ContentType=\"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml\"/><Override PartName=\"/xl/worksheets/sheet1.xml\" ContentType=\"application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml\"/></Types>",
