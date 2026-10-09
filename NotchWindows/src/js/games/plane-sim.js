@@ -143,6 +143,15 @@
     { id: 'b777', name: 'Boeing 777', kind: 'Airliner', blurb: 'Huge twin-jet with big engines. Powerful, smooth and a little nimbler than the 747.',
       stall: 66, cruise: 160, max: 240, thrust: 8.0, authority: 0.8, pitch: 0.95, roll: 0.65, yaw: 0.22, stability: 2.3, gear: 2.4, scale: 1, cam: 2.8,
       span: 12.2, wingY: -0.15, wingZ: 3.15, nose: -13, tail: 13, gLimit: 5.2, wingX: 1.6, tailZ: 8.5 },
+    { id: 'a320', name: 'Airbus A320', kind: 'Airliner', blurb: 'The world\u2019s favourite short-haul twin. Nimble for an airliner, with sharklets.',
+      stall: 59, cruise: 136, max: 212, thrust: 7.6, authority: 0.8, pitch: 1.0, roll: 0.85, yaw: 0.25, stability: 2.3, gear: 1.9, scale: 1, cam: 1.9,
+      span: 6.8, wingY: 0.0, wingZ: 1.8, nose: -7.5, tail: 7.5, gLimit: 5.2, wingX: 1.1, tailZ: 4.9 },
+    { id: 'a350', name: 'Airbus A350', kind: 'Airliner', blurb: 'A modern long-haul twin with raked wingtips. Smooth, quiet and efficient.',
+      stall: 64, cruise: 158, max: 240, thrust: 8.0, authority: 0.8, pitch: 0.95, roll: 0.7, yaw: 0.22, stability: 2.3, gear: 2.4, scale: 1, cam: 2.8,
+      span: 12.9, wingY: -0.15, wingZ: 3.2, nose: -13.4, tail: 13.4, gLimit: 5.2, wingX: 1.5, tailZ: 8.8 },
+    { id: 'a380', name: 'Airbus A380', kind: 'Superjumbo', blurb: 'Two full decks and four engines. The biggest airliner there is, and it feels it.',
+      stall: 70, cruise: 150, max: 226, thrust: 6.9, authority: 0.8, pitch: 0.85, roll: 0.5, yaw: 0.2, stability: 2.4, gear: 2.9, scale: 1, cam: 3.4,
+      span: 15.9, wingY: 0.1, wingZ: 3.5, nose: -14.5, tail: 14.5, gLimit: 5.2, wingX: 1.8, tailZ: 9.5 },
   ];
 
   /// A simple airliner built from boxes, nose towards -z. Sizes are about 40% of the real aircraft so the game's
@@ -153,9 +162,12 @@
   const AIRCRAFT = {
     c172: { tailPitch: 14, engine: 'piston', cyl: 4, rpmIdle: 700, rpmMax: 2700, dial: 'GA', flapNotches: [0, 0.33, 0.67, 1], flapLabels: ['UP', '10°', '20°', '30°'], fuel: 2100, vr: 1.12, vfe: 1.6, vno: 1.25 },
     pa28: { tailPitch: 13, engine: 'piston', cyl: 4, rpmIdle: 650, rpmMax: 2700, dial: 'GA', flapNotches: [0, 0.33, 0.67, 1], flapLabels: ['UP', '10°', '25°', '40°'], fuel: 2400, vr: 1.12, vfe: 1.55, vno: 1.25 },
-    b737: { tailPitch: 11, engine: 'jet', engines: 2, n1Idle: 22, dial: 'AIRLINER', flapNotches: [0, 0.2, 0.4, 0.6, 0.8, 1], flapLabels: ['UP', '1', '5', '15', '30', '40'], fuel: 1700, vr: 1.2, vfe: 1.45, vno: 1.25 },
-    b747: { tailPitch: 10, engine: 'jet', engines: 4, n1Idle: 24, dial: 'AIRLINER', flapNotches: [0, 0.2, 0.4, 0.6, 0.8, 1], flapLabels: ['UP', '1', '5', '10', '20', '30'], fuel: 2000, vr: 1.2, vfe: 1.45, vno: 1.25 },
-    b777: { tailPitch: 9.5, engine: 'jet', engines: 2, n1Idle: 20, dial: 'AIRLINER', flapNotches: [0, 0.2, 0.4, 0.6, 0.8, 1], flapLabels: ['UP', '1', '5', '15', '20', '30'], fuel: 2000, vr: 1.2, vfe: 1.45, vno: 1.25 },
+    b737: { retract: true, gearTime: 4, tailPitch: 11, engine: 'jet', engines: 2, n1Idle: 22, dial: 'AIRLINER', flapNotches: [0, 0.2, 0.4, 0.6, 0.8, 1], flapLabels: ['UP', '1', '5', '15', '30', '40'], fuel: 1700, vr: 1.2, vfe: 1.45, vno: 1.25 },
+    b747: { retract: true, gearTime: 6, tailPitch: 10, engine: 'jet', engines: 4, n1Idle: 24, dial: 'AIRLINER', flapNotches: [0, 0.2, 0.4, 0.6, 0.8, 1], flapLabels: ['UP', '1', '5', '10', '20', '30'], fuel: 2000, vr: 1.2, vfe: 1.45, vno: 1.25 },
+    a320: { retract: true, gearTime: 4, tailPitch: 11.5, engine: 'jet', engines: 2, n1Idle: 22, dial: 'AIRLINER', flapNotches: [0, 0.2, 0.4, 0.6, 0.8, 1], flapLabels: ['0', '1', '1+F', '2', '3', 'FULL'], fuel: 1700, vr: 1.2, vfe: 1.45, vno: 1.25 },
+    a350: { retract: true, gearTime: 5, tailPitch: 10, engine: 'jet', engines: 2, n1Idle: 20, dial: 'AIRLINER', flapNotches: [0, 0.2, 0.4, 0.6, 0.8, 1], flapLabels: ['0', '1', '1+F', '2', '3', 'FULL'], fuel: 2000, vr: 1.2, vfe: 1.45, vno: 1.25 },
+    a380: { retract: true, gearTime: 7, tailPitch: 9, engine: 'jet', engines: 4, n1Idle: 24, dial: 'AIRLINER', flapNotches: [0, 0.2, 0.4, 0.6, 0.8, 1], flapLabels: ['0', '1', '2', '3', '4', 'FULL'], fuel: 2200, vr: 1.2, vfe: 1.45, vno: 1.25 },
+    b777: { retract: true, gearTime: 5, tailPitch: 9.5, engine: 'jet', engines: 2, n1Idle: 20, dial: 'AIRLINER', flapNotches: [0, 0.2, 0.4, 0.6, 0.8, 1], flapLabels: ['UP', '1', '5', '15', '20', '30'], fuel: 2000, vr: 1.2, vfe: 1.45, vno: 1.25 },
   };
   PLANES.forEach((p) => Object.assign(p, AIRCRAFT[p.id]));
   /// The speeds on this aircraft's airspeed indicator, in m/s: flaps-down stall, clean stall, flaps limit, the end of the
@@ -163,7 +175,7 @@
   const speedsOf = (p) => ({ vs0: p.stall * 0.88, vs1: p.stall, vfe: p.stall * p.vfe, vno: p.cruise * p.vno, vne: p.max, vr: p.stall * p.vr });
 
   function airliner(c) {
-    const b = new Builder();
+    const b = new Builder(), g = new Builder();   // g: the undercarriage, kept apart so it can fold away
     const L = c.L, D = c.D, h = L / 2;
     const hull = hex(c.body), trim = hex(c.trim), tailc = hex(c.tail), dark = hex('#2a2f36'), glass = hex('#24313f'), eng = hex(c.engine || '#aeb6bf');
     const zNose = -h, zA = -h + L * 0.13, zB = h - L * 0.27, zT = h;
@@ -173,7 +185,7 @@
     b.taper(0, -D * 0.3, zA, D * 1.02, D * 0.4, zB, D * 1.02, D * 0.4, trim);        // belly colour
     b.box([0, D * 0.42, zA - L * 0.035], [D * 0.5, D * 0.1, L * 0.05], glass);       // cockpit windows
     for (const sx of [-1, 1]) b.box([sx * (D / 2 + 0.02), D * 0.14, (zA + zB) / 2], [0.05, D * 0.1, zB - zA - L * 0.03], glass);
-    if (c.hump) b.taper(0, D * 0.52, zA - L * 0.01, D * 0.66, D * 0.4, zA + L * 0.24, D * 0.5, D * 0.2, hull);   // the 747's upper deck
+    if (c.hump) b.taper(0, D * 0.52, zA - L * 0.01, D * (c.humpW || 0.66), D * (c.humpH || 0.4), zA + L * (c.humpLen || 0.24), D * (c.humpW ? c.humpW * 0.85 : 0.5), D * (c.humpH ? c.humpH * 0.55 : 0.2), hull);   // the upper deck
     // Wings: swept, low, with the engines slung underneath.
     const wz = c.wingZ, wy = -D * 0.3;
     for (const sx of [-1, 1]) {
@@ -192,12 +204,14 @@
     // Landing gear: two main legs under the wing roots and a nose leg.
     const gb = -D / 2, gh = c.gearH;
     for (const sx of [-1, 1]) {
-      b.box([sx * D * 0.55, gb - gh / 2, wz + c.root * 1.1], [0.14, gh, 0.14], dark);
-      b.box([sx * D * 0.55, gb - gh + 0.25, wz + c.root * 1.1], [0.42, 0.5, 1.0], dark);
+      g.box([sx * D * 0.55, gb - gh / 2, wz + c.root * 1.1], [0.14, gh, 0.14], dark);
+      g.box([sx * D * 0.55, gb - gh + 0.25, wz + c.root * 1.1], [0.42, 0.5, 1.0], dark);
+      if (c.bogie) g.box([sx * D * 0.55, gb - gh + 0.25, wz + c.root * 1.1 + 1.0], [0.42, 0.5, 1.0], dark);   // the longer aircraft have six-wheel bogies
     }
-    b.box([0, gb - gh / 2, zNose + L * 0.11], [0.12, gh, 0.12], dark);
-    b.box([0, gb - gh + 0.25, zNose + L * 0.11], [0.32, 0.5, 0.5], dark);
-    return { body: b, prop: null, propAt: null };
+    if (c.centreGear) { g.box([0, gb - gh / 2, wz + c.root * 1.3], [0.14, gh, 0.14], dark); g.box([0, gb - gh + 0.25, wz + c.root * 1.3], [0.42, 0.5, 1.0], dark); }
+    g.box([0, gb - gh / 2, zNose + L * 0.11], [0.12, gh, 0.12], dark);
+    g.box([0, gb - gh + 0.25, zNose + L * 0.11], [0.32, 0.5, 0.5], dark);
+    return { body: b, gear: g, gearPivot: gb, prop: null, propAt: null };
   }
 
   function buildPlane(id) {
@@ -243,6 +257,12 @@
       body: '#f4f6f8', trim: '#b5322a', tail: '#b5322a', engines: [-1, 1].flatMap((sx) => [{ x: sx * 4.4, z: -3.0, d: 1.0, len: 2.4 }, { x: sx * 8.4, z: -1.1, d: 1.0, len: 2.4 }]) });
     if (id === 'b777') return airliner({ L: 26, D: 2.5, span: 24.4, wingZ: -2.0, root: 3.9, tip: 0.9, sweep: 4.7, dihedral: 0.6, fin: 3.7, gearH: 1.8,
       body: '#f4f6f8', trim: '#223a66', tail: '#0b7d63', engines: [-1, 1].map((sx) => ({ x: sx * 4.9, z: -3.0, d: 1.45, len: 3.0 })) });
+    if (id === 'a320') return airliner({ L: 15.0, D: 1.5, span: 13.6, wingZ: -1.0, root: 2.2, tip: 0.6, sweep: 2.5, dihedral: 0.5, winglets: true, fin: 2.3, gearH: 1.15,
+      body: '#f6f7f9', trim: '#0a5bbf', tail: '#0a2f6b', engines: [-1, 1].map((sx) => ({ x: sx * 2.9, z: -1.9, d: 0.9, len: 1.9 })) });
+    if (id === 'a350') return airliner({ L: 26.9, D: 2.4, span: 25.9, wingZ: -2.1, root: 4.0, tip: 0.9, sweep: 4.9, dihedral: 0.8, winglets: true, bogie: true, fin: 3.8, gearH: 1.8,
+      body: '#f6f7f9', trim: '#0a2f6b', tail: '#1a56c4', engines: [-1, 1].map((sx) => ({ x: sx * 5.0, z: -3.2, d: 1.4, len: 3.0 })) });
+    if (id === 'a380') return airliner({ L: 29.0, D: 3.0, span: 31.8, wingZ: -2.4, root: 5.0, tip: 1.1, sweep: 6.2, dihedral: 1.0, hump: true, humpLen: 0.7, humpW: 0.88, humpH: 0.5, bogie: true, centreGear: true, fin: 4.6, gearH: 2.2,
+      body: '#f6f7f9', trim: '#0b3d91', tail: '#0b3d91', engines: [-1, 1].flatMap((sx) => [{ x: sx * 5.8, z: -3.4, d: 1.15, len: 2.8 }, { x: sx * 10.4, z: -1.2, d: 1.15, len: 2.8 }]) });
     return { body: b, prop: null, propAt: null };
   }
 
@@ -451,6 +471,10 @@
       // What still works: each wing, the engine (and how much power it still makes), the undercarriage.
       this.damage = { L: true, R: true, engine: true, power: 1, gear: true, tail: 1 };
       this.fuel = this.s.fuel || 1800; this.tailT = 0; this.flapNotch = 0;
+      // The airliners fold their undercarriage away after take-off (the light aircraft have fixed wheels). Starting in
+      // the air, they begin with it up; the Landing challenge makes you put it down.
+      const up = !onGround && !!this.s.retract;
+      this.gearDown = !up; this.gearPos = up ? 0 : 1;
       this.events = []; this.overT = 0; this.ogT = 0; this.why = ''; this.impactVel = v3();
     }
     axes() { return { f: qrot(this.q, [0, 0, -1]), u: qrot(this.q, [0, 1, 0]), r: qrot(this.q, [1, 0, 0]) }; }
@@ -459,6 +483,21 @@
     get bank() { const a = this.axes(); return Math.atan2(-a.r[1], a.u[1]); }
     get heading() { const f = this.axes().f; return Math.atan2(f[0], -f[2]); }
     get wings() { return (this.damage.L ? 0.5 : 0) + (this.damage.R ? 0.5 : 0); }
+
+    /// The gear lever. Returns what happened: 'up', 'down', or why not ('fixed', 'broken', 'ground').
+    toggleGear() {
+      if (!this.s.retract) return 'fixed';
+      if (!this.damage.gear) return 'broken';
+      if (this.onGround) return 'ground';
+      this.gearDown = !this.gearDown;
+      return this.gearDown ? 'down' : 'up';
+    }
+    /// 'DOWN' (three greens), 'TRANSIT', 'UP', 'BROKEN' or 'FIXED'.
+    get gearState() {
+      if (!this.s.retract) return 'FIXED';
+      if (!this.damage.gear) return 'BROKEN';
+      return this.gearPos > 0.99 ? 'DOWN' : this.gearPos < 0.01 ? 'UP' : 'TRANSIT';
+    }
 
     /// The engine stops (or, partly, runs rough at a fraction of its power).
     failEngine(partial = false) {
@@ -491,7 +530,7 @@
       let liftDir = sub(u, mul(vhat, dot(u, vhat)));
       liftDir = len(liftDir) > 1e-4 ? norm(liftDir) : u;
       const lift = mul(liftDir, q * cl * wings);
-      const cd = this.cd0 * (1 + this.flaps * 1.6) + this.ki * cl * cl * wings + (this.brake && !this.onGround ? 0.06 : 0) + (wings < 1 ? 0.02 : 0);
+      const cd = this.cd0 * (1 + this.flaps * 1.6) * (s.retract ? 0.92 + 0.12 * this.gearPos : 1) + this.ki * cl * cl * wings + (this.brake && !this.onGround ? 0.06 : 0) + (wings < 1 ? 0.02 : 0);
       const drag = mul(vhat, -q * cd);
       const side = mul(r, -q * Math.sin(beta) * 0.6);         // the fuselage resists skidding
       // Thrust fades a little with speed, like a propeller; a failed engine gives none.
@@ -548,6 +587,17 @@
         if (this.fuel <= 0) { this.failEngine(); this.events.push({ type: 'fuel' }); }
       }
       this.tailT = Math.max(0, this.tailT - dt);
+      // The undercarriage takes a few seconds to move; the wheels are not "out" until it has finished.
+      if (s.retract) {
+        const target = this.gearDown ? 1 : 0;
+        if (this.gearPos !== target) {
+          const step = dt / (s.gearTime || 4);
+          this.gearPos = clamp(this.gearPos + clamp(target - this.gearPos, -step, step), 0, 1);
+          if (this.gearPos === target) this.events.push({ type: 'gearmoved', down: this.gearDown });
+        }
+        if (this.gearPos > 0.05 && V > s.stall * 2.3 && !this.gearSpeedT) { this.gearSpeedT = 6; this.events.push({ type: 'gearspeed' }); }
+        this.gearSpeedT = Math.max(0, (this.gearSpeedT || 0) - dt);
+      }
       this.vel = add(this.vel, mul(acc, dt));
       this.pos = add(this.pos, mul(this.vel, dt));
 
@@ -562,7 +612,8 @@
 
       // Wheels on the ground.
       const gh = groundAt(world, this.pos[0], this.pos[2]);
-      const gear = this.damage.gear ? s.gear : 0.55;
+      const wheelsOut = !s.retract || this.gearPos > 0.9;
+      const gear = this.damage.gear && wheelsOut ? s.gear : 0.55;
       const bottom = this.pos[1] - gear;
       if (bottom <= gh) {
         const sink = -this.vel[1];
@@ -576,6 +627,8 @@
           this.onGround = true; this.touch = [this.pos[0], this.pos[2]]; this.sinkAtTouch = sink;
           // Hard, but not fatal: the undercarriage gives way and it slides on its belly.
           if (sink > 7.5 && this.damage.gear) { this.damage.gear = false; this.events.push({ type: 'gear' }); }
+          // Landing with the wheels still up: it comes down on its belly and the engines scrape.
+          else if (!wheelsOut && this.damage.gear) { this.damage.gear = false; this.events.push({ type: 'gear', cause: 'up' }); this.failEngine(true); }
         }
         this.pos[1] = gh + gear;
         // Rolling on the wheels: the velocity follows the nose, with rolling friction, and brakes. On the belly
@@ -691,7 +744,7 @@
   .pg button:hover { background: rgba(255,255,255,.18); }
   .pg button.pg-on { background: linear-gradient(180deg, #ffb347, #ff7e2d); border-color: transparent; color: #1a1205; }
   .pg button.pg-go { background: linear-gradient(180deg, #5ee08a, #22b35a); color: #062b13; border: none; font-size: 14px; padding: 8px 18px; font-weight: 800; }
-  .pg .pg-planes { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
+  .pg .pg-planes { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
   @media (max-width: 720px) { .pg .pg-planes, .pg .pg-modes { grid-template-columns: repeat(2, 1fr); } }
   .pg .pg-card { background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.1); border-radius: 11px; padding: 7px 8px; cursor: pointer; }
   .pg .pg-card.pg-on { border-color: #ffb347; background: rgba(255,179,71,.14); box-shadow: 0 0 0 1px #ffb347 inset; }
@@ -779,7 +832,7 @@
         for (let i = 0; i < arr.length; i += 9) { arr[i] -= c[0]; arr[i + 1] -= c[1]; arr[i + 2] -= c[2]; }
         parts[k] = { mesh: upload({ d: arr }), center: c };
       }
-      return { parts, prop: upload(m.prop), propAt: m.propAt };
+      return { parts, prop: upload(m.prop), propAt: m.propAt, gear: m.gear ? upload(m.gear) : null, gearPivot: m.gearPivot || 0 };
     }
     const planeMeshes = {};
     for (const p of PLANES) planeMeshes[p.id] = splitPlane(p, buildPlane(p.id));
@@ -800,7 +853,7 @@
     let flight = new Flight(plane);
     let hoops = [], nextHoop = 0, score = 0, timeLeft = 0, elapsed = 0, streak = 0, hoopsMade = 0;
     let camMode = 0, camPos = [0, 30, 60], paused = false, result = null, propAngle = 0, toastTimer = 0;
-    let tailScrapeT = 0, rotateCalled = false, v1Called = false, lowFuelWarned = false, flapSoundT = 0;
+    let gearWarn = false, gearBeepAt = 0, tailScrapeT = 0, rotateCalled = false, v1Called = false, lowFuelWarned = false, flapSoundT = 0;
     let rollAcc = 0, rollT = 0, loopAcc = 0, loopT = 0, lowT = 0, hadTakeoff = false, stoppedT = 0;
     const smoke = [];              // particles: fire, smoke, dust, sparks, spray
     const debris = [];             // parts that have come off and are tumbling on their own
@@ -1039,6 +1092,11 @@
         if (screen === 'fly') {
           if (k === 'p') { paused = !paused; renderUI(); }
           if (k === 'c') camMode = (camMode + 1) % 3;
+          if (k === 'g') {
+            const r = flight.toggleGear();
+            if (r === 'up' || r === 'down') { toast(r === 'down' ? 'Gear down' : 'Gear up', 1100); noise(1.1, 0.12, 280); }
+            else toast(r === 'fixed' ? `The ${plane.name} has fixed wheels: no gear to raise` : r === 'broken' ? 'The undercarriage is broken' : 'Gear can only be raised in the air', 1500);
+          }
           if (k === 'f' || k === 'v') {
             const n = plane.flapNotches || [0, 1], to = clamp(flight.flapNotch + (k === 'f' ? 1 : -1), 0, n.length - 1);
             if (to !== flight.flapNotch) {
@@ -1191,6 +1249,14 @@
           } else toast(`⚠ TAIL STRIKE! Tail ${ev.health < 0.35 ? 'badly ' : ''}damaged (${Math.round(ev.health * 100)}%): weaker elevator and rudder. Keep the nose lower.`, 2800);
         } else if (ev.type === 'fuel') {
           toast('⛽ Out of fuel: the engine has stopped. Glide and land!', 3000);
+        } else if (ev.type === 'gearmoved') {
+          noise(0.18, 0.28, 130);                 // the gear locks with a thump
+          toast(ev.down ? '🛬 Gear down and locked' : 'Gear up and locked', 1200);
+        } else if (ev.type === 'gearspeed') {
+          toast('⚠ GEAR OVERSPEED: slow down before lowering the gear', 2200); beep(520, 0.25, 'square', 0.1);
+        } else if (ev.type === 'gear' && ev.cause === 'up') {
+          toast('💥 GEAR UP LANDING! Sliding on the belly, engines scraping…', 3000);
+          noise(2.4, 0.4, 600);
         } else if (ev.type === 'gear') {
           toast('💥 The undercarriage collapsed! Sliding on the belly…', 2400);
           noise(2.2, 0.3, 700);
@@ -1310,6 +1376,10 @@
         rotateCalled = true; toast('ROTATE', 1400); chime();
       }
       if (!flight.onGround) rotateCalled = true;
+      // "Too low, gear": an airliner low and slow with its wheels still up.
+      const aglNow = flight.pos[1] - plane.gear - groundAt(W, flight.pos[0], flight.pos[2]);
+      gearWarn = !!plane.retract && !flight.onGround && flight.gearPos < 0.99 && !flight.gearDown && aglNow < 200 && flight.speed < plane.stall * 1.8 && flight.throttle < 0.85;
+      if (gearWarn && elapsed - gearBeepAt > 1.2) { gearBeepAt = elapsed; beep(900, 0.12, 'square', 0.1); setTimeout(() => beep(700, 0.12, 'square', 0.1), 150); }
       if (!lowFuelWarned && flight.fuel < (plane.fuel || 1800) * 0.12 && flight.damage.engine) { lowFuelWarned = true; toast('⛽ LOW FUEL', 2200); beep(660, 0.2, 'square', 0.12); setTimeout(() => beep(660, 0.2, 'square', 0.12), 260); }
     }
 
@@ -1386,6 +1456,11 @@
         for (const k of ['F', 'L', 'R', 'T']) {
           const part = pm.parts[k];
           if (part && parts.has(k)) draw(part.mesh, model(flight.q, add(flight.pos, qrot(flight.q, mul(part.center, plane.scale))), plane.scale));
+        }
+        if (pm.gear && parts.has('F') && (screen === 'menu' || (flight.damage.gear && flight.gearPos > 0.04))) {
+          // The undercarriage folds up into the fuselage by squashing it towards the belly.
+          const gp = screen === 'menu' ? 1 : flight.gearPos;
+          draw(pm.gear, mat4mul(model(flight.q, flight.pos, plane.scale), new Float32Array([1, 0, 0, 0, 0, gp, 0, 0, 0, 0, 1, 0, 0, pm.gearPivot * (1 - gp), 0, 1])));
         }
         if (pm.prop && parts.has('P')) {
           const pq = qmul(flight.q, qaxis([0, 0, 1], propAngle));
@@ -1505,6 +1580,11 @@
         const lab = (plane.flapLabels || ['UP', 'DOWN'])[flight.flapNotch] || 'UP';
         h2.textAlign = 'right'; h2.font = `700 ${Math.round(9 * s + 2)}px system-ui`;
         h2.fillStyle = flight.flaps ? '#89c2ff' : '#7c8594'; h2.fillText(`FLAPS ${lab}`, tx - 12, ty + 80 * s + 9);
+        {
+          const gs = flight.gearState, col = gs === 'DOWN' ? '#5ee08a' : gs === 'TRANSIT' ? '#ffb347' : gs === 'BROKEN' ? '#ff4d4d' : '#7c8594';
+          h2.fillStyle = gearWarn && Math.floor(performance.now() / 300) % 2 ? '#ff4d4d' : col;
+          h2.fillText(gs === 'FIXED' ? 'GEAR FIXED' : `GEAR ${gs}${gs === 'DOWN' ? ' ▼▼▼' : ''}`, tx - 12, ty + 80 * s - 21);
+        }
         const fuelPct = clamp(flight.fuel / (plane.fuel || 1800), 0, 1);
         h2.fillStyle = fuelPct < 0.12 ? '#ff6b6b' : fuelPct < 0.3 ? '#ffd166' : '#7c8594';
         h2.fillText(`FUEL ${Math.round(fuelPct * 100)}%`, tx - 12, ty + 80 * s - 6);
@@ -1558,6 +1638,7 @@
       // Warnings.
       h2.font = `900 ${Math.round(16 * s + 4)}px system-ui`;
       const blink = Math.floor(performance.now() / 300) % 2;
+      if (gearWarn && blink) { h2.fillStyle = '#ff4d4d'; h2.fillText('TOO LOW · GEAR', cx, 78 * s + 10); }
       if (!flight.damage.engine && blink) { h2.fillStyle = '#ff4d4d'; h2.fillText('ENGINE FAILURE', cx, 56 * s + 10); }
       else if (flight.wings < 1 && blink) { h2.fillStyle = '#ff4d4d'; h2.fillText(flight.wings === 0 ? 'NO WINGS' : 'WING LOST', cx, 56 * s + 10); }
       else if (flight.stalled && blink) { h2.fillStyle = '#ff4d4d'; h2.fillText('STALL', cx, 56 * s + 10); }
@@ -1649,9 +1730,9 @@
           <button data-a="invert">${invert ? '✓ ' : ''}Invert (down climbs, like a flight stick)</button></div>
           <h2>Keys</h2><div class="pg-hint">
           <kbd>W</kbd> more throttle · <kbd>S</kbd> less throttle · <kbd>↑</kbd> climb · <kbd>↓</kbd> dive · <kbd>←</kbd> <kbd>→</kbd> roll · <kbd>A</kbd> <kbd>D</kbd> rudder (and steering on the ground)<br>
-          <kbd>F</kbd> flaps down a notch · <kbd>V</kbd> flaps up · <kbd>Space</kbd> brakes / airbrake · <kbd>C</kbd> camera (chase, cockpit, orbit) · <kbd>P</kbd> pause (and the menu) · <kbd>R</kbd> restart · <kbd>M</kbd> mouse steering on / off</div>
+          <kbd>F</kbd> flaps down a notch · <kbd>V</kbd> flaps up · <kbd>G</kbd> gear up / down (airliners; the Cessna and Piper have fixed wheels) · <kbd>Space</kbd> brakes / airbrake · <kbd>C</kbd> camera (chase, cockpit, orbit) · <kbd>P</kbd> pause (and the menu) · <kbd>R</kbd> restart · <kbd>M</kbd> mouse steering on / off</div>
           <h2>Tips</h2><div class="pg-hint">Bank by moving the cursor sideways and ease it ${climb} to turn: the wings turn the plane, the rudder only tidies up. Too slow or pulling too hard
-          stalls the wing (STALL): push the nose down and add power. To land: slow down, flaps down, line up with the runway, and touch down gently (watch V/S).
+          stalls the wing (STALL): push the nose down and add power. To land: slow down, flaps down, gear down (airliners), line up with the runway, and touch down gently (watch V/S).
           To take off: full throttle (hold W) on the runway, then ease the cursor ${climb} (or hold ${invert ? "↓" : "↑"}) at about ${Math.round(plane.stall * 1.3 * 3.6)} km/h. Airliners turn slowly, so start turns early.</div>
           <h2>Settings</h2><div class="pg-row">
           <button data-a="sound">${sound ? '🔊 Sound on' : '🔇 Sound off'}</button>

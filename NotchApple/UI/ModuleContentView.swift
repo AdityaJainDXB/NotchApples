@@ -46,6 +46,7 @@ struct ModuleContentView: View {
         case .timer: TimerView()
         case .f1: F1View()
         case .tennis: TennisView()
+        case .radar: RadarView()
         case .klick: KlickView()
         case .convert: ConvertView()
         case .games: GamesView()

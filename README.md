@@ -206,6 +206,11 @@ All screenshots use sample data.
 
 > **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is still in the repository's tags.
 
+### Mac 2.0.29 · Windows 1.41.0 BETA · 9 October 2026 · Flight Radar, Airbus aircraft and retractable gear
+
+- **Flight Radar** tab: a round radar centred on you with every aircraft around you, live (adsb.lol's free feed). Ranges of 25 to 200 nm, click a plane for callsign, type, registration, height, speed and heading. Your location is rounded to about 1 km, and it only asks while the tab is open.
+- **Airbus A320, A350 and A380** in the Plane game, and **retractable landing gear** on the airliners (**G**): raise it after take-off, lower it to land, with gear lights, a "too low" warning and belly landings if you forget.
+
 ### Mac 2.0.28 · Windows 1.40.0 BETA · 9 October 2026 · Plane: a proper cockpit
 
 - **Round airspeed and altimeter dials** that change with the aircraft (coloured arcs for flaps, normal flying, caution and the never-exceed line; three altimeter hands), an engine gauge (rpm or jet N1 %), fuel and flaps position.
@@ -1406,7 +1411,7 @@ Per-app volume and EQ use Core Audio process taps, which arrived in macOS 14.2. 
   - `api.github.com` / `raw.githubusercontent.com` for the free VPN server list, and `vpngate.net`, only when you open the VPN tab
   - open.er-api.com for currency rates, only when you convert a currency (Pro)
   - DuckDuckGo, only when you turn on web search in the AI tab (Pro): just your question
-  - CoinGecko and Yahoo Finance for Markets (Pro), ADSB.lol for live flight status (Pro): only the symbols and flight numbers you add
+  - CoinGecko and Yahoo Finance for Markets (Pro), ADSB.lol for live flight status (Pro) and the Flight Radar tab: only the symbols and flight numbers you add, and your location rounded to about 1 km while the Flight Radar tab is open
   - Apple's speech recognition when you dictate (on this Mac when your Mac supports it)
   - your plugins, which run whatever their scripts do (you install them)
   - GitHub, only when you choose to send feedback, a bug report or a crash report (you review it and submit it yourself)

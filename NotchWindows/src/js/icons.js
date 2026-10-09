@@ -8,6 +8,7 @@ const P = {
   f1: '<path d="M5 22V3"/><path d="M5 4h14l-2.2 4 2.2 4H5"/><path d="M10 4v8M14.5 4v8"/>',
   convert: '<path d="M4 9h13l-3.5-3.5M20 15H7l3.5 3.5"/>',
   klick: '<rect x="2.5" y="6" width="19" height="12" rx="2.5"/><path d="M6 9.5h.01M9.5 9.5h.01M13 9.5h.01M16.5 9.5h.01M6 12.5h.01M18 12.5h.01M8 15h8"/>',
+  radar: '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4.5"/><path d="M12 12l5.5-5.5M12 3v2M3 12h2"/>',
   tennis: '<circle cx="12" cy="12" r="9"/><path d="M5.6 5.1c3.2 3.6 3.2 10.2 0 13.8M18.4 5.1c-3.2 3.6-3.2 10.2 0 13.8"/>',
   nowplaying: '<path d="M9 18V5.5l11-2V16"/><circle cx="6" cy="18" r="3"/><circle cx="17" cy="16" r="3"/>',
   browser: '<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3.2 3.2 3.2 14.8 0 18M12 3c-3.2 3.2-3.2 14.8 0 18"/>',
