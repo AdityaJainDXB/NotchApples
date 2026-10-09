@@ -442,6 +442,7 @@ final class NotchTriggerView: NSView {
     // Spring-loading: dragging a file onto the notch opens it on the File Shelf,
     // and the drop itself lands in the shelf's drop zone.
     override func draggingEntered(_ sender: NSDraggingInfo) -> NSDragOperation {
+        DragLog.log.notice("closed notch: drag entered")
         onDragEnter()
         return .copy
     }
@@ -862,6 +863,7 @@ final class NotchWindowController {
         let p = NSEvent.mouseLocation, f = screen.frame
         guard p.y > f.maxY - 70, abs(p.x - f.midX) < 240 else { return }
         dragOpened = true
+        DragLog.log.notice("drag near the notch: opening")
         openForDrop()
     }
 

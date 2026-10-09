@@ -8,6 +8,7 @@
 //  stopped drops from registering in 2.0.37).
 //
 
+import os
 import SwiftUI
 import UniformTypeIdentifiers
 
@@ -40,7 +41,7 @@ struct MagneticDropModifier: ViewModifier {
                 }
             }
             .animation(reduceMotion ? nil : .interpolatingSpring(stiffness: 280, damping: 24), value: over)
-            .onDrop(of: types, isTargeted: Binding(get: { over }, set: { over = $0; isTargeted?.wrappedValue = $0 }), perform: perform)
+            .onDrop(of: types, isTargeted: Binding(get: { over }, set: { over = $0; DragLog.log.notice("drop target \\(label, privacy: .public): over=\\($0, privacy: .public)"); isTargeted?.wrappedValue = $0 }), perform: { items in DragLog.log.notice("drop on \\(label, privacy: .public): \\(items.count, privacy: .public) item(s)"); return perform(items) })
     }
 }
 
@@ -50,4 +51,11 @@ extension View {
                       perform: @escaping ([NSItemProvider]) -> Bool) -> some View {
         modifier(MagneticDropModifier(types: types, isTargeted: isTargeted, label: label, perform: perform))
     }
+}
+
+/// Logging for the drag-and-drop paths (read with `log show --predicate 'category == "drag"'`), and the notification
+/// the notch uses to hand a dropped file to the Convert tab.
+enum DragLog {
+    static let log = Logger(subsystem: "com.notchapple.app", category: "drag")
+    static let convertDrop = Notification.Name("notch.convert.drop")
 }

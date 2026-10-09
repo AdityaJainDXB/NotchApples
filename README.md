@@ -212,6 +212,10 @@ All screenshots use sample data.
 
 > **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is still in the repository's tags.
 
+### Mac 2.0.44 · 10 October 2026 · Drop anywhere on the open notch
+
+- **A file dropped anywhere on the open notch** goes to the Shelf (or Convert when that tab is showing), not only inside a tab's own drop area. Drag events are now logged so a drop that fails can be traced.
+
 ### Mac 2.0.43 · 10 October 2026 · Dragging a file to the notch, for real
 
 - **Drag a file to the top centre of the screen and the notch opens** for the drop, from a Finder window or the desktop. The 2.0.38 attempt never fired (macOS sends no mouse events to other apps during a drag); it now watches the pointer.
