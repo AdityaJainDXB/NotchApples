@@ -32,7 +32,10 @@ final class LyricsModel: ObservableObject {
         tick()
     }
 
-    func stop() { timer?.invalidate(); timer = nil }
+    func stop() {
+        if SideLyrics.keepsModelRunning { return }   // the side overlay still needs the lines
+        timer?.invalidate(); timer = nil
+    }
 
     private func tick() {
         guard let now = NowPlayingMonitor.shared.current, !now.title.isEmpty else { return }
