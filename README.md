@@ -1370,6 +1370,17 @@ Per-app volume and EQ use Core Audio process taps, which arrived in macOS 14.2. 
 - At checkout your email is used only to send your key and for "Lost my key?"; once you've paid, the server keeps only a salted hash of it.
 - No telemetry or analytics. Signing in with Google is optional and only syncs your setup and Pro to your other Macs.
 
+## Thanks to the collaborators 🙏
+
+Notch apple is built by a small group, and every one of them has shaped it:
+
+- [**Aditya Jain**](https://github.com/AdityaJainDXB)
+- [**Viraj Singh Chadha**](https://github.com/VirajSinghChadha)
+- **Sumin Sethi**
+- [**Saigamer007pro**](https://github.com/Saigamer007pro)
+
+Thank you. 💜
+
 ## Donate 💜
 
 Notch apple is free and made by three high school developers. Donating is **completely optional**: it doesn't unlock anything, it just supports continued development. If it's useful to you, you can donate any amount in **Litecoin (LTC)**:
