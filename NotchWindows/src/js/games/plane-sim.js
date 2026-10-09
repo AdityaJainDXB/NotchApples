@@ -1588,7 +1588,21 @@
     // ---- menus (HTML over the canvas)
     function statBar(label, v) { return `<div class="pg-stat">${label}<span><i style="width:${Math.round(clamp(v, 0.05, 1) * 100)}%"></i></span></div>`; }
     function fmtScore(m, v) { return m.id === 'trial' ? `${Number(v).toFixed(1)} s` : m.id === 'hoops' ? `${v}` : `${v}`; }
+    /// Draws the menu or the pause / result screen. If one of them ever throws (a saved tab from an older version, a
+    /// bad value), it falls back to the first tab instead of leaving a blank blue screen.
     function renderUI() {
+      try { renderUIInner(); }
+      catch (e) {
+        console.error(e);
+        if (menuTab !== 'play') {
+          menuTab = 'play'; write('menuTab', 'play');
+          try { renderUIInner(); return; } catch (e2) { console.error(e2); }
+        }
+        ui.innerHTML = '<div class="pg-menu"><h1>✈️ Plane</h1><p class="pg-hint">Something went wrong drawing this screen.</p><div class="pg-row"><button data-a="menu">Try again</button></div></div>';
+        bind();
+      }
+    }
+    function renderUIInner() {
       if (screen === 'fly') {
         ui.innerHTML = paused ? `<div class="pg-pause"><div class="pg-menu" style="width:auto;text-align:center"><h1 style="justify-content:center">Paused</h1>
           <div class="pg-row" style="justify-content:center;margin-top:8px"><button data-a="resume" class="pg-go">Resume (P)</button><button data-a="restart">Restart (R)</button><button data-a="menu">Menu</button></div></div></div>` : '';
@@ -1636,7 +1650,7 @@
           <h2>Keys</h2><div class="pg-hint">
           <kbd>W</kbd> more throttle · <kbd>S</kbd> less throttle · <kbd>↑</kbd> climb · <kbd>↓</kbd> dive · <kbd>←</kbd> <kbd>→</kbd> roll · <kbd>A</kbd> <kbd>D</kbd> rudder (and steering on the ground)<br>
           <kbd>F</kbd> flaps down a notch · <kbd>V</kbd> flaps up · <kbd>Space</kbd> brakes / airbrake · <kbd>C</kbd> camera (chase, cockpit, orbit) · <kbd>P</kbd> pause (and the menu) · <kbd>R</kbd> restart · <kbd>M</kbd> mouse steering on / off</div>
-          <h2>Tips</h2><div class="pg-hint">Bank by moving the cursor sideways and ease it ${pull === 'down' ? 'down' : 'up'} to turn: the wings turn the plane, the rudder only tidies up. Too slow or pulling too hard
+          <h2>Tips</h2><div class="pg-hint">Bank by moving the cursor sideways and ease it ${climb} to turn: the wings turn the plane, the rudder only tidies up. Too slow or pulling too hard
           stalls the wing (STALL): push the nose down and add power. To land: slow down, flaps down, line up with the runway, and touch down gently (watch V/S).
           To take off: full throttle (hold W) on the runway, then ease the cursor ${climb} (or hold ${invert ? "↓" : "↑"}) at about ${Math.round(plane.stall * 1.3 * 3.6)} km/h. Airliners turn slowly, so start turns early.</div>
           <h2>Settings</h2><div class="pg-row">
