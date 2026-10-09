@@ -1721,7 +1721,7 @@ private struct AboutSettings: View {
             Text("Notch apple").font(.title.bold())
             Text("Version \(Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "—")")
                 .foregroundStyle(.secondary)
-            Text("Free, open source, and local first.").foregroundStyle(.secondary)
+            Text("Free to start, source-available, and local first.").foregroundStyle(.secondary)
             HStack(spacing: 14) {
                 Label(Entitlements.shared.tier == .free ? "Free" : "\(Entitlements.shared.tier.name) unlocked", systemImage: Entitlements.shared.tier == .free ? "seal" : "checkmark.seal.fill")
                     .foregroundStyle(Entitlements.shared.tier != .free ? .green : .secondary)

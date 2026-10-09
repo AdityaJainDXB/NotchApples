@@ -1,21 +1,64 @@
-MIT License
+Notch apple Source-Available License, version 1.0
 
-Copyright (c) 2026 Aditya Jain
+Copyright (c) 2026 Aditya Jain. All rights reserved, except as this licence says.
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+This is not an open-source licence. You can read the code and learn from it, build it
+to try it, and help improve it, but Notch apple is a paid product and its paid features
+(Pro and Ultimate) are for people who bought a key.
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+1. What you may do
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+   a) Read, study and build this source code on your own computers.
+   b) Use a copy you built yourself for personal, non-commercial purposes. The free
+      features are free. The paid features (Pro and Ultimate) are for use with a valid
+      key bought from the project, or a free promo key it issued.
+   c) Contribute improvements: fork the repository on GitHub to send a pull request,
+      report issues, and discuss it.
+
+2. What you may not do
+
+   a) Sell, rent, sublicense or distribute the software, or any copy, build, app,
+      installer or derivative of it, in source or binary form, or publish a fork as a
+      product people can run, without written permission from the copyright holder.
+   b) Use the software or its code commercially, in a product or a service.
+   c) Remove, bypass, disable or change the licence, activation, entitlement, update,
+      revocation or tier checks, or unlock Pro or Ultimate features without a valid key;
+      or make, share or sell keys, key generators, cracks, patches or tools that do.
+   d) Attack, overload or probe the project's servers, or use them other than through
+      an unmodified official build in the ordinary way. Report security problems
+      privately to the copyright holder instead.
+   e) Use the name "Notch apple", its icon or its logo in a way that suggests your
+      version is official or endorsed.
+
+3. Contributions
+
+   If you contribute code, text, artwork or other material to the project, you assign
+   to Aditya Jain the copyright in your contribution, or, where that is not possible,
+   you grant Aditya Jain a perpetual, worldwide, irrevocable, royalty-free licence to
+   use, copy, modify, distribute, sublicense and relicense it in any way, including in
+   paid products. You confirm that the contribution is yours to give.
+
+4. Earlier versions
+
+   Source code and releases published before 9 October 2026 were published under the
+   MIT licence (kept in LICENSE-MIT-before-2026-10-09.txt). Anyone who already has those
+   versions keeps the rights the MIT licence gave them for those versions. This licence
+   applies to everything published from the commit that adds it onwards.
+
+5. Other people's software
+
+   Some parts of this repository and of the app come from other people and stay under
+   their own licences: see the LICENSES folder, NotchWindows/THIRD_PARTY.md and
+   Settings → About → Acknowledgements. This licence does not change them.
+
+6. No warranty
+
+   The software is provided "as is", without warranty of any kind. The copyright holder
+   is not liable for any claim or damage arising from it.
+
+7. Ending
+
+   If you break these terms, your rights under this licence end. The copyright holder
+   may give written permission for anything this licence does not allow.
+
+Contact: notchapple.support@gmail.com

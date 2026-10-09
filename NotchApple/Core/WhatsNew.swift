@@ -20,6 +20,11 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.0.32", date: "9 October 2026", headline: "A new licence, and premium sounds from the server", items: [
+            "Notch apple's code is now source-available (copyright Aditya Jain): you can read and build it, but not resell it or unlock the paid features without a key. Earlier versions stay MIT.",
+            "Four premium Klick sounds (Pro) download from the licence server with your key: Cherry MX Black, Gateron Ink, Alps and Buckling spring.",
+            "Clipboard Link now checks your Ultimate key with the server; update both devices to keep linking.",
+        ]),
         ReleaseNote(version: "2.0.31", date: "9 October 2026", headline: "Do It, and lyrics on the side of your screen", items: [
             "Do It (Ultimate): tell the AI what to do and it does it on your screen, step by step. Start and Stop, asks before anything risky, Ctrl+Option+Esc stops it from any app.",
             "Now Playing: Lyrics on screen (Pro) floats the synced lyrics along the side of your screen while music plays.",

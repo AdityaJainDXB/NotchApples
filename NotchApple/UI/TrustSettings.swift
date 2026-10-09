@@ -57,7 +57,7 @@ struct PrivacyDashboard: View {
             Destination(host: "ADSB.lol", what: "Flight numbers you pin", when: "Live flight status (Pro)", active: !FlightWatcher.shared.pinned.isEmpty),
             Destination(host: "ADSB.lol", what: "Your approximate location (rounded to about 1 km)", when: "Flight Radar tab, only while it is open", active: settings.radarEnabled),
             Destination(host: "open.er-api.com", what: "Nothing about you: today's rates", when: "Currency conversion (Pro)", active: Entitlements.shared.canUse(.currency)),
-            Destination(host: "License server", what: "Your key and a one-way hash of this Mac", when: "Activating or deactivating a key; a daily signed revocation list", active: Entitlements.shared.key != nil),
+            Destination(host: "License server", what: "Your key and a one-way hash of this Mac", when: "Activating or deactivating a key; a daily signed revocation list; renewing the 72-hour tokens that unlock server-held content (premium Klick sounds, Clipboard Link)", active: Entitlements.shared.key != nil),
             Destination(host: "Google / Firebase", what: "Your settings and activation", when: "Only if you sign in (Backup & Sync)", active: AccountSync.shared.isSignedIn),
             Destination(host: "iCloud Drive", what: "Settings, notes and to-dos you choose to sync", when: "Only if sync is on", active: SettingsBackup.shared.iCloudSync || NotesCloudSync.shared.enabled),
             Destination(host: "Your plugins", what: "Whatever your plugin scripts do", when: "Plugins tab", active: settings.pluginsEnabled),

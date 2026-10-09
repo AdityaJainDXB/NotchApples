@@ -25,6 +25,8 @@ final class KlickEngine: ObservableObject {
         let name: String
         let blurb: String
         let symbol: String
+        /// Premium sounds are not in the app: they are downloaded from the licence server with a real key.
+        var remote = false
     }
 
     static let packs: [Pack] = [
@@ -36,6 +38,10 @@ final class KlickEngine: ObservableObject {
         Pack(id: "brown", name: "Brown", blurb: "A gentle tactile bump, quieter than Blue.", symbol: "leaf.fill"),
         Pack(id: "topre", name: "Topre", blurb: "Muted, rounded thock of rubber domes.", symbol: "circle.fill"),
         Pack(id: "typewriter", name: "Typewriter", blurb: "Metal clack, and a bell on Enter.", symbol: "doc.text.fill"),
+        Pack(id: "cherryblack", name: "Cherry MX Black", blurb: "Deep, heavy linear. A smooth, low thock.", symbol: "cloud.fill", remote: true),
+        Pack(id: "gateronink", name: "Gateron Ink", blurb: "Creamy and rounded, a softer thock than Cream.", symbol: "cloud.fill", remote: true),
+        Pack(id: "alps", name: "Alps", blurb: "Crisp and clicky, with a bright snap.", symbol: "cloud.fill", remote: true),
+        Pack(id: "modelm", name: "Buckling spring", blurb: "The loud, ringing click of an old IBM keyboard.", symbol: "cloud.fill", remote: true),
         Pack(id: "bubble", name: "Bubble", blurb: "Playful pops. Not a real switch, just fun.", symbol: "bubbles.and.sparkles.fill"),
     ]
 
@@ -50,6 +56,9 @@ final class KlickEngine: ObservableObject {
     @Published private(set) var needsAccessibility = false
     /// Briefly true on each key, for the little light in the tab.
     @Published private(set) var lastKey = Date.distantPast
+    /// Premium packs being downloaded right now, and why one couldn't be.
+    @Published private(set) var downloading = Set<String>()
+    @Published private(set) var packProblem: [String: String] = [:]
 
     private let engine = AVAudioEngine()
     private var players: [AVAudioPlayerNode] = []
@@ -175,6 +184,7 @@ final class KlickEngine: ObservableObject {
     /// The sound of a few keys, to hear a pack before you choose it.
     func preview(_ id: String) {
         packID = id
+        guard loadedPack == id else { return }      // a premium pack plays once it has downloaded
         for (i, kind) in ["down", "down", "up", "down", "space"].enumerated() {
             DispatchQueue.main.asyncAfter(deadline: .now() + Double(i) * 0.11) { [weak self] in self?.play(kind) }
         }
@@ -206,8 +216,54 @@ final class KlickEngine: ObservableObject {
         }
     }
 
+    // MARK: Premium packs (from the server)
+
+    static func remoteFolder(_ id: String) -> URL {
+        FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
+            .appendingPathComponent("Notch apple/klick/\(id)", isDirectory: true)
+    }
+
+    /// True when the sounds are on this Mac: built in, or a premium pack already downloaded.
+    func isAvailable(_ p: Pack) -> Bool {
+        !p.remote || FileManager.default.fileExists(atPath: Self.remoteFolder(p.id).appendingPathComponent("down1.wav").path)
+    }
+
+    /// Downloads a premium pack with this Mac's token. The server gives it only to a real key.
+    private var lastAttempt: [String: Date] = [:]
+
+    private func fetchRemote(_ id: String) {
+        guard !downloading.contains(id), Date().timeIntervalSince(lastAttempt[id] ?? .distantPast) > 60 else { return }
+        lastAttempt[id] = .now
+        downloading.insert(id); packProblem[id] = nil
+        Task {
+            let result = await EntitlementService.shared.download("klick/\(id).pack")
+            switch result {
+            case .success(let data):
+                if let files = PackFile.parse(data), files.contains(where: { $0.name == "down1.wav" }) {
+                    let folder = Self.remoteFolder(id)
+                    try? FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+                    for f in files { try? f.data.write(to: folder.appendingPathComponent(f.name), options: .atomic) }
+                } else { packProblem[id] = "The download was damaged. Try again." }
+            case .failure(let e):
+                packProblem[id] = e.message
+                if packID == id { packID = "cream" }      // never leave the keyboard silent
+            }
+            downloading.remove(id)
+            if packID == id, isAvailable(pack) { loadPack() }
+            objectWillChange.send()
+        }
+    }
+
     private func loadPack() {
-        guard let folder = Bundle.main.url(forResource: "klick", withExtension: nil)?.appendingPathComponent(packID) else { return }
+        let current = pack
+        let base: URL?
+        if current.remote {
+            guard isAvailable(current) else { fetchRemote(current.id); return }     // keeps the last sounds until it arrives
+            base = Self.remoteFolder(current.id)
+        } else {
+            base = Bundle.main.url(forResource: "klick", withExtension: nil)?.appendingPathComponent(packID)
+        }
+        guard let folder = base else { return }
         func load(_ name: String) -> AVAudioPCMBuffer? {
             guard let file = try? AVAudioFile(forReading: folder.appendingPathComponent("\(name).wav")),
                   let buffer = AVAudioPCMBuffer(pcmFormat: file.processingFormat, frameCapacity: AVAudioFrameCount(file.length)) else { return nil }

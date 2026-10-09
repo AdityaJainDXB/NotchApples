@@ -5,6 +5,8 @@
 import { load, save } from '../store.js';
 import { invoke, listen } from '../native.js';
 import { canUse } from '../features.js';
+import { download } from './entitle.js';
+import { parsePack } from './entitlelogic.js';
 
 export const PACKS = [
   { id: 'mechanical', name: 'Mechanical', blurb: 'The classic clacky keyboard: a sharp click, a hard clack and a crisp release.', icon: '⌨️' },
@@ -16,14 +18,43 @@ export const PACKS = [
   { id: 'topre', name: 'Topre', blurb: 'Muted, rounded thock of rubber domes.', icon: '⚫' },
   { id: 'typewriter', name: 'Typewriter', blurb: 'Metal clack, and a bell on Enter.', icon: '📜' },
   { id: 'bubble', name: 'Bubble', blurb: 'Playful pops. Not a real switch, just fun.', icon: '🫧' },
+  // Premium sounds are not in the app: they download from the licence server with a real key, and are kept on this PC.
+  { id: 'cherryblack', name: 'Cherry MX Black', blurb: 'Deep, heavy linear. A smooth, low thock.', icon: '☁️', remote: true },
+  { id: 'gateronink', name: 'Gateron Ink', blurb: 'Creamy and rounded, a softer thock than Cream.', icon: '☁️', remote: true },
+  { id: 'alps', name: 'Alps', blurb: 'Crisp and clicky, with a bright snap.', icon: '☁️', remote: true },
+  { id: 'modelm', name: 'Buckling spring', blurb: 'The loud, ringing click of an old IBM keyboard.', icon: '☁️', remote: true },
 ];
+
+// ---- premium packs
+const b64 = (u8) => { let s = ''; for (let i = 0; i < u8.length; i += 0x8000) s += String.fromCharCode(...u8.subarray(i, i + 0x8000)); return btoa(s); };
+const unb64 = (s) => Uint8Array.from(atob(s), (c) => c.charCodeAt(0));
+export const isRemote = (id) => !!PACKS.find((p) => p.id === id)?.remote;
+export const available = (id) => !isRemote(id) || !!load(`klick.remote.${id}`, null);
+const downloading = new Set(), problems = {};
+export const isDownloading = (id) => downloading.has(id);
+export const problem = (id) => problems[id] || '';
+
+/// Downloads a premium pack (the server gives it only to a real key). Resolves true when it is on this PC.
+export async function fetchRemote(id) {
+  if (available(id)) return true;
+  if (downloading.has(id)) return false;
+  downloading.add(id); delete problems[id]; changed();
+  try {
+    const files = parsePack(await download(`klick/${id}.pack`));
+    if (!files || !files.some((f) => f.name === 'down1.wav')) throw new Error('The download was damaged. Try again.');
+    save(`klick.remote.${id}`, Object.fromEntries(files.map((f) => [f.name, b64(f.data)])));
+    buffers.forEach((_, key) => { if (key.startsWith(`${id}/`)) buffers.delete(key); });
+    return true;
+  } catch (e) { problems[id] = e.message; return false; }
+  finally { downloading.delete(id); changed(); }
+}
 
 const listeners = new Set();
 export const onChange = (fn) => { listeners.add(fn); return () => listeners.delete(fn); };
 const changed = () => listeners.forEach((fn) => { try { fn(); } catch {} });
 
 export const isOn = () => load('klick.on', false);
-export const packId = () => (PACKS.some((p) => p.id === load('klick.pack', 'cream')) ? load('klick.pack', 'cream') : 'cream');
+export const packId = () => { const id = load('klick.pack', 'cream'); return PACKS.some((p) => p.id === id) && available(id) ? id : 'cream'; };
 export const keyUp = () => load('klick.keyUp', true);
 export const volume = (id) => load('klick.volumes', {})[id] ?? 0.6;
 export function setVolume(id, v) { save('klick.volumes', { ...load('klick.volumes', {}), [id]: Math.min(1, Math.max(0, v)) }); }
@@ -38,6 +69,12 @@ async function buffer(pack, name) {
   if (buffers.has(key)) return buffers.get(key);
   const p = (async () => {
     ctx ??= new AudioContext();
+    if (isRemote(pack)) {
+      const data = load(`klick.remote.${pack}`, {})[`${name}.wav`];
+      if (!data) return null;
+      const bytes = unb64(data);
+      return ctx.decodeAudioData(bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength));
+    }
     const res = await fetch(`sounds/klick/${pack}/${name}.wav`);
     return ctx.decodeAudioData(await res.arrayBuffer());
   })().catch(() => null);
@@ -61,7 +98,8 @@ export async function play(kind, pack = packId()) {
 }
 
 /// A few keys of a pack, to hear it before choosing it.
-export function preview(id) {
+export async function preview(id) {
+  if (isRemote(id) && !available(id)) { if (!(await fetchRemote(id))) return; }
   save('klick.pack', id); preload(id); changed();
   ['key', 'key', 'up', 'key', 'space'].forEach((k, i) => setTimeout(() => play(k, id), i * 110));
 }

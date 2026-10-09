@@ -271,7 +271,7 @@ function clipLinkCard(repaint) {
         el('div', { class: 'hstack', style: 'padding-top:6px' }, typed, button('Use it', async () => { if (!(await S()).setCode(typed.value)) msg.textContent = 'That isn’t a valid code. It has 20 letters and numbers.'; else repaint(); }, { small: true, kind: 'quiet' })), msg);
     } else {
       const status = el('span', { class: 'small dim' }, '…');
-      const paintState = async () => { const m = await S(); status.textContent = { off: 'Off', connecting: 'Connecting…', live: 'Linked', reconnecting: 'Reconnecting…' }[m.state] || ''; };
+      const paintState = async () => { const m = await S(); status.textContent = { off: 'Off', connecting: 'Connecting…', live: 'Linked', reconnecting: 'Reconnecting…', failed: 'Needs your Ultimate key and a connection to check it' }[m.state] || ''; };
       paintState(); addEventListener('clipsync-state', paintState);
       rows.push(setting('Your link code', 'Enter this same code on each device.', el('div', { class: 'hstack' }, el('code', { class: 'mono selectable' }, c), button('Copy', () => { navigator.clipboard.writeText(c); toast('Code copied'); }, { small: true, kind: 'quiet' }))),
         setting('Status', '', status),

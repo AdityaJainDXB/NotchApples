@@ -6,13 +6,13 @@
 
 <p align="center"><b>AI, right where you need it.</b><br>
 Press <kbd>⌃⌥S</kbd>, drag over anything on your Mac's screen, and solve, explain, translate or summarize it in a second, right from the notch.<br>
-Free, open source, with free AI or fully local AI on your Mac. Plus 30 more tools in the notch.</p>
+Free to start, source-available, with free AI or fully local AI on your Mac. Plus 30 more tools in the notch.</p>
 
 <p align="center">
   <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><img alt="Latest release" src="https://img.shields.io/github/v/release/AdityaJainDXB/NotchApples?filter=v*&color=8a5cf6&label=release"></a>
   <img alt="macOS 14+" src="https://img.shields.io/badge/macOS-14%2B-8a5cf6">
   <img alt="Windows 10/11" src="https://img.shields.io/badge/Windows-10%20%7C%2011-8a5cf6">
-  <a href="LICENSE"><img alt="MIT license" src="https://img.shields.io/badge/license-MIT-8a5cf6"></a>
+  <a href="LICENSE"><img alt="Source-available license" src="https://img.shields.io/badge/license-source--available-8a5cf6"></a>
 </p>
 
 <p align="center">
@@ -211,6 +211,11 @@ All screenshots use sample data.
 
 - **Do It (Ultimate): the AI does the task on your screen.** A new **Do It** tab: describe what you want ("fill in this worksheet", "find the cheapest option"), press **Start**, and the AI looks at your screen and clicks, types, scrolls and presses keys, one step at a time, telling you what it's doing. A bar at the bottom of the screen shows progress with a **Stop** button, and **Ctrl+Option+Esc** (Mac) / **Ctrl+Alt+Esc** (Windows) stops it from any app. It **asks first** before anything that sends, buys, deletes, posts, or involves passwords and payment, and never types passwords or card numbers; **Confirm every step** lets you approve each action; it stops after 40 steps. It needs a vision-capable model chosen in Settings → AI (Gemini, Claude, ChatGPT…) and, on the Mac, **Screen Recording** and **Accessibility**. Screenshots go to your chosen AI provider while it works, and only then.
 - **Lyrics on the side of your screen (Pro).** In **Now Playing**, switch on **Lyrics on screen**: synced lyrics float along the left or right edge of your screen, Spotify-style (the current line big and bright, the lines around it dimmer), above your other apps and ignoring the mouse, fading away when nothing plays. Off by default.
+
+### Mac 2.0.32 · Windows 1.44.0 BETA · 9 October 2026 · A new licence, and more of the paid value on the server
+
+- **Source-available licence.** The code is now under the Notch apple Source-Available License (copyright Aditya Jain): read it, build it, help improve it; no reselling or redistributing it and no unlocking paid features without a key. Versions before 9 October 2026 were MIT and stay MIT for those who have them.
+- **Server-held content.** A real key on a registered device gets short-lived signed tokens from the licence server. They unlock **four premium Klick sounds** (Cherry MX Black, Gateron Ink, Alps, Buckling spring), downloaded on demand and never in the repository, and are required for **Clipboard Link** on the relay. Both devices need this update to link. How it works and what is and isn't protected: [docs/PROTECTING_PAID_FEATURES.md](docs/PROTECTING_PAID_FEATURES.md).
 
 ### Mac 2.0.30 · Windows 1.42.0 BETA · 9 October 2026 · GPWS callouts, and games that fit
 
@@ -1176,7 +1181,8 @@ The full feature-by-feature plan is in [docs/TIERS.md](docs/TIERS.md).
 - **Keys from before tiers** (`NOTCH-XXXX-XXXX-XXXX` and access codes) keep working as Pro.
 - Refunds are case by case; see the [terms](https://virajsinghchadha.github.io/notchapples-site/terms.html).
 - Questions about a purchase: **notchapples.support@gmail.com**.
-- The license server is open source too: [server/license-worker](server/license-worker).
+- How the paid features are protected, and what a modified copy can and can't do: [docs/PROTECTING_PAID_FEATURES.md](docs/PROTECTING_PAID_FEATURES.md).
+- The license server's source is published too: [server/license-worker](server/license-worker). Its signing key and admin codes are never in the repository.
 
 ## Troubleshooting
 
@@ -1463,4 +1469,4 @@ Every bit helps and is hugely appreciated. Want more too? [Pro is $1 and Ultimat
 
 ## License
 
-[MIT](LICENSE)
+[Notch apple Source-Available License](LICENSE). You can read, build and learn from the code and help improve it; selling or redistributing it, or unlocking the paid features without a key, is not allowed. Versions published before 9 October 2026 were MIT and stay that way for anyone who has them ([the MIT text](LICENSE-MIT-before-2026-10-09.txt)). Third-party parts keep their own licences (see `LICENSES/`).

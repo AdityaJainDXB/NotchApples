@@ -190,6 +190,11 @@ export const tier = () => override ?? Math.max(cached?.tier ?? 0, hasOldCode() ?
 export const tierName = () => TIERS[tier()];
 export const can = (needed) => tier() >= needed;
 
+/// What the entitlement service sends to ask for tokens (nothing else is exposed), or null without a signed key.
+export const entitleInfo = () => (cached ? { key: cached.text, device: deviceId(), name: 'Windows PC' } : null);
+/// Checks an Ed25519 signature against the licence public key (for tokens from the server).
+export async function verifySigned(sig, msg) { try { return await crypto.subtle.verify('Ed25519', await publicKey(), sig, msg); } catch { return false; } }
+
 /// Activates a signed key or an old code. Returns { ok, tier } or { error }.
 export async function activate(input) {
   if (looksLikeKey(input)) {

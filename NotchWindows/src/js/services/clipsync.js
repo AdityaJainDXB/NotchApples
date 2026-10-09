@@ -73,7 +73,7 @@ export const enabled = () => load('clipsync.on', false);
 export const code = () => load('clipsync.code', '');
 export const deviceId = () => { let d = load('clipsync.device', ''); if (!d) { d = uid(); save('clipsync.device', d); } return d; };
 export const deviceName = () => load('clipsync.name', 'Windows PC');
-export let state = 'off';           // off | connecting | live | reconnecting
+export let state = 'off';           // off | connecting | live | reconnecting | failed
 const seen = new Set();
 let socket = null, gen = 0, retry = 0, pingTimer = null, flashUntil = 0, flashText = '', lastApplied = '', lastAppliedAt = 0;
 
@@ -97,13 +97,18 @@ export async function apply() {
   connect();
 }
 
+const passFromServer = () => import('./entitle.js').then((m) => m.pass()).catch(() => null);
+
 async function connect() {
   const g = gen, c = code();
   setState('connecting');
-  const [key, topic] = await Promise.all([keyFor(c), topicFor(c)]);
+  // Clipboard Link rooms need a pass from the licence server (a short-lived signed "Ultimate" note with nothing about you
+  // in it). A copy of the app modified to skip the local licence check gets no pass, so the relay refuses it.
+  const [key, topic, pass] = await Promise.all([keyFor(c), topicFor(c), passFromServer()]);
   if (g !== gen) return;
+  if (!pass) { lost(g); setState('failed'); return; }
   let ws;
-  try { ws = new WebSocket(`${RELAY}/${topic}/ws`); } catch { return lost(g); }
+  try { ws = new WebSocket(`${RELAY}/clip/${topic}/ws?p=${encodeURIComponent(pass)}`); } catch { return lost(g); }
   socket = ws;
   ws.onmessage = async (m) => {
     if (g !== gen || typeof m.data !== 'string' || m.data === 'pong') return;

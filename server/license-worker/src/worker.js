@@ -15,6 +15,12 @@
 //   POST /recover  {email, txid?}         emails the keys bought with that address (never shows them)
 //   POST /activate {key, device}          soft limit of DEVICE_LIMIT Macs per key
 //   POST /deactivate {key, device}
+//   POST /entitle  {key, device, name?}   the same checks as /activate, then two short-lived signed tokens:
+//                                         `token` (Authorization: Bearer for GET /asset/<id>) and `pass` (an anonymous
+//                                         proof of the tier, for the room relay). Valid 72 hours; the app renews them.
+//   GET  /asset/<id>                      paid content kept only on this server (Authorization: Bearer <token>); the tier
+//                                         needed is stored with the file. A modified app without a real key gets nothing.
+//   POST /admin/asset-put?id=&tier=       upload that content (admin only); /admin/asset-list, /admin/asset-delete
 //   GET  /revoked                         signed list of revoked key IDs (the app checks it now and then)
 //   GET  /config                          prices and whether Ultimate is on sale
 //   POST /admin/issue | /admin/revoke | /admin/reissue   (Authorization: Bearer ADMIN_TOKEN)
@@ -422,7 +428,7 @@ const publicRecord = (id, r, revokedList) => ({
 // Every change made in the panel is written down: when, what, which key. Never an email address, a full key
 // or the admin token. Entries live in KV metadata (newest first) and are kept for 180 days.
 const AUDITED = new Set(['/admin/issue', '/admin/suspend', '/admin/unsuspend', '/admin/revoke', '/admin/reissue', '/admin/note',
-  '/admin/devices', '/admin/email', '/admin/promo-create', '/admin/promo-delete', '/admin/test-payment']);
+  '/admin/devices', '/admin/email', '/admin/promo-create', '/admin/promo-delete', '/admin/test-payment', '/admin/asset-put', '/admin/asset-delete']);
 
 async function audit(env, path, body, result) {
   try {
@@ -437,6 +443,8 @@ async function audit(env, path, body, result) {
       '/admin/email': () => 'key emailed',
       '/admin/note': () => 'note changed',
       '/admin/promo-create': () => `${result?.codes?.length || 0} promo codes`,
+      '/admin/asset-put': () => `asset ${body.id || ''}`,
+      '/admin/asset-delete': () => `asset ${body.id || ''} removed`,
     }[path]?.() || '';
     const id = `audit:${String(9e12 - at).padStart(13, '0')}-${[...crypto.getRandomValues(new Uint8Array(3))].map((b) => b.toString(16).padStart(2, '0')).join('')}`;
     await env.KV.put(id, '1', { expirationTtl: 180 * 86400, metadata: { at, a: path.slice(7), k: target, d: detail.slice(0, 120) } });
@@ -476,6 +484,16 @@ async function admin(env, path, body) {
     const r = await getJSON(env, `key:${id}`);
     if (!r) throw new HTTPError(404, 'No key with that ID on the server');
     return { ...publicRecord(id, r, await revokedIds(env)), deviceLimit: Number(env.DEVICE_LIMIT || 3) };
+  }
+  if (path === '/admin/asset-list') {
+    const out = []; let cursor;
+    do { const page = await env.KV.list({ prefix: 'asset:', cursor }); for (const k of page.keys) out.push({ id: k.name.slice(6), ...k.metadata }); cursor = page.list_complete ? undefined : page.cursor; } while (cursor);
+    return { assets: out };
+  }
+  if (path === '/admin/asset-delete') {
+    if (!ASSET_ID.test(String(body.id || ''))) throw new HTTPError(400, 'Bad asset id.');
+    await env.KV.delete(`asset:${body.id}`);
+    return { deleted: body.id };
   }
   if (path === '/admin/stats') {
     let cursor, total = 0, pro = 0, ult = 0, susp = 0, active = 0;
@@ -597,6 +615,71 @@ async function admin(env, path, body) {
   throw new HTTPError(404, 'Not found');
 }
 
+// MARK: Entitlements: paid value that lives only on the server
+//
+// A copy of the app can be modified to say "yes" to every licence check on its own side, so the things worth paying for
+// that can live here do. /entitle swaps a real, unrevoked key on a registered device for two signed tokens (the same
+// Ed25519 key, a different domain prefix, so a token can never pass for a key and a key never for a token).
+
+const ENT_TTL = 72 * 3600;   // seconds: matches how long the app lets a Mac go without checking in
+const b64u = (bytes) => btoa(String.fromCharCode(...bytes)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+const unb64u = (s) => { const t = String(s).replace(/-/g, '+').replace(/_/g, '/'); return Uint8Array.from(atob(t + '==='.slice((t.length + 3) % 4)), (c) => c.charCodeAt(0)); };
+
+/** kind: 'ent1' (full: key id, tier, device) or 'pass1' (anonymous: tier only). */
+export async function mintToken(env, kind, payload) {
+  const body = b64u(enc.encode(JSON.stringify(payload)));
+  return `${kind}.${body}.${b64u(await sign(env, enc.encode(`NOTCHAPPLE-${kind}\n${body}`)))}`;
+}
+
+/** Returns the payload of a genuine, unexpired token of this kind, or null. */
+export async function verifyToken(env, kind, token, nowSec = Math.floor(Date.now() / 1000)) {
+  const parts = String(token || '').split('.');
+  if (parts.length !== 3 || parts[0] !== kind) return null;
+  try {
+    const keyset = await keys(env);
+    if (!(await crypto.subtle.verify(keyset.algo, keyset.pub, unb64u(parts[2]), enc.encode(`NOTCHAPPLE-${kind}\n${parts[1]}`)))) return null;
+    const payload = JSON.parse(new TextDecoder().decode(unb64u(parts[1])));
+    return Number(payload.exp) > nowSec && TIER_NAME[payload.t] ? payload : null;
+  } catch { return null; }
+}
+
+async function entitle(env, body) {
+  const r = await activate(env, { key: body.key, device: body.device, name: body.name }, true);
+  if (!r.ok) return r;
+  const k = parseKey(body.key), now = Math.floor(Date.now() / 1000), exp = now + ENT_TTL;
+  return {
+    ok: true, tier: r.tier, tierNum: k.tier, exp,
+    token: await mintToken(env, 'ent1', { k: k.keyId, t: k.tier, d: body.device.slice(0, 16), iat: now, exp }),
+    pass: await mintToken(env, 'pass1', { t: k.tier, exp, r: hex(randomBytes(6)) }),
+  };
+}
+
+const ASSET_ID = /^[a-z0-9][a-z0-9._\/-]{0,100}$/;
+const ASSET_MAX = 20 * 1024 * 1024;
+
+async function assetGet(env, request, id) {
+  if (!ASSET_ID.test(id) || id.includes('..')) throw new HTTPError(404, 'Not found');
+  const token = (request.headers.get('authorization') || '').replace(/^Bearer /, '');
+  const p = await verifyToken(env, 'ent1', token);
+  if (!p) throw new HTTPError(401, 'This content needs a valid licence. Open the app and try again.');
+  if ((await revokedIds(env)).includes(p.k)) throw new HTTPError(403, 'This licence has been revoked.');
+  const { value, metadata } = await env.KV.getWithMetadata(`asset:${id}`, 'arrayBuffer');
+  if (!value) throw new HTTPError(404, 'Not found');
+  if (p.t < (metadata?.tier || 1)) throw new HTTPError(403, `This content is part of ${TIER_NAME[metadata?.tier || 1]}.`);
+  return new Response(value, { headers: { 'content-type': metadata?.type || 'application/octet-stream', 'x-sha256': metadata?.sha || '', 'cache-control': 'private, max-age=3600', ...CORS } });
+}
+
+async function assetPut(env, request, url) {
+  const id = url.searchParams.get('id') || '', tier = Number(url.searchParams.get('tier') || 1);
+  if (!ASSET_ID.test(id) || id.includes('..')) throw new HTTPError(400, 'Bad asset id.');
+  if (![1, 2].includes(tier)) throw new HTTPError(400, 'tier must be 1 (Pro) or 2 (Ultimate).');
+  const bytes = new Uint8Array(await request.arrayBuffer());
+  if (!bytes.length || bytes.length > ASSET_MAX) throw new HTTPError(413, 'Empty or too large (20 MB at most).');
+  const sha = hex(new Uint8Array(await crypto.subtle.digest('SHA-256', bytes)));
+  await env.KV.put(`asset:${id}`, bytes, { metadata: { tier, size: bytes.length, sha, type: url.searchParams.get('type') || 'application/octet-stream', at: Date.now() } });
+  return { ok: true, id, tier, size: bytes.length, sha };
+}
+
 // MARK: Entry
 
 import { ADMIN_PAGE } from './admin-page.js';
@@ -610,6 +693,17 @@ const ADMIN_HEADERS = {
 const CORS = { 'access-control-allow-origin': '*', 'access-control-allow-methods': 'GET, POST, OPTIONS', 'access-control-allow-headers': 'content-type, authorization' };
 const json = (data, status = 200, headers = {}) => new Response(JSON.stringify(data), { status, headers: { 'content-type': 'application/json', ...CORS, ...headers } });
 
+/** Only the admin tokens work; 10 wrong tries from an address lock it out for an hour. */
+async function adminGate(env, request) {
+  const ip = request.headers.get('cf-connecting-ip') || 'unknown';
+  const fails = Number(await env.KV.get(`adminfail:${ip}`)) || 0;
+  if (fails >= 10) throw new HTTPError(429, 'Too many wrong tries. Wait an hour.');
+  if (!(await isAdmin(env, request))) {
+    await env.KV.put(`adminfail:${ip}`, String(fails + 1), { expirationTtl: 3600 });
+    throw new HTTPError(401, 'Unauthorized');
+  }
+}
+
 export default {
   async fetch(request, env) {
     if (request.method === 'OPTIONS') return new Response(null, { headers: CORS });
@@ -620,21 +714,22 @@ export default {
         if (path === '/config') return json({ prices: prices(env), ultimate: env.ULTIMATE_ON === '1', network: env.NETWORK || 'mainnet', wallet: env.WALLET });
         if (path === '/admin') return new Response(ADMIN_PAGE, { headers: ADMIN_HEADERS });
         if (path === '/revoked') return json(await revokedList(env), 200, { 'cache-control': 'public, max-age=3600' });
+        if (path.startsWith('/asset/')) return await assetGet(env, request, path.slice('/asset/'.length));
         throw new HTTPError(404, 'Not found');
       }
       if (request.method !== 'POST') throw new HTTPError(405, 'Method not allowed');
+      if (path === '/admin/asset-put') {
+        // A raw binary upload, so it can't go through the small JSON path below. Same admin sign-in and lock-out.
+        await adminGate(env, request);
+        const result = await assetPut(env, request, new URL(request.url));
+        await audit(env, path, { id: result.id }, result);
+        return json(result);
+      }
       const text = await request.text();
       if (text.length > 4096) throw new HTTPError(413, 'Too large');
       let body; try { body = JSON.parse(text || '{}'); } catch { throw new HTTPError(400, 'Bad JSON'); }
       if (path.startsWith('/admin/')) {
-        // Only the one admin token works; 10 wrong tries from an address lock it out for an hour.
-        const ip = request.headers.get('cf-connecting-ip') || 'unknown';
-        const fails = Number(await env.KV.get(`adminfail:${ip}`)) || 0;
-        if (fails >= 10) throw new HTTPError(429, 'Too many wrong tries. Wait an hour.');
-        if (!(await isAdmin(env, request))) {
-          await env.KV.put(`adminfail:${ip}`, String(fails + 1), { expirationTtl: 3600 });
-          throw new HTTPError(401, 'Unauthorized');
-        }
+        await adminGate(env, request);
         const result = await admin(env, path, body);
         if (AUDITED.has(path)) await audit(env, path, body, result);
         return json(result);
@@ -646,6 +741,7 @@ export default {
         case '/recover': return json(await recover(env, body));
         case '/activate': return json(await activate(env, body, true));
         case '/deactivate': return json(await activate(env, body, false));
+        case '/entitle': return json(await entitle(env, body));
       }
       throw new HTTPError(404, 'Not found');
     } catch (e) {

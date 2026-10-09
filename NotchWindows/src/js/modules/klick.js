@@ -29,9 +29,9 @@ export function render(root) {
     sw.replaceChildren(toggle(on, (v) => { K.setOn(v); paint(); }));
     grid.replaceChildren(...K.PACKS.map((p) => {
       const chosen = p.id === pack.id;
-      const card = el('div', { class: `kl-card${chosen ? ' on' : ''}`, title: `Choose ${p.name} and hear it`, onclick: () => { K.preview(p.id); paint(); } },
-        el('div', { class: 'hstack', style: 'gap:6px' }, el('span', {}, p.icon), el('b', { class: 'grow' }, p.name), chosen ? el('span', { class: 'accent' }, '✓') : null),
-        el('div', { class: 'tiny dim' }, p.blurb));
+      const card = el('div', { class: `kl-card${chosen ? ' on' : ''}`, title: `Choose ${p.name} and hear it`, onclick: () => { K.preview(p.id).then(paint); paint(); } },
+        el('div', { class: 'hstack', style: 'gap:6px' }, el('span', {}, p.icon), el('b', { class: 'grow' }, p.name), K.isDownloading(p.id) ? el('span', { class: 'tiny dim' }, '…') : (p.remote && !K.available(p.id)) ? el('span', { class: 'tiny dim', title: 'Downloads when you pick it (needs your Pro key and a connection)' }, '⬇') : chosen ? el('span', { class: 'accent' }, '✓') : null),
+        el('div', { class: 'tiny dim' }, p.blurb), K.problem(p.id) ? el('div', { class: 'tiny warn' }, K.problem(p.id)) : null);
       if (chosen) {
         // The chosen sound's own volume.
         const range = el('input', { type: 'range', min: 0, max: 100, value: Math.round(K.volume(p.id) * 100), style: 'flex:1', title: `${p.name} volume` });
@@ -45,7 +45,11 @@ export function render(root) {
     }));
   }
   paint();
+  // Repaint only when something about the packs changed (a download started, finished or failed), not on every key.
+  const sigOf = () => K.PACKS.map((p) => `${p.id}${K.isDownloading(p.id)}${K.available(p.id)}${K.problem(p.id)}`).join('|') + K.packId();
+  let sig = sigOf();
   const off = K.onChange(() => {
+    if (sigOf() !== sig) { sig = sigOf(); paint(); }
     light.classList.toggle('lit', performance.now() - K.lastKey < 90);
     setTimeout(() => light.classList.remove('lit'), 90);
   });

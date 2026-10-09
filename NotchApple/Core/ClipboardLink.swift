@@ -61,14 +61,27 @@ final class ClipboardLink: ObservableObject {
     }
 
     private func connect() {
-        guard let url = URL(string: "\(Self.relay)/\(ClipboardLinkLogic.topic(code: code))/ws") else { return }
         state = .connecting
         let gen = generation
-        let task = URLSession.shared.webSocketTask(with: url)
-        socket = task
-        task.resume()
-        listen(task, gen)
-        pingTimer = Timer.scheduledTimer(withTimeInterval: 30, repeats: true) { [weak task] _ in task?.send(.string("ping")) { _ in } }
+        let topic = ClipboardLinkLogic.topic(code: code)
+        // Clipboard Link rooms need a pass from the licence server (a short-lived signed "Ultimate" note with nothing about
+        // you in it). A copy of the app modified to skip the local licence check gets no pass, so the relay refuses it.
+        Task { [weak self] in
+            let pass = await EntitlementService.shared.pass()
+            guard let self, gen == self.generation else { return }
+            guard let pass, var parts = URLComponents(string: "\(Self.relay)/clip/\(topic)/ws") else {
+                self.lost("no pass", gen)
+                self.state = .failed("Clipboard Link needs your Ultimate key and a connection to check it.")
+                return
+            }
+            parts.queryItems = [URLQueryItem(name: "p", value: pass)]
+            guard let url = parts.url else { return }
+            let task = URLSession.shared.webSocketTask(with: url)
+            self.socket = task
+            task.resume()
+            self.listen(task, gen)
+            self.pingTimer = Timer.scheduledTimer(withTimeInterval: 30, repeats: true) { [weak task] _ in task?.send(.string("ping")) { _ in } }
+        }
     }
 
     private func listen(_ task: URLSessionWebSocketTask, _ gen: Int) {

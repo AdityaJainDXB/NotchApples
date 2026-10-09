@@ -1,6 +1,6 @@
 # Contributing to Notch apple
 
-Thanks for helping! Notch apple is MIT-licensed and built by three high school developers, so every issue, idea and pull request helps.
+Thanks for helping! Notch apple is source-available (see [LICENSE](LICENSE)) and built by three high school developers, so every issue, idea and pull request helps.
 
 ## Reporting a bug
 
@@ -23,3 +23,7 @@ Share a plugin through the gallery. See [docs/PLUGINS.md](docs/PLUGINS.md#galler
 The app is in English for now. To start a translation:
 1. Open an issue titled "Translation: <language>" so work isn't duplicated.
 2. Contribute an Xcode String Catalog (`Localizable.xcstrings`) with your language. Keep the plain, friendly tone, and keep product names (Notch apple, Pro, Ultimate) as they are.
+
+## Licence of your contribution
+
+By sending a pull request you agree to section 3 of the [LICENSE](LICENSE): the copyright in your contribution belongs to Aditya Jain (or, where that is not possible, you grant a perpetual, irrevocable licence to use and relicense it, including in paid products), and you confirm it is yours to give.

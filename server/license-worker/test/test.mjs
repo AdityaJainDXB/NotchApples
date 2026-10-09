@@ -6,7 +6,7 @@
 
 import assert from 'node:assert/strict';
 import { writeFileSync } from 'node:fs';
-import worker, { parseKey, verifyKey, b32encode, b32decode } from '../src/worker.js';
+import worker, { parseKey, verifyKey, verifyToken, mintToken, b32encode, b32decode } from '../src/worker.js';
 
 const pair = await crypto.subtle.generateKey({ name: 'Ed25519' }, true, ['sign', 'verify']);
 const jwk = await crypto.subtle.exportKey('jwk', pair.privateKey);
@@ -15,7 +15,8 @@ const pubRaw = new Uint8Array(await crypto.subtle.exportKey('raw', pair.publicKe
 const store = new Map();
 const meta = new Map();
 const KV = {
-  async get(k) { return store.has(k) ? store.get(k) : null; },
+  async get(k, type) { if (!store.has(k)) return null; const v = store.get(k); return type === 'arrayBuffer' && v instanceof Uint8Array ? v.buffer.slice(v.byteOffset, v.byteOffset + v.byteLength) : v; },
+  async getWithMetadata(k, type) { return { value: await this.get(k, type), metadata: meta.get(k) || null }; },
   async put(k, v, o) { store.set(k, v); if (o?.metadata) meta.set(k, o.metadata); },
   async delete(k) { store.delete(k); meta.delete(k); },
   async list({ prefix, cursor, limit = 1000 }) {
@@ -328,7 +329,90 @@ await test('Admin: audit log, device names and per-day stats', async () => {
   assert.ok(st.bySource.admin >= 2);
 });
 
+// ---- Entitlements and server-held content
+
+const devn = (n) => n.toString(16).padStart(64, '0');
+const getAsset = async (id, token) => {
+  const r = await worker.fetch(new Request('https://w.test/asset/' + id, { headers: token ? { authorization: 'Bearer ' + token } : {} }), env);
+  return { status: r.status, bytes: new Uint8Array(await r.arrayBuffer()), sha: r.headers.get('x-sha256') };
+};
+const put = async (id, tier, bytes) => {
+  const r = await worker.fetch(new Request(`https://w.test/admin/asset-put?id=${id}&tier=${tier}&type=text/plain`, { method: 'POST', body: bytes, headers: { authorization: 'Bearer admin-test' } }), env);
+  return { status: r.status, ...(await r.json()) };
+};
+
+await test('Entitle: a real key on a device gets a token and an anonymous pass; a fake key or bad device does not', async () => {
+  const pro = (await call('/admin/issue', { tier: 'pro' }, { authorization: 'Bearer admin-test' })).key;
+  const e = await call('/entitle', { key: pro, device: devn(101) });
+  assert.equal(e.status, 200); assert.equal(e.ok, true); assert.equal(e.tier, 'Pro');
+  const t = await verifyToken(env, 'ent1', e.token), p = await verifyToken(env, 'pass1', e.pass);
+  assert.equal(t.t, 1); assert.equal(p.t, 1);
+  assert.equal(p.k, undefined, 'the pass names no key');
+  assert.equal(p.d, undefined, 'the pass names no device');
+  assert.equal((await call('/entitle', { key: 'NTCH-PRO-AAAAAA', device: devn(101) })).status, 400);
+  assert.equal((await call('/entitle', { key: pro, device: 'nope' })).status, 400);
+});
+
+await test('Entitle follows the device limit and revocation of /activate', async () => {
+  const k = (await call('/admin/issue', { tier: 'pro' }, { authorization: 'Bearer admin-test' })).key;
+  for (const n of [1, 2, 3]) assert.equal((await call('/entitle', { key: k, device: devn(200 + n) })).ok, true);
+  const over = await call('/entitle', { key: k, device: devn(204) });
+  assert.equal(over.ok, false); assert.equal(over.reason, 'limit'); assert.equal(over.token, undefined);
+  const id = parseKey(k).keyId;
+  await call('/admin/revoke', { keyId: id, reason: 'test' }, { authorization: 'Bearer admin-test' });
+  const gone = await call('/entitle', { key: k, device: devn(201) });
+  assert.equal(gone.ok, false); assert.equal(gone.reason, 'revoked');
+});
+
+await test('Tokens: tampered, expired, the wrong kind and a licence key all fail', async () => {
+  const k = (await call('/admin/issue', { tier: 'ultimate' }, { authorization: 'Bearer admin-test' })).key;
+  const e = await call('/entitle', { key: k, device: devn(301) });
+  assert.ok(await verifyToken(env, 'ent1', e.token));
+  const [a, body, sig] = e.token.split('.');
+  const forged = btoa(JSON.stringify({ k: 'x', t: 2, d: 'x', iat: 1, exp: 9e9 })).replace(/=+$/, '');
+  assert.equal(await verifyToken(env, 'ent1', `${a}.${forged}.${sig}`), null, 'a changed payload');
+  assert.equal(await verifyToken(env, 'ent1', e.pass), null, 'a pass is not a token');
+  assert.equal(await verifyToken(env, 'pass1', e.token), null, 'a token is not a pass');
+  assert.equal(await verifyToken(env, 'ent1', e.token, e.exp + 1), null, 'expired');
+  assert.equal(await verifyToken(env, 'ent1', k), null, 'a licence key is not a token');
+  assert.equal(await verifyToken(env, 'ent1', ''), null);
+});
+
+await test('Assets: only an admin uploads; the right tier downloads; others get nothing', async () => {
+  const body = new TextEncoder().encode('premium content');
+  assert.equal((await worker.fetch(new Request('https://w.test/admin/asset-put?id=a.txt&tier=1', { method: 'POST', body, headers: { authorization: 'Bearer wrong' } }), env)).status, 401);
+  assert.equal((await put('gallery/pro.txt', 1, body)).ok, true);
+  assert.equal((await put('gallery/ultimate.txt', 2, body)).ok, true);
+  assert.equal((await put('../escape', 1, body)).status, 400);
+  assert.equal((await put('bad id', 1, body)).status, 400);
+  const pro = (await call('/entitle', { key: (await call('/admin/issue', { tier: 'pro' }, { authorization: 'Bearer admin-test' })).key, device: devn(401) })).token;
+  const ult = (await call('/entitle', { key: (await call('/admin/issue', { tier: 'ultimate' }, { authorization: 'Bearer admin-test' })).key, device: devn(402) })).token;
+  const ok = await getAsset('gallery/pro.txt', pro);
+  assert.equal(ok.status, 200); assert.equal(new TextDecoder().decode(ok.bytes), 'premium content'); assert.equal(ok.sha.length, 64);
+  assert.equal((await getAsset('gallery/ultimate.txt', pro)).status, 403, 'Pro cannot get an Ultimate file');
+  assert.equal((await getAsset('gallery/ultimate.txt', ult)).status, 200);
+  assert.equal((await getAsset('gallery/pro.txt', '')).status, 401, 'no token');
+  assert.equal((await getAsset('gallery/pro.txt', 'ent1.x.y')).status, 401, 'junk token');
+  assert.equal((await getAsset('gallery/missing.txt', pro)).status, 404);
+  assert.equal((await getAsset('..%2Fsecret', pro)).status, 404);
+  const list = await call('/admin/asset-list', {}, { authorization: 'Bearer admin-test' });
+  assert.ok(list.assets.some((a) => a.id === 'gallery/pro.txt' && a.tier === 1));
+});
+
+await test('Assets: a token from a revoked key stops working at once', async () => {
+  const k = (await call('/admin/issue', { tier: 'pro' }, { authorization: 'Bearer admin-test' })).key;
+  const tok = (await call('/entitle', { key: k, device: devn(501) })).token;
+  assert.equal((await getAsset('gallery/pro.txt', tok)).status, 200);
+  await call('/admin/revoke', { keyId: parseKey(k).keyId, reason: 'leak' }, { authorization: 'Bearer admin-test' });
+  assert.equal((await getAsset('gallery/pro.txt', tok)).status, 403);
+});
+
 // Fixture for the Swift tests: a Pro and an Ultimate key from this run, with this run's public key.
-const fx = { publicKey: btoa(String.fromCharCode(...pubRaw)), pro: leaked, ultimate: (await call('/admin/issue', { tier: 'ultimate' }, { authorization: 'Bearer admin-test' })).key };
+const far = 4102444800;   // the year 2100, so the fixture never expires under the Swift tests
+const fx = { publicKey: btoa(String.fromCharCode(...pubRaw)), pro: leaked, ultimate: (await call('/admin/issue', { tier: 'ultimate' }, { authorization: 'Bearer admin-test' })).key,
+  ent: await mintToken(env, 'ent1', { k: '0011223344556677', t: 2, d: 'abcdef0123456789', iat: 1, exp: far }),
+  pass: await mintToken(env, 'pass1', { t: 2, exp: far, r: 'abc123' }),
+  passPro: await mintToken(env, 'pass1', { t: 1, exp: far, r: 'abc123' }),
+  expired: await mintToken(env, 'pass1', { t: 2, exp: 1000, r: 'abc123' }) };
 writeFileSync(new URL('./fixture.json', import.meta.url), JSON.stringify(fx, null, 2) + '\n');
 console.log(`\n${passed} passed. Wrote test/fixture.json for the Swift tests.`);

@@ -84,10 +84,13 @@ struct KlickView: View {
                     .foregroundStyle(chosen ? Theme.accentBright : Theme.textSecondary)
                 Text(p.name).font(.system(size: 12, weight: .bold)).foregroundStyle(.white)
                 Spacer(minLength: 0)
-                if chosen { Image(systemName: "checkmark.circle.fill").font(.system(size: 12)).foregroundStyle(Theme.accentBright) }
+                if klick.downloading.contains(p.id) { ProgressView().controlSize(.mini) }
+                else if p.remote && !klick.isAvailable(p) { Image(systemName: "icloud.and.arrow.down").font(.system(size: 11)).foregroundStyle(Theme.textSecondary).help("Downloads when you pick it (needs your Pro key and a connection)") }
+                else if chosen { Image(systemName: "checkmark.circle.fill").font(.system(size: 12)).foregroundStyle(Theme.accentBright) }
             }
             Text(p.blurb).font(.system(size: 10)).foregroundStyle(Theme.textSecondary).lineLimit(2)
                 .fixedSize(horizontal: false, vertical: true)
+            if let problem = klick.packProblem[p.id] { Text(problem).font(.system(size: 9)).foregroundStyle(.orange) }
             if chosen {
                 // The chosen sound's own volume.
                 HStack(spacing: 4) {
