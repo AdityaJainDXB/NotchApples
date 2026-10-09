@@ -80,7 +80,8 @@ final class AirDropSender: NSObject, ObservableObject, NSSharingServiceDelegate 
 
     private func showAnchor() {
         hideAnchor()
-        let screen = NSScreen.main ?? NSScreen.screens[0]
+        // Below the notch, so on the screen the notch is on, which isn't always the focused one.
+        guard let screen = DisplayLayouts.currentScreen ?? NSScreen.main ?? NSScreen.screens.first else { return }
         let size = NSSize(width: 260, height: 24)
         let origin = NSPoint(x: screen.frame.midX - size.width / 2, y: screen.frame.maxY - 80)
         let w = AnchorWindow(contentRect: NSRect(origin: origin, size: size), styleMask: [.borderless], backing: .buffered, defer: false)
