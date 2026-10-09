@@ -624,22 +624,7 @@ struct ClaudeChatView: View {
 
     private var providerBar: some View {
         HStack(spacing: 8) {
-            Menu {
-                Section("Free") {
-                    ForEach(AIProvider.allCases.filter(\.isFree)) { p in
-                        Button { config.provider = p } label: { Label(p.title, systemImage: p == config.provider ? "checkmark" : "") }
-                    }
-                }
-                Section("Paid (your own account)") {
-                    ForEach(AIProvider.allCases.filter { !$0.isFree }) { p in
-                        Button { config.provider = p } label: { Label(p.title, systemImage: p == config.provider ? "checkmark" : "") }
-                    }
-                }
-            } label: {
-                Label(config.provider.title, systemImage: "sparkles").font(.system(size: 12, weight: .semibold))
-            }
-            .menuStyle(.borderlessButton).fixedSize()
-            .help("AI provider")
+            ProviderPicker(config: config)
 
             if config.provider.isConfigured {
                 ModelPicker(config: config)

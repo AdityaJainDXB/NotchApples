@@ -654,7 +654,7 @@ final class NotchWindowController {
                     case .track: MediaControl.send(a.width < 0 ? .next : .previous)
                     default: break
                     }
-                } else if a.height < -40, abs(a.height) > abs(a.width) * 1.2, NotchGesture.openSwipeUp.action == .close {
+                } else if a.height < -40, abs(a.height) > abs(a.width) * 1.2, NotchGesture.openSwipeUp.action == .close, !SettingsManager.shared.stickyNotch {
                     self.swipeFired = true
                     self.collapse()
                 }

@@ -20,6 +20,9 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.0.39", date: "10 October 2026", headline: "Cassette mode on the Now Playing tab", items: [
+            "The Now Playing tab has a tape button beside Open Player: it swaps the cover for a cassette whose reels turn while it plays.",
+        ]),
         ReleaseNote(version: "2.0.38", date: "10 October 2026", headline: "Dragging files to the notch", items: [
             "Dragging a file to the top centre of the screen now opens the notch even when its own drop area is hidden or covered, so the file can be dropped straight onto the Shelf.",
         ]),
