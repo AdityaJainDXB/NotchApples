@@ -20,6 +20,9 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.0.45", date: "10 October 2026", headline: "Files can reach the notch", items: [
+            "Dragging a file no longer slides underneath the notch: while you drag, the notch steps below the dragging layer so it can take the drop (it goes back up when you let go).",
+        ]),
         ReleaseNote(version: "2.0.44", date: "10 October 2026", headline: "Drop anywhere on the open notch", items: [
             "A file dropped anywhere on the open notch (not only inside a tab's drop area) goes to the Shelf, or to Convert when that tab is showing.",
         ]),

@@ -212,6 +212,10 @@ All screenshots use sample data.
 
 > **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is still in the repository's tags.
 
+### Mac 2.0.45 · 10 October 2026 · Files can reach the notch
+
+- **A dragged file no longer slides underneath the notch.** With *Keep the notch visible in full-screen apps* on, the notch sat above the layer macOS draws dragged files on, so it never received them. While you drag a file the notch now steps below that layer, then goes back up when you let go.
+
 ### Mac 2.0.44 · 10 October 2026 · Drop anywhere on the open notch
 
 - **A file dropped anywhere on the open notch** goes to the Shelf (or Convert when that tab is showing), not only inside a tab's own drop area. Drag events are now logged so a drop that fails can be traced.

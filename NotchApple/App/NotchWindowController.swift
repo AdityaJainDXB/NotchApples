@@ -683,6 +683,7 @@ final class NotchWindowController {
 
     /// Puts both windows back on top after a Space change, wake or display change.
     func reassertWindowLevels() {
+        if loweredForDrag { setDragLevels(true); return }
         trigger.keepAboveEverything(orderFront: !SettingsManager.shared.isNotchHidden)
         panel.keepAboveEverything(extraLevels: 1)
         reposition()
@@ -852,11 +853,31 @@ final class NotchWindowController {
         dragTimer = timer
     }
 
+    /// A dragged file is drawn at the system's dragging level (500), and macOS only offers a drop to windows below it. The
+    /// notch sits at level 1000 when "keep the notch visible in full-screen apps" is on, so the file slid underneath it
+    /// and nothing accepted the drop. While a file is being dragged the notch drops below the dragging layer, and goes
+    /// back up when the button is released.
+    private var loweredForDrag = false
+
+    private func setDragLevels(_ lower: Bool) {
+        loweredForDrag = lower
+        if lower {
+            trigger.level = NSWindow.Level(rawValue: NSWindow.Level.statusBar.rawValue + 1)
+            panel.level = NSWindow.Level(rawValue: NSWindow.Level.statusBar.rawValue + 2)
+        } else {
+            trigger.keepAboveEverything(orderFront: false)
+            panel.keepAboveEverything(extraLevels: 1, orderFront: false)
+        }
+        DragLog.log.notice("notch levels for drag: \(lower ? "lowered" : "restored", privacy: .public)")
+    }
+
     private func pollDrag() {
         let down = NSEvent.pressedMouseButtons & 1 == 1
         defer { buttonWasDown = down }
         let board = NSPasteboard(name: .drag)
         if down && !buttonWasDown { dragChangeCountAtPress = board.changeCount; dragOpened = false }
+        let fileDrag = down && board.changeCount != dragChangeCountAtPress && board.types?.contains(.fileURL) == true
+        if fileDrag != loweredForDrag { setDragLevels(fileDrag) }
         guard down else { dragOpened = false; return }
         guard !dragOpened, !state.isExpanded, board.changeCount != dragChangeCountAtPress,
               board.types?.contains(.fileURL) == true, let screen = targetScreen else { return }
