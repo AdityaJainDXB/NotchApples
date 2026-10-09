@@ -1376,7 +1376,6 @@ Notch apple is built by a small group, and every one of them has shaped it:
 
 - [**Aditya Jain**](https://github.com/AdityaJainDXB)
 - [**Viraj Singh Chadha**](https://github.com/VirajSinghChadha)
-- **Sumin Sethi**
 - [**Saigamer007pro**](https://github.com/Saigamer007pro)
 
 Thank you. 💜
