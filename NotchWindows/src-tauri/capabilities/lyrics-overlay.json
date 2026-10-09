@@ -1,0 +1,9 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "lyrics-overlay",
+  "description": "The lyrics overlay on the side of the screen. It only listens for lyric lines and says when it is ready.",
+  "windows": ["lyrics-overlay"],
+  "permissions": [
+    "core:event:default"
+  ]
+}

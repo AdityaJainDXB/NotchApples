@@ -90,6 +90,7 @@ const commands = {
     outputs: [{ id: 'a', name: 'Speakers (Realtek Audio)', default: true }, { id: 'b', name: 'Headphones (WH-1000XM4)', default: false }],
     input: 'Microphone Array (Intel)', mic_muted: state.micMuted, apps: state.apps, balance: state.balance ?? 0.5, balance_ok: true }),
   klick_set: () => {},
+  lyrics_overlay_show: () => {}, lyrics_overlay_hide: () => {},
   convert_tools: () => ({ word: false, powerpoint: false, excel: false, libreoffice: false, ffmpeg: false }),
   convert_pick: () => ['C:\\Users\\you\\Pictures\\holiday.heic', 'C:\\Users\\you\\Documents\\Report.pptx'],
   convert_temp_dir: () => 'C:\\Temp',

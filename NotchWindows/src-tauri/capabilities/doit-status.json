@@ -1,0 +1,9 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "doit-status",
+  "description": "The small Do It status window: shows progress and a Stop button. It can only send and receive events.",
+  "windows": ["doit-status"],
+  "permissions": [
+    "core:event:default"
+  ]
+}

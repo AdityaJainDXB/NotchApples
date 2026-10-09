@@ -10,6 +10,7 @@ import { empty, toggle, select } from '../ui.js';
 import { icon } from '../icons.js';
 import { proNote } from './activation.js';
 import * as M from '../services/media.js';
+import * as SL from '../services/sidelyrics.js';
 import { invoke } from '../native.js';
 
 export function render(root) {
@@ -41,6 +42,12 @@ export function render(root) {
   // Sleep timer: pause the music after a while (only if something is playing).
   const sleepNote = el('span', { class: 'tiny dim num' });
   const sleepSel = select([0, 15, 30, 45, 60, 90].map((n) => ({ value: n, label: n ? `Pause in ${n} min` : 'Sleep timer' })), 0, (v) => { Number(v) ? M.startSleepTimer(Number(v)) : M.cancelSleepTimer(); }, { cls: 'auto', title: 'Pause the music after a while' });
+  // Lyrics on the side of the screen (Pro): a small overlay over every app, driven by services/sidelyrics.js.
+  const sideRow = canUse('lyrics')
+    ? el('div', { class: 'hstack small', style: 'gap:8px;flex-wrap:wrap', title: 'Shows the synced lyrics along the edge of the screen while music plays' },
+        toggle(SL.isOn(), (on) => SL.setOn(on)), el('span', { class: 'dim' }, 'Lyrics on the side of your screen'),
+        select([{ value: 'left', label: 'Left' }, { value: 'right', label: 'Right' }], SL.side(), (v) => SL.setSide(v), { cls: 'auto', title: 'Which edge of the screen' }))
+    : proNote('lyrics', 'Lyrics on the side of your screen.');
   const lyricBox = el('div', { class: 'col scroll', style: 'flex:1;min-height:0;gap:6px;padding-right:4px' });
   const player = el('div', { class: 'card col', style: 'flex:1.7;min-width:0;gap:10px' },
     el('div', { class: 'hstack', style: 'gap:20px;align-items:center;flex:1' }, art,
@@ -49,7 +56,7 @@ export function render(root) {
         bar, el('div', { class: 'hstack' }, pos, el('div', { class: 'spacer' }), dur),
         el('div', { class: 'hstack', style: 'gap:10px;flex-wrap:wrap' }, prevBtn, playBtn, nextBtn, sleepSel, sleepNote,
           el('button', { class: 'icon-btn', title: 'Lyrics', onclick: () => setSpot(true) }, '❝')),
-        balRow)),
+        balRow, sideRow)),
     el('label', { class: 'hstack small dim', style: 'cursor:pointer' },
       toggle(load('media.pill', true), (v) => save('media.pill', v)), 'Show the cover on the closed notch while music plays'));
   // The lyrics can fill the whole notch (like the Mac's full-screen view): big centred lines, the current one in white.

@@ -24,6 +24,7 @@ mod index;
 mod input;
 mod klick;
 mod convert;
+mod doit;
 mod media;
 mod net;
 mod phonetic;
@@ -129,6 +130,9 @@ fn register_shortcuts(app: AppHandle, shortcuts: HashMap<String, String>) -> Vec
 }
 
 fn on_shortcut(app: &AppHandle, id: u32) {
+    if doit::on_shortcut(app, id) {
+        return;
+    }
     let action = SHORTCUTS.lock().ok().and_then(|s| s.as_ref().and_then(|m| m.get(&id).cloned()));
     let Some(action) = action else { return };
     match action.as_str() {
@@ -325,6 +329,61 @@ fn open_browser(app: AppHandle, url: String) -> Result<(), String> {
     Ok(())
 }
 
+/// Shows the lyrics overlay: a transparent, click-through window pinned to the left or right edge of the main
+/// screen, vertically centred. Created the first time it is needed (see src/lyrics-overlay.html).
+#[tauri::command]
+fn lyrics_overlay_show(app: AppHandle, side: String) -> Result<(), String> {
+    const W: f64 = 360.0;
+    const H: f64 = 440.0;
+    const MARGIN: f64 = 12.0;
+    let monitor = app
+        .primary_monitor()
+        .ok()
+        .flatten()
+        .or_else(|| app.get_webview_window("notch").and_then(|w| w.current_monitor().ok().flatten()))
+        .ok_or("no monitor")?;
+    let scale = monitor.scale_factor();
+    let screen = monitor.size().to_logical::<f64>(scale);
+    let origin = monitor.position().to_logical::<f64>(scale);
+    let x = if side == "right" { origin.x + screen.width - W - MARGIN } else { origin.x + MARGIN };
+    let y = origin.y + (screen.height - H) / 2.0;
+
+    let window = match app.get_webview_window("lyrics-overlay") {
+        Some(existing) => existing,
+        None => {
+            let w = WebviewWindowBuilder::new(&app, "lyrics-overlay", WebviewUrl::App("lyrics-overlay.html".into()))
+                .title("Notch apple — Lyrics")
+                .inner_size(W, H)
+                .position(x, y)
+                .decorations(false)
+                .transparent(true)
+                .shadow(false)
+                .resizable(false)
+                .always_on_top(true)
+                .skip_taskbar(true)
+                .focused(false)
+                .focusable(false)
+                .visible_on_all_workspaces(true)
+                .build()
+                .map_err(|e| e.to_string())?;
+            let _ = w.set_ignore_cursor_events(true);
+            w
+        }
+    };
+    let _ = window.set_position(tauri::LogicalPosition::new(x, y));
+    let _ = window.set_ignore_cursor_events(true);
+    let _ = window.show();
+    Ok(())
+}
+
+/// Closes the lyrics overlay (the switch went off, or Pro lapsed).
+#[tauri::command]
+fn lyrics_overlay_hide(app: AppHandle) {
+    if let Some(w) = app.get_webview_window("lyrics-overlay") {
+        let _ = w.close();
+    }
+}
+
 // ---- automated UI check (CI) --------------------------------------------
 
 /// Saves a screenshot of the notch window (CI only).
@@ -456,7 +515,7 @@ fn main() {
             awake::set_keep_awake, awake::keep_awake_state,
             system_stats, top_processes, transliterate, capture_screen,
             installed_apps, path_info, launch_app, open_path, reveal_path, open_url,
-            pick_app, pick_folder, pick_file, open_browser,
+            pick_app, pick_folder, pick_file, open_browser, lyrics_overlay_show, lyrics_overlay_hide,
             index::search_files, index::set_search_folders, index::search_status,
             icons::icons,
             watch::screen_time, watch::set_edge_trigger, watch::privacy_now, watch::foreground_now, watch::minimize_external,
@@ -466,6 +525,7 @@ fn main() {
             hello::hello_available, hello::hello_verify,
             input::paste_text, input::paste_now, input::dictate,
             klick::klick_set,
+            doit::doit_screen, doit::doit_click, doit::doit_type, doit::doit_key, doit::doit_scroll, doit::doit_sleep, doit::doit_arm, doit::doit_capture,
             convert::convert_tools,
             convert::convert_read,
             convert::convert_write,
