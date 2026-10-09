@@ -59,6 +59,8 @@ final class SettingsWindowController: NSWindowController, NSWindowDelegate {
             UserDefaults.standard.set(tab.rawValue, forKey: "settings.lastPane")
             SettingsTab.selection.send(tab)
         }
+        // Open on the desktop (Space) you are on now, even over a full-screen app, instead of jumping to where it was.
+        window?.collectionBehavior.insert([.moveToActiveSpace, .fullScreenAuxiliary])
         NSApp.activate(ignoringOtherApps: true)
         if window?.isVisible == false { fitToScreen() }
         window?.level = .floating          // keep above the notch panel's owner app

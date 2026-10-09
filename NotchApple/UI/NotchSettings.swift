@@ -32,6 +32,9 @@ struct NotchSettings: View {
 
     var body: some View {
         Form {
+            Section("Top bar") {
+                TopBarSwitches()
+            }
             Section {
                 Toggle(isOn: $settings.globalHotkeyEnabled) {
                     Text("Open and close with \(HotkeyBinding.notch.label)")

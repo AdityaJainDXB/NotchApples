@@ -642,9 +642,8 @@ final class NotchWindowController {
             guard p.y > self.panel.frame.height - 56, event.hasPreciseScrollingDeltas, event.momentumPhase == [] else { return event }
             if event.phase == .began { self.swipeAccumulator = .zero; self.swipeFired = false }
             let flip: CGFloat = event.isDirectionInvertedFromDevice ? 1 : -1
-            // Up/down scrolling on the tab bar moves tabs exactly like left/right does.
-            let sx = event.scrollingDeltaX * flip, sy = event.scrollingDeltaY * flip
-            self.swipeAccumulator.width += abs(sy) > abs(sx) ? sy : sx
+            self.swipeAccumulator.width += event.scrollingDeltaX * flip
+            self.swipeAccumulator.height += event.scrollingDeltaY * flip
             if !self.swipeFired {
                 let a = self.swipeAccumulator
                 if abs(a.width) > 70, abs(a.width) > abs(a.height) * 1.5 {
@@ -655,7 +654,7 @@ final class NotchWindowController {
                     case .track: MediaControl.send(a.width < 0 ? .next : .previous)
                     default: break
                     }
-                } else if a.height < -70, abs(a.height) > abs(a.width) * 1.5, NotchGesture.openSwipeUp.action == .close {
+                } else if a.height < -40, abs(a.height) > abs(a.width) * 1.2, NotchGesture.openSwipeUp.action == .close {
                     self.swipeFired = true
                     self.collapse()
                 }

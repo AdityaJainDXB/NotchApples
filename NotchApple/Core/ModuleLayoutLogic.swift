@@ -170,4 +170,19 @@ enum ModuleLayoutLogic {
         flush()
         return rows
     }
+
+    // MARK: Top bar (the buttons that are always in the notch header)
+
+    /// The header buttons someone can turn off. The power menu is always there: it holds Settings and Quit.
+    static let topBarItems = ["coffee", "pin", "settings", "close"]
+
+    static func topBarShown(_ item: String, hidden: [String]) -> Bool { !hidden.contains(item) }
+
+    /// The hidden list after switching `item` on or off. Unknown names are ignored.
+    static func topBar(setting item: String, shown: Bool, hidden: [String]) -> [String] {
+        guard topBarItems.contains(item) else { return hidden }
+        var list = hidden.filter { $0 != item }
+        if !shown { list.append(item) }
+        return list
+    }
 }

@@ -89,6 +89,7 @@ struct NotchRootView: View {
     @ObservedObject private var updater = UpdateChecker.shared
     @ObservedObject private var patchLog = PatchLog.shared
     @ObservedObject private var tour = TourModel.shared
+    @ObservedObject private var topBar = TopBarPrefs.shared
 
     @Namespace private var duoSpace
     /// The tab that was showing before this switch, so the new page knows which side to slide in from.
@@ -160,6 +161,9 @@ struct NotchRootView: View {
             TourView().insetInNotch().overlay(alignment: .topTrailing) { closeButton }
         } else if patchLog.isShowing {
             PatchLogView().insetInNotch().overlay(alignment: .topTrailing) { closeButton }
+        } else if !topBar.chosen {
+            // Once, after installing or updating: pick which header buttons to keep.
+            TopBarChooserView().insetInNotch().overlay(alignment: .topTrailing) { closeButton }
         } else if updater.reminderDue, let release = updater.reminderRelease {
             // Every 4th or 5th time the notch is opened while an update is waiting.
             RequiredUpdateView(release: release, skippable: true).insetInNotch().overlay(alignment: .topTrailing) { closeButton }
@@ -216,13 +220,23 @@ struct NotchRootView: View {
             Spacer(minLength: 0)
             ClaudeCodeDotView()
             UpdatePill { state.close(); AppDelegate.openSettingsWindow(tab: .updates) }
-            CoffeeButton()
-            PinButton()
-            IconButton(systemImage: "gearshape.fill", help: "Settings (⌘,)") {
-                state.close(); AppDelegate.openSettingsWindow()
+            // The always-there buttons share one bordered capsule so they read as a fixed group.
+            HStack(spacing: 2) {
+                if topBar.shown("coffee") { CoffeeButton() }
+                if topBar.shown("pin") { PinButton() }
+                if topBar.shown("settings") {
+                    IconButton(systemImage: "gearshape.fill", help: "Settings (⌘,)") {
+                        state.close(); AppDelegate.openSettingsWindow()
+                    }
+                }
+                AppActionsButton { state.close() }
+                if topBar.shown("close") {
+                    IconButton(systemImage: "chevron.up", help: "Close (Esc or \(HotkeyBinding.notch.label))") { state.close() }
+                }
             }
-            AppActionsButton { state.close() }
-            IconButton(systemImage: "chevron.up", help: "Close (Esc or \(HotkeyBinding.notch.label))") { state.close() }
+            .padding(.horizontal, 6).padding(.vertical, 2)
+            .background(Capsule().fill(Color.white.opacity(0.05)))
+            .overlay(Capsule().strokeBorder(Theme.accent.opacity(0.45), lineWidth: 1))
         }
     }
 

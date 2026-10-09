@@ -123,4 +123,14 @@ final class ModuleLayoutTests: XCTestCase {
         XCTAssertEqual(ModuleLayoutLogic.defaultSize("devices"), .small)
         XCTAssertEqual(ModuleLayoutLogic.defaultSize("notes"), .medium)
     }
+
+    func testTopBarSwitching() {
+        var hidden: [String] = []
+        hidden = ModuleLayoutLogic.topBar(setting: "pin", shown: false, hidden: hidden)
+        XCTAssertEqual(hidden, ["pin"])
+        XCTAssertFalse(ModuleLayoutLogic.topBarShown("pin", hidden: hidden))
+        XCTAssertEqual(ModuleLayoutLogic.topBar(setting: "pin", shown: false, hidden: hidden), ["pin"])
+        XCTAssertEqual(ModuleLayoutLogic.topBar(setting: "pin", shown: true, hidden: hidden), [])
+        XCTAssertEqual(ModuleLayoutLogic.topBar(setting: "power", shown: false, hidden: []), [])
+    }
 }

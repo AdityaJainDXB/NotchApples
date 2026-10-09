@@ -58,7 +58,7 @@ Pick your computer. Both buttons start the download straight away. The Mac butto
   </tr>
   <tr>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/v2.0.25/NotchApple-2.0.25.dmg"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.0.25</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/v2.0.26/NotchApple-2.0.26.dmg"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.0.26</b></a>
     </td>
     <td align="center">
       <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 1.38.0 BETA</b></a>
@@ -205,6 +205,12 @@ All screenshots use sample data.
 ## What's new
 
 > **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is still in the repository's tags.
+
+### Mac 2.0.26 · 9 October 2026 · Top bar, ⌘E / ⌘J, calmer Tools
+
+- Bordered group for the always-there header buttons, and a **Choose your top bar** step after installing or updating (also in Settings → Notch).
+- **⌘E** opens and closes the notch, **⌘J** hides and shows it. Swipe up on the top bar closes the notch. Settings opens on the desktop you are on.
+- **Tools** is a set of tiles: tap one to open it.
 
 ### Mac 2.0.25 · 9 October 2026 · ⌨️ Klick: a Mechanical sound
 

@@ -271,17 +271,82 @@ struct ToolsView: View {
             PageChips(items: ToolsPage.allCases, selected: page, title: \.title, symbol: \.symbol) { pageRaw = $0.rawValue }
             switch page {
             case .utilities:
-                HStack(alignment: .top, spacing: Theme.gap) {
-                    keepAwakeCard.frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-                    textGrabCard.frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-                    colorCard.frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-                }
+                utilities
             case .calculator:
                 CalculatorView()
             case .translator:
                 NotchTranslatorView()
             }
         }
+    }
+
+    // MARK: Utilities: tiles first, the tool you click opens below
+
+    private enum Utility: String, CaseIterable, Identifiable {
+        case keepAwake, textGrab, color
+        var id: String { rawValue }
+        var title: String {
+            switch self { case .keepAwake: "Keep Awake"; case .textGrab: "Text Grab"; case .color: "Colors" }
+        }
+        var symbol: String {
+            switch self { case .keepAwake: "cup.and.saucer"; case .textGrab: "text.viewfinder"; case .color: "eyedropper.halffull" }
+        }
+    }
+
+    @State private var openUtility: Utility?
+
+    private func status(_ u: Utility) -> String? {
+        switch u {
+        case .keepAwake: awake.isOn || lid.isOn ? "On" : nil
+        case .textGrab: nil
+        case .color: colors.recent.isEmpty ? nil : "\(colors.recent.count) saved"
+        }
+    }
+
+    private var utilities: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: Theme.gap) {
+                HStack(spacing: Theme.gap) {
+                    ForEach(Utility.allCases) { u in utilityTile(u) }
+                }
+                if let u = openUtility {
+                    Group {
+                        switch u {
+                        case .keepAwake: keepAwakeCard
+                        case .textGrab: textGrabCard
+                        case .color: colorCard
+                        }
+                    }
+                    .frame(maxWidth: .infinity, alignment: .topLeading)
+                    .transition(.opacity.combined(with: .move(edge: .top)))
+                } else {
+                    Text("Tap a tool to use it.").font(.system(size: 11)).foregroundStyle(Theme.textSecondary)
+                        .frame(maxWidth: .infinity).padding(.top, 6)
+                }
+            }
+            .padding(.bottom, 4)
+        }
+        .scrollIndicators(.hidden)
+    }
+
+    private func utilityTile(_ u: Utility) -> some View {
+        let selected = openUtility == u
+        let on = status(u)
+        return Button {
+            withAnimation(Theme.spring) { openUtility = selected ? nil : u }
+        } label: {
+            VStack(spacing: 6) {
+                Image(systemName: u.symbol).font(.system(size: 20)).foregroundStyle(on != nil || selected ? Theme.accentBright : .white)
+                Text(u.title).font(.system(size: 12, weight: .semibold)).foregroundStyle(.white).lineLimit(1)
+                Text(on ?? " ").font(.system(size: 10)).foregroundStyle(Theme.accentBright).lineLimit(1)
+            }
+            .frame(maxWidth: .infinity).padding(.vertical, 12)
+            .background(RoundedRectangle(cornerRadius: 12, style: .continuous).fill(selected ? Theme.accent.opacity(0.25) : Theme.surface))
+            .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).strokeBorder(selected ? Theme.accentBright : .clear, lineWidth: 1))
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(u.title)
     }
 
     @StateObject private var grab = TextGrab.shared

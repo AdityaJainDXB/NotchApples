@@ -20,6 +20,11 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.0.26", date: "9 October 2026", headline: "Top bar you choose, ⌘E and ⌘J", items: [
+            "The always-there buttons sit in a bordered group, and you choose which to keep (Settings → Notch).",
+            "⌘E opens and closes the notch; ⌘J hides and shows it. Swipe up on the top bar closes it.",
+            "Tools are tidy tiles you tap to open. Settings opens on the desktop you are on.",
+        ]),
         ReleaseNote(version: "2.0.25", date: "9 October 2026", headline: "Klick: a Mechanical sound", items: [
             "Klick has a new Mechanical sound: the classic clacky keyboard, with a sharp click, a hard clack and a crisp release.",
         ]),

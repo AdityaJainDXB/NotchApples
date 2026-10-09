@@ -191,6 +191,7 @@ final class SettingsManager: ObservableObject {
         // The notch opens and closes with ⌘J for everyone; anyone still on an old default (⌘E, ⌃⌥N) is moved once.
         HotkeyBinding.migrateNotchToCommandJ()
         HotkeyBinding.migrateInvisibilityOffCommandO()
+        HotkeyBinding.migrateNotchOffCommandJ()   // ⌘E opens and closes, ⌘J hides and shows (2.0.26)
         let offByDefault: [Module] = [.windows, .tools, .notes, .focus, .browser, .launcher]
         if alreadyInstalled {
             for m in offByDefault where d.object(forKey: m.storageKey) == nil { d.set(true, forKey: m.storageKey) }

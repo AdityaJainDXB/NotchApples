@@ -37,12 +37,13 @@ struct HotkeyBinding: Equatable {
             }
         }
 
+        /// 2.0.26: ⌘E opens and closes the notch, ⌘J hides and shows it. (2.0.24 and 2.0.25 had ⌘J open and close it.)
         /// Notch: ⌘J for everyone from 2.0.24 (⌥Space and other ⌥-only combinations are blocked by macOS for global
         /// hot keys). It was ⌃⌥N on new installs and ⌘E for older ones, see `migrateNotchToCommandJ`.
         var defaultBinding: HotkeyBinding {
             switch self {
-            case .notch: HotkeyBinding(keyCode: UInt32(kVK_ANSI_J), modifiers: UInt32(cmdKey), label: "⌘J")
-            case .invisibility: HotkeyBinding(keyCode: UInt32(kVK_ANSI_O), modifiers: UInt32(controlKey | optionKey), label: "⌃⌥O")
+            case .notch: HotkeyBinding(keyCode: UInt32(kVK_ANSI_E), modifiers: UInt32(cmdKey), label: "⌘E")
+            case .invisibility: HotkeyBinding(keyCode: UInt32(kVK_ANSI_J), modifiers: UInt32(cmdKey), label: "⌘J")
             case .capture: HotkeyBinding(keyCode: UInt32(kVK_ANSI_S), modifiers: UInt32(controlKey | optionKey), label: "⌃⌥S")
             case .palette: HotkeyBinding(keyCode: UInt32(kVK_ANSI_P), modifiers: UInt32(controlKey | optionKey), label: "⌃⌥P")
             case .lidFold: HotkeyBinding(keyCode: UInt32(kVK_ANSI_F), modifiers: UInt32(controlKey | optionKey), label: "⌃⌥F")
@@ -67,6 +68,19 @@ struct HotkeyBinding: Equatable {
         let oldDefault = (saved.keyCode == legacyNotch.keyCode && saved.modifiers == legacyNotch.modifiers)
             || (saved.keyCode == previousNotchDefault.keyCode && saved.modifiers == previousNotchDefault.modifiers)
         if oldDefault { reset(.notch) }
+    }
+
+    /// 2.0.26: ⌘J now hides the notch, so a notch shortcut someone saved as ⌘J goes back to ⌘E, once.
+    static func migrateNotchOffCommandJ() {
+        let d = UserDefaults.standard
+        guard !d.bool(forKey: "hotkey.notch.migratedOffCmdJ") else { return }
+        d.set(true, forKey: "hotkey.notch.migratedOffCmdJ")
+        let jKey = UInt32(kVK_ANSI_J), cmd = UInt32(cmdKey)
+        let saved = current(.notch)
+        if saved.keyCode == jKey && saved.modifiers == cmd { reset(.notch) }
+        // A hide shortcut that was left on the old ⌃⌥O default simply follows the new default.
+        let hide = current(.invisibility)
+        if hide.keyCode == UInt32(kVK_ANSI_O) && hide.modifiers == UInt32(controlKey | optionKey) { reset(.invisibility) }
     }
 
     /// 2.0.6: anyone whose hide shortcut is still ⌘O moves to ⌃⌥O, once, so ⌘O opens files again everywhere.
