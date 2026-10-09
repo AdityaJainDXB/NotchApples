@@ -188,8 +188,8 @@ final class SettingsManager: ObservableObject {
         let alreadyInstalled = d.bool(forKey: "onboarding.permissionsShown")
         // Remembered before the first-run welcome sets that flag: was Notch apple already installed when 2.0 arrived?
         if d.object(forKey: "v2.freshInstall") == nil { d.set(!alreadyInstalled, forKey: "v2.freshInstall") }
-        // New installs open the notch with ⌃⌥N; people already using ⌘E keep it (and can change it in Settings).
-        if alreadyInstalled, d.object(forKey: "hotkey.notch.keyCode") == nil { HotkeyBinding.save(.legacyNotch, for: .notch) }
+        // The notch opens and closes with ⌘J for everyone; anyone still on an old default (⌘E, ⌃⌥N) is moved once.
+        HotkeyBinding.migrateNotchToCommandJ()
         HotkeyBinding.migrateInvisibilityOffCommandO()
         let offByDefault: [Module] = [.windows, .tools, .notes, .focus, .browser, .launcher]
         if alreadyInstalled {

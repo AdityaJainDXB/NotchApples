@@ -7,7 +7,7 @@
 //  permission and never sees any other keystrokes.
 //
 //  Keys used:
-//   • ⌃⌥N — toggles the notch (⌘E for people who used it before). User-configurable.
+//   • ⌘J — toggles the notch (⌘E and ⌃⌥N before 2.0.24). User-configurable.
 //   • ⌃⌥O — hides or reveals the whole notch (invisibility). The combination is user-configurable. (⌘O until 2.0.6.)
 //   • ⌃⌥S — captures part of the screen for the AI, even while the notch is hidden. User-configurable.
 //   • Esc — closes the notch; registered only while the notch is open, so
@@ -37,11 +37,11 @@ struct HotkeyBinding: Equatable {
             }
         }
 
-        /// Notch: ⌃⌥N on new installs (⌥Space and other ⌥-only combinations are blocked by macOS for global
-        /// hot keys). People who already used ⌘E keep it, see `SettingsManager.registerDefaults`.
+        /// Notch: ⌘J for everyone from 2.0.24 (⌥Space and other ⌥-only combinations are blocked by macOS for global
+        /// hot keys). It was ⌃⌥N on new installs and ⌘E for older ones, see `migrateNotchToCommandJ`.
         var defaultBinding: HotkeyBinding {
             switch self {
-            case .notch: HotkeyBinding(keyCode: UInt32(kVK_ANSI_N), modifiers: UInt32(controlKey | optionKey), label: "⌃⌥N")
+            case .notch: HotkeyBinding(keyCode: UInt32(kVK_ANSI_J), modifiers: UInt32(cmdKey), label: "⌘J")
             case .invisibility: HotkeyBinding(keyCode: UInt32(kVK_ANSI_O), modifiers: UInt32(controlKey | optionKey), label: "⌃⌥O")
             case .capture: HotkeyBinding(keyCode: UInt32(kVK_ANSI_S), modifiers: UInt32(controlKey | optionKey), label: "⌃⌥S")
             case .palette: HotkeyBinding(keyCode: UInt32(kVK_ANSI_P), modifiers: UInt32(controlKey | optionKey), label: "⌃⌥P")
@@ -54,6 +54,20 @@ struct HotkeyBinding: Equatable {
     static let legacyNotch = HotkeyBinding(keyCode: UInt32(kVK_ANSI_E), modifiers: UInt32(cmdKey), label: "⌘E")
     /// The hide shortcut up to 2.0.5. As a global hot key it took ⌘O (Open…) away from every other app.
     static let legacyInvisibility = HotkeyBinding(keyCode: UInt32(kVK_ANSI_O), modifiers: UInt32(cmdKey), label: "⌘O")
+
+    static let previousNotchDefault = HotkeyBinding(keyCode: UInt32(kVK_ANSI_N), modifiers: UInt32(controlKey | optionKey), label: "⌃⌥N")
+
+    /// 2.0.24: the notch shortcut is ⌘J for everyone. Anyone still on one of the old defaults (⌘E, ⌃⌥N) moves to it,
+    /// once; a shortcut someone recorded themselves is left alone, and they can change it back in Settings.
+    static func migrateNotchToCommandJ() {
+        let d = UserDefaults.standard
+        guard !d.bool(forKey: "hotkey.notch.migratedToCmdJ") else { return }
+        d.set(true, forKey: "hotkey.notch.migratedToCmdJ")
+        let saved = current(.notch)
+        let oldDefault = (saved.keyCode == legacyNotch.keyCode && saved.modifiers == legacyNotch.modifiers)
+            || (saved.keyCode == previousNotchDefault.keyCode && saved.modifiers == previousNotchDefault.modifiers)
+        if oldDefault { reset(.notch) }
+    }
 
     /// 2.0.6: anyone whose hide shortcut is still ⌘O moves to ⌃⌥O, once, so ⌘O opens files again everywhere.
     static func migrateInvisibilityOffCommandO() {

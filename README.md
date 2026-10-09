@@ -58,7 +58,7 @@ Pick your computer. Both buttons start the download straight away. The Mac butto
   </tr>
   <tr>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/v2.0.24/NotchApple-2.0.24.dmg"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.0.24</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/v2.0.25/NotchApple-2.0.25.dmg"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.0.25</b></a>
     </td>
     <td align="center">
       <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 1.38.0 BETA</b></a>
@@ -206,9 +206,13 @@ All screenshots use sample data.
 
 > **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is still in the repository's tags.
 
-### Mac 2.0.24 · 9 October 2026 · ⌨️ Klick: a Mechanical sound
+### Mac 2.0.25 · 9 October 2026 · ⌨️ Klick: a Mechanical sound
 
 - **Klick has a Mechanical sound.** The classic clacky keyboard: a sharp click, a hard clack as the key bottoms out, a ring from the case and a crisp click on release. First in the list, with its own volume. Windows 1.38.0 has it too.
+
+### Mac 2.0.24 · 9 October 2026 · ⌘J opens and closes the notch
+
+- **⌘J** is now the shortcut that opens and closes the notch, for everyone (it replaces ⌘E and ⌃⌥N; anyone still on those moves to ⌘J once, a shortcut you recorded yourself is kept). Change it in Settings → Shortcuts & Hotkeys. While it's on, other apps don't get ⌘J.
 
 ### Mac 2.0.23 · 9 October 2026 · ☕ Coffee button, tidier Tools
 
@@ -216,7 +220,7 @@ All screenshots use sample data.
 - **Tools is tidier.** The two Keep Awake cards became one (a switch, with **Options** for the time limits and **Allow lid-closed running**), leaving three roomy cards.
 - **Convert accepts drops from the notch.** Dragging a file onto the notch while on Convert stays on Convert, the whole tab takes drops, and Shelf files have **Convert…** in their menu. Windows 1.38.0 has the same fix.
 
-### Mac 2.0.22 · Windows 1.38.0 BETA · 9 October 2026 · 🔁 Convert
+### Mac 2.0.24 · Windows 1.38.0 BETA · 9 October 2026 · 🔁 Convert
 
 - **Convert (Ultimate): turn any file into another kind.** A new **Convert** tab: drop files on it (or click **Choose files**). Each file gets a **From** picker (what it is, worked out from its name, and changeable) and a **To** picker (what it should become). Click **Convert**, or **Convert all**. The result is saved **next to the original** ("Report.pdf"), never over anything, with **Open** and **Show** buttons.
   - **Pictures:** PNG, JPEG, HEIC, WebP, GIF, BMP, TIFF, ICO, SVG, AVIF → PNG, JPG, HEIC (Mac), WebP, GIF, BMP, TIFF, ICO or PDF, and several pictures → **one combined PDF**.
@@ -781,11 +785,11 @@ Choose which ones show in **Settings → Notch Extras**.
 
 ![Focus countdown beside the notch](docs/screenshots/live-activity.png)
 
-**Open the notch by clicking it, pressing `⌘E` (`⌃⌥N` on new installs; changeable in **Settings → Shortcuts & Hotkeys**) in any app, or dragging a file onto it.** Press `Esc` or `⌘E`, or click anywhere else, to close it.
+**Open the notch by clicking it, pressing `⌘J` (changeable in **Settings → Shortcuts & Hotkeys**) in any app, or dragging a file onto it.** Press `Esc` or `⌘E`, or click anywhere else, to close it.
 
 **Open on hover (optional, off by default):** turn it on in **Settings → General**. The notch then opens when the pointer rests on it and closes when the pointer moves away. Click inside to keep it open while you type or drag. With the option off, hovering only highlights the notch.
 
-`⌘E` is a system-wide shortcut registered through Carbon, so it needs no Accessibility permission. While it's on, other apps won't receive `⌘E` (for example "Use Selection for Find"). You can turn it off in **Settings → General**.
+`⌘J` is a system-wide shortcut registered through Carbon, so it needs no Accessibility permission. While it's on, other apps won't receive `⌘J` (it is Downloads in Safari and Chrome, and View Options in Finder). You can turn it off in **Settings → General**.
 
 **Hide the notch with `⌃⌥O`** (change it in **Settings → Shortcuts & Hotkeys**): press it from anywhere to make the notch and its menu-bar icon disappear, and press it again to bring them back. Everything keeps running while it's hidden (music, timers, Messenger), and `⌘E` also brings it back. **Settings → Shortcuts & Hotkeys** shows whether it's visible or hidden and has the on/off switch.
 
@@ -1007,7 +1011,7 @@ Windows PCs have no camera notch, so the collapsed state is a slim pill pinned t
 | `Esc` | Close the notch while it is open |
 
 Windows reserves most Win-key combinations, so `Ctrl + Alt` is used instead of
-the Mac's `⌃⌥N` / `⌃⌥O`.
+the Mac's `⌘J` / `⌃⌥O`.
 
 ### What doesn't carry over
 
@@ -1101,7 +1105,7 @@ Every task is saved in **Settings → AI History**, on your Mac only: the image 
 | Shortcut | Does |
 | --- | --- |
 | <kbd>⌃⌥S</kbd> | Capture for AI, from any app (even with the notch hidden) |
-| <kbd>⌃⌥N</kbd> | Open or close the notch (<kbd>⌘E</kbd> if you've used Notch apple since before 1.13) |
+| <kbd>⌘J</kbd> | Open or close the notch (it was <kbd>⌘E</kbd> or <kbd>⌃⌥N</kbd> before 2.0.24) |
 | <kbd>⌃⌥O</kbd> | Hide or show the whole notch (`⌘O` before 2.0.6) |
 | <kbd>⌃⌥</kbd> + arrows, <kbd>↩</kbd>, <kbd>C</kbd>, <kbd>⌫</kbd> | Snap the front window: halves, maximise, centre, restore |
 | <kbd>Esc</kbd> | Close the notch, or cancel a capture |

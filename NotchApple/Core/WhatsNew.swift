@@ -20,7 +20,7 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
-        ReleaseNote(version: "2.0.24", date: "9 October 2026", headline: "Klick: a Mechanical sound", items: [
+        ReleaseNote(version: "2.0.25", date: "9 October 2026", headline: "Klick: a Mechanical sound", items: [
             "Klick has a new Mechanical sound: the classic clacky keyboard, with a sharp click, a hard clack and a crisp release.",
         ]),
         ReleaseNote(version: "2.0.23", date: "9 October 2026", headline: "Coffee button, tidier Tools, Convert drops", items: [
