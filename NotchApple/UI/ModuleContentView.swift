@@ -48,6 +48,7 @@ struct ModuleContentView: View {
         case .tennis: TennisView()
         case .radar: RadarView()
         case .klick: KlickView()
+        case .wallpaper: WallpaperView()
         case .convert: PremiumSlot(module: .convert)
         case .doIt: PremiumSlot(module: .doIt)
         case .games: GamesView()

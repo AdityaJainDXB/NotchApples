@@ -12,7 +12,7 @@ import SwiftUI
 
 /// Every optional feature module in the app.
 enum Module: String, CaseIterable, Identifiable {
-    case today, claude, browser, launcher, translator, stats, windows, tools, mirror, worldClock, messenger, clipboard, notes, focus, shelf, share, audio, vpn, nowPlaying, search, timer, snippets, shortcuts, devices, live, f1, tennis, radar, sports, games, alerts, plugins, voiceNotes, screenTime, quickAdd, markets, home, security, cacheCleaner, claudeUsage, smartHome, devTools, wellbeing, nonNecessities, todo, klick, convert, doIt
+    case today, claude, browser, launcher, translator, stats, windows, tools, mirror, worldClock, messenger, clipboard, notes, focus, shelf, share, audio, vpn, nowPlaying, search, timer, snippets, shortcuts, devices, live, f1, tennis, radar, wallpaper, sports, games, alerts, plugins, voiceNotes, screenTime, quickAdd, markets, home, security, cacheCleaner, claudeUsage, smartHome, devTools, wellbeing, nonNecessities, todo, klick, convert, doIt
 
     var id: String { rawValue }
 
@@ -47,6 +47,7 @@ enum Module: String, CaseIterable, Identifiable {
         case .tennis: "Tennis"
         case .radar: "Flight Radar"
         case .klick: "Klick"
+        case .wallpaper: "Wallpaper"
         case .convert: "Convert"
         case .doIt: "Do It"
         case .games: "Games"
@@ -100,6 +101,7 @@ enum Module: String, CaseIterable, Identifiable {
         case .tennis: "tennisball.fill"
         case .radar: "airplane"
         case .klick: "keyboard.fill"
+        case .wallpaper: "photo.tv"
         case .convert: "arrow.triangle.2.circlepath"
         case .doIt: "wand.and.stars"
         case .games: "gamecontroller.fill"
@@ -151,6 +153,7 @@ enum Module: String, CaseIterable, Identifiable {
         case .games: "Add-on: tiny games for a short break: 2048, Snake and a reaction test. Best scores stay on this Mac."
         case .f1: "Add-on: Formula 1 live timing (order, gaps, tyres, laps, flags), the weekend schedule with a countdown, and standings. Follow a driver to see their position beside the notch."
         case .klick: "Pro: your keyboard sounds like a mechanical one, in any app. Eight sounds (Cream, Holy Panda, Blue, Red, Brown, Topre, Typewriter, Bubble), each with its own volume, and an on / off switch."
+        case .wallpaper: "Pro: play a video as your desktop wallpaper on every display. Add your own (up to 60 seconds, up to 4K) or pick from a small free library of NASA clips. It pauses on battery and when windows cover it; the lock screen shows a still from the video."
         case .convert: "Ultimate: drop a file and turn it into another kind. PPTX to PDF, HEIC to JPG, Word to PDF, MOV to MP4, Excel to CSV, PDF to pictures and more, saved next to the original."
         case .doIt: "Ultimate: tell the AI what to do (a worksheet, a form, a task) and it does it on your screen, step by step. You press Start, can stop it any time, and it asks before anything risky."
         case .tennis: "Every ATP and WTA match with live scores, in Men, Women and Mixed. Grand Slams show in red, earlier weeks and recent Grand Slams are a click away, plus the ATP and WTA top 20. Star your favourite players and their live score shows beside the notch."
@@ -210,6 +213,7 @@ final class SettingsManager: ObservableObject {
         defaults[Module.tennis.storageKey] = true   // 2.0.5: Tennis is on for everyone
         defaults[Module.radar.storageKey] = true    // Flight Radar is on for everyone
         defaults[Module.klick.storageKey] = true    // 2.0.19: the Klick tab shows (it explains Pro until unlocked)
+        defaults[Module.wallpaper.storageKey] = true  // the Wallpaper tab shows (it explains Pro until unlocked)
         defaults[Module.convert.storageKey] = true  // 2.0.22: the Convert tab shows (it explains Ultimate until unlocked)
         defaults[Module.doIt.storageKey] = true     // 2.0.26: the Do It tab shows (it explains Ultimate until unlocked)
         d.register(defaults: defaults)
@@ -259,6 +263,7 @@ final class SettingsManager: ObservableObject {
     @AppStorage(Module.tennis.storageKey) var tennisEnabled = true
     @AppStorage(Module.radar.storageKey) var radarEnabled = true
     @AppStorage(Module.klick.storageKey) var klickEnabled = true
+    @AppStorage(Module.wallpaper.storageKey) var wallpaperEnabled = true
     @AppStorage(Module.convert.storageKey) var convertEnabled = true
     @AppStorage(Module.doIt.storageKey) var doItEnabled = true
     @AppStorage(Module.games.storageKey) var gamesEnabled = false
@@ -374,6 +379,7 @@ final class SettingsManager: ObservableObject {
         case .tennis: $tennisEnabled
         case .radar: $radarEnabled
         case .klick: $klickEnabled
+        case .wallpaper: $wallpaperEnabled
         case .convert: $convertEnabled
         case .doIt: $doItEnabled
         case .games: $gamesEnabled

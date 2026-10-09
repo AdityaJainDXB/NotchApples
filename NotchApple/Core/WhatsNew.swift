@@ -20,6 +20,10 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.0.35", date: "10 October 2026", headline: "Live wallpaper", items: [
+            "New Wallpaper tab (Pro): play your own video (up to 60 seconds, up to 4K) or a free NASA clip as your desktop wallpaper, on every display.",
+            "It pauses on battery, in Low Power Mode, on sleep or lock, and when windows cover it. The lock screen shows a still from the video.",
+        ]),
         ReleaseNote(version: "2.0.34", date: "9 October 2026", headline: "Notch apple AI, included with Pro", items: [
             "Settings → AI → Notch apple AI (included): ask without setting up any key. Pro gets 60 messages a day, Ultimate 200. Your own keys still work with no limit.",
         ]),

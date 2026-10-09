@@ -76,7 +76,7 @@ enum Feature: String, CaseIterable, Identifiable {
     // Pro: tabs
     case messenger, audio, vpn, voiceNotes, screenTime, quickAdd, launcher, snippets, mirror, focus
     // Pro: system and media
-    case rainAlert, lyrics, forecast, meetingPlanner, micMute, topProcesses, dndToggle, browserMedia, klick
+    case rainAlert, lyrics, forecast, meetingPlanner, micMute, topProcesses, dndToggle, browserMedia, klick, liveWallpaper
     // Pro: sync
     case sync
     // Ultimate (built in later phases; hidden until ready)
@@ -162,6 +162,7 @@ enum Feature: String, CaseIterable, Identifiable {
         case .rainAlert: "Rain alerts"
         case .lyrics: "Lyrics"
         case .klick: "Klick"
+        case .liveWallpaper: "Live wallpaper"
         case .convert: "Convert"
         case .doIt: "Do It"
         case .forecast: "Week forecast and more cities"
@@ -244,6 +245,7 @@ enum Feature: String, CaseIterable, Identifiable {
         case .rainAlert: "A nudge before it starts raining."
         case .lyrics: "Lyrics for what's playing."
         case .klick: "Mechanical keyboard sounds as you type, in any app."
+        case .liveWallpaper: "A video as your desktop wallpaper: your own (up to 60 seconds, up to 4K) or from a free library."
         case .doIt: "Tell the AI what to do on your screen (a worksheet, a form, a task) and it does it for you, step by step, until you stop it."
         case .convert: "Turn any file into another kind: PPTX to PDF, HEIC to JPG, Word to PDF, MOV to MP4, Excel to CSV and more."
         case .forecast: "The next 12 hours and 7 days, for up to six cities."

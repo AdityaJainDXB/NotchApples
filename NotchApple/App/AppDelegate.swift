@@ -48,6 +48,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         WellbeingService.shared.start()
         SystemWatch.shared.start()
         PremiumRegistry.claudeStart?()
+        WallpaperEngine.shared.apply()      // a live wallpaper you left on starts again
         NotesCloudSync.shared.syncNow()
         // Ultimate: plugins keep running in the background for Home widgets and activities.
         if PluginHost.shared.keepRunning { PluginHost.shared.start() }

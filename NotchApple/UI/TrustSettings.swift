@@ -55,6 +55,7 @@ struct PrivacyDashboard: View {
             Destination(host: "LRCLIB", what: "Song title and artist", when: "Lyrics (Pro)", active: settings.showLyrics && Entitlements.shared.canUse(.lyrics)),
             Destination(host: "CoinGecko, Yahoo Finance", what: "Symbols you add", when: "Markets (Pro)", active: settings.marketsEnabled),
             Destination(host: "ADSB.lol", what: "Flight numbers you pin", when: "Live flight status (Pro)", active: !FlightWatcher.shared.pinned.isEmpty),
+            Destination(host: "images-assets.nasa.gov", what: "Nothing about you: the clip you chose to get", when: "Wallpaper tab, free library (Pro)", active: settings.wallpaperEnabled),
             Destination(host: "ADSB.lol", what: "Your approximate location (rounded to about 1 km)", when: "Flight Radar tab, only while it is open", active: settings.radarEnabled),
             Destination(host: "open.er-api.com", what: "Nothing about you: today's rates", when: "Currency conversion (Pro)", active: Entitlements.shared.canUse(.currency)),
             Destination(host: "License server", what: "Your key and a one-way hash of this Mac", when: "Activating or deactivating a key; a daily signed revocation list; renewing the 72-hour tokens that unlock server-held content (premium Klick sounds, Clipboard Link)", active: Entitlements.shared.key != nil),
