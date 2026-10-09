@@ -155,7 +155,7 @@ private struct AirDropCard: View {
             }
         }
         // The whole card takes a drop, not just the circle (a drop that missed the circle used to do nothing).
-        .onDrop(of: [.fileURL], isTargeted: $targeted) { providers in
+        .magneticDrop(of: [.fileURL], label: "Let go to share", isTargeted: $targeted) { providers in
             guard mode == .files else { mode = .files; return false }
             loadURLs(providers) { urls in sender.send(urls) }
             return true
@@ -321,7 +321,7 @@ private struct PairDropCard: View {
                 .overlay(Text(codeEntry.count == 6 ? "…or drop files or folders here to send" : "Enter the code, then drop files here")
                     .font(.system(size: 12)).foregroundStyle(Theme.textSecondary))
                 .frame(height: 56)
-                .onDrop(of: [.fileURL], isTargeted: $dropTargeted) { providers in
+                .magneticDrop(of: [.fileURL], label: "Let go to share", isTargeted: $dropTargeted) { providers in
                     guard codeEntry.count == 6 else { pairDrop.status = "Type their 6-digit code first, then drop the files."; return false }
                     loadURLs(providers) { pairDrop.send($0, code: codeEntry, to: chosenPeer) }
                     return true

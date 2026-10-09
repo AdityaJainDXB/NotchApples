@@ -598,7 +598,7 @@ struct ClaudeChatView: View {
             if config.provider.isConfigured { content } else { keyPrompt }
         }
         .onAppear { if config.availableModels[config.provider] == nil { config.refreshModels() } }
-        .onDrop(of: [.fileURL, .image], isTargeted: $dropTargeted, perform: handleDrop)
+        .magneticDrop(of: [.fileURL, .image], label: "Let go to attach", isTargeted: $dropTargeted, perform: handleDrop)
         .overlay {
             if dropTargeted {
                 RoundedRectangle(cornerRadius: 14).strokeBorder(Theme.accent, style: StrokeStyle(lineWidth: 2, dash: [6]))
@@ -642,21 +642,7 @@ struct ClaudeChatView: View {
             .help("AI provider")
 
             if config.provider.isConfigured {
-                Menu {
-                    let models = config.availableModels[config.provider] ?? []
-                    if models.isEmpty { Text(config.loadingModels ? "Loading models…" : "No models found") }
-                    ForEach(models, id: \.self) { m in
-                        Button { config.setModel(m, for: config.provider) } label: {
-                            Label(m, systemImage: m == config.model ? "checkmark" : "")
-                        }
-                    }
-                    Divider()
-                    Button("Refresh model list") { config.refreshModels() }
-                } label: {
-                    Text(config.model).font(.system(size: 12)).lineLimit(1)
-                }
-                .menuStyle(.borderlessButton).fixedSize()
-                .help("Model")
+                ModelPicker(config: config)
             }
             Spacer()
             badge(config.provider.likelySupportsVision(config.model) ? "Sees images" : "Text only",

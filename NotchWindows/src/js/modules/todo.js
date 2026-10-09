@@ -4,7 +4,7 @@
 // with priority sorting on (the default), sits at the top.
 
 import { el, load, save, uid, dayLabel, fmtTime } from '../store.js';
-import { iconBtn, menu, toast, prompt, empty } from '../ui.js';
+import { iconBtn, menu, toast, prompt, empty, holdButton, undoToast } from '../ui.js';
 import * as R from '../services/reminders.js';
 import { parseWhen } from './quickadd.js';
 import { RULES, nextDue, ruleLabel } from '../services/recur.js';
@@ -142,7 +142,7 @@ export function render(root, opts = {}) {
     el('div', { class: 'col scroll', style: 'flex:0 0 170px;gap:4px' }, listsBox,
       el('label', { class: 'hstack tiny dim', style: 'margin-top:6px;cursor:pointer' }, el('input', { type: 'checkbox', checked: showDone, onchange: (e) => { showDone = e.target.checked; save('todo.showDone', showDone); paint(); } }), 'Show done'),
       el('label', { class: 'hstack tiny dim', style: 'cursor:pointer', title: 'High priority (red) first, then medium, then low' }, el('input', { type: 'checkbox', checked: sortByPriority, onchange: (e) => { sortByPriority = e.target.checked; save('todo.sortByPriority', sortByPriority); paint(); } }), 'Sort by priority'),
-      el('button', { class: 'btn small ghost', onclick: () => { R.saveTodos(R.todos().filter((t) => !t.done)); paint(); } }, 'Clear done')),
+      holdButton('Hold to clear done', () => { const before = R.todos(); R.saveTodos(before.filter((t) => !t.done)); paint(); undoToast('Done items cleared', () => { R.saveTodos(before); paint(); }); }, { hint: 'Press and hold to clear the finished to-dos. You can undo it.' })),
     el('div', { class: 'col', style: 'flex:1;min-width:0;gap:6px' }, el('div', { class: 'hstack' }, chosenBtn, input), hint, items)));
   paint();
   setTimeout(() => input.focus(), 40);

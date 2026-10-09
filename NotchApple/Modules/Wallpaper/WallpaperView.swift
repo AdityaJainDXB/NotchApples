@@ -39,7 +39,7 @@ struct WallpaperView: View {
             footer
         }
         .overlay { if dropping { RoundedRectangle(cornerRadius: 12).strokeBorder(Theme.accentBright, style: StrokeStyle(lineWidth: 2, dash: [6])).background(Theme.accent.opacity(0.1)).allowsHitTesting(false) } }
-        .onDrop(of: [.fileURL], isTargeted: $dropping) { providers in
+        .magneticDrop(of: [.fileURL], label: "Let go to add the video", isTargeted: $dropping) { providers in
             guard let p = providers.first else { return false }
             _ = p.loadObject(ofClass: URL.self) { url, _ in
                 guard let url else { return }

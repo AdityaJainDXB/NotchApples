@@ -212,6 +212,15 @@ All screenshots use sample data.
 
 > **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is still in the repository's tags.
 
+### Mac 2.0.37 · Windows 1.48.0 BETA · 10 October 2026 · 🧲 A nicer feel, and two card games
+
+- **Magnetic drop zones** (Shelf, Convert, Share, Launcher, Wallpaper, AI tab): the target leans towards the file you drag, with a glow and a label.
+- **Hold to clear** the Shelf or finished to-dos, with an **Undo** that counts down.
+- **Searchable model picker** in the AI tab, with a preview card for each model.
+- **Cassette mode** for the music player.
+- **Blackjack and Solitaire** in Games.
+- The pricing page now prints a **receipt** after a confirmed payment.
+
 ### Mac 2.0.36 · Windows 1.47.0 BETA · 10 October 2026 · ✈️ A bigger Plane world and a world leaderboard
 
 - **About three times more map**, with plains, ranges and a sea beyond the valley.

@@ -3,6 +3,7 @@
 // attach images and PDFs, search the web with sources, personas, slash commands,
 // saved chats, read aloud and voice typing.
 
+import { magnet } from '../services/magnet.js';
 import { el, load, save, timeAgo } from '../store.js';
 import { invoke, listen, openUrl } from '../native.js';
 import { canUse } from '../features.js';
@@ -29,31 +30,61 @@ export function render(root, opts = {}) {
   // ---- toolbar ----
   const providerSel = el('select', { class: 'field auto', title: 'Provider' },
     ...Object.entries(AI.PROVIDERS).map(([id, p]) => el('option', { value: id, selected: id === AI.provider() }, p.name)));
-  const modelSel = el('select', { class: 'field auto', title: 'Model', style: 'max-width:220px' });
-
+  // A searchable model picker: type to filter, Enter picks the first match, hovering a model previews what we know of it.
+  let modelList = [];
+  const modelBtn = el('button', { class: 'field auto model-btn', type: 'button', title: 'Model', 'aria-haspopup': 'listbox', style: 'max-width:220px;text-align:left' });
+  function paintModelBtn() { modelBtn.textContent = `${AI.modelOf(AI.provider())} ▾`; }
   async function paintModels() {
-    const p = AI.provider();
-    const current = AI.modelOf(p);
-    modelSel.replaceChildren(el('option', { value: current, selected: true }, current));
+    const p = AI.provider(), current = AI.modelOf(p);
+    paintModelBtn();
     const list = await AI.listModels(p);
-    const ids = new Set();
-    const opts2 = [];
+    const ids = new Set(); modelList = [];
     for (const m of [{ id: current, label: current }, ...(p === 'openRouter' ? list.filter((x) => x.free) : list)]) {
-      if (ids.has(m.id)) continue; ids.add(m.id);
-      opts2.push(el('option', { value: m.id, selected: m.id === current }, p === 'openRouter' && m.free ? `${m.id}` : m.label || m.id));
+      if (ids.has(m.id)) continue; ids.add(m.id); modelList.push(m);
     }
-    opts2.push(el('option', { value: '__custom' }, 'Other model…'));
-    modelSel.replaceChildren(...opts2);
   }
-  providerSel.addEventListener('change', () => { AI.setProvider(providerSel.value); paintModels(); keyHint(); });
-  modelSel.addEventListener('change', async () => {
-    if (modelSel.value === '__custom') {
-      const { prompt } = await import('../ui.js');
-      const id = await prompt('Model name', { placeholder: 'e.g. gemini-3.8-pro', value: AI.modelOf(AI.provider()) });
-      if (id) AI.setModel(AI.provider(), id);
+  function openModelPicker() {
+    document.querySelector('.model-pop')?.remove();
+    const p = AI.provider(), cur = AI.modelOf(p), info = AI.PROVIDERS[p] || {};
+    const search = el('input', { class: 'field', placeholder: 'Search models', 'aria-label': 'Search models', style: 'width:100%' });
+    const list = el('div', { class: 'model-list', role: 'listbox' });
+    const card = el('div', { class: 'model-card hidden' });
+    const pop = el('div', { class: 'model-pop' }, el('div', { class: 'col', style: 'gap:6px;width:240px' }, search, list), card);
+    const r = modelBtn.getBoundingClientRect();
+    pop.style.left = `${Math.max(8, Math.min(r.left, innerWidth - 480))}px`; pop.style.top = `${r.bottom + 4}px`;
+    const close = () => { pop.remove(); document.removeEventListener('pointerdown', away, true); document.removeEventListener('keydown', esc, true); };
+    const away = (e) => { if (!pop.contains(e.target) && e.target !== modelBtn) close(); };
+    const esc = (e) => { if (e.key === 'Escape') { e.stopPropagation(); close(); } };
+    const pick = async (id) => {
+      if (id === '__custom') { close(); const { prompt } = await import('../ui.js'); const v = await prompt('Model name', { placeholder: 'e.g. gemini-3.8-pro', value: cur }); if (v) AI.setModel(p, v); }
+      else { AI.setModel(p, id); close(); }
       paintModels();
-    } else AI.setModel(AI.provider(), modelSel.value);
-  });
+    };
+    const show = (m) => {
+      if (!m) { card.classList.add('hidden'); return; }
+      const local = p === 'ollama' || p === 'apple';
+      card.replaceChildren(el('b', {}, m.id), el('div', { class: 'tiny faint' }, info.name || p),
+        el('div', { class: 'tiny' }, local ? '🔒 Runs on this computer: nothing leaves it' : '☁️ Answered by the provider you chose'),
+        m.id === cur ? el('div', { class: 'tiny' }, '✓ Selected') : null);
+      card.classList.remove('hidden');
+    };
+    const paintList = () => {
+      const q = search.value.trim().toLowerCase();
+      const rows = modelList.filter((m) => !q || m.id.toLowerCase().includes(q) || (m.label || '').toLowerCase().includes(q));
+      list.replaceChildren(...rows.map((m) => {
+        const row = el('button', { class: `model-row${m.id === cur ? ' on' : ''}`, type: 'button', role: 'option', 'aria-selected': m.id === cur, onclick: () => pick(m.id) }, m.label || m.id);
+        row.onmouseenter = row.onfocus = () => show(m);
+        return row;
+      }), el('button', { class: 'model-row', type: 'button', onclick: () => pick('__custom') }, 'Other model…'));
+      show(null);   // the preview closes when the search changes
+    };
+    search.addEventListener('input', paintList);
+    search.addEventListener('keydown', (e) => { if (e.key === 'Enter') { const first = list.querySelector('.model-row'); first?.click(); } });
+    document.body.append(pop); paintList(); search.focus();
+    setTimeout(() => { document.addEventListener('pointerdown', away, true); document.addEventListener('keydown', esc, true); });
+  }
+  modelBtn.addEventListener('click', openModelPicker);
+  providerSel.addEventListener('change', () => { AI.setProvider(providerSel.value); paintModels(); keyHint(); });
 
   const webBtn = iconBtn('🌐', 'Search the web for answers (Pro)', () => {
     if (!canUse('webSearch')) return locked('webSearch');
@@ -307,7 +338,7 @@ export function render(root, opts = {}) {
   // ---- layout ----
 
   root.append(el('div', { class: 'col fill', style: 'gap:8px' },
-    el('div', { class: 'hstack' }, providerSel, modelSel, el('div', { class: 'spacer' }), webBtn, shotBtn, fileBtn, voiceBtn, speakBtn, moreBtn),
+    el('div', { class: 'hstack' }, providerSel, modelBtn, el('div', { class: 'spacer' }), webBtn, shotBtn, fileBtn, voiceBtn, speakBtn, moreBtn),
     log, slashBox, tray, notice,
     el('div', { class: 'hstack', style: 'align-items:flex-end' }, input, sendBtn)));
 
@@ -319,5 +350,6 @@ export function render(root, opts = {}) {
   if (opts.ask) { input.value = opts.ask; submit(); }
   setTimeout(() => input.focus(), 50);
 
-  return () => { unlistenDrop?.(); speechSynthesis.cancel(); };
+  const offMag = magnet(root, 'Let go to attach');
+  return () => { unlistenDrop?.(); offMag(); speechSynthesis.cancel(); };
 }

@@ -149,8 +149,9 @@ struct FileShelfView: View {
                     Button { airDropAll() } label: { Label("AirDrop", systemImage: "airplayaudio") }
                         .buttonStyle(PurpleButtonStyle(prominent: false))
                         .help("Send everything on the shelf with AirDrop")
-                    Button("Clear all") { withAnimation { store.removeAll() } }
-                        .buttonStyle(PurpleButtonStyle(prominent: false))
+                    HoldToConfirmButton(hint: "Press and hold to clear the whole shelf. You can undo it afterwards.") { withAnimation { store.removeAll() } } label: {
+                        Label("Hold to clear", systemImage: "trash")
+                    }
                 }
                 // Keyboard/pointer alternative to drag and drop (HIG › Drag and drop).
                 Button { addViaPanel() } label: { Label("Add files…", systemImage: "plus") }
@@ -192,7 +193,7 @@ struct FileShelfView: View {
                 }
             }
             .animation(Theme.spring, value: targeted)
-            .onDrop(of: [.fileURL], isTargeted: $targeted) { providers in
+            .magneticDrop(of: [.fileURL], label: "Let go to add to the Shelf", isTargeted: $targeted) { providers in
                 for provider in providers {
                     _ = provider.loadObject(ofClass: URL.self) { url, _ in
                         if let url { DispatchQueue.main.async { withAnimation(Theme.spring) { store.add(url) } } }
