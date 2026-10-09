@@ -202,7 +202,7 @@ final class SettingsManager: ObservableObject {
         defaults[Module.sports.storageKey] = true   // everyone gets Sports, tracking Barcelona
         defaults[Module.tennis.storageKey] = true   // 2.0.5: Tennis is on for everyone
         defaults[Module.klick.storageKey] = true    // 2.0.19: the Klick tab shows (it explains Pro until unlocked)
-        defaults[Module.convert.storageKey] = true  // 2.0.21: the Convert tab shows (it explains Ultimate until unlocked)
+        defaults[Module.convert.storageKey] = true  // 2.0.22: the Convert tab shows (it explains Ultimate until unlocked)
         d.register(defaults: defaults)
     }
 

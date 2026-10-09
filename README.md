@@ -58,7 +58,7 @@ Pick your computer. Both buttons start the download straight away. The Mac butto
   </tr>
   <tr>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/v2.0.21/NotchApple-2.0.21.dmg"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.0.21</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/v2.0.22/NotchApple-2.0.22.dmg"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.0.22</b></a>
     </td>
     <td align="center">
       <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 1.38.0 BETA</b></a>
@@ -206,7 +206,7 @@ All screenshots use sample data.
 
 > **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is still in the repository's tags.
 
-### Mac 2.0.21 · Windows 1.38.0 BETA · 9 October 2026 · 🔁 Convert
+### Mac 2.0.22 · Windows 1.38.0 BETA · 9 October 2026 · 🔁 Convert
 
 - **Convert (Ultimate): turn any file into another kind.** A new **Convert** tab: drop files on it (or click **Choose files**). Each file gets a **From** picker (what it is, worked out from its name, and changeable) and a **To** picker (what it should become). Click **Convert**, or **Convert all**. The result is saved **next to the original** ("Report.pdf"), never over anything, with **Open** and **Show** buttons.
   - **Pictures:** PNG, JPEG, HEIC, WebP, GIF, BMP, TIFF, ICO, SVG, AVIF → PNG, JPG, HEIC (Mac), WebP, GIF, BMP, TIFF, ICO or PDF, and several pictures → **one combined PDF**.
@@ -219,6 +219,11 @@ All screenshots use sample data.
 - **How it converts.** As much as possible is done by the computer itself. On the Mac that means Image I/O, PDFKit, the macOS text system, afconvert and AVFoundation, plus Keynote, Pages and Numbers when they're installed. On Windows it's done right in the app (pictures, text, Markdown, Word text, CSV/JSON/Excel tables, audio to WAV), plus Windows' own PDF and picture readers, and Word, PowerPoint and Excel when they're installed. **LibreOffice** (free) and **FFmpeg** (free) add old Office formats and every audio and video format. The tab shows which of these your computer has. When a file needs one, it says so, with a link (and on the Mac, `brew install ffmpeg`; on Windows, `winget install Gyan.FFmpeg`).
 - **Windows 1.38.0 also includes 1.37.0's changes** (Klick and the Plane fixes, below).
 - **Mac release check fixed.** The new launch check now starts the app from inside the DMG people download, so releases go out again.
+
+### Mac 2.0.21 · 9 October 2026 · Klick asks for the permission it needs
+
+- **Klick asks for Input Monitoring as well as Accessibility.** After an update, some Macs stayed silent because macOS wants both for hearing keys in other apps. Klick now asks for both, shows which one is missing with a button for each, and explains how to reset a permission that looks on but doesn't work after an update.
+- Klick skips a click instead of erroring when the sound output is busy or changing (headphones connecting).
 
 ### Mac 2.0.20 · Windows 1.37.0 BETA · 9 October 2026 · ⌨️ Klick, and Plane controls that make sense
 
