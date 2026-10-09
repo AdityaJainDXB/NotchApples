@@ -2213,7 +2213,7 @@
       // pointed to). A wing drop that is held becomes a spin in the light planes.
       if (this.sd > 0.02) {
           const cue = (Math.abs(input.yaw) > 0.3 ? Math.sign(input.yaw) : 0) + (Math.abs(input.roll) > 0.6 ? Math.sign(input.roll) * 0.6 : 0) - (Math.abs(beta) > 6 * DEG ? Math.sign(beta) * 0.6 : 0) + (Math.abs(this.bank) > 20 * DEG ? Math.sign(this.bank) * 0.5 : 0);   // a spin goes the way the rudder, the aileron, the skid and the dropped wing all point
-        target[2] -= this.stallDir * 0.9 * this.sd * (1 + 0.6 * Math.abs(input.yaw)) * (wings === 1 ? 1 : 0.4);
+        target[2] -= this.stallDir * 0.9 * clamp(28 / s.stall, 0.3, 1) * this.sd * (1 + 0.6 * Math.abs(input.yaw)) * (wings === 1 ? 1 : 0.4);
       }
       const spinProne = s.spin !== undefined ? s.spin : s.stall < 42;
       if (!this.spin) {
