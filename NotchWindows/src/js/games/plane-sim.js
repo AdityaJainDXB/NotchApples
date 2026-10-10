@@ -2148,6 +2148,45 @@
     rock: { roll: 0.14, grip: 0.6, skid: 0.7, soft: 1.2 },
   };
   const gauss = () => (Math.random() + Math.random() + Math.random() - 1.5) * 2;
+  // ---- weather settings (Fly menu, saved): a runway-relative wind (crosswind and head/tail wind, in knots) and a turbulence level
+  const KT = 0.514444;
+  const TURB_LEVELS = [['none', 'None', 0], ['light', 'Light', 0.6], ['moderate', 'Moderate', 1.4], ['severe', 'Severe', 2.4], ['extreme', 'Extreme', 3.6]];
+  const WX_DEFAULT = { random: false, crossKt: 5, headKt: 0, turb: 'light' };
+  const WX_PRESETS = [
+    ['calm', 'Calm', { random: false, crossKt: 0, headKt: 0, turb: 'none' }],
+    ['breezy', 'Breezy', { random: false, crossKt: 8, headKt: 6, turb: 'light' }],
+    ['xwind', 'Crosswind landing', { random: false, crossKt: 20, headKt: 0, turb: 'light' }],
+    ['storm', 'Storm', { random: false, crossKt: 38, headKt: 24, turb: 'severe' }],
+    ['hurricane', 'Hurricane', { random: false, crossKt: 90, headKt: 0, turb: 'extreme' }],
+    ['random', 'Random (like before)', { random: true, crossKt: 0, headKt: 0, turb: 'moderate' }],
+  ];
+  let WX = { ...WX_DEFAULT };
+  const turbMul = (id) => (TURB_LEVELS.find((t) => t[0] === id) || TURB_LEVELS[1])[2];
+  const sanWx = (o) => {
+    const d = WX_DEFAULT, n = (v, lo, hi, dv) => (Number.isFinite(Number(v)) && v !== null && v !== '' ? clamp(Math.round(Number(v)), lo, hi) : dv);
+    o = o && typeof o === 'object' ? o : {};
+    return { random: !!o.random, crossKt: n(o.crossKt, -90, 90, d.crossKt), headKt: n(o.headKt, -30, 30, d.headKt), turb: TURB_LEVELS.some((t) => t[0] === o.turb) ? o.turb : d.turb };
+  };
+  /// The wind as a velocity (m/s, the way it blows) for a runway heading: crossKt > 0 is from the right, headKt > 0 a headwind.
+  const wxVector = (heading, w = WX) => {
+    const fx = Math.sin(heading), fz = -Math.cos(heading), rx = Math.cos(heading), rz = Math.sin(heading);
+    const h = w.headKt * KT, c = w.crossKt * KT;
+    return [-h * fx - c * rx, -h * fz - c * rz];
+  };
+  /// Total speed (kt), the compass direction it blows from (degrees), and the runway-relative parts, for the menu text.
+  const wxInfo = (heading = 0, w = WX) => {
+    const [vx, vz] = wxVector(heading, w), kt = Math.hypot(vx, vz) / KT;
+    return { kt, from: kt < 0.5 ? 0 : (((Math.atan2(-vx, vz) / DEG) % 360) + 360) % 360, cross: w.crossKt, head: w.headKt };
+  };
+  const wxText = (w = WX) => {
+    if (w.random) return 'Random light breeze (0 to 10 kt, any direction), moderate bumps';
+    const i = wxInfo(0, w), tl = (TURB_LEVELS.find((t) => t[0] === w.turb) || TURB_LEVELS[1])[1];
+    if (i.kt < 0.5) return `Calm · ${tl} turbulence`;
+    const parts = [];
+    if (w.crossKt) parts.push(`${Math.abs(w.crossKt)} kt crosswind from the ${w.crossKt < 0 ? 'left' : 'right'}`);
+    if (w.headKt) parts.push(`${Math.abs(w.headKt)} kt ${w.headKt > 0 ? 'head' : 'tail'}wind`);
+    return `Wind ${String(Math.round(i.from / 10) % 36 * 10).padStart(3, '0')}° at ${Math.round(i.kt)} kt (${(i.kt * KT).toFixed(0)} m/s) · ${parts.join(' + ')} · ${tl} turbulence`;
+  };
   /// Lift coefficient rounding off smoothly towards its peak `pk`.
   const satCl = (x, pk) => (x < 0.85 * pk ? x : pk - 0.15 * pk * Math.exp(-(x - 0.85 * pk) / (0.15 * pk)));
   const WHAT = { ground: 'Flew into terrain', terrain: 'Hit the hillside', water: 'Ditched in the water', tree: 'Hit a tree',
@@ -2167,29 +2206,47 @@
       this.agil = 5 - 2 * clamp((spec.stall - 24) / 46, 0, 1);
       this.turb = 1;
       this.buildGear();
-      this.reset([0, spec.gear, 0], 0, 0, true, 0);
+      this.reset([0, spec.gear, 0], 0, 0, true);
     }
     /// Contact points (body axes, x right, y up, -z forward): three wheels on springs, and the structure that scrapes
     /// when they fail: wing tips, tail, nose, belly, engine pods and the roof.
     buildGear() {
       const s = this.s, k = s.scale || 1, g = s.gear * k;
-      const T = Math.max(0.28, 0.38 * g), x0 = 0.35 * T;                        // travel and static compression
+      const T = Math.max(0.2, 0.2 * g), x0 = 0.35 * T;                        // travel and static compression
       const mainZ = 0.12 * Math.abs(s.nose) * k, noseZ = 0.62 * s.nose * k;
       const track = Math.max(1.0, s.span * 0.28) * k;
       const wN = mainZ / (mainZ - noseZ), wM = (1 - wN) / 2;                  // share of the weight each wheel carries
-      const yW = -(g + x0), belly = (0.45 + 0.1 * s.gear) * k;
-      const tailY = (s.tail * k - mainZ) * Math.tan((s.tailPitch || 12) * DEG) + yW;   // so the tail strikes at tailPitch
       const Ct = 0.3 * Math.sqrt(G / x0);                                     // total damper (damping ratio 0.35: a hard landing bounces)
-      const wheel = (id, r, share) => ({ id, kind: 'w', r, k: (G * share) / x0, c: Ct * share, on: false, vi: 0, vt: 0, Fn: 0 });
+      // The main legs: one axle on the small planes, a bogie of two or three axles on the big airliners (the 747 and A380
+      // add body gear). Every wheel point has its own share of the weight, the oleo's gas spring and its tyre in series.
+      const big = s.cat === 'liner' && s.stall >= 62, nAx = big ? (s.id === 'b747' ? 2 : 3) : 1, body = s.id === 'b747' || s.id === 'a380';
+      const Lf = (s.tail - s.nose) * k, axD = 0.032 * Lf, dtyre = clamp(0.03 * g, 0.02, 0.07);
+      const nMain = 2 * nAx + (body ? 4 : 0);
+      const wheel = (id, r, share, o = {}) => Object.assign({ id, kind: 'w', r, k: (G * share) / x0, c: Ct * share, share, kt: (G * share) / dtyre, on: false, vi: 0, vt: 0, Fn: 0, Fs: 0, s: 0, ws: 0, lockT: 0, peak: 0, side: 0, main: false, ax: 0, y0: r[1], sq: 0 }, o);
       const hard = (id, kind, r) => ({ id, kind, r, k: 900, c: 55, on: false, vi: 0, vt: 0, Fn: 0 });
-      this.pts = [
-        wheel('N', [0, yW, noseZ], wN), wheel('ML', [-track, yW, mainZ], wM), wheel('MR', [track, yW, mainZ], wM),
+      const yW = -(g + x0 + dtyre), belly = (0.45 + 0.1 * s.gear) * k;
+      const tailY = (s.tail * k - mainZ) * Math.tan((s.tailPitch || 12) * DEG) + yW;   // so the tail strikes at tailPitch
+      const mainShare = wM * 2 / nMain;
+      const wh = [wheel('N', [0, yW, noseZ], wN, { side: 0 })];
+      for (const sd of [-1, 1]) {
+        for (let a = 0; a < nAx; a++) {
+          const ax = nAx === 1 ? 0 : nAx === 2 ? (a - 0.5) * 2 : a - 1;      // -1 rear ... +1 front (positive = ahead)
+          wh.push(wheel(nAx === 1 ? (sd < 0 ? 'ML' : 'MR') : (sd < 0 ? 'ML' : 'MR') + a, [sd * track, yW, mainZ - ax * axD], mainShare, { side: sd, main: true, ax }));
+        }
+        if (body) for (let a = 0; a < 2; a++) wh.push(wheel('B' + (sd < 0 ? 'L' : 'R') + a, [sd * track * 0.36, yW, mainZ + 0.05 * Lf - (a - 0.5) * 2 * axD * 0.8], mainShare, { side: sd, main: true, ax: 0, body: true }));
+      }
+      this.pts = [...wh,
         hard('L', 's', [-s.span * k, s.wingY * k, s.wingZ * k]), hard('R', 's', [s.span * k, s.wingY * k, s.wingZ * k]),
         hard('T', 's', [0, tailY, s.tail * k]), hard('nose', 's', [0, -belly * 0.6, s.nose * k * 0.95]),
         hard('bf', 'b', [0, -belly, s.nose * k * 0.55]), hard('bm', 'b', [0, -belly, mainZ]), hard('ba', 'b', [0, -belly, s.tail * k * 0.6]),
         hard('pL', 'b', [-track * 0.9, -belly - 0.1 * k, mainZ - 0.6 * k]), hard('pR', 'b', [track * 0.9, -belly - 0.1 * k, mainZ - 0.6 * k]),
         hard('rf', 'r', [0, belly * 1.9, s.nose * k * 0.4]), hard('rm', 'r', [0, belly * 1.9, 0]), hard('ra', 'r', [0, belly * 1.9, s.tail * k * 0.6]),
       ];
+      this.rebound = 0.22; this.nWheel = wh.length; this.axD = axD; this.tilt = 0; this.truck = nAx > 1;
+      this.antiskid = s.cat === 'liner' || s.cat === 'biz' || s.cat === 'mil';
+      this.wheelM = 0.015 * (1 + clamp((s.stall - 24) / 40, 0, 1.2));         // how hard it is to spin a wheel up (sets the spin-up time)
+      this.reverser = s.engine === 'jet' && s.cat !== 'mil' || s.engine === 'turboprop';
+      this.groundSpoil = s.cat === 'liner' || s.cat === 'biz';
       this.T = T; this.x0 = x0;
       this.bound = Math.max(...this.pts.map((p) => len(p.r)));
       const L = (s.tail - s.nose) * k;
@@ -2201,7 +2258,15 @@
     /// `wind` (m/s) overrides the random steady wind (0 to 5 m/s, from a random direction).
     reset(pos, heading, speed, onGround, wind) {
       this.pos = pos; this.q = qheading(heading, onGround ? 0 : 0.02);
-      this.windSpd = wind != null ? wind : Math.random() * 5; this.windFrom = Math.random() * Math.PI * 2;
+      // The wind: the saved Weather settings (runway-relative; `heading` is the runway / approach heading), or the old
+      // random 0 to 5 m/s breeze. An explicit `wind` still wins.
+      this.rwyHdg = heading;
+      if (wind != null) { this.windSpd = wind; this.windFrom = Math.random() * Math.PI * 2; this.turb = 1; }
+      else if (WX.random) { this.windSpd = Math.random() * 5; this.windFrom = Math.random() * Math.PI * 2; this.turb = 1; }
+      else {
+        const [vx, vz] = wxVector(heading);
+        this.windSpd = Math.hypot(vx, vz); this.windFrom = this.windSpd > 1e-6 ? Math.atan2(-vx, vz) : 0; this.turb = turbMul(WX.turb);
+      }
       const wx = -Math.sin(this.windFrom) * this.windSpd, wz = Math.cos(this.windFrom) * this.windSpd;
       this.wv = [wx, 0, wz]; this.tb = [0, 0, 0]; this.rough = 0; this.roughT = 0; this.gustT = 3 + Math.random() * 8; this.gustPh = -1; this.gustLen = 3; this.gustAmp = 0;
       this.vel = add(mul(qrot(this.q, [0, 0, -1]), speed), onGround ? v3() : [wx, 0, wz]);
@@ -2209,7 +2274,7 @@
       this.crashed = false; this.stalled = false; this.aoa = 0; this.beta = 0; this.gload = 1; this.touch = null; this.sinkAtTouch = 0;
       this.ias = speed; this.tas = speed; this.sigma = 1; this.t = 0;
       // What still works: each wing, the engine (and how much power it still makes), the undercarriage, the nose leg, the tyres.
-      this.damage = { L: true, R: true, engine: true, power: 1, gear: true, tail: 1, nose: true, tyreL: false, tyreR: false };
+      this.damage = { L: true, R: true, engine: true, power: 1, gear: true, tail: 1, nose: true, tyreL: false, tyreR: false, strutL: 0, strutR: 0 };
       this.fuel = this.s.fuel || 1800; this.tailT = 0; this.flapNotch = 0; this.fuelOut = false;
       // The airliners fold their undercarriage away after take-off (the light aircraft have fixed wheels). Starting in
       // the air, they begin with it up; the Landing challenge makes you put it down.
@@ -2222,8 +2287,10 @@
       // ground
       this.noContactT = onGround ? 0 : 1; this.airT = onGround ? 0 : 1; this.everDown = !!onGround; this.surface = SURFACES.runway; this.gGear = 0; this.maxGGear = 1;
       this.scrapeI = 0; this.scrapePos = v3(); this.noseStress = 0; this.gearEvent = null; this.bumpT = 0; this.wet = 0;
-      for (const P of this.pts) { P.on = false; P.vi = 0; P.vt = 0; P.Fn = 0; }
+      for (const P of this.pts) { P.on = false; P.vi = 0; P.vt = 0; P.Fn = 0; P.Fs = 0; P.s = 0; P.ws = 0; P.lockT = 0; P.peak = 0; P.sq = 0; if (P.y0 != null) P.r[1] = P.y0; }
+      this.tl = [0, 0]; this.sideOn = [false, false]; this.mainsOn = 0; this.brakeP = 0; this.gspoil = 0; this.rev = false; this.inYaw = 0; this.td = null; this.tilt = 0; this.skidT = 0; this.squealT = 0; this.lastTd = null;
       // wreck
+      this.gone = new Set(); this.engSev = [0, 0]; this.sepLog = []; this.leak = 0; this.ignited = false; this.igniteT = -1; this.gPeak = 1; this.cabinDmg = 0; this.exT = -1; this.slid = 0; this.impact0 = null; this.fuelAtCrash = 0;
       this.info = null; this.report = null; this.breakQ = []; this.wreckT = 0; this.rest = false; this.restT = 0; this.buoy = 1; this.wetT = 0; this.wreckTouch = 0;
     }
     /// The g meter: the wings' load plus whatever the wheels are adding on the runway.
@@ -2258,16 +2325,23 @@
       if (partial) this.damage.power = Math.min(this.damage.power, 0.35);
       else { this.damage.engine = false; this.damage.power = 0; }
     }
-    loseWing(side, cause) {
+    loseWing(side, cause, brk) {
       if (!this.damage[side]) return;
       this.damage[side] = false;
+      // Where it broke: at the root, at the engine pylon (the engine tears off and the wing snaps outboard of it) or out at the tip.
+      if (!brk) {
+        const r = Math.random(), eng = this.s.engines || 0;
+        brk = cause === 'overg' || cause === 'overspeed' ? 'root' : cause === 'crash' ? (eng >= 2 && this.s.cat !== 'ga' ? (r < 0.5 ? 'pylon' : r < 0.85 ? 'root' : 'tip') : (r < 0.55 ? 'root' : 'tip')) : (r < 0.7 ? 'tip' : 'root');
+      }
+      if (cause === 'ground' || cause === 'crash' || cause === 'tree' || cause === 'water') this.leak = Math.min(1, this.leak + 0.4);     // the tanks are in the wings
+      this.sepLog.push(side === 'L' ? 'left wing' : 'right wing');
       if (this.structFail) { /* the first failure is the cause */ } else if (cause === 'overg') this.structFail = { t: this.t, text: `Structural failure: ${Math.abs(this.gload).toFixed(1)} g` };
       else if (cause === 'overspeed') this.structFail = { t: this.t, text: `Structural failure: ${(this.ias * 3.6).toFixed(0)} km/h, over the speed limit` };
-      this.events.push({ type: 'wing', side, cause });
+      this.events.push({ type: 'wing', side, cause, brk });
     }
     breakTail() {
       if (this.damage.tail <= 0) return;
-      this.damage.tail = 0; this.events.push({ type: 'tail', health: 0, sev: 1 });
+      this.damage.tail = 0; this.events.push({ type: 'tail', health: 0, sev: 1 }); this.sepLog.push('tail');
     }
 
     /// Steady wind plus gusts plus turbulence, which grows near the ground and over rough country. Sets this.wv.
@@ -2280,22 +2354,31 @@
         this.rough = clamp((Math.max(a, b, c, d) - Math.min(a, b, c, d)) / 60, 0, 1.5);
       }
       const spd = this.windSpd, low = Math.exp(-Math.max(agl, 0) / 260);
-      const sig = this.turb * 1.5 * (0.1 + 0.07 * spd + low * (0.35 + 0.55 * this.rough) * (0.6 + 0.1 * spd));
+      // rms turbulence (m/s): the chosen level, plus ground-level and rough-country extras. Capped so that even a hurricane
+      // at "Extreme" stays survivable; the level's own multiplier sets the cap.
+      const sig = Math.min(this.turb * 1.5 * (0.1 + 0.07 * spd + low * (0.35 + 0.55 * this.rough) * (0.6 + 0.1 * spd)), this.turb * 2.4);
+      // Gusts: bigger and more frequent with the level (none at all when the air is smooth).
+      const gf = this.turb > 0 ? clamp(this.turb * 0.7, 0.3, 2.5) : 0;
+      this.gustMax = 0.4 * (0.4 + spd * 0.25) * gf;
       this.gustT -= dt;
-      if (this.gustT <= 0 && this.gustPh < 0) { this.gustPh = 0; this.gustLen = 2 + Math.random() * 3; this.gustAmp = (0.15 + Math.random() * 0.45) * (0.4 + spd * 0.3) * this.turb; }
+      if (this.gustT <= 0 && this.gustPh < 0) { this.gustPh = 0; this.gustLen = 2 + Math.random() * 3; this.gustAmp = (0.1 + Math.random() * 0.3) * (0.4 + spd * 0.25) * gf; }
       let gust = 0;
       if (this.gustPh >= 0) {
         this.gustPh += dt;
-        if (this.gustPh >= this.gustLen) { this.gustPh = -1; this.gustT = 5 + Math.random() * 15; }
+        if (this.gustPh >= this.gustLen) { this.gustPh = -1; this.gustT = (5 + Math.random() * 15) / Math.max(0.6, Math.sqrt(this.turb)); }
         else gust = Math.sin(Math.PI * this.gustPh / this.gustLen) * this.gustAmp;
       }
-      const a1 = Math.exp(-dt / 1.6), b1 = sig * Math.sqrt(1 - a1 * a1);
-      this.tb[0] = this.tb[0] * a1 + b1 * gauss(); this.tb[1] = this.tb[1] * a1 + b1 * gauss(); this.tb[2] = this.tb[2] * a1 + b1 * gauss();
-      const bl = 0.45 + 0.55 * (1 - Math.exp(-Math.max(agl, 0) / 40));      // the wind is weaker right at the surface
+      const a1 = Math.exp(-dt / 1.6), b1 = sig * Math.sqrt(1 - a1 * a1), lim = 3 * sig + 1e-6;
+      for (let i = 0; i < 3; i++) this.tb[i] = clamp(this.tb[i] * a1 + b1 * gauss(), -lim, lim);
+      const bl = 0.8 + 0.2 * (1 - Math.exp(-Math.max(agl, 0) / 40));      // a little weaker right at the surface
       const base = (spd + gust) * bl;
-      this.wv[0] = -Math.sin(this.windFrom) * base + this.tb[0];
-      this.wv[1] = this.onGround ? 0 : this.tb[1] * 0.45;
-      this.wv[2] = Math.cos(this.windFrom) * base + this.tb[2];
+      const tg = this.onGround ? 0.5 : 1;                                  // gusts are milder at ground level
+      this.wv[0] = -Math.sin(this.windFrom) * base + this.tb[0] * tg;
+      this.wv[2] = Math.cos(this.windFrom) * base + this.tb[2] * tg;
+      // Vertical gusts: limited so that turbulence alone adds at most ~3 g (light planes) or ~2 g (airliners).
+      const V = len(sub(this.vel, this.wv)), gAdd = this.s.stall > 45 ? 2 : 3;
+      const wMax = V > 8 ? (gAdd * G) / (this.clSlope * this.k * V) : 1e3;
+      this.wv[1] = this.onGround ? 0 : clamp(this.tb[1] * 0.45, -wMax, wMax);
     }
 
     step(dt, input, world) {
@@ -2331,6 +2414,7 @@
       // Ground effect: close to the ground the wing sheds less induced drag and carries a little more lift.
       const hGE = Math.max(0, agl), x16 = (16 * hGE) / (2 * s.span * (s.scale || 1)), phi = (x16 * x16) / (1 + x16 * x16);
       cl *= 1 + 0.15 * (1 - phi);
+      if (this.onGround && V > 1) cl *= Math.cos(beta) ** 2;      // wind along the wings (a crosswind on the runway) makes no lift: the plane is not lifted onto one wing
       const kiEff = this.ki * (0.35 + 0.65 * phi);
         this.stallDir = Math.abs(this.bank) > 3 * DEG ? Math.sign(this.bank) : Math.abs(beta) > 1.5 * DEG ? -Math.sign(beta) : input.roll !== 0 ? Math.sign(input.roll) : input.yaw !== 0 ? Math.sign(input.yaw) : (Math.random() < 0.5 ? -1 : 1);
       const airborne = !this.onGround, stallNow = airborne && Vi > 4 && aa > stallAoa;
@@ -2346,7 +2430,16 @@
 
       // ---- drag: parasitic (speed²), induced (lift²), flaps, gear, the flat plate after the stall, a dead propeller
       const gearK = s.retract ? 0.92 + 0.22 * this.gearPos : 1;
-      let cd = this.cd0 * (1 + flaps * 1.6) * gearK + kiEff * cl * cl * wings + (this.brake && !this.onGround ? 0.06 : 0) + (wings < 1 ? 0.02 : 0);
+      // Brake pressure builds as the pedal is held (a tap is gentle); the ground spoilers of the airliners pop up on touchdown
+      // with the thrust at idle (or with the brakes on) and dump the wing's lift so the weight rests on the wheels.
+      this.inYaw = input.yaw || 0;
+      this.brakeP += ((this.brake && this.onGround ? 1 : 0) - this.brakeP) * Math.min(1, dt * (this.brake ? 1.7 : 7));
+      const wantSp = this.groundSpoil && this.onGround && this.noContactT < 0.2 && this.speed > 22 && (this.brake || this.throttle < 0.3) && wings > 0 ? 1 : 0;
+      const spRate = dt * (wantSp ? 3 : 1.5);
+      if (wantSp !== this.gspoil) this.gspoil = clamp(this.gspoil + clamp(wantSp - this.gspoil, -spRate, spRate), 0, 1);
+      if (this.gspoil > 0.3 && !this.spoilEv) { this.spoilEv = true; this.events.push({ type: 'spoilers', up: true }); } else if (this.gspoil < 0.05) this.spoilEv = false;
+      cl *= 1 - 0.8 * this.gspoil;
+      let cd = this.cd0 * (1 + flaps * 1.6) * gearK + 0.1 * this.gspoil + kiEff * cl * cl * wings + (this.brake && !this.onGround ? 0.06 : 0) + (wings < 1 ? 0.02 : 0);
       if (stallNow) cd += 0.9 * Math.pow(Math.sin(Math.min(aa, Math.PI / 2)), 2);
       if (this.spin) cd += 0.55;
       if (!this.damage.engine && s.engine === 'piston') cd += 0.012;
@@ -2362,7 +2455,9 @@
       const power = this.damage.engine ? this.damage.power : 0;
       const jet = s.engine === 'jet', rT = clamp(V / s.max, 0, 1.4);
       const lapse = jet ? Math.pow(sigma, 0.85) : clamp((sigma - 0.12) / 0.88, 0.2, 1);
-      const thrust = mul(f, this.throttle * power * s.thrust * (jet ? 1.15 - 0.22 * rT : 1.2 - 0.35 * rT) * lapse * (this.spin ? 0.5 : 1));
+      // Reverse thrust (jets and turboprops, on the ground): the buckets close, or the blades go flat, and the push goes forward.
+      this.rev = !!input.reverse && this.reverser && this.onGround && this.noContactT < 0.2 && V > 5 && this.damage.gear;
+      const thrust = mul(f, this.throttle * power * s.thrust * (jet ? 1.15 - 0.22 * rT : 1.2 - 0.35 * rT) * lapse * (this.spin ? 0.5 : 1) * (this.rev ? (jet ? -0.4 : -0.55) : 1));
       const acc = add(add(add(lift, drag), add(side, thrust)), [0, -G, 0]);
       this.gload = dot(add(acc, [0, G, 0]), u) / G;
       if (this.gload > this.maxG) this.maxG = this.gload;
@@ -2391,7 +2486,7 @@
       ];
       // Adverse yaw (the rising wing drags back) and, on single-engine propeller planes, a little torque and p-factor
       // that pull the nose left under power at low speed.
-      if (!this.onGround) { target[1] += input.roll * 0.12 * eff; const lt = clamp(30 / s.stall, 0.4, 1.2); target[2] += this.tb[0] * 0.1 * lt; target[0] += this.tb[1] * 0.05 * lt; }   // gusts rock the wings and the nose
+      if (!this.onGround) { target[1] += input.roll * 0.12 * eff; const lt = clamp(30 / s.stall, 0.4, 1.2); target[2] += clamp(this.tb[0], -7, 7) * 0.1 * lt; target[0] += clamp(this.tb[1], -7, 7) * 0.05 * lt; }   // gusts rock the wings and the nose
       if (s.engine === 'piston') target[1] += this.throttle * power * (1 - clamp(Vi / s.cruise, 0, 1)) * (this.onGround ? 0.025 : 0.07);
       if (this.damage.tail < 1) { target[0] *= tailF; target[1] *= tailF; if (this.damage.tail <= 0) target[0] -= 0.3; }
       // Wing leveller: with the roll keys released, the wings roll back to level by themselves (positive roll
@@ -2429,7 +2524,18 @@
         // The wheels and springs keep the wings level and the nose up or down; the nose wheel steers, less the faster it goes.
         const gs = len(this.vel), sf = clamp(gs / 3, 0, 1), maxYaw = 0.8 * G / Math.max(gs, 5);
         target[2] = 0;
-        target[1] = clamp((-input.yaw * 0.6 - input.roll * 0.3) * sf, -maxYaw, maxYaw);
+        // The nose wheel steers (its own force is added in `pressWheel`, so only part of the turn is asked for here). With
+        // the mains planted, a crabbed or skidding plane is pulled straight (the wheels sit behind the centre of mass),
+        // and in a crosswind the fin turns it into the wind unless the rudder holds it.
+        let tgy = (-input.yaw * 0.6 - input.roll * 0.3) * sf * (this.damage.gear && this.damage.nose ? 0.6 : 1);
+        if (this.mainsOn > 0 && gs > 4) {
+          const vb = qrot(qconj(this.q), this.vel);
+          if (vb[2] < 0) tgy -= clamp(Math.atan2(vb[0], -vb[2]), -0.5, 0.5) * 1.1 * Math.min(1, this.mainsOn / 2);
+        }
+        tgy -= beta * stab * 0.3 * clamp(Vi / (s.stall * 0.8), 0, 1) * (this.mainsOn > 0 ? 1 : 0.3);
+        // A strut that took a beating on landing pulls the plane to that side.
+        tgy += (this.damage.strutR - this.damage.strutL) * 0.12 * sf;
+        target[1] = clamp(tgy, -maxYaw * 1.3, maxYaw * 1.3);
         if (s.engine === 'piston') target[1] += this.throttle * power * (1 - clamp(Vi / s.cruise, 0, 1)) * 0.025;
         if (Vi < s.stall * 0.7) { target[0] = Math.min(target[0], 0); if (this.damage.gear && this.damage.nose) target[0] -= this.pitchAngle * 3; }
       }
@@ -2448,6 +2554,11 @@
         if (this.fuel <= 0) { this.failEngine(); this.fuelOut = true; this.events.push({ type: 'fuel' }); }
       }
       this.tailT = Math.max(0, this.tailT - dt);
+      // Bogie trucks tip nose-up in flight, so the rear axle meets the runway first; the truck then levels out.
+      if (this.truck) {
+        for (let i = 0; i < 2; i++) this.tl[i] += ((this.sideOn[i] ? 0 : 0.13) - this.tl[i]) * (1 - Math.exp(-dt * (this.sideOn[i] ? 7 : 0.8)));
+        for (let i = 0; i < this.nWheel; i++) { const P = this.pts[i]; if (P.ax) P.r[1] = P.y0 + P.ax * this.axD * Math.sin(this.tl[P.side < 0 ? 0 : 1]); }
+      }
       this.bumpT = Math.max(0, this.bumpT - dt); this.scrapeEvT = Math.max(0, (this.scrapeEvT || 0) - dt);
       // The undercarriage takes a few seconds to move; the wheels are not "out" until it has finished.
       if (s.retract) {
@@ -2512,6 +2623,8 @@
       if (P.kind === 'w') return !wreck && this.damage.gear && (!this.s.retract || this.gearPos > 0.9) && (P.id !== 'N' || this.damage.nose);
       if (P.id === 'L' || P.id === 'R') return this.damage[P.id];
       if (P.id === 'T') return this.damage.tail > 0;
+      if (this.gone.has('N') && (P.id === 'nose' || P.id === 'bf' || P.id === 'rf')) return false;
+      if ((P.id === 'pL' && this.engSev[0] > 0) || (P.id === 'pR' && this.engSev[1] > 0)) return false;
       return true;
     }
     /// A force (m/s² for a unit mass) acting at a contact point: changes the velocity and, through the lever arm, the spin.
@@ -2547,19 +2660,60 @@
       P.Fn = Fn; this.applyForce(P, fx, fy, fz, dt);
       return Fn;
     }
-    /// A wheel: the oleo spring and damper (with a hard stop at the end of its travel), tyre grip across the wheel,
-    /// rolling resistance and the brakes along it.
-    pressWheel(P, nx, ny, nz, pen, surf, fp, lat, dt) {
-      const over = Math.max(0, pen - this.T);
-      let Fn = P.k * Math.min(pen, this.T) + P.c * Math.max(0, P.vi) * (over > 0 ? 3 : 1) + P.k * 10 * over;
-      Fn = Math.min(Fn, 40 * G);
+    /// A wheel. The tyre (stiff) and the oleo strut (a gas spring that stiffens as it compresses, damped harder on the way
+    /// in than on the way out, with a hard stop at the end of its travel) are in series. Along the wheel: the spin-up of the
+    /// wheel from rest at touchdown, rolling resistance, brakes (they lock the wheel unless there is anti-skid) and the
+    /// grip it has left. Across it: side force from the slip angle, saturating at the friction limit.
+    pressWheel(P, nx, ny, nz, pen, surf, fp0, lat0, dt) {
+      const T = this.T, Fs0 = G * P.share, e = 0.12 * T;
+      // The nose wheel points where it is steered.
+      let fp = fp0, lat = lat0;
+      if (P.id === 'N') {
+        const gs = len(this.vel), d = this.inYaw * 1.0 * (1 - 0.88 * clamp((gs - 4) / 36, 0, 1));
+        if (Math.abs(d) > 1e-3) { const c = Math.cos(d), sn = Math.sin(d); P.fp = P.fp || [0, 0, 0]; P.lat = P.lat || [0, 0, 0];
+          for (let i = 0; i < 3; i++) { P.fp[i] = fp0[i] * c + lat0[i] * sn; P.lat[i] = lat0[i] * c - fp0[i] * sn; } fp = P.fp; lat = P.lat; }
+      }
+      const dty = Math.min(pen, P.Fs / P.kt), stroke = Math.max(0, pen - dty);
+      const fa = Fs0 * Math.pow((T - this.x0 + e) / (T - Math.min(stroke, T) + e), 1.35);
+      let Fsp = Math.min(fa, P.kt * pen);
+      const over = Math.max(0, stroke - T);
+      if (over > 0) Fsp += Fs0 * 90 * over / T;                                   // bottomed out
+      const engaged = stroke > 0.002;
+      const vi = P.vi;
+      const Fd = engaged ? (vi > 0 ? P.c * vi * (1 + 0.3 * vi) * (over > 0 ? 3 : 1) : P.c * this.rebound * vi) : P.c * 0.12 * vi;
+      let Fn = Math.min(Math.max(0, Fsp + Fd), 40 * G);
+      // A strut that has been damaged on a previous landing shimmies.
+      const sdmg = P.side < 0 ? this.damage.strutL : P.side > 0 ? this.damage.strutR : 0;
+      if (sdmg > 0 && P.main) Fn *= 1 + 0.28 * sdmg * Math.sin(this.t * 17 + P.side) * clamp(len(this.vel) / 18, 0, 1);
+      P.Fs = Fsp; P.s = stroke; if (Fn / Fs0 > P.peak) P.peak = Fn / Fs0; if (over > P.over) P.over = over;
       const vlong = P.tx * fp[0] + P.ty * fp[1] + P.tz * fp[2], vlat = P.tx * lat[0] + P.ty * lat[1] + P.tz * lat[2];
-      P.vlat = vlat;
-      const burst = P.id === 'ML' ? this.damage.tyreL : P.id === 'MR' ? this.damage.tyreR : false;
-      const lim = surf.grip * (burst ? 0.55 : 1) * Fn;
-      const fl = -clamp(vlat * 40, -lim, lim);
-      const rr = (surf.roll + (burst ? 0.3 : 0)) * Fn + (P.id !== 'N' && this.brake ? this.brakeMu * Fn : 0);
-      const fo = -Math.sign(vlong) * Math.min(rr, Math.abs(vlong) / (dt * 2));
+      P.vlat = vlat; P.vlong = vlong;
+      const burst = P.side < 0 ? this.damage.tyreL : P.side > 0 ? this.damage.tyreR : false;
+      const mu = 0.85 * surf.grip * (burst ? 0.55 : 1);
+      const av = Math.abs(vlong), sg = vlong >= 0 ? 1 : -1;
+      // across the wheel: slip angle -> side force (about 0.7 of the limit at 6 degrees), a stiff stick at walking pace
+      const arg = vlat / (av * 0.11 + 0.35);
+      const fl = -mu * Fn * Math.tanh(arg);
+      if (P.main && Math.abs(arg) > 1.9 && av > 7 && Fn > 0.3 * Fs0) P.sq = Math.min(1, Math.abs(arg) / 4); else P.sq = 0;
+      // along the wheel
+      let Fb = 0;
+      if (P.main) {
+        const dbr = 1 + this.inYaw * P.side * 0.6 * (1 - clamp((av - 8) / 12, 0, 1));                  // right rudder brakes the right wheels more
+        Fb = this.brakeP * (this.antiskid ? 1.15 : 0.66) * Fs0 * Math.max(0, dbr);
+      }
+      const sr = av > 1.5 ? clamp((av - P.ws) / av, -1, 1) : 0;
+      const muE = mu * (sr > 0.22 ? 0.78 : 1);
+      if (this.antiskid && sr > 0.16) Fb *= 0.2;                                    // anti-skid lets the brake off
+      const Fx = clamp(1.5 * (av - P.ws), -muE * Fn, muE * Fn);
+      P.ws = Math.max(0, P.ws + (Fx - Fb) * dt / this.wheelM);
+      // Locked and sliding at speed: smoke, and a flat spot or a burst on dry ground.
+      if (Fb > 0.15 && P.ws < 0.25 * av && av > 8) {
+        P.lockT += dt;
+        if (P.lockT > 0.15) this.skidT = Math.max(this.skidT, P.lockT);
+        if (P.lockT > 1.3 && av > 28 && surf.grip >= 0.9 && !burst && Math.random() < dt * 0.9) this.burstTyre(P.side < 0 ? 'tyreL' : 'tyreR', 'locked');
+      } else P.lockT = Math.max(0, P.lockT - dt * 2);
+      const rr = (surf.roll + (burst ? 0.3 : 0) + (sdmg > 0 ? 0.05 * sdmg : 0)) * Fn;
+      const fo = -sg * Math.min(rr, av / (dt * 2)) - sg * Fx;
       P.Fn = Fn;
       this.applyForce(P, nx * Fn + fp[0] * fo + lat[0] * fl, ny * Fn + fp[1] * fo + lat[1] * fl, nz * Fn + fp[2] * fo + lat[2] * fl, dt);
       return Fn;
@@ -2575,8 +2729,8 @@
       const gh0 = groundAt(world, pos[0], pos[2]);
       this.scrapeI = Math.max(0, this.scrapeI - dt * 3);
       if (pos[1] - gh0 > this.bound * 1.5 + 5) {
-        for (const P of pts) P.on = false;
-        this.wet = 0; this.wreckTouch = 0; this.gGear = 0;
+        for (const P of pts) { P.on = false; if (P.kind === 'w') P.ws *= 1 - dt * 0.3; }
+        this.wet = 0; this.wreckTouch = 0; this.gGear = 0; this.mainsOn = 0; this.sideOn[0] = this.sideOn[1] = false; this.skidT = 0;
         if (!wreck) { this.noContactT += dt; this.airT += dt; if (this.noContactT > 0.25) this.onGround = false; }
         return false;
       }
@@ -2589,7 +2743,8 @@
       this.setR();
       const f = qrot(this.q, [0, 0, -1]), fd = f[0] * nx + f[1] * ny + f[2] * nz;
       const fp = norm([f[0] - nx * fd, f[1] - ny * fd, f[2] - nz * fd]), lat = cross(fp, [nx, ny, nz]);
-      let touching = 0, wheels = 0, gsum = 0, wet = 0, noseLoad = 0;
+      let touching = 0, wheels = 0, gsum = 0, wet = 0, noseLoad = 0, mains = 0, sq = 0;
+      this.sideOn[0] = this.sideOn[1] = false; this.skidT = Math.max(0, this.skidT - dt * 2);
       const crashFn = (why, P, extra) => this.crash(why, Object.assign({ n: [nx, ny, nz], vi: P.vi, vt: P.vt, P }, extra));
       for (let i = 0; i < pts.length; i++) {
         const P = pts[i];
@@ -2599,7 +2754,7 @@
         const th = terrainAt(world, px, pz), isWet = th < WATER;
         let pen = (isWet ? WATER : th) - py;
         const obj = wreck ? hitObject(world, [px, py, pz]) : null;
-        if (pen <= 0 && !obj) { P.on = false; continue; }
+        if (pen <= 0 && !obj) { P.on = false; if (P.kind === 'w') { P.ws *= 1 - dt * 0.3; P.Fs = 0; P.s = 0; } continue; }
         // Buried in a hillside (a very fast plane can tunnel into a slope between two steps): that is a crash.
         if (!wreck && pen > 3) { this.probe(P, nx, ny, nz); crashFn(isWet ? 'water' : ny < 0.93 ? 'terrain' : 'ground', P); return true; }
         if (wreck && pen > 2) pen = 2;
@@ -2630,17 +2785,31 @@
         }
         if (P.kind === 'w') {
           wheels++;
-          if (first && P.vi > 0.8) this.events.push({ type: 'wheel', vi: P.vi, id: P.id });
-          if (first && this.airT > 0.7) {
-            // The touchdown: where, and how hard.
-            this.sinkAtTouch = P.vi; this.touch = [pos[0], pos[2]]; this.everDown = true;
-            if (P.vi > this.gearSink * 0.5 && !this.gearEvent) this.gearEvent = { cause: 'hard', vi: P.vi };
+          if (first) {
+            P.peak = 0; P.over = 0;
+            const vl = P.tx * fp[0] + P.ty * fp[1] + P.tz * fp[2];
+            if (this.airT > 0.12 && P.vi > 0.05) this.events.push({ type: 'wheel', vi: P.vi, vl, id: P.id, side: P.side, main: P.main, at: [px, py, pz] });
+            let td = this.td;
+            if (this.airT > 0.7 || (!td && this.airT > 0.12)) {
+              // The touchdown: where, and how hard.
+              this.sinkAtTouch = P.vi; this.touch = [pos[0], pos[2]]; this.everDown = true;
+              this.td = td = { t: this.t, sink: P.vi, z: pos[2], x: pos[0], bank: this.bank, pitch: this.pitchAngle, ias: this.ias, vl, first: P.id, noseFirst: P.id === 'N' && P.vi > 0.8, bounces: 0, rebound: 0, lat: Math.abs(P.tx * lat[0] + P.ty * lat[1] + P.tz * lat[2]), done: false, wingLow: false };
+              if (P.vi > this.gearSink * 0.5 && !this.gearEvent) this.gearEvent = { cause: 'hard', vi: P.vi };
+            } else if (td && this.t - td.t < 0.15) {
+              // The other wheels arriving a moment later: the hardest of them counts, and a wing-low touchdown shows in the sink difference.
+              if (P.vi > td.sink) { if (P.vi - td.sink > 0.9 && P.main) td.wingLow = true; td.sink = P.vi; this.sinkAtTouch = P.vi; }
+            } else if (td && this.airT > 0.12 && this.t - td.t < 10) {
+              td.bounces++; td.rebound = Math.max(td.rebound, P.vi); td.t2 = this.t;
+              this.events.push({ type: 'bounce', vi: P.vi, n: td.bounces });
+            }
           }
           if (first && !this.wheelCheck(P, crashFn, lat)) { if (this.crashed) return true; }
           if (!P.on) continue;
           const Fn = this.pressWheel(P, nx, ny, nz, pen, surf, fp, lat, dt);
           gsum += Fn;
           if (P.id === 'N') noseLoad = Fn;
+          if (P.main) { mains++; this.sideOn[P.side < 0 ? 0 : 1] = true; }
+          if (P.sq > sq) sq = P.sq;
         } else {
           if (!wreck) { if (this.hitCheck(P, first, pen, crashFn)) return true; }
           else this.wreckCheck(P, first, px, py, pz);
@@ -2652,7 +2821,13 @@
           gsum += P.Fn * 0.5;
         }
       }
-      this.wet = wet;
+      this.wet = wet; this.mainsOn = mains;
+      if (!wreck) {
+        // Tyre squeal when the side load is at the limit, and smoke and a screech under a locked wheel.
+        this.squealT -= dt; this.skidEvT = (this.skidEvT || 0) - dt;
+        if (sq > 0 && this.squealT <= 0) { this.squealT = 0.28; this.events.push({ type: 'squeal', k: sq, at: [pos[0], pos[1] - this.s.gear, pos[2]] }); }
+        if (this.skidT > 0.15 && this.skidEvT <= 0) { this.skidEvT = 0.25; this.events.push({ type: 'skid', k: clamp(this.skidT / 1.5, 0.2, 1), at: [pos[0], pos[1] - this.s.gear, pos[2]] }); }
+      }
       this.gGear = Math.min(gsum / G - 1, 12); if (this.gGear < 0) this.gGear = 0;
       if (this.gGear > this.maxGGear) this.maxGGear = this.gGear;
       if (wreck) { this.wreckTouch = touching; return false; }
@@ -2679,7 +2854,13 @@
       }
       // Sideways at touchdown (crabbing in a crosswind): side load on the wheels.
       if (Math.abs(P.tx * lat[0] + P.ty * lat[1] + P.tz * lat[2]) > 0.3 * s.stall + 1.5 && P.id !== 'N') { this.collapseGear('side', vi); return false; }
-      if (P.id !== 'N' && vi > gs * 0.55 && Math.random() < 0.35) this.burstTyre(P.id === 'ML' ? 'tyreL' : 'tyreR');
+      if (P.main && vi > gs * 0.55 && Math.random() < 0.35 * (vi / gs)) this.burstTyre(P.side < 0 ? 'tyreL' : 'tyreR', 'hard');
+      // A very hard landing (close to what the leg is built for) bends the strut for good: it shimmies and drags to that side.
+      if (P.main && vi > gs * 0.62) {
+        const key = P.side < 0 ? 'strutL' : 'strutR', dmg = clamp((vi / gs - 0.62) / 0.38, 0.15, 1);
+        if (dmg > this.damage[key]) { this.damage[key] = dmg; this.events.push({ type: 'strut', side: P.side < 0 ? 'L' : 'R', dmg, vi }); }
+      }
+      if (P.id === 'N' && vi > 1.2 && this.td && this.t - this.td.t < 0.05 && this.mainsOn === 0) this.td.noseFirst = true;
       return true;
     }
     collapseGear(cause, vi) {
@@ -2697,11 +2878,12 @@
       this.events.push({ type: 'gear', cause: 'nose', vi });
       if (this.s.engine === 'piston') this.failEngine(); else this.failEngine(true);
       if (this.vel[1] < 0) this.vel[1] *= 0.6;
+      this.w[0] -= 0.12 + this.speed * 0.012;                       // the nose drops and digs in
       for (const P of this.pts) if (P.id === 'N') P.on = false;
     }
-    burstTyre(which) {
+    burstTyre(which, why) {
       if (this.damage[which]) return;
-      this.damage[which] = true; this.events.push({ type: 'tyre', side: which === 'tyreL' ? 'L' : 'R' });
+      this.damage[which] = true; this.events.push({ type: 'tyre', side: which === 'tyreL' ? 'L' : 'R', why });
     }
     /// Structure (not wheels) meeting the ground while the plane is still a plane.
     hitCheck(P, first, pen, crashFn) {
@@ -2752,6 +2934,26 @@
       const sev = clamp(0.08 + V / 300 + excess * 1.2 + vi / 25, 0.08, 0.6);
       this.damage.tail = Math.max(0, this.damage.tail - sev);
       this.events.push({ type: 'tail', health: this.damage.tail, sev });
+    }
+
+    /// How the landing went, once the bounces have settled (null until then): "Smooth touchdown 0.6 m/s, 14 m past the
+    /// numbers", "Hard touchdown 3.1 m/s", "Bounced twice"...
+    touchdownText(onRunway) {
+      const td = this.td;
+      if (!td || td.done || !this.damage.gear) return null;
+      if (!this.onGround || this.t - Math.max(td.t, td.t2 || 0) < 1.1) return null;
+      td.done = true;
+      const sink = td.sink, q = sink < 1 ? 'Smooth' : sink < 2 ? 'Nice' : sink < 3 ? 'Firm' : sink < 4.5 ? 'Hard' : 'Very hard';
+      const bank = Math.abs(td.bank) / DEG, tags = [];
+      if (td.noseFirst) tags.push('nose first: porpoised');
+      else if (td.bounces > 0) tags.push(td.bounces === 1 ? 'bounced' : `bounced ${td.bounces} times`);
+      if (td.wingLow || bank > 6) tags.push(`${Math.round(bank)}° wing low`);
+      if (td.lat > 3.5) tags.push('sideways');
+      const d = -td.z - 12;
+      const where = !onRunway ? 'off the runway' : td.z > 5 ? 'short of the runway' : d < 0 ? 'before the numbers' : `${Math.round(d)} m past the numbers`;
+      const head = td.bounces > 0 && !td.noseFirst ? 'Bounced' : `${q} touchdown`;
+      this.lastTd = { sink, bounces: td.bounces, noseFirst: td.noseFirst, d, q };
+      return `${head} ${sink.toFixed(1)} m/s, ${where}${tags.length && !(td.bounces > 0 && !td.noseFirst && tags.length === 1) ? ' · ' + tags.filter((t) => !(head === 'Bounced' && /^bounced/.test(t))).join(', ') : ''}`;
     }
 
     // ---------------------------------------------------------------- the wreck
@@ -3107,7 +3309,7 @@
     const debris = [];             // parts that have come off and are tumbling on their own
     let attached = new Set(ALL_PARTS);
     let wreckT = 0, failAt = Infinity, hadFailure = false, engineSmokeT = 0, wingLostAt = -1, canyonT = 0;
-    let wreckFire = false, fireT = 0, crashCam = null, tyreT = 0, debrisSndT = 0;
+    let wreckFire = false, fireT = 0, crashCam = null, tyreT = 0, debrisSndT = 0, sideToast = 0, skidToast = 0, tdShown = null;
     const ZERO_CTL = { pitch: 0, roll: 0, yaw: 0, throttle: 0 };
     let failures = read('failures', 'rare');
     const keys = new Set();
@@ -3115,6 +3317,8 @@
     const done = new Set(read('done', []));
     // invertY false (the default): up climbs, for the mouse and the ↑ key. True: flight-stick style, down climbs.
     let invert = read('invertY', false), mouseOn = read('mouse', true), sens = read('sens', 1), sound = read('sound', true), units = read('units', 'kmh');
+    WX = sanWx(read('weather', WX_DEFAULT));   // Weather panel settings, shared by every mode
+    const saveWx = () => { write('weather', WX); if (screen === 'menu' && flight) flight.reset([0, plane.gear, 0], 0, 0, true); };   // the menu scene's windsocks follow
     let playerName = read('name', '');
 
     // ---- sound (Web Audio): engine drone, a chime for hoops, a thud for crashes
@@ -3446,7 +3650,7 @@
       if (down && e.repeat && keys.has(k)) { if (screen === 'fly') e.preventDefault?.(); return; }   // held keys repeat: toggles fire once
       const typing = e.target && e.target.tagName === 'INPUT' && e.target.type !== 'range';
       if (typing) { if (down && k === 'Enter' && result?.qualifies) saveScore(); return; }
-      const game = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' ', 'w', 's', 'a', 'd', 'q', 'e', 'f', 'v', 'b', 'c', 'p', 'r', 'Shift', 'Control', 'g'];
+      const game = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' ', 'w', 's', 'a', 'd', 'q', 'e', 'f', 'v', 'b', 'c', 'p', 'r', 'x', 'Shift', 'Control', 'g'];
       if (game.includes(k) && screen === 'fly') e.preventDefault?.();
       if (down) {
         if (screen === 'fly') {
@@ -3511,6 +3715,7 @@
         roll: clamp((has('ArrowRight') ? 1 : 0) - (has('ArrowLeft') ? 1 : 0) + (m ? stick(mouse.x) : 0), -1, 1),
         yaw: (has('d') || has('e') ? 1 : 0) - (has('a') || has('q') ? 1 : 0),
         throttle: (has('w') || has('Shift') ? 1 : 0) - (has('s') || has('Control') ? 1 : 0),
+        reverse: has('x'),
       };
     }
 
@@ -3520,6 +3725,7 @@
       fire: { life: [0.6, 1.4], size: [2, 5], col: (k) => [1, 0.55 - k * 0.4, 0.1], glow: 0.7, rise: 6, grav: 0, a: 0.85 },
       smoke: { life: [3, 6], size: [3, 14], col: (k) => [0.3 + k * 0.35, 0.3 + k * 0.35, 0.31 + k * 0.35], glow: 0, rise: 4, grav: 0, a: 0.55 },
       dark: { life: [0.8, 1.4], size: [0.7, 2.6], col: (k) => [0.1 + k * 0.35, 0.1 + k * 0.35, 0.11 + k * 0.35], glow: 0, rise: 1, grav: 0, a: 0.6 },
+      tsmoke: { life: [0.9, 1.9], size: [0.5, 2.8], col: (k) => [0.86 - k * 0.1, 0.86 - k * 0.1, 0.88 - k * 0.1], glow: 0.15, rise: 0.7, grav: 0, a: 0.5 },
       haze: { life: [0.6, 1.1], size: [0.5, 1.8], col: () => [0.75, 0.75, 0.75], glow: 0.2, rise: 0.5, grav: 0, a: 0.35 },
       dust: { life: [1, 2.5], size: [2, 7], col: () => [0.55, 0.45, 0.32], glow: 0, rise: 1, grav: 0, a: 0.5 },
       spark: { life: [0.3, 0.8], size: [0.3, 0.1], col: () => [1, 0.85, 0.3], glow: 1, rise: 0, grav: 9.8 },
@@ -3684,11 +3890,31 @@
           toast(ev.cause === 'side' ? '💥 Sideways touchdown! The undercarriage collapsed under the side load' : `💥 The undercarriage collapsed on a hard landing (${(ev.vi || 0).toFixed(1)} m/s)! Sliding on the belly…`, 2800);
           noise(0.6, 0.5, 400); noise(2.2, 0.3, 700);
         } else if (ev.type === 'wheel') {
-          // A tyre meeting the ground: a chirp, and a thump that grows with the sink rate.
-          if (tyreT <= 0) { tyreT = 0.12; noise(0.1, clamp(0.08 + ev.vi * 0.05, 0.08, 0.5), 1500); noise(0.25, clamp(0.08 + ev.vi * 0.04, 0.08, 0.45), 150 + ev.vi * 20);
-            for (let i = 0; i < Math.min(8, ev.vi * 2); i++) puff('haze', add(flight.pos, qrot(flight.q, [(ev.id === 'ML' ? -1 : 1) * 1.2, -plane.gear, 0.5])), add(mul(flight.vel, 0.3), jitter(2))); }
+          // A tyre meeting the ground: a thump that grows with the sink rate, and on a main wheel the chirp and puff of smoke
+          // as the stopped wheel is spun up to the speed of the runway.
+          noise(0.22, clamp(0.05 + ev.vi * 0.045, 0.05, 0.45), 130 + ev.vi * 22);
+          if (ev.main && ev.vl > 10) {
+            const k = clamp((ev.vl - 10) / 55, 0, 1);
+            noise(0.07 + 0.12 * k, 0.05 + 0.12 * k, 2200 + 600 * k);
+            for (let i = 0, n = 2 + Math.round(7 * k); i < n; i++) puff('tsmoke', ev.at, add(mul(flight.vel, 0.12), jitter(1.5)));
+          }
+          if (ev.vi > 3.5) for (let i = 0; i < 3; i++) puff('dust', ev.at, jitter(4));
+        } else if (ev.type === 'bounce') {
+          noise(0.3, clamp(0.05 + ev.vi * 0.05, 0.05, 0.4), 150);
+        } else if (ev.type === 'squeal') {
+          // Side load at the limit: the tyres howl and smoke.
+          noise(0.25, 0.05 + 0.1 * ev.k, 3000); puff('tsmoke', ev.at, add(mul(flight.vel, 0.1), jitter(1)));
+          if (!sideToast) { sideToast = 4; toast('Tyres squealing: sideways at touchdown. Keep it straight!', 1600); }
+        } else if (ev.type === 'skid') {
+          // A locked wheel sliding: a long screech and a trail of smoke.
+          noise(0.35, 0.07 + 0.1 * ev.k, 1700 + 600 * ev.k); for (let i = 0; i < 3; i++) puff('tsmoke', ev.at, add(mul(flight.vel, 0.1), jitter(1.2)));
+          if (!skidToast) { skidToast = 5; toast('Wheels locked! Ease off the brakes: skidding wears the tyres through', 2000); }
+        } else if (ev.type === 'strut') {
+          toast(`⚠ ${ev.side === 'L' ? 'Left' : 'Right'} main gear strut damaged by the landing (${ev.vi.toFixed(1)} m/s): it will shimmy and pull to that side`, 3200); noise(0.3, 0.4, 260);
+        } else if (ev.type === 'spoilers') {
+          noise(0.4, 0.1, 600); toast('Ground spoilers', 900);
         } else if (ev.type === 'tyre') {
-          toast(`💥 ${ev.side === 'L' ? 'Left' : 'Right'} tyre burst! The plane pulls to that side`, 2400); noise(0.15, 0.5, 2500);
+          toast(ev.why === 'locked' ? `💥 ${ev.side === 'L' ? 'Left' : 'Right'} tyre burst: skidded through on locked wheels` : `💥 ${ev.side === 'L' ? 'Left' : 'Right'} tyre burst! The plane pulls to that side`, 2600); noise(0.15, 0.5, 2500);
         } else if (ev.type === 'scrape') {
           toast(ev.what === 'wingtip' ? '⚠ Wingtip scraping the ground! Level the wings' : '⚠ Engine scraped the ground: it is running rough', 2200); noise(0.5, 0.35, 900);
         } else if (ev.type === 'spin') {
@@ -3704,6 +3930,12 @@
         }
       }
       if (tyreT > 0) tyreT -= dt;
+      if (sideToast > 0) sideToast -= dt;
+      if (skidToast > 0) skidToast -= dt;
+      if (flight.td && !flight.td.done && !flight.crashed) {
+        const msg = flight.touchdownText(onRunway([flight.td.x, 0, flight.td.z]));
+        if (msg) toast(msg, 3000);
+      }
       if (flight.crashed) {
         // Let the wreck tumble, slide and burn until it has stopped (at least a few seconds, at most a few more) before
         // the result; the report on that screen says what happened.
@@ -3777,7 +4009,6 @@
       if (!wasGround && flight.onGround) {
         const sink = flight.sinkAtTouch;
         // (The tyre chirp and thump come with the 'wheel' event.)
-        if (flight.damage.gear) toast(`Touchdown · ${sink.toFixed(1)} m/s${sink < 1 ? ' · butter!' : sink < 2.5 ? ' · nice' : sink < 4.5 ? ' · firm' : sink < 6 ? ' · hard!' : ' · ouch'}`, 1500);
         if (sink < 1 && onRunway(flight.pos) && flight.damage.gear) achieve('butter');
       }
       if (flight.onGround && flight.speed < 1.5 && (!flight.damage.gear || !flight.damage.nose)) {
@@ -3854,7 +4085,7 @@
       const pm = planeMeshes[plane.id], menu = screen === 'menu', parts = menu ? new Set(ALL_PARTS) : attached;
       const dt = clamp((t - surf.last) / 1000, 0, 0.1); surf.last = t;
       const ease = 1 - Math.exp(-dt * 8), fly = !menu && !flight.crashed;
-      const tgt = { ail: fly ? ctl.roll : 0, elev: fly ? ctl.pitch : 0, rud: fly ? ctl.yaw : 0, flap: menu ? 0 : flight.flaps || 0, spoil: fly && flight.brake ? (flight.onGround ? 1 : 0.5) : 0 };
+      const tgt = { ail: fly ? ctl.roll : 0, elev: fly ? ctl.pitch : 0, rud: fly ? ctl.yaw : 0, flap: menu ? 0 : flight.flaps || 0, spoil: fly ? Math.max(flight.gspoil || 0, flight.brake ? (flight.onGround ? 1 : 0.5) : 0) : 0 };
       for (const k of Object.keys(tgt)) surf[k] += (tgt[k] - surf[k]) * (k === 'flap' ? ease * 0.35 : ease);
       const M = model(flight.q, flight.pos, plane.scale);
       const flapMax = plane.cat === 'mil' ? 24 : plane.cat === 'ga' || plane.cat === 'turbo' ? 32 : 38;
@@ -4186,16 +4417,23 @@
       }
       // Wind: where it blows from, how hard, and an arrow showing which way it is pushing relative to the nose.
       {
-        const wx = flight.wv[0], wz = flight.wv[2], ws = flight.windSpd, from = (((Math.atan2(-wx, wz) / DEG) % 360) + 360) % 360, rel = Math.atan2(wx, -wz) - flight.heading;
-        const bw = 78 * s + 22, bh = 22 * s + 14, bx = 8, by = 8, ax = bx + 15, ay = by + bh / 2, al = 4 + clamp(ws, 0, 12) * 1.3;
+        const wx = flight.wv[0], wz = flight.wv[2], ws = flight.windSpd, rel = Math.atan2(wx, -wz) - flight.heading;
+        // The steady wind (what the windsock and the weather report say), its gust peak and its parts along and across the runway.
+        const sx0 = -Math.sin(flight.windFrom) * ws, sz0 = Math.cos(flight.windFrom) * ws, from = (((flight.windFrom / DEG) % 360) + 360) % 360;
+        const rh = flight.rwyHdg || 0, headC = -(sx0 * Math.sin(rh) - sz0 * Math.cos(rh)), crossC = -(sx0 * Math.cos(rh) + sz0 * Math.sin(rh));   // + headwind, + from the right
+        const un = kmh ? 3.6 : 1.944, ul = kmh ? 'km/h' : 'kt', gustPk = ws + (flight.gustMax || 0);
+        const bw = 118 * s + 40, bh = 46 * s + 18, bx = 8, by = 8, ax = bx + 17, ay = by + bh / 2, al = 4 + clamp(ws, 0, 25) * 0.65;
         box(bx, by, bw, bh);
         h2.strokeStyle = '#8fd0ff'; h2.fillStyle = '#8fd0ff'; h2.lineWidth = 2; h2.beginPath();
         const ex = ax + Math.sin(rel) * al, ey = ay - Math.cos(rel) * al, sx = ax - Math.sin(rel) * al, sy = ay + Math.cos(rel) * al;
         h2.moveTo(sx, sy); h2.lineTo(ex, ey); h2.stroke();
         h2.beginPath(); h2.moveTo(ex, ey); h2.lineTo(ex - Math.sin(rel - 0.5) * 5, ey + Math.cos(rel - 0.5) * 5); h2.lineTo(ex - Math.sin(rel + 0.5) * 5, ey + Math.cos(rel + 0.5) * 5); h2.fill();
         h2.textAlign = 'left'; h2.font = `700 ${Math.round(9 * s + 2)}px system-ui`; h2.fillStyle = '#e8ebf0';
-        h2.fillText(`WIND ${String(Math.round(from / 10) % 36 * 10).padStart(3, '0')}°`, bx + 30, by + bh / 2 - 6);
-        h2.fillStyle = '#9aa3b2'; h2.fillText(`${Math.round(ws * (kmh ? 3.6 : 1.944))} ${kmh ? 'km/h' : 'kt'}`, bx + 30, by + bh / 2 + 7);
+        const ly = 13 * s + 5, ty = by + 8 + ly * 0 + 4;
+        h2.fillText(`Wind ${String(Math.round(from / 10) % 36 * 10).padStart(3, '0')}° ${Math.round(ws * un)} ${ul}${gustPk - ws > 0.7 ? ', gusting ' + Math.round(gustPk * un) : ''}`, bx + 36, ty);
+        h2.fillStyle = '#9aa3b2';
+        h2.fillText(`X-wind ${Math.round(Math.abs(crossC) * un)} ${crossC < -0.3 ? '◀ L' : crossC > 0.3 ? 'R ▶' : ''}`, bx + 36, ty + ly);
+        h2.fillText(`${headC >= 0 ? 'H-wind' : 'T-wind'} ${Math.round(Math.abs(headC) * un)} · GS ${Math.round(flight.speed * un)}`, bx + 36, ty + ly * 2);
         h2.textAlign = 'center';
       }
       // Next hoop distance (and direction when it's off-screen).
@@ -4206,10 +4444,10 @@
       }
       // Damage panel (top right) once anything is wrong.
       const dmg = flight.damage;
-      if (!dmg.engine || dmg.power < 1 || !dmg.L || !dmg.R || !dmg.gear || dmg.tail < 1 || !dmg.nose || dmg.tyreL || dmg.tyreR) {
+      if (!dmg.engine || dmg.power < 1 || !dmg.L || !dmg.R || !dmg.gear || dmg.tail < 1 || !dmg.nose || dmg.tyreL || dmg.tyreR || dmg.strutL > 0.1 || dmg.strutR > 0.1) {
         const rows = [['ENGINE', !dmg.engine ? 'FAILED' : dmg.power < 1 ? 'ROUGH' : 'OK', !dmg.engine ? '#ff4d4d' : dmg.power < 1 ? '#ffd166' : '#5ee08a'],
           ['L WING', dmg.L ? 'OK' : 'GONE', dmg.L ? '#5ee08a' : '#ff4d4d'], ['R WING', dmg.R ? 'OK' : 'GONE', dmg.R ? '#5ee08a' : '#ff4d4d'],
-          ['GEAR', !dmg.gear ? 'BROKEN' : !dmg.nose ? 'NOSE LEG' : dmg.tyreL || dmg.tyreR ? 'TYRE' : 'OK', dmg.gear && dmg.nose && !dmg.tyreL && !dmg.tyreR ? '#5ee08a' : '#ff4d4d'],
+          ['GEAR', !dmg.gear ? 'BROKEN' : !dmg.nose ? 'NOSE LEG' : dmg.tyreL || dmg.tyreR ? 'TYRE' : dmg.strutL > 0.1 || dmg.strutR > 0.1 ? 'STRUT' : 'OK', dmg.gear && dmg.nose && !dmg.tyreL && !dmg.tyreR && !(dmg.strutL > 0.1 || dmg.strutR > 0.1) ? '#5ee08a' : '#ff4d4d'],
           ['TAIL', dmg.tail >= 1 ? 'OK' : dmg.tail <= 0 ? 'GONE' : `${Math.round(dmg.tail * 100)}%`, dmg.tail >= 1 ? '#5ee08a' : dmg.tail <= 0 ? '#ff4d4d' : '#ffd166']];
         const bw = 120 * s + 14, bx = W2 - bw - 8, by0 = 8;
         box(bx, by0, bw, rows.length * 16 * s + 12);
@@ -4228,6 +4466,21 @@
     }
 
     // ---- menus (HTML over the canvas)
+    /// The Weather panel on the Fly tab: presets, crosswind (left / right), head / tail wind and turbulence level.
+    function weatherPanel() {
+      const same = (a, b) => a.random === b.random && (a.random || (Math.abs(a.crossKt) === b.crossKt && a.headKt === b.headKt && a.turb === b.turb));
+      const dis = WX.random ? 'disabled style="opacity:.4"' : '';
+      const cross = Math.abs(WX.crossKt), side = WX.crossKt < 0 ? 'L' : 'R';
+      return `<h2>3 · Weather <small style="font-weight:500;opacity:.6">applies to every challenge</small></h2>
+        <div class="pg-row" style="gap:5px">${WX_PRESETS.map(([id, name, p]) => `<button data-wxp="${id}" class="${same(WX, p) ? 'pg-on' : ''}">${name}</button>`).join('')}</div>
+        <div class="pg-row" style="margin-top:5px"><label class="pg-hint" style="min-width:185px">Crosswind <b data-wxv="cross">${cross} kt (${(cross * KT).toFixed(0)} m/s)</b></label>
+          <button data-wxs="L" class="${side === 'L' ? 'pg-on' : ''}" ${dis}>◀ From left</button><button data-wxs="R" class="${side === 'R' ? 'pg-on' : ''}" ${dis}>From right ▶</button>
+          <input type="range" min="0" max="90" step="1" value="${cross}" data-wx="cross" aria-label="Crosswind in knots" style="flex:1;min-width:120px;padding:0" ${dis}></div>
+        <div class="pg-row"><label class="pg-hint" style="min-width:185px">Head / tail wind <b data-wxv="head">${WX.headKt === 0 ? '0 kt' : Math.abs(WX.headKt) + ' kt ' + (WX.headKt > 0 ? 'head' : 'tail')}</b></label>
+          <input type="range" min="-30" max="30" step="1" value="${WX.headKt}" data-wx="head" aria-label="Headwind positive, tailwind negative, in knots" style="flex:1;min-width:120px;padding:0" ${dis}></div>
+        <div class="pg-row" style="gap:5px"><span class="pg-hint" style="min-width:185px">Turbulence and gusts</span>${TURB_LEVELS.map(([id, name]) => `<button data-wxt="${id}" class="${!WX.random && WX.turb === id ? 'pg-on' : ''}" ${dis}>${name}</button>`).join('')}</div>
+        <div class="pg-hint" style="margin-top:3px" data-wxsum>${wxText()}</div>`;
+    }
     function statBar(label, v) { return `<div class="pg-stat">${label}<span><i style="width:${Math.round(clamp(v, 0.05, 1) * 100)}%"></i></span></div>`; }
     function fmtScore(m, v) { return m.id === 'trial' ? `${Number(v).toFixed(1)} s` : m.id === 'hoops' ? `${v}` : `${v}`; }
     /// Draws the menu or the pause / result screen. If one of them ever throws (a saved tab from an older version, a
@@ -4279,7 +4532,8 @@
             <button data-a="mine" title="Pick the scenery nearest to where you are">📍 My location</button>
             <input data-place maxlength="40" placeholder="Type a city or country" style="width:150px"><button data-a="goplace">Go</button></div>
           <div class="pg-hint" style="margin-top:3px">${escapeHtml(placeNote || `Now flying over: ${regionOf(regionId).id ? regionOf(regionId).name + ' (' + regionOf(regionId).lm + ')' : 'the home valley'}. The landmark stands just off the runway.`)}</div>
-          <h2>3 · Pick a challenge</h2><div class="pg-modes">${MODES.map((m) => `<button class="pg-mode ${m === mode ? 'pg-on' : ''}" data-mode="${m.id}">${m.icon} ${m.name}<small>${m.desc}</small></button>`).join('')}</div>
+          ${weatherPanel()}
+          <h2>4 · Pick a challenge</h2><div class="pg-modes">${MODES.map((m) => `<button class="pg-mode ${m === mode ? 'pg-on' : ''}" data-mode="${m.id}">${m.icon} ${m.name}<small>${m.desc}</small></button>`).join('')}</div>
           <div class="pg-row" style="margin-top:10px"><button class="pg-go" data-a="start">✈️ Take off (Enter)</button>
             <span class="pg-hint">Best: ${(() => { const b = read(`board.${mode.id}`, [])[0]; return b && mode.id !== 'free' ? `${fmtScore(mode, b.score)} by ${escapeHtml(b.name)}` : '—'; })()}</span></div>`;
       } else if (menuTab === 'board') {
@@ -4310,7 +4564,7 @@
           <button data-a="invert">${invert ? '✓ ' : ''}Invert (down climbs, like a flight stick)</button></div>
           <h2>Keys</h2><div class="pg-hint">
           <kbd>W</kbd> more throttle · <kbd>S</kbd> less throttle · <kbd>↑</kbd> climb · <kbd>↓</kbd> dive · <kbd>←</kbd> <kbd>→</kbd> roll · <kbd>A</kbd> <kbd>D</kbd> rudder (and steering on the ground)<br>
-          <kbd>F</kbd> flaps down a notch · <kbd>V</kbd> flaps up · <kbd>G</kbd> gear up / down (everything but the Cessna, Piper and Cirrus, which have fixed wheels) · <kbd>Space</kbd> brakes / airbrake · <kbd>C</kbd> camera (chase, cockpit, orbit) · <kbd>P</kbd> pause (and the menu) · <kbd>R</kbd> restart · <kbd>M</kbd> mouse steering on / off</div>
+          <kbd>F</kbd> flaps down a notch · <kbd>V</kbd> flaps up · <kbd>G</kbd> gear up / down (everything but the Cessna, Piper and Cirrus, which have fixed wheels) · <kbd>Space</kbd> brakes / airbrake (with <kbd>A</kbd> <kbd>D</kbd> at taxi speed it brakes the wheel on that side; the airliners dump their spoilers on touchdown) · <kbd>X</kbd> reverse thrust on the ground (jets and turboprops, with the throttle up) · <kbd>C</kbd> camera (chase, cockpit, orbit) · <kbd>P</kbd> pause (and the menu) · <kbd>R</kbd> restart · <kbd>M</kbd> mouse steering on / off</div>
           <h2>Tips</h2><div class="pg-hint">Bank by moving the cursor sideways and ease it ${climb} to turn: the wings turn the plane, the rudder only tidies up. Too slow or pulling too hard
           stalls the wing (STALL): push the nose down and add power. To land: slow down, flaps down, gear down (airliners), line up with the runway, and touch down gently (watch V/S).
           To take off: full throttle (hold W) on the runway, then ease the cursor ${climb} (or hold ${invert ? "↓" : "↑"}) at about ${Math.round(plane.stall * 1.3 * 3.6)} km/h. Airliners turn slowly, so start turns early.</div>
@@ -4340,6 +4594,24 @@
       ui.querySelectorAll('[data-range]').forEach((n) => {
         n.oninput = () => { sens = Number(n.value); write('sens', sens); const v = ui.querySelector('[data-sensval]'); if (v) v.textContent = `${sens.toFixed(1)}×`; };
         n.onchange = () => root.focus();
+      });
+      // Weather panel: the sliders update the text as they move and save on release; the buttons redraw the menu.
+      ui.querySelectorAll('[data-wx]').forEach((n) => {
+        n.oninput = () => {
+          const v = Number(n.value);
+          if (n.dataset.wx === 'cross') { WX.crossKt = (WX.crossKt < 0 ? -1 : 1) * v; const e = ui.querySelector('[data-wxv=cross]'); if (e) e.textContent = `${v} kt (${(v * KT).toFixed(0)} m/s)`; }
+          else { WX.headKt = v; const e = ui.querySelector('[data-wxv=head]'); if (e) e.textContent = v === 0 ? '0 kt' : `${Math.abs(v)} kt ${v > 0 ? 'head' : 'tail'}`; }
+          const t = ui.querySelector('[data-wxsum]'); if (t) t.textContent = wxText();
+          saveWx();
+        };
+        n.onchange = () => { renderUI(); root.focus(); };
+      });
+      ui.querySelectorAll('[data-wxs]').forEach((n) => n.onclick = () => { const m = Math.abs(WX.crossKt) || 0; WX.crossKt = n.dataset.wxs === 'L' ? -m : m; saveWx(); renderUI(); });
+      ui.querySelectorAll('[data-wxt]').forEach((n) => n.onclick = () => { WX.turb = n.dataset.wxt; saveWx(); renderUI(); });
+      ui.querySelectorAll('[data-wxp]').forEach((n) => n.onclick = () => {
+        const p = WX_PRESETS.find((x) => x[0] === n.dataset.wxp); if (!p) return;
+        const keepSide = WX.crossKt < 0 ? -1 : 1;   // presets keep the side you chose; Random leaves the sliders where they were
+        WX = p[2].random ? { ...WX, random: true } : { ...p[2], crossKt: p[2].crossKt * keepSide }; saveWx(); renderUI();
       });
       ui.querySelectorAll('[data-scope]').forEach((n) => n.onclick = () => { boardScope = n.dataset.scope; write('boardScope', boardScope); renderUI(); });
       ui.querySelectorAll('[data-period]').forEach((n) => n.onclick = () => { boardPeriod = n.dataset.period; write('boardPeriod', boardPeriod); renderUI(); });
