@@ -212,6 +212,11 @@ All screenshots use sample data.
 
 > **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is still in the repository's tags.
 
+### Mac 2.0.48 · Windows 1.51.0 BETA · 10 October 2026 · Six more fighter jets
+
+- **Plane: six more fighters** beside the F-35: **F-16 Falcon, F-15 Eagle, F/A-18 Hornet, Eurofighter Typhoon, F-22 Raptor and Sukhoi Su-27**. Each has its own wing shape, tail (single, twin or canted), colours, afterburner and retractable gear; the Typhoon is a delta with canards; the twins have two nozzles. Like the F-35 they only say "Pull up".
+- **Flaps:** press **F** again after the last notch and they come back up.
+
 ### Mac 2.0.47 · Windows 1.50.0 BETA · 10 October 2026 · ✈️ Plane Sim: far more realistic
 
 - **Flying that behaves.** A proper **stall** (buffet, then a wing drops), **spins** in the light planes, **ground effect**, induced drag, **wind, gusts and turbulence** (worse near the ground and over hills, with a wind arrow), thinner air with height (true versus indicated speed), and heavy planes that respond slowly. Pull too hard or go too fast and the **g-limit** matters: a g readout with a vignette, and wings that fail past it.

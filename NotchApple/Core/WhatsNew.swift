@@ -20,6 +20,10 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.0.48", date: "10 October 2026", headline: "Six more fighter jets", items: [
+            "Plane: the F-16 Falcon, F-15 Eagle, F/A-18 Hornet, Eurofighter Typhoon, F-22 Raptor and Sukhoi Su-27 join the F-35, each with its own wing, tail and colours, afterburner and retractable gear.",
+            "Plane: press F again after the last flap setting and the flaps come back up.",
+        ]),
         ReleaseNote(version: "2.0.47", date: "10 October 2026", headline: "Plane Sim: far more realistic", items: [
             "Realistic flying: stalls and spins, wind and turbulence, g-limits, gear that bounces on a hard landing.",
             "Crashes like real life: gear collapse, belly slides, wings shearing off, fireballs, debris and a wreck that tumbles, with a crash report.",

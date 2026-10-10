@@ -177,6 +177,24 @@
     { id: 'f35', cat: 'mil', name: 'F-35 Lightning', kind: 'Stealth fighter', blurb: 'Single engine with afterburner, twin tails and nine G. Fast, nimble and very hungry for fuel.',
       stall: 50, cruise: 190, max: 300, thrust: 10.5, authority: 0.95, pitch: 1.8, roll: 3.8, yaw: 0.6, stability: 1.9, gear: 1.35, scale: 1, cam: 1.2,
       span: 3.6, wingY: -0.16, wingZ: 1.35, nose: -5.3, tail: 4.9, gLimit: 9, wingX: 1.0, tailZ: 2.4, tailX: 2.3 },
+    { id: 'f16', cat: 'mil', name: 'F-16 Falcon', kind: 'Fighter', blurb: 'A light, agile single-engine fighter with one big tail. Quick to roll, quick to climb and forgiving to land.',
+      stall: 49, cruise: 190, max: 310, thrust: 10.5, authority: 0.95, pitch: 1.9, roll: 4.0, yaw: 0.6, stability: 1.8, gear: 1.35, scale: 0.95, cam: 1.15,
+      span: 3.4, wingY: -0.16, wingZ: 1.35, nose: -5.3, tail: 4.9, gLimit: 9, wingX: 1.0, tailZ: 2.4, tailX: 2.3 },
+    { id: 'f15', cat: 'mil', name: 'F-15 Eagle', kind: 'Fighter', blurb: 'A big twin-engine air-superiority fighter with twin tails. Fast and powerful, a little heavier to turn.',
+      stall: 56, cruise: 205, max: 335, thrust: 12.5, authority: 0.9, pitch: 1.6, roll: 3.2, yaw: 0.55, stability: 2.0, gear: 1.35, scale: 1.2, cam: 1.3,
+      span: 3.9, wingY: -0.16, wingZ: 1.35, nose: -5.3, tail: 4.9, gLimit: 9, wingX: 1.0, tailZ: 2.4, tailX: 2.3 },
+    { id: 'f18', cat: 'mil', name: 'F/A-18 Hornet', kind: 'Carrier fighter', blurb: 'A carrier fighter built to be flown slow. Stable on approach, with a forgiving stall and strong low-speed control.',
+      stall: 45, cruise: 180, max: 305, thrust: 10.5, authority: 1.0, pitch: 1.8, roll: 3.5, yaw: 0.6, stability: 2.1, gear: 1.35, scale: 1.05, cam: 1.2,
+      span: 3.7, wingY: -0.16, wingZ: 1.35, nose: -5.3, tail: 4.9, gLimit: 7.5, wingX: 1.0, tailZ: 2.4, tailX: 2.3 },
+    { id: 'typhoon', cat: 'mil', name: 'Eurofighter Typhoon', kind: 'Delta-canard fighter', blurb: 'A delta wing with canards and a single fin. Very agile and very quick off the mark.',
+      stall: 52, cruise: 195, max: 325, thrust: 12, authority: 1.0, pitch: 2.1, roll: 3.8, yaw: 0.55, stability: 1.5, gear: 1.35, scale: 1.0, cam: 1.2,
+      span: 3.3, wingY: -0.16, wingZ: 1.35, nose: -5.3, tail: 4.9, gLimit: 9, wingX: 1.0, tailZ: 2.4, tailX: 2.3 },
+    { id: 'f22', cat: 'mil', name: 'F-22 Raptor', kind: 'Stealth fighter', blurb: 'A stealth fighter with huge thrust and twin canted tails. The most powerful and nimble jet here.',
+      stall: 54, cruise: 215, max: 350, thrust: 14.5, authority: 1.0, pitch: 2.1, roll: 4.0, yaw: 0.6, stability: 1.6, gear: 1.35, scale: 1.15, cam: 1.25,
+      span: 3.7, wingY: -0.16, wingZ: 1.35, nose: -5.3, tail: 4.9, gLimit: 9, wingX: 1.0, tailZ: 2.4, tailX: 2.3 },
+    { id: 'su27', cat: 'mil', name: 'Sukhoi Su-27', kind: 'Fighter', blurb: 'A large, very manoeuvrable twin-engine fighter with twin tails. Loves tight turns.',
+      stall: 54, cruise: 200, max: 330, thrust: 12, authority: 1.0, pitch: 1.9, roll: 3.3, yaw: 0.55, stability: 1.8, gear: 1.4, scale: 1.3, cam: 1.35,
+      span: 3.9, wingY: -0.16, wingZ: 1.35, nose: -5.3, tail: 4.9, gLimit: 9, wingX: 1.0, tailZ: 2.4, tailX: 2.3 },
   ];
 
   /// Per-aircraft cockpit data: what kind of engine it has (for the sound and the engine gauge), the speeds painted on its
@@ -199,6 +217,12 @@
     b777: { retract: true, gearTime: 5, tailPitch: 9.5, engine: 'jet', engines: 2, n1Idle: 20, dial: 'AIRLINER', flapNotches: [0, 0.2, 0.4, 0.6, 0.8, 1], flapLabels: ['UP', '1', '5', '15', '20', '30'], fuel: 2000, vr: 1.2, vfe: 1.45, vno: 1.25 },
     b787: { retract: true, gearTime: 5, tailPitch: 10, engine: 'jet', engines: 2, n1Idle: 20, dial: 'AIRLINER', flapNotches: [0, 0.2, 0.4, 0.6, 0.8, 1], flapLabels: ['UP', '1', '5', '15', '20', '30'], fuel: 2000, vr: 1.2, vfe: 1.45, vno: 1.25 },
     f35: { retract: true, gearTime: 3, tailPitch: 14, engine: 'jet', engines: 1, n1Idle: 30, ab: true, dial: 'FIGHTER', flapNotches: [0, 0.5, 1], flapLabels: ['UP', 'T/O', 'LAND'], fuel: 1300, vr: 1.2, vfe: 1.9, vno: 1.3, gpws: 'betty' },
+    f16: { retract: true, gearTime: 3, tailPitch: 14, engine: 'jet', engines: 1, n1Idle: 30, ab: true, dial: 'FIGHTER', flapNotches: [0, 0.5, 1], flapLabels: ['UP', 'T/O', 'LAND'], fuel: 1200, vr: 1.2, vfe: 1.9, vno: 1.3, gpws: 'betty' },
+    f15: { retract: true, gearTime: 3, tailPitch: 14, engine: 'jet', engines: 2, n1Idle: 30, ab: true, dial: 'FIGHTER', flapNotches: [0, 0.5, 1], flapLabels: ['UP', 'T/O', 'LAND'], fuel: 1500, vr: 1.2, vfe: 1.9, vno: 1.3, gpws: 'betty' },
+    f18: { retract: true, gearTime: 3, tailPitch: 14, engine: 'jet', engines: 2, n1Idle: 30, ab: true, dial: 'FIGHTER', flapNotches: [0, 0.5, 1], flapLabels: ['UP', 'T/O', 'LAND'], fuel: 1300, vr: 1.2, vfe: 1.9, vno: 1.3, gpws: 'betty' },
+    typhoon: { retract: true, gearTime: 3, tailPitch: 14, engine: 'jet', engines: 2, n1Idle: 30, ab: true, dial: 'FIGHTER', flapNotches: [0, 0.5, 1], flapLabels: ['UP', 'T/O', 'LAND'], fuel: 1300, vr: 1.2, vfe: 1.9, vno: 1.3, gpws: 'betty' },
+    f22: { retract: true, gearTime: 3, tailPitch: 14, engine: 'jet', engines: 2, n1Idle: 30, ab: true, dial: 'FIGHTER', flapNotches: [0, 0.5, 1], flapLabels: ['UP', 'T/O', 'LAND'], fuel: 1500, vr: 1.2, vfe: 1.9, vno: 1.3, gpws: 'betty' },
+    su27: { retract: true, gearTime: 3, tailPitch: 14, engine: 'jet', engines: 2, n1Idle: 30, ab: true, dial: 'FIGHTER', flapNotches: [0, 0.5, 1], flapLabels: ['UP', 'T/O', 'LAND'], fuel: 1600, vr: 1.2, vfe: 1.9, vno: 1.3, gpws: 'betty' },
   };
   PLANES.forEach((p) => Object.assign(p, AIRCRAFT[p.id]));
   /// Whether this aircraft speaks: true for the airliner calls, 'betty' for just "Pull up" (the fighter), false for nothing.
@@ -925,7 +949,7 @@
   // ---- the stealth fighter: a blended, faceted fuselage, trapezoid wings, twin canted fins and all-moving tail planes
   function fighterBuild(P, S) {
     const b = new Builder(), W = { b, dyn: [], gears: [], lights: [], fans: [], spec: P }, C = hex, tan = (d) => Math.tan(d * DEG);
-    const grey = C('#9ba2ad'), grey2 = C('#838a95'), grey3 = C('#6f7681'), radome = C('#555b65'), dark = [0.07, 0.07, 0.08];
+    const grey = C(S.c1 || '#9ba2ad'), grey2 = C(S.c2 || '#838a95'), grey3 = C(S.c3 || '#6f7681'), radome = C('#555b65'), dark = [0.07, 0.07, 0.08];
     const rings = [[-5.3, 0.03, 0.03, -0.02, 2], [-5.15, 0.2, 0.17, -0.04, 2.4], [-4.5, 0.5, 0.34, -0.04, 2.7], [-3.5, 0.76, 0.5, 0.0, 2.9], [-2.5, 0.92, 0.62, 0.04, 3.1], [-1.1, 1.05, 0.66, 0.07, 3.2],
       [0.6, 1.05, 0.62, 0.08, 3.2], [2.1, 0.92, 0.56, 0.1, 3.0], [3.5, 0.7, 0.48, 0.11, 2.7], [4.4, 0.56, 0.43, 0.11, 2.4], [4.88, 0.5, 0.4, 0.11, 2.1]].map(([z, w, h, cy, e]) => ({ z, w, h, cy, e }));
     loftRings(b, rings, (z, th) => (z < -4.6 ? radome : z > 4.4 ? grey3 : th > 295 || th < 65 ? grey2 : ((Math.floor(z * 1.7) + Math.floor(th / 30)) % 3 === 0 ? grey2 : grey)), 18);
@@ -937,19 +961,25 @@
     const can = [[-3.35, 0.04, 0.03, 0.5], [-3.0, 0.3, 0.2, 0.6], [-2.4, 0.43, 0.29, 0.66], [-1.5, 0.43, 0.3, 0.66], [-0.8, 0.3, 0.2, 0.6], [-0.4, 0.06, 0.04, 0.53]].map(([z, w, h, cy]) => ({ z, w, h, cy, e: 2 }));
     loftRings(b, can, (z) => (z < -3.2 ? grey3 : [0.26, 0.22, 0.14]), 14);
     // ---- wings: swept, thin, with flaperons and ailerons
-    const semi = P.span, wings = {}, wsecs = [{ s: 0, le: -1.65, c: 3.95, th: 0.07 }, { s: semi, le: -1.65 + semi * tan(35), c: 0.9, th: 0.05 }];
+    const semi = P.span, wings = {}, wsecs = [{ s: 0, le: -1.65 - ((S.rootC || 3.95) - 3.95) * 0.45, c: S.rootC || 3.95, th: 0.07 }, { s: semi, le: -1.65 - ((S.rootC || 3.95) - 3.95) * 0.45 + semi * tan(S.sweep || 35), c: S.tipC || 0.9, th: 0.05 }];
     for (const side of [-1, 1]) {
-      const cs = [{ kind: 'flaperon', s0: 1.0, s1: 2.15, c0: 0.7, side }, { kind: 'aileron', s0: 2.2, s1: 3.35, c0: 0.72, side }];
+      const cs = [{ kind: 'flaperon', s0: semi * 0.28, s1: semi * 0.6, c0: 0.7, side }, { kind: 'aileron', s0: semi * 0.61, s1: semi * 0.93, c0: 0.72, side }];
       wings[side] = wingBuild(W, wingFrame(side, -0.1, -1), wsecs, { col: grey, colB: grey2, cs, camber: 0.008 });
     }
     // ---- tail: twin canted fins with rudders, all-moving tailplanes
     const fsecs = [{ s: 0, le: 1.9, c: 1.8, th: 0.05 }, { s: 1.6, le: 1.9 + 1.6 * tan(42), c: 0.75, th: 0.04 }];
+    const finStyle = S.fins || 'canted', finSides = finStyle === 'single' ? [1] : [-1, 1];
+    const finHt = finStyle === 'single' ? 2.3 : finStyle === 'twin' ? 1.9 : 1.6;
+    const fsecs2 = [{ s: 0, le: 1.9, c: finStyle === 'single' ? 2.4 : 1.8, th: 0.05 }, { s: finHt, le: 1.9 + finHt * tan(finStyle === 'single' ? 38 : 42), c: 0.75, th: 0.04 }];
     for (const side of [-1, 1]) {
-      const fb = wingBuild(W, finFrame(side * 0.42, 0.28, 20, side), fsecs, { col: grey, colB: grey, cs: [{ kind: 'rudder', s0: 0.1, s1: 1.55, c0: 0.64, axisUp: true }] });
-      polyFan(b, [fb.pt(1.0, 0.25, 1, 0.012), fb.pt(1.0, 0.55, 1, 0.012), fb.pt(1.35, 0.5, 1, 0.012), fb.pt(1.35, 0.22, 1, 0.012)].map((p) => p), [1, 0, 0], C('#d6b13a'));
-      polyFan(b, [fb.pt(1.0, 0.25, -1, 0.012), fb.pt(1.0, 0.55, -1, 0.012), fb.pt(1.35, 0.5, -1, 0.012), fb.pt(1.35, 0.22, -1, 0.012)], [-1, 0, 0], C('#d6b13a'));
+      if (finSides.includes(side)) {
+      const fb = wingBuild(W, finFrame(finStyle === 'single' ? 0 : side * (finStyle === 'twin' ? 0.62 : 0.42), 0.28, finStyle === 'canted' ? 20 : finStyle === 'twin' ? 6 : 0, side), fsecs2, { col: grey, colB: grey, cs: [{ kind: 'rudder', s0: 0.1, s1: finHt - 0.05, c0: 0.64, axisUp: true }] });
+      if (S.stripes !== false) polyFan(b, [fb.pt(1.0, 0.25, 1, 0.012), fb.pt(1.0, 0.55, 1, 0.012), fb.pt(1.35, 0.5, 1, 0.012), fb.pt(1.35, 0.22, 1, 0.012)].map((p) => p), [1, 0, 0], C('#d6b13a'));
+      if (S.stripes !== false) polyFan(b, [fb.pt(1.0, 0.25, -1, 0.012), fb.pt(1.0, 0.55, -1, 0.012), fb.pt(1.35, 0.5, -1, 0.012), fb.pt(1.35, 0.22, -1, 0.012)], [-1, 0, 0], C('#d6b13a'));
+      }
       wingBuild(W, wingFrame(side, 0.06, -3, 0.5), [{ s: 0, le: 2.75, c: 1.75, th: 0.05 }, { s: 1.55, le: 2.75 + 1.55 * tan(40), c: 0.6, th: 0.04 }], { col: grey, colB: grey2, cs: [{ kind: 'stab', s0: 0, s1: 1.55, c0: 0, h: 0.3, side }], camber: 0.004 });
     }
+    if (S.canard) for (const side of [-1, 1]) wingBuild(W, wingFrame(side, 0.12, 0, 0.3), [{ s: 0, le: -2.5, c: 1.3, th: 0.04 }, { s: 1.3, le: -2.5 + 1.3 * tan(45), c: 0.5, th: 0.03 }], { col: grey, colB: grey2, cs: [{ kind: 'stab', s0: 0, s1: 1.3, c0: 0, h: 0.2, side }], camber: 0.004 });
     // Speed brake: two panels on the spine that pop up when the brakes are used.
     for (const sx of [-0.32, 0.32]) {
       const pb = new Builder();
@@ -958,10 +988,20 @@
     }
     // ---- engine nozzle, with a dark, hot-looking bore
     const nz = [0, 0.11, 4.85];
+    if (S.twin) {   // two engines: two smaller nozzles side by side
+      for (const sx of [-0.27, 0.27]) {
+        const n2 = [sx, nz[1], nz[2]];
+        revolveZ(b, n2, [[-0.45, 0.27, grey3], [-0.1, 0.26, [0.3, 0.3, 0.33]], [0.12, 0.23, [0.2, 0.2, 0.22]], [0.2, 0.21, dark]], 14);
+        revolveZ(b, n2, [[0.2, 0.21, dark], [0.0, 0.12, [0.12, 0.08, 0.06]], [-0.15, 0.0, dark]], 10);
+      }
+    } else {
     revolveZ(b, nz, [[-0.45, 0.47, grey3], [-0.1, 0.45, [0.3, 0.3, 0.33]], [0.12, 0.4, [0.2, 0.2, 0.22]], [0.2, 0.37, dark]], 16);
     revolveZ(b, nz, [[0.2, 0.37, dark], [0.0, 0.2, [0.12, 0.08, 0.06]], [-0.15, 0.0, dark]], 12);
-    const sP = [0, 1].map((k) => { const pts = []; for (let i = 0; i < 18; i++) { const a = (i / 18) * Math.PI * 2, rr = k ? 0.4 : 0.44; pts.push([Math.cos(a) * rr, nz[1] + Math.sin(a) * rr, nz[2] + (k ? 0.2 + (i % 2 ? 0.12 : 0) : 0.0)]); } return pts; });
-    gridMesh(b, sP, [0.28, 0.28, 0.31], { closed: true, refs: [[0, nz[1], nz[2]], [0, nz[1], nz[2] + 0.2]] });
+    }
+    if (!S.twin) {
+        const sP = [0, 1].map((k) => { const pts = []; for (let i = 0; i < 18; i++) { const a = (i / 18) * Math.PI * 2, rr = k ? 0.4 : 0.44; pts.push([Math.cos(a) * rr, nz[1] + Math.sin(a) * rr, nz[2] + (k ? 0.2 + (i % 2 ? 0.12 : 0) : 0.0)]); } return pts; });
+        gridMesh(b, sP, [0.28, 0.28, 0.31], { closed: true, refs: [[0, nz[1], nz[2]], [0, nz[1], nz[2] + 0.2]] });
+    }
     // ---- undercarriage
     const wr = 0.27, ww = 0.17;
     for (const side of [-1, 1]) mainLeg(W, side * 1.02, -0.35, 0.5, P.gear, wr, ww, [0], 1, true, 0.07);
@@ -988,6 +1028,13 @@
     if (LINERS[id]) return linerBuild(P, LINERS[id]);
     if (GA[id]) return gaBuild(P, GA[id]);
     if (id === 'f35') return fighterBuild(P, {});
+    if (id === 'f16') return fighterBuild(P, { c1: '#8a96a3', c2: '#78848f', c3: '#66707b', sweep: 40, rootC: 4.3, tipC: 0.7, fins: 'single', stripes: false });
+    if (id === 'f15') return fighterBuild(P, { c1: '#7f8a97', c2: '#6d7884', c3: '#5c6670', sweep: 33, rootC: 4.0, tipC: 1.1, fins: 'twin', stripes: false, twin: true });
+    if (id === 'f18') return fighterBuild(P, { c1: '#79838e', c2: '#68717b', c3: '#575f69', sweep: 28, rootC: 4.0, tipC: 1.0, fins: 'canted', stripes: false, twin: true });
+    if (id === 'typhoon') return fighterBuild(P, { c1: '#a0a9b3', c2: '#8d97a2', c3: '#7a848f', sweep: 56, rootC: 5.6, tipC: 0.5, fins: 'single', canard: true, stripes: false, twin: true });
+    if (id === 'f22') return fighterBuild(P, { c1: '#69727d', c2: '#5c646e', c3: '#4e565f', sweep: 42, rootC: 4.4, tipC: 0.95, fins: 'canted', stripes: false, twin: true });
+    if (id === 'su27') return fighterBuild(P, { c1: '#7f9bb5', c2: '#6d889f', c3: '#5b7389', sweep: 42, rootC: 4.6, tipC: 0.9, fins: 'twin', stripes: false, twin: true });
+
     return { body: new Builder(), dyn: [], gears: [], lights: [], fans: [] };
   }
   // ---- AIRCRAFT MODELS END
@@ -3411,7 +3458,7 @@
             else toast(r === 'fixed' ? `The ${plane.name} has fixed wheels: no gear to raise` : r === 'broken' ? 'The undercarriage is broken' : 'Gear can only be raised in the air', 1500);
           }
           if (k === 'f' || k === 'v') {
-            const n = plane.flapNotches || [0, 1], to = clamp(flight.flapNotch + (k === 'f' ? 1 : -1), 0, n.length - 1);
+            const n = plane.flapNotches || [0, 1], to = k === 'f' && flight.flapNotch >= n.length - 1 ? 0 : clamp(flight.flapNotch + (k === 'f' ? 1 : -1), 0, n.length - 1);   // F again after the last notch brings the flaps back up
             if (to !== flight.flapNotch) {
               flight.flapNotch = to; flight.flaps = n[to];
               toast(`Flaps ${(plane.flapLabels || ['UP', 'DOWN'])[to]}`, 900); noise(0.5, 0.12, 700);
