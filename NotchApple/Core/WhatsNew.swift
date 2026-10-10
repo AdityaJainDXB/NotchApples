@@ -20,6 +20,11 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.0.49", date: "10 October 2026", headline: "Plane: weather, touchdowns and crashes", items: [
+            "New Weather panel in the Plane menu: 0–90 kt crosswind, headwind or tailwind, and turbulence from none to extreme, with presets.",
+            "Far more realistic touchdowns: oleo struts, tyre side forces, spin-up smoke, skids and burst tyres, tilting bogies, reverse thrust on X, and a rating for every landing.",
+            "Even more realistic crashes: the plane breaks into sections, skips across the ground, burns only when a tank tears, and the report says what broke.",
+        ]),
         ReleaseNote(version: "2.0.48", date: "10 October 2026", headline: "Six more fighter jets", items: [
             "Plane: the F-16 Falcon, F-15 Eagle, F/A-18 Hornet, Eurofighter Typhoon, F-22 Raptor and Sukhoi Su-27 join the F-35, each with its own wing, tail and colours, afterburner and retractable gear.",
             "Plane: press F again after the last flap setting and the flaps come back up.",

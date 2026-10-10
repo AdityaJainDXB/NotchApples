@@ -64,10 +64,10 @@ Pick your computer. Both buttons start the download straight away. The Mac butto
   </tr>
   <tr>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/v2.0.34/NotchApple-2.0.34.dmg"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.0.47</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/v2.0.34/NotchApple-2.0.34.dmg"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.0.49</b></a>
     </td>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 1.50.0 BETA</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 1.52.0 BETA</b></a>
     </td>
   </tr>
   <tr>
@@ -211,6 +211,12 @@ All screenshots use sample data.
 ## What's new
 
 > **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is still in the repository's tags.
+
+### Mac 2.0.49 · Windows 1.52.0 BETA · 10 October 2026 · 🌬 Plane: weather, touchdowns and crashes
+
+- **Weather in the Plane menu.** A **Weather** panel with a **0–90 kt crosswind** (left or right), a **headwind / tailwind** slider and **turbulence** from None to Extreme, plus presets (Calm, Breezy, Crosswind landing, Storm, Hurricane, Random). The panel's wind box shows the wind, gusts, cross and head components and your ground speed.
+- **Touchdowns and gear.** Each wheel is a tyre on an **oleo strut** (stiffens as it compresses, damps harder going down, can bottom out), with real **tyre side force** so a crabbed crosswind landing squeals and straightens. Spin-up chirp and **smoke**, **skids and burst tyres** (light planes), differential braking, nosewheel steering, ground spoilers, **reverse thrust (X)** and **tilting bogie trucks** on the big airliners. Bounces, porpoising, one-wheel rolls, wingtip scrapes and **strut damage** depend on how you land, and every touchdown gets a rating.
+- **Crashes, even more real.** The plane breaks into a **nose, fuselage, tail, wing panels, engines and gear legs** that tear off where they really would; shallow impacts **skip** before breaking up; **fire** needs a torn tank and a spark; wrecks leave a **gouge**, smoke drifts with the wind, a ditched plane **floats then sinks**. Slow-motion at the big impact, layered crash sounds, and a more detailed crash report.
 
 ### Mac 2.0.48 · Windows 1.51.0 BETA · 10 October 2026 · Six more fighter jets
 
