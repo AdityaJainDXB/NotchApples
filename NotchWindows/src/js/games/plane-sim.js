@@ -430,7 +430,15 @@
   const nacaT = (u) => 5 * (0.2969 * Math.sqrt(u) - 0.126 * u - 0.3516 * u * u + 0.2843 * u * u * u - 0.1036 * u * u * u * u);
   const foilStations = (u0, u1) => [u0, ...FOIL.filter((u) => u > u0 + 1e-6 && u < u1 - 1e-6), u1];
   /// Which part of the broken-up aircraft a piece at (cx, cz) belongs to; the same rule splits the main mesh (see splitPlane).
-  const bucketOf = (spec, cx, cz) => (cz >= spec.tailZ && Math.abs(cx) < (spec.tailX || 1e9) ? 'T' : cx < -spec.wingX ? 'L' : cx > spec.wingX ? 'R' : 'F');
+  /// Which separable section a point belongs to: the tail group (T), the wings (L, R) and their outer panels (Lo, Ro), the
+  /// nose and cockpit section (N) and the rest of the fuselage (F). (Engines are picked out by their own position.)
+  const bucketOf = (spec, cx, cz) => {
+    if (cz >= spec.tailZ && Math.abs(cx) < (spec.tailX || 1e9)) return 'T';
+    const out = spec.span * (spec.scale || 1) * 0.58;
+    if (cx < -spec.wingX) return cx < -out ? 'Lo' : 'L';
+    if (cx > spec.wingX) return cx > out ? 'Ro' : 'R';
+    return cz < spec.nose * (spec.scale || 1) * 0.5 ? 'N' : 'F';
+  };
   const centroidOf = (bld) => { let x = 0, z = 0, n = bld.d.length / 9; for (let i = 0; i < bld.d.length; i += 9) { x += bld.d[i]; z += bld.d[i + 2]; } return [x / n, z / n]; };
   /// A lofted lifting surface. `f` is its frame { o: origin, S: unit vector along the span, T: unit vector across it
   /// (up for a wing, sideways for a fin) }; `secs` are { s, le, c, th } (distance along the span, leading-edge z, chord,
@@ -528,7 +536,8 @@
       polyFan(fb, [P(r * 0.2, a0), P(r * 0.82, a0 + 0.13), P(r * 0.82, a0 + 0.3), P(r * 0.2, a0 + 0.2)], [0, 0, -1], e.fanCol || [0.66, 0.68, 0.72]);
     }
     revolveZ(fb, [0, 0, 0], [[0.015 * L, r * 0.24, [0.7, 0.72, 0.76]], [-0.04 * L, r * 0.17, [0.8, 0.82, 0.85]], [-0.085 * L, r * 0.05, [0.85, 0.86, 0.9]], [-0.09 * L, 0, [0.85, 0.86, 0.9]]], 10);
-    W.fans.push({ mesh: fb, at: [e.x, e.y, e.z + 0.105 * L], attach: bucketOf(W.spec, e.x, e.z), dir: e.dir || 1 });
+    if (W.engs) W.engs.push({ x: e.x, y: e.y, z: e.z, r: r * 1.12, len: L * 1.33 });
+    W.fans.push({ mesh: fb, at: [e.x, e.y, e.z + 0.105 * L], attach: W.engs ? 'E' + (W.engs.length - 1) : bucketOf(W.spec, e.x, e.z), dir: e.dir || 1 });
   }
   /// The pylon joining a pod to the wing's underside (or to the fuselage side if `side` is given).
   function pylon(W, e, topY, z0, z1, col) {
@@ -589,7 +598,7 @@
   /// Builds a jet: lofted fuselage with windows and doors, a swept wing with flaps, ailerons and spoilers, a fin with rudder,
   /// tail planes with elevators, engine pods (under the wing or on the rear fuselage), winglets, gear and lights.
   function linerBuild(P, S) {
-    const b = new Builder(), W = { b, dyn: [], gears: [], lights: [], fans: [], spec: P };
+    const b = new Builder(), W = { b, dyn: [], gears: [], lights: [], fans: [], engs: [], spec: P };
     const zN = P.nose, zT = P.tail, L = zT - zN, D = S.D, r = D / 2, semi = P.span, C = hex;
     const body = C(S.body), belly = C(S.belly || S.body), trim = C(S.trim), tailc = C(S.tail), accent = C(S.accent || S.trim);
     const glass = [0.06, 0.09, 0.13], eng = C(S.eng || '#e7ebef'), wingc = C(S.wingCol || '#dde2e8'), wingB = C(S.wingBot || '#c2c8d0'), dark = [0.1, 0.11, 0.13], radome = [0.2, 0.22, 0.25];
@@ -699,7 +708,7 @@
     addLight(W, 'beacon', [0, -r + 0.02, zN + 0.45 * L], lr * 1.2);
 
     if (S.paint) S.paint({ b, rings, zN, zT, L, D, r, nl, tl, body, belly, trim, tailc, accent, finLogo, fin: f, glass, dark, tb });
-    return { body: b, dyn: W.dyn, gears: W.gears, lights: W.lights, fans: W.fans };
+    return { body: b, dyn: W.dyn, gears: W.gears, lights: W.lights, fans: W.fans, engs: W.engs };
   }
 
   // ---- the liveries (all invented) and the jets' shapes
@@ -2290,7 +2299,7 @@
       for (const P of this.pts) { P.on = false; P.vi = 0; P.vt = 0; P.Fn = 0; P.Fs = 0; P.s = 0; P.ws = 0; P.lockT = 0; P.peak = 0; P.sq = 0; if (P.y0 != null) P.r[1] = P.y0; }
       this.tl = [0, 0]; this.sideOn = [false, false]; this.mainsOn = 0; this.brakeP = 0; this.gspoil = 0; this.rev = false; this.inYaw = 0; this.td = null; this.tilt = 0; this.skidT = 0; this.squealT = 0; this.lastTd = null;
       // wreck
-      this.gone = new Set(); this.engSev = [0, 0]; this.sepLog = []; this.leak = 0; this.ignited = false; this.igniteT = -1; this.gPeak = 1; this.cabinDmg = 0; this.exT = -1; this.slid = 0; this.impact0 = null; this.fuelAtCrash = 0;
+      this.hot = 0; this.eStep = 0; this.cabT = 0; this.snapQ = {}; this.crush = 4; this.fireSize = 0; this.gone = new Set(); this.engSev = [0, 0]; this.sepLog = []; this.leak = 0; this.ignited = false; this.igniteT = -1; this.gPeak = 1; this.cabinDmg = 0; this.exT = -1; this.slid = 0; this.impact0 = null; this.fuelAtCrash = 0;
       this.info = null; this.report = null; this.breakQ = []; this.wreckT = 0; this.rest = false; this.restT = 0; this.buoy = 1; this.wetT = 0; this.wreckTouch = 0;
     }
     /// The g meter: the wings' load plus whatever the wheels are adding on the runway.
@@ -2890,7 +2899,11 @@
       const vi = P.vi, vt = P.vt, V = this.speed;
       switch (P.id) {
         case 'L': case 'R': {
-          if (vi + 0.12 * vt > 4.2) { this.loseWing(P.id, 'ground'); this.vel = mul(this.vel, 0.92); if (P.id === 'L') this.w[2] += 0.6; else this.w[2] -= 0.6; }
+          if (vi + 0.12 * vt > 4.2) {
+            // A wing digging in at speed: it snaps, but first it spins the plane round its tip (a cartwheel when it is fast).
+            this.loseWing(P.id, 'ground'); this.vel = mul(this.vel, 0.92);
+            const sg = P.id === 'L' ? 1 : -1, k = clamp(0.45 + V * 0.04, 0.6, 3); this.w[2] += sg * k; this.w[1] += sg * k * 0.35;
+          }
           else if (P.vt > 3) { this.scrape(P, 0.5); if (this.scrapeEvT <= 0) { this.scrapeEvT = 2.5; this.events.push({ type: 'scrape', what: 'wingtip' }); } }
           return false;
         }
@@ -2919,11 +2932,51 @@
         }
       }
     }
-    /// Structure meeting the ground or an obstacle in a wreck: things shear off and thud.
+    /// Structure meeting the ground or an obstacle in a wreck: things shear off and thud. Each impact is judged by its
+    /// energy (per kilogram), so a hard hit takes off more than a scrape.
     wreckCheck(P, first, px, py, pz) {
-      if ((P.id === 'L' || P.id === 'R') && P.vi + 0.12 * P.vt > 6) this.loseWing(P.id, 'crash');
-      else if (P.id === 'T' && P.vi > 6) this.breakTail();
-      if (first && P.vi > 3.5 && this.bumpT <= 0) { this.bumpT = 0.12; this.events.push({ type: 'bump', vi: P.vi, at: [px, py, pz] }); }
+      const vi = P.vi, e = 0.5 * vi * vi + 0.08 * P.vt * P.vt, id = P.id;
+      if ((id === 'L' || id === 'R') && this.damage[id] && vi + 0.12 * P.vt > 6 && !this.snapQ[id]) {
+        // The wing digs in: it swings the whole hull round (a cartwheel when it is fast) before the root lets go.
+        this.snapQ[id] = true;
+        const sg = id === 'L' ? 1 : -1, k = clamp(0.3 + P.vt * 0.04, 0.3, 3);
+        this.w[2] += sg * k; this.w[1] += sg * k * 0.3;
+        this.breakQ.push({ t: this.wreckT + 0.08 + Math.random() * 0.1, part: id }); this.breakQ.sort((a, b) => a.t - b.t);
+      } else if (id === 'T' && vi > 6) this.breakTail();
+      else if (first && (id === 'nose' || id === 'bf' || id === 'rf') && e > 90 && !this.gone.has('N')) this.severNose();
+      else if (first && (id === 'pL' || id === 'pR') && e > 40 && this.s.engines >= 2 && this.s.cat !== 'ga') this.severEngine(id === 'pL' ? -1 : 1);
+      if (first && vi > 3 && id !== 'L' && id !== 'R' && id !== 'T') {
+        const g = (vi * vi) / (2 * this.crush * 1.3 * G);
+        if (g > this.gPeak) this.gPeak = g;
+        if (e > this.eStep) this.eStep = e;
+      }
+      if (first && vi > 3.5 && this.bumpT <= 0) { this.bumpT = 0.12; this.events.push({ type: 'bump', vi, at: [px, py, pz], e }); }
+    }
+    /// The cockpit section lets go at the bulkhead behind it.
+    severNose() {
+      if (this.gone.has('N')) return;
+      this.gone.add('N'); this.sepLog.push('nose'); this.cabinDmg = Math.min(1, this.cabinDmg + 0.25);
+      if (this.s.engine === 'piston') this.failEngine();
+      this.events.push({ type: 'sever', part: 'N', side: 0 });
+    }
+    /// An engine tears off its pylon (side -1 left, +1 right).
+    severEngine(side) {
+      const i = side < 0 ? 0 : 1, perSide = Math.max(1, (this.s.engines || 2) >> 1);
+      if (this.engSev[i] >= perSide) return;
+      this.engSev[i] = perSide;                                    // (every engine on that wing is lost with the pylon load path)
+      this.sepLog.push(perSide > 1 ? `${side < 0 ? 'left' : 'right'} engines` : `${side < 0 ? 'left' : 'right'} engine`);
+      if (this.engSev[0] && this.engSev[1]) this.failEngine(); else this.failEngine(true);
+      this.leak = Math.min(1, this.leak + 0.15); this.hot = Math.max(this.hot, 0.5);
+      this.events.push({ type: 'sever', part: 'E', side });
+    }
+    /// The spilled fuel catches: a fire whose size follows the fuel that is left.
+    ignite() {
+      if (this.ignited) return;
+      const ff = clamp(this.fuel / (this.s.fuel || 1800), 0, 1);
+      if (ff < 0.03) return;
+      this.ignited = true; this.igniteT = this.wreckT; this.fireSize = ff * (0.5 + 0.35 * (this.s.cam || 1));
+      if (Math.random() < 0.1 * ff + (this.s.cat === 'liner' ? 0.04 : 0)) this.exT = this.wreckT + 1 + Math.random() * 5;
+      this.events.push({ type: 'ignite', size: this.fireSize, ff, late: this.wreckT > 0.3 });
     }
     /// The tail dragging on the ground: each scrape costs some of its health, faster and harder ones more. At
     /// nothing left the tail breaks off.
@@ -2963,7 +3016,11 @@
     stepWreck(dt, world) {
       if (this.rest) return;
       this.wreckT += dt;
-      while (this.breakQ.length && this.breakQ[0].t <= this.wreckT) { const b = this.breakQ.shift(); if (b.part === 'T') this.breakTail(); else this.loseWing(b.part, 'crash'); }
+      while (this.breakQ.length && this.breakQ[0].t <= this.wreckT) {
+        const b = this.breakQ.shift();
+        if (b.part === 'T') this.breakTail(); else if (b.part === 'N') this.severNose(); else if (b.part === 'E') this.severEngine(b.side);
+        else this.loseWing(b.part, 'crash', b.mode);
+      }
       this.bumpT = Math.max(0, this.bumpT - dt);
       const V = len(this.vel);
       this.vel[1] -= G * dt;
@@ -2972,57 +3029,91 @@
       const wl = len(this.w);
       if (wl * dt > 1e-6) this.q = qnorm(qmul(this.q, qaxis(mul(this.w, 1 / wl), wl * dt)));
       this.w = mul(this.w, Math.exp(-dt * 0.25));
+      this.eStep = 0; this.cabT -= dt;
       this.contacts(dt, world, true);
+      if (this.eStep > 40 && this.cabT <= 0) { this.cabT = 0.25; this.cabinDmg = Math.min(1, this.cabinDmg + (this.eStep - 40) / 800); }
       if (this.wet > 0) { this.wetT += dt; if (this.wetT > 7) this.buoy = Math.max(0.15, 1 - (this.wetT - 7) * 0.05); }
-      if (this.pos[1] < WATER - 5) { this.rest = true; this.sunk = true; return; }
+      // Fuel from the torn tanks and a spark (scraping metal, a hot engine, the shower of sparks at the first hit) start the fire,
+      // but not every time. A small fuel explosion is rare.
+      if (!this.ignited && this.leak > 0.08 && this.wet === 0 && this.wreckT < 40) {
+        const hard = this.surface && this.surface.skid < 0.45 ? 1.5 : 1;
+        const spark = (this.scrapeI > 0.2 ? 0.5 * hard : 0) + this.hot * Math.max(0, 1 - this.wreckT / 2.5) + (this.engSev[0] + this.engSev[1] > 0 ? 0.12 : 0);
+        if (Math.random() < dt * this.leak * spark * 1.6) this.ignite();
+      }
+      if (this.ignited && this.exT > 0 && this.wreckT > this.exT) { this.exT = -1; this.events.push({ type: 'explode', size: this.fireSize * 0.6 }); }
+      if (this.pos[1] < WATER - 5) { this.rest = true; this.sunk = true; this.report = this.makeReport(); return; }
       const calm = len(this.vel) < 0.35 && len(this.w) < 0.12 && (this.wreckTouch > 0 || this.wet > 0);
       this.restT = calm && this.wet === 0 ? this.restT + dt : 0;
-      if (this.restT > 0.8) { this.rest = true; this.vel = v3(); this.w = v3(); }
+      if (this.restT > 0.8) { this.rest = true; this.vel = v3(); this.w = v3(); this.report = this.makeReport(); }
     }
 
-    /// The end of the flight: works out how bad it was from the speed into the surface, what broke and how it ends.
+    /// The end of the flight: works out how bad it was from the velocity into the surface (speed and angle), how much
+    /// energy the structure has to take, what lets go first and whether the fuel burns.
     crash(why = 'crash', c = {}) {
       if (this.crashed) return;
       const s = this.s, V = this.speed;
       const vi = Math.max(0, c.vi ?? -this.vel[1]), vt = c.vt ?? 0;
       const ve = c.object ? V * 0.85 : Math.hypot(vi, 0.3 * vt);          // speed that has to be absorbed
       const sev = ve < 8 ? 0 : ve < 16 ? 1 : ve < 30 ? 2 : 3;
-      const fuelFrac = clamp(this.fuel / (s.fuel || 1800), 0, 1);
-      const fire = why !== 'water' && fuelFrac > 0.03 && (sev >= 3 || (sev === 2 && Math.random() < 0.6) || (sev === 1 && Math.random() < 0.2));
-      const crush = 2.5 + 4 * clamp((s.stall - 24) / 46, 0, 1);            // how far the structure crumples
-      const gEst = (ve * ve) / (2 * crush * G);
-      const surv = gEst < 12 ? 'Survivable' : gEst < 22 ? 'Barely survivable' : 'Not survivable';
+      const E = 0.5 * ve * ve;                                            // energy the structure has to absorb (J/kg)
+      const ang = c.object ? Math.PI / 2 : Math.atan2(vi, Math.max(vt, 0.1));
       const pitch = this.pitchAngle, bank = this.bank;
-      this.info = { why, sev, ve, vi, vt, V, pitch, bank, engineOut: !this.damage.engine, g: gEst, surv, fire, sink: -this.vel[1], ias: this.ias, at: this.pos.slice() };
-      this.why = why; this.crashed = true; this.wreckT = 0; this.impactVel = this.vel.slice();
-      // Crumpling takes most of the speed into the surface; the rest becomes tumble.
+      // A shallow hit at speed on level ground does not stop it: it skips like a stone, breaking up as it goes.
+      const skip = !c.object && why !== 'water' && ang < 22 * DEG && V > 28 && ve < 45 && Math.abs(bank) < 45 * DEG;
+      const fuelFrac = clamp(this.fuel / (s.fuel || 1800), 0, 1);
+      const crush = 2.5 + 4 * clamp((s.stall - 24) / 46, 0, 1);            // how far the structure crumples
+      this.crush = crush;
+      const gEst = (ve * ve) / (2 * crush * (skip ? 1.8 : 1) * G);
+      this.gPeak = Math.max(this.gPeak, gEst);
+      this.cabinDmg = clamp((gEst - 12) / 16, 0, 1) + (c.object && ve > 25 ? 0.5 : 0);
+      this.info = { why, sev, ve, vi, vt, V, pitch, bank, engineOut: !this.damage.engine, g: gEst, fire: false, sink: -this.vel[1], ias: this.ias, at: this.pos.slice(), E, ang, skip,
+        hdg: this.heading, surf: this.surface === SURFACES.runway ? 'runway' : 'ground' };
+      this.why = why; this.crashed = true; this.wreckT = 0; this.impactVel = this.vel.slice(); this.fuelAtCrash = this.fuel;
+      this.snapQ = {}; this.hot = E > 200 ? 1 : E > 80 ? 0.55 : E > 30 ? 0.2 : 0.05;
+      // Crumpling takes most of the speed into the surface; the rest becomes tumble (or, shallow, a bounce).
       const n = c.n;
       if (n) {
         const vn = dot(this.vel, n);
         if (vn < 0) {
-          // The normal speed is crushed away (a little bounces back) and the sliding speed is scrubbed off in proportion.
           const vnv = mul(n, vn), vtv = sub(this.vel, vnv);
-          this.vel = add(mul(vtv, [0.95, 0.8, 0.6, 0.45][sev]), mul(vnv, -0.1));
+          this.vel = add(mul(vtv, skip ? 0.9 : [0.95, 0.8, 0.6, 0.45][sev]), mul(vnv, skip ? -0.3 : -0.1));
         }
         if (c.P) {
           const b = qrot(qconj(this.q), mul(n, Math.max(0, -vn) * 0.5)), r = c.P.r, I = this.I;
           this.w[0] += (r[1] * b[2] - r[2] * b[1]) / I[0]; this.w[1] += (r[2] * b[0] - r[0] * b[2]) / I[1] * 0.5; this.w[2] += (r[0] * b[1] - r[1] * b[0]) / I[2];
         }
       }
-      // What comes off, and when.
+      // What comes off, and when: each piece lets go if the energy is above its threshold (a little random), earliest the
+      // parts that the attitude put in the way. Each break takes some of the energy with it.
       this.breakQ = [];
-      if (sev >= 3) { this.loseWing('L', 'crash'); this.loseWing('R', 'crash'); this.breakTail(); }
-      else if (sev === 2) {
-        const first = Math.random() < 0.5 ? 'L' : 'R';
-        this.breakQ.push({ t: 0.12, part: 'T' }, { t: 0.2, part: first }, { t: 0.5, part: first === 'L' ? 'R' : 'L' });
-      } else if (sev === 1 && Math.random() < 0.5) this.breakQ.push({ t: 0.3, part: Math.random() < 0.5 ? 'L' : 'R' });
+      const liner = (s.engines || 0) >= 2 && s.cat !== 'ga' && s.cat !== 'mil', noseOn = why === 'nose' || pitch < -12 * DEG || !!c.object, tailOn = pitch > 12 * DEG && !c.object;
+      const low = bank > 0 ? 'R' : 'L', high = low === 'R' ? 'L' : 'R';
+      const wf = why === 'water' ? 1.3 : 1;
+      let rem = (E / wf) * (skip ? 0.38 : 1);        // (a skip leaves energy for the next hits)
+      const q = this.breakQ;
+      const take = (thr, t, o) => { const k = thr * (0.75 + 0.5 * Math.random()); if (rem > k) { q.push(Object.assign({ t }, o)); rem -= k * 0.4; return true; } return false; };
+      if (liner) { take(c.object ? 60 : 45, 0.03, { part: 'E', side: low === 'L' ? -1 : 1 }); take(c.object ? 70 : 52, 0.08, { part: 'E', side: low === 'L' ? 1 : -1 }); }
+      take(Math.abs(bank) > 10 * DEG ? 42 : 95, 0.12, { part: low });
+      take(c.object ? 90 : 115, 0.2, { part: high });
+      take(tailOn ? 60 : 150, 0.15, { part: 'T' });
+      take(noseOn ? 100 : 240, 0.1, { part: 'N' });
+      q.sort((a, b) => a.t - b.t);
       if (sev >= 1) this.damage.gear = false;
       this.failEngine();
+      // Fire: needs fuel in the torn tanks and something to light it (see stepWreck); the first hit often does.
+      this.leak = Math.max(this.leak, E > 70 ? 0.3 : E > 30 ? 0.12 : 0.03);
+      for (const b of q) if (b.part === 'L' || b.part === 'R') this.leak = Math.min(1, this.leak + 0.4);
+      if (why !== 'water' && fuelFrac > 0.03 && this.leak > 0.1) {
+        const pIgn = clamp(this.leak * (0.3 + this.hot * 0.9) * (0.5 + 0.5 * fuelFrac) * 1.1, 0, 0.97);
+        if (Math.random() < pIgn) this.ignite();
+      }
+      this.info.fire = this.ignited;
       this.report = this.makeReport();
       this.events.push({ type: 'crash', why, info: this.info });
     }
 
-    /// A short honest account of what happened, for the result screen: { title, lines, surv, g }.
+    /// A short honest account of what happened, for the result screen: { title, lines, surv, g }. It is rebuilt when the
+    /// wreck has stopped, so it can say what separated and where the wreck ended up.
     makeReport() {
       const i = this.info;
       const pitch = Math.round(i.pitch / DEG), bank = Math.round(Math.abs(i.bank) / DEG);
@@ -3040,11 +3131,20 @@
       if (cause) title = `${cause}, ${impact}, ${att}`;
       else if (i.why === 'water') title = `${what} at ${Math.round(i.V)} m/s`;
       else if (i.why === 'flip') title = `${what} on landing at ${Math.round(i.V)} m/s`;
-      else title = `${what}, ${impact}, ${att}`;
-      const lines = [`Speed ${Math.round(i.V)} m/s · sink ${i.sink.toFixed(1)} m/s · ${att}${bank > 4 ? ` · ${bank}° bank` : ''}`,
-        `Impact load about ${Math.round(i.g)} g · ${i.surv}`];
-      if (i.fire) lines.push('Fuel fire after the impact');
-      return { title, lines, surv: i.surv, g: i.g, crash: true };
+      else title = `${what}, ${impact}, ${att}${i.skip ? ' (skipped)' : ''}`;
+      // Survivability from the peak deceleration and the state of the cabin section.
+      const g = this.gPeak, cab = this.cabinDmg;
+      const cabin = cab < 0.3 ? 'cabin intact' : cab < 0.7 ? 'cabin badly damaged' : 'cabin destroyed';
+      const surv = g < 14 && cab < 0.5 ? 'Survivable' : g < 24 && cab < 0.8 ? 'Barely survivable' : 'Not survivable';
+      const list = (a) => a.length < 2 ? a.join('') : a.length === 2 ? a.join(' and ') : `${a.slice(0, -1).join(', ')} and ${a[a.length - 1]}`;
+      const lines = [`Speed ${Math.round(i.V)} m/s · sink ${i.sink.toFixed(1)} m/s · ${att}${bank > 4 ? ` · ${bank}° bank` : ''} · ${Math.round(i.ang / DEG)}° to the surface`,
+        `About ${Math.round(g)} g peak, ${cabin}`];
+      if (this.sepLog.length) { const t = list(this.sepLog); lines.push(`${t.charAt(0).toUpperCase() + t.slice(1)} separated`); }
+      if (this.ignited) lines.push(this.igniteT < 0.4 ? 'Fuel fire after the impact' : `Fire broke out ${Math.round(this.igniteT)} s after the impact`);
+      else if (this.leak > 0.1 && i.why !== 'water') lines.push('Fuel spilled but did not ignite');
+      if (i.why === 'water') lines.push(this.sunk ? 'The wreck sank' : 'The wreck floated for a while');
+      if (this.rest || this.sunk) { const d = Math.round(Math.hypot(this.pos[0] - i.at[0], this.pos[2] - i.at[2])); if (d > 8) lines.push(`Wreck came to rest ${d} m from the first impact`); }
+      return { title, lines, surv, g, cabin, crash: true };
     }
     /// For a flight that ended without a crash (a belly slide to a stop): what failed, and whether it was survivable.
     slideReport() {
@@ -3222,23 +3322,30 @@
     // off and tumble on its own. A part's `mesh` includes the control surfaces resting in their neutral position (that is
     // what tumbles away); `live` leaves them out, because they are drawn separately, moved by the controls.
     function splitPlane(spec, m) {
-      const full = { F: [], L: [], R: [], T: [] }, live = { F: [], L: [], R: [], T: [] };
+      const full = {}, live = {}, engs = m.engs || [];
       const place = (d, alsoLive) => {
         for (let i = 0; i < d.length; i += 27) {
-          const cx = (d[i] + d[i + 9] + d[i + 18]) / 3, cz = (d[i + 2] + d[i + 11] + d[i + 20]) / 3, k = bucketOf(spec, cx, cz);
+          const cx = (d[i] + d[i + 9] + d[i + 18]) / 3, cy = (d[i + 1] + d[i + 10] + d[i + 19]) / 3, cz = (d[i + 2] + d[i + 11] + d[i + 20]) / 3;
+          let k = null;
+          for (let e = 0; e < engs.length && e < 4; e++) { const E = engs[e], dx = cx - E.x, dy = cy - E.y; if (dx * dx + dy * dy < E.r * E.r && cz > E.z - 0.12 && cz < E.z + E.len) { k = 'E' + e; break; } }
+          if (!k) k = bucketOf(spec, cx, cz);
+          if (!full[k]) { full[k] = []; live[k] = []; }
           for (let j = 0; j < 27; j++) { full[k].push(d[i + j]); if (alsoLive) live[k].push(d[i + j]); }
         }
       };
       place(m.body.d, true);
       for (const dy of m.dyn || []) place(dy.mesh.d, false);
       const parts = {};
+      // The bounding box of a mesh and its centre: the pieces that break off are boxes to the physics.
+      const bbox = (arr) => { const lo = [1e9, 1e9, 1e9], hi = [-1e9, -1e9, -1e9]; for (let i = 0; i < arr.length; i += 9) for (let a = 0; a < 3; a++) { const v = arr[i + a]; if (v < lo[a]) lo[a] = v; if (v > hi[a]) hi[a] = v; } return [lo, hi]; };
       for (const [k, arr] of Object.entries(full)) {
         if (!arr.length) continue;
         const c = v3(), n = arr.length / 9;
         for (let i = 0; i < arr.length; i += 9) { c[0] += arr[i] / n; c[1] += arr[i + 1] / n; c[2] += arr[i + 2] / n; }
         const shift = (a) => { for (let i = 0; i < a.length; i += 9) { a[i] -= c[0]; a[i + 1] -= c[1]; a[i + 2] -= c[2]; } };
         shift(arr); shift(live[k]);
-        parts[k] = { mesh: upload({ d: arr }), live: upload({ d: live[k] }), center: c };
+        const [lo, hi] = bbox(arr);
+        parts[k] = { mesh: upload({ d: arr }), live: upload({ d: live[k] }), center: c, lo, hi };
       }
       // Lights: a glowing core and a faint halo for each kind on each part.
       const groups = new Map();
@@ -3251,7 +3358,14 @@
       return {
         parts, prop: upload(m.prop), propAt: m.propAt, disc: upload(m.disc),
         dyn: (m.dyn || []).map((d) => ({ kind: d.kind, side: d.side, attach: d.attach, pivot: d.pivot, axis: d.axis, gl: upload(d.mesh) })),
-        gears: (m.gears || []).map((g) => ({ pivot: g.pivot, axis: g.axis, ang: g.ang, nose: !!g.nose, gl: upload(g.mesh) })),
+        gears: (m.gears || []).map((g) => {
+          // (a recentred copy for the leg when it breaks off)
+          const d = g.mesh.d.slice(), c = v3(), n = d.length / 9;
+          for (let i = 0; i < d.length; i += 9) { c[0] += d[i] / n; c[1] += d[i + 1] / n; c[2] += d[i + 2] / n; }
+          for (let i = 0; i < d.length; i += 9) { d[i] -= c[0]; d[i + 1] -= c[1]; d[i + 2] -= c[2]; }
+          const [lo, hi] = bbox(d);
+          return { pivot: g.pivot, axis: g.axis, ang: g.ang, nose: !!g.nose, gl: upload(g.mesh), piece: { mesh: upload({ d }), center: c, lo, hi } };
+        }),
         fans: (m.fans || []).map((f) => ({ at: f.at, attach: f.attach, dir: f.dir, gl: upload(f.mesh) })),
         lights: [...groups.values()].map((g) => ({ kind: g.kind, attach: g.attach, core: upload(g.core), halo: upload(g.halo) })),
         flame: m.flame ? { at: m.flame.at, gl: upload(m.flame.mesh), dia: upload(m.flame.diamonds) } : null,
@@ -3269,7 +3383,7 @@
     }
     const rotorMesh = upload(rotorB);
     const WR = makeWorldRenderer(gl, W, { prog, U, draw, upload, I, rotorMesh });
-    const ALL_PARTS = ['F', 'L', 'R', 'T', 'P'];
+    const ALL_PARTS = ['F', 'N', 'L', 'Lo', 'R', 'Ro', 'T', 'E0', 'E1', 'E2', 'E3', 'P'];
 
     // ---- state
     let plane = PLANES.find((p) => p.id === read('plane', 'c172')) || PLANES[0];
@@ -4089,7 +4203,7 @@
       for (const k of Object.keys(tgt)) surf[k] += (tgt[k] - surf[k]) * (k === 'flap' ? ease * 0.35 : ease);
       const M = model(flight.q, flight.pos, plane.scale);
       const flapMax = plane.cat === 'mil' ? 24 : plane.cat === 'ga' || plane.cat === 'turbo' ? 32 : 38;
-      for (const k of ['F', 'L', 'R', 'T']) {
+      for (const k in pm.parts) {
         const part = pm.parts[k];
         if (part && parts.has(k)) draw(part.live, model(flight.q, add(flight.pos, qrot(flight.q, mul(part.center, plane.scale))), plane.scale));
       }
