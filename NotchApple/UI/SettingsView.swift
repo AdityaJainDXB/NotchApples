@@ -295,6 +295,7 @@ struct SettingsView: View {
                 case .focus: NotchSettings()   // Focus lives in Notch → Focus now; this only keeps old links working
                 case .audio: AudioSettings()
                 case .vpn: VPNSettings()
+                case .bambu: BambuSettingsView()
                 case .widget: WidgetSettings()
                 case .updates: UpdatesSettings()
                 case .privacy: PrivacyPermissionsPane(tab: $tab) { PrivacyDashboard() }

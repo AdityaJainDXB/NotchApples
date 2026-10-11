@@ -37,6 +37,7 @@ struct ModuleContentView: View {
         case .share: ShareView()
         case .audio: AudioView()
         case .vpn: VPNView()
+        case .bambu: BambuView()
         case .nowPlaying: NowPlayingView()
         case .search: FileSearchView()
         case .browser: BrowserView()
