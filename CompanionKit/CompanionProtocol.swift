@@ -1,6 +1,6 @@
 //
 //  CompanionProtocol.swift
-//  Notch apple (shared by the Mac app and the iPhone companion)
+//  Notch Apple (shared by the Mac app and the iPhone companion)
 //
 //  How the iPhone talks to the Mac, with no server in between:
 //   • The Mac advertises `_notchapple._tcp` on the local network (Bonjour).

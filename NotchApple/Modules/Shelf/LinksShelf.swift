@@ -1,6 +1,6 @@
 //
 //  LinksShelf.swift
-//  Notch apple
+//  Notch Apple
 //
 //  Save a link now, read it later (free). Paste or type an address; it's checked and tidied by
 //  LinkShelfLogic and kept in this Mac's Application Support folder. Nothing is fetched or sent anywhere:

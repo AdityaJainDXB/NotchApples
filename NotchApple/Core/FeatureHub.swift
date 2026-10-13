@@ -1,6 +1,6 @@
 //
 //  FeatureHub.swift
-//  Notch apple
+//  Notch Apple
 //
 //  Wires the 1.14 features into the closed notch and runs their light
 //  background checks:

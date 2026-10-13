@@ -1,6 +1,6 @@
 //
 //  GeminiFallbackTests.swift
-//  Notch apple tests
+//  Notch Apple tests
 //
 //  The order Gemini models are tried in when one fails.
 //

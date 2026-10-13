@@ -1,6 +1,6 @@
 //
 //  TodoView.swift
-//  Notch apple
+//  Notch Apple
 //
 //  The to-do list (free), saved on this Mac. It sits in the Notes tab and as the To-Do widget on Home. The input
 //  at the top is also the Quick Add: write "call mum tomorrow 3pm !!!" and the date and priority are picked out

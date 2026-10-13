@@ -1,6 +1,6 @@
 //
 //  PlaneGameView.swift
-//  Notch apple
+//  Notch Apple
 //
 //  Plane: a 3D flight game (pick a plane, fly through hoops, time trials, landings, challenges and a leaderboard).
 //  The game is a WebGL page shared with the Windows app (plane-sim.js), shown here in a web view. Scores and
@@ -16,7 +16,7 @@ struct PlaneGameView: View {
             PlaneWebView(url: url)
                 .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
         } else {
-            Text("The Plane game is missing from this copy of Notch apple.")
+            Text("The Plane game is missing from this copy of Notch Apple.")
                 .font(.system(size: 12)).foregroundStyle(Theme.textSecondary)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
         }

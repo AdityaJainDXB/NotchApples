@@ -1,6 +1,6 @@
 //
 //  SnapDropController.swift
-//  Notch apple
+//  Notch Apple
 //
 //  Drag any window up to the notch and a strip of snap zones drops down
 //  beneath it. Keep dragging onto a zone and let go: the window snaps there.

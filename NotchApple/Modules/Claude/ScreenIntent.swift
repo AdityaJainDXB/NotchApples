@@ -1,6 +1,6 @@
 //
 //  ScreenIntent.swift
-//  Notch apple
+//  Notch Apple
 //
 //  Decides whether a question to the AI is about what's on the screen
 //  ("what's on my screen?", "explain this error", "summarise this page"),

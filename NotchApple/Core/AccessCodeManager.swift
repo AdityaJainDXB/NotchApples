@@ -1,6 +1,6 @@
 //
 //  AccessCodeManager.swift
-//  Notch apple
+//  Notch Apple
 //
 //  Offline access-code activation for the gated features (AI, Messenger, Audio,
 //  Now Playing and VPN); everything else works without a code. 50 valid codes (NOTCH-XXXX-XXXX) ship as
@@ -129,7 +129,7 @@ enum AccessCodeManager {
             && KeychainHelper.set("true", for: .activated)
     }
 
-    /// Activates from a saved code hash (restored from your Notch apple account). Only hashes of real codes work.
+    /// Activates from a saved code hash (restored from your Notch Apple account). Only hashes of real codes work.
     @discardableResult
     static func activate(hash: String, mask: String) -> Bool {
         guard validHashes.contains(hash) || hash == KeychainHelper.get(.productKeyHash) else { return false }

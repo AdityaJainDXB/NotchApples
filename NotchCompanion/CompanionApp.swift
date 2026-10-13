@@ -1,9 +1,9 @@
 //
 //  CompanionApp.swift
-//  Notch apple companion (iPhone)
+//  Notch Apple companion (iPhone)
 //
 //  Send text and links to your Mac's notch, see its battery and music, and run
-//  a few controls, over your Wi-Fi with no server. Needs Notch apple Ultimate
+//  a few controls, over your Wi-Fi with no server. Needs Notch Apple Ultimate
 //  on the Mac (Settings → iPhone). Installed with Sideloadly.
 //
 
@@ -25,7 +25,7 @@ struct RootView: View {
             Group {
                 if client.pairing == nil { PairView() } else { MainView() }
             }
-            .navigationTitle("Notch apple")
+            .navigationTitle("Notch Apple")
         }
         .tint(Color(red: 0.62, green: 0.42, blue: 1))
         .preferredColorScheme(.dark)
@@ -50,7 +50,7 @@ struct PairView: View {
             } header: {
                 Text("Your Macs")
             } footer: {
-                Text("On the Mac, open Notch apple → Settings → iPhone, turn on the iPhone companion and press Pair an iPhone. Both need to be on the same Wi-Fi.")
+                Text("On the Mac, open Notch Apple → Settings → iPhone, turn on the iPhone companion and press Pair an iPhone. Both need to be on the same Wi-Fi.")
             }
             if let m = client.message { Text(m).foregroundStyle(.orange) }
         }
@@ -156,7 +156,7 @@ struct MainView: View {
 
 struct SendToMacIntent: AppIntent {
     static let title: LocalizedStringResource = "Send to Mac notch"
-    static let description = IntentDescription("Sends text or a link to Notch apple on your Mac.")
+    static let description = IntentDescription("Sends text or a link to Notch Apple on your Mac.")
     @Parameter(title: "Text or link") var text: String
 
     func perform() async throws -> some IntentResult & ProvidesDialog {

@@ -1,6 +1,6 @@
 //
 //  ClaudeClient.swift
-//  Notch apple
+//  Notch Apple
 //
 //  Minimal client for the Anthropic Messages API (https://docs.anthropic.com).
 //  Uses the user's own API key (saved on this Mac) — the developer pays nothing

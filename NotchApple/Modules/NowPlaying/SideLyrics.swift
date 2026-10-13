@@ -1,6 +1,6 @@
 //
 //  SideLyrics.swift
-//  Notch apple
+//  Notch Apple
 //
 //  Lyrics on the side of your screen (Pro): a small click-through overlay that shows the current line of the
 //  song big and bright with the line before and the next two dimmer, over every app and Space. It reuses

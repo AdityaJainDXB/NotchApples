@@ -1,6 +1,6 @@
 //
 //  UpdateSigningTests.swift
-//  Notch apple tests
+//  Notch Apple tests
 //
 //  The release-signature check the updater runs before it opens a download.
 //

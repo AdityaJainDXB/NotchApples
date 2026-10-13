@@ -1,8 +1,8 @@
 //
 //  NotchAppleApp.swift
-//  Notch apple
+//  Notch Apple
 //
-//  App entry point. Notch apple is an agent app (LSUIElement = YES): no Dock
+//  App entry point. Notch Apple is an agent app (LSUIElement = YES): no Dock
 //  icon, no main window. The notch panel and status item are owned by
 //  `AppDelegate`; SwiftUI only provides the Settings scene.
 //

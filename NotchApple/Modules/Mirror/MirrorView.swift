@@ -1,6 +1,6 @@
 //
 //  MirrorView.swift
-//  Notch apple
+//  Notch Apple
 //
 //  A mirror in the notch: a live preview of your Mac's camera, to check your
 //  hair before a call. Add-on, off by default (Settings → Modules).
@@ -146,7 +146,7 @@ struct MirrorView: View {
     private var permission: some View {
         VStack(spacing: 10) {
             Image(systemName: "camera.fill").font(.system(size: 28)).foregroundStyle(Theme.accent)
-            Text(camera.status == .notDetermined ? "Allow the camera to use the mirror." : "Camera access is off for Notch apple.")
+            Text(camera.status == .notDetermined ? "Allow the camera to use the mirror." : "Camera access is off for Notch Apple.")
                 .foregroundStyle(.white)
             if camera.status == .notDetermined {
                 Button("Allow camera") { camera.start() }.buttonStyle(PurpleButtonStyle())

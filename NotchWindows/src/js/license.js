@@ -116,7 +116,7 @@ export async function parseKey(input) {
   let label, rest;
   if (s.startsWith('NTCH-PRO-')) { label = 'PRO'; rest = s.slice(9); }
   else if (s.startsWith('NTCH-ULTM-')) { label = 'ULTM'; rest = s.slice(10); }
-  else return { error: "That doesn't look like a Notch apple key. Copy the whole key, from NTCH- to the end." };
+  else return { error: "That doesn't look like a Notch Apple key. Copy the whole key, from NTCH- to the end." };
   const body = rest.replace(/-/g, '');
   const bytes = decode(body);
   if (!bytes || bytes.length !== 76 || bytes[0] !== 1) return { error: "This key has been changed or wasn't copied completely." };

@@ -1,6 +1,6 @@
 //
 //  WhatsNew.swift
-//  Notch apple
+//  Notch Apple
 //
 //  Release notes inside the app. After an update the notch opens once on the patch log (PatchLogView); Got it
 //  marks that version as seen, so it never nags again.
@@ -78,15 +78,15 @@ enum WhatsNew {
             "New Wallpaper tab (Pro): play your own video (up to 60 seconds, up to 4K) or a free NASA clip as your desktop wallpaper, on every display.",
             "It pauses on battery, in Low Power Mode, on sleep or lock, and when windows cover it. The lock screen shows a still from the video.",
         ]),
-        ReleaseNote(version: "2.0.34", date: "9 October 2026", headline: "Notch apple AI, included with Pro", items: [
-            "Settings → AI → Notch apple AI (included): ask without setting up any key. Pro gets 60 messages a day, Ultimate 200. Your own keys still work with no limit.",
+        ReleaseNote(version: "2.0.34", date: "9 October 2026", headline: "Notch Apple AI, included with Pro", items: [
+            "Settings → AI → Notch Apple AI (included): ask without setting up any key. Pro gets 60 messages a day, Ultimate 200. Your own keys still work with no limit.",
         ]),
         ReleaseNote(version: "2.0.33", date: "9 October 2026", headline: "Ultimate modules go private, radar fits", items: [
             "The Ultimate modules (Convert, Smart Home, Claude usage, Do It, Purge) are built into official releases only; nothing changes for you.",
             "Flight Radar's header fits on the Mac: the range is a small menu beside Refresh.",
         ]),
         ReleaseNote(version: "2.0.32", date: "9 October 2026", headline: "A new licence, and premium sounds from the server", items: [
-            "Notch apple's code is now source-available (copyright Aditya Jain): you can read and build it, but not resell it or unlock the paid features without a key. Earlier versions stay MIT.",
+            "Notch Apple's code is now source-available (copyright Aditya Jain): you can read and build it, but not resell it or unlock the paid features without a key. Earlier versions stay MIT.",
             "Four premium Klick sounds (Pro) download from the licence server with your key: Cherry MX Black, Gateron Ink, Alps and Buckling spring.",
             "Clipboard Link now checks your Ultimate key with the server; update both devices to keep linking.",
         ]),
@@ -108,7 +108,7 @@ enum WhatsNew {
             "Tail strikes: rotate too steeply and the tail scrapes, damaging it. Flaps step in notches, you can run out of fuel, and airliners call out Rotate.",
         ]),
         ReleaseNote(version: "2.0.27", date: "9 October 2026", headline: "Updates once a week, if you want", items: [
-            "New option: Update at most once a week. Off by default. On, Notch apple stops announcing every release and asks about the newest update once a week; required security updates still appear straight away.",
+            "New option: Update at most once a week. Off by default. On, Notch Apple stops announcing every release and asks about the newest update once a week; required security updates still appear straight away.",
             "It is switched on or off in this card, in Settings → Notch and in Settings → Updates.",
         ]),
         ReleaseNote(version: "2.0.26", date: "9 October 2026", headline: "Top bar you choose, ⌘E and ⌘J", items: [
@@ -135,14 +135,14 @@ enum WhatsNew {
             "Klick (Pro): mechanical keyboard sounds as you type, in any app. Eight sounds, each with its own volume, and an on / off switch.",
             "Plane: cursor up (or ↑) now climbs, the mouse steers inside a small ring so it never runs off the notch, and keys always reach the game.",
         ]),
-        ReleaseNote(version: "2.0.19", date: "9 October 2026", headline: "Notch apple opens again", items: [
+        ReleaseNote(version: "2.0.19", date: "9 October 2026", headline: "Notch Apple opens again", items: [
             "Fixed a crash at launch in 2.0.17 and 2.0.18.",
         ]),
         ReleaseNote(version: "2.0.18", date: "9 October 2026", headline: "Lid-closed Keep Awake asks only when used", items: [
             "The password prompt appears only when you flip the lid-closed switch, and cancelling doesn't bring it back until you flip it again.",
         ]),
         ReleaseNote(version: "2.0.17", date: "9 October 2026", headline: "Keep Awake with the lid closed", items: [
-            "New tool: Keep Awake (Lid Closed) keeps your Mac running with the lid shut. It asks for your password, turns off under 15% battery and when Notch apple quits.",
+            "New tool: Keep Awake (Lid Closed) keeps your Mac running with the lid shut. It asks for your password, turns off under 15% battery and when Notch Apple quits.",
         ]),
         ReleaseNote(version: "2.0.16", date: "9 October 2026", headline: "⌥A turns the keyboard light off too", items: [
             "Option+A now takes the keyboard backlight to zero with the screen, and restores both.",
@@ -206,11 +206,11 @@ enum WhatsNew {
             "One thing today, pinned notes, countdowns and the full Up next list are back, in a Today card on Home.",
         ]),
         ReleaseNote(version: "1.34.9", date: "7 October 2026", headline: "Out-of-date copies must update", items: [
-            "Notch apple checks for the newest release in the background every 15 minutes, even with update notifications off. A copy that is not the newest must update before it works.",
+            "Notch Apple checks for the newest release in the background every 15 minutes, even with update notifications off. A copy that is not the newest must update before it works.",
             "A release can carry a security message that the update screen shows.",
         ]),
         ReleaseNote(version: "1.34.8", date: "7 October 2026", headline: "A required update that can't be dodged", items: [
-            "When a release is marked required, Notch apple remembers it, so blocking the internet afterwards does not lift it.",
+            "When a release is marked required, Notch Apple remembers it, so blocking the internet afterwards does not lift it.",
             "Until the update is installed: the notch shows only the Update screen, paid features and most shortcuts are off, and notch badges stop.",
         ]),
         ReleaseNote(version: "1.34.7", date: "7 October 2026", headline: "Faster license suspension", items: [
@@ -218,7 +218,7 @@ enum WhatsNew {
             "A Mac that can't verify its license for 3 days pauses paid features until it is online again.",
         ]),
         ReleaseNote(version: "1.34.6", date: "7 October 2026", headline: "Suspended licenses stop within hours", items: [
-            "A suspended or revoked license key is now noticed within hours, with no update needed: Notch apple checks at launch, after sleep and every hour (at most every 6 hours).",
+            "A suspended or revoked license key is now noticed within hours, with no update needed: Notch Apple checks at launch, after sleep and every hour (at most every 6 hours).",
             "A Mac that has not been able to check for 30 days pauses paid features until it is online again.",
             "A brand-new install starts on the widget Home; people updating keep the Classic page until they choose in Settings → Modules & Layout.",
             "This is a required update: it brings the whole 1.34 set of changes to everyone.",
@@ -251,11 +251,11 @@ enum WhatsNew {
             "Connect to Claude in the Claude usage tab to see your real session and weekly limits.",
         ]),
         ReleaseNote(version: "1.33.2", date: "7 October 2026", headline: "Updating works from anywhere", items: [
-            "Fixed the \"Can't write to …/AppTranslocation/…\" error: if Notch apple was opened from the DMG or Downloads, the update now installs into Applications.",
+            "Fixed the \"Can't write to …/AppTranslocation/…\" error: if Notch Apple was opened from the DMG or Downloads, the update now installs into Applications.",
         ]),
         ReleaseNote(version: "1.33.1", date: "7 October 2026", headline: "The patch log in the notch, and Gemini that switches model", items: [
             "After an update the notch opens on what changed, with a switch for each new optional feature and a Got it button. No separate window.",
-            "If a Gemini request fails before answering, Notch apple retries on the next Gemini model (up to four) and tells you with a short notice.",
+            "If a Gemini request fails before answering, Notch Apple retries on the next Gemini model (up to four) and tells you with a short notice.",
         ]),
         ReleaseNote(version: "1.32.5", date: "7 October 2026", headline: "Option+A, update reminders, and no locked screen", items: [
             "Includes everything from 1.32.1 to 1.32.4, which never built. Option+A blacks out the screen and brings it back; update reminders come every 4th or 5th notch open; a window after updating lets you switch on new features; and the permission screen no longer blocks the notch.",
@@ -272,7 +272,7 @@ enum WhatsNew {
         ]),
         ReleaseNote(version: "1.32.1", date: "7 October 2026", headline: "Option+A screen blackout, and the Accessibility prompt fixed", items: [
             "Press Option+A to take the screen brightness to zero and again to bring it back. Switch it off in Settings if you type å.",
-            "macOS keeps a stale Accessibility entry after each update, so Notch apple kept asking even when it was switched on. It now clears that entry once per version and asks again, and the setup screen has an \"It's already on: fix it\" button.",
+            "macOS keeps a stale Accessibility entry after each update, so Notch Apple kept asking even when it was switched on. It now clears that entry once per version and asks again, and the setup screen has an \"It's already on: fix it\" button.",
         ]),
         ReleaseNote(version: "1.30.3", date: "6 October 2026", headline: "Add your VPN app, and a required setup step", items: [
             "Your own VPN is now just \"add the app\": click VPN app in the VPN tab and pick Proton VPN, NordVPN, Mullvad, WireGuard or any other app. The power button opens it and turns green when your Mac has a VPN tunnel up. No addresses or passwords.",
@@ -324,7 +324,7 @@ enum WhatsNew {
             "Every game keeps its best score, and there is one Sound switch for all of them in the Games sidebar.",
         ]),
         ReleaseNote(version: "1.26.1", date: "5 October 2026", headline: "Purge instead of our own cleaner", items: [
-            "The Ultimate Cache Cleaner tab is now the Purge tab. It opens the Purge app (a separate disk cleaner) from the notch, and links you to it if it isn't installed. Notch apple no longer scans or deletes anything itself.",
+            "The Ultimate Cache Cleaner tab is now the Purge tab. It opens the Purge app (a separate disk cleaner) from the notch, and links you to it if it isn't installed. Notch Apple no longer scans or deletes anything itself.",
             "Fixed: a two-finger sideways swipe over the tab bar used to scroll the tabs and also switch to the next one. It now only scrolls. If you liked switching by swipe, turn on Settings → Notch → Swipe on the tab bar switches tabs.",
         ]),
         ReleaseNote(version: "1.26.0", date: "5 October 2026", headline: "Duo animations, Cache Cleaner and full-screen notch", items: [
@@ -336,9 +336,9 @@ enum WhatsNew {
         ReleaseNote(version: "1.25.0", date: "5 October 2026", headline: "Your own hot corners", items: [
             "Settings → Notch → Hot corners: push the pointer into any screen corner to open a website, an app, a file or folder, run a Shortcut, open Mission Control, or open and close the notch.",
             "Pick a different action for each corner, how long the pointer must rest there, and optionally a key to hold (⌥, ⌘, ⌃ or ⇧) so it never fires by accident.",
-            "Works next to macOS's own hot corners. In System Settings → Desktop & Dock → Hot Corners, set a corner to “–” if you give it to Notch apple. Free for everyone.",
+            "Works next to macOS's own hot corners. In System Settings → Desktop & Dock → Hot Corners, set a corner to “–” if you give it to Notch Apple. Free for everyone.",
         ]),
-        ReleaseNote(version: "1.24.0", date: "4 October 2026", headline: "Notch apple on your iPhone", items: [
+        ReleaseNote(version: "1.24.0", date: "4 October 2026", headline: "Notch Apple on your iPhone", items: [
             "Ultimate: the iPhone companion. Send text and links to the notch, see the Mac's battery and music, and control music, timers and Keep Awake. It works over your Wi-Fi with no server, and every message is encrypted.",
             "Get NotchAppleCompanion.ipa from the release and install it with Sideloadly. With a free Apple ID, reinstall it every 7 days. Pair it in Settings → iPhone.",
             "Shortcuts on iPhone: “Send to Mac notch” and “Get Mac status”, including from the share sheet.",
@@ -355,11 +355,11 @@ enum WhatsNew {
             "Swipe down on the notch to open it (Settings → Notch), and a countdown beside the notch 15 minutes before your next event.",
             "Undo: deleting a note, to-do, clipboard item, shelf file or Home widget shows Undo for a few seconds (⌘Z works too).",
             "Focus: with a Shortcuts automation, the notch stays quiet or steps aside while a Focus is on; with Pro it switches to the matching profile.",
-            "AppleScript: tell application \"Notch apple\" to run notch command \"timer?minutes=5\".",
+            "AppleScript: tell application \"Notch Apple\" to run notch command \"timer?minutes=5\".",
             "Pro: a Do Not Disturb toggle, send to-dos to Things or Todoist, and drag-and-drop in Home.",
         ]),
         ReleaseNote(version: "1.22.0", date: "4 October 2026", headline: "Trust, and a few more extras", items: [
-            "Settings → Privacy: every permission, everywhere Notch apple can connect to and when, and what it keeps on this Mac, with Delete buttons.",
+            "Settings → Privacy: every permission, everywhere Notch Apple can connect to and when, and what it keeps on this Mac, with Delete buttons.",
             "Settings → Help & Feedback: send feedback, and a bug report you read in full before you submit it yourself on GitHub.",
             "Crash reports, off by default: after a crash you can review the report (name and home folder removed) and send it.",
             "Pro: a 12-hour and 7-day forecast for up to six cities, a meeting-time planner in World Clock, mic mute, and top apps by CPU.",

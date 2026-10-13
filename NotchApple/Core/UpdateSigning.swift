@@ -1,6 +1,6 @@
 //
 //  UpdateSigning.swift
-//  Notch apple
+//  Notch Apple
 //
 //  Checks that an update was signed by the release key before it is opened. The app is only ad-hoc signed, so the
 //  system's own signature checks prove nothing about who built a download. This does: each release carries

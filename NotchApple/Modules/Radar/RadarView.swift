@@ -1,6 +1,6 @@
 //
 //  RadarView.swift
-//  Notch apple
+//  Notch Apple
 //
 //  Flight Radar: you in the middle of a round scope, north up, with every aircraft around you as a little plane
 //  pointing the way it is flying, coloured by height. Click one (on the scope or in the list) to see its details.

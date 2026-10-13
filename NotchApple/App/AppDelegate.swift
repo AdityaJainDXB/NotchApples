@@ -1,6 +1,6 @@
 //
 //  AppDelegate.swift
-//  Notch apple
+//  Notch Apple
 //
 //  Boots the two entry points into the UI:
 //   1. A transparent, borderless `NotchPanel` pinned over the hardware notch
@@ -205,7 +205,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     /// Settings → Appearance → Style → Menu bar icon (Pro).
     func refreshStatusIcon() {
-        statusItem?.button?.image = NSImage(systemSymbolName: StylePrefs.statusSymbol, accessibilityDescription: "Notch apple")
+        statusItem?.button?.image = NSImage(systemSymbolName: StylePrefs.statusSymbol, accessibilityDescription: "Notch Apple")
     }
 
     /// Registers or removes the global ⌘E shortcut to match the preference.
@@ -289,7 +289,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let wanted = SettingsManager.shared.showStatusItem && !SettingsManager.shared.isNotchHidden
         if wanted, statusItem == nil {
             let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
-            item.button?.image = NSImage(systemSymbolName: StylePrefs.statusSymbol, accessibilityDescription: "Notch apple")
+            item.button?.image = NSImage(systemSymbolName: StylePrefs.statusSymbol, accessibilityDescription: "Notch Apple")
             item.button?.target = self
             item.button?.action = #selector(statusItemClicked(_:))
             item.button?.sendAction(on: [.leftMouseUp, .rightMouseUp])
@@ -316,7 +316,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             item("Settings…", "gearshape.fill", .systemPurple, #selector(openSettings), ",")
             item("Relaunch", "arrow.clockwise", .systemOrange, #selector(relaunchApp), "")
             menu.addItem(.separator())
-            item("Quit Notch apple", "xmark.circle.fill", .systemRed, #selector(quitApp), "q")
+            item("Quit Notch Apple", "xmark.circle.fill", .systemRed, #selector(quitApp), "q")
             statusItem?.menu = menu
             statusItem?.button?.performClick(nil)
             statusItem?.menu = nil

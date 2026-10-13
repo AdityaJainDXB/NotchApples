@@ -59,7 +59,7 @@ export function renderUpgrade(module, onUnlocked) {
         wrap.replaceChildren(el('div', { class: 'center' },
           el('div', { style: 'font-size:34px' }, '✅'),
           el('div', { class: 'title' }, 'Unlocked'),
-          el('div', { class: 'small dim' }, 'Thanks for supporting Notch apple.')));
+          el('div', { class: 'small dim' }, 'Thanks for supporting Notch Apple.')));
         setTimeout(onUnlocked, 900);
       })));
   return wrap;

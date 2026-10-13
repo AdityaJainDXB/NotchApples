@@ -1,4 +1,4 @@
-// Renders the Notch apple app icon (purple gradient squircle with a notch pill) to an .iconset.
+// Renders the Notch Apple app icon (purple gradient squircle with a notch pill) to an .iconset.
 import AppKit
 let out = CommandLine.arguments[1]
 try? FileManager.default.createDirectory(atPath: out, withIntermediateDirectories: true)

@@ -1,15 +1,15 @@
-# dmgbuild settings for the Notch apple installer window.
+# dmgbuild settings for the Notch Apple installer window.
 # Values come in via `-D key=value` from scripts/build_dmg.sh.
 import os
 
-app = defines["app"]            # path to "Notch apple.app"
+app = defines["app"]            # path to "Notch Apple.app"
 background = defines["background"]
 
 format = "UDZO"
 filesystem = "HFS+"
 files = [app]
 symlinks = {"Applications": "/Applications"}
-hide_extensions = ["Notch apple.app"]
+hide_extensions = ["Notch Apple.app"]
 
 # 660 x 420 window, no toolbar / sidebar / status bar: just the drag target.
 # Height = 420 pt background + title bar + (if the user shows it) the path bar.
@@ -26,6 +26,6 @@ arrange_by = None
 
 # Positions match the frosted tiles in dmg-background.tiff (centre points).
 icon_locations = {
-    "Notch apple.app": (180, 186),
+    "Notch Apple.app": (180, 186),
     "Applications": (480, 186),
 }

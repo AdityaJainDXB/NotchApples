@@ -1,6 +1,6 @@
 //
 //  NotchMessengerView.swift
-//  Notch apple
+//  Notch Apple
 //
 //  Notch Messenger: chat with people on the same Wi-Fi, or in an anonymous,
 //  end-to-end-encrypted room joined with a code.
@@ -174,7 +174,7 @@ struct NotchMessengerView: View {
             Image(systemName: mode == .nearby ? "wifi" : "lock.shield")
                 .font(.system(size: 26)).foregroundStyle(Theme.accentGradient)
             Text(mode == .nearby
-                 ? "Anyone on this Wi-Fi with Notch apple and Messenger open shows up here automatically."
+                 ? "Anyone on this Wi-Fi with Notch Apple and Messenger open shows up here automatically."
                  : web.state == .joined
                  ? "You're in the room. Press Copy code and send it to friends; anyone with the code can join."
                  : "Press New room to create a private room (its code is copied for you to share), or type a friend's code and press Join. Messages are end-to-end encrypted and never stored.")

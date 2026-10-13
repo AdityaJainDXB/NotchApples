@@ -1,6 +1,6 @@
 //
 //  DevToolsView.swift
-//  Notch apple
+//  Notch Apple
 //
 //  The Dev Tools tab (free, off until you turn it on in Settings → Modules): JSON, Base64 and URL encoding,
 //  case changes, a JWT reader, hashes and ids, timestamps, a regex tester, a colour contrast checker and a QR code.

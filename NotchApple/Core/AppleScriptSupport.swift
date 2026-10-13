@@ -1,11 +1,11 @@
 //
 //  AppleScriptSupport.swift
-//  Notch apple
+//  Notch Apple
 //
 //  AppleScript (scripting dictionary in NotchApple.sdef):
-//    tell application "Notch apple" to toggle notch
-//    tell application "Notch apple" to run notch command "timer?minutes=5"
-//    tell application "Notch apple" to run notch command "ask?q=What's on today?"   -- Ultimate
+//    tell application "Notch Apple" to toggle notch
+//    tell application "Notch Apple" to run notch command "timer?minutes=5"
+//    tell application "Notch Apple" to run notch command "ask?q=What's on today?"   -- Ultimate
 //  Every command goes through the same notchapple:// handler (FeatureHub), so the
 //  same tier rules apply as for links and the `notch` command-line tool.
 //

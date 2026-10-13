@@ -1,8 +1,8 @@
 //
 //  LidFoldSettings.swift
-//  Notch apple, Lid Fold
+//  Notch Apple, Lid Fold
 //
-//  Original to Notch apple. Settings → Lid Fold.
+//  Original to Notch Apple. Settings → Lid Fold.
 //
 
 import SwiftUI

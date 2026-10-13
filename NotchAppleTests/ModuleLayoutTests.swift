@@ -1,6 +1,6 @@
 //
 //  ModuleLayoutTests.swift
-//  Notch apple tests
+//  Notch Apple tests
 //
 //  Where the reorganised features go, and what the choices allow.
 //

@@ -1,6 +1,6 @@
 //
 //  IOKitLidAngleProvider.swift
-//  Notch apple, Lid Fold
+//  Notch Apple, Lid Fold
 //
 //  Origin:  Still, native/Sources/Still/LidSensor.swift
 //           https://github.com/kavishshahh (project: Still)

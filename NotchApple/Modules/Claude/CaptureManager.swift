@@ -1,6 +1,6 @@
 //
 //  CaptureManager.swift
-//  Notch apple
+//  Notch Apple
 //
 //  Universal capture: grab part of the screen and hand it to the AI tab.
 //
@@ -15,7 +15,7 @@
 //
 //  The display is always the one under the pointer, never NSScreen.main (the
 //  screen with the key window), so a capture on display 2 never grabs display 1.
-//  Notch apple's own windows are left out of every capture.
+//  Notch Apple's own windows are left out of every capture.
 //
 
 import AppKit
@@ -58,7 +58,7 @@ final class CaptureManager {
         case noPermission, noDisplay, failed(String)
         var errorDescription: String? {
             switch self {
-            case .noPermission: "Notch apple needs Screen Recording permission to capture your screen. Turn it on in System Settings → Privacy & Security → Screen & System Audio Recording, then relaunch Notch apple."
+            case .noPermission: "Notch Apple needs Screen Recording permission to capture your screen. Turn it on in System Settings → Privacy & Security → Screen & System Audio Recording, then relaunch Notch Apple."
             case .noDisplay: "Couldn't find the display under the pointer."
             case .failed(let why): "The capture didn't work: \(why)"
             }
@@ -127,7 +127,7 @@ final class CaptureManager {
         (screen.deviceDescription[NSDeviceDescriptionKey("NSScreenNumber")] as? NSNumber)?.uint32Value
     }
 
-    /// The display at its native pixel size (points × backing scale), without Notch apple's windows.
+    /// The display at its native pixel size (points × backing scale), without Notch Apple's windows.
     static func captureDisplay(_ screen: NSScreen) async throws -> CGImage {
         let content: SCShareableContent
         do { content = try await SCShareableContent.excludingDesktopWindows(false, onScreenWindowsOnly: true) }

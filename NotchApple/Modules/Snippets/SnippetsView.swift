@@ -1,6 +1,6 @@
 //
 //  SnippetsView.swift
-//  Notch apple
+//  Notch Apple
 //
 //  Saved text snippets (addresses, sign-offs, code, replies…). Click one to
 //  paste it straight into the app you were using; without Accessibility it is

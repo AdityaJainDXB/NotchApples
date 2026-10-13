@@ -1,6 +1,6 @@
 //
 //  FileSearchManager.swift
-//  Notch apple
+//  Notch Apple
 //
 //  Instant file search on top of Spotlight (`NSMetadataQuery`). No directory
 //  walking: Spotlight's index answers the query, we only filter and rank the

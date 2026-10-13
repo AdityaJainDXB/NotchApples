@@ -1,6 +1,6 @@
 //
 //  LayoutPicker.swift
-//  Notch apple
+//  Notch Apple
 //
 //  The little menu that says where a feature lives (on Home, its own tab, Non-Necessities, or off). Used by
 //  Settings → Modules & Layout and by the chooser shown after an update, so both always agree.

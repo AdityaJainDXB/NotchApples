@@ -1,6 +1,6 @@
 //
 //  WellbeingView.swift
-//  Notch apple
+//  Notch Apple
 //
 //  The Wellbeing tab (free, off until you turn it on in Settings → Modules): a breathing exercise, break reminders
 //  (eyes, water, stretch, posture) and a bedtime nudge. The reminders keep running while the notch is closed: a

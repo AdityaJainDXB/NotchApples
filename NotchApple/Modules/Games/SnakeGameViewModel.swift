@@ -1,6 +1,6 @@
 //
 //  SnakeGameViewModel.swift
-//  Notch apple
+//  Notch Apple
 //
 //  Snake without the lag. The old version overwrote one "next direction" per tick, so two quick
 //  taps lost the first, and it redrew every segment as a SwiftUI view on the main thread.

@@ -1,6 +1,6 @@
 //
 //  VPNTunnelTests.swift
-//  Notch apple tests
+//  Notch Apple tests
 //
 //  "Is a VPN connected?": a utun interface that is up and has a real IPv4 address, and nothing else.
 //

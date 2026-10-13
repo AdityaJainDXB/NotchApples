@@ -1,6 +1,6 @@
 //
 //  MathEngineTests.swift
-//  Notch apple tests
+//  Notch Apple tests
 //
 //  The calculator's algebra: arithmetic, variables, equations, systems, factoring and derivatives.
 //

@@ -1,6 +1,6 @@
 //
 //  MarketsView.swift
-//  Notch apple
+//  Notch Apple
 //
 //  Markets (Pro): a watchlist of stocks and crypto with today's change and a
 //  small chart. Pin one to show it beside the closed notch.

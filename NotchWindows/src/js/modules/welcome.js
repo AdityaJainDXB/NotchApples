@@ -24,7 +24,7 @@ export function upgradeDialog(m, onUnlocked) {
   const plan = tierLabel(planOf(m));
   const price = planOf(m) >= 2 ? '$5' : '$1';
   const dlg = modal(null, el('div', { class: 'upgrade-dlg' },
-    el('img', { class: 'flyer', src: 'img/flyer.webp', alt: 'Notch apple: your MacBook notch, finally useful' }),
+    el('img', { class: 'flyer', src: 'img/flyer.webp', alt: 'Notch Apple: your MacBook notch, finally useful' }),
     el('div', { class: 'col', style: 'gap:10px;flex:1;min-width:0' },
       el('span', { class: `tier ${plan.toLowerCase()}` }, plan),
       el('div', { class: 'title' }, `${m.name} needs ${plan}`),

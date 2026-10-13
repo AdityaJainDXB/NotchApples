@@ -1,6 +1,6 @@
 //
 //  ScreenTools.swift
-//  Notch apple
+//  Notch Apple
 //
 //  Pro screen tools:
 //   • Ruler: drag anywhere on screen to measure width, height and distance in

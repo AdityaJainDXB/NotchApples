@@ -1,6 +1,6 @@
 //
 //  UpdateChecker.swift
-//  Notch apple
+//  Notch Apple
 //
 //  Native updates from this project's GitHub releases.
 //
@@ -10,7 +10,7 @@
 //  • A newer version shows a notification, a badge on Settings → Updates and
 //    a small pill in the notch. You choose: Update, or Not now (skips that
 //    version until an even newer one comes out).
-//  • Update downloads the release's DMG, checks the app inside is Notch apple
+//  • Update downloads the release's DMG, checks the app inside is Notch Apple
 //    with the expected version, swaps it in place and relaunches.
 //
 
@@ -259,7 +259,7 @@ final class UpdateChecker: ObservableObject {
               let version = versionNumber(from: tag)
         else { return nil }
         let published = (json["published_at"] as? String).flatMap { ISO8601DateFormatter().date(from: $0) }
-        return Release(version: version, title: json["name"] as? String ?? "Notch apple \(version)",
+        return Release(version: version, title: json["name"] as? String ?? "Notch Apple \(version)",
                        notes: json["body"] as? String ?? "", published: published, dmgURL: dmgURL, pageURL: page)
     }
 
@@ -291,7 +291,7 @@ final class UpdateChecker: ObservableObject {
         guard !DemoHooks.isDemo, Self.isNewer(release.version, than: currentVersion) else { return }
         let content = UNMutableNotificationContent()
         content.title = "Update available"
-        content.body = "Notch apple \(release.version) is ready. Would you like to update?"
+        content.body = "Notch Apple \(release.version) is ready. Would you like to update?"
         content.categoryIdentifier = Self.notificationCategory
         UNUserNotificationCenter.current().add(UNNotificationRequest(identifier: "update-\(release.version)", content: content, trigger: nil))
     }
@@ -381,7 +381,7 @@ final class UpdateChecker: ObservableObject {
         guard let info = Bundle(url: newApp)?.infoDictionary,
               info["CFBundleIdentifier"] as? String == Bundle.main.bundleIdentifier,
               info["CFBundleShortVersionString"] as? String == expectedVersion else {
-            throw UpdateError.message("The downloaded app isn't the expected Notch apple \(expectedVersion).")
+            throw UpdateError.message("The downloaded app isn't the expected Notch Apple \(expectedVersion).")
         }
         let staged = fm.temporaryDirectory.appendingPathComponent("NotchApple-staged-\(UUID().uuidString).app")
         // --norsrc --noextattr: a plain copy off the disk image carries Finder
@@ -391,12 +391,12 @@ final class UpdateChecker: ObservableObject {
         _ = try? await run("/usr/bin/xattr", ["-cr", staged.path])   // best effort: macOS re-adds some itself
 
         // Check the signature is intact (not tampered with in transit) and that this
-        // really is Notch apple. `--deep` is not used: Apple deprecated it for
+        // really is Notch Apple. `--deep` is not used: Apple deprecated it for
         // verification and it trips over attributes macOS adds on its own.
         try await run("/usr/bin/codesign", ["--verify", staged.path])
         let requirement = try await run("/usr/bin/codesign", ["-d", "-r-", staged.path])
         guard let id = Bundle.main.bundleIdentifier, requirement.contains("identifier \"\(id)\"") else {
-            throw UpdateError.message("The downloaded app isn't signed as Notch apple.")
+            throw UpdateError.message("The downloaded app isn't signed as Notch Apple.")
         }
 
         // Opened straight from the DMG or Downloads, macOS runs a temporary read-only copy ("App Translocation").
@@ -497,7 +497,7 @@ struct UpdatesSettings: View {
                 Toggle(isOn: $updater.weekly) {
                     Text("Update at most once a week")
                     Text(updater.weekly
-                         ? "Notch apple tells you about the newest update once a week, not for every release. Required security updates still appear straight away. Check now always shows the latest."
+                         ? "Notch Apple tells you about the newest update once a week, not for every release. Required security updates still appear straight away. Check now always shows the latest."
                          : "Off: you hear about every release. Turn this on to be asked about updates once a week.")
                 }
                 .onChange(of: updater.weekly) { _, _ in updater.objectWillChange.send() }
@@ -511,7 +511,7 @@ struct UpdatesSettings: View {
                         .disabled(updater.phase == .checking)
                 }
             } footer: {
-                Text("Notch apple asks GitHub for the latest release. Nothing about you is sent. With automatic checks off, it only checks when you press Check now.")
+                Text("Notch Apple asks GitHub for the latest release. Nothing about you is sent. With automatic checks off, it only checks when you press Check now.")
             }
 
             if let release = updater.pendingUpdate {
@@ -519,7 +519,7 @@ struct UpdatesSettings: View {
                     VStack(alignment: .leading, spacing: 6) {
                         Label("Update available", systemImage: "arrow.down.circle.fill")
                             .font(.headline).foregroundStyle(Theme.accent)
-                        Text("Notch apple \(release.version) is ready. Would you like to update?")
+                        Text("Notch Apple \(release.version) is ready. Would you like to update?")
                         if let date = release.published {
                             Text("Released \(date.formatted(date: .abbreviated, time: .omitted))").font(.caption).foregroundStyle(.secondary)
                         }
@@ -555,7 +555,7 @@ struct UpdatesSettings: View {
                 } header: {
                     Text(release.title)
                 } footer: {
-                    Text("Update downloads the new version from GitHub, replaces this copy and reopens Notch apple. Your settings and data are kept. Not now hides this version until a newer one comes out.")
+                    Text("Update downloads the new version from GitHub, replaces this copy and reopens Notch Apple. Your settings and data are kept. Not now hides this version until a newer one comes out.")
                 }
             } else if updater.phase == .upToDate {
                 Section { Label("You're up to date.", systemImage: "checkmark.circle.fill").foregroundStyle(.green) }
@@ -595,7 +595,7 @@ struct UpdatesSettings: View {
     @ViewBuilder private var progressRow: some View {
         switch updater.phase {
         case .downloading(let value): ProgressView("Downloading…", value: value)
-        case .installing: ProgressView("Installing… Notch apple will quit and reopen by itself.").progressViewStyle(.linear)
+        case .installing: ProgressView("Installing… Notch Apple will quit and reopen by itself.").progressViewStyle(.linear)
         default: EmptyView()
         }
     }
@@ -617,7 +617,7 @@ struct UpdatePill: View {
                     .background(Capsule().fill(Theme.accentGradient))
             }
             .buttonStyle(.plain)
-            .help("Notch apple \(release.version) is available")
+            .help("Notch Apple \(release.version) is available")
         }
     }
 }

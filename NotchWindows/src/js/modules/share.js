@@ -1,6 +1,6 @@
 // Share: PairDrop between this PC and nearby Macs and PCs, and private chat. Receive shows your code; Send takes
 // theirs and your files or folders; Chat opens a private conversation with a device by its code. It runs in the
-// background (services/pairdrop.js), so this tab only shows it. Works with Notch apple on Mac.
+// background (services/pairdrop.js), so this tab only shows it. Works with Notch Apple on Mac.
 import { magnet } from '../services/magnet.js';
 import { el, load, save } from '../store.js';
 import { invoke, listen, openUrl } from '../native.js';
@@ -52,7 +52,7 @@ export function render(root) {
       el('div', {}, 'Give this code to the person sending you files, or starting a chat:'),
       el('div', { class: 'hstack' }, el('div', { class: 'mono selectable', style: 'font-size:34px;font-weight:700;letter-spacing:.2em;color:var(--accent)' }, s.code.split('').join(' ')),
         el('button', { class: 'icon-btn', title: 'New code', onclick: () => PD.api.regenerate() }, '↻')),
-      el('div', { class: 'small dim' }, 'Files you receive are saved to Downloads. Both devices need to be on the same Wi-Fi, with Notch apple open.'));
+      el('div', { class: 'small dim' }, 'Files you receive are saved to Downloads. Both devices need to be on the same Wi-Fi, with Notch Apple open.'));
   }
 
   function sendView() {
@@ -79,7 +79,7 @@ export function render(root) {
       el('div', { class: 'card col gap-6', style: 'flex:0 0 210px' },
         el('div', { class: 'section-title' }, 'Start a private chat'), codeIn,
         el('button', { class: 'btn', disabled: codeIn.value.length !== 6, onclick: () => PD.api.chatStart(codeIn.value, peer) }, 'Connect'), peerSelect(),
-        el('div', { class: 'tiny faint' }, 'Chats live only while Notch apple is open and you are both on this Wi-Fi.')),
+        el('div', { class: 'tiny faint' }, 'Chats live only while Notch Apple is open and you are both on this Wi-Fi.')),
       el('div', { class: 'card col gap-6', style: 'flex:1;min-width:0' },
         s.threads.length
           ? el('div', { class: 'col', style: 'flex:1;min-height:0;gap:6px' },
@@ -101,7 +101,7 @@ export function render(root) {
   const modes = segmented([{ value: 'receive', label: 'Receive' }, { value: 'send', label: 'Send' }, { value: 'chat', label: 'Chat' }], mode, (v) => { mode = v; save('pd.mode', v); paint(); });
   const header = el('div', { class: 'hstack', style: 'flex:none' }, el('div', { class: 'section-title' }, '📤 PairDrop'), nameBox, el('div', { class: 'spacer' }), modes);
   const footer = el('div', { class: 'hstack tiny faint', style: 'flex:none;gap:10px' },
-    el('span', { class: 'grow' }, 'If Windows asks about the firewall, allow Notch apple on private networks.'),
+    el('span', { class: 'grow' }, 'If Windows asks about the firewall, allow Notch Apple on private networks.'),
     el('button', { class: 'btn small ghost', onclick: () => openUrl('ms-settings:crossdevice') }, 'Nearby sharing'),
     el('button', { class: 'btn small ghost', onclick: () => invoke('open_browser', { url: 'https://pairdrop.net/' }) }, 'pairdrop.net'));
   root.append(el('div', { class: 'col fill', style: 'gap:8px' }, header, body, progress, status, footer));

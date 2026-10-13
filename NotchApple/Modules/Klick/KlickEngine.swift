@@ -1,6 +1,6 @@
 //
 //  KlickEngine.swift
-//  Notch apple
+//  Notch Apple
 //
 //  Klick (Pro): your keyboard sounds like a mechanical one, in any app. Pick a sound (Cream, Holy Panda, Blue, Red,
 //  Brown, Topre, Typewriter or Bubble), set its volume, and every key you press plays it: three slightly different
@@ -52,7 +52,7 @@ final class KlickEngine: ObservableObject {
     @AppStorage("klick.keyUp") var keyUpSound = true
     /// Volume for each sound, 0…1, as "cream=0.7,blue=0.4".
     @AppStorage("klick.volumes") private var volumesRaw = ""
-    /// True while the switch is on but macOS hasn't allowed Accessibility, so only keys typed in Notch apple sound.
+    /// True while the switch is on but macOS hasn't allowed Accessibility, so only keys typed in Notch Apple sound.
     @Published private(set) var needsAccessibility = false
     /// Briefly true on each key, for the little light in the tab.
     @Published private(set) var lastKey = Date.distantPast
@@ -125,7 +125,7 @@ final class KlickEngine: ObservableObject {
             globalMonitor = NSEvent.addGlobalMonitorForEvents(matching: [.keyDown, .keyUp]) { event in
                 MainActor.assumeIsolated { KlickEngine.shared.handle(event) }
             }
-            // Keys typed in Notch apple itself (Settings, the notch) never reach the global monitor.
+            // Keys typed in Notch Apple itself (Settings, the notch) never reach the global monitor.
             localMonitor = NSEvent.addLocalMonitorForEvents(matching: [.keyDown, .keyUp]) { event in
                 MainActor.assumeIsolated { KlickEngine.shared.handle(event) }
                 return event

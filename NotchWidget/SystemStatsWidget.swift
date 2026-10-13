@@ -1,6 +1,6 @@
 //
 //  SystemStatsWidget.swift
-//  Notch apple widget extension
+//  Notch Apple widget extension
 //
 //  "MacBook Center": RAM, CPU, network speed, battery and disk space for
 //  Notification Center and the desktop, in Small and Medium sizes.

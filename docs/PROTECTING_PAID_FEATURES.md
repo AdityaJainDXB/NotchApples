@@ -1,6 +1,6 @@
 # How the paid features are protected
 
-Notch apple's code is source-available (see [LICENSE](../LICENSE)), so anyone can read it and build it. This page says
+Notch Apple's code is source-available (see [LICENSE](../LICENSE)), so anyone can read it and build it. This page says
 what that does and does not give them, and how the paid features are kept on the server where they can be.
 
 ## What a copy of the code never contains
@@ -65,9 +65,9 @@ What this does **not** do: the old versions of those files are still in this rep
 it was up to 2.0.32 (and rebuild an old, unlocked copy of it). Only changes from now on stay private. Rewriting the history to
 remove them would break every clone and fork, and copies that already exist can't be taken back.
 
-## Notch apple AI (hosted)
+## Notch Apple AI (hosted)
 
-Pro and Ultimate include **Notch apple AI**: the app sends an OpenAI-style chat request with its token to the licence server
+Pro and Ultimate include **Notch Apple AI**: the app sends an OpenAI-style chat request with its token to the licence server
 (`POST /ai/v1/chat/completions`). The server checks the key, counts a daily allowance per key (a Durable Object per key, so no KV
 writes; Pro 60, Ultimate 200 a day by default), cleans the request (text and embedded images only; the server chooses the model)
 and calls an AI provider with the project's own key (the `AI_API_KEY` secret, never in the app or repository). Without a real

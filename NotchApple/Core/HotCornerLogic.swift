@@ -1,6 +1,6 @@
 //
 //  HotCornerLogic.swift
-//  Notch apple
+//  Notch Apple
 //
 //  The pure parts of hot corners (no AppKit state), so the unit tests can compile them on their own:
 //  the four corners, which corner a point is in, and how typed text becomes a web address.

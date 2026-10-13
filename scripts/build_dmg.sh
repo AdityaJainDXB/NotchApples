@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Builds a Release copy of Notch apple and packages it into a drag-to-install DMG.
+# Builds a Release copy of Notch Apple and packages it into a drag-to-install DMG.
 # Usage: scripts/build_dmg.sh            → dist/NotchApple-<version>.dmg
 set -euo pipefail
 cd "$(dirname "$0")/.."
@@ -19,7 +19,7 @@ command -v xcodegen >/dev/null && xcodegen generate >/dev/null
 VERSION=$(grep 'MARKETING_VERSION' project.yml | head -1 | sed -E 's/.*"(.*)".*/\1/')
 xcodebuild -project NotchApple.xcodeproj -scheme NotchApple -configuration Release \
   -derivedDataPath build/dd ARCHS="arm64 x86_64" ONLY_ACTIVE_ARCH=NO build | xcbeautify 2>/dev/null || true
-APP="build/dd/Build/Products/Release/Notch apple.app"
+APP="build/dd/Build/Products/Release/Notch Apple.app"
 [ -d "$APP" ] || { echo "Build failed"; exit 1; }
 
 # Ad-hoc signatures identify the app by its exact hash, so every new build
@@ -44,13 +44,13 @@ DMG="dist/NotchApple-$VERSION.dmg"
 rm -f "$DMG"
 "$VENV/bin/dmgbuild" -s scripts/dmg/dmg_settings.py \
   -D app="$APP" -D background="$BG" \
-  "Notch apple" "$DMG" >/dev/null
+  "Notch Apple" "$DMG" >/dev/null
 
 # Keep the Homebrew cask in step with this release.
 SHA=$(shasum -a 256 "$DMG" | awk '{print $1}')
 sed -i '' -E "s/^  version \".*\"/  version \"$VERSION\"/; s/^  sha256 \".*\"/  sha256 \"$SHA\"/" Casks/notch-apple.rb
 # Remove the built app now that it's inside the DMG, so there's only one
-# "Notch apple" on this Mac (the one in /Applications). Build caches stay.
+# "Notch Apple" on this Mac (the one in /Applications). Build caches stay.
 /System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister -u "$PWD/$APP" 2>/dev/null || true
 rm -rf "$APP"
 

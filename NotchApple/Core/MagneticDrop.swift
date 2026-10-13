@@ -1,6 +1,6 @@
 //
 //  MagneticDrop.swift
-//  Notch apple
+//  Notch Apple
 //
 //  A file drop target with a little feedback: while a dragged file is over it the content grows slightly, a soft glow
 //  sits behind it and a small label says what happens on release. It uses SwiftUI's standard

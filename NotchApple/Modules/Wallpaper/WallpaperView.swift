@@ -1,6 +1,6 @@
 //
 //  WallpaperView.swift
-//  Notch apple
+//  Notch Apple
 //
 //  The Wallpaper tab (Pro): your videos and a small free library as picture cards (click one to use it), a button and a
 //  drop target to add your own (up to 60 seconds, up to 4K), and the switches that keep it from using too much power.

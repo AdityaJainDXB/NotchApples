@@ -1,6 +1,6 @@
 //
 //  AudioDeviceController.swift
-//  Notch apple
+//  Notch Apple
 //
 //  CoreAudio wrapper for output-device routing, master volume, and per-app
 //  volume / EQ.

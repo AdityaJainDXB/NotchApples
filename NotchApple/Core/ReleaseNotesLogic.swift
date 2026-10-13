@@ -1,6 +1,6 @@
 //
 //  ReleaseNotesLogic.swift
-//  Notch apple
+//  Notch Apple
 //
 //  What the update screen shows of a release's notes: the changes, without the boilerplate (the install line, the
 //  updates paragraph) and without the markers that steer the app (`[required-update]`, `[security]`).

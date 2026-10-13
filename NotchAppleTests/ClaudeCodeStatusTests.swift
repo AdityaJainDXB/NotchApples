@@ -1,6 +1,6 @@
 //
 //  ClaudeCodeStatusTests.swift
-//  Notch apple tests
+//  Notch Apple tests
 //
 //  The Claude Code status dot: which words give green and which give yellow, and the safe merge of the two hooks
 //  into Claude Code's settings.json.

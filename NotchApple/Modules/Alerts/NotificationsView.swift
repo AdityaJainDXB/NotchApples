@@ -1,6 +1,6 @@
 //
 //  NotificationsView.swift
-//  Notch apple
+//  Notch Apple
 //
 //  Mirrors notifications from other apps into the notch. macOS has no public
 //  API to read other apps' notifications, so this reads Notification Center's
@@ -168,7 +168,7 @@ struct NotificationsView: View {
                 VStack(spacing: 10) {
                     Image(systemName: "lock.shield").font(.system(size: 30)).foregroundStyle(Theme.accentGradient)
                     Text("Allow Full Disk Access").font(.headline).foregroundStyle(.white)
-                    Text("Notification Center keeps notifications in a protected file. Give Notch apple Full Disk Access to show them here; it only reads them, on this Mac.")
+                    Text("Notification Center keeps notifications in a protected file. Give Notch Apple Full Disk Access to show them here; it only reads them, on this Mac.")
                         .font(.system(size: 12)).foregroundStyle(Theme.textSecondary).multilineTextAlignment(.center).frame(maxWidth: 440)
                     HStack {
                         Button("Open Privacy Settings") { PermissionsModel.openPrivacy("Privacy_AllFiles") }.buttonStyle(PurpleButtonStyle())

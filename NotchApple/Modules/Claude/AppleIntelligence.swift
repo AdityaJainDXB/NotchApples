@@ -1,6 +1,6 @@
 //
 //  AppleIntelligence.swift
-//  Notch apple
+//  Notch Apple
 //
 //  Apple's on-device model (macOS 26 or newer with Apple Intelligence turned on),
 //  as an AI provider: free, private and offline. Text only, and it's a small model,

@@ -1,6 +1,6 @@
 //
 //  NamedTimers.swift
-//  Notch apple
+//  Notch Apple
 //
 //  Several named timers at once (Pro): type "Pasta 10m" or "Egg 1:30" and each one counts down on its own,
 //  with a notification and a sound when it ends. They end at a fixed time, so they stay exact and survive a

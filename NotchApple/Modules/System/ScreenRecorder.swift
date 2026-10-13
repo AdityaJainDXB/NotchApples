@@ -1,6 +1,6 @@
 //
 //  ScreenRecorder.swift
-//  Notch apple
+//  Notch Apple
 //
 //  Screen recording with pause / resume, a live timer beside the notch and a
 //  trim step afterwards. Built on ScreenCaptureKit + AVAssetWriter, and the
@@ -46,7 +46,7 @@ final class ScreenRecorder: NSObject, ObservableObject {
         guard !isRecording else { return }
         guard CGPreflightScreenCaptureAccess() else {
             _ = CGRequestScreenCaptureAccess()
-            flash("Allow Screen Recording for Notch apple in System Settings, then try again.")
+            flash("Allow Screen Recording for Notch Apple in System Settings, then try again.")
             return
         }
         Task {

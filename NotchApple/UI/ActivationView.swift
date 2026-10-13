@@ -1,6 +1,6 @@
 //
 //  ActivationView.swift
-//  Notch apple
+//  Notch Apple
 //
 //  The inline unlock prompt. It appears inside the notch when someone opens a
 //  Pro tab, and in Settings → License. It shows what the feature does and the

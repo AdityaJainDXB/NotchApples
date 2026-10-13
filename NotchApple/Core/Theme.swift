@@ -1,6 +1,6 @@
 //
 //  Theme.swift
-//  Notch apple
+//  Notch Apple
 //
 //  Design tokens and reusable controls, following Apple's HIG for macOS:
 //   • Pointer targets are at least 28 × 28 pt (HIG › Accessibility).

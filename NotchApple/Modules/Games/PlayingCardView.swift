@@ -1,6 +1,6 @@
 //
 //  PlayingCardView.swift
-//  Notch apple
+//  Notch Apple
 //
 //  A playing card in the classic 5:7 shape with corner indices and the traditional pip layouts, and a fanned hand
 //  whose hovered card lifts. Court cards show a framed letter and the suit.

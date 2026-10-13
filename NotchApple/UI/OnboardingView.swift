@@ -1,6 +1,6 @@
 //
 //  OnboardingView.swift
-//  Notch apple
+//  Notch Apple
 //
 //  First run, in four short pages: permissions, pick your tabs, pick a theme,
 //  and a quick tour. Every step can be skipped and changed later in Settings.
@@ -18,7 +18,7 @@ enum Onboarding {
         let hosting = NSHostingController(rootView: OnboardingView { close() }
             .environmentObject(SettingsManager.shared))
         let w = NSWindow(contentViewController: hosting)
-        w.title = "Welcome to Notch apple"
+        w.title = "Welcome to Notch Apple"
         w.styleMask = [.titled, .closable, .fullSizeContentView]
         w.titlebarAppearsTransparent = true
         w.isReleasedWhenClosed = false
@@ -70,7 +70,7 @@ struct OnboardingView: View {
                 if page > 0 { Button("Back") { withAnimation(Theme.spring) { page -= 1 } } }
                 Spacer()
                 Button("Skip") { done() }.buttonStyle(.plain).foregroundStyle(.secondary)
-                Button(page == 3 ? "Start using Notch apple" : "Continue") {
+                Button(page == 3 ? "Start using Notch Apple" : "Continue") {
                     if page == 3 { done(); AppDelegate.current?.notch?.expand() }
                     else { withAnimation(Theme.spring) { page += 1 } }
                 }
@@ -90,7 +90,7 @@ private struct OnboardingPermissions: View {
             HStack(spacing: 14) {
                 Image(nsImage: NSApp.applicationIconImage).resizable().frame(width: 56, height: 56)
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("Welcome to Notch apple").font(.title.bold())
+                    Text("Welcome to Notch Apple").font(.title.bold())
                     Text("Your MacBook's notch, made useful. Nothing below is required; allow only what you'd like.")
                         .foregroundStyle(.secondary)
                 }

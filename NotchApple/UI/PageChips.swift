@@ -1,6 +1,6 @@
 //
 //  PageChips.swift
-//  Notch apple
+//  Notch Apple
 //
 //  A row of small pill buttons that switch between the pages inside a tab (Tools, Non-Necessities).
 //

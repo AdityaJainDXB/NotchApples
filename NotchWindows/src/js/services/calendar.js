@@ -150,7 +150,7 @@ export function start() {
       const key = `${e.title}|${e.start}`;
       if (!e.allDay && mins <= 5 && mins > 0 && !alerted.has(key)) {
         alerted.add(key);
-        notify(`${e.title} in ${Math.ceil(mins)} min`, e.join ? 'Open Notch apple to join.' : (e.location || 'Coming up'));
+        notify(`${e.title} in ${Math.ceil(mins)} min`, e.join ? 'Open Notch Apple to join.' : (e.location || 'Coming up'));
       }
     }
     refresh();

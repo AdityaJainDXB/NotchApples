@@ -1,6 +1,6 @@
 //
 //  ProductKeys.swift
-//  Notch apple
+//  Notch Apple
 //
 //  One-time product keys (NOTCH-XXXX-XXXX-XXXX) from the website: bought for
 //  $1 in Litecoin, or claimed free with a promo code. The site writes the

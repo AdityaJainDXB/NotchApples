@@ -114,7 +114,7 @@ pub async fn read_file_base64(path: String) -> Result<FileData, String> {
 
 // ---- VPN: Windows' own client, L2TP/IPsec with VPN Gate's published settings ----
 
-const VPN_NAME: &str = "Notch apple VPN";
+const VPN_NAME: &str = "Notch Apple VPN";
 
 #[derive(Serialize)]
 pub struct VpnStatus {

@@ -32,7 +32,7 @@ export async function check() {
   if (available && load('updates.notified', '') !== available.version && announce()) {
     save('updates.notified', available.version);
     noteAnnounced();
-    notify('Notch apple update', `Version ${available.version} is ready. Open Settings → Updates to install it.`);
+    notify('Notch Apple update', `Version ${available.version} is ready. Open Settings → Updates to install it.`);
   }
   document.dispatchEvent(new CustomEvent('update-available', { detail: available ? { version: available.version, announce: announce() } : null }));
   refresh();
@@ -48,5 +48,5 @@ export function start() {
   setTimeout(() => { if (pref('updates.auto')) check(); }, 30_000);
   setInterval(() => { if (pref('updates.auto')) check(); }, 6 * 3600e3);
   provide('update', 5, () => (available && pref('updates.pill') && announce()
-    ? { icon: '⬆', label: 'Update', tab: 'settings', title: `Notch apple ${available.version} is ready` } : null));
+    ? { icon: '⬆', label: 'Update', tab: 'settings', title: `Notch Apple ${available.version} is ready` } : null));
 }

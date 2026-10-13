@@ -1,6 +1,6 @@
 //
 //  NotchGestures.swift
-//  Notch apple
+//  Notch Apple
 //
 //  Trackpad gestures on the closed notch:
 //   • two-finger scroll up / down → volume up / down (with the notch gauge)

@@ -1,6 +1,6 @@
 //
 //  BrowserView.swift
-//  Notch apple
+//  Notch Apple
 //
 //  The Browser tab: address and search bar, back / forward / reload, and the
 //  page itself. With nothing open it shows a start page with a search box and

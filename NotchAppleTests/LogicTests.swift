@@ -1,6 +1,6 @@
 //
 //  LogicTests.swift
-//  Notch apple tests
+//  Notch Apple tests
 //
 //  Pure logic, compiled straight into the test bundle (no app host, so running
 //  the tests never opens a second notch): readable math, answer parsing, input

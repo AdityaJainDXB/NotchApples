@@ -1,6 +1,6 @@
 //
 //  PremiumRegistry.swift
-//  Notch apple
+//  Notch Apple
 //
 //  The Ultimate modules (Convert, Smart Home, Claude usage, Do It and the Purge launcher) are not in the public source:
 //  they live in a private repository and are built into the official releases only. This is how the public code finds
@@ -45,7 +45,7 @@ struct PremiumMissingView: View {
         VStack(spacing: 8) {
             Image(systemName: symbol).font(.system(size: 30)).foregroundStyle(Theme.accent)
             Text("\(title) is in the official Ultimate build").font(.system(size: 14, weight: .semibold)).foregroundStyle(.white)
-            Text("This copy of Notch apple was built from the public source code, which doesn't include the Ultimate modules. Get the official app from the website.")
+            Text("This copy of Notch Apple was built from the public source code, which doesn't include the Ultimate modules. Get the official app from the website.")
                 .font(.system(size: 11)).foregroundStyle(Theme.textSecondary).multilineTextAlignment(.center).frame(maxWidth: 420)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)

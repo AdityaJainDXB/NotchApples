@@ -1,4 +1,4 @@
-// Notch apple license server: a Cloudflare Worker (free plan) with one KV namespace.
+// Notch Apple license server: a Cloudflare Worker (free plan) with one KV namespace.
 //
 // It issues product keys signed with Ed25519. The app checks them offline using only the
 // public key built into it. The private key exists only as this Worker's SIGNING_KEY secret,
@@ -21,10 +21,10 @@
 //   GET  /asset/<id>                      paid content kept only on this server (Authorization: Bearer <token>); the tier
 //                                         needed is stored with the file. A modified app without a real key gets nothing.
 //   POST /admin/asset-put?id=&tier=       upload that content (admin only); /admin/asset-list, /admin/asset-delete
-//   POST /ai/v1/chat/completions          Notch apple AI, included with Pro and Ultimate: an OpenAI-style chat request (Authorization:
+//   POST /ai/v1/chat/completions          Notch Apple AI, included with Pro and Ultimate: an OpenAI-style chat request (Authorization:
 //                                         Bearer <token>) that the server forwards to an AI provider with the project's own key,
 //                                         with a daily limit per key. Off until the AI_API_KEY secret is set.
-//   GET  /ai/status                       whether Notch apple AI is switched on, and the daily limits
+//   GET  /ai/status                       whether Notch Apple AI is switched on, and the daily limits
 //   GET  /plane/board?mode=&period=       the world leaderboard of the Plane game (hoops | trial | landing; all | week)
 //   POST /plane/score {mode,name,plane,score,region}   posts a score (open to everyone; plausibility checks and a rate limit)
 //   GET  /revoked                         signed list of revoked key IDs (the app checks it now and then)
@@ -217,7 +217,7 @@ async function payment(env, txid) {
   } catch {}
   if (env.NETWORK === 'testnet') throw new HTTPError(502, "Couldn't reach the Litecoin explorer. Try again in a minute.");
   try {
-    const r = await fetch(`https://litecoinblockexplorer.net/api/v2/tx/${txid}`, { signal: timeout(8000), headers: { 'user-agent': 'Notch apple license server' } });
+    const r = await fetch(`https://litecoinblockexplorer.net/api/v2/tx/${txid}`, { signal: timeout(8000), headers: { 'user-agent': 'Notch Apple license server' } });
     if (r.status === 404 || r.status === 400) return null;
     if (r.ok) {
       const tx = await r.json();
@@ -253,8 +253,8 @@ async function sendMail(env, to, subject, text) {
 
 function keyMail(keys) {
   const lines = keys.map((k) => `${TIER_NAME[k.tier]} key:\n${k.key}\n\nActivate in one click: notchapple://activate?key=${encodeURIComponent(k.key)}`);
-  return `Thanks for supporting Notch apple!\n\n${lines.join('\n\n')}\n\n` +
-    'Or open Notch apple → Settings → License, paste the key and press Activate.\n' +
+  return `Thanks for supporting Notch Apple!\n\n${lines.join('\n\n')}\n\n` +
+    'Or open Notch Apple → Settings → License, paste the key and press Activate.\n' +
     "It's yours for life: every 1.x update is included. Keep this email; if you lose the key, use \"Lost my key?\" on the website.\n\n" +
     'Questions? Just reply to this email, or write to notchapples.support@gmail.com.';
 }
@@ -315,7 +315,7 @@ async function claim(env, body) {
   if (used) throw new HTTPError(409, 'That payment has already been used for a key.');
   const pay = txid === testTx ? { paid: o.litoshi, blockTime: null } : await payment(env, txid);
   if (!pay) return { pending: true, message: 'Waiting for the transaction to appear on the network…' };
-  if (pay.paid === 0) throw new HTTPError(400, "That transaction doesn't pay the Notch apple address.");
+  if (pay.paid === 0) throw new HTTPError(400, "That transaction doesn't pay the Notch Apple address.");
   if (pay.paid !== o.litoshi) {
     throw new HTTPError(400, `That payment is ${ltc(pay.paid)} LTC, but this order needs exactly ${ltc(o.litoshi)} LTC. ` +
       'If an exchange took a fee from it, contact us with the transaction ID and we will sort it out.');
@@ -327,7 +327,7 @@ async function claim(env, body) {
     const old = await getJSON(env, `key:${o.upgradeFrom}`);
     if (old) { old.upgradedTo = keyId; await putJSON(env, `key:${o.upgradeFrom}`, old); }
   }
-  const emailed = await sendMail(env, o.email, `Your Notch apple ${TIER_NAME[o.tier]} key`, keyMail([{ tier: o.tier, key }]));
+  const emailed = await sendMail(env, o.email, `Your Notch Apple ${TIER_NAME[o.tier]} key`, keyMail([{ tier: o.tier, key }]));
   const done = { ...o, status: 'paid', txid, keyId, key, emailed, email: undefined, emailHash: await emailHash(env, o.email) };
   await putJSON(env, `order:${body.order}`, done);
   return { key, tier: TIER_NAME[o.tier], emailed };
@@ -344,7 +344,7 @@ async function promo(env, body) {
   await env.KV.put(`promo:${h}`, 'claiming');
   const { key, keyId } = await issueKey(env, TIER.pro, 'promo', body.email.trim(), { promo: h });
   await env.KV.put(`promo:${h}`, keyId);
-  const emailed = await sendMail(env, body.email.trim(), 'Your Notch apple Pro key', keyMail([{ tier: TIER.pro, key }]));
+  const emailed = await sendMail(env, body.email.trim(), 'Your Notch Apple Pro key', keyMail([{ tier: TIER.pro, key }]));
   return { key, tier: 'Pro', emailed };
 }
 
@@ -363,7 +363,7 @@ async function recover(env, body) {
   }
   const revoked = await revokedIds(env);
   found = found.filter((k) => !revoked.includes(parseKey(k.key)?.keyId));
-  if (found.length) await sendMail(env, body.email.trim(), 'Your Notch apple key', keyMail(found));
+  if (found.length) await sendMail(env, body.email.trim(), 'Your Notch Apple key', keyMail(found));
   return generic;
 }
 
@@ -466,7 +466,7 @@ async function admin(env, path, body) {
     const note = String(body.note || '').slice(0, 200);
     const keys = [];
     for (let i = 0; i < count; i++) keys.push(await issueKey(env, tier, 'admin', body.email || null, { note }));
-    const emailed = body.email ? await sendMail(env, body.email, `Your Notch apple ${TIER_NAME[tier]} key`, keyMail([{ tier, key: keys[0].key }])) : false;
+    const emailed = body.email ? await sendMail(env, body.email, `Your Notch Apple ${TIER_NAME[tier]} key`, keyMail([{ tier, key: keys[0].key }])) : false;
     return count === 1 ? { ...keys[0], emailed } : { keys };
   }
   if (path === '/admin/list') {
@@ -563,7 +563,7 @@ async function admin(env, path, body) {
     const rec = await getJSON(env, `key:${id}`);
     if (!rec?.key) throw new HTTPError(404, 'No key with that ID on the server');
     if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(String(body.email || ''))) throw new HTTPError(400, 'Enter a valid email');
-    const sent = await sendMail(env, body.email, `Your Notch apple ${TIER_NAME[rec.tier]} key`, keyMail([{ tier: rec.tier, key: rec.key }]));
+    const sent = await sendMail(env, body.email, `Your Notch Apple ${TIER_NAME[rec.tier]} key`, keyMail([{ tier: rec.tier, key: rec.key }]));
     return { emailed: sent };
   }
   if (path === '/admin/promo-create') {
@@ -620,7 +620,7 @@ async function admin(env, path, body) {
     const tier = rec?.tier || parseKey(body.key)?.tier;
     if (!tier) throw new HTTPError(400, 'Unknown key; pass the full key to reissue');
     const r = await issueKey(env, tier, 'reissue', body.email || null, { replaces: id });
-    const emailed = body.email ? await sendMail(env, body.email, `Your new Notch apple ${TIER_NAME[tier]} key`, keyMail([{ tier, key: r.key }])) : false;
+    const emailed = body.email ? await sendMail(env, body.email, `Your new Notch Apple ${TIER_NAME[tier]} key`, keyMail([{ tier, key: r.key }])) : false;
     return { revoked: id, ...r, emailed };
   }
   throw new HTTPError(404, 'Not found');
@@ -691,7 +691,7 @@ async function assetPut(env, request, url) {
   return { ok: true, id, tier, size: bytes.length, sha };
 }
 
-// MARK: Notch apple AI (hosted)
+// MARK: Notch Apple AI (hosted)
 //
 // The one paid feature that can only exist here: the app sends a chat request with its token, the server checks the key and
 // a daily allowance, and calls the AI provider with the project's own key (the secret AI_API_KEY, never in the app or repo).
@@ -740,10 +740,10 @@ export function cleanAiRequest(body, env) {
 }
 
 async function aiChat(env, request) {
-  if (!aiOn(env)) throw new HTTPError(503, "Notch apple AI isn't switched on yet.");
+  if (!aiOn(env)) throw new HTTPError(503, "Notch Apple AI isn't switched on yet.");
   const token = (request.headers.get('authorization') || '').replace(/^Bearer /, '');
   const p = await verifyToken(env, 'ent1', token);
-  if (!p) throw new HTTPError(401, 'Notch apple AI needs a valid Pro or Ultimate key. Open the app and try again.');
+  if (!p) throw new HTTPError(401, 'Notch Apple AI needs a valid Pro or Ultimate key. Open the app and try again.');
   if ((await revokedIds(env)).includes(p.k)) throw new HTTPError(403, 'This licence has been revoked.');
   const text = await request.text();
   if (text.length > 3 * 1024 * 1024) throw new HTTPError(413, 'Too large.');
@@ -751,16 +751,16 @@ async function aiChat(env, request) {
   const upstream = cleanAiRequest(body, env);
   const limit = aiLimit(env, p.t);
   const q = await (await env.AI_QUOTA.get(env.AI_QUOTA.idFromName(p.k)).fetch('https://quota/', { method: 'POST', body: JSON.stringify({ limit }) })).json();
-  if (!q.ok) throw new HTTPError(429, `You've used today's ${limit} Notch apple AI messages. They reset at midnight UTC; you can also use your own key in Settings → AI.`, { limit });
+  if (!q.ok) throw new HTTPError(429, `You've used today's ${limit} Notch Apple AI messages. They reset at midnight UTC; you can also use your own key in Settings → AI.`, { limit });
   let r;
   try {
     r = await fetch(`${(env.AI_BASE || AI_DEFAULT_BASE).replace(/\/+$/, '')}/chat/completions`, {
       method: 'POST', headers: { 'content-type': 'application/json', authorization: `Bearer ${env.AI_API_KEY}` }, body: JSON.stringify(upstream) });
-  } catch { throw new HTTPError(503, 'Notch apple AI is busy. Try again in a minute.'); }
+  } catch { throw new HTTPError(503, 'Notch Apple AI is busy. Try again in a minute.'); }
   if (!r.ok) {
     // The provider's reason goes to the server log (never to the app, which only hears "busy"), so a wrong model or key can be found.
     console.error('AI provider answered', r.status, (await r.text()).slice(0, 300));
-    throw new HTTPError(r.status === 429 || r.status >= 500 ? 503 : 502, 'Notch apple AI is busy. Try again in a minute.');
+    throw new HTTPError(r.status === 429 || r.status >= 500 ? 503 : 502, 'Notch Apple AI is busy. Try again in a minute.');
   }
   return new Response(r.body, { headers: { 'content-type': r.headers.get('content-type') || 'application/json', 'x-ai-remaining': String(Math.max(0, limit - q.used)), 'cache-control': 'no-store', ...CORS } });
 }
@@ -876,7 +876,7 @@ export default {
     const path = new URL(request.url).pathname.replace(/\/+$/, '') || '/';
     try {
       if (request.method === 'GET') {
-        if (path === '/') return json({ ok: true, service: 'Notch apple licenses' });
+        if (path === '/') return json({ ok: true, service: 'Notch Apple licenses' });
         if (path === '/config') return json({ prices: prices(env), ultimate: env.ULTIMATE_ON === '1', network: env.NETWORK || 'mainnet', wallet: env.WALLET });
         if (path === '/admin') return new Response(ADMIN_PAGE, { headers: ADMIN_HEADERS });
         if (path === '/revoked') return json(await revokedList(env), 200, { 'cache-control': 'public, max-age=3600' });

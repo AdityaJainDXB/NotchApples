@@ -1,6 +1,6 @@
 //
 //  AudioView.swift
-//  Notch apple
+//  Notch Apple
 //
 //  Audio hub: output routing, master volume, and native per-app volume + EQ.
 //
@@ -96,7 +96,7 @@ struct AudioView: View {
             Label(error, systemImage: "exclamationmark.triangle.fill")
                 .font(.system(size: 11)).foregroundStyle(.yellow).lineLimit(3)
         } else if audio.backend == .unavailable {
-            Label("Per-app audio needs macOS 14.2, or the BackgroundMusic driver included in the Notch apple DMG.",
+            Label("Per-app audio needs macOS 14.2, or the BackgroundMusic driver included in the Notch Apple DMG.",
                   systemImage: "exclamationmark.triangle.fill")
                 .font(.system(size: 11)).foregroundStyle(.yellow)
         }

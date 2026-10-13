@@ -1,6 +1,6 @@
 //
 //  SystemExtras.swift
-//  Notch apple
+//  Notch Apple
 //
 //  Pro system extras:
 //   • Mic mute: one click sets your microphone's input level to zero (and back),
@@ -172,7 +172,7 @@ enum DNDToggle {
 }
 
 /// Light ↔ dark for all of macOS, in one click (free). It asks System Events, so macOS asks once
-/// whether Notch apple may control it; if you say no, a note explains where to change that.
+/// whether Notch Apple may control it; if you say no, a note explains where to change that.
 @MainActor
 enum DarkModeToggle {
     static var isDark: Bool { UserDefaults.standard.string(forKey: "AppleInterfaceStyle") == "Dark" }
@@ -181,7 +181,7 @@ enum DarkModeToggle {
         var error: NSDictionary?
         NSAppleScript(source: "tell application \"System Events\" to tell appearance preferences to set dark mode to not dark mode")?.executeAndReturnError(&error)
         if error != nil {
-            Notifier.post(title: "Couldn't switch the appearance", body: "Allow Notch apple to control System Events in System Settings → Privacy & Security → Automation.")
+            Notifier.post(title: "Couldn't switch the appearance", body: "Allow Notch Apple to control System Events in System Settings → Privacy & Security → Automation.")
             return
         }
         // The preference is written a moment later, so show what we just switched to rather than re-reading it.

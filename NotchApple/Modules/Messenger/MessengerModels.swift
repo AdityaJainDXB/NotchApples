@@ -1,6 +1,6 @@
 //
 //  MessengerModels.swift
-//  Notch apple
+//  Notch Apple
 //
 //  Shared types for Notch Messenger: the anonymous identity, messages, and
 //  the JSON envelope both transports (Nearby Wi-Fi and Anonymous Room) send.

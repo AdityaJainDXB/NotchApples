@@ -1,6 +1,6 @@
 //
 //  SportsView.swift
-//  Notch apple
+//  Notch Apple
 //
 //  The Sports tab: your team (Barcelona by default) on the left, a league's
 //  fixtures and scores for the next week on the right. See SportsModel for the data.

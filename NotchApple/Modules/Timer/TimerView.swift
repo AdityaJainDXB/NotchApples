@@ -1,6 +1,6 @@
 //
 //  TimerView.swift
-//  Notch apple
+//  Notch Apple
 //
 //  The Timer tab: a countdown timer with presets and a stopwatch with laps.
 //  While either runs, the time shows beside the closed notch, like the

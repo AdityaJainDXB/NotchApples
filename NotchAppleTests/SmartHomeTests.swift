@@ -1,6 +1,6 @@
 //
 //  SmartHomeTests.swift
-//  Notch apple tests
+//  Notch Apple tests
 //
 //  The Smart Home rules: reading Home Assistant's device list, tidying the server address and picking the right service.
 //

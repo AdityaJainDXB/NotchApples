@@ -1,6 +1,6 @@
 //
 //  SystemWatch.swift
-//  Notch apple
+//  Notch Apple
 //
 //  Four small guards, all off until you turn them on in Settings → Extras: "unplug at 80%" battery care, a low disk
 //  space warning, an internet-down alert, and a speed test button in the Stats tab. The internet check fetches a tiny

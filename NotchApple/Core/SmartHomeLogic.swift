@@ -1,6 +1,6 @@
 //
 //  SmartHomeLogic.swift
-//  Notch apple
+//  Notch Apple
 //
 //  The rules behind the Smart Home tab (Ultimate), which talks to your own Home Assistant over its REST API.
 //  Home Assistant itself connects Philips Hue, IKEA, Zigbee, Matter and hundreds of other brands, so this one

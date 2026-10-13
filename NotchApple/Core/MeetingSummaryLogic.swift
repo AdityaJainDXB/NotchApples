@@ -1,6 +1,6 @@
 //
 //  MeetingSummaryLogic.swift
-//  Notch apple
+//  Notch Apple
 //
 //  Meeting summaries (Ultimate): Voice Notes started from a calendar event. This builds the request sent to the
 //  AI you chose (the transcript only, never the audio) and the note text that is saved to the meeting's note.

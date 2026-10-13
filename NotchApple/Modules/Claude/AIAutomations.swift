@@ -1,6 +1,6 @@
 //
 //  AIAutomations.swift
-//  Notch apple
+//  Notch Apple
 //
 //  AI automations (Ultimate): prompts that run on a schedule, like "every
 //  weekday at 8:00, summarise my calendar". The answer arrives as a

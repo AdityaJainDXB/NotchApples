@@ -1,6 +1,6 @@
 //
 //  FileSearchView.swift
-//  Notch apple
+//  Notch Apple
 //
 //  The Search tab: type to find files, apps and folders through Spotlight.
 //  ↑/↓ move the highlight, Return opens, ⌘R (or ⌥-click) reveals in Finder,

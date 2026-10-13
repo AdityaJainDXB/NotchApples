@@ -75,7 +75,7 @@ function General(repaint, opts) {
   const sizeSel = segmented([{ value: 'compact', label: 'Small' }, { value: 'standard', label: 'Standard' }, { value: 'large', label: 'Large' }], pref('ui.size'), (v) => { if (v !== 'standard' && !canUse('notchResize')) { toast('Notch size is part of Pro.'); sizeSel.setValue('standard'); return; } setPref('ui.size', v); });
   return [
     card('Startup',
-      setting('Start with Windows', 'Notch apple opens quietly when you sign in.', auto),
+      setting('Start with Windows', 'Notch Apple opens quietly when you sign in.', auto),
       el('div', { class: 'tiny dim', style: 'padding-top:6px' }, 'Updates now have their own section.')),
     card('The notch',
       setting('Position', 'Where the pill sits on the top edge.', segmented([{ value: 'left', label: 'Left' }, { value: 'center', label: 'Centre' }, { value: 'right', label: 'Right' }], pref('ui.position'), (v) => setPref('ui.position', v))),
@@ -105,10 +105,10 @@ function General(repaint, opts) {
         const p = await invoke('pick_file'); if (!p) return;
         try { const f = await invoke('read_file_base64', { path: p }); const data = JSON.parse(decodeURIComponent(escape(atob(f.data))));
           if (!(await confirm('Restore this backup?', { ok: 'Restore', detail: 'Your current settings, notes and to-dos are replaced.' }))) return;
-          for (const [k, v] of Object.entries(data)) localStorage.setItem(k, v); location.reload(); } catch (e) { toast(`That isn't a Notch apple backup (${e.message}).`, { error: true }); }
+          for (const [k, v] of Object.entries(data)) localStorage.setItem(k, v); location.reload(); } catch (e) { toast(`That isn't a Notch Apple backup (${e.message}).`, { error: true }); }
       }, { kind: 'quiet', small: true })),
       setting('Reset everything', 'Back to a fresh install (your key stays).', button('Reset…', async () => {
-        if (!(await confirm('Reset Notch apple?', { ok: 'Reset', danger: true, detail: 'Removes all settings, notes, to-dos, clipboard history and snippets on this PC.' }))) return;
+        if (!(await confirm('Reset Notch Apple?', { ok: 'Reset', danger: true, detail: 'Removes all settings, notes, to-dos, clipboard history and snippets on this PC.' }))) return;
         const keep = {}; for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); if (/^license\./.test(k)) keep[k] = localStorage.getItem(k); }
         localStorage.clear(); for (const [k, v] of Object.entries(keep)) localStorage.setItem(k, v); location.reload();
       }, { kind: 'danger', small: true }))),
@@ -130,14 +130,14 @@ function Updates() {
     notes.replaceChildren(markdown(s.available.notes || '', { onLink: (u) => invoke('open_browser', { url: u }) }));
     actions.replaceChildren(button('Install and restart', async () => {
       status.textContent = 'Downloading and checking the update…';
-      try { await U.install(); status.textContent = 'Installing… Notch apple will restart.'; } catch (e) { status.textContent = e.message; }
+      try { await U.install(); status.textContent = 'Installing… Notch Apple will restart.'; } catch (e) { status.textContent = e.message; }
     }), checkBtn);
   };
   const checkBtn = button('Check now', check, { kind: 'quiet' });
   actions.append(checkBtn);
   setTimeout(check, 50);
   return [card('Software update',
-    el('div', { class: 'hstack' }, el('div', { class: 'grow' }, el('div', {}, 'Notch apple for Windows ', version), status), actions),
+    el('div', { class: 'hstack' }, el('div', { class: 'grow' }, el('div', {}, 'Notch Apple for Windows ', version), status), actions),
     notes,
     setting('Check for updates automatically', 'Checked at startup and every six hours; you’re told once per version.', prefToggle('updates.auto')),
     setting('Show “Update” on the pill', 'A small badge when a new version is ready.', prefToggle('updates.pill')),
@@ -294,7 +294,7 @@ function Security(repaint) {
   invoke('hello_available').then((ok) => { avail.textContent = ok ? 'Windows Hello is set up on this PC.' : 'Windows Hello isn’t set up. Set it up in Windows Settings → Accounts → Sign-in options.'; });
   return [panicCard(), card('Lock', setting('Require Windows Hello to open the notch', 'Face, fingerprint or PIN.', toggle(pref('lock.enabled'), async (v) => {
     if (v && !(await invoke('hello_available').catch(() => false))) { toast('Set up Windows Hello first.', { error: true }); return repaint(); }
-    if (v && !(await invoke('hello_verify', { message: 'Turn on the Notch apple lock' }).catch(() => false))) return repaint();
+    if (v && !(await invoke('hello_verify', { message: 'Turn on the Notch Apple lock' }).catch(() => false))) return repaint();
     setPref('lock.enabled', v);
   })), setting('Ask again after', '', select([{ value: 0, label: 'Every time' }, { value: 60, label: '1 minute' }, { value: 300, label: '5 minutes' }, { value: 3600, label: '1 hour' }], pref('lock.grace'), (v) => setPref('lock.grace', Number(v)), { cls: 'auto' })), avail)];
 }
@@ -336,7 +336,7 @@ function Access(repaint) {
 function About() {
   const v = el('span', {});
   appInfo.then((i) => { v.textContent = i.version; });
-  return [card('', el('div', { class: 'big' }, 'Notch apple for Windows'), el('div', { class: 'small dim' }, 'Version ', v, '. Open source. Your notes, to-dos, clipboard and keys stay on this PC.'),
-    el('div', { class: 'hstack', style: 'padding-top:8px' }, button('GitHub', () => openUrl('https://github.com/AdityaJainDXB/NotchApples'), { kind: 'quiet', small: true }), button('Website', () => openUrl('https://virajsinghchadha.github.io/notchapples-site/'), { kind: 'quiet', small: true }), button('Quit Notch apple', () => invoke('quit_app'), { kind: 'danger', small: true }))),
+  return [card('', el('div', { class: 'big' }, 'Notch Apple for Windows'), el('div', { class: 'small dim' }, 'Version ', v, '. Open source. Your notes, to-dos, clipboard and keys stay on this PC.'),
+    el('div', { class: 'hstack', style: 'padding-top:8px' }, button('GitHub', () => openUrl('https://github.com/AdityaJainDXB/NotchApples'), { kind: 'quiet', small: true }), button('Website', () => openUrl('https://virajsinghchadha.github.io/notchapples-site/'), { kind: 'quiet', small: true }), button('Quit Notch Apple', () => invoke('quit_app'), { kind: 'danger', small: true }))),
   card('Privacy', el('div', { class: 'small dim' }, 'No accounts and no tracking. Web requests go only to the services a feature needs (weather, sports, the AI provider you pick…). Entering a key sends only the key and a random ID for this PC to the license server.'))];
 }

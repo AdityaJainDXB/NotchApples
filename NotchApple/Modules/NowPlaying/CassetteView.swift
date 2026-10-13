@@ -1,6 +1,6 @@
 //
 //  CassetteView.swift
-//  Notch apple
+//  Notch Apple
 //
 //  Cassette mode for the music player: whatever is playing is shown as a tape. The two reels turn while it plays,
 //  the tape moves from the left reel to the right as the song goes on, and the label shows the title and artist.

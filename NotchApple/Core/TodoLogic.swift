@@ -1,6 +1,6 @@
 //
 //  TodoLogic.swift
-//  Notch apple
+//  Notch Apple
 //
 //  The To-Do list's rules, with no screens: priorities, how the list is ordered (red, highest-priority tasks pinned
 //  to the top), and how a typed line becomes a task ("call mum tomorrow 3pm !!!"). Tested without the app.

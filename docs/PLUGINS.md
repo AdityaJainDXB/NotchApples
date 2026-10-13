@@ -1,4 +1,4 @@
-# Notch apple plugins
+# Notch Apple plugins
 
 Plugins are small scripts, in any language, that put your own information in the notch. They live in `~/Library/Application Support/Notch apple/Plugins`. Open the folder from the **Plugins** tab.
 

@@ -1,6 +1,6 @@
 //
 //  AIPure.swift
-//  Notch apple
+//  Notch Apple
 //
 //  The AI tab's plain logic, kept free of UI so the tests can check it:
 //  slash commands, reading web search results, and when automations are due.

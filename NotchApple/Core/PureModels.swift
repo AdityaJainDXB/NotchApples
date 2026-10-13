@@ -1,6 +1,6 @@
 //
 //  PureModels.swift
-//  Notch apple
+//  Notch Apple
 //
 //  Plain data and parsing used by profiles, app rules and the plugin SDK,
 //  kept free of UI so the tests can check them.

@@ -1,6 +1,6 @@
 //
 //  MathText.swift
-//  Notch apple
+//  Notch Apple
 //
 //  Parsing behind RichTextView, with no UI so it can be unit-tested:
 //  LaTeX → readable Unicode math, and Markdown → blocks (text, headings,

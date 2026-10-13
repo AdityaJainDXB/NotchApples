@@ -1,6 +1,6 @@
 //
 //  AIExtras.swift
-//  Notch apple
+//  Notch Apple
 //
 //  Pro additions to the AI tab:
 //   • Personas: a standing instruction ("explain like a tutor", "be brief") added to every answer.

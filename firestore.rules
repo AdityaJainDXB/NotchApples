@@ -1,5 +1,5 @@
 rules_version = '2';
-// Notch apple. Paste into Firebase console → Firestore Database → Rules → Publish.
+// Notch Apple. Paste into Firebase console → Firestore Database → Rules → Publish.
 service cloud.firestore {
   match /databases/{database}/documents {
 

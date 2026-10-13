@@ -1,6 +1,6 @@
 //
 //  VPNTunnel.swift
-//  Notch apple
+//  Notch Apple
 //
 //  Is a VPN connected? Apps like Proton VPN, NordVPN, Mullvad, WireGuard or Tunnelblick all create a tunnel network
 //  interface (utunN) with an IPv4 address while they are connected. The pure rule is here so it can be unit-tested;
@@ -50,7 +50,7 @@ enum VPNTunnel {
     static var isConnected: Bool { isActive(current()) }
 }
 
-/// VPN apps Notch apple recognises, so adding one is a single click.
+/// VPN apps Notch Apple recognises, so adding one is a single click.
 enum KnownVPNApps {
     static let all: [(name: String, bundleID: String)] = [
         ("Proton VPN", "ch.protonvpn.mac"),

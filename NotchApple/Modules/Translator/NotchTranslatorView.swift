@@ -1,6 +1,6 @@
 //
 //  NotchTranslatorView.swift
-//  Notch apple
+//  Notch Apple
 //
 //  The Translator tab: type on the left, read the translation and its
 //  pronunciation on the right. Arabic, English, French, Spanish, Hindi,

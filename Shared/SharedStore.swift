@@ -1,6 +1,6 @@
 //
 //  SharedStore.swift
-//  Shared between the Notch apple app and its WidgetKit extension.
+//  Shared between the Notch Apple app and its WidgetKit extension.
 //
 //  The widget runs in its own sandboxed process, so anything it needs from the
 //  main app (now-playing info, chosen weather location) is written into an

@@ -1,6 +1,6 @@
 //
 //  Converter.swift
-//  Notch apple
+//  Notch Apple
 //
 //  Pro: unit and currency conversion in the Tools calculator. Type
 //  "5 km to mi", "72 f in c", "3 cups to ml" or "100 usd to eur".

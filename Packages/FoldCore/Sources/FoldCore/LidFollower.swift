@@ -1,8 +1,8 @@
 //
 //  LidFollower.swift
-//  Notch apple, Lid Fold
+//  Notch Apple, Lid Fold
 //
-//  Original to Notch apple (uses Still's GestureGate and FoldMath.smooth). Turns a stream of lid angles
+//  Original to Notch Apple (uses Still's GestureGate and FoldMath.smooth). Turns a stream of lid angles
 //  into "what should the overlay do now", with no UI in it, so it can be tested with a mock sensor.
 //  Replaces the sensor/gate/timer logic that sat in Still's AppModel.
 //

@@ -1,6 +1,6 @@
 //
 //  BlackjackView.swift
-//  Notch apple
+//  Notch Apple
 //
 //  Blackjack against the dealer, four decks. Blackjack pays 3:2, the dealer stands on every 17, you can double on
 //  your first two cards. Play money only; the bank is kept on this Mac and refills when it runs out.

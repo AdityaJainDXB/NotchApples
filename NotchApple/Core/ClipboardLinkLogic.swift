@@ -1,9 +1,9 @@
 //
 //  ClipboardLinkLogic.swift
-//  Notch apple
+//  Notch Apple
 //
 //  Clipboard Link (Ultimate): copy on one device, paste on another. Your devices share a secret link code; text
-//  is sealed with a key made from that code (AES-GCM) and passed through Notch apple's room relay, which only
+//  is sealed with a key made from that code (AES-GCM) and passed through Notch Apple's room relay, which only
 //  sees scrambled bytes and an unreadable topic. The Windows app uses exactly the same format, so Macs and PCs
 //  can share one clipboard. No screens and no network here, so it can be tested.
 //

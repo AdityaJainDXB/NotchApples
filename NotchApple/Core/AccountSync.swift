@@ -1,8 +1,8 @@
 //
 //  AccountSync.swift
-//  Notch apple
+//  Notch Apple
 //
-//  A Notch apple account: sign in with Google (or Apple), and your notch setup
+//  A Notch Apple account: sign in with Google (or Apple), and your notch setup
 //  and access code are saved to your account (Firebase Auth + Cloud Firestore)
 //  and restored on any Mac you sign in on. It works alongside iCloud sync.
 //
@@ -257,7 +257,7 @@ final class AccountSync: NSObject, ObservableObject {
         guard let (prefs, _) = try? SettingsBackup.decode(payload) else { return }
         let alert = NSAlert()
         alert.messageText = "Restore your saved notch setup?"
-        alert.informativeText = "Your account has a setup saved from \(mac)\(date.map { " on " + $0.formatted(date: .abbreviated, time: .shortened) } ?? ""). Restoring replaces this Mac's modules, layout and preferences, then restarts Notch apple. Choose Keep This Mac's to save this Mac's setup to your account instead."
+        alert.informativeText = "Your account has a setup saved from \(mac)\(date.map { " on " + $0.formatted(date: .abbreviated, time: .shortened) } ?? ""). Restoring replaces this Mac's modules, layout and preferences, then restarts Notch Apple. Choose Keep This Mac's to save this Mac's setup to your account instead."
         alert.addButton(withTitle: "Restore and Restart")
         alert.addButton(withTitle: "Keep This Mac's")
         alert.addButton(withTitle: "Decide Later")
@@ -325,7 +325,7 @@ final class AccountSync: NSObject, ObservableObject {
     func signInWithApple() {
         let alert = NSAlert()
         alert.messageText = "Sign in with Apple is coming soon"
-        alert.informativeText = "Apple only allows Sign in with Apple in apps published through the Apple Developer Program. Until Notch apple is, please continue with Google. Your setup and access code sync the same way."
+        alert.informativeText = "Apple only allows Sign in with Apple in apps published through the Apple Developer Program. Until Notch Apple is, please continue with Google. Your setup and access code sync the same way."
         alert.addButton(withTitle: "Continue with Google")
         alert.addButton(withTitle: "Cancel")
         NSApp.activate(ignoringOtherApps: true)
@@ -406,7 +406,7 @@ final class AccountSync: NSObject, ObservableObject {
             "WEAK_PASSWORD": "Use a password with at least 6 characters.",
             "TOO_MANY_ATTEMPTS_TRY_LATER": "Too many attempts. Try again in a few minutes.",
             "USER_DISABLED": "This account has been disabled.",
-            "OPERATION_NOT_ALLOWED": "This sign-in method isn't turned on for Notch apple yet.",
+            "OPERATION_NOT_ALLOWED": "This sign-in method isn't turned on for Notch Apple yet.",
             "PERMISSION_DENIED": "Your account couldn't access its saved setup. Try signing out and in again.",
         ]
         return map.first { raw.hasPrefix($0.key) }?.value ?? raw
@@ -469,7 +469,7 @@ struct AccountSection: View {
             }
             if let m = account.message { Text(m).font(.callout).foregroundStyle(.secondary) }
         } header: {
-            Text("Notch apple account")
+            Text("Notch Apple account")
         } footer: {
             Text("Sign in on any Mac to get your notch set up the way you like it, with Pro unlocked. Your setup is stored in your account (Google Firebase) and only you can read it. Your access code is kept as a secure fingerprint, never the code itself; AI keys and your Messenger identity are never uploaded.")
         }

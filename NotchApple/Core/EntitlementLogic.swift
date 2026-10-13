@@ -1,6 +1,6 @@
 //
 //  EntitlementLogic.swift
-//  Notch apple
+//  Notch Apple
 //
 //  Paid value that lives on the server. After a real key is registered on this Mac, the licence server hands out two
 //  short-lived signed tokens: a full token (to download paid content) and an anonymous pass (to join Clipboard Link

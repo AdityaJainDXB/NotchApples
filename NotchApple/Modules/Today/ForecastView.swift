@@ -1,6 +1,6 @@
 //
 //  ForecastView.swift
-//  Notch apple
+//  Notch Apple
 //
 //  Pro weather: the next 12 hours and 7 days, for your location and up to
 //  five more cities, from Open-Meteo (free, no key). Only the cities'

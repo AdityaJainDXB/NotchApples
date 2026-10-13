@@ -1,6 +1,6 @@
 //
 //  SnakeGameView.swift
-//  Notch apple
+//  Notch Apple
 //
 //  The Snake board: one Canvas, redrawn only when the game ticks. Arrow keys or WASD steer, Space pauses.
 //

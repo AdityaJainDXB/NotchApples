@@ -1,6 +1,6 @@
 //
 //  TennisView.swift
-//  Notch apple
+//  Notch Apple
 //
 //  The Tennis tab: the week's matches on the left, under a banner for the tournament
 //  (red for a Grand Slam), with Men, Women and Mixed tabs and arrows to earlier weeks;

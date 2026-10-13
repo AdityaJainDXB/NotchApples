@@ -2,7 +2,7 @@
 name = "pairdrop-core"
 version = "0.1.0"
 edition = "2021"
-description = "Notch apple PairDrop: serverless file sharing and private chat on the local network, compatible with the Mac app"
+description = "Notch Apple PairDrop: serverless file sharing and private chat on the local network, compatible with the Mac app"
 license = "MIT"
 
 [dependencies]

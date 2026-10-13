@@ -1,6 +1,6 @@
 //
 //  ReleaseNotesLogicTests.swift
-//  Notch apple tests
+//  Notch Apple tests
 //
 //  What the update screen shows of the release notes.
 //
@@ -14,7 +14,7 @@ final class ReleaseNotesLogicTests: XCTestCase {
         - 🔑 Connect works.
 
         **Updates**
-        Notch apple tells you when a release like this one is out.
+        Notch Apple tells you when a release like this one is out.
 
         Install: download the DMG below.
         """

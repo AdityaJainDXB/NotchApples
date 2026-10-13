@@ -1,6 +1,6 @@
 //
 //  AIModes.swift
-//  Notch apple
+//  Notch Apple
 //
 //  What to do with a capture: each mode is an instruction added to the
 //  request. Adding a mode is one case here; nothing else in the AI layer changes.

@@ -1,10 +1,10 @@
 //
 //  ClipboardLink.swift
-//  Notch apple
+//  Notch Apple
 //
 //  The connection side of Clipboard Link (Ultimate; the format and rules are in ClipboardLinkLogic.swift).
 //  Off until you turn it on in Settings → Clipboard. While on, text you copy here is sealed with your link
-//  code and sent through Notch apple's room relay to your other devices, and text copied there lands on this
+//  code and sent through Notch Apple's room relay to your other devices, and text copied there lands on this
 //  Mac's clipboard. Password-manager items are never sent, because the clipboard history never saves them.
 //
 

@@ -1,6 +1,6 @@
 //
 //  Entitlements.swift
-//  Notch apple
+//  Notch Apple
 //
 //  The one place that decides what this Mac may use: `Entitlements.shared.tier`
 //  and `canUse(_:)`. Every paid feature asks it; nothing else checks licenses.
@@ -71,7 +71,7 @@ final class Entitlements: ObservableObject {
         var usable = key
         if key != nil, LicenseKey.verificationLapsed(lastVerified: lastVerified) {
             usable = nil
-            notice = "Notch apple couldn't check your license for over \(LicenseKey.verificationGraceHours / 24) days. Connect to the internet and it comes back on its own."
+            notice = "Notch Apple couldn't check your license for over \(LicenseKey.verificationGraceHours / 24) days. Connect to the internet and it comes back on its own."
         }
         let t = LicenseKey.tier(key: usable, revoked: revoked, legacyActivated: hasLegacyActivation)
         if t != tier { tier = t }
@@ -132,7 +132,7 @@ final class Entitlements: ObservableObject {
         lastVerified = Date()
         if ids.contains(k.keyID) {
             notice = LicenseKey.Problem.revoked.errorDescription
-        } else if notice?.hasPrefix("Notch apple couldn't check") == true {
+        } else if notice?.hasPrefix("Notch Apple couldn't check") == true {
             notice = nil
         }
         recompute()

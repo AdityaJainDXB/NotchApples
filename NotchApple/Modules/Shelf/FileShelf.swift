@@ -1,6 +1,6 @@
 //
 //  FileShelf.swift
-//  Notch apple
+//  Notch Apple
 //
 //  A drop zone that remembers files and folders across launches. Each item is
 //  persisted as a security-scoped bookmark so the sandboxed app keeps access

@@ -1,6 +1,6 @@
 //
 //  SystemHUDObserver.swift
-//  Notch apple
+//  Notch Apple
 //
 //  Watches the system volume (CoreAudio property listeners) and the built-in
 //  display's brightness, and asks the closed notch to flash a gauge when either

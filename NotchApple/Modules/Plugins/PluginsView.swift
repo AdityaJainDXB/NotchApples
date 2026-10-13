@@ -1,6 +1,6 @@
 //
 //  PluginsView.swift
-//  Notch apple
+//  Notch Apple
 //
 //  Plugins: your own notch widgets, in any language. Every script in
 //  ~/Library/Application Support/Notch apple/Plugins runs and its output shows
@@ -170,7 +170,7 @@ final class PluginHost: ObservableObject {
         let url = Self.folder.appendingPathComponent("hello.1m.sh")
         let script = """
         #!/bin/zsh
-        # A Notch apple plugin. First line = headline, other lines = body.
+        # A Notch Apple plugin. First line = headline, other lines = body.
         # Add " | href=https://…" to make a line a link, or " | run=command" to run something.
         echo "Uptime $(uptime | sed 's/.*up \\([^,]*\\),.*/\\1/')"
         echo "Logged in as $USER"

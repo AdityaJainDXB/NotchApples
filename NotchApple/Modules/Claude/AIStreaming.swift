@@ -1,6 +1,6 @@
 //
 //  AIStreaming.swift
-//  Notch apple
+//  Notch Apple
 //
 //  Streams replies word by word from every provider (server-sent events), so
 //  answers appear as they're written and Stop keeps whatever arrived. Each
@@ -207,7 +207,7 @@ extension AIClient {
             }
             if provider == .openRouter {
                 r.setValue("https://github.com/AdityaJainDXB/NotchApples", forHTTPHeaderField: "HTTP-Referer")
-                r.setValue("Notch apple", forHTTPHeaderField: "X-Title")
+                r.setValue("Notch Apple", forHTTPHeaderField: "X-Title")
             }
             var messages: [[String: Any]] = [["role": "system", "content": system]]
             for msg in history {

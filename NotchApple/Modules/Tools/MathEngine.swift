@@ -1,6 +1,6 @@
 //
 //  MathEngine.swift
-//  Notch apple
+//  Notch Apple
 //
 //  The calculator's brain: multi-step expressions, variables, equations and algebra, all on this Mac.
 //

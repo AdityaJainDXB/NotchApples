@@ -1,6 +1,6 @@
 //
 //  TourLogic.swift
-//  Notch apple
+//  Notch Apple
 //
 //  Who sees the walkthrough and how its steps move, with no screens in it so it can be tested. The tour is
 //  compulsory for people updating to this version: it keeps coming back (and remembers its step) until the last

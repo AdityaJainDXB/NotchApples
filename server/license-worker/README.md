@@ -1,6 +1,6 @@
 # License server
 
-A Cloudflare Worker (free plan) that sells and signs Notch apple product keys. See the comment at the top of [src/worker.js](src/worker.js) for every endpoint.
+A Cloudflare Worker (free plan) that sells and signs Notch Apple product keys. See the comment at the top of [src/worker.js](src/worker.js) for every endpoint.
 
 - **Keys** are `NTCH-PRO-…` / `NTCH-ULTM-…`: a 12-byte payload (version, tier, key ID, issue day) and its Ed25519 signature. The app checks them offline with the public key in `NotchApple/Core/LicenseKey.swift`. The private key is only the Worker's `SIGNING_KEY` secret.
 - **Payments** are Litecoin, straight to the wallet. Every order reserves its own exact amount for 48 hours; a key is issued only to the holder of the secret order ID, for a payment of exactly that amount, made after the order. Someone watching the public blockchain can't claim a buyer's payment.
@@ -29,10 +29,10 @@ Ultimate stays off sale (`ULTIMATE_ON = "0"` in `wrangler.toml`) until its first
 
 Live since 4 October 2026 at the Worker URL in the website's `api.json`. Email is sent through Brevo.
 
-The signing key and admin token are backed up in the login Keychain as **Notch apple license signing key** and **Notch apple license admin token** (account `notchapple`). To read them:
+The signing key and admin token are backed up in the login Keychain as **Notch Apple license signing key** and **Notch Apple license admin token** (account `notchapple`). To read them:
 
 ```bash
-security find-generic-password -a notchapple -s "Notch apple license signing key" -w
+security find-generic-password -a notchapple -s "Notch Apple license signing key" -w
 ```
 
 ## Admin

@@ -1,6 +1,6 @@
 //
 //  ModuleLayoutLogic.swift
-//  Notch apple
+//  Notch Apple
 //
 //  Where each reorganised feature lives: on the Home page (expanded, or hidden behind a click), as its own tab,
 //  inside the Non-Necessities tab, or switched off. Pure rules (module names are plain strings here), so they are

@@ -1,6 +1,6 @@
 //
 //  WorldClockView.swift
-//  Notch apple
+//  Notch Apple
 //
 //  World clocks in the notch: the time in the cities you care about, with
 //  day/night and the difference from your time. Add-on, off by default.

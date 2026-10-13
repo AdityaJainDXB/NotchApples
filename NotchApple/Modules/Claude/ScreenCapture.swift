@@ -1,9 +1,9 @@
 //
 //  ScreenCapture.swift
-//  Notch apple
+//  Notch Apple
 //
 //  Captures the current display with ScreenCaptureKit (macOS 14+), excluding
-//  Notch apple's own windows, and returns a size-capped base64 JPEG ready for
+//  Notch Apple's own windows, and returns a size-capped base64 JPEG ready for
 //  Claude's vision input. The first use triggers the system Screen Recording
 //  permission prompt.
 //
@@ -16,7 +16,7 @@ enum ScreenCapture {
         case noDisplay, encode, noPermission
         var errorDescription: String? {
             switch self {
-            case .noPermission: "Notch apple needs Screen Recording to see your screen. Turn it on in System Settings → Privacy & Security → Screen & System Audio Recording, then press Relaunch (macOS only applies it after a restart)."
+            case .noPermission: "Notch Apple needs Screen Recording to see your screen. Turn it on in System Settings → Privacy & Security → Screen & System Audio Recording, then press Relaunch (macOS only applies it after a restart)."
 
             case .noDisplay: "No display available. Grant Screen Recording in System Settings → Privacy & Security."
             case .encode: "Couldn't encode the screenshot."

@@ -1,6 +1,6 @@
 //
 //  BiometricAuth.swift
-//  Notch apple
+//  Notch Apple
 //
 //  Biometric gate built on LocalAuthentication. On macOS,
 //  `.deviceOwnerAuthentication` automatically offers Touch ID, Apple Watch
@@ -57,7 +57,7 @@ struct LockView: View {
                     .foregroundStyle(Theme.accentGradient)
                     .symbolEffect(.pulse, options: .repeating)
             }
-            Text("Notch apple is locked").font(.headline).foregroundStyle(.white)
+            Text("Notch Apple is locked").font(.headline).foregroundStyle(.white)
             if failed {
                 Text("Not recognised. Try again.").font(.caption).foregroundStyle(.red.opacity(0.9))
             }
@@ -91,7 +91,7 @@ struct LockView: View {
         face.stop()
         usingFace = false
         Task { @MainActor in
-            let ok = await BiometricAuth.authenticate(reason: "unlock Notch apple")
+            let ok = await BiometricAuth.authenticate(reason: "unlock Notch Apple")
             withAnimation(Theme.spring) {
                 state.isUnlocked = ok
                 failed = !ok

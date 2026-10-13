@@ -1,9 +1,9 @@
 //
 //  TrustSettings.swift
-//  Notch apple
+//  Notch Apple
 //
 //  Platform and trust:
-//   • Privacy dashboard (free): every permission, every place Notch apple can
+//   • Privacy dashboard (free): every permission, every place Notch Apple can
 //     connect to and when, and what it keeps on this Mac, with Delete buttons.
 //   • Help & Feedback (free): send feedback, and a bug report you read in full
 //     before anything leaves your Mac (it opens a GitHub issue you submit yourself).
@@ -56,7 +56,7 @@ struct PrivacyDashboard: View {
             Destination(host: "CoinGecko, Yahoo Finance", what: "Symbols you add", when: "Markets (Pro)", active: settings.marketsEnabled),
             Destination(host: "ADSB.lol", what: "Flight numbers you pin", when: "Live flight status (Pro)", active: !FlightWatcher.shared.pinned.isEmpty),
             Destination(host: "images-assets.nasa.gov", what: "Nothing about you: the clip you chose to get", when: "Wallpaper tab, free library (Pro)", active: settings.wallpaperEnabled),
-            Destination(host: "Notch apple licence server", what: "Your pilot name, plane and score, only when you tick the world box and save", when: "Games → Plane, world leaderboard", active: settings.gamesEnabled),
+            Destination(host: "Notch Apple licence server", what: "Your pilot name, plane and score, only when you tick the world box and save", when: "Games → Plane, world leaderboard", active: settings.gamesEnabled),
             Destination(host: "open-meteo.com, ipwho.is", what: "A city name you type, or your approximate location", when: "Games → Plane, only when you press Go or My location", active: settings.gamesEnabled),
             Destination(host: "ADSB.lol", what: "Your approximate location (rounded to about 1 km)", when: "Flight Radar tab, only while it is open", active: settings.radarEnabled),
             Destination(host: "open.er-api.com", what: "Nothing about you: today's rates", when: "Currency conversion (Pro)", active: Entitlements.shared.canUse(.currency)),
@@ -66,7 +66,7 @@ struct PrivacyDashboard: View {
             Destination(host: "Your plugins", what: "Whatever your plugin scripts do", when: "Plugins tab", active: settings.pluginsEnabled),
             Destination(host: "apple.com", what: "Nothing about you: a tiny test page, to see if you're online", when: "Every 20 seconds, only if “Tell me when the internet drops” is on", active: SystemWatch.shared.internetAlert),
             Destination(host: "Cloudflare (speed.cloudflare.com)", what: "Nothing about you: about 20 MB to measure your speed", when: "Only when you press Speed test in Stats", active: false),
-            Destination(host: "Notch apple room relay (Cloudflare)", what: "Scrambled clipboard text only your devices can read, and Messenger room traffic", when: "Clipboard Link or Messenger rooms, when on", active: ClipboardLink.shared.enabled || WebP2PManager.shared.state == .joined),
+            Destination(host: "Notch Apple room relay (Cloudflare)", what: "Scrambled clipboard text only your devices can read, and Messenger room traffic", when: "Clipboard Link or Messenger rooms, when on", active: ClipboardLink.shared.enabled || WebP2PManager.shared.state == .joined),
             Destination(host: "Your Home Assistant", what: "Your device states and the commands you press", when: "Smart Home, once you connect it (your own server)", active: PremiumRegistry.smartHomeConfigured?() ?? false),
         ]
     }
@@ -97,7 +97,7 @@ struct PrivacyDashboard: View {
                 row("Notifications", permissions.notifications == .authorized, "Alerts and automation results")
                 Button("Change in System Settings…") { NSWorkspace.shared.open(URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy")!) }
             } header: {
-                Text("What Notch apple can access")
+                Text("What Notch Apple can access")
             } footer: {
                 Text("Nothing is required. Each permission only powers the features listed next to it.")
             }
@@ -157,7 +157,7 @@ struct PrivacyDashboard: View {
                 confirm = nil
                 measure()
             }
-        } message: { Text("This can't be undone. Restart Notch apple afterwards so it starts fresh.") }
+        } message: { Text("This can't be undone. Restart Notch Apple afterwards so it starts fresh.") }
     }
 
     private func row(_ name: String, _ granted: Bool, _ use: String) -> some View {
@@ -202,7 +202,7 @@ enum BugReport {
         \(description.isEmpty ? "(describe what you did and what went wrong)" : description)
 
         **Environment**
-        - Notch apple \(WhatsNew.currentVersion) (\(Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "?"))
+        - Notch Apple \(WhatsNew.currentVersion) (\(Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "?"))
         - macOS \(info.operatingSystemVersionString)
         - Mac: \(String(cString: model)), \(ProcessInfo.processInfo.processorCount) cores
         - Tier: \(Entitlements.shared.tier.name)
@@ -235,27 +235,27 @@ final class CrashReports: ObservableObject {
     @AppStorage("crash.lastChecked") private var lastChecked = Date.now.timeIntervalSince1970
     @Published private(set) var pending: String?
 
-    /// Looks for a new macOS crash report for Notch apple since the last launch.
+    /// Looks for a new macOS crash report for Notch Apple since the last launch.
     func checkAtLaunch() {
         defer { lastChecked = Date.now.timeIntervalSince1970 }
         guard optIn else { return }
         let dir = FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent("Library/Logs/DiagnosticReports")
         let files = (try? FileManager.default.contentsOfDirectory(at: dir, includingPropertiesForKeys: [.contentModificationDateKey])) ?? []
         guard let newest = files
-            .filter({ $0.lastPathComponent.hasPrefix("Notch apple") && ["ips", "crash"].contains($0.pathExtension) })
+            .filter({ $0.lastPathComponent.lowercased().hasPrefix("notch apple") && ["ips", "crash"].contains($0.pathExtension) })
             .compactMap({ url -> (URL, Date)? in (try? url.resourceValues(forKeys: [.contentModificationDateKey]).contentModificationDate).map { (url, $0) } })
             .filter({ $0.1.timeIntervalSince1970 > lastChecked })
             .max(by: { $0.1 < $1.1 }),
               let text = try? String(contentsOf: newest.0, encoding: .utf8) else { return }
         // The first part of the report holds the crash reason and the crashed thread.
         pending = BugReport.redact(String(text.prefix(8000)))
-        Notifier.post(title: "Notch apple quit unexpectedly", body: "Open Settings → Help & Feedback to review the crash report and send it if you'd like.")
+        Notifier.post(title: "Notch Apple quit unexpectedly", body: "Open Settings → Help & Feedback to review the crash report and send it if you'd like.")
     }
 
     func send() {
         guard let report = pending else { return }
         BugReport.openIssue(title: "Crash report (\(WhatsNew.currentVersion))",
-                            body: BugReport.build(description: "Notch apple quit unexpectedly.") + "\n\n**Crash report (reviewed by me, name and home folder removed)**\n```\n\(report.prefix(4500))\n```",
+                            body: BugReport.build(description: "Notch Apple quit unexpectedly.") + "\n\n**Crash report (reviewed by me, name and home folder removed)**\n```\n\(report.prefix(4500))\n```",
                             label: "crash")
         pending = nil
     }
@@ -332,7 +332,7 @@ struct HelpSettings: View {
 
             Section {
                 Link("Read the README", destination: URL(string: "https://github.com/AdityaJainDXB/NotchApples#readme")!)
-                Link("Help translate Notch apple", destination: URL(string: "https://github.com/AdityaJainDXB/NotchApples/blob/main/CONTRIBUTING.md#translations")!)
+                Link("Help translate Notch Apple", destination: URL(string: "https://github.com/AdityaJainDXB/NotchApples/blob/main/CONTRIBUTING.md#translations")!)
                 Link("Donate 💜", destination: URL(string: "https://github.com/AdityaJainDXB/NotchApples#donate-")!)
             }
         }

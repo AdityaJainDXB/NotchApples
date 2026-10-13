@@ -1,6 +1,6 @@
 //
 //  HabitLogic.swift
-//  Notch apple
+//  Notch Apple
 //
 //  Streaks for the habit tracker: how many days in a row you've done something, your best run, and the last few days
 //  as ticks. Days are "yyyy-MM-dd" keys and the arithmetic is done on dates alone (no clocks or time zones), so it

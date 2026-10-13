@@ -1,6 +1,6 @@
 //
 //  WindowManager.swift
-//  Notch apple
+//  Notch Apple
 //
 //  Moves and resizes other apps' windows through the Accessibility API
 //  (the same approach as Rectangle or Magnet). Needs the Accessibility
@@ -149,7 +149,7 @@ final class WindowManager: ObservableObject {
     @Published private(set) var lastMessage: String?
     @Published private(set) var canRestore = false
 
-    /// The last app that was active other than Notch apple, so notch buttons
+    /// The last app that was active other than Notch Apple, so notch buttons
     /// act on the window you were just using.
     private var lastOtherApp: NSRunningApplication?
     /// Frames before the last snap, so it can be undone.
@@ -174,7 +174,7 @@ final class WindowManager: ObservableObject {
         isTrusted = AXIsProcessTrusted()
     }
 
-    /// Shows the system prompt, which also adds Notch apple to the Accessibility
+    /// Shows the system prompt, which also adds Notch Apple to the Accessibility
     /// list, then opens that list and watches for the switch being turned on.
     func requestAccess() {
         let key = kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String
@@ -185,7 +185,7 @@ final class WindowManager: ObservableObject {
         watchForTrust()
     }
 
-    /// Asks once per install, at launch, so Notch apple shows up in the list.
+    /// Asks once per install, at launch, so Notch Apple shows up in the list.
     func promptOnceIfNeeded() {
         let key = "windows.promptedFor.\(Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "")"
         guard !AXIsProcessTrusted(), !UserDefaults.standard.bool(forKey: key) else { return }
@@ -441,7 +441,7 @@ final class WindowManager: ObservableObject {
 
     private func ensureTrusted() -> Bool {
         refreshTrust()
-        if !isTrusted { flash("Allow Accessibility for Notch apple to move windows.") }
+        if !isTrusted { flash("Allow Accessibility for Notch Apple to move windows.") }
         return isTrusted
     }
 

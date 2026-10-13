@@ -47,7 +47,7 @@ sed -i '' 's/let t = LicenseKey.tier(key: key, revoked: revoked, legacyActivated
 sed -i '' 's/PRODUCT_BUNDLE_IDENTIFIER: com.notchapple.app$/PRODUCT_BUNDLE_IDENTIFIER: com.notchapple.demo/; s/com.notchapple.app.widget/com.notchapple.demo.widget/' project.yml
 xcodegen generate -q
 xcodebuild -project NotchApple.xcodeproj -scheme NotchApple -configuration Release -derivedDataPath "$WORK/dd" build 2>&1 | grep -E "error:|BUILD" | sort -u
-APP="$WORK/dd/Build/Products/Release/Notch apple.app/Contents/MacOS/Notch apple"
+APP="$WORK/dd/Build/Products/Release/Notch Apple.app/Contents/MacOS/Notch Apple"
 
 cat > "$WORK/wid.swift" <<'EOF'
 import CoreGraphics
@@ -74,7 +74,7 @@ defaults write $D f1.follow ""
 curl -s -m 3 localhost:11434/api/tags >/dev/null || { echo "Start Ollama first (ollama serve)"; exit 1; }
 
 # Quit the installed app while shooting so two notches don't overlap; reopened at the end.
-REAL_RUNNING=0; pgrep -x "Notch apple" >/dev/null && REAL_RUNNING=1 && osascript -e 'quit app "Notch apple"' && sleep 2
+REAL_RUNNING=0; pgrep -x "Notch Apple" >/dev/null && REAL_RUNNING=1 && osascript -e 'quit app "Notch Apple"' && sleep 2
 
 answers() { python3 -c "import json,sys;d=json.load(open('$DATA/Notch apple/ai-history.json'));print(sum(1 for s in d for m in s['messages'] if m['role']=='assistant'))" 2>/dev/null || echo 0; }
 wait_answers() { local want=$1; for _ in $(seq 1 120); do [ "$(answers)" -ge "$want" ] && return; sleep 1; done; echo "  (timed out waiting for the answer)"; }
@@ -123,7 +123,7 @@ shot settings-privacy settings 6 -openSettings privacy
 shot settings-help settings 6 -openSettings help -demoTier ultimate
 shot ai-web        panel answers:1 -openNotch claude -demoPro YES -demoWeb YES -demoAsk "Who designed the Eiffel Tower, and how tall is it?"
 
-[ $REAL_RUNNING = 1 ] && open -g -a "/Applications/Notch apple.app"
+[ $REAL_RUNNING = 1 ] && open -g -a "/Applications/Notch Apple.app"
 defaults delete $D >/dev/null 2>&1 || true
 
 if [ -n "$SITE" ]; then

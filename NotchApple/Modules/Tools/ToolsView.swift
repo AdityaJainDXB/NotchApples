@@ -1,6 +1,6 @@
 //
 //  ToolsView.swift
-//  Notch apple
+//  Notch Apple
 //
 //  Small everyday tools in the notch:
 //   • Keep Awake: stops the Mac sleeping (IOKit power assertion, like
@@ -43,7 +43,7 @@ final class KeepAwake: ObservableObject {
         var id: IOPMAssertionID = 0
         let result = IOPMAssertionCreateWithName(kIOPMAssertionTypePreventUserIdleDisplaySleep as CFString,
                                                  IOPMAssertionLevel(kIOPMAssertionLevelOn),
-                                                 "Notch apple Keep Awake" as CFString, &id)
+                                                 "Notch Apple Keep Awake" as CFString, &id)
         guard result == kIOReturnSuccess else { return }
         assertion = id
         isOn = true

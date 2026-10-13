@@ -1,6 +1,6 @@
 //
 //  RadarLogic.swift
-//  Notch apple
+//  Notch Apple
 //
 //  Flight Radar: the aircraft around you, from adsb.lol's free public ADS-B feed (no account or key). This file has
 //  no screens in it so it can be tested: reading the feed, the distance and bearing from you, where an aircraft

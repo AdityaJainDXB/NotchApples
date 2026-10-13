@@ -1,6 +1,6 @@
 //
 //  SystemWatchTests.swift
-//  Notch apple tests
+//  Notch Apple tests
 //
 //  Battery care, low disk, the internet-down state machine and the speed test maths. The Windows app runs the same
 //  cases against services/syswatch.js.

@@ -1,6 +1,6 @@
 //
 //  QuickAnswerTests.swift
-//  Notch apple tests
+//  Notch Apple tests
 //
 //  The short answers typed into the command palette and calculator. The Windows app runs the same cases against
 //  services/answers.js.

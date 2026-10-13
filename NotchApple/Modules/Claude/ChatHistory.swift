@@ -1,6 +1,6 @@
 //
 //  ChatHistory.swift
-//  Notch apple
+//  Notch Apple
 //
 //  Saves every AI conversation so you can look back at it in
 //  Settings → AI History: which provider and model answered, what you asked,

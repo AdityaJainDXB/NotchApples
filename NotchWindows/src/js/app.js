@@ -146,7 +146,7 @@ export function buildTabs() {
     el('button', { class: `icon-btn ${pinned ? 'on' : ''}`, title: pinned ? 'Pinned open — click to unpin' : 'Keep open when I click elsewhere',
       onclick: () => { pinned = !pinned; buildTabs(); } }, icon('pin', 20)),
     el('button', { class: 'icon-btn', title: 'Hide the pill (Ctrl+Alt+O)', onclick: () => { collapse(); invoke('set_hidden', { hidden: true }); } }, icon('hide', 20)),
-    el('button', { class: 'icon-btn', title: 'Quit Notch apple', onclick: () => invoke('quit_app') }, icon('power', 20)),
+    el('button', { class: 'icon-btn', title: 'Quit Notch Apple', onclick: () => invoke('quit_app') }, icon('power', 20)),
     el('button', { class: 'icon-btn', title: 'Close (Esc)', onclick: () => collapse() }, icon('up', 22)),
     el('button', { class: `icon-btn gear${active === 'settings' ? ' on' : ''}`, title: 'Settings (Ctrl+,)', onclick: () => show('settings') }, icon('settings', 20)));
 }
@@ -225,7 +225,7 @@ async function unlock() {
   if (Date.now() - unlockedAt < pref('lock.grace') * 1000) return true;
   busy++;
   try {
-    const ok = await invoke('hello_verify', { message: 'Unlock Notch apple' });
+    const ok = await invoke('hello_verify', { message: 'Unlock Notch Apple' });
     if (ok) unlockedAt = Date.now();
     return ok;
   } catch (e) {
@@ -409,7 +409,7 @@ listen('tauri://drag-drop', async (e) => {
 });
 
 /// Command-line control (Ultimate: Command-line and scripting):
-///   "Notch apple.exe" --open clipboard | --toggle | --hide | --show
+///   "Notch Apple.exe" --open clipboard | --toggle | --hide | --show
 function handleArgs(args = []) {
   const i = args.indexOf('--open');
   if (!canUse('scripting')) return;
@@ -439,17 +439,17 @@ setRenderer((list) => {
     } else {
       hint.replaceChildren();
     }
-    pill.title = topActivity.title || 'Open Notch apple (Ctrl+Alt+N)';
+    pill.title = topActivity.title || 'Open Notch Apple (Ctrl+Alt+N)';
     pill.classList.remove('idle');
   } else {
     pill.classList.add('idle');
     earLeft.replaceChildren();
     hint.style.color = '';
-    hint.textContent = pref('ui.showClock') ? '' : (tierName() === 'Free' ? 'Notch apple' : `Notch apple ${tierName()}`);
+    hint.textContent = pref('ui.showClock') ? '' : (tierName() === 'Free' ? 'Notch Apple' : `Notch Apple ${tierName()}`);
     earRight.replaceChildren(pref('ui.showClock')
       ? el('span', { class: 'label num' }, new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }))
       : '');
-    pill.title = 'Open Notch apple (Ctrl+Alt+N)';
+    pill.title = 'Open Notch Apple (Ctrl+Alt+N)';
   }
 });
 setInterval(refreshPill, 15000);

@@ -1,8 +1,8 @@
 //
 //  AcknowledgementsView.swift
-//  Notch apple
+//  Notch Apple
 //
-//  Credits for the open-source work Notch apple adapts, with each license's full text.
+//  Credits for the open-source work Notch Apple adapts, with each license's full text.
 //  The text files are bundled from the repo's LICENSES/ folder.
 //
 
@@ -40,7 +40,7 @@ struct AcknowledgementsView: View {
             Divider()
             ScrollView {
                 VStack(alignment: .leading, spacing: 12) {
-                    Text("Notch apple adapts work from these open-source projects. Each keeps its own license; the full text is below.")
+                    Text("Notch Apple adapts work from these open-source projects. Each keeps its own license; the full text is below.")
                         .font(.callout).foregroundStyle(.secondary)
                     ForEach(credits) { c in
                         VStack(alignment: .leading, spacing: 6) {

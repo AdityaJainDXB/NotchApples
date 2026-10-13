@@ -1,6 +1,6 @@
 //
 //  DevicesView.swift
-//  Notch apple
+//  Notch Apple
 //
 //  The Devices tab:
 //   • Battery for Bluetooth accessories: AirPods (left / right / case) from

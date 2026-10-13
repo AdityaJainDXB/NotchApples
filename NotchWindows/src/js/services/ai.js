@@ -18,7 +18,7 @@ export const PROVIDERS = {
   openAI:     { name: 'ChatGPT', free: 'Paid', base: 'https://api.openai.com/v1', keyUrl: 'https://platform.openai.com/api-keys', def: 'gpt-4o-mini', images: true },
   claude:     { name: 'Claude', free: 'Paid', keyUrl: 'https://console.anthropic.com/settings/keys', def: 'claude-sonnet-5', images: true, pdf: true },
   // Included with Pro and Ultimate: answered by the licence server with the project's own AI key (no key to set up).
-  hosted:     { name: 'Notch apple AI (included)', free: 'Included with Pro and Ultimate', base: `${WORKER}/ai/v1`, keyUrl: 'https://virajsinghchadha.github.io/notchapples-site/pro.html', def: 'notch-fast', noKey: true, images: true, hosted: true },
+  hosted:     { name: 'Notch Apple AI (included)', free: 'Included with Pro and Ultimate', base: `${WORKER}/ai/v1`, keyUrl: 'https://virajsinghchadha.github.io/notchapples-site/pro.html', def: 'notch-fast', noKey: true, images: true, hosted: true },
   deepSeek:   { name: 'DeepSeek', free: 'Paid, low cost', base: 'https://api.deepseek.com/v1', keyUrl: 'https://platform.deepseek.com/api_keys', def: 'deepseek-chat' },
 };
 
@@ -53,7 +53,7 @@ export async function listModels(p) {
         images: (m.architecture?.input_modalities || []).includes('image'),
         textOut: JSON.stringify(m.architecture?.output_modalities || ['text']) === '["text"]' }));
     } else if (p === 'hosted') {
-      list = [{ id: 'notch-fast', label: 'Notch apple AI' }];
+      list = [{ id: 'notch-fast', label: 'Notch Apple AI' }];
     } else if (p === 'claude' && keyOf(p)) {
       const j = await getJSON('https://api.anthropic.com/v1/models?limit=100', { headers: { 'x-api-key': keyOf(p), 'anthropic-version': '2023-06-01' } });
       list = (j.data || []).map((m) => ({ id: m.id, label: m.display_name || m.id }));
@@ -175,12 +175,12 @@ async function sendOnce(p, model, messages, system) {
     : { role: m.role, content: m.text || ' ' }))] };
   const headers = key ? { Authorization: `Bearer ${key}` } : {};
   if (p === 'hosted') {
-    if (!entitleInfo()) throw err(401, 'Notch apple AI is included with Pro and Ultimate. Add your key in Settings → Access.');
+    if (!entitleInfo()) throw err(401, 'Notch Apple AI is included with Pro and Ultimate. Add your key in Settings → Access.');
     const t = await entitlementToken();
     if (!t) throw err(0, "Couldn't check your key with the server. Connect to the internet and try again.");
     headers.Authorization = `Bearer ${t}`;
   }
-  if (p === 'openRouter') { headers['HTTP-Referer'] = 'https://github.com/AdityaJainDXB/NotchApples'; headers['X-Title'] = 'Notch apple'; }
+  if (p === 'openRouter') { headers['HTTP-Referer'] = 'https://github.com/AdityaJainDXB/NotchApples'; headers['X-Title'] = 'Notch Apple'; }
   let j;
   try {
     j = await getJSON(`${PROVIDERS[p].base}/chat/completions`, { method: 'POST', json: body, headers, timeout: 180000 });

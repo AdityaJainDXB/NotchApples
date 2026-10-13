@@ -1,6 +1,6 @@
 //
 //  PluginPinning.swift
-//  Notch apple
+//  Notch Apple
 //
 //  The plugin gallery downloads scripts that then run on someone's Mac, from a branch anyone with write access can change.
 //  So nothing is trusted because of where it came from:

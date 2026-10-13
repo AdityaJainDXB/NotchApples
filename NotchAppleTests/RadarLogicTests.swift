@@ -1,6 +1,6 @@
 //
 //  RadarLogicTests.swift
-//  Notch apple
+//  Notch Apple
 //
 //  The same vectors as NotchWindows/src/js/services/radarlogic.js (see dev/selftest or the node check in CI).
 //

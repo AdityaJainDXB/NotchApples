@@ -1,6 +1,6 @@
 //
 //  VoiceNotesView.swift
-//  Notch apple
+//  Notch Apple
 //
 //  Pro: Voice Notes. Press record in the notch, talk, stop. The recording is
 //  transcribed on your Mac (Apple's on-device speech recognition when the
@@ -85,7 +85,7 @@ final class VoiceNotesModel: NSObject, ObservableObject, AVAudioRecorderDelegate
             }
             return
         default:
-            message = "Allow the microphone for Notch apple in System Settings → Privacy & Security → Microphone."
+            message = "Allow the microphone for Notch Apple in System Settings → Privacy & Security → Microphone."
             PermissionsModel.openPrivacy("Privacy_Microphone")
             return
         }
@@ -142,7 +142,7 @@ final class VoiceNotesModel: NSObject, ObservableObject, AVAudioRecorderDelegate
         SFSpeechRecognizer.requestAuthorization { status in
             DispatchQueue.main.async {
                 guard status == .authorized else {
-                    self.message = "Allow Speech Recognition for Notch apple in System Settings → Privacy & Security."
+                    self.message = "Allow Speech Recognition for Notch Apple in System Settings → Privacy & Security."
                     PermissionsModel.openPrivacy("Privacy_SpeechRecognition")
                     return
                 }

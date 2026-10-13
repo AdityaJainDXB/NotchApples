@@ -1,6 +1,6 @@
 //
 //  TourView.swift
-//  Notch apple
+//  Notch Apple
 //
 //  The compulsory walkthrough after the 1.34 update, shown inside the notch (no pop-up, no separate window). One
 //  step per big change, each with a drawn picture and, where it makes sense, a live control to try. The last step

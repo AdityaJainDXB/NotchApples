@@ -1,6 +1,6 @@
 //
 //  ClaudeCodeStatusLogic.swift
-//  Notch apple
+//  Notch Apple
 //
 //  The pure rules for the Claude Code status dot, kept free of UI so they can be unit-tested:
 //   • which words mean a green dot (finished fine) and which mean yellow (needs you, or warnings/errors),
@@ -30,7 +30,7 @@ enum ClaudeCodeStatusLogic {
     static let doneCommand = #"open -g "notchapple://claude-code?status=done""#
     static let attentionCommand = #"open -g "notchapple://claude-code?status=attention""#
 
-    /// Claude Code event → the command that tells Notch apple. Stop = a task finished; Notification = it needs your input or approval.
+    /// Claude Code event → the command that tells Notch Apple. Stop = a task finished; Notification = it needs your input or approval.
     static let hooks: [(event: String, command: String)] = [("Stop", doneCommand), ("Notification", attentionCommand)]
 
     /// Adds the two hooks to a Claude Code settings dictionary. Idempotent, and leaves every other setting and hook alone.

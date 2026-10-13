@@ -1,6 +1,6 @@
 //
 //  LicenseTests.swift
-//  Notch apple tests
+//  Notch Apple tests
 //
 //  Signed product keys and tiers. The keys come from the license server's own
 //  sandbox test (server/license-worker/test/fixture.json, written by

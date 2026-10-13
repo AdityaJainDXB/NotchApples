@@ -1,6 +1,6 @@
 //
 //  NotchWindow+LevelFix.swift
-//  Notch apple
+//  Notch Apple
 //
 //  Keeps the notch windows above everything, on every Space and over
 //  full-screen apps. The panels are created with the right level and

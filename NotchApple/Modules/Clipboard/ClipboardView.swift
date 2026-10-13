@@ -1,6 +1,6 @@
 //
 //  ClipboardView.swift
-//  Notch apple
+//  Notch Apple
 //
 //  The Clipboard tab: search and filter everything you've copied, click an
 //  item to copy it again, pin favourites, delete the rest.

@@ -1,6 +1,6 @@
 //
 //  CompanionPairingTests.swift
-//  Notch apple tests
+//  Notch Apple tests
 //
 //  The iPhone companion's pairing code, the key exchange and the replay counter.
 //

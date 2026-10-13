@@ -1,6 +1,6 @@
 //
 //  NonNecessitiesView.swift
-//  Notch apple
+//  Notch Apple
 //
 //  One tab for the things you use now and then: Focus, World Clock, Audio, Snippets, Shortcuts, Timers, Plugins,
 //  Voice Notes, Screen Time and Smart Home (and anything else you chose to tuck away). A row of pages along the

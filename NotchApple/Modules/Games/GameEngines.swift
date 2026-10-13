@@ -1,6 +1,6 @@
 //
 //  GameEngines.swift
-//  Notch apple
+//  Notch Apple
 //
 //  The rules of the mini-games, with no views and no timers, so they're easy to test and fast:
 //   • SnakeEngine: a FIFO queue of up to 2 turns per tick, so quick arrow-key taps are kept in order.

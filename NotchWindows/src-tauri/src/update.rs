@@ -93,7 +93,7 @@ pub async fn update_check() -> Result<Option<Update>, String> {
 #[tauri::command]
 pub async fn update_install(app: AppHandle, url: String, sha256: Option<String>, size: u64) -> Result<(), String> {
     if !url.starts_with("https://github.com/AdityaJainDXB/NotchApples/releases/download/") {
-        return Err("That isn't a Notch apple download.".into());
+        return Err("That isn't a Notch Apple download.".into());
     }
     let path = std::env::temp_dir().join("NotchApple-Update-Setup.exe");
     let written = crate::net::download(&url, &path).await?;
@@ -107,7 +107,7 @@ pub async fn update_install(app: AppHandle, url: String, sha256: Option<String>,
         return Err("The download didn't match the published file, so it wasn't installed. Try again.".into());
     }
     // The installer must start only AFTER this app has really exited: while it still runs, the installer can't
-    // replace notch-apple.exe ("Failed to kill Notch apple" / "Error opening file for writing"). Closing a WebView2
+    // replace notch-apple.exe ("Failed to kill Notch Apple" / "Error opening file for writing"). Closing a WebView2
     // app can take several seconds on a slow PC, so a fixed delay isn't enough. A small script waits until the
     // process is gone (with a hard stop after about 50 seconds), then runs the installer: /P shows only a progress
     // bar, /R starts the app again when it's done, and /UPDATE tells the installer this is an upgrade.

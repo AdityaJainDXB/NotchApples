@@ -1,6 +1,6 @@
 //
 //  F1View.swift
-//  Notch apple
+//  Notch Apple
 //
 //  The F1 tab: live timing tower on the left; countdown, weekend schedule and
 //  standings on the right. See F1Model for where the data comes from.

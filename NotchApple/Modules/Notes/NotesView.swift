@@ -1,6 +1,6 @@
 //
 //  NotesView.swift
-//  Notch apple
+//  Notch Apple
 //
 //  Quick notes in the notch: a list of notes on the left, the editor on the
 //  right. Saved automatically as you type, stored on this Mac only.

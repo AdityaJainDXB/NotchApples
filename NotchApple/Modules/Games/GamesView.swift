@@ -1,6 +1,6 @@
 //
 //  GamesView.swift
-//  Notch apple
+//  Notch Apple
 //
 //  Notch Games: tiny games for a short break, right in the panel.
 //   • 2048: arrow keys (or WASD) slide the tiles; merge to 2048.

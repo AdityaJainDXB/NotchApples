@@ -1,6 +1,6 @@
 //
 //  WindowsView.swift
-//  Notch apple
+//  Notch Apple
 //
 //  The Windows tab: snap the window you were using, tile every window on the
 //  screen at once, and save / restore whole window layouts.
@@ -122,7 +122,7 @@ struct WindowsView: View {
         VStack(spacing: 10) {
             Image(systemName: "rectangle.split.2x2.fill").font(.system(size: 30)).foregroundStyle(Theme.accent)
             Text("Snap and tile your windows").font(.system(size: 15, weight: .semibold)).foregroundStyle(.white)
-            Text("Notch apple needs Accessibility access to move and resize other apps' windows.\nTurn on Notch apple in System Settings → Privacy & Security → Accessibility.\nAlready on but not working? Select it, press −, then click Allow again.")
+            Text("Notch Apple needs Accessibility access to move and resize other apps' windows.\nTurn on Notch Apple in System Settings → Privacy & Security → Accessibility.\nAlready on but not working? Select it, press −, then click Allow again.")
                 .font(.system(size: 12))
                 .multilineTextAlignment(.center)
                 .foregroundStyle(Theme.textSecondary)
@@ -153,7 +153,7 @@ struct WindowsSettings: View {
                     }
                 }
             } footer: {
-                Text("Moving other apps' windows needs Accessibility access. If you update Notch apple, macOS may ask again: remove it from the list and turn it back on.")
+                Text("Moving other apps' windows needs Accessibility access. If you update Notch Apple, macOS may ask again: remove it from the list and turn it back on.")
             }
             Section("Snapping") {
                 Toggle("Show snap zones when I drag a window to the notch", isOn: $settings.windowDragToNotch)

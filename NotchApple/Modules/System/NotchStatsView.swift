@@ -1,6 +1,6 @@
 //
 //  NotchStatsView.swift
-//  Notch apple
+//  Notch Apple
 //
 //  The "Mac Stats" tab: the same numbers as the MacBook Center widget, updated
 //  live every second while the tab is showing. Nothing is read while it's closed.

@@ -1,8 +1,8 @@
 //
 //  LidAngleProviding.swift
-//  Notch apple, Lid Fold
+//  Notch Apple, Lid Fold
 //
-//  Original to Notch apple. How a lid-angle reading reaches the rest of the app, so the real sensor
+//  Original to Notch Apple. How a lid-angle reading reaches the rest of the app, so the real sensor
 //  (IOKit, in the app target) and a scripted mock are interchangeable. Macs without the sensor
 //  (M1 Air, 13" MacBook Pro) deliver `LidReading(angle: nil, ...)` and everything else keeps working.
 //

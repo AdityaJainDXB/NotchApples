@@ -1,6 +1,6 @@
 //
 //  EntitlementService.swift
-//  Notch apple
+//  Notch Apple
 //
 //  Fetches and keeps the licence server's tokens for this Mac (see EntitlementLogic), so paid content that lives only on
 //  the server (the premium Klick sounds) and the Clipboard Link relay can be handed to a real key and to nothing else.

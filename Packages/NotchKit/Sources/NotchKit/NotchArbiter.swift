@@ -1,6 +1,6 @@
 //
 //  NotchArbiter.swift
-//  Notch apple
+//  Notch Apple
 //
 //  Decides who may use the notch right now, so Lid Fold and the Cleaner never fight over it.
 //

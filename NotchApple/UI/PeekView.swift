@@ -1,6 +1,6 @@
 //
 //  PeekView.swift
-//  Notch apple
+//  Notch Apple
 //
 //  The "peek" state between closed and open: resting the pointer on the notch
 //  shows a one-line glance just below it (what's playing, your next event today,

@@ -1,6 +1,6 @@
 //
 //  ClaudeLimitsLogic.swift
-//  Notch apple
+//  Notch Apple
 //
 //  Your real Claude limits (the percentage of the 5-hour session and of the week that you have used, and when each
 //  resets) as Claude reports them, instead of a guess from local token counts. This file only reads the data:

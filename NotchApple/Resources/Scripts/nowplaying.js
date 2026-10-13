@@ -1,4 +1,4 @@
-// Notch apple: system-wide Now Playing bridge.
+// Notch Apple: system-wide Now Playing bridge.
 // Reads what's playing in ANY app (Music, Spotify, Anghami, browsers, podcasts…)
 // from macOS's MediaRemote and prints one JSON line whenever it changes.
 // It runs inside /usr/bin/osascript because macOS only lets Apple's own tools

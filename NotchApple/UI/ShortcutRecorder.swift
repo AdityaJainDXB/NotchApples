@@ -1,6 +1,6 @@
 //
 //  ShortcutRecorder.swift
-//  Notch apple
+//  Notch Apple
 //
 //  A "click, then press the keys you want" shortcut field for Settings.
 //  It records with a local key monitor (no Accessibility permission) and saves
@@ -61,7 +61,7 @@ struct ShortcutRecorder: View {
                 return nil
             }
             if reserved.contains(new) {
-                message = "\(new.label) is already used by Notch apple. Try another."
+                message = "\(new.label) is already used by Notch Apple. Try another."
                 return nil
             }
             HotkeyBinding.save(new, for: slot)

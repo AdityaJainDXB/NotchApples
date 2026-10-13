@@ -1,6 +1,6 @@
 //
 //  SnippetVariablesTests.swift
-//  Notch apple tests
+//  Notch Apple tests
 //
 //  Placeholders in snippets. The Windows app runs the same cases against services/snippetvars.js.
 //

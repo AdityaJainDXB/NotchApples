@@ -112,7 +112,7 @@ mod imp {
                         SetWindowPos(hwnd, None, r.left, r.top, r.right - r.left, r.bottom - r.top, SWP_NOZORDER | SWP_NOACTIVATE)
                             .map_err(|e| e.to_string())
                     },
-                    None => Err("This window hasn't been moved by Notch apple.".into()),
+                    None => Err("This window hasn't been moved by Notch Apple.".into()),
                 };
             }
             "maximize" => {

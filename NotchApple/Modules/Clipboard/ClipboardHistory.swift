@@ -1,6 +1,6 @@
 //
 //  ClipboardHistory.swift
-//  Notch apple
+//  Notch Apple
 //
 //  Clipboard manager: everything you copy is saved to a history you can
 //  search, re-copy, pin and delete from the notch.

@@ -1,6 +1,6 @@
 //
 //  UpdateCadenceLogicTests.swift
-//  Notch apple
+//  Notch Apple
 //
 
 import XCTest

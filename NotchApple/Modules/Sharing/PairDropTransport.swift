@@ -1,6 +1,6 @@
 //
 //  PairDropTransport.swift
-//  Notch apple
+//  Notch Apple
 //
 //  The two ends of one PairDrop connection, free of any app code so they can be tested over a loopback socket
 //  (scripts/run-pairdrop-loopback.sh): OutgoingTransfer sends a header, waits for the answer, streams the file and

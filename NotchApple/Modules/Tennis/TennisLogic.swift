@@ -1,6 +1,6 @@
 //
 //  TennisLogic.swift
-//  Notch apple
+//  Notch Apple
 //
 //  The pure part of the Tennis tab: turning ESPN's tennis scoreboards and rankings into
 //  tournaments, matches and players, sorting them into the Men, Women and Mixed draws,

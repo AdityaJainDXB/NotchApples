@@ -1,6 +1,6 @@
 //
 //  LiveActivity.swift
-//  Notch apple
+//  Notch Apple
 //
 //  Dynamic Island-style "live activities" for the CLOSED notch. The hardware
 //  notch is a camera cutout with no pixels, so activities draw in two small

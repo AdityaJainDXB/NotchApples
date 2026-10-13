@@ -1,6 +1,6 @@
 //
 //  EntitlementLogicTests.swift
-//  Notch apple tests
+//  Notch Apple tests
 //
 //  Tokens from the licence server's own sandbox test (server/license-worker/test/fixture.json), so these prove the app
 //  and the server agree on the format and the signature, plus the content pack format.

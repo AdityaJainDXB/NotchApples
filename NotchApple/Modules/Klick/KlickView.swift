@@ -1,6 +1,6 @@
 //
 //  KlickView.swift
-//  Notch apple
+//  Notch Apple
 //
 //  The Klick tab (Pro): the on / off switch, the eight sounds as cards (click one to choose it and hear it; the chosen
 //  one has its own volume slider), a key-up option and a box to try it. See KlickEngine.
@@ -59,7 +59,7 @@ struct KlickView: View {
     private var permissionNote: some View {
         HStack(spacing: 8) {
             Image(systemName: "lock.shield").foregroundStyle(.orange)
-            Text("To hear keys in other apps, allow Notch apple in Privacy & Security → Accessibility and Input Monitoring. Already on but silent after an update? Select Notch apple there, press −, then add it again. Until then only keys typed in Notch apple click.")
+            Text("To hear keys in other apps, allow Notch Apple in Privacy & Security → Accessibility and Input Monitoring. Already on but silent after an update? Select Notch Apple there, press −, then add it again. Until then only keys typed in Notch Apple click.")
                 .font(.system(size: 11)).foregroundStyle(Theme.textSecondary).fixedSize(horizontal: false, vertical: true)
             Spacer(minLength: 4)
             VStack(spacing: 4) {

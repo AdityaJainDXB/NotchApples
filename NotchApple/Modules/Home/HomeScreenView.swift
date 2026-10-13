@@ -1,6 +1,6 @@
 //
 //  HomeScreenView.swift
-//  Notch apple
+//  Notch Apple
 //
 //  The Home page, the first tab. It replaces the old Today page.
 //

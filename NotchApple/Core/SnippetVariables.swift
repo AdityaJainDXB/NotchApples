@@ -1,6 +1,6 @@
 //
 //  SnippetVariables.swift
-//  Notch apple
+//  Notch Apple
 //
 //  Placeholders in snippets: {date}, {time}, {datetime}, {weekday}, {year}, {clipboard} and {uuid} become today's
 //  values when the snippet is pasted or expanded. Anything else in braces is left exactly as typed. The Windows app has

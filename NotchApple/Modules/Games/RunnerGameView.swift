@@ -1,6 +1,6 @@
 //
 //  RunnerGameView.swift
-//  Notch apple
+//  Notch Apple
 //
 //  Arcade runner (a small Geometry Dash-style game): the cube runs on its own; Space, ↑, W or a click jumps over
 //  the spikes and blocks. It speeds up the longer you last. Your best distance is kept on this Mac.

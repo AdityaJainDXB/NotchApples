@@ -1,6 +1,6 @@
 //
 //  ExternalActivities.swift
-//  Notch apple
+//  Notch Apple
 //
 //  Live Activities API (Ultimate): your own apps and scripts can show a live
 //  activity beside the closed notch, the way the timer or a download does.

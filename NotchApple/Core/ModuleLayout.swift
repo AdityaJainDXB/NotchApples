@@ -1,6 +1,6 @@
 //
 //  ModuleLayout.swift
-//  Notch apple
+//  Notch Apple
 //
 //  Connects the layout rules (ModuleLayoutLogic) to the real modules: where each reorganised feature lives
 //  (Home, its own tab, Non-Necessities, off), saved in UserDefaults. Settings → Modules & Layout and the

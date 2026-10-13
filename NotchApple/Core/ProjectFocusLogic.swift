@@ -1,6 +1,6 @@
 //
 //  ProjectFocusLogic.swift
-//  Notch apple
+//  Notch Apple
 //
 //  Focus minutes by project (Pro). The log is "2026-10-07|Website" → minutes, so a day's total stays in the
 //  ordinary focus history and the project split is extra. Pure rules, no storage, so they can be tested

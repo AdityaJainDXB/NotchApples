@@ -1,6 +1,6 @@
 //
 //  WallpaperEngine.swift
-//  Notch apple
+//  Notch Apple
 //
 //  Live wallpaper (Pro): plays your video, silently and on a loop, behind your desktop icons on every display and on every
 //  desktop (Space). It is a borderless window at the desktop's own level, so it sits above the system wallpaper and below

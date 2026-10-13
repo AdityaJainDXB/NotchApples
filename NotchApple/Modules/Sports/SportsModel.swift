@@ -1,6 +1,6 @@
 //
 //  SportsModel.swift
-//  Notch apple
+//  Notch Apple
 //
 //  Sports in the notch (ESPN's free public feed, no account or key):
 //   • Your team, Barcelona unless you change it: the next match with a countdown,

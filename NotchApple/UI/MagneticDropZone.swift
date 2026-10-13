@@ -1,6 +1,6 @@
 //
 //  MagneticDropZone.swift
-//  Notch apple
+//  Notch Apple
 //
 //  A drop zone drawn as a card: an icon tile, "Drop a file here", and "or click to browse". While a file is being
 //  dragged it reacts to the pointer: within 180 points the card leans up to 10 points towards it, grows a little and

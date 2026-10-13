@@ -1,6 +1,6 @@
 //
 //  FoldCapture.swift
-//  Notch apple, Lid Fold
+//  Notch Apple, Lid Fold
 //
 //  Origin:  Still, native/Sources/Still/ScreenCapture.swift
 //           (MIT, Copyright (c) 2026 Akshay Sharma and Kavish Shah; LICENSES/Still-MIT.txt)
@@ -17,7 +17,7 @@ enum FoldCaptureIssue: LocalizedError {
     case permission, noDisplay
     var errorDescription: String? {
         switch self {
-        case .permission: return "Screen Recording is not allowed for Notch apple."
+        case .permission: return "Screen Recording is not allowed for Notch Apple."
         case .noDisplay: return "A display is no longer available."
         }
     }

@@ -5,7 +5,7 @@
 	<key>NSAppleScriptEnabled</key><true/>
 	<key>OSAScriptingDefinition</key><string>NotchApple.sdef</string>
 	<key>CFBundleDevelopmentRegion</key><string>en</string>
-	<key>CFBundleDisplayName</key><string>Notch apple</string>
+	<key>CFBundleDisplayName</key><string>Notch Apple</string>
 	<key>CFBundleExecutable</key><string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key><string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
 	<key>CFBundleInfoDictionaryVersion</key><string>6.0</string>
@@ -19,7 +19,7 @@
 	<key>LSApplicationCategoryType</key><string>public.app-category.productivity</string>
 	<key>NSHumanReadableCopyright</key><string>Copyright © 2026 Aditya Jain. Source-available licence.</string>
 	<key>NSAppTransportSecurity</key><dict><key>NSAllowsLocalNetworking</key><true/></dict>
-	<key>NSLocalNetworkUsageDescription</key><string>Notch apple discovers nearby devices on your Wi-Fi for PairDrop file sharing and Messenger chat. Nothing leaves your local network.</string>
+	<key>NSLocalNetworkUsageDescription</key><string>Notch Apple discovers nearby devices on your Wi-Fi for PairDrop file sharing and Messenger chat. Nothing leaves your local network.</string>
 	<key>NSBonjourServices</key><array><string>_notchapple._tcp</string><string>_notch-chat._tcp</string><string>_notch-chat._udp</string></array>
 	<key>NSCalendarsFullAccessUsageDescription</key><string>Shows your upcoming events in the notch and widget.</string>
 	<key>NSScreenCaptureUsageDescription</key><string>Lets you share a screenshot with Claude when you tap Share Screen.</string>

@@ -1,6 +1,6 @@
 //
 //  MessengerNotifier.swift
-//  Notch apple
+//  Notch Apple
 //
 //  Lets you know when someone messages you:
 //   • a macOS notification (sender, text, and where it came from), unless
@@ -71,7 +71,7 @@ final class MessengerNotifier: NSObject, ObservableObject {
 }
 
 extension MessengerNotifier: UNUserNotificationCenterDelegate {
-    /// Show banners even while Notch apple is the active app.
+    /// Show banners even while Notch Apple is the active app.
     nonisolated func userNotificationCenter(_ center: UNUserNotificationCenter, willPresent notification: UNNotification,
                                             withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void) {
         completionHandler([.banner, .sound, .list])

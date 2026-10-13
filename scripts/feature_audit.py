@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Checks every item of the Notch apple spec against the code and writes docs/FEATURE_AUDIT.md.
+"""Checks every item of the Notch Apple spec against the code and writes docs/FEATURE_AUDIT.md.
 
 For each item it searches the source for the code that implements it and records the first
 file:line found, so the audit is evidence, not a claim. Items that can't exist (no public API)

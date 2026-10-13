@@ -1,6 +1,6 @@
 //
 //  CookieClickerView.swift
-//  Notch apple
+//  Notch Apple
 //
 //  Cookie Clicker: click the cookie, buy click multipliers (each doubles a click) and auto-clickers
 //  (cursors, grandmas, farms, mines, factories) that bake while you do something else.

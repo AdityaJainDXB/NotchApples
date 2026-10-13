@@ -1,6 +1,6 @@
 //
 //  MusicLevelMeter.swift
-//  Notch apple
+//  Notch Apple
 //
 //  Makes the music bars beside the notch move with the song. A listen-only
 //  Core Audio tap (macOS 14.2+) hears what the Mac is playing, never changes
@@ -46,12 +46,12 @@ final class MusicLevelMeter: @unchecked Sendable {
         guard !isRunning, !failed else { return }
         guard #available(macOS 14.2, *) else { failed = true; return }
         guard let outputUID = Self.defaultOutputUID() else { return }
-        // Listen to everything the Mac plays except Notch apple itself, without muting anything.
+        // Listen to everything the Mac plays except Notch Apple itself, without muting anything.
         let description = CATapDescription(stereoGlobalTapButExcludeProcesses: Self.ownProcessObject().map { [$0] } ?? [])
         description.uuid = UUID()
         description.muteBehavior = .unmuted
         description.isPrivate = true
-        description.name = "Notch apple music bars"
+        description.name = "Notch Apple music bars"
         var tap = AudioObjectID(kAudioObjectUnknown)
         guard AudioHardwareCreateProcessTap(description, &tap) == noErr else { failed = true; return }
         tapID = tap
@@ -59,7 +59,7 @@ final class MusicLevelMeter: @unchecked Sendable {
         filters = (0..<2).map { _ in Self.centres.map { BandPass(centre: $0, q: 1.1, sampleRate: rate) } }
 
         let aggregate: [String: Any] = [
-            kAudioAggregateDeviceNameKey: "Notch apple music bars",
+            kAudioAggregateDeviceNameKey: "Notch Apple music bars",
             kAudioAggregateDeviceUIDKey: UUID().uuidString,
             kAudioAggregateDeviceMainSubDeviceKey: outputUID,
             kAudioAggregateDeviceIsPrivateKey: true,

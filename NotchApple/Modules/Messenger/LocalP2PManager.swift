@@ -1,9 +1,9 @@
 //
 //  LocalP2PManager.swift
-//  Notch apple
+//  Notch Apple
 //
 //  "Nearby Wi-Fi" chat using Apple's MultipeerConnectivity:
-//   • Every Notch apple with Messenger on advertises and browses the
+//   • Every Notch Apple with Messenger on advertises and browses the
 //     `notch-chat` service (Bonjour `_notch-chat._tcp` / `_udp`).
 //   • Peers connect automatically. To avoid both sides inviting each other,
 //     only the peer with the smaller random ID sends the invitation.

@@ -1,6 +1,6 @@
 //
 //  DownloadWatcher.swift
-//  Notch apple
+//  Notch Apple
 //
 //  Shows download and copy progress beside the closed notch. Safari, Chrome,
 //  Finder copies, AirDrop and most other apps publish file progress

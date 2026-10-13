@@ -1,6 +1,6 @@
 //
 //  WallpaperLogicTests.swift
-//  Notch apple tests
+//  Notch Apple tests
 //
 //  What video a wallpaper accepts, when it plays, and the free library's list.
 //

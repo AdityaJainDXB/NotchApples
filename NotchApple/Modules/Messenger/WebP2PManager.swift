@@ -1,6 +1,6 @@
 //
 //  WebP2PManager.swift
-//  Notch apple
+//  Notch Apple
 //
 //  "Anonymous Room" chat over the internet with zero developer cost.
 //
@@ -10,7 +10,7 @@
 //       – one hash becomes the relay topic,
 //       – the other becomes a 256-bit AES-GCM key.
 //     The relay therefore never sees the room name, and can't read messages.
-//   • Messages travel over TLS WebSockets through Notch apple's own relay
+//   • Messages travel over TLS WebSockets through Notch Apple's own relay
 //     (server/room-relay: a Cloudflare Worker that forwards live and stores nothing),
 //     plus free public relays as backups:
 //       1. ntfy.sh (open source, port 443, so it works on school and office
@@ -39,7 +39,7 @@ final class WebP2PManager: ObservableObject {
 
     /// Free public relays, tried in order.
     enum Relay {
-        /// Notch apple's own relay (server/room-relay, a free Cloudflare Worker).
+        /// Notch Apple's own relay (server/room-relay, a free Cloudflare Worker).
         case own(host: String)
         case ntfy(host: String)
         case mqtt(URL)

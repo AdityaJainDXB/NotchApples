@@ -1,6 +1,6 @@
 //
 //  WallpaperLogic.swift
-//  Notch apple
+//  Notch Apple
 //
 //  Live wallpaper (Pro): the rules, with no screens or video in them so they can be tested. What video is accepted (up to
 //  60 seconds, up to 4K, up to a size), when the wallpaper plays or pauses to save battery, safe file names, and the small

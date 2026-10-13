@@ -1,8 +1,8 @@
 //
 //  RequiredSetup.swift
-//  Notch apple
+//  Notch Apple
 //
-//  The one permission Notch apple needs to do its job: Accessibility. It is what lets the notch show the volume and
+//  The one permission Notch Apple needs to do its job: Accessibility. It is what lets the notch show the volume and
 //  brightness gauge when you press the keys (and keep macOS's own pop-up from stacking on top), snap windows,
 //  paste snippets and read selected text. It never blocks the notch.
 //  The moment macOS reports it as granted, the volume and brightness gauge starts, with no relaunch.

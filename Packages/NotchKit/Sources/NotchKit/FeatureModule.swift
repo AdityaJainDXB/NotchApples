@@ -1,6 +1,6 @@
 //
 //  FeatureModule.swift
-//  Notch apple
+//  Notch Apple
 //
 //  What every optional feature module (Lid Fold, Cleaner) exposes to the app. Modules are separate
 //  packages with no dependency on each other; the app owns the registry and the notch arbiter.

@@ -1,8 +1,8 @@
 //
 //  FoldSession.swift
-//  Notch apple, Lid Fold
+//  Notch Apple, Lid Fold
 //
-//  Original to Notch apple. The rules that keep the fold from ever trapping you behind a frosted
+//  Original to Notch Apple. The rules that keep the fold from ever trapping you behind a frosted
 //  desktop: how long each trigger may last, when a session must be torn down, and the angle curves
 //  used by Preview, the timed demo and the hotkey hold. Pure functions, so they are unit-tested.
 //  (The eased-hold curve follows the idea of Still's screen-saver mode; the code is new.)

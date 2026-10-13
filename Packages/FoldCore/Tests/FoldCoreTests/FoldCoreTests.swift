@@ -1,6 +1,6 @@
 //
 //  FoldCoreTests.swift
-//  Notch apple, Lid Fold
+//  Notch Apple, Lid Fold
 //
 //  Origin:  Still, native/Tests/FoldCoreTests/FoldCoreTests.swift (MIT, Copyright (c) 2026 Akshay Sharma
 //           and Kavish Shah; see LICENSES/Still-MIT.txt)

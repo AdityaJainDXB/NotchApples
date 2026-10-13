@@ -1,6 +1,6 @@
 //
 //  BrowserMedia.swift
-//  Notch apple
+//  Notch Apple
 //
 //  Pro: control video and audio playing in Safari, Chrome, Arc, Brave or Edge
 //  (YouTube, Netflix, podcasts on the web…): speed from 0.5× to 3×, skip
@@ -9,7 +9,7 @@
 //   • Safari: Settings → Advanced → Show features for web developers, then
 //     Develop → Allow JavaScript from Apple Events.
 //   • Chrome/Arc/Brave/Edge: View → Developer → Allow JavaScript from Apple Events.
-//  plus macOS asking once to let Notch apple control that browser.
+//  plus macOS asking once to let Notch Apple control that browser.
 //  Apps without scripting (Apple Podcasts, Spotify) can't change speed.
 //
 
@@ -48,7 +48,7 @@ enum BrowserMedia {
                 return b.safari ? "Turn on Develop → Allow JavaScript from Apple Events in Safari"
                                 : "Turn on View → Developer → Allow JavaScript from Apple Events in \(b.name)"
             }
-            return "\(b.name) didn't respond (allow Notch apple in System Settings → Privacy & Security → Automation)"
+            return "\(b.name) didn't respond (allow Notch Apple in System Settings → Privacy & Security → Automation)"
         }
         let out = result?.stringValue ?? ""
         return out == "none" ? "No video or audio in the front tab" : out

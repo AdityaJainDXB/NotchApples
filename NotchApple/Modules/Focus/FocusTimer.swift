@@ -1,6 +1,6 @@
 //
 //  FocusTimer.swift
-//  Notch apple
+//  Notch Apple
 //
 //  A Pomodoro-style focus timer. Work and break sessions alternate; while a
 //  session runs, the closed notch shows the countdown (see LiveActivity.swift),

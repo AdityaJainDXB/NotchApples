@@ -1,8 +1,8 @@
 //
 //  CommandPalette.swift
-//  Notch apple
+//  Notch Apple
 //
-//  Command palette (Pro, ⌃⌥P): one box to search and run everything Notch apple
+//  Command palette (Pro, ⌃⌥P): one box to search and run everything Notch Apple
 //  can do: open a tab, start a timer, paste a snippet, run a saved prompt, open
 //  an app or a Settings pane, or just ask the AI. ↑↓ to choose, Return to run,
 //  Esc to close. Fully keyboard-driven.

@@ -1,5 +1,5 @@
 #!/bin/bash
-# Show a live activity beside the Notch apple notch (needs Notch apple Ultimate).
+# Show a live activity beside the Notch Apple notch (needs Notch Apple Ultimate).
 #
 #   notch-activity <id> [--title T] [--text T] [--symbol sf.symbol] [--progress 0.5] [--color 34C759] [--seconds 600]
 #   notch-activity <id> --end

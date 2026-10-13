@@ -1,6 +1,6 @@
 //
 //  AppLauncher.swift
-//  Notch apple
+//  Notch Apple
 //
 //  The Launcher tab: a shelf of apps you choose. Add as many as you like from
 //  the list of installed apps, by dragging an app in, or by picking one in a

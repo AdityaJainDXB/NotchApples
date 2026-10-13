@@ -1,6 +1,6 @@
 //
 //  FoldOverlay.swift
-//  Notch apple, Lid Fold
+//  Notch Apple, Lid Fold
 //
 //  Origin:  Still, native/Sources/Still/DesktopOverlay.swift
 //           (MIT, Copyright (c) 2026 Akshay Sharma and Kavish Shah; LICENSES/Still-MIT.txt)

@@ -1,6 +1,6 @@
 //
 //  LiveView.swift
-//  Notch apple
+//  Notch Apple
 //
 //  The Live tab:
 //   • Scores: today's games in a league (ESPN's free public scoreboard feed).

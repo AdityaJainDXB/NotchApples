@@ -1,6 +1,6 @@
 //
 //  TennisLogicTests.swift
-//  Notch apple tests
+//  Notch Apple tests
 //
 //  How the Tennis tab reads ESPN's scoreboards and rankings.
 //

@@ -1,6 +1,6 @@
 //
 //  PatchLogView.swift
-//  Notch apple
+//  Notch Apple
 //
 //  The update patch log, inside the notch. After an update the notch opens on what changed in this version, with a
 //  switch for each new optional feature and one "Got it" button that returns to the tabs. No separate window or
@@ -59,7 +59,7 @@ struct PatchLogView: View {
             HStack(spacing: 10) {
                 Image(systemName: "sparkles").font(.system(size: 22)).foregroundStyle(Theme.accentGradient)
                 VStack(alignment: .leading, spacing: 1) {
-                    Text("Notch apple \(release?.version ?? WhatsNew.currentVersion)").font(.system(size: 16, weight: .bold)).foregroundStyle(.white)
+                    Text("Notch Apple \(release?.version ?? WhatsNew.currentVersion)").font(.system(size: 16, weight: .bold)).foregroundStyle(.white)
                     if let r = release { Text(r.headline).font(.system(size: 11)).foregroundStyle(Theme.textSecondary) }
                 }
                 Spacer()

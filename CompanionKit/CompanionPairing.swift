@@ -1,6 +1,6 @@
 //
 //  CompanionPairing.swift
-//  Notch apple (shared by the Mac app and the iPhone companion)
+//  Notch Apple (shared by the Mac app and the iPhone companion)
 //
 //  The pairing and replay rules, kept apart from the sockets so both ends and the tests use the same code.
 //
@@ -104,7 +104,7 @@ extension Companion {
     static func checkSequence(last: Int64?, seq: Int64?, now: Date, window: TimeInterval = 600) -> SequenceDecision {
         guard let seq else {
             return last == nil ? SequenceDecision(accepted: true, newLast: nil, reason: nil)
-                               : SequenceDecision(accepted: false, newLast: last, reason: "Update the Notch apple app on your iPhone.")
+                               : SequenceDecision(accepted: false, newLast: last, reason: "Update the Notch Apple app on your iPhone.")
         }
         guard abs(Double(seq) / 1000 - now.timeIntervalSince1970) <= window else {
             return SequenceDecision(accepted: false, newLast: last, reason: "Check the date and time on your iPhone and Mac.")

@@ -1,6 +1,6 @@
 //
 //  VPNView.swift
-//  Notch apple
+//  Notch Apple
 //
 //  One big power button in the middle: tap it to connect to the chosen server, tap again to disconnect.
 //  The server picker sits discreetly on the right (your VPN app, the free library, VPN Gate). To use your own VPN
@@ -17,7 +17,7 @@ struct VPNView: View {
     @State private var picking = false
     @State private var addingApp = false
 
-    /// For a VPN app, "connected" means the Mac has a VPN tunnel up (the app itself isn't something Notch apple can ask).
+    /// For a VPN app, "connected" means the Mac has a VPN tunnel up (the app itself isn't something Notch Apple can ask).
     private var connected: Bool { vpn.selected?.kind == .app ? vpn.tunnelActive : vpn.status == .connected }
     private var busy: Bool { vpn.selected?.kind != .app && (vpn.status == .connecting || vpn.status == .reasserting || vpn.status == .disconnecting) }
 
@@ -93,7 +93,7 @@ struct VPNView: View {
                 Text(client == .tunnelblick ? "One-time setup: install the VPN helper" : "One-time setup: install WireGuard")
                     .font(.system(size: 13, weight: .semibold)).foregroundStyle(.white)
                 Text(client == .tunnelblick
-                     ? "Tunnelblick is free, open source and included with Notch apple. After installing, your server connects automatically."
+                     ? "Tunnelblick is free, open source and included with Notch Apple. After installing, your server connects automatically."
                      : "WireGuard is free on the Mac App Store. After installing, your profile opens automatically.")
                     .font(.system(size: 11)).foregroundStyle(Theme.textSecondary).lineLimit(2)
             }
@@ -217,7 +217,7 @@ private struct AddVPNAppSheet: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Add your VPN app").font(.title3.bold())
-            Text("Pick the VPN app you already use. Notch apple opens it for you and shows whether your Mac is connected. You don't type any addresses or passwords.")
+            Text("Pick the VPN app you already use. Notch Apple opens it for you and shows whether your Mac is connected. You don't type any addresses or passwords.")
                 .font(.callout).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
             if found.isEmpty {
                 Text("No well-known VPN apps found. Choose yours below.").font(.callout).foregroundStyle(.secondary).padding(.vertical, 6)

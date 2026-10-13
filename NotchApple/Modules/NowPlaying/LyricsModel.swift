@@ -1,6 +1,6 @@
 //
 //  LyricsModel.swift
-//  Notch apple
+//  Notch Apple
 //
 //  Synced lyrics for the Now Playing tab. Lyrics come from LRCLIB (free, no
 //  account); the playback position is read from Music or Spotify with
@@ -69,7 +69,7 @@ final class LyricsModel: ObservableObject {
             var comps = URLComponents(string: "https://lrclib.net/api/get")!
             comps.queryItems = [.init(name: "track_name", value: title), .init(name: "artist_name", value: artist)]
             var request = URLRequest(url: comps.url!)
-            request.setValue("Notch apple (https://github.com/AdityaJainDXB/NotchApples)", forHTTPHeaderField: "User-Agent")
+            request.setValue("Notch Apple (https://github.com/AdityaJainDXB/NotchApples)", forHTTPHeaderField: "User-Agent")
             struct Resp: Decodable { let syncedLyrics: String?; let plainLyrics: String?; let instrumental: Bool? }
             guard key == loadedKey else { return }
             if let (data, response) = try? await URLSession.shared.data(for: request),

@@ -1,8 +1,8 @@
 //
 //  FaceUnlock.swift
-//  Notch apple
+//  Notch Apple
 //
-//  Webcam face unlock for Notch apple's own lock, built on AVFoundation and
+//  Webcam face unlock for Notch Apple's own lock, built on AVFoundation and
 //  Apple's Vision framework. Everything runs on-device.
 //
 //  Enrolment
@@ -200,7 +200,7 @@ final class FaceUnlockEngine: NSObject, ObservableObject {
                 Task { @MainActor in granted ? self.configureAndRun() : self.fail("Camera access was denied.") }
             }
         default:
-            fail("Allow camera access for Notch apple in System Settings → Privacy & Security → Camera.")
+            fail("Allow camera access for Notch Apple in System Settings → Privacy & Security → Camera.")
         }
     }
 

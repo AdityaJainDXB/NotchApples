@@ -22,7 +22,7 @@ pub struct Plugin {
     pub interval: u64,
 }
 
-const EXAMPLE: &str = r#"# An example Notch apple plugin. Edit it, or add your own scripts here.
+const EXAMPLE: &str = r#"# An example Notch Apple plugin. Edit it, or add your own scripts here.
 # The ".1m" in the file name means it refreshes every minute.
 Write-Output "Hello from PowerShell"
 Write-Output ("It's " + (Get-Date -Format "dddd, HH:mm"))

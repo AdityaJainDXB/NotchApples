@@ -1,6 +1,6 @@
 //
 //  AppTheme.swift
-//  Notch apple
+//  Notch Apple
 //
 //  Colour themes. `ThemeManager` remembers the chosen theme; the `Theme` tokens
 //  (Theme.swift) read from it, so every screen picks it up. The default is
@@ -519,7 +519,7 @@ private struct ThemeEditor: View {
         guard panel.runModal() == .OK, let url = panel.url,
               let data = try? Data(contentsOf: url, options: .mappedIfSafe), data.count < 10_000 else { return }
         guard let t = try? JSONDecoder().decode(CustomTheme.self, from: data), t.isValid else {
-            message = "That file isn't a Notch apple theme."; return
+            message = "That file isn't a Notch Apple theme."; return
         }
         theme = t
         message = "Imported \(t.name). Press Use this theme to apply it."

@@ -1,6 +1,6 @@
 //
 //  WallpaperLibrary.swift
-//  Notch apple
+//  Notch Apple
 //
 //  Your wallpaper videos: the ones you add (copied into this app's folder, so the original can move) and the ones you get
 //  from the free NASA library. Every video is checked before it is kept: a video, up to 60 seconds, up to 4K and 800 MB
@@ -103,7 +103,7 @@ final class WallpaperLibrary: ObservableObject {
         let dest = Self.folder.appendingPathComponent("\(id).\(ext)")
         do {
             try await Task.detached { try FileManager.default.copyItem(at: source, to: dest) }.value
-        } catch { message = "Couldn't copy the video into Notch apple: \(error.localizedDescription)"; return nil }
+        } catch { message = "Couldn't copy the video into Notch Apple: \(error.localizedDescription)"; return nil }
         let item = WallpaperItem(id: id, name: name, seconds: info.seconds, width: info.width, height: info.height, bytes: info.bytes, file: dest.lastPathComponent, credit: nil)
         await finish(item, from: dest)
         return item

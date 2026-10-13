@@ -54,7 +54,7 @@ struct Provider: TimelineProvider {
         return NotchEntry(date: .now, weather: weather, nowPlaying: SharedStore.nowPlaying, events: await upcomingEvents())
     }
 
-    /// Uses the Mac's current location when Notch apple has location permission
+    /// Uses the Mac's current location when Notch Apple has location permission
     /// (widgets share their app's permission), otherwise the saved city.
     private static func weatherLocation() async -> WeatherLocation {
         let manager = CLLocationManager()
@@ -192,7 +192,7 @@ struct NotchWidgetView: View {
     }
 }
 
-/// Both widgets ship in one extension: the original Notch apple widget and MacBook Center.
+/// Both widgets ship in one extension: the original Notch Apple widget and MacBook Center.
 @main
 struct NotchWidgets: WidgetBundle {
     var body: some Widget {
@@ -207,7 +207,7 @@ struct NotchAppleWidget: Widget {
             NotchWidgetView(entry: entry)
                 .containerBackground(for: .widget) { widgetBackground }
         }
-        .configurationDisplayName("Notch apple")
+        .configurationDisplayName("Notch Apple")
         .description("Weather, now playing and your next events.")
         .supportedFamilies([.systemSmall, .systemMedium, .systemLarge])
     }

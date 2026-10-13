@@ -1,6 +1,6 @@
 //
 //  RequiredUpdateView.swift
-//  Notch apple
+//  Notch Apple
 //
 //  (With skippable: true it is the request shown when a new version comes out and every 4th or 5th time the notch
 //  is opened after that: it lists what is in the update and has "Skip for now". Updates are only compulsory when
@@ -24,12 +24,12 @@ struct RequiredUpdateView: View {
             Spacer(minLength: 0)
             Image(systemName: "arrow.down.circle.fill").font(.system(size: 34)).foregroundStyle(Theme.accentGradient)
             let security = UpdateChecker.securityNote(release.notes)
-            Text(skippable ? "A new Notch apple is ready" : security != nil ? "Critical security update" : "Update Notch apple to keep using it").font(.system(size: 18, weight: .bold)).foregroundStyle(.white)
+            Text(skippable ? "A new Notch Apple is ready" : security != nil ? "Critical security update" : "Update Notch Apple to keep using it").font(.system(size: 18, weight: .bold)).foregroundStyle(.white)
             if let security, !skippable {
                 Text(security.isEmpty ? "This version has security problems that are fixed in the update." : security)
                     .font(.system(size: 12, weight: .semibold)).foregroundStyle(.orange).multilineTextAlignment(.center).frame(maxWidth: 520)
             }
-            Text(skippable ? "Version \(release.version) is ready. It takes under a minute; your settings and data are kept and Notch apple reopens by itself." : "Version \(release.version) is required: this copy is out of date. It takes under a minute; your settings and data are kept and Notch apple reopens by itself.")
+            Text(skippable ? "Version \(release.version) is ready. It takes under a minute; your settings and data are kept and Notch Apple reopens by itself." : "Version \(release.version) is required: this copy is out of date. It takes under a minute; your settings and data are kept and Notch Apple reopens by itself.")
                 .font(.system(size: 12)).foregroundStyle(Theme.textSecondary).multilineTextAlignment(.center).frame(maxWidth: 520)
             let inside = ReleaseNotesLogic.whatsInside(release.notes)
             if !inside.isEmpty {
@@ -47,7 +47,7 @@ struct RequiredUpdateView: View {
             }
             switch updater.phase {
             case .downloading(let v): ProgressView("Downloading…", value: v).frame(maxWidth: 280)
-            case .installing: ProgressView("Installing… Notch apple will quit and reopen.").progressViewStyle(.linear).frame(maxWidth: 320)
+            case .installing: ProgressView("Installing… Notch Apple will quit and reopen.").progressViewStyle(.linear).frame(maxWidth: 320)
             case .failed(let m):
                 Text(m).font(.system(size: 11)).foregroundStyle(.orange).multilineTextAlignment(.center).frame(maxWidth: 480)
                 actions(label: "Try again")

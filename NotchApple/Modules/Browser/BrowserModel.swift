@@ -1,6 +1,6 @@
 //
 //  BrowserModel.swift
-//  Notch apple
+//  Notch Apple
 //
 //  A small web browser for the notch, built on WebKit (the same engine as
 //  Safari). One web view lives here so the page you were on is still there

@@ -1,6 +1,6 @@
 //
 //  HoldToConfirm.swift
-//  Notch apple
+//  Notch Apple
 //
 //  A destructive button you press and hold: a fill sweeps across while you hold, and only when it is full does the
 //  action run. Letting go early, or sliding off the button, cancels. VoiceOver and keyboard users activate it

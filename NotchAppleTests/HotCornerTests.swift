@@ -1,6 +1,6 @@
 //
 //  HotCornerTests.swift
-//  Notch apple tests
+//  Notch Apple tests
 //
 //  Which corner a point is in (and that corners between two displays are ignored),
 //  and how a typed website becomes a URL.

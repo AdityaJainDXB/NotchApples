@@ -1,6 +1,6 @@
 //
 //  TodayView.swift
-//  Notch apple
+//  Notch Apple
 //
 //  The data behind the Home page: the date, current weather (free Open-Meteo data, same
 //  location as the widget), your next calendar events and battery. (The screen itself is HomeScreenView.)

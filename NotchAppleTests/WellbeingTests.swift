@@ -1,6 +1,6 @@
 //
 //  WellbeingTests.swift
-//  Notch apple tests
+//  Notch Apple tests
 //
 //  Break reminders, the breathing circle, the bedtime nudge, the focus goal and countdowns. The Windows app runs
 //  the same cases against services/wellbeing.js.

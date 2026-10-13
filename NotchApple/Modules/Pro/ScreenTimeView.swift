@@ -1,6 +1,6 @@
 //
 //  ScreenTimeView.swift
-//  Notch apple
+//  Notch Apple
 //
 //  Pro: Screen Time and the Focus Blocker.
 //   • Screen Time: how long each app was in front today and this week. It

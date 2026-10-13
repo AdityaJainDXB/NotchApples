@@ -1,8 +1,8 @@
 //
 //  LidFoldModule.swift
-//  Notch apple, Lid Fold
+//  Notch Apple, Lid Fold
 //
-//  Original to Notch apple. Runs one fold at a time and makes sure it always ends:
+//  Original to Notch Apple. Runs one fold at a time and makes sure it always ends:
 //
 //    triggers   Preview button, timed demo, hotkey (fold and hold), and (optional) the real lid angle
 //    safety     OFF by default; nothing is captured until you turn it on AND Screen Recording is allowed;

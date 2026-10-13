@@ -1,6 +1,6 @@
 //
 //  UndoToast.swift
-//  Notch apple
+//  Notch Apple
 //
 //  Undo for destructive actions: deleting a note, to-do, clipboard item, shelf
 //  file or Home widget shows "Deleted · Undo" at the bottom of the notch for

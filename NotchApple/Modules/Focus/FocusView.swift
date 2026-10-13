@@ -1,6 +1,6 @@
 //
 //  FocusView.swift
-//  Notch apple
+//  Notch Apple
 //
 //  The Focus tab: a big ring countdown with start / pause / reset, session
 //  type switcher, and today's completed sessions.

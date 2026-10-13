@@ -1,6 +1,6 @@
 //
 //  LinkShelfLogic.swift
-//  Notch apple
+//  Notch Apple
 //
 //  The links shelf: save a link now, read it later. This turns what you paste or type into a clean web
 //  address (adding https:// when it's missing) and refuses anything that isn't a web link, so a saved

@@ -407,7 +407,7 @@ await test('Assets: a token from a revoked key stops working at once', async () 
   assert.equal((await getAsset('gallery/pro.txt', tok)).status, 403);
 });
 
-// ---- Notch apple AI (hosted)
+// ---- Notch Apple AI (hosted)
 
 const quotaObjects = new Map();
 env.AI_QUOTA = {

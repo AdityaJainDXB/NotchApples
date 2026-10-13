@@ -1,6 +1,6 @@
 //
 //  TopBarPrefs.swift
-//  Notch apple
+//  Notch Apple
 //
 //  Which of the always-there header buttons (coffee, pin, settings, close) show in the notch. New installs and
 //  updates see a one-time chooser; Settings → Notch has the same switches. The power menu is always shown.

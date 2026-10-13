@@ -1,11 +1,11 @@
 //
 //  ScreenRecordingDetector.swift
-//  Notch apple
+//  Notch Apple
 //
 //  Tells the notch when the screen is being recorded so it can show a
 //  recording dot. macOS has no public "someone is recording" notification, so
 //  this combines what can be observed without extra permissions:
-//   • a recording started from Notch apple itself (Today → Start recording),
+//   • a recording started from Notch Apple itself (Today → Start recording),
 //   • the system `screencapture` tool in video mode (⌘⇧5 and `screencapture -v`),
 //  (`CGDisplayIsCaptured` is no longer supported by macOS, so it can't be used.)
 //  Recorders that stream through their own code (OBS, Zoom, browsers) can't be

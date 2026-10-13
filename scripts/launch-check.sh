@@ -10,11 +10,11 @@ DMG="dist/NotchApple-$VERSION.dmg"
 MNT=$(mktemp -d)
 hdiutil attach -nobrowse -readonly -mountpoint "$MNT" "$DMG" >/dev/null || { echo "launch-check: couldn't open $DMG"; exit 1; }
 WORK=$(mktemp -d)
-cp -R "$MNT/Notch apple.app" "$WORK/"
+cp -R "$MNT/Notch Apple.app" "$WORK/"
 hdiutil detach "$MNT" >/dev/null 2>&1 || true
 trap 'rm -rf "$WORK"' EXIT
-APP="$WORK/Notch apple.app"
-BIN="$APP/Contents/MacOS/Notch apple"
+APP="$WORK/Notch Apple.app"
+BIN="$APP/Contents/MacOS/Notch Apple"
 [ -x "$BIN" ] || { echo "launch-check: no app inside $DMG"; exit 1; }
 "$BIN" >/tmp/notch-launch.log 2>&1 &
 pid=$!

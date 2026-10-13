@@ -1,6 +1,6 @@
 //
 //  RadarModel.swift
-//  Notch apple
+//  Notch Apple
 //
 //  Flight Radar's data: the aircraft within a range of where you are (the same place as your weather: your current
 //  location if you allowed it, otherwise the city you chose), from adsb.lol's free public feed. It asks only while

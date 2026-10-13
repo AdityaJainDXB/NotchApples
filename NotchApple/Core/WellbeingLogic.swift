@@ -1,6 +1,6 @@
 //
 //  WellbeingLogic.swift
-//  Notch apple
+//  Notch Apple
 //
 //  The rules behind break reminders (eyes, water, stretch, posture), the breathing exercise, the bedtime nudge,
 //  the daily focus goal and date countdowns. Plain numbers and date keys only (no clocks or screens), so it can be

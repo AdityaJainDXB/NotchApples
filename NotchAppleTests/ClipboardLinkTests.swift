@@ -1,6 +1,6 @@
 //
 //  ClipboardLinkTests.swift
-//  Notch apple tests
+//  Notch Apple tests
 //
 //  Clipboard Link: codes, keys, sealing, and (importantly) that a message sealed by an independent implementation
 //  (Node's crypto, standing in for the Windows app) opens here, so Macs and PCs understand each other.

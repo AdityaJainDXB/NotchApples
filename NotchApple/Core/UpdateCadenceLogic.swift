@@ -1,8 +1,8 @@
 //
 //  UpdateCadenceLogic.swift
-//  Notch apple
+//  Notch Apple
 //
-//  "Update at most once a week": when the person turns it on, Notch apple stops announcing every release
+//  "Update at most once a week": when the person turns it on, Notch Apple stops announcing every release
 //  (the notification, the Update button and the reminders in the notch) and offers the newest one once a week
 //  instead. Off by default. A release marked as required (security) is always announced, and the version
 //  already offered stays visible until it is installed or skipped. Pure rules, so they are tested without the app.

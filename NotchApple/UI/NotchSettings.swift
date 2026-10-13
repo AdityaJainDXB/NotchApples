@@ -1,6 +1,6 @@
 //
 //  NotchSettings.swift
-//  Notch apple
+//  Notch Apple
 //
 //  Settings → Notch: how it opens, when it steps aside, its size, edge zones,
 //  tabs per display, gestures and feedback. Pro options show a badge and stay
@@ -39,7 +39,7 @@ struct NotchSettings: View {
             Section {
                 Toggle(isOn: $weeklyUpdates) {
                     Text("Update at most once a week")
-                    Text("Off: you hear about every release. On: Notch apple asks about the newest update once a week instead of announcing each one. Required security updates still appear straight away. Also in Settings → Updates.")
+                    Text("Off: you hear about every release. On: Notch Apple asks about the newest update once a week instead of announcing each one. Required security updates still appear straight away. Also in Settings → Updates.")
                 }
             } header: {
                 Text("Updates")
@@ -102,7 +102,7 @@ struct NotchSettings: View {
                 .onChange(of: keepInFullscreen) { _, _ in notch?.reassertWindowLevels(); notch?.recheckFullscreen(); notch?.updateAutoHide() }
                 Toggle(isOn: $autoHideRecording) {
                     Text("Hide while the screen is recorded")
-                    Text("While Notch apple's recorder or the system recorder (⌘⇧5) is running. Other apps' screen sharing can't be detected.")
+                    Text("While Notch Apple's recorder or the system recorder (⌘⇧5) is running. Other apps' screen sharing can't be detected.")
                 }
                 .onChange(of: autoHideRecording) { _, _ in notch?.updateAutoHide() }
             } header: {

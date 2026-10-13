@@ -1,6 +1,6 @@
 //
 //  ClaudeLimitsTests.swift
-//  Notch apple tests
+//  Notch Apple tests
 //
 //  Reading Claude's real usage limits, Claude Code's saved sign-in, and the colour they give.
 //

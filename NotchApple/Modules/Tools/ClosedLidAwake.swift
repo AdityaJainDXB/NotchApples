@@ -1,6 +1,6 @@
 //
 //  ClosedLidAwake.swift
-//  Notch apple
+//  Notch Apple
 //
 //  "Keep Awake (Lid Closed)": `pmset -a disablesleep 1` keeps the Mac running with the lid shut and no external
 //  display. It needs administrator rights, so each change asks for them through the standard macOS prompt.

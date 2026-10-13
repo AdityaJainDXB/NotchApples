@@ -1,6 +1,6 @@
 //
 //  ShareView.swift
-//  Notch apple
+//  Notch Apple
 //
 //  Two ways to share: Apple AirDrop via `NSSharingService`, and PairDrop for
 //  local sharing with a 6-digit code.
@@ -353,7 +353,7 @@ private struct PairDropCard: View {
                 Button { pairDrop.startChat(code: codeEntry, with: chosenPeer) } label: { Label("Connect", systemImage: "bubble.left.and.bubble.right.fill") }
                     .buttonStyle(PurpleButtonStyle()).disabled(codeEntry.count != 6)
                 peerMenu
-                Text("Chats live only while Notch apple is open and both of you are on this Wi-Fi.")
+                Text("Chats live only while Notch Apple is open and both of you are on this Wi-Fi.")
                     .font(.system(size: 10)).foregroundStyle(Theme.textSecondary).fixedSize(horizontal: false, vertical: true)
             }
             .frame(width: 190, alignment: .leading)

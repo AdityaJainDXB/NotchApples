@@ -1,6 +1,6 @@
 //
 //  RichText.swift
-//  Notch apple
+//  Notch Apple
 //
 //  Renders AI answers instead of dumping raw Markdown/LaTeX (parsing is in MathText.swift):
 //   • headings, lists, bold/italic/inline code and links (Markdown)

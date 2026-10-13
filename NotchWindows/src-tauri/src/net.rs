@@ -1,6 +1,6 @@
 //! Web requests for the UI.
 //!
-//! The web view enforces CORS, and plenty of the free services Notch apple uses
+//! The web view enforces CORS, and plenty of the free services Notch Apple uses
 //! (ESPN's team lists, Groq, a local Ollama, F1 timing) don't send the headers a
 //! browser needs. Requests made from Rust aren't subject to that, so every
 //! network call in the app comes through here.

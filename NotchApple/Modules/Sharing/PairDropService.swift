@@ -1,6 +1,6 @@
 //
 //  PairDropService.swift
-//  Notch apple
+//  Notch Apple
 //
 //  Serverless, local-network file sharing and private chat ("PairDrop"-style) on the Network framework.
 //
@@ -94,7 +94,7 @@ final class PairDropService: ObservableObject {
                     guard let self else { return }
                     switch state {
                     case .failed(let err): self.status = "Couldn't start PairDrop: \(err)"
-                    case .waiting: self.status = "PairDrop is waiting for Local Network access. Allow Notch apple in System Settings → Privacy & Security → Local Network."
+                    case .waiting: self.status = "PairDrop is waiting for Local Network access. Allow Notch Apple in System Settings → Privacy & Security → Local Network."
                     case .ready: if self.isRunning { self.status = "Ready to receive as \(self.deviceName)" }
                     default: break
                     }

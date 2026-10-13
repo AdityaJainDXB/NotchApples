@@ -1,8 +1,8 @@
 //
 //  AppRelauncher.swift
-//  Notch apple
+//  Notch Apple
 //
-//  Quits and reopens Notch apple. Needed after granting Screen Recording,
+//  Quits and reopens Notch Apple. Needed after granting Screen Recording,
 //  which macOS only applies to an app once it has been relaunched.
 //
 
@@ -25,7 +25,7 @@ enum AppRelauncher {
 enum ScreenPermission {
     static var isGranted: Bool { CGPreflightScreenCaptureAccess() }
 
-    /// Shows the system prompt the first time (which also adds Notch apple to
+    /// Shows the system prompt the first time (which also adds Notch Apple to
     /// the list in System Settings); later calls do nothing visible.
     @discardableResult
     static func request() -> Bool {

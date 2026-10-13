@@ -1,6 +1,6 @@
 //
 //  BreakoutGameView.swift
-//  Notch apple
+//  Notch Apple
 //
 //  Breakout in the notch: the mouse (or ← → / A D) moves the paddle, click or Space launches the ball.
 //  Three lives; each cleared wall is a new, faster level. High score is kept on this Mac.

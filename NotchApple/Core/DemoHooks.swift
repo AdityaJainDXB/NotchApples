@@ -1,6 +1,6 @@
 //
 //  DemoHooks.swift
-//  Notch apple
+//  Notch Apple
 //
 //  Drives the app for scripts/screenshots.sh. It only does anything in the
 //  screenshot build (bundle ID com.notchapple.demo, with its own throwaway

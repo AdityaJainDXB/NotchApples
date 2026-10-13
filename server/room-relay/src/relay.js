@@ -1,4 +1,4 @@
-// Notch apple Messenger relay (Anonymous rooms).
+// Notch Apple Messenger relay (Anonymous rooms).
 //
 //   wss://<worker>/<topic>/ws
 //
@@ -42,7 +42,7 @@ export async function passOk(pass, minTier = CLIP_MIN_TIER, nowSec = Math.floor(
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
-    if (url.pathname === '/') return new Response('Notch apple rooms relay');
+    if (url.pathname === '/') return new Response('Notch Apple rooms relay');
     const clip = url.pathname.match(/^\/clip\/([^/]+)\/ws$/);
     if (clip) {
       if (!TOPIC.test(clip[1])) return new Response('Not found', { status: 404 });

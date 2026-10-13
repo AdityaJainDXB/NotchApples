@@ -1,6 +1,6 @@
 # Third-party notices
 
-Notch apple adapts ideas and code from the open-source projects below. Each keeps its own license; the full
+Notch Apple adapts ideas and code from the open-source projects below. Each keeps its own license; the full
 text of each is in this folder.
 
 | Project | License | Used for | Files |
@@ -11,9 +11,9 @@ text of each is in this folder.
 
 ## Apache License 2.0 notice (LidAngleSensor)
 
-The lid-angle sensor discovery and report decoding in Notch apple follows the approach of Sam Henri Gold's
+The lid-angle sensor discovery and report decoding in Notch Apple follows the approach of Sam Henri Gold's
 LidAngleSensor, through Still's adaptation of it. LidAngleSensor is licensed under the Apache License,
-Version 2.0 (`LidAngleSensor-Apache-2.0.txt`). It publishes no NOTICE file. Notch apple's version is a
+Version 2.0 (`LidAngleSensor-Apache-2.0.txt`). It publishes no NOTICE file. Notch Apple's version is a
 modified rewrite: it reads the sensor behind a protocol, adds a mock for Macs without one, and changes
 error handling. Files that contain such adapted code say so in their header.
 

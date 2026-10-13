@@ -1,6 +1,6 @@
 //
 //  QuickAnswerLogic.swift
-//  Notch apple
+//  Notch Apple
 //
 //  Short answers typed into the command palette or calculator: "12% of 80", "15% off 200", "200 + 15%", "20 is what %
 //  of 80", "5 km in mi", "days until 25 Dec" and "time in Tokyo". Nothing is sent anywhere. The Windows app has the same

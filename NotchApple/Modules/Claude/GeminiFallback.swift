@@ -1,6 +1,6 @@
 //
 //  GeminiFallback.swift
-//  Notch apple
+//  Notch Apple
 //
 //  Gemini sometimes refuses a request (rate limit on one model, a timeout, a model that can't take the image).
 //  When that happens before any text has arrived, the same request is retried on the next Gemini model, one after

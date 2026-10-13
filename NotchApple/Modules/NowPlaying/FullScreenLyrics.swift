@@ -1,6 +1,6 @@
 //
 //  FullScreenLyrics.swift
-//  Notch apple
+//  Notch Apple
 //
 //  Lyrics on the whole screen (Pro), like a karaoke wall: big lines, the current one bright, scrolling with the
 //  song. You open it from the lyrics panel or the command palette, and close it with Esc or a click. It only

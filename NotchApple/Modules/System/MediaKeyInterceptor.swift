@@ -1,6 +1,6 @@
 //
 //  MediaKeyInterceptor.swift
-//  Notch apple
+//  Notch Apple
 //
 //  Replaces macOS's own volume and brightness pop-ups with the notch gauge.
 //

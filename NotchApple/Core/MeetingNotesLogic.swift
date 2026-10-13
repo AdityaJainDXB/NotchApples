@@ -1,6 +1,6 @@
 //
 //  MeetingNotesLogic.swift
-//  Notch apple
+//  Notch Apple
 //
 //  A note started from a calendar event (Pro): the title and time at the top, then Agenda, Notes and Actions.
 //  Asking again for the same meeting on the same day opens the note you already made. No screens, so it can be

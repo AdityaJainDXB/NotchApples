@@ -1,6 +1,6 @@
 //
 //  SettingsWindowController.swift
-//  Notch apple
+//  Notch Apple
 //
 //  Agent apps (LSUIElement = YES) can't reliably open the SwiftUI `Settings`
 //  scene: `showSettingsWindow:` is silently dropped because the app never
@@ -21,7 +21,7 @@ final class SettingsWindowController: NSWindowController, NSWindowDelegate {
     private init() {
         let hosting = NSHostingController(rootView: SettingsView().environmentObject(SettingsManager.shared))
         let window = NSWindow(contentViewController: hosting)
-        window.title = "Notch apple Settings"
+        window.title = "Notch Apple Settings"
         // HIG › Settings: no minimize/zoom for a settings window.
         // Resizable so it always fits smaller or scaled laptop screens.
         window.styleMask = [.titled, .closable, .resizable, .fullSizeContentView]

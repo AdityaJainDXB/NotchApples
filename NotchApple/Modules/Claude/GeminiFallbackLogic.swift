@@ -1,6 +1,6 @@
 //
 //  GeminiFallbackLogic.swift
-//  Notch apple
+//  Notch Apple
 //
 //  Which Gemini models to try, in what order, when the chosen one fails (rate limit, timeout, a model that
 //  can't take the image). Pure, so it is tested without the network.

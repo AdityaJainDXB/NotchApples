@@ -1,6 +1,6 @@
 //
 //  AppAudioTap.swift
-//  Notch apple
+//  Notch Apple
 //
 //  Native per-app volume and 10-band EQ, with no audio driver, using Core
 //  Audio process taps (macOS 14.2+):
@@ -95,7 +95,7 @@ final class AppAudioTap {
         var errorDescription: String? {
             switch self {
             case .noProcess: "That app isn't playing audio yet."
-            case .create(let s): "Couldn't tap the app's audio (\(s)). Allow Notch apple under System Settings → Privacy & Security → Screen & System Audio Recording."
+            case .create(let s): "Couldn't tap the app's audio (\(s)). Allow Notch Apple under System Settings → Privacy & Security → Screen & System Audio Recording."
             case .aggregate(let s): "Couldn't create the audio route (\(s))."
             case .start(let s): "Couldn't start audio processing (\(s))."
             }
@@ -111,7 +111,7 @@ final class AppAudioTap {
         description.uuid = UUID()
         description.muteBehavior = .mutedWhenTapped
         description.isPrivate = true
-        description.name = "Notch apple tap \(pid)"
+        description.name = "Notch Apple tap \(pid)"
         var tap = AudioObjectID(kAudioObjectUnknown)
         var status = AudioHardwareCreateProcessTap(description, &tap)
         guard status == noErr else { throw TapError.create(status) }
@@ -121,7 +121,7 @@ final class AppAudioTap {
 
         // 2. Aggregate device: tap in, real output device out.
         let aggregate: [String: Any] = [
-            kAudioAggregateDeviceNameKey: "Notch apple \(pid)",
+            kAudioAggregateDeviceNameKey: "Notch Apple \(pid)",
             kAudioAggregateDeviceUIDKey: UUID().uuidString,
             kAudioAggregateDeviceMainSubDeviceKey: outputDeviceUID,
             kAudioAggregateDeviceIsPrivateKey: true,

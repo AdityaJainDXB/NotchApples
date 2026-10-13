@@ -1,6 +1,6 @@
 //
 //  ClaudeCodeStatus.swift
-//  Notch apple
+//  Notch Apple
 //
 //  A small status dot for long-running Claude Code work. Claude Code's hooks run `open -g "notchapple://claude-code?status=…"`:
 //    green  for 4 seconds when a task finishes,

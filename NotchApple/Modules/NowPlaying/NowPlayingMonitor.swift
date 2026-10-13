@@ -1,6 +1,6 @@
 //
 //  NowPlayingMonitor.swift
-//  Notch apple
+//  Notch Apple
 //
 //  Tracks what's playing on the Mac: Apple Music, Spotify, Anghami, browsers,
 //  podcasts, anything that shows in Control Center's Now Playing.

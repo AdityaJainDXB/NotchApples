@@ -1,6 +1,6 @@
 //
 //  AppActionsMenu.swift
-//  Notch apple
+//  Notch Apple
 //
 //  A small colour-coded menu: Settings (purple), Relaunch (orange) and
 //  Quit (red). Opened from the power button in the notch header.
@@ -25,13 +25,13 @@ struct AppActionsMenu: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
-            Text("Notch apple").font(.system(size: 12, weight: .semibold)).foregroundStyle(.secondary)
+            Text("Notch Apple").font(.system(size: 12, weight: .semibold)).foregroundStyle(.secondary)
                 .padding(.horizontal, 4)
             row("Open Settings", "gearshape.fill", Color(red: 0.62, green: 0.4, blue: 1)) {
                 dismiss(); AppDelegate.openSettingsWindow()
             }
             row("Relaunch", "arrow.clockwise", .orange) { dismiss(); AppRelauncher.relaunch() }
-            row("Quit Notch apple", "xmark.circle.fill", .red) { NSApp.terminate(nil) }
+            row("Quit Notch Apple", "xmark.circle.fill", .red) { NSApp.terminate(nil) }
         }
         .padding(10)
         .frame(width: 220)

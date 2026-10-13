@@ -1,6 +1,6 @@
 //
 //  ClaudeUsageTests.swift
-//  Notch apple tests
+//  Notch Apple tests
 //
 //  The Claude Code usage tracker's maths: reading transcript lines, the 5-hour windows, today and the week.
 //

@@ -1,6 +1,6 @@
 //
 //  DuoAnimation.swift
-//  Notch apple
+//  Notch Apple
 //
 //  The "iPhone Duo" feel (Settings → Notch → Use iPhone Duo animations, on by default): views pop
 //  and morph the way the Dynamic Island does. The open panel springs out of the notch with a soft

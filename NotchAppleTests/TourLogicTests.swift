@@ -1,6 +1,6 @@
 //
 //  TourLogicTests.swift
-//  Notch apple tests
+//  Notch Apple tests
 //
 //  Who sees the walkthrough and how its steps move.
 //

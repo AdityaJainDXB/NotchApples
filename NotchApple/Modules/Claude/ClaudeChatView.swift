@@ -1,6 +1,6 @@
 //
 //  ClaudeChatView.swift
-//  Notch apple
+//  Notch Apple
 //
 //  The AI tab: see something → capture it → understand or act on it.
 //
@@ -190,7 +190,7 @@ final class ClaudeChatModel: ObservableObject {
             setInput(CapturedInput(image: cg, source: "\(url.lastPathComponent) · \(cg.width) × \(cg.height)", kind: .file))
             return true
         }
-        error = "\(url.lastPathComponent) isn't an image or PDF Notch apple can read. Try PNG, JPEG, WEBP, HEIC or PDF."
+        error = "\(url.lastPathComponent) isn't an image or PDF Notch Apple can read. Try PNG, JPEG, WEBP, HEIC or PDF."
         return false
     }
 
@@ -290,7 +290,7 @@ final class ClaudeChatModel: ObservableObject {
            forceScreen ? allowed(.aiCapture) : Entitlements.shared.canUse(.aiCapture) {
             if config.provider.likelySupportsVision(config.model) {
                 attachScreen = true
-                notice = "Took a screenshot to answer that (Notch apple itself is left out)."
+                notice = "Took a screenshot to answer that (Notch Apple itself is left out)."
             } else {
                 notice = "\(config.model) can't see images, so no screenshot was sent. Switch to Gemini or a vision model to ask about your screen."
             }
@@ -414,7 +414,7 @@ final class ClaudeChatModel: ObservableObject {
                 if let replacement = live.first(where: { $0 != gone }) {
                     config.setModel(replacement, for: provider)
                     config.refreshModels()
-                    self.error = "\(gone) isn't available any more, so Notch apple switched to \(replacement). Press Retry."
+                    self.error = "\(gone) isn't available any more, so Notch Apple switched to \(replacement). Press Retry."
                 } else {
                     self.error = AIFailure.modelUnavailable(gone).localizedDescription
                 }
@@ -496,7 +496,7 @@ final class ClaudeChatModel: ObservableObject {
 
     func export(markdown: Bool) {
         let panel = NSSavePanel()
-        panel.nameFieldStringValue = "Notch apple \(Date.now.formatted(.iso8601.year().month().day())).\(markdown ? "md" : "txt")"
+        panel.nameFieldStringValue = "Notch Apple \(Date.now.formatted(.iso8601.year().month().day())).\(markdown ? "md" : "txt")"
         NSApp.activate(ignoringOtherApps: true)
         guard panel.runModal() == .OK, let url = panel.url else { return }
         let body = markdown ? conversationMarkdown : MathText.plain(conversationMarkdown)
@@ -812,7 +812,7 @@ struct ClaudeChatView: View {
                 if error.contains("Screen Recording") {
                     HStack(spacing: 8) {
                         Button("Open System Settings") { ScreenPermission.openSettings() }.buttonStyle(PurpleButtonStyle(prominent: false))
-                        Button("Relaunch Notch apple") { AppRelauncher.relaunch() }.buttonStyle(PurpleButtonStyle())
+                        Button("Relaunch Notch Apple") { AppRelauncher.relaunch() }.buttonStyle(PurpleButtonStyle())
                     }
                 } else if !model.messages.isEmpty && !model.isSending {
                     Button("Retry") { model.retry() }.buttonStyle(PurpleButtonStyle(prominent: false))
@@ -983,7 +983,7 @@ enum AIFullView {
                                        startPoint: .top, endPoint: .bottom)))
         let w = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 820, height: 640),
                          styleMask: [.titled, .closable, .resizable, .miniaturizable, .fullSizeContentView], backing: .buffered, defer: false)
-        w.title = "Notch apple AI"
+        w.title = "Notch Apple AI"
         w.titlebarAppearsTransparent = true
         w.appearance = NSAppearance(named: .darkAqua)
         w.contentView = host

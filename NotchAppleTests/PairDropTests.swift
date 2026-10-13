@@ -1,6 +1,6 @@
 //
 //  PairDropTests.swift
-//  Notch apple tests
+//  Notch Apple tests
 //
 //  The PairDrop wire format, safe names, the wrong-code limit and who may chat.
 //

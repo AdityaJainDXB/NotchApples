@@ -1,6 +1,6 @@
 //
 //  LocationProvider.swift
-//  Notch apple
+//  Notch Apple
 //
 //  Finds your approximate location (city-level) so weather is local instead
 //  of the Cupertino default. Asks for permission once; the location is only

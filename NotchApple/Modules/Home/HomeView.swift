@@ -1,6 +1,6 @@
 //
 //  HomeView.swift
-//  Notch apple
+//  Notch Apple
 //
 //  Home (Pro): your own dashboard in the notch. Add widgets, pick a size for
 //  each (small = one column, medium = two, large = the full width) and put them

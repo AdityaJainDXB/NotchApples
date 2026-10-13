@@ -1,6 +1,6 @@
 //
 //  ModelPicker.swift
-//  Notch apple
+//  Notch Apple
 //
 //  A searchable model picker for the AI tab: type to filter, arrow keys and Return to choose, and hovering a model
 //  shows a preview card beside the list with what the app knows about it (provider, whether it sees images,

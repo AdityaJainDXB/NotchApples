@@ -1,6 +1,6 @@
 //
 //  SolitaireView.swift
-//  Notch apple
+//  Notch Apple
 //
 //  Klondike Solitaire, draw one. Click a card (or a run of face-up cards), then click where it goes; double-click a
 //  card to send it to a foundation; click the stock to turn a card, and again when it is empty to turn the waste back.

@@ -1,6 +1,6 @@
 //
 //  ClaudeUsagePaceTests.swift
-//  Notch apple tests
+//  Notch Apple tests
 //
 //  The green / yellow / red pacing of the Claude usage tracker and when the notch announces a change.
 //

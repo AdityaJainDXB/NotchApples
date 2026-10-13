@@ -1,6 +1,6 @@
 //
 //  WidgetCenter.swift
-//  Notch apple
+//  Notch Apple
 //
 //  Connects the notch's tabs to the NotchWidget protocol (PureModels.swift):
 //  each Module is a widget with one entitlement gate and a lifecycle, so a tab

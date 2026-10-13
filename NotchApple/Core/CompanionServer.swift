@@ -1,6 +1,6 @@
 //
 //  CompanionServer.swift
-//  Notch apple
+//  Notch Apple
 //
 //  The Mac end of the iPhone companion (Ultimate; protocol in CompanionKit).
 //  Off until you turn it on in Settings → iPhone. While on, it listens on the
@@ -282,7 +282,7 @@ struct CompanionSettings: View {
                             Spacer()
                             Text(expires, style: .timer).foregroundStyle(.secondary).monospacedDigit()
                         }
-                        Text("On your iPhone, open Notch apple, tap this Mac and type the code. It works once, for 2 minutes, and stops after 5 wrong tries.").font(.caption).foregroundStyle(.secondary)
+                        Text("On your iPhone, open Notch Apple, tap this Mac and type the code. It works once, for 2 minutes, and stops after 5 wrong tries.").font(.caption).foregroundStyle(.secondary)
                     } else {
                         Button("Pair an iPhone…") { server.startPairing() }
                         if let note = server.pairingNote { Text(note).font(.caption).foregroundStyle(.orange) }

@@ -1,6 +1,6 @@
 //
 //  BrightnessBlackout.swift
-//  Notch apple
+//  Notch Apple
 //
 //  Press ⌥A to take the built-in display's brightness to zero, press it again to bring it back to where it was.
 //  An event tap sees the key (so the "å" it would type is swallowed); it needs Accessibility, the same

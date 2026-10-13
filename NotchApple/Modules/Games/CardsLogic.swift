@@ -1,6 +1,6 @@
 //
 //  CardsLogic.swift
-//  Notch apple
+//  Notch Apple
 //
 //  The rules for Blackjack and Solitaire, free of any display code. The same rules, with the same test vectors,
 //  are in the Windows app (games/cardslogic.js).

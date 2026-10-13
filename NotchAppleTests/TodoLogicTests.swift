@@ -1,6 +1,6 @@
 //
 //  TodoLogicTests.swift
-//  Notch apple tests
+//  Notch Apple tests
 //
 //  The To-Do list's order and how a typed line becomes a task.
 //

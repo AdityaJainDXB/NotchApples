@@ -1,6 +1,6 @@
 //
 //  SystemWatchLogic.swift
-//  Notch apple
+//  Notch Apple
 //
 //  The rules behind four small guards: "unplug at 80%" battery care, a low disk space warning, an internet-down
 //  alert with live latency, and the speed test's maths. No clocks, networks or screens here, so it can be tested.

@@ -1,6 +1,6 @@
 //
 //  PluginPinningTests.swift
-//  Notch apple tests
+//  Notch Apple tests
 //
 //  The plugin gallery only installs what the signed index lists, byte for byte.
 //

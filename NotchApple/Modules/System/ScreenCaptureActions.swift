@@ -1,6 +1,6 @@
 //
 //  ScreenCaptureActions.swift
-//  Notch apple
+//  Notch Apple
 //
 //  The Today tab's "Take Screenshot" and "Start Recording" buttons. Both use
 //  the system `screencapture` tool. Before a screenshot the notch is taken off
@@ -97,7 +97,7 @@ final class ScreenCaptureActions: ObservableObject {
     private func ensurePermission() -> Bool {
         if CGPreflightScreenCaptureAccess() { return true }
         _ = CGRequestScreenCaptureAccess()
-        flash("Allow Screen Recording for Notch apple in System Settings, then try again.", seconds: 8)
+        flash("Allow Screen Recording for Notch Apple in System Settings, then try again.", seconds: 8)
         return false
     }
 

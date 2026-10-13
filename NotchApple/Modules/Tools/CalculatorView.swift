@@ -1,6 +1,6 @@
 //
 //  CalculatorView.swift
-//  Notch apple
+//  Notch Apple
 //
 //  The calculator page of Tools: type one line or many. Each line is worked out in order, so later lines can use
 //  earlier ones (a = 5, then 2a + 1), and equations, systems, factoring and derivatives work too (see MathEngine).

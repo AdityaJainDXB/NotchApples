@@ -1,6 +1,6 @@
 //
 //  NotchBehavior.swift
-//  Notch apple
+//  Notch Apple
 //
 //  How the notch opens, hides and responds (Settings → Notch):
 //   • hover delay, fullscreen and screen-recording auto-hide (free);

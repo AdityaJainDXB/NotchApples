@@ -1,11 +1,11 @@
 //
 //  HotCorners.swift
-//  Notch apple
+//  Notch Apple
 //
-//  Your own hot corners: push the pointer into a screen corner and Notch apple opens a website,
+//  Your own hot corners: push the pointer into a screen corner and Notch Apple opens a website,
 //  an app, a file or folder, runs a Shortcut, opens Mission Control or toggles the notch.
 //  They work next to macOS's own hot corners (System Settings → Desktop & Dock), so set Apple's
-//  to "–" for a corner you give to Notch apple.
+//  to "–" for a corner you give to Notch Apple.
 //
 //  Nothing polls: one mouse-moved monitor runs only while hot corners are on and a corner has an
 //  action. A corner fires once per visit (move out and back to fire it again), after a short delay
@@ -201,7 +201,7 @@ struct HotCornersSection: View {
         } header: {
             Text("Hot corners")
         } footer: {
-            Text("Push the pointer into a corner to open a website, an app, a file, a Shortcut or Mission Control. Each corner fires once per visit; move out and back to fire it again. macOS's own hot corners still work too: in System Settings → Desktop & Dock → Hot Corners, set a corner to “–” if you give it to Notch apple.")
+            Text("Push the pointer into a corner to open a website, an app, a file, a Shortcut or Mission Control. Each corner fires once per visit; move out and back to fire it again. macOS's own hot corners still work too: in System Settings → Desktop & Dock → Hot Corners, set a corner to “–” if you give it to Notch Apple.")
         }
     }
 }

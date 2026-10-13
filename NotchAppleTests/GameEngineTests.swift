@@ -1,6 +1,6 @@
 //
 //  GameEngineTests.swift
-//  Notch apple tests
+//  Notch Apple tests
 //
 //  The mini-game rules: Snake's turn queue (the fix for dropped keys), walls and growth,
 //  Breakout's bounces, bricks and lives, and the Memory pattern game.

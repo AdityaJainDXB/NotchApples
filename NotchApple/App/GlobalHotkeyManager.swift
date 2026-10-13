@@ -1,6 +1,6 @@
 //
 //  GlobalHotkeyManager.swift
-//  Notch apple
+//  Notch Apple
 //
 //  System-wide hot keys built on Carbon's `RegisterEventHotKey`. Unlike an
 //  NSEvent global monitor, a registered hot key needs no Accessibility

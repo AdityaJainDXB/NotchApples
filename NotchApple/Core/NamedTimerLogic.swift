@@ -1,6 +1,6 @@
 //
 //  NamedTimerLogic.swift
-//  Notch apple
+//  Notch Apple
 //
 //  Reads what you type for a named timer: "Pasta 10m", "Tea 3 min", "Egg 1:30", "Laundry for 45",
 //  "1h30m". A bare number is minutes. No screens, so it can be tested; the Windows app

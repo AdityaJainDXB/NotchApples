@@ -1,6 +1,6 @@
 //
 //  HabitTests.swift
-//  Notch apple tests
+//  Notch Apple tests
 //
 //  Streak maths for the habit tracker. The Windows app runs the same cases against services/habits.js.
 //

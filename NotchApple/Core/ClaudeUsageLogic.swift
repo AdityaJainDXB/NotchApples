@@ -1,6 +1,6 @@
 //
 //  ClaudeUsageLogic.swift
-//  Notch apple
+//  Notch Apple
 //
 //  The maths behind the Claude Code usage tracker (Ultimate). Claude Code writes every conversation to
 //  ~/.claude/projects/<project>/<session>.jsonl, and each assistant reply carries the tokens it used.

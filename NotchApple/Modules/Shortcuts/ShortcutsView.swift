@@ -1,6 +1,6 @@
 //
 //  ShortcutsView.swift
-//  Notch apple
+//  Notch Apple
 //
 //  Runs Apple Shortcuts from the notch (via the built-in `shortcuts` command),
 //  with a Focus row for shortcuts that switch Focus modes. macOS has no public

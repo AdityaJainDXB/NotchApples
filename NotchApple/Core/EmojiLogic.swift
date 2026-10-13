@@ -1,6 +1,6 @@
 //
 //  EmojiLogic.swift
-//  Notch apple
+//  Notch Apple
 //
 //  Emoji and symbol search for the command palette ("emoji heart", ":fire"). Words you type must all match
 //  the name or an everyday search word ("love" finds hearts). The Windows app (emoji.js) runs the same

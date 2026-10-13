@@ -1,6 +1,6 @@
-# Contributing to Notch apple
+# Contributing to Notch Apple
 
-Thanks for helping! Notch apple is source-available (see [LICENSE](LICENSE)) and built by three high school developers, so every issue, idea and pull request helps.
+Thanks for helping! Notch Apple is source-available (see [LICENSE](LICENSE)) and built by three high school developers, so every issue, idea and pull request helps.
 
 ## Reporting a bug
 
@@ -22,7 +22,7 @@ Share a plugin through the gallery. See [docs/PLUGINS.md](docs/PLUGINS.md#galler
 
 The app is in English for now. To start a translation:
 1. Open an issue titled "Translation: <language>" so work isn't duplicated.
-2. Contribute an Xcode String Catalog (`Localizable.xcstrings`) with your language. Keep the plain, friendly tone, and keep product names (Notch apple, Pro, Ultimate) as they are.
+2. Contribute an Xcode String Catalog (`Localizable.xcstrings`) with your language. Keep the plain, friendly tone, and keep product names (Notch Apple, Pro, Ultimate) as they are.
 
 ## Licence of your contribution
 

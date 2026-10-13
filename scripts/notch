@@ -1,5 +1,5 @@
 #!/bin/bash
-# Control Notch apple from Terminal (scripting needs Notch apple Ultimate; open/toggle/timer work for everyone).
+# Control Notch Apple from Terminal (scripting needs Notch Apple Ultimate; open/toggle/timer work for everyone).
 #
 #   notch open <tab>            open the notch on a tab (ai, today, notes, …)
 #   notch toggle | close | hide | show

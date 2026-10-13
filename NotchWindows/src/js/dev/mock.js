@@ -19,7 +19,7 @@ const ok = (v) => Promise.resolve(v);
 const rand = (a, b) => a + Math.random() * (b - a);
 
 const hits = (q) => [
-  { name: 'Notch apple', path: 'shell:AppsFolder\\NotchApple', parent: 'App', is_dir: false, size: 0, kind: 'app', modified: 0 },
+  { name: 'Notch Apple', path: 'shell:AppsFolder\\NotchApple', parent: 'App', is_dir: false, size: 0, kind: 'app', modified: 0 },
   { name: `${q} report.docx`, path: `C:\\Users\\you\\Documents\\${q} report.docx`, parent: 'C:\\Users\\you\\Documents', is_dir: false, size: 48213, kind: 'file', modified: 1790000000 },
   { name: `${q} photos`, path: `C:\\Users\\you\\Pictures\\${q} photos`, parent: 'C:\\Users\\you\\Pictures', is_dir: true, size: 0, kind: 'folder', modified: 1789000000 },
 ];

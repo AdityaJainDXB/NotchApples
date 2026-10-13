@@ -1,4 +1,4 @@
-# Builds the Windows installers for Notch apple (NotchWindows/, Tauri).
+# Builds the Windows installers for Notch Apple (NotchWindows/, Tauri).
 #
 # A Windows build cannot be cross-compiled from macOS, so this runs on a real
 # Windows runner. Push a tag like `win-v1.13.5` to attach the installers to a
@@ -92,7 +92,7 @@ jobs:
           # Never become the repo's "latest" release: the Mac app looks for a
           # release with a .dmg, and a Windows one has none for it to install.
           make_latest: false
-          name: "Notch apple for Windows ${{ github.ref_name }}"
+          name: "Notch Apple for Windows ${{ github.ref_name }}"
           files: |
             NotchWindows/src-tauri/target/release/bundle/nsis/*.exe
             NotchWindows/src-tauri/target/release/bundle/msi/*.msi
@@ -107,7 +107,7 @@ jobs:
         with:
           tag_name: windows-latest
           make_latest: false
-          name: "Notch apple for Windows (always the newest)"
+          name: "Notch Apple for Windows (always the newest)"
           body: |
             **Windows download.** Get `NotchApple-Windows-Setup.exe` below, double-click it, and follow the steps in the [README](https://github.com/${{ github.repository }}#download).
 

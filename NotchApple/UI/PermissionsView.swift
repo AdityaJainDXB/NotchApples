@@ -1,8 +1,8 @@
 //
 //  PermissionsView.swift
-//  Notch apple
+//  Notch Apple
 //
-//  One place to see and grant everything Notch apple can use. Shown
+//  One place to see and grant everything Notch Apple can use. Shown
 //  automatically on first launch (Settings → Permissions), and any time after.
 //  Each row explains why the permission is useful; nothing is required.
 //
@@ -107,7 +107,7 @@ struct PermissionsView: View {
                     HStack(spacing: 14) {
                         Image(nsImage: NSApp.applicationIconImage).resizable().frame(width: 56, height: 56)
                         VStack(alignment: .leading, spacing: 4) {
-                            Text("Welcome to Notch apple").font(.title2.bold())
+                            Text("Welcome to Notch Apple").font(.title2.bold())
                             Text("Click the notch or press \(HotkeyBinding.notch.label) to open it. Turn on what you'd like below; everything is optional and can be changed later.")
                                 .font(.callout).foregroundStyle(.secondary)
                         }
@@ -120,9 +120,9 @@ struct PermissionsView: View {
                 VStack(alignment: .leading, spacing: 6) {
                     Label("How to turn permissions on", systemImage: "hand.raised.fill").font(.headline)
                     Text("1. Click **Allow** (or **Open Settings…**) next to a feature below.")
-                    Text("2. If macOS asks, click **Allow**. Otherwise open System Settings → Privacy & Security, find the permission and switch **Notch apple** on.")
+                    Text("2. If macOS asks, click **Allow**. Otherwise open System Settings → Privacy & Security, find the permission and switch **Notch Apple** on.")
                     Text("3. For **Screen Recording** (the AI's \"what's on my screen?\"), macOS only applies the change after a restart: click **Relaunch** here.")
-                    Text("4. First time opening the app? macOS may say it can't verify it. Right-click Notch apple → **Open** once, or go to Privacy & Security → **Open Anyway**.")
+                    Text("4. First time opening the app? macOS may say it can't verify it. Right-click Notch Apple → **Open** once, or go to Privacy & Security → **Open Anyway**.")
                 }
                 .font(.callout).foregroundStyle(.secondary)
                 .padding(.vertical, 4)
@@ -161,7 +161,7 @@ struct PermissionsView: View {
 
             Section {
                 row("Open at login", "power", .green,
-                    detail: "Starts Notch apple when you log in and lets it run in the background, so the notch, clipboard and messages are always ready.",
+                    detail: "Starts Notch Apple when you log in and lets it run in the background, so the notch, clipboard and messages are always ready.",
                     state: loginState) {
                     switch model.loginItem {
                     case .enabled: Button("Turn off", action: model.disableLoginItem)

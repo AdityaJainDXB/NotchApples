@@ -1,6 +1,6 @@
 //
 //  MemoryGameView.swift
-//  Notch apple
+//  Notch Apple
 //
 //  Memory pattern matcher (Simon): four coloured pads light up in a pattern; repeat it by clicking the pads
 //  or with the arrow keys. Each round adds one more light. Your best round is kept on this Mac.

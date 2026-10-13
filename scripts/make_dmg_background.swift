@@ -2,7 +2,7 @@
 // Vibrant purple gradient, soft glows, frosted tiles, white rounded type.
 // Usage: swift scripts/make_dmg_background.swift <output-dir>
 //
-// Finder draws the item names ("Notch apple", "Applications") itself and
+// Finder draws the item names ("Notch Apple", "Applications") itself and
 // always in dark text on a custom background — it can't be recoloured — so
 // each name sits on a light frosted pill that's part of this image.
 import AppKit
@@ -89,7 +89,7 @@ func render(scale: CGFloat) -> NSBitmapImageRep {
         let h = str.size().height
         str.draw(in: NSRect(x: 0, y: centerY - h / 2, width: W, height: h))
     }
-    text("Notch apple", centerY: 44, font: rounded(28, .bold), alpha: 1)
+    text("Notch Apple", centerY: 44, font: rounded(28, .bold), alpha: 1)
     text("Drag the app onto Applications to install", centerY: 76, font: rounded(14, .medium), alpha: 0.88)
     text("Then open it from Applications or Spotlight", centerY: 356, font: rounded(12.5, .regular), alpha: 0.78)
 

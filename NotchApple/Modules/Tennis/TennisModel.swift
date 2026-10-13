@@ -1,6 +1,6 @@
 //
 //  TennisModel.swift
-//  Notch apple
+//  Notch Apple
 //
 //  Tennis in the notch (ESPN's free public feed, no account or key):
 //   • Every ATP and WTA match of the week, live, coming up and finished, in the

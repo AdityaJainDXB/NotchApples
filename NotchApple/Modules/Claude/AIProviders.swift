@@ -1,6 +1,6 @@
 //
 //  AIProviders.swift
-//  Notch apple
+//  Notch Apple
 //
 //  The AI tab works with several providers, so nobody has to pay to use it:
 //
@@ -25,7 +25,7 @@ import Foundation
 
 enum AIProvider: String, CaseIterable, Identifiable, Codable {
     case gemini, groq, openRouter, ollama, apple, deepSeek, claude, openAI
-    /// Notch apple AI: included with Pro and Ultimate, answered by the licence server with the project's own AI key.
+    /// Notch Apple AI: included with Pro and Ultimate, answered by the licence server with the project's own AI key.
     case hosted
 
     var id: String { rawValue }
@@ -40,7 +40,7 @@ enum AIProvider: String, CaseIterable, Identifiable, Codable {
         case .deepSeek: "DeepSeek"
         case .claude: "Claude"
         case .openAI: "ChatGPT (OpenAI)"
-        case .hosted: "Notch apple AI (included)"
+        case .hosted: "Notch Apple AI (included)"
         }
     }
 
@@ -153,19 +153,19 @@ enum AIError: LocalizedError {
     }
 }
 
-/// Notch apple AI: where it lives and the token it needs. Answers come from the licence server, which checks the key
+/// Notch Apple AI: where it lives and the token it needs. Answers come from the licence server, which checks the key
 /// and a daily allowance and uses the project's own AI key, so a copy of the app without a real key gets nothing.
 enum HostedAI {
     /// Set once at launch (`LiveAIAuth`); tests set a stub. Nil means no licensing is available.
     static var auth: AIAuthProvider?
 
     static func base() async throws -> String {
-        guard let server = await auth?.serverURL() else { throw AIError.http(0, "Couldn't reach Notch apple's server. Check your connection.") }
+        guard let server = await auth?.serverURL() else { throw AIError.http(0, "Couldn't reach Notch Apple's server. Check your connection.") }
         return server.absoluteString.trimmingCharacters(in: CharacterSet(charactersIn: "/")) + "/ai/v1"
     }
 
     @MainActor static func token() async throws -> String {
-        guard let auth, auth.hasKey() else { throw AIError.http(401, "Notch apple AI is included with Pro and Ultimate. Add your key in Settings → License.") }
+        guard let auth, auth.hasKey() else { throw AIError.http(401, "Notch Apple AI is included with Pro and Ultimate. Add your key in Settings → License.") }
         guard let t = await auth.token() else { throw AIError.http(0, "Couldn't check your key with the server. Connect to the internet and try again.") }
         return t
     }
@@ -248,7 +248,7 @@ enum AIClient {
         }
         if provider == .openRouter {
             request.setValue("https://github.com/AdityaJainDXB/NotchApples", forHTTPHeaderField: "HTTP-Referer")
-            request.setValue("Notch apple", forHTTPHeaderField: "X-Title")
+            request.setValue("Notch Apple", forHTTPHeaderField: "X-Title")
         }
         var messages: [[String: Any]] = [["role": "system", "content": systemPrompt]]
         for msg in history {

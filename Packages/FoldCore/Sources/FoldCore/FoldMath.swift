@@ -1,6 +1,6 @@
 //
 //  FoldMath.swift
-//  Notch apple, Lid Fold
+//  Notch Apple, Lid Fold
 //
 //  Origin:  Still, native/Sources/FoldCore/FoldMath.swift
 //           https://github.com/kavishshahh (project: Still)

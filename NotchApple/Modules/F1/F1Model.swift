@@ -1,6 +1,6 @@
 //
 //  F1Model.swift
-//  Notch apple
+//  Notch Apple
 //
 //  Formula 1 in the notch:
 //   • The weekend schedule in your time zone, with a countdown to the next session

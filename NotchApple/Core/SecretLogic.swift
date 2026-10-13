@@ -1,6 +1,6 @@
 //
 //  SecretLogic.swift
-//  Notch apple
+//  Notch Apple
 //
 //  "Protect secrets" for the clipboard: spots copied text that looks like a secret (an API key or token, a private key,
 //  a JWT, a one-time code or a card number) so it can be kept out of the clipboard history and cleared from the

@@ -1,6 +1,6 @@
 //
 //  QuickAddView.swift
-//  Notch apple
+//  Notch Apple
 //
 //  Pro: Quick Add. Type naturally ("Dentist tomorrow 3pm", "Call mum friday",
 //  "remind me to pay rent on the 1st") and it becomes a Calendar event or a
@@ -121,7 +121,7 @@ final class QuickAddModel: ObservableObject {
                 text = ""
                 TodayModel.shared.refresh()
             } catch let QuickAddError.noAccess(name, pane) {
-                message = "Allow \(name) for Notch apple in System Settings."
+                message = "Allow \(name) for Notch Apple in System Settings."
                 PermissionsModel.openPrivacy(pane)
             } catch {
                 message = "Couldn't add it: \(error.localizedDescription)"

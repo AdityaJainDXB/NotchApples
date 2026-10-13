@@ -1,6 +1,6 @@
 //
 //  ModuleRegistry.swift
-//  Notch apple
+//  Notch Apple
 //
 //  Owns the optional feature modules (Lid Fold, Cleaner). Keeps the lifecycle in one place: every running
 //  module is stopped before sleep, on a display change and at quit, and the ones that were running are

@@ -3,13 +3,13 @@ cask "notch-apple" do
   sha256 "dc6d46c12ebcdea027eb300811eb16863d7740dcc623351376199900dba5bf72"
 
   url "https://github.com/AdityaJainDXB/NotchApples/releases/download/v#{version}/NotchApple-#{version}.dmg"
-  name "Notch apple"
+  name "Notch Apple"
   desc "Turns the MacBook notch into a productivity hub"
   homepage "https://virajsinghchadha.github.io/notchapples-site/"
 
   depends_on macos: :sonoma
 
-  app "Notch apple.app"
+  app "Notch Apple.app"
 
   zap trash: [
     "~/Library/Application Support/Notch apple",
@@ -19,7 +19,7 @@ cask "notch-apple" do
   ]
 
   caveats <<~EOS
-    Notch apple is free and open source but not notarized by Apple.
+    Notch Apple is free and open source but not notarized by Apple.
     The first time you open it, macOS may block it. To allow it, go to
     System Settings → Privacy & Security and click "Open Anyway".
 

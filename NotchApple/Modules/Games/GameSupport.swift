@@ -1,6 +1,6 @@
 //
 //  GameSupport.swift
-//  Notch apple
+//  Notch Apple
 //
 //  Shared by the mini-games: sound effects (one switch for all, in the Games sidebar), a steady
 //  background game loop that doesn't block the UI thread, and a key monitor that reads key presses

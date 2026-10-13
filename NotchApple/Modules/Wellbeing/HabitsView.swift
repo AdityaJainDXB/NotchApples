@@ -1,6 +1,6 @@
 //
 //  HabitsView.swift
-//  Notch apple
+//  Notch Apple
 //
 //  Habits (Pro), inside the Wellbeing tab: add something you want to do every day, tick today (or any of the last 7
 //  days) and watch the streak grow. Saved on this Mac. The streak maths lives in HabitLogic.swift.

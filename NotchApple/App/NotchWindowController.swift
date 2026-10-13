@@ -1,6 +1,6 @@
 //
 //  NotchWindowController.swift
-//  Notch apple
+//  Notch Apple
 //
 //  Owns the notch windows and their geometry.
 //

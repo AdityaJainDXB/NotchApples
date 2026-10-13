@@ -1,6 +1,6 @@
 //
 //  PairDropLogic.swift
-//  Notch apple
+//  Notch Apple
 //
 //  The rules of PairDrop with no networking in them, so they can be tested: the message header both sides
 //  speak, how a frame is length-prefixed, safe file names, the cap on wrong-code guesses, the display name, and

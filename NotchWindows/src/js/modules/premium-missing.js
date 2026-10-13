@@ -7,5 +7,5 @@ const NAMES = { convert: 'Convert', doit: 'Do It', smarthome: 'Smart Home', clau
 
 export function render(root, id) {
   root.append(empty('🔒', `${NAMES[id] || 'This tab'} is in the official Ultimate build`,
-    "This copy of Notch apple was built from the public source code, which doesn't include the Ultimate modules. Get the official app from the website."));
+    "This copy of Notch Apple was built from the public source code, which doesn't include the Ultimate modules. Get the official app from the website."));
 }

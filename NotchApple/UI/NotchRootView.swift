@@ -1,6 +1,6 @@
 //
 //  NotchRootView.swift
-//  Notch apple
+//  Notch Apple
 //
 //  The SwiftUI shell hosted inside `NotchPanel`. Collapsed, it is a black
 //  shape that blends into the hardware notch. On click it springs open into a

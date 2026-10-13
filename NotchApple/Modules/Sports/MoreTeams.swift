@@ -1,6 +1,6 @@
 //
 //  MoreTeams.swift
-//  Notch apple
+//  Notch Apple
 //
 //  Pro: follow more teams than your main one. While any of them is playing,
 //  its live score takes turns beside the notch with your main team's.

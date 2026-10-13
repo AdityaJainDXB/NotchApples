@@ -1,6 +1,6 @@
 //
 //  Profiles.swift
-//  Notch apple
+//  Notch Apple
 //
 //  Pro customization:
 //   • Profiles (Work, Study, Gaming…): which tabs show and which theme, switched

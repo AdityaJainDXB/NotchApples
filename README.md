@@ -1,8 +1,8 @@
 <p align="center">
-  <img src="docs/icon.png" width="128" alt="Notch apple icon">
+  <img src="docs/icon.png" width="128" alt="Notch Apple icon">
 </p>
 
-<h1 align="center">Notch apple</h1>
+<h1 align="center">Notch Apple</h1>
 
 <p align="center"><b>AI, right where you need it.</b><br>
 Press <kbd>⌃⌥S</kbd>, drag over anything on your Mac's screen, and solve, explain, translate or summarize it in a second, right from the notch.<br>
@@ -28,9 +28,9 @@ Free to start, source-available, with free AI or fully local AI on your Mac. Plu
   <img src="docs/screenshots/ai-result.png" width="49%" alt="The answer in the notch: steps solving 3x² − 12 = 0, answered on the Mac with Ollama">
 </p>
 
-## What is Notch apple?
+## What is Notch Apple?
 
-Notch apple lives in the black cutout at the top of your MacBook screen (a small pill on Macs without one). Press <kbd>⌃⌥S</kbd> in any app, drag a box around a maths problem, an error, a paragraph in another language or a chart, and pick what to do: **Solve, Explain, Translate, Summarize, Code**… The answer streams into the notch, and you can keep asking follow-ups about the same capture. It also brings F1 live timing, live tennis from every ATP and WTA tournament, window snapping, clipboard history, Now Playing and many more tools. Everything is optional, and only the Pro extras need a key.
+Notch Apple lives in the black cutout at the top of your MacBook screen (a small pill on Macs without one). Press <kbd>⌃⌥S</kbd> in any app, drag a box around a maths problem, an error, a paragraph in another language or a chart, and pick what to do: **Solve, Explain, Translate, Summarize, Code**… The answer streams into the notch, and you can keep asking follow-ups about the same capture. It also brings F1 live timing, live tennis from every ATP and WTA tournament, window snapping, clipboard history, Now Playing and many more tools. Everything is optional, and only the Pro extras need a key.
 
 | | |
 | --- | --- |
@@ -49,7 +49,7 @@ Notch apple lives in the black cutout at the top of your MacBook screen (a small
 | 🖼 **Live wallpaper** *(Pro, new)* | Play a video as your desktop wallpaper: your own (up to 60 s, up to 4K) or a free NASA clip. Pauses on battery and when windows cover it; the lock screen shows a still |
 | 📡 **Flight Radar** *(new)* | Every aircraft around you, live, on a round radar with callsign, type, height and speed (the free adsb.lol feed; your location is rounded to about 1 km and only sent while the tab is open) |
 | ✈️ **Plane game** *(new)* | A 3D flight sim in Games: Cessna, Piper, Boeing 737, 747, 777 and Airbus A320, A350, A380, with real airspeed and altimeter dials, engine sounds, flaps in notches, retractable gear, tail strikes, damage and spoken GPWS callouts. Fly with the mouse (**M** switches it off). Fly over Dubai, London, Paris, New York, Tokyo, Sydney, Cairo or San Francisco (or your own location) with their landmarks, and compete on a world leaderboard |
-| 🤖 **Notch apple AI** *(included with Pro)* | Ask without setting up any key: the request goes to Notch apple's server, which checks your key and answers with the project's own AI account (Pro 60 messages a day, Ultimate 200). Your own keys still work with no limit |
+| 🤖 **Notch Apple AI** *(included with Pro)* | Ask without setting up any key: the request goes to Notch Apple's server, which checks your key and answers with the project's own AI account (Pro 60 messages a day, Ultimate 200). Your own keys still work with no limit |
 | 🗓 **Updates once a week** | Optional and off by default: be asked about updates once a week instead of for every release |
 | 🧰 **30+ more tools** | Now Playing, window snapping, clipboard, file shelf, focus timer, Sports, Messenger, notes, search and more |
 
@@ -88,19 +88,19 @@ Pick your computer. Both buttons start the download straight away. The Mac butto
    Chrome or Edge may say the file *isn't commonly downloaded*. That's only because it's a new, uncommon download: click **Keep** (in Edge, open the **…** menu next to the file first).
 2. **Double-click the file** and click through the installer.
    If a blue **"Windows protected your PC"** window appears, click **More info**, then **Run anyway**. Windows shows this for every app that doesn't pay for a code-signing certificate. The full source code is in this repository.
-3. **Open Notch apple.** If it doesn't open by itself, press the **Windows key**, type `Notch apple` and press **Enter**.
+3. **Open Notch Apple.** If it doesn't open by itself, press the **Windows key**, type `Notch Apple` and press **Enter**.
    A slim pill appears at the **top centre of your screen**. Click it to open the panel, or press **`Ctrl + Alt + N`** from any app.
 4. **Free to start.** Everything free works straight away. If you bought Pro or Ultimate, open **Settings → Access** and enter your key (`NTCH-…`, the same key as the Mac app, valid on up to 3 devices).
 
 <details>
 <summary><b>Something not working on Windows?</b></summary>
 
-- **I can't see it.** Look at the very top centre of your screen. Or find the Notch apple icon near the clock (click the **^** arrow if it's hidden), right-click it and choose **Open notch**. If you pressed `Ctrl + Alt + O`, the notch is hidden: press it again.
+- **I can't see it.** Look at the very top centre of your screen. Or find the Notch Apple icon near the clock (click the **^** arrow if it's hidden), right-click it and choose **Open notch**. If you pressed `Ctrl + Alt + O`, the notch is hidden: press it again.
 - **It doesn't start with Windows.** Not yet. Open it from the Start menu when you want it.
 - **My antivirus removed the file.** Restore it from the antivirus quarantine, or [build it yourself](#build-from-source).
 - **Updating.** Download again and run the new installer. It replaces the old version.
 - **Remove your key from this PC.** **Settings → Access → Remove the key from this PC** frees the device slot.
-- **Uninstall.** **Settings → Apps → Installed apps → Notch apple → Uninstall.**
+- **Uninstall.** **Settings → Apps → Installed apps → Notch Apple → Uninstall.**
 - **Need an `.msi` instead** (for a work-managed PC)? Get [`NotchApple-Windows.msi`](https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows.msi).
 - **Other Windows versions:** the [releases list](https://github.com/AdityaJainDXB/NotchApples/releases) keeps the recent Windows builds (1.31.0 and newer). Older downloads were removed to keep the list short; the app updates itself to the newest one.
 
@@ -121,11 +121,11 @@ Update later with `brew upgrade --cask notch-apple`. The first time you open it,
 
 #### Manually
 
-<p align="center"><img src="docs/screenshots/dmg-installer.png" width="520" alt="The Notch apple installer window: drag the app onto Applications"></p>
+<p align="center"><img src="docs/screenshots/dmg-installer.png" width="520" alt="The Notch Apple installer window: drag the app onto Applications"></p>
 
 1. **Click "Download for Mac" above.** On the page that opens, click the **`NotchApple-x.y.z.dmg`** file under **Assets** to download it.
-2. Open it and drag **Notch apple** into **Applications**.
-3. The app is ad-hoc signed, not notarized, so on first launch right-click the app and choose **Open**, then confirm. (Or run `xattr -dr com.apple.quarantine "/Applications/Notch apple.app"`.)
+2. Open it and drag **Notch Apple** into **Applications**.
+3. The app is ad-hoc signed, not notarized, so on first launch right-click the app and choose **Open**, then confirm. (Or run `xattr -dr com.apple.quarantine "/Applications/Notch Apple.app"`.)
 4. Click the notch, or the menu-bar icon, to get started.
 
 On a Mac without a notch, a slim pill appears at the top center of the menu bar instead.
@@ -289,9 +289,9 @@ All screenshots use sample data.
 
 - **A video as your wallpaper.** The new **Wallpaper** tab plays a video behind your desktop icons on every display and every desktop. Add your own (up to 60 seconds, up to 4K, drop it on the tab) or get one of six free NASA clips (public domain, downloaded from NASA only when you press Get). It pauses on battery, in Low Power Mode, on sleep or lock, and when windows cover it; it is silent. macOS can't play video on the lock screen, so a still from the video becomes the system wallpaper, and your old wallpaper comes back when you turn it off.
 
-### Mac 2.0.34 · Windows 1.46.0 BETA · 9 October 2026 · Notch apple AI, included with Pro and Ultimate
+### Mac 2.0.34 · Windows 1.46.0 BETA · 9 October 2026 · Notch Apple AI, included with Pro and Ultimate
 
-- **Notch apple AI (included)**: choose it in Settings → AI and ask, with no API key to set up. The request goes to Notch apple's licence server, which checks your key and answers with the project's own AI account (Pro 60 messages a day, Ultimate 200). Your own keys still work with no limit. A copy of the app without a real key can't use it. It needs the server's AI key to be switched on first.
+- **Notch Apple AI (included)**: choose it in Settings → AI and ask, with no API key to set up. The request goes to Notch Apple's licence server, which checks your key and answers with the project's own AI account (Pro 60 messages a day, Ultimate 200). Your own keys still work with no limit. A copy of the app without a real key can't use it. It needs the server's AI key to be switched on first.
 
 ### Mac 2.0.33 · Windows 1.45.0 BETA · 9 October 2026 · Ultimate modules go private
 
@@ -300,7 +300,7 @@ All screenshots use sample data.
 
 ### Mac 2.0.32 · Windows 1.44.0 BETA · 9 October 2026 · A new licence, and more of the paid value on the server
 
-- **Source-available licence.** The code is now under the Notch apple Source-Available License (copyright Aditya Jain): read it, build it, help improve it; no reselling or redistributing it and no unlocking paid features without a key. Versions before 9 October 2026 were MIT and stay MIT for those who have them.
+- **Source-available licence.** The code is now under the Notch Apple Source-Available License (copyright Aditya Jain): read it, build it, help improve it; no reselling or redistributing it and no unlocking paid features without a key. Versions before 9 October 2026 were MIT and stay MIT for those who have them.
 - **Server-held content.** A real key on a registered device gets short-lived signed tokens from the licence server. They unlock **four premium Klick sounds** (Cherry MX Black, Gateron Ink, Alps, Buckling spring), downloaded on demand and never in the repository, and are required for **Clipboard Link** on the relay. Both devices need this update to link. How it works and what is and isn't protected: [docs/PROTECTING_PAID_FEATURES.md](docs/PROTECTING_PAID_FEATURES.md).
 
 ### Mac 2.0.31 · Windows 1.43.0 BETA · 9 October 2026 · 🪄 Do It, and lyrics on your screen
@@ -381,7 +381,7 @@ All screenshots use sample data.
 
 ### Mac 2.0.19 · 9 October 2026 · Fixes the app not opening
 
-- **Fixed:** 2.0.17 and 2.0.18 crashed at launch (the lid-closed Keep Awake tool). If Notch apple won't open, download this DMG and replace the app.
+- **Fixed:** 2.0.17 and 2.0.18 crashed at launch (the lid-closed Keep Awake tool). If Notch Apple won't open, download this DMG and replace the app.
 
 ### Mac 2.0.18 · 9 October 2026 · Lid-closed Keep Awake asks only when used
 
@@ -448,7 +448,7 @@ All screenshots use sample data.
 This is a **compulsory** update: every Mac on an earlier version is asked to install it.
 
 - **The notch can always be closed with the mouse again.** Pinning it kept it open for good, so clicking outside never closed it, even after a restart. The pin now lasts only until you close the notch (Mac and Windows).
-- **A close button on every notch screen,** including the lock, update, tour and what's-new screens, which hide the tab bar. Clicking in Settings or another Notch apple window also closes the notch now.
+- **A close button on every notch screen,** including the lock, update, tour and what's-new screens, which hide the tab bar. Clicking in Settings or another Notch Apple window also closes the notch now.
 - **Security: the hide shortcut moved from `⌘O` to `⌃⌥O`.** As a global shortcut, `⌘O` took "Open…" away from every other app, and pressing it to open a file could hide the notch instead. If you were on `⌘O`, you're moved over once. Change it in Settings → Shortcuts & Hotkeys.
 - **The Non-Necessities tab no longer shows twice.** Rearranging tabs could save a tab twice. Saved orders are cleaned up, and a tab can't be saved twice any more.
 
@@ -499,7 +499,7 @@ Both are in Settings → General → On the pill.
 
 Claude Code dot, Claude usage tracker, Smart Home, clipboard link, developer tools, wellbeing and habits, panic hide, quick capture, Cookie Clicker, Runner, Breakout and Memory, repeating to-dos with snooze and a "3 due" badge, stay-awake presets, snippet variables, quick answers, text size and skins, and low-battery, low-disk and internet warnings.
 
-### 1.24.0 · 4 October 2026 · Notch apple on your iPhone
+### 1.24.0 · 4 October 2026 · Notch Apple on your iPhone
 
 - **Ultimate · [iPhone companion](#iphone-companion):** send text and links to the notch, see the Mac's battery and music, and control music, timers and Keep Awake. It works over your Wi-Fi with no server, and every message is encrypted.
 - **Shortcuts on iPhone:** "Send to Mac notch" and "Get Mac status", including from the share sheet.
@@ -518,12 +518,12 @@ Claude Code dot, Claude usage tracker, Smart Home, clipboard link, developer too
 - **Swipe down to open** (Settings → Notch), and a **countdown** beside the notch 15 minutes before your next event.
 - **Undo** for deleting notes, to-dos, clipboard items, shelf files and Home widgets (⌘Z works too).
 - **Focus:** with a Shortcuts automation the notch stays quiet or steps aside while a Focus is on; with Pro it switches to the matching profile. [How](#focus).
-- **AppleScript:** `tell application "Notch apple" to run notch command "timer?minutes=5"`.
+- **AppleScript:** `tell application "Notch Apple" to run notch command "timer?minutes=5"`.
 - **Pro:** Do Not Disturb toggle, send to-dos to Things or Todoist, drag-and-drop in Home.
 
 ### 1.22.0 · 4 October 2026 · Trust, and a few more extras
 
-- **Settings → Privacy:** every permission, everywhere Notch apple can connect to and when, and what it keeps on this Mac, with Delete buttons.
+- **Settings → Privacy:** every permission, everywhere Notch Apple can connect to and when, and what it keeps on this Mac, with Delete buttons.
 - **Settings → Help & Feedback:** feedback, and a bug report you read in full and submit yourself on GitHub.
 - **Crash reports, off by default:** after a crash, review the macOS report (name and home folder removed) and send it if you like.
 - **Pro:** a 12-hour and 7-day forecast for up to six cities, a meeting-time planner in World Clock, mic mute, and top apps by CPU.
@@ -641,7 +641,7 @@ Claude Code dot, Claude usage tracker, Smart Home, clipboard link, developer too
 
 #### New in 1.33.2
 
-- **Update works from anywhere.** Fixed "Can't write to …/AppTranslocation/…": when Notch apple is opened from the DMG or Downloads, the update now installs into Applications.
+- **Update works from anywhere.** Fixed "Can't write to …/AppTranslocation/…": when Notch Apple is opened from the DMG or Downloads, the update now installs into Applications.
 
 #### New in 1.33.1
 
@@ -668,17 +668,17 @@ Claude Code dot, Claude usage tracker, Smart Home, clipboard link, developer too
 #### New in 1.32.1
 
 - **⌥A blacks out the screen and brings it back.** Option+A takes the built-in display's brightness to zero; press it again to restore the previous level. Switch it off in Settings if you type "å".
-- **Fixed "Accessibility needed" when it was already on.** After an update macOS kept a stale entry; Notch apple now clears it once per version and asks again. There is also an **It's already on: fix it** button on the setup screen.
+- **Fixed "Accessibility needed" when it was already on.** After an update macOS kept a stale entry; Notch Apple now clears it once per version and asks again. There is also an **It's already on: fix it** button on the setup screen.
 
 #### New in 1.30.3
 
 - **Add your VPN app, nothing else.** In the VPN tab click **VPN app** and pick the app you already use (Proton VPN, NordVPN, ExpressVPN, Mullvad, Surfshark, WireGuard, Tunnelblick, Tailscale… or any app). The power button opens it and turns green when your Mac has a VPN tunnel up. The custom address/username/password form is gone.
-- **A required setup step.** Notch apple needs the Accessibility permission (the volume and brightness gauge, window snapping, snippets and selected text depend on it). Until it is on, the open notch shows a setup screen; once granted, the gauge starts straight away.
+- **A required setup step.** Notch Apple needs the Accessibility permission (the volume and brightness gauge, window snapping, snippets and selected text depend on it). Until it is on, the open notch shows a setup screen; once granted, the gauge starts straight away.
 
 #### New in 1.30.2
 
 - **Fixed the notch sitting below the top of the screen** (1.30.0 and 1.30.1). A window-level change made for full-screen apps had lowered it under the menu bar; it is flush at the top again.
-- **Fixed double volume and brightness pop-ups.** Notch apple's gauge no longer shows on top of the macOS pop-up when "Hide the macOS pop-ups" is on but Accessibility isn't allowed yet.
+- **Fixed double volume and brightness pop-ups.** Notch Apple's gauge no longer shows on top of the macOS pop-up when "Hide the macOS pop-ups" is on but Accessibility isn't allowed yet.
 
 #### New in 1.30.1
 
@@ -688,7 +688,7 @@ Claude Code dot, Claude usage tracker, Smart Home, clipboard link, developer too
 
 - **Claude Code status dot.** Green for 4 seconds when a Claude Code task finishes; yellow for 4 seconds when it needs your input or approval, or finishes with warnings or errors. Beside the closed notch and in the open notch's header. Settings → Notch Extras → Claude Code adds the two hooks to `~/.claude/settings.json` (after saving a copy); scripts can use `open -g "notchapple://claude-code?status=done"` or `status=attention`.
 - **Pin** in the notch header: keeps it open while you drag files in.
-- **A new VPN page:** one big power button, a discreet server picker, your own custom VPNs (IKEv2, OpenVPN, WireGuard) with passwords kept in Notch apple's private file. The VPN badge is removed from the header.
+- **A new VPN page:** one big power button, a discreet server picker, your own custom VPNs (IKEv2, OpenVPN, WireGuard) with passwords kept in Notch Apple's private file. The VPN badge is removed from the header.
 - **AirDrop:** drops work anywhere on the card, files from Finder and the Desktop are read correctly, errors are shown, and a new **Text / code** tab sends strings and snippets (as text or a file).
 - **Two new games:** Cookie Clicker (click multipliers, auto-clickers, saved progress) and an arcade Runner.
 - **Live scores** are now inside the Sports tab; the Live tab is now **Parcels & Flights** (off by default; "Not recommended - limited usefulness for most situations, low compatibility").
@@ -728,7 +728,7 @@ Claude Code dot, Claude usage tracker, Smart Home, clipboard link, developer too
 
 #### New in 1.26.1
 
-- **Purge instead of our own cleaner.** The Ultimate *Cache Cleaner* tab from 1.26.0 is now the **Purge** tab: it opens the [Purge](https://github.com/jithin-sabu/purge-app) app (a separate disk cleaner) from the notch, or links you to it if it isn't installed. Notch apple no longer scans or deletes anything itself.
+- **Purge instead of our own cleaner.** The Ultimate *Cache Cleaner* tab from 1.26.0 is now the **Purge** tab: it opens the [Purge](https://github.com/jithin-sabu/purge-app) app (a separate disk cleaner) from the notch, or links you to it if it isn't installed. Notch Apple no longer scans or deletes anything itself.
 - **Tab-bar swipe fixed.** A two-finger sideways swipe over the tab bar used to scroll the tabs *and* switch to the next one. It now only scrolls. Prefer the old behaviour? Settings → Notch → *Swipe on the tab bar switches tabs*.
 
 #### New in 1.26.0
@@ -740,11 +740,11 @@ Claude Code dot, Claude usage tracker, Smart Home, clipboard link, developer too
 
 #### New in 1.25.0
 
-- **Your own hot corners.** Settings → Notch → Hot corners: push the pointer into any corner of the screen to open a **website**, an **app**, a **file or folder**, run a **Shortcut**, open **Mission Control**, or open and close the notch. Choose a different action for each corner, how long the pointer must rest there, and optionally a key to hold (⌥, ⌘, ⌃ or ⇧) so you never trigger one by accident. A corner fires once per visit; move out and back to fire it again. Corners where two displays meet are ignored. They work next to macOS's own hot corners: in System Settings → Desktop & Dock → Hot Corners, set a corner to “–” if you give it to Notch apple. Free for everyone.
+- **Your own hot corners.** Settings → Notch → Hot corners: push the pointer into any corner of the screen to open a **website**, an **app**, a **file or folder**, run a **Shortcut**, open **Mission Control**, or open and close the notch. Choose a different action for each corner, how long the pointer must rest there, and optionally a key to hold (⌥, ⌘, ⌃ or ⇧) so you never trigger one by accident. A corner fires once per visit; move out and back to fire it again. Corners where two displays meet are ignored. They work next to macOS's own hot corners: in System Settings → Desktop & Dock → Hot Corners, set a corner to “–” if you give it to Notch Apple. Free for everyone.
 
 #### New in 1.24.3
 
-- **Anonymous rooms work again.** The free public relays were refusing messages (ntfy.sh's daily quota) or unreachable on many networks. Rooms now go through Notch apple's own relay (a Cloudflare Worker that forwards encrypted messages live and stores nothing), with the public relays as backups. Everyone in a room should update.
+- **Anonymous rooms work again.** The free public relays were refusing messages (ntfy.sh's daily quota) or unreachable on many networks. Rooms now go through Notch Apple's own relay (a Cloudflare Worker that forwards encrypted messages live and stores nothing), with the public relays as backups. Everyone in a room should update.
 
 #### New in 1.24.2
 
@@ -759,7 +759,7 @@ Claude Code dot, Claude usage tracker, Smart Home, clipboard link, developer too
 - **Choose your features on first launch, one at a time.** A welcome flow goes through the tabs one by one: a picture of what it does, what plan it needs, and **Turn on** or **Not now** (with a progress bar and a Back button). Pro and Ultimate tabs are shown too; turning one on tells you it has to be bought, with the price, the flyer and a link to the website (and a box for your key if you already have one). Run it again any time from Settings → Tabs → *Choose with pictures…*.
 - **No more jumping at startup.** The notch used to appear at Windows' default spot and move twice before settling. It now stays hidden until its final position is applied.
 - **Opening no longer flashes the wrong size.** The notch now waits until the page has actually reached its new size before showing the content, on opening and closing.
-- **Updates are more reliable.** The installer now starts a couple of seconds after the app closes, so it can no longer fail with "Failed to kill Notch apple".
+- **Updates are more reliable.** The installer now starts a couple of seconds after the app closes, so it can no longer fail with "Failed to kill Notch Apple".
 - Glass (see-through notch) stays off by default.
 
 #### Windows 1.26.4 BETA
@@ -779,8 +779,8 @@ Claude Code dot, Claude usage tracker, Smart Home, clipboard link, developer too
 
 #### Windows 1.26.2 BETA
 
-- **Updates install in one step.** *Install and restart* now runs the installer with just a progress bar and reopens Notch apple when it finishes, instead of walking you through the installer pages again. The "update ready" notification now points to Settings → Updates.
-- **Lighter on small machines.** On a PC with 6 GB of memory or less (including small virtual machines), Notch apple starts its web engine in a low-memory mode: smaller caches and a cap on the page's JavaScript heap. Site isolation stays on.
+- **Updates install in one step.** *Install and restart* now runs the installer with just a progress bar and reopens Notch Apple when it finishes, instead of walking you through the installer pages again. The "update ready" notification now points to Settings → Updates.
+- **Lighter on small machines.** On a PC with 6 GB of memory or less (including small virtual machines), Notch Apple starts its web engine in a low-memory mode: smaller caches and a cap on the page's JavaScript heap. Site isolation stays on.
 
 #### Windows 1.26.1 BETA
 
@@ -930,7 +930,7 @@ When the VPN module is on, a **VPN On/Off** pill in the notch header shows the t
 
 ## Window management
 
-The **Windows** module arranges your app windows without leaving the notch. It needs one permission: **System Settings → Privacy & Security → Accessibility → Notch apple** (the Windows tab has a button that takes you there).
+The **Windows** module arranges your app windows without leaving the notch. It needs one permission: **System Settings → Privacy & Security → Accessibility → Notch Apple** (the Windows tab has a button that takes you there).
 
 - **Drag to the notch:** start dragging any window by its title bar and move the pointer up to the notch. Snap zones appear underneath; move onto one (its name lights up) and let go.
 - **Snap from the notch:** open the Windows tab and click a layout. It applies to the window you were just using.
@@ -947,9 +947,9 @@ The **Windows** module arranges your app windows without leaving the notch. It n
 | `⌃⌥C` | Center |
 | `⌃⌥⌫` | Undo the last snap |
 
-The gap between windows, the drag-to-notch zones and the shortcuts can be changed in **Settings → Windows**. If you allowed Accessibility for a version before 1.12.0 and snapping doesn't work, remove Notch apple from the Accessibility list with −, then turn it on again. From 1.12.0 the permission carries over to future updates.
+The gap between windows, the drag-to-notch zones and the shortcuts can be changed in **Settings → Windows**. If you allowed Accessibility for a version before 1.12.0 and snapping doesn't work, remove Notch Apple from the Accessibility list with −, then turn it on again. From 1.12.0 the permission carries over to future updates.
 
-Other things new in 1.11: the notch **remembers the last tab** you had open. Notch apple is no longer sandboxed, because macOS only gives Accessibility to sandboxed apps from the App Store. Your settings, notes, clipboard and AI history are moved over automatically the first time 1.11 opens.
+Other things new in 1.11: the notch **remembers the last tab** you had open. Notch Apple is no longer sandboxed, because macOS only gives Accessibility to sandboxed apps from the App Store. Your settings, notes, clipboard and AI history are moved over automatically the first time 1.11 opens.
 
 ## File Search
 
@@ -964,14 +964,14 @@ The **Search** tab searches your Mac with Spotlight, the same index Finder and �
 
 **Settings → File Search** turns the tab on or off, sets the scope (**User home folder only**, the default, or **Entire Mac**) and picks the file types to include. With every type ticked, folders and all other files are included too.
 
-If macOS stops Notch apple reading **Downloads**, **Documents** or **Desktop**, a warning appears with a **Grant Full Disk Access in System Settings** button that opens the right page.
+If macOS stops Notch Apple reading **Downloads**, **Documents** or **Desktop**, a warning appears with a **Grant Full Disk Access in System Settings** button that opens the right page.
 
 Other things new in 1.12: **no more keychain password prompts.** Earlier versions saved API keys and face-unlock data in the login Keychain, and because the app is ad-hoc signed, macOS asked for your login password again after every update. They're now stored in a private file only your user account can read. After updating, paste your AI API keys again and set up face unlock again.
 
 ## Backup and sync your setup
 
 **Settings → Backup & Sync** keeps your whole notch setup safe:
-- **Notch apple account:** **Continue with Google** (Sign in with Apple is coming) and your setup and access code are saved to your account, then restored on any Mac you sign in on, with Pro unlocked. It's stored in Firebase, where only you can read it; the access code is kept as a secure fingerprint, never the code itself. You'll find it in **Settings → Backup & Sync** and **Settings → License & Activation**.
+- **Notch Apple account:** **Continue with Google** (Sign in with Apple is coming) and your setup and access code are saved to your account, then restored on any Mac you sign in on, with Pro unlocked. It's stored in Firebase, where only you can read it; the access code is kept as a secure fingerprint, never the code itself. You'll find it in **Settings → Backup & Sync** and **Settings → License & Activation**.
 - **Sync with your Apple ID:** turn on *Keep my notch setup in iCloud* and it's saved to iCloud Drive → Notch apple every time you change something. On a new Mac, install Notch apple, open this page and click **Restore from iCloud**. There's no separate account to create.
 - **Backup file:** **Export settings…** saves a `.notchsettings` file, and **Import settings…** brings it back, on this Mac or another.
 
@@ -1038,10 +1038,10 @@ With Pro, the profile with that name (Settings → Profiles & Rules) switches on
 ## AppleScript
 
 ```applescript
-tell application "Notch apple" to toggle notch
-tell application "Notch apple" to run notch command "open/ai"
-tell application "Notch apple" to run notch command "timer?minutes=25"
-tell application "Notch apple" to run notch command "ask?q=What's on today?" -- Ultimate
+tell application "Notch Apple" to toggle notch
+tell application "Notch Apple" to run notch command "open/ai"
+tell application "Notch Apple" to run notch command "timer?minutes=25"
+tell application "Notch Apple" to run notch command "ask?q=What's on today?" -- Ultimate
 ```
 
 Any `notchapple://` command works, with the same tier rules as links and [scripts/notch](scripts/notch).
@@ -1099,16 +1099,16 @@ Use the **Open URL** action in Apple Shortcuts (or `open` in Terminal) with thes
 
 ## Updates
 
-**Mac:** from 1.12.0, Notch apple updates itself from this repository's GitHub releases. (On Windows, download and run the newest installer instead: see [Install on Windows](#install-on-windows).)
+**Mac:** from 1.12.0, Notch Apple updates itself from this repository's GitHub releases. (On Windows, download and run the newest installer instead: see [Install on Windows](#install-on-windows).)
 
 - When a new release is published, you get a notification (**"Update available. Would you like to update?"**), an **Update** button appears in the notch, and **Settings → Updates** shows a badge with the release notes.
-- Press **Update** and it downloads the new DMG, checks the app inside is genuine Notch apple, replaces your copy and reopens. Your settings and data are kept.
+- Press **Update** and it downloads the new DMG, checks the app inside is genuine Notch Apple, replaces your copy and reopens. Your settings and data are kept.
 - Press **Not now** to skip that version. You'll only be asked again when a newer one comes out.
 - Don't want updates at all? Turn off **Check for updates automatically** in Settings → Updates. You can still press **Check now** any time.
 
 Checking only asks GitHub for the latest release. Nothing about you is sent.
 
-## Notch apple for Windows
+## Notch Apple for Windows
 
 The Windows version lives in [`NotchWindows/`](NotchWindows/). It is a **separate app, not a port of the Swift code** (built with [Tauri 2](https://tauri.app): a Rust shell plus a web UI), because the macOS app is almost entirely SwiftUI and AppKit, and none of those exist on Windows.
 
@@ -1132,7 +1132,7 @@ Windows PCs have no camera notch, so the collapsed state is a slim pill pinned t
 | 🗂 **Shelf** | Drop files to keep them handy |
 | ⚙️ **Settings** | All 14 colour themes, module switches, AI keys, access code (with **Remove access**), shortcuts |
 
-**Notch apple for Windows is locked until you enter an access code.** Nothing opens, and no tab loads, without one: every tab shows the lock screen, and the pill reads **🔒 Locked**. Once a valid code is entered, the whole app unlocks. The same 50 codes work on Windows and macOS; the app ships only their SHA-256 hashes, exactly like the Mac build, so the codes themselves are never stored in it.
+**Notch Apple for Windows is locked until you enter an access code.** Nothing opens, and no tab loads, without one: every tab shows the lock screen, and the pill reads **🔒 Locked**. Once a valid code is entered, the whole app unlocks. The same 50 codes work on Windows and macOS; the app ships only their SHA-256 hashes, exactly like the Mac build, so the codes themselves are never stored in it.
 
 **To remove access:** open **Settings → Access → Remove access & lock**, then confirm. That deletes the code from this PC and locks the app straight away. Tick **Also erase everything I saved** to wipe your notes, AI keys, clipboard history and settings too.
 
@@ -1160,15 +1160,15 @@ the Mac's `⌘J` / `⌃⌥O`.
 
 ## Want a lighter version?
 
-Every feature is optional, so the easiest way to slim Notch apple down is to **turn off what you don't need in Settings → Modules**. Turned-off modules disappear from the notch and stop running in the background.
+Every feature is optional, so the easiest way to slim Notch Apple down is to **turn off what you don't need in Settings → Modules**. Turned-off modules disappear from the notch and stop running in the background.
 
 Older versions (1.15.3 and earlier) are no longer available to download: they were made before Free, Pro and Ultimate. Every current version includes everything they had. All releases since 1.16.0 are on the [releases page](https://github.com/AdityaJainDXB/NotchApples/releases).
 
 ## Permissions
 
-On first launch, Notch apple opens **Settings → Permissions**. It shows everything in one place, with a switch or **Allow** button for each, and all of it is optional:
+On first launch, Notch Apple opens **Settings → Permissions**. It shows everything in one place, with a switch or **Allow** button for each, and all of it is optional:
 
-- **Open at login / run in the background:** registers Notch apple as a login item. If macOS asks, approve it under **System Settings → General → Login Items & Extensions** ("Allow in the Background").
+- **Open at login / run in the background:** registers Notch Apple as a login item. If macOS asks, approve it under **System Settings → General → Login Items & Extensions** ("Allow in the Background").
 - **Notifications:** messages and focus timer alerts.
 - **Location:** local weather in Today and the widget (approximate location only). Without it, weather uses the city you choose in **Settings → Widget**.
 - **Calendars:** your next events.
@@ -1178,7 +1178,7 @@ The table below lists when each is asked for.
 
 | Permission | Used by | When it's asked |
 | --- | --- | --- |
-| Screen Recording | AI capture (<kbd>⌃⌥S</kbd>), "what's on my screen?", Text Grab | The first time you capture. macOS applies it after Notch apple restarts; the AI tab offers **Open System Settings** and **Relaunch** if it's missing |
+| Screen Recording | AI capture (<kbd>⌃⌥S</kbd>), "what's on my screen?", Text Grab | The first time you capture. macOS applies it after Notch Apple restarts; the AI tab offers **Open System Settings** and **Relaunch** if it's missing |
 | Local Network | PairDrop, Messenger (Nearby Wi-Fi) | The first time either looks for nearby devices |
 | Calendars | Widget | When the widget first loads |
 | Touch ID / password | Biometric Lock | Each time you open the notch while the lock is on |
@@ -1220,7 +1220,7 @@ The first time, the AI tab walks you through it: pick free Gemini or private Oll
 
 | Provider | Cost | Get a key | Notes |
 | --- | --- | --- | --- |
-| **Notch apple AI** | Included with Pro and Ultimate (Pro 60 messages a day, Ultimate 200) | No key: choose it in Settings → AI | Answered by Notch apple's server with the project's own AI account; reads images. Your own keys below have no limit. |
+| **Notch Apple AI** | Included with Pro and Ultimate (Pro 60 messages a day, Ultimate 200) | No key: choose it in Settings → AI | Answered by Notch Apple's server with the project's own AI account; reads images. Your own keys below have no limit. |
 | **Google Gemini** | Free tier, no billing | [aistudio.google.com/apikey](https://aistudio.google.com/apikey) | Fast; reads images. The default (`gemini-3.8-flash`). |
 | **Groq** | Free tier, no billing | [console.groq.com/keys](https://console.groq.com/keys) | Very fast open models (Llama, Qwen, DeepSeek-distilled and more). |
 | **OpenRouter** | Free models, no billing | [openrouter.ai/keys](https://openrouter.ai/keys) | Only the free models are listed. The selection changes over time. |
@@ -1229,7 +1229,7 @@ The first time, the AI tab walks you through it: pick free Gemini or private Oll
 | Claude | Paid (your Anthropic account) | [console.anthropic.com](https://console.anthropic.com/settings/keys) | |
 | ChatGPT (OpenAI) | Paid (your OpenAI account) | [platform.openai.com](https://platform.openai.com/api-keys) | The OpenAI API has no free tier. |
 
-Free OpenRouter models are shared and often busy, and many can't read images: Notch apple picks an image-capable free model, retries once if the host is busy, then falls back to other free models and tells you which one answered. If a saved model is retired by its provider, Notch apple switches to a current one and says so.
+Free OpenRouter models are shared and often busy, and many can't read images: Notch Apple picks an image-capable free model, retries once if the host is busy, then falls back to other free models and tells you which one answered. If a saved model is retired by its provider, Notch Apple switches to a current one and says so.
 
 ### History
 
@@ -1253,7 +1253,7 @@ Change the three global shortcuts in **Settings → Shortcuts & Hotkeys**. They 
 
 ## Pro and Ultimate
 
-Notch apple is free, and the free tier is complete. Two one-time upgrades add more:
+Notch Apple is free, and the free tier is complete. Two one-time upgrades add more:
 
 | | Free | Pro · $1 once | Ultimate · $5 once |
 |---|---|---|---|
@@ -1268,7 +1268,7 @@ Notch apple is free, and the free tier is complete. Two one-time upgrades add mo
 The full feature-by-feature plan is in [docs/TIERS.md](docs/TIERS.md).
 
 - **Buy** on the [pricing page](https://virajsinghchadha.github.io/notchapples-site/pro.html), in Litecoin. Each order gets its own exact amount, which is how the payment is matched to you. Your key is shown straight away and emailed.
-- **Activate** in **Settings → License** (paste the key) or with the **Activate in Notch apple** link. The key is checked on your Mac against a public key built into the app, so it works offline. It works on up to 3 of your Macs; **Deactivate this Mac** frees a slot.
+- **Activate** in **Settings → License** (paste the key) or with the **Activate in Notch Apple** link. The key is checked on your Mac against a public key built into the app, so it works offline. It works on up to 3 of your Macs; **Deactivate this Mac** frees a slot.
 - **Upgrade** from Pro to Ultimate for the $4 difference. Your Pro key keeps working until you activate the new one.
 - **Lost your key?** Use **Lost my key?** on the pricing page; it's emailed to the address you bought with.
 - **Keys from before tiers** (`NOTCH-XXXX-XXXX-XXXX` and access codes) keep working as Pro.
@@ -1279,34 +1279,34 @@ The full feature-by-feature plan is in [docs/TIERS.md](docs/TIERS.md).
 
 ## Troubleshooting
 
-- **Captures show only the wallpaper, or say Screen Recording is needed.** Turn on Notch apple in System Settings → Privacy & Security → Screen & System Audio Recording, then relaunch it (the AI tab has both buttons). After an update, if it still fails, remove Notch apple from that list with **−** and add it again.
+- **Captures show only the wallpaper, or say Screen Recording is needed.** Turn on Notch Apple in System Settings → Privacy & Security → Screen & System Audio Recording, then relaunch it (the AI tab has both buttons). After an update, if it still fails, remove Notch Apple from that list with **−** and add it again.
 - **⌃⌥S does nothing.** Another app may own the combination: Settings → Shortcuts & Hotkeys shows a warning; pick another shortcut.
 - **"Can't read images".** The selected model is text only. Pick a vision model (any Gemini model, or `gemma3:4b` in Ollama).
-- **"Isn't available" / "rate-limiting you".** The model was retired (Notch apple switches automatically) or the free tier is busy: wait a minute and press Retry, or switch provider.
+- **"Isn't available" / "rate-limiting you".** The model was retired (Notch Apple switches automatically) or the free tier is busy: wait a minute and press Retry, or switch provider.
 - **Ollama isn't running.** Install it from [ollama.com](https://ollama.com/download), open it, and run `ollama pull gemma3:4b`.
 - **macOS says the app can't be opened.** It isn't notarized: right-click → Open, or System Settings → Privacy & Security → Open Anyway.
 - **A payment for Pro couldn't be verified.** Use the **Need help?** link under the error on the Get Pro page; it fills in your transaction ID.
 
 ## Face unlock
 
-Unlock Notch apple by looking at your Mac's camera.
+Unlock Notch Apple by looking at your Mac's camera.
 
-1. Go to **Settings → Authentication** and turn on **Lock Notch apple**.
+1. Go to **Settings → Authentication** and turn on **Lock Notch Apple**.
 2. Click **Set up face unlock…** and allow camera access. Follow the prompts (look straight, turn slightly left and right, tilt up and down) while it takes six photos.
 3. Click **Test…** to check it recognises you. Good, even lighting helps.
 4. Now when you open the notch, a **Face ID-style** animation asks you to look at the camera and **blink**. It turns into a green check with a trackpad tap when it recognises you, and shakes red if it doesn't. **Use Touch ID** is always there as a fallback.
 
 How it works: Apple's Vision framework finds your face in each photo and turns it into a *feature print* (a list of numbers). Only those numbers and a match threshold calibrated from your own photos are saved in a private file on this Mac that only your user account can read. The photos themselves are never saved or sent anywhere. Unlocking needs several matching frames **and a blink**, which stops a printed photo from working. **Delete face data…** removes the template; it asks for Touch ID or your password first.
 
-> **Limits:** a regular FaceTime camera is 2D, unlike Apple's Face ID, which uses a 3D depth camera. Someone who looks like you, or a good enough video, might get through, so treat face unlock as a convenience rather than strong security. It unlocks Notch apple only. macOS doesn't let third-party apps unlock the Mac itself or replace its login.
+> **Limits:** a regular FaceTime camera is 2D, unlike Apple's Face ID, which uses a 3D depth camera. Someone who looks like you, or a good enough video, might get through, so treat face unlock as a convenience rather than strong security. It unlocks Notch Apple only. macOS doesn't let third-party apps unlock the Mac itself or replace its login.
 
 ## Using Messenger
 
 Open the notch and click the 💬 tab. Your handle (for example `MistyOwl#769`) is shown top right; change it in **Settings → Messenger**.
 
-**Nearby Wi-Fi.** Anyone on the same network with Notch apple and Messenger open appears automatically ("2 people nearby on Wi-Fi"). Just type. This uses Apple's MultipeerConnectivity with encryption required, and works without internet.
+**Nearby Wi-Fi.** Anyone on the same network with Notch Apple and Messenger open appears automatically ("2 people nearby on Wi-Fi"). Just type. This uses Apple's MultipeerConnectivity with encryption required, and works without internet.
 
-**Create a room.** In **Anonymous room** mode, press **New room**. Notch apple makes a private, hard-to-guess code (like `ember-puffin-4576-2rjc`), joins it, and copies it to your clipboard. Paste it to your friends; they paste it into the room box and press **Join**. **Copy code** copies it again at any time.
+**Create a room.** In **Anonymous room** mode, press **New room**. Notch Apple makes a private, hard-to-guess code (like `ember-puffin-4576-2rjc`), joins it, and copies it to your clipboard. Paste it to your friends; they paste it into the room box and press **Join**. **Copy code** copies it again at any time.
 
 **Join a room.** Type any room code and press **Join**. Everyone who enters the same code (`#Cafe-Study`, `cafe-study` and `CAFE-STUDY ` all count as the same) is in the same room and shown as "3 online".
 
@@ -1318,21 +1318,21 @@ How rooms stay private:
 
 > Anyone who knows the code can join the room, and short numeric codes are easy to guess. For a private chat, use **New room**, which makes a code with about a trillion possibilities.
 
-**Notifications.** When someone messages you while the notch is closed or you're on another tab, you get a macOS notification (sender, message and room), the closed notch grows a small purple dot, and the Messenger tab shows a badge. Click the notification to jump straight to the chat. Messenger keeps listening in the background, rejoining your last room when Notch apple starts. Turn notifications or message previews off in **Settings → Messenger**.
+**Notifications.** When someone messages you while the notch is closed or you're on another tab, you get a macOS notification (sender, message and room), the closed notch grows a small purple dot, and the Messenger tab shows a badge. Click the notification to jump straight to the chat. Messenger keeps listening in the background, rejoining your last room when Notch Apple starts. Turn notifications or message previews off in **Settings → Messenger**.
 
 Turn off **Allow local network discovery** in **Settings → Messenger** to stay invisible on your Wi-Fi.
 
 ## Using the VPN
 
-Notch apple doesn't run any VPN servers. It organises free VPN profiles and connects them for you. A **profile** is a small text file that says which server to connect to and how: `.ovpn` for **OpenVPN** or `.conf` for **WireGuard**.
+Notch Apple doesn't run any VPN servers. It organises free VPN profiles and connects them for you. A **profile** is a small text file that says which server to connect to and how: `.ovpn` for **OpenVPN** or `.conf` for **WireGuard**.
 
-Notch apple hands the profile to a VPN helper app that makes the actual connection. **You don't need to download anything yourself:** the free, open-source [Tunnelblick](https://tunnelblick.net) installer (notarized by its developer) is **included inside Notch apple**.
+Notch Apple hands the profile to a VPN helper app that makes the actual connection. **You don't need to download anything yourself:** the free, open-source [Tunnelblick](https://tunnelblick.net) installer (notarized by its developer) is **included inside Notch Apple**.
 
 ### Step 1: One-time setup (automatic)
 
-The first time you click **Connect** on an OpenVPN server, Notch apple shows **"One-time setup: install the VPN helper"**. Click **Install**, follow Tunnelblick's installer, and Notch apple finishes connecting your server automatically once it's installed. After that, every **Connect** goes straight through.
+The first time you click **Connect** on an OpenVPN server, Notch Apple shows **"One-time setup: install the VPN helper"**. Click **Install**, follow Tunnelblick's installer, and Notch Apple finishes connecting your server automatically once it's installed. After that, every **Connect** goes straight through.
 
-You can also install it with Homebrew: `brew install --cask tunnelblick`. For WireGuard `.conf` profiles, Notch apple offers the free [WireGuard](https://apps.apple.com/app/wireguard/id1451685025) app from the Mac App Store the same way.
+You can also install it with Homebrew: `brew install --cask tunnelblick`. For WireGuard `.conf` profiles, Notch Apple offers the free [WireGuard](https://apps.apple.com/app/wireguard/id1451685025) app from the Mac App Store the same way.
 
 ### Step 2: Turn on the VPN module
 
@@ -1341,7 +1341,7 @@ Go to **Settings → Modules** and switch **VPN** on. A **VPN** tab and a **VPN 
 ### Step 3: Pick a free server (nothing to download)
 
 1. Open the notch and go to the **VPN** tab. The **Free library** list loads automatically. It has about 270 free OpenVPN servers from [github.com/Zoult/.ovpn](https://github.com/Zoult/.ovpn), grouped by country. Type in **Search country** to filter.
-2. Click **Connect**. Notch apple downloads that server's `.ovpn`, saves it to **Downloads**, and opens it in Tunnelblick or OpenVPN Connect.
+2. Click **Connect**. Notch Apple downloads that server's `.ovpn`, saves it to **Downloads**, and opens it in Tunnelblick or OpenVPN Connect.
 3. In Tunnelblick, click **OK / Install**, then click **Connect**.
 4. If it asks for a username and password, use the login for that provider:
 
@@ -1353,7 +1353,7 @@ Go to **Settings → Modules** and switch **VPN** on. A **VPN** tab and a **VPN 
 | **FreeOpenVPN** | Shown on that country's page at [freeopenvpn.org](https://www.freeopenvpn.org) |
 | **VPN Gate** (second tab) | `vpn` / `vpn` |
 
-Notch apple opens the right login page for you when you click **Connect**. Click ☆ to keep a server in **My profiles**.
+Notch Apple opens the right login page for you when you click **Connect**. Click ☆ to keep a server in **My profiles**.
 
 ### Or use your own `.ovpn` / `.conf`
 
@@ -1491,7 +1491,7 @@ NotchWindows/
 
 ## Why some features need a paid Apple Developer account
 
-Notch apple is built to cost nothing, so the public DMG is **ad-hoc signed**. A few Apple capabilities are only available to builds signed by a paid developer team. The free build handles each of these gracefully:
+Notch Apple is built to cost nothing, so the public DMG is **ad-hoc signed**. A few Apple capabilities are only available to builds signed by a paid developer team. The free build handles each of these gracefully:
 
 | Capability | Free build | Signed build |
 | --- | --- | --- |
@@ -1544,7 +1544,7 @@ Per-app volume and EQ use Core Audio process taps, which arrived in macOS 14.2. 
 
 ## Thanks to the collaborators 🙏
 
-Notch apple is built by a small group, and every one of them has shaped it:
+Notch Apple is built by a small group, and every one of them has shaped it:
 
 - [**Aditya Jain**](https://github.com/AdityaJainDXB)
 - [**Viraj Singh Chadha**](https://github.com/VirajSinghChadha)
@@ -1554,7 +1554,7 @@ Thank you. 💜
 
 ## Donate 💜
 
-Notch apple is free and made by three high school developers. Donating is **completely optional**: it doesn't unlock anything, it just supports continued development. If it's useful to you, you can donate any amount in **Litecoin (LTC)**:
+Notch Apple is free and made by three high school developers. Donating is **completely optional**: it doesn't unlock anything, it just supports continued development. If it's useful to you, you can donate any amount in **Litecoin (LTC)**:
 
 ```
 ltc1qymlmvkdmvpk5f90esthzgwaw6w0tuzq6tdr6kf
@@ -1564,4 +1564,4 @@ Every bit helps and is hugely appreciated. Want more too? [Pro is $1 and Ultimat
 
 ## License
 
-[Notch apple Source-Available License](LICENSE). You can read, build and learn from the code and help improve it; selling or redistributing it, or unlocking the paid features without a key, is not allowed. Versions published before 9 October 2026 were MIT and stay that way for anyone who has them ([the MIT text](LICENSE-MIT-before-2026-10-09.txt)). Third-party parts keep their own licences (see `LICENSES/`).
+[Notch Apple Source-Available License](LICENSE). You can read, build and learn from the code and help improve it; selling or redistributing it, or unlocking the paid features without a key, is not allowed. Versions published before 9 October 2026 were MIT and stay that way for anyone who has them ([the MIT text](LICENSE-MIT-before-2026-10-09.txt)). Third-party parts keep their own licences (see `LICENSES/`).

@@ -1,6 +1,6 @@
 //
 //  DevToolkitLogic.swift
-//  Notch apple
+//  Notch Apple
 //
 //  Small developer tools for the Tools tab: format and minify JSON, base64 and URL encoding, case changes,
 //  a JWT decoder, hashes, UUIDs, lorem ipsum, timestamps, a regex tester and a colour contrast checker.

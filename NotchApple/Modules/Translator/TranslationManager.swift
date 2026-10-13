@@ -1,6 +1,6 @@
 //
 //  TranslationManager.swift
-//  Notch apple
+//  Notch Apple
 //
 //  Seven-language translation with a phonetic line for non-Latin scripts.
 //

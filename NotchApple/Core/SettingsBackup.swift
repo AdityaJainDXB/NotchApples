@@ -1,6 +1,6 @@
 //
 //  SettingsBackup.swift
-//  Notch apple
+//  Notch Apple
 //
 //  Save your whole notch setup (modules, tab order, theme, shortcuts, Notch
 //  Extras, snippets, launcher apps, world clock cities, focus lengths…) and
@@ -52,7 +52,7 @@ final class SettingsBackup: ObservableObject {
     static func encode() throws -> Data {
         let prefs = try PropertyListSerialization.data(fromPropertyList: snapshot(), format: .binary, options: 0)
         let wrapper: [String: Any] = [
-            "app": "Notch apple",
+            "app": "Notch Apple",
             "format": 1,
             "version": Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "",
             "created": ISO8601DateFormatter().string(from: .now),
@@ -65,7 +65,7 @@ final class SettingsBackup: ObservableObject {
     struct Summary { let created: Date?; let mac: String; let version: String; let count: Int }
 
     static func decode(_ data: Data) throws -> (prefs: [String: Any], summary: Summary) {
-        guard let json = try JSONSerialization.jsonObject(with: data) as? [String: Any], json["app"] as? String == "Notch apple",
+        guard let json = try JSONSerialization.jsonObject(with: data) as? [String: Any], (json["app"] as? String)?.lowercased() == "notch apple",
               let b64 = json["settings"] as? String, let plist = Data(base64Encoded: b64),
               let prefs = try PropertyListSerialization.propertyList(from: plist, format: nil) as? [String: Any]
         else { throw BackupError.notABackup }
@@ -77,7 +77,7 @@ final class SettingsBackup: ObservableObject {
         case notABackup, noICloud
         var errorDescription: String? {
             switch self {
-            case .notABackup: "That file isn't a Notch apple settings backup."
+            case .notABackup: "That file isn't a Notch Apple settings backup."
             case .noICloud: "iCloud Drive isn't turned on. Turn it on in System Settings → Apple Account → iCloud → iCloud Drive."
             }
         }
@@ -103,7 +103,7 @@ final class SettingsBackup: ObservableObject {
 
     func exportFile() {
         let panel = NSSavePanel()
-        panel.nameFieldStringValue = "Notch apple settings \(Date.now.formatted(.iso8601.year().month().day())).\(Self.fileExtension)"
+        panel.nameFieldStringValue = "Notch Apple settings \(Date.now.formatted(.iso8601.year().month().day())).\(Self.fileExtension)"
         panel.allowedContentTypes = [UTType(filenameExtension: Self.fileExtension) ?? .json]
         panel.canCreateDirectories = true
         NSApp.activate(ignoringOtherApps: true)
@@ -131,7 +131,7 @@ final class SettingsBackup: ObservableObject {
             let (prefs, s) = try Self.decode(Data(contentsOf: url))
             let alert = NSAlert()
             alert.messageText = "Restore these settings?"
-            alert.informativeText = "From \(s.mac)\(s.created.map { ", saved " + $0.formatted(date: .abbreviated, time: .shortened) } ?? "") (Notch apple \(s.version)). Your current modules, layout and preferences will be replaced, and Notch apple will restart. AI keys and your access code are kept."
+            alert.informativeText = "From \(s.mac)\(s.created.map { ", saved " + $0.formatted(date: .abbreviated, time: .shortened) } ?? "") (Notch Apple \(s.version)). Your current modules, layout and preferences will be replaced, and Notch Apple will restart. AI keys and your access code are kept."
             alert.addButton(withTitle: "Restore and Restart")
             alert.addButton(withTitle: "Cancel")
             NSApp.activate(ignoringOtherApps: true)
@@ -144,7 +144,7 @@ final class SettingsBackup: ObservableObject {
 
     // MARK: iCloud Drive
 
-    /// ~/Library/Mobile Documents/com~apple~CloudDocs/Notch apple, when iCloud Drive is on.
+    /// ~/Library/Mobile Documents/com~apple~CloudDocs/Notch Apple, when iCloud Drive is on.
     static var iCloudFolder: URL? {
         let drive = FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent("Library/Mobile Documents/com~apple~CloudDocs")
         guard FileManager.default.fileExists(atPath: drive.path) else { return nil }

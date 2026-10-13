@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Promo codes for Notch apple Pro.
+"""Promo codes for Notch Apple Pro.
 
 Each promo code gives one free product key, once. Only SHA-256 hashes are
 published (Firestore rules and the website); the codes themselves stay in
@@ -40,7 +40,7 @@ def add(n):
         if code not in existing:
             existing.add(code); new.append(code)
     CODES.parent.mkdir(exist_ok=True)
-    header = "" if CODES.exists() else "Notch apple promo codes (each gives one free product key, one time only).\nKeep this file private: it is git-ignored.\n\n"
+    header = "" if CODES.exists() else "Notch Apple promo codes (each gives one free product key, one time only).\nKeep this file private: it is git-ignored.\n\n"
     with CODES.open("a") as f:
         f.write(header + "\n".join(new) + "\n")
     print(f"Added {n} codes to {CODES.relative_to(ROOT)}:")

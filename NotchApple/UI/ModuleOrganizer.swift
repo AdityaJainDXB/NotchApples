@@ -1,6 +1,6 @@
 //
 //  ModuleOrganizer.swift
-//  Notch apple
+//  Notch Apple
 //
 //  One place to choose and arrange the notch's tabs, used by the welcome tour and by
 //  Settings → Appearance. No arrows: every tab is a card you drag.

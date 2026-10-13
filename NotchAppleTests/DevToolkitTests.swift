@@ -1,6 +1,6 @@
 //
 //  DevToolkitTests.swift
-//  Notch apple tests
+//  Notch Apple tests
 //
 //  The developer tools, checked against well-known reference values (SHA of "abc", the standard JWT sample,
 //  WCAG contrast examples). The Windows app runs the same cases against services/devkit.js.

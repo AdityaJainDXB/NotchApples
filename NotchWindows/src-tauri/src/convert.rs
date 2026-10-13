@@ -126,7 +126,7 @@ pub async fn convert_write(path: String, data: String) -> Result<(), String> {
 /// A private temp folder for two-step jobs (Markdown through a web page, slides through a PDF).
 #[tauri::command]
 pub fn convert_temp_dir() -> Result<String, String> {
-    let dir = std::env::temp_dir().join("Notch apple convert");
+    let dir = std::env::temp_dir().join("Notch Apple convert");
     std::fs::create_dir_all(&dir).map_err(|e| e.to_string())?;
     Ok(dir.to_string_lossy().to_string())
 }

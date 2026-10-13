@@ -1,6 +1,6 @@
 //
 //  SystemStatsReader.swift
-//  Shared between the Notch apple app and its WidgetKit extension.
+//  Shared between the Notch Apple app and its WidgetKit extension.
 //
 //  Reads live Mac performance numbers with low-level system calls, all local:
 //   • RAM: `host_statistics64` (active / wired / compressed) against physical memory

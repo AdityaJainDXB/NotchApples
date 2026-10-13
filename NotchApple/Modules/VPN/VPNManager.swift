@@ -1,10 +1,10 @@
 //
 //  VPNManager.swift
-//  Notch apple
+//  Notch Apple
 //
 //  Zero-cost VPN client scaffolding.
 //
-//  There are no Notch apple servers. Users bring free tunnels:
+//  There are no Notch Apple servers. Users bring free tunnels:
 //   • Import a local WireGuard `.conf` or OpenVPN `.ovpn` file, or
 //   • Pick from the free .ovpn library (github.com/Zoult/.ovpn), fetched live
 //     so it stays current and nothing third-party is redistributed in the app, or
@@ -322,7 +322,7 @@ final class VPNManager: ObservableObject {
         selected = profile
     }
 
-    /// The app does the connecting (that is the point: no configs, no passwords here). Notch apple opens it and then
+    /// The app does the connecting (that is the point: no configs, no passwords here). Notch Apple opens it and then
     /// shows whether your Mac has a VPN tunnel up.
     private func openVPNApp(_ profile: VPNProfile) {
         guard let path = profile.appPath, FileManager.default.fileExists(atPath: path) else {
@@ -354,7 +354,7 @@ final class VPNManager: ObservableObject {
             proto.remoteIdentifier = profile.server
             proto.useExtendedAuthentication = true
             manager.protocolConfiguration = proto
-            manager.localizedDescription = "Notch apple · \(profile.name)"
+            manager.localizedDescription = "Notch Apple · \(profile.name)"
             manager.isEnabled = true
             try await manager.saveToPreferences()
             try manager.connection.startVPNTunnel()
@@ -375,7 +375,7 @@ final class VPNManager: ObservableObject {
             proto.serverAddress = profile.server
             proto.providerConfiguration = ["kind": profile.kind.rawValue, "config": profile.config]
             manager.protocolConfiguration = proto
-            manager.localizedDescription = "Notch apple · \(profile.name)"
+            manager.localizedDescription = "Notch Apple · \(profile.name)"
             manager.isEnabled = true
             try await manager.saveToPreferences()
             try await manager.loadFromPreferences()
@@ -408,7 +408,7 @@ final class VPNManager: ObservableObject {
                     message = (message ?? "") + " The username and password are on the page that just opened in your browser."
                 }
             } else if profile.kind == .openVPN, Self.bundledTunnelblick != nil {
-                // Offer the Tunnelblick installer that ships inside Notch apple, then finish connecting.
+                // Offer the Tunnelblick installer that ships inside Notch Apple, then finish connecting.
                 pendingProfile = profile
                 needsVPNClient = .tunnelblick
                 message = "One-time setup: install the free VPN helper (Tunnelblick), then this server connects automatically."

@@ -1,4 +1,4 @@
-/* Notch apple for Windows — the floating panel and every shared control.
+/* Notch Apple for Windows — the floating panel and every shared control.
    Windows PCs have no camera notch, so the collapsed state is a slim pill at the
    top of the screen that grows downward when opened, like the Mac notch.
    Colours come from the theme (themes.js sets the custom properties). */

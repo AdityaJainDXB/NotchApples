@@ -1,6 +1,6 @@
 //
 //  SecretLogicTests.swift
-//  Notch apple tests
+//  Notch Apple tests
 //
 //  What counts as "looks like a secret" for the clipboard's Protect secrets option. The Windows app runs the same
 //  cases against services/secrets.js. Every key below is made up for the test.

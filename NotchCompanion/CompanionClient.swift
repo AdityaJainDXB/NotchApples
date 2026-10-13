@@ -1,8 +1,8 @@
 //
 //  CompanionClient.swift
-//  Notch apple companion (iPhone)
+//  Notch Apple companion (iPhone)
 //
-//  Finds Macs running Notch apple on the same Wi-Fi (Bonjour), pairs with the
+//  Finds Macs running Notch Apple on the same Wi-Fi (Bonjour), pairs with the
 //  12-character code the Mac shows, and sends sealed requests (CompanionKit).
 //  The pairing token is kept in this iPhone's Keychain.
 //
@@ -41,7 +41,7 @@ final class CompanionClient: ObservableObject {
             Task { @MainActor in if self.found != sorted { self.found = sorted } }
         }
         b.stateUpdateHandler = { state in
-            if case .failed = state { Task { @MainActor in self.message = "Allow Local Network for Notch apple in iOS Settings → Privacy & Security." } }
+            if case .failed = state { Task { @MainActor in self.message = "Allow Local Network for Notch Apple in iOS Settings → Privacy & Security." } }
         }
         b.start(queue: .main)
         browser = b

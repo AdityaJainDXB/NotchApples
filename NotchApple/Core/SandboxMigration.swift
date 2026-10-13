@@ -1,6 +1,6 @@
 //
 //  SandboxMigration.swift
-//  Notch apple
+//  Notch Apple
 //
 //  Up to 1.11.0 the app was sandboxed, so its settings and files lived in
 //  ~/Library/Containers/com.notchapple.app. It isn't sandboxed any more

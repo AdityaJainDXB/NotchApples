@@ -1,6 +1,6 @@
 //
 //  TodayExtras.swift
-//  Notch apple
+//  Notch Apple
 //
 //  Background helpers for the Today tab:
 //   • MeetingWatcher: finds the Zoom / Meet / Teams / Webex link in upcoming

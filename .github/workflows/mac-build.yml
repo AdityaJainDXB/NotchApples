@@ -82,7 +82,7 @@ jobs:
           target_commitish: ${{ github.sha }}
           # The Mac updater reads the latest release and installs its DMG.
           make_latest: true
-          name: "Notch apple ${{ steps.v.outputs.version }}"
+          name: "Notch Apple ${{ steps.v.outputs.version }}"
           body_path: release-notes/${{ steps.v.outputs.version }}.md
           files: |
             dist/NotchApple-${{ steps.v.outputs.version }}.dmg

@@ -1,6 +1,6 @@
 //
 //  KeychainHelper.swift
-//  Notch apple
+//  Notch Apple
 //
 //  Stores secrets (API keys, the face-unlock template) in a private file in
 //  Application Support, readable only by the current user (0600, in a 0700

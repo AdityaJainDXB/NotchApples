@@ -1,6 +1,6 @@
 //
 //  TodayWellbeing.swift
-//  Notch apple
+//  Notch Apple
 //
 //  Two small additions to the Today tab: "One thing today" (a single line that clears itself tomorrow) and
 //  countdowns to dates you care about (an exam, a trip, a launch). The date maths is in WellbeingLogic.swift.

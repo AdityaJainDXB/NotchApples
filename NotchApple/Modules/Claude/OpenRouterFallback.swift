@@ -1,6 +1,6 @@
 //
 //  OpenRouterFallback.swift
-//  Notch apple
+//  Notch Apple
 //
 //  OpenRouter's free models are shared and often rate-limited ("429 Provider
 //  returned error"), and many of them can't read images. This picks a model

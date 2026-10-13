@@ -1,6 +1,6 @@
 //
 //  MusicSleepTimer.swift
-//  Notch apple
+//  Notch Apple
 //
 //  "Pause the music after N minutes", for falling asleep to a playlist. When time is up it pauses only if something is
 //  actually playing (so it never starts music), and says so with a notification. Nothing is sent anywhere.
