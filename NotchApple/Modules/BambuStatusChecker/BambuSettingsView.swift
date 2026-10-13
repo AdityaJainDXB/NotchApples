@@ -1,40 +1,145 @@
+//
+//  BambuSettingsView.swift
+//  Notch Apple
+//
+//  Settings → Bambu Lab: the printers the notch watches. Each printer needs the
+//  three things the LAN mode screen shows (IP, access code, serial); fields are
+//  saved as you type and reconnects happen automatically. The settings fields
+//  can also be left empty, in which case BAMBU_IP, BAMBU_ACCESS_CODE and
+//  BAMBU_SERIAL fill them in.
+//
+
 import SwiftUI
+
 struct BambuSettingsView: View {
-    @ObservedObject var manager = BambuManager.shared
-    @State private var newPrinterName = "My Printer", newPrinterIP = "", newPrinterAccess = "", newPrinterSerial = ""
+    @StateObject private var manager = BambuManager.shared
+    @State private var newName = ""
+    @State private var newHost = ""
+    @State private var newAccessCode = ""
+    @State private var newSerial = ""
+    @State private var addProblem: String?
+
     var body: some View {
         Form {
             Section {
-                Toggle("Enable Bambu Lab Status", isOn: Binding(
-                    get: { manager.isConnected.values.contains(true) || !manager.printers.isEmpty },
-                    set: { enabled in enabled ? manager.startMonitoring() : manager.stopMonitoring() }
+                Toggle("Watch my printers", isOn: Binding(
+                    get: { manager.enabled },
+                    set: { $0 ? manager.start() : manager.stop() }
                 ))
+            } footer: {
+                Text("Off means Notch Apple never contacts the printers. Nothing is sent anywhere else: every report stays on this Mac.")
             }
-            Section {
-                Picker("Selected Printer", selection: $manager.selectedPrinterID) {
-                    ForEach(manager.printers) { p in Text(p.name).tag(p.id) }
-                }.pickerStyle(.menu)
-            } header: { Text("Manage Printers") }
-            if let selectedID = manager.selectedPrinterID, let printer = manager.printers.first(where: { $0.id == selectedID }) {
-                Section {
-                    TextField("Name", text: Binding(get: { printer.name }, set: { v in if let idx = manager.printers.firstIndex(where: { $0.id == selectedID }) { manager.printers[idx].name = v; manager.saveConfigs() } }))
-                    TextField("IP Address", text: Binding(get: { printer.ip }, set: { v in if let idx = manager.printers.firstIndex(where: { $0.id == selectedID }) { manager.printers[idx].ip = v; manager.saveConfigs() } }))
-                    SecureField("Access Code", text: Binding(get: { printer.accessCode }, set: { v in if let idx = manager.printers.firstIndex(where: { $0.id == selectedID }) { manager.printers[idx].accessCode = v; manager.saveConfigs() } }))
-                    TextField("Serial Number", text: Binding(get: { printer.serialNumber }, set: { v in if let idx = manager.printers.firstIndex(where: { $0.id == selectedID }) { manager.printers[idx].serialNumber = v; manager.saveConfigs() } }))
-                    Button(role: .destructive) { manager.removePrinter(id: selectedID) } label: { Label("Remove Printer", systemImage: "trash") }
-                } header: { Text("Printer Configuration") }
+
+            Section("Printers") {
+                if manager.printers.isEmpty {
+                    Text("No printers yet. Add one below.")
+                        .foregroundStyle(Theme.textSecondary)
+                } else {
+                    ForEach(manager.printers) { printer in
+                        printerRow(printer)
+                    }
+                    .onDelete { indexSet in
+                        for i in indexSet { manager.remove(id: manager.printers[i].id) }
+                    }
+                }
             }
+
+            if let selected = manager.selectedPrinter {
+                Section("Selected printer") {
+                    TextField("Name (optional)", text: binding(selected, \.name))
+                    TextField("IP address or hostname", text: binding(selected, \.host))
+                    SecureField("Access code", text: binding(selected, \.accessCode))
+                    TextField("Serial number", text: binding(selected, \.serial))
+                    if let problem = BambuManager.validate(selected) {
+                        Label(problem, systemImage: "exclamationmark.triangle")
+                            .font(.caption).foregroundStyle(.orange)
+                    }
+                    HStack {
+                        Button("Reconnect") { manager.update(selected) }
+                        Button("Trust new certificate") { manager.trustNewCertificate(id: selected.id) }
+                            .help("Use after a printer firmware update or reset. Notch Apple remembers the certificate the printer showed the first time and refuses a different one.")
+                        Spacer()
+                        Button("Remove", role: .destructive) { manager.remove(id: selected.id) }
+                    }
+                }
+            }
+
             Section {
-                TextField("Printer Name", text: $newPrinterName)
-                TextField("IP Address", text: $newPrinterIP)
-                SecureField("Access Code", text: $newPrinterAccess)
-                TextField("Serial Number", text: $newPrinterSerial)
-                Button("Add Printer") {
-                    manager.addPrinter(BambuPrinterConfig(name: newPrinterName, ip: newPrinterIP, accessCode: newPrinterAccess, serialNumber: newPrinterSerial))
-                    newPrinterName = "My Printer"; newPrinterIP = ""; newPrinterAccess = ""; newPrinterSerial = ""
-                }.disabled(newPrinterIP == "" || newPrinterAccess == "" || newPrinterSerial == "")
-            } header: { Text("Add New Printer") } footer: { Text("Multi-printer support requires Notch apple Pro.") }
-            Section { BambuView().frame(maxWidth: .infinity).padding(.vertical) } header: { Text("Preview") }
-        }.formStyle(.grouped)
+                TextField("Name (optional)", text: $newName)
+                TextField("IP address or hostname", text: $newHost)
+                SecureField("Access code", text: $newAccessCode)
+                TextField("Serial number", text: $newSerial)
+                Button("Add printer") { addPrinter() }
+                    .disabled(Self.hasAll(newHost, newAccessCode, newSerial) == false)
+                if let problem = addProblem {
+                    Label(problem, systemImage: "exclamationmark.triangle")
+                        .font(.caption).foregroundStyle(.orange)
+                }
+                if !manager.canAddPrinter {
+                    Text("More than one printer comes with Notch Apple Pro (\(Feature.bambuMulti.title)).")
+                        .font(.caption).foregroundStyle(Theme.textSecondary)
+                }
+            } header: {
+                Text("Add a printer")
+            } footer: {
+                Text("On the printer screen: Settings → LAN Mode. Turn LAN Mode on and note the IP address, access code and serial number. Empty fields fall back to the BAMBU_IP, BAMBU_ACCESS_CODE and BAMBU_SERIAL environment variables.")
+            }
+
+            Section("Preview") {
+                BambuView()
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
+        }
+    }
+
+    // MARK: - Rows and bindings
+
+    private func printerRow(_ printer: BambuPrinterConfig) -> some View {
+        let snap = manager.snapshot(for: printer.id)
+        return HStack(spacing: 10) {
+            Circle().fill(Color(hex: snap.phase.hex)).frame(width: 9, height: 9)
+                .opacity(manager.isConnecting(printer.id) ? 0.4 : 1)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(printer.displayName).font(.system(size: 13, weight: .semibold))
+                Text(subtitle(printer)).font(.system(size: 11)).foregroundStyle(Theme.textSecondary).lineLimit(1)
+            }
+            Spacer()
+            if manager.selectedPrinterID == printer.id {
+                Image(systemName: "checkmark.circle.fill").foregroundStyle(Theme.accentBright)
+            }
+        }
+        .contentShape(Rectangle())
+        .onTapGesture { manager.selectedPrinterID = printer.id }
+    }
+
+    private func subtitle(_ printer: BambuPrinterConfig) -> String {
+        let snap = manager.snapshot(for: printer.id)
+        var text = snap.phase.title
+        let host = manager.resolved(printer).host
+        if !host.isEmpty { text += " · \(host)" }
+        if let failure = manager.failure(for: printer.id), snap.phase == .offline { text = failure }
+        return text
+    }
+
+    /// A binding into a stored printer: every keystroke is saved (and never
+    /// reconnects on its own; Reconnect does that).
+    private func binding(_ printer: BambuPrinterConfig, _ keyPath: WritableKeyPath<BambuPrinterConfig, String>) -> Binding<String> {
+        Binding(
+            get: { printer[keyPath: keyPath] },
+            set: { newValue in manager.setField(printer.id, keyPath, newValue) }
+        )
+    }
+
+    private func addPrinter() {
+        addProblem = manager.addPrinter(name: newName, host: newHost, accessCode: newAccessCode, serial: newSerial)
+        if addProblem == nil {
+            newName = ""; newHost = ""; newAccessCode = ""; newSerial = ""
+        }
+    }
+
+    private static func hasAll(_ host: String, _ code: String, _ serial: String) -> Bool {
+        !host.trimmingCharacters(in: .whitespaces).isEmpty &&
+        !code.trimmingCharacters(in: .whitespaces).isEmpty &&
+        !serial.trimmingCharacters(in: .whitespaces).isEmpty
     }
 }

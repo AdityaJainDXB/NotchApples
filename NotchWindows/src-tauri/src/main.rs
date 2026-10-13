@@ -1,4 +1,4 @@
-// Notch apple for Windows — the native side.
+// Notch Apple for Windows — the native side.
 //
 // The window is borderless, transparent and always on top, pinned to the top of
 // the primary screen. Collapsed it is a slim pill; opening it grows the window
@@ -9,6 +9,7 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 mod apps;
+mod bambu;
 mod audio;
 mod brightness;
 mod notifications;
@@ -321,7 +322,7 @@ fn open_browser(app: AppHandle, url: String) -> Result<(), String> {
         return Ok(());
     }
     WebviewWindowBuilder::new(&app, "browser", WebviewUrl::External(parsed))
-        .title("Notch apple — Browser")
+        .title("Notch Apple — Browser")
         .inner_size(1100.0, 760.0)
         .center()
         .build()
@@ -352,7 +353,7 @@ fn lyrics_overlay_show(app: AppHandle, side: String) -> Result<(), String> {
         Some(existing) => existing,
         None => {
             let w = WebviewWindowBuilder::new(&app, "lyrics-overlay", WebviewUrl::App("lyrics-overlay.html".into()))
-                .title("Notch apple — Lyrics")
+                .title("Notch Apple — Lyrics")
                 .inner_size(W, H)
                 .position(x, y)
                 .decorations(false)
@@ -396,7 +397,7 @@ async fn selftest_capture(name: String) -> Result<(), String> {
         let ours = std::process::id();
         let target = windows
             .into_iter()
-            .find(|w| w.pid().ok() == Some(ours) && w.title().map(|t| t == "Notch apple").unwrap_or(false));
+            .find(|w| w.pid().ok() == Some(ours) && w.title().map(|t| t == "Notch Apple").unwrap_or(false));
         let img = match target {
             Some(w) => w.capture_image().map_err(|e| e.to_string())?,
             // The window isn't listed on some machines (it is a tool window with no taskbar button): take the
@@ -426,17 +427,17 @@ fn selftest_finish(app: AppHandle, report: String) {
 // ---- tray -----------------------------------------------------------------
 
 fn build_tray(app: &tauri::App) -> tauri::Result<()> {
-    let open = MenuItem::with_id(app, "open", "Open Notch apple", true, Some("Ctrl+Alt+N"))?;
+    let open = MenuItem::with_id(app, "open", "Open Notch Apple", true, Some("Ctrl+Alt+N"))?;
     let hide = MenuItem::with_id(app, "hide", "Show or hide the pill", true, Some("Ctrl+Alt+O"))?;
     let settings = MenuItem::with_id(app, "settings", "Settings…", true, None::<&str>)?;
     let updates = MenuItem::with_id(app, "updates", "Check for updates…", true, None::<&str>)?;
-    let quit = MenuItem::with_id(app, "quit", "Quit Notch apple", true, None::<&str>)?;
+    let quit = MenuItem::with_id(app, "quit", "Quit Notch Apple", true, None::<&str>)?;
     let sep = PredefinedMenuItem::separator(app)?;
     let menu = Menu::with_items(app, &[&open, &hide, &settings, &updates, &sep, &quit])?;
 
     TrayIconBuilder::with_id("main")
         .icon(app.default_window_icon().cloned().ok_or(tauri::Error::InvalidIcon(std::io::Error::other("no icon")))?)
-        .tooltip("Notch apple — Ctrl+Alt+N")
+        .tooltip("Notch Apple — Ctrl+Alt+N")
         .menu(&menu)
         .show_menu_on_left_click(false)
         .on_menu_event(|app, event| match event.id.as_ref() {
@@ -537,6 +538,7 @@ fn main() {
             update::update_check, update::update_install,
             extras::downloads_progress, extras::save_temp_file, extras::save_file_as, extras::read_file_base64,
             extras::vpn_status, extras::vpn_connect, extras::vpn_disconnect,
+            bambu::bambu_start, bambu::bambu_stop, bambu::bambu_running, bambu::bambu_trust_new,
         claude_usage::claude_usage,
         brightness::brightness_state,
         notifications::notifications_recent,
@@ -573,7 +575,7 @@ fn main() {
             Ok(())
         })
         .run(tauri::generate_context!())
-        .expect("error while running Notch apple");
+        .expect("error while running Notch Apple");
 }
 
 #[cfg(test)]

@@ -1,6 +1,6 @@
 //
 //  SettingsView.swift
-//  Notch apple
+//  Notch Apple
 //
 //  The Settings window, laid out like macOS System Settings: a sidebar of
 //  panes on the left and a grouped form on the right. Following the HIG:
@@ -18,7 +18,7 @@ import UniformTypeIdentifiers
 
 /// Panes in the Settings window. `selection` lets other code jump to a pane.
 enum SettingsTab: String, CaseIterable, Identifiable, Hashable {
-    case general, notch, appearance, profiles, extras, backup, browser, license, shortcuts, permissions, authentication, modules, lidFold, windows, claude, aiHistory, messenger, clipboard, fileSearch, focus, audio, vpn, widget, iphone, updates, privacy, help, about
+    case general, notch, appearance, profiles, extras, backup, browser, license, shortcuts, permissions, authentication, modules, lidFold, windows, claude, aiHistory, messenger, clipboard, bambu, fileSearch, focus, audio, vpn, widget, iphone, updates, privacy, help, about
     static let selection = PassthroughSubject<SettingsTab, Never>()
 
     var id: String { rawValue }
@@ -43,6 +43,7 @@ enum SettingsTab: String, CaseIterable, Identifiable, Hashable {
         case .aiHistory: "AI History"
         case .messenger: "Messenger"
         case .clipboard: "Clipboard"
+        case .bambu: "Bambu Lab"
         case .fileSearch: "File Search"
         case .focus: "Focus"
         case .audio: "Audio"
@@ -76,6 +77,7 @@ enum SettingsTab: String, CaseIterable, Identifiable, Hashable {
         case .aiHistory: "clock.arrow.circlepath"
         case .messenger: "bubble.left.and.bubble.right.fill"
         case .clipboard: "doc.on.clipboard.fill"
+        case .bambu: "printer.fill"
         case .fileSearch: "magnifyingglass"
         case .focus: "timer"
         case .audio: "speaker.wave.2.fill"
@@ -109,6 +111,7 @@ enum SettingsTab: String, CaseIterable, Identifiable, Hashable {
         case .aiHistory: .indigo
         case .messenger: .green
         case .clipboard: .yellow
+        case .bambu: .orange
         case .fileSearch: .purple
         case .focus: .purple
         case .audio: .pink
@@ -357,7 +360,7 @@ private struct PrivacyChooser: View {
             Text("Privacy & Permissions").font(.title3.bold())
             Text("Which would you like to open?").foregroundStyle(.secondary)
             HStack(spacing: 12) {
-                choice("Permissions", "What macOS lets Notch apple use: accessibility, screen, camera and more.", "checkmark.shield.fill", .permissions)
+                choice("Permissions", "What macOS lets Notch Apple use: accessibility, screen, camera and more.", "checkmark.shield.fill", .permissions)
                 choice("Privacy", "What stays on your Mac, what goes online, and how to delete your data.", "eye.slash.fill", .privacy)
             }
             Button("Cancel") { done(nil) }.keyboardShortcut(.cancelAction).buttonStyle(.plain).foregroundStyle(.secondary)
@@ -672,7 +675,7 @@ private struct GeneralSettings: View {
                 }
                 Toggle(isOn: $settings.showRecordingIndicator) {
                     Text("Show a dot on the notch while the screen is recorded")
-                    Text("Works for Notch apple's own recordings and the system recorder (⌘⇧5). Other recording apps can't be detected.")
+                    Text("Works for Notch Apple's own recordings and the system recorder (⌘⇧5). Other recording apps can't be detected.")
                 }
                 Toggle(isOn: $settings.showChargingActivity) {
                     Text("Show battery beside the notch when charging")
@@ -705,7 +708,7 @@ private struct AuthenticationSettings: View {
         Form {
             Section {
                 Toggle(isOn: $settings.securityEnabled) {
-                    Text("Lock Notch apple")
+                    Text("Lock Notch Apple")
                     Text("Ask to unlock every time the notch opens.")
                 }
             }
@@ -717,7 +720,7 @@ private struct AuthenticationSettings: View {
                         Text("Not set up").foregroundStyle(.secondary)
                     }
                 }
-                Toggle("Unlock Notch apple with my face", isOn: $settings.faceUnlockEnabled)
+                Toggle("Unlock Notch Apple with my face", isOn: $settings.faceUnlockEnabled)
                     .disabled(!enrolled)
                 HStack {
                     Button(enrolled ? "Set up again…" : "Set up face unlock…") { sheet = .enrol }
@@ -1563,7 +1566,7 @@ private struct AudioSettings: View {
                     }
                 }
                 if audio.backend == .native {
-                    Text("Per-app volume and EQ work without installing anything. The first time you change an app, macOS asks to allow audio recording. Notch apple only processes the sound; it never records or sends it anywhere.")
+                    Text("Per-app volume and EQ work without installing anything. The first time you change an app, macOS asks to allow audio recording. Notch Apple only processes the sound; it never records or sends it anywhere.")
                         .font(.callout).foregroundStyle(.secondary)
                 }
             } header: {
@@ -1575,7 +1578,7 @@ private struct AudioSettings: View {
             } header: {
                 Text("Optional driver")
             } footer: {
-                Text("Only needed on macOS 14.0–14.1, where the built-in engine isn't available. The installer is included with Notch apple.")
+                Text("Only needed on macOS 14.0–14.1, where the built-in engine isn't available. The installer is included with Notch Apple.")
             }
         }
         .formStyle(.grouped)
@@ -1702,7 +1705,7 @@ private struct WidgetSettings: View {
             }
             .disabled(location.useCurrentLocation)
             Section("Add the widget") {
-                Text("Right-click the desktop, choose Edit Widgets…, and search for “Notch apple”.")
+                Text("Right-click the desktop, choose Edit Widgets…, and search for “Notch Apple”.")
             }
         }
         .formStyle(.grouped)
@@ -1719,7 +1722,7 @@ private struct AboutSettings: View {
     var body: some View {
         VStack(spacing: 12) {
             Image(nsImage: NSApp.applicationIconImage).resizable().frame(width: 96, height: 96)
-            Text("Notch apple").font(.title.bold())
+            Text("Notch Apple").font(.title.bold())
             Text("Version \(Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "—")")
                 .foregroundStyle(.secondary)
             Text("Free to start, source-available, and local first.").foregroundStyle(.secondary)
@@ -1750,7 +1753,7 @@ private struct AboutSettings: View {
             }
             Text("MIT License").font(.caption).foregroundStyle(.secondary)
             Button("Acknowledgements") { showAcknowledgements = true }.buttonStyle(.link).font(.caption)
-            Button("Quit Notch apple") { NSApp.terminate(nil) }.padding(.top, 8)
+            Button("Quit Notch Apple") { NSApp.terminate(nil) }.padding(.top, 8)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .sheet(isPresented: $showAcknowledgements) { AcknowledgementsView() }

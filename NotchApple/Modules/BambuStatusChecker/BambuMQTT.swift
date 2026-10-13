@@ -1,6 +1,6 @@
 //
 //  BambuMQTT.swift
-//  Notch apple
+//  Notch Apple
 //
 //  Tiny MQTT 3.1.1 client over TLS for a Bambu Lab printer on the LAN (port 8883,
 //  username bblp, password = LAN access code, self-signed certificate).
@@ -15,6 +15,8 @@ final class BambuMQTT {
     enum Event {
         case connected
         case payload(Data)
+        /// The printer's certificate fingerprint, seen for the first time: the manager remembers it.
+        case pinned(String)
         case failed(String)
         case disconnected
     }
@@ -28,25 +30,40 @@ final class BambuMQTT {
     private var onEvent: ((Event) -> Void)?
     private var closed = false
     private var topic = ""
+    private var pinMismatch = false
 
-    func start(host: String, password: String, topic: String, onEvent: @escaping (Event) -> Void) {
-        queue.async { self.startLocked(host: host, password: password, topic: topic, onEvent: onEvent) }
+    func start(host: String, password: String, topic: String, pin: String?, onEvent: @escaping (Event) -> Void) {
+        queue.async { self.startLocked(host: host, password: password, topic: topic, pin: pin, onEvent: onEvent) }
     }
 
     func stop() {
         queue.async { self.tearDown(emit: false) }
     }
 
-    private func startLocked(host: String, password: String, topic: String, onEvent: @escaping (Event) -> Void) {
+    private func startLocked(host: String, password: String, topic: String, pin: String?, onEvent: @escaping (Event) -> Void) {
         tearDown(emit: false)
         closed = false
         self.onEvent = onEvent
         self.topic = topic
+        pinMismatch = false
         buffer.removeAll(keepingCapacity: true)
 
         let tls = NWProtocolTLS.Options()
-        sec_protocol_options_set_verify_block(tls.securityProtocolOptions, { _, _, complete in
-            complete(true)
+        sec_protocol_options_set_verify_block(tls.securityProtocolOptions, { [weak self] _, trust, complete in
+            // The printer signs its own certificate, so trust is decided by the pinned fingerprint instead.
+            let ref = sec_trust_copy_ref(trust).takeRetainedValue()
+            guard let leaf = (SecTrustCopyCertificateChain(ref) as? [SecCertificate])?.first else { complete(false); return }
+            let seen = BambuStatusLogic.fingerprint(of: SecCertificateCopyData(leaf) as Data)
+            switch BambuStatusLogic.decidePin(stored: pin, seen: seen) {
+            case .match:
+                complete(true)
+            case .pinFirst:
+                self?.onEvent?(.pinned(seen))
+                complete(true)
+            case .mismatch:
+                self?.pinMismatch = true
+                complete(false)
+            }
         }, queue)
         let tcp = NWProtocolTCP.Options()
         tcp.connectionTimeout = Int(BambuStatusLogic.connectTimeout)
@@ -142,8 +159,9 @@ final class BambuMQTT {
         return packetId
     }
 
-    private func fail(_ message: String) {
+    private func fail(_ raw: String) {
         guard !closed else { return }
+        let message = pinMismatch ? BambuStatusLogic.pinMismatchMessage : raw
         let cb = onEvent
         tearDown(emit: false)
         cb?(.failed(message))

@@ -1,7 +1,7 @@
 [package]
 name = "notch-apple"
 version = "1.52.0"
-description = "Notch apple for Windows — a productivity hub pinned to the top of your screen"
+description = "Notch Apple for Windows — a productivity hub pinned to the top of your screen"
 authors = ["AdityaJainDXB"]
 license-file = "../../LICENSE"
 edition = "2021"
@@ -35,6 +35,8 @@ sha2 = "0.10"
 tokio = { version = "1", features = ["time"] }
 # PairDrop: serverless file sharing and chat on the local network (tested on its own and against the Mac app).
 pairdrop-core = { path = "pairdrop-core" }
+# The Bambu Lab tab: MQTT over TLS to the printer on the LAN. the printer signs its own certificate, so the connection pins the one it showed the first time (see bambu.rs).
+rumqttc = { version = "0.24", default-features = false, features = ["use-rustls"] }
 
 [target.'cfg(windows)'.dependencies]
 windows-future = "0.3"

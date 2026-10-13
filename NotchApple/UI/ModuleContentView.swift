@@ -1,6 +1,6 @@
 //
 //  ModuleContentView.swift
-//  Notch apple
+//  Notch Apple
 //
 //  The screen for a module. The notch uses it for the selected tab; Home uses it inside an accordion and
 //  Non-Necessities inside its pages, so a feature looks and works the same wherever it lives.

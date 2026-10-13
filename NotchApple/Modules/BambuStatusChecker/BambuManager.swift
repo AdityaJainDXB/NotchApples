@@ -1,89 +1,289 @@
-import Foundation
-import AppKit
+//
+//  BambuManager.swift
+//  Notch Apple
+//
+//  Bambu Lab: one live snapshot per configured printer. Each printer runs its own
+//  BambuMQTT client on a private queue (the printer's LAN reports on port 8883);
+//  every event hops to the main actor here, so the module can publish and no
+//  network work ever happens on the main thread. Failures (bad credentials, the
+//  printer being off or on another network) land in `failures` and retry on a
+//  timer instead of spinning, and nothing here can crash the notch: a broken
+//  printer just shows as Offline with a plain-language line.
+//
+//  One printer is free; more than one needs Pro (Feature.bambuMulti).
+//
 
+import Combine
+import Foundation
+import SwiftUI
+
+/// A printer as the user typed it. Credentials live in UserDefaults (the access
+/// code is not a secret beyond "who is on your Wi-Fi"; the printer's own LAN
+/// mode hands it out on its screen).
 struct BambuPrinterConfig: Codable, Identifiable, Hashable {
     var id = UUID()
-    var name: String = "My Printer"
-    var ip: String = ""
-    var accessCode: String = ""
-    var serialNumber: String = ""
-}
+    var name = ""
+    var host = ""          // IP or hostname, e.g. 192.168.1.50
+    var accessCode = ""
+    var serial = ""
+    /// SHA-256 of the certificate the printer showed the first time (trust on first use); nil until it connects.
+    var certPin: String?
 
-enum BambuStatus: String, Codable {
-    case printing = "RUNNING", idle = "IDLE", paused = "PAUSE", offline = "OFFLINE", failed = "FAILED", finished = "FINISH"
-    var color: NSColor {
-        switch self {
-        case .printing: return .systemGreen
-        case .paused: return .systemYellow
-        case .idle: return .systemBlue
-        case .offline, .failed, .finished: return .systemGray
-        }
-    }
-}
-
-struct BambuTelemetry: Codable {
-    var status: BambuStatus = .offline
-    var nozzleTemp: Double = 0, bedTemp: Double = 0, progress: Double = 0
-    var fileName: String = "No file", remainingTime: Int = 0
+    var displayName: String { name.isEmpty ? (host.isEmpty ? "My Printer" : host) : name }
 }
 
 @MainActor
 final class BambuManager: ObservableObject {
     static let shared = BambuManager()
-    @Published var printers: [BambuPrinterConfig] = []
-    @Published var telemetry: [UUID: BambuTelemetry] = [:]
+
+    /// How many printers come with the free app; the rest need Pro.
+    static let freePrinters = 1
+
+    /// The whole tab stops polling: no printer is contacted.
+    @AppStorage("bambu.enabled") var enabled = false
+    /// How often a dropped connection is retried. Bambu printers only speak when
+    /// something changes, so a steady connection is the telemetry feed.
+    private static let retryAfter: TimeInterval = 12
+
+    @Published private(set) var printers: [BambuPrinterConfig] = []
+    /// The latest merged report per printer; `.offline` until one arrives.
+    @Published private(set) var snapshots: [UUID: BambuSnapshot] = [:]
+    /// Why a printer is offline (timeout, refused access code), when known.
+    @Published private(set) var failures: [UUID: String] = [:]
+    /// Printers mid-connect, so the view can show a spinner instead of a stale phase.
+    @Published private(set) var connecting: Set<UUID> = []
     @Published var selectedPrinterID: UUID?
-    @Published var isConnected: [UUID: Bool] = [:]
-    @Published var errorMessages: [UUID: String] = [:]
-    private let configKey = "bambu.printers"
-    private var timer: Timer?
+
+    private var clients: [UUID: BambuMQTT] = [:]
+    private var retryTasks: [UUID: Task<Void, Never>] = [:]
+    private let store = UserDefaults.standard
+
     init() {
-        if let data = UserDefaults.standard.data(forKey: configKey),
-           let saved = try? JSONDecoder().decode([BambuPrinterConfig].self, from: data) {
+        if let data = store.data(forKey: "bambu.printers"),
+           let saved = try? JSONDecoder().decode([BambuPrinterConfig].self, from: data), !saved.isEmpty {
             printers = saved
-            if let first = printers.first { selectedPrinterID = first.id }
         }
+        selectedPrinterID = printers.first?.id
+        if enabled && !printers.isEmpty { start() }
     }
-    func saveConfigs() {
-        if let data = try? JSONEncoder().encode(printers) { UserDefaults.standard.set(data, forKey: configKey) }
+
+    // MARK: - Configuration
+
+    func save() {
+        store.set(try? JSONEncoder().encode(printers), forKey: "bambu.printers")
     }
-    func addPrinter(_ config: BambuPrinterConfig) {
-        if printers.count >= 1 && !Entitlements.shared.canUse(.bambuPremium) {
-            errorMessages[config.id] = "Multi-printer support requires Notch apple Pro."
+
+    /// True when another printer can be added (the first one is free, more need Pro).
+    var canAddPrinter: Bool {
+        printers.count < Self.freePrinters || Entitlements.shared.canUse(.bambuMulti)
+    }
+
+    /// Adds a printer and starts watching it. Returns nil on success, or the
+    /// reason it wasn't added (missing fields, or the Pro wall for more printers).
+    @discardableResult
+    func addPrinter(name: String, host: String, accessCode: String, serial: String) -> String? {
+        let trimmed = BambuPrinterConfig(name: name.trimmingCharacters(in: .whitespaces),
+                                        host: host.trimmingCharacters(in: .whitespaces),
+                                        accessCode: accessCode.trimmingCharacters(in: .whitespaces),
+                                        serial: serial.trimmingCharacters(in: .whitespaces))
+        if let problem = Self.validate(trimmed) { return problem }
+        guard canAddPrinter else { return "Another printer needs Notch Apple Pro (\(Feature.bambuMulti.title))." }
+        printers.append(trimmed)
+        save()
+        if selectedPrinterID == nil { selectedPrinterID = trimmed.id }
+        connect(trimmed)
+        return nil
+    }
+
+    /// Saves an edit (IP, code, serial) and reconnects the printer.
+    func update(_ config: BambuPrinterConfig) {
+        guard let i = printers.firstIndex(where: { $0.id == config.id }) else { return }
+        // A different address or serial is a different printer, so the old certificate no longer applies.
+        var next = config
+        if printers[i].host != config.host || printers[i].serial != config.serial { next.certPin = nil }
+        printers[i] = next
+        save()
+        if selectedPrinterID == nil { selectedPrinterID = config.id }
+        connect(config)
+    }
+
+    /// Saves one edited field without reconnecting (the settings fields use this
+    /// on every keystroke; Reconnect starts a fresh session once the user asks).
+    func setField(_ id: UUID, _ keyPath: WritableKeyPath<BambuPrinterConfig, String>, _ value: String) {
+        guard let i = printers.firstIndex(where: { $0.id == id }) else { return }
+        printers[i][keyPath: keyPath] = value
+        if keyPath == \.host || keyPath == \.serial { printers[i].certPin = nil }
+        save()
+    }
+
+    func remove(id: UUID) {
+        printers.removeAll { $0.id == id }
+        snapshots[id] = nil
+        failures[id] = nil
+        retryTasks.removeValue(forKey: id)?.cancel()
+        clients.removeValue(forKey: id)?.stop()
+        if selectedPrinterID == id { selectedPrinterID = printers.first?.id }
+        save()
+    }
+
+    /// The stored field, or the matching environment variable when it's empty
+    /// (BAMBU_IP / BAMBU_PRINTER_IP, BAMBU_ACCESS_CODE, BAMBU_SERIAL).
+    func resolved(_ p: BambuPrinterConfig) -> BambuPrinterConfig {
+        let r = BambuStatusLogic.resolved(ip: p.host, accessCode: p.accessCode, serial: p.serial)
+        return BambuPrinterConfig(id: p.id, name: p.name, host: r.ip, accessCode: r.accessCode, serial: r.serial, certPin: p.certPin)
+    }
+
+    /// A plain-language problem with the credentials, or nil when they are usable.
+    static func validate(_ p: BambuPrinterConfig) -> String? {
+        let r = BambuStatusLogic.resolved(ip: p.host, accessCode: p.accessCode, serial: p.serial)
+        if BambuStatusLogic.normalizeHost(r.ip) == nil {
+            return r.ip.isEmpty ? "Add the printer's IP address or hostname." : "“\(r.ip)” doesn’t look like an IP address or hostname."
+        }
+        if r.accessCode.isEmpty { return "Add the access code from the printer's screen (Settings → LAN)." }
+        if BambuStatusLogic.normalizeSerial(r.serial) == nil {
+            return r.serial.isEmpty ? "Add the printer's serial number." : "“\(r.serial)” doesn’t look like a Bambu serial number."
+        }
+        return nil
+    }
+
+    // MARK: - Connections
+
+    /// Monitoring on: connect every printer. Off: nothing is contacted.
+    func start() {
+        enabled = true
+        for p in printers { connect(p) }
+    }
+
+    func stop() {
+        enabled = false
+        for (id, task) in retryTasks { task.cancel(); retryTasks.removeValue(forKey: id) }
+        for (id, client) in clients {
+            snapshots[id] = BambuStatusLogic.offline(message: nil)
+            clients.removeValue(forKey: id)?.stop()
+        }
+        connecting.removeAll()
+    }
+
+    /// Forgets the remembered certificate (after a firmware update or reset) and reconnects, which remembers the new one.
+    func trustNewCertificate(id: UUID) {
+        guard let i = printers.firstIndex(where: { $0.id == id }) else { return }
+        printers[i].certPin = nil
+        save()
+        connect(printers[i])
+    }
+
+    /// Drops the printer's session and starts a fresh one (used after editing it).
+    func reconnect(id: UUID) {
+        guard let p = printers.first(where: { $0.id == id }) else { return }
+        connect(p)
+    }
+
+    private func connect(_ stored: BambuPrinterConfig) {
+        let p = resolved(stored)
+        retryTasks.removeValue(forKey: p.id)?.cancel()
+        clients.removeValue(forKey: p.id)?.stop()
+        guard enabled else { return }
+
+        // Missing or nonsense credentials must never reach the network layer.
+        if let problem = Self.validate(stored) {
+            snapshots[p.id] = BambuStatusLogic.offline(message: problem)
+            failures[p.id] = problem
+            connecting.remove(p.id)
             return
         }
-        printers.append(config)
-        saveConfigs()
-    }
-    func removePrinter(id: UUID) {
-        printers.removeAll { $0.id == id }
-        if selectedPrinterID == id { selectedPrinterID = printers.first?.id }
-        saveConfigs()
-    }
-    var errorMessage: String? { guard let id = selectedPrinterID else { return nil }; return errorMessages[id] }
-    var currentTelemetry: BambuTelemetry { guard let id = selectedPrinterID else { return BambuTelemetry() }; return telemetry[id] ?? BambuTelemetry() }
-    var currentIsConnected: Bool { guard let id = selectedPrinterID else { return false }; return isConnected[id] ?? false }
-    func startMonitoring() {
-        stopMonitoring()
-        timer = Timer.scheduledTimer(withTimeInterval: 5, repeats: true) { [weak self] _ in Task { @MainActor in await self?.fetchAllStatus() } }
-        Task { @MainActor in await fetchAllStatus() }
-    }
-    func stopMonitoring() { timer?.invalidate(); timer = nil; isConnected.removeAll() }
-    private func fetchAllStatus() async { for printer in printers { await fetchStatus(for: printer) } }
-    private func fetchStatus(for printer: BambuPrinterConfig) async {
-        guard printer.ip != "", printer.accessCode != "", printer.serialNumber != "" else {
-            errorMessages[printer.id] = "Printer not configured."; isConnected[printer.id] = false; return
+        guard let creds = BambuStatusLogic.credentials(ip: p.host, accessCode: p.accessCode, serial: p.serial) else {
+            failures[p.id] = "These printer details can’t be used. Check them in Settings → Bambu Lab."
+            return
         }
-        do {
-            try await Task.sleep(nanoseconds: 500_000_000)
-            let statuses: [BambuStatus] = [.printing, .idle, .paused, .offline]
-            let randomStatus = statuses.randomElement() ?? .offline
-            if randomStatus == .offline { telemetry[printer.id] = BambuTelemetry(status: .offline); isConnected[printer.id] = false }
-            else {
-                telemetry[printer.id] = BambuTelemetry(status: randomStatus, nozzleTemp: Double.random(in: 200...230), bedTemp: Double.random(in: 50...65), progress: Double.random(in: 0...100), fileName: "Bambu_Part_\(printer.name).gcode", remainingTime: Int.random(in: 600...3600))
-                isConnected[printer.id] = true
+
+        connecting.insert(p.id)
+        let id = p.id
+        let client = BambuMQTT()
+        clients[id] = client
+        client.start(host: creds.host,
+                     password: creds.code,
+                     topic: BambuStatusLogic.reportTopic(serial: creds.serial),
+                     pin: p.certPin) { [weak self] event in
+            Task { @MainActor in self?.handle(event, for: id) }
+        }
+    }
+
+    private func handle(_ event: BambuMQTT.Event, for id: UUID) {
+        switch event {
+        case .connected:
+            connecting.remove(id)
+            failures[id] = nil
+            // No report yet: the printer is reachable, so show Idle rather than Offline.
+            if snapshots[id] == nil || snapshots[id]?.phase == .offline {
+                snapshots[id] = BambuSnapshot(phase: .idle)
             }
-            errorMessages[printer.id] = nil
-        } catch { errorMessages[printer.id] = "Connection failed"; isConnected[printer.id] = false }
+
+        case .pinned(let fingerprint):
+            if let i = printers.firstIndex(where: { $0.id == id }), printers[i].certPin == nil {
+                printers[i].certPin = fingerprint
+                save()
+            }
+
+        case .payload(let data):
+            connecting.remove(id)
+            failures[id] = nil
+            let current = snapshots[id] ?? BambuSnapshot(phase: .idle)
+            snapshots[id] = BambuStatusLogic.apply(data, onto: current, connected: true)
+
+        case .failed(let message):
+            connecting.remove(id)
+            let off = BambuStatusLogic.offline(message: message)
+            snapshots[id] = off
+            failures[id] = message
+            clients[id]?.stop()
+            clients[id] = nil
+            scheduleRetry(id)
+
+        case .disconnected:
+            connecting.remove(id)
+            clients[id]?.stop()
+            clients[id] = nil
+            if snapshots[id] != nil, snapshots[id]?.phase != .offline {
+                snapshots[id] = BambuStatusLogic.offline(message: "Lost connection to the printer. Retrying…")
+                failures[id] = "Lost connection to the printer. Retrying…"
+            }
+            scheduleRetry(id)
+        }
+    }
+
+    /// Retry after a pause, but only while monitoring is on: a printer that is off
+    /// for the evening shouldn't be hammered in a loop.
+    private func scheduleRetry(_ id: UUID) {
+        retryTasks[id]?.cancel()
+        guard enabled, printers.contains(where: { $0.id == id }) else { return }
+        retryTasks[id] = Task { @MainActor [weak self] in
+            try? await Task.sleep(nanoseconds: UInt64(Self.retryAfter * 1_000_000_000))
+            guard !Task.isCancelled, let self, self.enabled,
+                  let p = self.printers.first(where: { $0.id == id }) else { return }
+            self.connect(p)
+        }
+    }
+
+    // MARK: - Reading
+
+    var selectedPrinter: BambuPrinterConfig? {
+        printers.first(where: { $0.id == selectedPrinterID }) ?? printers.first
+    }
+
+    func snapshot(for id: UUID?) -> BambuSnapshot {
+        guard let id, let s = snapshots[id] else {
+            return selectedPrinter == nil ? BambuStatusLogic.offline(message: nil) : BambuSnapshot(phase: .idle)
+        }
+        return s
+    }
+
+    func failure(for id: UUID?) -> String? {
+        guard let id else { return nil }
+        return failures[id]
+    }
+
+    func isConnecting(_ id: UUID?) -> Bool {
+        guard let id else { return false }
+        return connecting.contains(id)
     }
 }

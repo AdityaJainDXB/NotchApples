@@ -1,6 +1,6 @@
 //
 //  SettingsManager.swift
-//  Notch apple
+//  Notch Apple
 //
 //  Central source of truth for which modules are enabled. Every feature in the
 //  app is optional: the notch UI reads `enabledModules` and only renders tabs
@@ -12,7 +12,7 @@ import SwiftUI
 
 /// Every optional feature module in the app.
 enum Module: String, CaseIterable, Identifiable {
-    case today, claude, browser, launcher, translator, stats, windows, tools, mirror, worldClock, messenger, clipboard, notes, focus, shelf, share, audio, vpn, nowPlaying, search, timer, snippets, shortcuts, devices, live, f1, tennis, radar, wallpaper, sports, games, alerts, plugins, voiceNotes, screenTime, quickAdd, markets, home, security, cacheCleaner, claudeUsage, smartHome, devTools, wellbeing, nonNecessities, todo, klick, convert, doIt
+    case today, claude, browser, launcher, translator, stats, windows, tools, mirror, worldClock, messenger, clipboard, notes, focus, shelf, share, audio, vpn, nowPlaying, search, timer, snippets, shortcuts, devices, live, f1, tennis, radar, wallpaper, sports, games, alerts, plugins, voiceNotes, screenTime, quickAdd, markets, home, security, cacheCleaner, claudeUsage, smartHome, devTools, wellbeing, nonNecessities, todo, klick, convert, doIt, bambu
 
     var id: String { rawValue }
 
@@ -67,6 +67,7 @@ enum Module: String, CaseIterable, Identifiable {
         case .wellbeing: "Wellbeing"
         case .nonNecessities: "Non-Necessities"
         case .todo: "To-Do"
+        case .bambu: "Bambu Lab"
         }
     }
 
@@ -121,6 +122,7 @@ enum Module: String, CaseIterable, Identifiable {
         case .wellbeing: "leaf.fill"
         case .nonNecessities: "ellipsis.circle.fill"
         case .todo: "checklist"
+        case .bambu: "printer.fill"
         }
     }
 
@@ -172,9 +174,10 @@ enum Module: String, CaseIterable, Identifiable {
         case .devTools: "Format JSON, encode and decode, read a JWT, hash, make a UUID, convert timestamps, test a regex, check colour contrast and make a QR code. Free, and everything stays on this Mac."
         case .smartHome: "Ultimate: lights, switches, scenes and more from your own Home Assistant (which also connects Hue, IKEA, Zigbee and Matter). The access token stays on this Mac."
         case .todo: "A to-do list with quick add built in: type a task (and a time, and !!! for high priority) and it goes straight in. High priority shows red and sits at the top."
+        case .bambu: "Watch your Bambu Lab 3D printers from the notch: status, nozzle and bed temperatures, print progress and time left, straight from the printer on your Wi-Fi."
         case .nonNecessities: "Everything you use now and then in one tab: Focus, World Clock, Audio, Snippets, Shortcuts, Timers, Plugins, Voice Notes, Screen Time and Smart Home."
         case .claudeUsage: "Ultimate: how many tokens Claude Code has used in your 5-hour window, today and this week, with budgets you set yourself. Read from ~/.claude on this Mac."
-        case .cacheCleaner: "Ultimate: open the Purge app from the notch to free up disk space. Purge does the cleaning; Notch apple deletes nothing itself."
+        case .cacheCleaner: "Ultimate: open the Purge app from the notch to free up disk space. Purge does the cleaning; Notch Apple deletes nothing itself."
         }
     }
 
@@ -195,7 +198,7 @@ final class SettingsManager: ObservableObject {
     static func registerDefaults() {
         let d = UserDefaults.standard
         let alreadyInstalled = d.bool(forKey: "onboarding.permissionsShown")
-        // Remembered before the first-run welcome sets that flag: was Notch apple already installed when 2.0 arrived?
+        // Remembered before the first-run welcome sets that flag: was Notch Apple already installed when 2.0 arrived?
         if d.object(forKey: "v2.freshInstall") == nil { d.set(!alreadyInstalled, forKey: "v2.freshInstall") }
         // The notch opens and closes with ⌘J for everyone; anyone still on an old default (⌘E, ⌃⌥N) is moved once.
         HotkeyBinding.migrateNotchToCommandJ()
@@ -282,6 +285,8 @@ final class SettingsManager: ObservableObject {
     @AppStorage(Module.devTools.storageKey) var devToolsEnabled = false
     @AppStorage(Module.wellbeing.storageKey) var wellbeingEnabled = false
     @AppStorage(Module.todo.storageKey) var todoEnabled = false
+
+    @AppStorage(Module.bambu.storageKey) var bambuEnabled = false
     /// The iPhone Duo pop-and-morph animations (on by default).
     @AppStorage(Duo.key) var useDuoAnimations = true
     /// On (default): a two-finger sideways swipe over the tab bar only scrolls the tabs. Off: it also switches tab.
@@ -400,6 +405,7 @@ final class SettingsManager: ObservableObject {
         case .wellbeing: $wellbeingEnabled
         case .nonNecessities: .constant(true)
         case .todo: $todoEnabled
+        case .bambu: $bambuEnabled
         }
     }
 

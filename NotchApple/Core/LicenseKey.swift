@@ -1,6 +1,6 @@
 //
 //  LicenseKey.swift
-//  Notch apple
+//  Notch Apple
 //
 //  Tiers, the features each one unlocks, and the signed product keys that
 //  prove which tier you bought. Pure logic (no UI, no network), so the tests
@@ -68,7 +68,7 @@ enum Feature: String, CaseIterable, Identifiable {
     // Ultimate: AI
     case automations
     // Pro: productivity
-    case meetingSummaries, meetingNotes, namedTimers, focusProjects, richNotes, remindersSync, clipboardUnlimited, shelfPlus, textExpander, annotate, ruler, currency, commandPalette
+    case meetingSummaries, meetingNotes, namedTimers, focusProjects, richNotes, remindersSync, clipboardUnlimited, shelfPlus, textExpander, annotate, ruler, currency, commandPalette, bambuMulti
     // Ultimate: scripting
     case scripting
     // Ultimate: files and agents
@@ -113,6 +113,7 @@ enum Feature: String, CaseIterable, Identifiable {
         case .ruler: "Screen ruler"
         case .currency: "Unit and currency converter"
         case .commandPalette: "Command palette"
+        case .bambuMulti: "More Bambu Lab printers"
         case .scripting: "Command-line and scripting"
         case .edgeTrigger: "Edge trigger zones"
         case .displayLayouts: "Tabs per display"
@@ -195,7 +196,8 @@ enum Feature: String, CaseIterable, Identifiable {
         case .annotate: "Draw arrows, boxes, highlights and text on a screenshot."
         case .ruler: "Measure anything on screen in points."
         case .currency: "Type 5 km to mi or 100 usd to eur in the calculator."
-        case .commandPalette: "One shortcut to search and run everything Notch apple can do."
+        case .commandPalette: "One shortcut to search and run everything Notch Apple can do."
+        case .bambuMulti: "Watch several Bambu Lab printers in the Bambu Lab tab, each with its own status."
         case .scripting: "A `notch` command for Terminal and more notchapple:// commands for scripts."
         case .edgeTrigger: "Open the notch from anywhere along the top of the screen."
         case .displayLayouts: "Choose which tabs show on each display."
@@ -277,7 +279,7 @@ struct LicenseKey: Equatable {
         case notAKey, tampered, wrongTier, revoked, tooManyMacs(Int), server(String)
         var errorDescription: String? {
             switch self {
-            case .notAKey: "That doesn't look like a Notch apple key. Copy the whole key, from NTCH- to the end."
+            case .notAKey: "That doesn't look like a Notch Apple key. Copy the whole key, from NTCH- to the end."
             case .tampered: "That key isn't valid. Check it was copied completely, or use \"Lost my key?\"."
             case .wrongTier: "That key's tier label doesn't match the key. Copy it again from your email."
             case .revoked: "That key has been turned off (refunded or shared publicly). Use \"Lost my key?\" or contact us."

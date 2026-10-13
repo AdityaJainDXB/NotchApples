@@ -1,12 +1,13 @@
 //
 //  BambuStatusLogic.swift
-//  Notch apple
+//  Notch Apple
 //
 //  Rules for the BambuStatusChecker module: reading a Bambu Lab printer's local MQTT
 //  reports, mapping gcode_state onto the notch colours, and merging the partial
 //  JSON the printer sends. No screens and no network here, so it can be tested.
 //
 
+import CryptoKit
 import Foundation
 
 enum BambuPhase: String, Equatable {
@@ -46,6 +47,25 @@ struct BambuSnapshot: Equatable {
 }
 
 enum BambuStatusLogic {
+    // MARK: Certificate pinning
+    // A printer's certificate is signed by the printer itself, so no authority can vouch for it. Instead the
+    // first certificate it shows is remembered (trust on first use) and any different one is refused, so
+    // someone on the same Wi-Fi can't pose as the printer and read the access code.
+
+    enum PinDecision: Equatable { case pinFirst, match, mismatch }
+
+    /// SHA-256 of the certificate's DER bytes, as lowercase hex.
+    static func fingerprint(of der: Data) -> String {
+        SHA256.hash(data: der).map { String(format: "%02x", $0) }.joined()
+    }
+
+    static func decidePin(stored: String?, seen: String) -> PinDecision {
+        guard let stored, !stored.isEmpty else { return .pinFirst }
+        return stored.lowercased() == seen.lowercased() ? .match : .mismatch
+    }
+
+    static let pinMismatchMessage = "The printer’s certificate changed, so Notch Apple refused to connect. If you updated its firmware or reset it, choose “Trust new certificate” in Settings → Bambu Lab. If not, someone on your network may be posing as it."
+
     /// LAN MQTT is always this port on current Bambu firmware.
     static let mqttPort: UInt16 = 8883
     static let mqttUser = "bblp"
