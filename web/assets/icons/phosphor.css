@@ -1,0 +1,100 @@
+/* Phosphor Icons 2.1.1 (MIT), subset to the icons this site uses */
+@font-face{font-family:"Phosphor";src:url(phosphor-subset.woff2) format("woff2");font-weight:normal;font-style:normal;font-display:block}
+.ph {
+  /* use !important to prevent issues with browser extensions that change fonts */
+  font-family: "Phosphor" !important;
+  speak: never;
+  font-style: normal;
+  font-weight: normal;
+  font-variant: normal;
+  text-transform: none;
+  line-height: 1;
+
+  /* Enable Ligatures ================ */
+  letter-spacing: 0;
+  -webkit-font-feature-settings: "liga";
+  -moz-font-feature-settings: "liga=1";
+  -moz-font-feature-settings: "liga";
+  -ms-font-feature-settings: "liga" 1;
+  font-feature-settings: "liga";
+  -webkit-font-variant-ligatures: discretionary-ligatures;
+  font-variant-ligatures: discretionary-ligatures;
+
+  /* Better Font Rendering =========== */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+.ph-airplane-in-flight:before{content:"\e4fe"}
+.ph-airplane-tilt:before{content:"\e5d6"}
+.ph-app-window:before{content:"\e5da"}
+.ph-apple-logo:before{content:"\e516"}
+.ph-arrow-left:before{content:"\e058"}
+.ph-arrow-up:before{content:"\e08e"}
+.ph-arrow-up-right:before{content:"\e092"}
+.ph-arrows-left-right:before{content:"\e0a0"}
+.ph-battery-charging:before{content:"\e0ba"}
+.ph-bell:before{content:"\e0ce"}
+.ph-book-open:before{content:"\e0e6"}
+.ph-browser:before{content:"\e0f4"}
+.ph-bug:before{content:"\e5f4"}
+.ph-calendar-check:before{content:"\e712"}
+.ph-calendar-plus:before{content:"\e714"}
+.ph-caret-up:before{content:"\e13c"}
+.ph-chart-line-up:before{content:"\e156"}
+.ph-chat-teardrop-dots:before{content:"\e176"}
+.ph-check:before{content:"\e182"}
+.ph-check-circle:before{content:"\e184"}
+.ph-clipboard-text:before{content:"\e198"}
+.ph-clock:before{content:"\e19a"}
+.ph-cloud-arrow-up:before{content:"\e1ae"}
+.ph-command:before{content:"\e1c4"}
+.ph-cpu:before{content:"\e610"}
+.ph-cricket:before{content:"\ee12"}
+.ph-crop:before{content:"\e1d4"}
+.ph-cursor:before{content:"\e1dc"}
+.ph-device-mobile:before{content:"\e1e0"}
+.ph-download-simple:before{content:"\e20c"}
+.ph-eye-slash:before{content:"\e224"}
+.ph-flag-checkered:before{content:"\ea38"}
+.ph-game-controller:before{content:"\e26e"}
+.ph-github-logo:before{content:"\e576"}
+.ph-globe:before{content:"\e288"}
+.ph-globe-hemisphere-west:before{content:"\e28c"}
+.ph-hard-drives:before{content:"\e2a0"}
+.ph-headphones:before{content:"\e2a6"}
+.ph-heart:before{content:"\e2a8"}
+.ph-hourglass-medium:before{content:"\e2b8"}
+.ph-key:before{content:"\e2d6"}
+.ph-keyboard:before{content:"\e2d8"}
+.ph-lightning:before{content:"\e2de"}
+.ph-list:before{content:"\e2f0"}
+.ph-magic-wand:before{content:"\e6b6"}
+.ph-magnifying-glass:before{content:"\e30c"}
+.ph-microphone:before{content:"\e326"}
+.ph-minus:before{content:"\e32a"}
+.ph-music-notes:before{content:"\e340"}
+.ph-note-pencil:before{content:"\e34c"}
+.ph-package:before{content:"\e390"}
+.ph-palette:before{content:"\e6c8"}
+.ph-paper-plane-tilt:before{content:"\e398"}
+.ph-plus:before{content:"\e3d4"}
+.ph-puzzle-piece:before{content:"\e596"}
+.ph-scan-smiley:before{content:"\ebb4"}
+.ph-scissors:before{content:"\eae0"}
+.ph-share-network:before{content:"\e408"}
+.ph-shield-check:before{content:"\e40c"}
+.ph-soccer-ball:before{content:"\e716"}
+.ph-sparkle:before{content:"\e6a2"}
+.ph-speaker-high:before{content:"\e44a"}
+.ph-squares-four:before{content:"\e464"}
+.ph-star:before{content:"\e46a"}
+.ph-sun:before{content:"\e472"}
+.ph-tennis-ball:before{content:"\e720"}
+.ph-terminal-window:before{content:"\eae8"}
+.ph-timer:before{content:"\e492"}
+.ph-translate:before{content:"\e4a2"}
+.ph-tray:before{content:"\e4aa"}
+.ph-users-three:before{content:"\e68e"}
+.ph-wifi-slash:before{content:"\e4f2"}
+.ph-windows-logo:before{content:"\e692"}
+.ph-x:before{content:"\e4f6"}

@@ -1,0 +1,23 @@
+{
+  "name": "notchapples-site",
+  "version": "1.0.0",
+  "description": "<p align=\"center\">   <img src=\"https://raw.githubusercontent.com/AdityaJainDXB/NotchApples/main/docs/icon.png\" width=\"96\" alt=\"Notch apple icon\"> </p>",
+  "main": "index.js",
+  "scripts": {},
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/VirajSinghChadha/notchapples-site.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/VirajSinghChadha/notchapples-site/issues"
+  },
+  "homepage": "https://github.com/VirajSinghChadha/notchapples-site#readme",
+  "devDependencies": {
+    "@playwright/test": "^1.64.0",
+    "@types/node": "^26.6.4"
+  }
+}

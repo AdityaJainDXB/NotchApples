@@ -1,0 +1,1280 @@
+<!doctype html>
+<html lang="en">
+<script>document.documentElement.classList.add('js')</script>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Notch apple: the MacBook notch app and Windows notch app, with AI</title>
+<meta name="description" content="Notch apple turns your MacBook notch (and a Windows notch pill) into a command center. Press ⌃⌥S, capture anything on screen and solve, explain, translate or summarize it with free AI or fully local Ollama. Plus music, live sports, F1, clipboard, window snapping and 30 more tools. Free to start and source-available.">
+<meta property="og:site_name" content="Notch apple">
+<meta property="og:title" content="Notch apple: the MacBook notch app and Windows notch app">
+<meta property="og:description" content="Capture anything on your screen and understand it instantly, right from the notch. Free to start, source-available, free AI or fully local.">
+<meta property="og:image" content="https://virajsinghchadha.github.io/notchapples-site/assets/og.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="627">
+<meta property="og:image:alt" content="Notch apple answering a maths question in the MacBook notch">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://virajsinghchadha.github.io/notchapples-site/">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Notch apple: the MacBook notch app and Windows notch app">
+<meta name="twitter:description" content="Capture anything on your screen and understand it instantly, right from the notch. Free to start, source-available, free AI or fully local.">
+<meta name="twitter:image" content="https://virajsinghchadha.github.io/notchapples-site/assets/og.jpg">
+<link rel="canonical" href="https://virajsinghchadha.github.io/notchapples-site/">
+<meta name="keywords" content="MacBook notch app, Mac notch, notch apple, Windows notch, Windows notch app, Dynamic Island for Mac, Dynamic Island for Windows, notch widgets, now playing notch, free notch app">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"SoftwareApplication","name":"Notch apple","applicationCategory":"UtilitiesApplication","operatingSystem":"macOS, Windows 10, Windows 11","description":"Turns the MacBook notch (and a Windows notch pill) into an AI command center with music, live sports, clipboard, window snapping and more.","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"url":"https://virajsinghchadha.github.io/notchapples-site/","downloadUrl":"https://github.com/AdityaJainDXB/NotchApples/releases/latest"}</script>
+<meta name="theme-color" content="#09080d">
+<meta name="color-scheme" content="dark">
+<link rel="icon" href="assets/icon-48.png" type="image/png" sizes="48x48">
+<link rel="apple-touch-icon" href="assets/icon-180.png">
+<link rel="preload" href="assets/fonts/geist-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="assets/fonts/fonts.css">
+<link rel="preload" href="assets/icons/phosphor-subset.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="assets/icons/phosphor.css">
+<style>
+/* ============ Tokens ============
+   One accent (the app icon's violet), violet-tinted neutrals, one radius rule:
+   controls are pills, surfaces are 16px, media frames are 20px. */
+:root{
+  --bg:#09080d;--bg2:#0e0c14;--surface:#13111a;--surface2:#1a1723;
+  --line:rgba(255,255,255,.08);--line2:rgba(255,255,255,.14);
+  --tx:#f3f1f8;--mut:#a7a2b5;--dim:#8b8698;
+  --ac:#9b7bff;--ac-strong:#7650ee;--ac-ink:#cdbfff;--ac-wash:rgba(155,123,255,.12);
+  --ok:#6ee7a8;
+  --r-s:16px;--r-m:20px;
+  --ease-out:cubic-bezier(.23,1,.32,1);
+  --ease-io:cubic-bezier(.77,0,.175,1);
+  --ease-drawer:cubic-bezier(.32,.72,0,1);
+  --mono:"Geist Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+  /* names the live demo uses */
+  --p:var(--ac);--p2:var(--ac-strong);--p3:var(--ac-ink);--glow:rgba(155,123,255,.32);
+  --card:var(--surface);--card2:var(--surface2);--green:var(--ok);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{overflow-x:clip;scroll-behavior:smooth;scrollbar-color:#2c2838 var(--bg);-webkit-text-size-adjust:100%}
+body{background:var(--bg);color:var(--tx);font:16px/1.6 Geist,-apple-system,BlinkMacSystemFont,system-ui,sans-serif;overflow-x:hidden;-webkit-font-smoothing:antialiased;caret-color:var(--ac)}
+::selection{background:rgba(155,123,255,.38);color:#fff}
+::-webkit-scrollbar{width:12px;height:12px}::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:#2c2838;border-radius:99px;border:3px solid var(--bg)}::-webkit-scrollbar-thumb:hover{background:#3b3550}
+a{color:inherit;text-decoration:none}
+p a,.ul{text-decoration:underline;text-decoration-color:rgba(205,191,255,.4);text-underline-offset:3px;text-decoration-thickness:1px;transition:text-decoration-color .2s ease}
+p a:hover,.ul:hover{text-decoration-color:var(--ac-ink)}
+img{max-width:100%;height:auto;display:block}
+[hidden]{display:none!important}
+b,strong{font-weight:600}
+kbd,code{font-family:var(--mono)}
+:focus-visible{outline:2px solid var(--ac-ink);outline-offset:3px;border-radius:8px}
+.wrap{max-width:1200px;margin:0 auto;padding:0 24px}
+h1,h2,h3{text-wrap:balance;font-weight:600}
+h2{font-size:clamp(34px,4.6vw,56px);line-height:1.04;letter-spacing:-.035em}
+h3{font-size:19px;letter-spacing:-.015em;line-height:1.3}
+.lede{color:var(--mut);font-size:clamp(17px,1.6vw,19px);max-width:56ch;margin-top:18px;text-wrap:pretty}
+.ph{line-height:1}
+.skip{position:absolute;left:-9999px;top:8px;z-index:200;background:var(--ac-strong);color:#fff;padding:8px 14px;border-radius:99px}
+.skip:focus{left:12px}
+section[id],header[id],[id].anchor{scroll-margin-top:84px}
+
+/* ============ Buttons ============ */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:9px;height:48px;padding:0 22px;border-radius:99px;font:600 15px/1 Geist,sans-serif;background:var(--ac-strong);color:#fff;border:0;cursor:pointer;white-space:nowrap;box-shadow:inset 0 1px 0 rgba(255,255,255,.22),0 8px 20px -10px rgba(0,0,0,.7);transition:transform 160ms var(--ease-out),background-color .2s ease,box-shadow .2s ease;-webkit-tap-highlight-color:transparent}
+.btn .ph{font-size:18px}
+.btn:active{transform:scale(.97)}
+.btn.ghost{background:rgba(255,255,255,.06);box-shadow:inset 0 0 0 1px var(--line2);color:var(--tx)}
+.btn.sm{height:36px;padding:0 15px;font-size:13.5px}
+.link{display:inline-flex;align-items:center;gap:6px;font-weight:600;color:var(--tx);height:48px;padding:0 6px}
+.link .ph{transition:transform .25s var(--ease-out)}
+@media (hover:hover) and (pointer:fine){
+  .btn:hover{background:#6a44e0}
+  .btn.ghost:hover{background:rgba(255,255,255,.1)}
+  .link:hover .ph{transform:translate(2px,-2px)}
+}
+
+/* ============ Nav: the page has a notch ============ */
+.notchnav{position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:60;padding-top:env(safe-area-inset-top)}
+.nn{position:relative;width:max-content;max-width:calc(100vw - 32px);display:flex;align-items:center;gap:6px;height:52px;padding:0 8px 0 16px;background:#050408;border-radius:0 0 22px 22px;box-shadow:0 10px 30px -10px rgba(0,0,0,.8),inset 0 -1px 0 rgba(255,255,255,.06)}
+/* concave shoulders, like the real cutout */
+.nn:before,.nn:after{content:"";position:absolute;top:0;width:14px;height:14px;background:radial-gradient(circle at 0 100%,transparent 13.5px,#050408 14px)}
+.nn:before{left:-14px;transform:scaleX(-1)}.nn:after{right:-14px}
+.nn .logo{display:flex;align-items:center;gap:9px;font-weight:600;font-size:15px;letter-spacing:-.01em;padding-right:6px;white-space:nowrap}
+.nn .logo img{width:24px;height:24px;border-radius:6px}
+.nl{display:grid;grid-template-columns:1fr;transition:grid-template-columns .45s var(--ease-drawer),opacity .3s ease}
+.nl>div{overflow:hidden;display:flex;align-items:center;gap:2px;min-width:0}
+.nl a{font-size:14px;color:var(--mut);padding:7px 11px;border-radius:99px;white-space:nowrap;transition:color .2s ease,background-color .2s ease}
+.nl a[aria-current=true]{color:var(--tx)}
+.nn .gh{display:grid;place-items:center;width:36px;height:36px;border-radius:99px;color:var(--mut);font-size:19px;transition:color .2s ease,background-color .2s ease}
+.menu-btn{display:none;width:36px;height:36px;border-radius:99px;border:0;background:rgba(255,255,255,.08);color:var(--tx);font-size:18px;cursor:pointer;place-items:center}
+@media (hover:hover) and (pointer:fine){.nl a:hover,.nn .gh:hover{color:var(--tx);background:rgba(255,255,255,.07)}}
+/* past the hero the notch tucks its links away until you hover it, like the app */
+.compact .nl{grid-template-columns:0fr;opacity:0}
+.compact .notchnav:hover .nl,.compact .notchnav:focus-within .nl{grid-template-columns:1fr;opacity:1}
+.mobile-menu{position:fixed;top:calc(60px + env(safe-area-inset-top));left:12px;right:12px;z-index:59;background:rgba(19,17,26,.97);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-radius:var(--r-m);box-shadow:inset 0 0 0 1px var(--line2),0 30px 60px -20px rgba(0,0,0,.8);padding:8px;display:grid;opacity:0;transform:translateY(-8px) scale(.98);transform-origin:top center;pointer-events:none;visibility:hidden;transition:opacity .2s ease,transform .25s var(--ease-out),visibility 0s linear .25s}
+.mobile-menu.on{opacity:1;transform:none;pointer-events:auto;visibility:visible;transition-delay:0s}
+.mobile-menu a{padding:13px 14px;border-radius:12px;font-size:16px}
+.mobile-menu a:active{background:rgba(255,255,255,.06)}
+@media(max-width:860px){
+  .nl{display:none}.menu-btn{display:grid}.nn .gh{display:none}
+}
+
+/* ============ Hero ============ */
+.hero{position:relative;padding:132px 0 0;overflow:hidden}
+.hero:before{content:"";position:absolute;left:50%;top:-30%;width:1100px;height:900px;transform:translateX(-50%);background:radial-gradient(closest-side,rgba(118,80,238,.22),transparent 72%);pointer-events:none}
+.hero-top{position:relative;display:grid;grid-template-columns:1.25fr 1fr;gap:48px;align-items:end}
+h1{font-size:clamp(48px,7.6vw,96px);line-height:.98;letter-spacing:-.04em;font-weight:600}
+h1 .l2{display:block;color:var(--mut)}
+.hero-side .sub{color:var(--mut);font-size:clamp(17px,1.5vw,19px);max-width:42ch;text-wrap:pretty}
+.hero-side .sub b{color:var(--tx)}
+.kbd{font:500 .86em var(--mono);color:var(--tx);background:rgba(255,255,255,.08);box-shadow:inset 0 0 0 1px var(--line2);border-radius:7px;padding:1px 7px;white-space:nowrap}
+.cta{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:28px}
+.facts{position:relative;display:flex;flex-wrap:wrap;gap:8px 28px;justify-content:center;color:var(--dim);font-size:14px;padding:26px 0 0}
+.facts span{display:inline-flex;align-items:center;gap:8px}.facts .ph{color:var(--ok);font-size:15px}
+/* intro: the hero lines arrive once, staggered */
+.js .intro{animation:intro .9s var(--ease-out) both;animation-delay:calc(var(--i,0) * 90ms + 80ms)}
+@keyframes intro{from{opacity:0;transform:translateY(14px)}}
+/* The headline is the largest paint: slide it in without fading from transparent, which browsers skip when timing it. */
+@keyframes intro-h{from{transform:translateY(14px)}}
+.js h1 .intro{animation-name:intro-h}
+
+/* ============ Live demo (laptop + notch) ============ */
+.laptop{position:relative;margin:64px auto 0;max-width:1000px}
+.screen{position:relative;border-radius:22px 22px 0 0;padding:11px 11px 0;background:#141218;box-shadow:inset 0 0 0 1px #2a2732,0 60px 120px -30px rgba(0,0,0,.9),0 40px 140px -40px rgba(118,80,238,.45)}
+.display{position:relative;border-radius:12px 12px 0 0;overflow:hidden;height:540px;background:
+  radial-gradient(900px 520px at 18% 115%,#5b2bd6 0%,transparent 62%),
+  radial-gradient(760px 520px at 92% -15%,#a23bc4 0%,transparent 58%),
+  linear-gradient(160deg,#24104a,#0f0822 55%,#1a0c3d)}
+.base{height:16px;margin:0 -4%;background:linear-gradient(#c9c7d0,#86848f);border-radius:0 0 16px 16px;position:relative}
+.base:before{content:"";position:absolute;left:50%;top:0;transform:translateX(-50%);width:15%;height:6px;background:#a3a1ac;border-radius:0 0 9px 9px}
+.menubar{position:absolute;inset:0 0 auto;height:30px;background:rgba(0,0,0,.22);backdrop-filter:blur(10px);display:flex;justify-content:space-between;align-items:center;padding:0 16px;font-size:12.5px;color:#eee;z-index:2}
+.menubar .l{display:flex;gap:16px}.menubar .r{display:flex;gap:14px;opacity:.9;font-variant-numeric:tabular-nums}
+.win{position:absolute;border-radius:12px;background:rgba(20,12,36,.7);box-shadow:inset 0 0 0 1px rgba(255,255,255,.08),0 20px 50px rgba(0,0,0,.4);backdrop-filter:blur(20px);transition:left .6s var(--ease-io),top .6s var(--ease-io),width .6s var(--ease-io),height .6s var(--ease-io);overflow:hidden}
+.win .bar{height:24px;display:flex;gap:6px;align-items:center;padding:0 10px;border-bottom:1px solid rgba(255,255,255,.06)}
+.win .bar i{width:9px;height:9px;border-radius:50%;background:#ff5f57}.win .bar i:nth-child(2){background:#febc2e}.win .bar i:nth-child(3){background:#28c840}
+.win .bar span{margin-left:8px;font-size:11px;color:var(--mut)}
+.win .lines{padding:12px}.win .lines div{height:7px;border-radius:4px;background:rgba(255,255,255,.08);margin-bottom:8px}
+#w1{left:6%;top:21%;width:44%;height:62%}#w2{left:48%;top:30%;width:44%;height:58%}
+.notch{position:absolute;top:0;left:50%;transform:translateX(-50%);z-index:10;background:#000;width:190px;height:32px;border-radius:0 0 20px 20px;cursor:pointer;overflow:hidden;transition:width .55s var(--ease-drawer),height .55s var(--ease-drawer),border-radius .55s var(--ease-drawer),box-shadow .3s ease;box-shadow:0 0 0 1px rgba(155,123,255,.28),0 8px 30px rgba(118,80,238,.25)}
+.notch.open{width:min(720px,96%);height:380px;border-radius:0 0 34px 34px;cursor:default;background:linear-gradient(180deg,#0b0615,#170c2e 60%,#24104a)}
+.ears{position:absolute;inset:0;display:flex;align-items:center;justify-content:space-between;padding:0 14px;font-size:12px;color:var(--p3);transition:opacity .2s;font-variant-numeric:tabular-nums}
+.ears .eq{display:flex;gap:2px;align-items:flex-end;height:12px}.ears .eq i{width:3px;height:12px;background:var(--p);border-radius:2px;transform-origin:bottom;animation:eq 1s infinite ease-in-out}
+.ears .eq i:nth-child(2){animation-delay:.2s}.ears .eq i:nth-child(3){animation-delay:.4s}
+@keyframes eq{0%,100%{transform:scaleY(.34)}50%{transform:scaleY(1)}}
+.notch.open .ears{opacity:0;pointer-events:none}
+.panel{position:absolute;inset:0;padding:40px 18px 16px;display:flex;flex-direction:column;opacity:0;visibility:hidden;transition:opacity .25s ease,visibility 0s linear .25s;pointer-events:none}
+.notch.open .panel{opacity:1;visibility:visible;transition:opacity .25s ease .16s,visibility 0s;pointer-events:auto}
+.phead{display:flex;align-items:center;gap:6px;border-bottom:1px solid rgba(255,255,255,.08);padding-bottom:10px;margin-bottom:12px}
+.tabs{display:flex;gap:4px;overflow-x:auto;scrollbar-width:none;flex:1;min-width:0;-webkit-mask-image:linear-gradient(90deg,transparent,#000 18px,#000 calc(100% - 28px),transparent);mask-image:linear-gradient(90deg,transparent,#000 18px,#000 calc(100% - 28px),transparent)}
+.tabs::-webkit-scrollbar{display:none}
+.tabs button{flex:none;display:inline-flex;align-items:center;gap:6px;background:transparent;color:var(--mut);border:0;border-radius:99px;padding:6px 11px;font:600 12px Geist,sans-serif;cursor:pointer;transition:color .2s ease,background-color .2s ease;white-space:nowrap}
+.tabs button:hover{color:#fff;background:rgba(255,255,255,.06)}
+.tabs button.on{color:#fff;background:var(--p2)}
+.nb-gh{flex:none;display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:#fff;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);border-radius:99px;padding:6px 11px;transition:background-color .2s}
+.nb-gh:hover{background:rgba(155,123,255,.3)}
+.nb-gh .ph{font-size:14px}
+.nb-x{flex:none;width:32px;height:32px;border-radius:50%;border:0;background:transparent;color:var(--mut);cursor:pointer;font-size:15px;display:grid;place-items:center}
+.nb-x:hover{background:rgba(255,255,255,.08);color:#fff}
+.pwr{position:relative;flex:none}
+.pmenu{position:absolute;right:0;top:34px;width:200px;background:#1b1030;border:1px solid rgba(255,255,255,.12);border-radius:14px;padding:8px;z-index:5;box-shadow:0 20px 50px rgba(0,0,0,.5);text-align:left;opacity:0;transform:scale(.96);transform-origin:top right;pointer-events:none;visibility:hidden;transition:opacity .15s ease,transform .18s var(--ease-out),visibility 0s linear .18s}
+.pmenu.on{opacity:1;transform:none;pointer-events:auto;visibility:visible;transition-delay:0s}
+.pmenu b{display:block;font-size:11px;color:var(--mut);padding:2px 6px 6px}
+.pmenu button{display:flex;align-items:center;gap:10px;width:100%;background:none;border:0;color:#fff;font:500 13px Geist,sans-serif;padding:6px;border-radius:9px;cursor:pointer}
+.pmenu button:hover{background:rgba(255,255,255,.07)}
+.pmenu i{width:24px;height:24px;border-radius:7px;display:grid;place-items:center;font-style:normal;font-size:12px}
+.views{flex:1;position:relative;min-height:0}
+.view{position:absolute;inset:0;display:none;font-size:13px;animation:vin .3s var(--ease-out)}
+.view.on{display:block}
+@keyframes vin{from{opacity:0;transform:translateY(6px)}}
+.g{display:grid;gap:10px;height:100%}
+.box{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:12px 14px;text-align:left}
+.box small{display:block;color:var(--mut);font-size:11px;margin-bottom:2px}
+.box .big{font-size:30px;font-weight:600;letter-spacing:-.02em;line-height:1.1;font-variant-numeric:tabular-nums}
+.ev{display:flex;gap:10px;align-items:flex-start;margin-top:10px}.ev i{width:3px;align-self:stretch;border-radius:2px;background:var(--p)}
+.ev b{display:block;font-size:13px}.ev span{color:var(--mut);font-size:11px}
+.now{margin-left:auto;font-size:10px;background:rgba(155,123,255,.3);color:#fff;padding:1px 8px;border-radius:99px;font-style:normal}
+.msg{padding:9px 13px;border-radius:14px;margin-bottom:8px;max-width:78%;text-align:left;line-height:1.45}
+.msg.u{background:var(--p2);margin-left:auto}.msg.a{background:rgba(255,255,255,.06)}
+.chip{display:inline-block;font-size:11px;color:var(--p3);margin-bottom:10px}
+.inp{display:flex;gap:8px;position:absolute;left:0;right:0;bottom:0}
+.inp div{flex:1;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:8px 12px;color:var(--dim);text-align:left}
+.snapgrid{display:grid;grid-template-columns:repeat(8,1fr);gap:6px}
+.sz{padding:0;appearance:none;-webkit-appearance:none;aspect-ratio:1.5;border-radius:8px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);position:relative;cursor:pointer;transition:transform .2s var(--ease-out),background-color .2s,border-color .2s}
+.sz:hover,.sz.hi{border-color:var(--p);background:rgba(155,123,255,.2);transform:scale(1.06)}
+.sz i{position:absolute;border-radius:3px;background:var(--p)}
+.arr{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+.arr button{flex:1;min-width:90px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);color:#fff;border-radius:12px;padding:9px;font:600 12px Geist,sans-serif;cursor:pointer;transition:transform .16s var(--ease-out),border-color .2s}
+.arr button:hover{border-color:var(--p)}.arr button:active{transform:scale(.97)}
+.clip{display:flex;align-items:center;gap:10px;background:rgba(255,255,255,.04);padding:9px 12px;border-radius:12px;margin-bottom:6px;text-align:left}
+.clip .ic{width:26px;height:26px;border-radius:8px;background:rgba(255,255,255,.07);display:grid;place-items:center;font-size:12px}
+.clip b{display:block;font-size:12.5px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:470px}.clip span{font-size:10.5px;color:var(--mut)}
+.filters{display:flex;gap:4px;margin-bottom:10px}.filters span{font-size:11px;padding:3px 10px;border-radius:8px;background:rgba(255,255,255,.05);color:var(--mut)}.filters span.on{background:var(--p2);color:#fff}
+.timer{font-size:64px;font-weight:600;letter-spacing:-.03em;font-variant-numeric:tabular-nums;line-height:1}
+.ring{width:170px;height:170px;border-radius:50%;display:grid;place-items:center;background:conic-gradient(var(--p) var(--deg,0deg),rgba(255,255,255,.07) 0);margin:6px auto;position:relative}
+.ring:before{content:"";position:absolute;inset:8px;border-radius:50%;background:#150a2b}
+.ring>div{position:relative;text-align:center}.ring small{display:block;color:var(--mut);font-size:12px}
+.tool .big{font-size:26px}
+.swatches{display:flex;gap:6px;margin-top:10px}.swatches i{width:26px;height:26px;border-radius:7px;border:1px solid rgba(255,255,255,.2)}
+.mirror{height:100%;border-radius:16px;background:radial-gradient(circle at 50% 42%,#f2d1c4 0 17%,transparent 17.5%),radial-gradient(ellipse 30% 26% at 50% 88%,#6d28d9 0 99%,transparent 100%),linear-gradient(160deg,#39275e,#1c1033);position:relative;border:10px solid #fff;box-shadow:0 0 40px rgba(255,255,255,.35)}
+.mirror:after{content:"Live, nothing is recorded";position:absolute;left:10px;bottom:8px;font-size:10px;color:#fff;background:rgba(0,0,0,.4);padding:2px 8px;border-radius:99px}
+.clock b{font-size:26px;font-variant-numeric:tabular-nums}
+.shelf{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;height:100%;border:1.5px dashed rgba(155,123,255,.5);border-radius:16px;padding:14px}
+.file{border-radius:12px;background:rgba(255,255,255,.04);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;font-size:11.5px}
+.file div{font-size:30px}
+.search{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:10px 12px;color:#fff;text-align:left;margin-bottom:8px}
+.res{display:flex;gap:10px;align-items:center;padding:7px 10px;border-radius:10px;text-align:left}.res.on{background:rgba(155,123,255,.25)}.res span{color:var(--mut);font-size:11px;margin-left:auto}
+.hint{position:absolute;left:0;right:0;bottom:18px;text-align:center;font-size:13px;color:rgba(255,255,255,.78);z-index:1;transition:opacity .3s ease}
+.notch-trigger{position:absolute;inset:0;z-index:3;padding:0;border:0;background:transparent;border-radius:inherit;cursor:pointer;color:transparent}
+.notch-trigger:focus-visible{outline-offset:-3px}
+.notch.open .notch-trigger{visibility:hidden;pointer-events:none}
+.demo-pause{position:absolute;right:14px;bottom:14px;z-index:2;display:inline-flex;align-items:center;gap:6px;padding:6px 12px;min-height:28px;border-radius:99px;border:1px solid rgba(255,255,255,.18);background:rgba(19,17,26,.72);color:rgba(255,255,255,.88);font:600 12px Geist,sans-serif;cursor:pointer}
+.demo-pause:hover{background:rgba(19,17,26,.9);color:#fff}
+.demo-pause[hidden]{display:none}
+.hint kbd{font:500 11px var(--mono);background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);border-radius:6px;padding:1px 6px}
+.tr{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.tr .box{min-height:92px}.tr .box b{display:block;font-size:17px;font-weight:600;line-height:1.35}
+.langs{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:10px}
+.langs button{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);color:var(--mut);border-radius:99px;padding:4px 11px;font:600 11.5px Geist,sans-serif;cursor:pointer}
+.langs button.on{background:var(--p2);color:#fff;border-color:var(--p)}
+.speak{margin-top:8px;background:rgba(255,255,255,.08);border:0;color:#fff;border-radius:99px;padding:4px 12px;font:600 11.5px Geist,sans-serif;cursor:pointer}
+.meter{height:6px;border-radius:4px;background:rgba(255,255,255,.1);margin-top:8px;overflow:hidden}.meter i{display:block;height:100%;background:var(--p);transition:width .8s var(--ease-out)}
+.themes{display:flex;gap:10px;flex-wrap:wrap}.themes button{width:78px;border:2px solid transparent;background:rgba(255,255,255,.05);border-radius:14px;padding:10px 6px;color:#fff;font:600 11.5px Geist,sans-serif;cursor:pointer}
+.themes button i{display:block;height:34px;border-radius:9px;margin-bottom:6px}.themes button.on{border-color:#fff}
+.tabs button .nw{font-style:normal;font-size:8.5px;font-weight:700;letter-spacing:.05em;color:#052e12;background:var(--ok);border-radius:99px;padding:1px 5px}
+#demo[data-theme=ocean]{--p:#38bdf8;--p2:#0284c7;--p3:#bae6fd;--glow:rgba(56,189,248,.38)}
+#demo[data-theme=sunset]{--p:#fb923c;--p2:#e11d48;--p3:#fed7aa;--glow:rgba(251,146,60,.38)}
+#demo[data-theme=forest]{--p:#4ade80;--p2:#15803d;--p3:#bbf7d0;--glow:rgba(74,222,128,.34)}
+#demo[data-theme=rose]{--p:#f472b6;--p2:#be185d;--p3:#fbcfe8;--glow:rgba(244,114,182,.38)}
+#demo[data-theme] .notch{box-shadow:0 0 0 1px var(--p),0 8px 30px var(--glow)}
+
+/* ============ Sections ============ */
+section{padding:clamp(80px,9vw,128px) 0;position:relative}
+.sh{max-width:760px;margin-bottom:56px}
+.rv{transition:opacity .8s var(--ease-out),transform .8s var(--ease-out)}
+.js .rv:not(.in){opacity:0;transform:translateY(18px)}
+@keyframes revealFallback{to{opacity:1;transform:none;filter:none}}
+.js .rv:not(.in){animation:revealFallback .01s 2.8s forwards}
+
+/* statement */
+.statement{padding-top:clamp(110px,13vw,170px);padding-bottom:0}
+.statement p{font-size:clamp(26px,3.4vw,44px);line-height:1.28;letter-spacing:-.025em;font-weight:500;color:#7f7a92;max-width:min(26ch,100%);text-wrap:pretty}
+.statement p b{color:var(--tx);font-weight:500}
+.statement p .kbd{font-size:.62em;vertical-align:.18em}
+
+/* AI story: sticky media, scrolling steps */
+.sa{display:grid;grid-template-columns:1.35fr 1fr;gap:64px;align-items:start}
+.sa-media{position:sticky;top:max(88px,calc(50vh - 22vw));aspect-ratio:16/10.4;border-radius:var(--r-m);background:#0f0d16;box-shadow:inset 0 0 0 1px var(--line),0 40px 100px -30px rgba(0,0,0,.9);overflow:hidden}
+.sa-media img{position:absolute;inset:10px;width:calc(100% - 20px);height:calc(100% - 20px);object-fit:contain;border-radius:12px;opacity:0;transform:scale(.985);transition:opacity .5s var(--ease-out),transform .6s var(--ease-out)}
+.sa-media img.on{opacity:1;transform:none}
+.sa-steps{list-style:none;padding:6vh 0 10vh}
+.sa-step{min-height:46vh;display:flex;flex-direction:column;justify-content:center;padding:24px 0;opacity:.4;transition:opacity .4s ease}
+.sa-step.on{opacity:1}
+.sa-step .n{font:500 13px var(--mono);color:var(--ac-ink);margin-bottom:14px}
+.sa-step h3{font-size:clamp(26px,2.6vw,34px);letter-spacing:-.03em;line-height:1.1}
+.sa-step p{color:var(--mut);font-size:17px;margin-top:14px;max-width:44ch}
+.sa-inline{display:none}
+.modes{display:flex;flex-wrap:wrap;gap:6px;margin-top:20px}
+.modes span{font-size:13px;padding:5px 11px;border-radius:99px;background:rgba(255,255,255,.05);box-shadow:inset 0 0 0 1px var(--line);color:var(--mut)}
+.modes span.local{color:var(--ok);box-shadow:inset 0 0 0 1px rgba(110,231,168,.3)}
+.kbds{display:grid;grid-template-columns:auto 1fr;gap:10px 16px;margin-top:22px;font-size:15px;color:var(--mut);align-items:baseline}
+.kbds kbd,.k{font:500 12.5px var(--mono);background:rgba(255,255,255,.06);box-shadow:inset 0 0 0 1px var(--line2);border-radius:7px;padding:3px 8px;color:var(--tx);white-space:nowrap}
+
+/* Built around your Mac: asymmetric grid */
+.bento{display:grid;grid-template-columns:repeat(12,1fr);gap:16px}
+.cell{background:var(--surface);border-radius:var(--r-s);box-shadow:inset 0 0 0 1px var(--line);padding:30px;overflow:hidden;position:relative}
+.cell h3{font-size:22px}
+.cell p{color:var(--mut);margin-top:8px;font-size:15.5px;max-width:52ch}
+.cell.a{grid-column:span 7;grid-row:span 2;display:flex;flex-direction:column}
+.cell.b{grid-column:span 5}.cell.c{grid-column:span 5}
+.cell.d{grid-column:span 12;display:grid;grid-template-columns:repeat(4,1fr);gap:32px;background:linear-gradient(135deg,rgba(118,80,238,.16),rgba(118,80,238,.04) 60%),var(--surface)}
+.cell.a img{margin-top:26px;border-radius:12px;box-shadow:0 0 0 1px var(--line);margin-bottom:-60px}
+.cell.b img{margin-top:22px;border-radius:12px;box-shadow:0 0 0 1px var(--line);margin-bottom:-90px}
+.cell.d h3{font-size:17px;display:flex;align-items:center;gap:9px}
+.cell.d h3 .ph{color:var(--ac-ink);font-size:20px}
+.cell.d p{font-size:14.5px}
+.provs{display:flex;flex-wrap:wrap;gap:6px;margin-top:16px}
+.provs span{font-size:12.5px;padding:4px 10px;border-radius:99px;background:rgba(255,255,255,.05);color:var(--mut)}
+.provs span.local{color:var(--ok)}
+.monitors{display:flex;gap:12px;align-items:flex-end;justify-content:center;margin-top:26px}
+.mon{border-radius:10px;box-shadow:inset 0 0 0 2px #34303f;background:linear-gradient(160deg,#211640,#100b20);position:relative;overflow:hidden}
+.mon.a{width:46%;aspect-ratio:16/10}.mon.b{width:40%;aspect-ratio:16/9}
+.mon .sel{position:absolute;left:22%;top:24%;width:46%;height:42%;border:1.5px solid #fff;box-shadow:0 0 0 999px rgba(0,0,0,.45);border-radius:3px}
+.mon .ptr{position:absolute;left:64%;top:62%;font-size:16px;color:#fff}
+.mon small{position:absolute;left:9px;bottom:6px;font-size:10.5px;color:var(--mut)}
+
+/* Match day: overlapping screens */
+.md{display:grid;grid-template-columns:.9fr 1.5fr;gap:56px;align-items:center}
+.md ul{list-style:none;margin-top:26px;display:grid;gap:14px}
+.md li{display:grid;grid-template-columns:22px 1fr;gap:12px;color:var(--mut);font-size:15.5px}
+.md li .ph{color:var(--ac-ink);font-size:19px;margin-top:2px}
+.md li b{color:var(--tx)}
+.stage{position:relative;padding-bottom:16%}
+.stage img{border-radius:14px;box-shadow:0 0 0 1px var(--line2),0 40px 90px -20px rgba(0,0,0,.9)}
+.stage .s2{position:absolute;width:56%;left:-8%;bottom:0}
+.stage .s3{position:absolute;width:36%;right:-4%;bottom:6%}
+
+/* Feature index with a segmented control */
+.seg{position:relative;display:inline-flex;padding:4px;border-radius:99px;background:rgba(255,255,255,.05);box-shadow:inset 0 0 0 1px var(--line);margin-bottom:40px;max-width:100%;overflow-x:auto;scrollbar-width:none}
+.seg::-webkit-scrollbar{display:none}
+.seg button{position:relative;z-index:1;flex:none;height:38px;padding:0 17px;border:0;background:none;border-radius:99px;color:var(--mut);font:600 14px Geist,sans-serif;cursor:pointer;transition:color .2s ease;white-space:nowrap}
+.seg button[aria-selected=true]{color:#fff}
+.seg .pill{position:absolute;z-index:0;top:4px;left:0;height:38px;border-radius:99px;background:var(--ac-strong);box-shadow:inset 0 1px 0 rgba(255,255,255,.2);transition:transform .4s var(--ease-drawer),width .4s var(--ease-drawer)}
+.fx{display:grid;grid-template-columns:repeat(3,1fr);gap:0 40px}
+.fi{display:grid;grid-template-columns:40px 1fr;gap:14px;padding:22px 0;border-top:1px solid var(--line);align-items:start}
+.fi .ic{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;background:var(--ac-wash);color:var(--ac-ink);font-size:20px}
+.fi h3{font-size:16.5px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.fi p{color:var(--mut);font-size:14.5px;margin-top:3px;line-height:1.5}
+.tag{font:500 11px var(--mono);letter-spacing:.02em;color:var(--ac-ink);padding:2px 7px;border-radius:6px;background:var(--ac-wash)}
+.tag.u{color:#ffd28a;background:rgba(255,190,90,.1)}
+.fi.hide{display:none}
+.js .fi.enter{animation:fin .45s var(--ease-out) both;animation-delay:calc(var(--d,0) * 22ms)}
+@keyframes fin{from{opacity:0;transform:translateY(8px)}}
+
+/* Pricing: one table, three columns */
+.plans{display:grid;grid-template-columns:repeat(3,1fr);border-radius:var(--r-m);box-shadow:inset 0 0 0 1px var(--line2);background:var(--surface);overflow:hidden}
+.plan{padding:34px 30px;display:flex;flex-direction:column}
+.plan+.plan{border-left:1px solid var(--line)}
+.plan.best{background:linear-gradient(180deg,rgba(118,80,238,.2),rgba(118,80,238,.05) 70%)}
+.plan .nm{display:flex;align-items:center;gap:10px;font-weight:600;font-size:17px}
+.plan .pr{font-size:48px;letter-spacing:-.04em;font-weight:600;margin:14px 0 2px;font-variant-numeric:tabular-nums}
+.plan .pr small{font-size:15px;color:var(--mut);letter-spacing:0;font-weight:500;margin-left:6px}
+.plan .ln{color:var(--mut);font-size:15px}
+.plan ul{list-style:none;margin:24px 0 30px;display:grid;gap:11px;font-size:14.5px;color:var(--mut)}
+.plan li{display:grid;grid-template-columns:18px 1fr;gap:10px}
+.plan li .ph{color:var(--ac-ink);margin-top:3px}
+.plan .btn{margin-top:auto;align-self:flex-start}
+.fine{color:var(--dim);font-size:14px;margin-top:22px;text-align:center;text-wrap:balance}
+
+/* Gallery */
+.gallery{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+.shot{border-radius:var(--r-s);overflow:hidden;cursor:zoom-in;background:var(--surface);box-shadow:inset 0 0 0 1px var(--line);transition:transform .35s var(--ease-out),box-shadow .35s ease}
+.shot img{width:100%;aspect-ratio:16/10;object-fit:cover;object-position:top;background:#0f0d16}
+.shot figcaption{padding:13px 16px 15px;font-size:14.5px;font-weight:500}.shot figcaption span{display:block;color:var(--mut);font-size:13px;font-weight:400}
+@media (hover:hover) and (pointer:fine){.shot:hover{transform:translateY(-3px);box-shadow:inset 0 0 0 1px var(--line2),0 24px 50px -20px rgba(0,0,0,.9)}}
+.js .shot.fi-in{animation:fin .45s var(--ease-out) both;animation-delay:calc(var(--d,0) * 30ms)}
+.gmore{display:flex;justify-content:center;margin-top:30px}
+.lb{position:fixed;inset:0;z-index:100;display:flex;align-items:center;justify-content:center;padding:30px;background:rgba(6,5,10,.86);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);cursor:zoom-out;opacity:0;pointer-events:none;visibility:hidden;transition:opacity .22s ease,visibility 0s linear .22s}
+.lb img{max-height:88vh;border-radius:16px;box-shadow:0 40px 100px rgba(0,0,0,.7);transform:scale(.96);transition:transform .28s var(--ease-out)}
+.lb.on{opacity:1;pointer-events:auto;visibility:visible;transition-delay:0s}.lb.on img{transform:none}
+.lb-x{position:absolute;top:max(14px,env(safe-area-inset-top));right:max(14px,env(safe-area-inset-right));width:44px;height:44px;border-radius:50%;border:0;background:rgba(19,17,26,.9);color:var(--tx);display:grid;place-items:center;font-size:20px;cursor:pointer;box-shadow:inset 0 0 0 1px var(--line2)}
+
+/* What's new */
+.wn{display:grid;grid-template-columns:1.25fr 1fr;gap:56px;align-items:start}
+.feat .v{font:500 13px var(--mono);color:var(--ac-ink)}
+.feat h3{font-size:clamp(26px,2.6vw,34px);letter-spacing:-.03em;margin:8px 0 12px;line-height:1.1}
+.feat ul{color:var(--mut);margin-left:18px;display:grid;gap:5px}
+.feat img{max-height:460px;width:auto;margin-top:26px;border-radius:14px;box-shadow:0 0 0 1px var(--line2)}
+.rels{display:grid}
+.rel{padding:20px 0;border-top:1px solid var(--line)}
+.rel .v{display:flex;gap:12px;align-items:baseline;justify-content:space-between}
+.rel .v b{font:500 13.5px var(--mono);color:var(--tx)}.rel .v span{color:var(--dim);font-size:13.5px}
+.rel h3{font-size:16.5px;margin:4px 0 6px}
+.rel ul{margin-left:18px;color:var(--mut);font-size:14.5px;display:grid;gap:3px}
+.older{border-top:1px solid var(--line)}
+.older>summary{padding:18px 0;color:var(--ac-ink);font-weight:600;cursor:pointer;list-style:none}
+.older>summary::-webkit-details-marker{display:none}
+
+/* Download */
+.dl-head{text-align:center;max-width:720px;margin:0 auto 48px}
+.dl-head .ver{color:var(--mut);margin-top:16px;font-variant-numeric:tabular-nums}
+.dl-head .ver b{color:var(--tx)}
+.plats{display:grid;grid-template-columns:1fr 1fr;gap:16px;max-width:980px;margin:0 auto}
+.plat{border-radius:var(--r-m);padding:32px;background:var(--surface);box-shadow:inset 0 0 0 1px var(--line);display:flex;flex-direction:column;gap:6px}
+.plat.me{box-shadow:inset 0 0 0 1px rgba(155,123,255,.45);background:linear-gradient(180deg,rgba(118,80,238,.14),transparent 70%),var(--surface)}
+.plat .os{display:flex;align-items:center;gap:12px;font-size:22px;font-weight:600;letter-spacing:-.02em}
+.plat .os .ph{font-size:28px}
+.plat .req{color:var(--mut);font-size:14.5px}
+.plat .cta{margin-top:20px}
+.plat .alt{color:var(--dim);font-size:13.5px;margin-top:12px}
+.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:40px;max-width:980px;margin:56px auto 0;list-style:none;counter-reset:s}
+.steps li{counter-increment:s;color:var(--mut);font-size:15px;padding-top:18px;border-top:1px solid var(--line)}
+.steps li:before{content:counter(s);display:block;font:500 13px var(--mono);color:var(--ac-ink);margin-bottom:10px}
+.steps b{color:var(--tx)}
+pre{position:relative;max-width:980px;margin:40px auto 0;background:#07060b;border-radius:var(--r-s);box-shadow:inset 0 0 0 1px var(--line);padding:20px 22px;overflow-x:auto;font:13.5px/1.75 var(--mono);color:var(--ac-ink)}
+pre .c{color:var(--dim)}
+.copy{position:absolute;right:12px;top:12px;font:600 12.5px Geist,sans-serif;height:30px;padding:0 13px;border-radius:99px;background:rgba(255,255,255,.08);color:var(--tx);border:0;cursor:pointer;transition:transform .16s var(--ease-out),background-color .2s}
+.copy:active{transform:scale(.96)}.copy:hover{background:rgba(255,255,255,.14)}
+
+/* Support */
+.duo{display:grid;grid-template-columns:1.1fr 1fr;gap:16px}
+.card{border-radius:var(--r-m);padding:32px;background:var(--surface);box-shadow:inset 0 0 0 1px var(--line)}
+.card h3{font-size:22px;display:flex;align-items:center;gap:10px}
+.card h3 .ph{color:var(--ac-ink)}
+.card>p{color:var(--mut);margin:8px 0 22px;font-size:15.5px;max-width:48ch}
+.don{display:flex;gap:20px;align-items:center;flex-wrap:wrap}
+.qr{width:132px;height:132px;background:#fff;border-radius:12px;padding:8px;flex:none}
+.qr img,.qr canvas{width:116px!important;height:116px!important}
+.addr{display:flex;gap:8px;align-items:center;background:rgba(0,0,0,.35);box-shadow:inset 0 0 0 1px var(--line);border-radius:12px;padding:8px 8px 8px 12px;margin-bottom:12px}
+.addr code{font-size:12.5px;word-break:break-all;flex:1;color:var(--mut)}
+.addr button{flex:none;font:600 12.5px Geist,sans-serif;height:30px;padding:0 12px;border-radius:99px;background:rgba(255,255,255,.08);color:var(--tx);border:0;cursor:pointer;transition:transform .16s var(--ease-out)}
+.addr button:active{transform:scale(.96)}
+.rows{display:grid}
+.rows a{display:grid;grid-template-columns:36px 1fr 20px;gap:14px;align-items:center;padding:16px 4px;border-top:1px solid var(--line)}
+.rows a:first-child{border-top:0;padding-top:4px}
+.rows .ph{font-size:20px;color:var(--ac-ink)}
+.rows b{display:block;font-size:15.5px}.rows span{color:var(--mut);font-size:14px}
+.rows .go{color:var(--dim);transition:transform .25s var(--ease-out),color .2s}
+@media (hover:hover) and (pointer:fine){.rows a:hover .go{transform:translate(2px,-2px);color:var(--tx)}}
+
+/* FAQ */
+.faqg{display:grid;grid-template-columns:1fr 1.6fr;gap:56px;align-items:start}
+.faqg .sh{position:sticky;top:110px;margin:0}
+details.q{border-top:1px solid var(--line);interpolate-size:allow-keywords}
+details.q:last-child{border-bottom:1px solid var(--line)}
+details.q summary{cursor:pointer;list-style:none;display:flex;justify-content:space-between;gap:20px;padding:20px 2px;font-weight:600;font-size:17px}
+details.q summary::-webkit-details-marker{display:none}
+details.q summary .ph{color:var(--mut);font-size:18px;transition:transform .3s var(--ease-out);flex:none;margin-top:4px}
+details.q[open] summary .ph{transform:rotate(45deg)}
+details.q::details-content{block-size:0;overflow:hidden;opacity:0;transition:block-size .35s var(--ease-out),opacity .3s ease,content-visibility .35s allow-discrete}
+details.q[open]::details-content{block-size:auto;opacity:1}
+details.q p{color:var(--mut);padding:0 2px 22px;max-width:62ch}
+details.q code{background:rgba(255,255,255,.07);padding:1px 6px;border-radius:5px;font-size:13px}
+
+/* Footer + the end */
+footer{border-top:1px solid var(--line);padding:56px 0 36px;color:var(--mut);font-size:14.5px}
+.foot{display:grid;grid-template-columns:1.6fr repeat(3,1fr);gap:32px}
+.foot .logo{display:flex;align-items:center;gap:10px;font-weight:600;color:var(--tx)}
+.foot .logo img{width:26px;height:26px;border-radius:7px}
+.foot .brand p{margin-top:12px;max-width:34ch}
+.foot h4{font-size:13.5px;color:var(--tx);margin-bottom:12px;font-weight:600}
+.foot ul{list-style:none;display:grid;gap:2px}.foot ul a{display:inline-block;padding:6px 0}
+.foot a{transition:color .2s ease}.foot a:hover{color:var(--tx)}
+.footbar{border-top:1px solid var(--line);margin-top:40px;padding-top:20px;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;font-size:13.5px;color:var(--dim)}
+#footMade{cursor:default;user-select:none}
+.the-end{padding:90px 0 140px;text-align:center}
+.the-end h2{font-size:clamp(30px,4vw,44px)}
+.the-end p{color:var(--mut);margin-top:10px}
+.loop{display:inline-flex;flex-direction:column;align-items:center;gap:12px;margin-top:30px;background:none;border:0;color:var(--tx);cursor:pointer;font:600 15px Geist,sans-serif;transition:transform .16s var(--ease-out)}
+.loop:active{transform:scale(.97)}
+.loop .ring{width:64px;height:64px;margin:0;background:conic-gradient(var(--ac) var(--deg,0deg),rgba(255,255,255,.08) 0)}
+.loop .ring:before{background:var(--bg)}
+.loop .ring>div{font-size:22px;display:grid;place-items:center}
+
+
+/* ============ Polish: fill the dark, add depth ============ */
+body:before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;background:
+  radial-gradient(circle at 1px 1px,rgba(255,255,255,.055) 1px,transparent 1.4px) 0 0/28px 28px,
+  radial-gradient(900px 600px at 100% 30%,rgba(118,80,238,.09),transparent 70%),
+  radial-gradient(800px 600px at 0% 75%,rgba(162,59,196,.07),transparent 70%)}
+section::before{content:"";position:absolute;left:50%;top:0;width:min(1100px,100%);height:1px;transform:translateX(-50%);background:linear-gradient(90deg,transparent,rgba(155,123,255,.35),transparent);pointer-events:none}
+section.statement::before,section.the-end::before{display:none}
+section:nth-of-type(odd)::after{content:"";position:absolute;right:-12%;top:12%;width:520px;height:520px;border-radius:50%;background:radial-gradient(closest-side,rgba(118,80,238,.13),transparent);pointer-events:none;z-index:-1}
+section:nth-of-type(even)::after{content:"";position:absolute;left:-12%;top:20%;width:520px;height:520px;border-radius:50%;background:radial-gradient(closest-side,rgba(162,59,196,.10),transparent);pointer-events:none;z-index:-1}
+section{padding:clamp(64px,7vw,100px) 0}
+.sh{margin-bottom:44px}
+h1 .l2{background:linear-gradient(90deg,#cdbfff,#9b7bff 55%,#e08bff);-webkit-background-clip:text;background-clip:text;color:transparent}
+h2{background:linear-gradient(180deg,#fff 30%,#b9b2d0);-webkit-background-clip:text;background-clip:text;color:transparent}
+.statement p{max-width:min(34ch,100%)}
+.sa-step{min-height:34vh}
+.sa-steps{padding:3vh 0 5vh}
+.cell,.card,.plan,.shot{transition:transform .35s var(--ease-out),box-shadow .35s ease,background-color .35s ease}
+.cell,.card{background:linear-gradient(160deg,rgba(155,123,255,.07),transparent 55%),var(--surface)}
+@media (hover:hover) and (pointer:fine){
+  .cell:hover,.card:hover{transform:translateY(-3px);box-shadow:inset 0 0 0 1px rgba(155,123,255,.35),0 24px 60px -24px rgba(118,80,238,.5)}
+}
+.fi{border-radius:14px;padding:20px 14px;transition:background-color .25s ease}
+@media (hover:hover) and (pointer:fine){.fi:hover{background:rgba(155,123,255,.06)}}
+.the-end{padding:64px 0 90px;background:radial-gradient(600px 260px at 50% 100%,rgba(118,80,238,.2),transparent 70%)}
+footer{background:linear-gradient(180deg,transparent,rgba(118,80,238,.06))}
+.makers{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin-top:26px}
+.makers span{display:inline-flex;align-items:center;gap:8px;font-size:14px;color:var(--mut);padding:8px 16px;border-radius:99px;background:rgba(255,255,255,.05);box-shadow:inset 0 0 0 1px var(--line2)}
+.makers .ph{color:var(--ac-ink);font-size:17px}
+
+/* ============ Responsive ============ */
+@media(max-width:980px){
+  .hero-top{grid-template-columns:1fr;gap:22px}
+  .sa{grid-template-columns:1fr}
+  .sa-media{display:none}
+  .sa-step{min-height:0;opacity:1;padding:0 0 56px}
+  .sa-steps{padding-bottom:0}
+  .sa-inline{display:block;margin-top:22px;border-radius:14px;box-shadow:0 0 0 1px var(--line2)}
+  .cell.a,.cell.b,.cell.c{grid-column:span 12;grid-row:auto}
+  .cell.a img,.cell.b img{margin-bottom:-40px}
+  .cell.d{grid-template-columns:1fr 1fr}
+  .md{grid-template-columns:1fr;gap:40px}
+  .stage{margin:0 4%}
+  .fx{grid-template-columns:1fr 1fr}
+  .plans{grid-template-columns:1fr}.plan+.plan{border-left:0;border-top:1px solid var(--line)}
+  .gallery{grid-template-columns:1fr 1fr}
+  .wn{grid-template-columns:1fr}
+  .duo{grid-template-columns:1fr}
+  .faqg{grid-template-columns:1fr;gap:28px}.faqg .sh{position:static}
+  .foot{grid-template-columns:1fr 1fr}
+  .display{height:520px}.notch.open{height:400px}
+  .snapgrid{grid-template-columns:repeat(4,1fr)}
+}
+@media(max-width:640px){
+  .wrap{padding:0 16px}
+  .hero{padding-top:104px}
+  .btn{height:46px;padding:0 18px}
+  .cta .btn{flex:1 1 auto}
+  .laptop{margin-top:44px}
+  .display{height:560px}.notch.open{width:98%;height:440px;border-radius:0 0 24px 24px}
+  .nb-gh span{display:none}
+  #w1,#w2{display:none}
+  .timer{font-size:48px}.clip b{max-width:200px}
+  .g.c2,.g.c3{grid-template-columns:1fr!important}
+  .cell{padding:24px}
+  .cell.d{grid-template-columns:1fr;gap:22px}
+  .fx{grid-template-columns:1fr}
+  .gallery{grid-template-columns:1fr}
+  .plats{grid-template-columns:1fr}
+  .steps{grid-template-columns:1fr;gap:20px}
+  .plan{padding:28px 24px}
+  .stage .s3{display:none}.stage .s2{width:62%;left:-4%}
+  .foot{grid-template-columns:1fr}
+}
+/* ---------- scroll progress + back to top ---------- */
+.prog{position:fixed;top:0;left:0;right:0;height:2px;z-index:70;transform-origin:0 50%;transform:scaleX(var(--p,0));background:linear-gradient(90deg,var(--p2),var(--p3));pointer-events:none}
+/* Where the browser can tie it to scrolling natively, the script no longer has to. */
+@supports (animation-timeline:scroll()){.prog{animation:prog-grow linear both;animation-timeline:scroll(root block)}@keyframes prog-grow{from{transform:scaleX(0)}to{transform:scaleX(1)}}}
+.totop{position:fixed;right:max(16px,env(safe-area-inset-right));bottom:max(16px,env(safe-area-inset-bottom));z-index:55;width:44px;height:44px;border-radius:50%;border:0;display:grid;place-items:center;font-size:18px;color:var(--tx);background:rgba(19,17,26,.9);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);box-shadow:inset 0 0 0 1px var(--line2),0 10px 30px -10px rgba(0,0,0,.8);cursor:pointer;opacity:0;transform:translateY(10px);pointer-events:none;visibility:hidden;transition:opacity .25s ease,transform .25s var(--ease-out),background-color .2s ease,visibility 0s linear .25s}
+.totop.on{opacity:1;transform:none;pointer-events:auto;visibility:visible;transition-delay:0s}
+@media (hover:hover) and (pointer:fine){.totop:hover{background:var(--p2)}}
+@media(prefers-reduced-motion:reduce){.totop{transition:opacity .01s}}
+@media(prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  *,*:before,*:after{animation-duration:.01ms!important;animation-iteration-count:1!important}
+  .rv,.sa-media img,.lb img,.mobile-menu,.seg .pill,.win,.notch{transition-property:opacity!important}
+  .js .rv:not(.in){transform:none;filter:none}
+  .sa-media img{transform:none;filter:none}
+}
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<div class="prog" id="prog" aria-hidden="true"></div>
+<nav class="notchnav" aria-label="Main"><div class="nn">
+  <a href="#top" class="logo"><img src="assets/icon-48.png" alt="" width="24" height="24"> Notch apple</a>
+  <div class="nl"><div>
+    <a href="#capture">How it works</a>
+    <a href="#features">Features</a>
+    <a href="#pro">Pricing</a>
+    <a href="#new">What's new</a>
+  </div></div>
+  <a class="gh" href="https://github.com/AdityaJainDXB/NotchApples" target="_blank" rel="noopener" aria-label="Notch apple on GitHub"><i class="ph ph-github-logo"></i></a>
+  <a class="btn sm" href="#download">Download</a>
+  <button class="menu-btn" id="menuBtn" aria-label="Menu" aria-expanded="false" aria-controls="mobileMenu"><i class="ph ph-list"></i></button>
+</div></nav>
+<div class="mobile-menu" id="mobileMenu">
+  <a href="#capture">How it works</a><a href="#features">Features</a><a href="#screenshots">Screenshots</a><a href="#pro">Pricing</a><a href="#new">What's new</a><a href="#donate">Support the project</a>
+  <a href="https://github.com/AdityaJainDXB/NotchApples" target="_blank" rel="noopener">GitHub</a>
+</div>
+<button class="totop" id="toTop" aria-label="Back to top"><i class="ph ph-arrow-up"></i></button>
+<header class="hero" id="top">
+  <div class="wrap">
+    <div class="hero-top">
+      <h1><span class="intro" style="--i:0">The notch,</span> <span class="l2 intro" style="--i:1">put to work.</span></h1>
+      <div class="hero-side">
+        <p class="sub intro" style="--i:2">Press <span class="kbd">⌃⌥S</span>, drag over anything on screen, and get it <b>solved, explained or translated</b>. Thirty more tools live right beside it.</p>
+        <div class="cta intro" style="--i:3">
+          <a class="btn" href="#download" id="heroDl"><i class="ph ph-apple-logo"></i> <span>Download for Mac</span></a>
+          <a class="btn ghost" href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe" id="heroAlt"><i class="ph ph-windows-logo"></i> <span>Windows</span></a>
+        </div>
+      </div>
+    </div>
+
+    <div class="laptop intro" style="--i:4" id="demo" role="group" aria-label="Interactive illustration of Notch apple (not a screenshot)">
+      <div class="screen"><div class="display" id="display">
+        <div class="menubar" aria-hidden="true"><div class="l"><b></b><b>Finder</b><span>File</span><span>Edit</span><span>View</span><span>Go</span></div><div class="r"><span>⌁ 92%</span><span id="clock">Tue 9:41</span></div></div>
+        <div class="win" id="w1" aria-hidden="true"><div class="bar"><i></i><i></i><i></i><span>Safari</span></div><div class="lines"><div style="width:80%"></div><div style="width:60%"></div><div style="width:70%"></div><div style="width:40%"></div></div></div>
+        <div class="win" id="w2" aria-hidden="true"><div class="bar"><i></i><i></i><i></i><span>Notes</span></div><div class="lines"><div style="width:70%"></div><div style="width:85%"></div><div style="width:50%"></div></div></div>
+
+        <div class="notch" id="notch"><button class="notch-trigger" id="notchBtn" type="button" aria-expanded="false" aria-controls="notchPanel" aria-label="Open the Notch apple demo"></button>
+          <div class="ears" aria-hidden="true"><span class="eq"><i></i><i></i><i></i></span><span id="earTimer">24:59</span></div>
+          <div class="panel" id="notchPanel" role="region" aria-label="Notch apple demo">
+            <div class="phead">
+              <div class="tabs" id="tabs"></div>
+              <a class="nb-gh" href="https://github.com/AdityaJainDXB/NotchApples" target="_blank" rel="noopener" title="Notch apple on GitHub"><i class="ph ph-github-logo"></i><span>GitHub</span></a>
+              <div class="pwr"><button class="nb-x" id="pwrBtn" aria-label="Settings, relaunch or quit" title="Settings, relaunch or quit">⏻</button>
+                <div class="pmenu" id="pmenu"><b>Notch apple</b>
+                  <button><i style="background:#9d66ff">⚙</i>Open Settings</button>
+                  <button><i style="background:#f59e0b">↻</i>Relaunch</button>
+                  <button><i style="background:#ef4444">✕</i>Quit Notch apple</button>
+                </div></div>
+              <button class="nb-x" id="closeBtn" aria-label="Close"><i class="ph ph-caret-up"></i></button>
+            </div>
+            <div class="views">
+              <div class="view" data-t="Today" data-i="☀️">
+                <div class="g c2" style="grid-template-columns:1fr 1.5fr">
+                  <div class="box"><small>Tuesday</small><div class="big">29 September</div><div style="margin-top:10px;font-size:22px">☀️ 24° <small style="display:inline;font-size:12px">Clear, Cupertino</small></div><small style="margin-top:auto;padding-top:40px">🔋 92%</small></div>
+                  <div class="box"><small>Up next</small>
+                    <div class="ev"><i></i><div><b>Design review</b><span>11:00 to 11:45</span></div><em class="now">Now</em></div>
+                    <div class="ev"><i style="background:#fb923c"></i><div><b>Lunch with Sam</b><span>12:45 to 13:45</span></div></div>
+                    <div class="ev"><i style="background:#4ade80"></i><div><b>Gym</b><span>16:15 to 17:15</span></div></div>
+                  </div>
+                </div>
+              </div>
+              <div class="view" data-t="AI" data-i="✨">
+                <div class="chip">✨ Google Gemini, gemini-3.8-flash, <span style="color:var(--green)">Free</span></div>
+                <div class="msg u">What's on my screen?</div>
+                <div class="msg a">📸 Screenshot attached. You're comparing two windows: a Safari page about notch apps and a note with your to-do list for today.</div>
+                <div class="msg u">Summarise my note in one line</div>
+                <div class="inp"><div>Message AI…</div></div>
+              </div>
+              <div class="view" data-t="Windows" data-i="🪟">
+                <small style="color:var(--mut)">Snap the front window. Hover or focus a zone to try it.</small>
+                <div class="snapgrid" id="snaps" role="group" aria-label="Window snap zones" style="margin-top:8px"></div>
+                <div class="arr"><button data-tile="split">⬌ Split screen</button><button data-tile="grid">⊞ 4-window grid</button><button data-tile="cols">⫴ 3 columns</button><button data-tile="reset">↺ Reset</button></div>
+              </div>
+              <div class="view" data-t="Clipboard" data-i="📋">
+                <div class="filters"><span class="on">All</span><span>Pinned</span><span>Text</span><span>Links</span><span>Images</span><span>Files</span></div>
+                <div class="clip"><div class="ic">🔗</div><div><b>https://github.com/AdityaJainDXB/NotchApples</b><span>📌 Safari, 1 min ago</span></div></div>
+                <div class="clip"><div class="ic">≡</div><div><b>brew install --cask notch-apple</b><span>Terminal, 9 min ago</span></div></div>
+                <div class="clip"><div class="ic">≡</div><div><b>Meeting moved to 3:30, same room.</b><span>Messages, 14 min ago</span></div></div>
+                <div class="clip"><div class="ic">📄</div><div><b>Slides.key</b><span>Finder, 22 min ago</span></div></div>
+              </div>
+              <div class="view" data-t="Focus" data-i="⏱">
+                <div class="ring" id="ring"><div><div class="timer" id="timer">25:00</div><small>Focus, session 2 of 4</small></div></div>
+              </div>
+              <div class="view" data-t="Tools" data-i="🧰">
+                <div class="g c2" style="grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr">
+                  <div class="box tool"><small>🔤 Text Grab</small><div class="big" style="font-size:18px">Copy text from screen</div><small>Copied 142 characters</small></div>
+                  <div class="box tool"><small>☕ Keep Awake</small><div class="big">1 hour</div><small>Awake until 10:41</small></div>
+                  <div class="box tool"><small>🎨 Color Picker</small><div class="big">#9B7BFF</div><div class="swatches"><i style="background:#9b7bff"></i><i style="background:#f472b6"></i><i style="background:#38bdf8"></i><i style="background:#facc15"></i></div></div>
+                  <div class="box tool"><small>🧮 Calculator</small><div style="font-family:var(--mono);color:var(--mut)">(12.5 + 7) × 3</div><div class="big">= 58.5</div></div>
+                </div>
+              </div>
+              <div class="view" data-t="Mirror" data-i="🪞"><div class="mirror"></div></div>
+              <div class="view" data-t="World" data-i="🌍">
+                <div class="g c3" style="grid-template-columns:1fr 1fr 1fr" id="clocks"></div>
+              </div>
+              <div class="view" data-t="Translate" data-i="🌐" data-new="1">
+                <div class="langs" id="langs"></div>
+                <div class="tr">
+                  <div class="box"><small>English</small><b>Hello, how are you?</b></div>
+                  <div class="box"><small id="trLang">Spanish</small><b id="trOut">Hola, ¿cómo estás?</b><button class="speak" id="speak">🔊 Read aloud</button></div>
+                </div>
+              </div>
+              <div class="view" data-t="Stats" data-i="📊" data-new="1">
+                <div class="g c3" style="grid-template-columns:1fr 1fr 1fr;height:auto">
+                  <div class="box"><small>🧠 RAM</small><div class="big" id="stRam">8.4 GB</div><div class="meter"><i id="mRam" style="width:52%"></i></div></div>
+                  <div class="box"><small>⚙️ CPU</small><div class="big" id="stCpu">23%</div><div class="meter"><i id="mCpu" style="width:23%"></i></div></div>
+                  <div class="box"><small>🌐 Network</small><div class="big" id="stNet" style="font-size:22px">↓ 4.2 MB/s</div><small id="stUp">↑ 0.6 MB/s</small></div>
+                  <div class="box"><small>🔋 Battery</small><div class="big">92%</div><div class="meter"><i style="width:92%"></i></div></div>
+                  <div class="box"><small>💾 Disk free</small><div class="big">312 GB</div><div class="meter"><i style="width:34%"></i></div></div>
+                  <div class="box"><small>🧩 Widget</small><div style="font-size:12px;margin-top:6px;color:var(--mut)">MacBook Center, Small and Medium, in Notification Center</div></div>
+                </div>
+              </div>
+              <div class="view" data-t="Themes" data-i="🎨" data-new="1">
+                <small style="color:var(--mut);display:block;margin-bottom:10px">Settings → Appearance. Pick a colour theme; this demo restyles to match.</small>
+                <div class="themes" id="themes">
+                  <button class="on" data-th=""><i style="background:linear-gradient(135deg,#b39bff,#7650ee)"></i>Violet</button>
+                  <button data-th="ocean"><i style="background:linear-gradient(135deg,#38bdf8,#0284c7)"></i>Ocean</button>
+                  <button data-th="sunset"><i style="background:linear-gradient(135deg,#fb923c,#e11d48)"></i>Sunset</button>
+                  <button data-th="forest"><i style="background:linear-gradient(135deg,#4ade80,#15803d)"></i>Forest</button>
+                  <button data-th="rose"><i style="background:linear-gradient(135deg,#f472b6,#be185d)"></i>Rose</button>
+                </div>
+                <div style="display:flex;gap:16px;margin-top:14px;color:var(--mut);font-size:12px"><span>🔊 Volume and brightness gauge</span><span>🔴 Recording indicator</span></div>
+              </div>
+              <div class="view" data-t="Shelf" data-i="🗂">
+                <div class="shelf"><div class="file"><div>📄</div>report.pdf</div><div class="file"><div>🖼️</div>hero.png</div><div class="file"><div>📦</div>build.zip</div><div class="file" style="border:1px dashed rgba(255,255,255,.2);color:var(--mut)"><div>＋</div>Drop here</div></div>
+              </div>
+              <div class="view" data-t="Search" data-i="🔍">
+                <div class="search">🔍 invoice</div>
+                <div class="res on">📄 <b>Invoice-September.pdf</b><span>Documents</span></div>
+                <div class="res">📊 <b>Invoices 2026.numbers</b><span>Desktop</span></div>
+                <div class="res">📁 <b>Invoices</b><span>iCloud Drive</span></div>
+              </div>
+              <div class="view" data-t="Messenger" data-i="💬">
+                <div class="chip"># cafe-study, 🔒 end-to-end encrypted, 3 online</div>
+                <div class="msg a"><b style="color:#6ee7b7;font-size:11px">FriendKoala#314</b><br>anyone up for the study session at 5?</div>
+                <div class="msg u">I'm in 🙌</div>
+                <div class="inp"><div>👋 😂 👍 ❤️ 🔥 &nbsp; Message</div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="hint" id="hint">Click the notch to try it. This demo is live.</div>
+        <button class="demo-pause" id="demoPause" type="button"><i class="ph ph-pause" aria-hidden="true"></i> Pause tour</button>
+      </div></div>
+      <div class="base"></div>
+    </div>
+
+    <div class="facts intro" style="--i:5">
+      <span><i class="ph ph-check"></i>Free to start, source-available</span>
+      <span><i class="ph ph-check"></i>Free AI, or fully local with Ollama</span>
+      <span><i class="ph ph-check"></i>No account needed</span>
+      <span><i class="ph ph-check"></i>macOS 14+ and Windows 10/11</span>
+    </div>
+  </div>
+</header>
+
+<main id="main">
+
+<section class="statement" id="what" aria-label="What is Notch apple"><div class="wrap">
+  <p class="rv">Notch apple lives in the <b>black cutout at the top of your screen</b>. Click it or press <span class="kbd">⌃⌥N</span> and it opens over whatever you're doing. <b>No windows to find. No app switching.</b> On Macs without a notch, it's a small pill that works the same way.</p>
+</div></section>
+
+<section id="capture"><div class="wrap">
+  <div class="sh rv"><h2>Ask about anything on your screen.</h2><p class="lede">A maths question, a Python error, a chart, a page in another language. Four steps, all from the notch.</p></div>
+  <div class="sa">
+    <div class="sa-media" aria-hidden="true">
+      <img class="on" src="assets/screenshots/capture-overlay.webp" width="1600" height="1041" alt="">
+      <img src="assets/screenshots/ai-input.webp" width="1480" height="840" alt="" loading="lazy">
+      <img src="assets/screenshots/ai-result.webp" width="1480" height="840" alt="" loading="lazy">
+      <img src="assets/screenshots/follow-up.webp" width="1480" height="840" alt="" loading="lazy">
+    </div>
+    <ol class="sa-steps">
+      <li class="sa-step on" data-i="0">
+        <div class="n">Capture</div>
+        <h3>Drag a box around it.</h3>
+        <p>Press <span class="k">⌃⌥S</span> in any app, even full screen. The display under your pointer freezes and you select a region, a single window, or the whole screen. The crop stays Retina-sharp.</p>
+        <img class="sa-inline" loading="lazy" src="assets/screenshots/capture-overlay.webp" width="1600" height="1041" alt="The capture overlay: the screen is dimmed except a selected box around a maths question, with its size, 1800 by 764 pixels, shown at the corner">
+      </li>
+      <li class="sa-step anchor" id="ai" data-i="1">
+        <div class="n">Choose</div>
+        <h3>It suggests what to do.</h3>
+        <p>Notch apple reads the text first and picks the likely action: Solve for maths, Code for an error, Translate for another language, Explain for a chart.</p>
+        <div class="modes" aria-label="Modes"><span>Solve</span><span>Explain</span><span>Explain simply</span><span>Hint</span><span>Summarize</span><span>Translate</span><span>Rewrite</span><span>Code</span><span>Ask</span><span class="local">Extract text, on your Mac</span></div>
+        <img class="sa-inline" loading="lazy" src="assets/screenshots/ai-input.webp" width="1480" height="840" alt="The AI tab with a captured maths question, labelled 'Looks like math', and action buttons: Solve, Hint, Explain simply, Answer only, Explain and Summarize">
+      </li>
+      <li class="sa-step anchor" id="actions" data-i="2">
+        <div class="n">Answer</div>
+        <h3>Read it as it's written.</h3>
+        <p>Answers stream in with readable maths instead of raw LaTeX, code blocks with Copy, and real tables. This one ran on the Mac itself with Ollama.</p>
+        <div class="kbds"><span class="k">⌃⌥N</span><span>Open or close the notch</span><span class="k">⌘⇧V</span><span>Paste an image or text</span><span class="k">⌘R</span><span>Retry, with another provider if you switched</span></div>
+        <img class="sa-inline" loading="lazy" src="assets/screenshots/ai-result.webp" width="1480" height="840" alt="The answer: numbered steps solving 3x squared minus 12 equals 0, ending with x equals 2 and minus 2, answered on this Mac with Ollama">
+      </li>
+      <li class="sa-step anchor" id="followup" data-i="3">
+        <div class="n">Follow up</div>
+        <h3>Keep asking.</h3>
+        <p>"Why are there two answers?" "Make it simpler." The AI still sees your capture and its earlier answers. Stop, Retry and Edit work like you'd expect, and everything can be exported as Markdown.</p>
+        <img class="sa-inline" loading="lazy" src="assets/screenshots/follow-up.webp" width="1480" height="840" alt="A follow-up question, 'Why are there two answers?', answered with an explanation about quadratic equations">
+      </li>
+    </ol>
+  </div>
+</div></section>
+
+<section id="privacy"><div class="wrap">
+  <div class="sh rv"><h2>Your AI, your Mac, your rules.</h2><p class="lede">Pick the provider, keep the history, and always know what leaves your computer.</p></div>
+  <div class="bento">
+    <article class="cell a rv anchor" id="history">
+      <h3>Every answer, saved locally.</h3>
+      <p>Each task keeps its image, mode, question, answer and the model that wrote it. Search "quadratic" and pick up where you left off, or set history to delete itself after a day, a week or a month.</p>
+      <img loading="lazy" src="assets/screenshots/history.webp" width="1600" height="1042" alt="Settings, AI History: a searchable list of past tasks with thumbnails and modes, and the selected Code task with its answer">
+    </article>
+    <article class="cell b rv anchor" id="settings">
+      <h3>Free AI, or fully local.</h3>
+      <p>Use a free key, run models on your Mac with no key at all, or bring your own.</p>
+      <div class="provs"><span>Gemini</span><span>Groq</span><span>OpenRouter</span><span class="local">Ollama, offline</span><span>Claude</span><span>ChatGPT</span><span>DeepSeek</span></div>
+      <img loading="lazy" src="assets/screenshots/settings-ai.webp" width="1600" height="1042" alt="Settings, AI: provider Ollama on this Mac, model gemma3:4b, 'This model can read screenshots', a Test connection button, and capture settings">
+    </article>
+    <article class="cell c rv anchor" id="monitors">
+      <h3>Sharp on every display.</h3>
+      <p>Capture follows your pointer and uses that display's own resolution, so a Retina laptop beside a 4K monitor both come out crisp.</p>
+      <div class="monitors" role="img" aria-label="Illustration: two displays; the pointer is on the second, where the selection box is drawn"><div class="mon a"><small>Built-in Retina</small></div><div class="mon b"><div class="sel"></div><i class="ph ph-cursor ptr"></i><small>External</small></div></div>
+    </article>
+    <div class="cell d rv">
+      <div><h3><i class="ph ph-hard-drives"></i>Stays on your Mac</h3><p>API keys, chat history, captures and on-device text recognition.</p></div>
+      <div><h3><i class="ph ph-paper-plane-tilt"></i>Sent only when you ask</h3><p>With a cloud provider, only your question and capture go to the provider you chose.</p></div>
+      <div><h3><i class="ph ph-wifi-slash"></i>Ollama sends nothing</h3><p>Answers are made on your Mac, and the notch says "On this Mac".</p></div>
+      <div><h3><i class="ph ph-eye-slash"></i>No tracking</h3><p>No telemetry and no account. Signing in is optional and only syncs your setup.</p></div>
+    </div>
+  </div>
+</div></section>
+
+<section id="sports"><div class="wrap md">
+  <div class="rv">
+    <h2 id="f1" class="anchor">Match day, in the notch.</h2>
+    <p class="lede">Live F1 timing, your football team's next match, and a quick game for the break in between.</p>
+    <ul>
+      <li><i class="ph ph-flag-checkered"></i><span><b>F1:</b> the live running order, full classification with tyres and gaps, the weekend in your time zone, and your driver beside the notch.</span></li>
+      <li><i class="ph ph-soccer-ball"></i><span><b>Sports:</b> club football, World Cup and national teams, NBA, NFL, MLB and NHL, with a heads-up 30 minutes before kick-off.</span></li>
+      <li><i class="ph ph-cricket"></i><span><b>Cricket:</b> India's internationals and the IPL.</span></li>
+      <li><i class="ph ph-game-controller"></i><span><b>Notch Games:</b> 2048, Snake and a reaction test.</span></li>
+    </ul>
+  </div>
+  <div class="stage rv">
+    <img loading="lazy" src="assets/screenshots/f1.webp" width="1480" height="840" alt="The F1 tab: Bahrain Grand Prix qualifying classification with team colours, tyres and lap times, the weekend schedule with a countdown to the race, and driver standings">
+    <img class="s2" loading="lazy" src="assets/screenshots/sports-detail.webp" width="1480" height="840" alt="The Sports tab: Barcelona's next match with a countdown, and match details for Sevilla 1-3 Barcelona with goalscorers and substitutions">
+    <img class="s3" loading="lazy" src="assets/screenshots/games.webp" width="1480" height="840" alt="Notch Games: a 2048 board with score and best score, and buttons for Snake and Reaction">
+  </div>
+</div></section>
+
+<section id="features"><div class="wrap">
+  <div class="sh rv"><h2>Thirty more tools. Turn on the ones you use.</h2><p class="lede">Every module is optional. Switch them in Settings → Modules and the rest stays out of your way.</p></div>
+  <div class="seg rv" role="tablist" aria-label="Feature groups" id="fseg">
+    <span class="pill" aria-hidden="true"></span>
+    <button role="tab" aria-selected="true" data-c="day">Everyday</button>
+    <button role="tab" aria-selected="false" data-c="work">Work</button>
+    <button role="tab" aria-selected="false" data-c="net">Connected</button>
+    <button role="tab" aria-selected="false" data-c="pro">Paid</button>
+  </div>
+  <div class="fx" id="fx">
+    <div class="fi" data-c="day"><span class="ic"><i class="ph ph-music-notes"></i></span><div><h3>Now Playing</h3><p>Anything playing, with album art beside the notch, controls and synced lyrics.</p></div></div>
+    <div class="fi" data-c="day"><span class="ic"><i class="ph ph-sun"></i></span><div><h3>Home</h3><p>Weather, your next events, battery, devices, notifications and quick add, with clipboard, now playing and notes one click away. Choose the Classic page or the widget page, and reorder the widgets.</p></div></div>
+    <div class="fi" data-c="day"><span class="ic"><i class="ph ph-clipboard-text"></i></span><div><h3>Clipboard history</h3><p>Search, pin and filter what you copied. Password-manager secrets are never saved.</p></div></div>
+    <div class="fi" data-c="day"><span class="ic"><i class="ph ph-note-pencil"></i></span><div><h3>Notes and to-do</h3><p>Quick notes and a to-do list, saved on your Mac as you type.</p></div></div>
+    <div class="fi" data-c="day"><span class="ic"><i class="ph ph-tray"></i></span><div><h3>File Shelf</h3><p>Drop a file on the notch to park it. Drag it out whenever you need it.</p></div></div>
+    <div class="fi" data-c="day"><span class="ic"><i class="ph ph-magnifying-glass"></i></span><div><h3>File Search</h3><p>Spotlight-powered search for files, apps and folders.</p></div></div>
+    <div class="fi" data-c="day"><span class="ic"><i class="ph ph-timer"></i></span><div><h3>Timer and stopwatch</h3><p>Presets from a minute to an hour, laps, and the time left beside the notch.</p></div></div>
+    <div class="fi" data-c="day"><span class="ic"><i class="ph ph-battery-charging"></i></span><div><h3>Charging, in words</h3><p>Plug in and the notch says how long until full. Unplug and it shows the time left.</p></div></div>
+    <div class="fi" data-c="day"><span class="ic"><i class="ph ph-globe-hemisphere-west"></i></span><div><h3>World Clock <span class="tag">Add-on</span></h3><p>The cities you care about, with day or night and the difference from yours.</p></div></div>
+
+    <div class="fi" data-c="work"><span class="ic"><i class="ph ph-squares-four"></i></span><div><h3>Window snapping</h3><p>Drag a window to the notch and drop it on a zone, or use ⌃⌥ and the arrow keys.</p></div></div>
+    <div class="fi" data-c="work"><span class="ic"><i class="ph ph-crop"></i></span><div><h3>Tools</h3><p>Text Grab, Keep Awake, a colour picker and a calculator that answers as you type.</p></div></div>
+    <div class="fi" data-c="work"><span class="ic"><i class="ph ph-translate"></i></span><div><h3>Translator <span class="tag">Add-on</span></h3><p>Seven languages with pronunciation and read-aloud.</p></div></div>
+    <div class="fi" data-c="work"><span class="ic"><i class="ph ph-cpu"></i></span><div><h3>Mac Stats</h3><p>Live RAM, CPU, network, battery and disk, in the notch or as a widget.</p></div></div>
+    <div class="fi" data-c="work"><span class="ic"><i class="ph ph-app-window"></i></span><div><h3>Desktop widgets</h3><p>Weather, music, next events and the MacBook Center widget.</p></div></div>
+    <div class="fi" data-c="work"><span class="ic"><i class="ph ph-lightning"></i></span><div><h3>Shortcuts</h3><p>Run Apple Shortcuts and Focus modes, or drive the notch with notchapple:// links.</p></div></div>
+    <div class="fi" data-c="work"><span class="ic"><i class="ph ph-scissors"></i></span><div><h3>Snippets <span class="tag">Pro</span></h3><p>Paste saved text into any app in one click.</p></div></div>
+    <div class="fi" data-c="work"><span class="ic"><i class="ph ph-browser"></i></span><div><h3>Browser and Launcher <span class="tag">Pro</span></h3><p>Search the web and open your favourite apps from a shelf you arrange.</p></div></div>
+    <div class="fi" data-c="work"><span class="ic"><i class="ph ph-hourglass-medium"></i></span><div><h3>Focus <span class="tag">Pro</span></h3><p>Pomodoro sessions with the countdown beside the closed notch.</p></div></div>
+
+    <div class="fi" data-c="net"><span class="ic"><i class="ph ph-share-network"></i></span><div><h3>AirDrop and PairDrop</h3><p>Send with AirDrop, or to any device on your Wi-Fi with a 6-digit code.</p></div></div>
+    <div class="fi" data-c="net"><span class="ic"><i class="ph ph-headphones"></i></span><div><h3>Devices</h3><p>AirPods and accessory battery, which apps use your mic, and Ring my iPhone.</p></div></div>
+    <div class="fi" data-c="net"><span class="ic"><i class="ph ph-bell"></i></span><div><h3>Notifications</h3><p>Your other apps' notifications in the notch, and replies to iMessages.</p></div></div>
+    <div class="fi" data-c="net"><span class="ic"><i class="ph ph-package"></i></span><div><h3>Live tracking</h3><p>Paste a parcel or flight number and follow it from the notch.</p></div></div>
+    <div class="fi" data-c="net"><span class="ic"><i class="ph ph-chat-teardrop-dots"></i></span><div><h3>Messenger <span class="tag">Pro</span></h3><p>Chat on the same Wi-Fi or in an encrypted room. Random handles, no accounts.</p></div></div>
+    <div class="fi" data-c="net"><span class="ic"><i class="ph ph-speaker-high"></i></span><div><h3>Per-app audio <span class="tag">Pro</span></h3><p>Volume up to 150% and a 10-band EQ for each app.</p></div></div>
+    <div class="fi" data-c="net"><span class="ic"><i class="ph ph-shield-check"></i></span><div><h3>Free VPN <span class="tag">Pro</span></h3><p>A list of free OpenVPN servers, or import your own profiles.</p></div></div>
+    <div class="fi" data-c="net"><span class="ic"><i class="ph ph-cloud-arrow-up"></i></span><div><h3>Sign in and sync <span class="tag">Pro</span></h3><p>Your setup and key follow you to a new Mac. Or use iCloud or a backup file.</p></div></div>
+    <div class="fi" data-c="net"><span class="ic"><i class="ph ph-scan-smiley"></i></span><div><h3>Face ID-style lock</h3><p>Lock the notch with Touch ID, your password or your webcam.</p></div></div>
+
+    <div class="fi" data-c="pro"><span class="ic"><i class="ph ph-microphone"></i></span><div><h3>Voice Notes <span class="tag">Pro</span></h3><p>Record from the notch, transcribe on your Mac, then summarise with action items.</p></div></div>
+    <div class="fi" data-c="pro"><span class="ic"><i class="ph ph-chart-line-up"></i></span><div><h3>Screen Time <span class="tag">Pro</span></h3><p>See where your time goes, set app limits, and block distractions during Focus.</p></div></div>
+    <div class="fi" data-c="pro"><span class="ic"><i class="ph ph-calendar-plus"></i></span><div><h3>Quick Add <span class="tag">Pro</span></h3><p>Type "Dentist tomorrow 3pm" and it lands in Calendar or Reminders.</p></div></div>
+    <div class="fi" data-c="pro"><span class="ic"><i class="ph ph-command"></i></span><div><h3>Command palette <span class="tag">Pro</span></h3><p>⌃⌥P runs anything, with a text expander, markup, ruler and converter.</p></div></div>
+    <div class="fi" data-c="pro"><span class="ic"><i class="ph ph-palette"></i></span><div><h3>Home and themes <span class="tag">Pro</span></h3><p>Your own dashboard, profiles by app or time of day, and 22 themes.</p></div></div>
+    <div class="fi" data-c="pro"><span class="ic"><i class="ph ph-globe"></i></span><div><h3>Web search <span class="tag">Pro</span></h3><p>AI answers that cite their sources, plus personas and voice.</p></div></div>
+    <div class="fi" data-c="pro"><span class="ic"><i class="ph ph-device-mobile"></i></span><div><h3>iPhone companion <span class="tag u">Ultimate</span></h3><p>Your notch on your iPhone over Wi-Fi, encrypted, with no server.</p></div></div>
+    <div class="fi" data-c="pro"><span class="ic"><i class="ph ph-terminal-window"></i></span><div><h3>The platform <span class="tag u">Ultimate</span></h3><p>Live Activities API, AI automations, the plugin SDK and scripting.</p></div></div>
+    <div class="fi" data-c="pro"><span class="ic"><i class="ph ph-puzzle-piece"></i></span><div><h3>Plugins <span class="tag u">Ultimate</span></h3><p>Turn any script's output into a notch widget, or grab one from the gallery.</p></div></div>
+    <div class="fi" data-c="net"><span class="ic"><i class="ph ph-airplane-in-flight"></i></span><div><h3>Flight Radar</h3><p>Every aircraft around you, live on a round radar, with callsign, type, height and speed.</p></div></div>
+    <div class="fi" data-c="day"><span class="ic"><i class="ph ph-tennis-ball"></i></span><div><h3>Tennis</h3><p>Every ATP and WTA match live, Grand Slams in red, the top 20 and your favourite players.</p></div></div>
+    <div class="fi" data-c="day"><span class="ic"><i class="ph ph-airplane-tilt"></i></span><div><h3>Plane game</h3><p>A 3D flight sim in the notch: Cessna to A380, real dials, engine sounds, retractable gear and GPWS callouts.</p></div></div>
+    <div class="fi" data-c="pro"><span class="ic"><i class="ph ph-sparkle"></i></span><div><h3>Notch apple AI <span class="tag">Pro</span></h3><p>Ask without setting up a key: answered by Notch apple's own AI, with a daily allowance. Your own keys still work.</p></div></div>
+    <div class="fi" data-c="pro"><span class="ic"><i class="ph ph-keyboard"></i></span><div><h3>Klick <span class="tag">Pro</span></h3><p>Mechanical keyboard sounds in any app: thirteen sounds, four of them premium downloads.</p></div></div>
+    <div class="fi" data-c="pro"><span class="ic"><i class="ph ph-arrows-left-right"></i></span><div><h3>Convert <span class="tag u">Ultimate</span></h3><p>Drop any file and turn it into another kind: PPTX to PDF, HEIC to JPG, MOV to MP4 and more.</p></div></div>
+    <div class="fi" data-c="pro"><span class="ic"><i class="ph ph-magic-wand"></i></span><div><h3>Do It <span class="tag u">Ultimate</span></h3><p>Tell the AI what to do on your screen and watch it work, with a Stop button that works from any app.</p></div></div>
+    <div class="fi" data-c="day"><span class="ic"><i class="ph ph-calendar-check"></i></span><div><h3>Updates once a week</h3><p>Optional, off by default: be asked about updates once a week instead of for every release.</p></div></div>
+  </div>
+</div></section>
+
+<section id="pro"><div class="wrap">
+  <div class="sh rv"><h2>Free for everyone. Pay once for more.</h2><p class="lede">No subscription, no account, no renewals. Every future update is included.</p></div>
+  <div class="plans rv">
+    <div class="plan">
+      <div class="nm">Free</div>
+      <div class="pr">$0</div>
+      <div class="ln">The complete notch.</div>
+      <ul>
+        <li><i class="ph ph-check"></i>Now Playing, timers, battery and AirPods</li>
+        <li><i class="ph ph-check"></i>Calendar, weather, clipboard, notes, file shelf</li>
+        <li><i class="ph ph-check"></i>F1, tennis, sports scores and Notch Games (with a flight sim)</li>
+        <li><i class="ph ph-check"></i>Flight Radar: the aircraft around you, live</li>
+        <li><i class="ph ph-check"></i>AI with your own free key or Ollama</li>
+        <li><i class="ph ph-check"></i>Window snapping, AirDrop, Shortcuts</li>
+      </ul>
+      <a class="btn ghost" href="#download">Download</a>
+    </div>
+    <div class="plan best">
+      <div class="nm">Pro</div>
+      <div class="pr">$1<small>once</small></div>
+      <div class="ln">Power, depth and polish.</div>
+      <ul>
+        <li><i class="ph ph-check"></i>AI about your screen, web search with sources</li>
+        <li><i class="ph ph-check"></i>Home dashboard, profiles, command palette</li>
+        <li><i class="ph ph-check"></i>Notch apple AI included: no key to set up</li>
+        <li><i class="ph ph-check"></i>Markets, flight status, Klick keyboard sounds, 22 themes</li>
+        <li><i class="ph ph-check"></i>Messenger, Audio, VPN, Voice Notes, Screen Time</li>
+        <li><i class="ph ph-check"></i>Works offline on up to 3 Macs</li>
+      </ul>
+      <a class="btn" href="pro.html">Get Pro</a>
+    </div>
+    <div class="plan">
+      <div class="nm">Ultimate</div>
+      <div class="pr">$5<small>once</small></div>
+      <div class="ln">Everything in Pro, plus the platform.</div>
+      <ul>
+        <li><i class="ph ph-check"></i>Live Activities API, two activities at once</li>
+        <li><i class="ph ph-check"></i>AI automations on a schedule</li>
+        <li><i class="ph ph-check"></i>Plugin SDK, scripting, notes sync</li>
+        <li><i class="ph ph-check"></i>iPhone companion, Convert and Do It</li>
+        <li><i class="ph ph-check"></i>Beta channel and priority support</li>
+      </ul>
+      <a class="btn ghost" href="pro.html">Get Ultimate</a>
+    </div>
+  </div>
+  <p class="fine">Paid in Litecoin, key emailed to you. Students can ask for a free Pro code. <a href="pro.html#promo">Have a promo code?</a></p>
+</div></section>
+
+<section id="screenshots"><div class="wrap">
+  <div class="sh rv"><h2>Every screen, for real.</h2><p class="lede">Taken from the current app with sample data. Click any to enlarge.</p></div>
+  <div class="seg rv" role="tablist" aria-label="Screenshot categories" id="gseg"><span class="pill" aria-hidden="true"></span></div>
+  <div class="gallery" id="gal"></div>
+  <div class="gmore"><button class="btn ghost" id="gMore" hidden>Show more</button></div>
+</div></section>
+
+<section id="new"><div class="wrap">
+  <div class="sh rv"><h2>Always getting better.</h2><p class="lede">Updates arrive in the app: a notification, an Update button in the notch, and Update or Not now in Settings.</p></div>
+  <div class="wn">
+    <article class="feat rv" id="featRel"></article>
+    <div class="rels rv" id="timeline"></div>
+  </div>
+</div></section>
+
+<section id="download"><div class="wrap">
+  <div class="dl-head rv">
+    <h2>Download Notch apple.</h2>
+    <p class="ver" id="dlVer">Latest release on GitHub</p>
+  </div>
+  <div class="plats rv">
+    <div class="plat" id="platMac">
+      <div class="os"><i class="ph ph-apple-logo"></i>macOS</div>
+      <div class="req"><span id="dlArch">Apple silicon and Intel</span>, macOS 14 Sonoma or newer</div>
+      <div class="cta"><a class="btn" id="dlBtn" href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><i class="ph ph-download-simple"></i> <span>Download for Mac</span></a></div>
+      <div class="alt" id="dlSize">DMG, free, source-available licence</div>
+    </div>
+    <div class="plat" id="platWin">
+      <div class="os"><i class="ph ph-windows-logo"></i>Windows</div>
+      <div class="req">Windows 10 and 11, same key as your Mac</div>
+      <div class="cta"><a class="btn ghost" id="dlWin" href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><i class="ph ph-download-simple"></i> <span>Download for Windows</span></a></div>
+      <div class="alt">.exe installer, or the <a class="ul" href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows.msi">.msi</a></div>
+    </div>
+  </div>
+  <ol class="steps rv">
+    <li><b>Open the DMG</b> and drag Notch apple into Applications.</li>
+    <li><b>Open it.</b> It isn't notarized by Apple yet, so the first time, right-click it and choose Open.</li>
+    <li><b>Press <span class="k">⌃⌥N</span></b> or click the notch. Screen Recording is asked for the first time you capture.</li>
+  </ol>
+  <pre class="rv"><button class="copy" onclick="cp(this)">Copy</button><code id="brew"><span class="c"># or with Homebrew</span>
+brew tap adityajaindxb/notchapples https://github.com/AdityaJainDXB/NotchApples
+brew install --cask notch-apple</code></pre>
+</div></section>
+
+<section id="donate"><div class="wrap">
+  <div class="sh rv"><h2>Made by three high school developers.</h2><p class="lede">Notch apple is free and always will be. If it helps you, here's how to help it.</p></div>
+  <div class="duo">
+    <div class="card rv">
+      <h3><i class="ph ph-heart"></i>Donate</h3>
+      <p>Any amount, in Litecoin. It doesn't unlock anything; it keeps the project going.</p>
+      <div class="don">
+        <div class="qr" id="donateQr" role="img" aria-label="QR code for the Litecoin donation address"></div>
+        <div style="flex:1;min-width:220px">
+          <div class="addr"><code id="ltcAddr">ltc1qymlmvkdmvpk5f90esthzgwaw6w0tuzq6tdr6kf</code><button id="copyAddr">Copy</button></div>
+          <a class="btn sm ghost" href="litecoin:ltc1qymlmvkdmvpk5f90esthzgwaw6w0tuzq6tdr6kf">Open in my wallet</a>
+        </div>
+      </div>
+    </div>
+    <div class="card rv" id="github">
+      <h3><i class="ph ph-github-logo"></i>Built in the open</h3>
+      <p>Swift, SwiftUI and AppKit, source-available under the Notch apple Source-Available License.</p>
+      <div class="rows">
+        <a href="https://github.com/AdityaJainDXB/NotchApples" target="_blank" rel="noopener"><i class="ph ph-star"></i><div><b>Star on GitHub</b><span>Free, and it helps people find it</span></div><i class="ph ph-arrow-up-right go"></i></a>
+        <a href="https://github.com/AdityaJainDXB/NotchApples/issues" target="_blank" rel="noopener"><i class="ph ph-bug"></i><div><b>Report an issue</b><span>Bugs, ideas and payment help</span></div><i class="ph ph-arrow-up-right go"></i></a>
+        <a href="https://github.com/AdityaJainDXB/NotchApples#readme" target="_blank" rel="noopener"><i class="ph ph-book-open"></i><div><b>Documentation</b><span>Install, permissions, providers</span></div><i class="ph ph-arrow-up-right go"></i></a>
+      </div>
+    </div>
+  </div>
+</div></section>
+
+<section id="faq"><div class="wrap faqg">
+  <div class="sh rv"><h2>Questions.</h2><p class="lede">Anything else? <a href="https://github.com/AdityaJainDXB/NotchApples/issues" target="_blank" rel="noopener">Open an issue</a>.</p></div>
+  <div class="rv">
+    <details class="q"><summary>Does it work on Macs without a notch?<i class="ph ph-plus"></i></summary><p>Yes. Notch apple shows a small pill at the top centre of the screen that works exactly the same way.</p></details>
+    <details class="q"><summary>Is it really free?<i class="ph ph-plus"></i></summary><p>Yes: the core app is free, and the code is source-available (you can read and build it, but not resell it or unlock the paid features without a key). AI uses free providers by default (Gemini, Groq, OpenRouter's free models, or Ollama on your Mac). Pro ($1) and Ultimate ($5) are optional, one-time purchases.</p></details>
+    <details class="q"><summary>How do I open and close it?<i class="ph ph-plus"></i></summary><p>Click the notch, press <code>⌃⌥N</code> in any app, or drag a file onto it. Press <code>Esc</code> or click elsewhere to close. You can also turn on "open on hover" in Settings → General.</p></details>
+    <details class="q"><summary>Why does window snapping need Accessibility?<i class="ph ph-plus"></i></summary><p>Moving other apps' windows is only possible through macOS Accessibility. Notch apple uses it only to read and set window positions.</p></details>
+    <details class="q"><summary>What does capture need?<i class="ph ph-plus"></i></summary><p>Screen Recording permission, asked the first time you press <code>⌃⌥S</code>. macOS applies it after Notch apple restarts.</p></details>
+    <details class="q"><summary>Which AI should I use?<i class="ph ph-plus"></i></summary><p>Google Gemini is free and reads images. For complete privacy, install Ollama and run <code>ollama pull gemma3:4b</code>: answers are made on your Mac, offline. Settings → AI → Test connection checks your setup.</p></details>
+    <details class="q"><summary>How do updates work?<i class="ph ph-plus"></i></summary><p>Notch apple checks GitHub for the latest release and shows "Update available". Choose Update or Not now, or turn off automatic checks in Settings → Updates.</p></details>
+    <details class="q"><summary>Can I make it smaller?<i class="ph ph-plus"></i></summary><p>Turn off modules you don't need in Settings → Modules. Older, smaller builds are listed in the <a href="https://github.com/AdityaJainDXB/NotchApples#want-a-lighter-version">README</a>.</p></details>
+  </div>
+</div></section>
+
+</main>
+
+<footer><div class="wrap">
+  <div class="foot">
+    <div class="brand"><a href="#top" class="logo"><img src="assets/icon-48.png" alt="" width="26" height="26"> Notch apple</a><p>The notch, put to work. Free to start and source-available, for macOS and Windows.</p></div>
+    <div><h4>Product</h4><ul><li><a href="#download">Download</a></li><li><a href="#features">Features</a></li><li><a href="#screenshots">Screenshots</a></li><li><a href="#new">What's new</a></li><li><a href="pro.html">Pricing</a></li></ul></div>
+    <div><h4>Project</h4><ul><li><a href="https://github.com/AdityaJainDXB/NotchApples" target="_blank" rel="noopener">GitHub</a></li><li><a href="https://github.com/AdityaJainDXB/NotchApples#readme" target="_blank" rel="noopener">Documentation</a></li><li><a href="https://github.com/AdityaJainDXB/NotchApples/releases" target="_blank" rel="noopener">Releases</a></li><li><a href="https://github.com/AdityaJainDXB/NotchApples/issues" target="_blank" rel="noopener">Report an issue</a></li></ul></div>
+    <div><h4>About</h4><ul><li><a href="#donate">Donate</a></li><li><a href="#privacy">Privacy</a></li><li><a href="terms.html">Terms and refunds</a></li><li><a href="https://github.com/AdityaJainDXB/NotchApples/blob/main/LICENSE" target="_blank" rel="noopener">Source-Available License</a></li></ul></div>
+  </div>
+  <div class="footbar"><span id="footVer">Notch apple</span><span id="footMade">Made by three high school developers</span></div>
+</div></footer>
+
+<section class="the-end" aria-label="End of page"><div class="wrap">
+  <h2>That's everything.</h2>
+  <p>Keep scrolling and Notch apple takes you back to the start.</p>
+  <div class="makers"><span><i class="ph ph-users-three"></i>Built by three high school developers</span><span><i class="ph ph-heart"></i>Free to start, source-available</span></div>
+  <button class="loop" id="loop"><span class="ring" id="loopRing"><div><i class="ph ph-arrow-up"></i></div></span><span id="loopText">Back to the start</span></button>
+</div></section>
+
+<div class="lb" id="lb" role="dialog" aria-modal="true" aria-label="Screenshot"><button class="lb-x" type="button" aria-label="Close"><i class="ph ph-x" aria-hidden="true"></i></button><img alt=""></div>
+
+<script>
+const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
+const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const notch=$('#notch'),tabsEl=$('#tabs'),views=$$('.view'),hint=$('#hint'),pauseBtn=$('#demoPause'),notchBtn=$('#notchBtn');
+let cur=0,auto=!reduce;
+
+/* ---------- live demo ---------- */
+views.forEach((v,i)=>{const b=document.createElement('button');b.innerHTML=`<span>${v.dataset.i}</span>${v.dataset.t}${v.dataset.new?' <em class="nw">NEW</em>':''}`;b.onclick=e=>{e.stopPropagation();stopAuto();show(i)};b.setAttribute('role','tab');b.id='tab'+i;b.setAttribute('aria-controls','view'+i);v.id='view'+i;v.setAttribute('role','tabpanel');v.setAttribute('aria-labelledby','tab'+i);tabsEl.appendChild(b)});
+tabsEl.setAttribute('role','tablist');tabsEl.setAttribute('aria-label','Demo modules');
+tabsEl.addEventListener('keydown',e=>{const k=e.key;if(!['ArrowRight','ArrowLeft','Home','End'].includes(k))return;e.preventDefault();stopAuto();const n=k==='Home'?0:k==='End'?views.length-1:(cur+(k==='ArrowRight'?1:-1)+views.length)%views.length;show(n);tabsEl.children[n].focus({preventScroll:true})});
+function centerTab(b,behavior){tabsEl.scrollTo({left:b.offsetLeft-tabsEl.clientWidth/2+b.clientWidth/2,behavior})}
+function show(i){cur=i;views.forEach((v,j)=>v.classList.toggle('on',i===j));[...tabsEl.children].forEach((b,j)=>{b.classList.toggle('on',i===j);b.setAttribute('aria-selected',i===j);b.tabIndex=i===j?0:-1;if(i===j)centerTab(b,reduce?'auto':'smooth')})}
+show(0);
+// show(0) runs while the notch is still a 190px pill, so the tab row keeps a stale scroll offset and the first tab opens clipped.
+// Re-centre the selected tab as the row widens while the notch opens.
+new ResizeObserver(()=>{const b=tabsEl.querySelector('[aria-selected="true"]');if(b&&notch.classList.contains('open'))centerTab(b,'auto')}).observe(tabsEl);
+function openN(f){notch.classList.add('open');notchBtn.setAttribute('aria-expanded','true');hint.style.opacity=0;if(f){const t=tabsEl.querySelector('[aria-selected="true"]')||tabsEl.querySelector('button');t&&t.focus({preventScroll:true})}}
+function closeN(){const had=notch.contains(document.activeElement)&&document.activeElement!==notchBtn;notch.classList.remove('open');notchBtn.setAttribute('aria-expanded','false');hint.style.opacity=1;if(had)notchBtn.focus({preventScroll:true})}
+function stopAuto(){auto=false;pauseBtn.hidden=true}
+if(reduce)pauseBtn.hidden=true;
+pauseBtn.onclick=e=>{e.stopPropagation();stopAuto()};
+notch.addEventListener('focusin',stopAuto);notch.addEventListener('pointerenter',stopAuto);
+notch.addEventListener('click',()=>{if(!notch.classList.contains('open')){stopAuto();openN(true)}});
+$('#pwrBtn').onclick=e=>{e.stopPropagation();stopAuto();$('#pmenu').classList.toggle('on')};
+$$('#pmenu button').forEach(b=>b.onclick=e=>{e.stopPropagation();$('#pmenu').classList.remove('on')});
+$('#closeBtn').onclick=e=>{e.stopPropagation();stopAuto();closeN()};
+document.addEventListener('keydown',e=>{if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==='e'){e.preventDefault();stopAuto();notch.classList.contains('open')?closeN():openN(true)}if(e.key==='Escape'){stopAuto();closeN();$('#pmenu').classList.remove('on')}});
+document.addEventListener('click',e=>{if(!notch.contains(e.target)&&notch.classList.contains('open')&&!auto)closeN()});
+let demoVisible=true;new IntersectionObserver(es=>{demoVisible=es[0].isIntersecting}).observe($('#demo'));
+setTimeout(function tour(){if(!auto)return;if(!demoVisible){setTimeout(tour,2000);return}openN();let n=0;show(0);const t=setInterval(()=>{if(!auto){clearInterval(t);return}n++;if(n>=views.length){clearInterval(t);closeN();setTimeout(tour,3500);return}show(n)},2300)},1600);
+
+const zones=[[0,0,.5,1],[.5,0,.5,1],[0,0,1,.5],[0,.5,1,.5],[0,0,.667,1],[.333,0,.667,1],[0,0,1,1],[.2,.15,.6,.7],[0,0,.5,.5],[.5,0,.5,.5],[0,.5,.5,.5],[.5,.5,.5,.5],[0,0,.333,1],[.333,0,.333,1],[.667,0,.333,1],[.05,.05,.9,.9]];
+const W1=$('#w1'),W2=$('#w2'),area={x:.02,y:.07,w:.96,h:.9};
+function place(el,[x,y,w,h]){Object.assign(el.style,{left:(area.x+x*area.w)*100+'%',top:(area.y+y*area.h)*100+'%',width:w*area.w*100+'%',height:h*area.h*100+'%'})}
+const zoneNames=['Left half','Right half','Top half','Bottom half','Left two thirds','Right two thirds','Maximize','Center','Top left','Top right','Bottom left','Bottom right','Left third','Middle third','Right third','Almost maximize'];
+zones.forEach((z,k)=>{const d=document.createElement('button');d.type='button';d.className='sz';d.setAttribute('aria-label','Snap window: '+zoneNames[k]);d.onfocus=()=>place(W1,z);const i=document.createElement('i');Object.assign(i.style,{left:4+z[0]*84+'%',top:6+z[1]*80+'%',width:z[2]*84+'%',height:z[3]*80+'%'});d.appendChild(i);d.onmouseenter=()=>place(W1,z);d.onclick=e=>{e.stopPropagation();place(W1,z)};$('#snaps').appendChild(d)});
+$$('.arr button').forEach(b=>b.onclick=e=>{e.stopPropagation();const t=b.dataset.tile;
+  if(t==='split'){place(W1,[0,0,.5,1]);place(W2,[.5,0,.5,1])}
+  if(t==='grid'){place(W1,[0,0,.5,.5]);place(W2,[.5,.5,.5,.5])}
+  if(t==='cols'){place(W1,[0,0,.333,1]);place(W2,[.333,0,.333,1])}
+  if(t==='reset'){W1.removeAttribute('style');W2.removeAttribute('style')}});
+
+let s=1499;setInterval(()=>{s=s>0?s-1:1499;const t=String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0');$('#timer').textContent=t;$('#earTimer').textContent=t;$('#ring').style.setProperty('--deg',(1-s/1500)*360+'deg')},1000);
+
+const TR={Spanish:['Hola, ¿cómo estás?','es-ES'],French:['Bonjour, comment allez-vous ?','fr-FR'],German:['Hallo, wie geht es dir?','de-DE'],Hindi:['नमस्ते, आप कैसे हैं?','hi-IN'],Arabic:['مرحبا، كيف حالك؟','ar-SA'],Mandarin:['你好，你好吗？','zh-CN'],English:['Hello, how are you?','en-US']};
+let trCur='Spanish';
+function setLang(l){trCur=l;$('#trLang').textContent=l;$('#trOut').textContent=TR[l][0];$$('#langs button').forEach(b=>{b.classList.toggle('on',b.textContent===l);b.setAttribute('aria-pressed',b.textContent===l)});$('#trOut').lang=TR[l][1].slice(0,2);$('#trOut').dir=l==='Arabic'?'rtl':'ltr'}
+Object.keys(TR).forEach(l=>{const b=document.createElement('button');b.textContent=l;b.onclick=e=>{e.stopPropagation();stopAuto();setLang(l)};$('#langs').appendChild(b)});setLang('Spanish');
+$('#speak').onclick=e=>{e.stopPropagation();stopAuto();if('speechSynthesis' in window){const u=new SpeechSynthesisUtterance(TR[trCur][0]);u.lang=TR[trCur][1];speechSynthesis.cancel();speechSynthesis.speak(u)}};
+$$('#themes button').forEach(b=>b.onclick=e=>{e.stopPropagation();stopAuto();$$('#themes button').forEach(x=>{x.classList.remove('on');x.setAttribute('aria-pressed','false')});b.classList.add('on');b.setAttribute('aria-pressed','true');const d=$('#demo');b.dataset.th?d.dataset.theme=b.dataset.th:d.removeAttribute('data-theme')});
+$$('#themes button').forEach(b=>b.setAttribute('aria-pressed',b.classList.contains('on')));
+setInterval(()=>{if(!demoVisible||reduce)return;const r=7.6+Math.random()*1.6,c=12+Math.random()*30;$('#stRam').textContent=r.toFixed(1)+' GB';$('#mRam').style.width=r/16*100+'%';$('#stCpu').textContent=Math.round(c)+'%';$('#mCpu').style.width=c+'%';$('#stNet').textContent='↓ '+(2+Math.random()*6).toFixed(1)+' MB/s';$('#stUp').textContent='↑ '+(0.2+Math.random()*1.2).toFixed(1)+' MB/s'},1500);
+const cities=[['London','Europe/London'],['New York','America/New_York'],['Tokyo','Asia/Tokyo']];
+function tick(){const now=new Date();$('#clocks').innerHTML=cities.map(([n,z])=>{const h=+now.toLocaleString('en-GB',{hour:'2-digit',hour12:false,timeZone:z});return `<div class="box clock"><small>${h>=7&&h<19?'☀️':'🌙'} ${n}</small><b>${now.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',timeZone:z})}</b></div>`}).join('');
+  $('#clock').textContent=now.toLocaleDateString([],{weekday:'short'})+' '+now.toLocaleTimeString([],{hour:'numeric',minute:'2-digit'})}
+tick();setInterval(()=>{if(demoVisible&&!reduce)tick()},10000);
+
+/* ---------- nav: tuck the notch's links away once past the hero ---------- */
+new IntersectionObserver(es=>document.documentElement.classList.toggle('compact',!es[0].isIntersecting),{rootMargin:'-120px 0px 0px 0px'}).observe($('.hero-top'));
+const menuBtn=$('#menuBtn'),mm=$('#mobileMenu');
+function setMenu(on){mm.classList.toggle('on',on);menuBtn.setAttribute('aria-expanded',on);menuBtn.innerHTML=on?'<i class="ph ph-x"></i>':'<i class="ph ph-list"></i>';if(on){const a=mm.querySelector('a');a&&a.focus({preventScroll:true})}}
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&mm.classList.contains('on')){setMenu(false);menuBtn.focus()}});
+menuBtn.onclick=()=>setMenu(!mm.classList.contains('on'));
+$$('#mobileMenu a').forEach(a=>a.addEventListener('click',()=>setMenu(false)));
+
+/* ---------- segmented controls: one sliding pill ---------- */
+function segment(root,onPick){
+  const pill=root.querySelector('.pill');
+  function move(b,instant){if(instant)pill.style.transition='none';pill.style.width=b.offsetWidth+'px';pill.style.transform=`translateX(${b.offsetLeft}px)`;if(instant){pill.offsetWidth;pill.style.transition=''}}
+  function pick(b,instant){root.querySelectorAll('button').forEach(x=>x.setAttribute('aria-selected',x===b));move(b,instant);onPick(b)}
+  root.querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>pick(b)));
+  const first=root.querySelector('[aria-selected=true]')||root.querySelector('button');
+  requestAnimationFrame(()=>pick(first,true));
+  addEventListener('resize',()=>move(root.querySelector('[aria-selected=true]'),true));
+  if(document.fonts)document.fonts.ready.then(()=>move(root.querySelector('[aria-selected=true]'),true));
+}
+segment($('#fseg'),b=>{let d=0;$$('#fx .fi').forEach(f=>{const on=f.dataset.c===b.dataset.c;f.classList.toggle('hide',!on);f.classList.remove('enter');if(on){f.style.setProperty('--d',d++);void f.offsetWidth;f.classList.add('enter')}})});
+
+
+/* ---------- AI story: the sticky screenshot follows the step you're reading ---------- */
+const saImgs=$$('.sa-media img'),saSteps=$$('.sa-step');
+const stepIO=new IntersectionObserver(es=>es.forEach(e=>{if(!e.isIntersecting)return;const i=+e.target.dataset.i;saSteps.forEach(s=>s.classList.toggle('on',s===e.target));saImgs.forEach((im,j)=>im.classList.toggle('on',j===i))}),{rootMargin:'-45% 0px -45% 0px'});
+saSteps.forEach(s=>stepIO.observe(s));
+
+/* ---------- reveal on scroll (content is never left hidden) ---------- */
+const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target)}}),{threshold:.12,rootMargin:'0px 0px -6% 0px'});
+$$('.rv').forEach(el=>io.observe(el));
+setTimeout(()=>$$('.rv').forEach(el=>el.classList.add('in')),4000);
+
+/* ---------- lightbox ---------- */
+const lb=$('#lb'),lbX=lb.querySelector('.lb-x');let lbOpener=null;
+function lbInert(on){document.querySelectorAll('body > *').forEach(el=>{if(el!==lb&&el.tagName!=='SCRIPT')el.inert=on})}
+function openLb(src,alt){const im=lb.querySelector('img');im.src=src;im.alt=alt||'';lbOpener=document.activeElement;lb.classList.add('on');lbInert(true);lbX.focus({preventScroll:true})}
+function closeLb(){if(!lb.classList.contains('on'))return;lb.classList.remove('on');lbInert(false);if(lbOpener&&lbOpener.focus)lbOpener.focus({preventScroll:true});lbOpener=null}
+lb.onclick=closeLb;
+document.addEventListener('keydown',e=>{if(!lb.classList.contains('on'))return;if(e.key==='Escape')closeLb();else if(e.key==='Tab'){e.preventDefault();lbX.focus()}});
+// Enlargeable images work from the keyboard too
+function zoomable(el,get){el.style.cursor='zoom-in';el.tabIndex=0;el.setAttribute('role','button');el.setAttribute('aria-label','Enlarge: '+(el.querySelector('img')||el).alt);el.onclick=()=>openLb(...get());el.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();openLb(...get())}})}
+$$('.cell img,.stage img,.sa-inline').forEach(img=>zoomable(img,()=>[img.src,img.alt]));
+
+/* ---------- screenshots ---------- */
+const R='https://raw.githubusercontent.com/AdityaJainDXB/NotchApples/main/docs/screenshots/',L='assets/screenshots/';
+const shots=[
+ ['AI','ai-empty','AI','Capture, paste, selected text, or ask',1],['AI','capture-overlay','Capture','Drag over anything on screen',1],['AI','ai-input','Pick an action','Suggested from a look at the text',1],
+ ['AI','ai-result','Answer','Readable maths, streamed in',1],['AI','follow-up','Follow-ups','The image is remembered',1],['AI','code-analysis','Code','Explain and fix errors',1],
+ ['AI','ai-web','Web search','Pro. Answers cite their sources',1],['AI','history','History','Search, reopen, export',1],['AI','settings-ai','AI settings','Providers, Test connection, privacy',1],
+ ['Notch','home','Home','Pro. Your own dashboard of widgets',1],['Notch','palette','Command palette','Pro. ⌃⌥P runs anything',1],['Notch','markets','Markets','Pro. Stocks and crypto',1],['Notch','notch-stacked','Two at once','Ultimate. Timer and your build',1],['Notch','notes-todo','To-do','Free. Reminders sync with Pro',1],['Notch','tools-convert','Converter','Pro. Units and currencies',1],
+ ['Notch','sports','Sports','Your team, fixtures, table',1],['Notch','sports-detail','Match details','Goals, cards, lineups',1],['Notch','sports-table','League table','Next to the fixtures',1],['Notch','sports-cricket','Cricket','India and the IPL',1],['Notch','games','Games','2048, Snake, reaction test',1],['Notch','f1','F1','Live timing, schedule, standings',1],['Notch','notch-peek','Peek','A one-line glance on hover',1],['Notch','iphone-companion','iPhone companion','Ultimate. Over Wi-Fi, encrypted',1],
+ ['Notch','nowplaying','Now Playing','Any app, album cover, controls'],['Notch','island-music','Music beside the notch','Album cover and live bars'],['Notch','island-charging','Charging','Time to full, in words'],
+ ['Notch','voice-notes','Voice Notes','Pro. Transcribed on your Mac'],['Notch','screen-time','Screen Time','Pro. Limits and Focus Blocker'],['Notch','quick-add','Quick Add','Pro. Calendar and Reminders'],
+ ['Notch','timer','Timer','Countdown and stopwatch'],['Notch','notch-update','Update','A new release, one click away'],['Notch','live','Live','Scores and tracking'],['Notch','devices','Devices','Accessory battery, mic and camera'],
+ ['Notch','notifications','Notifications','Reply to iMessages'],['Notch','plugins','Plugins','Widgets from any script'],['Notch','snippets','Snippets','Paste saved text anywhere'],
+ ['Notch','today','Home','Weather, events, devices and widgets'],['Notch','windows','Windows','Snap, tile and save layouts'],['Notch','window-snap-zones','Snap zones','Drag a window to the notch'],['Notch','tools','Tools','Keep Awake, colours, calculator'],['Notch','mirror','Mirror','Add-on. Camera placeholder shown'],['Notch','world-clock','World Clock','Add-on. Cities and time difference'],['Notch','clipboard','Clipboard','Search, pin and filter'],
+ ['Notch','notes','Notes','Saved automatically'],['Notch','messenger','Messenger','Anonymous encrypted rooms'],['Notch','focus','Focus','Pomodoro timer'],['Notch','share','Share','AirDrop and PairDrop'],['Notch','shelf','File Shelf','Drop files into the notch'],['Notch','audio','Audio','Per-app volume and EQ'],['Notch','vpn','VPN','Free servers'],
+ ['Settings','settings-notch','Notch','Hover, fullscreen, size, gestures',1],['Settings','settings-themes','Themes','22 themes and your own',1],['Settings','settings-profiles','Profiles','Pro. By app or time of day',1],['Settings','settings-privacy','Privacy','Everything it can access',1],['Settings','settings-help','Help and Feedback','Reviewed before it\'s sent',1],['Settings','onboarding','Welcome','Four short steps',1],['Settings','onboarding-tour','Tour','A quick look around',1],
+ ['Settings','settings-extras','Notch Extras','What shows beside the notch'],['Settings','settings-backup','Backup and Sync','Google account, iCloud, backup files'],['Settings','settings-license','Sign in','Pro unlocked on every Mac'],
+ ['Settings','settings-general','General','Like System Settings'],['Settings','settings-modules','Modules','Every feature is optional'],['Settings','settings-updates','Updates','Update or Not now'],['Settings','settings-windows','Windows','Zones, shortcuts, gaps'],
+ ['Settings','settings-permissions','Permissions','Everything in one place'],['Settings','settings-authentication','Face unlock','Face ID-style'],['Settings','settings-clipboard','Clipboard','History settings'],
+ ['Settings','settings-messenger','Messenger','Handle and notifications'],['Settings','settings-audio','Audio','Built-in engine'],['Settings','settings-vpn','VPN','Profiles and servers'],['Settings','settings-widget','Widget','Location or a city'],['Settings','settings-focus','Focus','Session lengths'],
+ ['Get Pro','pro','Unlock Pro','In the notch',1],['Get Pro','settings-pro','Pro in Settings','Your tier and key',1],['Get Pro','get-pro-ltc','Pay with Litecoin','The classic checkout'],['Get Pro','get-pro-promo','Promo code','A free key, once per code'],['Get Pro','get-pro-key','Your product key','Made instantly']
+];
+const PAGE=9;let gCat='AI',gShown=PAGE;
+['AI','Notch','Settings','Get Pro'].forEach((c,i)=>{const b=document.createElement('button');b.setAttribute('role','tab');b.setAttribute('aria-selected',i===0);b.dataset.c=c;b.textContent=c;$('#gseg').appendChild(b)});
+function renderGal(){const list=shots.filter(s=>s[0]===gCat);
+  $('#gal').innerHTML=list.slice(0,gShown).map((s,i)=>{const src=s[4]?L+s[1]+'.webp':R+s[1]+'.png';return `<figure class="shot fi-in" style="--d:${i%PAGE}" data-src="${src}"><img loading="lazy" src="${src}" alt="${s[2]}: ${s[3]}"><figcaption>${s[2]}<span>${s[3]}</span></figcaption></figure>`}).join('');
+  $$('#gal .shot').forEach(f=>zoomable(f,()=>[f.dataset.src,f.querySelector('img').alt]));
+  const more=list.length-gShown;$('#gMore').hidden=more<=0;$('#gMore').textContent=`Show ${more} more`}
+segment($('#gseg'),b=>{gCat=b.dataset.c;gShown=PAGE;renderGal()});
+$('#gMore').onclick=()=>{gShown=999;renderGal()};
+
+/* ---------- what's new ---------- */
+const REL=[
+ ['2.0.37','10 October 2026','A nicer feel, and two card games',['Drop zones lean towards your file like a magnet (Shelf, Convert, Share, Launcher, Wallpaper, AI tab)','Clearing the Shelf or finished to-dos is press-and-hold, with a countdown Undo','A searchable model picker in the AI tab, cassette mode for the music player, and Blackjack and Solitaire in Games']],
+ ['2.0.36','10 October 2026','A bigger Plane world and a world leaderboard',['The Plane map is about three times bigger; fly over Dubai, London, Paris, New York, Tokyo, Sydney, Cairo or San Francisco (or your own location) with their landmarks','Post a score to a shared world leaderboard: only your name, plane and score are sent, and only when you choose']],
+ ['2.0.35','10 October 2026','Live wallpaper (Pro)',['A video as your desktop wallpaper: your own (up to 60 seconds, 4K) or a free NASA clip, paused on battery and when covered; the lock screen shows a still']],
+ ['2.0.34','9 October 2026','Notch apple AI, included with Pro',['Settings \u2192 AI \u2192 Notch apple AI (included): ask without setting up any key. Pro gets 60 messages a day and Ultimate 200; your own keys still work with no limit']],
+ ['2.0.33','9 October 2026','Ultimate modules go private, radar fits',['The Ultimate modules are built into the official releases only (nothing changes for you); a build from the public source runs without them','Flight Radar\'s header fits on the Mac: the range is a small menu beside Refresh']],
+ ['2.0.32','9 October 2026','A new licence, and premium sounds from the server',['The code is now source-available (copyright Aditya Jain): you can read and build it, but not resell it or unlock the paid features without a key; earlier versions stay MIT','Four premium Klick sounds (Pro) download from the licence server with your key; Clipboard Link now checks your Ultimate key with the server, so update both devices to keep linking']],
+ ['2.0.30','9 October 2026','GPWS callouts, and games that fit',['The airliners in the Plane game now speak realistic GPWS warnings and callouts (Sink rate, Terrain, Pull up, Minimums, Retard\u2026), with a switch in Controls','The Games list scrolls and keeps the Sound switch in view, so nothing is cut off in the notch']],
+ ['2.0.29','9 October 2026','Flight Radar, Airbus and landing gear',['A new Flight Radar tab: a round radar of every aircraft around you, live, with callsign, type, height and speed (it uses your location rounded to about 1 km and only asks while the tab is open)','Plane game: Airbus A320, A350 and A380, and a gear lever (G) on the airliners with gear lights, a too-low warning and belly landings if you forget']],
+ ['2.0.28','9 October 2026','Plane: a proper cockpit',['Round airspeed and altimeter dials that change with the aircraft, an engine gauge, fuel and flaps; piston and jet engine sounds; tail strikes that damage the tail','Fixes the Plane Controls tab and the blank blue screen it caused']],
+ ['2.0.27','9 October 2026','Updates once a week, if you want',['A new option, off by default: update at most once a week, instead of hearing about every release','After updating, the notch shows it on What\'s new so you can switch it on; also in Settings \u2192 Notch and Settings \u2192 Updates. Required security updates still appear straight away']],
+ ['2.0.26','9 October 2026','Your own top bar',['A bordered group of always-there buttons, and you choose which to keep (Settings \u2192 Notch)','\u2318E opens and closes the notch, \u2318J hides and shows it; Tools are tidy tiles']],
+ ['2.0.25','9 October 2026','Klick: a Mechanical sound',['The classic clacky keyboard: a sharp click, a hard clack and a crisp release']],
+ ['2.0.23','9 October 2026','Coffee button, tidier Tools',['A coffee button beside the pin keeps your Mac awake until you click it again','One Keep Awake card in Tools; dragging a file onto the notch keeps the Convert tab']],
+ ['2.0.22','9 October 2026','Convert: turn any file into another kind',['Ultimate: drop files and convert pictures, PDFs, documents and presentations, saved next to the original','Combine pictures into one PDF']],
+ ['2.0.20','9 October 2026','Klick, and Plane controls that climb',['Pro: mechanical keyboard sounds as you type, in any app, with eight sounds and a volume for each','Plane: the cursor up climbs, and the mouse steers inside a small ring so it never leaves the notch']],
+ ['2.0.16','9 October 2026','\u2325A turns the keyboard light off too',['Option+A takes the screen and the keyboard backlight to zero and restores both','Settings has a Reset keyboard brightness button']],
+ ['2.0.15','9 October 2026','Edit Home in the notch, AirDrop rebuilt',['Move, resize, collapse, remove and add Home widgets right in the notch','AirDrop opens from its own window and shows what is happening']],
+ ['2.0.13','8 October 2026','Plane: M switches the mouse off',['Press M in the Plane game to fly with the keys only, and again to bring the mouse back']],
+ ['2.0.7','8 October 2026','Tennis fits the notch',['The Tennis tab no longer runs off the edge: its buttons wrap and the side column shrinks to fit']],
+ ['2.0.6','8 October 2026','The notch always closes',['Pinning the notch no longer keeps it open for good; a close button on every notch screen','The hide shortcut is now \u2303\u2325O so it no longer takes \u2318O from other apps; Non-Necessities shows once']],
+ ['2.0.5','8 October 2026','Tennis tab',['Every ATP and WTA match of the week, live, coming up and finished, with set scores, tiebreaks and the server','Men, Women and Mixed, Grand Slams in red, earlier weeks, the ATP and WTA top 20 and favourite players with a live score beside the notch']],
+ ['2.0.2','8 October 2026','To-Do on Home, and widget Home for everyone',['A To-Do widget with Quick Add built in; high priority is red and sorted first','Home opens as the widget page; Classic is one click away in Settings \u2192 Modules & Layout \u2192 Home screen']],
+ ['2.0.1','8 October 2026','One version line again',['Everything from 1.34.0 to 1.34.10 under a higher number, so every copy updates normally']],
+ ['1.34.9','7 October 2026','Out-of-date copies must update',['Notch apple checks for the newest release in the background every 15 minutes, even with update notifications off. A copy that is not the newest must update before it works','A release can carry a security message that the update screen shows']],
+ ['1.34.7','7 October 2026','Faster license suspension',['A suspended license stops working about 10 minutes after the Mac next checks in (launch, wake, every 10 minutes), with no update needed','A Mac that cannot verify its license for 3 days pauses paid features until it is online again']],
+ ['1.34.5','7 October 2026','Search finds features, and a better Claude usage tab',['Settings search finds features: type "windows" and Modules & Layout shows only Windows, highlighted','Claude usage: a ring per limit, Opus and Sonnet bars, a 30-day history chart and several Claude accounts','Alerts at 80% and 95% of your real limits, and a forecast of when you would hit one (1.34.4)']],
+ ['1.34.3','7 October 2026','A notch that closes, and What\'s New that fits',['The notch closes when you swipe to another desktop or open Settings','What\'s New, the tour and update screens stay inside the notch\'s edges']],
+ ['1.34.2','7 October 2026','Claude usage connects again',['Finds Claude Code\'s newer sign-in and reads your limits even when Anthropic\'s usage endpoint is off']],
+ ['1.34.1','7 October 2026','Classic Home is back, and PairDrop fixed',['Choose Classic (weather, battery, next events) or Widgets Home in Settings → Modules & Layout, and reorder your Home widgets','PairDrop file transfers complete again']],
+ ['1.34.0','7 October 2026','HUGE UPDATE for efficiency and modular design',['Home replaces Today: devices, notifications and quick add always there; clipboard, now playing and notes tucked away until you click them','Claude usage as green, yellow and red lights for your 5-hour window and week, with a 5-second badge in the closed notch and Pin to Home','An algebra calculator (variables, equations, systems) and the Translator inside Tools','Non-Necessities: Focus, World Clock, Audio, Snippets, Shortcuts, Timers, Plugins, Voice Notes, Screen Time and Smart Home in one tab, placed your way','PairDrop rebuilt (any size, folders, progress) with private chat, and a guided tour after updating']],
+ ['1.33.0','7 October 2026','Meeting summaries',['Ultimate: record a calendar meeting from Today, get it transcribed, and an AI summary with decisions and action items','One click adds the summary to the meeting\'s note. It records your microphone only']],
+ ['Windows 1.46.0','9 October 2026','Notch apple AI, included with Pro',['The same included AI, with no key to set up (60 messages a day on Pro, 200 on Ultimate)']],
+ ['Windows 1.45.0','9 October 2026','Ultimate modules go private',['Convert, Smart Home, Claude Usage and Do It are built into the official releases only; they work as before for you']],
+ ['Windows 1.44.0','9 October 2026','A new licence, and premium sounds from the server',['The same source-available licence, four premium Klick sounds downloaded with your key, and a server check for Clipboard Link']],
+ ['Windows 1.42.0','9 October 2026','GPWS callouts, and games that fit',['Spoken GPWS warnings and radio-altimeter callouts on the airliners in the Plane game','2048, Snake, Memory and Breakout scale to fit the notch instead of being cut off']],
+ ['Windows 1.41.0','9 October 2026','Flight Radar, Airbus and landing gear',['The same Flight Radar tab, Airbus A320, A350 and A380, and retractable landing gear in the Plane game']],
+ ['Windows 1.40.0','9 October 2026','Plane: a proper cockpit',['Airspeed and altimeter dials, engine sounds, tail strikes, flaps in notches and fuel; fixes the Controls tab and the blank blue screen']],
+ ['Windows 1.39.0','9 October 2026','Updates once a week, and catching up',['The same optional once-a-week update prompts as the Mac, off by default and asked once after updating (Settings \u2192 Updates)','Brings Windows level with the Mac: Klick keyboard sounds, Convert and the Plane game fixes']],
+ ['Windows 1.31.0','7 October 2026','Meeting summaries and Messenger',['Ultimate: meeting summaries from a calendar event','Messenger shows by default, like on the Mac']],
+ ['1.32.0','7 October 2026','Pinned notes, emoji search, named timers',['Pin notes to Today; emoji and symbol search in the command palette','Pro: named timers, focus time by project, meeting notes from a calendar event, full-screen lyrics','A links shelf to save a link now and read it later']],
+ ['Windows 1.30.0','7 October 2026','Smoother tab switching',['The tab highlight glides between tabs and the page slides in from the direction you are going, also in Lite mode','Fixes: overlapping cards in Tools, a stray "null" in VPN, a squeezed Translator output box, cut-off hourly weather labels']],
+ ['Windows 1.29.0','7 October 2026','Brightness gauge and notification peek',['Brightness gauge on the pill for laptop screens (off by default)','Experimental notification peek: the newest Windows notification flashes beside the pill. Read-only, nothing is stored or sent, and it turns itself off if your PC can\'t support it','Both are in Settings → General → On the pill']],
+ ['1.31.0','7 October 2026','Claude usage, Smart Home and more',['Ultimate: Claude usage tracker with weekly alerts, and Smart Home with Home Assistant','Clipboard link between your Mac and Windows PC, sealed end to end','Developer tools, habit tracker (Pro), wellbeing, panic hide, quick answers','Light/dark switch for macOS, and an optional screen flash when Claude Code finishes']],
+ ['1.30.0','6 October 2026','Claude Code dot, your own VPN, games',['A green or yellow dot when a Claude Code task finishes or needs you','Add the VPN app you already use','Live sports merged into Sports, Cookie Clicker, Runner, Breakout and Memory']],
+ ['1.24.3','5 October 2026','Anonymous rooms fixed',['Rooms use Notch apple\'s own encrypted relay, so messages always arrive']],
+ ['1.24.2','5 October 2026','Messenger rooms fix',['Everyone in a room sees everyone, even on networks that block a relay']],
+ ['1.24.1','5 October 2026','Bug fix',['Messenger and AI chat open on the latest message']],
+ ['1.24.0','4 October 2026','Notch apple on your iPhone',['Ultimate: an iPhone companion over Wi-Fi, encrypted, with no server','Shortcuts: Send to Mac notch','Pro: browser video speed and skip','Windows 1.24: Free, Pro and Ultimate, one key for Mac and Windows, To-do and a Ctrl+K palette'],'iphone-companion'],
+ ['1.23.1','4 October 2026','Pro and Ultimate are on sale',['Signed keys, shown and emailed, on up to 3 Macs','Every future update included','Optional tip; free Pro for students'],'pro'],
+ ['1.23.0','4 October 2026','The finishing touches',['Peek: a one-line glance when you hover the notch','Swipe down to open, next-event countdown, Undo','Pro: Do Not Disturb toggle, Things and Todoist'],'notch-peek'],
+ ['1.22.0','4 October 2026','Trust, and a few more extras',['Settings → Privacy shows every permission and connection','Bug and crash reports you review first'],'settings-privacy'],
+ ['1.21.0','4 October 2026','Make it yours',['Pro: Home dashboard, profiles, per-app rules','Ultimate: plugin SDK and gallery'],'home'],
+ ['1.20.0','4 October 2026','Get more done',['To-do list for everyone','Pro: command palette, text expander, markup, converter'],'palette'],
+ ['1.19.0','4 October 2026','A smarter assistant',['Apple Intelligence, free and on your Mac','Pro: web search with sources, personas, voice'],'ai-web'],
+ ['1.18.0','4 October 2026','More live activities',['Meeting pulse','Pro: Markets, flight status, more teams']],
+ ['1.17.0','4 October 2026','A notch that fits how you work',['Hide in fullscreen apps, hover delay, keyboard control','Welcome tour and Settings search']],
+ ['1.16.0','4 October 2026','Free, Pro and Ultimate',['Pay once: Pro is $1, Ultimate is $5','Older keys keep working as Pro']],
+ ['1.15.3','3 October 2026','Clearer cricket scores',[]],
+ ['1.15.2','3 October 2026','Windows, charts and a full view',['Capture a single window, even if others overlap it','Charts and tables are recognised']],
+ ['1.15.1','3 October 2026','Match day, cricket and games',['Match alerts, league tables and match details','Notch Games: 2048, Snake and a reaction test']],
+ ['1.15.0','3 October 2026','See it, capture it, understand it',['Capture anything with ⌃⌥S','One-click modes, streaming answers and follow-ups']],
+ ['1.14.5','2 October 2026','F1 in the notch',[]],['1.14.1','30 September 2026','Now Playing like the iPhone',[]],['1.14.0','30 September 2026','22 new features',[]],
+ ['1.13.0','29 September 2026','Translator, Mac Stats, themes',[]],['1.11.0','29 September 2026','Window manager',[]],['1.10.0','28 September 2026','Screen-aware AI',[]],['1.9.0','28 September 2026','Free AI',[]]
+];
+const feat=REL.find(r=>r[4]);
+$('#featRel').innerHTML=`<div class="v">Notch apple ${feat[0]}, ${feat[1]}</div><h3>${feat[2]}</h3><ul>${feat[3].map(i=>`<li>${i}</li>`).join('')}</ul><img loading="lazy" src="${L+feat[4]}.webp" alt="${feat[2]} in Notch apple ${feat[0]}">`;
+$('#featRel img').onclick=e=>openLb(e.target.src,e.target.alt);$('#featRel img').style.cursor='zoom-in';
+const relHTML=r=>`<article class="rel"><div class="v"><b>${r[0]}</b><span>${r[1]}</span></div><h3>${r[2]}</h3>${r[3].length?`<ul>${r[3].map(i=>`<li>${i}</li>`).join('')}</ul>`:''}</article>`;
+const rest=REL.filter(r=>r!==feat);
+$('#timeline').innerHTML=rest.slice(0,4).map(relHTML).join('')+`<details class="older"><summary>Earlier releases (${rest.length-4})</summary>${rest.slice(4).map(relHTML).join('')}<p style="padding:16px 0;color:var(--mut)">Full notes on <a href="https://github.com/AdityaJainDXB/NotchApples/releases" target="_blank" rel="noopener">GitHub releases</a>.</p></details>`;
+
+/* ---------- latest release, straight from GitHub ---------- */
+// GitHub's unauthenticated API allows 60 requests an hour per IP, so keep the last good answer for an hour,
+// and fall back to it (however old) when a request fails.
+function ghGet(path,slim){
+  const k='gh:'+path;let c=null;try{c=JSON.parse(localStorage.getItem(k)||'null')}catch(e){}
+  if(c&&Date.now()-c.t<36e5)return Promise.resolve(c.d);
+  return fetch('https://api.github.com/repos/AdityaJainDXB/NotchApples'+path).then(r=>r.ok?r.json():null).then(j=>{
+    if(!j)return c&&c.d;const d=slim(j);try{localStorage.setItem(k,JSON.stringify({t:Date.now(),d}))}catch(e){}return d
+  }).catch(()=>c&&c.d);
+}
+Promise.all([
+  ghGet('/releases/latest',j=>({tag_name:j.tag_name,published_at:j.published_at,assets:(j.assets||[]).filter(a=>/\.dmg$/i.test(a.name)).map(a=>({name:a.name,size:a.size,browser_download_url:a.browser_download_url}))})),
+  ghGet('',j=>({stargazers_count:j.stargazers_count}))
+]).then(([j,repo])=>{
+  const v=((j&&j.tag_name)||'').replace(/^v/,'');const dmg=((j&&j.assets)||[])[0];
+  const stars=repo&&Number.isFinite(repo.stargazers_count)?repo.stargazers_count:null;
+  const el=$('#dlVer');
+  if(v){
+    el.textContent='';el.append('Latest version: ');const b=document.createElement('b');b.textContent='Notch apple '+v;el.append(b);
+    if(j.published_at)el.append(', released '+new Date(j.published_at).toLocaleDateString(undefined,{day:'numeric',month:'long',year:'numeric'}));
+    $('#footVer').textContent='Notch apple '+v;
+  }
+  if(stars!==null){
+    const a=document.createElement('a');a.href='https://github.com/AdityaJainDXB/NotchApples';a.rel='noopener';a.target='_blank';
+    a.textContent='\u2605 '+stars.toLocaleString()+' on GitHub';el.append(v?' \u00b7 ':'',a);
+  }
+  if(dmg){$('#dlBtn').href=dmg.browser_download_url;$('#dlSize').textContent='DMG, '+(dmg.size/1048576).toFixed(0)+' MB, free, source-available licence'}
+});
+
+/* ---------- lead with the visitor's own platform ---------- */
+const onWin=/Windows/i.test(navigator.userAgent);
+(onWin?$('#platWin'):$('#platMac')).classList.add('me');
+if(onWin){
+  $('#dlWin').classList.remove('ghost');$('#dlBtn').classList.add('ghost');
+  $('#platWin').parentNode.insertBefore($('#platWin'),$('#platMac'));
+  const h=$('#heroDl'),a=$('#heroAlt');
+  h.href=$('#dlWin').href;h.innerHTML='<i class="ph ph-windows-logo"></i> <span>Download for Windows</span>';
+  a.href='#download';a.innerHTML='<i class="ph ph-apple-logo"></i> <span>Mac</span>';
+}
+
+/* ---------- nav reflects the section you're reading ---------- */
+const navLinks=$$('.nl a');
+const hio=new IntersectionObserver(es=>es.forEach(e=>{if(!e.isIntersecting)return;history.replaceState(null,'','#'+e.target.id);navLinks.forEach(a=>a.setAttribute('aria-current',a.getAttribute('href')==='#'+e.target.id))}),{rootMargin:'-45% 0px -54% 0px'});
+$$('main section[id]').forEach(s=>hio.observe(s));
+
+/* ---------- copy buttons, donation QR ---------- */
+function flash(b,t){const o=b.textContent;b.textContent=t;setTimeout(()=>b.textContent=o,1500)}
+function cp(b){navigator.clipboard&&navigator.clipboard.writeText('brew tap adityajaindxb/notchapples https://github.com/AdityaJainDXB/NotchApples\nbrew install --cask notch-apple');flash(b,'Copied')}
+$('#copyAddr').onclick=e=>{navigator.clipboard&&navigator.clipboard.writeText($('#ltcAddr').textContent);flash(e.target,'Copied')};
+function qr(){if(window.QRCode)new QRCode($('#donateQr'),{text:'litecoin:'+$('#ltcAddr').textContent,width:116,height:116,correctLevel:QRCode.CorrectLevel.M})}
+
+/* ---------- the end: scrolling on past the bottom loops back to the start ---------- */
+let push=0,looping=false;
+function atBottom(){return innerHeight+scrollY>=document.documentElement.scrollHeight-4}
+function backToStart(){looping=true;$('#loopText').textContent='Back to the start…';scrollTo({top:0,behavior:reduce?'auto':'smooth'});setTimeout(()=>{looping=false;push=0;setRing();$('#loopText').textContent='Back to the start'},1200)}
+function setRing(){$('#loopRing').style.setProperty('--deg',Math.min(push/900,1)*360+'deg')}
+$('#loop').onclick=backToStart;
+if(!reduce){
+  let bottomSince=0;addEventListener('scroll',()=>{if(atBottom()){if(!bottomSince)bottomSince=Date.now()}else{bottomSince=0;push=0;setRing()}},{passive:true});
+  addEventListener('wheel',e=>{if(looping)return;if(atBottom()&&bottomSince&&Date.now()-bottomSince>1200&&e.deltaY>0){push+=Math.min(e.deltaY,60);setRing();$('#loopText').textContent='Keep scrolling to start again';if(push>900)backToStart()}else if(e.deltaY<0&&push){push=0;setRing();$('#loopText').textContent='Back to the start'}},{passive:true});
+  let ty=0;addEventListener('touchstart',e=>{ty=e.touches[0].clientY},{passive:true});
+  addEventListener('touchmove',e=>{if(looping||!atBottom()||!bottomSince||Date.now()-bottomSince<1200)return;const d=ty-e.touches[0].clientY;if(d>0){push=d*3;setRing();if(push>900)backToStart()}},{passive:true});
+  addEventListener('touchend',()=>{if(!looping){push=0;setRing()}},{passive:true});
+}
+</script>
+<script src="assets/qrcode.min.js" defer onload="qr()"></script>
+<script>/* hidden: click the footer line 3 times */(function(){var n=0,t;var el=document.getElementById("footMade");if(!el)return;el.addEventListener("click",function(){n++;clearTimeout(t);t=setTimeout(function(){n=0},1500);if(n>=3){n=0;location.href="admin.html"}})})()
+/* ---------- scroll progress + back to top ---------- */
+;(()=>{const bar=$('#prog'),top=$('#toTop'),nativeProg=CSS.supports('animation-timeline','scroll()');let t=false;
+function upd(){t=false;const max=document.documentElement.scrollHeight-innerHeight,y=scrollY;if(!nativeProg)bar.style.setProperty('--p',max>0?Math.min(1,y/max):0);top.classList.toggle('on',y>innerHeight*1.2)}
+addEventListener('scroll',()=>{if(!t){t=true;requestAnimationFrame(upd)}},{passive:true});addEventListener('resize',upd);upd();
+top.onclick=()=>scrollTo({top:0,behavior:reduce?'auto':'smooth'})})();
+</script>
+</body>
+</html>

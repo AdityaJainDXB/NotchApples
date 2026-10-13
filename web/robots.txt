@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://virajsinghchadha.github.io/notchapples-site/sitemap.xml

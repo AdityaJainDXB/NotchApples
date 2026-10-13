@@ -1,0 +1,499 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Notch apple pricing: free, Pro $1 and Ultimate $5, one-time</title>
+<meta name="description" content="Notch apple is free. Pro is $1 once, Ultimate $5 once: no subscription, no account, lifetime 1.x updates. Pay in Litecoin; your signed key is shown and emailed.">
+<meta name="theme-color" content="#09080d">
+<link rel="canonical" href="https://virajsinghchadha.github.io/notchapples-site/pro.html">
+<meta property="og:site_name" content="Notch apple">
+<meta property="og:title" content="Notch apple pricing">
+<meta property="og:description" content="Free to start. Pro $1 once, Ultimate $5 once. No subscription.">
+<meta property="og:image" content="https://virajsinghchadha.github.io/notchapples-site/assets/og.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="627">
+<meta property="og:image:alt" content="Notch apple answering a maths question in the MacBook notch">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://virajsinghchadha.github.io/notchapples-site/pro.html">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Notch apple pricing">
+<meta name="twitter:description" content="Free to start. Pro $1 once, Ultimate $5 once. No subscription.">
+<meta name="twitter:image" content="https://virajsinghchadha.github.io/notchapples-site/assets/og.jpg">
+<link rel="icon" href="assets/icon-48.png" type="image/png" sizes="48x48">
+<link rel="apple-touch-icon" href="assets/icon-180.png">
+<link rel="preload" href="assets/fonts/geist-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="assets/fonts/fonts.css">
+<link rel="preload" href="assets/icons/phosphor-subset.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="assets/icons/phosphor.css">
+<style>
+:root{--bg:#09080d;--surface:#13111a;--surface2:#1a1723;--line:rgba(255,255,255,.08);--line2:rgba(255,255,255,.14);
+  --tx:#f3f1f8;--mut:#a7a2b5;--dim:#8b8698;--ac:#9b7bff;--ac-strong:#7650ee;--ac-ink:#cdbfff;--ac-wash:rgba(155,123,255,.12);
+  --ok:#6ee7a8;--red:#ff8a9a;--gold:#ffd28a;--r-s:16px;--r-m:20px;
+  --ease-out:cubic-bezier(.23,1,.32,1);--ease-drawer:cubic-bezier(.32,.72,0,1);--mono:"Geist Mono",ui-monospace,SFMono-Regular,Menlo,monospace}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scrollbar-color:#2c2838 var(--bg);scroll-behavior:smooth;overflow-x:clip}
+body{background:var(--bg);color:var(--tx);font:16px/1.6 Geist,-apple-system,system-ui,sans-serif;min-height:100vh;-webkit-font-smoothing:antialiased;caret-color:var(--ac)}
+body:before{content:"";position:absolute;left:50%;top:-320px;width:min(1000px,100%);height:760px;transform:translateX(-50%);background:radial-gradient(closest-side,rgba(118,80,238,.2),transparent 72%);pointer-events:none;z-index:-1}
+::selection{background:rgba(155,123,255,.38);color:#fff}
+a{color:inherit;text-decoration:none}
+p a,.faq a,.note a{text-decoration:underline;text-decoration-color:rgba(205,191,255,.4);text-underline-offset:3px}
+:focus-visible{outline:2px solid var(--ac-ink);outline-offset:3px;border-radius:8px}
+code{font-family:var(--mono);font-size:.92em}
+.wrap{max-width:1100px;margin:0 auto;padding:0 24px}.narrow{max-width:720px}
+/* nav: the notch */
+.notchnav{position:sticky;top:0;z-index:20;display:flex;justify-content:center}
+.nn{position:relative;display:flex;align-items:center;gap:6px;height:52px;padding:0 8px 0 16px;background:#050408;border-radius:0 0 22px 22px;box-shadow:0 10px 30px -10px rgba(0,0,0,.8),inset 0 -1px 0 rgba(255,255,255,.06)}
+.nn:before,.nn:after{content:"";position:absolute;top:0;width:14px;height:14px;background:radial-gradient(circle at 0 100%,transparent 13.5px,#050408 14px)}
+.nn:before{left:-14px;transform:scaleX(-1)}.nn:after{right:-14px}
+.logo{display:flex;align-items:center;gap:9px;font-weight:600;font-size:15px;padding-right:8px}.logo img{width:24px;height:24px;border-radius:6px}
+.nn .back{font-size:14px;color:var(--mut);padding:7px 12px;border-radius:99px;transition:color .2s,background-color .2s}
+.nn .back:hover{color:var(--tx);background:rgba(255,255,255,.07)}
+h1{font-size:clamp(40px,6.4vw,72px);line-height:1;letter-spacing:-.04em;font-weight:600;margin:88px 0 18px;text-wrap:balance}
+h1 span{color:var(--mut)}
+h2{font-size:clamp(28px,3.6vw,40px);letter-spacing:-.03em;font-weight:600;line-height:1.1;margin:120px 0 26px}
+.lead{color:var(--mut);font-size:clamp(17px,1.6vw,19px);max-width:58ch;margin:0 0 48px;text-wrap:pretty}
+/* plans: one table */
+.plans{display:grid;grid-template-columns:repeat(3,1fr);border-radius:var(--r-m);box-shadow:inset 0 0 0 1px var(--line2);background:var(--surface);overflow:hidden}
+.plan{position:relative;padding:34px 28px;display:flex;flex-direction:column}
+.plan+.plan{border-left:1px solid var(--line)}
+.plan.best{background:linear-gradient(180deg,rgba(118,80,238,.2),rgba(118,80,238,.05) 70%)}
+.plan .badge{position:absolute;top:34px;right:28px;font:500 11px var(--mono);color:var(--ac-ink);background:var(--ac-wash);padding:3px 8px;border-radius:6px}
+.plan h3{font-size:17px;font-weight:600}
+.plan .pr{font-size:48px;font-weight:600;letter-spacing:-.04em;margin:12px 0 0;font-variant-numeric:tabular-nums}.plan .pr small{font-size:15px;color:var(--mut);font-weight:500;letter-spacing:0;margin-left:6px}
+.plan p.sub{color:var(--mut);font-size:15px;margin:2px 0 22px}
+.plan ul{list-style:none;font-size:14.5px;color:var(--mut);flex:1;display:grid;gap:11px;align-content:start;margin-bottom:26px}
+.plan li{padding-left:28px;position:relative}
+.plan li:before{content:"\e182";font-family:Phosphor;position:absolute;left:0;top:1px;color:var(--ac-ink);font-size:15px}
+.plan li.soon:before{content:"\e19a";color:var(--gold)}
+/* buttons */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:9px;width:100%;margin-top:10px;height:48px;padding:0 20px;border-radius:99px;font:600 15px Geist,system-ui;background:var(--ac-strong);color:#fff;border:0;cursor:pointer;box-shadow:inset 0 1px 0 rgba(255,255,255,.22),0 8px 20px -10px rgba(0,0,0,.7);transition:transform 160ms var(--ease-out),background-color .2s ease,opacity .2s}
+.btn:active:not(:disabled){transform:scale(.97)}
+.btn.ghost{background:rgba(255,255,255,.06);box-shadow:inset 0 0 0 1px var(--line2)}
+.btn:disabled{opacity:.45;cursor:default}
+@media (hover:hover) and (pointer:fine){.btn:hover:not(:disabled){background:#6a44e0}.btn.ghost:hover:not(:disabled){background:rgba(255,255,255,.1)}}
+/* comparison */
+.tblwrap{overflow-x:auto;border-radius:var(--r-m);box-shadow:inset 0 0 0 1px var(--line);background:var(--surface)}
+table{width:100%;border-collapse:collapse;font-size:14.5px}
+th,td{padding:12px 18px;border-bottom:1px solid var(--line);text-align:left}
+th{font-size:13.5px;color:var(--mut);font-weight:600;position:sticky;top:0;background:var(--surface)}
+tbody tr:last-child td{border-bottom:0}
+td:not(:first-child),th:not(:first-child){text-align:center;width:96px}
+td.y{color:var(--ac-ink)}td.n{color:#4e4a5c}
+tr.grp td{color:var(--tx);font-weight:600;font-size:14.5px;padding-top:26px;border-bottom-color:var(--line2)}
+td .ph{font-size:17px;vertical-align:-3px}
+/* checkout */
+.card{background:var(--surface);border-radius:var(--r-m);box-shadow:inset 0 0 0 1px var(--line2),0 40px 100px -40px rgba(0,0,0,.9);padding:30px}
+.tabs{position:relative;display:grid;grid-template-columns:repeat(4,1fr);gap:4px;padding:4px;background:rgba(255,255,255,.05);box-shadow:inset 0 0 0 1px var(--line);border-radius:99px;margin-bottom:26px}
+.tabs button{border:0;background:none;color:var(--mut);font:600 13.5px Geist,system-ui;height:38px;padding:0 8px;border-radius:99px;cursor:pointer;transition:color .2s,background-color .25s var(--ease-out);white-space:nowrap}
+.tabs button.on{background:var(--ac-strong);color:#fff;box-shadow:inset 0 1px 0 rgba(255,255,255,.2)}
+.pane{display:none}.pane.on{display:block;animation:pin .3s var(--ease-out)}
+@keyframes pin{from{opacity:0;transform:translateY(6px)}}
+.muted{color:var(--mut);font-size:14.5px}
+.choice{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+.choice button{text-align:left;border:0;background:rgba(255,255,255,.04);box-shadow:inset 0 0 0 1px var(--line2);color:var(--tx);border-radius:14px;padding:13px 15px;cursor:pointer;font:inherit;transition:transform 160ms var(--ease-out),box-shadow .2s,background-color .2s}
+.choice button:active:not(:disabled){transform:scale(.98)}
+.choice b{display:block;font-size:17px;font-weight:600}.choice span{font-size:13px;color:var(--mut)}
+.choice button.on{background:var(--ac-wash);box-shadow:inset 0 0 0 1.5px var(--ac)}
+.choice button:disabled{opacity:.45;cursor:default}
+label{display:block;font-size:13.5px;color:var(--mut);margin-top:18px;font-weight:500}
+input,textarea{width:100%;background:rgba(0,0,0,.35);border:0;box-shadow:inset 0 0 0 1px var(--line2);border-radius:12px;padding:12px 14px;color:var(--tx);font:15px Geist,system-ui;margin-top:7px;outline:none;transition:box-shadow .2s}
+input::placeholder,textarea::placeholder{color:#7b768a}
+input.mono,textarea{font:14px var(--mono)}
+input:focus,textarea:focus{box-shadow:inset 0 0 0 1.5px var(--ac),0 0 0 4px rgba(155,123,255,.15)}
+.pay{display:grid;grid-template-columns:auto 1fr;gap:22px;align-items:center;margin:20px 0}
+#qr{background:#fff;padding:10px;border-radius:14px;width:160px;height:160px}#qr img,#qr canvas{width:140px!important;height:140px!important}
+.field{display:flex;gap:8px;align-items:center;background:rgba(0,0,0,.35);box-shadow:inset 0 0 0 1px var(--line);border-radius:12px;padding:9px 9px 9px 13px;margin-top:7px}
+.field code{font:14px var(--mono);word-break:break-all;flex:1}
+.field code.big{font-size:20px;font-weight:500;color:var(--ac-ink)}
+.mini{display:inline-flex;align-items:center;height:30px;border:0;background:rgba(255,255,255,.08);color:var(--tx);border-radius:99px;padding:0 13px;font:600 12.5px Geist,system-ui;cursor:pointer;white-space:nowrap;transition:transform 160ms var(--ease-out),background-color .2s}
+.mini:active{transform:scale(.96)}.mini:hover{background:rgba(255,255,255,.14)}
+.warn{background:rgba(255,190,90,.07);box-shadow:inset 0 0 0 1px rgba(255,190,90,.28);color:#ffe2b0;border-radius:12px;padding:12px 14px;font-size:13.5px;margin-top:14px}
+.status{margin-top:14px;font-size:14px;min-height:22px}.status.err{color:var(--red)}.status.ok{color:var(--ok)}
+.status a{color:var(--ac-ink);text-decoration:underline;font-size:13.5px}
+.result{display:none;text-align:center}.result.on{display:block;animation:pin .4s var(--ease-out)}.result h3{font-size:24px;font-weight:600;letter-spacing:-.02em;margin:10px 0 4px}
+.result .kicon{width:56px;height:56px;border-radius:16px;display:inline-grid;place-items:center;background:var(--ac-wash);color:var(--ac-ink);font-size:28px}
+.key{font:500 13px/1.6 var(--mono);padding:16px;border-radius:14px;background:rgba(0,0,0,.4);box-shadow:inset 0 0 0 1px rgba(155,123,255,.4);margin:16px 0 12px;user-select:all;word-break:break-all;text-align:left}
+.steps{counter-reset:s;list-style:none;margin:14px 0 0;text-align:left}.steps li{counter-increment:s;position:relative;padding-left:32px;margin:10px 0;font-size:14.5px;color:var(--mut)}
+.steps li:before{content:counter(s);position:absolute;left:0;top:1px;width:22px;height:22px;border-radius:7px;background:var(--ac-wash);color:var(--ac-ink);font:500 12px var(--mono);display:grid;place-items:center}
+.spin{width:14px;height:14px;border:2px solid rgba(255,255,255,.35);border-top-color:#fff;border-radius:50%;animation:r .6s linear infinite;display:none}
+.busy .spin{display:inline-block}@keyframes r{to{transform:rotate(360deg)}}
+.faq{margin:0 0 80px}
+.faq div{padding:20px 0;border-top:1px solid var(--line)}
+.faq h3{font-size:16.5px;font-weight:600;margin:0 0 6px}.faq p{color:var(--mut);font-size:14.5px}
+.note{font-size:14px;color:var(--dim);text-align:center;margin:20px 0}
+footer{border-top:1px solid var(--line);padding:30px 0 44px;color:var(--dim);font-size:14px;text-align:center}footer a{color:var(--mut);margin:0 10px;transition:color .2s}footer a:hover{color:var(--tx)}
+@media(max-width:860px){.plans{grid-template-columns:1fr}.plan+.plan{border-left:0;border-top:1px solid var(--line)}.plan.best{order:-1}.faq{grid-template-columns:1fr}}
+@media(max-width:560px){.wrap{padding:0 16px}h1{margin-top:64px}.pay{grid-template-columns:1fr;justify-items:center}.card{padding:20px}.tabs{grid-template-columns:1fr 1fr;border-radius:18px}.choice{grid-template-columns:1fr}#tipChoice{grid-template-columns:1fr 1fr!important}.nn .back span{display:none}}
+@media(prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition-duration:.01ms!important}html{scroll-behavior:auto}}
+
+/* receipt printer (shown after a payment is confirmed) */
+.printer[hidden]{display:none}.printer{max-width:340px;margin:0 auto 26px;display:flex;flex-direction:column;align-items:center}
+.pr-machine{width:100%;border-radius:24px;padding:12px 12px 30px;position:relative;background:#2a2830;border:1px solid #0b0a0e;box-shadow:0 20px 36px -20px rgba(0,0,0,.7),inset 0 1px 0 rgba(255,255,255,.14)}
+.pr-machine::after{content:"";position:absolute;left:24px;right:24px;bottom:12px;height:8px;border-radius:4px;background:#050408;box-shadow:inset 0 1px 2px #000}
+.pr-screen{border-radius:12px;background:#050408;border:1px solid #000;padding:14px 16px;font:12px/1.5 var(--mono);color:#cfcbdc;box-shadow:inset 0 0 24px 4px rgba(0,0,0,.5)}
+.pr-screen .row{display:flex;justify-content:space-between;gap:10px}
+.pr-status{display:flex;align-items:center;gap:8px;margin-top:10px;color:#a7a2b5;font-weight:600}
+.pr-status i{font-size:16px}
+.pr-status .spin2{width:14px;height:14px;border:2px solid #6a6678;border-top-color:transparent;border-radius:50%;animation:prspin .8s linear infinite}
+.pr-status .okc{color:var(--ok)}
+@keyframes prspin{to{transform:rotate(360deg)}}
+.pr-out{width:calc(80% + 3rem);max-width:100%;height:0;overflow:hidden;margin-top:-16px;padding:0 24px;position:relative;z-index:2;transition:height .01s}
+.pr-out.on{height:430px}
+.pr-paper{background:#fbfaf5;color:#1d1c1a;font:12px/1.55 var(--mono);padding:24px 22px 30px;min-height:300px;
+  clip-path:polygon(0 0,100% 0,100% calc(100% - 4px),97.5% 100%,95% calc(100% - 4px),92.5% 100%,90% calc(100% - 4px),87.5% 100%,85% calc(100% - 4px),82.5% 100%,80% calc(100% - 4px),77.5% 100%,75% calc(100% - 4px),72.5% 100%,70% calc(100% - 4px),67.5% 100%,65% calc(100% - 4px),62.5% 100%,60% calc(100% - 4px),57.5% 100%,55% calc(100% - 4px),52.5% 100%,50% calc(100% - 4px),47.5% 100%,45% calc(100% - 4px),42.5% 100%,40% calc(100% - 4px),37.5% 100%,35% calc(100% - 4px),32.5% 100%,30% calc(100% - 4px),27.5% 100%,25% calc(100% - 4px),22.5% 100%,20% calc(100% - 4px),17.5% 100%,15% calc(100% - 4px),12.5% 100%,10% calc(100% - 4px),7.5% 100%,5% calc(100% - 4px),2.5% 100%,0 calc(100% - 4px));
+  transform:translateY(calc(-100% + 2px));opacity:0}
+.pr-out.print .pr-paper{opacity:1;animation:prfeed 1.75s steps(9,end) forwards}
+.pr-out.done .pr-paper{opacity:1;transform:none}
+@keyframes prfeed{from{transform:translateY(calc(-100% + 2px))}to{transform:translateY(0)}}
+.pr-paper h4{font:700 14px var(--mono);letter-spacing:.08em;text-transform:uppercase;text-align:center}
+.pr-paper hr{border:0;border-top:1px dashed #1d1c1a55;margin:12px 0}
+.pr-paper dl div{display:flex;justify-content:space-between;gap:10px;padding:2px 0}
+.pr-paper dd{text-align:right;word-break:break-all}
+.pr-paper .tot{font-weight:700;font-size:13px}
+@media (prefers-reduced-motion:reduce){.pr-out.print .pr-paper{animation:none;transform:none}.pr-status .spin2{animation:none}}
+</style>
+</head>
+<body>
+<nav class="notchnav" aria-label="Main"><div class="nn"><a class="logo" href="./"><img src="assets/icon-48.png" alt="" width="24" height="24"> Notch apple</a><a class="back" href="./"><i class="ph ph-arrow-left"></i> <span>Back to the site</span></a></div></nav>
+<main>
+<div class="wrap">
+  <h1>Free for everyone.<br><span>Pay once for more.</span></h1>
+  <p class="lead">No subscriptions, no account, no renewals. Buy a key once and keep it for life, with every future update included. The app has no ads and no tracking in every tier.</p>
+
+  <div class="plans">
+    <div class="plan">
+      <h3>Free</h3><div class="pr">$0</div><p class="sub">The complete notch.</p>
+      <ul>
+        <li>Now Playing with album art, visualizer, timers, battery and AirPods</li>
+        <li>Calendar, weather, world clock, clipboard history, quick notes, file shelf</li>
+        <li>F1 live timing, sports scores, Notch Games</li>
+        <li>AI: ask anything with your own free key or on-device Ollama</li>
+        <li>Window snapping, AirDrop, screenshots, Shortcuts, backup</li>
+      </ul>
+      <a class="btn ghost" href="https://github.com/AdityaJainDXB/NotchApples/releases/latest">Download for Mac</a>
+      <a class="btn ghost" href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe">Download for Windows</a>
+    </div>
+    <div class="plan">
+      <h3>Pro</h3><div class="pr">$1<small>once</small></div><p class="sub">Power, depth and polish.</p>
+      <ul>
+        <li><b>Notch apple AI included</b>: ask without setting up any key (a daily allowance; your own keys still work)</li>
+        <li>AI about your screen, images and PDFs; web search with sources; personas, slash commands, voice</li>
+        <li>Home dashboard, profiles, per-app rules, command palette (⌃⌥P)</li>
+        <li>Text expander, screenshot markup, ruler, unit and currency converter</li>
+        <li>Markets, live flight status, more teams, week forecast, meeting planner</li>
+        <li>22 themes and a theme editor, resize, gestures, edge zones, styles</li>
+        <li>Klick keyboard sounds, including premium sounds downloaded with your key</li>
+        <li>Messenger, Audio, VPN, Voice Notes, Screen Time, Launcher, Snippets, Mirror, Focus, sync</li>
+      </ul>
+      <button class="btn" data-buy="pro">Get Pro, $1</button>
+    </div>
+    <div class="plan best">
+      <span class="badge">Best value</span>
+      <h3>Ultimate</h3><div class="pr">$5<small>once</small></div><p class="sub">Everything in Pro, plus the platform.</p>
+      <ul>
+        <li>Everything in Pro</li>
+        <li>Live Activities API for your own apps and scripts, two activities at once</li>
+        <li>AI automations on a schedule</li>
+        <li>Plugin SDK and the community plugin gallery</li>
+        <li>Convert any file to another kind, and Do It: the AI works on your screen for you</li>
+        <li>Clipboard Link: your clipboard on all your Macs and PCs, encrypted</li>
+        <li>More Notch apple AI messages a day than Pro</li>
+        <li><code>notch</code> command and scripting, notes and to-dos in iCloud</li>
+        <li>Priority support and the beta channel</li>
+        <li>iPhone companion (sideload with Sideloadly)</li>
+        <li class="soon">Apple Watch</li>
+      </ul>
+      <p class="muted" style="font-size:13px;margin:-12px 0 6px">Apple Watch is planned. Already have Pro? Upgrade for $4.</p>
+      <button class="btn" data-buy="ultimate" id="ultBtn">Get Ultimate, $5</button>
+    </div>
+  </div>
+
+  <h2>Compare tiers</h2>
+  <div class="tblwrap"><table>
+    <thead><tr><th>Feature</th><th>Free</th><th>Pro</th><th>Ultimate</th></tr></thead>
+    <tbody id="cmp"></tbody>
+  </table></div>
+</div>
+
+<div class="wrap narrow">
+  <h2 id="checkout">Checkout</h2>
+  <div class="card">
+    <div id="offline" class="warn" style="display:none;margin:0 0 16px"></div>
+    <div id="forms">
+      <div class="tabs" role="tablist">
+        <button class="on" data-p="buy">Buy</button><button data-p="upgrade">Upgrade</button><button data-p="promo">Promo code</button><button data-p="recover">Lost my key?</button>
+      </div>
+
+      <div class="pane on" id="buy">
+        <div id="start">
+          <label style="margin-top:0">Tier</label>
+          <div class="choice" id="tierChoice">
+            <button class="on" data-tier="pro"><b>Pro · $1</b><span>One-time. Every Pro feature.</span></button>
+            <button data-tier="ultimate"><b>Ultimate · $5</b><span>Everything, now and as it ships.</span></button>
+          </div>
+          <label>Add a tip? (optional, it goes to three high school developers)</label>
+          <div class="choice" id="tipChoice" style="grid-template-columns:repeat(4,1fr)">
+            <button class="on" data-tip="0"><b>No tip</b></button>
+            <button data-tip="1"><b>+$1</b></button>
+            <button data-tip="3"><b>+$3</b></button>
+            <button data-tip="5"><b>+$5</b></button>
+          </div>
+          <label for="email">Email (your key is sent here; used only for that and "Lost my key?")</label>
+          <input id="email" type="email" placeholder="you@example.com" autocomplete="email">
+          <button class="btn" id="orderBtn"><span class="spin"></span><span>Continue to payment</span></button>
+          <div class="status" id="orderStatus"></div>
+        </div>
+      </div>
+
+      <div class="pane" id="upgrade">
+        <p class="muted">Already have Pro? Pay just the $4 difference. Your Pro key keeps working until you activate the new Ultimate key.</p>
+        <label for="upKey">Your Pro key</label>
+        <textarea id="upKey" class="mono" rows="3" placeholder="NTCH-PRO-…" spellcheck="false"></textarea>
+        <label for="upEmail">Email for the new key</label>
+        <input id="upEmail" type="email" placeholder="you@example.com" autocomplete="email">
+        <button class="btn" id="upBtn"><span class="spin"></span><span>Upgrade for $4</span></button>
+        <div class="status" id="upStatus"></div>
+      </div>
+
+      <div class="pane" id="promo">
+        <p class="muted">Each promo code gives one Pro key, once.</p>
+        <label for="code">Promo code</label>
+        <input id="code" class="mono" placeholder="PROMO-XXXX-XXXX-XXXX" autocomplete="off" spellcheck="false">
+        <label for="promoEmail">Email (your key is sent here)</label>
+        <input id="promoEmail" type="email" placeholder="you@example.com" autocomplete="email">
+        <button class="btn" id="promoBtn"><span class="spin"></span><span>Get my Pro key</span></button>
+        <div class="status" id="promoStatus"></div>
+      </div>
+
+      <div class="pane" id="recover">
+        <p class="muted">We'll email every key bought with this address. For extra certainty, add the payment's transaction ID. Keys are only ever sent to the buyer's email, never shown here.</p>
+        <label for="recEmail">Email you used at checkout</label>
+        <input id="recEmail" type="email" placeholder="you@example.com" autocomplete="email">
+        <label for="recTx">Transaction ID (optional)</label>
+        <input id="recTx" class="mono" placeholder="64 characters, or an explorer link" autocomplete="off" spellcheck="false">
+        <button class="btn" id="recBtn"><span class="spin"></span><span>Email my key</span></button>
+        <div class="status" id="recStatus"></div>
+        <p class="muted" style="margin-top:10px">Bought before tiers (a NOTCH-XXXX key)? It still works and counts as Pro. Paste it in the app as before.</p>
+      </div>
+    </div>
+
+    <div id="paying" style="display:none">
+      <p class="muted" id="payFor"></p>
+      <div class="pay">
+        <div id="qr" aria-label="QR code for the payment"></div>
+        <div>
+          <label style="margin-top:0">Send exactly</label>
+          <div class="field"><code class="big" id="amt"></code><button class="mini" data-copy="amt">Copy</button></div>
+          <label>To this Litecoin address</label>
+          <div class="field"><code id="addr"></code><button class="mini" data-copy="addr">Copy</button></div>
+          <a class="mini" id="walletLink" style="display:inline-block;margin-top:10px">Open in my wallet</a>
+        </div>
+      </div>
+      <div class="warn">The amount is unique to your order; that's how we know the payment is yours. Send it <b>exactly</b>. Sending from an exchange? Make sure the exchange's withdrawal fee is added on top, so exactly this amount arrives.</div>
+      <label for="txid">Transaction ID (after you've sent it)</label>
+      <input id="txid" class="mono" placeholder="64 characters, or an explorer link" autocomplete="off" spellcheck="false">
+      <button class="btn" id="claimBtn"><span class="spin"></span><span>I've paid: get my key</span></button>
+      <div class="status" id="claimStatus"></div>
+      <p class="muted" style="margin-top:10px">This order stays open for 48 hours, even if you close the page. <a href="#" id="cancelOrder" style="text-decoration:underline">Start over</a></p>
+    </div>
+
+    <div class="result" id="result">
+      <div class="printer" id="printer" aria-label="Receipt printer" hidden>
+        <div class="pr-machine">
+          <div class="pr-screen">
+            <div class="row"><span id="prWhat"></span><b id="prAmt"></b></div>
+            <div class="pr-status" role="status" aria-live="polite"><span id="prIcon"></span><span id="prText">Processing your order</span></div>
+          </div>
+        </div>
+        <div class="pr-out" id="prOut"><article class="pr-paper" id="prPaper"></article></div>
+      </div>
+      <div class="kicon"><i class="ph ph-key"></i></div>
+      <h3>Your <span id="resTier"></span> key</h3>
+      <p class="muted" id="resMail"></p>
+      <div class="key" id="key"></div>
+      <button class="mini" id="copyKey">Copy key</button> <a class="mini" id="openKey">Activate in Notch apple</a>
+      <ol class="steps" style="max-width:460px;margin:22px auto 0"><li>Click "Activate in Notch apple", or open Settings → License and paste the key.</li><li>Press Unlock. It's checked on your Mac, offline.</li><li>Works on up to 3 of your Macs. New Mac? Paste the same key.</li></ol>
+      <a class="btn" href="https://github.com/AdityaJainDXB/NotchApples/releases/latest" style="max-width:460px;margin:22px auto 0">Download for Mac</a>
+      <a class="btn ghost" href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe" style="max-width:460px;margin:10px auto 0">Download for Windows</a>
+    </div>
+  </div>
+  <p class="note">Payments go straight to the developer's Litecoin wallet. No card details, no payment company. <a href="terms.html" style="text-decoration:underline">Terms and refunds</a></p>
+
+  <h2>Questions</h2>
+  <section class="faq" id="faqs">
+    <div><h3>Is it really one payment?</h3><p>Yes. Pro is $1 and Ultimate is $5, once. There are no subscriptions, renewals or expiry dates, and every future update is included, 2.0 and beyond.</p></div>
+    <div><h3>Student discount?</h3><p>Students can ask for a free Pro promo code: <a href="https://github.com/AdityaJainDXB/NotchApples/issues/new?labels=payment&title=Student%20promo%20code" style="text-decoration:underline">open a request</a> (no proof needed, just be honest).</p></div>
+    <div><h3>Can I pay more?</h3><p>Yes, add a tip at checkout. It all goes to three high school developers, and it's hugely appreciated.</p></div>
+    <div><h3>How does activation work?</h3><p>Your key is signed by our license server. The app checks the signature on your Mac, offline, using a public key built into the app. When you activate, the app tells the server a one-way hash of your Mac (so a key works on up to 3 Macs); nothing else.</p></div>
+    <div><h3>I have Pro. How do I upgrade?</h3><p>Use the Upgrade tab: paste your Pro key and pay the $4 difference. You get a new Ultimate key; your Pro key keeps working until you replace it.</p></div>
+    <div><h3>I lost my key</h3><p>Use "Lost my key?" with the email you bought with. Keys are emailed only to that address.</p></div>
+    <div><h3>Refunds?</h3><p>Handled case by case: email <a href="mailto:notchapples.support@gmail.com" style="text-decoration:underline">notchapples.support@gmail.com</a> with your transaction ID. A refunded key is turned off. See the <a href="terms.html" style="text-decoration:underline">terms</a>.</p></div>
+    <div><h3>I bought Pro before tiers existed</h3><p>Your NOTCH-XXXX key or access code keeps working and counts as Pro. Donors and anyone who paid $2: <a href="https://github.com/AdityaJainDXB/NotchApples/issues/new?labels=payment&title=Early%20supporter%20Ultimate" style="text-decoration:underline">ask for your free Ultimate key</a>.</p></div>
+    <div><h3>Does the app have ads or tracking?</h3><p>No, in every tier. Not in the app, and not on this website.</p></div>
+  </section>
+</div>
+</main>
+<footer><a href="mailto:notchapples.support@gmail.com">Support</a><a href="./">Home</a><a href="terms.html">Terms and refunds</a><a href="https://github.com/AdityaJainDXB/NotchApples">GitHub</a></footer>
+
+<script src="assets/qrcode.min.js"></script>
+<script>
+// The license server (server/license-worker in the app's repo). Also listed in api.json for the app.
+const WORKER = "https://notchapple-licenses.adityajain1225.workers.dev";
+const $ = s => document.querySelector(s);
+const save = (k, v) => { try { v == null ? localStorage.removeItem(k) : localStorage.setItem(k, JSON.stringify(v)) } catch {} };
+const load = k => { try { return JSON.parse(localStorage.getItem(k)) } catch { return null } };
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+// Comparison table
+const ROWS = [
+  ['Notch'], ['Spring animations, hover / click / hotkey, menu bar, launch at login', 1], ['Hide in fullscreen apps, hover delay, keyboard control', 1], ['Notch on Macs without a notch', 1], ['Resize, edge trigger zones, tabs per display, custom gestures', 2],
+  ['Live activities'], ['Now Playing, visualizer, timers, battery, AirPods, volume HUD', 1], ['Live scores, followed team, F1 live timing', 1], ['Meeting alerts, download progress, Markets, flight status, more teams', 2], ['Live Activities API, two activities at once', 3],
+  ['AI'], ['Ask anything, follow-ups, your own key, Ollama, Apple Intelligence', 1], ['Screen and files, history, web search, personas, slash commands, voice', 2], ['Automations on a schedule', 3],
+  ['Productivity'], ['Clipboard history, notes, to-do, file shelf, AirDrop, Text Grab', 1], ['Window snapping, screenshots, Shortcuts, calculator', 1], ['Command palette, text expander, markup, ruler, converter, Reminders', 2], ['notch command and scripting', 3],
+  ['Customization'], ['Light/dark Settings, 14 themes, tab order', 1], ['Browser video and podcast speed and skip', 2], ['22 themes, theme editor, Home dashboard, profiles, per-app rules, styles', 2], ['Plugin SDK and gallery', 3],
+  ['Platform'], ['Updates, What\'s New, backup, Privacy dashboard, feedback', 1], ['Sync settings across Macs', 2], ['Notes and to-dos in iCloud, beta channel, priority support', 3], ['iPhone companion (sideloaded): send to the notch, status, controls', 3], ['Apple Watch', 'soon3'],
+];
+$('#cmp').innerHTML = ROWS.map(r => r.length === 1 ? `<tr class="grp"><td colspan="4">${r[0]}</td></tr>` :
+  `<tr><td>${r[0]}</td>${[1, 2, 3].map(t => { const v = r[1], soon = typeof v === 'string', min = soon ? +v.slice(-1) : v;
+    return t >= min ? `<td class="y">${soon ? '<i class="ph ph-clock" aria-label="Planned"></i>' : '<i class="ph ph-check" aria-label="Included"></i>'}</td>` : '<td class="n"><i class="ph ph-minus" aria-label="Not included"></i></td>' }).join('')}</tr>`).join('');
+
+// Tabs
+function tab(name) { document.querySelectorAll('.tabs button,.pane').forEach(x => x.classList.remove('on')); $(`[data-p=${name}]`).classList.add('on'); $('#' + name).classList.add('on') }
+document.querySelectorAll('.tabs button').forEach(b => b.onclick = () => tab(b.dataset.p));
+let tier = 'pro';
+document.querySelectorAll('#tierChoice button').forEach(b => b.onclick = () => { if (b.disabled) return; document.querySelectorAll('#tierChoice button').forEach(x => x.classList.remove('on')); b.classList.add('on'); tier = b.dataset.tier });
+document.querySelectorAll('[data-buy]').forEach(b => b.onclick = () => { $(`#tierChoice [data-tier=${b.dataset.buy}]`).click(); tab('buy'); $('#checkout').scrollIntoView({ behavior: 'smooth' }); setTimeout(() => $('#email').focus(), 500) });
+const hash = location.hash.slice(1);
+if (['upgrade', 'promo', 'recover'].includes(hash)) { tab(hash); setTimeout(() => $('#checkout').scrollIntoView(), 50) }
+
+// Helpers
+function copy(text, btn) { navigator.clipboard?.writeText(text).then(() => { const t = btn.textContent; btn.textContent = 'Copied'; setTimeout(() => btn.textContent = t, 1400) }) }
+document.querySelectorAll('[data-copy]').forEach(b => b.onclick = () => copy($('#' + b.dataset.copy).textContent.split(' ')[0], b));
+$('#copyKey').onclick = e => copy($('#key').textContent, e.target);
+function status(id, text, cls = '', help = cls === 'err') {
+  const e = $(id); e.textContent = text; e.className = 'status ' + cls;
+  if (help) { const a = document.createElement('a'); a.target = '_blank'; a.rel = 'noopener';
+    const tx = ($('#txid').value.toLowerCase().match(/[0-9a-f]{64}/) || [''])[0];
+    a.href = 'https://github.com/AdityaJainDXB/NotchApples/issues/new?labels=payment&title=' + encodeURIComponent('Key help') + '&body=' + encodeURIComponent(`What happened: ${text}\n\nTransaction ID: ${tx || '-'}\nWallet or exchange I used:\n\n(Please don't post your email or key here.)`);
+    a.textContent = "Need help? We'll sort it out →"; e.append(document.createElement('br'), a) }
+}
+function busy(btn, on) { btn.disabled = on; btn.classList.toggle('busy', on) }
+async function api(path, body) {
+  const r = await fetch(WORKER + path, body ? { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) } : {});
+  const j = await r.json().catch(() => ({ error: 'The key server sent something unreadable (' + r.status + ').' }));
+  if (!r.ok || j.error) throw new Error(j.error || ('Error ' + r.status));
+  return j;
+}
+const validEmail = e => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e.trim());
+
+// A receipt prints after a confirmed payment: processing, then the paper feeds out a line at a time, then it is done.
+async function printReceipt(o) {
+  const box = $('#printer'), out = $('#prOut'), icon = $('#prIcon'), text = $('#prText');
+  const tierName = o.tier === 'ultimate' ? 'Ultimate' : 'Pro', day = new Date().toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
+  const esc = t => String(t).replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
+  $('#prWhat').textContent = `${tierName} · one payment`; $('#prAmt').textContent = `$${o.usd}`;
+  $('#prPaper').innerHTML = `<h4>Receipt</h4><hr><dl>
+    <div><dt>Item</dt><dd>Notch apple ${esc(tierName)}</dd></div>
+    <div><dt>Price</dt><dd>$${esc(o.usd)}</dd></div>
+    <div><dt>Paid</dt><dd>${esc(o.ltc)} LTC</dd></div>
+    <div><dt>Order</dt><dd>${esc(String(o.order).slice(0, 12))}</dd></div>
+    <div><dt>Date</dt><dd>${esc(day)}</dd></div></dl><hr>
+    <dl><div class="tot"><dt>Total paid</dt><dd>$${esc(o.usd)}</dd></div></dl><hr>
+    <p style="text-align:center">Thank you. Your key is below.<br>No subscription, ever.</p>`;
+  box.hidden = false; out.className = 'pr-out';
+  icon.innerHTML = '<span class="spin2"></span>'; text.textContent = 'Processing your order';
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  await sleep(reduce ? 0 : 700);
+  text.textContent = 'Printing your receipt'; out.className = 'pr-out on print';
+  await sleep(reduce ? 0 : 1800);
+  out.className = 'pr-out on done'; icon.innerHTML = '<i class="ph ph-check-circle okc"></i>'; text.textContent = 'Order complete';
+}
+function showKey(r, order) {
+  $('#forms').style.display = 'none'; $('#paying').style.display = 'none'; $('#result').classList.add('on');
+  $('#resTier').textContent = r.tier; $('#key').textContent = r.key;
+  $('#openKey').href = 'notchapple://activate?key=' + encodeURIComponent(r.key);
+  $('#resMail').textContent = r.emailed ? "We've also emailed it to you. Keep that email." : 'Save it now (copy it somewhere safe). Email delivery is not available right now.';
+  $('#result').scrollIntoView({ behavior: 'smooth', block: 'center' });
+  if (order && order.usd) printReceipt(order); else $('#printer').hidden = true;
+}
+
+// Demo: pro.html#receipt-demo prints a sample receipt in the browser only. No order, no server call, no key.
+if (location.hash === '#receipt-demo') {
+  $('#forms').style.display = 'none'; $('#result').classList.add('on');
+  [...$('#result').children].forEach(c => { if (c.id !== 'printer') c.style.display = 'none' });
+  const note = document.createElement('p'); note.className = 'muted'; note.style.textAlign = 'center'; note.textContent = 'Demo receipt: nothing was bought and no key was made.';
+  $('#result').append(note);
+  printReceipt({ tier: 'pro', usd: 1, ltc: '0.00000000', order: 'DEMO' });
+  $('#result').scrollIntoView({ block: 'center' });
+}
+
+// Server availability
+let config = null;
+(async () => {
+  if (!WORKER) return offline('Signed keys go on sale very soon. Until then you can still get Pro with the <a href="legacy.html" style="text-decoration:underline">classic checkout</a>; those keys keep working.');
+  try { config = await api('/config') } catch { return offline("The key server can't be reached right now. Please try again in a few minutes.") }
+  if (!config.ultimate) {
+    const b = $('#tierChoice [data-tier=ultimate]'); b.disabled = true; b.querySelector('span').textContent = 'Coming soon, with its first features.';
+    $('#ultBtn').disabled = true; $('#ultBtn').textContent = 'Coming soon'; $('#upBtn').disabled = true;
+  }
+  const open = load('na.order'); if (open && open.expires > Date.now()) paying(open);
+})();
+function offline(html) { const w = $('#offline'); w.innerHTML = html; w.style.display = 'block'; document.querySelectorAll('#orderBtn,#upBtn,#promoBtn,#recBtn,#ultBtn').forEach(b => b.disabled = true) }
+
+// Orders
+function paying(o) {
+  save('na.order', o);
+  $('#forms').style.display = 'none'; $('#paying').style.display = 'block';
+  $('#payFor').textContent = `${o.tier === 'ultimate' ? (o.usd === 4 ? 'Upgrade to Ultimate' : 'Ultimate') : 'Pro'} · $${o.usd}` + (o.price ? ` (1 LTC = $${(+o.price).toFixed(2)})` : '');
+  $('#amt').textContent = o.ltc + ' LTC'; $('#addr').textContent = o.wallet;
+  const uri = `litecoin:${o.wallet}?amount=${o.ltc}`; $('#walletLink').href = uri; $('#qr').innerHTML = '';
+  if (window.QRCode) new QRCode($('#qr'), { text: uri, width: 140, height: 140, correctLevel: QRCode.CorrectLevel.M });
+}
+$('#cancelOrder').onclick = e => { e.preventDefault(); save('na.order', null); $('#paying').style.display = 'none'; $('#forms').style.display = 'block' };
+async function startOrder(btn, statusId, body) {
+  if (!validEmail(body.email)) return status(statusId, 'Enter a valid email address. Your key is sent there.', 'err', false);
+  busy(btn, true); status(statusId, 'Getting your exact amount…');
+  try { paying(await api('/order', body)); status(statusId, '') } catch (e) { status(statusId, e.message, 'err') } finally { busy(btn, false) }
+}
+let tip = 0;
+document.querySelectorAll('#tipChoice button').forEach(b => b.onclick = () => { document.querySelectorAll('#tipChoice button').forEach(x => x.classList.remove('on')); b.classList.add('on'); tip = +b.dataset.tip });
+$('#orderBtn').onclick = () => startOrder($('#orderBtn'), '#orderStatus', { tier, email: $('#email').value, tip });
+$('#upBtn').onclick = () => {
+  const k = $('#upKey').value.trim();
+  if (!/^ntch-?pro/i.test(k)) return status('#upStatus', 'Paste your whole Pro key (it starts with NTCH-PRO-).', 'err', false);
+  startOrder($('#upBtn'), '#upStatus', { tier: 'ultimate', email: $('#upEmail').value, upgradeFrom: k });
+};
+$('#claimBtn').onclick = async () => {
+  const btn = $('#claimBtn'), o = load('na.order'), m = $('#txid').value.toLowerCase().match(/[0-9a-f]{64}/);
+  if (!o) return;
+  if (!m) return status('#claimStatus', 'Paste the 64-character transaction ID (or an explorer link to it).', 'err', false);
+  busy(btn, true);
+  try {
+    for (let i = 0; i < 40; i++) {   // up to ~10 minutes for the transaction to reach the network
+      const r = await api('/claim', { order: o.order, txid: m[0] });
+      if (r.key) { save('na.order', null); save('na.key.' + o.order, r); return showKey(r, o) }
+      status('#claimStatus', (r.message || 'Waiting for the payment…') + ' Keep this page open.');
+      await sleep(15000);
+    }
+    status('#claimStatus', "We couldn't find that transaction yet. Check the ID and try again in a few minutes.", 'err');
+  } catch (e) { status('#claimStatus', e.message, 'err') } finally { busy(btn, false) }
+};
+
+// Promo and recovery
+$('#code').oninput = e => { let s = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ''); if (s && !'PROMO'.startsWith(s) && !s.startsWith('PROMO')) s = 'PROMO' + s; s = s.slice(0, 17); e.target.value = s.length > 5 ? 'PROMO-' + (s.slice(5).match(/.{1,4}/g) || []).join('-') : s };
+$('#promoBtn').onclick = async () => {
+  const btn = $('#promoBtn'), email = $('#promoEmail').value;
+  if (!validEmail(email)) return status('#promoStatus', 'Enter a valid email address. Your key is sent there.', 'err', false);
+  busy(btn, true); status('#promoStatus', 'Checking…');
+  try { showKey(await api('/promo', { code: $('#code').value, email })) } catch (e) { status('#promoStatus', e.message, 'err') } finally { busy(btn, false) }
+};
+$('#recBtn').onclick = async () => {
+  const btn = $('#recBtn'), email = $('#recEmail').value, tx = ($('#recTx').value.toLowerCase().match(/[0-9a-f]{64}/) || [])[0];
+  if (!validEmail(email)) return status('#recStatus', 'Enter the email address you used at checkout.', 'err', false);
+  busy(btn, true);
+  try { const r = await api('/recover', tx ? { email, txid: tx } : { email }); status('#recStatus', r.message, 'ok') } catch (e) { status('#recStatus', e.message, 'err') } finally { busy(btn, false) }
+};
+</script>
+</body>
+</html>
