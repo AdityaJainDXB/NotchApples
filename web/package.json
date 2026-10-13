@@ -1,21 +1,21 @@
 {
   "name": "notchapples-site",
   "version": "1.0.0",
-  "description": "<p align=\"center\">   <img src=\"https://raw.githubusercontent.com/AdityaJainDXB/NotchApples/main/docs/icon.png\" width=\"96\" alt=\"Notch apple icon\"> </p>",
+  "description": "The Notch Apple website (served by GitHub Pages from this folder).",
   "main": "index.js",
-  "scripts": {},
+  "scripts": { "test": "playwright test", "check": "node ../scripts/check-site.mjs" },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/VirajSinghChadha/notchapples-site.git"
+    "url": "git+https://github.com/AdityaJainDXB/NotchApples.git"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "type": "commonjs",
   "bugs": {
-    "url": "https://github.com/VirajSinghChadha/notchapples-site/issues"
+    "url": "https://github.com/AdityaJainDXB/NotchApples/issues"
   },
-  "homepage": "https://github.com/VirajSinghChadha/notchapples-site#readme",
+  "homepage": "https://github.com/AdityaJainDXB/NotchApples/tree/main/web#readme",
   "devDependencies": {
     "@playwright/test": "^1.64.0",
     "@types/node": "^26.6.4"

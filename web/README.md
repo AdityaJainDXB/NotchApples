@@ -1,15 +1,15 @@
 <p align="center">
-  <img src="https://raw.githubusercontent.com/AdityaJainDXB/NotchApples/main/docs/icon.png" width="96" alt="Notch apple icon">
+  <img src="https://raw.githubusercontent.com/AdityaJainDXB/NotchApples/main/docs/icon.png" width="96" alt="Notch Apple icon">
 </p>
 
-<h1 align="center">Notch apple — website</h1>
+<h1 align="center">Notch Apple — website</h1>
 
 <p align="center">
-  The official website for <a href="https://github.com/AdityaJainDXB/NotchApples"><b>Notch apple</b></a>, the free-to-start, source-available app that turns your MacBook notch into a productivity hub.
+  The official website for <a href="https://github.com/AdityaJainDXB/NotchApples"><b>Notch Apple</b></a>, the free-to-start, source-available app that turns your MacBook notch into a productivity hub.
 </p>
 
 <p align="center">
-  <a href="https://virajsinghchadha.github.io/notchapples-site/"><b>🌐 Live site</b></a>
+  <a href="https://adityajaindxb.github.io/NotchApples/"><b>🌐 Live site</b></a>
   &nbsp;·&nbsp;
   <a href="https://github.com/AdityaJainDXB/NotchApples"><b>App repository</b></a>
   &nbsp;·&nbsp;
@@ -40,8 +40,8 @@ README.md    this file
 ## Run it locally
 
 ```bash
-git clone https://github.com/VirajSinghChadha/notchapples-site.git
-cd notchapples-site
+git clone https://github.com/AdityaJainDXB/NotchApples.git
+cd NotchApples/web
 python3 -m http.server 8000
 ```
 
@@ -49,9 +49,9 @@ Then open <http://localhost:8000>. Opening `index.html` directly also works.
 
 ## Deploying
 
-The site is hosted on **GitHub Pages** from the `main` branch. Every push to `main` goes live within a minute or two.
+The site is hosted on **GitHub Pages**, deployed by `.github/workflows/pages.yml` from this folder (`web/`). Every push to `main` that touches `web/` goes live within a minute or two.
 
-The site is served at https://virajsinghchadha.github.io/notchapples-site/ (the notch.cc.cd custom domain was removed because some networks block it as Dynamic DNS).
+The site is served at https://adityajaindxb.github.io/NotchApples/. https://notch.cc.cd forwards to it (a small redirect page in the `AdityaJainDXB/notch.cc.cd` repository) rather than being the Pages custom domain, because some networks block `cc.cd` as Dynamic DNS and a custom domain would make the github.io address redirect there too. The old address, https://virajsinghchadha.github.io/notchapples-site/, keeps serving `api.json` and forwards its pages here, because installed copies of the app read the payment directory from it.
 
 ## Updating the site for a new release
 
@@ -62,4 +62,4 @@ The site is served at https://virajsinghchadha.github.io/notchapples-site/ (the 
 
 ## Credits
 
-Built by [@AdityaJainDXB](https://github.com/AdityaJainDXB) and [@VirajSinghChadha](https://github.com/VirajSinghChadha). Notch apple is source-available under the Notch apple Source-Available License; see the [app repository](https://github.com/AdityaJainDXB/NotchApples) for the source code, releases and licence.
+Built by [@AdityaJainDXB](https://github.com/AdityaJainDXB) and [@VirajSinghChadha](https://github.com/VirajSinghChadha). Notch Apple is source-available under the Notch Apple Source-Available License; see the [app repository](https://github.com/AdityaJainDXB/NotchApples) for the source code, releases and licence.

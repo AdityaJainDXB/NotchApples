@@ -1,4 +1,4 @@
-# Notch apple
+# Notch Apple
 
 ## What it is
 A free-to-start, source-available app that turns the MacBook notch (or a small pill on Macs without one, and on Windows) into a command center. The headline feature is screen-aware AI: press ⌃⌥S, drag over anything on screen, and solve, explain, translate or summarize it. Around it sit 30+ optional modules: Now Playing, clipboard history, window snapping, F1 and live sports, focus timer, file shelf, translator, Mac stats, messenger and more.

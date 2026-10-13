@@ -14,10 +14,10 @@ test('the download box shows the live version, stars and the DMG link', async ({
   await page.route(`${API}/releases/latest`, (r) => r.fulfill({ json: RELEASE }));
   await page.route(API, (r) => r.fulfill({ json: { stargazers_count: 1234 } }));
   await page.goto('/index.html');
-  await expect(page.locator('#dlVer')).toContainText('Notch apple 9.9.9');
+  await expect(page.locator('#dlVer')).toContainText('Notch Apple 9.9.9');
   await expect(page.locator('#dlVer')).toContainText('★ 1,234 on GitHub');
   await expect(page.locator('#dlBtn')).toHaveAttribute('href', 'https://example.invalid/NotchApple-9.9.9.dmg');
-  await expect(page.locator('#footVer')).toHaveText('Notch apple 9.9.9');
+  await expect(page.locator('#footVer')).toHaveText('Notch Apple 9.9.9');
 });
 
 test('a rate-limited reload still shows the last good answer', async ({ page }) => {

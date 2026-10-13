@@ -1,0 +1,41 @@
+name: Deploy website
+
+# The website lives in web/. A push to main that touches it (or a manual run, or the weekly update) checks the
+# links and publishes the folder to GitHub Pages. See web/README.md.
+on:
+  push:
+    branches: [main]
+    paths: ['web/**', '.github/workflows/pages.yml']
+  workflow_dispatch:
+  workflow_call:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Check links
+        run: node scripts/check-site.mjs
+      - uses: actions/configure-pages@v5
+      - name: Leave out files that are not part of the site
+        run: rm -rf web/node_modules web/tests web/test-results web/playwright* web/package*.json web/*.md
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: web
+      - id: deployment
+        uses: actions/deploy-pages@v4
