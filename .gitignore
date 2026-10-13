@@ -43,3 +43,6 @@ brag-output/
 .agents/
 .codex/
 .impeccable/
+
+# Admin access codes (made by server/license-worker/scripts/admin-keys.mjs)
+.env.admin.keys*
