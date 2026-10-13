@@ -17,7 +17,7 @@ Free to start, source-available, with free AI or fully local AI on your Mac. Plu
 
 <p align="center">
   <a href="#download"><b>⬇️ Download</b></a>
-  &nbsp;·&nbsp; <a href="https://virajsinghchadha.github.io/notchapples-site/"><b>🌐 Website</b></a>
+  &nbsp;·&nbsp; <a href="https://adityajaindxb.github.io/NotchApples/"><b>🌐 Website</b></a>
   &nbsp;·&nbsp; <a href="#whats-new"><b>✨ What's new</b></a>
   &nbsp;·&nbsp; <a href="#pro-and-ultimate"><b>🔑 Pro and Ultimate</b></a>
   &nbsp;·&nbsp; <a href="#donate-"><b>💜 Donate</b></a>
@@ -508,7 +508,7 @@ Claude Code dot, Claude usage tracker, Smart Home, clipboard link, developer too
 
 ### 1.23.1 · 4 October 2026 · Pro and Ultimate are on sale
 
-- Buy **Pro ($1)** or **Ultimate ($5)** on the [pricing page](https://virajsinghchadha.github.io/notchapples-site/pro.html). Your signed key is shown and emailed, and works on up to 3 Macs.
+- Buy **Pro ($1)** or **Ultimate ($5)** on the [pricing page](https://adityajaindxb.github.io/NotchApples/pro.html). Your signed key is shown and emailed, and works on up to 3 Macs.
 - **Every future update is included** for buyers, 2.0 and beyond. Add an optional tip at checkout if you'd like.
 - Students can ask for a free Pro promo code.
 
@@ -577,7 +577,7 @@ Claude Code dot, Claude usage tracker, Smart Home, clipboard link, developer too
 
 ### 1.16.0 · 4 October 2026 · Free, Pro and Ultimate
 
-- **Three tiers, each paid once.** Free stays complete. **Pro is $1** and **Ultimate is $5**, with no subscription, no account and every future update included. [Compare tiers](https://virajsinghchadha.github.io/notchapples-site/pro.html).
+- **Three tiers, each paid once.** Free stays complete. **Pro is $1** and **Ultimate is $5**, with no subscription, no account and every future update included. [Compare tiers](https://adityajaindxb.github.io/NotchApples/pro.html).
 - **AI is free now:** ask anything, follow-ups, Markdown/math/code rendering, with your own free key or on-device Ollama. Asking about your screen (⌃⌥S), selected text, images and PDFs, and AI History are Pro.
 - **Signed product keys** (`NTCH-PRO-…` / `NTCH-ULTM-…`), checked on your Mac, offline. They're shown at checkout and emailed to you, work on up to 3 Macs, and can be activated with one click (`notchapple://activate?key=…`).
 - **Settings → License:** your tier, the key, Deactivate this Mac, Lost my key?, Upgrade to Ultimate ($4), Compare tiers, Terms and refunds.
@@ -812,7 +812,7 @@ The Windows app is **rebuilt from scratch** to match the Mac app. It's a beta: p
 - **One key for Mac and Windows:** `NTCH-PRO-…` / `NTCH-ULTM-…` keys from the website work in Settings → Access (3 devices per key). Old `NOTCH-XXXX-XXXX` codes still work as Pro.
 - **New:** a To-do tab, a unit converter in Tools, and a **Ctrl + K** command palette.
 
-The full list for every release is on the [website](https://virajsinghchadha.github.io/notchapples-site/#new) and in the [GitHub releases](https://github.com/AdityaJainDXB/NotchApples/releases).
+The full list for every release is on the [website](https://adityajaindxb.github.io/NotchApples/#new) and in the [GitHub releases](https://github.com/AdityaJainDXB/NotchApples/releases).
 
 <details>
 <summary><b>Earlier releases</b></summary>
@@ -834,7 +834,7 @@ The full list for every release is on the [website](https://virajsinghchadha.git
 #### New in 1.14.2
 
 - **Nothing that was free became paid.** Now Playing, windows, clipboard, shelf, focus, tools and the rest stay free forever; Pro is the same features as before.
-- **Get Pro on the website**: a product key for $1 in Litecoin (or $2 to cover fees and support the high school developers), or free with a promo code. Keys are made instantly, work once, on one Mac. [Get Pro →](https://virajsinghchadha.github.io/notchapples-site/pro.html)
+- **Get Pro on the website**: a product key for $1 in Litecoin (or $2 to cover fees and support the high school developers), or free with a promo code. Keys are made instantly, work once, on one Mac. [Get Pro →](https://adityajaindxb.github.io/NotchApples/pro.html)
 - Product keys (NOTCH-XXXX-XXXX-XXXX) are checked online and re-verified against the blockchain; older access codes keep working.
 
 </details>
@@ -1267,12 +1267,12 @@ Notch Apple is free, and the free tier is complete. Two one-time upgrades add mo
 
 The full feature-by-feature plan is in [docs/TIERS.md](docs/TIERS.md).
 
-- **Buy** on the [pricing page](https://virajsinghchadha.github.io/notchapples-site/pro.html), in Litecoin. Each order gets its own exact amount, which is how the payment is matched to you. Your key is shown straight away and emailed.
+- **Buy** on the [pricing page](https://adityajaindxb.github.io/NotchApples/pro.html), in Litecoin. Each order gets its own exact amount, which is how the payment is matched to you. Your key is shown straight away and emailed.
 - **Activate** in **Settings → License** (paste the key) or with the **Activate in Notch Apple** link. The key is checked on your Mac against a public key built into the app, so it works offline. It works on up to 3 of your Macs; **Deactivate this Mac** frees a slot.
 - **Upgrade** from Pro to Ultimate for the $4 difference. Your Pro key keeps working until you activate the new one.
 - **Lost your key?** Use **Lost my key?** on the pricing page; it's emailed to the address you bought with.
 - **Keys from before tiers** (`NOTCH-XXXX-XXXX-XXXX` and access codes) keep working as Pro.
-- Refunds are case by case; see the [terms](https://virajsinghchadha.github.io/notchapples-site/terms.html).
+- Refunds are case by case; see the [terms](https://adityajaindxb.github.io/NotchApples/terms.html).
 - Questions about a purchase: **notchapples.support@gmail.com**.
 - How the paid features are protected, and what a modified copy can and can't do: [docs/PROTECTING_PAID_FEATURES.md](docs/PROTECTING_PAID_FEATURES.md).
 - The license server's source is published too: [server/license-worker](server/license-worker). Its signing key and admin codes are never in the repository.
@@ -1408,13 +1408,13 @@ xcodebuild test -project NotchApple.xcodeproj -scheme NotchAppleTests
 Retake the README and website screenshots (needs [Ollama](https://ollama.com/download) with `ollama pull gemma3:4b`; it builds a separate demo copy with sample data and captures only its windows):
 
 ```bash
-scripts/screenshots.sh --site ../notchapples-site
+scripts/screenshots.sh --site web
 ```
 
 Add promo codes for Pro (codes go to the git-ignored `private/` folder; only hashes are published). Add the new hashes to `PROMOS` in `server/license-worker/src/worker.js` too, then redeploy the license server:
 
 ```bash
-python3 scripts/promo_codes.py --add 25 --site ../notchapples-site/pro.html
+python3 scripts/promo_codes.py --add 25 --site web/pro.html
 ```
 
 ### Contributing
@@ -1560,7 +1560,7 @@ Notch Apple is free and made by three high school developers. Donating is **comp
 ltc1qymlmvkdmvpk5f90esthzgwaw6w0tuzq6tdr6kf
 ```
 
-Every bit helps and is hugely appreciated. Want more too? [Pro is $1 and Ultimate $5](https://virajsinghchadha.github.io/notchapples-site/pro.html), each paid once. Donated already? Ask for a free Ultimate key.
+Every bit helps and is hugely appreciated. Want more too? [Pro is $1 and Ultimate $5](https://adityajaindxb.github.io/NotchApples/pro.html), each paid once. Donated already? Ask for a free Ultimate key.
 
 ## License
 

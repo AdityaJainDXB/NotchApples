@@ -83,7 +83,7 @@ enum AIProvider: String, CaseIterable, Identifiable, Codable {
         case .deepSeek: URL(string: "https://platform.deepseek.com/api_keys")!
         case .claude: URL(string: "https://console.anthropic.com/settings/keys")!
         case .openAI: URL(string: "https://platform.openai.com/api-keys")!
-        case .hosted: URL(string: "https://virajsinghchadha.github.io/notchapples-site/pro.html")!
+        case .hosted: URL(string: "https://adityajaindxb.github.io/NotchApples/pro.html")!
         }
     }
 

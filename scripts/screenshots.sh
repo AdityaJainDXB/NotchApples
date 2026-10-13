@@ -1,7 +1,7 @@
 #!/bin/bash
 # Takes the product screenshots used by the README and the website, from the real app.
 #
-#   scripts/screenshots.sh [--site <path to the website repo>]
+#   scripts/screenshots.sh [--site web]
 #
 # How it stays clean and repeatable:
 #   • Builds a separate screenshot copy of the current code (bundle ID com.notchapple.demo)

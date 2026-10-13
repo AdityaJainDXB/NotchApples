@@ -185,8 +185,8 @@ extension Module {
 /// Where the license server lives. The website's api.json names it, so it can move
 /// without an app update. Cached for a week.
 enum LicenseServer {
-    static let directory = URL(string: "https://virajsinghchadha.github.io/notchapples-site/api.json")!
-    static let site = "https://virajsinghchadha.github.io/notchapples-site/pro.html"
+    static let directory = URL(string: "https://adityajaindxb.github.io/NotchApples/api.json")!
+    static let site = "https://adityajaindxb.github.io/NotchApples/pro.html"
 
     static func url() async -> URL? {
         let d = UserDefaults.standard

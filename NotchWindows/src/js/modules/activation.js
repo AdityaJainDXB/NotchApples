@@ -7,7 +7,7 @@ import { activate, format } from '../license.js';
 import { openUrl } from '../native.js';
 import { FEATURES, tierLabel } from '../features.js';
 
-export const BUY_URL = 'https://virajsinghchadha.github.io/notchapples-site/pro.html';
+export const BUY_URL = 'https://adityajaindxb.github.io/NotchApples/pro.html';
 
 /// A field that takes an NTCH-PRO-…/NTCH-ULTM-… key or an old NOTCH-XXXX-XXXX code.
 export function keyField(onDone) {

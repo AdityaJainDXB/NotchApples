@@ -31,7 +31,7 @@ export function pack(files) {
 async function config() {
   let url = process.env.WORKER_URL;
   if (!url) {
-    const site = join(root, '..', 'notchapples-site', 'api.json');
+    const site = join(root, 'web', 'api.json');
     if (existsSync(site)) url = JSON.parse(readFileSync(site, 'utf8')).licenseServer;
   }
   const tokenFile = join(root, 'private', 'admin-token.txt');

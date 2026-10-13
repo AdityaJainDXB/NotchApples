@@ -456,7 +456,7 @@ private struct LicenseSettings: View {
                     Link("Get Pro ($1) or Ultimate ($5) →", destination: URL(string: LicenseServer.site)!)
                 }
                 Link("Lost my key?", destination: URL(string: LicenseServer.site + "#recover")!)
-                Link("Terms and refunds", destination: URL(string: "https://virajsinghchadha.github.io/notchapples-site/terms.html")!)
+                Link("Terms and refunds", destination: URL(string: "https://adityajaindxb.github.io/NotchApples/terms.html")!)
                 Button("Deactivate this Mac…", role: .destructive) { confirmDeactivate = true }
                     .disabled(entitlements.tier == .free)
             } footer: {
@@ -1743,7 +1743,7 @@ private struct AboutSettings: View {
             .buttonStyle(PurpleButtonStyle(prominent: WhatsNew.hasUnseen))
             Button("Replay the tour") { TourModel.shared.replay() }.buttonStyle(.link).font(.caption)
             HStack {
-                Link("Website", destination: URL(string: "https://virajsinghchadha.github.io/notchapples-site/")!)
+                Link("Website", destination: URL(string: "https://adityajaindxb.github.io/NotchApples/")!)
                 Text("·").foregroundStyle(.secondary)
                 Link("GitHub", destination: URL(string: "https://github.com/AdityaJainDXB/NotchApples")!)
                 Text("·").foregroundStyle(.secondary)

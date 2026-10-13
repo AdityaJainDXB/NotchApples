@@ -18,7 +18,7 @@ export const PROVIDERS = {
   openAI:     { name: 'ChatGPT', free: 'Paid', base: 'https://api.openai.com/v1', keyUrl: 'https://platform.openai.com/api-keys', def: 'gpt-4o-mini', images: true },
   claude:     { name: 'Claude', free: 'Paid', keyUrl: 'https://console.anthropic.com/settings/keys', def: 'claude-sonnet-5', images: true, pdf: true },
   // Included with Pro and Ultimate: answered by the licence server with the project's own AI key (no key to set up).
-  hosted:     { name: 'Notch Apple AI (included)', free: 'Included with Pro and Ultimate', base: `${WORKER}/ai/v1`, keyUrl: 'https://virajsinghchadha.github.io/notchapples-site/pro.html', def: 'notch-fast', noKey: true, images: true, hosted: true },
+  hosted:     { name: 'Notch Apple AI (included)', free: 'Included with Pro and Ultimate', base: `${WORKER}/ai/v1`, keyUrl: 'https://adityajaindxb.github.io/NotchApples/pro.html', def: 'notch-fast', noKey: true, images: true, hosted: true },
   deepSeek:   { name: 'DeepSeek', free: 'Paid, low cost', base: 'https://api.deepseek.com/v1', keyUrl: 'https://platform.deepseek.com/api_keys', def: 'deepseek-chat' },
 };
 

@@ -5,7 +5,7 @@ cask "notch-apple" do
   url "https://github.com/AdityaJainDXB/NotchApples/releases/download/v#{version}/NotchApple-#{version}.dmg"
   name "Notch Apple"
   desc "Turns the MacBook notch into a productivity hub"
-  homepage "https://virajsinghchadha.github.io/notchapples-site/"
+  homepage "https://adityajaindxb.github.io/NotchApples/"
 
   depends_on macos: :sonoma
 
@@ -25,7 +25,7 @@ cask "notch-apple" do
 
     The free version is complete. Pro ($1) and Ultimate ($5) are optional
     one-time upgrades (no subscription, every 1.x update included):
-      https://virajsinghchadha.github.io/notchapples-site/pro.html
+      https://adityajaindxb.github.io/NotchApples/pro.html
     The app has no ads and no tracking. Updates also arrive inside the app.
   EOS
 end

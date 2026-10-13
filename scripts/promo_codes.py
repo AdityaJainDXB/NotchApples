@@ -6,7 +6,7 @@ published (Firestore rules and the website); the codes themselves stay in
 private/promo-codes.txt, which git ignores.
 
   python3 scripts/promo_codes.py --add 25            # make 25 new codes
-  python3 scripts/promo_codes.py --sync --site ../notchapples-site/pro.html
+  python3 scripts/promo_codes.py --sync --site web/pro.html
 
 --add appends new random codes (never sequential) and then syncs.
 --sync rewrites the hash list in firestore.rules and, with --site, in the
