@@ -33,6 +33,28 @@ final class PlaneWKWebView: WKWebView {
     }
 }
 
+/// The Plane game's web view while it is on screen, so the menu-bar quick-dock can pause it without the notch open.
+@MainActor
+enum PlaneGameControl {
+    fileprivate(set) static weak var web: WKWebView?
+
+    static var isRunning: Bool { web != nil }
+
+    /// Sends the game its pause key (P). Returns false when the game isn't open.
+    @discardableResult
+    static func togglePause() -> Bool {
+        guard let web else { return false }
+        web.evaluateJavaScript("window.NotchPlaneGame && window.NotchPlaneGame.key && (window.NotchPlaneGame.key('p', true), window.NotchPlaneGame.key('p', false))")
+        return true
+    }
+
+    /// Opens the notch on the Plane game (choosing Plane in the Games tab first).
+    static func launch() {
+        UserDefaults.standard.set(GamesView.Game.plane.rawValue, forKey: "games.last")
+        AppDelegate.showNotch(tab: .games)
+    }
+}
+
 private struct PlaneWebView: NSViewRepresentable {
     let url: URL
 
@@ -76,6 +98,7 @@ private struct PlaneWebView: NSViewRepresentable {
         DispatchQueue.main.async { view.window?.makeFirstResponder(view) }
         let coordinator = context.coordinator
         coordinator.web = view
+        PlaneGameControl.web = view
         coordinator.monitor = NSEvent.addLocalMonitorForEvents(matching: [.keyDown, .keyUp]) { [weak coordinator] event in
             let consumed = MainActor.assumeIsolated { coordinator?.forward(event) ?? false }
             return consumed ? nil : event
@@ -88,6 +111,7 @@ private struct PlaneWebView: NSViewRepresentable {
     static func dismantleNSView(_ nsView: PlaneWKWebView, coordinator: Coordinator) {
         if let m = coordinator.monitor { NSEvent.removeMonitor(m) }
         coordinator.monitor = nil
+        if PlaneGameControl.web === nsView { PlaneGameControl.web = nil }
         // Stop the game loop and the engine sound straight away.
         nsView.loadHTMLString("", baseURL: nil)
     }

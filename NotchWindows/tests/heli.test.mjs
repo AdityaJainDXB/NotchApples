@@ -4,6 +4,9 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createRequire } from 'node:module';
 
+// The simulation draws gusts from Math.random; a seeded generator keeps these tests repeatable.
+let seed = 20261013;
+Math.random = () => { seed = (seed + 0x6d2b79f5) | 0; let t = Math.imul(seed ^ (seed >>> 15), 1 | seed); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
 globalThis.window = globalThis;
 globalThis.document = { getElementById: () => null };
 createRequire(import.meta.url)('../src/js/games/plane-sim.js');
@@ -81,4 +84,35 @@ test('every helicopter builds a mesh with two spinning rotors', () => {
     }
     assert.ok((m.gears || []).length > 0, `${h.id} stands on gear`);
   }
+});
+
+test('the emergency landing assist brings every helicopter down gently and then gives the controls back', () => {
+  const starts = { hover: () => {}, fast: (f) => { f.vel = [0, 0, -40]; }, sinking: (f) => { f.vel = [0, -6, -20]; } };
+  for (const h of HELIS) {
+    for (const [name, setup] of Object.entries(starts)) {
+      const f = new Flight(h);
+      f.reset([0, 300, 0], 0, 0, false, null);
+      setup(f);
+      assert.ok(f.emergencyOn(), `${h.id}: the assist can be switched on in the air`);
+      let touch = null;
+      for (let t = 0; t < 60 * 240 && f.emergency && !f.crashed; t++) {
+        f.step(1 / 60, { ...idle, throttle: 0.2 }, world);
+        if (f.onGround && touch == null) touch = f.vel[1];
+      }
+      assert.ok(!f.crashed, `${h.id} (${name}) lands in one piece`);
+      assert.ok(touch != null && touch > -1.5, `${h.id} (${name}) touches down gently (${touch?.toFixed(2)} m/s)`);
+      assert.equal(f.emergency, false, `${h.id} (${name}) hands the controls back once it has stopped`);
+      assert.ok(Math.abs(f.pitchAngle) < 10 * Math.PI / 180 && Math.abs(f.bank) < 10 * Math.PI / 180, `${h.id} (${name}) sits level`);
+    }
+  }
+});
+
+test('the assist is for helicopters in the air, and can be cancelled', () => {
+  const plane = new Flight(PLANES.find((p) => !p.rotor));
+  plane.reset([0, 300, 0], 0, 60, false, null);
+  assert.equal(plane.emergencyOn(), false, 'an aeroplane has no such assist');
+  const f = new Flight(HELIS[0]);
+  f.reset([0, 300, 0], 0, 0, false, null);
+  f.emergencyOn(); f.emergencyOff();
+  assert.equal(f.emergency, false);
 });

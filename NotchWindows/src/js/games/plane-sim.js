@@ -2550,12 +2550,44 @@
       this.wv[1] = this.onGround ? 0 : clamp(this.tb[1] * 0.45, -wMax, wMax);
     }
 
+    /// Emergency landing (helicopters): the assist levels the disc, runs the collective to hold a gentle descent
+    /// (steeper high up, a flare near the ground, a soft settle at the end) and gives the controls back once the
+    /// skids are down and the helicopter has stopped. The pedals stay with the pilot, so they can still point it.
+    emergencyOn() {
+      if (!this.heli || this.crashed || this.onGround) return false;
+      this.emergency = true; this.autoI = 0; return true;
+    }
+    emergencyOff() { this.emergency = false; }
+    autoLand(input, agl, dt) {
+      const s = this.s, vy = this.vel[1], hs = Math.hypot(this.vel[0], this.vel[2]);
+      let vTarget = agl > 40 ? -4.5 : agl > 12 ? -(1.4 + 0.11 * agl) : -clamp(0.35 + 0.1 * agl, 0.35, 1.7);   // m/s
+      // Too fast to touch down: hold the height low down until the drift has been leaned away.
+      if ((agl < 30 && hs > 2) || (agl < 8 && hs > 0.8)) vTarget = 0.2;
+      // On the skids: take the lift off so it settles, with the cyclic centred and no rocking.
+      if (this.onGround) return { ...input, throttle: 0.15, pitch: 0, roll: 0 };
+      const hover = 1.06 / s.rotorLift;
+      // A little integral term: ground effect and the rotor's lag put the hover collective off the textbook value.
+      this.autoI = clamp((this.autoI || 0) + (vTarget - vy) * dt * 0.22, -0.35, 0.25);
+      const collective = clamp(hover + clamp((vTarget - vy) * 0.28, -0.35, 0.3) + this.autoI, 0, 1);
+      // Lean against the drift to stop it (nose up while moving forward, banked toward the side it is sliding to);
+      // the disc trims itself back to level, so a light correction for big tilts is all the attitude needs.
+      const { f, r } = this.axes(), vf = dot(this.vel, f), vr = dot(this.vel, r);
+      const gain = agl < 10 ? 0.06 : 0.035;
+      const pitch = clamp(vf * gain - this.pitchAngle * 0.8, -0.3, 0.3);
+      const roll = clamp(vr * gain + this.bank * 0.8, -0.3, 0.3);
+      return { ...input, throttle: collective, pitch, roll };
+    }
+
     step(dt, input, world) {
       if (this.crashed) { this.stepWreck(dt, world); return; }
       const s = this.s, { f, u, r } = this.axes();
       this.t += dt;
       const gh0 = groundAt(world, this.pos[0], this.pos[2]);
       const agl = this.pos[1] - s.gear - gh0;
+      if (this.emergency) {
+        if (this.onGround && Math.hypot(this.vel[0], this.vel[1], this.vel[2]) < 1.2) { this.emergency = false; this.events.push({ type: 'emergencydone' }); }
+        else input = this.autoLand(input, agl, dt);
+      }
       const sigma = densityAt(this.pos[1]);
       this.windStep(dt, agl, world);
       // The airflow: the plane's motion through the moving air. V is true airspeed, Vi what the airspeed indicator says.
@@ -3974,7 +4006,7 @@
       if (down && e.repeat && keys.has(k)) { if (screen === 'fly') e.preventDefault?.(); return; }   // held keys repeat: toggles fire once
       const typing = e.target && e.target.tagName === 'INPUT' && e.target.type !== 'range';
       if (typing) { if (down && k === 'Enter' && result?.qualifies) saveScore(); return; }
-      const game = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' ', 'w', 's', 'a', 'd', 'q', 'e', 'f', 'v', 'b', 'c', 'p', 'r', 'x', 'Shift', 'Control', 'g'];
+      const game = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' ', 'w', 's', 'a', 'd', 'q', 'e', 'f', 'v', 'b', 'c', 'p', 'r', 'x', 'Shift', 'Control', 'g', 'h'];
       if (game.includes(k) && screen === 'fly') e.preventDefault?.();
       if (down) {
         if (screen === 'fly') {
@@ -3984,6 +4016,12 @@
             const r = flight.toggleGear();
             if (r === 'up' || r === 'down') { toast(r === 'down' ? 'Gear down' : 'Gear up', 1100); noise(1.1, 0.12, 280); }
             else toast(r === 'fixed' ? `The ${plane.name} has fixed wheels: no gear to raise` : r === 'broken' ? 'The undercarriage is broken' : 'Gear can only be raised in the air', 1500);
+          }
+          if (k === 'h') {
+            if (!plane.rotor) toast('Emergency landing is for helicopters', 1400);
+            else if (flight.emergency) { flight.emergencyOff(); toast('Emergency landing cancelled: you have the controls', 1600); }
+            else if (flight.emergencyOn()) { toast('🚨 EMERGENCY LANDING: levelling and descending. H to cancel', 2400); beep(880, 0.18, 'square', 0.08); }
+            else toast('Emergency landing needs the helicopter in the air', 1400);
           }
           if (k === 'f' || k === 'v') {
             const n = plane.flapNotches || [0, 1], to = k === 'f' && flight.flapNotch >= n.length - 1 ? 0 : clamp(flight.flapNotch + (k === 'f' ? 1 : -1), 0, n.length - 1);   // F again after the last notch brings the flaps back up
@@ -4332,6 +4370,8 @@
             detach('T', add(mul(flight.axes().f, -3), [0, 3, 0]), 5);
             toast('💥 TAIL STRIKE! The tail broke off: you have almost no pitch control', 3000);
           } else toast(`⚠ TAIL STRIKE! Tail ${ev.health < 0.35 ? 'badly ' : ''}damaged (${Math.round(ev.health * 100)}%): weaker elevator and rudder. Keep the nose lower.`, 2800);
+        } else if (ev.type === 'emergencydone') {
+          toast('✅ Emergency landing complete: the helicopter is down and stopped', 2800); noise(0.2, 0.2, 200);
         } else if (ev.type === 'fuel') {
           toast('⛽ Out of fuel: the engine has stopped. Glide and land!', 3000);
         } else if (ev.type === 'gearmoved') {
@@ -4958,6 +4998,35 @@
         rows.forEach(([n, v, c], i) => { const y = by0 + 12 + i * 16 * s; h2.fillStyle = 'rgba(255,255,255,.65)'; h2.fillText(n, bx + 8, y); h2.fillStyle = c; h2.fillText(v, bx + 8 + 62 * s, y); });
         h2.textAlign = 'center';
       }
+      // Helicopter panel: height above the ground, climb rate, ground speed, collective and rotor speed, and the
+      // emergency-landing banner (the assist levels the disc and sets down gently; H starts and cancels it).
+      if (plane.rotor) {
+        const aglFt = Math.max(0, agl * 3.281), vsFpm = Math.round(flight.vel[1] * 196.85 / 10) * 10;
+        const gs = Math.hypot(flight.vel[0], flight.vel[2]), gsTxt = kmh ? `${Math.round(gs * 3.6)} km/h` : `${Math.round(gs * 1.944)} kt`;
+        const nr = Math.round(100 * (flight.damage.engine ? 1 : 0.55 + 0.1 * flight.throttle));
+        const rows = [['HEIGHT', `${Math.round(aglFt)} ft`, '#e8ebf0'],
+          ['V/S', `${vsFpm > 0 ? '+' : ''}${vsFpm} fpm`, vsFpm < -1500 && aglFt < 300 ? '#ff6b6b' : '#e8ebf0'],
+          ['GROUND', gsTxt, '#e8ebf0'],
+          ['COLLECTIVE', `${Math.round(flight.throttle * 100)}%`, '#e8ebf0'],
+          ['ROTOR', `${nr}%`, nr < 90 ? '#ff6b6b' : '#5ee08a']];
+        const bw = 128 * s + 22, bx = 8, by0 = 8 + (46 * s + 18) + 6;   // under the wind box
+        box(bx, by0, bw, rows.length * 16 * s + 12);
+        h2.font = `700 ${Math.round(9 * s + 2)}px system-ui`; h2.textBaseline = 'middle';
+        rows.forEach(([n, v, c], i) => {
+          const y = by0 + 12 + i * 16 * s;
+          h2.textAlign = 'left'; h2.fillStyle = 'rgba(255,255,255,.65)'; h2.fillText(n, bx + 8, y);
+          h2.textAlign = 'right'; h2.fillStyle = c; h2.fillText(v, bx + bw - 8, y);
+        });
+        if (flight.emergency) {
+          const blink = 0.55 + 0.45 * Math.sin(performance.now() / 160);
+          h2.textAlign = 'center'; h2.font = `800 ${Math.round(13 * s + 3)}px system-ui`;
+          h2.fillStyle = `rgba(255,70,60,${0.25 + 0.2 * blink})`; h2.beginPath(); h2.roundRect ? h2.roundRect(W2 / 2 - 150 * s - 10, 44, 300 * s + 20, 30 * s + 8, 10) : h2.rect(W2 / 2 - 150 * s - 10, 44, 300 * s + 20, 30 * s + 8); h2.fill();
+          h2.fillStyle = '#fff'; h2.fillText('EMERGENCY LANDING', W2 / 2, 44 + 15 * s + 4);
+          h2.font = `600 ${Math.round(9 * s + 2)}px system-ui`; h2.fillStyle = 'rgba(255,255,255,.8)'; h2.fillText('assist is flying · pedals are yours · H to cancel', W2 / 2, 44 + 28 * s + 6);
+        } else if (!flight.damage.engine) {
+          h2.textAlign = 'center'; h2.font = `800 ${Math.round(12 * s + 3)}px system-ui`; h2.fillStyle = '#ff6b6b'; h2.fillText('ENGINE OUT · press H for an emergency landing', W2 / 2, 60);
+        }
+      }
       // Hard g: the view narrows to a grey-out and goes black (blackout), or reddens (redout) when pushing negative.
       if (Math.abs(flight.blackout) > 0.04) {
         const b = flight.blackout, ab = Math.abs(b), c = b > 0 ? '0,0,0' : '170,0,10', m = Math.min(W2, H2);
@@ -5067,7 +5136,7 @@
           <button data-a="invert">${invert ? '✓ ' : ''}Invert (down climbs, like a flight stick)</button></div>
           <h2>Keys</h2><div class="pg-hint">
           <kbd>W</kbd> more throttle · <kbd>S</kbd> less throttle · <kbd>↑</kbd> climb · <kbd>↓</kbd> dive · <kbd>←</kbd> <kbd>→</kbd> roll · <kbd>A</kbd> <kbd>D</kbd> rudder (and steering on the ground)<br>
-          <kbd>F</kbd> flaps down a notch · <kbd>V</kbd> flaps up · <kbd>G</kbd> gear up / down (everything but the Cessna, Piper and Cirrus, which have fixed wheels) · <kbd>Space</kbd> brakes / airbrake (with <kbd>A</kbd> <kbd>D</kbd> at taxi speed it brakes the wheel on that side; the airliners dump their spoilers on touchdown) · <kbd>X</kbd> reverse thrust on the ground (jets and turboprops, with the throttle up) · <kbd>C</kbd> camera (chase, cockpit, orbit) · <kbd>P</kbd> pause (and the menu) · <kbd>R</kbd> restart · <kbd>M</kbd> mouse steering on / off</div>
+          <kbd>F</kbd> flaps down a notch · <kbd>V</kbd> flaps up · <kbd>H</kbd> helicopter emergency landing (levels it and sets it down gently; <kbd>H</kbd> again to take over) · <kbd>G</kbd> gear up / down (everything but the Cessna, Piper and Cirrus, which have fixed wheels) · <kbd>Space</kbd> brakes / airbrake (with <kbd>A</kbd> <kbd>D</kbd> at taxi speed it brakes the wheel on that side; the airliners dump their spoilers on touchdown) · <kbd>X</kbd> reverse thrust on the ground (jets and turboprops, with the throttle up) · <kbd>C</kbd> camera (chase, cockpit, orbit) · <kbd>P</kbd> pause (and the menu) · <kbd>R</kbd> restart · <kbd>M</kbd> mouse steering on / off</div>
           <h2>Tips</h2><div class="pg-hint">Bank by moving the cursor sideways and ease it ${climb} to turn: the wings turn the plane, the rudder only tidies up. Too slow or pulling too hard
           stalls the wing (STALL): push the nose down and add power. To land: slow down, flaps down, gear down (airliners), line up with the runway, and touch down gently (watch V/S).
           To take off: full throttle (hold W) on the runway, then ease the cursor ${climb} (or hold ${invert ? "↓" : "↑"}) at about ${Math.round(plane.stall * 1.3 * 3.6)} km/h. Airliners turn slowly, so start turns early.</div>

@@ -300,11 +300,25 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
     }
 
+    @objc private func flightQuickDock() {
+        if PlaneGameControl.isRunning { PlaneGameControl.togglePause() } else { PlaneGameControl.launch() }
+    }
+
     /// Left click toggles the notch; right click shows a small menu.
     @objc private func statusItemClicked(_ sender: NSStatusBarButton) {
         if NSApp.currentEvent?.type == .rightMouseUp {
             let menu = NSMenu()
             menu.addItem(withTitle: "Open Notch", action: #selector(toggleNotch), keyEquivalent: "").target = self
+            // Flight Simulator quick-dock: launches the Plane game, or pauses and resumes it while it is open.
+            if SettingsManager.shared.gamesEnabled {
+                let flying = PlaneGameControl.isRunning
+                let dock = NSMenuItem(title: flying ? "Pause or Resume Flight Simulator" : "Launch Flight Simulator",
+                                      action: #selector(flightQuickDock), keyEquivalent: "")
+                dock.target = self
+                dock.image = NSImage(systemSymbolName: flying ? "pause.circle.fill" : "airplane", accessibilityDescription: nil)?
+                    .withSymbolConfiguration(.init(paletteColors: [.systemTeal]))
+                menu.addItem(dock)
+            }
             // Colour-coded like the notch's power menu: purple settings, orange relaunch, red quit.
             func item(_ title: String, _ symbol: String, _ color: NSColor, _ action: Selector, _ key: String) {
                 let i = NSMenuItem(title: title, action: action, keyEquivalent: key)

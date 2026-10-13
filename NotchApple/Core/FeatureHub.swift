@@ -144,6 +144,9 @@ enum FeatureHub {
             let name = parts.dropFirst().first?.lowercased() ?? ""
             let tab = Module.allCases.first { $0.rawValue.lowercased() == name || $0.title.lowercased() == name }
             if let tab, tab.isTab { AppDelegate.showNotch(tab: tab) } else { delegate?.notch?.expand() }
+        case "flight":
+            // notchapple://flight launches the Plane game; notchapple://flight/pause pauses or resumes it.
+            if parts.dropFirst().first == "pause" { PlaneGameControl.togglePause() } else { PlaneGameControl.launch() }
         case "toggle": delegate?.toggleNotch()
         case "close": delegate?.notch?.closeNotch()
         case "hide": delegate?.notch?.setInvisible(true)
