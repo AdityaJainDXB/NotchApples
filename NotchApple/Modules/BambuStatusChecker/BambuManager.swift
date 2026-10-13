@@ -13,6 +13,7 @@
 //  One printer is free; more than one needs Pro (Feature.bambuMulti).
 //
 
+import AppKit
 import Combine
 import Foundation
 import SwiftUI
@@ -53,6 +54,13 @@ final class BambuManager: ObservableObject {
     /// Printers mid-connect, so the view can show a spinner instead of a stale phase.
     @Published private(set) var connecting: Set<UUID> = []
     @Published var selectedPrinterID: UUID?
+    /// A printer running too hot, by printer: the notch glows red while this is set.
+    @Published private(set) var thermalAlerts: [UUID: BambuStatusLogic.ThermalAlert] = [:]
+
+    /// A soft sound and a haptic tap when a print pauses, finishes or fails.
+    @AppStorage("bambu.sounds") var soundsEnabled = true
+    /// The red glow and notification when a heater is over its limit or the hotend is creeping hot.
+    @AppStorage("bambu.thermalAlerts") var thermalAlertsEnabled = true
 
     private var clients: [UUID: BambuMQTT] = [:]
     private var retryTasks: [UUID: Task<Void, Never>] = [:]
@@ -120,6 +128,7 @@ final class BambuManager: ObservableObject {
         printers.removeAll { $0.id == id }
         snapshots[id] = nil
         failures[id] = nil
+        thermalAlerts[id] = nil
         retryTasks.removeValue(forKey: id)?.cancel()
         clients.removeValue(forKey: id)?.stop()
         if selectedPrinterID == id { selectedPrinterID = printers.first?.id }
@@ -228,7 +237,9 @@ final class BambuManager: ObservableObject {
             connecting.remove(id)
             failures[id] = nil
             let current = snapshots[id] ?? BambuSnapshot(phase: .idle)
-            snapshots[id] = BambuStatusLogic.apply(data, onto: current, connected: true)
+            let next = BambuStatusLogic.apply(data, onto: current, connected: true)
+            snapshots[id] = next
+            react(from: current, to: next, id: id)
 
         case .failed(let message):
             connecting.remove(id)
@@ -262,6 +273,62 @@ final class BambuManager: ObservableObject {
                   let p = self.printers.first(where: { $0.id == id }) else { return }
             self.connect(p)
         }
+    }
+
+    // MARK: - Alerts
+
+    private func react(from old: BambuSnapshot, to new: BambuSnapshot, id: UUID) {
+        let name = printers.first(where: { $0.id == id })?.displayName ?? "Printer"
+
+        let alert = thermalAlertsEnabled ? BambuStatusLogic.thermalAlert(previous: old, current: new) : nil
+        if alert != thermalAlerts[id] {
+            thermalAlerts[id] = alert
+            if let alert {
+                Notifier.post(title: "\(name) is running hot", body: alert.message)
+                feedback(sound: "Basso")
+            }
+            LiveActivityCenter.shared.recompute()
+        }
+
+        guard let event = BambuStatusLogic.event(from: old, to: new) else {
+            if old.phase != new.phase || old.progress != new.progress { LiveActivityCenter.shared.recompute() }
+            return
+        }
+        switch event {
+        case .paused:
+            feedback(sound: "Tink")
+            LiveActivityCenter.shared.flash(LiveActivity(symbol: "pause.circle.fill", label: "Paused", tint: .systemYellow), seconds: 6)
+        case .finished:
+            feedback(sound: "Glass")
+            Notifier.post(title: "\(name): print finished", body: new.filename.isEmpty ? "Your print is done." : "\(new.filename) is done.")
+            LiveActivityCenter.shared.flash(LiveActivity(symbol: "checkmark.circle.fill", label: "Print done", tint: .systemGreen), seconds: 8)
+        case .failed:
+            feedback(sound: "Basso")
+            Notifier.post(title: "\(name): print failed", body: new.filename.isEmpty ? "The print stopped with an error." : "\(new.filename) stopped with an error.")
+            LiveActivityCenter.shared.flash(LiveActivity(symbol: "exclamationmark.triangle.fill", label: "Print failed", tint: .systemRed), seconds: 8)
+        }
+    }
+
+    private func feedback(sound: String) {
+        guard soundsEnabled else { return }
+        NSSound(named: NSSound.Name(sound))?.play()
+        NSHapticFeedbackManager.defaultPerformer.perform(.levelChange, performanceTime: .now)
+    }
+
+    /// What the closed notch shows while a print is running: the colour of its state and the progress, or a red
+    /// breathing glow when something is running too hot. Nothing while every printer is idle or offline.
+    var liveActivity: LiveActivity? {
+        guard enabled else { return nil }
+        if let (_, alert) = thermalAlerts.first {
+            return LiveActivity(symbol: "thermometer.high", label: {
+                switch alert { case .nozzleHot(let t), .bedHot(let t), .heatCreep(let t): return "\(t)°"
+                               case .nozzleOvershoot(let t), .bedOvershoot(let t): return "+\(t)°" }
+            }(), tint: .systemRed, pulse: true)
+        }
+        let live = printers.compactMap { p in snapshots[p.id].map { (p, $0) } }.filter { $0.1.isActive }
+        guard let (_, snap) = live.first(where: { $0.1.phase == .printing }) ?? live.first else { return nil }
+        let tint = NSColor(Color(hex: snap.phase.hex))
+        return LiveActivity(symbol: "printer.fill", label: snap.phase == .paused ? "Paused" : BambuStatusLogic.liveLabel(snap), tint: tint)
     }
 
     // MARK: - Reading

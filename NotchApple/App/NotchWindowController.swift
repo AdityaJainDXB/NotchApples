@@ -982,7 +982,10 @@ final class NotchWindowController {
             peekPanel = p
             return p
         }()
-        panel.contentView = NSHostingView(rootView: PeekView(symbol: info.symbol, text: info.text))
+        // The frame is set below; SwiftUI resizing the window mid-layout is what AppKit throws on (issue #11).
+        let peekHost = NSHostingView(rootView: PeekView(symbol: info.symbol, text: info.text))
+        peekHost.sizingOptions = []
+        panel.contentView = peekHost
         let size = CGSize(width: max(state.notchSize.width + 160, 320), height: 34)
         panel.setFrame(NSRect(x: screen.frame.midX - size.width / 2, y: screen.frame.maxY - state.notchSize.height - size.height - 4,
                               width: size.width, height: size.height), display: true)

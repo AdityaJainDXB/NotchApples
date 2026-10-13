@@ -30,6 +30,13 @@ struct BambuSettingsView: View {
                 Text("Off means Notch Apple never contacts the printers. Nothing is sent anywhere else: every report stays on this Mac.")
             }
 
+            Section {
+                Toggle("Sound and haptic tap when a print pauses, finishes or fails", isOn: $manager.soundsEnabled)
+                Toggle("Warn when a heater runs too hot or the hotend creeps hot", isOn: $manager.thermalAlertsEnabled)
+            } footer: {
+                Text("The warning glows red beside the notch and sends a notification. Limits: nozzle 300°, bed 110°, or 15° over target; heat creep is a hotend above 60° that keeps rising with the heater off.")
+            }
+
             Section("Printers") {
                 if manager.printers.isEmpty {
                     Text("No printers yet. Add one below.")

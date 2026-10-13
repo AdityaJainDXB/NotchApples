@@ -39,6 +39,9 @@ struct BambuView: View {
             if manager.snapshot(for: manager.selectedPrinterID).phase == .printing {
                 progressCard
             }
+            if let id = manager.selectedPrinterID, let alert = manager.thermalAlerts[id] {
+                thermalCard(alert)
+            }
             if let failure = manager.failure(for: manager.selectedPrinterID) {
                 problemCard(failure)
             }
@@ -106,6 +109,7 @@ struct BambuView: View {
             ProgressView(value: Double(snap.progress) / 100)
                 .progressViewStyle(.linear)
                 .tint(Color(hex: snap.phase.hex))
+                .animation(.easeInOut(duration: 0.6), value: snap.progress)
             HStack(spacing: 14) {
                 tempLabel("thermometer.medium", BambuStatusLogic.temperatureLabel(snap.nozzleC), "Nozzle", .orange)
                 tempLabel("square.grid.3x3", BambuStatusLogic.temperatureLabel(snap.bedC), "Bed", .blue)
@@ -127,6 +131,18 @@ struct BambuView: View {
             Text(value).font(.system(size: 12, weight: .semibold, design: .rounded)).monospacedDigit()
             Text(label).font(.system(size: 10)).foregroundStyle(Theme.textSecondary)
         }
+    }
+
+    private func thermalCard(_ alert: BambuStatusLogic.ThermalAlert) -> some View {
+        HStack(alignment: .top, spacing: 8) {
+            Image(systemName: "thermometer.high").font(.system(size: 12, weight: .bold)).foregroundStyle(.red)
+            Text(alert.message).font(.system(size: 11, weight: .medium)).foregroundStyle(Theme.textPrimary).fixedSize(horizontal: false, vertical: true)
+            Spacer(minLength: 0)
+        }
+        .padding(Theme.gap)
+        .background(Color.red.opacity(0.16), in: RoundedRectangle(cornerRadius: Theme.corner, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: Theme.corner, style: .continuous).strokeBorder(Color.red.opacity(0.5)))
+        .accessibilityLabel("Warning: \(alert.message)")
     }
 
     private func problemCard(_ message: String) -> some View {

@@ -40,6 +40,8 @@ export const MODULES = [
     blurb: 'Quick notes in the notch, saved automatically.' },
   { id: 'todo', name: 'To-do', icon: '✅', load: () => import('./modules/todo.js'),
     blurb: 'A to-do list with due dates and reminders.' },
+  { id: 'bambu', name: 'Bambu Lab', icon: '🖨️', load: () => import('./modules/bambu.js'),
+    blurb: 'Watch your Bambu Lab 3D printer on your Wi-Fi: status, nozzle and bed temperatures, print progress and time left, with a warning if it runs too hot.' },
   { id: 'focus', name: 'Focus', icon: '🎯', feature: 'focus', load: () => import('./modules/focus.js'),
     blurb: 'A Pomodoro focus timer with a countdown on the pill, session stats, and distraction blocking.' },
   { id: 'timer', name: 'Timer', icon: '⏱', load: () => import('./modules/timer.js'),

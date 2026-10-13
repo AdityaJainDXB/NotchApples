@@ -28,7 +28,9 @@ enum ScreenRuler {
             w.backgroundColor = .clear
             w.ignoresMouseEvents = false
             w.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
-            w.contentView = NSHostingView(rootView: RulerView(scale: screen.backingScaleFactor) { close() })
+            let host = NSHostingView(rootView: RulerView(scale: screen.backingScaleFactor) { close() })
+            host.sizingOptions = []      // the window is the screen; SwiftUI must not resize it during layout
+            w.contentView = host
             w.makeKeyAndOrderFront(nil)
             windows.append(w)
         }

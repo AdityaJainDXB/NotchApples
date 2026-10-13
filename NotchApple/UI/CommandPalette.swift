@@ -32,7 +32,9 @@ enum CommandPalette {
         p.level = .modalPanel
         p.hasShadow = true
         p.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
-        p.contentView = NSHostingView(rootView: PaletteView(query: query) { close() })
+        let host = NSHostingView(rootView: PaletteView(query: query) { close() })
+        host.sizingOptions = []          // fixed 620 x 420; SwiftUI must not resize the window during layout
+        p.contentView = host
         if let screen = NSScreen.screens.first(where: { $0.frame.contains(NSEvent.mouseLocation) }) ?? NSScreen.main {
             p.setFrameOrigin(NSPoint(x: screen.frame.midX - 310, y: screen.frame.maxY - screen.frame.height * 0.28 - 420))
         }

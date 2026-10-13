@@ -40,6 +40,9 @@ struct BambuSnapshot: Equatable {
     var remainingMinutes: Int?
     var nozzleC: Double?
     var bedC: Double?
+    /// What the heaters are aiming for (0 or nil: heater off).
+    var nozzleTargetC: Double?
+    var bedTargetC: Double?
     var filename: String = ""
     var error: String?
 
@@ -156,6 +159,54 @@ enum BambuStatusLogic {
         }
     }
 
+    // MARK: Print events and thermal alerts
+
+    /// Something worth a sound, a haptic tap and a glance at the notch.
+    enum PrintEvent: Equatable { case paused, finished, failed }
+
+    static func event(from old: BambuSnapshot?, to new: BambuSnapshot) -> PrintEvent? {
+        guard let old, old.phase != .offline, new.phase != .offline else { return nil }
+        if old.phase == .printing, new.phase == .paused { return .paused }
+        let was = old.gcodeState.uppercased(), now = new.gcodeState.uppercased()
+        if now == "FAILED", was != "FAILED" { return .failed }
+        if now == "FINISH", was != "FINISH", old.isActive { return .finished }
+        return nil
+    }
+
+    enum ThermalAlert: Equatable {
+        case nozzleHot(Int), bedHot(Int), nozzleOvershoot(Int), bedOvershoot(Int), heatCreep(Int)
+
+        var message: String {
+            switch self {
+            case .nozzleHot(let t): "Nozzle is at \(t)°, above the safe limit."
+            case .bedHot(let t): "Bed is at \(t)°, above the safe limit."
+            case .nozzleOvershoot(let t): "Nozzle is \(t)° over its target."
+            case .bedOvershoot(let t): "Bed is \(t)° over its target."
+            case .heatCreep(let t): "Nozzle is still climbing (\(t)°) with the heater off. Check the hotend fan and cooling."
+            }
+        }
+    }
+
+    /// Absolute limits (Bambu nozzles top out near 300°, beds near 110°) and how far over its target a heater may drift.
+    static let maxNozzleC = 300.0
+    static let maxBedC = 110.0
+    static let overshootC = 15.0
+    /// Heat creep: heat travelling up past the heat break softens filament above the nozzle. The telltale in the
+    /// reports is a hotend that is above 60° with its heater off and *rising* between two reports.
+    static let creepFloorC = 60.0
+    static let creepRiseC = 1.0
+
+    static func thermalAlert(previous: BambuSnapshot?, current: BambuSnapshot) -> ThermalAlert? {
+        guard current.phase != .offline else { return nil }
+        if let n = current.nozzleC, n > maxNozzleC { return .nozzleHot(Int(n.rounded())) }
+        if let b = current.bedC, b > maxBedC { return .bedHot(Int(b.rounded())) }
+        if let n = current.nozzleC, let t = current.nozzleTargetC, t > 0, n > t + overshootC { return .nozzleOvershoot(Int((n - t).rounded())) }
+        if let b = current.bedC, let t = current.bedTargetC, t > 0, b > t + overshootC { return .bedOvershoot(Int((b - t).rounded())) }
+        if current.phase == .idle, let n = current.nozzleC, n > creepFloorC, (current.nozzleTargetC ?? 0) == 0,
+           let before = previous?.nozzleC, n >= before + creepRiseC { return .heatCreep(Int(n.rounded())) }
+        return nil
+    }
+
     /// Bambu reports are often deltas: keep the previous snapshot and overlay `print`.
     static func apply(_ data: Data, onto current: BambuSnapshot, connected: Bool) -> BambuSnapshot {
         guard let root = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any] else { return current }
@@ -174,6 +225,8 @@ enum BambuStatusLogic {
         if let m = int(print["mc_remaining_time"]) { next.remainingMinutes = max(m, 0) }
         if let n = double(print["nozzle_temper"]) { next.nozzleC = n }
         if let b = double(print["bed_temper"]) { next.bedC = b }
+        if let t = double(print["nozzle_target_temper"]) { next.nozzleTargetC = t }
+        if let t = double(print["bed_target_temper"]) { next.bedTargetC = t }
         let name = string(print["subtask_name"]).flatMap { $0.isEmpty ? nil : $0 }
             ?? string(print["gcode_file"])
         if let name, !name.isEmpty { next.filename = displayName(name) }

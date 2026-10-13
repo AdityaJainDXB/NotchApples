@@ -26,7 +26,9 @@ enum FullScreenLyrics {
         w.level = .floating
         w.isReleasedWhenClosed = false
         w.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
-        w.contentView = NSHostingView(rootView: FullScreenLyricsView(close: { close() }))
+        let host = NSHostingView(rootView: FullScreenLyricsView(close: { close() }))
+        host.sizingOptions = []          // the window has its own frame; SwiftUI must not resize it during layout
+        w.contentView = host
         window = w
         NSApp.activate(ignoringOtherApps: true)
         w.makeKeyAndOrderFront(nil)
