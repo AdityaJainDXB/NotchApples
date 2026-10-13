@@ -64,10 +64,10 @@ Pick your computer. Both buttons start the download straight away. The Mac butto
   </tr>
   <tr>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/v2.0.34/NotchApple-2.0.34.dmg"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.0.49</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/v2.0.34/NotchApple-2.0.34.dmg"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.0.50</b></a>
     </td>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 1.52.0 BETA</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 1.53.0 BETA</b></a>
     </td>
   </tr>
   <tr>
@@ -211,6 +211,15 @@ All screenshots use sample data.
 ## What's new
 
 > **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is still in the repository's tags.
+
+### Mac 2.0.50 · Windows 1.53.0 BETA · 13 October 2026 · 🖨 Bambu Lab printers, and helicopter emergencies
+
+- **Bambu Lab tab.** Watch your 3D printer from the notch, straight from the printer on your Wi-Fi (IP address, access code and serial number from its LAN mode screen). **Green** printing, **yellow** paused, **blue** idle, **gray** offline; the file, a progress bar, time left and live nozzle and bed temperatures. While a print runs it shows beside the closed notch. One printer is free; more need Pro.
+- **Safe by default.** The printer signs its own certificate, so Notch Apple remembers the first one it sees and refuses a different one (**Trust new certificate** after a firmware update). Nothing leaves your network; the access code is kept in a file only you can read.
+- **Warnings and sounds.** A red glow and a notification when the nozzle is over 300°, the bed over 110°, a heater runs 15° over its target, or the hotend keeps heating with the heater off (heat creep). A soft sound and a tap when a print pauses, finishes or fails. Both can be turned off.
+- **Plane: emergency landing.** In a helicopter press **H**: it levels the disc, controls the descent, flares and sets down gently, then hands the controls back (**H** again to take over). A new helicopter panel shows height, climb rate, ground speed, collective and rotor speed.
+- **Flight Simulator in the menu bar.** Right-click the menu-bar icon: **Launch Flight Simulator**, then **Pause or Resume**. Also `notchapple://flight` and `notchapple://flight/pause`.
+- **Fixes.** A crash that could happen while a small overlay window (the peek, the command palette, the ruler, full-screen lyrics) resized. The app is written **Notch Apple** everywhere. The website now lives in this repository, in `web/`.
 
 ### Mac 2.0.49 · Windows 1.52.0 BETA · 10 October 2026 · 🌬 Plane: weather, touchdowns and crashes
 

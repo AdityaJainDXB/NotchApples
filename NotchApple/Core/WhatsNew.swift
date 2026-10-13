@@ -20,6 +20,12 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.0.50", date: "13 October 2026", headline: "Bambu Lab printers, and helicopter emergencies", items: [
+            "New Bambu Lab tab: watch your 3D printer on your Wi-Fi, with status colours (green printing, yellow paused, blue idle, gray offline), progress, time left and live nozzle and bed temperatures, and it shows beside the notch while a print runs.",
+            "A red glow, a notification and a sound if a heater runs too hot or the hotend creeps hot; a soft sound and tap when a print pauses, finishes or fails. The printer's certificate is remembered on first connection and a different one is refused.",
+            "Plane: press H in a helicopter for an emergency landing (it levels out and sets down gently), with a helicopter HUD. A Flight Simulator item in the menu-bar menu launches or pauses the game.",
+            "Fixes a crash that could happen while a small overlay window resized. The app is now written Notch Apple everywhere.",
+        ]),
         ReleaseNote(version: "2.0.49", date: "10 October 2026", headline: "Plane: weather, touchdowns and crashes", items: [
             "New Weather panel in the Plane menu: 0–90 kt crosswind, headwind or tailwind, and turbulence from none to extreme, with presets.",
             "Far more realistic touchdowns: oleo struts, tyre side forces, spin-up smoke, skids and burst tyres, tilting bogies, reverse thrust on X, and a rating for every landing.",
