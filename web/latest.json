@@ -1,0 +1,18 @@
+{
+  "version": "2.0.50",
+  "title": "Notch Apple 2.0.50 · Bambu Lab printers, and helicopter emergencies",
+  "notes": "**New**\n- 🖨 **Bambu Lab tab.** Watch your 3D printer from the notch, straight from the printer on your Wi-Fi: **green** printing, **yellow** paused, **blue** idle, **gray** offline, with the file, a progress bar, time left and live nozzle and bed temperatures. It shows beside the closed notch while a print runs. Add the printer's IP address, access code and serial number (all on its LAN mode screen) in Settings → Bambu Lab. One printer is free; more need Pro.\n- 🌡 **Warnings and sounds.** A red glow and a notification if the nozzle is over 300°, the bed over 110°, a heater runs 15° over its target, or the hotend keeps heating with the heater off. A soft sound and a tap when a print pauses, finishes or fails.\n- 🔒 **The printer's certificate is remembered** the first time it connects and a different one is refused (Trust new certificate, after a firmware update). The access code is kept in a file only you can read.\n- 🚁 **Emergency landing in the Plane game.** In a helicopter press **H**: it levels out, controls the descent, flares and sets down gently, then hands the controls back. A new helicopter panel shows height, climb rate, ground speed, collective and rotor speed.\n- ✈️ **Flight Simulator in the menu bar.** Right-click the menu-bar icon to launch the game or pause and resume it.\n\n**Fixes**\n- A crash that could happen while a small overlay window (the peek, the command palette, the ruler, full-screen lyrics) resized.\n- The app is written **Notch Apple** everywhere.\n\nWindows 1.53.0 BETA gets the Bambu Lab tab and the helicopter emergency landing too.\n\nInstall: download the DMG below and drag Notch Apple to Applications, or `brew upgrade --cask notch-apple`.\n",
+  "published": "2026-10-13T17:02:36Z",
+  "dmg": "https://github.com/AdityaJainDXB/NotchApples/releases/download/v2.0.50/NotchApple-2.0.50.dmg",
+  "dmgSize": 50886982,
+  "page": "https://github.com/AdityaJainDXB/NotchApples/releases/tag/v2.0.50",
+  "stars": 2,
+  "windows": {
+    "version": "1.53.0",
+    "notes": "**Notch Apple for Windows 1.53.0 (BETA)**\n\n**New**\n- 🖨 **Bambu Lab tab.** Watch your 3D printer on your Wi-Fi: **green** printing, **yellow** paused, **blue** idle, **gray** offline, with the file, a progress bar, time left and live nozzle and bed temperatures. It shows on the pill while a print runs. Add the printer's IP address, access code and serial number (all on its LAN mode screen). One printer is free; more need Pro.\n- 🌡 **Warnings and sounds.** A notification and a red glow if the nozzle is over 300°, the bed over 110°, a heater runs 15° over its target, or the hotend keeps heating with the heater off. A soft tone when a print pauses, finishes or fails.\n- 🔒 The printer's certificate is remembered the first time it connects, and a different one is refused (**Trust new certificate** after a firmware update).\n- 🚁 **Plane: emergency landing.** In a helicopter press **H**: it levels out, controls the descent, flares and sets down gently, then hands the controls back. A new helicopter panel shows height, climb rate, ground speed, collective and rotor speed.\n\nThe window title now reads **Notch Apple**. The installer file name still says \"Notch.apple\" for now so that Windows upgrades the existing install instead of adding a second copy.\n",
+    "url": "https://github.com/AdityaJainDXB/NotchApples/releases/download/win-v1.53.0/Notch.apple_1.53.0_x64-setup.exe",
+    "sha256": "0820887ec21559cd52de5f4c8c0e2b6fbe8a0bae4eb4037d96cec3325206ff92",
+    "size": 5879461,
+    "page": "https://github.com/AdityaJainDXB/NotchApples/releases/tag/win-v1.53.0"
+  }
+}

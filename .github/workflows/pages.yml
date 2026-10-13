@@ -6,6 +6,13 @@ on:
   push:
     branches: [main]
     paths: ['web/**', '.github/workflows/pages.yml']
+  # A new or edited release refreshes web/latest.json (what the apps' update checks read), so no release step has to remember to.
+  release:
+    types: [published, edited, released]
+  # The Windows build publishes its release with the workflow's own token, which does not raise `release` events.
+  workflow_run:
+    workflows: ['Windows build']
+    types: [completed]
   workflow_dispatch:
   workflow_call:
 
@@ -29,8 +36,12 @@ jobs:
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: 22
-      - name: Check links
-        run: node scripts/check-site.mjs
+      - name: Refresh latest.json from the newest releases (what the apps' update checks read)
+        run: node scripts/update-latest-json.mjs
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: "Quality gate (links, secrets, scripts, browser tests); a broken site is never published"
+        run: bash scripts/gate-site.sh
       - uses: actions/configure-pages@983d7736d9b0ae728b81ab479565c72886d7745b # v5
       - name: Leave out files that are not part of the site
         run: rm -rf web/node_modules web/tests web/test-results web/playwright* web/package*.json web/*.md

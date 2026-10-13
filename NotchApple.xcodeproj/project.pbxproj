@@ -162,6 +162,7 @@
 		5E3C1CC5BAB503490C8F01EA /* ConvertFormats.swift in Sources */ = {isa = PBXBuildFile; fileRef = E26901871B9937AEB263FD76 /* ConvertFormats.swift */; };
 		5F2E6DC4CD761DFB777B0C6B /* SharedStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9E160C9C8DBBE561F7DD2AD /* SharedStore.swift */; };
 		6411DBA270E4594DD6E7E500 /* SmartHomeLogic.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99A4B06A001F63424485AE1E /* SmartHomeLogic.swift */; };
+		65E49B470932813D55A3B43D /* UpdateFeedTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 26E2CDCE2AD3600E816DD832 /* UpdateFeedTests.swift */; };
 		665D37222F33D194EE9EB74E /* ClaudeUsageLogic.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7765304556C50213C9EC28B5 /* ClaudeUsageLogic.swift */; };
 		66D14933037AA4515567B0A2 /* TodoLogicTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E232DC7A1E5C4A3A89FF53F /* TodoLogicTests.swift */; };
 		66F9ECB3DB5740E0CA3A1801 /* NotchWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3ED6813AA8EF7F3F44235A0D /* NotchWindowController.swift */; };
@@ -291,6 +292,7 @@
 		B951987EF7BCF13111DBEB86 /* EmojiData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1940B20688933C3A74510BE8 /* EmojiData.swift */; };
 		BA7765B73DBDA2F91EF640DA /* ClipboardHistory.swift in Sources */ = {isa = PBXBuildFile; fileRef = B28853C8C1080D36D2737ECC /* ClipboardHistory.swift */; };
 		BA93BAC8834DACC8ACD93A5A /* PluginPinning.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84D0C556292784B35ACD5779 /* PluginPinning.swift */; };
+		BB3C43FA653EED49288D67A7 /* UpdateFeedLogic.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1CB3E4938594C70774215625 /* UpdateFeedLogic.swift */; };
 		BB723ACBAA9D4CB614CB840B /* PureModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50CCA2828E5DEA8799BE2ACC /* PureModels.swift */; };
 		BBAC304513C3A28C3306A3C6 /* NonNecessitiesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C7025C2035FDB06C94F94FBF /* NonNecessitiesView.swift */; };
 		BBE41E9A2D18302599E044DC /* PairDropService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E3AACE5DE410E31472973B9 /* PairDropService.swift */; };
@@ -303,6 +305,7 @@
 		BFB0FCFCE4AFDF257319FFA4 /* SportsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 768548256973F1C93565E1FB /* SportsView.swift */; };
 		C0BDDB82DF40271C84791F6E /* UpdateCadenceLogicTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C8FE35A81A2E2DCED5EAE8D1 /* UpdateCadenceLogicTests.swift */; };
 		C0DE4A0B6EE69BF33D224196 /* TennisView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE3DF37ECFE22BA6B80763D9 /* TennisView.swift */; };
+		C0F51A45A30EFE4AE68F92F5 /* UpdateFeedLogic.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1CB3E4938594C70774215625 /* UpdateFeedLogic.swift */; };
 		C120C97882F28CA5E083E84F /* PlaneGame.html in Resources */ = {isa = PBXBuildFile; fileRef = 2E9887FE2DA1B017814CA1B5 /* PlaneGame.html */; };
 		C12ACE0DDAC8010E001B8997 /* ModuleLayoutLogic.swift in Sources */ = {isa = PBXBuildFile; fileRef = C8EDB281E38038EB25BFB0D2 /* ModuleLayoutLogic.swift */; };
 		C25F856CABCC1156DF674B6D /* FullScreenLyrics.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4649C21487D880C8DF7A14F8 /* FullScreenLyrics.swift */; };
@@ -453,6 +456,7 @@
 		1BB3450673E6FC967D2A1F87 /* KeychainHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainHelper.swift; sourceTree = "<group>"; };
 		1C5A54FB338D3A1C23699078 /* NotchRootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotchRootView.swift; sourceTree = "<group>"; };
 		1CAB10BDAD5FCC095EF02B18 /* PremiumRegistry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PremiumRegistry.swift; sourceTree = "<group>"; };
+		1CB3E4938594C70774215625 /* UpdateFeedLogic.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdateFeedLogic.swift; sourceTree = "<group>"; };
 		1D1C64F3F921E34B6F6E3B22 /* ClaudeCodeStatusTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClaudeCodeStatusTests.swift; sourceTree = "<group>"; };
 		1D75D90CD0ED25880BFFC38F /* BackgroundMusic-LICENSE.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = "BackgroundMusic-LICENSE.txt"; sourceTree = "<group>"; };
 		1E110D84068F1FF553B96B6E /* DoItView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DoItView.swift; sourceTree = "<group>"; };
@@ -470,6 +474,7 @@
 		2600981443BE101B7F8049FD /* MarketsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarketsView.swift; sourceTree = "<group>"; };
 		26224581D5D211D4749547E8 /* ClipboardLinkTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClipboardLinkTests.swift; sourceTree = "<group>"; };
 		264A2A3E4ADCB8D6919DC502 /* SnakeGameViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SnakeGameViewModel.swift; sourceTree = "<group>"; };
+		26E2CDCE2AD3600E816DD832 /* UpdateFeedTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdateFeedTests.swift; sourceTree = "<group>"; };
 		281C97D2743323428F5ACD8F /* VPNManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VPNManager.swift; sourceTree = "<group>"; };
 		295575A04EF33302E9D9A7FE /* AppIcon.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; path = AppIcon.icns; sourceTree = "<group>"; };
 		2BDB8BD41E7ADF271C9499F9 /* SystemWatch.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SystemWatch.swift; sourceTree = "<group>"; };
@@ -1046,6 +1051,7 @@
 				6E232DC7A1E5C4A3A89FF53F /* TodoLogicTests.swift */,
 				84C42A558F1064C50BD9A506 /* TourLogicTests.swift */,
 				C8FE35A81A2E2DCED5EAE8D1 /* UpdateCadenceLogicTests.swift */,
+				26E2CDCE2AD3600E816DD832 /* UpdateFeedTests.swift */,
 				828F805721C574A3258A44F8 /* UpdateSigningTests.swift */,
 				A7241EE0C2D1B5C9875023CE /* VPNTunnelTests.swift */,
 				E182D36E05020E0FB79C7EA1 /* WallpaperLogicTests.swift */,
@@ -1136,6 +1142,7 @@
 				755B22C2370E85554D2C56DF /* TourLogic.swift */,
 				223DF7525EF47087BAD0DD8B /* UpdateCadenceLogic.swift */,
 				91C60D5E0497858899252D40 /* UpdateChecker.swift */,
+				1CB3E4938594C70774215625 /* UpdateFeedLogic.swift */,
 				A280B5F6BC95664645C9444F /* UpdateSigning.swift */,
 				D6446A004FCDC55C0BF6957C /* VPNTunnel.swift */,
 				5A7687E5F02BA5A9C7ECCC75 /* WellbeingLogic.swift */,
@@ -2052,6 +2059,7 @@
 				1CEE83D2920A754B4BB7ABF0 /* UndoToast.swift in Sources */,
 				28B64F942027DAED884BDCAC /* UpdateCadenceLogic.swift in Sources */,
 				6A45649B04783F57F515062D /* UpdateChecker.swift in Sources */,
+				C0F51A45A30EFE4AE68F92F5 /* UpdateFeedLogic.swift in Sources */,
 				4D7D2117A636E748337CE0A7 /* UpdateSigning.swift in Sources */,
 				C6704B893CA4C4D32A413A19 /* VPNManager.swift in Sources */,
 				B6BBBF5A2BD8214916C71BBF /* VPNTunnel.swift in Sources */,
@@ -2184,6 +2192,8 @@
 				161A2A846A70C66AF08D44B2 /* TourLogicTests.swift in Sources */,
 				9DC28FCDCC7F0968D23CFA78 /* UpdateCadenceLogic.swift in Sources */,
 				C0BDDB82DF40271C84791F6E /* UpdateCadenceLogicTests.swift in Sources */,
+				BB3C43FA653EED49288D67A7 /* UpdateFeedLogic.swift in Sources */,
+				65E49B470932813D55A3B43D /* UpdateFeedTests.swift in Sources */,
 				03CA426E2F3ED3EFE9A5467C /* UpdateSigning.swift in Sources */,
 				CED81247766CC71EBCA69C5C /* UpdateSigningTests.swift in Sources */,
 				953C24EAF0E356448322CD23 /* VPNTunnel.swift in Sources */,

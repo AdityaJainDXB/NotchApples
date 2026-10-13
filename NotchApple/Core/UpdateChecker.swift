@@ -4,8 +4,8 @@
 //
 //  Native updates from this project's GitHub releases.
 //
-//  • Checks api.github.com for the latest release (at launch, then every
-//    6 hours) when "Check for updates automatically" is on. Nothing else is
+//  • Checks the website's latest.json (then GitHub's releases feed, then the API) for the latest release (at launch, then every
+//    15 minutes) when "Check for updates automatically" is on. Nothing else is
 //    sent: it's a plain, anonymous request.
 //  • A newer version shows a notification, a badge on Settings → Updates and
 //    a small pill in the notch. You choose: Update, or Not now (skips that
@@ -228,20 +228,43 @@ final class UpdateChecker: ObservableObject {
     /// and keeping only releases with a .dmg means other platforms can never
     /// stop the Mac app from updating.
     private static func fetchLatest() async throws -> Release {
+        // 1. latest.json on the website and 2. GitHub's releases feed: neither is the API, so neither is held back by
+        // the 60-requests-an-hour limit that a shared network uses up (which showed as "Couldn't reach GitHub").
+        if let data = await fetchData(UpdateFeed.latestJSON), let entry = UpdateFeed.parseLatestJSON(data) { return release(entry) }
+        if let data = await fetchData(UpdateFeed.atomFeed), let entry = UpdateFeed.newest(UpdateFeed.parseAtom(data)) { return release(entry) }
+        // 3. The API, as before.
         var request = URLRequest(url: URL(string: "https://api.github.com/repos/\(repo)/releases?per_page=20")!)
         request.setValue("application/vnd.github+json", forHTTPHeaderField: "Accept")
         request.setValue("NotchApple", forHTTPHeaderField: "User-Agent")
         request.timeoutInterval = 20
         let (data, response) = try await URLSession.shared.data(for: request)
-        guard (response as? HTTPURLResponse)?.statusCode == 200,
-              let list = try JSONSerialization.jsonObject(with: data) as? [[String: Any]]
-        else { throw UpdateError.message("Couldn't reach GitHub to check for updates.") }
+        let status = (response as? HTTPURLResponse)?.statusCode
+        guard status == 200, let list = try JSONSerialization.jsonObject(with: data) as? [[String: Any]]
+        else {
+            throw UpdateError.message(status == 403 || status == 429
+                ? "GitHub is limiting requests from this network for a while. Try again in an hour."
+                : "Couldn't reach GitHub to check for updates.")
+        }
 
         let releases = list.compactMap(parse).sorted { isNewer($0.version, than: $1.version) }
         guard let newest = releases.first else {
             throw UpdateError.message("No Mac release with a download was found on GitHub.")
         }
         return newest
+    }
+
+    private static func fetchData(_ url: URL) async -> Data? {
+        var request = URLRequest(url: url)
+        request.setValue("NotchApple", forHTTPHeaderField: "User-Agent")
+        request.cachePolicy = .reloadIgnoringLocalCacheData
+        request.timeoutInterval = 15
+        guard let (data, response) = try? await URLSession.shared.data(for: request),
+              (response as? HTTPURLResponse)?.statusCode == 200 else { return nil }
+        return data
+    }
+
+    private static func release(_ e: UpdateFeed.Entry) -> Release {
+        Release(version: e.version, title: e.title, notes: e.notes, published: e.published, dmgURL: e.dmgURL, pageURL: e.pageURL)
     }
 
     /// One release from the GitHub API, or nil when it isn't a Mac release we can install.

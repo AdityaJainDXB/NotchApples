@@ -50,8 +50,8 @@
   --card:var(--surface);--card2:var(--surface2);--green:var(--ok);
 }
 *{box-sizing:border-box;margin:0;padding:0}
-html{overflow-x:clip;scroll-behavior:smooth;scrollbar-color:#2c2838 var(--bg);-webkit-text-size-adjust:100%}
-body{background:var(--bg);color:var(--tx);font:16px/1.6 Geist,-apple-system,BlinkMacSystemFont,system-ui,sans-serif;overflow-x:hidden;-webkit-font-smoothing:antialiased;caret-color:var(--ac)}
+html{overflow-x:clip;scroll-behavior:smooth;scroll-padding-top:84px;scrollbar-color:#2c2838 var(--bg);-webkit-text-size-adjust:100%}
+body{background:var(--bg);color:var(--tx);font:16px/1.6 Geist,-apple-system,BlinkMacSystemFont,system-ui,sans-serif;overflow-x:clip;-webkit-font-smoothing:antialiased;caret-color:var(--ac)}
 ::selection{background:rgba(155,123,255,.38);color:#fff}
 ::-webkit-scrollbar{width:12px;height:12px}::-webkit-scrollbar-track{background:var(--bg)}
 ::-webkit-scrollbar-thumb{background:#2c2838;border-radius:99px;border:3px solid var(--bg)}::-webkit-scrollbar-thumb:hover{background:#3b3550}
@@ -76,7 +76,7 @@ section[id],header[id],[id].anchor{scroll-margin-top:84px}
 /* ============ Buttons ============ */
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:9px;height:48px;padding:0 22px;border-radius:99px;font:600 15px/1 Geist,sans-serif;background:var(--ac-strong);color:#fff;border:0;cursor:pointer;white-space:nowrap;box-shadow:inset 0 1px 0 rgba(255,255,255,.22),0 8px 20px -10px rgba(0,0,0,.7);transition:transform 160ms var(--ease-out),background-color .2s ease,box-shadow .2s ease;-webkit-tap-highlight-color:transparent}
 .btn .ph{font-size:18px}
-.btn:active{transform:scale(.97)}
+.btn:active{transform:scale(.96)}
 .btn.ghost{background:rgba(255,255,255,.06);box-shadow:inset 0 0 0 1px var(--line2);color:var(--tx)}
 .btn.sm{height:36px;padding:0 15px;font-size:13.5px}
 .link{display:inline-flex;align-items:center;gap:6px;font-weight:600;color:var(--tx);height:48px;padding:0 6px}
@@ -91,7 +91,7 @@ section[id],header[id],[id].anchor{scroll-margin-top:84px}
 .notchnav{position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:60;padding-top:env(safe-area-inset-top)}
 .nn{position:relative;width:max-content;max-width:calc(100vw - 32px);display:flex;align-items:center;gap:6px;height:52px;padding:0 8px 0 16px;background:#050408;border-radius:0 0 22px 22px;box-shadow:0 10px 30px -10px rgba(0,0,0,.8),inset 0 -1px 0 rgba(255,255,255,.06)}
 /* concave shoulders, like the real cutout */
-.nn:before,.nn:after{content:"";position:absolute;top:0;width:14px;height:14px;background:radial-gradient(circle at 0 100%,transparent 13.5px,#050408 14px)}
+.nn:before,.nn:after{content:"";position:absolute;top:-1px;width:15px;height:15px;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 15 15'%3E%3Cpath d='M0 0H15V15H14A14 14 0 0 0 0 1Z' fill='%23050408'/%3E%3C/svg%3E") 0 0/100% 100% no-repeat}
 .nn:before{left:-14px;transform:scaleX(-1)}.nn:after{right:-14px}
 .nn .logo{display:flex;align-items:center;gap:9px;font-weight:600;font-size:15px;letter-spacing:-.01em;padding-right:6px;white-space:nowrap}
 .nn .logo img{width:24px;height:24px;border-radius:6px}
@@ -134,7 +134,7 @@ h1 .l2{display:block;color:var(--mut)}
 
 /* ============ Live demo (laptop + notch) ============ */
 .laptop{position:relative;margin:64px auto 0;max-width:1000px}
-.screen{position:relative;border-radius:22px 22px 0 0;padding:11px 11px 0;background:#141218;box-shadow:inset 0 0 0 1px #2a2732,0 60px 120px -30px rgba(0,0,0,.9),0 40px 140px -40px rgba(118,80,238,.45)}
+.screen{position:relative;border-radius:22px 22px 0 0;padding:11px 11px 0;background:#141218;box-shadow:inset 0 0 0 1px #2a2732,0 60px 120px -30px rgba(0,0,0,.9),0 30px 80px -40px rgba(0,0,0,.7)}
 .display{position:relative;border-radius:12px 12px 0 0;overflow:hidden;height:540px;background:
   radial-gradient(900px 520px at 18% 115%,#5b2bd6 0%,transparent 62%),
   radial-gradient(760px 520px at 92% -15%,#a23bc4 0%,transparent 58%),
@@ -149,7 +149,7 @@ h1 .l2{display:block;color:var(--mut)}
 .win .bar span{margin-left:8px;font-size:11px;color:var(--mut)}
 .win .lines{padding:12px}.win .lines div{height:7px;border-radius:4px;background:rgba(255,255,255,.08);margin-bottom:8px}
 #w1{left:6%;top:21%;width:44%;height:62%}#w2{left:48%;top:30%;width:44%;height:58%}
-.notch{position:absolute;top:0;left:50%;transform:translateX(-50%);z-index:10;background:#000;width:190px;height:32px;border-radius:0 0 20px 20px;cursor:pointer;overflow:hidden;transition:width .55s var(--ease-drawer),height .55s var(--ease-drawer),border-radius .55s var(--ease-drawer),box-shadow .3s ease;box-shadow:0 0 0 1px rgba(155,123,255,.28),0 8px 30px rgba(118,80,238,.25)}
+.notch{position:absolute;top:0;left:50%;transform:translateX(-50%);z-index:10;background:#000;width:190px;height:32px;border-radius:0 0 20px 20px;cursor:pointer;overflow:hidden;transition:width .55s var(--ease-drawer),height .55s var(--ease-drawer),border-radius .55s var(--ease-drawer),box-shadow .3s ease;box-shadow:0 0 0 1px rgba(155,123,255,.28),0 10px 28px -8px rgba(0,0,0,.7)}
 .notch.open{width:min(720px,96%);height:380px;border-radius:0 0 34px 34px;cursor:default;background:linear-gradient(180deg,#0b0615,#170c2e 60%,#24104a)}
 .ears{position:absolute;inset:0;display:flex;align-items:center;justify-content:space-between;padding:0 14px;font-size:12px;color:var(--p3);transition:opacity .2s;font-variant-numeric:tabular-nums}
 .ears .eq{display:flex;gap:2px;align-items:flex-end;height:12px}.ears .eq i{width:3px;height:12px;background:var(--p);border-radius:2px;transform-origin:bottom;animation:eq 1s infinite ease-in-out}
@@ -186,7 +186,7 @@ h1 .l2{display:block;color:var(--mut)}
 .box .big{font-size:30px;font-weight:600;letter-spacing:-.02em;line-height:1.1;font-variant-numeric:tabular-nums}
 .ev{display:flex;gap:10px;align-items:flex-start;margin-top:10px}.ev i{width:3px;align-self:stretch;border-radius:2px;background:var(--p)}
 .ev b{display:block;font-size:13px}.ev span{color:var(--mut);font-size:11px}
-.now{margin-left:auto;font-size:10px;background:rgba(155,123,255,.3);color:#fff;padding:1px 8px;border-radius:99px;font-style:normal}
+.now{margin-left:auto;font-size:11px;background:rgba(155,123,255,.3);color:#fff;padding:1px 8px;border-radius:99px;font-style:normal}
 .msg{padding:9px 13px;border-radius:14px;margin-bottom:8px;max-width:78%;text-align:left;line-height:1.45}
 .msg.u{background:var(--p2);margin-left:auto}.msg.a{background:rgba(255,255,255,.06)}
 .chip{display:inline-block;font-size:11px;color:var(--p3);margin-bottom:10px}
@@ -210,7 +210,7 @@ h1 .l2{display:block;color:var(--mut)}
 .tool .big{font-size:26px}
 .swatches{display:flex;gap:6px;margin-top:10px}.swatches i{width:26px;height:26px;border-radius:7px;border:1px solid rgba(255,255,255,.2)}
 .mirror{height:100%;border-radius:16px;background:radial-gradient(circle at 50% 42%,#f2d1c4 0 17%,transparent 17.5%),radial-gradient(ellipse 30% 26% at 50% 88%,#6d28d9 0 99%,transparent 100%),linear-gradient(160deg,#39275e,#1c1033);position:relative;border:10px solid #fff;box-shadow:0 0 40px rgba(255,255,255,.35)}
-.mirror:after{content:"Live, nothing is recorded";position:absolute;left:10px;bottom:8px;font-size:10px;color:#fff;background:rgba(0,0,0,.4);padding:2px 8px;border-radius:99px}
+.mirror:after{content:"Live, nothing is recorded";position:absolute;left:10px;bottom:8px;font-size:11px;color:#fff;background:rgba(0,0,0,.4);padding:2px 8px;border-radius:99px}
 .clock b{font-size:26px;font-variant-numeric:tabular-nums}
 .shelf{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;height:100%;border:1.5px dashed rgba(155,123,255,.5);border-radius:16px;padding:14px}
 .file{border-radius:12px;background:rgba(255,255,255,.04);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;font-size:11.5px}
@@ -251,9 +251,9 @@ section{padding:clamp(80px,9vw,128px) 0;position:relative}
 
 /* statement */
 .statement{padding-top:clamp(110px,13vw,170px);padding-bottom:0}
-.statement p{font-size:clamp(26px,3.4vw,44px);line-height:1.28;letter-spacing:-.025em;font-weight:500;color:#7f7a92;max-width:min(26ch,100%);text-wrap:pretty}
+.statement p{font-size:clamp(26px,3.4vw,44px);line-height:1.3;letter-spacing:-.025em;font-weight:500;color:#7f7a92;max-width:min(26ch,100%);text-wrap:pretty}
 .statement p b{color:var(--tx);font-weight:500}
-.statement p .kbd{font-size:.62em;vertical-align:.18em}
+.statement p .kbd{font-size:max(.62em,11px);vertical-align:.18em}
 
 /* AI story: sticky media, scrolling steps */
 .sa{display:grid;grid-template-columns:1.35fr 1fr;gap:64px;align-items:start}
@@ -267,6 +267,8 @@ section{padding:clamp(80px,9vw,128px) 0;position:relative}
 .sa-step h3{font-size:clamp(26px,2.6vw,34px);letter-spacing:-.03em;line-height:1.1}
 .sa-step p{color:var(--mut);font-size:17px;margin-top:14px;max-width:44ch}
 .sa-inline{display:none}
+/* A hairline of pure white at low opacity keeps screenshot edges crisp against the dark page */
+.sa-inline,.sa-media img,.cell img,.stage img{outline:1px solid oklch(1 0 0 / .1);outline-offset:-1px}
 .modes{display:flex;flex-wrap:wrap;gap:6px;margin-top:20px}
 .modes span{font-size:13px;padding:5px 11px;border-radius:99px;background:rgba(255,255,255,.05);box-shadow:inset 0 0 0 1px var(--line);color:var(--mut)}
 .modes span.local{color:var(--ok);box-shadow:inset 0 0 0 1px rgba(110,231,168,.3)}
@@ -456,15 +458,15 @@ section:nth-of-type(odd)::after{content:"";position:absolute;right:-12%;top:12%;
 section:nth-of-type(even)::after{content:"";position:absolute;left:-12%;top:20%;width:520px;height:520px;border-radius:50%;background:radial-gradient(closest-side,rgba(162,59,196,.10),transparent);pointer-events:none;z-index:-1}
 section{padding:clamp(64px,7vw,100px) 0}
 .sh{margin-bottom:44px}
-h1 .l2{background:linear-gradient(90deg,#cdbfff,#9b7bff 55%,#e08bff);-webkit-background-clip:text;background-clip:text;color:transparent}
-h2{background:linear-gradient(180deg,#fff 30%,#b9b2d0);-webkit-background-clip:text;background-clip:text;color:transparent}
+h1 .l2{color:var(--ac-ink)}
+h2{color:var(--tx)}
 .statement p{max-width:min(34ch,100%)}
 .sa-step{min-height:34vh}
 .sa-steps{padding:3vh 0 5vh}
 .cell,.card,.plan,.shot{transition:transform .35s var(--ease-out),box-shadow .35s ease,background-color .35s ease}
 .cell,.card{background:linear-gradient(160deg,rgba(155,123,255,.07),transparent 55%),var(--surface)}
 @media (hover:hover) and (pointer:fine){
-  .cell:hover,.card:hover{transform:translateY(-3px);box-shadow:inset 0 0 0 1px rgba(155,123,255,.35),0 24px 60px -24px rgba(118,80,238,.5)}
+  .cell:hover,.card:hover{transform:translateY(-3px);box-shadow:inset 0 0 0 1px rgba(155,123,255,.35),0 24px 60px -24px rgba(0,0,0,.75)}
 }
 .fi{border-radius:14px;padding:20px 14px;transition:background-color .25s ease}
 @media (hover:hover) and (pointer:fine){.fi:hover{background:rgba(155,123,255,.06)}}
@@ -998,7 +1000,7 @@ brew install --cask notch-apple</code></pre>
   <button class="loop" id="loop"><span class="ring" id="loopRing"><div><i class="ph ph-arrow-up"></i></div></span><span id="loopText">Back to the start</span></button>
 </div></section>
 
-<div class="lb" id="lb" role="dialog" aria-modal="true" aria-label="Screenshot"><button class="lb-x" type="button" aria-label="Close"><i class="ph ph-x" aria-hidden="true"></i></button><img alt=""></div>
+<div class="lb" id="lb" role="dialog" aria-modal="true" aria-label="Screenshot"><button class="lb-x" type="button" aria-label="Close"><i class="ph ph-x" aria-hidden="true"></i></button><img src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==" alt="" alt=""></div>
 
 <script>
 const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
@@ -1081,8 +1083,16 @@ segment($('#fseg'),b=>{let d=0;$$('#fx .fi').forEach(f=>{const on=f.dataset.c===
 
 /* ---------- AI story: the sticky screenshot follows the step you're reading ---------- */
 const saImgs=$$('.sa-media img'),saSteps=$$('.sa-step');
-const stepIO=new IntersectionObserver(es=>es.forEach(e=>{if(!e.isIntersecting)return;const i=+e.target.dataset.i;saSteps.forEach(s=>s.classList.toggle('on',s===e.target));saImgs.forEach((im,j)=>im.classList.toggle('on',j===i))}),{rootMargin:'-45% 0px -45% 0px'});
-saSteps.forEach(s=>stepIO.observe(s));
+// The step nearest the middle of the screen is the one being read; its picture takes the sticky preview. Read from the
+// scroll position (not an observer) so it follows the page exactly, going down and coming back up.
+let stepRaf=0;
+function pickStep(){
+  stepRaf=0;const mid=innerHeight*.5;let best=null,bd=Infinity;
+  saSteps.forEach(s=>{const r=s.getBoundingClientRect(),d=mid>=r.top&&mid<=r.bottom?0:Math.min(Math.abs(r.top-mid),Math.abs(r.bottom-mid));if(d<bd){bd=d;best=s}});
+  if(!best||best.classList.contains('on'))return;
+  const i=+best.dataset.i;saSteps.forEach(s=>s.classList.toggle('on',s===best));saImgs.forEach((im,j)=>im.classList.toggle('on',j===i));
+}
+addEventListener('scroll',()=>{if(!stepRaf)stepRaf=requestAnimationFrame(pickStep)},{passive:true});addEventListener('resize',pickStep);pickStep();
 
 /* ---------- reveal on scroll (content is never left hidden) ---------- */
 const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target)}}),{threshold:.12,rootMargin:'0px 0px -6% 0px'});
@@ -1227,10 +1237,15 @@ function ghGet(path,slim){
     if(!j)return c&&c.d;const d=slim(j);try{localStorage.setItem(k,JSON.stringify({t:Date.now(),d}))}catch(e){}return d
   }).catch(()=>c&&c.d);
 }
-Promise.all([
+// The release info comes from latest.json on this site (refreshed by every release): GitHub's API only allows 60 anonymous
+// requests an hour per address, which a shared network uses up, so it is only the fallback.
+const fromSite=fetch('latest.json',{cache:'no-cache'}).then(r=>r.ok?r.json():null).then(d=>d&&d.version&&d.dmg?{rel:{tag_name:'v'+d.version,published_at:d.published,assets:[{name:'NotchApple-'+d.version+'.dmg',size:d.dmgSize,browser_download_url:d.dmg}]},stars:d.stars}:null).catch(()=>null);
+fromSite.then(site=>site||Promise.all([
   ghGet('/releases/latest',j=>({tag_name:j.tag_name,published_at:j.published_at,assets:(j.assets||[]).filter(a=>/\.dmg$/i.test(a.name)).map(a=>({name:a.name,size:a.size,browser_download_url:a.browser_download_url}))})),
   ghGet('',j=>({stargazers_count:j.stargazers_count}))
-]).then(([j,repo])=>{
+]).then(([j,repo])=>({rel:j,stars:repo&&Number.isFinite(repo.stargazers_count)?repo.stargazers_count:null}))).then(({rel:j,stars:starsRaw})=>{
+  const repo=starsRaw===null||starsRaw===undefined?null:{stargazers_count:starsRaw};
+
   const v=((j&&j.tag_name)||'').replace(/^v/,'');const dmg=((j&&j.assets)||[])[0];
   const stars=repo&&Number.isFinite(repo.stargazers_count)?repo.stargazers_count:null;
   const el=$('#dlVer');

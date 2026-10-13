@@ -109,6 +109,7 @@ targets:
       - NotchApple/Modules/Wallpaper/WallpaperLogic.swift
       - NotchApple/Modules/Games/CardsLogic.swift
       - NotchApple/Modules/BambuStatusChecker/BambuStatusLogic.swift
+      - NotchApple/Core/UpdateFeedLogic.swift
       - NotchApple/Modules/Tennis/TennisLogic.swift
       - NotchApple/Core/ClaudeUsageLogic.swift
       - NotchApple/Core/SmartHomeLogic.swift

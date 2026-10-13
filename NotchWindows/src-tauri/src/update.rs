@@ -6,6 +6,10 @@ use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use tauri::AppHandle;
 
+/// The website's latest.json (refreshed by every release). GitHub's API only allows 60 anonymous requests an hour per
+/// address, which a shared network uses up, so the API is only the fallback.
+const SITE_FILE: &str = "https://adityajaindxb.github.io/NotchApples/latest.json";
+const DOWNLOADS: &str = "https://github.com/AdityaJainDXB/NotchApples/releases/download/";
 const RELEASES: &str = "https://api.github.com/repos/AdityaJainDXB/NotchApples/releases?per_page=40";
 pub const CURRENT: &str = env!("CARGO_PKG_VERSION");
 
@@ -57,8 +61,48 @@ pub fn newer(candidate: &[u64], current: &[u64]) -> bool {
     false
 }
 
+#[derive(Deserialize)]
+struct SiteFile {
+    windows: Option<SiteWindows>,
+}
+
+#[derive(Deserialize)]
+struct SiteWindows {
+    version: String,
+    notes: Option<String>,
+    url: String,
+    sha256: Option<String>,
+    size: u64,
+    page: String,
+}
+
+/// What latest.json says about Windows: `Some(None)` = readable and nothing newer, `Some(Some(update))` = a newer
+/// build, `None` = unreadable or untrustworthy (use the API instead). The download must be this project's.
+pub fn from_site(text: &str, current: &[u64]) -> Option<Option<Update>> {
+    let file: SiteFile = serde_json::from_str(text).ok()?;
+    let w = file.windows?;
+    if !w.url.starts_with(DOWNLOADS) || !w.url.ends_with("-setup.exe") || !w.page.starts_with("https://github.com/AdityaJainDXB/NotchApples/") {
+        return None;
+    }
+    let v = version_of(&format!("win-v{}", w.version))?;
+    if !newer(&v, current) {
+        return Some(None);
+    }
+    Some(Some(Update { version: w.version, notes: w.notes.unwrap_or_default(), url: w.url, sha256: w.sha256, size: w.size, page: w.page }))
+}
+
 #[tauri::command]
 pub async fn update_check() -> Result<Option<Update>, String> {
+    let current = version_of(&format!("win-v{CURRENT}")).unwrap_or_default();
+    if let Ok(res) = crate::net::client().get(SITE_FILE).header("Cache-Control", "no-cache").send().await {
+        if res.status().is_success() {
+            if let Ok(text) = res.text().await {
+                if let Some(answer) = from_site(&text, &current) {
+                    return Ok(answer);
+                }
+            }
+        }
+    }
     let res = crate::net::client()
         .get(RELEASES)
         .header("Accept", "application/vnd.github+json")
@@ -66,10 +110,14 @@ pub async fn update_check() -> Result<Option<Update>, String> {
         .await
         .map_err(crate::net::describe)?;
     if !res.status().is_success() {
-        return Err(format!("GitHub didn't answer ({}).", res.status().as_u16()));
+        let code = res.status().as_u16();
+        return Err(if code == 403 || code == 429 {
+            "GitHub is limiting requests from this network for a while. Try again in an hour.".to_string()
+        } else {
+            format!("GitHub didn't answer ({code}).")
+        });
     }
     let releases: Vec<Release> = res.json().await.map_err(|e| e.to_string())?;
-    let current = version_of(&format!("win-v{CURRENT}")).unwrap_or_default();
 
     let best = releases
         .into_iter()
@@ -175,5 +223,33 @@ mod tests {
         assert!(newer(&[1, 24, 1], &[1, 24]));
         assert!(!newer(&[1, 24, 0], &[1, 24, 0]));
         assert!(!newer(&[1, 9, 9], &[1, 24, 0]));
+    }
+}
+
+#[cfg(test)]
+mod site_tests {
+    use super::*;
+
+    const GOOD: &str = r#"{"version":"2.0.50","windows":{"version":"1.53.0","notes":"n","url":"https://github.com/AdityaJainDXB/NotchApples/releases/download/win-v1.53.0/Notch.apple_1.53.0_x64-setup.exe","sha256":"ab","size":10,"page":"https://github.com/AdityaJainDXB/NotchApples/releases/tag/win-v1.53.0"}}"#;
+
+    #[test]
+    fn a_newer_build_is_offered() {
+        let u = from_site(GOOD, &[1, 52, 0]).unwrap().unwrap();
+        assert_eq!(u.version, "1.53.0");
+        assert_eq!(u.sha256.as_deref(), Some("ab"));
+    }
+
+    #[test]
+    fn the_same_or_an_older_build_is_not() {
+        assert!(from_site(GOOD, &[1, 53, 0]).unwrap().is_none());
+        assert!(from_site(GOOD, &[1, 60, 0]).unwrap().is_none());
+    }
+
+    #[test]
+    fn a_download_from_somewhere_else_is_refused() {
+        let bad = GOOD.replace("github.com/AdityaJainDXB", "evil.example/AdityaJainDXB");
+        assert!(from_site(&bad, &[1, 52, 0]).is_none());
+        assert!(from_site("not json", &[1, 52, 0]).is_none());
+        assert!(from_site(r#"{"version":"2.0.50"}"#, &[1, 52, 0]).is_none());
     }
 }
