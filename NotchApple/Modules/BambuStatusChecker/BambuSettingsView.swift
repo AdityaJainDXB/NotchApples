@@ -12,7 +12,7 @@
 import SwiftUI
 
 struct BambuSettingsView: View {
-    @StateObject private var manager = BambuManager.shared
+    @ObservedObject private var manager = BambuManager.shared
     @State private var newName = ""
     @State private var newHost = ""
     @State private var newAccessCode = ""

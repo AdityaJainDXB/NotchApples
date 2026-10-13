@@ -34,6 +34,7 @@ enum KeychainHelper {
         case companionPhones = "companion.phones"
         case homeAssistantToken = "homeassistant.token"
         case clipboardLinkCode = "clipboardlink.code"
+        case bambuAccessCodes = "bambu.accessCodes"
     }
 
     private static let lock = NSLock()

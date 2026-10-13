@@ -11,7 +11,7 @@
 import SwiftUI
 
 struct BambuView: View {
-    @StateObject private var manager = BambuManager.shared
+    @ObservedObject private var manager = BambuManager.shared
 
     /// Set when the module is on screen, so the settings live-preview is honest.
     var body: some View {

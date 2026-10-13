@@ -3,12 +3,13 @@
 //! Bambu Lab printers speak MQTT over TLS on the local network (port 8883, user `bblp`, password = the LAN
 //! access code, certificate signed by the printer itself, so it can't be checked against any authority).
 //! The web view can't open a raw socket, so this does: it connects, subscribes to `device/<serial>/report`,
-//! and streams every report to the UI as an event. Each connection drives itself on its own thread and is
-//! kept alive by the `Client` held in `Pool`: stopping (the tab closing, a printer removed) drops the
-//! client, the iteration ends and the thread leaves. Nothing here blocks the caller for long — a printer
-//! that is off or slow fails on its own thread and tells the UI why.
+//! and streams every report to the UI as an event. Each connection drives itself on its own thread. Stopping
+//! (the tab closing, a printer removed, a reconnect) sets the connection's stop flag and sends a disconnect: its
+//! thread then leaves quietly, WITHOUT telling the UI, so a connection that was replaced never reports itself
+//! as "dropped" over the new one. Nothing here blocks the caller for long: a printer that is off or slow fails on
+//! its own thread and tells the UI why (the UI decides whether to try again).
 
-use std::sync::Mutex;
+use std::sync::{Mutex, MutexGuard};
 use std::time::Duration;
 
 use rumqttc::{Client, Connection, Event, MqttOptions, Packet, QoS, Transport, TlsConfiguration};
@@ -38,8 +39,21 @@ pub struct Config {
 
 struct Entry {
     serial: String,
-    /// Keeping this alive keeps the printer's connection open; dropping it ends the thread.
+    /// Keeps the connection open and is how it is told to disconnect.
     client: Client,
+    /// Set when this connection has been stopped or replaced: its thread must leave without reporting.
+    stop: Arc<AtomicBool>,
+}
+
+impl Entry {
+    fn shut_down(self) {
+        self.stop.store(true, Ordering::SeqCst);
+        let _ = self.client.try_disconnect();
+    }
+}
+
+fn lock<T>(m: &Mutex<T>) -> MutexGuard<'_, T> {
+    m.lock().unwrap_or_else(|e| e.into_inner())   // a poisoned lock still has to let a stop through
 }
 
 /// The live printer connections, by serial: saving a printer re-connects it without a second socket.
@@ -60,28 +74,34 @@ pub fn bambu_start(pool: State<'_, Pool>, app: AppHandle, config: Config) -> Res
     let pins = pin_file(&app)?;
     let mismatch = Arc::new(AtomicBool::new(false));
     let (client, connection) = connect(&config, pins, mismatch.clone())?;
+    let stop = Arc::new(AtomicBool::new(false));
     {
-        let mut live = pool.inner.lock().map_err(|_| "The Bambu Lab connections are broken.".to_string())?;
-        live.retain(|e| e.serial != serial);
-        live.push(Entry { serial: serial.clone(), client });
+        let mut live = lock(&pool.inner);
+        let (old, keep): (Vec<Entry>, Vec<Entry>) = std::mem::take(&mut *live).into_iter().partition(|e| e.serial == serial);
+        *live = keep;
+        old.into_iter().for_each(Entry::shut_down);
+        live.push(Entry { serial: serial.clone(), client, stop: stop.clone() });
     }
     let pump = app.clone();
-    std::thread::spawn(move || drive(pump, serial, connection, mismatch));
+    std::thread::spawn(move || drive(pump, serial, connection, mismatch, stop));
     Ok(topic)
 }
 
-/// Stops every printer (the tab closing, or the settings being emptied).
+/// Stops one printer (by serial), or every printer when no serial is given (the tab closing, or the settings being emptied).
 #[tauri::command]
-pub fn bambu_stop(pool: State<'_, Pool>) {
-    if let Ok(mut live) = pool.inner.lock() {
-        live.clear();
-    }
+pub fn bambu_stop(pool: State<'_, Pool>, serial: Option<String>) {
+    let mut live = lock(&pool.inner);
+    let (gone, keep): (Vec<Entry>, Vec<Entry>) = std::mem::take(&mut *live)
+        .into_iter()
+        .partition(|e| serial.as_deref().map_or(true, |s| e.serial == s.trim()));
+    *live = keep;
+    gone.into_iter().for_each(Entry::shut_down);
 }
 
 /// Which printers the app is connected to (Settings shows the count).
 #[tauri::command]
 pub fn bambu_running(pool: State<'_, Pool>) -> Vec<String> {
-    pool.inner.lock().map(|live| live.iter().map(|e| e.serial.clone()).collect()).unwrap_or_default()
+    lock(&pool.inner).iter().map(|e| e.serial.clone()).collect()
 }
 
 /// Opens the connection and subscribes. A problem here is reported to the UI by the driving thread, so
@@ -91,7 +111,7 @@ fn connect(config: &Config, pins: PathBuf, mismatch: Arc<AtomicBool>) -> Result<
     if serial.is_empty() || config.access_code.trim().is_empty() || config.host.trim().is_empty() {
         return Err("Add the printer’s IP, access code and serial number first.".into());
     }
-    let mut opts = MqttOptions::new("notchapple", config.host.trim(), PORT);
+    let mut opts = MqttOptions::new(format!("notchapple-{serial}"), config.host.trim(), PORT);   // one client id per printer, so connections never kick each other off;
     opts.set_credentials(USER, config.access_code.trim());
     opts.set_keep_alive(Duration::from_secs(KEEP_ALIVE));
     opts.set_clean_session(true);
@@ -102,13 +122,17 @@ fn connect(config: &Config, pins: PathBuf, mismatch: Arc<AtomicBool>) -> Result<
     client
         .subscribe(format!("device/{serial}/report"), QoS::AtMostOnce)
         .map_err(|e| format!("Couldn’t subscribe to the printer: {e}"))?;
+    // Newer printers send only what changed until they are asked for everything once.
+    let _ = client.publish(format!("device/{serial}/request"), QoS::AtMostOnce, false,
+        r#"{"pushing":{"sequence_id":"0","command":"pushall"}}"#);
     Ok((client, connection))
 }
 
-/// What a connection's thread does: every report goes to the UI, and a connection that fails or ends
-/// emits a state so the tab can show it and try again.
-fn drive(app: AppHandle, serial: String, mut connection: Connection, mismatch: Arc<AtomicBool>) {
+/// What a connection's thread does: every report goes to the UI, and a connection that fails or ends on its
+/// own emits a state so the tab can show it (a stopped or replaced one says nothing).
+fn drive(app: AppHandle, serial: String, mut connection: Connection, mismatch: Arc<AtomicBool>, stop: Arc<AtomicBool>) {
     for event in connection.iter() {
+        if stop.load(Ordering::SeqCst) { return; }
         match event {
             Ok(Event::Incoming(Packet::Publish(p))) => {
                 let _ = app.emit(EVENT_REPORT, serde_json::json!({
@@ -118,12 +142,15 @@ fn drive(app: AppHandle, serial: String, mut connection: Connection, mismatch: A
             }
             Ok(_) => {}
             Err(e) => {
+                if stop.load(Ordering::SeqCst) { return; }
                 let _ = app.emit(EVENT_STATE, serde_json::json!({ "serial": serial, "state": "failed", "message": if mismatch.load(Ordering::SeqCst) { PIN_MISMATCH.to_string() } else { explain(&e.to_string()) } }));
                 return;
             }
         }
     }
-    let _ = app.emit(EVENT_STATE, serde_json::json!({ "serial": serial, "state": "dropped" }));
+    if !stop.load(Ordering::SeqCst) {
+        let _ = app.emit(EVENT_STATE, serde_json::json!({ "serial": serial, "state": "dropped" }));
+    }
 }
 
 const PIN_MISMATCH: &str = "The printer’s certificate changed, so Notch Apple refused to connect. If you updated its firmware or reset it, choose “Trust new certificate” in Settings → Bambu Lab. If not, someone on your network may be posing as it.";
@@ -157,17 +184,39 @@ fn pin_file(app: &AppHandle) -> Result<PathBuf, String> {
     Ok(dir.join("bambu_pins.json"))
 }
 
-fn read_pins(path: &PathBuf) -> serde_json::Map<String, serde_json::Value> {
-    std::fs::read_to_string(path).ok().and_then(|t| serde_json::from_str(&t).ok()).unwrap_or_default()
+/// One lock for the pin file: several printers connect at once, and a read-modify-write must not interleave.
+static PIN_LOCK: Mutex<()> = Mutex::new(());
+
+/// The remembered certificates. A missing file is an empty map; a file that exists but can't be read is an
+/// error, so a damaged file can never quietly turn into "trust whatever you are shown".
+fn read_pins(path: &PathBuf) -> Result<serde_json::Map<String, serde_json::Value>, String> {
+    let text = match std::fs::read_to_string(path) {
+        Ok(t) => t,
+        Err(e) if e.kind() == std::io::ErrorKind::NotFound => return Ok(Default::default()),
+        Err(e) => return Err(format!("couldn’t read the remembered certificates: {e}")),
+    };
+    match serde_json::from_str::<serde_json::Value>(&text) {
+        Ok(serde_json::Value::Object(m)) if m.values().all(|v| v.is_string()) => Ok(m),
+        _ => Err("the remembered-certificates file is damaged: choose “Trust new certificate” to start it afresh".into()),
+    }
+}
+
+/// Writes the whole file or none of it (to a temporary file, then renamed over the old one).
+fn write_pins(path: &PathBuf, pins: serde_json::Map<String, serde_json::Value>) -> Result<(), String> {
+    let tmp = path.with_extension("json.tmp");
+    std::fs::write(&tmp, serde_json::Value::Object(pins).to_string()).map_err(|e| e.to_string())?;
+    std::fs::rename(&tmp, path).map_err(|e| e.to_string())
 }
 
 /// Forgets a printer's remembered certificate (after a firmware update or reset): the next connection remembers the new one.
 #[tauri::command]
 pub fn bambu_trust_new(app: AppHandle, serial: String) -> Result<(), String> {
     let path = pin_file(&app)?;
-    let mut pins = read_pins(&path);
+    let _guard = lock(&PIN_LOCK);
+    // A damaged file is exactly what this button is for: start afresh instead of failing.
+    let mut pins = read_pins(&path).unwrap_or_default();
     pins.remove(serial.trim());
-    std::fs::write(&path, serde_json::Value::Object(pins).to_string()).map_err(|e| e.to_string())
+    write_pins(&path, pins)
 }
 
 #[derive(Debug)]
@@ -186,12 +235,13 @@ impl ServerCertVerifier for PinnedCert {
         _now: UnixTime,
     ) -> Result<ServerCertVerified, rustls::Error> {
         let seen = fingerprint(end_entity.as_ref());
-        let mut pins = read_pins(&self.file);
+        let _guard = lock(&PIN_LOCK);
+        let mut pins = read_pins(&self.file).map_err(rustls::Error::General)?;
         match decide_pin(pins.get(&self.serial).and_then(|v| v.as_str()), &seen) {
             PinDecision::Match => Ok(ServerCertVerified::assertion()),
             PinDecision::PinFirst => {
                 pins.insert(self.serial.clone(), serde_json::Value::String(seen));
-                std::fs::write(&self.file, serde_json::Value::Object(pins).to_string())
+                write_pins(&self.file, pins)
                     .map_err(|e| rustls::Error::General(format!("couldn’t remember the printer’s certificate: {e}")))?;
                 Ok(ServerCertVerified::assertion())
             }

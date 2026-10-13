@@ -22,7 +22,8 @@ const newest = listed.sort(cmp).at(-1) || '0.0.0';
 
 const plain = (s) => s.replace(/\*\*(.+?)\*\*/g, '$1').replace(/`([^`]+)`/g, '$1').replace(/\[([^\]]+)\]\([^)]+\)/g, '$1').replace(/^[^\p{L}\p{N}]+/u, '').replace(/\s+/g, ' ').trim();   // no leading emoji, like the entries already listed
 const short = (s, n) => (s.length <= n ? s : s.slice(0, n - 1).replace(/[\s,;:.]+\S*$/, '') + '…');
-const esc = (s) => s.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+// The strings end up inside a <script> and are shown with innerHTML: escape quotes, backslashes and anything HTML.
+const esc = (s) => s.replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/&/g, '\\u0026').replace(/</g, '\\u003c').replace(/>/g, '\\u003e');
 
 const files = readdirSync(join(root, 'release-notes')).filter((f) => /^\d+\.\d+\.\d+\.md$/.test(f))
   .map((f) => f.replace(/\.md$/, '')).filter((v) => cmp(v, newest) > 0).sort(cmp);   // oldest first, so each one lands on top in order

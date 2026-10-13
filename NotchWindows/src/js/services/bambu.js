@@ -49,11 +49,11 @@ export function add(p) {
 }
 
 export function remove(id) {
+  const p0 = byId(id);
   clearTimeout(retry.get(id)); retry.delete(id);
   savePrinters(printers().filter((p) => p.id !== id));
   snaps.delete(id); failures.delete(id); alerts.delete(id); connecting.delete(id);
-  invoke('bambu_stop').catch(() => {});
-  if (isOn()) printers().forEach(connect);
+  invoke('bambu_stop', { serial: p0?.serial?.trim() }).catch(() => {});   // only this printer: the others keep their connection
   changed();
 }
 
@@ -61,7 +61,7 @@ export function remove(id) {
 export async function trustNewCertificate(id) {
   const p = byId(id); if (!p) return;
   await invoke('bambu_trust_new', { serial: p.serial.trim() }).catch(() => {});
-  connect(p);
+  if (isOn()) connect(p);   // when monitoring is off, the next time it is switched on remembers the new certificate
 }
 
 export function enable() {
@@ -73,6 +73,7 @@ export function enable() {
 
 export function disable() {
   save('bambu.on', false);
+  clearTimeout(startTimer);
   retry.forEach((t) => clearTimeout(t)); retry.clear();
   invoke('bambu_stop').catch(() => {});
   printers().forEach((p) => snaps.set(p.id, L.offline(null)));
@@ -87,9 +88,11 @@ async function connect(p) {
   connecting.add(p.id); changed();
   try {
     await invoke('bambu_start', { config: { host: p.host.trim(), access_code: p.accessCode.trim(), serial: p.serial.trim() } });
+    if (!isOn() || !byId(p.id)) { invoke('bambu_stop', { serial: p.serial.trim() }).catch(() => {}); return; }   // switched off or removed while connecting
+    connecting.delete(p.id);
     if (!snaps.has(p.id) || snaps.get(p.id).phase === 'offline') snaps.set(p.id, L.waiting());
   } catch (e) {
-    fail(p, String(e));
+    if (isOn() && byId(p.id)) fail(p, String(e));
   }
 }
 
@@ -106,6 +109,7 @@ function fail(p, message) {
 function wire() {
   if (wired) return; wired = true;
   listen('bambu:report', ({ serial, payload }) => {
+    if (!isOn()) return;
     const p = bySerial(serial); if (!p) return;
     let root; try { root = JSON.parse(payload); } catch { return; }
     connecting.delete(p.id); failures.delete(p.id);
@@ -114,12 +118,13 @@ function wire() {
     snaps.set(p.id, next);
     react(p, old, next);
     changed();
-  });
+  }).catch(() => {});
   listen('bambu:state', ({ serial, state, message }) => {
+    if (!isOn()) return;
     const p = bySerial(serial); if (!p) return;
     if (state === 'failed') fail(p, message || 'Couldn’t reach the printer.');
     else if (state === 'dropped') fail(p, 'Lost connection to the printer. Retrying…');
-  });
+  }).catch(() => {});
 }
 
 // ---- alerts: a tone, a notification, and the pill ----
@@ -128,6 +133,7 @@ function tone(freqs) {
   if (!sounds()) return;
   try {
     ctx ??= new AudioContext();
+    if (ctx.state === 'suspended') ctx.resume().catch(() => {});
     freqs.forEach((f, i) => {
       const o = ctx.createOscillator(), g = ctx.createGain(), t = ctx.currentTime + i * 0.16;
       o.frequency.value = f; o.type = 'sine';
@@ -164,8 +170,9 @@ provide('bambu', 55, () => {
 });
 
 /// Called once at launch by the service loader: reconnects only if the user switched monitoring on.
+let startTimer = 0;
 export function start() {
   if (!isOn()) return;
   wire();
-  setTimeout(() => printers().forEach(connect), 1500);
+  startTimer = setTimeout(() => printers().forEach(connect), 1500);
 }

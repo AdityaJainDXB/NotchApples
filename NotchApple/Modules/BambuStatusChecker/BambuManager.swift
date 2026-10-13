@@ -30,6 +30,29 @@ struct BambuPrinterConfig: Codable, Identifiable, Hashable {
     /// SHA-256 of the certificate the printer showed the first time (trust on first use); nil until it connects.
     var certPin: String?
 
+    /// The access code lives in the owner-only secrets file (KeychainHelper), never in UserDefaults or backups of them.
+    enum CodingKeys: String, CodingKey { case id, name, host, serial, certPin, accessCode }
+
+    init(id: UUID = UUID(), name: String = "", host: String = "", accessCode: String = "", serial: String = "", certPin: String? = nil) {
+        self.id = id; self.name = name; self.host = host; self.accessCode = accessCode; self.serial = serial; self.certPin = certPin
+    }
+
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        id = try c.decodeIfPresent(UUID.self, forKey: .id) ?? UUID()
+        name = try c.decodeIfPresent(String.self, forKey: .name) ?? ""
+        host = try c.decodeIfPresent(String.self, forKey: .host) ?? ""
+        serial = try c.decodeIfPresent(String.self, forKey: .serial) ?? ""
+        certPin = try c.decodeIfPresent(String.self, forKey: .certPin)
+        accessCode = try c.decodeIfPresent(String.self, forKey: .accessCode) ?? ""   // an older save; moved to the secrets file on load
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var c = encoder.container(keyedBy: CodingKeys.self)
+        try c.encode(id, forKey: .id); try c.encode(name, forKey: .name); try c.encode(host, forKey: .host)
+        try c.encode(serial, forKey: .serial); try c.encodeIfPresent(certPin, forKey: .certPin)
+    }
+
     var displayName: String { name.isEmpty ? (host.isEmpty ? "My Printer" : host) : name }
 }
 
@@ -70,15 +93,47 @@ final class BambuManager: ObservableObject {
         if let data = store.data(forKey: "bambu.printers"),
            let saved = try? JSONDecoder().decode([BambuPrinterConfig].self, from: data), !saved.isEmpty {
             printers = saved
+            let codes = Self.loadCodes()
+            for i in printers.indices where printers[i].accessCode.isEmpty { printers[i].accessCode = codes[printers[i].id.uuidString] ?? "" }
+            if saved.contains(where: { !$0.accessCode.isEmpty }) { save() }   // moves a code from an older save into the secrets file
         }
         selectedPrinterID = printers.first?.id
         if enabled && !printers.isEmpty { start() }
+        // Turning the whole Bambu module off must close the connections, and turning it back on brings them back.
+        NotificationCenter.default.addObserver(forName: UserDefaults.didChangeNotification, object: nil, queue: .main) { [weak self] _ in
+            MainActor.assumeIsolated { self?.moduleMayHaveChanged() }
+        }
+    }
+
+    private var moduleWasOn = SettingsManager.shared.bambuEnabled
+
+    private func moduleMayHaveChanged() {
+        let on = SettingsManager.shared.bambuEnabled
+        guard on != moduleWasOn else { return }
+        moduleWasOn = on
+        if on {
+            if enabled { for p in printers { connect(p) } }
+        } else {
+            for (id, task) in retryTasks { task.cancel(); retryTasks.removeValue(forKey: id) }
+            for (id, client) in clients { snapshots[id] = BambuStatusLogic.offline(message: nil); client.stop() }
+            clients.removeAll()
+            connecting.removeAll()
+            thermalAlerts.removeAll()
+            LiveActivityCenter.shared.recompute()
+        }
     }
 
     // MARK: - Configuration
 
     func save() {
         store.set(try? JSONEncoder().encode(printers), forKey: "bambu.printers")
+        let codes = Dictionary(printers.filter { !$0.accessCode.isEmpty }.map { ($0.id.uuidString, $0.accessCode) }, uniquingKeysWith: { a, _ in a })
+        if let data = try? JSONEncoder().encode(codes), let text = String(data: data, encoding: .utf8) { KeychainHelper.set(text, for: .bambuAccessCodes) }
+    }
+
+    private static func loadCodes() -> [String: String] {
+        guard let text = KeychainHelper.get(.bambuAccessCodes), let map = try? JSONDecoder().decode([String: String].self, from: Data(text.utf8)) else { return [:] }
+        return map
     }
 
     /// True when another printer can be added (the first one is free, more need Pro).
@@ -129,6 +184,7 @@ final class BambuManager: ObservableObject {
         snapshots[id] = nil
         failures[id] = nil
         thermalAlerts[id] = nil
+        LiveActivityCenter.shared.recompute()
         retryTasks.removeValue(forKey: id)?.cancel()
         clients.removeValue(forKey: id)?.stop()
         if selectedPrinterID == id { selectedPrinterID = printers.first?.id }
@@ -148,6 +204,7 @@ final class BambuManager: ObservableObject {
         if BambuStatusLogic.normalizeHost(r.ip) == nil {
             return r.ip.isEmpty ? "Add the printer's IP address or hostname." : "“\(r.ip)” doesn’t look like an IP address or hostname."
         }
+        if r.accessCode.utf8.count > 255 { return "That access code is too long: it is 8 characters on the printer's screen." }
         if r.accessCode.isEmpty { return "Add the access code from the printer's screen (Settings → LAN)." }
         if BambuStatusLogic.normalizeSerial(r.serial) == nil {
             return r.serial.isEmpty ? "Add the printer's serial number." : "“\(r.serial)” doesn’t look like a Bambu serial number."
@@ -171,6 +228,8 @@ final class BambuManager: ObservableObject {
             clients.removeValue(forKey: id)?.stop()
         }
         connecting.removeAll()
+        thermalAlerts.removeAll()
+        LiveActivityCenter.shared.recompute()
     }
 
     /// Forgets the remembered certificate (after a firmware update or reset) and reconnects, which remembers the new one.
@@ -191,7 +250,7 @@ final class BambuManager: ObservableObject {
         let p = resolved(stored)
         retryTasks.removeValue(forKey: p.id)?.cancel()
         clients.removeValue(forKey: p.id)?.stop()
-        guard enabled else { return }
+        guard enabled, SettingsManager.shared.bambuEnabled else { return }
 
         // Missing or nonsense credentials must never reach the network layer.
         if let problem = Self.validate(stored) {
@@ -212,8 +271,12 @@ final class BambuManager: ObservableObject {
         client.start(host: creds.host,
                      password: creds.code,
                      topic: BambuStatusLogic.reportTopic(serial: creds.serial),
-                     pin: p.certPin) { [weak self] event in
-            Task { @MainActor in self?.handle(event, for: id) }
+                     pin: p.certPin) { [weak self, weak client] event in
+            // Ignore anything a replaced or removed connection still had queued: it must not touch the new session.
+            Task { @MainActor in
+                guard let self, let client, self.clients[id] === client else { return }
+                self.handle(event, for: id)
+            }
         }
     }
 
@@ -248,12 +311,16 @@ final class BambuManager: ObservableObject {
             failures[id] = message
             clients[id]?.stop()
             clients[id] = nil
+            thermalAlerts[id] = nil
+            LiveActivityCenter.shared.recompute()
             scheduleRetry(id)
 
         case .disconnected:
             connecting.remove(id)
             clients[id]?.stop()
             clients[id] = nil
+            thermalAlerts[id] = nil
+            LiveActivityCenter.shared.recompute()
             if snapshots[id] != nil, snapshots[id]?.phase != .offline {
                 snapshots[id] = BambuStatusLogic.offline(message: "Lost connection to the printer. Retrying…")
                 failures[id] = "Lost connection to the printer. Retrying…"
@@ -281,9 +348,11 @@ final class BambuManager: ObservableObject {
         let name = printers.first(where: { $0.id == id })?.displayName ?? "Printer"
 
         let alert = thermalAlertsEnabled ? BambuStatusLogic.thermalAlert(previous: old, current: new) : nil
-        if alert != thermalAlerts[id] {
+        let had = thermalAlerts[id]
+        if alert != had {
             thermalAlerts[id] = alert
-            if let alert {
+            // The number moves every report; only a different problem is worth a notification and a sound.
+            if let alert, alert.kind != had?.kind {
                 Notifier.post(title: "\(name) is running hot", body: alert.message)
                 feedback(sound: "Basso")
             }

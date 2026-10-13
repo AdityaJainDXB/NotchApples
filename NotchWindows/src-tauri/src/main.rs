@@ -484,6 +484,7 @@ fn lean_webview_on_small_machines() {
 fn main() {
     lean_webview_on_small_machines();
     tauri::Builder::default()
+        .manage(bambu::Pool::default())
         // A second launch (e.g. clicking the Start menu entry again) opens the
         // existing notch instead of starting another one.
         .plugin(tauri_plugin_single_instance::init(|app, args, _cwd| {

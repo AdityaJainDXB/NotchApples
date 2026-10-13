@@ -96,5 +96,11 @@ export function render(root) {
   }
 
   paint();
-  const off = B.onChange(() => { if (!body.isConnected) return off(); paint(); });
+  // A printer reports about once a second; repainting would wipe what is being typed in the Add form.
+  const off = B.onChange(() => {
+    if (!body.isConnected) return off();
+    const a = document.activeElement;
+    if (a && a.tagName === 'INPUT' && body.contains(a)) return;
+    paint();
+  });
 }

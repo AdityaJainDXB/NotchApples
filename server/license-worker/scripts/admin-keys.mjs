@@ -29,10 +29,14 @@ const count = Number(args[args.indexOf('--count') + 1]) || 3;
 
 const sha = (s) => createHash('sha256').update(s).digest('hex');
 const workerUrl = () => {
-  if (process.env.WORKER_URL) return process.env.WORKER_URL.replace(/\/+$/, '');
+  let url = process.env.WORKER_URL;
   const api = join(root, 'web', 'api.json');
-  if (existsSync(api)) return JSON.parse(readFileSync(api, 'utf8')).licenseServer.replace(/\/+$/, '');
-  throw new Error('Set WORKER_URL (or keep web/api.json).');
+  if (!url && existsSync(api)) url = JSON.parse(readFileSync(api, 'utf8')).licenseServer;
+  if (!url) throw new Error('Set WORKER_URL (or keep web/api.json).');
+  // An admin code is sent to this address, so it must be https on Cloudflare Workers: a changed file can't redirect it elsewhere.
+  const host = (() => { try { const u = new URL(url); return u.protocol === 'https:' ? u.hostname : ''; } catch { return ''; } })();
+  if (!/\.workers\.dev$/.test(host)) throw new Error(`Refusing to send an admin code to ${url}: it must be an https://….workers.dev address.`);
+  return url.replace(/\/+$/, '');
 };
 
 function storedCodes() {
@@ -101,7 +105,8 @@ if (mode === 'check') { const r = await check(); process.exit(r.total === 0 || r
 else if (mode === 'reroll') reroll();
 else if (mode === 'auto') {
   const r = await check();
-  if (r.total > 0 && r.valid > 0) console.log('At least one admin code still works: nothing to do.');
+  if (r.total === 0) console.log('No stored admin code to test, so there is no evidence one has stopped working: not rerolling. Use `reroll` to make fresh ones on purpose.');
+  else if (r.valid > 0) console.log('At least one admin code still works: nothing to do.');
   else if (!r.conclusive) console.log('Could not reach the Worker to decide: not rerolling.');
   else { console.log('No admin code signs in: rerolling.'); reroll(); }
 } else { console.error('Usage: admin-keys.mjs check | reroll [--count 3] [--apply] | auto [--apply]'); process.exit(2); }

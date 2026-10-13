@@ -1208,10 +1208,11 @@ const REL=[
  ['1.14.5','2 October 2026','F1 in the notch',[]],['1.14.1','30 September 2026','Now Playing like the iPhone',[]],['1.14.0','30 September 2026','22 new features',[]],
  ['1.13.0','29 September 2026','Translator, Mac Stats, themes',[]],['1.11.0','29 September 2026','Window manager',[]],['1.10.0','28 September 2026','Screen-aware AI',[]],['1.9.0','28 September 2026','Free AI',[]]
 ];
+const H=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');   // release text is data, never markup
 const feat=REL.find(r=>r[4]);
-$('#featRel').innerHTML=`<div class="v">Notch Apple ${feat[0]}, ${feat[1]}</div><h3>${feat[2]}</h3><ul>${feat[3].map(i=>`<li>${i}</li>`).join('')}</ul><img loading="lazy" src="${L+feat[4]}.webp" alt="${feat[2]} in Notch Apple ${feat[0]}">`;
+$('#featRel').innerHTML=`<div class="v">Notch Apple ${H(feat[0])}, ${H(feat[1])}</div><h3>${H(feat[2])}</h3><ul>${feat[3].map(i=>`<li>${H(i)}</li>`).join('')}</ul><img loading="lazy" src="${L+feat[4]}.webp" alt="${H(feat[2]).replace(/"/g,'&quot;')} in Notch Apple ${H(feat[0])}">`;
 $('#featRel img').onclick=e=>openLb(e.target.src,e.target.alt);$('#featRel img').style.cursor='zoom-in';
-const relHTML=r=>`<article class="rel"><div class="v"><b>${r[0]}</b><span>${r[1]}</span></div><h3>${r[2]}</h3>${r[3].length?`<ul>${r[3].map(i=>`<li>${i}</li>`).join('')}</ul>`:''}</article>`;
+const relHTML=r=>`<article class="rel"><div class="v"><b>${H(r[0])}</b><span>${H(r[1])}</span></div><h3>${H(r[2])}</h3>${r[3].length?`<ul>${r[3].map(i=>`<li>${H(i)}</li>`).join('')}</ul>`:''}</article>`;
 const rest=REL.filter(r=>r!==feat);
 $('#timeline').innerHTML=rest.slice(0,4).map(relHTML).join('')+`<details class="older"><summary>Earlier releases (${rest.length-4})</summary>${rest.slice(4).map(relHTML).join('')}<p style="padding:16px 0;color:var(--mut)">Full notes on <a href="https://github.com/AdityaJainDXB/NotchApples/releases" target="_blank" rel="noopener">GitHub releases</a>.</p></details>`;
 

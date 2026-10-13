@@ -176,6 +176,17 @@ enum BambuStatusLogic {
     enum ThermalAlert: Equatable {
         case nozzleHot(Int), bedHot(Int), nozzleOvershoot(Int), bedOvershoot(Int), heatCreep(Int)
 
+        /// Which problem it is, whatever the number: the notification and sound fire when the kind changes, not on every degree.
+        var kind: String {
+            switch self {
+            case .nozzleHot: "nozzleHot"
+            case .bedHot: "bedHot"
+            case .nozzleOvershoot: "nozzleOvershoot"
+            case .bedOvershoot: "bedOvershoot"
+            case .heatCreep: "heatCreep"
+            }
+        }
+
         var message: String {
             switch self {
             case .nozzleHot(let t): "Nozzle is at \(t)°, above the safe limit."

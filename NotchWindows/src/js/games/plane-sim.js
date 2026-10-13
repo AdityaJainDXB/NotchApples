@@ -2579,7 +2579,7 @@
     }
 
     step(dt, input, world) {
-      if (this.crashed) { this.stepWreck(dt, world); return; }
+      if (this.crashed) { this.emergency = false; this.stepWreck(dt, world); return; }
       const s = this.s, { f, u, r } = this.axes();
       this.t += dt;
       const gh0 = groundAt(world, this.pos[0], this.pos[2]);

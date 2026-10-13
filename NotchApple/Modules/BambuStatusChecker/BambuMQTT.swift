@@ -215,6 +215,8 @@ final class BambuMQTT {
             if index > 5 { buffer.removeAll(); return nil }
         }
         let total = index + value
+        // Bambu reports are a few kilobytes; a declared size past 1 MB is not a printer talking.
+        if value > 1_048_576 { buffer.removeAll(); return nil }
         guard buffer.count >= total else { return nil }
         let payload = Data(buffer[index..<total])
         buffer.removeSubrange(0..<total)

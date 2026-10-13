@@ -40,15 +40,26 @@ async function gh(path, init = {}) {
   return r.status === 204 ? null : r.json();
 }
 
+/// Every page of a list (a long thread must not hide the newest marker).
+async function pages(path) {
+  const all = [];
+  for (let page = 1; page <= 20; page++) {
+    const part = await gh(`${path}${path.includes('?') ? '&' : '?'}page=${page}`);
+    all.push(...part);
+    if (part.length < 100) break;
+  }
+  return all;
+}
+
 async function openIssues() {
-  const list = await gh('/issues?state=open&per_page=100');
+  const list = await pages('/issues?state=open&per_page=100');
   return list.filter((i) => !i.pull_request);
 }
 
 async function plan() {
   const out = [];
   for (const issue of await openIssues()) {
-    const comments = await gh(`/issues/${issue.number}/comments?per_page=100`);
+    const comments = await pages(`/issues/${issue.number}/comments?per_page=100`);
     out.push({ number: issue.number, title: issue.title, ageDays: Math.floor((Date.now() - new Date(issue.created_at)) / DAY), ...decide(issue, comments) });
   }
   return out;
@@ -67,7 +78,7 @@ async function main() {
   }
   if (cmd === 'mark') {
     if (!/^\d+$/.test(a || '') || !['asked', 'assumed'].includes(b) || !c) { console.error('Usage: mark <issue> asked|assumed "<text>"'); process.exit(2); }
-    await gh(`/issues/${a}/comments`, { method: 'POST', body: JSON.stringify({ body: `${c}\n\n<!-- weekly-triage:${b} -->` }) });
+    await gh(`/issues/${a}/comments`, { method: 'POST', body: JSON.stringify({ body: `${c.replace(/<!--[\s\S]*?-->/g, '')}\n\n<!-- weekly-triage:${b} -->` }) });
     console.log(`marked #${a} as ${b}`); return;
   }
   console.error('Usage: triage-issues.mjs plan | close-stale | mark <n> asked|assumed "<text>"'); process.exit(2);
