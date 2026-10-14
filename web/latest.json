@@ -8,11 +8,11 @@
   "page": "https://github.com/AdityaJainDXB/NotchApples/releases/tag/v2.0.65",
   "stars": 2,
   "windows": {
-    "version": "1.69.0",
-    "notes": "Notch.apple for Windows 1.69.0\n\n- Tabs, buttons, tiles and list rows give a little under the cursor on press, not only on release.\n- Reduce Motion: tiles no longer lift or shrink. Reduced transparency: frosted menus and toasts become solid. High contrast: brighter secondary text and firmer borders, plus clearer keyboard focus.\n\nThe installer is still named \"Notch.apple\".\n",
-    "url": "https://github.com/AdityaJainDXB/NotchApples/releases/download/win-v1.69.0/Notch.apple_1.69.0_x64-setup.exe",
-    "sha256": "99b56ffd58349b09a8e94d6618e7b6160953d3bdfdff3b0af10ac1cc41d359b9",
-    "size": 5940302,
-    "page": "https://github.com/AdityaJainDXB/NotchApples/releases/tag/win-v1.69.0"
+    "version": "1.70.0",
+    "notes": "Notch.apple for Windows 1.70.0\n\n- Fixes clipboard sync, the messenger and the network speed test being blocked by the app's connection rules in the installed app.\n\nThe installer is still named \"Notch.apple\".\n",
+    "url": "https://github.com/AdityaJainDXB/NotchApples/releases/download/win-v1.70.0/Notch.apple_1.70.0_x64-setup.exe",
+    "sha256": "81caeac25043cfe6f630c663124481b133d4199e66ecb8c7fc366b2fb9131d96",
+    "size": 5940099,
+    "page": "https://github.com/AdityaJainDXB/NotchApples/releases/tag/win-v1.70.0"
   }
 }
