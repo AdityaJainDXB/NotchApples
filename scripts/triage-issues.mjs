@@ -18,18 +18,57 @@ export const CYCLE_DAYS = 7;
 const MARK = /<!-- weekly-triage:(asked|assumed) -->/;
 
 const isBot = (c) => c.user?.type === 'Bot' || /\[bot\]$/.test(c.user?.login || '');
+// The routine's own comments carry the hidden marker. It runs from the owner's login on the desktop (not a bot account), so a
+// marker counts when a bot or the repository owner wrote it: a stranger pasting the marker into a comment cannot move an issue along.
+const owner = () => (process.env.GITHUB_REPOSITORY || '').split('/')[0].toLowerCase();
+const isRoutine = (c) => MARK.test(c.body || '') && (isBot(c) || (c.user?.login || '').toLowerCase() === owner() && owner() !== '');
+
+/// What kind of issue is this, from the labels its form applied?
+export function kindOf(labels = []) {
+  const names = labels.map((l) => (typeof l === 'string' ? l : l.name));
+  if (names.includes('enhancement')) return 'feature';
+  if (names.some((n) => ['bug', 'mac', 'windows', 'flight-sim'].includes(n))) return 'problem';
+  if (names.includes('question')) return 'help';
+  if (names.some((n) => n === 'feedback' || n === 'from-feedback')) return 'feedback';
+  return 'other';
+}
 
 /// What should happen to this issue today? `comments` oldest first; `now` is a Date.
 export function decide(issue, comments, now = new Date()) {
-  const marked = [...comments].reverse().find((c) => isBot(c) && MARK.test(c.body || ''));
+  const marked = [...comments].reverse().find(isRoutine);
   if (!marked) return { action: 'attempt', stage: null };
   const stage = marked.body.match(MARK)[1];
   const at = new Date(marked.created_at);
-  const replied = comments.some((c) => !isBot(c) && new Date(c.created_at) > at);
+  const replied = comments.some((c) => !isRoutine(c) && !isBot(c) && new Date(c.created_at) > at);
   if (replied) return { action: 'attempt', stage, reason: 'a person replied' };
   const cycles = Math.floor((now - at) / (CYCLE_DAYS * DAY));
   if (stage === 'asked') return cycles >= 1 ? { action: 'assume', stage, cycles } : { action: 'wait', stage, cycles };
   return cycles >= 2 ? { action: 'close', stage, cycles } : { action: 'wait', stage, cycles };
+}
+
+/// What should happen to this discussion? A discussion is answered once; a person writing after the routine's answer brings it back.
+export function decideDiscussion(d, now = new Date()) {
+  const category = d.category?.name || '';
+  if (d.closed || !['Q&A', 'General', 'Ideas'].includes(category)) return { action: 'skip' };
+  if (category === 'Q&A' && d.answer) return { action: 'skip', reason: 'answered' };
+  const comments = d.comments?.nodes || [];
+  const mine = [...comments].reverse().find((c) => /<!-- weekly-triage:discussion -->/.test(c.body || '') && (c.author?.login || '').toLowerCase() === owner() && owner() !== '');
+  if (!mine) return { action: 'reply', category };
+  const at = new Date(mine.createdAt);
+  return comments.some((c) => c !== mine && new Date(c.createdAt) > at && (c.author?.login || '').toLowerCase() !== owner()) ? { action: 'reply', category, reason: 'a person replied' } : { action: 'wait' };
+}
+
+async function graphql(query, variables = {}) {
+  const r = await fetch('https://api.github.com/graphql', { method: 'POST', headers: { authorization: `Bearer ${process.env.GITHUB_TOKEN}`, 'content-type': 'application/json' }, body: JSON.stringify({ query, variables }) });
+  const j = await r.json();
+  if (!r.ok || j.errors) throw new Error(`GitHub GraphQL: ${JSON.stringify(j.errors || r.status).slice(0, 200)}`);
+  return j.data;
+}
+
+async function discussionsPlan() {
+  const [o, n] = process.env.GITHUB_REPOSITORY.split('/');
+  const data = await graphql(`query($o:String!,$n:String!){repository(owner:$o,name:$n){discussions(first:50,orderBy:{field:UPDATED_AT,direction:DESC}){nodes{id number title body closed category{name} answer{id} comments(last:30){nodes{author{login} createdAt body}}}}}}`, { o, n });
+  return data.repository.discussions.nodes.map((d) => ({ id: d.id, number: d.number, title: d.title, category: d.category?.name, ...decideDiscussion(d) })).filter((d) => d.action !== 'skip');
 }
 
 async function gh(path, init = {}) {
@@ -60,7 +99,7 @@ async function plan() {
   const out = [];
   for (const issue of await openIssues()) {
     const comments = await pages(`/issues/${issue.number}/comments?per_page=100`);
-    out.push({ number: issue.number, title: issue.title, ageDays: Math.floor((Date.now() - new Date(issue.created_at)) / DAY), ...decide(issue, comments) });
+    out.push({ number: issue.number, title: issue.title, kind: kindOf(issue.labels), labels: (issue.labels || []).map((l) => l.name), ageDays: Math.floor((Date.now() - new Date(issue.created_at)) / DAY), ...decide(issue, comments) });
   }
   return out;
 }
@@ -81,7 +120,13 @@ async function main() {
     await gh(`/issues/${a}/comments`, { method: 'POST', body: JSON.stringify({ body: `${c.replace(/<!--[\s\S]*?-->/g, '')}\n\n<!-- weekly-triage:${b} -->` }) });
     console.log(`marked #${a} as ${b}`); return;
   }
-  console.error('Usage: triage-issues.mjs plan | close-stale | mark <n> asked|assumed "<text>"'); process.exit(2);
+  if (cmd === 'discussions') { console.log(JSON.stringify(await discussionsPlan(), null, 2)); return; }
+  if (cmd === 'reply-discussion') {
+    if (!/^D_[A-Za-z0-9_-]+$/.test(a || '') || !b) { console.error('Usage: reply-discussion <discussion node id> "<text>"'); process.exit(2); }
+    await graphql('mutation($id:ID!,$body:String!){addDiscussionComment(input:{discussionId:$id,body:$body}){comment{id}}}', { id: a, body: `${b.replace(/<!--[\s\S]*?-->/g, '')}\n\n<!-- weekly-triage:discussion -->` });
+    console.log(`replied to ${a}`); return;
+  }
+  console.error('Usage: triage-issues.mjs plan | close-stale | mark <n> asked|assumed "<text>" | discussions | reply-discussion <id> "<text>"'); process.exit(2);
 }
 
 if (import.meta.url === `file://${process.argv[1]}` || process.argv[1]?.endsWith('triage-issues.mjs')) await main();
