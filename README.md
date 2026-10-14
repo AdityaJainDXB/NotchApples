@@ -238,6 +238,7 @@ All screenshots use sample data.
 ### Mac 2.0.63 · Windows 1.67.0 BETA · 14 October 2026 · 🖨️ Find your printers again
 
 - After signing in with your Bambu account, **Find printers on my account** lists your printers again with the saved sign-in: no need to sign out and in. If you are signed in and have added none, the list appears by itself.
+- **Use your token (advanced):** for Google, Apple or Facebook sign-ins when no email code arrives, paste the `token` cookie from makerworld.com instead.
 
 ### Windows 1.66.0 BETA · 14 October 2026 · 📜 The Windows app is MIT
 
