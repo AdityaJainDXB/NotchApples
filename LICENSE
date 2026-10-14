@@ -61,4 +61,13 @@ to try it, and help improve it, but Notch Apple is a paid product and its paid f
    If you break these terms, your rights under this licence end. The copyright holder
    may give written permission for anything this licence does not allow.
 
+8. The Windows app (MIT)
+
+   From 14 October 2026 the Windows app, meaning everything in the NotchWindows folder
+   of this repository, is licensed under the MIT licence in NotchWindows/LICENSE, instead
+   of this licence. That includes the flight simulator file shared with the Mac app,
+   NotchWindows/src/js/games/plane-sim.js. The licence does NOT cover the Notch Apple
+   name and logo, the Mac app, the licence server, the website, or the private Ultimate
+   modules (which are not in this repository and are not part of the MIT-licensed code).
+
 Contact: notchapple.support@gmail.com

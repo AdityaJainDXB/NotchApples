@@ -193,7 +193,7 @@
  {
   "q": "Can I see or change the source code?",
   "k": "source code open source github licence license mit build contribute fork",
-  "a": "The code is source-available on GitHub: you can read it, build it and help improve it, but you can't resell it or unlock the paid features without a key. Versions from before 9 October 2026 were MIT.",
+  "a": "The code is source-available on GitHub: you can read it, build it and help improve it, but you can't resell it or unlock the paid features without a key. The exception is the Windows app, which is under the MIT licence. Versions from before 9 October 2026 were MIT.",
   "link": [
    "GitHub",
    "https://github.com/AdityaJainDXB/NotchApples"
