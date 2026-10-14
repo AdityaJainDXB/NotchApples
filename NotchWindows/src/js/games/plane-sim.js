@@ -1312,6 +1312,48 @@
     }
     return null;
   }
+  /// The step-by-step procedure for what the aircraft is doing now: { title, steps: [{ t, ok }], cur } or null (helicopters,
+  /// the cruise). Each step ticks itself off when it is done; `cur` is the first one still to do.
+  function procedure(f, world, ctx = {}) {
+    const s = f.s;
+    if (s.rotor || f.crashed) return null;
+    const liner = ['liner', 'biz', 'turbo'].includes(s.cat) && (s.flapNotches || []).length > 2, sp = speedsOf(s);
+    const gear = s.gear * (s.scale || 1), agl = f.pos[1] - gear - groundAt(world, f.pos[0], f.pos[2]);
+    const kt = (v) => Math.round(v / KT);
+    let title, steps = [];
+    const il = !f.onGround && agl > 20 ? ilsAt(world, f.pos, gear) : null;
+    if (f.onGround && !ctx.took) {
+      title = 'BEFORE TAKE-OFF';
+      let on = false;
+      for (const e of RUNWAY_ENDS) {
+        const along = (f.pos[2] - e.zt) * e.dir, lat = Math.abs(f.pos[0] - e.x), dh = Math.abs(((f.heading - e.hdg + Math.PI * 3) % (Math.PI * 2)) - Math.PI);
+        if (along > -80 && along < e.len * 0.6 && lat < 30 && dh < 0.4) on = true;
+      }
+      steps = [['Fuel on board', f.fuel > (s.fuel || 1800) * 0.2], ['Throttle to idle  (S)', f.engRun || f.throttle < 0.08], ['Start the engine  (I)', f.engRun]];
+      if (liner) steps.push(['Flaps for take-off  (F)', f.flapNotch >= 1]);
+      if (s.retract) steps.push(['Gear down  (G)', f.gearDown]);
+      steps.push(['Release the brake  (Space)', !f.brake], ['Line up on the runway', on], ['Full throttle  (W)', f.throttle > 0.9], [`Rotate at ${kt(sp.vr)} kt  (pull back)`, f.ias >= sp.vr]);
+    } else if (il && il.dist < 14000) {
+      title = 'APPROACH';
+      steps = [[`Slow to ${kt(s.stall * 1.6)} kt`, f.ias <= s.stall * 1.65]];
+      if (liner) steps.push(['Flaps for landing  (F)', f.flapNotch >= 2]);
+      if (s.retract) steps.push(['Gear down  (G)', f.gearDown]);
+      steps.push(['Intercept the ILS  (J lets the autopilot fly it)', Math.abs(il.loc) < 0.012 && Math.abs(il.gsDev) < 0.006], ['Over the threshold: throttle idle, flare', agl < 12 && f.throttle < 0.15]);
+    } else if (!f.onGround && ctx.took && agl < 450) {
+      title = 'CLIMB-OUT';
+      steps = [['Positive rate: pitch for the climb', f.vel[1] > 2]];
+      if (s.retract) steps.push(['Gear up  (G)', !f.gearDown]);
+      if (liner) steps.push(['Flaps up  (V)', f.flapNotch === 0]);
+      steps.push(['Climb away', agl > 300]);
+    } else if (f.onGround && ctx.took && f.speed > 3) {
+      title = 'LANDING ROLL';
+      steps = [['Throttle idle  (S)', f.throttle < 0.1], [s.engine === 'piston' ? 'Brake  (Space)' : 'Brake and reverse thrust  (Space, X)', f.speed < 25 || f.brake], ['Slow to taxi speed', f.speed < 8]];
+    } else return null;
+    const out = steps.map(([t, ok]) => ({ t, ok: !!ok })), cur = out.findIndex((x) => !x.ok);
+    return { title, steps: out, cur };
+  }
+  /// The orientation of an aircraft from its heading, pitch and bank (what other pilots send).
+  const attitudeQ = (h, pi, b) => qmul(qheading(h, pi), qaxis([0, 0, 1], -b));
   const padAt = (p) => HELIPADS.find((h) => Math.abs(p[0] - h.x) < h.half && Math.abs(p[2] - h.z) < h.half) || null;
   /// The ground is a heightfield of TCELL-metre cells cut into TCHUNK x TCHUNK-cell chunks, which are generated, meshed
   /// (at four levels of detail) and planted with trees on demand as the plane flies. Water is the surface at WATER.
@@ -1788,7 +1830,8 @@
   const SEG7 = { 0: 'abcdef', 1: 'bc', 2: 'abged', 3: 'abgcd', 4: 'fgbc', 5: 'afgcd', 6: 'afgedc', 7: 'abc', 8: 'abcdefg', 9: 'abcdfg' };
 
   function makeWorld(region = REGIONS[0]) {
-    const r = rng(7), b = new Builder(), lights = new Builder(), ground = new Builder(), decal = new Builder(), marks = new Builder(), beacon = new Builder(), lampB = new Builder();
+    const r = rng(7), b = new Builder(), lights = new Builder(), lightHalo = new Builder(), ground = new Builder(), decal = new Builder(), marks = new Builder(), beacon = new Builder(), lampB = new Builder();
+    { const lbox = lights.box.bind(lights); lights.box = (c, sz, col) => { lbox(c, sz, col); blob(lightHalo, c, 2.3, col); }; }   // every light gets a soft halo that shows at night
     const world = { chunks: new Array(TNC * TNC), colliders: [], grid: new Map(), turbines: [], keep: [[LM[0], LM[1], 460]], papi: [], socks: [], wind: null, lighthouse: null, region: region.id, desert: !!region.desert };
     const gAt = (x, z) => groundAt(world, x, z);
     const solid = (min, max, kind) => addSolid(world, min, max, kind);
@@ -2070,7 +2113,7 @@
       const x = (r() - 0.5) * 2 * WORLD, z = (r() - 0.5) * 2 * WORLD, y = 1600 + r() * 300;
       for (let k = 0; k < 5; k++) cloudPuff(cl, x + (r() - 0.5) * 420, y + r() * 30, z + (r() - 0.5) * 260, 110 + r() * 90, 45 + r() * 40, 90 + r() * 70);
     }
-    Object.assign(world, { world: b, clouds: cl, lights, ground, decal, marks, beacon, lampB });
+    Object.assign(world, { world: b, clouds: cl, lights, lightHalo, ground, decal, marks, beacon, lampB });
     primeObjects(world, 0, -300, 1700);
     return world;
   }
@@ -2100,7 +2143,7 @@
 
   // ------------------------------------------------------------------ drawing the world
 
-  const FOG_FAR = 10500;
+  const FOG_FAR = 10500, ONE3 = [1, 1, 1];
   /// How much of the haze colour covers something `d` metres (view depth) away; the same curve in every shader.
   const FOG_GLSL = 'float fogAmt(float d, float far) { float x = d / (far * 0.5); return clamp(1.0 - exp(-x * x * 0.9), 0.0, 1.0); }';
   const PREC = '#ifdef GL_FRAGMENT_PRECISION_HIGH\nprecision highp float;\n#else\nprecision mediump float;\n#endif\n';
@@ -2244,7 +2287,7 @@
     }
 
     // Static meshes, small helper meshes, the shared index buffers.
-    const meshesOf = (W) => ({ world: upload(W.world), ground: upload(W.ground), decal: upload(W.decal), marks: upload(W.marks), lights: upload(W.lights), beacon: upload(W.beacon), lamp: upload(W.lampB), clouds: upload(W.clouds) });
+    const meshesOf = (W) => ({ world: upload(W.world), ground: upload(W.ground), decal: upload(W.decal), marks: upload(W.marks), lights: upload(W.lights), lightHalo: upload(W.lightHalo), beacon: upload(W.beacon), lamp: upload(W.lampB), clouds: upload(W.clouds) });
     let M = meshesOf(W);
     const unit = new Builder(); unit.box([0, 0, 0], [1, 1, 1], [1, 1, 1]); const boxMesh = upload(unit);
     const dsc = new Builder(); for (let i = 0; i < 14; i++) { const a0 = (i / 14) * 6.2832, a1 = ((i + 1) / 14) * 6.2832; dsc.tri([0, 0, 0], [Math.cos(a0), 0, Math.sin(a0)], [Math.cos(a1), 0, Math.sin(a1)], [1, 1, 1], [0, -1, 0]); }
@@ -2376,6 +2419,7 @@
         const g = c.treesGL; if (!g) continue;
         if (d < 1300) draw(g.near); else if (d < 4800) draw(g.far);
       }
+      gl.uniform3fv(U.lum, ONE3);   // lamps are not dimmed by the dark
       draw(M.lights, I, [1, 1, 1], 0.9);
       const blink = Math.sin(t * 0.0063) > 0.3 ? 1 : 0.15;
       draw(M.beacon, I, [1, 1, 1], blink);
@@ -2389,6 +2433,11 @@
           set.units.forEach((u, k) => draw(boxMesh, model([0, 0, 0, 1], [u[0], u[1], u[2]], 1.7), ang > thr[k] ? [1, 1, 1] : [1, 0.12, 0.08], 1.2));
         }
       }
+      {
+        const nk = clamp(1 - ENV.lum[0], 0, 1) * (ENV.tod === 'night' ? 1.2 : 0.8);
+        if (nk > 0.08 && M.lightHalo) { gl.enable(gl.BLEND); gl.depthMask(false); gl.uniform1f(U.alpha, clamp(0.12 + 0.3 * nk, 0, 0.5)); draw(M.lightHalo, I, [1, 1, 1], 1.6); gl.uniform1f(U.alpha, 1); gl.depthMask(true); gl.disable(gl.BLEND); }
+      }
+      gl.uniform3fv(U.lum, ENV.lum);
       // Windsocks.
       {
         const [wx, wz] = windOf(ctx), q = sockQ(wx, wz);
@@ -4634,6 +4683,39 @@
       const heading = Math.atan2(aim[0] - x, -(aim[1] - z));
       traffic.push({ id, spec, pos: [x, Math.min(alt, 3500), z], heading, speed: Math.min(spec.cruise * (0.7 + Math.random() * 0.2), 140), vy: 0, turn: 0, turnT: 8 + Math.random() * 15, bank: 0, state: 'fly', t: 0, vel: v3(), w: v3(), q: qheading(heading) });
     }
+    // ---- Fly with others: the pilots who have switched it on appear as aircraft with their callsigns (they cannot be hit).
+    let shareOn = read('share', false), skyId = read('skyid', ''), remote = [], skyT = 0, skyBusy = false, skyFails = 0, skyPilots = null, skyOff = false;
+    if (!/^[0-9a-f]{32}$/.test(skyId)) { skyId = [...crypto.getRandomValues(new Uint8Array(16))].map((x) => x.toString(16).padStart(2, '0')).join(''); write('skyid', skyId); }
+    const skyFetch = async (path, body) => {
+      const ac = new AbortController(), to = setTimeout(() => ac.abort(), 4000);
+      try { const r = await fetch(`${WORLD_SERVER}${path}`, { method: body ? 'POST' : 'GET', headers: { 'content-type': 'application/json' }, body: body ? JSON.stringify(body) : undefined, signal: ac.signal, keepalive: !!body }); return r.ok ? await r.json() : null; }
+      catch { return null; } finally { clearTimeout(to); }
+    };
+    async function skySync() {
+      skyBusy = true;
+      const j = await skyFetch('/plane/sky', { id: skyId, cs: playerName || 'Pilot', plane: plane.id, p: flight.pos.map((v) => Math.round(v * 10) / 10), h: +flight.heading.toFixed(3), pi: +flight.pitchAngle.toFixed(3), b: +flight.bank.toFixed(3), s: +flight.speed.toFixed(1) });
+      skyBusy = false;
+      if (!j || !Array.isArray(j.others)) { if (++skyFails >= 4 && !skyOff) { skyOff = true; remote = []; toast('Shared flying is not available right now', 2600); } return; }
+      skyFails = 0; skyOff = false; skyPilots = j.pilots;
+      const seen = new Set();
+      for (const o of j.others) {
+        const spec = PLANES.find((x) => x.id === o.plane && !x.rotor) || PLANES.find((x) => x.id === 'c172');
+        seen.add(o.k);
+        let a = remote.find((q) => q.k === o.k);
+        const vel = [Math.sin(o.h) * Math.cos(o.pi) * o.s, Math.sin(o.pi) * o.s, -Math.cos(o.h) * Math.cos(o.pi) * o.s], ahead = add(o.p, mul(vel, o.age / 1000 + 0.3));
+        if (!a) { a = { k: o.k, id: spec.id, spec, state: 'fly', pos: ahead, t: 0, w: v3() }; remote.push(a); }
+        Object.assign(a, { cs: o.cs, vel, heading: o.h, pitch: o.pi, bank: o.b, speed: o.s, snap: ahead });
+        a.q = attitudeQ(o.h, o.pi, o.b);
+      }
+      remote = remote.filter((a) => seen.has(a.k));
+    }
+    function stepSky(dt) {
+      if (!shareOn || skyOff && skyFails >= 4 && (skyT -= dt) > 0) return;
+      for (const a of remote) { a.pos = add(a.pos, mul(a.vel, dt)); if (a.snap) { a.pos = add(a.pos, mul(sub(a.snap, a.pos), Math.min(1, dt * 1.5))); a.snap = add(a.snap, mul(a.vel, dt)); } }
+      skyT -= dt;
+      if (skyT <= 0 && !skyBusy) { skyT = skyOff ? 15 : 2; skySync(); }
+    }
+    const skyLeave = () => { if (shareOn) skyFetch('/plane/sky/leave', { id: skyId }); remote = []; };
     function stepTraffic(dt) {
       trafficT -= dt;
       if (trafficT <= 0 && traffic.filter((a) => a.state === 'fly').length < 3) { spawnTraffic(); trafficT = 25 + Math.random() * 35; }
@@ -4936,6 +5018,7 @@
       } else { stoppedT = 0; stopCredited = false; }
       // ---- AI traffic: other aircraft crossing the sky. They can be passed, heard about, or hit.
       if (trafficOn && !flight.crashed) stepTraffic(dt);
+      if (shareOn && !flight.crashed) stepSky(dt);
       else if (!trafficOn && traffic.length) traffic = [];
       // ---- configuration errors: an airliner, business jet or turboprop needs its flaps for take-off and for landing.
       const needsFlaps = ['liner', 'biz', 'turbo'].includes(plane.cat) && (plane.flapNotches || []).length > 2;
@@ -5032,7 +5115,7 @@
       const tgt = { ail: fly ? ctl.roll : 0, elev: fly ? ctl.pitch : 0, rud: fly ? ctl.yaw : 0, flap: menu ? 0 : flight.flaps || 0, spoil: fly ? Math.max(flight.gspoil || 0, flight.brake ? (flight.onGround ? 1 : 0.5) : 0) : 0 };
       for (const k of Object.keys(tgt)) surf[k] += (tgt[k] - surf[k]) * (k === 'flap' ? ease * 0.35 : ease);
       // Other aircraft: their parts and control surfaces at rest (no gear), tumbling and darkened once they are going down.
-      for (const a of traffic) {
+      for (const a of [...traffic, ...remote]) {
         const tpm = planeMeshes[a.id], sc = a.spec.scale || 1, AM = model(a.q, a.pos, sc);
         const tint = a.state === 'fall' ? [0.32, 0.26, 0.22] : [1, 1, 1], glow = a.state === 'fall' ? 0.0 : 0;
         for (const k in tpm.parts) { const part = tpm.parts[k]; if (part) draw(part.live, model(a.q, add(a.pos, qrot(a.q, mul(part.center, sc))), sc), tint, glow); }
@@ -5107,6 +5190,7 @@
       const ph = (t / 1000) % 1.25, strobeOn = ph < 0.06 || (ph > 0.16 && ph < 0.22), beaconOn = (t / 1000) % 1.1 < 0.22;
       const landOn = menu || (ground ? flight.throttle > 0.02 || flight.speed > 2 : plane.retract ? gearOut && agl < 1500 : agl < 400);
       const running = menu || flight.engRun || flight.speed > 20, moving = menu || !ground || flight.speed > 2.5;
+      gl.uniform3fv(U.lum, ONE3);   // the aircraft's own lights shine at full strength
       for (const lg of pm.lights) {
         if (!parts.has(lg.attach)) continue;
         let tint = [1, 1, 1], glow = 1.6, on = true;
@@ -5137,6 +5221,7 @@
         if (burner) { gl.uniform1f(U.alpha, 0.9); draw(pm.flame.dia, mat4mul(M, S), [1, 1, 1], 1.8); }
         gl.uniform1f(U.alpha, 1); gl.depthMask(true); gl.disable(gl.BLEND);
       }
+      gl.uniform3fv(U.lum, ENV.lum);
     }
 
     // ---- DRAW AIRCRAFT END
@@ -5444,19 +5529,20 @@
         const tw = Math.min(W2 - 24, h2.measureText(atcText).width + 28), tx = (W2 - tw) / 2;
         box(tx, 84 * s + 4, tw, 26); h2.fillStyle = '#ffe9a8'; h2.fillText(atcText, W2 / 2, 84 * s + 17, tw - 16);
       }
-      // Checklist: shown on the ground before the first take-off (T hides it).
-      if (showCheck && flight.onGround && flight.speed < 2 && !hadTakeoff && !flight.crashed && !plane.rotor) {
-        const items = [['Engine running  (I)', flight.engRun], ['Brake released  (Space)', !flight.brake]];
-        if (plane.retract) items.push(['Gear down  (G)', flight.gearDown]);
-        if (['liner', 'biz', 'turbo'].includes(plane.cat) && (plane.flapNotches || []).length > 2) items.push(['Flaps set for take-off  (F)', flight.flapNotch >= 1]);
-        if (onApron(flight.pos)) items.push(['Ground crew done  (1 to 4)', !!(svcDone[1] || svcDone[4])]);
-        items.push(['Fuel on board', flight.fuel > (plane.fuel || 1800) * 0.2]);
-        const bw5 = 190 * s + 20, bh5 = 20 * s + items.length * 16 * s + 10, bx5 = 8, by5 = 70 * s + 24;
-        box(bx5, by5, bw5, bh5); h2.textAlign = 'left'; h2.textBaseline = 'middle'; h2.font = `700 ${Math.round(9 * s + 2)}px system-ui`;
-        const ready = items.every((it) => it[1]);
-        h2.fillStyle = ready ? '#5ee08a' : '#9fe3ff'; h2.fillText(ready ? 'CHECKLIST COMPLETE: ready for take-off' : 'BEFORE TAKE-OFF  (T hides)', bx5 + 8, by5 + 12);
-        items.forEach(([n, ok], i) => { h2.fillStyle = ok ? '#5ee08a' : '#ffd166'; h2.fillText(`${ok ? '✓' : '○'}  ${n}`, bx5 + 8, by5 + 12 + 16 * s * (i + 1) + 4); });
-        h2.textAlign = 'center';
+      // Procedure: the steps for this phase of the flight, ticked off as they are done (T hides it).
+      if (showCheck && !flight.crashed) {
+        const pr = procedure(flight, W, { took: hadTakeoff });
+        if (pr) {
+          const bw5 = 214 * s + 20, bh5 = 22 * s + pr.steps.length * 16 * s + 8, bx5 = 8, by5 = 70 * s + 24;
+          box(bx5, by5, bw5, bh5); h2.textAlign = 'left'; h2.textBaseline = 'middle'; h2.font = `700 ${Math.round(9 * s + 2)}px system-ui`;
+          const done = pr.cur < 0;
+          h2.fillStyle = done ? '#5ee08a' : '#9fe3ff'; h2.fillText(done ? pr.title + ': COMPLETE' : pr.title + '  (T hides)', bx5 + 8, by5 + 12);
+          pr.steps.forEach((st, i) => {
+            h2.fillStyle = st.ok ? '#5ee08a' : i === pr.cur ? '#ffd166' : 'rgba(255,255,255,.5)';
+            h2.fillText(`${st.ok ? '✓' : i === pr.cur ? '►' : '○'}  ${st.t}`, bx5 + 8, by5 + 12 + 16 * s * (i + 1) + 4, bw5 - 14);
+          });
+          h2.textAlign = 'center';
+        }
       }
       // Autopilot panel: the targets it is holding.
       if (flight.ap && flight.ap.on && !flight.crashed) {
@@ -5506,9 +5592,9 @@
         box(W2 - bw2 - 8, 8 + (flight.damage ? 0 : 0) + 7 * 16 * s + 22, bw2, 22); h2.fillStyle = 'rgba(255,255,255,.85)'; h2.fillText(txt, W2 - bw2, 8 + 7 * 16 * s + 33);
       }
       // Markers over the other aircraft you can see, with their distance (so they are never just a dot in the haze).
-      if (trafficOn && lastVP) {
+      if ((trafficOn || remote.length) && lastVP) {
         h2.font = `700 ${Math.round(9 * s + 2)}px system-ui`; h2.textAlign = 'center'; h2.textBaseline = 'middle';
-        for (const a of traffic) {
+        for (const a of [...(trafficOn ? traffic : []), ...remote]) {
           if (a.state !== 'fly') continue;
           const px = a.pos[0], py = a.pos[1], pz = a.pos[2], m = lastVP;
           const cw = m[3] * px + m[7] * py + m[11] * pz + m[15];
@@ -5518,7 +5604,7 @@
           const d = len(sub(a.pos, flight.pos)); if (d > 8000) continue;
           const col = d < 1500 ? '#ffd166' : 'rgba(255,255,255,.85)';
           h2.strokeStyle = col; h2.lineWidth = 1.6; h2.beginPath(); h2.moveTo(sx, sy - 11); h2.lineTo(sx + 11, sy); h2.lineTo(sx, sy + 11); h2.lineTo(sx - 11, sy); h2.closePath(); h2.stroke();
-          h2.fillStyle = col; h2.fillText(`${a.spec.name.split(' ').slice(-1)[0]} ${d < 950 ? Math.round(d) + ' m' : (d / 1000).toFixed(1) + ' km'}`, sx, sy + 24);
+          h2.fillStyle = col; h2.fillText(`${a.cs ? a.cs + ' · ' : ''}${a.spec.name.split(' ').slice(-1)[0]} ${d < 950 ? Math.round(d) + ' m' : (d / 1000).toFixed(1) + ' km'}`, sx, sy + 24);
         }
       }
       // The nearest other aircraft, with its distance, height difference and which way it lies.
@@ -5641,7 +5727,8 @@
           <div class="pg-hint" style="margin-top:3px">${escapeHtml(placeNote || `Now flying over: ${regionOf(regionId).id ? regionOf(regionId).name + ' (' + regionOf(regionId).lm + ')' : 'the home valley'}. The landmark stands just off the runway.`)}</div>
           <h2>3 · Start at <small style="font-weight:500;opacity:.6">for Free Flight</small></h2>
           <div class="pg-row" style="gap:5px;flex-wrap:wrap"><button data-start="auto" class="${startAt === 'auto' ? 'pg-on' : ''}" title="The home runway">Automatic</button>${STARTS.filter((x) => !x.gate).map((x) => `<button data-start="${x.id}" class="${startAt === x.id ? 'pg-on' : ''}">${x.name}</button>`).join('')}</div>
-          <div class="pg-row" style="margin-top:8px"><button data-traffic class="${trafficOn ? 'pg-on' : ''}" title="Other aircraft cross the sky; you can pass them, hear a traffic call, or hit them">AI traffic: ${trafficOn ? 'On' : 'Off'}</button><span class="pg-hint">Other aircraft in the sky: a mid-air collision brings both down.</span></div>
+          <div class="pg-row" style="margin-top:8px"><button data-share class="${shareOn ? 'pg-on' : ''}" title="See other Notch pilots who have this on: your callsign, aircraft and position are sent while you fly">Fly with others: ${shareOn ? 'On' : 'Off'}</button><button data-traffic class="${trafficOn ? 'pg-on' : ''}" title="Other aircraft cross the sky; you can pass them, hear a traffic call, or hit them">AI traffic: ${trafficOn ? 'On' : 'Off'}</button><span class="pg-hint">Other aircraft in the sky: a mid-air collision brings both down.</span></div>
+          <div class="pg-hint" style="margin:2px 0 6px">Fly with others sends your callsign (your leaderboard name), aircraft and position to the other pilots who switched it on, every couple of seconds while you fly. It is off until you turn it on, uses a random id (no account) and other pilots cannot be hit.</div>
           ${weatherPanel()}
           <h2>5 · Pick a challenge</h2><div class="pg-modes">${MODES.map((m) => `<button class="pg-mode ${m === mode ? 'pg-on' : ''}" data-mode="${m.id}">${m.icon} ${m.name}<small>${m.desc}</small></button>`).join('')}</div>
           <div class="pg-row" style="margin-top:10px"><button class="pg-go" data-a="start">✈️ Take off (Enter)</button>
@@ -5722,6 +5809,10 @@
       ui.querySelectorAll('[data-tod]').forEach((n) => n.onclick = () => { applyEnv(n.dataset.tod, ENV.vis); write('env', { tod: ENV.tod, vis: ENV.vis }); renderUI(); });
       ui.querySelectorAll('[data-vis]').forEach((n) => n.onclick = () => { applyEnv(ENV.tod, n.dataset.vis); write('env', { tod: ENV.tod, vis: ENV.vis }); renderUI(); });
       ui.querySelectorAll('[data-wxt]').forEach((n) => n.onclick = () => { WX.turb = n.dataset.wxt; saveWx(); renderUI(); });
+      ui.querySelectorAll('[data-share]').forEach((n) => n.onclick = () => {
+        shareOn = !shareOn; write('share', shareOn); if (!shareOn) skyLeave(); else { skyOff = false; skyFails = 0; skyT = 0; skyFetch('/plane/sky/count').then((c) => { if (c) { skyPilots = c.pilots; toast(`${c.pilots} pilot${c.pilots === 1 ? '' : 's'} flying with others right now`, 2200); } }); }
+        renderUI();
+      });
       ui.querySelectorAll('[data-traffic]').forEach((n) => n.onclick = () => { trafficOn = !trafficOn; write('traffic', trafficOn); renderUI(); });
       ui.querySelectorAll('[data-start]').forEach((n) => n.onclick = () => { startAt = n.dataset.start; write('startAt', startAt); renderUI(); });
       ui.querySelectorAll('[data-wxp]').forEach((n) => n.onclick = () => {
@@ -5917,7 +6008,7 @@
       step: (secs) => { for (let i = 0; i < secs * 120; i++) { update(1 / 120); if (i % 2 === 0) { wreckFx(1 / 60); stepParticles(1 / 60); stepDebris(1 / 60); } } } };
 
     return () => {
-      alive = false; cancelAnimationFrame(raf); cancelSpeech();
+      alive = false; cancelAnimationFrame(raf); cancelSpeech(); skyLeave();
       window.removeEventListener('keydown', kd); window.removeEventListener('keyup', ku); window.removeEventListener('blur', blur);
       document.removeEventListener('visibilitychange', hidden);
       try { ac?.close(); } catch { /* already closed */ }
@@ -5925,5 +6016,5 @@
     };
   }
 
-  window.NotchPlaneGame = { mount, PLANES, MODES, CHALLENGES, Flight, _test: { atcStep, applyEnv, ENV, ilsAt, RUNWAY_ENDS, AP_SIGN, APRONS, buildPlane, REGIONS, nearestRegion, matchRegion, raCallout, gpwsWarnings, groundAt, makeWorld, qheading, qrot, hitObject, terrainAt, surfaceAt, roughnessAt, normalAt } };
+  window.NotchPlaneGame = { mount, PLANES, MODES, CHALLENGES, Flight, _test: { attitudeQ, procedure, atcStep, applyEnv, ENV, ilsAt, RUNWAY_ENDS, AP_SIGN, APRONS, buildPlane, REGIONS, nearestRegion, matchRegion, raCallout, gpwsWarnings, groundAt, makeWorld, qheading, qrot, hitObject, terrainAt, surfaceAt, roughnessAt, normalAt } };
 })();

@@ -6,7 +6,7 @@
 
 import assert from 'node:assert/strict';
 import { writeFileSync } from 'node:fs';
-import worker, { parseKey, verifyKey, verifyToken, mintToken, b32encode, b32decode, AiQuota, cleanAiRequest, PlaneBoard, PlaneRate, cleanPilotName, cleanPlaneScore } from '../src/worker.js';
+import worker, { parseKey, verifyKey, verifyToken, mintToken, b32encode, b32decode, AiQuota, cleanAiRequest, PlaneBoard, PlaneRate, PlaneSky, cleanPilotName, cleanPlaneScore } from '../src/worker.js';
 
 const pair = await crypto.subtle.generateKey({ name: 'Ed25519' }, true, ['sign', 'verify']);
 const jwk = await crypto.subtle.exportKey('jwk', pair.privateKey);
@@ -583,6 +583,30 @@ await test('Insights: glitch notes and feedback are stored, rate-limited, trimme
   assert.equal(fb.feedback.length, 2); assert.equal(fb.byKind.idea, 2);
   assert.equal(fb.feedback.find((x) => x.os === 'win').text.length, 1000);
   assert.equal((await call('/admin/feedback', {})).status, 401);
+});
+
+// ---- Fly with others
+
+env.PLANE_SKY = fakeDO(PlaneSky);
+const sky = (body, ip = '2.2.2.2') => call('/plane/sky', body, { 'cf-connecting-ip': ip });
+const pid = (n) => String(n).padStart(32, '0').replace(/0/g, 'a').slice(0, 31) + (n % 10);
+const me = (n, x = 0, z = 0) => ({ id: pid(n), cs: 'Ana' + n, plane: 'a320', p: [x, 500, z], h: 0.5, pi: 0.02, b: 0.1, s: 90 });
+await test('Fly with others: pilots see each other nearby, not themselves, and not those far away', async () => {
+  let r = await sky(me(1, 0, 0), '3.3.3.1'); assert.equal(r.status, 200); assert.deepEqual(r.others, []);
+  r = await sky(me(2, 1000, -2000), '3.3.3.2'); assert.equal(r.others.length, 1); assert.equal(r.others[0].cs, 'Ana1'); assert.ok(!('id' in r.others[0]));
+  r = await sky(me(3, 19000, 19000), '3.3.3.3'); assert.equal(r.others.length, 0);
+  assert.equal((await (await worker.fetch(new Request('https://w.test/plane/sky/count'), env)).json()).pilots, 3);
+});
+await test('Fly with others: bad ids, positions and callsigns are refused or cleaned; flooding is limited', async () => {
+  assert.equal((await sky({ ...me(4), id: 'nope' })).status, 400);
+  assert.equal((await sky({ ...me(4), p: [0, 0] })).status, 400);
+  assert.equal((await sky({ ...me(4), p: [1e9, 0, 0] })).status, 400);
+  assert.equal((await sky({ ...me(4), s: 9999 })).status, 400);
+  assert.equal((await sky({ ...me(5), cs: '<script>alert(1)</script>' }, '4.4.4.5')).pilots > 0, true);
+  const r = await sky(me(6), '4.4.4.6'); assert.ok(r.others.every((o) => !/[<>]/.test(o.cs)));
+  for (let i = 10; i < 13; i++) assert.equal((await sky(me(i), '5.5.5.5')).status, 200);
+  assert.equal((await sky(me(13), '5.5.5.5')).status, 429);
+  assert.equal((await sky(me(10), '5.5.5.5')).status, 429);   // the same pilot, too soon
 });
 
 // Fixture for the Swift tests: a Pro and an Ultimate key from this run, with this run's public key.

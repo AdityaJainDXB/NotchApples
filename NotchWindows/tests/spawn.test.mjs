@@ -111,3 +111,31 @@ test('night is darker than day and fog pulls the horizon in', () => {
   T.applyEnv('day', 'clear');
   assert.ok(n[0] < 0.3 && stars > 0 && fm < 0.2 && T.ENV.lum[0] === 1 && T.ENV.fogMul === 1 && T.ENV.stars === 0);
 });
+
+test('the procedure walks through take-off, climb-out, approach and landing, ticking steps off', () => {
+  const p = PLANES.find((q) => q.id === 'a320'), f = new Flight(p);
+  f.reset([0, T.groundAt(world, 0, 0) + p.gear, -10], 0, 0, true, 0);
+  f.engOff = true; f.throttle = 0;
+  const run = (n, inp) => { for (let i = 0; i < n; i++) f.step(1 / 60, { pitch: 0, roll: 0, yaw: 0, throttle: 0, ...inp }, world); };
+  run(30, {});
+  let pr = T.procedure(f, world, { took: false });
+  assert.equal(pr.title, 'BEFORE TAKE-OFF'); assert.match(pr.steps[pr.cur].t, /Start the engine/);
+  f.engineStart(); run(11 * 60, {});
+  pr = T.procedure(f, world, { took: false }); assert.match(pr.steps[pr.cur].t, /Flaps for take-off/);
+  f.flapNotch = 1; f.flaps = p.flapNotches[1]; f.brake = false;
+  pr = T.procedure(f, world, { took: false }); assert.match(pr.steps[pr.cur].t, /Full throttle/);
+  const a = new Flight(p); a.reset([0, 560, 9000], 0, p.stall * 1.5, false, 0);
+  a.step(1 / 60, { pitch: 0, roll: 0, yaw: 0, throttle: 0 }, world);
+  const ap = T.procedure(a, world, { took: true }); assert.equal(ap.title, 'APPROACH'); assert.ok(ap.steps.length >= 4 && ap.cur >= 0);
+  const c = T.procedure(Object.assign(new Flight(PLANES.find((q) => q.id === 'r44' || q.rotor) || p), {}), world, {});
+  assert.ok(c === null || c.title);
+});
+
+test('an aircraft built from heading, pitch and bank reads back the same way', () => {
+  const p = PLANES.find((q) => q.id === 'a320');
+  for (const [h, pi, b] of [[0, 0, 0], [1.2, 0.1, 0.4], [-2.5, -0.15, -0.3], [3, 0.05, 0.2]]) {
+    const f = new Flight(p); f.reset([0, 500, 0], 0, 80, false, 0); f.q = T.attitudeQ(h, pi, b);
+    const dh = Math.atan2(Math.sin(f.heading - h), Math.cos(f.heading - h));
+    assert.ok(Math.abs(dh) < 0.01 && Math.abs(f.pitchAngle - pi) < 0.01 && Math.abs(f.bank - b) < 0.01, `h${h} p${pi} b${b}: got ${f.heading.toFixed(2)} ${f.pitchAngle.toFixed(2)} ${f.bank.toFixed(2)}`);
+  }
+});

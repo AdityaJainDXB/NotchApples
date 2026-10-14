@@ -20,6 +20,11 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.0.58", date: "14 October 2026", headline: "Plane: fly with other Notch pilots, a step-by-step procedure, glowing lights at night", items: [
+            "Plane: Fly with others (off until you turn it on) shows other Notch pilots in the sky with their callsigns. It sends only your callsign, aircraft and position, with a random id and no account.",
+            "Plane: a step-by-step procedure for each phase (before take-off, climb-out, approach, landing roll): the next step is highlighted and each ticks itself off.",
+            "Plane: runway, helipad and airfield lights, and your own aircraft's lights, glow properly at night.",
+        ]),
         ReleaseNote(version: "2.0.57", date: "14 October 2026", headline: "Plane: messages fit the screen", items: [
             "Plane: the take-off and landing configuration warnings are shorter, and long on-screen messages now wrap instead of running off the edge.",
         ]),

@@ -26,6 +26,8 @@
 //                                         with a daily limit per key. Off until the AI_API_KEY secret is set.
 //   GET  /ai/status                       whether Notch Apple AI is switched on, and the daily limits
 //   GET  /plane/board?mode=&period=       the world leaderboard of the Plane game (hoops | trial | landing; all | week)
+//   POST /plane/sky {id,cs,plane,p,h,pi,b,s}  Fly with others: sends your position, returns the pilots nearby (opt-in, in memory only)
+//   POST /plane/sky/leave {id} · GET /plane/sky/count
 //   POST /plane/score {mode,name,plane,score,region}   posts a score (open to everyone; plausibility checks and a rate limit)
 //   GET  /revoked                         signed list of revoked key IDs (the app checks it now and then)
 //   GET  /config                          prices and whether Ultimate is on sale
@@ -38,6 +40,7 @@
 // for up to 48 hours, so the key can be emailed when the payment arrives.
 
 import * as Insights from './insights.js';
+import { SkyRoom, SkyError } from './sky.js';
 const TIER = { pro: 1, ultimate: 2 };
 const TIER_LABEL = { 1: 'PRO', 2: 'ULTM' };
 const TIER_NAME = { 1: 'Pro', 2: 'Ultimate' };
@@ -821,6 +824,33 @@ export class PlaneBoard {
   }
 }
 
+/** The live sky of "Fly with others": one Durable Object holds the pilots in memory (see sky.js). */
+export class PlaneSky {
+  constructor(state) { this.state = state; this.room = new SkyRoom(); }
+  async fetch(request) {
+    const url = new URL(request.url);
+    try {
+      if (url.pathname === '/count') return Response.json({ pilots: this.room.count() });
+      const body = await request.json();
+      if (url.pathname === '/leave') return Response.json(this.room.leave(body.id));
+      return Response.json(this.room.update(body, body.addr, cleanPilotName));
+    } catch (e) {
+      return Response.json({ error: e instanceof SkyError ? e.message : 'Bad request.' }, { status: e instanceof SkyError ? e.status : 400 });
+    }
+  }
+}
+async function skyCall(env, path, payload) {
+  if (!env.PLANE_SKY) throw new HTTPError(503, 'Shared flying is not switched on yet.');
+  const r = await env.PLANE_SKY.get(env.PLANE_SKY.idFromName('sky')).fetch(`https://sky${path}`, { method: 'POST', body: JSON.stringify(payload) });
+  const j = await r.json();
+  if (!r.ok) throw new HTTPError(r.status, j.error || 'Shared flying is busy.');
+  return j;
+}
+async function skySync(env, request, body) {
+  const addr = await sha256(`sky|${request.headers.get('cf-connecting-ip') || 'unknown'}`);
+  return await skyCall(env, '/sync', { ...body, addr });
+}
+
 /** At most 10 scores a minute from one address. */
 export class PlaneRate {
   constructor(state) { this.state = state; }
@@ -886,6 +916,7 @@ export default {
         if (path === '/revoked') return json(await revokedList(env), 200, { 'cache-control': 'public, max-age=3600' });
         if (path.startsWith('/asset/')) return await assetGet(env, request, path.slice('/asset/'.length));
         if (path === '/plane/board') return await planeBoard(env, new URL(request.url));
+        if (path === '/plane/sky/count') return json(env.PLANE_SKY ? await (await env.PLANE_SKY.get(env.PLANE_SKY.idFromName('sky')).fetch('https://sky/count')).json() : { pilots: 0 }, 200, { 'cache-control': 'public, max-age=15' });
         if (path === '/ai/status') return json({ on: aiOn(env), model: aiOn(env) ? 'notch-fast' : null, limits: { pro: aiLimit(env, 1), ultimate: aiLimit(env, 2) } });
         throw new HTTPError(404, 'Not found');
       }
@@ -919,6 +950,8 @@ export default {
         case '/deactivate': return json(await activate(env, body, false));
         case '/entitle': return json(await entitle(env, body));
         case '/plane/score': return json(await planePost(env, request, body));
+        case '/plane/sky': return json(await skySync(env, request, body));
+        case '/plane/sky/leave': return json(await skyCall(env, '/leave', { id: body.id }));
       }
       throw new HTTPError(404, 'Not found');
     } catch (e) {
