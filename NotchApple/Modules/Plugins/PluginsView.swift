@@ -72,7 +72,7 @@ final class PluginHost: ObservableObject {
             let parts = url.deletingPathExtension().lastPathComponent.split(separator: ".")
             let interval = parts.count > 1 ? Self.parseInterval(String(parts.last!)) : nil
             return Plugin(url: url, name: String(parts.first ?? "Plugin").replacingOccurrences(of: "-", with: " ").capitalized,
-                          interval: interval ?? 300)
+                          interval: max(interval ?? 300, 5))   // a file named x.0s.sh used to respawn every second
         }
         runDue(force: true)
     }

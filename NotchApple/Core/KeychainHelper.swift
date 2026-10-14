@@ -77,9 +77,14 @@ enum KeychainHelper {
     // MARK: Storage
 
     private static func load() -> [String: Data] {
-        guard let data = try? Data(contentsOf: fileURL),
-              let dict = try? JSONDecoder().decode([String: Data].self, from: data) else { return [:] }
-        return dict
+        guard let data = try? Data(contentsOf: fileURL) else { return [:] }
+        if let dict = try? JSONDecoder().decode([String: Data].self, from: data) { return dict }
+        // The file is there but unreadable. Keep a copy before anything can overwrite it, so a bad read never wipes every
+        // saved key (the licence, the AI keys, the tokens): they can be recovered from the copy.
+        let copy = fileURL.deletingLastPathComponent().appendingPathComponent("secrets.unreadable-\(Int(Date().timeIntervalSince1970)).json")
+        try? FileManager.default.copyItem(at: fileURL, to: copy)
+        try? FileManager.default.setAttributes([.posixPermissions: 0o600], ofItemAtPath: copy.path)
+        return [:]
     }
 
     private static func update(_ change: (inout [String: Data]) -> Void) -> Bool {

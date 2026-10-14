@@ -153,7 +153,9 @@ enum FeatureHub {
         case "hide": delegate?.notch?.setInvisible(true)
         case "show": delegate?.notch?.setInvisible(false)
         case "timer":
-            let minutes = Double(query["minutes"] ?? "") ?? 5
+            // Links come from any app or web page: a value that is not a sensible number of minutes must never reach the timer.
+            let asked = Double(query["minutes"] ?? "") ?? 5
+            let minutes = asked.isFinite ? min(max(asked, 1.0 / 60), 1440) : 5
             if parts.dropFirst().first == "stop" { CountdownTimer.shared.resetTimer() }
             else { CountdownTimer.shared.startTimer(seconds: minutes * 60) }
         case "stopwatch":
@@ -162,7 +164,7 @@ enum FeatureHub {
             parts.dropFirst().first == "stop" ? FocusTimer.shared.pause() : FocusTimer.shared.start()
         case "keepawake":
             if parts.dropFirst().first == "off" { KeepAwake.shared.stop() }
-            else { KeepAwake.shared.start(minutes: query["minutes"].flatMap(Int.init)) }
+            else { KeepAwake.shared.start(minutes: query["minutes"].flatMap(Int.init).map { min(max($0, 1), 1440) }) }   // (an overflowing value used to trap)
         case "snippet":
             if let name = query["name"], let s = SnippetStore.shared.items.first(where: { $0.title.caseInsensitiveCompare(name) == .orderedSame }) {
                 PasteHelper.paste(s.text)

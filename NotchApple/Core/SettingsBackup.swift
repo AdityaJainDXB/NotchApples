@@ -33,6 +33,8 @@ final class SettingsBackup: ObservableObject {
     private static let excludedPrefixes = ["NS", "Apple", "com.apple", "onboarding.", "migration.", "backup.", "messenger.senderID",
                                            "messenger.activeRoom", "shelf.items", "ui.lastTab", "settings.lastPane", "update.",
                                            "focus.completed", "focus.history", "hotkey.migrated", "account.",
+                                           // Anything that decides where a stored secret is sent, or lets another device in, stays on this Mac.
+                                           "smartHome.url", "companion.", "updates.", "bambu.printers",
                                            // Entitlement caches are worked out on each Mac, never copied between Macs.
                                            "license.", "style.proAllowed", "updates.ultimateAllowed"]
     private var saveWork: DispatchWorkItem?

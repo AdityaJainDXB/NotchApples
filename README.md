@@ -64,10 +64,10 @@ Pick your computer. Both buttons start the download straight away. The Mac butto
   </tr>
   <tr>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/v2.0.34/NotchApple-2.0.34.dmg"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.0.51</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/v2.0.34/NotchApple-2.0.34.dmg"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.0.52</b></a>
     </td>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 1.54.0 BETA</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 1.55.0 BETA</b></a>
     </td>
   </tr>
   <tr>
@@ -211,6 +211,12 @@ All screenshots use sample data.
 ## What's new
 
 > **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is still in the repository's tags.
+
+### Mac 2.0.52 · Windows 1.55.0 BETA · 14 October 2026 · 🏝 A much bigger Plane map, and a security pass
+
+- **More airfields.** Four new ones: **Seaside** on the southern plain, and **Coral Island**, **Palm Atoll** and **Lighthouse Cay**, each on its own hilly island in the sea to the south. Each has a runway with markings and lights, an apron with a hangar, a windsock and a helipad (helicopters start there when you choose it).
+- **Start anywhere.** A new **Start at** row in the Fly tab picks the airfield for Free Flight. The screen shows the nearest airfield, how far it is and which way to turn.
+- **Hardening.** A full code review found and fixed: links such as `notchapple://keepawake?minutes=…` could crash the app with a huge or invalid number; an unreadable saved-keys file could wipe every saved key (a copy is kept now); a restored settings backup could change where your Home Assistant token is sent; PairDrop accepted unlimited sizes and skipped macOS's download warning; plugins could be asked to run every second. On Windows, backups no longer carry tokens or printer codes (and restoring one can't overwrite them), the web helper no longer accepts look-alike local addresses or redirects, only data files can be saved to the temp folder, and VPN profiles lose any lines that could run programs.
 
 ### Mac 2.0.51 · Windows 1.54.0 BETA · 14 October 2026 · 🔄 Updates work again, and helicopters fly properly
 

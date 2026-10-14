@@ -4,6 +4,17 @@ import { el } from '../store.js';
 import { invoke, http } from '../native.js';
 import { toast, empty } from '../ui.js';
 
+/// A profile from a volunteer server is attacker-controlled text, and OpenVPN can run programs named in it (script-security,
+/// up, down, route-up, tls-verify, plugin...). Those lines are removed before the file is saved and opened.
+const DANGEROUS = /^\s*(script-security|up|down|route-up|route-pre-down|tls-verify|auth-user-pass-verify|client-connect|client-disconnect|learn-address|ipchange|plugin|setenv|setenv-safe|up-restart|up-delay|down-pre|management|cd|chroot|daemon|log|log-append|writepid|status|ca-ext|echo)\b/i;
+function safeOvpn(b64) {
+  try {
+    const text = decodeURIComponent(escape(atob(b64)));
+    const kept = text.split(/\r?\n/).filter((l) => !DANGEROUS.test(l)).join('\n');
+    return btoa(unescape(encodeURIComponent(kept)));
+  } catch { return ''; }
+}
+
 export function render(root) {
   let servers = null, busy = false;
   const list = el('div', { class: 'col gap-4 scroll', style: 'flex:1' }), status = el('div', { class: 'hstack' });
@@ -30,7 +41,7 @@ export function render(root) {
         busy = false; paintStatus();
       } }, 'Connect'),
       el('button', { class: 'btn small quiet', title: 'Open in the OpenVPN app', onclick: async () => {
-        try { const p = await invoke('save_temp_file', { name: `vpngate-${s.cc}-${s.ip.replace(/\./g, '-')}.ovpn`, base64: s.ovpn }); await invoke('open_path', { path: p }); }
+        try { const p = await invoke('save_temp_file', { name: `vpngate-${s.cc}-${s.ip.replace(/\./g, '-')}.ovpn`, base64: safeOvpn(s.ovpn) }); await invoke('open_path', { path: p }); }
         catch { toast('Install OpenVPN Connect to use .ovpn profiles.', { error: true }); }
       } }, '.ovpn'))));
     if (!servers.length) list.append(empty('🛡', 'No servers', 'VPN Gate didn’t answer. Try again later.'));

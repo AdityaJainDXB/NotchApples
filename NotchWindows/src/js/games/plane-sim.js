@@ -1226,10 +1226,27 @@
   /// A second, shorter strip on a plateau in the hills.
   const RIDGE = { x: -2300, z0: 1250, z1: 550, half: 16, y: 120 };
   /// Helipads: a square of concrete with an H. Helicopters start on the first one; the second is on the mountain plateau.
+  /// More airfields: one on the southern plain and three on islands in the southern sea. Each has a north-south runway
+  /// (take off towards -z), an apron with a hangar, a windsock and a helipad. `island` raises a hilly island round it.
+  const AIRFIELDS = [
+    { id: 'seaside', name: 'Seaside', x: -1900, z: 3000, len: 1100, half: 18 },
+    { id: 'coral', name: 'Coral Island', x: -3200, z: 7000, len: 1000, half: 16, island: { r: 1800, peak: 55 } },
+    { id: 'palm', name: 'Palm Atoll', x: 3600, z: 8000, len: 900, half: 16, island: { r: 1700, peak: 45 } },
+    { id: 'cay', name: 'Lighthouse Cay', x: 200, z: 8700, len: 700, half: 14, island: { r: 1500, peak: 35 } },
+  ];
   const HELIPADS = [
     { id: 'home', name: 'Airfield helipad', x: -75, z: -170, half: 14 },
     { id: 'ridge', name: 'Mountain helipad', x: RIDGE.x + 70, z: 900, half: 14 },
+    ...AIRFIELDS.map((a) => ({ id: a.id, name: `${a.name} helipad`, x: a.x + a.half + 30, z: a.z + 35, half: 14 })),
   ];
+  /// Where a flight can start: the home airfield first, then each new one (the runway's southern end, facing north).
+  const STARTS = [{ id: 'home', name: 'Home airfield', pos: [0, 0, -30], pad: HELIPADS[0] },
+    { id: 'gate', name: 'Home gate (apron)', pos: [62, 0, -640], pad: HELIPADS[0], gate: true },
+    ...AIRFIELDS.map((a) => ({ id: a.id, name: a.name, pos: [a.x, 0, a.z + a.len / 2 - 40], pad: HELIPADS.find((h) => h.id === a.id) }))];
+  /// Aprons, where the ground crew works: the home airfield's two and one beside each new runway.
+  const APRONS = [[38, 104, -760, -560], [38, 90, -460, -210], ...AIRFIELDS.map((a) => [a.x + a.half + 8, a.x + a.half + 60, a.z - 55, a.z + 55])];
+  const onApron = (p) => APRONS.some((r) => p[0] > r[0] && p[0] < r[1] && p[2] > r[2] && p[2] < r[3]);
+  const onAirfield = (p) => AIRFIELDS.some((a) => Math.abs(p[0] - a.x) < a.half && Math.abs(p[2] - a.z) < a.len / 2 + 5);
   const padAt = (p) => HELIPADS.find((h) => Math.abs(p[0] - h.x) < h.half && Math.abs(p[2] - h.z) < h.half) || null;
   /// The ground is a heightfield of TCELL-metre cells cut into TCHUNK x TCHUNK-cell chunks, which are generated, meshed
   /// (at four levels of detail) and planted with trees on demand as the plane flies. Water is the surface at WATER.
@@ -1243,7 +1260,7 @@
   const RIVER2 = [[-1500, -2200], [-1250, -1500], [-1000, -600], [-1150, 400], [-950, 1500], [-1200, 2600], [-900, 3600], [-1000, 4700], [-1050, 6200]];
   const BRIDGE = { x: -2050, z: -2800 };
   /// Places kept perfectly level: [centre x, centre z, half width, half depth] (airfield, town, three villages, the city).
-  const FLATS = [[0, -700, 160, 960], [1250, -1350, 450, 550], [600, 1300, 240, 240], [-300, 2800, 240, 240], [2300, -250, 240, 240], [2900, 3100, 560, 560], [520, -1050, 420, 330]];
+  const FLATS = [[0, -700, 160, 960], [1250, -1350, 450, 550], [600, 1300, 240, 240], [-300, 2800, 240, 240], [2300, -250, 240, 240], [2900, 3100, 560, 560], [520, -1050, 420, 330], ...AIRFIELDS.map((a) => [a.x + 12, a.z, a.half + 70, a.len / 2 + 70])];
   const CITY = { x: 2900, z: 3100 };
   const ROADS = [
     [[160, -660], [300, -730], [560, -850], [780, -1000], [850, -1100]],                 // airfield to the town
@@ -1296,6 +1313,13 @@
     const zc = 4500 + (fbm(x / 2400 + 40, 7.3, 3) - 0.5) * 1500 + (fbm(x / 650 + 3, z / 650, 2) - 0.5) * 260;   // the coast
     const cw = smooth(zc - 2200, zc - 300, z);
     h = Math.max(h + (smin(h, -2 + (zc - z) * 0.02, 10) - h) * cw, -70);
+    for (const a of AIRFIELDS) {                                                                   // islands in the southern sea
+      if (!a.island) continue;
+      const dd = Math.hypot(x - a.x, z - a.z) * (1 + (fbm(x / 300 + a.x / 50, z / 300, 2) - 0.5) * 0.5), t = 1 - smooth(0.2 * a.island.r, a.island.r, dd);
+      if (t <= 0) continue;
+      const ih = -62 + (62 + a.island.peak) * t + (fbm(x / 180 + a.z / 40, z / 180, 3) - 0.4) * 30 * t;
+      if (ih > h) h = ih;
+    }
     const pd = Math.hypot(x - RIDGE.x, z - (RIDGE.z0 + RIDGE.z1) / 2);
     h += (RIDGE.y - h) * (1 - smooth(420, 720, pd));                                               // the plateau
     h = Math.min(h, 14 + 4000 * smooth(110, 1600, Math.hypot(x - BRIDGE.x, z - BRIDGE.z)));          // low banks at the bridge
@@ -1638,7 +1662,7 @@
 
   // ---- painted ground: what you would land on
 
-  const PAVED = [[-22, 22, -1440, 40], [51, 65, -1297, -113], [22, 51, -127, -113], [22, 51, -1297, -1283], [22, 38, -707, -693], [38, 90, -460, -210], [38, 104, -760, -560], [RIDGE.x - 16, RIDGE.x + 16, 550, 1250], ...HELIPADS.map((h) => [h.x - h.half, h.x + h.half, h.z - h.half, h.z + h.half])];
+  const PAVED = [[-22, 22, -1440, 40], [51, 65, -1297, -113], [22, 51, -127, -113], [22, 51, -1297, -1283], [22, 38, -707, -693], [38, 90, -460, -210], [38, 104, -760, -560], [RIDGE.x - 16, RIDGE.x + 16, 550, 1250], ...HELIPADS.map((h) => [h.x - h.half, h.x + h.half, h.z - h.half, h.z + h.half]), ...AIRFIELDS.map((a) => [a.x - a.half, a.x + a.half, a.z - a.len / 2, a.z + a.len / 2])];
   const onPaved = (x, z) => { for (const p of PAVED) if (x > p[0] && x < p[1] && z > p[2] && z < p[3]) return true; return false; };
   const snowLine = (x, z) => 1180 + (vnoise(x / 430 + 5, z / 430) - 0.5) * 300;
   /// What the ground is made of at (x, z): 'runway' (any paving, the mountain strip too), 'road', 'water', 'sand', 'snow', 'rock', 'forest' or 'grass'.
@@ -1784,6 +1808,28 @@
     for (const sg of [-1, 1]) rectQ(marks, rx + sg * (rh - 1.2), rx + sg * (rh - 0.7), RIDGE.z0, RIDGE.z1, ry + 0.14, paint);
     block([rx + 60, ry + 6, 900], [30, 12, 24], hex('#b5651d'), 'hangar'); gable(b, rx + 60, ry + 12, 900, 30, 24, 4, hex('#7f3f00'), true);
     sock(rx - 26, 1210, ry);
+    const white2 = hex('#fff4d0'), amber2 = hex('#ffb347');
+    // The new airfields: asphalt, centre dashes, threshold bars, edge lights, an apron with a hangar and a windsock.
+    for (const a of AIRFIELDS) {
+      const y = gAt(a.x, a.z) + 0.1, z0 = a.z - a.len / 2, z1 = a.z + a.len / 2;
+      rectQ(decal, a.x - a.half, a.x + a.half, z0, z1, y, asphalt);
+      for (let z = z0 + 50; z < z1 - 60; z += 40) rectQ(marks, a.x - 0.4, a.x + 0.4, z, z + 18, y + 0.04, paint);
+      for (const [zt, dir] of [[z0, 1], [z1, -1]]) for (let k = 0; k < 6; k++) { const x0 = a.x + (k - 2.5) * 2.6; rectQ(marks, x0 - 0.5, x0 + 0.5, zt + dir * 8, zt + dir * 28, y + 0.04, paint); }
+      for (let z = z0; z <= z1; z += 50) for (const sx of [-1, 1]) lights.box([a.x + sx * (a.half + 1.3), y + 0.3, z], [0.7, 0.7, 0.7], Math.min(z - z0, z1 - z) < 150 ? amber2 : white2);
+      const ax = a.x + a.half + 8;
+      rectQ(decal, ax, ax + 52, a.z - 55, a.z + 55, y, concrete);
+      block([ax + 36, y + 5, a.z - 28], [26, 10, 20], hex('#8a9199'), 'hangar'); gable(b, ax + 36, y + 10, a.z - 28, 26, 20, 4, hex('#a04030'), true);
+      sock(a.x - a.half - 14, a.z, y - 0.1);
+    }
+    // Ground-service vehicles parked on the aprons: a fuel truck, a catering truck, a baggage cart and a pushback tug.
+    const trucks = (x, z, y) => {
+      b.box([x, y + 1.4, z], [2.6, 2.4, 7], hex('#e8e8e8')); b.box([x, y + 2.9, z], [2.2, 1.4, 4.4], hex('#c0392b')); b.box([x, y + 1.4, z + 3.9], [2.4, 2.2, 1.6], hex('#2c3e50'));      // fuel
+      b.box([x + 8, y + 1.5, z + 4], [2.6, 2.6, 6.5], hex('#f4f4f1')); b.box([x + 8, y + 3.6, z + 3.2], [2.4, 2.4, 4.4], hex('#2980b9')); b.box([x + 8, y + 1.4, z + 7.8], [2.4, 2.2, 1.6], hex('#2c3e50'));   // catering
+      b.box([x - 7, y + 0.6, z + 2], [1.8, 0.9, 3.4], hex('#7f8c8d')); b.box([x - 7, y + 1.4, z + 2.4], [1.7, 0.8, 2.2], hex('#95a5a6'));                                                         // baggage cart
+      b.box([x - 11, y + 0.9, z - 3], [2.2, 1.3, 3.6], hex('#e67e22')); b.box([x - 11, y + 1.9, z - 2.4], [1.6, 0.9, 1.6], hex('#34495e'));                                                      // tug
+    };
+    for (const a of AIRFIELDS) trucks(a.x + a.half + 24, a.z + 6, gAt(a.x, a.z) + 0.1);
+    trucks(72, -690, 0.1); trucks(66, -614, 0.1);
     // Helipads: concrete, a yellow edge, a white H and a ring of lights at the corners.
     for (const hp of HELIPADS) {
       const y = gAt(hp.x, hp.z) + 0.1, h = hp.half;
@@ -1965,7 +2011,7 @@
     return null;
   }
   const onRunway = (p) => (Math.abs(p[0] - RUNWAY.x) < RUNWAY.half && p[2] < RUNWAY.z0 + 5 && p[2] > RUNWAY.z1 - 5)
-    || (Math.abs(p[0] - RIDGE.x) < RIDGE.half && p[2] < RIDGE.z0 + 5 && p[2] > RIDGE.z1 - 5);
+    || (Math.abs(p[0] - RIDGE.x) < RIDGE.half && p[2] < RIDGE.z0 + 5 && p[2] > RIDGE.z1 - 5) || onAirfield(p);
   const onRidge = (p) => Math.abs(p[0] - RIDGE.x) < RIDGE.half && p[2] < RIDGE.z0 + 5 && p[2] > RIDGE.z1 - 5;
 
   // ------------------------------------------------------------------ drawing the world
@@ -3680,7 +3726,7 @@
     }
     let gpwsOn = read('gpws', true), gpwsText = '', gpwsLevel = 0, gpwsT = 0, gpwsLastFt = null, gpwsAt = {}, hundredCalled = false, wasAirborne = false;
     let gearWarn = false, gearBeepAt = 0, tailScrapeT = 0, rotateCalled = false, v1Called = false, lowFuelWarned = false, flapSoundT = 0;
-    let rollAcc = 0, rollT = 0, loopAcc = 0, loopT = 0, lowT = 0, hadTakeoff = false, stoppedT = 0, hadAir = false, stopCredited = false, hoverT = 0;
+    let rollAcc = 0, rollT = 0, loopAcc = 0, loopT = 0, lowT = 0, hadTakeoff = false, stoppedT = 0, hadAir = false, stopCredited = false, hoverT = 0, cfgTakeoff = false, cfgLanding = false, svc = null, svcDone = {};
     const smoke = [];              // particles: fire, smoke, dust, sparks, spray
     const debris = [];             // parts that have come off and are tumbling on their own
     let attached = new Set(ALL_PARTS);
@@ -3965,11 +4011,12 @@
       const applies = failures === 'often' || mode.id === 'free' || mode.id === 'landing';
       failAt = rate && applies ? (mode.id === 'landing' ? 20 + Math.random() * 40 : -Math.log(Math.random()) / rate + 20) : Infinity;
       if (mode.id === 'landing' && failures === 'rare' && Math.random() > 0.25) failAt = Infinity;
-      rollAcc = 0; loopAcc = 0; lowT = 0; stoppedT = 0; hadTakeoff = false; hadAir = false; stopCredited = false; hoverT = 0;
+      rollAcc = 0; loopAcc = 0; lowT = 0; stoppedT = 0; hadTakeoff = false; hadAir = false; stopCredited = false; hoverT = 0; cfgTakeoff = false; cfgLanding = false; svc = null; svcDone = {};
       hoops = []; nextHoop = 0;
       const homePad = HELIPADS[0], hoverTrim = plane.rotor ? 1.06 / plane.rotorLift : 0;
-      if (mode.id === 'free' && plane.rotor) flight.reset([homePad.x, groundAt(W, homePad.x, homePad.z) + plane.gear + 0.05, homePad.z], 0, 0, true);   // a helicopter starts on its helipad
-      else if (mode.id === 'free') flight.reset([0, plane.gear, -30], 0, 0, true);
+      const spot = startSpot();
+      if (mode.id === 'free' && plane.rotor) flight.reset([spot.pad.x, groundAt(W, spot.pad.x, spot.pad.z) + plane.gear + 0.05, spot.pad.z], 0, 0, true);   // a helicopter starts on its helipad
+      else if (mode.id === 'free') flight.reset([spot.pos[0], groundAt(W, spot.pos[0], spot.pos[2]) + plane.gear, spot.pos[2]], 0, 0, true);
       else if (mode.id === 'landing' && plane.rotor) {
         // On approach to the helipad: 300 m out and 70 m up, flying slowly towards it.
         flight.reset([homePad.x, groundAt(W, homePad.x, homePad.z) + 70, homePad.z + 300], 0, 14, false);
@@ -4069,6 +4116,14 @@
               if (to > 0 && flight.ias > speedsOf(plane).vfe * 1.05) toast('⚠ FLAPS OVERSPEED', 1600);
             }
           }
+          if ('1234'.includes(k) && k.length === 1) {
+            const id = +k, ok = flight.onGround && flight.speed < 0.8 && flight.throttle < 0.12 && onApron(flight.pos);
+            if (!ok) toast('Ground crew: stop on an apron with the throttle closed (parking brake: Space)', 2200);
+            else if (svc) toast('Ground crew: one job at a time', 1400);
+            else if (id === 4 && plane.rotor) toast('Helicopters are not pushed back: just lift off', 1800);
+            else if (svcDone[id] && id !== 4) toast('Already done', 1200);
+            else { svc = { id, t: 0, dur: ({ 1: 9, 2: 8, 3: 7, 4: 14 })[id] }; toast(({ 1: '⛽ Fuel truck connected…', 2: '🍽 Catering truck at the door…', 3: '🧳 Loading baggage…', 4: '🚜 Tug attached: pushing back…' })[id], 1600); }
+          }
           if (k === 'r') start();
           if (k === 'm') { mouseOn = !mouseOn; write('mouse', mouseOn); toast(mouseOn ? 'Mouse steering on' : 'Mouse steering off: use the keys', 1400); }
         } else if (screen === 'result' && (k === 'r' || k === ' ')) { e.preventDefault?.(); start(); }
@@ -4107,6 +4162,8 @@
     };
     /// The helicopter's collective lever: W raises it, S lowers it, and it stays where you leave it.
     let heliColl = 0;
+    let startAt = read('startAt', 'home');   // where a free flight begins: 'home' or an airfield id
+    const startSpot = () => STARTS.find((x) => x.id === startAt) || STARTS[0];
     function input() {
       const has = (k) => keys.has(k);
       const m = mouseOn && mouse.in && mouse.engaged;
@@ -4603,13 +4660,41 @@
           }
           if (mode.id === 'landing') {
             const tp = flight.touch || [flight.pos[0], flight.pos[2]], sink = flight.sinkAtTouch, centre = Math.abs(tp[0]), zone = Math.abs(tp[1] - (-300));
-            const pts = on ? Math.max(0, Math.round(1000 - sink * 140 - centre * 12 - zone * 0.5)) : 0;
-            finish('done', pts, on ? `Landed · touchdown ${sink.toFixed(1)} m/s · ${centre.toFixed(1)} m off the centre line` : 'Stopped off the runway');
+            const pts = on ? Math.max(0, Math.round(1000 - sink * 140 - centre * 12 - zone * 0.5 - (cfgLanding ? 150 : 0))) : 0;
+            finish('done', pts, on ? `Landed · touchdown ${sink.toFixed(1)} m/s · ${centre.toFixed(1)} m off the centre line${cfgLanding ? ' · −150 for landing with no flaps' : ''}` : 'Stopped off the runway');
             return;
           }
           if (mode.id === 'free' && on && stoppedT < 0.7) toast('Landed and stopped. Take off again any time.', 2000);
         }
       } else { stoppedT = 0; stopCredited = false; }
+      // ---- configuration errors: an airliner, business jet or turboprop needs its flaps for take-off and for landing.
+      const needsFlaps = ['liner', 'biz', 'turbo'].includes(plane.cat) && (plane.flapNotches || []).length > 2;
+      if (needsFlaps) {
+        const aglNow = flight.pos[1] - groundAt(W, flight.pos[0], flight.pos[2]), gearDown = plane.retract ? flight.gearDown : true;
+        if (flight.onGround && flight.throttle > 0.7 && flight.speed > 25 && flight.flapNotch === 0 && onRunway(flight.pos)) {
+          say('Config flaps', { level: 2, every: 4, key: 'cfgto' });
+          if (!cfgTakeoff) { cfgTakeoff = true; toast('⚠ CONFIGURATION: rolling for take-off with the flaps up. Set take-off flaps (F): without them the plane needs more speed and runway.', 4200); beep(520, 0.3, 'square', 0.1); }
+        }
+        if (!flight.onGround && aglNow < 300 && aglNow > 5 && flight.vel[1] < -1 && flight.flapNotch === 0 && gearDown && !flight.crashed) {
+          say('Config flaps', { level: 2, every: 5, key: 'cfgld' });
+          if (!cfgLanding) { cfgLanding = true; toast('⚠ CONFIGURATION: landing with the flaps up. Set landing flaps (F): without them the approach speed and the landing roll are far too long.', 4200); beep(520, 0.3, 'square', 0.1); }
+        }
+      }
+      // ---- ground services (when stopped on an apron): 1 refuel, 2 catering, 3 baggage, 4 pushback
+      if (svc) {
+        const still = flight.onGround && flight.speed < 1.2 && flight.throttle < 0.12;
+        if (!still) { toast('Ground crew: service cancelled, you started moving', 2000); svc = null; }
+        else {
+          flight.brake = true; svc.t += dt;
+          if (svc.id === 4) { const f4 = flight.axes().f; flight.pos = add(flight.pos, mul(f4, -1.7 * dt)); flight.vel = v3(); }
+          if (svc.t >= svc.dur) {
+            svcDone[svc.id] = true;
+            if (svc.id === 1) { flight.fuel = plane.fuel || 1800; flight.fuelOut = false; }
+            toast(({ 1: '⛽ Refuelled: tanks full', 2: '🍽 Catering loaded', 3: '🧳 Baggage loaded', 4: '🚜 Pushback complete: tug disconnected, cleared to start engines and taxi' })[svc.id], 2600); beep(660, 0.12);
+            svc = null;
+          }
+        }
+      }
       // Helicopter challenge: hold a steady hover, 5 to 60 m up, within 3 m/s... for 15 s.
       if (plane.rotor && !flight.onGround && !flight.crashed) {
         const hgt = flight.pos[1] - groundAt(W, flight.pos[0], flight.pos[2]), hs = Math.hypot(flight.vel[0], flight.vel[2]);
@@ -5066,6 +5151,27 @@
         rows.forEach(([n, v, c], i) => { const y = by0 + 12 + i * 16 * s; h2.fillStyle = 'rgba(255,255,255,.65)'; h2.fillText(n, bx + 8, y); h2.fillStyle = c; h2.fillText(v, bx + 8 + 62 * s, y); });
         h2.textAlign = 'center';
       }
+      // Ground services panel: shown when stopped on an apron.
+      if (flight.onGround && flight.speed < 1.2 && onApron(flight.pos) && !flight.crashed) {
+        h2.textAlign = 'left'; h2.textBaseline = 'middle'; h2.font = `700 ${Math.round(10 * s + 2)}px system-ui`;
+        const job = (id, name) => `[${id}] ${name}${svcDone[id] ? ' ✓' : ''}${svc && svc.id === id ? ' ' + Math.round(100 * svc.t / svc.dur) + '%' : ''}`;
+        const txt = `GROUND CREW   ${job(1, 'Refuel')}   ${job(2, 'Catering')}   ${job(3, 'Baggage')}${plane.rotor ? '' : '   ' + job(4, 'Pushback')}`;
+        const bw3 = h2.measureText(txt).width + 24, bx3 = (W2 - bw3) / 2;
+        box(bx3, 48 * s + 30, bw3, svc ? 38 : 24);
+        h2.fillStyle = '#9fe3ff'; h2.fillText(txt, bx3 + 12, 48 * s + 42);
+        if (svc) { h2.fillStyle = 'rgba(255,255,255,.18)'; h2.fillRect(bx3 + 12, 48 * s + 55, bw3 - 24, 5); h2.fillStyle = '#5ee08a'; h2.fillRect(bx3 + 12, 48 * s + 55, (bw3 - 24) * svc.t / svc.dur, 5); }
+      }
+      // The nearest airfield (and the helipads), with its distance and which way to turn for it.
+      {
+        let best = null, bd = Infinity;
+        for (const st of STARTS) { if (st.gate) continue; const c = st.id === 'home' ? [0, -700] : [st.pos[0], st.pos[2] - 460]; const d = Math.hypot(c[0] - flight.pos[0], c[1] - flight.pos[2]); if (d < bd) { bd = d; best = { st, c }; } }
+        const rel = ((Math.atan2(best.c[0] - flight.pos[0], -(best.c[1] - flight.pos[2])) - flight.heading + Math.PI * 3) % (Math.PI * 2)) - Math.PI;
+        const arrow = Math.abs(rel) < 0.35 ? '▲' : Math.abs(rel) > 2.8 ? '▼' : rel > 0 ? '▶' : '◀';
+        const txt = `${best.st.name} · ${bd < 950 ? Math.round(bd) + ' m' : (bd / 1000).toFixed(1) + ' km'} ${arrow}`;
+        h2.font = `700 ${Math.round(9 * s + 2)}px system-ui`; h2.textAlign = 'left'; h2.textBaseline = 'middle';
+        const bw2 = h2.measureText(txt).width + 16, by2 = H2 - 8 - 24;
+        box(W2 - bw2 - 8, 8 + (flight.damage ? 0 : 0) + 7 * 16 * s + 22, bw2, 22); h2.fillStyle = 'rgba(255,255,255,.85)'; h2.fillText(txt, W2 - bw2, 8 + 7 * 16 * s + 33);
+      }
       // Helicopter panel: height above the ground, climb rate, ground speed, collective and rotor speed, and the
       // emergency-landing banner (the assist levels the disc and sets down gently; H starts and cancels it).
       if (plane.rotor) {
@@ -5111,7 +5217,7 @@
       const same = (a, b) => a.random === b.random && (a.random || (Math.abs(a.crossKt) === b.crossKt && a.headKt === b.headKt && a.turb === b.turb));
       const dis = WX.random ? 'disabled style="opacity:.4"' : '';
       const cross = Math.abs(WX.crossKt), side = WX.crossKt < 0 ? 'L' : 'R';
-      return `<h2>3 · Weather <small style="font-weight:500;opacity:.6">applies to every challenge</small></h2>
+      return `<h2>4 · Weather <small style="font-weight:500;opacity:.6">applies to every challenge</small></h2>
         <div class="pg-row" style="gap:5px">${WX_PRESETS.map(([id, name, p]) => `<button data-wxp="${id}" class="${same(WX, p) ? 'pg-on' : ''}">${name}</button>`).join('')}</div>
         <div class="pg-row" style="margin-top:5px"><label class="pg-hint" style="min-width:185px">Crosswind <b data-wxv="cross">${cross} kt (${(cross * KT).toFixed(0)} m/s)</b></label>
           <button data-wxs="L" class="${side === 'L' ? 'pg-on' : ''}" ${dis}>◀ From left</button><button data-wxs="R" class="${side === 'R' ? 'pg-on' : ''}" ${dis}>From right ▶</button>
@@ -5172,8 +5278,10 @@
             <button data-a="mine" title="Pick the scenery nearest to where you are">📍 My location</button>
             <input data-place maxlength="40" placeholder="Type a city or country" style="width:150px"><button data-a="goplace">Go</button></div>
           <div class="pg-hint" style="margin-top:3px">${escapeHtml(placeNote || `Now flying over: ${regionOf(regionId).id ? regionOf(regionId).name + ' (' + regionOf(regionId).lm + ')' : 'the home valley'}. The landmark stands just off the runway.`)}</div>
+          <h2>3 · Start at <small style="font-weight:500;opacity:.6">for Free Flight</small></h2>
+          <div class="pg-row" style="gap:5px;flex-wrap:wrap">${STARTS.map((x) => `<button data-start="${x.id}" class="${x.id === startSpot().id ? 'pg-on' : ''}">${x.name}</button>`).join('')}</div>
           ${weatherPanel()}
-          <h2>4 · Pick a challenge</h2><div class="pg-modes">${MODES.map((m) => `<button class="pg-mode ${m === mode ? 'pg-on' : ''}" data-mode="${m.id}">${m.icon} ${m.name}<small>${m.desc}</small></button>`).join('')}</div>
+          <h2>5 · Pick a challenge</h2><div class="pg-modes">${MODES.map((m) => `<button class="pg-mode ${m === mode ? 'pg-on' : ''}" data-mode="${m.id}">${m.icon} ${m.name}<small>${m.desc}</small></button>`).join('')}</div>
           <div class="pg-row" style="margin-top:10px"><button class="pg-go" data-a="start">✈️ Take off (Enter)</button>
             <span class="pg-hint">Best: ${(() => { const b = read(`board.${mode.id}`, [])[0]; return b && mode.id !== 'free' ? `${fmtScore(mode, b.score)} by ${escapeHtml(b.name)}` : '—'; })()}</span></div>`;
       } else if (menuTab === 'board') {
@@ -5248,6 +5356,7 @@
       });
       ui.querySelectorAll('[data-wxs]').forEach((n) => n.onclick = () => { const m = Math.abs(WX.crossKt) || 0; WX.crossKt = n.dataset.wxs === 'L' ? -m : m; saveWx(); renderUI(); });
       ui.querySelectorAll('[data-wxt]').forEach((n) => n.onclick = () => { WX.turb = n.dataset.wxt; saveWx(); renderUI(); });
+      ui.querySelectorAll('[data-start]').forEach((n) => n.onclick = () => { startAt = n.dataset.start; write('startAt', startAt); renderUI(); });
       ui.querySelectorAll('[data-wxp]').forEach((n) => n.onclick = () => {
         const p = WX_PRESETS.find((x) => x[0] === n.dataset.wxp); if (!p) return;
         const keepSide = WX.crossKt < 0 ? -1 : 1;   // presets keep the side you chose; Random leaves the sliders where they were

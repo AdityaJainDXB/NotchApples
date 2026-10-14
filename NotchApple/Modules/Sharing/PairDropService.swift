@@ -298,6 +298,7 @@ final class PairDropService: ObservableObject {
         switch h.kind {
         case .file:
             guard h.code == pairingCode, h.size >= 0 else { return wrong() }
+            guard h.size <= 4 * 1024 * 1024 * 1024 else { return .reject }   // nobody on the network can fill the disk with one send
             limiter.recordSuccess()
             status = "Receiving \(PairDropLogic.safeFileName(h.fileName)) from \(h.sender)…"
             return .acceptFile
@@ -328,6 +329,9 @@ final class PairDropService: ObservableObject {
         let dest = downloads.appendingPathComponent(name)
         do {
             try FileManager.default.moveItem(at: temp, to: dest)
+            // Mark it as downloaded from elsewhere, so macOS asks before opening an app or script that arrived this way.
+            var quarantine = URLResourceValues(); quarantine.quarantineProperties = [kLSQuarantineTypeKey as String: kLSQuarantineTypeOtherDownload as String]
+            var target = dest; try? target.setResourceValues(quarantine)
             status = "Received \(name) from \(header.sender). Saved to Downloads."
             LiveActivityCenter.shared.flash(LiveActivity(symbol: "arrow.down.circle.fill", label: "Received", tint: .systemGreen), seconds: 4)
             Notifier.post(title: "PairDrop: file received", body: "\(name) from \(header.sender), saved to Downloads.")

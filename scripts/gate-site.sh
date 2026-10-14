@@ -17,6 +17,14 @@ if grep -rInE --exclude-dir=node_modules --exclude-dir=tests --exclude=package-l
   echo "A secret-looking string is in web/. Remove it (and rotate it)."; fail=1
 else echo "clean"; fi
 
+step "The site only talks to hosts it is meant to (payment and licence links cannot be quietly redirected)"
+# Every http(s) host that appears in a page, a script or a data file must be on this list. Adding a host is a deliberate edit here.
+allowed='^(github\.com|api\.github\.com|raw\.githubusercontent\.com|adityajaindxb\.github\.io|notchapple-licenses\.adityajain1225\.workers\.dev|www\.w3\.org|www\.sitemaps\.org|schema\.org|fonts\.googleapis\.com|fonts\.gstatic\.com|notch\.cc\.cd|example\.invalid)$'
+odd=$(grep -IhoE 'https?://[a-zA-Z0-9._-]+' web/*.html web/api.json web/latest.json web/sitemap.xml web/robots.txt $(find web/assets -name '*.js' -o -name '*.css' 2>/dev/null) 2>/dev/null | sed -E 's#https?://##' | sort -u | grep -vE "$allowed" || true)
+if [ -n "$odd" ]; then echo "These hosts are not on the allowlist (scripts/gate-site.sh):"; echo "$odd"; fail=1; else echo "ok"; fi
+# The licence server address and the wallet the pricing page shows must be exactly what they were.
+grep -q 'https://notchapple-licenses.adityajain1225.workers.dev' web/api.json || { echo "web/api.json no longer points at the licence server"; fail=1; }
+
 step "Scripts parse"
 for f in web/*.html; do
   node -e '

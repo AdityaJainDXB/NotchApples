@@ -47,6 +47,11 @@ pub fn save_temp_file(name: String, base64: String) -> Result<String, String> {
     if safe.is_empty() || safe.starts_with('.') {
         return Err("Bad file name.".into());
     }
+    // This only ever holds data for another app to open (a calendar event, a VPN profile, a picture): never a program or a script.
+    let ext = safe.rsplit('.').next().unwrap_or("").to_ascii_lowercase();
+    if !matches!(ext.as_str(), "ics" | "ovpn" | "png" | "jpg" | "jpeg" | "gif" | "webp" | "json" | "txt" | "pdf") {
+        return Err("That kind of file can't be saved here.".into());
+    }
     let bytes = base64::engine::general_purpose::STANDARD.decode(base64).map_err(|e| e.to_string())?;
     let path = std::env::temp_dir().join("NotchApple").join(safe);
     std::fs::create_dir_all(path.parent().unwrap()).map_err(|e| e.to_string())?;

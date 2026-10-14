@@ -56,8 +56,6 @@ jobs:
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
-          plugin_marketplaces: https://github.com/affaan-m/everything-claude-code.git
-          plugins: ecc@ecc
           claude_args: --max-turns 40 --allowedTools "Read,Glob,Grep,Edit,Write"
           prompt: |
             The website quality gate failed. Its log is in ${{ runner.temp }}/gate.log. Read it, then fix what it reports by
@@ -144,8 +142,6 @@ jobs:
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
-          plugin_marketplaces: https://github.com/affaan-m/everything-claude-code.git
-          plugins: ecc@ecc
           claude_args: --max-turns 60 --allowedTools "Read,Glob,Grep,Edit,Write"
           prompt: |
             You are doing the weekly audit of the Notch Apple repository. Latest release tag: ${{ needs.site.outputs.latest }}.
@@ -248,21 +244,11 @@ jobs:
           bad=$(git apply --numstat out/weekly.patch | cut -f3 | grep -vE '^(NotchApple/|NotchAppleTests/|NotchWindows/src/|NotchWindows/tests/|NotchWindows/src-tauri/src/|web/[A-Za-z0-9._-]+\.(html|xml|txt)$|web/assets/)' || true)
           key=$(git apply --numstat out/weekly.patch | cut -f3 | grep -iE '(^|/)\.env|\.pem$|\.jwk$|key|secret|token' || true)
           if [ -n "$bad$key" ]; then echo "::error::The audit touched files outside the allowlist:"; echo "$bad"; echo "$key"; exit 1; fi
-          # 1. The website part: applied to main only if the site still passes the whole gate.
-          if git apply --include='web/*' --check out/weekly.patch 2>/dev/null && git apply --numstat --include='web/*' out/weekly.patch | grep -q .; then
-            git apply --index --include='web/*' out/weekly.patch
-            if bash scripts/gate-site.sh; then
-              git commit -m "fix(web): weekly audit $DAY (passed the site quality gate)"
-              git push origin HEAD:main
-            else
-              echo "::warning::The audit's website changes failed the gate, so they were not published."
-              git reset --hard HEAD
-            fi
-          fi
-          # 2. Everything else: one pull request for a person to merge.
-          if git apply --exclude='web/*' --numstat out/weekly.patch | grep -q .; then
+          # Every change from the audit, the website's included, goes in ONE pull request for a person to merge. (The audit
+          # reads public issue text; a page that handles payments must never change without a human looking.)
+          if git apply --numstat out/weekly.patch | grep -q .; then
             git checkout -b "weekly/$DAY"
-            git apply --index --exclude='web/*' out/weekly.patch
+            git apply --index out/weekly.patch
             git commit -m "chore: weekly audit $DAY"
             git push origin "weekly/$DAY"
             { sed 's/<!--.*-->//g' out/weekly-report.md 2>/dev/null || echo "Weekly audit."; echo; cat fixes.txt; } > body.md

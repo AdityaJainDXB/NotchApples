@@ -36,6 +36,12 @@ pub fn client() -> &'static reqwest::Client {
         reqwest::Client::builder()
             .user_agent(concat!("NotchApple/", env!("CARGO_PKG_VERSION"), " (Windows)"))
             .connect_timeout(Duration::from_secs(10))
+            // A redirect is checked like the first address: never from https down to plain http, and never to a place the
+            // checks above would have refused (an https site cannot bounce a request to the router or a local service).
+            .redirect(reqwest::redirect::Policy::custom(|attempt| {
+                let downgrade = attempt.previous().last().map_or(false, |p| p.scheme() == "https") && attempt.url().scheme() == "http";
+                if attempt.previous().len() >= 6 || downgrade || allowed(attempt.url().as_str()).is_err() { attempt.stop() } else { attempt.follow() }
+            }))
             .build()
             .expect("HTTP client")
     })
@@ -48,10 +54,12 @@ fn allowed(url: &str) -> Result<reqwest::Url, String> {
         // Plain http only for this PC (Ollama) and the local network.
         "http" => {
             let host = parsed.host_str().unwrap_or("");
+            // Real address checks: a name that merely starts with "10." or "127." (10.evil.com) is not this PC or the LAN.
+            let ip4 = host.parse::<std::net::Ipv4Addr>().ok();
+            let ip6 = host.trim_matches(|c| c == '[' || c == ']').parse::<std::net::Ipv6Addr>().ok();
             let local = host == "localhost"
-                || host.starts_with("127.")
-                || host.starts_with("192.168.")
-                || host.starts_with("10.")
+                || ip4.map_or(false, |ip| ip.is_loopback() || ip.is_private())
+                || ip6.map_or(false, |ip| ip.is_loopback())
                 || host.ends_with(".local");
             if local {
                 Ok(parsed)

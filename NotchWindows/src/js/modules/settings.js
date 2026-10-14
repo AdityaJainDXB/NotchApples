@@ -18,6 +18,16 @@ const NAV = { General: ['settings', '#8e8e93'], Updates: ['share', '#30d158'], A
 const ICONS_UPDATES = 1;
 const ICONS = { General: '⚙', Appearance: '🎨', Tabs: '🗂', Shortcuts: '⌨', AI: '✨', Calendar: '📅', Weather: '⛅', Clipboard: '📋', Security: '🔒', Rules: '🧭', Automations: '🤖', Access: '🔑', About: 'ℹ' };
 
+/// Keys that hold a secret (a licence, an AI key, a token, the clipboard-link code): never in a backup, never restored from one.
+const SECRET_KEY = /^(ai\.key\.|license\.|entitle\.|clipsync\.code$)|\.(token|pass|password|secret)$/;
+/// Keys that decide where stored secrets are sent: a restored file may not change them.
+const PROTECTED_KEY = /^(smarthome\.(url|token)|ai\.(base|url|endpoint)|bambu\.on$)/;
+/// A stored value as a backup may carry it: the printers' access codes are left out.
+function scrub(k, v) {
+  if (k !== 'bambu.printers') return v;
+  try { return JSON.stringify(JSON.parse(v).map(({ accessCode, ...rest }) => rest)); } catch { return null; }
+}
+
 export function render(root, opts = {}) {
   let current = opts.pane || load('settings.pane', 'General');
   if (!PANES[current]) current = 'General';
@@ -97,7 +107,7 @@ function General(repaint, opts) {
     claudeCard(),
     card('Your data',
       setting('Back up your setup', 'Tabs, settings, notes, to-dos, snippets… (not keys).', button('Export…', async () => {
-        const data = {}; for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); if (!/^(ai\.key\.|license\.)/.test(k)) data[k] = localStorage.getItem(k); }
+        const data = {}; for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); if (SECRET_KEY.test(k)) continue; const v = scrub(k, localStorage.getItem(k)); if (v != null) data[k] = v; }
         const p = await invoke('save_file_as', { name: `NotchApple-backup-${new Date().toISOString().slice(0, 10)}.json`, base64: btoa(unescape(encodeURIComponent(JSON.stringify(data)))) });
         if (p) toast('Backup saved');
       }, { kind: 'quiet', small: true })),
@@ -105,7 +115,8 @@ function General(repaint, opts) {
         const p = await invoke('pick_file'); if (!p) return;
         try { const f = await invoke('read_file_base64', { path: p }); const data = JSON.parse(decodeURIComponent(escape(atob(f.data))));
           if (!(await confirm('Restore this backup?', { ok: 'Restore', detail: 'Your current settings, notes and to-dos are replaced.' }))) return;
-          for (const [k, v] of Object.entries(data)) localStorage.setItem(k, v); location.reload(); } catch (e) { toast(`That isn't a Notch Apple backup (${e.message}).`, { error: true }); }
+          // A backup file can come from anyone: keys that hold secrets or decide where they are sent are never taken from it.
+          for (const [k, v] of Object.entries(data)) { if (typeof v !== 'string' || v.length > 2_000_000 || !/^[A-Za-z0-9._:-]{1,80}$/.test(k) || SECRET_KEY.test(k) || PROTECTED_KEY.test(k)) continue; const clean = scrub(k, v); if (clean != null) localStorage.setItem(k, clean); } location.reload(); } catch (e) { toast(`That isn't a Notch Apple backup (${e.message}).`, { error: true }); }
       }, { kind: 'quiet', small: true })),
       setting('Reset everything', 'Back to a fresh install (your key stays).', button('Reset…', async () => {
         if (!(await confirm('Reset Notch Apple?', { ok: 'Reset', danger: true, detail: 'Removes all settings, notes, to-dos, clipboard history and snippets on this PC.' }))) return;

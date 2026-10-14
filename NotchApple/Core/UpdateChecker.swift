@@ -285,7 +285,7 @@ final class UpdateChecker: ObservableObject {
               let assets = json["assets"] as? [[String: Any]],
               let dmg = assets.first(where: { ($0["name"] as? String)?.hasSuffix(".dmg") == true }),
               let dmgURL = (dmg["browser_download_url"] as? String).flatMap(URL.init(string:)),
-              dmgURL.host == "github.com",
+              UpdateFeed.isTrustedDMG(dmgURL),
               let version = versionNumber(from: tag)
         else { return nil }
         let published = (json["published_at"] as? String).flatMap { ISO8601DateFormatter().date(from: $0) }
@@ -329,6 +329,8 @@ final class UpdateChecker: ObservableObject {
     // MARK: Installing
 
     func install() {
+        if case .downloading = phase { return }
+        if phase == .installing { return }
         guard let release = pendingUpdate ?? requiredUpdate ?? latest else { return }
         phase = .downloading(0)
         let task = URLSession.shared.downloadTask(with: release.dmgURL) { [weak self] file, response, error in

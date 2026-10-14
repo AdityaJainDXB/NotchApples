@@ -20,6 +20,10 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.0.52", date: "14 October 2026", headline: "A much bigger Plane map, and a security pass", items: [
+            "Plane: four new airfields (Seaside on the coast, and Coral Island, Palm Atoll and Lighthouse Cay on islands in the southern sea), each with a runway, hangar, windsock and helipad. Choose where Free Flight starts, and the screen shows the nearest airfield and which way it is.",
+            "Hardening from a full code review: links like notchapple://keepawake can no longer crash the app, a bad read of the saved-keys file can no longer wipe your keys, restored settings backups can't redirect your Home Assistant, and PairDrop files are limited in size and marked as downloaded.",
+        ]),
         ReleaseNote(version: "2.0.51", date: "14 October 2026", headline: "Updates work again, and helicopters fly properly", items: [
             "Update checks no longer fail with \"Couldn't reach GitHub\": they read a small file from the website first, so a busy shared network can't use up GitHub's hourly limit.",
             "Helicopters rewritten: the stick leans the helicopter (right goes right, up goes forward), the collective stays where you leave it, hover is steady, the tail rotor is calmer, and the blades are drawn properly.",
