@@ -29,12 +29,15 @@ struct BambuPrinterConfig: Codable, Identifiable, Hashable {
     var serial = ""
     /// SHA-256 of the certificate the printer showed the first time (trust on first use); nil until it connects.
     var certPin: String?
+    /// Set (to the account's region) when the printer is reached through the person's Bambu account instead of the LAN.
+    var cloud: String?
+    var isCloud: Bool { cloud != nil }
 
     /// The access code lives in the owner-only secrets file (KeychainHelper), never in UserDefaults or backups of them.
-    enum CodingKeys: String, CodingKey { case id, name, host, serial, certPin, accessCode }
+    enum CodingKeys: String, CodingKey { case id, name, host, serial, certPin, accessCode, cloud }
 
-    init(id: UUID = UUID(), name: String = "", host: String = "", accessCode: String = "", serial: String = "", certPin: String? = nil) {
-        self.id = id; self.name = name; self.host = host; self.accessCode = accessCode; self.serial = serial; self.certPin = certPin
+    init(id: UUID = UUID(), name: String = "", host: String = "", accessCode: String = "", serial: String = "", certPin: String? = nil, cloud: String? = nil) {
+        self.id = id; self.name = name; self.host = host; self.accessCode = accessCode; self.serial = serial; self.certPin = certPin; self.cloud = cloud
     }
 
     init(from decoder: Decoder) throws {
@@ -44,13 +47,14 @@ struct BambuPrinterConfig: Codable, Identifiable, Hashable {
         host = try c.decodeIfPresent(String.self, forKey: .host) ?? ""
         serial = try c.decodeIfPresent(String.self, forKey: .serial) ?? ""
         certPin = try c.decodeIfPresent(String.self, forKey: .certPin)
+        cloud = try c.decodeIfPresent(String.self, forKey: .cloud)
         accessCode = try c.decodeIfPresent(String.self, forKey: .accessCode) ?? ""   // an older save; moved to the secrets file on load
     }
 
     func encode(to encoder: Encoder) throws {
         var c = encoder.container(keyedBy: CodingKeys.self)
         try c.encode(id, forKey: .id); try c.encode(name, forKey: .name); try c.encode(host, forKey: .host)
-        try c.encode(serial, forKey: .serial); try c.encodeIfPresent(certPin, forKey: .certPin)
+        try c.encode(serial, forKey: .serial); try c.encodeIfPresent(certPin, forKey: .certPin); try c.encodeIfPresent(cloud, forKey: .cloud)
         try c.encode("", forKey: .accessCode)   // the key stays (empty) so an older build can still read the list
     }
 
@@ -78,6 +82,8 @@ final class BambuManager: ObservableObject {
     /// Printers mid-connect, so the view can show a spinner instead of a stale phase.
     @Published private(set) var connecting: Set<UUID> = []
     @Published var selectedPrinterID: UUID?
+    /// The Bambu account region the Mac is signed in to (nil when signed out). The token itself stays in the secrets file.
+    @Published private(set) var cloudRegion: String? = BambuManager.loadSession()?.region
     /// A printer running too hot, by printer: the notch glows red while this is set.
     @Published private(set) var thermalAlerts: [UUID: BambuStatusLogic.ThermalAlert] = [:]
 
@@ -200,11 +206,12 @@ final class BambuManager: ObservableObject {
     /// (BAMBU_IP / BAMBU_PRINTER_IP, BAMBU_ACCESS_CODE, BAMBU_SERIAL).
     func resolved(_ p: BambuPrinterConfig) -> BambuPrinterConfig {
         let r = BambuStatusLogic.resolved(ip: p.host, accessCode: p.accessCode, serial: p.serial)
-        return BambuPrinterConfig(id: p.id, name: p.name, host: r.ip, accessCode: r.accessCode, serial: r.serial, certPin: p.certPin)
+        return BambuPrinterConfig(id: p.id, name: p.name, host: r.ip, accessCode: r.accessCode, serial: r.serial, certPin: p.certPin, cloud: p.cloud)
     }
 
     /// A plain-language problem with the credentials, or nil when they are usable.
     static func validate(_ p: BambuPrinterConfig) -> String? {
+        if p.isCloud { return BambuStatusLogic.normalizeSerial(p.serial) == nil ? "That printer’s serial number looks wrong." : nil }   // reached through the account: no address or code
         let r = BambuStatusLogic.resolved(ip: p.host, accessCode: p.accessCode, serial: p.serial)
         if BambuStatusLogic.normalizeHost(r.ip) == nil {
             return r.ip.isEmpty ? "Add the printer's IP address or hostname." : "“\(r.ip)” doesn’t look like an IP address or hostname."
@@ -215,6 +222,46 @@ final class BambuManager: ObservableObject {
             return r.serial.isEmpty ? "Add the printer's serial number." : "“\(r.serial)” doesn’t look like a Bambu serial number."
         }
         return nil
+    }
+
+    // MARK: - Bambu account (printers watched through Bambu Cloud, so LAN Mode can stay off)
+
+    /// The saved sign-in, from the owner-only secrets file. Never the password.
+    static func loadSession() -> BambuCloud.Session? {
+        guard let text = KeychainHelper.get(.bambuCloudSession),
+              let s = try? JSONDecoder().decode(BambuCloud.Session.self, from: Data(text.utf8)), s.isValid else { return nil }
+        return s
+    }
+
+    /// Keeps a new sign-in. Returns false when it could not be written.
+    func saveSession(_ s: BambuCloud.Session) -> Bool {
+        guard s.isValid, let data = try? JSONEncoder().encode(s), let text = String(data: data, encoding: .utf8),
+              KeychainHelper.set(text, for: .bambuCloudSession) else { return false }
+        cloudRegion = s.region
+        return true
+    }
+
+    /// Adds the chosen printers from the account. Returns how many were added, and why it stopped early if it did.
+    @discardableResult
+    func addCloudPrinters(_ devices: [BambuCloud.Device], region: String) -> (added: Int, stopped: String?) {
+        var added = 0
+        for d in devices {
+            if printers.contains(where: { BambuStatusLogic.normalizeSerial($0.serial) == d.serial }) { continue }
+            guard canAddPrinter else { save(); return (added, "Another printer needs Notch Apple Pro (\(Feature.bambuMulti.title)).") }
+            let p = BambuPrinterConfig(name: d.name, serial: d.serial, cloud: region)
+            printers.append(p); added += 1
+            if selectedPrinterID == nil { selectedPrinterID = p.id }
+            connect(p)
+        }
+        save()
+        return (added, nil)
+    }
+
+    /// Signs out: the saved token is deleted and the printers that were reached through the account are removed.
+    func cloudSignOut() {
+        for p in printers where p.isCloud { remove(id: p.id) }
+        _ = KeychainHelper.delete(.bambuCloudSession)
+        cloudRegion = nil
     }
 
     // MARK: - Connections
@@ -262,6 +309,25 @@ final class BambuManager: ObservableObject {
             snapshots[p.id] = BambuStatusLogic.offline(message: problem)
             failures[p.id] = problem
             connecting.remove(p.id)
+            return
+        }
+        if let region = p.cloud {
+            guard let session = Self.loadSession(), session.region == region, session.isValid, let reg = BambuCloud.regions[region],
+                  let serial = BambuStatusLogic.normalizeSerial(p.serial) else {
+                failures[p.id] = BambuCloud.expired
+                snapshots[p.id] = BambuStatusLogic.offline(message: BambuCloud.expired)
+                return
+            }
+            connecting.insert(p.id)
+            let id = p.id
+            let client = BambuMQTT()
+            clients[id] = client
+            client.startCloud(host: reg.mqttHost, user: session.mqttUser, token: session.token, topic: BambuStatusLogic.reportTopic(serial: serial)) { [weak self, weak client] event in
+                Task { @MainActor in
+                    guard let self, let client, self.clients[id] === client else { return }
+                    self.handle(event, for: id)
+                }
+            }
             return
         }
         guard let creds = BambuStatusLogic.credentials(ip: p.host, accessCode: p.accessCode, serial: p.serial) else {
@@ -318,7 +384,7 @@ final class BambuManager: ObservableObject {
             clients[id] = nil
             thermalAlerts[id] = nil
             LiveActivityCenter.shared.recompute()
-            scheduleRetry(id)
+            if message != BambuCloud.expired { scheduleRetry(id) }   // an expired sign-in needs the person, not a retry loop
 
         case .disconnected:
             connecting.remove(id)

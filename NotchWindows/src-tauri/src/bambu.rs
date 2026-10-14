@@ -35,6 +35,86 @@ pub struct Config {
     pub host: String,
     pub access_code: String,
     pub serial: String,
+    /// Set (to "global" or "china") for a printer reached through the person's Bambu account instead of the LAN: the
+    /// sign-in itself is read from the owner's private session file, never sent through the UI.
+    #[serde(default)]
+    pub cloud: Option<String>,
+}
+
+/// Bambu Cloud's MQTT brokers, one per account region. Nothing else is ever connected to with an account token.
+pub fn cloud_host(region: &str) -> Option<&'static str> {
+    match region {
+        "global" => Some("us.mqtt.bambulab.com"),
+        "china" => Some("cn.mqtt.bambulab.com"),
+        _ => None,
+    }
+}
+
+/// The signed-in account, kept in one small file in the app's private data folder (`bambu_cloud.json`). It holds the
+/// account's numeric id and the access token Bambu issued: never the password, which is not kept anywhere.
+#[derive(Deserialize, serde::Serialize, Clone, PartialEq, Debug)]
+pub struct CloudSession {
+    pub region: String,
+    pub uid: String,
+    pub token: String,
+}
+
+fn valid_session(c: &CloudSession) -> Result<(), String> {
+    if cloud_host(&c.region).is_none() { return Err("Unknown Bambu account region.".into()); }
+    if c.uid.is_empty() || c.uid.len() > 20 || !c.uid.bytes().all(|b| b.is_ascii_digit()) { return Err("That doesn’t look like a Bambu account id.".into()); }
+    if c.token.len() < 20 || c.token.len() > 8192 || c.token.bytes().any(|b| b.is_ascii_whitespace() || b.is_ascii_control()) { return Err("That doesn’t look like a Bambu sign-in token.".into()); }
+    Ok(())
+}
+
+fn cloud_file(app: &AppHandle) -> Result<PathBuf, String> {
+    let dir = app.path().app_data_dir().map_err(|e| format!("No private place to keep the sign-in: {e}"))?;
+    std::fs::create_dir_all(&dir).map_err(|e| format!("No private place to keep the sign-in: {e}"))?;
+    Ok(dir.join("bambu_cloud.json"))
+}
+
+/// Writes the session to `path` (to a temporary file first, owner-only where the system supports it, then renamed in).
+pub fn write_session(path: &PathBuf, c: &CloudSession) -> Result<(), String> {
+    valid_session(c)?;
+    let tmp = path.with_extension("json.tmp");
+    std::fs::write(&tmp, serde_json::to_string(c).map_err(|e| e.to_string())?).map_err(|e| e.to_string())?;
+    #[cfg(unix)]
+    { use std::os::unix::fs::PermissionsExt; let _ = std::fs::set_permissions(&tmp, std::fs::Permissions::from_mode(0o600)); }
+    std::fs::rename(&tmp, path).map_err(|e| e.to_string())
+}
+
+pub fn read_session(path: &PathBuf) -> Result<Option<CloudSession>, String> {
+    let text = match std::fs::read_to_string(path) {
+        Ok(t) => t,
+        Err(e) if e.kind() == std::io::ErrorKind::NotFound => return Ok(None),
+        Err(e) => return Err(format!("couldn’t read the saved sign-in: {e}")),
+    };
+    let c: CloudSession = serde_json::from_str(&text).map_err(|_| "the saved sign-in is damaged: sign in again".to_string())?;
+    valid_session(&c)?;
+    Ok(Some(c))
+}
+
+/// Keeps the account sign-in (after the UI has signed in with the account's own password, once, in memory).
+#[tauri::command]
+pub fn bambu_cloud_save(app: AppHandle, region: String, uid: String, token: String) -> Result<(), String> {
+    write_session(&cloud_file(&app)?, &CloudSession { region, uid, token })
+}
+
+/// Which region is signed in (the token itself never goes back to the UI), or nothing.
+#[tauri::command]
+pub fn bambu_cloud_status(app: AppHandle) -> Result<Option<String>, String> {
+    Ok(read_session(&cloud_file(&app)?)?.map(|c| c.region))
+}
+
+/// Signs out: the saved token is deleted and every account-connected printer is disconnected.
+#[tauri::command]
+pub fn bambu_cloud_clear(pool: State<'_, Pool>, app: AppHandle, serials: Vec<String>) -> Result<(), String> {
+    let path = cloud_file(&app)?;
+    match std::fs::remove_file(&path) { Ok(()) => {}, Err(e) if e.kind() == std::io::ErrorKind::NotFound => {}, Err(e) => return Err(format!("couldn’t delete the saved sign-in: {e}")) }
+    let mut live = lock(&pool.inner);
+    let (gone, keep): (Vec<Entry>, Vec<Entry>) = std::mem::take(&mut *live).into_iter().partition(|e| serials.iter().any(|s| s.trim() == e.serial));
+    *live = keep;
+    gone.into_iter().for_each(Entry::shut_down);
+    Ok(())
 }
 
 struct Entry {
@@ -73,7 +153,14 @@ pub fn bambu_start(pool: State<'_, Pool>, app: AppHandle, config: Config) -> Res
     let topic = format!("device/{serial}/report");
     let pins = pin_file(&app)?;
     let mismatch = Arc::new(AtomicBool::new(false));
-    let (client, connection) = connect(&config, pins, mismatch.clone())?;
+    let session = match &config.cloud {
+        Some(region) => match read_session(&cloud_file(&app)?)? {
+            Some(c) if &c.region == region => Some(c),
+            _ => return Err("Sign in with your Bambu account again (Printer Status → Bambu account).".into()),
+        },
+        None => None,
+    };
+    let (client, connection) = connect(&config, session, pins, mismatch.clone())?;
     let stop = Arc::new(AtomicBool::new(false));
     {
         let mut live = lock(&pool.inner);
@@ -83,7 +170,8 @@ pub fn bambu_start(pool: State<'_, Pool>, app: AppHandle, config: Config) -> Res
         live.push(Entry { serial: serial.clone(), client, stop: stop.clone() });
     }
     let pump = app.clone();
-    std::thread::spawn(move || drive(pump, serial, connection, mismatch, stop));
+    let cloud = config.cloud.is_some();
+    std::thread::spawn(move || drive(pump, serial, connection, mismatch, stop, cloud));
     Ok(topic)
 }
 
@@ -106,16 +194,26 @@ pub fn bambu_running(pool: State<'_, Pool>) -> Vec<String> {
 
 /// Opens the connection and subscribes. A problem here is reported to the UI by the driving thread, so
 /// this only fails on a printer the settings describe wrongly.
-fn connect(config: &Config, pins: PathBuf, mismatch: Arc<AtomicBool>) -> Result<(Client, Connection), String> {
+fn connect(config: &Config, session: Option<CloudSession>, pins: PathBuf, mismatch: Arc<AtomicBool>) -> Result<(Client, Connection), String> {
     let serial = config.serial.trim();
-    if serial.is_empty() || config.access_code.trim().is_empty() || config.host.trim().is_empty() {
-        return Err("Add the printer’s IP, access code and serial number first.".into());
+    if serial.is_empty() { return Err("Add the printer’s serial number first.".into()); }
+    let mut opts;
+    if let Some(c) = session {
+        // Through the account: Bambu's own broker, whose certificate is checked against the system's trusted authorities.
+        let host = cloud_host(&c.region).ok_or("Unknown Bambu account region.")?;
+        opts = MqttOptions::new(format!("notchapple-{}-{serial}", &c.uid), host, PORT);
+        opts.set_credentials(format!("u_{}", c.uid), c.token);
+        opts.set_transport(Transport::tls_with_default_config());
+    } else {
+        if config.access_code.trim().is_empty() || config.host.trim().is_empty() {
+            return Err("Add the printer’s IP, access code and serial number first.".into());
+        }
+        opts = MqttOptions::new(format!("notchapple-{serial}"), config.host.trim(), PORT);   // one client id per printer, so connections never kick each other off;
+        opts.set_credentials(USER, config.access_code.trim());
+        opts.set_transport(Transport::Tls(TlsConfiguration::Rustls(printer_cert_config(pins, serial.to_string(), mismatch))));
     }
-    let mut opts = MqttOptions::new(format!("notchapple-{serial}"), config.host.trim(), PORT);   // one client id per printer, so connections never kick each other off;
-    opts.set_credentials(USER, config.access_code.trim());
     opts.set_keep_alive(Duration::from_secs(KEEP_ALIVE));
     opts.set_clean_session(true);
-    opts.set_transport(Transport::Tls(TlsConfiguration::Rustls(printer_cert_config(pins, serial.to_string(), mismatch))));
 
     let (client, connection) = Client::new(opts, 8);
     // Subscribing before the first iteration is fine: what can't be sent yet is queued.
@@ -130,7 +228,7 @@ fn connect(config: &Config, pins: PathBuf, mismatch: Arc<AtomicBool>) -> Result<
 
 /// What a connection's thread does: every report goes to the UI, and a connection that fails or ends on its
 /// own emits a state so the tab can show it (a stopped or replaced one says nothing).
-fn drive(app: AppHandle, serial: String, mut connection: Connection, mismatch: Arc<AtomicBool>, stop: Arc<AtomicBool>) {
+fn drive(app: AppHandle, serial: String, mut connection: Connection, mismatch: Arc<AtomicBool>, stop: Arc<AtomicBool>, cloud: bool) {
     for event in connection.iter() {
         if stop.load(Ordering::SeqCst) { return; }
         match event {
@@ -143,7 +241,7 @@ fn drive(app: AppHandle, serial: String, mut connection: Connection, mismatch: A
             Ok(_) => {}
             Err(e) => {
                 if stop.load(Ordering::SeqCst) { return; }
-                let _ = app.emit(EVENT_STATE, serde_json::json!({ "serial": serial, "state": "failed", "message": if mismatch.load(Ordering::SeqCst) { PIN_MISMATCH.to_string() } else { explain(&e.to_string()) } }));
+                let _ = app.emit(EVENT_STATE, serde_json::json!({ "serial": serial, "state": "failed", "message": if mismatch.load(Ordering::SeqCst) { PIN_MISMATCH.to_string() } else { explain(&e.to_string(), cloud) } }));
                 return;
             }
         }
@@ -294,14 +392,54 @@ mod tests {
         assert_eq!(decide_pin(Some("abcd"), "abce"), PinDecision::Mismatch);
     }
     #[test]
+    fn only_bambus_own_brokers_are_known() {
+        assert_eq!(cloud_host("global"), Some("us.mqtt.bambulab.com"));
+        assert_eq!(cloud_host("china"), Some("cn.mqtt.bambulab.com"));
+        assert_eq!(cloud_host("evil.example.com"), None);
+        assert_eq!(cloud_host(""), None);
+    }
+    fn sample() -> CloudSession { CloudSession { region: "global".into(), uid: "123456789".into(), token: "a".repeat(40) } }
+    #[test]
+    fn a_session_is_checked_before_it_is_kept() {
+        assert!(valid_session(&sample()).is_ok());
+        assert!(valid_session(&CloudSession { uid: "12a".into(), ..sample() }).is_err());
+        assert!(valid_session(&CloudSession { uid: "".into(), ..sample() }).is_err());
+        assert!(valid_session(&CloudSession { token: "short".into(), ..sample() }).is_err());
+        assert!(valid_session(&CloudSession { token: "has space in it ".repeat(4), ..sample() }).is_err());
+        assert!(valid_session(&CloudSession { region: "mars".into(), ..sample() }).is_err());
+    }
+    #[test]
+    fn a_session_is_written_and_read_back_and_a_missing_file_is_no_session() {
+        let dir = std::env::temp_dir().join(format!("notch-bambu-test-{}", std::process::id()));
+        std::fs::create_dir_all(&dir).unwrap();
+        let path = dir.join("bambu_cloud.json");
+        assert_eq!(read_session(&path).unwrap(), None);
+        write_session(&path, &sample()).unwrap();
+        assert_eq!(read_session(&path).unwrap(), Some(sample()));
+        #[cfg(unix)]
+        { use std::os::unix::fs::PermissionsExt; assert_eq!(std::fs::metadata(&path).unwrap().permissions().mode() & 0o777, 0o600); }
+        assert!(write_session(&path, &CloudSession { token: "x".into(), ..sample() }).is_err());
+        std::fs::write(&path, "not json").unwrap();
+        assert!(read_session(&path).is_err());
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+    #[test]
+    fn an_expired_sign_in_is_explained() {
+        assert!(explain("Not authorized", true).contains("sign in again"));
+        assert!(explain("Not authorized", false).contains("access code"));
+    }
+    #[test]
     fn fingerprints_are_sha256_hex() {
         assert_eq!(fingerprint(b"abc"), "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad");
     }
 }
 
 /// Turns a connection error into something a person can act on.
-fn explain(e: &str) -> String {
+fn explain(e: &str, cloud: bool) -> String {
     let low = e.to_lowercase();
+    if cloud && (low.contains("refused") || low.contains("not authorized") || low.contains("bad user") || low.contains("password")) {
+        return "Bambu Cloud refused the saved sign-in. It has probably expired: sign in again under Bambu account.".into();
+    }
     if low.contains("timed out") || low.contains("timeout") {
         return "Nothing answered on the LAN. Check the IP and that the printer is on the same Wi-Fi.".into();
     }

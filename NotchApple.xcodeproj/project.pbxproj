@@ -235,6 +235,7 @@
 		97C87D7865B82ECEB80B9E60 /* LiveActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = F49D3A20C7CFE9C60DB8CBC3 /* LiveActivity.swift */; };
 		9854A28185C5F1BFA9BD308B /* EntitlementService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B152DA9BC593AFE18B270D7 /* EntitlementService.swift */; };
 		9888DB8995D4D32CCCA80B7A /* AIModes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44CAF8A30126F03D6A230ED7 /* AIModes.swift */; };
+		999703452C3B4A7E989FECB4 /* BambuCloudTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4882C21A4A6F05557459BF6F /* BambuCloudTests.swift */; };
 		9A2C6A4BDCB6FDE201E61B4D /* RequiredSetup.swift in Sources */ = {isa = PBXBuildFile; fileRef = E333C9ABF7AC014274F64237 /* RequiredSetup.swift */; };
 		9A9464BC0242991E51653A79 /* CardsLogic.swift in Sources */ = {isa = PBXBuildFile; fileRef = BDFCAAEEC42B9E9ABD4338DC /* CardsLogic.swift */; };
 		9A9D1D6D9DD74FC05EDE7D67 /* SystemStatsReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0261C9487F10782B8FFD351 /* SystemStatsReader.swift */; };
@@ -321,6 +322,7 @@
 		C91A005EA4ED8AC410BAF839 /* ClaudeChatView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 76A2AE80E039AD25E2029A03 /* ClaudeChatView.swift */; };
 		C98DE3A377FCDC8CCBF285CE /* SideLyrics.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3BE2B5EE8C3DF9E81757B5F2 /* SideLyrics.swift */; };
 		CA0E4BF296C64534C899D7F2 /* FileSearchManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75CDCA4D3C86F0827F694E96 /* FileSearchManager.swift */; };
+		CA11F1C03FFC4AFD5CD1AE78 /* BambuCloudLogic.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF6150902E8344F80FB20C62 /* BambuCloudLogic.swift */; };
 		CA7CEE6CA140974017B3B517 /* SnippetsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C159DF1B14A1D38FD58EC46 /* SnippetsView.swift */; };
 		CAE1DF990BABDB15E55D4838 /* ClaudeLimitsLogic.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7936F885815136490DB5AB3F /* ClaudeLimitsLogic.swift */; };
 		CAED309713A89A35F4C679CE /* WhatsNew.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE594AA0AF5EFE02B030F414 /* WhatsNew.swift */; };
@@ -353,6 +355,7 @@
 		DDDDB7E81AB5751C2D7A3F80 /* ShortcutsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33BEEDB2663AD6544E5061C7 /* ShortcutsView.swift */; };
 		DE787D98D8EB9B7B2E4CB705 /* F1View.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1EFD1D83C7FB4561E3A2CC27 /* F1View.swift */; };
 		DFC0C10C61F488FC1CE273A4 /* FoldShader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 60E39552D413F32D02D5FFD0 /* FoldShader.swift */; };
+		E06CB949FD19F2F0CBC0A6B2 /* BambuCloudLogic.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF6150902E8344F80FB20C62 /* BambuCloudLogic.swift */; };
 		E0E40F939970A6AB282C7437 /* WeatherService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 92FC7E64A4478DE0F57D42E4 /* WeatherService.swift */; };
 		E169C6F5EBEE22CEB32E76C5 /* MeetingSummaryLogic.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1951F9A6444DB9F503B2FD2B /* MeetingSummaryLogic.swift */; };
 		E319EE438B96439F305C073F /* WallpaperLogic.swift in Sources */ = {isa = PBXBuildFile; fileRef = 940C2E169AC16EED8E3B6F5C /* WallpaperLogic.swift */; };
@@ -516,6 +519,7 @@
 		47ACBF89621DF199C9208518 /* LinkShelfTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LinkShelfTests.swift; sourceTree = "<group>"; };
 		47E065BB9B31FD505442E472 /* PanicHide.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PanicHide.swift; sourceTree = "<group>"; };
 		48667860F7FB5AB63EB47043 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		4882C21A4A6F05557459BF6F /* BambuCloudTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BambuCloudTests.swift; sourceTree = "<group>"; };
 		4885DCE3ACCF1FF623E1D25F /* BrightnessBlackout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrightnessBlackout.swift; sourceTree = "<group>"; };
 		4894C776E7909EF42A1F97E9 /* ModuleOrganizer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModuleOrganizer.swift; sourceTree = "<group>"; };
 		48EF75FD565DB103E4CEEB07 /* MusicLevelMeter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MusicLevelMeter.swift; sourceTree = "<group>"; };
@@ -750,6 +754,7 @@
 		FBF521DE52E4227ABF0CCC29 /* Entitlements.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Entitlements.swift; sourceTree = "<group>"; };
 		FC6F714640D09B5653DF1D9F /* nowplaying.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = nowplaying.js; sourceTree = "<group>"; };
 		FD3462AB4990D112534C8581 /* WallpaperView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WallpaperView.swift; sourceTree = "<group>"; };
+		FF6150902E8344F80FB20C62 /* BambuCloudLogic.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BambuCloudLogic.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -1019,6 +1024,7 @@
 		4FDBD7B4BACFA5DD0D5BABBF /* NotchAppleTests */ = {
 			isa = PBXGroup;
 			children = (
+				4882C21A4A6F05557459BF6F /* BambuCloudTests.swift */,
 				14A58A151882263600938577 /* BambuPinTests.swift */,
 				B04639220ABBD701F4F5AB0A /* CardsLogicTests.swift */,
 				1D1C64F3F921E34B6F6E3B22 /* ClaudeCodeStatusTests.swift */,
@@ -1492,6 +1498,7 @@
 		C37285A0475FC8C364AA4A5B /* BambuStatusChecker */ = {
 			isa = PBXGroup;
 			children = (
+				FF6150902E8344F80FB20C62 /* BambuCloudLogic.swift */,
 				F173F2DD0E8CE0B158D9A906 /* BambuManager.swift */,
 				B1EFD353E5C57381E9C14F7B /* BambuMQTT.swift */,
 				C1B46C85D50EF864599EA96B /* BambuSettingsView.swift */,
@@ -1846,6 +1853,7 @@
 				D06C969F43875E0C40B785B1 /* AppleScriptSupport.swift in Sources */,
 				695DD73EF704946DF4FBD01C /* AudioDeviceController.swift in Sources */,
 				00DDB2C1BC9ABCAA43C21ADD /* AudioView.swift in Sources */,
+				CA11F1C03FFC4AFD5CD1AE78 /* BambuCloudLogic.swift in Sources */,
 				F8B74D8067A0CB885DEDFD21 /* BambuMQTT.swift in Sources */,
 				9509D27C41EB45F32569CEA8 /* BambuManager.swift in Sources */,
 				AC3F95130978AB662D033CAC /* BambuSettingsView.swift in Sources */,
@@ -2120,6 +2128,8 @@
 				551145056941A04D36C2B5A2 /* AIPure.swift in Sources */,
 				4BBC20C1B9BB0BECDDA93205 /* AIStreaming.swift in Sources */,
 				AF81D61FB4970C8D89EE00D1 /* AppleIntelligence.swift in Sources */,
+				E06CB949FD19F2F0CBC0A6B2 /* BambuCloudLogic.swift in Sources */,
+				999703452C3B4A7E989FECB4 /* BambuCloudTests.swift in Sources */,
 				2A5DC111EE7812BBD43DED77 /* BambuPinTests.swift in Sources */,
 				C307D2D56FA7AA856D332C08 /* BambuStatusLogic.swift in Sources */,
 				B89F153613A7A2A15BDBC29A /* CardsLogic.swift in Sources */,
@@ -2332,7 +2342,7 @@
 				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Manual;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 116;
+				CURRENT_PROJECT_VERSION = 117;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = "";
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -2348,7 +2358,7 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 2.0.59;
+				MARKETING_VERSION = 2.0.60;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -2466,7 +2476,7 @@
 				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Manual;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 116;
+				CURRENT_PROJECT_VERSION = 117;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = "";
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -2488,7 +2498,7 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 2.0.59;
+				MARKETING_VERSION = 2.0.60;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;

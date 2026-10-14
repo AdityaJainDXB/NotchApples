@@ -3,10 +3,11 @@
 // pauses, finishes or fails, the thermal warning, and what the closed pill shows. Rules live in bambulogic.js.
 
 import { load, save } from '../store.js';
-import { invoke, listen, notify } from '../native.js';
+import { invoke, listen, notify, http } from '../native.js';
 import { provide, refresh } from '../activity.js';
 import { canUse } from '../features.js';
 import * as L from './bambulogic.js';
+import * as C from './bambucloudlogic.js';
 
 const subs = new Set();
 const snaps = new Map();    // printer id -> snapshot
@@ -48,6 +49,50 @@ export function add(p) {
   return null;
 }
 
+// ---- Bambu account (printers watched through Bambu Cloud, so LAN Mode can stay off) ----
+// The password is used once, in memory, by bambucloudlogic.js and goes only to Bambu. Rust keeps the token Bambu returns in
+// the app's private data folder; this file never sees it again and only remembers which region is signed in.
+const CLOUD_KEY = 'bambu.cloud';
+export const cloudRegion = () => load(CLOUD_KEY, null)?.region || null;
+export const cloudSignIn = (region, account, password) => C.signIn(http, region, account, password);
+export const cloudSendCode = (region, account) => C.sendCode(http, region, account);
+export const cloudWithCode = (region, account, code) => C.signInWithCode(http, region, account, code);
+export const cloudWithTfa = (region, tfaKey, code) => C.signInWithTfa(http, region, tfaKey, code);
+
+/// With a token in hand: looks up the account and the printers on it, and keeps the sign-in. Returns { ok, devices } or { ok: false, message }.
+export async function cloudFinish(region, token) {
+  const a = await C.fetchAccount(http, region, token);
+  if (!a.ok) return a;
+  try { await invoke('bambu_cloud_save', { region, uid: a.uid, token }); } catch (e) { return { ok: false, message: String(e) }; }
+  save(CLOUD_KEY, { region });
+  changed();
+  return { ok: true, devices: a.devices };
+}
+
+/// Adds the chosen printers from the account. Returns how many were added and the reason it stopped early, if it did.
+export function cloudAdd(devices, region) {
+  let added = 0, stopped = null;
+  for (const d of devices) {
+    if (printers().some((p) => (p.serial || '').trim() === d.serial)) continue;
+    if (!canAdd()) { stopped = 'Another printer needs Notch Apple Pro (More printers).'; break; }
+    const p = C.cloudPrinter(d, region);
+    savePrinters([...printers(), p]); added++;
+    if (isOn()) connect(p);
+  }
+  changed();
+  return { added, stopped };
+}
+
+/// Signs out: the saved token is deleted, and the printers that were reached through the account are removed.
+export async function cloudSignOut() {
+  const mine = printers().filter((p) => p.cloud);
+  try { await invoke('bambu_cloud_clear', { serials: mine.map((p) => p.serial.trim()) }); } catch { /* nothing saved */ }
+  mine.forEach((p) => { clearTimeout(retry.get(p.id)); retry.delete(p.id); snaps.delete(p.id); failures.delete(p.id); alerts.delete(p.id); connecting.delete(p.id); });
+  savePrinters(printers().filter((p) => !p.cloud));
+  save(CLOUD_KEY, null);
+  changed();
+}
+
 export function remove(id) {
   const p0 = byId(id);
   clearTimeout(retry.get(id)); retry.delete(id);
@@ -87,7 +132,7 @@ async function connect(p) {
   clearTimeout(retry.get(p.id));
   connecting.add(p.id); changed();
   try {
-    await invoke('bambu_start', { config: { host: p.host.trim(), access_code: p.accessCode.trim(), serial: p.serial.trim() } });
+    await invoke('bambu_start', { config: { host: (p.host || '').trim(), access_code: (p.accessCode || '').trim(), serial: p.serial.trim(), cloud: p.cloud || null } });
     if (!isOn() || !byId(p.id)) { invoke('bambu_stop', { serial: p.serial.trim() }).catch(() => {}); return; }   // switched off or removed while connecting
     connecting.delete(p.id);
     if (!snaps.has(p.id) || snaps.get(p.id).phase === 'offline') snaps.set(p.id, L.waiting());
@@ -100,7 +145,7 @@ function fail(p, message) {
   connecting.delete(p.id);
   snaps.set(p.id, L.offline(message)); failures.set(p.id, message); alerts.delete(p.id);
   clearTimeout(retry.get(p.id));
-  if (isOn() && !String(message).toLowerCase().includes(L.PIN_MISMATCH_HINT)) {
+  if (isOn() && !String(message).toLowerCase().includes(L.PIN_MISMATCH_HINT) && !/sign in again/i.test(String(message))) {
     retry.set(p.id, setTimeout(() => { const cur = byId(p.id); if (cur && isOn()) connect(cur); }, RETRY_MS));
   }
   changed();

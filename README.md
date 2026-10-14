@@ -73,10 +73,10 @@ Pick your computer. Both buttons start the download straight away. The Mac butto
   </tr>
   <tr>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/v2.0.34/NotchApple-2.0.34.dmg"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.0.59</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/v2.0.34/NotchApple-2.0.34.dmg"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.0.60</b></a>
     </td>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 1.61.0 BETA</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 1.62.0 BETA</b></a>
     </td>
   </tr>
   <tr>
@@ -224,6 +224,11 @@ All screenshots use sample data.
 ### Mac 2.0.59 · Windows 1.61.0 BETA · 14 October 2026 · 🖨️ Printer Status note
 
 - Printer Status explains that LAN Mode turns off the printer's cloud features (Bambu Handy, remote printing, print history).
+
+### Mac 2.0.60 · Windows 1.62.0 BETA · 14 October 2026 · 🖨️ Bambu account sign-in
+
+- Printer Status can sign in with your Bambu account, so the printer does not need LAN Mode (and keeps its cloud features).
+- The password goes only to Bambu and is never saved; signing out deletes the saved token.
 
 ### Mac 2.0.58 · Windows 1.60.0 BETA · 14 October 2026 · ✈️ Fly with others, procedures, night lights
 

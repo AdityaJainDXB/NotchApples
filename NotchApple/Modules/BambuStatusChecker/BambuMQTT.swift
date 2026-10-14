@@ -31,17 +31,25 @@ final class BambuMQTT {
     private var closed = false
     private var topic = ""
     private var pinMismatch = false
+    /// Set when the printer is reached through the person's Bambu account: Bambu's own broker, user u_<id>, the account token as the password.
+    private var cloudUser: String?
 
     func start(host: String, password: String, topic: String, pin: String?, onEvent: @escaping (Event) -> Void) {
-        queue.async { self.startLocked(host: host, password: password, topic: topic, pin: pin, onEvent: onEvent) }
+        queue.async { self.startLocked(host: host, password: password, topic: topic, pin: pin, cloudUser: nil, onEvent: onEvent) }
+    }
+
+    /// Through Bambu Cloud: the broker's certificate is checked against the system's trusted authorities (no pinning).
+    func startCloud(host: String, user: String, token: String, topic: String, onEvent: @escaping (Event) -> Void) {
+        queue.async { self.startLocked(host: host, password: token, topic: topic, pin: nil, cloudUser: user, onEvent: onEvent) }
     }
 
     func stop() {
         queue.async { self.tearDown(emit: false) }
     }
 
-    private func startLocked(host: String, password: String, topic: String, pin: String?, onEvent: @escaping (Event) -> Void) {
+    private func startLocked(host: String, password: String, topic: String, pin: String?, cloudUser: String?, onEvent: @escaping (Event) -> Void) {
         tearDown(emit: false)
+        self.cloudUser = cloudUser
         closed = false
         self.onEvent = onEvent
         self.topic = topic
@@ -49,6 +57,7 @@ final class BambuMQTT {
         buffer.removeAll(keepingCapacity: true)
 
         let tls = NWProtocolTLS.Options()
+        if cloudUser == nil {
         sec_protocol_options_set_verify_block(tls.securityProtocolOptions, { [weak self] _, trust, complete in
             // The printer signs its own certificate, so trust is decided by the pinned fingerprint instead.
             let ref = sec_trust_copy_ref(trust).takeRetainedValue()
@@ -65,6 +74,7 @@ final class BambuMQTT {
                 complete(false)
             }
         }, queue)
+        }
         let tcp = NWProtocolTCP.Options()
         tcp.connectionTimeout = Int(BambuStatusLogic.connectTimeout)
         let params = NWParameters(tls: tls, tcp: tcp)
@@ -76,7 +86,7 @@ final class BambuMQTT {
         }
         conn.start(queue: queue)
         let work = DispatchWorkItem { [weak self] in
-            self?.fail("Timed out reaching the printer. Check the IP and that the printer is on the same Wi-Fi.")
+            self?.fail(cloudUser != nil ? "Timed out reaching Bambu Cloud. Check your internet connection." : "Timed out reaching the printer. Check the IP and that the printer is on the same Wi-Fi.")
         }
         timeoutWork = work
         queue.asyncAfter(deadline: .now() + BambuStatusLogic.connectTimeout, execute: work)
@@ -85,7 +95,7 @@ final class BambuMQTT {
     private func handle(_ state: NWConnection.State, password: String, topic: String) {
         switch state {
         case .ready:
-            send(Self.connectPacket(password: password))
+            send(Self.connectPacket(user: cloudUser ?? BambuStatusLogic.mqttUser, clientId: Self.clientId(cloudUser: cloudUser, topic: topic), password: password))
             receive()
         case .waiting(let error):
             fail(Self.explain(error))
@@ -121,12 +131,20 @@ final class BambuMQTT {
                 let code = packet.payload.count >= 2 ? packet.payload[1] : 1
                 if code == 0 {
                     send(Self.subscribePacket(topic: topic, packetId: nextId()))
+                    // Newer printers send only what changed until they are asked for everything once (the cloud never sends the rest).
+                    if cloudUser != nil, topic.hasSuffix("/report") {
+                        send(Self.publishPacket(topic: String(topic.dropLast("/report".count)) + "/request", payload: #"{"pushing":{"sequence_id":"0","command":"pushall"}}"#))
+                    }
                     startPing()
                     emit(.connected)
                 } else {
-                    fail(code == 4 || code == 5
-                         ? "The access code was refused. Open the printer screen → Settings → LAN and copy the access code."
-                         : "The printer refused the MQTT login (code \(code)).")
+                    if cloudUser != nil {
+                        fail(code == 4 || code == 5 ? BambuCloud.expired : "Bambu Cloud refused the login (code \(code)).")
+                    } else {
+                        fail(code == 4 || code == 5
+                             ? "The access code was refused. Open the printer screen → Settings → LAN and copy the access code."
+                             : "The printer refused the MQTT login (code \(code)).")
+                    }
                 }
             case 3: // PUBLISH
                 if let payload = Self.publishPayload(packet) { emit(.payload(payload)) }
@@ -234,7 +252,25 @@ final class BambuMQTT {
         return out
     }
 
-    private static func connectPacket(password: String) -> Data {
+    /// One client id per printer (and per account), so connections never kick each other off.
+    private static func clientId(cloudUser: String?, topic: String) -> String {
+        let parts = topic.split(separator: "/")
+        let serial = parts.count >= 2 ? String(parts[1]) : ""
+        return cloudUser.map { "notchapple-\($0)-\(serial)" } ?? "notchapple"
+    }
+
+    private static func publishPacket(topic: String, payload: String) -> Data {
+        var body = Data()
+        let t = Data(topic.utf8)
+        body.append(UInt8(t.count >> 8)); body.append(UInt8(t.count & 0xFF)); body.append(t)
+        body.append(Data(payload.utf8))
+        var pkt = Data([0x30])
+        pkt.append(remaining(body.count))
+        pkt.append(body)
+        return pkt
+    }
+
+    private static func connectPacket(user: String, clientId: String, password: String) -> Data {
         var vh = Data()
         func str(_ s: String) {
             let d = Data(s.utf8)
@@ -245,8 +281,8 @@ final class BambuMQTT {
         vh.append(0xC2)              // username + password + clean session
         vh.append(UInt8(BambuStatusLogic.keepAlive >> 8))
         vh.append(UInt8(BambuStatusLogic.keepAlive & 0xFF))
-        str("notchapple")
-        str(BambuStatusLogic.mqttUser)
+        str(clientId)
+        str(user)
         str(password)
         var pkt = Data([0x10])
         pkt.append(remaining(vh.count))

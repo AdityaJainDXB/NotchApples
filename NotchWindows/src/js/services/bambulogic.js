@@ -12,6 +12,7 @@ export const emptySnapshot = () => ({ phase: 'offline', gcodeState: '', progress
 export const blankPrinter = () => ({ id: Math.random().toString(36).slice(2, 9), name: '', host: '', accessCode: '', serial: '' });
 
 export const printerName = (p) => p.name?.trim() || p.host || 'My Printer';
+export const viaCloud = (p) => !!(p && p.cloud);
 
 /// A usable IP or hostname: strips a pasted scheme, path and port, then says no to spaces.
 export function normalizeHost(raw) {
@@ -50,6 +51,7 @@ export function resolved(p, env = {}) {
 
 /// A plain-language problem with the credentials, or null when they are usable.
 export function problem(p, env) {
+  if (p && p.cloud) return normalizeSerial(p.serial) ? null : 'That printer’s serial number looks wrong.';   // reached through the account: no address or code
   const r = resolved(p, env);
   if (!normalizeHost(r.host)) return r.host ? `“${r.host}” doesn’t look like an IP address or hostname.` : 'Add the printer’s IP address or hostname.';
   if (!r.accessCode) return 'Add the access code from the printer’s screen (Settings → LAN).';

@@ -13,8 +13,8 @@ packages:
 settings:
   base:
     SWIFT_VERSION: "5.0"
-    MARKETING_VERSION: "2.0.59"
-    CURRENT_PROJECT_VERSION: "116"
+    MARKETING_VERSION: "2.0.60"
+    CURRENT_PROJECT_VERSION: "117"
     CODE_SIGN_IDENTITY: "-"
     CODE_SIGN_STYLE: Manual
     DEVELOPMENT_TEAM: ""
@@ -109,6 +109,7 @@ targets:
       - NotchApple/Modules/Wallpaper/WallpaperLogic.swift
       - NotchApple/Modules/Games/CardsLogic.swift
       - NotchApple/Modules/BambuStatusChecker/BambuStatusLogic.swift
+      - NotchApple/Modules/BambuStatusChecker/BambuCloudLogic.swift
       - NotchApple/Core/UpdateFeedLogic.swift
       - NotchApple/Modules/Tennis/TennisLogic.swift
       - NotchApple/Core/ClaudeUsageLogic.swift

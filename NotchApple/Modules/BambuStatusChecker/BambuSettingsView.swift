@@ -11,8 +11,74 @@
 
 import SwiftUI
 
+/// The Bambu account sign-in: email and password (used once, in memory, and cleared at once), then a code if Bambu asks
+/// for one, then the printers on the account. What is kept is only the token Bambu returns, in the owner-only secrets file.
+@MainActor
+final class BambuSignInModel: ObservableObject {
+    enum Step { case idle, code, tfa, pick }
+    @Published var step = Step.idle
+    @Published var region = "global"
+    @Published var email = ""
+    @Published var password = ""
+    @Published var code = ""
+    @Published var message = ""
+    @Published var busy = false
+    @Published var devices: [BambuCloud.Device] = []
+    @Published var chosen = Set<String>()
+    private var tfaKey = ""
+
+    func signIn() {
+        guard !busy else { return }
+        let pw = password
+        password = ""                      // the password leaves the form the moment it is sent
+        busy = true; message = "Signing in…"
+        Task { await handle(await BambuCloud.signIn(region: region, account: email, password: pw)) }
+    }
+
+    func confirm() {
+        guard !busy else { return }
+        let c = code
+        busy = true; message = "Checking…"
+        let step = self.step, key = tfaKey
+        Task { await handle(step == .code ? await BambuCloud.signIn(region: region, account: email, code: c) : await BambuCloud.signIn(region: region, tfaKey: key, code: c)) }
+    }
+
+    func cancel() { step = .idle; code = ""; message = ""; busy = false }
+
+    private func handle(_ result: BambuCloud.SignIn) async {
+        switch result {
+        case .ok(let token): await finish(token: token)
+        case .verify:
+            let problem = await BambuCloud.sendCode(region: region, account: email)
+            step = .code; code = ""; busy = false
+            message = problem ?? "Bambu emailed you a six-digit code."
+        case .tfa(let key):
+            tfaKey = key; step = .tfa; code = ""; busy = false
+            message = "Enter the code from your authenticator app."
+        case .error(let m):
+            message = m; busy = false
+        }
+    }
+
+    private func finish(token: String) async {
+        let a = await BambuCloud.account(region: region, token: token)
+        guard let info = a.info else { message = a.message ?? BambuCloud.fallback; step = .idle; busy = false; return }
+        guard BambuManager.shared.saveSession(BambuCloud.Session(region: region, uid: info.uid, token: token)) else {
+            message = "Couldn’t keep the sign-in on this Mac."; step = .idle; busy = false; return
+        }
+        devices = info.devices; chosen = Set(info.devices.map(\.serial)); step = .pick; busy = false
+        message = info.devices.isEmpty ? "No printers are bound to this account yet." : ""
+    }
+
+    func addChosen() {
+        let r = BambuManager.shared.addCloudPrinters(devices.filter { chosen.contains($0.serial) }, region: region)
+        step = .idle; message = r.stopped ?? (r.added == 0 ? "Those printers are already added." : "Added \(r.added) printer\(r.added == 1 ? "" : "s").")
+    }
+}
+
 struct BambuSettingsView: View {
     @ObservedObject private var manager = BambuManager.shared
+    @StateObject private var signIn = BambuSignInModel()
     @State private var newName = ""
     @State private var newHost = ""
     @State private var newAccessCode = ""
@@ -54,22 +120,30 @@ struct BambuSettingsView: View {
             if let selected = manager.selectedPrinter {
                 Section("Selected printer") {
                     TextField("Name (optional)", text: binding(selected, \.name))
-                    TextField("IP address or hostname", text: binding(selected, \.host))
-                    SecureField("Access code", text: binding(selected, \.accessCode))
-                    TextField("Serial number", text: binding(selected, \.serial))
+                    if selected.isCloud {
+                        Text("Through your Bambu account · \(selected.serial)").font(.caption).foregroundStyle(Theme.textSecondary)
+                    } else {
+                        TextField("IP address or hostname", text: binding(selected, \.host))
+                        SecureField("Access code", text: binding(selected, \.accessCode))
+                        TextField("Serial number", text: binding(selected, \.serial))
+                    }
                     if let problem = BambuManager.validate(selected) {
                         Label(problem, systemImage: "exclamationmark.triangle")
                             .font(.caption).foregroundStyle(.orange)
                     }
                     HStack {
                         Button("Reconnect") { manager.update(selected) }
-                        Button("Trust new certificate") { manager.trustNewCertificate(id: selected.id) }
-                            .help("Use after a printer firmware update or reset. Notch Apple remembers the certificate the printer showed the first time and refuses a different one.")
+                        if !selected.isCloud {
+                            Button("Trust new certificate") { manager.trustNewCertificate(id: selected.id) }
+                                .help("Use after a printer firmware update or reset. Notch Apple remembers the certificate the printer showed the first time and refuses a different one.")
+                        }
                         Spacer()
                         Button("Remove", role: .destructive) { manager.remove(id: selected.id) }
                     }
                 }
             }
+
+            accountSection
 
             Section {
                 TextField("Name (optional)", text: $newName)
@@ -87,7 +161,7 @@ struct BambuSettingsView: View {
                         .font(.caption).foregroundStyle(Theme.textSecondary)
                 }
             } header: {
-                Text("Add a printer")
+                Text("Add a printer on the LAN (needs LAN Mode)")
             } footer: {
                 Text("Empty fields fall back to the BAMBU_IP, BAMBU_ACCESS_CODE and BAMBU_SERIAL environment variables.")
             }
@@ -126,6 +200,49 @@ struct BambuSettingsView: View {
         .formStyle(.grouped)
     }
 
+    @ViewBuilder private var accountSection: some View {
+        Section {
+            if signIn.step == .pick {
+                ForEach(signIn.devices) { d in
+                    Toggle(isOn: Binding(get: { signIn.chosen.contains(d.serial) }, set: { on in if on { signIn.chosen.insert(d.serial) } else { signIn.chosen.remove(d.serial) } })) {
+                        VStack(alignment: .leading) {
+                            Text(d.name)
+                            Text("\(d.model.isEmpty ? "" : d.model + " · ")\(d.online ? "online" : "offline")").font(.caption).foregroundStyle(Theme.textSecondary)
+                        }
+                    }
+                }
+                Button("Add selected printers") { signIn.addChosen() }.disabled(signIn.chosen.isEmpty)
+            } else if signIn.step == .code || signIn.step == .tfa {
+                TextField(signIn.step == .code ? "Six-digit code from the email" : "Code from your authenticator app", text: $signIn.code)
+                    .onSubmit { signIn.confirm() }
+                HStack {
+                    Button("Confirm") { signIn.confirm() }.disabled(signIn.busy)
+                    Button("Cancel") { signIn.cancel() }
+                }
+            } else if let region = manager.cloudRegion {
+                Label("Signed in to your Bambu account (\(BambuCloud.regions[region]?.name ?? region))", systemImage: "checkmark.circle.fill")
+                    .foregroundStyle(.green)
+                Text("Printers added from the account are watched without LAN Mode. To pick up a newly added printer, sign out and sign in again.")
+                    .font(.caption).foregroundStyle(Theme.textSecondary)
+                Button("Sign out", role: .destructive) { manager.cloudSignOut(); signIn.message = "Signed out. The saved sign-in is deleted." }
+            } else {
+                Picker("Region", selection: $signIn.region) {
+                    ForEach(BambuCloud.regionOrder, id: \.self) { Text(BambuCloud.regions[$0]?.name ?? $0).tag($0) }
+                }
+                TextField("Bambu account email", text: $signIn.email).textContentType(.username)
+                SecureField("Password", text: $signIn.password).onSubmit { signIn.signIn() }
+                Button("Sign in") { signIn.signIn() }.disabled(signIn.busy || signIn.email.isEmpty || signIn.password.isEmpty)
+            }
+            if !signIn.message.isEmpty {
+                Label(signIn.message, systemImage: "info.circle").font(.caption).foregroundStyle(.orange)
+            }
+        } header: {
+            Text("Or: sign in with your Bambu account")
+        } footer: {
+            Text("Watch your printers without turning LAN Mode on, so the Bambu Handy app and the printer's cloud features keep working. Your password goes only to Bambu, from this Mac, and is never saved. Notch Apple keeps just the sign-in token Bambu returns, in an owner-only file, and signing out deletes it. Bambu has no official way to do this, so it may stop working if Bambu changes its sign-in: LAN Mode will always work.")
+        }
+    }
+
     private func setupStep(_ n: Int, _ text: String) -> some View {
         HStack(alignment: .firstTextBaseline, spacing: 10) {
             Text("\(n)").font(.caption.bold()).frame(width: 20, height: 20)
@@ -158,7 +275,7 @@ struct BambuSettingsView: View {
         let snap = manager.snapshot(for: printer.id)
         var text = snap.phase.title
         let host = manager.resolved(printer).host
-        if !host.isEmpty { text += " · \(host)" }
+        if printer.isCloud { text += " · Bambu account" } else if !host.isEmpty { text += " · \(host)" }
         if let failure = manager.failure(for: printer.id), snap.phase == .offline { text = failure }
         return text
     }
