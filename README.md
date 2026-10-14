@@ -64,10 +64,10 @@ Pick your computer. Both buttons start the download straight away. The Mac butto
   </tr>
   <tr>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/v2.0.34/NotchApple-2.0.34.dmg"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.0.52</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/v2.0.34/NotchApple-2.0.34.dmg"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.0.53</b></a>
     </td>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 1.55.0 BETA</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 1.56.0 BETA</b></a>
     </td>
   </tr>
   <tr>
@@ -211,6 +211,14 @@ All screenshots use sample data.
 ## What's new
 
 > **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is still in the repository's tags.
+
+### Mac 2.0.53 · Windows 1.56.0 BETA · 14 October 2026 · ✈️ Plane fixes, ground crew and traffic; your feedback
+
+- **No more crash on start.** The bigger fighters (F-15, F-22, Su-27) were dropped onto the runway from too high because the start height ignored the model's size, so they hit it as a crash. Every aircraft now sits down cleanly (a test checks all of them). A helicopter stays put on its pad until you lift off.
+- **Ground crew.** Stopped on an apron: **1** refuel, **2** catering, **3** baggage, **4** pushback (a tug pushes you back). Service trucks stand on the aprons. Airliners, business jets and turboprops now start at the **gate** by default (the Start at row has an Automatic setting).
+- **Traffic.** Other aircraft cross the sky. They have diamond markers with distance, a **TRAFFIC** readout and "Traffic" call-outs; a pass within 120 m is a **Close call** challenge, and a collision tears a wing off yours and sends the other aircraft down burning. Switch it off in the Fly tab.
+- **Configuration errors.** Rolling for take-off or landing without flaps in an airliner, business jet or turboprop gives a "Config, flaps" call-out, and a landing without flaps costs points in Landing mode.
+- **Feedback.** About every three to four weeks the open notch asks for an idea, a problem or praise (**Not now** skips it; it is sent only when you press Send). **Settings → Help & Feedback → Count this Mac in the user numbers** (Windows: Settings → Feedback and numbers) is off until you say yes and sends only a random id, the app version, the OS version and your plan. The website has a **What people are asking for** page.
 
 ### Mac 2.0.52 · Windows 1.55.0 BETA · 14 October 2026 · 🏝 A much bigger Plane map, and a security pass
 
@@ -1554,7 +1562,7 @@ Per-app volume and EQ use Core Audio process taps, which arrived in macOS 14.2. 
   - the clipboard link relay (`notchapple-rooms`, Cloudflare), only if you set a link code: it forwards sealed bytes it cannot read and stores nothing; secrets are never sent
   - `speed.cloudflare.com` for the speed test and a tiny Cloudflare page for the internet-drop check, only when you run them or turn the check on
   - Windows only, if you turn on the experimental notification peek: Windows' own notification list on this PC is read (read-only) to flash the newest notification beside the pill. It stays on the PC: nothing is stored or sent, and the temporary copy used when Windows has the list locked is deleted straight away
-  - the license server, only if you activate a signed key: activating or deactivating sends the key and a one-way hash of your Mac (salted per key, so it can't be linked across keys) to enforce the 3-Mac limit, and about once a day it downloads the signed list of turned-off keys (nothing about you is sent). The website's `api.json` says where the server is. Keys are checked offline; without internet, activation still works
+  - the license server, only if you agree to the anonymous user count or send feedback (a random install id, app version, OS version and plan; the text you typed), and if you activate a signed key: activating or deactivating sends the key and a one-way hash of your Mac (salted per key, so it can't be linked across keys) to enforce the 3-Mac limit, and about once a day it downloads the signed list of turned-off keys (nothing about you is sent). The website's `api.json` says where the server is. Keys are checked offline; without internet, activation still works
 - PairDrop and Nearby Wi-Fi chat never leave your local network.
 - Anonymous room messages are end-to-end encrypted before they leave your Mac, and the relay (`ntfy.sh`, or a public MQTT broker as a fallback) stores nothing.
 - Per-app audio is processed in memory on your Mac. Nothing is recorded.
@@ -1563,7 +1571,7 @@ Per-app volume and EQ use Core Audio process taps, which arrived in macOS 14.2. 
 - Search only asks Spotlight's local index. Nothing you search for leaves your Mac.
 - Captures are kept in memory while you work. AI history (with captured images, up to 1600 px) is saved only in `~/Library/Application Support/Notch apple/`; turn it off, stop keeping images, or set it to delete old chats in Settings → AI History. **Extract text** runs entirely on your Mac.
 - At checkout your email is used only to send your key and for "Lost my key?"; once you've paid, the server keeps only a salted hash of it.
-- No telemetry or analytics. Signing in with Google is optional and only syncs your setup and Pro to your other Macs.
+- No telemetry or analytics unless you switch it on. Settings → Help & Feedback → **Count this Mac in the user numbers** (off until you say yes, on Windows under Settings → Feedback and numbers) sends a random id made on your computer, the app version, the OS version and your plan about once a day, and nothing else: no name, email, licence or address, and the server keeps no IP address. The feedback card in the notch (about every three to four weeks; Not now skips it) sends only what you type, when you press Send. Signing in with Google is optional and only syncs your setup and Pro to your other Macs.
 
 ## Thanks to the collaborators 🙏
 

@@ -49,6 +49,7 @@ struct PrivacyDashboard: View {
         return [
             Destination(host: onDevice ? "Nowhere (on this Mac)" : ai.title, what: "Your AI questions, and images you choose to send", when: "Only when you ask", active: settings.claudeEnabled),
             Destination(host: "DuckDuckGo", what: "The question, when web search is on", when: "Only with the globe turned on (Pro)", active: Entitlements.shared.canUse(.webSearch)),
+            Destination(host: "the licence server (notchapple-licenses…workers.dev)", what: "Only if you agree: a random install id, app version, macOS version and plan, once a day; and feedback or problem notes you press Send on", when: "Only after you turn on Settings → Help & Feedback → Count this Mac, or press Send on a note", active: Insights.shared.sharing),
             Destination(host: "api.github.com, github.com", what: "Nothing about you: the release list", when: "Update checks (can be turned off)", active: true),
             Destination(host: "open-meteo.com", what: "Your approximate location", when: "Weather", active: settings.todayEnabled),
             Destination(host: "ESPN, Jolpica, F1 live timing", what: "Nothing about you: public scores", when: "Sports, Live, F1 and Tennis tabs", active: settings.sportsEnabled || settings.f1Enabled || settings.tennisEnabled || settings.liveEnabled),
@@ -267,12 +268,25 @@ struct HelpSettings: View {
     @ObservedObject private var crashes = CrashReports.shared
     @ObservedObject private var entitlements = Entitlements.shared
     @ObservedObject private var notesSync = NotesCloudSync.shared
+    @ObservedObject private var insights = Insights.shared
     @AppStorage("updates.beta") private var beta = false
     @State private var describe = ""
     @State private var reviewing: String?
 
     var body: some View {
         Form {
+            Section {
+                Button("Tell the developers what you think…") { insights.askNow() }
+                Toggle(isOn: Binding(get: { insights.sharing }, set: { insights.setSharing($0) })) {
+                    Text("Count this Mac in the user numbers (anonymous)")
+                    Text("Sends a random id made on this Mac, the app version, the macOS version and your plan, about once a day. No name, email, licence or address; nothing is sent while this is off, and you can turn it off at any time.")
+                }
+            } header: {
+                Text("Feedback and numbers")
+            } footer: {
+                Text("About every three to four weeks the notch asks for an idea, a problem or praise when you open it. It is only sent when you press Send, and Not now skips it.")
+            }
+
             Section {
                 TextField("What happened, or what would you like?", text: $describe, axis: .vertical).lineLimit(2...5)
                 HStack {

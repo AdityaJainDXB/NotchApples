@@ -37,6 +37,7 @@
 // salted hash per Mac for the device limit. A plain email is kept only on unpaid orders,
 // for up to 48 hours, so the key can be emailed when the payment arrives.
 
+import * as Insights from './insights.js';
 const TIER = { pro: 1, ultimate: 2 };
 const TIER_LABEL = { 1: 'PRO', 2: 'ULTM' };
 const TIER_NAME = { 1: 'Pro', 2: 'Ultimate' };
@@ -506,6 +507,9 @@ async function admin(env, path, body) {
     await env.KV.delete(`asset:${body.id}`);
     return { deleted: body.id };
   }
+  if (path === '/admin/insights') return await Insights.insights(env);
+  if (path === '/admin/glitches') return await Insights.glitches(env);
+  if (path === '/admin/feedback') return await Insights.feedbackList(env);
   if (path === '/admin/stats') {
     let cursor, total = 0, pro = 0, ult = 0, susp = 0, active = 0;
     const revoked = await revokedIds(env);
@@ -904,6 +908,9 @@ export default {
         return json(result);
       }
       switch (path) {
+        case '/telemetry/ping': return json(await Insights.ping(env, body));
+        case '/telemetry/glitch': return json(await Insights.glitch(env, body));
+        case '/feedback': return json(await Insights.feedback(env, body));
         case '/order': return json(await order(env, body));
         case '/claim': return json(await claim(env, body));
         case '/promo': return json(await promo(env, body));
@@ -915,6 +922,7 @@ export default {
       }
       throw new HTTPError(404, 'Not found');
     } catch (e) {
+      if (e instanceof Insights.InsightsError) return json({ error: e.message }, e.status);
       if (e instanceof HTTPError) return json({ error: e.message, ...e.extra }, e.status);
       console.error('Unhandled error', e && e.stack || e);
       return json({ error: 'Something went wrong. Please try again.' }, 500);

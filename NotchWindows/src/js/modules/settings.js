@@ -105,6 +105,10 @@ function General(repaint, opts) {
       setting('Show notifications on the pill (experimental)', 'Flashes the newest Windows notification beside the pill. It reads Windows’ own notification list on this PC, read-only; nothing is stored or sent. Windows has no official way to do this, so it may not work on every PC.', notificationToggle()),
       setting('Volume gauge', 'Shows the volume on the pill for a moment when it changes. Off by default because Windows shows its own volume pop-up.', toggle(load('hud.volume', false), (v) => save('hud.volume', v)))),
     claudeCard(),
+    card('Feedback and numbers',
+      setting('Tell the developers what you think', 'An idea, a problem or praise. It is sent only when you press Send.', button('Open…', () => import('../services/insights.js').then((m) => m.ask()), { kind: 'quiet', small: true })),
+      setting('Count this PC in the user numbers (anonymous)', 'Sends a random id made on this PC, the app version, the Windows version and your plan, about once a day. No name, email, licence or address. Nothing is sent while this is off; the feedback card appears about every three to four weeks and Not now skips it.',
+        toggle(load('insights.choice', '') === 'yes', (v) => import('../services/insights.js').then((m) => m.setSharing(v))))),
     card('Your data',
       setting('Back up your setup', 'Tabs, settings, notes, to-dos, snippets… (not keys).', button('Export…', async () => {
         const data = {}; for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); if (SECRET_KEY.test(k)) continue; const v = scrub(k, localStorage.getItem(k)); if (v != null) data[k] = v; }

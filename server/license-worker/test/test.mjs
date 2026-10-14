@@ -545,6 +545,46 @@ await test('World board: the weekly board only has recent scores; the admin can 
   assert.equal((await call('/admin/plane-clear', { mode: 'hoops' }, { authorization: 'Bearer wrong' })).status, 401);
 });
 
+const iid = (n) => n.toString(16).padStart(32, '0');
+await test('Insights: an opted-in install pings once, the admin sees counts (and no one else can)', async () => {
+  const ping = (o) => call('/telemetry/ping', { id: iid(1), v: '2.0.52', os: 'mac', osv: '27.0', tier: 1, ...o });
+  assert.equal((await ping()).status, 200);
+  assert.equal((await ping({ id: iid(2), os: 'win', v: '1.55.0', osv: '11', tier: 0 })).status, 200);
+  assert.equal((await ping({ id: iid(3), v: '2.0.51', tier: 2 })).status, 200);
+  assert.equal((await ping()).status, 200);                       // the same install again: no double count
+  const d = await call('/admin/insights', {}, { authorization: 'Bearer admin-test' });
+  assert.equal(d.status, 200);
+  assert.equal(d.total, 3); assert.equal(d.byOs.mac, 2); assert.equal(d.byOs.win, 1);
+  assert.equal(d.byVersion['2.0.52'], 1); assert.equal(d.byTier.Ultimate, 1);
+  assert.equal(d.dailyActive.at(-1).active, 3);
+  assert.equal(d.active1, 3); assert.equal(d.newLast7, 3);
+  assert.equal((await call('/admin/insights', {}, { authorization: 'Bearer nope' })).status, 401);
+  assert.equal((await call('/admin/insights', {})).status, 401);
+});
+await test('Insights: bad ids, versions and systems are refused; nothing identifying is stored', async () => {
+  assert.equal((await call('/telemetry/ping', { id: 'not-an-id', v: '2.0.52', os: 'mac' })).status, 400);
+  assert.equal((await call('/telemetry/ping', { id: iid(9), v: '<script>', os: 'mac' })).status, 400);
+  assert.equal((await call('/telemetry/ping', { id: iid(9), v: '2.0.52', os: 'linux' })).status, 400);
+  const users = [...store.keys()].filter((k) => k.startsWith('usr:'));
+  for (const k of users) assert.ok(!JSON.stringify(meta.get(k)).match(/email|ip|name/i), 'no personal fields');
+});
+await test('Insights: glitch notes and feedback are stored, rate-limited, trimmed, and listed for the admin', async () => {
+  const g = await call('/telemetry/glitch', { id: iid(5), v: '2.0.52', os: 'mac', kind: 'crash', text: 'The notch froze when I dragged a file\u0000.' });
+  assert.equal(g.status, 200);
+  assert.equal((await call('/telemetry/glitch', { id: iid(5), v: '2.0.52', os: 'mac', text: 'again, too soon' })).status, 429);
+  assert.equal((await call('/telemetry/glitch', { id: iid(6), v: '2.0.52', os: 'mac', text: 'x' })).status, 400);
+  const f = await call('/feedback', { id: iid(5), v: '2.0.52', os: 'mac', kind: 'idea', text: 'A pomodoro stats page please' });
+  assert.equal(f.status, 200);
+  assert.equal((await call('/feedback', { id: iid(5), v: '2.0.52', os: 'mac', kind: 'idea', text: 'second one right away' })).status, 429);
+  await call('/feedback', { id: iid(7), v: '1.55.0', os: 'win', kind: 'weird-kind', text: 'x'.repeat(1500) });
+  const gl = await call('/admin/glitches', {}, { authorization: 'Bearer admin-test' });
+  assert.equal(gl.glitches.length, 1); assert.match(gl.glitches[0].text, /^The notch froze/); assert.ok(!gl.glitches[0].text.includes('\u0000'));
+  const fb = await call('/admin/feedback', {}, { authorization: 'Bearer admin-test' });
+  assert.equal(fb.feedback.length, 2); assert.equal(fb.byKind.idea, 2);
+  assert.equal(fb.feedback.find((x) => x.os === 'win').text.length, 1000);
+  assert.equal((await call('/admin/feedback', {})).status, 401);
+});
+
 // Fixture for the Swift tests: a Pro and an Ultimate key from this run, with this run's public key.
 const far = 4102444800;   // the year 2100, so the fixture never expires under the Swift tests
 const fx = { publicKey: btoa(String.fromCharCode(...pubRaw)), pro: leaked, ultimate: (await call('/admin/issue', { tier: 'ultimate' }, { authorization: 'Bearer admin-test' })).key,

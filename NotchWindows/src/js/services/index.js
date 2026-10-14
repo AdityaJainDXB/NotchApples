@@ -5,7 +5,7 @@
 // the app doesn't make twenty things start (and the window stutter) at the same moment.
 
 const NOW = ['clipboard', 'focus', 'timer', 'media', 'rules'];
-const LATER = ['bambu', 'klick', 'convert', 'pairdrop', 'sports', 'reminders', 'calendar', 'weather', 'markets', 'screentime', 'privacy', 'awake',
+const LATER = ['insights', 'bambu', 'klick', 'convert', 'pairdrop', 'sports', 'reminders', 'calendar', 'weather', 'markets', 'screentime', 'privacy', 'awake',
   'downloads', 'messenger', 'plugins', 'automations', 'updates', 'flights', 'f1', 'tennis', 'claudecode', 'hud', 'clipsync', 'wellbeing', 'syswatch', 'claudeusage', 'winnotifs', 'sidelyrics'];
 
 // The Ultimate services are in the private repository: a build from the public source simply doesn't have them.

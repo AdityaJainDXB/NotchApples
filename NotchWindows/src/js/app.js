@@ -290,6 +290,7 @@ export async function expand(tab, opts) {
   // A first launch starts with the feature chooser (an existing setup that already has tabs chosen skips it).
   const firstRun = !load('onboarding.done', false) && load('modules.enabled', null) === null;
   show(firstRun ? 'welcome' : (tab || active), opts);
+  if (!firstRun) import('./services/insights.js').then((m) => m.noteOpened()).catch(() => {});   // the feedback card, every three to four weeks
   await nextFrame();
   body.classList.remove('swap');
   if (animate) {

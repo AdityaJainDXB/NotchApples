@@ -88,6 +88,7 @@ struct NotchRootView: View {
     @EnvironmentObject private var settings: SettingsManager
     @StateObject private var entitlements = Entitlements.shared
     @ObservedObject private var updater = UpdateChecker.shared
+    @ObservedObject private var insights = Insights.shared
     @ObservedObject private var patchLog = PatchLog.shared
     @ObservedObject private var tour = TourModel.shared
     @ObservedObject private var topBar = TopBarPrefs.shared
@@ -155,7 +156,7 @@ struct NotchRootView: View {
         .tint(Theme.accent)
         // A new theme rebuilds the notch so every view picks up the new colours.
         .id(ThemeManager.shared.currentThemeID)
-        .onChange(of: state.isExpanded) { _, open in if open { updater.noteNotchOpened() } }
+        .onChange(of: state.isExpanded) { _, open in if open { updater.noteNotchOpened(); insights.noteNotchOpened() } }
     }
 
     /// Radius of the concave shoulders where the notch meets the menu bar.
@@ -187,6 +188,9 @@ struct NotchRootView: View {
         } else if updater.reminderDue, let release = updater.reminderRelease {
             // Every 4th or 5th time the notch is opened while an update is waiting.
             RequiredUpdateView(release: release, skippable: true).insetInNotch().overlay(alignment: .topTrailing) { closeButton }
+        } else if insights.surveyDue {
+            // Every three to four weeks (and from Settings → Help & Feedback): an idea, a problem or praise. Not now skips it.
+            FeedbackView().insetInNotch().overlay(alignment: .topTrailing) { closeButton }
         } else {
             VStack(spacing: 10) {
                 header

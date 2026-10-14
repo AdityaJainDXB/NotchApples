@@ -10,7 +10,7 @@ Mac (and Windows) users who live on the keyboard: students checking a maths ques
 1. Make the offer clear in one screen and get people to download (Mac DMG, Homebrew, Windows installer).
 2. Prove it with the live notch demo and real screenshots, never mockups pretending to be screenshots.
 3. Explain pricing honestly: the notch is free; Pro is $1 and Ultimate $5, paid once.
-4. Be upfront about privacy: local first, free AI or fully local Ollama, no tracking in the app.
+4. Be upfront about privacy: local first, free AI or fully local Ollama, no tracking in the app unless the person opts in to the anonymous user count and feedback box.
 5. Support the project: optional Litecoin donations and GitHub stars. No ads anywhere.
 
 ## Voice

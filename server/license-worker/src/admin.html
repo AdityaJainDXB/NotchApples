@@ -97,7 +97,10 @@ tr.k:hover td{background:rgba(255,255,255,.025)}
     <div class="row small dim" style="gap:14px;margin-top:6px"><span><i style="display:inline-block;width:10px;height:10px;border-radius:3px;background:var(--p);vertical-align:-1px"></i> Pro</span><span><i style="display:inline-block;width:10px;height:10px;border-radius:3px;background:var(--warn);vertical-align:-1px"></i> Ultimate</span><div class="sp"></div><span id="srcSum"></span></div>
   </section>
 
-  <div class="grid">
+  <section class="card" id="insightsCard" style="margin:16px 0">
+    <h2>Users <span style="font-weight:400;color:var(--dim)">&middot; only installs that agreed to share anonymous usage are counted</span></h2>
+    <div class="stats" id="insStats"><div class="card stat"><div class="n">-</div><div class="l">Installs</div></div></div>
+    <div class="grid">
     <section class="card">
       <h2>Generate keys</h2>
       <label>Tier</label>
@@ -198,9 +201,9 @@ $('logout').onclick = signOut;
 
 async function start() {
   $('login').style.display = 'none'; $('app').style.display = 'block';
-  await Promise.all([loadStats(), loadKeys(true), loadPromos(), loadAudit()]);
+  await Promise.all([loadStats(), loadKeys(true), loadPromos(), loadAudit(), loadInsights()]);
 }
-$('refresh').onclick = () => { loadStats(); loadKeys(true); loadAudit(); };
+$('refresh').onclick = () => { loadStats(); loadKeys(true); loadAudit(); loadInsights(); };
 
 async function loadStats() {
   try {
@@ -233,6 +236,30 @@ async function loadAudit() {
     const r = await api('audit');
     $('aRows').innerHTML = r.rows.length ? r.rows.map((x) => '<tr><td>' + (x.at ? new Date(x.at).toLocaleString(undefined, { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : '–') + '</td><td>' + esc(x.action) + '</td><td class="mono">' + esc(x.target) + '</td><td class="dim">' + esc(x.detail) + '</td></tr>').join('') : '<tr><td colspan="4" class="dim">Nothing yet.</td></tr>';
   } catch (e) { $('aRows').innerHTML = '<tr><td colspan="4" class="st-bad">' + esc(e.message) + '</td></tr>'; }
+}
+
+// ---- users, glitches and feedback
+const insEsc = (t) => String(t == null ? '' : t).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const insDate = (t) => new Date(t).toLocaleString(undefined, { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+const insRows = (obj, cols) => Object.entries(obj).sort((a, b) => b[1] - a[1]).map(([k, n]) => `<tr><td>${insEsc(k)}</td><td>${n}</td></tr>`).join('') || `<tr><td colspan="${cols}">No data yet</td></tr>`;
+async function loadInsights() {
+  try {
+    const s = await api('insights');
+    const card = (n, l) => `<div class="card stat"><div class="n">${insEsc(n)}</div><div class="l">${insEsc(l)}</div></div>`;
+    $('insStats').innerHTML = card(s.total, 'Installs sharing') + card(s.active1, 'Active today') + card(s.active7, 'Active in 7 days') + card(s.active30, 'Active in 30 days') + card(s.newLast7, 'New this week') + card((s.byOs.mac || 0) + ' / ' + (s.byOs.win || 0), 'Mac / Windows');
+    const max = Math.max(1, ...s.dailyActive.map((d) => d.active));
+    $('insBars').innerHTML = s.dailyActive.map((d) => `<div title="${insEsc(d.day)}: ${d.active}" style="flex:1;background:var(--p);border-radius:4px 4px 0 0;height:${Math.max(3, Math.round(d.active / max * 86))}px;min-width:8px"></div>`).join('');
+    $('insDays').innerHTML = s.dailyActive.map((d) => `<div style="flex:1;text-align:center">${insEsc(d.day.slice(8))}</div>`).join('');
+    $('insVer').innerHTML = Object.entries(s.versionsByOs).sort((a, b) => b[1] - a[1]).map(([k, n]) => { const [os, v] = k.split('|'); return `<tr><td>${os === 'mac' ? 'macOS' : 'Windows'}</td><td>${insEsc(v)}</td><td>${n}</td></tr>`; }).join('') || '<tr><td colspan="3">No data yet</td></tr>';
+    $('insOs').innerHTML = insRows(s.byOsVersion, 2); $('insTier').innerHTML = insRows(s.byTier, 2);
+  } catch (e) { toast(e.message); }
+  try {
+    const g = await api('glitches');
+    $('glRows').innerHTML = g.glitches.map((x) => `<tr><td>${insEsc(insDate(x.at))}</td><td>${x.os === 'mac' ? 'macOS' : 'Windows'}</td><td>${insEsc(x.v)}</td><td style="white-space:pre-wrap">${insEsc(x.text)}</td></tr>`).join('') || '<tr><td colspan="4">None reported</td></tr>';
+    const f = await api('feedback');
+    $('fbSummary').textContent = `· ${Object.entries(f.byKind).map(([k, n]) => `${n} ${k}`).join(', ') || 'none yet'}`;
+    $('fbRows').innerHTML = f.feedback.map((x) => `<tr><td>${insEsc(insDate(x.at))}</td><td>${insEsc(x.kind)}</td><td>${x.os === 'mac' ? 'macOS' : 'Windows'}</td><td>${insEsc(x.v)}</td><td style="white-space:pre-wrap">${insEsc(x.text)}</td></tr>`).join('') || '<tr><td colspan="5">None yet</td></tr>';
+  } catch (e) { toast(e.message); }
 }
 
 // ---- list

@@ -20,6 +20,11 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.0.53", date: "14 October 2026", headline: "Plane: no more crash on take-off start, ground crew and traffic; your feedback", items: [
+            "Plane: fighters (F-15, F-22, Su-27 and others) no longer crash into the runway the moment a flight starts: the start height now matches each model's size, and helicopters stay put on their pad until you lift off.",
+            "Plane: airliners start at the gate by default, where the ground crew works (1 refuel, 2 catering, 3 baggage, 4 pushback), and other aircraft cross the sky with markers, traffic call-outs, close calls and mid-air collisions that bring both down. Flap configuration errors are called out.",
+            "A feedback card now appears in the open notch about every three to four weeks (Not now skips it), and Settings → Help & Feedback can count this Mac anonymously (off until you say yes).",
+        ]),
         ReleaseNote(version: "2.0.52", date: "14 October 2026", headline: "A much bigger Plane map, and a security pass", items: [
             "Plane: four new airfields (Seaside on the coast, and Coral Island, Palm Atoll and Lighthouse Cay on islands in the southern sea), each with a runway, hangar, windsock and helipad. Choose where Free Flight starts, and the screen shows the nearest airfield and which way it is.",
             "Hardening from a full code review: links like notchapple://keepawake can no longer crash the app, a bad read of the saved-keys file can no longer wipe your keys, restored settings backups can't redirect your Home Assistant, and PairDrop files are limited in size and marked as downloaded.",

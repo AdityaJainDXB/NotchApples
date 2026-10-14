@@ -73,6 +73,7 @@ enum FeatureHub {
         let s = SettingsManager.shared
         if s.meetingAlert && s.todayEnabled && Entitlements.shared.canUse(.meetingAlert) { MeetingWatcher.shared.check() }
         EventCountdown.shared.check()
+        Insights.shared.pingIfDue()
         if s.rainAlert && s.todayEnabled && Entitlements.shared.canUse(.rainAlert) { RainWatcher.shared.checkIfDue() }
         if s.devicesEnabled {
             PrivacyMonitor.shared.setRunning(s.privacyIndicator)

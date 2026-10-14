@@ -2439,7 +2439,7 @@
       this.agil = (this.heli ? 6.5 : 5) - 2 * clamp((spec.stall - 24) / 46, 0, 1);
       this.turb = 1;
       this.buildGear();
-      this.reset([0, spec.gear, 0], 0, 0, true);
+      this.reset([0, spec.gear * (spec.scale || 1), 0], 0, 0, true);
     }
     /// Contact points (body axes, x right, y up, -z forward): three wheels on springs, and the structure that scrapes
     /// when they fail: wing tips, tail, nose, belly, engine pods and the roof.
@@ -2622,6 +2622,8 @@
       this.emergency = true; this.autoI = 0; return true;
     }
     emergencyOff() { this.emergency = false; }
+    /// A parked helicopter (on the ground, collective down) stays where it is: no creeping or slow turning on its skids.
+    park() { if (this.heli && this.onGround && !this.crashed) { this.vel[0] = 0; this.vel[2] = 0; this.w = v3(); } }
     autoLand(input, agl, dt) {
       const s = this.s, vy = this.vel[1], hs = Math.hypot(this.vel[0], this.vel[2]);
       let vTarget = agl > 40 ? -4.5 : agl > 12 ? -(1.4 + 0.11 * agl) : -clamp(0.35 + 0.1 * agl, 0.35, 1.7);   // m/s
@@ -2649,7 +2651,7 @@
       const s = this.s, { f, u, r } = this.axes();
       this.t += dt;
       const gh0 = groundAt(world, this.pos[0], this.pos[2]);
-      const agl = this.pos[1] - s.gear - gh0;
+      const agl = this.pos[1] - s.gear * (s.scale || 1) - gh0;
       if (this.emergency) {
         if (this.onGround && Math.hypot(this.vel[0], this.vel[1], this.vel[2]) < 1.2) { this.emergency = false; this.events.push({ type: 'emergencydone' }); }
         else input = this.autoLand(input, agl, dt);
@@ -3137,8 +3139,8 @@
       if (!wreck) {
         // Tyre squeal when the side load is at the limit, and smoke and a screech under a locked wheel.
         this.squealT -= dt; this.skidEvT = (this.skidEvT || 0) - dt;
-        if (sq > 0 && this.squealT <= 0) { this.squealT = 0.28; this.events.push({ type: 'squeal', k: sq, at: [pos[0], pos[1] - this.s.gear, pos[2]] }); }
-        if (this.skidT > 0.15 && this.skidEvT <= 0) { this.skidEvT = 0.25; this.events.push({ type: 'skid', k: clamp(this.skidT / 1.5, 0.2, 1), at: [pos[0], pos[1] - this.s.gear, pos[2]] }); }
+        if (sq > 0 && this.squealT <= 0) { this.squealT = 0.28; this.events.push({ type: 'squeal', k: sq, at: [pos[0], pos[1] - this.s.gear * (this.s.scale || 1), pos[2]] }); }
+        if (this.skidT > 0.15 && this.skidEvT <= 0) { this.skidEvT = 0.25; this.events.push({ type: 'skid', k: clamp(this.skidT / 1.5, 0.2, 1), at: [pos[0], pos[1] - this.s.gear * (this.s.scale || 1), pos[2]] }); }
       }
       this.gGear = Math.min(gsum / G - 1, 12); if (this.gGear < 0) this.gGear = 0;
       if (this.gGear > this.maxGGear) this.maxGGear = this.gGear;
@@ -3741,7 +3743,7 @@
     // invertY false (the default): up climbs, for the mouse and the ↑ key. True: flight-stick style, down climbs.
     let invert = read('invertY', false), mouseOn = read('mouse', true), sens = read('sens', 1), sound = read('sound', true), units = read('units', 'kmh');
     WX = sanWx(read('weather', WX_DEFAULT));   // Weather panel settings, shared by every mode
-    const saveWx = () => { write('weather', WX); if (screen === 'menu' && flight) flight.reset([0, plane.gear, 0], 0, 0, true); };   // the menu scene's windsocks follow
+    const saveWx = () => { write('weather', WX); if (screen === 'menu' && flight) flight.reset([0, gearH(), 0], 0, 0, true); };   // the menu scene's windsocks follow
     let playerName = read('name', '');
 
     // ---- sound (Web Audio): engine drone, a chime for hoops, a thud for crashes
@@ -3905,7 +3907,7 @@
     const cancelSpeech = () => { try { window.speechSynthesis?.cancel(); } catch { /* ignore */ } };
     /// Looks ahead along the flight path for ground that is rising above you: seconds until it, or null.
     function terrainAhead() {
-      const alt = flight.pos[1] - plane.gear, g0 = groundAt(W, flight.pos[0], flight.pos[2]);
+      const alt = flight.pos[1] - gearH(), g0 = groundAt(W, flight.pos[0], flight.pos[2]);
       for (const t of [3, 5, 7, 9, 11, 14]) {
         const x = flight.pos[0] + flight.vel[0] * t, z = flight.pos[2] + flight.vel[2] * t, gh = groundAt(W, x, z);
         if (gh - g0 > 12 && gh > alt - 30) return t;
@@ -3915,7 +3917,7 @@
     function gpwsTick(dt) {
       if (gpwsT > 0) gpwsT -= dt;
       if (!gpwsKind(plane) || flight.crashed || !gpwsOn) { gpwsLastFt = null; return; }
-      const alt = flight.pos[1] - plane.gear, ft = (alt - groundAt(W, flight.pos[0], flight.pos[2])) * 3.281, sink = -flight.vel[1] * 196.85;
+      const alt = flight.pos[1] - gearH(), ft = (alt - groundAt(W, flight.pos[0], flight.pos[2])) * 3.281, sink = -flight.vel[1] * 196.85;
       const airborne = !flight.onGround, arcade = mode.id === 'hoops' || mode.id === 'trial';
       const [x, z] = [flight.pos[0], flight.pos[2]];
       const full = gpwsKind(plane) === true;      // an airliner calls everything; the fighter's voice only says "Pull up"
@@ -4012,12 +4014,12 @@
       const applies = failures === 'often' || mode.id === 'free' || mode.id === 'landing';
       failAt = rate && applies ? (mode.id === 'landing' ? 20 + Math.random() * 40 : -Math.log(Math.random()) / rate + 20) : Infinity;
       if (mode.id === 'landing' && failures === 'rare' && Math.random() > 0.25) failAt = Infinity;
-      rollAcc = 0; loopAcc = 0; lowT = 0; stoppedT = 0; hadTakeoff = false; hadAir = false; stopCredited = false; hoverT = 0; cfgTakeoff = false; cfgLanding = false; svc = null; svcDone = {}; traffic = []; trafficT = 6; nearSeen = new Set(); traffic = []; trafficT = 6; nearSeen = new Set();
+      rollAcc = 0; loopAcc = 0; lowT = 0; stoppedT = 0; hadTakeoff = false; hadAir = false; stopCredited = false; hoverT = 0; cfgTakeoff = false; cfgLanding = false; svc = null; svcDone = {}; traffic = []; trafficT = 3; nearSeen = new Set(); traffic = []; trafficT = 6; nearSeen = new Set();
       hoops = []; nextHoop = 0;
       const homePad = HELIPADS[0], hoverTrim = plane.rotor ? 1.06 / plane.rotorLift : 0;
       const spot = startSpot();
-      if (mode.id === 'free' && plane.rotor) flight.reset([spot.pad.x, groundAt(W, spot.pad.x, spot.pad.z) + plane.gear + 0.05, spot.pad.z], 0, 0, true);   // a helicopter starts on its helipad
-      else if (mode.id === 'free') flight.reset([spot.pos[0], groundAt(W, spot.pos[0], spot.pos[2]) + plane.gear, spot.pos[2]], 0, 0, true);
+      if (mode.id === 'free' && plane.rotor) flight.reset([spot.pad.x, groundAt(W, spot.pad.x, spot.pad.z) + gearH() + 0.05, spot.pad.z], 0, 0, true);   // a helicopter starts on its helipad
+      else if (mode.id === 'free') flight.reset([spot.pos[0], groundAt(W, spot.pos[0], spot.pos[2]) + gearH(), spot.pos[2]], 0, 0, true);
       else if (mode.id === 'landing' && plane.rotor) {
         // On approach to the helipad: 300 m out and 70 m up, flying slowly towards it.
         flight.reset([homePad.x, groundAt(W, homePad.x, homePad.z) + 70, homePad.z + 300], 0, 14, false);
@@ -4162,10 +4164,12 @@
       return Math.sign(v) * Math.min(1, Math.pow((a - dead) / (1 - dead), 1.3));
     };
     /// The helicopter's collective lever: W raises it, S lowers it, and it stays where you leave it.
+    /// How high the aircraft's centre sits when its wheels are on the ground (the model's size is part of it).
+    const gearH = () => plane.gear * (plane.scale || 1);
     let heliColl = 0;
-    let trafficOn = read('traffic', true), traffic = [], trafficT = 8, nearSeen = new Set();   // AI aircraft crossing the sky
-    let startAt = read('startAt', 'home');   // where a free flight begins: 'home' or an airfield id
-    const startSpot = () => STARTS.find((x) => x.id === startAt) || STARTS[0];
+    let trafficOn = read('traffic', true), traffic = [], trafficT = 3, nearSeen = new Set();   // AI aircraft crossing the sky
+    let startAt = read('startAt', 'auto');   // where a free flight begins: 'home' or an airfield id
+    const startSpot = () => STARTS.find((x) => x.id === (startAt === 'auto' ? (['liner', 'biz', 'turbo'].includes(plane.cat) ? 'gate' : 'home') : startAt)) || STARTS[0];
     function input() {
       const has = (k) => keys.has(k);
       const m = mouseOn && mouse.in && mouse.engaged;
@@ -4444,7 +4448,7 @@
     const trafficRadius = (spec) => (spec.span || 5) * (spec.scale || 1) + 2.5;
     function spawnTraffic() {
       const id = TRAFFIC_IDS[Math.floor(Math.random() * TRAFFIC_IDS.length)], spec = PLANES.find((x) => x.id === id);
-      const theta = Math.random() * Math.PI * 2, dist = 3600 + Math.random() * 2200;
+      const theta = Math.random() * Math.PI * 2, dist = 2600 + Math.random() * 1700;
       const x = flight.pos[0] + Math.sin(theta) * dist, z = flight.pos[2] - Math.cos(theta) * dist;
       const floor = groundAt(W, x, z) + 320, alt = Math.max(floor, flight.pos[1] + (Math.random() - 0.4) * 500);
       // Aim at the player with some spread: some pass wide, a few come straight at you.
@@ -4497,7 +4501,7 @@
       traffic = traffic.filter((a) => a.state !== 'gone');
       trafficNearest = nearest;
     }
-    let trafficNearest = null;
+    let trafficNearest = null, lastVP = null;
     /// A mid-air collision: the other aircraft loses control and falls burning, and the player's loses a wing.
     function collideTraffic(a) {
       a.state = 'fall'; a.t = 0;
@@ -4523,10 +4527,12 @@
       const inp = input();
       ctl = devCtl || inp;
       if (devHold) return;
-      flight.brake = keys.has(' ') || keys.has('b');
+      // A helicopter on the ground with the collective down is held by its skid friction / parking brake (the wind alone would slide it).
+      flight.brake = keys.has(' ') || keys.has('b') || (plane.rotor && flight.onGround && heliColl < 0.12);
       const prev = flight.pos.slice();
       const wasGround = flight.onGround;
       flight.step(dt, inp, W);
+      if (plane.rotor && heliColl < 0.12 && Math.abs(inp.yaw) < 0.05) flight.park();
       elapsed += dt;
       // A dead engine's propeller only windmills in the airflow.
       propAngle += dt * (flight.damage.engine ? 8 + flight.throttle * 60 * flight.damage.power : flight.speed * 0.12);
@@ -4662,7 +4668,7 @@
       }
       // Burning rubber off a burst tyre.
       if ((flight.damage.tyreL || flight.damage.tyreR) && flight.onGround && flight.speed > 6 && Math.random() < dt * 14) {
-        puff('dark', add(flight.pos, qrot(flight.q, [flight.damage.tyreL ? -1.4 : 1.4, -plane.gear, 0.5])), jitter(2));
+        puff('dark', add(flight.pos, qrot(flight.q, [flight.damage.tyreL ? -1.4 : 1.4, -gearH(), 0.5])), jitter(2));
       }
 
       // Hoops: passing through the ring's plane inside its radius.
@@ -4785,7 +4791,7 @@
       if (Math.abs(rollAcc) > Math.PI * 2) { achieve('roll'); rollAcc = 0; }
       loopAcc += w[0] * dt; loopT += dt; if (loopT > 10) { loopAcc *= 0.5; loopT = 5; }
       if (Math.abs(loopAcc) > Math.PI * 2 && !flight.onGround) { achieve('loop'); loopAcc = 0; }
-      const agl = flight.pos[1] - plane.gear - groundAt(W, flight.pos[0], flight.pos[2]);
+      const agl = flight.pos[1] - gearH() - groundAt(W, flight.pos[0], flight.pos[2]);
       if (!flight.onGround && agl < 15 && flight.speed > 60) { lowT += dt; if (lowT > 3) achieve('low'); } else lowT = 0;
       if (flight.ias > plane.max * 0.97) achieve('fast');
       const bp = flight.pos;
@@ -4808,7 +4814,7 @@
       }
       if (!flight.onGround) rotateCalled = true;
       // "Too low, gear": an airliner low and slow with its wheels still up.
-      const aglNow = flight.pos[1] - plane.gear - groundAt(W, flight.pos[0], flight.pos[2]);
+      const aglNow = flight.pos[1] - gearH() - groundAt(W, flight.pos[0], flight.pos[2]);
       gearWarn = !!plane.retract && !flight.onGround && flight.gearPos < 0.99 && !flight.gearDown && aglNow < 200 && flight.ias < plane.stall * 1.8 && flight.throttle < 0.85;
       if (gearWarn && !gpwsOn && elapsed - gearBeepAt > 1.2) { gearBeepAt = elapsed; beep(900, 0.12, 'square', 0.1); setTimeout(() => beep(700, 0.12, 'square', 0.1), 150); }
       if (!lowFuelWarned && flight.fuel < (plane.fuel || 1800) * 0.12 && flight.damage.engine) { lowFuelWarned = true; toast('⛽ LOW FUEL', 2200); beep(660, 0.2, 'square', 0.12); setTimeout(() => beep(660, 0.2, 'square', 0.12), 260); }
@@ -4905,7 +4911,7 @@
       for (const f of pm.fans) if (parts.has(f.attach)) draw(f.gl, mat4mul(M, model(qaxis([0, 0, 1], surf.fan * f.dir), f.at, 1)));
       // Lights.
       const ground = !menu && flight.onGround, gearOut = menu || (plane.retract ? (flight.gearPos == null ? 1 : flight.gearPos) > 0.3 : true);
-      const agl = menu ? 0 : flight.pos[1] - plane.gear - groundAt(W, flight.pos[0], flight.pos[2]);
+      const agl = menu ? 0 : flight.pos[1] - gearH() - groundAt(W, flight.pos[0], flight.pos[2]);
       const ph = (t / 1000) % 1.25, strobeOn = ph < 0.06 || (ph > 0.16 && ph < 0.22), beaconOn = (t / 1000) % 1.1 < 0.22;
       const landOn = menu || (ground ? flight.throttle > 0.02 || flight.speed > 2 : plane.retract ? gearOut && agl < 1500 : agl < 400);
       const running = menu || flight.damage.engine || flight.speed > 20, moving = menu || !ground || flight.speed > 2.5;
@@ -4953,7 +4959,7 @@
       const showPlane = screen !== 'fly' || camMode !== 1;
       if (screen === 'menu') {
         const a = t * 0.0003;
-        flight.pos = [0, plane.gear, 0]; flight.q = qheading(0, 0); flight.crashed = false;
+        flight.pos = [0, gearH(), 0]; flight.q = qheading(0, 0); flight.crashed = false;
         const r = 15 * (plane.cam || plane.scale);
         eye = [Math.sin(a) * r, 4.5, Math.cos(a) * r]; up = [0, 1, 0];
         // Aim left of the plane so it turns in the free space to the right of the menu.
@@ -4991,6 +4997,7 @@
       const proj = persp(fovy, w / h, camMode === 1 ? 0.3 : 1, 14000);
       if (devView) { eye = devView.eye; at = devView.at; up = [0, 1, 0]; }
       const vp = mat4mul(proj, lookAt(eye, at, up));
+      lastVP = vp;
       gl.uniformMatrix4fv(U.vp, false, vp);
 
       // Sky, ground, trees, airfield, clouds and water (it leaves the ordinary shader bound).
@@ -5048,7 +5055,7 @@
       h2.scale(dpr, dpr);
       const W2 = w / dpr, H2 = h / dpr, s = Math.min(1, W2 / 640);
       const spd = flight.speed, kmh = units === 'kmh';
-      const alt = flight.pos[1] - plane.gear;
+      const alt = flight.pos[1] - gearH();
       const agl = alt - groundAt(W, flight.pos[0], flight.pos[2]);
       h2.font = `700 ${Math.round(12 * s + 2)}px system-ui, sans-serif`; h2.textBaseline = 'middle';
       const box = (x, y, bw, bh) => { h2.fillStyle = 'rgba(8,12,24,.55)'; h2.beginPath(); h2.roundRect ? h2.roundRect(x, y, bw, bh, 8) : h2.rect(x, y, bw, bh); h2.fill(); };
@@ -5097,7 +5104,7 @@
       }
       // Altimeter.
       {
-        const cx = 8 + DR * 3 + 14, cy = dy, ft = (flight.pos[1] - plane.gear) * 3.281, mb = 1013;
+        const cx = 8 + DR * 3 + 14, cy = dy, ft = (flight.pos[1] - gearH()) * 3.281, mb = 1013;
         ring(cx, cy, DR);
         for (let i = 0; i < 50; i++) {
           const a = -Math.PI / 2 + (i / 50) * Math.PI * 2, major = i % 5 === 0;
@@ -5181,6 +5188,7 @@
       if (mode.id === 'hoops') status = `⭕ ${score}    ⏱ ${Math.max(0, Math.ceil(timeLeft))}s`;
       else if (mode.id === 'trial') status = `Hoop ${Math.min(nextHoop + 1, hoops.length)}/${hoops.length}    ⏱ ${elapsed.toFixed(1)}s`;
       else if (mode.id === 'landing') status = 'Land on the runway and stop';
+      else if (!plane.rotor && flight.onGround && flight.speed < 0.5 && onApron(flight.pos) && !hadTakeoff) status = 'At the gate: press 1 refuel · 2 catering · 3 baggage · 4 pushback, then taxi to the runway';
       else if (plane.rotor && flight.onGround && !hadAir) status = 'Hold W to raise the collective · ↑ leans forward · A/D turn · H emergency landing';
       else status = flight.onGround && !hadTakeoff ? (invert ? 'Hold W for throttle · cursor down or ↓ to lift off' : 'Hold W for throttle · cursor up or ↑ to lift off') : 'Free flight';
       const tw = h2.measureText(status).width + 24;
@@ -5258,6 +5266,22 @@
         h2.font = `700 ${Math.round(9 * s + 2)}px system-ui`; h2.textAlign = 'left'; h2.textBaseline = 'middle';
         const bw2 = h2.measureText(txt).width + 16, by2 = H2 - 8 - 24;
         box(W2 - bw2 - 8, 8 + (flight.damage ? 0 : 0) + 7 * 16 * s + 22, bw2, 22); h2.fillStyle = 'rgba(255,255,255,.85)'; h2.fillText(txt, W2 - bw2, 8 + 7 * 16 * s + 33);
+      }
+      // Markers over the other aircraft you can see, with their distance (so they are never just a dot in the haze).
+      if (trafficOn && lastVP) {
+        h2.font = `700 ${Math.round(9 * s + 2)}px system-ui`; h2.textAlign = 'center'; h2.textBaseline = 'middle';
+        for (const a of traffic) {
+          if (a.state !== 'fly') continue;
+          const px = a.pos[0], py = a.pos[1], pz = a.pos[2], m = lastVP;
+          const cw = m[3] * px + m[7] * py + m[11] * pz + m[15];
+          if (cw <= 1) continue;
+          const sx = ((m[0] * px + m[4] * py + m[8] * pz + m[12]) / cw * 0.5 + 0.5) * W2, sy = (1 - ((m[1] * px + m[5] * py + m[9] * pz + m[13]) / cw * 0.5 + 0.5)) * H2;
+          if (sx < 20 || sx > W2 - 20 || sy < 20 || sy > H2 - 20) continue;
+          const d = len(sub(a.pos, flight.pos)); if (d > 8000) continue;
+          const col = d < 1500 ? '#ffd166' : 'rgba(255,255,255,.85)';
+          h2.strokeStyle = col; h2.lineWidth = 1.6; h2.beginPath(); h2.moveTo(sx, sy - 11); h2.lineTo(sx + 11, sy); h2.lineTo(sx, sy + 11); h2.lineTo(sx - 11, sy); h2.closePath(); h2.stroke();
+          h2.fillStyle = col; h2.fillText(`${a.spec.name.split(' ').slice(-1)[0]} ${d < 950 ? Math.round(d) + ' m' : (d / 1000).toFixed(1) + ' km'}`, sx, sy + 24);
+        }
       }
       // The nearest other aircraft, with its distance, height difference and which way it lies.
       if (trafficOn && trafficNearest && trafficNearest.a.state === 'fly') {
@@ -5376,7 +5400,7 @@
             <input data-place maxlength="40" placeholder="Type a city or country" style="width:150px"><button data-a="goplace">Go</button></div>
           <div class="pg-hint" style="margin-top:3px">${escapeHtml(placeNote || `Now flying over: ${regionOf(regionId).id ? regionOf(regionId).name + ' (' + regionOf(regionId).lm + ')' : 'the home valley'}. The landmark stands just off the runway.`)}</div>
           <h2>3 · Start at <small style="font-weight:500;opacity:.6">for Free Flight</small></h2>
-          <div class="pg-row" style="gap:5px;flex-wrap:wrap">${STARTS.map((x) => `<button data-start="${x.id}" class="${x.id === startSpot().id ? 'pg-on' : ''}">${x.name}</button>`).join('')}</div>
+          <div class="pg-row" style="gap:5px;flex-wrap:wrap"><button data-start="auto" class="${startAt === 'auto' ? 'pg-on' : ''}" title="Airliners, business jets and turboprops start at the gate with the ground crew; the rest on the runway">Automatic</button>${STARTS.map((x) => `<button data-start="${x.id}" class="${startAt === x.id ? 'pg-on' : ''}">${x.name}</button>`).join('')}</div>
           <div class="pg-row" style="margin-top:8px"><button data-traffic class="${trafficOn ? 'pg-on' : ''}" title="Other aircraft cross the sky; you can pass them, hear a traffic call, or hit them">AI traffic: ${trafficOn ? 'On' : 'Off'}</button><span class="pg-hint">Other aircraft in the sky: a mid-air collision brings both down.</span></div>
           ${weatherPanel()}
           <h2>5 · Pick a challenge</h2><div class="pg-modes">${MODES.map((m) => `<button class="pg-mode ${m === mode ? 'pg-on' : ''}" data-mode="${m.id}">${m.icon} ${m.name}<small>${m.desc}</small></button>`).join('')}</div>
