@@ -20,6 +20,12 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.0.51", date: "14 October 2026", headline: "Updates work again, and helicopters fly properly", items: [
+            "Update checks no longer fail with \"Couldn't reach GitHub\": they read a small file from the website first, so a busy shared network can't use up GitHub's hourly limit.",
+            "Helicopters rewritten: the stick leans the helicopter (right goes right, up goes forward), the collective stays where you leave it, hover is steady, the tail rotor is calmer, and the blades are drawn properly.",
+            "Helicopters start on a helipad (there is one at the airfield and one on the mountain plateau), with new challenges: Hover steady, On the H, Top of the world.",
+            "Fixes the mountain strip challenge never showing when you flew in rather than took off. The Bambu tab is now called Printer Status, with clear setup steps.",
+        ]),
         ReleaseNote(version: "2.0.50", date: "13 October 2026", headline: "Bambu Lab printers, and helicopter emergencies", items: [
             "New Bambu Lab tab: watch your 3D printer on your Wi-Fi, with status colours (green printing, yellow paused, blue idle, gray offline), progress, time left and live nozzle and bed temperatures, and it shows beside the notch while a print runs.",
             "A red glow, a notification and a sound if a heater runs too hot or the hotend creeps hot; a soft sound and tap when a print pauses, finishes or fails. The printer's certificate is remembered on first connection and a different one is refused.",

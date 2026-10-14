@@ -200,16 +200,16 @@
     // length used for ground effect, and thrust stays 0: the engine only drives the rotor. Lift comes from the
     // disc along the body's up axis, so pitching or banking tilts it and the helicopter flies like the real thing.
     { id: 'r44', cat: 'rotary', name: 'Robinson R44', kind: 'Light helicopter', blurb: 'A four-seat piston helicopter with a skidded gear, light on the controls. Hover, then tilt the disc to fly.',
-      rotor: true, rotorLift: 1.18, rotorR: 5.05,
-      stall: 44, cruise: 45, max: 65, thrust: 0, authority: 1, pitch: 0.85, roll: 0.95, yaw: 1.25, stability: 0.55, gear: 1.35, scale: 1, cam: 1,
+      rotor: true, rotorLift: 1.9, rotorR: 5.05,
+      stall: 44, cruise: 45, max: 65, thrust: 0, authority: 1, pitch: 0.85, roll: 0.95, yaw: 0.7, stability: 0.55, gear: 1.35, scale: 1, cam: 1,
       span: 0.6, wingY: -0.5, wingZ: -2.2, nose: -2.6, tail: 5.6, gLimit: 3.5, wingX: 0.5, tailZ: 4.6, tailX: 0.6 },
     { id: 'b206', cat: 'rotary', name: 'Bell 206 JetRanger', kind: 'Utility helicopter', blurb: 'The classic turbine light helicopter: quick on the pedals, with a teetering two-blade rotor. Carries slung loads in its day.',
-      rotor: true, rotorLift: 1.24, rotorR: 5.2,
-      stall: 46, cruise: 52, max: 72, thrust: 0, authority: 1, pitch: 0.85, roll: 1.0, yaw: 1.35, stability: 0.5, gear: 1.45, scale: 1, cam: 1,
+      rotor: true, rotorLift: 1.95, rotorR: 5.2,
+      stall: 46, cruise: 52, max: 72, thrust: 0, authority: 1, pitch: 0.85, roll: 1.0, yaw: 0.75, stability: 0.5, gear: 1.45, scale: 1, cam: 1,
       span: 0.7, wingY: -0.55, wingZ: -2.4, nose: -2.7, tail: 5.9, gLimit: 3.5, wingX: 0.55, tailZ: 4.9, tailX: 0.6 },
     { id: 'ah64', cat: 'rotary', name: 'AH-64 Apache', kind: 'Attack helicopter', blurb: 'A twin-engine gunship on wheels: heavy, twin-rotor scream, and the fuselage barely moves when you pull the collective.',
-      rotor: true, rotorLift: 1.2, rotorR: 7.3,
-      stall: 48, cruise: 55, max: 76, thrust: 0, authority: 1, pitch: 0.75, roll: 0.8, yaw: 1.2, stability: 0.6, gear: 1.2, scale: 1, cam: 1,
+      rotor: true, rotorLift: 1.85, rotorR: 7.3,
+      stall: 48, cruise: 55, max: 76, thrust: 0, authority: 1, pitch: 0.75, roll: 0.8, yaw: 0.65, stability: 0.6, gear: 1.2, scale: 1, cam: 1,
       span: 0.9, wingY: -0.6, wingZ: -2.6, nose: -3.4, tail: 6.4, gLimit: 3.5, wingX: 0.6, tailZ: 5.4, tailX: 0.7 },
   ];
 
@@ -908,7 +908,10 @@
       : [p[0], p[1] * Math.cos(a) - p[2] * Math.sin(a), p[1] * Math.sin(a) + p[2] * Math.cos(a)];
     for (let k = 0; k < n; k++) {
       const a = (k / n) * Math.PI * 2;
-      const P = (r, c, t) => spin([r, c, t], a);
+      // A blade lies flat in the disc: along the radius, with its chord across it and its thin side facing the axis.
+      // Main rotor (axis y): radius along x, chord along z, thickness along y. Tail rotor (axis x): radius along y,
+      // chord along z, thickness along x.
+      const P = (r, c, t) => axis === 'y' ? spin([r, t, c], a) : spin([t, r, c], a);
       const q = (s) => [P(0, s * cR / 2, -th), P(R, s * cT / 2 + sw, -th), P(R, s * cT / 2 + sw, th), P(0, s * cR / 2, th)];
       b.hexa([...q(-1), ...q(1)], C);
     }
@@ -918,8 +921,9 @@
     for (let i = 1; i < ring.length - 1; i++) b.tri(ring[0], ring[i], ring[i + 1], C, [0, 0, 0]);
     // The blur disc: a flat plate the renderer fades in as the rotor speeds up.
     const disc = new Builder();
-    const rr = []; for (let i = 0; i < 28; i++) { const t = (i / 28) * Math.PI * 2; rr.push([Math.cos(t) * R, Math.sin(t) * R, 0]); }
-    polyFan(disc, [[0, 0, 0], ...rr, rr[0]], [0, 0, -1], [0.6, 0.6, 0.63]);
+    // The disc lies in the same plane as the blades (flat for the main rotor, upright for the tail rotor).
+    const rr = []; for (let i = 0; i < 28; i++) { const t = (i / 28) * Math.PI * 2; rr.push(axis === 'y' ? [Math.cos(t) * R, 0, Math.sin(t) * R] : [0, Math.cos(t) * R, Math.sin(t) * R]); }
+    polyFan(disc, [axis === 'y' ? [0, 0, 0] : [0, 0, 0], ...rr, rr[0]], axis === 'y' ? [0, -1, 0] : [-1, 0, 0], [0.6, 0.6, 0.63]);
     return { mesh: b, disc };
   }
 
@@ -1221,6 +1225,12 @@
   const RUNWAY = { x: 0, z0: 0, z1: -1400, half: 22 };   // the main runway runs from z = 0 towards -z
   /// A second, shorter strip on a plateau in the hills.
   const RIDGE = { x: -2300, z0: 1250, z1: 550, half: 16, y: 120 };
+  /// Helipads: a square of concrete with an H. Helicopters start on the first one; the second is on the mountain plateau.
+  const HELIPADS = [
+    { id: 'home', name: 'Airfield helipad', x: -75, z: -170, half: 14 },
+    { id: 'ridge', name: 'Mountain helipad', x: RIDGE.x + 70, z: 900, half: 14 },
+  ];
+  const padAt = (p) => HELIPADS.find((h) => Math.abs(p[0] - h.x) < h.half && Math.abs(p[2] - h.z) < h.half) || null;
   /// The ground is a heightfield of TCELL-metre cells cut into TCHUNK x TCHUNK-cell chunks, which are generated, meshed
   /// (at four levels of detail) and planted with trees on demand as the plane flies. Water is the surface at WATER.
   const TCELL = 32, TCHUNK = 32, TCS = TCELL * TCHUNK, WORLD = 12288, WATER = -2;
@@ -1628,7 +1638,7 @@
 
   // ---- painted ground: what you would land on
 
-  const PAVED = [[-22, 22, -1440, 40], [51, 65, -1297, -113], [22, 51, -127, -113], [22, 51, -1297, -1283], [22, 38, -707, -693], [38, 90, -460, -210], [38, 104, -760, -560], [RIDGE.x - 16, RIDGE.x + 16, 550, 1250]];
+  const PAVED = [[-22, 22, -1440, 40], [51, 65, -1297, -113], [22, 51, -127, -113], [22, 51, -1297, -1283], [22, 38, -707, -693], [38, 90, -460, -210], [38, 104, -760, -560], [RIDGE.x - 16, RIDGE.x + 16, 550, 1250], ...HELIPADS.map((h) => [h.x - h.half, h.x + h.half, h.z - h.half, h.z + h.half])];
   const onPaved = (x, z) => { for (const p of PAVED) if (x > p[0] && x < p[1] && z > p[2] && z < p[3]) return true; return false; };
   const snowLine = (x, z) => 1180 + (vnoise(x / 430 + 5, z / 430) - 0.5) * 300;
   /// What the ground is made of at (x, z): 'runway' (any paving, the mountain strip too), 'road', 'water', 'sand', 'snow', 'rock', 'forest' or 'grass'.
@@ -1774,6 +1784,14 @@
     for (const sg of [-1, 1]) rectQ(marks, rx + sg * (rh - 1.2), rx + sg * (rh - 0.7), RIDGE.z0, RIDGE.z1, ry + 0.14, paint);
     block([rx + 60, ry + 6, 900], [30, 12, 24], hex('#b5651d'), 'hangar'); gable(b, rx + 60, ry + 12, 900, 30, 24, 4, hex('#7f3f00'), true);
     sock(rx - 26, 1210, ry);
+    // Helipads: concrete, a yellow edge, a white H and a ring of lights at the corners.
+    for (const hp of HELIPADS) {
+      const y = gAt(hp.x, hp.z) + 0.1, h = hp.half;
+      rectQ(decal, hp.x - h, hp.x + h, hp.z - h, hp.z + h, y, concrete);
+      for (const [x0, x1, z0, z1] of [[-h, h, -h, -h + 0.7], [-h, h, h - 0.7, h], [-h, -h + 0.7, -h, h], [h - 0.7, h, -h, h]]) rectQ(marks, hp.x + x0, hp.x + x1, hp.z + z0, hp.z + z1, y + 0.04, yellow);
+      rectQ(marks, hp.x - 5, hp.x - 3.2, hp.z - 6, hp.z + 6, y + 0.05, paint); rectQ(marks, hp.x + 3.2, hp.x + 5, hp.z - 6, hp.z + 6, y + 0.05, paint); rectQ(marks, hp.x - 3.2, hp.x + 3.2, hp.z - 0.9, hp.z + 0.9, y + 0.05, paint);
+      for (const sx of [-1, 1]) for (const sz of [-1, 1]) lights.box([hp.x + sx * (h - 0.4), y + 0.3, hp.z + sz * (h - 0.4)], [0.6, 0.6, 0.6], hex('#35e06a'));
+    }
 
     // ---- airfield buildings: hangars, control tower, terminal
     const steel = hex('#95a5a6'), glass = hex('#5d8fb5');
@@ -2573,9 +2591,11 @@
       // the disc trims itself back to level, so a light correction for big tilts is all the attitude needs.
       const { f, r } = this.axes(), vf = dot(this.vel, f), vr = dot(this.vel, r);
       const gain = agl < 10 ? 0.06 : 0.035;
-      const pitch = clamp(vf * gain - this.pitchAngle * 0.8, -0.3, 0.3);
-      const roll = clamp(vr * gain + this.bank * 0.8, -0.3, 0.3);
-      return { ...input, throttle: collective, pitch, roll };
+      // The cyclic is an angle command: lean the disc against the drift (nose up while moving forward, banked away from
+      // the side it is sliding to).
+      const pitch = clamp(vf * gain, -0.5, 0.5);
+      const roll = clamp(-vr * gain, -0.5, 0.5);
+      return { ...input, throttle: collective, collective, pitch, roll };
     }
 
     step(dt, input, world) {
@@ -2676,6 +2696,9 @@
       }
       let acc = add(add(add(lift, drag), add(side, thrust)), [0, -G, 0]);
       if (rotor) acc = add(acc, mul(u, rotor));
+      // The rotor's own downwash resists vertical motion, so a collective setting gives a steady climb or descent rate
+      // (and hands off it holds its height) instead of an ever faster rise.
+      if (this.heli && this.throttle > 0.05) acc = add(acc, [0, -this.vel[1] * 0.9, 0]);
       this.gload = dot(add(acc, [0, G, 0]), u) / G;
       if (this.gload > this.maxG) this.maxG = this.gload;
       if (this.gload < this.minG) this.minG = this.gload;
@@ -2706,9 +2729,13 @@
       // tail rotor's own, not the wind-vane feedback a plane's fin gives: at a helicopter's speeds a sideslip
       // is mostly the wind it is drifting with, and chasing it all the time only wobbles the nose.
       if (this.heli) {
-        target[0] = input.pitch * s.pitch;
+        // The stick sets how far the disc leans (up to about 25 degrees), not how fast it turns: hold it and the helicopter
+        // settles at that lean and flies steadily; let go and it comes back to level. Positive pitch is nose up, positive
+        // roll is the right side down (the game's keys flip the pitch so that "up" flies forward).
+        const maxTilt = 25 * DEG, kP = 3.2;
+        target[0] = clamp((input.pitch * maxTilt - this.pitchAngle) * kP, -s.pitch * 1.6, s.pitch * 1.6);
         target[1] = -input.yaw * s.yaw;
-        target[2] = input.roll * s.roll;
+        target[2] = clamp((this.bank - input.roll * maxTilt) * kP, -s.roll * 1.6, s.roll * 1.6);
       }
       // Adverse yaw (the rising wing drags back) and, on single-engine propeller planes, a little torque and p-factor
       // that pull the nose left under power at low speed.
@@ -2718,7 +2745,7 @@
       // Wing leveller: with the roll keys released, the wings roll back to level by themselves (positive roll
       // rate is to the left, and a positive bank is right wing down, so the bank itself is the correction).
       // Only hands off and not upside down, so loops and inverted flight still work.
-      if (input.roll === 0 && input.pitch === 0 && Math.abs(this.bank) < 100 * DEG && !this.onGround && intact && this.sd < 0.05 && !this.spin) {
+      if (!this.heli && input.roll === 0 && input.pitch === 0 && Math.abs(this.bank) < 100 * DEG && !this.onGround && intact && this.sd < 0.05 && !this.spin) {
         // A helicopter holds its attitude: the leveller works at hover and pushes harder (the rotor is quick).
         const hold = clamp(Vi / s.cruise, 0.3, 1);
         target[2] += Math.sin(this.bank) * (this.heli ? 2.6 : 1.3) * clamp(Vi / s.cruise, this.heli ? 0.45 : 0.3, this.heli ? 1.1 : 1);
@@ -2781,8 +2808,9 @@
 
       // The collective is a lever, not a lever-rate: it moves to where the key puts it, while a plane's
       // throttle ramps whichever way the key is held. Same input, different feel, as it should be.
+      const collective = input.collective !== undefined ? input.collective : clamp(input.throttle, 0, 1);
       this.throttle = this.heli
-        ? clamp(this.throttle + (clamp(input.throttle, 0, 1) - this.throttle) * Math.min(1, dt * (input.throttle > this.throttle ? 2.2 : 1.6)), 0, 1)
+        ? clamp(this.throttle + (collective - this.throttle) * Math.min(1, dt * (collective > this.throttle ? 2.2 : 1.6)), 0, 1)
         : clamp(this.throttle + input.throttle * dt * 0.6, 0, 1);
       // Fuel: burnt with the throttle, and the engine stops when the tank is dry.
       if (this.damage.engine && power > 0) {
@@ -3422,6 +3450,9 @@
     { id: 'glider', name: 'Glider pilot', desc: 'Land on a runway after an engine failure' },
     { id: 'onewing', name: 'One-winged', desc: 'Keep flying 10 s after losing a wing' },
     { id: 'survivor', name: 'Walked away', desc: 'Survive a belly landing' },
+    { id: 'hover', name: 'Hover steady', desc: 'In a helicopter, hold a steady hover for 15 s' },
+    { id: 'pad', name: 'On the H', desc: 'Land a helicopter on a helipad and stop' },
+    { id: 'padridge', name: 'Top of the world', desc: 'Land a helicopter on the mountain helipad' },
   ];
 
   // ------------------------------------------------------------------ styles
@@ -3649,7 +3680,7 @@
     }
     let gpwsOn = read('gpws', true), gpwsText = '', gpwsLevel = 0, gpwsT = 0, gpwsLastFt = null, gpwsAt = {}, hundredCalled = false, wasAirborne = false;
     let gearWarn = false, gearBeepAt = 0, tailScrapeT = 0, rotateCalled = false, v1Called = false, lowFuelWarned = false, flapSoundT = 0;
-    let rollAcc = 0, rollT = 0, loopAcc = 0, loopT = 0, lowT = 0, hadTakeoff = false, stoppedT = 0;
+    let rollAcc = 0, rollT = 0, loopAcc = 0, loopT = 0, lowT = 0, hadTakeoff = false, stoppedT = 0, hadAir = false, stopCredited = false, hoverT = 0;
     const smoke = [];              // particles: fire, smoke, dust, sparks, spray
     const debris = [];             // parts that have come off and are tumbling on their own
     let attached = new Set(ALL_PARTS);
@@ -3924,7 +3955,7 @@
 
     // ---- starting a flight
     function start() {
-      flight = new Flight(plane);
+      flight = new Flight(plane); heliColl = 0;
       score = 0; elapsed = 0; streak = 0; hoopsMade = 0; result = null; paused = false; smoke.length = 0;
       mouse.engaged = false;   // move the cursor to the middle to take control
       debris.length = 0; attached = new Set(ALL_PARTS); goneGear.clear(); gouges.length = 0; slowT = 0; duckT = 0; bumpSlow = false; shakeKick = 0; fireK = 1; dirtD = 0; wreckT = 0; hadFailure = false; engineSmokeT = 0; wingLostAt = -1; canyonT = 0;
@@ -3934,16 +3965,23 @@
       const applies = failures === 'often' || mode.id === 'free' || mode.id === 'landing';
       failAt = rate && applies ? (mode.id === 'landing' ? 20 + Math.random() * 40 : -Math.log(Math.random()) / rate + 20) : Infinity;
       if (mode.id === 'landing' && failures === 'rare' && Math.random() > 0.25) failAt = Infinity;
-      rollAcc = 0; loopAcc = 0; lowT = 0; stoppedT = 0; hadTakeoff = false;
+      rollAcc = 0; loopAcc = 0; lowT = 0; stoppedT = 0; hadTakeoff = false; hadAir = false; stopCredited = false; hoverT = 0;
       hoops = []; nextHoop = 0;
-      if (mode.id === 'free') flight.reset([0, plane.gear, -30], 0, 0, true);
-      else if (mode.id === 'landing') {
+      const homePad = HELIPADS[0], hoverTrim = plane.rotor ? 1.06 / plane.rotorLift : 0;
+      if (mode.id === 'free' && plane.rotor) flight.reset([homePad.x, groundAt(W, homePad.x, homePad.z) + plane.gear + 0.05, homePad.z], 0, 0, true);   // a helicopter starts on its helipad
+      else if (mode.id === 'free') flight.reset([0, plane.gear, -30], 0, 0, true);
+      else if (mode.id === 'landing' && plane.rotor) {
+        // On approach to the helipad: 300 m out and 70 m up, flying slowly towards it.
+        flight.reset([homePad.x, groundAt(W, homePad.x, homePad.z) + 70, homePad.z + 300], 0, 14, false);
+        flight.throttle = hoverTrim; heliColl = hoverTrim;
+      } else if (mode.id === 'landing') {
         const dist = 1600 + Math.random() * 400, side = (Math.random() - 0.5) * 120;
         // On the extended centre line behind the threshold, a 3–4° glide slope, at approach speed.
         flight.reset([side, dist * Math.tan(3.5 * DEG) + 4, dist], 0, plane.stall * 1.35, false);
         flight.throttle = 0.3; flight.flapNotch = Math.min(2, (plane.flapNotches || [0, 1]).length - 1); flight.flaps = (plane.flapNotches || [0, 1])[flight.flapNotch];
       } else {
-        flight.reset([0, 160, -200], 0, plane.cruise, false);
+        flight.reset([0, 160, -200], 0, plane.rotor ? 0 : plane.cruise, false);
+        if (plane.rotor) { flight.throttle = hoverTrim; heliColl = hoverTrim; }   // a helicopter starts in a hover, not at 150 km/h
         if (mode.id === 'hoops') {
           timeLeft = 90; hoopRand = rng(Date.now() & 0xffff);
           let from = [0, 160, -200], dir = [0, 0, -1];
@@ -4067,12 +4105,17 @@
       if (a < dead) return 0;
       return Math.sign(v) * Math.min(1, Math.pow((a - dead) / (1 - dead), 1.3));
     };
+    /// The helicopter's collective lever: W raises it, S lowers it, and it stays where you leave it.
+    let heliColl = 0;
     function input() {
       const has = (k) => keys.has(k);
       const m = mouseOn && mouse.in && mouse.engaged;
       let pitch = clamp((has('ArrowUp') ? 1 : 0) - (has('ArrowDown') ? 1 : 0) - (m ? stick(mouse.y) : 0), -1, 1);
       if (invert) pitch = -pitch;
+      // A helicopter's cyclic: up (or forward) tilts the nose DOWN and flies forward, the opposite of an aeroplane's elevator.
+      if (plane.rotor) pitch = -pitch;
       return {
+        collective: plane.rotor ? heliColl : undefined,
         pitch,
         roll: clamp((has('ArrowRight') ? 1 : 0) - (has('ArrowLeft') ? 1 : 0) + (m ? stick(mouse.x) : 0), -1, 1),
         yaw: (has('d') || has('e') ? 1 : 0) - (has('a') || has('q') ? 1 : 0),
@@ -4340,6 +4383,11 @@
     function update(dt) {
       if (toastTimer > 0) { toastTimer -= dt; if (toastTimer <= 0) toastEl.style.opacity = 0; }
       if (screen !== 'fly' || paused) return;
+      if (plane.rotor) {
+        // W / S move the collective lever and it stays put; during the emergency assist it follows what the assist does.
+        if (flight.emergency) heliColl = flight.throttle;
+        else heliColl = clamp(heliColl + ((keys.has('w') || keys.has('Shift') ? 1 : 0) - (keys.has('s') || keys.has('Control') ? 1 : 0)) * dt * 0.4, 0, 1);
+      }
       const inp = input();
       ctl = devCtl || inp;
       if (devHold) return;
@@ -4521,6 +4569,8 @@
       }
 
       // Challenges along the way.
+      // Having flown (15 m up) is what makes a later landing count, whether you took off from a runway or started in the air.
+      if (!flight.onGround && flight.pos[1] - groundAt(W, flight.pos[0], flight.pos[2]) > 15) hadAir = true;
       if (wasGround && !flight.onGround && flight.pos[1] - groundAt(W, flight.pos[0], flight.pos[2]) > 2) { hadTakeoff = true; if (onRunway(prev)) achieve('takeoff'); }
       if (!wasGround && flight.onGround) {
         const sink = flight.sinkAtTouch;
@@ -4534,11 +4584,23 @@
           const rep = flight.slideReport();
           finish('crash', mode.id === 'landing' ? 0 : mode.id === 'hoops' ? score : null, `${rep.title} · the plane is scrap, but you walked away`, rep); return;
         }
-      } else if (flight.onGround && flight.speed < 1.5 && (hadTakeoff || mode.id === 'landing')) {
+      } else if (flight.onGround && flight.speed < 1.5 && (hadTakeoff || hadAir || mode.id === 'landing')) {
         stoppedT += dt;
         if (stoppedT > 0.6) {
-          const on = onRunway(flight.pos);
-          if (on && stoppedT < 0.7) { achieve('landed'); if (onRidge(flight.pos)) achieve('ridge'); if (hadFailure) achieve('glider'); }
+          const pad = padAt(flight.pos), on = onRunway(flight.pos) || !!pad;
+          // Credit once per stop (it used to need a 0.1 s window, which a landing on a plateau could easily miss).
+          if (on && !stopCredited) {
+            stopCredited = true;
+            if (pad) { if (plane.rotor) { achieve('pad'); if (pad.id === 'ridge') achieve('padridge'); } }
+            else { achieve('landed'); if (onRidge(flight.pos)) achieve('ridge'); }
+            if (hadFailure && !pad) achieve('glider');
+          }
+          if (mode.id === 'landing' && plane.rotor) {
+            const hp = HELIPADS[0], sink = flight.sinkAtTouch, off = Math.hypot(flight.pos[0] - hp.x, flight.pos[2] - hp.z);
+            const pts = pad ? Math.max(0, Math.round(1000 - sink * 160 - off * 25)) : 0;
+            finish('done', pts, pad ? `Landed on the helipad · touchdown ${sink.toFixed(1)} m/s · ${off.toFixed(1)} m from the H` : 'Stopped off the helipad');
+            return;
+          }
           if (mode.id === 'landing') {
             const tp = flight.touch || [flight.pos[0], flight.pos[2]], sink = flight.sinkAtTouch, centre = Math.abs(tp[0]), zone = Math.abs(tp[1] - (-300));
             const pts = on ? Math.max(0, Math.round(1000 - sink * 140 - centre * 12 - zone * 0.5)) : 0;
@@ -4547,7 +4609,12 @@
           }
           if (mode.id === 'free' && on && stoppedT < 0.7) toast('Landed and stopped. Take off again any time.', 2000);
         }
-      } else stoppedT = 0;
+      } else { stoppedT = 0; stopCredited = false; }
+      // Helicopter challenge: hold a steady hover, 5 to 60 m up, within 3 m/s... for 15 s.
+      if (plane.rotor && !flight.onGround && !flight.crashed) {
+        const hgt = flight.pos[1] - groundAt(W, flight.pos[0], flight.pos[2]), hs = Math.hypot(flight.vel[0], flight.vel[2]);
+        if (hgt > 5 && hgt < 60 && hs < 1.2 && Math.abs(flight.vel[1]) < 0.8 && Math.abs(flight.bank) < 8 * DEG && Math.abs(flight.pitchAngle) < 8 * DEG) { hoverT += dt; if (hoverT > 15) achieve('hover'); } else hoverT = Math.max(0, hoverT - dt * 2);
+      }
       const w = flight.w;
       rollAcc += w[2] * dt; rollT += dt; if (rollT > 4) { rollAcc *= 0.5; rollT = 2; }
       if (Math.abs(rollAcc) > Math.PI * 2) { achieve('roll'); rollAcc = 0; }
@@ -4942,6 +5009,7 @@
       if (mode.id === 'hoops') status = `⭕ ${score}    ⏱ ${Math.max(0, Math.ceil(timeLeft))}s`;
       else if (mode.id === 'trial') status = `Hoop ${Math.min(nextHoop + 1, hoops.length)}/${hoops.length}    ⏱ ${elapsed.toFixed(1)}s`;
       else if (mode.id === 'landing') status = 'Land on the runway and stop';
+      else if (plane.rotor && flight.onGround && !hadAir) status = 'Hold W to raise the collective · ↑ leans forward · A/D turn · H emergency landing';
       else status = flight.onGround && !hadTakeoff ? (invert ? 'Hold W for throttle · cursor down or ↓ to lift off' : 'Hold W for throttle · cursor up or ↑ to lift off') : 'Free flight';
       const tw = h2.measureText(status).width + 24;
       box(cx - tw / 2, 8, tw, 26 * s + 6); h2.fillStyle = '#fff'; h2.fillText(status, cx, 8 + (26 * s + 6) / 2);

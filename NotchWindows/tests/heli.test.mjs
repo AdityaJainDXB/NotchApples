@@ -47,20 +47,40 @@ test('full collective climbs, and partial collective holds the hover: the rotor 
   }
 });
 
-test('a pulse of cyclic flies the helicopter forward, and the disc comes back to level', () => {
+test('holding the cyclic forward flies the helicopter forward at a steady lean, and letting go brings it level', () => {
   for (const h of HELIS) {
     const trim = 1.06 / h.rotorLift;
     const f = new Flight(h);
     f.reset([0, 400, 0], 0, 0, false, null);
-    // A pilot pulses the cyclic to tilt the disc, then lets go: the helicopter leans into the acceleration
-    // and keeps flying, and the disc returns to level as the trim settlement does its work.
-    for (let i = 0; i < Math.round(60 * 1.5); i++) f.step(1 / 60, { ...idle, throttle: trim, pitch: -0.4 }, world);
-    for (let i = 0; i < 60 * 12; i++) f.step(1 / 60, { ...idle, throttle: trim }, world);
-    assert.ok(f.speed > 4, `${h.id} keeps flying forward (${f.speed.toFixed(1)} m/s)`);
-    assert.ok(Math.abs(f.pitchAngle) < 10 * Math.PI / 180, `${h.id} settles level (${(f.pitchAngle * 57.3).toFixed(1)}°)`);
-    assert.ok(Math.abs(f.bank) < 12 * Math.PI / 180, `${h.id} settles wings level`);
-    assert.ok(Math.abs(f.pos[1] - 400) < 55, `${h.id} stays level within metres while translating (${f.pos[1].toFixed(1)})`);  // the extra translation lift carries it a little higher as it speeds up
+    for (let i = 0; i < 60 * 5; i++) f.step(1 / 60, { ...idle, throttle: trim, pitch: -0.6 }, world);
+    assert.ok(f.speed > 5, `${h.id} flies forward (${f.speed.toFixed(1)} m/s)`);
+    assert.ok(-f.vel[2] > 4, `${h.id} goes towards its nose (the nose points to -z): vz ${f.vel[2].toFixed(1)}`);
+    assert.ok(f.pitchAngle < -8 * Math.PI / 180 && f.pitchAngle > -30 * Math.PI / 180, `${h.id} leans steadily, not further and further (${(f.pitchAngle * 57.3).toFixed(1)}°)`);
+    for (let i = 0; i < 60 * 14; i++) f.step(1 / 60, { ...idle, throttle: trim }, world);
+    assert.ok(Math.abs(f.pitchAngle) < 6 * Math.PI / 180, `${h.id} settles level (${(f.pitchAngle * 57.3).toFixed(1)}°)`);
+    assert.ok(Math.abs(f.bank) < 6 * Math.PI / 180, `${h.id} stays wings level`);
     assert.ok(!f.stalled && !f.crashed, `${h.id} never stalls and stays in one piece`);
+  }
+});
+
+test('the stick leans the right way: roll right banks right and slides right, pedals right turn right', () => {
+  for (const h of HELIS) {
+    const trim = 1.06 / h.rotorLift;
+    const r = fly(h, { ...idle, throttle: trim, roll: 1 }, 3);
+    assert.ok(r.bank > 10 * Math.PI / 180, `${h.id} banks right with roll right (bank ${(r.bank * 57.3).toFixed(1)}°)`);
+    assert.ok(r.vel[0] > 1, `${h.id} slides to the right (vx ${r.vel[0].toFixed(1)})`);
+    const y = fly(h, { ...idle, throttle: trim, yaw: 1 }, 2);
+    assert.ok(y.heading > 0.3, `${h.id} turns right with the right pedal`);
+    assert.ok(y.heading < 1.6, `${h.id} turns at a controllable rate (${(y.heading * 57.3 / 2).toFixed(0)}°/s)`);
+  }
+});
+
+test('a collective left where it is holds the height (the rotor damps vertical motion)', () => {
+  for (const h of HELIS) {
+    const hover = fly(h, { ...idle, throttle: 1.06 / h.rotorLift }, 20);
+    assert.ok(Math.abs(hover.vel[1]) < 1.5, `${h.id} holds its height (vy ${hover.vel[1].toFixed(2)})`);
+    const up = fly(h, { ...idle, throttle: 1.35 / h.rotorLift }, 8);
+    assert.ok(up.vel[1] > 1 && up.vel[1] < 8, `${h.id} climbs at a steady, modest rate (${up.vel[1].toFixed(1)} m/s)`);
   }
 });
 

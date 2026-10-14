@@ -64,10 +64,10 @@ Pick your computer. Both buttons start the download straight away. The Mac butto
   </tr>
   <tr>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/v2.0.34/NotchApple-2.0.34.dmg"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.0.50</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/v2.0.34/NotchApple-2.0.34.dmg"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.0.51</b></a>
     </td>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 1.53.0 BETA</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 1.54.0 BETA</b></a>
     </td>
   </tr>
   <tr>
@@ -211,6 +211,14 @@ All screenshots use sample data.
 ## What's new
 
 > **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is still in the repository's tags.
+
+### Mac 2.0.51 · Windows 1.54.0 BETA · 14 October 2026 · 🔄 Updates work again, and helicopters fly properly
+
+- **Updates.** "Couldn't reach GitHub" came from GitHub allowing only 60 anonymous requests an hour per address, which a shared network uses up. Notch Apple now reads the newest release from a small file on its website, then from GitHub's release feed, and only then from the API.
+- **Helicopters.** The stick now leans the helicopter and it settles at that lean (right goes right, **up goes forward**), the collective (**W / S**) stays where you leave it, the rotor damps vertical motion so a steady collective gives a steady climb, the tail rotor turns at a sane rate, and the blades lie flat in the disc instead of standing up.
+- **Helipads.** A helicopter now starts on a **helipad** (one at the airfield, one on the mountain plateau). Landing mode asks you to land on the H. New challenges: **Hover steady**, **On the H**, **Top of the world**.
+- **Mountain strip.** Landing and stopping there now counts however you got there (it used to need a take-off from the runway first).
+- **Printer Status.** The Bambu tab is now called **Printer Status**, its settings screen is laid out properly, and it lists the steps to connect a printer.
 
 ### Mac 2.0.50 · Windows 1.53.0 BETA · 13 October 2026 · 🖨 Bambu Lab printers, and helicopter emergencies
 
