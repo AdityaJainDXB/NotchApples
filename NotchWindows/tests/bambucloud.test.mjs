@@ -89,3 +89,10 @@ test('a cloud printer needs only a serial number, and is named from the account'
   assert.equal(L.problem(p, {}), null); assert.equal(p.cloud, 'global'); assert.equal(L.printerName(p), 'Office');
   assert.notEqual(L.problem({ ...p, serial: 'x' }, {}), null);
 });
+test('the printers can be listed again through the saved sign-in, and an expired one is explained', async () => {
+  const ok = await C.accountVia(async (what) => (what === 'preference' ? '{"uid":42}' : JSON.stringify({ devices: [{ dev_id: '01P00A123456789', name: 'Office', online: true }] })));
+  assert.equal(ok.ok, true); assert.equal(ok.devices.length, 1);
+  const expired = await C.accountVia(async () => { throw new Error('Bambu Cloud refused the saved sign-in. It has probably expired: sign in again under Bambu account.'); });
+  assert.equal(expired.ok, false); assert.match(expired.message, /sign in again/);
+  assert.equal((await C.accountVia(async () => 'not json')).ok, false);
+});

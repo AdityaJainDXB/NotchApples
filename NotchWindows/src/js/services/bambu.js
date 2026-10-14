@@ -70,6 +70,9 @@ export async function cloudFinish(region, token) {
   return { ok: true, devices: a.devices };
 }
 
+/// Lists the printers on the signed-in account again, with the sign-in Rust keeps (the token never comes here).
+export const cloudDevices = () => C.accountVia((what) => invoke('bambu_cloud_get', { what }));
+
 /// Adds the chosen printers from the account. Returns how many were added and the reason it stopped early, if it did.
 export function cloudAdd(devices, region) {
   let added = 0, stopped = null;

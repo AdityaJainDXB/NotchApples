@@ -63,8 +63,20 @@ export function render(root) {
     else acct.msg = result.message;
     paint();
   }
+  async function findPrinters() {
+    if (acct.busy) return;
+    acct.busy = true; acct.msg = 'Asking Bambu for your printers…'; paint();
+    const r = await B.cloudDevices();
+    acct.busy = false;
+    if (!r.ok) { acct.msg = r.message; return paint(); }
+    acct.region = B.cloudRegion() || acct.region; acct.devices = r.devices; acct.chosen = new Set(r.devices.map((d) => d.serial));
+    acct.step = r.devices.length ? 'devices' : 'idle'; acct.msg = r.devices.length ? '' : 'No printers are bound to this account yet.';
+    paint();
+  }
+  let autoFound = false;
   function accountCard() {
     const signed = B.cloudRegion();
+    if (signed && !autoFound && acct.step === 'idle' && !B.printers().some((p) => p.cloud)) { autoFound = true; setTimeout(findPrinters, 0); }   // signed in but nothing added yet: list them
     const note = el('div', { class: 'tiny faint' }, 'Your password goes only to Bambu, from this PC, and is never saved. Notch Apple keeps just the sign-in token Bambu returns, in its private folder, and signing out deletes it. Bambu has no official way to do this, so it may stop working if Bambu changes its sign-in: LAN Mode will always work.');
     const msg = el('div', { class: 'small', style: 'color:#ff9f0a;min-height:16px' }, acct.msg);
     if (acct.step === 'devices') {
@@ -89,8 +101,8 @@ export function render(root) {
     }
     if (signed) {
       return el('div', { class: 'card col', style: 'gap:8px' }, el('b', {}, '✅ Signed in to your Bambu account'),
-        el('div', { class: 'small faint' }, `Region: ${REGION_NAMES[signed] || signed}. Printers added from the account are watched without LAN Mode. To pick up a newly added printer, sign out and sign in again.`),
-        el('div', { class: 'hstack', style: 'gap:8px' }, holdButton('Sign out', async () => { const r = await B.cloudSignOut(); toast(r.ok ? 'Signed out. The saved sign-in is deleted.' : r.message); paint(); }, { hint: 'Hold to sign out and remove the account’s printers' })), note);
+        el('div', { class: 'small faint' }, `Region: ${REGION_NAMES[signed] || signed}. Printers added from the account are watched without LAN Mode.`),
+        el('div', { class: 'hstack', style: 'gap:8px' }, button('Find printers on my account', findPrinters, { small: true }), holdButton('Sign out', async () => { const r = await B.cloudSignOut(); toast(r.ok ? 'Signed out. The saved sign-in is deleted.' : r.message); paint(); }, { hint: 'Hold to sign out and remove the account’s printers' })), note);
     }
     const email = el('input', { class: 'field', type: 'email', placeholder: 'Bambu account email', autocomplete: 'off' });
     const pass = el('input', { class: 'field', type: 'password', placeholder: 'Password', autocomplete: 'off' });
@@ -113,11 +125,25 @@ export function render(root) {
       const s = await B.cloudSendCode(acct.region, acct.account);
       acct.busy = false; acct.step = s.ok ? 'verify' : 'idle'; acct.msg = s.ok ? 'Bambu emailed you a six-digit code.' : s.message; paint();
     };
+    // Advanced, for Google, Apple or Facebook sign-ins when no email code arrives: the sign-in token Bambu's own website gives the browser.
+    const tok = el('input', { class: 'field', type: 'password', placeholder: 'Paste the token here', autocomplete: 'off', style: 'flex:1;min-width:200px' });
+    const useToken = async () => {
+      if (acct.busy) return;
+      let t = tok.value.trim().replace(/^bearer\s+/i, '').replace(/^["']|["']$/g, ''); tok.value = '';   // gone from the screen at once
+      acct.region = region.value;
+      if (!C.looksLikeToken(t)) { acct.msg = 'That does not look like a Bambu token. It is one long line of letters, digits, dots and dashes.'; msg.textContent = acct.msg; return; }
+      acct.busy = true; acct.msg = 'Checking the token…'; msg.textContent = acct.msg;
+      await afterToken(t); t = '';
+    };
+    const advanced = el('details', { class: 'small' }, el('summary', { class: 'faint', style: 'cursor:pointer' }, 'Signed in with Google, Apple or Facebook and no code arrives? Use your token'),
+      el('div', { class: 'col', style: 'gap:6px;margin-top:6px' },
+        el('div', { class: 'tiny faint' }, 'Sign in to makerworld.com in your browser. Then open the browser’s developer tools (F12), go to Application (Chrome, Edge) or Storage (Firefox), Cookies, makerworld.com, and copy the Value of the cookie named “token”. Treat it like a password: it is only sent to Bambu, never saved on our side except in the app’s private folder, and signing out deletes it.'),
+        el('div', { class: 'hstack', style: 'gap:8px;flex-wrap:wrap' }, tok, button('Use this token', useToken, { small: true }))));
     return el('div', { class: 'card col', style: 'gap:8px' }, el('b', {}, 'Or: sign in with your Bambu account'),
       el('div', { class: 'small faint' }, 'Watch your printers without turning LAN Mode on, so the Bambu Handy app and the printer’s cloud features keep working.'),
       el('div', { class: 'hstack', style: 'gap:8px;flex-wrap:wrap' }, region, email, pass, button('Sign in', go, { small: true })),
       el('div', { class: 'hstack', style: 'gap:8px;flex-wrap:wrap;align-items:center' }, button('Email me a code instead', emailCode, { small: true, title: 'For accounts you made with Google, Apple or Facebook: no password needed' }),
-        el('span', { class: 'tiny faint' }, 'Sign in to Bambu with Google, Apple or Facebook? Enter the same email and use this, no password needed.')), msg, note);
+        el('span', { class: 'tiny faint' }, 'Sign in to Bambu with Google, Apple or Facebook? Enter the same email and use this, no password needed.')), advanced, msg, note);
   }
 
   function paint() {

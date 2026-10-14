@@ -73,10 +73,10 @@ Pick your computer. Both buttons start the download straight away. The Mac butto
   </tr>
   <tr>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/v2.0.34/NotchApple-2.0.34.dmg"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.0.62</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/v2.0.34/NotchApple-2.0.34.dmg"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.0.63</b></a>
     </td>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 1.66.0 BETA</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 1.67.0 BETA</b></a>
     </td>
   </tr>
   <tr>
@@ -234,6 +234,10 @@ All screenshots use sample data.
 ## What's new
 
 > **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is still in the repository's tags.
+
+### Mac 2.0.63 · Windows 1.67.0 BETA · 14 October 2026 · 🖨️ Find your printers again
+
+- After signing in with your Bambu account, **Find printers on my account** lists your printers again with the saved sign-in: no need to sign out and in. If you are signed in and have added none, the list appears by itself.
 
 ### Windows 1.66.0 BETA · 14 October 2026 · 📜 The Windows app is MIT
 

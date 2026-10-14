@@ -21,6 +21,7 @@ final class BambuSignInModel: ObservableObject {
     @Published var email = ""
     @Published var password = ""
     @Published var code = ""
+    @Published var tokenText = ""
     @Published var message = ""
     @Published var busy = false
     @Published var devices: [BambuCloud.Device] = []
@@ -58,7 +59,35 @@ final class BambuSignInModel: ObservableObject {
         }
     }
 
-    func cancel() { generation += 1; step = .idle; code = ""; password = ""; message = ""; busy = false }
+    /// Advanced, for Google, Apple or Facebook sign-ins when no email code arrives: the sign-in token Bambu's own website gives the browser.
+    func signIn(token raw: String) {
+        guard !busy else { return }
+        var t = raw.trimmingCharacters(in: .whitespacesAndNewlines)
+        if t.lowercased().hasPrefix("bearer ") { t = String(t.dropFirst(7)).trimmingCharacters(in: .whitespaces) }
+        t = t.trimmingCharacters(in: CharacterSet(charactersIn: "\"'"))
+        guard BambuCloud.looksLikeToken(t) else { message = "That does not look like a Bambu token. It is one long line of letters, digits, dots and dashes."; return }
+        busy = true; message = "Checking the token…"
+        generation += 1; let g = generation
+        Task { guard g == generation else { return }; await finish(token: t) }
+    }
+
+    /// Lists the printers on the signed-in account again (with the saved sign-in), so none has to be picked on the spot.
+    func refreshDevices() {
+        guard !busy else { return }
+        busy = true; message = "Asking Bambu for your printers…"
+        generation += 1; let g = generation
+        Task {
+            let r = await BambuManager.shared.cloudDevices()
+            guard g == generation else { return }
+            busy = false
+            guard let list = r.devices else { message = r.message ?? BambuCloud.fallback; return }
+            devices = list; chosen = Set(list.map(\.serial))
+            step = list.isEmpty ? .idle : .pick
+            message = list.isEmpty ? "No printers are bound to this account yet." : ""
+        }
+    }
+
+    func cancel() { generation += 1; step = .idle; code = ""; password = ""; tokenText = ""; message = ""; busy = false }
 
     private func handle(_ result: BambuCloud.SignIn) async {
         switch result {
@@ -237,8 +266,9 @@ struct BambuSettingsView: View {
             } else if let region = manager.cloudRegion {
                 Label("Signed in to your Bambu account (\(BambuCloud.regions[region]?.name ?? region))", systemImage: "checkmark.circle.fill")
                     .foregroundStyle(.green)
-                Text("Printers added from the account are watched without LAN Mode. To pick up a newly added printer, sign out and sign in again.")
+                Text("Printers added from the account are watched without LAN Mode.")
                     .font(.caption).foregroundStyle(Theme.textSecondary)
+                Button("Find printers on my account") { signIn.refreshDevices() }.disabled(signIn.busy)
                 Button("Sign out", role: .destructive) {
                     signIn.password = ""
                     signIn.message = manager.cloudSignOut() ? "Signed out. The saved sign-in is deleted." : "Couldn’t delete the saved sign-in. You are still signed in: try again."
@@ -254,6 +284,13 @@ struct BambuSettingsView: View {
                     .help("For accounts you made with Google, Apple or Facebook: no password needed")
                 Text("Sign in to Bambu with Google, Apple or Facebook? Enter the same email and use “Email me a code instead”: no password needed.")
                     .font(.caption).foregroundStyle(Theme.textSecondary)
+                DisclosureGroup("Signed in with Google, Apple or Facebook and no code arrives? Use your token") {
+                    Text("Sign in to makerworld.com in your browser. Then open its developer tools (Safari: Develop menu, Show Web Inspector; Chrome: ⌥⌘I), go to Storage or Application, Cookies, makerworld.com, and copy the Value of the cookie named “token”. Treat it like a password: it is only sent to Bambu and kept in the app's private folder, and signing out deletes it.")
+                        .font(.caption).foregroundStyle(Theme.textSecondary)
+                    SecureField("Paste the token here", text: $signIn.tokenText)
+                    Button("Use this token") { let t = signIn.tokenText; signIn.tokenText = ""; signIn.signIn(token: t) }
+                        .disabled(signIn.busy || signIn.tokenText.isEmpty)
+                }
             }
             if !signIn.message.isEmpty {
                 Label(signIn.message, systemImage: "info.circle").font(.caption).foregroundStyle(.orange)
@@ -263,6 +300,7 @@ struct BambuSettingsView: View {
         } footer: {
             Text("Watch your printers without turning LAN Mode on, so the Bambu Handy app and the printer's cloud features keep working. Your password goes only to Bambu, from this Mac, and is never saved. Notch Apple keeps just the sign-in token Bambu returns, in an owner-only file, and signing out deletes it. Bambu has no official way to do this, so it may stop working if Bambu changes its sign-in: LAN Mode will always work.")
         }
+        .task { if manager.cloudRegion != nil, !manager.printers.contains(where: \.isCloud), signIn.step == .idle { signIn.refreshDevices() } }   // signed in but nothing added yet: list them
     }
 
     private func setupStep(_ n: Int, _ text: String) -> some View {

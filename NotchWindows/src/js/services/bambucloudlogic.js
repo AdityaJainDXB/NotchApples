@@ -24,7 +24,7 @@ export const REGIONS = {
 export const regionOf = (r) => (Object.prototype.hasOwnProperty.call(REGIONS, r) ? REGIONS[r] : null);
 
 const FALLBACK = 'Bambu’s sign-in did not work. It may have changed, so use LAN Mode on the printer instead.';
-const looksLikeToken = (t) => typeof t === 'string' && t.length >= 20 && t.length <= 8192 && !/\s/.test(t);
+export const looksLikeToken = (t) => typeof t === 'string' && t.length >= 20 && t.length <= 8192 && !/\s/.test(t);
 export const looksLikeEmail = (s) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(s || '').trim());
 const parse = (r) => { try { return JSON.parse(r.text); } catch { return null; } };
 const isHtml = (r) => /^\s*</.test(r.text || '');
@@ -103,6 +103,16 @@ export async function fetchAccount(http, region, token) {
     if (!bind.ok || isHtml(bind)) return { ok: false, message: FALLBACK };
     return { ok: true, uid, devices: readDevices(parse(bind)) };
   } catch { return { ok: false, message: 'Couldn’t reach Bambu. Check your internet connection.' }; }
+}
+
+/// With the saved token held in Rust: asks for the account id and printers through `ask(what)` ('preference' | 'bind', returns the answer's text).
+export async function accountVia(ask) {
+  try {
+    let pref; try { pref = JSON.parse(await ask('preference')); } catch (e) { if (/sign in again|refused/i.test(String(e))) return { ok: false, message: String(e) }; return { ok: false, message: FALLBACK }; }
+    if (!readUid(pref)) return { ok: false, message: FALLBACK };
+    let bind; try { bind = JSON.parse(await ask('bind')); } catch (e) { return { ok: false, message: /sign in again|refused/i.test(String(e)) ? String(e) : FALLBACK }; }
+    return { ok: true, devices: readDevices(bind) };
+  } catch { return { ok: false, message: FALLBACK }; }
 }
 
 /// The numeric account id from the preference answer.

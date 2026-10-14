@@ -242,6 +242,14 @@ final class BambuManager: ObservableObject {
         return true
     }
 
+    /// Asks Bambu which printers are on the signed-in account, with the saved token (the token never leaves this file).
+    func cloudDevices() async -> (devices: [BambuCloud.Device]?, message: String?) {
+        guard let s = Self.loadSession() else { return (nil, BambuCloud.expired) }
+        let a = await BambuCloud.account(region: s.region, token: s.token)
+        guard let info = a.info else { return (nil, a.message == "Bambu refused the sign-in. Try again." ? BambuCloud.expired : a.message) }
+        return (info.devices, nil)
+    }
+
     /// Adds the chosen printers from the account. Returns how many were added, and why it stopped early if it did.
     @discardableResult
     func addCloudPrinters(_ devices: [BambuCloud.Device], region: String) -> (added: Int, stopped: String?) {

@@ -112,6 +112,35 @@ pub fn bambu_cloud_save(app: AppHandle, region: String, uid: String, token: Stri
     write_session(&cloud_file(&app)?, &CloudSession { region, uid, token })
 }
 
+/// Bambu's account API for a region.
+pub fn cloud_api(region: &str) -> Option<&'static str> {
+    match region { "global" => Some("https://api.bambulab.com"), "china" => Some("https://api.bambulab.cn"), _ => None }
+}
+
+/// Asks Bambu about the signed-in account with the saved token: only `preference` (the account id) and `bind` (its printers)
+/// can be asked, and the answer's text goes to the UI; the token itself never does.
+#[tauri::command]
+pub async fn bambu_cloud_get(app: AppHandle, what: String) -> Result<String, String> {
+    let session = read_session(&cloud_file(&app)?)?.ok_or("Sign in with your Bambu account first.")?;
+    let base = cloud_api(&session.region).ok_or("Unknown Bambu account region.")?;
+    let path = match what.as_str() {
+        "preference" => "/v1/design-user-service/my/preference",
+        "bind" => "/v1/iot-service/api/user/bind",
+        _ => return Err("Unknown request.".into()),
+    };
+    let res = crate::net::strict_client()
+        .get(format!("{base}{path}"))
+        .bearer_auth(&session.token)
+        .timeout(Duration::from_secs(20))
+        .send().await.map_err(crate::net::describe)?;
+    let status = res.status().as_u16();
+    if status == 401 || status == 403 { return Err("Bambu Cloud refused the saved sign-in. It has probably expired: sign in again under Bambu account.".into()); }
+    if !res.status().is_success() { return Err(format!("Bambu answered {status}.")); }
+    let text = res.text().await.map_err(crate::net::describe)?;
+    if text.len() > 200_000 { return Err("Bambu's answer was unexpectedly large.".into()); }
+    Ok(text)
+}
+
 /// Which region is signed in (the token itself never goes back to the UI), or nothing.
 #[tauri::command]
 pub fn bambu_cloud_status(app: AppHandle) -> Result<Option<String>, String> {
@@ -437,6 +466,12 @@ mod tests {
         std::fs::write(&path, "not json").unwrap();
         assert!(read_session(&path).is_err());
         let _ = std::fs::remove_dir_all(&dir);
+    }
+    #[test]
+    fn only_bambus_account_api_is_known() {
+        assert_eq!(cloud_api("global"), Some("https://api.bambulab.com"));
+        assert_eq!(cloud_api("china"), Some("https://api.bambulab.cn"));
+        assert_eq!(cloud_api("evil"), None);
     }
     #[test]
     fn serials_cannot_carry_mqtt_wildcards() {

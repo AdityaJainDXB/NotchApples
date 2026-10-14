@@ -20,6 +20,9 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.0.63", date: "14 October 2026", headline: "Printer Status: find your printers again any time", items: [
+            "After signing in with your Bambu account, a new Find printers on my account button lists the printers again, using the saved sign-in, so you never have to sign out and in to add one. If you are signed in with nothing added yet, the list appears by itself.",
+        ]),
         ReleaseNote(version: "2.0.62", date: "14 October 2026", headline: "Plane: Clean start, and a security pass", items: [
             "Plane: a Clean start switch on the flight simulator's home screen. You spawn on the runway with the battery, beacon and engine off and do the whole start-up yourself (Y battery, O beacon, S throttle idle, I engine, then flaps, gear and brake), with the checklist on screen walking you through it. Off, you spawn ready to roll.",
             "Hardening from a full review: the shared-flying relay is rate-limited and only shows pilots in the same part of the world, other pilots' data is validated, the Bambu sign-in is stricter about redirects, sign-out and retries, and a few smaller fixes.",
