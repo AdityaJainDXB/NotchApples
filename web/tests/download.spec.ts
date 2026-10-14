@@ -71,7 +71,14 @@ test('every release link on the pages responds', async ({ page, request }) => {
   expect(urls.size).toBeGreaterThan(0);
   for (const u of urls) {
     // A one-byte range keeps the big installers from downloading.
-    const res = await request.get(u, { headers: { Range: 'bytes=0-0' }, maxRedirects: 5 });
-    expect([200, 206], u).toContain(res.status());
+    // GitHub sometimes answers a download with a one-off 5xx or 429: try a few times before calling a link broken.
+    let status = 0;
+    for (let attempt = 0; attempt < 4; attempt++) {
+      const res = await request.get(u, { headers: { Range: 'bytes=0-0' }, maxRedirects: 5, failOnStatusCode: false }).catch(() => null);
+      status = res ? res.status() : 0;
+      if (status === 200 || status === 206 || (status >= 400 && status < 500 && status !== 429)) break;
+      await new Promise((r) => setTimeout(r, 1500 * (attempt + 1)));
+    }
+    expect([200, 206], u).toContain(status);
   }
 });
