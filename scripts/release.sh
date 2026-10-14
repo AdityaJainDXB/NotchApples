@@ -1,5 +1,5 @@
 #!/bin/bash
-# Builds the DMG, commits, pushes, publishes the GitHub release and updates the Homebrew cask.
+# Builds the DMG, commits, pushes, publishes the GitHub release, updates the Homebrew cask and attaches the iPhone .ipa.
 #   scripts/release.sh "<title>" <notes.md> "<commit message>"
 # The version comes from project.yml. Run the tests first.
 set -euo pipefail
@@ -24,4 +24,6 @@ git diff --cached --quiet || git commit -q -m "$MSG"
 git push -q origin main
 gh release create "v$VERSION" "$DMG" --latest --title "Notch Apple $VERSION · $TITLE" --notes-file "$NOTES"
 git add Casks && git commit -q -m "Cask: $VERSION" -m "Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>" && git push -q origin main
+# The iPhone companion is rebuilt for every release, so the .ipa on the release is always the same version as the Mac app.
+scripts/build_ipa.sh --upload || { echo "WARNING: the iPhone app was NOT attached to v$VERSION: run scripts/build_ipa.sh --upload"; exit 1; }
 echo "Released $VERSION ($ARCHS)"
