@@ -1,18 +1,18 @@
 {
-  "version": "2.0.61",
-  "title": "Notch Apple 2.0.61 · Printer Status: sign in without a password",
-  "notes": "**Printer Status**\n- 🔑 **Sign in to Bambu without a password.** If you use Google, Apple or Facebook to sign in to Bambu, enter the same email in Printer Status and press **Email me a code instead**: Bambu emails a six-digit code and that is all you need. Like the rest of the account sign-in, this is based on what the community has documented and has been tested against a simulated Bambu, not a live account, so please tell us if it does not work for you (LAN Mode always does).\n\nWindows 1.63.0 BETA has the same option.\n\nInstall: download the DMG below and drag Notch Apple to Applications, or `brew upgrade --cask notch-apple`.\n",
-  "published": "2026-10-14T07:59:04Z",
-  "dmg": "https://github.com/AdityaJainDXB/NotchApples/releases/download/v2.0.61/NotchApple-2.0.61.dmg",
-  "dmgSize": 51160515,
-  "page": "https://github.com/AdityaJainDXB/NotchApples/releases/tag/v2.0.61",
+  "version": "2.0.65",
+  "title": "Notch Apple 2.0.65 · Smoother, and kinder to Reduce Motion",
+  "notes": "**Polish**\n- ✨ Reordering modules, the tour, theme choices, Home and Claude usage now settle without a bounce, and switch to a quick fade when **Reduce Motion** is on (a few of them ignored that setting before).\n- The website responds to a tap at once, follows **Reduce Transparency** and **Increase Contrast**, and the chat panel opens out of its button.\n\nWindows is unchanged in this release.\n\nInstall: download the DMG below and drag Notch Apple to Applications, or `brew upgrade --cask notch-apple`.\n",
+  "published": "2026-10-14T10:18:05Z",
+  "dmg": "https://github.com/AdityaJainDXB/NotchApples/releases/download/v2.0.65/NotchApple-2.0.65.dmg",
+  "dmgSize": 51264036,
+  "page": "https://github.com/AdityaJainDXB/NotchApples/releases/tag/v2.0.65",
   "stars": 2,
   "windows": {
-    "version": "1.62.0",
-    "notes": "Notch.apple for Windows 1.62.0\n\n- Printer Status: sign in with your Bambu account to watch printers without LAN Mode (the printer keeps its cloud features). The password goes only to Bambu and is never saved; signing out deletes the saved token.\n- Tested against a simulated Bambu, not a live account: if it does not work for you, LAN Mode still does.\n\nThe installer is still named \"Notch.apple\".\n",
-    "url": "https://github.com/AdityaJainDXB/NotchApples/releases/download/win-v1.62.0/Notch.apple_1.62.0_x64-setup.exe",
-    "sha256": "d835e7c7a8940a64ca38ff598d65683bb1d01fabe653c821d50675a91a1a4f0e",
-    "size": 5920156,
-    "page": "https://github.com/AdityaJainDXB/NotchApples/releases/tag/win-v1.62.0"
+    "version": "1.68.0",
+    "notes": "Notch.apple for Windows 1.68.0\n\n- Printer Status: a Camera card. P1 and A1 printers (the A1 mini) show their live picture over your own network (nothing goes through the internet or a server, nothing is saved). X1, P2 and H2 printers send video this app cannot play yet: \"Copy video address\" opens in VLC (switch on LAN Only Liveview first).\n- Press \"Find printers on my account\" once more so account printers learn their access code for the camera.\n- Tested against a simulated printer, not a real one.\n\nThe installer is still named \"Notch.apple\".\n",
+    "url": "https://github.com/AdityaJainDXB/NotchApples/releases/download/win-v1.68.0/Notch.apple_1.68.0_x64-setup.exe",
+    "sha256": "32bfafd77dc89f8f23e3f0653267ae36ab02514f102d0e39f213380bad8cb881",
+    "size": 5939622,
+    "page": "https://github.com/AdityaJainDXB/NotchApples/releases/tag/win-v1.68.0"
   }
 }
