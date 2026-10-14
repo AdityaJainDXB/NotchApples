@@ -19,7 +19,7 @@ Free to start, source-available, with free AI or fully local AI on your Mac. Plu
 <p align="center">
   <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><img alt="Mac release" src="https://img.shields.io/github/v/release/AdityaJainDXB/NotchApples?filter=v*&label=Mac%20release&color=2ea043"></a>
   <a href="https://github.com/AdityaJainDXB/NotchApples/actions/workflows/windows-build.yml"><img alt="Windows build" src="https://img.shields.io/github/v/release/AdityaJainDXB/NotchApples?filter=win-v*&include_prereleases&label=Windows%20build&color=2ea043"></a>
-  <a href="https://github.com/AdityaJainDXB/NotchApples/actions/workflows/pages.yml"><img alt="Deploy website" src="https://github.com/AdityaJainDXB/NotchApples/actions/workflows/pages.yml/badge.svg?branch=main"></a>
+  <a href="https://adityajaindxb.github.io/NotchApples/"><img alt="Website" src="https://img.shields.io/website?url=https%3A%2F%2Fadityajaindxb.github.io%2FNotchApples%2F&label=Website&up_message=online&down_message=offline&up_color=2ea043"></a>
 </p>
 
 <p align="center">
