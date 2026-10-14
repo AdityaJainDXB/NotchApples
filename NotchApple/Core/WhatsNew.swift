@@ -20,6 +20,9 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.0.61", date: "14 October 2026", headline: "Printer Status: sign in without a password", items: [
+            "If you sign in to Bambu with Google, Apple or Facebook, use Email me a code instead: enter the same email and type the six-digit code Bambu sends. No password needed.",
+        ]),
         ReleaseNote(version: "2.0.60", date: "14 October 2026", headline: "Printer Status: watch your Bambu printers without LAN Mode", items: [
             "Printer Status can now sign in with your Bambu account instead of LAN Mode, so the Bambu Handy app and the printer's cloud features keep working. Your password goes only to Bambu and is never saved; only the sign-in token Bambu returns is kept, in an owner-only file, and signing out deletes it.",
             "Printers on the account are added with one click. Bambu has no official way to do this, so if it stops working, LAN Mode still does.",

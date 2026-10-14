@@ -43,6 +43,18 @@ final class BambuSignInModel: ObservableObject {
         Task { await handle(step == .code ? await BambuCloud.signIn(region: region, account: email, code: c) : await BambuCloud.signIn(region: region, tfaKey: key, code: c)) }
     }
 
+    /// For accounts made with Google, Apple or Facebook (no Bambu password): Bambu emails a code to the account's address.
+    func signInWithEmailedCode() {
+        guard !busy else { return }
+        guard BambuCloud.looksLikeEmail(email) else { message = "Enter the email address of your Bambu account first."; return }
+        busy = true; message = "Asking Bambu to email you a code…"
+        Task {
+            let problem = await BambuCloud.sendCode(region: region, account: email)
+            busy = false
+            if let problem { message = problem } else { step = .code; code = ""; message = "Bambu emailed you a six-digit code." }
+        }
+    }
+
     func cancel() { step = .idle; code = ""; message = ""; busy = false }
 
     private func handle(_ result: BambuCloud.SignIn) async {
@@ -232,6 +244,10 @@ struct BambuSettingsView: View {
                 TextField("Bambu account email", text: $signIn.email).textContentType(.username)
                 SecureField("Password", text: $signIn.password).onSubmit { signIn.signIn() }
                 Button("Sign in") { signIn.signIn() }.disabled(signIn.busy || signIn.email.isEmpty || signIn.password.isEmpty)
+                Button("Email me a code instead") { signIn.signInWithEmailedCode() }.disabled(signIn.busy || signIn.email.isEmpty)
+                    .help("For accounts you made with Google, Apple or Facebook: no password needed")
+                Text("Sign in to Bambu with Google, Apple or Facebook? Enter the same email and use “Email me a code instead”: no password needed.")
+                    .font(.caption).foregroundStyle(Theme.textSecondary)
             }
             if !signIn.message.isEmpty {
                 Label(signIn.message, systemImage: "info.circle").font(.caption).foregroundStyle(.orange)

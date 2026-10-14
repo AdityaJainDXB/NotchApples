@@ -104,9 +104,20 @@ export function render(root) {
       const r = await B.cloudSignIn(acct.region, acct.account, pw);
       step(r);
     };
+    // For accounts made with Google, Apple or Facebook (no Bambu password): Bambu emails a code to the account's address.
+    const emailCode = async () => {
+      if (acct.busy) return;
+      acct.account = email.value.trim(); acct.region = region.value;
+      if (!C.looksLikeEmail(acct.account)) { acct.msg = 'Enter the email address of your Bambu account first.'; msg.textContent = acct.msg; return; }
+      acct.busy = true; acct.msg = 'Asking Bambu to email you a code…'; msg.textContent = acct.msg;
+      const s = await B.cloudSendCode(acct.region, acct.account);
+      acct.busy = false; acct.step = s.ok ? 'verify' : 'idle'; acct.msg = s.ok ? 'Bambu emailed you a six-digit code.' : s.message; paint();
+    };
     return el('div', { class: 'card col', style: 'gap:8px' }, el('b', {}, 'Or: sign in with your Bambu account'),
       el('div', { class: 'small faint' }, 'Watch your printers without turning LAN Mode on, so the Bambu Handy app and the printer’s cloud features keep working.'),
-      el('div', { class: 'hstack', style: 'gap:8px;flex-wrap:wrap' }, region, email, pass, button('Sign in', go, { small: true })), msg, note);
+      el('div', { class: 'hstack', style: 'gap:8px;flex-wrap:wrap' }, region, email, pass, button('Sign in', go, { small: true })),
+      el('div', { class: 'hstack', style: 'gap:8px;flex-wrap:wrap;align-items:center' }, button('Email me a code instead', emailCode, { small: true, title: 'For accounts you made with Google, Apple or Facebook: no password needed' }),
+        el('span', { class: 'tiny faint' }, 'Sign in to Bambu with Google, Apple or Facebook? Enter the same email and use this, no password needed.')), msg, note);
   }
 
   function paint() {
