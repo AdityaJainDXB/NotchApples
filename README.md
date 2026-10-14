@@ -65,10 +65,10 @@ Pick your computer. Both buttons start the download straight away. The Mac butto
   </tr>
   <tr>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/v2.0.34/NotchApple-2.0.34.dmg"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.0.54</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/v2.0.34/NotchApple-2.0.34.dmg"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.0.55</b></a>
     </td>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 1.57.0 BETA</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 1.58.0 BETA</b></a>
     </td>
   </tr>
   <tr>
@@ -212,6 +212,12 @@ All screenshots use sample data.
 ## What's new
 
 > **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is still in the repository's tags.
+
+### Mac 2.0.55 · Windows 1.58.0 BETA · 14 October 2026 · ✈️ ILS approaches and wider taxiways
+
+- ILS on every runway: an on-screen box with the localiser and glideslope needles, and **J** lets the autopilot fly the approach down to 45 m.
+- Wider taxiways, and fast ground turns can no longer tip a jet over.
+- The autopilot holds its speed properly.
 
 ### Mac 2.0.54 · Windows 1.57.0 BETA · 14 October 2026 · ✈️ Plane autopilot and solid aprons
 

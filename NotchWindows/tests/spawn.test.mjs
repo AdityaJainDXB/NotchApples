@@ -58,3 +58,23 @@ test('the autopilot turns to a new heading and holds a new height', () => {
     assert.ok(Math.abs(f.ap.alt - f.pos[1]) < 25, `${id} height held`);
   }
 });
+
+test('the ILS approach mode brings an aircraft down the glideslope onto the runway centre line', () => {
+  for (const id of ['c172', 'a320']) {
+    const p = PLANES.find((q) => q.id === id), f = new Flight(p);
+    // 9 km out from the home runway's south threshold, 250 m left of the course, 560 m up (a bit above the 3 degree slope).
+    f.reset([-250, 560, 9000], 0, p.stall * 1.5, false, 0);
+    for (let i = 0; i < 5 * 60; i++) f.step(1 / 60, { pitch: 0, roll: 0, yaw: 0, throttle: 0.5 }, world);
+    assert.ok(T.ilsAt(world, f.pos, p.gear), `${id} sees the ILS`);
+    assert.ok(f.apApproach(world), `${id} arms the approach`);
+    let done = false;
+    for (let i = 0; i < 300 * 60 && !f.crashed; i++) {
+      f.step(1 / 60, { pitch: 0, roll: 0, yaw: 0, throttle: 0.5 }, world);
+      if (f.events.some((e) => e.type === 'apils' && e.done)) { done = true; break; }
+      f.events.length = 0;
+    }
+    assert.ok(done && !f.crashed, `${id} reached the hand-over`);
+    assert.ok(Math.abs(f.pos[0]) < 25, `${id} on the centre line (x=${f.pos[0].toFixed(0)})`);
+    assert.ok(f.pos[2] > -100 && f.pos[2] < 1800, `${id} short of the runway end (z=${f.pos[2].toFixed(0)})`);
+  }
+});

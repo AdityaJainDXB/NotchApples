@@ -20,6 +20,11 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.0.55", date: "14 October 2026", headline: "Plane: ILS approaches, wider taxiways, no more tipping over", items: [
+            "Plane: instrument landing system on every runway. Line up with a runway within 30 km and an ILS box shows the runway, distance and the localiser and glideslope needles. Press J and the autopilot flies the approach down to 45 m, with tower calls; gear and flaps stay yours.",
+            "Plane: the taxiways at the home airfield are twice as wide, so big jets and fighters no longer drop a wheel onto the grass, and turning on the ground is limited so a fast turn can no longer tip a jet over.",
+            "Plane: the autopilot now holds its speed properly.",
+        ]),
         ReleaseNote(version: "2.0.54", date: "14 October 2026", headline: "Plane: autopilot, solid aprons and visible wheels on traffic", items: [
             "Plane: an autopilot for fixed-wing aircraft. Press K in the air to hold your heading, height and speed; , and . turn it 5 degrees, [ and ] change height by 50 m, and moving the stick or K hands the controls back.",
             "Plane: the aprons at the new airfields count as paved ground now, like the runway, so the nose wheel no longer sinks in and breaks when you turn sharply there.",

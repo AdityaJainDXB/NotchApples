@@ -1245,6 +1245,34 @@
     ...AIRFIELDS.map((a) => ({ id: a.id, name: a.name, pos: [a.x, 0, a.z + a.len / 2 - 40], pad: HELIPADS.find((h) => h.id === a.id) }))];
   /// Aprons, where the ground crew works: the home airfield's two and one beside each new runway.
   const APRONS = [[38, 104, -760, -560], [38, 90, -460, -210], ...AIRFIELDS.map((a) => [a.x + a.half + 8, a.x + a.half + 60, a.z - 55, a.z + 55])];
+  /// Every runway end with an instrument landing system: x, the threshold's z, the way the landing runs along z (+1 or -1), length.
+  const RUNWAY_ENDS = [];
+  {
+    const add = (name, x, zStart, zEnd) => {
+      const dir = Math.sign(zEnd - zStart);
+      RUNWAY_ENDS.push({ name: `${name} ${dir < 0 ? '36' : '18'}`, x, zt: zStart, dir, len: Math.abs(zEnd - zStart), hdg: dir < 0 ? 0 : Math.PI, gs: 3 * Math.PI / 180 });
+    };
+    add('Home', 0, 0, -1400); add('Home', 0, -1400, 0);
+    for (const a of AIRFIELDS) { add(a.name, a.x, a.z + a.len / 2, a.z - a.len / 2); add(a.name, a.x, a.z - a.len / 2, a.z + a.len / 2); }
+    add('Mountain strip', RIDGE.x, 1250, 550); add('Mountain strip', RIDGE.x, 550, 1250);
+    RUNWAY_ENDS[RUNWAY_ENDS.length - 1].gs = RUNWAY_ENDS[RUNWAY_ENDS.length - 2].gs = 4 * Math.PI / 180;
+  }
+  /// The best localiser and glideslope signal at a position: the runway end whose approach course the aircraft is on, or null.
+  /// `loc` is how far right of the course it is (radians seen from the threshold), `gsDev` how far above the slope (radians).
+  function ilsAt(world, pos, gear = 0) {
+    let best = null;
+    for (const e of RUNWAY_ENDS) {
+      const dist = (e.zt - pos[2]) * e.dir;
+      if (dist < 300 || dist > 30000) continue;
+      const lat = (pos[0] - e.x) * (e.dir < 0 ? 1 : -1), loc = Math.atan2(lat, dist);
+      if (Math.abs(loc) > 0.3) continue;
+      if (!best || Math.abs(loc) < Math.abs(best.loc)) best = { rwy: e, dist, loc, lat };
+    }
+    if (!best) return null;
+    const elev = groundAt(world, best.rwy.x, best.rwy.zt), ang = Math.atan2(pos[1] - gear - elev, best.dist);
+    best.gsDev = ang - best.rwy.gs; best.elev = elev; best.high = pos[1] - gear - elev;
+    return best;
+  }
   const onApron = (p) => APRONS.some((r) => p[0] > r[0] && p[0] < r[1] && p[2] > r[2] && p[2] < r[3]);
   const onAirfield = (p) => AIRFIELDS.some((a) => Math.abs(p[0] - a.x) < a.half && Math.abs(p[2] - a.z) < a.len / 2 + 5);
   const padAt = (p) => HELIPADS.find((h) => Math.abs(p[0] - h.x) < h.half && Math.abs(p[2] - h.z) < h.half) || null;
@@ -1662,7 +1690,7 @@
 
   // ---- painted ground: what you would land on
 
-  const PAVED = [[-22, 22, -1440, 40], [51, 65, -1297, -113], [22, 51, -127, -113], [22, 51, -1297, -1283], [22, 38, -707, -693], [38, 90, -460, -210], [38, 104, -760, -560], [RIDGE.x - 16, RIDGE.x + 16, 550, 1250], ...HELIPADS.map((h) => [h.x - h.half, h.x + h.half, h.z - h.half, h.z + h.half]), ...AIRFIELDS.map((a) => [a.x - a.half, a.x + a.half, a.z - a.len / 2, a.z + a.len / 2]), ...APRONS];
+  const PAVED = [[-22, 22, -1440, 40], [44, 72, -1305, -105], [22, 46, -135, -105], [22, 46, -1305, -1275], [22, 46, -715, -685], [38, 90, -460, -210], [38, 104, -760, -560], [RIDGE.x - 16, RIDGE.x + 16, 550, 1250], ...HELIPADS.map((h) => [h.x - h.half, h.x + h.half, h.z - h.half, h.z + h.half]), ...AIRFIELDS.map((a) => [a.x - a.half, a.x + a.half, a.z - a.len / 2, a.z + a.len / 2]), ...APRONS];
   const onPaved = (x, z) => { for (const p of PAVED) if (x > p[0] && x < p[1] && z > p[2] && z < p[3]) return true; return false; };
   const snowLine = (x, z) => 1180 + (vnoise(x / 430 + 5, z / 430) - 0.5) * 300;
   /// What the ground is made of at (x, z): 'runway' (any paving, the mountain strip too), 'road', 'water', 'sand', 'snow', 'rock', 'forest' or 'grass'.
@@ -1777,10 +1805,10 @@
     };
     endMarks(0, -1, '36'); endMarks(RUNWAY.z1, 1, '18');
     // Taxiway, connectors and aprons, with a yellow centre line.
-    rectQ(decal, 51, 65, -113, -210, 0.1, asphalt); rectQ(decal, 51, 65, -460, -560, 0.1, asphalt); rectQ(decal, 51, 65, -760, -1297, 0.1, asphalt);
-    rectQ(decal, 22, 51, -113, -127, 0.1, asphalt); rectQ(decal, 22, 38, -693, -707, 0.1, asphalt); rectQ(decal, 22, 51, -1283, -1297, 0.1, asphalt);
+    rectQ(decal, 44, 72, -105, -210, 0.1, asphalt); rectQ(decal, 44, 72, -460, -560, 0.1, asphalt); rectQ(decal, 44, 72, -760, -1305, 0.1, asphalt);
+    rectQ(decal, 22, 46, -105, -135, 0.1, asphalt); rectQ(decal, 22, 46, -685, -715, 0.1, asphalt); rectQ(decal, 22, 46, -1275, -1305, 0.1, asphalt);
     rectQ(decal, 38, 90, -210, -460, 0.1, concrete); rectQ(decal, 38, 104, -560, -760, 0.1, concrete);
-    bar(57.75, 58.25, -113, -1290, yellow); bar(22, 57.75, -119.75, -120.25, yellow); bar(22, 57.75, -699.75, -700.25, yellow); bar(22, 57.75, -1289.75, -1290.25, yellow);
+    bar(57.75, 58.25, -105, -1290, yellow); bar(22, 57.75, -119.75, -120.25, yellow); bar(22, 57.75, -699.75, -700.25, yellow); bar(22, 57.75, -1289.75, -1290.25, yellow);
     // Lights: edge lights (amber near each end), green threshold bars, approach lights with two crossbars at both ends.
     const white = hex('#fff4d0'), amber = hex('#ffb347'), green = hex('#35e06a');
     for (let z = 0; z >= RUNWAY.z1; z -= 60) for (const sx of [-1, 1]) lights.box([sx * (RUNWAY.half + 1.3), 0.35, z], [0.7, 0.7, 0.7], Math.min(-z, z - RUNWAY.z1) < 300 ? amber : white);
@@ -2653,18 +2681,41 @@
       this.ap = { on: true, hdg: this.heading, alt: this.pos[1], spd: Math.max(this.ias, this.s.stall * 1.35), i: 0 };
       return true;
     }
+    /// Arms the approach mode on the runway whose ILS the aircraft is on (the autopilot comes on if it was off).
+    apApproach(world) {
+      if (this.s.rotor || this.crashed || this.onGround) return null;
+      const ils = ilsAt(world, this.pos, this.s.gear * (this.s.scale || 1));
+      if (!ils) return null;
+      if (!this.ap || !this.ap.on) this.apEngage();
+      this.ap.mode = 'appr'; this.ap.rwy = ils.rwy; this.ap.captured = false; this.ap.spd = Math.max(this.s.stall * 1.35, Math.min(this.ias, this.s.stall * 1.6));
+      return ils;
+    }
     apOff() { if (this.ap) this.ap.on = false; }
-    apInput(input, dt) {
+    apInput(input, dt, world) {
       const a = this.ap, s = this.s;
       // Taking hold of the stick or running out of safe speed hands the aircraft back.
       if (Math.abs(input.pitch) > 0.35 || Math.abs(input.roll) > 0.35 || this.inStall || this.onGround || this.damage.L === false || this.damage.R === false) { a.on = false; this.events.push({ type: 'apoff' }); return input; }
+      let vsApp = null;
+      if (a.mode === 'appr') {
+        // Flying the ILS: steer onto the localiser course, hold level until the glideslope comes down to us, then follow it.
+        const ils = ilsAt(world, this.pos, s.gear * (s.scale || 1));
+        if (!ils || ils.rwy !== a.rwy) { a.mode = 'hold'; a.alt = this.pos[1]; this.events.push({ type: 'apils', lost: true }); }
+        else if (ils.high < 45) { a.on = false; this.events.push({ type: 'apils', done: true }); return input; }
+        else {
+          a.hdg = ils.rwy.hdg - clamp(ils.loc * 6, -0.52, 0.52);
+          const err = ils.gsDev * ils.dist, hs = Math.hypot(this.vel[0], this.vel[2]);
+          vsApp = err < -80 ? 0 : clamp(-hs * Math.tan(ils.rwy.gs) - err * 0.06, -9, 3);
+          if (a.captured !== true && Math.abs(err) < 60) { a.captured = true; this.events.push({ type: 'apils', captured: true }); }
+        }
+      }
       let he = a.hdg - this.heading; while (he > Math.PI) he -= 2 * Math.PI; while (he < -Math.PI) he += 2 * Math.PI;
       const bankT = clamp(he * 1.1, -0.44, 0.44);
       const roll = clamp((bankT - this.bank) * 2.0 + 0, -0.6, 0.6);
-      const vsT = clamp((a.alt - this.pos[1]) * 0.08, -6, 6) * (s.cat === 'ga' ? 0.6 : 1);
+      const vsT = vsApp != null ? vsApp : clamp((a.alt - this.pos[1]) * 0.08, -6, 6) * (s.cat === 'ga' ? 0.6 : 1);
       const pitch = clamp((this.pitchAngle - 0.0) * -0.0 + (vsT - this.vel[1]) * 0.06, -0.4, 0.4);
       a.i = clamp(a.i + (a.spd - this.ias) * dt * 0.02, -0.5, 0.5);
-      const throttle = clamp(0.55 + (a.spd - this.ias) * 0.04 + a.i, 0.05, 1);
+      // (the throttle lever moves at a rate set by input.throttle, so ask for the movement that reaches the wanted setting)
+      const throttle = clamp((clamp(0.5 + (a.spd - this.ias) * 0.05 + a.i, 0.05, 1) - this.throttle) * 3, -1, 1);
       return { ...input, roll: roll * AP_SIGN.roll, pitch: pitch * AP_SIGN.pitch, yaw: 0, throttle };
     }
 
@@ -2678,7 +2729,7 @@
         if (this.onGround && Math.hypot(this.vel[0], this.vel[1], this.vel[2]) < 1.2) { this.emergency = false; this.events.push({ type: 'emergencydone' }); }
         else input = this.autoLand(input, agl, dt);
       }
-      if (this.ap && this.ap.on) input = this.apInput(input, dt);
+      if (this.ap && this.ap.on) input = this.apInput(input, dt, world);
       const sigma = densityAt(this.pos[1]);
       this.windStep(dt, agl, world);
       // The airflow: the plane's motion through the moving air. V is true airspeed, Vi what the airspeed indicator says.
@@ -2851,13 +2902,14 @@
       }
       if (this.onGround) {
         // The wheels and springs keep the wings level and the nose up or down; the nose wheel steers, less the faster it goes.
-        const gs = len(this.vel), sf = clamp(gs / 3, 0, 1), maxYaw = 0.8 * G / Math.max(gs, 5);
+        const gs = len(this.vel), sf = clamp(gs / 3, 0, 1), maxYaw = 0.4 * G / Math.max(gs, 5);
         target[2] = 0;
         // The nose wheel steers (its own force is added in `pressWheel`, so only part of the turn is asked for here). With
         // the mains planted, a crabbed or skidding plane is pulled straight (the wheels sit behind the centre of mass),
         // and in a crosswind the fin turns it into the wind unless the rudder holds it.
         let tgy = (-input.yaw * 0.6 - input.roll * 0.3) * sf * (this.damage.gear && this.damage.nose ? 0.6 : 1);
-        this.steerYaw = this.damage.gear && this.damage.nose ? -tgy : 0;
+        // (the turn the nose wheel may ask for is limited to a third of a g of sideways load, so a fast turn cannot tip it over)
+        this.steerYaw = this.damage.gear && this.damage.nose ? clamp(-tgy, -0.34 * G / Math.max(gs, 4), 0.34 * G / Math.max(gs, 4)) : 0;
         if (this.mainsOn > 0 && gs > 4) {
           const vb = qrot(qconj(this.q), this.vel);
           if (vb[2] < 0) tgy -= clamp(Math.atan2(vb[0], -vb[2]), -0.5, 0.5) * 1.1 * Math.min(1, this.mainsOn / 2);
@@ -4117,7 +4169,7 @@
       if (down && e.repeat && keys.has(k)) { if (screen === 'fly') e.preventDefault?.(); return; }   // held keys repeat: toggles fire once
       const typing = e.target && e.target.tagName === 'INPUT' && e.target.type !== 'range';
       if (typing) { if (down && k === 'Enter' && result?.qualifies) saveScore(); return; }
-      const game = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' ', 'w', 's', 'a', 'd', 'q', 'e', 'f', 'v', 'b', 'c', 'p', 'r', 'x', 'Shift', 'Control', 'g', 'h', 'k', ',', '.', '[', ']'];
+      const game = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' ', 'w', 's', 'a', 'd', 'q', 'e', 'f', 'v', 'b', 'c', 'p', 'r', 'x', 'Shift', 'Control', 'g', 'h', 'j', 'k', ',', '.', '[', ']'];
       if (game.includes(k) && screen === 'fly') e.preventDefault?.();
       if (down) {
         if (screen === 'fly') {
@@ -4127,6 +4179,14 @@
             const r = flight.toggleGear();
             if (r === 'up' || r === 'down') { toast(r === 'down' ? 'Gear down' : 'Gear up', 1100); noise(1.1, 0.12, 280); }
             else toast(r === 'fixed' ? `The ${plane.name} has fixed wheels: no gear to raise` : r === 'broken' ? 'The undercarriage is broken' : 'Gear can only be raised in the air', 1500);
+          }
+          if (k === 'j') {
+            if (plane.rotor) toast('The approach mode is for fixed-wing aircraft', 1500);
+            else {
+              const ils = flight.apApproach(W);
+              if (ils) toast(`ILS ${ils.rwy.name}: autopilot flying the approach. Gear and flaps are yours; it hands over at 45 m`, 2800);
+              else toast('No ILS signal: line up with a runway, within 30 km and about 17° of its course', 2200);
+            }
           }
           if (k === 'k') {
             if (plane.rotor) toast('The autopilot is for fixed-wing aircraft', 1500);
@@ -4594,6 +4654,12 @@
         } else if (ev.type === 'gearmoved') {
           noise(0.18, 0.28, 130);                 // the gear locks with a thump
           toast(ev.down ? '🛬 Gear down and locked' : 'Gear up and locked', 1200);
+        } else if (ev.type === 'apoff') {
+          toast('Autopilot disconnected', 1500); beep(520, 0.25, 'square', 0.07);
+        } else if (ev.type === 'apils') {
+          if (ev.captured) toast('Tower: glideslope alive, cleared ILS approach', 2000);
+          else if (ev.done) { toast('Autopilot off. Cleared to land: your aircraft', 2600); beep(880, 0.3, 'square', 0.08); }
+          else if (ev.lost) toast('ILS signal lost: holding heading and height', 2000);
         } else if (ev.type === 'gearspeed') {
           toast('⚠ GEAR OVERSPEED: slow down before lowering the gear', 2200); beep(520, 0.25, 'square', 0.1);
         } else if (ev.type === 'gear' && ev.cause === 'up') {
@@ -5283,10 +5349,27 @@
       if (flight.ap && flight.ap.on && !flight.crashed) {
         h2.textAlign = 'left'; h2.textBaseline = 'middle'; h2.font = `700 ${Math.round(10 * s + 2)}px system-ui`;
         const a = flight.ap, hd = ((Math.round(a.hdg * 57.2958) % 360) + 360) % 360;
-        const txt = `AP   HDG ${String(hd).padStart(3, '0')}°   ALT ${Math.round(a.alt * 3.28084)} ft   SPD ${Math.round(a.spd / KT)} kt    , . heading   [ ] altitude   K off`;
+        const txt = `${a.mode === 'appr' ? 'AP APPR' : 'AP'}   HDG ${String(hd).padStart(3, '0')}°   ALT ${Math.round(a.alt * 3.28084)} ft   SPD ${Math.round(a.spd / KT)} kt    , . heading   [ ] altitude   K off   J approach`;
         const bw3 = h2.measureText(txt).width + 24, bx3 = (W2 - bw3) / 2;
         box(bx3, H2 - 34 * s - 18, bw3, 24); h2.fillStyle = '#5ee08a'; h2.fillText(txt, bx3 + 12, H2 - 34 * s - 6);
         h2.textAlign = 'center';
+      }
+      // Instrument landing system: runway, distance and the two needles, shown when on an approach course.
+      if (!plane.rotor && !flight.crashed && !flight.onGround) {
+        const il = ilsAt(W, flight.pos, gearH());
+        if (il && il.dist < 22000) {
+          const x0 = 8, y0 = H2 - 150 * s - 30, bw4 = 128 * s + 20, bh4 = 62 * s;
+          box(x0, y0, bw4, bh4); h2.textBaseline = 'middle'; h2.textAlign = 'left';
+          h2.font = `700 ${Math.round(9 * s + 2)}px system-ui`; h2.fillStyle = '#9fe3ff';
+          h2.fillText(`ILS ${il.rwy.name}  ${(il.dist / 1000).toFixed(1)} km`, x0 + 8, y0 + 12);
+          const cx = x0 + 8 + 56 * s, cy = y0 + 38 * s, span = 52 * s;
+          h2.strokeStyle = 'rgba(255,255,255,.3)'; h2.lineWidth = 1; h2.beginPath(); h2.moveTo(cx - span, cy); h2.lineTo(cx + span, cy); h2.moveTo(cx, cy - 14 * s); h2.lineTo(cx, cy + 14 * s); h2.stroke();
+          // needles point to where the course is: left if you are right of it, down if you are above the slope
+          const lx = clamp(-il.loc / 0.044, -1, 1) * span, gy = clamp(il.gsDev / 0.012, -1, 1) * 12 * s;
+          h2.fillStyle = Math.abs(il.loc) < 0.01 ? '#5ee08a' : '#ffd166'; h2.fillRect(cx + lx - 1.5, cy - 11 * s, 3, 22 * s);
+          h2.fillStyle = Math.abs(il.gsDev) < 0.004 ? '#5ee08a' : '#ffd166'; h2.fillRect(cx - 18 * s, cy + gy * 0 - gy - 1.5, 36 * s, 3);
+          h2.textAlign = 'center';
+        }
       }
       // Ground services panel: shown when stopped on an apron.
       if (flight.onGround && flight.speed < 1.2 && onApron(flight.pos) && !flight.crashed) {
@@ -5721,5 +5804,5 @@
     };
   }
 
-  window.NotchPlaneGame = { mount, PLANES, MODES, CHALLENGES, Flight, _test: { AP_SIGN, APRONS, buildPlane, REGIONS, nearestRegion, matchRegion, raCallout, gpwsWarnings, groundAt, makeWorld, qheading, qrot, hitObject, terrainAt, surfaceAt, roughnessAt, normalAt } };
+  window.NotchPlaneGame = { mount, PLANES, MODES, CHALLENGES, Flight, _test: { ilsAt, RUNWAY_ENDS, AP_SIGN, APRONS, buildPlane, REGIONS, nearestRegion, matchRegion, raCallout, gpwsWarnings, groundAt, makeWorld, qheading, qrot, hitObject, terrainAt, surfaceAt, roughnessAt, normalAt } };
 })();
