@@ -3687,7 +3687,7 @@
   .pg .pg-hint { font-size: 10.5px; color: rgba(255,255,255,.7); line-height: 1.45; }
   .pg kbd { font: 600 10px/1 inherit; padding: 2px 4px; border-radius: 4px; background: rgba(255,255,255,.16); }
   .pg input { font: inherit; font-size: 12px; color: #fff; background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.2); border-radius: 8px; padding: 5px 8px; width: 120px; }
-  .pg .pg-toast { position: absolute; left: 50%; top: 12%; transform: translateX(-50%); background: rgba(10,14,28,.82); border: 1px solid #ffb347; border-radius: 12px; padding: 6px 14px; font-size: 13px; font-weight: 700; pointer-events: none; transition: opacity .3s; white-space: nowrap; }
+  .pg .pg-toast { position: absolute; left: 50%; top: 12%; transform: translateX(-50%); background: rgba(10,14,28,.82); border: 1px solid #ffb347; border-radius: 12px; padding: 6px 14px; font-size: 13px; font-weight: 700; pointer-events: none; transition: opacity .3s; white-space: normal; text-align: center; width: max-content; max-width: min(92%, 560px); line-height: 1.3; }
   .pg .pg-result { text-align: center; } .pg .pg-big { font-size: 34px; font-weight: 900; margin: 4px 0; }
   .pg .pg-report { margin: 8px auto 4px; padding: 7px 12px; max-width: 360px; border-radius: 10px; background: rgba(255,255,255,.08); font-size: 12px; line-height: 1.45; color: #cfd5df; }
   .pg .pg-report b { display: block; font-size: 14px; margin-bottom: 2px; } .pg .pg-ok b { color: #5ee08a; } .pg .pg-warn b { color: #ffd166; } .pg .pg-bad b { color: #ff7a6b; }
@@ -4943,11 +4943,11 @@
         const aglNow = flight.pos[1] - groundAt(W, flight.pos[0], flight.pos[2]), gearDown = plane.retract ? flight.gearDown : true;
         if (flight.onGround && flight.throttle > 0.7 && flight.speed > 25 && flight.flapNotch === 0 && onRunway(flight.pos)) {
           say('Config flaps', { level: 2, every: 4, key: 'cfgto' });
-          if (!cfgTakeoff) { cfgTakeoff = true; toast('⚠ CONFIGURATION: rolling for take-off with the flaps up. Set take-off flaps (F): without them the plane needs more speed and runway.', 4200); beep(520, 0.3, 'square', 0.1); }
+          if (!cfgTakeoff) { cfgTakeoff = true; toast('⚠ CONFIG: flaps up. Set take-off flaps (F)', 3600); beep(520, 0.3, 'square', 0.1); }
         }
         if (!flight.onGround && aglNow < 300 && aglNow > 5 && flight.vel[1] < -1 && flight.flapNotch === 0 && gearDown && !flight.crashed) {
           say('Config flaps', { level: 2, every: 5, key: 'cfgld' });
-          if (!cfgLanding) { cfgLanding = true; toast('⚠ CONFIGURATION: landing with the flaps up. Set landing flaps (F): without them the approach speed and the landing roll are far too long.', 4200); beep(520, 0.3, 'square', 0.1); }
+          if (!cfgLanding) { cfgLanding = true; toast('⚠ CONFIG: flaps up. Set landing flaps (F)', 3600); beep(520, 0.3, 'square', 0.1); }
         }
       }
       // ---- ground services (when stopped on an apron): 1 refuel, 2 catering, 3 baggage, 4 pushback

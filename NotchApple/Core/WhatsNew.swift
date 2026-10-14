@@ -20,6 +20,9 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.0.57", date: "14 October 2026", headline: "Plane: messages fit the screen", items: [
+            "Plane: the take-off and landing configuration warnings are shorter, and long on-screen messages now wrap instead of running off the edge.",
+        ]),
         ReleaseNote(version: "2.0.56", date: "14 October 2026", headline: "Plane: cold-and-dark start, air traffic control, night and fog", items: [
             "Plane: no more apron or gate start: every flight begins on a runway, which ended the glitches on the aprons.",
             "Plane: turn on Cold and dark start in Controls, then run the checklist (shown on screen, T hides it) and start the engine with I.",
