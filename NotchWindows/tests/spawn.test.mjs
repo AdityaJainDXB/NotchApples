@@ -78,3 +78,36 @@ test('the ILS approach mode brings an aircraft down the glideslope onto the runw
     assert.ok(f.pos[2] > -100 && f.pos[2] < 1800, `${id} short of the runway end (z=${f.pos[2].toFixed(0)})`);
   }
 });
+
+test('a cold engine makes no power until it is started', () => {
+  for (const id of ['c172', 'a320', 'f16']) {
+    const p = PLANES.find((q) => q.id === id), f = new Flight(p);
+    f.reset([0, T.groundAt(world, 0, 0) + p.gear * (p.scale || 1), -30], 0, 0, true, 0);
+    f.engOff = true;
+    for (let i = 0; i < 15 * 60; i++) f.step(1 / 60, { pitch: 0, roll: 0, yaw: 0, throttle: 1 }, world);
+    assert.ok(f.speed < 1 && f.throttle === 0, `${id} stays put with the engine off`);
+    f.throttle = 0; assert.equal(f.engineStart(), 'ok');
+    for (let i = 0; i < 12 * 60; i++) f.step(1 / 60, { pitch: 0, roll: 0, yaw: 0, throttle: i > 600 ? 1 : 0 }, world);
+    assert.ok(!f.engOff && f.engRun, `${id} is running after the starter`);
+    for (let i = 0; i < 10 * 60; i++) f.step(1 / 60, { pitch: 0, roll: 0, yaw: 0, throttle: 1 }, world);
+    assert.ok(f.speed > 8, `${id} accelerates once running (${f.speed.toFixed(1)})`);
+  }
+});
+
+test('ATC clears take-off on the runway, the ILS approach and the landing, once each', () => {
+  const p = PLANES.find((q) => q.id === 'a320'), f = new Flight(p), st = { cs: 'Notch 123', said: new Set() };
+  f.reset([0, T.groundAt(world, 0, 0) + p.gear, -10], 0, 0, true, 0);
+  f.step(1 / 60, { pitch: 0, roll: 0, yaw: 0, throttle: 0 }, world);
+  const a = T.atcStep(st, f, world); assert.match(a, /cleared for take-off/i); assert.equal(T.atcStep(st, f, world), null);
+  const g = new Flight(p), s2 = { cs: 'Notch 7', said: new Set() };
+  g.reset([0, 560, 9000], 0, p.stall * 1.5, false, 0);
+  g.step(1 / 60, { pitch: 0, roll: 0, yaw: 0, throttle: 0.5 }, world);
+  assert.match(T.atcStep(s2, g, world), /I L S approach/); assert.equal(T.atcStep(s2, g, world), null);
+  g.pos = [0, 160, 1500]; assert.match(T.atcStep(s2, g, world), /cleared to land/i);
+});
+
+test('night is darker than day and fog pulls the horizon in', () => {
+  T.applyEnv('night', 'fog'); const n = [...T.ENV.lum], fm = T.ENV.fogMul, stars = T.ENV.stars;
+  T.applyEnv('day', 'clear');
+  assert.ok(n[0] < 0.3 && stars > 0 && fm < 0.2 && T.ENV.lum[0] === 1 && T.ENV.fogMul === 1 && T.ENV.stars === 0);
+});

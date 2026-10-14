@@ -20,6 +20,12 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.0.56", date: "14 October 2026", headline: "Plane: cold-and-dark start, air traffic control, night and fog", items: [
+            "Plane: no more apron or gate start: every flight begins on a runway, which ended the glitches on the aprons.",
+            "Plane: turn on Cold and dark start in Controls, then run the checklist (shown on screen, T hides it) and start the engine with I.",
+            "Plane: air traffic control calls out take-off, approach and landing clearances (spoken, switch in Controls), and the ILS is cleared by the tower.",
+            "Plane: choose Dawn, Day, Dusk or Night, and Clear, Haze or Fog, in the weather panel.",
+        ]),
         ReleaseNote(version: "2.0.55", date: "14 October 2026", headline: "Plane: ILS approaches, wider taxiways, no more tipping over", items: [
             "Plane: instrument landing system on every runway. Line up with a runway within 30 km and an ILS box shows the runway, distance and the localiser and glideslope needles. Press J and the autopilot flies the approach down to 45 m, with tower calls; gear and flaps stay yours.",
             "Plane: the taxiways at the home airfield are twice as wide, so big jets and fighters no longer drop a wheel onto the grass, and turning on the ground is limited so a fast turn can no longer tip a jet over.",
