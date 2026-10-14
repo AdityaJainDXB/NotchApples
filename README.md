@@ -13,6 +13,7 @@ Free to start, source-available, with free AI or fully local AI on your Mac. Plu
   <img alt="macOS 14+" src="https://img.shields.io/badge/macOS-14%2B-8a5cf6">
   <img alt="Windows 10/11" src="https://img.shields.io/badge/Windows-10%20%7C%2011-8a5cf6">
   <a href="LICENSE"><img alt="Source-available license" src="https://img.shields.io/badge/license-source--available-8a5cf6"></a>
+  [![Mac build](https://img.shields.io/github/actions/workflow/status/AdityaJainDXB/NotchApples/mac-build.yml?branch=main&color=805AD5&label=macOS)](https://github.com/AdityaJainDXB/NotchApples/actions/workflows/mac-build.yml)
 </p>
 
 <p align="center">
