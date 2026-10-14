@@ -536,6 +536,7 @@ footer{background:linear-gradient(180deg,transparent,rgba(118,80,238,.06))}
   .sa-media img{transform:none;filter:none}
 }
 </style>
+<link rel="stylesheet" href="assets/chat.css">
 </head>
 <body>
 <a class="skip" href="#main">Skip to content</a>
@@ -1305,5 +1306,6 @@ function upd(){t=false;const max=document.documentElement.scrollHeight-innerHeig
 addEventListener('scroll',()=>{if(!t){t=true;requestAnimationFrame(upd)}},{passive:true});addEventListener('resize',upd);upd();
 top.onclick=()=>scrollTo({top:0,behavior:reduce?'auto':'smooth'})})();
 </script>
+<script src="assets/chat.js" defer></script>
 </body>
 </html>

@@ -1,0 +1,229 @@
+[
+ {
+  "q": "What is Notch Apple?",
+  "k": "about overview what is app notchapple dynamic island",
+  "a": "Notch Apple turns the notch at the top of a MacBook screen (or a small pill on Macs without one, and on Windows) into a command center. Its headline feature is screen-aware AI: press Control-Option-S, drag a box over anything on screen, and solve, explain, translate or summarize it. Around that are 30+ optional tools such as Now Playing, clipboard history, window snapping, a file shelf, a focus timer, F1 and tennis scores and games."
+ },
+ {
+  "q": "Is it really free?",
+  "k": "free cost price pay money cheap paid",
+  "a": "Yes. The core app is free. Pro costs $1 and Ultimate costs $5, each paid once, with no subscription and no account. The code is source-available: you can read and build it, but not resell it or unlock the paid features without a key.",
+  "link": [
+   "See pricing",
+   "pro.html"
+  ]
+ },
+ {
+  "q": "How much do Pro and Ultimate cost?",
+  "k": "price pro ultimate upgrade buy purchase cost dollars litecoin crypto payment",
+  "a": "Pro is $1 and Ultimate is $5, both one-time purchases that include every future update. You pay in Litecoin from the pricing page and your key is made when the payment confirms.",
+  "link": [
+   "Pricing page",
+   "pro.html"
+  ]
+ },
+ {
+  "q": "What do Pro and Ultimate add?",
+  "k": "pro ultimate features difference extra premium unlock",
+  "a": "Pro adds things like the included Notch Apple AI (60 messages a day), live wallpaper, Klick keyboard sounds, a bigger clipboard history and the command palette. Ultimate adds the Convert file converter, Smart Home (Home Assistant), Claude usage, Do It, two activities at once on the notch, more AI messages (200 a day) and more. The pricing page lists everything.",
+  "link": [
+   "Pricing page",
+   "pro.html"
+  ]
+ },
+ {
+  "q": "How do I get a licence key after paying?",
+  "k": "key licence license activate activation unlock redeem",
+  "a": "After the payment confirms, the pricing page shows your key. In the app open Settings, then License, paste the key and press Unlock. A key works on up to 3 computers. If you lose it, the pricing page has a recover option that uses the email you gave.",
+  "link": [
+   "Pricing page",
+   "pro.html"
+  ]
+ },
+ {
+  "q": "How many computers can one key use?",
+  "k": "devices macs computers limit three 3 key share",
+  "a": "Up to 3. You can free a computer by deactivating the key in Settings, then License."
+ },
+ {
+  "q": "Does it work on Windows?",
+  "k": "windows pc microsoft win10 win11 beta run runs running work works compatible 11 10 support supported",
+  "a": "Yes, a Windows version is available as a beta. Download the installer from the Download section. Windows may show a SmartScreen warning because the app is not code-signed yet: choose More info, then Run anyway.",
+  "link": [
+   "Download",
+   "#download"
+  ]
+ },
+ {
+  "q": "What do I need to run it?",
+  "k": "requirements system macos version minimum compatible intel apple silicon m1 m2 m3",
+  "a": "On Mac: macOS 14 or later, on Apple silicon or Intel. On Windows: Windows 10 or 11."
+ },
+ {
+  "q": "How do I install it on a Mac?",
+  "k": "install installation download dmg drag applications open first launch unidentified developer gatekeeper",
+  "a": "Download the DMG, open it and drag Notch Apple into Applications. The app is ad-hoc signed and not notarized, so the first time right-click it and choose Open, then confirm. Or run: xattr -dr com.apple.quarantine \"/Applications/Notch Apple.app\".",
+  "link": [
+   "Download",
+   "#download"
+  ]
+ },
+ {
+  "q": "Can I install it with Homebrew?",
+  "k": "homebrew brew cask tap command terminal",
+  "a": "Yes: brew tap adityajaindxb/notchapples https://github.com/AdityaJainDXB/NotchApples, then brew install --cask notch-apple. Update later with brew upgrade --cask notch-apple."
+ },
+ {
+  "q": "How do I open and close the notch?",
+  "k": "open close shortcut hotkey keyboard toggle show hide control option",
+  "a": "Click the notch, press Control-Option-N in any app, or drag a file onto it. Press Esc or click elsewhere to close. Command-E opens and closes it and Command-J hides and shows it. You can also turn on open on hover in Settings."
+ },
+ {
+  "q": "How does screen capture and AI work?",
+  "k": "capture screenshot ai solve explain translate summarize shortcut control option s drag box screen question",
+  "a": "Press Control-Option-S in any app, drag a box around a maths problem, an error, a paragraph in another language or a chart, then pick Solve, Explain, Translate, Summarize or Code. The answer streams into the notch and you can keep asking follow-up questions about the same capture."
+ },
+ {
+  "q": "What permissions does it need?",
+  "k": "permission accessibility screen recording privacy allow macos security settings",
+  "a": "Screen Recording, asked the first time you capture (macOS applies it after a restart of the app), and Accessibility for window snapping and the volume and brightness gauge. Each permission is used only for the feature that asks for it."
+ },
+ {
+  "q": "Which AI should I use?",
+  "k": "ai provider gemini ollama groq openai openrouter deepseek anthropic claude free model offline local apple",
+  "a": "Google Gemini is free and reads images. For complete privacy, install Ollama and run ollama pull gemma3:4b: answers are made on your computer, offline. You can also use Groq, OpenRouter, OpenAI, DeepSeek, Anthropic, or Apple's on-device model. Pro and Ultimate also include Notch Apple AI, which needs no key."
+ },
+ {
+  "q": "What is Notch Apple AI?",
+  "k": "included hosted ai no key quota messages daily limit pro ultimate 60 200",
+  "a": "An AI that is included with Pro (60 messages a day) and Ultimate (200 a day) so you can ask without setting up any key. Your own keys still work with no limit."
+ },
+ {
+  "q": "Is my data private? Does it track me?",
+  "k": "privacy tracking telemetry analytics data collect spying anonymous opt in",
+  "a": "By default nothing is counted. There is no account and no ads. If you choose to, you can turn on an anonymous user count (a random id, app version, system version and plan, about once a day) and a feedback box in the app's settings. Local AI with Ollama never leaves your computer. The terms page lists exactly what is sent.",
+  "link": [
+   "Terms and privacy",
+   "terms.html"
+  ]
+ },
+ {
+  "q": "Does it work on Macs without a notch?",
+  "k": "notch no notch pill external display older mac",
+  "a": "Yes. Notch Apple shows a small pill at the top centre of the screen that works exactly the same way."
+ },
+ {
+  "q": "How do updates work?",
+  "k": "update upgrade new version latest check automatic",
+  "a": "Notch Apple checks for new releases and shows Update available. Choose Update or Not now, or turn off automatic checks in Settings, then Updates. You can also run brew upgrade --cask notch-apple."
+ },
+ {
+  "q": "Why does window snapping need Accessibility?",
+  "k": "accessibility window snapping snap",
+  "a": "Moving other apps' windows is only possible through macOS Accessibility. Notch Apple uses it only to read and set window positions."
+ },
+ {
+  "q": "How do I make it smaller or turn modules off?",
+  "k": "smaller lighter modules disable turn off tabs hide feature clutter",
+  "a": "Turn off modules you don't need in Settings, then Modules. Older, smaller builds are also listed in the project README."
+ },
+ {
+  "q": "How do I drag files onto the notch?",
+  "k": "file shelf drag drop drop zone shelf airdrop share convert",
+  "a": "Drag a file toward the notch and it opens on the File Shelf, where the drop card takes it. From the shelf you can share it, or with Ultimate convert it to another format. Pin the notch with the pin button to keep it open while you drag."
+ },
+ {
+  "q": "What is the Printer Status tab?",
+  "k": "printer bambu 3d print status temperature progress filament lan",
+  "a": "It shows your Bambu 3D printer's status on your own network: green printing, yellow paused, blue idle, gray offline, plus progress, time left and nozzle and bed temperatures, with a warning if something runs too hot. Turn on LAN Mode on the printer, then add its IP address, access code and serial number in Settings, then Printer Status. Notch Apple is not affiliated with Bambu Lab."
+ },
+ {
+  "q": "Is there a flight simulator?",
+  "k": "plane flight simulator game fly aircraft airliner fighter helicopter jet cessna",
+  "a": "Yes, in the Games tab: about 30 aircraft from light planes to airliners, fighters and helicopters, several airfields and islands, weather, ground crew, AI traffic and challenges. W and S are throttle, the arrow keys fly, A and D are rudder, F and V set flaps, G is gear, and H starts a helicopter emergency landing."
+ },
+ {
+  "q": "What are the flight simulator controls?",
+  "k": "controls keys keyboard fly plane throttle flaps gear brake camera rudder helicopter collective",
+  "a": "W and S: throttle (collective in a helicopter). Arrow keys: pitch and roll (in a helicopter, up leans forward). A and D: rudder. F and V: flaps down and up. G: gear. Space or B: brakes. X: reverse thrust. C: camera. P: pause. R: restart. 1 to 4 at an apron: refuel, catering, baggage, pushback. H: helicopter emergency landing."
+ },
+ {
+  "q": "How do I use the ground crew in the flight simulator?",
+  "k": "ground crew pushback refuel catering baggage tug gate apron services",
+  "a": "Stop on an apron with the throttle closed (airliners start at the gate). Press 1 to refuel, 2 for catering, 3 for baggage and 4 for pushback, where a tug pushes you backward before you start your engines and taxi."
+ },
+ {
+  "q": "What is Klick?",
+  "k": "klick keyboard sound typing mechanical click",
+  "a": "A Pro feature that plays mechanical keyboard sounds as you type in any app, with eight sounds and a volume for each."
+ },
+ {
+  "q": "What is cassette mode?",
+  "k": "cassette music player now playing tape",
+  "a": "A look for the Now Playing card that shows a cassette tape with the controls beside it. Turn it on or off in Settings."
+ },
+ {
+  "q": "Can I use it on more than one display?",
+  "k": "multiple displays monitors screens external second",
+  "a": "Yes. The notch shows on the display you use, and with Ultimate you can choose which tabs show on each display."
+ },
+ {
+  "q": "How do I uninstall it?",
+  "k": "uninstall remove delete quit stop",
+  "a": "On Mac, quit the app and drag it from Applications to the Bin. On Windows, use Settings, then Apps, then Installed apps. Your settings are kept in Application Support (Mac) or the app data folder (Windows) and can be deleted too."
+ },
+ {
+  "q": "I found a bug. What should I do?",
+  "k": "bug crash problem broken issue error glitch report help support",
+  "a": "Thank you. Open Settings, then Help & Feedback in the app to send a report, or open an issue on GitHub. Say what you were doing, your version and what you saw.",
+  "link": [
+   "Open an issue",
+   "https://github.com/AdityaJainDXB/NotchApples/issues"
+  ]
+ },
+ {
+  "q": "How can I suggest a feature?",
+  "k": "feature request suggest idea feedback wish roadmap",
+  "a": "Every few weeks the open notch asks for an idea, a problem or praise, and Settings has the same box. The ideas are gathered on a public page.",
+  "link": [
+   "What people ask for",
+   "community.html"
+  ]
+ },
+ {
+  "q": "Can I see or change the source code?",
+  "k": "source code open source github licence license mit build contribute fork",
+  "a": "The code is source-available on GitHub: you can read it, build it and help improve it, but you can't resell it or unlock the paid features without a key. Versions from before 9 October 2026 were MIT.",
+  "link": [
+   "GitHub",
+   "https://github.com/AdityaJainDXB/NotchApples"
+  ]
+ },
+ {
+  "q": "Who makes Notch Apple?",
+  "k": "who made creator developer team author about",
+  "a": "Notch Apple is made by Aditya Jain with other high school developers, and is built in the open on GitHub.",
+  "link": [
+   "GitHub",
+   "https://github.com/AdityaJainDXB/NotchApples"
+  ]
+ },
+ {
+  "q": "Does it have a refund policy?",
+  "k": "refund money back return cancel terms",
+  "a": "The terms page explains refunds and what is sent when you activate a key.",
+  "link": [
+   "Terms and refunds",
+   "terms.html"
+  ]
+ },
+ {
+  "q": "How do I recover a lost key or purchase?",
+  "k": "lost key recover recovery forgot email resend purchase",
+  "a": "On the pricing page there is a recover option: enter the email you used and the key is sent again.",
+  "link": [
+   "Pricing page",
+   "pro.html"
+  ]
+ }
+]

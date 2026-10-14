@@ -153,6 +153,7 @@ footer{border-top:1px solid var(--line);padding:30px 0 44px;color:var(--dim);fon
 .pr-paper .tot{font-weight:700;font-size:13px}
 @media (prefers-reduced-motion:reduce){.pr-out.print .pr-paper{animation:none;transform:none}.pr-status .spin2{animation:none}}
 </style>
+<link rel="stylesheet" href="assets/chat.css">
 </head>
 <body>
 <nav class="notchnav" aria-label="Main"><div class="nn"><a class="logo" href="./"><img src="assets/icon-48.png" alt="" width="24" height="24"> Notch Apple</a><a class="back" href="./"><i class="ph ph-arrow-left"></i> <span>Back to the site</span></a></div></nav>
@@ -495,5 +496,6 @@ $('#recBtn').onclick = async () => {
   try { const r = await api('/recover', tx ? { email, txid: tx } : { email }); status('#recStatus', r.message, 'ok') } catch (e) { status('#recStatus', e.message, 'err') } finally { busy(btn, false) }
 };
 </script>
+<script src="assets/chat.js" defer></script>
 </body>
 </html>

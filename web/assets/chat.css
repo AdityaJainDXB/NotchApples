@@ -1,0 +1,27 @@
+.nc-fab{position:fixed;left:max(16px,env(safe-area-inset-left));bottom:max(16px,env(safe-area-inset-bottom));z-index:56;display:flex;align-items:center;gap:8px;height:44px;padding:0 16px 0 8px;border:0;border-radius:99px;background:#7650ee;color:#fff;font:600 14px/1 -apple-system,BlinkMacSystemFont,system-ui,sans-serif;cursor:pointer;box-shadow:0 10px 24px -10px rgba(0,0,0,.7),inset 0 0 0 1px rgba(255,255,255,.12);transition:transform .2s cubic-bezier(.23,1,.32,1),opacity .2s ease}
+.nc-fab>span:first-child{display:grid;place-items:center;width:28px;height:28px;border-radius:50%;background:rgba(255,255,255,.18);font-size:16px}
+.nc-fab:active{transform:scale(.96)}.nc-fab.nc-hide{opacity:0;pointer-events:none;transform:scale(.9)}
+.nc-fab:focus-visible,.nc-chip:focus-visible,.nc-x:focus-visible,.nc-send:focus-visible,.nc-in:focus-visible,.nc-msg a:focus-visible{outline:2px solid #cdbfff;outline-offset:2px}
+.nc-panel{position:fixed;left:max(16px,env(safe-area-inset-left));bottom:max(16px,env(safe-area-inset-bottom));z-index:57;width:min(380px,calc(100vw - 32px));max-height:min(560px,calc(100dvh - 32px));display:flex;flex-direction:column;background:#13111a;color:#f3f1f8;border-radius:20px;box-shadow:0 30px 70px -20px rgba(0,0,0,.85),inset 0 0 0 1px rgba(255,255,255,.1);font:14px/1.5 -apple-system,BlinkMacSystemFont,system-ui,sans-serif;overflow:hidden;animation:nc-in .25s cubic-bezier(.23,1,.32,1)}
+.nc-panel[hidden]{display:none}
+@keyframes nc-in{from{opacity:0;transform:translateY(8px) scale(.98)}to{opacity:1;transform:none}}
+.nc-head{display:flex;align-items:center;justify-content:space-between;padding:12px 14px 12px 16px;border-bottom:1px solid rgba(255,255,255,.08)}
+.nc-head strong{font-size:15px;letter-spacing:-.01em}
+.nc-x{width:32px;height:32px;border:0;border-radius:50%;background:rgba(255,255,255,.07);color:#f3f1f8;font-size:20px;line-height:1;cursor:pointer}
+.nc-log{flex:1;min-height:120px;overflow:auto;padding:14px 14px 4px;display:flex;flex-direction:column;gap:8px;overscroll-behavior:contain}
+.nc-msg{max-width:92%;padding:9px 12px;border-radius:14px}
+.nc-msg p{margin:0;text-wrap:pretty}
+.nc-bot{align-self:flex-start;background:#1c1925;border-bottom-left-radius:5px}
+.nc-me{align-self:flex-end;background:#7650ee;color:#fff;border-bottom-right-radius:5px}
+.nc-msg a{display:inline-block;margin-top:6px;color:#cdbfff;font-weight:600;text-decoration:none}
+.nc-msg a:hover{text-decoration:underline;text-underline-offset:3px}
+.nc-chips{display:flex;flex-wrap:wrap;gap:6px;padding:8px 14px}
+.nc-chip{border:0;border-radius:99px;padding:7px 12px;background:rgba(155,123,255,.14);color:#e1d7ff;font:500 13px/1.2 inherit;font-family:inherit;cursor:pointer;text-align:left;transition:background-color .2s ease}
+.nc-chip:hover{background:rgba(155,123,255,.26)}
+.nc-form{display:flex;gap:8px;padding:8px 14px 10px}
+.nc-in{flex:1;min-width:0;height:40px;border:0;border-radius:99px;padding:0 14px;background:#0c0b11;color:#f3f1f8;font:inherit;box-shadow:inset 0 0 0 1px rgba(255,255,255,.1)}
+.nc-send{height:40px;padding:0 16px;border:0;border-radius:99px;background:#7650ee;color:#fff;font:600 14px/1 inherit;font-family:inherit;cursor:pointer}
+.nc-send:active{transform:scale(.96)}
+.nc-foot{padding:0 16px 12px;color:#8b85a0;font-size:11.5px}
+@media (prefers-reduced-motion:reduce){.nc-panel{animation:none}.nc-fab{transition:none}}
+@media (max-width:480px){.nc-fab-t{display:none}.nc-fab{padding:0 8px}}
