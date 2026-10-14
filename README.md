@@ -57,7 +57,7 @@ Notch Apple lives in the black cutout at the top of your MacBook screen (a small
 | ⌨️ **Klick** *(Pro)* | Mechanical keyboard sounds as you type, in any app: Mechanical, Cream, Holy Panda, Blue, Red, Brown, Topre, Typewriter or Bubble, plus four premium sounds downloaded with your key (Cherry MX Black, Gateron Ink, Alps, Buckling spring), each with its own volume, and an on / off switch |
 | 🖼 **Live wallpaper** *(Pro, new)* | Play a video as your desktop wallpaper: your own (up to 60 s, up to 4K) or a free NASA clip. Pauses on battery and when windows cover it; the lock screen shows a still |
 | 📡 **Flight Radar** *(new)* | Every aircraft around you, live, on a round radar with callsign, type, height and speed (the free adsb.lol feed; your location is rounded to about 1 km and only sent while the tab is open) |
-| ✈️ **Plane game** *(new)* | A 3D flight sim in Games: Cessna, Piper, Boeing 737, 747, 777 and Airbus A320, A350, A380, with real airspeed and altimeter dials, engine sounds, flaps in notches, retractable gear, tail strikes, damage and spoken GPWS callouts. Fly with the mouse (**M** switches it off). Fly over Dubai, London, Paris, New York, Tokyo, Sydney, Cairo or San Francisco (or your own location) with their landmarks, and compete on a world leaderboard |
+| ✈️ **Plane game** | A 3D flight sim in Games: Cessna to A380, fighters and helicopters, with real dials, engine sounds, flaps in notches, retractable gear, damage and spoken GPWS callouts. An **autopilot** and **ILS approaches**, **air traffic control** calls, **AI traffic** and ground crew, **Clean start** with a step-by-step checklist, night and fog, and optional **Fly with others** (see other Notch pilots; off until you turn it on). Fly over Dubai, London, Paris, New York, Tokyo, Sydney, Cairo or San Francisco and compete on a world leaderboard |
 | 🤖 **Notch Apple AI** *(included with Pro)* | Ask without setting up any key: the request goes to Notch Apple's server, which checks your key and answers with the project's own AI account (Pro 60 messages a day, Ultimate 200). Your own keys still work with no limit |
 | 🗓 **Updates once a week** | Optional and off by default: be asked about updates once a week instead of for every release |
 | 🧰 **30+ more tools** | Now Playing, window snapping, clipboard, file shelf, focus timer, Sports, Messenger, notes, search and more |
@@ -73,10 +73,10 @@ Pick your computer. Both buttons start the download straight away. The Mac butto
   </tr>
   <tr>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/v2.0.34/NotchApple-2.0.34.dmg"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.0.61</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/v2.0.34/NotchApple-2.0.34.dmg"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.0.62</b></a>
     </td>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 1.63.0 BETA</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 1.64.0 BETA</b></a>
     </td>
   </tr>
   <tr>
@@ -182,6 +182,20 @@ Taken from the current app with [`scripts/screenshots.sh`](scripts/screenshots.s
 
 All screenshots use sample data.
 
+<details>
+<summary><b>Flight simulator and Printer Status</b></summary>
+
+| | |
+| --- | --- |
+| ![Flight sim start screen](docs/screenshots/plane-home.png) | ![Clean start checklist](docs/screenshots/plane-clean-start.png) |
+| **Start screen**: Clean start, Fly with others, weather, time of day | **Clean start**: the checklist walks you through the start-up |
+| ![Night take-off](docs/screenshots/plane-night.png) | ![ILS approach](docs/screenshots/plane-ils.png) |
+| **Night**: glowing runway lights and the tower | **ILS approach**: needles, autopilot and AI traffic |
+| ![Fly with others](docs/screenshots/plane-share.png) | ![Settings: Printer Status](docs/screenshots/settings-bambu.png) |
+| **Fly with others**: other Notch pilots, with callsigns | **Printer Status**: LAN Mode, or sign in with your Bambu account |
+
+</details>
+
 | | |
 | --- | --- |
 | ![Today](docs/screenshots/today.png) | ![AI](docs/screenshots/claude.png) |
@@ -221,9 +235,10 @@ All screenshots use sample data.
 
 > **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is still in the repository's tags.
 
-### Mac 2.0.59 · Windows 1.61.0 BETA · 14 October 2026 · 🖨️ Printer Status note
+### Mac 2.0.62 · Windows 1.64.0 BETA · 14 October 2026 · ✈️ Clean start, and a security pass
 
-- Printer Status explains that LAN Mode turns off the printer's cloud features (Bambu Handy, remote printing, print history).
+- **Clean start** on the flight simulator's home screen: spawn on the runway with the battery, beacon and engine off, and do the whole start-up yourself (**Y** battery, **O** beacon, **S** throttle idle, **I** engine, then flaps, gear, brake). The checklist on screen walks you through it. Off, you spawn ready to roll.
+- Hardening from a full review: the shared-flying relay is rate-limited per address and shows only pilots in the same part of the world, a fresh random id is made for every flight session, other pilots' data is validated, the Bambu sign-in handles redirects, sign-out and retries more carefully, and the website's admin page has a content security policy.
 
 ### Mac 2.0.61 · Windows 1.63.0 BETA · 14 October 2026 · 🖨️ Bambu sign-in without a password
 
@@ -234,11 +249,19 @@ All screenshots use sample data.
 - Printer Status can sign in with your Bambu account, so the printer does not need LAN Mode (and keeps its cloud features).
 - The password goes only to Bambu and is never saved; signing out deletes the saved token.
 
+### Mac 2.0.59 · Windows 1.61.0 BETA · 14 October 2026 · 🖨️ Printer Status note
+
+- Printer Status explains that LAN Mode turns off the printer's cloud features (Bambu Handy, remote printing, print history).
+
 ### Mac 2.0.58 · Windows 1.60.0 BETA · 14 October 2026 · ✈️ Fly with others, procedures, night lights
 
 - **Fly with others** (opt-in): see other Notch pilots with their callsigns.
 - Step-by-step procedure for take-off, climb-out, approach and landing.
 - Runway and aircraft lights glow at night.
+
+### Mac 2.0.57 · Windows 1.59.0 BETA · 14 October 2026 · ✈️ Messages fit the screen
+
+- The take-off and landing configuration warnings are shorter, and long on-screen messages wrap instead of running off the edge.
 
 ### Mac 2.0.56 · Windows 1.59.0 BETA · 14 October 2026 · ✈️ Cold and dark start, ATC, night and fog
 

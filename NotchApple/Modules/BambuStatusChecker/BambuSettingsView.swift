@@ -26,13 +26,15 @@ final class BambuSignInModel: ObservableObject {
     @Published var devices: [BambuCloud.Device] = []
     @Published var chosen = Set<String>()
     private var tfaKey = ""
+    private var generation = 0   // a sign-in that finishes after Cancel (or a new try) is ignored
 
     func signIn() {
         guard !busy else { return }
         let pw = password
         password = ""                      // the password leaves the form the moment it is sent
         busy = true; message = "Signing in…"
-        Task { await handle(await BambuCloud.signIn(region: region, account: email, password: pw)) }
+        generation += 1; let g = generation
+        Task { let r = await BambuCloud.signIn(region: region, account: email, password: pw); guard g == generation else { return }; await handle(r) }
     }
 
     func confirm() {
@@ -40,7 +42,8 @@ final class BambuSignInModel: ObservableObject {
         let c = code
         busy = true; message = "Checking…"
         let step = self.step, key = tfaKey
-        Task { await handle(step == .code ? await BambuCloud.signIn(region: region, account: email, code: c) : await BambuCloud.signIn(region: region, tfaKey: key, code: c)) }
+        generation += 1; let g = generation
+        Task { let r = step == .code ? await BambuCloud.signIn(region: region, account: email, code: c) : await BambuCloud.signIn(region: region, tfaKey: key, code: c); guard g == generation else { return }; await handle(r) }
     }
 
     /// For accounts made with Google, Apple or Facebook (no Bambu password): Bambu emails a code to the account's address.
@@ -55,7 +58,7 @@ final class BambuSignInModel: ObservableObject {
         }
     }
 
-    func cancel() { step = .idle; code = ""; message = ""; busy = false }
+    func cancel() { generation += 1; step = .idle; code = ""; password = ""; message = ""; busy = false }
 
     private func handle(_ result: BambuCloud.SignIn) async {
         switch result {
@@ -236,7 +239,10 @@ struct BambuSettingsView: View {
                     .foregroundStyle(.green)
                 Text("Printers added from the account are watched without LAN Mode. To pick up a newly added printer, sign out and sign in again.")
                     .font(.caption).foregroundStyle(Theme.textSecondary)
-                Button("Sign out", role: .destructive) { manager.cloudSignOut(); signIn.message = "Signed out. The saved sign-in is deleted." }
+                Button("Sign out", role: .destructive) {
+                    signIn.password = ""
+                    signIn.message = manager.cloudSignOut() ? "Signed out. The saved sign-in is deleted." : "Couldn’t delete the saved sign-in. You are still signed in: try again."
+                }
             } else {
                 Picker("Region", selection: $signIn.region) {
                     ForEach(BambuCloud.regionOrder, id: \.self) { Text(BambuCloud.regions[$0]?.name ?? $0).tag($0) }

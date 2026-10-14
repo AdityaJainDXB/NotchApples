@@ -135,7 +135,7 @@
  {
   "q": "What is the Printer Status tab?",
   "k": "printer bambu 3d print status temperature progress filament lan",
-  "a": "It shows your Bambu 3D printer's status on your own network: green printing, yellow paused, blue idle, gray offline, plus progress, time left and nozzle and bed temperatures, with a warning if something runs too hot. Turn on LAN Mode on the printer, then add its IP address, access code and serial number in Settings, then Printer Status. Notch Apple is not affiliated with Bambu Lab."
+  "a": "It shows your Bambu 3D printer's status: green printing, yellow paused, blue idle, gray offline, plus progress, time left and nozzle and bed temperatures, with a warning if something runs too hot. There are two ways to connect. On your own network: turn on LAN Mode on the printer (which switches off its cloud features, such as the Bambu Handy app) and add its IP address, access code and serial number in Settings, then Printer Status. Or sign in with your Bambu account in the same place: your password goes only to Bambu and is never saved, the printer keeps its cloud features, and its status then comes through Bambu's servers. Notch Apple is not affiliated with Bambu Lab."
  },
  {
   "q": "Is there a flight simulator?",

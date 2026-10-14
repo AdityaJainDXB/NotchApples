@@ -784,7 +784,7 @@ export const PLANE_NAMES = { c172: 'Cessna 172', pa28: 'Piper PA-28', b737: 'Boe
 const BAD_WORDS = ['fuck', 'shit', 'cunt', 'nigg', 'fag', 'rape', 'nazi', 'hitler', 'bitch', 'whore', 'slut', 'dick', 'cock', 'pussy', 'porn', 'sex'];
 
 export function cleanPilotName(raw) {
-  const name = String(raw || '').replace(/[^\p{L}\p{N} _.-]/gu, '').replace(/\s+/g, ' ').trim().slice(0, 16);
+  const name = [...String(raw || '').normalize('NFKC').replace(/[^\p{L}\p{N} _.-]/gu, '').replace(/\s+/g, ' ').trim()].slice(0, 16).join('').trim();
   const flat = name.toLowerCase().replace(/[^a-z]/g, '').replace(/1/g, 'i');
   return !name || BAD_WORDS.some((w) => flat.includes(w)) ? 'Pilot' : name;
 }
@@ -847,21 +847,33 @@ async function skyCall(env, path, payload) {
   return j;
 }
 async function skySync(env, request, body) {
-  const addr = await sha256(`sky|${request.headers.get('cf-connecting-ip') || 'unknown'}`);
+  await addressLimit(env, request, 'sky', 90);
+  const ip = request.headers.get('cf-connecting-ip') || 'unknown';
+  const addr = await sha256(`sky|${ip.includes(':') ? ip.split(':').slice(0, 4).join(':') : ip}`);   // an IPv6 /64 counts as one address
   return await skyCall(env, '/sync', { ...body, addr });
 }
 
 /** At most 10 scores a minute from one address. */
 export class PlaneRate {
   constructor(state) { this.state = state; }
-  async fetch() {
+  async fetch(request) {
     const now = Date.now();
+    const max = Math.min(600, Math.max(1, Number(new URL(request.url).searchParams.get('max')) || 10));
     const times = ((await this.state.storage.get('t')) || []).filter((t) => now - t < 60000);
-    if (times.length >= 10) return Response.json({ ok: false });
+    if (times.length >= max) return Response.json({ ok: false });
     times.push(now);
     await this.state.storage.put('t', times);
     return Response.json({ ok: true });
   }
+}
+
+/** At most `max` calls a minute from one address (a /64 for IPv6), checked BEFORE a shared object or a KV write is paid for. */
+async function addressLimit(env, request, bucket, max) {
+  if (!env.PLANE_RATE) return;
+  const ip = request.headers.get('cf-connecting-ip') || 'unknown';
+  const net = ip.includes(':') ? ip.split(':').slice(0, 4).join(':') : ip;
+  const r = await (await env.PLANE_RATE.get(env.PLANE_RATE.idFromName(await sha256(`${bucket}|${net}`))).fetch(`https://rate/?max=${max}`, { method: 'POST' })).json();
+  if (!r.ok) throw new HTTPError(429, 'Too many requests. Try again in a minute.');
 }
 
 async function planePost(env, request, body) {
@@ -916,7 +928,7 @@ export default {
         if (path === '/revoked') return json(await revokedList(env), 200, { 'cache-control': 'public, max-age=3600' });
         if (path.startsWith('/asset/')) return await assetGet(env, request, path.slice('/asset/'.length));
         if (path === '/plane/board') return await planeBoard(env, new URL(request.url));
-        if (path === '/plane/sky/count') return json(env.PLANE_SKY ? await (await env.PLANE_SKY.get(env.PLANE_SKY.idFromName('sky')).fetch('https://sky/count')).json() : { pilots: 0 }, 200, { 'cache-control': 'public, max-age=15' });
+        if (path === '/plane/sky/count') { await addressLimit(env, request, 'skycount', 30); return json(env.PLANE_SKY ? await (await env.PLANE_SKY.get(env.PLANE_SKY.idFromName('sky')).fetch('https://sky/count')).json() : { pilots: 0 }); }
         if (path === '/ai/status') return json({ on: aiOn(env), model: aiOn(env) ? 'notch-fast' : null, limits: { pro: aiLimit(env, 1), ultimate: aiLimit(env, 2) } });
         throw new HTTPError(404, 'Not found');
       }
@@ -929,6 +941,7 @@ export default {
         await audit(env, path, { id: result.id }, result);
         return json(result);
       }
+      if (Number(request.headers.get('content-length') || 0) > 4096) throw new HTTPError(413, 'Too large');
       const text = await request.text();
       if (text.length > 4096) throw new HTTPError(413, 'Too large');
       let body; try { body = JSON.parse(text || '{}'); } catch { throw new HTTPError(400, 'Bad JSON'); }
@@ -939,9 +952,9 @@ export default {
         return json(result);
       }
       switch (path) {
-        case '/telemetry/ping': return json(await Insights.ping(env, body));
-        case '/telemetry/glitch': return json(await Insights.glitch(env, body));
-        case '/feedback': return json(await Insights.feedback(env, body));
+        case '/telemetry/ping': await addressLimit(env, request, 'ins', 60); return json(await Insights.ping(env, body));
+        case '/telemetry/glitch': await addressLimit(env, request, 'ins', 60); return json(await Insights.glitch(env, body));
+        case '/feedback': await addressLimit(env, request, 'ins', 60); return json(await Insights.feedback(env, body));
         case '/order': return json(await order(env, body));
         case '/claim': return json(await claim(env, body));
         case '/promo': return json(await promo(env, body));
@@ -951,7 +964,7 @@ export default {
         case '/entitle': return json(await entitle(env, body));
         case '/plane/score': return json(await planePost(env, request, body));
         case '/plane/sky': return json(await skySync(env, request, body));
-        case '/plane/sky/leave': return json(await skyCall(env, '/leave', { id: body.id }));
+        case '/plane/sky/leave': await addressLimit(env, request, 'sky', 90); return json(await skyCall(env, '/leave', { id: body.id }));
       }
       throw new HTTPError(404, 'Not found');
     } catch (e) {

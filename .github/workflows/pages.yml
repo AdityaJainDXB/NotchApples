@@ -26,6 +26,8 @@ concurrency:
 
 jobs:
   deploy:
+    # (a failed or cancelled Windows build does not redeploy the site)
+    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
     environment:
       name: github-pages

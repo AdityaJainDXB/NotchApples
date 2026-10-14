@@ -139,3 +139,13 @@ test('an aircraft built from heading, pitch and bank reads back the same way', (
     assert.ok(Math.abs(dh) < 0.01 && Math.abs(f.pitchAngle - pi) < 0.01 && Math.abs(f.bank - b) < 0.01, `h${h} p${pi} b${b}: got ${f.heading.toFixed(2)} ${f.pitchAngle.toFixed(2)} ${f.bank.toFixed(2)}`);
   }
 });
+
+test('a clean start needs the battery before the starter will turn', () => {
+  const p = PLANES.find((q) => q.id === 'c172'), f = new Flight(p);
+  f.reset([0, T.groundAt(world, 0, 0) + p.gear, -30], 0, 0, true, 0);
+  f.engOff = true; f.battery = false; f.throttle = 0;
+  assert.equal(f.engineStart(), 'battery');
+  f.battery = true; assert.equal(f.engineStart(), 'ok');
+  const pr = T.procedure(f, world, { took: false });
+  assert.ok(pr.steps.some((x) => /Battery on/.test(x.t)) && pr.steps.some((x) => /Beacon on/.test(x.t)));
+});

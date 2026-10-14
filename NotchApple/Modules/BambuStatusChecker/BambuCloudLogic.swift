@@ -197,10 +197,18 @@ enum BambuCloud {
 
     // MARK: Doing it (one URLSession with no cookie jar and no cache: nothing about the sign-in is written to disk)
 
+    /// Follows a redirect only within the same Bambu host: a body (the password) or a header must never be re-sent anywhere else.
+    private final class SameHost: NSObject, URLSessionTaskDelegate {
+        func urlSession(_ session: URLSession, task: URLSessionTask, willPerformHTTPRedirection response: HTTPURLResponse,
+                        newRequest request: URLRequest, completionHandler: @escaping (URLRequest?) -> Void) {
+            completionHandler(request.url?.host == task.originalRequest?.url?.host && request.url?.scheme == "https" ? request : nil)
+        }
+    }
+    private static let redirectGuard = SameHost()
     static let session: URLSession = {
         let c = URLSessionConfiguration.ephemeral
         c.httpCookieStorage = nil; c.httpShouldSetCookies = false; c.urlCache = nil; c.requestCachePolicy = .reloadIgnoringLocalCacheData
-        return URLSession(configuration: c)
+        return URLSession(configuration: c, delegate: redirectGuard, delegateQueue: nil)
     }()
 
     static func send(_ request: URLRequest?) async -> Answer? {

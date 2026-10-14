@@ -17,6 +17,7 @@ const connecting = new Set();
 const retry = new Map();
 let wired = false;
 const RETRY_MS = 12_000;
+const attempts = new Map();   // printer id -> failed tries in a row, so a printer that keeps failing is tried less and less often
 
 export const onChange = (fn) => { subs.add(fn); return () => subs.delete(fn); };
 const changed = () => { subs.forEach((f) => { try { f(); } catch (e) { console.error(e); } }); refresh(); };
@@ -86,11 +87,13 @@ export function cloudAdd(devices, region) {
 /// Signs out: the saved token is deleted, and the printers that were reached through the account are removed.
 export async function cloudSignOut() {
   const mine = printers().filter((p) => p.cloud);
-  try { await invoke('bambu_cloud_clear', { serials: mine.map((p) => p.serial.trim()) }); } catch { /* nothing saved */ }
+  try { await invoke('bambu_cloud_clear', { serials: mine.map((p) => p.serial.trim()) }); }
+  catch (e) { return { ok: false, message: `Couldn’t delete the saved sign-in (${String(e)}). You are still signed in: close other programs using the file and try again.` }; }
   mine.forEach((p) => { clearTimeout(retry.get(p.id)); retry.delete(p.id); snaps.delete(p.id); failures.delete(p.id); alerts.delete(p.id); connecting.delete(p.id); });
   savePrinters(printers().filter((p) => !p.cloud));
   save(CLOUD_KEY, null);
   changed();
+  return { ok: true };
 }
 
 export function remove(id) {
@@ -146,7 +149,8 @@ function fail(p, message) {
   snaps.set(p.id, L.offline(message)); failures.set(p.id, message); alerts.delete(p.id);
   clearTimeout(retry.get(p.id));
   if (isOn() && !String(message).toLowerCase().includes(L.PIN_MISMATCH_HINT) && !/sign in again/i.test(String(message))) {
-    retry.set(p.id, setTimeout(() => { const cur = byId(p.id); if (cur && isOn()) connect(cur); }, RETRY_MS));
+    const n = (attempts.get(p.id) || 0) + 1; attempts.set(p.id, n);
+    retry.set(p.id, setTimeout(() => { const cur = byId(p.id); if (cur && isOn()) connect(cur); }, Math.min(300_000, RETRY_MS * 2 ** Math.min(n - 1, 5))));
   }
   changed();
 }
@@ -157,7 +161,7 @@ function wire() {
     if (!isOn()) return;
     const p = bySerial(serial); if (!p) return;
     let root; try { root = JSON.parse(payload); } catch { return; }
-    connecting.delete(p.id); failures.delete(p.id);
+    connecting.delete(p.id); failures.delete(p.id); attempts.delete(p.id);
     const old = snapshot(p.id);
     const next = L.apply(root, old.phase === 'offline' ? L.waiting() : old);
     snaps.set(p.id, next);

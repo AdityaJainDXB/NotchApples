@@ -63,6 +63,9 @@ jobs:
             test). Make the smallest change that fixes each problem and keep all content, ids and behaviour. You cannot run
             commands; the gate runs again after you finish. Do not touch anything outside web/, and never read or print
             anything under private/ or any key, token or .env file.
+      - name: Put back the scripts and test setup (the repair may only change the site's own files)
+        if: steps.gate.outcome == 'failure' && env.HAS_CLAUDE == 'true'
+        run: git checkout -- scripts web/package.json web/package-lock.json web/playwright.config.ts web/tests 2>/dev/null || true
       - id: gate2
         name: Quality gate again, after the repair
         if: steps.gate.outcome == 'failure' && env.HAS_CLAUDE == 'true'

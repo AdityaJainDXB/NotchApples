@@ -1283,7 +1283,10 @@
     const say = (key, text) => { if (st.said.has(key)) return null; st.said.add(key); return text; };
     const gear = f.s.gear * (f.s.scale || 1), agl = f.pos[1] - gear - groundAt(world, f.pos[0], f.pos[2]), cs = st.cs;
     const num = (e) => e.name.split(' ').pop(), field = (e) => e.name.slice(0, e.name.lastIndexOf(' '));
+    // A finished approach or departure is forgotten, so the next circuit gets its calls again.
+    if (agl > 120 && st.touched) { for (const k of [...st.said]) if (k.startsWith('app:') || k.startsWith('land:') || k.startsWith('line:') || k === 'vacate') st.said.delete(k); st.touched = false; st.landed = null; }
     if (f.onGround) {
+      if (st.cleared && f.speed > 5) { st.landed = st.cleared; st.touched = true; }
       if (f.speed < 1 && onApron(f.pos) && f.engRun && f.t > 2 && !st.said.has('took')) {
         const m = say('push', `Ground, ${cs}: push-back and engine start approved. Taxi to the runway and hold short.`); if (m) return m;
       }
@@ -1291,12 +1294,12 @@
         for (const e of RUNWAY_ENDS) {
           const along = (f.pos[2] - e.zt) * e.dir, lat = Math.abs(f.pos[0] - e.x);
           let dh = Math.abs(((f.heading - e.hdg + Math.PI * 3) % (Math.PI * 2)) - Math.PI);
-          if (along > -60 && along < 220 && lat < 40 && dh < 0.5 && f.pos[2] !== undefined) {
+          if (along > -60 && along < 220 && lat < 40 && dh < 0.5 && true) {
             const m = say('line:' + e.name, `Tower, ${cs}: runway ${num(e)}, wind ${atcWindText(f)}. Cleared for take-off.`); if (m) { st.said.add('took'); return m; }
           }
         }
       }
-      if (f.speed < 40 && st.landed) {
+      if (f.speed < 40 && st.landed && st.touched) {
         const m = say('vacate', `Tower, ${cs}: welcome to ${st.landed}. Vacate the runway when able and taxi to the apron.`); if (m) return m;
       }
     } else {
@@ -1306,7 +1309,7 @@
         const m = say('app:' + il.rwy.name, `Approach, ${cs}: ${Math.round(il.dist / 1000)} kilometres from runway ${num(il.rwy)}, wind ${atcWindText(f)}. Cleared I L S approach.`); if (m) return m;
         if (il.dist < 3800 && agl < 400) {
           const m2 = say('land:' + il.rwy.name, `Tower, ${cs}: runway ${num(il.rwy)}, wind ${atcWindText(f)}. Cleared to land.`);
-          if (m2) { st.landed = field(il.rwy); return m2; }
+          if (m2) { st.cleared = field(il.rwy); return m2; }
         }
       }
     }
@@ -1329,7 +1332,7 @@
         const along = (f.pos[2] - e.zt) * e.dir, lat = Math.abs(f.pos[0] - e.x), dh = Math.abs(((f.heading - e.hdg + Math.PI * 3) % (Math.PI * 2)) - Math.PI);
         if (along > -80 && along < e.len * 0.6 && lat < 30 && dh < 0.4) on = true;
       }
-      steps = [['Fuel on board', f.fuel > (s.fuel || 1800) * 0.2], ['Throttle to idle  (S)', f.engRun || f.throttle < 0.08], ['Start the engine  (I)', f.engRun]];
+      steps = [['Fuel on board', f.fuel > (s.fuel || 1800) * 0.2], ['Battery on  (Y)', f.battery !== false], ['Beacon on  (O)', f.beaconSw !== false], ['Throttle to idle  (S)', f.engRun || f.throttle < 0.08], ['Start the engine  (I)', f.engRun]];
       if (liner) steps.push(['Flaps for take-off  (F)', f.flapNotch >= 1]);
       if (s.retract) steps.push(['Gear down  (G)', f.gearDown]);
       steps.push(['Release the brake  (Space)', !f.brake], ['Line up on the runway', on], ['Full throttle  (W)', f.throttle > 0.9], [`Rotate at ${kt(sp.vr)} kt  (pull back)`, f.ias >= sp.vr]);
@@ -2639,7 +2642,7 @@
       const wx = -Math.sin(this.windFrom) * this.windSpd, wz = Math.cos(this.windFrom) * this.windSpd;
       this.wv = [wx, 0, wz]; this.tb = [0, 0, 0]; this.rough = 0; this.roughT = 0; this.gustT = 3 + Math.random() * 8; this.gustPh = -1; this.gustLen = 3; this.gustAmp = 0;
       this.vel = add(mul(qrot(this.q, [0, 0, -1]), speed), onGround ? v3() : [wx, 0, wz]);
-      this.engOff = false; this.starting = false; this.startT = 0;
+      this.engOff = false; this.starting = false; this.startT = 0; this.battery = true; this.beaconSw = true;
       this.w = v3(); this.throttle = onGround ? 0 : 0.7; this.flaps = 0; this.brake = false; this.onGround = onGround;
       this.crashed = false; this.stalled = false; this.aoa = 0; this.beta = 0; this.gload = 1; this.touch = null; this.sinkAtTouch = 0;
       this.ias = speed; this.tas = speed; this.sigma = 1; this.t = 0;
@@ -2675,6 +2678,7 @@
     engineStart() {
       if (!this.engOff) return 'running';
       if (this.starting) return 'busy';
+      if (!this.battery) return 'battery';
       if (!this.onGround || this.speed > 5) return 'air';
       if (this.throttle > 0.05) return 'throttle';
       this.starting = true; this.startT = 0; return 'ok';
@@ -2813,6 +2817,8 @@
       const a = this.ap, s = this.s;
       // Taking hold of the stick or running out of safe speed hands the aircraft back.
       if (Math.abs(input.pitch) > 0.35 || Math.abs(input.roll) > 0.35 || this.inStall || this.onGround || this.damage.L === false || this.damage.R === false) { a.on = false; this.events.push({ type: 'apoff' }); return input; }
+      // Low and not on an approach: it hands back rather than flying a height-hold into the ground.
+      if (a.mode !== 'appr' && this.pos[1] - s.gear * (s.scale || 1) - groundAt(world, this.pos[0], this.pos[2]) < 60) { a.on = false; this.events.push({ type: 'apoff' }); return input; }
       let vsApp = null;
       if (a.mode === 'appr') {
         // Flying the ILS: steer onto the localiser course, hold level until the glideslope comes down to us, then follow it.
@@ -2830,7 +2836,7 @@
       const bankT = clamp(he * 1.1, -0.44, 0.44);
       const roll = clamp((bankT - this.bank) * 2.0 + 0, -0.6, 0.6);
       const vsT = vsApp != null ? vsApp : clamp((a.alt - this.pos[1]) * 0.08, -6, 6) * (s.cat === 'ga' ? 0.6 : 1);
-      const pitch = clamp((this.pitchAngle - 0.0) * -0.0 + (vsT - this.vel[1]) * 0.06, -0.4, 0.4);
+      const pitch = clamp((vsT - this.vel[1]) * 0.06, -0.4, 0.4);
       a.i = clamp(a.i + (a.spd - this.ias) * dt * 0.02, -0.5, 0.5);
       // (the throttle lever moves at a rate set by input.throttle, so ask for the movement that reaches the wanted setting)
       const throttle = clamp((clamp(0.5 + (a.spd - this.ias) * 0.05 + a.i, 0.05, 1) - this.throttle) * 3, -1, 1);
@@ -3759,10 +3765,10 @@
     if (!gl) { ui.innerHTML = '<div class="pg-menu"><h1>✈️ Plane</h1><p class="pg-hint">This computer\'s graphics don\'t support WebGL, which the 3D plane game needs.</p></div>'; return () => {}; }
 
     // ---- GL setup
-    const vs = `attribute vec3 p; attribute vec3 n; attribute vec3 c; uniform mat4 vp, m; uniform vec3 tint; uniform float glow;
+    const vs = `attribute vec3 p; attribute vec3 n; attribute vec3 c; uniform mat4 vp, m; uniform vec3 tint; uniform float glow; uniform vec3 sunDir;
       varying vec3 vc; varying float vd; varying float vl;
       void main(){ vec4 w = m * vec4(p,1.0); gl_Position = vp * w; vec3 nn = normalize(mat3(m) * n);
-        float l = max(dot(nn, vec3(${SUN.map((v) => v.toFixed(4)).join(', ')})), 0.0); vl = 0.42 + 0.68 * l + glow; vc = c * tint; vd = gl_Position.w; }`;
+        float l = max(dot(nn, sunDir), 0.0); vl = 0.42 + 0.68 * l + glow; vc = c * tint; vd = gl_Position.w; }`;
     const fs = `precision mediump float; varying vec3 vc; varying float vd; varying float vl; uniform vec3 fog; uniform float fogFar; uniform float alpha; uniform vec3 lum;
       ${FOG_GLSL}
       void main(){ gl_FragColor = vec4(mix(vc * vl * lum, fog, fogAmt(vd, fogFar)), alpha); }`;
@@ -3771,7 +3777,7 @@
     gl.bindAttribLocation(prog, 0, 'p'); gl.bindAttribLocation(prog, 1, 'n'); gl.bindAttribLocation(prog, 2, 'c'); gl.linkProgram(prog); gl.useProgram(prog);
     const loc = { p: gl.getAttribLocation(prog, 'p'), n: gl.getAttribLocation(prog, 'n'), c: gl.getAttribLocation(prog, 'c') };
     const uni = (name) => gl.getUniformLocation(prog, name);
-    const U = { vp: uni('vp'), m: uni('m'), tint: uni('tint'), glow: uni('glow'), fog: uni('fog'), lum: uni('lum'), fogFar: uni('fogFar'), alpha: uni('alpha') };
+    const U = { vp: uni('vp'), m: uni('m'), tint: uni('tint'), glow: uni('glow'), fog: uni('fog'), lum: uni('lum'), sunDir: uni('sunDir'), fogFar: uni('fogFar'), alpha: uni('alpha') };
     gl.enable(gl.DEPTH_TEST);
     gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
     const upload = (builder) => {
@@ -4244,8 +4250,9 @@
       engState.rpm = plane.engine === 'jet' ? 0 : plane.rpmIdle + (plane.rpmMax - plane.rpmIdle) * up;
       engState.n1 = plane.engine === 'jet' || plane.engine === 'turboprop' || plane.engine === 'turboshaft' ? plane.n1Idle + (100 - plane.n1Idle) * up : 0;
       screen = 'fly'; renderUI(); root.focus();
+      if (shareOn) { remote = []; skyT = 0; toast('Fly with others is on: your callsign, aircraft and position are shared', 2600); }
       atc = { cs: `Notch ${100 + Math.floor(Math.random() * 899)}`, said: new Set() }; atcText = ''; atcT = 0; showCheck = true;
-      if (coldStart && !plane.rotor && flight.onGround) { flight.engOff = true; flight.throttle = 0; toast('Cold and dark: press I to start the engine (throttle at idle)', 3200); }
+      if (coldStart && !plane.rotor && flight.onGround) { flight.engOff = true; flight.throttle = 0; flight.battery = false; flight.beaconSw = false; toast('Clean start: battery (Y), beacon (O), then the engine (I). The checklist on the left walks you through it', 4200); }
       if (audio()?.state === 'suspended') ac.resume();
       if (engGain) engGain.gain.value = 1;
     }
@@ -4295,7 +4302,7 @@
       if (down && e.repeat && keys.has(k)) { if (screen === 'fly') e.preventDefault?.(); return; }   // held keys repeat: toggles fire once
       const typing = e.target && e.target.tagName === 'INPUT' && e.target.type !== 'range';
       if (typing) { if (down && k === 'Enter' && result?.qualifies) saveScore(); return; }
-      const game = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' ', 'w', 's', 'a', 'd', 'q', 'e', 'f', 'v', 'b', 'c', 'p', 'r', 'x', 'Shift', 'Control', 'g', 'h', 'i', 't', 'j', 'k', ',', '.', '[', ']'];
+      const game = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' ', 'w', 's', 'a', 'd', 'q', 'e', 'f', 'v', 'b', 'c', 'p', 'r', 'x', 'Shift', 'Control', 'g', 'h', 'i', 't', 'y', 'o', 'j', 'k', ',', '.', '[', ']'];
       if (game.includes(k) && screen === 'fly') e.preventDefault?.();
       if (down) {
         if (screen === 'fly') {
@@ -4306,12 +4313,15 @@
             if (r === 'up' || r === 'down') { toast(r === 'down' ? 'Gear down' : 'Gear up', 1100); noise(1.1, 0.12, 280); }
             else toast(r === 'fixed' ? `The ${plane.name} has fixed wheels: no gear to raise` : r === 'broken' ? 'The undercarriage is broken' : 'Gear can only be raised in the air', 1500);
           }
+          if (k === 'y') { flight.battery = !flight.battery; toast(flight.battery ? 'Battery on' : 'Battery off: the lights go out and the engine cannot be started', 1600); noise(0.4, 0.1, 500); }
+          if (k === 'o') { flight.beaconSw = !flight.beaconSw; toast(flight.beaconSw ? 'Beacon on' : 'Beacon off', 1000); noise(0.3, 0.1, 700); }
           if (k === 'i') {
             const r2 = flight.engineStart();
             if (r2 === 'ok') { toast('Starter running…', 2200); beep(300, 0.5, 'sawtooth', 0.06); }
             else if (r2 === 'running') toast('The engine is already running', 1200);
             else if (r2 === 'busy') toast('Starter running…', 900);
             else if (r2 === 'throttle') toast('Pull the throttle back to idle first (S)', 1600);
+            else if (r2 === 'battery') toast('Switch the battery on first (Y)', 1600);
             else toast('Engines are started on the ground', 1400);
           }
           if (k === 't') { showCheck = !showCheck; toast(showCheck ? 'Checklist on' : 'Checklist off', 900); }
@@ -4685,20 +4695,29 @@
     }
     // ---- Fly with others: the pilots who have switched it on appear as aircraft with their callsigns (they cannot be hit).
     let shareOn = read('share', false), skyId = read('skyid', ''), remote = [], skyT = 0, skyBusy = false, skyFails = 0, skyPilots = null, skyOff = false;
-    if (!/^[0-9a-f]{32}$/.test(skyId)) { skyId = [...crypto.getRandomValues(new Uint8Array(16))].map((x) => x.toString(16).padStart(2, '0')).join(''); write('skyid', skyId); }
+    // The random id is made only when sharing is switched on, and a new one is made for every flight session.
+    const newSkyId = () => [...crypto.getRandomValues(new Uint8Array(16))].map((x) => x.toString(16).padStart(2, '0')).join('');
+    skyId = '';
     const skyFetch = async (path, body) => {
       const ac = new AbortController(), to = setTimeout(() => ac.abort(), 4000);
       try { const r = await fetch(`${WORLD_SERVER}${path}`, { method: body ? 'POST' : 'GET', headers: { 'content-type': 'application/json' }, body: body ? JSON.stringify(body) : undefined, signal: ac.signal, keepalive: !!body }); return r.ok ? await r.json() : null; }
       catch { return null; } finally { clearTimeout(to); }
     };
     async function skySync() {
+      if (!skyId) skyId = newSkyId();
       skyBusy = true;
-      const j = await skyFetch('/plane/sky', { id: skyId, cs: playerName || 'Pilot', plane: plane.id, p: flight.pos.map((v) => Math.round(v * 10) / 10), h: +flight.heading.toFixed(3), pi: +flight.pitchAngle.toFixed(3), b: +flight.bank.toFixed(3), s: +flight.speed.toFixed(1) });
+      const j = await skyFetch('/plane/sky', { id: skyId, cs: playerName || 'Pilot', plane: plane.id, rg: regionId || 'home', p: flight.pos.map((v) => Math.round(v * 10) / 10), h: +flight.heading.toFixed(3), pi: +flight.pitchAngle.toFixed(3), b: +flight.bank.toFixed(3), s: +flight.speed.toFixed(1) });
       skyBusy = false;
+      if (!shareOn || !alive) { remote = []; return; }   // switched off while the answer was on its way
       if (!j || !Array.isArray(j.others)) { if (++skyFails >= 4 && !skyOff) { skyOff = true; remote = []; toast('Shared flying is not available right now', 2600); } return; }
       skyFails = 0; skyOff = false; skyPilots = j.pilots;
       const seen = new Set();
-      for (const o of j.others) {
+      for (const o0 of j.others.slice(0, 14)) {
+        // What comes back from the server is checked like any outside data: wrong shapes are skipped, numbers are kept sane.
+        const fin = (v, lo, hi) => (Number.isFinite(v) ? Math.min(hi, Math.max(lo, v)) : null);
+        const pos = Array.isArray(o0 && o0.p) && o0.p.length === 3 ? o0.p.map((v, i) => fin(v, i === 1 ? -50 : -20000, i === 1 ? 30000 : 20000)) : null;
+        const o = pos && !pos.includes(null) && typeof o0.k === 'string' && o0.k.length <= 16 ? { k: o0.k, cs: String(o0.cs ?? 'Pilot').replace(/[^\p{L}\p{N} _.-]/gu, '').slice(0, 16) || 'Pilot', plane: String(o0.plane), p: pos, h: fin(o0.h, -7, 7), pi: fin(o0.pi, -3.2, 3.2), b: fin(o0.b, -3.2, 3.2), s: fin(o0.s, 0, 700), age: fin(o0.age, 0, 10000) ?? 0 } : null;
+        if (!o || [o.h, o.pi, o.b, o.s].includes(null)) continue;
         const spec = PLANES.find((x) => x.id === o.plane && !x.rotor) || PLANES.find((x) => x.id === 'c172');
         seen.add(o.k);
         let a = remote.find((q) => q.k === o.k);
@@ -4715,7 +4734,7 @@
       skyT -= dt;
       if (skyT <= 0 && !skyBusy) { skyT = skyOff ? 15 : 2; skySync(); }
     }
-    const skyLeave = () => { if (shareOn) skyFetch('/plane/sky/leave', { id: skyId }); remote = []; };
+    const skyLeave = () => { if (shareOn && skyId) skyFetch('/plane/sky/leave', { id: skyId }); remote = []; skyId = ''; };
     function stepTraffic(dt) {
       trafficT -= dt;
       if (trafficT <= 0 && traffic.filter((a) => a.state === 'fly').length < 3) { spawnTraffic(); trafficT = 25 + Math.random() * 35; }
@@ -5018,8 +5037,8 @@
       } else { stoppedT = 0; stopCredited = false; }
       // ---- AI traffic: other aircraft crossing the sky. They can be passed, heard about, or hit.
       if (trafficOn && !flight.crashed) stepTraffic(dt);
-      if (shareOn && !flight.crashed) stepSky(dt);
       else if (!trafficOn && traffic.length) traffic = [];
+      if (shareOn && !flight.crashed) stepSky(dt);
       // ---- configuration errors: an airliner, business jet or turboprop needs its flaps for take-off and for landing.
       const needsFlaps = ['liner', 'biz', 'turbo'].includes(plane.cat) && (plane.flapNotches || []).length > 2;
       if (needsFlaps) {
@@ -5115,7 +5134,7 @@
       const tgt = { ail: fly ? ctl.roll : 0, elev: fly ? ctl.pitch : 0, rud: fly ? ctl.yaw : 0, flap: menu ? 0 : flight.flaps || 0, spoil: fly ? Math.max(flight.gspoil || 0, flight.brake ? (flight.onGround ? 1 : 0.5) : 0) : 0 };
       for (const k of Object.keys(tgt)) surf[k] += (tgt[k] - surf[k]) * (k === 'flap' ? ease * 0.35 : ease);
       // Other aircraft: their parts and control surfaces at rest (no gear), tumbling and darkened once they are going down.
-      for (const a of [...traffic, ...remote]) {
+      for (const a of [...traffic, ...(shareOn ? remote : [])]) {
         const tpm = planeMeshes[a.id], sc = a.spec.scale || 1, AM = model(a.q, a.pos, sc);
         const tint = a.state === 'fall' ? [0.32, 0.26, 0.22] : [1, 1, 1], glow = a.state === 'fall' ? 0.0 : 0;
         for (const k in tpm.parts) { const part = tpm.parts[k]; if (part) draw(part.live, model(a.q, add(a.pos, qrot(a.q, mul(part.center, sc))), sc), tint, glow); }
@@ -5193,15 +5212,15 @@
       gl.uniform3fv(U.lum, ONE3);   // the aircraft's own lights shine at full strength
       for (const lg of pm.lights) {
         if (!parts.has(lg.attach)) continue;
-        let tint = [1, 1, 1], glow = 1.6, on = true;
+        let tint = [1, 1, 1], glow = 1.6, on = menu || flight.battery !== false;
         switch (lg.kind) {
           case 'navR': tint = [1, 0.12, 0.1]; break;
           case 'navG': tint = [0.1, 1, 0.25]; break;
           case 'navW': tint = [1, 1, 1]; glow = 1.2; break;
-          case 'strobe': on = strobeOn && moving; glow = 3; break;
-          case 'beacon': tint = [1, 0.1, 0.08]; on = beaconOn && running; glow = 2.4; break;
-          case 'land': tint = [1, 0.97, 0.86]; on = landOn; glow = 2.6; break;
-          case 'taxi': tint = [1, 0.95, 0.8]; on = landOn && (ground || menu); glow = 2; break;
+          case 'strobe': on = on && strobeOn && moving; glow = 3; break;
+          case 'beacon': tint = [1, 0.1, 0.08]; on = on && beaconOn && (menu || flight.beaconSw !== false); glow = 2.4; break;
+          case 'land': tint = [1, 0.97, 0.86]; on = on && landOn; glow = 2.6; break;
+          case 'taxi': tint = [1, 0.95, 0.8]; on = on && landOn && (ground || menu); glow = 2; break;
         }
         draw(lg.core, M, on ? tint : cmul(tint, 0.42), on ? glow : 0);
         if (on) {
@@ -5229,7 +5248,7 @@
       const { w, h, dpr } = size();
       gl.viewport(0, 0, w, h);
       gl.clearColor(...HAZE, 1); gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-      gl.uniform3fv(U.fog, HAZE); gl.uniform3fv(U.lum, ENV.lum); gl.uniform1f(U.fogFar, FOG_FAR * ENV.fogMul); gl.uniform1f(U.alpha, 1);
+      gl.uniform3fv(U.fog, HAZE); gl.uniform3fv(U.lum, ENV.lum); gl.uniform3fv(U.sunDir, SUN); gl.uniform1f(U.fogFar, FOG_FAR * ENV.fogMul); gl.uniform1f(U.alpha, 1);
 
       // Camera.
       let eye, at, up;
@@ -5531,7 +5550,7 @@
       }
       // Procedure: the steps for this phase of the flight, ticked off as they are done (T hides it).
       if (showCheck && !flight.crashed) {
-        const pr = procedure(flight, W, { took: hadTakeoff });
+        const pr = procedure(flight, W, { took: hadTakeoff || hadAir });
         if (pr) {
           const bw5 = 214 * s + 20, bh5 = 22 * s + pr.steps.length * 16 * s + 8, bx5 = 8, by5 = 70 * s + 24;
           box(bx5, by5, bw5, bh5); h2.textAlign = 'left'; h2.textBaseline = 'middle'; h2.font = `700 ${Math.round(9 * s + 2)}px system-ui`;
@@ -5592,9 +5611,9 @@
         box(W2 - bw2 - 8, 8 + (flight.damage ? 0 : 0) + 7 * 16 * s + 22, bw2, 22); h2.fillStyle = 'rgba(255,255,255,.85)'; h2.fillText(txt, W2 - bw2, 8 + 7 * 16 * s + 33);
       }
       // Markers over the other aircraft you can see, with their distance (so they are never just a dot in the haze).
-      if ((trafficOn || remote.length) && lastVP) {
+      if ((trafficOn || (shareOn && remote.length)) && lastVP) {
         h2.font = `700 ${Math.round(9 * s + 2)}px system-ui`; h2.textAlign = 'center'; h2.textBaseline = 'middle';
-        for (const a of [...(trafficOn ? traffic : []), ...remote]) {
+        for (const a of [...(trafficOn ? traffic : []), ...(shareOn ? remote : [])]) {
           if (a.state !== 'fly') continue;
           const px = a.pos[0], py = a.pos[1], pz = a.pos[2], m = lastVP;
           const cw = m[3] * px + m[7] * py + m[11] * pz + m[15];
@@ -5727,7 +5746,8 @@
           <div class="pg-hint" style="margin-top:3px">${escapeHtml(placeNote || `Now flying over: ${regionOf(regionId).id ? regionOf(regionId).name + ' (' + regionOf(regionId).lm + ')' : 'the home valley'}. The landmark stands just off the runway.`)}</div>
           <h2>3 · Start at <small style="font-weight:500;opacity:.6">for Free Flight</small></h2>
           <div class="pg-row" style="gap:5px;flex-wrap:wrap"><button data-start="auto" class="${startAt === 'auto' ? 'pg-on' : ''}" title="The home runway">Automatic</button>${STARTS.filter((x) => !x.gate).map((x) => `<button data-start="${x.id}" class="${startAt === x.id ? 'pg-on' : ''}">${x.name}</button>`).join('')}</div>
-          <div class="pg-row" style="margin-top:8px"><button data-share class="${shareOn ? 'pg-on' : ''}" title="See other Notch pilots who have this on: your callsign, aircraft and position are sent while you fly">Fly with others: ${shareOn ? 'On' : 'Off'}</button><button data-traffic class="${trafficOn ? 'pg-on' : ''}" title="Other aircraft cross the sky; you can pass them, hear a traffic call, or hit them">AI traffic: ${trafficOn ? 'On' : 'Off'}</button><span class="pg-hint">Other aircraft in the sky: a mid-air collision brings both down.</span></div>
+          <div class="pg-row" style="margin-top:8px"><button data-share class="${shareOn ? 'pg-on' : ''}" title="See other Notch pilots who have this on: your callsign, aircraft and position are sent while you fly">Fly with others: ${shareOn ? 'On' : 'Off'}</button><button data-clean class="${coldStart ? 'pg-on' : ''}" title="Start on the runway with the battery, beacon and engine off, and do the whole start-up yourself with the keys (Y battery, O beacon, I engine)">Clean start: ${coldStart ? 'On' : 'Off'}</button><button data-traffic class="${trafficOn ? 'pg-on' : ''}" title="Other aircraft cross the sky; you can pass them, hear a traffic call, or hit them">AI traffic: ${trafficOn ? 'On' : 'Off'}</button><span class="pg-hint">Other aircraft in the sky: a mid-air collision brings both down.</span></div>
+          <div class="pg-hint" style="margin:2px 0 6px">Clean start: you spawn on the runway with everything off and run the whole start-up from the checklist on screen (<kbd>Y</kbd> battery, <kbd>O</kbd> beacon, <kbd>S</kbd> throttle idle, <kbd>I</kbd> engine, <kbd>F</kbd> flaps, <kbd>G</kbd> gear). Off, you spawn ready to roll.</div>
           <div class="pg-hint" style="margin:2px 0 6px">Fly with others sends your callsign (your leaderboard name), aircraft and position to the other pilots who switched it on, every couple of seconds while you fly. It is off until you turn it on, uses a random id (no account) and other pilots cannot be hit.</div>
           ${weatherPanel()}
           <h2>5 · Pick a challenge</h2><div class="pg-modes">${MODES.map((m) => `<button class="pg-mode ${m === mode ? 'pg-on' : ''}" data-mode="${m.id}">${m.icon} ${m.name}<small>${m.desc}</small></button>`).join('')}</div>
@@ -5761,14 +5781,13 @@
           <button data-a="invert">${invert ? '✓ ' : ''}Invert (down climbs, like a flight stick)</button></div>
           <h2>Keys</h2><div class="pg-hint">
           <kbd>W</kbd> more throttle · <kbd>S</kbd> less throttle · <kbd>↑</kbd> climb · <kbd>↓</kbd> dive · <kbd>←</kbd> <kbd>→</kbd> roll · <kbd>A</kbd> <kbd>D</kbd> rudder (and steering on the ground)<br>
-          <kbd>F</kbd> flaps down a notch · <kbd>V</kbd> flaps up · <kbd>H</kbd> helicopter emergency landing (levels it and sets it down gently; <kbd>H</kbd> again to take over) · <kbd>I</kbd> start the engine (cold and dark start) · <kbd>T</kbd> checklist · <kbd>K</kbd> autopilot (<kbd>,</kbd> <kbd>.</kbd> heading, <kbd>[</kbd> <kbd>]</kbd> height) · <kbd>J</kbd> ILS approach · <kbd>G</kbd> gear up / down (everything but the Cessna, Piper and Cirrus, which have fixed wheels) · <kbd>Space</kbd> brakes / airbrake (with <kbd>A</kbd> <kbd>D</kbd> at taxi speed it brakes the wheel on that side; the airliners dump their spoilers on touchdown) · <kbd>X</kbd> reverse thrust on the ground (jets and turboprops, with the throttle up) · <kbd>C</kbd> camera (chase, cockpit, orbit) · <kbd>P</kbd> pause (and the menu) · <kbd>R</kbd> restart · <kbd>M</kbd> mouse steering on / off</div>
+          <kbd>F</kbd> flaps down a notch · <kbd>V</kbd> flaps up · <kbd>H</kbd> helicopter emergency landing (levels it and sets it down gently; <kbd>H</kbd> again to take over) · <kbd>Y</kbd> battery · <kbd>O</kbd> beacon · <kbd>I</kbd> start the engine (Clean start) · <kbd>T</kbd> checklist · <kbd>K</kbd> autopilot (<kbd>,</kbd> <kbd>.</kbd> heading, <kbd>[</kbd> <kbd>]</kbd> height) · <kbd>J</kbd> ILS approach · <kbd>G</kbd> gear up / down (everything but the Cessna, Piper and Cirrus, which have fixed wheels) · <kbd>Space</kbd> brakes / airbrake (with <kbd>A</kbd> <kbd>D</kbd> at taxi speed it brakes the wheel on that side; the airliners dump their spoilers on touchdown) · <kbd>X</kbd> reverse thrust on the ground (jets and turboprops, with the throttle up) · <kbd>C</kbd> camera (chase, cockpit, orbit) · <kbd>P</kbd> pause (and the menu) · <kbd>R</kbd> restart · <kbd>M</kbd> mouse steering on / off</div>
           <h2>Tips</h2><div class="pg-hint">Bank by moving the cursor sideways and ease it ${climb} to turn: the wings turn the plane, the rudder only tidies up. Too slow or pulling too hard
           stalls the wing (STALL): push the nose down and add power. To land: slow down, flaps down, gear down (airliners), line up with the runway, and touch down gently (watch V/S).
           To take off: full throttle (hold W) on the runway, then ease the cursor ${climb} (or hold ${invert ? "↓" : "↑"}) at about ${Math.round(plane.stall * 1.3 * 3.6)} km/h. Airliners turn slowly, so start turns early.</div>
           <h2>Settings</h2><div class="pg-row">
           <button data-a="sound">${sound ? '🔊 Sound on' : '🔇 Sound off'}</button>
           <button data-a="atc" title="Spoken air traffic control: take-off, approach and landing clearances">${atcOn ? '✓ ' : ''}ATC voice</button>
-          <button data-a="cold" title="Start with the engine off: run the checklist and start it with I">${coldStart ? '✓ ' : ''}Cold and dark start</button>
           <button data-a="gpws" title="Spoken ground proximity warnings and radio-altimeter calls on the airliners">${gpwsOn ? '✓ ' : ''}GPWS voice (airliners)</button>
           <button data-a="units">${units === 'kmh' ? 'km/h · m' : 'knots · feet'}</button>
           <button data-a="failures">Failures: ${failures === 'off' ? 'off' : failures === 'often' ? 'often (every mode)' : 'rare (Free Flight, Landing)'}</button></div>
@@ -5809,6 +5828,7 @@
       ui.querySelectorAll('[data-tod]').forEach((n) => n.onclick = () => { applyEnv(n.dataset.tod, ENV.vis); write('env', { tod: ENV.tod, vis: ENV.vis }); renderUI(); });
       ui.querySelectorAll('[data-vis]').forEach((n) => n.onclick = () => { applyEnv(ENV.tod, n.dataset.vis); write('env', { tod: ENV.tod, vis: ENV.vis }); renderUI(); });
       ui.querySelectorAll('[data-wxt]').forEach((n) => n.onclick = () => { WX.turb = n.dataset.wxt; saveWx(); renderUI(); });
+      ui.querySelectorAll('[data-clean]').forEach((n) => n.onclick = () => { coldStart = !coldStart; write('cold', coldStart); renderUI(); });
       ui.querySelectorAll('[data-share]').forEach((n) => n.onclick = () => {
         shareOn = !shareOn; write('share', shareOn); if (!shareOn) skyLeave(); else { skyOff = false; skyFails = 0; skyT = 0; skyFetch('/plane/sky/count').then((c) => { if (c) { skyPilots = c.pilots; toast(`${c.pilots} pilot${c.pilots === 1 ? '' : 's'} flying with others right now`, 2200); } }); }
         renderUI();
@@ -5846,7 +5866,6 @@
         }
         else if (a === 'invert') { invert = !invert; write('invertY', invert); renderUI(); }
         else if (a === 'atc') { atcOn = !atcOn; write('atc', atcOn); if (!atcOn) cancelSpeech(); renderUI(); }
-        else if (a === 'cold') { coldStart = !coldStart; write('cold', coldStart); renderUI(); }
         else if (a === 'gpws') { gpwsOn = !gpwsOn; write('gpws', gpwsOn); if (!gpwsOn) cancelSpeech(); renderUI(); }
         else if (a === 'mouse') { mouseOn = !mouseOn; write('mouse', mouseOn); renderUI(); }
         else if (a === 'sound') { sound = !sound; write('sound', sound); if (!sound && engGain) engGain.gain.value = 0; renderUI(); }
@@ -6001,7 +6020,7 @@
     window.NotchPlaneGame.key = (key, down) => onKey({ key, repeat: false, target: null }, down);
     window.NotchPlaneGame._state = () => ({ screen, keys: [...keys], bank: flight.bank, pitch: flight.pitchAngle, pos: flight.pos, w: flight.w, onGround: flight.onGround,
       speed: flight.speed, ias: flight.ias, gload: flight.gload, spin: flight.spin, wreckRest: flight.rest, report: flight.report, damage: flight.damage, crashed: flight.crashed, why: flight.why, debris: debris.length, particles: smoke.length });
-    window.NotchPlaneGame._poke = { traffic: () => traffic, spawnTraffic: () => spawnTraffic(), failEngine: (p) => { failAt = elapsed; }, flight: () => flight, world: () => W, dbg: () => ({ debris, smoke, gouges, slowT, duckT, shakeKick, attached: [...attached] }),
+    window.NotchPlaneGame._poke = { remote: () => remote, sky: () => ({ on: shareOn, id: skyId, pilots: skyPilots, off: skyOff }), traffic: () => traffic, spawnTraffic: () => spawnTraffic(), failEngine: (p) => { failAt = elapsed; }, flight: () => flight, world: () => W, dbg: () => ({ debris, smoke, gouges, slowT, duckT, shakeKick, attached: [...attached] }),
       // Test hooks for looking at the models: a fixed camera, held controls, and freezing the physics.
       view: (v) => { devView = v; }, ctl: (c) => { devCtl = c; }, hold: (h) => { devHold = h; }, plane: () => plane, surf,
       // Test hook: run the simulation ahead by `secs` seconds without drawing (a slow software renderer can't keep real time).

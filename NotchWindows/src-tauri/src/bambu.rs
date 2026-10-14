@@ -59,6 +59,11 @@ pub struct CloudSession {
     pub token: String,
 }
 
+/// A Bambu serial: letters and digits only, 8 to 32 of them (it becomes part of an MQTT topic, so `+`, `#` and `/` must never get through).
+pub fn valid_serial(s: &str) -> bool {
+    (8..=32).contains(&s.len()) && s.bytes().all(|b| b.is_ascii_alphanumeric())
+}
+
 fn valid_session(c: &CloudSession) -> Result<(), String> {
     if cloud_host(&c.region).is_none() { return Err("Unknown Bambu account region.".into()); }
     if c.uid.is_empty() || c.uid.len() > 20 || !c.uid.bytes().all(|b| b.is_ascii_digit()) { return Err("That doesn’t look like a Bambu account id.".into()); }
@@ -76,10 +81,18 @@ fn cloud_file(app: &AppHandle) -> Result<PathBuf, String> {
 pub fn write_session(path: &PathBuf, c: &CloudSession) -> Result<(), String> {
     valid_session(c)?;
     let tmp = path.with_extension("json.tmp");
-    std::fs::write(&tmp, serde_json::to_string(c).map_err(|e| e.to_string())?).map_err(|e| e.to_string())?;
-    #[cfg(unix)]
-    { use std::os::unix::fs::PermissionsExt; let _ = std::fs::set_permissions(&tmp, std::fs::Permissions::from_mode(0o600)); }
-    std::fs::rename(&tmp, path).map_err(|e| e.to_string())
+    let text = serde_json::to_string(c).map_err(|e| e.to_string())?;
+    let done = (|| -> std::io::Result<()> {
+        use std::io::Write;
+        let mut o = std::fs::OpenOptions::new();
+        o.write(true).create(true).truncate(true);
+        #[cfg(unix)]
+        { use std::os::unix::fs::OpenOptionsExt; o.mode(0o600); }   // owner-only from the first byte
+        o.open(&tmp)?.write_all(text.as_bytes())?;
+        std::fs::rename(&tmp, path)
+    })();
+    if let Err(e) = done { let _ = std::fs::remove_file(&tmp); return Err(e.to_string()); }
+    Ok(())
 }
 
 pub fn read_session(path: &PathBuf) -> Result<Option<CloudSession>, String> {
@@ -109,12 +122,13 @@ pub fn bambu_cloud_status(app: AppHandle) -> Result<Option<String>, String> {
 #[tauri::command]
 pub fn bambu_cloud_clear(pool: State<'_, Pool>, app: AppHandle, serials: Vec<String>) -> Result<(), String> {
     let path = cloud_file(&app)?;
-    match std::fs::remove_file(&path) { Ok(()) => {}, Err(e) if e.kind() == std::io::ErrorKind::NotFound => {}, Err(e) => return Err(format!("couldn’t delete the saved sign-in: {e}")) }
-    let mut live = lock(&pool.inner);
-    let (gone, keep): (Vec<Entry>, Vec<Entry>) = std::mem::take(&mut *live).into_iter().partition(|e| serials.iter().any(|s| s.trim() == e.serial));
-    *live = keep;
-    gone.into_iter().for_each(Entry::shut_down);
-    Ok(())
+    {   // the connections first, so nothing keeps using the token while it is being deleted
+        let mut live = lock(&pool.inner);
+        let (gone, keep): (Vec<Entry>, Vec<Entry>) = std::mem::take(&mut *live).into_iter().partition(|e| serials.iter().any(|s| s.trim() == e.serial));
+        *live = keep;
+        gone.into_iter().for_each(Entry::shut_down);
+    }
+    match std::fs::remove_file(&path) { Ok(()) => Ok(()), Err(e) if e.kind() == std::io::ErrorKind::NotFound => Ok(()), Err(e) => Err(format!("couldn’t delete the saved sign-in: {e}")) }
 }
 
 struct Entry {
@@ -150,13 +164,14 @@ pub const EVENT_STATE: &str = "bambu:state";
 #[tauri::command]
 pub fn bambu_start(pool: State<'_, Pool>, app: AppHandle, config: Config) -> Result<String, String> {
     let serial = config.serial.trim().to_string();
+    if !valid_serial(&serial) { return Err("That doesn’t look like a Bambu serial number.".into()); }   // it goes into an MQTT topic: no wildcards
     let topic = format!("device/{serial}/report");
     let pins = pin_file(&app)?;
     let mismatch = Arc::new(AtomicBool::new(false));
     let session = match &config.cloud {
         Some(region) => match read_session(&cloud_file(&app)?)? {
             Some(c) if &c.region == region => Some(c),
-            _ => return Err("Sign in with your Bambu account again (Printer Status → Bambu account).".into()),
+            _ => return Err("Your Bambu account sign-in is missing or has expired: sign in again under Printer Status → Bambu account.".into()),
         },
         None => None,
     };
@@ -424,6 +439,19 @@ mod tests {
         let _ = std::fs::remove_dir_all(&dir);
     }
     #[test]
+    fn serials_cannot_carry_mqtt_wildcards() {
+        assert!(valid_serial("01P00A123456789"));
+        assert!(!valid_serial("01P00A12+456789"));
+        assert!(!valid_serial("01P00A12#456789"));
+        assert!(!valid_serial("a/b/c/d/e/f/g/h"));
+        assert!(!valid_serial("short"));
+    }
+    #[test]
+    fn a_plain_outage_is_not_called_an_expired_sign_in() {
+        assert!(explain("connection refused", true).contains("Check your internet"));
+        assert!(!explain("connection refused", true).contains("sign in again"));
+    }
+    #[test]
     fn an_expired_sign_in_is_explained() {
         assert!(explain("Not authorized", true).contains("sign in again"));
         assert!(explain("Not authorized", false).contains("access code"));
@@ -437,8 +465,11 @@ mod tests {
 /// Turns a connection error into something a person can act on.
 fn explain(e: &str, cloud: bool) -> String {
     let low = e.to_lowercase();
-    if cloud && (low.contains("refused") || low.contains("not authorized") || low.contains("bad user") || low.contains("password")) {
+    if cloud && (low.contains("not authorized") || low.contains("bad user") || low.contains("password")) {
         return "Bambu Cloud refused the saved sign-in. It has probably expired: sign in again under Bambu account.".into();
+    }
+    if cloud && (low.contains("refused") || low.contains("timed out") || low.contains("timeout") || low.contains("dns")) {
+        return "Couldn’t reach Bambu Cloud. Check your internet connection; Notch Apple will try again.".into();
     }
     if low.contains("timed out") || low.contains("timeout") {
         return "Nothing answered on the LAN. Check the IP and that the printer is on the same Wi-Fi.".into();

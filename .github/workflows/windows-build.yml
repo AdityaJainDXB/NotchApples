@@ -42,7 +42,7 @@ jobs:
         run: ./scripts/run-windows-smoke.sh
 
       - name: Install Rust
-        uses: dtolnay/rust-toolchain@stable
+        uses: dtolnay/rust-toolchain@686976e191b89faba57d3206551f0f330d8cb249 # stable
 
       # PairDrop's engine: real file transfers over TCP between two copies, wrong codes, chat, and more.
       - name: PairDrop engine tests
@@ -51,7 +51,7 @@ jobs:
         run: ./scripts/run-pairdrop-core-tests.sh
 
       - name: Cache cargo
-        uses: Swatinem/rust-cache@v2
+        uses: Swatinem/rust-cache@49a0bdc70d2e1b713ca9e2869b211fcce03d3c1c # v2
         with:
           workspaces: NotchWindows/src-tauri
           # Tagged releases only read the cache. Saving a new ~600 MB copy on every release filled the 10 GB limit.

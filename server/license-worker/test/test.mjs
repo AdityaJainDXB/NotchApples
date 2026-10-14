@@ -609,6 +609,27 @@ await test('Fly with others: bad ids, positions and callsigns are refused or cle
   assert.equal((await sky(me(10), '5.5.5.5')).status, 429);   // the same pilot, too soon
 });
 
+await test('Fly with others: unknown aircraft are refused, the short id is per session, pilots can leave, the count is rate limited', async () => {
+  assert.equal((await sky({ ...me(30), plane: 'toString' }, '6.6.6.1')).status, 400);
+  assert.equal((await sky({ ...me(30), plane: 'a320' }, '6.6.6.1')).status, 200);
+  const r1 = await sky(me(31, 100, 100), '6.6.6.2'); const k1 = r1.others.find((o) => o.cs === 'Ana30').k;
+  assert.match(k1, /^[0-9a-f]{8}$/); assert.ok(!pid(30).startsWith(k1) || k1 !== pid(30).slice(0, 8), 'not a prefix of the persistent id');
+  assert.equal((await call('/plane/sky/leave', { id: pid(30) }, { 'cf-connecting-ip': '6.6.6.1' })).ok, true);
+  assert.ok(!(await sky(me(32, 100, 100), '6.6.6.3')).others.some((o) => o.cs === 'Ana30'));
+  let limited = 0; for (let i = 0; i < 40; i++) { const r = await worker.fetch(new Request('https://w.test/plane/sky/count', { headers: { 'cf-connecting-ip': '7.7.7.7' } }), env); if (r.status === 429) limited++; }
+  assert.ok(limited > 0, 'the count is rate limited per address');
+});
+await test('Fly with others: pilots only see others flying in the same part of the world', async () => {
+  assert.equal((await sky({ ...me(40, 0, 0), rg: 'tokyo' }, '8.8.8.1')).status, 200);
+  const same = await sky({ ...me(41, 50, 50), rg: 'tokyo' }, '8.8.8.2'); assert.ok(same.others.some((o) => o.cs === 'Ana40'));
+  const other = await sky({ ...me(42, 50, 50), rg: 'paris' }, '8.8.8.3'); assert.ok(!other.others.some((o) => o.cs === 'Ana40'));
+  assert.equal((await sky({ ...me(43), rg: '../x' }, '8.8.8.4')).status, 400);
+});
+await test('Pilot names are normalised (look-alike letters) and cut by characters, not code units', async () => {
+  assert.equal(cleanPilotName('𝓐𝓭𝓶𝓲𝓷'), 'Admin');
+  assert.equal([...cleanPilotName('😀'.repeat(20) + 'ab')].length <= 16, true);
+});
+
 // Fixture for the Swift tests: a Pro and an Ultimate key from this run, with this run's public key.
 const far = 4102444800;   // the year 2100, so the fixture never expires under the Swift tests
 const fx = { publicKey: btoa(String.fromCharCode(...pubRaw)), pro: leaked, ultimate: (await call('/admin/issue', { tier: 'ultimate' }, { authorization: 'Bearer admin-test' })).key,

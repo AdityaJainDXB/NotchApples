@@ -94,6 +94,7 @@ final class BambuManager: ObservableObject {
 
     private var clients: [UUID: BambuMQTT] = [:]
     private var retryTasks: [UUID: Task<Void, Never>] = [:]
+    private var failureStreak: [UUID: Int] = [:]
     private let store = UserDefaults.standard
 
     init() {
@@ -258,10 +259,12 @@ final class BambuManager: ObservableObject {
     }
 
     /// Signs out: the saved token is deleted and the printers that were reached through the account are removed.
-    func cloudSignOut() {
-        for p in printers where p.isCloud { remove(id: p.id) }
-        _ = KeychainHelper.delete(.bambuCloudSession)
+    @discardableResult
+    func cloudSignOut() -> Bool {
+        for p in printers where p.isCloud { remove(id: p.id) }   // the connections stop first
+        guard KeychainHelper.delete(.bambuCloudSession) else { return false }
         cloudRegion = nil
+        return true
     }
 
     // MARK: - Connections
@@ -368,6 +371,7 @@ final class BambuManager: ObservableObject {
             }
 
         case .payload(let data):
+            failureStreak[id] = nil
             connecting.remove(id)
             failures[id] = nil
             let current = snapshots[id] ?? BambuSnapshot(phase: .idle)
@@ -405,8 +409,12 @@ final class BambuManager: ObservableObject {
     private func scheduleRetry(_ id: UUID) {
         retryTasks[id]?.cancel()
         guard enabled, printers.contains(where: { $0.id == id }) else { return }
+        // A printer that keeps failing is tried less and less often (12 s, 24 s ... up to 5 minutes), so Bambu is never hammered.
+        let tries = failureStreak[id, default: 0]
+        failureStreak[id] = tries + 1
+        let wait = min(300, Self.retryAfter * pow(2, Double(min(tries, 5))))
         retryTasks[id] = Task { @MainActor [weak self] in
-            try? await Task.sleep(nanoseconds: UInt64(Self.retryAfter * 1_000_000_000))
+            try? await Task.sleep(nanoseconds: UInt64(wait * 1_000_000_000))
             guard !Task.isCancelled, let self, self.enabled,
                   let p = self.printers.first(where: { $0.id == id }) else { return }
             self.connect(p)

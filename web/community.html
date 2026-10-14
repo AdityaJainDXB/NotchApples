@@ -39,7 +39,7 @@ fetch('feedback-summary.json', { cache: 'no-cache' }).then((r) => r.ok ? r.json(
   for (const t of d.themes) {
     const box = document.createElement('div'); box.className = 't';
     const n = document.createElement('span'); n.className = 'n'; n.textContent = t.count + (t.count === 1 ? ' person' : ' people');
-    const h = document.createElement('h2'); const k = document.createElement('span'); k.className = 'k ' + t.kind; k.textContent = t.kind; h.append(k, document.createTextNode(t.title));
+    const h = document.createElement('h2'); const k = document.createElement('span'); k.className = 'k ' + (['idea', 'problem', 'praise'].includes(t.kind) ? t.kind : ''); k.textContent = t.kind; h.append(k, document.createTextNode(t.title));
     box.append(n, h);
     if (t.note) { const p = document.createElement('p'); p.textContent = t.note; box.append(p); }
     list.append(box);

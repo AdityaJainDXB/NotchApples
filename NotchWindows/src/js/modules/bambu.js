@@ -90,7 +90,7 @@ export function render(root) {
     if (signed) {
       return el('div', { class: 'card col', style: 'gap:8px' }, el('b', {}, '✅ Signed in to your Bambu account'),
         el('div', { class: 'small faint' }, `Region: ${REGION_NAMES[signed] || signed}. Printers added from the account are watched without LAN Mode. To pick up a newly added printer, sign out and sign in again.`),
-        el('div', { class: 'hstack', style: 'gap:8px' }, holdButton('Sign out', async () => { await B.cloudSignOut(); toast('Signed out. The saved sign-in is deleted.'); paint(); }, { hint: 'Hold to sign out and remove the account’s printers' })), note);
+        el('div', { class: 'hstack', style: 'gap:8px' }, holdButton('Sign out', async () => { const r = await B.cloudSignOut(); toast(r.ok ? 'Signed out. The saved sign-in is deleted.' : r.message); paint(); }, { hint: 'Hold to sign out and remove the account’s printers' })), note);
     }
     const email = el('input', { class: 'field', type: 'email', placeholder: 'Bambu account email', autocomplete: 'off' });
     const pass = el('input', { class: 'field', type: 'password', placeholder: 'Password', autocomplete: 'off' });
