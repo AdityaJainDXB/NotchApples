@@ -652,3 +652,30 @@ body[data-perf="lite"] .ws-step { animation: none; }
 .dc-glow { position: absolute; width: 150px; height: 150px; margin: -75px 0 0 -75px; border-radius: 50%; background: var(--accent); filter: blur(36px); opacity: 0; pointer-events: none; transition: opacity .2s; }
 .drop-card.near .dc-glow { opacity: .3; }
 @media (prefers-reduced-motion: reduce) { .drop-card, .drop-card.near, .drop-card.over { transition: none; transform: none; } }
+
+/* --------------------------------------------------------------- feel */
+/* Feedback on the press itself, not only on release. */
+.tab:active, .icon-btn:active, .seg button:active, .item.clickable:active, .chip.clickable:active { transform: scale(.97); transition-duration: .1s; }
+.tile:active { transform: scale(.985); transition-duration: .1s; }
+:where(a, button, [role="button"], input, select, summary):focus-visible { outline: 2px solid var(--accent-bright, #cdbfff); outline-offset: 2px; }
+
+/* Reduce Motion: nothing lifts or shrinks; changes of colour and opacity stay. */
+@media (prefers-reduced-motion: reduce) {
+  .tile:hover, .tile:active { transform: none; }
+  .tab:active, .icon-btn:active, .seg button:active, .item.clickable:active, .chip.clickable:active, .btn:active { transform: none; }
+}
+
+/* Reduce Transparency: frosted layers become solid. */
+@media (prefers-reduced-transparency: reduce) {
+  body:not([data-perf="lite"]) .menu, body:not([data-perf="lite"]) .toast, body:not([data-perf="lite"]) .overlay > * {
+    backdrop-filter: none; -webkit-backdrop-filter: none; background-color: #17171d;
+  }
+  body.glass #shell { background: var(--bg); }
+}
+
+/* Increase Contrast: brighter secondary text and firmer borders. */
+@media (prefers-contrast: more) {
+  :root { --text-dim: rgba(255,255,255,.92) !important; --text-faint: rgba(255,255,255,.82) !important; --border: rgba(255,255,255,.34) !important; }   /* (!important: the themes set these on the page itself) */
+  .btn.quiet, .btn.ghost, .seg, .chip { border-color: rgba(255,255,255,.5); }
+  :where(a, button, [role="button"], input, select, summary):focus-visible { outline: 3px solid #fff; outline-offset: 3px; }
+}

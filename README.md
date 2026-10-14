@@ -74,7 +74,7 @@ Pick your computer. Both buttons start the download straight away. The Mac butto
       <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.0.65</b></a>
     </td>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 1.68.0 BETA</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 1.69.0 BETA</b></a>
     </td>
   </tr>
   <tr>
@@ -232,6 +232,11 @@ All screenshots use sample data.
 ## What's new
 
 > **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is still in the repository's tags.
+
+### Windows 1.69.0 BETA · 14 October 2026 · ✨ Smoother feel on Windows
+
+- Tabs, buttons, tiles and list rows give a little under the cursor on press, not only on release.
+- With **Reduce Motion** on, tiles no longer lift or shrink. Frosted menus and toasts become solid when transparency is reduced, and with high contrast the secondary text is brighter and borders firmer.
 
 ### Mac 2.0.65 · 14 October 2026 · ✨ Smoother, and kinder to Reduce Motion
 
