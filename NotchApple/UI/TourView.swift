@@ -78,13 +78,13 @@ struct TourView: View {
             .transition(.opacity)
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             HStack {
-                if tour.step > 0 { Button("Back") { withAnimation(.snappy) { tour.step = TourLogic.back(tour.step) } }.buttonStyle(PurpleButtonStyle(prominent: false)) }
+                if tour.step > 0 { Button("Back") { withAnimation(Theme.snappy()) { tour.step = TourLogic.back(tour.step) } }.buttonStyle(PurpleButtonStyle(prominent: false)) }
                 Spacer()
                 Text("\(tour.step + 1) of \(TourLogic.stepCount)").font(.system(size: 11)).foregroundStyle(Theme.textSecondary)
                 if TourLogic.isLast(tour.step) {
                     Button("Finish") { applyDraft(); tour.finish() }.buttonStyle(PurpleButtonStyle())
                 } else {
-                    Button("Next") { withAnimation(.snappy) { tour.step = TourLogic.next(tour.step) } }.buttonStyle(PurpleButtonStyle())
+                    Button("Next") { withAnimation(Theme.snappy()) { tour.step = TourLogic.next(tour.step) } }.buttonStyle(PurpleButtonStyle())
                 }
             }
         }

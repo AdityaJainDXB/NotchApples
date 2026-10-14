@@ -130,7 +130,7 @@ private struct OnboardingTheme: View {
                 ForEach(free, id: \.self) { id in
                     let t = AppTheme.theme(for: id)
                     let selected = manager.currentThemeID == id
-                    Button { withAnimation(.snappy) { manager.setTheme(id) } } label: {
+                    Button { withAnimation(Theme.snappy()) { manager.setTheme(id) } } label: {
                         HStack(spacing: 10) {
                             Circle().fill(LinearGradient(colors: [t.secondaryAccent, t.primaryAccent], startPoint: .topLeading, endPoint: .bottomTrailing))
                                 .frame(width: 26, height: 26)

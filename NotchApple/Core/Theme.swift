@@ -54,6 +54,17 @@ enum Theme {
     /// Minimum pointer target on macOS.
     static let minTarget: CGFloat = 28
 
+    /// A critically damped spring (no overshoot) for things that move without a throw behind them: reordering, toggling, revealing.
+    /// A plain fade when Reduce Motion is on.
+    static var settle: Animation {
+        NSWorkspace.shared.accessibilityDisplayShouldReduceMotion ? .easeInOut(duration: 0.15) : .spring(response: 0.3, dampingFraction: 1.0)
+    }
+
+    /// `.snappy` that honours Reduce Motion.
+    static func snappy(_ duration: Double = 0.5) -> Animation {
+        NSWorkspace.shared.accessibilityDisplayShouldReduceMotion ? .easeInOut(duration: 0.15) : .snappy(duration: duration)
+    }
+
     /// Spring for open/close and tab changes; a plain fade when Reduce Motion is on.
     static var spring: Animation {
         NSWorkspace.shared.accessibilityDisplayShouldReduceMotion

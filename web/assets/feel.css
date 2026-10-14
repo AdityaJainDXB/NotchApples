@@ -1,0 +1,39 @@
+/* How the site responds to touch, to the person's accessibility settings, and to type size. Loaded last, on every page. */
+
+/* No 300 ms wait before a tap, and double-tap does not zoom the controls. */
+a, button, summary, input, select, label, [role="button"], [role="tab"] { touch-action: manipulation; }
+
+/* Feedback on the press itself (pointer down), not only on release: every control gives a little under the finger. */
+.seg button:active, .tabs button:active, .nn .gh:active, .nl a:active, .shot:active, .sz:active, .loop:active, .nc-chip:active, .nc-x:active {
+  transform: scale(.97);
+  transition-duration: .1s;
+}
+.shot:active { transform: scale(.985); }
+
+/* The chat panel opens out of the button it came from (bottom left), and goes back the way it came. */
+.nc-panel { transform-origin: left bottom; }
+
+/* Type: optical sizing where the font has it, and tracking tight on display text, near zero on body copy (set per size above). */
+body { font-optical-sizing: auto; -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
+
+/* Reduce Transparency: frosted surfaces become solid. */
+@media (prefers-reduced-transparency: reduce) {
+  .mobile-menu, .menubar, .win, .lb, .nc-panel, .nc-fab { backdrop-filter: none !important; -webkit-backdrop-filter: none !important; }
+  .mobile-menu { background: #13111a !important; }
+  .menubar { background: #0c0a12 !important; }
+  .win { background: #140c24 !important; }
+  .lb { background: #06050a !important; }
+}
+
+/* Increase Contrast: brighter secondary text, firmer borders, a visible edge on every control. */
+@media (prefers-contrast: more) {
+  :root { --mut: #d3cfe0; --dim: #c0bbd0; --line: rgba(255, 255, 255, .28); --line2: rgba(255, 255, 255, .45); }
+  .btn.ghost, .seg button, .tabs button, .nc-chip, .nc-x { box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .5); }
+  .nc-foot, .nc-msg a { color: #e6e1f5; }
+  a:focus-visible, button:focus-visible, summary:focus-visible { outline: 3px solid #fff; outline-offset: 3px; }
+}
+
+/* Reduce Motion: movement becomes a short cross-fade (the pages' own rules keep opacity changes that help understanding). */
+@media (prefers-reduced-motion: reduce) {
+  .seg button:active, .tabs button:active, .nn .gh:active, .nl a:active, .shot:active, .sz:active, .loop:active, .nc-chip:active, .nc-x:active { transform: none; }
+}

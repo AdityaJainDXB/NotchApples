@@ -312,7 +312,7 @@ struct AppearanceSettings: View {
                             ForEach(themes) { theme in
                                 ThemeSwatchCard(theme: theme, isSelected: current.id == theme.id,
                                                 locked: theme.id.isPro && !entitlements.canUse(.proThemes)) {
-                                    withAnimation(.snappy) { manager.setTheme(theme.id) }
+                                    withAnimation(Theme.snappy()) { manager.setTheme(theme.id) }
                                 }
                             }
                         }

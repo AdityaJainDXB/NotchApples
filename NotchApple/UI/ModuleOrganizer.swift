@@ -39,7 +39,7 @@ struct ModuleOrganizer: View {
             }
             // Dropping on empty space at the end moves the card to the end.
             .onDrop(of: [.text], delegate: CardDrop(enter: {}, done: { if let d = dragging { place(d, before: nil) }; dragging = nil }))
-            .animation(.spring(response: 0.3, dampingFraction: 0.8), value: on)
+            .animation(Theme.settle, value: on)
 
             zoneHeader("Add more", detail: "Click a tab to add it, or drag it up to the spot you want.")
             LazyVGrid(columns: columns, spacing: 8) {
@@ -52,7 +52,7 @@ struct ModuleOrganizer: View {
                 enter: { overOff = true; if let d = dragging, settings.isEnabled(d) { remove(d) } },
                 done: { overOff = false; dragging = nil },
                 exit: { overOff = false }))
-            .animation(.spring(response: 0.3, dampingFraction: 0.8), value: off)
+            .animation(Theme.settle, value: off)
         }
         // A drag cancelled somewhere else never leaves a card stuck as "being dragged".
         .onDrop(of: [.text], delegate: CardDrop(enter: {}, done: { dragging = nil; overOff = false }))
@@ -121,11 +121,11 @@ struct ModuleOrganizer: View {
     // MARK: Changes
 
     private func add(_ module: Module) {
-        withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) { place(module, before: nil) }
+        withAnimation(Theme.settle) { place(module, before: nil) }
     }
 
     private func remove(_ module: Module) {
-        withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) { settings.binding(for: module).wrappedValue = false }
+        withAnimation(Theme.settle) { settings.binding(for: module).wrappedValue = false }
     }
 
     /// Puts `module` in the notch, just before `target` (or last).
@@ -135,7 +135,7 @@ struct ModuleOrganizer: View {
         var list = settings.enabledTabs.filter { $0 != module }
         let index = target.flatMap { list.firstIndex(of: $0) } ?? list.endIndex
         list.insert(module, at: index)
-        withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) { settings.setEnabledTabOrder(list) }
+        withAnimation(Theme.settle) { settings.setEnabledTabOrder(list) }
     }
 }
 

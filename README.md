@@ -71,7 +71,7 @@ Pick your computer. Both buttons start the download straight away. The Mac butto
   </tr>
   <tr>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.0.64</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.0.65</b></a>
     </td>
     <td align="center">
       <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 1.68.0 BETA</b></a>
@@ -232,6 +232,11 @@ All screenshots use sample data.
 ## What's new
 
 > **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is still in the repository's tags.
+
+### Mac 2.0.65 · 14 October 2026 · ✨ Smoother, and kinder to Reduce Motion
+
+- Reordering modules, the tour, theme choices, Home and Claude usage settle without a bounce, and use a quick fade when **Reduce Motion** is on.
+- The website responds to a tap at once, follows **Reduce Transparency** and **Increase Contrast**, and its chat panel opens out of its button.
 
 ### Mac 2.0.64 · Windows 1.68.0 BETA · 14 October 2026 · 🎥 The printer's camera
 

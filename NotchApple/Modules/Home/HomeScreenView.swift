@@ -264,7 +264,7 @@ struct HomeScreenView: View {
         let isOpen = open.contains(m)
         return VStack(spacing: 0) {
             Button {
-                withAnimation(.snappy(duration: 0.25)) { if isOpen { open.remove(m) } else { open.insert(m) } }
+                withAnimation(Theme.snappy(0.25)) { if isOpen { open.remove(m) } else { open.insert(m) } }
             } label: {
                 HStack(spacing: 10) {
                     Image(systemName: m.symbol).frame(width: 20).foregroundStyle(Theme.accentBright)

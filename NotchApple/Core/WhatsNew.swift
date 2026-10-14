@@ -20,6 +20,10 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.0.65", date: "14 October 2026", headline: "Smoother, and kinder to Reduce Motion", items: [
+            "Reordering modules, the tour, theme choices, Home and Claude usage now settle without a bounce and switch to a quick fade when Reduce Motion is on.",
+            "The website responds to a tap straight away, follows Reduce Transparency and Increase Contrast, and the chat panel opens from its button.",
+        ]),
         ReleaseNote(version: "2.0.64", date: "14 October 2026", headline: "Printer Status: the printer's camera", items: [
             "Printer Status has a Camera card. For P1 and A1 printers (the A1 mini, for example) Open camera shows the live picture from the printer, over your own network: nothing goes through the internet or any server, and nothing is saved.",
             "The X1, P2 and H2 printers send video this app cannot play yet, so for those the card offers Copy video address to open in VLC (switch on LAN Only Liveview on the printer first).",
