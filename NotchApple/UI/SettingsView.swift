@@ -43,7 +43,7 @@ enum SettingsTab: String, CaseIterable, Identifiable, Hashable {
         case .aiHistory: "AI History"
         case .messenger: "Messenger"
         case .clipboard: "Clipboard"
-        case .bambu: "Bambu Lab"
+        case .bambu: "Printer Status"
         case .fileSearch: "File Search"
         case .focus: "Focus"
         case .audio: "Audio"

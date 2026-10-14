@@ -265,7 +265,7 @@ final class BambuManager: ObservableObject {
             return
         }
         guard let creds = BambuStatusLogic.credentials(ip: p.host, accessCode: p.accessCode, serial: p.serial) else {
-            failures[p.id] = "These printer details can’t be used. Check them in Settings → Bambu Lab."
+            failures[p.id] = "These printer details can’t be used. Check them in Settings → Printer Status."
             return
         }
 

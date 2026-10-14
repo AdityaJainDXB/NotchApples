@@ -89,13 +89,37 @@ struct BambuSettingsView: View {
             } header: {
                 Text("Add a printer")
             } footer: {
-                Text("On the printer screen: Settings → LAN Mode. Turn LAN Mode on and note the IP address, access code and serial number. Empty fields fall back to the BAMBU_IP, BAMBU_ACCESS_CODE and BAMBU_SERIAL environment variables.")
+                Text("Empty fields fall back to the BAMBU_IP, BAMBU_ACCESS_CODE and BAMBU_SERIAL environment variables.")
+            }
+
+            Section {
+                VStack(alignment: .leading, spacing: 8) {
+                    setupStep(1, "Put the Mac and the printer on the same Wi-Fi.")
+                    setupStep(2, "On the printer's screen open Settings, then Network (or WLAN), and switch LAN Mode on. Wi-Fi and LAN Mode both need to be on.")
+                    setupStep(3, "Still on that screen, read the printer's IP address and its Access Code (eight characters).")
+                    setupStep(4, "The serial number is under Settings, then Device (it also starts with 0 or 3 and is printed on the back).")
+                    setupStep(5, "Type the three above under Add a printer, then press Add printer. The first time it connects, Notch Apple remembers the printer's certificate.")
+                }
+                .font(.callout)
+            } header: {
+                Text("How to connect your printer")
+            } footer: {
+                Text("Works with Bambu printers over your own network, nothing goes to the internet. Notch Apple is not affiliated with Bambu Lab.")
             }
 
             Section("Preview") {
                 BambuView()
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
+        }
+        .formStyle(.grouped)
+    }
+
+    private func setupStep(_ n: Int, _ text: String) -> some View {
+        HStack(alignment: .firstTextBaseline, spacing: 10) {
+            Text("\(n)").font(.caption.bold()).frame(width: 20, height: 20)
+                .background(Circle().fill(Theme.accent.opacity(0.25)))
+            Text(text).fixedSize(horizontal: false, vertical: true)
         }
     }
 

@@ -40,7 +40,7 @@ const bySerial = (serial) => printers().find((p) => (p.serial || '').trim() === 
 export function add(p) {
   const bad = L.problem(p, {});
   if (bad) return bad;
-  if (!canAdd()) return 'Another printer needs Notch Apple Pro (More Bambu Lab printers).';
+  if (!canAdd()) return 'Another printer needs Notch Apple Pro (More printers).';
   const clean = { ...p, host: p.host.trim(), accessCode: p.accessCode.trim(), serial: p.serial.trim() };
   savePrinters([...printers(), clean]);
   if (isOn()) connect(clean);

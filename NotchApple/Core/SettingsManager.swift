@@ -67,7 +67,7 @@ enum Module: String, CaseIterable, Identifiable {
         case .wellbeing: "Wellbeing"
         case .nonNecessities: "Non-Necessities"
         case .todo: "To-Do"
-        case .bambu: "Bambu Lab"
+        case .bambu: "Printer Status"
         }
     }
 
@@ -174,7 +174,7 @@ enum Module: String, CaseIterable, Identifiable {
         case .devTools: "Format JSON, encode and decode, read a JWT, hash, make a UUID, convert timestamps, test a regex, check colour contrast and make a QR code. Free, and everything stays on this Mac."
         case .smartHome: "Ultimate: lights, switches, scenes and more from your own Home Assistant (which also connects Hue, IKEA, Zigbee and Matter). The access token stays on this Mac."
         case .todo: "A to-do list with quick add built in: type a task (and a time, and !!! for high priority) and it goes straight in. High priority shows red and sits at the top."
-        case .bambu: "Watch your Bambu Lab 3D printers from the notch: status, nozzle and bed temperatures, print progress and time left, straight from the printer on your Wi-Fi."
+        case .bambu: "Watch your Bambu 3D printers (not affiliated with Bambu Lab) from the notch: status, nozzle and bed temperatures, print progress and time left, straight from the printer on your Wi-Fi."
         case .nonNecessities: "Everything you use now and then in one tab: Focus, World Clock, Audio, Snippets, Shortcuts, Timers, Plugins, Voice Notes, Screen Time and Smart Home."
         case .claudeUsage: "Ultimate: how many tokens Claude Code has used in your 5-hour window, today and this week, with budgets you set yourself. Read from ~/.claude on this Mac."
         case .cacheCleaner: "Ultimate: open the Purge app from the notch to free up disk space. Purge does the cleaning; Notch Apple deletes nothing itself."

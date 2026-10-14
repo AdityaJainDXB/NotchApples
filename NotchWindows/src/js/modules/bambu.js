@@ -51,7 +51,7 @@ export function render(root) {
       toggle(B.isOn(), (v) => { v ? B.enable() : B.disable(); paint(); }))));
 
     if (!list.length) {
-      parts.push(empty('🖨️', 'No printer yet', 'Add your Bambu Lab printer below with the IP, access code and serial number shown on its screen under Settings → LAN Mode.'));
+      parts.push(empty('🖨️', 'No printer yet', 'Add your Bambu printer below with the IP, access code and serial number shown on its screen under Settings → LAN Mode.'));
     } else {
       if (list.length > 1) {
         parts.push(el('div', { class: 'hstack', style: 'gap:6px;flex-wrap:wrap' }, ...list.map((p) =>
