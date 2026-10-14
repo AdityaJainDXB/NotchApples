@@ -130,10 +130,11 @@ export function readDevices(j) {
     const serial = normalizeSerial(d && d.dev_id);
     if (!serial) continue;
     const clean = (t) => String(t || '').replace(/[\u0000-\u001f<>]/g, '').trim().slice(0, 40);
-    out.push({ serial, name: clean(d.name) || clean(d.dev_product_name) || 'Bambu printer', model: clean(d.dev_product_name), online: !!d.online });
+    const code = String(d.dev_access_code || '').replace(/[^A-Za-z0-9]/g, '');
+    out.push({ serial, name: clean(d.name) || clean(d.dev_product_name) || 'Bambu printer', model: clean(d.dev_product_name), online: !!d.online, accessCode: code.length <= 32 ? code : '' });
   }
   return out;
 }
 
 /// A cloud printer as the printer list keeps it (no address, no access code: the account's sign-in does the rest).
-export const cloudPrinter = (d, region) => ({ id: `cloud-${d.serial}`, name: d.name, host: '', accessCode: '', serial: d.serial, cloud: region });
+export const cloudPrinter = (d, region) => ({ id: `cloud-${d.serial}`, name: d.name, host: '', accessCode: d.accessCode || '', serial: d.serial, cloud: region });

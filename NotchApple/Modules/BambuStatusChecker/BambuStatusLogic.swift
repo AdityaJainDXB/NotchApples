@@ -45,6 +45,9 @@ struct BambuSnapshot: Equatable {
     var bedTargetC: Double?
     var filename: String = ""
     var error: String?
+    /// The printer's address on the LAN and, for the printers that stream video, the address of that stream (from its reports).
+    var ip: String?
+    var rtspsURL: String?
 
     var isActive: Bool { phase == .printing || phase == .paused }
 }
@@ -231,6 +234,10 @@ enum BambuStatusLogic {
             next.phase = phase(gcodeState: next.gcodeState, connected: connected)
             return next
         }
+        if let net = print["net"] as? [String: Any], let info = net["info"] as? [[String: Any]] {
+            for entry in info { if let n = int(entry["ip"]), let ip = BambuCameraLogic.ipString(n) { next.ip = ip; break } }
+        }
+        if let cam = print["ipcam"] as? [String: Any], let url = string(cam["rtsp_url"]) { next.rtspsURL = url.hasPrefix("rtsps://") ? url : nil }
         if let state = string(print["gcode_state"]), !state.isEmpty { next.gcodeState = state }
         if let p = int(print["mc_percent"]) { next.progress = min(max(p, 0), 100) }
         if let m = int(print["mc_remaining_time"]) { next.remainingMinutes = max(m, 0) }

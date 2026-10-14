@@ -20,6 +20,11 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.0.64", date: "14 October 2026", headline: "Printer Status: the printer's camera", items: [
+            "Printer Status has a Camera card. For P1 and A1 printers (the A1 mini, for example) Open camera shows the live picture from the printer, over your own network: nothing goes through the internet or any server, and nothing is saved.",
+            "The X1, P2 and H2 printers send video this app cannot play yet, so for those the card offers Copy video address to open in VLC (switch on LAN Only Liveview on the printer first).",
+            "This is based on what the community has documented and was tested against a simulated printer, not a real one: please tell us how it goes.",
+        ]),
         ReleaseNote(version: "2.0.63", date: "14 October 2026", headline: "Printer Status: find your printers again any time", items: [
             "After signing in with your Bambu account, a new Find printers on my account button lists the printers again, using the saved sign-in, so you never have to sign out and in to add one. If you are signed in with nothing added yet, the list appears by itself.",
         ]),

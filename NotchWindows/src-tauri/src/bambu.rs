@@ -320,7 +320,7 @@ fn fingerprint(der: &[u8]) -> String {
 }
 
 /// Where the remembered certificates live: one small JSON file of serial -> fingerprint in the app's data folder.
-fn pin_file(app: &AppHandle) -> Result<PathBuf, String> {
+pub(crate) fn pin_file(app: &AppHandle) -> Result<PathBuf, String> {
     let dir = app.path().app_data_dir().map_err(|e| format!("No place to keep the printer’s certificate: {e}"))?;
     std::fs::create_dir_all(&dir).map_err(|e| format!("No place to keep the printer’s certificate: {e}"))?;
     Ok(dir.join("bambu_pins.json"))
@@ -410,7 +410,7 @@ impl ServerCertVerifier for PinnedCert {
     }
 }
 
-fn printer_cert_config(file: PathBuf, serial: String, mismatch: Arc<AtomicBool>) -> Arc<ClientConfig> {
+pub(crate) fn printer_cert_config(file: PathBuf, serial: String, mismatch: Arc<AtomicBool>) -> Arc<ClientConfig> {
     Arc::new(
         ClientConfig::builder()
             .dangerous()

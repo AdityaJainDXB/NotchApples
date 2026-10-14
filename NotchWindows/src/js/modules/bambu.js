@@ -21,6 +21,22 @@ export function render(root) {
     el('label', { class: 'col', style: 'gap:2px;flex:1;min-width:140px' }, el('span', { class: 'tiny faint' }, label),
       el('input', { class: 'field', value, oninput: (e) => onchange(e.target.value), ...attrs }));
 
+  // The camera picture is one <img> that frames replace in place (a repaint of the whole tab would flicker and wipe typing).
+  const camImg = el('img', { alt: 'The printer’s camera', style: 'width:100%;border-radius:8px;display:none' });
+  const offFrames = B.onFrame((jpeg) => { if (!camImg.isConnected) { B.cameraStop(); return; } camImg.src = `data:image/jpeg;base64,${jpeg}`; camImg.style.display = 'block'; });
+  function cameraCard(p) {
+    const c = B.camera(), mine = c.serial === p.serial.trim(), on = mine && c.state !== 'idle', t = B.cameraTarget(p), video = B.videoAddress(p);
+    if (!on) camImg.style.display = 'none';
+    const kids = [el('div', { class: 'hstack', style: 'gap:8px' }, el('b', {}, '🎥 Camera'), el('span', { class: 'grow' }),
+      t ? button(on ? 'Close' : 'Open camera', () => { if (on) { B.cameraStop(); paint(); } else B.cameraStart(p); }, { small: true }) : el('span', { class: 'tiny faint' }, ''))];
+    if (on) kids.push(camImg);
+    if (mine && c.state === 'connecting') kids.push(el('div', { class: 'small faint' }, 'Connecting to the camera…'));
+    if (mine && c.state === 'failed') kids.push(el('div', { class: 'small', style: 'color:#ff9f0a' }, c.message || 'The camera stopped.'));
+    if (!t) kids.push(el('div', { class: 'small faint' }, 'The camera needs the printer’s address and access code: they come from the printer’s settings here, or for an account printer from its status reports once it is online.'));
+    else if (video && mine && c.state === 'failed') kids.push(button('Copy video address (for VLC)', async () => { try { await navigator.clipboard.writeText(video); toast('Copied. It includes the printer’s access code.'); } catch { toast('Couldn’t copy'); } }, { small: true, title: 'The X1, P2 and H2 printers send video this app cannot play yet. They need “LAN Only Liveview” switched on.' }));
+    return el('div', { class: 'card col', style: 'gap:8px' }, ...kids);
+  }
+
   function statusCard(p) {
     const s = B.snapshot(p.id), busy = B.isConnecting(p.id);
     const colour = L.phaseColour(s);
@@ -163,6 +179,7 @@ export function render(root) {
       }
       const p = list.find((x) => x.id === selected);
       parts.push(statusCard(p));
+      parts.push(cameraCard(p));
       const hot = B.alertFor(p.id);
       if (hot) parts.push(el('div', { class: 'card', style: 'border:1px solid rgba(255,69,58,.6);background:rgba(255,69,58,.14)' }, '🌡️ ', hot.message));
       const why = B.failure(p.id);
@@ -204,7 +221,7 @@ export function render(root) {
   paint();
   // A printer reports about once a second; repainting would wipe what is being typed in the Add form.
   const off = B.onChange(() => {
-    if (!body.isConnected) return off();
+    if (!body.isConnected) { B.cameraStop(); offFrames(); return off(); }
     const a = document.activeElement;
     if (a && a.tagName === 'INPUT' && body.contains(a)) return;
     paint();

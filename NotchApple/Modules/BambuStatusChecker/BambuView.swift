@@ -12,6 +12,7 @@ import SwiftUI
 
 struct BambuView: View {
     @ObservedObject private var manager = BambuManager.shared
+    @StateObject private var camera = BambuCameraModel()
 
     /// Set when the module is on screen, so the settings live-preview is honest.
     var body: some View {
@@ -36,6 +37,7 @@ struct BambuView: View {
                 .font(.system(size: 12, weight: .semibold))
             }
             statusCard
+            cameraCard
             if manager.snapshot(for: manager.selectedPrinterID).phase == .printing {
                 progressCard
             }
@@ -47,6 +49,50 @@ struct BambuView: View {
             }
             footer
         }
+    }
+
+    /// The printer's camera: live pictures for the P1 and A1 printers (on the local network), and the address of the video
+    /// stream to open in a video player for the printers that send video (X1, P2, H2).
+    private var cameraCard: some View {
+        let id = manager.selectedPrinterID
+        let target = id.flatMap { manager.cameraTarget(for: $0) }
+        let open = camera.state != .idle
+        return VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                Label("Camera", systemImage: "video.fill").font(.system(size: 12, weight: .semibold))
+                Spacer()
+                if let id, let target {
+                    Button(open ? "Close" : "Open camera") {
+                        if open { camera.stop() } else {
+                            camera.start(host: target.host, code: target.code, pin: manager.printers.first { $0.id == id }?.camPin) { manager.setCameraPin(id, $0) }
+                        }
+                    }
+                    .buttonStyle(PurpleButtonStyle(prominent: false)).controlSize(.small)
+                }
+            }
+            if let img = camera.image {
+                Image(nsImage: img).resizable().aspectRatio(contentMode: .fit)
+                    .clipShape(RoundedRectangle(cornerRadius: 8)).frame(maxWidth: .infinity)
+            }
+            switch camera.state {
+            case .connecting: Text("Connecting to the camera…").font(.system(size: 11)).foregroundStyle(Theme.textSecondary)
+            case .failed(let m): Text(m).font(.system(size: 11)).foregroundStyle(.orange).fixedSize(horizontal: false, vertical: true)
+            default: EmptyView()
+            }
+            if target == nil {
+                Text("The camera needs the printer's address and access code. They come from Settings → Printer Status, or for an account printer from its status reports once it is online.")
+                    .font(.system(size: 11)).foregroundStyle(Theme.textSecondary).fixedSize(horizontal: false, vertical: true)
+            } else if let target, let address = BambuCameraLogic.rtspsAddress(ip: target.host, code: target.code),
+                      case .failed = camera.state {
+                Button("Copy video address (for VLC)") { NSPasteboard.general.clearContents(); NSPasteboard.general.setString(address, forType: .string) }
+                    .buttonStyle(PurpleButtonStyle(prominent: false)).controlSize(.small)
+                    .help("Includes the printer's access code. The X1, P2 and H2 printers need “LAN Only Liveview” switched on.")
+            }
+        }
+        .padding(10)
+        .background(RoundedRectangle(cornerRadius: 10).fill(Color.white.opacity(0.06)))
+        .onChange(of: manager.selectedPrinterID) { _, _ in camera.stop() }
+        .onDisappear { camera.stop() }
     }
 
     /// The header: what the printer is doing, with the colour the phase maps to.

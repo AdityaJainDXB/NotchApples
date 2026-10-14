@@ -73,6 +73,21 @@ const num = (v) => (typeof v === 'number' ? v : v != null && v !== '' && !Number
 
 /// Merges one report (or a "print" object) onto the snapshot we have. Bambu reports are deltas: a
 /// missing field means "unchanged", never zero.
+/// The printer's address from its report: Bambu sends it as one little-endian number (192.168.1.100 is 1677830336).
+export function ipFromNumber(v) {
+  const n = Number(v);
+  if (!Number.isInteger(n) || n <= 0 || n > 0xFFFFFFFF) return null;
+  const o = [n & 255, (n >>> 8) & 255, (n >>> 16) & 255, (n >>> 24) & 255];
+  return o[0] === 0 || o[0] === 255 ? null : o.join('.');
+}
+
+/// The address to open in a video player (VLC) for the printers whose camera is a video stream (X1, P2, H2).
+export function rtspsAddress(ip, code) {
+  if (!ip || !code || !/^[0-9.:]+$/.test(ip)) return null;
+  const enc = [...new TextEncoder().encode(code)].map((b) => (/[A-Za-z0-9]/.test(String.fromCharCode(b)) ? String.fromCharCode(b) : `%${b.toString(16).toUpperCase().padStart(2, '0')}`)).join('');
+  return `rtsps://bblp:${enc}@${ip}:322/streaming/live/1`;
+}
+
 export function apply(root, current) {
   const now = Date.now();
   const next = { ...current, at: now };
@@ -92,6 +107,8 @@ export function apply(root, current) {
   if (nozzleTarget != null) next.nozzleTargetC = nozzleTarget;
   const bedTarget = num(p.bed_target_temper);
   if (bedTarget != null) next.bedTargetC = bedTarget;
+  if (p.net && Array.isArray(p.net.info)) { for (const e of p.net.info) { const ip = ipFromNumber(e && e.ip); if (ip) { next.ip = ip; break; } } }
+  if (p.ipcam && typeof p.ipcam.rtsp_url === 'string') next.rtspsUrl = p.ipcam.rtsp_url.startsWith('rtsps://') ? p.ipcam.rtsp_url : null;
   const name = p.subtask_name || p.gcode_file || '';
   if (name) next.filename = String(name).split(/[\\/]/).filter(Boolean).pop() || String(name);
   next.phase = phaseOf(next.gcodeState, true);

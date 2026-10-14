@@ -33,6 +33,47 @@ export const snapshot = (id) => snaps.get(id) || (id ? L.waiting() : L.emptySnap
 export const failure = (id) => failures.get(id) || null;
 export const alertFor = (id) => alerts.get(id) || null;
 export const isConnecting = (id) => connecting.has(id);
+// ---- the camera (P1 and A1 printers, on the local network) ----
+// One camera at a time. Rust opens the stream and sends pictures here; this keeps the latest one for the card.
+const cam = { serial: null, state: 'idle', message: '', jpeg: null };
+const camSubs = new Set();
+let camWired = false;
+export const camera = () => cam;
+export const onFrame = (fn) => { camSubs.add(fn); return () => camSubs.delete(fn); };
+const camChanged = () => { changed(); };
+/// The address and access code the camera needs: the typed address, or for an account printer the address learned from its reports.
+export function cameraTarget(p) {
+  if (!p) return null;
+  const host = p.cloud ? (snaps.get(p.id)?.ip || '') : (p.host || '').trim();
+  const code = (p.accessCode || '').trim();
+  return host && code ? { host, code } : null;
+}
+export const videoAddress = (p) => { const t = cameraTarget(p); return t ? L.rtspsAddress(t.host, t.code) : null; };
+function wireCamera() {
+  if (camWired) return; camWired = true;
+  listen('bambu:frame', ({ serial, jpeg }) => {
+    if (cam.serial !== serial) return;
+    cam.jpeg = jpeg; if (cam.state !== 'live') { cam.state = 'live'; camChanged(); }
+    camSubs.forEach((f) => { try { f(jpeg); } catch { /* the view went away */ } });
+  }).catch(() => {});
+  listen('bambu:camera', ({ serial, state, message }) => {
+    if (cam.serial !== serial) return;
+    cam.state = state === 'failed' || state === 'ended' ? 'failed' : state; cam.message = message || ''; camChanged();
+  }).catch(() => {});
+}
+export async function cameraStart(p) {
+  const t = cameraTarget(p); if (!t) return;
+  wireCamera();
+  Object.assign(cam, { serial: p.serial.trim(), state: 'connecting', message: '', jpeg: null }); camChanged();
+  try { await invoke('bambu_camera_start', { host: t.host, accessCode: t.code, serial: p.serial.trim() }); }
+  catch (e) { Object.assign(cam, { state: 'failed', message: String(e) }); camChanged(); }
+}
+export function cameraStop() {
+  if (cam.state === 'idle') return;
+  invoke('bambu_camera_stop').catch(() => {});
+  Object.assign(cam, { serial: null, state: 'idle', message: '', jpeg: null });
+}
+
 export const canAdd = () => printers().length < L.FREE_PRINTERS || canUse('bambuMulti');
 
 const byId = (id) => printers().find((p) => p.id === id);
@@ -77,7 +118,12 @@ export const cloudDevices = () => C.accountVia((what) => invoke('bambu_cloud_get
 export function cloudAdd(devices, region) {
   let added = 0, stopped = null;
   for (const d of devices) {
-    if (printers().some((p) => (p.serial || '').trim() === d.serial)) continue;
+    const have = printers().find((p) => (p.serial || '').trim() === d.serial);
+    if (have) {
+      // Already added: fill in the LAN access code the camera needs if it was added before the code was known.
+      if (have.cloud && !have.accessCode && d.accessCode) savePrinters(printers().map((p) => (p.id === have.id ? { ...p, accessCode: d.accessCode } : p)));
+      continue;
+    }
     if (!canAdd()) { stopped = 'Another printer needs Notch Apple Pro (More printers).'; break; }
     const p = C.cloudPrinter(d, region);
     savePrinters([...printers(), p]); added++;

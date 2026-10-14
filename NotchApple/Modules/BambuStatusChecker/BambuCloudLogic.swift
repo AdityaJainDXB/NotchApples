@@ -59,6 +59,8 @@ enum BambuCloud {
         var name: String
         var model: String
         var online: Bool
+        /// The printer's LAN access code, when the account list has it (the camera uses it on the local network).
+        var accessCode: String = ""
         var id: String { serial }
     }
 
@@ -124,7 +126,8 @@ enum BambuCloud {
             guard let serial = BambuStatusLogic.normalizeSerial(d["dev_id"] as? String ?? "") else { return nil }
             let model = clean(d["dev_product_name"])
             let name = clean(d["name"])
-            return Device(serial: serial, name: name.isEmpty ? (model.isEmpty ? "Bambu printer" : model) : name, model: model, online: (d["online"] as? Bool) ?? false)
+            let code = (d["dev_access_code"] as? String ?? "").filter { $0.isLetter || $0.isNumber }
+            return Device(serial: serial, name: name.isEmpty ? (model.isEmpty ? "Bambu printer" : model) : name, model: model, online: (d["online"] as? Bool) ?? false, accessCode: code.count <= 32 ? code : "")
         }
     }
 

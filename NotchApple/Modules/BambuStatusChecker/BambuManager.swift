@@ -29,12 +29,14 @@ struct BambuPrinterConfig: Codable, Identifiable, Hashable {
     var serial = ""
     /// SHA-256 of the certificate the printer showed the first time (trust on first use); nil until it connects.
     var certPin: String?
+    /// The same for the camera's connection (port 6000), remembered the first time the camera is opened.
+    var camPin: String?
     /// Set (to the account's region) when the printer is reached through the person's Bambu account instead of the LAN.
     var cloud: String?
     var isCloud: Bool { cloud != nil }
 
     /// The access code lives in the owner-only secrets file (KeychainHelper), never in UserDefaults or backups of them.
-    enum CodingKeys: String, CodingKey { case id, name, host, serial, certPin, accessCode, cloud }
+    enum CodingKeys: String, CodingKey { case id, name, host, serial, certPin, camPin, accessCode, cloud }
 
     init(id: UUID = UUID(), name: String = "", host: String = "", accessCode: String = "", serial: String = "", certPin: String? = nil, cloud: String? = nil) {
         self.id = id; self.name = name; self.host = host; self.accessCode = accessCode; self.serial = serial; self.certPin = certPin; self.cloud = cloud
@@ -47,6 +49,7 @@ struct BambuPrinterConfig: Codable, Identifiable, Hashable {
         host = try c.decodeIfPresent(String.self, forKey: .host) ?? ""
         serial = try c.decodeIfPresent(String.self, forKey: .serial) ?? ""
         certPin = try c.decodeIfPresent(String.self, forKey: .certPin)
+        camPin = try c.decodeIfPresent(String.self, forKey: .camPin)
         cloud = try c.decodeIfPresent(String.self, forKey: .cloud)
         accessCode = try c.decodeIfPresent(String.self, forKey: .accessCode) ?? ""   // an older save; moved to the secrets file on load
     }
@@ -54,7 +57,7 @@ struct BambuPrinterConfig: Codable, Identifiable, Hashable {
     func encode(to encoder: Encoder) throws {
         var c = encoder.container(keyedBy: CodingKeys.self)
         try c.encode(id, forKey: .id); try c.encode(name, forKey: .name); try c.encode(host, forKey: .host)
-        try c.encode(serial, forKey: .serial); try c.encodeIfPresent(certPin, forKey: .certPin); try c.encodeIfPresent(cloud, forKey: .cloud)
+        try c.encode(serial, forKey: .serial); try c.encodeIfPresent(certPin, forKey: .certPin); try c.encodeIfPresent(camPin, forKey: .camPin); try c.encodeIfPresent(cloud, forKey: .cloud)
         try c.encode("", forKey: .accessCode)   // the key stays (empty) so an older build can still read the list
     }
 
@@ -255,9 +258,13 @@ final class BambuManager: ObservableObject {
     func addCloudPrinters(_ devices: [BambuCloud.Device], region: String) -> (added: Int, stopped: String?) {
         var added = 0
         for d in devices {
-            if printers.contains(where: { BambuStatusLogic.normalizeSerial($0.serial) == d.serial }) { continue }
+            if let i = printers.firstIndex(where: { BambuStatusLogic.normalizeSerial($0.serial) == d.serial }) {
+                // Already added: fill in the LAN access code the camera needs if it was added before the code was known.
+                if printers[i].isCloud, printers[i].accessCode.isEmpty, !d.accessCode.isEmpty { printers[i].accessCode = d.accessCode }
+                continue
+            }
             guard canAddPrinter else { save(); return (added, "Another printer needs Notch Apple Pro (\(Feature.bambuMulti.title)).") }
-            let p = BambuPrinterConfig(name: d.name, serial: d.serial, cloud: region)
+            let p = BambuPrinterConfig(name: d.name, accessCode: d.accessCode, serial: d.serial, cloud: region)
             printers.append(p); added += 1
             if selectedPrinterID == nil { selectedPrinterID = p.id }
             connect(p)
@@ -295,10 +302,24 @@ final class BambuManager: ObservableObject {
         LiveActivityCenter.shared.recompute()
     }
 
+    /// The camera's address and code for a printer: the LAN address (typed, or learned from its reports) and the access code.
+    func cameraTarget(for id: UUID) -> (host: String, code: String)? {
+        guard let p = printers.first(where: { $0.id == id }) else { return nil }
+        let r = resolved(p)
+        let host = (p.isCloud ? snapshot(for: id).ip : r.host) ?? ""
+        return host.isEmpty || r.accessCode.isEmpty ? nil : (host, r.accessCode)
+    }
+
+    func setCameraPin(_ id: UUID, _ fingerprint: String) {
+        guard let i = printers.firstIndex(where: { $0.id == id }), printers[i].camPin == nil else { return }
+        printers[i].camPin = fingerprint; save()
+    }
+
     /// Forgets the remembered certificate (after a firmware update or reset) and reconnects, which remembers the new one.
     func trustNewCertificate(id: UUID) {
         guard let i = printers.firstIndex(where: { $0.id == id }) else { return }
         printers[i].certPin = nil
+        printers[i].camPin = nil
         save()
         connect(printers[i])
     }

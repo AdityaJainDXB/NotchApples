@@ -96,3 +96,8 @@ test('the printers can be listed again through the saved sign-in, and an expired
   assert.equal(expired.ok, false); assert.match(expired.message, /sign in again/);
   assert.equal((await C.accountVia(async () => 'not json')).ok, false);
 });
+test('the printer list carries the LAN access code for the camera, cleaned', () => {
+  const d = C.readDevices({ devices: [{ dev_id: '01P00A123456789', name: 'Office', dev_access_code: '12 34-5678', online: true }, { dev_id: '03W00X987654321', dev_access_code: 'x'.repeat(40) }] });
+  assert.equal(d[0].accessCode, '12345678'); assert.equal(d[1].accessCode, '');
+  assert.equal(C.cloudPrinter(d[0], 'global').accessCode, '12345678');
+});

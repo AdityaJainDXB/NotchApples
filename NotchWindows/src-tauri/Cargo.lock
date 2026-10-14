@@ -2938,7 +2938,7 @@ dependencies = [
 
 [[package]]
 name = "notch-apple"
-version = "1.67.0"
+version = "1.68.0"
 dependencies = [
  "any_ascii",
  "arboard",

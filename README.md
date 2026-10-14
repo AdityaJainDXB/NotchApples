@@ -73,10 +73,10 @@ Pick your computer. Both buttons start the download straight away. The Mac butto
   </tr>
   <tr>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.0.63</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.0.64</b></a>
     </td>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 1.67.0 BETA</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 1.68.0 BETA</b></a>
     </td>
   </tr>
   <tr>
@@ -234,6 +234,12 @@ All screenshots use sample data.
 ## What's new
 
 > **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is still in the repository's tags.
+
+### Mac 2.0.64 · Windows 1.68.0 BETA · 14 October 2026 · 🎥 The printer's camera
+
+- Printer Status has a **Camera** card. On P1 and A1 printers (the A1 mini, for example) **Open camera** shows the live picture, over your own network: nothing goes through the internet or a server, and nothing is saved.
+- The X1, P2 and H2 printers send H.264 video the app cannot play yet: **Copy video address** gives the address to open in VLC (switch on *LAN Only Liveview* on the printer first; it does not turn the cloud features off).
+- Account-connected printers use the printer's address from its reports and its access code from your account's list. Based on community documentation and tested against a simulated printer, not a real one.
 
 ### Mac 2.0.63 · Windows 1.67.0 BETA · 14 October 2026 · 🖨️ Find your printers again
 

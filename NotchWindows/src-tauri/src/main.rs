@@ -10,6 +10,7 @@
 
 mod apps;
 mod bambu;
+mod bambucam;
 mod audio;
 mod brightness;
 mod notifications;
@@ -485,6 +486,7 @@ fn main() {
     lean_webview_on_small_machines();
     tauri::Builder::default()
         .manage(bambu::Pool::default())
+        .manage(bambucam::CamPool::default())
         // A second launch (e.g. clicking the Start menu entry again) opens the
         // existing notch instead of starting another one.
         .plugin(tauri_plugin_single_instance::init(|app, args, _cwd| {
@@ -539,7 +541,7 @@ fn main() {
             update::update_check, update::update_install,
             extras::downloads_progress, extras::save_temp_file, extras::save_file_as, extras::read_file_base64,
             extras::vpn_status, extras::vpn_connect, extras::vpn_disconnect,
-            bambu::bambu_start, bambu::bambu_stop, bambu::bambu_running, bambu::bambu_trust_new, bambu::bambu_cloud_save, bambu::bambu_cloud_status, bambu::bambu_cloud_get, bambu::bambu_cloud_clear,
+            bambu::bambu_start, bambu::bambu_stop, bambu::bambu_running, bambu::bambu_trust_new, bambu::bambu_cloud_save, bambu::bambu_cloud_status, bambu::bambu_cloud_get, bambucam::bambu_camera_start, bambucam::bambu_camera_stop, bambu::bambu_cloud_clear,
         claude_usage::claude_usage,
         brightness::brightness_state,
         notifications::notifications_recent,

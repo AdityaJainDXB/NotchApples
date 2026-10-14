@@ -33,3 +33,15 @@ test('thermal alerts: limits, overshoot, creep', () => {
   assert.equal(L.thermalAlert(snap({ phase: 'idle', nozzleC: 30 }), snap({ phase: 'idle', nozzleC: 33 })), null);
   assert.equal(L.thermalAlert(null, snap({ phase: 'offline', nozzleC: 400 })), null);
 });
+test('the printer address is read from its little-endian number, and the video address is built safely', () => {
+  assert.equal(L.ipFromNumber(1677830336), '192.168.1.100');
+  assert.equal(L.ipFromNumber(0), null); assert.equal(L.ipFromNumber(-1), null); assert.equal(L.ipFromNumber(2 ** 32), null);
+  assert.equal(L.rtspsAddress('192.168.1.100', 'ab12cd34'), 'rtsps://bblp:ab12cd34@192.168.1.100:322/streaming/live/1');
+  assert.equal(L.rtspsAddress('10.0.0.2', 'a@b/c'), 'rtsps://bblp:a%40b%2Fc@10.0.0.2:322/streaming/live/1');
+  assert.equal(L.rtspsAddress('evil.example.com', 'x'), null);
+});
+test('the report gives the printer its address and, for video printers, the stream address', () => {
+  const s = L.apply({ print: { gcode_state: 'IDLE', net: { conf: 0, info: [{ ip: 0 }, { ip: 1677830336 }] }, ipcam: { rtsp_url: 'rtsps://192.168.1.100:322/streaming/live/1' } } }, L.waiting());
+  assert.equal(s.ip, '192.168.1.100'); assert.match(s.rtspsUrl, /^rtsps:/);
+  assert.equal(L.apply({ print: { ipcam: { rtsp_url: 'disable' } } }, s).rtspsUrl, null);
+});
