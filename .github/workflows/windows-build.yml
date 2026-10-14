@@ -18,6 +18,8 @@ permissions:
 
 jobs:
   build:
+    # The release secrets (the premium deploy key) are only handed to builds of a tag, through the protected "release" environment.
+    environment: release
     runs-on: windows-latest
     defaults:
       run:
@@ -58,7 +60,7 @@ jobs:
           save-if: ${{ github.event_name == 'workflow_dispatch' }}
 
       - name: Install Tauri CLI
-        run: cargo install tauri-cli --version "^2" --locked
+        run: cargo install tauri-cli --version "=2.12.1" --locked
 
       - name: Build installers
         run: cargo tauri build

@@ -47,6 +47,32 @@ pub fn client() -> &'static reqwest::Client {
     })
 }
 
+/// For requests that carry a body or a credential (a password, a token, a cookie): a redirect may only stay on the same host,
+/// so what was sent can never be forwarded to a different site by a redirect.
+pub fn strict_client() -> &'static reqwest::Client {
+    static CLIENT: OnceLock<reqwest::Client> = OnceLock::new();
+    CLIENT.get_or_init(|| {
+        reqwest::Client::builder()
+            .user_agent(concat!("NotchApple/", env!("CARGO_PKG_VERSION"), " (Windows)"))
+            .connect_timeout(Duration::from_secs(10))
+            .redirect(reqwest::redirect::Policy::custom(|attempt| {
+                let same = attempt.previous().first().map_or(false, |first| first.host_str() == attempt.url().host_str() && attempt.url().scheme() == "https");
+                if attempt.previous().len() >= 3 || !same { attempt.stop() } else { attempt.follow() }
+            }))
+            .build()
+            .expect("HTTP client")
+    })
+}
+
+/// True when a request carries something that must not follow a redirect to another site.
+pub fn needs_strict(body: &Option<String>, headers: &Option<HashMap<String, String>>) -> bool {
+    body.as_deref().map_or(false, |b| !b.is_empty())
+        || headers.as_ref().map_or(false, |h| h.keys().any(|k| {
+            let k = k.to_ascii_lowercase();
+            ["authorization", "cookie", "x-csrf-token", "x-api-key", "api-key"].contains(&k.as_str()) || k.contains("token") || k.contains("secret")
+        }))
+}
+
 fn allowed(url: &str) -> Result<reqwest::Url, String> {
     let parsed = reqwest::Url::parse(url).map_err(|_| format!("Not a web address: {url}"))?;
     match parsed.scheme() {
@@ -76,7 +102,8 @@ pub async fn http(req: Request) -> Result<Response, String> {
     let url = allowed(&req.url)?;
     let method = req.method.as_deref().unwrap_or("GET").to_uppercase();
     let method = reqwest::Method::from_bytes(method.as_bytes()).map_err(|_| "Unknown request method.")?;
-    let mut builder = client()
+    let strict = needs_strict(&req.body, &req.headers);
+    let mut builder = (if strict { strict_client() } else { client() })
         .request(method, url)
         .timeout(Duration::from_millis(req.timeout_ms.unwrap_or(30_000).clamp(1_000, 180_000)));
     for (k, v) in req.headers.unwrap_or_default() {
@@ -133,6 +160,17 @@ pub async fn download(url: &str, path: &std::path::Path) -> Result<u64, String> 
 mod tests {
     use super::*;
 
+    #[test]
+    fn a_request_with_a_body_or_a_credential_never_follows_a_redirect_to_another_site() {
+        let h = |k: &str| Some(HashMap::from([(k.to_string(), "x".to_string())]));
+        assert!(needs_strict(&Some("{\"password\":1}".into()), &None));
+        assert!(needs_strict(&None, &h("Authorization")));
+        assert!(needs_strict(&None, &h("cookie")));
+        assert!(needs_strict(&None, &h("x-csrf-token")));
+        assert!(needs_strict(&None, &h("X-Api-Key")));
+        assert!(!needs_strict(&None, &None));
+        assert!(!needs_strict(&Some(String::new()), &h("accept")));
+    }
     #[test]
     fn only_safe_addresses_are_allowed() {
         assert!(allowed("https://site.api.espn.com/x").is_ok());

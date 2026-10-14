@@ -76,7 +76,7 @@ Pick your computer. Both buttons start the download straight away. The Mac butto
       <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/v2.0.34/NotchApple-2.0.34.dmg"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.0.62</b></a>
     </td>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 1.64.0 BETA</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 1.65.0 BETA</b></a>
     </td>
   </tr>
   <tr>
@@ -234,6 +234,12 @@ All screenshots use sample data.
 ## What's new
 
 > **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is still in the repository's tags.
+
+### Windows 1.65.0 BETA · 14 October 2026 · 🔒 Windows hardening
+
+- The Windows app's web view now has a content security policy: it can only load its own files and talk to the services it needs.
+- A request that carries a password, a token or a cookie never follows a redirect to a different site.
+- The Windows build runs in a protected release environment (tags only) with a pinned build tool.
 
 ### Mac 2.0.62 · Windows 1.64.0 BETA · 14 October 2026 · ✈️ Clean start, and a security pass
 
