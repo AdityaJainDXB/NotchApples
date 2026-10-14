@@ -20,6 +20,9 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.0.59", date: "14 October 2026", headline: "Printer Status: a clear note about LAN Mode", items: [
+            "Printer Status now says plainly that LAN Mode switches off the printer's cloud features (Bambu Handy, remote printing, print history), and that some printers may connect without it, so you can try adding the printer first.",
+        ]),
         ReleaseNote(version: "2.0.58", date: "14 October 2026", headline: "Plane: fly with other Notch pilots, a step-by-step procedure, glowing lights at night", items: [
             "Plane: Fly with others (off until you turn it on) shows other Notch pilots in the sky with their callsigns. It sends only your callsign, aircraft and position, with a random id and no account.",
             "Plane: a step-by-step procedure for each phase (before take-off, climb-out, approach, landing roll): the next step is highlighted and each ticks itself off.",

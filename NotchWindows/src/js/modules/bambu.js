@@ -51,7 +51,7 @@ export function render(root) {
       toggle(B.isOn(), (v) => { v ? B.enable() : B.disable(); paint(); }))));
 
     if (!list.length) {
-      parts.push(empty('🖨️', 'No printer yet', 'Add your Bambu printer below with the IP, access code and serial number shown on its screen under Settings → LAN Mode.'));
+      parts.push(empty('🖨️', 'No printer yet', 'Add your Bambu printer below with the IP, access code and serial number shown on its screen under Settings → LAN Mode. Note: LAN Mode turns off the printer\'s cloud features (Bambu Handy, remote printing).'));
     } else {
       if (list.length > 1) {
         parts.push(el('div', { class: 'hstack', style: 'gap:6px;flex-wrap:wrap' }, ...list.map((p) =>
@@ -79,6 +79,7 @@ export function render(root) {
 
     const draft = L.blankPrinter();
     const problem = el('div', { class: 'tiny', style: 'color:#ff9f0a;min-height:14px' });
+    parts.push(el('div', { class: 'card' }, el('b', {}, '⚠️ Please note'), el('div', { class: 'muted', style: 'margin-top:4px' }, "LAN Mode switches off the printer's cloud features: the Bambu Handy app, starting or watching prints from outside your home, and print history in Bambu Cloud. Some printers and firmware versions may answer on your network without LAN Mode, so try adding the printer first and switch LAN Mode on only if it cannot connect.")));
     parts.push(el('div', { class: 'card col', style: 'gap:8px' }, el('b', {}, 'Add a printer'),
       el('div', { class: 'hstack', style: 'gap:8px;flex-wrap:wrap' },
         field('Name (optional)', '', (v) => { draft.name = v; }),

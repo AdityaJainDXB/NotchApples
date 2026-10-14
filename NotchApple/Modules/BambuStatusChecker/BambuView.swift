@@ -165,7 +165,7 @@ struct BambuView: View {
             Image(systemName: "printer.fill")
                 .font(.system(size: 28, weight: .semibold)).foregroundStyle(Theme.accentBright)
             Text("No printer yet").font(.system(size: 14, weight: .bold))
-            Text("Add your Bambu printer in Settings → Printer Status with its IP, access code and serial number — all shown on the printer's screen under Settings → LAN Mode.")
+            Text("Add your Bambu printer in Settings → Printer Status with its IP, access code and serial number — all shown on the printer's screen under Settings → LAN Mode. Note: LAN Mode turns off the printer's cloud features (Bambu Handy, remote printing).")
                 .font(.system(size: 11)).foregroundStyle(Theme.textSecondary).multilineTextAlignment(.center)
             Button("Open Bambu Settings…") { AppDelegate.openSettingsWindow(tab: .bambu) }
                 .buttonStyle(PurpleButtonStyle(prominent: false)).controlSize(.small)

@@ -73,10 +73,10 @@ Pick your computer. Both buttons start the download straight away. The Mac butto
   </tr>
   <tr>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/v2.0.34/NotchApple-2.0.34.dmg"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.0.58</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/v2.0.34/NotchApple-2.0.34.dmg"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.0.59</b></a>
     </td>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 1.60.0 BETA</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 1.61.0 BETA</b></a>
     </td>
   </tr>
   <tr>
@@ -220,6 +220,10 @@ All screenshots use sample data.
 ## What's new
 
 > **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is still in the repository's tags.
+
+### Mac 2.0.59 · Windows 1.61.0 BETA · 14 October 2026 · 🖨️ Printer Status note
+
+- Printer Status explains that LAN Mode turns off the printer's cloud features (Bambu Handy, remote printing, print history).
 
 ### Mac 2.0.58 · Windows 1.60.0 BETA · 14 October 2026 · ✈️ Fly with others, procedures, night lights
 

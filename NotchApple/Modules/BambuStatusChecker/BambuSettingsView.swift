@@ -93,6 +93,17 @@ struct BambuSettingsView: View {
             }
 
             Section {
+                Label {
+                    Text("LAN Mode switches off the printer's cloud features: the Bambu Handy app, starting or watching prints from outside your home, and print history in Bambu Cloud. Some printers and firmware versions may answer on your network without LAN Mode, so try adding the printer first and switch LAN Mode on only if it cannot connect.")
+                } icon: {
+                    Image(systemName: "exclamationmark.triangle.fill").foregroundStyle(.orange)
+                }
+                .font(.callout)
+            } header: {
+                Text("Please note")
+            }
+
+            Section {
                 VStack(alignment: .leading, spacing: 8) {
                     setupStep(1, "Put the Mac and the printer on the same Wi-Fi.")
                     setupStep(2, "On the printer's screen open Settings, then Network (or WLAN), and switch LAN Mode on. Wi-Fi and LAN Mode both need to be on.")
