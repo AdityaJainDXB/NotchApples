@@ -4682,11 +4682,13 @@
       }
       // ---- ground services (when stopped on an apron): 1 refuel, 2 catering, 3 baggage, 4 pushback
       if (svc) {
-        const still = flight.onGround && flight.speed < 1.2 && flight.throttle < 0.12;
+        const still = flight.onGround && flight.speed < (svc.id === 4 ? 3 : 1.2) && flight.throttle < 0.12;
         if (!still) { toast('Ground crew: service cancelled, you started moving', 2000); svc = null; }
         else {
-          flight.brake = true; svc.t += dt;
-          if (svc.id === 4) { const f4 = flight.axes().f; flight.pos = add(flight.pos, mul(f4, -1.7 * dt)); flight.vel = v3(); }
+          svc.t += dt;
+          // The tug pushes at walking pace with the brake off; every other job is done with the parking brake on.
+          flight.brake = svc.id !== 4;
+          if (svc.id === 4) { const f4 = flight.axes().f; flight.vel = [-f4[0] * 1.7, flight.vel[1], -f4[2] * 1.7]; }
           if (svc.t >= svc.dur) {
             svcDone[svc.id] = true;
             if (svc.id === 1) { flight.fuel = plane.fuel || 1800; flight.fuelOut = false; }
