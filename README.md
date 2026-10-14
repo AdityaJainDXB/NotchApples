@@ -17,6 +17,14 @@ Free to start, source-available, with free AI or fully local AI on your Mac. Plu
 </p>
 
 <p align="center">
+  <a href="https://github.com/AdityaJainDXB/NotchApples/actions/workflows/mac-build.yml"><img alt="Mac build" src="https://github.com/AdityaJainDXB/NotchApples/actions/workflows/mac-build.yml/badge.svg"></a>
+  <a href="https://github.com/AdityaJainDXB/NotchApples/actions/workflows/windows-build.yml"><img alt="Windows build" src="https://github.com/AdityaJainDXB/NotchApples/actions/workflows/windows-build.yml/badge.svg"></a>
+  <a href="https://github.com/AdityaJainDXB/NotchApples/actions/workflows/windows-ci.yml"><img alt="Windows CI" src="https://github.com/AdityaJainDXB/NotchApples/actions/workflows/windows-ci.yml/badge.svg"></a>
+  <a href="https://github.com/AdityaJainDXB/NotchApples/actions/workflows/pages.yml"><img alt="Deploy website" src="https://github.com/AdityaJainDXB/NotchApples/actions/workflows/pages.yml/badge.svg"></a>
+  <a href="https://github.com/AdityaJainDXB/NotchApples/actions/workflows/packages-check.yml"><img alt="Packages check" src="https://github.com/AdityaJainDXB/NotchApples/actions/workflows/packages-check.yml/badge.svg"></a>
+</p>
+
+<p align="center">
   <a href="#download"><b>⬇️ Download</b></a>
   &nbsp;·&nbsp; <a href="https://adityajaindxb.github.io/NotchApples/"><b>🌐 Website</b></a>
   &nbsp;·&nbsp; <a href="#whats-new"><b>✨ What's new</b></a>
