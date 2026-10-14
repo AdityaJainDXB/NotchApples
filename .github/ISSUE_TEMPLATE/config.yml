@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Ask a question or chat
+    url: https://github.com/AdityaJainDXB/NotchApples/discussions/categories/q-a
+    about: How do I...? Questions are answered fastest in Discussions.
+  - name: Show your setup
+    url: https://github.com/AdityaJainDXB/NotchApples/discussions/categories/show-and-tell
+    about: Share your notch setup, tips and screenshots.
+  - name: Support and FAQ
+    url: https://github.com/AdityaJainDXB/NotchApples/blob/main/SUPPORT.md
+    about: Updates, licence keys, privacy and where to get help.

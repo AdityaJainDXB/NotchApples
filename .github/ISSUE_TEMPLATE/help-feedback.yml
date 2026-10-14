@@ -1,0 +1,28 @@
+name: Help or feedback
+description: Updates, licence keys, privacy, praise, or anything that is not a bug or an idea
+title: "[Help] "
+labels: ["question"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        For quick how-to questions, [Discussions Q&A](https://github.com/AdityaJainDXB/NotchApples/discussions/categories/q-a) is usually faster.
+        Never post a licence key or access code here.
+  - type: dropdown
+    id: topic
+    attributes:
+      label: What is it about?
+      options: [Installing or updating, Licence or Ultimate, Privacy or data, Website, General feedback, Other]
+    validations:
+      required: true
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Which app?
+      options: [Mac, Windows, Both, Not sure]
+  - type: textarea
+    id: msg
+    attributes:
+      label: Tell us more
+    validations:
+      required: true

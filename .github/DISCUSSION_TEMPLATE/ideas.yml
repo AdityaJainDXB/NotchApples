@@ -1,0 +1,9 @@
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: idea
+    attributes:
+      label: Your idea
+      description: What should Notch Apple do, and why would it help you? Formal requests go through the "Suggest a feature" issue form.
+    validations:
+      required: true

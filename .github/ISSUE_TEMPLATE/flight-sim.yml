@@ -1,0 +1,41 @@
+name: Flight simulator glitch
+description: Physics, controls, airports, AI traffic or ground services in the flight game
+title: "[Flight sim] "
+labels: ["bug", "flight-sim"]
+body:
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Platform
+      options: [Mac, Windows]
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: App version
+    validations:
+      required: true
+  - type: input
+    id: aircraft
+    attributes:
+      label: Aircraft
+      placeholder: F-16, A320, helicopter...
+    validations:
+      required: true
+  - type: dropdown
+    id: start
+    attributes:
+      label: How did you start?
+      options: [Runway, Gate / apron, Helipad, In the air, Challenge mode]
+  - type: textarea
+    id: what
+    attributes:
+      label: What went wrong?
+      description: Include what you did just before (landing, taxi, pushback, gear up or down).
+    validations:
+      required: true
+  - type: textarea
+    id: extra
+    attributes:
+      label: Screenshot or recording

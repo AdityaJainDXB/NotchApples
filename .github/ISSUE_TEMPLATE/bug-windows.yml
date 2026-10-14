@@ -1,0 +1,62 @@
+name: Problem in the Windows app
+description: Something is broken, crashes or looks wrong in Notch Apple for Windows
+title: "[Windows] "
+labels: ["bug", "windows"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for helping. Please do not include licence keys, access codes or other personal data.
+  - type: input
+    id: version
+    attributes:
+      label: App version
+      description: Shown in Settings (for example 1.56.0)
+    validations:
+      required: true
+  - type: input
+    id: windows
+    attributes:
+      label: Windows version
+      placeholder: Windows 11 23H2
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Which part is affected?
+      options:
+        - The notch itself (opening, hover, layout)
+        - Music / Now Playing
+        - Calendar / widgets
+        - File shelf / sharing
+        - Printer Status (Bambu)
+        - Games / flight simulator
+        - Installer or updates
+        - Licence / Ultimate
+        - Settings
+        - Something else
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: And what did you expect instead?
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+    validations:
+      required: true
+  - type: dropdown
+    id: how-often
+    attributes:
+      label: How often does it happen?
+      options: [Every time, Sometimes, Only once]
+  - type: textarea
+    id: extra
+    attributes:
+      label: Screenshots or screen recordings

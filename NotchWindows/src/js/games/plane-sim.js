@@ -4847,6 +4847,8 @@
         const tint = a.state === 'fall' ? [0.32, 0.26, 0.22] : [1, 1, 1], glow = a.state === 'fall' ? 0.0 : 0;
         for (const k in tpm.parts) { const part = tpm.parts[k]; if (part) draw(part.live, model(a.q, add(a.pos, qrot(a.q, mul(part.center, sc))), sc), tint, glow); }
         for (const d of tpm.dyn) draw(d.gl, AM, tint, glow);
+        // Wheels down below 400 m above the ground (approach or climb-out), up in the cruise.
+        if (a.pos[1] - groundAt(W, a.pos[0], a.pos[2]) < 400) for (const g of tpm.gears) draw(g.gl, AM, tint, glow);
       }
       const M = model(flight.q, flight.pos, plane.scale);
       const flapMax = plane.cat === 'mil' ? 24 : plane.cat === 'ga' || plane.cat === 'turbo' ? 32 : 38;
