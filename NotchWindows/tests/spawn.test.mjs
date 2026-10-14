@@ -40,3 +40,21 @@ test('every helicopter settles on its helipad too', () => {
     assert.ok(f.onGround && f.speed < 0.5, `${p.id} sits still`);
   }
 });
+
+test('every apron is paved, so the nose wheel never digs in there', () => {
+  for (const r of T.APRONS) assert.equal(T.surfaceAt(world, (r[0] + r[1]) / 2, (r[2] + r[3]) / 2), 'runway');
+});
+
+test('the autopilot turns to a new heading and holds a new height', () => {
+  for (const id of ['c172', 'a320']) {
+    const p = PLANES.find((q) => q.id === id), f = new Flight(p);
+    f.reset([2000, 1500, 11000], 0, p.cruise, false, 0);
+    for (let i = 0; i < 20 * 60; i++) f.step(1 / 60, { pitch: 0, roll: 0, yaw: 0, throttle: 0.7 }, world);
+    assert.ok(f.apEngage(), 'engages in the air');
+    f.ap.hdg += 0.5; f.ap.alt += 100;
+    for (let i = 0; i < 60 * 60; i++) f.step(1 / 60, { pitch: 0, roll: 0, yaw: 0, throttle: 0.7 }, world);
+    const he = Math.atan2(Math.sin(f.ap.hdg - f.heading), Math.cos(f.ap.hdg - f.heading));
+    assert.ok(!f.crashed && Math.abs(he) < 0.06, `${id} heading held (${he})`);
+    assert.ok(Math.abs(f.ap.alt - f.pos[1]) < 25, `${id} height held`);
+  }
+});

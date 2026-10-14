@@ -1662,7 +1662,7 @@
 
   // ---- painted ground: what you would land on
 
-  const PAVED = [[-22, 22, -1440, 40], [51, 65, -1297, -113], [22, 51, -127, -113], [22, 51, -1297, -1283], [22, 38, -707, -693], [38, 90, -460, -210], [38, 104, -760, -560], [RIDGE.x - 16, RIDGE.x + 16, 550, 1250], ...HELIPADS.map((h) => [h.x - h.half, h.x + h.half, h.z - h.half, h.z + h.half]), ...AIRFIELDS.map((a) => [a.x - a.half, a.x + a.half, a.z - a.len / 2, a.z + a.len / 2])];
+  const PAVED = [[-22, 22, -1440, 40], [51, 65, -1297, -113], [22, 51, -127, -113], [22, 51, -1297, -1283], [22, 38, -707, -693], [38, 90, -460, -210], [38, 104, -760, -560], [RIDGE.x - 16, RIDGE.x + 16, 550, 1250], ...HELIPADS.map((h) => [h.x - h.half, h.x + h.half, h.z - h.half, h.z + h.half]), ...AIRFIELDS.map((a) => [a.x - a.half, a.x + a.half, a.z - a.len / 2, a.z + a.len / 2]), ...APRONS];
   const onPaved = (x, z) => { for (const p of PAVED) if (x > p[0] && x < p[1] && z > p[2] && z < p[3]) return true; return false; };
   const snowLine = (x, z) => 1180 + (vnoise(x / 430 + 5, z / 430) - 0.5) * 300;
   /// What the ground is made of at (x, z): 'runway' (any paving, the mountain strip too), 'road', 'water', 'sand', 'snow', 'rock', 'forest' or 'grass'.
@@ -2375,6 +2375,7 @@
     snow: { roll: 0.11, grip: 0.35, skid: 0.2, soft: 0.7 },
     rock: { roll: 0.14, grip: 0.6, skid: 0.7, soft: 1.2 },
   };
+  const AP_SIGN = { roll: 1, pitch: 1 };   // which way the stick moves the aircraft (checked in the autopilot tests)
   const gauss = () => (Math.random() + Math.random() + Math.random() - 1.5) * 2;
   // ---- weather settings (Fly menu, saved): a runway-relative wind (crosswind and head/tail wind, in knots) and a turbulence level
   const KT = 0.514444;
@@ -2646,6 +2647,27 @@
       return { ...input, throttle: collective, collective, pitch, roll };
     }
 
+    /// The autopilot: holds a heading (banking up to 25 degrees), a height (climbing or descending gently) and a speed.
+    apEngage() {
+      if (this.s.rotor || this.crashed || this.onGround) return false;
+      this.ap = { on: true, hdg: this.heading, alt: this.pos[1], spd: Math.max(this.ias, this.s.stall * 1.35), i: 0 };
+      return true;
+    }
+    apOff() { if (this.ap) this.ap.on = false; }
+    apInput(input, dt) {
+      const a = this.ap, s = this.s;
+      // Taking hold of the stick or running out of safe speed hands the aircraft back.
+      if (Math.abs(input.pitch) > 0.35 || Math.abs(input.roll) > 0.35 || this.inStall || this.onGround || this.damage.L === false || this.damage.R === false) { a.on = false; this.events.push({ type: 'apoff' }); return input; }
+      let he = a.hdg - this.heading; while (he > Math.PI) he -= 2 * Math.PI; while (he < -Math.PI) he += 2 * Math.PI;
+      const bankT = clamp(he * 1.1, -0.44, 0.44);
+      const roll = clamp((bankT - this.bank) * 2.0 + 0, -0.6, 0.6);
+      const vsT = clamp((a.alt - this.pos[1]) * 0.08, -6, 6) * (s.cat === 'ga' ? 0.6 : 1);
+      const pitch = clamp((this.pitchAngle - 0.0) * -0.0 + (vsT - this.vel[1]) * 0.06, -0.4, 0.4);
+      a.i = clamp(a.i + (a.spd - this.ias) * dt * 0.02, -0.5, 0.5);
+      const throttle = clamp(0.55 + (a.spd - this.ias) * 0.04 + a.i, 0.05, 1);
+      return { ...input, roll: roll * AP_SIGN.roll, pitch: pitch * AP_SIGN.pitch, yaw: 0, throttle };
+    }
+
     step(dt, input, world) {
       if (this.crashed) { this.emergency = false; this.stepWreck(dt, world); return; }
       const s = this.s, { f, u, r } = this.axes();
@@ -2656,6 +2678,7 @@
         if (this.onGround && Math.hypot(this.vel[0], this.vel[1], this.vel[2]) < 1.2) { this.emergency = false; this.events.push({ type: 'emergencydone' }); }
         else input = this.autoLand(input, agl, dt);
       }
+      if (this.ap && this.ap.on) input = this.apInput(input, dt);
       const sigma = densityAt(this.pos[1]);
       this.windStep(dt, agl, world);
       // The airflow: the plane's motion through the moving air. V is true airspeed, Vi what the airspeed indicator says.
@@ -4094,7 +4117,7 @@
       if (down && e.repeat && keys.has(k)) { if (screen === 'fly') e.preventDefault?.(); return; }   // held keys repeat: toggles fire once
       const typing = e.target && e.target.tagName === 'INPUT' && e.target.type !== 'range';
       if (typing) { if (down && k === 'Enter' && result?.qualifies) saveScore(); return; }
-      const game = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' ', 'w', 's', 'a', 'd', 'q', 'e', 'f', 'v', 'b', 'c', 'p', 'r', 'x', 'Shift', 'Control', 'g', 'h'];
+      const game = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' ', 'w', 's', 'a', 'd', 'q', 'e', 'f', 'v', 'b', 'c', 'p', 'r', 'x', 'Shift', 'Control', 'g', 'h', 'k', ',', '.', '[', ']'];
       if (game.includes(k) && screen === 'fly') e.preventDefault?.();
       if (down) {
         if (screen === 'fly') {
@@ -4105,6 +4128,14 @@
             if (r === 'up' || r === 'down') { toast(r === 'down' ? 'Gear down' : 'Gear up', 1100); noise(1.1, 0.12, 280); }
             else toast(r === 'fixed' ? `The ${plane.name} has fixed wheels: no gear to raise` : r === 'broken' ? 'The undercarriage is broken' : 'Gear can only be raised in the air', 1500);
           }
+          if (k === 'k') {
+            if (plane.rotor) toast('The autopilot is for fixed-wing aircraft', 1500);
+            else if (flight.ap && flight.ap.on) { flight.apOff(); toast('Autopilot off: you have the controls', 1500); }
+            else if (flight.apEngage()) toast('Autopilot on: holding heading, altitude and speed', 1800);
+            else toast('The autopilot needs you in the air', 1400);
+          }
+          if (flight.ap && flight.ap.on && (k === ',' || k === '.')) flight.ap.hdg += (k === '.' ? 1 : -1) * 5 * DEG;
+          if (flight.ap && flight.ap.on && (k === '[' || k === ']')) flight.ap.alt = Math.max(60, flight.ap.alt + (k === ']' ? 1 : -1) * 50);
           if (k === 'h') {
             if (!plane.rotor) toast('Emergency landing is for helicopters', 1400);
             else if (flight.emergency) { flight.emergencyOff(); toast('Emergency landing cancelled: you have the controls', 1600); }
@@ -5248,6 +5279,15 @@
         rows.forEach(([n, v, c], i) => { const y = by0 + 12 + i * 16 * s; h2.fillStyle = 'rgba(255,255,255,.65)'; h2.fillText(n, bx + 8, y); h2.fillStyle = c; h2.fillText(v, bx + 8 + 62 * s, y); });
         h2.textAlign = 'center';
       }
+      // Autopilot panel: the targets it is holding.
+      if (flight.ap && flight.ap.on && !flight.crashed) {
+        h2.textAlign = 'left'; h2.textBaseline = 'middle'; h2.font = `700 ${Math.round(10 * s + 2)}px system-ui`;
+        const a = flight.ap, hd = ((Math.round(a.hdg * 57.2958) % 360) + 360) % 360;
+        const txt = `AP   HDG ${String(hd).padStart(3, '0')}°   ALT ${Math.round(a.alt * 3.28084)} ft   SPD ${Math.round(a.spd / KT)} kt    , . heading   [ ] altitude   K off`;
+        const bw3 = h2.measureText(txt).width + 24, bx3 = (W2 - bw3) / 2;
+        box(bx3, H2 - 34 * s - 18, bw3, 24); h2.fillStyle = '#5ee08a'; h2.fillText(txt, bx3 + 12, H2 - 34 * s - 6);
+        h2.textAlign = 'center';
+      }
       // Ground services panel: shown when stopped on an apron.
       if (flight.onGround && flight.speed < 1.2 && onApron(flight.pos) && !flight.crashed) {
         h2.textAlign = 'left'; h2.textBaseline = 'middle'; h2.font = `700 ${Math.round(10 * s + 2)}px system-ui`;
@@ -5681,5 +5721,5 @@
     };
   }
 
-  window.NotchPlaneGame = { mount, PLANES, MODES, CHALLENGES, Flight, _test: { buildPlane, REGIONS, nearestRegion, matchRegion, raCallout, gpwsWarnings, groundAt, makeWorld, qheading, qrot, hitObject, terrainAt, surfaceAt, roughnessAt, normalAt } };
+  window.NotchPlaneGame = { mount, PLANES, MODES, CHALLENGES, Flight, _test: { AP_SIGN, APRONS, buildPlane, REGIONS, nearestRegion, matchRegion, raCallout, gpwsWarnings, groundAt, makeWorld, qheading, qrot, hitObject, terrainAt, surfaceAt, roughnessAt, normalAt } };
 })();

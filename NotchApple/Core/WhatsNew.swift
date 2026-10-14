@@ -20,6 +20,11 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.0.54", date: "14 October 2026", headline: "Plane: autopilot, solid aprons and visible wheels on traffic", items: [
+            "Plane: an autopilot for fixed-wing aircraft. Press K in the air to hold your heading, height and speed; , and . turn it 5 degrees, [ and ] change height by 50 m, and moving the stick or K hands the controls back.",
+            "Plane: the aprons at the new airfields count as paved ground now, like the runway, so the nose wheel no longer sinks in and breaks when you turn sharply there.",
+            "Plane: other aircraft show their wheels when they are low.",
+        ]),
         ReleaseNote(version: "2.0.53", date: "14 October 2026", headline: "Plane: no more crash on take-off start, ground crew and traffic; your feedback", items: [
             "Plane: fighters (F-15, F-22, Su-27 and others) no longer crash into the runway the moment a flight starts: the start height now matches each model's size, and helicopters stay put on their pad until you lift off.",
             "Plane: airliners start at the gate by default, where the ground crew works (1 refuel, 2 catering, 3 baggage, 4 pushback), and other aircraft cross the sky with markers, traffic call-outs, close calls and mid-air collisions that bring both down. Flap configuration errors are called out.",
