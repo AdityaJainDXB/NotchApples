@@ -35,7 +35,7 @@ try { stars = api('').stargazers_count; } catch { /* keep going without it */ }
 const data = {
   version: r.tag_name.slice(1),
   title: r.name || `Notch Apple ${r.tag_name.slice(1)}`,
-  notes: (r.body || '').slice(0, 4000),
+  notes: (r.body || '').slice(0, 20000),
   published: r.published_at,
   dmg: dmg.browser_download_url,
   dmgSize: dmg.size,
@@ -43,7 +43,7 @@ const data = {
   stars,
   windows: win ? {
     version: win.x.tag_name.replace(/^win-v/, ''),
-    notes: (win.x.body || '').slice(0, 4000),
+    notes: (win.x.body || '').slice(0, 20000),
     url: win.exe.browser_download_url,
     sha256: win.exe.digest?.startsWith('sha256:') ? win.exe.digest.slice(7) : null,
     size: win.exe.size,

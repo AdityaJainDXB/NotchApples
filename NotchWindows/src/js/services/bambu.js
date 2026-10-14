@@ -53,7 +53,7 @@ export function remove(id) {
   clearTimeout(retry.get(id)); retry.delete(id);
   savePrinters(printers().filter((p) => p.id !== id));
   snaps.delete(id); failures.delete(id); alerts.delete(id); connecting.delete(id);
-  invoke('bambu_stop', { serial: p0?.serial?.trim() }).catch(() => {});   // only this printer: the others keep their connection
+  if (p0?.serial) invoke('bambu_stop', { serial: p0.serial.trim() }).catch(() => {});   // only this printer: the others keep their connection
   changed();
 }
 

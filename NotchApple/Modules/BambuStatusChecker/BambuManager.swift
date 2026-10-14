@@ -51,6 +51,7 @@ struct BambuPrinterConfig: Codable, Identifiable, Hashable {
         var c = encoder.container(keyedBy: CodingKeys.self)
         try c.encode(id, forKey: .id); try c.encode(name, forKey: .name); try c.encode(host, forKey: .host)
         try c.encode(serial, forKey: .serial); try c.encodeIfPresent(certPin, forKey: .certPin)
+        try c.encode("", forKey: .accessCode)   // the key stays (empty) so an older build can still read the list
     }
 
     var displayName: String { name.isEmpty ? (host.isEmpty ? "My Printer" : host) : name }
@@ -126,9 +127,13 @@ final class BambuManager: ObservableObject {
     // MARK: - Configuration
 
     func save() {
-        store.set(try? JSONEncoder().encode(printers), forKey: "bambu.printers")
         let codes = Dictionary(printers.filter { !$0.accessCode.isEmpty }.map { ($0.id.uuidString, $0.accessCode) }, uniquingKeysWith: { a, _ in a })
-        if let data = try? JSONEncoder().encode(codes), let text = String(data: data, encoding: .utf8) { KeychainHelper.set(text, for: .bambuAccessCodes) }
+        var stored = false
+        if let data = try? JSONEncoder().encode(codes), let text = String(data: data, encoding: .utf8) { stored = KeychainHelper.set(text, for: .bambuAccessCodes) }
+        var list = (try? JSONSerialization.jsonObject(with: JSONEncoder().encode(printers))) as? [[String: Any]] ?? []
+        // If the owner-only file could not be written, the code stays with the printer rather than being lost.
+        if !stored { for i in list.indices { if let id = list[i]["id"] as? String, let code = codes[id] { list[i]["accessCode"] = code } } }
+        store.set(try? JSONSerialization.data(withJSONObject: list), forKey: "bambu.printers")
     }
 
     private static func loadCodes() -> [String: String] {

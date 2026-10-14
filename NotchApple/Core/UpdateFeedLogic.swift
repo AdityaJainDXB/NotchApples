@@ -28,12 +28,16 @@ enum UpdateFeed {
 
     /// A download we will install: https, github.com, this project's release downloads, a .dmg.
     static func isTrustedDMG(_ url: URL) -> Bool {
-        url.scheme == "https" && url.host == "github.com"
-            && url.path.hasPrefix("/\(repo)/releases/download/") && url.pathExtension.lowercased() == "dmg"
+        // Exactly this project's release-download shape: no dot segments or encoded tricks, no other path.
+        let raw = url.absoluteString.lowercased()
+        guard url.scheme == "https", url.host == "github.com", url.port == nil, url.query == nil, url.fragment == nil,
+              !raw.contains(".."), !raw.contains("%2e"), !raw.contains("%2f") else { return false }
+        return url.path.range(of: "^/\(NSRegularExpression.escapedPattern(for: repo))/releases/download/v[0-9]+(\\.[0-9]+)*/NotchApple-[0-9]+(\\.[0-9]+)*\\.dmg$", options: .regularExpression) != nil
     }
 
     private static func isTrustedPage(_ url: URL) -> Bool {
-        url.scheme == "https" && url.host == "github.com" && url.path.hasPrefix("/\(repo)/")
+        let raw = url.absoluteString.lowercased()
+        return url.scheme == "https" && url.host == "github.com" && url.path.hasPrefix("/\(repo)/") && !raw.contains("..") && !raw.contains("%2e")
     }
 
     static func number(from tag: String) -> String? {

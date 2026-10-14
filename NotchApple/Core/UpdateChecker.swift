@@ -230,8 +230,15 @@ final class UpdateChecker: ObservableObject {
     private static func fetchLatest() async throws -> Release {
         // 1. latest.json on the website and 2. GitHub's releases feed: neither is the API, so neither is held back by
         // the 60-requests-an-hour limit that a shared network uses up (which showed as "Couldn't reach GitHub").
-        if let data = await fetchData(UpdateFeed.latestJSON), let entry = UpdateFeed.parseLatestJSON(data) { return release(entry) }
-        if let data = await fetchData(UpdateFeed.atomFeed), let entry = UpdateFeed.newest(UpdateFeed.parseAtom(data)) { return release(entry) }
+        // Beta releases (an Ultimate option) are not in either of those sources, so with the beta option on the API is used.
+        let wantsBeta = UserDefaults.standard.bool(forKey: "updates.beta") && UserDefaults.standard.bool(forKey: "updates.ultimateAllowed")
+        if !wantsBeta {
+            // Both sources are asked and the newer answer wins, so a website file that lags a release can't hide it.
+            var found: [UpdateFeed.Entry] = []
+            if let data = await fetchData(UpdateFeed.latestJSON), let entry = UpdateFeed.parseLatestJSON(data) { found.append(entry) }
+            if let data = await fetchData(UpdateFeed.atomFeed) { found.append(contentsOf: UpdateFeed.parseAtom(data)) }
+            if let entry = UpdateFeed.newest(found) { return release(entry) }
+        }
         // 3. The API, as before.
         var request = URLRequest(url: URL(string: "https://api.github.com/repos/\(repo)/releases?per_page=20")!)
         request.setValue("application/vnd.github+json", forHTTPHeaderField: "Accept")

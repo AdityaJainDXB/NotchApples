@@ -76,12 +76,26 @@ struct SiteWindows {
     page: String,
 }
 
+/// This project's installer on github.com and nothing else: https, the right host and path, no dot segments or encoded
+/// tricks (a URL parser would quietly collapse `..` and send the request somewhere else), and a setup.exe at the end.
+pub fn trusted_download(url: &str) -> bool {
+    let lower = url.to_ascii_lowercase();
+    url.starts_with(DOWNLOADS)
+        && url.ends_with("-setup.exe")
+        && !lower.contains("..")
+        && !lower.contains("%2e")
+        && !lower.contains("%2f")
+        && !url.contains('?')
+        && !url.contains('#')
+        && !url.contains('\\')
+}
+
 /// What latest.json says about Windows: `Some(None)` = readable and nothing newer, `Some(Some(update))` = a newer
 /// build, `None` = unreadable or untrustworthy (use the API instead). The download must be this project's.
 pub fn from_site(text: &str, current: &[u64]) -> Option<Option<Update>> {
     let file: SiteFile = serde_json::from_str(text).ok()?;
     let w = file.windows?;
-    if !w.url.starts_with(DOWNLOADS) || !w.url.ends_with("-setup.exe") || !w.page.starts_with("https://github.com/AdityaJainDXB/NotchApples/") {
+    if !trusted_download(&w.url) || !w.page.starts_with("https://github.com/AdityaJainDXB/NotchApples/") || w.page.contains("..") {
         return None;
     }
     let v = version_of(&format!("win-v{}", w.version))?;
@@ -94,7 +108,7 @@ pub fn from_site(text: &str, current: &[u64]) -> Option<Option<Update>> {
 #[tauri::command]
 pub async fn update_check() -> Result<Option<Update>, String> {
     let current = version_of(&format!("win-v{CURRENT}")).unwrap_or_default();
-    if let Ok(res) = crate::net::client().get(SITE_FILE).header("Cache-Control", "no-cache").send().await {
+    if let Ok(res) = crate::net::client().get(SITE_FILE).header("Cache-Control", "no-cache").timeout(std::time::Duration::from_secs(15)).send().await {
         if res.status().is_success() {
             if let Ok(text) = res.text().await {
                 if let Some(answer) = from_site(&text, &current) {
@@ -140,7 +154,7 @@ pub async fn update_check() -> Result<Option<Update>, String> {
 
 #[tauri::command]
 pub async fn update_install(app: AppHandle, url: String, sha256: Option<String>, size: u64) -> Result<(), String> {
-    if !url.starts_with("https://github.com/AdityaJainDXB/NotchApples/releases/download/") {
+    if !trusted_download(&url) {
         return Err("That isn't a Notch Apple download.".into());
     }
     let path = std::env::temp_dir().join("NotchApple-Update-Setup.exe");
@@ -249,6 +263,9 @@ mod site_tests {
     fn a_download_from_somewhere_else_is_refused() {
         let bad = GOOD.replace("github.com/AdityaJainDXB", "evil.example/AdityaJainDXB");
         assert!(from_site(&bad, &[1, 52, 0]).is_none());
+        let dots = GOOD.replace("releases/download/win-v1.53.0/", "releases/download/../../../Other/repo/releases/download/x/");
+        assert!(from_site(&dots, &[1, 52, 0]).is_none());
+        assert!(!trusted_download("https://github.com/AdityaJainDXB/NotchApples/releases/download/win-v1.0.0/a-setup.exe?x=1"));
         assert!(from_site("not json", &[1, 52, 0]).is_none());
         assert!(from_site(r#"{"version":"2.0.50"}"#, &[1, 52, 0]).is_none());
     }

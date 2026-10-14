@@ -214,7 +214,11 @@ pub fn bambu_trust_new(app: AppHandle, serial: String) -> Result<(), String> {
     let path = pin_file(&app)?;
     let _guard = lock(&PIN_LOCK);
     // A damaged file is exactly what this button is for: start afresh instead of failing.
-    let mut pins = read_pins(&path).unwrap_or_default();
+    let mut pins = match read_pins(&path) {
+        Ok(p) => p,
+        Err(e) if e.contains("damaged") => Default::default(),   // exactly what this button is for
+        Err(e) => return Err(e),                                 // a busy or unreadable file must not wipe the other printers' pins
+    };
     pins.remove(serial.trim());
     write_pins(&path, pins)
 }
