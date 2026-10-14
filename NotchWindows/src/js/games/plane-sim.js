@@ -3496,6 +3496,7 @@
     { id: 'glider', name: 'Glider pilot', desc: 'Land on a runway after an engine failure' },
     { id: 'onewing', name: 'One-winged', desc: 'Keep flying 10 s after losing a wing' },
     { id: 'survivor', name: 'Walked away', desc: 'Survive a belly landing' },
+    { id: 'near', name: 'Close call', desc: 'Pass within 120 m of another aircraft without hitting it' },
     { id: 'hover', name: 'Hover steady', desc: 'In a helicopter, hold a steady hover for 15 s' },
     { id: 'pad', name: 'On the H', desc: 'Land a helicopter on a helipad and stop' },
     { id: 'padridge', name: 'Top of the world', desc: 'Land a helicopter on the mountain helipad' },
@@ -4011,7 +4012,7 @@
       const applies = failures === 'often' || mode.id === 'free' || mode.id === 'landing';
       failAt = rate && applies ? (mode.id === 'landing' ? 20 + Math.random() * 40 : -Math.log(Math.random()) / rate + 20) : Infinity;
       if (mode.id === 'landing' && failures === 'rare' && Math.random() > 0.25) failAt = Infinity;
-      rollAcc = 0; loopAcc = 0; lowT = 0; stoppedT = 0; hadTakeoff = false; hadAir = false; stopCredited = false; hoverT = 0; cfgTakeoff = false; cfgLanding = false; svc = null; svcDone = {};
+      rollAcc = 0; loopAcc = 0; lowT = 0; stoppedT = 0; hadTakeoff = false; hadAir = false; stopCredited = false; hoverT = 0; cfgTakeoff = false; cfgLanding = false; svc = null; svcDone = {}; traffic = []; trafficT = 6; nearSeen = new Set(); traffic = []; trafficT = 6; nearSeen = new Set();
       hoops = []; nextHoop = 0;
       const homePad = HELIPADS[0], hoverTrim = plane.rotor ? 1.06 / plane.rotorLift : 0;
       const spot = startSpot();
@@ -4162,6 +4163,7 @@
     };
     /// The helicopter's collective lever: W raises it, S lowers it, and it stays where you leave it.
     let heliColl = 0;
+    let trafficOn = read('traffic', true), traffic = [], trafficT = 8, nearSeen = new Set();   // AI aircraft crossing the sky
     let startAt = read('startAt', 'home');   // where a free flight begins: 'home' or an airfield id
     const startSpot = () => STARTS.find((x) => x.id === startAt) || STARTS[0];
     function input() {
@@ -4289,7 +4291,7 @@
       hangar: 'Hit a hangar', tower: 'Hit the control tower' };
     const WING_TEXT = { overspeed: 'Overspeed!', overg: 'Over-G!', ground: 'Wingtip hit the ground!', water: 'Wingtip in the water!',
       tree: 'Clipped a tree!', building: 'Clipped a building!', bridge: 'Clipped the bridge!', turbine: 'Hit a turbine blade!',
-      mast: 'Hit the radio mast!', hangar: 'Clipped a hangar!', tower: 'Clipped the tower!', crash: 'Torn off in the crash!' };
+      mast: 'Hit the radio mast!', hangar: 'Clipped a hangar!', tower: 'Clipped the tower!', crash: 'Torn off in the crash!', midair: 'MID-AIR COLLISION!' };
     const CHUNK_COLS = [[0.92, 0.93, 0.95], [0.75, 0.78, 0.82], [0.35, 0.36, 0.4], [0.2, 0.25, 0.5], [0.75, 0.2, 0.15]];
     /// Small broken pieces of the airframe, thrown out over a wide area (they bounce a little and settle).
     function spawnChunks(n, speed, at, base) {
@@ -4435,6 +4437,79 @@
       else if (mode.id === 'trial') finish('crash', null, `${why} · hoop ${nextHoop + 1} of ${hoops.length}`, rep);
       else if (mode.id === 'landing') finish('crash', 0, why, rep);
       else finish('crash', null, why, rep);
+    }
+
+    // ---- AI traffic
+    const TRAFFIC_IDS = ['c172', 'pa28', 'sr22', 'pc12', 'cit', 'e175', 'a220', 'b737', 'a320', 'b787'];
+    const trafficRadius = (spec) => (spec.span || 5) * (spec.scale || 1) + 2.5;
+    function spawnTraffic() {
+      const id = TRAFFIC_IDS[Math.floor(Math.random() * TRAFFIC_IDS.length)], spec = PLANES.find((x) => x.id === id);
+      const theta = Math.random() * Math.PI * 2, dist = 3600 + Math.random() * 2200;
+      const x = flight.pos[0] + Math.sin(theta) * dist, z = flight.pos[2] - Math.cos(theta) * dist;
+      const floor = groundAt(W, x, z) + 320, alt = Math.max(floor, flight.pos[1] + (Math.random() - 0.4) * 500);
+      // Aim at the player with some spread: some pass wide, a few come straight at you.
+      const spread = Math.random() < 0.2 ? 30 : 150 + Math.random() * 600, aim = [flight.pos[0] + (Math.random() - 0.5) * spread, flight.pos[2] + (Math.random() - 0.5) * spread];
+      const heading = Math.atan2(aim[0] - x, -(aim[1] - z));
+      traffic.push({ id, spec, pos: [x, Math.min(alt, 3500), z], heading, speed: Math.min(spec.cruise * (0.7 + Math.random() * 0.2), 140), vy: 0, turn: 0, turnT: 8 + Math.random() * 15, bank: 0, state: 'fly', t: 0, vel: v3(), w: v3(), q: qheading(heading) });
+    }
+    function stepTraffic(dt) {
+      trafficT -= dt;
+      if (trafficT <= 0 && traffic.filter((a) => a.state === 'fly').length < 3) { spawnTraffic(); trafficT = 25 + Math.random() * 35; }
+      let nearest = null;
+      for (const a of traffic) {
+        a.t += dt;
+        if (a.state === 'fly') {
+          a.turnT -= dt;
+          if (a.turnT <= 0) { a.turn = Math.random() < 0.5 ? 0 : (Math.random() - 0.5) * 0.07; a.turnT = 6 + Math.random() * 14; }
+          a.heading += a.turn * dt;
+          const gnd = groundAt(W, a.pos[0], a.pos[2]), want = a.pos[1] < gnd + 240 ? 6 : a.pos[1] > 3600 ? -3 : (Math.sin(a.t / 17 + a.speed) * 1.2);
+          a.vy += (want - a.vy) * Math.min(1, dt * 0.8);
+          const hv = [Math.sin(a.heading) * a.speed, a.vy, -Math.cos(a.heading) * a.speed];
+          a.vel = hv; a.pos = add(a.pos, mul(hv, dt));
+          a.bank += (clamp(a.turn * a.speed / 9.8, -0.45, 0.45) - a.bank) * Math.min(1, dt * 1.5);
+          a.q = qmul(qheading(a.heading, Math.asin(clamp(a.vy / a.speed, -0.3, 0.3))), qaxis([0, 0, 1], -a.bank));
+          const rel = sub(a.pos, flight.pos), d = len(rel);
+          if (d > 9500 || a.t > 600) { a.state = 'gone'; continue; }
+          // Hit?
+          const rr = trafficRadius(a.spec) + (plane.rotor ? 6 : trafficRadius(plane));
+          if (d < rr && !flight.crashed) { collideTraffic(a); continue; }
+          // A close call, then a TCAS-style call-out as one closes in on the same height.
+          if (d < 120 + rr && !nearSeen.has(a)) { nearSeen.add(a); achieve('near'); toast('😮 Close call!', 1600); }
+          const closing = -dot(rel, sub(flight.vel, a.vel)) / Math.max(d, 1) < 0;   // distance shrinking
+          if (closing && d < 2200 && Math.abs(rel[1]) < 450) say(d < 800 ? 'Traffic, traffic, traffic' : 'Traffic', { level: d < 800 ? 2 : 1, every: 7, key: 'tcas' });
+          if (!nearest || d < nearest.d) nearest = { a, d };
+        } else if (a.state === 'fall') {
+          a.vel = add(a.vel, [0, -9.8 * dt, 0]); a.vel = mul(a.vel, 1 - 0.04 * dt);
+          a.pos = add(a.pos, mul(a.vel, dt));
+          a.q = qnorm(qmul(a.q, qaxis(norm(a.w), len(a.w) * dt)));
+          if (Math.random() < dt * 40) puff('fire', add(a.pos, jitter(3)), jitter(4));
+          if (Math.random() < dt * 30) puff('soot', add(a.pos, jitter(2)), [0, 3, 0]);
+          const gnd = groundAt(W, a.pos[0], a.pos[2]);
+          if (a.pos[1] < gnd + 2) {
+            for (let i = 0; i < 26; i++) puff(i % 3 === 0 ? 'fire' : i % 3 === 1 ? 'dirt' : 'soot', add(a.pos, jitter(10)), add([0, 8 + Math.random() * 8, 0], jitter(14)));
+            for (let i = 0; i < 6; i++) puff('gfire', add(a.pos, jitter(14)), v3());
+            if (len(sub(a.pos, flight.pos)) < 1500) { noise(1.4, 0.45, 220); shakeKick = Math.max(shakeKick, 0.25); }
+            a.state = 'gone';
+          }
+          if (a.t > 120) a.state = 'gone';
+        }
+      }
+      traffic = traffic.filter((a) => a.state !== 'gone');
+      trafficNearest = nearest;
+    }
+    let trafficNearest = null;
+    /// A mid-air collision: the other aircraft loses control and falls burning, and the player's loses a wing.
+    function collideTraffic(a) {
+      a.state = 'fall'; a.t = 0;
+      a.w = [(Math.random() - 0.5) * 3, (Math.random() - 0.5) * 3, (Math.random() - 0.5) * 3 + 2];
+      a.vel = add(mul(a.vel, 0.7), [0, -2, 0]);
+      const { r } = flight.axes(), side = dot(sub(a.pos, flight.pos), r) >= 0 ? 'R' : 'L';
+      flight.loseWing(side, 'midair', Math.random() < 0.6 ? 'tip' : 'root');
+      if (Math.random() < 0.35) flight.breakTail();
+      flight.vel = add(flight.vel, jitter(8)); flight.w = add(flight.w, [(Math.random() - 0.5) * 1.5, (Math.random() - 0.5) * 1.5, (side === 'R' ? -1 : 1) * 1.8]);
+      shakeKick = 1; noise(0.8, 0.6, 500); noise(1.2, 0.4, 150);
+      for (let i = 0; i < 16; i++) puff('spark', a.pos, add(jitter(30), mul(flight.vel, 0.3)));
+      for (let i = 0; i < 8; i++) puff('fire', a.pos, jitter(10));
     }
 
     function update(dt) {
@@ -4667,6 +4742,9 @@
           if (mode.id === 'free' && on && stoppedT < 0.7) toast('Landed and stopped. Take off again any time.', 2000);
         }
       } else { stoppedT = 0; stopCredited = false; }
+      // ---- AI traffic: other aircraft crossing the sky. They can be passed, heard about, or hit.
+      if (trafficOn && !flight.crashed) stepTraffic(dt);
+      else if (!trafficOn && traffic.length) traffic = [];
       // ---- configuration errors: an airliner, business jet or turboprop needs its flaps for take-off and for landing.
       const needsFlaps = ['liner', 'biz', 'turbo'].includes(plane.cat) && (plane.flapNotches || []).length > 2;
       if (needsFlaps) {
@@ -4757,6 +4835,13 @@
       const ease = 1 - Math.exp(-dt * 8), fly = !menu && !flight.crashed;
       const tgt = { ail: fly ? ctl.roll : 0, elev: fly ? ctl.pitch : 0, rud: fly ? ctl.yaw : 0, flap: menu ? 0 : flight.flaps || 0, spoil: fly ? Math.max(flight.gspoil || 0, flight.brake ? (flight.onGround ? 1 : 0.5) : 0) : 0 };
       for (const k of Object.keys(tgt)) surf[k] += (tgt[k] - surf[k]) * (k === 'flap' ? ease * 0.35 : ease);
+      // Other aircraft: their parts and control surfaces at rest (no gear), tumbling and darkened once they are going down.
+      for (const a of traffic) {
+        const tpm = planeMeshes[a.id], sc = a.spec.scale || 1, AM = model(a.q, a.pos, sc);
+        const tint = a.state === 'fall' ? [0.32, 0.26, 0.22] : [1, 1, 1], glow = a.state === 'fall' ? 0.0 : 0;
+        for (const k in tpm.parts) { const part = tpm.parts[k]; if (part) draw(part.live, model(a.q, add(a.pos, qrot(a.q, mul(part.center, sc))), sc), tint, glow); }
+        for (const d of tpm.dyn) draw(d.gl, AM, tint, glow);
+      }
       const M = model(flight.q, flight.pos, plane.scale);
       const flapMax = plane.cat === 'mil' ? 24 : plane.cat === 'ga' || plane.cat === 'turbo' ? 32 : 38;
       for (const k in pm.parts) {
@@ -5174,6 +5259,16 @@
         const bw2 = h2.measureText(txt).width + 16, by2 = H2 - 8 - 24;
         box(W2 - bw2 - 8, 8 + (flight.damage ? 0 : 0) + 7 * 16 * s + 22, bw2, 22); h2.fillStyle = 'rgba(255,255,255,.85)'; h2.fillText(txt, W2 - bw2, 8 + 7 * 16 * s + 33);
       }
+      // The nearest other aircraft, with its distance, height difference and which way it lies.
+      if (trafficOn && trafficNearest && trafficNearest.a.state === 'fly') {
+        const a = trafficNearest.a, d = trafficNearest.d, dy = Math.round((a.pos[1] - flight.pos[1]) * 3.281 / 100) * 100;
+        const rel = ((Math.atan2(a.pos[0] - flight.pos[0], -(a.pos[2] - flight.pos[2])) - flight.heading + Math.PI * 3) % (Math.PI * 2)) - Math.PI;
+        const arrow = Math.abs(rel) < 0.35 ? '▲' : Math.abs(rel) > 2.8 ? '▼' : rel > 0 ? '▶' : '◀';
+        const txt = `TRAFFIC ${a.spec.name.split(' ').slice(-1)[0]} · ${d < 950 ? Math.round(d) + ' m' : (d / 1000).toFixed(1) + ' km'} ${arrow} ${dy === 0 ? 'level' : (dy > 0 ? '+' : '') + dy + ' ft'}`;
+        h2.font = `700 ${Math.round(9 * s + 2)}px system-ui`; h2.textAlign = 'left'; h2.textBaseline = 'middle';
+        const bw4 = h2.measureText(txt).width + 16, by4 = 8 + 7 * 16 * s + 22 + 28;
+        box(W2 - bw4 - 8, by4, bw4, 22); h2.fillStyle = d < 800 ? '#ffd166' : 'rgba(255,255,255,.85)'; h2.fillText(txt, W2 - bw4, by4 + 11);
+      }
       // Helicopter panel: height above the ground, climb rate, ground speed, collective and rotor speed, and the
       // emergency-landing banner (the assist levels the disc and sets down gently; H starts and cancels it).
       if (plane.rotor) {
@@ -5282,6 +5377,7 @@
           <div class="pg-hint" style="margin-top:3px">${escapeHtml(placeNote || `Now flying over: ${regionOf(regionId).id ? regionOf(regionId).name + ' (' + regionOf(regionId).lm + ')' : 'the home valley'}. The landmark stands just off the runway.`)}</div>
           <h2>3 · Start at <small style="font-weight:500;opacity:.6">for Free Flight</small></h2>
           <div class="pg-row" style="gap:5px;flex-wrap:wrap">${STARTS.map((x) => `<button data-start="${x.id}" class="${x.id === startSpot().id ? 'pg-on' : ''}">${x.name}</button>`).join('')}</div>
+          <div class="pg-row" style="margin-top:8px"><button data-traffic class="${trafficOn ? 'pg-on' : ''}" title="Other aircraft cross the sky; you can pass them, hear a traffic call, or hit them">AI traffic: ${trafficOn ? 'On' : 'Off'}</button><span class="pg-hint">Other aircraft in the sky: a mid-air collision brings both down.</span></div>
           ${weatherPanel()}
           <h2>5 · Pick a challenge</h2><div class="pg-modes">${MODES.map((m) => `<button class="pg-mode ${m === mode ? 'pg-on' : ''}" data-mode="${m.id}">${m.icon} ${m.name}<small>${m.desc}</small></button>`).join('')}</div>
           <div class="pg-row" style="margin-top:10px"><button class="pg-go" data-a="start">✈️ Take off (Enter)</button>
@@ -5358,6 +5454,7 @@
       });
       ui.querySelectorAll('[data-wxs]').forEach((n) => n.onclick = () => { const m = Math.abs(WX.crossKt) || 0; WX.crossKt = n.dataset.wxs === 'L' ? -m : m; saveWx(); renderUI(); });
       ui.querySelectorAll('[data-wxt]').forEach((n) => n.onclick = () => { WX.turb = n.dataset.wxt; saveWx(); renderUI(); });
+      ui.querySelectorAll('[data-traffic]').forEach((n) => n.onclick = () => { trafficOn = !trafficOn; write('traffic', trafficOn); renderUI(); });
       ui.querySelectorAll('[data-start]').forEach((n) => n.onclick = () => { startAt = n.dataset.start; write('startAt', startAt); renderUI(); });
       ui.querySelectorAll('[data-wxp]').forEach((n) => n.onclick = () => {
         const p = WX_PRESETS.find((x) => x[0] === n.dataset.wxp); if (!p) return;
@@ -5543,7 +5640,7 @@
     window.NotchPlaneGame.key = (key, down) => onKey({ key, repeat: false, target: null }, down);
     window.NotchPlaneGame._state = () => ({ screen, keys: [...keys], bank: flight.bank, pitch: flight.pitchAngle, pos: flight.pos, w: flight.w, onGround: flight.onGround,
       speed: flight.speed, ias: flight.ias, gload: flight.gload, spin: flight.spin, wreckRest: flight.rest, report: flight.report, damage: flight.damage, crashed: flight.crashed, why: flight.why, debris: debris.length, particles: smoke.length });
-    window.NotchPlaneGame._poke = { failEngine: (p) => { failAt = elapsed; }, flight: () => flight, world: () => W, dbg: () => ({ debris, smoke, gouges, slowT, duckT, shakeKick, attached: [...attached] }),
+    window.NotchPlaneGame._poke = { traffic: () => traffic, spawnTraffic: () => spawnTraffic(), failEngine: (p) => { failAt = elapsed; }, flight: () => flight, world: () => W, dbg: () => ({ debris, smoke, gouges, slowT, duckT, shakeKick, attached: [...attached] }),
       // Test hooks for looking at the models: a fixed camera, held controls, and freezing the physics.
       view: (v) => { devView = v; }, ctl: (c) => { devCtl = c; }, hold: (h) => { devHold = h; }, plane: () => plane, surf,
       // Test hook: run the simulation ahead by `secs` seconds without drawing (a slow software renderer can't keep real time).
