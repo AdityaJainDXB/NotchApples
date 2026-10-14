@@ -17,11 +17,9 @@ Free to start, source-available, with free AI or fully local AI on your Mac. Plu
 </p>
 
 <p align="center">
-  <a href="https://github.com/AdityaJainDXB/NotchApples/actions/workflows/mac-build.yml"><img alt="Mac build" src="https://github.com/AdityaJainDXB/NotchApples/actions/workflows/mac-build.yml/badge.svg"></a>
-  <a href="https://github.com/AdityaJainDXB/NotchApples/actions/workflows/windows-build.yml"><img alt="Windows build" src="https://github.com/AdityaJainDXB/NotchApples/actions/workflows/windows-build.yml/badge.svg"></a>
-  <a href="https://github.com/AdityaJainDXB/NotchApples/actions/workflows/windows-ci.yml"><img alt="Windows CI" src="https://github.com/AdityaJainDXB/NotchApples/actions/workflows/windows-ci.yml/badge.svg"></a>
-  <a href="https://github.com/AdityaJainDXB/NotchApples/actions/workflows/pages.yml"><img alt="Deploy website" src="https://github.com/AdityaJainDXB/NotchApples/actions/workflows/pages.yml/badge.svg"></a>
-  <a href="https://github.com/AdityaJainDXB/NotchApples/actions/workflows/packages-check.yml"><img alt="Packages check" src="https://github.com/AdityaJainDXB/NotchApples/actions/workflows/packages-check.yml/badge.svg"></a>
+  <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><img alt="Mac release" src="https://img.shields.io/github/v/release/AdityaJainDXB/NotchApples?filter=v*&label=Mac%20release&color=2ea043"></a>
+  <a href="https://github.com/AdityaJainDXB/NotchApples/actions/workflows/windows-build.yml"><img alt="Windows build" src="https://img.shields.io/github/v/release/AdityaJainDXB/NotchApples?filter=win-v*&include_prereleases&label=Windows%20build&color=2ea043"></a>
+  <a href="https://github.com/AdityaJainDXB/NotchApples/actions/workflows/pages.yml"><img alt="Deploy website" src="https://github.com/AdityaJainDXB/NotchApples/actions/workflows/pages.yml/badge.svg?branch=main"></a>
 </p>
 
 <p align="center">

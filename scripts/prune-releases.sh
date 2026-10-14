@@ -3,12 +3,12 @@
 #
 #   scripts/prune-releases.sh [--keep N] [--max N] [--dry-run]
 #
-# Mac releases (tags v*) and Windows releases (tags win-v*) are pruned separately: the newest N of each (default 6) are kept,
+# Mac releases (tags v*) and Windows releases (tags win-v*) are pruned separately: the newest N of each (default 4) are kept,
 # and at most --max of the oldest ones beyond that are deleted per kind (default 1, which is what the weekly routine uses
 # after it publishes a release). Never touched: the release marked Latest and the rolling `windows-latest` release (the
 # website's Windows download links point at it). Only the release page and its files are deleted; the git tags stay.
 set -euo pipefail
-keep=6; max=1; dry=0
+keep=4; max=1; dry=0
 while [ $# -gt 0 ]; do
   case "$1" in
     --keep) keep="$2"; shift 2 ;;
