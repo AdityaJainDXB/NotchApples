@@ -15,7 +15,12 @@ final class BlackjackModel: ObservableObject {
     @Published var player: [PlayingCard] = []
     @Published var dealer: [PlayingCard] = []
     @Published var bet = 25
-    @Published var bank = UserDefaults.standard.object(forKey: "games.blackjack.bank") as? Int ?? 500
+    /// A saved bank of 0 (lost everything, then quit) refills to 500 on launch instead of locking the table.
+    @Published var bank: Int = {
+        let saved = UserDefaults.standard.object(forKey: "games.blackjack.bank") as? Int ?? 500
+        if saved < 1 { UserDefaults.standard.set(500, forKey: "games.blackjack.bank"); return 500 }
+        return saved
+    }()
     @Published var message = ""
     @Published var doubled = false
     private var deck: [PlayingCard] = []

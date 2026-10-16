@@ -71,7 +71,7 @@ Pick your computer. Both buttons start the download straight away. The Mac butto
   </tr>
   <tr>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.0.65</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.0.66</b></a>
     </td>
     <td align="center">
       <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 1.70.0 BETA</b></a>
@@ -241,6 +241,10 @@ All screenshots use sample data.
 
 - Tabs, buttons, tiles and list rows give a little under the cursor on press, not only on release.
 - With **Reduce Motion** on, tiles no longer lift or shrink. Frosted menus and toasts become solid when transparency is reduced, and with high contrast the secondary text is brighter and borders firmer.
+
+### Mac 2.0.66 · 16 October 2026 · 🃏 Blackjack: no more empty bank
+
+- Fixed Blackjack getting stuck at a bank of 0 after losing everything and quitting. The table now refills to 500 chips when it opens. (Reported in issue 14.)
 
 ### Mac 2.0.65 · 14 October 2026 · ✨ Smoother, and kinder to Reduce Motion
 

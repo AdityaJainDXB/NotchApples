@@ -20,6 +20,9 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.0.66", date: "16 October 2026", headline: "Blackjack: no more empty bank", items: [
+            "Fixed Blackjack getting stuck at a bank of 0 after losing everything and quitting: the table now refills to 500 chips when you open it, so you can always deal.",
+        ]),
         ReleaseNote(version: "2.0.65", date: "14 October 2026", headline: "Smoother, and kinder to Reduce Motion", items: [
             "Reordering modules, the tour, theme choices, Home and Claude usage now settle without a bounce and switch to a quick fade when Reduce Motion is on.",
             "The website responds to a tap straight away, follows Reduce Transparency and Increase Contrast, and the chat panel opens from its button.",

@@ -6,7 +6,9 @@ import { cardEl, fanEl } from '../games/cardui.js';
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 export function blackjack(host) {
-  let bank = load('games.blackjack.bank', 500), bet = Math.min(25, bank), deck = [], player = [], dealer = [], phase = 'bet', msg = '', alive = true, doubled = false;
+  let bank = load('games.blackjack.bank', 500);
+  if (!(bank >= 1)) { bank = 500; save('games.blackjack.bank', bank); }
+  let bet = Math.min(25, bank), deck = [], player = [], dealer = [], phase = 'bet', msg = '', alive = true, doubled = false;
   const draw = () => { if (deck.length < 15) deck = shuffle(makeDeck(4)); return deck.pop(); };
   const root = el('div', { class: 'col', style: 'align-items:center;gap:8px;min-width:420px' });
   host.replaceChildren(root);
