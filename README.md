@@ -74,7 +74,7 @@ Pick your computer. Both buttons start the download straight away. The Mac butto
       <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.0.66</b></a>
     </td>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 1.70.0 BETA</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 1.70.1 BETA</b></a>
     </td>
   </tr>
   <tr>
@@ -232,6 +232,10 @@ All screenshots use sample data.
 ## What's new
 
 > **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is still in the repository's tags.
+
+### Windows 1.70.1 BETA · 16 October 2026 · 🃏 Blackjack: no more empty bank
+
+- Fixed Blackjack getting stuck at a bank of 0 after losing everything and quitting. The table now refills to 500 chips when it opens.
 
 ### Windows 1.70.0 BETA · 14 October 2026 · 🔧 Clipboard sync, messenger and speed test work again
 
