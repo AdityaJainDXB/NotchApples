@@ -2575,7 +2575,9 @@
       this.ki = 0.06;
       this.cd0 = this.heli ? 0.012 : spec.thrust / (this.k * spec.max * spec.max) - this.ki * clLevel * clLevel;
       // Heavy aircraft answer the controls slowly (response rate, 1/s).
-      this.agil = (this.heli ? 6.5 : 5) - 2 * clamp((spec.stall - 24) / 46, 0, 1);
+      this.agil = (this.heli ? 6.5 : 7.5) - (this.heli ? 2 : 2.5) * clamp((spec.stall - 24) / 46, 0, 1);
+      // Airliners are quick to start moving when a key goes down (they used to take a beat to bite), still slower than a light plane.
+      this.liner = spec.cat === 'liner' ? 1 : 0;
       this.turb = 1;
       this.buildGear();
       this.reset([0, spec.gear * (spec.scale || 1), 0], 0, 0, true);
@@ -2966,9 +2968,9 @@
       const intact = wings === 1;
       const tailF = 0.3 + 0.7 * this.damage.tail;      // a scraped tail makes the elevator and rudder weaker
       const target = [
-        clamp(aCmd * (stabT + path) - this.aoa * stabT + (V > 5 && !this.onGround ? this.k * sigma * V * flaps * 0.35 - G * Math.cos(gamma) / V : 0), -s.pitch * 1.6, s.pitch * 1.6),
+        clamp(aCmd * (stabT + path) - this.aoa * stabT + (V > 5 && !this.onGround ? this.k * sigma * V * flaps * 0.35 - G * Math.cos(gamma) / V : 0), -s.pitch * 1.6 * (1 + 0.2 * this.liner), s.pitch * 1.6 * (1 + 0.2 * this.liner)),
         -input.yaw * s.yaw * eff - beta * stab,
-        -input.roll * s.roll * eff * Math.max(wings, 0.3) * (1 - 0.6 * this.sd),
+        -input.roll * s.roll * (1 + 0.35 * this.liner) * eff * Math.max(wings, 0.3) * (1 - 0.6 * this.sd),
       ];
       // A helicopter's cyclic: the rotor answers the stick with a rate (tilt the disc, and the thrust follows),
       // not with an angle of attack, and it does so however fast it is going — including a hover. Yaw is the
@@ -5115,7 +5117,7 @@
     // ---- drawing
     let lastW = 0, lastH = 0;
     function size() {
-      const r = root.getBoundingClientRect(), dpr = Math.min(window.devicePixelRatio || 1, 2);
+      const r = root.getBoundingClientRect(), dpr = Math.min(window.devicePixelRatio || 1, dprCap);
       const w = Math.max(1, Math.round(r.width * dpr)), h = Math.max(1, Math.round(r.height * dpr));
       if (w !== lastW || h !== lastH) { cv.width = hud.width = w; cv.height = hud.height = h; lastW = w; lastH = h; }
       return { w, h, dpr };
@@ -5124,7 +5126,7 @@
     // ---- DRAW AIRCRAFT BEGIN
     // ---- drawing the aircraft: the body in its parts, then the moving surfaces, gear, propeller or fans, lights and flame
     // `ctl` is what the pilot is asking for (set every step); `surf` is where the surfaces actually are, easing towards it.
-    let ctl = { pitch: 0, roll: 0, yaw: 0, throttle: 0 }, devCtl = null, devHold = false, devView = null;
+    let dprCap = 2, ctl = { pitch: 0, roll: 0, yaw: 0, throttle: 0 }, devCtl = null, devHold = false, devView = null;
     const surf = { ail: 0, elev: 0, rud: 0, flap: 0, spoil: 0, last: 0, fan: 0 };
     const hingeM = (pivot, axis, ang) => { const q = qaxis(axis, ang); return model(q, sub(pivot, qrot(q, pivot)), 1); };
     function drawAircraft(t) {
@@ -5994,10 +5996,14 @@
     }
 
     // ---- main loop
-    let raf = 0, last = performance.now(), alive = true;
+    let raf = 0, last = performance.now(), alive = true, frameAvg = 0.016, slowFrames = 0;
     function frame(t) {
       if (!alive) return;
-      const real = Math.min(0.05, (t - last) / 1000); last = t;
+      const raw = (t - last) / 1000, real = Math.min(0.1, raw); last = t;
+      // A slow machine draws fewer pixels rather than flying in slow motion: after a second and a half of frames
+      // slower than 24 fps the picture steps down (never back up, so it cannot flicker between sizes).
+      frameAvg += (Math.min(raw, 0.25) - frameAvg) * 0.05;
+      if (frameAvg > 0.042 && dprCap > 1) { slowFrames += raw; if (slowFrames > 1.5) { dprCap = Math.max(1, dprCap - 0.25); slowFrames = 0; frameAvg = 0.02; } } else slowFrames = 0;
       // The beat of slow motion at a big impact: 0.4x for a second or so, then back to full speed.
       if (slowT > 0) slowT -= real;
       duckT -= real; shakeKick *= Math.exp(-real * 2.5);
