@@ -3749,6 +3749,124 @@
   .pg .pg-pause { position: absolute; inset: 0; display: grid; place-items: center; background: rgba(0,0,0,.35); font-size: 13px; }
   `;
 
+  // ------------------------------------------------------------------ war: the physics and the AI's brain (no drawing)
+
+  /// Bombs, bullets and missiles, and how the computer pilots steer and aim. Everything here is plain maths on
+  /// positions and velocities (metres, seconds), so it can be tested without a screen.
+  const WAR = (() => {
+    const G = 9.80665;
+    /// Air gets thinner with height: drag at 5 km is about half what it is at sea level.
+    const rhoAt = (h) => Math.exp(-Math.max(0, h) / 8500);
+    /// A 500 lb bomb: drag per metre `k` gives a terminal speed of about 255 m/s at sea level (sqrt(g / k)). `R` is how far
+    /// the blast reaches and `dmg` what it does at the very centre.
+    const BOMB = { k: 1.5e-4, R: 45, dmg: 300 };
+    /// A 20 mm cannon: the muzzle speed, the drag it slows with, how long a round lives and its scatter (radians).
+    const GUN = { speed: 880, k: 4e-5, life: 2.3, spread: 0.0035 };
+    const wrap = (a) => ((a + Math.PI * 3) % (Math.PI * 2)) - Math.PI;
+
+    /// One step of a falling bomb. Gravity, plus drag against the air (the wind moves the air, so a bomb drifts with it).
+    function bombStep(b, dt, wind = [0, 0, 0]) {
+      const rel = sub(b.vel, wind), sp = len(rel), drag = BOMB.k * rhoAt(b.pos[1]) * sp;
+      b.vel = [b.vel[0] - rel[0] * drag * dt, b.vel[1] - G * dt - rel[1] * drag * dt, b.vel[2] - rel[2] * drag * dt];
+      b.pos = add(b.pos, mul(b.vel, dt));
+      b.t = (b.t || 0) + dt;
+      return b;
+    }
+    /// Where a bomb let go right now would land, and when: the bombsight's impact marker.
+    function impactPoint(pos, vel, groundFn, wind = [0, 0, 0], dt = 0.05, maxT = 90) {
+      const b = { pos: pos.slice(), vel: vel.slice(), t: 0 };
+      let prev = b.pos.slice();
+      while (b.t < maxT) {
+        prev = b.pos.slice(); bombStep(b, dt, wind);
+        const g = groundFn(b.pos[0], b.pos[2]);
+        if (b.pos[1] <= g) {
+          // Slide back to where the path crossed the ground, for a finer answer than one step.
+          const g0 = groundFn(prev[0], prev[2]), a = prev[1] - g0, c = b.pos[1] - g, k = a / Math.max(1e-6, a - c);
+          return { pos: lerp(prev, b.pos, clamp(k, 0, 1)), t: b.t - dt * (1 - clamp(k, 0, 1)) };
+        }
+      }
+      return { pos: b.pos, t: b.t };
+    }
+    /// What a blast does at distance d: full power at the centre, falling away with the square of the way out, nothing past R.
+    function blastDamage(d, R = BOMB.R, power = BOMB.dmg) {
+      if (d >= R) return 0;
+      const x = 1 - Math.max(0, d) / R;
+      return power * x * x;
+    }
+    /// One step of a bullet: gravity and a little drag.
+    function bulletStep(b, dt) {
+      const sp = len(b.vel), drag = GUN.k * sp;
+      b.vel = [b.vel[0] - b.vel[0] * drag * dt, b.vel[1] - G * dt - b.vel[1] * drag * dt, b.vel[2] - b.vel[2] * drag * dt];
+      b.pos = add(b.pos, mul(b.vel, dt));
+      b.t = (b.t || 0) + dt;
+      return b;
+    }
+    /// Does the segment p0→p1 pass within r of centre c? (A fast bullet jumps several metres a step, so a point test misses.)
+    function segHit(p0, p1, c, r) {
+      const d = sub(p1, p0), l2 = dot(d, d);
+      const t = l2 < 1e-9 ? 0 : clamp(dot(sub(c, p0), d) / l2, 0, 1);
+      const q = add(p0, mul(d, t));
+      return len(sub(q, c)) <= r;
+    }
+    /// Where to aim a shot of speed `speed` from `sp` to hit a target moving at `tv`: the point and the time of flight.
+    function leadPoint(sp, sv, tp, tv, speed) {
+      const r = sub(tp, sp), v = sub(tv, sv);          // the target's motion relative to the shooter (who adds its own speed)
+      const a = dot(v, v) - speed * speed, b = 2 * dot(r, v), c = dot(r, r);
+      let t;
+      if (Math.abs(a) < 1e-6) t = b === 0 ? null : -c / b;
+      else {
+        const disc = b * b - 4 * a * c;
+        if (disc < 0) return null;
+        const s = Math.sqrt(disc), t1 = (-b - s) / (2 * a), t2 = (-b + s) / (2 * a);
+        t = Math.min(...[t1, t2].filter((x) => x > 0));
+        if (!Number.isFinite(t)) t = null;
+      }
+      if (t == null || t <= 0) return null;
+      return { point: add(tp, mul(tv, t)), t };
+    }
+    /// A heat-seeking missile: it flies a proportional-navigation course (turn at N times the rate the target seems to
+    /// swing round it), burns for `burn` seconds and then coasts. Without a target it flies straight.
+    function missileStep(m, tgt, dt) {
+      const N = 4, burn = 4, maxG = 30;
+      m.t = (m.t || 0) + dt;
+      let speed = len(m.vel);
+      const dir = speed > 1 ? mul(m.vel, 1 / speed) : [0, 0, -1];
+      speed = m.t < burn ? Math.min(620, speed + 190 * dt) : Math.max(180, speed - 25 * dt);
+      let nd = dir;
+      if (tgt) {
+        const r = sub(tgt.pos, m.pos), rn = Math.max(1, len(r)), los = mul(r, 1 / rn), vr = sub(tgt.vel, m.vel);
+        const Vc = -dot(r, vr) / rn, omega = mul(cross(r, vr), 1 / (rn * rn));
+        let acc = mul(cross(omega, los), N * Math.max(0, Vc));
+        const al = len(acc), lim = maxG * G;
+        if (al > lim) acc = mul(acc, lim / al);
+        nd = norm(add(dir, mul(acc, dt / Math.max(speed, 1))));
+      }
+      m.vel = mul(nd, speed);
+      m.pos = add(m.pos, mul(m.vel, dt));
+      return m;
+    }
+    /// Turns a computer pilot's aircraft `a` ({pos, heading, pitch, speed, bank}) towards the direction `want` at up to
+    /// `turn` rad/s, and moves it. Heading 0 is towards -z and turning right is positive, like the player's.
+    function steer(a, want, dt, turn) {
+      const wh = Math.atan2(want[0], -want[2]), wp = Math.asin(clamp(want[1] / (len(want) || 1), -1, 1));
+      const dh = wrap(wh - a.heading);
+      a.heading = wrap(a.heading + clamp(dh, -turn * dt, turn * dt));
+      a.pitch = clamp(a.pitch + clamp(wp - a.pitch, -turn * 0.75 * dt, turn * 0.75 * dt), -1.2, 1.2);
+      a.bank += (clamp(dh * 1.6, -1.25, 1.25) - a.bank) * Math.min(1, dt * 3);
+      const cp = Math.cos(a.pitch);
+      a.vel = [Math.sin(a.heading) * cp * a.speed, Math.sin(a.pitch) * a.speed, -Math.cos(a.heading) * cp * a.speed];
+      a.pos = add(a.pos, mul(a.vel, dt));
+      return a;
+    }
+    /// The angle (radians) between the way an aircraft is pointing and the direction to a point.
+    function offBore(a, p) {
+      const cp = Math.cos(a.pitch), f = [Math.sin(a.heading) * cp, Math.sin(a.pitch), -Math.cos(a.heading) * cp];
+      const to = norm(sub(p, a.pos));
+      return Math.acos(clamp(dot(f, to), -1, 1));
+    }
+    return { G, BOMB, GUN, rhoAt, bombStep, impactPoint, blastDamage, bulletStep, segHit, leadPoint, missileStep, steer, offBore, wrap };
+  })();
+
   // ------------------------------------------------------------------ the game
 
   function mount(host) {
@@ -6035,5 +6153,5 @@
     };
   }
 
-  window.NotchPlaneGame = { mount, PLANES, MODES, CHALLENGES, Flight, _test: { attitudeQ, procedure, atcStep, applyEnv, ENV, ilsAt, RUNWAY_ENDS, AP_SIGN, APRONS, buildPlane, REGIONS, nearestRegion, matchRegion, raCallout, gpwsWarnings, groundAt, makeWorld, qheading, qrot, hitObject, terrainAt, surfaceAt, roughnessAt, normalAt } };
+  window.NotchPlaneGame = { mount, PLANES, MODES, CHALLENGES, Flight, _test: { WAR, attitudeQ, procedure, atcStep, applyEnv, ENV, ilsAt, RUNWAY_ENDS, AP_SIGN, APRONS, buildPlane, REGIONS, nearestRegion, matchRegion, raCallout, gpwsWarnings, groundAt, makeWorld, qheading, qrot, hitObject, terrainAt, surfaceAt, roughnessAt, normalAt } };
 })();
