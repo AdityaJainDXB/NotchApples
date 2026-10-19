@@ -3774,6 +3774,22 @@
   .pg .pg-result { text-align: center; } .pg .pg-big { font-size: 34px; font-weight: 900; margin: 4px 0; }
   .pg .pg-report { margin: 8px auto 4px; padding: 7px 12px; max-width: 360px; border-radius: 10px; background: rgba(255,255,255,.08); font-size: 12px; line-height: 1.45; color: #cfd5df; }
   .pg .pg-report b { display: block; font-size: 14px; margin-bottom: 2px; } .pg .pg-ok b { color: #5ee08a; } .pg .pg-warn b { color: #ffd166; } .pg .pg-bad b { color: #ff7a6b; }
+  .pg .pg-ctlcard { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); width: min(300px, 46%); max-height: 78%; overflow: auto; z-index: 6; padding: 10px 12px; border-radius: 14px; background: rgba(10,14,28,.86); backdrop-filter: blur(8px); border: 1px solid rgba(255,179,71,.7); color: #fff; cursor: pointer; font-size: 11.5px; box-shadow: 0 8px 28px rgba(0,0,0,.4); }
+  .pg .pg-ctitle { font-size: 13px; font-weight: 800; margin-bottom: 4px; } .pg .pg-ctitle span { float: right; font-size: 9.5px; font-weight: 500; opacity: .6; }
+  .pg .pg-cgoal { font-size: 11.5px; line-height: 1.4; margin-bottom: 7px; color: rgba(255,255,255,.88); } .pg .pg-cgoal b { color: #ffb347; }
+  .pg .pg-cgrid { display: grid; gap: 5px; } .pg .pg-crow { display: flex; gap: 8px; align-items: flex-start; }
+  .pg .pg-ckeys { flex: 0 0 auto; min-width: 74px; display: flex; flex-wrap: wrap; gap: 3px; } .pg .pg-ckeys kbd { font-size: 11.5px; padding: 3px 6px; border-radius: 5px; background: rgba(255,255,255,.2); box-shadow: 0 2px 0 rgba(255,255,255,.18); }
+  .pg .pg-ckeys i { font-style: normal; font-size: 11px; font-weight: 700; padding: 3px 6px; border-radius: 5px; background: rgba(255,179,71,.28); }
+  .pg .pg-cname b { font-size: 12px; } .pg .pg-cname small { display: block; font-size: 10.5px; line-height: 1.35; color: rgba(255,255,255,.65); }
+  .pg .pg-howto { margin-top: 8px; padding: 9px 11px; border-radius: 12px; background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.1); }
+  .pg .pg-howto .pg-cgrid { grid-template-columns: repeat(2, 1fr); gap: 4px 14px; } @media (max-width: 560px) { .pg .pg-howto .pg-cgrid { grid-template-columns: 1fr; } }
+  .pg .pg-chips { display: flex; gap: 5px; flex-wrap: wrap; margin: 4px 0 8px; }
+  .pg .pg-ctlbtn { position: absolute; left: 10px; top: 46%; z-index: 5; width: 28px; height: 28px; border-radius: 50%; border: 1px solid rgba(255,255,255,.35); background: rgba(10,14,28,.7); color: #fff; font-weight: 800; font-size: 14px; display: grid; place-items: center; cursor: pointer; padding: 0; }
+  .pg .pg-wbar { position: absolute; right: 8px; top: 34%; z-index: 5; flex-direction: column; gap: 6px; }
+  .pg .pg-wbar button { position: relative; display: grid; grid-template-columns: 26px 1fr auto; align-items: center; gap: 4px; width: 128px; padding: 6px 8px; border-radius: 10px; border: 1px solid rgba(255,255,255,.25); background: rgba(10,14,28,.72); color: #fff; font-size: 12px; cursor: pointer; text-align: left; user-select: none; touch-action: none; }
+  .pg .pg-wbar button:active { background: rgba(255,179,71,.45); } .pg .pg-wbar button b { font-weight: 700; } .pg .pg-wbar button span { font-size: 16px; }
+  .pg .pg-wbar button kbd { font-size: 10px; } .pg .pg-wbar button i { position: absolute; right: 6px; bottom: 2px; font-style: normal; font-size: 9.5px; opacity: .8; }
+  .pg .pg-wbar button.pg-lock { border-color: #ff5d5d; box-shadow: 0 0 10px #ff5d5d; }
   .pg .pg-pause { position: absolute; inset: 0; display: grid; place-items: center; background: rgba(0,0,0,.35); font-size: 13px; }
   `;
 
@@ -4397,6 +4413,7 @@
       engState.rpm = plane.engine === 'jet' ? 0 : plane.rpmIdle + (plane.rpmMax - plane.rpmIdle) * up;
       engState.n1 = plane.engine === 'jet' || plane.engine === 'turboprop' || plane.engine === 'turboshaft' ? plane.n1Idle + (100 - plane.n1Idle) * up : 0;
       screen = 'fly'; renderUI(); root.focus();
+      { const seen = read(`ctlseen.${mode.id}`, 0); write(`ctlseen.${mode.id}`, seen + 1); if (seen < 3) showCtl(true, 18); else { showCtl(false); toast('Press ? for the controls', 2200); } }
       if (shareOn) { remote = []; skyT = 0; toast('Fly with others is on: your callsign, aircraft and position are shared', 2600); }
       atc = { cs: `Notch ${100 + Math.floor(Math.random() * 899)}`, said: new Set() }; atcText = ''; atcT = 0; showCheck = true;
       if (coldStart && !plane.rotor && flight.onGround) { flight.engOff = true; flight.throttle = 0; flight.battery = false; flight.beaconSw = false; toast('Clean start: battery (Y), beacon (O), then the engine (I). The checklist on the left walks you through it', 4200); }
@@ -4449,11 +4466,12 @@
       if (down && e.repeat && keys.has(k)) { if (screen === 'fly') e.preventDefault?.(); return; }   // held keys repeat: toggles fire once
       const typing = e.target && e.target.tagName === 'INPUT' && e.target.type !== 'range';
       if (typing) { if (down && k === 'Enter' && result?.qualifies) saveScore(); return; }
-      const game = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' ', 'w', 's', 'a', 'd', 'q', 'e', 'f', 'v', 'b', 'c', 'p', 'r', 'x', 'Shift', 'Control', 'g', 'h', 'i', 't', 'y', 'o', 'j', 'k', ',', '.', '[', ']', 'Enter', 'z', 'n', 'l'];
+      const game = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' ', 'w', 's', 'a', 'd', 'q', 'e', 'f', 'v', 'b', 'c', 'p', 'r', 'x', 'Shift', 'Control', 'g', 'h', 'i', 't', 'y', 'o', 'j', 'k', ',', '.', '[', ']', 'Enter', 'z', 'n', 'l', '?', '/'];
       if (game.includes(k) && screen === 'fly') e.preventDefault?.();
       if (down) {
         if (screen === 'fly') {
-          if (k === 'p') { paused = !paused; renderUI(); }
+          if (k === 'p') { paused = !paused; renderUI(); if (!paused) { try { ac && ac.resume && ac.resume(); } catch { /* no sound */ } } }
+          if (k === '?' || k === '/') showCtl(ctlEl.style.display === 'none');
           if (mode.id === 'war') { if (k === 'n') warLaunch(); else if (k === 'l') warFlares(); }
           if (k === 'c') camMode = (camMode + 1) % 3;
           if (k === 'g') {
@@ -4524,13 +4542,15 @@
     // its key-up here, and would otherwise stay "held" (a plane that keeps rolling by itself).
     const blur = () => keys.clear(); window.addEventListener('blur', blur);
     root.addEventListener('focusout', (e) => { if (!root.contains(e.relatedTarget)) keys.clear(); });
-    const hidden = () => { if (document.hidden) keys.clear(); }; document.addEventListener('visibilitychange', hidden);
+    // Hidden (the window or notch closed): let go of the keys and pause the flight, so nothing happens while nobody is looking.
+    const hidden = () => { if (document.hidden) { keys.clear(); warPad.gun = false; warPad.bomb = false; if (screen === 'fly' && !paused) { paused = true; renderUI(); } } }; document.addEventListener('visibilitychange', hidden);
     // The mouse steers by where the cursor is inside a small ring in the middle of the view: the ring's edge is full
     // stick, so a short move is enough and the cursor never has to leave the notch. It only takes control once the
     // cursor has been in the middle (a cursor left anywhere after clicking Take off can't bank the plane), and lets
     // go when the cursor leaves the game.
     const ringRadius = () => { const r = root.getBoundingClientRect(); return Math.max(40, Math.min(r.width, r.height) * 0.2) / clamp(sens, 0.3, 2.5); };
     root.addEventListener('pointermove', (e) => {
+      if (e.target && e.target.closest && e.target.closest('.pg-wbar, .pg-ctlbtn, .pg-ctlcard')) { mouse.x = 0; mouse.y = 0; mouse.engaged = false; return; }   // over a button: let go of the stick
       const r = root.getBoundingClientRect(), R = ringRadius();
       const dx = (e.clientX - r.left - r.width / 2) / R, dy = (e.clientY - r.top - r.height / 2) / R;
       const d = Math.hypot(dx, dy), k = d > 1 ? 1 / d : 1;
@@ -5036,7 +5056,6 @@
         ground: [], foes: [], friend: null, bullets: [], bombsAir: [], missilesAir: [], flaks: [], craters: [], feed: [], lock: null, lockT: 0,
         gunT: 0, bombT: 0, flash: 0, warn: '', warnT: 0, wavePause: 2.5, waveClear: false, gunners: 0, dead: false, feedT: 0, shown: false, d };
       if (warSide === 'coop') war.friend = warSpawnAircraft('f16', 'friend');
-      toast('✈ AIR WAR  ·  Enter / click: guns   Z: bombs   N: missile   L: flares', 4200);
     }
 
     function warSpawnAircraft(id, role, dist = 3200) {
@@ -5189,7 +5208,7 @@
     }
     function warPlayerFire(dt) {
       const L = war.L, { f, u } = flight.axes();
-      const wantGun = (keys.has('Enter') || warPad.gun) && war.gun > 0;
+      const wantGun = (keys.has('Enter') || keys.has(' ') || warPad.gun) && war.gun > 0;
       if (wantGun) {
         war.gunT -= dt;
         while (war.gunT <= 0 && war.gun > 0) {
@@ -5200,7 +5219,7 @@
         }
       } else war.gunT = Math.min(0, war.gunT);
       war.bombT -= dt;
-      if (keys.has('z') && war.bombs > 0 && war.bombT <= 0) {
+      if ((keys.has('z') || keys.has('b') || warPad.bomb) && war.bombs > 0 && war.bombT <= 0) {
         war.bombs--; war.bombT = L.stick;
         const p = add(flight.pos, mul(u, -1.6 * (plane.scale || 1))), jitterV = jitter(1.2);
         war.bombsAir.push({ owner: 'p', pos: p, vel: add(flight.vel, [jitterV[0], -0.5, jitterV[2]]), t: 0 });
@@ -5571,6 +5590,86 @@
       if (war.flash > 0) { h2.fillStyle = `rgba(255,30,30,${war.flash * 0.35})`; h2.fillRect(0, 0, W2, H2); }
     }
 
+    // ================================================================== CONTROLS HELP
+    // What to press, for each game mode: a card shown when a flight starts (and again with ?), a short version under the
+    // mode buttons in the menu, a full version in the Controls tab, and clickable weapon buttons in Air War.
+    const CTL_FLY = () => plane.rotor ? [
+      [['Mouse'], 'Steer', 'Move the cursor into the ring in the middle of the view, then sideways to bank and up or down to tilt forward or back'],
+      [['←', '→', '↑', '↓'], 'Steer (keys)', 'left / right bank, up tilts forward and flies on, down slows and flies back'],
+      [['W', 'S'], 'Collective', 'W raises the lever, S lowers it. It stays where you leave it'],
+      [['A', 'D'], 'Turn', 'swings the nose round (the tail rotor)'],
+    ] : [
+      [['Mouse'], 'Steer', 'Move the cursor into the ring in the middle of the view, then sideways to roll and turn, up or down to climb or dive'],
+      [['←', '→', '↑', '↓'], 'Steer (keys)', 'left / right roll, up climbs, down dives'],
+      [['W', 'S'], 'Throttle', 'W adds power, S takes it away (Shift and Ctrl work too)'],
+      [['A', 'D'], 'Rudder', 'tidies a turn, and steers on the ground'],
+    ];
+    const CTL_GEAR = () => plane.rotor ? [] : [[['G'], 'Landing gear', 'up or down (some aircraft have fixed wheels)'], [['F', 'V'], 'Flaps', 'F lowers a notch, V raises one']];
+    const CTL_GAME = [[['C'], 'Camera', 'behind, cockpit or far'], [['P'], 'Pause'], [['R'], 'Restart'], [['?'], 'Show this help']];
+    function ctlSpec(id) {
+      const brakes = [['Space', 'B'], 'Brakes', 'on the ground. In the air they act as an airbrake'];
+      switch (id) {
+        case 'hoops': return { goal: '90 seconds. Fly through the glowing hoops: the gold one is next and the arrow ahead of you points to it. Every hoop is a point.', rows: [...CTL_FLY(), ...CTL_GAME] };
+        case 'trial': return { goal: 'Fly the 12 hoops in order as fast as you can. The gold one is next and the arrow points to it.', rows: [...CTL_FLY(), ...CTL_GAME] };
+        case 'landing': return { goal: 'You start on final approach. Slow down, lower the gear and flaps, line up with the runway and touch down softly, then stop.',
+          rows: [...CTL_FLY(), ...CTL_GEAR(), ...(plane.rotor ? [] : [[['J'], 'Approach autopilot', 'flies the ILS for you. Gear, flaps and power are still yours'], [['K'], 'Autopilot', 'holds your heading and height']]), brakes, ...CTL_GAME] };
+        case 'war': return { goal: 'Destroy ground targets and shoot down enemy fighters. Clear a wave to start the next; you are re-armed a little each time. If your health runs out you are shot down.',
+          rows: [[['Space', 'Enter', 'Click'], 'Guns', 'hold to fire. The circle is where the shells go; a red ring leads a locked fighter'],
+            [['B', 'Z'], 'Bombs', 'hold for a stick. The yellow diamond is where a bomb let go now would land'],
+            [['N'], 'Missile', 'keep a fighter in the sights until it says LOCK, then press N'],
+            [['L'], 'Flares', 'press when you hear MISSILE! to break its lock'],
+            ...CTL_FLY(), ...CTL_GAME,
+            [['Radar'], 'Colours', 'red: fighters · blue: your wingman · orange: ground targets']] };
+        default: return { goal: 'Take off and explore: hills, a canyon, a mountain strip. Watch for engine failures.',
+          rows: [...CTL_FLY(), ...CTL_GEAR(), brakes, ...(plane.rotor ? [[['H'], 'Emergency landing', 'levels the helicopter and sets it down. H again to take over']] : [[['K'], 'Autopilot', 'holds your heading and height'], [['J'], 'Approach autopilot', 'flies the ILS to a runway']]),
+            [['Y', 'O', 'I'], 'Start-up', 'battery, beacon, engine (Clean start)'], [['1', '2', '3', '4'], 'Ground crew', 'refuel, catering, baggage, pushback (stopped on an apron)'], [['T'], 'Checklist', 'show or hide it'], ...CTL_GAME] };
+      }
+    }
+    function ctlHtml(id, compact) {
+      const sp = ctlSpec(id), m = MODES.find((x) => x.id === id) || MODES[0];
+      const cap = (k) => (k === 'Mouse' || k === 'Click' || k === 'Radar' ? `<i>${k}</i>` : `<kbd>${k}</kbd>`);
+      const rows = sp.rows.map(([keys, name, how]) => `<div class="pg-crow"><span class="pg-ckeys">${keys.map(cap).join('')}</span><span class="pg-cname"><b>${name}</b>${how && !compact ? `<small>${how}</small>` : ''}</span></div>`).join('');
+      return `<div class="pg-cgoal"><b>${m.icon} ${m.name}</b> ${sp.goal}</div><div class="pg-cgrid">${rows}</div>`;
+    }
+    // The card over the flight, the "?" button, and (in Air War) the weapon buttons.
+    const ctlEl = document.createElement('div'); ctlEl.className = 'pg-ctlcard'; ctlEl.style.display = 'none';
+    const ctlBtn = document.createElement('button'); ctlBtn.className = 'pg-ctlbtn'; ctlBtn.textContent = '?'; ctlBtn.title = 'Controls for this mode (?)'; ctlBtn.style.display = 'none';
+    const wbar = document.createElement('div'); wbar.className = 'pg-wbar'; wbar.style.display = 'none';
+    wbar.innerHTML = [['gun', '🔫', 'Guns', 'Space'], ['bomb', '💣', 'Bombs', 'B'], ['msl', '🚀', 'Missile', 'N'], ['flr', '✨', 'Flares', 'L']]
+      .map(([id, ic, name, key]) => `<button data-w="${id}" title="${name} (${key})"><span>${ic}</span><b>${name}</b><kbd>${key}</kbd><i data-n="${id}"></i></button>`).join('');
+    root.append(ctlEl, ctlBtn, wbar);
+    let ctlT = 0, helpMode = null;
+    function showCtl(on, secs = 16) {
+      ctlT = on ? secs : 0;
+      if (on) ctlEl.innerHTML = `<div class="pg-ctitle">Controls <span>click or press ? to close</span></div>${ctlHtml(mode.id, false)}`;
+      ctlEl.style.display = on ? 'block' : 'none';
+    }
+    ctlEl.onclick = () => showCtl(false);
+    ctlBtn.onclick = (e) => { e.stopPropagation(); showCtl(ctlEl.style.display === 'none'); root.focus(); };
+    const wDown = (id) => { if (id === 'gun') warPad.gun = true; else if (id === 'bomb') warPad.bomb = true; else if (id === 'msl') warLaunch(); else if (id === 'flr') warFlares(); };
+    const wUp = () => { warPad.gun = false; warPad.bomb = false; };
+    wbar.querySelectorAll('button').forEach((b) => {
+      b.addEventListener('pointerdown', (e) => { e.preventDefault(); e.stopPropagation(); if (screen === 'fly' && !paused) wDown(b.dataset.w); });
+      b.addEventListener('mousedown', (e) => e.stopPropagation());
+      for (const ev of ['pointerup', 'pointerleave', 'pointercancel']) b.addEventListener(ev, wUp);
+    });
+    /// Shows or hides the buttons and the card to suit the screen (called whenever the screen changes).
+    function syncCtlUi() {
+      const fly = screen === 'fly';
+      ctlBtn.style.display = fly ? 'grid' : 'none';
+      wbar.style.display = fly && mode.id === 'war' ? 'flex' : 'none';
+      if (!fly) showCtl(false);
+    }
+    function ctlTick(dt) {
+      if (ctlT > 0 && (ctlT -= dt) <= 0) showCtl(false);
+      if (wbar.style.display !== 'none' && war) {
+        const n = { gun: war.L.gun ? war.gun : '–', bomb: war.bombs, msl: war.L.missiles ? war.missiles : '–', flr: war.flares };
+        for (const k in n) { const el = wbar.querySelector(`[data-n="${k}"]`); if (el && el.textContent !== String(n[k])) el.textContent = n[k]; }
+        const lockOn = war.lock && war.lockT >= 1 && war.missiles > 0;
+        wbar.querySelector('[data-w="msl"]').classList.toggle('pg-lock', !!lockOn);
+      }
+    }
+
     function update(dt) {
       if (toastTimer > 0) { toastTimer -= dt; if (toastTimer <= 0) toastEl.style.opacity = 0; }
       if (screen !== 'fly' || paused) return;
@@ -5583,7 +5682,7 @@
       ctl = devCtl || inp;
       if (devHold) return;
       // A helicopter on the ground with the collective down is held by its skid friction / parking brake (the wind alone would slide it).
-      flight.brake = keys.has(' ') || keys.has('b') || (plane.rotor && flight.onGround && heliColl < 0.12);
+      flight.brake = (mode.id !== 'war' && (keys.has(' ') || keys.has('b'))) || (plane.rotor && flight.onGround && heliColl < 0.12);
       const prev = flight.pos.slice();
       const wasGround = flight.onGround;
       flight.step(dt, inp, W);
@@ -5813,6 +5912,7 @@
         }
       } else { stoppedT = 0; stopCredited = false; }
       // ---- AI traffic: other aircraft crossing the sky. They can be passed, heard about, or hit.
+      ctlTick(dt);
       if (mode.id === 'war') { traffic = []; warStep(dt); }
       else if (trafficOn && !flight.crashed) stepTraffic(dt);
       else if (!trafficOn && traffic.length) traffic = [];
@@ -6479,7 +6579,7 @@
     /// Draws the menu or the pause / result screen. If one of them ever throws (a saved tab from an older version, a
     /// bad value), it falls back to the first tab instead of leaving a blank blue screen.
     function renderUI() {
-      try { renderUIInner(); }
+      try { renderUIInner(); syncCtlUi(); }
       catch (e) {
         console.error(e);
         if (menuTab !== 'play') {
@@ -6532,7 +6632,8 @@
           <div class="pg-hint" style="margin:2px 0 6px">Fly with others sends your callsign (your leaderboard name), aircraft and position to the other pilots who switched it on, every couple of seconds while you fly. It is off until you turn it on, uses a random id (no account) and other pilots cannot be hit.</div>
           ${weatherPanel()}
           <h2>5 · Pick a challenge</h2><div class="pg-modes">${MODES.map((m) => `<button class="pg-mode ${m === mode ? 'pg-on' : ''}" data-mode="${m.id}">${m.icon} ${m.name}<small>${m.desc}</small></button>`).join('')}</div>
-          ${mode.id === 'war' ? `<div class="pg-row" style="margin-top:6px"><span class="pg-hint">Battle:</span><button data-warside="coop" class="${warSide === 'coop' ? 'pg-on' : ''}">🤝 Co-op: computer wingman</button><button data-warside="versus" class="${warSide === 'versus' ? 'pg-on' : ''}">⚔️ Versus: computer aces hunt you</button></div><div class="pg-row"><span class="pg-hint">Enemy skill:</span>${['easy', 'normal', 'hard'].map((k) => `<button data-wardiff="${k}" class="${warDiff === k ? 'pg-on' : ''}">${k[0].toUpperCase() + k.slice(1)}</button>`).join('')}</div><div class="pg-hint" style="margin:2px 0 6px">Enter or click: guns · Z: bombs (hold for a stick) · N: missile at the locked fighter · L: flares. Any aircraft can fight; fighters carry missiles.</div>` : ''}
+          ${mode.id === 'war' ? `<div class="pg-row" style="margin-top:6px"><span class="pg-hint">Battle:</span><button data-warside="coop" class="${warSide === 'coop' ? 'pg-on' : ''}">🤝 Co-op: computer wingman</button><button data-warside="versus" class="${warSide === 'versus' ? 'pg-on' : ''}">⚔️ Versus: computer aces hunt you</button></div><div class="pg-row"><span class="pg-hint">Enemy skill:</span>${['easy', 'normal', 'hard'].map((k) => `<button data-wardiff="${k}" class="${warDiff === k ? 'pg-on' : ''}">${k[0].toUpperCase() + k.slice(1)}</button>`).join('')}</div>` : ''}
+          <div class="pg-howto"><div class="pg-ctitle">How to play ${mode.name}</div>${ctlHtml(mode.id, true)}<div class="pg-hint" style="margin-top:5px">During a flight, press <kbd>?</kbd> or click the round <b>?</b> button to see this again, with what each control does.</div></div>
           <div class="pg-row" style="margin-top:10px"><button class="pg-go" data-a="start">✈️ Take off (Enter)</button>
             <span class="pg-hint">Best: ${(() => { const b = read(`board.${mode.id}`, [])[0]; return b && mode.id !== 'free' ? `${fmtScore(mode, b.score)} by ${escapeHtml(b.name)}` : '—'; })()}</span></div>`;
       } else if (menuTab === 'board') {
@@ -6554,14 +6655,16 @@
         body = `<h2>Challenges · ${[...done].filter((d) => CHALLENGES.some((c) => c.id === d)).length} / ${CHALLENGES.length}</h2><div class="pg-ach">${CHALLENGES.map((c) => `<div class="${done.has(c.id) ? 'pg-done' : ''}">${done.has(c.id) ? '🏅' : '🔒'} ${c.name} <small>${c.desc}</small></div>`).join('')}</div>`;
       } else {
         const climb = invert ? 'down' : 'up';
-        body = `<h2>Mouse steering ${mouseOn ? '' : '(off)'}</h2><div class="pg-hint">Move the cursor into the ring in the middle of the view to take control. Then move it
+        const hm = MODES.some((m) => m.id === helpMode) ? helpMode : mode.id;
+        body = `<h2>Controls for each game mode</h2><div class="pg-chips">${MODES.map((m) => `<button data-ctlmode="${m.id}" class="${m.id === hm ? 'pg-on' : ''}">${m.icon} ${m.name}</button>`).join('')}</div><div class="pg-howto" style="margin-top:0">${ctlHtml(hm, false)}</div>
+          <h2>Mouse steering ${mouseOn ? '' : '(off)'}</h2><div class="pg-hint">Move the cursor into the ring in the middle of the view to take control. Then move it
           <b>left / right</b> to roll into a bank and turn, and <b>${climb}</b> to climb (the other way to dive). The edge of the ring is full stick, so small moves are enough;
           bring it back to the middle to fly straight. Let go of everything and the wings roll back to level. Leaving the game view lets go.
           Higher sensitivity makes the ring smaller.</div>
           <div class="pg-row" style="margin-top:6px"><label class="pg-hint">Sensitivity <input type="range" min="0.3" max="2.5" step="0.1" value="${sens}" data-range="sens" style="width:170px;padding:0"> <b data-sensval>${Number(sens).toFixed(1)}×</b></label>
           <button data-a="mouse">${mouseOn ? '✓ ' : ''}Mouse steering</button>
           <button data-a="invert">${invert ? '✓ ' : ''}Invert (down climbs, like a flight stick)</button></div>
-          <h2>Keys</h2><div class="pg-hint">
+          <h2>Every key</h2><div class="pg-hint">
           <kbd>W</kbd> more throttle · <kbd>S</kbd> less throttle · <kbd>↑</kbd> climb · <kbd>↓</kbd> dive · <kbd>←</kbd> <kbd>→</kbd> roll · <kbd>A</kbd> <kbd>D</kbd> rudder (and steering on the ground)<br>
           <kbd>F</kbd> flaps down a notch · <kbd>V</kbd> flaps up · <kbd>H</kbd> helicopter emergency landing (levels it and sets it down gently; <kbd>H</kbd> again to take over) · <kbd>Y</kbd> battery · <kbd>O</kbd> beacon · <kbd>I</kbd> start the engine (Clean start) · <kbd>T</kbd> checklist · <kbd>K</kbd> autopilot (<kbd>,</kbd> <kbd>.</kbd> heading, <kbd>[</kbd> <kbd>]</kbd> height) · <kbd>J</kbd> ILS approach · <kbd>G</kbd> gear up / down (everything but the Cessna, Piper and Cirrus, which have fixed wheels) · <kbd>Space</kbd> brakes / airbrake (with <kbd>A</kbd> <kbd>D</kbd> at taxi speed it brakes the wheel on that side; the airliners dump their spoilers on touchdown) · <kbd>X</kbd> reverse thrust on the ground (jets and turboprops, with the throttle up) · <kbd>C</kbd> camera (chase, cockpit, orbit) · <kbd>P</kbd> pause (and the menu) · <kbd>R</kbd> restart · <kbd>M</kbd> mouse steering on / off</div>
           <h2>Tips</h2><div class="pg-hint">Bank by moving the cursor sideways and ease it ${climb} to turn: the wings turn the plane, the rudder only tidies up. Too slow or pulling too hard
@@ -6632,13 +6735,14 @@
       };
       ui.querySelectorAll('[data-place]').forEach((n) => n.onkeydown = (e) => { e.stopPropagation(); if (e.key === 'Enter') { const v = n.value.trim(); if (v) goPlace(() => lookupPlace(v)); } });
       ui.querySelectorAll('[data-warside]').forEach((n) => n.onclick = () => { warSide = n.dataset.warside; write('warside', warSide); renderUI(); });
+      ui.querySelectorAll('[data-ctlmode]').forEach((n) => n.onclick = () => { helpMode = n.dataset.ctlmode; renderUI(); });
       ui.querySelectorAll('[data-wardiff]').forEach((n) => n.onclick = () => { warDiff = n.dataset.wardiff; write('wardiff', warDiff); renderUI(); });
       ui.querySelectorAll('[data-mode]').forEach((n) => n.onclick = () => { mode = MODES.find((m) => m.id === n.dataset.mode); write('mode', mode.id); renderUI(); });
       ui.querySelectorAll('[data-tab]').forEach((n) => n.onclick = () => { menuTab = n.dataset.tab; write('menuTab', menuTab); renderUI(); });
       ui.querySelectorAll('[data-a]').forEach((n) => n.onclick = () => {
         const a = n.dataset.a;
         if (a === 'start' || a === 'again' || a === 'restart') start();
-        else if (a === 'resume') { paused = false; renderUI(); root.focus(); }
+        else if (a === 'resume') { paused = false; renderUI(); root.focus(); try { ac && ac.resume && ac.resume(); } catch { /* no sound */ } }
         else if (a === 'menu') { screen = 'menu'; paused = false; if (engGain) engGain.gain.value = 0; renderUI(); }
         else if (a === 'save') saveScore();
         else if (a === 'mine') goPlace(myPlace);
@@ -6780,7 +6884,7 @@
     // ---- main loop
     let raf = 0, last = performance.now(), alive = true;
     function frame(t) {
-      if (!alive) return;
+      if (!alive || suspended) return;
       const real = Math.min(0.05, (t - last) / 1000); last = t;
       // The beat of slow motion at a big impact: 0.4x for a second or so, then back to full speed.
       if (slowT > 0) slowT -= real;
@@ -6801,6 +6905,25 @@
     raf = requestAnimationFrame(frame);
     root.focus();
     // For tests: the live flight state.
+    // Setting the game aside (the notch closes, another tab opens) and bringing it back: the flight is kept exactly as it was.
+    // It is paused so nothing happens while you are away, the drawing stops and the sound is muted.
+    let suspended = false;
+    function suspendGame() {
+      if (suspended || !alive) return;
+      suspended = true;
+      keys.clear(); warPad.gun = false; warPad.bomb = false; cancelSpeech();
+      if (screen === 'fly' && !paused) { paused = true; renderUI(); }
+      try { ac && ac.suspend && ac.suspend(); } catch { /* no sound to mute */ }
+      cancelAnimationFrame(raf);
+    }
+    function resumeGame() {
+      if (!suspended || !alive) return;
+      suspended = false; last = performance.now();
+      raf = requestAnimationFrame(frame);
+      if (!(screen === 'fly' && paused)) { try { ac && ac.resume && ac.resume(); } catch { /* no sound */ } }   // sound returns when you unpause
+      root.focus();
+    }
+    window.NotchPlaneGame.suspend = suspendGame; window.NotchPlaneGame.resume = resumeGame;
     window.NotchPlaneGame.key = (key, down) => onKey({ key, repeat: false, target: null }, down);
     window.NotchPlaneGame._state = () => ({ screen, keys: [...keys], bank: flight.bank, pitch: flight.pitchAngle, pos: flight.pos, w: flight.w, onGround: flight.onGround,
       speed: flight.speed, ias: flight.ias, gload: flight.gload, spin: flight.spin, wreckRest: flight.rest, report: flight.report, damage: flight.damage, crashed: flight.crashed, why: flight.why, debris: debris.length, particles: smoke.length });

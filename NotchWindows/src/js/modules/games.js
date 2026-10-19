@@ -87,13 +87,24 @@ function reaction(host) {
   return () => clearTimeout(timer);
 }
 
-/// Plane: the 3D flight game. The same script runs in the Mac app's web view.
+/// Plane: the 3D flight game. The same script runs in the Mac app's web view. The game is kept between visits, so
+/// closing the notch or switching tabs does not lose the flight: it is paused while you are away, and put back as it was.
+let planeGame = null, planeIdle = 0;
 function plane(host) {
-  const box = el('div', { style: 'position:absolute;inset:0' });
+  clearTimeout(planeIdle);
   host.style.position = 'relative';
-  host.replaceChildren(box);
-  let stop = () => {}, gone = false;
-  import('../services/weather.js').then((w) => w.location()).then((l) => { window.NotchDeviceLocation = { lat: l.lat, lon: l.lon, name: l.name }; }).catch(() => {});
-  import('../games/plane-sim.js').then(() => { if (!gone) stop = window.NotchPlaneGame.mount(box); });
-  return () => { gone = true; stop(); host.style.position = ''; };
+  if (!planeGame) {
+    const box = el('div', { style: 'position:absolute;inset:0' });
+    planeGame = { box, stop: () => {}, gone: false };
+    const g = planeGame;
+    import('../services/weather.js').then((w) => w.location()).then((l) => { window.NotchDeviceLocation = { lat: l.lat, lon: l.lon, name: l.name }; }).catch(() => {});
+    import('../games/plane-sim.js').then(() => { if (!g.gone) g.stop = window.NotchPlaneGame.mount(box); });
+  } else if (window.NotchPlaneGame && window.NotchPlaneGame.resume) window.NotchPlaneGame.resume();
+  host.replaceChildren(planeGame.box);
+  return () => {
+    host.style.position = '';
+    if (window.NotchPlaneGame && window.NotchPlaneGame.suspend) window.NotchPlaneGame.suspend();
+    // Not coming back for an hour: let go of it (the flight is lost, the memory is returned).
+    planeIdle = setTimeout(() => { if (planeGame) { planeGame.gone = true; planeGame.stop(); planeGame = null; } }, 60 * 60 * 1000);
+  };
 }

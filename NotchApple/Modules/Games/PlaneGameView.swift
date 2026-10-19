@@ -4,7 +4,9 @@
 //
 //  Plane: a 3D flight game (pick a plane, fly through hoops, time trials, landings, challenges and a leaderboard).
 //  The game is a WebGL page shared with the Windows app (plane-sim.js), shown here in a web view. Scores and
-//  settings stay in the web view's local storage on this Mac. Nothing runs once the tab is closed.
+//  settings stay in the web view's local storage on this Mac. The game is kept between visits: closing the notch or
+//  switching tab pauses the flight and mutes it, and coming back puts it back as it was (it is let go of after an
+//  hour away).
 //
 
 import SwiftUI
@@ -37,6 +39,29 @@ final class PlaneWKWebView: WKWebView {
 @MainActor
 enum PlaneGameControl {
     fileprivate(set) static weak var web: WKWebView?
+    /// The game's web view, kept alive between visits so the flight is not lost when the notch closes.
+    fileprivate static var kept: PlaneWKWebView?
+    /// Which on-screen copy of the game view owns the web view now (a newer copy may be made before an older one is torn down).
+    fileprivate static var owner: ObjectIdentifier?
+    private static var releaseTask: Task<Void, Never>?
+
+    /// The game was put away: pause and mute it, and let go of it if it is not wanted again for an hour.
+    fileprivate static func setAside(_ view: PlaneWKWebView) {
+        view.evaluateJavaScript("window.NotchPlaneGame && window.NotchPlaneGame.suspend && window.NotchPlaneGame.suspend()")
+        releaseTask?.cancel()
+        releaseTask = Task { @MainActor in
+            try? await Task.sleep(for: .seconds(3600))
+            guard !Task.isCancelled, web == nil else { return }
+            kept?.loadHTMLString("", baseURL: nil)     // stops the game loop and the engine sound
+            kept = nil
+        }
+    }
+
+    /// The game is wanted again.
+    fileprivate static func bringBack(_ view: PlaneWKWebView) {
+        releaseTask?.cancel(); releaseTask = nil
+        view.evaluateJavaScript("window.NotchPlaneGame && window.NotchPlaneGame.resume && window.NotchPlaneGame.resume()")
+    }
 
     static var isRunning: Bool { web != nil }
 
@@ -82,6 +107,20 @@ private struct PlaneWebView: NSViewRepresentable {
     func makeCoordinator() -> Coordinator { Coordinator() }
 
     func makeNSView(context: Context) -> PlaneWKWebView {
+        // Coming back to a game that is being kept: the same web view, with the flight as it was.
+        if let kept = PlaneGameControl.kept {
+            let coordinator = context.coordinator
+            coordinator.web = kept
+            PlaneGameControl.web = kept
+            PlaneGameControl.owner = ObjectIdentifier(coordinator)
+            coordinator.monitor = NSEvent.addLocalMonitorForEvents(matching: [.keyDown, .keyUp]) { [weak coordinator] event in
+                let consumed = MainActor.assumeIsolated { coordinator?.forward(event) ?? false }
+                return consumed ? nil : event
+            }
+            PlaneGameControl.bringBack(kept)
+            DispatchQueue.main.async { kept.window?.makeFirstResponder(kept) }
+            return kept
+        }
         let config = WKWebViewConfiguration()
         config.mediaTypesRequiringUserActionForPlayback = []
         // Where the user is (their Weather location), so the Plane game can pick the nearest scenery.
@@ -99,6 +138,8 @@ private struct PlaneWebView: NSViewRepresentable {
         let coordinator = context.coordinator
         coordinator.web = view
         PlaneGameControl.web = view
+        PlaneGameControl.kept = view
+        PlaneGameControl.owner = ObjectIdentifier(coordinator)
         coordinator.monitor = NSEvent.addLocalMonitorForEvents(matching: [.keyDown, .keyUp]) { [weak coordinator] event in
             let consumed = MainActor.assumeIsolated { coordinator?.forward(event) ?? false }
             return consumed ? nil : event
@@ -111,8 +152,10 @@ private struct PlaneWebView: NSViewRepresentable {
     static func dismantleNSView(_ nsView: PlaneWKWebView, coordinator: Coordinator) {
         if let m = coordinator.monitor { NSEvent.removeMonitor(m) }
         coordinator.monitor = nil
+        guard PlaneGameControl.owner == ObjectIdentifier(coordinator) else { return }     // a newer copy has taken over
+        PlaneGameControl.owner = nil
         if PlaneGameControl.web === nsView { PlaneGameControl.web = nil }
-        // Stop the game loop and the engine sound straight away.
-        nsView.loadHTMLString("", baseURL: nil)
+        // Not destroyed: the flight is paused, muted and kept for when the notch opens again.
+        PlaneGameControl.setAside(nsView)
     }
 }
