@@ -20,6 +20,11 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.0.70", date: "19 October 2026", headline: "Plane controls made clear, and the game is kept", items: [
+            "Every Plane mode now tells you what to press: a card at the start of each flight (press ? to see it again), a How to play box in the menu and a full list in the Controls tab.",
+            "Air War: Space or a click fires, B bombs, N a missile, L flares, with clickable weapon buttons.",
+            "The Plane game no longer resets when you close the notch or switch tab: it pauses and picks up where you left off.",
+        ]),
         ReleaseNote(version: "2.0.69", date: "19 October 2026", headline: "Air War: bombers, bombs and dogfights", items: [
             "A new Plane mode: bomb tanks, bunkers and AA guns and shoot down enemy fighters in waves, with a computer wingman or against computer aces.",
             "Bombs fall realistically with a bombsight; Enter or click fires the cannon, Z bombs, N a missile, L flares.",

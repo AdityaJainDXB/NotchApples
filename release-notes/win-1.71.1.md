@@ -1,0 +1,2 @@
+- 🎮 Plane now tells you the controls for each mode: a card at the start of every flight (press ? to see it again), a "How to play" box in the menu and a full list per mode in the Controls tab. Air War has clickable weapon buttons, and Space or a click fires the guns.
+- 💾 The Plane game is kept when you close the notch or switch tab, paused and put back exactly as it was.

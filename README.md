@@ -71,10 +71,10 @@ Pick your computer. Both buttons start the download straight away. The Mac butto
   </tr>
   <tr>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.0.69</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.0.70</b></a>
     </td>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 1.71.0 BETA</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 1.71.1 BETA</b></a>
     </td>
   </tr>
   <tr>
@@ -232,6 +232,12 @@ All screenshots use sample data.
 ## What's new
 
 > **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is still in the repository's tags.
+
+### Mac 2.0.70 · Windows 1.71.1 BETA · 19 October 2026 · 🎮 Clear Plane controls, and the game is kept
+
+- **Controls for every Plane mode:** a card at the start of each flight says what to press and what it does (press **?** or click the round **?** button to see it again), the menu has a "How to play" box, and the Controls tab has the full list for each mode.
+- **Air War is easier:** Space or a click fires the guns, B bombs, N a missile, L flares, plus clickable weapon buttons with ammo counts.
+- **The Plane game is kept when you close the notch or switch tab.** It is paused while you are away and put back exactly as it was; it is let go of after an hour.
 
 ### Mac 2.0.69 · Windows 1.71.0 BETA · 19 October 2026 · 💣 Air War
 
