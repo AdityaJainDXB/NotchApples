@@ -4032,6 +4032,76 @@
     return { pitch: pitch * AP_SIGN.pitch, roll: roll * AP_SIGN.roll, yaw: 0, throttle };
   }
 
+  // ------------------------------------------------------------------ playing with others: the room, the lobby and the votes
+
+  /// Everything about a shared Battle that does not need a screen. Players meet in a room named by a short code, through the
+  /// same live relay the Clipboard Link uses (it only passes frames between the people connected; nothing is stored). One
+  /// player is the host: the computer enemies and the waves run on the host and everyone else is shown them, while each
+  /// player drives their own vehicle and judges the hits on it.
+  const BATTLE_RELAY = 'wss://notchapple-rooms.adityajain1225.workers.dev';
+  const NET = (() => {
+    const CODE_CHARS = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';       // no 0/O, 1/I/L: easy to read out loud
+    /// A new room code such as "K7PD2M".
+    const newCode = (rand = Math.random) => Array.from({ length: 6 }, () => CODE_CHARS[Math.floor(rand() * CODE_CHARS.length)]).join('');
+    /// What someone typed, tidied up: capitals, no spaces or dashes. Null if it cannot be a code.
+    const normCode = (raw) => { const c = String(raw || '').toUpperCase().replace(/[^A-Z0-9]/g, ''); return c.length === 6 && [...c].every((ch) => CODE_CHARS.includes(ch)) ? c : null; };
+    /// The relay's name for a room: a hash of the code (the relay never sees the code itself).
+    async function topicFor(code) {
+      const data = new TextEncoder().encode(`notchapple-battle-v1|${code}`);
+      const h = new Uint8Array(await crypto.subtle.digest('SHA-256', data));
+      return `notchapple-v1-${[...h.slice(0, 20)].map((b) => b.toString(16).padStart(2, '0')).join('')}`;
+    }
+    const r1 = (v) => Math.round(v * 10) / 10, r3 = (v) => Math.round(v * 1000) / 1000;
+    /// A vehicle's state, as sent ten times a second.
+    const packState = (id, s) => ({ t: 's', id, k: s.kind, p: s.pos.map(r1), q: s.q.map(r3), v: s.vel.map(r1), hp: Math.round(s.hp), tu: r3(s.turret || 0), gn: r3(s.gun || 0), fg: s.firing ? 1 : 0, al: s.alive === false ? 0 : 1 });
+    const unpackState = (m) => ({ id: m.id, kind: m.k, pos: m.p, q: m.q, vel: m.v, hp: m.hp, turret: m.tu, gun: m.gn, firing: !!m.fg, alive: m.al !== 0 });
+    /// Where a remote vehicle is drawn now: its last reported place carried on by its speed, eased from where it was drawn
+    /// before, so it glides instead of jumping (and a late message does not snap it back).
+    function glide(shown, report, ageSec, dt) {
+      const ahead = Math.min(ageSec, 0.4);
+      const goal = [report.pos[0] + report.vel[0] * ahead, report.pos[1] + report.vel[1] * ahead, report.pos[2] + report.vel[2] * ahead];
+      if (!shown) return goal;
+      const k = 1 - Math.exp(-dt * 9);
+      return [shown[0] + (goal[0] - shown[0]) * k, shown[1] + (goal[1] - shown[1]) * k, shown[2] + (goal[2] - shown[2]) * k];
+    }
+    /// Voting: each player has at most one vote per question. A change passes when more than half of the players voted for it.
+    function tally(playerIds, votes, key, current, options) {
+      const counts = {};
+      for (const id of playerIds) { const v = votes[id] && votes[id][key]; if (v != null && v !== current && options.includes(v)) counts[v] = (counts[v] || 0) + 1; }
+      const need = Math.floor(playerIds.length / 2) + 1;
+      for (const v of Object.keys(counts)) if (counts[v] >= need) return { passed: v, counts, need };
+      return { passed: null, counts, need };
+    }
+    /// The first free place on each side to start from (so players do not start on top of each other).
+    const slotOffset = (slot) => { const col = slot % 4, row = Math.floor(slot / 4); return [(col - 1.5) * 90, row * 90]; };
+
+    /// A link to a room. `Socket` is the WebSocket class (replaced by a pretend one in tests).
+    class Link {
+      constructor(Socket, onMessage, onState) { this.Socket = Socket; this.onMessage = onMessage; this.onState = onState; this.ws = null; this.state = 'off'; this.topic = null; this.retry = 0; this.wantOpen = false; this.sent = 0; }
+      async join(code) {
+        this.close(); this.topic = await topicFor(code); this.wantOpen = true; this._open();
+      }
+      _open() {
+        if (!this.wantOpen) return;
+        this._set('connecting');
+        let ws;
+        try { ws = new this.Socket(`${BATTLE_RELAY}/${this.topic}/ws`); } catch { this._set('failed'); return; }
+        this.ws = ws;
+        ws.onmessage = (e) => {
+          let m; try { m = JSON.parse(typeof e.data === 'string' ? e.data : ''); } catch { return; }
+          if (m && m.event === 'open') { this.retry = 0; this._set('on'); return; }
+          if (m && m.t) this.onMessage(m);
+        };
+        ws.onclose = () => { if (this.ws !== ws) return; this.ws = null; if (!this.wantOpen) return; this._set('connecting'); this.timer = setTimeout(() => this._open(), Math.min(8000, 1000 * 2 ** this.retry++)); };
+        ws.onerror = () => { /* onclose follows */ };
+      }
+      send(obj) { if (this.ws && this.state === 'on') { try { this.ws.send(JSON.stringify(obj)); this.sent++; return true; } catch { return false; } } return false; }
+      close() { this.wantOpen = false; clearTimeout(this.timer); if (this.ws) { const ws = this.ws; this.ws = null; try { ws.close(); } catch { /* already closed */ } } this._set('off'); }
+      _set(s) { if (this.state !== s) { this.state = s; this.onState && this.onState(s); } }
+    }
+    return { newCode, normCode, topicFor, packState, unpackState, glide, tally, slotOffset, Link, CODE_CHARS };
+  })();
+
   // ------------------------------------------------------------------ the game
 
   function mount(host) {
@@ -7245,5 +7315,5 @@
     };
   }
 
-  window.NotchPlaneGame = { mount, PLANES, MODES, CHALLENGES, Flight, _test: { WAR, TANK, TankBody, tankAimAt, planeAssist, ARENAS, arenaHeight, setArena: (a) => { ARENA = a; }, wrapPi, attitudeQ, procedure, atcStep, applyEnv, ENV, ilsAt, RUNWAY_ENDS, AP_SIGN, APRONS, buildPlane, REGIONS, nearestRegion, matchRegion, raCallout, gpwsWarnings, groundAt, makeWorld, qheading, qrot, hitObject, terrainAt, surfaceAt, roughnessAt, normalAt } };
+  window.NotchPlaneGame = { mount, PLANES, MODES, CHALLENGES, Flight, _test: { NET, WAR, TANK, TankBody, tankAimAt, planeAssist, ARENAS, arenaHeight, setArena: (a) => { ARENA = a; }, wrapPi, attitudeQ, procedure, atcStep, applyEnv, ENV, ilsAt, RUNWAY_ENDS, AP_SIGN, APRONS, buildPlane, REGIONS, nearestRegion, matchRegion, raCallout, gpwsWarnings, groundAt, makeWorld, qheading, qrot, hitObject, terrainAt, surfaceAt, roughnessAt, normalAt } };
 })();
