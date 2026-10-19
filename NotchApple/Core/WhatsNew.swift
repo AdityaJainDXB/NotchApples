@@ -20,6 +20,11 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.0.69", date: "19 October 2026", headline: "Air War: bombers, bombs and dogfights", items: [
+            "A new Plane mode: bomb tanks, bunkers and AA guns and shoot down enemy fighters in waves, with a computer wingman or against computer aces.",
+            "Bombs fall realistically with a bombsight; Enter or click fires the cannon, Z bombs, N a missile, L flares.",
+            "New aircraft: the B-52 heavy bomber with tail gunners, and the A-10 gunship.",
+        ]),
         ReleaseNote(version: "2.0.68", date: "19 October 2026", headline: "Claude usage animates the closed notch", items: [
             "Every percent your 5-hour or weekly use goes up, the closed notch pulses and shows how much is left of both.",
             "Claude usage refreshes every minute in the background and when the Mac wakes, so it no longer goes stale.",

@@ -71,10 +71,10 @@ Pick your computer. Both buttons start the download straight away. The Mac butto
   </tr>
   <tr>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.0.68</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.0.69</b></a>
     </td>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 1.70.1 BETA</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 1.71.0 BETA</b></a>
     </td>
   </tr>
   <tr>
@@ -232,6 +232,13 @@ All screenshots use sample data.
 ## What's new
 
 > **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is still in the repository's tags.
+
+### Mac 2.0.69 · Windows 1.71.0 BETA · 19 October 2026 · 💣 Air War
+
+- **Air War**, a new mode in Plane: bomb tanks, trucks, bunkers, fuel depots and AA guns and shoot down enemy fighters, in waves, with a computer wingman (Co-op) or computer aces hunting you (Versus), on Easy / Normal / Hard.
+- Real weapons: bombs with gravity, drag and wind and a bombsight that shows where one would land; a cannon (Enter or click); bombs (Z, hold for a stick); heat-seeking missiles (N); flares (L); a radar.
+- New aircraft: the **B-52** heavy bomber (40 bombs, tail gunners) and the **A-10** gunship. Any aircraft can fight. Four new challenges.
+- Not in this version: driving a tank or other ground vehicle, and fighting other people (the "Fly with others" sky is still look-only).
 
 ### Windows 1.70.1 BETA · 16 October 2026 · 🃏 Blackjack: no more empty bank
 

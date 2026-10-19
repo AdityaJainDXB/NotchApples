@@ -1,0 +1,2 @@
+- 💣 **Air War**, a new game mode in Plane: bomb ground targets and shoot down enemy fighters in waves, with a computer wingman or against computer aces. Real falling bombs with a bombsight, cannon, heat-seeking missiles, flares and a radar.
+- ✈️ New aircraft: the B-52 heavy bomber (with tail gunners) and the A-10 gunship.
