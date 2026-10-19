@@ -137,4 +137,27 @@ final class ClaudeLimitsTests: XCTestCase {
         XCTAssertEqual(ClaudeAccountLogic.active(list, picked: "gone")?.label, "Account 1")
         XCTAssertEqual(ClaudeAccountLogic.accounts(services: ["Claude Code-credentials"], emails: [:]).first?.label, "Claude account")
     }
+
+    func testEveryWholePercentIsAnIncrease() {
+        func limits(_ five: Double, _ seven: Double) -> ClaudeLimits {
+            ClaudeLimits(fiveHour: ClaudeLimit(fraction: five, resetsAt: nil), sevenDay: ClaudeLimit(fraction: seven, resetsAt: nil))
+        }
+        XCTAssertEqual(ClaudeLimitsLogic.increased(old: nil, new: limits(0.16, 0.08)).fiveHour, false)       // first reading
+        let a = ClaudeLimitsLogic.increased(old: limits(0.16, 0.08), new: limits(0.17, 0.08))
+        XCTAssertTrue(a.fiveHour); XCTAssertFalse(a.sevenDay)
+        let b = ClaudeLimitsLogic.increased(old: limits(0.16, 0.08), new: limits(0.16, 0.09))
+        XCTAssertFalse(b.fiveHour); XCTAssertTrue(b.sevenDay)
+        let c = ClaudeLimitsLogic.increased(old: limits(0.90, 0.40), new: limits(0.02, 0.40))               // the 5h window reset
+        XCTAssertFalse(c.fiveHour); XCTAssertFalse(c.sevenDay)
+        let d = ClaudeLimitsLogic.increased(old: limits(0.160, 0.08), new: limits(0.164, 0.08))              // same whole percent
+        XCTAssertFalse(d.fiveHour)
+    }
+
+    func testWhatIsLeft() {
+        XCTAssertEqual(ClaudeLimitsLogic.left(ClaudeLimit(fraction: 0.16, resetsAt: nil)), 84)
+        XCTAssertEqual(ClaudeLimitsLogic.left(ClaudeLimit(fraction: 1.2, resetsAt: nil)), 0)
+        XCTAssertNil(ClaudeLimitsLogic.left(nil))
+        XCTAssertEqual(ClaudeLimitsLogic.leftText("5h", ClaudeLimit(fraction: 0.16, resetsAt: nil)), "5h 84% left")
+        XCTAssertEqual(ClaudeLimitsLogic.leftText("wk", nil), "wk –")
+    }
 }

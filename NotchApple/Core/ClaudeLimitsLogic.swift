@@ -27,6 +27,27 @@ struct ClaudeLimits: Equatable {
 }
 
 enum ClaudeLimitsLogic {
+    // MARK: Every point of use (the closed-notch animation)
+
+    /// Which windows went up by at least one whole percent since the last reading. The first reading (nothing to
+    /// compare with) and a window that reset (the percent fell) are not increases.
+    static func increased(old: ClaudeLimits?, new: ClaudeLimits) -> (fiveHour: Bool, sevenDay: Bool) {
+        guard let old else { return (false, false) }
+        func up(_ a: ClaudeLimit?, _ b: ClaudeLimit?) -> Bool { guard let a, let b else { return false }; return b.percent > a.percent }
+        return (up(old.fiveHour, new.fiveHour), up(old.sevenDay, new.sevenDay))
+    }
+
+    /// The share left of a window, 0…100 (100 when it is not known to be used at all).
+    static func left(_ limit: ClaudeLimit?) -> Int? {
+        guard let limit else { return nil }
+        return max(0, min(100, 100 - limit.percent))
+    }
+
+    /// "5h 84% left" / "wk 92% left": what each side of the closed notch says. A window Claude didn't report shows "–".
+    static func leftText(_ title: String, _ limit: ClaudeLimit?) -> String {
+        left(limit).map { "\(title) \($0)% left" } ?? "\(title) –"
+    }
+
     static let fiveHourLength: TimeInterval = 5 * 3600
     static let sevenDayLength: TimeInterval = 7 * 86_400
 
