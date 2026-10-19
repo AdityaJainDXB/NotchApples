@@ -1,0 +1,2 @@
+- ⚔️ **Battle**: the Plane game's new, simpler fighting mode. Pick a fighter, gunship, bomber or **tank**, pick one of three flat battlefields, and choose Automatic, Easy or Pro controls. Co-op with a computer wingman or Fight, and enemies on or off.
+- 🪖 Drive a tank with a turret and a big gun. Automatic mode flies the plane for you.

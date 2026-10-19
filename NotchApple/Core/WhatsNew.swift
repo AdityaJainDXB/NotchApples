@@ -20,6 +20,10 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.0.71", date: "19 October 2026", headline: "Battle: a tank, flat battlefields and Automatic flying", items: [
+            "Air War is now Battle: pick a vehicle (fighter, gunship, bomber or a tank you drive), one of three flat battlefields, and Automatic, Easy or Pro controls.",
+            "Co-op or Fight, and enemies on or off for target practice. The battle screen is simpler.",
+        ]),
         ReleaseNote(version: "2.0.70", date: "19 October 2026", headline: "Plane controls made clear, and the game is kept", items: [
             "Every Plane mode now tells you what to press: a card at the start of each flight (press ? to see it again), a How to play box in the menu and a full list in the Controls tab.",
             "Air War: Space or a click fires, B bombs, N a missile, L flares, with clickable weapon buttons.",

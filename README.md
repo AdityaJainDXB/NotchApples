@@ -71,10 +71,10 @@ Pick your computer. Both buttons start the download straight away. The Mac butto
   </tr>
   <tr>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.0.70</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.0.71</b></a>
     </td>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 1.71.1 BETA</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 1.72.0 BETA</b></a>
     </td>
   </tr>
   <tr>
@@ -232,6 +232,13 @@ All screenshots use sample data.
 ## What's new
 
 > **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is still in the repository's tags.
+
+### Mac 2.0.71 · Windows 1.72.0 BETA · 19 October 2026 · ⚔️ Battle: a tank, flat battlefields and Automatic flying
+
+- **Air War is now Battle, and much simpler:** pick a vehicle (fighter, gunship, bomber or **tank**), one of three flat battlefields (**Green Plains**, **Desert Dunes**, **Island Fortress**), and how you want to play.
+- **Drive a tank:** W/S drive, A/D turn, the mouse or arrows aim the turret and gun, Space or a click fires an exploding shell, B the machine gun. Enemy tanks drive at you.
+- **Automatic, Easy or Pro:** Automatic flies the plane for you and drops bombs only when they would hit; Easy helps your aim; Pro is full control. Co-op or Fight, and enemies on or off for target practice.
+- Not yet: playing with other people (coming next).
 
 ### Mac 2.0.70 · Windows 1.71.1 BETA · 19 October 2026 · 🎮 Clear Plane controls, and the game is kept
 
