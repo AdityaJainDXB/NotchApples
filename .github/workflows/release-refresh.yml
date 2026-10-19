@@ -1,10 +1,11 @@
 name: Refresh website after a release
 
-# Pages deploys from main. After either release is published, check that both versioned installers exist, then ask main
-# to deploy. The first platform's event waits here without deploying; the second platform's event deploys the complete pair.
+# Pages deploys from main. After either release build finishes, check that both versioned installers exist, then ask main
+# to deploy. The first platform's completion waits here without deploying; the second deploys the complete pair.
 on:
-  release:
-    types: [published]
+  workflow_run:
+    workflows: ['Mac build', 'Windows build']
+    types: [completed]
 
 permissions:
   actions: write
@@ -12,6 +13,9 @@ permissions:
 
 jobs:
   deploy:
+    if: >-
+      github.event.workflow_run.conclusion == 'success' &&
+      (startsWith(github.event.workflow_run.head_branch, 'mac-v') || startsWith(github.event.workflow_run.head_branch, 'win-v'))
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
