@@ -1,17 +1,11 @@
 name: Deploy website
 
-# The website lives in web/. A push to main that touches it (or a manual run, or the weekly update) checks the
-# links and publishes the folder to GitHub Pages. See web/README.md.
+# The website lives in web/. A normal push to main that touches it (or a manual run, or the weekly update) checks the
+# links and publishes the folder to GitHub Pages. A release-prep push waits until both platform installers are published.
 on:
   push:
     branches: [main]
-    paths: ['web/**', '.github/workflows/pages.yml']
-  # (A new or edited release also refreshes web/latest.json: release-refresh.yml asks main to run this workflow, because
-  # GitHub Pages only accepts deployments that run from main, and a `release` event runs from the release's tag.)
-  # The Windows build publishes its release with the workflow's own token, which does not raise `release` events.
-  workflow_run:
-    workflows: ['Windows build']
-    types: [completed]
+    paths: ['web/**']
   workflow_dispatch:
   workflow_call:
 
@@ -26,8 +20,8 @@ concurrency:
 
 jobs:
   deploy:
-    # (a failed or cancelled Windows build does not redeploy the site)
-    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
+    # Release-prep commits change web/ but wait for release-refresh.yml to confirm both installers are published.
+    if: "${{ github.event_name != 'push' || !startsWith(github.event.head_commit.message, 'release: prepare') }}"
     runs-on: ubuntu-latest
     environment:
       name: github-pages
