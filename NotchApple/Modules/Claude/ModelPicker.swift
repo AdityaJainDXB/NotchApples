@@ -17,7 +17,7 @@ struct ModelPicker: View {
     @FocusState private var searchFocused: Bool
 
     private var models: [String] {
-        let all = config.availableModels[config.provider] ?? []
+        let all = ModelPickerLogic.unique(config.availableModels[config.provider] ?? [])
         let q = query.trimmingCharacters(in: .whitespaces).lowercased()
         return q.isEmpty ? all : all.filter { $0.lowercased().contains(q) }
     }
@@ -51,6 +51,7 @@ struct ModelPicker: View {
                         ForEach(models, id: \.self) { m in row(m) }
                     }
                 }
+                .scrollIndicators(.visible)
                 Button("Refresh model list") { config.refreshModels() }.buttonStyle(.plain).font(.caption).foregroundStyle(Theme.accentBright)
             }
             .frame(width: 250, height: 280).padding(10)

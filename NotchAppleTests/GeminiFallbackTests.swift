@@ -8,6 +8,10 @@
 import XCTest
 
 final class GeminiFallbackTests: XCTestCase {
+    func testModelPickerRemovesDuplicateAndEmptyRowsWithoutReordering() {
+        XCTAssertEqual(ModelPickerLogic.unique(["gemini-flash", "gemini-pro", "gemini-flash", ""]), ["gemini-flash", "gemini-pro"])
+    }
+
     func testTheChosenModelIsFirstThenTheLiveList() {
         let c = GeminiFallbackLogic.candidates(chosen: "gemini-x", live: ["gemini-a", "gemini-b"])
         XCTAssertEqual(Array(c.prefix(3)), ["gemini-x", "gemini-a", "gemini-b"])

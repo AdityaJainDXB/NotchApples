@@ -8,6 +8,14 @@
 
 import Foundation
 
+enum ModelPickerLogic {
+    /// Live provider APIs may repeat aliases. Keep the first occurrence so SwiftUI's row identity stays unique.
+    static func unique(_ models: [String]) -> [String] {
+        var seen = Set<String>()
+        return models.filter { !$0.isEmpty && seen.insert($0).inserted }
+    }
+}
+
 enum GeminiFallbackLogic {
     /// Used after the live model list, and when it can't be loaded.
     static let known = ["gemini-3.8-flash", "gemini-3-flash", "gemini-2.5-flash", "gemini-2.5-flash-lite", "gemini-2.0-flash"]

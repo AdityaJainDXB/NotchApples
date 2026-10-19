@@ -55,14 +55,15 @@ Notch Apple lives in the black cutout at the top of your MacBook screen (a small
 | ⌨️ **Klick** *(Pro)* | Mechanical keyboard sounds as you type, in any app: Mechanical, Cream, Holy Panda, Blue, Red, Brown, Topre, Typewriter or Bubble, plus four premium sounds downloaded with your key (Cherry MX Black, Gateron Ink, Alps, Buckling spring), each with its own volume, and an on / off switch |
 | 🖼 **Live wallpaper** *(Pro, new)* | Play a video as your desktop wallpaper: your own (up to 60 s, up to 4K) or a free NASA clip. Pauses on battery and when windows cover it; the lock screen shows a still |
 | 📡 **Flight Radar** *(new)* | Every aircraft around you, live, on a round radar with callsign, type, height and speed (the free adsb.lol feed; your location is rounded to about 1 km and only sent while the tab is open) |
-| ✈️ **Plane game** | A 3D flight sim in Games: Cessna to A380, fighters and helicopters, with real dials, engine sounds, flaps in notches, retractable gear, damage and spoken GPWS callouts. An **autopilot** and **ILS approaches**, **air traffic control** calls, **AI traffic** and ground crew, **Clean start** with a step-by-step checklist, night and fog, and optional **Fly with others** (see other Notch pilots; off until you turn it on). Fly over Dubai, London, Paris, New York, Tokyo, Sydney, Cairo or San Francisco and compete on a world leaderboard |
+| ✈️ **Plane game** | A 3D flight sim in Games: Cessna to A380, fighters and helicopters, with real dials, engine sounds, flaps in notches, retractable gear, damage and spoken GPWS callouts. **Battle** adds co-op and multiplayer waves with clearer enemy markers, an aim ring, a battlefield warning, sturdy fighter wings, a G-force toggle and a self-destruct/respawn button that keeps the wave score. The simulator also has an **autopilot**, **ILS approaches**, **full-screen mode**, AI traffic, Clean start and optional Fly with others. |
+| 🃏 **Poker** | Play-money Texas Hold’em against the computer in Games, with a persistent chip stack and a tested seven-card hand evaluator. |
 | 🤖 **Notch Apple AI** *(included with Pro)* | Ask without setting up any key: the request goes to Notch Apple's server, which checks your key and answers with the project's own AI account (Pro 60 messages a day, Ultimate 200). Your own keys still work with no limit |
 | 🗓 **Updates once a week** | Optional and off by default: be asked about updates once a week instead of for every release |
 | 🧰 **30+ more tools** | Now Playing, window snapping, clipboard, file shelf, focus timer, Sports, Messenger, notes, search and more |
 
 ## Download
 
-Pick your computer. Both buttons start the download straight away. The Mac button is pinned to version 2.0.20
+Pick your computer. Both buttons start the download straight away. The Mac link always opens the latest stable release; the Windows link always downloads the newest Windows installer.
 
 <table align="center">
   <tr>
@@ -71,10 +72,10 @@ Pick your computer. Both buttons start the download straight away. The Mac butto
   </tr>
   <tr>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.0.73</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.0.75</b></a>
     </td>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 1.74.0 BETA</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 1.75.0 BETA</b></a>
     </td>
   </tr>
   <tr>
@@ -232,6 +233,12 @@ All screenshots use sample data.
 ## What's new
 
 > **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is still in the repository's tags.
+
+### Mac 2.0.75 · Windows 1.75.0 BETA · 19 October 2026 · 🎮 Battle, Plane and Games, easier to use
+
+- Battle now has default-on Over-G effects with an off switch, plus a self-destruct button or X that respawns you without losing your current wave or score. The limited mouse aim ring and red boundary warning remain in place.
+- Open Plane full screen from the menu or with F11. Games adds play-money Texas Hold’em against the computer.
+- Claude Usage scrolls within smaller windows; the Gemini model picker handles repeated model results and overlapping refreshes safely.
 
 ### Mac 2.0.74 · Windows 1.74.0 BETA · 19 October 2026 · ⚔️ Battle is clearer and sturdier
 

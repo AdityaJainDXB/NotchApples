@@ -84,4 +84,66 @@ enum Cards {
         guard let top = pile.last else { return card.rank == "A" }
         return top.suit == card.suit && card.value == top.value + 1
     }
+
+    // MARK: Texas Hold'em
+
+    struct PokerRank: Equatable, Comparable {
+        /// High card, pair, two pair, trips, straight, flush, full house, quads, straight flush.
+        let category: Int
+        let kickers: [Int]
+        static func < (lhs: Self, rhs: Self) -> Bool {
+            if lhs.category != rhs.category { return lhs.category < rhs.category }
+            for (a, b) in zip(lhs.kickers, rhs.kickers) where a != b { return a < b }
+            return lhs.kickers.count < rhs.kickers.count
+        }
+    }
+
+    /// Best five-card hand from the player's hole cards and the visible community cards (five to seven total).
+    static func pokerRank(_ cards: [PlayingCard]) -> PokerRank? {
+        guard (5...7).contains(cards.count) else { return nil }
+        var best: PokerRank?
+        for a in 0..<(cards.count - 4) {
+            for b in (a + 1)..<(cards.count - 3) {
+                for c in (b + 1)..<(cards.count - 2) {
+                    for d in (c + 1)..<(cards.count - 1) {
+                        for e in (d + 1)..<cards.count {
+                            let next = pokerFive([cards[a], cards[b], cards[c], cards[d], cards[e]])
+                            if best == nil || best! < next { best = next }
+                        }
+                    }
+                }
+            }
+        }
+        return best
+    }
+
+    private static func pokerFive(_ hand: [PlayingCard]) -> PokerRank {
+        let values = hand.map { $0.rank == "A" ? 14 : $0.value }.sorted(by: >)
+        let groupedValues = Dictionary(grouping: values, by: { value in value })
+        var groups: [(rank: Int, count: Int)] = groupedValues.map { entry in
+            (rank: entry.key, count: entry.value.count)
+        }
+        groups.sort { lhs, rhs in
+            lhs.count == rhs.count ? lhs.rank > rhs.rank : lhs.count > rhs.count
+        }
+        let flush = hand.allSatisfy { $0.suit == hand[0].suit }
+        let unique = Array(Set(values)).sorted(by: >)
+        let straightHigh: Int? = {
+            if unique.count == 5, unique[0] - unique[4] == 4 { return unique[0] }
+            if unique == [14, 5, 4, 3, 2] { return 5 }
+            return nil
+        }()
+        if flush, let straightHigh { return PokerRank(category: 8, kickers: [straightHigh]) }
+        if groups[0].count == 4 { return PokerRank(category: 7, kickers: [groups[0].rank, groups[1].rank]) }
+        if groups[0].count == 3, groups[1].count == 2 { return PokerRank(category: 6, kickers: [groups[0].rank, groups[1].rank]) }
+        if flush { return PokerRank(category: 5, kickers: values) }
+        if let straightHigh { return PokerRank(category: 4, kickers: [straightHigh]) }
+        if groups[0].count == 3 { return PokerRank(category: 3, kickers: [groups[0].rank] + groups.dropFirst().map { $0.rank }.sorted(by: >)) }
+        if groups[0].count == 2, groups[1].count == 2 {
+            let pairs = groups.prefix(2).map { $0.rank }.sorted(by: >)
+            return PokerRank(category: 2, kickers: pairs + [groups[2].rank])
+        }
+        if groups[0].count == 2 { return PokerRank(category: 1, kickers: [groups[0].rank] + groups.dropFirst().map { $0.rank }.sorted(by: >)) }
+        return PokerRank(category: 0, kickers: values)
+    }
 }

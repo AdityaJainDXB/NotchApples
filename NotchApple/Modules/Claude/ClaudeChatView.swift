@@ -36,6 +36,7 @@ final class AIConfig: ObservableObject {
     @Published private(set) var availableModels: [AIProvider: [String]] = [:]
     @Published private(set) var loadingModels = false
     @Published private(set) var modelError: String?
+    private var modelRefreshID = UUID()
 
     var provider: AIProvider {
         get {
@@ -66,12 +67,21 @@ final class AIConfig: ObservableObject {
 
     func refreshModels() {
         let p = provider
-        guard p.isConfigured else { return }
+        let requestID = UUID()
+        modelRefreshID = requestID
+        guard p.isConfigured else { loadingModels = false; modelError = nil; return }
         loadingModels = true
         modelError = nil
         Task {
-            do { availableModels[p] = try await AIClient.models(for: p) }
-            catch { modelError = error.localizedDescription }
+            do {
+                let models = try await AIClient.models(for: p)
+                guard modelRefreshID == requestID, provider == p else { return }
+                availableModels[p] = ModelPickerLogic.unique(models)
+            } catch {
+                guard modelRefreshID == requestID, provider == p else { return }
+                modelError = error.localizedDescription
+            }
+            guard modelRefreshID == requestID, provider == p else { return }
             loadingModels = false
         }
     }

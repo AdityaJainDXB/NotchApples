@@ -3177,7 +3177,9 @@
       // ---- structure: pulling past the limit loads the wings up until one breaks (far past, at once); too fast with
       // big control inputs sets the wings fluttering. And the pilot's blood: blackout for hard pulls, redout for pushes.
       const gp = this.gload > 0 ? this.gload / s.gLimit : -this.gload / (s.gLimit * 0.5);
-      if (gp > 1 && intact) {
+      if (this.sturdy && this.overG === false) {
+        this.stress = 0; this.blackout = 0;
+      } else if (gp > 1 && intact) {
         this.stress += (gp - 1) * dt * 2.5;
         if ((this.stress > 1 || gp > 1.5) && !this.sturdy) this.loseWing(this.bank > 0 ? 'R' : 'L', 'overg');
       } else this.stress = Math.max(0, this.stress - dt * 0.05);
@@ -3189,8 +3191,10 @@
         this.flutter += dt * ((Vi / s.max - 1.05) * 8 + stick * 1.5);
         if (this.flutter > 1) { this.loseWing('L', 'overspeed'); this.loseWing('R', 'overspeed'); }
       } else this.flutter = Math.max(0, this.flutter - dt * 0.5);
-      const gS = Math.max(4.2, s.gLimit * 0.55), gT = this.gload > gS ? clamp((this.gload - gS) / 3, 0, 1) : this.gload < -1 ? -clamp((-1 - this.gload) / 2, 0, 1) : 0;
-      this.blackout += clamp(gT - this.blackout, -dt * 0.9, dt * 0.55);
+      if (!(this.sturdy && this.overG === false)) {
+        const gS = Math.max(4.2, s.gLimit * 0.55), gT = this.gload > gS ? clamp((this.gload - gS) / 3, 0, 1) : this.gload < -1 ? -clamp((-1 - this.gload) / 2, 0, 1) : 0;
+        this.blackout += clamp(gT - this.blackout, -dt * 0.9, dt * 0.55);
+      }
 
       if (this.collide(world)) return;
       if (this.contacts(dt, world, false)) return;
@@ -4682,9 +4686,10 @@
       if (down && e.repeat && keys.has(k)) { if (screen === 'fly') e.preventDefault?.(); return; }   // held keys repeat: toggles fire once
       const typing = e.target && e.target.tagName === 'INPUT' && e.target.type !== 'range';
       if (typing) { if (down && k === 'Enter' && result?.qualifies) saveScore(); return; }
-      const game = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' ', 'w', 's', 'a', 'd', 'q', 'e', 'f', 'v', 'b', 'c', 'p', 'r', 'x', 'Shift', 'Control', 'g', 'h', 'i', 't', 'y', 'o', 'j', 'k', ',', '.', '[', ']', 'Enter', 'z', 'n', 'l', '?', '/'];
+      const game = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' ', 'w', 's', 'a', 'd', 'q', 'e', 'f', 'v', 'b', 'c', 'p', 'r', 'x', 'Shift', 'Control', 'g', 'h', 'i', 't', 'y', 'o', 'j', 'k', ',', '.', '[', ']', 'Enter', 'z', 'n', 'l', '?', '/', 'F11'];
       if (game.includes(k) && screen === 'fly') e.preventDefault?.();
       if (down) {
+        if (k === 'F11') { toggleFullscreen(); return; }
         if (screen === 'fly') {
           if (k === 'u' && war && war.net) toggleVote();
           if (k === 'p' && (!(war && war.net) || paused)) { paused = !paused; renderUI(); if (!paused) { try { ac && ac.resume && ac.resume(); } catch { /* no sound */ } } }
@@ -4747,6 +4752,7 @@
             else { svc = { id, t: 0, dur: ({ 1: 9, 2: 8, 3: 7, 4: 14 })[id] }; toast(({ 1: '⛽ Fuel truck connected…', 2: '🍽 Catering truck at the door…', 3: '🧳 Loading baggage…', 4: '🚜 Tug attached: pushing back…' })[id], 1600); }
           }
           if (k === 'r') onStartPress('restart');
+          if (k === 'x' && war) warSelfDestruct();
           if (k === 'm') { mouseOn = !mouseOn; write('mouse', mouseOn); toast(mouseOn ? 'Mouse steering on' : 'Mouse steering off: use the keys', 1400); }
         } else if (screen === 'result' && (k === 'r' || k === ' ')) { e.preventDefault?.(); onStartPress('again'); }
         else if (screen === 'menu' && k === 'Enter') onStartPress('start');
@@ -5206,7 +5212,7 @@
       { id: 'b52', name: 'Bomber', icon: '💣', blurb: 'Carries 40 bombs and has gunners who shoot at fighters.' },
       { id: 'tank', name: 'Tank', icon: '🪖', blurb: 'Drive on the ground with a turret and a big gun.' },
     ];
-    let warSide = read('warside', 'coop'), warDiff = 'easy', warVeh = read('warveh', 'f16'), warField = read('warfield', 'plains'), warAssist = read('warassist', 'easy'), warNpc = read('warnpc', true);
+    let warSide = read('warside', 'coop'), warDiff = 'easy', warVeh = read('warveh', 'f16'), warField = read('warfield', 'plains'), warAssist = read('warassist', 'easy'), warNpc = read('warnpc', true), warOverG = read('waroverg', true);
     if (warSide !== 'versus') warSide = 'coop';
     if (!WAR_VEHICLES.some((v) => v.id === warVeh)) warVeh = 'f16';
     if (!ARENAS.some((a) => a.id === warField)) warField = 'plains';
@@ -5296,7 +5302,7 @@
         tankBody.pos[1] = groundAt(W, spot.x, spot.z) + 0.2;
         flight.reset([spot.x, tankBody.pos[1] + 2.2, spot.z], spot.heading, 0, true);
       } else flight.reset([spot.x, plane.id === 'b52' ? 1100 : 450, shared ? spot.z : R * 0.9], spot.heading, plane.cruise, false);
-      flight.sturdy = !tank;
+      flight.sturdy = !tank; flight.overG = warOverG;
       war = { arena, vehicle: tank ? 'tank' : 'plane', tank: tankBody, assist: warAssist, npc: warNpc, ap: { hdg: spot.heading, alt: flight.pos[1], spd: plane.cruise * 1.05, i: 0 }, outT: 0, endT: 0, shells: L.shells,
         gidn: 0, nidn: 0, score: 0, kills: 0, wave: 0, hp: L.hp, maxHp: L.hp, L, gun: L.gun, bombs: L.bombs, missiles: L.missiles, flares: L.flares,
         ground: [], foes: [], friend: null, bullets: [], bombsAir: [], missilesAir: [], flaks: [], craters: [], feed: [], lock: null, lockT: 0,
@@ -5414,6 +5420,31 @@
         if (warRand() < 0.6) flight.breakTail();
         war.flash = 1;
       }
+    }
+    /// End the current vehicle without throwing away score or wave progress. Shared players use normal respawn and kill reporting.
+    function warSelfDestruct() {
+      if (!war || war.dead) return;
+      if (war.net) { warHurt(war.hp, 'self-destruct', 'p'); return; }
+      const p = war.vehicle === 'tank' ? war.tank.pos : flight.pos;
+      warBoom(p, 1.1); war.dead = true; war.hp = 0; war.flash = 1; war.selfDestructT = 1.25;
+      toast('Sortie ended · returning to the same wave', 1800);
+    }
+    function warSoloRespawn() {
+      if (!war || war.net) return;
+      const R = war.arena.R, spot = { x: 0, z: R * 0.72, heading: 0 };
+      netResetWreck(); flight = new Flight(plane); heliColl = 0;
+      war.dead = false; war.selfDestructT = 0; war.hp = war.maxHp; war.gun = war.L.gun; war.bombs = war.L.bombs;
+      war.missiles = war.L.missiles; war.flares = war.L.flares; war.shells = war.L.shells; war.flash = 0;
+      if (war.vehicle === 'tank') {
+        war.tank = new TankBody([spot.x, 0, spot.z], spot.heading);
+        war.tank.pos[1] = groundAt(W, spot.x, spot.z) + 0.2;
+        flight.reset([spot.x, war.tank.pos[1] + 2.2, spot.z], spot.heading, 0, true);
+      } else {
+        flight.reset([spot.x, plane.id === 'b52' ? 1100 : 450, spot.z], spot.heading, plane.cruise, false);
+        flight.sturdy = true; flight.overG = warOverG;
+        war.ap = { hdg: spot.heading, alt: flight.pos[1], spd: plane.cruise * 1.05, i: 0 };
+      }
+      toast(`Back in wave ${war.wave} · ${war.kills} kills kept`, 1800);
     }
     function warScore(g, who) {
       war.score += g.pts; war.kills++;
@@ -5829,8 +5860,9 @@
     function warStep(dt) {
       if (!war) return;
       if (war.net && flight.crashed && !war.dead) netCrashed();
-      if (flight.crashed && !war.net) return;
+      if (flight.crashed && !war.net && !(war.selfDestructT > 0)) return;
       if (war.endT > 0 && (war.endT -= dt) <= 0) { finish('crash', war.score, `Tank destroyed · ${war.score} pts · wave ${war.wave}`); return; }
+      if (war.selfDestructT > 0 && (war.selfDestructT -= dt) <= 0) warSoloRespawn();
       if (war.net) { netTick(dt); if (war.net && war.net.role === 'client') netReplicaStep(dt); }
       if (!war.dead && war.vehicle === 'plane') {
         // Out past the edge of the battlefield: a warning, then damage.
@@ -5956,7 +5988,7 @@
       for (const a of war.foes) markAir(a, '#ff5d5d', 'BANDIT');
       if (war.net) for (const o of war.net.others.values()) {
         if (!o.alive || !o.rep || !o.shown) continue;
-        const col = netFight() ? '#ffb347' : '#6cb6ff'; markAir({ state: 'fly', pos: add(o.shown, [0, 7, 0]) }, col, o.name.slice(0, 10));
+        markAir({ state: 'fly', pos: add(o.shown, [0, 7, 0]) }, '#6cb6ff', o.name.slice(0, 10));
       }
       if (war.friend) markAir(war.friend, '#6cb6ff', 'WINGMAN');
       // The gun sight: the cross where the shells go, 650 m ahead, and a lead cue on the locked fighter.
@@ -6142,7 +6174,8 @@
       const tank = war && war.vehicle === 'tank';
       const defs = tank ? [['gun', '💥', 'Cannon', 'Space'], ['bomb', '🔫', 'Machine gun', 'B']]
         : [['gun', '🔫', 'Guns', 'Space'], ['bomb', '💣', 'Bombs', 'B'], ['msl', '🚀', 'Missile', 'N'], ['flr', '✨', 'Flares', 'L']];
-      wbar.innerHTML = defs.map(([id, ic, name, key]) => `<button data-w="${id}" title="${name} (${key})"><span>${ic}</span><b>${name}</b><kbd>${key}</kbd><i data-n="${id}"></i></button>`).join('');
+      wbar.innerHTML = defs.map(([id, ic, name, key]) => `<button data-w="${id}" title="${name} (${key})"><span>${ic}</span><b>${name}</b><kbd>${key}</kbd><i data-n="${id}"></i></button>`).join('')
+        + '<button data-w="self" title="End this sortie and respawn without losing wave progress"><span>💥</span><b>Self-destruct</b><kbd>X</kbd></button>';
       bindWbar();
     }
     let ctlT = 0, helpMode = null;
@@ -6157,7 +6190,7 @@
     const wUp = () => { warPad.gun = false; warPad.bomb = false; };
     function bindWbar() {
       wbar.querySelectorAll('button').forEach((b) => {
-        b.addEventListener('pointerdown', (e) => { e.preventDefault(); e.stopPropagation(); if (screen === 'fly' && !paused) wDown(b.dataset.w); });
+        b.addEventListener('pointerdown', (e) => { e.preventDefault(); e.stopPropagation(); if (screen === 'fly' && !paused) { if (b.dataset.w === 'self') warSelfDestruct(); else wDown(b.dataset.w); } });
         b.addEventListener('mousedown', (e) => e.stopPropagation());
         for (const ev of ['pointerup', 'pointerleave', 'pointercancel']) b.addEventListener(ev, wUp);
       });
@@ -6366,6 +6399,18 @@
       finish('done', war.score, `${name} won with ${n.kills[winnerId] || 0} kills`);
     }
 
+    function toggleFullscreen() {
+      if (document.fullscreenElement) { document.exitFullscreen?.().catch?.(() => {}); return; }
+      const el = document.documentElement, enter = el.requestFullscreen || el.webkitRequestFullscreen;
+      if (enter) Promise.resolve(enter.call(el)).catch(() => toast('Full screen is not available in this window', 1800));
+      else toast('Full screen is not available in this window', 1800);
+    }
+    function toggleWarOverG() {
+      warOverG = !warOverG; write('waroverg', warOverG);
+      if (war && war.vehicle === 'plane') flight.overG = warOverG;
+      renderUI();
+    }
+
     // ---- what the host sends about the enemies
     const r1n = (v) => Math.round(v * 10) / 10;
     function netSendWave() {
@@ -6527,7 +6572,7 @@
       }
       const raw = input();
       ctl = devCtl || raw;
-      const inp = mode.id === 'war' && war ? warInput(raw, dt) : raw;
+      const inp = mode.id === 'war' && war ? warInput(ctl, dt) : ctl;
       if (devHold) return;
       // A helicopter on the ground with the collective down is held by its skid friction / parking brake (the wind alone would slide it).
       flight.brake = (mode.id !== 'war' && (keys.has(' ') || keys.has('b'))) || (plane.rotor && flight.onGround && heliColl < 0.12);
@@ -7452,6 +7497,7 @@
         <h2>3 · How you play</h2>
         <div class="pg-row"><span class="pg-lab">Controls</span>${chip('warassist', warAssist, 'auto', '🤖 Automatic', 'The vehicle looks after itself; you point and shoot')}${chip('warassist', warAssist, 'easy', '🙂 Easy', 'You drive or fly, with help aiming')}${chip('warassist', warAssist, 'pro', '🎮 Pro', 'Full control, no help')}</div>
         <div class="pg-hint" style="margin:2px 0 8px">${assistText[warAssist]}</div>
+        <div class="pg-row"><span class="pg-lab">Realism</span><button data-waroverg class="${warOverG ? 'pg-on' : ''}">Over-G effects: ${warOverG ? 'On' : 'Off'}</button><span class="pg-hint">On by default; turn off G stress and blackout.</span></div>
         <div class="pg-row"><span class="pg-lab">Teams</span>${chip('warside', warSide, 'coop', '🤝 Co-op', 'You and a computer wingman against the computer')}${chip('warside', warSide, 'versus', '⚔️ Fight', 'No wingman: computer aces hunt you')}</div>
         <div class="pg-row" style="margin-top:6px"><span class="pg-lab">Enemies</span>${chip('warnpc', warNpc ? 'on' : 'off', 'on', 'On: they fight back', 'Fighters, tanks and guns shoot at you')}${chip('warnpc', warNpc ? 'on' : 'off', 'off', 'Off: targets only', 'Targets that do not shoot: for practice')}</div>`;
     }
@@ -7481,6 +7527,7 @@
         <div class="pg-row" style="margin-top:6px"><span class="pg-lab">Enemies</span>${opt('npc', [[true, 'On'], [false, 'Off']])}</div>
         <div class="pg-row" style="margin-top:6px"><span class="pg-lab">Field</span>${opt('field', ARENAS.map((a) => [a.id, a.name]))}</div>
         <div class="pg-row" style="margin-top:6px"><span class="pg-lab">Your help</span>${[['auto', '🤖 Automatic'], ['easy', '🙂 Easy'], ['pro', '🎮 Pro']].map(([id, label]) => `<button data-warassist="${id}" class="${warAssist === id ? 'pg-on' : ''}">${label}</button>`).join('')}</div>
+        <div class="pg-row" style="margin-top:6px"><span class="pg-lab">Realism</span><button data-waroverg class="${warOverG ? 'pg-on' : ''}">Over-G effects: ${warOverG ? 'On' : 'Off'}</button><span class="pg-hint">Local setting; Battle wings remain sturdy.</span></div>
         <div class="pg-hint" style="margin-top:4px">Co-op: everyone is on one side against the computer. Fight: players shoot each other, first to ${FIGHT_WIN_KILLS} kills wins (if the enemies are on they shoot everyone). Everyone plays the same battlefield and the same enemies.</div>`;
     }
     let joinDraft = '';
@@ -7539,6 +7586,7 @@
         const modesHtml = `<h2>What do you want to play?</h2><div class="pg-modes">${MODES.map((m) => `<button class="pg-mode ${m === mode ? 'pg-on' : ''}" data-mode="${m.id}">${m.icon} ${m.name}<small>${m.desc}</small></button>`).join('')}</div>`;
         body = modesHtml + (mode.id === 'war' ? battleHtml() : setupHtml) + `          <div class="pg-howto"><div class="pg-ctitle">How to play ${mode.name}</div>${ctlHtml(mode.id, true)}<div class="pg-hint" style="margin-top:5px">During a flight, press <kbd>?</kbd> or click the round <b>?</b> button to see this again, with what each control does.</div></div>
           <div class="pg-row" style="margin-top:10px">${mode.id === 'war' && netg && netg.role === 'client' ? '<span class="pg-hint">Waiting for the host to start…</span>' : `<button class="pg-go" data-a="start">${mode.id === 'war' ? (netg ? '⚔️ Start the battle for everyone (Enter)' : '⚔️ Start the battle (Enter)') : '✈️ Take off (Enter)'}</button>`}
+            <button data-a="fullscreen" title="Open the Plane game edge to edge. Press Escape or F11 to leave">⛶ Full screen (F11)</button>
             <span class="pg-hint">Best: ${(() => { const b = read(`board.${mode.id}`, [])[0]; return b && mode.id !== 'free' ? `${fmtScore(mode, b.score)} by ${escapeHtml(b.name)}` : '—'; })()}</span></div>`;
       } else if (menuTab === 'board') {
         const scopes = `<div class="pg-row"><button data-scope="local" class="${boardScope === 'local' ? 'pg-on' : ''}">This computer</button><button data-scope="world" class="${boardScope === 'world' ? 'pg-on' : ''}">🌍 World</button>${boardScope === 'world' ? `<button data-period="all" class="${boardPeriod === 'all' ? 'pg-on' : ''}">All time</button><button data-period="week" class="${boardPeriod === 'week' ? 'pg-on' : ''}">This week</button>` : ''}</div>`;
@@ -7646,6 +7694,7 @@
       ui.querySelectorAll('[data-netset]').forEach((n) => n.onclick = () => { const [key, raw] = n.dataset.netset.split(':'), val = raw === 'true' ? true : raw === 'false' ? false : raw; if (netg.role === 'host') netHostSet(key, val); else netVoteCast(key, val); renderUI(); });
       ui.querySelectorAll('[data-warfield]').forEach((n) => n.onclick = () => { warField = n.dataset.warfield; write('warfield', warField); renderUI(); });
       ui.querySelectorAll('[data-warassist]').forEach((n) => n.onclick = () => { warAssist = n.dataset.warassist; write('warassist', warAssist); renderUI(); });
+      ui.querySelectorAll('[data-waroverg]').forEach((n) => n.onclick = toggleWarOverG);
       ui.querySelectorAll('[data-warnpc]').forEach((n) => n.onclick = () => { warNpc = n.dataset.warnpc === 'on'; write('warnpc', warNpc); renderUI(); });
       ui.querySelectorAll('[data-warside]').forEach((n) => n.onclick = () => { warSide = n.dataset.warside; write('warside', warSide); renderUI(); });
       ui.querySelectorAll('[data-ctlmode]').forEach((n) => n.onclick = () => { helpMode = n.dataset.ctlmode; renderUI(); });
@@ -7657,6 +7706,7 @@
         const a = n.dataset.a;
         if (a === 'start' || a === 'again' || a === 'restart') onStartPress(a);
         else if (a === 'resume') { paused = false; renderUI(); root.focus(); try { ac && ac.resume && ac.resume(); } catch { /* no sound */ } }
+        else if (a === 'fullscreen') toggleFullscreen();
         else if (a === 'menu') { if (netg) netLeave(true); screen = 'menu'; paused = false; if (engGain) engGain.gain.value = 0; restorePlane(); useBattlefield(''); flight = new Flight(plane); renderUI(); }
         else if (a === 'save') saveScore();
         else if (a === 'mine') goPlace(myPlace);

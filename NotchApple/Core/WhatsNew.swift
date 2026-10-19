@@ -20,6 +20,11 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.0.75", date: "19 October 2026", headline: "Battle, Plane and Games, easier to use", items: [
+            "Battle keeps fighter wings sturdy and lets you turn off over-G blackout and stress. The self-destruct button respawns you in the same wave without losing kills or score; the red boundary warning and mouse aim ring stay visible and useful.",
+            "Plane can open full screen with the menu button or F11. The Games tab adds play-money Texas Hold’em against the computer.",
+            "Claude Usage now scrolls inside smaller windows. The Gemini model picker ignores duplicate models and safely discards stale refreshes.",
+        ]),
         ReleaseNote(version: "2.0.74", date: "19 October 2026", headline: "Battle is clearer and sturdier", items: [
             "Battle aircraft no longer lose wings to over-G, overspeed or wingtip scrapes; speed and load are capped, while a hard nose-first crash remains fatal.",
             "Easy and Automatic warn and help pull up near the ground; Pro gets a low-altitude warning. Enemy markers, smoke trails, wave objectives and briefings make the battle easier to read.",

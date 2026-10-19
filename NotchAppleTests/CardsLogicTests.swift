@@ -2,6 +2,7 @@ import XCTest
 
 final class CardsLogicTests: XCTestCase {
     private func hand(_ ranks: String...) -> [PlayingCard] { ranks.enumerated().map { PlayingCard(id: "\($0.offset)", rank: $0.element, suit: .spades) } }
+    private func poker(_ cards: (String, Suit)...) -> [PlayingCard] { cards.enumerated().map { PlayingCard(id: "p\($0.offset)", rank: $0.element.0, suit: $0.element.1) } }
 
     func testDeck() {
         let d = Cards.deck(); XCTAssertEqual(d.count, 52); XCTAssertEqual(Set(d.map(\.id)).count, 52)
@@ -35,5 +36,16 @@ final class CardsLogicTests: XCTestCase {
         let ac = PlayingCard(id: "x", rank: "A", suit: .clubs)
         XCTAssertTrue(Cards.canPlaceFoundation(ac, on: [])); XCTAssertTrue(Cards.canPlaceFoundation(PlayingCard(id: "y", rank: "2", suit: .clubs), on: [ac]))
         XCTAssertFalse(Cards.canPlaceFoundation(PlayingCard(id: "z", rank: "2", suit: .hearts), on: [ac]))
+    }
+
+    func testPokerRanksAndWheelStraight() {
+        let royal = Cards.pokerRank(poker(("A", .spades), ("K", .spades), ("Q", .spades), ("J", .spades), ("10", .spades), ("2", .clubs), ("3", .hearts)))!
+        let quads = Cards.pokerRank(poker(("9", .spades), ("9", .hearts), ("9", .clubs), ("9", .diamonds), ("A", .spades), ("2", .clubs), ("3", .hearts)))!
+        XCTAssertGreaterThan(royal, quads)
+
+        let wheel = Cards.pokerRank(poker(("A", .spades), ("2", .hearts), ("3", .clubs), ("4", .diamonds), ("5", .spades)))!
+        let sixHigh = Cards.pokerRank(poker(("2", .spades), ("3", .hearts), ("4", .clubs), ("5", .diamonds), ("6", .spades)))!
+        XCTAssertLessThan(wheel, sixHigh)
+        XCTAssertNil(Cards.pokerRank(hand("A", "K", "Q", "J")))
     }
 }
