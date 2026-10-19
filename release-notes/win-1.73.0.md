@@ -1,0 +1,2 @@
+- 🌐 **Play Battle with friends** in the Plane game: host a game and share the 6-letter code, or join with a friend's. Works on the same Wi-Fi or far apart, and Mac and Windows can play together.
+- 🤝 Co-op against the computer or Fight each other, with a vote to change the match, and you come back after five seconds if you are shot down.

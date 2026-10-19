@@ -20,6 +20,10 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.0.72", date: "19 October 2026", headline: "Battle with friends", items: [
+            "Host a game in Battle and share the 6-letter code, or join a friend's. It works on the same Wi-Fi or far apart, and Mac and Windows can play together.",
+            "Co-op against the computer or Fight each other, with a vote (press U) to change the match. If you are shot down you come back after five seconds.",
+        ]),
         ReleaseNote(version: "2.0.71", date: "19 October 2026", headline: "Battle: a tank, flat battlefields and Automatic flying", items: [
             "Air War is now Battle: pick a vehicle (fighter, gunship, bomber or a tank you drive), one of three flat battlefields, and Automatic, Easy or Pro controls.",
             "Co-op or Fight, and enemies on or off for target practice. The battle screen is simpler.",

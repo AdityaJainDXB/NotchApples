@@ -71,10 +71,10 @@ Pick your computer. Both buttons start the download straight away. The Mac butto
   </tr>
   <tr>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.0.71</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.0.72</b></a>
     </td>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 1.72.0 BETA</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 1.73.0 BETA</b></a>
     </td>
   </tr>
   <tr>
@@ -232,6 +232,13 @@ All screenshots use sample data.
 ## What's new
 
 > **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is still in the repository's tags.
+
+### Mac 2.0.72 · Windows 1.73.0 BETA · 19 October 2026 · 🌐 Battle with friends
+
+- **Play Battle with friends:** host a game and share the 6-letter code, or join with a friend's. It works on the same Wi-Fi or far apart, and Mac and Windows can play together.
+- **Co-op or Fight**, with the same battlefield and the same enemies for everyone. In Fight the first to 10 kills wins.
+- **Vote to change the match** (press U): Co-op or Fight, enemies on or off, the battlefield. A change passes with more than half the players. If you are shot down you are back in five seconds.
+- How it works: the room code is hashed and used as a room name on the same live relay the Clipboard Link uses; the relay only passes frames between the people in the room and stores nothing. The people in the room can see your name, vehicle and position.
 
 ### Mac 2.0.71 · Windows 1.72.0 BETA · 19 October 2026 · ⚔️ Battle: a tank, flat battlefields and Automatic flying
 
