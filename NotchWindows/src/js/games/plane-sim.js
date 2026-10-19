@@ -3829,6 +3829,12 @@
   .pg .pg-report b { display: block; font-size: 14px; margin-bottom: 2px; } .pg .pg-ok b { color: #5ee08a; } .pg .pg-warn b { color: #ffd166; } .pg .pg-bad b { color: #ff7a6b; }
   .pg .pg-bgrid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; } .pg .pg-b3 { grid-template-columns: repeat(3, 1fr); }
   .pg .pg-lab { font-size: 11px; font-weight: 800; opacity: .7; width: 66px; } @media (max-width: 560px) { .pg .pg-bgrid { grid-template-columns: repeat(2, 1fr); } .pg .pg-b3 { grid-template-columns: 1fr; } }
+  .pg .pg-netbar { position: absolute; left: 10px; top: calc(46% + 36px); z-index: 5; gap: 6px; } .pg .pg-netbar button { padding: 5px 9px; border-radius: 9px; border: 1px solid rgba(255,255,255,.3); background: rgba(10,14,28,.78); color: #fff; font-size: 12px; font-weight: 700; cursor: pointer; }
+  .pg .pg-room { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 8px 12px; border-radius: 12px; background: rgba(255,179,71,.12); border: 1px solid rgba(255,179,71,.5); }
+  .pg .pg-code { font: 800 30px/1.1 ui-monospace, Menlo, monospace; letter-spacing: .18em; color: #ffb347; user-select: all; }
+  .pg .pg-people { display: grid; gap: 4px; } .pg .pg-person { display: flex; justify-content: space-between; padding: 5px 10px; border-radius: 9px; background: rgba(255,255,255,.07); font-size: 12px; } .pg .pg-person span { opacity: .75; }
+  .pg button.pg-voted { box-shadow: 0 0 0 1px #ffb347 inset; }
+  .pg .pg-vote { top: 30%; transform: none; }
   .pg .pg-ctlcard { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); width: min(300px, 46%); max-height: 78%; overflow: auto; z-index: 6; padding: 10px 12px; border-radius: 14px; background: rgba(10,14,28,.86); backdrop-filter: blur(8px); border: 1px solid rgba(255,179,71,.7); color: #fff; cursor: pointer; font-size: 11.5px; box-shadow: 0 8px 28px rgba(0,0,0,.4); }
   .pg .pg-ctitle { font-size: 13px; font-weight: 800; margin-bottom: 4px; } .pg .pg-ctitle span { float: right; font-size: 9.5px; font-weight: 500; opacity: .6; }
   .pg .pg-cgoal { font-size: 11.5px; line-height: 1.4; margin-bottom: 7px; color: rgba(255,255,255,.88); } .pg .pg-cgoal b { color: #ffb347; }
@@ -4664,7 +4670,8 @@
       if (game.includes(k) && screen === 'fly') e.preventDefault?.();
       if (down) {
         if (screen === 'fly') {
-          if (k === 'p') { paused = !paused; renderUI(); if (!paused) { try { ac && ac.resume && ac.resume(); } catch { /* no sound */ } } }
+          if (k === 'u' && war && war.net) toggleVote();
+          if (k === 'p' && (!(war && war.net) || paused)) { paused = !paused; renderUI(); if (!paused) { try { ac && ac.resume && ac.resume(); } catch { /* no sound */ } } }
           if (k === '?' || k === '/') showCtl(ctlEl.style.display === 'none');
           if (mode.id === 'war') { if (k === 'n') warLaunch(); else if (k === 'l') warFlares(); }
           if (k === 'c') camMode = (camMode + 1) % 3;
@@ -4723,10 +4730,10 @@
             else if (svcDone[id] && id !== 4) toast('Already done', 1200);
             else { svc = { id, t: 0, dur: ({ 1: 9, 2: 8, 3: 7, 4: 14 })[id] }; toast(({ 1: '⛽ Fuel truck connected…', 2: '🍽 Catering truck at the door…', 3: '🧳 Loading baggage…', 4: '🚜 Tug attached: pushing back…' })[id], 1600); }
           }
-          if (k === 'r') start();
+          if (k === 'r') onStartPress('restart');
           if (k === 'm') { mouseOn = !mouseOn; write('mouse', mouseOn); toast(mouseOn ? 'Mouse steering on' : 'Mouse steering off: use the keys', 1400); }
-        } else if (screen === 'result' && (k === 'r' || k === ' ')) { e.preventDefault?.(); start(); }
-        else if (screen === 'menu' && k === 'Enter') start();
+        } else if (screen === 'result' && (k === 'r' || k === ' ')) { e.preventDefault?.(); onStartPress('again'); }
+        else if (screen === 'menu' && k === 'Enter') onStartPress('start');
         keys.add(k);
       } else keys.delete(k);
     };
@@ -4737,14 +4744,14 @@
     const blur = () => keys.clear(); window.addEventListener('blur', blur);
     root.addEventListener('focusout', (e) => { if (!root.contains(e.relatedTarget)) keys.clear(); });
     // Hidden (the window or notch closed): let go of the keys and pause the flight, so nothing happens while nobody is looking.
-    const hidden = () => { if (document.hidden) { keys.clear(); warPad.gun = false; warPad.bomb = false; if (screen === 'fly' && !paused) { paused = true; renderUI(); } } }; document.addEventListener('visibilitychange', hidden);
+    const hidden = () => { if (document.hidden) { keys.clear(); warPad.gun = false; warPad.bomb = false; if (screen === 'fly' && !paused && !(war && war.net)) { paused = true; renderUI(); } } }; document.addEventListener('visibilitychange', hidden);
     // The mouse steers by where the cursor is inside a small ring in the middle of the view: the ring's edge is full
     // stick, so a short move is enough and the cursor never has to leave the notch. It only takes control once the
     // cursor has been in the middle (a cursor left anywhere after clicking Take off can't bank the plane), and lets
     // go when the cursor leaves the game.
     const ringRadius = () => { const r = root.getBoundingClientRect(); return Math.max(40, Math.min(r.width, r.height) * 0.2) / clamp(sens, 0.3, 2.5); };
     root.addEventListener('pointermove', (e) => {
-      if (e.target && e.target.closest && e.target.closest('.pg-wbar, .pg-ctlbtn, .pg-ctlcard')) { mouse.x = 0; mouse.y = 0; mouse.engaged = false; return; }   // over a button: let go of the stick
+      if (e.target && e.target.closest && e.target.closest('.pg-wbar, .pg-ctlbtn, .pg-ctlcard, .pg-netbar')) { mouse.x = 0; mouse.y = 0; mouse.engaged = false; return; }   // over a button: let go of the stick
       const r = root.getBoundingClientRect(), R = ringRadius();
       const dx = (e.clientX - r.left - r.width / 2) / R, dy = (e.clientY - r.top - r.height / 2) / R;
       const d = Math.hypot(dx, dy), k = d > 1 ? 1 / d : 1;
@@ -5035,6 +5042,7 @@
       if (flight.sunk && Math.random() < dt * 5) puff('bubble', [at[0] + (Math.random() - 0.5) * 5, WATER + 0.1, at[2] + (Math.random() - 0.5) * 5], [0, 1.5, 0]);
     }
     function crashResult() {
+      if (war && war.net) return;
       if (flight.info) flight.report = flight.makeReport();
       const rep = flight.report, why = war && war.dead ? 'Shot down' : rep ? rep.title : (CRASH_TEXT[flight.why] || 'Crashed');
       if (mode.id === 'hoops') finish('crash', score, `${why} · ${score} hoop${score === 1 ? '' : 's'}`, rep);
@@ -5264,17 +5272,20 @@
     function warStart() {
       const arena = ARENAS.find((a) => a.id === warField) || ARENAS[0], tank = warVeh === 'tank', R = arena.R;
       const L = tank ? { gun: 900, bombs: 0, missiles: 0, flares: 0, hp: TANK.hp, stick: 0.2, shells: 40 } : { ...warLoadout(plane), shells: 0 }, d = WAR_DIFF[warLevel()];
+      const shared = netg && netg.running && netg.start, mine = shared ? netg.start.players.find((q) => q.id === netMyId) : null;
+      const spot = shared ? netStartSpot(R, netg.start.cfg, mine ? mine.slot : 0) : { x: 0, z: R * 0.72, heading: 0 };
       let tankBody = null;
       if (tank) {
-        tankBody = new TankBody([0, 0, R * 0.72], 0);
-        tankBody.pos[1] = groundAt(W, 0, R * 0.72) + 0.2;
-        flight.reset([0, tankBody.pos[1] + 2.2, R * 0.72], 0, 0, true);
-      } else flight.reset([0, plane.id === 'b52' ? 1100 : 450, R * 0.9], 0, plane.cruise, false);
-      war = { arena, vehicle: tank ? 'tank' : 'plane', tank: tankBody, assist: warAssist, npc: warNpc, ap: { hdg: 0, alt: flight.pos[1], spd: plane.cruise * 1.05, i: 0 }, outT: 0, endT: 0, shells: L.shells,
-        score: 0, kills: 0, wave: 0, hp: L.hp, maxHp: L.hp, L, gun: L.gun, bombs: L.bombs, missiles: L.missiles, flares: L.flares,
+        tankBody = new TankBody([spot.x, 0, spot.z], spot.heading);
+        tankBody.pos[1] = groundAt(W, spot.x, spot.z) + 0.2;
+        flight.reset([spot.x, tankBody.pos[1] + 2.2, spot.z], spot.heading, 0, true);
+      } else flight.reset([spot.x, plane.id === 'b52' ? 1100 : 450, shared ? spot.z : R * 0.9], spot.heading, plane.cruise, false);
+      war = { arena, vehicle: tank ? 'tank' : 'plane', tank: tankBody, assist: warAssist, npc: warNpc, ap: { hdg: spot.heading, alt: flight.pos[1], spd: plane.cruise * 1.05, i: 0 }, outT: 0, endT: 0, shells: L.shells,
+        gidn: 0, nidn: 0, score: 0, kills: 0, wave: 0, hp: L.hp, maxHp: L.hp, L, gun: L.gun, bombs: L.bombs, missiles: L.missiles, flares: L.flares,
         ground: [], foes: [], friend: null, bullets: [], bombsAir: [], missilesAir: [], flaks: [], craters: [], feed: [], lock: null, lockT: 0,
         gunT: 0, bombT: 0, flash: 0, warn: '', warnT: 0, wavePause: 2.5, waveClear: false, gunners: 0, dead: false, feedT: 0, shown: false, d };
-      if (warSide === 'coop') war.friend = warSpawnAircraft('f16', 'friend');
+      if (shared) netAttachToWar();
+      else if (warSide === 'coop') war.friend = warSpawnAircraft('f16', 'friend');
       buildWbar();
     }
 
@@ -5290,7 +5301,7 @@
         heading = Math.atan2(-x, z);            // towards the middle
       }
       const speed = role === 'friend' ? Math.max(flight.speed, plane.cruise * 0.8, 150) : d.speed;
-      const a = { id, spec, role, pos, heading, pitch: 0, speed, bank: 0, vel: v3(), q: qheading(heading), hp: 100 * (role === 'foe' ? d.hp : 1), maxHp: 100 * (role === 'foe' ? d.hp : 1),
+      const a = { nid: role === 'foe' ? ++war.nidn : 0, id, spec, role, pos, heading, pitch: 0, speed, bank: 0, vel: v3(), q: qheading(heading), hp: 100 * (role === 'foe' ? d.hp : 1), maxHp: 100 * (role === 'foe' ? d.hp : 1),
         state: 'fly', t: 0, w: v3(), cool: 1 + warRand() * 2, burstLeft: 0, gunT: 0, mslCool: 8 + warRand() * 10, target: null, retargetT: 0, warnMsl: null, lastHit: null };
       a.vel = [Math.sin(heading) * speed, 0, -Math.cos(heading) * speed];
       return a;
@@ -5313,7 +5324,7 @@
           const x = cx + dx, z = cz + dz;
           if (!forced && !onLand(x, z)) return;
           const k = WAR_KINDS[kind], hunter = kind === 'tank' && war.npc && war.vehicle === 'tank';
-          war.ground.push({ kind, pos: [x, Math.max(groundAt(W, x, z), 0), z], heading, turret: heading, hp: k.hp * d.hp, maxHp: k.hp * d.hp, r: k.r, pts: k.pts, cool: (kind === 'aa' || kind === 'tank' ? 5 : 1) + warRand() * 2, t: 0, burning: 0, lastHit: null,
+          war.ground.push({ nid: ++war.gidn, kind, pos: [x, Math.max(groundAt(W, x, z), 0), z], heading, turret: heading, hp: k.hp * d.hp, maxHp: k.hp * d.hp, r: k.r, pts: k.pts, cool: (kind === 'aa' || kind === 'tank' ? 5 : 1) + warRand() * 2, t: 0, burning: 0, lastHit: null,
             speed: kind === 'truck' || (kind === 'tank' && base === 'convoy') ? 6 : 0, hunt: hunter, dead: false });
         };
         if (base === 'base') {
@@ -5329,7 +5340,7 @@
       // A battlefield with no level ground for a base (it should not happen): put something down so the wave can be won.
       if (!war.ground.some((g) => !g.dead)) {
         const x = 0, z = -R * 0.5, k = WAR_KINDS.bunker;
-        war.ground.push({ kind: 'bunker', pos: [x, Math.max(groundAt(W, x, z), 0), z], heading: 0, turret: 0, hp: k.hp * d.hp, maxHp: k.hp * d.hp, r: k.r, pts: k.pts, cool: 3, t: 0, burning: 0, lastHit: null, speed: 0, dead: false });
+        war.ground.push({ nid: ++war.gidn, kind: 'bunker', pos: [x, Math.max(groundAt(W, x, z), 0), z], heading: 0, turret: 0, hp: k.hp * d.hp, maxHp: k.hp * d.hp, r: k.r, pts: k.pts, cool: 3, t: 0, burning: 0, lastHit: null, speed: 0, dead: false });
       }
       const airN = war.npc ? Math.min(5, Math.round((warSide === 'versus' ? 1 + Math.floor(n / 1.5) : Math.floor((n + 1) / 2)) * d.count)) : 0;
       for (let i = 0; i < airN; i++) war.foes.push(warSpawnAircraft(warRand() < 0.5 ? 'su27' : 'f15', 'foe'));
@@ -5343,9 +5354,10 @@
       }
       warFeed(`WAVE ${n}: ${war.ground.filter((g) => !g.dead).length} ground targets${airN ? ` · ${airN} fighter${airN === 1 ? '' : 's'}` : ''}`);
       toast(`WAVE ${n}`, 1800); beep(520, 0.15, 'square', 0.07);
+      netSendWave();
     }
 
-    function warFeed(text) { war.feed.unshift({ text, t: 6 }); war.feed.length = Math.min(war.feed.length, 5); }
+    function warFeed(text, share = true) { war.feed.unshift({ text, t: 6 }); war.feed.length = Math.min(war.feed.length, 5); if (share) netEvent({ k: 'feed', x: text }); }
 
     // ---- effects
     function warBoom(p, size = 1) {
@@ -5364,7 +5376,7 @@
     }
 
     // ---- damage
-    function warHurt(amount, why) {
+    function warHurt(amount, why, by = 'npc') {
       if (war.dead || flight.crashed) return;
       war.hp = Math.max(0, war.hp - amount);
       war.flash = Math.min(1, war.flash + clamp(amount / 40, 0.25, 1));
@@ -5372,6 +5384,11 @@
       noise(0.25, 0.3, 900);
       if (war.hp <= 0) {
         war.dead = true;
+        if (war.net) {          // a shared battle: it blows up, the others are told, and you are back in a few seconds
+          warBoom(war.vehicle === 'tank' ? war.tank.pos : flight.pos, 1.3); war.flash = 1; war.net.respawnT = 5; toast(`💥 DESTROYED: ${why}`, 2500);
+          netSend({ t: 'k', id: netMyId, v: netMyId, by }); netGameMsg({ t: 'k', id: netMyId, v: netMyId, by });
+          return;
+        }
         if (war.vehicle === 'tank') { toast(`💥 TANK DESTROYED: ${why}`, 3000); warBoom(war.tank.pos, 1.5); war.flash = 1; war.endT = 2.4; return; }
         toast(`💥 SHOT DOWN: ${why}`, 3000);
         flight.loseWing(warRand() < 0.5 ? 'L' : 'R', 'war', 'root');
@@ -5386,7 +5403,7 @@
       if (who !== 'f') { beep(880, 0.08, 'square', 0.06); setTimeout(() => beep(1320, 0.1, 'square', 0.06), 70); }
     }
     function warDamageGround(g, dmg, who) {
-      if (g.dead || dmg <= 0) return;
+      if (g.dead || dmg <= 0 || !warAuth()) return;
       g.hp -= dmg; g.lastHit = who;
       if (g.hp <= 0) {
         g.dead = true; g.burning = 20 + warRand() * 20; warScore(g, who);
@@ -5395,7 +5412,7 @@
       }
     }
     function warDamageAir(a, dmg, who) {
-      if (a.state !== 'fly' || dmg <= 0) return;
+      if (a.state !== 'fly' || dmg <= 0 || !warAuth()) return;
       a.hp -= dmg; a.lastHit = who;
       if (a.hp <= 0) {
         a.state = 'fall'; a.t = 0; a.w = [(warRand() - 0.5) * 3, (warRand() - 0.5) * 3, (warRand() - 0.5) * 3 + 2];
@@ -5404,15 +5421,20 @@
       }
     }
     /// A blast: hits every ground target, aircraft, your wingman and you within its reach.
-    function warBlast(p, R, power, who) {
-      // Your side's blasts hurt the enemy; the enemy's (missiles) hurt you and your wingman; a fuel depot going up hurts everyone.
-      if (who !== 'e') {
+    function warBlast(p, R, power, who, fl = {}) {
+      // Your side's blasts hurt the enemy (decided by the host); the enemy's (missiles) hurt you and the other players; a fuel depot going up hurts everyone.
+      if (who !== 'e' && !fl.noNpc && !fl.vis) {
         for (const g of war.ground) if (!g.dead) warDamageGround(g, WAR.blastDamage(len(sub(add(g.pos, [0, 1, 0]), p)), R, power), who);
         for (const a of war.foes) if (a.state === 'fly') warDamageAir(a, WAR.blastDamage(len(sub(a.pos, p)), R, power), who);
       }
       if (war.friend && war.friend.state === 'fly' && who !== 'f' && who !== 'p') warDamageAir(war.friend, WAR.blastDamage(len(sub(war.friend.pos, p)), R, power), who);
+      if (fl.vis) return;
       const hurtYou = WAR.blastDamage(len(sub(flight.pos, p)), R, power);
-      if (who === 'e') warHurt(hurtYou * 0.6, 'enemy missile'); else if (who !== 'f') warHurt(hurtYou * 0.5, 'caught in a blast');
+      if (who === 'e') warHurt(hurtYou * 0.6, 'enemy missile', 'npc');
+      else if (who === 'r') { if (netFight()) warHurt(hurtYou * 0.6, 'enemy player', fl.by); }
+      else if (who !== 'f') warHurt(hurtYou * 0.5, 'caught in a blast', who === 'p' ? netMyId : 'npc');
+      // On the host: an enemy blast near another player hurts them (it tells them).
+      if (who === 'e' && war.net && war.net.role === 'host') for (const o of war.net.others.values()) if (o.alive && o.shown) netHurtRemote(o.id, WAR.blastDamage(len(sub(o.shown, p)), R, power) * 0.6, 'enemy missile');
     }
 
     // ---- weapons
@@ -5421,14 +5443,19 @@
       const d = norm(add(dir, [(warRand() - 0.5) * err * 2, (warRand() - 0.5) * err * 2, (warRand() - 0.5) * err * 2]));
       const b = { owner, pos: pos.slice(), vel: add(vel, mul(d, speed)), t: 0, dmgAir, dmgGround };
       if (extra) Object.assign(b, extra);
+      if (war.net && owner === 'p') { b.noNpc = !warAuth(); if (b.shell) netSend({ t: 'sh', id: netMyId, p: b.pos.map(r1n), v: b.vel.map(r1n) }); }
       war.bullets.push(b);
+      return b;
       if (war.bullets.length > 400) war.bullets.shift();
     }
     /// A tank shell bursts where it lands (or hits): it hurts everything within a few metres.
-    function warShellBurst(b) { warBoom(b.pos, 0.7); warCrater(b.pos, 4); warBlast(b.pos, 14, 170, b.owner); }
+    function warShellBurst(b) { warBoom(b.pos, 0.7); warCrater(b.pos, 4); warBlast(b.pos, 14, 170, b.owner, b); }
     function warFireMissile(owner, pos, vel, dir, target) {
-      war.missilesAir.push({ owner, pos: pos.slice(), vel: add(vel, mul(dir, 120)), t: 0, target, trail: 0 });
+      const m = { owner, pos: pos.slice(), vel: add(vel, mul(dir, 120)), t: 0, target, trail: 0 };
+      if (war.net && owner === 'p') { m.noNpc = !warAuth(); netSend({ t: 'm', id: netMyId, p: m.pos.map(r1n), v: m.vel.map(r1n), tg: target && target.ref ? target.ref.nid : 0 }); }
+      war.missilesAir.push(m);
       noise(0.7, 0.25, 1800);
+      return m;
     }
     /// The nearest enemy (a fighter, or a ground target that is still alive) within `range` of `from`, for the helpers to aim at.
     function warNearestEnemy(from, range) {
@@ -5515,8 +5542,9 @@
           if (!war.ground.some((g) => !g.dead && Math.hypot(g.pos[0] - hit.pos[0], g.pos[2] - hit.pos[2]) < 38)) { war.bombT = 0.08; return; }
         }
         war.bombs--; war.bombT = L.stick;
-        const p = add(flight.pos, mul(u, -1.6 * (plane.scale || 1))), jitterV = jitter(1.2);
-        war.bombsAir.push({ owner: 'p', pos: p, vel: add(flight.vel, [jitterV[0], -0.5, jitterV[2]]), t: 0 });
+        const p = add(flight.pos, mul(u, -1.6 * (plane.scale || 1))), jitterV = jitter(1.2), bomb = { owner: 'p', pos: p, vel: add(flight.vel, [jitterV[0], -0.5, jitterV[2]]), t: 0, noNpc: !!war.net && !warAuth() };
+        war.bombsAir.push(bomb);
+        if (war.net) netSend({ t: 'b', id: netMyId, p: bomb.pos.map(r1n), v: bomb.vel.map(r1n) });
         noise(0.12, 0.12, 700);
         if (war.bombs === 0) toast('Out of bombs', 1400);
       }
@@ -5538,6 +5566,7 @@
       noise(0.3, 0.15, 3000);
       // A missile homing on you may be fooled, and the nearer it is the likelier it is.
       for (const m of war.missilesAir) if (m.owner === 'e' && len(sub(m.pos, flight.pos)) < 2800 && warRand() < 0.6) m.target = null;
+      if (war.net) netSend({ t: 'fl', id: netMyId });
     }
 
     // ---- the computer pilots
@@ -5549,7 +5578,7 @@
       if (a.retargetT <= 0 || (a.target && a.target.state === 'fall') || (a.target && a.target.dead)) {
         a.retargetT = 3 + warRand() * 3;
         const cands = [];
-        if (foe) { cands.push({ kind: 'air', pos: flight.pos, vel: flight.vel, player: true, state: 'fly' }); if (war.friend && war.friend.state === 'fly' && warSide === 'coop') cands.push({ kind: 'air', pos: war.friend.pos, vel: war.friend.vel, ref: war.friend, state: 'fly' }); }
+        if (foe) { for (const q of warPlayersList()) cands.push({ kind: 'air', pos: q.pos, vel: q.vel, player: q.id, state: 'fly' }); if (war.friend && war.friend.state === 'fly' && warSide === 'coop') cands.push({ kind: 'air', pos: war.friend.pos, vel: war.friend.vel, ref: war.friend, state: 'fly' }); }
         else { for (const o of war.foes) if (o.state === 'fly') cands.push({ kind: 'air', pos: o.pos, vel: o.vel, ref: o, state: 'fly' });
           if (!cands.length) for (const g of war.ground) if (!g.dead) cands.push({ kind: 'ground', pos: g.pos, vel: v3(), ref: g, state: 'fly' }); }
         let best = null, bd = Infinity;
@@ -5559,7 +5588,7 @@
       const t = a.target;
       let want, aim = null, range = 99999;
       if (t) {
-        if (t.player) { t.pos = flight.pos; t.vel = flight.vel; } else if (t.ref && t.kind === 'air') { t.pos = t.ref.pos; t.vel = t.ref.vel; }
+        if (t.player) { const q = warPlayersList().find((x) => x.id === t.player); if (q) { t.pos = q.pos; t.vel = q.vel; } else { a.target = null; a.retargetT = 0; return; } } else if (t.ref && t.kind === 'air') { t.pos = t.ref.pos; t.vel = t.ref.vel; }
         range = len(sub(t.pos, a.pos));
         const lead = t.kind === 'air' && range < 2500 ? WAR.leadPoint(a.pos, a.vel, t.pos, t.vel, WAR.GUN.speed) : null;
         aim = lead ? add(lead.point, [0, 0.5 * WAR.G * lead.t * lead.t, 0]) : t.pos;
@@ -5605,7 +5634,7 @@
       a.mslCool -= dt;
       if (foe && t && t.player && a.mslCool <= 0 && (warSide === 'versus' || warDiff === 'hard') && range > 1300 && range < 4200 && WAR.offBore(a, t.pos) < 0.22) {
         a.mslCool = 24 + warRand() * 12;
-        warFireMissile('e', a.pos, a.vel, nose, { player: true });
+        warFireMissile('e', a.pos, a.vel, nose, { player: t.player }); netEvent({ k: 'em', p: a.pos.map(r1n), v: add(a.vel, mul(nose, 120)).map(r1n), tg: t.player });
         war.warn = 'MISSILE!'; war.warnT = 3; beep(1500, 0.3, 'square', 0.1);
       }
     }
@@ -5626,9 +5655,10 @@
         if (g.burning > 0) { g.burning -= dt; if (warRand() < dt * 5) puff('soot', add(g.pos, [0, 2, 0]), [0, 6, 0]); if (warRand() < dt * 3) puff('fire', add(g.pos, jitter(3)), [0, 3, 0]); }
         return;
       }
-      const d = war.d, dp = len(sub(flight.pos, g.pos)), flat2 = Math.hypot(flight.pos[0] - g.pos[0], flight.pos[2] - g.pos[2]), agl = flight.pos[1] - groundAt(W, flight.pos[0], flight.pos[2]);
+      const np = warNearestPlayer(g.pos);
+      const d = war.d, dp = len(sub(np.pos, g.pos)), flat2 = Math.hypot(np.pos[0] - g.pos[0], np.pos[2] - g.pos[2]), agl = np.pos[1] - groundAt(W, np.pos[0], np.pos[2]);
       if (g.hunt) {      // an enemy tank drives at yours until it is in range
-        g.heading += clamp(wrapPi(Math.atan2(flight.pos[0] - g.pos[0], -(flight.pos[2] - g.pos[2])) - g.heading), -0.4 * dt, 0.4 * dt);
+        g.heading += clamp(wrapPi(Math.atan2(np.pos[0] - g.pos[0], -(np.pos[2] - g.pos[2])) - g.heading), -0.4 * dt, 0.4 * dt);
         g.speed = flat2 > 450 ? 5 : 0;
       }
       if (g.speed > 0) {
@@ -5639,20 +5669,22 @@
       g.cool -= dt;
       if (g.kind === 'aa' && g.cool <= 0 && dp < 3300 && agl > 40 && !flight.crashed) {
         g.cool = (1.5 + warRand()) / d.flak;
-        const base = add(g.pos, [0, 2, 0]), lead = WAR.leadPoint(base, v3(), flight.pos, flight.vel, 750);
+        const base = add(g.pos, [0, 2, 0]), lead = WAR.leadPoint(base, v3(), np.pos, np.vel, 750);
         if (lead) {
           // The shell flies to where you will be, and it is never quite right: the error grows with the range.
           const err = dp * 0.012 / d.flak, aim = add(lead.point, [(warRand() - 0.5) * err * 2, (warRand() - 0.5) * err, (warRand() - 0.5) * err * 2]);
-          war.flaks.push({ from: base, to: aim, t: 0, T: Math.max(0.5, len(sub(aim, base)) / 750) });
+          const T = Math.max(0.5, len(sub(aim, base)) / 750);
+          war.flaks.push({ from: base, to: aim, t: 0, T });
+          netEvent({ k: 'flak', f: base.map(r1n), o: aim.map(r1n), T: Math.round(T * 100) / 100 });
           noise(0.15, clamp(0.5 * (1 - dp / 4000), 0.04, 0.4), 500);
         }
       }
       if (g.kind === 'tank') {
-        g.turret = g.turret + clamp(WAR.wrap(Math.atan2(flight.pos[0] - g.pos[0], -(flight.pos[2] - g.pos[2])) - g.turret), -0.8 * dt, 0.8 * dt);
+        g.turret = g.turret + clamp(WAR.wrap(Math.atan2(np.pos[0] - g.pos[0], -(np.pos[2] - g.pos[2])) - g.turret), -0.8 * dt, 0.8 * dt);
         if (g.cool <= 0 && flat2 < 1500 && agl < 600 && !flight.crashed) {
           g.cool = (2.4 + warRand() * 1.4) / d.burst;
-          const mz = add(g.pos, [Math.sin(g.turret) * 5, 2, -Math.cos(g.turret) * 5]), lead = WAR.leadPoint(mz, v3(), flight.pos, flight.vel, 650);
-          if (lead) { const dir = norm(sub(lead.point, mz)); warShoot('e', mz, dir, v3(), d.aim * 1.6, 26, 0, 650); noise(0.3, 0.18, 400); }
+          const mz = add(g.pos, [Math.sin(g.turret) * 5, 2, -Math.cos(g.turret) * 5]), lead = WAR.leadPoint(mz, v3(), np.pos, np.vel, 650);
+          if (lead) { const dir = norm(sub(lead.point, mz)), sh = warShoot('e', mz, dir, v3(), d.aim * 1.6, 26, 0, 650); netEvent({ k: 'ts', p: sh.pos.map(r1n), v: sh.vel.map(r1n) }); noise(0.3, 0.18, 400); }
         }
       }
     }
@@ -5669,13 +5701,15 @@
           else if (hitGround && len(sub(b.pos, flight.pos)) < 3000 && warRand() < 0.5) puff('dirt', b.pos, [0, 6, 0]);
           b.dead = true; continue;
         }
-        if (b.owner === 'p' || b.owner === 'f') {
+        if (b.owner === 'r' && netFight() && !war.dead && WAR.segHit(p0, b.pos, flight.pos, rP)) { if (b.shell) warShellBurst(b); else { warHurt(b.dmgAir, 'enemy player', b.by); puff('spark', b.pos, jitter(20)); } b.dead = true; continue; }
+        if ((b.owner === 'p' || b.owner === 'f' || b.owner === 'r') && !b.noNpc) {
           for (const a of war.foes) if (a.state === 'fly' && WAR.segHit(p0, b.pos, a.pos, 7.5)) { if (b.shell) warShellBurst(b); else { warDamageAir(a, b.dmgAir, b.owner); puff('spark', b.pos, jitter(20)); } b.dead = true; break; }
           if (b.dead) continue;
           for (const g of war.ground) if (!g.dead && WAR.segHit(p0, b.pos, add(g.pos, [0, 1.2, 0]), g.r)) { if (b.shell) warShellBurst(b); else { warDamageGround(g, b.dmgGround, b.owner); puff('dirt', b.pos, jitter(8)); } b.dead = true; break; }
-        } else {
-          if (!flight.crashed && WAR.segHit(p0, b.pos, flight.pos, rP)) { warHurt(b.dmgAir * (war.maxHp > 120 ? 0.8 : 1), 'enemy fire'); puff('spark', b.pos, jitter(20)); b.dead = true; continue; }
+        } else if (b.owner === 'e' && !b.vis) {
+          if (!flight.crashed && !war.dead && WAR.segHit(p0, b.pos, flight.pos, rP)) { warHurt(b.dmgAir * (war.maxHp > 120 ? 0.8 : 1), 'enemy fire'); puff('spark', b.pos, jitter(20)); b.dead = true; continue; }
           if (war.friend && war.friend.state === 'fly' && WAR.segHit(p0, b.pos, war.friend.pos, 7.5)) { warDamageAir(war.friend, b.dmgAir, 'e'); b.dead = true; }
+          if (war.net && war.net.role === 'host') for (const o of war.net.others.values()) if (o.alive && o.shown && WAR.segHit(p0, b.pos, o.shown, netRadius({ tank: o.rep && o.rep.kind === 'tank' }))) { netHurtRemote(o.id, b.dmgAir, 'enemy fire'); puff('spark', b.pos, jitter(20)); b.dead = true; break; }
         }
       }
       war.bullets = war.bullets.filter((b) => !b.dead);
@@ -5685,7 +5719,7 @@
         const g = groundAt(W, b.pos[0], b.pos[2]);
         if (b.pos[1] <= g + 0.3) {
           b.dead = true; const at = [b.pos[0], g, b.pos[2]];
-          warBoom(at, 1); warCrater(at, 9); warBlast(at, WAR.BOMB.R, WAR.BOMB.dmg, b.owner);
+          warBoom(at, 1); warCrater(at, 9); warBlast(at, WAR.BOMB.R, WAR.BOMB.dmg, b.owner, b);
           if (b.owner === 'p') war.bombsHit = (war.bombsHit || 0) + 1;
         }
       }
@@ -5694,8 +5728,10 @@
       for (const m of war.missilesAir) {
         let tg = null;
         if (m.target) {
-          if (m.target.player) tg = { pos: flight.pos, vel: flight.vel };
-          else if (m.target.ref && m.target.ref.state === 'fly') tg = { pos: m.target.ref.pos, vel: m.target.ref.vel };
+          if (m.target.player) {
+            if (m.target.player === 'me' || m.target.player === true) tg = { pos: flight.pos, vel: flight.vel };
+            else { const o = war.net && war.net.others.get(m.target.player); if (o && o.alive && o.rep) tg = { pos: o.shown || o.rep.pos, vel: o.rep.vel }; else m.target = null; }
+          } else if (m.target.ref && m.target.ref.state === 'fly') tg = { pos: m.target.ref.pos, vel: m.target.ref.vel };
           else m.target = null;
         }
         WAR.missileStep(m, tg, dt);
@@ -5703,10 +5739,14 @@
         const g = groundAt(W, m.pos[0], m.pos[2]);
         let boom = m.pos[1] <= g + 1 || m.t > 14;
         if (!boom && m.t > 0.4) {
-          if (m.owner === 'e') { if (len(sub(m.pos, flight.pos)) < Math.max(14, rP * 1.4)) boom = true; if (war.friend && war.friend.state === 'fly' && len(sub(m.pos, war.friend.pos)) < 14) boom = true; }
-          else for (const a of war.foes) if (a.state === 'fly' && len(sub(m.pos, a.pos)) < 16) boom = true;
+          if (m.owner === 'e') {
+            if (!m.vis && !war.dead && len(sub(m.pos, flight.pos)) < Math.max(14, rP * 1.4)) boom = true;
+            if (war.friend && war.friend.state === 'fly' && len(sub(m.pos, war.friend.pos)) < 14) boom = true;
+            if (war.net && war.net.role === 'host' && !m.vis) for (const o of war.net.others.values()) if (o.alive && o.shown && len(sub(m.pos, o.shown)) < 14) boom = true;
+          } else if (m.owner === 'r' && netFight()) { if (!war.dead && len(sub(m.pos, flight.pos)) < Math.max(14, rP * 1.4)) boom = true; }
+          if (m.owner !== 'e') for (const a of war.foes) if (a.state === 'fly' && len(sub(m.pos, a.pos)) < 16) boom = true;
         }
-        if (boom) { m.dead = true; warBoom(m.pos, 0.8); warBlast(m.pos, 45, 260, m.owner === 'e' ? 'e' : m.owner); }
+        if (boom) { m.dead = true; warBoom(m.pos, 0.8); warBlast(m.pos, 45, 260, m.owner, m); }
       }
       war.missilesAir = war.missilesAir.filter((m) => !m.dead);
       // Flak: a shell that bursts where it was aimed, and hurts what is near the burst.
@@ -5718,8 +5758,11 @@
           for (let i = 0; i < 6; i++) puff('spark', at, jitter(30));
           const dist = len(sub(at, flight.pos)); noise(0.35, clamp(0.55 * (1 - dist / 2500), 0.05, 0.5), 260);
           if (dist < 320) { war.warn = 'FLAK!'; war.warnT = 1.2; shakeKick = Math.max(shakeKick, clamp(1 - dist / 320, 0, 1) * 0.5); }
-          if (!flight.crashed) warHurt(WAR.blastDamage(dist, 38, 16), 'flak');
-          if (war.friend && war.friend.state === 'fly') warDamageAir(war.friend, WAR.blastDamage(len(sub(at, war.friend.pos)), 38, 16), 'e');
+          if (!k.vis) {
+            if (!flight.crashed && !war.dead) warHurt(WAR.blastDamage(dist, 38, 16), 'flak');
+            if (war.friend && war.friend.state === 'fly') warDamageAir(war.friend, WAR.blastDamage(len(sub(at, war.friend.pos)), 38, 16), 'e');
+            if (war.net && war.net.role === 'host') for (const o of war.net.others.values()) if (o.alive && o.shown) netHurtRemote(o.id, WAR.blastDamage(len(sub(at, o.shown)), 38, 16), 'flak');
+          }
         }
       }
       war.flaks = war.flaks.filter((k) => !k.dead);
@@ -5756,8 +5799,11 @@
 
     // ---- one step of the war
     function warStep(dt) {
-      if (!war || flight.crashed) return;
+      if (!war) return;
+      if (war.net && flight.crashed && !war.dead) netCrashed();
+      if (flight.crashed && !war.net) return;
       if (war.endT > 0 && (war.endT -= dt) <= 0) { finish('crash', war.score, `Tank destroyed · ${war.score} pts · wave ${war.wave}`); return; }
+      if (war.net) { netTick(dt); if (war.net && war.net.role === 'client') netReplicaStep(dt); }
       if (!war.dead && war.vehicle === 'plane') {
         // Out past the edge of the battlefield: a warning, then damage.
         if (Math.hypot(flight.pos[0], flight.pos[2]) > war.arena.R * 1.02) { war.outT += dt; war.warn = 'TURN BACK: LEAVING THE BATTLEFIELD'; war.warnT = 0.4; if (war.outT > 5) warHurt(10 * dt, 'out of bounds'); }
@@ -5770,13 +5816,13 @@
       war.feed = war.feed.filter((f) => f.t > 0);
       // Next wave when the last one is cleared.
       const aliveG = war.ground.some((g) => !g.dead), aliveF = war.foes.some((a) => a.state !== 'gone');
-      if (!aliveG && !aliveF && war.wave > 0 && !war.waveClear) { war.waveClear = true; war.wavePause = 4.5; const bonus = 250 * war.wave; war.score += bonus; toast(`✔ WAVE ${war.wave} CLEARED  +${bonus}`, 2400); chime(); }
-      if (war.waveClear || war.wave === 0) { war.wavePause -= dt; if (war.wavePause <= 0) warSpawnWave(); }
+      if (warAuth() && !aliveG && !aliveF && war.wave > 0 && !war.waveClear) { war.waveClear = true; war.wavePause = 4.5; const bonus = 250 * war.wave; war.score += bonus; toast(`✔ WAVE ${war.wave} CLEARED  +${bonus}`, 2400); chime(); }
+      if (warAuth() && (war.waveClear || war.wave === 0)) { war.wavePause -= dt; if (war.wavePause <= 0) warSpawnWave(); }
       if (!war.dead) { warPlayerFire(dt); warLockOn(dt); if (war.L.gunners) warGunners(dt); }
-      for (const a of war.foes) { if (a.state === 'fly') { warPilot(a, dt); if (!war.dead && len(sub(a.pos, flight.pos)) < Math.max(5, (plane.span || 5)) + 7) { warDamageAir(a, 999, 'p'); warHurt(55, 'collision'); } } else if (a.state === 'fall') warFall(a, dt); }
-      war.foes = war.foes.filter((a) => a.state !== 'gone');
+      if (warAuth()) for (const a of war.foes) { if (a.state === 'fly') { warPilot(a, dt); if (!war.dead && len(sub(a.pos, flight.pos)) < Math.max(5, (plane.span || 5)) + 7) { warDamageAir(a, 999, 'p'); warHurt(55, 'collision'); } } else if (a.state === 'fall') warFall(a, dt); }
+      if (warAuth()) war.foes = war.foes.filter((a) => a.state !== 'gone');
       if (war.friend) { const a = war.friend; if (a.state === 'fly') warPilot(a, dt); else if (a.state === 'fall') warFall(a, dt); else war.friend = null; }
-      for (const g of war.ground) warGroundStep(g, dt);
+      if (warAuth()) for (const g of war.ground) warGroundStep(g, dt);
       warProjectiles(dt);
       // A damaged aircraft trails smoke and then fire.
       if (!war.dead && war.hp < war.maxHp * 0.5 && warRand() < dt * 30) puff('dark', warMuzzle(), mul(flight.vel, 0.9));
@@ -5801,7 +5847,12 @@
     }
     function warRender(t) {
       if (!war || screen !== 'fly') return;
-      if (war.vehicle === 'tank') warDrawTank(war.tank.pos, war.tank.q, war.tank.turret, war.tank.gun, war.dead ? [0.2, 0.18, 0.17] : [0.72, 0.9, 1.3]);
+      if (war.vehicle === 'tank' && !(war.net && war.dead)) warDrawTank(war.tank.pos, war.tank.q, war.tank.turret, war.tank.gun, war.dead ? [0.2, 0.18, 0.17] : [0.72, 0.9, 1.3]);
+      if (war.net) for (const o of war.net.others.values()) {
+        if (!o.alive || !o.rep || !o.shown) continue;
+        if (o.rep.kind === 'tank') warDrawTank(o.shown, o.rep.q, o.rep.turret, o.rep.gun, o.colour);
+        else if (planeMeshes[o.rep.kind]) warDrawAircraft({ id: o.rep.kind, spec: PLANES.find((q) => q.id === o.rep.kind), pos: o.shown, q: o.rep.q, state: 'fly' }, o.colour, 0);
+      }
       for (const c of war.craters) draw(warMeshes.crater, model([0, 0, 0, 1], c.p, c.r), [0.1, 0.085, 0.07]);
       for (const g of war.ground) {
         const tint = g.dead ? [0.2, 0.18, 0.17] : [1, 1, 1], q = qheading(g.heading), at = [g.pos[0], g.pos[1], g.pos[2]];
@@ -5854,6 +5905,13 @@
         h2.fillText(`${label} ${fmtD(dd)}${locked ? (war.lockT >= 1 ? '  LOCK' : '  …') : ''}`, q.x, q.y + r + 10);
       };
       for (const a of war.foes) markAir(a, '#ff5d5d', 'BANDIT');
+      if (war.net) for (const o of war.net.others.values()) {
+        if (!o.alive || !o.rep || !o.shown) continue;
+        const dd = len(sub(o.shown, flight.pos)), q = proj(add(o.shown, [0, 7, 0])); if (!onScr(q, 10) || dd > 6000) continue;
+        const col = netFight() ? '#ffb347' : '#6cb6ff';
+        h2.fillStyle = col; h2.fillText(`${o.name} ${fmtD(dd)}`, q.x, q.y - 4);
+        h2.fillStyle = 'rgba(0,0,0,.6)'; h2.fillRect(q.x - 16, q.y + 2, 32, 3); h2.fillStyle = col; h2.fillRect(q.x - 16, q.y + 2, 32 * clamp(o.hp / 100, 0, 1), 3);
+      }
       if (war.friend) markAir(war.friend, '#6cb6ff', 'WINGMAN');
       // The gun sight: the cross where the shells go, 650 m ahead, and a lead cue on the locked fighter.
       const sight = proj(add(flight.pos, mul(f, 650)));
@@ -5902,9 +5960,16 @@
       const wp = tank ? `CANNON ${war.shells}   MACHINE GUN ${war.gun}   ${war.tank.reload > 0 ? 'RELOADING' : 'READY'}` : [war.L.gun ? `GUN ${war.gun}` : null, `BOMB ${war.bombs}`, war.L.missiles ? `MSL ${war.missiles}` : null, `FLARE ${war.flares}`].filter(Boolean).join('   ');
       h2.fillText(wp, bx + 10, by + 26 * s + 3);
       h2.textAlign = 'right'; h2.fillText(`WAVE ${war.wave}  ·  ${war.score} pts`, bx + bw - 10, by + 26 * s + 3);
+      if (war.net) {        // who is in the battle, and how they are doing
+        h2.textAlign = 'left'; h2.font = `700 ${Math.round(10 * s + 2)}px system-ui`;
+        const rows = [[netMyName() + ' (you)', netFight() ? war.net.kills[netMyId] || 0 : Math.round(war.hp / war.maxHp * 100), '#fff'], ...[...war.net.others.values()].map((o) => [o.name, netFight() ? war.net.kills[o.id] || 0 : Math.round(o.hp), o.alive ? '#cfe6ff' : '#888'])];
+        h2.fillStyle = 'rgba(8,12,24,.55)'; h2.fillRect(8, 44 * s + 6, 128, 14 * rows.length + 8);
+        rows.forEach(([name, v, col], i) => { h2.fillStyle = col; h2.fillText(name.slice(0, 11), 14, 44 * s + 19 + i * 14); h2.textAlign = 'right'; h2.fillText(netFight() ? `${v} kills` : `${v}%`, 130, 44 * s + 19 + i * 14); h2.textAlign = 'left'; });
+        if (war.net.winner) { h2.textAlign = 'center'; h2.font = `800 ${Math.round(24 * s + 4)}px system-ui`; h2.fillStyle = '#ffd166'; h2.fillText('MATCH OVER', W2 / 2, H2 * 0.3); }
+      }
       // The feed of what just happened.
       h2.textAlign = 'left'; h2.font = `600 ${Math.round(10 * s + 2)}px system-ui`;
-      war.feed.forEach((fd, i) => { h2.fillStyle = `rgba(255,255,255,${clamp(fd.t, 0, 1)})`; h2.fillText(fd.text, 14, H2 * 0.22 + i * 15); });
+      war.feed.forEach((fd, i) => { h2.fillStyle = `rgba(255,255,255,${clamp(fd.t, 0, 1)})`; h2.fillText(fd.text, 14, H2 * (war.net ? 0.34 : 0.22) + i * 15); });
       // A small radar: you at the centre, ahead is up. Enemies red, wingman blue, ground targets orange.
       const R = Math.round(44 * s + 14), cx = W2 - R - 12, cy = R + 12, range = 6000;
       h2.fillStyle = 'rgba(8,12,24,.55)'; h2.beginPath(); h2.arc(cx, cy, R, 0, Math.PI * 2); h2.fill();
@@ -5916,9 +5981,11 @@
         h2.fillStyle = col; if (sq) h2.fillRect(x - 2, y - 2, 4, 4); else { h2.beginPath(); h2.arc(x, y, 3, 0, Math.PI * 2); h2.fill(); }
       };
       for (const g of war.ground) if (!g.dead) blip(g.pos, '#ff9f43', true);
+      if (war.net) for (const o of war.net.others.values()) if (o.alive && o.shown) blip(o.shown, netFight() ? '#ffb347' : '#6cb6ff', false);
       for (const a of war.foes) if (a.state === 'fly') blip(a.pos, '#ff5d5d', false);
       if (war.friend && war.friend.state === 'fly') blip(war.friend.pos, '#6cb6ff', false);
       h2.fillStyle = '#fff'; h2.beginPath(); h2.moveTo(cx, cy - 5); h2.lineTo(cx + 4, cy + 4); h2.lineTo(cx - 4, cy + 4); h2.closePath(); h2.fill();
+      if (war.net && war.dead && war.net.respawnT > 0) { h2.textAlign = 'center'; h2.font = `800 ${Math.round(24 * s + 4)}px system-ui`; h2.fillStyle = '#ff9f9f'; h2.fillText(`DESTROYED · BACK IN ${Math.ceil(war.net.respawnT)}`, W2 / 2, H2 * 0.4); }
       // Warnings and the red flash when you are hit.
       if (war.warn) { h2.textAlign = 'center'; h2.font = `800 ${Math.round(22 * s + 4)}px system-ui`; h2.fillStyle = Math.floor(performance.now() / 180) % 2 ? '#ff5d5d' : '#ffd166'; h2.fillText(war.warn, W2 / 2, H2 * 0.18); }
       if (war.flash > 0) { h2.fillStyle = `rgba(255,30,30,${war.flash * 0.35})`; h2.fillRect(0, 0, W2, H2); }
@@ -5957,6 +6024,7 @@
             [['Mouse'], 'Aim the turret', `move the cursor out of the ring in the middle: sideways turns the turret, up and down raise the gun.${aimNote}`], [['←', '→', '↑', '↓'], 'Aim (keys)', 'turret left and right, gun up and down'],
             [['Space', 'Enter', 'Click'], 'Cannon', 'a big shell that explodes where it lands. About 2 seconds to reload'], [['B', 'Z'], 'Machine gun', 'hold to fire. Good against planes and trucks'],
             [['C'], 'Camera', 'behind, gunner or far'], [['P'], 'Pause'], [['R'], 'Restart'], [['?'], 'Show this help'],
+            ...(war && war.net ? [[['U'], 'Vote', 'change the match with the other players']] : []),
             [['Radar'], 'Colours', 'red: fighters · blue: your wingman · orange: ground targets']
           ] : [
             [['Space', 'Enter', 'Click'], 'Guns', `hold to fire. The circle is where the shells go.${aimNote}`],
@@ -5964,6 +6032,7 @@
             [['N'], 'Missile', 'keep a fighter in the sights until it says LOCK, then press N'], [['L'], 'Flares', 'press when you hear MISSILE! to break its lock'],
             ...(auto ? [[['Mouse', '←', '→'], 'Turn', 'the plane turns towards where you point and keeps its height'], [['↑', '↓'], 'Climb / dive', 'it settles at the new height'], [['W', 'S'], 'Speed', 'faster or slower']] : CTL_FLY()),
             [['C'], 'Camera', 'behind, cockpit or far'], [['P'], 'Pause'], [['R'], 'Restart'], [['?'], 'Show this help'],
+            ...(war && war.net ? [[['U'], 'Vote', 'change the match with the other players']] : []),
             [['Radar'], 'Colours', 'red: fighters · blue: your wingman · orange: ground targets']] };
         }
         default: return { goal: 'Take off and explore: hills, a canyon, a mountain strip. Watch for engine failures.',
@@ -5981,7 +6050,26 @@
     const ctlEl = document.createElement('div'); ctlEl.className = 'pg-ctlcard'; ctlEl.style.display = 'none';
     const ctlBtn = document.createElement('button'); ctlBtn.className = 'pg-ctlbtn'; ctlBtn.textContent = '?'; ctlBtn.title = 'Controls for this mode (?)'; ctlBtn.style.display = 'none';
     const wbar = document.createElement('div'); wbar.className = 'pg-wbar'; wbar.style.display = 'none';
-    root.append(ctlEl, ctlBtn, wbar);
+    const netbar = document.createElement('div'); netbar.className = 'pg-netbar'; netbar.style.display = 'none';
+    netbar.innerHTML = '<button data-nb="vote" title="Vote to change the match (U)">🗳 Vote</button><button data-nb="leave" title="Leave this battle">⎋ Leave</button>';
+    const voteEl = document.createElement('div'); voteEl.className = 'pg-ctlcard pg-vote'; voteEl.style.display = 'none';
+    root.append(ctlEl, ctlBtn, wbar, netbar, voteEl);
+    function voteHtml() {
+      const n = netg, row = (key, label, vals) => `<div class="pg-crow" style="align-items:center"><span class="pg-ckeys" style="min-width:70px"><b>${label}</b></span><span class="pg-chips" style="margin:0">${vals.map(([val, name]) => {
+        const cur = n.cfg[key] === val, c = netVoteCounts(key)[val] || 0, mine = n.votes[netMyId] && n.votes[netMyId][key] === val;
+        return `<button data-vote="${key}:${val}" class="${cur ? 'pg-on' : mine ? 'pg-voted' : ''}">${name}${!cur && c ? ` (${c})` : ''}</button>`; }).join('')}</span></div>`;
+      return `<div class="pg-ctitle">Vote to change the match <span>click or press U to close</span></div>
+        <div class="pg-cgoal">A change passes when more than half of the players vote for it, and the battle then starts again.</div>
+        <div class="pg-cgrid">${row('side', 'Teams', [['coop', '🤝 Co-op'], ['versus', '⚔️ Fight']])}${row('npc', 'Enemies', [[true, 'On'], [false, 'Off']])}${row('field', 'Field', ARENAS.map((a) => [a.id, a.name]))}</div>`;
+    }
+    function toggleVote(force) {
+      const on = force != null ? force : voteEl.style.display === 'none';
+      if (on && netg) { voteEl.innerHTML = voteHtml(); voteEl.style.display = 'block'; voteEl.querySelectorAll('[data-vote]').forEach((b) => b.onclick = (e) => { e.stopPropagation(); const [key, raw] = b.dataset.vote.split(':'); netVoteCast(key, raw === 'true' ? true : raw === 'false' ? false : raw); voteEl.innerHTML = voteHtml(); toggleVoteBind(); }); }
+      else voteEl.style.display = 'none';
+    }
+    function toggleVoteBind() { voteEl.querySelectorAll('[data-vote]').forEach((b) => b.onclick = (e) => { e.stopPropagation(); const [key, raw] = b.dataset.vote.split(':'); netVoteCast(key, raw === 'true' ? true : raw === 'false' ? false : raw); voteEl.innerHTML = voteHtml(); toggleVoteBind(); }); }
+    netbar.querySelectorAll('button').forEach((b) => b.addEventListener('click', (e) => { e.stopPropagation(); if (b.dataset.nb === 'vote') toggleVote(); else { netLeave(true); screen = 'menu'; paused = false; if (engGain) engGain.gain.value = 0; restorePlane(); useBattlefield(''); flight = new Flight(plane); renderUI(); } }));
+    netbar.addEventListener('mousedown', (e) => e.stopPropagation());
     /// The buttons for the vehicle in use: a tank has a cannon and a machine gun; an aircraft has guns, bombs, missiles and flares.
     function buildWbar() {
       const tank = war && war.vehicle === 'tank';
@@ -6012,10 +6100,12 @@
       const fly = screen === 'fly';
       ctlBtn.style.display = fly ? 'grid' : 'none';
       wbar.style.display = fly && mode.id === 'war' ? 'flex' : 'none';
-      if (!fly) showCtl(false);
+      netbar.style.display = fly && mode.id === 'war' && war && war.net ? 'flex' : 'none';
+      if (!fly) { showCtl(false); toggleVote(false); }
     }
     function ctlTick(dt) {
       if (ctlT > 0 && (ctlT -= dt) <= 0) showCtl(false);
+      if (voteEl.style.display !== 'none' && netg && netg.rev !== voteEl.dataset.rev) { voteEl.dataset.rev = netg.rev; voteEl.innerHTML = voteHtml(); toggleVoteBind(); }
       if (wbar.style.display !== 'none' && war) {
         const n = war.vehicle === 'tank' ? { gun: war.shells, bomb: war.gun } : { gun: war.L.gun ? war.gun : '–', bomb: war.bombs, msl: war.L.missiles ? war.missiles : '–', flr: war.flares };
         for (const k in n) { const el = wbar.querySelector(`[data-n="${k}"]`); if (el && el.textContent !== String(n[k])) el.textContent = n[k]; }
@@ -6024,6 +6114,336 @@
       }
     }
 
+    // ================================================================== SHARED BATTLES
+    // One player hosts a room and shares its code; the others join with it. The host runs the computer enemies and the waves
+    // and everyone else is shown them; each player drives their own vehicle and judges the hits on it. In Co-op everyone is
+    // on one side; in Fight the players shoot each other (and the enemies, if they are on, shoot everyone).
+    const FIGHT_WIN_KILLS = 10;
+    let netg = null;           // the room you are in, or null
+    const netMyId = (() => { let id = read('netid', ''); if (!id) { id = [...crypto.getRandomValues(new Uint8Array(4))].map((b) => b.toString(16).padStart(2, '0')).join(''); write('netid', id); } return id; })();
+    const netMyName = () => (playerName || `Pilot ${netMyId.slice(0, 2).toUpperCase()}`).slice(0, 14);
+    const warAuth = () => !war || !war.net || war.net.role === 'host';          // this copy of the game runs the computer enemies
+    const netFight = () => !!(war && war.net && war.net.cfg.side === 'versus');  // players shoot each other
+    const netSend = (o) => (netg && netg.link ? netg.link.send(o) : false);
+    const NET_COLOURS = [[0.62, 0.82, 1.25], [1.25, 0.9, 0.5], [0.7, 1.2, 0.7], [1.2, 0.7, 1.1], [0.8, 1.1, 1.2], [1.2, 1.0, 0.7]];
+    const netBump = () => { if (netg) netg.rev = (netg.rev || 0) + 1; };
+
+    function netOpen(role, code) {
+      netLeave(true);
+      netg = { role, code, cfg: { field: warField, side: warSide, npc: warNpc }, link: null, roster: [], peers: new Map(), votes: {}, running: false, hostSeen: 0, hostId: role === 'host' ? netMyId : '',
+        status: 'connecting', error: '', joined: Date.now(), lobbyT: 0, helloT: 0, rev: 0, shownRev: -1, saved: null };
+      netg.link = new NET.Link(WebSocket, netMsg, (st) => { if (!netg) return; netg.status = st; if (st === 'on') { netg.error = ''; netg.joined = Date.now(); netHello(); if (role === 'host') netSendLobby(); } netBump(); });
+      netg.link.join(code);
+      netg.timer = setInterval(netHousekeeping, 500);
+      netBump();
+    }
+    function netLeave(quiet = false) {
+      if (!netg) return;
+      netSend({ t: 'bye', id: netMyId });
+      clearInterval(netg.timer); netg.link.close();
+      if (netg.saved) { warField = netg.saved.field; warSide = netg.saved.side; warNpc = netg.saved.npc; }
+      netg = null;
+      if (war) war.net = null;
+      if (!quiet) renderUI();
+    }
+    const netHello = () => netg && netg.role === 'client' && netSend({ t: 'hi', id: netMyId, n: netMyName(), v: warVeh });
+    function netRoster() {          // the host's list of who is here (itself first)
+      return [{ id: netMyId, n: netMyName(), v: warVeh }, ...[...netg.peers.values()].map((p) => ({ id: p.id, n: p.n, v: p.v }))];
+    }
+    function netSendLobby() { if (netg && netg.role === 'host') { netg.roster = netRoster(); netSend({ t: 'lobby', host: netMyId, cfg: netg.cfg, roster: netg.roster, running: netg.running }); } }
+    function netHousekeeping() {
+      if (!netg) return;
+      const now = Date.now();
+      if (netg.role === 'host') {
+        for (const [id, p] of netg.peers) if (now - p.last > 8000) { netg.peers.delete(id); if (war && war.net) war.net.others.delete(id); netBump(); if (war && war.net) warFeed(`${p.n} left`); }
+        if (now - netg.lobbyT > 1500) { netg.lobbyT = now; netSendLobby(); }
+      } else {
+        if (now - netg.helloT > 1800) { netg.helloT = now; netHello(); }
+        if (netg.hostSeen && now - netg.hostSeen > 10000) netEnd('The host left the game.');
+        else if (!netg.hostSeen && netg.status === 'on' && now - netg.joined > 12000 && !netg.error) { netg.error = 'No game with that code was found. Check the code, and that the host has opened the room.'; netBump(); }
+      }
+      if (netg && screen === 'menu' && netg.rev !== netg.shownRev) { netg.shownRev = netg.rev; renderUI(); }
+    }
+    /// The game you were in is over (the host left, or you left): back to the menu.
+    function netEnd(why) {
+      const wasInMatch = !!(war && war.net);
+      netLeave(true);
+      if (wasInMatch && screen === 'fly') { toast(why, 4000); screen = 'menu'; paused = false; if (engGain) engGain.gain.value = 0; restorePlane(); useBattlefield(''); flight = new Flight(plane); }
+      else if (why && screen === 'menu') toast(why, 3500);
+      renderUI();
+    }
+
+    // ---- the host's side of starting and voting
+    function netHostStart() {
+      if (!netg || netg.role !== 'host' || netg.status !== 'on') return;
+      const players = netRoster().map((p, i) => ({ ...p, slot: i }));
+      netg.running = true;
+      const msg = { t: 'start', cfg: netg.cfg, players, seed: Date.now() & 0xffff };
+      netSend(msg);
+      netBegin(msg);
+    }
+    function netSendStartTo(id) { const players = netRoster().map((p, i) => ({ ...p, slot: i })); netSend({ t: 'start', cfg: netg.cfg, players, seed: 0, to: id, late: true }); if (war) netSendWave(); }
+    function netVoteCast(key, val) {
+      if (!netg) return;
+      if (netg.role === 'host') { netg.votes[netMyId] = { ...(netg.votes[netMyId] || {}), [key]: val }; netCountVotes(); }
+      else netSend({ t: 'vote', id: netMyId, key, val });
+      netBump();
+    }
+    const NET_VOTE_OPTIONS = { side: ['coop', 'versus'], npc: [true, false], field: ARENAS.map((a) => a.id) };
+    function netCountVotes() {
+      if (!netg || netg.role !== 'host') return;
+      const ids = netRoster().map((p) => p.id);
+      for (const key of Object.keys(NET_VOTE_OPTIONS)) {
+        const r = NET.tally(ids, netg.votes, key, netg.cfg[key], NET_VOTE_OPTIONS[key]);
+        if (r.passed != null) {
+          netg.cfg = { ...netg.cfg, [key]: r.passed };
+          for (const id of Object.keys(netg.votes)) if (netg.votes[id]) delete netg.votes[id][key];
+          netSendLobby();
+          if (netg.running) { const players = netRoster().map((p, i) => ({ ...p, slot: i })); const msg = { t: 'start', cfg: netg.cfg, players, seed: Date.now() & 0xffff }; netSend(msg); netBegin(msg); toast('Vote passed: starting again', 2500); }
+          netBump();
+        }
+      }
+    }
+    /// How many players want each choice right now (for the vote buttons).
+    function netVoteCounts(key) { const c = {}; if (!netg) return c; for (const v of Object.values(netg.votes)) if (v && v[key] != null) c[v[key]] = (c[v[key]] || 0) + 1; return c; }
+    function netHostSet(key, val) {      // the host may simply decide in the lobby
+      if (!netg || netg.role !== 'host' || netg.running) return;
+      netg.cfg = { ...netg.cfg, [key]: val }; netSendLobby(); netBump();
+    }
+
+    // ---- beginning a match (the host and every other player run this when the host starts)
+    function netBegin(msg) {
+      if (!netg) return;
+      if (!netg.saved) netg.saved = { field: warField, side: warSide, npc: warNpc };
+      warField = msg.cfg.field; warSide = msg.cfg.side; warNpc = msg.cfg.npc;
+      netg.running = true; netg.cfg = msg.cfg; netg.votes = {};
+      netg.start = msg;
+      mode = MODES.find((m) => m.id === 'war');
+      start();
+    }
+    /// Called by warStart when the battle is a shared one: adds the shared part of the battle to `war`.
+    function netAttachToWar() {
+      const msg = netg.start, me = msg.players.find((p) => p.id === netMyId) || { slot: 0 };
+      war.net = { role: netg.role, cfg: msg.cfg, slot: me.slot, others: new Map(), kills: {}, names: Object.fromEntries(msg.players.map((p) => [p.id, p.n])), respawnT: 0, sendT: 0, foeT: 0, groundT: 0, remoteFireT: 0, gidn: 0, nidn: 0, endAt: 0, winner: '' };
+      for (const p of msg.players) if (p.id !== netMyId) war.net.others.set(p.id, { id: p.id, name: p.n, colour: NET_COLOURS[p.slot % NET_COLOURS.length], rep: null, shown: null, t: 0, alive: false, hp: 100, kind: p.v === 'tank' ? 'tank' : p.v, firing: false, gunT: 0 });
+      war.friend = null;                                          // the other players are your wingmen
+      if (netg.role === 'client') { war.wavePause = 1e9; war.wave = 0; }   // the host decides when a wave comes
+    }
+    /// Where this player starts: spread along their side of the battlefield (the south; in a Fight, the odd ones start in the north).
+    function netStartSpot(R, cfg, slotNo) {
+      const north = cfg.side === 'versus' && slotNo % 2 === 1, slot = north ? (slotNo - 1) / 2 : slotNo / (cfg.side === 'versus' ? 2 : 1);
+      const [dx, dz] = NET.slotOffset(Math.floor(slot));
+      return { x: dx, z: (north ? -1 : 1) * (R * 0.72 + dz), heading: north ? Math.PI : 0, north };
+    }
+
+    // ---- what is sent, ten times a second
+    function netMyState() {
+      const tank = war.vehicle === 'tank', t = war.tank;
+      const firing = tank ? (keys.has('z') || keys.has('b') || warPad.bomb) && war.gun > 0 : (keys.has('Enter') || keys.has(' ') || warPad.gun) && war.gun > 0;
+      return { kind: tank ? 'tank' : plane.id, pos: tank ? t.pos : flight.pos, q: tank ? t.q : flight.q, vel: tank ? t.vel : flight.vel, hp: war.hp / war.maxHp * 100, turret: tank ? t.turret : 0, gun: tank ? t.gun : 0, firing: firing && !war.dead, alive: !war.dead };
+    }
+    function netTick(dt) {
+      const n = war.net;
+      n.sendT -= dt;
+      if (n.sendT <= 0) { n.sendT = 0.1; netSend(NET.packState(netMyId, netMyState())); }
+      // The other players: glide them to where they are, and let their guns fire.
+      const now = performance.now();
+      for (const o of n.others.values()) {
+        if (!o.rep) continue;
+        if (now - o.t > 5000) { o.alive = false; continue; }
+        o.shown = NET.glide(o.shown, o.rep, (now - o.t) / 1000, dt);
+        if (o.firing && o.alive) {
+          o.gunT -= dt;
+          while (o.gunT <= 0) {
+            o.gunT += o.rep.kind === 'tank' ? 0.085 : 0.05;
+            const dir = o.rep.kind === 'tank' ? [Math.sin(o.rep.turret) * Math.cos(o.rep.gun), Math.sin(o.rep.gun), -Math.cos(o.rep.turret) * Math.cos(o.rep.gun)] : qrot(o.rep.q, [0, 0, -1]);
+            const b = { owner: 'r', by: o.id, pos: add(o.shown, mul(dir, 6)), vel: add(o.rep.vel, mul(norm(add(dir, jitter(0.006))), WAR.GUN.speed)), t: 0, dmgAir: o.rep.kind === 'tank' ? 6 : 9, dmgGround: o.rep.kind === 'tank' ? 3 : 5, noNpc: !warAuth() };
+            war.bullets.push(b); if (war.bullets.length > 400) war.bullets.shift();
+          }
+        }
+      }
+      // The host tells everyone where the enemies are.
+      if (n.role === 'host') {
+        n.foeT -= dt; n.groundT -= dt;
+        if (n.foeT <= 0) { n.foeT = 0.1; netSendFoes(); }
+        if (n.groundT <= 0) { n.groundT = 0.5; netSendGround(); }
+      }
+      // Respawn after being destroyed.
+      if (war.dead && n.respawnT > 0 && (n.respawnT -= dt) <= 0) netRespawn();
+      // A Fight with the enemy off is won by the first to ten.
+      if (n.role === 'host' && netFight() && !n.winner) { const best = Object.entries(n.kills).sort((a, b) => b[1] - a[1])[0]; if (best && best[1] >= FIGHT_WIN_KILLS) { n.winner = best[0]; netSend({ t: 'end', w: best[0], k: n.kills }); netFinish(best[0]); } }
+    }
+    /// The aircraft hit the ground or something solid: in a shared battle that is a death like any other.
+    function netCrashed() {
+      war.dead = true; war.hp = 0; war.net.respawnT = 5; war.flash = 1; toast('💥 CRASHED', 2500);
+      netSend({ t: 'k', id: netMyId, v: netMyId, by: 'npc' }); netGameMsg({ t: 'k', id: netMyId, v: netMyId, by: 'npc' });
+    }
+    function netResetWreck() {
+      debris.length = 0; attached = new Set(ALL_PARTS); goneGear.clear(); gouges.length = 0; slowT = 0; duckT = 0; bumpSlow = false; shakeKick = 0; fireK = 1; dirtD = 0; wreckT = 0; hadFailure = false; engineSmokeT = 0; wingLostAt = -1; canyonT = 0;
+      wreckFire = false; fireT = 0; crashCam = null; smoke.length = 0; stoppedT = 0; stopCredited = false; hadAir = false; hadTakeoff = false;
+    }
+    function netRespawn() {
+      if (flight.crashed) { netResetWreck(); flight = new Flight(plane); heliColl = 0; }
+      const R = war.arena.R, spot = netStartSpot(R, war.net.cfg, war.net.slot);
+      war.dead = false; war.hp = war.maxHp; war.gun = war.L.gun; war.bombs = war.L.bombs; war.missiles = war.L.missiles; war.flares = war.L.flares; war.shells = war.L.shells; war.flash = 0;
+      if (war.vehicle === 'tank') {
+        war.tank = new TankBody([spot.x, 0, spot.z], spot.heading); war.tank.pos[1] = groundAt(W, spot.x, spot.z) + 0.2;
+        flight.reset([spot.x, war.tank.pos[1] + 2.2, spot.z], spot.heading, 0, true);
+      } else { flight.reset([spot.x, plane.id === 'b52' ? 1100 : 450, spot.z], spot.heading, plane.cruise, false); war.ap = { hdg: spot.heading, alt: flight.pos[1], spd: plane.cruise * 1.05, i: 0 }; }
+      toast('Back in the fight', 1500);
+    }
+    function netFinish(winnerId) {
+      const n = war.net, name = winnerId === netMyId ? 'You' : (n.names[winnerId] || 'A player');
+      finish('done', war.score, `${name} won with ${n.kills[winnerId] || 0} kills`);
+    }
+
+    // ---- what the host sends about the enemies
+    const r1n = (v) => Math.round(v * 10) / 10;
+    function netSendWave() {
+      if (!war || !war.net || war.net.role !== 'host') return;
+      netSend({ t: 'wave', n: war.wave, sc: war.score, kl: war.kills, g: war.ground.map((g) => ({ i: g.nid, k: g.kind, x: r1n(g.pos[0]), y: r1n(g.pos[1]), z: r1n(g.pos[2]), h: Math.round(g.heading * 100) / 100, hp: Math.round(g.hp), mx: Math.round(g.maxHp), d: g.dead ? 1 : 0, s: g.speed })) });
+    }
+    function netSendFoes() {
+      netSend({ t: 'wf', f: war.foes.map((a) => ({ i: a.nid, id: a.id, x: r1n(a.pos[0]), y: r1n(a.pos[1]), z: r1n(a.pos[2]), h: Math.round(a.heading * 100) / 100, p: Math.round(a.pitch * 100) / 100, b: Math.round(a.bank * 100) / 100, s: Math.round(a.speed), hp: Math.round(a.hp), st: a.state === 'fly' ? 0 : 1, fg: a.burstLeft > 0 ? 1 : 0 })) });
+    }
+    function netSendGround() {
+      netSend({ t: 'wg', n: war.wave, sc: war.score, kl: war.kills, g: war.ground.map((g) => [g.nid, Math.round(g.hp), g.dead ? 1 : 0, r1n(g.pos[0]), r1n(g.pos[2]), Math.round(g.heading * 100) / 100]) });
+    }
+    const netEvent = (e) => { if (war && war.net && war.net.role === 'host') netSend({ t: 'ev', ...e }); };
+    const netHurtRemote = (id, amt, why) => { if (amt > 0.05) netSend({ t: 'hit', to: id, a: Math.round(amt * 10) / 10, w: why }); };
+
+    // ---- what arrives
+    function netMsg(m) {
+      if (!netg || !m || typeof m.t !== 'string') return;
+      if (m.id === netMyId) return;
+      switch (m.t) {
+        case 'hi': {       // someone is here
+          if (netg.role !== 'host') break;
+          const isNew = !netg.peers.has(m.id), p = netg.peers.get(m.id) || { id: m.id };
+          Object.assign(p, { n: String(m.n || 'Pilot').slice(0, 14), v: WAR_VEHICLES.some((v) => v.id === m.v) ? m.v : 'f16', last: Date.now() });
+          netg.peers.set(m.id, p);
+          if (isNew || p.vChanged) { netBump(); netSendLobby(); if (netg.running) netSendStartTo(m.id); }
+          else if (netg.roster.find((r) => r.id === m.id)?.v !== p.v) { netBump(); netSendLobby(); }
+          break;
+        }
+        case 'bye': {
+          if (netg.role === 'host' && netg.peers.delete(m.id)) { netBump(); if (war && war.net) { warFeed(`${war.net.names[m.id] || 'A player'} left`); war.net.others.delete(m.id); } netSendLobby(); }
+          else if (netg.role === 'client' && m.id === netg.hostId) netEnd('The host left the game.');
+          break;
+        }
+        case 'lobby': {
+          if (netg.role !== 'client') break;
+          netg.hostSeen = Date.now(); netg.hostId = m.host; netg.cfg = m.cfg; netg.roster = m.roster; netg.error = ''; netBump();
+          break;
+        }
+        case 'start': {
+          if (netg.role !== 'client' || (m.to && m.to !== netMyId)) break;
+          netg.hostSeen = Date.now(); netBegin(m);
+          break;
+        }
+        case 'vote': if (netg.role === 'host') { netg.votes[m.id] = { ...(netg.votes[m.id] || {}), [m.key]: m.val }; netCountVotes(); netBump(); } break;
+        case 'end': if (war && war.net && !war.net.winner) { war.net.winner = m.w; war.net.kills = m.k || {}; netFinish(m.w); } break;
+        default: if (war && war.net) netGameMsg(m);
+      }
+    }
+    function netOther(id) { return war.net.others.get(id); }
+    /// A list of `n` finite numbers that could be a place in the world (anything else another player sends is ignored).
+    const okVec = (v, n = 3) => Array.isArray(v) && v.length === n && v.every((x) => Number.isFinite(x) && Math.abs(x) < 40000);
+    function netGameMsg(m) {
+      const n = war.net;
+      switch (m.t) {
+        case 's': {                           // another player's state
+          const o = netOther(m.id); if (!o || !okVec(m.p) || !okVec(m.q, 4) || !okVec(m.v)) break;
+          const r = NET.unpackState(m);
+          if (o.alive && !r.alive && r.hp <= 0) { /* their death is announced by the 'k' message */ }
+          o.rep = r; o.t = performance.now(); o.alive = r.alive; o.hp = r.hp; o.kind = r.kind; o.firing = r.firing;
+          if (!o.shown) o.shown = r.pos.slice();
+          break;
+        }
+        case 'b': { if (!okVec(m.p) || !okVec(m.v)) break; war.bombsAir.push({ owner: 'r', by: m.id, pos: m.p.slice(), vel: m.v.slice(), t: 0, noNpc: !warAuth() }); break; }
+        case 'sh': { if (!okVec(m.p) || !okVec(m.v)) break; war.bullets.push({ owner: 'r', by: m.id, shell: true, pos: m.p.slice(), vel: m.v.slice(), t: 0, dmgAir: 90, dmgGround: 150, noNpc: !warAuth() }); break; }
+        case 'm': { if (!okVec(m.p) || !okVec(m.v)) break; const tgt = m.tg ? war.foes.find((a) => a.nid === m.tg) : null; war.missilesAir.push({ owner: 'r', by: m.id, pos: m.p.slice(), vel: m.v.slice(), t: 0, target: tgt ? { ref: tgt } : null, trail: 0, noNpc: !warAuth() }); break; }
+        case 'fl': if (n.role === 'host') for (const mm of war.missilesAir) if (mm.owner === 'e' && mm.target && mm.target.player === m.id && warRand() < 0.6) mm.target = null; break;
+        case 'hit': if (m.to === netMyId && Number.isFinite(m.a) && m.a > 0 && m.a < 400) warHurt(m.a, String(m.w || 'enemy fire').slice(0, 24)); break;
+        case 'k': {                            // someone was destroyed
+          const by = m.by || '', victim = m.v, vn = victim === netMyId ? 'You' : (n.names[victim] || 'A player'), bn = by === netMyId ? 'you' : (n.names[by] || 'the enemy');
+          if (by && by !== 'npc' && by !== victim) n.kills[by] = (n.kills[by] || 0) + (n.role === 'host' ? 1 : 0);
+          warFeed(by && by !== 'npc' && by !== victim ? `${n.names[by] || 'A player'} destroyed ${vn === 'You' ? 'you' : vn}` : `${vn === 'You' ? 'You were' : vn + ' was'} destroyed by ${bn === 'you' ? 'yourself' : bn}`, false);
+          if (n.role === 'host') netSend({ t: 'ks', k: n.kills });
+          break;
+        }
+        case 'ks': n.kills = m.k || {}; break;
+        case 'wave': if (n.role === 'client') netApplyWave(m); break;
+        case 'wf': if (n.role === 'client') netApplyFoes(m); break;
+        case 'wg': if (n.role === 'client') netApplyGround(m); break;
+        case 'ev': if (n.role === 'client') netApplyEvent(m); break;
+      }
+    }
+    // ---- the other players' copy of the world (what a player who is not the host sees)
+    function netApplyWave(m) {
+      war.wave = m.n; war.score = m.sc; war.kills = m.kl; war.waveClear = false; war.wavePause = 1e9;
+      war.ground = m.g.map((g) => ({ nid: g.i, kind: g.k, pos: [g.x, g.y, g.z], heading: g.h, turret: g.h, hp: g.hp, maxHp: g.mx, r: WAR_KINDS[g.k].r, pts: WAR_KINDS[g.k].pts, dead: !!g.d, speed: g.s, burning: 0, cool: 1e9, t: 0 }));
+      toast(`WAVE ${m.n}`, 1800); beep(520, 0.15, 'square', 0.07);
+    }
+    function netApplyGround(m) {
+      war.wave = m.n; war.score = m.sc; war.kills = m.kl;
+      for (const [id, hp, dead, x, z, h] of m.g) {
+        const g = war.ground.find((q) => q.nid === id); if (!g) continue;
+        g.hp = hp; g.heading = h; if (g.speed > 0) { g.pos[0] = x; g.pos[2] = z; g.pos[1] = groundAt(W, x, z); }
+        if (dead && !g.dead) { g.dead = true; g.burning = 25; warBoom(g.pos, g.kind === 'fuel' ? 1.8 : g.kind === 'bunker' ? 1.3 : 0.8); warCrater(g.pos, 6); }
+      }
+    }
+    function netApplyFoes(m) {
+      const seen = new Set();
+      for (const s of m.f) {
+        seen.add(s.i);
+        let a = war.foes.find((q) => q.nid === s.i);
+        if (!a) { a = { nid: s.i, id: s.id, spec: PLANES.find((x) => x.id === s.id), role: 'foe', pos: [s.x, s.y, s.z], heading: s.h, pitch: s.p, speed: s.s, bank: s.b, vel: v3(), q: qheading(s.h), hp: s.hp, maxHp: 100, state: 'fly', t: 0, w: v3(), burstLeft: 0, gunT: 0, cool: 0, target: null, remote: true }; war.foes.push(a); }
+        a.goal = [s.x, s.y, s.z]; a.heading = s.h; a.pitch = s.p; a.bank = s.b; a.speed = s.s; a.hp = s.hp; a.snapAt = performance.now(); a.firing = !!s.fg;
+        const cp = Math.cos(a.pitch); a.vel = [Math.sin(a.heading) * cp * a.speed, Math.sin(a.pitch) * a.speed, -Math.cos(a.heading) * cp * a.speed];
+        if (s.st && a.state === 'fly') { a.state = 'fall'; a.t = 0; a.w = [(warRand() - 0.5) * 3, (warRand() - 0.5) * 3, (warRand() - 0.5) * 3 + 2]; for (let i = 0; i < 10; i++) puff('fire', add(a.pos, jitter(4)), jitter(14)); }
+      }
+      for (const a of war.foes) if (!seen.has(a.nid) && a.state === 'fly') a.state = 'gone';       // the host removed it
+    }
+    function netApplyEvent(m) {
+      if (m.k === 'feed') warFeed(m.x, false);
+      else if (m.k === 'flak') war.flaks.push({ from: m.f, to: m.o, t: 0, T: m.T, vis: true });
+      else if (m.k === 'ts') war.bullets.push({ owner: 'e', vis: true, shell: false, pos: m.p, vel: m.v, t: 0, dmgAir: 0, dmgGround: 0 });
+      else if (m.k === 'em') war.missilesAir.push({ owner: 'e', vis: true, pos: m.p, vel: m.v, t: 0, target: m.tg ? { player: m.tg } : null, trail: 0 });
+      else if (m.k === 'sc') { war.score = m.sc; }
+    }
+    /// On a player who is not the host: carry the enemies on between the host's reports (they come ten times a second).
+    function netReplicaStep(dt) {
+      const now = performance.now();
+      for (const a of war.foes) {
+        if (a.state === 'fly') {
+          a.pos = add(a.pos, mul(a.vel, dt));
+          if (a.goal) { const e = sub(a.goal, a.pos), k = 1 - Math.exp(-dt * 6); a.pos = add(a.pos, mul(e, k * 0.6)); }
+          a.q = qmul(qheading(a.heading, a.pitch), qaxis([0, 0, 1], -a.bank));
+          if (a.firing) { a.gunT -= dt; while (a.gunT <= 0) { a.gunT += 0.07; const d = norm(a.vel); war.bullets.push({ owner: 'e', vis: true, pos: add(a.pos, mul(d, 8)), vel: add(a.vel, mul(norm(add(d, jitter(0.03))), WAR.GUN.speed)), t: 0, dmgAir: 0, dmgGround: 0 }); } }
+          if (a.snapAt && now - a.snapAt > 2500) a.state = 'gone';
+        } else if (a.state === 'fall') warFall(a, dt);
+      }
+      war.foes = war.foes.filter((a) => a.state !== 'gone');
+      for (const g of war.ground) {
+        if (g.dead) { if (g.burning > 0) { g.burning -= dt; if (warRand() < dt * 5) puff('soot', add(g.pos, [0, 2, 0]), [0, 6, 0]); if (warRand() < dt * 3) puff('fire', add(g.pos, jitter(3)), [0, 3, 0]); } continue; }
+        if (g.speed > 0) { g.pos[0] += Math.sin(g.heading) * g.speed * dt; g.pos[2] -= Math.cos(g.heading) * g.speed * dt; g.pos[1] = groundAt(W, g.pos[0], g.pos[2]); }
+        if (g.kind === 'tank') { const np = warNearestPlayer(g.pos); g.turret += clamp(wrapPi(Math.atan2(np.pos[0] - g.pos[0], -(np.pos[2] - g.pos[2])) - g.turret), -0.8 * dt, 0.8 * dt); }
+      }
+    }
+
+    // ---- who the computer enemies can aim at: you, and (on the host) the other players
+    function warPlayersList() {
+      const list = [{ id: 'me', local: true, pos: flight.pos, vel: flight.vel, alive: !war.dead, tank: war.vehicle === 'tank' }];
+      if (war.net) for (const o of war.net.others.values()) if (o.alive && o.rep) list.push({ id: o.id, local: false, pos: o.shown || o.rep.pos, vel: o.rep.vel, alive: true, tank: o.rep.kind === 'tank' });
+      return list.filter((p) => p.alive);
+    }
+    function warNearestPlayer(from) {
+      let best = null, bd = Infinity;
+      for (const p of warPlayersList()) { const d = len(sub(p.pos, from)); if (d < bd) { bd = d; best = p; } }
+      return best || { id: 'me', local: true, pos: flight.pos, vel: flight.vel, alive: true, tank: war.vehicle === 'tank' };
+    }
+    const netRadius = (p) => (p.tank ? 4.6 : 8);
     function update(dt) {
       if (toastTimer > 0) { toastTimer -= dt; if (toastTimer <= 0) toastEl.style.opacity = 0; }
       if (screen !== 'fly' || paused) return;
@@ -6040,7 +6460,7 @@
       flight.brake = (mode.id !== 'war' && (keys.has(' ') || keys.has('b'))) || (plane.rotor && flight.onGround && heliColl < 0.12);
       const prev = flight.pos.slice();
       const wasGround = flight.onGround;
-      if (mode.id === 'war' && war && war.vehicle === 'tank') tankDrive(dt, inp); else flight.step(dt, inp, W);
+      if (war && war.net && war.dead && !flight.crashed) { /* destroyed: it waits to come back */ } else if (mode.id === 'war' && war && war.vehicle === 'tank') tankDrive(dt, inp); else flight.step(dt, inp, W);
       if (plane.rotor && heliColl < 0.12 && Math.abs(inp.yaw) < 0.05) flight.park();
       elapsed += dt;
       // A dead engine's propeller only windmills in the airflow.
@@ -6156,6 +6576,7 @@
         // the result; the report on that screen says what happened.
         wreckT += dt;
         updateSound();
+        if (war && war.net) { warStep(dt); return; }      // a shared battle goes on without you; you come back in a few seconds
         if ((flight.rest && wreckT > 3.2) || wreckT > (flight.wet > 0 ? 8 : 11)) crashResult();
         return;
       }
@@ -6232,7 +6653,7 @@
         // (The tyre chirp and thump come with the 'wheel' event.)
         if (sink < 1 && onRunway(flight.pos) && flight.damage.gear) achieve('butter');
       }
-      if (flight.onGround && flight.speed < 1.5 && (!flight.damage.gear || !flight.damage.nose)) {
+      if (flight.onGround && flight.speed < 1.5 && (!flight.damage.gear || !flight.damage.nose) && !(war && war.net)) {
         stoppedT += dt;
         if (stoppedT > 0.8) {
           achieve('survivor');
@@ -6262,7 +6683,7 @@
             finish('done', pts, on ? `Landed · touchdown ${sink.toFixed(1)} m/s · ${centre.toFixed(1)} m off the centre line${cfgLanding ? ' · −150 for landing with no flaps' : ''}` : 'Stopped off the runway');
             return;
           }
-          if (mode.id === 'war' && war) { finish('done', war.score, `Back on the ground · ${war.score} pts · wave ${war.wave} · ${war.kills} kills`); return; }
+          if (mode.id === 'war' && war && !war.net) { finish('done', war.score, `Back on the ground · ${war.score} pts · wave ${war.wave} · ${war.kills} kills`); return; }
           if (mode.id === 'free' && on && stoppedT < 0.7) toast('Landed and stopped. Take off again any time.', 2000);
         }
       } else { stoppedT = 0; stopCredited = false; }
@@ -6545,7 +6966,7 @@
         });
       }
 
-      if (showPlane && !(mode.id === 'war' && war && war.vehicle === 'tank')) drawAircraft(t);
+      if (showPlane && !(mode.id === 'war' && war && (war.vehicle === 'tank' || (war.net && war.dead && !flight.crashed)))) drawAircraft(t);
       if (mode.id === 'war') warRender(t);
       // Broken-off parts; the burnt ones darker.
       const charred = flight.crashed && flight.ignited ? [0.42, 0.4, 0.38] : null;
@@ -6945,8 +7366,8 @@
         bind();
       }
     }
-    /// The Battle menu: your vehicle, the battlefield, and three simple choices.
-    function battleHtml() {
+    /// The Battle menu: your vehicle, the battlefield, and three simple choices (and a way to play with friends).
+    function soloBattleHtml() {
       const card = (attr, cur, id, title, text) => `<div class="pg-card ${cur === id ? 'pg-on' : ''}" data-${attr}="${id}"><b>${title}</b><i>${text}</i></div>`;
       const chip = (attr, cur, id, label, tip) => `<button data-${attr}="${id}" class="${cur === id ? 'pg-on' : ''}" title="${tip}">${label}</button>`;
       const assistText = { auto: 'Automatic: the plane flies itself and holds its own height and speed. You point it where you want to go and shoot. A tank aims its turret by itself.',
@@ -6958,6 +7379,45 @@
         <div class="pg-hint" style="margin:2px 0 8px">${assistText[warAssist]}</div>
         <div class="pg-row"><span class="pg-lab">Teams</span>${chip('warside', warSide, 'coop', '🤝 Co-op', 'You and a computer wingman against the computer')}${chip('warside', warSide, 'versus', '⚔️ Fight', 'No wingman: computer aces hunt you')}</div>
         <div class="pg-row" style="margin-top:6px"><span class="pg-lab">Enemies</span>${chip('warnpc', warNpc ? 'on' : 'off', 'on', 'On: they fight back', 'Fighters, tanks and guns shoot at you')}${chip('warnpc', warNpc ? 'on' : 'off', 'off', 'Off: targets only', 'Targets that do not shoot: for practice')}</div>`;
+    }
+    function battleHtml() {
+      if (netg) return lobbyHtml();
+      return soloBattleHtml() + `<h2>4 · Play with friends</h2>
+        <div class="pg-row"><button data-nethost class="pg-go">Host a game</button><span class="pg-hint">or join one:</span><input data-netcode maxlength="8" placeholder="Room code" style="width:110px;text-transform:uppercase" value="${escapeHtml(joinDraft)}"><button data-netjoin>Join</button></div>
+        <div class="pg-hint" style="margin-top:4px">The host gets a 6-letter code to share. It works on the same Wi-Fi or far apart, and Mac and Windows can play together. You fight on the same battlefield as everyone else: together against the computer (Co-op) or against each other (Fight). The people in the room can see your name, your vehicle and where you are.</div>`;
+    }
+    /// The waiting room: the code, who is here, and what the match will be (the host chooses; the others vote).
+    function lobbyHtml() {
+      const n = netg, host = n.role === 'host', veh = (id) => (WAR_VEHICLES.find((v) => v.id === id) || WAR_VEHICLES[0]);
+      const roster = host ? netRoster() : n.roster;
+      const note = n.error ? `<div class="pg-hint" style="color:#ffb347">${escapeHtml(n.error)}</div>` : n.status !== 'on' ? '<div class="pg-hint">Connecting…</div>' : !host && !n.hostSeen ? '<div class="pg-hint">Looking for the game…</div>' : '';
+      const people = roster.map((r) => `<div class="pg-person"><b>${escapeHtml(r.n)}${r.id === netMyId ? ' (you)' : ''}${r.id === n.hostId ? ' 👑' : ''}</b><span>${veh(r.v).icon} ${veh(r.v).name}</span></div>`).join('') || '<div class="pg-hint">Just you so far.</div>';
+      const opt = (key, vals) => vals.map(([val, label]) => {
+        const cur = n.cfg[key] === val, c = netVoteCounts(key)[val] || 0, mine = n.votes[netMyId] && n.votes[netMyId][key] === val;
+        return `<button data-netset="${key}:${val}" class="${cur ? 'pg-on' : mine ? 'pg-voted' : ''}" title="${host ? 'Choose this' : cur ? 'This is how it is' : 'Vote for this'}">${label}${!cur && c ? ` (${c})` : ''}</button>`;
+      }).join('');
+      const how = host ? 'You are the host: your choices apply straight away.' : 'Press a choice to vote for it. It changes when more than half of the players agree.';
+      return `<h2>Your game</h2>
+        <div class="pg-room"><div><span class="pg-hint">Room code (tell your friends)</span><div class="pg-code">${n.code}</div></div><button data-netleave>Leave</button></div>${note}
+        <h2>Players</h2><div class="pg-people">${people}</div>
+        <h2>Your vehicle</h2><div class="pg-bgrid">${WAR_VEHICLES.map((v) => `<div class="pg-card ${warVeh === v.id ? 'pg-on' : ''}" data-warveh="${v.id}"><b>${v.icon} ${v.name}</b><i>${v.blurb}</i></div>`).join('')}</div>
+        <h2>The match</h2><div class="pg-hint" style="margin-bottom:4px">${how}</div>
+        <div class="pg-row"><span class="pg-lab">Teams</span>${opt('side', [['coop', '🤝 Co-op'], ['versus', '⚔️ Fight']])}</div>
+        <div class="pg-row" style="margin-top:6px"><span class="pg-lab">Enemies</span>${opt('npc', [[true, 'On'], [false, 'Off']])}</div>
+        <div class="pg-row" style="margin-top:6px"><span class="pg-lab">Field</span>${opt('field', ARENAS.map((a) => [a.id, a.name]))}</div>
+        <div class="pg-row" style="margin-top:6px"><span class="pg-lab">Your help</span>${[['auto', '🤖 Automatic'], ['easy', '🙂 Easy'], ['pro', '🎮 Pro']].map(([id, label]) => `<button data-warassist="${id}" class="${warAssist === id ? 'pg-on' : ''}">${label}</button>`).join('')}</div>
+        <div class="pg-hint" style="margin-top:4px">Co-op: everyone is on one side against the computer. Fight: players shoot each other, first to ${FIGHT_WIN_KILLS} kills wins (if the enemies are on they shoot everyone). Everyone plays the same battlefield and the same enemies.</div>`;
+    }
+    let joinDraft = '';
+    function onStartPress(a) {
+      if (mode.id === 'war' && netg && screen === 'menu') { if (netg.role === 'host') netHostStart(); return; }
+      if (war && war.net) {
+        if (war.net.role === 'host') { netg.running = false; netHostStart(); }
+        else if (a === 'again' && screen === 'result') { screen = 'menu'; renderUI(); }
+        else toast('Only the host can start it again', 1800);
+        return;
+      }
+      start();
     }
     function renderUIInner() {
       if (screen === 'fly') {
@@ -7003,7 +7463,7 @@
 `;
         const modesHtml = `<h2>What do you want to play?</h2><div class="pg-modes">${MODES.map((m) => `<button class="pg-mode ${m === mode ? 'pg-on' : ''}" data-mode="${m.id}">${m.icon} ${m.name}<small>${m.desc}</small></button>`).join('')}</div>`;
         body = modesHtml + (mode.id === 'war' ? battleHtml() : setupHtml) + `          <div class="pg-howto"><div class="pg-ctitle">How to play ${mode.name}</div>${ctlHtml(mode.id, true)}<div class="pg-hint" style="margin-top:5px">During a flight, press <kbd>?</kbd> or click the round <b>?</b> button to see this again, with what each control does.</div></div>
-          <div class="pg-row" style="margin-top:10px"><button class="pg-go" data-a="start">${mode.id === 'war' ? '⚔️ Start the battle (Enter)' : '✈️ Take off (Enter)'}</button>
+          <div class="pg-row" style="margin-top:10px">${mode.id === 'war' && netg && netg.role === 'client' ? '<span class="pg-hint">Waiting for the host to start…</span>' : `<button class="pg-go" data-a="start">${mode.id === 'war' ? (netg ? '⚔️ Start the battle for everyone (Enter)' : '⚔️ Start the battle (Enter)') : '✈️ Take off (Enter)'}</button>`}
             <span class="pg-hint">Best: ${(() => { const b = read(`board.${mode.id}`, [])[0]; return b && mode.id !== 'free' ? `${fmtScore(mode, b.score)} by ${escapeHtml(b.name)}` : '—'; })()}</span></div>`;
       } else if (menuTab === 'board') {
         const scopes = `<div class="pg-row"><button data-scope="local" class="${boardScope === 'local' ? 'pg-on' : ''}">This computer</button><button data-scope="world" class="${boardScope === 'world' ? 'pg-on' : ''}">🌍 World</button>${boardScope === 'world' ? `<button data-period="all" class="${boardPeriod === 'all' ? 'pg-on' : ''}">All time</button><button data-period="week" class="${boardPeriod === 'week' ? 'pg-on' : ''}">This week</button>` : ''}</div>`;
@@ -7103,20 +7563,26 @@
         renderUI();
       };
       ui.querySelectorAll('[data-place]').forEach((n) => n.onkeydown = (e) => { e.stopPropagation(); if (e.key === 'Enter') { const v = n.value.trim(); if (v) goPlace(() => lookupPlace(v)); } });
-      ui.querySelectorAll('[data-warveh]').forEach((n) => n.onclick = () => { warVeh = n.dataset.warveh; write('warveh', warVeh); renderUI(); });
+      ui.querySelectorAll('[data-warveh]').forEach((n) => n.onclick = () => { warVeh = n.dataset.warveh; write('warveh', warVeh); if (netg) { if (netg.role === 'host') netSendLobby(); else netHello(); } renderUI(); });
+      ui.querySelectorAll('[data-nethost]').forEach((n) => n.onclick = () => { netOpen('host', NET.newCode()); renderUI(); });
+      ui.querySelectorAll('[data-netjoin]').forEach((n) => n.onclick = () => { const input = ui.querySelector('[data-netcode]'), c = NET.normCode(input && input.value); if (!c) { toast('A room code is 6 letters and numbers', 2200); return; } joinDraft = ''; netOpen('client', c); renderUI(); });
+      ui.querySelectorAll('[data-netcode]').forEach((n) => { n.oninput = () => { joinDraft = n.value.toUpperCase(); }; n.onkeydown = (e) => { e.stopPropagation(); if (e.key === 'Enter') ui.querySelector('[data-netjoin]')?.click(); }; });
+      ui.querySelectorAll('[data-netleave]').forEach((n) => n.onclick = () => { netLeave(true); renderUI(); });
+      ui.querySelectorAll('[data-netset]').forEach((n) => n.onclick = () => { const [key, raw] = n.dataset.netset.split(':'), val = raw === 'true' ? true : raw === 'false' ? false : raw; if (netg.role === 'host') netHostSet(key, val); else netVoteCast(key, val); renderUI(); });
       ui.querySelectorAll('[data-warfield]').forEach((n) => n.onclick = () => { warField = n.dataset.warfield; write('warfield', warField); renderUI(); });
       ui.querySelectorAll('[data-warassist]').forEach((n) => n.onclick = () => { warAssist = n.dataset.warassist; write('warassist', warAssist); renderUI(); });
       ui.querySelectorAll('[data-warnpc]').forEach((n) => n.onclick = () => { warNpc = n.dataset.warnpc === 'on'; write('warnpc', warNpc); renderUI(); });
       ui.querySelectorAll('[data-warside]').forEach((n) => n.onclick = () => { warSide = n.dataset.warside; write('warside', warSide); renderUI(); });
       ui.querySelectorAll('[data-ctlmode]').forEach((n) => n.onclick = () => { helpMode = n.dataset.ctlmode; renderUI(); });
       ui.querySelectorAll('[data-wardiff]').forEach((n) => n.onclick = () => { warDiff = n.dataset.wardiff; write('wardiff', warDiff); renderUI(); });
-      ui.querySelectorAll('[data-mode]').forEach((n) => n.onclick = () => { mode = MODES.find((m) => m.id === n.dataset.mode); write('mode', mode.id); renderUI(); });
+      ui.querySelectorAll('[data-mode]').forEach((n) => n.onclick = () => {
+        if (netg && n.dataset.mode !== 'war') netLeave(true); mode = MODES.find((m) => m.id === n.dataset.mode); write('mode', mode.id); renderUI(); });
       ui.querySelectorAll('[data-tab]').forEach((n) => n.onclick = () => { menuTab = n.dataset.tab; write('menuTab', menuTab); renderUI(); });
       ui.querySelectorAll('[data-a]').forEach((n) => n.onclick = () => {
         const a = n.dataset.a;
-        if (a === 'start' || a === 'again' || a === 'restart') start();
+        if (a === 'start' || a === 'again' || a === 'restart') onStartPress(a);
         else if (a === 'resume') { paused = false; renderUI(); root.focus(); try { ac && ac.resume && ac.resume(); } catch { /* no sound */ } }
-        else if (a === 'menu') { screen = 'menu'; paused = false; if (engGain) engGain.gain.value = 0; restorePlane(); useBattlefield(''); flight = new Flight(plane); renderUI(); }
+        else if (a === 'menu') { if (netg) netLeave(true); screen = 'menu'; paused = false; if (engGain) engGain.gain.value = 0; restorePlane(); useBattlefield(''); flight = new Flight(plane); renderUI(); }
         else if (a === 'save') saveScore();
         else if (a === 'mine') goPlace(myPlace);
         else if (a === 'goplace') { const v = (ui.querySelector('[data-place]')?.value || '').trim(); if (v) goPlace(() => lookupPlace(v)); }
@@ -7285,7 +7751,7 @@
       if (suspended || !alive) return;
       suspended = true;
       keys.clear(); warPad.gun = false; warPad.bomb = false; cancelSpeech();
-      if (screen === 'fly' && !paused) { paused = true; renderUI(); }
+      if (screen === 'fly' && !paused && !(war && war.net)) { paused = true; renderUI(); }
       try { ac && ac.suspend && ac.suspend(); } catch { /* no sound to mute */ }
       cancelAnimationFrame(raf);
     }
@@ -7300,7 +7766,7 @@
     window.NotchPlaneGame.key = (key, down) => onKey({ key, repeat: false, target: null }, down);
     window.NotchPlaneGame._state = () => ({ screen, keys: [...keys], bank: flight.bank, pitch: flight.pitchAngle, pos: flight.pos, w: flight.w, onGround: flight.onGround,
       speed: flight.speed, ias: flight.ias, gload: flight.gload, spin: flight.spin, wreckRest: flight.rest, report: flight.report, damage: flight.damage, crashed: flight.crashed, why: flight.why, debris: debris.length, particles: smoke.length });
-    window.NotchPlaneGame._poke = { war: () => war, warHurt: (n) => warHurt(n, 'test'), warFire: (k, v) => { if (k === 'gun') warPad.gun = v; }, remote: () => remote, sky: () => ({ on: shareOn, id: skyId, pilots: skyPilots, off: skyOff }), traffic: () => traffic, spawnTraffic: () => spawnTraffic(), failEngine: (p) => { failAt = elapsed; }, flight: () => flight, world: () => W, dbg: () => ({ debris, smoke, gouges, slowT, duckT, shakeKick, attached: [...attached] }),
+    window.NotchPlaneGame._poke = { net: { vote: (k, v) => netVoteCast(k, v), hurt: (id, a) => netHurtRemote(id, a, 'test'), room: () => netg && { role: netg.role, code: netg.code, cfg: netg.cfg, running: netg.running, status: netg.status, votes: netg.votes, id: netMyId }, hurtMe: (a, by) => warHurt(a, 'test', by) }, war: () => war, warHurt: (n) => warHurt(n, 'test'), warFire: (k, v) => { if (k === 'gun') warPad.gun = v; }, remote: () => remote, sky: () => ({ on: shareOn, id: skyId, pilots: skyPilots, off: skyOff }), traffic: () => traffic, spawnTraffic: () => spawnTraffic(), failEngine: (p) => { failAt = elapsed; }, flight: () => flight, world: () => W, dbg: () => ({ debris, smoke, gouges, slowT, duckT, shakeKick, attached: [...attached] }),
       // Test hooks for looking at the models: a fixed camera, held controls, and freezing the physics.
       view: (v) => { devView = v; }, ctl: (c) => { devCtl = c; }, hold: (h) => { devHold = h; }, plane: () => plane, surf,
       // Test hook: run the simulation ahead by `secs` seconds without drawing (a slow software renderer can't keep real time).
