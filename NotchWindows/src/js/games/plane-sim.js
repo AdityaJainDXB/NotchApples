@@ -130,7 +130,7 @@
   // Performance numbers drive the flight model (see Flight): speeds in m/s, rates in rad/s. `cat` groups the planes in the
   // picker. The position fields (span, wingY, wingZ, nose, tail) mark the wingtips, nose and tail for collisions;
   // `wingX`, `tailZ` and `tailX` say where the model splits into fuselage, wings and tail when parts break off.
-  const CATS = [['ga', 'Light aircraft'], ['turbo', 'Turboprop'], ['biz', 'Business & regional'], ['liner', 'Airliners'], ['mil', 'Fighter'], ['rotary', 'Helicopters']];
+  const CATS = [['ga', 'Light aircraft'], ['turbo', 'Turboprop'], ['biz', 'Business & regional'], ['liner', 'Airliners'], ['mil', 'Military: fighters, bombers & gunships'], ['rotary', 'Helicopters']];
   const PLANES = [
     { id: 'c172', cat: 'ga', name: 'Cessna 172', kind: 'Skyhawk', blurb: 'The classic trainer: slow, stable and forgiving. Lands itself, almost.',
       stall: 24, cruise: 52, max: 78, thrust: 3.3, authority: 0.8, pitch: 1.3, roll: 1.9, yaw: 0.55, stability: 2.6, gear: 1.3, scale: 1, cam: 1,
@@ -195,6 +195,12 @@
     { id: 'su27', cat: 'mil', name: 'Sukhoi Su-27', kind: 'Fighter', blurb: 'A large, very manoeuvrable twin-engine fighter with twin tails. Loves tight turns.',
       stall: 54, cruise: 200, max: 330, thrust: 12, authority: 1.0, pitch: 1.9, roll: 3.3, yaw: 0.55, stability: 1.8, gear: 1.35, scale: 1.3, cam: 1.35,
       span: 3.9, wingY: -0.16, wingZ: 1.35, nose: -5.3, tail: 4.9, gLimit: 9, wingX: 1.0, tailZ: 2.4, tailX: 2.3 },
+    { id: 'a10', cat: 'mil', name: 'A-10 Warthog', kind: 'Gunship', blurb: 'A slow, tough tank-buster: straight wings, two engines on pods and a huge cannon. Best flown low in Air War, where it carries the most ammunition and shrugs off hits.',
+      stall: 44, cruise: 125, max: 190, thrust: 8, authority: 1.0, pitch: 1.5, roll: 2.4, yaw: 0.6, stability: 2.0, gear: 1.4, scale: 1.25, cam: 1.3,
+      span: 5.6, wingY: -0.16, wingZ: 1.35, nose: -5.3, tail: 4.9, gLimit: 7, wingX: 1.0, tailZ: 2.4, tailX: 2.3 },
+    { id: 'b52', cat: 'mil', name: 'B-52 Stratofortress', kind: 'Heavy bomber', blurb: 'A huge swept high wing, four engines and a bomb bay for forty bombs, with gunners who shoot back at fighters. Slow to turn: line up every run early.',
+      stall: 62, cruise: 165, max: 245, thrust: 7.2, authority: 0.75, pitch: 0.8, roll: 0.45, yaw: 0.18, stability: 2.5, gear: 2.4, scale: 1, cam: 3.0,
+      span: 15, wingY: 0.7, wingZ: 0.8, nose: -14, tail: 14.5, gLimit: 3.5, wingX: 1.7, tailZ: 5.6, tailX: 5.5 },
     // Helicopters: the rotor does the lifting (`rotor`), so the wing numbers are only for show. `rotorLift` is the
     // disc's thrust in g at full collective (1.25 is enough to climb out of ground effect), `rotorR` the blade
     // length used for ground effect, and thrust stays 0: the engine only drives the rotor. Lift comes from the
@@ -238,6 +244,8 @@
     f18: { retract: true, gearTime: 3, tailPitch: 14, engine: 'jet', engines: 2, n1Idle: 30, ab: true, dial: 'FIGHTER', flapNotches: [0, 0.5, 1], flapLabels: ['UP', 'T/O', 'LAND'], fuel: 1300, vr: 1.2, vfe: 1.9, vno: 1.3, gpws: 'betty' },
     typhoon: { retract: true, gearTime: 3, tailPitch: 14, engine: 'jet', engines: 2, n1Idle: 30, ab: true, dial: 'FIGHTER', flapNotches: [0, 0.5, 1], flapLabels: ['UP', 'T/O', 'LAND'], fuel: 1300, vr: 1.2, vfe: 1.9, vno: 1.3, gpws: 'betty' },
     f22: { retract: true, gearTime: 3, tailPitch: 14, engine: 'jet', engines: 2, n1Idle: 30, ab: true, dial: 'FIGHTER', flapNotches: [0, 0.5, 1], flapLabels: ['UP', 'T/O', 'LAND'], fuel: 1500, vr: 1.2, vfe: 1.9, vno: 1.3, gpws: 'betty' },
+    a10: { retract: true, gearTime: 3, tailPitch: 12, engine: 'jet', engines: 2, n1Idle: 28, dial: 'FIGHTER', flapNotches: [0, 0.5, 1], flapLabels: ['UP', 'T/O', 'LAND'], fuel: 1800, vr: 1.2, vfe: 1.9, vno: 1.3, gpws: 'betty' },
+    b52: { retract: true, gearTime: 6, tailPitch: 8, engine: 'jet', engines: 4, n1Idle: 26, dial: 'AIRLINER', flapNotches: [0, 0.3, 0.6, 1], flapLabels: ['UP', '1', '2', 'FULL'], fuel: 2200, vr: 1.2, vfe: 1.5, vno: 1.3, gpws: 'betty' },
     su27: { retract: true, gearTime: 3, tailPitch: 14, engine: 'jet', engines: 2, n1Idle: 30, ab: true, dial: 'FIGHTER', flapNotches: [0, 0.5, 1], flapLabels: ['UP', 'T/O', 'LAND'], fuel: 1600, vr: 1.2, vfe: 1.9, vno: 1.3, gpws: 'betty' },
     // Helicopters: `turboshaft` drives the rotor (its own gauge, spool and sound), and the throttle is the
     // collective. No flaps (the flap field is only cosmetic here); the tail rotor is the yaw control.
@@ -745,6 +753,12 @@
   }
   const BAND = (K, v0, u0, v1, u1, w) => [[v0, u0], [v0, u0 + w], [v1, u1 + w], [v1, u1]];   // a slanted band on the fin
   const LINERS = {
+    // A heavy bomber: a long slim fuselage with a high, swept wing (negative wingLow), four engines and no windows.
+    b52: { D: 2.1, noseLen: 0.1, tailLen: 0.3, droop: 0.05, tailUp: 0.5, tailEnd: 0.12, wingLE: 0.3, sweep: 35, cr: 0.17, ck: 0.1, ct: 0.04, xk: 0.4, th: 0.1, dih: -2, ail: [0.78, 0.97], wingLow: -1.0,
+      body: '#a3a9b0', belly: '#868d94', trim: '#2c3138', tail: '#9aa1a8', accent: '#2c3138', eng: '#6e757c', wingCol: '#979ea5', wingBot: '#80878e',
+      win: [0.13, 0.1305], winPitch: 0.3, winTh: [94, 100], doors: [],
+      fin: { z: 0.72, cr: 5.0, ct: 1.8, h: 5.5, sweep: 40 }, htail: { z: 0.86, cr: 3.2, ct: 1.0, semi: 5.2, sweep: 30, dih: 0, y: 0.5 },
+      engines: [{ f: 0.2, d: 0.95, len: 2.8, ahead: 1.1, drop: 0.5 }, { f: 0.42, d: 0.95, len: 2.8, ahead: 1.1, drop: 0.5 }], legs: [{ x: 0.0, zf: 0.52, ax: [-0.45, 0.45] }], noseGear: 0.12, wheelR: 0.3, wheelW: 0.14 },
     b737: { D: 1.5, noseLen: 0.12, tailLen: 0.27, droop: 0.1, tailUp: 0.5, tailEnd: 0.1, wingLE: 0.36, sweep: 25, cr: 0.2, ck: 0.135, ct: 0.04, xk: 0.33, th: 0.125, dih: 6, ail: [0.77, 0.97],
       body: '#f4f6f8', belly: '#cdd3da', trim: '#1e6bd6', tail: '#1e6bd6', accent: '#ffffff', win: [0.19, 0.72], winPitch: 0.21, winTh: [94, 103], doors: [[0.165, 0.42], [0.69, 0.42]],
       winglet: { h: 0.85, cant: 9, sweep: 44, tipC: 0.2 }, fin: { z: 0.735, cr: 2.2, ct: 0.85, h: 2.55, sweep: 37 }, htail: { z: 0.81, cr: 1.6, ct: 0.55, semi: 2.85, sweep: 32, dih: 7 },
@@ -1194,6 +1208,15 @@
     const P = PLANES.find((p) => p.id === id);
     if (LINERS[id]) return linerBuild(P, LINERS[id]);
     if (GA[id]) return gaBuild(P, GA[id]);
+    if (id === 'a10') {
+      const m = fighterBuild(P, { c1: '#7a8269', c2: '#6a7259', c3: '#5a6149', sweep: 5, rootC: 3.6, tipC: 2.0, fins: 'twin', stripes: false, twin: true });
+      // The two engines sit on pods on top of the rear fuselage.
+      for (const sx of [-1, 1]) {
+        revolveZ(m.body, [sx * 0.78, 0.82, 2.2], [[-1.5, 0.12, [0.32, 0.34, 0.28]], [-1.1, 0.4, [0.33, 0.36, 0.29]], [0, 0.44, [0.4, 0.43, 0.36]], [1.5, 0.4, [0.38, 0.4, 0.34]], [2.1, 0.3, [0.18, 0.18, 0.2]]], 12);
+        rod(m.body, [sx * 0.78, 0.6, 1.4], [sx * 0.5, 0.2, 1.4], 0.16, 0.16, [0.4, 0.43, 0.36], 6);
+      }
+      return m;
+    }
     if (id === 'f35') return fighterBuild(P, {});
     if (id === 'f16') return fighterBuild(P, { c1: '#8a96a3', c2: '#78848f', c3: '#66707b', sweep: 40, rootC: 4.3, tipC: 0.7, fins: 'single', stripes: false });
     if (id === 'f15') return fighterBuild(P, { c1: '#7f8a97', c2: '#6d7884', c3: '#5c6670', sweep: 33, rootC: 4.0, tipC: 1.1, fins: 'twin', stripes: false, twin: true });
@@ -3684,6 +3707,10 @@
 
   const CHALLENGES = [
     { id: 'first', name: 'First hoop', desc: 'Fly through a hoop' },
+    { id: 'warfirst', name: 'First blood', desc: 'Destroy a target in Air War' },
+    { id: 'splash', name: 'Splash one', desc: 'Shoot down an enemy fighter in Air War' },
+    { id: 'wave3', name: 'Dug in', desc: 'Reach wave 3 in Air War' },
+    { id: 'carpet', name: 'Carpet bombing', desc: 'Destroy 4 targets with one bombing run' },
     { id: 'ten', name: 'Hoop hunter', desc: '10 hoops in one Hoop Rush' },
     { id: 'twenty', name: 'Ring master', desc: '20 hoops in one Hoop Rush' },
     { id: 'trial', name: 'Course complete', desc: 'Finish the Time Trial' },
@@ -5034,6 +5061,7 @@
     function warSpawnWave() {
       war.wave++;
       const n = war.wave, d = war.d;
+      if (n >= 3) achieve('wave3');
       const clusters = Math.min(1 + Math.ceil(n / 2), 4);
       for (let c = 0; c < clusters; c++) {
         let cx = 0, cz = 0, ok = false;
@@ -5114,6 +5142,7 @@
     }
     function warScore(g, who) {
       war.score += g.pts; war.kills++;
+      if (who === 'p') { achieve('warfirst'); if (g.name === 'Fighter') achieve('splash'); war.run = (war.run || 0) + 1; war.runT = 3; if (war.run >= 4) achieve('carpet'); }
       warFeed(`${who === 'f' ? 'Wingman destroyed' : 'Destroyed'} ${g.name || WAR_KINDS[g.kind].name}  +${g.pts}`);
       if (who !== 'f') { beep(880, 0.08, 'square', 0.06); setTimeout(() => beep(1320, 0.1, 'square', 0.06), 70); }
     }
@@ -5386,7 +5415,7 @@
       for (const off of [[0, 3, 12], [0, -2, -2]]) {
         const from = add(flight.pos, qrot(flight.q, mul(off, plane.scale || 1))), lead = WAR.leadPoint(from, flight.vel, best.pos, best.vel, 880);
         const dir = lead ? norm(sub(add(lead.point, [0, 0.5 * WAR.G * lead.t * lead.t, 0]), from)) : norm(sub(best.pos, from));
-        warShoot('p', from, dir, flight.vel, 0.012, 8, 5);
+        warShoot('p', from, dir, flight.vel, 0.022, 7, 5);
       }
     }
 
@@ -5410,6 +5439,7 @@
       const d = war.d;
       war.flash = Math.max(0, war.flash - dt * 1.6); war.warnT -= dt; if (war.warnT <= 0) war.warn = '';
       for (const f of war.feed) f.t -= dt;
+      if (war.runT > 0 && (war.runT -= dt) <= 0) war.run = 0;
       war.feed = war.feed.filter((f) => f.t > 0);
       // Next wave when the last one is cleared.
       const aliveG = war.ground.some((g) => !g.dead), aliveF = war.foes.some((a) => a.state !== 'gone');
