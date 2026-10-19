@@ -1,18 +1,18 @@
 {
-  "version": "2.0.65",
-  "title": "Notch Apple 2.0.65 · Smoother, and kinder to Reduce Motion",
-  "notes": "**Polish**\n- ✨ Reordering modules, the tour, theme choices, Home and Claude usage now settle without a bounce, and switch to a quick fade when **Reduce Motion** is on (a few of them ignored that setting before).\n- The website responds to a tap at once, follows **Reduce Transparency** and **Increase Contrast**, and the chat panel opens out of its button.\n\nWindows is unchanged in this release.\n\nInstall: download the DMG below and drag Notch Apple to Applications, or `brew upgrade --cask notch-apple`.\n",
-  "published": "2026-10-14T10:18:05Z",
-  "dmg": "https://github.com/AdityaJainDXB/NotchApples/releases/download/v2.0.65/NotchApple-2.0.65.dmg",
-  "dmgSize": 51264036,
-  "page": "https://github.com/AdityaJainDXB/NotchApples/releases/tag/v2.0.65",
+  "version": "2.0.72",
+  "title": "Notch Apple 2.0.72",
+  "notes": "**New**\n- 🌐 **Play Battle with friends.** Open Battle, tap **Host a game** and share the 6-letter code, or **Join** with a friend's code. It works on the same Wi-Fi or far apart, and Mac and Windows can play together.\n- 🤝 **Co-op or Fight.** In Co-op everyone is on one side against the computer. In Fight the players shoot each other (first to 10 kills wins), and if the enemies are on they shoot everyone. Everyone plays on the same battlefield against the same enemies.\n- 🗳️ **Vote to change the match.** Co-op or Fight, enemies on or off, and the battlefield: the host can just choose in the lobby, and everyone else votes (press **U** during a battle). A change passes when more than half the players agree.\n- 💥 If you are shot down or crash in a shared battle you come back after five seconds, and the battle goes on.\n- You can see the other players' names, vehicles and health, and they appear on your radar.\n\nInstall: download the DMG below and drag Notch Apple to Applications, or `brew upgrade --cask notch-apple`.\n",
+  "published": "2026-10-19T10:03:56Z",
+  "dmg": "https://github.com/AdityaJainDXB/NotchApples/releases/download/v2.0.72/NotchApple-2.0.72.dmg",
+  "dmgSize": 51382399,
+  "page": "https://github.com/AdityaJainDXB/NotchApples/releases/tag/v2.0.72",
   "stars": 2,
   "windows": {
-    "version": "1.70.0",
-    "notes": "Notch.apple for Windows 1.70.0\n\n- Fixes clipboard sync, the messenger and the network speed test being blocked by the app's connection rules in the installed app.\n\nThe installer is still named \"Notch.apple\".\n",
-    "url": "https://github.com/AdityaJainDXB/NotchApples/releases/download/win-v1.70.0/Notch.apple_1.70.0_x64-setup.exe",
-    "sha256": "81caeac25043cfe6f630c663124481b133d4199e66ecb8c7fc366b2fb9131d96",
-    "size": 5940099,
-    "page": "https://github.com/AdityaJainDXB/NotchApples/releases/tag/win-v1.70.0"
+    "version": "1.73.0",
+    "notes": "",
+    "url": "https://github.com/AdityaJainDXB/NotchApples/releases/download/win-v1.73.0/Notch.apple_1.73.0_x64-setup.exe",
+    "sha256": "24bad97269d0f2ec57284691545854e5aeb786a5bfae4777922b844f30fb9873",
+    "size": 5978413,
+    "page": "https://github.com/AdityaJainDXB/NotchApples/releases/tag/win-v1.73.0"
   }
 }
