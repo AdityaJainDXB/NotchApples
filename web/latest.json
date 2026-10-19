@@ -1,18 +1,18 @@
 {
-  "version": "2.0.72",
-  "title": "Notch Apple 2.0.72",
-  "notes": "**New**\n- 🌐 **Play Battle with friends.** Open Battle, tap **Host a game** and share the 6-letter code, or **Join** with a friend's code. It works on the same Wi-Fi or far apart, and Mac and Windows can play together.\n- 🤝 **Co-op or Fight.** In Co-op everyone is on one side against the computer. In Fight the players shoot each other (first to 10 kills wins), and if the enemies are on they shoot everyone. Everyone plays on the same battlefield against the same enemies.\n- 🗳️ **Vote to change the match.** Co-op or Fight, enemies on or off, and the battlefield: the host can just choose in the lobby, and everyone else votes (press **U** during a battle). A change passes when more than half the players agree.\n- 💥 If you are shot down or crash in a shared battle you come back after five seconds, and the battle goes on.\n- You can see the other players' names, vehicles and health, and they appear on your radar.\n\nInstall: download the DMG below and drag Notch Apple to Applications, or `brew upgrade --cask notch-apple`.\n",
-  "published": "2026-10-19T10:03:56Z",
-  "dmg": "https://github.com/AdityaJainDXB/NotchApples/releases/download/v2.0.72/NotchApple-2.0.72.dmg",
-  "dmgSize": 51382399,
-  "page": "https://github.com/AdityaJainDXB/NotchApples/releases/tag/v2.0.72",
+  "version": "2.0.75",
+  "title": "Notch Apple 2.0.75",
+  "notes": "**Battle, Plane and Games, easier to use**\n\n- Battle now offers a default-on Over-G effects toggle. The new self-destruct button (or X) respawns you without resetting the wave or its score. The existing red boundary warning and limited mouse aim ring remain available.\n- Open the Plane simulator full screen from its menu or with F11; Escape or F11 returns to the notch view.\n- Games adds play-money Texas Hold’em against the computer, with a saved chip stack and standard seven-card hand ranking.\n- Fixed the Claude Usage view clipping its contents in shorter windows: it scrolls within the available space.\n- Hardened the Gemini model picker against duplicate provider results and overlapping refreshes.\n\nInstall: download the DMG below and drag Notch Apple to Applications, or `brew upgrade --cask notch-apple`.\n",
+  "published": "2026-10-19T15:34:14Z",
+  "dmg": "https://github.com/AdityaJainDXB/NotchApples/releases/download/v2.0.75/NotchApple-2.0.75.dmg",
+  "dmgSize": 51493697,
+  "page": "https://github.com/AdityaJainDXB/NotchApples/releases/tag/v2.0.75",
   "stars": 2,
   "windows": {
-    "version": "1.73.0",
+    "version": "1.75.0",
     "notes": "",
-    "url": "https://github.com/AdityaJainDXB/NotchApples/releases/download/win-v1.73.0/Notch.apple_1.73.0_x64-setup.exe",
-    "sha256": "24bad97269d0f2ec57284691545854e5aeb786a5bfae4777922b844f30fb9873",
-    "size": 5978413,
-    "page": "https://github.com/AdityaJainDXB/NotchApples/releases/tag/win-v1.73.0"
+    "url": "https://github.com/AdityaJainDXB/NotchApples/releases/download/win-v1.75.0/Notch.apple_1.75.0_x64-setup.exe",
+    "sha256": "5f9c04e0530df271ea71129c7b56aae7441982685431ed94196c443c3985ec4b",
+    "size": 5978324,
+    "page": "https://github.com/AdityaJainDXB/NotchApples/releases/tag/win-v1.75.0"
   }
 }
