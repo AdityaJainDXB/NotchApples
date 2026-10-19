@@ -3995,7 +3995,7 @@
   // ------------------------------------------------------------------ the tank and the Automatic flying assist
 
   /// A drivable tank: the hull turns and drives, the turret turns on its own, and the gun raises and lowers.
-  const TANK = { speed: 13, reverse: 6, accel: 9, turn: 1.0, turretRate: 1.7, gunRate: 0.8, gunMin: -0.1, gunMax: 0.5, hp: 260, shell: 420, reload: 2.2 };
+  const TANK = { speed: 13, boostSpeed: 20, reverse: 6, accel: 9, boostAccel: 13, turn: 1.0, turretRate: 1.7, gunRate: 0.8, gunMin: -0.1, gunMax: 0.5, hp: 260, shell: 420, reload: 2.2 };
   class TankBody {
     constructor(pos, heading) {
       this.pos = [pos[0], 0, pos[2]]; this.heading = heading; this.turret = heading; this.gun = 0.04;
@@ -4007,8 +4007,10 @@
     /// input: { drive -1..1 (forward +), steer -1..1 (right +), aimX -1..1 (turret right +), aimY -1..1 (gun up +) }.
     /// `limit` keeps it inside a round battlefield of that radius; water and steep ground stop it, and so do solid things.
     step(dt, input, world, limit = 1e9) {
-      const want = input.drive > 0 ? input.drive * TANK.speed : input.drive * TANK.reverse;
-      this.speed += clamp(want - this.speed, -TANK.accel * dt, TANK.accel * dt);
+      const boosting = input.drive > 0 && input.boost;
+      const want = input.drive > 0 ? input.drive * (boosting ? TANK.boostSpeed : TANK.speed) : input.drive * TANK.reverse;
+      const accel = boosting ? TANK.boostAccel : TANK.accel;
+      this.speed += clamp(want - this.speed, -accel * dt, accel * dt);
       const sr = TANK.turn * (0.55 + 0.45 * Math.min(1, Math.abs(this.speed) / 6));
       this.heading = wrapPi(this.heading + input.steer * sr * dt);
       this.turret = wrapPi(this.turret + input.aimX * TANK.turretRate * dt);
@@ -4812,6 +4814,7 @@
         roll: clamp((has('ArrowRight') ? 1 : 0) - (has('ArrowLeft') ? 1 : 0) + (m ? stick(mouse.x) : 0), -1, 1),
         yaw: (has('d') || has('e') ? 1 : 0) - (has('a') || has('q') ? 1 : 0),
         throttle: (has('w') || has('Shift') ? 1 : 0) - (has('s') || has('Control') ? 1 : 0),
+        boost: has('Shift'),
         reverse: has('x'),
       };
     }
@@ -5527,7 +5530,7 @@
             aimX = clamp(wrapPi(sol.yaw - t.turret) * 3, -1, 1); aimY = clamp((sol.pitch - t.gun) * 4, -1, 1);
           }
         }
-        return { drive: raw.throttle, steer: raw.yaw, aimX, aimY };
+        return { drive: raw.throttle, steer: raw.yaw, aimX, aimY, boost: !!raw.boost };
       }
       if (war.assist === 'auto') {
         const st = war.ap, R = war.arena.R;
@@ -6068,7 +6071,7 @@
         h2.textAlign = 'center'; h2.font = `800 ${Math.round(17 * s + 3)}px system-ui`; h2.fillStyle = '#fff';
         h2.fillText(`WAVE ${war.wave} BRIEFING · DESTROY ${war.waveGround ?? war.ground.length} TARGETS${war.waveFighters ? ` + ${war.waveFighters} FIGHTERS` : ''}`, W2 / 2, H2 * 0.31);
         h2.font = `700 ${Math.round(11 * s + 2)}px system-ui`; h2.fillStyle = '#ffd166';
-        h2.fillText(tank ? 'WASD drive · mouse aim · click or Enter to fire' : `Enter / click: guns · Z: bombs${war.L.missiles ? ' · N: missile' : ''} · L: flares`, W2 / 2, H2 * 0.31 + 26 * s);
+        h2.fillText(tank ? 'WASD drive · Shift boost · mouse aim · click or Enter to fire' : `Enter / click: guns · Z: bombs${war.L.missiles ? ' · N: missile' : ''} · L: flares`, W2 / 2, H2 * 0.31 + 26 * s);
       }
       if (war.waveClear) { h2.textAlign = 'center'; h2.font = `900 ${Math.round(26 * s + 4)}px system-ui`; h2.fillStyle = '#ffd166'; h2.fillText(`WAVE ${war.wave} CLEARED  +${250 * war.wave}`, W2 / 2, H2 * 0.42); }
       const nextGround = war.ground.filter((g) => !g.dead).sort((a, b) => len(sub(a.pos, flight.pos)) - len(sub(b.pos, flight.pos)))[0];

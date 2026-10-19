@@ -60,6 +60,21 @@ test('a tank drives forward, turns, reverses more slowly, and sits on the ground
   } finally { T.setArena(null); }
 });
 
+test('holding boost makes a tank faster than normal throttle', () => {
+  const { a, w } = battleWorld(0);
+  try {
+    const normal = new T.TankBody([0, 0, 2000], 0);
+    const boosted = new T.TankBody([100, 0, 2000], 0);
+    for (let i = 0; i < 300; i++) {
+      normal.step(1 / 60, { drive: 1, steer: 0, aimX: 0, aimY: 0 }, w, a.R * 1.05);
+      boosted.step(1 / 60, { drive: 1, steer: 0, aimX: 0, aimY: 0, boost: true }, w, a.R * 1.05);
+    }
+    assert.ok(normal.speed <= T.TANK.speed + 0.01, `normal speed ${normal.speed}`);
+    assert.ok(boosted.speed > normal.speed + 5, `boosted ${boosted.speed} vs normal ${normal.speed}`);
+    assert.ok(boosted.speed <= T.TANK.boostSpeed + 0.01, `boosted speed ${boosted.speed}`);
+  } finally { T.setArena(null); }
+});
+
 test('a tank cannot leave the battlefield or drive into the sea', () => {
   const { a, w } = battleWorld(0);
   try {
