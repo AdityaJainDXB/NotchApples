@@ -20,6 +20,9 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.0.76", date: "19 October 2026", headline: "Shift boost for Battle tanks", items: [
+            "Hold Shift while driving a tank in Battle to boost its acceleration and raise its top speed from 13 to 20 m/s. The wave briefing now shows the boost control.",
+        ]),
         ReleaseNote(version: "2.0.75", date: "19 October 2026", headline: "Battle, Plane and Games, easier to use", items: [
             "Battle keeps fighter wings sturdy and lets you turn off over-G blackout and stress. The self-destruct button respawns you in the same wave without losing kills or score; the red boundary warning and mouse aim ring stay visible and useful.",
             "Plane can open full screen with the menu button or F11. The Games tab adds play-money Texas Hold’em against the computer.",
