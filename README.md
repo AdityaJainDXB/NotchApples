@@ -71,7 +71,7 @@ Pick your computer. Both buttons start the download straight away. The Mac butto
   </tr>
   <tr>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.0.72</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.0.73</b></a>
     </td>
     <td align="center">
       <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 1.73.0 BETA</b></a>
@@ -232,6 +232,10 @@ All screenshots use sample data.
 ## What's new
 
 > **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is still in the repository's tags.
+
+### Mac 2.0.73 · 19 October 2026 · 🧭 Clearer Battle radar help
+
+- The Controls help now says the radar is always visible in the top-right and explains its colours. Removed the misleading **Radar** key-style badge, which looked like a button. (Reported in issue 24.)
 
 ### Mac 2.0.72 · Windows 1.73.0 BETA · 19 October 2026 · 🌐 Battle with friends
 

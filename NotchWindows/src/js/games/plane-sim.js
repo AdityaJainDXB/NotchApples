@@ -6025,7 +6025,7 @@
             [['Space', 'Enter', 'Click'], 'Cannon', 'a big shell that explodes where it lands. About 2 seconds to reload'], [['B', 'Z'], 'Machine gun', 'hold to fire. Good against planes and trucks'],
             [['C'], 'Camera', 'behind, gunner or far'], [['P'], 'Pause'], [['R'], 'Restart'], [['?'], 'Show this help'],
             ...(war && war.net ? [[['U'], 'Vote', 'change the match with the other players']] : []),
-            [['Radar'], 'Colours', 'red: fighters · blue: your wingman · orange: ground targets']
+            [[], 'Radar colours', 'The radar is always visible in the top-right. Red: fighters · blue: wingman · orange: ground targets.']
           ] : [
             [['Space', 'Enter', 'Click'], 'Guns', `hold to fire. The circle is where the shells go.${aimNote}`],
             [['B', 'Z'], 'Bombs', auto ? 'hold: it drops only when a bomb would hit a target' : 'hold for a stick. The yellow diamond is where a bomb let go now would land'],
@@ -6033,7 +6033,7 @@
             ...(auto ? [[['Mouse', '←', '→'], 'Turn', 'the plane turns towards where you point and keeps its height'], [['↑', '↓'], 'Climb / dive', 'it settles at the new height'], [['W', 'S'], 'Speed', 'faster or slower']] : CTL_FLY()),
             [['C'], 'Camera', 'behind, cockpit or far'], [['P'], 'Pause'], [['R'], 'Restart'], [['?'], 'Show this help'],
             ...(war && war.net ? [[['U'], 'Vote', 'change the match with the other players']] : []),
-            [['Radar'], 'Colours', 'red: fighters · blue: your wingman · orange: ground targets']] };
+            [[], 'Radar colours', 'The radar is always visible in the top-right. Red: fighters · blue: wingman · orange: ground targets.']] };
         }
         default: return { goal: 'Take off and explore: hills, a canyon, a mountain strip. Watch for engine failures.',
           rows: [...CTL_FLY(), ...CTL_GEAR(), brakes, ...(plane.rotor ? [[['H'], 'Emergency landing', 'levels the helicopter and sets it down. H again to take over']] : [[['K'], 'Autopilot', 'holds your heading and height'], [['J'], 'Approach autopilot', 'flies the ILS to a runway']]),
@@ -6042,8 +6042,8 @@
     }
     function ctlHtml(id, compact) {
       const sp = ctlSpec(id), m = MODES.find((x) => x.id === id) || MODES[0];
-      const cap = (k) => (k === 'Mouse' || k === 'Click' || k === 'Radar' ? `<i>${k}</i>` : `<kbd>${k}</kbd>`);
-      const rows = sp.rows.map(([keys, name, how]) => `<div class="pg-crow"><span class="pg-ckeys">${keys.map(cap).join('')}</span><span class="pg-cname"><b>${name}</b>${how && !compact ? `<small>${how}</small>` : ''}</span></div>`).join('');
+      const cap = (k) => (k === 'Mouse' || k === 'Click' ? `<i>${k}</i>` : `<kbd>${k}</kbd>`);
+      const rows = sp.rows.map(([keys, name, how]) => `<div class="pg-crow">${keys.length ? `<span class="pg-ckeys">${keys.map(cap).join('')}</span>` : ''}<span class="pg-cname"><b>${name}</b>${how && !compact ? `<small>${how}</small>` : ''}</span></div>`).join('');
       return `<div class="pg-cgoal"><b>${m.icon} ${m.name}</b> ${sp.goal}</div><div class="pg-cgrid">${rows}</div>`;
     }
     // The card over the flight, the "?" button, and (in Air War) the weapon buttons.
