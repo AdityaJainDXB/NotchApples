@@ -20,6 +20,10 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.0.68", date: "19 October 2026", headline: "Claude usage animates the closed notch", items: [
+            "Every percent your 5-hour or weekly use goes up, the closed notch pulses and shows how much is left of both.",
+            "Claude usage refreshes every minute in the background and when the Mac wakes, so it no longer goes stale.",
+        ]),
         ReleaseNote(version: "2.0.66", date: "16 October 2026", headline: "Blackjack: no more empty bank", items: [
             "Fixed Blackjack getting stuck at a bank of 0 after losing everything and quitting: the table now refills to 500 chips when you open it, so you can always deal.",
         ]),

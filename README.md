@@ -71,7 +71,7 @@ Pick your computer. Both buttons start the download straight away. The Mac butto
   </tr>
   <tr>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.0.67</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.0.68</b></a>
     </td>
     <td align="center">
       <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 1.70.1 BETA</b></a>
@@ -245,6 +245,10 @@ All screenshots use sample data.
 
 - Tabs, buttons, tiles and list rows give a little under the cursor on press, not only on release.
 - With **Reduce Motion** on, tiles no longer lift or shrink. Frosted menus and toasts become solid when transparency is reduced, and with high contrast the secondary text is brighter and borders firmer.
+
+### Mac 2.0.68 · 19 October 2026 · 📊 Claude usage animates the closed notch
+
+- Every whole percent of 5-hour or weekly use pulses the closed notch with how much is left of both; the numbers now refresh every minute in the background and on wake instead of going stale.
 
 ### Mac 2.0.67 · 19 October 2026 · 🍪 Cookie Clicker: start over works
 
