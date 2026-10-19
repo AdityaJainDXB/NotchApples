@@ -2705,6 +2705,7 @@
     }
     /// `wind` (m/s) overrides the random steady wind (0 to 5 m/s, from a random direction).
     reset(pos, heading, speed, onGround, wind) {
+      this.sturdy = false;
       this.pos = pos; this.q = qheading(heading, onGround ? 0 : 0.02);
       // The wind: the saved Weather settings (runway-relative; `heading` is the runway / approach heading), or the old
       // random 0 to 5 m/s breeze. An explicit `wind` still wins.
@@ -2786,6 +2787,10 @@
       else { this.damage.engine = false; this.damage.power = 0; }
     }
     loseWing(side, cause, brk) {
+      if (this.sturdy && ['overg', 'overspeed', 'tree', 'ground', 'rock'].includes(cause)) {
+        this.events.push({ type: 'sturdyhit', cause });
+        return;
+      }
       if (!this.damage[side]) return;
       this.damage[side] = false;
       // Where it broke: at the root, at the engine pylon (the engine tears off and the wing snaps outboard of it) or out at the tip.
@@ -3022,6 +3027,10 @@
       // (and hands off it holds its height) instead of an ever faster rise.
       if (this.heli && this.throttle > 0.05) acc = add(acc, [0, -this.vel[1] * 0.9, 0]);
       this.gload = dot(add(acc, [0, G, 0]), u) / G;
+      if (this.sturdy) {
+        const limited = clamp(this.gload, -Math.max(1.5, s.gLimit * 0.72), Math.max(1.5, s.gLimit * 0.72));
+        if (limited !== this.gload) { acc = add(acc, mul(u, (limited - this.gload) * G)); this.gload = limited; }
+      }
       if (this.gload > this.maxG) this.maxG = this.gload;
       if (this.gload < this.minG) this.minG = this.gload;
 
@@ -3170,10 +3179,13 @@
       const gp = this.gload > 0 ? this.gload / s.gLimit : -this.gload / (s.gLimit * 0.5);
       if (gp > 1 && intact) {
         this.stress += (gp - 1) * dt * 2.5;
-        if (this.stress > 1 || gp > 1.5) this.loseWing(this.bank > 0 ? 'R' : 'L', 'overg');
+        if ((this.stress > 1 || gp > 1.5) && !this.sturdy) this.loseWing(this.bank > 0 ? 'R' : 'L', 'overg');
       } else this.stress = Math.max(0, this.stress - dt * 0.05);
       const stick = Math.max(Math.abs(input.pitch), Math.abs(input.roll));
-      if (Vi > s.max * 1.05 && wings > 0) {
+      if (this.sturdy && Vi > s.max) {
+        const wind = this.wind || v3(), air = sub(this.vel, wind), capped = mul(norm(air), s.max);
+        this.vel = add(capped, wind); this.flutter = 0;
+      } else if (Vi > s.max * 1.05 && wings > 0) {
         this.flutter += dt * ((Vi / s.max - 1.05) * 8 + stick * 1.5);
         if (this.flutter > 1) { this.loseWing('L', 'overspeed'); this.loseWing('R', 'overspeed'); }
       } else this.flutter = Math.max(0, this.flutter - dt * 0.5);
@@ -3198,7 +3210,10 @@
         const p = add(this.pos, qrot(this.q, local));
         const obj = hitObject(world, p);
         if (!obj) continue;
-        if (part === 'L' || part === 'R') { this.loseWing(part, obj.kind); this.vel = mul(this.vel, 0.8); }
+        if (part === 'L' || part === 'R') {
+          if (this.sturdy) { this.events.push({ type: 'sturdyhit', cause: obj.kind }); this.vel = mul(this.vel, 0.72); }
+          else { this.loseWing(part, obj.kind); this.vel = mul(this.vel, 0.8); }
+        }
         else {
           const hd = V > 1 ? norm([this.vel[0], 0, this.vel[2]]) : this.axes().f;
           this.crash(obj.kind, { object: true, n: [-hd[0], 0, -hd[2]], vi: V * 0.85, vt: 0 }); return true;
@@ -3485,6 +3500,7 @@
         case 'L': case 'R': {
           if (vi + 0.12 * vt > 4.2) {
             // A wing digging in at speed: it snaps, but first it spins the plane round its tip (a cartwheel when it is fast).
+            if (this.sturdy) { this.events.push({ type: 'sturdyhit', cause: 'ground' }); this.vel = mul(this.vel, 0.72); return false; }
             this.loseWing(P.id, 'ground'); this.vel = mul(this.vel, 0.92);
             const sg = P.id === 'L' ? 1 : -1, k = clamp(0.45 + V * 0.04, 0.6, 3); this.w[2] += sg * k; this.w[1] += sg * k * 0.35;
           }
@@ -5159,9 +5175,9 @@
       a.w = [(Math.random() - 0.5) * 3, (Math.random() - 0.5) * 3, (Math.random() - 0.5) * 3 + 2];
       a.vel = add(mul(a.vel, 0.7), [0, -2, 0]);
       const { r } = flight.axes(), side = dot(sub(a.pos, flight.pos), r) >= 0 ? 'R' : 'L';
-      flight.loseWing(side, 'midair', Math.random() < 0.6 ? 'tip' : 'root');
-      if (Math.random() < 0.35) flight.breakTail();
-      flight.vel = add(flight.vel, jitter(8)); flight.w = add(flight.w, [(Math.random() - 0.5) * 1.5, (Math.random() - 0.5) * 1.5, (side === 'R' ? -1 : 1) * 1.8]);
+      if (war && war.vehicle === 'plane') { war.warn = 'AIRCRAFT CONTACT'; war.warnT = 1.8; flight.vel = mul(flight.vel, 0.78); }
+      else { flight.loseWing(side, 'midair', Math.random() < 0.6 ? 'tip' : 'root'); if (Math.random() < 0.35) flight.breakTail(); }
+      flight.vel = add(flight.vel, jitter(3)); flight.w = add(flight.w, [(Math.random() - 0.5) * 0.5, (Math.random() - 0.5) * 0.5, (side === 'R' ? -1 : 1) * 0.6]);
       shakeKick = 1; noise(0.8, 0.6, 500); noise(1.2, 0.4, 150);
       for (let i = 0; i < 16; i++) puff('spark', a.pos, add(jitter(30), mul(flight.vel, 0.3)));
       for (let i = 0; i < 8; i++) puff('fire', a.pos, jitter(10));
@@ -5280,6 +5296,7 @@
         tankBody.pos[1] = groundAt(W, spot.x, spot.z) + 0.2;
         flight.reset([spot.x, tankBody.pos[1] + 2.2, spot.z], spot.heading, 0, true);
       } else flight.reset([spot.x, plane.id === 'b52' ? 1100 : 450, shared ? spot.z : R * 0.9], spot.heading, plane.cruise, false);
+      flight.sturdy = !tank;
       war = { arena, vehicle: tank ? 'tank' : 'plane', tank: tankBody, assist: warAssist, npc: warNpc, ap: { hdg: spot.heading, alt: flight.pos[1], spd: plane.cruise * 1.05, i: 0 }, outT: 0, endT: 0, shells: L.shells,
         gidn: 0, nidn: 0, score: 0, kills: 0, wave: 0, hp: L.hp, maxHp: L.hp, L, gun: L.gun, bombs: L.bombs, missiles: L.missiles, flares: L.flares,
         ground: [], foes: [], friend: null, bullets: [], bombsAir: [], missilesAir: [], flaks: [], craters: [], feed: [], lock: null, lockT: 0,
@@ -5344,6 +5361,7 @@
       }
       const airN = war.npc ? Math.min(5, Math.round((warSide === 'versus' ? 1 + Math.floor(n / 1.5) : Math.floor((n + 1) / 2)) * d.count)) : 0;
       for (let i = 0; i < airN; i++) war.foes.push(warSpawnAircraft(warRand() < 0.5 ? 'su27' : 'f15', 'foe'));
+      war.waveGround = war.ground.filter((g) => !g.dead).length; war.waveFighters = airN;
       war.waveClear = false;
       // Re-arm a little between waves.
       if (n > 1) {
@@ -5353,6 +5371,7 @@
         war.hp = Math.min(war.maxHp, war.hp + war.maxHp * 0.25);
       }
       warFeed(`WAVE ${n}: ${war.ground.filter((g) => !g.dead).length} ground targets${airN ? ` · ${airN} fighter${airN === 1 ? '' : 's'}` : ''}`);
+      war.briefingT = 4;
       toast(`WAVE ${n}`, 1800); beep(520, 0.15, 'square', 0.07);
       netSendWave();
     }
@@ -5482,11 +5501,20 @@
       if (war.assist === 'auto') {
         const st = war.ap, R = war.arena.R;
         st.spd = clamp(st.spd + raw.throttle * 40 * dt, plane.stall * 1.35, plane.max * 0.85);
+        const agl = flight.pos[1] - groundAt(W, flight.pos[0], flight.pos[2]);
         const o = planeAssist(flight, st, { turn: raw.roll, climb: invert ? -raw.pitch : raw.pitch }, dt, W, { floor: 200 });
+        war.pullUp = agl < 80 && flight.vel[1] < -1;
+        if (war.pullUp) o.pitch = Math.max(o.pitch || 0, 0.22);
         // Leaving the battlefield: it turns back by itself.
         if (Math.hypot(flight.pos[0], flight.pos[2]) > R * 0.8) st.hdg = Math.atan2(-flight.pos[0], flight.pos[2]);
         return { ...raw, ...o };
       }
+      if (war.assist === 'easy') {
+        const agl = flight.pos[1] - groundAt(W, flight.pos[0], flight.pos[2]);
+        war.pullUp = agl < 80 && flight.vel[1] < -1;
+        if (war.pullUp) return { ...raw, pitch: Math.max(raw.pitch, 0.18) };
+      }
+      war.pullUp = false;
       return raw;
     }
     /// Drives the tank for one step and lets the rest of the game follow it: `flight` stands in for the tank (where it is,
@@ -5812,6 +5840,7 @@
       const d = war.d;
       war.flash = Math.max(0, war.flash - dt * 1.6); war.warnT -= dt; if (war.warnT <= 0) war.warn = '';
       for (const f of war.feed) f.t -= dt;
+      war.briefingT = Math.max(0, (war.briefingT || 0) - dt);
       if (war.runT > 0 && (war.runT -= dt) <= 0) war.run = 0;
       war.feed = war.feed.filter((f) => f.t > 0);
       // Next wave when the last one is cleared.
@@ -5820,6 +5849,7 @@
       if (warAuth() && (war.waveClear || war.wave === 0)) { war.wavePause -= dt; if (war.wavePause <= 0) warSpawnWave(); }
       if (!war.dead) { warPlayerFire(dt); warLockOn(dt); if (war.L.gunners) warGunners(dt); }
       if (warAuth()) for (const a of war.foes) { if (a.state === 'fly') { warPilot(a, dt); if (!war.dead && len(sub(a.pos, flight.pos)) < Math.max(5, (plane.span || 5)) + 7) { warDamageAir(a, 999, 'p'); warHurt(55, 'collision'); } } else if (a.state === 'fall') warFall(a, dt); }
+      for (const a of war.foes) if (a.state === 'fly' && warRand() < dt * 8) puff('dark', add(a.pos, mul(a.vel, -0.035)), mul(a.vel, -0.06));
       if (warAuth()) war.foes = war.foes.filter((a) => a.state !== 'gone');
       if (war.friend) { const a = war.friend; if (a.state === 'fly') warPilot(a, dt); else if (a.state === 'fall') warFall(a, dt); else war.friend = null; }
       if (warAuth()) for (const g of war.ground) warGroundStep(g, dt);
@@ -5859,7 +5889,7 @@
         if (g.kind === 'tank') warDrawTank(at, q, g.turret, 0.04, tint);
         else draw(warMeshes[g.kind], model(q, at), tint);
       }
-      for (const a of war.foes) warDrawAircraft(a, [1.2, 0.62, 0.55], 0);
+      for (const a of war.foes) warDrawAircraft(a, [1.8, 0.22, 0.16], 0);
       if (war.friend) warDrawAircraft(war.friend, [0.62, 0.82, 1.2], 0);
       for (const b of war.bullets) draw(warMeshes.tracer, model(qDir(b.vel), b.pos, b.shell ? 2.4 : 1), b.owner === 'e' ? [1, 0.35, 0.25] : [1, 0.9, 0.4], 2.2);
       for (const b of war.bombsAir) draw(warMeshes.bomb, model(qDir(b.vel), b.pos, 1.4), [1, 1, 1], 0);
@@ -5876,6 +5906,12 @@
         if (cw <= 1) return null;
         return { x: ((m[0] * p[0] + m[4] * p[1] + m[8] * p[2] + m[12]) / cw * 0.5 + 0.5) * W2, y: (1 - ((m[1] * p[0] + m[5] * p[1] + m[9] * p[2] + m[13]) / cw * 0.5 + 0.5)) * H2 };
       };
+      const edgePoint = (p) => {
+        const rel = sub(p, flight.pos), { f: ff, r: rr, u: uu } = flight.axes(), depth = dot(rel, ff), side = dot(rel, rr) * (depth < 0 ? -1 : 1), up = dot(rel, uu) * (depth < 0 ? -1 : 1);
+        const dx = side || 0.001, dy = -up || 0.001, k = Math.min((W2 / 2 - 24) / Math.abs(dx), (H2 / 2 - 24) / Math.abs(dy));
+        const x = W2 / 2 + dx * k, y = H2 / 2 + dy * k;
+        return { x, y, angle: Math.atan2(dy, dx) };
+      };
       const onScr = (q, pad = 16) => q && q.x > pad && q.x < W2 - pad && q.y > pad && q.y < H2 - pad;
       h2.textAlign = 'center'; h2.textBaseline = 'middle'; h2.lineWidth = 1.6;
       { // What you are playing, and which wave.
@@ -5883,34 +5919,44 @@
         const banner = `${vn}${mark} · wave ${war.wave} · ${war.kills} kill${war.kills === 1 ? '' : 's'}`;
         h2.font = `800 ${Math.round(15 * s + 3)}px system-ui`; const bw0 = h2.measureText(banner).width + 28;
         box(W2 / 2 - bw0 / 2, 8, bw0, 26 * s + 6); h2.fillStyle = '#fff'; h2.fillText(banner, W2 / 2, 8 + (26 * s + 6) / 2);
+        const groundLeft = war.ground.filter((g) => !g.dead).length, fighterLeft = war.foes.filter((a) => a.state !== 'gone').length;
+        const objective = `WAVE ${war.wave}: destroy ${war.waveGround ?? war.ground.length} targets${war.waveFighters ? ` and ${war.waveFighters} fighters` : ''} · ${groundLeft + fighterLeft} left`;
+        h2.font = `700 ${Math.round(10 * s + 2)}px system-ui`; h2.fillStyle = '#ffd166';
+        h2.fillText(objective, W2 / 2, 42 * s + 8);
       }
       const fmtD = (d) => (d < 950 ? Math.round(d) + ' m' : (d / 1000).toFixed(1) + ' km');
       // Targets: ground (orange), enemy fighters (red), your wingman (blue).
       h2.font = `700 ${Math.round(9 * s + 2)}px system-ui`;
       const near = war.ground.filter((g) => !g.dead).map((g) => [len(sub(g.pos, flight.pos)), g]).sort((a, b) => a[0] - b[0]).slice(0, 14);
+      let labels = 0;
       for (const [dd, g] of near) {
         if (dd > 7000) continue;
         const q = proj(add(g.pos, [0, 3, 0])); if (!onScr(q, 10)) continue;
-        h2.strokeStyle = h2.fillStyle = '#ff9f43';
-        const r = clamp(2400 / dd * 7, 5, 14);
+        const pulse = war.ground.filter((x) => !x.dead).length <= 3 ? 1 + 0.18 * Math.sin(performance.now() / 120) : 1;
+        h2.strokeStyle = h2.fillStyle = '#ff9f43'; h2.lineWidth = 2.5;
+        const height = Math.max(0, g.pos[1] - flight.pos[1]);
+        const r = clamp(2600 / dd * 9 + height / 120, 7, 22) * pulse;
         h2.strokeRect(q.x - r, q.y - r, r * 2, r * 2);
-        if (dd < 2200 && near.indexOf(near.find((n) => n[1] === g)) < 3) { h2.fillText(`${WAR_KINDS[g.kind].name} ${fmtD(dd)}`, q.x, q.y + r + 9); if (g.hp < g.maxHp) { h2.fillStyle = 'rgba(0,0,0,.6)'; h2.fillRect(q.x - r, q.y - r - 6, r * 2, 3); h2.fillStyle = '#ff9f43'; h2.fillRect(q.x - r, q.y - r - 6, r * 2 * clamp(g.hp / g.maxHp, 0, 1), 3); } }
+        if (labels < 3) { h2.fillText(`${WAR_KINDS[g.kind].name} ${fmtD(dd)}`, q.x, q.y + r + 9); labels++; }
+        if (g.hp < g.maxHp) { h2.fillStyle = 'rgba(0,0,0,.6)'; h2.fillRect(q.x - r, q.y - r - 6, r * 2, 3); h2.fillStyle = '#ff9f43'; h2.fillRect(q.x - r, q.y - r - 6, r * 2 * clamp(g.hp / g.maxHp, 0, 1), 3); }
       }
       const markAir = (a, col, label) => {
         if (a.state !== 'fly') return;
-        const dd = len(sub(a.pos, flight.pos)), q = proj(a.pos); if (!onScr(q, 10)) return;
-        const locked = war.lock === a, r = locked ? 17 : 11;
-        h2.strokeStyle = h2.fillStyle = col;
-        h2.beginPath(); h2.moveTo(q.x, q.y - r); h2.lineTo(q.x + r, q.y); h2.lineTo(q.x, q.y + r); h2.lineTo(q.x - r, q.y); h2.closePath(); h2.stroke();
-        h2.fillText(`${label} ${fmtD(dd)}${locked ? (war.lockT >= 1 ? '  LOCK' : '  …') : ''}`, q.x, q.y + r + 10);
+        const dd = len(sub(a.pos, flight.pos)), q0 = proj(a.pos), q = onScr(q0, 10) ? q0 : edgePoint(a.pos), locked = war.lock === a, lastFew = war.ground.filter((g) => !g.dead).length + war.foes.filter((f) => f.state === 'fly').length <= 3, r = (locked ? 19 : 14) * (lastFew ? 1 + 0.18 * Math.sin(performance.now() / 120) : 1);
+        h2.strokeStyle = h2.fillStyle = col; h2.lineWidth = 3;
+        if (onScr(q, 10)) {
+          h2.strokeRect(q.x - r, q.y - r, r * 2, r * 2);
+          if (labels < 3) { h2.fillText(`${label} ${fmtD(dd)}${locked ? (war.lockT >= 1 ? ' LOCK' : ' …') : ''}`, q.x, q.y + r + 11); labels++; }
+        } else if (q) {
+          const ang = q.angle || Math.atan2(q.y - H2 / 2, q.x - W2 / 2), ex = q.x, ey = q.y;
+          h2.save(); h2.translate(ex, ey); h2.rotate(ang); h2.beginPath(); h2.moveTo(11, 0); h2.lineTo(-7, -8); h2.lineTo(-7, 8); h2.closePath(); h2.fill(); h2.restore();
+          if (labels < 3) { h2.fillText(`${label} ${fmtD(dd)}`, ex, ey + 18); labels++; }
+        }
       };
       for (const a of war.foes) markAir(a, '#ff5d5d', 'BANDIT');
       if (war.net) for (const o of war.net.others.values()) {
         if (!o.alive || !o.rep || !o.shown) continue;
-        const dd = len(sub(o.shown, flight.pos)), q = proj(add(o.shown, [0, 7, 0])); if (!onScr(q, 10) || dd > 6000) continue;
-        const col = netFight() ? '#ffb347' : '#6cb6ff';
-        h2.fillStyle = col; h2.fillText(`${o.name} ${fmtD(dd)}`, q.x, q.y - 4);
-        h2.fillStyle = 'rgba(0,0,0,.6)'; h2.fillRect(q.x - 16, q.y + 2, 32, 3); h2.fillStyle = col; h2.fillRect(q.x - 16, q.y + 2, 32 * clamp(o.hp / 100, 0, 1), 3);
+        const col = netFight() ? '#ffb347' : '#6cb6ff'; markAir({ state: 'fly', pos: add(o.shown, [0, 7, 0]) }, col, o.name.slice(0, 10));
       }
       if (war.friend) markAir(war.friend, '#6cb6ff', 'WINGMAN');
       // The gun sight: the cross where the shells go, 650 m ahead, and a lead cue on the locked fighter.
@@ -5986,8 +6032,29 @@
       if (war.friend && war.friend.state === 'fly') blip(war.friend.pos, '#6cb6ff', false);
       h2.fillStyle = '#fff'; h2.beginPath(); h2.moveTo(cx, cy - 5); h2.lineTo(cx + 4, cy + 4); h2.lineTo(cx - 4, cy + 4); h2.closePath(); h2.fill();
       if (war.net && war.dead && war.net.respawnT > 0) { h2.textAlign = 'center'; h2.font = `800 ${Math.round(24 * s + 4)}px system-ui`; h2.fillStyle = '#ff9f9f'; h2.fillText(`DESTROYED · BACK IN ${Math.ceil(war.net.respawnT)}`, W2 / 2, H2 * 0.4); }
+      if (war.briefingT > 0) {
+        h2.textAlign = 'center'; h2.font = `800 ${Math.round(17 * s + 3)}px system-ui`; h2.fillStyle = '#fff';
+        h2.fillText(`WAVE ${war.wave} BRIEFING · DESTROY ${war.waveGround ?? war.ground.length} TARGETS${war.waveFighters ? ` + ${war.waveFighters} FIGHTERS` : ''}`, W2 / 2, H2 * 0.31);
+        h2.font = `700 ${Math.round(11 * s + 2)}px system-ui`; h2.fillStyle = '#ffd166';
+        h2.fillText(tank ? 'WASD drive · mouse aim · click or Enter to fire' : `Enter / click: guns · Z: bombs${war.L.missiles ? ' · N: missile' : ''} · L: flares`, W2 / 2, H2 * 0.31 + 26 * s);
+      }
+      if (war.waveClear) { h2.textAlign = 'center'; h2.font = `900 ${Math.round(26 * s + 4)}px system-ui`; h2.fillStyle = '#ffd166'; h2.fillText(`WAVE ${war.wave} CLEARED  +${250 * war.wave}`, W2 / 2, H2 * 0.42); }
+      const nextGround = war.ground.filter((g) => !g.dead).sort((a, b) => len(sub(a.pos, flight.pos)) - len(sub(b.pos, flight.pos)))[0];
+      if (nextGround) {
+        const d = sub(nextGround.pos, flight.pos), ax = dot(d, flight.axes().r), az = dot(d, flight.axes().f), dirs = ['↑', '↗', '→', '↘', '↓', '↙', '←', '↖'], arrow = dirs[(Math.round((Math.atan2(ax, az) / (Math.PI / 4)) + 8) % 8)];
+        h2.textAlign = 'center'; h2.font = `800 ${Math.round(11 * s + 2)}px system-ui`; h2.fillStyle = '#ffb15c'; h2.fillText(`NEXT TARGET ${arrow} ${fmtD(len(d))}`, W2 / 2, 62 * s + 8);
+      }
+      if (war.pullUp || (war.assist === 'pro' && war.vehicle === 'plane' && flight.pos[1] - groundAt(W, flight.pos[0], flight.pos[2]) < 80)) {
+        h2.textAlign = 'center'; h2.font = `900 ${Math.round(24 * s + 4)}px system-ui`; h2.fillStyle = war.pullUp ? '#ffd166' : '#ff9f43'; h2.fillText(war.pullUp ? 'PULL UP' : 'LOW ALTITUDE', W2 / 2, H2 * 0.23);
+      }
+      if (war.vehicle === 'plane' && mouseOn && !paused) {
+        const ax = W2 / 2, ay = H2 / 2, ar = ringRadius();
+        h2.strokeStyle = 'rgba(255,255,255,.68)'; h2.lineWidth = 1.5; h2.beginPath(); h2.arc(ax, ay, ar, 0, Math.PI * 2); h2.stroke();
+        if (mouse.in && mouse.engaged) { h2.strokeStyle = '#ffd166'; h2.beginPath(); h2.moveTo(ax, ay); h2.lineTo(ax + mouse.x * ar, ay + mouse.y * ar); h2.stroke(); h2.fillStyle = '#ffd166'; h2.beginPath(); h2.arc(ax + mouse.x * ar, ay + mouse.y * ar, 5, 0, Math.PI * 2); h2.fill(); }
+      }
       // Warnings and the red flash when you are hit.
       if (war.warn) { h2.textAlign = 'center'; h2.font = `800 ${Math.round(22 * s + 4)}px system-ui`; h2.fillStyle = Math.floor(performance.now() / 180) % 2 ? '#ff5d5d' : '#ffd166'; h2.fillText(war.warn, W2 / 2, H2 * 0.18); }
+      if (war.outT > 0) { h2.strokeStyle = `rgba(255,45,45,${0.35 + 0.35 * Math.sin(performance.now() / 160)})`; h2.lineWidth = 7; h2.strokeRect(4, 4, W2 - 8, H2 - 8); }
       if (war.flash > 0) { h2.fillStyle = `rgba(255,30,30,${war.flash * 0.35})`; h2.fillRect(0, 0, W2, H2); }
     }
 
@@ -6267,6 +6334,8 @@
         n.foeT -= dt; n.groundT -= dt;
         if (n.foeT <= 0) { n.foeT = 0.1; netSendFoes(); }
         if (n.groundT <= 0) { n.groundT = 0.5; netSendGround(); }
+        n.waveT = (n.waveT || 0) - dt;
+        if (n.waveT <= 0) { n.waveT = 1; netSendWave(); }
       }
       // Respawn after being destroyed.
       if (war.dead && n.respawnT > 0 && (n.respawnT -= dt) <= 0) netRespawn();
@@ -6289,7 +6358,7 @@
       if (war.vehicle === 'tank') {
         war.tank = new TankBody([spot.x, 0, spot.z], spot.heading); war.tank.pos[1] = groundAt(W, spot.x, spot.z) + 0.2;
         flight.reset([spot.x, war.tank.pos[1] + 2.2, spot.z], spot.heading, 0, true);
-      } else { flight.reset([spot.x, plane.id === 'b52' ? 1100 : 450, spot.z], spot.heading, plane.cruise, false); war.ap = { hdg: spot.heading, alt: flight.pos[1], spd: plane.cruise * 1.05, i: 0 }; }
+      } else { flight.reset([spot.x, plane.id === 'b52' ? 1100 : 450, spot.z], spot.heading, plane.cruise, false); flight.sturdy = true; war.ap = { hdg: spot.heading, alt: flight.pos[1], spd: plane.cruise * 1.05, i: 0 }; }
       toast('Back in the fight', 1500);
     }
     function netFinish(winnerId) {
@@ -6301,7 +6370,7 @@
     const r1n = (v) => Math.round(v * 10) / 10;
     function netSendWave() {
       if (!war || !war.net || war.net.role !== 'host') return;
-      netSend({ t: 'wave', n: war.wave, sc: war.score, kl: war.kills, g: war.ground.map((g) => ({ i: g.nid, k: g.kind, x: r1n(g.pos[0]), y: r1n(g.pos[1]), z: r1n(g.pos[2]), h: Math.round(g.heading * 100) / 100, hp: Math.round(g.hp), mx: Math.round(g.maxHp), d: g.dead ? 1 : 0, s: g.speed })) });
+      netSend({ t: 'wave', n: war.wave, sc: war.score, kl: war.kills, af: war.waveFighters || 0, g: war.ground.map((g) => ({ i: g.nid, k: g.kind, x: r1n(g.pos[0]), y: r1n(g.pos[1]), z: r1n(g.pos[2]), h: Math.round(g.heading * 100) / 100, hp: Math.round(g.hp), mx: Math.round(g.maxHp), d: g.dead ? 1 : 0, s: g.speed })) });
     }
     function netSendFoes() {
       netSend({ t: 'wf', f: war.foes.map((a) => ({ i: a.nid, id: a.id, x: r1n(a.pos[0]), y: r1n(a.pos[1]), z: r1n(a.pos[2]), h: Math.round(a.heading * 100) / 100, p: Math.round(a.pitch * 100) / 100, b: Math.round(a.bank * 100) / 100, s: Math.round(a.speed), hp: Math.round(a.hp), st: a.state === 'fly' ? 0 : 1, fg: a.burstLeft > 0 ? 1 : 0 })) });
@@ -6381,12 +6450,16 @@
     }
     // ---- the other players' copy of the world (what a player who is not the host sees)
     function netApplyWave(m) {
+      if (!Number.isInteger(m.n) || m.n < war.wave || m.n === war.appliedWave || !Array.isArray(m.g)) return;
       war.wave = m.n; war.score = m.sc; war.kills = m.kl; war.waveClear = false; war.wavePause = 1e9;
+      war.appliedWave = m.n;
+      war.waveGround = m.g.length; war.waveFighters = Number.isInteger(m.af) ? m.af : 0; war.briefingT = 4;
       war.ground = m.g.map((g) => ({ nid: g.i, kind: g.k, pos: [g.x, g.y, g.z], heading: g.h, turret: g.h, hp: g.hp, maxHp: g.mx, r: WAR_KINDS[g.k].r, pts: WAR_KINDS[g.k].pts, dead: !!g.d, speed: g.s, burning: 0, cool: 1e9, t: 0 }));
       toast(`WAVE ${m.n}`, 1800); beep(520, 0.15, 'square', 0.07);
     }
     function netApplyGround(m) {
-      war.wave = m.n; war.score = m.sc; war.kills = m.kl;
+      if (m.n !== war.wave) return;
+      war.score = m.sc; war.kills = m.kl;
       for (const [id, hp, dead, x, z, h] of m.g) {
         const g = war.ground.find((q) => q.nid === id); if (!g) continue;
         g.hp = hp; g.heading = h; if (g.speed > 0) { g.pos[0] = x; g.pos[2] = z; g.pos[1] = groundAt(W, x, z); }
@@ -6468,7 +6541,9 @@
 
       // What broke this step.
       for (const ev of flight.events.splice(0)) {
-        if (ev.type === 'wing') {
+        if (ev.type === 'sturdyhit') {
+          if (war && war.vehicle === 'plane') { war.warn = 'WINGTIP STRIKE · SLOWED'; war.warnT = 1.5; }
+        } else if (ev.type === 'wing') {
           const at = partPos(ev.side);
           wingBreak(ev);
           for (let i = 0; i < 14; i++) puff(ev.cause === 'water' ? 'spray' : 'dust', at, add(mul(flight.vel, 0.4), jitter(10)));
@@ -7766,7 +7841,7 @@
     window.NotchPlaneGame.key = (key, down) => onKey({ key, repeat: false, target: null }, down);
     window.NotchPlaneGame._state = () => ({ screen, keys: [...keys], bank: flight.bank, pitch: flight.pitchAngle, pos: flight.pos, w: flight.w, onGround: flight.onGround,
       speed: flight.speed, ias: flight.ias, gload: flight.gload, spin: flight.spin, wreckRest: flight.rest, report: flight.report, damage: flight.damage, crashed: flight.crashed, why: flight.why, debris: debris.length, particles: smoke.length });
-    window.NotchPlaneGame._poke = { net: { vote: (k, v) => netVoteCast(k, v), hurt: (id, a) => netHurtRemote(id, a, 'test'), room: () => netg && { role: netg.role, code: netg.code, cfg: netg.cfg, running: netg.running, status: netg.status, votes: netg.votes, id: netMyId }, hurtMe: (a, by) => warHurt(a, 'test', by) }, war: () => war, warHurt: (n) => warHurt(n, 'test'), warFire: (k, v) => { if (k === 'gun') warPad.gun = v; }, remote: () => remote, sky: () => ({ on: shareOn, id: skyId, pilots: skyPilots, off: skyOff }), traffic: () => traffic, spawnTraffic: () => spawnTraffic(), failEngine: (p) => { failAt = elapsed; }, flight: () => flight, world: () => W, dbg: () => ({ debris, smoke, gouges, slowT, duckT, shakeKick, attached: [...attached] }),
+    window.NotchPlaneGame._poke = { startBattle: (assist = 'easy') => { mode = MODES.find((m) => m.id === 'war'); warVeh = 'f16'; warAssist = assist; warSide = 'coop'; warNpc = false; start(); return war; }, net: { vote: (k, v) => netVoteCast(k, v), hurt: (id, a) => netHurtRemote(id, a, 'test'), room: () => netg && { role: netg.role, code: netg.code, cfg: netg.cfg, running: netg.running, status: netg.status, votes: netg.votes, id: netMyId }, hurtMe: (a, by) => warHurt(a, 'test', by) }, war: () => war, warHurt: (n) => warHurt(n, 'test'), warFire: (k, v) => { if (k === 'gun') warPad.gun = v; }, remote: () => remote, sky: () => ({ on: shareOn, id: skyId, pilots: skyPilots, off: skyOff }), traffic: () => traffic, spawnTraffic: () => spawnTraffic(), failEngine: (p) => { failAt = elapsed; }, flight: () => flight, world: () => W, dbg: () => ({ debris, smoke, gouges, slowT, duckT, shakeKick, attached: [...attached] }),
       // Test hooks for looking at the models: a fixed camera, held controls, and freezing the physics.
       view: (v) => { devView = v; }, ctl: (c) => { devCtl = c; }, hold: (h) => { devHold = h; }, plane: () => plane, surf,
       // Test hook: run the simulation ahead by `secs` seconds without drawing (a slow software renderer can't keep real time).

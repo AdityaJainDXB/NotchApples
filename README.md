@@ -74,7 +74,7 @@ Pick your computer. Both buttons start the download straight away. The Mac butto
       <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.0.73</b></a>
     </td>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 1.73.0 BETA</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 1.74.0 BETA</b></a>
     </td>
   </tr>
   <tr>
@@ -232,6 +232,12 @@ All screenshots use sample data.
 ## What's new
 
 > **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is still in the repository's tags.
+
+### Mac 2.0.74 · Windows 1.74.0 BETA · 19 October 2026 · ⚔️ Battle is clearer and sturdier
+
+- Battle aircraft no longer lose wings to over-G, overspeed or wingtip scrapes; speed and load are capped, and a hard nose-first ground crash remains fatal.
+- Easy and Automatic warn and help pull up near the ground; Pro gets a low-altitude warning. Battle targets now have stronger markers, enemy aircraft trail smoke, and the HUD shows wave objectives, next-target direction and a short briefing.
+- Fixed multiplayer wave progression getting stuck on wave 1 by resending authoritative wave snapshots to clients. (Issue #22.)
 
 ### Mac 2.0.73 · 19 October 2026 · 🧭 Clearer Battle radar help
 

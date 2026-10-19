@@ -65,6 +65,15 @@ jobs:
       - name: Build installers
         run: cargo tauri build
 
+      - name: Launch check (the app must start and stay running)
+        shell: pwsh
+        run: |
+          $exe = Resolve-Path "target/release/notch-apple.exe"
+          $app = Start-Process -FilePath $exe -PassThru
+          Start-Sleep -Seconds 15
+          if ($app.HasExited) { throw "Notch Apple exited during the launch check (code $($app.ExitCode))" }
+          Stop-Process -Id $app.Id -Force
+
       - name: Show what was produced
         shell: bash
         run: ls -R target/release/bundle || true

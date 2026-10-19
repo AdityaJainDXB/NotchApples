@@ -118,3 +118,24 @@ test('Automatic flying holds its height and speed, turns briskly, and never stal
     }
   } finally { T.setArena(null); }
 });
+
+test('Battle sturdy-wing handling caps speed and G through hard turns without losing wings', () => {
+  const { w } = battleWorld(0);
+  try {
+    for (const assist of ['easy', 'pro']) {
+      const P = G.PLANES.find((p) => p.id === 'f16'), fl = new G.Flight(P);
+      fl.reset([0, 900, 1500], 0, P.cruise, false);
+      fl.sturdy = true;
+      const assistState = { hdg: fl.heading, alt: 900, spd: P.cruise, i: 0 };
+      for (let i = 0; i < 60 * 60; i++) {
+        const roll = i % 600 < 240 ? 1 : i % 600 < 480 ? -1 : 0;
+        fl.step(1 / 60, T.planeAssist(fl, assistState, { turn: roll, climb: 0 }, 1 / 60, w), w);
+        assert.ok(fl.damage.L && fl.damage.R, `${assist}: wings intact at ${(i / 60).toFixed(1)}s`);
+        const actualAirSpeed = Math.hypot(fl.vel[0] - fl.wind[0], fl.vel[1] - fl.wind[1], fl.vel[2] - fl.wind[2]);
+        assert.ok(actualAirSpeed <= P.max + 2, `${assist}: speed capped at ${actualAirSpeed.toFixed(1)} m/s`);
+        assert.ok(Math.abs(fl.gload) <= Math.max(1.5, P.gLimit * 0.72) + 1e-6, `${assist}: G limited to ${fl.gload.toFixed(1)}`);
+        assert.ok(!fl.crashed, `${assist}: no crash at ${(i / 60).toFixed(1)}s`);
+      }
+    }
+  } finally { T.setArena(null); }
+});

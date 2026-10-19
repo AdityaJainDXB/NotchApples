@@ -20,6 +20,11 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.0.74", date: "19 October 2026", headline: "Battle is clearer and sturdier", items: [
+            "Battle aircraft no longer lose wings to over-G, overspeed or wingtip scrapes; speed and load are capped, while a hard nose-first crash remains fatal.",
+            "Easy and Automatic warn and help pull up near the ground; Pro gets a low-altitude warning. Enemy markers, smoke trails, wave objectives and briefings make the battle easier to read.",
+            "Fixed multiplayer wave progression getting stuck on wave 1.",
+        ]),
         ReleaseNote(version: "2.0.72", date: "19 October 2026", headline: "Battle with friends", items: [
             "Host a game in Battle and share the 6-letter code, or join a friend's. It works on the same Wi-Fi or far apart, and Mac and Windows can play together.",
             "Co-op against the computer or Fight each other, with a vote (press U) to change the match. If you are shot down you come back after five seconds.",
