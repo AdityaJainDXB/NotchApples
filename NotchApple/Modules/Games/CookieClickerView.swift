@@ -113,16 +113,29 @@ struct CookieClickerView: View {
                             lockedRow(b)
                         }
                     }
-                    Button("Start over…", role: .destructive) { confirmReset = true }
-                        .buttonStyle(.plain).font(.system(size: 10)).foregroundStyle(Theme.textSecondary).padding(.top, 4)
+                    if confirmReset {
+                        HStack(spacing: 8) {
+                            Text("Reset all progress?")
+                                .font(.system(size: 10)).foregroundStyle(Theme.textSecondary)
+                            Spacer(minLength: 0)
+                            Button("Cancel") { confirmReset = false }
+                                .buttonStyle(.plain).font(.system(size: 10)).foregroundStyle(Theme.textSecondary)
+                            Button("Start over", role: .destructive) {
+                                model.reset()
+                                confirmReset = false
+                            }
+                            .buttonStyle(.plain).font(.system(size: 10, weight: .semibold)).foregroundStyle(.red)
+                        }
+                        .padding(.top, 4)
+                    } else {
+                        Button("Start over…", role: .destructive) { confirmReset = true }
+                            .buttonStyle(.plain).font(.system(size: 10)).foregroundStyle(Theme.textSecondary).padding(.top, 4)
+                    }
                 }
             }
         }
         .onAppear { model.activate() }
         .onDisappear { model.deactivate() }
-        .confirmationDialog("Start over from zero?", isPresented: $confirmReset) {
-            Button("Start over", role: .destructive) { model.reset() }
-        }
     }
 
     private var cookie: some View {
