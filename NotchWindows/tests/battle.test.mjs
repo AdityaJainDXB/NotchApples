@@ -1,0 +1,120 @@
+// Battle: the flat battlefields, the drivable tank and the Automatic flying assist. Run: node --test NotchWindows/tests
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { createRequire } from 'node:module';
+
+globalThis.window = globalThis;
+globalThis.document = { getElementById: () => null };
+createRequire(import.meta.url)('../src/js/games/plane-sim.js');
+const G = globalThis.NotchPlaneGame, T = G._test;
+const ground = (w) => (x, z) => T.groundAt(w, x, z);
+
+test('each battlefield is flat in the middle, has a low rim of hills (or sea) round the edge, and sea beyond', () => {
+  for (const a of T.ARENAS) {
+    const inner = [];
+    for (let r = 0; r <= 0.9 * a.R; r += 150) for (let th = 0; th < 6.28; th += 0.5) inner.push(T.arenaHeight(a, Math.cos(th) * r, Math.sin(th) * r));
+    if (a.island) {
+      assert.ok(T.arenaHeight(a, 0, 0) > 25, `${a.id} has a fortress hill`);
+      assert.ok(T.arenaHeight(a, 0, a.R * 1.3) < 0, `${a.id} is surrounded by sea`);
+      assert.ok(T.arenaHeight(a, a.R * 0.5, 0) > 3, `${a.id} has dry land`);
+    } else {
+      const lo = Math.min(...inner), hi = Math.max(...inner);
+      assert.ok(hi - lo < a.rough * 2 + 8, `${a.id} is level: ${lo.toFixed(1)} to ${hi.toFixed(1)}`);
+      assert.ok(lo > 0, `${a.id} has no water inside`);
+      assert.ok(T.arenaHeight(a, 0, a.R * 1.5) > a.base + 20, `${a.id} has a rim of hills`);
+      assert.ok(T.arenaHeight(a, 0, a.R * 3) < 0, `${a.id} has sea beyond the rim`);
+    }
+  }
+});
+
+test('a battlefield world has none of the valley\'s runway, towns and bridge, and is the same every time', () => {
+  const a = T.ARENAS[0];
+  T.setArena(a);
+  try {
+    const w1 = T.makeWorld(T.REGIONS[0], a), w2 = T.makeWorld(T.REGIONS[0], a);
+    assert.equal(w1.arena, 'plains');
+    assert.ok(Math.abs(T.groundAt(w1, 0, 0) - T.groundAt(w2, 0, 0)) < 1e-9);
+    const built = w1.colliders.filter((c) => c.kind !== 'tree');
+    assert.ok(built.length > 5 && built.length < 120, `only the battlefield's own bases and rocks, no airfield or town (${built.length})`);
+    assert.ok(!built.some((c) => ['hangar', 'tower', 'mast', 'bridge'].includes(c.kind)), 'no hangars, towers, masts or bridge');
+    assert.ok(Math.abs(T.groundAt(w1, 20, -300) - a.base) < 8, 'the old runway is gone: just level ground');
+  } finally { T.setArena(null); }
+});
+
+function battleWorld(i = 0) { const a = T.ARENAS[i]; T.setArena(a); return { a, w: T.makeWorld(T.REGIONS[0], a) }; }
+
+test('a tank drives forward, turns, reverses more slowly, and sits on the ground', () => {
+  const { a, w } = battleWorld(0);
+  try {
+    const t = new T.TankBody([0, 0, 2000], 0);
+    for (let i = 0; i < 300; i++) t.step(1 / 60, { drive: 1, steer: 0, aimX: 0, aimY: 0 }, w, a.R * 1.05);   // 5 s
+    assert.ok(t.speed > 10 && t.speed <= T.TANK.speed + 0.01, `speed ${t.speed}`);
+    assert.ok(t.pos[2] < 2000 - 30, `it went north: z ${t.pos[2]}`);
+    assert.ok(Math.abs(t.pos[1] - T.groundAt(w, t.pos[0], t.pos[2])) < 1.5, 'on the ground');
+    const h0 = t.heading;
+    for (let i = 0; i < 60; i++) t.step(1 / 60, { drive: 0, steer: 1, aimX: 0, aimY: 0 }, w, a.R * 1.05);
+    assert.ok(T.wrapPi(t.heading - h0) > 0.5, 'steering right turns it right');
+    const r = new T.TankBody([0, 0, 0], 0);
+    for (let i = 0; i < 300; i++) r.step(1 / 60, { drive: -1, steer: 0, aimX: 0, aimY: 0 }, w, a.R * 1.05);
+    assert.ok(r.speed < 0 && r.speed >= -T.TANK.reverse - 0.01, `reverse speed ${r.speed}`);
+  } finally { T.setArena(null); }
+});
+
+test('a tank cannot leave the battlefield or drive into the sea', () => {
+  const { a, w } = battleWorld(0);
+  try {
+    const t = new T.TankBody([0, 0, a.R * 0.95], 0);
+    for (let i = 0; i < 60 * 40; i++) t.step(1 / 60, { drive: 1, steer: 0, aimX: 0, aimY: 0 }, w, a.R * 1.05);
+    for (let i = 0; i < 60 * 40; i++) t.step(1 / 60, { drive: 1, steer: 0.0, aimX: 0, aimY: 0 }, w, a.R * 1.05);
+    assert.ok(Math.hypot(t.pos[0], t.pos[2]) <= a.R * 1.05 + 5);
+  } finally { T.setArena(null); }
+  const { a: isl, w: iw } = battleWorld(2);
+  try {
+    const t = new T.TankBody([0, 0, 1500], Math.PI / 2);        // heading east, towards the sea
+    for (let i = 0; i < 60 * 120; i++) t.step(1 / 60, { drive: 1, steer: 0, aimX: 0, aimY: 0 }, iw, isl.R * 1.4);
+    assert.ok(T.groundAt(iw, t.pos[0], t.pos[2]) > 0, 'it stopped at the shore');
+  } finally { T.setArena(null); }
+});
+
+test('the turret and gun turn and are limited, and the aim solution hits what it aims at', () => {
+  const { w } = battleWorld(0);
+  try {
+    const t = new T.TankBody([0, 0, 2000], 0);
+    for (let i = 0; i < 60; i++) t.step(1 / 60, { drive: 0, steer: 0, aimX: 1, aimY: 1 }, w, 1e9);
+    assert.ok(T.wrapPi(t.turret - 0) > 1.5, 'the turret turned right');
+    assert.ok(t.gun <= T.TANK.gunMax + 1e-9 && t.gun > 0.3, 'the gun is raised and stops at its limit');
+    // Aim at a target 900 m away and fly a shell to it.
+    const tank = new T.TankBody([0, 0, 2000], 0);
+    const target = [300, 6, 1200];
+    const s = T.tankAimAt(tank, target, [0, 0, 0]);
+    tank.turret = s.yaw; tank.gun = s.pitch;
+    const shell = { pos: tank.muzzle(), vel: tank.aim().map((v) => v * T.TANK.shell), t: 0 };
+    let best = 1e9;
+    for (let i = 0; i < 1200; i++) { T.WAR.bulletStep(shell, 0.005); best = Math.min(best, Math.hypot(shell.pos[0] - target[0], shell.pos[1] - target[1], shell.pos[2] - target[2])); }
+    assert.ok(best < 6, `the shell came within ${best.toFixed(1)} m`);
+  } finally { T.setArena(null); }
+});
+
+test('Automatic flying holds its height and speed, turns briskly, and never stalls or hits the ground', () => {
+  const { w } = battleWorld(0);
+  try {
+    for (const id of ['f16', 'a10', 'b52']) {
+      const P = G.PLANES.find((p) => p.id === id), fl = new G.Flight(P);
+      fl.reset([0, 600, 1500], 0, P.cruise, false);
+      const st = { hdg: fl.heading, alt: 600, spd: P.cruise * 1.05, i: 0 };
+      let minAgl = 1e9, stalled = 0, h8 = 0;
+      for (let t = 0; t < 40; t += 1 / 60) {
+        const cmd = t < 8 ? { turn: 1, climb: 0 } : { turn: 0, climb: 0 };
+        fl.step(1 / 60, T.planeAssist(fl, st, cmd, 1 / 60, w), w);
+        minAgl = Math.min(minAgl, fl.pos[1] - T.groundAt(w, fl.pos[0], fl.pos[2]));
+        if (fl.inStall) stalled++;
+        if (Math.abs(t - 8) < 1 / 120) h8 = fl.heading;
+        assert.ok(!fl.crashed, `${id} crashed at ${t.toFixed(1)} s`);
+      }
+      assert.ok(h8 > 0.7, `${id} turned ${(h8 * 57.3).toFixed(0)}° in 8 s`);
+      assert.ok(minAgl > 150, `${id} stayed ${minAgl.toFixed(0)} m up`);
+      assert.equal(stalled, 0, `${id} never stalled`);
+      assert.ok(Math.abs(fl.ias - P.cruise * 1.05) < 35, `${id} held its speed: ${fl.ias.toFixed(0)}`);
+    }
+  } finally { T.setArena(null); }
+});

@@ -1449,7 +1449,34 @@
   /// The terrain's shape before it is sampled into the grid: level ground for the airfield, towns and villages; foothills
   /// and ridged, eroded mountains (warped so nothing lines up) rising round the valley; a coastal plain falling to a sea
   /// in the south; a plateau for the second strip; the lake, a canyon river in the mountains and a gentle one to the sea.
-  function terrainShape(x, z) {
+  // ---- battlefields: flat, open, purpose-made places to fight in. The ordinary world is a mountain valley, which is too hard
+  // to fight in, so a battlefield replaces all of its ground. Everything is centred on (0, 0); the players' side is the
+  // south (+z) and the enemy's the north (-z).
+  const ARENAS = [
+    { id: 'plains', name: 'Green Plains', blurb: 'Flat open grassland with a few woods. The easiest place to fly and to drive.', R: 3000, base: 9, rough: 3, rim: 130, desert: false },
+    { id: 'dunes', name: 'Desert Dunes', blurb: 'Rolling sand dunes and rocks. Tanks hide behind the dunes; planes get a clear view.', R: 3000, base: 14, rough: 15, rim: 180, desert: true },
+    { id: 'island', name: 'Island Fortress', blurb: 'A round island with a fortress on the hill in the middle, in open sea.', R: 2500, base: 12, rough: 4, rim: 0, desert: false, island: true },
+  ];
+  let ARENA = null;
+  function arenaHeight(a, x, z) {
+    const d = Math.hypot(x, z);
+    if (a.island) {
+      const wob = (fbm(x / 520 + 7, z / 520 + 2, 2) - 0.5) * 340;
+      const land = 1 - smooth(a.R * 0.84, a.R * 1.02, d + wob);
+      const hill = 44 * (1 - smooth(100, 700, d));
+      const h = Math.max(a.base + hill + (fbm(x / 260 + 1, z / 260 + 5, 2) - 0.5) * a.rough, 4);
+      return -45 + (h + 45) * land;
+    }
+    const wave = a.desert ? (Math.sin(x / 170 + fbm(x / 420, z / 420, 2) * 5) * Math.cos(z / 210 + 1) * 0.55 + fbm(x / 250, z / 250, 3) - 0.4) * a.rough
+      : (fbm(x / 600 + 3, z / 600 + 9, 3) - 0.45) * a.rough;
+    const ring = smooth(a.R * 1.04, a.R * 1.55, d) * a.rim * (0.6 + 0.8 * fbm(x / 800 + 4, z / 800 + 1, 3));   // a low rim of hills round the edge
+    const h = a.base + wave + ring;
+    const sea = smooth(a.R * 2.1, a.R * 2.8, d);
+    return h + (-45 - h) * sea;
+  }
+  /// The ground height at (x, z): a battlefield's if one is chosen, otherwise the mountain valley's.
+  function terrainShape(x, z) { return ARENA ? arenaHeight(ARENA, x, z) : terrainNatural(x, z); }
+  function terrainNatural(x, z) {
     const d = Math.hypot(x - VALLEY[0], z - VALLEY[1]);
     const wx = x + (fbm(x / 1300 + 5.2, z / 1300 + 1.3, 3) - 0.5) * 900, wz = z + (fbm(x / 1300 + 8.1, z / 1300 + 4.7, 3) - 0.5) * 900;
     const plain = smooth(150, 1500, z) * smooth(-2700, -1500, x) * (1 - smooth(2700, 4200, x));   // the coastal plain
@@ -1855,10 +1882,10 @@
   }
   const SEG7 = { 0: 'abcdef', 1: 'bc', 2: 'abged', 3: 'abgcd', 4: 'fgbc', 5: 'afgcd', 6: 'afgedc', 7: 'abc', 8: 'abcdefg', 9: 'abcdfg' };
 
-  function makeWorld(region = REGIONS[0]) {
+  function makeWorld(region = REGIONS[0], arena = null) {
     const r = rng(7), b = new Builder(), lights = new Builder(), lightHalo = new Builder(), ground = new Builder(), decal = new Builder(), marks = new Builder(), beacon = new Builder(), lampB = new Builder();
     { const lbox = lights.box.bind(lights); lights.box = (c, sz, col) => { lbox(c, sz, col); blob(lightHalo, c, 2.3, col); }; }   // every light gets a soft halo that shows at night
-    const world = { chunks: new Array(TNC * TNC), colliders: [], grid: new Map(), turbines: [], keep: [[LM[0], LM[1], 460]], papi: [], socks: [], wind: null, lighthouse: null, region: region.id, desert: !!region.desert };
+    const world = { chunks: new Array(TNC * TNC), colliders: [], grid: new Map(), turbines: [], keep: [[LM[0], LM[1], 460]], papi: [], socks: [], wind: null, lighthouse: null, region: region.id, desert: !!region.desert || !!(arena && arena.desert), arena: arena ? arena.id : '' };
     const gAt = (x, z) => groundAt(world, x, z);
     const solid = (min, max, kind) => addSolid(world, min, max, kind);
     const block = (c, s, col, kind) => { b.box(c, s, col); if (kind) solid(sub(c, mul(s, 0.5)), add(c, mul(s, 0.5)), kind); };
@@ -1903,6 +1930,30 @@
         for (let t = 6; t + 8 < L; t += 22) ribbon(bl, [[ax + dx * t, az + dz * t], [ax + dx * (t + 8), az + dz * (t + 8)]], 0.4, 0.5, col);
       }
     };
+    /// A battlefield's scenery: a base at each end (the players' to the south, the enemy's to the north), rocks for cover,
+    /// and on the island a ring of walls round the fortress hill.
+    const arenaProps = (a) => {
+      const rr = rng(91), conc = hex('#9a9da0'), dark = hex('#6b6f73'), padc = hex('#5d6165');
+      const flag = (x, z, col) => { const y = gAt(x, z); b.box([x, y + 7, z], [0.4, 14, 0.4], hex('#d8d8d8')); b.box([x + 2.6, y + 12.2, z], [5, 3, 0.2], col); };
+      for (const [bz, col] of [[a.R * 0.78, hex('#2f7fe0')], [-a.R * 0.78, hex('#d8453a')]]) {
+        rectQ(decal, -70, 70, bz - 70, bz + 70, 0.12, padc);
+        for (const [dx, dz, w, d, h] of [[-48, 0, 26, 18, 10], [48, 0, 26, 18, 10], [0, bz > 0 ? 44 : -44, 36, 14, 8]]) block([dx, gAt(dx, bz + dz) + h / 2, bz + dz], [w, h, d], conc, 'building');
+        flag(0, bz, col);
+      }
+      const n = a.island ? 22 : 46;
+      for (let i = 0; i < n; i++) {
+        const th = rr() * Math.PI * 2, rad = (a.island ? 0.15 : 0.1) * a.R + rr() * a.R * (a.island ? 0.62 : 0.85), x = Math.cos(th) * rad, z = Math.sin(th) * rad;
+        if (Math.hypot(x, Math.abs(z) - a.R * 0.78) < 140 || gAt(x, z) < 2) continue;
+        const w = 5 + rr() * 11, h = 2 + rr() * 5, d = 5 + rr() * 11;
+        block([x, gAt(x, z) + h / 2 - 0.6, z], [w, h, d], a.desert ? hex('#b69b6a') : dark, 'rock');
+      }
+      if (a.island) for (let k = 0; k < 16; k++) {
+        const th = (k / 16) * Math.PI * 2; if (k % 4 === 0) continue;      // four gates
+        const x = Math.cos(th) * 300, z = Math.sin(th) * 300;
+        block([x, gAt(x, z) + 4, z], [58, 8, 6], conc, 'building');
+      }
+    };
+    if (!arena) {
     const asphalt = hex('#3a3e44'), shoulder = hex('#4a4f55'), concrete = hex('#979a9d'), paint = hex('#f4f4f1'), yellow = hex('#f1c232'), mown = hex('#5d9a3a'), road = hex('#55595e');
 
     // ---- the main runway: asphalt, edge lines, centre dashes, thresholds, aiming and touchdown marks, numbers, lights
@@ -2128,6 +2179,8 @@
       world.lighthouse = { x: lx, z: lz, y: g + 27.7 };
     }
 
+    }
+    if (arena) arenaProps(arena);
     // ---- clouds: flat-bottomed puffs in the middle layer (kept off the airfield), a thin high layer above
     const cl = new Builder();
     for (let i = 0; i < 90; i++) {
@@ -3910,6 +3963,72 @@
     }
     return { G, BOMB, GUN, rhoAt, bombStep, impactPoint, blastDamage, bulletStep, segHit, leadPoint, missileStep, steer, offBore, wrap };
   })();
+
+  // ------------------------------------------------------------------ the tank and the Automatic flying assist
+
+  /// A drivable tank: the hull turns and drives, the turret turns on its own, and the gun raises and lowers.
+  const TANK = { speed: 13, reverse: 6, accel: 9, turn: 1.0, turretRate: 1.7, gunRate: 0.8, gunMin: -0.1, gunMax: 0.5, hp: 260, shell: 420, reload: 2.2 };
+  class TankBody {
+    constructor(pos, heading) {
+      this.pos = [pos[0], 0, pos[2]]; this.heading = heading; this.turret = heading; this.gun = 0.04;
+      this.speed = 0; this.vel = [0, 0, 0]; this.q = qheading(heading, 0); this.reload = 0; this.crashed = false;
+    }
+    /// The way the barrel points, and the end of the barrel.
+    aim() { const c = Math.cos(this.gun); return [Math.sin(this.turret) * c, Math.sin(this.gun), -Math.cos(this.turret) * c]; }
+    muzzle() { return add(add(this.pos, [0, 2.4, 0]), mul(this.aim(), 5.2)); }
+    /// input: { drive -1..1 (forward +), steer -1..1 (right +), aimX -1..1 (turret right +), aimY -1..1 (gun up +) }.
+    /// `limit` keeps it inside a round battlefield of that radius; water and steep ground stop it, and so do solid things.
+    step(dt, input, world, limit = 1e9) {
+      const want = input.drive > 0 ? input.drive * TANK.speed : input.drive * TANK.reverse;
+      this.speed += clamp(want - this.speed, -TANK.accel * dt, TANK.accel * dt);
+      const sr = TANK.turn * (0.55 + 0.45 * Math.min(1, Math.abs(this.speed) / 6));
+      this.heading = wrapPi(this.heading + input.steer * sr * dt);
+      this.turret = wrapPi(this.turret + input.aimX * TANK.turretRate * dt);
+      this.gun = clamp(this.gun + input.aimY * TANK.gunRate * dt, TANK.gunMin, TANK.gunMax);
+      this.reload = Math.max(0, this.reload - dt);
+      const step = this.speed * dt, nx = this.pos[0] + Math.sin(this.heading) * step, nz = this.pos[2] - Math.cos(this.heading) * step;
+      const here = groundAt(world, this.pos[0], this.pos[2]), there = groundAt(world, nx, nz);
+      const probe = [nx + Math.sin(this.heading) * Math.sign(step || 1) * 3.2, there + 1.2, nz - Math.cos(this.heading) * Math.sign(step || 1) * 3.2];
+      const blocked = there < WATER + 0.8 || Math.abs(there - here) > Math.abs(step) * 0.9 + 0.02 || Math.hypot(nx, nz) > limit || !!hitObject(world, probe);
+      if (blocked && Math.abs(step) > 1e-6) this.speed = 0;
+      else { this.pos[0] = nx; this.pos[2] = nz; }
+      const y = groundAt(world, this.pos[0], this.pos[2]);
+      // Sit on the ground with the hull tilted to the slope under it.
+      const fx = Math.sin(this.heading), fz = -Math.cos(this.heading), rx = Math.cos(this.heading), rz = Math.sin(this.heading);
+      const pitch = Math.atan2(groundAt(world, this.pos[0] + fx * 3.5, this.pos[2] + fz * 3.5) - groundAt(world, this.pos[0] - fx * 3.5, this.pos[2] - fz * 3.5), 7);
+      const roll = Math.atan2(groundAt(world, this.pos[0] - rx * 2, this.pos[2] - rz * 2) - groundAt(world, this.pos[0] + rx * 2, this.pos[2] + rz * 2), 4);
+      this.pos[1] = y + 0.2;
+      this.q = qmul(qheading(this.heading, clamp(pitch, -0.5, 0.5)), qaxis([0, 0, 1], -clamp(roll, -0.4, 0.4)));
+      this.vel = [fx * this.speed, 0, fz * this.speed];
+      return this;
+    }
+  }
+  const wrapPi = (a) => ((a + Math.PI * 3) % (Math.PI * 2)) - Math.PI;
+  /// Where a tank's turret and gun should point to hit a target: leads a moving one and allows for the shell's drop.
+  function tankAimAt(tank, tp, tv) {
+    const from = add(tank.pos, [0, 2.4, 0]);
+    const lead = WAR.leadPoint(from, tank.vel, tp, tv || [0, 0, 0], TANK.shell) || { point: tp, t: len(sub(tp, from)) / TANK.shell };
+    const aim = add(lead.point, [0, 0.5 * WAR.G * lead.t * lead.t, 0]), d = sub(aim, from), h = Math.hypot(d[0], d[2]);
+    return { yaw: Math.atan2(d[0], -d[2]), pitch: Math.atan2(d[1], Math.max(h, 1)), dist: len(sub(tp, from)) };
+  }
+
+  /// Automatic flying: the aircraft keeps its own speed and height and turns where you point it. `cmd` is { turn: -1..1,
+  /// climb: -1..1 } and `st` the assist's memory ({ hdg, alt, spd, i }). It never lets the aircraft sink towards the ground
+  /// (the floor is `floor` metres up) and returns the stick, rudder and throttle to feed the flight model.
+  function planeAssist(fl, st, cmd, dt, world, o = {}) {
+    st.hdg = wrapPi(st.hdg + cmd.turn * (o.turnRate || 0.6) * dt);
+    const off = wrapPi(st.hdg - fl.heading);
+    if (Math.abs(off) > 1.1) st.hdg = wrapPi(fl.heading + Math.sign(off) * 1.1);          // never swing round the long way
+    const floor = o.floor || 220, g0 = groundAt(world, fl.pos[0], fl.pos[2]), g1 = groundAt(world, fl.pos[0] + fl.vel[0] * 6, fl.pos[2] + fl.vel[2] * 6);
+    st.alt = clamp(st.alt + cmd.climb * (o.climbRate || 70) * dt, Math.max(g0, g1) + floor, o.ceiling || 2600);
+    const bm = o.bankMax || 1.3, he = wrapPi(st.hdg - fl.heading), bankT = clamp(he * 3.0, -bm, bm);
+    const roll = clamp((bankT - fl.bank) * 2.5, -1, 1);
+    const vsT = clamp((st.alt - fl.pos[1]) * 0.12, -30, 30);
+    const pitch = clamp((vsT - fl.vel[1]) * 0.05 + Math.abs(Math.sin(fl.bank)) * (o.pull || 0.3), -0.5, 0.7);
+    st.i = clamp(st.i + (st.spd - fl.ias) * dt * 0.02, -0.5, 0.5);
+    const throttle = clamp((clamp(0.55 + (st.spd - fl.ias) * 0.04 + st.i, 0.1, 1) - fl.throttle) * 3, -1, 1);
+    return { pitch: pitch * AP_SIGN.pitch, roll: roll * AP_SIGN.roll, yaw: 0, throttle };
+  }
 
   // ------------------------------------------------------------------ the game
 
@@ -6942,5 +7061,5 @@
     };
   }
 
-  window.NotchPlaneGame = { mount, PLANES, MODES, CHALLENGES, Flight, _test: { WAR, attitudeQ, procedure, atcStep, applyEnv, ENV, ilsAt, RUNWAY_ENDS, AP_SIGN, APRONS, buildPlane, REGIONS, nearestRegion, matchRegion, raCallout, gpwsWarnings, groundAt, makeWorld, qheading, qrot, hitObject, terrainAt, surfaceAt, roughnessAt, normalAt } };
+  window.NotchPlaneGame = { mount, PLANES, MODES, CHALLENGES, Flight, _test: { WAR, TANK, TankBody, tankAimAt, planeAssist, ARENAS, arenaHeight, setArena: (a) => { ARENA = a; }, wrapPi, attitudeQ, procedure, atcStep, applyEnv, ENV, ilsAt, RUNWAY_ENDS, AP_SIGN, APRONS, buildPlane, REGIONS, nearestRegion, matchRegion, raCallout, gpwsWarnings, groundAt, makeWorld, qheading, qrot, hitObject, terrainAt, surfaceAt, roughnessAt, normalAt } };
 })();
