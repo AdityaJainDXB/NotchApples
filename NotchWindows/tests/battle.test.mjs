@@ -154,3 +154,40 @@ test('Battle sturdy-wing handling caps speed and G through hard turns without lo
     }
   } finally { T.setArena(null); }
 });
+
+test('arcade handling: turn and climb rates, quick turn, no stall, no wing loss under violent stick input', () => {
+  const { w } = battleWorld(0);
+  try {
+    for (const id of ['f16', 'a10', 'b52']) {
+      const P = G.PLANES.find((p) => p.id === id), R = T.ARCADE_RATES[id];
+      const mk = () => { const fl = new G.Flight(P); fl.reset([0, 900, 1500], 0, P.cruise, false); fl.sturdy = true; fl.arcade = R; return fl; };
+      // full-right stick for 1 s: turn rate is about the table's rate
+      let fl = mk();
+      for (let i = 0; i < 60; i++) fl.step(1 / 60, { roll: 1, pitch: 0, yaw: 0, throttle: 0.7 }, w);
+      const deg = fl.heading * 180 / Math.PI;
+      assert.ok(deg > R.turn * 57.3 * 0.6 && deg < R.turn * 57.3 * 1.1, `${id} turned ${deg.toFixed(0)} deg in 1 s`);
+      // full pull for 3 s climbs at about the table's rate
+      fl = mk();
+      for (let i = 0; i < 180; i++) fl.step(1 / 60, { roll: 0, pitch: 1, yaw: 0, throttle: 1 }, w);
+      assert.ok(fl.pos[1] - 900 > R.climb * 3 * 0.45, `${id} climbed ${(fl.pos[1] - 900).toFixed(0)} m in 3 s`);
+      // violent stick for 60 s: nothing breaks, no stall
+      fl = mk(); let stalled = 0;
+      for (let i = 0; i < 3600; i++) {
+        const s = Math.sin(i / 7);
+        fl.step(1 / 60, { roll: s > 0 ? 1 : -1, pitch: Math.cos(i / 5) > 0 ? 1 : -1, yaw: s, throttle: 0.8 }, w);
+        if (fl.inStall) stalled++;
+        if (fl.crashed) { fl = mk(); }
+        assert.ok(fl.wings === 2 || fl.wings === undefined || fl.wings > 0, `${id} lost a wing`);
+      }
+      assert.equal(stalled, 0, `${id} never stalled`);
+    }
+    // quick turn: f16 about 180 degrees inside 3 s
+    const P = G.PLANES.find((p) => p.id === 'f16'), fl = new G.Flight(P);
+    fl.reset([0, 900, 1500], 0, P.cruise, false); fl.arcade = T.ARCADE_RATES.f16; fl.sturdy = true;
+    fl.step(1 / 60, { roll: 0, pitch: 0, yaw: 0, throttle: 0.7 }, w);
+    assert.ok(fl.quickTurn(1));
+    for (let i = 0; i < 180; i++) fl.step(1 / 60, { roll: 0, pitch: 0, yaw: 0, throttle: 0.7 }, w);
+    assert.ok(Math.abs(T.wrapPi(fl.heading - Math.PI)) < 0.35, `quick turn ended ${(fl.heading * 57.3).toFixed(0)} deg`);
+    assert.ok(!fl.quickTurn(1), 'cooldown');
+  } finally { T.setArena(null); }
+});

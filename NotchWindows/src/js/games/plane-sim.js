@@ -1453,9 +1453,9 @@
   // to fight in, so a battlefield replaces all of its ground. Everything is centred on (0, 0); the players' side is the
   // south (+z) and the enemy's the north (-z).
   const ARENAS = [
-    { id: 'plains', name: 'Green Plains', blurb: 'Flat open grassland with a few woods. The easiest place to fly and to drive.', R: 3000, base: 9, rough: 3, rim: 130, desert: false },
-    { id: 'dunes', name: 'Desert Dunes', blurb: 'Rolling sand dunes and rocks. Tanks hide behind the dunes; planes get a clear view.', R: 3000, base: 14, rough: 15, rim: 180, desert: true },
-    { id: 'island', name: 'Island Fortress', blurb: 'A round island with a fortress on the hill in the middle, in open sea.', R: 2500, base: 12, rough: 4, rim: 0, desert: false, island: true },
+    { id: 'plains', name: 'Green Plains', blurb: 'Flat open grassland with a few woods. The easiest place to fly and to drive.', R: 3600, base: 9, rough: 3, rim: 130, desert: false },
+    { id: 'dunes', name: 'Desert Dunes', blurb: 'Rolling sand dunes and rocks. Tanks hide behind the dunes; planes get a clear view.', R: 3600, base: 14, rough: 15, rim: 180, desert: true },
+    { id: 'island', name: 'Island Fortress', blurb: 'A round island with a fortress on the hill in the middle, in open sea.', R: 3600, base: 12, rough: 4, rim: 0, desert: false, island: true },
   ];
   let ARENA = null;
   function arenaHeight(a, x, z) {
@@ -2589,6 +2589,8 @@
     snow: { roll: 0.11, grip: 0.35, skid: 0.2, soft: 0.7 },
     rock: { roll: 0.14, grip: 0.6, skid: 0.7, soft: 1.2 },
   };
+  /// Arcade handling rates (radians/s turn, m/s climb, minimum speed) for Easy and Automatic.
+  const ARCADE_RATES = { f16: { turn: 0.87, climb: 30, vmin: 70 }, a10: { turn: 0.52, climb: 20, vmin: 60 }, b52: { turn: 0.31, climb: 12, vmin: 70 } };
   const AP_SIGN = { roll: 1, pitch: 1 };   // which way the stick moves the aircraft (checked in the autopilot tests)
   const gauss = () => (Math.random() + Math.random() + Math.random() - 1.5) * 2;
   // ---- weather settings (Fly menu, saved): a runway-relative wind (crosswind and head/tail wind, in knots) and a turbulence level
@@ -2705,7 +2707,7 @@
     }
     /// `wind` (m/s) overrides the random steady wind (0 to 5 m/s, from a random direction).
     reset(pos, heading, speed, onGround, wind) {
-      this.sturdy = false;
+      this.sturdy = false; this.arcade = null; this.arc = null;
       this.pos = pos; this.q = qheading(heading, onGround ? 0 : 0.02);
       // The wind: the saved Weather settings (runway-relative; `heading` is the runway / approach heading), or the old
       // random 0 to 5 m/s breeze. An explicit `wind` still wins.
@@ -3196,11 +3198,48 @@
         this.blackout += clamp(gT - this.blackout, -dt * 0.9, dt * 0.55);
       }
 
+      if (this.arcade && !this.onGround) this.arcadeSteer(dt, input);
       if (this.collide(world)) return;
       if (this.contacts(dt, world, false)) return;
       if (this.pos[1] > 3000) { this.vel[1] = Math.min(this.vel[1], 0); }                  // ceiling
       const edge = WORLD - 600;
       if (Math.abs(this.pos[0]) > edge || Math.abs(this.pos[2]) > edge) this.pos = [clamp(this.pos[0], -edge, edge), this.pos[1], clamp(this.pos[2], -edge, edge)];
+    }
+
+    /// Arcade handling (Easy and Automatic): after the normal forces, the flight path is re-aimed so the plane turns and
+    /// climbs at fixed, forgiving rates. Speed still comes from the real model; the bank follows the turn, and it never stalls.
+    arcadeSteer(dt, input) {
+      const A = this.arcade;
+      let spd = Math.max(len(this.vel), A.vmin);
+      if (!this.arc) {
+        const v = this.vel, hz = Math.hypot(v[0], v[2]);
+        this.arc = { h: Math.atan2(v[0], -v[2]), g: Math.atan2(v[1], hz || 1), sx: 0, sy: 0, bank: 0, qt: 0, qdir: 0 };
+      }
+      const a = this.arc;
+      const shape = (v) => Math.sign(v) * Math.min(1, Math.abs(v)) ** 1.35;
+      const tx = shape(clamp(input.roll || 0, -1, 1)) + shape(clamp(input.yaw || 0, -1, 1)) * 0.6;
+      const ty = shape(clamp(input.pitch || 0, -1, 1));
+      const k = 1 - Math.exp(-dt * 9);                 // stick smoothing, ~0.1 s
+      a.sx += (clamp(tx, -1, 1) - a.sx) * k; a.sy += (ty - a.sy) * k;
+      let w = a.sx * A.turn;
+      if (a.qt > 0) { a.qt -= dt; w = a.qdir * A.turn * 1.25; }
+      const wMax = A.turn * 1.25;
+      w = clamp(w, -wMax, wMax);
+      a.h += w * dt;
+      const gT = Math.asin(clamp(a.sy * A.climb / spd, -0.9, 0.9));
+      a.g += (gT - a.g) * (1 - Math.exp(-dt * 4));
+      const bt = Math.atan2(w * spd, 9.81) * 0.8;
+      a.bank += (clamp(bt, -1.2, 1.2) - a.bank) * (1 - Math.exp(-dt * 6));
+      const cg = Math.cos(a.g);
+      this.vel = [Math.sin(a.h) * cg * spd, Math.sin(a.g) * spd, -Math.cos(a.h) * cg * spd];
+      this.q = qnorm(qmul(qheading(a.h, a.g), qaxis([0, 0, 1], -a.bank)));
+      this.gload = 1 + Math.min(3, Math.abs(w * spd) / 9.81 * 0.3);
+      this.stalled = false; this.inStall = false; this.buffet = 0;
+    }
+    /// Quick turn: a fast 180 degrees, with a cooldown.
+    quickTurn(dir) {
+      const a = this.arc; if (!this.arcade || !a || a.qt > 0 || (this.qtCool || 0) > this.t) return false;
+      a.qdir = dir || 1; a.qt = Math.PI / (this.arcade.turn * 1.25); this.qtCool = this.t + a.qt + 3; return true;
     }
 
     /// Wingtips, nose and tail against trees, buildings, the bridge and turbines. A wingtip strike tears that wing
@@ -4731,6 +4770,10 @@
           }
           if (flight.ap && flight.ap.on && (k === ',' || k === '.')) flight.ap.hdg += (k === '.' ? 1 : -1) * 5 * DEG;
           if (flight.ap && flight.ap.on && (k === '[' || k === ']')) flight.ap.alt = Math.max(60, flight.ap.alt + (k === ']' ? 1 : -1) * 50);
+          if (k === 'q' && war && war.vehicle === 'plane' && flight.arcade) {
+            const dir = (keys.has('d') || keys.has('arrowright')) ? 1 : (keys.has('a') || keys.has('arrowleft')) ? -1 : (flight.arc && flight.arc.sx < 0 ? -1 : 1);
+            if (flight.quickTurn(dir)) toast('↩ QUICK TURN', 900); else toast('Quick turn recharging', 700);
+          }
           if (k === 'h') {
             if (!plane.rotor) toast('Emergency landing is for helicopters', 1400);
             else if (flight.emergency) { flight.emergencyOff(); toast('Emergency landing cancelled: you have the controls', 1600); }
@@ -4773,7 +4816,7 @@
     // stick, so a short move is enough and the cursor never has to leave the notch. It only takes control once the
     // cursor has been in the middle (a cursor left anywhere after clicking Take off can't bank the plane), and lets
     // go when the cursor leaves the game.
-    const ringRadius = () => { const r = root.getBoundingClientRect(); return Math.max(40, Math.min(r.width, r.height) * 0.2) / clamp(sens, 0.3, 2.5); };
+    const ringRadius = () => { const r = root.getBoundingClientRect(); return Math.max(40, Math.min(r.width, r.height) * (flight.arcade ? 0.14 : 0.2)) / clamp(sens, 0.3, 2.5); };
     root.addEventListener('pointermove', (e) => {
       if (e.target && e.target.closest && e.target.closest('.pg-wbar, .pg-ctlbtn, .pg-ctlcard, .pg-netbar')) { mouse.x = 0; mouse.y = 0; mouse.engaged = false; return; }   // over a button: let go of the stick
       const r = root.getBoundingClientRect(), R = ringRadius();
@@ -5197,9 +5240,9 @@
     // aces that hunt you (versus). Enter or a click fires the guns, Z drops bombs (hold for a stick), N fires a missile at
     // the locked fighter, L fires flares. The physics and the pilots' steering are in WAR (above); this is the game round it.
     const WAR_DIFF = {
-      easy:   { turn: 0.55, aim: 0.04, burst: 0.7, hp: 0.8, flak: 0.45, count: 0.7, speed: 180 },
-      normal: { turn: 0.8, aim: 0.028, burst: 1, hp: 1, flak: 0.8, count: 1, speed: 205 },
-      hard:   { turn: 1.05, aim: 0.018, burst: 1.3, hp: 1.25, flak: 1.1, count: 1.3, speed: 225 },
+      easy:   { turn: 0.55, aim: 0.07, burst: 0.7, hp: 0.8, flak: 0.45, count: 0.7, speed: 180 },
+      normal: { turn: 0.8, aim: 0.05, burst: 1, hp: 1, flak: 0.8, count: 1, speed: 205 },
+      hard:   { turn: 1.05, aim: 0.03, burst: 1.3, hp: 1.25, flak: 1.1, count: 1.3, speed: 225 },
     };
     const WAR_KINDS = {
       truck: { name: 'Truck', hp: 45, r: 3.8, pts: 50 },
@@ -5299,6 +5342,7 @@
       const L = tank ? { gun: 900, bombs: 0, missiles: 0, flares: 0, hp: TANK.hp, stick: 0.2, shells: 40 } : { ...warLoadout(plane), shells: 0 }, d = WAR_DIFF[warLevel()];
       const shared = netg && netg.running && netg.start, mine = shared ? netg.start.players.find((q) => q.id === netMyId) : null;
       const spot = shared ? netStartSpot(R, netg.start.cfg, mine ? mine.slot : 0) : { x: 0, z: R * 0.72, heading: 0 };
+      const startZ = spot.z;
       let tankBody = null;
       if (tank) {
         tankBody = new TankBody([spot.x, 0, spot.z], spot.heading);
@@ -5306,7 +5350,7 @@
         flight.reset([spot.x, tankBody.pos[1] + 2.2, spot.z], spot.heading, 0, true);
       } else flight.reset([spot.x, plane.id === 'b52' ? 1100 : 450, shared ? spot.z : R * 0.9], spot.heading, plane.cruise, false);
       flight.sturdy = !tank; flight.overG = warOverG;
-      war = { arena, vehicle: tank ? 'tank' : 'plane', tank: tankBody, assist: warAssist, npc: warNpc, ap: { hdg: spot.heading, alt: flight.pos[1], spd: plane.cruise * 1.05, i: 0 }, outT: 0, endT: 0, shells: L.shells,
+      war = { startZ, arena, vehicle: tank ? 'tank' : 'plane', tank: tankBody, assist: warAssist, npc: warNpc, ap: { hdg: spot.heading, alt: flight.pos[1], spd: plane.cruise * 1.05, i: 0 }, outT: 0, endT: 0, shells: L.shells,
         gidn: 0, nidn: 0, score: 0, kills: 0, wave: 0, hp: L.hp, maxHp: L.hp, L, gun: L.gun, bombs: L.bombs, missiles: L.missiles, flares: L.flares,
         ground: [], foes: [], friend: null, bullets: [], bombsAir: [], missilesAir: [], flaks: [], craters: [], feed: [], lock: null, lockT: 0,
         gunT: 0, bombT: 0, flash: 0, warn: '', warnT: 0, wavePause: 2.5, waveClear: false, gunners: 0, dead: false, feedT: 0, shown: false, d };
@@ -5340,9 +5384,11 @@
       const clusters = Math.min(1 + Math.ceil(n / 2), 3);
       for (let c = 0; c < clusters; c++) {
         let cx = 0, cz = 0, ok = false;
+        // Bases stand in a row straight ahead of where you start: the first 1200 m away (800 m for a tank), then 500 to 700 m apart.
+        const z0 = war.startZ ?? R * 0.72, first = war.vehicle === 'tank' ? 800 : 1200;
         for (let tries = 0; tries < 40 && !ok; tries++) {
-          cx = (warRand() - 0.5) * R * 1.1; cz = -R * (0.2 + warRand() * 0.55);     // in the enemy's half
-          ok = onLand(cx, cz) && Math.hypot(cx, cz) < R * 0.85;
+          cx = (warRand() - 0.5) * (tries < 20 ? 260 : 1200); cz = z0 - first - (c + (tries > 20 ? 0.5 * warRand() : 0)) * (500 + warRand() * 200);
+          ok = onLand(cx, cz) && Math.hypot(cx, cz) < R * 0.7;
         }
         if (!ok) { cx = (warRand() - 0.5) * 600; cz = -R * 0.45; }
         const base = warRand() < 0.5 || (c === 0 && n === 1) ? 'base' : 'convoy';
@@ -5519,6 +5565,11 @@
     }
     /// What the keys and the mouse mean in a battle: a tank is driven and its turret aimed; Automatic flying turns and climbs for you.
     function warInput(raw, dt) {
+      if (war.vehicle !== 'tank') {
+        // Easy and Automatic fly arcade style; Pro keeps the full aerodynamic model.
+        const R = ARCADE_RATES[plane.id];
+        flight.arcade = war.assist !== 'pro' && R ? (war.assist === 'auto' ? { ...R, turn: R.turn * 0.7 } : R) : null;
+      }
       if (war.vehicle === 'tank') {
         const t = war.tank;
         let aimX = raw.roll, aimY = invert ? -raw.pitch : raw.pitch;
@@ -5690,7 +5741,7 @@
         if (a.burstLeft <= 0) a.cool = (1.2 + warRand() * 1.4) / (foe ? d.burst : 1);
       } else if (t && a.cool <= 0 && !tooLow && !a.warnMsl) {
         const ob = WAR.offBore(a, aim), maxR = t.kind === 'ground' ? 1100 : 900;
-        if (range > (t.kind === 'ground' ? 300 : 120) && range < maxR && ob < (t.kind === 'ground' ? 0.05 : 0.065)) { a.burstLeft = 0.5 + warRand() * 0.5; a.gunT = 0; }
+        if (range > (t.kind === 'ground' ? 300 : (foe ? 250 : 120)) && range < maxR && ob < (t.kind === 'ground' ? 0.05 : 0.065)) { a.burstLeft = (foe ? 0.3 : 0.5) + warRand() * (foe ? 0.3 : 0.5); a.gunT = 0; }
       }
       // A missile from a foe: in versus or on hard, when it has a good look at you.
       a.mslCool -= dt;
@@ -5730,11 +5781,11 @@
       if (!war.npc) return;       // the enemy is switched off: targets that do not shoot back
       g.cool -= dt;
       if (g.kind === 'aa' && g.cool <= 0 && dp < 3300 && agl > 40 && !flight.crashed) {
-        g.cool = (1.5 + warRand()) / d.flak;
+        g.cool = (1.5 + warRand()) * 1.4 / d.flak;
         const base = add(g.pos, [0, 2, 0]), lead = WAR.leadPoint(base, v3(), np.pos, np.vel, 750);
         if (lead) {
           // The shell flies to where you will be, and it is never quite right: the error grows with the range.
-          const err = dp * 0.012 / d.flak, aim = add(lead.point, [(warRand() - 0.5) * err * 2, (warRand() - 0.5) * err, (warRand() - 0.5) * err * 2]);
+          const err = dp * 0.012 * 2.5 / d.flak, aim = add(lead.point, [(warRand() - 0.5) * err * 2, (warRand() - 0.5) * err, (warRand() - 0.5) * err * 2]);
           const T = Math.max(0.5, len(sub(aim, base)) / 750);
           war.flaks.push({ from: base, to: aim, t: 0, T });
           netEvent({ k: 'flak', f: base.map(r1n), o: aim.map(r1n), T: Math.round(T * 100) / 100 });
@@ -5769,7 +5820,7 @@
           if (b.dead) continue;
           for (const g of war.ground) if (!g.dead && WAR.segHit(p0, b.pos, add(g.pos, [0, 1.2, 0]), g.r)) { if (b.shell) warShellBurst(b); else { warDamageGround(g, b.dmgGround, b.owner); puff('dirt', b.pos, jitter(8)); } b.dead = true; break; }
         } else if (b.owner === 'e' && !b.vis) {
-          if (!flight.crashed && !war.dead && WAR.segHit(p0, b.pos, flight.pos, rP)) { warHurt(b.dmgAir * (war.maxHp > 120 ? 0.8 : 1), 'enemy fire'); puff('spark', b.pos, jitter(20)); b.dead = true; continue; }
+          if (!flight.crashed && !war.dead && WAR.segHit(p0, b.pos, flight.pos, rP)) { warHurt(b.dmgAir * (war.maxHp > 120 ? 0.8 : 1) * (war.assist !== 'pro' ? 0.5 : 1), 'enemy fire'); puff('spark', b.pos, jitter(20)); b.dead = true; continue; }
           if (war.friend && war.friend.state === 'fly' && WAR.segHit(p0, b.pos, war.friend.pos, 7.5)) { warDamageAir(war.friend, b.dmgAir, 'e'); b.dead = true; }
           if (war.net && war.net.role === 'host') for (const o of war.net.others.values()) if (o.alive && o.shown && WAR.segHit(p0, b.pos, o.shown, netRadius({ tank: o.rep && o.rep.kind === 'tank' }))) { netHurtRemote(o.id, b.dmgAir, 'enemy fire'); puff('spark', b.pos, jitter(20)); b.dead = true; break; }
         }
@@ -5869,8 +5920,15 @@
       if (war.net) { netTick(dt); if (war.net && war.net.role === 'client') netReplicaStep(dt); }
       if (!war.dead && war.vehicle === 'plane') {
         // Out past the edge of the battlefield: a warning, then damage.
-        if (Math.hypot(flight.pos[0], flight.pos[2]) > war.arena.R * 1.02) { war.outT += dt; war.warn = 'TURN BACK: LEAVING THE BATTLEFIELD'; war.warnT = 0.4; if (war.outT > 5) warHurt(10 * dt, 'out of bounds'); }
-        else war.outT = Math.max(0, war.outT - dt * 2);
+        const rr = Math.hypot(flight.pos[0], flight.pos[2]), Rw = war.arena.R;
+        if (rr > Rw * 0.85) {
+          const toC = Math.atan2(-flight.pos[0], flight.pos[2]) , hd = flight.heading;     // heading that points back to the middle
+          war.edgeArrow = wrapPi(toC - hd);
+          if (rr > Rw) { war.outT += dt; war.warn = `TURN BACK: LEAVING THE BATTLEFIELD (${Math.max(0, 12 - war.outT).toFixed(0)}s)`; war.warnT = 0.4; if (war.outT > 12) warHurt(3 * dt, 'out of bounds'); }
+          else { war.warn = 'NEAR THE EDGE: TURN BACK'; war.warnT = 0.4; war.outT = Math.max(0, war.outT - dt * 2); }
+          // Easy gently steers a plane that has drifted past 90% back towards the middle.
+          if (war.assist === 'easy' && rr > Rw * 0.9 && flight.arc) flight.arc.h += clamp(wrapPi(toC - flight.arc.h), -1, 1) * 0.35 * dt;
+        } else { war.edgeArrow = null; war.outT = Math.max(0, war.outT - dt * 2); }
       }
       const d = war.d;
       war.flash = Math.max(0, war.flash - dt * 1.6); war.warnT -= dt; if (war.warnT <= 0) war.warn = '';
@@ -7909,5 +7967,5 @@
     };
   }
 
-  window.NotchPlaneGame = { mount, PLANES, MODES, CHALLENGES, Flight, _test: { NET, WAR, TANK, TankBody, tankAimAt, planeAssist, ARENAS, arenaHeight, setArena: (a) => { ARENA = a; }, wrapPi, attitudeQ, procedure, atcStep, applyEnv, ENV, ilsAt, RUNWAY_ENDS, AP_SIGN, APRONS, buildPlane, REGIONS, nearestRegion, matchRegion, raCallout, gpwsWarnings, groundAt, makeWorld, qheading, qrot, hitObject, terrainAt, surfaceAt, roughnessAt, normalAt } };
+  window.NotchPlaneGame = { mount, PLANES, MODES, CHALLENGES, Flight, _test: { ARCADE_RATES, NET, WAR, TANK, TankBody, tankAimAt, planeAssist, ARENAS, arenaHeight, setArena: (a) => { ARENA = a; }, wrapPi, attitudeQ, procedure, atcStep, applyEnv, ENV, ilsAt, RUNWAY_ENDS, AP_SIGN, APRONS, buildPlane, REGIONS, nearestRegion, matchRegion, raCallout, gpwsWarnings, groundAt, makeWorld, qheading, qrot, hitObject, terrainAt, surfaceAt, roughnessAt, normalAt } };
 })();
