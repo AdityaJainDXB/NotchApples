@@ -20,6 +20,13 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.0.79", date: "20 October 2026", headline: "Battle: Soldier on foot, two new planes", items: [
+            "New Soldier vehicle: walk, run, strafe and crouch with mouse look, a first- or third-person view (C), and a low-poly soldier avatar.",
+            "The rifle has 30-round magazines (R reloads), a 4x and 10x scope on right-click or Z with range marks for bullet drop, a rifle sway that settles when still or crouched, and grenades on G.",
+            "Enemy riflemen march at you in squads, stop to shoot and miss a lot. Your rifle does twice their damage. Multiplayer works: other players see your soldier, teammates are green.",
+            "New war planes: the Interceptor (fastest, 12 missiles, no bombs) and the Heavy Striker (16 bombs, tough, slow to turn).",
+            "The bomb countdown is smaller and no longer covers your plane. In Pro, a plane that leaves the battlefield now turns back by itself.",
+        ]),
         ReleaseNote(version: "2.0.78", date: "20 October 2026", headline: "Battle: lock-on, descending and teammates", items: [
             "Fixed planes refusing to go down: the pull-up assist now only steps in when you are about to hit the ground, and diving is faster in Easy and Automatic.",
             "Lock-on is clearer: a box and a filling ring on the target, LOCK: PRESS N when a missile can fire, and the lock stays on while the target is roughly ahead.",

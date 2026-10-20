@@ -72,7 +72,7 @@ Pick your computer. Both buttons start the download straight away. The Mac link 
   </tr>
   <tr>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.0.78</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.0.79</b></a>
     </td>
     <td align="center">
       <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 1.76.0 BETA</b></a>
@@ -233,6 +233,14 @@ All screenshots use sample data.
 ## What's new
 
 > **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is still in the repository's tags.
+
+### Mac 2.0.79 · Windows 1.79.0 BETA · 20 October 2026 · 🎖️ Battle: Soldier on foot, two new planes
+
+- New Soldier vehicle: walk, run, strafe and crouch with mouse look, a first- or third-person view (C), and a low-poly soldier avatar.
+- The rifle has 30-round magazines (R reloads), a 4x and 10x scope on right-click or Z with range marks for bullet drop, a rifle sway that settles when still or crouched, and grenades on G.
+- Enemy riflemen march at you in squads, stop to shoot and miss a lot. Your rifle does twice their damage. Multiplayer works: other players see your soldier, teammates are green.
+- New war planes: the Interceptor (fastest, 12 missiles, no bombs) and the Heavy Striker (16 bombs, tough, slow to turn).
+- The bomb countdown is smaller and no longer covers your plane. In Pro, a plane that leaves the battlefield now turns back by itself.
 
 ### Mac 2.0.78 · Windows 1.78.0 BETA · 20 October 2026 · 🎯 Battle: lock-on, descending and teammates
 
