@@ -158,7 +158,7 @@ test('Battle sturdy-wing handling caps speed and G through hard turns without lo
 test('arcade handling: turn and climb rates, quick turn, no stall, no wing loss under violent stick input', () => {
   const { w } = battleWorld(0);
   try {
-    for (const id of ['f16', 'a10', 'b52']) {
+    for (const id of ['f16', 'a10', 'b52', 'f15', 'su27']) {
       const P = G.PLANES.find((p) => p.id === id), R = T.ARCADE_RATES[id];
       const mk = () => { const fl = new G.Flight(P); fl.reset([0, 900, 1500], 0, P.cruise, false); fl.sturdy = true; fl.arcade = R; return fl; };
       // full-right stick for 1 s: turn rate is about the table's rate

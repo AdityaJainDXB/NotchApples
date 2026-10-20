@@ -2590,7 +2590,7 @@
     rock: { roll: 0.14, grip: 0.6, skid: 0.7, soft: 1.2 },
   };
   /// Arcade handling rates (radians/s turn, m/s climb, minimum speed) for Easy and Automatic.
-  const ARCADE_RATES = { f16: { turn: 0.87, climb: 30, vmin: 70 }, a10: { turn: 0.52, climb: 20, vmin: 60 }, b52: { turn: 0.31, climb: 12, vmin: 70 } };
+  const ARCADE_RATES = { f16: { turn: 0.87, climb: 30, vmin: 70 }, a10: { turn: 0.52, climb: 20, vmin: 60 }, f15: { turn: 0.7, climb: 42, vmin: 95 }, su27: { turn: 0.5, climb: 24, vmin: 70 }, b52: { turn: 0.31, climb: 12, vmin: 70 } };
   const AP_SIGN = { roll: 1, pitch: 1 };   // which way the stick moves the aircraft (checked in the autopilot tests)
   const gauss = () => (Math.random() + Math.random() + Math.random() - 1.5) * 2;
   // ---- weather settings (Fly menu, saved): a runway-relative wind (crosswind and head/tail wind, in knots) and a turbulence level
@@ -5255,6 +5255,8 @@
     const WAR_VEHICLES = [
       { id: 'f16', name: 'Fighter', icon: '✈️', blurb: 'Fast and quick to turn. Guns, missiles and a few bombs.' },
       { id: 'a10', name: 'Gunship', icon: '🛩️', blurb: 'Slow and tough, with the most cannon ammunition. Best at tanks.' },
+      { id: 'f15', name: 'Interceptor', icon: '🚀', blurb: 'The fastest jet, with 12 missiles and a light gun but no bombs. Thin armour: kill fighters first, never trade hits.' },
+      { id: 'su27', name: 'Heavy Striker', icon: '🦅', blurb: 'A big twin-engine jet that carries 16 bombs, 8 missiles and a strong gun, and takes a beating. Turns slowly.' },
       { id: 'b52', name: 'Bomber', icon: '💣', blurb: 'Carries 40 bombs and has gunners who shoot at fighters.' },
       { id: 'tank', name: 'Tank', icon: '🪖', blurb: 'Drive on the ground with a turret and a big gun.' },
     ];
@@ -5281,6 +5283,8 @@
     /// The weapons each kind of aircraft carries, and how much punishment it takes.
     function warLoadout(p) {
       if (p.id === 'b52') return { gun: 0, bombs: 40, missiles: 0, flares: 12, hp: 170, stick: 0.11, gunners: true };
+      if (p.id === 'f15') return { gun: 260, bombs: 0, missiles: 12, flares: 24, hp: 75, stick: 0.2 };
+      if (p.id === 'su27') return { gun: 650, bombs: 16, missiles: 8, flares: 16, hp: 135, stick: 0.2 };
       if (p.id === 'a10') return { gun: 1100, bombs: 8, missiles: 4, flares: 16, hp: 150, stick: 0.2 };
       if (p.cat === 'mil') return { gun: 520, bombs: 4, missiles: 6, flares: 20, hp: 100, stick: 0.2 };
       if (p.cat === 'rotary') return { gun: 700, bombs: 6, missiles: 8, flares: 12, hp: 100, stick: 0.25 };
@@ -6099,7 +6103,8 @@
           h2.strokeStyle = '#ffd166'; h2.fillStyle = '#ffd166';
           h2.beginPath(); h2.moveTo(q.x, q.y - 11); h2.lineTo(q.x + 11, q.y); h2.lineTo(q.x, q.y + 11); h2.lineTo(q.x - 11, q.y); h2.closePath(); h2.stroke();
           h2.beginPath(); h2.arc(q.x, q.y, 2, 0, Math.PI * 2); h2.fill();
-          h2.fillText(`BOMB ${hit.t.toFixed(0)} s`, q.x, q.y + 22);
+          // The countdown is small, faint and off to the side, and hidden when the marker is over the middle of the screen (your plane).
+          if (Math.hypot(q.x - W2 / 2, q.y - H2 / 2) > 90 * s + 40) { h2.save(); h2.globalAlpha = 0.7; h2.font = `700 ${Math.round(8 * s + 2)}px system-ui`; h2.textAlign = 'left'; h2.fillText(`${hit.t.toFixed(0)}s`, q.x + 14, q.y + 4); h2.restore(); }
         } else {
           // Off the screen: an arrow at the edge.
           h2.fillStyle = '#ffd166'; h2.fillText(`BOMB IMPACT ${fmtD(len(sub(hit.pos, flight.pos)))} ${hit.pos[1] < flight.pos[1] ? '↓' : ''}`, W2 / 2, H2 * 0.15 + 16);
