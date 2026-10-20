@@ -20,6 +20,11 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.0.77", date: "20 October 2026", headline: "Battle is easier to fly and fight", items: [
+            "Easy and Automatic now fly arcade style: quick, smooth turns (about 50°/s in the F-16), steady climbs, no stalls and no snapped wings. Press Q for a quick 180° turn (3 s cooldown). Pro keeps the full flight model.",
+            "Enemies miss more and fire shorter bursts from farther away; flak is less accurate and half damage in Easy and Automatic.",
+            "Enemy bases now stand in a row straight ahead (500–700 m apart). The battlefields are bigger and the edge is gentler: a warning at 85%, 12 s before any damage, and Easy nudges you back.",
+        ]),
         ReleaseNote(version: "2.0.76", date: "19 October 2026", headline: "Shift boost for Battle tanks", items: [
             "Hold Shift while driving a tank in Battle to boost its acceleration and raise its top speed from 13 to 20 m/s. The wave briefing now shows the boost control.",
         ]),

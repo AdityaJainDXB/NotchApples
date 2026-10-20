@@ -1,0 +1,7 @@
+**Battle is easier to fly and fight**
+
+- Easy and Automatic now fly arcade style: quick, smooth turns (about 50°/s in the F-16), steady climbs, no stalls and no snapped wings. Press Q for a quick 180° turn (3 s cooldown). Pro keeps the full flight model.
+- Enemies miss more and fire shorter bursts from farther away; flak is less accurate and half damage in Easy and Automatic.
+- Enemy bases now stand in a row straight ahead (500–700 m apart). The battlefields are bigger and the edge is gentler: a warning at 85%, 12 s before any damage, and Easy nudges you back.
+
+The Plane simulator and Battle mode are shared with the Mac version.

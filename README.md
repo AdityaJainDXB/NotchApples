@@ -72,7 +72,7 @@ Pick your computer. Both buttons start the download straight away. The Mac link 
   </tr>
   <tr>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.0.76</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.0.77</b></a>
     </td>
     <td align="center">
       <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 1.76.0 BETA</b></a>
@@ -233,6 +233,11 @@ All screenshots use sample data.
 ## What's new
 
 > **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is still in the repository's tags.
+
+### Mac 2.0.77 · Windows 1.77.0 BETA · 20 October 2026 · 🪖 Battle is easier to fly and fight
+
+- Easy and Automatic fly arcade style: quick smooth turns, steady climbs, no stalls or snapped wings. Q does a quick 180° turn. Pro is unchanged.
+- Enemies miss more; flak is gentler. Enemy bases stand in a row ahead, the battlefields are bigger and the edge is more forgiving.
 
 ### Mac 2.0.76 · Windows 1.76.0 BETA · 19 October 2026 · 🪖 Shift boost for Battle tanks
 
