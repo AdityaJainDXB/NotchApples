@@ -79,8 +79,12 @@ final class NotificationMirror: ObservableObject {
         if !firstLoad {
             unseen += fresh.count
             if SettingsManager.shared.flashNotifications {
-                LiveActivityCenter.shared.flash(LiveActivity(symbol: "bell.badge.fill", label: unseen > 9 ? "9+" : "\(unseen)",
-                                                             tint: NSColor(Theme.accentBright)), seconds: 5)
+                // A popup beside the closed notch: who it is from (the title) and the app, not just a count.
+                let newest = fresh.max { $0.date < $1.date }
+                let what = [newest?.title, newest?.appName].compactMap { $0 }.filter { !$0.isEmpty }.first ?? "New notification"
+                let extra = fresh.count > 1 ? " +\(fresh.count - 1)" : ""
+                LiveActivityCenter.shared.flash(LiveActivity(symbol: "bell.badge.fill", label: String(what.prefix(22)) + extra,
+                                                             tint: NSColor(Theme.accentBright)), seconds: 6)
             }
         }
     }

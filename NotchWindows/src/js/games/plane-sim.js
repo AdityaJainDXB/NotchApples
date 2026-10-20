@@ -3218,7 +3218,7 @@
       const a = this.arc;
       const shape = (v) => Math.sign(v) * Math.min(1, Math.abs(v)) ** 1.35;
       const tx = shape(clamp(input.roll || 0, -1, 1)) + shape(clamp(input.yaw || 0, -1, 1)) * 0.6;
-      const ty = shape(clamp(input.pitch || 0, -1, 1));
+      const pi = clamp(input.pitch || 0, -1, 1), ty = shape(pi) * (pi < 0 ? 1.8 : 1);
       const k = 1 - Math.exp(-dt * 9);                 // stick smoothing, ~0.1 s
       a.sx += (clamp(tx, -1, 1) - a.sx) * k; a.sy += (ty - a.sy) * k;
       let w = a.sx * A.turn;
@@ -3226,7 +3226,7 @@
       const wMax = A.turn * 1.25;
       w = clamp(w, -wMax, wMax);
       a.h += w * dt;
-      const gT = Math.asin(clamp(a.sy * A.climb / spd, -0.9, 0.9));
+      const gT = Math.asin(clamp(a.sy * A.climb / spd, -0.95, 0.9));
       a.g += (gT - a.g) * (1 - Math.exp(-dt * 4));
       const bt = Math.atan2(w * spd, 9.81) * 0.8;
       a.bank += (clamp(bt, -1.2, 1.2) - a.bank) * (1 - Math.exp(-dt * 6));
@@ -5588,7 +5588,7 @@
         st.spd = clamp(st.spd + raw.throttle * 40 * dt, plane.stall * 1.35, plane.max * 0.85);
         const agl = flight.pos[1] - groundAt(W, flight.pos[0], flight.pos[2]);
         const o = planeAssist(flight, st, { turn: raw.roll, climb: invert ? -raw.pitch : raw.pitch }, dt, W, { floor: 200 });
-        war.pullUp = agl < 80 && flight.vel[1] < -1;
+        war.pullUp = agl < 120 && flight.vel[1] < -1 && agl / -flight.vel[1] < 2;
         if (war.pullUp) o.pitch = Math.max(o.pitch || 0, 0.22);
         // Leaving the battlefield: it turns back by itself.
         if (Math.hypot(flight.pos[0], flight.pos[2]) > R * 0.8) st.hdg = Math.atan2(-flight.pos[0], flight.pos[2]);
@@ -5596,7 +5596,7 @@
       }
       if (war.assist === 'easy') {
         const agl = flight.pos[1] - groundAt(W, flight.pos[0], flight.pos[2]);
-        war.pullUp = agl < 80 && flight.vel[1] < -1;
+        war.pullUp = agl < 120 && flight.vel[1] < -1 && agl / -flight.vel[1] < 2;
         if (war.pullUp) return { ...raw, pitch: Math.max(raw.pitch, 0.18) };
       }
       war.pullUp = false;
@@ -5906,7 +5906,12 @@
         const ang = Math.acos(clamp(dot(f, mul(to, 1 / dd)), -1, 1));
         if (ang < ba) { ba = ang; best = a; }
       }
-      if (best && best === war.lock) war.lockT += dt; else { war.lock = best; war.lockT = 0; }
+      const cur = war.lock && war.lock.state === 'fly' ? war.lock : null;
+      if (cur) {                                   // keep the lock while it stays roughly ahead
+        const to = sub(cur.pos, flight.pos), dd = len(to);
+        if (dd > 7000 || Math.acos(clamp(dot(f, mul(to, 1 / (dd || 1))), -1, 1)) > 0.75) war.lock = null;
+      }
+      if (war.lock) war.lockT += dt; else if (best) { war.lock = best; war.lockT = 0; } else war.lockT = 0;
       if (war.lock && war.lockT >= 1 && war.missiles > 0) { war.lockBeep = (war.lockBeep || 0) - dt; if (war.lockBeep <= 0) { war.lockBeep = 0.45; beep(1250, 0.07, 'square', 0.05); } }
     }
 
@@ -6049,13 +6054,25 @@
       for (const a of war.foes) markAir(a, '#ff5d5d', 'BANDIT');
       if (war.net) for (const o of war.net.others.values()) {
         if (!o.alive || !o.rep || !o.shown) continue;
-        markAir({ state: 'fly', pos: add(o.shown, [0, 7, 0]) }, '#6cb6ff', o.name.slice(0, 10));
+        // Your team is always bright green with a star; players you are fighting are red.
+        const foeP = netFight();
+        markAir({ state: 'fly', pos: add(o.shown, [0, 7, 0]) }, foeP ? '#ff5d5d' : '#39ff7a', (foeP ? '' : '★ ') + o.name.slice(0, 10));
       }
-      if (war.friend) markAir(war.friend, '#6cb6ff', 'WINGMAN');
+      if (war.friend) markAir(war.friend, '#39ff7a', '★ WINGMAN');
       // The gun sight: the cross where the shells go, 650 m ahead, and a lead cue on the locked fighter.
       const sight = proj(add(flight.pos, mul(f, 650)));
       if (onScr(sight, 4) && war.L.gun > 0 && !tank) {
         h2.strokeStyle = 'rgba(255,240,150,.9)'; h2.beginPath(); h2.arc(sight.x, sight.y, 13, 0, Math.PI * 2); h2.moveTo(sight.x - 21, sight.y); h2.lineTo(sight.x - 8, sight.y); h2.moveTo(sight.x + 8, sight.y); h2.lineTo(sight.x + 21, sight.y); h2.moveTo(sight.x, sight.y - 21); h2.lineTo(sight.x, sight.y - 8); h2.stroke();
+      }
+      if (war.lock && war.lock.state === 'fly' && !tank) {
+        // Lock-on box on the target: a thin box while it tracks, a bright one with LOCK once the missile can fire.
+        const t = war.lock, q0 = proj(t.pos), q = onScr(q0, 10) ? q0 : edgePoint(t.pos), on = war.lockT >= 1, sz = 22 * s + 8;
+        h2.strokeStyle = h2.fillStyle = on ? '#ff3b3b' : '#ffd166'; h2.lineWidth = on ? 3 : 2;
+        h2.strokeRect(q.x - sz, q.y - sz, sz * 2, sz * 2);
+        if (!on) { h2.beginPath(); h2.arc(q.x, q.y, sz + 6, -Math.PI / 2, -Math.PI / 2 + war.lockT * Math.PI * 2); h2.stroke(); }
+        h2.font = `800 ${Math.round(11 * s + 3)}px system-ui`; h2.textAlign = 'center';
+        h2.fillText(on ? (war.missiles > 0 ? 'LOCK: PRESS N' : 'LOCK: NO MISSILES') : 'LOCKING…', q.x, q.y + sz + 16 * s + 4);
+        h2.lineWidth = 1;
       }
       const lt = war.lock;
       if (lt && lt.state === 'fly' && war.L.gun > 0 && !tank) {

@@ -72,7 +72,7 @@ Pick your computer. Both buttons start the download straight away. The Mac link 
   </tr>
   <tr>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.0.77</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.0.78</b></a>
     </td>
     <td align="center">
       <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 1.76.0 BETA</b></a>
@@ -233,6 +233,13 @@ All screenshots use sample data.
 ## What's new
 
 > **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is still in the repository's tags.
+
+### Mac 2.0.78 · Windows 1.78.0 BETA · 20 October 2026 · 🎯 Battle: lock-on, descending and teammates
+
+- Fixed planes refusing to go down: the pull-up assist now only steps in when you are about to hit the ground, and diving is faster in Easy and Automatic.
+- Lock-on is clearer: a box and a filling ring on the target, LOCK: PRESS N when a missile can fire, and the lock stays on while the target is roughly ahead.
+- Teammates show in bright green with a star; players you are fighting show in red.
+- New notifications (Notifications add-on) pop up beside the closed notch with the sender or app name.
 
 ### Mac 2.0.77 · Windows 1.77.0 BETA · 20 October 2026 · 🪖 Battle is easier to fly and fight
 

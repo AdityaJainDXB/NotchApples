@@ -20,6 +20,12 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.0.78", date: "20 October 2026", headline: "Battle: lock-on, descending and teammates", items: [
+            "Fixed planes refusing to go down: the pull-up assist now only steps in when you are about to hit the ground, and diving is faster in Easy and Automatic.",
+            "Lock-on is clearer: a box and a filling ring on the target, LOCK: PRESS N when a missile can fire, and the lock stays on while the target is roughly ahead.",
+            "Teammates show in bright green with a star; players you are fighting show in red.",
+            "New notifications (Notifications add-on) pop up beside the closed notch with the sender or app name.",
+        ]),
         ReleaseNote(version: "2.0.77", date: "20 October 2026", headline: "Battle is easier to fly and fight", items: [
             "Easy and Automatic now fly arcade style: quick, smooth turns (about 50°/s in the F-16), steady climbs, no stalls and no snapped wings. Press Q for a quick 180° turn (3 s cooldown). Pro keeps the full flight model.",
             "Enemies miss more and fire shorter bursts from farther away; flak is less accurate and half damage in Easy and Automatic.",
