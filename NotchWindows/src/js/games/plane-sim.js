@@ -2590,7 +2590,7 @@
     rock: { roll: 0.14, grip: 0.6, skid: 0.7, soft: 1.2 },
   };
   /// Arcade handling rates (radians/s turn, m/s climb, minimum speed) for Easy and Automatic.
-  const ARCADE_RATES = { f16: { turn: 0.87, climb: 30, vmin: 70 }, a10: { turn: 0.52, climb: 20, vmin: 60 }, f15: { turn: 0.7, climb: 42, vmin: 95 }, su27: { turn: 0.5, climb: 24, vmin: 70 }, b52: { turn: 0.31, climb: 12, vmin: 70 } };
+  const ARCADE_RATES = { f16: { turn: 0.87, climb: 30, dive: 95, vmin: 70 }, a10: { turn: 0.52, climb: 20, dive: 70, vmin: 60 }, f15: { turn: 0.7, climb: 42, dive: 105, vmin: 95 }, su27: { turn: 0.5, climb: 24, dive: 85, vmin: 70 }, b52: { turn: 0.31, climb: 12, dive: 30, vmin: 70 } };
   const AP_SIGN = { roll: 1, pitch: 1 };   // which way the stick moves the aircraft (checked in the autopilot tests)
   const gauss = () => (Math.random() + Math.random() + Math.random() - 1.5) * 2;
   // ---- weather settings (Fly menu, saved): a runway-relative wind (crosswind and head/tail wind, in knots) and a turbulence level
@@ -2653,7 +2653,9 @@
       this.ki = 0.06;
       this.cd0 = this.heli ? 0.012 : spec.thrust / (this.k * spec.max * spec.max) - this.ki * clLevel * clLevel;
       // Heavy aircraft answer the controls slowly (response rate, 1/s).
-      this.agil = (this.heli ? 6.5 : 5) - 2 * clamp((spec.stall - 24) / 46, 0, 1);
+      this.agil = (this.heli ? 6.5 : 7.5) - (this.heli ? 2 : 2.5) * clamp((spec.stall - 24) / 46, 0, 1);
+      // Airliners are quick to start moving when a key goes down (they used to take a beat to bite), still slower than a light plane.
+      this.liner = spec.cat === 'liner' ? 1 : 0;
       this.turb = 1;
       this.buildGear();
       this.reset([0, spec.gear * (spec.scale || 1), 0], 0, 0, true);
@@ -3053,9 +3055,9 @@
       const intact = wings === 1;
       const tailF = 0.3 + 0.7 * this.damage.tail;      // a scraped tail makes the elevator and rudder weaker
       const target = [
-        clamp(aCmd * (stabT + path) - this.aoa * stabT + (V > 5 && !this.onGround ? this.k * sigma * V * flaps * 0.35 - G * Math.cos(gamma) / V : 0), -s.pitch * 1.6, s.pitch * 1.6),
+        clamp(aCmd * (stabT + path) - this.aoa * stabT + (V > 5 && !this.onGround ? this.k * sigma * V * flaps * 0.35 - G * Math.cos(gamma) / V : 0), -s.pitch * 1.6 * (1 + 0.2 * this.liner), s.pitch * 1.6 * (1 + 0.2 * this.liner)),
         -input.yaw * s.yaw * eff - beta * stab,
-        -input.roll * s.roll * eff * Math.max(wings, 0.3) * (1 - 0.6 * this.sd),
+        -input.roll * s.roll * (1 + 0.35 * this.liner) * eff * Math.max(wings, 0.3) * (1 - 0.6 * this.sd),
       ];
       // A helicopter's cyclic: the rotor answers the stick with a rate (tilt the disc, and the thrust follows),
       // not with an angle of attack, and it does so however fast it is going — including a hover. Yaw is the
@@ -3217,29 +3219,35 @@
       }
       const a = this.arc;
       const shape = (v) => Math.sign(v) * Math.min(1, Math.abs(v)) ** 1.35;
-      const tx = shape(clamp(input.roll || 0, -1, 1)) + shape(clamp(input.yaw || 0, -1, 1)) * 0.6;
-      const pi = clamp(input.pitch || 0, -1, 1), ty = shape(pi) * (pi < 0 ? 1.8 : 1);
-      const k = 1 - Math.exp(-dt * 9);                 // stick smoothing, ~0.1 s
+      const tx = shape(clamp(input.roll || 0, -1, 1)) + shape(clamp(input.yaw || 0, -1, 1)) * 0.3;
+      const pi = clamp(input.pitch || 0, -1, 1), ty = shape(pi);
+      const k = 1 - Math.exp(-dt * 5);                 // stick smoothing, ~0.2 s
       a.sx += (clamp(tx, -1, 1) - a.sx) * k; a.sy += (ty - a.sy) * k;
-      let w = a.sx * A.turn;
-      if (a.qt > 0) { a.qt -= dt; w = a.qdir * A.turn * 1.25; }
-      const wMax = A.turn * 1.25;
-      w = clamp(w, -wMax, wMax);
+      // A jet turns by banking: the stick sets the bank it rolls towards (at a limited roll rate, so it takes a moment to
+      // lean in and a moment to level out), and the turn rate follows the bank. Faster means a wider turn.
+      const maxBank = 1.15, rollRate = 1.7;
+      const bankT = a.qt > 0 ? a.qdir * maxBank : clamp(a.sx, -1, 1) * maxBank;
+      a.bank += clamp(bankT - a.bank, -rollRate * dt, rollRate * dt);
+      const speedF = clamp(190 / spd, 0.6, 1.15);
+      let w = A.turn * 1.25 * (Math.sin(a.bank) / Math.sin(maxBank)) * speedF * 0.85 * (a.qt > 0 ? 1.8 : 1);
       a.h += w * dt;
-      const gT = Math.asin(clamp(a.sy * A.climb / spd, -0.95, 0.9));
-      a.g += (gT - a.g) * (1 - Math.exp(-dt * 4));
-      const bt = Math.atan2(w * spd, 9.81) * 0.8;
-      a.bank += (clamp(bt, -1.2, 1.2) - a.bank) * (1 - Math.exp(-dt * 6));
+      if (a.qt > 0) { a.qrem -= Math.abs(w) * dt; if (a.qrem <= 0) a.qt = 0; }   // the quick turn ends after 180 degrees
+      // Pitch: climbs are limited, dives are steeper and quicker, and the nose follows at a limited pitch rate.
+      // A hard bank without back pressure lets the nose sag a little.
+      const rate = a.sy >= 0 ? A.climb : A.dive;
+      const gT = Math.asin(clamp(a.sy * rate / spd - 0.05 * Math.abs(Math.sin(a.bank)) * (1 - Math.max(0, a.sy)), -0.95, 0.9));
+      const dg = (gT - a.g) * (1 - Math.exp(-dt * 3));
+      a.g += clamp(dg, -0.75 * dt, 0.6 * dt);
       const cg = Math.cos(a.g);
       this.vel = [Math.sin(a.h) * cg * spd, Math.sin(a.g) * spd, -Math.cos(a.h) * cg * spd];
       this.q = qnorm(qmul(qheading(a.h, a.g), qaxis([0, 0, 1], -a.bank)));
-      this.gload = 1 + Math.min(3, Math.abs(w * spd) / 9.81 * 0.3);
+      this.gload = 1 + Math.min(4, Math.abs(w * spd) / 9.81 * 0.5);
       this.stalled = false; this.inStall = false; this.buffet = 0;
     }
     /// Quick turn: a fast 180 degrees, with a cooldown.
     quickTurn(dir) {
       const a = this.arc; if (!this.arcade || !a || a.qt > 0 || (this.qtCool || 0) > this.t) return false;
-      a.qdir = dir || 1; a.qt = Math.PI / (this.arcade.turn * 1.25); this.qtCool = this.t + a.qt + 3; return true;
+      a.qdir = dir || 1; a.qt = 1; a.qrem = Math.PI; this.qtCool = this.t + 6; return true;
     }
 
     /// Wingtips, nose and tail against trees, buildings, the bridge and turbines. A wingtip strike tears that wing
@@ -7178,7 +7186,7 @@
     // ---- drawing
     let lastW = 0, lastH = 0;
     function size() {
-      const r = root.getBoundingClientRect(), dpr = Math.min(window.devicePixelRatio || 1, 2);
+      const r = root.getBoundingClientRect(), dpr = Math.min(window.devicePixelRatio || 1, dprCap);
       const w = Math.max(1, Math.round(r.width * dpr)), h = Math.max(1, Math.round(r.height * dpr));
       if (w !== lastW || h !== lastH) { cv.width = hud.width = w; cv.height = hud.height = h; lastW = w; lastH = h; }
       return { w, h, dpr };
@@ -7187,7 +7195,7 @@
     // ---- DRAW AIRCRAFT BEGIN
     // ---- drawing the aircraft: the body in its parts, then the moving surfaces, gear, propeller or fans, lights and flame
     // `ctl` is what the pilot is asking for (set every step); `surf` is where the surfaces actually are, easing towards it.
-    let ctl = { pitch: 0, roll: 0, yaw: 0, throttle: 0 }, devCtl = null, devHold = false, devView = null;
+    let dprCap = 2, ctl = { pitch: 0, roll: 0, yaw: 0, throttle: 0 }, devCtl = null, devHold = false, devView = null;
     const surf = { ail: 0, elev: 0, rud: 0, flap: 0, spoil: 0, last: 0, fan: 0 };
     const hingeM = (pivot, axis, ang) => { const q = qaxis(axis, ang); return model(q, sub(pivot, qrot(q, pivot)), 1); };
     function drawAircraft(t) {
@@ -8137,10 +8145,14 @@
     }
 
     // ---- main loop
-    let raf = 0, last = performance.now(), alive = true;
+    let raf = 0, last = performance.now(), alive = true, frameAvg = 0.016, slowFrames = 0;
     function frame(t) {
       if (!alive || suspended) return;
-      const real = Math.min(0.05, (t - last) / 1000); last = t;
+      const raw = (t - last) / 1000, real = Math.min(0.1, raw); last = t;
+      // A slow machine draws fewer pixels rather than flying in slow motion: after a second and a half of frames
+      // slower than 24 fps the picture steps down (never back up, so it cannot flicker between sizes).
+      frameAvg += (Math.min(raw, 0.25) - frameAvg) * 0.05;
+      if (frameAvg > 0.042 && dprCap > 1) { slowFrames += raw; if (slowFrames > 1.5) { dprCap = Math.max(1, dprCap - 0.25); slowFrames = 0; frameAvg = 0.02; } } else slowFrames = 0;
       // The beat of slow motion at a big impact: 0.4x for a second or so, then back to full speed.
       if (slowT > 0) slowT -= real;
       duckT -= real; shakeKick *= Math.exp(-real * 2.5);
