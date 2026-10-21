@@ -20,6 +20,11 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.0.99", date: "21 October 2026", headline: "Battle: breakable trees and rolling hills", items: [
+            "Trees break when you hit them: a plane's wing or nose, a tank or a van that runs into a tree breaks it (leaves fly and there is a crack), and it is gone from the picture for the rest of the battle. A strong Battle plane slows down but flies on; trees grow back in the next battle.",
+            "The battlefields are no longer pancake flat: gentle rolling hills (up to about 40 m high, slopes of 5 to 10 degrees) so there are ridges to hide behind and to fly over, still easy for tanks and soldiers to cross.",
+            "Automatic flying with heavy planes (the B-52) banks a little less and rolls back the short way, which fixes a rare tumble into the ground.",
+        ]),
         ReleaseNote(version: "2.0.98", date: "21 October 2026", headline: "Battle: a simpler screen", items: [
             "Battle looks simpler in a small window: the weapon buttons shrink to an icon with its key count so they all fit and cover less, the Vote and Leave buttons move to the bottom-left corner and the room text is hidden when there is no space, the radar shows just your height, and ground target labels no longer print on top of each other (two at most).",
         ]),

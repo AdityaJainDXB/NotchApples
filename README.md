@@ -72,7 +72,7 @@ Pick your computer. Both buttons start the download straight away. The Mac link 
   </tr>
   <tr>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.0.98</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.0.99</b></a>
     </td>
     <td align="center">
       <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 1.96.0 BETA</b></a>
@@ -233,6 +233,12 @@ All screenshots use sample data.
 ## What's new
 
 > **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is still in the repository's tags.
+
+### Mac 2.0.99 · Windows 1.98.0 BETA · 21 October 2026 · Battle: breakable trees and rolling hills
+
+- Trees break when you hit them: a plane's wing or nose, a tank or a van that runs into a tree breaks it (leaves fly and there is a crack), and it is gone from the picture for the rest of the battle. A strong Battle plane slows down but flies on; trees grow back in the next battle.
+- The battlefields are no longer pancake flat: gentle rolling hills (up to about 40 m high, slopes of 5 to 10 degrees) so there are ridges to hide behind and to fly over, still easy for tanks and soldiers to cross.
+- Automatic flying with heavy planes (the B-52) banks a little less and rolls back the short way, which fixes a rare tumble into the ground.
 
 ### Mac 2.0.98 · Windows 1.97.0 BETA · 21 October 2026 · Battle: a simpler screen
 
