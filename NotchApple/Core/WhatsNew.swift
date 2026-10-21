@@ -20,6 +20,9 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.0.88", date: "21 October 2026", headline: "Battle: R respawns you instead of restarting", items: [
+            "Pressing R in a battle now puts you straight back in your vehicle in the same wave, with the same score and kills. It no longer restarts the whole battle for everyone. On foot, R still reloads: use Respawn in the pause menu.",
+        ]),
         ReleaseNote(version: "2.0.87", date: "21 October 2026", headline: "Battle: a growing battlefield", items: [
             "For soldiers, tanks and helicopters the battlefield now starts small (40% of its radius) and grows with every wave until it is the full size at wave 7. A message tells you when it grows; at the edge you get a warning.",
             "The host decides the size and tells everyone each wave, so all players share the same field, and players who join later get the current size. Jets keep the full battlefield.",

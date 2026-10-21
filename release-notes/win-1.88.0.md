@@ -1,0 +1,3 @@
+**Battle: R respawns you instead of restarting**
+
+- Pressing R in a battle now puts you straight back in your vehicle in the same wave, with the same score and kills. It no longer restarts the whole battle for everyone. On foot, R still reloads: use Respawn in the pause menu.
