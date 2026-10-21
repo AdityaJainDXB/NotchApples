@@ -22,6 +22,8 @@ enum WhatsNew {
     static let releases: [ReleaseNote] = [
         ReleaseNote(version: "2.0.84", date: "21 October 2026", headline: "Notch popups follow your accent colour", items: [
             "The calendar countdown (\"French in 10m\"), message popups and Clipboard Link popups beside the closed notch now use the accent colour you chose in Settings → Appearance instead of a fixed teal.",
+            "Battle: the lock button (T) now also locks on to ground targets: bases, tanks, guns, trucks and fuel depots.",
+            "Battle: new guided missiles (G): you fly the missile with the mouse or arrows while your plane flies itself, then detonate it with Space, a click or G. Two per round; in shared battles for now only the host can use them.",
         ]),
         ReleaseNote(version: "2.0.83", date: "21 October 2026", headline: "Battle: online by default, exact bombs and a lock button", items: [
             "Battle now puts you in an open game: press Start and you join the wave being played, or open one if nobody is there. Single player still opens your own game and shows its room code so others can join any time.",
