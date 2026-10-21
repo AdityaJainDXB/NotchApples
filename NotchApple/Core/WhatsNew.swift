@@ -20,6 +20,9 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.0.91", date: "21 October 2026", headline: "Claude usage no longer announces rises that did not happen", items: [
+            "The closed notch no longer pulses \"usage went up\" when it had not. It compared one Claude account's percentage with another's (or with an unstable order of accounts) and read the difference as a rise; each account is now compared only with its own last reading.",
+        ]),
         ReleaseNote(version: "2.0.90", date: "21 October 2026", headline: "Battle: working votes and obvious teammates", items: [
             "Fixed the vote panel: none of its buttons worked, because the panel was being rebuilt many times a second, so a click never landed. Voting for teams, enemies, field and pause works again.",
             "Teammates are now easy to spot: in Co-op they show in bright green with a star, a double green bracket and their name always visible, their plane or soldier is tinted green, their names in the player list are green, and they are big green dots on the radar (with a \"GREEN = YOUR TEAM\" note). In Fight everyone keeps their own colour.",
