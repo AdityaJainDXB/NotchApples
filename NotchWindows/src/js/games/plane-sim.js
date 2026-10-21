@@ -4876,7 +4876,7 @@
             else if (svcDone[id] && id !== 4) toast('Already done', 1200);
             else { svc = { id, t: 0, dur: ({ 1: 9, 2: 8, 3: 7, 4: 14 })[id] }; toast(({ 1: '⛽ Fuel truck connected…', 2: '🍽 Catering truck at the door…', 3: '🧳 Loading baggage…', 4: '🚜 Tug attached: pushing back…' })[id], 1600); }
           }
-          if (k === 'r' && !(mode.id === 'war' && war && war.foot)) onStartPress('restart');
+          if (k === 'r') { if (mode.id !== 'war' || !war) onStartPress('restart'); else if (!(war.foot && !war.dead)) warQuickRespawn(); }
           if (k === 'x' && war) warSelfDestruct();
           if (k === 'm') { mouseOn = !mouseOn; write('mouse', mouseOn); toast(mouseOn ? 'Mouse steering on' : 'Mouse steering off: use the keys', 1400); }
         } else if (screen === 'result' && (k === 'r' || k === ' ')) { e.preventDefault?.(); onStartPress('again'); }
@@ -5702,6 +5702,15 @@
       war.van = { pos: [px, groundAt(W, px, pz) + 0.2, pz], q: qheading(h, 0), heading: h };
       if (war.net) netSend({ t: 'vn', id: netMyId, on: 1, p: war.van.pos.map(r1n), q: war.van.q.map((v) => Math.round(v * 1000) / 1000) });
       buildWbar(); toast('Landed. Your van is beside you: walk to it and press E', 3200);
+    }
+    /// R in a battle: you are straight back in your vehicle in the same wave (same score, same kills, same wave and field). It never
+    /// restarts the battle for anyone. On foot, R reloads instead: use the pause menu's Respawn.
+    function warQuickRespawn() {
+      if (!war || screen !== 'fly' || mode.id !== 'war' || war.mapOpen) return;
+      war.heli = null; war.guiding = false; war.guideM = null; war.selfDestructT = 0; war.endT = 0;
+      if (war.net) { war.net.respawnT = 0; netRespawn(); } else warSoloRespawn();
+      war.warn = ''; paused = false; stoppedT = 0;
+      toast('Back in the fight: same wave, same score', 1600);
     }
     function warSoloRespawn() {
       if (!war || war.net) return;
@@ -6705,7 +6714,7 @@
             [['W', 'S'], 'Drive', 'forward and back'], [['A', 'D'], 'Turn the tank', 'it turns on the spot when stopped'],
             [['Mouse'], 'Aim the turret', `move the cursor out of the ring in the middle: sideways turns the turret, up and down raise the gun.${aimNote}`], [['←', '→', '↑', '↓'], 'Aim (keys)', 'turret left and right, gun up and down'],
             [['Space', 'Enter', 'Click'], 'Cannon', 'a big shell that explodes where it lands. About 2 seconds to reload'], [['B', 'Z'], 'Machine gun', 'hold to fire. Good against planes and trucks'],
-            [['C'], 'Camera', 'behind, gunner or far'], [['P'], 'Pause'], [['R'], 'Restart'], [['?'], 'Show this help'],
+            [['C'], 'Camera', 'behind, gunner or far'], [['P'], 'Pause'], [['R'], 'Respawn', 'straight back in the same wave, nothing else restarts'], [['?'], 'Show this help'],
             ...(war && war.net ? [[['U'], 'Vote', 'change the match with the other players']] : []),
             [[], 'Radar colours', 'The radar is always visible in the top-right. Red: fighters · blue: wingman · orange: ground targets.']
           ] : [
@@ -6713,7 +6722,7 @@
             [['B', 'Z'], 'Bombs', auto ? 'hold: it drops only when a bomb would hit a target' : 'the bomb lands exactly on the yellow diamond where it was when you pressed. Hold for a stick'],
             ...(plane.rotor ? [[['E'], 'Land and get out', 'touch down and stop, then E: you step out with a rifle and an RPG, and E beside the helicopter climbs back in']] : []), [['T'], 'Lock on', 'press T to lock on to the fighter or ground target (base, tank, gun, truck) nearest your nose and keep it locked. T again to let go'], [['G'], 'Guided missile', 'you fly the missile with the mouse or arrows while the plane flies itself. Space, click or G detonates. 2 each round'], [['N'], 'Missile', 'fire at the locked fighter once it says LOCK'], [['L'], 'Flares', 'press when you hear MISSILE! to break its lock'], [['J'], 'Eject', 'bail out: the jet goes down and you fight on foot with a rifle. Ramming an enemy destroys it too'],
             ...(auto ? [[['Mouse', '←', '→'], 'Turn', 'the plane turns towards where you point and keeps its height'], [['↑', '↓'], 'Climb / dive', 'it settles at the new height'], [['W', 'S'], 'Speed', 'faster or slower']] : CTL_FLY()),
-            [['C'], 'Camera', 'behind, cockpit or far'], [['P'], 'Pause'], [['R'], 'Restart'], [['?'], 'Show this help'],
+            [['C'], 'Camera', 'behind, cockpit or far'], [['P'], 'Pause'], [['R'], 'Respawn', 'straight back in the same wave, nothing else restarts'], [['?'], 'Show this help'],
             ...(war && war.net ? [[['U'], 'Vote', 'change the match with the other players']] : []),
             [[], 'Radar colours', 'The radar is always visible in the top-right. Red: fighters · blue: wingman · orange: ground targets.']] };
         }
@@ -8214,7 +8223,7 @@
     function renderUIInner() {
       if (screen === 'fly') {
         ui.innerHTML = paused ? `<div class="pg-pause"><div class="pg-menu" style="width:auto;text-align:center"><h1 style="justify-content:center">Paused</h1>
-          <div class="pg-row" style="justify-content:center;margin-top:8px"><button data-a="resume" class="pg-go">Resume (P)</button><button data-a="restart">Restart (R)</button><button data-a="menu">Menu</button></div></div></div>` : '';
+          <div class="pg-row" style="justify-content:center;margin-top:8px"><button data-a="resume" class="pg-go">Resume (P)</button><button data-a="restart">${mode.id === 'war' && war ? 'Respawn (R)' : 'Restart (R)'}</button><button data-a="menu">Menu</button></div></div></div>` : '';
         bind(); return;
       }
       if (screen === 'result') {
@@ -8377,7 +8386,8 @@
       ui.querySelectorAll('[data-tab]').forEach((n) => n.onclick = () => { menuTab = n.dataset.tab; write('menuTab', menuTab); renderUI(); });
       ui.querySelectorAll('[data-a]').forEach((n) => n.onclick = () => {
         const a = n.dataset.a;
-        if (a === 'start' || a === 'again' || a === 'restart') onStartPress(a);
+        if (a === 'restart' && mode.id === 'war' && war && screen === 'fly') { paused = false; renderUI(); warQuickRespawn(); root.focus(); }
+        else if (a === 'start' || a === 'again' || a === 'restart') onStartPress(a);
         else if (a === 'resume') { paused = false; renderUI(); root.focus(); try { ac && ac.resume && ac.resume(); } catch { /* no sound */ } }
         else if (a === 'fullscreen') toggleFullscreen();
         else if (a === 'menu') { if (netg) netLeave(true); screen = 'menu'; paused = false; if (engGain) engGain.gain.value = 0; restorePlane(); useBattlefield(''); flight = new Flight(plane); renderUI(); }
