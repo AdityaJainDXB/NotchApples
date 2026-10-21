@@ -6012,6 +6012,8 @@
     }
     function warSoldierFire(dt) {
       const t = war.tank; war.grenT = Math.max(0, (war.grenT || 0) - dt); war.healCool = Math.max(0, war.healCool - dt); warLootStep();
+      // Tap R to reload; hold R for a second and a half to respawn (back in the same wave).
+      if (keys.has('r') && !war.mapOpen) { war.rHold = (war.rHold || 0) + dt; if (war.rHold > 1.5) { war.rHold = 0; warQuickRespawn(); return; } } else war.rHold = 0;
       if (war.reloadT > 0 && (war.reloadT -= dt) <= 0) { const n = Math.min(SOLDIER.mag - war.mag, war.gun); war.mag += n; war.gun -= n; war.reloadT = 0; }
       if (war.mag <= 0 && war.gun > 0 && war.reloadT <= 0) warReload();
       if (war.weapon === 'rpg') {
@@ -6658,6 +6660,7 @@
         // A compass bearing under the header.
         const deg = Math.round(((war.tank.turret * 57.2958) % 360 + 360) % 360), card = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'][Math.round(deg / 45) % 8];
         h2.fillStyle = 'rgba(255,255,255,.85)'; h2.textAlign = 'center'; h2.font = `700 ${Math.round(10 * s + 3)}px system-ui`; h2.fillText(`${card} ${deg}°`, cx, 62 * s + 4);
+        if ((war.rHold || 0) > 0.3) { h2.fillStyle = '#ffd166'; h2.font = `800 ${Math.round(13 * s + 4)}px system-ui`; h2.textAlign = 'center'; h2.fillText(`Keep holding R to respawn… ${Math.round(clamp(war.rHold / 1.5, 0, 1) * 100)}%`, cx, cy + 70 * s); }
         if (war.van && len(sub(war.van.pos, war.tank.pos)) < 10) { h2.fillStyle = '#ffd166'; h2.font = `800 ${Math.round(13 * s + 4)}px system-ui`; h2.fillText('E: get in the van', cx, cy + 110 * s); }
         if (war.heli && len(sub(war.heli.pos, war.tank.pos)) < 14) { h2.fillStyle = '#ffd166'; h2.font = `800 ${Math.round(13 * s + 4)}px system-ui`; h2.fillText('E: climb into the helicopter', cx, cy + 90 * s); }
       }
@@ -6790,7 +6793,7 @@
           if (warVeh === 'soldier') return { goal: 'You are a soldier on foot. Shoot the enemy riflemen marching at you, clear each wave and survive. Your rifle hits much harder than theirs.', rows: [
             [['W', 'S'], 'Walk', 'forward and back. Hold Shift to run'], [['A', 'D'], 'Step sideways', 'strafe left and right'],
             [['Mouse'], 'Aim and look', 'the crosshair follows the cursor. Move the cursor to the edge of the screen to turn. In the scope the cursor turns the view slowly. Arrow keys also look'],
-            [['Space', 'Enter', 'Click'], 'Rifle', 'hold to fire. 30 rounds a magazine; shots drop over distance'], [['R'], 'Reload', 'takes under 2 seconds'],
+            [['Space', 'Enter', 'Click'], 'Rifle', 'hold to fire. 30 rounds a magazine; shots drop over distance'], [['R'], 'Reload / respawn', 'tap R to reload (under 2 seconds); hold R for 1.5 seconds to respawn in the same wave'],
             [['2', '1'], 'RPG or rifle', 'press 2 for the RPG (a big rocket, 4 at a time, more every wave) and 1 for the rifle'], [['E'], 'Van or helicopter', 'beside your van or helicopter, E gets in (and out again when it has stopped). The van is fast: W/S drive, A/D steer, Shift boost'], [['H', 'J', 'K'], 'Heal', 'H bandage (+15 health, up to 75), J shield potion (+50 shield), K medkit (full health). Walk over glowing loot to pick it up: grey, blue, purple, gold'], [['Space'], 'Jump', 'jump over things; Shift runs, Ctrl or V crouches'], [['Right-click', 'Z'], 'Scope', 'cycles 1x, 4x and 10x. The marks show where a bullet lands at 100 to 500 m'], [['G'], 'Grenade', 'a short throw that explodes after about 2 seconds'],
             [['Y'], 'Heat vision', 'see through smoke: people, vehicles, aircraft and fires glow white'], [['Ctrl', 'V'], 'Crouch', 'slower, but the rifle steadies'], [['C'], 'Camera', 'first person, behind you, or far'], [['P'], 'Pause'], [['?'], 'Show this help'],
             ...(war && war.net ? [[['U'], 'Vote', 'change the match with the other players']] : []),
