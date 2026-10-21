@@ -6,6 +6,6 @@ Apps compare versions number by number (`2.1.3` is newer than `2.0.102`), so ins
 
 `scripts/release.sh` refuses a patch of 100 or more and prints the number to use.
 
-**Windows** is `1.N.0`, where N goes up by one for every Windows release (`1.101.0`, then `1.102.0`). Windows installers are matched by tag (`win-vX`), so nothing else depends on N staying small.
+**Windows** uses the same number as the Mac for the same release (Mac `2.1.3` and Windows `2.1.3`, tag `win-v2.1.3`). Windows was `1.N.0` up to `1.101.0`; the apps compare numbers part by part, so `2.1.3` is newer than `1.101.0` and updates carry across.
 
 When you bump a version, change it in `project.yml` (Mac), `NotchWindows/src-tauri/tauri.conf.json`, `Cargo.toml` and `Cargo.lock` (Windows), the README, `WhatsNew.swift` and `release-notes/`.

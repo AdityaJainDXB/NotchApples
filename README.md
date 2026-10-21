@@ -72,10 +72,10 @@ Pick your computer. Both buttons start the download straight away. The Mac link 
   </tr>
   <tr>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.0.102</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.1.3</b></a>
     </td>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 1.96.0 BETA</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 2.1.3 BETA</b></a>
     </td>
   </tr>
   <tr>
@@ -233,6 +233,11 @@ All screenshots use sample data.
 ## What's new
 
 > **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is still in the repository's tags.
+
+### Mac 2.1.3 · Windows 2.1.3 BETA · 21 October 2026 · 📉 Fewer network messages, new version numbers
+
+- Online Battle sends 5 updates a second instead of 10, to keep the shared room relay inside Cloudflare's free daily limits. Movement still looks smooth because other players' vehicles are glided between updates.
+- Version numbers are tidier: Mac rolls over from 2.0.102 to 2.1.3, and Windows now uses the same number as the Mac (2.1.3, replacing the 1.101.0 style). Updates work as normal.
 
 ### Mac 2.0.102 · Windows 1.101.0 BETA · 21 October 2026 · Plane menu: shorter and quieter
 

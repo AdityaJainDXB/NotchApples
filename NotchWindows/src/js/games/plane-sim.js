@@ -7227,7 +7227,7 @@
     function netTick(dt) {
       const n = war.net;
       n.sendT -= dt;
-      if (n.sendT <= 0) { n.sendT = 0.1; netSend(NET.packState(netMyId, netMyState())); }
+      if (n.sendT <= 0) { n.sendT = 0.2; netSend(NET.packState(netMyId, netMyState())); }      // 5 a second (the free Cloudflare plan counts every message)
       // The other players: glide them to where they are, and let their guns fire.
       const now = performance.now();
       for (const o of n.others.values()) {
@@ -7248,7 +7248,7 @@
       // The host tells everyone where the enemies are.
       if (n.role === 'host') {
         n.foeT -= dt; n.groundT -= dt;
-        if (n.foeT <= 0) { n.foeT = 0.1; netSendFoes(); }
+        if (n.foeT <= 0) { n.foeT = 0.2; netSendFoes(); }
         if (n.groundT <= 0) { n.groundT = war.foot ? 0.2 : 0.5; netSendGround(); }
         n.lootT = (n.lootT || 0) - dt; if (n.lootT <= 0) { n.lootT = 1.5; lootSend(); }
         n.waveT = (n.waveT || 0) - dt;

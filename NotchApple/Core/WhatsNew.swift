@@ -20,6 +20,10 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.1.3", date: "21 October 2026", headline: "Fewer network messages, new version numbers", items: [
+            "Online Battle sends 5 updates a second instead of 10, to keep the shared room relay inside Cloudflare's free daily limits. Movement still looks smooth because other players' vehicles are glided between updates.",
+            "Version numbers are tidier: Mac rolls over from 2.0.102 to 2.1.3, and Windows now uses the same number as the Mac (2.1.3, replacing the 1.101.0 style). Updates work as normal.",
+        ]),
         ReleaseNote(version: "2.0.102", date: "21 October 2026", headline: "Plane menu: shorter and quieter", items: [
             "The big \"How to play\" card on the Plane menu now shows only until you have started a game once. After that it folds into one \"How to play\" button (and a Hide button to fold it again). The long explanation under Host a game is one short line, and the Full screen button only appears where full screen can work, so you no longer get \"Full screen is not available in this window\".",
         ]),
