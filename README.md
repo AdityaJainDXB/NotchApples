@@ -72,7 +72,7 @@ Pick your computer. Both buttons start the download straight away. The Mac link 
   </tr>
   <tr>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.0.82</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.0.83</b></a>
     </td>
     <td align="center">
       <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 1.82.0 BETA</b></a>
@@ -233,6 +233,17 @@ All screenshots use sample data.
 ## What's new
 
 > **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is still in the repository's tags.
+
+### Mac 2.0.83 · Windows 1.83.0 BETA · 21 October 2026 · 🌐 Battle: online by default, exact bombs and a lock button
+
+- Battle now puts you in an open game: press Start and you join the wave being played, or open one if nobody is there. Single player still opens your own game and shows its room code so others can join any time.
+- You must type your name before starting; it shows above you and in the player list. Players are labelled before the computer fighters.
+- In shared battles the game keeps running while the notch is closed. Players can vote to pause the round (press U) and vote again to play on.
+- Soldier: aim with the cursor. The crosshair follows it and the view turns when the cursor reaches the screen edge; in the scope the cursor turns the view slowly.
+- Bombs land exactly on the yellow diamond where it was when you pressed B, a quick tap always drops one, and Easy and Automatic snap to a target within 45 m.
+- New lock button (T): lock on to the fighter nearest your nose and keep it locked until you press T again.
+- Pro: the plane now turns itself back when it heads out of the battlefield (from about 85% of the radius, earlier when fast).
+- Mac: Keep Awake (Lid Closed) can switch itself off after a time you type in hours, minutes and seconds (numbers only).
 
 ### Mac 2.0.82 · Windows 1.82.0 BETA · 21 October 2026 · 🪂 Battle: eject works in shared battles
 
