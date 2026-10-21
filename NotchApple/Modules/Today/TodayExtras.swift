@@ -151,6 +151,6 @@ final class EventCountdown {
     var liveActivity: LiveActivity? {
         guard let n = next, n.start > .now else { return nil }
         let minutes = max(1, Int(ceil(n.start.timeIntervalSinceNow / 60)))
-        return LiveActivity(symbol: "calendar", label: "in \(minutes)m", tint: .systemTeal, leftText: String(n.title.prefix(12)))
+        return LiveActivity(symbol: "calendar", label: "in \(minutes)m", tint: NSColor(Theme.accentBright), leftText: String(n.title.prefix(12)))
     }
 }

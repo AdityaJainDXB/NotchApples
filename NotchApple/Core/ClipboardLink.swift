@@ -122,7 +122,7 @@ final class ClipboardLink: ObservableObject {
               let env = ClipboardLinkLogic.open(sealed, key: ClipboardLinkLogic.key(code: code)),
               ClipboardLinkLogic.judge(env, selfID: deviceID, seen: &seen) == .accept else { return }
         ClipboardHistory.shared.applyRemote(env.text, from: env.name)
-        LiveActivityCenter.shared.flash(LiveActivity(symbol: "doc.on.clipboard", label: "From \(env.name)", tint: .systemTeal), seconds: 3)
+        LiveActivityCenter.shared.flash(LiveActivity(symbol: "doc.on.clipboard", label: "From \(env.name)", tint: NSColor(Theme.accentBright)), seconds: 3)
     }
 
     /// Called by the clipboard history for every text you copy here.

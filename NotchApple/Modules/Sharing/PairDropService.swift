@@ -308,14 +308,14 @@ final class PairDropService: ObservableObject {
             sessions[h.senderService] = PairDropLogic.Session(peerService: h.senderService, peerName: h.sender, sendCode: h.replyCode, expectCode: pairingCode)
             if !threads.contains(where: { $0.id == h.senderService }) { threads.append(PairDropChatThread(peerService: h.senderService, peerName: h.sender)) }
             status = "\(h.sender) started a chat with you."
-            LiveActivityCenter.shared.flash(LiveActivity(symbol: "bubble.left.fill", label: h.sender, tint: .systemTeal), seconds: 4)
+            LiveActivityCenter.shared.flash(LiveActivity(symbol: "bubble.left.fill", label: h.sender, tint: NSColor(Theme.accentBright)), seconds: 4)
             return .acceptMessage
         case .message:
             guard PairDropLogic.authorised(h, sessions: sessions) else { return wrong() }
             let text = PairDropLogic.clampMessage(h.text)
             guard !text.isEmpty else { return .acceptMessage }
             append(PairDropChatMessage(fromMe: false, text: text, date: .now), to: h.senderService, peerName: h.sender, unread: true)
-            LiveActivityCenter.shared.flash(LiveActivity(symbol: "bubble.left.fill", label: h.sender, tint: .systemTeal), seconds: 4)
+            LiveActivityCenter.shared.flash(LiveActivity(symbol: "bubble.left.fill", label: h.sender, tint: NSColor(Theme.accentBright)), seconds: 4)
             Notifier.post(title: h.sender, body: String(text.prefix(140)))
             return .acceptMessage
         }

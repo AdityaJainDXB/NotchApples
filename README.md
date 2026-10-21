@@ -72,7 +72,7 @@ Pick your computer. Both buttons start the download straight away. The Mac link 
   </tr>
   <tr>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.0.83</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.0.84</b></a>
     </td>
     <td align="center">
       <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 1.82.0 BETA</b></a>
@@ -233,6 +233,10 @@ All screenshots use sample data.
 ## What's new
 
 > **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is still in the repository's tags.
+
+### Mac 2.0.84 · 21 October 2026 · 🎨 Notch popups follow your accent colour
+
+- The calendar countdown ("French in 10m"), message popups and Clipboard Link popups beside the closed notch now use the accent colour you chose in Settings → Appearance instead of a fixed teal.
 
 ### Mac 2.0.83 · Windows 1.83.0 BETA · 21 October 2026 · 🌐 Battle: online by default, exact bombs and a lock button
 

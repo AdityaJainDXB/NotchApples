@@ -20,6 +20,9 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.0.84", date: "21 October 2026", headline: "Notch popups follow your accent colour", items: [
+            "The calendar countdown (\"French in 10m\"), message popups and Clipboard Link popups beside the closed notch now use the accent colour you chose in Settings → Appearance instead of a fixed teal.",
+        ]),
         ReleaseNote(version: "2.0.83", date: "21 October 2026", headline: "Battle: online by default, exact bombs and a lock button", items: [
             "Battle now puts you in an open game: press Start and you join the wave being played, or open one if nobody is there. Single player still opens your own game and shows its room code so others can join any time.",
             "You must type your name before starting; it shows above you and in the player list. Players are labelled before the computer fighters.",
