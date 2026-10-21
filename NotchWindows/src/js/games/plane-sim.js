@@ -5369,6 +5369,9 @@
     const WAR_OLIVE = [0.34, 0.38, 0.24], WAR_DARK = [0.14, 0.15, 0.13], WAR_GREY = [0.55, 0.57, 0.58];
 
     /// The weapons each kind of aircraft carries, and how much punishment it takes.
+    /// Ground fighters and helicopters start on a small field that grows with every wave (jets always get the whole field).
+    const WAR_R0 = 0.4;
+    const warFieldR = (n) => (war.grows ? war.arena.R * Math.min(1, WAR_R0 + 0.1 * (Math.max(n, 1) - 1)) : war.arena.R);
     const warStartAlt = () => (plane.id === 'b52' ? 1100 : plane.rotor ? 140 : 450);
     function warLoadout(p) {
       if (p.id === 'b52') return { gun: 0, bombs: 40, missiles: 0, flares: 12, hp: 170, stick: 0.11, gunners: true };
@@ -5445,7 +5448,7 @@
 
     // ---- starting and the waves
     function warStart() {
-      const arena = ARENAS.find((a) => a.id === warField) || ARENAS[0], tank = warVeh === 'tank' || warVeh === 'soldier', foot = warVeh === 'soldier', R = arena.R;
+      const arena = ARENAS.find((a) => a.id === warField) || ARENAS[0], tank = warVeh === 'tank' || warVeh === 'soldier', foot = warVeh === 'soldier', grows = tank || plane.rotor, R = grows ? arena.R * WAR_R0 : arena.R;
       const L = foot ? { gun: SOLDIER.reserve, bombs: SOLDIER.grenades, missiles: 0, flares: 0, hp: SOLDIER.hp, stick: 0.5, shells: 0, rpg: SOLDIER.rpg } : tank ? { gun: 900, bombs: 0, missiles: 0, flares: 0, hp: TANK.hp, stick: 0.2, shells: 40 } : { ...warLoadout(plane), shells: 0 }, d = WAR_DIFF[warLevel()];
       const shared = netg && netg.running && netg.start, mine = shared ? netg.start.players.find((q) => q.id === netMyId) : null;
       const spot = shared ? netStartSpot(R, netg.start.cfg, mine ? mine.slot : 0) : { x: 0, z: R * 0.72, heading: 0 };
@@ -5457,7 +5460,7 @@
         flight.reset([spot.x, tankBody.pos[1] + 2.2, spot.z], spot.heading, 0, true);
       } else flight.reset([spot.x, warStartAlt(), shared ? spot.z : R * 0.9], spot.heading, plane.cruise, false);
       flight.sturdy = !tank; flight.overG = warOverG;
-      war = { startZ, arena, vehicle: tank ? 'tank' : 'plane', foot, rpg: foot ? SOLDIER.rpg : 0, weapon: 'rifle', heli: null, mag: SOLDIER.mag, reloadT: 0, zoomI: 0, tank: tankBody, assist: warAssist, npc: warNpc, ap: { hdg: spot.heading, alt: flight.pos[1], spd: plane.cruise * 1.05, i: 0 }, outT: 0, endT: 0, shells: L.shells,
+      war = { startZ, arena, R, grows, vehicle: tank ? 'tank' : 'plane', foot, rpg: foot ? SOLDIER.rpg : 0, weapon: 'rifle', heli: null, mag: SOLDIER.mag, reloadT: 0, zoomI: 0, tank: tankBody, assist: warAssist, npc: warNpc, ap: { hdg: spot.heading, alt: flight.pos[1], spd: plane.cruise * 1.05, i: 0 }, outT: 0, endT: 0, shells: L.shells,
         gidn: 0, nidn: 0, score: 0, kills: 0, wave: 0, hp: L.hp, maxHp: L.hp, L, gun: L.gun, bombs: L.bombs, missiles: L.missiles, flares: L.flares,
         ground: [], foes: [], friend: null, bullets: [], bombsAir: [], missilesAir: [], flaks: [], craters: [], feed: [], lock: null, lockT: 0,
         gunT: 0, bombT: 0, flash: 0, warn: '', warnT: 0, wavePause: 2.5, waveClear: false, gunners: 0, dead: false, feedT: 0, shown: false, d };
@@ -5468,7 +5471,7 @@
     }
 
     function warSpawnAircraft(id, role) {
-      const spec = PLANES.find((x) => x.id === id), d = war.d, R = war.arena.R;
+      const spec = PLANES.find((x) => x.id === id), d = war.d, R = war.R;
       let pos, heading;
       if (role === 'friend') {
         if (war.vehicle === 'tank') { pos = [war.tank.pos[0] + 120, groundAt(W, war.tank.pos[0], war.tank.pos[2]) + 170, war.tank.pos[2] + 100]; heading = 0; }
@@ -5488,7 +5491,7 @@
     /// Squads of people on foot in a row ahead of you, each further away. They march at the nearest player and stop to shoot;
     /// from wave 3 one in each squad carries an RPG.
     function warSpawnInfantry(n, squads, size) {
-      const d = war.d, R = war.arena.R, z0 = war.startZ ?? R * 0.72;
+      const d = war.d, R = war.R, z0 = war.startZ ?? R * 0.72;
       let alive = war.ground.filter((q) => !q.dead && INF.has(q.kind)).length;      // at most 24 people on foot at once
       for (let c = 0; c < squads; c++) {
         let cx = 0, cz = 0, ok = false;
@@ -5504,7 +5507,9 @@
     }
     function warSpawnWave() {
       war.wave++;
-      const n = war.wave, d = war.d, R = war.arena.R;
+      const n = war.wave, d = war.d;
+      if (war.grows && warAuth()) { const R2 = warFieldR(n); if (n > 1 && R2 > war.R + 1) { toast(`⬆ The battlefield grows: ${Math.round(R2)} m across the middle`, 3000); warFeed(`Battlefield radius now ${Math.round(R2)} m`); } war.R = R2; }
+      const R = war.R;
       if (n >= 3) achieve('wave3');
       const clusters = war.foot ? 0 : Math.min(1 + Math.ceil(n / 2), 3);
       for (let c = 0; c < clusters; c++) {
@@ -5692,7 +5697,7 @@
     function warSpawnVan() {
       const t = war.tank; t.landed = true;
       const h = t.heading, x = t.pos[0] + Math.cos(h) * 9, z = t.pos[2] + Math.sin(h) * 9;
-      const ok = groundAt(W, x, z) > WATER + 1.5 && Math.hypot(x, z) < war.arena.R;
+      const ok = groundAt(W, x, z) > WATER + 1.5 && Math.hypot(x, z) < war.R;
       const px = ok ? x : t.pos[0] - Math.cos(h) * 9, pz = ok ? z : t.pos[2] - Math.sin(h) * 9;
       war.van = { pos: [px, groundAt(W, px, pz) + 0.2, pz], q: qheading(h, 0), heading: h };
       if (war.net) netSend({ t: 'vn', id: netMyId, on: 1, p: war.van.pos.map(r1n), q: war.van.q.map((v) => Math.round(v * 1000) / 1000) });
@@ -5705,7 +5710,7 @@
         war.ejected = false; war.vehicle = 'plane'; war.foot = false; war.tank = null; camMode = 0;
         war.L = { ...warLoadout(plane), shells: 0 }; war.maxHp = war.L.hp; buildWbar();
       }
-      const R = war.arena.R, spot = { x: 0, z: R * 0.72, heading: 0 };
+      const R = war.R, spot = { x: 0, z: R * 0.72, heading: 0 };
       netResetWreck(); flight = new Flight(plane); heliColl = 0;
       war.dead = false; war.selfDestructT = 0; war.hp = war.maxHp; war.gun = war.L.gun; war.bombs = war.L.bombs;
       war.missiles = war.L.missiles; war.flares = war.L.flares; war.shells = war.L.shells; war.flash = 0;
@@ -5830,7 +5835,7 @@
         return { drive: raw.throttle, steer: raw.yaw, aimX, aimY, boost: !!raw.boost };
       }
       if (war.assist === 'auto' && !plane.rotor) {
-        const st = war.ap, R = war.arena.R;
+        const st = war.ap, R = war.R;
         st.spd = clamp(st.spd + raw.throttle * 40 * dt, plane.stall * 1.35, plane.max * 0.85);
         const agl = flight.pos[1] - groundAt(W, flight.pos[0], flight.pos[2]);
         const o = planeAssist(flight, st, { turn: raw.roll, climb: invert ? -raw.pitch : raw.pitch }, dt, W, { floor: 200 });
@@ -5848,7 +5853,7 @@
       war.pullUp = false;
       if (war.assist === 'pro' && !plane.rotor) {
         // Pro: past the edge the plane turns itself back to the middle (hands back at 80% of the radius).
-        const rr = Math.hypot(flight.pos[0], flight.pos[2]), Rw = war.arena.R;
+        const rr = Math.hypot(flight.pos[0], flight.pos[2]), Rw = war.R;
         // It takes over at 85% of the radius when you are heading outwards (earlier for a fast plane), and hands back once you
         // point inwards again, or are well inside.
         const outward = (flight.vel[0] * flight.pos[0] + flight.vel[2] * flight.pos[2]) / (rr || 1);
@@ -5872,7 +5877,7 @@
     function tankDrive(dt, inp) {
       const t = war.tank;
       if (war.mapOpen) { t.pos[1] = groundAt(W, t.pos[0], t.pos[2]) + t.air; flight.pos = add(t.pos, [0, t.eye, 0]); flight.vel = [0, 0, 0]; flight.q = qheading(t.turret, t.gun); flight.crashed = false; flight.onGround = true; flight.events.length = 0; return; }
-      t.step(dt, inp, W, war.arena.R * 1.05);
+      t.step(dt, inp, W, war.R * 1.05);
       if (war.driving) { t.turret = t.heading; t.gun = 0.12; }
       else if (war.foot && t.dropped && !t.landed && t.air <= 0) warSpawnVan();
       flight.pos = add(t.pos, [0, war.foot ? t.eye : 2.2, 0]); flight.vel = t.vel.slice(); flight.q = qheading(t.turret, t.gun);
@@ -6060,7 +6065,7 @@
         const { r, f } = flight.axes();
         aim = add(add(flight.pos, mul(r, 170)), mul(f, 40)); aim[1] += 15; want = sub(aim, a.pos); range = len(want);
       } else want = [Math.sin(a.heading), 0, -Math.cos(a.heading)];
-      if (Math.hypot(a.pos[0], a.pos[2]) > war.arena.R * 0.93) want = [-a.pos[0], 0, -a.pos[2]];     // back to the battlefield
+      if (Math.hypot(a.pos[0], a.pos[2]) > war.R * 0.93) want = [-a.pos[0], 0, -a.pos[2]];     // back to the battlefield
       // Look out for the ground, and for a missile coming in.
       const ahead = add(a.pos, mul(a.vel, 3)), floor = Math.max(groundAt(W, a.pos[0], a.pos[2]), groundAt(W, ahead[0], ahead[2]));
       let tooLow = false;
@@ -6345,7 +6350,7 @@
       if (war.net) { netTick(dt); if (war.net && war.net.role === 'client') netReplicaStep(dt); }
       if (!war.dead && war.vehicle === 'plane') {
         // Out past the edge of the battlefield: a warning, then damage.
-        const rr = Math.hypot(flight.pos[0], flight.pos[2]), Rw = war.arena.R;
+        const rr = Math.hypot(flight.pos[0], flight.pos[2]), Rw = war.R;
         if (rr > Rw * 0.85) {
           const toC = Math.atan2(-flight.pos[0], flight.pos[2]) , hd = flight.heading;     // heading that points back to the middle
           war.edgeArrow = wrapPi(toC - hd);
@@ -6355,6 +6360,7 @@
           if (war.assist === 'easy' && rr > Rw * 0.9 && flight.arc) flight.arc.h += clamp(wrapPi(toC - flight.arc.h), -1, 1) * 0.35 * dt;
         } else { war.edgeArrow = null; war.outT = Math.max(0, war.outT - dt * 2); }
       }
+      if (!war.dead && war.vehicle === 'tank' && war.grows && Math.hypot(flight.pos[0], flight.pos[2]) > war.R * 0.94) { war.warn = 'EDGE OF THE BATTLEFIELD: it grows with every wave'; war.warnT = 0.4; }
       const d = war.d;
       war.flash = Math.max(0, war.flash - dt * 1.6); war.warnT -= dt; if (war.warnT <= 0) war.warn = '';
       for (const f of war.feed) f.t -= dt;
@@ -6726,7 +6732,7 @@
     const ctlEl = document.createElement('div'); ctlEl.className = 'pg-ctlcard'; ctlEl.style.display = 'none';
     const ctlBtn = document.createElement('button'); ctlBtn.className = 'pg-ctlbtn'; ctlBtn.textContent = '?'; ctlBtn.title = 'Controls for this mode (?)'; ctlBtn.style.display = 'none';
     const mapEl = document.createElement('div'); mapEl.style.cssText = 'display:none;position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:30;text-align:center;width:min(92%,400px);box-sizing:border-box;padding:12px;border-radius:14px;background:rgba(8,12,24,.92);color:#fff;font:600 13px system-ui;box-shadow:0 8px 30px rgba(0,0,0,.5)';
-    mapEl.innerHTML = '<div style="font:800 15px system-ui">Choose where to land <span data-map="t" style="opacity:.7;font-weight:600"></span></div><canvas data-map="cv" width="360" height="360" style="position:relative;inset:auto;display:block;margin:6px auto;width:min(100%,360px);height:auto;aspect-ratio:1/1;border-radius:8px;cursor:crosshair"></canvas><div style="margin:6px 0;opacity:.8;font-weight:500">Click the map to pick your landing spot. The enemy comes from the top. You jump from the bus and float down: steer a little with W A S D.</div><button data-map="go" class="pg-go">Jump (Enter)</button>';
+    mapEl.innerHTML = '<div style="font:800 15px system-ui">Choose where to land <span data-map="t" style="opacity:.7;font-weight:600"></span></div><canvas data-map="cv" width="360" height="360" style="position:relative;inset:auto;display:block;margin:6px auto;width:min(100%,360px);height:auto;aspect-ratio:1/1;border-radius:8px;cursor:crosshair"></canvas><div style="margin:6px 0;opacity:.8;font-weight:500">Click the map to pick your landing spot inside the white circle: the battlefield grows with every wave. The enemy comes from the top. You jump from the bus and float down: steer a little with W A S D.</div><button data-map="go" class="pg-go">Jump (Enter)</button>';
     for (const ev of ['mousedown', 'pointerdown', 'click']) mapEl.addEventListener(ev, (e) => e.stopPropagation());
     const wbar = document.createElement('div'); wbar.className = 'pg-wbar'; wbar.style.display = 'none';
     const netbar = document.createElement('div'); netbar.className = 'pg-netbar'; netbar.style.display = 'none';
@@ -6809,7 +6815,8 @@
         ig.putImageData(d, 0, 0); mapImgs[a.id] = im;
       }
       g.imageSmoothingEnabled = true; g.drawImage(mapImgs[a.id], 0, 0, 360, 360);
-      g.strokeStyle = '#fff'; g.lineWidth = 2; g.beginPath(); g.arc(180, 180, a.R * sc, 0, Math.PI * 2); g.stroke();
+      g.strokeStyle = 'rgba(255,255,255,.35)'; g.lineWidth = 1; g.beginPath(); g.arc(180, 180, a.R * sc, 0, Math.PI * 2); g.stroke();
+      g.strokeStyle = '#fff'; g.lineWidth = 2; g.beginPath(); g.arc(180, 180, war.R * sc, 0, Math.PI * 2); g.stroke();
       g.fillStyle = '#fff'; g.font = '700 11px system-ui'; g.textAlign = 'center'; g.fillText('ENEMY ↑', 180, 16);
       const p = war.pick || { x: 0, z: 0 }; g.strokeStyle = '#ffd166'; g.fillStyle = '#ffd166'; g.lineWidth = 2;
       g.beginPath(); g.arc(180 + p.x * sc, 180 + p.z * sc, 7, 0, Math.PI * 2); g.stroke(); g.beginPath(); g.arc(180 + p.x * sc, 180 + p.z * sc, 2, 0, Math.PI * 2); g.fill();
@@ -6818,7 +6825,7 @@
       if (!war || !war.mapOpen) return;
       const cv = e.currentTarget, r = cv.getBoundingClientRect(), a = war.arena, sc = 360 / (2 * a.R * 1.15);
       let x = ((e.clientX - r.left) / r.width * 360 - 180) / sc, z = ((e.clientY - r.top) / r.height * 360 - 180) / sc;
-      const m = Math.hypot(x, z), lim = a.R * 0.85; if (m > lim) { x *= lim / m; z *= lim / m; }
+      const m = Math.hypot(x, z), lim = war.R * 0.85; if (m > lim) { x *= lim / m; z *= lim / m; }
       war.pick = { x, z }; warMapDraw();
     });
     mapEl.querySelector('[data-map="go"]').addEventListener('click', () => warConfirmDrop());
@@ -7024,7 +7031,7 @@
     function netRespawn() {
       if (flight.crashed) { netResetWreck(); flight = new Flight(plane); heliColl = 0; }
       if (war.ejected) { war.ejected = false; war.vehicle = 'plane'; war.foot = false; war.tank = null; camMode = 0; war.L = { ...warLoadout(plane), shells: 0 }; war.maxHp = war.L.hp; buildWbar(); }
-      const R = war.arena.R, spot = netStartSpot(R, war.net.cfg, war.net.slot);
+      const R = war.R, spot = netStartSpot(R, war.net.cfg, war.net.slot);
       war.dead = false; war.hp = war.maxHp; war.gun = war.L.gun; war.bombs = war.L.bombs; war.missiles = war.L.missiles; war.flares = war.L.flares; war.shells = war.L.shells; war.flash = 0;
       if (war.vehicle === 'tank') {
         if (war.driving) { war.driving = false; war.foot = warVeh === 'soldier'; war.van = null; } war.tank = warBody(spot); war.tank.pos[1] = groundAt(W, spot.x, spot.z) + 0.2; if (war.foot) { war.mag = SOLDIER.mag; war.reloadT = 0; war.zoomI = 0; war.rpg = SOLDIER.rpg; war.weapon = 'rifle'; }
@@ -7053,7 +7060,7 @@
     const r1n = (v) => Math.round(v * 10) / 10;
     function netSendWave() {
       if (!war || !war.net || war.net.role !== 'host') return;
-      netSend({ t: 'wave', n: war.wave, sc: war.score, kl: war.kills, af: war.waveFighters || 0, g: war.ground.map((g) => ({ i: g.nid, k: g.kind, x: r1n(g.pos[0]), y: r1n(g.pos[1]), z: r1n(g.pos[2]), h: Math.round(g.heading * 100) / 100, hp: Math.round(g.hp), mx: Math.round(g.maxHp), d: g.dead ? 1 : 0, s: g.speed })) });
+      netSend({ t: 'wave', R: Math.round(war.R), n: war.wave, sc: war.score, kl: war.kills, af: war.waveFighters || 0, g: war.ground.map((g) => ({ i: g.nid, k: g.kind, x: r1n(g.pos[0]), y: r1n(g.pos[1]), z: r1n(g.pos[2]), h: Math.round(g.heading * 100) / 100, hp: Math.round(g.hp), mx: Math.round(g.maxHp), d: g.dead ? 1 : 0, s: g.speed })) });
     }
     function netSendFoes() {
       netSend({ t: 'wf', f: war.foes.map((a) => ({ i: a.nid, id: a.id, x: r1n(a.pos[0]), y: r1n(a.pos[1]), z: r1n(a.pos[2]), h: Math.round(a.heading * 100) / 100, p: Math.round(a.pitch * 100) / 100, b: Math.round(a.bank * 100) / 100, s: Math.round(a.speed), hp: Math.round(a.hp), st: a.state === 'fly' ? 0 : 1, fg: a.burstLeft > 0 ? 1 : 0 })) });
@@ -7137,7 +7144,7 @@
     function netApplyWave(m) {
       if (!Number.isInteger(m.n) || m.n < war.wave || m.n === war.appliedWave || !Array.isArray(m.g)) return;
       war.wave = m.n; war.score = m.sc; war.kills = m.kl; war.waveClear = false; war.wavePause = 1e9;
-      war.appliedWave = m.n;
+      war.appliedWave = m.n; if (Number.isFinite(m.R) && m.R > 300 && m.R < 20000) { if (war.grows && m.R > war.R + 1 && m.n > 1) toast(`⬆ The battlefield grows: ${Math.round(m.R)} m across the middle`, 3000); war.R = m.R; }
       war.waveGround = m.g.length; war.waveFighters = Number.isInteger(m.af) ? m.af : 0; war.briefingT = 4;
       war.ground = m.g.map((g) => ({ nid: g.i, kind: g.k, pos: [g.x, g.y, g.z], heading: g.h, turret: g.h, hp: g.hp, maxHp: g.mx, r: WAR_KINDS[g.k].r, pts: WAR_KINDS[g.k].pts, dead: !!g.d, speed: g.s, burning: 0, cool: 1e9, t: 0 }));
       toast(`WAVE ${m.n}`, 1800); beep(520, 0.15, 'square', 0.07);
@@ -8574,7 +8581,7 @@
     window.NotchPlaneGame.key = (key, down) => onKey({ key, repeat: false, target: null }, down);
     window.NotchPlaneGame._state = () => ({ screen, keys: [...keys], bank: flight.bank, pitch: flight.pitchAngle, pos: flight.pos, w: flight.w, onGround: flight.onGround,
       speed: flight.speed, ias: flight.ias, gload: flight.gload, spin: flight.spin, wreckRest: flight.rest, report: flight.report, damage: flight.damage, crashed: flight.crashed, why: flight.why, debris: debris.length, particles: smoke.length });
-    window.NotchPlaneGame._poke = { startBattle: (assist = 'easy', veh = 'f16', npc = false) => { mode = MODES.find((m) => m.id === 'war'); warVeh = veh; warAssist = assist; warSide = 'coop'; warNpc = npc; start(); return war; }, net: { vote: (k, v) => netVoteCast(k, v), hurt: (id, a) => netHurtRemote(id, a, 'test'), room: () => netg && { role: netg.role, code: netg.code, cfg: netg.cfg, running: netg.running, status: netg.status, votes: netg.votes, id: netMyId }, hurtMe: (a, by) => warHurt(a, 'test', by) }, auto: (name, veh = 'f16', play = 'online') => { mode = MODES.find((m) => m.id === 'war'); playerName = name; warVeh = veh; warPlay = play; warNpc = true; warSide = 'coop'; warAutoStart(); return !!netg; }, netinfo: () => ({ role: netg && netg.role, code: netg && netg.code, status: netg && netg.status, running: netg && netg.running, peers: netg ? [...netg.peers.values()].map((p) => p.n) : [], paused: netg && netg.cfg.paused, wave: war && war.wave, net: !!(war && war.net), others: war && war.net ? [...war.net.others.values()].map((o) => [o.name, o.alive, o.rep && o.rep.kind]) : [] }), lock: () => warToggleLock(), spawnWave: () => { warSpawnWave(); return war.ground.map((g) => g.kind); }, war: () => war, cam: () => ({ camMode, camPos: camPos.slice() }), warHurt: (n) => warHurt(n, 'test'), warFire: (k, v) => { if (k === 'gun') warPad.gun = v; }, remote: () => remote, sky: () => ({ on: shareOn, id: skyId, pilots: skyPilots, off: skyOff }), traffic: () => traffic, spawnTraffic: () => spawnTraffic(), failEngine: (p) => { failAt = elapsed; }, flight: () => flight, world: () => W, dbg: () => ({ debris, smoke, gouges, slowT, duckT, shakeKick, attached: [...attached] }),
+    window.NotchPlaneGame._poke = { startBattle: (assist = 'easy', veh = 'f16', npc = false) => { mode = MODES.find((m) => m.id === 'war'); warVeh = veh; warAssist = assist; warSide = 'coop'; warNpc = npc; start(); return war; }, net: { vote: (k, v) => netVoteCast(k, v), hurt: (id, a) => netHurtRemote(id, a, 'test'), room: () => netg && { role: netg.role, code: netg.code, cfg: netg.cfg, running: netg.running, status: netg.status, votes: netg.votes, id: netMyId }, hurtMe: (a, by) => warHurt(a, 'test', by) }, auto: (name, veh = 'f16', play = 'online') => { mode = MODES.find((m) => m.id === 'war'); playerName = name; warVeh = veh; warPlay = play; warNpc = true; warSide = 'coop'; warAutoStart(); return !!netg; }, netinfo: () => ({ role: netg && netg.role, code: netg && netg.code, status: netg && netg.status, running: netg && netg.running, peers: netg ? [...netg.peers.values()].map((p) => p.n) : [], paused: netg && netg.cfg.paused, wave: war && war.wave, net: !!(war && war.net), others: war && war.net ? [...war.net.others.values()].map((o) => [o.name, o.alive, o.rep && o.rep.kind]) : [] }), join: (code, name, veh = 'f16') => { mode = MODES.find((m) => m.id === 'war'); playerName = name; warVeh = veh; netOpen('client', code); return true; }, lock: () => warToggleLock(), spawnWave: () => { warSpawnWave(); return war.ground.map((g) => g.kind); }, war: () => war, cam: () => ({ camMode, camPos: camPos.slice() }), warHurt: (n) => warHurt(n, 'test'), warFire: (k, v) => { if (k === 'gun') warPad.gun = v; }, remote: () => remote, sky: () => ({ on: shareOn, id: skyId, pilots: skyPilots, off: skyOff }), traffic: () => traffic, spawnTraffic: () => spawnTraffic(), failEngine: (p) => { failAt = elapsed; }, flight: () => flight, world: () => W, dbg: () => ({ debris, smoke, gouges, slowT, duckT, shakeKick, attached: [...attached] }),
       // Test hooks for looking at the models: a fixed camera, held controls, and freezing the physics.
       view: (v) => { devView = v; }, ctl: (c) => { devCtl = c; }, hold: (h) => { devHold = h; }, plane: () => plane, surf,
       // Test hook: run the simulation ahead by `secs` seconds without drawing (a slow software renderer can't keep real time).
