@@ -3900,7 +3900,7 @@
   .pg .pg-report b { display: block; font-size: 14px; margin-bottom: 2px; } .pg .pg-ok b { color: #5ee08a; } .pg .pg-warn b { color: #ffd166; } .pg .pg-bad b { color: #ff7a6b; }
   .pg .pg-bgrid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; } .pg .pg-b3 { grid-template-columns: repeat(3, 1fr); }
   .pg .pg-lab { font-size: 11px; font-weight: 800; opacity: .7; width: 66px; } @media (max-width: 560px) { .pg .pg-bgrid { grid-template-columns: repeat(2, 1fr); } .pg .pg-b3 { grid-template-columns: 1fr; } }
-  .pg .pg-netbar { position: absolute; left: 10px; top: calc(46% + 36px); z-index: 5; gap: 6px; } .pg .pg-netbar button { padding: 5px 9px; border-radius: 9px; border: 1px solid rgba(255,255,255,.3); background: rgba(10,14,28,.78); color: #fff; font-size: 12px; font-weight: 700; cursor: pointer; }
+  .pg .pg-netbar { position: absolute; left: 10px; bottom: 12px; z-index: 5; gap: 5px; opacity: .72; font-size: 10px; } .pg .pg-netbar:hover { opacity: 1; } .pg .pg-netbar button { padding: 3px 7px; border-radius: 8px; border: 1px solid rgba(255,255,255,.3); background: rgba(10,14,28,.78); color: #fff; font-size: 12px; font-weight: 700; cursor: pointer; }
   .pg .pg-room { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 8px 12px; border-radius: 12px; background: rgba(255,179,71,.12); border: 1px solid rgba(255,179,71,.5); }
   .pg .pg-code { font: 800 30px/1.1 ui-monospace, Menlo, monospace; letter-spacing: .18em; color: #ffb347; user-select: all; }
   .pg .pg-people { display: grid; gap: 4px; } .pg .pg-person { display: flex; justify-content: space-between; padding: 5px 10px; border-radius: 9px; background: rgba(255,255,255,.07); font-size: 12px; } .pg .pg-person span { opacity: .75; }
@@ -3922,6 +3922,8 @@
   .pg .pg-wbar button { position: relative; display: grid; grid-template-columns: 26px 1fr auto; align-items: center; gap: 4px; width: 128px; padding: 6px 8px; border-radius: 10px; border: 1px solid rgba(255,255,255,.25); background: rgba(10,14,28,.72); color: #fff; font-size: 12px; cursor: pointer; text-align: left; user-select: none; touch-action: none; }
   .pg .pg-wbar button:active { background: rgba(255,179,71,.45); } .pg .pg-wbar button b { font-weight: 700; } .pg .pg-wbar button span { font-size: 16px; }
   .pg .pg-wbar button kbd { font-size: 10px; } .pg .pg-wbar button i { position: absolute; right: 6px; bottom: 2px; font-style: normal; font-size: 9.5px; opacity: .8; }
+  /* In a small window the weapon buttons shrink to an icon, its key and its count, so they fit and cover less. */
+  .pg .pg-netbar.pg-compact span { display: none; } .pg .pg-wbar { max-height: 62%; } .pg .pg-wbar.pg-compact { top: 22%; gap: 4px; } .pg .pg-wbar.pg-compact button { width: 46px; grid-template-columns: 1fr; justify-items: center; padding: 4px 3px; } .pg .pg-wbar.pg-compact button b, .pg .pg-wbar.pg-compact button kbd { display: none; } .pg .pg-wbar.pg-compact button i { right: 3px; bottom: 1px; font-size: 10px; opacity: 1; }
   .pg .pg-wbar button.pg-lock { border-color: #ff5d5d; box-shadow: 0 0 10px #ff5d5d; }
   .pg .pg-pause { position: absolute; inset: 0; display: grid; place-items: center; background: rgba(0,0,0,.35); font-size: 13px; }
   `;
@@ -6576,6 +6578,8 @@
       h2.font = `700 ${Math.round(9 * s + 2)}px system-ui`;
       const near = war.ground.filter((g) => !g.dead).map((g) => [len(sub(g.pos, flight.pos)), g]).sort((a, b) => a[0] - b[0]).slice(0, 14);
       let labels = 0;
+      const placed = [];        // where labels already are: a label is skipped if it would sit on top of another
+      const canLabel = (x, y) => { if (placed.some((p) => Math.abs(p.x - x) < 120 && Math.abs(p.y - y) < 15)) return false; placed.push({ x, y }); return true; };
       for (const [dd, g] of near) {
         if (dd > 7000) continue;
         const q = proj(add(g.pos, [0, 3, 0])); if (!onScr(q, 10)) continue;
@@ -6584,7 +6588,7 @@
         const height = Math.max(0, g.pos[1] - flight.pos[1]);
         const r = clamp(2600 / dd * 9 + height / 120, 7, 22) * pulse;
         h2.strokeRect(q.x - r, q.y - r, r * 2, r * 2);
-        if (labels < 3) { h2.fillText(`${WAR_KINDS[g.kind].name} ${fmtD(dd)}`, q.x, q.y + r + 9); labels++; }
+        if (labels < 2 && canLabel(q.x, q.y + r + 9)) { h2.fillText(`${WAR_KINDS[g.kind].name} ${fmtD(dd)}`, q.x, q.y + r + 9); labels++; }
         if (g.hp < g.maxHp) { h2.fillStyle = 'rgba(0,0,0,.6)'; h2.fillRect(q.x - r, q.y - r - 6, r * 2, 3); h2.fillStyle = '#ff9f43'; h2.fillRect(q.x - r, q.y - r - 6, r * 2 * clamp(g.hp / g.maxHp, 0, 1), 3); }
       }
       /// Height ("Y level") of a marker next to yours: its own Y and how far above (+) or below (-) you it is.
@@ -6599,11 +6603,11 @@
             h2.save(); h2.shadowColor = col; h2.shadowBlur = 14; h2.lineWidth = 2; h2.strokeRect(q.x - r - 5, q.y - r - 5, r * 2 + 10, r * 2 + 10); h2.restore();
             h2.save(); h2.font = `800 ${Math.round(12 * s + 3)}px system-ui`; h2.textAlign = 'center'; h2.shadowColor = 'rgba(0,0,0,.8)'; h2.shadowBlur = 4; h2.fillStyle = col; h2.fillText(`${label}  ${fmtD(dd)}  ${yTag(a)}`, q.x, q.y - r - 10); h2.restore();
           } else
-          if (labels < 3) { h2.fillText(`${label} ${fmtD(dd)} ${yTag(a)}${locked ? (war.lockT >= 1 ? ' LOCK' : ' …') : ''}`, q.x, q.y + r + 11); labels++; }
+          if (labels < 2 && canLabel(q.x, q.y + r + 11)) { h2.fillText(`${label} ${fmtD(dd)} ${yTag(a)}${locked ? (war.lockT >= 1 ? ' LOCK' : ' …') : ''}`, q.x, q.y + r + 11); labels++; }
         } else if (q) {
           const ang = q.angle || Math.atan2(q.y - H2 / 2, q.x - W2 / 2), ex = q.x, ey = q.y;
           h2.save(); h2.translate(ex, ey); h2.rotate(ang); h2.beginPath(); h2.moveTo(11, 0); h2.lineTo(-7, -8); h2.lineTo(-7, 8); h2.closePath(); h2.fill(); h2.restore();
-          if (team || labels < 3) { h2.fillText(`${label} ${fmtD(dd)} ${yTag(a)}`, ex, ey + 18); if (!team) labels++; }
+          if (team || (labels < 2 && canLabel(ex, ey + 18))) { h2.fillText(`${label} ${fmtD(dd)} ${yTag(a)}`, ex, ey + 18); if (!team) labels++; }
         }
       };
       if (war.net) for (const o of war.net.others.values()) {
@@ -6727,8 +6731,7 @@
       if (war.net) for (const o of war.net.others.values()) if (o.alive && o.shown) blip(o.shown, netFight() ? '#ffb347' : '#39ff7a', false, !netFight());
       for (const a of war.foes) if (a.state === 'fly') blip(a.pos, '#ff5d5d', false);
       if (war.friend && war.friend.state === 'fly') blip(war.friend.pos, '#39ff7a', false, true);
-      h2.fillStyle = '#fff'; h2.font = `800 ${Math.round(10 * s + 3)}px system-ui`; h2.textAlign = 'center'; h2.fillText(`YOU  Y${Math.round(flight.pos[1])}`, cx, cy + R + (war.net && !netFight() ? 26 : 13));
-      if (war.net && !netFight()) { h2.fillStyle = '#39ff7a'; h2.font = `700 ${Math.round(9 * s + 2)}px system-ui`; h2.textAlign = 'center'; h2.fillText('● GREEN = YOUR TEAM', cx, cy + R + 12); }
+      h2.fillStyle = '#fff'; h2.font = `800 ${Math.round(10 * s + 3)}px system-ui`; h2.textAlign = 'center'; h2.fillText(`Y${Math.round(flight.pos[1])}`, cx, cy + R + 13);
       h2.fillStyle = '#fff'; h2.beginPath(); h2.moveTo(cx, cy - 5); h2.lineTo(cx + 4, cy + 4); h2.lineTo(cx - 4, cy + 4); h2.closePath(); h2.fill();
       if (war.net && war.dead && war.net.respawnT > 0) { h2.textAlign = 'center'; h2.font = `800 ${Math.round(24 * s + 4)}px system-ui`; h2.fillStyle = '#ff9f9f'; h2.fillText(`DESTROYED · BACK IN ${Math.ceil(war.net.respawnT)}`, W2 / 2, H2 * 0.4); }
       if (war.briefingT > 0) {
@@ -6943,7 +6946,8 @@
       toast('🪂 You jumped from the bus. Steer a little with W A S D', 2600);
     }
     function ctlTick(dt) {
-      if (netg && war && war.net) { const ce = netbar.querySelector('[data-nb="code"]'); if (ce) { const t = `Room ${netg.code} · ${netg.cfg.side === 'versus' ? '⚔ FIGHT: players are enemies' : '🤝 CO-OP: all one team'} · ${netg.role === 'host' ? 1 + netg.peers.size : Math.max(2, (netg.roster || []).length)} playing`; if (ce.textContent !== t) ce.textContent = t; } }
+      { const rh = root.getBoundingClientRect().height; if (rh) { wbar.classList.toggle('pg-compact', rh < 720); netbar.classList.toggle('pg-compact', rh < 720); } }
+      if (netg && war && war.net) { const ce = netbar.querySelector('[data-nb="code"]'); if (ce) { const t = `${netg.code} · ${netg.cfg.side === 'versus' ? '⚔ FIGHT' : '🤝 CO-OP'} · ${netg.role === 'host' ? 1 + netg.peers.size : Math.max(2, (netg.roster || []).length)}`; if (ce.textContent !== t) ce.textContent = t; } }
       { const hb = wbar.querySelector('[data-w="heat"]'); if (hb) hb.classList.toggle('pg-lock', thermal); }
       if (thermal && !(screen === 'fly' && mode.id === 'war')) warThermal(false);
       const showMap = !!(war && war.mapOpen && screen === 'fly');
