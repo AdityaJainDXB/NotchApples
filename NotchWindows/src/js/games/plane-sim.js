@@ -4798,7 +4798,9 @@
     }
 
     // ---- starting a flight
+    let howOpen = false;
     function start() {
+      write('howseen_' + mode.id, true); howOpen = false;
       if (mode.id === 'war') { plane = PLANES.find((p) => p.id === (warVeh === 'tank' || warVeh === 'soldier' ? 'f16' : warVeh === 'heli' ? 'ah64' : warVeh)) || PLANES[0]; useBattlefield(warField); }
       else { restorePlane(); useBattlefield(''); }
       flight = new Flight(plane); heliColl = 0;
@@ -8428,7 +8430,7 @@
         + soloBattleHtml() + `<h2>4 · Play with friends</h2>
         ${wifiCode ? `<div class="pg-row"><span class="pg-lab">This Wi-Fi</span><b style="letter-spacing:.14em;font-size:15px">${wifiCode}</b><span class="pg-hint">Everyone on this Wi-Fi gets this same code: the first to press Host opens the game, the others press Join. (Online already puts everyone in one open game.)</span></div>` : ''}
         <div class="pg-row"><button data-nethost class="pg-go">Host a game</button><span class="pg-hint">or join one:</span><input data-netcode maxlength="8" placeholder="Room code" style="width:110px;text-transform:uppercase" value="${escapeHtml(joinDraft)}"><button data-netjoin>Join</button></div>
-        <div class="pg-hint" style="margin-top:4px">The host gets a 6-letter code to share. It works on the same Wi-Fi or far apart, and Mac and Windows can play together. You fight on the same battlefield as everyone else: together against the computer (Co-op) or against each other (Fight). The people in the room can see your name, your vehicle and where you are.</div>`;
+        <div class="pg-hint" style="margin-top:4px">Host a private game and share its 6-letter code, or just press Start to join an open one.</div>`;
     }
     /// The waiting room: the code, who is here, and what the match will be (the host chooses; the others vote).
     function lobbyHtml() {
@@ -8529,9 +8531,9 @@
           ${weatherPanel()}
 `;
         const modesHtml = `<h2>What do you want to play?</h2><div class="pg-modes">${MODES.map((m) => `<button class="pg-mode ${m === mode ? 'pg-on' : ''}" data-mode="${m.id}">${m.icon} ${m.name}<small>${m.desc}</small></button>`).join('')}</div>`;
-        body = modesHtml + (mode.id === 'war' ? battleHtml() : setupHtml) + `          <div class="pg-howto"><div class="pg-ctitle">How to play ${mode.name}</div>${ctlHtml(mode.id, true)}<div class="pg-hint" style="margin-top:5px">During a flight, press <kbd>?</kbd> or click the round <b>?</b> button to see this again, with what each control does.</div></div>
+        body = modesHtml + (mode.id === 'war' ? battleHtml() : setupHtml) + (read('howseen_' + mode.id, false) && !howOpen ? `          <div class="pg-row" style="margin-top:8px"><button data-howtoggle>❓ How to play ${mode.name}</button></div>` : `          <div class="pg-howto"><div class="pg-ctitle">How to play ${mode.name}${read('howseen_' + mode.id, false) ? ' <button data-howtoggle style="float:right;font-size:11px">Hide</button>' : ''}</div>${ctlHtml(mode.id, true)}<div class="pg-hint" style="margin-top:5px">During a flight, press <kbd>?</kbd> or click the round <b>?</b> button to see this again, with what each control does.</div></div>`) + `
           <div class="pg-row" style="margin-top:10px">${mode.id === 'war' && netg && netg.role === 'client' ? '<span class="pg-hint">Waiting for the host to start…</span>' : `<button class="pg-go" data-a="start">${mode.id === 'war' ? (netg ? '⚔️ Start the battle for everyone (Enter)' : '⚔️ Start the battle (Enter)') : '✈️ Take off (Enter)'}</button>`}
-            <button data-a="fullscreen" title="Open the Plane game edge to edge. Press Escape or F11 to leave">⛶ Full screen (F11)</button>
+            ${(document.fullscreenEnabled || document.webkitFullscreenEnabled) ? '<button data-a="fullscreen" title="Open the Plane game edge to edge. Press Escape or F11 to leave">⛶ Full screen (F11)</button>' : ''}
             <span class="pg-hint">Best: ${(() => { const b = read(`board.${mode.id}`, [])[0]; return b && mode.id !== 'free' ? `${fmtScore(mode, b.score)} by ${escapeHtml(b.name)}` : '—'; })()}</span></div>`;
       } else if (menuTab === 'board') {
         const scopes = `<div class="pg-row"><button data-scope="local" class="${boardScope === 'local' ? 'pg-on' : ''}">This computer</button><button data-scope="world" class="${boardScope === 'world' ? 'pg-on' : ''}">🌍 World</button>${boardScope === 'world' ? `<button data-period="all" class="${boardPeriod === 'all' ? 'pg-on' : ''}">All time</button><button data-period="week" class="${boardPeriod === 'week' ? 'pg-on' : ''}">This week</button>` : ''}</div>`;
@@ -8633,6 +8635,7 @@
       };
       ui.querySelectorAll('[data-place]').forEach((n) => n.onkeydown = (e) => { e.stopPropagation(); if (e.key === 'Enter') { const v = n.value.trim(); if (v) goPlace(() => lookupPlace(v)); } });
       ui.querySelectorAll('[data-warveh]').forEach((n) => n.onclick = () => { warVeh = n.dataset.warveh; write('warveh', warVeh); if (netg) { if (netg.role === 'host') netSendLobby(); else netHello(); } renderUI(); });
+      ui.querySelectorAll('[data-howtoggle]').forEach((n) => n.onclick = () => { howOpen = !howOpen; renderUI(); });
       ui.querySelectorAll('[data-warname]').forEach((n) => { n.oninput = () => { playerName = n.value.trim().slice(0, 14); write('name', playerName); }; n.onkeydown = (e) => { e.stopPropagation(); if (e.key === 'Enter') onStartPress('start'); }; });
       ui.querySelectorAll('[data-warplay]').forEach((n) => n.onclick = () => { warPlay = n.dataset.warplay; write('warplay', warPlay); renderUI(); });
       ui.querySelectorAll('[data-nethost]').forEach((n) => n.onclick = () => { netOpen('host', wifiCode || NET.newCode()); if (wifiCode && netg) netg.wifi = true; renderUI(); });
