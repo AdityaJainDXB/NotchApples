@@ -72,7 +72,7 @@ Pick your computer. Both buttons start the download straight away. The Mac link 
   </tr>
   <tr>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.0.100</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.0.101</b></a>
     </td>
     <td align="center">
       <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 1.96.0 BETA</b></a>
@@ -233,6 +233,10 @@ All screenshots use sample data.
 ## What's new
 
 > **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is still in the repository's tags.
+
+### Mac 2.0.101 · Windows 1.100.0 BETA · 21 October 2026 · Plane game: the sound really stops
+
+- Fixed the plane game's sound that would not stop: the Sound button now silences everything (engine, warnings and spoken calls) and turns it back on properly, and closing the notch, leaving the game or hiding the window stops all sound too, including the spoken warnings that kept going in shared battles that run in the background. The old mute only set a volume that the engine sound then glided back up.
 
 ### Mac 2.0.100 · Windows 1.99.0 BETA · 21 October 2026 · Battle: flying trees and wildfire
 

@@ -1,0 +1,3 @@
+**Plane game: the sound really stops**
+
+- Fixed the plane game's sound that would not stop: the Sound button now silences everything (engine, warnings and spoken calls) and turns it back on properly, and closing the notch, leaving the game or hiding the window stops all sound too, including the spoken warnings that kept going in shared battles that run in the background. The old mute only set a volume that the engine sound then glided back up.

@@ -20,6 +20,9 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.0.101", date: "21 October 2026", headline: "Plane game: the sound really stops", items: [
+            "Fixed the plane game's sound that would not stop: the Sound button now silences everything (engine, warnings and spoken calls) and turns it back on properly, and closing the notch, leaving the game or hiding the window stops all sound too, including the spoken warnings that kept going in shared battles that run in the background. The old mute only set a volume that the engine sound then glided back up.",
+        ]),
         ReleaseNote(version: "2.0.100", date: "21 October 2026", headline: "Battle: flying trees and wildfire", items: [
             "Battle explosions are now dramatic: a missile, bomb, rocket, shell, grenade or a burning depot throws the trees near its middle into the air (they tumble and some are on fire, and a flaming one can set the ground where it lands alight), and sets trees further out on fire.",
             "Burning trees give off flames and smoke for 9 to 16 seconds and then fall, and fire jumps from tree to tree, so a wildfire can spread through a wood after a missile lands close to it. On foot, standing next to a burning tree hurts.",
