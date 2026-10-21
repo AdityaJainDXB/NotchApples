@@ -20,6 +20,10 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.0.86", date: "21 October 2026", headline: "Battle: parachute start with a map, and a military van", items: [
+            "Soldier battles now start with a parachute jump from the bus: a map shows the battlefield, you click where to land (25 seconds, then it jumps for you), float down and steer a little with W A S D.",
+            "A military van waits beside you when you land. Walk up and press E to get in: W/S drive, A/D steer, Shift boost (up to about 115 km/h), E to get out when stopped. Other players see your van, parked or driving.",
+        ]),
         ReleaseNote(version: "2.0.85", date: "21 October 2026", headline: "Battle: land a helicopter, get out, and RPGs", items: [
             "New Helicopter vehicle (an Apache): land and stop, press E to step out as a soldier, and press E beside it to climb back in. Other players see it parked. If your soldier is lost you get a new helicopter in the same wave.",
             "Soldiers now carry an RPG: press 2 for the RPG (a big rocket that kills a soldier outright, 4 at a time, 2 more each wave) and 1 for the rifle.",

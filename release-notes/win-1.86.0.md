@@ -1,0 +1,4 @@
+**Battle: parachute start with a map, and a military van**
+
+- Soldier battles now start with a parachute jump from the bus: a map shows the battlefield, you click where to land (25 seconds, then it jumps for you), float down and steer a little with W A S D.
+- A military van waits beside you when you land. Walk up and press E to get in: W/S drive, A/D steer, Shift boost (up to about 115 km/h), E to get out when stopped. Other players see your van, parked or driving.

@@ -72,7 +72,7 @@ Pick your computer. Both buttons start the download straight away. The Mac link 
   </tr>
   <tr>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.0.85</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.0.86</b></a>
     </td>
     <td align="center">
       <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 1.82.0 BETA</b></a>
@@ -233,6 +233,11 @@ All screenshots use sample data.
 ## What's new
 
 > **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is still in the repository's tags.
+
+### Mac 2.0.86 · Windows 1.86.0 BETA · 21 October 2026 · Battle: parachute start with a map, and a military van
+
+- Soldier battles now start with a parachute jump from the bus: a map shows the battlefield, you click where to land (25 seconds, then it jumps for you), float down and steer a little with W A S D.
+- A military van waits beside you when you land. Walk up and press E to get in: W/S drive, A/D steer, Shift boost (up to about 115 km/h), E to get out when stopped. Other players see your van, parked or driving.
 
 ### Mac 2.0.85 · Windows 1.85.0 BETA · 21 October 2026 · 🚁 Battle: land a helicopter, get out, and RPGs
 
