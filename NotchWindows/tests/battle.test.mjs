@@ -19,7 +19,7 @@ test('each battlefield is flat in the middle, has a low rim of hills (or sea) ro
       assert.ok(T.arenaHeight(a, a.R * 0.5, 0) > 3, `${a.id} has dry land`);
     } else {
       const lo = Math.min(...inner), hi = Math.max(...inner);
-      assert.ok(hi - lo < a.rough * 2 + 8, `${a.id} is level: ${lo.toFixed(1)} to ${hi.toFixed(1)}`);
+      assert.ok(hi - lo < a.rough * 2 + (a.hills || 0) * 1.5 + 8, `${a.id} is level: ${lo.toFixed(1)} to ${hi.toFixed(1)}`);
       assert.ok(lo > 0, `${a.id} has no water inside`);
       assert.ok(T.arenaHeight(a, 0, a.R * 1.5) > a.base + 20, `${a.id} has a rim of hills`);
       assert.ok(T.arenaHeight(a, 0, a.R * 3) < 0, `${a.id} has sea beyond the rim`);
@@ -37,7 +37,7 @@ test('a battlefield world has none of the valley\'s runway, towns and bridge, an
     const built = w1.colliders.filter((c) => c.kind !== 'tree');
     assert.ok(built.length > 5 && built.length < 120, `only the battlefield's own bases and rocks, no airfield or town (${built.length})`);
     assert.ok(!built.some((c) => ['hangar', 'tower', 'mast', 'bridge'].includes(c.kind)), 'no hangars, towers, masts or bridge');
-    assert.ok(Math.abs(T.groundAt(w1, 20, -300) - a.base) < 8, 'the old runway is gone: just level ground');
+    assert.ok(Math.abs(T.groundAt(w1, 20, -300) - a.base) < 8 + a.hills * 1.2, 'the old runway is gone: just ground (rolling hills, no runway)');
   } finally { T.setArena(null); }
 });
 
@@ -195,5 +195,26 @@ test('arcade handling: turn and climb rates, quick turn, no stall, no wing loss 
     for (let i = 0; i < 180; i++) fl.step(1 / 60, { roll: 0, pitch: 0, yaw: 0, throttle: 0.7 }, w);
     assert.ok(Math.abs(T.wrapPi(fl.heading - Math.PI)) < 0.35, `quick turn ended ${(fl.heading * 57.3).toFixed(0)} deg`);
     assert.ok(!fl.quickTurn(1), 'cooldown');
+  } finally { T.setArena(null); }
+});
+
+test('a tree that is hit breaks: it stops being solid, leaves the picture and is reported, and a sturdy plane flies on through it', () => {
+  const a = T.ARENAS.find((x) => x.id === 'plains'); T.setArena(a);
+  try {
+    const w = T.makeWorld(T.REGIONS[0], a); T.primeObjects(w, 0, 0, 900);
+    const tree = w.colliders.find((c) => c.kind === 'tree'); assert.ok(tree, 'there are trees');
+    const mid = [(tree.min[0] + tree.max[0]) / 2, (tree.min[1] + tree.max[1]) / 2, (tree.min[2] + tree.max[2]) / 2];
+    assert.equal(T.hitObject(w, mid), tree);
+    const before = w.colliders.length;
+    assert.ok(T.breakTree(w, tree)); assert.ok(!T.breakTree(w, tree), 'only once');
+    assert.equal(w.colliders.length, before - 1); assert.notEqual(T.hitObject(w, mid), tree);
+    assert.equal(w.felled.length, 1); assert.equal(w.broken, 1);
+    // A sturdy plane's wingtip through another tree breaks it and slows the plane, with no crash.
+    const t2 = w.colliders.find((c) => c.kind === 'tree' && c !== tree);
+    const P = G.PLANES.find((p) => p.id === 'f16'), fl = new G.Flight(P);
+    fl.reset([(t2.min[0] + t2.max[0]) / 2, (t2.min[1] + t2.max[1]) / 2 + 0, (t2.min[2] + t2.max[2]) / 2 + 40], 0, P.cruise, false); fl.sturdy = true;
+    for (let i = 0; i < 90 && !fl.crashed; i++) fl.step(1 / 60, { pitch: 0, roll: 0, yaw: 0, throttle: 0.7 }, w);
+    assert.ok(!fl.crashed, 'a sturdy plane does not crash into a tree');
+    assert.ok(w.felled.length >= 2 || T.hitObject(w, [(t2.min[0] + t2.max[0]) / 2, (t2.min[1] + t2.max[1]) / 2, (t2.min[2] + t2.max[2]) / 2]) !== t2, 'the tree it ran into is gone');
   } finally { T.setArena(null); }
 });

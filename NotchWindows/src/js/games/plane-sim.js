@@ -1457,9 +1457,9 @@
   // to fight in, so a battlefield replaces all of its ground. Everything is centred on (0, 0); the players' side is the
   // south (+z) and the enemy's the north (-z).
   const ARENAS = [
-    { id: 'plains', name: 'Green Plains', blurb: 'Flat open grassland with a few woods. The easiest place to fly and to drive.', R: 3600, base: 9, rough: 3, rim: 130, desert: false },
-    { id: 'dunes', name: 'Desert Dunes', blurb: 'Rolling sand dunes and rocks. Tanks hide behind the dunes; planes get a clear view.', R: 3600, base: 14, rough: 15, rim: 180, desert: true },
-    { id: 'island', name: 'Island Fortress', blurb: 'A round island with a fortress on the hill in the middle, in open sea.', R: 3600, base: 12, rough: 4, rim: 0, desert: false, island: true },
+    { id: 'plains', name: 'Green Plains', blurb: 'Open grassland with gentle rolling hills and a few woods. The easiest place to fly and to drive.', R: 3600, base: 30, rough: 3, hills: 34, rim: 130, desert: false },
+    { id: 'dunes', name: 'Desert Dunes', blurb: 'Rolling sand dunes and rocks. Tanks hide behind the dunes; planes get a clear view.', R: 3600, base: 26, rough: 15, hills: 22, rim: 180, desert: true },
+    { id: 'island', name: 'Island Fortress', blurb: 'A round island with a fortress on the hill in the middle, in open sea.', R: 3600, base: 14, rough: 4, hills: 14, rim: 0, desert: false, island: true },
   ];
   let ARENA = null;
   function arenaHeight(a, x, z) {
@@ -1468,13 +1468,14 @@
       const wob = (fbm(x / 520 + 7, z / 520 + 2, 2) - 0.5) * 340;
       const land = 1 - smooth(a.R * 0.84, a.R * 1.02, d + wob);
       const hill = 44 * (1 - smooth(100, 700, d));
-      const h = Math.max(a.base + hill + (fbm(x / 260 + 1, z / 260 + 5, 2) - 0.5) * a.rough, 4);
+      const h = Math.max(a.base + hill + (fbm(x / 260 + 1, z / 260 + 5, 2) - 0.5) * a.rough + (a.hills ? (fbm(x / 600 + 5, z / 600 + 3, 3) - 0.5) * a.hills * 1.4 : 0), 4);
       return -45 + (h + 45) * land;
     }
     const wave = a.desert ? (Math.sin(x / 170 + fbm(x / 420, z / 420, 2) * 5) * Math.cos(z / 210 + 1) * 0.55 + fbm(x / 250, z / 250, 3) - 0.4) * a.rough
       : (fbm(x / 600 + 3, z / 600 + 9, 3) - 0.45) * a.rough;
     const ring = smooth(a.R * 1.04, a.R * 1.55, d) * a.rim * (0.6 + 0.8 * fbm(x / 800 + 4, z / 800 + 1, 3));   // a low rim of hills round the edge
-    const h = a.base + wave + ring;
+    const rolling = a.hills ? (fbm(x / 950 + 11, z / 950 + 5, 3) - 0.5) * a.hills * 1.6 + (fbm(x / 380 + 2, z / 380 + 8, 2) - 0.5) * a.hills * 0.5 : 0;      // long, gentle rolling hills
+    const h = a.base + wave + rolling + ring;
     const sea = smooth(a.R * 2.1, a.R * 2.8, d);
     return h + (-45 - h) * sea;
   }
@@ -1677,10 +1678,12 @@
   /// Register a solid box with the coarse grid the plane is tested against.
   function addSolid(world, min, max, kind) {
     const c = { min, max, kind };
+    c.cb = null;
     world.colliders.push(c);
     for (let gx = Math.floor(min[0] / 200); gx <= Math.floor(max[0] / 200); gx++) for (let gz = Math.floor(min[2] / 200); gz <= Math.floor(max[2] / 200); gz++) {
       const k = `${gx},${gz}`; if (!world.grid.has(k)) world.grid.set(k, []); world.grid.get(k).push(c);
     }
+    return c;
   }
 
   // ---- what grows and is painted where
@@ -1812,6 +1815,7 @@
     c.obj = true;
     const rr = rng((((c.ci + 1) * 73856093) ^ ((c.cj + 1) * 19349663)) + 4242), near = new Builder(), far = new Builder();
     const step = 26, n = Math.floor(TCS / step);
+    c.treeList = []; c.bushList = [];
     for (let a = 0; a < n; a++) for (let q = 0; q < n; q++) {
       const x = c.x0 + (a + rr()) * step, z = c.z0 + (q + rr()) * step, roll = rr(), y = terrainAt(world, x, z);
       if (y < WATER + 1.5 || y > 760) continue;
@@ -1821,18 +1825,42 @@
       const nrm = normalAt(world, x, z, 6), fp = forestP(x, z, y, nrm[1]) * (world.desert && y < 80 ? 0.06 : 1);
       if (!(roll < fp * 0.8 || (nrm[1] > 0.93 && roll > 0.994))) continue;
       const conifer = rr() < smooth(80, 420, y + (vnoise(x / 220, z / 220) - 0.5) * 260) + 0.08, h = conifer ? 12 + rr() * 12 : 9 + rr() * 9, w = h * 0.22;
-      plantTree(near, far, x, y, z, h, conifer, rr);
-      addSolid(world, [x - w, y - 1, z - w], [x + w, y + h, z + w], 'tree');
+      const seed = Math.floor(rr() * 4294967296);
+      plantTree(near, far, x, y, z, h, conifer, rng(seed));
+      c.treeList.push({ x, y, z, h, conifer, seed, solid: addSolid(world, [x - w, y - 1, z - w], [x + w, y + h, z + w], 'tree') });
     }
     // Hedgerows along the field boundaries drawn by the ground shader (160 x 224 m fields).
     const bush = (x, z) => {
       const y = terrainAt(world, x, z), ny = normalAt(world, x, z, 6)[1];
-      if (farmAt(world, x, z, y, ny) > 0.55 && rr() > 0.2) near.cone([x, y - 0.3, z], 2.2 + rr() * 0.8, 0, 2.4 + rr(), TREE_COL.hedge, 4);
+      if (farmAt(world, x, z, y, ny) > 0.55 && rr() > 0.2) { const br = 2.2 + rr() * 0.8, bh = 2.4 + rr(); c.bushList.push([x, y - 0.3, z, br, bh]); near.cone([x, y - 0.3, z], br, 0, bh, TREE_COL.hedge, 4); }
     };
     for (let lx = Math.ceil(c.x0 / 160) * 160; lx < c.x0 + TCS; lx += 160) for (let z = c.z0 + rr() * 22; z < c.z0 + TCS; z += 22) bush(lx, z);
     for (let lz = Math.ceil(c.z0 / 224) * 224; lz < c.z0 + TCS; lz += 224) for (let x = c.x0 + rr() * 22; x < c.x0 + TCS; x += 22) bush(x, lz);
     c.near = near.d.length ? new Float32Array(near.d) : null;
     c.far = far.d.length ? new Float32Array(far.d) : null;
+  }
+  /// A tree that is hit (by a plane, a tank or a van) breaks: it stops being solid and disappears from the picture, and the game
+  /// is told where it stood (world.felled) to throw leaves and make the crack.
+  function breakTree(world, solid) {
+    if (!solid || solid.broken || solid.kind !== 'tree') return false;
+    solid.broken = true; world.broken++;
+    world.colliders = world.colliders.filter((q) => q !== solid);
+    for (let gx = Math.floor(solid.min[0] / 200); gx <= Math.floor(solid.max[0] / 200); gx++) for (let gz = Math.floor(solid.min[2] / 200); gz <= Math.floor(solid.max[2] / 200); gz++) {
+      const l = world.grid.get(`${gx},${gz}`); if (l) { const i = l.indexOf(solid); if (i >= 0) l.splice(i, 1); }
+    }
+    const cx = (solid.min[0] + solid.max[0]) / 2, cz = (solid.min[2] + solid.max[2]) / 2;
+    const ci = Math.floor((cx + WORLD) / TCS), cj = Math.floor((cz + WORLD) / TCS);
+    const c = ci >= 0 && cj >= 0 && ci < TNC && cj < TNC ? chunkOf(world, ci, cj) : null;
+    if (c && c.treeList) {
+      const i = c.treeList.findIndex((t) => t.solid === solid), t = c.treeList[i];
+      if (i >= 0) { c.treeList.splice(i, 1); world.felled.push([t.x, t.y, t.z, t.h]); }
+      const near = new Builder(), far = new Builder();
+      for (const q of c.treeList) plantTree(near, far, q.x, q.y, q.z, q.h, q.conifer, rng(q.seed));
+      for (const b of c.bushList) near.cone([b[0], b[1], b[2]], b[3], 0, b[4], TREE_COL.hedge, 4);
+      c.near = near.d.length ? new Float32Array(near.d) : null; c.far = far.d.length ? new Float32Array(far.d) : null;
+      c.treesDirty = true;
+    }
+    return true;
   }
   /// Plant every chunk within `rad` metres of (x, z) (hitObject does this for whatever the plane is about to fly into).
   function primeObjects(world, x, z, rad) {
@@ -1889,7 +1917,7 @@
   function makeWorld(region = REGIONS[0], arena = null) {
     const r = rng(7), b = new Builder(), lights = new Builder(), lightHalo = new Builder(), ground = new Builder(), decal = new Builder(), marks = new Builder(), beacon = new Builder(), lampB = new Builder();
     { const lbox = lights.box.bind(lights); lights.box = (c, sz, col) => { lbox(c, sz, col); blob(lightHalo, c, 2.3, col); }; }   // every light gets a soft halo that shows at night
-    const world = { chunks: new Array(TNC * TNC), colliders: [], grid: new Map(), turbines: [], keep: [[LM[0], LM[1], 460]], papi: [], socks: [], wind: null, lighthouse: null, region: region.id, desert: !!region.desert || !!(arena && arena.desert), arena: arena ? arena.id : '' };
+    const world = { chunks: new Array(TNC * TNC), colliders: [], grid: new Map(), felled: [], broken: 0, turbines: [], keep: [[LM[0], LM[1], 460]], papi: [], socks: [], wind: null, lighthouse: null, region: region.id, desert: !!region.desert || !!(arena && arena.desert), arena: arena ? arena.id : '' };
     const gAt = (x, z) => groundAt(world, x, z);
     const solid = (min, max, kind) => addSolid(world, min, max, kind);
     const block = (c, s, col, kind) => { b.box(c, s, col); if (kind) solid(sub(c, mul(s, 0.5)), add(c, mul(s, 0.5)), kind); };
@@ -2406,6 +2434,7 @@
         if (d < 6800 && !c.lod[2]) ensureMesh(c, 2);
         if (d < 3600 && !c.lod[1]) ensureMesh(c, 1);
         if (d < 1700 && !c.lod[0]) ensureMesh(c, 0);
+        if (c.treesDirty && c.treesGL) { if (c.treesGL.near) gl.deleteBuffer(c.treesGL.near.buf); if (c.treesGL.far) gl.deleteBuffer(c.treesGL.far.buf); c.treesGL = null; c.treesDirty = false; }
         if (d < 2400 && !c.treesGL) ensureTrees(c);
       }
     }
@@ -3266,9 +3295,11 @@
         const obj = hitObject(world, p);
         if (!obj) continue;
         if (part === 'L' || part === 'R') {
+          if (obj.kind === 'tree') breakTree(world, obj);
           if (this.sturdy) { this.events.push({ type: 'sturdyhit', cause: obj.kind }); this.vel = mul(this.vel, 0.72); }
           else { this.loseWing(part, obj.kind); this.vel = mul(this.vel, 0.8); }
         }
+        else if (this.sturdy && obj.kind === 'tree') { breakTree(world, obj); this.events.push({ type: 'sturdyhit', cause: 'tree' }); this.vel = mul(this.vel, 0.6); }
         else {
           const hd = V > 1 ? norm([this.vel[0], 0, this.vel[2]]) : this.axes().f;
           this.crash(obj.kind, { object: true, n: [-hd[0], 0, -hd[2]], vi: V * 0.85, vt: 0 }); return true;
@@ -4073,7 +4104,9 @@
       const step = this.speed * dt, nx = this.pos[0] + Math.sin(this.heading) * step, nz = this.pos[2] - Math.cos(this.heading) * step;
       const here = groundAt(world, this.pos[0], this.pos[2]), there = groundAt(world, nx, nz);
       const probe = [nx + Math.sin(this.heading) * Math.sign(step || 1) * 3.2, there + 1.2, nz - Math.cos(this.heading) * Math.sign(step || 1) * 3.2];
-      const blocked = there < WATER + 0.8 || Math.abs(there - here) > Math.abs(step) * 0.9 + 0.02 || Math.hypot(nx, nz) > limit || !!hitObject(world, probe);
+      const ho = hitObject(world, probe);
+      if (ho && ho.kind === 'tree') { breakTree(world, ho); this.speed *= 0.7; }      // a tank or van drives through a tree and it breaks
+      const blocked = there < WATER + 0.8 || Math.abs(there - here) > Math.abs(step) * 0.9 + 0.02 || Math.hypot(nx, nz) > limit || (!!ho && ho.kind !== 'tree');
       if (blocked && Math.abs(step) > 1e-6) this.speed = 0;
       else { this.pos[0] = nx; this.pos[2] = nz; }
       const y = groundAt(world, this.pos[0], this.pos[2]);
@@ -5470,6 +5503,7 @@
 
     // ---- starting and the waves
     function warStart() {
+      if (W.broken) { const keep = worldArena; worldArena = ''; useBattlefield(keep); }      // trees broken in the last battle grow back
       const arena = ARENAS.find((a) => a.id === warField) || ARENAS[0], tank = warVeh === 'tank' || warVeh === 'soldier', foot = warVeh === 'soldier', grows = tank || plane.rotor, R = grows ? arena.R * WAR_R0 : arena.R;
       const L = foot ? { gun: SOLDIER.reserve, bombs: SOLDIER.grenades, missiles: 0, flares: 0, hp: SOLDIER.hp, stick: 0.5, shells: 0, rpg: SOLDIER.rpg } : tank ? { gun: 900, bombs: 0, missiles: 0, flares: 0, hp: TANK.hp, stick: 0.2, shells: 40 } : { ...warLoadout(plane), shells: 0 }, d = WAR_DIFF[warLevel()];
       const shared = netg && netg.running && netg.start, mine = shared ? netg.start.players.find((q) => q.id === netMyId) : null;
@@ -7331,6 +7365,12 @@
     }
     const netRadius = (p) => (p.foot ? 1.0 : p.tank ? 4.6 : 8);
     function update(dt) {
+      if (W.felled && W.felled.length) {         // trees that broke: leaves and a crack
+        for (const t of W.felled.splice(0)) {
+          for (let i = 0; i < 14; i++) puff('leaf', [t[0], t[1] + t[3] * 0.6, t[2]], jitter(11));
+          if (len(sub([t[0], t[1], t[2]], flight.pos)) < 700) noise(0.18, 0.22, 260);
+        }
+      }
       if (toastTimer > 0) { toastTimer -= dt; if (toastTimer <= 0) toastEl.style.opacity = 0; }
       if (screen !== 'fly' || paused) return;
       if (plane.rotor) {
@@ -8729,5 +8769,5 @@
     };
   }
 
-  window.NotchPlaneGame = { mount, PLANES, MODES, CHALLENGES, Flight, _test: { LOOT_RARITY, LOOT_KINDS, lootRoll, lootAmount, SOLDIER, SoldierBody, riflemanError, ARCADE_RATES, NET, WAR, TANK, TankBody, tankAimAt, planeAssist, ARENAS, arenaHeight, setArena: (a) => { ARENA = a; }, wrapPi, attitudeQ, procedure, atcStep, applyEnv, ENV, ilsAt, RUNWAY_ENDS, AP_SIGN, APRONS, buildPlane, REGIONS, nearestRegion, matchRegion, raCallout, gpwsWarnings, groundAt, makeWorld, qheading, qrot, hitObject, terrainAt, surfaceAt, roughnessAt, normalAt } };
+  window.NotchPlaneGame = { mount, PLANES, MODES, CHALLENGES, Flight, _test: { breakTree, primeObjects, LOOT_RARITY, LOOT_KINDS, lootRoll, lootAmount, SOLDIER, SoldierBody, riflemanError, ARCADE_RATES, NET, WAR, TANK, TankBody, tankAimAt, planeAssist, ARENAS, arenaHeight, setArena: (a) => { ARENA = a; }, wrapPi, attitudeQ, procedure, atcStep, applyEnv, ENV, ilsAt, RUNWAY_ENDS, AP_SIGN, APRONS, buildPlane, REGIONS, nearestRegion, matchRegion, raCallout, gpwsWarnings, groundAt, makeWorld, qheading, qrot, hitObject, terrainAt, surfaceAt, roughnessAt, normalAt } };
 })();
