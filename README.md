@@ -234,9 +234,10 @@ All screenshots use sample data.
 
 > **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is still in the repository's tags.
 
-### Mac 2.0.84 · 21 October 2026 · 🎨 Notch popups follow your accent colour
+### Mac 2.0.84 · Windows 1.84.0 BETA · 21 October 2026 · 🎨 Notch popups follow your accent colour; Windows Browser no longer freezes the notch
 
 - The calendar countdown ("French in 10m"), message popups and Clipboard Link popups beside the closed notch now use the accent colour you chose in Settings → Appearance instead of a fixed teal.
+- Windows: opening a page in the Browser tab no longer freezes or crashes the notch. The window is now created off the main thread, where Windows used to deadlock. The lyrics overlay had the same flaw and is fixed too.
 
 ### Mac 2.0.83 · Windows 1.83.0 BETA · 21 October 2026 · 🌐 Battle: online by default, exact bombs and a lock button
 

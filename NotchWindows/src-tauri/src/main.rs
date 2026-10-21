@@ -308,9 +308,10 @@ async fn pick_file(app: AppHandle) -> Result<Option<String>, String> {
 }
 
 /// Opens a page in a separate always-on-top browser window. The notch panel is
-/// too short to read a web page in.
+/// too short to read a web page in. Async on purpose: building a window inside a synchronous command
+/// deadlocks on Windows (the notch freezes while the page's window is created).
 #[tauri::command]
-fn open_browser(app: AppHandle, url: String) -> Result<(), String> {
+async fn open_browser(app: AppHandle, url: String) -> Result<(), String> {
     let parsed: tauri::Url = url.parse().map_err(|_| "That doesn't look like a web address.")?;
     if !matches!(parsed.scheme(), "http" | "https") {
         return Err("Only web pages can be opened here.".into());
@@ -334,7 +335,7 @@ fn open_browser(app: AppHandle, url: String) -> Result<(), String> {
 /// Shows the lyrics overlay: a transparent, click-through window pinned to the left or right edge of the main
 /// screen, vertically centred. Created the first time it is needed (see src/lyrics-overlay.html).
 #[tauri::command]
-fn lyrics_overlay_show(app: AppHandle, side: String) -> Result<(), String> {
+async fn lyrics_overlay_show(app: AppHandle, side: String) -> Result<(), String> {
     const W: f64 = 360.0;
     const H: f64 = 440.0;
     const MARGIN: f64 = 12.0;
