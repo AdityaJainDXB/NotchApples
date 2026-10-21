@@ -20,6 +20,9 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.0.95", date: "21 October 2026", headline: "Battle: hold R on foot to respawn", items: [
+            "On foot, tap R to reload and hold R for 1.5 seconds to respawn in the same wave (a progress message shows while you hold). Same score, same wave, nothing restarts for anyone else.",
+        ]),
         ReleaseNote(version: "2.0.94", date: "21 October 2026", headline: "Battle: open games start as Co-op", items: [
             "Open games now start as Co-op, so a friend who joins is on your team (green) and not an enemy. Before, a game inherited whatever the host had picked last, and if that was Fight every other player was an enemy.",
             "The room bar now says which it is: \"CO-OP: all one team\" or \"FIGHT: players are enemies\", with the room code and how many are playing. Vote with U to switch.",
