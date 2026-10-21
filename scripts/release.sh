@@ -6,6 +6,12 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 TITLE="$1"; NOTES="$2"; MSG="$3"
 VERSION=$(grep 'MARKETING_VERSION' project.yml | head -1 | sed -E 's/.*"(.*)".*/\1/')
+# Mac versions stay readable: the last number rolls over into the next middle number before it reaches 100 (see docs/VERSIONING.md).
+PATCH=${VERSION##*.}
+if [ "$PATCH" -ge 100 ]; then
+  MID=${VERSION%.*}; MAJ=${MID%.*}; MIN=${MID##*.}
+  echo "Version $VERSION is past the rollover: 2.0.100 is 2.1.0, so $VERSION should be $MAJ.$((MIN + PATCH / 100)).$((PATCH % 100)). Edit MARKETING_VERSION in project.yml (and the notes, README and WhatsNew) first."; exit 1
+fi
 export REQUIRE_PREMIUM=1     # an official release must contain the Ultimate modules (private repository)
 scripts/build_dmg.sh >/dev/null 2>&1 || true
 DMG="dist/NotchApple-$VERSION.dmg"
