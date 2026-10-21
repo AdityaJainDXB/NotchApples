@@ -218,3 +218,17 @@ test('a tree that is hit breaks: it stops being solid, leaves the picture and is
     assert.ok(w.felled.length >= 2 || T.hitObject(w, [(t2.min[0] + t2.max[0]) / 2, (t2.min[1] + t2.max[1]) / 2, (t2.min[2] + t2.max[2]) / 2]) !== t2, 'the tree it ran into is gone');
   } finally { T.setArena(null); }
 });
+
+test('a tree another player broke can be found by its position and broken here too, and is told to nobody again', () => {
+  const a = T.ARENAS.find((x) => x.id === 'plains'); T.setArena(a);
+  try {
+    const w1 = T.makeWorld(T.REGIONS[0], a), w2 = T.makeWorld(T.REGIONS[0], a);
+    T.primeObjects(w1, 0, 0, 900);
+    const tree = w1.colliders.find((c) => c.kind === 'tree'), x = (tree.min[0] + tree.max[0]) / 2, z = (tree.min[2] + tree.max[2]) / 2;
+    assert.ok(T.breakTree(w1, tree)); assert.equal(w1.felled[0][4], false, 'a local break is reported to the others');
+    const twin = T.treeAt(w2, Math.round(x * 10) / 10, Math.round(z * 10) / 10);       // the position travels rounded to 0.1 m
+    assert.ok(twin, 'the same world has the same tree there');
+    assert.ok(T.breakTree(w2, twin, true)); assert.equal(w2.felled[0][4], true, 'a break learned from another player is not sent on');
+    assert.equal(T.treeAt(w2, x, z), null, 'it is gone');
+  } finally { T.setArena(null); }
+});

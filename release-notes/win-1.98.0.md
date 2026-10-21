@@ -3,3 +3,4 @@
 - Trees break when you hit them: a plane's wing or nose, a tank or a van that runs into a tree breaks it (leaves fly and there is a crack), and it is gone from the picture for the rest of the battle. A strong Battle plane slows down but flies on; trees grow back in the next battle.
 - The battlefields are no longer pancake flat: gentle rolling hills (up to about 40 m high, slopes of 5 to 10 degrees) so there are ridges to hide behind and to fly over, still easy for tanks and soldiers to cross.
 - Automatic flying with heavy planes (the B-52) banks a little less and rolls back the short way, which fixes a rare tumble into the ground.
+- In shared battles a broken tree breaks for everyone: when one player breaks a tree it falls on every other player's screen too, and players who join later see the trees that are already down.

@@ -1841,7 +1841,7 @@
   }
   /// A tree that is hit (by a plane, a tank or a van) breaks: it stops being solid and disappears from the picture, and the game
   /// is told where it stood (world.felled) to throw leaves and make the crack.
-  function breakTree(world, solid) {
+  function breakTree(world, solid, remote = false) {
     if (!solid || solid.broken || solid.kind !== 'tree') return false;
     solid.broken = true; world.broken++;
     world.colliders = world.colliders.filter((q) => q !== solid);
@@ -1853,7 +1853,7 @@
     const c = ci >= 0 && cj >= 0 && ci < TNC && cj < TNC ? chunkOf(world, ci, cj) : null;
     if (c && c.treeList) {
       const i = c.treeList.findIndex((t) => t.solid === solid), t = c.treeList[i];
-      if (i >= 0) { c.treeList.splice(i, 1); world.felled.push([t.x, t.y, t.z, t.h]); }
+      if (i >= 0) { c.treeList.splice(i, 1); world.felled.push([t.x, t.y, t.z, t.h, remote]); }
       const near = new Builder(), far = new Builder();
       for (const q of c.treeList) plantTree(near, far, q.x, q.y, q.z, q.h, q.conifer, rng(q.seed));
       for (const b of c.bushList) near.cone([b[0], b[1], b[2]], b[3], 0, b[4], TREE_COL.hedge, 4);
@@ -1861,6 +1861,12 @@
       c.treesDirty = true;
     }
     return true;
+  }
+  /// The tree standing at (x, z), if there is one (for a break that another player reported).
+  function treeAt(world, x, z) {
+    primeObjects(world, x, z, 60);
+    const list = world.grid.get(`${Math.floor(x / 200)},${Math.floor(z / 200)}`) || [];
+    return list.find((c) => c.kind === 'tree' && !c.broken && Math.abs((c.min[0] + c.max[0]) / 2 - x) < 1.6 && Math.abs((c.min[2] + c.max[2]) / 2 - z) < 1.6) || null;
   }
   /// Plant every chunk within `rad` metres of (x, z) (hitObject does this for whatever the plane is about to fly into).
   function primeObjects(world, x, z, rad) {
@@ -7069,7 +7075,7 @@
       netSend(msg);
       netBegin(msg);
     }
-    function netSendStartTo(id) { const players = netRoster().map((p, i) => ({ ...p, slot: i })); netSend({ t: 'start', cfg: netg.cfg, players, seed: 0, to: id, late: true }); if (war) netSendWave(); }
+    function netSendStartTo(id) { const players = netRoster().map((p, i) => ({ ...p, slot: i })); netSend({ t: 'start', cfg: netg.cfg, players, seed: 0, to: id, late: true }); if (war) { netSendWave(); if (war.net && war.net.treeLog && war.net.treeLog.length) netSend({ t: 'tl', to: id, L: war.net.treeLog.slice(-300) }); } }
     function netVoteCast(key, val) {
       if (!netg) return;
       if (netg.role === 'host') { netg.votes[netMyId] = { ...(netg.votes[netMyId] || {}), [key]: val }; netCountVotes(); }
@@ -7275,6 +7281,15 @@
           war.loot = war.loot.filter((q) => q !== l); lootSend(); netSend({ t: 'lx', id: l.id, w: m.p, k: l.k, r: l.r }); break;
         }
         case 'lx': { if (m.w === netMyId && LOOT_KINDS.some((q) => q.k === m.k) && Number.isInteger(m.r) && m.r >= 0 && m.r < 4) warApplyLoot(m.k, m.r); war.loot = war.loot.filter((q) => q.id !== m.id); break; }
+        case 'tb': {         // another player broke a tree: it breaks here too
+          if (!Number.isFinite(m.x) || !Number.isFinite(m.z)) break;
+          const tr = treeAt(W, m.x, m.z); if (tr) breakTree(W, tr, true); break;
+        }
+        case 'tl': {         // the trees already broken before you joined
+          if (m.to !== netMyId || !Array.isArray(m.L)) break;
+          for (const a of m.L.slice(0, 400)) if (Array.isArray(a) && Number.isFinite(a[0]) && Number.isFinite(a[1])) { const tr = treeAt(W, a[0], a[1]); if (tr) breakTree(W, tr, true); }
+          break;
+        }
         case 'vn': { const o = netOther(m.id); if (!o) break; o.van = m.on && okVec(m.p) && okVec(m.q, 4) ? { pos: m.p.slice(), q: m.q.slice() } : null; break; }
         case 'hl': { const o = netOther(m.id); if (!o) break; if (m.on && okVec(m.p) && okVec(m.q, 4) && PLANES.some((q) => q.id === m.k && q.rotor)) o.heli = { id: m.k, pos: m.p.slice(), q: m.q.slice() }; else o.heli = null; break; }
         case 'sh': { if (!okVec(m.p) || !okVec(m.v)) break; war.bullets.push({ owner: 'r', by: m.id, shell: true, pos: m.p.slice(), vel: m.v.slice(), t: 0, dmgAir: 90, dmgGround: 150, noNpc: !warAuth() }); break; }
@@ -7367,6 +7382,7 @@
     function update(dt) {
       if (W.felled && W.felled.length) {         // trees that broke: leaves and a crack
         for (const t of W.felled.splice(0)) {
+          if (war && war.net) { if (!t[4]) netSend({ t: 'tb', x: Math.round(t[0] * 10) / 10, z: Math.round(t[2] * 10) / 10 }); (war.net.treeLog || (war.net.treeLog = [])).push([Math.round(t[0] * 10) / 10, Math.round(t[2] * 10) / 10]); }
           for (let i = 0; i < 14; i++) puff('leaf', [t[0], t[1] + t[3] * 0.6, t[2]], jitter(11));
           if (len(sub([t[0], t[1], t[2]], flight.pos)) < 700) noise(0.18, 0.22, 260);
         }
@@ -8769,5 +8785,5 @@
     };
   }
 
-  window.NotchPlaneGame = { mount, PLANES, MODES, CHALLENGES, Flight, _test: { breakTree, primeObjects, LOOT_RARITY, LOOT_KINDS, lootRoll, lootAmount, SOLDIER, SoldierBody, riflemanError, ARCADE_RATES, NET, WAR, TANK, TankBody, tankAimAt, planeAssist, ARENAS, arenaHeight, setArena: (a) => { ARENA = a; }, wrapPi, attitudeQ, procedure, atcStep, applyEnv, ENV, ilsAt, RUNWAY_ENDS, AP_SIGN, APRONS, buildPlane, REGIONS, nearestRegion, matchRegion, raCallout, gpwsWarnings, groundAt, makeWorld, qheading, qrot, hitObject, terrainAt, surfaceAt, roughnessAt, normalAt } };
+  window.NotchPlaneGame = { mount, PLANES, MODES, CHALLENGES, Flight, _test: { breakTree, treeAt, primeObjects, LOOT_RARITY, LOOT_KINDS, lootRoll, lootAmount, SOLDIER, SoldierBody, riflemanError, ARCADE_RATES, NET, WAR, TANK, TankBody, tankAimAt, planeAssist, ARENAS, arenaHeight, setArena: (a) => { ARENA = a; }, wrapPi, attitudeQ, procedure, atcStep, applyEnv, ENV, ilsAt, RUNWAY_ENDS, AP_SIGN, APRONS, buildPlane, REGIONS, nearestRegion, matchRegion, raCallout, gpwsWarnings, groundAt, makeWorld, qheading, qrot, hitObject, terrainAt, surfaceAt, roughnessAt, normalAt } };
 })();
