@@ -20,6 +20,9 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.1.4", date: "21 October 2026", headline: "Claude usage pulse: much less often", items: [
+            "The Claude usage pulse on the closed notch (\"5h 96% left, wk 48% left\") no longer keeps coming back. It only appears when a number passes the highest one it has already shown (a reading that wobbles 4, 5, 4, 5 says nothing more), at most once every five minutes, and straight away only when usage is at 75% or more. A window that resets starts the count again.",
+        ]),
         ReleaseNote(version: "2.1.3", date: "21 October 2026", headline: "Fewer network messages, new version numbers", items: [
             "Online Battle sends 5 updates a second instead of 10, to keep the shared room relay inside Cloudflare's free daily limits. Movement still looks smooth because other players' vehicles are glided between updates.",
             "Version numbers are tidier: Mac rolls over from 2.0.102 to 2.1.3, and Windows now uses the same number as the Mac (2.1.3, replacing the 1.101.0 style). Updates work as normal.",

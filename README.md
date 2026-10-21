@@ -72,7 +72,7 @@ Pick your computer. Both buttons start the download straight away. The Mac link 
   </tr>
   <tr>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.1.3</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.1.4</b></a>
     </td>
     <td align="center">
       <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 2.1.3 BETA</b></a>
@@ -233,6 +233,10 @@ All screenshots use sample data.
 ## What's new
 
 > **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is still in the repository's tags.
+
+### Mac 2.1.4 · Windows 2.1.4 BETA · 21 October 2026 · 📉 Claude usage pulse: much less often
+
+- The Claude usage pulse on the closed notch ("5h 96% left, wk 48% left") no longer keeps coming back. It only appears when a number passes the highest one it has already shown (a reading that wobbles 4, 5, 4, 5 says nothing more), at most once every five minutes, and straight away only when usage is at 75% or more. A window that resets starts the count again.
 
 ### Mac 2.1.3 · Windows 2.1.3 BETA · 21 October 2026 · 📉 Fewer network messages, new version numbers
 

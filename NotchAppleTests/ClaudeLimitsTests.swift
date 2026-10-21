@@ -138,6 +138,21 @@ final class ClaudeLimitsTests: XCTestCase {
         XCTAssertEqual(ClaudeAccountLogic.accounts(services: ["Claude Code-credentials"], emails: [:]).first?.label, "Claude account")
     }
 
+    func testTheNotchOnlyPulsesForANewHighAndNotTooOften() {
+        var a = UsageAnnouncer()
+        let t0 = Date()
+        func check(_ five: Int, _ week: Int, at seconds: TimeInterval) -> Bool {
+            a.shouldAnnounce(account: "x", readings: ["5h": five, "wk": week], now: t0.addingTimeInterval(seconds))
+        }
+        XCTAssertFalse(check(4, 40, at: 0))                                   // the first reading says nothing
+        XCTAssertTrue(check(5, 40, at: 60))                                   // a new high
+        XCTAssertFalse(check(6, 40, at: 120))                                 // another rise, but under five minutes later
+        XCTAssertTrue(check(7, 40, at: 500))
+        XCTAssertFalse(check(6, 40, at: 900)); XCTAssertFalse(check(7, 40, at: 1000))   // jitter back and forth: nothing new
+        XCTAssertTrue(check(80, 40, at: 1010)); XCTAssertTrue(check(81, 40, at: 1015))   // high usage is always told straight away
+        XCTAssertFalse(check(2, 40, at: 3000))                                // the window reset: counting starts again
+    }
+
     func testEveryWholePercentIsAnIncrease() {
         func limits(_ five: Double, _ seven: Double) -> ClaudeLimits {
             ClaudeLimits(fiveHour: ClaudeLimit(fraction: five, resetsAt: nil), sevenDay: ClaudeLimit(fraction: seven, resetsAt: nil))
