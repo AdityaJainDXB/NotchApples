@@ -6487,6 +6487,8 @@
       draw(warMeshes.leg, model(qmul(q, qaxis([1, 0, 0], sw)), add(base, qrot(q, [-0.12, 0.9 - drop * 0.4, 0]))), tint);
       draw(warMeshes.leg, model(qmul(q, qaxis([1, 0, 0], -sw)), add(base, qrot(q, [0.12, 0.9 - drop * 0.4, 0]))), tint);
     }
+    /// Your team shows in bright green; in Fight everyone keeps their own colour.
+    const teamTint = (o) => (netFight() ? o.colour : [0.45, 1.5, 0.6]);
     function warDrawVan(at, q, tint) { draw(warMeshes.van, model(q, at), tint); }
     function warRender(t) {
       if (!war || screen !== 'fly') return;
@@ -6497,12 +6499,12 @@
       else if (war.vehicle === 'tank' && !(war.net && war.dead)) warDrawTank(war.tank.pos, war.tank.q, war.tank.turret, war.tank.gun, war.dead ? [0.2, 0.18, 0.17] : [0.72, 0.9, 1.3]);
       if (war.net) for (const o of war.net.others.values()) {
         if (!o.alive || !o.rep || !o.shown) continue;
-        if (o.rep.kind === 'van') warDrawVan(o.shown, o.rep.q, o.colour);
+        if (o.rep.kind === 'van') warDrawVan(o.shown, o.rep.q, teamTint(o));
         else if (o.rep.kind === 'soldier') {
           const moved = o.lastShown ? Math.hypot(o.shown[0] - o.lastShown[0], o.shown[2] - o.lastShown[2]) : 0; o.lastShown = o.shown.slice(); o.walk = (o.walk || 0) + moved * 0.9;
-          warDrawSoldier(o.shown, o.rep.turret, o.walk, o.colour, false, moved > 0.01);
-        } else if (o.rep.kind === 'tank') warDrawTank(o.shown, o.rep.q, o.rep.turret, o.rep.gun, o.colour);
-        else if (planeMeshes[o.rep.kind]) warDrawAircraft({ id: o.rep.kind, spec: PLANES.find((q) => q.id === o.rep.kind), pos: o.shown, q: o.rep.q, state: 'fly' }, o.colour, 0);
+          warDrawSoldier(o.shown, o.rep.turret, o.walk, teamTint(o), false, moved > 0.01);
+        } else if (o.rep.kind === 'tank') warDrawTank(o.shown, o.rep.q, o.rep.turret, o.rep.gun, teamTint(o));
+        else if (planeMeshes[o.rep.kind]) warDrawAircraft({ id: o.rep.kind, spec: PLANES.find((q) => q.id === o.rep.kind), pos: o.shown, q: o.rep.q, state: 'fly' }, teamTint(o), 0);
       }
       for (const l of war.loot) {      // loot: a spinning box and a tall beam in its rarity colour
         const tint = LOOT_RARITY[l.r].tint, y = groundAt(W, l.x, l.z);
@@ -6510,9 +6512,9 @@
         draw(warMeshes.beam, model([0, 0, 0, 1], [l.x, y, l.z], 1), tint, 1.2);
       }
       if (war.van) warDrawVan(war.van.pos, war.van.q, [1, 1, 1]);
-      if (war.net) for (const o of war.net.others.values()) if (o.van) warDrawVan(o.van.pos, o.van.q, o.colour);
+      if (war.net) for (const o of war.net.others.values()) if (o.van) warDrawVan(o.van.pos, o.van.q, teamTint(o));
       if (war.heli && planeMeshes[war.heli.id]) warDrawAircraft({ id: war.heli.id, spec: PLANES.find((q) => q.id === war.heli.id), pos: war.heli.pos, q: war.heli.q, state: 'fly' }, [1, 1, 1], 0);
-      if (war.net) for (const o of war.net.others.values()) if (o.heli && planeMeshes[o.heli.id]) warDrawAircraft({ id: o.heli.id, spec: PLANES.find((q) => q.id === o.heli.id), pos: o.heli.pos, q: o.heli.q, state: 'fly' }, o.colour, 0);
+      if (war.net) for (const o of war.net.others.values()) if (o.heli && planeMeshes[o.heli.id]) warDrawAircraft({ id: o.heli.id, spec: PLANES.find((q) => q.id === o.heli.id), pos: o.heli.pos, q: o.heli.q, state: 'fly' }, teamTint(o), 0);
       for (const c of war.craters) draw(warMeshes.crater, model([0, 0, 0, 1], c.p, c.r), [0.1, 0.085, 0.07]);
       for (const g of war.ground) {
         const tint = g.dead ? [0.2, 0.18, 0.17] : [1, 1, 1], q = qheading(g.heading), at = [g.pos[0], g.pos[1], g.pos[2]];
@@ -6574,27 +6576,31 @@
         if (labels < 3) { h2.fillText(`${WAR_KINDS[g.kind].name} ${fmtD(dd)}`, q.x, q.y + r + 9); labels++; }
         if (g.hp < g.maxHp) { h2.fillStyle = 'rgba(0,0,0,.6)'; h2.fillRect(q.x - r, q.y - r - 6, r * 2, 3); h2.fillStyle = '#ff9f43'; h2.fillRect(q.x - r, q.y - r - 6, r * 2 * clamp(g.hp / g.maxHp, 0, 1), 3); }
       }
-      const markAir = (a, col, label) => {
+      const markAir = (a, col, label, team = false) => {
         if (a.state !== 'fly') return;
         const dd = len(sub(a.pos, flight.pos)), q0 = proj(a.pos), q = onScr(q0, 10) ? q0 : edgePoint(a.pos), locked = war.lock === a, lastFew = war.ground.filter((g) => !g.dead).length + war.foes.filter((f) => f.state === 'fly').length <= 3, r = (locked ? 19 : 14) * (lastFew ? 1 + 0.18 * Math.sin(performance.now() / 120) : 1);
         h2.strokeStyle = h2.fillStyle = col; h2.lineWidth = 3;
         if (onScr(q, 10)) {
           h2.strokeRect(q.x - r, q.y - r, r * 2, r * 2);
+          if (team) {          // a teammate: a second bracket, a green glow and the name always shown
+            h2.save(); h2.shadowColor = col; h2.shadowBlur = 14; h2.lineWidth = 2; h2.strokeRect(q.x - r - 5, q.y - r - 5, r * 2 + 10, r * 2 + 10); h2.restore();
+            h2.save(); h2.font = `800 ${Math.round(12 * s + 3)}px system-ui`; h2.textAlign = 'center'; h2.shadowColor = 'rgba(0,0,0,.8)'; h2.shadowBlur = 4; h2.fillStyle = col; h2.fillText(`${label}  ${fmtD(dd)}`, q.x, q.y - r - 10); h2.restore();
+          } else
           if (labels < 3) { h2.fillText(`${label} ${fmtD(dd)}${locked ? (war.lockT >= 1 ? ' LOCK' : ' …') : ''}`, q.x, q.y + r + 11); labels++; }
         } else if (q) {
           const ang = q.angle || Math.atan2(q.y - H2 / 2, q.x - W2 / 2), ex = q.x, ey = q.y;
           h2.save(); h2.translate(ex, ey); h2.rotate(ang); h2.beginPath(); h2.moveTo(11, 0); h2.lineTo(-7, -8); h2.lineTo(-7, 8); h2.closePath(); h2.fill(); h2.restore();
-          if (labels < 3) { h2.fillText(`${label} ${fmtD(dd)}`, ex, ey + 18); labels++; }
+          if (team || labels < 3) { h2.fillText(`${label} ${fmtD(dd)}`, ex, ey + 18); if (!team) labels++; }
         }
       };
       if (war.net) for (const o of war.net.others.values()) {
         if (!o.alive || !o.rep || !o.shown) continue;
         // Your team is always bright green with a star; players you are fighting are red.
         const foeP = netFight();
-        markAir({ state: 'fly', pos: add(o.shown, [0, 7, 0]) }, foeP ? '#ff5d5d' : '#39ff7a', (foeP ? '' : '★ ') + o.name.slice(0, 10));
+        markAir({ state: 'fly', pos: add(o.shown, [0, o.rep.kind === 'soldier' ? 2.6 : 7, 0]) }, foeP ? '#ff5d5d' : '#39ff7a', (foeP ? '' : '★ ') + o.name.slice(0, 12), !foeP);
       }
       for (const a of war.foes) markAir(a, '#ff5d5d', 'BANDIT');
-      if (war.friend) markAir(war.friend, '#39ff7a', '★ WINGMAN');
+      if (war.friend) markAir(war.friend, '#39ff7a', '★ WINGMAN', true);
       // The gun sight: the cross where the shells go, 650 m ahead, and a lead cue on the locked fighter.
       const sight = proj(add(flight.pos, mul(f, 650)));
       if (onScr(sight, 4) && war.L.gun > 0 && !tank) {
@@ -6685,7 +6691,7 @@
       h2.textAlign = 'right'; h2.fillText(`WAVE ${war.wave}  ·  ${war.score} pts`, bx + bw - 10, by + 26 * s + 3);
       if (war.net) {        // who is in the battle, and how they are doing
         h2.textAlign = 'left'; h2.font = `700 ${Math.round(10 * s + 2)}px system-ui`;
-        const rows = [[netMyName() + ' (you)', netFight() ? war.net.kills[netMyId] || 0 : Math.round(war.hp / war.maxHp * 100), '#fff'], ...[...war.net.others.values()].map((o) => [o.name, netFight() ? war.net.kills[o.id] || 0 : Math.round(o.hp), o.alive ? '#cfe6ff' : '#888'])];
+        const rows = [[netMyName() + ' (you)', netFight() ? war.net.kills[netMyId] || 0 : Math.round(war.hp / war.maxHp * 100), '#fff'], ...[...war.net.others.values()].map((o) => [o.name, netFight() ? war.net.kills[o.id] || 0 : Math.round(o.hp), o.alive ? (netFight() ? '#cfe6ff' : '#39ff7a') : '#888'])];
         h2.fillStyle = 'rgba(8,12,24,.55)'; h2.fillRect(8, 44 * s + 6, 128, 14 * rows.length + 8);
         rows.forEach(([name, v, col], i) => { h2.fillStyle = col; h2.fillText(name.slice(0, 11), 14, 44 * s + 19 + i * 14); h2.textAlign = 'right'; h2.fillText(netFight() ? `${v} kills` : `${v}%`, 130, 44 * s + 19 + i * 14); h2.textAlign = 'left'; });
         if (war.net.winner) { h2.textAlign = 'center'; h2.font = `800 ${Math.round(24 * s + 4)}px system-ui`; h2.fillStyle = '#ffd166'; h2.fillText('MATCH OVER', W2 / 2, H2 * 0.3); }
@@ -6697,16 +6703,17 @@
       const R = Math.round(44 * s + 14), cx = W2 - R - 12, cy = R + 12, range = 6000;
       h2.fillStyle = 'rgba(8,12,24,.55)'; h2.beginPath(); h2.arc(cx, cy, R, 0, Math.PI * 2); h2.fill();
       h2.strokeStyle = 'rgba(255,255,255,.25)'; h2.lineWidth = 1; h2.beginPath(); h2.arc(cx, cy, R, 0, Math.PI * 2); h2.arc(cx, cy, R / 2, 0, Math.PI * 2); h2.moveTo(cx, cy - R); h2.lineTo(cx, cy + R); h2.moveTo(cx - R, cy); h2.lineTo(cx + R, cy); h2.stroke();
-      const blip = (p, col, sq) => {
+      const blip = (p, col, sq, ring = false) => {
         const dx = p[0] - flight.pos[0], dz = p[2] - flight.pos[2], ch = Math.cos(flight.heading), sh = Math.sin(flight.heading);
         const fx = dx * ch + dz * sh, fz = -dx * sh + dz * ch, rr = Math.hypot(fx, fz), k = rr > range ? range / rr : 1;
         const x = cx + fx * k / range * R, y = cy + fz * k / range * R;
-        h2.fillStyle = col; if (sq) h2.fillRect(x - 2, y - 2, 4, 4); else { h2.beginPath(); h2.arc(x, y, 3, 0, Math.PI * 2); h2.fill(); }
+        h2.fillStyle = col; if (sq) h2.fillRect(x - 2, y - 2, 4, 4); else { h2.beginPath(); h2.arc(x, y, ring ? 4 : 3, 0, Math.PI * 2); h2.fill(); if (ring) { h2.strokeStyle = '#fff'; h2.lineWidth = 1.5; h2.stroke(); } }
       };
       for (const g of war.ground) if (!g.dead) blip(g.pos, '#ff9f43', true);
-      if (war.net) for (const o of war.net.others.values()) if (o.alive && o.shown) blip(o.shown, netFight() ? '#ffb347' : '#6cb6ff', false);
+      if (war.net) for (const o of war.net.others.values()) if (o.alive && o.shown) blip(o.shown, netFight() ? '#ffb347' : '#39ff7a', false, !netFight());
       for (const a of war.foes) if (a.state === 'fly') blip(a.pos, '#ff5d5d', false);
-      if (war.friend && war.friend.state === 'fly') blip(war.friend.pos, '#6cb6ff', false);
+      if (war.friend && war.friend.state === 'fly') blip(war.friend.pos, '#39ff7a', false, true);
+      if (war.net && !netFight()) { h2.fillStyle = '#39ff7a'; h2.font = `700 ${Math.round(9 * s + 2)}px system-ui`; h2.textAlign = 'center'; h2.fillText('● GREEN = YOUR TEAM', cx, cy + R + 12); }
       h2.fillStyle = '#fff'; h2.beginPath(); h2.moveTo(cx, cy - 5); h2.lineTo(cx + 4, cy + 4); h2.lineTo(cx - 4, cy + 4); h2.closePath(); h2.fill();
       if (war.net && war.dead && war.net.respawnT > 0) { h2.textAlign = 'center'; h2.font = `800 ${Math.round(24 * s + 4)}px system-ui`; h2.fillStyle = '#ff9f9f'; h2.fillText(`DESTROYED · BACK IN ${Math.ceil(war.net.respawnT)}`, W2 / 2, H2 * 0.4); }
       if (war.briefingT > 0) {
@@ -6922,7 +6929,7 @@
       if (showMap !== (mapEl.style.display === 'block')) { mapEl.style.display = showMap ? 'block' : 'none'; if (showMap) warMapDraw(); }
       if (showMap) { const tt = mapEl.querySelector('[data-map="t"]'); tt.textContent = `${Math.max(0, Math.ceil(war.mapT))}s`; }
       if (ctlT > 0 && (ctlT -= dt) <= 0) showCtl(false);
-      if (voteEl.style.display !== 'none' && netg && netg.rev !== voteEl.dataset.rev) { voteEl.dataset.rev = netg.rev; voteEl.innerHTML = voteHtml(); toggleVoteBind(); }
+      if (voteEl.style.display !== 'none' && netg && String(netg.rev) !== voteEl.dataset.rev && !voteEl.matches(':active')) { voteEl.dataset.rev = String(netg.rev); voteEl.innerHTML = voteHtml(); toggleVoteBind(); }
       if (wbar.style.display !== 'none' && war) {
         const n = war.driving ? {} : war.foot ? { gun: war.weapon === 'rpg' ? `${war.rpg}` : `${war.mag}/${war.gun}`, rpg: war.weapon === 'rpg' ? 'RPG' : `${war.rpg}`, gren: war.bombs, band: war.bandage, shp: war.shieldPots, kit: war.medkit, scope: `${SOLDIER.zoom[war.zoomI]}x`, rel: war.reloadT > 0 ? '…' : '' } : war.vehicle === 'tank' ? { gun: war.shells, bomb: war.gun } : { gun: war.L.gun ? war.gun : '–', bomb: war.bombs, msl: war.L.missiles ? war.missiles : '–', gde: war.guided || 0, flr: war.flares };
         for (const k in n) { const el = wbar.querySelector(`[data-n="${k}"]`); if (el && el.textContent !== String(n[k])) el.textContent = n[k]; }
