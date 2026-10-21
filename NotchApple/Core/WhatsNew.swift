@@ -20,6 +20,9 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.0.93", date: "21 October 2026", headline: "Battle: heat vision", items: [
+            "New heat vision in Battle (press Y or the Heat vision button): the picture goes grey, smoke, dust and haze disappear, and people, vehicles, aircraft and fires glow white so you can see them through smoke.",
+        ]),
         ReleaseNote(version: "2.0.92", date: "21 October 2026", headline: "Flight and Battle: Y levels and clearer readouts", items: [
             "New Y levels: Battle markers for teammates, enemies and your wingman now show their height and how far above (+) or below (-) you they are (for example \"Bob 422 m Y578 (+127)\"), and your own Y is shown under the radar.",
             "In free flight the traffic box shows YOU Y and THEM Y heights.",
