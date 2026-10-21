@@ -232,3 +232,23 @@ test('a tree another player broke can be found by its position and broken here t
     assert.equal(T.treeAt(w2, x, z), null, 'it is gone');
   } finally { T.setArena(null); }
 });
+
+test('a blast throws the trees near its middle into the air and sets those further out alight, the same way on every screen', () => {
+  const a = T.ARENAS.find((x) => x.id === 'plains'); T.setArena(a);
+  try {
+    const w1 = T.makeWorld(T.REGIONS[0], a), w2 = T.makeWorld(T.REGIONS[0], a);
+    T.primeObjects(w1, 0, 0, 1500);
+    // The densest spot among the trees: use the first tree as the centre of a missile blast (radius 45 m).
+    const t0 = w1.colliders.filter((c) => c.kind === 'tree').sort((p, q) => p.min[0] - q.min[0])[0], cx = t0.min[0], cz = t0.min[2];
+    let best = null;
+    for (const c of w1.colliders) if (c.kind === 'tree') { const n = T.treesNear(w1, c.min[0], c.min[2], 45).length; if (!best || n > best.n) best = { n, x: c.min[0], z: c.min[2] }; }
+    assert.ok(best.n >= 4, `a spot with trees around it (${best.n} within 45 m)`);
+    const r1 = T.blastTrees(w1, [best.x, 0, best.z], 45, 5), r2 = T.blastTrees(w2, [best.x, 0, best.z], 45, 5);
+    assert.deepEqual(r1.fly.map((t) => [t.cx, t.cz]), r2.fly.map((t) => [t.cx, t.cz]), 'both screens throw the same trees');
+    assert.deepEqual(r1.burn.map((t) => [t.cx, t.cz]), r2.burn.map((t) => [t.cx, t.cz]), 'and burn the same trees');
+    assert.ok(r1.fly.every((t) => t.d < 45 * 0.5), 'only the ones near the middle fly');
+    assert.ok(r1.burn.every((t) => true) && r1.burn.every((t) => t.d < 45), 'the burning ones are inside the blast');
+    assert.equal(T.blastTrees(w1, [best.x + 5000, 0, best.z], 45, 5).fly.length, 0, 'a blast far from any tree does nothing');
+    console.log(`blast of 45 m among ${best.n} trees: ${r1.fly.length} thrown, ${r1.burn.length} alight`);
+  } finally { T.setArena(null); }
+});

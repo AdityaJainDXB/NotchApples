@@ -1868,6 +1868,30 @@
     const list = world.grid.get(`${Math.floor(x / 200)},${Math.floor(z / 200)}`) || [];
     return list.find((c) => c.kind === 'tree' && !c.broken && Math.abs((c.min[0] + c.max[0]) / 2 - x) < 1.6 && Math.abs((c.min[2] + c.max[2]) / 2 - z) < 1.6) || null;
   }
+  const hash01 = (x, z, s = 0) => { const v = Math.sin(x * 12.9898 + z * 78.233 + s * 37.719) * 43758.5453; return v - Math.floor(v); };
+  /// Every standing tree within `r` metres of (x, z).
+  function treesNear(world, x, z, r) {
+    primeObjects(world, x, z, r);
+    const seen = new Set(), out = [];
+    for (let gx = Math.floor((x - r) / 200); gx <= Math.floor((x + r) / 200); gx++) for (let gz = Math.floor((z - r) / 200); gz <= Math.floor((z + r) / 200); gz++) {
+      for (const c of world.grid.get(`${gx},${gz}`) || []) {
+        if (c.kind !== 'tree' || c.broken || seen.has(c)) continue; seen.add(c);
+        const cx = (c.min[0] + c.max[0]) / 2, cz = (c.min[2] + c.max[2]) / 2, d = Math.hypot(cx - x, cz - z);
+        if (d < r) out.push({ tree: c, cx, cz, d });
+      }
+    }
+    return out.sort((a, b) => a.d - b.d);
+  }
+  /// What a blast does to the trees: the ones near the middle are thrown into the air, the ones further out catch fire.
+  /// It depends only on where the blast and the trees are, so every player's game picks the same ones.
+  function blastTrees(world, p, R, salt = 0) {
+    const fly = [], burn = [], core = R * 0.5;
+    for (const t of treesNear(world, p[0], p[2], R)) {
+      const rnd = hash01(t.cx, t.cz, salt);
+      if (t.d < core && rnd < 0.95) fly.push(t); else if (rnd < 0.95 * (1 - 0.6 * t.d / R) + 0.1) burn.push(t);
+    }
+    return { fly: fly.slice(0, 14), burn: burn.slice(0, 30) };
+  }
   /// Plant every chunk within `rad` metres of (x, z) (hitObject does this for whatever the plane is about to fly into).
   function primeObjects(world, x, z, rad) {
     for (let cj = Math.max(0, Math.floor((z - rad + WORLD) / TCS)); cj <= Math.min(TNC - 1, Math.floor((z + rad + WORLD) / TCS)); cj++) {
@@ -5464,6 +5488,7 @@
       b.box([0, 1.15, 0.5], [2.3, 1.5, 4.4], [0.3, 0.35, 0.24]); b.box([0, 1.0, -2.1], [2.2, 1.1, 1.3], [0.26, 0.3, 0.2]); b.box([0, 1.75, -2.2], [1.9, 0.5, 0.15], [0.55, 0.7, 0.8]);
       for (const [wx, wz] of [[-1.2, -1.7], [1.2, -1.7], [-1.2, 1.9], [1.2, 1.9]]) b.box([wx, 0.45, wz], [0.35, 0.9, 0.9], [0.08, 0.08, 0.09]);
       m.van = upload(b);
+      b = new Builder(); b.cone([0, -6, 0], 0.55, 0.3, 10, TREE_COL.bark, 4); crown(b, 0, 3, 0, 3.2, 3.4, [0.3, 0.55, 0.28], 5, 0.4); m.treeProp = upload(b);
       b = new Builder(); b.box([0, 0.55, 0], [0.7, 0.7, 0.7], [1, 1, 1]); m.loot = upload(b);
       b = new Builder(); b.box([0, 30, 0], [0.35, 60, 0.35], [1, 1, 1]); m.beam = upload(b);
       b = new Builder(); b.box([0, 3.4, 0], [5, 0.12, 5], [0.92, 0.92, 0.86]); b.box([-1.2, 1.9, 0], [0.04, 3, 0.04], [0.4, 0.4, 0.4]); b.box([1.2, 1.9, 0], [0.04, 3, 0.04], [0.4, 0.4, 0.4]); m.canopy = upload(b);
@@ -5522,7 +5547,7 @@
         flight.reset([spot.x, tankBody.pos[1] + 2.2, spot.z], spot.heading, 0, true);
       } else flight.reset([spot.x, warStartAlt(), shared ? spot.z : R * 0.9], spot.heading, plane.cruise, false);
       flight.sturdy = !tank; flight.overG = warOverG;
-      war = { startZ, arena, R, grows, loot: [], lootId: 0, shield: foot ? SOLDIER.shield : 0, bandage: 0, shieldPots: 0, medkit: 0, healCool: 0, vehicle: tank ? 'tank' : 'plane', foot, rpg: foot ? SOLDIER.rpg : 0, weapon: 'rifle', heli: null, mag: SOLDIER.mag, reloadT: 0, zoomI: 0, tank: tankBody, assist: warAssist, npc: warNpc, ap: { hdg: spot.heading, alt: flight.pos[1], spd: plane.cruise * 1.05, i: 0 }, outT: 0, endT: 0, shells: L.shells,
+      war = { fires: [], flyers: [], startZ, arena, R, grows, loot: [], lootId: 0, shield: foot ? SOLDIER.shield : 0, bandage: 0, shieldPots: 0, medkit: 0, healCool: 0, vehicle: tank ? 'tank' : 'plane', foot, rpg: foot ? SOLDIER.rpg : 0, weapon: 'rifle', heli: null, mag: SOLDIER.mag, reloadT: 0, zoomI: 0, tank: tankBody, assist: warAssist, npc: warNpc, ap: { hdg: spot.heading, alt: flight.pos[1], spd: plane.cruise * 1.05, i: 0 }, outT: 0, endT: 0, shells: L.shells,
         gidn: 0, nidn: 0, score: 0, kills: 0, wave: 0, hp: L.hp, maxHp: L.hp, L, gun: L.gun, bombs: L.bombs, missiles: L.missiles, flares: L.flares,
         ground: [], foes: [], friend: null, bullets: [], bombsAir: [], missilesAir: [], flaks: [], craters: [], feed: [], lock: null, lockT: 0,
         gunT: 0, bombT: 0, flash: 0, warn: '', warnT: 0, wavePause: 2.5, waveClear: false, gunners: 0, dead: false, feedT: 0, shown: false, d };
@@ -5672,7 +5697,54 @@
     function warFeed(text, share = true) { war.feed.unshift({ text, t: 6 }); war.feed.length = Math.min(war.feed.length, 5); if (share) netEvent({ k: 'feed', x: text }); }
 
     // ---- effects
+    // ---- trees and fire: blasts throw trees about and set them alight; fire spreads from tree to tree
+    function warIgnite(tr) {
+      if (!tr || tr.broken || tr.fire || war.fires.length >= 40) return;
+      const cx = (tr.min[0] + tr.max[0]) / 2, cz = (tr.min[2] + tr.max[2]) / 2;
+      tr.fire = { t: 0, life: 9 + hash01(cx, cz, 7) * 7, em: 0, sp: 0, cx, cz, top: tr.max[1] };
+      war.fires.push(tr);
+    }
+    function warBlastTrees(p, R) {
+      if (!war || mode.id !== 'war' || R < 8 || len(sub(p, flight.pos)) > 3000) return;
+      const { fly, burn } = blastTrees(W, p, R, Math.round(p[0] / 4) + Math.round(p[2] / 4) * 7);
+      for (const t of fly) {
+        const out = norm([t.cx - p[0], 0.001, t.cz - p[2]]), sp = 22 + hash01(t.cx, t.cz, 3) * 26;
+        war.flyers.push({ pos: [t.cx, t.tree.max[1] * 0.5 + groundAt(W, t.cx, t.cz), t.cz], vel: [out[0] * sp, 18 + hash01(t.cx, t.cz, 4) * 22, out[2] * sp], q: [0, 0, 0, 1], w: [hash01(t.cx, t.cz, 5) * 6 - 3, hash01(t.cx, t.cz, 6) * 4 - 2, hash01(t.cx, t.cz, 9) * 6 - 3], t: 0, h: t.tree.max[1] - t.tree.min[1], hot: t.d < R * 0.25 });
+        const g = t.tree; breakTree(W, g, true);
+        for (let i = 0; i < 6; i++) puff('leaf', [t.cx, g.max[1] * 0.6, t.cz], jitter(14));
+      }
+      for (const t of burn) warIgnite(t.tree);
+    }
+    function warFireStep(dt) {
+      if (!war) return;
+      for (const tr of war.fires) {
+        const F = tr.fire; if (!F) continue; F.t += dt; F.em -= dt; F.sp += dt;
+        const y = groundAt(W, F.cx, F.cz), top = [F.cx, y + (F.top - y) * 0.75, F.cz];
+        if (F.em <= 0) { F.em = 0.22; puff('fire', add(top, jitter(2.5)), [0, 5 + warRand() * 4, 0]); if (warRand() < 0.4) puff('soot', add(top, jitter(2)), [0, 5, 0]); }
+        if (F.sp > 0.7) {       // the fire jumps to trees close by
+          F.sp = 0;
+          for (const n of treesNear(W, F.cx, F.cz, 17)) if (!n.tree.fire && hash01(n.cx, n.cz, Math.floor(F.t * 3) + 11) < 0.22) warIgnite(n.tree);
+        }
+        if (war.foot && !war.dead && Math.hypot(war.tank.pos[0] - F.cx, war.tank.pos[2] - F.cz) < 3.2) warHurt(5 * dt, 'fire');
+        if (F.t > F.life) {
+          tr.fire = null; for (let i = 0; i < 8; i++) puff('fire', add(top, jitter(4)), jitter(10)); for (let i = 0; i < 4; i++) puff('soot', add(top, jitter(3)), [0, 6, 0]);
+          breakTree(W, tr, true);
+        }
+      }
+      war.fires = war.fires.filter((t) => t.fire && !t.broken);
+      for (const f of war.flyers) {
+        f.t += dt; f.vel[1] -= 14 * dt; f.pos = add(f.pos, mul(f.vel, dt)); f.q = qnorm(qmul(f.q, qaxis(norm(f.w), len(f.w) * dt)));
+        if (f.hot || f.t < 0.6) { if (warRand() < dt * 30) puff('fire', add(f.pos, jitter(2)), jitter(4)); if (warRand() < dt * 14) puff('soot', add(f.pos, jitter(2)), [0, 3, 0]); }
+        const g = groundAt(W, f.pos[0], f.pos[2]);
+        if (f.pos[1] < g + 0.6 || f.t > 6) {
+          f.dead = true; for (let i = 0; i < 5; i++) puff('dirt', [f.pos[0], g + 0.5, f.pos[2]], jitter(8)); for (let i = 0; i < 6; i++) puff('leaf', add(f.pos, jitter(3)), jitter(10));
+          if (f.hot) for (const n of treesNear(W, f.pos[0], f.pos[2], 9)) if (hash01(n.cx, n.cz, 13) < 0.4) warIgnite(n.tree);
+        }
+      }
+      war.flyers = war.flyers.filter((f) => !f.dead);
+    }
     function warBoom(p, size = 1) {
+      warBlastTrees(p, 22 * size);
       const dist = len(sub(p, flight.pos));
       puff('boom', p, v3());
       for (let i = 0; i < Math.round(12 * size); i++) puff('fire', add(p, jitter(7 * size)), add([0, 6 + warRand() * 10, 0], jitter(14)));
@@ -5869,6 +5941,7 @@
     }
     /// A blast: hits every ground target, aircraft, your wingman and you within its reach.
     function warBlast(p, R, power, who, fl = {}) {
+      warBlastTrees(p, R);
       // Your side's blasts hurt the enemy (decided by the host); the enemy's (missiles) hurt you and the other players; a fuel depot going up hurts everyone.
       if (who !== 'e' && !fl.noNpc && !fl.vis) {
         for (const g of war.ground) if (!g.dead) warDamageGround(g, WAR.blastDamage(len(sub(add(g.pos, [0, 1, 0]), p)), R, power), who);
@@ -6468,6 +6541,7 @@
     function warStep(dt) {
       if (!war) return;
       if (war.mapOpen && (war.mapT -= dt) <= 0) warConfirmDrop();
+      warFireStep(dt);
       if (war.net && flight.crashed && !war.dead) netCrashed();
       if (flight.crashed && !war.net && !(war.selfDestructT > 0)) return;
       if (war.endT > 0 && (war.endT -= dt) <= 0) { finish('crash', war.score, `${war.foot ? 'Soldier down' : 'Tank destroyed'} · ${war.score} pts · wave ${war.wave}`); return; }
@@ -6580,6 +6654,7 @@
       }
       for (const a of war.foes) warDrawAircraft(a, [1.8, 0.22, 0.16], 0);
       if (war.friend) warDrawAircraft(war.friend, [0.62, 0.82, 1.2], 0);
+      for (const f of war.flyers) draw(warMeshes.treeProp, model(f.q, f.pos, clamp(f.h / 12, 0.6, 2)), f.hot ? [1.7, 0.8, 0.25] : [0.45, 0.7, 0.35], f.hot ? 0.8 : 0);
       for (const b of war.bullets) draw(warMeshes.tracer, model(qDir(b.vel), b.pos, b.shell ? 2.4 : 1), b.owner === 'e' ? [1, 0.35, 0.25] : [1, 0.9, 0.4], 2.2);
       for (const b of war.bombsAir) draw(warMeshes.bomb, model(qDir(b.vel), b.pos, 1.4), [1, 1, 1], 0);
       for (const m of war.missilesAir) draw(warMeshes.missile, model(qDir(m.vel), m.pos, 1.2), [1, 1, 1], 0.4);
@@ -8770,7 +8845,7 @@
     window.NotchPlaneGame.key = (key, down) => onKey({ key, repeat: false, target: null }, down);
     window.NotchPlaneGame._state = () => ({ screen, keys: [...keys], bank: flight.bank, pitch: flight.pitchAngle, pos: flight.pos, w: flight.w, onGround: flight.onGround,
       speed: flight.speed, ias: flight.ias, gload: flight.gload, spin: flight.spin, wreckRest: flight.rest, report: flight.report, damage: flight.damage, crashed: flight.crashed, why: flight.why, debris: debris.length, particles: smoke.length });
-    window.NotchPlaneGame._poke = { startBattle: (assist = 'easy', veh = 'f16', npc = false) => { mode = MODES.find((m) => m.id === 'war'); warVeh = veh; warAssist = assist; warSide = 'coop'; warNpc = npc; start(); return war; }, net: { vote: (k, v) => netVoteCast(k, v), hurt: (id, a) => netHurtRemote(id, a, 'test'), room: () => netg && { role: netg.role, code: netg.code, cfg: netg.cfg, running: netg.running, status: netg.status, votes: netg.votes, id: netMyId }, hurtMe: (a, by) => warHurt(a, 'test', by) }, auto: (name, veh = 'f16', play = 'online') => { mode = MODES.find((m) => m.id === 'war'); playerName = name; warVeh = veh; warPlay = play; warNpc = true; warSide = 'coop'; warAutoStart(); return !!netg; }, netinfo: () => ({ role: netg && netg.role, code: netg && netg.code, status: netg && netg.status, running: netg && netg.running, peers: netg ? [...netg.peers.values()].map((p) => p.n) : [], paused: netg && netg.cfg.paused, wave: war && war.wave, net: !!(war && war.net), others: war && war.net ? [...war.net.others.values()].map((o) => [o.name, o.alive, o.rep && o.rep.kind]) : [] }), join: (code, name, veh = 'f16') => { mode = MODES.find((m) => m.id === 'war'); playerName = name; warVeh = veh; netOpen('client', code); return true; }, dropLoot: (dx, dz, k, r) => { const p = war.tank ? war.tank.pos : flight.pos; warDropLoot(p[0] + dx, p[2] + dz, k, r); return war.loot.length; }, lock: () => warToggleLock(), spawnWave: () => { warSpawnWave(); return war.ground.map((g) => g.kind); }, war: () => war, cam: () => ({ camMode, camPos: camPos.slice() }), warHurt: (n) => warHurt(n, 'test'), warFire: (k, v) => { if (k === 'gun') warPad.gun = v; }, remote: () => remote, sky: () => ({ on: shareOn, id: skyId, pilots: skyPilots, off: skyOff }), traffic: () => traffic, spawnTraffic: () => spawnTraffic(), failEngine: (p) => { failAt = elapsed; }, flight: () => flight, world: () => W, dbg: () => ({ debris, smoke, gouges, slowT, duckT, shakeKick, attached: [...attached] }),
+    window.NotchPlaneGame._poke = { startBattle: (assist = 'easy', veh = 'f16', npc = false) => { mode = MODES.find((m) => m.id === 'war'); warVeh = veh; warAssist = assist; warSide = 'coop'; warNpc = npc; start(); return war; }, net: { vote: (k, v) => netVoteCast(k, v), hurt: (id, a) => netHurtRemote(id, a, 'test'), room: () => netg && { role: netg.role, code: netg.code, cfg: netg.cfg, running: netg.running, status: netg.status, votes: netg.votes, id: netMyId }, hurtMe: (a, by) => warHurt(a, 'test', by) }, auto: (name, veh = 'f16', play = 'online') => { mode = MODES.find((m) => m.id === 'war'); playerName = name; warVeh = veh; warPlay = play; warNpc = true; warSide = 'coop'; warAutoStart(); return !!netg; }, netinfo: () => ({ role: netg && netg.role, code: netg && netg.code, status: netg && netg.status, running: netg && netg.running, peers: netg ? [...netg.peers.values()].map((p) => p.n) : [], paused: netg && netg.cfg.paused, wave: war && war.wave, net: !!(war && war.net), others: war && war.net ? [...war.net.others.values()].map((o) => [o.name, o.alive, o.rep && o.rep.kind]) : [] }), join: (code, name, veh = 'f16') => { mode = MODES.find((m) => m.id === 'war'); playerName = name; warVeh = veh; netOpen('client', code); return true; }, dropLoot: (dx, dz, k, r) => { const p = war.tank ? war.tank.pos : flight.pos; warDropLoot(p[0] + dx, p[2] + dz, k, r); return war.loot.length; }, blast: (dx, dz, R = 45) => { const p = war.tank ? war.tank.pos : flight.pos; const x = p[0] + dx, z = p[2] + dz; warBoom([x, groundAt(W, x, z) + 1, z], 1); warBlast([x, groundAt(W, x, z) + 1, z], R, 260, 'p'); return { fires: war.fires.length, flyers: war.flyers.length }; }, bestTrees: () => { let best = null; primeObjects(W, 0, 0, 1800); for (const c of W.colliders) if (c.kind === 'tree' && Math.hypot(c.min[0], c.min[2]) < 1800) { const n = treesNear(W, c.min[0], c.min[2], 45).length; if (!best || n > best.n) best = { n, x: c.min[0], z: c.min[2] }; } return best; }, lock: () => warToggleLock(), spawnWave: () => { warSpawnWave(); return war.ground.map((g) => g.kind); }, war: () => war, cam: () => ({ camMode, camPos: camPos.slice() }), warHurt: (n) => warHurt(n, 'test'), warFire: (k, v) => { if (k === 'gun') warPad.gun = v; }, remote: () => remote, sky: () => ({ on: shareOn, id: skyId, pilots: skyPilots, off: skyOff }), traffic: () => traffic, spawnTraffic: () => spawnTraffic(), failEngine: (p) => { failAt = elapsed; }, flight: () => flight, world: () => W, dbg: () => ({ debris, smoke, gouges, slowT, duckT, shakeKick, attached: [...attached] }),
       // Test hooks for looking at the models: a fixed camera, held controls, and freezing the physics.
       view: (v) => { devView = v; }, ctl: (c) => { devCtl = c; }, hold: (h) => { devHold = h; }, plane: () => plane, surf,
       // Test hook: run the simulation ahead by `secs` seconds without drawing (a slow software renderer can't keep real time).
@@ -8785,5 +8860,5 @@
     };
   }
 
-  window.NotchPlaneGame = { mount, PLANES, MODES, CHALLENGES, Flight, _test: { breakTree, treeAt, primeObjects, LOOT_RARITY, LOOT_KINDS, lootRoll, lootAmount, SOLDIER, SoldierBody, riflemanError, ARCADE_RATES, NET, WAR, TANK, TankBody, tankAimAt, planeAssist, ARENAS, arenaHeight, setArena: (a) => { ARENA = a; }, wrapPi, attitudeQ, procedure, atcStep, applyEnv, ENV, ilsAt, RUNWAY_ENDS, AP_SIGN, APRONS, buildPlane, REGIONS, nearestRegion, matchRegion, raCallout, gpwsWarnings, groundAt, makeWorld, qheading, qrot, hitObject, terrainAt, surfaceAt, roughnessAt, normalAt } };
+  window.NotchPlaneGame = { mount, PLANES, MODES, CHALLENGES, Flight, _test: { blastTrees, treesNear, hash01, breakTree, treeAt, primeObjects, LOOT_RARITY, LOOT_KINDS, lootRoll, lootAmount, SOLDIER, SoldierBody, riflemanError, ARCADE_RATES, NET, WAR, TANK, TankBody, tankAimAt, planeAssist, ARENAS, arenaHeight, setArena: (a) => { ARENA = a; }, wrapPi, attitudeQ, procedure, atcStep, applyEnv, ENV, ilsAt, RUNWAY_ENDS, AP_SIGN, APRONS, buildPlane, REGIONS, nearestRegion, matchRegion, raCallout, gpwsWarnings, groundAt, makeWorld, qheading, qrot, hitObject, terrainAt, surfaceAt, roughnessAt, normalAt } };
 })();
