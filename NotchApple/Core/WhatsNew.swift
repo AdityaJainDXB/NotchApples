@@ -20,6 +20,11 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.0.85", date: "21 October 2026", headline: "Battle: land a helicopter, get out, and RPGs", items: [
+            "New Helicopter vehicle (an Apache): land and stop, press E to step out as a soldier, and press E beside it to climb back in. Other players see it parked. If your soldier is lost you get a new helicopter in the same wave.",
+            "Soldiers now carry an RPG: press 2 for the RPG (a big rocket that kills a soldier outright, 4 at a time, 2 more each wave) and 1 for the rifle.",
+            "Enemy soldiers carry RPGs too. From wave 3 one in each squad fires rockets at you or your low-flying helicopter, and helicopter waves now include squads on foot.",
+        ]),
         ReleaseNote(version: "2.0.84", date: "21 October 2026", headline: "Notch popups follow your accent colour", items: [
             "The calendar countdown (\"French in 10m\"), message popups and Clipboard Link popups beside the closed notch now use the accent colour you chose in Settings → Appearance instead of a fixed teal.",
             "Battle: the lock button (T) now also locks on to ground targets: bases, tanks, guns, trucks and fuel depots.",

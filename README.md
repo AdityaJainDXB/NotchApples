@@ -72,7 +72,7 @@ Pick your computer. Both buttons start the download straight away. The Mac link 
   </tr>
   <tr>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.0.84</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.0.85</b></a>
     </td>
     <td align="center">
       <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 1.82.0 BETA</b></a>
@@ -233,6 +233,12 @@ All screenshots use sample data.
 ## What's new
 
 > **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is still in the repository's tags.
+
+### Mac 2.0.85 · Windows 1.85.0 BETA · 21 October 2026 · 🚁 Battle: land a helicopter, get out, and RPGs
+
+- New Helicopter vehicle (an Apache): land and stop, press E to step out as a soldier, and press E beside it to climb back in. Other players see it parked. If your soldier is lost you get a new helicopter in the same wave.
+- Soldiers now carry an RPG: press 2 for the RPG (a big rocket that kills a soldier outright, 4 at a time, 2 more each wave) and 1 for the rifle.
+- Enemy soldiers carry RPGs too. From wave 3 one in each squad fires rockets at you or your low-flying helicopter, and helicopter waves now include squads on foot.
 
 ### Mac 2.0.84 · Windows 1.84.0 BETA · 21 October 2026 · 🎨 Browser freeze fix, lock on ground targets, guided missiles, accent-coloured popups
 
