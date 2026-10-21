@@ -4808,7 +4808,7 @@
           if (k === 'u' && war && war.net) toggleVote();
           if (k === 'p' && (!(war && war.net) || paused)) { paused = !paused; renderUI(); if (!paused) { try { ac && ac.resume && ac.resume(); } catch { /* no sound */ } } }
           if (k === '?' || k === '/') showCtl(ctlEl.style.display === 'none');
-          if (mode.id === 'war') { if (k === 'n') warLaunch(); else if (k === 'l') warFlares(); else if (k === 'z') warScope(); else if (k === 'r') warReload(); else if (k === 'g') warGrenade(); }
+          if (mode.id === 'war') { if (k === 'n') warLaunch(); else if (k === 'l') warFlares(); else if (k === 't') warToggleLock(); else if (k === 'z') warScope(); else if (k === 'r') warReload(); else if (k === 'g') warGrenade(); if ((k === 'b' || k === 'z') && war && war.vehicle === 'plane' && !war.dead) war.bombPend = true; }
           if (k === 'c') camMode = (camMode + 1) % 3;
           if (k === 'g' && !(mode.id === 'war' && war && war.foot)) {
             const r = flight.toggleGear();
@@ -4826,7 +4826,7 @@
             else if (r2 === 'battery') toast('Switch the battery on first (Y)', 1600);
             else toast('Engines are started on the ground', 1400);
           }
-          if (k === 't') { showCheck = !showCheck; toast(showCheck ? 'Checklist on' : 'Checklist off', 900); }
+          if (k === 't' && mode.id !== 'war') { showCheck = !showCheck; toast(showCheck ? 'Checklist on' : 'Checklist off', 900); }
           if (k === 'j' && mode.id === 'war') warEject();
           if (k === 'j' && mode.id !== 'war') {
             if (plane.rotor) toast('The approach mode is for fixed-wing aircraft', 1500);
@@ -4894,6 +4894,7 @@
     root.addEventListener('pointermove', (e) => {
       if (e.target && e.target.closest && e.target.closest('.pg-wbar, .pg-ctlbtn, .pg-ctlcard, .pg-netbar')) { mouse.x = 0; mouse.y = 0; mouse.engaged = false; return; }   // over a button: let go of the stick
       const r = root.getBoundingClientRect(), R = ringRadius();
+      mouse.px = e.clientX - r.left - r.width / 2; mouse.py = e.clientY - r.top - r.height / 2; mouse.w = r.width; mouse.h = r.height;
       const dx = (e.clientX - r.left - r.width / 2) / R, dy = (e.clientY - r.top - r.height / 2) / R;
       const d = Math.hypot(dx, dy), k = d > 1 ? 1 / d : 1;
       mouse.x = dx * k; mouse.y = dy * k; mouse.in = true;
@@ -5714,7 +5715,16 @@
         flight.arcade = war.assist !== 'pro' && R ? (war.assist === 'auto' ? { ...R, turn: R.turn * 0.7 } : R) : null;
       }
       if (war.foot) {
-        return { drive: raw.throttle, steer: raw.yaw, aimX: raw.roll, aimY: invert ? -raw.pitch : raw.pitch, boost: !!raw.boost || keys.has('Shift'), crouch: keys.has('Control') || keys.has('v'), lookScale: 1 / SOLDIER.zoom[war.zoomI] };
+        // Not scoped: the cursor is the crosshair and the view turns only when the cursor is near the edge of the screen.
+        // Scoped: the crosshair stays in the middle and the cursor's distance from the middle turns the view slowly.
+        let aimX = raw.roll, aimY = invert ? -raw.pitch : raw.pitch;
+        if (SOLDIER.zoom[war.zoomI] === 1) {
+          const edge = (v, lim) => Math.sign(v) * Math.pow(clamp((Math.abs(v) - lim) / (1 - lim), 0, 1), 1.3);
+          const kx = (keys.has('ArrowRight') ? 1 : 0) - (keys.has('ArrowLeft') ? 1 : 0), ky = (keys.has('ArrowUp') ? 1 : 0) - (keys.has('ArrowDown') ? 1 : 0);
+          aimX = clamp(kx + (mouse.in && mouse.w ? edge(mouse.px / (mouse.w / 2), 0.62) : 0), -1, 1);
+          aimY = clamp((invert ? -ky : ky) + (mouse.in && mouse.h ? edge(-mouse.py / (mouse.h / 2), 0.62) * (invert ? -1 : 1) : 0), -1, 1);
+        }
+        return { drive: raw.throttle, steer: raw.yaw, aimX, aimY, boost: !!raw.boost || keys.has('Shift'), crouch: keys.has('Control') || keys.has('v'), lookScale: 1 / SOLDIER.zoom[war.zoomI] };
       }
       if (war.vehicle === 'tank') {
         const t = war.tank;
@@ -5749,7 +5759,12 @@
       if (war.assist === 'pro') {
         // Pro: past the edge the plane turns itself back to the middle (hands back at 80% of the radius).
         const rr = Math.hypot(flight.pos[0], flight.pos[2]), Rw = war.arena.R;
-        if (rr > Rw * 0.97) war.autoBack = true; else if (rr < Rw * 0.8) { war.autoBack = false; war.backDir = 0; }
+        // It takes over at 85% of the radius when you are heading outwards (earlier for a fast plane), and hands back once you
+        // point inwards again, or are well inside.
+        const outward = (flight.vel[0] * flight.pos[0] + flight.vel[2] * flight.pos[2]) / (rr || 1);
+        const lead = Math.min(0.12, Math.hypot(flight.vel[0], flight.vel[2]) / Rw * 0.9);
+        if (rr > Rw * (0.85 - lead) && outward > 5) war.autoBack = true;
+        else if (rr < Rw * 0.75 || (outward < -20 && rr < Rw * 0.9)) { war.autoBack = false; war.backDir = 0; }
         if (war.autoBack && !war.dead) {
           let err = wrapPi(Math.atan2(-flight.pos[0], flight.pos[2]) - flight.heading);
           if (!war.backDir) war.backDir = err >= 0 ? 1 : -1;
@@ -5806,10 +5821,17 @@
     }
     function warGrenade() {
       if (!war || !war.foot || war.dead || war.bombs <= 0 || (war.grenT || 0) > 0) return;
-      const t = war.tank, a = t.aim(), g = { owner: 'p', pos: t.muzzle(), vel: add(t.vel, [a[0] * 22, a[1] * 22 + 5, a[2] * 22]), t: 0, gren: true, fuse: 2.4, noNpc: !!war.net && !warAuth() };
+      const t = war.tank, a = warFootAim(), g = { owner: 'p', pos: t.muzzle(), vel: add(t.vel, [a[0] * 22, a[1] * 22 + 5, a[2] * 22]), t: 0, gren: true, fuse: 2.4, noNpc: !!war.net && !warAuth() };
       war.bombs--; war.grenT = 0.8; war.bombsAir.push(g);
       if (war.net) netSend({ t: 'b', id: netMyId, p: g.pos.map(r1n), v: g.vel.map(r1n), g: 1 });
       noise(0.1, 0.12, 500); if (war.bombs === 0) toast('Last grenade thrown', 1200);
+    }
+    /// The direction of a soldier's shot: through the cursor when not scoped, straight ahead in the scope.
+    function warFootAim() {
+      const t = war.tank, z = SOLDIER.zoom[war.zoomI];
+      if (z !== 1 || !mouse.in || !mouse.w) return t.aim();
+      const { f, r, u } = flight.axes(), tH = Math.tan(31 * DEG), nx = mouse.px / (mouse.w / 2), ny = -mouse.py / (mouse.h / 2);
+      return norm(add(f, add(mul(r, nx * tH * (mouse.w / mouse.h)), mul(u, ny * tH))));
     }
     function warSoldierFire(dt) {
       const t = war.tank; war.grenT = Math.max(0, (war.grenT || 0) - dt);
@@ -5817,7 +5839,7 @@
       if (war.mag <= 0 && war.gun > 0 && war.reloadT <= 0) warReload();
       if ((keys.has('Enter') || keys.has(' ') || warPad.gun) && war.reloadT <= 0 && war.mag > 0 && t.reload <= 0) {
         t.reload = SOLDIER.fireGap; war.mag--;
-        warShoot('p', t.muzzle(), t.aim(), t.vel, t.spread(SOLDIER.zoom[war.zoomI]), SOLDIER.dmg, SOLDIER.dmg, SOLDIER.muzzle);
+        warShoot('p', t.muzzle(), warFootAim(), t.vel, t.spread(SOLDIER.zoom[war.zoomI]), SOLDIER.dmg, SOLDIER.dmg, SOLDIER.muzzle);
         noise(0.07, 0.2, 1700); shakeKick = Math.max(shakeKick, 0.06); t.sway = Math.min(1.2, t.sway + 0.08);
         if (war.mag === 0 && war.gun === 0) toast('Out of ammunition', 1400);
       }
@@ -5837,14 +5859,20 @@
         }
       } else war.gunT = Math.min(0, war.gunT);
       war.bombT -= dt;
-      if ((keys.has('z') || keys.has('b') || warPad.bomb) && war.bombs > 0 && war.bombT <= 0) {
+      const bombPress = keys.has('z') || keys.has('b') || warPad.bomb || war.bombPend; war.bombPend = false;
+      if (bombPress && war.bombs > 0 && war.bombT <= 0) {
         // Automatic drops only when a bomb would land on something; it looks again a moment later.
         if (war.assist === 'auto') {
           const hit = WAR.impactPoint(add(flight.pos, mul(u, -1.6 * (plane.scale || 1))), flight.vel, (x, z) => groundAt(W, x, z), flight.wind || v3(), 0.1);
           if (!war.ground.some((g) => !g.dead && Math.hypot(g.pos[0] - hit.pos[0], g.pos[2] - hit.pos[2]) < 38)) { war.bombT = 0.08; return; }
         }
         war.bombs--; war.bombT = L.stick;
-        const p = add(flight.pos, mul(u, -1.6 * (plane.scale || 1))), jitterV = jitter(1.2), bomb = { owner: 'p', pos: p, vel: add(flight.vel, [jitterV[0], -0.5, jitterV[2]]), t: 0, noNpc: !!war.net && !warAuth() };
+        // The bomb lands where the yellow diamond was when you pressed: it is steered to that point on the way down.
+        // Easy and Automatic also snap it to a target within 45 m of the diamond.
+        const p = add(flight.pos, mul(u, -1.6 * (plane.scale || 1))), aimHit = WAR.impactPoint(p, flight.vel, (x, z) => groundAt(W, x, z), flight.wind || v3(), 0.08);
+        let target = aimHit.pos.slice();
+        if (war.assist !== 'pro') { let bd = 45; for (const g of war.ground) { if (g.dead || g.kind === 'rifleman') continue; const dd = Math.hypot(g.pos[0] - target[0], g.pos[2] - target[2]); if (dd < bd) { bd = dd; target = g.pos.slice(); } } }
+        const bomb = { owner: 'p', pos: p, vel: add(flight.vel, [0, -0.5, 0]), t: 0, target, noNpc: !!war.net && !warAuth() };
         war.bombsAir.push(bomb);
         if (war.net) netSend({ t: 'b', id: netMyId, p: bomb.pos.map(r1n), v: bomb.vel.map(r1n) });
         noise(0.12, 0.12, 700);
@@ -6041,7 +6069,13 @@
       // Bombs
       for (const b of war.bombsAir) {
         if (b.gren) { b.t += dt; b.fuse -= dt; b.vel = add(b.vel, [0, -9.8 * dt, 0]); b.pos = add(b.pos, mul(b.vel, dt)); }
-        else WAR.bombStep(b, dt, flight.wind || v3());
+        else {
+          if (b.target && b.owner === 'p') {
+            const pr = WAR.impactPoint(b.pos, b.vel, (x, z) => groundAt(W, x, z), flight.wind || v3(), 0.08), k = Math.min(1, 8 * dt);
+            if (pr && pr.t > 0.12) { b.vel[0] += clamp((b.target[0] - pr.pos[0]) / pr.t * k, -15, 15); b.vel[2] += clamp((b.target[2] - pr.pos[2]) / pr.t * k, -15, 15); }
+          }
+          WAR.bombStep(b, dt, flight.wind || v3());
+        }
         const g = groundAt(W, b.pos[0], b.pos[2]);
         if (b.gren && (b.pos[1] <= g + 0.2 || b.fuse <= 0)) {
           b.dead = true; const at = [b.pos[0], Math.max(g, b.pos[1] > g + 3 ? b.pos[1] : g), b.pos[2]];
@@ -6112,8 +6146,30 @@
       }
     }
 
+    /// The lock button (T): lock on to the enemy fighter nearest the nose and hold it until you press T again, it is destroyed, or it flies far away.
+    function warToggleLock() {
+      if (!war || war.dead || war.vehicle !== 'plane' || screen !== 'fly') return;
+      if (war.manualLock) { war.manualLock = false; war.lock = null; war.lockT = 0; toast('Lock released', 900); return; }
+      const { f } = flight.axes(); let best = null, ba = 1.2;
+      for (const a of war.foes) {
+        if (a.state !== 'fly') continue;
+        const to = sub(a.pos, flight.pos), dd = len(to); if (dd > 9000 || dd < 60) continue;
+        const ang = Math.acos(clamp(dot(f, mul(to, 1 / dd)), -1, 1)); if (ang < ba) { ba = ang; best = a; }
+      }
+      if (!best) { toast('No enemy fighter ahead to lock on to', 1300); return; }
+      war.lock = best; war.lockT = 0; war.manualLock = true; toast('Locking on… (T to release)', 1100); beep(900, 0.06, 'square', 0.05);
+    }
     function warLockOn(dt) {
       const { f } = flight.axes();
+      if (war.manualLock) {
+        const cur = war.lock;
+        if (!cur || cur.state !== 'fly' || len(sub(cur.pos, flight.pos)) > 9000) { war.manualLock = false; war.lock = null; war.lockT = 0; toast('Target lost', 900); }
+        else {
+          war.lockT += dt;
+          if (war.lockT >= 1 && war.missiles > 0) { war.lockBeep = (war.lockBeep || 0) - dt; if (war.lockBeep <= 0) { war.lockBeep = 0.45; beep(1250, 0.07, 'square', 0.05); } }
+          return;
+        }
+      }
       let best = null, ba = 0.5;
       for (const a of war.foes) {
         if (a.state !== 'fly') continue;
@@ -6291,13 +6347,13 @@
           if (labels < 3) { h2.fillText(`${label} ${fmtD(dd)}`, ex, ey + 18); labels++; }
         }
       };
-      for (const a of war.foes) markAir(a, '#ff5d5d', 'BANDIT');
       if (war.net) for (const o of war.net.others.values()) {
         if (!o.alive || !o.rep || !o.shown) continue;
         // Your team is always bright green with a star; players you are fighting are red.
         const foeP = netFight();
         markAir({ state: 'fly', pos: add(o.shown, [0, 7, 0]) }, foeP ? '#ff5d5d' : '#39ff7a', (foeP ? '' : '★ ') + o.name.slice(0, 10));
       }
+      for (const a of war.foes) markAir(a, '#ff5d5d', 'BANDIT');
       if (war.friend) markAir(war.friend, '#39ff7a', '★ WINGMAN');
       // The gun sight: the cross where the shells go, 650 m ahead, and a lead cue on the locked fighter.
       const sight = proj(add(flight.pos, mul(f, 650)));
@@ -6322,8 +6378,9 @@
       if (war.foot) {
         const z = SOLDIER.zoom[war.zoomI], cx = W2 / 2, cy = H2 / 2;
         if (z === 1) {
+          const px = mouse.in && mouse.w ? cx + mouse.px / mouse.w * W2 : cx, py = mouse.in && mouse.h ? cy + mouse.py / mouse.h * H2 : cy;
           h2.strokeStyle = 'rgba(255,255,255,.9)'; h2.lineWidth = 2; h2.beginPath();
-          h2.moveTo(cx - 14, cy); h2.lineTo(cx - 5, cy); h2.moveTo(cx + 5, cy); h2.lineTo(cx + 14, cy); h2.moveTo(cx, cy - 14); h2.lineTo(cx, cy - 5); h2.moveTo(cx, cy + 5); h2.lineTo(cx, cy + 14); h2.stroke(); h2.lineWidth = 1;
+          h2.moveTo(px - 14, py); h2.lineTo(px - 5, py); h2.moveTo(px + 5, py); h2.lineTo(px + 14, py); h2.moveTo(px, py - 14); h2.lineTo(px, py - 5); h2.moveTo(px, py + 5); h2.lineTo(px, py + 14); h2.stroke(); h2.lineWidth = 1;
         } else {
           // The scope: a black mask with a round window, a crosshair and range marks that show where the bullet will be 100 to 500 m away.
           const R0 = Math.min(W2, H2) * 0.46;
@@ -6413,7 +6470,7 @@
         h2.textAlign = 'center'; h2.font = `800 ${Math.round(17 * s + 3)}px system-ui`; h2.fillStyle = '#fff';
         h2.fillText(`WAVE ${war.wave} BRIEFING · ${war.foot ? 'KILL' : 'DESTROY'} ${war.waveGround ?? war.ground.length} ${war.foot ? 'ENEMY SOLDIERS' : 'TARGETS'}${war.waveFighters ? ` + ${war.waveFighters} FIGHTERS` : ''}`, W2 / 2, H2 * 0.31);
         h2.font = `700 ${Math.round(11 * s + 2)}px system-ui`; h2.fillStyle = '#ffd166';
-        h2.fillText(war.foot ? 'WASD walk · Shift run · mouse aim · click fire · right-click scope · R reload · G grenade' : tank ? 'WASD drive · Shift boost · mouse aim · click or Enter to fire' : `Enter / click: guns · Z: bombs${war.L.missiles ? ' · N: missile' : ''} · L: flares`, W2 / 2, H2 * 0.31 + 26 * s);
+        h2.fillText(war.foot ? 'WASD walk · Shift run · aim with the cursor (edges turn) · click fire · right-click scope · R reload · G grenade' : tank ? 'WASD drive · Shift boost · mouse aim · click or Enter to fire' : `Enter / click: guns · Z: bombs${war.L.missiles ? ' · N: missile' : ''} · L: flares`, W2 / 2, H2 * 0.31 + 26 * s);
       }
       if (war.waveClear) { h2.textAlign = 'center'; h2.font = `900 ${Math.round(26 * s + 4)}px system-ui`; h2.fillStyle = '#ffd166'; h2.fillText(`WAVE ${war.wave} CLEARED  +${250 * war.wave}`, W2 / 2, H2 * 0.42); }
       const nextGround = war.ground.filter((g) => !g.dead).sort((a, b) => len(sub(a.pos, flight.pos)) - len(sub(b.pos, flight.pos)))[0];
@@ -6429,6 +6486,7 @@
         h2.strokeStyle = 'rgba(255,255,255,.68)'; h2.lineWidth = 1.5; h2.beginPath(); h2.arc(ax, ay, ar, 0, Math.PI * 2); h2.stroke();
         if (mouse.in && mouse.engaged) { h2.strokeStyle = '#ffd166'; h2.beginPath(); h2.moveTo(ax, ay); h2.lineTo(ax + mouse.x * ar, ay + mouse.y * ar); h2.stroke(); h2.fillStyle = '#ffd166'; h2.beginPath(); h2.arc(ax + mouse.x * ar, ay + mouse.y * ar, 5, 0, Math.PI * 2); h2.fill(); }
       }
+      if (netHold()) { h2.fillStyle = 'rgba(8,12,24,.6)'; h2.fillRect(0, H2 * 0.4, W2, H2 * 0.16); h2.fillStyle = '#ffd166'; h2.textAlign = 'center'; h2.font = `800 ${Math.round(24 * s + 6)}px system-ui`; h2.fillText('⏸ ROUND PAUSED BY VOTE', W2 / 2, H2 * 0.49); h2.font = `600 ${Math.round(11 * s + 3)}px system-ui`; h2.fillStyle = '#fff'; h2.fillText('Press U and vote ▶ Playing to carry on', W2 / 2, H2 * 0.53); }
       // Warnings and the red flash when you are hit.
       if (war.warn) { h2.textAlign = 'center'; h2.font = `800 ${Math.round(22 * s + 4)}px system-ui`; h2.fillStyle = Math.floor(performance.now() / 180) % 2 ? '#ff5d5d' : '#ffd166'; h2.fillText(war.warn, W2 / 2, H2 * 0.18); }
       if (war.outT > 0) { h2.strokeStyle = `rgba(255,45,45,${0.35 + 0.35 * Math.sin(performance.now() / 160)})`; h2.lineWidth = 7; h2.strokeRect(4, 4, W2 - 8, H2 - 8); }
@@ -6461,7 +6519,7 @@
         case 'war': {
           if (warVeh === 'soldier') return { goal: 'You are a soldier on foot. Shoot the enemy riflemen marching at you, clear each wave and survive. Your rifle hits much harder than theirs.', rows: [
             [['W', 'S'], 'Walk', 'forward and back. Hold Shift to run'], [['A', 'D'], 'Step sideways', 'strafe left and right'],
-            [['Mouse'], 'Look and aim', 'move the cursor out of the ring in the middle: the farther out, the faster you turn. Arrow keys also look'],
+            [['Mouse'], 'Aim and look', 'the crosshair follows the cursor. Move the cursor to the edge of the screen to turn. In the scope the cursor turns the view slowly. Arrow keys also look'],
             [['Space', 'Enter', 'Click'], 'Rifle', 'hold to fire. 30 rounds a magazine; shots drop over distance'], [['R'], 'Reload', 'takes under 2 seconds'],
             [['Right-click', 'Z'], 'Scope', 'cycles 1x, 4x and 10x. The marks show where a bullet lands at 100 to 500 m'], [['G'], 'Grenade', 'a short throw that explodes after about 2 seconds'],
             [['Ctrl', 'V'], 'Crouch', 'slower, but the rifle steadies'], [['C'], 'Camera', 'first person, behind you, or far'], [['P'], 'Pause'], [['?'], 'Show this help'],
@@ -6480,8 +6538,8 @@
             [[], 'Radar colours', 'The radar is always visible in the top-right. Red: fighters · blue: wingman · orange: ground targets.']
           ] : [
             [['Space', 'Enter', 'Click'], 'Guns', `hold to fire. The circle is where the shells go.${aimNote}`],
-            [['B', 'Z'], 'Bombs', auto ? 'hold: it drops only when a bomb would hit a target' : 'hold for a stick. The yellow diamond is where a bomb let go now would land'],
-            [['N'], 'Missile', 'keep a fighter in the sights until it says LOCK, then press N'], [['L'], 'Flares', 'press when you hear MISSILE! to break its lock'], [['J'], 'Eject', 'bail out: the jet goes down and you fight on foot with a rifle. Ramming an enemy destroys it too'],
+            [['B', 'Z'], 'Bombs', auto ? 'hold: it drops only when a bomb would hit a target' : 'the bomb lands exactly on the yellow diamond where it was when you pressed. Hold for a stick'],
+            [['T'], 'Lock on', 'press T to lock on to the fighter nearest your nose and keep it locked. T again to let go'], [['N'], 'Missile', 'fire at the locked fighter once it says LOCK'], [['L'], 'Flares', 'press when you hear MISSILE! to break its lock'], [['J'], 'Eject', 'bail out: the jet goes down and you fight on foot with a rifle. Ramming an enemy destroys it too'],
             ...(auto ? [[['Mouse', '←', '→'], 'Turn', 'the plane turns towards where you point and keeps its height'], [['↑', '↓'], 'Climb / dive', 'it settles at the new height'], [['W', 'S'], 'Speed', 'faster or slower']] : CTL_FLY()),
             [['C'], 'Camera', 'behind, cockpit or far'], [['P'], 'Pause'], [['R'], 'Restart'], [['?'], 'Show this help'],
             ...(war && war.net ? [[['U'], 'Vote', 'change the match with the other players']] : []),
@@ -6503,7 +6561,7 @@
     const ctlBtn = document.createElement('button'); ctlBtn.className = 'pg-ctlbtn'; ctlBtn.textContent = '?'; ctlBtn.title = 'Controls for this mode (?)'; ctlBtn.style.display = 'none';
     const wbar = document.createElement('div'); wbar.className = 'pg-wbar'; wbar.style.display = 'none';
     const netbar = document.createElement('div'); netbar.className = 'pg-netbar'; netbar.style.display = 'none';
-    netbar.innerHTML = '<button data-nb="vote" title="Vote to change the match (U)">🗳 Vote</button><button data-nb="leave" title="Leave this battle">⎋ Leave</button>';
+    netbar.innerHTML = '<button data-nb="vote" title="Vote to change the match (U)">🗳 Vote</button><button data-nb="leave" title="Leave this battle">⎋ Leave</button><span data-nb="code" style="align-self:center;font:700 11px system-ui;opacity:.85;padding:0 6px"></span>';
     const voteEl = document.createElement('div'); voteEl.className = 'pg-ctlcard pg-vote'; voteEl.style.display = 'none';
     const qbar = document.createElement('div'); qbar.className = 'pg-qbar'; qbar.style.display = 'none';
     qbar.innerHTML = '<button data-q="voice" title="Spoken calls on / off: ground proximity (Pull up), ATC">🗣</button><button data-q="tcas" title="Traffic calls (TCAS) on / off">📡</button>';
@@ -6521,8 +6579,8 @@
         const cur = n.cfg[key] === val, c = netVoteCounts(key)[val] || 0, mine = n.votes[netMyId] && n.votes[netMyId][key] === val;
         return `<button data-vote="${key}:${val}" class="${cur ? 'pg-on' : mine ? 'pg-voted' : ''}">${name}${!cur && c ? ` (${c})` : ''}</button>`; }).join('')}</span></div>`;
       return `<div class="pg-ctitle">Vote to change the match <span>click or press U to close</span></div>
-        <div class="pg-cgoal">A change passes when more than half of the players vote for it, and the battle then starts again.</div>
-        <div class="pg-cgrid">${row('side', 'Teams', [['coop', '🤝 Co-op'], ['versus', '⚔️ Fight']])}${row('npc', 'Enemies', [[true, 'On'], [false, 'Off']])}${row('field', 'Field', ARENAS.map((a) => [a.id, a.name]))}</div>`;
+        <div class="pg-cgoal">A change passes when more than half of the players vote for it. Changing the teams, enemies or field starts the battle again; Pause just freezes the round for everyone until the players vote to play on. The game never stops by itself when someone closes the notch.</div>
+        <div class="pg-cgrid">${row('side', 'Teams', [['coop', '🤝 Co-op'], ['versus', '⚔️ Fight']])}${row('npc', 'Enemies', [[true, 'On'], [false, 'Off']])}${row('field', 'Field', ARENAS.map((a) => [a.id, a.name]))}${row('paused', 'Round', [[false, '▶ Playing'], [true, '⏸ Paused']])}</div>`;
     }
     function toggleVote(force) {
       const on = force != null ? force : voteEl.style.display === 'none';
@@ -6536,7 +6594,7 @@
     function buildWbar() {
       const tank = war && war.vehicle === 'tank';
       const defs = war && war.foot ? [['gun', '🔫', 'Rifle', 'Space'], ['scope', '🔭', 'Scope', 'Z'], ['gren', '💣', 'Grenade', 'G'], ['rel', '🔄', 'Reload', 'R']] : tank ? [['gun', '💥', 'Cannon', 'Space'], ['bomb', '🔫', 'Machine gun', 'B']]
-        : [['gun', '🔫', 'Guns', 'Space'], ['bomb', '💣', 'Bombs', 'B'], ['msl', '🚀', 'Missile', 'N'], ['flr', '✨', 'Flares', 'L']];
+        : [['gun', '🔫', 'Guns', 'Space'], ['bomb', '💣', 'Bombs', 'B'], ['msl', '🚀', 'Missile', 'N'], ['lock', '🎯', 'Lock on', 'T'], ['flr', '✨', 'Flares', 'L']];
       wbar.innerHTML = defs.map(([id, ic, name, key]) => `<button data-w="${id}" title="${name} (${key})"><span>${ic}</span><b>${name}</b><kbd>${key}</kbd><i data-n="${id}"></i></button>`).join('')
         + (war && war.vehicle === 'plane' ? '<button data-w="eject" title="Eject: the jet goes down and you fight on foot with a rifle"><span>🪂</span><b>Eject</b><kbd>J</kbd></button>' : '')
         + '<button data-w="self" title="End this sortie and respawn without losing wave progress"><span>💥</span><b>Self-destruct</b><kbd>X</kbd></button>';
@@ -6550,7 +6608,7 @@
     }
     ctlEl.onclick = () => showCtl(false);
     ctlBtn.onclick = (e) => { e.stopPropagation(); showCtl(ctlEl.style.display === 'none'); root.focus(); };
-    const wDown = (id) => { if (id === 'gun') warPad.gun = true; else if (id === 'bomb') warPad.bomb = true; else if (id === 'msl') warLaunch(); else if (id === 'flr') warFlares(); else if (id === 'scope') warScope(); else if (id === 'gren') warGrenade(); else if (id === 'rel') warReload(); };
+    const wDown = (id) => { if (id === 'gun') warPad.gun = true; else if (id === 'bomb') warPad.bomb = true; else if (id === 'msl') warLaunch(); else if (id === 'lock') warToggleLock(); else if (id === 'flr') warFlares(); else if (id === 'scope') warScope(); else if (id === 'gren') warGrenade(); else if (id === 'rel') warReload(); };
     const wUp = () => { warPad.gun = false; warPad.bomb = false; };
     function bindWbar() {
       wbar.querySelectorAll('button').forEach((b) => {
@@ -6565,6 +6623,7 @@
       ctlBtn.style.display = fly ? 'grid' : 'none'; qbar.style.display = fly ? 'flex' : 'none'; syncQbar();
       wbar.style.display = fly && mode.id === 'war' ? 'flex' : 'none';
       netbar.style.display = fly && mode.id === 'war' && war && war.net ? 'flex' : 'none';
+      const codeEl = netbar.querySelector('[data-nb="code"]'); if (codeEl) codeEl.textContent = netg ? `Room ${netg.code} · ${netRoster ? 1 + (netg.peers ? netg.peers.size : 0) : 1} playing` : '';
       if (!fly) { showCtl(false); toggleVote(false); }
     }
     function ctlTick(dt) {
@@ -6594,7 +6653,7 @@
 
     function netOpen(role, code) {
       netLeave(true);
-      netg = { role, code, cfg: { field: warField, side: warSide, npc: warNpc }, link: null, roster: [], peers: new Map(), votes: {}, running: false, hostSeen: 0, hostId: role === 'host' ? netMyId : '',
+      netg = { role, code, cfg: { field: warField, side: warSide, npc: warNpc, paused: false }, link: null, roster: [], peers: new Map(), votes: {}, running: false, hostSeen: 0, hostId: role === 'host' ? netMyId : '',
         status: 'connecting', error: '', joined: Date.now(), lobbyT: 0, helloT: 0, rev: 0, shownRev: -1, saved: null };
       netg.link = new NET.Link(WebSocket, netMsg, (st) => { if (!netg) return; netg.status = st; if (st === 'on') { netg.error = ''; netg.joined = Date.now(); netHello(); if (role === 'host') netSendLobby(); } netBump(); });
       netg.link.join(code);
@@ -6618,6 +6677,10 @@
     function netHousekeeping() {
       if (!netg) return;
       const now = Date.now();
+      if (netg.role === 'host' && netg.autoStart && netg.status === 'on') { netg.autoStart = false; netHostStart(); return; }
+      if (netg.role === 'client' && netg.autoJoin && !netg.hostSeen && netg.status === 'on' && now - netg.joined > 3500) {
+        const code = netg.code; netOpen('host', code); netg.autoStart = true; return;     // nobody is hosting: open the game yourself
+      }
       if (netg.role === 'host') {
         for (const [id, p] of netg.peers) if (now - p.last > 8000) { netg.peers.delete(id); if (war && war.net) war.net.others.delete(id); netBump(); if (war && war.net) warFeed(`${p.n} left`); }
         if (now - netg.lobbyT > 1500) { netg.lobbyT = now; netSendLobby(); }
@@ -6653,17 +6716,17 @@
       else netSend({ t: 'vote', id: netMyId, key, val });
       netBump();
     }
-    const NET_VOTE_OPTIONS = { side: ['coop', 'versus'], npc: [true, false], field: ARENAS.map((a) => a.id) };
+    const NET_VOTE_OPTIONS = { side: ['coop', 'versus'], npc: [true, false], field: ARENAS.map((a) => a.id), paused: [true, false] };
     function netCountVotes() {
       if (!netg || netg.role !== 'host') return;
       const ids = netRoster().map((p) => p.id);
       for (const key of Object.keys(NET_VOTE_OPTIONS)) {
         const r = NET.tally(ids, netg.votes, key, netg.cfg[key], NET_VOTE_OPTIONS[key]);
         if (r.passed != null) {
-          netg.cfg = { ...netg.cfg, [key]: r.passed };
+          netg.cfg = { ...netg.cfg, [key]: NET_VOTE_OPTIONS[key].find((o) => String(o) === String(r.passed)) };      // the tally's keys are text: turn "true" back into true
           for (const id of Object.keys(netg.votes)) if (netg.votes[id]) delete netg.votes[id][key];
           netSendLobby();
-          if (netg.running) { const players = netRoster().map((p, i) => ({ ...p, slot: i })); const msg = { t: 'start', cfg: netg.cfg, players, seed: Date.now() & 0xffff }; netSend(msg); netBegin(msg); toast('Vote passed: starting again', 2500); }
+          if (netg.running && key !== 'paused') { const players = netRoster().map((p, i) => ({ ...p, slot: i })); const msg = { t: 'start', cfg: netg.cfg, players, seed: Date.now() & 0xffff }; netSend(msg); netBegin(msg); toast('Vote passed: starting again', 2500); }
           netBump();
         }
       }
@@ -7872,7 +7935,10 @@
     }
     function battleHtml() {
       if (netg) return lobbyHtml();
-      return soloBattleHtml() + `<h2>4 · Play with friends</h2>
+      const chipP = (id, label, tip) => `<button data-warplay="${id}" class="${warPlay === id ? 'pg-on' : ''}" title="${tip}">${label}</button>`;
+      return `<h2>Who are you?</h2><div class="pg-row"><span class="pg-lab">Your name</span><input data-warname maxlength="14" placeholder="Required: others see this" value="${escapeHtml(playerName)}" style="width:170px"><span class="pg-hint">Shown above you and in the player list.</span></div>
+        <div class="pg-row" style="margin:6px 0"><span class="pg-lab">Play</span>${chipP('online', '🌐 Online', 'Join an open game on this battlefield, in the wave being played. If nobody is there you open one.')}${chipP('single', '👤 Single player', 'Your own game. Others can still join with its room code, any time.')}<span class="pg-hint">${warPlay === 'single' ? 'Your own game; others can join with the room code shown in it.' : 'Press Start: you join an open game and the wave being played.'}</span></div>`
+        + soloBattleHtml() + `<h2>4 · Play with friends</h2>
         <div class="pg-row"><button data-nethost class="pg-go">Host a game</button><span class="pg-hint">or join one:</span><input data-netcode maxlength="8" placeholder="Room code" style="width:110px;text-transform:uppercase" value="${escapeHtml(joinDraft)}"><button data-netjoin>Join</button></div>
         <div class="pg-hint" style="margin-top:4px">The host gets a 6-letter code to share. It works on the same Wi-Fi or far apart, and Mac and Windows can play together. You fight on the same battlefield as everyone else: together against the computer (Co-op) or against each other (Fight). The people in the room can see your name, your vehicle and where you are.</div>`;
     }
@@ -7900,8 +7966,22 @@
         <div class="pg-hint" style="margin-top:4px">Co-op: everyone is on one side against the computer. Fight: players shoot each other, first to ${FIGHT_WIN_KILLS} kills wins (if the enemies are on they shoot everyone). Everyone plays the same battlefield and the same enemies.</div>`;
     }
     let joinDraft = '';
+    let warPlay = read('warplay', 'online');
+    if (warPlay !== 'single') warPlay = 'online';
+    /// Open games anyone can drop into: one room per battlefield, so players on the same field meet.
+    const PUBLIC_ROOMS = { plains: 'PUBGRN', dunes: 'PUBSND', island: 'PUBSEA' };
+    /// Start a Battle: find an open game and join the wave being played, or open one if nobody is there. Single player opens
+    /// your own room (with its code on screen) that others can still join at any time.
+    function warAutoStart() {
+      const nm = (playerName || '').trim();
+      if (!nm) { toast('Type your name first so the others know who you are', 2400); ui.querySelector('[data-warname]')?.focus(); return; }
+      if (warPlay === 'single') { netOpen('host', NET.newCode()); netg.autoStart = true; }
+      else { netOpen('client', PUBLIC_ROOMS[warField] || PUBLIC_ROOMS.plains); netg.autoJoin = true; }
+      renderUI();
+    }
     function onStartPress(a) {
       if (mode.id === 'war' && netg && screen === 'menu') { if (netg.role === 'host') netHostStart(); return; }
+      if (mode.id === 'war' && !netg && screen === 'menu' && !(war && war.net)) { warAutoStart(); return; }
       if (war && war.net) {
         if (war.net.role === 'host') { netg.running = false; netHostStart(); }
         else if (a === 'again' && screen === 'result') { screen = 'menu'; renderUI(); }
@@ -8057,6 +8137,8 @@
       };
       ui.querySelectorAll('[data-place]').forEach((n) => n.onkeydown = (e) => { e.stopPropagation(); if (e.key === 'Enter') { const v = n.value.trim(); if (v) goPlace(() => lookupPlace(v)); } });
       ui.querySelectorAll('[data-warveh]').forEach((n) => n.onclick = () => { warVeh = n.dataset.warveh; write('warveh', warVeh); if (netg) { if (netg.role === 'host') netSendLobby(); else netHello(); } renderUI(); });
+      ui.querySelectorAll('[data-warname]').forEach((n) => { n.oninput = () => { playerName = n.value.trim().slice(0, 14); write('name', playerName); }; n.onkeydown = (e) => { e.stopPropagation(); if (e.key === 'Enter') onStartPress('start'); }; });
+      ui.querySelectorAll('[data-warplay]').forEach((n) => n.onclick = () => { warPlay = n.dataset.warplay; write('warplay', warPlay); renderUI(); });
       ui.querySelectorAll('[data-nethost]').forEach((n) => n.onclick = () => { netOpen('host', NET.newCode()); renderUI(); });
       ui.querySelectorAll('[data-netjoin]').forEach((n) => n.onclick = () => { const input = ui.querySelector('[data-netcode]'), c = NET.normCode(input && input.value); if (!c) { toast('A room code is 6 letters and numbers', 2200); return; } joinDraft = ''; netOpen('client', c); renderUI(); });
       ui.querySelectorAll('[data-netcode]').forEach((n) => { n.oninput = () => { joinDraft = n.value.toUpperCase(); }; n.onkeydown = (e) => { e.stopPropagation(); if (e.key === 'Enter') ui.querySelector('[data-netjoin]')?.click(); }; });
@@ -8217,6 +8299,8 @@
     }
 
     // ---- main loop
+    /// The players voted to pause the round: the enemies, the shots and your own vehicle stand still.
+    const netHold = () => !!(war && war.net && netg && netg.cfg && netg.cfg.paused);
     let raf = 0, last = performance.now(), alive = true, frameAvg = 0.016, slowFrames = 0;
     function frame(t) {
       if (!alive || suspended) return;
@@ -8230,7 +8314,8 @@
       duckT -= real; shakeKick *= Math.exp(-real * 2.5);
       const dt = real * (slowT > 0 ? (slowT > 0.25 ? 0.4 : 0.4 + 2.4 * (0.25 - slowT)) : 1);
       // Physics in small fixed steps so fast planes stay stable.
-      let left = dt; while (left > 1e-4) { const h = Math.min(left, 1 / 120); update(h); left -= h; }
+      const held = netHold();
+      let left = held ? 0 : dt; while (left > 1e-4) { const h = Math.min(left, 1 / 120); update(h); left -= h; }
       // Behind the result panel a wreck that has not quite stopped (still sliding, or sinking) carries on.
       if (screen === 'result' && flight.crashed && !flight.rest && !paused) {
         left = dt; while (left > 1e-4) { const h = Math.min(left, 1 / 120); flight.step(h, ZERO_CTL, W); left -= h; }
@@ -8247,17 +8332,26 @@
     // Setting the game aside (the notch closes, another tab opens) and bringing it back: the flight is kept exactly as it was.
     // It is paused so nothing happens while you are away, the drawing stops and the sound is muted.
     let suspended = false;
+    let bgTimer = 0, bgLast = 0;
+    /// In a shared battle the game keeps running while the notch is closed (drawing stops, sound is muted): the others are still
+    /// playing. Players can vote to pause the round.
+    function bgStep() {
+      const now = performance.now(), dt = Math.min(1.5, (now - bgLast) / 1000); bgLast = now;
+      if (!alive || !(war && war.net) || netHold()) return;
+      let left = dt; while (left > 1e-4) { const h = Math.min(left, 1 / 60); update(h); left -= h; }
+    }
     function suspendGame() {
       if (suspended || !alive) return;
       suspended = true;
       keys.clear(); warPad.gun = false; warPad.bomb = false; cancelSpeech();
-      if (screen === 'fly' && !paused && !(war && war.net)) { paused = true; renderUI(); }
       try { ac && ac.suspend && ac.suspend(); } catch { /* no sound to mute */ }
       cancelAnimationFrame(raf);
+      if (screen === 'fly' && war && war.net) { bgLast = performance.now(); bgTimer = setInterval(bgStep, 100); return; }
+      if (screen === 'fly' && !paused) { paused = true; renderUI(); }
     }
     function resumeGame() {
       if (!suspended || !alive) return;
-      suspended = false; last = performance.now();
+      suspended = false; last = performance.now(); clearInterval(bgTimer); bgTimer = 0;
       raf = requestAnimationFrame(frame);
       if (!(screen === 'fly' && paused)) { try { ac && ac.resume && ac.resume(); } catch { /* no sound */ } }   // sound returns when you unpause
       root.focus();
@@ -8266,7 +8360,7 @@
     window.NotchPlaneGame.key = (key, down) => onKey({ key, repeat: false, target: null }, down);
     window.NotchPlaneGame._state = () => ({ screen, keys: [...keys], bank: flight.bank, pitch: flight.pitchAngle, pos: flight.pos, w: flight.w, onGround: flight.onGround,
       speed: flight.speed, ias: flight.ias, gload: flight.gload, spin: flight.spin, wreckRest: flight.rest, report: flight.report, damage: flight.damage, crashed: flight.crashed, why: flight.why, debris: debris.length, particles: smoke.length });
-    window.NotchPlaneGame._poke = { startBattle: (assist = 'easy', veh = 'f16', npc = false) => { mode = MODES.find((m) => m.id === 'war'); warVeh = veh; warAssist = assist; warSide = 'coop'; warNpc = npc; start(); return war; }, net: { vote: (k, v) => netVoteCast(k, v), hurt: (id, a) => netHurtRemote(id, a, 'test'), room: () => netg && { role: netg.role, code: netg.code, cfg: netg.cfg, running: netg.running, status: netg.status, votes: netg.votes, id: netMyId }, hurtMe: (a, by) => warHurt(a, 'test', by) }, war: () => war, cam: () => ({ camMode, camPos: camPos.slice() }), warHurt: (n) => warHurt(n, 'test'), warFire: (k, v) => { if (k === 'gun') warPad.gun = v; }, remote: () => remote, sky: () => ({ on: shareOn, id: skyId, pilots: skyPilots, off: skyOff }), traffic: () => traffic, spawnTraffic: () => spawnTraffic(), failEngine: (p) => { failAt = elapsed; }, flight: () => flight, world: () => W, dbg: () => ({ debris, smoke, gouges, slowT, duckT, shakeKick, attached: [...attached] }),
+    window.NotchPlaneGame._poke = { startBattle: (assist = 'easy', veh = 'f16', npc = false) => { mode = MODES.find((m) => m.id === 'war'); warVeh = veh; warAssist = assist; warSide = 'coop'; warNpc = npc; start(); return war; }, net: { vote: (k, v) => netVoteCast(k, v), hurt: (id, a) => netHurtRemote(id, a, 'test'), room: () => netg && { role: netg.role, code: netg.code, cfg: netg.cfg, running: netg.running, status: netg.status, votes: netg.votes, id: netMyId }, hurtMe: (a, by) => warHurt(a, 'test', by) }, auto: (name, veh = 'f16', play = 'online') => { mode = MODES.find((m) => m.id === 'war'); playerName = name; warVeh = veh; warPlay = play; warNpc = true; warSide = 'coop'; warAutoStart(); return !!netg; }, netinfo: () => ({ role: netg && netg.role, code: netg && netg.code, status: netg && netg.status, running: netg && netg.running, peers: netg ? [...netg.peers.values()].map((p) => p.n) : [], paused: netg && netg.cfg.paused, wave: war && war.wave, net: !!(war && war.net), others: war && war.net ? [...war.net.others.values()].map((o) => [o.name, o.alive, o.rep && o.rep.kind]) : [] }), lock: () => warToggleLock(), war: () => war, cam: () => ({ camMode, camPos: camPos.slice() }), warHurt: (n) => warHurt(n, 'test'), warFire: (k, v) => { if (k === 'gun') warPad.gun = v; }, remote: () => remote, sky: () => ({ on: shareOn, id: skyId, pilots: skyPilots, off: skyOff }), traffic: () => traffic, spawnTraffic: () => spawnTraffic(), failEngine: (p) => { failAt = elapsed; }, flight: () => flight, world: () => W, dbg: () => ({ debris, smoke, gouges, slowT, duckT, shakeKick, attached: [...attached] }),
       // Test hooks for looking at the models: a fixed camera, held controls, and freezing the physics.
       view: (v) => { devView = v; }, ctl: (c) => { devCtl = c; }, hold: (h) => { devHold = h; }, plane: () => plane, surf,
       // Test hook: run the simulation ahead by `secs` seconds without drawing (a slow software renderer can't keep real time).
