@@ -6576,6 +6576,8 @@
         if (labels < 3) { h2.fillText(`${WAR_KINDS[g.kind].name} ${fmtD(dd)}`, q.x, q.y + r + 9); labels++; }
         if (g.hp < g.maxHp) { h2.fillStyle = 'rgba(0,0,0,.6)'; h2.fillRect(q.x - r, q.y - r - 6, r * 2, 3); h2.fillStyle = '#ff9f43'; h2.fillRect(q.x - r, q.y - r - 6, r * 2 * clamp(g.hp / g.maxHp, 0, 1), 3); }
       }
+      /// Height ("Y level") of a marker next to yours: its own Y and how far above (+) or below (-) you it is.
+      const yTag = (a) => { const dy = Math.round(a.pos[1] - flight.pos[1]); return `Y${Math.round(a.pos[1])} (${dy >= 0 ? '+' : ''}${dy})`; };
       const markAir = (a, col, label, team = false) => {
         if (a.state !== 'fly') return;
         const dd = len(sub(a.pos, flight.pos)), q0 = proj(a.pos), q = onScr(q0, 10) ? q0 : edgePoint(a.pos), locked = war.lock === a, lastFew = war.ground.filter((g) => !g.dead).length + war.foes.filter((f) => f.state === 'fly').length <= 3, r = (locked ? 19 : 14) * (lastFew ? 1 + 0.18 * Math.sin(performance.now() / 120) : 1);
@@ -6584,13 +6586,13 @@
           h2.strokeRect(q.x - r, q.y - r, r * 2, r * 2);
           if (team) {          // a teammate: a second bracket, a green glow and the name always shown
             h2.save(); h2.shadowColor = col; h2.shadowBlur = 14; h2.lineWidth = 2; h2.strokeRect(q.x - r - 5, q.y - r - 5, r * 2 + 10, r * 2 + 10); h2.restore();
-            h2.save(); h2.font = `800 ${Math.round(12 * s + 3)}px system-ui`; h2.textAlign = 'center'; h2.shadowColor = 'rgba(0,0,0,.8)'; h2.shadowBlur = 4; h2.fillStyle = col; h2.fillText(`${label}  ${fmtD(dd)}`, q.x, q.y - r - 10); h2.restore();
+            h2.save(); h2.font = `800 ${Math.round(12 * s + 3)}px system-ui`; h2.textAlign = 'center'; h2.shadowColor = 'rgba(0,0,0,.8)'; h2.shadowBlur = 4; h2.fillStyle = col; h2.fillText(`${label}  ${fmtD(dd)}  ${yTag(a)}`, q.x, q.y - r - 10); h2.restore();
           } else
-          if (labels < 3) { h2.fillText(`${label} ${fmtD(dd)}${locked ? (war.lockT >= 1 ? ' LOCK' : ' …') : ''}`, q.x, q.y + r + 11); labels++; }
+          if (labels < 3) { h2.fillText(`${label} ${fmtD(dd)} ${yTag(a)}${locked ? (war.lockT >= 1 ? ' LOCK' : ' …') : ''}`, q.x, q.y + r + 11); labels++; }
         } else if (q) {
           const ang = q.angle || Math.atan2(q.y - H2 / 2, q.x - W2 / 2), ex = q.x, ey = q.y;
           h2.save(); h2.translate(ex, ey); h2.rotate(ang); h2.beginPath(); h2.moveTo(11, 0); h2.lineTo(-7, -8); h2.lineTo(-7, 8); h2.closePath(); h2.fill(); h2.restore();
-          if (team || labels < 3) { h2.fillText(`${label} ${fmtD(dd)}`, ex, ey + 18); if (!team) labels++; }
+          if (team || labels < 3) { h2.fillText(`${label} ${fmtD(dd)} ${yTag(a)}`, ex, ey + 18); if (!team) labels++; }
         }
       };
       if (war.net) for (const o of war.net.others.values()) {
@@ -6713,6 +6715,7 @@
       if (war.net) for (const o of war.net.others.values()) if (o.alive && o.shown) blip(o.shown, netFight() ? '#ffb347' : '#39ff7a', false, !netFight());
       for (const a of war.foes) if (a.state === 'fly') blip(a.pos, '#ff5d5d', false);
       if (war.friend && war.friend.state === 'fly') blip(war.friend.pos, '#39ff7a', false, true);
+      h2.fillStyle = '#fff'; h2.font = `800 ${Math.round(10 * s + 3)}px system-ui`; h2.textAlign = 'center'; h2.fillText(`YOU  Y${Math.round(flight.pos[1])}`, cx, cy + R + (war.net && !netFight() ? 26 : 13));
       if (war.net && !netFight()) { h2.fillStyle = '#39ff7a'; h2.font = `700 ${Math.round(9 * s + 2)}px system-ui`; h2.textAlign = 'center'; h2.fillText('● GREEN = YOUR TEAM', cx, cy + R + 12); }
       h2.fillStyle = '#fff'; h2.beginPath(); h2.moveTo(cx, cy - 5); h2.lineTo(cx + 4, cy + 4); h2.lineTo(cx - 4, cy + 4); h2.closePath(); h2.fill();
       if (war.net && war.dead && war.net.respawnT > 0) { h2.textAlign = 'center'; h2.font = `800 ${Math.round(24 * s + 4)}px system-ui`; h2.fillStyle = '#ff9f9f'; h2.fillText(`DESTROYED · BACK IN ${Math.ceil(war.net.respawnT)}`, W2 / 2, H2 * 0.4); }
@@ -8155,7 +8158,7 @@
         const a = trafficNearest.a, d = trafficNearest.d, dy = Math.round((a.pos[1] - flight.pos[1]) * 3.281 / 100) * 100;
         const rel = ((Math.atan2(a.pos[0] - flight.pos[0], -(a.pos[2] - flight.pos[2])) - flight.heading + Math.PI * 3) % (Math.PI * 2)) - Math.PI;
         const arrow = Math.abs(rel) < 0.35 ? 'AHEAD' : Math.abs(rel) > 2.8 ? 'BEHIND' : rel > 0 ? 'TO THE RIGHT' : 'TO THE LEFT';      // words: an up arrow looked like "it is above you"
-        const txt = `TRAFFIC ${a.spec.name.split(' ').slice(-1)[0]} · ${d < 950 ? Math.round(d) + ' m' : (d / 1000).toFixed(1) + ' km'} ${arrow} ${dy === 0 ? 'LEVEL' : (dy > 0 ? 'ABOVE ' + dy : 'BELOW ' + (-dy)) + ' ft'}`;
+        const txt = `TRAFFIC ${a.spec.name.split(' ').slice(-1)[0]} · ${d < 950 ? Math.round(d) + ' m' : (d / 1000).toFixed(1) + ' km'} ${arrow} ${dy === 0 ? 'LEVEL' : (dy > 0 ? 'ABOVE ' + dy : 'BELOW ' + (-dy)) + ' ft'} · YOU Y${Math.round(flight.pos[1])} · THEM Y${Math.round(a.pos[1])}`;
         h2.font = `700 ${Math.round(9 * s + 2)}px system-ui`; h2.textAlign = 'left'; h2.textBaseline = 'middle';
         const bw4 = h2.measureText(txt).width + 16, by4 = 8 + 7 * 16 * s + 22 + 28;
         box(W2 - bw4 - 8, by4, bw4, 22); h2.fillStyle = d < 800 ? '#ffd166' : 'rgba(255,255,255,.85)'; h2.fillText(txt, W2 - bw4, by4 + 11);
