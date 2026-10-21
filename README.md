@@ -72,7 +72,7 @@ Pick your computer. Both buttons start the download straight away. The Mac link 
   </tr>
   <tr>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.0.99</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.0.100</b></a>
     </td>
     <td align="center">
       <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 1.96.0 BETA</b></a>
@@ -233,6 +233,12 @@ All screenshots use sample data.
 ## What's new
 
 > **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is still in the repository's tags.
+
+### Mac 2.0.100 · Windows 1.99.0 BETA · 21 October 2026 · Battle: flying trees and wildfire
+
+- Battle explosions are now dramatic: a missile, bomb, rocket, shell, grenade or a burning depot throws the trees near its middle into the air (they tumble and some are on fire, and a flaming one can set the ground where it lands alight), and sets trees further out on fire.
+- Burning trees give off flames and smoke for 9 to 16 seconds and then fall, and fire jumps from tree to tree, so a wildfire can spread through a wood after a missile lands close to it. On foot, standing next to a burning tree hurts.
+- Every player's game picks the same trees to throw and burn, so the fire looks the same for everyone. Heat vision shows the flames through the smoke.
 
 ### Mac 2.0.99 · Windows 1.98.0 BETA · 21 October 2026 · Battle: breakable trees and rolling hills
 

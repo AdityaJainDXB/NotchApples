@@ -20,6 +20,11 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.0.100", date: "21 October 2026", headline: "Battle: flying trees and wildfire", items: [
+            "Battle explosions are now dramatic: a missile, bomb, rocket, shell, grenade or a burning depot throws the trees near its middle into the air (they tumble and some are on fire, and a flaming one can set the ground where it lands alight), and sets trees further out on fire.",
+            "Burning trees give off flames and smoke for 9 to 16 seconds and then fall, and fire jumps from tree to tree, so a wildfire can spread through a wood after a missile lands close to it. On foot, standing next to a burning tree hurts.",
+            "Every player's game picks the same trees to throw and burn, so the fire looks the same for everyone. Heat vision shows the flames through the smoke.",
+        ]),
         ReleaseNote(version: "2.0.99", date: "21 October 2026", headline: "Battle: breakable trees and rolling hills", items: [
             "Trees break when you hit them: a plane's wing or nose, a tank or a van that runs into a tree breaks it (leaves fly and there is a crack), and it is gone from the picture for the rest of the battle. A strong Battle plane slows down but flies on; trees grow back in the next battle.",
             "The battlefields are no longer pancake flat: gentle rolling hills (up to about 40 m high, slopes of 5 to 10 degrees) so there are ridges to hide behind and to fly over, still easy for tanks and soldiers to cross.",

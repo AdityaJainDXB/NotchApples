@@ -1,0 +1,5 @@
+**Battle: flying trees and wildfire**
+
+- Battle explosions are now dramatic: a missile, bomb, rocket, shell, grenade or a burning depot throws the trees near its middle into the air (they tumble and some are on fire, and a flaming one can set the ground where it lands alight), and sets trees further out on fire.
+- Burning trees give off flames and smoke for 9 to 16 seconds and then fall, and fire jumps from tree to tree, so a wildfire can spread through a wood after a missile lands close to it. On foot, standing next to a burning tree hurts.
+- Every player's game picks the same trees to throw and burn, so the fire looks the same for everyone. Heat vision shows the flames through the smoke.
