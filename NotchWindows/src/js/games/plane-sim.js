@@ -8128,7 +8128,7 @@
         let best = null, bd = Infinity;
         for (const st of STARTS) { if (st.gate) continue; const c = st.id === 'home' ? [0, -700] : [st.pos[0], st.pos[2] - 460]; const d = Math.hypot(c[0] - flight.pos[0], c[1] - flight.pos[2]); if (d < bd) { bd = d; best = { st, c }; } }
         const rel = ((Math.atan2(best.c[0] - flight.pos[0], -(best.c[1] - flight.pos[2])) - flight.heading + Math.PI * 3) % (Math.PI * 2)) - Math.PI;
-        const arrow = Math.abs(rel) < 0.35 ? '▲' : Math.abs(rel) > 2.8 ? '▼' : rel > 0 ? '▶' : '◀';
+        const arrow = Math.abs(rel) < 0.35 ? 'AHEAD' : Math.abs(rel) > 2.8 ? 'BEHIND' : rel > 0 ? 'TO THE RIGHT' : 'TO THE LEFT';      // words: an up arrow looked like "it is above you"
         const txt = `${best.st.name} · ${bd < 950 ? Math.round(bd) + ' m' : (bd / 1000).toFixed(1) + ' km'} ${arrow}`;
         h2.font = `700 ${Math.round(9 * s + 2)}px system-ui`; h2.textAlign = 'left'; h2.textBaseline = 'middle';
         const bw2 = h2.measureText(txt).width + 16, by2 = H2 - 8 - 24;
@@ -8154,8 +8154,8 @@
       if (trafficOn && trafficNearest && trafficNearest.a.state === 'fly') {
         const a = trafficNearest.a, d = trafficNearest.d, dy = Math.round((a.pos[1] - flight.pos[1]) * 3.281 / 100) * 100;
         const rel = ((Math.atan2(a.pos[0] - flight.pos[0], -(a.pos[2] - flight.pos[2])) - flight.heading + Math.PI * 3) % (Math.PI * 2)) - Math.PI;
-        const arrow = Math.abs(rel) < 0.35 ? '▲' : Math.abs(rel) > 2.8 ? '▼' : rel > 0 ? '▶' : '◀';
-        const txt = `TRAFFIC ${a.spec.name.split(' ').slice(-1)[0]} · ${d < 950 ? Math.round(d) + ' m' : (d / 1000).toFixed(1) + ' km'} ${arrow} ${dy === 0 ? 'level' : (dy > 0 ? '+' : '') + dy + ' ft'}`;
+        const arrow = Math.abs(rel) < 0.35 ? 'AHEAD' : Math.abs(rel) > 2.8 ? 'BEHIND' : rel > 0 ? 'TO THE RIGHT' : 'TO THE LEFT';      // words: an up arrow looked like "it is above you"
+        const txt = `TRAFFIC ${a.spec.name.split(' ').slice(-1)[0]} · ${d < 950 ? Math.round(d) + ' m' : (d / 1000).toFixed(1) + ' km'} ${arrow} ${dy === 0 ? 'LEVEL' : (dy > 0 ? 'ABOVE ' + dy : 'BELOW ' + (-dy)) + ' ft'}`;
         h2.font = `700 ${Math.round(9 * s + 2)}px system-ui`; h2.textAlign = 'left'; h2.textBaseline = 'middle';
         const bw4 = h2.measureText(txt).width + 16, by4 = 8 + 7 * 16 * s + 22 + 28;
         box(W2 - bw4 - 8, by4, bw4, 22); h2.fillStyle = d < 800 ? '#ffd166' : 'rgba(255,255,255,.85)'; h2.fillText(txt, W2 - bw4, by4 + 11);
