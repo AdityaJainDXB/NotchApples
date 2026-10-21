@@ -4178,10 +4178,10 @@
     if (Math.abs(off) > 1.1) st.hdg = wrapPi(fl.heading + Math.sign(off) * 1.1);          // never swing round the long way
     const floor = o.floor || 220, g0 = groundAt(world, fl.pos[0], fl.pos[2]), g1 = groundAt(world, fl.pos[0] + fl.vel[0] * 6, fl.pos[2] + fl.vel[2] * 6);
     st.alt = clamp(st.alt + cmd.climb * (o.climbRate || 70) * dt, Math.max(g0, g1) + floor, o.ceiling || 2600);
-    const bm = o.bankMax || 1.3, he = wrapPi(st.hdg - fl.heading), bankT = clamp(he * 3.0, -bm, bm);
-    const roll = clamp((bankT - fl.bank) * 2.5, -1, 1);
+    const bm = o.bankMax || (fl.s.gLimit < 5 ? 1.0 : 1.3), he = wrapPi(st.hdg - fl.heading), bankT = clamp(he * 3.0, -bm, bm);
+    const roll = clamp(wrapPi(bankT - fl.bank) * 2.5, -1, 1);          // the short way round, even if a gust has rolled the plane past 90 degrees
     const vsT = clamp((st.alt - fl.pos[1]) * 0.12, -30, 30);
-    const pitch = clamp((vsT - fl.vel[1]) * 0.05 + Math.abs(Math.sin(fl.bank)) * (o.pull || 0.3), -0.5, 0.7);
+    const pitch = Math.abs(fl.bank) > 1.35 ? clamp((vsT - fl.vel[1]) * 0.02, -0.15, 0.15) : clamp((vsT - fl.vel[1]) * 0.05 + Math.abs(Math.sin(fl.bank)) * (o.pull || 0.3), -0.5, 0.7);      // rolled right over: level the wings first, do not pull
     st.i = clamp(st.i + (st.spd - fl.ias) * dt * 0.02, -0.5, 0.5);
     const throttle = clamp((clamp(0.55 + (st.spd - fl.ias) * 0.04 + st.i, 0.1, 1) - fl.throttle) * 3, -1, 1);
     return { pitch: pitch * AP_SIGN.pitch, roll: roll * AP_SIGN.roll, yaw: 0, throttle };
