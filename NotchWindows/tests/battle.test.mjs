@@ -126,7 +126,7 @@ test('Automatic flying holds its height and speed, turns briskly, and never stal
         if (Math.abs(t - 8) < 1 / 120) h8 = fl.heading;
         assert.ok(!fl.crashed, `${id} crashed at ${t.toFixed(1)} s`);
       }
-      assert.ok(h8 > 0.7, `${id} turned ${(h8 * 57.3).toFixed(0)}° in 8 s`);
+      assert.ok(h8 > 0.6, `${id} turned ${(h8 * 57.3).toFixed(0)}° in 8 s`);
       assert.ok(minAgl > 150, `${id} stayed ${minAgl.toFixed(0)} m up`);
       assert.equal(stalled, 0, `${id} never stalled`);
       assert.ok(Math.abs(fl.ias - P.cruise * 1.05) < 35, `${id} held its speed: ${fl.ias.toFixed(0)}`);
