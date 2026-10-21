@@ -4526,7 +4526,7 @@
     let playerName = read('name', '');
 
     // ---- sound (Web Audio): engine drone, a chime for hoops, a thud for crashes
-    let ac = null, eng = null, engGain = null, snd = null;
+    let ac = null, eng = null, engGain = null, snd = null, soundHeld = false;      // soundHeld: the notch is closed or the sound is off: nothing may make a noise
     /// Builds the always-running sounds of the flight: a piston engine (firing pulses and a propeller beat), a jet
     /// (spooling roar, whine and rumble), wind noise, the tyres rolling, the stall horn and the overspeed clacker. They
     /// start silent; `updateSound` sets their levels every frame from the engine, the speed and the aircraft.
@@ -4568,8 +4568,19 @@
       const fire = { f: filt('bandpass', 2300, 0.7), f2: filt('lowpass', 420, 0.7), g: gain(0), g2: gain(0) }; const fn = noiseSrc(); fn.connect(fire.f); fire.f.connect(fire.g); fire.g.connect(out); fn.connect(fire.f2); fire.f2.connect(fire.g2); fire.g2.connect(out);
       return { p, j, w, r, horn, clack, fire };
     }
+    /// Silences everything for real. (Setting the master gain's value is not enough: the engine sounds keep gliding their level back
+    /// up, so the gain's pending changes are cancelled first, and the audio itself is paused.)
+    function muteAudio() {
+      try { cancelSpeech(); } catch { /* none */ }
+      if (!ac) return;
+      try { if (engGain) { const t = ac.currentTime; engGain.gain.cancelScheduledValues(t); engGain.gain.setValueAtTime(0, t); } ac.suspend && ac.suspend(); } catch { /* no sound to mute */ }
+    }
+    function unmuteAudio() {
+      if (!ac || !sound || soundHeld) return;
+      try { if (engGain) { const t = ac.currentTime; engGain.gain.cancelScheduledValues(t); engGain.gain.setValueAtTime(1, t); } ac.resume && ac.resume(); } catch { /* no sound */ }
+    }
     function audio() {
-      if (!sound) return null;
+      if (!sound || soundHeld) return null;
       if (!ac) {
         try {
           ac = new (window.AudioContext || window.webkitAudioContext)();
@@ -4669,6 +4680,7 @@
       return voiceCache;
     }
     function speak(text, level) {
+      if (soundHeld || !sound) return;
       const synth = window.speechSynthesis;
       if (!synth || typeof SpeechSynthesisUtterance === 'undefined') { beep(level >= 2 ? 1100 : 760, 0.25, 'square', 0.1); return; }
       try {
@@ -4836,13 +4848,13 @@
       atc = { cs: `Notch ${100 + Math.floor(Math.random() * 899)}`, said: new Set() }; atcText = ''; atcT = 0; showCheck = true;
       if (coldStart && !plane.rotor && flight.onGround) { flight.engOff = true; flight.throttle = 0; flight.battery = false; flight.beaconSw = false; toast('Clean start: battery (Y), beacon (O), then the engine (I). The checklist on the left walks you through it', 4200); }
       if (audio()?.state === 'suspended') ac.resume();
-      if (engGain) engGain.gain.value = 1;
+      unmuteAudio();
     }
 
     function finish(kind, value, label, report = null) {
       screen = 'result';
       result = { kind, value, label, best: false, rank: 0, report };
-      if (engGain) engGain.gain.value = 0;
+      muteAudio();
       cancelSpeech();
       const board = read(`board.${mode.id}`, []);
       const qualifies = value != null && (board.length < 10 || (mode.better === 'high' ? value > board[board.length - 1].score : value < board[board.length - 1].score));
@@ -4891,7 +4903,7 @@
         if (screen === 'fly') {
           if (war && war.mapOpen && (k === 'Enter' || k === ' ')) { warConfirmDrop(); e.preventDefault?.(); return; }
           if (k === 'u' && war && war.net) toggleVote();
-          if (k === 'p' && (!(war && war.net) || paused)) { paused = !paused; renderUI(); if (!paused) { try { ac && ac.resume && ac.resume(); } catch { /* no sound */ } } }
+          if (k === 'p' && (!(war && war.net) || paused)) { paused = !paused; renderUI(); if (!paused) { unmuteAudio(); } }
           if (k === '?' || k === '/') showCtl(ctlEl.style.display === 'none');
           if (mode.id === 'war') { if (k === 'n') warLaunch(); else if (k === 'l') warFlares(); else if (k === 't') warToggleLock(); else if (k === 'e') warHeliExitEnter(); else if (k === '1' && war && war.foot) warSwitchWeapon('rifle'); else if (k === '2' && war && war.foot) warSwitchWeapon('rpg'); else if (k === 'z') warScope(); else if (k === 'r') warReload(); else if (k === 'g') { if (war && war.foot) warGrenade(); else warLaunchGuided(); } if ((k === 'b' || k === 'z') && war && war.vehicle === 'plane' && !war.dead) war.bombPend = true; }
           if (k === 'c') camMode = (camMode + 1) % 3;
@@ -4973,7 +4985,7 @@
     const blur = () => keys.clear(); window.addEventListener('blur', blur);
     root.addEventListener('focusout', (e) => { if (!root.contains(e.relatedTarget)) keys.clear(); });
     // Hidden (the window or notch closed): let go of the keys and pause the flight, so nothing happens while nobody is looking.
-    const hidden = () => { if (document.hidden) { keys.clear(); warPad.gun = false; warPad.bomb = false; if (screen === 'fly' && !paused && !(war && war.net)) { paused = true; renderUI(); } } }; document.addEventListener('visibilitychange', hidden);
+    const hidden = () => { if (document.hidden) { muteAudio(); keys.clear(); warPad.gun = false; warPad.bomb = false; if (screen === 'fly' && !paused && !(war && war.net)) { paused = true; renderUI(); } } else if (screen === 'fly' && !paused && !soundHeld) unmuteAudio(); }; document.addEventListener('visibilitychange', hidden);
     // The mouse steers by where the cursor is inside a small ring in the middle of the view: the ring's edge is full
     // stick, so a short move is enough and the cursor never has to leave the notch. It only takes control once the
     // cursor has been in the middle (a cursor left anywhere after clicking Take off can't bank the plane), and lets
@@ -6983,7 +6995,7 @@
       else voteEl.style.display = 'none';
     }
     function toggleVoteBind() { voteEl.querySelectorAll('[data-vote]').forEach((b) => b.onclick = (e) => { e.stopPropagation(); const [key, raw] = b.dataset.vote.split(':'); netVoteCast(key, raw === 'true' ? true : raw === 'false' ? false : raw); voteEl.innerHTML = voteHtml(); toggleVoteBind(); }); }
-    netbar.querySelectorAll('button').forEach((b) => b.addEventListener('click', (e) => { e.stopPropagation(); if (b.dataset.nb === 'vote') toggleVote(); else { netLeave(true); screen = 'menu'; paused = false; if (engGain) engGain.gain.value = 0; restorePlane(); useBattlefield(''); flight = new Flight(plane); renderUI(); } }));
+    netbar.querySelectorAll('button').forEach((b) => b.addEventListener('click', (e) => { e.stopPropagation(); if (b.dataset.nb === 'vote') toggleVote(); else { netLeave(true); screen = 'menu'; paused = false; muteAudio(); restorePlane(); useBattlefield(''); flight = new Flight(plane); renderUI(); } }));
     netbar.addEventListener('mousedown', (e) => e.stopPropagation());
     /// The buttons for the vehicle in use: a tank has a cannon and a machine gun; an aircraft has guns, bombs, missiles and flares.
     function buildWbar() {
@@ -7136,7 +7148,7 @@
     function netEnd(why) {
       const wasInMatch = !!(war && war.net);
       netLeave(true);
-      if (wasInMatch && screen === 'fly') { toast(why, 4000); screen = 'menu'; paused = false; if (engGain) engGain.gain.value = 0; restorePlane(); useBattlefield(''); flight = new Flight(plane); }
+      if (wasInMatch && screen === 'fly') { toast(why, 4000); screen = 'menu'; paused = false; muteAudio(); restorePlane(); useBattlefield(''); flight = new Flight(plane); }
       else if (why && screen === 'menu') toast(why, 3500);
       renderUI();
     }
@@ -8642,9 +8654,9 @@
         const a = n.dataset.a;
         if (a === 'restart' && mode.id === 'war' && war && screen === 'fly') { paused = false; renderUI(); warQuickRespawn(); root.focus(); }
         else if (a === 'start' || a === 'again' || a === 'restart') onStartPress(a);
-        else if (a === 'resume') { paused = false; renderUI(); root.focus(); try { ac && ac.resume && ac.resume(); } catch { /* no sound */ } }
+        else if (a === 'resume') { paused = false; renderUI(); root.focus(); unmuteAudio(); }
         else if (a === 'fullscreen') toggleFullscreen();
-        else if (a === 'menu') { if (netg) netLeave(true); screen = 'menu'; paused = false; if (engGain) engGain.gain.value = 0; restorePlane(); useBattlefield(''); flight = new Flight(plane); renderUI(); }
+        else if (a === 'menu') { if (netg) netLeave(true); screen = 'menu'; paused = false; muteAudio(); restorePlane(); useBattlefield(''); flight = new Flight(plane); renderUI(); }
         else if (a === 'save') saveScore();
         else if (a === 'mine') goPlace(myPlace);
         else if (a === 'goplace') { const v = (ui.querySelector('[data-place]')?.value || '').trim(); if (v) goPlace(() => lookupPlace(v)); }
@@ -8658,7 +8670,7 @@
         else if (a === 'tcas') { tcasOn = !tcasOn; write('tcas', tcasOn); if (!tcasOn) cancelSpeech(); renderUI(); }
         else if (a === 'gpws') { gpwsOn = !gpwsOn; write('gpws', gpwsOn); if (!gpwsOn) cancelSpeech(); renderUI(); }
         else if (a === 'mouse') { mouseOn = !mouseOn; write('mouse', mouseOn); renderUI(); }
-        else if (a === 'sound') { sound = !sound; write('sound', sound); if (!sound && engGain) engGain.gain.value = 0; renderUI(); }
+        else if (a === 'sound') { sound = !sound; write('sound', sound); if (sound) unmuteAudio(); else muteAudio(); renderUI(); }
         else if (a === 'units') { units = units === 'kmh' ? 'kt' : 'kmh'; write('units', units); renderUI(); }
         else if (a === 'failures') { failures = failures === 'rare' ? 'often' : failures === 'often' ? 'off' : 'rare'; write('failures', failures); renderUI(); }
         else if (a === 'clear') { if (window.confirm ? window.confirm('Clear every leaderboard on this computer?') : true) { MODES.forEach((m) => write(`board.${m.id}`, [])); renderUI(); } }
@@ -8829,23 +8841,23 @@
       if (suspended || !alive) return;
       suspended = true;
       keys.clear(); warPad.gun = false; warPad.bomb = false; cancelSpeech();
-      try { ac && ac.suspend && ac.suspend(); } catch { /* no sound to mute */ }
+      soundHeld = true; muteAudio();
       cancelAnimationFrame(raf);
       if (screen === 'fly' && war && war.net) { bgLast = performance.now(); bgTimer = setInterval(bgStep, 100); return; }
       if (screen === 'fly' && !paused) { paused = true; renderUI(); }
     }
     function resumeGame() {
       if (!suspended || !alive) return;
-      suspended = false; last = performance.now(); clearInterval(bgTimer); bgTimer = 0;
+      suspended = false; soundHeld = false; last = performance.now(); clearInterval(bgTimer); bgTimer = 0;
       raf = requestAnimationFrame(frame);
-      if (!(screen === 'fly' && paused)) { try { ac && ac.resume && ac.resume(); } catch { /* no sound */ } }   // sound returns when you unpause
+      if (!(screen === 'fly' && paused)) unmuteAudio();   // sound returns when you unpause
       root.focus();
     }
     window.NotchPlaneGame.suspend = suspendGame; window.NotchPlaneGame.resume = resumeGame;
     window.NotchPlaneGame.key = (key, down) => onKey({ key, repeat: false, target: null }, down);
     window.NotchPlaneGame._state = () => ({ screen, keys: [...keys], bank: flight.bank, pitch: flight.pitchAngle, pos: flight.pos, w: flight.w, onGround: flight.onGround,
       speed: flight.speed, ias: flight.ias, gload: flight.gload, spin: flight.spin, wreckRest: flight.rest, report: flight.report, damage: flight.damage, crashed: flight.crashed, why: flight.why, debris: debris.length, particles: smoke.length });
-    window.NotchPlaneGame._poke = { startBattle: (assist = 'easy', veh = 'f16', npc = false) => { mode = MODES.find((m) => m.id === 'war'); warVeh = veh; warAssist = assist; warSide = 'coop'; warNpc = npc; start(); return war; }, net: { vote: (k, v) => netVoteCast(k, v), hurt: (id, a) => netHurtRemote(id, a, 'test'), room: () => netg && { role: netg.role, code: netg.code, cfg: netg.cfg, running: netg.running, status: netg.status, votes: netg.votes, id: netMyId }, hurtMe: (a, by) => warHurt(a, 'test', by) }, auto: (name, veh = 'f16', play = 'online') => { mode = MODES.find((m) => m.id === 'war'); playerName = name; warVeh = veh; warPlay = play; warNpc = true; warSide = 'coop'; warAutoStart(); return !!netg; }, netinfo: () => ({ role: netg && netg.role, code: netg && netg.code, status: netg && netg.status, running: netg && netg.running, peers: netg ? [...netg.peers.values()].map((p) => p.n) : [], paused: netg && netg.cfg.paused, wave: war && war.wave, net: !!(war && war.net), others: war && war.net ? [...war.net.others.values()].map((o) => [o.name, o.alive, o.rep && o.rep.kind]) : [] }), join: (code, name, veh = 'f16') => { mode = MODES.find((m) => m.id === 'war'); playerName = name; warVeh = veh; netOpen('client', code); return true; }, dropLoot: (dx, dz, k, r) => { const p = war.tank ? war.tank.pos : flight.pos; warDropLoot(p[0] + dx, p[2] + dz, k, r); return war.loot.length; }, blast: (dx, dz, R = 45) => { const p = war.tank ? war.tank.pos : flight.pos; const x = p[0] + dx, z = p[2] + dz; warBoom([x, groundAt(W, x, z) + 1, z], 1); warBlast([x, groundAt(W, x, z) + 1, z], R, 260, 'p'); return { fires: war.fires.length, flyers: war.flyers.length }; }, bestTrees: () => { let best = null; primeObjects(W, 0, 0, 1800); for (const c of W.colliders) if (c.kind === 'tree' && Math.hypot(c.min[0], c.min[2]) < 1800) { const n = treesNear(W, c.min[0], c.min[2], 45).length; if (!best || n > best.n) best = { n, x: c.min[0], z: c.min[2] }; } return best; }, lock: () => warToggleLock(), spawnWave: () => { warSpawnWave(); return war.ground.map((g) => g.kind); }, war: () => war, cam: () => ({ camMode, camPos: camPos.slice() }), warHurt: (n) => warHurt(n, 'test'), warFire: (k, v) => { if (k === 'gun') warPad.gun = v; }, remote: () => remote, sky: () => ({ on: shareOn, id: skyId, pilots: skyPilots, off: skyOff }), traffic: () => traffic, spawnTraffic: () => spawnTraffic(), failEngine: (p) => { failAt = elapsed; }, flight: () => flight, world: () => W, dbg: () => ({ debris, smoke, gouges, slowT, duckT, shakeKick, attached: [...attached] }),
+    window.NotchPlaneGame._poke = { startBattle: (assist = 'easy', veh = 'f16', npc = false) => { mode = MODES.find((m) => m.id === 'war'); warVeh = veh; warAssist = assist; warSide = 'coop'; warNpc = npc; start(); return war; }, net: { vote: (k, v) => netVoteCast(k, v), hurt: (id, a) => netHurtRemote(id, a, 'test'), room: () => netg && { role: netg.role, code: netg.code, cfg: netg.cfg, running: netg.running, status: netg.status, votes: netg.votes, id: netMyId }, hurtMe: (a, by) => warHurt(a, 'test', by) }, auto: (name, veh = 'f16', play = 'online') => { mode = MODES.find((m) => m.id === 'war'); playerName = name; warVeh = veh; warPlay = play; warNpc = true; warSide = 'coop'; warAutoStart(); return !!netg; }, netinfo: () => ({ role: netg && netg.role, code: netg && netg.code, status: netg && netg.status, running: netg && netg.running, peers: netg ? [...netg.peers.values()].map((p) => p.n) : [], paused: netg && netg.cfg.paused, wave: war && war.wave, net: !!(war && war.net), others: war && war.net ? [...war.net.others.values()].map((o) => [o.name, o.alive, o.rep && o.rep.kind]) : [] }), join: (code, name, veh = 'f16') => { mode = MODES.find((m) => m.id === 'war'); playerName = name; warVeh = veh; netOpen('client', code); return true; }, dropLoot: (dx, dz, k, r) => { const p = war.tank ? war.tank.pos : flight.pos; warDropLoot(p[0] + dx, p[2] + dz, k, r); return war.loot.length; }, blast: (dx, dz, R = 45) => { const p = war.tank ? war.tank.pos : flight.pos; const x = p[0] + dx, z = p[2] + dz; warBoom([x, groundAt(W, x, z) + 1, z], 1); warBlast([x, groundAt(W, x, z) + 1, z], R, 260, 'p'); return { fires: war.fires.length, flyers: war.flyers.length }; }, bestTrees: () => { let best = null; primeObjects(W, 0, 0, 1800); for (const c of W.colliders) if (c.kind === 'tree' && Math.hypot(c.min[0], c.min[2]) < 1800) { const n = treesNear(W, c.min[0], c.min[2], 45).length; if (!best || n > best.n) best = { n, x: c.min[0], z: c.min[2] }; } return best; }, audioState: () => ({ state: ac && ac.state, gain: engGain ? engGain.gain.value : null, held: soundHeld, sound }), setSound: (on) => { sound = on; if (on) unmuteAudio(); else muteAudio(); }, lock: () => warToggleLock(), spawnWave: () => { warSpawnWave(); return war.ground.map((g) => g.kind); }, war: () => war, cam: () => ({ camMode, camPos: camPos.slice() }), warHurt: (n) => warHurt(n, 'test'), warFire: (k, v) => { if (k === 'gun') warPad.gun = v; }, remote: () => remote, sky: () => ({ on: shareOn, id: skyId, pilots: skyPilots, off: skyOff }), traffic: () => traffic, spawnTraffic: () => spawnTraffic(), failEngine: (p) => { failAt = elapsed; }, flight: () => flight, world: () => W, dbg: () => ({ debris, smoke, gouges, slowT, duckT, shakeKick, attached: [...attached] }),
       // Test hooks for looking at the models: a fixed camera, held controls, and freezing the physics.
       view: (v) => { devView = v; }, ctl: (c) => { devCtl = c; }, hold: (h) => { devHold = h; }, plane: () => plane, surf,
       // Test hook: run the simulation ahead by `secs` seconds without drawing (a slow software renderer can't keep real time).
