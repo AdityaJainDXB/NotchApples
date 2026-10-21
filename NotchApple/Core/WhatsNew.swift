@@ -20,6 +20,9 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.0.98", date: "21 October 2026", headline: "Battle: a simpler screen", items: [
+            "Battle looks simpler in a small window: the weapon buttons shrink to an icon with its key count so they all fit and cover less, the Vote and Leave buttons move to the bottom-left corner and the room text is hidden when there is no space, the radar shows just your height, and ground target labels no longer print on top of each other (two at most).",
+        ]),
         ReleaseNote(version: "2.0.97", date: "21 October 2026", headline: "Same Wi-Fi, same private room code", items: [
             "Friends on the same Wi-Fi now get the same private room code. The Battle menu shows it as \"This Wi-Fi\", Host uses it and the Join box is filled in with it. The first to press Host opens the game and the others press Join; if two press Host at once, one joins the other automatically. (The Online button already puts everyone in one open game.)",
             "This needs the licence server update (it works out the code from your public network address and stores nothing). Until that is live, Host gives a random code as before.",

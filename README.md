@@ -72,7 +72,7 @@ Pick your computer. Both buttons start the download straight away. The Mac link 
   </tr>
   <tr>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.0.97</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.0.98</b></a>
     </td>
     <td align="center">
       <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 1.96.0 BETA</b></a>
@@ -233,6 +233,10 @@ All screenshots use sample data.
 ## What's new
 
 > **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is still in the repository's tags.
+
+### Mac 2.0.98 · Windows 1.97.0 BETA · 21 October 2026 · Battle: a simpler screen
+
+- Battle looks simpler in a small window: the weapon buttons shrink to an icon with its key count so they all fit and cover less, the Vote and Leave buttons move to the bottom-left corner and the room text is hidden when there is no space, the radar shows just your height, and ground target labels no longer print on top of each other (two at most).
 
 ### Mac 2.0.97 · Windows 1.96.0 BETA · 21 October 2026 · 📶 Same Wi-Fi, same private room code
 
