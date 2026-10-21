@@ -98,3 +98,29 @@ test('the RPG: a rocket kills a rifleman outright, drops a little over 200 m, an
   console.log('rocket drop at 200 m:', (-b.pos[1]).toFixed(1));
   assert.ok(SOLDIER.rpgReload > SOLDIER.fireGap * 10, 'a slow reload');
 });
+
+test('loot: the rolls follow the rarity weights, rarer drops give more, and every kind has an amount', () => {
+  let seed = 11; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+  const counts = [0, 0, 0, 0], kinds = {}; const N = 20000;
+  for (let i = 0; i < N; i++) { const r = T.lootRoll(rnd); counts[r.r]++; kinds[r.k] = (kinds[r.k] || 0) + 1; }
+  const frac = counts.map((c) => c / N);
+  assert.ok(Math.abs(frac[0] - 0.6) < 0.03 && Math.abs(frac[3] - 0.03) < 0.01, `rarity shares ${frac.map((x) => x.toFixed(3))}`);
+  console.log('rarity shares:', frac.map((x) => x.toFixed(3)).join(' / '));
+  assert.equal(Object.keys(kinds).length, T.LOOT_KINDS.length, 'every kind can drop');
+  for (const k of T.LOOT_KINDS) { assert.ok(T.lootAmount(k.k, 3) >= T.lootAmount(k.k, 0), `${k.k}: gold gives at least common`); assert.ok(T.lootAmount(k.k, 0) >= 1); }
+  assert.equal(T.lootAmount('ammo', 0), 60); assert.equal(T.lootAmount('ammo', 3), 180);
+});
+
+test('a jump goes up about a metre, comes back down, and cannot be done in the air', () => {
+  const w = world();
+  try {
+    const b = new SoldierBody([0, 0, 0], 0); run(b, w, still, 0.5);
+    const g0 = T.groundAt(w, 0, 0);
+    let peak = 0, jumps = 0, airborne = false;
+    for (let t = 0; t < 2; t += 1 / 60) { b.step(1 / 60, { ...still, jump: true }, w); peak = Math.max(peak, b.pos[1] - g0); if (b.jumpH > 0.05 && !airborne) { airborne = true; jumps++; } if (b.jumpH <= 0.01) airborne = false; }
+    assert.ok(peak > 0.9 && peak < 1.4, `jump height ${peak.toFixed(2)}`);
+    assert.ok(jumps >= 2, 'holding the key jumps again on landing, not in mid-air');
+    run(b, w, still, 1.5); assert.ok(Math.abs(b.pos[1] - T.groundAt(w, b.pos[0], b.pos[2])) < 0.05, 'back on the ground');
+    console.log('jump height:', peak.toFixed(2));
+  } finally { T.setArena(null); }
+});
