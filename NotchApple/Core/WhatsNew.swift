@@ -20,6 +20,11 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.0.87", date: "21 October 2026", headline: "Battle: a growing battlefield", items: [
+            "For soldiers, tanks and helicopters the battlefield now starts small (40% of its radius) and grows with every wave until it is the full size at wave 7. A message tells you when it grows; at the edge you get a warning.",
+            "The host decides the size and tells everyone each wave, so all players share the same field, and players who join later get the current size. Jets keep the full battlefield.",
+            "The landing map shows the current play area as a white circle.",
+        ]),
         ReleaseNote(version: "2.0.86", date: "21 October 2026", headline: "Battle: parachute start with a map, and a military van", items: [
             "Soldier battles now start with a parachute jump from the bus: a map shows the battlefield, you click where to land (25 seconds, then it jumps for you), float down and steer a little with W A S D.",
             "A military van waits beside you when you land. Walk up and press E to get in: W/S drive, A/D steer, Shift boost (up to about 115 km/h), E to get out when stopped. Other players see your van, parked or driving.",

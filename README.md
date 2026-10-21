@@ -72,7 +72,7 @@ Pick your computer. Both buttons start the download straight away. The Mac link 
   </tr>
   <tr>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.0.86</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.0.87</b></a>
     </td>
     <td align="center">
       <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 1.82.0 BETA</b></a>
@@ -233,6 +233,12 @@ All screenshots use sample data.
 ## What's new
 
 > **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is still in the repository's tags.
+
+### Mac 2.0.87 · Windows 1.87.0 BETA · 21 October 2026 · Battle: a growing battlefield
+
+- For soldiers, tanks and helicopters the battlefield now starts small (40% of its radius) and grows with every wave until it is the full size at wave 7. A message tells you when it grows; at the edge you get a warning.
+- The host decides the size and tells everyone each wave, so all players share the same field, and players who join later get the current size. Jets keep the full battlefield.
+- The landing map shows the current play area as a white circle.
 
 ### Mac 2.0.86 · Windows 1.86.0 BETA · 21 October 2026 · Battle: parachute start with a map, and a military van
 
