@@ -72,7 +72,7 @@ Pick your computer. Both buttons start the download straight away. The Mac link 
   </tr>
   <tr>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.0.91</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.0.92</b></a>
     </td>
     <td align="center">
       <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 1.82.0 BETA</b></a>
@@ -233,6 +233,12 @@ All screenshots use sample data.
 ## What's new
 
 > **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is still in the repository's tags.
+
+### Mac 2.0.92 · Windows 1.91.0 BETA · 21 October 2026 · Flight and Battle: Y levels and clearer readouts
+
+- New Y levels: Battle markers for teammates, enemies and your wingman now show their height and how far above (+) or below (-) you they are (for example "Bob 422 m Y578 (+127)"), and your own Y is shown under the radar.
+- In free flight the traffic box shows YOU Y and THEM Y heights.
+- The airfield and traffic readouts use words (AHEAD, BEHIND, TO THE LEFT, TO THE RIGHT, ABOVE, BELOW, LEVEL) instead of arrows, because an up arrow made it look like the plane was climbing.
 
 ### Mac 2.0.91 · 21 October 2026 · 📈 Claude usage no longer announces rises that did not happen
 

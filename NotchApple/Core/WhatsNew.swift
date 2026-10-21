@@ -20,6 +20,11 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.0.92", date: "21 October 2026", headline: "Flight and Battle: Y levels and clearer readouts", items: [
+            "New Y levels: Battle markers for teammates, enemies and your wingman now show their height and how far above (+) or below (-) you they are (for example \"Bob 422 m Y578 (+127)\"), and your own Y is shown under the radar.",
+            "In free flight the traffic box shows YOU Y and THEM Y heights.",
+            "The airfield and traffic readouts use words (AHEAD, BEHIND, TO THE LEFT, TO THE RIGHT, ABOVE, BELOW, LEVEL) instead of arrows, because an up arrow made it look like the plane was climbing.",
+        ]),
         ReleaseNote(version: "2.0.91", date: "21 October 2026", headline: "Claude usage no longer announces rises that did not happen", items: [
             "The closed notch no longer pulses \"usage went up\" when it had not. It compared one Claude account's percentage with another's (or with an unstable order of accounts) and read the difference as a rise; each account is now compared only with its own last reading.",
         ]),
