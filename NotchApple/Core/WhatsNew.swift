@@ -20,6 +20,9 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.0.102", date: "21 October 2026", headline: "Plane menu: shorter and quieter", items: [
+            "The big \"How to play\" card on the Plane menu now shows only until you have started a game once. After that it folds into one \"How to play\" button (and a Hide button to fold it again). The long explanation under Host a game is one short line, and the Full screen button only appears where full screen can work, so you no longer get \"Full screen is not available in this window\".",
+        ]),
         ReleaseNote(version: "2.0.101", date: "21 October 2026", headline: "Plane game: the sound really stops", items: [
             "Fixed the plane game's sound that would not stop: the Sound button now silences everything (engine, warnings and spoken calls) and turns it back on properly, and closing the notch, leaving the game or hiding the window stops all sound too, including the spoken warnings that kept going in shared battles that run in the background. The old mute only set a volume that the engine sound then glided back up.",
         ]),

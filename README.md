@@ -72,7 +72,7 @@ Pick your computer. Both buttons start the download straight away. The Mac link 
   </tr>
   <tr>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.0.101</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.0.102</b></a>
     </td>
     <td align="center">
       <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 1.96.0 BETA</b></a>
@@ -233,6 +233,10 @@ All screenshots use sample data.
 ## What's new
 
 > **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is still in the repository's tags.
+
+### Mac 2.0.102 · Windows 1.101.0 BETA · 21 October 2026 · Plane menu: shorter and quieter
+
+- The big "How to play" card on the Plane menu now shows only until you have started a game once. After that it folds into one "How to play" button (and a Hide button to fold it again). The long explanation under Host a game is one short line, and the Full screen button only appears where full screen can work, so you no longer get "Full screen is not available in this window".
 
 ### Mac 2.0.101 · Windows 1.100.0 BETA · 21 October 2026 · Plane game: the sound really stops
 
