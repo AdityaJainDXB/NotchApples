@@ -6940,6 +6940,7 @@
       toast('🪂 You jumped from the bus. Steer a little with W A S D', 2600);
     }
     function ctlTick(dt) {
+      if (netg && war && war.net) { const ce = netbar.querySelector('[data-nb="code"]'); if (ce) { const t = `Room ${netg.code} · ${netg.cfg.side === 'versus' ? '⚔ FIGHT: players are enemies' : '🤝 CO-OP: all one team'} · ${netg.role === 'host' ? 1 + netg.peers.size : Math.max(2, (netg.roster || []).length)} playing`; if (ce.textContent !== t) ce.textContent = t; } }
       { const hb = wbar.querySelector('[data-w="heat"]'); if (hb) hb.classList.toggle('pg-lock', thermal); }
       if (thermal && !(screen === 'fly' && mode.id === 'war')) warThermal(false);
       const showMap = !!(war && war.mapOpen && screen === 'fly');
@@ -8309,7 +8310,7 @@
       const nm = (playerName || '').trim();
       if (!nm) { toast('Type your name first so the others know who you are', 2400); ui.querySelector('[data-warname]')?.focus(); return; }
       if (warPlay === 'single') { netOpen('host', NET.newCode()); netg.autoStart = true; }
-      else { netOpen('client', PUBLIC_ROOMS[warField] || PUBLIC_ROOMS.plains); netg.autoJoin = true; }
+      else { warSide = 'coop'; write('warside', 'coop'); netOpen('client', PUBLIC_ROOMS[warField] || PUBLIC_ROOMS.plains); netg.autoJoin = true; }       // an open game starts as Co-op: everyone on one team
       renderUI();
     }
     function onStartPress(a) {
