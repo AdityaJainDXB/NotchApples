@@ -20,6 +20,11 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.0.89", date: "21 October 2026", headline: "Battle: loot, healing and a Fortnite-style soldier", items: [
+            "Loot drops: glowing boxes with a tall beam (grey, blue, purple, gold) lie around the battlefield each wave and enemy soldiers drop some when they die. Walk over them to pick up rifle ammo, rockets, grenades, bandages, shield potions and medkits; a rarer colour gives more. The host decides who gets each one, so two players never take the same box.",
+            "Healing on foot: H bandage (+15 health up to 75), J shield potion (+50 shield), K medkit (full health). The soldier now has a shield bar over the health bar that soaks up damage first.",
+            "Fortnite-style walking: an over-the-shoulder third-person camera by default (first person in the scope), Space jumps, Shift runs, Ctrl or V crouches, and you aim with the cursor. Fire is now click or Enter.",
+        ]),
         ReleaseNote(version: "2.0.88", date: "21 October 2026", headline: "Battle: R respawns you instead of restarting", items: [
             "Pressing R in a battle now puts you straight back in your vehicle in the same wave, with the same score and kills. It no longer restarts the whole battle for everyone. On foot, R still reloads: use Respawn in the pause menu.",
         ]),

@@ -72,7 +72,7 @@ Pick your computer. Both buttons start the download straight away. The Mac link 
   </tr>
   <tr>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.0.88</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.0.89</b></a>
     </td>
     <td align="center">
       <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 1.82.0 BETA</b></a>
@@ -233,6 +233,12 @@ All screenshots use sample data.
 ## What's new
 
 > **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is still in the repository's tags.
+
+### Mac 2.0.89 · Windows 1.89.0 BETA · 21 October 2026 · Battle: loot, healing and a Fortnite-style soldier
+
+- Loot drops: glowing boxes with a tall beam (grey, blue, purple, gold) lie around the battlefield each wave and enemy soldiers drop some when they die. Walk over them to pick up rifle ammo, rockets, grenades, bandages, shield potions and medkits; a rarer colour gives more. The host decides who gets each one, so two players never take the same box.
+- Healing on foot: H bandage (+15 health up to 75), J shield potion (+50 shield), K medkit (full health). The soldier now has a shield bar over the health bar that soaks up damage first.
+- Fortnite-style walking: an over-the-shoulder third-person camera by default (first person in the scope), Space jumps, Shift runs, Ctrl or V crouches, and you aim with the cursor. Fire is now click or Enter.
 
 ### Mac 2.0.88 · Windows 1.88.0 BETA · 21 October 2026 · Battle: R respawns you instead of restarting
 
