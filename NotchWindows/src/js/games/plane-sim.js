@@ -7198,6 +7198,8 @@
           break;
         }
         case 'lobby': {
+          // Two people on the same Wi-Fi both pressed Host on the shared code: the one with the lower id keeps it, the other joins.
+          if (netg.role === 'host' && netg.wifi && !netg.running && m.host && m.host !== netMyId && String(m.host) < String(netMyId)) { netg.role = 'client'; netg.hostId = m.host; netg.wifi = false; }
           if (netg.role !== 'client') break;
           netg.hostSeen = Date.now(); netg.hostId = m.host; netg.cfg = m.cfg; netg.roster = m.roster; netg.error = ''; netBump();
           break;
@@ -8272,10 +8274,12 @@
     }
     function battleHtml() {
       if (netg) return lobbyHtml();
+      loadWifiCode();
       const chipP = (id, label, tip) => `<button data-warplay="${id}" class="${warPlay === id ? 'pg-on' : ''}" title="${tip}">${label}</button>`;
       return `<h2>Who are you?</h2><div class="pg-row"><span class="pg-lab">Your name</span><input data-warname maxlength="14" placeholder="Required: others see this" value="${escapeHtml(playerName)}" style="width:170px"><span class="pg-hint">Shown above you and in the player list.</span></div>
         <div class="pg-row" style="margin:6px 0"><span class="pg-lab">Play</span>${chipP('online', '🌐 Online', 'Join an open game on this battlefield, in the wave being played. If nobody is there you open one.')}${chipP('single', '👤 Single player', 'Your own game. Others can still join with its room code, any time.')}<span class="pg-hint">${warPlay === 'single' ? 'Your own game; others can join with the room code shown in it.' : 'Press Start: you join an open game and the wave being played.'}</span></div>`
         + soloBattleHtml() + `<h2>4 · Play with friends</h2>
+        ${wifiCode ? `<div class="pg-row"><span class="pg-lab">This Wi-Fi</span><b style="letter-spacing:.14em;font-size:15px">${wifiCode}</b><span class="pg-hint">Everyone on this Wi-Fi gets this same code: the first to press Host opens the game, the others press Join. (Online already puts everyone in one open game.)</span></div>` : ''}
         <div class="pg-row"><button data-nethost class="pg-go">Host a game</button><span class="pg-hint">or join one:</span><input data-netcode maxlength="8" placeholder="Room code" style="width:110px;text-transform:uppercase" value="${escapeHtml(joinDraft)}"><button data-netjoin>Join</button></div>
         <div class="pg-hint" style="margin-top:4px">The host gets a 6-letter code to share. It works on the same Wi-Fi or far apart, and Mac and Windows can play together. You fight on the same battlefield as everyone else: together against the computer (Co-op) or against each other (Fight). The people in the room can see your name, your vehicle and where you are.</div>`;
     }
@@ -8303,6 +8307,12 @@
         <div class="pg-hint" style="margin-top:4px">Co-op: everyone is on one side against the computer. Fight: players shoot each other, first to ${FIGHT_WIN_KILLS} kills wins (if the enemies are on they shoot everyone). Everyone plays the same battlefield and the same enemies.</div>`;
     }
     let joinDraft = '';
+    /// The room code everyone on the same Wi-Fi (the same public address) gets, from the licence server; null until it answers (or if it cannot).
+    let wifiCode = null, wifiTried = false;
+    function loadWifiCode() {
+      if (wifiTried) return; wifiTried = true;
+      skyFetch('/plane/net').then((j) => { const c = j && NET.normCode(j.code); if (c) { wifiCode = c; if (!joinDraft) joinDraft = c; if (screen === 'menu' && !netg) renderUI(); } });
+    }
     let warPlay = read('warplay', 'online');
     if (warPlay !== 'single') warPlay = 'online';
     /// Open games anyone can drop into: one room per battlefield, so players on the same field meet.
@@ -8478,7 +8488,7 @@
       ui.querySelectorAll('[data-warveh]').forEach((n) => n.onclick = () => { warVeh = n.dataset.warveh; write('warveh', warVeh); if (netg) { if (netg.role === 'host') netSendLobby(); else netHello(); } renderUI(); });
       ui.querySelectorAll('[data-warname]').forEach((n) => { n.oninput = () => { playerName = n.value.trim().slice(0, 14); write('name', playerName); }; n.onkeydown = (e) => { e.stopPropagation(); if (e.key === 'Enter') onStartPress('start'); }; });
       ui.querySelectorAll('[data-warplay]').forEach((n) => n.onclick = () => { warPlay = n.dataset.warplay; write('warplay', warPlay); renderUI(); });
-      ui.querySelectorAll('[data-nethost]').forEach((n) => n.onclick = () => { netOpen('host', NET.newCode()); renderUI(); });
+      ui.querySelectorAll('[data-nethost]').forEach((n) => n.onclick = () => { netOpen('host', wifiCode || NET.newCode()); if (wifiCode && netg) netg.wifi = true; renderUI(); });
       ui.querySelectorAll('[data-netjoin]').forEach((n) => n.onclick = () => { const input = ui.querySelector('[data-netcode]'), c = NET.normCode(input && input.value); if (!c) { toast('A room code is 6 letters and numbers', 2200); return; } joinDraft = ''; netOpen('client', c); renderUI(); });
       ui.querySelectorAll('[data-netcode]').forEach((n) => { n.oninput = () => { joinDraft = n.value.toUpperCase(); }; n.onkeydown = (e) => { e.stopPropagation(); if (e.key === 'Enter') ui.querySelector('[data-netjoin]')?.click(); }; });
       ui.querySelectorAll('[data-netleave]').forEach((n) => n.onclick = () => { netLeave(true); renderUI(); });

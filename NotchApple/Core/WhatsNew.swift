@@ -20,6 +20,10 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.0.97", date: "21 October 2026", headline: "Same Wi-Fi, same private room code", items: [
+            "Friends on the same Wi-Fi now get the same private room code. The Battle menu shows it as \"This Wi-Fi\", Host uses it and the Join box is filled in with it. The first to press Host opens the game and the others press Join; if two press Host at once, one joins the other automatically. (The Online button already puts everyone in one open game.)",
+            "This needs the licence server update (it works out the code from your public network address and stores nothing). Until that is live, Host gives a random code as before.",
+        ]),
         ReleaseNote(version: "2.0.96", date: "21 October 2026", headline: "Battle: friends meet in the same open game", items: [
             "Friends now meet in the same open game even if they picked different battlefields. Online used a separate room for each battlefield, so one friend landed in the \"Green Plains\" room and the other in \"Island Fortress\". There is now one open room: the battlefield is the one the first player picked, and you can vote for another with U. Both of you need this version. To play in a private game instead, use Single player and share its room code.",
         ]),

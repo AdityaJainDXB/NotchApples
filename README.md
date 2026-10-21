@@ -72,10 +72,10 @@ Pick your computer. Both buttons start the download straight away. The Mac link 
   </tr>
   <tr>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.0.96</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.0.97</b></a>
     </td>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 1.82.0 BETA</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 1.96.0 BETA</b></a>
     </td>
   </tr>
   <tr>
@@ -233,6 +233,11 @@ All screenshots use sample data.
 ## What's new
 
 > **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is still in the repository's tags.
+
+### Mac 2.0.97 · Windows 1.96.0 BETA · 21 October 2026 · 📶 Same Wi-Fi, same private room code
+
+- Friends on the same Wi-Fi now get the same private room code. The Battle menu shows it as "This Wi-Fi", Host uses it and the Join box is filled in with it. The first to press Host opens the game and the others press Join; if two press Host at once, one joins the other automatically. (The Online button already puts everyone in one open game.)
+- This needs the licence server update (it works out the code from your public network address and stores nothing). Until that is live, Host gives a random code as before.
 
 ### Mac 2.0.96 · Windows 1.95.0 BETA · 21 October 2026 · Battle: friends meet in the same open game
 

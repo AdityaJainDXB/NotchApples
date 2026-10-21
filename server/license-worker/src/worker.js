@@ -929,6 +929,12 @@ export default {
         if (path.startsWith('/asset/')) return await assetGet(env, request, path.slice('/asset/'.length));
         if (path === '/plane/board') return await planeBoard(env, new URL(request.url));
         if (path === '/plane/sky/count') { await addressLimit(env, request, 'skycount', 30); return json(env.PLANE_SKY ? await (await env.PLANE_SKY.get(env.PLANE_SKY.idFromName('sky')).fetch('https://sky/count')).json() : { pilots: 0 }); }
+        if (path === '/plane/net') {      // a room code everyone on the same Wi-Fi gets, so friends on one network land in the same shared Battle
+          await addressLimit(env, request, 'netcode', 20);
+          const ip = request.headers.get('cf-connecting-ip') || 'unknown', net = ip.includes(':') ? ip.split(':').slice(0, 4).join(':') : ip, chars = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+          const h = await sha256(`battle-net|${env.EMAIL_PEPPER || ''}|${net}`);
+          return json({ code: Array.from({ length: 6 }, (_, i) => chars[parseInt(h.slice(i * 2, i * 2 + 2), 16) % chars.length]).join('') }, 200, { 'cache-control': 'no-store' });
+        }
         if (path === '/ai/status') return json({ on: aiOn(env), model: aiOn(env) ? 'notch-fast' : null, limits: { pro: aiLimit(env, 1), ultimate: aiLimit(env, 2) } });
         throw new HTTPError(404, 'Not found');
       }

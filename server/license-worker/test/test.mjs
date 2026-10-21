@@ -619,6 +619,14 @@ await test('Fly with others: unknown aircraft are refused, the short id is per s
   let limited = 0; for (let i = 0; i < 40; i++) { const r = await worker.fetch(new Request('https://w.test/plane/sky/count', { headers: { 'cf-connecting-ip': '7.7.7.7' } }), env); if (r.status === 429) limited++; }
   assert.ok(limited > 0, 'the count is rate limited per address');
 });
+await test('Battle room code: the same network gets the same code, another network a different one, and it is rate limited', async () => {
+  const code = async (ip) => (await (await worker.fetch(new Request('https://w.test/plane/net', { headers: { 'cf-connecting-ip': ip } }), env)).json()).code;
+  const a1 = await code('9.9.9.9'), a2 = await code('9.9.9.9'), b1 = await code('9.9.8.8');
+  assert.match(a1, /^[A-HJKMNP-Z2-9]{6}$/); assert.equal(a1, a2); assert.notEqual(a1, b1);
+  assert.equal(await code('2001:db8:1:2:aaaa:bbbb:cccc:1'), await code('2001:db8:1:2:1111:2222:3333:4'), 'devices in one IPv6 network share a code');
+  let limited = 0; for (let i = 0; i < 30; i++) { const r = await worker.fetch(new Request('https://w.test/plane/net', { headers: { 'cf-connecting-ip': '5.5.5.5' } }), env); if (r.status === 429) limited++; }
+  assert.ok(limited > 0);
+});
 await test('Fly with others: pilots only see others flying in the same part of the world', async () => {
   assert.equal((await sky({ ...me(40, 0, 0), rg: 'tokyo' }, '8.8.8.1')).status, 200);
   const same = await sky({ ...me(41, 50, 50), rg: 'tokyo' }, '8.8.8.2'); assert.ok(same.others.some((o) => o.cs === 'Ana40'));
