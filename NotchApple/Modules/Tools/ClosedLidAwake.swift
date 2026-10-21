@@ -18,6 +18,8 @@ final class ClosedLidAwake: ObservableObject {
     @Published private(set) var isOn = false
     @Published private(set) var busy = false
     @Published var message: String?
+    /// When it will switch itself off (nil: no limit). Kept across launches; the switch-off itself runs as a background job.
+    @Published private(set) var offAt: Date? = UserDefaults.standard.object(forKey: "lid.offAt") as? Date
 
     private var watch: Timer?
     /// Set when the low-battery prompt was cancelled, so it is not asked again until the switch is flipped.
@@ -30,6 +32,7 @@ final class ClosedLidAwake: ObservableObject {
     /// Reads the real setting from the system.
     func refresh() {
         isOn = Self.parseSleepDisabled(Self.run("/usr/bin/pmset", ["-g"]))
+        if !isOn || (offAt ?? .distantFuture) < Date() { setOffAt(nil) }
         updateWatch()
         LiveActivityCenter.shared.recompute()
     }
@@ -47,7 +50,13 @@ final class ClosedLidAwake: ObservableObject {
         return "Running with the lid closed on battery drains it fast."
     }
 
-    func set(_ on: Bool) {
+    private func setOffAt(_ d: Date?) {
+        offAt = d
+        if let d { UserDefaults.standard.set(d, forKey: "lid.offAt") } else { UserDefaults.standard.removeObject(forKey: "lid.offAt") }
+    }
+
+    /// `seconds` > 0 makes it switch itself off after that long (0 = no limit).
+    func set(_ on: Bool, seconds: Int = 0) {
         guard !busy, on != isOn else { return }
         if on, let b = LiveActivityCenter.battery(), b.percent < Self.lowBatteryPercent {
             message = "Battery is under \(Self.lowBatteryPercent)%. Plug in first."
@@ -57,10 +66,11 @@ final class ClosedLidAwake: ObservableObject {
         declinedAutoOff = false
         message = on ? batteryWarning : nil
         DispatchQueue.global(qos: .userInitiated).async {
-            let error = Self.pmset(on)
+            let error = Self.pmset(on, seconds: on ? seconds : 0)
             DispatchQueue.main.async {
                 MainActor.assumeIsolated {
                     self.busy = false
+                    if error == nil { self.setOffAt(on && seconds > 0 ? Date().addingTimeInterval(Double(seconds)) : nil) }
                     if let error {
                         self.message = error
                         if !on { self.declinedAutoOff = true }
@@ -100,11 +110,16 @@ final class ClosedLidAwake: ObservableObject {
     // MARK: System calls
 
     /// nil on success, otherwise a short error.
-    nonisolated private static func pmset(_ on: Bool, allowPrompt: Bool = true) -> String? {
+    nonisolated private static func pmset(_ on: Bool, seconds: Int = 0, allowPrompt: Bool = true) -> String? {
         // Only a person flipping the switch ever sees the password prompt.
         guard allowPrompt else { return "Needs your password. Flip the switch to retry." }
         var error: NSDictionary?
-        let script = NSAppleScript(source: "do shell script \"pmset -a disablesleep \(on ? 1 : 0)\" with administrator privileges")
+        // One password prompt does both: the change, and (with a time limit) a background job that switches it off again
+        // later, even if this app has quit. A new change first stops the old job so it cannot cut a later session short.
+        let pid = "/var/db/notchapple-lid.pid"
+        var cmd = "[ -f \(pid) ] && kill $(cat \(pid)) 2>/dev/null; rm -f \(pid); pmset -a disablesleep \(on ? 1 : 0)"
+        if on, seconds > 0 { cmd += "; (sleep \(seconds); pmset -a disablesleep 0; rm -f \(pid)) >/dev/null 2>&1 & echo $! > \(pid)" }
+        let script = NSAppleScript(source: "do shell script \"\(cmd)\" with administrator privileges")
         script?.executeAndReturnError(&error)
         guard let error else { return nil }
         let code = (error[NSAppleScript.errorNumber] as? Int) ?? 0

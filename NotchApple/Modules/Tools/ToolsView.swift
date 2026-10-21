@@ -378,6 +378,11 @@ struct ToolsView: View {
 
     @StateObject private var lid = ClosedLidAwake.shared
     @AppStorage("tools.keepAwakeOptions") private var optionsOpen = false
+    @AppStorage("tools.lidHours") private var lidHours = ""
+    @AppStorage("tools.lidMinutes") private var lidMinutes = ""
+    @AppStorage("tools.lidSeconds") private var lidSeconds = ""
+    private var lidLimitSeconds: Int { (Int(lidHours) ?? 0) * 3600 + (Int(lidMinutes) ?? 0) * 60 + (Int(lidSeconds) ?? 0) }
+    private func digits(_ s: String) -> String { String(s.filter(\.isNumber).prefix(3)) }
 
     /// One Keep Awake card: the switch on top; the time limits and the lid-closed switch fold out underneath.
     private var keepAwakeCard: some View {
@@ -424,8 +429,16 @@ struct ToolsView: View {
                                     .font(.system(size: 10)).foregroundStyle(Theme.textSecondary).fixedSize(horizontal: false, vertical: true)
                             }
                             Spacer(minLength: 4)
-                            Toggle("", isOn: Binding(get: { lid.isOn }, set: { lid.set($0) }))
+                            Toggle("", isOn: Binding(get: { lid.isOn }, set: { lid.set($0, seconds: lidLimitSeconds) }))
                                 .toggleStyle(.switch).labelsHidden().disabled(lid.busy)
+                        }
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("Switch off by itself after").font(.system(size: 10, weight: .semibold)).foregroundStyle(Theme.textSecondary)
+                            HStack(spacing: 6) {
+                                lidField("0", $lidHours, "h"); lidField("0", $lidMinutes, "m"); lidField("0", $lidSeconds, "s")
+                            }
+                            Text(lid.isOn && lid.offAt != nil ? "Switches off at \(lid.offAt!.formatted(date: .omitted, time: .standard))." : "Numbers only. Leave all empty or 0 for no limit. Applies when you turn the switch on.")
+                                .font(.system(size: 10)).foregroundStyle(Theme.textSecondary).fixedSize(horizontal: false, vertical: true)
                         }
                         if let m = lid.message {
                             Text(m).font(.system(size: 10)).foregroundStyle(.orange).fixedSize(horizontal: false, vertical: true)
@@ -439,6 +452,17 @@ struct ToolsView: View {
             }
         }
         .onAppear { lid.refresh() }
+    }
+
+    private func lidField(_ placeholder: String, _ value: Binding<String>, _ unit: String) -> some View {
+        HStack(spacing: 3) {
+            TextField(placeholder, text: value)
+                .textFieldStyle(.plain).multilineTextAlignment(.trailing).font(.system(size: 12, weight: .semibold)).foregroundStyle(.white)
+                .frame(width: 34).padding(.vertical, 4).padding(.horizontal, 5)
+                .background(RoundedRectangle(cornerRadius: 6).fill(Color.white.opacity(0.08)))
+                .onChange(of: value.wrappedValue) { _, new in let d = digits(new); if d != new { value.wrappedValue = d } }
+            Text(unit).font(.system(size: 10)).foregroundStyle(Theme.textSecondary)
+        }
     }
 
     private var statusText: String {
