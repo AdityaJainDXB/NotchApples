@@ -20,6 +20,9 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.0.82", date: "21 October 2026", headline: "Battle: eject works in shared battles", items: [
+            "Eject (J) now also works in shared battles with friends, and it always tells you what is stopping it (not in a jet, already on foot, the jet already crashed) instead of doing nothing.",
+        ]),
         ReleaseNote(version: "2.0.81", date: "21 October 2026", headline: "Battle: eject, parachute and rifle", items: [
             "Eject: a new button (or J) in the Battle jets. The jet goes down in flames and you float down on a parachute, then fight on foot with the rifle. When the jet is badly damaged or on fire the screen says EJECT: PRESS J. A jet that crashes and stops now lets you climb out and keep fighting on foot. If the pilot is lost on foot, a new jet comes back in the same wave.",
             "Ramming works: flying low into a ground target destroys it (at a cost to your jet), as hitting an enemy fighter already does.",

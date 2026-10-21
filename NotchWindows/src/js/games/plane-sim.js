@@ -5590,9 +5590,13 @@
     /// Eject: the jet goes down in flames on its own and you float down on a parachute, then fight on foot with a rifle.
     /// (Also used when the jet comes to rest after a crash you walked away from.)
     function warEject(fromCrash = false) {
-      if (!war || war.dead || war.net || war.vehicle !== 'plane' || (flight.crashed && !fromCrash)) return;
+      if (!war || screen !== 'fly') return;
+      if (mode.id !== 'war') return;
+      if (war.vehicle !== 'plane') { toast(war.ejected ? 'You are already on foot' : 'Eject is for the jets: you are not in one', 1600); return; }
+      if (war.dead) { toast('Too late to eject', 1200); return; }
+      if (flight.crashed && !fromCrash) { toast('The jet has already crashed', 1400); return; }
       const pos = flight.pos.slice(), ground = groundAt(W, pos[0], pos[2]), h = flight.heading;
-      if (!fromCrash) {
+      if (!fromCrash && !war.net) {
         const w = [(warRand() - 0.5) * 3, (warRand() - 0.5) * 3, (warRand() - 0.5) * 3 + 1.5];
         war.foes.push({ nid: 0, id: plane.id, spec: plane, role: 'wreck', pos: pos.slice(), heading: h, pitch: 0, speed: flight.speed, bank: 0, vel: flight.vel.slice(), q: flight.q.slice(), hp: 0, maxHp: 1,
           state: 'fall', t: 0, w, cool: 0, burstLeft: 0, gunT: 0, mslCool: 99, target: null, retargetT: 0, warnMsl: null, lastHit: null });
@@ -6172,7 +6176,7 @@
       if (war.friend) { const a = war.friend; if (a.state === 'fly') warPilot(a, dt); else if (a.state === 'fall') warFall(a, dt); else war.friend = null; }
       if (warAuth()) for (const g of war.ground) warGroundStep(g, dt);
       warProjectiles(dt);
-      if (!war.dead && war.vehicle === 'plane' && !war.net && (war.hp < war.maxHp * 0.3 || flight.ignited)) { war.warn = '🪂 EJECT: PRESS J'; war.warnT = 0.4; }
+      if (!war.dead && war.vehicle === 'plane' && (war.hp < war.maxHp * 0.3 || flight.ignited)) { war.warn = '🪂 EJECT: PRESS J'; war.warnT = 0.4; }
       // A damaged aircraft trails smoke and then fire.
       if (!war.dead && war.hp < war.maxHp * 0.5 && warRand() < dt * 30) puff('dark', warMuzzle(), mul(flight.vel, 0.9));
       if (!war.dead && war.hp < war.maxHp * 0.25 && warRand() < dt * 25) puff('fire', add(flight.pos, jitter(2)), mul(flight.vel, 0.9));
@@ -6534,7 +6538,7 @@
       const defs = war && war.foot ? [['gun', '🔫', 'Rifle', 'Space'], ['scope', '🔭', 'Scope', 'Z'], ['gren', '💣', 'Grenade', 'G'], ['rel', '🔄', 'Reload', 'R']] : tank ? [['gun', '💥', 'Cannon', 'Space'], ['bomb', '🔫', 'Machine gun', 'B']]
         : [['gun', '🔫', 'Guns', 'Space'], ['bomb', '💣', 'Bombs', 'B'], ['msl', '🚀', 'Missile', 'N'], ['flr', '✨', 'Flares', 'L']];
       wbar.innerHTML = defs.map(([id, ic, name, key]) => `<button data-w="${id}" title="${name} (${key})"><span>${ic}</span><b>${name}</b><kbd>${key}</kbd><i data-n="${id}"></i></button>`).join('')
-        + (war && war.vehicle === 'plane' && !war.net ? '<button data-w="eject" title="Eject: the jet goes down and you fight on foot with a rifle"><span>🪂</span><b>Eject</b><kbd>J</kbd></button>' : '')
+        + (war && war.vehicle === 'plane' ? '<button data-w="eject" title="Eject: the jet goes down and you fight on foot with a rifle"><span>🪂</span><b>Eject</b><kbd>J</kbd></button>' : '')
         + '<button data-w="self" title="End this sortie and respawn without losing wave progress"><span>💥</span><b>Self-destruct</b><kbd>X</kbd></button>';
       bindWbar();
     }
@@ -6747,6 +6751,7 @@
     }
     function netRespawn() {
       if (flight.crashed) { netResetWreck(); flight = new Flight(plane); heliColl = 0; }
+      if (war.ejected) { war.ejected = false; war.vehicle = 'plane'; war.foot = false; war.tank = null; camMode = 0; war.L = { ...warLoadout(plane), shells: 0 }; war.maxHp = war.L.hp; buildWbar(); }
       const R = war.arena.R, spot = netStartSpot(R, war.net.cfg, war.net.slot);
       war.dead = false; war.hp = war.maxHp; war.gun = war.L.gun; war.bombs = war.L.bombs; war.missiles = war.L.missiles; war.flares = war.L.flares; war.shells = war.L.shells; war.flash = 0;
       if (war.vehicle === 'tank') {
