@@ -72,7 +72,7 @@ Pick your computer. Both buttons start the download straight away. The Mac link 
   </tr>
   <tr>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.0.89</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.0.90</b></a>
     </td>
     <td align="center">
       <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 1.82.0 BETA</b></a>
@@ -233,6 +233,11 @@ All screenshots use sample data.
 ## What's new
 
 > **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is still in the repository's tags.
+
+### Mac 2.0.90 · Windows 1.90.0 BETA · 21 October 2026 · Battle: working votes and obvious teammates
+
+- Fixed the vote panel: none of its buttons worked, because the panel was being rebuilt many times a second, so a click never landed. Voting for teams, enemies, field and pause works again.
+- Teammates are now easy to spot: in Co-op they show in bright green with a star, a double green bracket and their name always visible, their plane or soldier is tinted green, their names in the player list are green, and they are big green dots on the radar (with a "GREEN = YOUR TEAM" note). In Fight everyone keeps their own colour.
 
 ### Mac 2.0.89 · Windows 1.89.0 BETA · 21 October 2026 · Battle: loot, healing and a Fortnite-style soldier
 

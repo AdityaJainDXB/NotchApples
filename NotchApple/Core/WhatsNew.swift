@@ -20,6 +20,10 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.0.90", date: "21 October 2026", headline: "Battle: working votes and obvious teammates", items: [
+            "Fixed the vote panel: none of its buttons worked, because the panel was being rebuilt many times a second, so a click never landed. Voting for teams, enemies, field and pause works again.",
+            "Teammates are now easy to spot: in Co-op they show in bright green with a star, a double green bracket and their name always visible, their plane or soldier is tinted green, their names in the player list are green, and they are big green dots on the radar (with a \"GREEN = YOUR TEAM\" note). In Fight everyone keeps their own colour.",
+        ]),
         ReleaseNote(version: "2.0.89", date: "21 October 2026", headline: "Battle: loot, healing and a Fortnite-style soldier", items: [
             "Loot drops: glowing boxes with a tall beam (grey, blue, purple, gold) lie around the battlefield each wave and enemy soldiers drop some when they die. Walk over them to pick up rifle ammo, rockets, grenades, bandages, shield potions and medkits; a rarer colour gives more. The host decides who gets each one, so two players never take the same box.",
             "Healing on foot: H bandage (+15 health up to 75), J shield potion (+50 shield), K medkit (full health). The soldier now has a shield bar over the health bar that soaks up damage first.",
