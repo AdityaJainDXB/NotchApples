@@ -72,7 +72,7 @@ Pick your computer. Both buttons start the download straight away. The Mac link 
   </tr>
   <tr>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.0.79</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.0.80</b></a>
     </td>
     <td align="center">
       <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 1.76.0 BETA</b></a>
@@ -233,6 +233,13 @@ All screenshots use sample data.
 ## What's new
 
 > **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is still in the repository's tags.
+
+### Mac 2.0.80 · Windows 1.80.0 BETA · 21 October 2026 · ✈️ Battle: fighters fly like jets
+
+- Easy and Automatic fighters now bank into their turns: the jet leans in and levels out instead of snapping left and right, and the turn gets wider at high speed.
+- Diving is much quicker: the F-16 and F-15 can now go down about three times as fast as they climb, and a hard bank lets the nose sag a little.
+- Q quick turn now ends after exactly 180°. Airliners respond faster to the controls.
+- Smoother game: scenery builds faster, sound updates less often, and slow computers draw fewer pixels instead of flying in slow motion.
 
 ### Mac 2.0.79 · Windows 1.79.0 BETA · 20 October 2026 · 🎖️ Battle: Soldier on foot, two new planes
 

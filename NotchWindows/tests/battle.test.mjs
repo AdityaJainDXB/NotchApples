@@ -161,11 +161,17 @@ test('arcade handling: turn and climb rates, quick turn, no stall, no wing loss 
     for (const id of ['f16', 'a10', 'b52', 'f15', 'su27']) {
       const P = G.PLANES.find((p) => p.id === id), R = T.ARCADE_RATES[id];
       const mk = () => { const fl = new G.Flight(P); fl.reset([0, 900, 1500], 0, P.cruise, false); fl.sturdy = true; fl.arcade = R; return fl; };
-      // full-right stick for 1 s: turn rate is about the table's rate
+      // full-right stick: the jet leans in first (it does not turn instantly), then turns at about the table's rate
       let fl = mk();
-      for (let i = 0; i < 60; i++) fl.step(1 / 60, { roll: 1, pitch: 0, yaw: 0, throttle: 0.7 }, w);
+      for (let i = 0; i < 12; i++) fl.step(1 / 60, { roll: 1, pitch: 0, yaw: 0, throttle: 0.7 }, w);
+      assert.ok(Math.abs(fl.arc.bank) < 0.5, `${id} banked gradually (${fl.arc.bank.toFixed(2)} rad after 0.2 s)`);
+      for (let i = 12; i < 120; i++) fl.step(1 / 60, { roll: 1, pitch: 0, yaw: 0, throttle: 0.7 }, w);
       const deg = fl.heading * 180 / Math.PI;
-      assert.ok(deg > R.turn * 57.3 * 0.6 && deg < R.turn * 57.3 * 1.1, `${id} turned ${deg.toFixed(0)} deg in 1 s`);
+      assert.ok(deg > R.turn * 57.3 * 2 * 0.6 && deg < R.turn * 57.3 * 2 * 1.1, `${id} turned ${deg.toFixed(0)} deg in 2 s`);
+      // full push forward for 3 s: it dives faster than it climbs
+      fl = mk();
+      for (let i = 0; i < 180; i++) fl.step(1 / 60, { roll: 0, pitch: -1, yaw: 0, throttle: 0.7 }, w);
+      assert.ok(900 - fl.pos[1] > R.climb * 3 * 0.8, `${id} dived ${(900 - fl.pos[1]).toFixed(0)} m in 3 s`);
       // full pull for 3 s climbs at about the table's rate
       fl = mk();
       for (let i = 0; i < 180; i++) fl.step(1 / 60, { roll: 0, pitch: 1, yaw: 0, throttle: 1 }, w);

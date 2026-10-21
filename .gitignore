@@ -46,3 +46,4 @@ brag-output/
 
 # Admin access codes (made by server/license-worker/scripts/admin-keys.mjs)
 .env.admin.keys*
+brag-output-*/

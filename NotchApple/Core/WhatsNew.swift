@@ -20,6 +20,12 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.0.80", date: "21 October 2026", headline: "Battle: fighters fly like jets", items: [
+            "Easy and Automatic fighters now bank into their turns: the jet leans in and levels out instead of snapping left and right, and the turn gets wider at high speed.",
+            "Diving is much quicker: the F-16 and F-15 can now go down about three times as fast as they climb, and a hard bank lets the nose sag a little.",
+            "Q quick turn now ends after exactly 180°. Airliners respond faster to the controls.",
+            "Smoother game: scenery builds faster, sound updates less often, and slow computers draw fewer pixels instead of flying in slow motion.",
+        ]),
         ReleaseNote(version: "2.0.79", date: "20 October 2026", headline: "Battle: Soldier on foot, two new planes", items: [
             "New Soldier vehicle: walk, run, strafe and crouch with mouse look, a first- or third-person view (C), and a low-poly soldier avatar.",
             "The rifle has 30-round magazines (R reloads), a 4x and 10x scope on right-click or Z with range marks for bullet drop, a rifle sway that settles when still or crouched, and grenades on G.",
