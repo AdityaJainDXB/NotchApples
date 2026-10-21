@@ -89,3 +89,12 @@ test('enemy riflemen miss a lot at range: simulated bursts', () => {
   console.log('hit rates 60/150/300 m:', near.toFixed(3), mid.toFixed(3), far.toFixed(3));
   assert.ok(near > far, 'closer is more dangerous');
 });
+
+test('the RPG: a rocket kills a rifleman outright, drops a little over 200 m, and each wave gives more', () => {
+  assert.ok(SOLDIER.rpgDmg >= SOLDIER.enemyHp * 2, 'one rocket is enough for an enemy soldier');
+  assert.ok(SOLDIER.rpgEnemyDmg < SOLDIER.hp / 3, 'an enemy rocket takes less than a third of your health');
+  const b = { pos: [0, 0, 0], vel: [0, 0, -SOLDIER.rpgSpeed], t: 0 }; while (-b.pos[2] < 200) WAR.bulletStep(b, 0.002);
+  assert.ok(-b.pos[1] > 1 && -b.pos[1] < 40, `rocket drop at 200 m ${(-b.pos[1]).toFixed(1)}`);
+  console.log('rocket drop at 200 m:', (-b.pos[1]).toFixed(1));
+  assert.ok(SOLDIER.rpgReload > SOLDIER.fireGap * 10, 'a slow reload');
+});
