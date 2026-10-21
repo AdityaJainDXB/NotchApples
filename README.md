@@ -72,10 +72,10 @@ Pick your computer. Both buttons start the download straight away. The Mac link 
   </tr>
   <tr>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.0.80</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.0.81</b></a>
     </td>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 1.76.0 BETA</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 1.81.0 BETA</b></a>
     </td>
   </tr>
   <tr>
@@ -233,6 +233,14 @@ All screenshots use sample data.
 ## What's new
 
 > **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is still in the repository's tags.
+
+### Mac 2.0.81 · Windows 1.81.0 BETA · 21 October 2026 · 🪂 Battle: eject, parachute and rifle
+
+- Eject: a new button (or J) in the Battle jets. The jet goes down in flames and you float down on a parachute, then fight on foot with the rifle. When the jet is badly damaged or on fire the screen says EJECT: PRESS J. A jet that crashes and stops now lets you climb out and keep fighting on foot. If the pilot is lost on foot, a new jet comes back in the same wave.
+- Ramming works: flying low into a ground target destroys it (at a cost to your jet), as hitting an enemy fighter already does.
+- Two small buttons by the ? button turn spoken calls (Pull up, ATC) and TCAS traffic calls on or off while you fly. TCAS is on by default and has its own switch in the pause menu settings (a reply to the Pull up request).
+- Fixed the vote card in shared battles: clicks on it no longer fire your guns, and U now opens it without the key leaking to the game.
+- Fixed the airliner and slow-computer handling from last time: airliners answer the controls sooner, and a slow computer draws fewer pixels instead of flying in slow motion.
 
 ### Mac 2.0.80 · Windows 1.80.0 BETA · 21 October 2026 · ✈️ Battle: fighters fly like jets
 

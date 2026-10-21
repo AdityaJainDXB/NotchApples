@@ -3916,6 +3916,7 @@
   .pg .pg-howto { margin-top: 8px; padding: 9px 11px; border-radius: 12px; background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.1); }
   .pg .pg-howto .pg-cgrid { grid-template-columns: repeat(2, 1fr); gap: 4px 14px; } @media (max-width: 560px) { .pg .pg-howto .pg-cgrid { grid-template-columns: 1fr; } }
   .pg .pg-chips { display: flex; gap: 5px; flex-wrap: wrap; margin: 4px 0 8px; }
+  .pg .pg-qbar { position: absolute; left: 10px; top: calc(46% - 66px); z-index: 5; display: flex; gap: 6px; } .pg .pg-qbar button { width: 28px; height: 28px; border-radius: 50%; border: 1px solid rgba(255,255,255,.35); background: rgba(10,14,28,.7); color: #fff; font-size: 13px; display: grid; place-items: center; cursor: pointer; padding: 0; } .pg .pg-qbar button.pg-off { opacity: .45; text-decoration: line-through; }
   .pg .pg-ctlbtn { position: absolute; left: 10px; top: 46%; z-index: 5; width: 28px; height: 28px; border-radius: 50%; border: 1px solid rgba(255,255,255,.35); background: rgba(10,14,28,.7); color: #fff; font-weight: 800; font-size: 14px; display: grid; place-items: center; cursor: pointer; padding: 0; }
   .pg .pg-wbar { position: absolute; right: 8px; top: 34%; z-index: 5; flex-direction: column; gap: 6px; }
   .pg .pg-wbar button { position: relative; display: grid; grid-template-columns: 26px 1fr auto; align-items: center; gap: 4px; width: 128px; padding: 6px 8px; border-radius: 10px; border: 1px solid rgba(255,255,255,.25); background: rgba(10,14,28,.72); color: #fff; font-size: 12px; cursor: pointer; text-align: left; user-select: none; touch-action: none; }
@@ -4097,6 +4098,7 @@
       this.pos = [pos[0], 0, pos[2]]; this.heading = heading; this.turret = heading; this.gun = 0;
       this.speed = 0; this.vel = [0, 0, 0]; this.q = qheading(heading, 0); this.reload = 0; this.crashed = false;
       this.crouch = false; this.walk = 0; this.sway = 1; this.eye = SOLDIER.eye; this.moving = false;
+      this.air = 0;      // metres above the ground while still under a parachute (after ejecting)
     }
     aim() { const c = Math.cos(this.gun); return [Math.sin(this.turret) * c, Math.sin(this.gun), -Math.cos(this.turret) * c]; }
     muzzle() { return add(add(this.pos, [0, this.eye - 0.12, 0]), mul(this.aim(), 0.9)); }
@@ -4114,7 +4116,9 @@
       const fwd = input.drive >= 0 ? input.drive * top : input.drive * top * SOLDIER.back, side = input.steer * top * SOLDIER.strafe;
       let wx = fx * fwd + rx * side, wz = fz * fwd + rz * side;
       const wl = Math.hypot(wx, wz); if (wl > top) { wx *= top / wl; wz *= top / wl; }
-      const k = clamp(SOLDIER.accel * dt, 0, 1);
+      const chute = this.air > 0.05;
+      if (chute) { wx *= 0.4; wz *= 0.4; }       // under the canopy you can only steer a little
+      const k = clamp(SOLDIER.accel * (chute ? 0.25 : 1) * dt, 0, 1);
       this.vel[0] += (wx - this.vel[0]) * k; this.vel[2] += (wz - this.vel[2]) * k; this.vel[1] = 0;
       const here = groundAt(world, this.pos[0], this.pos[2]);
       const free = (nx, nz) => { const th = groundAt(world, nx, nz); return th >= WATER + 0.5 && Math.abs(th - here) < Math.hypot(nx - this.pos[0], nz - this.pos[2]) * 0.9 + 0.03 && Math.hypot(nx, nz) <= limit && !hitObject(world, [nx, th + 1, nz]); };
@@ -4125,7 +4129,8 @@
       else { this.vel[0] = 0; this.vel[2] = 0; }
       this.speed = Math.hypot(this.vel[0], this.vel[2]); this.moving = this.speed > 0.4;
       this.walk += this.speed * dt * 0.9;
-      this.pos[1] = groundAt(world, this.pos[0], this.pos[2]);
+      if (this.air > 0) this.air = Math.max(0, this.air - dt * (this.air > 60 ? 22 : 6));      // the canopy opens low down
+      this.pos[1] = groundAt(world, this.pos[0], this.pos[2]) + this.air;
       // Sway of the rifle: settles when still, more so while crouched.
       const swayT = (this.moving ? 1 : 0.25) * (this.crouch ? 0.5 : 1);
       this.sway += (swayT - this.sway) * (1 - Math.exp(-dt * 2.5));
@@ -4416,7 +4421,7 @@
       return out;
     }
     let atcOn = read('atc', true), coldStart = read('cold', false), showCheck = true, atc = { cs: 'Notch 100', said: new Set() }, atcText = '', atcT = 0;
-    let gpwsOn = read('gpws', true), gpwsText = '', gpwsLevel = 0, gpwsT = 0, gpwsLastFt = null, gpwsAt = {}, hundredCalled = false, wasAirborne = false;
+    let tcasOn = read('tcas', true), gpwsOn = read('gpws', true), gpwsText = '', gpwsLevel = 0, gpwsT = 0, gpwsLastFt = null, gpwsAt = {}, hundredCalled = false, wasAirborne = false;
     let gearWarn = false, gearBeepAt = 0, tailScrapeT = 0, rotateCalled = false, v1Called = false, lowFuelWarned = false, flapSoundT = 0;
     let rollAcc = 0, rollT = 0, loopAcc = 0, loopT = 0, lowT = 0, hadTakeoff = false, stoppedT = 0, hadAir = false, stopCredited = false, hoverT = 0, cfgTakeoff = false, cfgLanding = false, svc = null, svcDone = {};
     const smoke = [];              // particles: fire, smoke, dust, sparks, spray
@@ -4795,7 +4800,7 @@
       if (down && e.repeat && keys.has(k)) { if (screen === 'fly') e.preventDefault?.(); return; }   // held keys repeat: toggles fire once
       const typing = e.target && e.target.tagName === 'INPUT' && e.target.type !== 'range';
       if (typing) { if (down && k === 'Enter' && result?.qualifies) saveScore(); return; }
-      const game = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' ', 'w', 's', 'a', 'd', 'q', 'e', 'f', 'v', 'b', 'c', 'p', 'r', 'x', 'Shift', 'Control', 'g', 'h', 'i', 't', 'y', 'o', 'j', 'k', ',', '.', '[', ']', 'Enter', 'z', 'n', 'l', '?', '/', 'F11'];
+      const game = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' ', 'w', 's', 'a', 'd', 'q', 'e', 'f', 'v', 'b', 'c', 'p', 'r', 'x', 'Shift', 'Control', 'g', 'h', 'i', 't', 'y', 'o', 'j', 'k', ',', '.', '[', ']', 'Enter', 'z', 'n', 'l', 'u', '?', '/', 'F11'];
       if (game.includes(k) && screen === 'fly') e.preventDefault?.();
       if (down) {
         if (k === 'F11') { toggleFullscreen(); return; }
@@ -4822,7 +4827,8 @@
             else toast('Engines are started on the ground', 1400);
           }
           if (k === 't') { showCheck = !showCheck; toast(showCheck ? 'Checklist on' : 'Checklist off', 900); }
-          if (k === 'j') {
+          if (k === 'j' && mode.id === 'war') warEject();
+          if (k === 'j' && mode.id !== 'war') {
             if (plane.rotor) toast('The approach mode is for fixed-wing aircraft', 1500);
             else {
               const ils = flight.apApproach(W);
@@ -5268,7 +5274,7 @@
           // A close call, then a TCAS-style call-out as one closes in on the same height.
           if (d < 120 + rr && !nearSeen.has(a)) { nearSeen.add(a); achieve('near'); toast('😮 Close call!', 1600); }
           const closing = -dot(rel, sub(flight.vel, a.vel)) / Math.max(d, 1) < 0;   // distance shrinking
-          if (closing && d < 2200 && Math.abs(rel[1]) < 450) say(d < 800 ? 'Traffic, traffic, traffic' : 'Traffic', { level: d < 800 ? 2 : 1, every: 7, key: 'tcas' });
+          if (tcasOn && closing && d < 2200 && Math.abs(rel[1]) < 450) say(d < 800 ? 'Traffic, traffic, traffic' : 'Traffic', { level: d < 800 ? 2 : 1, every: 7, key: 'tcas' });
           if (!nearest || d < nearest.d) nearest = { a, d };
         } else if (a.state === 'fall') {
           a.vel = add(a.vel, [0, -9.8 * dt, 0]); a.vel = mul(a.vel, 1 - 0.04 * dt);
@@ -5565,6 +5571,7 @@
           netSend({ t: 'k', id: netMyId, v: netMyId, by }); netGameMsg({ t: 'k', id: netMyId, v: netMyId, by });
           return;
         }
+        if (war.ejected && war.vehicle === 'tank') { toast(`☠ PILOT DOWN: ${why} · new jet coming`, 2600); warBoom(war.tank.pos, 0.9); war.flash = 1; war.selfDestructT = 2; return; }
         if (war.vehicle === 'tank') { toast(war.foot ? `☠ YOU WERE KILLED: ${why}` : `💥 TANK DESTROYED: ${why}`, 3000); warBoom(war.tank.pos, 1.5); war.flash = 1; war.endT = 2.4; return; }
         toast(`💥 SHOT DOWN: ${why}`, 3000);
         flight.loseWing(warRand() < 0.5 ? 'L' : 'R', 'war', 'root');
@@ -5580,8 +5587,37 @@
       warBoom(p, 1.1); war.dead = true; war.hp = 0; war.flash = 1; war.selfDestructT = 1.25;
       toast('Sortie ended · returning to the same wave', 1800);
     }
+    /// Eject: the jet goes down in flames on its own and you float down on a parachute, then fight on foot with a rifle.
+    /// (Also used when the jet comes to rest after a crash you walked away from.)
+    function warEject(fromCrash = false) {
+      if (!war || war.dead || war.net || war.vehicle !== 'plane' || (flight.crashed && !fromCrash)) return;
+      const pos = flight.pos.slice(), ground = groundAt(W, pos[0], pos[2]), h = flight.heading;
+      if (!fromCrash) {
+        const w = [(warRand() - 0.5) * 3, (warRand() - 0.5) * 3, (warRand() - 0.5) * 3 + 1.5];
+        war.foes.push({ nid: 0, id: plane.id, spec: plane, role: 'wreck', pos: pos.slice(), heading: h, pitch: 0, speed: flight.speed, bank: 0, vel: flight.vel.slice(), q: flight.q.slice(), hp: 0, maxHp: 1,
+          state: 'fall', t: 0, w, cool: 0, burstLeft: 0, gunT: 0, mslCool: 99, target: null, retargetT: 0, warnMsl: null, lastHit: null });
+      }
+      for (let i = 0; i < 8; i++) puff('fire', add(pos, jitter(3)), jitter(10));
+      noise(0.5, 0.25, 700);
+      const body = new SoldierBody([pos[0], 0, pos[2]], h);
+      body.air = fromCrash ? 0 : Math.max(0.5, pos[1] - ground);
+      body.vel = [flight.vel[0] * 0.15, 0, flight.vel[2] * 0.15];
+      body.pos[1] = ground + body.air;
+      netResetWreck(); flight = new Flight(plane);
+      war.ejected = true; war.vehicle = 'tank'; war.foot = true; war.tank = body;
+      war.L = { gun: SOLDIER.reserve, bombs: SOLDIER.grenades, missiles: 0, flares: 0, hp: SOLDIER.hp, stick: 0.5, shells: 0 };
+      war.hp = war.maxHp = SOLDIER.hp; war.gun = war.L.gun; war.bombs = war.L.bombs; war.missiles = 0; war.flares = 0; war.shells = 0;
+      war.mag = SOLDIER.mag; war.reloadT = 0; war.zoomI = 0; war.flash = 0; war.pullUp = false; stoppedT = 0;
+      flight.reset([pos[0], body.pos[1] + SOLDIER.eye, pos[2]], h, 0, true);
+      camMode = 1; buildWbar();
+      toast(fromCrash ? '🪂 You climbed out of the wreck: fight on foot' : '🪂 Ejected: the jet is lost. Land and fight on foot with your rifle', 3200);
+    }
     function warSoloRespawn() {
       if (!war || war.net) return;
+      if (war.ejected) {      // a pilot who was lost on foot gets a new jet, back in the same wave
+        war.ejected = false; war.vehicle = 'plane'; war.foot = false; war.tank = null; camMode = 0;
+        war.L = { ...warLoadout(plane), shells: 0 }; war.maxHp = war.L.hp; buildWbar();
+      }
       const R = war.arena.R, spot = { x: 0, z: R * 0.72, heading: 0 };
       netResetWreck(); flight = new Flight(plane); heliColl = 0;
       war.dead = false; war.selfDestructT = 0; war.hp = war.maxHp; war.gun = war.L.gun; war.bombs = war.L.bombs;
@@ -6123,11 +6159,20 @@
       if (warAuth() && (war.waveClear || war.wave === 0)) { war.wavePause -= dt; if (war.wavePause <= 0) warSpawnWave(); }
       if (!war.dead) { warPlayerFire(dt); warLockOn(dt); if (war.L.gunners) warGunners(dt); }
       if (warAuth()) for (const a of war.foes) { if (a.state === 'fly') { warPilot(a, dt); if (!war.dead && len(sub(a.pos, flight.pos)) < Math.max(5, (plane.span || 5)) + 7) { warDamageAir(a, 999, 'p'); warHurt(55, 'collision'); } } else if (a.state === 'fall') warFall(a, dt); }
+      if (warAuth() && !war.dead && war.vehicle === 'plane' && !flight.crashed) {
+        const agl = flight.pos[1] - groundAt(W, flight.pos[0], flight.pos[2]);
+        if (agl < 30) for (const g of war.ground) {
+          if (g.dead || g.kind === 'rifleman') continue;
+          const gr = (WAR_KINDS[g.kind] ? WAR_KINDS[g.kind].r : 5) + 7;
+          if (Math.hypot(g.pos[0] - flight.pos[0], g.pos[2] - flight.pos[2]) < gr) { warDamageGround(g, 9999, 'p'); warHurt(45, 'collision'); toast('💥 You rammed it: it is destroyed', 1600); break; }
+        }
+      }
       for (const a of war.foes) if (a.state === 'fly' && warRand() < dt * 8) puff('dark', add(a.pos, mul(a.vel, -0.035)), mul(a.vel, -0.06));
       if (warAuth()) war.foes = war.foes.filter((a) => a.state !== 'gone');
       if (war.friend) { const a = war.friend; if (a.state === 'fly') warPilot(a, dt); else if (a.state === 'fall') warFall(a, dt); else war.friend = null; }
       if (warAuth()) for (const g of war.ground) warGroundStep(g, dt);
       warProjectiles(dt);
+      if (!war.dead && war.vehicle === 'plane' && !war.net && (war.hp < war.maxHp * 0.3 || flight.ignited)) { war.warn = '🪂 EJECT: PRESS J'; war.warnT = 0.4; }
       // A damaged aircraft trails smoke and then fire.
       if (!war.dead && war.hp < war.maxHp * 0.5 && warRand() < dt * 30) puff('dark', warMuzzle(), mul(flight.vel, 0.9));
       if (!war.dead && war.hp < war.maxHp * 0.25 && warRand() < dt * 25) puff('fire', add(flight.pos, jitter(2)), mul(flight.vel, 0.9));
@@ -6432,7 +6477,7 @@
           ] : [
             [['Space', 'Enter', 'Click'], 'Guns', `hold to fire. The circle is where the shells go.${aimNote}`],
             [['B', 'Z'], 'Bombs', auto ? 'hold: it drops only when a bomb would hit a target' : 'hold for a stick. The yellow diamond is where a bomb let go now would land'],
-            [['N'], 'Missile', 'keep a fighter in the sights until it says LOCK, then press N'], [['L'], 'Flares', 'press when you hear MISSILE! to break its lock'],
+            [['N'], 'Missile', 'keep a fighter in the sights until it says LOCK, then press N'], [['L'], 'Flares', 'press when you hear MISSILE! to break its lock'], [['J'], 'Eject', 'bail out: the jet goes down and you fight on foot with a rifle. Ramming an enemy destroys it too'],
             ...(auto ? [[['Mouse', '←', '→'], 'Turn', 'the plane turns towards where you point and keeps its height'], [['↑', '↓'], 'Climb / dive', 'it settles at the new height'], [['W', 'S'], 'Speed', 'faster or slower']] : CTL_FLY()),
             [['C'], 'Camera', 'behind, cockpit or far'], [['P'], 'Pause'], [['R'], 'Restart'], [['?'], 'Show this help'],
             ...(war && war.net ? [[['U'], 'Vote', 'change the match with the other players']] : []),
@@ -6456,7 +6501,17 @@
     const netbar = document.createElement('div'); netbar.className = 'pg-netbar'; netbar.style.display = 'none';
     netbar.innerHTML = '<button data-nb="vote" title="Vote to change the match (U)">🗳 Vote</button><button data-nb="leave" title="Leave this battle">⎋ Leave</button>';
     const voteEl = document.createElement('div'); voteEl.className = 'pg-ctlcard pg-vote'; voteEl.style.display = 'none';
-    root.append(ctlEl, ctlBtn, wbar, netbar, voteEl);
+    const qbar = document.createElement('div'); qbar.className = 'pg-qbar'; qbar.style.display = 'none';
+    qbar.innerHTML = '<button data-q="voice" title="Spoken calls on / off: ground proximity (Pull up), ATC">🗣</button><button data-q="tcas" title="Traffic calls (TCAS) on / off">📡</button>';
+    const syncQbar = () => { qbar.querySelector('[data-q="voice"]').classList.toggle('pg-off', !(gpwsOn || atcOn)); qbar.querySelector('[data-q="tcas"]').classList.toggle('pg-off', !tcasOn); };
+    qbar.querySelectorAll('button').forEach((b) => { b.addEventListener('mousedown', (e) => e.stopPropagation()); b.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (b.dataset.q === 'voice') { const on = !(gpwsOn || atcOn); gpwsOn = on; atcOn = on; write('gpws', on); write('atc', on); if (!on) cancelSpeech(); toast(on ? 'Spoken calls on' : 'Spoken calls off', 1200); }
+      else { tcasOn = !tcasOn; write('tcas', tcasOn); if (!tcasOn) cancelSpeech(); toast(tcasOn ? 'TCAS traffic calls on' : 'TCAS traffic calls off', 1200); }
+      syncQbar(); root.focus();
+    }); });
+    root.append(qbar, ctlEl, ctlBtn, wbar, netbar, voteEl);
+    for (const el of [voteEl, ctlEl, ctlBtn]) { el.addEventListener('mousedown', (e) => e.stopPropagation()); el.addEventListener('pointerdown', (e) => e.stopPropagation()); }
     function voteHtml() {
       const n = netg, row = (key, label, vals) => `<div class="pg-crow" style="align-items:center"><span class="pg-ckeys" style="min-width:70px"><b>${label}</b></span><span class="pg-chips" style="margin:0">${vals.map(([val, name]) => {
         const cur = n.cfg[key] === val, c = netVoteCounts(key)[val] || 0, mine = n.votes[netMyId] && n.votes[netMyId][key] === val;
@@ -6479,6 +6534,7 @@
       const defs = war && war.foot ? [['gun', '🔫', 'Rifle', 'Space'], ['scope', '🔭', 'Scope', 'Z'], ['gren', '💣', 'Grenade', 'G'], ['rel', '🔄', 'Reload', 'R']] : tank ? [['gun', '💥', 'Cannon', 'Space'], ['bomb', '🔫', 'Machine gun', 'B']]
         : [['gun', '🔫', 'Guns', 'Space'], ['bomb', '💣', 'Bombs', 'B'], ['msl', '🚀', 'Missile', 'N'], ['flr', '✨', 'Flares', 'L']];
       wbar.innerHTML = defs.map(([id, ic, name, key]) => `<button data-w="${id}" title="${name} (${key})"><span>${ic}</span><b>${name}</b><kbd>${key}</kbd><i data-n="${id}"></i></button>`).join('')
+        + (war && war.vehicle === 'plane' && !war.net ? '<button data-w="eject" title="Eject: the jet goes down and you fight on foot with a rifle"><span>🪂</span><b>Eject</b><kbd>J</kbd></button>' : '')
         + '<button data-w="self" title="End this sortie and respawn without losing wave progress"><span>💥</span><b>Self-destruct</b><kbd>X</kbd></button>';
       bindWbar();
     }
@@ -6494,7 +6550,7 @@
     const wUp = () => { warPad.gun = false; warPad.bomb = false; };
     function bindWbar() {
       wbar.querySelectorAll('button').forEach((b) => {
-        b.addEventListener('pointerdown', (e) => { e.preventDefault(); e.stopPropagation(); if (screen === 'fly' && !paused) { if (b.dataset.w === 'self') warSelfDestruct(); else wDown(b.dataset.w); } });
+        b.addEventListener('pointerdown', (e) => { e.preventDefault(); e.stopPropagation(); if (screen === 'fly' && !paused) { if (b.dataset.w === 'self') warSelfDestruct(); else if (b.dataset.w === 'eject') warEject(); else wDown(b.dataset.w); } });
         b.addEventListener('mousedown', (e) => e.stopPropagation());
         for (const ev of ['pointerup', 'pointerleave', 'pointercancel']) b.addEventListener(ev, wUp);
       });
@@ -6502,7 +6558,7 @@
     /// Shows or hides the buttons and the card to suit the screen (called whenever the screen changes).
     function syncCtlUi() {
       const fly = screen === 'fly';
-      ctlBtn.style.display = fly ? 'grid' : 'none';
+      ctlBtn.style.display = fly ? 'grid' : 'none'; qbar.style.display = fly ? 'flex' : 'none'; syncQbar();
       wbar.style.display = fly && mode.id === 'war' ? 'flex' : 'none';
       netbar.style.display = fly && mode.id === 'war' && war && war.net ? 'flex' : 'none';
       if (!fly) { showCtl(false); toggleVote(false); }
@@ -7082,6 +7138,7 @@
         stoppedT += dt;
         if (stoppedT > 0.8) {
           achieve('survivor');
+          if (mode.id === 'war' && war && !war.net && war.vehicle === 'plane' && !war.dead) { warEject(true); return; }
           const rep = flight.slideReport();
           finish('crash', mode.id === 'landing' ? 0 : mode.id === 'hoops' ? score : mode.id === 'war' && war ? war.score : null, `${rep.title} · the plane is scrap, but you walked away`, rep); return;
         }
@@ -7932,6 +7989,7 @@
           <h2>Settings</h2><div class="pg-row">
           <button data-a="sound">${sound ? '🔊 Sound on' : '🔇 Sound off'}</button>
           <button data-a="atc" title="Spoken air traffic control: take-off, approach and landing clearances">${atcOn ? '✓ ' : ''}ATC voice</button>
+          <button data-a="tcas" title="Spoken traffic calls (Traffic, traffic, traffic) when another aircraft closes in; on by default">${tcasOn ? '✓ ' : ''}TCAS traffic calls</button>
           <button data-a="gpws" title="Spoken ground proximity warnings and radio-altimeter calls on the airliners">${gpwsOn ? '✓ ' : ''}GPWS voice (airliners)</button>
           <button data-a="units">${units === 'kmh' ? 'km/h · m' : 'knots · feet'}</button>
           <button data-a="failures">Failures: ${failures === 'off' ? 'off' : failures === 'often' ? 'often (every mode)' : 'rare (Free Flight, Landing)'}</button></div>
@@ -8025,6 +8083,7 @@
         }
         else if (a === 'invert') { invert = !invert; write('invertY', invert); renderUI(); }
         else if (a === 'atc') { atcOn = !atcOn; write('atc', atcOn); if (!atcOn) cancelSpeech(); renderUI(); }
+        else if (a === 'tcas') { tcasOn = !tcasOn; write('tcas', tcasOn); if (!tcasOn) cancelSpeech(); renderUI(); }
         else if (a === 'gpws') { gpwsOn = !gpwsOn; write('gpws', gpwsOn); if (!gpwsOn) cancelSpeech(); renderUI(); }
         else if (a === 'mouse') { mouseOn = !mouseOn; write('mouse', mouseOn); renderUI(); }
         else if (a === 'sound') { sound = !sound; write('sound', sound); if (!sound && engGain) engGain.gain.value = 0; renderUI(); }

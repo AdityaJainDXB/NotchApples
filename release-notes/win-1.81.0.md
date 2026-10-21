@@ -1,0 +1,7 @@
+**Battle: eject, parachute and rifle; spoken-call switches**
+
+- Eject: a new button (or J) in the Battle jets. The jet goes down in flames and you float down on a parachute, then fight on foot with the rifle. When the jet is badly damaged or on fire the screen says EJECT: PRESS J. A jet that crashes and stops now lets you climb out and keep fighting on foot. If the pilot is lost on foot, a new jet comes back in the same wave.
+- Ramming works: flying low into a ground target destroys it (at a cost to your jet), as hitting an enemy fighter already does.
+- Two small buttons by the ? button turn spoken calls (Pull up, ATC) and TCAS traffic calls on or off while you fly. TCAS is on by default and has its own switch in the pause menu settings (a reply to the Pull up request).
+- Fixed the vote card in shared battles: clicks on it no longer fire your guns, and U now opens it without the key leaking to the game.
+- Fixed the airliner and slow-computer handling from last time: airliners answer the controls sooner, and a slow computer draws fewer pixels instead of flying in slow motion.

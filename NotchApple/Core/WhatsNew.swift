@@ -20,6 +20,12 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.0.81", date: "21 October 2026", headline: "Battle: eject, parachute and rifle", items: [
+            "Eject: a new button (or J) in the Battle jets. The jet goes down in flames and you float down on a parachute, then fight on foot with the rifle. When the jet is badly damaged or on fire the screen says EJECT: PRESS J. A jet that crashes and stops now lets you climb out and keep fighting on foot. If the pilot is lost on foot, a new jet comes back in the same wave.",
+            "Ramming works: flying low into a ground target destroys it (at a cost to your jet), as hitting an enemy fighter already does.",
+            "Two small buttons by the ? button turn spoken calls (Pull up, ATC) and TCAS traffic calls on or off while you fly. TCAS is on by default and has its own switch in the pause menu settings (a reply to the Pull up request).",
+            "Fixed the vote card in shared battles: clicks on it no longer fire your guns, and U now opens it without the key leaking to the game.",
+        ]),
         ReleaseNote(version: "2.0.80", date: "21 October 2026", headline: "Battle: fighters fly like jets", items: [
             "Easy and Automatic fighters now bank into their turns: the jet leans in and levels out instead of snapping left and right, and the turn gets wider at high speed.",
             "Diving is much quicker: the F-16 and F-15 can now go down about three times as fast as they climb, and a hard bank lets the nose sag a little.",
