@@ -4059,11 +4059,11 @@
     /// input: { drive -1..1 (forward +), steer -1..1 (right +), aimX -1..1 (turret right +), aimY -1..1 (gun up +) }.
     /// `limit` keeps it inside a round battlefield of that radius; water and steep ground stop it, and so do solid things.
     step(dt, input, world, limit = 1e9) {
-      const boosting = input.drive > 0 && input.boost;
-      const want = input.drive > 0 ? input.drive * (boosting ? TANK.boostSpeed : TANK.speed) : input.drive * TANK.reverse;
-      const accel = boosting ? TANK.boostAccel : TANK.accel;
+      const K = this.K || TANK, boosting = input.drive > 0 && input.boost;
+      const want = input.drive > 0 ? input.drive * (boosting ? K.boostSpeed : K.speed) : input.drive * K.reverse;
+      const accel = boosting ? K.boostAccel : K.accel;
       this.speed += clamp(want - this.speed, -accel * dt, accel * dt);
-      const sr = TANK.turn * (0.55 + 0.45 * Math.min(1, Math.abs(this.speed) / 6));
+      const sr = K.turn * (0.55 + 0.45 * Math.min(1, Math.abs(this.speed) / 6));
       this.heading = wrapPi(this.heading + input.steer * sr * dt);
       this.turret = wrapPi(this.turret + input.aimX * TANK.turretRate * dt);
       this.gun = clamp(this.gun + input.aimY * TANK.gunRate * dt, TANK.gunMin, TANK.gunMax);
@@ -4086,6 +4086,10 @@
     }
   }
   const wrapPi = (a) => ((a + Math.PI * 3) % (Math.PI * 2)) - Math.PI;
+  /// The military van: a fast, unarmed truck (same driving model as the tank, with its own limits).
+  const VAN = { speed: 24, boostSpeed: 32, reverse: 8, accel: 12, boostAccel: 17, turn: 1.3, turretRate: 0, gunRate: 0, gunMin: 0, gunMax: 0 };
+  class VanBody extends TankBody { constructor(pos, heading) { super(pos, heading); this.K = VAN; this.gun = 0; } }
+  const DROP_ALT = 380;        // metres: the height you jump from at the start of a soldier's battle
 
   /// A soldier on foot: walks, runs, strafes, crouches and looks with the mouse. Level ground only (water, steep slopes, trees
   /// and buildings stop it) inside a round battlefield. Shaped like TankBody so the rest of Battle can treat it the same way:
@@ -4806,6 +4810,7 @@
       if (down) {
         if (k === 'F11') { toggleFullscreen(); return; }
         if (screen === 'fly') {
+          if (war && war.mapOpen && (k === 'Enter' || k === ' ')) { warConfirmDrop(); e.preventDefault?.(); return; }
           if (k === 'u' && war && war.net) toggleVote();
           if (k === 'p' && (!(war && war.net) || paused)) { paused = !paused; renderUI(); if (!paused) { try { ac && ac.resume && ac.resume(); } catch { /* no sound */ } } }
           if (k === '?' || k === '/') showCtl(ctlEl.style.display === 'none');
@@ -5394,6 +5399,11 @@
       m.soldier = upload(b);
       b = new Builder(); b.box([0, -0.45, 0], [0.2, 0.9, 0.24], [0.28, 0.32, 0.22]); m.leg = upload(b);
       b = new Builder();
+      b.box([0, 1.15, 0.5], [2.3, 1.5, 4.4], [0.3, 0.35, 0.24]); b.box([0, 1.0, -2.1], [2.2, 1.1, 1.3], [0.26, 0.3, 0.2]); b.box([0, 1.75, -2.2], [1.9, 0.5, 0.15], [0.55, 0.7, 0.8]);
+      for (const [wx, wz] of [[-1.2, -1.7], [1.2, -1.7], [-1.2, 1.9], [1.2, 1.9]]) b.box([wx, 0.45, wz], [0.35, 0.9, 0.9], [0.08, 0.08, 0.09]);
+      m.van = upload(b);
+      b = new Builder(); b.box([0, 3.4, 0], [5, 0.12, 5], [0.92, 0.92, 0.86]); b.box([-1.2, 1.9, 0], [0.04, 3, 0.04], [0.4, 0.4, 0.4]); b.box([1.2, 1.9, 0], [0.04, 3, 0.04], [0.4, 0.4, 0.4]); m.canopy = upload(b);
+      b = new Builder();
       b.box([0, 0.4, 0.3], [2.2, 0.8, 2.6], [0.3, 0.34, 0.22]);
       m.turret = upload(b);
       b = new Builder(); rod(b, [0, 0, -0.6], [0, 0, -5.6], 0.13, 0.1, [0.2, 0.21, 0.2], 8); m.barrel = upload(b);
@@ -5453,7 +5463,7 @@
         gunT: 0, bombT: 0, flash: 0, warn: '', warnT: 0, wavePause: 2.5, waveClear: false, gunners: 0, dead: false, feedT: 0, shown: false, d };
       if (shared) netAttachToWar();
       else if (warSide === 'coop' && !foot) war.friend = warSpawnAircraft('f16', 'friend');
-      if (foot) camMode = 1;
+      if (foot) { camMode = 1; warOpenMap(); }
       buildWbar();
     }
 
@@ -5628,6 +5638,26 @@
     /// E: in a helicopter that has landed and stopped, step out as a soldier (the helicopter stays parked); on foot beside it, climb back in.
     function warHeliExitEnter() {
       if (!war || war.dead || screen !== 'fly' || mode.id !== 'war') return;
+      if (war.driving) {
+        const v = war.tank;
+        if (Math.abs(v.speed) > 5) { toast('Stop the van first', 1200); return; }
+        const h = v.heading, body = new SoldierBody([v.pos[0] + Math.cos(h) * 4, 0, v.pos[2] + Math.sin(h) * 4], h);
+        body.pos[1] = groundAt(W, body.pos[0], body.pos[2]); body.dropped = true; body.landed = true;
+        war.van = { pos: v.pos.slice(), q: v.q.slice(), heading: h };
+        war.driving = false; war.foot = true; war.tank = body;
+        flight.reset([body.pos[0], body.pos[1] + SOLDIER.eye, body.pos[2]], h, 0, true); camMode = 1; buildWbar();
+        if (war.net) netSend({ t: 'vn', id: netMyId, on: 1, p: war.van.pos.map(r1n), q: war.van.q.map((x) => Math.round(x * 1000) / 1000) });
+        toast('Out of the van', 1200); return;
+      }
+      if (war.foot && war.van && !(war.heli && len(sub(war.heli.pos, war.tank.pos)) < 14)) {
+        if (len(sub(war.van.pos, war.tank.pos)) > 10) { toast('Walk up to the van first', 1400); return; }
+        const h = war.van.heading, v = new VanBody([war.van.pos[0], 0, war.van.pos[2]], h);
+        v.pos[1] = groundAt(W, v.pos[0], v.pos[2]) + 0.2;
+        war.tank = v; war.foot = false; war.driving = true; war.van = null; camMode = 0;
+        flight.reset([v.pos[0], v.pos[1] + 2.2, v.pos[2]], h, 0, true); buildWbar();
+        if (war.net) netSend({ t: 'vn', id: netMyId, on: 0 });
+        toast('In the van: W/S drive, A/D steer, Shift boost, E to get out', 2600); return;
+      }
       if (war.vehicle === 'plane' && plane.rotor) {
         const ground = groundAt(W, flight.pos[0], flight.pos[2]);
         if (!(flight.onGround || flight.pos[1] - ground < (plane.gear || 1.5) * (plane.scale || 1) + 1.2) || flight.speed > 3) { toast('Land the helicopter and stop first, then press E', 2000); return; }
@@ -5658,6 +5688,16 @@
         toast('Back in the helicopter', 1600);
       } else if (war.foot) toast('Your helicopter is not here', 1200);
     }
+    /// The van that waits beside you once you have landed.
+    function warSpawnVan() {
+      const t = war.tank; t.landed = true;
+      const h = t.heading, x = t.pos[0] + Math.cos(h) * 9, z = t.pos[2] + Math.sin(h) * 9;
+      const ok = groundAt(W, x, z) > WATER + 1.5 && Math.hypot(x, z) < war.arena.R;
+      const px = ok ? x : t.pos[0] - Math.cos(h) * 9, pz = ok ? z : t.pos[2] - Math.sin(h) * 9;
+      war.van = { pos: [px, groundAt(W, px, pz) + 0.2, pz], q: qheading(h, 0), heading: h };
+      if (war.net) netSend({ t: 'vn', id: netMyId, on: 1, p: war.van.pos.map(r1n), q: war.van.q.map((v) => Math.round(v * 1000) / 1000) });
+      buildWbar(); toast('Landed. Your van is beside you: walk to it and press E', 3200);
+    }
     function warSoloRespawn() {
       if (!war || war.net) return;
       if (war.ejected) {      // a pilot who was lost on foot gets a new jet, back in the same wave
@@ -5670,7 +5710,7 @@
       war.dead = false; war.selfDestructT = 0; war.hp = war.maxHp; war.gun = war.L.gun; war.bombs = war.L.bombs;
       war.missiles = war.L.missiles; war.flares = war.L.flares; war.shells = war.L.shells; war.flash = 0;
       if (war.vehicle === 'tank') {
-        war.tank = warBody(spot);
+        if (war.driving) { war.driving = false; war.foot = warVeh === 'soldier'; war.van = null; } war.tank = warBody(spot);
         if (war.foot) { war.mag = SOLDIER.mag; war.reloadT = 0; war.zoomI = 0; war.rpg = SOLDIER.rpg; war.weapon = 'rifle'; }
         war.tank.pos[1] = groundAt(W, spot.x, spot.z) + 0.2;
         flight.reset([spot.x, war.tank.pos[1] + 2.2, spot.z], spot.heading, 0, true);
@@ -5763,6 +5803,7 @@
         const R = ARCADE_RATES[plane.id];
         flight.arcade = war.assist !== 'pro' && R ? (war.assist === 'auto' ? { ...R, turn: R.turn * 0.7 } : R) : null;
       }
+      if (war.driving) { return { drive: raw.throttle, steer: clamp(raw.yaw + raw.roll, -1, 1), aimX: 0, aimY: 0, boost: !!raw.boost || keys.has('Shift') }; }
       if (war.foot) {
         // Not scoped: the cursor is the crosshair and the view turns only when the cursor is near the edge of the screen.
         // Scoped: the crosshair stays in the middle and the cursor's distance from the middle turns the view slowly.
@@ -5830,7 +5871,10 @@
     /// and the way its turret looks), so the camera, the enemies and the sights all work without knowing about tanks.
     function tankDrive(dt, inp) {
       const t = war.tank;
+      if (war.mapOpen) { t.pos[1] = groundAt(W, t.pos[0], t.pos[2]) + t.air; flight.pos = add(t.pos, [0, t.eye, 0]); flight.vel = [0, 0, 0]; flight.q = qheading(t.turret, t.gun); flight.crashed = false; flight.onGround = true; flight.events.length = 0; return; }
       t.step(dt, inp, W, war.arena.R * 1.05);
+      if (war.driving) { t.turret = t.heading; t.gun = 0.12; }
+      else if (war.foot && t.dropped && !t.landed && t.air <= 0) warSpawnVan();
       flight.pos = add(t.pos, [0, war.foot ? t.eye : 2.2, 0]); flight.vel = t.vel.slice(); flight.q = qheading(t.turret, t.gun);
       flight.crashed = false; flight.onGround = true; flight.events.length = 0;
     }
@@ -5907,6 +5951,7 @@
       }
     }
     function warPlayerFire(dt) {
+      if (war.driving) return;
       if (war.foot) { warSoldierFire(dt); return; }
       if (war.guiding) { if (keys.has('Enter') || keys.has(' ') || warPad.gun) { if (war.guideM) war.guideM.detonate = true; } return; }
       if (war.vehicle === 'tank') { warTankFire(dt); return; }
@@ -6159,7 +6204,7 @@
         } else if (b.owner === 'e' && !b.vis) {
           if (!flight.crashed && !war.dead && WAR.segHit(p0, b.pos, flight.pos, rP)) { warHurt(b.dmgAir * (war.maxHp > 120 ? 0.8 : 1) * (war.assist !== 'pro' ? 0.5 : 1), 'enemy fire'); puff('spark', b.pos, jitter(20)); b.dead = true; continue; }
           if (war.friend && war.friend.state === 'fly' && WAR.segHit(p0, b.pos, war.friend.pos, 7.5)) { warDamageAir(war.friend, b.dmgAir, 'e'); b.dead = true; }
-          if (war.net && war.net.role === 'host') for (const o of war.net.others.values()) if (o.alive && o.shown && WAR.segHit(p0, b.pos, o.shown, netRadius({ tank: o.rep && o.rep.kind === 'tank', foot: o.rep && o.rep.kind === 'soldier' }))) { netHurtRemote(o.id, b.dmgAir, 'enemy fire'); puff('spark', b.pos, jitter(20)); b.dead = true; break; }
+          if (war.net && war.net.role === 'host') for (const o of war.net.others.values()) if (o.alive && o.shown && WAR.segHit(p0, b.pos, o.shown, netRadius({ tank: o.rep && (o.rep.kind === 'tank' || o.rep.kind === 'van'), foot: o.rep && o.rep.kind === 'soldier' }))) { netHurtRemote(o.id, b.dmgAir, 'enemy fire'); puff('spark', b.pos, jitter(20)); b.dead = true; break; }
         }
       }
       war.bullets = war.bullets.filter((b) => !b.dead);
@@ -6292,6 +6337,7 @@
     // ---- one step of the war
     function warStep(dt) {
       if (!war) return;
+      if (war.mapOpen && (war.mapT -= dt) <= 0) warConfirmDrop();
       if (war.net && flight.crashed && !war.dead) netCrashed();
       if (flight.crashed && !war.net && !(war.selfDestructT > 0)) return;
       if (war.endT > 0 && (war.endT -= dt) <= 0) { finish('crash', war.score, `${war.foot ? 'Soldier down' : 'Tank destroyed'} · ${war.score} pts · wave ${war.wave}`); return; }
@@ -6363,18 +6409,25 @@
       draw(warMeshes.leg, model(qmul(q, qaxis([1, 0, 0], sw)), add(base, qrot(q, [-0.12, 0.9 - drop * 0.4, 0]))), tint);
       draw(warMeshes.leg, model(qmul(q, qaxis([1, 0, 0], -sw)), add(base, qrot(q, [0.12, 0.9 - drop * 0.4, 0]))), tint);
     }
+    function warDrawVan(at, q, tint) { draw(warMeshes.van, model(q, at), tint); }
     function warRender(t) {
       if (!war || screen !== 'fly') return;
-      if (war.foot) { if (camMode !== 1 && !(war.net && war.dead)) warDrawSoldier(war.tank.pos, war.tank.turret, war.tank.walk, war.dead ? [0.2, 0.18, 0.17] : [0.8, 1, 1.5], war.tank.crouch, war.tank.moving); }
+      if (war.foot) {
+        if (camMode !== 1 && !(war.net && war.dead)) warDrawSoldier(war.tank.pos, war.tank.turret, war.tank.walk, war.dead ? [0.2, 0.18, 0.17] : [0.8, 1, 1.5], war.tank.crouch, war.tank.moving);
+        if (war.tank.air > 0.5 && camMode !== 1) draw(warMeshes.canopy, model(qheading(war.tank.turret, 0), war.tank.pos), [1, 1, 1]);
+      } else if (war.driving) { if (!(war.net && war.dead)) warDrawVan(war.tank.pos, war.tank.q, [0.8, 1, 1.4]); }
       else if (war.vehicle === 'tank' && !(war.net && war.dead)) warDrawTank(war.tank.pos, war.tank.q, war.tank.turret, war.tank.gun, war.dead ? [0.2, 0.18, 0.17] : [0.72, 0.9, 1.3]);
       if (war.net) for (const o of war.net.others.values()) {
         if (!o.alive || !o.rep || !o.shown) continue;
-        if (o.rep.kind === 'soldier') {
+        if (o.rep.kind === 'van') warDrawVan(o.shown, o.rep.q, o.colour);
+        else if (o.rep.kind === 'soldier') {
           const moved = o.lastShown ? Math.hypot(o.shown[0] - o.lastShown[0], o.shown[2] - o.lastShown[2]) : 0; o.lastShown = o.shown.slice(); o.walk = (o.walk || 0) + moved * 0.9;
           warDrawSoldier(o.shown, o.rep.turret, o.walk, o.colour, false, moved > 0.01);
         } else if (o.rep.kind === 'tank') warDrawTank(o.shown, o.rep.q, o.rep.turret, o.rep.gun, o.colour);
         else if (planeMeshes[o.rep.kind]) warDrawAircraft({ id: o.rep.kind, spec: PLANES.find((q) => q.id === o.rep.kind), pos: o.shown, q: o.rep.q, state: 'fly' }, o.colour, 0);
       }
+      if (war.van) warDrawVan(war.van.pos, war.van.q, [1, 1, 1]);
+      if (war.net) for (const o of war.net.others.values()) if (o.van) warDrawVan(o.van.pos, o.van.q, o.colour);
       if (war.heli && planeMeshes[war.heli.id]) warDrawAircraft({ id: war.heli.id, spec: PLANES.find((q) => q.id === war.heli.id), pos: war.heli.pos, q: war.heli.q, state: 'fly' }, [1, 1, 1], 0);
       if (war.net) for (const o of war.net.others.values()) if (o.heli && planeMeshes[o.heli.id]) warDrawAircraft({ id: o.heli.id, spec: PLANES.find((q) => q.id === o.heli.id), pos: o.heli.pos, q: o.heli.q, state: 'fly' }, o.colour, 0);
       for (const c of war.craters) draw(warMeshes.crater, model([0, 0, 0, 1], c.p, c.r), [0.1, 0.085, 0.07]);
@@ -6505,10 +6558,11 @@
         // A compass bearing under the header.
         const deg = Math.round(((war.tank.turret * 57.2958) % 360 + 360) % 360), card = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'][Math.round(deg / 45) % 8];
         h2.fillStyle = 'rgba(255,255,255,.85)'; h2.textAlign = 'center'; h2.font = `700 ${Math.round(10 * s + 3)}px system-ui`; h2.fillText(`${card} ${deg}°`, cx, 62 * s + 4);
+        if (war.van && len(sub(war.van.pos, war.tank.pos)) < 10) { h2.fillStyle = '#ffd166'; h2.font = `800 ${Math.round(13 * s + 4)}px system-ui`; h2.fillText('E: get in the van', cx, cy + 110 * s); }
         if (war.heli && len(sub(war.heli.pos, war.tank.pos)) < 14) { h2.fillStyle = '#ffd166'; h2.font = `800 ${Math.round(13 * s + 4)}px system-ui`; h2.fillText('E: climb into the helicopter', cx, cy + 90 * s); }
       }
       // The bombsight: where a bomb dropped this instant would land.
-      if (tank && !war.foot) {
+      if (tank && !war.foot && !war.driving) {
         // Where the next shell would land, and how long until the cannon is ready.
         const sh = { pos: war.tank.muzzle(), vel: add(war.tank.aim().map((v) => v * TANK.shell), war.tank.vel), t: 0 };
         for (let i = 0; i < 260 && sh.pos[1] > groundAt(W, sh.pos[0], sh.pos[2]); i++) WAR.bulletStep(sh, 0.04);
@@ -6542,7 +6596,7 @@
       h2.fillStyle = 'rgba(255,255,255,.15)'; h2.fillRect(bx + 10, by + 8, bw - 20, 6);
       h2.fillStyle = hpF > 0.5 ? '#5bd17a' : hpF > 0.25 ? '#ffd166' : '#ff5d5d'; h2.fillRect(bx + 10, by + 8, (bw - 20) * hpF, 6);
       h2.fillStyle = '#fff';
-      const wp = war.foot ? `${war.weapon === 'rpg' ? `RPG ${war.rpg}` : `RIFLE ${war.mag}/${war.gun}`}   GRENADES ${war.bombs}   ${war.reloadT > 0 ? 'RELOADING' : war.mag === 0 ? 'EMPTY' : ''}` : tank ? `CANNON ${war.shells}   MACHINE GUN ${war.gun}   ${war.tank.reload > 0 ? 'RELOADING' : 'READY'}` : [war.L.gun ? `GUN ${war.gun}` : null, `BOMB ${war.bombs}`, war.L.missiles ? `MSL ${war.missiles}` : null, `FLARE ${war.flares}`].filter(Boolean).join('   ');
+      const wp = war.driving ? `VAN   ${Math.round(Math.abs(war.tank.speed) * 3.6)} km/h   E: get out when stopped` : war.foot ? `${war.weapon === 'rpg' ? `RPG ${war.rpg}` : `RIFLE ${war.mag}/${war.gun}`}   GRENADES ${war.bombs}   ${war.reloadT > 0 ? 'RELOADING' : war.mag === 0 ? 'EMPTY' : ''}` : tank ? `CANNON ${war.shells}   MACHINE GUN ${war.gun}   ${war.tank.reload > 0 ? 'RELOADING' : 'READY'}` : [war.L.gun ? `GUN ${war.gun}` : null, `BOMB ${war.bombs}`, war.L.missiles ? `MSL ${war.missiles}` : null, `FLARE ${war.flares}`].filter(Boolean).join('   ');
       h2.fillText(wp, bx + 10, by + 26 * s + 3);
       h2.textAlign = 'right'; h2.fillText(`WAVE ${war.wave}  ·  ${war.score} pts`, bx + bw - 10, by + 26 * s + 3);
       if (war.net) {        // who is in the battle, and how they are doing
@@ -6573,9 +6627,9 @@
       if (war.net && war.dead && war.net.respawnT > 0) { h2.textAlign = 'center'; h2.font = `800 ${Math.round(24 * s + 4)}px system-ui`; h2.fillStyle = '#ff9f9f'; h2.fillText(`DESTROYED · BACK IN ${Math.ceil(war.net.respawnT)}`, W2 / 2, H2 * 0.4); }
       if (war.briefingT > 0) {
         h2.textAlign = 'center'; h2.font = `800 ${Math.round(17 * s + 3)}px system-ui`; h2.fillStyle = '#fff';
-        h2.fillText(`WAVE ${war.wave} BRIEFING · ${war.foot ? 'KILL' : 'DESTROY'} ${war.waveGround ?? war.ground.length} ${war.foot ? 'ENEMY SOLDIERS' : 'TARGETS'}${war.waveFighters ? ` + ${war.waveFighters} FIGHTERS` : ''}`, W2 / 2, H2 * 0.31);
+        h2.fillText(`WAVE ${war.wave} BRIEFING · ${war.foot || war.driving ? 'KILL' : 'DESTROY'} ${war.waveGround ?? war.ground.length} ${war.foot || war.driving ? 'ENEMY SOLDIERS' : 'TARGETS'}${war.waveFighters ? ` + ${war.waveFighters} FIGHTERS` : ''}`, W2 / 2, H2 * 0.31);
         h2.font = `700 ${Math.round(11 * s + 2)}px system-ui`; h2.fillStyle = '#ffd166';
-        h2.fillText(war.foot ? 'WASD walk · Shift run · aim with the cursor (edges turn) · click fire · right-click scope · R reload · G grenade' : tank ? 'WASD drive · Shift boost · mouse aim · click or Enter to fire' : `Enter / click: guns · Z: bombs${war.L.missiles ? ' · N: missile' : ''} · L: flares`, W2 / 2, H2 * 0.31 + 26 * s);
+        h2.fillText(war.driving ? 'W/S drive · A/D steer · Shift boost · E get out when stopped' : war.foot ? 'WASD walk · Shift run · aim with the cursor (edges turn) · click fire · right-click scope · R reload · G grenade' : tank ? 'WASD drive · Shift boost · mouse aim · click or Enter to fire' : `Enter / click: guns · Z: bombs${war.L.missiles ? ' · N: missile' : ''} · L: flares`, W2 / 2, H2 * 0.31 + 26 * s);
       }
       if (war.waveClear) { h2.textAlign = 'center'; h2.font = `900 ${Math.round(26 * s + 4)}px system-ui`; h2.fillStyle = '#ffd166'; h2.fillText(`WAVE ${war.wave} CLEARED  +${250 * war.wave}`, W2 / 2, H2 * 0.42); }
       const nextGround = war.ground.filter((g) => !g.dead).sort((a, b) => len(sub(a.pos, flight.pos)) - len(sub(b.pos, flight.pos)))[0];
@@ -6633,7 +6687,7 @@
             [['W', 'S'], 'Walk', 'forward and back. Hold Shift to run'], [['A', 'D'], 'Step sideways', 'strafe left and right'],
             [['Mouse'], 'Aim and look', 'the crosshair follows the cursor. Move the cursor to the edge of the screen to turn. In the scope the cursor turns the view slowly. Arrow keys also look'],
             [['Space', 'Enter', 'Click'], 'Rifle', 'hold to fire. 30 rounds a magazine; shots drop over distance'], [['R'], 'Reload', 'takes under 2 seconds'],
-            [['2', '1'], 'RPG or rifle', 'press 2 for the RPG (a big rocket, 4 at a time, more every wave) and 1 for the rifle'], [['E'], 'Helicopter', 'beside your helicopter, E climbs back in'], [['Right-click', 'Z'], 'Scope', 'cycles 1x, 4x and 10x. The marks show where a bullet lands at 100 to 500 m'], [['G'], 'Grenade', 'a short throw that explodes after about 2 seconds'],
+            [['2', '1'], 'RPG or rifle', 'press 2 for the RPG (a big rocket, 4 at a time, more every wave) and 1 for the rifle'], [['E'], 'Van or helicopter', 'beside your van or helicopter, E gets in (and out again when it has stopped). The van is fast: W/S drive, A/D steer, Shift boost'], [['Right-click', 'Z'], 'Scope', 'cycles 1x, 4x and 10x. The marks show where a bullet lands at 100 to 500 m'], [['G'], 'Grenade', 'a short throw that explodes after about 2 seconds'],
             [['Ctrl', 'V'], 'Crouch', 'slower, but the rifle steadies'], [['C'], 'Camera', 'first person, behind you, or far'], [['P'], 'Pause'], [['?'], 'Show this help'],
             ...(war && war.net ? [[['U'], 'Vote', 'change the match with the other players']] : []),
             [[], 'Colours', 'Red soldiers are enemies. Your team is green with a star.']] };
@@ -6671,6 +6725,9 @@
     // The card over the flight, the "?" button, and (in Air War) the weapon buttons.
     const ctlEl = document.createElement('div'); ctlEl.className = 'pg-ctlcard'; ctlEl.style.display = 'none';
     const ctlBtn = document.createElement('button'); ctlBtn.className = 'pg-ctlbtn'; ctlBtn.textContent = '?'; ctlBtn.title = 'Controls for this mode (?)'; ctlBtn.style.display = 'none';
+    const mapEl = document.createElement('div'); mapEl.style.cssText = 'display:none;position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:30;text-align:center;width:min(92%,400px);box-sizing:border-box;padding:12px;border-radius:14px;background:rgba(8,12,24,.92);color:#fff;font:600 13px system-ui;box-shadow:0 8px 30px rgba(0,0,0,.5)';
+    mapEl.innerHTML = '<div style="font:800 15px system-ui">Choose where to land <span data-map="t" style="opacity:.7;font-weight:600"></span></div><canvas data-map="cv" width="360" height="360" style="position:relative;inset:auto;display:block;margin:6px auto;width:min(100%,360px);height:auto;aspect-ratio:1/1;border-radius:8px;cursor:crosshair"></canvas><div style="margin:6px 0;opacity:.8;font-weight:500">Click the map to pick your landing spot. The enemy comes from the top. You jump from the bus and float down: steer a little with W A S D.</div><button data-map="go" class="pg-go">Jump (Enter)</button>';
+    for (const ev of ['mousedown', 'pointerdown', 'click']) mapEl.addEventListener(ev, (e) => e.stopPropagation());
     const wbar = document.createElement('div'); wbar.className = 'pg-wbar'; wbar.style.display = 'none';
     const netbar = document.createElement('div'); netbar.className = 'pg-netbar'; netbar.style.display = 'none';
     netbar.innerHTML = '<button data-nb="vote" title="Vote to change the match (U)">🗳 Vote</button><button data-nb="leave" title="Leave this battle">⎋ Leave</button><span data-nb="code" style="align-self:center;font:700 11px system-ui;opacity:.85;padding:0 6px"></span>';
@@ -6684,7 +6741,7 @@
       else { tcasOn = !tcasOn; write('tcas', tcasOn); if (!tcasOn) cancelSpeech(); toast(tcasOn ? 'TCAS traffic calls on' : 'TCAS traffic calls off', 1200); }
       syncQbar(); root.focus();
     }); });
-    root.append(qbar, ctlEl, ctlBtn, wbar, netbar, voteEl);
+    root.append(qbar, ctlEl, ctlBtn, wbar, netbar, voteEl, mapEl);
     for (const el of [voteEl, ctlEl, ctlBtn]) { el.addEventListener('mousedown', (e) => e.stopPropagation()); el.addEventListener('pointerdown', (e) => e.stopPropagation()); }
     function voteHtml() {
       const n = netg, row = (key, label, vals) => `<div class="pg-crow" style="align-items:center"><span class="pg-ckeys" style="min-width:70px"><b>${label}</b></span><span class="pg-chips" style="margin:0">${vals.map(([val, name]) => {
@@ -6705,7 +6762,7 @@
     /// The buttons for the vehicle in use: a tank has a cannon and a machine gun; an aircraft has guns, bombs, missiles and flares.
     function buildWbar() {
       const tank = war && war.vehicle === 'tank';
-      const defs = war && war.foot ? [['gun', '🔫', 'Fire', 'Space'], ['rpg', '🚀', 'RPG / rifle', '2'], ['scope', '🔭', 'Scope', 'Z'], ['gren', '💣', 'Grenade', 'G'], ['rel', '🔄', 'Reload', 'R'], ...(war.heli ? [['heli', '🚁', 'Climb in', 'E']] : [])] : tank ? [['gun', '💥', 'Cannon', 'Space'], ['bomb', '🔫', 'Machine gun', 'B']]
+      const defs = war && war.driving ? [['van', '🚪', 'Get out', 'E']] : war && war.foot ? [['gun', '🔫', 'Fire', 'Space'], ['rpg', '🚀', 'RPG / rifle', '2'], ['scope', '🔭', 'Scope', 'Z'], ['gren', '💣', 'Grenade', 'G'], ['rel', '🔄', 'Reload', 'R'], ...(war.heli ? [['heli', '🚁', 'Climb in', 'E']] : []), ...(war.van ? [['van', '🚐', 'Get in van', 'E']] : [])] : tank ? [['gun', '💥', 'Cannon', 'Space'], ['bomb', '🔫', 'Machine gun', 'B']]
         : [['gun', '🔫', 'Guns', 'Space'], ['bomb', '💣', 'Bombs', 'B'], ['msl', '🚀', 'Missile', 'N'], ['gde', '🛰', 'Guided', 'G'], ['lock', '🎯', 'Lock on', 'T'], ['flr', '✨', 'Flares', 'L'], ...(plane.rotor ? [['heli', '🚁', 'Land & exit', 'E']] : [])];
       wbar.innerHTML = defs.map(([id, ic, name, key]) => `<button data-w="${id}" title="${name} (${key})"><span>${ic}</span><b>${name}</b><kbd>${key}</kbd><i data-n="${id}"></i></button>`).join('')
         + (war && war.vehicle === 'plane' ? '<button data-w="eject" title="Eject: the jet goes down and you fight on foot with a rifle"><span>🪂</span><b>Eject</b><kbd>J</kbd></button>' : '')
@@ -6720,7 +6777,7 @@
     }
     ctlEl.onclick = () => showCtl(false);
     ctlBtn.onclick = (e) => { e.stopPropagation(); showCtl(ctlEl.style.display === 'none'); root.focus(); };
-    const wDown = (id) => { if (id === 'gun') warPad.gun = true; else if (id === 'bomb') warPad.bomb = true; else if (id === 'msl') warLaunch(); else if (id === 'lock') warToggleLock(); else if (id === 'heli') warHeliExitEnter(); else if (id === 'rpg') warSwitchWeapon(war.weapon === 'rpg' ? 'rifle' : 'rpg'); else if (id === 'gde') warLaunchGuided(); else if (id === 'flr') warFlares(); else if (id === 'scope') warScope(); else if (id === 'gren') warGrenade(); else if (id === 'rel') warReload(); };
+    const wDown = (id) => { if (id === 'gun') warPad.gun = true; else if (id === 'bomb') warPad.bomb = true; else if (id === 'msl') warLaunch(); else if (id === 'lock') warToggleLock(); else if (id === 'heli' || id === 'van') warHeliExitEnter(); else if (id === 'rpg') warSwitchWeapon(war.weapon === 'rpg' ? 'rifle' : 'rpg'); else if (id === 'gde') warLaunchGuided(); else if (id === 'flr') warFlares(); else if (id === 'scope') warScope(); else if (id === 'gren') warGrenade(); else if (id === 'rel') warReload(); };
     const wUp = () => { warPad.gun = false; warPad.bomb = false; };
     function bindWbar() {
       wbar.querySelectorAll('button').forEach((b) => {
@@ -6738,11 +6795,51 @@
       const codeEl = netbar.querySelector('[data-nb="code"]'); if (codeEl) codeEl.textContent = netg ? `Room ${netg.code} · ${netRoster ? 1 + (netg.peers ? netg.peers.size : 0) : 1} playing` : '';
       if (!fly) { showCtl(false); toggleVote(false); }
     }
+    /// The landing map: the battlefield from above (sea blue, land green), the circle you can play in, and where you will land.
+    const mapImgs = {};
+    function warMapDraw() {
+      if (!war || !war.mapOpen) return;
+      const cv = mapEl.querySelector('[data-map="cv"]'), g = cv.getContext('2d'), a = war.arena, Rw = a.R * 1.15, N = 72, sc = 360 / (2 * Rw);
+      if (!mapImgs[a.id]) {
+        const im = document.createElement('canvas'); im.width = im.height = N; const ig = im.getContext('2d'), d = ig.createImageData(N, N);
+        for (let j = 0; j < N; j++) for (let i = 0; i < N; i++) {
+          const h = arenaHeight(a, ((i + 0.5) / N * 2 - 1) * Rw, ((j + 0.5) / N * 2 - 1) * Rw), o = (j * N + i) * 4, sea = h < 0;
+          d.data[o] = sea ? 30 : a.desert ? 196 : 70; d.data[o + 1] = sea ? 74 : a.desert ? 170 : 130; d.data[o + 2] = sea ? 122 : a.desert ? 110 : 72; d.data[o + 3] = 255;
+        }
+        ig.putImageData(d, 0, 0); mapImgs[a.id] = im;
+      }
+      g.imageSmoothingEnabled = true; g.drawImage(mapImgs[a.id], 0, 0, 360, 360);
+      g.strokeStyle = '#fff'; g.lineWidth = 2; g.beginPath(); g.arc(180, 180, a.R * sc, 0, Math.PI * 2); g.stroke();
+      g.fillStyle = '#fff'; g.font = '700 11px system-ui'; g.textAlign = 'center'; g.fillText('ENEMY ↑', 180, 16);
+      const p = war.pick || { x: 0, z: 0 }; g.strokeStyle = '#ffd166'; g.fillStyle = '#ffd166'; g.lineWidth = 2;
+      g.beginPath(); g.arc(180 + p.x * sc, 180 + p.z * sc, 7, 0, Math.PI * 2); g.stroke(); g.beginPath(); g.arc(180 + p.x * sc, 180 + p.z * sc, 2, 0, Math.PI * 2); g.fill();
+    }
+    mapEl.querySelector('[data-map="cv"]').addEventListener('click', (e) => {
+      if (!war || !war.mapOpen) return;
+      const cv = e.currentTarget, r = cv.getBoundingClientRect(), a = war.arena, sc = 360 / (2 * a.R * 1.15);
+      let x = ((e.clientX - r.left) / r.width * 360 - 180) / sc, z = ((e.clientY - r.top) / r.height * 360 - 180) / sc;
+      const m = Math.hypot(x, z), lim = a.R * 0.85; if (m > lim) { x *= lim / m; z *= lim / m; }
+      war.pick = { x, z }; warMapDraw();
+    });
+    mapEl.querySelector('[data-map="go"]').addEventListener('click', () => warConfirmDrop());
+    function warOpenMap() {
+      const t = war.tank; war.mapOpen = true; war.mapT = 25; war.pick = { x: t.pos[0], z: t.pos[2] };
+      t.air = DROP_ALT; t.dropped = true; t.landed = false; t.pos[1] = groundAt(W, t.pos[0], t.pos[2]) + t.air;
+    }
+    function warConfirmDrop() {
+      if (!war || !war.mapOpen) return;
+      war.mapOpen = false; const t = war.tank, p = war.pick;
+      t.pos[0] = p.x; t.pos[2] = p.z; t.air = DROP_ALT; t.pos[1] = groundAt(W, p.x, p.z) + t.air;
+      toast('🪂 You jumped from the bus. Steer a little with W A S D', 2600);
+    }
     function ctlTick(dt) {
+      const showMap = !!(war && war.mapOpen && screen === 'fly');
+      if (showMap !== (mapEl.style.display === 'block')) { mapEl.style.display = showMap ? 'block' : 'none'; if (showMap) warMapDraw(); }
+      if (showMap) { const tt = mapEl.querySelector('[data-map="t"]'); tt.textContent = `${Math.max(0, Math.ceil(war.mapT))}s`; }
       if (ctlT > 0 && (ctlT -= dt) <= 0) showCtl(false);
       if (voteEl.style.display !== 'none' && netg && netg.rev !== voteEl.dataset.rev) { voteEl.dataset.rev = netg.rev; voteEl.innerHTML = voteHtml(); toggleVoteBind(); }
       if (wbar.style.display !== 'none' && war) {
-        const n = war.foot ? { gun: war.weapon === 'rpg' ? `${war.rpg}` : `${war.mag}/${war.gun}`, rpg: war.weapon === 'rpg' ? 'RPG' : `${war.rpg}`, gren: war.bombs, scope: `${SOLDIER.zoom[war.zoomI]}x`, rel: war.reloadT > 0 ? '…' : '' } : war.vehicle === 'tank' ? { gun: war.shells, bomb: war.gun } : { gun: war.L.gun ? war.gun : '–', bomb: war.bombs, msl: war.L.missiles ? war.missiles : '–', gde: war.guided || 0, flr: war.flares };
+        const n = war.driving ? {} : war.foot ? { gun: war.weapon === 'rpg' ? `${war.rpg}` : `${war.mag}/${war.gun}`, rpg: war.weapon === 'rpg' ? 'RPG' : `${war.rpg}`, gren: war.bombs, scope: `${SOLDIER.zoom[war.zoomI]}x`, rel: war.reloadT > 0 ? '…' : '' } : war.vehicle === 'tank' ? { gun: war.shells, bomb: war.gun } : { gun: war.L.gun ? war.gun : '–', bomb: war.bombs, msl: war.L.missiles ? war.missiles : '–', gde: war.guided || 0, flr: war.flares };
         for (const k in n) { const el = wbar.querySelector(`[data-n="${k}"]`); if (el && el.textContent !== String(n[k])) el.textContent = n[k]; }
         const lockOn = war.lock && war.lockT >= 1 && war.missiles > 0, mslBtn = wbar.querySelector('[data-w="msl"]');
         if (mslBtn) mslBtn.classList.toggle('pg-lock', !!lockOn);
@@ -6879,7 +6976,7 @@
     function netMyState() {
       const tank = war.vehicle === 'tank', t = war.tank;
       const firing = war.foot ? (keys.has('Enter') || keys.has(' ') || warPad.gun) && war.mag > 0 && war.reloadT <= 0 : tank ? (keys.has('z') || keys.has('b') || warPad.bomb) && war.gun > 0 : (keys.has('Enter') || keys.has(' ') || warPad.gun) && war.gun > 0;
-      return { kind: war.foot ? 'soldier' : tank ? 'tank' : plane.id, pos: tank ? t.pos : flight.pos, q: tank ? t.q : flight.q, vel: tank ? t.vel : flight.vel, hp: war.hp / war.maxHp * 100, turret: tank ? t.turret : 0, gun: tank ? t.gun : 0, firing: firing && !war.dead, alive: !war.dead };
+      return { kind: war.driving ? 'van' : war.foot ? 'soldier' : tank ? 'tank' : plane.id, pos: tank ? t.pos : flight.pos, q: tank ? t.q : flight.q, vel: tank ? t.vel : flight.vel, hp: war.hp / war.maxHp * 100, turret: tank ? t.turret : 0, gun: tank ? t.gun : 0, firing: firing && !war.dead, alive: !war.dead };
     }
     function netTick(dt) {
       const n = war.net;
@@ -6930,7 +7027,7 @@
       const R = war.arena.R, spot = netStartSpot(R, war.net.cfg, war.net.slot);
       war.dead = false; war.hp = war.maxHp; war.gun = war.L.gun; war.bombs = war.L.bombs; war.missiles = war.L.missiles; war.flares = war.L.flares; war.shells = war.L.shells; war.flash = 0;
       if (war.vehicle === 'tank') {
-        war.tank = warBody(spot); war.tank.pos[1] = groundAt(W, spot.x, spot.z) + 0.2; if (war.foot) { war.mag = SOLDIER.mag; war.reloadT = 0; war.zoomI = 0; war.rpg = SOLDIER.rpg; war.weapon = 'rifle'; }
+        if (war.driving) { war.driving = false; war.foot = warVeh === 'soldier'; war.van = null; } war.tank = warBody(spot); war.tank.pos[1] = groundAt(W, spot.x, spot.z) + 0.2; if (war.foot) { war.mag = SOLDIER.mag; war.reloadT = 0; war.zoomI = 0; war.rpg = SOLDIER.rpg; war.weapon = 'rifle'; }
         flight.reset([spot.x, war.tank.pos[1] + 2.2, spot.z], spot.heading, 0, true);
       } else { flight.reset([spot.x, warStartAlt(), spot.z], spot.heading, plane.cruise, false); flight.sturdy = true; war.ap = { hdg: spot.heading, alt: flight.pos[1], spd: plane.cruise * 1.05, i: 0 }; }
       toast('Back in the fight', 1500);
@@ -7016,6 +7113,7 @@
           break;
         }
         case 'b': { if (!okVec(m.p) || !okVec(m.v)) break; war.bombsAir.push({ owner: 'r', by: m.id, pos: m.p.slice(), vel: m.v.slice(), t: 0, noNpc: !warAuth(), gren: m.g === 1, fuse: 2.4 }); break; }
+        case 'vn': { const o = netOther(m.id); if (!o) break; o.van = m.on && okVec(m.p) && okVec(m.q, 4) ? { pos: m.p.slice(), q: m.q.slice() } : null; break; }
         case 'hl': { const o = netOther(m.id); if (!o) break; if (m.on && okVec(m.p) && okVec(m.q, 4) && PLANES.some((q) => q.id === m.k && q.rotor)) o.heli = { id: m.k, pos: m.p.slice(), q: m.q.slice() }; else o.heli = null; break; }
         case 'sh': { if (!okVec(m.p) || !okVec(m.v)) break; war.bullets.push({ owner: 'r', by: m.id, shell: true, pos: m.p.slice(), vel: m.v.slice(), t: 0, dmgAir: 90, dmgGround: 150, noNpc: !warAuth() }); break; }
         case 'm': { if (!okVec(m.p) || !okVec(m.v)) break; const tgt = m.tg ? war.foes.find((a) => a.nid === m.tg) : null; war.missilesAir.push({ owner: 'r', by: m.id, pos: m.p.slice(), vel: m.v.slice(), t: 0, target: tgt ? { ref: tgt } : null, trail: 0, noNpc: !warAuth() }); break; }
@@ -7095,7 +7193,7 @@
     // ---- who the computer enemies can aim at: you, and (on the host) the other players
     function warPlayersList() {
       const list = [{ id: 'me', local: true, pos: flight.pos, vel: flight.vel, alive: !war.dead, tank: war.vehicle === 'tank' }];
-      if (war.net) for (const o of war.net.others.values()) if (o.alive && o.rep) list.push({ id: o.id, local: false, pos: o.shown || o.rep.pos, vel: o.rep.vel, alive: true, tank: o.rep.kind === 'tank' || o.rep.kind === 'soldier' });
+      if (war.net) for (const o of war.net.others.values()) if (o.alive && o.rep) list.push({ id: o.id, local: false, pos: o.shown || o.rep.pos, vel: o.rep.vel, alive: true, tank: o.rep.kind === 'tank' || o.rep.kind === 'soldier' || o.rep.kind === 'van' });
       return list.filter((p) => p.alive);
     }
     function warNearestPlayer(from) {
