@@ -4808,9 +4808,9 @@
           if (k === 'u' && war && war.net) toggleVote();
           if (k === 'p' && (!(war && war.net) || paused)) { paused = !paused; renderUI(); if (!paused) { try { ac && ac.resume && ac.resume(); } catch { /* no sound */ } } }
           if (k === '?' || k === '/') showCtl(ctlEl.style.display === 'none');
-          if (mode.id === 'war') { if (k === 'n') warLaunch(); else if (k === 'l') warFlares(); else if (k === 't') warToggleLock(); else if (k === 'z') warScope(); else if (k === 'r') warReload(); else if (k === 'g') warGrenade(); if ((k === 'b' || k === 'z') && war && war.vehicle === 'plane' && !war.dead) war.bombPend = true; }
+          if (mode.id === 'war') { if (k === 'n') warLaunch(); else if (k === 'l') warFlares(); else if (k === 't') warToggleLock(); else if (k === 'z') warScope(); else if (k === 'r') warReload(); else if (k === 'g') { if (war && war.foot) warGrenade(); else warLaunchGuided(); } if ((k === 'b' || k === 'z') && war && war.vehicle === 'plane' && !war.dead) war.bombPend = true; }
           if (k === 'c') camMode = (camMode + 1) % 3;
-          if (k === 'g' && !(mode.id === 'war' && war && war.foot)) {
+          if (k === 'g' && !(mode.id === 'war' && war)) {
             const r = flight.toggleGear();
             if (r === 'up' || r === 'down') { toast(r === 'down' ? 'Gear down' : 'Gear up', 1100); noise(1.1, 0.12, 280); }
             else toast(r === 'fixed' ? `The ${plane.name} has fixed wheels: no gear to raise` : r === 'broken' ? 'The undercarriage is broken' : 'Gear can only be raised in the air', 1500);
@@ -5526,7 +5526,7 @@
       const airN = war.npc && !war.foot ? Math.min(5, Math.round((warSide === 'versus' ? 1 + Math.floor(n / 1.5) : Math.floor((n + 1) / 2)) * d.count)) : 0;
       for (let i = 0; i < airN; i++) war.foes.push(warSpawnAircraft(warRand() < 0.5 ? 'su27' : 'f15', 'foe'));
       war.waveGround = war.ground.filter((g) => !g.dead).length; war.waveFighters = airN;
-      war.waveClear = false;
+      war.waveClear = false; war.guided = 2;
       // Re-arm a little between waves.
       if (n > 1) {
         war.bombs = Math.min(war.L.bombs, war.bombs + Math.ceil(war.L.bombs * 0.5)); war.missiles = Math.min(war.L.missiles, war.missiles + Math.ceil(war.L.missiles * 0.5));
@@ -5709,6 +5709,13 @@
     }
     /// What the keys and the mouse mean in a battle: a tank is driven and its turret aimed; Automatic flying turns and climbs for you.
     function warInput(raw, dt) {
+      war.lastRaw = raw;
+      if (war.guiding && war.vehicle === 'plane' && !war.dead) {
+        // The plane flies itself straight and level while you steer the missile.
+        if (flight.arcade) return { ...raw, roll: 0, pitch: 0, yaw: 0 };
+        const o = planeAssist(flight, war.ap, { turn: 0, climb: 0 }, dt, W, { floor: 200 });
+        return { ...raw, ...o };
+      }
       if (war.vehicle !== 'tank') {
         // Easy and Automatic fly arcade style; Pro keeps the full aerodynamic model.
         const R = ARCADE_RATES[plane.id];
@@ -5846,6 +5853,7 @@
     }
     function warPlayerFire(dt) {
       if (war.foot) { warSoldierFire(dt); return; }
+      if (war.guiding) { if (keys.has('Enter') || keys.has(' ') || warPad.gun) { if (war.guideM) war.guideM.detonate = true; } return; }
       if (war.vehicle === 'tank') { warTankFire(dt); return; }
       const L = war.L, { f, u } = flight.axes();
       const wantGun = (keys.has('Enter') || keys.has(' ') || warPad.gun) && war.gun > 0;
@@ -5887,6 +5895,29 @@
       war.missiles--;
       warFireMissile('p', add(warMuzzle(), mul(flight.axes().u, -1.2)), flight.vel, f, locked ? { ref: locked } : null);
       toast(locked ? 'Missile away' : 'Missile away (no lock: it flies straight)', 1000);
+    }
+    /// Guided missile (G): you fly the missile with the mouse or arrows while the plane flies itself, then detonate it with
+    /// Space, a click or G. Two per round.
+    function warLaunchGuided() {
+      if (!war || war.dead || war.vehicle !== 'plane' || screen !== 'fly') return;
+      if (war.guideM && !war.guideM.dead) { war.guideM.detonate = true; return; }
+      if (war.net && !warAuth()) { toast('Guided missiles are for the host in shared battles for now', 1800); return; }
+      if ((war.guided || 0) <= 0) { toast('No guided missiles left this round', 1400); return; }
+      const { f } = flight.axes(); war.guided--;
+      const m = warFireMissile('p', warMuzzle(), flight.vel, f, null); m.guided = true;
+      war.guideM = m; war.guiding = true; war.ap = { hdg: flight.heading, alt: flight.pos[1], spd: Math.max(flight.ias, plane.stall * 1.4), i: 0 };
+      toast('GUIDED MISSILE: steer with the mouse or arrows. Space, click or G detonates', 2800);
+    }
+    /// One step of a missile you are flying: it turns where you steer and speeds up to 320 m/s.
+    function warGuideStep(m, dt) {
+      const raw = war.lastRaw || { roll: 0, pitch: 0 };
+      m.t = (m.t || 0) + dt;
+      let sp = len(m.vel) || 200; const d = mul(m.vel, 1 / sp);
+      let h = Math.atan2(d[0], -d[2]), p = Math.asin(clamp(d[1], -1, 1));
+      h += clamp(raw.roll, -1, 1) * 1.2 * dt; p = clamp(p + clamp(raw.pitch, -1, 1) * 1.0 * dt, -1.45, 1.45);
+      sp = Math.min(320, sp + 140 * dt);
+      m.vel = [Math.sin(h) * Math.cos(p) * sp, Math.sin(p) * sp, -Math.cos(h) * Math.cos(p) * sp];
+      m.pos = add(m.pos, mul(m.vel, dt));
     }
     function warFlares() {
       if (!war || war.dead || screen !== 'fly') return;
@@ -6095,12 +6126,15 @@
             if (m.target.player === 'me' || m.target.player === true) tg = { pos: flight.pos, vel: flight.vel };
             else { const o = war.net && war.net.others.get(m.target.player); if (o && o.alive && o.rep) tg = { pos: o.shown || o.rep.pos, vel: o.rep.vel }; else m.target = null; }
           } else if (m.target.ref && m.target.ref.state === 'fly') tg = { pos: m.target.ref.pos, vel: m.target.ref.vel };
+          else if (m.target.ref && m.target.ref.kind && !m.target.ref.dead) tg = { pos: add(m.target.ref.pos, [0, 1.5, 0]), vel: [0, 0, 0] };
           else m.target = null;
         }
-        WAR.missileStep(m, tg, dt);
+        if (m === war.guideM && war.dead) { m.dead = true; war.guideM = null; war.guiding = false; continue; }
+        if (m.guided) warGuideStep(m, dt); else WAR.missileStep(m, tg, dt);
         m.trail -= dt; if (m.trail <= 0) { m.trail = 0.03; puff('tsmoke', m.pos, v3()); }
         const g = groundAt(W, m.pos[0], m.pos[2]);
-        let boom = m.pos[1] <= g + 1 || m.t > 14;
+        let boom = m.pos[1] <= g + 1 || m.t > (m.guided ? 30 : 14) || !!m.detonate;
+        if (m.guided && !boom) for (const gr of war.ground) if (!gr.dead && gr.kind !== 'rifleman' && len(sub(m.pos, gr.pos)) < 14) boom = true;
         if (!boom && m.t > 0.4) {
           if (m.owner === 'e') {
             if (!m.vis && !war.dead && len(sub(m.pos, flight.pos)) < Math.max(14, rP * 1.4)) boom = true;
@@ -6109,7 +6143,7 @@
           } else if (m.owner === 'r' && netFight()) { if (!war.dead && len(sub(m.pos, flight.pos)) < Math.max(14, rP * 1.4)) boom = true; }
           if (m.owner !== 'e') for (const a of war.foes) if (a.state === 'fly' && len(sub(m.pos, a.pos)) < 16) boom = true;
         }
-        if (boom) { m.dead = true; warBoom(m.pos, 0.8); warBlast(m.pos, 45, 260, m.owner, m); }
+        if (boom) { m.dead = true; warBoom(m.pos, m.guided ? 1.1 : 0.8); warBlast(m.pos, m.guided ? 60 : 45, m.guided ? 320 : 260, m.owner, m); if (m === war.guideM) { war.guideM = null; war.guiding = false; } }
       }
       war.missilesAir = war.missilesAir.filter((m) => !m.dead);
       // Flak: a shell that bursts where it was aimed, and hurts what is near the burst.
@@ -6147,23 +6181,25 @@
     }
 
     /// The lock button (T): lock on to the enemy fighter nearest the nose and hold it until you press T again, it is destroyed, or it flies far away.
+    const lockAlive = (t) => !!t && (t.state ? t.state === 'fly' : !t.dead);
+    const lockPos = (t) => (t.state ? t.pos : add(t.pos, [0, 1.5, 0]));
     function warToggleLock() {
       if (!war || war.dead || war.vehicle !== 'plane' || screen !== 'fly') return;
       if (war.manualLock) { war.manualLock = false; war.lock = null; war.lockT = 0; toast('Lock released', 900); return; }
       const { f } = flight.axes(); let best = null, ba = 1.2;
-      for (const a of war.foes) {
-        if (a.state !== 'fly') continue;
-        const to = sub(a.pos, flight.pos), dd = len(to); if (dd > 9000 || dd < 60) continue;
+      for (const a of [...war.foes, ...war.ground]) {          // fighters, and ground targets: bases, tanks, guns, trucks, fuel
+        if (!lockAlive(a) || a.kind === 'rifleman') continue;
+        const to = sub(lockPos(a), flight.pos), dd = len(to); if (dd > 9000 || dd < 60) continue;
         const ang = Math.acos(clamp(dot(f, mul(to, 1 / dd)), -1, 1)); if (ang < ba) { ba = ang; best = a; }
       }
-      if (!best) { toast('No enemy fighter ahead to lock on to', 1300); return; }
+      if (!best) { toast('Nothing ahead to lock on to', 1300); return; }
       war.lock = best; war.lockT = 0; war.manualLock = true; toast('Locking on… (T to release)', 1100); beep(900, 0.06, 'square', 0.05);
     }
     function warLockOn(dt) {
       const { f } = flight.axes();
       if (war.manualLock) {
         const cur = war.lock;
-        if (!cur || cur.state !== 'fly' || len(sub(cur.pos, flight.pos)) > 9000) { war.manualLock = false; war.lock = null; war.lockT = 0; toast('Target lost', 900); }
+        if (!lockAlive(cur) || len(sub(lockPos(cur), flight.pos)) > 9000) { war.manualLock = false; war.lock = null; war.lockT = 0; toast('Target lost', 900); }
         else {
           war.lockT += dt;
           if (war.lockT >= 1 && war.missiles > 0) { war.lockBeep = (war.lockBeep || 0) - dt; if (war.lockBeep <= 0) { war.lockBeep = 0.45; beep(1250, 0.07, 'square', 0.05); } }
@@ -6360,9 +6396,9 @@
       if (onScr(sight, 4) && war.L.gun > 0 && !tank) {
         h2.strokeStyle = 'rgba(255,240,150,.9)'; h2.beginPath(); h2.arc(sight.x, sight.y, 13, 0, Math.PI * 2); h2.moveTo(sight.x - 21, sight.y); h2.lineTo(sight.x - 8, sight.y); h2.moveTo(sight.x + 8, sight.y); h2.lineTo(sight.x + 21, sight.y); h2.moveTo(sight.x, sight.y - 21); h2.lineTo(sight.x, sight.y - 8); h2.stroke();
       }
-      if (war.lock && war.lock.state === 'fly' && !tank) {
+      if (lockAlive(war.lock) && !tank) {
         // Lock-on box on the target: a thin box while it tracks, a bright one with LOCK once the missile can fire.
-        const t = war.lock, q0 = proj(t.pos), q = onScr(q0, 10) ? q0 : edgePoint(t.pos), on = war.lockT >= 1, sz = 22 * s + 8;
+        const t = war.lock, q0 = proj(lockPos(t)), q = onScr(q0, 10) ? q0 : edgePoint(lockPos(t)), on = war.lockT >= 1, sz = 22 * s + 8;
         h2.strokeStyle = h2.fillStyle = on ? '#ff3b3b' : '#ffd166'; h2.lineWidth = on ? 3 : 2;
         h2.strokeRect(q.x - sz, q.y - sz, sz * 2, sz * 2);
         if (!on) { h2.beginPath(); h2.arc(q.x, q.y, sz + 6, -Math.PI / 2, -Math.PI / 2 + war.lockT * Math.PI * 2); h2.stroke(); }
@@ -6486,6 +6522,13 @@
         h2.strokeStyle = 'rgba(255,255,255,.68)'; h2.lineWidth = 1.5; h2.beginPath(); h2.arc(ax, ay, ar, 0, Math.PI * 2); h2.stroke();
         if (mouse.in && mouse.engaged) { h2.strokeStyle = '#ffd166'; h2.beginPath(); h2.moveTo(ax, ay); h2.lineTo(ax + mouse.x * ar, ay + mouse.y * ar); h2.stroke(); h2.fillStyle = '#ffd166'; h2.beginPath(); h2.arc(ax + mouse.x * ar, ay + mouse.y * ar, 5, 0, Math.PI * 2); h2.fill(); }
       }
+      if (war.guiding && war.guideM && !war.guideM.dead) {
+        const m = war.guideM; h2.save(); h2.textAlign = 'center';
+        h2.strokeStyle = '#ff5d5d'; h2.lineWidth = 2; h2.beginPath(); h2.arc(W2 / 2, H2 / 2, 18, 0, Math.PI * 2); h2.moveTo(W2 / 2 - 30, H2 / 2); h2.lineTo(W2 / 2 - 10, H2 / 2); h2.moveTo(W2 / 2 + 10, H2 / 2); h2.lineTo(W2 / 2 + 30, H2 / 2); h2.moveTo(W2 / 2, H2 / 2 - 30); h2.lineTo(W2 / 2, H2 / 2 - 10); h2.moveTo(W2 / 2, H2 / 2 + 10); h2.lineTo(W2 / 2, H2 / 2 + 30); h2.stroke();
+        h2.fillStyle = '#ff9f9f'; h2.font = `800 ${Math.round(14 * s + 4)}px system-ui`; h2.fillText(`GUIDED MISSILE · ${Math.max(0, 30 - m.t).toFixed(0)}s · ${Math.round(len(m.vel))} m/s`, W2 / 2, 70 * s);
+        h2.font = `600 ${Math.round(10 * s + 3)}px system-ui`; h2.fillStyle = '#fff'; h2.fillText('Steer with the mouse or arrows · Space, click or G detonates · your plane flies itself', W2 / 2, 88 * s);
+        h2.restore();
+      }
       if (netHold()) { h2.fillStyle = 'rgba(8,12,24,.6)'; h2.fillRect(0, H2 * 0.4, W2, H2 * 0.16); h2.fillStyle = '#ffd166'; h2.textAlign = 'center'; h2.font = `800 ${Math.round(24 * s + 6)}px system-ui`; h2.fillText('⏸ ROUND PAUSED BY VOTE', W2 / 2, H2 * 0.49); h2.font = `600 ${Math.round(11 * s + 3)}px system-ui`; h2.fillStyle = '#fff'; h2.fillText('Press U and vote ▶ Playing to carry on', W2 / 2, H2 * 0.53); }
       // Warnings and the red flash when you are hit.
       if (war.warn) { h2.textAlign = 'center'; h2.font = `800 ${Math.round(22 * s + 4)}px system-ui`; h2.fillStyle = Math.floor(performance.now() / 180) % 2 ? '#ff5d5d' : '#ffd166'; h2.fillText(war.warn, W2 / 2, H2 * 0.18); }
@@ -6539,7 +6582,7 @@
           ] : [
             [['Space', 'Enter', 'Click'], 'Guns', `hold to fire. The circle is where the shells go.${aimNote}`],
             [['B', 'Z'], 'Bombs', auto ? 'hold: it drops only when a bomb would hit a target' : 'the bomb lands exactly on the yellow diamond where it was when you pressed. Hold for a stick'],
-            [['T'], 'Lock on', 'press T to lock on to the fighter nearest your nose and keep it locked. T again to let go'], [['N'], 'Missile', 'fire at the locked fighter once it says LOCK'], [['L'], 'Flares', 'press when you hear MISSILE! to break its lock'], [['J'], 'Eject', 'bail out: the jet goes down and you fight on foot with a rifle. Ramming an enemy destroys it too'],
+            [['T'], 'Lock on', 'press T to lock on to the fighter or ground target (base, tank, gun, truck) nearest your nose and keep it locked. T again to let go'], [['G'], 'Guided missile', 'you fly the missile with the mouse or arrows while the plane flies itself. Space, click or G detonates. 2 each round'], [['N'], 'Missile', 'fire at the locked fighter once it says LOCK'], [['L'], 'Flares', 'press when you hear MISSILE! to break its lock'], [['J'], 'Eject', 'bail out: the jet goes down and you fight on foot with a rifle. Ramming an enemy destroys it too'],
             ...(auto ? [[['Mouse', '←', '→'], 'Turn', 'the plane turns towards where you point and keeps its height'], [['↑', '↓'], 'Climb / dive', 'it settles at the new height'], [['W', 'S'], 'Speed', 'faster or slower']] : CTL_FLY()),
             [['C'], 'Camera', 'behind, cockpit or far'], [['P'], 'Pause'], [['R'], 'Restart'], [['?'], 'Show this help'],
             ...(war && war.net ? [[['U'], 'Vote', 'change the match with the other players']] : []),
@@ -6594,7 +6637,7 @@
     function buildWbar() {
       const tank = war && war.vehicle === 'tank';
       const defs = war && war.foot ? [['gun', '🔫', 'Rifle', 'Space'], ['scope', '🔭', 'Scope', 'Z'], ['gren', '💣', 'Grenade', 'G'], ['rel', '🔄', 'Reload', 'R']] : tank ? [['gun', '💥', 'Cannon', 'Space'], ['bomb', '🔫', 'Machine gun', 'B']]
-        : [['gun', '🔫', 'Guns', 'Space'], ['bomb', '💣', 'Bombs', 'B'], ['msl', '🚀', 'Missile', 'N'], ['lock', '🎯', 'Lock on', 'T'], ['flr', '✨', 'Flares', 'L']];
+        : [['gun', '🔫', 'Guns', 'Space'], ['bomb', '💣', 'Bombs', 'B'], ['msl', '🚀', 'Missile', 'N'], ['gde', '🛰', 'Guided', 'G'], ['lock', '🎯', 'Lock on', 'T'], ['flr', '✨', 'Flares', 'L']];
       wbar.innerHTML = defs.map(([id, ic, name, key]) => `<button data-w="${id}" title="${name} (${key})"><span>${ic}</span><b>${name}</b><kbd>${key}</kbd><i data-n="${id}"></i></button>`).join('')
         + (war && war.vehicle === 'plane' ? '<button data-w="eject" title="Eject: the jet goes down and you fight on foot with a rifle"><span>🪂</span><b>Eject</b><kbd>J</kbd></button>' : '')
         + '<button data-w="self" title="End this sortie and respawn without losing wave progress"><span>💥</span><b>Self-destruct</b><kbd>X</kbd></button>';
@@ -6608,7 +6651,7 @@
     }
     ctlEl.onclick = () => showCtl(false);
     ctlBtn.onclick = (e) => { e.stopPropagation(); showCtl(ctlEl.style.display === 'none'); root.focus(); };
-    const wDown = (id) => { if (id === 'gun') warPad.gun = true; else if (id === 'bomb') warPad.bomb = true; else if (id === 'msl') warLaunch(); else if (id === 'lock') warToggleLock(); else if (id === 'flr') warFlares(); else if (id === 'scope') warScope(); else if (id === 'gren') warGrenade(); else if (id === 'rel') warReload(); };
+    const wDown = (id) => { if (id === 'gun') warPad.gun = true; else if (id === 'bomb') warPad.bomb = true; else if (id === 'msl') warLaunch(); else if (id === 'lock') warToggleLock(); else if (id === 'gde') warLaunchGuided(); else if (id === 'flr') warFlares(); else if (id === 'scope') warScope(); else if (id === 'gren') warGrenade(); else if (id === 'rel') warReload(); };
     const wUp = () => { warPad.gun = false; warPad.bomb = false; };
     function bindWbar() {
       wbar.querySelectorAll('button').forEach((b) => {
@@ -6630,7 +6673,7 @@
       if (ctlT > 0 && (ctlT -= dt) <= 0) showCtl(false);
       if (voteEl.style.display !== 'none' && netg && netg.rev !== voteEl.dataset.rev) { voteEl.dataset.rev = netg.rev; voteEl.innerHTML = voteHtml(); toggleVoteBind(); }
       if (wbar.style.display !== 'none' && war) {
-        const n = war.foot ? { gun: `${war.mag}/${war.gun}`, gren: war.bombs, scope: `${SOLDIER.zoom[war.zoomI]}x`, rel: war.reloadT > 0 ? '…' : '' } : war.vehicle === 'tank' ? { gun: war.shells, bomb: war.gun } : { gun: war.L.gun ? war.gun : '–', bomb: war.bombs, msl: war.L.missiles ? war.missiles : '–', flr: war.flares };
+        const n = war.foot ? { gun: `${war.mag}/${war.gun}`, gren: war.bombs, scope: `${SOLDIER.zoom[war.zoomI]}x`, rel: war.reloadT > 0 ? '…' : '' } : war.vehicle === 'tank' ? { gun: war.shells, bomb: war.gun } : { gun: war.L.gun ? war.gun : '–', bomb: war.bombs, msl: war.L.missiles ? war.missiles : '–', gde: war.guided || 0, flr: war.flares };
         for (const k in n) { const el = wbar.querySelector(`[data-n="${k}"]`); if (el && el.textContent !== String(n[k])) el.textContent = n[k]; }
         const lockOn = war.lock && war.lockT >= 1 && war.missiles > 0, mslBtn = wbar.querySelector('[data-w="msl"]');
         if (mslBtn) mslBtn.classList.toggle('pg-lock', !!lockOn);
@@ -7467,7 +7510,10 @@
         at = sub([0, 1.6, 0], mul(side, 6.5 * (plane.cam || plane.scale)));
       } else {
         const { f, u } = flight.axes();
-        if (camMode === 1 && !(flight.crashed && wreckT > 0.8)) {
+        if (war && war.guiding && war.guideM && !war.guideM.dead && mode.id === 'war') {
+          // Flying a guided missile: the camera rides behind it.
+          const dm = norm(war.guideM.vel); eye = add(sub(war.guideM.pos, mul(dm, 16)), [0, 4, 0]); at = add(war.guideM.pos, mul(dm, 120)); up = [0, 1, 0];
+        } else if (camMode === 1 && !(flight.crashed && wreckT > 0.8)) {
           eye = add(add(flight.pos, mul(u, 1.1)), mul(f, -0.4)); at = add(eye, f); up = u;
         } else if (flight.crashed && crashCam) {
           // After a crash: keep following from where the camera was, with a little shake that dies away, then settle into
