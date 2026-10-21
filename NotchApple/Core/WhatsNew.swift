@@ -20,6 +20,10 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.0.94", date: "21 October 2026", headline: "Battle: open games start as Co-op", items: [
+            "Open games now start as Co-op, so a friend who joins is on your team (green) and not an enemy. Before, a game inherited whatever the host had picked last, and if that was Fight every other player was an enemy.",
+            "The room bar now says which it is: \"CO-OP: all one team\" or \"FIGHT: players are enemies\", with the room code and how many are playing. Vote with U to switch.",
+        ]),
         ReleaseNote(version: "2.0.93", date: "21 October 2026", headline: "Battle: heat vision", items: [
             "New heat vision in Battle (press Y or the Heat vision button): the picture goes grey, smoke, dust and haze disappear, and people, vehicles, aircraft and fires glow white so you can see them through smoke.",
         ]),

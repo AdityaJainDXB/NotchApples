@@ -72,7 +72,7 @@ Pick your computer. Both buttons start the download straight away. The Mac link 
   </tr>
   <tr>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.0.93</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.0.94</b></a>
     </td>
     <td align="center">
       <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 1.82.0 BETA</b></a>
@@ -233,6 +233,11 @@ All screenshots use sample data.
 ## What's new
 
 > **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is still in the repository's tags.
+
+### Mac 2.0.94 · Windows 1.93.0 BETA · 21 October 2026 · Battle: open games start as Co-op
+
+- Open games now start as Co-op, so a friend who joins is on your team (green) and not an enemy. Before, a game inherited whatever the host had picked last, and if that was Fight every other player was an enemy.
+- The room bar now says which it is: "CO-OP: all one team" or "FIGHT: players are enemies", with the room code and how many are playing. Vote with U to switch.
 
 ### Mac 2.0.93 · Windows 1.92.0 BETA · 21 October 2026 · Battle: heat vision
 
