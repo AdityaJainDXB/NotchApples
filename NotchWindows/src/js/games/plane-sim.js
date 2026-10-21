@@ -72,9 +72,13 @@
     constructor() { this.d = []; }
     /// One flat triangle. `ref` is a point inside the solid: the normal is flipped to face away from it.
     tri(a, b, c, col, ref) {
-      let n = norm(cross(sub(b, a), sub(c, a)));
-      if (ref) { const m = mul(add(add(a, b), c), 1 / 3); if (dot(n, sub(m, ref)) < 0) n = mul(n, -1); }
-      for (const p of [a, b, c]) this.d.push(p[0], p[1], p[2], n[0], n[1], n[2], col[0], col[1], col[2]);
+      // Plain numbers, no temporary arrays: a chunk of scenery builds thousands of these.
+      const ux = b[0] - a[0], uy = b[1] - a[1], uz = b[2] - a[2], vx = c[0] - a[0], vy = c[1] - a[1], vz = c[2] - a[2];
+      let nx = uy * vz - uz * vy, ny = uz * vx - ux * vz, nz = ux * vy - uy * vx;
+      const l = Math.hypot(nx, ny, nz) || 1; nx /= l; ny /= l; nz /= l;
+      if (ref && nx * ((a[0] + b[0] + c[0]) / 3 - ref[0]) + ny * ((a[1] + b[1] + c[1]) / 3 - ref[1]) + nz * ((a[2] + b[2] + c[2]) / 3 - ref[2]) < 0) { nx = -nx; ny = -ny; nz = -nz; }
+      const d = this.d, c0 = col[0], c1 = col[1], c2 = col[2];
+      d.push(a[0], a[1], a[2], nx, ny, nz, c0, c1, c2, b[0], b[1], b[2], nx, ny, nz, c0, c1, c2, c[0], c[1], c[2], nx, ny, nz, c0, c1, c2);
     }
     quad(a, b, c, d, col, ref) { this.tri(a, b, c, col, ref); this.tri(a, c, d, col, ref); }
     /// Any six-sided solid from 8 corners: 0-3 one end, 4-7 the other, in the same winding.
@@ -4504,9 +4508,13 @@
       }
     }
     /// Sets the level of every looping sound from the engine, speed, ground contact and warnings.
+    let sndT = -1;
     function updateSound() {
       if (!snd || !ac || !sound) return;
-      const t = ac.currentTime, set = (param, v, tc = 0.08) => param.setTargetAtTime(v, t, tc);
+      const t = ac.currentTime;
+      if (t - sndT < 0.03 && t >= sndT) return;      // the levels glide over ~80 ms, so 30 updates a second is plenty
+      sndT = t;
+      const set = (param, v, tc = 0.08) => param.setTargetAtTime(v, t, tc);
       // After the biggest impact everything goes quiet for a moment, then comes back.
       set(engGain.gain, duckT > 0 ? 0.12 : 1, duckT > 0 ? 0.03 : 0.9);
       if (flight.crashed) {
