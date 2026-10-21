@@ -20,6 +20,9 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.0.96", date: "21 October 2026", headline: "Battle: friends meet in the same open game", items: [
+            "Friends now meet in the same open game even if they picked different battlefields. Online used a separate room for each battlefield, so one friend landed in the \"Green Plains\" room and the other in \"Island Fortress\". There is now one open room: the battlefield is the one the first player picked, and you can vote for another with U. Both of you need this version. To play in a private game instead, use Single player and share its room code.",
+        ]),
         ReleaseNote(version: "2.0.95", date: "21 October 2026", headline: "Battle: hold R on foot to respawn", items: [
             "On foot, tap R to reload and hold R for 1.5 seconds to respawn in the same wave (a progress message shows while you hold). Same score, same wave, nothing restarts for anyone else.",
         ]),
