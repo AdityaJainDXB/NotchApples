@@ -8306,6 +8306,8 @@
     let warPlay = read('warplay', 'online');
     if (warPlay !== 'single') warPlay = 'online';
     /// Open games anyone can drop into: one room per battlefield, so players on the same field meet.
+    // One open room for everybody (the battlefield is whatever the host chose; vote with U to change it). Older versions used one room per
+    // battlefield, which split friends who had picked different fields.
     const PUBLIC_ROOMS = { plains: 'PUBGRN', dunes: 'PUBSND', island: 'PUBSEA' };
     /// Start a Battle: find an open game and join the wave being played, or open one if nobody is there. Single player opens
     /// your own room (with its code on screen) that others can still join at any time.
@@ -8313,7 +8315,7 @@
       const nm = (playerName || '').trim();
       if (!nm) { toast('Type your name first so the others know who you are', 2400); ui.querySelector('[data-warname]')?.focus(); return; }
       if (warPlay === 'single') { netOpen('host', NET.newCode()); netg.autoStart = true; }
-      else { warSide = 'coop'; write('warside', 'coop'); netOpen('client', PUBLIC_ROOMS[warField] || PUBLIC_ROOMS.plains); netg.autoJoin = true; }       // an open game starts as Co-op: everyone on one team
+      else { warSide = 'coop'; write('warside', 'coop'); netOpen('client', PUBLIC_ROOMS.plains); netg.autoJoin = true; }       // an open game starts as Co-op: everyone on one team
       renderUI();
     }
     function onStartPress(a) {
