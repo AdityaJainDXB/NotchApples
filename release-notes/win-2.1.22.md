@@ -1,3 +1,4 @@
-## Notch Apple 2.1.21
+## Notch Apple for Windows 2.1.22 (BETA)
 
+- The Sound switch is now always obeyed in the airplane game: with it off, the game's audio engine is shut down completely and checked every frame, so no engine, warning or effect sound can slip through.
 - World Clock: search by country, state or well-known city, not just the time zone's city name. Type India, Mumbai, Texas, California, Dubai or Queensland and it finds the right time. Every country is listed, and each region with its own time (all of the USA's, Australia's, Russia's, Brazil's, Canada's and so on). The clock shows the name you picked.

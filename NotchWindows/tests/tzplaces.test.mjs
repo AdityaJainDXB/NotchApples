@@ -1,6 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { PLACES } from '../src/js/modules/tzplaces.js';
+import { readFileSync } from 'node:fs';
+
+// The module is a plain browser ES module (no package.json "type"), so load it as text rather than with import.
+const PLACES = new Function(`${readFileSync(new URL('../src/js/modules/tzplaces.js', import.meta.url), 'utf8').replace('export const PLACES', 'const PLACES')}; return PLACES;`)();
 
 const find = (q) => PLACES.filter((p) => `${p[0]} (${p[2]})`.toLowerCase().includes(q.toLowerCase())).map((p) => p[1]);
 

@@ -37,6 +37,9 @@ new_sqlite_classes = ["PlaneBoard", "PlaneRate"]
 tag = "v3"
 new_sqlite_classes = ["PlaneSky"]
 
+[triggers]
+crons = ["23 */6 * * *"]     # the checkout reminder emails (sendReminders), four times a day
+
 [vars]
 WALLET = "ltc1qymlmvkdmvpk5f90esthzgwaw6w0tuzq6tdr6kf"
 # Other coins people can pay in (public receiving addresses; the server only ever reads the blockchain, it holds no keys).

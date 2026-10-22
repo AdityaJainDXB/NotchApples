@@ -245,6 +245,8 @@ footer{border-top:1px solid var(--line);padding:30px 0 44px;color:var(--dim);fon
           </div>
           <label for="email">Email (your key is sent here; used only for that and "Lost my key?")</label>
           <input id="email" type="email" placeholder="you@example.com" autocomplete="email">
+          <label class="muted" style="display:flex;gap:8px;align-items:flex-start;font-weight:400;margin:8px 0"><input type="checkbox" id="remind" style="margin-top:3px"><span>Email me a reminder if I don't finish (at most three emails over six days, the last with 20% off). Unsubscribe any time.</span></label>
+          <div id="couponRow" hidden><label for="coupon">Discount code (20% off, for the email it was sent to)</label><input id="coupon" placeholder="BACK20-XXXXXXXX" autocomplete="off" autocapitalize="characters"></div>
           <button class="btn" id="orderBtn"><span class="spin"></span><span>Continue to payment</span></button>
           <div class="status" id="orderStatus"></div>
         </div>
@@ -485,7 +487,9 @@ async function startOrder(btn, statusId, body) {
 }
 let tip = 0;
 document.querySelectorAll('#tipChoice button').forEach(b => b.onclick = () => { document.querySelectorAll('#tipChoice button').forEach(x => x.classList.remove('on')); b.classList.add('on'); tip = +b.dataset.tip });
-$('#orderBtn').onclick = () => startOrder($('#orderBtn'), '#orderStatus', { tier, email: $('#email').value, tip });
+const urlCoupon = (new URLSearchParams(location.search).get('coupon') || '').toUpperCase().replace(/[^A-Z0-9-]/g, '').slice(0, 20);
+if (urlCoupon) { $('#coupon').value = urlCoupon; $('#couponRow').hidden = false; }
+$('#orderBtn').onclick = () => startOrder($('#orderBtn'), '#orderStatus', { tier, email: $('#email').value, tip, remind: $('#remind').checked, coupon: $('#coupon').value.trim() || undefined });
 $('#upBtn').onclick = () => {
   const k = $('#upKey').value.trim();
   if (!/^ntch-?pro/i.test(k)) return status('#upStatus', 'Paste your whole Pro key (it starts with NTCH-PRO-).', 'err', false);

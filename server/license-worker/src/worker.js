@@ -38,6 +38,8 @@
 // What it stores: orders, keys, a salted hash of the buyer's email (for recovery) and a
 // salted hash per Mac for the device limit. A plain email is kept only on unpaid orders,
 // for up to 48 hours, so the key can be emailed when the payment arrives.
+// Only if the buyer ticks "remind me": their address is also kept in plain text for at most 9 days to send up to three
+// reminder emails (day 2, 4, 6; the last with a one-time 20% coupon). Unsubscribe links, a purchase or the end delete it.
 
 import * as Insights from './insights.js';
 import { SkyRoom, SkyError } from './sky.js';
@@ -343,7 +345,7 @@ async function coinOrder(env, c, o) {
     if (await env.KV.get(`amount:${c.id}:${units}`)) continue;
     const id = hex(randomBytes(16)), created = Date.now();
     await env.KV.put(`amount:${c.id}:${units}`, id, { expirationTtl: ORDER_TTL });
-    await putJSON(env, `order:${id}`, { tier: o.tier, usd: o.usd, coin: c.id, units: units.toString(), created, email: o.email, upgradeFrom: o.upgradeFrom, status: 'open' }, ORDER_TTL);
+    await putJSON(env, `order:${id}`, { tier: o.tier, usd: o.usd, coin: c.id, units: units.toString(), created, email: o.email, upgradeFrom: o.upgradeFrom, coupon: o.coupon, status: 'open' }, ORDER_TTL);
     const amount = fmtUnits(units, dec);
     const uri = c.id === 'eth' ? `ethereum:${wallet}?value=${units}` : `${c.uri}:${wallet}?amount=${amount}`;
     return { order: id, tier: o.tierName, usd: o.usd, coin: c.id, symbol: c.symbol, amount, units: units.toString(), wallet, uri, price, expires: created + ORDER_TTL * 1000 };
@@ -380,6 +382,79 @@ function keyMail(keys) {
     'Questions? Just reply to this email, or write to notchapples.support@gmail.com.';
 }
 
+// MARK: Reminders (opt-in)
+// Someone who typed their email at checkout and ticked "remind me" gets at most three emails, about two days apart: day 2, day 4 and
+// day 6, the last with a one-time 20% coupon. Their address is kept in plain text for those days only. A paid order, the unsubscribe
+// link in every email, or the end of the sequence deletes it. Needs MAIL_API_KEY and the cron trigger in wrangler.toml.
+
+const COUPON_OFF = 0.2;
+const LEAD_TTL = 9 * 86400;
+const REMIND_DAYS = [2, 4, 6];
+const siteUrl = (env) => (env.SITE_URL || 'https://notch.cc.cd').replace(/\/+$/, '');
+const workerUrl = (env) => (env.PUBLIC_URL || 'https://notchapple-licenses.adityajain1225.workers.dev').replace(/\/+$/, '');
+const unsubToken = async (env, eh) => (await sha256(`${env.EMAIL_PEPPER || ''}|unsub|${eh}`)).slice(0, 24);
+
+async function leadSave(env, email, tierName) {
+  const eh = await emailHash(env, email);
+  if (await env.KV.get(`unsub:${eh}`) || await env.KV.get(`lead:${eh}`)) return;   // unsubscribed, or already in the sequence
+  if ((await getJSON(env, `email:${eh}`))?.length) return;                          // already bought something
+  await putJSON(env, `lead:${eh}`, { email, tier: tierName === 'ultimate' ? 'ultimate' : 'pro', created: Date.now(), sent: 0 }, LEAD_TTL);
+}
+
+async function couponCheck(env, raw, email) {
+  const code = String(raw || '').trim().toUpperCase();
+  const cp = /^BACK20-[A-Z2-9]{8}$/.test(code) ? await getJSON(env, `coupon:${code}`) : null;
+  if (!cp || cp.used || cp.exp < Date.now() || cp.eh !== await emailHash(env, email)) throw new HTTPError(400, "That discount code isn't valid for this email, or it has already been used.");
+  return code;
+}
+
+function reminderMail(env, lead, step, eh, coupon, token) {
+  const name = TIER_NAME[TIER[lead.tier]] || 'Pro';
+  const link = `${siteUrl(env)}/pro.html${coupon ? `?coupon=${coupon}` : ''}#checkout`;
+  const unsub = `${workerUrl(env)}/unsub?e=${eh}&t=${token}`;
+  const foot = `\n\nNo more of these? Unsubscribe in one click: ${unsub}\nQuestions? Just reply, or write to notchapples.support@gmail.com.`;
+  if (step === 0) return { subject: 'Still thinking about Notch Apple ' + name + '?', text: `Hey, this is from Notch Apple. We saw you started getting ${name} but didn't finish. Would you like to pick it up where you left off?\n\n${link}\n\nIt's a one-time payment, no subscription.${foot}` };
+  if (step === 1) return { subject: `Your Notch Apple ${name} is waiting`, text: `Hey, it's Notch Apple again. Your ${name} checkout is still there if you want it: one payment, lifetime 1.x updates, no account.\n\n${link}${foot}` };
+  return { subject: 'Last one: 20% off Notch Apple ' + name, text: `Hey, I don't think you're interested, and that's completely fine. But if you are, here's 20% off ${name}, just for you (use it with this same email address, it works once for two weeks):\n\nCode: ${coupon}\n${link}\n\nThis is the last email about it.${foot}` };
+}
+
+/** Run by the cron trigger: sends whichever reminder is due and clears finished or paid leads. Returns how many mails were sent. */
+async function sendReminders(env, now = Date.now()) {
+  let sent = 0, cursor;
+  do {
+    const page = await env.KV.list({ prefix: 'lead:', cursor });
+    for (const { name } of page.keys) {
+      const eh = name.slice(5), lead = await getJSON(env, name);
+      if (!lead) continue;
+      if ((await getJSON(env, `email:${eh}`))?.length || await env.KV.get(`unsub:${eh}`)) { await env.KV.delete(name); continue; }
+      const step = lead.sent || 0;
+      if (step >= REMIND_DAYS.length) { await env.KV.delete(name); continue; }
+      if (now - lead.created < REMIND_DAYS[step] * 86400000) continue;
+      let coupon = null;
+      if (step === REMIND_DAYS.length - 1) {
+        coupon = lead.coupon || `BACK20-${Array.from(randomBytes(8), (b) => 'ABCDEFGHJKMNPQRSTUVWXYZ23456789'[b % 31]).join('')}`;
+        await putJSON(env, `coupon:${coupon}`, { eh, exp: now + 14 * 86400000, used: false }, 15 * 86400);
+        lead.coupon = coupon;
+      }
+      const m = reminderMail(env, lead, step, eh, coupon, await unsubToken(env, eh));
+      if (!(await sendMail(env, lead.email, m.subject, m.text))) continue;              // try again at the next run
+      sent++;
+      if (step + 1 >= REMIND_DAYS.length) await env.KV.delete(name);
+      else await putJSON(env, name, { ...lead, sent: step + 1 }, LEAD_TTL);
+    }
+    cursor = page.list_complete ? undefined : page.cursor;
+  } while (cursor);
+  return sent;
+}
+
+async function unsubscribe(env, url) {
+  const eh = url.searchParams.get('e') || '', t = url.searchParams.get('t') || '';
+  const ok = /^[0-9a-f]{64}$/.test(eh) && t === await unsubToken(env, eh);
+  if (ok) { await env.KV.put(`unsub:${eh}`, '1'); await env.KV.delete(`lead:${eh}`); }
+  const msg = ok ? "You're unsubscribed. We won't email you about Notch Apple again." : 'That unsubscribe link is not valid. Write to notchapples.support@gmail.com and we will remove you.';
+  return new Response(`<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>Unsubscribe</title><body style="font:16px system-ui;max-width:32rem;margin:20vh auto;padding:0 1rem;color:#222"><p>${msg}</p>`, { status: ok ? 200 : 400, headers: { 'content-type': 'text/html; charset=utf-8' } });
+}
+
 // MARK: Routes
 
 class HTTPError extends Error { constructor(status, message, extra = {}) { super(message); this.status = status; this.extra = extra; } }
@@ -401,13 +476,17 @@ async function order(env, body) {
     if ((await revokedIds(env)).includes(k.keyId)) throw new HTTPError(400, 'That Pro key has been revoked.');
     usd = p.upgrade; upgradeFrom = k.keyId;
   }
+  // A 20% comeback coupon (from the last reminder email), valid for the address it was sent to.
+  let coupon = null;
+  if (body.coupon) { coupon = await couponCheck(env, body.coupon, body.email); usd = Math.round(usd * (1 - COUPON_OFF) * 100) / 100; }
   // Pay what you want: an optional tip on top (whole dollars, up to $50).
   const tip = Math.max(0, Math.min(50, Math.floor(Number(body.tip) || 0)));
   usd += tip;
+  if (body.remind === true) await leadSave(env, body.email.trim(), body.tier);      // they ticked the box: a few reminders if they never finish
   const coin = String(body.coin || 'ltc').toLowerCase();
   if (coin !== 'ltc') {
     if (!COINS[coin]) throw new HTTPError(400, 'Choose Litecoin, Bitcoin, Ethereum or Solana.');
-    return coinOrder(env, COINS[coin], { tier, tierName: body.tier, usd, upgradeFrom, email: body.email.trim() });
+    return coinOrder(env, COINS[coin], { tier, tierName: body.tier, usd, upgradeFrom, email: body.email.trim(), coupon });
   }
   const price = await ltcPrice(env);
   const base = Math.ceil((usd / price) * 1e4) * 1e4;       // round up to 0.0001 LTC
@@ -418,7 +497,7 @@ async function order(env, body) {
     const id = hex(randomBytes(16));
     const created = Date.now();
     await env.KV.put(`amount:${litoshi}`, id, { expirationTtl: ORDER_TTL });
-    await putJSON(env, `order:${id}`, { tier, usd, litoshi, created, email: body.email.trim(), upgradeFrom, status: 'open' }, ORDER_TTL);
+    await putJSON(env, `order:${id}`, { tier, usd, litoshi, created, email: body.email.trim(), upgradeFrom, coupon, status: 'open' }, ORDER_TTL);
     return { order: id, tier: body.tier, usd, coin: 'ltc', symbol: 'LTC', amount: ltc(litoshi), uri: `litecoin:${env.WALLET}?amount=${ltc(litoshi)}`, ltc: ltc(litoshi), litoshi, wallet: env.WALLET, price, expires: created + ORDER_TTL * 1000 };
   }
   throw new HTTPError(503, 'Checkout is busy. Try again in a minute.');
@@ -462,6 +541,8 @@ async function claim(env, body) {
     if (old) { old.upgradedTo = keyId; await putJSON(env, `key:${o.upgradeFrom}`, old); }
   }
   const emailed = await sendMail(env, o.email, `Your Notch Apple ${TIER_NAME[o.tier]} key`, keyMail([{ tier: o.tier, key }]));
+  if (o.coupon) { const cp = await getJSON(env, `coupon:${o.coupon}`); if (cp) await putJSON(env, `coupon:${o.coupon}`, { ...cp, used: true }, 30 * 86400); }
+  await env.KV.delete(`lead:${await emailHash(env, o.email)}`);                      // bought: no more reminders
   const done = { ...o, status: 'paid', txid, keyId, key, emailed, email: undefined, emailHash: await emailHash(env, o.email) };
   await putJSON(env, `order:${body.order}`, done);
   return { key, tier: TIER_NAME[o.tier], emailed };
@@ -1046,7 +1127,9 @@ async function adminGate(env, request) {
   }
 }
 
+export { sendReminders };
 export default {
+  async scheduled(event, env, ctx) { ctx.waitUntil(sendReminders(env)); },
   async fetch(request, env) {
     if (request.method === 'OPTIONS') return new Response(null, { headers: CORS });
     const path = new URL(request.url).pathname.replace(/\/+$/, '') || '/';
@@ -1054,6 +1137,7 @@ export default {
       if (request.method === 'GET') {
         if (path === '/') return json({ ok: true, service: 'Notch Apple licenses' });
         if (path === '/config') return json({ prices: prices(env), ultimate: env.ULTIMATE_ON === '1', network: env.NETWORK || 'mainnet', wallet: env.WALLET, coins: coinList(env) });
+        if (path === '/unsub') return await unsubscribe(env, new URL(request.url));
         if (path === '/admin') return new Response(ADMIN_PAGE, { headers: ADMIN_HEADERS });
         if (path === '/revoked') return json(await revokedList(env), 200, { 'cache-control': 'public, max-age=3600' });
         if (path.startsWith('/asset/')) return await assetGet(env, request, path.slice('/asset/'.length));

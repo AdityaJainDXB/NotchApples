@@ -6,7 +6,7 @@
 
 import assert from 'node:assert/strict';
 import { writeFileSync } from 'node:fs';
-import worker, { parseKey, verifyKey, verifyToken, mintToken, b32encode, b32decode, AiQuota, cleanAiRequest, PlaneBoard, PlaneRate, PlaneSky, cleanPilotName, cleanPlaneScore } from '../src/worker.js';
+import worker, { sendReminders, parseKey, verifyKey, verifyToken, mintToken, b32encode, b32decode, AiQuota, cleanAiRequest, PlaneBoard, PlaneRate, PlaneSky, cleanPilotName, cleanPlaneScore } from '../src/worker.js';
 
 const pair = await crypto.subtle.generateKey({ name: 'Ed25519' }, true, ['sign', 'verify']);
 const jwk = await crypto.subtle.exportKey('jwk', pair.privateKey);
@@ -646,6 +646,46 @@ const fx = { publicKey: btoa(String.fromCharCode(...pubRaw)), pro: leaked, ultim
   passPro: await mintToken(env, 'pass1', { t: 1, exp: far, r: 'abc123' }),
   expired: await mintToken(env, 'pass1', { t: 2, exp: 1000, r: 'abc123' }) };
 writeFileSync(new URL('./fixture.json', import.meta.url), JSON.stringify(fx, null, 2) + '\n');
+await test('reminder emails: opt-in only, day 2 / 4 / 6, a one-time 20% coupon on the last, unsubscribe and a purchase stop them', async () => {
+  const day = 86400000, mail = 'maybe@example.com', eh = await (async () => { const d = new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode('pepper|' + mail))); return [...d].map((x) => x.toString(16).padStart(2, '0')).join(''); })();
+  const leads = () => [...store.keys()].filter((k) => k.startsWith('lead:'));
+  const before = leads().length;
+  await call('/order', { tier: 'pro', email: 'nobox@example.com' });
+  assert.equal(leads().length, before, 'no tick, no reminder');
+  const o = await call('/order', { tier: 'pro', email: mail, remind: true });
+  assert.ok(o.order && leads().length === before + 1, 'ticked: queued');
+  const now = Date.now(); mails.length = 0;
+  assert.equal(await sendReminders(env, now + 1 * day), 0, 'nothing on day 1');
+  assert.equal(await sendReminders(env, now + 2.1 * day), 1, 'first reminder on day 2');
+  assert.equal(await sendReminders(env, now + 2.5 * day), 0, 'not twice');
+  assert.equal(await sendReminders(env, now + 4.1 * day), 1, 'second on day 4');
+  assert.match(mails[0].text, /unsub\?e=[0-9a-f]{64}&t=/); assert.ok(!/BACK20/.test(mails[0].text + mails[1].text), 'no coupon yet');
+  assert.equal(await sendReminders(env, now + 6.1 * day), 1, 'third on day 6');
+  const last = mails.at(-1), code = last.text.match(/BACK20-[A-Z2-9]{8}/)?.[0];
+  assert.ok(code && /20% off/.test(last.subject), 'the last mail carries the coupon');
+  assert.equal(await sendReminders(env, now + 9 * day), 0, 'the sequence is over'); assert.equal(leads().length, before, 'lead removed');
+  const full = await call('/order', { tier: 'pro', email: mail }), cut = await call('/order', { tier: 'pro', email: mail, coupon: code });
+  assert.ok(Math.abs(cut.usd - full.usd * 0.8) < 0.011, `20% off: ${full.usd} -> ${cut.usd}`);
+  const wrong = await call('/order', { tier: 'pro', email: 'someone@else.com', coupon: code }); assert.equal(wrong.status, 400, 'only for that email');
+  assert.equal((await call('/order', { tier: 'pro', email: mail, coupon: 'BACK20-AAAAAAAA' })).status, 400, 'made-up code');
+  // Paying with it uses it up.
+  const pay = cut.litoshi; chain.set(txid(901), { paid: pay, time: Math.floor(Date.now() / 1000) + 5 });
+  assert.ok((await call('/claim', { order: cut.order, txid: txid(901) })).key, 'paid');
+  assert.equal((await call('/order', { tier: 'pro', email: mail, coupon: code })).status, 400, 'a coupon works once');
+});
+
+await test('reminder emails stop on unsubscribe and when the address already bought', async () => {
+  const day = 86400000;
+  await call('/order', { tier: 'pro', email: 'quit@example.com', remind: true });
+  const eh = [...store.keys()].filter((k) => k.startsWith('lead:')).map((k) => k.slice(5)).find((h) => JSON.parse(store.get('lead:' + h)).email === 'quit@example.com');
+  const bad = await worker.fetch(new Request(`https://w.test/unsub?e=${eh}&t=${'0'.repeat(24)}`), env); assert.equal(bad.status, 400);
+  mails.length = 0; await sendReminders(env, Date.now() + 2.1 * day); const link = mails.find((m) => m.to === 'quit@example.com').text.match(/unsub\?e=[0-9a-f]{64}&t=[0-9a-f]{24}/)[0];
+  const ok = await worker.fetch(new Request('https://w.test/' + link), env); assert.equal(ok.status, 200);
+  mails.length = 0; await sendReminders(env, Date.now() + 4.1 * day); assert.ok(!mails.some((m) => m.to === 'quit@example.com'), 'unsubscribed');
+  await call('/order', { tier: 'pro', email: 'quit@example.com', remind: true });
+  assert.ok(![...store.keys()].some((k) => k.startsWith('lead:') && JSON.parse(store.get(k)).email === 'quit@example.com'), 'not re-added');
+});
+
 console.log(`\n${passed} passed. Wrote test/fixture.json for the Swift tests.`);
 
 // ---- Bitcoin, Ethereum and Solana checkout (a fake chain for each, no network)
