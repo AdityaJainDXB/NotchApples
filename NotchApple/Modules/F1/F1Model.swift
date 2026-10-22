@@ -223,9 +223,11 @@ final class F1Model: ObservableObject {
             return
         }
         guard let path = sessionPath else {
-            // F1's own live-timing feed is not reachable (it now refuses unsigned requests), so show the order from ESPN: the
-            // latest session of this weekend, or else the most recent one that finished. Never leave the spinner running.
-            await loadLiveOrder(weekend?.sessions.last(where: { $0.start <= .now }))
+            // F1's own live-timing feed is not reachable (it now refuses unsigned requests). With no session on, show the latest
+            // final classification (race, sprint or qualifying) from Jolpica; failing that the order from ESPN. Never leave the
+            // spinner running.
+            await loadLastClassification()
+            if cars.isEmpty { await loadLiveOrder(weekend?.sessions.last(where: { $0.start <= .now })) }
             return
         }
         orderOnly = false
@@ -337,6 +339,48 @@ final class F1Model: ObservableObject {
         isLive = running != nil && runningSession != nil && state == "in"
         status = isLive ? "Started" : "Provisional"; track = ""; lap = nil
         orderOnly = true; error = nil
+        LiveActivityCenter.shared.recompute()
+    }
+
+    // MARK: Latest final classification (Jolpica)
+
+    /// The newest finished race, sprint or qualifying, as a classification (the same table the live timing shows, without the tyres).
+    private func loadLastClassification() async {
+        func when(_ race: [String: Any], _ key: String?) -> Date {
+            let d = key.flatMap { race[$0] as? [String: Any] } ?? race
+            guard let day = d["date"] as? String else { return .distantPast }
+            return ISO8601DateFormatter().date(from: "\(day)T\((d["time"] as? String) ?? "00:00:00Z")") ?? .distantPast
+        }
+        var best: (when: Date, race: [String: Any], rows: [[String: Any]], kind: String)?
+        for (path, key, session, kind) in [("results", "Results", nil as String?, "Race"), ("sprint", "SprintResults", "Sprint", "Sprint"), ("qualifying", "QualifyingResults", "Qualifying", "Qualifying")] {
+            guard let url = URL(string: "https://api.jolpi.ca/ergast/f1/current/last/\(path).json"), let json = await Self.json(url),
+                  let race = (((json["MRData"] as? [String: Any])?["RaceTable"] as? [String: Any])?["Races"] as? [[String: Any]])?.first,
+                  let rows = race[key] as? [[String: Any]], !rows.isEmpty else { continue }
+            let t = when(race, session)
+            if best == nil || t > best!.when { best = (t, race, rows, kind) }
+        }
+        guard let best else { return }
+        let isQuali = best.kind == "Qualifying"
+        let list: [Car] = best.rows.compactMap { r -> Car? in
+            guard let pos = Int(r["position"] as? String ?? ""), let d = r["Driver"] as? [String: Any] else { return nil }
+            let family = d["familyName"] as? String ?? ""
+            let code = d["code"] as? String ?? String(family.prefix(3)).uppercased()
+            let con = r["Constructor"] as? [String: Any]
+            let colour = Self.teamColours[con?["constructorId"] as? String ?? ""] ?? "888888"
+            let status = r["status"] as? String ?? "Finished"
+            let finished = isQuali || status == "Finished" || status.hasPrefix("+") || status == "Lapped"
+            let qBest = ["Q3", "Q2", "Q1"].compactMap { r[$0] as? String }.first(where: { !$0.isEmpty }) ?? ""
+            let fastest = ((r["FastestLap"] as? [String: Any])?["Time"] as? [String: Any])?["time"] as? String ?? ""
+            let gap = isQuali ? "" : ((r["Time"] as? [String: Any])?["time"] as? String ?? (finished ? status : status))
+            return Car(number: d["permanentNumber"] as? String ?? code, position: pos, code: code, team: con?["name"] as? String ?? "",
+                       colour: Color(hex: colour), gap: pos == 1 && !isQuali ? "" : gap, interval: "", lastLap: "", bestLap: isQuali ? qBest : fastest,
+                       tyre: "", laps: Int(r["laps"] as? String ?? "") ?? 0, pits: 0, inPit: false, out: !finished)
+        }.sorted { $0.position < $1.position }
+        guard !list.isEmpty else { return }
+        cars = list
+        sessionTitle = "\(best.race["raceName"] as? String ?? "Formula 1") · \(best.kind)"
+        sessionType = best.kind == "Qualifying" ? "Qualifying" : "Race"
+        status = "Finalised"; track = ""; lap = nil; isLive = false; orderOnly = false; error = nil
         LiveActivityCenter.shared.recompute()
     }
 
