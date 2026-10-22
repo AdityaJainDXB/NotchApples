@@ -72,7 +72,7 @@ Pick your computer. Both buttons start the download straight away. The Mac link 
   </tr>
   <tr>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.1.7</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.1.8</b></a>
     </td>
     <td align="center">
       <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 2.1.5 BETA</b></a>
@@ -233,6 +233,10 @@ All screenshots use sample data.
 ## What's new
 
 > **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is still in the repository's tags.
+
+### Mac 2.1.8 · 22 October 2026 · 🏎️ Formula 1 tab fixed
+
+- Formula 1: the F1 tab no longer spins forever. F1 has closed the public live-timing feed the tab was reading, so it now shows the running order from ESPN when a session is on or has finished, and otherwise says plainly that session timing isn't being published. The schedule, standings and favourite-team features are unaffected.
 
 ### Mac 2.1.7 · Windows 2.1.7 BETA · 22 October 2026 · 🛰 Guided missiles for everyone
 

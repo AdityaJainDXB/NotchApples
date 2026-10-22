@@ -222,8 +222,13 @@ final class F1Model: ObservableObject {
             await loadLiveOrder(running)
             return
         }
+        guard let path = sessionPath else {
+            // F1's own live-timing feed is not reachable (it now refuses unsigned requests), so show the order from ESPN: the
+            // latest session of this weekend, or else the most recent one that finished. Never leave the spinner running.
+            await loadLiveOrder(weekend?.sessions.last(where: { $0.start <= .now }))
+            return
+        }
         orderOnly = false
-        guard let path = sessionPath else { return }
         let b = Self.base + path
         async let infoJ = Self.json(URL(string: b + "SessionInfo.json")!)
         async let statusJ = Self.json(URL(string: b + "SessionStatus.json")!)
@@ -298,15 +303,17 @@ final class F1Model: ObservableObject {
         "aston_martin": "229971", "cadillac": "AAAAAD",
     ]
 
-    private func loadLiveOrder(_ running: Session) async {
+    private func loadLiveOrder(_ running: Session?) async {
         guard let url = URL(string: "https://site.api.espn.com/apis/site/v2/sports/racing/f1/scoreboard"),
               let json = await Self.json(url),
               let event = (json["events"] as? [[String: Any]])?.first,
-              let comp = Self.competition(event, for: running.name),
-              let entries = comp["competitors"] as? [[String: Any]] else {
-            if cars.isEmpty { error = "Live order isn't available right now." }
+              let comp = running.flatMap({ Self.competition(event, for: $0.name) }) ?? Self.latestFinished(event),
+              let entries = comp["competitors"] as? [[String: Any]], !entries.isEmpty else {
+            if cars.isEmpty { error = "F1 isn't publishing session timing right now. The schedule and standings still work." }
             return
         }
+        let compType = comp["type"] as? [String: Any]
+        let sessionName = running?.name ?? (compType?["text"] as? String) ?? (compType?["abbreviation"] as? String) ?? "Latest session"
         // Match ESPN's names to F1's driver list for codes and team colours.
         let byName = Dictionary(drivers_.values.compactMap { d -> (String, [String: Any])? in
             (d["LastName"] as? String).map { ($0.lowercased(), d) }
@@ -324,13 +331,19 @@ final class F1Model: ObservableObject {
                        team: d["TeamName"] as? String ?? r?.team ?? "", colour: Color(hex: colour),
                        gap: "", interval: "", lastLap: "", bestLap: "", tyre: "", laps: 0, pits: 0, inPit: false, out: false)
         }.sorted { $0.position < $1.position }
-        sessionTitle = "\(weekend?.name ?? "Formula 1") · \(running.name)"
-        sessionType = running.name == "Race" || running.name == "Sprint" ? "Race" : running.name
+        sessionTitle = "\((event["name"] as? String) ?? weekend?.name ?? "Formula 1") · \(sessionName)"
+        sessionType = sessionName == "Race" || sessionName == "Sprint" ? "Race" : sessionName
         let state = ((comp["status"] as? [String: Any])?["type"] as? [String: Any])?["state"] as? String
-        isLive = runningSession != nil && state == "in"
+        isLive = running != nil && runningSession != nil && state == "in"
         status = isLive ? "Started" : "Provisional"; track = ""; lap = nil
         orderOnly = true; error = nil
         LiveActivityCenter.shared.recompute()
+    }
+
+    /// The most recent session in an ESPN event that has finished.
+    private static func latestFinished(_ event: [String: Any]) -> [String: Any]? {
+        let comps = (event["competitions"] as? [[String: Any]]) ?? []
+        return comps.last { (($0["status"] as? [String: Any])?["type"] as? [String: Any])?["state"] as? String == "post" && (($0["competitors"] as? [[String: Any]])?.isEmpty == false) }
     }
 
     /// ESPN's entry for a session ("Practice 1" → FP1, "Qualifying" → Qual…), or whichever is running.

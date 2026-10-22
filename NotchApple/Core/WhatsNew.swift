@@ -20,6 +20,9 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.1.8", date: "22 October 2026", headline: "Formula 1 tab fixed", items: [
+            "Formula 1: the F1 tab no longer spins forever. F1 has closed the public live-timing feed the tab was reading, so it now shows the running order from ESPN when a session is on or has finished, and otherwise says plainly that session timing isn't being published. The schedule, standings and favourite-team features are unaffected.",
+        ]),
         ReleaseNote(version: "2.1.7", date: "22 October 2026", headline: "Guided missiles for everyone", items: [
             "Guided missiles (G) now work for every player in a shared battle, not only the host. You fly your own missile, and when it explodes the host judges what it hit, so a friend's guided missile can destroy a base for the whole team. Everyone sees the explosion; two missiles come back each wave.",
             "Before, only the host could use them and anyone else got \"Guided missiles are for the host\". On the Online button the first player is the host, so most of your friends had no guided missiles at all.",
