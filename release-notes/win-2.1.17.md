@@ -1,0 +1,3 @@
+**Battle works offline**
+
+- Battle works offline: with no internet (or when the room server can't be reached) Start now plays a solo Battle on this computer instead of waiting for the network, and you don't need to type a name. The Battle menu says when you are offline. Online games with friends still need the internet.

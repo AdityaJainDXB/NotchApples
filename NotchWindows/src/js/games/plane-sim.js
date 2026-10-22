@@ -7232,6 +7232,8 @@
     function netHousekeeping() {
       if (!netg) return;
       const now = Date.now();
+      // Starting a game with no way to reach the room server: stop waiting and play offline.
+      if ((netg.autoStart || netg.autoJoin) && netg.status !== 'on' && now - netg.joined > 5000) { warOfflineStart(); return; }
       if (netg.role === 'host' && netg.autoStart && netg.status === 'on') { netg.autoStart = false; netHostStart(); return; }
       if (netg.role === 'client' && netg.autoJoin && !netg.hostSeen && netg.status === 'on' && now - netg.joined > 6000) {
         const code = netg.code; netOpen('host', code); netg.autoStart = true; return;     // nobody is hosting: open the game yourself
@@ -8542,7 +8544,8 @@
       if (netg) return lobbyHtml();
       loadWifiCode();
       const chipP = (id, label, tip) => `<button data-warplay="${id}" class="${warPlay === id ? 'pg-on' : ''}" title="${tip}">${label}</button>`;
-      return `<h2>Who are you?</h2><div class="pg-row"><span class="pg-lab">Your name</span><input data-warname maxlength="14" placeholder="Required: others see this" value="${escapeHtml(playerName)}" style="width:170px"><span class="pg-hint">Shown above you and in the player list.</span></div>
+      const offlineNote = navigator.onLine === false ? '<div class="pg-hint" style="color:#ffb347;margin-bottom:6px">You are offline: Start plays a solo Battle on this computer. Online games and friends need the internet.</div>' : '';
+      return `${offlineNote}<h2>Who are you?</h2><div class="pg-row"><span class="pg-lab">Your name</span><input data-warname maxlength="14" placeholder="Required: others see this" value="${escapeHtml(playerName)}" style="width:170px"><span class="pg-hint">Shown above you and in the player list.</span></div>
         <div class="pg-row" style="margin:6px 0"><span class="pg-lab">Play</span>${chipP('online', '🌐 Online', 'Join an open game on this battlefield, in the wave being played. If nobody is there you open one.')}${chipP('single', '👤 Single player', 'Your own game. Others can still join with its room code, any time.')}<span class="pg-hint">${warPlay === 'single' ? 'Your own game; others can join with the room code shown in it.' : 'Press Start: you join an open game and the wave being played.'}</span></div>`
         + soloBattleHtml() + `<h2>4 · Play with friends</h2>
         ${wifiCode ? `<div class="pg-row"><span class="pg-lab">This Wi-Fi</span><b style="letter-spacing:.14em;font-size:15px">${wifiCode}</b><span class="pg-hint">Everyone on this Wi-Fi gets this same code: the first to press Host opens the game, the others press Join. (Online already puts everyone in one open game.)</span></div>` : ''}
@@ -8588,7 +8591,14 @@
     const isOpenRoom = () => !!netg && Object.values(PUBLIC_ROOMS).includes(netg.code);      // the open game: everyone is on one team
     /// Start a Battle: find an open game and join the wave being played, or open one if nobody is there. Single player opens
     /// your own room (with its code on screen) that others can still join at any time.
+    /// No internet (or the room server cannot be reached): Battle does not need it. Play a solo Battle on this computer instead.
+    function warOfflineStart() {
+      if (netg) netLeave(true);
+      toast('No connection: playing a solo Battle on this computer', 3200);
+      start();
+    }
     function warAutoStart() {
+      if (navigator.onLine === false) { warOfflineStart(); return; }
       const nm = (playerName || '').trim();
       if (!nm) { toast('Type your name first so the others know who you are', 2400); ui.querySelector('[data-warname]')?.focus(); return; }
       if (warPlay === 'single') { netOpen('host', NET.newCode()); netg.autoStart = true; }

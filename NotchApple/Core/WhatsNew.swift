@@ -20,6 +20,9 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.1.17", date: "22 October 2026", headline: "Battle works offline", items: [
+            "Battle works offline: with no internet (or when the room server can't be reached) Start now plays a solo Battle on this computer instead of waiting for the network, and you don't need to type a name. The Battle menu says when you are offline. Online games with friends still need the internet.",
+        ]),
         ReleaseNote(version: "2.1.16", date: "22 October 2026", headline: "Privacy: choose what shows beside the notch", items: [
             "Privacy: Settings → Extras → Beside the notch lets you choose what appears beside the closed notch: calendar (next event and “Join”), timers and alarms, music, battery and charging, volume and brightness, messages and notifications, and everything else. “Only my calendar” keeps just the countdown to your next class or event, “Nothing” keeps the notch plain, and “Show everything” puts it all back. Nothing a passer-by could read pops up unless you allow it.",
         ]),
