@@ -1,0 +1,4 @@
+**Guided missiles for everyone**
+
+- Guided missiles (G) now work for every player in a shared battle, not only the host. You fly your own missile, and when it explodes the host judges what it hit, so a friend's guided missile can destroy a base for the whole team. Everyone sees the explosion; two missiles come back each wave.
+- Before, only the host could use them and anyone else got "Guided missiles are for the host". On the Online button the first player is the host, so most of your friends had no guided missiles at all.

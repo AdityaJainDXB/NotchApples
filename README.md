@@ -72,7 +72,7 @@ Pick your computer. Both buttons start the download straight away. The Mac link 
   </tr>
   <tr>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.1.6</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.1.7</b></a>
     </td>
     <td align="center">
       <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 2.1.5 BETA</b></a>
@@ -233,6 +233,11 @@ All screenshots use sample data.
 ## What's new
 
 > **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is still in the repository's tags.
+
+### Mac 2.1.7 · Windows 2.1.7 BETA · 22 October 2026 · 🛰 Guided missiles for everyone
+
+- Guided missiles (G) now work for every player in a shared battle, not only the host. You fly your own missile, and when it explodes the host judges what it hit, so a friend's guided missile can destroy a base for the whole team. Everyone sees the explosion; two missiles come back each wave.
+- Before, only the host could use them and anyone else got "Guided missiles are for the host". On the Online button the first player is the host, so most of your friends had no guided missiles at all.
 
 ### Mac 2.1.6 · Windows 2.1.6 BETA · 22 October 2026 · 🤝 Every percent again, and friends share one wave
 
