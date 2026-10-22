@@ -183,12 +183,23 @@ pub async fn update_install(app: AppHandle, url: String, sha256: Option<String>,
         let script_path = std::env::temp_dir().join("NotchApple-Update.cmd");
         let script = update_script(&path.display().to_string(), &std::env::current_exe().map(|p| p.display().to_string()).unwrap_or_default());
         std::fs::write(&script_path, script).map_err(|e| format!("Couldn't prepare the installer: {e}"))?;
-        std::process::Command::new("cmd.exe")
+        // The helper must outlive this app. If the app was started inside a Windows "job" that ends with it (a launcher or a task),
+        // the helper would be killed the moment the app quits, the installer would never run and nothing would reopen. So it asks to
+        // break away from the job first; if the job does not allow that, it starts the ordinary way.
+        const CREATE_BREAKAWAY_FROM_JOB: u32 = 0x0100_0000;
+        let started = std::process::Command::new("cmd.exe")
             .arg("/C")
             .arg(&script_path)
-            .creation_flags(CREATE_NO_WINDOW | DETACHED_PROCESS)
-            .spawn()
-            .map_err(|e| format!("Couldn't start the installer: {e}"))?;
+            .creation_flags(CREATE_NO_WINDOW | DETACHED_PROCESS | CREATE_BREAKAWAY_FROM_JOB)
+            .spawn();
+        if started.is_err() {
+            std::process::Command::new("cmd.exe")
+                .arg("/C")
+                .arg(&script_path)
+                .creation_flags(CREATE_NO_WINDOW | DETACHED_PROCESS)
+                .spawn()
+                .map_err(|e| format!("Couldn't start the installer: {e}"))?;
+        }
     }
     #[cfg(not(windows))]
     {
