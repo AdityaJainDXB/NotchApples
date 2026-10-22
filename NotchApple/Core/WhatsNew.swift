@@ -20,6 +20,11 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.1.15", date: "22 October 2026", headline: "Solitaire full screen, and Lock on is T again", items: [
+            "Solitaire has a Full screen button: it opens the game in its own window that fills the screen, with the cards sized to fit (up to nearly four times bigger). It is the same game, so you carry on where you were, and the green button or Esc brings you back.",
+            "The faded square glow round the open notch is gone: it was a soft shadow in your theme colour that the window cut off into a square. The notch itself is unchanged.",
+            "Battle: Lock on is the T key again, as before. Chat in online games now opens with / instead.",
+        ]),
         ReleaseNote(version: "2.1.14", date: "22 October 2026", headline: "Chat in online Battle", items: [
             "Chat in online Battle: press T to open a chat box and type to the other players. While the box is open your plane flies itself in slow circles around the middle of the field (it slows down first with the air brake), so you don't leave the battlefield; on foot you stand still. Enter sends, Enter on an empty line or Esc closes, and a button in the box hides other players' chat.",
             "Key change: Lock on moves from T to K (the Lock on button shows K), because T is now chat.",
