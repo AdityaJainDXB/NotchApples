@@ -1,0 +1,3 @@
+## Notch Apple for Windows 2.1.25 (BETA)
+
+- Plane racing with friends: in Time Trial, make a race room and send friends the 6-letter code. Everyone picks a plane, the host starts, and you all fly the same 12 hoops at once. You see the other racers' aircraft with their names, a live standings box shows who is ahead, and the results list everyone's time (or who crashed out).

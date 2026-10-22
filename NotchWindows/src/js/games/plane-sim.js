@@ -4880,6 +4880,7 @@
     }
 
     function finish(kind, value, label, report = null) {
+      praceEnd(kind, value);
       screen = 'result';
       result = { kind, value, label, best: false, rank: 0, report };
       muteAudio();
@@ -5380,6 +5381,105 @@
       if (skyT <= 0 && !skyBusy) { skyT = skyOff ? 15 : 2; skySync(); }
     }
     const skyLeave = () => { if (shareOn && skyId) skyFetch('/plane/sky/leave', { id: skyId }); remote = []; skyId = ''; };
+    // ---- Plane racing with friends: the 12-hoop Time Trial course flown together. One pilot makes a room and shares its
+    // 6-letter code, friends join, the host starts, and everyone flies the same hoops at once: the others' aircraft are drawn
+    // where they are, a standings box shows who is ahead (hoops passed, then time), and the results list everyone's time.
+    // It goes over the same live relay as Battle, in rooms of its own.
+    let prace = null;                    // { link, code, host, status, peers: Map, racing, order, done }
+    let praceShow = [];                  // the other racers' aircraft, in the shape the drawing code uses for other planes
+    const prHud = document.createElement('div'); prHud.className = 'pg-prhud'; prHud.style.cssText = 'position:absolute;right:8px;top:190px;z-index:5;background:rgba(8,12,22,.66);color:#fff;font:600 11px system-ui;border-radius:8px;padding:6px 8px;pointer-events:none;display:none;min-width:150px';
+    root.append(prHud);
+    const prName = () => (playerName || 'Pilot').slice(0, 16);
+    function praceOpen(host, code) {
+      praceLeave(true);
+      const c = code || NET.newCode();
+      prace = { code: c, host, status: 'connecting', peers: new Map(), racing: false, order: [], done: new Map(), hb: 0, sendT: 0 };
+      prace.link = new NET.Link(WebSocket, praceMsg, (st) => { if (!prace) return; prace.status = st; if (st === 'on') praceHello(); if (screen === 'menu') renderUI(); });
+      prace.link.join(c, 'planerace1');
+      prace.hb = setInterval(() => { praceHello(); const now = Date.now(); let gone = false; for (const [id, p] of prace.peers) if (now - p.seen > 8000) { prace.peers.delete(id); gone = true; } if (gone && screen === 'menu') renderUI(); }, 2000);
+      if (screen === 'menu') renderUI();
+    }
+    function praceLeave(quiet) {
+      if (!prace) return;
+      try { prace.link.send({ t: 'bye', id: netMyId }); } catch { /* offline */ }
+      clearInterval(prace.hb); prace.link.close(); prace = null; praceShow = []; prHud.style.display = 'none';
+      if (!quiet && screen === 'menu') renderUI();
+    }
+    const praceHello = () => { if (prace) prace.link.send({ t: 'hi', id: netMyId, n: prName(), pl: plane.id, host: prace.host ? 1 : 0 }); };
+    function praceMsg(m) {
+      if (!prace || !m || m.id === netMyId || typeof m.id !== 'string' || m.id.length > 24) return;
+      const fin = (v, lo, hi) => (Number.isFinite(v) ? Math.min(hi, Math.max(lo, v)) : 0);
+      let p = prace.peers.get(m.id);
+      if (!p) { p = { id: m.id, n: 'Pilot', pl: 'c172', seen: Date.now(), hoop: 0, el: 0, fin: null, out: false }; prace.peers.set(m.id, p); }
+      p.seen = Date.now();
+      if (m.t === 'hi') { const known = p.known; p.known = true; p.n = String(m.n || 'Pilot').replace(/[^\p{L}\p{N} _.-]/gu, '').slice(0, 16) || 'Pilot'; p.pl = PLANES.some((x) => x.id === m.pl && !x.rotor) ? m.pl : 'c172'; p.host = !!m.host; if (!known) praceHello(); if (screen === 'menu') renderUI(); }
+      else if (m.t === 'go' && Array.isArray(m.order) && !prace.host) praceStart(m.order.slice(0, 12).map(String));
+      else if (m.t === 's' && prace.racing && Array.isArray(m.p) && m.p.length === 3) {
+        const pos = m.p.map((v, i) => fin(v, i === 1 ? -50 : -20000, i === 1 ? 30000 : 20000)), h = fin(m.h, -7, 7), pi = fin(m.pi, -2, 2), b = fin(m.b, -4, 4), s = fin(m.s, 0, 400);
+        p.hoop = Math.round(fin(m.hp, 0, 12)); p.el = fin(m.el, 0, 3600);
+        const vel = [Math.sin(h) * Math.cos(pi) * s, Math.sin(pi) * s, -Math.cos(h) * Math.cos(pi) * s];
+        let a = praceShow.find((q) => q.k === m.id);
+        const spec = PLANES.find((x) => x.id === p.pl) || PLANES.find((x) => x.id === 'c172');
+        if (!a) { a = { k: m.id, id: spec.id, spec, state: 'fly', pos, t: 0, w: v3() }; praceShow.push(a); }
+        Object.assign(a, { id: spec.id, spec, cs: p.n, vel, snap: add(pos, mul(vel, 0.1)), heading: h, pitch: pi, bank: b, speed: s, state: 'fly' });
+        a.q = attitudeQ(h, pi, b);
+      } else if (m.t === 'fin' && prace.racing) { p.fin = fin(m.time, 0, 3600); p.hoop = 12; praceShow = praceShow.filter((a) => a.k !== m.id); if (screen === 'result') renderUI(); }
+      else if (m.t === 'out' && prace.racing) { p.out = true; praceShow = praceShow.filter((a) => a.k !== m.id); if (screen === 'result') renderUI(); }
+      else if (m.t === 'bye') { prace.peers.delete(m.id); praceShow = praceShow.filter((a) => a.k !== m.id); if (screen === 'menu' || screen === 'result') renderUI(); }
+    }
+    function praceStart(order) {
+      if (!prace) return;
+      prace.order = order; prace.racing = true; prace.myFin = null; prace.myOut = false;
+      for (const p of prace.peers.values()) { p.hoop = 0; p.el = 0; p.fin = null; p.out = false; }
+      praceShow = [];
+      mode = MODES.find((x) => x.id === 'trial'); if (plane.rotor) { plane = PLANES.find((x) => x.id === 'c172'); write('plane', plane.id); }
+      start();
+      // Side by side at the start, so nobody starts inside someone else.
+      const slot = Math.max(0, order.indexOf(netMyId)), off = (slot % 2 ? 1 : -1) * Math.ceil(slot / 2) * 40;
+      flight.reset([off, 160 + (slot % 3) * 12, -200], 0, plane.cruise, false);
+      toast(`Race! ${order.length} pilot${order.length === 1 ? '' : 's'} · fly the 12 hoops`, 2600);
+    }
+    function praceGo() {
+      if (!prace || !prace.host) return;
+      const order = [netMyId, ...[...prace.peers.values()].filter((p) => p.known).map((p) => p.id)].slice(0, 12);
+      const msg = { t: 'go', id: netMyId, order }; prace.link.send(msg); setTimeout(() => prace && prace.link.send(msg), 300);
+      praceStart(order);
+    }
+    /// Called when this pilot's run ends (finished, or crashed out).
+    function praceEnd(kind, value) {
+      if (!prace || !prace.racing || mode.id !== 'trial') return;
+      if (kind !== 'crash' && value != null) { prace.myFin = value; prace.link.send({ t: 'fin', id: netMyId, time: value }); }
+      else { prace.myOut = true; prace.link.send({ t: 'out', id: netMyId }); }
+    }
+    /// Everyone in the race, best first: finishers by time, then the rest by hoops passed (and who got there sooner).
+    function praceStandings() {
+      if (!prace) return [];
+      const me = { id: netMyId, n: prName() + ' (you)', hoop: screen === 'fly' ? nextHoop : (prace.myFin != null ? 12 : nextHoop), el: elapsed, fin: prace.myFin, out: prace.myOut, me: true };
+      const all = [me, ...[...prace.peers.values()].filter((p) => prace.order.includes(p.id))];
+      return all.sort((a, b) => (a.fin != null && b.fin != null ? a.fin - b.fin : a.fin != null ? -1 : b.fin != null ? 1 : a.out !== b.out ? (a.out ? 1 : -1) : b.hoop - a.hoop || a.el - b.el));
+    }
+    function praceTable() {
+      const rows = praceStandings();
+      return `<h2>🏁 Race ${escapeHtml(prace.code)}</h2><table class="pg-table">${rows.map((r, i) => `<tr${r.me ? ' style="background:rgba(91,108,255,.3)"' : ''}><td>${i + 1}</td><td>${escapeHtml(r.n)}</td><td>${r.fin != null ? r.fin.toFixed(1) + ' s' : r.out ? 'crashed out' : `hoop ${r.hoop}/12…`}</td></tr>`).join('')}</table>`;
+    }
+    function stepRace(dt) {
+      if (!prace) return;
+      for (const a of praceShow) { a.pos = add(a.pos, mul(a.vel, dt)); if (a.snap) { a.pos = add(a.pos, mul(sub(a.snap, a.pos), Math.min(1, dt * 3))); a.snap = add(a.snap, mul(a.vel, dt)); } }
+      const flying = prace.racing && screen === 'fly' && mode.id === 'trial';
+      if (flying) {
+        prace.sendT -= dt;
+        if (prace.sendT <= 0) { prace.sendT = 0.2; prace.link.send({ t: 's', id: netMyId, p: flight.pos.map((v) => Math.round(v * 10) / 10), h: +flight.heading.toFixed(3), pi: +flight.pitchAngle.toFixed(3), b: +flight.bank.toFixed(3), s: Math.round(len(flight.vel)), hp: nextHoop, el: Math.round(elapsed * 10) / 10 }); }
+        prace.hudT = (prace.hudT || 0) - dt;
+        if (prace.hudT <= 0) { prace.hudT = 0.25; prHud.style.display = ''; prHud.innerHTML = `<b>🏁 Race · ${praceStandings().length} pilots</b>` + praceStandings().map((r, i) => `<div style="${r.me ? 'color:#ffd166' : ''}">${i + 1}. ${escapeHtml(r.n)} · ${r.fin != null ? r.fin.toFixed(1) + ' s' : r.out ? 'out' : `${r.hoop}/12`}</div>`).join(''); }
+      } else prHud.style.display = 'none';
+    }
+    function praceHtml() {
+      if (!prace) return `<h2>🏁 Race friends <small style="font-weight:500;opacity:.6">the 12-hoop course, all at once</small></h2><div class="pg-row"><button data-a="prhost">Create a race room</button><input data-prcode maxlength="8" placeholder="CODE" style="width:84px;text-transform:uppercase;letter-spacing:2px"><button data-a="prjoin">Join</button></div><div class="pg-hint">Make a room and send friends the code; everyone picks a plane, the host starts, and you all fly the same hoops. You see their aircraft and who is ahead.</div>`;
+      const st = { connecting: 'Connecting…', on: 'Connected', failed: 'Could not connect', off: 'Offline' }[prace.status] || '';
+      const names = [prName() + ' (you)', ...[...prace.peers.values()].filter((p) => p.known).map((p) => `${p.n} · ${(PLANES.find((x) => x.id === p.pl) || {}).name || ''}`)];
+      return `<h2>🏁 Race room <b style="letter-spacing:2px">${escapeHtml(prace.code)}</b> <small style="font-weight:500;opacity:.6">${st}</small></h2><div class="pg-hint">${names.map(escapeHtml).join(' · ')}</div><div class="pg-row">${prace.host ? '<button data-a="prgo" class="pg-go">🏁 Start the race</button>' : '<span class="pg-hint">Waiting for the host to start…</span>'}<button data-a="prleave">Leave room</button></div><div class="pg-hint">Share the code: friends pick Time Trial → Join. Helicopters can't race: pick a plane.</div>`;
+    }
+
     function stepTraffic(dt) {
       trafficT -= dt;
       if (trafficT <= 0 && traffic.filter((a) => a.state === 'fly').length < 3) { spawnTraffic(); trafficT = 25 + Math.random() * 35; }
@@ -7594,6 +7694,7 @@
           if (len(sub([t[0], t[1], t[2]], flight.pos)) < 700) noise(0.18, 0.22, 260);
         }
       }
+      stepRace(dt);
       if (toastTimer > 0) { toastTimer -= dt; if (toastTimer <= 0) toastEl.style.opacity = 0; }
       if (screen !== 'fly' || paused) return;
       if (plane.rotor) {
@@ -7941,7 +8042,7 @@
       const tgt = { ail: fly ? ctl.roll : 0, elev: fly ? ctl.pitch : 0, rud: fly ? ctl.yaw : 0, flap: menu ? 0 : flight.flaps || 0, spoil: fly ? Math.max(flight.gspoil || 0, flight.brake ? (flight.onGround ? 1 : 0.5) : 0) : 0 };
       for (const k of Object.keys(tgt)) surf[k] += (tgt[k] - surf[k]) * (k === 'flap' ? ease * 0.35 : ease);
       // Other aircraft: their parts and control surfaces at rest (no gear), tumbling and darkened once they are going down.
-      for (const a of [...traffic, ...(shareOn ? remote : [])]) {
+      for (const a of [...traffic, ...(shareOn ? remote : []), ...praceShow]) {
         const tpm = planeMeshes[a.id], sc = a.spec.scale || 1, AM = model(a.q, a.pos, sc);
         const tint = a.state === 'fall' ? [0.32, 0.26, 0.22] : [1, 1, 1], glow = a.state === 'fall' ? 0.0 : 0;
         for (const k in tpm.parts) { const part = tpm.parts[k]; if (part) draw(part.live, model(a.q, add(a.pos, qrot(a.q, mul(part.center, sc))), sc), tint, glow); }
@@ -8427,9 +8528,9 @@
         box(W2 - bw2 - 8, 8 + (flight.damage ? 0 : 0) + 7 * 16 * s + 22, bw2, 22); h2.fillStyle = 'rgba(255,255,255,.85)'; h2.fillText(txt, W2 - bw2, 8 + 7 * 16 * s + 33);
       }
       // Markers over the other aircraft you can see, with their distance (so they are never just a dot in the haze).
-      if ((trafficOn || (shareOn && remote.length)) && lastVP) {
+      if ((trafficOn || (shareOn && remote.length) || praceShow.length) && lastVP) {
         h2.font = `700 ${Math.round(9 * s + 2)}px system-ui`; h2.textAlign = 'center'; h2.textBaseline = 'middle';
-        for (const a of [...(trafficOn ? traffic : []), ...(shareOn ? remote : [])]) {
+        for (const a of [...(trafficOn ? traffic : []), ...(shareOn ? remote : []), ...praceShow]) {
           if (a.state !== 'fly') continue;
           const px = a.pos[0], py = a.pos[1], pz = a.pos[2], m = lastVP;
           const cw = m[3] * px + m[7] * py + m[11] * pz + m[15];
@@ -8634,6 +8735,7 @@
           ${!r.qualifies && !r.posted && m.id !== 'free' && r.value >= 1 ? `<div class="pg-row" style="justify-content:center;margin:6px 0"><input maxlength="16" placeholder="Your name" value="${escapeHtml(playerName)}"><button data-a="post" style="padding:5px 12px;font-size:12px">🌍 Post to the world board</button></div>` : ''}
           ${r.saved ? `<div class="pg-hint">Saved at #${r.rank} on the ${m.name} leaderboard.</div>` : ''}
           ${r.posted === 'sending' ? '<div class="pg-hint">Posting to the world board…</div>' : r.posted === 'done' ? `<div class="pg-hint">🌍 On the world board${r.worldRank ? ` at #${r.worldRank}` : ''}.</div>` : r.posted === 'failed' ? `<div class="pg-hint" style="color:#ffb347">${escapeHtml(r.worldError || 'Could not post.')}</div>` : ''}
+          ${prace && prace.racing && m.id === 'trial' ? praceTable() : ''}
           ${board.length ? `<h2>${m.name} leaderboard</h2>${table(m, board.slice(0, 5))}` : ''}
           <div class="pg-row" style="justify-content:center;margin-top:10px"><button data-a="again" class="pg-go">Fly again (R)</button><button data-a="menu">Menu</button></div>
         </div>`;
@@ -8659,7 +8761,7 @@
           ${weatherPanel()}
 `;
         const modesHtml = `<h2>What do you want to play?</h2><div class="pg-modes">${MODES.map((m) => `<button class="pg-mode ${m === mode ? 'pg-on' : ''}" data-mode="${m.id}">${m.icon} ${m.name}<small>${m.desc}</small></button>`).join('')}</div>`;
-        body = modesHtml + (mode.id === 'war' ? battleHtml() : setupHtml) + (read('howseen_' + mode.id, false) && !howOpen ? `          <div class="pg-row" style="margin-top:8px"><button data-howtoggle>❓ How to play ${mode.name}</button></div>` : `          <div class="pg-howto"><div class="pg-ctitle">How to play ${mode.name}${read('howseen_' + mode.id, false) ? ' <button data-howtoggle style="float:right;font-size:11px">Hide</button>' : ''}</div>${ctlHtml(mode.id, true)}<div class="pg-hint" style="margin-top:5px">During a flight, press <kbd>?</kbd> or click the round <b>?</b> button to see this again, with what each control does.</div></div>`) + `
+        body = modesHtml + (mode.id === 'trial' ? praceHtml() : '') + (mode.id === 'war' ? battleHtml() : setupHtml) + (read('howseen_' + mode.id, false) && !howOpen ? `          <div class="pg-row" style="margin-top:8px"><button data-howtoggle>❓ How to play ${mode.name}</button></div>` : `          <div class="pg-howto"><div class="pg-ctitle">How to play ${mode.name}${read('howseen_' + mode.id, false) ? ' <button data-howtoggle style="float:right;font-size:11px">Hide</button>' : ''}</div>${ctlHtml(mode.id, true)}<div class="pg-hint" style="margin-top:5px">During a flight, press <kbd>?</kbd> or click the round <b>?</b> button to see this again, with what each control does.</div></div>`) + `
           <div class="pg-row" style="margin-top:10px">${mode.id === 'war' && netg && netg.role === 'client' ? '<span class="pg-hint">Waiting for the host to start…</span>' : `<button class="pg-go" data-a="start">${mode.id === 'war' ? (netg ? '⚔️ Start the battle for everyone (Enter)' : '⚔️ Start the battle (Enter)') : '✈️ Take off (Enter)'}</button>`}
             ${(document.fullscreenEnabled || document.webkitFullscreenEnabled) ? '<button data-a="fullscreen" title="Open the Plane game edge to edge. Press Escape or F11 to leave">⛶ Full screen (F11)</button>' : ''}
             <span class="pg-hint">Best: ${(() => { const b = read(`board.${mode.id}`, [])[0]; return b && mode.id !== 'free' ? `${fmtScore(mode, b.score)} by ${escapeHtml(b.name)}` : '—'; })()}</span></div>`;
@@ -8785,6 +8887,10 @@
         const a = n.dataset.a;
         if (a === 'restart' && mode.id === 'war' && war && screen === 'fly') { paused = false; renderUI(); warQuickRespawn(); root.focus(); }
         else if (a === 'start' || a === 'again' || a === 'restart') onStartPress(a);
+        else if (a === 'prhost') { praceOpen(true); }
+        else if (a === 'prjoin') { const c = NET.normCode(ui.querySelector('[data-prcode]')?.value); if (!c) toast('A race code is 6 letters and numbers', 2200); else praceOpen(false, c); }
+        else if (a === 'prgo') { praceGo(); }
+        else if (a === 'prleave') { praceLeave(); }
         else if (a === 'resume') { paused = false; renderUI(); root.focus(); unmuteAudio(); }
         else if (a === 'fullscreen') toggleFullscreen();
         else if (a === 'menu') { if (netg) netLeave(true); screen = 'menu'; paused = false; muteAudio(); restorePlane(); useBattlefield(''); flight = new Flight(plane); renderUI(); }
@@ -9000,7 +9106,7 @@
       step: (secs) => { for (let i = 0; i < secs * 120; i++) { update(1 / 120); if (i % 2 === 0) { wreckFx(1 / 60); stepParticles(1 / 60); stepDebris(1 / 60); } } } };
 
     return () => {
-      alive = false; cancelAnimationFrame(raf); cancelSpeech(); skyLeave();
+      alive = false; cancelAnimationFrame(raf); cancelSpeech(); skyLeave(); praceLeave(true);
       window.removeEventListener('keydown', kd); window.removeEventListener('keyup', ku); window.removeEventListener('blur', blur);
       document.removeEventListener('visibilitychange', hidden);
       try { ac?.close(); } catch { /* already closed */ }

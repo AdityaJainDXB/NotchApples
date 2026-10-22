@@ -20,6 +20,9 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.1.25", date: "22 October 2026", headline: "Plane racing with friends", items: [
+            "Plane racing with friends: in Time Trial, make a race room and send friends the 6-letter code. Everyone picks a plane, the host starts, and you all fly the same 12 hoops at once. You see the other racers' aircraft with their names, a live standings box shows who is ahead, and the results list everyone's time (or who crashed out).",
+        ]),
         ReleaseNote(version: "2.1.24", date: "22 October 2026", headline: "Racing: 12 tracks, 7 cars, cockpit view, crashes and a track designer", items: [
             "Racing is much bigger: 12 premade tracks (Grand Prix, Speedway oval, City streets, Mountain pass, Hairpin hill, Desert run, Coast road, Frozen lake, Kart track and the first three), and a garage of 7 cars: Formula One, GT3 Racer, Supercar V10, Muscle, Hot Hatch, Street GT and Drift King, each with its own top speed, grip, brakes, toughness and gearbox (stats shown in the garage).",
             "Three views, switched with V: chase camera, cockpit (a steering wheel that turns with the front wheels, paddles that flash at each gear change, shift lights, speed and rev dials, a mirror; the F1 car has its halo and wheel display) and the old top-down view.",
