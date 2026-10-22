@@ -20,6 +20,10 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.1.5", date: "22 October 2026", headline: "Every percent again, and friends share one wave", items: [
+            "The Claude usage pulse on the closed notch is back to one for every new percent. The earlier fix that stopped false ones (wobbling numbers and mixing up accounts) stays, so it only fires when a number really goes above the highest one it already showed.",
+            "Friends who use the same code end up in the same game and the same wave: if two players both open a game in one room at the same moment, the one that started later now joins the one already running (same wave, score and battlefield size). Waiting to find an open game is also a little longer (6 seconds) so a slow connection does not open a second game by mistake.",
+        ]),
         ReleaseNote(version: "2.1.4", date: "21 October 2026", headline: "Claude usage pulse: much less often", items: [
             "The Claude usage pulse on the closed notch (\"5h 96% left, wk 48% left\") no longer keeps coming back. It only appears when a number passes the highest one it has already shown (a reading that wobbles 4, 5, 4, 5 says nothing more), at most once every five minutes, and straight away only when usage is at 75% or more. A window that resets starts the count again.",
         ]),
