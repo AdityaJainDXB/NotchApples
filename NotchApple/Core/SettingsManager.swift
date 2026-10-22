@@ -240,6 +240,9 @@ final class SettingsManager: ObservableObject {
     @AppStorage("windows.gap") var windowGap = 8.0
     /// Briefly show battery level beside the notch when the charger is plugged in or out.
     @AppStorage("ui.chargingActivity") var showChargingActivity = true
+    /// Kinds of activity kept off the closed notch, as a comma-separated list (Settings → Extras → Beside the notch).
+    @AppStorage("notch.hiddenKinds") var hiddenActivityKinds = ""
+    func allows(_ kind: ActivityKind) -> Bool { !ActivityKind.hidden(from: hiddenActivityKinds).contains(kind) }
     @AppStorage(Module.clipboard.storageKey) var clipboardEnabled = true
     @AppStorage(Module.shelf.storageKey) var shelfEnabled = true
     @AppStorage(Module.share.storageKey) var shareEnabled = true

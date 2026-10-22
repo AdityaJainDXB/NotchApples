@@ -20,6 +20,9 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.1.16", date: "22 October 2026", headline: "Privacy: choose what shows beside the notch", items: [
+            "Privacy: Settings → Extras → Beside the notch lets you choose what appears beside the closed notch: calendar (next event and “Join”), timers and alarms, music, battery and charging, volume and brightness, messages and notifications, and everything else. “Only my calendar” keeps just the countdown to your next class or event, “Nothing” keeps the notch plain, and “Show everything” puts it all back. Nothing a passer-by could read pops up unless you allow it.",
+        ]),
         ReleaseNote(version: "2.1.15", date: "22 October 2026", headline: "Solitaire full screen, and Lock on is T again", items: [
             "Solitaire has a Full screen button: it opens the game in its own window that fills the screen, with the cards sized to fit (up to nearly four times bigger). It is the same game, so you carry on where you were, and the green button or Esc brings you back.",
             "The faded square glow round the open notch is gone: it was a soft shadow in your theme colour that the window cut off into a square. The notch itself is unchanged.",

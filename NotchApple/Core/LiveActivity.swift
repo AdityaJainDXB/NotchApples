@@ -78,18 +78,23 @@ final class LiveActivityCenter: ObservableObject {
     /// Recalculates what the closed notch should show.
     func recompute() {
         var next: LiveActivity?
-        if let hud = hudFlash {
+        // Settings → Extras → Beside the notch: kinds the person switched off never show.
+        let hidden = ActivityKind.hidden(from: SettingsManager.shared.hiddenActivityKinds)
+        let allowed: (LiveActivity) -> Bool = { a in
+            hidden.isEmpty || !hidden.contains(ActivityKind.of(symbol: a.symbol, dotOnly: a.dotOnly, musicBars: a.musicBars, hasArtwork: a.artwork != nil, hasGauge: a.gauge != nil))
+        }
+        if let hud = hudFlash, allowed(hud) {
             next = hud
-        } else if let flash = chargingFlash {
+        } else if let flash = chargingFlash, allowed(flash) {
             next = flash
-        } else if let flash = extraFlash {
+        } else if let flash = extraFlash, allowed(flash) {
             next = flash
         } else {
             let focus = SettingsManager.shared.focusEnabled ? FocusTimer.shared.liveActivity : nil
-            let ongoing = [focus].compactMap { $0 } + providers.compactMap { $0() }
+            let ongoing = ([focus].compactMap { $0 } + providers.compactMap { $0() }).filter(allowed)
             if let first = ongoing.first { next = Self.stacked(first, ongoing.dropFirst().first) }
         }
-        if next == nil, MessengerNotifier.shared.unread > 0 {
+        if next == nil, MessengerNotifier.shared.unread > 0, !hidden.contains(.messages) {
             next = LiveActivity(symbol: nil, label: nil, tint: NSColor(Theme.accentBright), dotOnly: true)
         }
         guard next != current else { return }

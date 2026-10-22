@@ -15,8 +15,36 @@ struct ExtrasSettings: View {
     @State private var confirmAddHooks = false
     @State private var hookMessage: String?
 
+    /// A switch for one kind of thing that can appear beside the closed notch.
+    private func kindBinding(_ kind: ActivityKind) -> Binding<Bool> {
+        Binding(get: { settings.allows(kind) }, set: { on in
+            var hidden = ActivityKind.hidden(from: settings.hiddenActivityKinds)
+            if on { hidden.remove(kind) } else { hidden.insert(kind) }
+            settings.hiddenActivityKinds = ActivityKind.stored(hidden)
+            LiveActivityCenter.shared.recompute()
+        })
+    }
+    private func setHidden(_ hidden: Set<ActivityKind>) {
+        settings.hiddenActivityKinds = ActivityKind.stored(hidden)
+        LiveActivityCenter.shared.recompute()
+    }
+
     var body: some View {
         Form {
+            Section {
+                HStack {
+                    Button("Show everything") { setHidden([]) }
+                    Button("Only my calendar") { setHidden(Set(ActivityKind.allCases).subtracting([.calendar])) }
+                    Button("Nothing") { setHidden(Set(ActivityKind.allCases)) }
+                }
+                ForEach(ActivityKind.allCases, id: \.self) { kind in
+                    Toggle(kind.title, isOn: kindBinding(kind))
+                }
+            } header: {
+                Text("Beside the notch: choose what shows")
+            } footer: {
+                Text("Privacy: switch off what you don't want anyone passing by to see on your screen. “Only my calendar” keeps just the countdown to your next class or event and “Join”. The switches below still apply as well.")
+            }
             Section {
                 Toggle("Low battery warning at 20% and 10%", isOn: $settings.lowBatteryAlert)
                 Toggle("Charging animation when you plug in", isOn: $settings.showChargingActivity)

@@ -118,3 +118,40 @@ final class WidgetLifecycle {
         return true
     }
 }
+
+// MARK: - What may appear beside the closed notch (privacy)
+
+/// The kinds of things that can appear beside the closed notch, so each can be switched off. (The kind is read from what the
+/// activity looks like, in one place, rather than tagged at every one of the places that make them.)
+enum ActivityKind: String, CaseIterable {
+    case calendar, timers, music, battery, volume, messages, other
+
+    var title: String {
+        switch self {
+        case .calendar: "Calendar: next event and “Join”"
+        case .timers: "Timers, alarms and Keep Awake"
+        case .music: "Music"
+        case .battery: "Battery and charging"
+        case .volume: "Volume and brightness"
+        case .messages: "Messages and notifications"
+        case .other: "Everything else (rain, downloads, devices, Claude…)"
+        }
+    }
+
+    static func of(symbol: String?, dotOnly: Bool, musicBars: Bool, hasArtwork: Bool, hasGauge: Bool) -> ActivityKind {
+        if hasGauge { return .volume }
+        if musicBars || hasArtwork || symbol == "music.note" { return .music }
+        if dotOnly || symbol == "bubble.left.fill" { return .messages }
+        guard let s = symbol else { return .other }
+        if s.hasPrefix("battery") { return .battery }
+        if s == "calendar" || s == "video.fill" { return .calendar }
+        if ["timer", "stopwatch", "bell.fill", "hourglass", "cup.and.saucer.fill", "laptopcomputer"].contains(s) { return .timers }
+        return .other
+    }
+
+    /// The kinds switched off, from the stored comma-separated list.
+    static func hidden(from stored: String) -> Set<ActivityKind> {
+        Set(stored.split(separator: ",").compactMap { ActivityKind(rawValue: String($0)) })
+    }
+    static func stored(_ hidden: Set<ActivityKind>) -> String { hidden.map(\.rawValue).sorted().joined(separator: ",") }
+}

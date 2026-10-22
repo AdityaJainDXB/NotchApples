@@ -234,6 +234,28 @@ final class CustomizationTests: XCTestCase {
     }
 }
 
+final class ActivityKindTests: XCTestCase {
+    func testKindsAreRecognised() {
+        func k(_ s: String?, dot: Bool = false, bars: Bool = false, art: Bool = false, gauge: Bool = false) -> ActivityKind {
+            ActivityKind.of(symbol: s, dotOnly: dot, musicBars: bars, hasArtwork: art, hasGauge: gauge)
+        }
+        XCTAssertEqual(k("calendar"), .calendar)
+        XCTAssertEqual(k("video.fill"), .calendar)
+        XCTAssertEqual(k("speaker.wave.2", gauge: true), .volume)
+        XCTAssertEqual(k("music.note", bars: true), .music)
+        XCTAssertEqual(k(nil, dot: true), .messages)
+        XCTAssertEqual(k("battery.100percent.bolt"), .battery)
+        XCTAssertEqual(k("timer"), .timers)
+        XCTAssertEqual(k("cloud.rain.fill"), .other)
+    }
+    func testHiddenListRoundTrips() {
+        let hidden: Set<ActivityKind> = [.music, .battery, .other]
+        XCTAssertEqual(ActivityKind.hidden(from: ActivityKind.stored(hidden)), hidden)
+        XCTAssertTrue(ActivityKind.hidden(from: "").isEmpty)
+        XCTAssertEqual(ActivityKind.hidden(from: "nonsense,music"), [.music])
+    }
+}
+
 final class UpdateFlowTests: XCTestCase {
     func testVersions() {
         XCTAssertEqual(VersionMath.number(from: "v1.22.0"), "1.22.0")

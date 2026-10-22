@@ -72,7 +72,7 @@ Pick your computer. Both buttons start the download straight away. The Mac link 
   </tr>
   <tr>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.1.15</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.1.16</b></a>
     </td>
     <td align="center">
       <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 2.1.14 BETA</b></a>
@@ -233,6 +233,10 @@ All screenshots use sample data.
 ## What's new
 
 > **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is in the repository's history.
+
+### Mac 2.1.16 · 22 October 2026 · 🔒 Privacy: choose what shows beside the notch
+
+- Privacy: Settings → Extras → Beside the notch lets you choose what appears beside the closed notch: calendar (next event and “Join”), timers and alarms, music, battery and charging, volume and brightness, messages and notifications, and everything else. “Only my calendar” keeps just the countdown to your next class or event, “Nothing” keeps the notch plain, and “Show everything” puts it all back. Nothing a passer-by could read pops up unless you allow it.
 
 ### Mac 2.1.15 · Windows 2.1.15 BETA · 22 October 2026 · 🃏 Solitaire full screen, and Lock on is T again
 
