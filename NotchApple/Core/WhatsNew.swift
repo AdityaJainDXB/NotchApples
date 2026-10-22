@@ -20,6 +20,11 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.1.14", date: "22 October 2026", headline: "Chat in online Battle", items: [
+            "Chat in online Battle: press T to open a chat box and type to the other players. While the box is open your plane flies itself in slow circles around the middle of the field (it slows down first with the air brake), so you don't leave the battlefield; on foot you stand still. Enter sends, Enter on an empty line or Esc closes, and a button in the box hides other players' chat.",
+            "Key change: Lock on moves from T to K (the Lock on button shows K), because T is now chat.",
+            "Windows: the update helper now breaks away from the app before the app closes, so the installer always runs and the notch reopens (this was 2.1.13).",
+        ]),
         ReleaseNote(version: "2.1.13", date: "22 October 2026", headline: "Windows updates that survive", items: [
             "Windows: the update helper now breaks away from the app before the app closes. If the notch was started by a launcher or a task, Windows used to stop the helper when the app quit, so the installer never ran, the notch stayed closed and the old version came back when you reopened it. Now the installer runs, and the notch reopens (as the new version, or the old one if the installer failed, with a log in your Temp folder).",
         ]),

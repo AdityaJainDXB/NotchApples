@@ -72,10 +72,10 @@ Pick your computer. Both buttons start the download straight away. The Mac link 
   </tr>
   <tr>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.1.13</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.1.14</b></a>
     </td>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 2.1.5 BETA</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 2.1.14 BETA</b></a>
     </td>
   </tr>
   <tr>
@@ -233,6 +233,12 @@ All screenshots use sample data.
 ## What's new
 
 > **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is in the repository's history.
+
+### Mac 2.1.14 · Windows 2.1.14 BETA · 22 October 2026 · 💬 Chat in online Battle
+
+- Chat in online Battle: press T to open a chat box and type to the other players. While the box is open your plane flies itself in slow circles around the middle of the field (it slows down first with the air brake), so you don't leave the battlefield; on foot you stand still. Enter sends, Enter on an empty line or Esc closes, and a button in the box hides other players' chat.
+- Key change: Lock on moves from T to K (the Lock on button shows K), because T is now chat.
+- Windows: the update helper now breaks away from the app before the app closes, so the installer always runs and the notch reopens (this was 2.1.13).
 
 ### Mac 2.1.13 · Windows 2.1.13 BETA · 22 October 2026 · 🪟 Windows updates that survive
 

@@ -3989,6 +3989,14 @@
   .pg .pg-howto .pg-cgrid { grid-template-columns: repeat(2, 1fr); gap: 4px 14px; } @media (max-width: 560px) { .pg .pg-howto .pg-cgrid { grid-template-columns: 1fr; } }
   .pg .pg-chips { display: flex; gap: 5px; flex-wrap: wrap; margin: 4px 0 8px; }
   .pg .pg-qbar { position: absolute; left: 10px; top: calc(46% - 66px); z-index: 5; display: flex; gap: 6px; } .pg .pg-qbar button { width: 28px; height: 28px; border-radius: 50%; border: 1px solid rgba(255,255,255,.35); background: rgba(10,14,28,.7); color: #fff; font-size: 13px; display: grid; place-items: center; cursor: pointer; padding: 0; } .pg .pg-qbar button.pg-off { opacity: .45; text-decoration: line-through; }
+  .pg .pg-chat { position: absolute; left: 10px; bottom: 74px; width: min(400px, 62%); z-index: 6; pointer-events: none; font-size: 12.5px; display: flex; flex-direction: column; gap: 2px; }
+  .pg .pg-chat div { background: rgba(10,14,28,.62); padding: 3px 8px; border-radius: 8px; color: #fff; word-break: break-word; }
+  .pg .pg-chat b { color: #ffd166; }
+  .pg .pg-chatbox { position: absolute; left: 10px; bottom: 18px; width: min(400px, 62%); z-index: 7; background: rgba(10,14,28,.9); border: 1px solid rgba(255,179,71,.7); border-radius: 12px; padding: 7px 8px; color: #fff; }
+  .pg .pg-chathint { font-size: 10.5px; color: #cdbfa0; margin-bottom: 5px; }
+  .pg .pg-chatrow { display: flex; gap: 5px; }
+  .pg .pg-chatrow input { flex: 1; min-width: 0; padding: 5px 8px; border-radius: 8px; border: 1px solid rgba(255,255,255,.3); background: rgba(255,255,255,.08); color: #fff; font-size: 13px; outline: none; }
+  .pg .pg-chatrow button { padding: 4px 8px; border-radius: 8px; border: 1px solid rgba(255,255,255,.3); background: rgba(10,14,28,.78); color: #fff; font-size: 11px; font-weight: 700; cursor: pointer; }
   .pg .pg-ctlbtn { position: absolute; left: 10px; top: 46%; z-index: 5; width: 28px; height: 28px; border-radius: 50%; border: 1px solid rgba(255,255,255,.35); background: rgba(10,14,28,.7); color: #fff; font-weight: 800; font-size: 14px; display: grid; place-items: center; cursor: pointer; padding: 0; }
   .pg .pg-wbar { position: absolute; right: 8px; top: 34%; z-index: 5; flex-direction: column; gap: 6px; }
   .pg .pg-wbar button { position: relative; display: grid; grid-template-columns: 26px 1fr auto; align-items: center; gap: 4px; width: 128px; padding: 6px 8px; border-radius: 10px; border: 1px solid rgba(255,255,255,.25); background: rgba(10,14,28,.72); color: #fff; font-size: 12px; cursor: pointer; text-align: left; user-select: none; touch-action: none; }
@@ -4913,6 +4921,7 @@
     const onKey = (e, down) => {
       if (!root.isConnected) return;
       const k = e.key.length === 1 ? e.key.toLowerCase() : e.key;
+      if (chatOpen && !e.target) { chatKey(k, down); return; }
       if (down && e.repeat && keys.has(k)) { if (screen === 'fly') e.preventDefault?.(); return; }   // held keys repeat: toggles fire once
       const typing = e.target && e.target.tagName === 'INPUT' && e.target.type !== 'range';
       if (typing) { if (down && k === 'Enter' && result?.qualifies) saveScore(); return; }
@@ -4925,7 +4934,7 @@
           if (k === 'u' && war && war.net) toggleVote();
           if (k === 'p' && (!(war && war.net) || paused)) { paused = !paused; renderUI(); if (!paused) { unmuteAudio(); } }
           if (k === '?' || k === '/') showCtl(ctlEl.style.display === 'none');
-          if (mode.id === 'war') { if (k === 'n') warLaunch(); else if (k === 'l') warFlares(); else if (k === 't') warToggleLock(); else if (k === 'e') warHeliExitEnter(); else if (k === '1' && war && war.foot) warSwitchWeapon('rifle'); else if (k === '2' && war && war.foot) warSwitchWeapon('rpg'); else if (k === 'z') warScope(); else if (k === 'r') warReload(); else if (k === 'g') { if (war && war.foot) warGrenade(); else warLaunchGuided(); } if ((k === 'b' || k === 'z') && war && war.vehicle === 'plane' && !war.dead) war.bombPend = true; }
+          if (mode.id === 'war') { if (k === 'n') warLaunch(); else if (k === 'l') warFlares(); else if (k === 't') openChat(); else if (k === 'k') warToggleLock(); else if (k === 'e') warHeliExitEnter(); else if (k === '1' && war && war.foot) warSwitchWeapon('rifle'); else if (k === '2' && war && war.foot) warSwitchWeapon('rpg'); else if (k === 'z') warScope(); else if (k === 'r') warReload(); else if (k === 'g') { if (war && war.foot) warGrenade(); else warLaunchGuided(); } if ((k === 'b' || k === 'z') && war && war.vehicle === 'plane' && !war.dead) war.bombPend = true; }
           if (k === 'c') camMode = (camMode + 1) % 3;
           if (k === 'g' && !(mode.id === 'war' && war)) {
             const r = flight.toggleGear();
@@ -6037,6 +6046,17 @@
         const R = ARCADE_RATES[plane.id];
         flight.arcade = war.assist !== 'pro' && R ? (war.assist === 'auto' ? { ...R, turn: R.turn * 0.7 } : R) : null;
       }
+      if (chatOpen && !war.dead) {
+        // Chatting: a plane flies itself in a slow, gentle circle around the middle of the battlefield; anything on the ground stands still.
+        if (war.vehicle === 'plane') {
+          if (plane.rotor) return { ...raw, pitch: 0, roll: 0, yaw: 0 };
+          const st = war.ap, R = war.arena.R;
+          st.spd = plane.stall * 1.5;
+          if (Math.hypot(flight.pos[0], flight.pos[2]) > R * 0.55) st.hdg = Math.atan2(-flight.pos[0], flight.pos[2]); else st.hdg = wrapPi(st.hdg + 0.12 * dt);
+          return { ...raw, ...planeAssist(flight, st, { turn: 0, climb: 0 }, dt, W, { floor: 220 }) };
+        }
+        return { drive: 0, steer: 0, aimX: 0, aimY: 0, boost: false, crouch: false, lookScale: 1 };
+      }
       if (war.driving) { return { drive: raw.throttle, steer: clamp(raw.yaw + raw.roll, -1, 1), aimX: 0, aimY: 0, boost: !!raw.boost || keys.has('Shift') }; }
       if (war.foot) {
         // Not scoped: the cursor is the crosshair and the view turns only when the cursor is near the edge of the screen.
@@ -6526,7 +6546,7 @@
       }
     }
 
-    /// The lock button (T): lock on to the enemy fighter nearest the nose and hold it until you press T again, it is destroyed, or it flies far away.
+    /// The lock button (K): lock on to the enemy fighter nearest the nose and hold it until you press K again, it is destroyed, or it flies far away.
     const lockAlive = (t) => !!t && (t.state ? t.state === 'fly' : !t.dead);
     const lockPos = (t) => (t.state ? t.pos : add(t.pos, [0, 1.5, 0]));
     /// Heat vision (Y): the picture goes grey, smoke and dust vanish, and people, vehicles, aircraft and fires glow white.
@@ -6545,7 +6565,7 @@
         const ang = Math.acos(clamp(dot(f, mul(to, 1 / dd)), -1, 1)); if (ang < ba) { ba = ang; best = a; }
       }
       if (!best) { toast('Nothing ahead to lock on to', 1300); return; }
-      war.lock = best; war.lockT = 0; war.manualLock = true; toast('Locking on… (T to release)', 1100); beep(900, 0.06, 'square', 0.05);
+      war.lock = best; war.lockT = 0; war.manualLock = true; toast('Locking on… (K to release)', 1100); beep(900, 0.06, 'square', 0.05);
     }
     function warLockOn(dt) {
       const { f } = flight.axes();
@@ -6969,7 +6989,7 @@
           ] : [
             [['Space', 'Enter', 'Click'], 'Guns', `hold to fire. The circle is where the shells go.${aimNote}`],
             [['B', 'Z'], 'Bombs', auto ? 'hold: it drops only when a bomb would hit a target' : 'the bomb lands exactly on the yellow diamond where it was when you pressed. Hold for a stick'],
-            ...(plane.rotor ? [[['E'], 'Land and get out', 'touch down and stop, then E: you step out with a rifle and an RPG, and E beside the helicopter climbs back in']] : []), [['Y'], 'Heat vision', 'see through smoke: aircraft, vehicles, people and fires glow white'], [['T'], 'Lock on', 'press T to lock on to the fighter or ground target (base, tank, gun, truck) nearest your nose and keep it locked. T again to let go'], [['G'], 'Guided missile', 'you fly the missile with the mouse or arrows while the plane flies itself. Space, click or G detonates. 2 each round'], [['N'], 'Missile', 'fire at the locked fighter once it says LOCK'], [['L'], 'Flares', 'press when you hear MISSILE! to break its lock'], [['J'], 'Eject', 'bail out: the jet goes down and you fight on foot with a rifle. Ramming an enemy destroys it too'],
+            ...(plane.rotor ? [[['E'], 'Land and get out', 'touch down and stop, then E: you step out with a rifle and an RPG, and E beside the helicopter climbs back in']] : []), [['Y'], 'Heat vision', 'see through smoke: aircraft, vehicles, people and fires glow white'], [['K'], 'Lock on', 'press K to lock on to the fighter or ground target (base, tank, gun, truck) nearest your nose and keep it locked. K again to let go'], [['T'], 'Chat', 'online games: type to the other players. Your plane flies itself in slow circles while the box is open'], [['G'], 'Guided missile', 'you fly the missile with the mouse or arrows while the plane flies itself. Space, click or G detonates. 2 each round'], [['N'], 'Missile', 'fire at the locked fighter once it says LOCK'], [['L'], 'Flares', 'press when you hear MISSILE! to break its lock'], [['J'], 'Eject', 'bail out: the jet goes down and you fight on foot with a rifle. Ramming an enemy destroys it too'],
             ...(auto ? [[['Mouse', '←', '→'], 'Turn', 'the plane turns towards where you point and keeps its height'], [['↑', '↓'], 'Climb / dive', 'it settles at the new height'], [['W', 'S'], 'Speed', 'faster or slower']] : CTL_FLY()),
             [['C'], 'Camera', 'behind, cockpit or far'], [['P'], 'Pause'], [['R'], 'Respawn', 'straight back in the same wave, nothing else restarts'], [['?'], 'Show this help'],
             ...(war && war.net ? [[['U'], 'Vote', 'change the match with the other players']] : []),
@@ -7005,7 +7025,50 @@
       else { tcasOn = !tcasOn; write('tcas', tcasOn); if (!tcasOn) cancelSpeech(); toast(tcasOn ? 'TCAS traffic calls on' : 'TCAS traffic calls off', 1200); }
       syncQbar(); root.focus();
     }); });
-    root.append(qbar, ctlEl, ctlBtn, wbar, netbar, voteEl, mapEl);
+    // ---- chat (shared Battle only): T opens it, the plane flies itself in slow circles while you type
+    const chatEl = document.createElement('div'); chatEl.className = 'pg-chat'; chatEl.style.display = 'none';
+    const chatBox = document.createElement('div'); chatBox.className = 'pg-chatbox'; chatBox.style.display = 'none';
+    chatBox.innerHTML = '<div class="pg-chathint">CHAT · your plane is on autopilot · Enter sends · Enter on an empty line or Esc closes</div><div class="pg-chatrow"><input maxlength="120" placeholder="Say something to the room" autocomplete="off" spellcheck="false"><button data-c="mute"></button><button data-c="close" title="Close chat">✕</button></div>';
+    const chatInput = chatBox.querySelector('input'), chatMuteBtn = chatBox.querySelector('[data-c="mute"]');
+    let chatOpen = false, chatMuted = read('chatoff', false), chatSentAt = 0; const chatLog = [], chatLast = new Map();
+    const cleanChat = (t) => String(t == null ? '' : t).replace(/[\u0000-\u001f\u007f<>]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 120);
+    function renderChat() {
+      chatEl.replaceChildren(...chatLog.slice(-6).map((c) => { const d = document.createElement('div'), b = document.createElement('b'); b.textContent = `${c.n}: `; d.append(b, document.createTextNode(c.text)); return d; }));
+      chatEl.style.display = chatLog.length && !chatMuted && screen === 'fly' ? 'flex' : 'none';
+      chatMuteBtn.textContent = chatMuted ? 'Chat hidden' : 'Chat shown';
+    }
+    function pushChat(n, text) { chatLog.push({ n, text, t: 14 }); if (chatLog.length > 30) chatLog.shift(); renderChat(); }
+    function openChat() {
+      if (!(war && war.net)) { toast('Chat is for online games with other players', 1800); return; }
+      if (chatOpen) return;
+      chatOpen = true; keys.clear(); warPad.gun = false; warPad.bomb = false;
+      if (war.vehicle === 'plane' && war.ap) { war.ap.hdg = flight.heading; war.ap.alt = flight.pos[1]; war.ap.i = 0; }
+      chatBox.style.display = 'block'; chatInput.value = ''; renderChat(); chatInput.focus();
+    }
+    function closeChat() { if (!chatOpen) return; chatOpen = false; chatBox.style.display = 'none'; chatInput.blur(); root.focus(); }
+    function sendChat(text) {
+      const now = Date.now(); if (now - chatSentAt < 800) { toast('Slow down a little', 900); return; }
+      chatSentAt = now; netSend({ t: 'chat', id: netMyId, m: text }); pushChat('You', text);
+    }
+    function chatEnter() { const text = cleanChat(chatInput.value); if (!text) { closeChat(); return; } sendChat(text); chatInput.value = ''; }
+    /// Keys the notch forwards from outside the page while chat is open (the page may not own the keyboard): type them into the box.
+    function chatKey(k, down) {
+      if (!down) return;
+      if (k === 'Enter') chatEnter();
+      else if (k === 'Backspace') chatInput.value = chatInput.value.slice(0, -1);
+      else if (k.length === 1 && chatInput.value.length < 120) chatInput.value += k;
+    }
+    function receiveChat(m) {
+      if (chatMuted || !war || !war.net) return;
+      const now = Date.now(); if (now - (chatLast.get(m.id) || 0) < 600) return; chatLast.set(m.id, now);
+      const text = cleanChat(m.m); if (!text) return;
+      pushChat(String(war.net.names[m.id] || (netg && netg.peers.get(m.id) && netg.peers.get(m.id).n) || 'Player').slice(0, 14), text);
+    }
+    chatInput.addEventListener('keydown', (e) => { e.stopPropagation(); if (e.key === 'Enter') { e.preventDefault(); chatEnter(); } else if (e.key === 'Escape') { e.preventDefault(); closeChat(); } });
+    chatInput.addEventListener('keyup', (e) => e.stopPropagation());
+    for (const el of [chatBox, chatEl]) { el.addEventListener('mousedown', (e) => e.stopPropagation()); el.addEventListener('pointerdown', (e) => e.stopPropagation()); }
+    chatBox.querySelectorAll('button').forEach((b) => b.addEventListener('click', (e) => { e.stopPropagation(); if (b.dataset.c === 'close') closeChat(); else { chatMuted = !chatMuted; write('chatoff', chatMuted); renderChat(); chatInput.focus(); } }));
+    root.append(chatEl, chatBox, qbar, ctlEl, ctlBtn, wbar, netbar, voteEl, mapEl);
     for (const el of [voteEl, ctlEl, ctlBtn]) { el.addEventListener('mousedown', (e) => e.stopPropagation()); el.addEventListener('pointerdown', (e) => e.stopPropagation()); }
     function voteHtml() {
       const n = netg, row = (key, label, vals) => `<div class="pg-crow" style="align-items:center"><span class="pg-ckeys" style="min-width:70px"><b>${label}</b></span><span class="pg-chips" style="margin:0">${vals.map(([val, name]) => {
@@ -7027,7 +7090,7 @@
     function buildWbar() {
       const tank = war && war.vehicle === 'tank';
       const defs = war && war.driving ? [['van', '🚪', 'Get out', 'E']] : war && war.foot ? [['gun', '🔫', 'Fire', 'Space'], ['rpg', '🚀', 'RPG / rifle', '2'], ['scope', '🔭', 'Scope', 'Z'], ['gren', '💣', 'Grenade', 'G'], ['rel', '🔄', 'Reload', 'R'], ['band', '🩹', 'Bandage', 'H'], ['shp', '🧪', 'Shield', 'J'], ['kit', '✚', 'Medkit', 'K'], ...(war.heli ? [['heli', '🚁', 'Climb in', 'E']] : []), ...(war.van ? [['van', '🚐', 'Get in van', 'E']] : [])] : tank ? [['gun', '💥', 'Cannon', 'Space'], ['bomb', '🔫', 'Machine gun', 'B']]
-        : [['gun', '🔫', 'Guns', 'Space'], ['bomb', '💣', 'Bombs', 'B'], ['msl', '🚀', 'Missile', 'N'], ['gde', '🛰', 'Guided', 'G'], ['lock', '🎯', 'Lock on', 'T'], ['flr', '✨', 'Flares', 'L'], ...(plane.rotor ? [['heli', '🚁', 'Land & exit', 'E']] : [])];
+        : [['gun', '🔫', 'Guns', 'Space'], ['bomb', '💣', 'Bombs', 'B'], ['msl', '🚀', 'Missile', 'N'], ['gde', '🛰', 'Guided', 'G'], ['lock', '🎯', 'Lock on', 'K'], ['flr', '✨', 'Flares', 'L'], ...(plane.rotor ? [['heli', '🚁', 'Land & exit', 'E']] : [])];
       defs.push(['heat', '🔥', 'Heat vision', 'Y']);
       wbar.innerHTML = defs.map(([id, ic, name, key]) => `<button data-w="${id}" title="${name} (${key})"><span>${ic}</span><b>${name}</b><kbd>${key}</kbd><i data-n="${id}"></i></button>`).join('')
         + (war && war.vehicle === 'plane' ? '<button data-w="eject" title="Eject: the jet goes down and you fight on foot with a rifle"><span>🪂</span><b>Eject</b><kbd>J</kbd></button>' : '')
@@ -7058,7 +7121,7 @@
       wbar.style.display = fly && mode.id === 'war' ? 'flex' : 'none';
       netbar.style.display = fly && mode.id === 'war' && war && war.net ? 'flex' : 'none';
       const codeEl = netbar.querySelector('[data-nb="code"]'); if (codeEl) codeEl.textContent = netg ? `Room ${netg.code} · ${netRoster ? 1 + (netg.peers ? netg.peers.size : 0) : 1} playing` : '';
-      if (!fly) { showCtl(false); toggleVote(false); }
+      if (!fly) { showCtl(false); toggleVote(false); closeChat(); chatLog.length = 0; renderChat(); }
     }
     /// The landing map: the battlefield from above (sea blue, land green), the circle you can play in, and where you will land.
     const mapImgs = {};
@@ -7099,6 +7162,7 @@
       toast('🪂 You jumped from the bus. Steer a little with W A S D', 2600);
     }
     function ctlTick(dt) {
+      if (chatLog.length) { for (const c of chatLog) c.t -= dt; const n0 = chatLog.length; while (chatLog.length && chatLog[0].t <= 0 && !chatOpen) chatLog.shift(); if (chatLog.length !== n0) renderChat(); }
       { const rh = root.getBoundingClientRect().height; if (rh) { wbar.classList.toggle('pg-compact', rh < 720); netbar.classList.toggle('pg-compact', rh < 720); } }
       if (netg && war && war.net) { const ce = netbar.querySelector('[data-nb="code"]'); if (ce) { const t = `${netg.code} · ${netg.cfg.side === 'versus' ? '⚔ FIGHT' : '🤝 CO-OP'} · ${netg.role === 'host' ? 1 + netg.peers.size : Math.max(2, (netg.roster || []).length)}`; if (ce.textContent !== t) ce.textContent = t; } }
       { const hb = wbar.querySelector('[data-w="heat"]'); if (hb) hb.classList.toggle('pg-lock', thermal); }
@@ -7363,6 +7427,7 @@
           else if (netg.roster.find((r) => r.id === m.id)?.v !== p.v) { netBump(); netSendLobby(); }
           break;
         }
+        case 'chat': receiveChat(m); break;
         case 'bye': {
           if (netg.role === 'host' && netg.peers.delete(m.id)) { netBump(); if (war && war.net) { warFeed(`${war.net.names[m.id] || 'A player'} left`); war.net.others.delete(m.id); } netSendLobby(); }
           else if (netg.role === 'client' && m.id === netg.hostId) netEnd('The host left the game.');
@@ -7539,7 +7604,8 @@
       const inp = mode.id === 'war' && war ? warInput(ctl, dt) : ctl;
       if (devHold) return;
       // A helicopter on the ground with the collective down is held by its skid friction / parking brake (the wind alone would slide it).
-      flight.brake = (mode.id !== 'war' && (keys.has(' ') || keys.has('b'))) || (plane.rotor && flight.onGround && heliColl < 0.12);
+      flight.brake = (mode.id !== 'war' && (keys.has(' ') || keys.has('b'))) || (plane.rotor && flight.onGround && heliColl < 0.12)
+        || (chatOpen && war && war.vehicle === 'plane' && !flight.onGround && !plane.rotor && flight.ias > plane.stall * 1.8);      // chatting: slow down with the air brake first
       const prev = flight.pos.slice();
       const wasGround = flight.onGround;
       if (war && war.net && war.dead && !flight.crashed) { /* destroyed: it waits to come back */ } else if (mode.id === 'war' && war && war.vehicle === 'tank') tankDrive(dt, inp); else flight.step(dt, inp, W);
