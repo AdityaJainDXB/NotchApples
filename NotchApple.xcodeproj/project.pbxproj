@@ -104,6 +104,7 @@
 		3EFFED94F8F614109390BB82 /* BrowserMedia.swift in Sources */ = {isa = PBXBuildFile; fileRef = 878D1B5C95884945FA120D5E /* BrowserMedia.swift */; };
 		3F254351E36FC4D87B8E2B96 /* PairDropLogic.swift in Sources */ = {isa = PBXBuildFile; fileRef = BEECBD83B2FC19C70E5139BE /* PairDropLogic.swift */; };
 		3F7C4BE3C38EF2FC14E0B0FA /* RunnerGameView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DF352A799B96D3FE708E1D5 /* RunnerGameView.swift */; };
+		3FBC19E8D908EA1C0914AA07 /* racing.js in Resources */ = {isa = PBXBuildFile; fileRef = 2D061AD1D52BA8268B11B374 /* racing.js */; };
 		4098B0C40272540FC563BC1F /* NotchAppleApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9B61EC777F0D6D3611243246 /* NotchAppleApp.swift */; };
 		40EA84F2B3F7DA5A6424D3E6 /* SecretLogicTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9C96FDC91C63EFDECAAA8BA3 /* SecretLogicTests.swift */; };
 		4132D2810197CE3A0F8A6429 /* HotCornerLogic.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C151FE67E6474F51CD20219 /* HotCornerLogic.swift */; };
@@ -163,6 +164,7 @@
 		5DCFF5FAC0FB3C4B22AE8E7B /* NotchMessengerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 643FFB36BCE34E64BBD52883 /* NotchMessengerView.swift */; };
 		5E3C1CC5BAB503490C8F01EA /* ConvertFormats.swift in Sources */ = {isa = PBXBuildFile; fileRef = E26901871B9937AEB263FD76 /* ConvertFormats.swift */; };
 		5F2E6DC4CD761DFB777B0C6B /* SharedStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9E160C9C8DBBE561F7DD2AD /* SharedStore.swift */; };
+		62345AC43148BC9A9FEF68F0 /* RacingGame.html in Resources */ = {isa = PBXBuildFile; fileRef = 69B4A0D4B7C6F5540FABA3AE /* RacingGame.html */; };
 		6411DBA270E4594DD6E7E500 /* SmartHomeLogic.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99A4B06A001F63424485AE1E /* SmartHomeLogic.swift */; };
 		65E49B470932813D55A3B43D /* UpdateFeedTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 26E2CDCE2AD3600E816DD832 /* UpdateFeedTests.swift */; };
 		665D37222F33D194EE9EB74E /* ClaudeUsageLogic.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7765304556C50213C9EC28B5 /* ClaudeUsageLogic.swift */; };
@@ -181,6 +183,7 @@
 		6EB4C5BE5A0101A1A21F64D6 /* PermissionsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81150E6B4F5BE3E2EB5CE1A1 /* PermissionsView.swift */; };
 		6EC70695CC1B08B90E01D311 /* TourLogic.swift in Sources */ = {isa = PBXBuildFile; fileRef = 755B22C2370E85554D2C56DF /* TourLogic.swift */; };
 		6FE62A468735A640B08A7BD1 /* ClaudeClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6747ADA828FF1D33683B30C8 /* ClaudeClient.swift */; };
+		709E896250FAEFF79F133F38 /* RacingGameView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3EBCD0478E4EF6B8B5FDA7F /* RacingGameView.swift */; };
 		710669E0D8B0E602B1A7EBAE /* AIProviders.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A2A98A73E13E924C3E3852B /* AIProviders.swift */; };
 		714569EF33B9BB6066BF09DD /* ModelPicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE038BF6AC791874D167F53C /* ModelPicker.swift */; };
 		71AFDBFC2EDD78D160371170 /* QuickAnswerLogic.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E7257E185D98B4E05674B7F /* QuickAnswerLogic.swift */; };
@@ -490,6 +493,7 @@
 		28EF16CBA88C9DA81D6CBABB /* InsightsClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InsightsClient.swift; sourceTree = "<group>"; };
 		295575A04EF33302E9D9A7FE /* AppIcon.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; path = AppIcon.icns; sourceTree = "<group>"; };
 		2BDB8BD41E7ADF271C9499F9 /* SystemWatch.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SystemWatch.swift; sourceTree = "<group>"; };
+		2D061AD1D52BA8268B11B374 /* racing.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = racing.js; sourceTree = "<group>"; };
 		2E9887FE2DA1B017814CA1B5 /* PlaneGame.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = PlaneGame.html; sourceTree = "<group>"; };
 		2FDF0D52167C63FBB161D611 /* SystemHUDObserver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SystemHUDObserver.swift; sourceTree = "<group>"; };
 		3047710BA5AC2CDBD910608B /* ProjectFocusLogic.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectFocusLogic.swift; sourceTree = "<group>"; };
@@ -559,6 +563,7 @@
 		6747ADA828FF1D33683B30C8 /* ClaudeClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClaudeClient.swift; sourceTree = "<group>"; };
 		67D16800EDB504F3DA0705BE /* SnapDropController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SnapDropController.swift; sourceTree = "<group>"; };
 		68B9FDCF64AD3B173A4D3440 /* NotchSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotchSettings.swift; sourceTree = "<group>"; };
+		69B4A0D4B7C6F5540FABA3AE /* RacingGame.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = RacingGame.html; sourceTree = "<group>"; };
 		69FFE07B5C8CD7AE23B2DDA7 /* DuoAnimation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DuoAnimation.swift; sourceTree = "<group>"; };
 		6D1D3CB4DD45527CA986357A /* FileSearchView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileSearchView.swift; sourceTree = "<group>"; };
 		6D5AC53B65AF61688CD0A628 /* AIStreaming.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIStreaming.swift; sourceTree = "<group>"; };
@@ -643,6 +648,7 @@
 		A259F6D85DF7D7125ED8DA20 /* RichText.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RichText.swift; sourceTree = "<group>"; };
 		A280B5F6BC95664645C9444F /* UpdateSigning.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdateSigning.swift; sourceTree = "<group>"; };
 		A2F817CBD2CC66E658282B91 /* ConvertView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConvertView.swift; sourceTree = "<group>"; };
+		A3EBCD0478E4EF6B8B5FDA7F /* RacingGameView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RacingGameView.swift; sourceTree = "<group>"; };
 		A7241EE0C2D1B5C9875023CE /* VPNTunnelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VPNTunnelTests.swift; sourceTree = "<group>"; };
 		A867CACABB3FC748CD5D0638 /* LinksShelf.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LinksShelf.swift; sourceTree = "<group>"; };
 		A86F7ABE9C93935F6764DF17 /* SecretLogic.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SecretLogic.swift; sourceTree = "<group>"; };
@@ -811,6 +817,7 @@
 			isa = PBXGroup;
 			children = (
 				DC8C118088B36E22640A6C5F /* plane-sim.js */,
+				2D061AD1D52BA8268B11B374 /* racing.js */,
 			);
 			path = games;
 			sourceTree = "<group>";
@@ -1604,6 +1611,7 @@
 				3718F42274C479A025DF477B /* NotchApple.entitlements */,
 				D151A71D3F7B4B4F846173CD /* NotchApple.sdef */,
 				2E9887FE2DA1B017814CA1B5 /* PlaneGame.html */,
+				69B4A0D4B7C6F5540FABA3AE /* RacingGame.html */,
 				718E8EA92709BA7168C47260 /* Scripts */,
 				D506FAC9BF7EB2007D0D1C92 /* Tunnelblick */,
 			);
@@ -1668,6 +1676,7 @@
 				1E93AE854D51B41D40C00311 /* PlaneGameView.swift */,
 				D9795A1C10F28E9E390AFB5F /* PlayingCardView.swift */,
 				94B2B55E8551857A0B426326 /* PokerView.swift */,
+				A3EBCD0478E4EF6B8B5FDA7F /* RacingGameView.swift */,
 				0DF352A799B96D3FE708E1D5 /* RunnerGameView.swift */,
 				6284BA6BCADE6A64DB75D681 /* SnakeGameView.swift */,
 				264A2A3E4ADCB8D6919DC502 /* SnakeGameViewModel.swift */,
@@ -1830,12 +1839,14 @@
 				8360703F9BC1E35F13FEFE5C /* NotchApple.sdef in Resources */,
 				C120C97882F28CA5E083E84F /* PlaneGame.html in Resources */,
 				5DA036B0487FEFE1B56816D4 /* Purge-MIT.txt in Resources */,
+				62345AC43148BC9A9FEF68F0 /* RacingGame.html in Resources */,
 				54CD01E3A05200B4078306CB /* Still-MIT.txt in Resources */,
 				29326D872AE0DC306AFD1986 /* Tunnelblick-ABOUT.txt in Resources */,
 				AA519CEBD27CD812DD518136 /* Tunnelblick.dmg in Resources */,
 				2F27B29ABFD1084E8B37A8A4 /* klick in Resources */,
 				14BB6F024439C7EDE0DCBD2C /* nowplaying.js in Resources */,
 				2006B2451159E4A12E70E69B /* plane-sim.js in Resources */,
+				3FBC19E8D908EA1C0914AA07 /* racing.js in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2031,6 +2042,7 @@
 				0E660E7247D927D8585B8973 /* PurgeView.swift in Sources */,
 				EADE473BE2A43DB53FDBF7CE /* QuickAddView.swift in Sources */,
 				71AFDBFC2EDD78D160371170 /* QuickAnswerLogic.swift in Sources */,
+				709E896250FAEFF79F133F38 /* RacingGameView.swift in Sources */,
 				93711D06AFB52CE8586619D2 /* RadarLogic.swift in Sources */,
 				6A1241D5888266447A677633 /* RadarModel.swift in Sources */,
 				9F8F1D24DD4B77A8B3ED11C1 /* RadarView.swift in Sources */,
@@ -2360,7 +2372,7 @@
 				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Manual;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 144;
+				CURRENT_PROJECT_VERSION = 145;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = "";
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -2376,7 +2388,7 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 2.1.17;
+				MARKETING_VERSION = 2.1.18;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -2494,7 +2506,7 @@
 				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Manual;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 144;
+				CURRENT_PROJECT_VERSION = 145;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = "";
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -2516,7 +2528,7 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 2.1.17;
+				MARKETING_VERSION = 2.1.18;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
