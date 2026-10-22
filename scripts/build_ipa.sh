@@ -18,7 +18,9 @@ PAY=$(mktemp -d); mkdir "$PAY/Payload"; cp -R "$APP" "$PAY/Payload/"
 mkdir -p dist; rm -f dist/NotchAppleCompanion.ipa
 (cd "$PAY" && zip -qry "$OLDPWD/dist/NotchAppleCompanion.ipa" Payload)
 rm -rf "$PAY"
-unzip -l dist/NotchAppleCompanion.ipa | grep -q "Payload/NotchCompanion.app/NotchCompanion" || { echo "The .ipa has no app binary"; exit 1; }
+# (The listing is read in full first: `grep -q` stops at the first match, and with pipefail the cut-off `unzip` used to fail the check.)
+LIST=$(unzip -l dist/NotchAppleCompanion.ipa)
+grep -q "Payload/NotchCompanion.app/NotchCompanion" <<<"$LIST" || { echo "The .ipa has no app binary"; exit 1; }
 echo "Built dist/NotchAppleCompanion.ipa ($V)"
 if [ "${1:-}" = "--upload" ]; then
   gh release upload "v$VERSION" dist/NotchAppleCompanion.ipa --clobber
