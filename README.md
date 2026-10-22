@@ -72,7 +72,7 @@ Pick your computer. Both buttons start the download straight away. The Mac link 
   </tr>
   <tr>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.1.5</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.1.6</b></a>
     </td>
     <td align="center">
       <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 2.1.5 BETA</b></a>
@@ -233,6 +233,11 @@ All screenshots use sample data.
 ## What's new
 
 > **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is still in the repository's tags.
+
+### Mac 2.1.6 · Windows 2.1.6 BETA · 22 October 2026 · 🤝 Every percent again, and friends share one wave
+
+- The Claude usage pulse on the closed notch is back to one for every new percent. The earlier fix that stopped false ones (wobbling numbers and mixing up accounts) stays, so it only fires when a number really goes above the highest one it already showed.
+- Friends who use the same code end up in the same game and the same wave: if two players both open a game in one room at the same moment, the one that started later now joins the one already running (same wave, score and battlefield size). Waiting to find an open game is also a little longer (6 seconds) so a slow connection does not open a second game by mistake.
 
 ### Mac 2.1.5 · Windows 2.1.5 BETA · 22 October 2026 · 🔇 Plane game: sound really off
 

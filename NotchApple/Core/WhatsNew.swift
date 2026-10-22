@@ -20,6 +20,10 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.1.6", date: "22 October 2026", headline: "Every percent again, and friends share one wave", items: [
+            "The Claude usage pulse on the closed notch is back to one for every new percent. The earlier fix that stopped false ones (wobbling numbers and mixing up accounts) stays, so it only fires when a number really goes above the highest one it already showed.",
+            "Friends who use the same code end up in the same game and the same wave: if two players both open a game in one room at the same moment, the one that started later now joins the one already running (same wave, score and battlefield size). Waiting to find an open game is also a little longer (6 seconds) so a slow connection does not open a second game by mistake.",
+        ]),
         ReleaseNote(version: "2.1.5", date: "22 October 2026", headline: "Plane game: sound really off", items: [
             "Plane game sound: switching sound off, or closing the notch, now shuts the game's audio engine down completely instead of only muting it, so nothing can still be heard. It starts fresh when sound is wanted again.",
         ]),
