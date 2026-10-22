@@ -4256,6 +4256,8 @@
   /// same live relay the Clipboard Link uses (it only passes frames between the people connected; nothing is stored). One
   /// player is the host: the computer enemies and the waves run on the host and everyone else is shown them, while each
   /// player drives their own vehicle and judges the hits on it.
+  /// The network protocol version of the Battle. Players only meet players on the same one; a newer protocol is how an old version is kept out.
+  const BATTLE_PV = 2;
   const BATTLE_RELAY = 'wss://notchapple-rooms.adityajain1225.workers.dev';
   const NET = (() => {
     const CODE_CHARS = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';       // no 0/O, 1/I/L: easy to read out loud
@@ -4265,7 +4267,7 @@
     const normCode = (raw) => { const c = String(raw || '').toUpperCase().replace(/[^A-Z0-9]/g, ''); return c.length === 6 && [...c].every((ch) => CODE_CHARS.includes(ch)) ? c : null; };
     /// The relay's name for a room: a hash of the code (the relay never sees the code itself).
     async function topicFor(code) {
-      const data = new TextEncoder().encode(`notchapple-battle-v1|${code}`);
+      const data = new TextEncoder().encode(`notchapple-battle-v2|${code}`);      // v2: older versions are in other rooms, so they can never meet players on this one
       const h = new Uint8Array(await crypto.subtle.digest('SHA-256', data));
       return `notchapple-v1-${[...h.slice(0, 20)].map((b) => b.toString(16).padStart(2, '0')).join('')}`;
     }
@@ -6993,7 +6995,7 @@
         return `<button data-vote="${key}:${val}" class="${cur ? 'pg-on' : mine ? 'pg-voted' : ''}">${name}${!cur && c ? ` (${c})` : ''}</button>`; }).join('')}</span></div>`;
       return `<div class="pg-ctitle">Vote to change the match <span>click or press U to close</span></div>
         <div class="pg-cgoal">A change passes when more than half of the players vote for it. Changing the teams, enemies or field starts the battle again; Pause just freezes the round for everyone until the players vote to play on. The game never stops by itself when someone closes the notch.</div>
-        <div class="pg-cgrid">${row('side', 'Teams', [['coop', '🤝 Co-op'], ['versus', '⚔️ Fight']])}${row('npc', 'Enemies', [[true, 'On'], [false, 'Off']])}${row('field', 'Field', ARENAS.map((a) => [a.id, a.name]))}${row('paused', 'Round', [[false, '▶ Playing'], [true, '⏸ Paused']])}</div>`;
+        <div class="pg-cgrid">${isOpenRoom() ? '' : row('side', 'Teams', [['coop', '🤝 Co-op'], ['versus', '⚔️ Fight']])}${row('npc', 'Enemies', [[true, 'On'], [false, 'Off']])}${row('field', 'Field', ARENAS.map((a) => [a.id, a.name]))}${row('paused', 'Round', [[false, '▶ Playing'], [true, '⏸ Paused']])}</div>`;
     }
     function toggleVote(force) {
       const on = force != null ? force : voteEl.style.display === 'none';
@@ -7128,11 +7130,11 @@
       if (war) war.net = null;
       if (!quiet) renderUI();
     }
-    const netHello = () => netg && netg.role === 'client' && netSend({ t: 'hi', id: netMyId, n: netMyName(), v: warVeh });
+    const netHello = () => netg && netg.role === 'client' && netSend({ t: 'hi', id: netMyId, n: netMyName(), v: warVeh, pv: BATTLE_PV });
     function netRoster() {          // the host's list of who is here (itself first)
       return [{ id: netMyId, n: netMyName(), v: warVeh }, ...[...netg.peers.values()].map((p) => ({ id: p.id, n: p.n, v: p.v }))];
     }
-    function netSendLobby() { if (netg && netg.role === 'host') { netg.roster = netRoster(); netSend({ t: 'lobby', host: netMyId, cfg: netg.cfg, roster: netg.roster, running: netg.running, t0: netg.t0 || 0 }); } }
+    function netSendLobby() { if (netg && netg.role === 'host') { netg.roster = netRoster(); netSend({ t: 'lobby', host: netMyId, cfg: netg.cfg, roster: netg.roster, running: netg.running, t0: netg.t0 || 0, pv: BATTLE_PV }); } }
     function netHousekeeping() {
       if (!netg) return;
       const now = Date.now();
@@ -7178,6 +7180,7 @@
     const NET_VOTE_OPTIONS = { side: ['coop', 'versus'], npc: [true, false], field: ARENAS.map((a) => a.id), paused: [true, false] };
     function netCountVotes() {
       if (!netg || netg.role !== 'host') return;
+      if (isOpenRoom()) { for (const id of Object.keys(netg.votes)) if (netg.votes[id]) delete netg.votes[id].side; netg.cfg.side = 'coop'; }
       const ids = netRoster().map((p) => p.id);
       for (const key of Object.keys(NET_VOTE_OPTIONS)) {
         const r = NET.tally(ids, netg.votes, key, netg.cfg[key], NET_VOTE_OPTIONS[key]);
@@ -7335,6 +7338,7 @@
           break;
         }
         case 'lobby': {
+          if (Number.isFinite(m.pv) && m.pv > BATTLE_PV && netg.role === 'client') { netg.error = 'This game needs a newer version of Notch Apple. Update the app to play.'; netBump(); toast('Update Notch Apple to play this game', 4000); break; }
           // Two people on the same Wi-Fi both pressed Host on the shared code: the one with the lower id keeps it, the other joins.
           if (netg.role === 'host' && netg.wifi && !netg.running && m.host && m.host !== netMyId && String(m.host) < String(netMyId)) { netg.role = 'client'; netg.hostId = m.host; netg.wifi = false; }
           // Two games in one room (two players both found nobody there and opened it): the one that started first keeps the room and the other
@@ -8484,6 +8488,7 @@
     // One open room for everybody (the battlefield is whatever the host chose; vote with U to change it). Older versions used one room per
     // battlefield, which split friends who had picked different fields.
     const PUBLIC_ROOMS = { plains: 'PUBGRN', dunes: 'PUBSND', island: 'PUBSEA' };
+    const isOpenRoom = () => !!netg && Object.values(PUBLIC_ROOMS).includes(netg.code);      // the open game: everyone is on one team
     /// Start a Battle: find an open game and join the wave being played, or open one if nobody is there. Single player opens
     /// your own room (with its code on screen) that others can still join at any time.
     function warAutoStart() {
