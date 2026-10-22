@@ -72,7 +72,7 @@ Pick your computer. Both buttons start the download straight away. The Mac link 
   </tr>
   <tr>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.1.11</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.1.12</b></a>
     </td>
     <td align="center">
       <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 2.1.5 BETA</b></a>
@@ -233,6 +233,12 @@ All screenshots use sample data.
 ## What's new
 
 > **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is in the repository's history.
+
+### Mac 2.1.12 · Windows 2.1.12 BETA · 22 October 2026 · 🗺 Battle is a journey, and a Windows update that always comes back
+
+- Battle is now a journey on one continuous map: when you clear a wave the front moves on, and the next enemies are way ahead of you (about 2.6 km further for planes, 1.1 km for people on foot and tanks). The land goes on instead of ending in the sea, the front travels along a long road round the map, and respawns, loot, bases, fighters and the edge warnings all follow the front. In shared battles the host decides where the front is and tells everyone.
+- Windows: the updater now keeps a log (NotchApple-Update.log in your Temp folder) and, if the app did not start again 15 seconds after the installer finished, starts it itself, so the notch always comes back instead of staying closed. If an update still does not take, download the installer from the website and run it, and send that log.
+- Windows: T is Lock on in Battle (and the checklist everywhere else) in this version; a Windows app older than 2.0.99 still opens the checklist, which is another reason to update.
 
 ### Mac 2.1.11 · 22 October 2026 · 🪂 Online Battle on one team, F1 final classification
 

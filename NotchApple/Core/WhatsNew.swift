@@ -20,6 +20,11 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.1.12", date: "22 October 2026", headline: "Battle is a journey, and a Windows update that always comes back", items: [
+            "Battle is now a journey on one continuous map: when you clear a wave the front moves on, and the next enemies are way ahead of you (about 2.6 km further for planes, 1.1 km for people on foot and tanks). The land goes on instead of ending in the sea, the front travels along a long road round the map, and respawns, loot, bases, fighters and the edge warnings all follow the front. In shared battles the host decides where the front is and tells everyone.",
+            "Windows: the updater now keeps a log (NotchApple-Update.log in your Temp folder) and, if the app did not start again 15 seconds after the installer finished, starts it itself, so the notch always comes back instead of staying closed. If an update still does not take, download the installer from the website and run it, and send that log.",
+            "Windows: T is Lock on in Battle (and the checklist everywhere else) in this version; a Windows app older than 2.0.99 still opens the checklist, which is another reason to update.",
+        ]),
         ReleaseNote(version: "2.1.11", date: "22 October 2026", headline: "Online Battle on one team, F1 final classification", items: [
             "Update needed for online Battle: it has a new network version, so everyone must be on 2.1.9 or newer (Windows 2.1.9 or newer) to meet in the airplane game. Older versions sit in their own empty rooms and cannot join.",
             "The open online game is Co-op for everybody (everyone on the green team, no Fight vote), and everyone gets 2 guided missiles per wave. Private games you open yourself can still be Co-op or Fight.",
