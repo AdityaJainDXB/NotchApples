@@ -21,8 +21,12 @@ test('each battlefield is flat in the middle, has a low rim of hills (or sea) ro
       const lo = Math.min(...inner), hi = Math.max(...inner);
       assert.ok(hi - lo < a.rough * 2 + (a.hills || 0) * 1.5 + 8, `${a.id} is level: ${lo.toFixed(1)} to ${hi.toFixed(1)}`);
       assert.ok(lo > 0, `${a.id} has no water inside`);
-      assert.ok(T.arenaHeight(a, 0, a.R * 1.5) > a.base + 20, `${a.id} has a rim of hills`);
-      assert.ok(T.arenaHeight(a, 0, a.R * 3) < 0, `${a.id} has sea beyond the rim`);
+      if (a.journey) {           // the land goes on so the battle can travel: no rim and no sea
+        for (const k of [1.5, 3, 5]) assert.ok(T.arenaHeight(a, 0, -a.R * k) > 0 && T.arenaHeight(a, a.R * k, 0) > 0, `${a.id} is still land ${k} radii away`);
+      } else {
+        assert.ok(T.arenaHeight(a, 0, a.R * 1.5) > a.base + 20, `${a.id} has a rim of hills`);
+        assert.ok(T.arenaHeight(a, 0, a.R * 3) < 0, `${a.id} has sea beyond the rim`);
+      }
     }
   }
 });
@@ -251,4 +255,21 @@ test('a blast throws the trees near its middle into the air and sets those furth
     assert.equal(T.blastTrees(w1, [best.x + 5000, 0, best.z], 45, 5).fly.length, 0, 'a blast far from any tree does nothing');
     console.log(`blast of 45 m among ${best.n} trees: ${r1.fly.length} thrown, ${r1.burn.length} alight`);
   } finally { T.setArena(null); }
+});
+
+
+test('the battle travels: each wave\'s front is further along a road that never leaves the map, the same for every player', () => {
+  const step = 2600;
+  let prev = T.journeyCenter(1, step);
+  assert.deepEqual(prev, [0, 0], 'wave 1 starts at the start');
+  let far = 0;
+  for (let n = 2; n <= 40; n++) {
+    const p = T.journeyCenter(n, step), d = Math.hypot(p[0] - prev[0], p[1] - prev[1]);
+    assert.ok(d > step * 0.3 && d < step * 1.3, `wave ${n} is a good way further on, at most ${step} m (${Math.round(d)} m)`);       // a little less round a corner
+    assert.ok(Math.abs(p[0]) < 9000 && Math.abs(p[1]) < 9000, `wave ${n} stays on the map (${p.map(Math.round)})`);
+    far = Math.max(far, Math.hypot(p[0], p[1])); prev = p;
+  }
+  assert.ok(far > 8000, `the road goes a long way (${Math.round(far)} m)`);
+  assert.deepEqual(T.journeyCenter(7, step), T.journeyCenter(7, step), 'everyone works out the same place');
+  console.log('road: wave 2', T.journeyCenter(2, step).map(Math.round), 'wave 5', T.journeyCenter(5, step).map(Math.round), 'furthest', Math.round(far));
 });

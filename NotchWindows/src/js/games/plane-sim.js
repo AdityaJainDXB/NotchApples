@@ -1457,11 +1457,22 @@
   // to fight in, so a battlefield replaces all of its ground. Everything is centred on (0, 0); the players' side is the
   // south (+z) and the enemy's the north (-z).
   const ARENAS = [
-    { id: 'plains', name: 'Green Plains', blurb: 'Open grassland with gentle rolling hills and a few woods. The easiest place to fly and to drive.', R: 3600, base: 30, rough: 3, hills: 34, rim: 130, desert: false },
-    { id: 'dunes', name: 'Desert Dunes', blurb: 'Rolling sand dunes and rocks. Tanks hide behind the dunes; planes get a clear view.', R: 3600, base: 26, rough: 15, hills: 22, rim: 180, desert: true },
+    { id: 'plains', name: 'Green Plains', blurb: 'Open grassland with gentle rolling hills and a few woods. The easiest place to fly and to drive.', R: 3600, base: 30, rough: 3, hills: 34, rim: 130, journey: true, desert: false },
+    { id: 'dunes', name: 'Desert Dunes', blurb: 'Rolling sand dunes and rocks. Tanks hide behind the dunes; planes get a clear view.', R: 3600, base: 26, rough: 15, hills: 22, rim: 180, journey: true, desert: true },
     { id: 'island', name: 'Island Fortress', blurb: 'A round island with a fortress on the hill in the middle, in open sea.', R: 3600, base: 14, rough: 4, hills: 14, rim: 0, desert: false, island: true },
   ];
   let ARENA = null;
+  /// Where the front of wave `n` is: the battle travels along a long road, `step` metres further each wave: north, then east, then south,
+  /// then back west to the start, round a big square that fits the map, so it is always a journey onwards and never leaves the map.
+  /// Wave 1 is at the start (0, 0). Every player works out the same place.
+  function journeyCenter(n, step, side = 8000) {
+    if (n <= 1) return [0, 0];
+    const s = (n - 1) * step, u = s % (4 * side), sway = Math.sin(s / 3500) * 700;
+    if (u < side) return [sway, -u];
+    if (u < 2 * side) return [u - side, -side + sway];
+    if (u < 3 * side) return [side + sway, -side + (u - 2 * side)];
+    return [side - (u - 3 * side), sway];
+  }
   function arenaHeight(a, x, z) {
     const d = Math.hypot(x, z);
     if (a.island) {
@@ -1473,10 +1484,10 @@
     }
     const wave = a.desert ? (Math.sin(x / 170 + fbm(x / 420, z / 420, 2) * 5) * Math.cos(z / 210 + 1) * 0.55 + fbm(x / 250, z / 250, 3) - 0.4) * a.rough
       : (fbm(x / 600 + 3, z / 600 + 9, 3) - 0.45) * a.rough;
-    const ring = smooth(a.R * 1.04, a.R * 1.55, d) * a.rim * (0.6 + 0.8 * fbm(x / 800 + 4, z / 800 + 1, 3));   // a low rim of hills round the edge
+    const ring = a.journey ? 0 : smooth(a.R * 1.04, a.R * 1.55, d) * a.rim * (0.6 + 0.8 * fbm(x / 800 + 4, z / 800 + 1, 3));   // a low rim of hills round the edge
     const rolling = a.hills ? (fbm(x / 950 + 11, z / 950 + 5, 3) - 0.5) * a.hills * 1.6 + (fbm(x / 380 + 2, z / 380 + 8, 2) - 0.5) * a.hills * 0.5 : 0;      // long, gentle rolling hills
     const h = a.base + wave + rolling + ring;
-    const sea = smooth(a.R * 2.1, a.R * 2.8, d);
+    const sea = a.journey ? 0 : smooth(a.R * 2.1, a.R * 2.8, d);
     return h + (-45 - h) * sea;
   }
   /// The ground height at (x, z): a battlefield's if one is chosen, otherwise the mountain valley's.
@@ -4121,7 +4132,7 @@
     muzzle() { return add(add(this.pos, [0, 2.4, 0]), mul(this.aim(), 5.2)); }
     /// input: { drive -1..1 (forward +), steer -1..1 (right +), aimX -1..1 (turret right +), aimY -1..1 (gun up +) }.
     /// `limit` keeps it inside a round battlefield of that radius; water and steep ground stop it, and so do solid things.
-    step(dt, input, world, limit = 1e9) {
+    step(dt, input, world, limit = 1e9, centre = [0, 0]) {
       const K = this.K || TANK, boosting = input.drive > 0 && input.boost;
       const want = input.drive > 0 ? input.drive * (boosting ? K.boostSpeed : K.speed) : input.drive * K.reverse;
       const accel = boosting ? K.boostAccel : K.accel;
@@ -4136,7 +4147,7 @@
       const probe = [nx + Math.sin(this.heading) * Math.sign(step || 1) * 3.2, there + 1.2, nz - Math.cos(this.heading) * Math.sign(step || 1) * 3.2];
       const ho = hitObject(world, probe);
       if (ho && ho.kind === 'tree') { breakTree(world, ho); this.speed *= 0.7; }      // a tank or van drives through a tree and it breaks
-      const blocked = there < WATER + 0.8 || Math.abs(there - here) > Math.abs(step) * 0.9 + 0.02 || Math.hypot(nx, nz) > limit || (!!ho && ho.kind !== 'tree');
+      const blocked = there < WATER + 0.8 || Math.abs(there - here) > Math.abs(step) * 0.9 + 0.02 || Math.hypot(nx - centre[0], nz - centre[1]) > limit || (!!ho && ho.kind !== 'tree');
       if (blocked && Math.abs(step) > 1e-6) this.speed = 0;
       else { this.pos[0] = nx; this.pos[2] = nz; }
       const y = groundAt(world, this.pos[0], this.pos[2]);
@@ -4175,7 +4186,7 @@
     aim() { const c = Math.cos(this.gun); return [Math.sin(this.turret) * c, Math.sin(this.gun), -Math.cos(this.turret) * c]; }
     muzzle() { return add(add(this.pos, [0, this.eye - 0.12, 0]), mul(this.aim(), 0.9)); }
     /// input: { drive -1..1 (forward +), steer -1..1 (strafe right +), aimX, aimY (look right / up, -1..1), boost (run), crouch, lookScale }.
-    step(dt, input, world, limit = 1e9) {
+    step(dt, input, world, limit = 1e9, centre = [0, 0]) {
       this.crouch = !!input.crouch;
       this.eye += ((this.crouch ? SOLDIER.eyeCrouch : SOLDIER.eye) - this.eye) * (1 - Math.exp(-dt * 10));
       const ls = input.lookScale || 1;
@@ -4193,7 +4204,7 @@
       const k = clamp(SOLDIER.accel * (chute ? 0.25 : 1) * dt, 0, 1);
       this.vel[0] += (wx - this.vel[0]) * k; this.vel[2] += (wz - this.vel[2]) * k; this.vel[1] = 0;
       const here = groundAt(world, this.pos[0], this.pos[2]);
-      const free = (nx, nz) => { const th = groundAt(world, nx, nz); return th >= WATER + 0.5 && Math.abs(th - here) < Math.hypot(nx - this.pos[0], nz - this.pos[2]) * 0.9 + 0.03 && Math.hypot(nx, nz) <= limit && !hitObject(world, [nx, th + 1, nz]); };
+      const free = (nx, nz) => { const th = groundAt(world, nx, nz); return th >= WATER + 0.5 && Math.abs(th - here) < Math.hypot(nx - this.pos[0], nz - this.pos[2]) * 0.9 + 0.03 && Math.hypot(nx - centre[0], nz - centre[1]) <= limit && !hitObject(world, [nx, th + 1, nz]); };
       const nx = this.pos[0] + this.vel[0] * dt, nz = this.pos[2] + this.vel[2] * dt;
       if (free(nx, nz)) { this.pos[0] = nx; this.pos[2] = nz; }
       else if (free(nx, this.pos[2])) { this.pos[0] = nx; this.vel[2] = 0; }
@@ -5476,6 +5487,8 @@
     const WAR_R0 = 0.4;
     const warFieldR = (n) => (war.grows ? war.arena.R * Math.min(1, WAR_R0 + 0.1 * (Math.max(n, 1) - 1)) : war.arena.R);
     const footScoped = () => !!(mode.id === 'war' && war && war.foot && screen === 'fly' && war.zoomI > 0);
+    /// How far a place is from the middle of the current front (the battle travels, so "the edge" is measured from here).
+    const warDist = (x, z) => Math.hypot(x - war.cx, z - war.cz);
     const warStartAlt = () => (plane.id === 'b52' ? 1100 : plane.rotor ? 140 : 450);
     function warLoadout(p) {
       if (p.id === 'b52') return { gun: 0, bombs: 40, missiles: 0, flares: 12, hp: 170, stick: 0.11, gunners: true };
@@ -5568,7 +5581,7 @@
         flight.reset([spot.x, tankBody.pos[1] + 2.2, spot.z], spot.heading, 0, true);
       } else flight.reset([spot.x, warStartAlt(), shared ? spot.z : R * 0.9], spot.heading, plane.cruise, false);
       flight.sturdy = !tank; flight.overG = warOverG;
-      war = { guided: 2, fires: [], flyers: [], startZ, arena, R, grows, loot: [], lootId: 0, shield: foot ? SOLDIER.shield : 0, bandage: 0, shieldPots: 0, medkit: 0, healCool: 0, vehicle: tank ? 'tank' : 'plane', foot, rpg: foot ? SOLDIER.rpg : 0, weapon: 'rifle', heli: null, mag: SOLDIER.mag, reloadT: 0, zoomI: 0, tank: tankBody, assist: warAssist, npc: warNpc, ap: { hdg: spot.heading, alt: flight.pos[1], spd: plane.cruise * 1.05, i: 0 }, outT: 0, endT: 0, shells: L.shells,
+      war = { cx: 0, cz: 0, guided: 2, fires: [], flyers: [], startZ, arena, R, grows, loot: [], lootId: 0, shield: foot ? SOLDIER.shield : 0, bandage: 0, shieldPots: 0, medkit: 0, healCool: 0, vehicle: tank ? 'tank' : 'plane', foot, rpg: foot ? SOLDIER.rpg : 0, weapon: 'rifle', heli: null, mag: SOLDIER.mag, reloadT: 0, zoomI: 0, tank: tankBody, assist: warAssist, npc: warNpc, ap: { hdg: spot.heading, alt: flight.pos[1], spd: plane.cruise * 1.05, i: 0 }, outT: 0, endT: 0, shells: L.shells,
         gidn: 0, nidn: 0, score: 0, kills: 0, wave: 0, hp: L.hp, maxHp: L.hp, L, gun: L.gun, bombs: L.bombs, missiles: L.missiles, flares: L.flares,
         ground: [], foes: [], friend: null, bullets: [], bombsAir: [], missilesAir: [], flaks: [], craters: [], feed: [], lock: null, lockT: 0,
         gunT: 0, bombT: 0, flash: 0, warn: '', warnT: 0, wavePause: 2.5, waveClear: false, gunners: 0, dead: false, feedT: 0, shown: false, d };
@@ -5585,9 +5598,9 @@
         if (war.vehicle === 'tank') { pos = [war.tank.pos[0] + 120, groundAt(W, war.tank.pos[0], war.tank.pos[2]) + 170, war.tank.pos[2] + 100]; heading = 0; }
         else { const { r, f } = flight.axes(); pos = add(add(flight.pos, mul(r, 140)), mul(f, -60)); heading = flight.heading; }
       } else {
-        const x = (warRand() - 0.5) * R * 1.2, z = -R * (0.85 + warRand() * 0.1);
+        const x = war.cx + (warRand() - 0.5) * R * 1.2, z = war.cz - R * (0.85 + warRand() * 0.1);
         pos = [x, groundAt(W, x, z) + 330 + warRand() * 250, z];
-        heading = Math.atan2(-x, z);            // towards the middle
+        heading = Math.atan2(-(x - war.cx), z - war.cz);            // towards the middle
       }
       const speed = role === 'friend' ? Math.max(flight.speed, plane.cruise * 0.8, 150) : d.speed;
       const a = { nid: role === 'foe' ? ++war.nidn : 0, id, spec, role, pos, heading, pitch: 0, speed, bank: 0, vel: v3(), q: qheading(heading), hp: 100 * (role === 'foe' ? d.hp : 1), maxHp: 100 * (role === 'foe' ? d.hp : 1),
@@ -5599,11 +5612,11 @@
     /// Squads of people on foot in a row ahead of you, each further away. They march at the nearest player and stop to shoot;
     /// from wave 3 one in each squad carries an RPG.
     function warSpawnInfantry(n, squads, size) {
-      const d = war.d, R = war.R, z0 = war.startZ ?? R * 0.72;
+      const d = war.d, R = war.R, z0 = war.wave > 1 && war.arena.journey ? war.cz + R * 0.72 : (war.startZ ?? R * 0.72);
       let alive = war.ground.filter((q) => !q.dead && INF.has(q.kind)).length;      // at most 24 people on foot at once
       for (let c = 0; c < squads; c++) {
         let cx = 0, cz = 0, ok = false;
-        for (let tries = 0; tries < 30 && !ok; tries++) { cx = (warRand() - 0.5) * (tries < 15 ? 160 : 800); cz = z0 - 330 - c * (180 + warRand() * 80); ok = onLand(cx, cz) && Math.hypot(cx, cz) < R * 0.85; }
+        for (let tries = 0; tries < 30 && !ok; tries++) { cx = war.cx + (warRand() - 0.5) * (tries < 15 ? 160 : 800); cz = z0 - 330 - c * (180 + warRand() * 80); ok = onLand(cx, cz) && warDist(cx, cz) < R * 0.85; }
         if (!ok) continue;
         for (let i = 0; i < size && alive < 24; i++, alive++) {
           const x = cx + (warRand() - 0.5) * 24, z = cz + (warRand() - 0.5) * 24; if (!onLand(x, z)) continue;
@@ -5625,7 +5638,7 @@
       if (!warAuth() || !(war.grows || war.foot)) return;
       for (let i = 0; i < 3 + n; i++) {
         let x = 0, z = 0, ok = false;
-        for (let tries = 0; tries < 20 && !ok; tries++) { const a = warRand() * 6.28, r = Math.sqrt(warRand()) * war.R * 0.75; x = Math.cos(a) * r; z = Math.sin(a) * r; ok = onLand(x, z); }
+        for (let tries = 0; tries < 20 && !ok; tries++) { const a = warRand() * 6.28, r = Math.sqrt(warRand()) * war.R * 0.75; x = war.cx + Math.cos(a) * r; z = war.cz + Math.sin(a) * r; ok = onLand(x, z); }
         if (ok) warDropLoot(x, z);
       }
     }
@@ -5661,18 +5674,23 @@
       war.wave++;
       const n = war.wave, d = war.d;
       if (war.grows && warAuth()) { const R2 = warFieldR(n); if (n > 1 && R2 > war.R + 1) { toast(`⬆ The battlefield grows: ${Math.round(R2)} m across the middle`, 3000); warFeed(`Battlefield radius now ${Math.round(R2)} m`); } war.R = R2; }
+      if (n > 1 && war.arena.journey && warAuth()) {      // the next front is further along the road
+        const [jx, jz] = journeyCenter(n, war.grows ? 1100 : 2600);
+        const ahead = Math.hypot(jx - war.cx, jz - war.cz); war.cx = jx; war.cz = jz;
+        toast(`ON TO THE NEXT FRONT: ${(ahead / 1000).toFixed(1)} km ahead`, 3500); warFeed(`The front moves on ${(ahead / 1000).toFixed(1)} km`);
+      }
       const R = war.R;
       if (n >= 3) achieve('wave3');
       const clusters = war.foot ? 0 : Math.min(1 + Math.ceil(n / 2), 3);
       for (let c = 0; c < clusters; c++) {
         let cx = 0, cz = 0, ok = false;
         // Bases stand in a row straight ahead of where you start: the first 1200 m away (800 m for a tank), then 500 to 700 m apart.
-        const z0 = war.startZ ?? R * 0.72, first = war.vehicle === 'tank' ? 800 : 1200;
+        const z0 = war.wave > 1 && war.arena.journey ? war.cz + R * 0.72 : (war.startZ ?? R * 0.72), first = war.vehicle === 'tank' ? 800 : 1200;
         for (let tries = 0; tries < 40 && !ok; tries++) {
-          cx = (warRand() - 0.5) * (tries < 20 ? 260 : 1200); cz = z0 - first - (c + (tries > 20 ? 0.5 * warRand() : 0)) * (500 + warRand() * 200);
-          ok = onLand(cx, cz) && Math.hypot(cx, cz) < R * 0.7;
+          cx = war.cx + (warRand() - 0.5) * (tries < 20 ? 260 : 1200); cz = z0 - first - (c + (tries > 20 ? 0.5 * warRand() : 0)) * (500 + warRand() * 200);
+          ok = onLand(cx, cz) && warDist(cx, cz) < R * 0.7;
         }
-        if (!ok) { cx = (warRand() - 0.5) * 600; cz = -R * 0.45; }
+        if (!ok) { cx = war.cx + (warRand() - 0.5) * 600; cz = war.cz - R * 0.45; }
         const base = warRand() < 0.5 || (c === 0 && n === 1) ? 'base' : 'convoy';
         const place = (kind, dx, dz, heading = 0, forced = false) => {
           const x = cx + dx, z = cz + dz;
@@ -5919,7 +5937,7 @@
         war.ejected = false; war.vehicle = 'plane'; war.foot = false; war.tank = null; camMode = 0;
         war.L = { ...warLoadout(plane), shells: 0 }; war.maxHp = war.L.hp; buildWbar();
       }
-      const R = war.R, spot = { x: 0, z: R * 0.72, heading: 0 };
+      const R = war.R, spot = { x: war.cx, z: war.cz + R * 0.72, heading: 0 };
       netResetWreck(); flight = new Flight(plane); heliColl = 0;
       war.dead = false; war.selfDestructT = 0; war.hp = war.maxHp; war.gun = war.L.gun; war.bombs = war.L.bombs;
       war.missiles = war.L.missiles; war.flares = war.L.flares; war.shells = war.L.shells; war.flash = 0;
@@ -6053,7 +6071,7 @@
         war.pullUp = agl < 120 && flight.vel[1] < -1 && agl / -flight.vel[1] < 2;
         if (war.pullUp) o.pitch = Math.max(o.pitch || 0, 0.22);
         // Leaving the battlefield: it turns back by itself.
-        if (Math.hypot(flight.pos[0], flight.pos[2]) > R * 0.8) st.hdg = Math.atan2(-flight.pos[0], flight.pos[2]);
+        if (warDist(flight.pos[0], flight.pos[2]) > R * 0.8) st.hdg = Math.atan2(-(flight.pos[0] - war.cx), flight.pos[2] - war.cz);
         return { ...raw, ...o };
       }
       if (war.assist === 'easy' && !plane.rotor) {
@@ -6064,15 +6082,15 @@
       war.pullUp = false;
       if (war.assist === 'pro' && !plane.rotor) {
         // Pro: past the edge the plane turns itself back to the middle (hands back at 80% of the radius).
-        const rr = Math.hypot(flight.pos[0], flight.pos[2]), Rw = war.R;
+        const rr = warDist(flight.pos[0], flight.pos[2]), Rw = war.R;
         // It takes over at 85% of the radius when you are heading outwards (earlier for a fast plane), and hands back once you
         // point inwards again, or are well inside.
-        const outward = (flight.vel[0] * flight.pos[0] + flight.vel[2] * flight.pos[2]) / (rr || 1);
+        const outward = (flight.vel[0] * (flight.pos[0] - war.cx) + flight.vel[2] * (flight.pos[2] - war.cz)) / (rr || 1);
         const lead = Math.min(0.12, Math.hypot(flight.vel[0], flight.vel[2]) / Rw * 0.9);
         if (rr > Rw * (0.85 - lead) && outward > 5) war.autoBack = true;
         else if (rr < Rw * 0.75 || (outward < -20 && rr < Rw * 0.9)) { war.autoBack = false; war.backDir = 0; }
         if (war.autoBack && !war.dead) {
-          let err = wrapPi(Math.atan2(-flight.pos[0], flight.pos[2]) - flight.heading);
+          let err = wrapPi(Math.atan2(-(flight.pos[0] - war.cx), flight.pos[2] - war.cz) - flight.heading);
           if (!war.backDir) war.backDir = err >= 0 ? 1 : -1;
           if (Math.abs(err) > 2.4) err = war.backDir * Math.abs(err);          // pointing straight away: pick one way and keep to it
           else war.backDir = err >= 0 ? 1 : -1;
@@ -6088,7 +6106,7 @@
     function tankDrive(dt, inp) {
       const t = war.tank;
       if (war.mapOpen) { t.pos[1] = groundAt(W, t.pos[0], t.pos[2]) + t.air; flight.pos = add(t.pos, [0, t.eye, 0]); flight.vel = [0, 0, 0]; flight.q = qheading(t.turret, t.gun); flight.crashed = false; flight.onGround = true; flight.events.length = 0; return; }
-      t.step(dt, inp, W, war.R * 1.05);
+      t.step(dt, inp, W, war.R * 1.05, [war.cx, war.cz]);
       if (war.driving) { t.turret = t.heading; t.gun = 0.12; }
       else if (war.foot && t.dropped && !t.landed && t.air <= 0) warSpawnVan();
       flight.pos = add(t.pos, [0, war.foot ? t.eye : 2.2, 0]); flight.vel = t.vel.slice(); flight.q = qheading(t.turret, t.gun);
@@ -6277,7 +6295,7 @@
         const { r, f } = flight.axes();
         aim = add(add(flight.pos, mul(r, 170)), mul(f, 40)); aim[1] += 15; want = sub(aim, a.pos); range = len(want);
       } else want = [Math.sin(a.heading), 0, -Math.cos(a.heading)];
-      if (Math.hypot(a.pos[0], a.pos[2]) > war.R * 0.93) want = [-a.pos[0], 0, -a.pos[2]];     // back to the battlefield
+      if (warDist(a.pos[0], a.pos[2]) > war.R * 0.93) want = [-(a.pos[0] - war.cx), 0, -(a.pos[2] - war.cz)];     // back to the battlefield
       // Look out for the ground, and for a missile coming in.
       const ahead = add(a.pos, mul(a.vel, 3)), floor = Math.max(groundAt(W, a.pos[0], a.pos[2]), groundAt(W, ahead[0], ahead[2]));
       let tooLow = false;
@@ -6569,9 +6587,9 @@
       if (war.net) { netTick(dt); if (war.net && war.net.role === 'client') netReplicaStep(dt); }
       if (!war.dead && war.vehicle === 'plane') {
         // Out past the edge of the battlefield: a warning, then damage.
-        const rr = Math.hypot(flight.pos[0], flight.pos[2]), Rw = war.R;
+        const rr = warDist(flight.pos[0], flight.pos[2]), Rw = war.R;
         if (rr > Rw * 0.85) {
-          const toC = Math.atan2(-flight.pos[0], flight.pos[2]) , hd = flight.heading;     // heading that points back to the middle
+          const toC = Math.atan2(-(flight.pos[0] - war.cx), flight.pos[2] - war.cz), hd = flight.heading;     // heading that points back to the middle
           war.edgeArrow = wrapPi(toC - hd);
           if (rr > Rw) { war.outT += dt; war.warn = `TURN BACK: LEAVING THE BATTLEFIELD (${Math.max(0, 12 - war.outT).toFixed(0)}s)`; war.warnT = 0.4; if (war.outT > 12) warHurt(3 * dt, 'out of bounds'); }
           else { war.warn = 'NEAR THE EDGE: TURN BACK'; war.warnT = 0.4; war.outT = Math.max(0, war.outT - dt * 2); }
@@ -6579,7 +6597,7 @@
           if (war.assist === 'easy' && rr > Rw * 0.9 && flight.arc) flight.arc.h += clamp(wrapPi(toC - flight.arc.h), -1, 1) * 0.35 * dt;
         } else { war.edgeArrow = null; war.outT = Math.max(0, war.outT - dt * 2); }
       }
-      if (!war.dead && war.vehicle === 'tank' && war.grows && Math.hypot(flight.pos[0], flight.pos[2]) > war.R * 0.94) { war.warn = 'EDGE OF THE BATTLEFIELD: it grows with every wave'; war.warnT = 0.4; }
+      if (!war.dead && war.vehicle === 'tank' && war.grows && warDist(flight.pos[0], flight.pos[2]) > war.R * 0.94) { war.warn = 'EDGE OF THE BATTLEFIELD: it grows with every wave'; war.warnT = 0.4; }
       const d = war.d;
       war.flash = Math.max(0, war.flash - dt * 1.6); war.warnT -= dt; if (war.warnT <= 0) war.warn = '';
       for (const f of war.feed) f.t -= dt;
@@ -7291,7 +7309,7 @@
     function netRespawn() {
       if (flight.crashed) { netResetWreck(); flight = new Flight(plane); heliColl = 0; }
       if (war.ejected) { war.ejected = false; war.vehicle = 'plane'; war.foot = false; war.tank = null; camMode = 0; war.L = { ...warLoadout(plane), shells: 0 }; war.maxHp = war.L.hp; buildWbar(); }
-      const R = war.R, spot = netStartSpot(R, war.net.cfg, war.net.slot);
+      const R = war.R, spot = netStartSpot(R, war.net.cfg, war.net.slot); spot.x += war.cx; spot.z += war.cz;
       war.dead = false; war.hp = war.maxHp; war.gun = war.L.gun; war.bombs = war.L.bombs; war.missiles = war.L.missiles; war.flares = war.L.flares; war.shells = war.L.shells; war.flash = 0;
       if (war.vehicle === 'tank') {
         if (war.driving) { war.driving = false; war.foot = warVeh === 'soldier'; war.van = null; } war.tank = warBody(spot); war.tank.pos[1] = groundAt(W, spot.x, spot.z) + 0.2; if (war.foot) { war.mag = SOLDIER.mag; war.reloadT = 0; war.zoomI = 0; war.rpg = SOLDIER.rpg; war.weapon = 'rifle'; war.shield = SOLDIER.shield; }
@@ -7320,7 +7338,7 @@
     const r1n = (v) => Math.round(v * 10) / 10;
     function netSendWave() {
       if (!war || !war.net || war.net.role !== 'host') return;
-      netSend({ t: 'wave', R: Math.round(war.R), n: war.wave, sc: war.score, kl: war.kills, af: war.waveFighters || 0, g: war.ground.map((g) => ({ i: g.nid, k: g.kind, x: r1n(g.pos[0]), y: r1n(g.pos[1]), z: r1n(g.pos[2]), h: Math.round(g.heading * 100) / 100, hp: Math.round(g.hp), mx: Math.round(g.maxHp), d: g.dead ? 1 : 0, s: g.speed })) });
+      netSend({ t: 'wave', cx: Math.round(war.cx), cz: Math.round(war.cz), R: Math.round(war.R), n: war.wave, sc: war.score, kl: war.kills, af: war.waveFighters || 0, g: war.ground.map((g) => ({ i: g.nid, k: g.kind, x: r1n(g.pos[0]), y: r1n(g.pos[1]), z: r1n(g.pos[2]), h: Math.round(g.heading * 100) / 100, hp: Math.round(g.hp), mx: Math.round(g.maxHp), d: g.dead ? 1 : 0, s: g.speed })) });
     }
     function netSendFoes() {
       netSend({ t: 'wf', f: war.foes.map((a) => ({ i: a.nid, id: a.id, x: r1n(a.pos[0]), y: r1n(a.pos[1]), z: r1n(a.pos[2]), h: Math.round(a.heading * 100) / 100, p: Math.round(a.pitch * 100) / 100, b: Math.round(a.bank * 100) / 100, s: Math.round(a.speed), hp: Math.round(a.hp), st: a.state === 'fly' ? 0 : 1, fg: a.burstLeft > 0 ? 1 : 0 })) });
@@ -7436,7 +7454,7 @@
     function netApplyWave(m) {
       if (!Number.isInteger(m.n) || m.n < war.wave || m.n === war.appliedWave || !Array.isArray(m.g)) return;
       war.wave = m.n; war.score = m.sc; war.kills = m.kl; war.waveClear = false; war.wavePause = 1e9;
-      war.appliedWave = m.n; war.guided = 2; if (Number.isFinite(m.R) && m.R > 300 && m.R < 20000) { if (war.grows && m.R > war.R + 1 && m.n > 1) toast(`⬆ The battlefield grows: ${Math.round(m.R)} m across the middle`, 3000); war.R = m.R; }
+      war.appliedWave = m.n; war.guided = 2; if (Number.isFinite(m.cx) && Number.isFinite(m.cz) && Math.abs(m.cx) < 20000 && Math.abs(m.cz) < 20000) { if (m.n > 1 && (m.cx !== war.cx || m.cz !== war.cz)) toast('ON TO THE NEXT FRONT', 3000); war.cx = m.cx; war.cz = m.cz; } if (Number.isFinite(m.R) && m.R > 300 && m.R < 20000) { if (war.grows && m.R > war.R + 1 && m.n > 1) toast(`⬆ The battlefield grows: ${Math.round(m.R)} m across the middle`, 3000); war.R = m.R; }
       war.waveGround = m.g.length; war.waveFighters = Number.isInteger(m.af) ? m.af : 0; war.briefingT = 4;
       war.ground = m.g.map((g) => ({ nid: g.i, kind: g.k, pos: [g.x, g.y, g.z], heading: g.h, turret: g.h, hp: g.hp, maxHp: g.mx, r: WAR_KINDS[g.k].r, pts: WAR_KINDS[g.k].pts, dead: !!g.d, speed: g.s, burning: 0, cool: 1e9, t: 0 }));
       toast(`WAVE ${m.n}`, 1800); beep(520, 0.15, 'square', 0.07);
@@ -8909,5 +8927,5 @@
     };
   }
 
-  window.NotchPlaneGame = { mount, PLANES, MODES, CHALLENGES, Flight, _test: { blastTrees, treesNear, hash01, breakTree, treeAt, primeObjects, LOOT_RARITY, LOOT_KINDS, lootRoll, lootAmount, SOLDIER, SoldierBody, riflemanError, ARCADE_RATES, NET, WAR, TANK, TankBody, tankAimAt, planeAssist, ARENAS, arenaHeight, setArena: (a) => { ARENA = a; }, wrapPi, attitudeQ, procedure, atcStep, applyEnv, ENV, ilsAt, RUNWAY_ENDS, AP_SIGN, APRONS, buildPlane, REGIONS, nearestRegion, matchRegion, raCallout, gpwsWarnings, groundAt, makeWorld, qheading, qrot, hitObject, terrainAt, surfaceAt, roughnessAt, normalAt } };
+  window.NotchPlaneGame = { mount, PLANES, MODES, CHALLENGES, Flight, _test: { journeyCenter, blastTrees, treesNear, hash01, breakTree, treeAt, primeObjects, LOOT_RARITY, LOOT_KINDS, lootRoll, lootAmount, SOLDIER, SoldierBody, riflemanError, ARCADE_RATES, NET, WAR, TANK, TankBody, tankAimAt, planeAssist, ARENAS, arenaHeight, setArena: (a) => { ARENA = a; }, wrapPi, attitudeQ, procedure, atcStep, applyEnv, ENV, ilsAt, RUNWAY_ENDS, AP_SIGN, APRONS, buildPlane, REGIONS, nearestRegion, matchRegion, raCallout, gpwsWarnings, groundAt, makeWorld, qheading, qrot, hitObject, terrainAt, surfaceAt, roughnessAt, normalAt } };
 })();

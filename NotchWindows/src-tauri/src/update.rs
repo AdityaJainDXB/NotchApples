@@ -172,29 +172,16 @@ pub async fn update_install(app: AppHandle, url: String, sha256: Option<String>,
     // replace notch-apple.exe ("Failed to kill Notch Apple" / "Error opening file for writing"). Closing a WebView2
     // app can take several seconds on a slow PC, so a fixed delay isn't enough. A small script waits until the
     // process is gone (with a hard stop after about 50 seconds), then runs the installer: /P shows only a progress
-    // bar, /R starts the app again when it's done, and /UPDATE tells the installer this is an upgrade.
+    // bar, /R starts the app again when it's done, and /UPDATE tells the installer this is an upgrade. The script writes
+    // %TEMP%\\NotchApple-Update.log, and if the app is not running 15 seconds after the installer finishes (it failed, or
+    // /R did nothing) it starts the app that was installed, so the notch always comes back.
     #[cfg(windows)]
     {
         use std::os::windows::process::CommandExt;
         const CREATE_NO_WINDOW: u32 = 0x0800_0000;
         const DETACHED_PROCESS: u32 = 0x0000_0008;
         let script_path = std::env::temp_dir().join("NotchApple-Update.cmd");
-        let script = format!(
-            "@echo off\r\n\
-             set /a tries=0\r\n\
-             :wait\r\n\
-             tasklist /fi \"imagename eq notch-apple.exe\" 2>nul | find /i \"notch-apple.exe\" >nul\r\n\
-             if errorlevel 1 goto go\r\n\
-             set /a tries+=1\r\n\
-             if %tries% geq 40 taskkill /f /im notch-apple.exe >nul 2>&1\r\n\
-             if %tries% geq 50 goto go\r\n\
-             ping -n 2 127.0.0.1 >nul\r\n\
-             goto wait\r\n\
-             :go\r\n\
-             ping -n 3 127.0.0.1 >nul\r\n\
-             \"{}\" /P /R /UPDATE\r\n",
-            path.display()
-        );
+        let script = update_script(&path.display().to_string(), &std::env::current_exe().map(|p| p.display().to_string()).unwrap_or_default());
         std::fs::write(&script_path, script).map_err(|e| format!("Couldn't prepare the installer: {e}"))?;
         std::process::Command::new("cmd.exe")
             .arg("/C")
@@ -215,6 +202,32 @@ pub async fn update_install(app: AppHandle, url: String, sha256: Option<String>,
     Ok(())
 }
 
+/// The little script that waits for the app to close, runs the installer, logs what happened and makes sure the app comes back.
+#[allow(dead_code)]
+pub fn update_script(installer: &str, exe: &str) -> String {
+    format!(
+            "@echo off\r\n\
+             set /a tries=0\r\n\
+             :wait\r\n\
+             tasklist /fi \"imagename eq notch-apple.exe\" 2>nul | find /i \"notch-apple.exe\" >nul\r\n\
+             if errorlevel 1 goto go\r\n\
+             set /a tries+=1\r\n\
+             if %tries% geq 40 taskkill /f /im notch-apple.exe >nul 2>&1\r\n\
+             if %tries% geq 50 goto go\r\n\
+             ping -n 2 127.0.0.1 >nul\r\n\
+             goto wait\r\n\
+             :go\r\n\
+             ping -n 3 127.0.0.1 >nul\r\n\
+             echo %date% %time% starting the installer >> \"%TEMP%\\NotchApple-Update.log\"\r\n\
+             \"{}\" /P /R /UPDATE\r\n\
+             echo %date% %time% the installer finished with code %errorlevel% >> \"%TEMP%\\NotchApple-Update.log\"\r\n\
+             ping -n 16 127.0.0.1 >nul\r\n\
+             tasklist /fi \"imagename eq notch-apple.exe\" 2>nul | find /i \"notch-apple.exe\" >nul\r\n\
+             if errorlevel 1 (echo %date% %time% the app did not start again, starting it >> \"%TEMP%\\NotchApple-Update.log\" & start \"\" \"{}\")\r\n",
+        installer, exe
+    )
+}
+
 fn hex(bytes: &[u8]) -> String {
     bytes.iter().map(|b| format!("{b:02x}")).collect()
 }
@@ -222,6 +235,16 @@ fn hex(bytes: &[u8]) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn the_update_script_runs_the_installer_logs_and_brings_the_app_back() {
+        let sc = update_script("C:\\Temp\\Setup.exe", "C:\\Apps\\notch-apple.exe");
+        assert!(sc.contains("\"C:\\Temp\\Setup.exe\" /P /R /UPDATE"));
+        assert!(sc.contains("NotchApple-Update.log"));
+        assert!(sc.contains("start \"\" \"C:\\Apps\\notch-apple.exe\""));
+        assert!(sc.find("/P /R /UPDATE").unwrap() < sc.find("start \"\"").unwrap(), "the app is only started again after the installer ran");
+        assert!(sc.contains("taskkill /f /im notch-apple.exe"), "it still waits for the old app to be gone first");
+    }
 
     #[test]
     fn reads_versions_from_windows_tags() {
