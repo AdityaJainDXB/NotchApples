@@ -72,7 +72,7 @@ Pick your computer. Both buttons start the download straight away. The Mac link 
   </tr>
   <tr>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.1.12</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.1.13</b></a>
     </td>
     <td align="center">
       <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 2.1.5 BETA</b></a>
@@ -233,6 +233,10 @@ All screenshots use sample data.
 ## What's new
 
 > **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is in the repository's history.
+
+### Mac 2.1.13 · Windows 2.1.13 BETA · 22 October 2026 · 🪟 Windows updates that survive
+
+- Windows: the update helper now breaks away from the app before the app closes. If the notch was started by a launcher or a task, Windows used to stop the helper when the app quit, so the installer never ran, the notch stayed closed and the old version came back when you reopened it. Now the installer runs, and the notch reopens (as the new version, or the old one if the installer failed, with a log in your Temp folder).
 
 ### Mac 2.1.12 · Windows 2.1.12 BETA · 22 October 2026 · 🗺 Battle is a journey, and a Windows update that always comes back
 
