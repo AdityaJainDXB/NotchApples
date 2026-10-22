@@ -20,6 +20,9 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.1.21", date: "22 October 2026", headline: "World Clock: every country and region", items: [
+            "World Clock: search by country, state or well-known city, not just the time zone's city name. Type India, Mumbai, Texas, California, Dubai or Queensland and it finds the right time. Every country is listed, and each region with its own time (all of the USA's, Australia's, Russia's, Brazil's, Canada's and so on). The clock shows the name you picked.",
+        ]),
         ReleaseNote(version: "2.1.20", date: "22 October 2026", headline: "Sound switch works for the airplane game", items: [
             "The Sound switch in the Games list now also turns the airplane game's sound (engine, warnings, effects) on and off. Before, it only affected the other games.",
         ]),

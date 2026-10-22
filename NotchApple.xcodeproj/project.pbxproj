@@ -349,6 +349,7 @@
 		D0B53274DFFC5E0DC4E3B739 /* EntitlementLogic.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF862F91B226950E4FE3D0F0 /* EntitlementLogic.swift */; };
 		D0E3852087030F02B39F54DA /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E6FBB87EB9AFEA3906A669FC /* HomeView.swift */; };
 		D14A7182094B0FCB8A57044B /* WorldClockView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BC0266F190CB2E6D5FE2CE7 /* WorldClockView.swift */; };
+		A1B2C3D4E5F60718293A4B5C /* TimeZonePlaces.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1C2D3E4F5A60718293A4B5D /* TimeZonePlaces.swift */; };
 		D1AD60DD92666BA2745017D8 /* CassetteView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 025431FF9865CF1BAEDF1A2D /* CassetteView.swift */; };
 		D1C210100728BD42DBD406B8 /* GamesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44EC19E1838745C95B5759DF /* GamesView.swift */; };
 		D2265784620BA51F5B8F79BB /* BlackjackView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 775FDA67EE327392D9D736C9 /* BlackjackView.swift */; };
@@ -597,6 +598,7 @@
 		78B2FB154D159E0F982419C0 /* MathText.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MathText.swift; sourceTree = "<group>"; };
 		7936F885815136490DB5AB3F /* ClaudeLimitsLogic.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClaudeLimitsLogic.swift; sourceTree = "<group>"; };
 		7B4A357F34CF825E961ADEF4 /* AppLauncher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppLauncher.swift; sourceTree = "<group>"; };
+		B1C2D3E4F5A60718293A4B5D /* TimeZonePlaces.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimeZonePlaces.swift; sourceTree = "<group>"; };
 		7BC0266F190CB2E6D5FE2CE7 /* WorldClockView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorldClockView.swift; sourceTree = "<group>"; };
 		7CC31FE35B8BD0245C7DD53D /* DevToolkitTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DevToolkitTests.swift; sourceTree = "<group>"; };
 		7E3DB230CD04EC3E1A948E17 /* WindowsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindowsView.swift; sourceTree = "<group>"; };
@@ -1234,6 +1236,7 @@
 		63B5F483B9A998123FAE1D8E /* WorldClock */ = {
 			isa = PBXGroup;
 			children = (
+				B1C2D3E4F5A60718293A4B5D /* TimeZonePlaces.swift */,
 				7BC0266F190CB2E6D5FE2CE7 /* WorldClockView.swift */,
 			);
 			path = WorldClock;
@@ -2136,6 +2139,7 @@
 				CAED309713A89A35F4C679CE /* WhatsNew.swift in Sources */,
 				DC37742E9DC53226546E0A45 /* WindowManager.swift in Sources */,
 				72569F25523646AA163A2245 /* WindowsView.swift in Sources */,
+				A1B2C3D4E5F60718293A4B5C /* TimeZonePlaces.swift in Sources */,
 				D14A7182094B0FCB8A57044B /* WorldClockView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -2404,7 +2408,7 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 2.1.20;
+				MARKETING_VERSION = 2.1.21;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -2544,7 +2548,7 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 2.1.20;
+				MARKETING_VERSION = 2.1.21;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;

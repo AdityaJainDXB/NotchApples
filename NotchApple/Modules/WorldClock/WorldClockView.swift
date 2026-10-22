@@ -14,7 +14,14 @@ struct WorldClockView: View {
     @State private var search = ""
     @State private var planning = false
 
-    private var zones: [String] { zonesData.split(separator: "\n").map(String.init).filter { TimeZone(identifier: $0) != nil } }
+    /// Saved as "Zone" or "Zone#Place name" (a city, state or country that shares that zone).
+    private var zones: [String] { zonesData.split(separator: "\n").map(String.init).filter { TimeZone(identifier: Self.zoneID($0)) != nil } }
+
+    /// Every country, region with its own time and well-known city, then any zone the list doesn't name.
+    private static let options: [(name: String, zone: String, detail: String)] = {
+        let named = Set(TimeZonePlaces.all.map(\.zone))
+        return TimeZonePlaces.all + TimeZone.knownTimeZoneIdentifiers.filter { !named.contains($0) }.map { (city($0), $0, $0) }
+    }()
 
     var body: some View {
         TimelineView(.periodic(from: .now, by: 1)) { context in
@@ -42,7 +49,7 @@ struct WorldClockView: View {
         // Three flexible columns always fit the notch; more cities scroll.
         LazyVGrid(columns: Array(repeating: GridItem(.flexible(minimum: 0), spacing: 10), count: 3), spacing: 10) {
             ForEach(zones, id: \.self) { id in
-                let zone = TimeZone(identifier: id)!
+                let zone = TimeZone(identifier: Self.zoneID(id))!
                 var cal = Calendar.current
                 let _ = cal.timeZone = zone
                 let hour = cal.component(.hour, from: now)
@@ -68,19 +75,20 @@ struct WorldClockView: View {
 
     private var picker: some View {
         VStack(alignment: .leading, spacing: 6) {
-            TextField("Search cities", text: $search)
+            TextField("Search a city, state or country", text: $search)
                 .textFieldStyle(.plain).padding(8)
                 .background(Theme.surface, in: RoundedRectangle(cornerRadius: 8, style: .continuous))
             ScrollView {
                 VStack(alignment: .leading, spacing: 2) {
-                    ForEach(TimeZone.knownTimeZoneIdentifiers.filter { search.isEmpty || Self.city($0).localizedCaseInsensitiveContains(search) || $0.localizedCaseInsensitiveContains(search) }.prefix(60), id: \.self) { id in
+                    ForEach(Array(Self.options.filter { search.isEmpty || $0.name.localizedCaseInsensitiveContains(search) || $0.detail.localizedCaseInsensitiveContains(search) || $0.zone.localizedCaseInsensitiveContains(search) }.prefix(80).enumerated()), id: \.offset) { _, place in
                         Button {
+                            let id = place.name == Self.city(place.zone) ? place.zone : "\(place.zone)#\(place.name)"
                             if !zones.contains(id) { zonesData = (zones + [id]).joined(separator: "\n") }
                             adding = false
                         } label: {
                             HStack {
-                                Text(Self.city(id)).foregroundStyle(.white)
-                                Text(id).font(.system(size: 11)).foregroundStyle(Theme.textSecondary)
+                                Text(place.name).foregroundStyle(.white)
+                                Text(place.detail).font(.system(size: 11)).foregroundStyle(Theme.textSecondary).lineLimit(1)
                                 Spacer()
                             }
                             .padding(.vertical, 4).contentShape(Rectangle())
@@ -94,8 +102,11 @@ struct WorldClockView: View {
 
     private func remove(_ id: String) { zonesData = zones.filter { $0 != id }.joined(separator: "\n") }
 
+    static func zoneID(_ id: String) -> String { id.split(separator: "#").first.map(String.init) ?? id }
+
     static func city(_ id: String) -> String {
-        (id.split(separator: "/").last.map(String.init) ?? id).replacingOccurrences(of: "_", with: " ")
+        if let hash = id.firstIndex(of: "#") { return String(id[id.index(after: hash)...]) }
+        return (id.split(separator: "/").last.map(String.init) ?? id).replacingOccurrences(of: "_", with: " ")
     }
 
     static func offset(_ zone: TimeZone, now: Date) -> String {

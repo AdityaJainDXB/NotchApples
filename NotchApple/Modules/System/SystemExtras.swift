@@ -127,7 +127,7 @@ struct MeetingPlanner: View {
             }
             Slider(value: $offset, in: 0...47, step: 1)
             ForEach([TimeZone.current.identifier] + zones, id: \.self) { id in
-                let zone = TimeZone(identifier: id) ?? .current
+                let zone = TimeZone(identifier: WorldClockView.zoneID(id)) ?? .current
                 var cal = Calendar.current
                 let _ = cal.timeZone = zone
                 let hour = cal.component(.hour, from: moment)
