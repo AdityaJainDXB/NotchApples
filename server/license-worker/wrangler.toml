@@ -39,6 +39,10 @@ new_sqlite_classes = ["PlaneSky"]
 
 [vars]
 WALLET = "ltc1qymlmvkdmvpk5f90esthzgwaw6w0tuzq6tdr6kf"
+# Other coins people can pay in (public receiving addresses; the server only ever reads the blockchain, it holds no keys).
+WALLET_BTC = "bc1q6n68e5pkteuvs9fj38an340yj9vz5h84gu0gz5"
+WALLET_ETH = "0x7CB03e86d62939C6BB743529Ba19E665a31dbCc5"
+WALLET_SOL = "8Ri5sCbpdPRVz8rmrirJWH6hv7ZAKLcdb7AgJFfekpFC"
 NETWORK = "mainnet"
 PRICE_PRO = "1"
 PRICE_ULTIMATE = "5"

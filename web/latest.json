@@ -1,18 +1,18 @@
 {
-  "version": "2.0.75",
-  "title": "Notch Apple 2.0.75",
-  "notes": "**Battle, Plane and Games, easier to use**\n\n- Battle now offers a default-on Over-G effects toggle. The new self-destruct button (or X) respawns you without resetting the wave or its score. The existing red boundary warning and limited mouse aim ring remain available.\n- Open the Plane simulator full screen from its menu or with F11; Escape or F11 returns to the notch view.\n- Games adds play-money Texas Hold’em against the computer, with a saved chip stack and standard seven-card hand ranking.\n- Fixed the Claude Usage view clipping its contents in shorter windows: it scrolls within the available space.\n- Hardened the Gemini model picker against duplicate provider results and overlapping refreshes.\n\nInstall: download the DMG below and drag Notch Apple to Applications, or `brew upgrade --cask notch-apple`.\n",
-  "published": "2026-10-19T15:34:14Z",
-  "dmg": "https://github.com/AdityaJainDXB/NotchApples/releases/download/v2.0.75/NotchApple-2.0.75.dmg",
-  "dmgSize": 51493697,
-  "page": "https://github.com/AdityaJainDXB/NotchApples/releases/tag/v2.0.75",
-  "stars": 2,
+  "version": "2.1.19",
+  "title": "Notch Apple 2.1.19 · New game: Capture the Flag",
+  "notes": "**New game: Capture the Flag**\n\n- New game: Capture the Flag, in the Games tab on Mac and Windows. Two teams fight round walls and crates: steal the other team's flag, carry it home to your own base (your own flag has to be there to score), and be first to 2, 3 or 5 captures or lead when the clock runs out. A flag you drop goes home when your team touches it or after 14 seconds, and whoever carries a flag runs faster and takes less damage.\n- Play against computer teams (2 to 5 players a side, Easy, Normal or Hard, they attack, defend and chase flag thieves), or online with friends: Quick match joins an open game, or Host a game and share the 6-letter code. Empty places are filled by the computer, and with no connection it plays the computer.\n- Controls: W A S D move, the mouse aims, click or Space shoots (or the arrow keys to aim without a mouse), M mutes.\n\nInstall: download the DMG below and drag Notch Apple to Applications, or `brew upgrade --cask notch-apple`.\n",
+  "published": "2026-10-22T13:55:37Z",
+  "dmg": "https://github.com/AdityaJainDXB/NotchApples/releases/download/v2.1.19/NotchApple-2.1.19.dmg",
+  "dmgSize": 51688042,
+  "page": "https://github.com/AdityaJainDXB/NotchApples/releases/tag/v2.1.19",
+  "stars": 3,
   "windows": {
-    "version": "1.75.0",
-    "notes": "",
-    "url": "https://github.com/AdityaJainDXB/NotchApples/releases/download/win-v1.75.0/Notch.apple_1.75.0_x64-setup.exe",
-    "sha256": "5f9c04e0530df271ea71129c7b56aae7441982685431ed94196c443c3985ec4b",
-    "size": 5978324,
-    "page": "https://github.com/AdityaJainDXB/NotchApples/releases/tag/win-v1.75.0"
+    "version": "2.1.18",
+    "notes": "**Racing game: race friends in cars**\n\n- New Racing game in the Games tab (Mac and Windows): top-down cars on a straight sprint, a curved circuit or a mixed track with straights, a hairpin and a chicane. Pick a Street GT, a Drift King or a Muscle car, and race 0 to 5 computer rivals at Easy, Normal or Hard.\n- Drive with the arrows or W A S D, brake and reverse with the down key, and tap Space for the handbrake to drift round corners (skid marks and a drift score). Lap times, the best race time and a minimap are kept on your computer.\n- Race friends online: choose Create room and share the 6-letter code, friends type it under Join, and the host starts the race for everyone (up to 8 drivers). Planes can already race through hoops in Plane's Hoop Rush and Time Trial; racing planes with friends is next.\n",
+    "url": "https://github.com/AdityaJainDXB/NotchApples/releases/download/win-v2.1.18/Notch.apple_2.1.18_x64-setup.exe",
+    "sha256": "9fdfe3bd1c48b4ef8626c5b102cabc5111d2e6eed23a506849df2a5c124d1b11",
+    "size": 6027455,
+    "page": "https://github.com/AdityaJainDXB/NotchApples/releases/tag/win-v2.1.18"
   }
 }

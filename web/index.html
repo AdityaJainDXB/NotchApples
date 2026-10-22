@@ -395,6 +395,7 @@ pre .c{color:var(--dim)}
 .card h3 .ph{color:var(--ac-ink)}
 .card>p{color:var(--mut);margin:8px 0 22px;font-size:15.5px;max-width:48ch}
 .don{display:flex;gap:20px;align-items:center;flex-wrap:wrap}
+.coins{display:flex;gap:6px;flex-wrap:wrap;margin:2px 0 12px}.coins button{font:600 12.5px Geist,sans-serif;height:30px;padding:0 13px;border-radius:99px;background:rgba(255,255,255,.07);color:var(--mut);border:0;box-shadow:inset 0 0 0 1px var(--line);cursor:pointer}.coins button.on{color:var(--tx);background:var(--ac-wash);box-shadow:inset 0 0 0 1px var(--ac)}
 .qr{width:132px;height:132px;background:#fff;border-radius:12px;padding:8px;flex:none}
 .qr img,.qr canvas{width:116px!important;height:116px!important}
 .addr{display:flex;gap:8px;align-items:center;background:rgba(0,0,0,.35);box-shadow:inset 0 0 0 1px var(--line);border-radius:12px;padding:8px 8px 8px 12px;margin-bottom:12px}
@@ -893,7 +894,7 @@ footer{background:linear-gradient(180deg,transparent,rgba(118,80,238,.06))}
       <a class="btn ghost" href="pro.html">Get Ultimate</a>
     </div>
   </div>
-  <p class="fine">Paid in Litecoin, key emailed to you. Students can ask for a free Pro code. <a href="pro.html#promo">Have a promo code?</a></p>
+  <p class="fine">Paid in Bitcoin, Ethereum, Solana or Litecoin, key emailed to you. Students can ask for a free Pro code. <a href="pro.html#promo">Have a promo code?</a></p>
 </div></section>
 
 <section id="screenshots"><div class="wrap">
@@ -945,12 +946,14 @@ brew install --cask notch-apple</code></pre>
   <div class="duo">
     <div class="card rv">
       <h3><i class="ph ph-heart"></i>Donate</h3>
-      <p>Any amount, in Litecoin. It doesn't unlock anything; it keeps the project going.</p>
+      <p>Any amount, in Bitcoin, Ethereum, Solana or Litecoin. It doesn't unlock anything; it keeps the project going.</p>
+      <div class="coins" id="coinTabs" role="tablist" aria-label="Choose a coin"><button class="on" data-c="btc">Bitcoin</button><button data-c="eth">Ethereum</button><button data-c="sol">Solana</button><button data-c="ltc">Litecoin</button></div>
       <div class="don">
-        <div class="qr" id="donateQr" role="img" aria-label="QR code for the Litecoin donation address"></div>
+        <div class="qr" id="donateQr" role="img" aria-label="QR code for the donation address"></div>
         <div style="flex:1;min-width:220px">
-          <div class="addr"><code id="ltcAddr">ltc1qymlmvkdmvpk5f90esthzgwaw6w0tuzq6tdr6kf</code><button id="copyAddr">Copy</button></div>
-          <a class="btn sm ghost" href="litecoin:ltc1qymlmvkdmvpk5f90esthzgwaw6w0tuzq6tdr6kf">Open in my wallet</a>
+          <div class="addr"><code id="ltcAddr">bc1q6n68e5pkteuvs9fj38an340yj9vz5h84gu0gz5</code><button id="copyAddr">Copy</button></div>
+          <a class="btn sm ghost" id="walletOpen" href="bitcoin:bc1q6n68e5pkteuvs9fj38an340yj9vz5h84gu0gz5">Open in my wallet</a>
+          <p class="fine" id="coinHelp" style="margin-top:10px"></p>
         </div>
       </div>
     </div>
@@ -1307,8 +1310,11 @@ $$('main section[id]').forEach(s=>hio.observe(s));
 /* ---------- copy buttons, donation QR ---------- */
 function flash(b,t){const o=b.textContent;b.textContent=t;setTimeout(()=>b.textContent=o,1500)}
 function cp(b){navigator.clipboard&&navigator.clipboard.writeText('brew tap adityajaindxb/notchapples https://github.com/AdityaJainDXB/NotchApples\nbrew install --cask notch-apple');flash(b,'Copied')}
+const COINS={btc:{a:'bc1q6n68e5pkteuvs9fj38an340yj9vz5h84gu0gz5',u:'bitcoin',h:'Send Bitcoin on the Bitcoin network.'},eth:{a:'0x7CB03e86d62939C6BB743529Ba19E665a31dbCc5',u:'ethereum',h:'Send ETH on the Ethereum network (the same address also receives tokens such as USDC on Ethereum).'},sol:{a:'8Ri5sCbpdPRVz8rmrirJWH6hv7ZAKLcdb7AgJFfekpFC',u:'solana',h:'Send SOL on the Solana network (the same address also receives USDC on Solana).'},ltc:{a:'ltc1qymlmvkdmvpk5f90esthzgwaw6w0tuzq6tdr6kf',u:'litecoin',h:'Send Litecoin on the Litecoin network.'}};
+let donateCoin='btc',donateQr=null;
 $('#copyAddr').onclick=e=>{navigator.clipboard&&navigator.clipboard.writeText($('#ltcAddr').textContent);flash(e.target,'Copied')};
-function qr(){if(window.QRCode)new QRCode($('#donateQr'),{text:'litecoin:'+$('#ltcAddr').textContent,width:116,height:116,correctLevel:QRCode.CorrectLevel.M})}
+function qr(){const c=COINS[donateCoin];$('#ltcAddr').textContent=c.a;$('#walletOpen').href=c.u+':'+c.a;$('#coinHelp').textContent=c.h;document.querySelectorAll('#coinTabs button').forEach(b=>b.classList.toggle('on',b.dataset.c===donateCoin));if(window.QRCode){const q=$('#donateQr');q.innerHTML='';new QRCode(q,{text:c.u+':'+c.a,width:116,height:116,correctLevel:QRCode.CorrectLevel.M})}}
+document.querySelectorAll('#coinTabs button').forEach(b=>b.onclick=()=>{donateCoin=b.dataset.c;qr()});
 
 /* ---------- the end: scrolling on past the bottom loops back to the start ---------- */
 let push=0,looping=false;

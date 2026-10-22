@@ -1259,7 +1259,7 @@ The full list for every release is on the [website](https://adityajaindxb.github
 
 - **F1** *(add-on)*: Formula 1 in the notch: the live running order during sessions, then the full classification with gaps, tyres, laps and the flag, plus the weekend schedule in your time zone with a countdown, and driver and team standings. Click a driver to follow them, and during a session their position and the lap show beside the closed notch.
 - **Updates**: when a new release is out you get a notification, an **Update** button in the notch and a card in Settings → Updates: choose **Update** or **Not now**. Turn automatic checks off there if you prefer.
-- Donate in Litecoin: see [Donate](#donate-).
+- Donate in Bitcoin, Ethereum, Solana or Litecoin: see [Donate](#donate-).
 
 #### New in 1.14.3
 
@@ -1268,7 +1268,7 @@ The full list for every release is on the [website](https://adityajaindxb.github
 #### New in 1.14.2
 
 - **Nothing that was free became paid.** Now Playing, windows, clipboard, shelf, focus, tools and the rest stay free forever; Pro is the same features as before.
-- **Get Pro on the website**: a product key for $1 in Litecoin (or $2 to cover fees and support the high school developers), or free with a promo code. Keys are made instantly, work once, on one Mac. [Get Pro →](https://adityajaindxb.github.io/NotchApples/pro.html)
+- **Get Pro on the website**: a product key for $1 in crypto (Bitcoin, Ethereum, Solana or Litecoin) (or $2 to cover fees and support the high school developers), or free with a promo code. Keys are made instantly, work once, on one Mac. [Get Pro →](https://adityajaindxb.github.io/NotchApples/pro.html)
 - Product keys (NOTCH-XXXX-XXXX-XXXX) are checked online and re-verified against the blockchain; older access codes keep working.
 
 </details>
@@ -1701,7 +1701,7 @@ Notch Apple is free, and the free tier is complete. Two one-time upgrades add mo
 
 The full feature-by-feature plan is in [docs/TIERS.md](docs/TIERS.md).
 
-- **Buy** on the [pricing page](https://adityajaindxb.github.io/NotchApples/pro.html), in Litecoin. Each order gets its own exact amount, which is how the payment is matched to you. Your key is shown straight away and emailed.
+- **Buy** on the [pricing page](https://adityajaindxb.github.io/NotchApples/pro.html), in Bitcoin, Ethereum, Solana or Litecoin. Each order gets its own exact amount, which is how the payment is matched to you. Your key is shown straight away and emailed.
 - **Activate** in **Settings → License** (paste the key) or with the **Activate in Notch Apple** link. The key is checked on your Mac against a public key built into the app, so it works offline. It works on up to 3 of your Macs; **Deactivate this Mac** frees a slot.
 - **Upgrade** from Pro to Ultimate for the $4 difference. Your Pro key keeps working until you activate the new one.
 - **Lost your key?** Use **Lost my key?** on the pricing page; it's emailed to the address you bought with.
@@ -1988,11 +1988,16 @@ Thank you. 💜
 
 ## Donate 💜
 
-Notch Apple is free and made by three high school developers. Donating is **completely optional**: it doesn't unlock anything, it just supports continued development. If it's useful to you, you can donate any amount in **Litecoin (LTC)**:
+Notch Apple is free and made by three high school developers. Donating is **completely optional**: it doesn't unlock anything, it just supports continued development. If it's useful to you, you can donate any amount in **Bitcoin, Ethereum, Solana or Litecoin**. Send on each coin's own network (not a token):
 
-```
-ltc1qymlmvkdmvpk5f90esthzgwaw6w0tuzq6tdr6kf
-```
+| Coin | Address |
+|---|---|
+| **Bitcoin (BTC)** | `bc1q6n68e5pkteuvs9fj38an340yj9vz5h84gu0gz5` |
+| **Ethereum (ETH)** | `0x7CB03e86d62939C6BB743529Ba19E665a31dbCc5` |
+| **Solana (SOL)** | `8Ri5sCbpdPRVz8rmrirJWH6hv7ZAKLcdb7AgJFfekpFC` |
+| **Litecoin (LTC)** | `ltc1qymlmvkdmvpk5f90esthzgwaw6w0tuzq6tdr6kf` |
+
+(The Ethereum address also receives USDC on Ethereum, and the Solana address USDC on Solana, if you prefer a stable coin.)
 
 Every bit helps and is hugely appreciated. Want more too? [Pro is $1 and Ultimate $5](https://adityajaindxb.github.io/NotchApples/pro.html), each paid once. Donated already? Ask for a free Ultimate key.
 

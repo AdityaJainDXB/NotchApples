@@ -15,8 +15,8 @@
  },
  {
   "q": "How much do Pro and Ultimate cost?",
-  "k": "price pro ultimate upgrade buy purchase cost dollars litecoin crypto payment",
-  "a": "Pro is $1 and Ultimate is $5, both one-time purchases that include every future update. You pay in Litecoin from the pricing page and your key is made when the payment confirms.",
+  "k": "price pro ultimate upgrade buy purchase cost dollars bitcoin ethereum solana litecoin crypto payment",
+  "a": "Pro is $1 and Ultimate is $5, both one-time purchases that include every future update. You pay in Bitcoin, Ethereum, Solana or Litecoin from the pricing page and your key is made when the payment confirms.",
   "link": [
    "Pricing page",
    "pro.html"

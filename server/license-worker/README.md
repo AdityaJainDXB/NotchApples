@@ -3,7 +3,7 @@
 A Cloudflare Worker (free plan) that sells and signs Notch Apple product keys. See the comment at the top of [src/worker.js](src/worker.js) for every endpoint.
 
 - **Keys** are `NTCH-PRO-…` / `NTCH-ULTM-…`: a 12-byte payload (version, tier, key ID, issue day) and its Ed25519 signature. The app checks them offline with the public key in `NotchApple/Core/LicenseKey.swift`. The private key is only the Worker's `SIGNING_KEY` secret.
-- **Payments** are Litecoin, straight to the wallet. Every order reserves its own exact amount for 48 hours; a key is issued only to the holder of the secret order ID, for a payment of exactly that amount, made after the order. Someone watching the public blockchain can't claim a buyer's payment.
+- **Payments** are Bitcoin, Ethereum, Solana or Litecoin, straight to the developer's wallets (the server only reads the blockchain; it holds no keys). Add or change an address with `WALLET_BTC`, `WALLET_ETH`, `WALLET_SOL` in `wrangler.toml`. Every order reserves its own exact amount for 48 hours; a key is issued only to the holder of the secret order ID, for a payment of exactly that amount, made after the order. Someone watching the public blockchain can't claim a buyer's payment.
 - **Email** (Brevo, or Resend with your own domain) sends the key, and "Lost my key?" re-sends it. After payment only a salted hash of the email is kept.
 - **Device limit**: 3 Macs per key, using a per-key salted hash of the Mac. **Revocation**: a signed list the app downloads about once a day.
 

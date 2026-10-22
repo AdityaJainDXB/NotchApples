@@ -647,3 +647,88 @@ const fx = { publicKey: btoa(String.fromCharCode(...pubRaw)), pro: leaked, ultim
   expired: await mintToken(env, 'pass1', { t: 2, exp: 1000, r: 'abc123' }) };
 writeFileSync(new URL('./fixture.json', import.meta.url), JSON.stringify(fx, null, 2) + '\n');
 console.log(`\n${passed} passed. Wrote test/fixture.json for the Swift tests.`);
+
+// ---- Bitcoin, Ethereum and Solana checkout (a fake chain for each, no network)
+{
+  const W = { btc: 'bc1qtestbtcwallet', eth: '0x7CB03e86d62939C6BB743529Ba19E665a31dbCc5', sol: '8Ri5sCbpdPRVz8rmrirJWH6hv7ZAKLcdb7AgJFfekpFC' };
+  Object.assign(env, { WALLET_BTC: W.btc, WALLET_ETH: W.eth, WALLET_SOL: W.sol, TEST_COINS: '1', TEST_BTC_PRICE: '100000', TEST_ETH_PRICE: '4000', TEST_SOL_PRICE: '200' });
+  const btcTx = new Map(), ethTx = new Map(), solTx = new Map(); let ethHead = 1000;
+  const ltcFetch = globalThis.fetch;
+  globalThis.fetch = async (url, init) => {
+    const u = String(url);
+    if (/mempool\.space|blockstream\.info/.test(u)) {
+      const m = u.match(/\/tx\/([0-9a-f]{64})$/); const tx = m && btcTx.get(m[1]); if (!tx) return new Response('nf', { status: 404 });
+      return new Response(JSON.stringify({ vout: [{ scriptpubkey_address: W.btc, value: tx.paid }, { scriptpubkey_address: 'bc1qchange', value: 7 }], status: tx.time ? { confirmed: true, block_time: tx.time } : { confirmed: false } }));
+    }
+    if (/publicnode\.com\/?$|llamarpc|ankr/.test(u) && u.includes('ethereum') || /eth\.llamarpc|rpc\.ankr\.com\/eth/.test(u)) {
+      const req = JSON.parse(init.body), [p0] = req.params, ok = (result) => new Response(JSON.stringify({ jsonrpc: '2.0', id: 1, result }));
+      if (req.method === 'eth_blockNumber') return ok('0x' + ethHead.toString(16));
+      const tx = ethTx.get(p0); 
+      if (req.method === 'eth_getTransactionByHash') return ok(tx ? { to: tx.to, value: '0x' + BigInt(tx.value).toString(16), input: tx.input || '0x', blockNumber: tx.block == null ? null : '0x' + tx.block.toString(16) } : null);
+      if (req.method === 'eth_getTransactionReceipt') return ok(tx && tx.block != null ? { status: tx.failed ? '0x0' : '0x1' } : null);
+      if (req.method === 'eth_getBlockByNumber') return ok({ timestamp: '0x' + Math.floor(Date.now() / 1000).toString(16) });
+    }
+    if (/solana/.test(u)) {
+      const req = JSON.parse(init.body), tx = solTx.get(req.params[0]);
+      if (!tx) return new Response(JSON.stringify({ jsonrpc: '2.0', id: 1, result: null }));
+      return new Response(JSON.stringify({ jsonrpc: '2.0', id: 1, result: { blockTime: Math.floor(Date.now() / 1000), meta: { err: tx.err || null, preBalances: [5000000, 1000], postBalances: [5000000 - tx.paid, 1000 + tx.paid] }, transaction: { message: { accountKeys: ['someoneelse', W.sol] } } } }));
+    }
+    return ltcFetch(url, init);
+  };
+  const hexid = (n) => n.toString(16).padStart(64, '0');
+  const ethid = (n) => '0x' + hexid(n), solid = (n) => ('A' + String(n).padStart(2, '1') + '1'.repeat(80)).slice(0, 84);
+  await test('Checkout in Bitcoin, Ethereum and Solana: /config lists them and the order asks for an exact unique amount', async () => {
+    const cfg = await call('/config'); assert.deepEqual(cfg.coins.map((c) => c.id), ['ltc', 'btc', 'eth', 'sol']); assert.equal(cfg.coins[1].wallet, W.btc);
+    const b = await call('/order', { tier: 'pro', email: 'b@example.com', coin: 'btc' }), e = await call('/order', { tier: 'pro', email: 'e@example.com', coin: 'eth' }), s = await call('/order', { tier: 'ultimate', email: 's@example.com', coin: 'sol' });
+    assert.equal(b.symbol, 'BTC'); assert.ok(Number(b.units) >= 1000 && Number(b.units) < 1000 + 200, `$1 of bitcoin at $100k is about 1000 sats (${b.units})`); assert.equal(b.wallet, W.btc); assert.match(b.uri, /^bitcoin:bc1qtestbtcwallet\?amount=0\.0000\d+$/);
+    assert.ok(BigInt(e.units) >= 250000000000000n && BigInt(e.units) < 250000000000000n + 2n * 10n ** 12n, `$1 of ether at $4000 (${e.units})`); assert.equal(e.uri, `ethereum:${W.eth}?value=${e.units}`);
+    assert.ok(Number(s.units) >= 25000000 && Number(s.units) < 25000000 + 200000, `$5 of SOL at $200 is 0.025 SOL (${s.units})`);
+    const again = await call('/order', { tier: 'pro', email: 'b2@example.com', coin: 'btc' }); assert.notEqual(again.units, b.units, 'every open order has its own amount');
+    assert.equal((await call('/order', { tier: 'pro', email: 'x@example.com', coin: 'doge' })).status, 400);
+  });
+  await test('Bitcoin: a confirmed exact payment issues a key; wrong amount, unconfirmed, replayed and other people\'s payments do not', async () => {
+    const o = await call('/order', { tier: 'pro', email: 'btcbuyer@example.com', coin: 'btc' });
+    assert.equal((await call('/claim', { order: o.order, txid: hexid(1) })).pending, true, 'not on the network yet');
+    btcTx.set(hexid(1), { paid: Number(o.units), time: null });
+    const wait = await call('/claim', { order: o.order, txid: hexid(1) }); assert.equal(wait.pending, true); assert.match(wait.message, /confirmed/);
+    btcTx.set(hexid(1), { paid: Number(o.units), time: Math.floor(Date.now() / 1000) });
+    const ok = await call('/claim', { order: o.order, txid: 'https://mempool.space/tx/' + hexid(1) });
+    assert.equal(ok.tier, 'Pro'); assert.ok(ok.key); assert.ok(mails.some((m) => m.to === 'btcbuyer@example.com'));
+    const thief = await call('/order', { tier: 'pro', email: 'thief@example.com', coin: 'btc' });
+    assert.equal((await call('/claim', { order: thief.order, txid: hexid(1) })).status, 409, 'the same payment cannot buy a second key');
+    btcTx.set(hexid(2), { paid: Number(thief.units) - 1, time: Math.floor(Date.now() / 1000) });
+    const short = await call('/claim', { order: thief.order, txid: hexid(2) }); assert.equal(short.status, 400); assert.match(short.error, /needs exactly/);
+    btcTx.set(hexid(3), { paid: Number(thief.units), time: Math.floor(Date.now() / 1000) - 7200 });
+    assert.equal((await call('/claim', { order: thief.order, txid: hexid(3) })).status, 400, 'a payment from before the order does not count');
+  });
+  await test('Ethereum: a plain transfer with enough confirmations works; a contract call, a failed transaction or too few confirmations do not', async () => {
+    const o = await call('/order', { tier: 'pro', email: 'ethbuyer@example.com', coin: 'eth' });
+    ethHead = 1000; ethTx.set(ethid(1), { to: W.eth.toLowerCase(), value: o.units, block: 999 });          // 2 confirmations
+    const few = await call('/claim', { order: o.order, txid: ethid(1) }); assert.equal(few.pending, true);
+    ethHead = 1002;
+    const ok = await call('/claim', { order: o.order, txid: ethid(1) }); assert.equal(ok.tier, 'Pro'); assert.ok(ok.key);
+    const o2 = await call('/order', { tier: 'pro', email: 'eth2@example.com', coin: 'eth' });
+    ethTx.set(ethid(2), { to: W.eth, value: o2.units, block: 900, input: '0xa9059cbb0000' });             // a token transfer, not Ether
+    assert.equal((await call('/claim', { order: o2.order, txid: ethid(2) })).status, 400);
+    ethTx.set(ethid(3), { to: W.eth, value: o2.units, block: 900, failed: true });
+    assert.equal((await call('/claim', { order: o2.order, txid: ethid(3) })).status, 400);
+    ethTx.set(ethid(4), { to: '0x0000000000000000000000000000000000000001', value: o2.units, block: 900 });
+    assert.equal((await call('/claim', { order: o2.order, txid: ethid(4) })).status, 400, 'paid someone else');
+    assert.equal((await call('/claim', { order: o2.order, txid: 'not-a-tx' })).status, 400);
+  });
+  await test('Solana: the amount that reached our address is what counts, and a failed transaction does not', async () => {
+    const o = await call('/order', { tier: 'ultimate', email: 'solbuyer@example.com', coin: 'sol' });
+    assert.equal((await call('/claim', { order: o.order, txid: solid(1) })).pending, true);
+    solTx.set(solid(1), { paid: Number(o.units) });
+    const ok = await call('/claim', { order: o.order, txid: solid(1) }); assert.equal(ok.tier, 'Ultimate'); assert.ok(ok.key);
+    const o2 = await call('/order', { tier: 'pro', email: 'sol2@example.com', coin: 'sol' });
+    solTx.set(solid(2), { paid: Number(o2.units) - 5 }); const short = await call('/claim', { order: o2.order, txid: solid(2) }); assert.equal(short.status, 400); assert.match(short.error, /needs exactly/);
+    solTx.set(solid(3), { paid: Number(o2.units), err: { InstructionError: [0, 'Custom'] } }); assert.equal((await call('/claim', { order: o2.order, txid: solid(3) })).status, 400);
+  });
+  await test('Without an address set, a coin is not offered', async () => {
+    const keep = env.WALLET_SOL; delete env.WALLET_SOL;
+    assert.ok(!(await call('/config')).coins.some((c) => c.id === 'sol')); assert.equal((await call('/order', { tier: 'pro', email: 'n@example.com', coin: 'sol' })).status, 400);
+    env.WALLET_SOL = keep;
+  });
+  globalThis.fetch = ltcFetch;
+}

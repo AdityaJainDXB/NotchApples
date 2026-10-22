@@ -234,6 +234,123 @@ async function payment(env, txid) {
 
 const ltc = (litoshi) => (litoshi / 1e8).toFixed(6);
 
+// MARK: Bitcoin, Ethereum and Solana
+//
+// The same checkout as Litecoin: an order reserves a unique amount, the buyer pays that exact amount to the developer's address
+// and pastes the transaction ID, and the server checks the payment on the public blockchain before it issues the key.
+// Amounts are exact whole numbers in each coin's smallest unit (BigInt: an Ether is 10^18 of them).
+//   granularity: the amount is rounded up to this (the cost of rounding is a fraction of a cent);
+//   tail: a unique number of units below it, so no two open orders ask for the same amount.
+const COINS = {
+  btc: { id: 'btc', name: 'Bitcoin', symbol: 'BTC', decimals: 8, wallet: 'WALLET_BTC', uri: 'bitcoin', granularity: 100n, tail: 99, tailStep: 1n,
+    gecko: 'bitcoin', coinbase: 'BTC-USD', kraken: 'XBTUSD', tx: /^[0-9a-f]{64}$/ },
+  eth: { id: 'eth', name: 'Ethereum', symbol: 'ETH', decimals: 18, wallet: 'WALLET_ETH', uri: 'ethereum', granularity: 10n ** 12n, tail: 9999, tailStep: 10n ** 6n,
+    gecko: 'ethereum', coinbase: 'ETH-USD', kraken: 'ETHUSD', tx: /^0x[0-9a-f]{64}$/ },
+  sol: { id: 'sol', name: 'Solana', symbol: 'SOL', decimals: 9, wallet: 'WALLET_SOL', uri: 'solana', granularity: 100000n, tail: 9999, tailStep: 1n,
+    gecko: 'solana', coinbase: 'SOL-USD', kraken: 'SOLUSD', tx: /^[1-9A-HJ-NP-Za-km-z]{80,90}$/ },
+};
+const coinWallet = (env, c) => (env.NETWORK === 'testnet' && !env.TEST_COINS ? '' : String(env[c.wallet] || ''));
+/** The coins that can be paid in right now: Litecoin always, and the others when their address is set. */
+function coinList(env) {
+  return [{ id: 'ltc', name: 'Litecoin', symbol: 'LTC', wallet: env.WALLET }, ...Object.values(COINS).filter((c) => coinWallet(env, c)).map((c) => ({ id: c.id, name: c.name, symbol: c.symbol, wallet: coinWallet(env, c) }))];
+}
+const coinPriceCache = {};
+async function coinPrice(env, c) {
+  const test = env[`TEST_${c.symbol}_PRICE`]; if (test) return Number(test);
+  const hit = coinPriceCache[c.id]; if (hit && Date.now() - hit.at < 60000) return hit.usd;
+  let usd = null;
+  const tries = [
+    async () => (await (await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${c.gecko}&vs_currencies=usd`, { signal: timeout(6000) })).json())[c.gecko].usd,
+    async () => Number((await (await fetch(`https://api.coinbase.com/v2/prices/${c.coinbase}/spot`, { signal: timeout(6000) })).json()).data.amount),
+    async () => Number(Object.values((await (await fetch(`https://api.kraken.com/0/public/Ticker?pair=${c.kraken}`, { signal: timeout(6000) })).json()).result)[0].c[0]),
+  ];
+  for (const t of tries) { try { const v = Number(await t()); if (v > 0 && isFinite(v)) { usd = v; break; } } catch {} }
+  if (!usd) throw new HTTPError(503, `Couldn't get the ${c.name} price right now. Try again in a minute.`);
+  coinPriceCache[c.id] = { usd, at: Date.now() };
+  return usd;
+}
+/** 123450000n with 8 decimals -> "1.2345" */
+function fmtUnits(units, decimals) {
+  const s = units.toString().padStart(decimals + 1, '0'), int = s.slice(0, -decimals), frac = s.slice(-decimals).replace(/0+$/, '');
+  return frac ? `${int}.${frac}` : int;
+}
+async function rpc(urls, method, params) {
+  let lastErr = null;
+  for (const url of urls) {
+    try {
+      const r = await fetch(url, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ jsonrpc: '2.0', id: 1, method, params }), signal: timeout(8000) });
+      if (!r.ok) { lastErr = r.status; continue; }
+      const j = await r.json();
+      if (j.error) { lastErr = j.error; continue; }
+      return { ok: true, result: j.result, url };
+    } catch (e) { lastErr = e; }
+  }
+  return { ok: false, error: lastErr };
+}
+const ETH_RPC = ['https://ethereum-rpc.publicnode.com', 'https://eth.llamarpc.com', 'https://rpc.ankr.com/eth'];
+const SOL_RPC = ['https://api.mainnet-beta.solana.com', 'https://solana-rpc.publicnode.com'];
+const unreachable = (c) => new HTTPError(502, `Couldn't reach the ${c.name} network explorers. Try again in a minute; your order stays open for 48 hours.`);
+/** What a transaction paid to our address: { paid (BigInt), blockTime (seconds, null while unconfirmed), confirmed }, or null when the network has not heard of it. */
+async function coinPayment(env, c, txid) {
+  const wallet = coinWallet(env, c);
+  if (c.id === 'btc') {
+    for (const base of ['https://mempool.space/api', 'https://blockstream.info/api']) {
+      try {
+        const r = await fetch(`${base}/tx/${txid}`, { signal: timeout(8000) });
+        if (r.status === 404 || r.status === 400) return null;
+        if (!r.ok) continue;
+        const tx = await r.json();
+        const paid = (tx.vout || []).filter((o) => o.scriptpubkey_address === wallet).reduce((a, o) => a + BigInt(o.value), 0n);
+        return { paid, blockTime: tx.status && tx.status.confirmed ? tx.status.block_time : null, confirmed: !!(tx.status && tx.status.confirmed) };
+      } catch {}
+    }
+    throw unreachable(c);
+  }
+  if (c.id === 'eth') {
+    const t = await rpc(ETH_RPC, 'eth_getTransactionByHash', [txid]);
+    if (!t.ok) throw unreachable(c);
+    const tx = t.result; if (!tx) return null;
+    // Only a plain transfer of Ether to our address counts (no contract calls, no tokens).
+    const mine = typeof tx.to === 'string' && tx.to.toLowerCase() === wallet.toLowerCase() && (tx.input === '0x' || tx.input === '0x0');
+    if (!tx.blockNumber) return { paid: mine ? BigInt(tx.value) : 0n, blockTime: null, confirmed: false };
+    const [rc, head, blk] = await Promise.all([rpc(ETH_RPC, 'eth_getTransactionReceipt', [txid]), rpc(ETH_RPC, 'eth_blockNumber', []), rpc(ETH_RPC, 'eth_getBlockByNumber', [tx.blockNumber, false])]);
+    if (!rc.ok || !head.ok || !blk.ok) throw unreachable(c);
+    if (!rc.result || rc.result.status !== '0x1') return { paid: 0n, blockTime: null, confirmed: true };      // failed or not yet receipted
+    const confirmations = Number(BigInt(head.result) - BigInt(tx.blockNumber)) + 1;
+    return { paid: mine ? BigInt(tx.value) : 0n, blockTime: blk.result ? Number(BigInt(blk.result.timestamp)) : null, confirmed: confirmations >= 3 };
+  }
+  if (c.id === 'sol') {
+    const t = await rpc(SOL_RPC, 'getTransaction', [txid, { encoding: 'json', commitment: 'confirmed', maxSupportedTransactionVersion: 0 }]);
+    if (!t.ok) throw unreachable(c);
+    const tx = t.result; if (!tx) return null;
+    if (tx.meta && tx.meta.err) return { paid: 0n, blockTime: tx.blockTime || null, confirmed: true };
+    const keys = [...(tx.transaction.message.accountKeys || []), ...((tx.meta.loadedAddresses && tx.meta.loadedAddresses.writable) || []), ...((tx.meta.loadedAddresses && tx.meta.loadedAddresses.readonly) || [])];
+    const i = keys.indexOf(wallet);
+    const paid = i >= 0 ? BigInt(tx.meta.postBalances[i]) - BigInt(tx.meta.preBalances[i]) : 0n;
+    return { paid: paid > 0n ? paid : 0n, blockTime: tx.blockTime || null, confirmed: true };
+  }
+  throw new HTTPError(400, 'Unknown coin.');
+}
+/** The order for a coin other than Litecoin: a unique exact amount to that coin's address. */
+async function coinOrder(env, c, o) {
+  const wallet = coinWallet(env, c);
+  if (!wallet) throw new HTTPError(400, `${c.name} payments are not switched on yet. Pick another coin.`);
+  const price = await coinPrice(env, c), dec = c.decimals, small = Math.min(dec, 9);
+  let base = BigInt(Math.ceil((o.usd / price) * 10 ** small)) * 10n ** BigInt(dec - small);
+  base = ((base + c.granularity - 1n) / c.granularity) * c.granularity;                    // round up
+  for (let i = 0; i < 20; i++) {
+    const units = base + BigInt(1 + Math.floor(Math.random() * c.tail)) * c.tailStep + BigInt(Math.floor(i / 5)) * c.granularity;
+    if (await env.KV.get(`amount:${c.id}:${units}`)) continue;
+    const id = hex(randomBytes(16)), created = Date.now();
+    await env.KV.put(`amount:${c.id}:${units}`, id, { expirationTtl: ORDER_TTL });
+    await putJSON(env, `order:${id}`, { tier: o.tier, usd: o.usd, coin: c.id, units: units.toString(), created, email: o.email, upgradeFrom: o.upgradeFrom, status: 'open' }, ORDER_TTL);
+    const amount = fmtUnits(units, dec);
+    const uri = c.id === 'eth' ? `ethereum:${wallet}?value=${units}` : `${c.uri}:${wallet}?amount=${amount}`;
+    return { order: id, tier: o.tierName, usd: o.usd, coin: c.id, symbol: c.symbol, amount, units: units.toString(), wallet, uri, price, expires: created + ORDER_TTL * 1000 };
+  }
+  throw new HTTPError(503, 'Checkout is busy. Try again in a minute.');
+}
+
 // MARK: Mail
 
 async function sendMail(env, to, subject, text) {
@@ -287,6 +404,11 @@ async function order(env, body) {
   // Pay what you want: an optional tip on top (whole dollars, up to $50).
   const tip = Math.max(0, Math.min(50, Math.floor(Number(body.tip) || 0)));
   usd += tip;
+  const coin = String(body.coin || 'ltc').toLowerCase();
+  if (coin !== 'ltc') {
+    if (!COINS[coin]) throw new HTTPError(400, 'Choose Litecoin, Bitcoin, Ethereum or Solana.');
+    return coinOrder(env, COINS[coin], { tier, tierName: body.tier, usd, upgradeFrom, email: body.email.trim() });
+  }
   const price = await ltcPrice(env);
   const base = Math.ceil((usd / price) * 1e4) * 1e4;       // round up to 0.0001 LTC
   // A unique amount per open order: the last two of six decimals.
@@ -297,36 +419,44 @@ async function order(env, body) {
     const created = Date.now();
     await env.KV.put(`amount:${litoshi}`, id, { expirationTtl: ORDER_TTL });
     await putJSON(env, `order:${id}`, { tier, usd, litoshi, created, email: body.email.trim(), upgradeFrom, status: 'open' }, ORDER_TTL);
-    return { order: id, tier: body.tier, usd, ltc: ltc(litoshi), litoshi, wallet: env.WALLET, price, expires: created + ORDER_TTL * 1000 };
+    return { order: id, tier: body.tier, usd, coin: 'ltc', symbol: 'LTC', amount: ltc(litoshi), uri: `litecoin:${env.WALLET}?amount=${ltc(litoshi)}`, ltc: ltc(litoshi), litoshi, wallet: env.WALLET, price, expires: created + ORDER_TTL * 1000 };
   }
   throw new HTTPError(503, 'Checkout is busy. Try again in a minute.');
 }
 
 async function claim(env, body) {
   if (typeof body.order !== 'string' || !/^[0-9a-f]{32}$/.test(body.order)) throw new HTTPError(400, 'Missing order.');
-  const txid = String(body.txid || '').toLowerCase().match(/[0-9a-f]{64}/)?.[0];
-  if (!validTxid(txid)) throw new HTTPError(400, 'Paste the 64-character transaction ID (or an explorer link to it).');
   const o = await getJSON(env, `order:${body.order}`);
+  const c = o && o.coin && COINS[o.coin] ? COINS[o.coin] : null;           // null: Litecoin
+  const raw = String(body.txid || '');
+  const txid = c ? (c.id === 'eth' ? (raw.match(/0x[0-9a-fA-F]{64}/) || [''])[0].toLowerCase() : c.id === 'sol' ? (raw.match(/[1-9A-HJ-NP-Za-km-z]{80,90}/) || [''])[0] : (raw.toLowerCase().match(/[0-9a-f]{64}/) || [''])[0])
+    : raw.toLowerCase().match(/[0-9a-f]{64}/)?.[0];
+  if (c ? !c.tx.test(txid) : !validTxid(txid)) throw new HTTPError(400, c ? `Paste the ${c.name} transaction ID (or an explorer link to it).` : 'Paste the 64-character transaction ID (or an explorer link to it).');
   if (!o) throw new HTTPError(404, 'That order has expired. Start a new one; if you already paid, use "Lost my key?" or contact us with the transaction ID.');
   if (o.status === 'paid') {
     if (o.txid !== txid) throw new HTTPError(409, 'This order is already paid with a different transaction.');
     return { key: o.key, tier: TIER_NAME[o.tier], emailed: o.emailed, again: true };
   }
-  // Admin test mode: only an order the admin marked, and only with the all-zeros transaction ID.
+  // Admin test mode: only an order the admin marked, and only with the all-zeros transaction ID (Litecoin orders).
   const testTx = '0'.repeat(64);
-  if (txid === testTx && !o.testPayment) throw new HTTPError(400, "That isn't a real transaction ID.");
-  const used = txid === testTx ? null : await env.KV.get(`tx:${txid}`);
+  if (!c && txid === testTx && !o.testPayment) throw new HTTPError(400, "That isn't a real transaction ID.");
+  const seenKey = c ? `tx:${c.id}:${txid}` : `tx:${txid}`;
+  const used = !c && txid === testTx ? null : await env.KV.get(seenKey);
   if (used) throw new HTTPError(409, 'That payment has already been used for a key.');
-  const pay = txid === testTx ? { paid: o.litoshi, blockTime: null } : await payment(env, txid);
+  const want = c ? BigInt(o.units) : BigInt(o.litoshi);
+  const pay = !c && txid === testTx ? { paid: BigInt(o.litoshi), blockTime: null, confirmed: true } : c ? await coinPayment(env, c, txid) : await payment(env, txid);
   if (!pay) return { pending: true, message: 'Waiting for the transaction to appear on the network…' };
-  if (pay.paid === 0) throw new HTTPError(400, "That transaction doesn't pay the Notch Apple address.");
-  if (pay.paid !== o.litoshi) {
-    throw new HTTPError(400, `That payment is ${ltc(pay.paid)} LTC, but this order needs exactly ${ltc(o.litoshi)} LTC. ` +
+  const paid = BigInt(pay.paid);
+  if (paid === 0n) throw new HTTPError(400, c ? `That transaction doesn't pay the Notch Apple ${c.name} address (or it failed).` : "That transaction doesn't pay the Notch Apple address.");
+  if (paid !== want) {
+    const shown = (v) => (c ? `${fmtUnits(v, c.decimals)} ${c.symbol}` : `${ltc(Number(v))} LTC`);
+    throw new HTTPError(400, `That payment is ${shown(paid)}, but this order needs exactly ${shown(want)}. ` +
       'If an exchange took a fee from it, contact us with the transaction ID and we will sort it out.');
   }
+  if (c && !pay.confirmed) return { pending: true, message: `Waiting for the ${c.name} payment to be confirmed…` };
   if (pay.blockTime && pay.blockTime * 1000 < o.created - 600000) throw new HTTPError(400, 'That payment was made before this order.');
-  if (txid !== testTx) await env.KV.put(`tx:${txid}`, body.order);
-  const { key, keyId } = await issueKey(env, o.tier, txid === testTx ? 'test' : 'ltc', o.email, { order: body.order, txid, upgradeFrom: o.upgradeFrom });
+  if (c || txid !== testTx) await env.KV.put(seenKey, body.order);
+  const { key, keyId } = await issueKey(env, o.tier, !c && txid === testTx ? 'test' : (c ? c.id : 'ltc'), o.email, { order: body.order, txid, upgradeFrom: o.upgradeFrom });
   if (o.upgradeFrom) {
     const old = await getJSON(env, `key:${o.upgradeFrom}`);
     if (old) { old.upgradedTo = keyId; await putJSON(env, `key:${o.upgradeFrom}`, old); }
@@ -923,7 +1053,7 @@ export default {
     try {
       if (request.method === 'GET') {
         if (path === '/') return json({ ok: true, service: 'Notch Apple licenses' });
-        if (path === '/config') return json({ prices: prices(env), ultimate: env.ULTIMATE_ON === '1', network: env.NETWORK || 'mainnet', wallet: env.WALLET });
+        if (path === '/config') return json({ prices: prices(env), ultimate: env.ULTIMATE_ON === '1', network: env.NETWORK || 'mainnet', wallet: env.WALLET, coins: coinList(env) });
         if (path === '/admin') return new Response(ADMIN_PAGE, { headers: ADMIN_HEADERS });
         if (path === '/revoked') return json(await revokedList(env), 200, { 'cache-control': 'public, max-age=3600' });
         if (path.startsWith('/asset/')) return await assetGet(env, request, path.slice('/asset/'.length));

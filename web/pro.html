@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Notch Apple pricing: free, Pro $1 and Ultimate $5, one-time</title>
-<meta name="description" content="Notch Apple is free. Pro is $1 once, Ultimate $5 once: no subscription, no account, lifetime 1.x updates. Pay in Litecoin; your signed key is shown and emailed.">
+<meta name="description" content="Notch Apple is free. Pro is $1 once, Ultimate $5 once: no subscription, no account, lifetime 1.x updates. Pay in Bitcoin, Ethereum, Solana or Litecoin; your signed key is shown and emailed.">
 <meta name="theme-color" content="#09080d">
 <link rel="canonical" href="https://adityajaindxb.github.io/NotchApples/pro.html">
 <meta property="og:site_name" content="Notch Apple">
@@ -239,6 +239,10 @@ footer{border-top:1px solid var(--line);padding:30px 0 44px;color:var(--dim);fon
             <button data-tip="3"><b>+$3</b></button>
             <button data-tip="5"><b>+$5</b></button>
           </div>
+          <div id="coinBox" style="display:none">
+            <label>Pay with</label>
+            <div class="choice" id="coinChoice" style="grid-template-columns:repeat(4,1fr)"></div>
+          </div>
           <label for="email">Email (your key is sent here; used only for that and "Lost my key?")</label>
           <input id="email" type="email" placeholder="you@example.com" autocomplete="email">
           <button class="btn" id="orderBtn"><span class="spin"></span><span>Continue to payment</span></button>
@@ -285,11 +289,12 @@ footer{border-top:1px solid var(--line);padding:30px 0 44px;color:var(--dim);fon
         <div>
           <label style="margin-top:0">Send exactly</label>
           <div class="field"><code class="big" id="amt"></code><button class="mini" data-copy="amt">Copy</button></div>
-          <label>To this Litecoin address</label>
+          <label id="addrLabel">To this Litecoin address</label>
           <div class="field"><code id="addr"></code><button class="mini" data-copy="addr">Copy</button></div>
           <a class="mini" id="walletLink" style="display:inline-block;margin-top:10px">Open in my wallet</a>
         </div>
       </div>
+      <div class="warn" id="coinNote" style="display:none"></div>
       <div class="warn">The amount is unique to your order; that's how we know the payment is yours. Send it <b>exactly</b>. Sending from an exchange? Make sure the exchange's withdrawal fee is added on top, so exactly this amount arrives.</div>
       <label for="txid">Transaction ID (after you've sent it)</label>
       <input id="txid" class="mono" placeholder="64 characters, or an explorer link" autocomplete="off" spellcheck="false">
@@ -318,7 +323,7 @@ footer{border-top:1px solid var(--line);padding:30px 0 44px;color:var(--dim);fon
       <a class="btn ghost" href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe" style="max-width:460px;margin:10px auto 0">Download for Windows</a>
     </div>
   </div>
-  <p class="note">Payments go straight to the developer's Litecoin wallet. No card details, no payment company. <a href="terms.html" style="text-decoration:underline">Terms and refunds</a></p>
+  <p class="note">Payments go straight to the developer's crypto wallets (Bitcoin, Ethereum, Solana or Litecoin). No card details, no payment company. <a href="terms.html" style="text-decoration:underline">Terms and refunds</a></p>
 
   <h2>Questions</h2>
   <section class="faq" id="faqs">
@@ -396,7 +401,7 @@ async function printReceipt(o) {
   $('#prPaper').innerHTML = `<h4>Receipt</h4><hr><dl>
     <div><dt>Item</dt><dd>Notch Apple ${esc(tierName)}</dd></div>
     <div><dt>Price</dt><dd>$${esc(o.usd)}</dd></div>
-    <div><dt>Paid</dt><dd>${esc(o.ltc)} LTC</dd></div>
+    <div><dt>Paid</dt><dd>${esc(o.amount || o.ltc)} ${esc(o.symbol || 'LTC')}</dd></div>
     <div><dt>Order</dt><dd>${esc(String(o.order).slice(0, 12))}</dd></div>
     <div><dt>Date</dt><dd>${esc(day)}</dd></div></dl><hr>
     <dl><div class="tot"><dt>Total paid</dt><dd>$${esc(o.usd)}</dd></div></dl><hr>
@@ -424,7 +429,7 @@ if (location.hash === '#receipt-demo') {
   [...$('#result').children].forEach(c => { if (c.id !== 'printer') c.style.display = 'none' });
   const note = document.createElement('p'); note.className = 'muted'; note.style.textAlign = 'center'; note.textContent = 'Demo receipt: nothing was bought and no key was made.';
   $('#result').append(note);
-  printReceipt({ tier: 'pro', usd: 1, ltc: '0.00000000', order: 'DEMO' });
+  printReceipt({ tier: 'pro', usd: 1, amount: '0.00000000', symbol: 'BTC', order: 'DEMO' });
   $('#result').scrollIntoView({ block: 'center' });
 }
 
@@ -437,6 +442,7 @@ let config = null;
     const b = $('#tierChoice [data-tier=ultimate]'); b.disabled = true; b.querySelector('span').textContent = 'Coming soon, with its first features.';
     $('#ultBtn').disabled = true; $('#ultBtn').textContent = 'Coming soon'; $('#upBtn').disabled = true;
   }
+  showCoins();
   const open = load('na.order'); if (open && open.expires > Date.now()) paying(open);
 })();
 function offline(html) { const w = $('#offline'); w.innerHTML = html; w.style.display = 'block'; document.querySelectorAll('#orderBtn,#upBtn,#promoBtn,#recBtn,#ultBtn').forEach(b => b.disabled = true) }
@@ -445,13 +451,34 @@ function offline(html) { const w = $('#offline'); w.innerHTML = html; w.style.di
 function paying(o) {
   save('na.order', o);
   $('#forms').style.display = 'none'; $('#paying').style.display = 'block';
-  $('#payFor').textContent = `${o.tier === 'ultimate' ? (o.usd === 4 ? 'Upgrade to Ultimate' : 'Ultimate') : 'Pro'} · $${o.usd}` + (o.price ? ` (1 LTC = $${(+o.price).toFixed(2)})` : '');
-  $('#amt').textContent = o.ltc + ' LTC'; $('#addr').textContent = o.wallet;
-  const uri = `litecoin:${o.wallet}?amount=${o.ltc}`; $('#walletLink').href = uri; $('#qr').innerHTML = '';
+  const sym = o.symbol || 'LTC', amount = o.amount || o.ltc, cname = (COIN_NAMES[o.coin || 'ltc'] || 'Litecoin');
+  $('#payFor').textContent = `${o.tier === 'ultimate' ? (o.usd === 4 ? 'Upgrade to Ultimate' : 'Ultimate') : 'Pro'} · $${o.usd}` + (o.price ? ` (1 ${sym} = $${(+o.price).toFixed(2)})` : '');
+  $('#amt').textContent = amount + ' ' + sym; $('#addr').textContent = o.wallet; $('#addrLabel').textContent = `To this ${cname} address`;
+  const note = COIN_NOTES[o.coin || 'ltc']; $('#coinNote').style.display = note ? 'block' : 'none'; $('#coinNote').textContent = note || '';
+  $('#txid').placeholder = o.coin === 'eth' ? '0x… (66 characters), or an explorer link' : o.coin === 'sol' ? 'The long transaction signature, or an explorer link' : '64 characters, or an explorer link';
+  const uri = o.uri || `litecoin:${o.wallet}?amount=${o.ltc}`; $('#walletLink').href = uri; $('#qr').innerHTML = '';
   if (window.QRCode) new QRCode($('#qr'), { text: uri, width: 140, height: 140, correctLevel: QRCode.CorrectLevel.M });
 }
 $('#cancelOrder').onclick = e => { e.preventDefault(); save('na.order', null); $('#paying').style.display = 'none'; $('#forms').style.display = 'block' };
+const COIN_NAMES = { ltc: 'Litecoin', btc: 'Bitcoin', eth: 'Ethereum', sol: 'Solana' };
+const COIN_NOTES = {
+  btc: 'Send Bitcoin on the Bitcoin network. Your key is issued once the payment has 1 confirmation (usually 10 to 30 minutes).',
+  eth: 'Send plain ETH on the Ethereum network itself (not Base, Arbitrum or another layer 2, and not a token such as USDC). Your key is issued after 3 confirmations (about 1 minute).',
+  sol: 'Send SOL on the Solana network (not a token). Your key is issued within a few seconds of the payment.',
+};
+let coin = 'btc';
+function showCoins() {
+  const list = (config && config.coins) || [];
+  if (list.length < 2) { coin = 'ltc'; $('#coinBox').style.display = 'none'; return; }
+  const order = ['btc', 'eth', 'sol', 'ltc'].filter(id => list.some(c => c.id === id));
+  if (!order.includes(coin)) coin = order[0];
+  $('#coinBox').style.display = 'block';
+  $('#coinChoice').innerHTML = order.map(id => `<button class="${id === coin ? 'on' : ''}" data-coin="${id}"><b>${COIN_NAMES[id]}</b></button>`).join('');
+  $('#coinChoice').style.gridTemplateColumns = `repeat(${order.length},1fr)`;
+  document.querySelectorAll('#coinChoice button').forEach(b => b.onclick = () => { coin = b.dataset.coin; document.querySelectorAll('#coinChoice button').forEach(x => x.classList.toggle('on', x === b)) });
+}
 async function startOrder(btn, statusId, body) {
+  body = { ...body, coin };
   if (!validEmail(body.email)) return status(statusId, 'Enter a valid email address. Your key is sent there.', 'err', false);
   busy(btn, true); status(statusId, 'Getting your exact amount…');
   try { paying(await api('/order', body)); status(statusId, '') } catch (e) { status(statusId, e.message, 'err') } finally { busy(btn, false) }
@@ -465,9 +492,10 @@ $('#upBtn').onclick = () => {
   startOrder($('#upBtn'), '#upStatus', { tier: 'ultimate', email: $('#upEmail').value, upgradeFrom: k });
 };
 $('#claimBtn').onclick = async () => {
-  const btn = $('#claimBtn'), o = load('na.order'), m = $('#txid').value.toLowerCase().match(/[0-9a-f]{64}/);
+  const btn = $('#claimBtn'), o = load('na.order'), raw = $('#txid').value;
   if (!o) return;
-  if (!m) return status('#claimStatus', 'Paste the 64-character transaction ID (or an explorer link to it).', 'err', false);
+  const m = o.coin === 'eth' ? raw.match(/0x[0-9a-fA-F]{64}/) : o.coin === 'sol' ? raw.match(/[1-9A-HJ-NP-Za-km-z]{80,90}/) : raw.toLowerCase().match(/[0-9a-f]{64}/);
+  if (!m) return status('#claimStatus', o.coin === 'eth' ? 'Paste the transaction hash (it starts with 0x), or an explorer link to it.' : o.coin === 'sol' ? 'Paste the transaction signature (a long string of letters and numbers), or an explorer link to it.' : 'Paste the 64-character transaction ID (or an explorer link to it).', 'err', false);
   busy(btn, true);
   try {
     for (let i = 0; i < 40; i++) {   // up to ~10 minutes for the transaction to reach the network
