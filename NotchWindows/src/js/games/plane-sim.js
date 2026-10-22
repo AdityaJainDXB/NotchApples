@@ -4597,8 +4597,8 @@
       try { cancelSpeech(); } catch { /* none */ }
       if (!ac) return;
       const old = ac;
-      try { if (engGain) { const t = old.currentTime; engGain.gain.cancelScheduledValues(t); engGain.gain.setValueAtTime(0, t); } old.suspend && old.suspend(); } catch { /* no sound to mute */ }
-      if (kill) { ac = null; engGain = null; snd = null; sndT = -1; try { old.close && old.close(); } catch { /* already closed */ } }
+      try { if (engGain) { const t = old.currentTime; engGain.gain.cancelScheduledValues(t); engGain.gain.setValueAtTime(0, t); } if (!kill && old.suspend) old.suspend().catch(() => {}); } catch { /* no sound to mute */ }
+      if (kill) { ac = null; engGain = null; snd = null; sndT = -1; try { old.close && old.close().catch(() => {}); } catch { /* already closed */ } }
     }
     function unmuteAudio() {
       if (!sound || soundHeld) return;
@@ -8801,7 +8801,7 @@
         else if (a === 'tcas') { tcasOn = !tcasOn; write('tcas', tcasOn); if (!tcasOn) cancelSpeech(); renderUI(); }
         else if (a === 'gpws') { gpwsOn = !gpwsOn; write('gpws', gpwsOn); if (!gpwsOn) cancelSpeech(); renderUI(); }
         else if (a === 'mouse') { mouseOn = !mouseOn; write('mouse', mouseOn); renderUI(); }
-        else if (a === 'sound') { sound = !sound; write('sound', sound); if (sound) unmuteAudio(); else muteAudio(true); renderUI(); }
+        else if (a === 'sound') { sound = !sound; write('sound', sound); if (typeof window.NotchHostSound === 'boolean') window.NotchHostSound = sound; if (sound) unmuteAudio(); else muteAudio(true); renderUI(); }
         else if (a === 'units') { units = units === 'kmh' ? 'kt' : 'kmh'; write('units', units); renderUI(); }
         else if (a === 'failures') { failures = failures === 'rare' ? 'often' : failures === 'often' ? 'off' : 'rare'; write('failures', failures); renderUI(); }
         else if (a === 'clear') { if (window.confirm ? window.confirm('Clear every leaderboard on this computer?') : true) { MODES.forEach((m) => write(`board.${m.id}`, [])); renderUI(); } }
@@ -8931,6 +8931,9 @@
     const netHold = () => !!(war && war.net && netg && netg.cfg && netg.cfg.paused);
     let raf = 0, last = performance.now(), alive = true, frameAvg = 0.016, slowFrames = 0;
     function frame(t) {
+      // The app's Sound switch is the boss: follow it every frame, and never leave an audio engine alive while it is off.
+      if (typeof window.NotchHostSound === 'boolean' && window.NotchHostSound !== sound) window.NotchPlaneGame.setSoundEnabled(window.NotchHostSound);
+      if (!sound && ac) muteAudio(true);
       if (!alive || suspended) return;
       const raw = (t - last) / 1000, real = Math.min(0.1, raw); last = t;
       // A slow machine draws fewer pixels rather than flying in slow motion: after a second and a half of frames
@@ -8986,7 +8989,7 @@
     }
     window.NotchPlaneGame.suspend = suspendGame; window.NotchPlaneGame.resume = resumeGame;
     /// The app's own Sound switch (the Games sidebar on the Mac) drives the game's sound too.
-    window.NotchPlaneGame.setSoundEnabled = (on) => { if (!alive) return; sound = !!on; if (sound) { if (!soundHeld) unmuteAudio(); } else muteAudio(); if (screen === 'menu') renderUI(); };
+    window.NotchPlaneGame.setSoundEnabled = (on) => { if (!alive) return; sound = !!on; if (sound) { if (!soundHeld) unmuteAudio(); } else muteAudio(true); if (screen === 'menu') renderUI(); };
     window.NotchPlaneGame.key = (key, down) => onKey({ key, repeat: false, target: null }, down);
     window.NotchPlaneGame._state = () => ({ screen, keys: [...keys], bank: flight.bank, pitch: flight.pitchAngle, pos: flight.pos, w: flight.w, onGround: flight.onGround,
       speed: flight.speed, ias: flight.ias, gload: flight.gload, spin: flight.spin, wreckRest: flight.rest, report: flight.report, damage: flight.damage, crashed: flight.crashed, why: flight.why, debris: debris.length, particles: smoke.length });

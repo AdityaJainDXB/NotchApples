@@ -152,7 +152,7 @@ private struct PlaneWebView: NSViewRepresentable {
     }
 
     func updateNSView(_ nsView: PlaneWKWebView, context: Context) {
-        nsView.evaluateJavaScript("window.NotchPlaneGame && window.NotchPlaneGame.setSoundEnabled && window.NotchPlaneGame.setSoundEnabled(\(soundOn))")
+        nsView.evaluateJavaScript("window.NotchHostSound=\(soundOn); window.NotchPlaneGame && window.NotchPlaneGame.setSoundEnabled && window.NotchPlaneGame.setSoundEnabled(\(soundOn))")
     }
 
     static func dismantleNSView(_ nsView: PlaneWKWebView, coordinator: Coordinator) {
