@@ -11,6 +11,7 @@
 //   • Cookie Clicker: click, buy multipliers and auto-clickers; progress is saved (CookieClickerView).
 //   • Runner: jump over spikes and blocks, a little Geometry Dash (RunnerGameView).
 //   • Plane: a 3D flight game with four planes, hoops, a time trial, landings and a leaderboard (PlaneGameView).
+//   • Capture the Flag: a top-down team game against computer players or friends in an online room (CtfGameView).
 //   • Racing: top-down cars on a straight, curved or mixed track, with rivals or friends in an online room (RacingGameView).
 //  Best scores are kept on this Mac. Nothing runs while the tab is closed.
 //
@@ -19,7 +20,7 @@ import SwiftUI
 
 struct GamesView: View {
     enum Game: String, CaseIterable, Identifiable {
-        case g2048 = "2048", snake = "Snake", breakout = "Breakout", memory = "Memory", reaction = "Reaction", cookies = "Cookies", runner = "Runner", plane = "Plane", racing = "Racing", blackjack = "Blackjack", solitaire = "Solitaire", poker = "Poker"
+        case g2048 = "2048", snake = "Snake", breakout = "Breakout", memory = "Memory", reaction = "Reaction", cookies = "Cookies", runner = "Runner", plane = "Plane", racing = "Racing", ctf = "Capture Flag", blackjack = "Blackjack", solitaire = "Solitaire", poker = "Poker"
         var id: String { rawValue }
         var symbol: String {
             switch self {
@@ -32,6 +33,7 @@ struct GamesView: View {
             case .runner: "figure.run"
             case .plane: "airplane"
             case .racing: "car.fill"
+            case .ctf: "flag.fill"
             case .blackjack: "suit.spade.fill"
             case .solitaire: "rectangle.on.rectangle.angled"
             case .poker: "suit.club.fill"
@@ -77,6 +79,7 @@ struct GamesView: View {
                 case .runner: RunnerGameView()
                 case .plane: PlaneGameView()
                 case .racing: RacingGameView()
+                case .ctf: CtfGameView()
                 case .blackjack: BlackjackView()
                 case .solitaire: SolitaireView()
                 case .poker: PokerView()
@@ -85,8 +88,8 @@ struct GamesView: View {
             .id(game)
         }
         // The Plane and Racing games are drawn for a bigger panel: grow the notch while one is open, and shrink it back after.
-        .onAppear { setBig(game == .plane || game == .racing) }
-        .onChange(of: lastRaw) { _, _ in setBig(game == .plane || game == .racing) }
+        .onAppear { setBig(game == .plane || game == .racing || game == .ctf) }
+        .onChange(of: lastRaw) { _, _ in setBig(game == .plane || game == .racing || game == .ctf) }
         .onDisappear { setBig(false) }
     }
 
@@ -108,6 +111,7 @@ struct GamesView: View {
         case .blackjack: "Hit or stand. Blackjack pays 3:2, the dealer stands on 17. Play money."
         case .solitaire: "Click a card, then where it goes. Double-click sends it to a foundation."
         case .poker: "Texas Hold’em against the computer. Check or call, raise 20, or fold. Play chips only."
+        case .ctf: "Capture the Flag. W A S D move, the mouse aims, click or Space shoots. Take their flag home. Computer teams or friends online."
         case .racing: "Racing. ↑ W gas, ↓ S brake and reverse, ← → A D steer, Space handbrake (drift), R restart, P pause. Online rooms race friends."
         case .plane: "3D flying. ↑ ↓ pitch, ← → roll, A D rudder, W S throttle, F flaps, Space brakes, C camera, P pause."
         }

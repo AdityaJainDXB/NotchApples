@@ -72,10 +72,10 @@ Pick your computer. Both buttons start the download straight away. The Mac link 
   </tr>
   <tr>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.1.18</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.1.19</b></a>
     </td>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 2.1.18 BETA</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 2.1.19 BETA</b></a>
     </td>
   </tr>
   <tr>
@@ -233,6 +233,12 @@ All screenshots use sample data.
 ## What's new
 
 > **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is in the repository's history.
+
+### Mac 2.1.19 · Windows 2.1.19 BETA · 22 October 2026 · 🚩 Capture the Flag
+
+- New game: Capture the Flag, in the Games tab on Mac and Windows. Two teams fight round walls and crates: steal the other team's flag, carry it home to your own base (your own flag has to be there to score), and be first to 2, 3 or 5 captures or lead when the clock runs out. A flag you drop goes home when your team touches it or after 14 seconds, and whoever carries a flag runs faster and takes less damage.
+- Play against computer teams (2 to 5 players a side, Easy, Normal or Hard, they attack, defend and chase flag thieves), or online with friends: Quick match joins an open game, or Host a game and share the 6-letter code. Empty places are filled by the computer, and with no connection it plays the computer.
+- Controls: W A S D move, the mouse aims, click or Space shoots (or the arrow keys to aim without a mouse), M mutes.
 
 ### Mac 2.1.18 · Windows 2.1.18 BETA · 22 October 2026 · 🏎️ Racing game: race friends in cars
 

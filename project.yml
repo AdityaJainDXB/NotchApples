@@ -13,8 +13,8 @@ packages:
 settings:
   base:
     SWIFT_VERSION: "5.0"
-    MARKETING_VERSION: "2.1.18"
-    CURRENT_PROJECT_VERSION: "145"
+    MARKETING_VERSION: "2.1.19"
+    CURRENT_PROJECT_VERSION: "146"
     CODE_SIGN_IDENTITY: "-"
     CODE_SIGN_STYLE: Manual
     DEVELOPMENT_TEAM: ""
@@ -34,6 +34,11 @@ targets:
         buildPhase: resources
       # The Racing game's engine is shared with the Windows app too.
       - path: NotchWindows/src/js/games/racing.js
+        buildPhase: resources
+      # Capture the Flag (ctf.js and its rules) is shared with the Windows app too.
+      - path: NotchWindows/src/js/games/ctf-logic.js
+        buildPhase: resources
+      - path: NotchWindows/src/js/games/ctf.js
         buildPhase: resources
       # Klick's keyboard sounds, shared with the Windows app (scripts/klick_sounds.py makes them).
       - path: NotchWindows/src/sounds/klick

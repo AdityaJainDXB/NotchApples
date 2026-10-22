@@ -1,6 +1,6 @@
 // Games: 2048, Snake, a reaction test, (as on the Mac) Cookie Clicker, Runner, Breakout and Memory, Plane, a
 // 3D flight game shared with the Mac (games/plane-sim.js), and Racing, a top-down car racing game with online rooms
-// (games/racing.js, also shared with the Mac).
+// (games/racing.js, also shared with the Mac), and Capture the Flag, a top-down team game with online rooms (games/ctf.js).
 // Best scores stay on this PC.
 import { el, load, save } from '../store.js';
 import { segmented } from '../ui.js';
@@ -15,7 +15,7 @@ export function render(root) {
   // to fit instead of being cut off. Plane and Racing fill the space themselves.
   const fit = () => {
     const inner = board.firstElementChild;
-    if (!inner || game === 'plane' || game === 'racing') return;
+    if (!inner || game === 'plane' || game === 'racing' || game === 'ctf') return;
     inner.style.transform = ''; inner.style.marginBottom = ''; inner.style.transformOrigin = 'center top';
     const w = inner.offsetWidth, h = inner.offsetHeight;
     if (!w || !h) return;
@@ -23,8 +23,8 @@ export function render(root) {
     if (k < 1) { inner.style.transform = `scale(${k})`; inner.style.marginBottom = `${-h * (1 - k)}px`; }
   };
   const ro = new ResizeObserver(fit); ro.observe(board);
-  const pick = (g) => { stop(); game = g; save('games.last', g); stop = ({ 2048: g2048, snake, reaction, cookie, runner, breakout, memory, plane, racing, blackjack, solitaire })[g](board) || (() => {}); requestAnimationFrame(fit); setTimeout(fit, 120); };
-  root.append(el('div', { class: 'col fill' }, segmented([{ value: '2048', label: '2048' }, { value: 'snake', label: 'Snake' }, { value: 'reaction', label: 'Reaction' }, { value: 'cookie', label: 'Cookie Clicker' }, { value: 'runner', label: 'Runner' }, { value: 'breakout', label: 'Breakout' }, { value: 'memory', label: 'Memory' }, { value: 'plane', label: '✈️ Plane' }, { value: 'racing', label: '🏎️ Racing' }, { value: 'blackjack', label: '🃏 Blackjack' }, { value: 'solitaire', label: '♠️ Solitaire' }], game, pick), board));
+  const pick = (g) => { stop(); game = g; save('games.last', g); stop = ({ 2048: g2048, snake, reaction, cookie, runner, breakout, memory, plane, racing, ctf, blackjack, solitaire })[g](board) || (() => {}); requestAnimationFrame(fit); setTimeout(fit, 120); };
+  root.append(el('div', { class: 'col fill' }, segmented([{ value: '2048', label: '2048' }, { value: 'snake', label: 'Snake' }, { value: 'reaction', label: 'Reaction' }, { value: 'cookie', label: 'Cookie Clicker' }, { value: 'runner', label: 'Runner' }, { value: 'breakout', label: 'Breakout' }, { value: 'memory', label: 'Memory' }, { value: 'plane', label: '✈️ Plane' }, { value: 'racing', label: '🏎️ Racing' }, { value: 'ctf', label: '🚩 Capture the Flag' }, { value: 'blackjack', label: '🃏 Blackjack' }, { value: 'solitaire', label: '♠️ Solitaire' }], game, pick), board));
   pick(game);
   return () => { ro.disconnect(); stop(); };
 }
@@ -118,5 +118,16 @@ function racing(host) {
   host.replaceChildren(box);
   let stop = () => {}, gone = false;
   import('../games/racing.js').then(() => { if (!gone) { stop = window.NotchRaceGame.mount(box); box.firstElementChild && box.firstElementChild.focus(); } });
+  return () => { gone = true; host.style.position = ''; stop(); };
+}
+
+/// Capture the Flag: a top-down team game with computer players or friends in an online room. The same script runs in the Mac
+/// app's web view. It stops when you switch away.
+function ctf(host) {
+  host.style.position = 'relative';
+  const box = el('div', { style: 'position:absolute;inset:0' });
+  host.replaceChildren(box);
+  let stop = () => {}, gone = false;
+  import('../games/ctf-logic.js').then(() => import('../games/ctf.js')).then(() => { if (!gone) { stop = window.NotchCtfGame.mount(box); box.firstElementChild && box.firstElementChild.focus(); } });
   return () => { gone = true; host.style.position = ''; stop(); };
 }
