@@ -72,10 +72,10 @@ Pick your computer. Both buttons start the download straight away. The Mac link 
   </tr>
   <tr>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.1.17</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.1.18</b></a>
     </td>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 2.1.17 BETA</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 2.1.18 BETA</b></a>
     </td>
   </tr>
   <tr>
@@ -233,6 +233,12 @@ All screenshots use sample data.
 ## What's new
 
 > **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is in the repository's history.
+
+### Mac 2.1.18 · Windows 2.1.18 BETA · 22 October 2026 · 🏎️ Racing game: race friends in cars
+
+- New Racing game in the Games tab (Mac and Windows): top-down cars on a straight sprint, a curved circuit or a mixed track with straights, a hairpin and a chicane. Pick a Street GT, a Drift King or a Muscle car, and race 0 to 5 computer rivals at Easy, Normal or Hard.
+- Drive with the arrows or W A S D, brake and reverse with the down key, and tap Space for the handbrake to drift round corners (skid marks and a drift score). Lap times, the best race time and a minimap are kept on your computer.
+- Race friends online: choose Create room and share the 6-letter code, friends type it under Join, and the host starts the race for everyone (up to 8 drivers). Planes can already race through hoops in Plane's Hoop Rush and Time Trial; racing planes with friends is next.
 
 ### Mac 2.1.17 · Windows 2.1.17 BETA · 22 October 2026 · ✈️ Battle works offline
 
