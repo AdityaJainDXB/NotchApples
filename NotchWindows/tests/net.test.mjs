@@ -43,6 +43,12 @@ test('a room code becomes a relay topic that hides the code, and the same code a
   assert.ok(!a.includes('K7PD2M'.toLowerCase()));
 });
 
+test('older versions are in a different room from this one, so they cannot meet it, and the old room is still reachable to tell them to update', async () => {
+  const now = await NET.topicFor('K7PD2M'), old = await NET.topicFor('K7PD2M', 'v1');
+  assert.notEqual(now, old);
+  assert.match(old, /^notchapple-v1-[0-9a-f]{40}$/);
+});
+
 test('two players in the same room hear each other, and a stranger in another room does not', async () => {
   const { Socket } = fakeRelay();
   const got = { a: [], b: [], c: [] };

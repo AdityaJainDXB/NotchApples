@@ -4266,8 +4266,8 @@
     /// What someone typed, tidied up: capitals, no spaces or dashes. Null if it cannot be a code.
     const normCode = (raw) => { const c = String(raw || '').toUpperCase().replace(/[^A-Z0-9]/g, ''); return c.length === 6 && [...c].every((ch) => CODE_CHARS.includes(ch)) ? c : null; };
     /// The relay's name for a room: a hash of the code (the relay never sees the code itself).
-    async function topicFor(code) {
-      const data = new TextEncoder().encode(`notchapple-battle-v2|${code}`);      // v2: older versions are in other rooms, so they can never meet players on this one
+    async function topicFor(code, ver = 'v2') {
+      const data = new TextEncoder().encode(`notchapple-battle-${ver}|${code}`);      // v2: older versions are in other rooms, so they can never meet players on this one
       const h = new Uint8Array(await crypto.subtle.digest('SHA-256', data));
       return `notchapple-v1-${[...h.slice(0, 20)].map((b) => b.toString(16).padStart(2, '0')).join('')}`;
     }
@@ -4298,8 +4298,8 @@
     /// A link to a room. `Socket` is the WebSocket class (replaced by a pretend one in tests).
     class Link {
       constructor(Socket, onMessage, onState) { this.Socket = Socket; this.onMessage = onMessage; this.onState = onState; this.ws = null; this.state = 'off'; this.topic = null; this.retry = 0; this.wantOpen = false; this.sent = 0; }
-      async join(code) {
-        this.close(); this.topic = await topicFor(code); this.wantOpen = true; this._open();
+      async join(code, ver = 'v2') {
+        this.close(); this.topic = await topicFor(code, ver); this.wantOpen = true; this._open();
       }
       _open() {
         if (!this.wantOpen) return;
@@ -7118,13 +7118,25 @@
         status: 'connecting', error: '', joined: Date.now(), t0: Date.now(), lobbyT: 0, helloT: 0, rev: 0, shownRev: -1, saved: null };
       netg.link = new NET.Link(WebSocket, netMsg, (st) => { if (!netg) return; netg.status = st; if (st === 'on') { netg.error = ''; netg.joined = Date.now(); netHello(); if (role === 'host') netSendLobby(); } netBump(); });
       netg.link.join(code);
+      // The host also listens for a few minutes in the old (v1) room of this code: a friend on an older version, who can never meet this
+      // game, is told on their own screen (as a player named in their lobby) to update, and the host sees who is stuck.
+      if (role === 'host') { netg.legacy = new NET.Link(WebSocket, netLegacyMsg, () => {}); netg.legacy.join(code, 'v1'); netg.legacyUntil = Date.now() + 5 * 60 * 1000; }
       netg.timer = setInterval(netHousekeeping, 500);
       netBump();
+    }
+    function netLegacyMsg(m) {
+      if (!netg || !netg.legacy || !m || m.t !== 'hi' || m.id === netMyId) return;
+      const now = Date.now();
+      if (now - (netg.legacyToast || 0) > 20000) { netg.legacyToast = now; toast(`${String(m.n || 'A friend').slice(0, 14)} is on an older Notch Apple and cannot join: they need to update (2.1.9 or newer)`, 5000); }
+      if (now - (netg.legacyReply || 0) > 2000) {          // what an older version shows in its lobby: a "player" saying what to do
+        netg.legacyReply = now;
+        netg.legacy.send({ t: 'lobby', host: 'update-needed', cfg: { field: 'plains', side: 'coop', npc: true }, roster: [{ id: 'update-needed', n: '⚠ UPDATE NOTCH APPLE (2.1.9+)', v: 'f16' }], running: false });
+      }
     }
     function netLeave(quiet = false) {
       if (!netg) return;
       netSend({ t: 'bye', id: netMyId });
-      clearInterval(netg.timer); netg.link.close();
+      clearInterval(netg.timer); netg.link.close(); if (netg.legacy) { netg.legacy.close(); netg.legacy = null; }
       if (netg.saved) { warField = netg.saved.field; warSide = netg.saved.side; warNpc = netg.saved.npc; }
       netg = null;
       if (war) war.net = null;
@@ -7142,6 +7154,7 @@
       if (netg.role === 'client' && netg.autoJoin && !netg.hostSeen && netg.status === 'on' && now - netg.joined > 6000) {
         const code = netg.code; netOpen('host', code); netg.autoStart = true; return;     // nobody is hosting: open the game yourself
       }
+      if (netg.legacy && now > netg.legacyUntil) { netg.legacy.close(); netg.legacy = null; }
       if (netg.role === 'host') {
         for (const [id, p] of netg.peers) if (now - p.last > 8000) { netg.peers.delete(id); if (war && war.net) war.net.others.delete(id); netBump(); if (war && war.net) warFeed(`${p.n} left`); }
         if (now - netg.lobbyT > 1500) { netg.lobbyT = now; netSendLobby(); }
