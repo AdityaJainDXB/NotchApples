@@ -5566,7 +5566,7 @@
         flight.reset([spot.x, tankBody.pos[1] + 2.2, spot.z], spot.heading, 0, true);
       } else flight.reset([spot.x, warStartAlt(), shared ? spot.z : R * 0.9], spot.heading, plane.cruise, false);
       flight.sturdy = !tank; flight.overG = warOverG;
-      war = { fires: [], flyers: [], startZ, arena, R, grows, loot: [], lootId: 0, shield: foot ? SOLDIER.shield : 0, bandage: 0, shieldPots: 0, medkit: 0, healCool: 0, vehicle: tank ? 'tank' : 'plane', foot, rpg: foot ? SOLDIER.rpg : 0, weapon: 'rifle', heli: null, mag: SOLDIER.mag, reloadT: 0, zoomI: 0, tank: tankBody, assist: warAssist, npc: warNpc, ap: { hdg: spot.heading, alt: flight.pos[1], spd: plane.cruise * 1.05, i: 0 }, outT: 0, endT: 0, shells: L.shells,
+      war = { guided: 2, fires: [], flyers: [], startZ, arena, R, grows, loot: [], lootId: 0, shield: foot ? SOLDIER.shield : 0, bandage: 0, shieldPots: 0, medkit: 0, healCool: 0, vehicle: tank ? 'tank' : 'plane', foot, rpg: foot ? SOLDIER.rpg : 0, weapon: 'rifle', heli: null, mag: SOLDIER.mag, reloadT: 0, zoomI: 0, tank: tankBody, assist: warAssist, npc: warNpc, ap: { hdg: spot.heading, alt: flight.pos[1], spd: plane.cruise * 1.05, i: 0 }, outT: 0, endT: 0, shells: L.shells,
         gidn: 0, nidn: 0, score: 0, kills: 0, wave: 0, hp: L.hp, maxHp: L.hp, L, gun: L.gun, bombs: L.bombs, missiles: L.missiles, flares: L.flares,
         ground: [], foes: [], friend: null, bullets: [], bombsAir: [], missilesAir: [], flaks: [], craters: [], feed: [], lock: null, lockT: 0,
         gunT: 0, bombT: 0, flash: 0, warn: '', warnT: 0, wavePause: 2.5, waveClear: false, gunners: 0, dead: false, feedT: 0, shown: false, d };
@@ -5989,9 +5989,9 @@
     }
     /// A tank shell bursts where it lands (or hits): it hurts everything within a few metres.
     function warShellBurst(b) { warBoom(b.pos, 0.7); warCrater(b.pos, 4); warBlast(b.pos, 14, 170, b.owner, b); }
-    function warFireMissile(owner, pos, vel, dir, target) {
+    function warFireMissile(owner, pos, vel, dir, target, quiet = false) {
       const m = { owner, pos: pos.slice(), vel: add(vel, mul(dir, 120)), t: 0, target, trail: 0 };
-      if (war.net && owner === 'p') { m.noNpc = !warAuth(); netSend({ t: 'm', id: netMyId, p: m.pos.map(r1n), v: m.vel.map(r1n), tg: target && target.ref ? target.ref.nid : 0 }); }
+      if (war.net && owner === 'p') { m.noNpc = !warAuth(); if (!quiet) netSend({ t: 'm', id: netMyId, p: m.pos.map(r1n), v: m.vel.map(r1n), tg: target && target.ref ? target.ref.nid : 0 }); }
       war.missilesAir.push(m);
       noise(0.7, 0.25, 1800);
       return m;
@@ -6217,10 +6217,9 @@
     function warLaunchGuided() {
       if (!war || war.dead || war.vehicle !== 'plane' || screen !== 'fly') return;
       if (war.guideM && !war.guideM.dead) { war.guideM.detonate = true; return; }
-      if (war.net && !warAuth()) { toast('Guided missiles are for the host in shared battles for now', 1800); return; }
       if ((war.guided || 0) <= 0) { toast('No guided missiles left this round', 1400); return; }
       const { f } = flight.axes(); war.guided--;
-      const m = warFireMissile('p', warMuzzle(), flight.vel, f, null); m.guided = true;
+      const m = warFireMissile('p', warMuzzle(), flight.vel, f, null, true); m.guided = true;      // others are told where it explodes, not along its way
       war.guideM = m; war.guiding = true; war.ap = { hdg: flight.heading, alt: flight.pos[1], spd: Math.max(flight.ias, plane.stall * 1.4), i: 0 };
       toast('GUIDED MISSILE: steer with the mouse or arrows. Space, click or G detonates', 2800);
     }
@@ -6470,7 +6469,7 @@
           } else if (m.owner === 'r' && netFight()) { if (!war.dead && len(sub(m.pos, flight.pos)) < Math.max(14, rP * 1.4)) boom = true; }
           if (m.owner !== 'e') for (const a of war.foes) if (a.state === 'fly' && len(sub(m.pos, a.pos)) < 16) boom = true;
         }
-        if (boom) { m.dead = true; warBoom(m.pos, m.guided ? 1.1 : 0.8); warBlast(m.pos, m.guided ? 60 : 45, m.guided ? 320 : 260, m.owner, m); if (m === war.guideM) { war.guideM = null; war.guiding = false; } }
+        if (boom) { m.dead = true; warBoom(m.pos, m.guided ? 1.1 : 0.8); warBlast(m.pos, m.guided ? 60 : 45, m.guided ? 320 : 260, m.owner, m); if (m.guided && war.net && m.owner === 'p') netSend({ t: 'gx', id: netMyId, p: m.pos.map(r1n) }); if (m === war.guideM) { war.guideM = null; war.guiding = false; } }
       }
       war.missilesAir = war.missilesAir.filter((m) => !m.dead);
       // Flak: a shell that bursts where it was aimed, and hurts what is near the burst.
@@ -7390,6 +7389,12 @@
           for (const a of m.L.slice(0, 400)) if (Array.isArray(a) && Number.isFinite(a[0]) && Number.isFinite(a[1])) { const tr = treeAt(W, a[0], a[1]); if (tr) breakTree(W, tr, true); }
           break;
         }
+        case 'gx': {         // another player's guided missile exploded here: everyone sees it, and the host judges what it hit
+          if (!okVec(m.p)) break;
+          warBoom(m.p, 1.1);
+          if (n.role === 'host') warBlast(m.p, 60, 320, 'r', { by: m.id });
+          break;
+        }
         case 'vn': { const o = netOther(m.id); if (!o) break; o.van = m.on && okVec(m.p) && okVec(m.q, 4) ? { pos: m.p.slice(), q: m.q.slice() } : null; break; }
         case 'hl': { const o = netOther(m.id); if (!o) break; if (m.on && okVec(m.p) && okVec(m.q, 4) && PLANES.some((q) => q.id === m.k && q.rotor)) o.heli = { id: m.k, pos: m.p.slice(), q: m.q.slice() }; else o.heli = null; break; }
         case 'sh': { if (!okVec(m.p) || !okVec(m.v)) break; war.bullets.push({ owner: 'r', by: m.id, shell: true, pos: m.p.slice(), vel: m.v.slice(), t: 0, dmgAir: 90, dmgGround: 150, noNpc: !warAuth() }); break; }
@@ -7414,7 +7419,7 @@
     function netApplyWave(m) {
       if (!Number.isInteger(m.n) || m.n < war.wave || m.n === war.appliedWave || !Array.isArray(m.g)) return;
       war.wave = m.n; war.score = m.sc; war.kills = m.kl; war.waveClear = false; war.wavePause = 1e9;
-      war.appliedWave = m.n; if (Number.isFinite(m.R) && m.R > 300 && m.R < 20000) { if (war.grows && m.R > war.R + 1 && m.n > 1) toast(`⬆ The battlefield grows: ${Math.round(m.R)} m across the middle`, 3000); war.R = m.R; }
+      war.appliedWave = m.n; war.guided = 2; if (Number.isFinite(m.R) && m.R > 300 && m.R < 20000) { if (war.grows && m.R > war.R + 1 && m.n > 1) toast(`⬆ The battlefield grows: ${Math.round(m.R)} m across the middle`, 3000); war.R = m.R; }
       war.waveGround = m.g.length; war.waveFighters = Number.isInteger(m.af) ? m.af : 0; war.briefingT = 4;
       war.ground = m.g.map((g) => ({ nid: g.i, kind: g.k, pos: [g.x, g.y, g.z], heading: g.h, turret: g.h, hp: g.hp, maxHp: g.mx, r: WAR_KINDS[g.k].r, pts: WAR_KINDS[g.k].pts, dead: !!g.d, speed: g.s, burning: 0, cool: 1e9, t: 0 }));
       toast(`WAVE ${m.n}`, 1800); beep(520, 0.15, 'square', 0.07);
