@@ -26,13 +26,13 @@ struct ClaudeLimits: Equatable {
     var isEmpty: Bool { fiveHour == nil && sevenDay == nil }
 }
 
-/// Decides when the closed notch pulses "usage went up". It remembers the highest percent it has announced for each window, so a
-/// reading that jitters (4, 5, 4, 5) says nothing after the first 5; a drop of more than 3 points means the window reset and starts
-/// the count again. It also keeps the pulses at least `minGap` seconds apart unless usage is getting high (75% or more).
+/// Decides when the closed notch pulses "usage went up". Every whole percent that is new pulses once. It remembers the highest percent
+/// it has announced for each window, so a reading that jitters (4, 5, 4, 5) says nothing after the first 5; a drop of more than 3 points
+/// means the window reset and starts the count again. (`minGap` can space the pulses out; it is 0, so none are held back.)
 struct UsageAnnouncer {
     private(set) var high: [String: Int] = [:]
     private(set) var last: Date = .distantPast
-    var minGap: TimeInterval = 300
+    var minGap: TimeInterval = 0
 
     /// `readings`: window name -> percent used, for one account. Returns true when the notch should pulse now.
     mutating func shouldAnnounce(account: String, readings: [String: Int], now: Date = Date()) -> Bool {

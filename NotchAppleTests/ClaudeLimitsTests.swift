@@ -138,19 +138,19 @@ final class ClaudeLimitsTests: XCTestCase {
         XCTAssertEqual(ClaudeAccountLogic.accounts(services: ["Claude Code-credentials"], emails: [:]).first?.label, "Claude account")
     }
 
-    func testTheNotchOnlyPulsesForANewHighAndNotTooOften() {
+    func testTheNotchPulsesOnceForEveryNewPercentAndNeverForAWobble() {
         var a = UsageAnnouncer()
         let t0 = Date()
         func check(_ five: Int, _ week: Int, at seconds: TimeInterval) -> Bool {
             a.shouldAnnounce(account: "x", readings: ["5h": five, "wk": week], now: t0.addingTimeInterval(seconds))
         }
         XCTAssertFalse(check(4, 40, at: 0))                                   // the first reading says nothing
-        XCTAssertTrue(check(5, 40, at: 60))                                   // a new high
-        XCTAssertFalse(check(6, 40, at: 120))                                 // another rise, but under five minutes later
-        XCTAssertTrue(check(7, 40, at: 500))
-        XCTAssertFalse(check(6, 40, at: 900)); XCTAssertFalse(check(7, 40, at: 1000))   // jitter back and forth: nothing new
-        XCTAssertTrue(check(80, 40, at: 1010)); XCTAssertTrue(check(81, 40, at: 1015))   // high usage is always told straight away
-        XCTAssertFalse(check(2, 40, at: 3000))                                // the window reset: counting starts again
+        XCTAssertTrue(check(5, 40, at: 10))                                   // every new percent pulses, even a few seconds apart
+        XCTAssertTrue(check(6, 40, at: 20))
+        XCTAssertFalse(check(5, 40, at: 30)); XCTAssertFalse(check(6, 40, at: 40))      // jitter back and forth: nothing new
+        XCTAssertTrue(check(6, 41, at: 50))                                   // the weekly figure went up
+        XCTAssertFalse(check(2, 41, at: 3000))                                // the window reset: counting starts again
+        XCTAssertTrue(check(3, 41, at: 3010))
     }
 
     func testEveryWholePercentIsAnIncrease() {
