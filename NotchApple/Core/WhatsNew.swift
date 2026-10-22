@@ -20,6 +20,9 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.1.5", date: "22 October 2026", headline: "Plane game: sound really off", items: [
+            "Plane game sound: switching sound off, or closing the notch, now shuts the game's audio engine down completely instead of only muting it, so nothing can still be heard. It starts fresh when sound is wanted again.",
+        ]),
         ReleaseNote(version: "2.1.4", date: "21 October 2026", headline: "Claude usage pulse: much less often", items: [
             "The Claude usage pulse on the closed notch (\"5h 96% left, wk 48% left\") no longer keeps coming back. It only appears when a number passes the highest one it has already shown (a reading that wobbles 4, 5, 4, 5 says nothing more), at most once every five minutes, and straight away only when usage is at 75% or more. A window that resets starts the count again.",
         ]),

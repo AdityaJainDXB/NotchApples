@@ -4570,13 +4570,18 @@
     }
     /// Silences everything for real. (Setting the master gain's value is not enough: the engine sounds keep gliding their level back
     /// up, so the gain's pending changes are cancelled first, and the audio itself is paused.)
-    function muteAudio() {
+    /// `kill` throws the audio engine away altogether (the notch was closed, or sound was switched off): nothing is left that
+    /// could ever make a noise, and it is built again from scratch when sound is wanted again.
+    function muteAudio(kill = false) {
       try { cancelSpeech(); } catch { /* none */ }
       if (!ac) return;
-      try { if (engGain) { const t = ac.currentTime; engGain.gain.cancelScheduledValues(t); engGain.gain.setValueAtTime(0, t); } ac.suspend && ac.suspend(); } catch { /* no sound to mute */ }
+      const old = ac;
+      try { if (engGain) { const t = old.currentTime; engGain.gain.cancelScheduledValues(t); engGain.gain.setValueAtTime(0, t); } old.suspend && old.suspend(); } catch { /* no sound to mute */ }
+      if (kill) { ac = null; engGain = null; snd = null; sndT = -1; try { old.close && old.close(); } catch { /* already closed */ } }
     }
     function unmuteAudio() {
-      if (!ac || !sound || soundHeld) return;
+      if (!sound || soundHeld) return;
+      if (!ac) { audio(); return; }
       try { if (engGain) { const t = ac.currentTime; engGain.gain.cancelScheduledValues(t); engGain.gain.setValueAtTime(1, t); } ac.resume && ac.resume(); } catch { /* no sound */ }
     }
     function audio() {
@@ -4987,7 +4992,7 @@
     const blur = () => keys.clear(); window.addEventListener('blur', blur);
     root.addEventListener('focusout', (e) => { if (!root.contains(e.relatedTarget)) keys.clear(); });
     // Hidden (the window or notch closed): let go of the keys and pause the flight, so nothing happens while nobody is looking.
-    const hidden = () => { if (document.hidden) { muteAudio(); keys.clear(); warPad.gun = false; warPad.bomb = false; if (screen === 'fly' && !paused && !(war && war.net)) { paused = true; renderUI(); } } else if (screen === 'fly' && !paused && !soundHeld) unmuteAudio(); }; document.addEventListener('visibilitychange', hidden);
+    const hidden = () => { if (document.hidden) { muteAudio(true); keys.clear(); warPad.gun = false; warPad.bomb = false; if (screen === 'fly' && !paused && !(war && war.net)) { paused = true; renderUI(); } } else if (screen === 'fly' && !paused && !soundHeld) unmuteAudio(); }; document.addEventListener('visibilitychange', hidden);
     // The mouse steers by where the cursor is inside a small ring in the middle of the view: the ring's edge is full
     // stick, so a short move is enough and the cursor never has to leave the notch. It only takes control once the
     // cursor has been in the middle (a cursor left anywhere after clicking Take off can't bank the plane), and lets
@@ -8673,7 +8678,7 @@
         else if (a === 'tcas') { tcasOn = !tcasOn; write('tcas', tcasOn); if (!tcasOn) cancelSpeech(); renderUI(); }
         else if (a === 'gpws') { gpwsOn = !gpwsOn; write('gpws', gpwsOn); if (!gpwsOn) cancelSpeech(); renderUI(); }
         else if (a === 'mouse') { mouseOn = !mouseOn; write('mouse', mouseOn); renderUI(); }
-        else if (a === 'sound') { sound = !sound; write('sound', sound); if (sound) unmuteAudio(); else muteAudio(); renderUI(); }
+        else if (a === 'sound') { sound = !sound; write('sound', sound); if (sound) unmuteAudio(); else muteAudio(true); renderUI(); }
         else if (a === 'units') { units = units === 'kmh' ? 'kt' : 'kmh'; write('units', units); renderUI(); }
         else if (a === 'failures') { failures = failures === 'rare' ? 'often' : failures === 'often' ? 'off' : 'rare'; write('failures', failures); renderUI(); }
         else if (a === 'clear') { if (window.confirm ? window.confirm('Clear every leaderboard on this computer?') : true) { MODES.forEach((m) => write(`board.${m.id}`, [])); renderUI(); } }
@@ -8844,7 +8849,7 @@
       if (suspended || !alive) return;
       suspended = true;
       keys.clear(); warPad.gun = false; warPad.bomb = false; cancelSpeech();
-      soundHeld = true; muteAudio();
+      soundHeld = true; muteAudio(true);
       cancelAnimationFrame(raf);
       if (screen === 'fly' && war && war.net) { bgLast = performance.now(); bgTimer = setInterval(bgStep, 100); return; }
       if (screen === 'fly' && !paused) { paused = true; renderUI(); }
