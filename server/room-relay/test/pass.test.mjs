@@ -8,7 +8,7 @@ const src = readFileSync(new URL('../src/relay.js', import.meta.url), 'utf8');
 const pair = await crypto.subtle.generateKey({ name: 'Ed25519' }, true, ['sign', 'verify']);
 const raw = btoa(String.fromCharCode(...new Uint8Array(await crypto.subtle.exportKey('raw', pair.publicKey))));
 const patched = src.replace(/const PUBLIC_KEY = '[^']+';/, `const PUBLIC_KEY = '${raw}';`);
-const { passOk } = await import('data:text/javascript;base64,' + Buffer.from(patched).toString('base64'));
+const { passOk, allowFrame } = await import('data:text/javascript;base64,' + Buffer.from(patched).toString('base64'));
 
 const b64u = (b) => btoa(String.fromCharCode(...b)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 const mint = async (payload, kind = 'pass1', key = pair.privateKey) => {
@@ -33,4 +33,8 @@ const real = await mintToken({ SIGNING_KEY: JSON.stringify(jwk) }, 'pass1', { t:
 assert.equal(await passOk(real), true); ok('a pass from the licence server is accepted by the relay');
 for (const junk of ['', 'x', 'pass1..', 'pass1.a.b', null, undefined]) assert.equal(await passOk(junk), false);
 ok('junk is refused');
+// A connection that floods is cut to 60 a second, and a normal one is never touched.
+{ const b = { n: 120, t: 0 }; let passed = 0; for (let i = 0; i < 1000; i++) if (allowFrame(b, 0)) passed++; assert.equal(passed, 120); ok('a flood is capped at the burst size');
+  let later = 0; for (let i = 0; i < 100; i++) if (allowFrame(b, 1000 + i)) later++; assert.ok(later >= 60 && later <= 70); ok('then it trickles at about 60 a second');
+  const calm = { n: 120, t: 0 }; let dropped = 0; for (let i = 0; i < 300; i++) if (!allowFrame(calm, i * 66)) dropped++; assert.equal(dropped, 0); ok('15 frames a second (a real Battle) is never dropped'); }
 console.log(`\n${n} passed.`);

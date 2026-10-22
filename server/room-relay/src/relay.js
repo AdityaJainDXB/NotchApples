@@ -15,6 +15,16 @@ const PUBLIC_KEY = 'HmCtNtd+sFaJO+8TQ57od7pptH3dhEx00SO16I1fhvs=';   // the same
 const CLIP_MIN_TIER = 2;
 const MAX_FRAME = 16 * 1024;
 const MAX_PEERS = 200;
+// One connection may send up to 60 frames a second (a burst of 120). A shared Battle needs about 15, so this only stops a
+// stuck or hostile client from burning the free daily allowance for everyone else.
+const FRAMES_PER_SEC = 60, FRAME_BURST = 120;
+
+/** Token bucket: true if a frame may pass now. `b` is the connection's own `{ n, t }` (created on first use). */
+export function allowFrame(b, now = Date.now()) {
+  b.n = Math.min(FRAME_BURST, b.n + ((now - b.t) / 1000) * FRAMES_PER_SEC); b.t = now;
+  if (b.n < 1) return false;
+  b.n -= 1; return true;
+}
 
 let pubKey = null;
 async function publicKey() {
@@ -58,7 +68,7 @@ export default {
 };
 
 export class Room {
-  constructor(state) { this.state = state; }
+  constructor(state) { this.state = state; this.buckets = new WeakMap(); }
 
   async fetch() {
     if (this.state.getWebSockets().length >= MAX_PEERS) return new Response('Room full', { status: 429 });
@@ -72,6 +82,8 @@ export class Room {
     if (data === 'ping') { ws.send('pong'); return; }
     const size = typeof data === 'string' ? data.length : data.byteLength;
     if (size === 0 || size > MAX_FRAME) return;
+    let b = this.buckets.get(ws); if (!b) { b = { n: FRAME_BURST, t: Date.now() }; this.buckets.set(ws, b); }
+    if (!allowFrame(b)) return;
     for (const peer of this.state.getWebSockets()) {
       if (peer !== ws) { try { peer.send(data); } catch { /* closed */ } }
     }
