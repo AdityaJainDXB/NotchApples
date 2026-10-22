@@ -1,0 +1,3 @@
+## Notch Apple for Windows 2.1.23 (BETA)
+
+- Every small game now has a Full screen button (the little corner arrows on Mac, "⛶ Full screen" on Windows): 2048, Snake, Breakout, Memory, Reaction, Cookie Clicker, Runner, Blackjack and Poker open in a big window that fills the screen, easy to see from a distance. Solitaire already had one.

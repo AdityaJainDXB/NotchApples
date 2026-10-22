@@ -19,14 +19,19 @@ export function render(root) {
     inner.style.transform = ''; inner.style.marginBottom = ''; inner.style.transformOrigin = 'center top';
     const w = inner.offsetWidth, h = inner.offsetHeight;
     if (!w || !h) return;
-    const k = Math.min(1, board.clientWidth / w, (board.clientHeight - 2) / h);
-    if (k < 1) { inner.style.transform = `scale(${k})`; inner.style.marginBottom = `${-h * (1 - k)}px`; }
+    const full = document.fullscreenElement === board;                       // full screen: the game grows to fill the screen
+    const k = Math.min(full ? 4 : 1, board.clientWidth / w, (board.clientHeight - 2) / h);
+    if (k < 1 || (full && k > 1)) { inner.style.transform = `scale(${k})`; inner.style.marginBottom = `${-h * (1 - k)}px`; }
   };
   const ro = new ResizeObserver(fit); ro.observe(board);
-  const pick = (g) => { stop(); game = g; save('games.last', g); stop = ({ 2048: g2048, snake, reaction, cookie, runner, breakout, memory, plane, racing, ctf, blackjack, solitaire })[g](board) || (() => {}); requestAnimationFrame(fit); setTimeout(fit, 120); };
-  root.append(el('div', { class: 'col fill' }, segmented([{ value: '2048', label: '2048' }, { value: 'snake', label: 'Snake' }, { value: 'reaction', label: 'Reaction' }, { value: 'cookie', label: 'Cookie Clicker' }, { value: 'runner', label: 'Runner' }, { value: 'breakout', label: 'Breakout' }, { value: 'memory', label: 'Memory' }, { value: 'plane', label: '✈️ Plane' }, { value: 'racing', label: '🏎️ Racing' }, { value: 'ctf', label: '🚩 Capture the Flag' }, { value: 'blackjack', label: '🃏 Blackjack' }, { value: 'solitaire', label: '♠️ Solitaire' }], game, pick), board));
+  // A Full screen button for the small games (too small to see from a distance or at a bad angle): the game grows to fill the screen, Esc leaves.
+  const onFull = () => { const on = document.fullscreenElement === board; board.style.cssText = on ? 'display:flex;justify-content:center;align-items:flex-start;background:#0d0b14;overflow:auto;padding-top:2vh' : ''; fit(); setTimeout(fit, 80); };
+  document.addEventListener('fullscreenchange', onFull);
+  const fullBtn = el('button', { class: 'btn small', title: 'Make this game fill the screen (Esc leaves)', onclick: () => { if (document.fullscreenElement === board) document.exitFullscreen?.(); else board.requestFullscreen?.().catch?.(() => {}); } }, '⛶ Full screen');
+  const pick = (g) => { stop(); game = g; save('games.last', g); fullBtn.style.display = (g === 'plane' || g === 'racing' || g === 'ctf') ? 'none' : ''; stop = ({ 2048: g2048, snake, reaction, cookie, runner, breakout, memory, plane, racing, ctf, blackjack, solitaire })[g](board) || (() => {}); requestAnimationFrame(fit); setTimeout(fit, 120); };
+  root.append(el('div', { class: 'col fill' }, segmented([{ value: '2048', label: '2048' }, { value: 'snake', label: 'Snake' }, { value: 'reaction', label: 'Reaction' }, { value: 'cookie', label: 'Cookie Clicker' }, { value: 'runner', label: 'Runner' }, { value: 'breakout', label: 'Breakout' }, { value: 'memory', label: 'Memory' }, { value: 'plane', label: '✈️ Plane' }, { value: 'racing', label: '🏎️ Racing' }, { value: 'ctf', label: '🚩 Capture the Flag' }, { value: 'blackjack', label: '🃏 Blackjack' }, { value: 'solitaire', label: '♠️ Solitaire' }], game, pick), el('div', { style: 'display:flex;justify-content:flex-end' }, fullBtn), board));
   pick(game);
-  return () => { ro.disconnect(); stop(); };
+  return () => { ro.disconnect(); stop(); document.removeEventListener('fullscreenchange', onFull); if (document.fullscreenElement === board) document.exitFullscreen?.(); };
 }
 function best(key, v) { const b = load(`games.best.${key}`, 0); if (v !== undefined && v > b) { save(`games.best.${key}`, v); return v; } return b; }
 

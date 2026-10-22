@@ -68,29 +68,33 @@ struct GamesView: View {
             }
             .frame(width: 130)
             .frame(maxHeight: .infinity, alignment: .top)
-            GlassCard {
-                switch game {
-                case .g2048: Game2048View()
-                case .snake: SnakeGameView()
-                case .breakout: BreakoutGameView()
-                case .memory: MemoryGameView()
-                case .reaction: ReactionView()
-                case .cookies: CookieClickerView()
-                case .runner: RunnerGameView()
-                case .plane: PlaneGameView()
-                case .racing: RacingGameView()
-                case .ctf: CtfGameView()
-                case .blackjack: BlackjackView()
-                case .solitaire: SolitaireView()
-                case .poker: PokerView()
-                }
-            }
+            GlassCard { Self.content(for: game) }
+            .overlay(alignment: .topTrailing) { if game.hasFullScreenButton { GameFullScreenButton(game: game).padding(6) } }
             .id(game)
         }
         // The Plane and Racing games are drawn for a bigger panel: grow the notch while one is open, and shrink it back after.
         .onAppear { setBig(game == .plane || game == .racing || game == .ctf) }
         .onChange(of: lastRaw) { _, _ in setBig(game == .plane || game == .racing || game == .ctf) }
         .onDisappear { setBig(false) }
+    }
+
+    /// One game's view (the same one the notch shows and the Full screen window scales up).
+    @ViewBuilder static func content(for game: Game) -> some View {
+        switch game {
+        case .g2048: Game2048View()
+        case .snake: SnakeGameView()
+        case .breakout: BreakoutGameView()
+        case .memory: MemoryGameView()
+        case .reaction: ReactionView()
+        case .cookies: CookieClickerView()
+        case .runner: RunnerGameView()
+        case .plane: PlaneGameView()
+        case .racing: RacingGameView()
+        case .ctf: CtfGameView()
+        case .blackjack: BlackjackView()
+        case .solitaire: SolitaireView()
+        case .poker: PokerView()
+        }
     }
 
     private func setBig(_ on: Bool) {

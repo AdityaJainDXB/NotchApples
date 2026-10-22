@@ -361,6 +361,7 @@
 		D6AB6D3B477B7BBBEFB85708 /* ScreenTimeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9428FE6894A084A43909BD76 /* ScreenTimeView.swift */; };
 		D6AD6B43EA61C6526CBC888C /* DoItAgent.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5B8287EF70546FBB3914E72 /* DoItAgent.swift */; };
 		D915CB7B0060ED6128415BF9 /* SnakeGameViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 264A2A3E4ADCB8D6919DC502 /* SnakeGameViewModel.swift */; };
+		D9CD0758EE2521191E344132 /* GameFullScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = E0C8A8EBFAB59EBC323417FC /* GameFullScreen.swift */; };
 		DC37742E9DC53226546E0A45 /* WindowManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 98A8EB2467586B8A5E087088 /* WindowManager.swift */; };
 		DC5EDBF914623CEC9EBB91A6 /* TennisLogicTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9342B7403A92BBB1CB6A292A /* TennisLogicTests.swift */; };
 		DCE9CF6CAF6F38227D18150F /* F1Model.swift in Sources */ = {isa = PBXBuildFile; fileRef = 466B2516F7D15E3C623784BC /* F1Model.swift */; };
@@ -741,6 +742,7 @@
 		E0227AD2AD08AA73D5BFC1A9 /* RadarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RadarView.swift; sourceTree = "<group>"; };
 		E05A03C9C8BB062C1E2C1DBB /* ScreenIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenIntent.swift; sourceTree = "<group>"; };
 		E07ED38955AE546C7637D5B9 /* WebP2PManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebP2PManager.swift; sourceTree = "<group>"; };
+		E0C8A8EBFAB59EBC323417FC /* GameFullScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameFullScreen.swift; sourceTree = "<group>"; };
 		E10EB7314C2DFD8AAF92A92A /* GeminiFallbackTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GeminiFallbackTests.swift; sourceTree = "<group>"; };
 		E14503320310AD4B1E118141 /* ReleaseNotesLogicTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReleaseNotesLogicTests.swift; sourceTree = "<group>"; };
 		E182D36E05020E0FB79C7EA1 /* WallpaperLogicTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WallpaperLogicTests.swift; sourceTree = "<group>"; };
@@ -1685,6 +1687,7 @@
 				702334063347B78DDA56DB8A /* CookieClickerView.swift */,
 				9D4FADAB2335D1E735AA1EF8 /* CtfGameView.swift */,
 				4A2294A11AF6369D10835393 /* GameEngines.swift */,
+				E0C8A8EBFAB59EBC323417FC /* GameFullScreen.swift */,
 				B694C02A230B240E8F014EF6 /* GameSupport.swift */,
 				44EC19E1838745C95B5759DF /* GamesView.swift */,
 				0D6E9B42DF5F2A2A2C87FC38 /* MemoryGameView.swift */,
@@ -1971,6 +1974,7 @@
 				BD8748CA1F9CA102F5CE6CCE /* ForecastView.swift in Sources */,
 				C25F856CABCC1156DF674B6D /* FullScreenLyrics.swift in Sources */,
 				8FFB80DA4806007F641ABDFD /* GameEngines.swift in Sources */,
+				D9CD0758EE2521191E344132 /* GameFullScreen.swift in Sources */,
 				A9A33B021A874F5F59E85D96 /* GameSupport.swift in Sources */,
 				D1C210100728BD42DBD406B8 /* GamesView.swift in Sources */,
 				A71D9EA46C6772C9D8F9245C /* GeminiFallback.swift in Sources */,
@@ -2392,7 +2396,7 @@
 				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Manual;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 149;
+				CURRENT_PROJECT_VERSION = 150;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = "";
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -2408,7 +2412,7 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 2.1.22;
+				MARKETING_VERSION = 2.1.23;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -2526,7 +2530,7 @@
 				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Manual;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 149;
+				CURRENT_PROJECT_VERSION = 150;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = "";
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -2548,7 +2552,7 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 2.1.22;
+				MARKETING_VERSION = 2.1.23;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;

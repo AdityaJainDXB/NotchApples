@@ -20,6 +20,9 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.1.23", date: "22 October 2026", headline: "Full screen button for every small game", items: [
+            "Every small game now has a Full screen button (the little corner arrows on Mac, \"⛶ Full screen\" on Windows): 2048, Snake, Breakout, Memory, Reaction, Cookie Clicker, Runner, Blackjack and Poker open in a big window that fills the screen, easy to see from a distance. Solitaire already had one.",
+        ]),
         ReleaseNote(version: "2.1.22", date: "22 October 2026", headline: "Airplane sound switch fixed, World Clock: every country and region", items: [
             "The Sound switch is now always obeyed in the airplane game: with it off, the game's audio engine is shut down completely and checked every frame, so no engine, warning or effect sound can slip through.",
             "World Clock: search by country, state or well-known city, not just the time zone's city name. Type India, Mumbai, Texas, California, Dubai or Queensland and it finds the right time. Every country is listed, and each region with its own time (all of the USA's, Australia's, Russia's, Brazil's, Canada's and so on). The clock shows the name you picked.",
