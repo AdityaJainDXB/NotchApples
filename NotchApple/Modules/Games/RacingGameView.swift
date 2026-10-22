@@ -36,6 +36,8 @@ final class RacingWKWebView: WKWebView {
 
 private struct RacingWebView: NSViewRepresentable {
     let url: URL
+    /// The Games sidebar's Sound switch: it turns the engine, tyres and crash sounds on and off too.
+    @AppStorage(GameSound.key) private var soundOn = true
 
     /// Forwards the game's keys to the page whenever the web view doesn't have the keyboard itself (the notch is a
     /// non-activating panel, and focus can sit elsewhere in it), so the arrows, W A S D and Space always drive the car.
@@ -63,6 +65,7 @@ private struct RacingWebView: NSViewRepresentable {
     func makeNSView(context: Context) -> RacingWKWebView {
         let config = WKWebViewConfiguration()
         config.mediaTypesRequiringUserActionForPlayback = []
+        config.userContentController.addUserScript(WKUserScript(source: "window.NotchHostSound=\(GameSound.enabled);", injectionTime: .atDocumentStart, forMainFrameOnly: true))
         let view = RacingWKWebView(frame: .zero, configuration: config)
         view.setValue(false, forKey: "drawsBackground")
         view.loadFileURL(url, allowingReadAccessTo: url.deletingLastPathComponent())
@@ -76,7 +79,9 @@ private struct RacingWebView: NSViewRepresentable {
         return view
     }
 
-    func updateNSView(_ nsView: RacingWKWebView, context: Context) {}
+    func updateNSView(_ nsView: RacingWKWebView, context: Context) {
+        nsView.evaluateJavaScript("window.NotchHostSound=\(soundOn); window.NotchRaceGame && window.NotchRaceGame.setSoundEnabled && window.NotchRaceGame.setSoundEnabled(\(soundOn))")
+    }
 
     static func dismantleNSView(_ nsView: RacingWKWebView, coordinator: Coordinator) {
         if let m = coordinator.monitor { NSEvent.removeMonitor(m) }

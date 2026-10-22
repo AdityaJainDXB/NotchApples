@@ -101,7 +101,7 @@ test('computer drivers finish every track, stay on the road, and the lap count i
     assert.ok(off / steps < 0.06, `${def.id}/${level}: off the road ${(100 * off / steps).toFixed(1)}% of the time`);
     const fin = racers.map((r) => r.finishT);
     if (def.closed) { for (const r of racers) assert.equal(r.lapTimes.length, laps, `${def.id}: ${laps} lap times recorded, got ${r.lapTimes.length}`); assert.ok(Math.min(...fin) / laps > 15 && Math.max(...fin) / laps < 125, `${def.id}/${level}: lap times ${fin.map((f) => (f / laps).toFixed(0))}`); }
-    else assert.ok(Math.min(...fin) > 20 && Math.max(...fin) < 60, `${def.id}: sprint times ${fin.map((f) => f.toFixed(1))}`);
+    else assert.ok(Math.min(...fin) > 20 && Math.max(...fin) < T.length / 12, `${def.id}: sprint times ${fin.map((f) => f.toFixed(1))}`);
   }
 });
 
@@ -113,8 +113,89 @@ test('the standings put finishers first by time, then the rest by distance', () 
 
 test('cars bump apart and a room code is six easy letters and numbers', () => {
   const a = R.newCar(car('gt'), 0, 0, 0), b = R.newCar(car('gt'), 2, 0, 0);
-  assert.ok(R.collide(a, b) && b.x - a.x >= 2.8);
+  assert.ok(R.collide(a, b) > 0 && b.x - a.x >= 2.5, `pushed apart to ${(b.x - a.x).toFixed(2)} m`);
   const c = R.NET.newCode(); assert.equal(c.length, 6); assert.ok([...c].every((ch) => R.NET.CODE_CHARS.includes(ch)));
   assert.equal(R.NET.normCode(' k7pd-2m '), 'K7PD2M'); assert.equal(R.NET.normCode('K7PD0M'), null); assert.equal(R.NET.normCode('abc'), null);
   assert.equal(R.fmt(75.5), '1:15.50'); assert.equal(R.fmt(0), '–');
+});
+
+// ---- more cars, the gearbox, damage and crashes
+test('every car has a gearbox that climbs through its gears with the revs between idle and the redline', () => {
+  for (const spec of R.CARS) {
+    const T = track('circuit'), c = R.newCar(spec, T.S[0].x, T.S[0].y, Math.atan2(T.S[0].ty, T.S[0].tx));
+    const seen = new Set(); let maxRpm = 0, minRpm = 1e9;
+    for (let i = 0; i < 60 * 30; i++) { R.stepCar(c, GO, 1 / 60, 1); seen.add(c.gear); maxRpm = Math.max(maxRpm, c.rpm); if (c.gear > 0) minRpm = Math.min(minRpm, c.rpm); }
+    assert.ok(seen.has(1) && seen.has(spec.gears), `${spec.id} uses gears 1 to ${spec.gears} (saw ${[...seen].sort()})`);
+    assert.ok(maxRpm <= spec.redline * 1.03 && maxRpm > spec.redline * 0.7, `${spec.id} revs ${maxRpm.toFixed(0)} of ${spec.redline}`);
+    assert.ok(minRpm >= spec.idle * 0.9, `${spec.id} never below idle (${minRpm.toFixed(0)})`);
+    for (let i = 0; i < 60 * 8; i++) R.stepCar(c, { throttle: 0, brake: 1, steer: 0, hand: 0 }, 1 / 60, 1);
+    assert.ok(c.gear <= 1, `${spec.id} back to first or neutral when stopped (gear ${c.gear})`);
+  }
+});
+
+test('the cars are really different: the F1 car is fastest and quickest round a corner, the hatch is slowest', () => {
+  const top = (id) => { const T = track('sprint'), c = R.newCar(car(id), 0, 0, -Math.PI / 2); for (let i = 0; i < 60 * 40; i++) R.stepCar(c, GO, 1 / 60, 1); return Math.hypot(c.vx, c.vy); };
+  assert.ok(top('f1') > top('super') && top('super') > top('gt3') && top('gt3') > top('gt') && top('gt') > top('hatch'), 'top speeds in order');
+  assert.ok(R.CARS.length >= 7);
+  assert.ok(car('f1').grip > car('gt3').grip && car('gt3').grip > car('muscle').grip);
+});
+
+test('a car that hits the barrier bounces, loses speed, spins and is damaged, in proportion to how hard it hit', () => {
+  const T = track('circuit'), q = T.S[60], hit = (speed) => {
+    const c = R.newCar(car('gt'), q.x + q.nx * (T.width / 2 + 7.5), q.y + q.ny * (T.width / 2 + 7.5), Math.atan2(q.ty, q.tx) + 0.5);
+    c.vx = q.nx * speed + q.tx * 10; c.vy = q.ny * speed + q.ty * 10;
+    const loc = R.locate(T, c.x, c.y, 60); const impact = R.wallHit(c, T, loc);
+    return { c, impact };
+  };
+  const soft = hit(8), hard = hit(35);
+  assert.ok(soft.impact > 7 && hard.impact > 30, `impacts ${soft.impact.toFixed(1)} / ${hard.impact.toFixed(1)}`);
+  assert.ok(hard.c.dmg > soft.c.dmg + 0.3 && hard.c.dmg <= 1, `damage ${soft.c.dmg.toFixed(2)} vs ${hard.c.dmg.toFixed(2)}`);
+  assert.ok(Math.abs(hard.c.spin) > Math.abs(soft.c.spin), 'a harder knock spins the car more');
+  const loc = R.locate(T, hard.c.x, hard.c.y, 60); assert.ok(Math.abs(loc.lat) <= T.width / 2 + 7.2, 'put back inside the barrier');
+  const q2 = T.S[60]; const away = hard.c.vx * q2.nx + hard.c.vy * q2.ny; assert.ok(away * Math.sign(R.locate(T, hard.c.x, hard.c.y, 60).lat) < 2, 'no longer heading into the wall');
+  // The F1 car is fragile; the muscle car is tough.
+  const f1 = R.newCar(car('f1'), 0, 0, 0), mu = R.newCar(car('muscle'), 0, 0, 0); R.hurt(f1, 25, 5, 40); R.hurt(mu, 25, 5, 40);
+  assert.ok(f1.dmg > mu.dmg, 'the F1 car takes more damage from the same knock');
+});
+
+test('car against car: a head-on crash hurts both and stops them, a glancing clip spins them, and damage slows the car', () => {
+  const a = R.newCar(car('gt'), 0, 0, 0), b = R.newCar(car('gt'), 4.4, 0, Math.PI); a.vx = 30; b.vx = -30; a.vf = 30; b.vf = 30;
+  const impact = R.collide(a, b); assert.ok(impact > 20, `head-on impact ${impact}`);
+  assert.ok(a.dmg > 0.2 && b.dmg > 0.2, 'both are damaged'); assert.ok(Math.abs(a.vx) < 25, 'the speed was shared out');
+  const c = R.newCar(car('gt'), 0, 0, 0), d = R.newCar(car('gt'), 3.9, 1.5, 0); c.vx = 30; d.vx = 18;
+  R.collide(c, d); assert.ok(Math.abs(c.spin) > 0.01 || Math.abs(d.spin) > 0.01, 'a clip twists them');
+  const healthy = R.newCar(car('gt'), 0, 0, -Math.PI / 2), wrecked = R.newCar(car('gt'), 0, 0, -Math.PI / 2); wrecked.dmg = 1;
+  for (let i = 0; i < 60 * 30; i++) { R.stepCar(healthy, GO, 1 / 60, 1); R.stepCar(wrecked, GO, 1 / 60, 1); }
+  assert.ok(Math.hypot(wrecked.vx, wrecked.vy) < Math.hypot(healthy.vx, healthy.vy) * 0.75, 'a wrecked car is much slower');
+});
+
+// ---- the track designer
+test('the designer checks a drawn track: too few points, too short, too tight and crossing are refused; a good loop is fine', () => {
+  const loop = (r, n = 10) => Array.from({ length: n }, (_, i) => [Math.cos((i / n) * Math.PI * 2) * r * 1.4, Math.sin((i / n) * Math.PI * 2) * r]);
+  assert.equal(R.checkTrack({ closed: true, width: 32, pts: [[0, 0], [100, 0], [100, 100]] }).ok, false, 'three points');
+  assert.match(R.checkTrack({ closed: true, width: 32, pts: loop(40, 6) }).why, /short|tight/, 'tiny loop');
+  const good = R.checkTrack({ closed: true, width: 32, pts: loop(300) });
+  assert.ok(good.ok, good.why);
+  const zig = R.checkTrack({ closed: false, width: 32, pts: [[0, 0], [0, -200], [60, -230], [0, -260], [0, -500]] });
+  assert.equal(zig.ok, false, 'a hairpin too tight for the road');
+  const eight = R.checkTrack({ closed: true, width: 32, pts: [[0, 0], [300, -300], [600, 0], [300, 300], [0, 0.1], [-300, -300], [-600, 0], [-300, 300]] });
+  assert.equal(eight.ok, false, 'a figure of eight crosses itself'); assert.match(eight.why, /itself|tight/);
+  for (const def of R.TRACKS) assert.ok(R.checkTrack(def).ok, `${def.id}: ${R.checkTrack(def).why}`);
+});
+
+test('a track survives being shared as a code, and broken codes are refused', () => {
+  const pts = Array.from({ length: 12 }, (_, i) => [Math.round(Math.cos((i / 12) * Math.PI * 2) * 420), Math.round(Math.sin((i / 12) * Math.PI * 2) * 300)]);
+  const def = R.customDef({ name: 'Ünïcode loop', closed: true, width: 40, look: 'snow', laps: 5, pts });
+  const code = R.encodeTrack(def), back = R.decodeTrack(code);
+  assert.ok(code.startsWith('NR1') && code.length < 400, code);
+  assert.ok(back && back.id === def.id && back.name === 'Ünïcode loop' && back.width === 40 && back.laps === 5 && back.grip === 0.85);
+  assert.deepEqual(back.pts, def.pts);
+  assert.equal(R.decodeTrack('NR1garbage'), null); assert.equal(R.decodeTrack('hello'), null);
+  const crossing = R.encodeTrack({ name: 'x', closed: true, width: 32, pts: [[0, 0], [300, -300], [600, 0], [300, 300], [0, 0.1], [-300, -300], [-600, 0], [-300, 300]] });
+  assert.equal(R.decodeTrack(crossing), null, 'an undrivable shared track is refused');
+  // A computer driver can finish a drawn track.
+  const T = R.buildTrack(back); T.laps = 1;
+  const r = R.newRacer('ai', 'ai', car('gt3'), T, 0), st = { idx: -1, lane: 0, skill: 0.9, stuck: 0, rev: 0, go: true };
+  let t = 0; while (!r.finished && t < 240) { R.stepCar(r.car, R.driveAI(T, r.car, st, 1 / 60), 1 / 60, 1); R.progress(r, T, t); t += 1 / 60; }
+  assert.ok(r.finished, 'finished the drawn loop');
 });

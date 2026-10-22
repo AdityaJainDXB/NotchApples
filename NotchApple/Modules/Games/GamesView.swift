@@ -116,7 +116,7 @@ struct GamesView: View {
         case .solitaire: "Click a card, then where it goes. Double-click sends it to a foundation."
         case .poker: "Texas Hold’em against the computer. Check or call, raise 20, or fold. Play chips only."
         case .ctf: "Capture the Flag. W A S D move, the mouse aims, click or Space shoots. Take their flag home. Computer teams or friends online."
-        case .racing: "Racing. ↑ W gas, ↓ S brake and reverse, ← → A D steer, Space handbrake (drift), R restart, P pause. Online rooms race friends."
+        case .racing: "Racing. ↑ W gas, ↓ S brake, ← → A D steer, Space handbrake, V view (chase, cockpit, top), M sound. 12 tracks, 7 cars, a track designer, online rooms."
         case .plane: "3D flying. ↑ ↓ pitch, ← → roll, A D rudder, W S throttle, F flaps, Space brakes, C camera, P pause."
         }
     }

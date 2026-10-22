@@ -20,6 +20,14 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.1.24", date: "22 October 2026", headline: "Racing: 12 tracks, 7 cars, cockpit view, crashes and a track designer", items: [
+            "Racing is much bigger: 12 premade tracks (Grand Prix, Speedway oval, City streets, Mountain pass, Hairpin hill, Desert run, Coast road, Frozen lake, Kart track and the first three), and a garage of 7 cars: Formula One, GT3 Racer, Supercar V10, Muscle, Hot Hatch, Street GT and Drift King, each with its own top speed, grip, brakes, toughness and gearbox (stats shown in the garage).",
+            "Three views, switched with V: chase camera, cockpit (a steering wheel that turns with the front wheels, paddles that flash at each gear change, shift lights, speed and rev dials, a mirror; the F1 car has its halo and wheel display) and the old top-down view.",
+            "Real engine sound from each car's revs and cylinders (a V8 rumbles, the V10 and F1 scream), gear changes you can hear, squealing tyres, wind, grass rumble and crash sounds. M or the app's Sound switch turns it all off.",
+            "Crash physics: solid barriers you bounce and scrape off, car-to-car impacts that push and spin both cars, damage that slows and pulls the car, sparks, flying bodywork, smoke and flames from a wreck.",
+            "Track designer: click to draw a circuit or a sprint, drag points to shape it, pick width, scenery and laps. It checks the road as you draw, then drive it at once, save it to your track list, or share it with a code. Online rooms can race on a drawn track: friends get it automatically.",
+            "Fixed: the Hairpin hill track used to cross over itself.",
+        ]),
         ReleaseNote(version: "2.1.23", date: "22 October 2026", headline: "Full screen button for every small game", items: [
             "Every small game now has a Full screen button (the little corner arrows on Mac, \"⛶ Full screen\" on Windows): 2048, Snake, Breakout, Memory, Reaction, Cookie Clicker, Runner, Blackjack and Poker open in a big window that fills the screen, easy to see from a distance. Solitaire already had one.",
         ]),
