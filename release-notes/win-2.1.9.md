@@ -1,0 +1,5 @@
+**Update needed for online Battle: everyone on one team**
+
+- Online Battle has a new network version: only people on this version or newer can meet each other, so everyone must update Notch Apple to play the airplane game with friends. Older versions now sit in their own empty rooms and cannot join, and a game started on a newer version tells you to update.
+- The open game is Co-op for everybody: all players are on the same team (green) and the Fight vote is gone from it. Private games you open yourself can still be Co-op or Fight.
+- Everyone gets guided missiles (2 each wave), and friends on the same code share one game and wave.

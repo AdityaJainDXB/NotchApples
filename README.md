@@ -72,7 +72,7 @@ Pick your computer. Both buttons start the download straight away. The Mac link 
   </tr>
   <tr>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.1.8</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.1.9</b></a>
     </td>
     <td align="center">
       <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 2.1.5 BETA</b></a>
@@ -233,6 +233,12 @@ All screenshots use sample data.
 ## What's new
 
 > **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is still in the repository's tags.
+
+### Mac 2.1.9 · Windows 2.1.9 BETA · 22 October 2026 · 🔄 Update needed for online Battle: everyone on one team
+
+- Online Battle has a new network version: only people on this version or newer can meet each other, so everyone must update Notch Apple to play the airplane game with friends. Older versions now sit in their own empty rooms and cannot join, and a game started on a newer version tells you to update.
+- The open game is Co-op for everybody: all players are on the same team (green) and the Fight vote is gone from it. Private games you open yourself can still be Co-op or Fight.
+- Everyone gets guided missiles (2 each wave), and friends on the same code share one game and wave.
 
 ### Mac 2.1.8 · 22 October 2026 · 🏎️ Formula 1 tab fixed
 

@@ -20,6 +20,11 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.1.9", date: "22 October 2026", headline: "Update needed for online Battle: everyone on one team", items: [
+            "Online Battle has a new network version: only people on this version or newer can meet each other, so everyone must update Notch Apple to play the airplane game with friends. Older versions now sit in their own empty rooms and cannot join, and a game started on a newer version tells you to update.",
+            "The open game is Co-op for everybody: all players are on the same team (green) and the Fight vote is gone from it. Private games you open yourself can still be Co-op or Fight.",
+            "Everyone gets guided missiles (2 each wave), and friends on the same code share one game and wave.",
+        ]),
         ReleaseNote(version: "2.1.8", date: "22 October 2026", headline: "Formula 1 tab fixed", items: [
             "Formula 1: the F1 tab no longer spins forever. F1 has closed the public live-timing feed the tab was reading, so it now shows the running order from ESPN when a session is on or has finished, and otherwise says plainly that session timing isn't being published. The schedule, standings and favourite-team features are unaffected.",
         ]),
