@@ -82,6 +82,8 @@ enum PlaneGameControl {
 
 private struct PlaneWebView: NSViewRepresentable {
     let url: URL
+    /// The Games sidebar's Sound switch: it also turns the game's engine, warnings and effects on and off.
+    @AppStorage(GameSound.key) private var soundOn = true
 
     /// Forwards the game's keys to the page whenever the web view doesn't have the keyboard itself (the notch is a
     /// non-activating panel, and focus can sit elsewhere in it), so the arrows, W/S and the rest always fly the plane.
@@ -123,6 +125,8 @@ private struct PlaneWebView: NSViewRepresentable {
         }
         let config = WKWebViewConfiguration()
         config.mediaTypesRequiringUserActionForPlayback = []
+        // Starts with the Sound switch as it is now (the game reads this before it makes any noise).
+        config.userContentController.addUserScript(WKUserScript(source: "window.NotchHostSound=\(GameSound.enabled);", injectionTime: .atDocumentStart, forMainFrameOnly: true))
         // Where the user is (their Weather location), so the Plane game can pick the nearest scenery.
         let here = SharedStore.weatherLocation
         if here.latitude != 0 || here.longitude != 0 {
@@ -147,7 +151,9 @@ private struct PlaneWebView: NSViewRepresentable {
         return view
     }
 
-    func updateNSView(_ nsView: PlaneWKWebView, context: Context) {}
+    func updateNSView(_ nsView: PlaneWKWebView, context: Context) {
+        nsView.evaluateJavaScript("window.NotchPlaneGame && window.NotchPlaneGame.setSoundEnabled && window.NotchPlaneGame.setSoundEnabled(\(soundOn))")
+    }
 
     static func dismantleNSView(_ nsView: PlaneWKWebView, coordinator: Coordinator) {
         if let m = coordinator.monitor { NSEvent.removeMonitor(m) }

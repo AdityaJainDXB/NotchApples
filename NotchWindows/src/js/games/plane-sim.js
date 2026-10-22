@@ -4540,7 +4540,7 @@
     const mouse = { x: 0, y: 0, in: false, engaged: false };   // the cursor in the steering ring, -1..1 each way
     const done = new Set(read('done', []));
     // invertY false (the default): up climbs, for the mouse and the ↑ key. True: flight-stick style, down climbs.
-    let invert = read('invertY', false), mouseOn = read('mouse', true), sens = read('sens', 1), sound = read('sound', true), units = read('units', 'kmh');
+    let invert = read('invertY', false), mouseOn = read('mouse', true), sens = read('sens', 1), sound = (typeof window.NotchHostSound === 'boolean') ? window.NotchHostSound : read('sound', true), units = read('units', 'kmh');
     { const e = read('env', {}); applyEnv(e && e.tod, e && e.vis); }   // time of day and visibility
     WX = sanWx(read('weather', WX_DEFAULT));   // Weather panel settings, shared by every mode
     const saveWx = () => { write('weather', WX); if (screen === 'menu' && flight) flight.reset([0, gearH(), 0], 0, 0, true); };   // the menu scene's windsocks follow
@@ -8985,6 +8985,8 @@
       root.focus();
     }
     window.NotchPlaneGame.suspend = suspendGame; window.NotchPlaneGame.resume = resumeGame;
+    /// The app's own Sound switch (the Games sidebar on the Mac) drives the game's sound too.
+    window.NotchPlaneGame.setSoundEnabled = (on) => { if (!alive) return; sound = !!on; if (sound) { if (!soundHeld) unmuteAudio(); } else muteAudio(); if (screen === 'menu') renderUI(); };
     window.NotchPlaneGame.key = (key, down) => onKey({ key, repeat: false, target: null }, down);
     window.NotchPlaneGame._state = () => ({ screen, keys: [...keys], bank: flight.bank, pitch: flight.pitchAngle, pos: flight.pos, w: flight.w, onGround: flight.onGround,
       speed: flight.speed, ias: flight.ias, gload: flight.gload, spin: flight.spin, wreckRest: flight.rest, report: flight.report, damage: flight.damage, crashed: flight.crashed, why: flight.why, debris: debris.length, particles: smoke.length });
