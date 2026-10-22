@@ -72,7 +72,7 @@ Pick your computer. Both buttons start the download straight away. The Mac link 
   </tr>
   <tr>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.1.10</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.1.11</b></a>
     </td>
     <td align="center">
       <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 2.1.5 BETA</b></a>
@@ -233,6 +233,12 @@ All screenshots use sample data.
 ## What's new
 
 > **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is in the repository's history.
+
+### Mac 2.1.11 · 22 October 2026 · 🪂 Online Battle on one team, F1 final classification
+
+- Update needed for online Battle: it has a new network version, so everyone must be on 2.1.9 or newer (Windows 2.1.9 or newer) to meet in the airplane game. Older versions sit in their own empty rooms and cannot join.
+- The open online game is Co-op for everybody (everyone on the green team, no Fight vote), and everyone gets 2 guided missiles per wave. Private games you open yourself can still be Co-op or Fight.
+- Formula 1: when no session is on, the F1 tab shows the latest final classification (the newest race, sprint or qualifying) with gaps, fastest laps and retirements. Live sessions show the running order.
 
 ### Mac 2.1.10 · 22 October 2026 · 🏎️ Formula 1: latest final classification
 

@@ -20,6 +20,11 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.1.11", date: "22 October 2026", headline: "Online Battle on one team, F1 final classification", items: [
+            "Update needed for online Battle: it has a new network version, so everyone must be on 2.1.9 or newer (Windows 2.1.9 or newer) to meet in the airplane game. Older versions sit in their own empty rooms and cannot join.",
+            "The open online game is Co-op for everybody (everyone on the green team, no Fight vote), and everyone gets 2 guided missiles per wave. Private games you open yourself can still be Co-op or Fight.",
+            "Formula 1: when no session is on, the F1 tab shows the latest final classification (the newest race, sprint or qualifying) with gaps, fastest laps and retirements. Live sessions show the running order.",
+        ]),
         ReleaseNote(version: "2.1.10", date: "22 October 2026", headline: "Formula 1: latest final classification", items: [
             "Formula 1: when no session is on, the F1 tab now shows the latest final classification (the newest race, sprint or qualifying) with gaps, fastest laps and retirements, instead of an empty page. Live sessions still show the running order.",
             "Housekeeping: the oldest 20 releases and their tags were removed to keep the list short.",
