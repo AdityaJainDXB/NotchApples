@@ -4933,8 +4933,8 @@
           if (war && war.mapOpen && (k === 'Enter' || k === ' ')) { warConfirmDrop(); e.preventDefault?.(); return; }
           if (k === 'u' && war && war.net) toggleVote();
           if (k === 'p' && (!(war && war.net) || paused)) { paused = !paused; renderUI(); if (!paused) { unmuteAudio(); } }
-          if (k === '?' || k === '/') showCtl(ctlEl.style.display === 'none');
-          if (mode.id === 'war') { if (k === 'n') warLaunch(); else if (k === 'l') warFlares(); else if (k === 't') openChat(); else if (k === 'k') warToggleLock(); else if (k === 'e') warHeliExitEnter(); else if (k === '1' && war && war.foot) warSwitchWeapon('rifle'); else if (k === '2' && war && war.foot) warSwitchWeapon('rpg'); else if (k === 'z') warScope(); else if (k === 'r') warReload(); else if (k === 'g') { if (war && war.foot) warGrenade(); else warLaunchGuided(); } if ((k === 'b' || k === 'z') && war && war.vehicle === 'plane' && !war.dead) war.bombPend = true; }
+          if (k === '?') showCtl(ctlEl.style.display === 'none');
+          if (mode.id === 'war') { if (k === 'n') warLaunch(); else if (k === 'l') warFlares(); else if (k === 't') warToggleLock(); else if (k === '/') openChat(); else if (k === 'e') warHeliExitEnter(); else if (k === '1' && war && war.foot) warSwitchWeapon('rifle'); else if (k === '2' && war && war.foot) warSwitchWeapon('rpg'); else if (k === 'z') warScope(); else if (k === 'r') warReload(); else if (k === 'g') { if (war && war.foot) warGrenade(); else warLaunchGuided(); } if ((k === 'b' || k === 'z') && war && war.vehicle === 'plane' && !war.dead) war.bombPend = true; }
           if (k === 'c') camMode = (camMode + 1) % 3;
           if (k === 'g' && !(mode.id === 'war' && war)) {
             const r = flight.toggleGear();
@@ -6546,7 +6546,7 @@
       }
     }
 
-    /// The lock button (K): lock on to the enemy fighter nearest the nose and hold it until you press K again, it is destroyed, or it flies far away.
+    /// The lock button (K): lock on to the enemy fighter nearest the nose and hold it until you press T again, it is destroyed, or it flies far away.
     const lockAlive = (t) => !!t && (t.state ? t.state === 'fly' : !t.dead);
     const lockPos = (t) => (t.state ? t.pos : add(t.pos, [0, 1.5, 0]));
     /// Heat vision (Y): the picture goes grey, smoke and dust vanish, and people, vehicles, aircraft and fires glow white.
@@ -6565,7 +6565,7 @@
         const ang = Math.acos(clamp(dot(f, mul(to, 1 / dd)), -1, 1)); if (ang < ba) { ba = ang; best = a; }
       }
       if (!best) { toast('Nothing ahead to lock on to', 1300); return; }
-      war.lock = best; war.lockT = 0; war.manualLock = true; toast('Locking on… (K to release)', 1100); beep(900, 0.06, 'square', 0.05);
+      war.lock = best; war.lockT = 0; war.manualLock = true; toast('Locking on… (T to release)', 1100); beep(900, 0.06, 'square', 0.05);
     }
     function warLockOn(dt) {
       const { f } = flight.axes();
@@ -6989,7 +6989,7 @@
           ] : [
             [['Space', 'Enter', 'Click'], 'Guns', `hold to fire. The circle is where the shells go.${aimNote}`],
             [['B', 'Z'], 'Bombs', auto ? 'hold: it drops only when a bomb would hit a target' : 'the bomb lands exactly on the yellow diamond where it was when you pressed. Hold for a stick'],
-            ...(plane.rotor ? [[['E'], 'Land and get out', 'touch down and stop, then E: you step out with a rifle and an RPG, and E beside the helicopter climbs back in']] : []), [['Y'], 'Heat vision', 'see through smoke: aircraft, vehicles, people and fires glow white'], [['K'], 'Lock on', 'press K to lock on to the fighter or ground target (base, tank, gun, truck) nearest your nose and keep it locked. K again to let go'], [['T'], 'Chat', 'online games: type to the other players. Your plane flies itself in slow circles while the box is open'], [['G'], 'Guided missile', 'you fly the missile with the mouse or arrows while the plane flies itself. Space, click or G detonates. 2 each round'], [['N'], 'Missile', 'fire at the locked fighter once it says LOCK'], [['L'], 'Flares', 'press when you hear MISSILE! to break its lock'], [['J'], 'Eject', 'bail out: the jet goes down and you fight on foot with a rifle. Ramming an enemy destroys it too'],
+            ...(plane.rotor ? [[['E'], 'Land and get out', 'touch down and stop, then E: you step out with a rifle and an RPG, and E beside the helicopter climbs back in']] : []), [['Y'], 'Heat vision', 'see through smoke: aircraft, vehicles, people and fires glow white'], [['T'], 'Lock on', 'press T to lock on to the fighter or ground target (base, tank, gun, truck) nearest your nose and keep it locked. T again to let go'], [['/'], 'Chat', 'online games: press / and type to the other players. Your plane flies itself in slow circles while the box is open'], [['G'], 'Guided missile', 'you fly the missile with the mouse or arrows while the plane flies itself. Space, click or G detonates. 2 each round'], [['N'], 'Missile', 'fire at the locked fighter once it says LOCK'], [['L'], 'Flares', 'press when you hear MISSILE! to break its lock'], [['J'], 'Eject', 'bail out: the jet goes down and you fight on foot with a rifle. Ramming an enemy destroys it too'],
             ...(auto ? [[['Mouse', '←', '→'], 'Turn', 'the plane turns towards where you point and keeps its height'], [['↑', '↓'], 'Climb / dive', 'it settles at the new height'], [['W', 'S'], 'Speed', 'faster or slower']] : CTL_FLY()),
             [['C'], 'Camera', 'behind, cockpit or far'], [['P'], 'Pause'], [['R'], 'Respawn', 'straight back in the same wave, nothing else restarts'], [['?'], 'Show this help'],
             ...(war && war.net ? [[['U'], 'Vote', 'change the match with the other players']] : []),
@@ -7090,7 +7090,7 @@
     function buildWbar() {
       const tank = war && war.vehicle === 'tank';
       const defs = war && war.driving ? [['van', '🚪', 'Get out', 'E']] : war && war.foot ? [['gun', '🔫', 'Fire', 'Space'], ['rpg', '🚀', 'RPG / rifle', '2'], ['scope', '🔭', 'Scope', 'Z'], ['gren', '💣', 'Grenade', 'G'], ['rel', '🔄', 'Reload', 'R'], ['band', '🩹', 'Bandage', 'H'], ['shp', '🧪', 'Shield', 'J'], ['kit', '✚', 'Medkit', 'K'], ...(war.heli ? [['heli', '🚁', 'Climb in', 'E']] : []), ...(war.van ? [['van', '🚐', 'Get in van', 'E']] : [])] : tank ? [['gun', '💥', 'Cannon', 'Space'], ['bomb', '🔫', 'Machine gun', 'B']]
-        : [['gun', '🔫', 'Guns', 'Space'], ['bomb', '💣', 'Bombs', 'B'], ['msl', '🚀', 'Missile', 'N'], ['gde', '🛰', 'Guided', 'G'], ['lock', '🎯', 'Lock on', 'K'], ['flr', '✨', 'Flares', 'L'], ...(plane.rotor ? [['heli', '🚁', 'Land & exit', 'E']] : [])];
+        : [['gun', '🔫', 'Guns', 'Space'], ['bomb', '💣', 'Bombs', 'B'], ['msl', '🚀', 'Missile', 'N'], ['gde', '🛰', 'Guided', 'G'], ['lock', '🎯', 'Lock on', 'T'], ['flr', '✨', 'Flares', 'L'], ...(plane.rotor ? [['heli', '🚁', 'Land & exit', 'E']] : [])];
       defs.push(['heat', '🔥', 'Heat vision', 'Y']);
       wbar.innerHTML = defs.map(([id, ic, name, key]) => `<button data-w="${id}" title="${name} (${key})"><span>${ic}</span><b>${name}</b><kbd>${key}</kbd><i data-n="${id}"></i></button>`).join('')
         + (war && war.vehicle === 'plane' ? '<button data-w="eject" title="Eject: the jet goes down and you fight on foot with a rifle"><span>🪂</span><b>Eject</b><kbd>J</kbd></button>' : '')

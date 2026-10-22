@@ -120,7 +120,6 @@ struct NotchRootView: View {
                             .stroke(Theme.accent.opacity(0.35), lineWidth: 1)
                     }
                 }
-                .shadow(color: state.isExpanded ? Theme.accent.opacity(0.35) : .clear, radius: 24, y: 8)
 
             if state.isExpanded {
                 expandedContent
