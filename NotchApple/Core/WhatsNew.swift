@@ -20,6 +20,9 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.1.36", date: "23 October 2026", headline: "Serve penalties in the pits", items: [
+            "Racing: serve a time penalty at your pit stop, like in F1. Press Q after getting a penalty: at your next stop the car stands still in the box for the penalty time before the crew goes to work, and the penalty is cleared from your race time. Press Q again to keep it added at the finish instead. Computer drivers serve theirs at their stops too.",
+        ]),
         ReleaseNote(version: "2.1.35", date: "23 October 2026", headline: "A pit entrance you can find", items: [
             "Racing: the pit entrance is now easy to find: a \"PIT IN\" board over the entry, a white line peeling off the track into the pit lane with chevrons, a matching line at the exit, and a HUD countdown on the run-up (\"Pit entry on the left in 200 m\"). The pit lane is on the start straight, on the outside of the circuit; drive in there, keep to the limiter and stop in your box (the green one).",
         ]),

@@ -582,7 +582,7 @@
         row('', btn('Start race', 'go', () => { backToDesign = false; startLocalRace(); }), btn('✏️ Track designer', '', () => openDesigner(findDef(trackId) && findDef(trackId).custom ? findDef(trackId) : null))),
         row('Online', btn('Create room', '', () => openRoom(true)), (() => { const i = document.createElement('input'); i.placeholder = 'CODE'; i.maxLength = 8; i.id = 'rc-code'; return i; })(), btn('Join', '', () => { const c = NET.normCode(root.querySelector('#rc-code').value); if (!c) { toast('That code is 6 letters and numbers.'); return; } openRoom(false, c); })),
         row('Name', name),
-        hint('↑ W gas · ↓ S brake and reverse · ← → A D steer · Space handbrake (drift) · V view (top, chase, cockpit) · M sound · R restart · P pause · Esc menu'));
+        hint('↑ W gas · ↓ S brake and reverse · ← → A D steer · Space handbrake (drift) · V view (top, chase, cockpit) · M sound · Q serve a penalty at your pit stop · R restart · P pause · Esc menu'));
     }
 
     let toastT = null;
@@ -682,6 +682,7 @@
         if (screen === 'design') { if (k === 'escape') showMenu(); else if (k === 'z') designUndo(); return; }
         if (k === 'escape' && screen !== 'menu') { closeNet(); paused = false; if (backToDesign && ds) { screen = 'design'; designUI(); } else showMenu(); return; }
         if (k === 'v' && screen !== 'menu' && screen !== 'lobby') { viewMode = { top: 'chase', chase: 'cockpit', cockpit: 'top' }[viewMode] || 'chase'; store.set('view', viewMode); toast({ top: 'Top-down view', chase: 'Chase view', cockpit: 'Cockpit view' }[viewMode]); return; }
+        if (k === 'q' && me && (me.pen || 0) > 0 && (me.inLane || screen === 'race') && !(me.service > 0)) { me.servePen = !me.servePen; toast(me.servePen ? `You will serve your ${me.pen} s penalty at your next pit stop` : 'Penalty will be added to your race time instead'); if (me.servePen) say(`Copy. We will serve the ${me.pen === 5 ? 'five' : me.pen === 10 ? 'ten' : me.pen} second penalty at the stop.`, 'eng', 1); return; }
         if (k === 'm') { setSound(!soundOn); toast(soundOn ? 'Sound on' : 'Sound off'); if (screen === 'menu') showMenu(); return; }
       }
       const m = KEYMAP[k]; if (m) { if (down) keys.add(m); else keys.delete(m); }
@@ -809,7 +810,7 @@
     // ---- the stewards (FIA style): time penalties are added to a driver's race time at the end.
     function penalize(r, sec, why) {
       r.pen = (r.pen || 0) + sec; r.penWhy = why;
-      if (r === me) { toast(`⚠ ${sec}-second time penalty: ${why}`); say(`You have a ${sec === 5 ? 'five' : 'ten'} second time penalty, for ${why}.`, 'eng', 2); }
+      if (r === me) { toast(`⚠ ${sec}-second time penalty: ${why}. Q: serve it at your next pit stop`); say(`You have a ${sec === 5 ? 'five' : 'ten'} second time penalty, for ${why}. You can serve it at the stop.`, 'eng', 2); }
       else if (me && Math.abs(r.prog - me.prog) < 400) say(`${sec} second penalty for ${r.name}.`, 'com', 1);
     }
     function trackLimits(r) {
@@ -903,8 +904,11 @@
             const v = Math.hypot(c.vx, c.vy); if (v > P.limit) { c.vx *= P.limit / v; c.vy *= P.limit / v; }      // the pit limiter
             if (Math.abs(rel - (r.boxS ?? P.box)) < 6 && v < 1.5 && !r.served) {
               r.service = (r.service || 0) + dt;
-              const need = 2.4 + (c.dmg > 0.3 ? 2.5 * c.dmg : 0);
-              if (r.service >= need) { c.dmg = 0; c.wear = 0; c.pull = 0; r.service = 0; r.served = true; if (r.ai) { const st = aiState.get(r.id); st.pitting = false; st.served = true; } if (r === me) { toast(`Pit stop: ${need.toFixed(1)} s · new tyres${need > 2.5 ? ', damage repaired' : ''}`); say('Good stop, good stop. Go, go, go!', 'eng', 2); } }
+              // FIA style: a time penalty can be served at a stop: the car stands still for it before anyone may work on it.
+              if (r.ai && r.pen > 0) r.servePen = true;
+              const wait = r.servePen ? (r.pen || 0) : 0, need = wait + 2.4 + (c.dmg > 0.3 ? 2.5 * c.dmg : 0);
+              if (wait && r.service >= wait && !r.penDone) { r.penDone = true; if (r === me) { toast(`Penalty served (${wait} s). The crew goes to work.`); say('Penalty served. Go, go on the tyres.', 'eng', 2); } }
+              if (r.service >= need) { if (wait) { r.pen = 0; r.servePen = false; } r.penDone = false; c.dmg = 0; c.wear = 0; c.pull = 0; r.service = 0; r.served = true; if (r.ai) { const st = aiState.get(r.id); st.pitting = false; st.served = true; } if (r === me) { toast(`Pit stop: ${need.toFixed(1)} s · new tyres${need > 2.5 ? ', damage repaired' : ''}`); say('Good stop, good stop. Go, go, go!', 'eng', 2); } }
             } else if (r.service > 0 && v > 2) r.service = 0;
           }
         } else { imp = wallHit(c, T, after); r.inLane = false; }
@@ -1070,7 +1074,8 @@
         const wear = me.car.wear || 0, y0 = (viewMode === 'cockpit' ? H * 0.24 : 40 * s);
         g.textAlign = 'center'; g.font = `800 ${12 * s}px system-ui`;
         { const Pd = pitInfo(T); if (Pd && !me.inLane) { const r0 = relS(T, me.sNow || 0), d = Pd.a - r0; if (d > 0 && d < 450) { g.fillStyle = '#ffd23f'; g.fillText(`PIT ENTRY ${Pd.side > 0 ? 'ON THE RIGHT ▶' : '◀ ON THE LEFT'} IN ${Math.round(d)} m`, W / 2, y0 + 32 * s); } } }
-        if (me.inLane) { g.fillStyle = '#4fe09a'; g.fillText(me.service > 0 ? `PIT STOP… ${me.service.toFixed(1)}s` : 'PIT LANE · LIMITER 80 km/h', W / 2, y0 + 16 * s); }
+        if (me.inLane) { g.fillStyle = '#4fe09a'; const wait = me.servePen ? (me.pen || 0) : 0; g.fillText(me.service > 0 ? (wait && me.service < wait ? `SERVING PENALTY… ${(wait - me.service).toFixed(1)}s` : `PIT STOP… ${(me.service - wait).toFixed(1)}s`) : 'PIT LANE · LIMITER 80 km/h', W / 2, y0 + 16 * s); }
+        if (me.pen && !(me.service > 0)) { g.fillStyle = '#ffd23f'; g.font = `700 ${10 * s}px system-ui`; g.fillText(me.servePen ? `✓ Serving your +${me.pen}s penalty at the next stop (Q to cancel)` : `Q: serve your +${me.pen}s penalty at your next pit stop`, W / 2, y0 + 48 * s); g.font = `800 ${12 * s}px system-ui`; }
         if (me.pen) { g.fillStyle = '#ff4d4d'; g.textAlign = 'left'; g.fillText(`+${me.pen}s PENALTY`, 16 * s, 100 * s); g.textAlign = 'center'; }
         g.textAlign = 'left'; g.font = `700 ${10 * s}px system-ui`; g.fillStyle = wear > 0.7 ? '#ff4d4d' : wear > 0.45 ? '#ffd166' : 'rgba(255,255,255,.75)';
         g.fillText(`TYRES ${Math.round((1 - wear) * 100)}%${me.tl ? ` · TRACK LIMITS ${Math.min(me.tl, 3)}/3` : ''}`, 16 * s, 114 * s);
