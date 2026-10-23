@@ -1,0 +1,3 @@
+## Notch Apple for Windows 2.1.43 (BETA)
+
+- Racing, pit stops fixed: stopping in your pit box now always works. Holding the brake used to turn into reverse the moment the car stopped, rolling you back out of the box before the crew could start. Now the crew catches the car as soon as you're in your green box and nearly stopped, holds it until the stop is done, and you can't reverse in the pit lane (as in real racing). The pit lane message also tells you how far away your box is.

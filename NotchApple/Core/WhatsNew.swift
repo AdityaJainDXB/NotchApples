@@ -20,6 +20,9 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.1.43", date: "23 October 2026", headline: "Pit stops that work", items: [
+            "Racing, pit stops fixed: stopping in your pit box now always works. Holding the brake used to turn into reverse the moment the car stopped, rolling you back out of the box before the crew could start. Now the crew catches the car as soon as you're in your green box and nearly stopped, holds it until the stop is done, and you can't reverse in the pit lane (as in real racing). The pit lane message also tells you how far away your box is.",
+        ]),
         ReleaseNote(version: "2.1.42", date: "23 October 2026", headline: "Meeting mode, and a real crashed car for the Medical Car", items: [
             "Meeting mode: while you're on a call (the camera is on, or the microphone has been in use for 20 seconds), the notch goes quiet. Music, scores, notification flashes and the hello stay away; volume and brightness still show. Beside the notch you see the camera or microphone (crossed out when you're muted) and the minutes left in the calendar meeting you're in, or how long the call has been going. It ends by itself when the call does. On by default; Settings → Notch Extras.",
             "Racing, driving the Medical Car: a crashed car now actually stops at the side of the track, smoking, where the crash happened. Drive up and stop beside it to check on the driver; the yellow flag or Virtual Safety Car stays out until you do (or about 2½ minutes pass), then the car is recovered and racing resumes.",

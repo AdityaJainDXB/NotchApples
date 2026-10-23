@@ -1198,6 +1198,7 @@
         const surf = off > edge + 1.5 && !(pitSide && loc.lat * P.side < P.outer) ? 0.55 : 1;   // the pit lane and its entry and exit are tarmac
         if (r.service > 0) { inp = { throttle: 0, brake: 1, steer: 0, hand: 0 }; c.vx = c.vy = 0; }    // jacked up in the box
         stepCar(c, inp, dt, surf);
+        if (r.inLane && c.vf < 0) { c.vx = c.vy = 0; c.vf = 0; }       // no reversing in the pit lane: the brake just holds the car
         const after = locate(T, c.x, c.y, loc.idx);
         let imp = 0;
         if (P && rel > P.a - 20 && rel < P.b + 20 && after.lat * P.side > 0) {
@@ -1212,7 +1213,9 @@
           if (r.inLane && !was && Math.hypot(c.vx, c.vy) > P.limit * 1.08) penalize(r, 5, 'speeding in the pit lane');
           if (r.inLane) {
             const v = Math.hypot(c.vx, c.vy); if (v > P.limit) { c.vx *= P.limit / v; c.vy *= P.limit / v; }      // the pit limiter
-            if (Math.abs(rel - (r.boxS ?? P.box)) < 6 && v < 1.5 && !r.served) {
+            // In your own box and nearly stopped: the crew catches the car and holds it (so a held brake can't turn into reverse).
+            if (!r.served && (r.service > 0 || (Math.abs(rel - (r.boxS ?? P.box)) < 8 && v < 5))) {
+              c.vx = c.vy = 0;
               r.service = (r.service || 0) + dt;
               // FIA style: a time penalty can be served at a stop: the car stands still for it before anyone may work on it.
               if (r.ai && r.pen > 0) r.servePen = true;
@@ -1388,7 +1391,7 @@
         const wear = me.car.wear || 0, y0 = (viewMode === 'cockpit' ? H * 0.24 : 40 * s);
         g.textAlign = 'center'; g.font = `800 ${12 * s}px system-ui`;
         { const Pd = pitInfo(T); if (Pd && !me.inLane) { const r0 = relS(T, me.sNow || 0), d = Pd.a - r0; if (d > 0 && d < 450) { g.fillStyle = '#ffd23f'; g.fillText(`PIT ENTRY ${Pd.side > 0 ? 'ON THE RIGHT ▶' : '◀ ON THE LEFT'} IN ${Math.round(d)} m`, W / 2, y0 + 32 * s); } } }
-        if (me.inLane) { g.fillStyle = '#4fe09a'; const wait = me.servePen ? (me.pen || 0) : 0; g.fillText(me.service > 0 ? (wait && me.service < wait ? `SERVING PENALTY… ${(wait - me.service).toFixed(1)}s` : `PIT STOP… ${(me.service - wait).toFixed(1)}s`) : 'PIT LANE · LIMITER 80 km/h', W / 2, y0 + 16 * s); }
+        if (me.inLane) { g.fillStyle = '#4fe09a'; const wait = me.servePen ? (me.pen || 0) : 0; g.fillText(me.service > 0 ? (wait && me.service < wait ? `SERVING PENALTY… ${(wait - me.service).toFixed(1)}s` : `PIT STOP… ${(me.service - wait).toFixed(1)}s`) : (() => { const d = Math.round((me.boxS ?? 0) - relS(T, me.sNow || 0)); return me.served ? 'PIT LANE · LIMITER 80 km/h' : d > 8 ? `PIT LANE · LIMITER 80 km/h · YOUR BOX (GREEN) IN ${d} m` : d < -8 ? 'PIT LANE · YOU PASSED YOUR BOX' : 'PIT LANE · BRAKE: STOP IN YOUR GREEN BOX'; })(), W / 2, y0 + 16 * s); }
         if (me.pen && !(me.service > 0)) { g.fillStyle = '#ffd23f'; g.font = `700 ${10 * s}px system-ui`; g.fillText(me.servePen ? `✓ Serving your +${me.pen}s penalty at the next stop (Q to cancel)` : `Q: serve your +${me.pen}s penalty at your next pit stop`, W / 2, y0 + 48 * s); g.font = `800 ${12 * s}px system-ui`; }
         if (me.pen) { g.fillStyle = '#ff4d4d'; g.textAlign = 'left'; g.fillText(`+${me.pen}s PENALTY`, 16 * s, 100 * s); g.textAlign = 'center'; }
         g.textAlign = 'left'; g.font = `700 ${10 * s}px system-ui`; g.fillStyle = wear > 0.7 ? '#ff4d4d' : wear > 0.45 ? '#ffd166' : 'rgba(255,255,255,.75)';
