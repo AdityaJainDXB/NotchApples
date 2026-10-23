@@ -20,6 +20,11 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.1.44", date: "23 October 2026", headline: "Racing that's different every time, and a real Safety Car", items: [
+            "Racing: every race is different now. The rivals' names, cars and grid places are shuffled, and each driver gets their own pace, line, reaction off the line and temperament. They make mistakes at random moments (running wide, locking a wheel, the odd spin), see the car in front (backing off or pulling out to pass) and give room to a car alongside. The pile-up that used to happen in the first seconds of every big race is gone: drivers hold their side of the grid off the line.",
+            "Racing, a real Safety Car period: the Safety Car comes onto the track right in front of the leader and waits for them, the field queues up behind it, it stays out for a lap and comes in at the end of the next one, and the race restarts when the leader crosses the line (the leader sets the pace until then). Overtaking the Safety Car itself is a 10-second penalty.",
+            "Racing, pit lane: computer cars now follow the pit lane all the way to the exit after their stop, instead of turning into the pit wall.",
+        ]),
         ReleaseNote(version: "2.1.43", date: "23 October 2026", headline: "Pit stops that work", items: [
             "Racing, pit stops fixed: stopping in your pit box now always works. Holding the brake used to turn into reverse the moment the car stopped, rolling you back out of the box before the crew could start. Now the crew catches the car as soon as you're in your green box and nearly stopped, holds it until the stop is done, and you can't reverse in the pit lane (as in real racing). The pit lane message also tells you how far away your box is.",
         ]),
