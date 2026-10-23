@@ -1779,7 +1779,8 @@ private struct AboutSettings: View {
                 Text("·").foregroundStyle(.secondary)
                 Link("GitHub", destination: URL(string: "https://github.com/AdityaJainDXB/NotchApples")!)
                 Text("·").foregroundStyle(.secondary)
-                Link("Report an issue", destination: URL(string: "https://github.com/AdityaJainDXB/NotchApples/issues")!)
+                Link("Get help or report a problem", destination: URL(string: "https://adityajaindxb.github.io/NotchApples/support.html?kind=mac")!)
+                    .help("No account needed: report a problem, suggest a feature or ask a question")
                 Text("·").foregroundStyle(.secondary)
                 Link("Donate", destination: URL(string: "https://github.com/AdityaJainDXB/NotchApples#donate-")!)
             }

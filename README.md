@@ -72,10 +72,10 @@ Pick your computer. Both buttons start the download straight away. The Mac link 
   </tr>
   <tr>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.1.37</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.1.38</b></a>
     </td>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 2.1.37 BETA</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 2.1.38 BETA</b></a>
     </td>
   </tr>
   <tr>
@@ -233,6 +233,10 @@ All screenshots use sample data.
 ## What's new
 
 > **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is in the repository's history.
+
+### Mac 2.1.38 · Windows 2.1.38 BETA · 23 October 2026 · 🙋 Get help without a GitHub account
+
+- Get help without a GitHub account: Settings has a "Get help or report a problem" link to a new form on the website. No sign-in is needed. Report a problem on Mac or Windows, a flight sim glitch, suggest a feature, ask a question, show your setup, or ask about your licence. Problems and ideas are posted as GitHub issues for you (your email is never shown), questions and setups go to Discussions, and licence questions stay private and are answered by email. GitHub and plain email still work too.
 
 ### Mac 2.1.37 · Windows 2.1.37 BETA · 23 October 2026 · 🤖 Track assistant, 20 new monuments, satellite imagery
 

@@ -352,6 +352,6 @@ function About() {
   const v = el('span', {});
   appInfo.then((i) => { v.textContent = i.version; });
   return [card('', el('div', { class: 'big' }, 'Notch Apple for Windows'), el('div', { class: 'small dim' }, 'Version ', v, '. Open source. Your notes, to-dos, clipboard and keys stay on this PC.'),
-    el('div', { class: 'hstack', style: 'padding-top:8px' }, button('GitHub', () => openUrl('https://github.com/AdityaJainDXB/NotchApples'), { kind: 'quiet', small: true }), button('Website', () => openUrl('https://adityajaindxb.github.io/NotchApples/'), { kind: 'quiet', small: true }), button('Quit Notch Apple', () => invoke('quit_app'), { kind: 'danger', small: true }))),
+    el('div', { class: 'hstack', style: 'padding-top:8px' }, button('GitHub', () => openUrl('https://github.com/AdityaJainDXB/NotchApples'), { kind: 'quiet', small: true }), button('Website', () => openUrl('https://adityajaindxb.github.io/NotchApples/'), { kind: 'quiet', small: true }), button('Get help or report a problem', () => openUrl('https://adityajaindxb.github.io/NotchApples/support.html?kind=windows'), { kind: 'quiet', small: true }), button('Quit Notch Apple', () => invoke('quit_app'), { kind: 'danger', small: true }))),
   card('Privacy', el('div', { class: 'small dim' }, 'No accounts and no tracking. Web requests go only to the services a feature needs (weather, sports, the AI provider you pick…). Entering a key sends only the key and a random ID for this PC to the license server.'))];
 }
