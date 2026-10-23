@@ -15,6 +15,8 @@ struct ExtrasSettings: View {
     @State private var confirmAddHooks = false
     @State private var hookMessage: String?
     @AppStorage(HelloAnimation.onKey) private var helloOn = true
+    @AppStorage(ThermalWatcher.key) private var heatWarning = true
+    @AppStorage(CapturePrivacy.key) private var hideFromCapture = false
     @AppStorage(HelloAnimation.nameKey) private var helloName = ""
 
     /// A switch for one kind of thing that can appear beside the closed notch.
@@ -63,6 +65,11 @@ struct ExtrasSettings: View {
                 Toggle("Rain alert (“rain in 15 min”)", isOn: $settings.rainAlert).requires(.rainAlert)
                 Toggle("Microphone and camera in use (Devices add-on)", isOn: $settings.privacyIndicator)
                 Toggle("Accessory low battery (Devices add-on)", isOn: $settings.accessoryBatteryAlert)
+                Toggle("“Hot” when the Mac overheats and slows down", isOn: $heatWarning)
+                    .onChange(of: heatWarning) { _, _ in LiveActivityCenter.shared.recompute() }
+                Toggle("Hide the notch from screenshots, recordings and screen sharing", isOn: $hideFromCapture)
+                    .onChange(of: hideFromCapture) { _, _ in CapturePrivacy.apply() }
+                    .help("Notifications, messages or your clipboard in the notch then never show up in a meeting or a recording")
                 Toggle("New notifications (Notifications add-on)", isOn: $settings.flashNotifications)
                 Toggle("Show two activities at once, one in each ear", isOn: $stack).requires(.activityStacking)
             } header: {

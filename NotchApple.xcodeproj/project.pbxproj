@@ -256,6 +256,7 @@
 		9DC28FCDCC7F0968D23CFA78 /* UpdateCadenceLogic.swift in Sources */ = {isa = PBXBuildFile; fileRef = 223DF7525EF47087BAD0DD8B /* UpdateCadenceLogic.swift */; };
 		9E99DCB7265462DA9D8D7095 /* CommandPalette.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2B877B3FC56AA179FD7FEAE /* CommandPalette.swift */; };
 		9EF85961675894ED65B9F776 /* ProductKeys.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13BA89CC14259A92057EDFDC /* ProductKeys.swift */; };
+		9F191E816E9E31973BFAF4EC /* ThermalWatcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0406E58D7528F932C40B864E /* ThermalWatcher.swift */; };
 		9F68FFA4EE2970516B9AA33A /* DevToolkitTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7CC31FE35B8BD0245C7DD53D /* DevToolkitTests.swift */; };
 		9F8F1D24DD4B77A8B3ED11C1 /* RadarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E0227AD2AD08AA73D5BFC1A9 /* RadarView.swift */; };
 		9F9EC854E119ACE78147C2FE /* ClaudeClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6747ADA828FF1D33683B30C8 /* ClaudeClient.swift */; };
@@ -442,6 +443,7 @@
 		0335700922F2B064E7FC742F /* NotesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotesView.swift; sourceTree = "<group>"; };
 		033E65EDFD61BEE79967253B /* MessengerModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessengerModels.swift; sourceTree = "<group>"; };
 		03F5574ACA9594C95D90C1CB /* HabitsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HabitsView.swift; sourceTree = "<group>"; };
+		0406E58D7528F932C40B864E /* ThermalWatcher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThermalWatcher.swift; sourceTree = "<group>"; };
 		04C0A62497E02145E6D99DC6 /* TennisLogic.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TennisLogic.swift; sourceTree = "<group>"; };
 		052621B0F73FFEA23C93C8B2 /* ScreenTools.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenTools.swift; sourceTree = "<group>"; };
 		0597034617E0E4011F1C53B0 /* RadarLogic.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RadarLogic.swift; sourceTree = "<group>"; };
@@ -1184,6 +1186,7 @@
 				2BDB8BD41E7ADF271C9499F9 /* SystemWatch.swift */,
 				43B0A5F7BE05C3F95C4B2A08 /* SystemWatchLogic.swift */,
 				419A5F6F30DFBF30351906D2 /* Theme.swift */,
+				0406E58D7528F932C40B864E /* ThermalWatcher.swift */,
 				9F05BAECF9EDAF2F5A745F05 /* TodoLogic.swift */,
 				755B22C2370E85554D2C56DF /* TourLogic.swift */,
 				223DF7525EF47087BAD0DD8B /* UpdateCadenceLogic.swift */,
@@ -2115,6 +2118,7 @@
 				C3ADEF24FDB35B2A799680AF /* TennisModel.swift in Sources */,
 				C0DE4A0B6EE69BF33D224196 /* TennisView.swift in Sources */,
 				3426BA9EDEDB4808A6BEF8BA /* Theme.swift in Sources */,
+				9F191E816E9E31973BFAF4EC /* ThermalWatcher.swift in Sources */,
 				7183022F97E2F24A2958AA4A /* TimeZonePlaces.swift in Sources */,
 				FD3C4D12C2C02652A4D6A729 /* TimerView.swift in Sources */,
 				1B28E6933512791CD9E4C469 /* TodayExtras.swift in Sources */,
@@ -2400,7 +2404,7 @@
 				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Manual;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 167;
+				CURRENT_PROJECT_VERSION = 168;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = "";
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -2416,7 +2420,7 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 2.1.40;
+				MARKETING_VERSION = 2.1.41;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -2534,7 +2538,7 @@
 				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Manual;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 167;
+				CURRENT_PROJECT_VERSION = 168;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = "";
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -2556,7 +2560,7 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 2.1.40;
+				MARKETING_VERSION = 2.1.41;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;

@@ -243,6 +243,13 @@ private struct ShelfTile: View {
         .contextMenu {
             Button("Open") { FileShelfStore.shared.withAccess(item) { NSWorkspace.shared.open($0) } }
             Button("Reveal in Finder") { FileShelfStore.shared.withAccess(item) { NSWorkspace.shared.activateFileViewerSelecting([$0]) } }
+            Menu("Copy as") {
+                Button("Path") { if let u = item.resolve() { ShelfCopy.put(u.path) } }
+                Button("Path with ~") { if let u = item.resolve() { ShelfCopy.put((u.path as NSString).abbreviatingWithTildeInPath) } }
+                Button("Markdown link") { if let u = item.resolve() { ShelfCopy.put("[\(u.lastPathComponent)](\(u.absoluteString))") } }
+                Button("File URL") { if let u = item.resolve() { ShelfCopy.put(u.absoluteString) } }
+                Button("Base64 data (small files)") { FileShelfStore.shared.withAccess(item) { ShelfCopy.base64($0) } }
+            }
             if SettingsManager.shared.convertEnabled {
                 Button("Convert…") {
                     if let url = item.resolve() { PremiumRegistry.convertAdd?([url]); notchState.selected = .convert }
@@ -293,5 +300,20 @@ private struct ShareButton: NSViewRepresentable {
         @objc func share(_ sender: NSButton) {
             NSSharingServicePicker(items: urls).show(relativeTo: sender.bounds, of: sender, preferredEdge: .minY)
         }
+    }
+}
+
+/// "Copy as" for files on the shelf: the text versions developers and writers keep needing.
+@MainActor
+enum ShelfCopy {
+    static func put(_ text: String) {
+        NSPasteboard.general.clearContents()
+        NSPasteboard.general.setString(text, forType: .string)
+    }
+    /// A data: URL with the file's type, for files up to 2 MB (bigger ones would only freeze whatever you paste into).
+    static func base64(_ url: URL) {
+        guard let size = try? url.resourceValues(forKeys: [.fileSizeKey]).fileSize, size <= 2_000_000, let data = try? Data(contentsOf: url) else { NSSound.beep(); return }
+        let mime = UTType(filenameExtension: url.pathExtension)?.preferredMIMEType ?? "application/octet-stream"
+        put("data:\(mime);base64,\(data.base64EncodedString())")
     }
 }

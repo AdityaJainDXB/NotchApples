@@ -72,10 +72,10 @@ Pick your computer. Both buttons start the download straight away. The Mac link 
   </tr>
   <tr>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.1.40</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.1.41</b></a>
     </td>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 2.1.40 BETA</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 2.1.41 BETA</b></a>
     </td>
   </tr>
   <tr>
@@ -233,6 +233,12 @@ All screenshots use sample data.
 ## What's new
 
 > **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is in the repository's history.
+
+### Mac 2.1.41 · Windows 2.1.41 BETA · 23 October 2026 · 🌡️ Heat warning, keep the notch out of screen shares, Copy as
+
+- "Hot" beside the notch: when your Mac gets hot enough that macOS starts slowing it down (a long export, a build, a game), a small amber mark shows beside the notch, red when it's critical, and it goes away as the Mac cools. Settings → Notch Extras → Beside the closed notch.
+- Privacy: a new switch keeps the notch out of screenshots, screen recordings and screen sharing, so a notification, a message or your clipboard in the notch never shows up in a meeting or a video. It's off by default (so your setup screenshots still show the notch).
+- File shelf: right-click a file → Copy as → path, path with ~, Markdown link, file URL, or Base64 data (files up to 2 MB).
 
 ### Mac 2.1.40 · Windows 2.1.40 BETA · 23 October 2026 · 🚓 Safety Car periods that end properly
 

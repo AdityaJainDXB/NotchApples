@@ -33,6 +33,7 @@ final class NotchPanel: NSPanel {
         hidesOnDeactivate = false
         becomesKeyOnlyIfNeeded = false   // take key status on open so typing works immediately
         ignoresMouseEvents = false       // transparent pixels still receive clicks
+        if CapturePrivacy.on { sharingType = .none }   // Settings → Privacy: keep the notch out of screenshots and screen sharing
     }
 
     override var canBecomeKey: Bool { true }

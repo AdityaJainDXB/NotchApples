@@ -26,6 +26,7 @@ enum FeatureHub {
     static func start() {
         let center = LiveActivityCenter.shared
         let settings = SettingsManager.shared
+        ThermalWatcher.shared.start()
         center.providers = [
             { ScreenRecorder.shared.liveActivity },
             { VoiceNotesModel.shared.liveActivity },
@@ -35,6 +36,7 @@ enum FeatureHub {
             { settings.downloadProgress && Entitlements.shared.canUse(.downloadProgress) ? DownloadWatcher.shared.liveActivity : nil },
             { settings.musicActivity && settings.nowPlayingEnabled ? NowPlayingMonitor.shared.liveActivity : nil },
             { settings.devicesEnabled && settings.privacyIndicator ? PrivacyMonitor.shared.liveActivity : nil },
+            { ThermalWatcher.shared.liveActivity },
             { (settings.sportsEnabled || settings.liveEnabled) ? ScoresModel.shared.liveActivity : nil },
             { settings.f1Enabled ? F1Model.shared.liveActivity : nil },
             { settings.tennisEnabled ? TennisModel.shared.liveActivity : nil },

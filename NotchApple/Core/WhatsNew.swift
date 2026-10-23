@@ -20,6 +20,11 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.1.41", date: "23 October 2026", headline: "Heat warning, keep the notch out of screen shares, Copy as", items: [
+            "\"Hot\" beside the notch: when your Mac gets hot enough that macOS starts slowing it down (a long export, a build, a game), a small amber mark shows beside the notch, red when it's critical, and it goes away as the Mac cools. Settings → Notch Extras → Beside the closed notch.",
+            "Privacy: a new switch keeps the notch out of screenshots, screen recordings and screen sharing, so a notification, a message or your clipboard in the notch never shows up in a meeting or a video. It's off by default (so your setup screenshots still show the notch).",
+            "File shelf: right-click a file → Copy as → path, path with ~, Markdown link, file URL, or Base64 data (files up to 2 MB).",
+        ]),
         ReleaseNote(version: "2.1.40", date: "23 October 2026", headline: "Safety Car periods that end properly", items: [
             "Racing, race control: the Safety Car now comes out at the right pace (about 144 km/h), and the period ends when it actually enters the pit lane, with a green-flag restart (it used to stay out until a 2-minute fallback). After a restart the crashed car is recovered so it doesn't keep triggering new flags, the next incident waits a while, and race officials never collide with race cars.",
             "Driving the Safety Car or the Medical Car: the first incident now happens within about 15 seconds of the start (as the Safety Car it always brings you out), instead of after a minute or more.",
