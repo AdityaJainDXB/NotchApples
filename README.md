@@ -72,10 +72,10 @@ Pick your computer. Both buttons start the download straight away. The Mac link 
   </tr>
   <tr>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.1.29</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.1.30</b></a>
     </td>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 2.1.29 BETA</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 2.1.30 BETA</b></a>
     </td>
   </tr>
   <tr>
@@ -233,6 +233,13 @@ All screenshots use sample data.
 ## What's new
 
 > **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is in the repository's history.
+
+### Mac 2.1.30 · Windows 2.1.30 BETA · 23 October 2026 · 🌍 A bigger world: far islands, a world map, coins and a passport
+
+- A much bigger world: the ocean around the home island now reaches more than three times as far, with six new far islands, each with its own airport: Sunset Key, Volcano Isle, Fjord Point, Eastport, Reef Harbour and Frost Island. They're a long flight across open sea, so check your fuel. Start at any of them from the menu.
+- World map (Free Flight menu → 🗺 World map): the home island, all eleven airports and where you are.
+- Coins and a passport: land and stop at an airport in Free Flight to earn coins. The first landing at each airport stamps your passport (+250); after that you earn more the further you flew to get there.
+- Hangar: paint schemes for your plane (Sunset, Ocean, Forest, Stealth, Gold). They have prices in coins but are all free for now.
 
 ### Mac 2.1.29 · Windows 2.1.29 BETA · 23 October 2026 · 🚢 Sea battle with warships and a carrier
 

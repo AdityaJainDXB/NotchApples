@@ -1260,6 +1260,13 @@
     { id: 'coral', name: 'Coral Island', x: -3200, z: 7000, len: 1000, half: 16, island: { r: 1800, peak: 55 } },
     { id: 'palm', name: 'Palm Atoll', x: 3600, z: 8000, len: 900, half: 16, island: { r: 1700, peak: 45 } },
     { id: 'cay', name: 'Lighthouse Cay', x: 200, z: 8700, len: 700, half: 14, island: { r: 1500, peak: 35 } },
+    // Far islands across the open ocean: a long flight (and a fuel check) from home.
+    { id: 'sunset', name: 'Sunset Key', x: -14200, z: 3500, len: 1100, half: 18, island: { r: 2300, peak: 70 }, far: true },
+    { id: 'volcano', name: 'Volcano Isle', x: 13600, z: -8800, len: 1000, half: 16, island: { r: 2600, peak: 240 }, far: true },
+    { id: 'fjord', name: 'Fjord Point', x: -5200, z: -15200, len: 1000, half: 16, island: { r: 2400, peak: 160 }, far: true },
+    { id: 'eastport', name: 'Eastport', x: 15600, z: 7600, len: 1300, half: 20, island: { r: 2600, peak: 60 }, far: true },
+    { id: 'reef', name: 'Reef Harbour', x: 5600, z: 15800, len: 900, half: 16, island: { r: 2000, peak: 40 }, far: true },
+    { id: 'frost', name: 'Frost Island', x: -15200, z: -12200, len: 1000, half: 16, island: { r: 2300, peak: 120 }, far: true },
   ];
   const HELIPADS = [
     { id: 'home', name: 'Airfield helipad', x: -75, z: -170, half: 14 },
@@ -1387,7 +1394,8 @@
   const padAt = (p) => HELIPADS.find((h) => Math.abs(p[0] - h.x) < h.half && Math.abs(p[2] - h.z) < h.half) || null;
   /// The ground is a heightfield of TCELL-metre cells cut into TCHUNK x TCHUNK-cell chunks, which are generated, meshed
   /// (at four levels of detail) and planted with trees on demand as the plane flies. Water is the surface at WATER.
-  const TCELL = 32, TCHUNK = 32, TCS = TCELL * TCHUNK, WORLD = 12288, WATER = -2;
+  const TCELL = 32, TCHUNK = 32, TCS = TCELL * TCHUNK, WORLD = 20480, WATER = -2;
+  const MAINLAND = 12288;          // the home island's size: the ocean beyond it (out to WORLD) holds the far islands
   const TNC = (WORLD * 2) / TCS, TN = TNC * TCHUNK;        // chunks / cells along one side of the world
   const VALLEY = [0, -700];                                // the middle of the valley the airfield sits in
   const LAKE = { x: -1500, z: -2200, r: 520 };
@@ -1529,7 +1537,7 @@
     const cw = smooth(zc - 2200, zc - 300, z);
     h = Math.max(h + (smin(h, -2 + (zc - z) * 0.02, 10) - h) * cw, -70);
     for (const a of AIRFIELDS) {                                                                   // islands in the southern sea
-      if (!a.island) continue;
+      if (!a.island || a.far) continue;
       const dd = Math.hypot(x - a.x, z - a.z) * (1 + (fbm(x / 300 + a.x / 50, z / 300, 2) - 0.5) * 0.5), t = 1 - smooth(0.2 * a.island.r, a.island.r, dd);
       if (t <= 0) continue;
       const ih = -62 + (62 + a.island.peak) * t + (fbm(x / 180 + a.z / 40, z / 180, 3) - 0.4) * 30 * t;
@@ -1548,7 +1556,17 @@
     }
     h *= smooth(0, 220, flatDist(x, z));                                                           // keep the built-up places level
     const edge = Math.max(Math.abs(x), Math.abs(z));
-    h += (-45 - h) * smooth(WORLD - 3300, WORLD - 1500, edge);                                      // an island: sea all round
+    h += (-45 - h) * smooth(MAINLAND - 3300, MAINLAND - 1500, edge);                                      // an island: sea all round
+    // The far islands out in the ocean, each with a level strip of ground for its airport.
+    if (edge > MAINLAND - 3400) for (const a of AIRFIELDS) {
+      if (!a.far) continue;
+      const dd = Math.hypot(x - a.x, z - a.z) * (1 + (fbm(x / 300 + a.x / 50, z / 300, 2) - 0.5) * 0.5), t = 1 - smooth(0.2 * a.island.r, a.island.r, dd);
+      if (t <= 0) continue;
+      let ih = -62 + (62 + a.island.peak) * t + (fbm(x / 180 + a.z / 40, z / 180, 3) - 0.4) * 30 * t;
+      const rx = Math.max(0, Math.abs(x - a.x) - a.half - 70), rz = Math.max(0, Math.abs(z - a.z) - a.len / 2 - 40), rd = Math.hypot(rx, rz);
+      ih += (3 - ih) * (1 - smooth(20, 300, rd));
+      if (ih > h) h = ih;
+    }
     return Math.max(h, -70);
   }
 
@@ -5429,6 +5447,50 @@
       if (skyT <= 0 && !skyBusy) { skyT = skyOff ? 15 : 2; skySync(); }
     }
     const skyLeave = () => { if (shareOn && skyId) skyFetch('/plane/sky/leave', { id: skyId }); remote = []; skyId = ''; };
+    // ---- Coins and the passport: land and stop on an airport's runway (or a helipad) in Free Flight to earn coins. The first
+    // landing at each airport stamps your passport (+250); after that you earn for how far you flew there. Coins buy paint
+    // schemes in the Hangar, which are all free for now.
+    let coins = read('coins', 0), passport = new Set(read('passport', [])), livery = read('livery', 'classic'), lastLand = read('lastland', null), mapOpen = false;
+    const LIVERIES = [['classic', 'Classic', [1, 1, 1], 0], ['sunset', 'Sunset', [1.18, 0.82, 0.62], 300], ['ocean', 'Ocean', [0.7, 0.92, 1.22], 300], ['forest', 'Forest', [0.74, 1.06, 0.7], 400], ['stealth', 'Stealth', [0.42, 0.43, 0.48], 800], ['gold', 'Gold', [1.28, 1.06, 0.5], 1500]];
+    const liveryTint = () => (LIVERIES.find((l) => l[0] === livery) || LIVERIES[0])[2];
+    const AIRPORTS = [{ id: 'home', name: 'Home airfield', x: 0, z: -700 }, ...AIRFIELDS.map((a) => ({ id: a.id, name: a.name, x: a.x, z: a.z, far: !!a.far }))];
+    function landAward(pad) {
+      const p = flight.pos, af = AIRFIELDS.find((a) => Math.abs(p[0] - a.x) < a.half + 15 && Math.abs(p[2] - a.z) < a.len / 2 + 40);
+      const ap = af ? { id: af.id, name: af.name } : pad ? { id: pad.id === 'ridge' ? 'ridge' : pad.id, name: pad.name } : { id: 'home', name: 'Home airfield' };
+      let earn, msg;
+      if (!passport.has(ap.id)) { passport.add(ap.id); earn = 250; msg = `🛂 New stamp: ${ap.name}! +250 🪙`; write('passport', [...passport]); }
+      else { const d = lastLand && lastLand.id !== ap.id ? Math.hypot(p[0] - lastLand.x, p[2] - lastLand.z) : 0; earn = 30 + Math.min(400, Math.round(d / 60)); msg = `🛬 Landed at ${ap.name}: +${earn} 🪙`; }
+      coins += earn; write('coins', coins); lastLand = { id: ap.id, x: p[0], z: p[2] }; write('lastland', lastLand);
+      toast(`${msg} · ${coins} coins`, 3200);
+    }
+    /// The world map: land and sea from above, every airport (✓ once stamped) and where you are.
+    function mapHtml() {
+      return `<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(5,8,16,.72);z-index:30;pointer-events:auto"><div style="background:rgba(14,18,30,.96);border:1px solid rgba(255,255,255,.15);border-radius:14px;padding:12px 14px;text-align:center;max-height:96%;overflow:auto;color:#fff"><div style="font:800 16px system-ui;margin-bottom:6px">🗺 World map</div><canvas data-worldmap width="560" height="560" style="position:static;display:block;margin:0 auto;width:min(420px,70vh);height:min(420px,70vh);border-radius:10px"></canvas><div class="pg-hint">🛂 ${passport.size} of ${AIRPORTS.length} airports stamped · 🪙 ${coins} coins. Cross the ocean to the far islands: check your fuel first.</div><div class="pg-row" style="justify-content:center"><button data-a="mapclose">Close</button></div></div></div>`;
+    }
+    let mapImg = null;
+    function drawWorldMap() {
+      const cvm = ui.querySelector('[data-worldmap]'); if (!cvm) return;
+      const g2 = cvm.getContext('2d'), N = 140, S = cvm.width, k = S / (2 * WORLD);
+      if (!mapImg) {
+        mapImg = g2.createImageData(N, N);
+        for (let j = 0; j < N; j++) for (let i = 0; i < N; i++) {
+          const x = -WORLD + (i + 0.5) * (2 * WORLD / N), z = -WORLD + (j + 0.5) * (2 * WORLD / N), h = terrainNatural(x, z), o = (j * N + i) * 4;
+          const c = h < WATER ? [28, 70 + Math.max(-60, h) * 0.3, 128] : h < 20 ? [196, 186, 140] : h < 400 ? [70 + h * 0.05, 130 - h * 0.05, 60] : [120 + Math.min(110, h * 0.05), 124 + Math.min(110, h * 0.05), 120 + Math.min(110, h * 0.05)];
+          mapImg.data[o] = c[0]; mapImg.data[o + 1] = c[1]; mapImg.data[o + 2] = c[2]; mapImg.data[o + 3] = 255;
+        }
+      }
+      const tmp = document.createElement('canvas'); tmp.width = N; tmp.height = N; tmp.getContext('2d').putImageData(mapImg, 0, 0);
+      g2.imageSmoothingEnabled = true; g2.drawImage(tmp, 0, 0, S, S);
+      g2.font = '600 13px system-ui'; g2.textAlign = 'center';
+      for (const a of AIRPORTS) { const x = (a.x + WORLD) * k, y = (a.z + WORLD) * k, got = passport.has(a.id); g2.fillStyle = got ? '#4fe09a' : '#ffd166'; g2.beginPath(); g2.arc(x, y, 6, 0, 7); g2.fill(); g2.fillStyle = '#fff'; g2.fillText(`${got ? '✓ ' : ''}${a.name}`, x, y - 10); }
+      const px = (flight.pos[0] + WORLD) * k, py = (flight.pos[2] + WORLD) * k; g2.fillStyle = '#ff4d6d'; g2.beginPath(); g2.arc(px, py, 7, 0, 7); g2.fill(); g2.strokeStyle = '#fff'; g2.lineWidth = 2; g2.stroke();
+    }
+    function hangarHtml() {
+      return `<h2>🪙 ${coins} coins · 🛂 ${passport.size} of ${AIRPORTS.length} airports <small style="font-weight:500;opacity:.6">land in Free Flight to earn</small></h2>
+        <div class="pg-row" style="gap:5px;flex-wrap:wrap"><span class="pg-hint" style="min-width:90px">Paint (Hangar)</span>${LIVERIES.map(([id, name, , price]) => `<button data-livery="${id}" class="${livery === id ? 'pg-on' : ''}" title="${price ? price + ' coins, free for now' : 'Free'}">${name}${price ? ` <s style="opacity:.55">${price}🪙</s> Free` : ''}</button>`).join('')}<button data-a="worldmap">🗺 World map</button></div>
+        <div class="pg-hint" style="margin:2px 0 6px">Passport: ${AIRPORTS.map((a) => `${passport.has(a.id) ? '✓' : '○'} ${escapeHtml(a.name)}${a.far ? ' (far)' : ''}`).join(' · ')}</div>`;
+    }
+
     // ---- Plane racing with friends: the 12-hoop Time Trial course flown together. One pilot makes a room and shares its
     // 6-letter code, friends join, the host starts, and everyone flies the same hoops at once: the others' aircraft are drawn
     // where they are, a standings box shows who is ahead (hoops passed, then time), and the results list everyone's time.
@@ -8058,6 +8120,7 @@
             if (pad) { if (plane.rotor) { achieve('pad'); if (pad.id === 'ridge') achieve('padridge'); } }
             else { achieve('landed'); if (onRidge(flight.pos)) achieve('ridge'); }
             if (hadFailure && !pad) achieve('glider');
+            if (mode.id === 'free') landAward(pad);
           }
           if (mode.id === 'landing' && plane.rotor) {
             const hp = HELIPADS[0], sink = flight.sinkAtTouch, off = Math.hypot(flight.pos[0] - hp.x, flight.pos[2] - hp.z);
@@ -8188,7 +8251,7 @@
       const flapMax = plane.cat === 'mil' ? 24 : plane.cat === 'ga' || plane.cat === 'turbo' ? 32 : 38;
       for (const k in pm.parts) {
         const part = pm.parts[k];
-        if (part && parts.has(k)) draw(part.live, model(flight.q, add(flight.pos, qrot(flight.q, mul(part.center, plane.scale))), plane.scale));
+        if (part && parts.has(k)) draw(part.live, model(flight.q, add(flight.pos, qrot(flight.q, mul(part.center, plane.scale))), plane.scale), liveryTint());
       }
       // Control surfaces, each on its hinge. Positive is trailing edge down (or to the right, for a rudder).
       for (const d of pm.dyn) {
@@ -8853,6 +8916,7 @@
       start();
     }
     function renderUIInner() {
+      if (mapOpen && screen === 'menu') { ui.innerHTML = mapHtml(); bind(); drawWorldMap(); return; }
       if (screen === 'fly') {
         ui.innerHTML = paused ? `<div class="pg-pause"><div class="pg-menu" style="width:auto;text-align:center"><h1 style="justify-content:center">Paused</h1>
           <div class="pg-row" style="justify-content:center;margin-top:8px"><button data-a="resume" class="pg-go">Resume (P)</button><button data-a="restart">${mode.id === 'war' && war ? 'Respawn (R)' : 'Restart (R)'}</button><button data-a="menu">Menu</button></div></div></div>` : '';
@@ -8890,6 +8954,7 @@
           <div class="pg-hint" style="margin-top:3px">${escapeHtml(placeNote || `Now flying over: ${regionOf(regionId).id ? regionOf(regionId).name + ' (' + regionOf(regionId).lm + ')' : 'the home valley'}. The landmark stands just off the runway.`)}</div>
           <h2>3 · Start at <small style="font-weight:500;opacity:.6">for Free Flight</small></h2>
           <div class="pg-row" style="gap:5px;flex-wrap:wrap"><button data-start="auto" class="${startAt === 'auto' ? 'pg-on' : ''}" title="The home runway">Automatic</button>${STARTS.filter((x) => !x.gate).map((x) => `<button data-start="${x.id}" class="${startAt === x.id ? 'pg-on' : ''}">${x.name}</button>`).join('')}</div>
+          ${hangarHtml()}
           <div class="pg-row" style="margin-top:8px"><button data-share class="${shareOn ? 'pg-on' : ''}" title="See other Notch pilots who have this on: your callsign, aircraft and position are sent while you fly">Fly with others: ${shareOn ? 'On' : 'Off'}</button><button data-clean class="${coldStart ? 'pg-on' : ''}" title="Start on the runway with the battery, beacon and engine off, and do the whole start-up yourself with the keys (Y battery, O beacon, I engine)">Clean start: ${coldStart ? 'On' : 'Off'}</button><button data-traffic class="${trafficOn ? 'pg-on' : ''}" title="Other aircraft cross the sky; you can pass them, hear a traffic call, or hit them">AI traffic: ${trafficOn ? 'On' : 'Off'}</button><span class="pg-hint">Other aircraft in the sky: a mid-air collision brings both down.</span></div>
           <div class="pg-hint" style="margin:2px 0 6px">Clean start: you spawn on the runway with everything off and run the whole start-up from the checklist on screen (<kbd>Y</kbd> battery, <kbd>O</kbd> beacon, <kbd>S</kbd> throttle idle, <kbd>I</kbd> engine, <kbd>F</kbd> flaps, <kbd>G</kbd> gear). Off, you spawn ready to roll.</div>
           <div class="pg-hint" style="margin:2px 0 6px">Fly with others sends your callsign (your leaderboard name), aircraft and position to the other pilots who switched it on, every couple of seconds while you fly. It is off until you turn it on, uses a random id (no account) and other pilots cannot be hit.</div>
@@ -8964,6 +9029,7 @@
         n.onchange = () => root.focus();
       });
       // Weather panel: the sliders update the text as they move and save on release; the buttons redraw the menu.
+      ui.querySelectorAll('[data-livery]').forEach((n) => n.onclick = () => { livery = n.dataset.livery; write('livery', livery); renderUI(); });
       ui.querySelectorAll('[data-warcity]').forEach((n) => { n.oninput = () => { warCity = n.value.replace(/[<>]/g, '').trim().slice(0, 20); write('warcity', warCity); }; });
       ui.querySelectorAll('[data-wx]').forEach((n) => {
         n.oninput = () => {
@@ -9023,6 +9089,8 @@
         const a = n.dataset.a;
         if (a === 'restart' && mode.id === 'war' && war && screen === 'fly') { paused = false; renderUI(); warQuickRespawn(); root.focus(); }
         else if (a === 'start' || a === 'again' || a === 'restart') onStartPress(a);
+        else if (a === 'worldmap') { mapOpen = true; renderUI(); }
+        else if (a === 'mapclose') { mapOpen = false; renderUI(); }
         else if (a === 'prhost') { praceOpen(true); }
         else if (a === 'prjoin') { const c = NET.normCode(ui.querySelector('[data-prcode]')?.value); if (!c) toast('A race code is 6 letters and numbers', 2200); else praceOpen(false, c); }
         else if (a === 'prgo') { praceGo(); }
