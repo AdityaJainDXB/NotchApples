@@ -72,10 +72,10 @@ Pick your computer. Both buttons start the download straight away. The Mac link 
   </tr>
   <tr>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.1.27</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.1.28</b></a>
     </td>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 2.1.27 BETA</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 2.1.28 BETA</b></a>
     </td>
   </tr>
   <tr>
@@ -233,6 +233,18 @@ All screenshots use sample data.
 ## What's new
 
 > **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is in the repository's history.
+
+### Mac 2.1.28 · Windows 2.1.28 BETA · 23 October 2026 · ✈️ Battle: fly low, bigger battlefields, cities, a home base, and day and night
+
+- Battle, flying fixes: in Automatic you are no longer held 200 m up. You can fly right down low, and if you keep pushing the stick down you can fly into the ground. Climbing and diving now answer the stick straight away, and turning is quicker.
+- Bigger battlefields: about half as big again, so you don't run off the edge so easily.
+- Wings no longer snap off from pulling G. Only a long, very hard pull far past the limit can break one.
+- Cities to bomb: every wave has an enemy city with houses, tower blocks and a factory, and you can name the first city yourself (Battle menu → Target city).
+- Home base: a runway near the start of every front. When you run out of missiles or bombs, the HUD points you home. Fly low and slow down the runway and the ground crew rearms you and patches you up.
+- More enemies in each wave (more bases, more convoys, more fighters), and enemy fire hurts you less in the Easy and Automatic settings.
+- Friendly fire: your guns and bombs can now hit your own wingman, so watch where you shoot.
+- Day and night: a new Day/night cycle setting, on by default. The sun rises and sets, with dawn and dusk colours and a starry night, one full day every 16 minutes. The fixed times of day are still there.
+- Fixed: trees knocked down or cleared away in a battle kept showing on screen.
 
 ### Mac 2.1.27 · Windows 2.1.27 BETA · 23 October 2026 · 🏎️ Formula One: real F1 cars, F1 tracks, team radio, and a hello from the notch
 

@@ -54,7 +54,8 @@ test('you cannot capture while your own flag is away, and a dropped flag returns
 test('shooting hurts the other team only, respawns come back with a shield, and kills are counted', () => {
   const m = C.newMatch(); const a = C.addPlayer(m, { id: 'a', team: 0 }), b = C.addPlayer(m, { id: 'b', team: 1 }), c = C.addPlayer(m, { id: 'c', team: 0 });
   a.shield = b.shield = c.shield = 0; a.x = -20; a.y = -50; b.x = 20; b.y = -50; c.x = 0; c.y = -50;
-  a.a = 0; const bu = C.fire(m, a, 0); assert.ok(bu);
+  a.a = 0; const rnd = Math.random; Math.random = () => 0.5;      // no spread: the shot goes straight at the enemy
+  const bu = C.fire(m, a, 0); Math.random = rnd; assert.ok(bu);
   for (let i = 0; i < 60; i++) C.stepBullets(m, 1 / 60, (bb, v) => C.damage(m, v, bb.dmg, bb.owner));
   assert.ok(c.hp === 100, 'a team mate is not hurt'); assert.ok(b.hp < 100, 'the enemy is');
   C.damage(m, b, 500, 'a'); assert.equal(b.alive, false); assert.equal(a.kills, 1);

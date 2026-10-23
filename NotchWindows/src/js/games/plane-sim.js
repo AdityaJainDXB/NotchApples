@@ -1414,19 +1414,37 @@
     dawn: { name: 'Dawn', sun: norm([0.82, 0.14, 0.3]), haze: [0.86, 0.66, 0.56], lum: [0.86, 0.74, 0.7], stars: 0.2 },
     dusk: { name: 'Dusk', sun: norm([-0.82, 0.12, 0.3]), haze: [0.78, 0.5, 0.44], lum: [0.78, 0.6, 0.62], stars: 0.35 },
     night: { name: 'Night', sun: norm([0.3, -0.3, 0.2]), haze: [0.06, 0.08, 0.15], lum: [0.2, 0.24, 0.38], stars: 1 },
+    cycle: { name: 'Day/night cycle', sun: norm([0.5, 0.64, 0.36]), haze: [0.72, 0.81, 0.91], lum: [1, 1, 1], stars: 0 },
   };
+  const DAY_SECONDS = 16 * 60;      // one whole day and night in the cycle
   const VISIBILITY = { clear: { name: 'Clear', fog: 1 }, haze: { name: 'Haze', fog: 0.45 }, fog: { name: 'Fog', fog: 0.14 } };
   const ENV = { tod: 'day', vis: 'clear', lum: [1, 1, 1], stars: 0, fogMul: 1 };
   /// Sets the time of day and visibility (the arrays the shaders read are changed in place).
   function applyEnv(tod, vis) {
-    const t = TODS[tod] || TODS.day, v = VISIBILITY[vis] || VISIBILITY.clear;
-    ENV.tod = TODS[tod] ? tod : 'day'; ENV.vis = VISIBILITY[vis] ? vis : 'clear';
+    const t = tod === 'cycle' ? cycleLight(ENV.clock ?? 0.35) : TODS[tod] || TODS.day, v = VISIBILITY[vis] || VISIBILITY.clear;
+    ENV.tod = TODS[tod] ? tod : 'cycle'; ENV.vis = VISIBILITY[vis] ? vis : 'clear';
     for (let i = 0; i < 3; i++) { SUN[i] = t.sun[i]; ENV.lum[i] = t.lum[i]; }
     const grey = (t.haze[0] + t.haze[1] + t.haze[2]) / 3, k = 1 - v.fog;
     for (let i = 0; i < 3; i++) HAZE[i] = t.haze[i] * (1 - 0.55 * k) + grey * 0.55 * k * 1.08;
     ENV.stars = t.stars * (1 - 0.7 * k); ENV.fogMul = v.fog;
     return ENV;
   }
+
+  /// The light at a moment of the day (0 midnight, 0.25 sunrise, 0.5 noon, 0.75 sunset): the sun climbs in the east and sets in
+  /// the west, dawn and dusk colour the sky, and at night it is moonlit with stars.
+  function cycleLight(phase) {
+    const a = phase * Math.PI * 2 - Math.PI / 2, e = Math.sin(a), rising = Math.cos(a) > 0;
+    const D = TODS.day, N = TODS.night, Tw = rising ? TODS.dawn : TODS.dusk, mix = (A, B, k) => A.map((x, i) => x + (B[i] - x) * k);
+    let haze, lum, stars;
+    if (e >= 0.25) { haze = D.haze; lum = D.lum; stars = 0; }
+    else if (e >= 0) { const k = e / 0.25; haze = mix(Tw.haze, D.haze, k); lum = mix(Tw.lum, D.lum, k); stars = Tw.stars * (1 - k); }
+    else if (e > -0.15) { const k = (e + 0.15) / 0.15; haze = mix(N.haze, Tw.haze, k); lum = mix(N.lum, Tw.lum, k); stars = 1 - k * (1 - Tw.stars); }
+    else { haze = N.haze; lum = N.lum; stars = 1; }
+    const sun = e > -0.05 ? norm([Math.cos(a) * 0.85, Math.max(0.04, e), 0.32]) : N.sun;
+    return { sun, haze, lum, stars };
+  }
+  /// Moves the cycle on by dt seconds (when the time of day is the cycle).
+  function stepCycle(dt) { if (ENV.tod !== 'cycle') return; ENV.clock = ((ENV.clock ?? 0.35) + dt / DAY_SECONDS) % 1; applyEnv('cycle', ENV.vis); }
 
   // Smooth value noise for the hills and the mountain ridges.
   function hash2(i, j) { let h = (Math.imul(i, 374761393) + Math.imul(j, 668265263)) | 0; h = Math.imul(h ^ (h >>> 13), 1274126177); return ((h ^ (h >>> 16)) >>> 0) / 4294967296; }
@@ -1457,9 +1475,9 @@
   // to fight in, so a battlefield replaces all of its ground. Everything is centred on (0, 0); the players' side is the
   // south (+z) and the enemy's the north (-z).
   const ARENAS = [
-    { id: 'plains', name: 'Green Plains', blurb: 'Open grassland with gentle rolling hills and a few woods. The easiest place to fly and to drive.', R: 3600, base: 30, rough: 3, hills: 34, rim: 130, journey: true, desert: false },
-    { id: 'dunes', name: 'Desert Dunes', blurb: 'Rolling sand dunes and rocks. Tanks hide behind the dunes; planes get a clear view.', R: 3600, base: 26, rough: 15, hills: 22, rim: 180, journey: true, desert: true },
-    { id: 'island', name: 'Island Fortress', blurb: 'A round island with a fortress on the hill in the middle, in open sea.', R: 3600, base: 14, rough: 4, hills: 14, rim: 0, desert: false, island: true },
+    { id: 'plains', name: 'Green Plains', blurb: 'Open grassland with gentle rolling hills and a few woods. The easiest place to fly and to drive.', R: 5600, base: 30, rough: 3, hills: 34, rim: 130, journey: true, desert: false },
+    { id: 'dunes', name: 'Desert Dunes', blurb: 'Rolling sand dunes and rocks. Tanks hide behind the dunes; planes get a clear view.', R: 5600, base: 26, rough: 15, hills: 22, rim: 180, journey: true, desert: true },
+    { id: 'island', name: 'Island Fortress', blurb: 'A round island with a fortress on the hill in the middle, in open sea.', R: 5600, base: 14, rough: 4, hills: 14, rim: 0, desert: false, island: true },
   ];
   let ARENA = null;
   /// Where the front of wave `n` is: the battle travels along a long road, `step` metres further each wave: north, then east, then south,
@@ -1835,6 +1853,7 @@
       if (blocked(world, x, z)) continue;
       const nrm = normalAt(world, x, z, 6), fp = forestP(x, z, y, nrm[1]) * (world.desert && y < 80 ? 0.06 : 1);
       if (!(roll < fp * 0.8 || (nrm[1] > 0.93 && roll > 0.994))) continue;
+      if (world.noTrees && world.noTrees.some((r) => x > r[0] && x < r[1] && z > r[2] && z < r[3])) continue;     // a cleared airstrip stays clear
       const conifer = rr() < smooth(80, 420, y + (vnoise(x / 220, z / 220) - 0.5) * 260) + 0.08, h = conifer ? 12 + rr() * 12 : 9 + rr() * 9, w = h * 0.22;
       const seed = Math.floor(rr() * 4294967296);
       plantTree(near, far, x, y, z, h, conifer, rng(seed));
@@ -1872,6 +1891,27 @@
       c.treesDirty = true;
     }
     return true;
+  }
+  /// Clears every tree out of a rectangle (an airstrip): they vanish, nothing falls, and each chunk is rebuilt once.
+  function clearTrees(world, x0, x1, z0, z1) {
+    (world.noTrees || (world.noTrees = [])).push([x0, x1, z0, z1]);
+    const cx = (x0 + x1) / 2, cz = (z0 + z1) / 2, touched = new Set();
+    for (const t of treesNear(world, cx, cz, Math.hypot(x1 - x0, z1 - z0) / 2 + 10)) {
+      if (t.cx < x0 || t.cx > x1 || t.cz < z0 || t.cz > z1) continue;
+      const solid = t.tree; solid.broken = true;
+      world.colliders = world.colliders.filter((q) => q !== solid);
+      for (let gx = Math.floor(solid.min[0] / 200); gx <= Math.floor(solid.max[0] / 200); gx++) for (let gz = Math.floor(solid.min[2] / 200); gz <= Math.floor(solid.max[2] / 200); gz++) { const l = world.grid.get(`${gx},${gz}`); if (l) { const i = l.indexOf(solid); if (i >= 0) l.splice(i, 1); } }
+      const ci = Math.floor((t.cx + WORLD) / TCS), cj = Math.floor((t.cz + WORLD) / TCS);
+      if (ci < 0 || cj < 0 || ci >= TNC || cj >= TNC) continue;
+      const c = chunkOf(world, ci, cj); if (!c.treeList) continue;
+      const i = c.treeList.findIndex((q) => q.solid === solid); if (i >= 0) { c.treeList.splice(i, 1); touched.add(c); }
+    }
+    for (const c of touched) {
+      const near = new Builder(), far = new Builder();
+      for (const q of c.treeList) plantTree(near, far, q.x, q.y, q.z, q.h, q.conifer, rng(q.seed));
+      for (const b of c.bushList) near.cone([b[0], b[1], b[2]], b[3], 0, b[4], TREE_COL.hedge, 4);
+      c.near = near.d.length ? new Float32Array(near.d) : null; c.far = far.d.length ? new Float32Array(far.d) : null; c.treesDirty = true;
+    }
   }
   /// The tree standing at (x, z), if there is one (for a break that another player reported).
   function treeAt(world, x, z) {
@@ -2569,6 +2609,8 @@
       gl.disable(gl.POLYGON_OFFSET_FILL);
       draw(M.world);
       for (const [c, , d] of vis) {
+        // Trees changed since they were uploaded (broken, or cleared for an airstrip): upload them again.
+        if (c.treesDirty && c.treesGL) { if (c.treesGL.near) gl.deleteBuffer(c.treesGL.near.buf); if (c.treesGL.far) gl.deleteBuffer(c.treesGL.far.buf); c.treesGL = null; c.treesDirty = false; ensureTrees(c); }
         const g = c.treesGL; if (!g) continue;
         if (d < 1300) draw(g.near); else if (d < 4800) draw(g.far);
       }
@@ -3258,9 +3300,9 @@
       if (this.sturdy && this.overG === false) {
         this.stress = 0; this.blackout = 0;
       } else if (gp > 1 && intact) {
-        this.stress += (gp - 1) * dt * 2.5;
-        if ((this.stress > 1 || gp > 1.5) && !this.sturdy) this.loseWing(this.bank > 0 ? 'R' : 'L', 'overg');
-      } else this.stress = Math.max(0, this.stress - dt * 0.05);
+        this.stress += Math.max(0, gp - 1.25) * dt * 0.6;                  // only a long, hard pull well past the limit breaks a wing
+        if ((this.stress > 1 || gp > 2.4) && !this.sturdy) this.loseWing(this.bank > 0 ? 'R' : 'L', 'overg');
+      } else this.stress = Math.max(0, this.stress - dt * 0.3);
       const stick = Math.max(Math.abs(input.pitch), Math.abs(input.roll));
       if (this.sturdy && Vi > s.max) {
         const wind = this.wind || v3(), air = sub(this.vel, wind), capped = mul(norm(air), s.max);
@@ -4260,10 +4302,12 @@
     if (Math.abs(off) > 1.1) st.hdg = wrapPi(fl.heading + Math.sign(off) * 1.1);          // never swing round the long way
     const floor = o.floor || 220, g0 = groundAt(world, fl.pos[0], fl.pos[2]), g1 = groundAt(world, fl.pos[0] + fl.vel[0] * 6, fl.pos[2] + fl.vel[2] * 6);
     st.alt = clamp(st.alt + cmd.climb * (o.climbRate || 70) * dt, Math.max(g0, g1) + floor, o.ceiling || 2600);
+    // The wanted height never runs far ahead of the plane, so reversing the stick reverses the climb straight away.
+    if (o.lead) st.alt = clamp(st.alt, fl.pos[1] - o.lead, fl.pos[1] + o.lead);
     const bm = o.bankMax || (fl.s.gLimit < 5 ? 1.15 : 1.3), he = wrapPi(st.hdg - fl.heading), bankT = clamp(he * 3.0, -bm, bm);
     const roll = clamp(wrapPi(bankT - fl.bank) * 2.5, -1, 1);          // the short way round, even if a gust has rolled the plane past 90 degrees
-    const vsT = clamp((st.alt - fl.pos[1]) * 0.12, -30, 30);
-    const pitch = Math.abs(fl.bank) > 1.35 ? clamp((vsT - fl.vel[1]) * 0.02, -0.15, 0.15) : clamp((vsT - fl.vel[1]) * 0.05 + Math.abs(Math.sin(fl.bank)) * (o.pull || 0.3), -0.5, 0.7);      // rolled right over: level the wings first, do not pull
+    const vsMax = o.vsMax || 30, vsT = clamp((st.alt - fl.pos[1]) * (o.lead ? 0.4 : 0.12), -vsMax, vsMax);
+    const pitch = Math.abs(fl.bank) > 1.35 ? clamp((vsT - fl.vel[1]) * 0.02, -0.15, 0.15) : clamp((vsT - fl.vel[1]) * (o.lead ? 0.08 : 0.05) + Math.abs(Math.sin(fl.bank)) * (o.pull || 0.3), -0.5, 0.7);      // rolled right over: level the wings first, do not pull
     st.i = clamp(st.i + (st.spd - fl.ias) * dt * 0.02, -0.5, 0.5);
     const throttle = clamp((clamp(0.55 + (st.spd - fl.ias) * 0.04 + st.i, 0.1, 1) - fl.throttle) * 3, -1, 1);
     return { pitch: pitch * AP_SIGN.pitch, roll: roll * AP_SIGN.roll, yaw: 0, throttle };
@@ -4541,7 +4585,7 @@
     const done = new Set(read('done', []));
     // invertY false (the default): up climbs, for the mouse and the ↑ key. True: flight-stick style, down climbs.
     let invert = read('invertY', false), mouseOn = read('mouse', true), sens = read('sens', 1), sound = (typeof window.NotchHostSound === 'boolean') ? window.NotchHostSound : read('sound', true), units = read('units', 'kmh');
-    { const e = read('env', {}); applyEnv(e && e.tod, e && e.vis); }   // time of day and visibility
+    { const e = read('env', {}); ENV.clock = 0.3 + Math.random() * 0.25; applyEnv(e && e.tod ? e.tod : 'cycle', e && e.vis); }   // time of day (the day/night cycle unless another was picked) and visibility   // time of day and visibility
     WX = sanWx(read('weather', WX_DEFAULT));   // Weather panel settings, shared by every mode
     const saveWx = () => { write('weather', WX); if (screen === 'menu' && flight) flight.reset([0, gearH(), 0], 0, 0, true); };   // the menu scene's windsocks follow
     let playerName = read('name', '');
@@ -5557,7 +5601,12 @@
       fuel: { name: 'Fuel depot', hp: 60, r: 5.5, pts: 120 },
       rifleman: { name: 'Rifleman', hp: SOLDIER.enemyHp, r: 0.9, pts: 60 },
       rpgman: { name: 'RPG soldier', hp: SOLDIER.enemyHp, r: 0.9, pts: 120 },
+      house: { name: 'Building', hp: 70, r: 7, pts: 60 },
+      tower: { name: 'Tower block', hp: 190, r: 9, pts: 150 },
+      factory: { name: 'Factory', hp: 260, r: 13, pts: 220 },
     };
+    const CITY_KINDS = new Set(['house', 'tower', 'factory']);
+    const CITY_NAMES = ['Redmoor', 'Ostrava Ridge', 'Kelvin Bay', 'Marrow', 'Dunhaven', 'Zarek', 'Port Lyle', 'Vellin', 'Corvane', 'Stonegate', 'Ashford Cross', 'Novik'];
     const INF = new Set(['rifleman', 'rpgman']);          // enemy people on foot
     // What you chose in the Battle menu: the vehicle, the battlefield, how much the game does for you, who fights, and whether the enemy shoots back.
     const WAR_VEHICLES = [
@@ -5570,7 +5619,7 @@
       { id: 'heli', name: 'Helicopter', icon: '🚁', blurb: 'An Apache gunship. Fly in, land and press E to get out with a rifle and an RPG, and E again beside it to climb back in. Flies like a helicopter: no arcade help.' },
       { id: 'tank', name: 'Tank', icon: '🪖', blurb: 'Drive on the ground with a turret and a big gun.' },
     ];
-    let warSide = read('warside', 'coop'), warDiff = 'easy', warVeh = read('warveh', 'f16'), warField = read('warfield', 'plains'), warAssist = read('warassist', 'easy'), warNpc = read('warnpc', true), warOverG = read('waroverg', true);
+    let warCity = read('warcity', ''), warSide = read('warside', 'coop'), warDiff = 'easy', warVeh = read('warveh', 'f16'), warField = read('warfield', 'plains'), warAssist = read('warassist', 'easy'), warNpc = read('warnpc', true), warOverG = read('waroverg', true);
     if (warSide !== 'versus') warSide = 'coop';
     if (!WAR_VEHICLES.some((v) => v.id === warVeh)) warVeh = 'f16';
     if (!ARENAS.some((a) => a.id === warField)) warField = 'plains';
@@ -5654,6 +5703,28 @@
       for (const [x, z] of [[-3.6, 0], [3.6, 0], [0, 4.2]]) { b.cone([x, 0, z], 2.9, 2.9, 4.2, [0.78, 0.8, 0.82], 14); b.cone([x, 4.2, z], 2.9, 0.6, 0.7, [0.7, 0.72, 0.74], 14); }
       b.box([0, 0.4, 1.8], [10, 0.5, 0.5], [0.45, 0.2, 0.15]);
       m.fuel = upload(b);
+      // A town: low houses with roofs, tower blocks with rows of windows, and a factory with chimneys.
+      b = new Builder();
+      b.box([0, 2.6, 0], [10, 5.2, 8], [0.78, 0.72, 0.62]); b.taper(0, 5.2, -4.2, 10.4, 0.1, 4.2, 10.4, 2.6, [0.55, 0.24, 0.18]);
+      for (const x of [-3, 0, 3]) b.box([x, 2.8, -4.05], [1.4, 1.4, 0.1], [0.25, 0.32, 0.4]);
+      m.house = upload(b);
+      b = new Builder();
+      b.box([0, 13, 0], [12, 26, 12], [0.62, 0.64, 0.68]);
+      for (let y = 3; y < 25; y += 3.2) { b.box([0, y, -6.05], [10.5, 1.3, 0.1], [0.2, 0.27, 0.36]); b.box([6.05, y, 0], [0.1, 1.3, 10.5], [0.2, 0.27, 0.36]); b.box([-6.05, y, 0], [0.1, 1.3, 10.5], [0.2, 0.27, 0.36]); b.box([0, y, 6.05], [10.5, 1.3, 0.1], [0.2, 0.27, 0.36]); }
+      b.box([0, 26.4, 0], [6, 0.8, 6], [0.4, 0.4, 0.42]);
+      m.tower = upload(b);
+      b = new Builder();
+      b.box([0, 4, 0], [24, 8, 16], [0.55, 0.5, 0.44]); b.box([0, 8.4, 0], [24.4, 0.8, 16.4], [0.4, 0.38, 0.36]);
+      for (const x of [-7, 0, 7]) b.taper(x, 8, -4, 2.4, 0, 4, 2.4, 1.8, [0.45, 0.43, 0.42]);
+      for (const x of [-8, 8]) b.cone([x, 8.8, 5], 1.3, 0.9, 16, [0.5, 0.36, 0.3], 10);
+      m.factory = upload(b);
+      // The home base: a runway with a centre line, threshold bars and a hangar.
+      b = new Builder();
+      b.box([0, 0.15, 0], [46, 0.3, 900], [0.24, 0.25, 0.27]);
+      for (let z = -420; z <= 420; z += 40) b.box([0, 0.32, z], [1.2, 0.05, 18], [0.92, 0.92, 0.9]);
+      for (const z of [-440, 440]) for (let x = -18; x <= 18; x += 6) b.box([x, 0.32, z], [3, 0.05, 12], [0.92, 0.92, 0.9]);
+      b.box([60, 6, 0], [30, 12, 40], [0.48, 0.5, 0.46]); b.box([60, 12.4, 0], [31, 0.8, 41], [0.38, 0.4, 0.38]);
+      m.runway = upload(b);
       b = new Builder();
       rod(b, [0, 0, -1.2], [0, 0, 0.9], 0.2, 0.2, [0.3, 0.34, 0.22], 8); rod(b, [0, 0, -1.6], [0, 0, -1.2], 0.02, 0.2, [0.3, 0.34, 0.22], 8);
       b.box([0, 0, 1.1], [0.95, 0.05, 0.4], [0.2, 0.22, 0.17]); b.box([0, 0, 1.1], [0.05, 0.95, 0.4], [0.2, 0.22, 0.17]);
@@ -5789,8 +5860,10 @@
         toast(`ON TO THE NEXT FRONT: ${(ahead / 1000).toFixed(1)} km ahead`, 3500); warFeed(`The front moves on ${(ahead / 1000).toFixed(1)} km`);
       }
       const R = war.R;
+      war.base = { x: war.cx + 520, z: war.cz + R * 0.6 };     // the home base: land (or fly low and slow) along its runway to rearm
+      if (war.vehicle === 'plane') clearTrees(W, war.base.x - 40, war.base.x + 90, war.base.z - 520, war.base.z + 520);
       if (n >= 3) achieve('wave3');
-      const clusters = war.foot ? 0 : Math.min(1 + Math.ceil(n / 2), 3);
+      const clusters = war.foot ? 0 : Math.min(2 + Math.ceil(n / 2), 5);
       for (let c = 0; c < clusters; c++) {
         let cx = 0, cz = 0, ok = false;
         // Bases stand in a row straight ahead of where you start: the first 1200 m away (800 m for a tank), then 500 to 700 m apart.
@@ -5818,6 +5891,20 @@
           place('tank', sx * -16, sz * -16, h); if (n >= 3) place('aa', sx * 50, sz * 50 + 10);
         }
       }
+      // A city to bomb on every wave (the one you named, first): buildings in blocks, a couple of tower blocks and a factory.
+      if (!war.foot && !war.driving) {
+        const want = n === 1 && warCity ? warCity : CITY_NAMES[(n + Math.floor(warRand() * 1000)) % CITY_NAMES.length];
+        let ccx = 0, ccz = 0, okc = false;
+        for (let t = 0; t < 40 && !okc; t++) { const a = warRand() * 6.28, r = R * (0.25 + 0.3 * warRand()); ccx = war.cx + Math.cos(a) * r; ccz = war.cz - Math.abs(Math.sin(a)) * r; okc = onLand(ccx, ccz) && onLand(ccx + 60, ccz + 60) && onLand(ccx - 60, ccz - 60); }
+        if (okc) {
+          const k = (kind, dx, dz) => { const x = ccx + dx, z = ccz + dz, K = WAR_KINDS[kind]; if (!onLand(x, z)) return; war.ground.push({ nid: ++war.gidn, kind, pos: [x, Math.max(groundAt(W, x, z), 0), z], heading: Math.round(warRand() * 4) * Math.PI / 2, turret: 0, hp: K.hp * d.hp, maxHp: K.hp * d.hp, r: K.r, pts: K.pts, cool: 99, t: 0, burning: 0, lastHit: null, speed: 0, hunt: false, dead: false, city: want }); };
+          const size = Math.min(3, 1 + Math.floor(n / 2));
+          for (let i = -size; i <= size; i++) for (let j = -1; j <= 1; j++) { const r0 = warRand(); k(r0 < 0.12 ? 'tower' : 'house', i * 26 + (warRand() - 0.5) * 6, j * 30 + (warRand() - 0.5) * 6); }
+          k('factory', (size + 1.6) * 26, 0); if (n > 2) k('tower', -(size + 1.4) * 26, 10);
+          war.cityName = want; war.cityAt = [ccx, ccz];
+          toast(`🏙 Target: the city of ${want}`, 3200); warFeed(`Bomb the city of ${want}`);
+        }
+      }
       if (war.foot) warSpawnInfantry(n, Math.min(1 + Math.floor((n + 1) / 2), 4), Math.min(2 + n, 7));
       else if (plane.rotor) warSpawnInfantry(n, Math.min(1 + Math.floor(n / 2), 3), Math.min(2 + n, 5));      // a helicopter also faces people on foot
       // A battlefield with no level ground for a base (it should not happen): put something down so the wave can be won.
@@ -5825,7 +5912,7 @@
         const x = 0, z = -R * 0.5, k = WAR_KINDS.bunker;
         war.ground.push({ nid: ++war.gidn, kind: 'bunker', pos: [x, Math.max(groundAt(W, x, z), 0), z], heading: 0, turret: 0, hp: k.hp * d.hp, maxHp: k.hp * d.hp, r: k.r, pts: k.pts, cool: 3, t: 0, burning: 0, lastHit: null, speed: 0, dead: false });
       }
-      const airN = war.npc && !war.foot ? Math.min(5, Math.round((warSide === 'versus' ? 1 + Math.floor(n / 1.5) : Math.floor((n + 1) / 2)) * d.count)) : 0;
+      const airN = war.npc && !war.foot ? Math.min(8, Math.round((warSide === 'versus' ? 2 + Math.floor(n / 1.5) : 1 + Math.floor((n + 1) / 2)) * d.count)) : 0;
       for (let i = 0; i < airN; i++) war.foes.push(warSpawnAircraft(warRand() < 0.5 ? 'su27' : 'f15', 'foe'));
       war.waveGround = war.ground.filter((g) => !g.dead).length; war.waveFighters = airN;
       war.waveClear = false; war.guided = 2; warScatterLoot(n);
@@ -6095,7 +6182,7 @@
         for (const g of war.ground) if (!g.dead) warDamageGround(g, WAR.blastDamage(len(sub(add(g.pos, [0, 1, 0]), p)), R, power), who);
         for (const a of war.foes) if (a.state === 'fly') warDamageAir(a, WAR.blastDamage(len(sub(a.pos, p)), R, power), who);
       }
-      if (war.friend && war.friend.state === 'fly' && who !== 'f' && who !== 'p') warDamageAir(war.friend, WAR.blastDamage(len(sub(war.friend.pos, p)), R, power), who);
+      if (war.friend && war.friend.state === 'fly' && who !== 'f') warDamageAir(war.friend, WAR.blastDamage(len(sub(war.friend.pos, p)), R, power), who);
       if (fl.vis) return;
       const hurtYou = WAR.blastDamage(len(sub(flight.pos, p)), R, power);
       if (who === 'e') warHurt(hurtYou * 0.6, 'enemy missile', 'npc');
@@ -6187,8 +6274,11 @@
         const st = war.ap, R = war.R;
         st.spd = clamp(st.spd + raw.throttle * 40 * dt, plane.stall * 1.35, plane.max * 0.85);
         const agl = flight.pos[1] - groundAt(W, flight.pos[0], flight.pos[2]);
-        const o = planeAssist(flight, st, { turn: raw.roll, climb: invert ? -raw.pitch : raw.pitch }, dt, W, { floor: 200 });
-        war.pullUp = agl < 120 && flight.vel[1] < -1 && agl / -flight.vel[1] < 2;
+        // Keep holding the stick down near the ground and the floor lets go: you can fly into it (and crash) if you mean to.
+        const climbIn = invert ? -raw.pitch : raw.pitch;
+        war.diveHold = climbIn < -0.4 && agl < 60 ? (war.diveHold || 0) + dt : 0;
+        const o = planeAssist(flight, st, { turn: raw.roll, climb: climbIn }, dt, W, { floor: war.diveHold > 1 ? -60 : war.overBase ? 3 : 30, turnRate: 1.15, climbRate: 95, lead: 120, vsMax: 55 });
+        war.pullUp = agl < 45 && flight.vel[1] < -4 && agl / -flight.vel[1] < 1.2 && raw.pitch >= 0;      // holding the stick forward lets you fly into the ground
         if (war.pullUp) o.pitch = Math.max(o.pitch || 0, 0.22);
         // Leaving the battlefield: it turns back by itself.
         if (warDist(flight.pos[0], flight.pos[2]) > R * 0.8) st.hdg = Math.atan2(-(flight.pos[0] - war.cx), flight.pos[2] - war.cz);
@@ -6196,7 +6286,7 @@
       }
       if (war.assist === 'easy' && !plane.rotor) {
         const agl = flight.pos[1] - groundAt(W, flight.pos[0], flight.pos[2]);
-        war.pullUp = agl < 120 && flight.vel[1] < -1 && agl / -flight.vel[1] < 2;
+        war.pullUp = agl < 45 && flight.vel[1] < -4 && agl / -flight.vel[1] < 1.2 && raw.pitch >= 0;
         if (war.pullUp) return { ...raw, pitch: Math.max(raw.pitch, 0.18) };
       }
       war.pullUp = false;
@@ -6555,9 +6645,11 @@
         if ((b.owner === 'p' || b.owner === 'f' || b.owner === 'r') && !b.noNpc) {
           for (const a of war.foes) if (a.state === 'fly' && WAR.segHit(p0, b.pos, a.pos, 7.5)) { if (b.shell) warShellBurst(b); else { warDamageAir(a, b.dmgAir, b.owner); puff('spark', b.pos, jitter(20)); } b.dead = true; break; }
           if (b.dead) continue;
+          // Friendly fire: your own rounds hit your wingman too, so watch where you shoot.
+          if (b.owner === 'p' && war.friend && war.friend.state === 'fly' && WAR.segHit(p0, b.pos, war.friend.pos, 7.5)) { warDamageAir(war.friend, b.dmgAir, 'p'); puff('spark', b.pos, jitter(20)); if (!war.ffT || war.ffT < elapsed) { toast('⚠ Friendly fire! That was your wingman', 1600); war.ffT = elapsed + 3; } b.dead = true; continue; }
           for (const g of war.ground) if (!g.dead && WAR.segHit(p0, b.pos, add(g.pos, [0, 1.2, 0]), g.r)) { if (b.shell) warShellBurst(b); else { warDamageGround(g, b.dmgGround, b.owner); puff('dirt', b.pos, jitter(8)); } b.dead = true; break; }
         } else if (b.owner === 'e' && !b.vis) {
-          if (!flight.crashed && !war.dead && WAR.segHit(p0, b.pos, flight.pos, rP)) { warHurt(b.dmgAir * (war.maxHp > 120 ? 0.8 : 1) * (war.assist !== 'pro' ? 0.5 : 1), 'enemy fire'); puff('spark', b.pos, jitter(20)); b.dead = true; continue; }
+          if (!flight.crashed && !war.dead && WAR.segHit(p0, b.pos, flight.pos, rP)) { warHurt(b.dmgAir * (war.maxHp > 120 ? 0.8 : 1) * (war.assist !== 'pro' ? 0.35 : 1), 'enemy fire'); puff('spark', b.pos, jitter(20)); b.dead = true; continue; }
           if (war.friend && war.friend.state === 'fly' && WAR.segHit(p0, b.pos, war.friend.pos, 7.5)) { warDamageAir(war.friend, b.dmgAir, 'e'); b.dead = true; }
           if (war.net && war.net.role === 'host') for (const o of war.net.others.values()) if (o.alive && o.shown && WAR.segHit(p0, b.pos, o.shown, netRadius({ tank: o.rep && (o.rep.kind === 'tank' || o.rep.kind === 'van'), foot: o.rep && o.rep.kind === 'soldier' }))) { netHurtRemote(o.id, b.dmgAir, 'enemy fire'); puff('spark', b.pos, jitter(20)); b.dead = true; break; }
         }
@@ -6705,6 +6797,18 @@
       if (war.endT > 0 && (war.endT -= dt) <= 0) { finish('crash', war.score, `${war.foot ? 'Soldier down' : 'Tank destroyed'} · ${war.score} pts · wave ${war.wave}`); return; }
       if (war.selfDestructT > 0 && (war.selfDestructT -= dt) <= 0) warSoloRespawn();
       if (war.net) { netTick(dt); if (war.net && war.net.role === 'client') netReplicaStep(dt); }
+      if (!war.dead && war.vehicle === 'plane' && war.base) {
+        // The home base: out of missiles (or bombs), come down the runway low and slow, and the ground crew rearms you.
+        const bx = flight.pos[0] - war.base.x, bz = flight.pos[2] - war.base.z, agl = flight.pos[1] - Math.max(groundAt(W, flight.pos[0], flight.pos[2]), 0);
+        const empty = war.missiles === 0 || (war.L.bombs > 0 && war.bombs === 0), onStrip = Math.abs(bx) < 40 && Math.abs(bz) < 470 && agl < 30 && flight.ias < plane.stall * 2.6;
+        if (empty && !onStrip) { const dist = Math.hypot(bx, bz), turn = wrapPi(Math.atan2(-bx, bz) - flight.heading); if (!war.warnT || war.warnT < 0.1) { war.warn = `OUT OF ${war.missiles === 0 ? 'MISSILES' : 'BOMBS'}: HOME BASE ${(dist / 1000).toFixed(1)} km ${Math.abs(turn) < 0.3 ? 'AHEAD' : turn > 0 ? '◀ LEFT' : 'RIGHT ▶'} · fly low and slow down its runway`; war.warnT = 0.3; } }
+        if (empty && onStrip) {
+          war.rearmT = (war.rearmT || 0) + dt; war.warn = `REARMING… ${Math.max(0, 2 - war.rearmT).toFixed(1)}s`; war.warnT = 0.3;
+          if (war.rearmT >= 2) { war.missiles = war.L.missiles; war.bombs = war.L.bombs; war.gun = war.L.gun; war.flares = war.L.flares; war.hp = Math.min(war.maxHp, war.hp + war.maxHp * 0.3); war.rearmT = 0; toast('🛠 Rearmed: missiles, bombs, gun and flares full', 2600); }
+        } else war.rearmT = 0;
+        // Over the base the floor drops away, so the assist lets you come right down to the runway.
+        war.overBase = Math.abs(bx) < 120 && Math.abs(bz) < 700;
+      }
       if (!war.dead && war.vehicle === 'plane') {
         // Out past the edge of the battlefield: a warning, then damage.
         const rr = warDist(flight.pos[0], flight.pos[2]), Rw = war.R;
@@ -6801,6 +6905,7 @@
       if (war.heli && planeMeshes[war.heli.id]) warDrawAircraft({ id: war.heli.id, spec: PLANES.find((q) => q.id === war.heli.id), pos: war.heli.pos, q: war.heli.q, state: 'fly' }, [1, 1, 1], 0);
       if (war.net) for (const o of war.net.others.values()) if (o.heli && planeMeshes[o.heli.id]) warDrawAircraft({ id: o.heli.id, spec: PLANES.find((q) => q.id === o.heli.id), pos: o.heli.pos, q: o.heli.q, state: 'fly' }, teamTint(o), 0);
       for (const c of war.craters) draw(warMeshes.crater, model([0, 0, 0, 1], c.p, c.r), [0.1, 0.085, 0.07]);
+      if (war.base && war.vehicle === 'plane') draw(warMeshes.runway, model([0, 0, 0, 1], [war.base.x, Math.max(groundAt(W, war.base.x, war.base.z), 0), war.base.z]), [1, 1, 1]);
       for (const g of war.ground) {
         const tint = g.dead ? [0.2, 0.18, 0.17] : [1, 1, 1], q = qheading(g.heading), at = [g.pos[0], g.pos[1], g.pos[2]];
         if (INF.has(g.kind)) {
@@ -7694,7 +7799,7 @@
           if (len(sub([t[0], t[1], t[2]], flight.pos)) < 700) noise(0.18, 0.22, 260);
         }
       }
-      stepRace(dt);
+      stepRace(dt); stepCycle(dt);
       if (toastTimer > 0) { toastTimer -= dt; if (toastTimer <= 0) toastEl.style.opacity = 0; }
       if (screen !== 'fly' || paused) return;
       if (plane.rotor) {
@@ -8638,6 +8743,7 @@
         <div class="pg-row"><span class="pg-lab">Controls</span>${chip('warassist', warAssist, 'auto', '🤖 Automatic', 'The vehicle looks after itself; you point and shoot')}${chip('warassist', warAssist, 'easy', '🙂 Easy', 'You drive or fly, with help aiming')}${chip('warassist', warAssist, 'pro', '🎮 Pro', 'Full control, no help')}</div>
         <div class="pg-hint" style="margin:2px 0 8px">${assistText[warAssist]}</div>
         <div class="pg-row"><span class="pg-lab">Realism</span><button data-waroverg class="${warOverG ? 'pg-on' : ''}">Over-G effects: ${warOverG ? 'On' : 'Off'}</button><span class="pg-hint">On by default; turn off G stress and blackout.</span></div>
+        <div class="pg-row"><span class="pg-lab">Target city</span><input data-warcity maxlength="20" placeholder="Name a city to bomb (or leave empty)" value="${escapeHtml(warCity)}" style="width:230px"><span class="pg-hint">Every wave has a city to destroy; the first one is yours.</span></div>
         <div class="pg-row"><span class="pg-lab">Teams</span>${chip('warside', warSide, 'coop', '🤝 Co-op', 'You and a computer wingman against the computer')}${chip('warside', warSide, 'versus', '⚔️ Fight', 'No wingman: computer aces hunt you')}</div>
         <div class="pg-row" style="margin-top:6px"><span class="pg-lab">Enemies</span>${chip('warnpc', warNpc ? 'on' : 'off', 'on', 'On: they fight back', 'Fighters, tanks and guns shoot at you')}${chip('warnpc', warNpc ? 'on' : 'off', 'off', 'Off: targets only', 'Targets that do not shoot: for practice')}</div>`;
     }
@@ -8829,6 +8935,7 @@
         n.onchange = () => root.focus();
       });
       // Weather panel: the sliders update the text as they move and save on release; the buttons redraw the menu.
+      ui.querySelectorAll('[data-warcity]').forEach((n) => { n.oninput = () => { warCity = n.value.replace(/[<>]/g, '').trim().slice(0, 20); write('warcity', warCity); }; });
       ui.querySelectorAll('[data-wx]').forEach((n) => {
         n.oninput = () => {
           const v = Number(n.value);
@@ -9114,5 +9221,5 @@
     };
   }
 
-  window.NotchPlaneGame = { mount, PLANES, MODES, CHALLENGES, Flight, _test: { journeyCenter, blastTrees, treesNear, hash01, breakTree, treeAt, primeObjects, LOOT_RARITY, LOOT_KINDS, lootRoll, lootAmount, SOLDIER, SoldierBody, riflemanError, ARCADE_RATES, NET, WAR, TANK, TankBody, tankAimAt, planeAssist, ARENAS, arenaHeight, setArena: (a) => { ARENA = a; }, wrapPi, attitudeQ, procedure, atcStep, applyEnv, ENV, ilsAt, RUNWAY_ENDS, AP_SIGN, APRONS, buildPlane, REGIONS, nearestRegion, matchRegion, raCallout, gpwsWarnings, groundAt, makeWorld, qheading, qrot, hitObject, terrainAt, surfaceAt, roughnessAt, normalAt } };
+  window.NotchPlaneGame = { mount, PLANES, MODES, CHALLENGES, Flight, _test: { clearTrees, chunkAt: (w, x, z) => chunkOf(w, Math.floor((x + WORLD) / TCS), Math.floor((z + WORLD) / TCS)), journeyCenter, blastTrees, treesNear, hash01, breakTree, treeAt, primeObjects, LOOT_RARITY, LOOT_KINDS, lootRoll, lootAmount, SOLDIER, SoldierBody, riflemanError, ARCADE_RATES, NET, WAR, TANK, TankBody, tankAimAt, planeAssist, ARENAS, arenaHeight, setArena: (a) => { ARENA = a; }, wrapPi, attitudeQ, procedure, atcStep, applyEnv, ENV, ilsAt, RUNWAY_ENDS, AP_SIGN, APRONS, buildPlane, REGIONS, nearestRegion, matchRegion, raCallout, gpwsWarnings, groundAt, makeWorld, qheading, qrot, hitObject, terrainAt, surfaceAt, roughnessAt, normalAt } };
 })();

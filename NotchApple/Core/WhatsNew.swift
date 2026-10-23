@@ -20,6 +20,17 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.1.28", date: "23 October 2026", headline: "Battle: fly low, bigger battlefields, cities, a home base, and day and night", items: [
+            "Battle, flying fixes: in Automatic you are no longer held 200 m up. You can fly right down low, and if you keep pushing the stick down you can fly into the ground. Climbing and diving now answer the stick straight away, and turning is quicker.",
+            "Bigger battlefields: about half as big again, so you don't run off the edge so easily.",
+            "Wings no longer snap off from pulling G. Only a long, very hard pull far past the limit can break one.",
+            "Cities to bomb: every wave has an enemy city with houses, tower blocks and a factory, and you can name the first city yourself (Battle menu → Target city).",
+            "Home base: a runway near the start of every front. When you run out of missiles or bombs, the HUD points you home. Fly low and slow down the runway and the ground crew rearms you and patches you up.",
+            "More enemies in each wave (more bases, more convoys, more fighters), and enemy fire hurts you less in the Easy and Automatic settings.",
+            "Friendly fire: your guns and bombs can now hit your own wingman, so watch where you shoot.",
+            "Day and night: a new Day/night cycle setting, on by default. The sun rises and sets, with dawn and dusk colours and a starry night, one full day every 16 minutes. The fixed times of day are still there.",
+            "Fixed: trees knocked down or cleared away in a battle kept showing on screen.",
+        ]),
         ReleaseNote(version: "2.1.27", date: "23 October 2026", headline: "Formula One: real F1 cars, F1 tracks, team radio, and a hello from the notch", items: [
             "Racing, Formula One: a proper F1 car (nose and front wing, sidepods, halo, helmet, airbox, rear wing and four open wheels that turn), and a lower chase camera behind it. Pick the F1 car and every rival drives one too, for a real F1 grid.",
             "Up to 15 rivals (was 5).",
