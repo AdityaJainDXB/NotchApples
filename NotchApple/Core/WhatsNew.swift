@@ -20,6 +20,10 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.1.26", date: "23 October 2026", headline: "Racing: cars sit on the road and barriers are solid", items: [
+            "Racing: cars now sit on top of the track in the chase view. The road used to be drawn over the back of a car (and over other cars), which made it look sunk into the tarmac. Cars now have wheels, a shadow and a full underside on the road.",
+            "The barriers beside the road are solid for every car, including the computer drivers: nothing gets through them, on any track. Tracks you draw in the designer are now checked so a tight bend or two close sections cannot let the barrier fold over and let cars through.",
+        ]),
         ReleaseNote(version: "2.1.25", date: "22 October 2026", headline: "Plane racing with friends", items: [
             "Plane racing with friends: in Time Trial, make a race room and send friends the 6-letter code. Everyone picks a plane, the host starts, and you all fly the same 12 hoops at once. You see the other racers' aircraft with their names, a live standings box shows who is ahead, and the results list everyone's time (or who crashed out).",
         ]),

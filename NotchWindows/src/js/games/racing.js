@@ -131,8 +131,9 @@
     if (T.length > 12000) return { ok: false, why: 'Too long (12 km at most).', T };
     let kmax = 0, at = 0;
     T.S.forEach((q, i) => { if (Math.abs(q.k) > kmax) { kmax = Math.abs(q.k); at = i; } });
-    if (kmax >= 1 / (def.width * 0.6)) return { ok: false, why: 'A bend is too tight for the road. Move the points round it further apart.', T, bad: at };
-    const gap = def.width * 1.0, skip = Math.ceil((def.width * 3) / T.step);
+    const wallD = def.width / 2 + WALL;      // the barriers stand this far from the middle of the road, so a bend must be wider than that or its inside barrier folds over itself
+    if (kmax >= 1 / (wallD + 1)) return { ok: false, why: 'A bend is too tight for the road. Move the points round it further apart.', T, bad: at };
+    const gap = 2 * wallD + 2, skip = Math.ceil((def.width * 3) / T.step);
     for (let i = 0; i < T.m; i += 2) for (let j = i + skip; j < T.m; j += 2) {
       if (T.closed && T.m - j + i < skip) continue;
       const a = T.S[i], b = T.S[j];
@@ -183,6 +184,8 @@
     { id: 'super', name: 'Supercar V10', blurb: 'Screaming V10 power and a very high top speed. A handful when you rush it.', accel: 22, vmax: 88, grip: 18, steer: 0.5, loose: 0.26, brake: 36, color: '#b6ff3b', down: 0.12, gears: 7, idle: 1000, redline: 8700, cyl: 10, tone: 'v10', tough: 1 },
     { id: 'f1', name: 'Formula One', blurb: 'The fastest thing here. Downforce glues it to the road: brake late, turn in hard. Fragile.', accel: 27, vmax: 94, grip: 30, steer: 0.42, loose: 0.08, brake: 58, color: '#f4f4f4', down: 0.55, gears: 8, idle: 4000, redline: 15000, cyl: 10, tone: 'f1', tough: 0.65 },
   ];
+  /// How far from the edge of the road the solid barriers stand (m).
+  const WALL = 7;
   const WHEELBASE = 2.8, CAR_LEN = 4.6, CAR_W = 2.0;
 
   /// Which gear the car is in and how fast the engine is turning, from its speed. A gear gives a share of the top speed;
@@ -329,7 +332,7 @@
   /// A solid barrier a little way past the edge of the road. A car that reaches it bounces off, scrapes along it, is twisted
   /// round by the knock, and is damaged by how hard it hit. Returns the impact speed (m/s), or 0 when nothing was touched.
   function wallHit(c, T, loc) {
-    const wallD = T.width / 2 + 7, off = Math.abs(loc.lat);
+    const wallD = T.width / 2 + WALL, off = Math.abs(loc.lat);
     if (off <= wallD) return 0;
     const q = T.S[loc.idx], sg = Math.sign(loc.lat) || 1, nx = q.nx * sg, ny = q.ny * sg, over = off - wallD;       // (nx, ny) points out, at the wall
     c.x -= nx * over; c.y -= ny * over;
@@ -841,7 +844,7 @@
       const drawLine = (s, col) => { const q = T.S[Math.max(0, Math.min(T.m - 1, Math.round(s / T.step)))], n = 8, w = T.width / n; for (let i = 0; i < n; i++) for (let j = 0; j < 2; j++) { g.fillStyle = (i + j) % 2 ? '#111' : col; const o = -T.width / 2 + i * w; g.save(); g.translate(q.x + q.nx * (o + w / 2), q.y + q.ny * (o + w / 2)); g.rotate(Math.atan2(q.ty, q.tx)); g.fillRect(j * 2 - 2, -w / 2, 2, w); g.restore(); } };
       drawLine(0, '#fff'); if (!T.closed) drawLine(T.length, '#fff');
       // The barriers each side.
-      for (const sg of [-1, 1]) { const o = sg * (T.width / 2 + 7); g.beginPath(); T.S.forEach((q, i) => { const x = q.x + q.nx * o, y = q.y + q.ny * o; i ? g.lineTo(x, y) : g.moveTo(x, y); }); if (T.closed) g.closePath(); g.strokeStyle = '#c9ccd2'; g.lineWidth = 1; g.stroke(); }
+      for (const sg of [-1, 1]) { const o = sg * (T.width / 2 + WALL); g.beginPath(); T.S.forEach((q, i) => { const x = q.x + q.nx * o, y = q.y + q.ny * o; i ? g.lineTo(x, y) : g.moveTo(x, y); }); if (T.closed) g.closePath(); g.strokeStyle = '#c9ccd2'; g.lineWidth = 1; g.stroke(); }
       // Skid marks.
       g.fillStyle = 'rgba(15,15,15,.45)';
       for (const s of skids) { g.save(); g.translate(s[0], s[1]); g.rotate(s[2]); g.fillRect(-0.7, -0.25, 1.6, 0.5); g.restore(); }
@@ -939,11 +942,15 @@
       };
       const carModel = (r) => {
         const k = r.car, col = r.color || k.spec.color, dm = 1 - k.dmg * 0.4, body = k.dmg > 0.2 ? shade(col, dm) : col;
+        // Its shadow on the road, so it is plainly standing on it.
+        { const ca = Math.cos(k.h), sa = Math.sin(k.h), hl = CAR_LEN / 2 + 0.5, hw = CAR_W / 2 + 0.45, pt = (u, v) => cam(k.x + ca * u - sa * v, k.y + sa * u + ca * v, 0.02);
+          poly([pt(hl, -hw), pt(hl, hw), pt(-hl, hw), pt(-hl, -hw)], 'rgba(0,0,0,.38)'); }
         if (k.spec.id === 'f1') {
           box(k.x, k.y, k.h, 0.12, 4.8, 0.9, 0.5, body); box(k.x - Math.cos(k.h) * 2.2, k.y - Math.sin(k.h) * 2.2, k.h, 0.7, 0.5, 1.9, 0.12, '#1a1a1a');
           box(k.x + Math.cos(k.h) * 2.3, k.y + Math.sin(k.h) * 2.3, k.h, 0.08, 0.4, 1.9, 0.08, '#1a1a1a');
           for (const [u, v] of [[1.6, 0.95], [1.6, -0.95], [-1.5, 0.95], [-1.5, -0.95]]) box(k.x + Math.cos(k.h) * u - Math.sin(k.h) * v, k.y + Math.sin(k.h) * u + Math.cos(k.h) * v, k.h, 0, 0.7, 0.45, 0.65, '#151515');
         } else {
+          for (const [u, v] of [[1.45, 0.98], [1.45, -0.98], [-1.45, 0.98], [-1.45, -0.98]]) box(k.x + Math.cos(k.h) * u - Math.sin(k.h) * v, k.y + Math.sin(k.h) * u + Math.cos(k.h) * v, k.h, 0, 0.78, 0.34, 0.55, '#151515');      // wheels on the road
           box(k.x, k.y, k.h, 0.22, CAR_LEN, CAR_W, 0.7, body);
           box(k.x - Math.cos(k.h) * 0.3, k.y - Math.sin(k.h) * 0.3, k.h, 0.92, 2.1, 1.65, 0.5, '#1d2533');
           if (k.spec.id === 'gt3') box(k.x - Math.cos(k.h) * 2.1, k.y - Math.sin(k.h) * 2.1, k.h, 1.15, 0.35, 1.9, 0.08, '#111');
@@ -955,12 +962,14 @@
       g.setTransform(1, 0, 0, 1, 0, 0); g.fillStyle = sky; g.fillRect(0, 0, W, hy + 2); g.fillStyle = T.ground; g.fillRect(0, hy, W, H - hy);
       g.fillStyle = shade(T.ground, 0.8); g.fillRect(0, hy, W, Math.max(2, H * 0.01));
       // The road, from far to near, with whatever stands by it in between.
-      const N = Math.min(150, T.closed ? T.m - 4 : 150), back = cock ? 1 : 4, idx0 = me.idx, wd = T.width / 2, wall = wd + 7;
+      const N = Math.min(150, T.closed ? T.m - 4 : 150), back = cock ? 1 : 4, idx0 = me.idx, wd = T.width / 2, wall = wd + WALL;
       const bucket = new Map(), put = (k, f) => { if (!bucket.has(k)) bucket.set(k, []); bucket.get(k).push(f); };
       for (const r of racers) {
         if (r === me && cock) continue;
         let kk = r.idx - idx0; if (T.closed) { if (kk > T.m / 2) kk -= T.m; if (kk < -T.m / 2) kk += T.m; }
-        if (kk >= -back && kk <= N) put(kk, () => carModel(r));
+        // A car is 4.6 m long and a road strip 4 m, so its rear lies over the strips nearer the camera: it is painted after those
+        // (two strips nearer than the one it is on), or the road would be drawn over its underside and wheels and sink it into the track.
+        if (kk >= -back && kk <= N) put(Math.max(kk - 2, -back), () => carModel(r));
       }
       const ground = T.ground, road = '#3a3d44';
       for (let k = N; k >= -back; k--) {
