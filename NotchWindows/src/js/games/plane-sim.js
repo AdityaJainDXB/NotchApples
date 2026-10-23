@@ -5518,7 +5518,7 @@
     // ---- Coins and the passport: land and stop on an airport's runway (or a helipad) in Free Flight to earn coins. The first
     // landing at each airport stamps your passport (+250); after that you earn for how far you flew there. Coins buy paint
     // schemes in the Hangar, which are all free for now.
-    let coins = read('coins', 0), passport = new Set(read('passport', [])), livery = read('livery', 'classic'), lastLand = read('lastland', null), mapOpen = false;
+    let coinLanded = false, coins = read('coins', 0), passport = new Set(read('passport', [])), livery = read('livery', 'classic'), lastLand = read('lastland', null), mapOpen = false;
     const LIVERIES = [['classic', 'Classic', [1, 1, 1], 0], ['sunset', 'Sunset', [1.18, 0.82, 0.62], 300], ['ocean', 'Ocean', [0.7, 0.92, 1.22], 300], ['forest', 'Forest', [0.74, 1.06, 0.7], 400], ['stealth', 'Stealth', [0.42, 0.43, 0.48], 800], ['gold', 'Gold', [1.28, 1.06, 0.5], 1500]];
     const liveryTint = () => (LIVERIES.find((l) => l[0] === livery) || LIVERIES[0])[2];
     const AIRPORTS = [{ id: 'home', name: 'Home airfield', x: 0, z: -700 }, ...AIRFIELDS.map((a) => ({ id: a.id, name: a.name, x: a.x, z: a.z, far: !!a.far }))];
@@ -8162,7 +8162,9 @@
 
       // Challenges along the way.
       // Having flown (15 m up) is what makes a later landing count, whether you took off from a runway or started in the air.
-      if (!flight.onGround && flight.pos[1] - groundAt(W, flight.pos[0], flight.pos[2]) > 15) hadAir = true;
+      if (!flight.onGround && flight.pos[1] - groundAt(W, flight.pos[0], flight.pos[2]) > 15) { hadAir = true; coinLanded = false; }
+      // Coins: landed (after a flight) and slowed to taxi speed on a runway or a helipad. Once per landing.
+      if (mode.id === 'free' && hadAir && !coinLanded && flight.onGround && !flight.crashed && flight.speed < 9) { const pad = padAt(flight.pos); if (onRunway(flight.pos) || pad) { coinLanded = true; landAward(pad); } }
       if (wasGround && !flight.onGround && flight.pos[1] - groundAt(W, flight.pos[0], flight.pos[2]) > 2) { hadTakeoff = true; if (onRunway(prev)) achieve('takeoff'); }
       if (!wasGround && flight.onGround) {
         const sink = flight.sinkAtTouch;
@@ -8187,7 +8189,6 @@
             if (pad) { if (plane.rotor) { achieve('pad'); if (pad.id === 'ridge') achieve('padridge'); } }
             else { achieve('landed'); if (onRidge(flight.pos)) achieve('ridge'); }
             if (hadFailure && !pad) achieve('glider');
-            if (mode.id === 'free') landAward(pad);
           }
           if (mode.id === 'landing' && plane.rotor) {
             const hp = HELIPADS[0], sink = flight.sinkAtTouch, off = Math.hypot(flight.pos[0] - hp.x, flight.pos[2] - hp.z);
@@ -8333,7 +8334,7 @@
           case 'rudder': a = surf.rud * 25 * DEG; break;
           case 'spoiler': a = -clamp(surf.spoil + Math.max(0, d.side * surf.ail) * 0.7, 0, 1) * 48 * DEG; break;
         }
-        draw(d.gl, Math.abs(a) < 1e-3 ? M : mat4mul(M, hingeM(d.pivot, d.axis, a)));
+        draw(d.gl, Math.abs(a) < 1e-3 ? M : mat4mul(M, hingeM(d.pivot, d.axis, a)), liveryTint());      // the moving surfaces get the paint too
       }
       // Undercarriage: legs fold about their hinges (inwards, nose leg forwards) and are hidden once up.
       if (parts.has('F') && (menu || flight.damage.gear)) {

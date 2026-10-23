@@ -1,0 +1,4 @@
+## Notch Apple for Windows 2.1.33 (BETA)
+
+- Fixed: coins and passport stamps now work. You earn them as soon as you've landed and slowed to taxi speed on a runway or helipad; before, the plane had to stop completely, which it hardly ever did.
+- Fixed: paint schemes now cover the whole plane, including the ailerons, flaps, elevators and rudder, which used to stay white.

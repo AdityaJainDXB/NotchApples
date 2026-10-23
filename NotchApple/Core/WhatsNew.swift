@@ -20,6 +20,10 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.1.33", date: "23 October 2026", headline: "Coins and paint schemes fixed", items: [
+            "Fixed: coins and passport stamps now work. You earn them as soon as you've landed and slowed to taxi speed on a runway or helipad; before, the plane had to stop completely, which it hardly ever did.",
+            "Fixed: paint schemes now cover the whole plane, including the ailerons, flaps, elevators and rudder, which used to stay white.",
+        ]),
         ReleaseNote(version: "2.1.32", date: "23 October 2026", headline: "Real terrain: fly over the real ground of any place", items: [
             "Real terrain (Free Flight): turn on 🛰 Real terrain under \"Where in the world\", then pick a place, type any city or country, or use My location. You fly over that place's real hills, mountains, valleys, coast and sea, with heights above sea level from the free elevation tiles on AWS (SRTM, GMTED and ETOPO1 data), and the home airfield and the other airports are given level ground. The world map shows the real land too.",
             "The flight ceiling is higher with real terrain, so you can fly over real mountains.",
