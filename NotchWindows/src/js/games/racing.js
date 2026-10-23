@@ -33,6 +33,14 @@
   /// The tracks. `pts` are control points in metres (x right, y down); a closed track is a loop run for several laps, an
   /// open one is a sprint from the first point to the last. `ground` is the colour round the road, `scenery` what stands along it.
   const TRACKS = [
+    { id: 'hoval', name: 'Hairpin oval', kind: 'Hairpin oval', closed: true, width: 30, laps: 3, blurb: 'Two long straights and two tight hairpins: brake hard, turn, and power out. The place to learn.', ground: GROUND.green, scenery: 'tyres',
+      pts: [[420,-40],[448,-28],[460,0],[448,28],[420,40],[400,40],[286,40],[171,40],[57,40],[-57,40],[-171,40],[-286,40],[-400,40],[-420,40],[-448,28],[-460,0],[-448,-28],[-420,-40],[-400,-40],[-286,-40],[-171,-40],[-57,-40],[57,-40],[171,-40],[286,-40],[400,-40]] },
+    { id: 'spa', name: 'Ardennes GP (Spa style)', kind: 'Spa', closed: true, width: 30, laps: 3, blurb: 'A Spa-Francorchamps style lap: La Source hairpin, the plunge through Eau Rouge, a long Kemmel straight, Pouhon and the Bus Stop chicane.', ground: GROUND.autumn, scenery: 'pines',
+      pts: [[0, 0], [0, -170], [15, -250], [60, -285], [105, -255], [125, -170], [160, -60], [205, 40], [235, 110], [290, 200], [400, 370], [520, 560], [600, 690], [650, 760], [700, 775], [740, 810], [760, 880], [730, 950], [650, 995], [550, 1015], [480, 1060], [455, 1140], [480, 1215], [545, 1250], [600, 1300], [610, 1380], [560, 1440], [450, 1450], [300, 1390], [160, 1250], [70, 1060], [10, 860], [-35, 620], [-55, 420], [-50, 290], [-20, 230], [-50, 170], [-30, 100]] },
+    { id: 'zandvoort', name: 'Dunes GP (Zandvoort style)', kind: 'Zandvoort', closed: true, width: 28, laps: 3, blurb: 'A Zandvoort style lap in the dunes: Tarzan hairpin, twisting corners over the sand and a fast curve onto the straight.', ground: GROUND.desert, scenery: 'none',
+      pts: [[0, 0], [300, 0], [520, 0], [620, -20], [660, -80], [630, -140], [550, -150], [470, -130], [400, -160], [380, -230], [430, -290], [500, -300], [540, -350], [520, -420], [440, -450], [340, -430], [260, -470], [180, -520], [80, -510], [20, -450], [40, -370], [110, -330], [130, -260], [70, -200], [-30, -210], [-120, -260], [-200, -230], [-230, -150], [-200, -70], [-120, -20]] },
+    { id: 'monza', name: 'Temple of Speed (Monza style)', kind: 'Monza', closed: true, width: 32, laps: 3, blurb: 'A Monza style lap: flat-out straights, three chicanes, the Lesmos and the long Parabolica. Low drag wins.', ground: GROUND.green, scenery: 'trees',
+      pts: [[0, 0], [300, 0], [560, 0], [640, -22], [720, 18], [810, 0], [920, -50], [985, -160], [990, -270], [960, -340], [1010, -410], [975, -480], [900, -540], [820, -570], [750, -545], [690, -500], [560, -472], [420, -468], [340, -450], [245, -505], [150, -458], [-120, -440], [-220, -400], [-260, -300], [-240, -160], [-170, -60], [-90, -10]] },
     { id: 'sprint', name: 'Straight sprint', kind: 'Straight', closed: false, width: 34, laps: 1, blurb: 'A 1.6 km drag strip. Flat out, one run.', ground: GROUND.green, scenery: 'none',
       pts: [[0, 0], [0, -400], [0, -800], [0, -1200], [0, -1600]] },
     { id: 'circuit', name: 'Curved circuit', kind: 'Curved', closed: true, width: 34, laps: 3, blurb: 'A flowing loop of sweeping bends. Easy to drift.', ground: GROUND.green, scenery: 'trees',
@@ -380,8 +388,8 @@
     return Math.max(0.01, -rv);
   }
 
-  const AI_NAMES = ['Rex', 'Nova', 'Blaze', 'Kit', 'Zed', 'Maya', 'Flash', 'Viper'];
-  const AI_COLORS = ['#7bd88f', '#c77dff', '#ff9f43', '#4dd0e1', '#f06292', '#cddc39', '#ef5350', '#90a4ae'];
+  const AI_NAMES = ['Rex', 'Nova', 'Blaze', 'Kit', 'Zed', 'Maya', 'Flash', 'Viper', 'Luca', 'Sora', 'Max', 'Ivy', 'Otto', 'Remy', 'Juno'];
+  const AI_COLORS = ['#7bd88f', '#c77dff', '#ff9f43', '#4dd0e1', '#f06292', '#cddc39', '#ef5350', '#90a4ae', '#1e88e5', '#ff7043', '#26a69a', '#ab47bc', '#ffd54f', '#8d6e63', '#78909c'];
   const LEVELS = { easy: { skill: 0.8, label: 'Easy' }, normal: { skill: 0.9, label: 'Normal' }, hard: { skill: 0.98, label: 'Hard' } };
 
   // ------------------------------------------------------------------ playing with others
@@ -462,7 +470,7 @@
     const g = cv.getContext('2d');
 
     // ---- settings kept between visits
-    let trackId = store.get('track', 'circuit'), carId = store.get('car', 'gt'), lapsSel = store.get('laps', 3), rivals = store.get('rivals', 3), level = store.get('level', 'normal');
+    let trackId = store.get('track', 'hoval'), carId = store.get('car', 'gt'), lapsSel = store.get('laps', 3), rivals = store.get('rivals', 3), level = store.get('level', 'normal');
     let myName = store.get('name', ''), myId = Math.random().toString(36).slice(2, 8);
     if (!myName) { myName = 'Driver ' + Math.floor(1000 + Math.random() * 9000); store.set('name', myName); }
     let viewMode = store.get('view', 'chase');          // top | chase | cockpit
@@ -476,7 +484,7 @@
     const getTrack = (id) => { const d = findDef(id) || TRACKS[1]; return trackCache[d.id] || (trackCache[d.id] = buildTrack(d)); };
     /// A track id from a message: a built-in one, one of ours, or a friend's drawn track sent along as a code.
     const resolveTrack = (id, code) => { if (findDef(id)) return id; const d = code && decodeTrack(code); if (d && d.id === id) { tempDefs[id] = d; return id; } return null; };
-    if (!findDef(trackId)) trackId = 'circuit';
+    if (!findDef(trackId)) trackId = 'hoval';
     const carSpec = (id) => CARS.find((c) => c.id === id) || CARS[0];
 
     // ---- state
@@ -521,16 +529,16 @@
     const bestLine = () => { const b = store.get(`best.${trackId}.${carId}`, null); return hint(b ? `Your best here: ${b.lap ? 'lap ' + fmt(b.lap) + ' · ' : ''}race ${fmt(b.race)}` : 'No time set here yet.'); };
 
     function showMenu() {
-      screen = 'menu'; big.textContent = ''; ui.classList.remove('rc-side');
+      screen = 'menu'; big.textContent = ''; ui.classList.remove('rc-side'); hush();
       const name = document.createElement('input'); name.value = myName; name.maxLength = 14; name.style.width = '120px'; name.style.textTransform = 'none'; name.style.letterSpacing = '0';
       name.onchange = () => { myName = (name.value || myName).trim().slice(0, 14) || myName; store.set('name', myName); };
       const mk = (n) => btn(String(n), n === rivals ? 'on' : '', () => { rivals = n; store.set('rivals', n); showMenu(); });
       card(head('🏎️ Racing'),
         ...pickers(showMenu),
-        row('Rivals', ...[0, 1, 3, 5].map(mk)),
+        row('Rivals', ...[0, 1, 3, 5, 7, 9, 11, 15].map(mk)),
         row('Level', ...Object.entries(LEVELS).map(([id, l]) => btn(l.label, id === level ? 'on' : '', () => { level = id; store.set('level', id); showMenu(); }))),
         bestLine(),
-        row('View', ...[['top', 'Top-down'], ['chase', 'Chase'], ['cockpit', 'Cockpit']].map(([id, l]) => btn(l, id === viewMode ? 'on' : '', () => { viewMode = id; store.set('view', id); showMenu(); })), btn(soundOn ? '🔊 Sound' : '🔇 Sound off', '', () => { setSound(!soundOn); showMenu(); })),
+        row('View', ...[['top', 'Top-down'], ['chase', 'Chase'], ['cockpit', 'Cockpit']].map(([id, l]) => btn(l, id === viewMode ? 'on' : '', () => { viewMode = id; store.set('view', id); showMenu(); })), btn(soundOn ? '🔊 Sound' : '🔇 Sound off', '', () => { setSound(!soundOn); showMenu(); }), btn(radioOn ? '📻 Radio' : '📻 Radio off', '', () => { radioOn = !radioOn; store.set('radio', radioOn); if (!radioOn) hush(); showMenu(); })),
         row('', btn('Start race', 'go', () => { backToDesign = false; startLocalRace(); }), btn('✏️ Track designer', '', () => openDesigner(findDef(trackId) && findDef(trackId).custom ? findDef(trackId) : null))),
         row('Online', btn('Create room', '', () => openRoom(true)), (() => { const i = document.createElement('input'); i.placeholder = 'CODE'; i.maxLength = 8; i.id = 'rc-code'; return i; })(), btn('Join', '', () => { const c = NET.normCode(root.querySelector('#rc-code').value); if (!c) { toast('That code is 6 letters and numbers.'); return; } openRoom(false, c); })),
         row('Name', name),
@@ -555,7 +563,7 @@
     function startLocalRace() {
       T = getTrack(trackId);
       const entries = [{ id: myId, name: myName, car: carId, color: carSpec(carId).color }];
-      for (let i = 0; i < rivals; i++) entries.push({ id: 'ai' + i, name: AI_NAMES[i % AI_NAMES.length], car: CARS[(i + 1) % CARS.length].id, color: AI_COLORS[i % AI_COLORS.length], ai: true });
+      for (let i = 0; i < rivals; i++) entries.push({ id: 'ai' + i, name: AI_NAMES[i % AI_NAMES.length], car: carId === 'f1' || carId === 'gt3' ? carId : CARS[(i + 1) % CARS.length].id, color: AI_COLORS[i % AI_COLORS.length], ai: true });   // F1 and GT3 race their own kind
       // The player starts at the back of a small field, so there is someone to catch.
       entries.push(entries.shift());
       setupRace(entries, lapsSel);
@@ -650,7 +658,7 @@
     let ac = null, au = null;
     const TONES = { gt: [0.5, 0.28, 0.16, 1], hatch: [0.42, 0.12, 0.3, 1.2], v8: [0.45, 0.6, 0.07, 0.72], v10: [0.38, 0.2, 0.42, 1.35], f1: [0.32, 0.1, 0.55, 1.7] };
     function audioKill() { if (ac) { const a = ac; ac = null; au = null; try { a.close().catch(() => {}); } catch { /* already closed */ } } }
-    function setSound(on) { soundOn = !!on; store.set('sound', soundOn); if (hostSound() !== null) window.NotchHostSound = soundOn; if (!soundOn) audioKill(); }
+    function setSound(on) { soundOn = !!on; store.set('sound', soundOn); if (hostSound() !== null) window.NotchHostSound = soundOn; if (!soundOn) { audioKill(); try { window.speechSynthesis && window.speechSynthesis.cancel(); } catch { /* none */ } } }
     function audioUp() {
       if (!soundOn || suspended || !alive) return null;
       if (ac) { if (ac.state === 'suspended') ac.resume().catch(() => {}); return ac; }
@@ -695,6 +703,67 @@
     }
     const stopEngine = () => audioKill();
 
+    // ---- team radio and commentary: your race engineer on the radio (a click and a crackle round each call) and an excited
+    // commentator for the big moments, spoken by the computer's own voices. Off with the 📻 switch, and silent when the sound is off.
+    let radioOn = store.get('radio', true), lastTalk = 0, radioPos = 0, radioLap = -1, radioWarned = false, radioLast = false;
+    const synth = () => (typeof window.speechSynthesis !== 'undefined' ? window.speechSynthesis : null);
+    const hush = () => { try { synth() && synth().cancel(); } catch { /* no voices */ } };
+    const pickVoice = (who) => {
+      const vs = (synth() && synth().getVoices()) || [], en = vs.filter((v) => /^en/i.test(v.lang));
+      const pref = who === 'com' ? [/Daniel/, /Arthur/, /Oliver/, /en-GB/i, /Google UK English Male/] : [/Fred/, /Alex/, /Tom/, /Aaron/, /en-US/i, /Google US English/];
+      for (const re of pref) { const v = en.find((x) => re.test(x.name) || re.test(x.lang)); if (v) return v; }
+      return en[0] || null;
+    };
+    function click() {
+      if (!au || !ac) return;
+      const t = ac.currentTime, sr = ac.createBufferSource(), fl = ac.createBiquadFilter(), gg = ac.createGain();
+      sr.buffer = au.nb; fl.type = 'bandpass'; fl.frequency.value = 1700; fl.Q.value = 1.4;
+      gg.gain.setValueAtTime(0.12, t); gg.gain.exponentialRampToValueAtTime(0.001, t + 0.18);
+      sr.connect(fl); fl.connect(gg); gg.connect(au.comp); sr.start(t, Math.random()); sr.stop(t + 0.2);
+    }
+    /// Says a line. `who` is 'eng' (the radio) or 'com' (the commentator). Lower `pri` lines are dropped while something is said.
+    function say(text, who = 'eng', pri = 1) {
+      const sp = synth(); if (!radioOn || !soundOn || suspended || !sp || typeof SpeechSynthesisUtterance === 'undefined') return;
+      const now = performance.now();
+      if ((sp.speaking || now - lastTalk < 2500) && pri < 2) return;
+      if (pri >= 2) sp.cancel();
+      lastTalk = now;
+      const u = new SpeechSynthesisUtterance(text), v = pickVoice(who);
+      if (v) u.voice = v;
+      u.rate = who === 'com' ? 1.18 : 1.06; u.pitch = who === 'com' ? 1.08 : 0.88; u.volume = 0.95;
+      if (who === 'eng') { click(); u.onend = () => click(); }
+      try { sp.speak(u); } catch { /* no voice */ }
+    }
+    const ord = (n) => `P${n}`;
+    /// Called every step of the race: decides what the engineer or the commentator has to say.
+    function radioTick() {
+      if (!me || !radioOn || screen !== 'race' || net && !me) return;
+      const order = ranking(racers), pos = order.indexOf(me) + 1;
+      if (clock > 6 && pos !== radioPos && radioPos) {
+        if (pos < radioPos) say(pos === 1 ? `${ord(1)}! You're leading the race. Great move.` : `${ord(pos)}. Nice move, keep it up.`, 'eng');
+        else say(`${ord(pos)}. Lost a place. Keep pushing.`, 'eng');
+      }
+      radioPos = pos;
+      if (T.closed && me.lap !== radioLap) {
+        if (radioLap >= 0 && me.lap >= 1 && !me.finished) {
+          const ahead = order[pos - 2], v = Math.max(8, Math.hypot(me.car.vx, me.car.vy)), gap = ahead ? (ahead.prog - me.prog) / v : 0;
+          const lt = me.lapTimes[me.lapTimes.length - 1], best = me.bestLap === lt && me.lapTimes.length > 1;
+          if (me.lap === raceLaps - 1) say(`Final lap. Final lap. ${pos === 1 ? 'Bring it home.' : `Gap ahead ${gap.toFixed(1)}. Go for it.`}`, 'eng', 2);
+          else if (best) say(`That's purple, fastest lap. ${fmt(lt)}.`, 'eng');
+          else say(`Lap time ${fmt(lt)}. ${ahead ? `Gap to ${ahead.name}, ${gap.toFixed(1)}.` : 'You are clear in front.'}`, 'eng');
+        }
+        radioLap = me.lap;
+      }
+      if (me.car.dmg > 0.55 && !radioWarned) { radioWarned = true; say('We have damage on the car. Take it easy, bring it home.', 'eng', 2); }
+    }
+    function radioStart() { radioPos = 0; radioLap = me ? me.lap : -1; radioWarned = false; radioLast = false; say("And it's lights out, and away we go!", 'com', 2); }
+    function radioFinish(pos) { say(pos === 1 ? `${me.name} takes the chequered flag! What a drive!` : `${me.name} crosses the line in ${ord(pos)}.`, 'com', 2); setTimeout(() => say(pos === 1 ? 'P1! Get in there! Unbelievable job.' : pos <= 3 ? `${ord(pos)}, podium! Great job, mate.` : `${ord(pos)}. Good effort, we go again.`, 'eng', 1), 3400); }
+    function radioCrash(r, speed) {
+      if (speed < 16) return;
+      if (r === me) { say('Are you OK? Check the car.', 'eng', 2); setTimeout(() => say(`Oh! ${me.name} is in the wall!`, 'com', 1), 1600); }
+      else if (me && Math.abs(r.prog - me.prog) < 300) say(`Big moment there for ${r.name}!`, 'com', 1);
+    }
+
     // ---- crashes you can see: sparks, flying bits of bodywork, smoke from a hurt car, flames from a wreck, tyre smoke
     function crash(r, x, y, speed, col) {
       const power = clamp(speed / 35, 0, 1), n = Math.min(70, 8 + speed * 1.6);
@@ -703,6 +772,7 @@
       for (let i = 0; i < 3 + power * 6; i++) parts.push({ k: 'smoke', x: x + (Math.random() - 0.5) * 2, y: y + (Math.random() - 0.5) * 2, z: 0.5, vx: (Math.random() - 0.5) * 3, vy: (Math.random() - 0.5) * 3, vz: 1, life: 1 + Math.random(), size: 1 + power * 2, dark: 0.35 });
       const near = me && Math.hypot(me.car.x - x, me.car.y - y);
       if (r === me) shake = Math.max(shake, clamp(speed / 22, 0.2, 1.4));
+      radioCrash(r, speed);
       if (near != null && near < 140) crashSound(power * (r === me ? 1 : clamp(1 - near / 140, 0.1, 0.6)));
       if (parts.length > 900) parts.splice(0, parts.length - 900);
     }
@@ -729,7 +799,7 @@
       if (screen === 'countdown') {
         cdLeft -= dt;
         big.textContent = cdLeft > 0 ? String(Math.ceil(cdLeft - 0.2 > 0 ? cdLeft - 0.2 : 1)) : 'GO!';
-        if (cdLeft <= 0) { screen = 'race'; clock = 0; setTimeout(() => { if (screen === 'race') big.textContent = ''; }, 700); for (const s of aiState.values()) s.go = true; }
+        if (cdLeft <= 0) { screen = 'race'; clock = 0; radioStart(); setTimeout(() => { if (screen === 'race') big.textContent = ''; }, 700); for (const s of aiState.values()) s.go = true; }
         return;
       }
       if (screen !== 'race' && screen !== 'done') return;
@@ -783,6 +853,7 @@
         if (r.finished && !was && net) net.link.send({ t: 'fin', id: myId, ft: Math.round(r.finishT * 100) / 100 });
         if (r.finished && !was && r === me) finishedMe();
       }
+      radioTick();
       if (me && me.car.shifted !== lastShift) { lastShift = me.car.shifted; paddle = 0.18; }
       if (net && screen === 'race' && me) { net.sendAcc = (net.sendAcc || 0) + dt; if (net.sendAcc > 0.1) { net.sendAcc = 0; net.link.send(NET.packState(myId, me)); } }
       if (screen === 'race' && racers.every((r) => r.finished) || (screen === 'race' && me && me.finished && racers.filter((r) => !r.remote && !r.ai).every((r) => r.finished) && clock - me.finishT > 6 && !net)) showResults();
@@ -795,6 +866,7 @@
       if (me.bestLap && (!upd.lap || me.bestLap < upd.lap)) upd.lap = me.bestLap;
       if (!upd.race || me.finishT < upd.race) { upd.race = me.finishT; me.newBest = true; }
       store.set(key, upd);
+      radioFinish(ranking(racers).indexOf(me) + 1);
     }
     function showResults() {
       if (screen === 'done') return;
@@ -875,7 +947,7 @@
       g.textAlign = 'left'; g.fillStyle = 'rgba(8,12,22,.6)';
       g.beginPath(); g.roundRect(8 * s, 8 * s, 138 * s, 64 * s, 8 * s); g.fill();
       g.fillStyle = '#fff'; g.font = `800 ${24 * s}px system-ui`;
-      g.fillText(`${pos}`, 16 * s, 40 * s); g.font = `600 ${11 * s}px system-ui`; g.fillStyle = 'rgba(255,255,255,.7)'; g.fillText(`/ ${racers.length}`, 34 * s, 40 * s);
+      g.fillText(`${pos}`, 16 * s, 40 * s); const pw = g.measureText(`${pos}`).width; g.font = `600 ${11 * s}px system-ui`; g.fillStyle = 'rgba(255,255,255,.7)'; g.fillText(`/ ${racers.length}`, 16 * s + pw + 4 * s, 40 * s);
       g.fillStyle = '#fff'; g.font = `700 ${12 * s}px system-ui`;
       g.fillText(T.closed ? `Lap ${clamp(me.lap + 1, 1, raceLaps)}/${raceLaps}` : `${Math.round(clamp(me.prog, 0, T.length))} / ${Math.round(T.length)} m`, 16 * s, 58 * s);
       g.textAlign = 'right'; g.font = `700 ${13 * s}px system-ui`; g.fillText(screen === 'countdown' ? '0:00.00' : fmt(me.finished ? me.finishT : clock), 138 * s, 28 * s);
@@ -909,11 +981,13 @@
     function draw3D(mode) {
       const c = me.car, sp = c.spec, cock = mode === 'cockpit';
       if (!cock) chaseYaw += wrapPi(c.h - chaseYaw) * 0.14; else chaseYaw = c.h;
+      for (const r of racers) r.car.spinW = ((r.car.spinW || 0) - (r.car.vf || 0) * 0.016 / 0.36) % (Math.PI * 2);
+      const low = sp.id === 'f1';
       const yaw = cock ? c.h : chaseYaw, cs = Math.cos(yaw), sn = Math.sin(yaw);
       const jx = shake > 0 ? (Math.random() - 0.5) * shake * 0.5 : 0, jz = shake > 0 ? (Math.random() - 0.5) * shake * 0.3 : 0;
-      const ex = (cock ? c.x - Math.cos(c.h) * 0.3 : c.x - cs * 8.5) + jx, ey = (cock ? c.y - Math.sin(c.h) * 0.3 : c.y - sn * 8.5) + jx;
-      const ez = (cock ? (sp.id === 'f1' ? 0.78 : 1.12) : 3.1) + jz;
-      const F = (W / 2) / Math.tan((cock ? 1.3 : 1.12) / 2), hy = H * (cock ? 0.44 : 0.36), NEAR = 0.35;
+      const camBack = low ? 6.2 : 8.5, ex = (cock ? c.x - Math.cos(c.h) * 0.3 : c.x - cs * camBack) + jx, ey = (cock ? c.y - Math.sin(c.h) * 0.3 : c.y - sn * camBack) + jx;
+      const ez = (cock ? (sp.id === 'f1' ? 0.78 : 1.12) : low ? 1.9 : 3.1) + jz;
+      const F = (W / 2) / Math.tan((cock ? 1.3 : 1.12) / 2), hy = H * (cock ? 0.44 : low ? 0.4 : 0.36), NEAR = 0.35;
       const cam = (x, y, z) => { const dx = x - ex, dy = y - ey; return [dx * cs + dy * sn, -dx * sn + dy * cs, z - ez]; };
       const scr = (p) => [W / 2 + (p[1] / p[0]) * F, hy - (p[2] / p[0]) * F];
       const poly = (pts, fill) => {
@@ -946,9 +1020,36 @@
         { const ca = Math.cos(k.h), sa = Math.sin(k.h), hl = CAR_LEN / 2 + 0.5, hw = CAR_W / 2 + 0.45, pt = (u, v) => cam(k.x + ca * u - sa * v, k.y + sa * u + ca * v, 0.02);
           poly([pt(hl, -hw), pt(hl, hw), pt(-hl, hw), pt(-hl, -hw)], 'rgba(0,0,0,.38)'); }
         if (k.spec.id === 'f1') {
-          box(k.x, k.y, k.h, 0.12, 4.8, 0.9, 0.5, body); box(k.x - Math.cos(k.h) * 2.2, k.y - Math.sin(k.h) * 2.2, k.h, 0.7, 0.5, 1.9, 0.12, '#1a1a1a');
-          box(k.x + Math.cos(k.h) * 2.3, k.y + Math.sin(k.h) * 2.3, k.h, 0.08, 0.4, 1.9, 0.08, '#1a1a1a');
-          for (const [u, v] of [[1.6, 0.95], [1.6, -0.95], [-1.5, 0.95], [-1.5, -0.95]]) box(k.x + Math.cos(k.h) * u - Math.sin(k.h) * v, k.y + Math.sin(k.h) * u + Math.cos(k.h) * v, k.h, 0, 0.7, 0.45, 0.65, '#151515');
+          // An open-wheel car built from shaped pieces (footprints in car space, u forward and v right), drawn together far to near.
+          const ca = Math.cos(k.h), sa = Math.sin(k.h), at = (u, v, z) => cam(k.x + ca * u - sa * v, k.y + sa * u + ca * v, z), F = [];
+          const solid = (fp, z0, z1, col) => {
+            for (let i = 0; i < fp.length; i++) { const p = fp[i], q = fp[(i + 1) % fp.length]; F.push({ v: [at(p[0], p[1], z0), at(q[0], q[1], z0), at(q[0], q[1], z1), at(p[0], p[1], z1)], col: shade(col, i % 2 ? 0.66 : 0.82) }); }
+            F.push({ v: fp.map((p) => at(p[0], p[1], z1)), col: shade(col, 1.05) });
+          };
+          const wheel = (u0, v0, r, w) => {
+            const vs = [v0 - w / 2, v0 + w / 2], out = v0 > 0 ? vs[1] : vs[0], N = 10, ring = (v) => Array.from({ length: N }, (_, i) => { const t = (i / N) * Math.PI * 2 + (k.spinW || 0); return at(u0 + Math.cos(t) * r, v, r + Math.sin(t) * r); });
+            const a0 = ring(vs[0]), a1 = ring(vs[1]);
+            for (let i = 0; i < N; i++) F.push({ v: [a0[i], a0[(i + 1) % N], a1[(i + 1) % N], a1[i]], col: i % 2 ? '#121212' : '#1b1b1b' });
+            F.push({ v: out === vs[1] ? a1 : a0, col: '#2b2b2b' });
+            F.push({ v: Array.from({ length: N }, (_, i) => { const t = (i / N) * Math.PI * 2; return at(u0 + Math.cos(t) * r * 0.55, out + (v0 > 0 ? 0.01 : -0.01), r + Math.sin(t) * r * 0.55); }), col: '#8a8f99' });
+          };
+          const dark = '#16181d', accent = shade(body, 0.55);
+          solid([[1.1, -0.82], [1.1, 0.82], [-1.9, 0.72], [-1.9, -0.72]], 0.04, 0.09, dark);                                  // floor
+          solid([[2.75, -0.95], [2.75, 0.95], [2.35, 0.95], [2.35, -0.95]], 0.07, 0.13, dark);                                  // front wing
+          solid([[2.7, -0.97], [2.7, -0.92], [2.3, -0.92], [2.3, -0.97]], 0.07, 0.3, accent); solid([[2.7, 0.92], [2.7, 0.97], [2.3, 0.97], [2.3, 0.92]], 0.07, 0.3, accent);
+          solid([[2.6, -0.12], [2.6, 0.12], [0.95, 0.32], [0.95, -0.32]], 0.16, 0.42, body);                                    // nose
+          solid([[0.95, -0.38], [0.95, 0.38], [-0.7, 0.45], [-0.7, -0.45]], 0.1, 0.6, body);                                    // tub
+          solid([[0.45, -0.9], [0.45, 0.9], [-1.3, 0.62], [-1.3, -0.62]], 0.1, 0.5, body);                                      // sidepods
+          solid([[-0.35, -0.34], [-0.35, 0.34], [-2.0, 0.12], [-2.0, -0.12]], 0.4, 0.88, body);                                 // engine cover and airbox
+          solid([[-0.6, -0.02], [-0.6, 0.02], [-1.9, 0.02], [-1.9, -0.02]], 0.88, 1.02, accent);                                // shark fin
+          solid([[-0.05, -0.15], [-0.05, 0.15], [-0.4, 0.15], [-0.4, -0.15]], 0.55, 0.82, '#f2c230');                          // helmet
+          solid([[0.55, -0.04], [0.55, 0.04], [-0.35, 0.04], [-0.35, -0.04]], 0.82, 0.88, dark);                                // halo
+          solid([[0.5, -0.33], [0.5, -0.27], [0.35, -0.27], [0.35, -0.33]], 0.58, 0.86, dark); solid([[0.5, 0.27], [0.5, 0.33], [0.35, 0.33], [0.35, 0.27]], 0.58, 0.86, dark);
+          solid([[-2.1, -0.85], [-2.1, 0.85], [-2.5, 0.85], [-2.5, -0.85]], 0.78, 0.92, body); solid([[-2.15, -0.85], [-2.15, 0.85], [-2.45, 0.85], [-2.45, -0.85]], 0.92, 0.98, dark);   // rear wing
+          solid([[-2.05, -0.88], [-2.05, -0.82], [-2.55, -0.82], [-2.55, -0.88]], 0.35, 1.02, accent); solid([[-2.05, 0.82], [-2.05, 0.88], [-2.55, 0.88], [-2.55, 0.82]], 0.35, 1.02, accent);
+          wheel(1.75, -0.92, 0.34, 0.34); wheel(1.75, 0.92, 0.34, 0.34); wheel(-1.6, -0.88, 0.37, 0.42); wheel(-1.6, 0.88, 0.37, 0.42);
+          for (const f of F) f.d = f.v.reduce((m, p) => m + p[0], 0) / f.v.length;
+          F.sort((x, y) => y.d - x.d).forEach((f) => poly(f.v, f.col));
         } else {
           for (const [u, v] of [[1.45, 0.98], [1.45, -0.98], [-1.45, 0.98], [-1.45, -0.98]]) box(k.x + Math.cos(k.h) * u - Math.sin(k.h) * v, k.y + Math.sin(k.h) * u + Math.cos(k.h) * v, k.h, 0, 0.78, 0.34, 0.55, '#151515');      // wheels on the road
           box(k.x, k.y, k.h, 0.22, CAR_LEN, CAR_W, 0.7, body);
@@ -1004,9 +1105,9 @@
         const items = bucket.get(k); if (items) items.forEach((f) => f());
       }
       // Smoke, flames, sparks and bits of car, far to near.
-      const ps = parts.map((p) => ({ p, c: cam(p.x, p.y, p.z) })).filter((o) => o.c[0] > NEAR && o.c[0] < 300).sort((a, b) => b.c[0] - a.c[0]);
+      const ps = parts.map((p) => ({ p, c: cam(p.x, p.y, p.z) })).filter((o) => o.c[0] > (o.p.k === 'smoke' ? 4 : NEAR) && o.c[0] < 300).sort((a, b) => b.c[0] - a.c[0]);
       for (const { p, c: pc } of ps) {
-        const [sx, sy] = scr(pc), u = F / pc[0];
+        const [sx, sy] = scr(pc), u = Math.min(F / pc[0], H * 0.12);
         if (p.k === 'smoke') { const v = p.dark * 255 | 0; g.fillStyle = p.dust ? `rgba(150,120,80,${clamp(p.life, 0, 1) * 0.35})` : `rgba(${v},${v},${v},${clamp(p.life, 0, 1) * 0.42})`; g.beginPath(); g.arc(sx, sy, p.size * u, 0, 7); g.fill(); }
         else if (p.k === 'fire') { g.fillStyle = `rgba(255,${120 + Math.random() * 110 | 0},30,${clamp(p.life * 2, 0, 1)})`; g.beginPath(); g.arc(sx, sy, p.size * u, 0, 7); g.fill(); }
         else if (p.k === 'spark') { g.fillStyle = '#ffe08a'; const z = Math.max(1.5, 0.25 * u); g.fillRect(sx - z / 2, sy - z / 2, z, z); }
@@ -1204,12 +1305,12 @@
     raf = requestAnimationFrame(frame);
 
     const api = {
-      key, suspend() { suspended = true; keys.clear(); audioKill(); }, resume() { suspended = false; last = performance.now(); }, setSoundEnabled(on) { setSound(on); },
+      key, suspend() { suspended = true; keys.clear(); audioKill(); hush(); }, resume() { suspended = false; last = performance.now(); }, setSoundEnabled(on) { setSound(on); },
       _state: () => ({ screen, racers, me, T, clock, net }),
     };
     window.NotchRaceGame.current = api;
     return function stop() {
-      alive = false; cancelAnimationFrame(raf); closeNet(); audioKill();
+      alive = false; cancelAnimationFrame(raf); closeNet(); audioKill(); hush();
       window.removeEventListener('keydown', onKd); window.removeEventListener('keyup', onKu);
       if (window.NotchRaceGame.current === api) window.NotchRaceGame.current = null;
       root.remove();

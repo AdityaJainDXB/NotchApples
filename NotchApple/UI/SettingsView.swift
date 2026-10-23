@@ -923,6 +923,15 @@ private struct ModulesSettings: View {
 // MARK: - AI
 
 private struct ClaudeSettings: View {
+    /// Why the AI in the notch is worth having.
+    static let advantages: [(String, String)] = [
+        ("key.slash", "No API key to set up: open the notch and ask"),
+        ("rectangle.dashed.and.paperclip", "Ask about your screen, an image or a PDF in one click"),
+        ("globe", "Web search with sources, right in the notch"),
+        ("mic.fill", "Voice: talk to it, hear the answer"),
+        ("command", "Always one shortcut away, over any app, without switching windows"),
+        ("text.bubble", "Personas and slash commands for quick rewrites, translations and summaries"),
+    ]
     @StateObject private var config = AIConfig.shared
     @State private var drafts: [AIProvider: String] = [:]
     @State private var customModel = ""
@@ -932,8 +941,31 @@ private struct ClaudeSettings: View {
     @AppStorage("capture.defaultMode") private var captureMode = CaptureManager.Mode.region.rawValue
     @AppStorage("ai.temperature") private var temperature = -1.0
 
+    @ObservedObject private var entitlements = Entitlements.shared
+
     var body: some View {
         Form {
+            // What Notch Apple AI gives you, and that it comes with Pro ($1 once), not only Ultimate.
+            Section {
+                VStack(alignment: .leading, spacing: 5) {
+                    ForEach(Self.advantages, id: \.0) { icon, text in
+                        Label(text, systemImage: icon).font(.callout)
+                    }
+                }
+                HStack {
+                    if entitlements.tier == .free {
+                        Link("Get Pro ($1 once) for Notch Apple AI →", destination: URL(string: LicenseServer.site)!)
+                    } else if config.provider != .hosted {
+                        Button("Use Notch Apple AI") { config.provider = .hosted }
+                    } else {
+                        Label("You're using Notch Apple AI", systemImage: "checkmark.seal.fill").foregroundStyle(.green)
+                    }
+                }
+            } header: {
+                Text("Notch Apple AI · included with Pro")
+            } footer: {
+                Text("No key to make and no account: it just works, with a daily allowance (more with Ultimate). Your own keys and Ollama still work too.")
+            }
             Section {
                 Picker("Provider", selection: Binding(get: { config.provider }, set: { config.provider = $0 })) {
                     Section("Free") { ForEach(AIProvider.allCases.filter(\.isFree)) { Text($0.title).tag($0) } }

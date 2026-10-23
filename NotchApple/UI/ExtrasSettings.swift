@@ -14,6 +14,8 @@ struct ExtrasSettings: View {
     @StateObject private var watch = SystemWatch.shared
     @State private var confirmAddHooks = false
     @State private var hookMessage: String?
+    @AppStorage(HelloAnimation.onKey) private var helloOn = true
+    @AppStorage(HelloAnimation.nameKey) private var helloName = ""
 
     /// A switch for one kind of thing that can appear beside the closed notch.
     private func kindBinding(_ kind: ActivityKind) -> Binding<Bool> {
@@ -31,6 +33,11 @@ struct ExtrasSettings: View {
 
     var body: some View {
         Form {
+            Section {
+                Toggle("Say hello when I open my Mac", isOn: $helloOn)
+                TextField("Your name", text: $helloName, prompt: Text("Your name"))
+                Button("Play it now") { HelloAnimation.show(force: true) }.disabled(!helloOn)
+            } header: { Text("Hello from the notch") } footer: { Text("A Formula One car races across the notch and says hello, when Notch Apple starts and when your Mac wakes up.") }
             Section {
                 HStack {
                     Button("Show everything") { setHidden([]) }

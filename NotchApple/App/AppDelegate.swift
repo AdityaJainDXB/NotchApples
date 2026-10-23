@@ -31,6 +31,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         SandboxMigration.runIfNeeded()
         notchController = NotchWindowController()
         notchController?.show()
+        HelloAnimation.start()          // the F1 car says hello (asks your name the first time)
         // Optional feature modules: registered always, started only if the user turned them on.
         ModuleRegistry.shared.register(LidFoldModule.shared)
         if LidFoldModule.shared.enabled { LidFoldModule.shared.start() }
@@ -140,6 +141,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             NSWorkspace.shared.notificationCenter.publisher(for: name)
                 .sink { _ in
                     GlobalHotkeyManager.shared.reregisterAll()
+                    Task { @MainActor in HelloAnimation.show() }
                     Task { @MainActor in await Entitlements.shared.checkRevocationIfDue(force: true) }
                 }
                 .store(in: &cancellables)

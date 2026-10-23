@@ -72,10 +72,10 @@ Pick your computer. Both buttons start the download straight away. The Mac link 
   </tr>
   <tr>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.1.26</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.1.27</b></a>
     </td>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 2.1.26 BETA</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 2.1.27 BETA</b></a>
     </td>
   </tr>
   <tr>
@@ -233,6 +233,16 @@ All screenshots use sample data.
 ## What's new
 
 > **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is in the repository's history.
+
+### Mac 2.1.27 · Windows 2.1.27 BETA · 23 October 2026 · 🏎️ Formula One: real F1 cars, F1 tracks, team radio, and a hello from the notch
+
+- Racing, Formula One: a proper F1 car (nose and front wing, sidepods, halo, helmet, airbox, rear wing and four open wheels that turn), and a lower chase camera behind it. Pick the F1 car and every rival drives one too, for a real F1 grid.
+- Up to 15 rivals (was 5).
+- Formula One style tracks: Ardennes GP (in the style of Spa, with La Source, Eau Rouge, the Kemmel straight and the Bus Stop), Dunes GP (Zandvoort style) and Temple of Speed (Monza style).
+- The first track is now a hairpin oval: two long straights and two tight hairpins, to learn braking and turning.
+- Team radio and commentary (📻 switch): lights out, position changes, lap times and gaps, fastest laps, the final lap, damage, crashes and the chequered flag, spoken by your Mac's voices.
+- Hello from the notch: when Notch Apple starts and each time your Mac wakes, an F1 car races across the notch and says hello with your name (it asks your name once; change it or turn it off in Settings → Notch Extras).
+- Settings → AI shows what Notch Apple AI gives you, and that it comes with Pro ($1 once): no key to set up, ask about your screen, web search, voice, always one shortcut away.
 
 ### Mac 2.1.26 · Windows 2.1.26 BETA · 23 October 2026 · 🏎️ Racing: cars sit on the road and barriers are solid
 
