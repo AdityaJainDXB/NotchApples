@@ -1016,6 +1016,7 @@
         line(Pd.outer); g.strokeStyle = '#c9ccd2'; g.lineWidth = 1; g.stroke();
         const mid = seg.filter((q) => { const r0 = relS(T, q.s); return r0 > Pd.a + 80 && r0 < Pd.b - 80; });
         g.beginPath(); mid.forEach((q, i) => { const x = q.x + q.nx * Pd.inner * Pd.side, y = q.y + q.ny * Pd.inner * Pd.side; i ? g.lineTo(x, y) : g.moveTo(x, y); }); g.strokeStyle = '#eee'; g.lineWidth = 0.8; g.stroke();
+        { const eq = T.S[((Math.round((Pd.a + 30) / T.step) % T.m) + T.m) % T.m]; g.fillStyle = '#ffd23f'; g.font = 'bold 7px system-ui'; g.textAlign = 'center'; g.fillText('PIT IN', eq.x + eq.nx * Pd.side * (Pd.outer + 8), eq.y + eq.ny * Pd.side * (Pd.outer + 8)); }
         for (const r of racers) { if (r.boxS == null) continue; const bq = T.S[(Math.round(r.boxS / T.step) % T.m + T.m) % T.m]; g.fillStyle = r === me ? '#4fe09a' : '#ffd23f'; g.save(); g.translate(bq.x + bq.nx * Pd.lane * Pd.side, bq.y + bq.ny * Pd.lane * Pd.side); g.rotate(Math.atan2(bq.ty, bq.tx)); g.fillRect(-5, -3, 10, 6); g.restore(); }
       } }
       // Skid marks.
@@ -1068,6 +1069,7 @@
       {
         const wear = me.car.wear || 0, y0 = (viewMode === 'cockpit' ? H * 0.24 : 40 * s);
         g.textAlign = 'center'; g.font = `800 ${12 * s}px system-ui`;
+        { const Pd = pitInfo(T); if (Pd && !me.inLane) { const r0 = relS(T, me.sNow || 0), d = Pd.a - r0; if (d > 0 && d < 450) { g.fillStyle = '#ffd23f'; g.fillText(`PIT ENTRY ${Pd.side > 0 ? 'ON THE RIGHT ▶' : '◀ ON THE LEFT'} IN ${Math.round(d)} m`, W / 2, y0 + 32 * s); } } }
         if (me.inLane) { g.fillStyle = '#4fe09a'; g.fillText(me.service > 0 ? `PIT STOP… ${me.service.toFixed(1)}s` : 'PIT LANE · LIMITER 80 km/h', W / 2, y0 + 16 * s); }
         if (me.pen) { g.fillStyle = '#ff4d4d'; g.textAlign = 'left'; g.fillText(`+${me.pen}s PENALTY`, 16 * s, 100 * s); g.textAlign = 'center'; }
         g.textAlign = 'left'; g.font = `700 ${10 * s}px system-ui`; g.fillStyle = wear > 0.7 ? '#ff4d4d' : wear > 0.45 ? '#ffd166' : 'rgba(255,255,255,.75)';
@@ -1250,6 +1252,12 @@
           const sd = Pd.side, midD = relD > Pd.a + 80 && relD < Pd.b - 80;
           strip(a, b, sd * (wd + 1.2), sd * Pd.outer, '#3b3e45');
           if (Math.floor(a.s / 6) % 2 === 0) strip(a, b, sd * (Pd.lane - 3.6), sd * (Pd.lane - 3.3), '#e8e8e8');
+          if (relD < Pd.a + 80) {        // the entry: a solid white line peeling off the track, and chevrons pointing in
+            const k0 = (relD - Pd.a) / 80, o = T.width / 2 + (Pd.inner - T.width / 2) * k0;
+            strip(a, b, sd * o, sd * (o + 0.35), '#ffffff');
+            if (Math.floor(relD / 8) % 2 === 0) strip(a, b, sd * (o + 1.5), sd * (Pd.outer - 1), 'rgba(255,255,255,.55)');
+          }
+          if (relD > Pd.b - 80) { const k0 = (Pd.b - relD) / 80, o = T.width / 2 + (Pd.inner - T.width / 2) * k0; strip(a, b, sd * o, sd * (o + 0.35), '#ffffff'); }
           for (const r of racers) if (r.boxS != null && Math.abs(relD - r.boxS) < 6 && (Math.abs(relD - r.boxS) > 4.5)) strip(a, b, sd * (Pd.lane - 3.3), sd * (Pd.lane + 3.3), r === me ? '#4fe09a' : '#ffd23f');
           if (midD) strip(a, b, sd * Pd.inner, sd * Pd.inner, '#e6e6e6', 0, 1.1);
           strip(a, b, sd * Pd.outer, sd * Pd.outer, '#b9bec6', 0, 1.6);
@@ -1257,6 +1265,8 @@
         } else { strip(a, b, -wall, -wall, bc, 0, 0.95); strip(a, b, wall, wall, bc, 0, 0.95); }
         const items = bucket.get(k); if (items) items.forEach((f) => f());
       }
+      // The pit entry, marked so you can find it: a "PIT IN" board over the entry while it is ahead of you.
+      { const Pd = pitInfo(T); if (Pd && !me.inLane) { const ei = ((Math.round((Pd.a + 25) / T.step) % T.m) + T.m) % T.m, q = T.S[ei], pc = cam(q.x + q.nx * Pd.side * Pd.lane, q.y + q.ny * Pd.side * Pd.lane, 3.2); if (pc[0] > NEAR && pc[0] < 600) { const [sx, sy] = scr(pc), k = clamp(40 / pc[0], 0.45, 1.4); g.font = `900 ${Math.round(15 * k * dpr)}px system-ui`; const tw = g.measureText('PIT IN').width; g.fillStyle = 'rgba(10,12,18,.85)'; g.fillRect(sx - tw / 2 - 8 * k * dpr, sy - 20 * k * dpr, tw + 16 * k * dpr, 26 * k * dpr); g.fillStyle = '#ffd23f'; g.textAlign = 'center'; g.fillText('PIT IN', sx, sy); } } }
       // Smoke, flames, sparks and bits of car, far to near.
       const ps = parts.map((p) => ({ p, c: cam(p.x, p.y, p.z) })).filter((o) => o.c[0] > (o.p.k === 'smoke' ? 4 : NEAR) && o.c[0] < 300).sort((a, b) => b.c[0] - a.c[0]);
       for (const { p, c: pc } of ps) {

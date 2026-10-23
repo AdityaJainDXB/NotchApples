@@ -20,6 +20,9 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.1.35", date: "23 October 2026", headline: "A pit entrance you can find", items: [
+            "Racing: the pit entrance is now easy to find: a \"PIT IN\" board over the entry, a white line peeling off the track into the pit lane with chevrons, a matching line at the exit, and a HUD countdown on the run-up (\"Pit entry on the left in 200 m\"). The pit lane is on the start straight, on the outside of the circuit; drive in there, keep to the limiter and stop in your box (the green one).",
+        ]),
         ReleaseNote(version: "2.1.34", date: "23 October 2026", headline: "Realistic guns and new tank models", items: [
             "More realistic guns: one round in four is a glowing tracer (like a real ammunition belt), with a muzzle flash at the gun, a continuous cannon roar while you hold the trigger (a deep growl on the Gunship), a little shake, and dust and sparks where rounds hit the ground. Enemy fighters show a muzzle flash when they open fire on you.",
             "New tank models: sloped front armour, track runs with seven road wheels a side, side skirts, a low turret with a gun mantlet, the commander's cupola and machine gun, smoke launchers, an antenna, a stowage rack, and a longer gun with a fume extractor and muzzle brake. Enemy tanks and your own get the new look.",
