@@ -5,6 +5,7 @@
 import { el, fmtTime, dayLabel } from '../store.js';
 import { segmented, iconBtn, empty } from '../ui.js';
 import * as F from '../services/f1.js';
+import { openUrl } from '../native.js';
 
 function countdown(d) {
   const ms = d - Date.now();
@@ -19,7 +20,17 @@ export function render(root) {
   const tower = el('div', { class: 'card col', style: 'flex:1.2;min-width:0;overflow:auto;gap:4px' });
   const next = el('div', { class: 'card col gap-6' });
   const standings = el('div', { class: 'card col', style: 'flex:1;min-height:0;overflow:auto;gap:4px' });
-  root.append(el('div', { class: 'row fill' }, tower, el('div', { class: 'col', style: 'flex:1;min-width:0' }, next, standings)));
+  // Watch on F1 TV (the official stream, in the browser) and Full screen: the timing grows to fill the screen, to read
+  // from a distance or keep beside the race. Esc leaves.
+  const box = el('div', { class: 'col fill', style: 'gap:6px;min-height:0' });
+  const fullBtn = el('button', { class: 'btn small', title: 'Live timing on the whole screen (Esc leaves)', onclick: () => { if (document.fullscreenElement === box) document.exitFullscreen?.(); else box.requestFullscreen?.().catch?.(() => {}); } }, '⛶ Full screen');
+  const onFull = () => { const on = document.fullscreenElement === box; box.style.cssText = on ? 'gap:6px;min-height:0;background:#0d0b14;padding:2vh 2vw;zoom:' + Math.max(1, Math.min(window.screen.width / 760, window.screen.height / 470)).toFixed(2) : 'gap:6px;min-height:0'; fullBtn.textContent = on ? '✕ Leave full screen' : '⛶ Full screen'; };
+  document.addEventListener('fullscreenchange', onFull);
+  box.append(el('div', { class: 'hstack', style: 'gap:6px;justify-content:flex-end' },
+    el('button', { class: 'btn small', title: 'Opens the official F1 TV stream in your browser (needs an F1 TV subscription)', onclick: () => openUrl('https://f1tv.formula1.com').catch(() => window.open('https://f1tv.formula1.com', '_blank')) }, '▶ Watch on F1 TV'),
+    fullBtn),
+    el('div', { class: 'row fill', style: 'min-height:0' }, tower, el('div', { class: 'col', style: 'flex:1;min-width:0' }, next, standings)));
+  root.append(box);
 
   function row(pos, code, name, team, right, { fastest = false } = {}) {
     const mine = code && F.followed() === code;
@@ -79,5 +90,5 @@ export function render(root) {
   paint();
   refreshAll();
   const t = setInterval(async () => { if (F.get().live?.state === 'in') { await F.loadLive().catch(() => {}); } if (alive) paint(); }, 20e3);
-  return () => { alive = false; clearInterval(t); };
+  return () => { alive = false; clearInterval(t); document.removeEventListener('fullscreenchange', onFull); if (document.fullscreenElement === box) document.exitFullscreen?.(); };
 }

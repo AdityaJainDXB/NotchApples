@@ -6,11 +6,13 @@
 //  standings on the right. See F1Model for where the data comes from.
 //
 
+import AppKit
 import SwiftUI
 
 struct F1View: View {
     @StateObject private var f1 = F1Model.shared
     @State private var tab = 0
+    var inBigWindow = false
 
     var body: some View {
         HStack(alignment: .top, spacing: 12) {
@@ -22,7 +24,7 @@ struct F1View: View {
             .frame(width: 250)
         }
         .onAppear { f1.viewing = true }
-        .onDisappear { f1.viewing = false }
+        .onDisappear { if !F1BigWindow.isOpen { f1.viewing = false } }      // the big window keeps the timing live
     }
 
     // MARK: Timing tower
@@ -41,6 +43,10 @@ struct F1View: View {
                     Text("Lap \(lap.current)/\(lap.total)").font(.system(size: 11, weight: .medium).monospacedDigit()).foregroundStyle(Theme.textSecondary)
                 }
                 flag
+                IconButton(systemImage: "play.tv.fill", help: "Watch on F1 TV (opens the official stream in your browser; needs an F1 TV subscription)") { F1BigWindow.watch() }
+                if !inBigWindow {
+                    IconButton(systemImage: "arrow.up.left.and.arrow.down.right", help: "Big view: live timing in its own window, as big as you like (put it beside the stream)") { F1BigWindow.toggle() }
+                }
                 IconButton(systemImage: "arrow.clockwise", help: "Refresh") { f1.refreshAll() }
             }
             if f1.orderOnly {
@@ -181,5 +187,65 @@ struct F1View: View {
                 }
             }
         }
+    }
+}
+
+/// The F1 tab in its own window, scaled up to whatever size you make it: live timing, the countdown and the standings,
+/// big enough to read from the sofa or to keep beside the race on F1 TV. Esc or the close button closes it.
+@MainActor
+enum F1BigWindow {
+    static let f1tv = URL(string: "https://f1tv.formula1.com")!
+    private static var window: NSWindow?
+    static var isOpen: Bool { window != nil }
+
+    static func watch() { NSWorkspace.shared.open(f1tv) }
+
+    static func toggle() {
+        if let w = window { w.makeKeyAndOrderFront(nil); NSApp.activate(ignoringOtherApps: true); return }
+        let screen = NSScreen.main ?? NSScreen.screens[0], vf = screen.visibleFrame
+        let size = CGSize(width: min(1100, vf.width * 0.6), height: min(660, vf.height * 0.7))
+        let w = F1Window(contentRect: NSRect(x: vf.maxX - size.width - 24, y: vf.midY - size.height / 2, width: size.width, height: size.height),
+                         styleMask: [.titled, .closable, .resizable, .miniaturizable, .fullSizeContentView], backing: .buffered, defer: false)
+        w.title = "Formula 1 · live timing"
+        w.titlebarAppearsTransparent = true
+        w.isReleasedWhenClosed = false
+        w.backgroundColor = .black
+        w.minSize = CGSize(width: 560, height: 320)
+        w.collectionBehavior = [.fullScreenPrimary, .moveToActiveSpace]
+        w.contentView = NSHostingView(rootView: F1BigView())
+        w.delegate = F1Window.closer
+        window = w
+        NSApp.activate(ignoringOtherApps: true)
+        w.makeKeyAndOrderFront(nil)
+    }
+
+    fileprivate static func closed() {
+        window = nil
+        F1Model.shared.viewing = false
+    }
+}
+
+private final class F1Window: NSWindow {
+    static let closer = Closer()
+    final class Closer: NSObject, NSWindowDelegate {
+        func windowWillClose(_ notification: Notification) { MainActor.assumeIsolated { F1BigWindow.closed() } }
+    }
+    override func cancelOperation(_ sender: Any?) { close() }        // Esc
+}
+
+/// The normal F1 tab, laid out at its usual size and then scaled up to fill the window.
+private struct F1BigView: View {
+    private let base = CGSize(width: 780, height: 420)
+    var body: some View {
+        GeometryReader { g in
+            let k = max(1, min(g.size.width / base.width, (g.size.height - 28) / base.height))
+            F1View(inBigWindow: true)
+                .padding(12)
+                .frame(width: base.width, height: base.height)
+                .scaleEffect(k)
+                .frame(width: g.size.width, height: g.size.height - 28)
+                .offset(y: 28)
+        }
+        .background(Color.black)
     }
 }

@@ -72,10 +72,10 @@ Pick your computer. Both buttons start the download straight away. The Mac link 
   </tr>
   <tr>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.1.44</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.1.45</b></a>
     </td>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 2.1.44 BETA</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 2.1.45 BETA</b></a>
     </td>
   </tr>
   <tr>
@@ -233,6 +233,11 @@ All screenshots use sample data.
 ## What's new
 
 > **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is in the repository's history.
+
+### Mac 2.1.45 · Windows 2.1.45 BETA · 23 October 2026 · 🏎️ Watch F1, and live timing as big as you like
+
+- F1: a ▶ Watch on F1 TV button opens the official live stream in your browser (it needs an F1 TV subscription), and a new Big view opens the F1 tab in its own window: live timing, the countdown and the standings scale up to whatever size you make it, so you can keep it beside the race or go full screen. Esc closes it.
+- Windows: a ▶ Watch on F1 TV button opens the official live stream in your browser (it needs an F1 TV subscription), and ⛶ Full screen makes the live timing, countdown and standings fill the screen. Esc leaves.
 
 ### Mac 2.1.44 · Windows 2.1.44 BETA · 23 October 2026 · 🎲 Racing that's different every time, and a real Safety Car
 
