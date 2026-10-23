@@ -20,6 +20,11 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.1.29", date: "23 October 2026", headline: "Sea battle with warships and a carrier", items: [
+            "Sea battle: a new Open Sea battlefield, a chain of small islands with enemy warships that sail and fire flak, island towns to bomb, and your own aircraft carrier as the home base. Fly low and slow along its deck to rearm.",
+            "More realistic missiles: they drop off the rail for a moment, then the motor lights with a visible flame and thick smoke while it burns, and they slow down after it burns out.",
+            "Rearming at the home base is quicker (1.5 seconds) and works from a little higher up.",
+        ]),
         ReleaseNote(version: "2.1.28", date: "23 October 2026", headline: "Battle: fly low, bigger battlefields, cities, a home base, and day and night", items: [
             "Battle, flying fixes: in Automatic you are no longer held 200 m up. You can fly right down low, and if you keep pushing the stick down you can fly into the ground. Climbing and diving now answer the stick straight away, and turning is quicker.",
             "Bigger battlefields: about half as big again, so you don't run off the edge so easily.",

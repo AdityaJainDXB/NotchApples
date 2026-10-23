@@ -10,7 +10,7 @@ const G = globalThis.NotchPlaneGame, T = G._test;
 const ground = (w) => (x, z) => T.groundAt(w, x, z);
 
 test('each battlefield is flat in the middle, has a low rim of hills (or sea) round the edge, and sea beyond', () => {
-  for (const a of T.ARENAS) {
+  for (const a of T.ARENAS.filter((x) => !x.archipelago)) {      // (Open Sea is a chain of small islands: planes only)
     const inner = [];
     for (let r = 0; r <= 0.9 * a.R; r += 150) for (let th = 0; th < 6.28; th += 0.5) inner.push(T.arenaHeight(a, Math.cos(th) * r, Math.sin(th) * r));
     if (a.island) {

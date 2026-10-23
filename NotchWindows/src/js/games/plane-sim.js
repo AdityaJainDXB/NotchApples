@@ -1478,6 +1478,7 @@
     { id: 'plains', name: 'Green Plains', blurb: 'Open grassland with gentle rolling hills and a few woods. The easiest place to fly and to drive.', R: 5600, base: 30, rough: 3, hills: 34, rim: 130, journey: true, desert: false },
     { id: 'dunes', name: 'Desert Dunes', blurb: 'Rolling sand dunes and rocks. Tanks hide behind the dunes; planes get a clear view.', R: 5600, base: 26, rough: 15, hills: 22, rim: 180, journey: true, desert: true },
     { id: 'island', name: 'Island Fortress', blurb: 'A round island with a fortress on the hill in the middle, in open sea.', R: 5600, base: 14, rough: 4, hills: 14, rim: 0, desert: false, island: true },
+    { id: 'sea', name: 'Open Sea', blurb: 'A chain of small islands in open sea: enemy warships, island bases, and your carrier to land on and rearm.', R: 5600, base: 10, rough: 4, hills: 18, rim: 0, desert: false, island: true, archipelago: [[0, -1800, 900], [-2600, -600, 650], [2400, -2600, 700], [1500, 600, 520], [-1400, -3300, 600]] },
   ];
   let ARENA = null;
   /// Where the front of wave `n` is: the battle travels along a long road, `step` metres further each wave: north, then east, then south,
@@ -1495,7 +1496,8 @@
     const d = Math.hypot(x, z);
     if (a.island) {
       const wob = (fbm(x / 520 + 7, z / 520 + 2, 2) - 0.5) * 340;
-      const land = 1 - smooth(a.R * 0.84, a.R * 1.02, d + wob);
+      // Open sea: several small islands instead of one big one.
+      const land = a.archipelago ? Math.max(...a.archipelago.map(([ix, iz, ir]) => 1 - smooth(ir * 0.7, ir, Math.hypot(x - ix, z - iz) + wob * ir / 1400))) : 1 - smooth(a.R * 0.84, a.R * 1.02, d + wob);
       const hill = 44 * (1 - smooth(100, 700, d));
       const h = Math.max(a.base + hill + (fbm(x / 260 + 1, z / 260 + 5, 2) - 0.5) * a.rough + (a.hills ? (fbm(x / 600 + 5, z / 600 + 3, 3) - 0.5) * a.hills * 1.4 : 0), 4);
       return -45 + (h + 45) * land;
@@ -4132,6 +4134,8 @@
       m.t = (m.t || 0) + dt;
       let speed = len(m.vel);
       const dir = speed > 1 ? mul(m.vel, 1 / speed) : [0, 0, -1];
+      // Off the rail it drops for a moment before the motor lights; then it burns (accelerating) and coasts (slowing).
+      if (m.drop && m.t < 0.28) { m.vel = add(m.vel, [0, -9.8 * dt, 0]); m.pos = add(m.pos, mul(m.vel, dt)); return m; }
       speed = m.t < burn ? Math.min(620, speed + 190 * dt) : Math.max(180, speed - 25 * dt);
       let nd = dir;
       if (tgt) {
@@ -5604,6 +5608,7 @@
       house: { name: 'Building', hp: 70, r: 7, pts: 60 },
       tower: { name: 'Tower block', hp: 190, r: 9, pts: 150 },
       factory: { name: 'Factory', hp: 260, r: 13, pts: 220 },
+      warship: { name: 'Warship', hp: 700, r: 26, pts: 600 },
     };
     const CITY_KINDS = new Set(['house', 'tower', 'factory']);
     const CITY_NAMES = ['Redmoor', 'Ostrava Ridge', 'Kelvin Bay', 'Marrow', 'Dunhaven', 'Zarek', 'Port Lyle', 'Vellin', 'Corvane', 'Stonegate', 'Ashford Cross', 'Novik'];
@@ -5718,6 +5723,19 @@
       for (const x of [-7, 0, 7]) b.taper(x, 8, -4, 2.4, 0, 4, 2.4, 1.8, [0.45, 0.43, 0.42]);
       for (const x of [-8, 8]) b.cone([x, 8.8, 5], 1.3, 0.9, 16, [0.5, 0.36, 0.3], 10);
       m.factory = upload(b);
+      // An enemy warship: a long grey hull, a stepped superstructure, a mast and three gun turrets.
+      b = new Builder();
+      b.taper(0, 0, -60, 16, 6, -76, 2, 6, [0.42, 0.45, 0.5]); b.box([0, 3, 4], [16, 6, 128], [0.42, 0.45, 0.5]); b.box([0, 6.2, 4], [15, 0.4, 126], [0.5, 0.48, 0.44]);
+      b.box([0, 10, 12], [10, 8, 26], [0.5, 0.53, 0.58]); b.box([0, 16, 8], [6, 5, 12], [0.55, 0.58, 0.62]); b.box([0, 24, 8], [0.6, 12, 0.6], [0.3, 0.3, 0.32]);
+      for (const z of [-40, -24, 46]) { b.box([0, 8, z], [6, 3, 7], [0.36, 0.39, 0.43]); for (const sx of [-1, 1]) rod(b, [sx * 0.9, 8.4, z - 2], [sx * 0.9, 8.6, z - 12], 0.35, 0.3, [0.25, 0.26, 0.28], 6); }
+      m.warship = upload(b);
+      // Your carrier: a flat flight deck with a centre line and an island on the right.
+      b = new Builder();
+      b.box([0, 8, 0], [34, 16, 300], [0.36, 0.38, 0.42]); b.box([0, 16.3, 0], [42, 0.6, 320], [0.27, 0.28, 0.3]);
+      for (let z = -150; z <= 150; z += 20) b.box([0, 16.65, z], [1, 0.05, 10], [0.95, 0.95, 0.9]);
+      b.box([17, 16.65, 0], [0.6, 0.05, 300], [0.9, 0.8, 0.2]); b.box([-17, 16.65, 0], [0.6, 0.05, 300], [0.9, 0.8, 0.2]);
+      b.box([24, 26, 30], [8, 20, 34], [0.45, 0.47, 0.52]); b.box([24, 40, 32], [0.5, 10, 0.5], [0.3, 0.3, 0.3]);
+      m.carrier = upload(b);
       // The home base: a runway with a centre line, threshold bars and a hangar.
       b = new Builder();
       b.box([0, 0.15, 0], [46, 0.3, 900], [0.24, 0.25, 0.27]);
@@ -5749,7 +5767,7 @@
     // ---- starting and the waves
     function warStart() {
       if (W.broken) { const keep = worldArena; worldArena = ''; useBattlefield(keep); }      // trees broken in the last battle grow back
-      const arena = ARENAS.find((a) => a.id === warField) || ARENAS[0], tank = warVeh === 'tank' || warVeh === 'soldier', foot = warVeh === 'soldier', grows = tank || plane.rotor, R = grows ? arena.R * WAR_R0 : arena.R;
+      const tank = warVeh === 'tank' || warVeh === 'soldier', arena = (tank && warField === 'sea' ? ARENAS.find((a) => a.id === 'island') : ARENAS.find((a) => a.id === warField)) || ARENAS[0], foot = warVeh === 'soldier', grows = tank || plane.rotor, R = grows ? arena.R * WAR_R0 : arena.R;
       const L = foot ? { gun: SOLDIER.reserve, bombs: SOLDIER.grenades, missiles: 0, flares: 0, hp: SOLDIER.hp, stick: 0.5, shells: 0, rpg: SOLDIER.rpg } : tank ? { gun: 900, bombs: 0, missiles: 0, flares: 0, hp: TANK.hp, stick: 0.2, shells: 40 } : { ...warLoadout(plane), shells: 0 }, d = WAR_DIFF[warLevel()];
       const shared = netg && netg.running && netg.start, mine = shared ? netg.start.players.find((q) => q.id === netMyId) : null;
       const spot = shared ? netStartSpot(R, netg.start.cfg, mine ? mine.slot : 0) : { x: 0, z: R * 0.72, heading: 0 };
@@ -5861,7 +5879,17 @@
       }
       const R = war.R;
       war.base = { x: war.cx + 520, z: war.cz + R * 0.6 };     // the home base: land (or fly low and slow) along its runway to rearm
-      if (war.vehicle === 'plane') clearTrees(W, war.base.x - 40, war.base.x + 90, war.base.z - 520, war.base.z + 520);
+      if (war.arena.archipelago) { war.base = { x: war.cx + 300, z: war.cz + R * 0.55, ship: true, deck: 16.6 }; }     // at sea, the home base is your carrier
+      if (war.vehicle === 'plane' && war.arena.archipelago) {
+        // Enemy warships out on the water: more each wave.
+        for (let i = 0; i < Math.min(1 + Math.ceil(n / 2), 4); i++) {
+          let x = 0, z = 0, ok = false;
+          for (let t = 0; t < 40 && !ok; t++) { const a = warRand() * 6.28, r = R * (0.25 + 0.4 * warRand()); x = war.cx + Math.cos(a) * r; z = war.cz - Math.abs(Math.sin(a)) * r; ok = groundAt(W, x, z) <= WATER + 0.5 && groundAt(W, x + 80, z) <= WATER + 0.5 && groundAt(W, x - 80, z) <= WATER + 0.5; }
+          if (!ok) continue;
+          const K = WAR_KINDS.warship; war.ground.push({ nid: ++war.gidn, kind: 'warship', pos: [x, 0, z], heading: warRand() * 6.28, turret: 0, hp: K.hp * d.hp, maxHp: K.hp * d.hp, r: K.r, pts: K.pts, cool: 4, t: 0, burning: 0, lastHit: null, speed: 4, hunt: false, dead: false, ship: true });
+        }
+      }
+      if (war.vehicle === 'plane' && !war.base.ship) clearTrees(W, war.base.x - 40, war.base.x + 90, war.base.z - 520, war.base.z + 520);
       if (n >= 3) achieve('wave3');
       const clusters = war.foot ? 0 : Math.min(2 + Math.ceil(n / 2), 5);
       for (let c = 0; c < clusters; c++) {
@@ -6206,7 +6234,7 @@
     /// A tank shell bursts where it lands (or hits): it hurts everything within a few metres.
     function warShellBurst(b) { warBoom(b.pos, 0.7); warCrater(b.pos, 4); warBlast(b.pos, 14, 170, b.owner, b); }
     function warFireMissile(owner, pos, vel, dir, target, quiet = false) {
-      const m = { owner, pos: pos.slice(), vel: add(vel, mul(dir, 120)), t: 0, target, trail: 0 };
+      const m = { owner, pos: add(pos, [0, -1.2, 0]), vel: add(vel, mul(dir, 20)), t: 0, target, trail: 0, drop: true };
       if (war.net && owner === 'p') { m.noNpc = !warAuth(); if (!quiet) netSend({ t: 'm', id: netMyId, p: m.pos.map(r1n), v: m.vel.map(r1n), tg: target && target.ref ? target.ref.nid : 0 }); }
       war.missilesAir.push(m);
       noise(0.7, 0.25, 1800);
@@ -6277,7 +6305,7 @@
         // Keep holding the stick down near the ground and the floor lets go: you can fly into it (and crash) if you mean to.
         const climbIn = invert ? -raw.pitch : raw.pitch;
         war.diveHold = climbIn < -0.4 && agl < 60 ? (war.diveHold || 0) + dt : 0;
-        const o = planeAssist(flight, st, { turn: raw.roll, climb: climbIn }, dt, W, { floor: war.diveHold > 1 ? -60 : war.overBase ? 3 : 30, turnRate: 1.15, climbRate: 95, lead: 120, vsMax: 55 });
+        const o = planeAssist(flight, st, { turn: raw.roll, climb: climbIn }, dt, W, { floor: war.diveHold > 1 ? -60 : war.overBase ? (war.base && war.base.ship ? 22 : 3) : 30, turnRate: 1.15, climbRate: 95, lead: 120, vsMax: 55 });
         war.pullUp = agl < 45 && flight.vel[1] < -4 && agl / -flight.vel[1] < 1.2 && raw.pitch >= 0;      // holding the stick forward lets you fly into the ground
         if (war.pullUp) o.pitch = Math.max(o.pitch || 0, 0.22);
         // Leaving the battlefield: it turns back by itself.
@@ -6603,13 +6631,14 @@
       }
       if (g.speed > 0) {
         g.pos[0] += Math.sin(g.heading) * g.speed * dt; g.pos[2] -= Math.cos(g.heading) * g.speed * dt; g.pos[1] = groundAt(W, g.pos[0], g.pos[2]);
-        if (!onLand(g.pos[0], g.pos[2]) || (!g.hunt && (g.t += dt) > 40)) { g.heading += Math.PI; g.t = 0; }
+        if (g.ship) { g.pos[1] = 0; if (groundAt(W, g.pos[0] + Math.sin(g.heading) * 120, g.pos[2] - Math.cos(g.heading) * 120) > WATER + 0.5 || (g.t += dt) > 60) { g.heading += 2.2; g.t = 0; } }
+        else if (!onLand(g.pos[0], g.pos[2]) || (!g.hunt && (g.t += dt) > 40)) { g.heading += Math.PI; g.t = 0; }
       }
       if (!war.npc) return;       // the enemy is switched off: targets that do not shoot back
       g.cool -= dt;
-      if (g.kind === 'aa' && g.cool <= 0 && dp < 3300 && agl > 40 && !flight.crashed) {
-        g.cool = (1.5 + warRand()) * 1.4 / d.flak;
-        const base = add(g.pos, [0, 2, 0]), lead = WAR.leadPoint(base, v3(), np.pos, np.vel, 750);
+      if ((g.kind === 'aa' || g.kind === 'warship') && g.cool <= 0 && dp < 3300 && agl > 40 && !flight.crashed) {
+        g.cool = (1.5 + warRand()) * (g.kind === 'warship' ? 0.9 : 1.4) / d.flak;
+        const base = add(g.pos, [0, g.kind === 'warship' ? 12 : 2, 0]), lead = WAR.leadPoint(base, v3(), np.pos, np.vel, 750);
         if (lead) {
           // The shell flies to where you will be, and it is never quite right: the error grows with the range.
           const err = dp * 0.012 * 2.5 / d.flak, aim = add(lead.point, [(warRand() - 0.5) * err * 2, (warRand() - 0.5) * err, (warRand() - 0.5) * err * 2]);
@@ -6689,7 +6718,7 @@
         }
         if (m === war.guideM && war.dead) { m.dead = true; war.guideM = null; war.guiding = false; continue; }
         if (m.guided) warGuideStep(m, dt); else WAR.missileStep(m, tg, dt);
-        m.trail -= dt; if (m.trail <= 0) { m.trail = 0.03; puff('tsmoke', m.pos, v3()); }
+        m.trail -= dt; if (m.trail <= 0 && !(m.drop && m.t < 0.28)) { m.trail = m.t < 4 ? 0.02 : 0.08; puff('tsmoke', m.pos, v3()); }
         const g = groundAt(W, m.pos[0], m.pos[2]);
         let boom = m.pos[1] <= g + 1 || m.t > (m.guided ? 30 : 14) || !!m.detonate;
         if (m.guided && !boom) for (const gr of war.ground) if (!gr.dead && !INF.has(gr.kind) && len(sub(m.pos, gr.pos)) < 14) boom = true;
@@ -6799,12 +6828,12 @@
       if (war.net) { netTick(dt); if (war.net && war.net.role === 'client') netReplicaStep(dt); }
       if (!war.dead && war.vehicle === 'plane' && war.base) {
         // The home base: out of missiles (or bombs), come down the runway low and slow, and the ground crew rearms you.
-        const bx = flight.pos[0] - war.base.x, bz = flight.pos[2] - war.base.z, agl = flight.pos[1] - Math.max(groundAt(W, flight.pos[0], flight.pos[2]), 0);
-        const empty = war.missiles === 0 || (war.L.bombs > 0 && war.bombs === 0), onStrip = Math.abs(bx) < 40 && Math.abs(bz) < 470 && agl < 30 && flight.ias < plane.stall * 2.6;
-        if (empty && !onStrip) { const dist = Math.hypot(bx, bz), turn = wrapPi(Math.atan2(-bx, bz) - flight.heading); if (!war.warnT || war.warnT < 0.1) { war.warn = `OUT OF ${war.missiles === 0 ? 'MISSILES' : 'BOMBS'}: HOME BASE ${(dist / 1000).toFixed(1)} km ${Math.abs(turn) < 0.3 ? 'AHEAD' : turn > 0 ? '◀ LEFT' : 'RIGHT ▶'} · fly low and slow down its runway`; war.warnT = 0.3; } }
+        const bx = flight.pos[0] - war.base.x, bz = flight.pos[2] - war.base.z, agl = flight.pos[1] - (war.base.ship ? war.base.deck : Math.max(groundAt(W, flight.pos[0], flight.pos[2]), 0));
+        const empty = war.missiles === 0 || (war.L.bombs > 0 && war.bombs === 0), onStrip = Math.abs(bx) < (war.base.ship ? 26 : 40) && Math.abs(bz) < (war.base.ship ? 170 : 470) && agl < 45 && agl > -6 && flight.ias < plane.stall * 2.6;
+        if (empty && !onStrip) { const dist = Math.hypot(bx, bz), turn = wrapPi(Math.atan2(-bx, bz) - flight.heading); if (!war.warnT || war.warnT < 0.1) { war.warn = `OUT OF ${war.missiles === 0 ? 'MISSILES' : 'BOMBS'}: HOME BASE ${(dist / 1000).toFixed(1)} km ${Math.abs(turn) < 0.3 ? 'AHEAD' : turn > 0 ? '◀ LEFT' : 'RIGHT ▶'} · fly low and slow down its ${war.base.ship ? 'deck (your carrier)' : 'runway'}`; war.warnT = 0.3; } }
         if (empty && onStrip) {
-          war.rearmT = (war.rearmT || 0) + dt; war.warn = `REARMING… ${Math.max(0, 2 - war.rearmT).toFixed(1)}s`; war.warnT = 0.3;
-          if (war.rearmT >= 2) { war.missiles = war.L.missiles; war.bombs = war.L.bombs; war.gun = war.L.gun; war.flares = war.L.flares; war.hp = Math.min(war.maxHp, war.hp + war.maxHp * 0.3); war.rearmT = 0; toast('🛠 Rearmed: missiles, bombs, gun and flares full', 2600); }
+          war.rearmT = (war.rearmT || 0) + dt; war.warn = `REARMING… ${Math.max(0, 1.5 - war.rearmT).toFixed(1)}s`; war.warnT = 0.3;
+          if (war.rearmT >= 1.5) { war.missiles = war.L.missiles; war.bombs = war.L.bombs; war.gun = war.L.gun; war.flares = war.L.flares; war.hp = Math.min(war.maxHp, war.hp + war.maxHp * 0.3); war.rearmT = 0; toast('🛠 Rearmed: missiles, bombs, gun and flares full', 2600); }
         } else war.rearmT = 0;
         // Over the base the floor drops away, so the assist lets you come right down to the runway.
         war.overBase = Math.abs(bx) < 120 && Math.abs(bz) < 700;
@@ -6905,7 +6934,7 @@
       if (war.heli && planeMeshes[war.heli.id]) warDrawAircraft({ id: war.heli.id, spec: PLANES.find((q) => q.id === war.heli.id), pos: war.heli.pos, q: war.heli.q, state: 'fly' }, [1, 1, 1], 0);
       if (war.net) for (const o of war.net.others.values()) if (o.heli && planeMeshes[o.heli.id]) warDrawAircraft({ id: o.heli.id, spec: PLANES.find((q) => q.id === o.heli.id), pos: o.heli.pos, q: o.heli.q, state: 'fly' }, teamTint(o), 0);
       for (const c of war.craters) draw(warMeshes.crater, model([0, 0, 0, 1], c.p, c.r), [0.1, 0.085, 0.07]);
-      if (war.base && war.vehicle === 'plane') draw(warMeshes.runway, model([0, 0, 0, 1], [war.base.x, Math.max(groundAt(W, war.base.x, war.base.z), 0), war.base.z]), [1, 1, 1]);
+      if (war.base && war.vehicle === 'plane') draw(war.base.ship ? warMeshes.carrier : warMeshes.runway, model([0, 0, 0, 1], [war.base.x, war.base.ship ? -2 : Math.max(groundAt(W, war.base.x, war.base.z), 0), war.base.z]), [1, 1, 1]);
       for (const g of war.ground) {
         const tint = g.dead ? [0.2, 0.18, 0.17] : [1, 1, 1], q = qheading(g.heading), at = [g.pos[0], g.pos[1], g.pos[2]];
         if (INF.has(g.kind)) {
@@ -6920,7 +6949,7 @@
       for (const f of war.flyers) draw(warMeshes.treeProp, model(f.q, f.pos, clamp(f.h / 12, 0.6, 2)), f.hot ? [1.7, 0.8, 0.25] : [0.45, 0.7, 0.35], f.hot ? 0.8 : 0);
       for (const b of war.bullets) draw(warMeshes.tracer, model(qDir(b.vel), b.pos, b.shell ? 2.4 : 1), b.owner === 'e' ? [1, 0.35, 0.25] : [1, 0.9, 0.4], 2.2);
       for (const b of war.bombsAir) draw(warMeshes.bomb, model(qDir(b.vel), b.pos, 1.4), [1, 1, 1], 0);
-      for (const m of war.missilesAir) draw(warMeshes.missile, model(qDir(m.vel), m.pos, 1.2), [1, 1, 1], 0.4);
+      for (const m of war.missilesAir) { draw(warMeshes.missile, model(qDir(m.vel), m.pos, 1.2), [1, 1, 1], 0.4); if (m.t < 4 && !(m.drop && m.t < 0.28)) draw(warMeshes.tracer, model(qDir(m.vel), sub(m.pos, mul(norm(m.vel), 2.2)), 2.2), [1, 0.62, 0.25], 3); }     // the motor's flame
     }
 
     // ---- the war HUD: sights, markers, ammunition, radar
