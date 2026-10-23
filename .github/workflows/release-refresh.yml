@@ -1,7 +1,9 @@
 name: Refresh website after a release
 
-# Pages deploys from main. After either release build finishes, check that both versioned installers exist, then ask main
-# to deploy. The first platform's completion waits here without deploying; the second deploys the complete pair.
+# Pages deploys from main. After a release build finishes, redeploy so latest.json offers it. latest.json takes the newest
+# Mac release and the newest Windows build separately, so neither platform's update waits for the other (Mac releases
+# also redeploy from scripts/release.sh). Waiting for a matching pair used to hold the Mac update back whenever a newer
+# version was released before the Windows build of the last one had finished.
 on:
   workflow_run:
     workflows: ['Mac build', 'Windows build']
@@ -21,27 +23,7 @@ jobs:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           ref: main
-      - name: Check that both versioned installers are published
-        id: pair
-        shell: bash
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          mac_version=$(sed -n 's/.*MARKETING_VERSION: "\([^"]*\)".*/\1/p' project.yml | head -1)
-          win_version=$(sed -n 's/^version = "\([^"]*\)"/\1/p' NotchWindows/src-tauri/Cargo.toml | head -1)
-          mac=$(gh api "repos/$GITHUB_REPOSITORY/releases/tags/v$mac_version" 2>/dev/null || true)
-          win=$(gh api "repos/$GITHUB_REPOSITORY/releases/tags/win-v$win_version" 2>/dev/null || true)
-          mac_ready=$(printf '%s' "$mac" | jq -r '(.draft == false) and any(.assets[]?; .name | endswith(".dmg"))' 2>/dev/null || echo false)
-          win_ready=$(printf '%s' "$win" | jq -r '(.draft == false) and any(.assets[]?; .name | endswith("-setup.exe"))' 2>/dev/null || echo false)
-          if [ "$mac_ready" = true ] && [ "$win_ready" = true ]; then
-            echo "Both releases are ready: Mac $mac_version and Windows $win_version."
-            echo "ready=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "Waiting for both installers (Mac $mac_version: $mac_ready; Windows $win_version: $win_ready)."
-            echo "ready=false" >> "$GITHUB_OUTPUT"
-          fi
-      - name: Ask main to deploy the website after the complete release pair
-        if: steps.pair.outputs.ready == 'true'
+      - name: Ask main to deploy the website
         run: gh workflow run pages.yml --repo "$GITHUB_REPOSITORY" --ref main
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
