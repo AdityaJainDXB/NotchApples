@@ -4679,6 +4679,7 @@
     let playerName = read('name', '');
 
     // ---- sound (Web Audio): engine drone, a chime for hoops, a thud for crashes
+    let gunSnd = null;      // the cannon's roar (see gunRoar)
     let ac = null, eng = null, engGain = null, snd = null, soundHeld = false;      // soundHeld: the notch is closed or the sound is off: nothing may make a noise
     /// Builds the always-running sounds of the flight: a piston engine (firing pulses and a propeller beat), a jet
     /// (spooling roar, whine and rumble), wind noise, the tyres rolling, the stall horn and the overspeed clacker. They
@@ -4730,6 +4731,7 @@
       if (!ac) return;
       const old = ac;
       try { if (engGain) { const t = old.currentTime; engGain.gain.cancelScheduledValues(t); engGain.gain.setValueAtTime(0, t); } if (!kill && old.suspend) old.suspend().catch(() => {}); } catch { /* no sound to mute */ }
+      if (gunSnd) { try { gunSnd.g.gain.value = 0; } catch { /* gone */ } if (kill) gunSnd = null; }
       if (kill) { ac = null; engGain = null; snd = null; sndT = -1; try { old.close && old.close().catch(() => {}); } catch { /* already closed */ } }
     }
     function unmuteAudio() {
@@ -5798,8 +5800,19 @@
     const warMeshes = (() => {
       const m = {};
       let b = new Builder();
-      b.box([0, 0.85, 0], [3.0, 0.9, 6.2], WAR_OLIVE); b.box([-1.75, 0.5, 0], [0.8, 1.0, 6.6], WAR_DARK); b.box([1.75, 0.5, 0], [0.8, 1.0, 6.6], WAR_DARK);
-      b.taper(0, 0.8, -3.1, 3.0, 0.7, -3.9, 2.6, 0.5, [0.3, 0.34, 0.22]);
+      // A main battle tank: a hull with a sloped front, track runs with seven road wheels a side, side skirts, an engine deck.
+      const OL2 = [0.3, 0.34, 0.21], RUB = [0.09, 0.09, 0.09], STEEL = [0.24, 0.25, 0.24];
+      b.box([0, 0.95, 0.3], [2.6, 0.75, 5.4], WAR_OLIVE);                                   // the hull
+      b.taper(0, 0.95, -2.4, 2.6, 0.75, -3.6, 2.4, 0.18, OL2, -0.3);                        // the sloped glacis
+      b.box([0, 1.36, 2.2], [2.4, 0.08, 1.8], OL2);                                         // engine deck grille
+      for (const sx of [-1, 1]) {
+        b.box([sx * 1.55, 0.55, 0], [0.7, 0.75, 6.4], RUB);                                 // the track
+        for (let i = 0; i < 7; i++) { const z = -2.6 + i * 0.86; rod(b, [sx * 1.2, 0.48, z], [sx * 1.92, 0.48, z], 0.36, 0.36, STEEL, 10); }   // road wheels
+        rod(b, [sx * 1.2, 0.72, -3.15], [sx * 1.92, 0.72, -3.15], 0.3, 0.3, STEEL, 8); rod(b, [sx * 1.2, 0.72, 3.15], [sx * 1.92, 0.72, 3.15], 0.32, 0.32, STEEL, 8);   // idler and drive sprocket
+        b.box([sx * 1.62, 1.02, 0], [0.12, 0.55, 5.8], OL2);                                // side skirt
+        b.box([sx * 1.55, 1.34, 0], [0.82, 0.06, 6.5], WAR_OLIVE);                          // track guard
+      }
+      for (const sx of [-0.55, 0.55]) b.box([sx, 1.2, -3.35], [0.32, 0.18, 0.12], [0.85, 0.82, 0.6]);   // headlights
       m.tank = upload(b);
       // A soldier: body (torso, head, helmet, arms, rifle) and two legs that swing from the hip.
       const UNI = [0.34, 0.4, 0.26], SKIN = [0.78, 0.6, 0.48], HELM = [0.22, 0.27, 0.19], GUN = [0.1, 0.1, 0.11];
@@ -5819,9 +5832,17 @@
       b = new Builder(); b.box([0, 30, 0], [0.35, 60, 0.35], [1, 1, 1]); m.beam = upload(b);
       b = new Builder(); b.box([0, 3.4, 0], [5, 0.12, 5], [0.92, 0.92, 0.86]); b.box([-1.2, 1.9, 0], [0.04, 3, 0.04], [0.4, 0.4, 0.4]); b.box([1.2, 1.9, 0], [0.04, 3, 0.04], [0.4, 0.4, 0.4]); m.canopy = upload(b);
       b = new Builder();
-      b.box([0, 0.4, 0.3], [2.2, 0.8, 2.6], [0.3, 0.34, 0.22]);
+      // The turret: low and wide, angled cheeks, a gun mantlet, the commander's cupola with a machine gun, an antenna and a bustle rack.
+      b.box([0, 0.38, 0.45], [2.3, 0.76, 2.4], [0.31, 0.35, 0.22]);
+      b.taper(0, 0.38, -0.75, 2.3, 0.76, -1.55, 1.3, 0.62, [0.29, 0.33, 0.2]);
+      b.box([0, 0.42, -1.6], [0.7, 0.55, 0.35], [0.26, 0.29, 0.19]);
+      b.cone([0.55, 0.76, 0.6], 0.36, 0.33, 0.28, [0.27, 0.3, 0.2], 10); b.box([0.55, 1.07, 0.6], [0.5, 0.06, 0.5], [0.22, 0.24, 0.17]);
+      rod(b, [0.55, 1.2, 0.45], [0.55, 1.2, -0.55], 0.04, 0.04, [0.1, 0.1, 0.1], 5);
+      rod(b, [-0.8, 0.76, 1.4], [-0.8, 3.0, 1.55], 0.015, 0.012, [0.1, 0.1, 0.1], 4);
+      b.box([0, 0.5, 1.85], [1.9, 0.5, 0.5], [0.26, 0.28, 0.2]);
+      for (const sx of [-1.05, 1.05]) b.box([sx, 0.62, -0.2], [0.22, 0.26, 0.6], [0.2, 0.22, 0.16]);     // smoke launchers
       m.turret = upload(b);
-      b = new Builder(); rod(b, [0, 0, -0.6], [0, 0, -5.6], 0.13, 0.1, [0.2, 0.21, 0.2], 8); m.barrel = upload(b);
+      b = new Builder(); rod(b, [0, 0, -0.6], [0, 0, -6.2], 0.13, 0.11, [0.22, 0.24, 0.18], 10); rod(b, [0, 0, -3.0], [0, 0, -3.9], 0.2, 0.2, [0.24, 0.27, 0.19], 10); b.box([0, 0, -6.3], [0.34, 0.3, 0.32], [0.16, 0.17, 0.15]); m.barrel = upload(b);    // the gun: a fume extractor and a muzzle brake
       b = new Builder();
       b.box([0, 1.7, -2.0], [2.3, 1.7, 1.8], [0.4, 0.42, 0.3]); b.box([0, 1.45, 1.4], [2.4, 1.3, 4.4], WAR_OLIVE);
       for (const z of [-2.2, 1.0, 2.6]) for (const x of [-1.2, 1.2]) b.box([x, 0.55, z], [0.45, 1.1, 1.1], WAR_DARK);
@@ -6152,6 +6173,22 @@
     }
 
     // ---- damage
+    /// The cannon's roar while you hold the trigger: a buzz at the gun's firing rate (deep for the Gunship) with a rush of noise.
+    function gunRoar(rate) {
+      const a = rate ? audio() : ac;
+      if (!a) { gunSnd = null; return; }
+      if (gunSnd && gunSnd.ctx !== a) gunSnd = null;
+      if (!gunSnd && rate) {
+        const o = a.createOscillator(), o2 = a.createOscillator(), g = a.createGain(), f = a.createBiquadFilter();
+        o.type = 'sawtooth'; o2.type = 'square'; f.type = 'lowpass'; f.frequency.value = 1800; g.gain.value = 0;
+        o.connect(f); o2.connect(f); f.connect(g); g.connect(a.destination); o.start(); o2.start();
+        gunSnd = { ctx: a, o, o2, g };
+      }
+      if (!gunSnd) return;
+      const t = a.currentTime;
+      if (rate) { gunSnd.o.frequency.setTargetAtTime(rate, t, 0.01); gunSnd.o2.frequency.setTargetAtTime(rate * 0.5, t, 0.01); }
+      gunSnd.g.gain.setTargetAtTime(rate ? 0.11 : 0, t, rate ? 0.01 : 0.04);
+    }
     function warHurt(amount, why, by = 'npc') {
       if (war.dead || flight.crashed) return;
       if (war.foot && war.shield > 0) { const ab = Math.min(war.shield, amount); war.shield -= ab; amount -= ab; war.flash = Math.min(1, war.flash + 0.15); if (amount <= 0) { noise(0.15, 0.2, 1400); return; } }
@@ -6565,10 +6602,13 @@
         while (war.gunT <= 0 && war.gun > 0) {
           war.gunT += 0.05; war.gun--;
           const dir = warAssistDir(norm(add(f, mul(u, 0.004))));
-          warShoot('p', warMuzzle(), dir, flight.vel, WAR.GUN.spread, 9, 5);
-          if (Math.round(war.gun) % 3 === 0) noise(0.08, 0.18, 1400);
+          const b = warShoot('p', warMuzzle(), dir, flight.vel, WAR.GUN.spread, 9, 5);
+          b.tracer = war.gun % 4 === 0;                     // one round in four is a tracer, like a real belt
+          war.muzzleT = 0.05; shakeKick = Math.max(shakeKick, 0.06);
         }
       } else war.gunT = Math.min(0, war.gunT);
+      gunRoar(wantGun && war.gun > 0 ? (plane.id === 'a10' ? 62 : 100) : 0);
+      if (war.muzzleT > 0) war.muzzleT -= dt;
       war.bombT -= dt;
       const bombPress = keys.has('z') || keys.has('b') || warPad.bomb || war.bombPend; war.bombPend = false;
       if (bombPress && war.bombs > 0 && war.bombT <= 0) {
@@ -6796,7 +6836,7 @@
         const hitGround = b.pos[1] < groundAt(W, b.pos[0], b.pos[2]);
         if (b.t > (b.shell ? 7 : WAR.GUN.life) * (b.dmgGround === 0 ? 2 : 1) || hitGround) {
           if (hitGround && b.shell) warShellBurst(b);
-          else if (hitGround && len(sub(b.pos, flight.pos)) < 3000 && warRand() < 0.5) puff('dirt', b.pos, [0, 6, 0]);
+          else if (hitGround && len(sub(b.pos, flight.pos)) < 3000 && (b.tracer || b.owner !== 'p' || warRand() < 0.6)) { puff('dirt', b.pos, [0, 6 + warRand() * 4, 0]); if (warRand() < 0.3) puff('spark', b.pos, jitter(8)); }
           b.dead = true; continue;
         }
         if (b.owner === 'r' && netFight() && !war.dead && WAR.segHit(p0, b.pos, flight.pos, rP)) { if (b.shell) warShellBurst(b); else { warHurt(b.dmgAir, 'enemy player', b.by); puff('spark', b.pos, jitter(20)); } b.dead = true; continue; }
@@ -7076,7 +7116,10 @@
       for (const a of war.foes) warDrawAircraft(a, [1.8, 0.22, 0.16], 0);
       if (war.friend) warDrawAircraft(war.friend, [0.62, 0.82, 1.2], 0);
       for (const f of war.flyers) draw(warMeshes.treeProp, model(f.q, f.pos, clamp(f.h / 12, 0.6, 2)), f.hot ? [1.7, 0.8, 0.25] : [0.45, 0.7, 0.35], f.hot ? 0.8 : 0);
-      for (const b of war.bullets) draw(warMeshes.tracer, model(qDir(b.vel), b.pos, b.shell ? 2.4 : 1), b.owner === 'e' ? [1, 0.35, 0.25] : [1, 0.9, 0.4], 2.2);
+      for (const b of war.bullets) { if (b.owner === 'p' && !b.shell && !b.tracer) { if (b.t < 0.25) draw(warMeshes.tracer, model(qDir(b.vel), b.pos, 0.6), [0.55, 0.5, 0.4], 0.2); continue; } draw(warMeshes.tracer, model(qDir(b.vel), b.pos, b.shell ? 2.4 : 1.15), b.owner === 'e' ? [1, 0.35, 0.25] : [1, 0.82, 0.35], 2.4); }
+      // Muzzle flashes: yours while the gun fires, and the enemy fighters' when they open up on you.
+      if (war.muzzleT > 0 && war.vehicle === 'plane' && !war.dead) { const mz = warMuzzle(), fq = qDir(add(flight.vel, mul(flight.axes().f, -1))); draw(warMeshes.tracer, model(flight.q, mz, 1.8 + Math.random() * 0.8), [1, 0.85, 0.45], 4); }
+      for (const a of war.foes) if (a.firing && a.state === 'fly' && Math.random() < 0.6) draw(warMeshes.tracer, model(a.q, add(a.pos, qrot(a.q, [0, 0, -(a.spec.nose || 7)])), 1.6), [1, 0.6, 0.3], 4);
       for (const b of war.bombsAir) draw(warMeshes.bomb, model(qDir(b.vel), b.pos, 1.4), [1, 1, 1], 0);
       for (const m of war.missilesAir) { draw(warMeshes.missile, model(qDir(m.vel), m.pos, 1.2), [1, 1, 1], 0.4); if (m.t < 4 && !(m.drop && m.t < 0.28)) draw(warMeshes.tracer, model(qDir(m.vel), sub(m.pos, mul(norm(m.vel), 2.2)), 2.2), [1, 0.62, 0.25], 3); }     // the motor's flame
     }

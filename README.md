@@ -72,10 +72,10 @@ Pick your computer. Both buttons start the download straight away. The Mac link 
   </tr>
   <tr>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.1.33</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.1.34</b></a>
     </td>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 2.1.33 BETA</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 2.1.34 BETA</b></a>
     </td>
   </tr>
   <tr>
@@ -233,6 +233,11 @@ All screenshots use sample data.
 ## What's new
 
 > **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is in the repository's history.
+
+### Mac 2.1.34 · Windows 2.1.34 BETA · 23 October 2026 · 🔫 Realistic guns and new tank models
+
+- More realistic guns: one round in four is a glowing tracer (like a real ammunition belt), with a muzzle flash at the gun, a continuous cannon roar while you hold the trigger (a deep growl on the Gunship), a little shake, and dust and sparks where rounds hit the ground. Enemy fighters show a muzzle flash when they open fire on you.
+- New tank models: sloped front armour, track runs with seven road wheels a side, side skirts, a low turret with a gun mantlet, the commander's cupola and machine gun, smoke launchers, an antenna, a stowage rack, and a longer gun with a fume extractor and muzzle brake. Enemy tanks and your own get the new look.
 
 ### Mac 2.1.33 · Windows 2.1.33 BETA · 23 October 2026 · 🪙 Coins and paint schemes fixed
 
