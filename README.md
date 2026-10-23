@@ -72,10 +72,10 @@ Pick your computer. Both buttons start the download straight away. The Mac link 
   </tr>
   <tr>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.1.31</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.1.32</b></a>
     </td>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 2.1.31 BETA</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 2.1.32 BETA</b></a>
     </td>
   </tr>
   <tr>
@@ -233,6 +233,12 @@ All screenshots use sample data.
 ## What's new
 
 > **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is in the repository's history.
+
+### Mac 2.1.32 · Windows 2.1.32 BETA · 23 October 2026 · 🛰 Real terrain: fly over the real ground of any place
+
+- Real terrain (Free Flight): turn on 🛰 Real terrain under "Where in the world", then pick a place, type any city or country, or use My location. You fly over that place's real hills, mountains, valleys, coast and sea, with heights above sea level from the free elevation tiles on AWS (SRTM, GMTED and ETOPO1 data), and the home airfield and the other airports are given level ground. The world map shows the real land too.
+- The flight ceiling is higher with real terrain, so you can fly over real mountains.
+- Real terrain needs an internet connection the first time a place loads, and it is only used in Free Flight; the other modes keep the home valley they were built for.
 
 ### Mac 2.1.31 · Windows 2.1.31 BETA · 23 October 2026 · 🏁 Pit lane, FIA penalties, real-looking cars, and a Mac-style hello
 

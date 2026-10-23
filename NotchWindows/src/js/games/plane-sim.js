@@ -1519,7 +1519,57 @@
     return h + (-45 - h) * sea;
   }
   /// The ground height at (x, z): a battlefield's if one is chosen, otherwise the mountain valley's.
-  function terrainShape(x, z) { return ARENA ? arenaHeight(ARENA, x, z) : terrainNatural(x, z); }
+  function terrainShape(x, z) { return ARENA ? arenaHeight(ARENA, x, z) : REAL && REAL_ACTIVE ? realHeight(x, z) : terrainNatural(x, z); }
+
+  // ---- real terrain: the actual hills, mountains, coast and sea of a place on Earth, from the free elevation tiles on AWS
+  // (Terrarium format, built from SRTM, GMTED and ETOPO1 data). The place's point is the home airfield; heights are
+  // measured from the ground there, the airfields are given level ground, and past the edge of the tiles it is open sea.
+  let REAL = null;          // { lat, lon, mpp, N, H (Float32Array of N*N metres), cx, cy, home }
+  let REAL_ACTIVE = false;  // real terrain is used in Free Flight (the other modes are built round the home valley)
+  const REAL_Z = 11, REAL_TILES = 4;
+  function realRaw(x, z) {
+    const R = REAL, gx = R.cx + x / R.mpp, gz = R.cy + z / R.mpp;
+    if (gx < 0 || gz < 0 || gx >= R.N - 1 || gz >= R.N - 1) return -60;
+    const i = Math.floor(gx), j = Math.floor(gz), fx = gx - i, fz = gz - j, k = j * R.N + i, H = R.H;
+    return (H[k] * (1 - fx) + H[k + 1] * fx) * (1 - fz) + (H[k + R.N] * (1 - fx) + H[k + R.N + 1] * fx) * fz;
+  }
+  function realHeight(x, z) {
+    const R = REAL; let h = realRaw(x, z);
+    if (h < -4) h = Math.min(h, 0) - 12;                                                           // heights are above sea level: below it (the seabed) is sea
+    else h = Math.max(h, 1);                                                                       // low flat land (salt flats, deltas) stays dry
+    h += (R.home - h) * (1 - smooth(0, 420, flatDist(x, z)));                                      // the home airfield is level, at its real height
+    for (const a of AIRFIELDS) {                                                                   // and so is every other airfield
+      const rx = Math.max(0, Math.abs(x - a.x) - a.half - 70), rz = Math.max(0, Math.abs(z - a.z) - a.len / 2 - 40), rd = Math.hypot(rx, rz);
+      if (rd > 420) continue;
+      const pad = Math.max(3, realRaw(a.x, a.z));
+      h += (pad - h) * (1 - smooth(20, 420, rd));
+    }
+    const edge = Math.max(Math.abs(x), Math.abs(z));
+    return Math.max(h + (-45 - h) * smooth(WORLD - 1600, WORLD - 300, edge), -400);
+  }
+  /// Fetches the elevation tiles round (lat, lon) and turns real terrain on (or off with null). Resolves when ready.
+  async function loadReal(lat, lon) {
+    if (lat == null) { REAL = null; return null; }
+    const n = 2 ** REAL_Z, fx = ((lon + 180) / 360) * n, la = lat * Math.PI / 180, fy = ((1 - Math.log(Math.tan(la) + 1 / Math.cos(la)) / Math.PI) / 2) * n;
+    const tx0 = Math.floor(fx) - Math.floor(REAL_TILES / 2) + (fx % 1 > 0.5 ? 1 : 0), ty0 = Math.floor(fy) - Math.floor(REAL_TILES / 2) + (fy % 1 > 0.5 ? 1 : 0);
+    const N = REAL_TILES * 256, H = new Float32Array(N * N);
+    const cv = typeof OffscreenCanvas !== 'undefined' ? new OffscreenCanvas(256, 256) : Object.assign(document.createElement('canvas'), { width: 256, height: 256 });
+    const g = cv.getContext('2d', { willReadFrequently: true });
+    const jobs = [];
+    for (let ty = 0; ty < REAL_TILES; ty++) for (let tx = 0; tx < REAL_TILES; tx++) jobs.push((async () => {
+      const r = await fetch(`https://s3.amazonaws.com/elevation-tiles-prod/terrarium/${REAL_Z}/${(tx0 + tx + n) % n}/${ty0 + ty}.png`);
+      if (!r.ok) throw new Error('tile ' + r.status);
+      return { tx, ty, bmp: await createImageBitmap(await r.blob()) };
+    })());
+    for (const { tx, ty, bmp } of await Promise.all(jobs)) {
+      g.clearRect(0, 0, 256, 256); g.drawImage(bmp, 0, 0); const d = g.getImageData(0, 0, 256, 256).data;
+      for (let y = 0; y < 256; y++) for (let x = 0; x < 256; x++) { const o = (y * 256 + x) * 4; H[(ty * 256 + y) * N + tx * 256 + x] = d[o] * 256 + d[o + 1] + d[o + 2] / 256 - 32768; }
+    }
+    const mpp = (40075016.686 * Math.cos(la)) / (n * 256);
+    const R = { lat, lon, mpp, N, H, cx: (fx - tx0) * 256, cy: (fy - ty0) * 256, home: 0 };
+    REAL = R; R.home = Math.max(3, realRaw(0, -700));       // the home airfield sits at the real height of the ground there
+    return R;
+  }
   function terrainNatural(x, z) {
     const d = Math.hypot(x - VALLEY[0], z - VALLEY[1]);
     const wx = x + (fbm(x / 1300 + 5.2, z / 1300 + 1.3, 3) - 0.5) * 900, wz = z + (fbm(x / 1300 + 8.1, z / 1300 + 4.7, 3) - 0.5) * 900;
@@ -3339,7 +3389,7 @@
       if (this.arcade && !this.onGround) this.arcadeSteer(dt, input);
       if (this.collide(world)) return;
       if (this.contacts(dt, world, false)) return;
-      if (this.pos[1] > 3000) { this.vel[1] = Math.min(this.vel[1], 0); }                  // ceiling
+      if (this.pos[1] > (REAL && REAL_ACTIVE ? 9500 : 3000)) { this.vel[1] = Math.min(this.vel[1], 0); }                  // ceiling
       const edge = WORLD - 600;
       if (Math.abs(this.pos[0]) > edge || Math.abs(this.pos[2]) > edge) this.pos = [clamp(this.pos[0], -edge, edge), this.pos[1], clamp(this.pos[2], -edge, edge)];
     }
@@ -4461,19 +4511,34 @@
     let W = makeWorld(regionOf(regionId));
     let placeNote = '';
     /// Rebuilds the scenery for another place (only from the menu).
+    let mapImg = null;      // the world map's picture, drawn again when the ground changes
     function setRegion(id) {
       ARENA = null; worldArena = '';
       regionId = id; write('region', id);
-      W = makeWorld(regionOf(id)); WR.setWorld(W);
+      W = makeWorld(regionOf(id)); WR.setWorld(W); mapImg = null;
+    }
+    // Real terrain (an option): the actual ground of the place you picked, loaded from the elevation tiles.
+    let realOn = read('realterrain', false), placeAt = read('realat', null);
+    /// Moves the game to a place: its landmark, and its real hills and coast when real terrain is on.
+    async function applyPlace(reg, at) {
+      if (at) { placeAt = at; write('realat', at); }
+      const where = placeAt && (placeAt.lat || placeAt.lon) ? placeAt : null;
+      if (realOn && where) {
+        placeNote = `Loading the real terrain round ${where.name || reg.name}…`; renderUI();
+        try { await loadReal(where.lat, where.lon); placeNote = `Real terrain: ${where.name || reg.name}. Heights from the AWS elevation tiles (SRTM, GMTED, ETOPO1).`; }
+        catch { await loadReal(null); placeNote = 'Could not load the real terrain (are you online?). Showing the home valley ground.'; }
+      } else await loadReal(null);
+      REAL_ACTIVE = !!REAL; setRegion(reg.id);
     }
     async function lookupPlace(text) {
       const known = matchRegion(text);
-      if (known) { placeNote = known.id ? `${known.name}: ${known.lm}.` : 'The home valley.'; return known; }
+      if (known) { placeNote = known.id ? `${known.name}: ${known.lm}.` : 'The home valley.'; placeAt = known.id ? { lat: known.lat, lon: known.lon, name: known.name } : null; return known; }
       const j = await (await fetch(`https://geocoding-api.open-meteo.com/v1/search?count=1&language=en&name=${encodeURIComponent(text)}`)).json();
       const hit = (j.results || [])[0];
       if (!hit) throw new Error('nothing found');
       const reg = nearestRegion(hit.latitude, hit.longitude, hit.country_code);
       placeNote = `${hit.name}${hit.country ? ', ' + hit.country : ''}: the closest scenery we have is ${reg.name} (${reg.lm}).`;
+      placeAt = { lat: hit.latitude, lon: hit.longitude, name: hit.name };
       return reg;
     }
     async function myPlace() {
@@ -4485,6 +4550,7 @@
       }
       const reg = nearestRegion(loc.lat, loc.lon, loc.cc);
       placeNote = `Near ${loc.name || 'you'}: showing ${reg.name} (${reg.lm}).`;
+      placeAt = { lat: loc.lat, lon: loc.lon, name: loc.name };
       return reg;
     }
     const hoopB = new Builder(); hoopB.torus(14, 1.3, [1, 1, 1]); const hoopMesh = upload(hoopB);
@@ -4895,6 +4961,8 @@
       write('howseen_' + mode.id, true); howOpen = false;
       if (mode.id === 'war') { plane = PLANES.find((p) => p.id === (warVeh === 'tank' || warVeh === 'soldier' ? 'f16' : warVeh === 'heli' ? 'ah64' : warVeh)) || PLANES[0]; useBattlefield(warField); }
       else { restorePlane(); useBattlefield(''); }
+      // Real terrain is for Free Flight; the other modes need the home valley they were built for.
+      { const wantReal = mode.id === 'free' && !!REAL; if (wantReal !== REAL_ACTIVE) { REAL_ACTIVE = wantReal; W = makeWorld(regionOf(regionId)); WR.setWorld(W); mapImg = null; } }
       flight = new Flight(plane); heliColl = 0;
       score = 0; elapsed = 0; streak = 0; hoopsMade = 0; result = null; paused = false; smoke.length = 0;
       mouse.engaged = false;   // move the cursor to the middle to take control
@@ -5467,15 +5535,14 @@
     function mapHtml() {
       return `<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(5,8,16,.72);z-index:30;pointer-events:auto"><div style="background:rgba(14,18,30,.96);border:1px solid rgba(255,255,255,.15);border-radius:14px;padding:12px 14px;text-align:center;max-height:96%;overflow:auto;color:#fff"><div style="font:800 16px system-ui;margin-bottom:6px">🗺 World map</div><canvas data-worldmap width="560" height="560" style="position:static;display:block;margin:0 auto;width:min(420px,70vh);height:min(420px,70vh);border-radius:10px"></canvas><div class="pg-hint">🛂 ${passport.size} of ${AIRPORTS.length} airports stamped · 🪙 ${coins} coins. Cross the ocean to the far islands: check your fuel first.</div><div class="pg-row" style="justify-content:center"><button data-a="mapclose">Close</button></div></div></div>`;
     }
-    let mapImg = null;
     function drawWorldMap() {
       const cvm = ui.querySelector('[data-worldmap]'); if (!cvm) return;
       const g2 = cvm.getContext('2d'), N = 140, S = cvm.width, k = S / (2 * WORLD);
       if (!mapImg) {
         mapImg = g2.createImageData(N, N);
         for (let j = 0; j < N; j++) for (let i = 0; i < N; i++) {
-          const x = -WORLD + (i + 0.5) * (2 * WORLD / N), z = -WORLD + (j + 0.5) * (2 * WORLD / N), h = terrainNatural(x, z), o = (j * N + i) * 4;
-          const c = h < WATER ? [28, 70 + Math.max(-60, h) * 0.3, 128] : h < 20 ? [196, 186, 140] : h < 400 ? [70 + h * 0.05, 130 - h * 0.05, 60] : [120 + Math.min(110, h * 0.05), 124 + Math.min(110, h * 0.05), 120 + Math.min(110, h * 0.05)];
+          const x = -WORLD + (i + 0.5) * (2 * WORLD / N), z = -WORLD + (j + 0.5) * (2 * WORLD / N), h = terrainShape(x, z), o = (j * N + i) * 4;
+          const hi = REAL && REAL_ACTIVE ? 1800 : 400, c = h < WATER ? [28, 70 + Math.max(-60, h) * 0.3, 128] : h < 20 ? [196, 186, 140] : h < hi ? [70 + (h / hi) * 40, 130 - (h / hi) * 30, 60] : h < hi * 1.6 ? [128, 124, 118] : [235, 238, 242];
           mapImg.data[o] = c[0]; mapImg.data[o + 1] = c[1]; mapImg.data[o + 2] = c[2]; mapImg.data[o + 3] = 255;
         }
       }
@@ -8949,6 +9016,7 @@
             <b>${p.name}</b><i>${p.kind}</i>${statBar('Speed', p.max / 300)}${statBar('Agility', p.roll / 4.2)}${statBar('Easy', (p.stability - 1.5) / 1.2)}</div>`).join('')}`).join('')}</div></div>
           <div class="pg-hint" style="margin-top:4px"><b>${plane.name}</b> · ${plane.blurb}</div>
           <h2>2 · Where in the world?</h2><div class="pg-row"><select data-region>${REGIONS.map((x) => `<option value="${x.id}" ${x.id === regionId ? 'selected' : ''}>${x.id ? x.name + ' · ' + x.lm : '🏔️ Home valley'}</option>`).join('')}</select>
+            <button data-a="realterrain" class="${realOn ? 'pg-on' : ''}" title="Use the real hills, mountains and coast of the place (downloaded elevation tiles)">🛰 Real terrain: ${realOn ? 'On' : 'Off'}</button>
             <button data-a="mine" title="Pick the scenery nearest to where you are">📍 My location</button>
             <input data-place maxlength="40" placeholder="Type a city or country" style="width:150px"><button data-a="goplace">Go</button></div>
           <div class="pg-hint" style="margin-top:3px">${escapeHtml(placeNote || `Now flying over: ${regionOf(regionId).id ? regionOf(regionId).name + ' (' + regionOf(regionId).lm + ')' : 'the home valley'}. The landmark stands just off the runway.`)}</div>
@@ -9059,10 +9127,10 @@
       });
       ui.querySelectorAll('[data-scope]').forEach((n) => n.onclick = () => { boardScope = n.dataset.scope; write('boardScope', boardScope); renderUI(); });
       ui.querySelectorAll('[data-period]').forEach((n) => n.onclick = () => { boardPeriod = n.dataset.period; write('boardPeriod', boardPeriod); renderUI(); });
-      ui.querySelectorAll('[data-region]').forEach((n) => n.onchange = () => { placeNote = ''; setRegion(n.value); renderUI(); });
+      ui.querySelectorAll('[data-region]').forEach((n) => n.onchange = async () => { placeNote = ''; const reg = regionOf(n.value); await applyPlace(reg, reg.id ? { lat: reg.lat, lon: reg.lon, name: reg.name } : null); renderUI(); });
       const goPlace = async (fn) => {
         placeNote = 'Looking…'; renderUI();
-        try { const reg = await fn(); setRegion(reg.id); } catch { placeNote = 'Could not find that place. Try a city, a country, or pick one from the list.'; }
+        try { const reg = await fn(); const note = placeNote; await applyPlace(reg, placeAt); if (!realOn) placeNote = note; } catch { placeNote = 'Could not find that place. Try a city, a country, or pick one from the list.'; }
         renderUI();
       };
       ui.querySelectorAll('[data-place]').forEach((n) => n.onkeydown = (e) => { e.stopPropagation(); if (e.key === 'Enter') { const v = n.value.trim(); if (v) goPlace(() => lookupPlace(v)); } });
@@ -9089,6 +9157,7 @@
         const a = n.dataset.a;
         if (a === 'restart' && mode.id === 'war' && war && screen === 'fly') { paused = false; renderUI(); warQuickRespawn(); root.focus(); }
         else if (a === 'start' || a === 'again' || a === 'restart') onStartPress(a);
+        else if (a === 'realterrain') { realOn = !realOn; write('realterrain', realOn); const reg = regionOf(regionId); applyPlace(reg, placeAt || (reg.id ? { lat: reg.lat, lon: reg.lon, name: reg.name } : null)).then(() => renderUI()); }
         else if (a === 'worldmap') { mapOpen = true; renderUI(); }
         else if (a === 'mapclose') { mapOpen = false; renderUI(); }
         else if (a === 'prhost') { praceOpen(true); }
@@ -9268,6 +9337,7 @@
     }
     renderUI();
     raf = requestAnimationFrame(frame);
+    if (realOn && placeAt && (placeAt.lat || placeAt.lon)) applyPlace(regionOf(regionId), placeAt).then(() => { if (screen === 'menu') renderUI(); });     // real terrain picked last time: load it again
     root.focus();
     // For tests: the live flight state.
     // Setting the game aside (the notch closes, another tab opens) and bringing it back: the flight is kept exactly as it was.

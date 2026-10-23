@@ -20,6 +20,11 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.1.32", date: "23 October 2026", headline: "Real terrain: fly over the real ground of any place", items: [
+            "Real terrain (Free Flight): turn on 🛰 Real terrain under \"Where in the world\", then pick a place, type any city or country, or use My location. You fly over that place's real hills, mountains, valleys, coast and sea, with heights above sea level from the free elevation tiles on AWS (SRTM, GMTED and ETOPO1 data), and the home airfield and the other airports are given level ground. The world map shows the real land too.",
+            "The flight ceiling is higher with real terrain, so you can fly over real mountains.",
+            "Real terrain needs an internet connection the first time a place loads, and it is only used in Free Flight; the other modes keep the home valley they were built for.",
+        ]),
         ReleaseNote(version: "2.1.31", date: "23 October 2026", headline: "Pit lane, FIA penalties, real-looking cars, and a Mac-style hello", items: [
             "Hello from the notch, Mac style: the notch now writes \"hello\" in the same flowing handwriting as the Mac's own welcome screen, stroke by stroke, then shows your name.",
             "Racing cars look like real cars: every car has its own body shape, a glass cabin with sloping windscreens, round wheels that turn, headlights and brake lights, and its details (the GT3's splitter and big rear wing, the hot hatch's roof spoiler, the muscle car's bonnet stripe, the supercar's low wedge).",
