@@ -271,3 +271,26 @@ test('worn tyres grip less', () => {
   const run = (wear) => { const c = R.newCar(car('gt'), 0, 0, 0); c.wear = wear; for (let i = 0; i < 60 * 6; i++) R.stepCar(c, GO, 1 / 60, 1); const h0 = c.h; for (let i = 0; i < 60 * 2; i++) R.stepCar(c, { throttle: 1, brake: 0, steer: 1, hand: 0 }, 1 / 60, 1); return Math.abs(c.h - h0); };
   assert.ok(run(1) < run(0) * 0.92, `turned ${run(1).toFixed(2)} on worn tyres vs ${run(0).toFixed(2)} on new`);
 });
+
+// ---- the track assistant
+test('the track assistant reads a request and builds a track with what was asked that passes the rules', () => {
+  const req = R.parseRequest('I want a race track with 21 chicanes and 4 hairpins, in the desert, called Sand Snake');
+  assert.equal(req.chicanes, 21); assert.equal(req.hairpins, 4); assert.equal(req.look, 'desert'); assert.equal(req.name, 'Sand Snake');
+  let res = null; for (let k = 0; k < 25 && !(res && res.def); k++) res = R.generateTrack(req, 1 + k * 7);
+  assert.ok(res.def, res.why); assert.equal(res.counts.ch, 21); assert.equal(res.counts.hp, 4);
+  assert.ok(R.checkTrack(res.def).ok, 'passes the designer rules');
+  const sp = R.generateTrack(R.parseRequest('a sprint with three hairpins, 4 km'), 1);
+  assert.ok(sp.def && !sp.def.closed && sp.counts.hp === 3 && sp.counts.ch === 0, 'a sprint, and no chicanes that were not asked for');
+  assert.equal(R.parseRequest('five hairpins').hairpins, 5);
+  assert.ok(Math.abs(R.parseRequest('a 3 mile circuit').km - 4.83) < 0.01);
+});
+
+test('the track assistant traces a circuit from a picture of its layout', () => {
+  const w = 300, h = 220, px = new Uint8ClampedArray(w * h * 4).fill(240); for (let i = 3; i < px.length; i += 4) px[i] = 255;
+  const dot = (x, y, r) => { for (let dy = -r; dy <= r; dy++) for (let dx = -r; dx <= r; dx++) { if (dx * dx + dy * dy > r * r) continue; const o = (Math.round(y + dy) * w + Math.round(x + dx)) * 4; px[o] = 200; px[o + 1] = 20; px[o + 2] = 20; } };
+  for (let t = 0; t < 1; t += 0.001) { const a = t * Math.PI * 2, r = 1 + 0.22 * Math.sin(3 * a); dot(150 + Math.cos(a) * 100 * r, 110 + Math.sin(a) * 70 * r, 3); }
+  const res = R.traceImage(px, w, h, 4.5);
+  assert.ok(res.def, res.why); assert.ok(Math.abs(res.T.length - 4500) < 300, `${res.T.length} m`);
+  const blank = new Uint8ClampedArray(w * h * 4).fill(240); for (let i = 3; i < blank.length; i += 4) blank[i] = 255;
+  assert.equal(R.traceImage(blank, w, h).def, null, 'a blank picture gives no track');
+});

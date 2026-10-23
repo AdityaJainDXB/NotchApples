@@ -72,10 +72,10 @@ Pick your computer. Both buttons start the download straight away. The Mac link 
   </tr>
   <tr>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.1.36</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.1.37</b></a>
     </td>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 2.1.36 BETA</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 2.1.37 BETA</b></a>
     </td>
   </tr>
   <tr>
@@ -233,6 +233,12 @@ All screenshots use sample data.
 ## What's new
 
 > **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is in the repository's history.
+
+### Mac 2.1.37 · Windows 2.1.37 BETA · 23 October 2026 · 🤖 Track assistant, 20 new monuments, satellite imagery
+
+- Racing: a track assistant in the track designer. Type what you want ("21 chicanes and 4 hairpins", "a fast 5 km circuit", "a desert sprint with three hairpins, called Dune Run") and it builds that track, checks it against the track rules and opens it to preview and edit. "Another version" gives a different layout. Or give it a picture of a circuit (📷 From a picture, or drop or paste an image, such as a map of Yas Marina) and it traces the layout into a drivable track.
+- Flying: 20 more places with their own monuments: Delhi (India Gate, Qutub Minar), Agra (Taj Mahal), Mumbai (Gateway of India), Abu Dhabi (Sheikh Zayed Grand Mosque), Rome (Colosseum), Athens (Parthenon), Moscow (St Basil's), Istanbul (Blue Mosque), Berlin (Brandenburg Gate and TV tower), Rio (Christ the Redeemer), Toronto (CN Tower), Seattle (Space Needle), Kuala Lumpur (Petronas Towers), Singapore (Marina Bay Sands), Shanghai (Oriental Pearl Tower), Beijing (Temple of Heaven), Seoul (N Seoul Tower), Bangkok (Wat Arun), Barcelona (Sagrada Família) and Riyadh (Kingdom Centre).
+- Real terrain now shows real satellite imagery of the place (Sentinel-2 cloudless by EOX, CC BY 4.0, contains modified Copernicus Sentinel data 2016) on top of its real heights, and trees grow only where the imagery shows forest.
 
 ### Mac 2.1.36 · Windows 2.1.36 BETA · 23 October 2026 · 🏁 Serve penalties in the pits
 

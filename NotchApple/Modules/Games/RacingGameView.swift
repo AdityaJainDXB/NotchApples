@@ -10,6 +10,7 @@
 
 import SwiftUI
 import WebKit
+import UniformTypeIdentifiers
 
 struct RacingGameView: View {
     var body: some View {
@@ -41,9 +42,19 @@ private struct RacingWebView: NSViewRepresentable {
 
     /// Forwards the game's keys to the page whenever the web view doesn't have the keyboard itself (the notch is a
     /// non-activating panel, and focus can sit elsewhere in it), so the arrows, W A S D and Space always drive the car.
-    @MainActor final class Coordinator {
+    @MainActor final class Coordinator: NSObject, WKUIDelegate {
         weak var web: RacingWKWebView?
         var monitor: Any?
+
+        /// The track designer's "From a picture" button: a file picker for an image of a circuit.
+        func webView(_ webView: WKWebView, runOpenPanelWith parameters: WKOpenPanelParameters, initiatedByFrame frame: WKFrameInfo, completionHandler: @escaping @MainActor @Sendable ([URL]?) -> Void) {
+            let panel = NSOpenPanel()
+            panel.allowedContentTypes = [.image]
+            panel.allowsMultipleSelection = false
+            panel.message = "Pick a picture of a circuit to turn into a track"
+            NSApp.activate(ignoringOtherApps: true)
+            panel.begin { response in completionHandler(response == .OK ? panel.urls : nil) }
+        }
 
         /// True when the key went to the game (and should go no further).
         func forward(_ e: NSEvent) -> Bool {
@@ -67,6 +78,7 @@ private struct RacingWebView: NSViewRepresentable {
         config.mediaTypesRequiringUserActionForPlayback = []
         config.userContentController.addUserScript(WKUserScript(source: "window.NotchHostSound=\(GameSound.enabled);", injectionTime: .atDocumentStart, forMainFrameOnly: true))
         let view = RacingWKWebView(frame: .zero, configuration: config)
+        view.uiDelegate = context.coordinator
         view.setValue(false, forKey: "drawsBackground")
         view.loadFileURL(url, allowingReadAccessTo: url.deletingLastPathComponent())
         DispatchQueue.main.async { view.window?.makeFirstResponder(view) }

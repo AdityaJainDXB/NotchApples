@@ -131,7 +131,7 @@
   function checkTrack(def) {
     const n = (def.pts || []).length;
     if (n < (def.closed ? 4 : 2)) return { ok: false, why: def.closed ? 'Click at least 4 points for a loop.' : 'Click at least 2 points.' };
-    if (n > 60) return { ok: false, why: 'Too many points (60 at most).' };
+    if (n > 220) return { ok: false, why: 'Too many points (220 at most).' };
     let T;
     try { T = buildTrack(def); } catch { return { ok: false, why: 'That shape does not make a road.' }; }
     if (!(T.m > 4)) return { ok: false, why: 'Too short.' };
@@ -162,9 +162,9 @@
   function decodeTrack(code) {
     try {
       const raw = String(code || '').trim().replace(/\s+/g, '');
-      if (!raw.startsWith('NR1') || raw.length > 2400) return null;
+      if (!raw.startsWith('NR1') || raw.length > 9000) return null;
       const o = JSON.parse(b64d(raw.slice(3)));
-      if (!o || !Array.isArray(o.p) || o.p.length % 2 || o.p.length > 120) return null;
+      if (!o || !Array.isArray(o.p) || o.p.length % 2 || o.p.length > 440) return null;
       const pts = []; for (let i = 0; i < o.p.length; i += 2) { const x = Number(o.p[i]), y = Number(o.p[i + 1]); if (!isFinite(x) || !isFinite(y) || Math.abs(x) > 6000 || Math.abs(y) > 6000) return null; pts.push([x, y]); }
       return customDef({ name: String(o.n || 'Shared track').slice(0, 24), closed: !!o.c, width: [26, 32, 40].includes(o.w) ? o.w : 32, look: GROUNDS[o.g] ? o.g : 'green', laps: [1, 3, 5].includes(o.l) ? o.l : 3, pts }, true);
     } catch { return null; }
@@ -175,6 +175,188 @@
     const def = { id: 'c-' + hashStr(JSON.stringify([d.closed ? 1 : 0, d.width, look, d.pts])), name: d.name || 'My track', kind: '★ ' + (d.name || 'Mine').slice(0, 12), custom: true, closed: !!d.closed, width: d.width || 32, laps: d.closed ? (d.laps || 3) : 1, look, blurb: `Your own ${d.closed ? 'circuit' : 'sprint'}.`, ground: gr.ground, scenery: gr.scenery, grip: gr.grip, pts: d.pts.map((p) => [p[0] + 0, p[1] + 0]) };
     if (check && !checkTrack(def).ok) return null;
     return def;
+  }
+
+  // ------------------------------------------------------------------ the track assistant
+  // Turns a request in plain words ("21 chicanes and 4 hairpins, about 5 km, fast, in the desert") or a picture of a
+  // circuit into a drivable track for the designer. It builds the layout like a real circuit is set out (straights, corners,
+  // chicanes, hairpins), checks it with the designer's rules, and tries again until it fits them.
+
+  const WORDNUM = { a: 1, an: 1, one: 1, two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, eight: 8, nine: 9, ten: 10, eleven: 11, twelve: 12, thirteen: 13, fourteen: 14, fifteen: 15, sixteen: 16, seventeen: 17, eighteen: 18, nineteen: 19, twenty: 20, thirty: 30 };
+  /// What someone asked for, read from their words.
+  function parseRequest(text) {
+    const t = ' ' + String(text || '').toLowerCase().replace(/[-–]/g, ' ') + ' ';
+    const num = (re) => { const m = t.match(re); if (!m) return null; const v = m[1]; return /^\d/.test(v) ? parseFloat(v) : (WORDNUM[v] ?? null); };
+    const N = '(\\d+(?:\\.\\d+)?|a|an|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty|thirty)';
+    const req = {
+      chicanes: num(new RegExp(N + '\\s+(?:\\w+\\s+)?chicanes?')), hairpins: num(new RegExp(N + '\\s+(?:\\w+\\s+)?hairpins?')),
+      corners: num(new RegExp(N + '\\s+(?:\\w+\\s+)?(?:corners?|turns?|bends?)')), straights: num(new RegExp(N + '\\s+(?:\\w+\\s+)?straights?')),
+      km: num(/(\d+(?:\.\d+)?)\s*(?:km|kilomet)/), miles: num(/(\d+(?:\.\d+)?)\s*mi(?:le)?s?\b/), laps: num(/(\d+)\s*laps?/),
+      sprint: /\b(sprint|point to point|a to b|drag|rally stage)\b/.test(t),
+      fast: /\b(fast|quick|high speed|flat out|monza)\b/.test(t), twisty: /\b(twisty|technical|tight|slow|street|monaco)\b/.test(t),
+      width: /\bnarrow\b/.test(t) ? 26 : /\bwide\b/.test(t) ? 40 : 32,
+      look: /\bdesert|sand|dune/.test(t) ? 'desert' : /\bsnow|ice|winter|frozen/.test(t) ? 'snow' : /\bcity|street|urban|night/.test(t) ? 'city' : /\bhill|mountain|forest|autumn/.test(t) ? 'autumn' : 'green',
+      name: (String(text || '').match(/(?:called|named)\s+["“']?([^"”'.,!?]{2,24})/i) || [])[1],
+    };
+    if (req.miles && !req.km) req.km = req.miles * 1.609;
+    return req;
+  }
+  /// A track from what was asked for. Returns { def, why } (def is null if nothing fitted the rules). `seed` varies the layout.
+  function generateTrack(req, seed = 1) {
+    let rs = seed * 9301 + 49297; const rnd = () => ((rs = (rs * 9301 + 49297) % 233280) / 233280);
+    const asked = req.hairpins != null || req.chicanes != null || req.corners != null;       // if anything was counted, the rest is not added unasked
+    const W = req.width || 32, hp = Math.max(0, Math.min(12, Math.round(req.hairpins ?? (asked ? 0 : req.twisty ? 2 : req.fast ? 0 : 1))));
+    const ch = Math.max(0, Math.min(40, Math.round(req.chicanes ?? (asked ? 0 : req.twisty ? 3 : req.fast ? 1 : 2))));
+    const extraCorners = Math.max(0, Math.min(20, Math.round(req.corners ?? (asked ? 2 : req.twisty ? 6 : 3))));
+    const sprint = !!req.sprint;
+    // Each feature needs a stretch of road; the loop is made long enough to hold them all (or as long as asked).
+    const need = hp * 330 + ch * 190 + extraCorners * 160;
+    let target = (req.km ? req.km * 1000 : Math.max(2600, need * 1.35 + 900));
+    target = clamp(Math.max(target, need + 800), 1200, 11000);
+    for (let attempt = 0; attempt < 14; attempt++) {
+      const grow = 1 + attempt * 0.12, step = 8, r90 = W * 2.2 * (req.fast ? 1.6 : 1) * grow, rHair = Math.max(W * 0.95, 30) * grow;
+      const ops = [];       // ['S', len] straight, ['T', angle, radius] turn (+ is right)
+      // The skeleton: a loop of four sides (or one long run for a sprint) that the features are threaded along.
+      const sides = sprint ? 1 : 4, featPer = Array.from({ length: sides }, () => []);
+      const feats = []; for (let i = 0; i < hp; i++) feats.push('H'); for (let i = 0; i < ch; i++) feats.push('C'); for (let i = 0; i < extraCorners; i++) feats.push('K');
+      for (let i = feats.length - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); [feats[i], feats[j]] = [feats[j], feats[i]]; }
+      feats.forEach((f, i) => featPer[i % sides].push(f));
+      const used = featPer.map((l) => l.reduce((m, f) => m + (f === 'H' ? 2 * r90 + 2 * rHair + 120 : f === 'C' ? 170 : 150), 0));
+      const sideLen = Math.max(...used.map((u) => u + 160), (target - (sprint ? 0 : 4 * (Math.PI / 2) * r90)) / sides);
+      let chSide = 1, hpSide = 1;
+      for (let sdx = 0; sdx < sides; sdx++) {
+        const list = featPer[sdx], gap = (sideLen - used[sdx]) / (list.length + 1);
+        for (const f of list) {
+          ops.push(['S', gap]);
+          if (f === 'C') { const a = 0.78 * chSide; ops.push(['T', a, W * 1.5 * grow], ['S', 24], ['T', -2 * a, W * 1.5 * grow], ['S', 24], ['T', a, W * 1.5 * grow]); chSide = -chSide; }
+          else if (f === 'H') { const sg = sprint ? hpSide : -1; ops.push(['T', sg * Math.PI / 2, r90], ['S', 90], ['T', -sg * Math.PI, rHair], ['S', 90], ['T', sg * Math.PI / 2, r90]); hpSide = -hpSide; }
+          else { const a = (0.35 + rnd() * 0.45) * (rnd() < 0.5 ? 1 : -1); ops.push(['T', a, W * 3 * grow], ['S', 60], ['T', -a, W * 3 * grow]); }
+        }
+        ops.push(['S', gap]);
+        if (!sprint) ops.push(['T', Math.PI / 2, r90]);
+      }
+      // Walk the plan.
+      let x = 0, y = 0, h = -Math.PI / 2; const pts = [[0, 0]];
+      for (const op of ops) {
+        if (op[0] === 'S') { const n = Math.max(1, Math.round(op[1] / step)); for (let i = 0; i < n; i++) { x += Math.cos(h) * op[1] / n; y += Math.sin(h) * op[1] / n; pts.push([x, y]); } }
+        else { const [, a, r] = op, len = Math.abs(a) * r, n = Math.max(2, Math.round(len / step)); for (let i = 0; i < n; i++) { h += a / n; x += Math.cos(h) * len / n; y += Math.sin(h) * len / n; pts.push([x, y]); } }
+      }
+      // Close the loop: spread the small leftover gap along the whole lap.
+      if (!sprint) { const ex = x, ey = y; for (let i = 0; i < pts.length; i++) { const k = i / (pts.length - 1); pts[i] = [pts[i][0] - ex * k, pts[i][1] - ey * k]; } pts.pop(); }
+      const simple = evenPts(pts, !sprint).map((p) => [Math.round(p[0]), Math.round(p[1])]);
+      const def = customDef({ name: req.name || describeReq(req, hp, ch), closed: !sprint, width: W, look: req.look, laps: req.laps && [1, 3, 5].includes(req.laps) ? req.laps : 3, pts: simple });
+      const ck = checkTrack(def);
+      if (ck.ok) return { def, why: '', T: ck.T, counts: { hp, ch, corners: extraCorners } };
+      if (attempt === 13) return { def: null, why: ck.why };
+    }
+    return { def: null, why: 'Could not fit that in.' };
+  }
+  const describeReq = (req, hp, ch) => [ch ? `${ch} chicane${ch === 1 ? '' : 's'}` : '', hp ? `${hp} hairpin${hp === 1 ? '' : 's'}` : ''].filter(Boolean).join(', ') || (req.fast ? 'Fast circuit' : 'My circuit');
+  /// Points spaced evenly along a line (at most about 210 of them): the curve through even points follows the shape without
+  /// overshooting where a tight corner meets a straight.
+  function evenPts(pts, closed) {
+    let len = 0; const seg = []; const n = pts.length, m = closed ? n : n - 1;
+    for (let i = 0; i < m; i++) { const a = pts[i], b = pts[(i + 1) % n], d = Math.hypot(b[0] - a[0], b[1] - a[1]); seg.push(d); len += d; }
+    const step = Math.max(20, len / 205), out = [pts[0].slice()]; let acc = 0, want = step;
+    for (let i = 0; i < m; i++) {
+      const a = pts[i], b = pts[(i + 1) % n], d = seg[i];
+      while (acc + d >= want) { const t = (want - acc) / d; out.push([a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t]); want += step; }
+      acc += d;
+    }
+    if (closed && Math.hypot(out[out.length - 1][0] - out[0][0], out[out.length - 1][1] - out[0][1]) < step * 0.6) out.pop();
+    if (!closed) out.push(pts[n - 1].slice());
+    return out;
+  }
+  /// Fewer points along a line (Ramer–Douglas–Peucker), keeping the shape to within `tol` metres; closed lines stay closed.
+  function simplifyPts(pts, closed, tol) {
+    const rdp = (a, b) => {
+      let best = -1, bd = tol; const A = pts[a], B = pts[b], dx = B[0] - A[0], dy = B[1] - A[1], L = Math.hypot(dx, dy) || 1;
+      for (let i = a + 1; i < b; i++) { const d = Math.abs((pts[i][0] - A[0]) * dy - (pts[i][1] - A[1]) * dx) / L; if (d > bd) { bd = d; best = i; } }
+      return best < 0 ? [a] : [...rdp(a, best), ...rdp(best, b)];
+    };
+    let idx = rdp(0, pts.length - 1); idx.push(pts.length - 1);
+    if (closed) idx = idx.slice(0, -1);
+    // Keep the points from being too far apart (the curve needs them on long gentle bends).
+    const out = [];
+    for (let k = 0; k < idx.length; k++) {
+      const a = pts[idx[k]], b = pts[idx[(k + 1) % idx.length]]; out.push(a);
+      if (!closed && k === idx.length - 1) break;
+      const d = Math.hypot(b[0] - a[0], b[1] - a[1]), n = Math.floor(d / 260);
+      for (let i = 1; i <= n; i++) out.push([a[0] + (b[0] - a[0]) * i / (n + 1), a[1] + (b[1] - a[1]) * i / (n + 1)]);
+    }
+    return out;
+  }
+  /// A circuit traced from a picture of its layout (RGBA pixels, w x h): the road line is the biggest connected shape that
+  /// stands out from the background; it is thinned to a centre line, followed round, scaled to `km` long and checked.
+  function traceImage(px, w, h, km = 4.6) {
+    // Background: the most common colour round the edge. The track: pixels that differ from it a lot.
+    const key = (o) => ((px[o] >> 4) << 8) | ((px[o + 1] >> 4) << 4) | (px[o + 2] >> 4), hist = new Map();
+    for (let x = 0; x < w; x++) for (const y of [0, h - 1]) { const k = key((y * w + x) * 4); hist.set(k, (hist.get(k) || 0) + 1); }
+    for (let y = 0; y < h; y++) for (const x of [0, w - 1]) { const k = key((y * w + x) * 4); hist.set(k, (hist.get(k) || 0) + 1); }
+    const bgk = [...hist.entries()].sort((a, b) => b[1] - a[1])[0][0], bg = [((bgk >> 8) & 15) * 16 + 8, ((bgk >> 4) & 15) * 16 + 8, (bgk & 15) * 16 + 8];
+    const diff = new Float32Array(w * h); let mx = 0;
+    for (let i = 0; i < w * h; i++) { const o = i * 4, d = Math.abs(px[o] - bg[0]) + Math.abs(px[o + 1] - bg[1]) + Math.abs(px[o + 2] - bg[2]); diff[i] = px[o + 3] < 40 ? 0 : d; if (d > mx) mx = d; }
+    // Otsu's threshold on the differences.
+    const H = new Array(64).fill(0); for (let i = 0; i < w * h; i++) H[Math.min(63, Math.floor(diff[i] / (mx + 1e-6) * 64))]++;
+    let sum = 0, sumB = 0, wB = 0, best = 0, th = 16; for (let i = 0; i < 64; i++) sum += i * H[i];
+    for (let i = 0; i < 64; i++) { wB += H[i]; if (!wB) continue; const wF = w * h - wB; if (!wF) break; sumB += i * H[i]; const mB = sumB / wB, mF = (sum - sumB) / wF, v = wB * wF * (mB - mF) ** 2; if (v > best) { best = v; th = i; } }
+    const cut = Math.max(40, (th + 0.5) / 64 * mx);
+    let mask = new Uint8Array(w * h); for (let i = 0; i < w * h; i++) mask[i] = diff[i] > cut ? 1 : 0;
+    // The biggest connected shape (8-way).
+    const lab = new Int32Array(w * h); let bestL = 0, bestN = 0, L = 0;
+    for (let i = 0; i < w * h; i++) {
+      if (!mask[i] || lab[i]) continue; L++; let n = 0; const st = [i]; lab[i] = L;
+      while (st.length) { const j = st.pop(); n++; const x = j % w, y = (j / w) | 0; for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) { const xx = x + dx, yy = y + dy; if (xx < 0 || yy < 0 || xx >= w || yy >= h) continue; const k = yy * w + xx; if (mask[k] && !lab[k]) { lab[k] = L; st.push(k); } } }
+      if (n > bestN) { bestN = n; bestL = L; }
+    }
+    if (bestN < 80) return { def: null, why: "Couldn't find a track line in that picture. Try a clear map of the circuit on a plain background." };
+    for (let i = 0; i < w * h; i++) mask[i] = lab[i] === bestL ? 1 : 0;
+    // Fill small holes, then thin to a one-pixel centre line (Zhang–Suen).
+    const at = (m, x, y) => (x < 0 || y < 0 || x >= w || y >= h ? 0 : m[y * w + x]);
+    for (let changed = true, pass = 0; changed && pass < 200; pass++) {
+      changed = false;
+      for (const step of [0, 1]) {
+        const del = [];
+        for (let y = 1; y < h - 1; y++) for (let x = 1; x < w - 1; x++) {
+          if (!mask[y * w + x]) continue;
+          const p = [at(mask, x, y - 1), at(mask, x + 1, y - 1), at(mask, x + 1, y), at(mask, x + 1, y + 1), at(mask, x, y + 1), at(mask, x - 1, y + 1), at(mask, x - 1, y), at(mask, x - 1, y - 1)];
+          const B = p.reduce((a, b) => a + b, 0); if (B < 2 || B > 6) continue;
+          let A = 0; for (let k = 0; k < 8; k++) if (!p[k] && p[(k + 1) % 8]) A++; if (A !== 1) continue;
+          if (step === 0 ? (p[0] * p[2] * p[4] || p[2] * p[4] * p[6]) : (p[0] * p[2] * p[6] || p[0] * p[4] * p[6])) continue;
+          del.push(y * w + x);
+        }
+        if (del.length) { changed = true; for (const k of del) mask[k] = 0; }
+      }
+    }
+    // Trim the loose ends (labels, pit lane stubs) until only loops are left, then follow the longest one round.
+    const nb = (k) => { const x = k % w, y = (k / w) | 0, out = []; for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) { if (!dx && !dy) continue; const xx = x + dx, yy = y + dy; if (xx >= 0 && yy >= 0 && xx < w && yy < h && mask[yy * w + xx]) out.push(yy * w + xx); } return out; };
+    for (let pass = 0; pass < 400; pass++) { let cut2 = 0; for (let k = 0; k < w * h; k++) if (mask[k] && nb(k).length <= 1) { mask[k] = 0; cut2++; } if (!cut2) break; }
+    let start = -1; for (let k = 0; k < w * h; k++) if (mask[k]) { start = k; break; }
+    if (start < 0) return { def: null, why: "The line in that picture doesn't close into a circuit. Try a picture where the whole track is one clear loop." };
+    const seen = new Uint8Array(w * h), loop = [start]; seen[start] = 1; let cur = start, prev = -1;
+    for (let guard = 0; guard < w * h; guard++) {
+      const cand = nb(cur).filter((k) => !seen[k]);
+      if (!cand.length) break;
+      // Go straight on where the line branches (keeps to the main loop at a junction).
+      let nx = cand[0];
+      if (cand.length > 1 && prev >= 0) { const dx0 = (cur % w) - (prev % w), dy0 = ((cur / w) | 0) - ((prev / w) | 0); nx = cand.reduce((b, k) => { const dx = (k % w) - (cur % w), dy = ((k / w) | 0) - ((cur / w) | 0), sb = (b % w) - (cur % w), tb = ((b / w) | 0) - ((cur / w) | 0); return dx * dx0 + dy * dy0 > sb * dx0 + tb * dy0 ? k : b; }, cand[0]); }
+      seen[nx] = 1; loop.push(nx); prev = cur; cur = nx;
+    }
+    if (loop.length < 40) return { def: null, why: "That picture's track line is too small or broken. Try a bigger, clearer layout." };
+    // Smooth, scale to a real length, simplify, and check (bigger if a bend is too tight).
+    let P = loop.map((k) => [k % w, (k / w) | 0]);
+    for (let r = 0; r < 3; r++) P = P.map((p, i) => { const a = P[(i - 2 + P.length) % P.length], b = P[(i - 1 + P.length) % P.length], c = P[(i + 1) % P.length], d = P[(i + 2) % P.length]; return [(a[0] + b[0] + p[0] + c[0] + d[0]) / 5, (a[1] + b[1] + p[1] + c[1] + d[1]) / 5]; });
+    let len = 0; for (let i = 0; i < P.length; i++) { const a = P[i], b = P[(i + 1) % P.length]; len += Math.hypot(b[0] - a[0], b[1] - a[1]); }
+    const cx = P.reduce((m, p) => m + p[0], 0) / P.length, cy = P.reduce((m, p) => m + p[1], 0) / P.length;
+    for (let attempt = 0; attempt < 10; attempt++) {
+      const k = (km * 1000 * (1 + attempt * 0.18)) / len, Q = P.map((p) => [(p[0] - cx) * k, (p[1] - cy) * k]);
+      const pts = evenPts(Q, true).map((p) => [Math.round(p[0]), Math.round(p[1])]);
+      const def = customDef({ name: 'Traced circuit', closed: true, width: 30, look: 'green', laps: 3, pts });
+      const ck = checkTrack(def);
+      if (ck.ok) return { def, why: '', T: ck.T };
+      if (attempt === 9) return { def: null, why: `Traced the layout, but ${ck.why.toLowerCase()}` };
+    }
+    return { def: null, why: 'Could not make it drivable.' };
   }
 
   // ------------------------------------------------------------------ cars
@@ -495,7 +677,7 @@
 .rc-card input{font:inherit;color:#fff;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.2);border-radius:8px;padding:5px 8px;width:92px;text-transform:uppercase;letter-spacing:2px}
 .rc-hint{opacity:.7;font-weight:500;font-size:11px;margin:3px 0}
 .rc-tbl{border-collapse:collapse;margin:6px 0;min-width:220px}.rc-tbl td{padding:2px 8px}.rc-tbl tr.me{background:rgba(91,108,255,.35)}
-.rc-ui.rc-side{justify-content:flex-start;align-items:stretch;padding:8px}.rc-ui.rc-side .rc-card{max-width:200px;font-size:11px}.rc-ui.rc-side .rc-row{margin:3px 0}
+.rc-ui.rc-side{justify-content:flex-start;align-items:stretch;padding:8px}.rc-ui.rc-side .rc-card{max-width:230px;font-size:11px}.rc-ai textarea{width:100%;box-sizing:border-box;font:inherit;color:#fff;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.2);border-radius:8px;padding:5px 7px;resize:vertical}.rc-ui.rc-side .rc-row{margin:3px 0}
 .rc-pair{display:flex;gap:10px;align-items:center;margin:4px 0}.rc-prev{border-radius:8px;flex:none}
 .rc-stats{min-width:170px}.rc-stats div{display:flex;align-items:center;gap:6px;font-size:10px;font-weight:500}.rc-stats span{width:56px;opacity:.75}.rc-stats i{flex:1;height:6px;border-radius:3px;background:rgba(255,255,255,.12);overflow:hidden}.rc-stats b{display:block;height:100%}
 .rc-big{position:absolute;left:0;right:0;top:26%;text-align:center;font-size:64px;font-weight:900;text-shadow:0 3px 14px rgba(0,0,0,.7);pointer-events:none}
@@ -1372,12 +1554,54 @@
         row('', ...Object.entries(GROUNDS).map(([id, gr]) => btn(gr.label, ds.look === id ? 'on' : '', () => { ds.look = id; designUI(); }))),
         ...(ds.closed ? [row('Laps', ...[1, 3, 5].map((n) => btn(String(n), ds.laps === n ? 'on' : '', () => { ds.laps = n; designUI(); })))] : []),
         status,
+        hint('🤖 Track assistant: say what you want, or give it a picture of a circuit'),
+        (() => { const box = document.createElement('div'); box.className = 'rc-ai';
+          const ta = document.createElement('textarea'); ta.rows = 2; ta.placeholder = 'e.g. 21 chicanes and 4 hairpins, about 6 km, in the desert'; ta.value = ds.ask || ''; ta.oninput = () => { ds.ask = ta.value; }; ta.onkeydown = (e) => { e.stopPropagation(); if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); designAsk(ta.value); } };
+          const pic = document.createElement('input'); pic.type = 'file'; pic.accept = 'image/*'; pic.style.display = 'none'; pic.onchange = () => { if (pic.files[0]) designPicture(pic.files[0]); };
+          box.append(ta, row('', btn('Make it', 'go', () => designAsk(ta.value)), btn('Another version', '', () => designAsk(ta.value, true)), btn('📷 From a picture', '', () => pic.click())), pic);
+          if (ds.aiMsg) { const m = hint(ds.aiMsg); m.style.opacity = '1'; m.style.color = ds.aiOk ? '#9ff0c4' : '#ffb35c'; box.append(m); }
+          return box; })(),
         row('', btn('Test drive', 'go', designDrive), btn('Save', '', designSave)),
         row('', btn('Share code', '', designShare), btn('Undo', '', designUndo), btn('Clear', '', () => designEdit(() => { ds.pts = []; }))),
         row('', code, btn('Load', '', () => { const d = decodeTrack(code.value); if (!d) { ds.code = code.value; toast('That code is not a valid track.'); designUI(); return; } designEdit(() => { Object.assign(ds, { name: d.name, closed: d.closed, width: d.width, look: d.look, laps: d.laps, pts: d.pts.map((p) => p.slice()), code: '' }); }); designFit(); })),
         ...(mine.length ? [hint('My tracks'), ...mine.slice(0, 12).map((d) => row('', btn(d.name, '', () => { ds.hist.push(JSON.stringify([ds.pts, ds.closed, ds.width])); Object.assign(ds, { name: d.name, closed: d.closed, width: d.width, look: d.look, laps: d.laps, pts: d.pts.map((p) => p.slice()) }); designFit(); designCheck(); designUI(); }), btn('✕', '', () => { store.set('custom', (store.get('custom', []) || []).filter((x) => customDef(x).id !== d.id)); designUI(); })))] : []),
         row('', btn('Back', '', () => { ds = null; showMenu(); })),
         hint('Click to add points · drag to move · right-click or double-click to remove · Z undo · the green dot is the start'));
+    }
+    /// The track assistant: a track from what was asked for (a new layout each time for "Another version").
+    function designAsk(text, again) {
+      const req = parseRequest(text || '');
+      ds.aiSeed = again ? (ds.aiSeed || 1) + 1 : 1;
+      let res = null; for (let k = 0; k < 25 && !(res && res.def); k++) res = generateTrack(req, ds.aiSeed + k * 7);
+      if (!res || !res.def) { ds.aiOk = false; ds.aiMsg = `Couldn't fit that in: ${res ? res.why : ''} Try fewer features or a longer track.`; designUI(); return; }
+      loadIntoDesign(res.def);
+      const c = res.counts || {};
+      ds.aiOk = true; ds.aiMsg = `Built "${res.def.name}": ${c.ch || 0} chicane${c.ch === 1 ? '' : 's'}, ${c.hp || 0} hairpin${c.hp === 1 ? '' : 's'}, ${(res.T.length / 1000).toFixed(1)} km, ${res.def.closed ? 'a circuit' : 'a sprint'}. It passes the track rules. Drag the points to change it, then Test drive.`;
+      designUI();
+    }
+    /// The track assistant, from a picture: the circuit is traced from the image (a layout map, a screenshot, a sketch).
+    function designPicture(file) {
+      ds.aiOk = true; ds.aiMsg = 'Reading the picture…'; designUI();
+      const img = new Image(), url = URL.createObjectURL(file);
+      img.onload = () => {
+        const k = Math.min(1, 420 / Math.max(img.width, img.height)), w = Math.max(40, Math.round(img.width * k)), h = Math.max(40, Math.round(img.height * k));
+        const cvs = document.createElement('canvas'); cvs.width = w; cvs.height = h; const cx = cvs.getContext('2d'); cx.fillStyle = '#fff'; cx.fillRect(0, 0, w, h); cx.drawImage(img, 0, 0, w, h);
+        URL.revokeObjectURL(url);
+        const req = parseRequest(ds.ask || ''), res = traceImage(cx.getImageData(0, 0, w, h).data, w, h, req.km || 4.6);
+        if (!res.def) { ds.aiOk = false; ds.aiMsg = res.why; designUI(); return; }
+        const nm = (file.name || '').replace(/\.[a-z0-9]+$/i, '').replace(/[_-]+/g, ' ').trim().slice(0, 24);
+        res.def.name = req.name || (nm && !/^(image|img|screenshot|photo)/i.test(nm) ? nm : 'Traced circuit');
+        loadIntoDesign(res.def);
+        ds.aiOk = true; ds.aiMsg = `Traced "${res.def.name}" from the picture: ${(res.T.length / 1000).toFixed(1)} km. It passes the track rules. Check the shape, drag points to fix anything, then Test drive.`;
+        designUI();
+      };
+      img.onerror = () => { URL.revokeObjectURL(url); ds.aiOk = false; ds.aiMsg = "That file isn't a picture I can read."; designUI(); };
+      img.src = url;
+    }
+    function loadIntoDesign(def) {
+      ds.hist.push(JSON.stringify([ds.pts, ds.closed, ds.width]));
+      Object.assign(ds, { name: def.name, closed: def.closed, width: def.width, look: def.look, laps: def.laps, pts: def.pts.map((p) => p.slice()) });
+      designFit(); designCheck();
     }
     function designDrive() {
       const ck = designCheck(); if (!ck.ok) { toast(ck.why); return; }
@@ -1404,6 +1628,9 @@
     const nearPoint = (px, py) => { let best = -1, bd = 14 * dpr; ds.pts.forEach((p, i) => { const q = dsToScreen(p[0], p[1]), d = Math.hypot(q[0] - px, q[1] - py); if (d < bd) { bd = d; best = i; } }); return best; };
     const snap = (v) => Math.round(v / 10) * 10;
     cv.addEventListener('contextmenu', (e) => { if (screen === 'design') e.preventDefault(); });
+    root.addEventListener('dragover', (e) => { if (screen === 'design') e.preventDefault(); });
+    root.addEventListener('drop', (e) => { if (screen !== 'design') return; e.preventDefault(); const f = [...(e.dataTransfer?.files || [])].find((x) => /^image\//.test(x.type)); if (f) designPicture(f); });
+    window.addEventListener('paste', (e) => { if (screen !== 'design' || !root.isConnected) return; const it = [...(e.clipboardData?.items || [])].find((x) => /^image\//.test(x.type)); if (it) { e.preventDefault(); designPicture(it.getAsFile()); } });
     cv.addEventListener('pointerdown', (e) => {
       if (screen !== 'design' || !ds) return;
       const [px, py] = evPos(e), i = nearPoint(px, py);
@@ -1451,7 +1678,7 @@
         const [sx, sy] = dsToScreen(p[0], p[1]);
         g.fillStyle = i === 0 ? '#21d07a' : (!ds.closed && i === ds.pts.length - 1) ? '#fff' : i === ds.hover || i === ds.drag ? '#ffd166' : '#5b6cff';
         g.beginPath(); g.arc(sx, sy, (i === ds.hover || i === ds.drag ? 8 : 6) * dpr, 0, 7); g.fill();
-        g.fillStyle = '#fff'; g.font = `700 ${9 * dpr}px system-ui`; g.textAlign = 'center'; g.fillText(String(i + 1), sx, sy - 10 * dpr);
+        if (ds.pts.length <= 40 || i % 10 === 0) { g.fillStyle = '#fff'; g.font = `700 ${9 * dpr}px system-ui`; g.textAlign = 'center'; g.fillText(String(i + 1), sx, sy - 10 * dpr); }
       });
       const a = dsArea(); g.fillStyle = 'rgba(255,255,255,.8)'; g.font = `600 ${10 * dpr}px system-ui`; g.textAlign = 'left';
       g.fillRect(a.x0 + 12 * dpr, H - 18 * dpr, 100 * k, 2 * dpr); g.fillText('100 m', a.x0 + 12 * dpr, H - 24 * dpr);
@@ -1492,6 +1719,6 @@
     setSoundEnabled: (on) => { window.NotchHostSound = !!on; const c = window.NotchRaceGame.current; if (c) c.setSoundEnabled(on); },
     resume: () => { const c = window.NotchRaceGame.current; if (c) c.resume(); },
     current: null,
-    _test: { pitInfo, relS, fence, checkTrack, encodeTrack, decodeTrack, customDef, GROUNDS, TRACKS, CARS, buildTrack, locate, gridSlot, newCar, stepCar, driveAI, newRacer, progress, ranking, collide, wallHit, hurt, gearbox, NET, fmt, LEVELS },
+    _test: { parseRequest, generateTrack, traceImage, simplifyPts, pitInfo, relS, fence, checkTrack, encodeTrack, decodeTrack, customDef, GROUNDS, TRACKS, CARS, buildTrack, locate, gridSlot, newCar, stepCar, driveAI, newRacer, progress, ranking, collide, wallHit, hurt, gearbox, NET, fmt, LEVELS },
   };
 })();

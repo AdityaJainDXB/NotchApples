@@ -1547,9 +1547,39 @@
     const edge = Math.max(Math.abs(x), Math.abs(z));
     return Math.max(h + (-45 - h) * smooth(WORLD - 1600, WORLD - 300, edge), -400);
   }
+  /// Satellite imagery for real terrain: Sentinel-2 cloudless (2016) by EOX, from tiles.maps.eox.at (CC BY 4.0, contains
+  /// modified Copernicus Sentinel data 2016). The tiles round the place are pasted into one picture laid over the ground.
+  let REAL_IMG = null;        // { canvas, x0, z0, w, h, v, px (the pixels) }
+  /// Is there forest at (x, z) on the satellite picture (a dark, green pixel)? Without a picture there are no trees.
+  function realForest(x, z) {
+    const I = REAL_IMG; if (!I || !I.px) return false;
+    const u = Math.floor(((x - I.x0) / I.w) * I.n), v = Math.floor(((z - I.z0) / I.h) * I.n);
+    if (u < 0 || v < 0 || u >= I.n || v >= I.n) return false;
+    const o = (v * I.n + u) * 4, r = I.px[o], g = I.px[o + 1], b = I.px[o + 2];
+    return g > r + 6 && g > b + 4 && r + g + b < 260;
+  }
+  const IMG_Z = 13;
+  async function loadImagery(lat, lon) {
+    const n = 2 ** IMG_Z, la = lat * Math.PI / 180, fx = ((lon + 180) / 360) * n, fy = ((1 - Math.log(Math.tan(la) + 1 / Math.cos(la)) / Math.PI) / 2) * n;
+    const mpp = (40075016.686 * Math.cos(la)) / (n * 256), span = Math.min(12, Math.ceil((2 * WORLD) / (mpp * 256)) + 1);
+    const tx0 = Math.floor(fx - span / 2), ty0 = Math.floor(fy - span / 2), N = span * 256;
+    const cv = document.createElement('canvas'); cv.width = N; cv.height = N; const g = cv.getContext('2d');
+    g.fillStyle = '#5f6b4a'; g.fillRect(0, 0, N, N);
+    let ok = 0;
+    await Promise.all(Array.from({ length: span * span }, async (_, k) => {
+      const tx = k % span, ty = Math.floor(k / span);
+      try { const r = await fetch(`https://tiles.maps.eox.at/wmts/1.0.0/s2cloudless_3857/default/g/${IMG_Z}/${ty0 + ty}/${(tx0 + tx + n) % n}.jpg`); if (!r.ok) return; g.drawImage(await createImageBitmap(await r.blob()), tx * 256, ty * 256); ok++; } catch { /* a missing tile stays plain */ }
+    }));
+    if (ok < (span * span) / 2) throw new Error('imagery');
+    // World x runs east and z south from the place's point, which is at (fx - tx0, fy - ty0) tiles into the picture.
+    const x0 = -(fx - tx0) * 256 * mpp, z0 = -(fy - ty0) * 256 * mpp;
+    REAL_IMG = { canvas: cv, x0, z0, w: N * mpp, h: N * mpp, n: N, px: g.getImageData(0, 0, N, N).data, v: (REAL_IMG ? REAL_IMG.v : 0) + 1 };
+    return REAL_IMG;
+  }
   /// Fetches the elevation tiles round (lat, lon) and turns real terrain on (or off with null). Resolves when ready.
   async function loadReal(lat, lon) {
-    if (lat == null) { REAL = null; return null; }
+    if (lat == null) { REAL = null; REAL_IMG = null; return null; }
+    const imgJob = loadImagery(lat, lon).catch(() => { REAL_IMG = null; });
     const n = 2 ** REAL_Z, fx = ((lon + 180) / 360) * n, la = lat * Math.PI / 180, fy = ((1 - Math.log(Math.tan(la) + 1 / Math.cos(la)) / Math.PI) / 2) * n;
     const tx0 = Math.floor(fx) - Math.floor(REAL_TILES / 2) + (fx % 1 > 0.5 ? 1 : 0), ty0 = Math.floor(fy) - Math.floor(REAL_TILES / 2) + (fy % 1 > 0.5 ? 1 : 0);
     const N = REAL_TILES * 256, H = new Float32Array(N * N);
@@ -1568,6 +1598,7 @@
     const mpp = (40075016.686 * Math.cos(la)) / (n * 256);
     const R = { lat, lon, mpp, N, H, cx: (fx - tx0) * 256, cy: (fy - ty0) * 256, home: 0 };
     REAL = R; R.home = Math.max(3, realRaw(0, -700));       // the home airfield sits at the real height of the ground there
+    await imgJob;
     return R;
   }
   function terrainNatural(x, z) {
@@ -1635,6 +1666,14 @@
     ctx.solid([x - k, y0, z - k], [x + k, y0 + h, z + k], 'landmark');
     return y0 + h;
   };
+  /// A dome from stacked rings (s slices), sitting on y0: round on top.
+  const dome = (ctx, x, y0, z, r, col, seg = 14, s = 6) => { for (let i = 0; i < s; i++) { const a0 = (i / s) * Math.PI / 2, a1 = ((i + 1) / s) * Math.PI / 2; ctx.b.cone([x, y0 + Math.sin(a0) * r, z], Math.cos(a0) * r, Math.cos(a1) * r, (Math.sin(a1) - Math.sin(a0)) * r, col, seg); } ctx.solid([x - r * 0.7, y0, z - r * 0.7], [x + r * 0.7, y0 + r, z + r * 0.7], 'landmark'); return y0 + r; };
+  /// An onion dome: it swells out past its drum, then draws in to a point.
+  const onion = (ctx, x, y0, z, r, col, seg = 12) => { const prof = [[0.75, 0], [1.05, 0.35], [1, 0.7], [0.7, 1.05], [0.28, 1.35], [0.04, 1.75]]; for (let i = 0; i + 1 < prof.length; i++) ctx.b.cone([x, y0 + prof[i][1] * r, z], prof[i][0] * r, prof[i + 1][0] * r, (prof[i + 1][1] - prof[i][1]) * r, col, seg); return y0 + 1.75 * r; };
+  /// A slender round tower (a minaret): a shaft, a balcony, a little cap.
+  const minaret = (ctx, x, z, h, r, col, cap) => { const g = ctx.g(x, z); ctx.b.cone([x, g, z], r, r * 0.8, h, col, 10); ctx.b.cone([x, g + h * 0.7, z], r * 1.6, r * 1.6, 1.2, col, 10); ctx.b.cone([x, g + h, z], r * 0.9, 0, h * 0.12, cap || col, 10); ctx.solid([x - r, g, z - r], [x + r, g + h, z + r], 'landmark'); };
+  /// An arch: two piers and a lintel (with a collider each), across x.
+  const archGate = (ctx, x, z, w, h, d, col) => { const g = ctx.g(x, z), pw = w * 0.22; for (const sx of [-1, 1]) ctx.block([x + sx * (w / 2 - pw / 2), g + h / 2, z], [pw, h, d], col, 'landmark'); ctx.block([x, g + h - h * 0.12, z], [w, h * 0.24, d], col, 'landmark'); return g + h; };
   const LANDMARKS = {
     dubai(ctx) {   // Burj Khalifa and two neighbours
       const [x, z] = LM, c = ctx.hex('#a9c4d8'), c2 = ctx.hex('#7f9db5');
@@ -1705,6 +1744,141 @@
         }
       }
     },
+    delhi(ctx) {   // India Gate, and the Qutub Minar a little way off
+      const [x, z] = LM, sand = ctx.hex('#d9b98f'), red = ctx.hex('#b5603e');
+      archGate(ctx, x, z, 30, 42, 12, sand); ctx.b.cone([x, ctx.g(x, z) + 42, z], 6, 4, 4, sand, 8);
+      const qx = x + 260, qz = z - 120, qg = ctx.g(qx, qz);
+      let y = qg; for (const [r0, r1, h] of [[7.5, 6.2, 30], [6.2, 5.2, 18], [5.2, 4.3, 14], [4.3, 3.6, 7], [3.6, 3, 4]]) { ctx.b.cone([qx, y, qz], r0, r1, h, red, 14); ctx.b.cone([qx, y + h - 1, qz], r1 * 1.25, r1 * 1.25, 1, sand, 14); y += h; }
+      ctx.solid([qx - 5, qg, qz - 5], [qx + 5, y, qz + 5], 'landmark');
+    },
+    agra(ctx) {   // the Taj Mahal: the great dome on its platform, four minarets
+      const [x, z] = LM, marble = ctx.hex('#f3efe6'), g = ctx.g(x, z);
+      ctx.block([x, g + 3.5, z], [95, 7, 95], marble, 'landmark'); ctx.block([x, g + 7 + 15, z], [57, 30, 57], marble, 'landmark');
+      ctx.b.cone([x, g + 37, z], 14, 14, 8, marble, 16); const top = dome(ctx, x, g + 45, z, 18, marble, 16); ctx.b.cone([x, top, z], 1.2, 0, 12, ctx.hex('#c9a646'), 6);
+      for (const [dx, dz] of [[-17, -17], [17, -17], [-17, 17], [17, 17]]) dome(ctx, x + dx, g + 37, z + dz, 5, marble, 10);
+      for (const [dx, dz] of [[-44, -44], [44, -44], [-44, 44], [44, 44]]) minaret(ctx, x + dx, z + dz, 42, 2.4, marble);
+    },
+    mumbai(ctx) {   // the Gateway of India on the waterfront
+      const [x, z] = LM, stone = ctx.hex('#c8a879');
+      ctx.b.quad([x - 220, 0.35, z - 260], [x + 220, 0.35, z - 260], [x + 220, 0.35, z - 30], [x - 220, 0.35, z - 30], ctx.hex('#3c7fae'));
+      const top = archGate(ctx, x, z, 30, 26, 18, stone);
+      for (const sx of [-12, 12]) { ctx.b.cone([x + sx, top, z - 6], 2.5, 2.5, 4, stone, 8); ctx.b.cone([x + sx, top, z + 6], 2.5, 2.5, 4, stone, 8); }
+      dome(ctx, x, top, z, 7, stone, 12);
+    },
+    abudhabi(ctx) {   // the Sheikh Zayed Grand Mosque: white domes, four tall minarets
+      const [x, z] = LM, white = ctx.hex('#f5f5f2'), g = ctx.g(x, z);
+      ctx.block([x, g + 9, z], [200, 18, 150], white, 'landmark');
+      dome(ctx, x, g + 26, z, 22, white, 16); ctx.b.cone([x, g + 18, z], 22, 22, 8, white, 16);
+      for (const [dx, dz] of [[-40, 0], [40, 0], [0, -35], [0, 35], [-60, -40], [60, -40], [-60, 40], [60, 40]]) { ctx.b.cone([x + dx, g + 18, z + dz], 9, 9, 4, white, 12); dome(ctx, x + dx, g + 22, z + dz, 9, white, 12); }
+      for (const [dx, dz] of [[-100, -75], [100, -75], [-100, 75], [100, 75]]) minaret(ctx, x + dx, z + dz, 107, 4, white, ctx.hex('#d4af37'));
+    },
+    rome(ctx) {   // the Colosseum: a great oval of arches, one side taller than the other
+      const [x, z] = LM, trav = ctx.hex('#cdb38f'), g = ctx.g(x, z);
+      const N = 40; for (let i = 0; i < N; i++) {
+        const a = (i / N) * Math.PI * 2, ax = Math.cos(a) * 94, az = Math.sin(a) * 78, h = Math.cos(a) > 0.2 ? 48 : 34;
+        ctx.b.box([x + ax, g + h / 2, z + az], [14, h, 14], trav);
+      }
+      for (let k = 0; k < 4; k++) ctx.solid([x - 100 + k * 50, g, z - 85], [x - 60 + k * 50, g + 48, z + 85], 'landmark');
+      ctx.b.quad([x - 70, g + 1, z - 55], [x + 70, g + 1, z - 55], [x + 70, g + 1, z + 55], [x - 70, g + 1, z + 55], ctx.hex('#b8a07a'));
+    },
+    athens(ctx) {   // the Parthenon on the Acropolis
+      const [x, z] = LM, marble = ctx.hex('#e6dfd0'), rock = ctx.hex('#a58f73');
+      const g = ctx.g(x, z); ctx.block([x, g + 35, z], [280, 70, 150], rock, 'landmark');
+      const t = g + 70; ctx.block([x, t + 2, z], [70, 4, 32], marble, 'landmark');
+      for (let i = 0; i < 8; i++) for (const sz of [-14, 14]) ctx.b.cone([x - 31 + i * 8.9, t + 4, z + sz], 1.0, 0.85, 10.4, marble, 8);
+      for (let i = 1; i < 4; i++) for (const sx of [-31, 31]) ctx.b.cone([x + sx, t + 4, z - 14 + i * 7], 1.0, 0.85, 10.4, marble, 8);
+      ctx.block([x, t + 15.5, z], [70, 2.5, 32], marble, 'landmark'); ctx.b.taper(x, t + 16.75, z - 16, 70, 0.2, z + 16, 70, 4, marble);
+    },
+    moscow(ctx) {   // St Basil's Cathedral: coloured onion domes, and a Kremlin tower
+      const [x, z] = LM, brick = ctx.hex('#a8443a'), g = ctx.g(x, z);
+      ctx.block([x, g + 12, z], [60, 24, 60], brick, 'landmark');
+      ctx.b.cone([x, g + 24, z], 7, 5, 26, brick, 8); ctx.b.cone([x, g + 50, z], 5, 0, 12, ctx.hex('#3f8f5a'), 8);
+      const cols = ['#2e6fb5', '#d8a531', '#3f9a5c', '#c8402f', '#e8e2d0', '#2fa5a5', '#c86b2f', '#7a3fb5'];
+      for (let i = 0; i < 8; i++) { const a = (i / 8) * Math.PI * 2, dx = Math.cos(a) * 20, dz = Math.sin(a) * 20, h = i % 2 ? 14 : 22; ctx.b.cone([x + dx, g + 24, z + dz], 5, 4.5, h, brick, 10); onion(ctx, x + dx, g + 24 + h, z + dz, 5, ctx.hex(cols[i]), 12); }
+      const kx = x - 200, kz = z + 60, t = stepTower(ctx, kx, kz, [[16, 40], [12, 14], [9, 10]], brick); ctx.b.cone([kx, t, kz], 6, 0, 24, ctx.hex('#3f8f5a'), 8);
+    },
+    istanbul(ctx) {   // a great mosque of Istanbul: a cascade of domes and six slender minarets
+      const [x, z] = LM, stone = ctx.hex('#b9b5ad'), lead = ctx.hex('#7d8790'), g = ctx.g(x, z);
+      ctx.block([x, g + 15, z], [70, 30, 70], stone, 'landmark'); dome(ctx, x, g + 30, z, 22, lead, 16);
+      for (const [dx, dz] of [[-28, 0], [28, 0], [0, -28], [0, 28]]) dome(ctx, x + dx, g + 24, z + dz, 12, lead, 12);
+      for (const [dx, dz] of [[-48, -48], [48, -48], [-48, 48], [48, 48], [-48, 90], [48, 90]]) minaret(ctx, x + dx, z + dz, 64, 2.6, stone, lead);
+    },
+    berlin(ctx) {   // the Brandenburg Gate and the TV tower
+      const [x, z] = LM, sand = ctx.hex('#d6c7a1'), g = ctx.g(x, z);
+      for (let i = 0; i < 6; i++) ctx.b.cone([x - 25 + i * 10, g, z], 1.6, 1.4, 20, sand, 10);
+      ctx.block([x, g + 22, z], [62, 5, 12], sand, 'landmark'); ctx.block([x, g + 26, z], [20, 4, 6], ctx.hex('#3d6b50'), 'landmark');
+      const tx = x + 400, tz = z - 300, tg = ctx.g(tx, tz); ctx.b.cone([tx, tg, tz], 6, 4, 200, ctx.hex('#bcc3c8'), 12);
+      dome(ctx, tx, tg + 200, tz, 16, ctx.hex('#c6ccd2'), 14); ctx.b.cone([tx, tg + 200 - 16, tz], 4, 16, 16, ctx.hex('#c6ccd2'), 14); ctx.b.cone([tx, tg + 216, tz], 2, 0.4, 150, ctx.hex('#d64534'), 6);
+      ctx.solid([tx - 5, tg, tz - 5], [tx + 5, tg + 366, tz + 5], 'landmark');
+    },
+    rio(ctx) {   // Christ the Redeemer on the top of Corcovado
+      const [x, z] = LM, rock = ctx.hex('#5f6e4c'), stone = ctx.hex('#e9e6df'), g = ctx.g(x, z);
+      ctx.b.cone([x, g, z], 220, 16, 320, rock, 10); ctx.solid([x - 110, g, z - 110], [x + 110, g + 210, z + 110], 'landmark');
+      const t = g + 320; ctx.block([x, t + 4, z], [9, 8, 9], stone, 'landmark'); ctx.b.cone([x, t + 8, z], 3.4, 2.2, 22, stone, 10);
+      ctx.block([x, t + 26, z], [28, 3, 3], stone, 'landmark'); ctx.b.cone([x, t + 30, z], 1.6, 1.4, 3, stone, 8);
+    },
+    toronto(ctx) {   // the CN Tower
+      const [x, z] = LM, conc = ctx.hex('#c9ccd0'), g = ctx.g(x, z);
+      ctx.b.cone([x, g, z], 18, 6, 340, conc, 3); ctx.b.cone([x, g + 330, z], 22, 22, 22, ctx.hex('#7d8a96'), 16); ctx.b.cone([x, g + 352, z], 22, 6, 6, conc, 16);
+      ctx.b.cone([x, g + 358, z], 5, 4, 90, conc, 10); ctx.b.cone([x, g + 448, z], 2, 0.4, 102, ctx.hex('#d64534'), 6);
+      ctx.solid([x - 9, g, z - 9], [x + 9, g + 550, z + 9], 'landmark');
+    },
+    seattle(ctx) {   // the Space Needle
+      const [x, z] = LM, white = ctx.hex('#ececec'), g = ctx.g(x, z);
+      ctx.b.cone([x, g, z], 14, 4, 80, white, 3); ctx.b.cone([x, g + 80, z], 4, 6, 70, white, 6);
+      ctx.b.cone([x, g + 150, z], 10, 24, 10, white, 16); ctx.b.cone([x, g + 160, z], 24, 16, 6, ctx.hex('#e3a53a'), 16); ctx.b.cone([x, g + 166, z], 2, 0.4, 18, white, 6);
+      ctx.solid([x - 6, g, z - 6], [x + 6, g + 184, z + 6], 'landmark');
+    },
+    kualalumpur(ctx) {   // the Petronas Towers and their skybridge
+      const [x, z] = LM, steel = ctx.hex('#c7ccd1');
+      for (const dx of [-35, 35]) { const top = stepTower(ctx, x + dx, z, [[46, 180], [40, 120], [32, 60], [24, 40], [16, 30]], steel); ctx.b.cone([x + dx, top, z], 3, 0.3, 60, steel, 8); ctx.solid([x + dx - 1.5, top, z - 1.5], [x + dx + 1.5, top + 60, z + 1.5], 'landmark'); }
+      ctx.block([x, ctx.g(x, z) + 175, z], [26, 8, 7], ctx.hex('#9aa3ab'), 'landmark');
+    },
+    singapore(ctx) {   // Marina Bay Sands: three towers carrying a ship on the roof
+      const [x, z] = LM, glass = ctx.hex('#b9c7d2'), g = ctx.g(x, z);
+      for (const dz of [-80, 0, 80]) { ctx.block([x - 12, g + 98, z + dz], [26, 196, 40], glass, 'landmark'); ctx.block([x + 12, g + 98, z + dz], [26, 196, 40], glass, 'landmark'); }
+      ctx.block([x, g + 200, z + 10], [44, 8, 340], ctx.hex('#d9dde0'), 'landmark');
+      ctx.b.quad([x + 60, 0.35, z - 250], [x + 360, 0.35, z - 250], [x + 360, 0.35, z + 250], [x + 60, 0.35, z + 250], ctx.hex('#2a74c0'));
+    },
+    shanghai(ctx) {   // the Oriental Pearl Tower and the Shanghai Tower
+      const [x, z] = LM, pink = ctx.hex('#c8586f'), steel = ctx.hex('#c3c9cf'), g = ctx.g(x, z);
+      for (let i = 0; i < 3; i++) { const a = (i / 3) * Math.PI * 2; ctx.b.cone([x + Math.cos(a) * 14, g, z + Math.sin(a) * 14], 4, 3, 270, steel, 8); }
+      dome(ctx, x, g + 68, z, 25, pink, 16); ctx.b.cone([x, g + 68, z], 4, 25, 0.01, pink, 16); ctx.b.cone([x, g + 43, z], 25, 4, 25, pink, 16);
+      dome(ctx, x, g + 263, z, 13, pink, 14); ctx.b.cone([x, g + 250, z], 13, 13, 13, pink, 14); ctx.b.cone([x, g + 276, z], 2, 0.4, 120, steel, 6);
+      ctx.solid([x - 10, g, z - 10], [x + 10, g + 396, z + 10], 'landmark');
+      const sx = x + 300, sz = z + 200, sg = ctx.g(sx, sz); let y = sg; for (let k = 0; k < 9; k++) { const r = 38 - k * 2.6; ctx.b.cone([sx, y, sz], r, r - 2.6, 70, ctx.hex('#a9bccb'), 3); y += 70; } ctx.solid([sx - 25, sg, sz - 25], [sx + 25, y, sz + 25], 'landmark');
+    },
+    beijing(ctx) {   // the Temple of Heaven: three blue roofs on a white marble base
+      const [x, z] = LM, white = ctx.hex('#efece4'), blue = ctx.hex('#2c4f8f'), red = ctx.hex('#b23a2e'), g = ctx.g(x, z);
+      for (const [r, h] of [[45, 2.5], [38, 2.5], [31, 2.5]]) ctx.b.cone([x, g + (45 - r) / 7 * 2.5, z], r, r, h, white, 20);
+      let y = g + 7.5;
+      for (const [r, h] of [[16, 9], [13, 7], [10, 6]]) { ctx.b.cone([x, y, z], r * 0.7, r * 0.7, h, red, 16); ctx.b.cone([x, y + h, z], r + 4, r * 0.55, 6, blue, 16); y += h + 6; }
+      ctx.b.cone([x, y, z], 1.8, 0, 5, ctx.hex('#d4af37'), 8); ctx.solid([x - 14, g, z - 14], [x + 14, y, z + 14], 'landmark');
+    },
+    seoul(ctx) {   // N Seoul Tower on Namsan hill
+      const [x, z] = LM, g = ctx.g(x, z), hill = ctx.hex('#4f6b3e'), white = ctx.hex('#ececec');
+      ctx.b.cone([x, g, z], 260, 40, 200, hill, 10); ctx.solid([x - 120, g, z - 120], [x + 120, g + 150, z + 120], 'landmark');
+      const t = g + 200; ctx.b.cone([x, t, z], 8, 5, 120, white, 10); ctx.b.cone([x, t + 120, z], 9, 14, 12, ctx.hex('#7d8a96'), 14); ctx.b.cone([x, t + 132, z], 2, 0.4, 60, white, 6);
+      ctx.solid([x - 6, t, z - 6], [x + 6, t + 192, z + 6], 'landmark');
+    },
+    bangkok(ctx) {   // Wat Arun: a tall central prang and four smaller ones by the river
+      const [x, z] = LM, stone = ctx.hex('#d9cfc0'), g = ctx.g(x, z);
+      ctx.b.quad([x - 300, 0.35, z + 90], [x + 300, 0.35, z + 90], [x + 300, 0.35, z + 300], [x - 300, 0.35, z + 300], ctx.hex('#7b6a3e'));
+      const prang = (px, pz, h) => { const pg = ctx.g(px, pz); let y = pg; for (let k = 0; k < 6; k++) { const r = h * 0.18 * (1 - k / 7); ctx.b.cone([px, y, pz], r, r * 0.86, h / 8, stone, 8); y += h / 8; } ctx.b.cone([px, y, pz], h * 0.04, 0, h * 0.25, stone, 8); ctx.solid([px - h * 0.1, pg, pz - h * 0.1], [px + h * 0.1, pg + h, pz + h * 0.1], 'landmark'); };
+      prang(x, z, 80); for (const [dx, dz] of [[-40, -40], [40, -40], [-40, 40], [40, 40]]) prang(x + dx, z + dz, 32);
+    },
+    barcelona(ctx) {   // the Sagrada Família: a cluster of tall spires
+      const [x, z] = LM, stone = ctx.hex('#c9b48f'), g = ctx.g(x, z);
+      ctx.block([x, g + 25, z], [90, 50, 60], stone, 'landmark');
+      for (const [dx, dz, h] of [[0, 0, 172], [-20, 0, 135], [20, 0, 135], [0, -18, 130], [0, 18, 130], [-38, -25, 107], [-30, -25, 112], [-22, -25, 107], [30, 25, 98], [38, 25, 94]]) { ctx.b.cone([x + dx, g + 40, z + dz], 4.5, 1.2, h - 40, stone, 10); ctx.b.cone([x + dx, g + h, z + dz], 2.2, 0, 6, ctx.hex('#d64534'), 6); }
+      ctx.solid([x - 8, g, z - 8], [x + 8, g + 172, z + 8], 'landmark');
+    },
+    riyadh(ctx) {   // the Kingdom Centre with its sky bridge
+      const [x, z] = LM, glass = ctx.hex('#9fb3c2'), g = ctx.g(x, z);
+      ctx.block([x, g + 90, z], [60, 180, 40], glass, 'landmark');
+      for (let k = 0; k < 10; k++) { const h = k * 10, w = 60 * (1 - (k / 10) ** 1.6); for (const sx of [-1, 1]) ctx.block([x + sx * (30 - (60 - w) / 4 - w / 4), g + 180 + h + 5, z], [w / 2 - 6, 10, 40], glass, 'landmark'); }
+      ctx.block([x, g + 270, z], [40, 6, 40], ctx.hex('#c9cfd4'), 'landmark');
+    },
     sanfrancisco(ctx) {   // the Golden Gate Bridge
       const [x, z] = LM, red = ctx.hex('#c0392b'), g = ctx.g(x, z);
       ctx.b.quad([x - 330, 0.35, z - 130], [x + 330, 0.35, z - 130], [x + 330, 0.35, z + 130], [x - 330, 0.35, z + 130], ctx.hex('#2a74c0'));
@@ -1721,13 +1895,33 @@
   };
   const REGIONS = [
     { id: '', name: 'Home valley', lm: 'the hills and the airfield', lat: 0, lon: 0, aliases: ['home', 'valley', 'default'] },
-    { id: 'dubai', name: 'Dubai', lm: 'Burj Khalifa', lat: 25.2, lon: 55.27, cc: 'AE', desert: true, aliases: ['uae', 'united arab emirates', 'abu dhabi', 'sharjah', 'emirates'] },
+    { id: 'dubai', name: 'Dubai', lm: 'Burj Khalifa', lat: 25.2, lon: 55.27, cc: 'AE', desert: true, aliases: ['uae', 'united arab emirates', 'sharjah', 'emirates'] },
     { id: 'london', name: 'London', lm: 'Tower Bridge', lat: 51.51, lon: -0.12, cc: 'GB', aliases: ['uk', 'united kingdom', 'england', 'britain', 'great britain', 'scotland', 'wales', 'manchester', 'birmingham'] },
     { id: 'paris', name: 'Paris', lm: 'the Eiffel Tower', lat: 48.86, lon: 2.35, cc: 'FR', aliases: ['france'] },
     { id: 'newyork', name: 'New York', lm: 'the Empire State Building', lat: 40.71, lon: -74.0, cc: 'US', aliases: ['nyc', 'usa', 'united states', 'america', 'new york city', 'manhattan'] },
     { id: 'tokyo', name: 'Tokyo', lm: 'Tokyo Tower', lat: 35.68, lon: 139.69, cc: 'JP', aliases: ['japan', 'osaka', 'kyoto'] },
     { id: 'sydney', name: 'Sydney', lm: 'the Opera House and Harbour Bridge', lat: -33.87, lon: 151.21, cc: 'AU', aliases: ['australia', 'melbourne', 'brisbane'] },
     { id: 'cairo', name: 'Cairo', lm: 'the pyramids of Giza', lat: 30.04, lon: 31.24, cc: 'EG', desert: true, aliases: ['egypt', 'giza', 'pyramids'] },
+    { id: 'delhi', name: 'Delhi', lm: 'India Gate and the Qutub Minar', lat: 28.61, lon: 77.21, cc: 'IN', aliases: ['india', 'new delhi', 'gurgaon', 'gurugram', 'noida', 'jaipur'] },
+    { id: 'agra', name: 'Agra', lm: 'the Taj Mahal', lat: 27.17, lon: 78.04, cc: 'IN', aliases: ['taj mahal', 'taj'] },
+    { id: 'mumbai', name: 'Mumbai', lm: 'the Gateway of India', lat: 18.92, lon: 72.83, cc: 'IN', aliases: ['bombay', 'pune', 'goa'] },
+    { id: 'abudhabi', name: 'Abu Dhabi', lm: 'the Sheikh Zayed Grand Mosque', lat: 24.41, lon: 54.47, cc: 'AE', desert: true, aliases: ['abu dhabi', 'yas island', 'al ain'] },
+    { id: 'rome', name: 'Rome', lm: 'the Colosseum', lat: 41.89, lon: 12.49, cc: 'IT', aliases: ['italy', 'milan', 'florence', 'venice', 'naples'] },
+    { id: 'athens', name: 'Athens', lm: 'the Parthenon', lat: 37.97, lon: 23.73, cc: 'GR', aliases: ['greece'] },
+    { id: 'moscow', name: 'Moscow', lm: "St Basil's Cathedral", lat: 55.75, lon: 37.62, cc: 'RU', aliases: ['russia', 'saint petersburg', 'st petersburg'] },
+    { id: 'istanbul', name: 'Istanbul', lm: 'the Blue Mosque', lat: 41.01, lon: 28.98, cc: 'TR', aliases: ['turkey', 'turkiye', 'ankara'] },
+    { id: 'berlin', name: 'Berlin', lm: 'the Brandenburg Gate and the TV tower', lat: 52.52, lon: 13.4, cc: 'DE', aliases: ['germany', 'munich', 'hamburg', 'frankfurt'] },
+    { id: 'rio', name: 'Rio de Janeiro', lm: 'Christ the Redeemer', lat: -22.95, lon: -43.21, cc: 'BR', aliases: ['rio', 'brazil', 'sao paulo'] },
+    { id: 'toronto', name: 'Toronto', lm: 'the CN Tower', lat: 43.64, lon: -79.39, cc: 'CA', aliases: ['canada', 'montreal', 'ottawa'] },
+    { id: 'seattle', name: 'Seattle', lm: 'the Space Needle', lat: 47.62, lon: -122.35, cc: 'US', aliases: ['washington state', 'portland'] },
+    { id: 'kualalumpur', name: 'Kuala Lumpur', lm: 'the Petronas Towers', lat: 3.16, lon: 101.71, cc: 'MY', aliases: ['malaysia', 'kl'] },
+    { id: 'singapore', name: 'Singapore', lm: 'Marina Bay Sands', lat: 1.28, lon: 103.86, cc: 'SG', aliases: [] },
+    { id: 'shanghai', name: 'Shanghai', lm: 'the Oriental Pearl Tower', lat: 31.24, lon: 121.5, cc: 'CN', aliases: ['china', 'hong kong'] },
+    { id: 'beijing', name: 'Beijing', lm: 'the Temple of Heaven', lat: 39.88, lon: 116.41, cc: 'CN', aliases: ['peking'] },
+    { id: 'seoul', name: 'Seoul', lm: 'N Seoul Tower', lat: 37.55, lon: 126.99, cc: 'KR', aliases: ['korea', 'south korea', 'busan'] },
+    { id: 'bangkok', name: 'Bangkok', lm: 'Wat Arun', lat: 13.74, lon: 100.49, cc: 'TH', aliases: ['thailand', 'phuket'] },
+    { id: 'barcelona', name: 'Barcelona', lm: 'the Sagrada Família', lat: 41.4, lon: 2.17, cc: 'ES', aliases: ['spain', 'madrid'] },
+    { id: 'riyadh', name: 'Riyadh', lm: 'the Kingdom Centre', lat: 24.71, lon: 46.67, cc: 'SA', desert: true, aliases: ['saudi arabia', 'saudi', 'jeddah'] },
     { id: 'sanfrancisco', name: 'San Francisco', lm: 'the Golden Gate Bridge', lat: 37.77, lon: -122.42, cc: 'US', aliases: ['sf', 'california', 'golden gate', 'los angeles', 'la'] },
   ];
   const regionOf = (id) => REGIONS.find((x) => x.id === id) || REGIONS[0];
@@ -1924,6 +2118,7 @@
       const nrm = normalAt(world, x, z, 6), fp = forestP(x, z, y, nrm[1]) * (world.desert && y < 80 ? 0.06 : 1);
       if (!(roll < fp * 0.8 || (nrm[1] > 0.93 && roll > 0.994))) continue;
       if (world.noTrees && world.noTrees.some((r) => x > r[0] && x < r[1] && z > r[2] && z < r[3])) continue;     // a cleared airstrip stays clear
+      if (REAL && REAL_ACTIVE && !realForest(x, z)) continue;                                   // real terrain: trees only where the picture shows forest
       const conifer = rr() < smooth(80, 420, y + (vnoise(x / 220, z / 220) - 0.5) * 260) + 0.08, h = conifer ? 12 + rr() * 12 : 9 + rr() * 9, w = h * 0.22;
       const seed = Math.floor(rr() * 4294967296);
       plantTree(near, far, x, y, z, h, conifer, rng(seed));
@@ -1931,6 +2126,7 @@
     }
     // Hedgerows along the field boundaries drawn by the ground shader (160 x 224 m fields).
     const bush = (x, z) => {
+      if (REAL && REAL_ACTIVE) return;            // no made-up hedges over real fields
       const y = terrainAt(world, x, z), ny = normalAt(world, x, z, 6)[1];
       if (farmAt(world, x, z, y, ny) > 0.55 && rr() > 0.2) { const br = 2.2 + rr() * 0.8, bh = 2.4 + rr(); c.bushList.push([x, y - 0.3, z, br, bh]); near.cone([x, y - 0.3, z], br, 0, bh, TREE_COL.hedge, 4); }
     };
@@ -2414,6 +2610,7 @@
     void main(){ gl_Position = vp * vec4(p, 1.0); vd = gl_Position.w; wp = p; wn = n.xyz; wo = n.w; wc = c.rgb; wf = c.a; }`;
   const TERRAIN_FS = `${PREC}varying vec3 wp; varying vec3 wn; varying vec3 wc; varying float wo; varying float wf; varying float vd;
     uniform sampler2D tx; uniform vec3 fogc; uniform vec3 sun; uniform vec3 cam; uniform float fogFar; uniform vec3 lum;
+    uniform sampler2D img; uniform float imgOn; uniform vec4 imgR;
     ${FOG_GLSL}
     float hash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
     void main(){
@@ -2442,20 +2639,26 @@
         crop = mix(crop, vec3(0.16, 0.30, 0.13) * (0.8 + t1.g * 0.4), he * 0.85);
         col = mix(col, crop, smoothstep(0.02, 0.5, wf));
       }
+      // Real terrain: the satellite picture is the ground colour (with a little fine detail close up).
+      float ion = 0.0;
+      if (imgOn > 0.5) {
+        vec2 iu = (wp.xz - imgR.xy) / imgR.zw;
+        if (iu.x > 0.0 && iu.y > 0.0 && iu.x < 1.0 && iu.y < 1.0) { ion = 1.0; col = texture2D(img, iu).rgb * 1.35 * (1.0 + (t1.r - 0.5) * 0.22 * f1 + (t2.g - 0.5) * 0.12 * f2); }
+      }
       float slope = 1.0 - n.y, nl = t3.b - 0.5, nm = t2.g - 0.5;
       vec3 rockc = mix(vec3(0.47, 0.44, 0.40), vec3(0.58, 0.53, 0.46), t2.r) * (0.92 + (t1.r - 0.5) * 0.5 * f1 + nm * 0.4);
       float rk = smoothstep(0.22, 0.40, slope + nl * 0.10) * step(2.0, wp.y);
-      col = mix(col, rockc, rk);
+      col = mix(col, rockc, rk * (1.0 - ion * 0.85));
       float scree = smoothstep(0.12, 0.24, slope) * (1.0 - rk) * smoothstep(350.0, 700.0, wp.y);
-      col = mix(col, vec3(0.58, 0.54, 0.49) * (0.9 + (t1.g - 0.5) * 0.4 * f1), scree * 0.6);
+      col = mix(col, vec3(0.58, 0.54, 0.49) * (0.9 + (t1.g - 0.5) * 0.4 * f1), scree * 0.6 * (1.0 - ion));
       float sl = 1180.0 + nl * 300.0 + nm * 80.0;
       float sn = smoothstep(sl - 25.0, sl + 40.0, wp.y + (t1.g - 0.5) * 30.0 * f1) * (1.0 - smoothstep(0.26, 0.46, slope + nm * 0.1));
-      col = mix(col, vec3(0.93, 0.95, 0.98) * (0.95 + (t1.r - 0.5) * 0.1 * f1), sn);
+      col = mix(col, vec3(0.93, 0.95, 0.98) * (0.95 + (t1.r - 0.5) * 0.1 * f1), sn * (1.0 - ion));
       vec3 nn = normalize(n + vec3(t1.g - 0.5, 0.0, t1.b - 0.5) * 0.55 * f1 * (1.0 - sn * 0.7) + vec3(t2.r - 0.5, 0.0, t2.b - 0.5) * 0.30 * f2);
       float dif = max(dot(nn, sun), 0.0);
       vec3 amb = mix(vec3(0.26, 0.24, 0.22), vec3(0.34, 0.42, 0.58), n.y * 0.5 + 0.5);
       vec3 lit = (amb * (0.55 + 0.45 * wo) + vec3(1.02, 0.95, 0.84) * dif * (0.45 + 0.55 * wo)) * 0.88;
-      col *= lit * lum;
+      col *= mix(lit, vec3(0.62) + lit * 0.45, ion) * lum;     // the picture already has its own shadows: light it more softly
       float f = fogAmt(vd, fogFar) * (1.0 - 0.4 * smoothstep(100.0, 1600.0, wp.y));
       gl_FragColor = vec4(mix(col, fogc, clamp(f, 0.0, 1.0)), 1.0);
     }`;
@@ -2519,7 +2722,7 @@
       const cache = {};
       return { p, u: (name) => (name in cache ? cache[name] : (cache[name] = gl.getUniformLocation(p, name))) };
     };
-    const T = mk(TERRAIN_VS, TERRAIN_FS), WA = mk(WATER_VS, WATER_FS), SK = mk(SKY_VS, SKY_FS);
+    const T = mk(TERRAIN_VS, TERRAIN_FS), WA = mk(WATER_VS, WATER_FS), SK = mk(SKY_VS, SKY_FS), imgTex = { t: null, v: 0 };
 
     // A small tileable noise texture (four independent channels) for every procedural detail: ground grain, ripples.
     const tex = gl.createTexture();
@@ -2636,6 +2839,17 @@
       gl.useProgram(T.p);
       gl.uniformMatrix4fv(T.u('vp'), false, ctx.vp); gl.uniform3fv(T.u('cam'), eye); gl.uniform3fv(T.u('fogc'), HAZE); gl.uniform3fv(T.u('sun'), SUN);
       gl.uniform1f(T.u('fogFar'), FOG_FAR * ENV.fogMul); gl.uniform3fv(T.u('lum'), ENV.lum); gl.uniform1i(T.u('tx'), 3);
+      const useImg = !!(REAL && REAL_ACTIVE && REAL_IMG && !ARENA);
+      if (useImg && imgTex.v !== REAL_IMG.v) {
+        if (!imgTex.t) imgTex.t = gl.createTexture();
+        gl.activeTexture(gl.TEXTURE4); gl.bindTexture(gl.TEXTURE_2D, imgTex.t);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, gl.RGB, gl.UNSIGNED_BYTE, REAL_IMG.canvas);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+        gl.activeTexture(gl.TEXTURE0); imgTex.v = REAL_IMG.v;
+      }
+      gl.uniform1f(T.u('imgOn'), useImg ? 1 : 0); gl.uniform1i(T.u('img'), 4);
+      if (useImg) { gl.uniform4f(T.u('imgR'), REAL_IMG.x0, REAL_IMG.z0, REAL_IMG.w, REAL_IMG.h); gl.activeTexture(gl.TEXTURE4); gl.bindTexture(gl.TEXTURE_2D, imgTex.t); gl.activeTexture(gl.TEXTURE0); }
       for (let k = 0; k < 3; k++) gl.enableVertexAttribArray(k);
       gl.activeTexture(gl.TEXTURE3); gl.bindTexture(gl.TEXTURE_2D, tex); gl.activeTexture(gl.TEXTURE0);
       const need = [], vis = [];
@@ -4525,7 +4739,7 @@
       const where = placeAt && (placeAt.lat || placeAt.lon) ? placeAt : null;
       if (realOn && where) {
         placeNote = `Loading the real terrain round ${where.name || reg.name}…`; renderUI();
-        try { await loadReal(where.lat, where.lon); placeNote = `Real terrain: ${where.name || reg.name}. Heights from the AWS elevation tiles (SRTM, GMTED, ETOPO1).`; }
+        try { await loadReal(where.lat, where.lon); placeNote = `Real terrain: ${where.name || reg.name}. Heights: AWS elevation tiles (SRTM, GMTED, ETOPO1). ${REAL_IMG ? 'Imagery: Sentinel-2 cloudless 2016 by EOX (CC BY 4.0, modified Copernicus Sentinel data).' : 'Satellite imagery could not load.'}`; }
         catch { await loadReal(null); placeNote = 'Could not load the real terrain (are you online?). Showing the home valley ground.'; }
       } else await loadReal(null);
       REAL_ACTIVE = !!REAL; setRegion(reg.id);
