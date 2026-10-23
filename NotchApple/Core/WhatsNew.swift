@@ -20,6 +20,10 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.1.40", date: "23 October 2026", headline: "Safety Car periods that end properly", items: [
+            "Racing, race control: the Safety Car now comes out at the right pace (about 144 km/h), and the period ends when it actually enters the pit lane, with a green-flag restart (it used to stay out until a 2-minute fallback). After a restart the crashed car is recovered so it doesn't keep triggering new flags, the next incident waits a while, and race officials never collide with race cars.",
+            "Driving the Safety Car or the Medical Car: the first incident now happens within about 15 seconds of the start (as the Safety Car it always brings you out), instead of after a minute or more.",
+        ]),
         ReleaseNote(version: "2.1.39", date: "23 October 2026", headline: "Race control, Safety Car and flags; real-terrain runway fixed", items: [
             "Flying: real terrain fixed. The runway is back (it was hidden under the real ground), and pressing Start while the real ground is still loading now waits for it instead of starting in half-loaded ground. There's also a ↻ Reload terrain button if it ever looks wrong. Heights are measured from the home airfield; land lower than it becomes low ground instead of flooding, and the real sea stays sea.",
             "Racing: race control with real flags. A yellow flag when a car hits the barrier (no overtaking there), the Virtual Safety Car for a wreck on track (everyone slows to a set pace), the Safety Car for a big crash (a silver GT with an orange light bar leads the pack until the track is clear, then comes in for a green-flag restart), a red flag for a huge crash or several wrecks (everyone stops, then the race restarts), a blue flag when the leader is about to lap you, and the Medical Car parks by the wreck. Overtaking under a flag, or going too fast under the VSC, earns a 5-second penalty.",
