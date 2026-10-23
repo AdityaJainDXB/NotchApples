@@ -48,7 +48,7 @@ enum HelloAnimation {
 
     /// Plays the hello (at most once every 20 seconds, and never while the notch is hidden or the hello is off).
     static func show(force: Bool = false) {
-        guard isOn, !SettingsManager.shared.isNotchHidden, force || Date().timeIntervalSince(lastShown) > 20,
+        guard isOn, !SettingsManager.shared.isNotchHidden, !MeetingMode.shared.active, force || Date().timeIntervalSince(lastShown) > 20,
               let screen = NSScreen.screens.first(where: { $0.safeAreaInsets.top > 0 }) ?? NSScreen.main else { return }
         lastShown = Date()
         panel?.orderOut(nil)

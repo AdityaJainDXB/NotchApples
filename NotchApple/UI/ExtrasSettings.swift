@@ -16,6 +16,7 @@ struct ExtrasSettings: View {
     @State private var hookMessage: String?
     @AppStorage(HelloAnimation.onKey) private var helloOn = true
     @AppStorage(ThermalWatcher.key) private var heatWarning = true
+    @AppStorage(MeetingMode.key) private var meetingMode = true
     @AppStorage(CapturePrivacy.key) private var hideFromCapture = false
     @AppStorage(HelloAnimation.nameKey) private var helloName = ""
 
@@ -65,6 +66,9 @@ struct ExtrasSettings: View {
                 Toggle("Rain alert (“rain in 15 min”)", isOn: $settings.rainAlert).requires(.rainAlert)
                 Toggle("Microphone and camera in use (Devices add-on)", isOn: $settings.privacyIndicator)
                 Toggle("Accessory low battery (Devices add-on)", isOn: $settings.accessoryBatteryAlert)
+                Toggle("Meeting mode: a quiet notch while the camera or microphone is on", isOn: $meetingMode)
+                    .onChange(of: meetingMode) { _, _ in MeetingMode.shared.refresh() }
+                    .help("Shows the minutes left in your meeting (or how long the call has run) and keeps music, scores and notification flashes away until the call ends")
                 Toggle("“Hot” when the Mac overheats and slows down", isOn: $heatWarning)
                     .onChange(of: heatWarning) { _, _ in LiveActivityCenter.shared.recompute() }
                 Toggle("Hide the notch from screenshots, recordings and screen sharing", isOn: $hideFromCapture)

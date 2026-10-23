@@ -362,6 +362,7 @@
 		D66E704382AB0D2A03526FE2 /* WallpaperLibrary.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00AA70E8C578D3F81476B1FB /* WallpaperLibrary.swift */; };
 		D6AB6D3B477B7BBBEFB85708 /* ScreenTimeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9428FE6894A084A43909BD76 /* ScreenTimeView.swift */; };
 		D6AD6B43EA61C6526CBC888C /* DoItAgent.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5B8287EF70546FBB3914E72 /* DoItAgent.swift */; };
+		D8B45C10E1494DA30C0CD58F /* MeetingMode.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50A79D1E1BC5B76D52EDE8FC /* MeetingMode.swift */; };
 		D915CB7B0060ED6128415BF9 /* SnakeGameViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 264A2A3E4ADCB8D6919DC502 /* SnakeGameViewModel.swift */; };
 		D9CD0758EE2521191E344132 /* GameFullScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = E0C8A8EBFAB59EBC323417FC /* GameFullScreen.swift */; };
 		DC37742E9DC53226546E0A45 /* WindowManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 98A8EB2467586B8A5E087088 /* WindowManager.swift */; };
@@ -551,6 +552,7 @@
 		4C191B301A7AE40F175BA044 /* FocusTimer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FocusTimer.swift; sourceTree = "<group>"; };
 		4DAB6955A36172C93698DDEC /* FeatureHub.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeatureHub.swift; sourceTree = "<group>"; };
 		4F23D3171A71FF28676DD18D /* BrowserModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrowserModel.swift; sourceTree = "<group>"; };
+		50A79D1E1BC5B76D52EDE8FC /* MeetingMode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeetingMode.swift; sourceTree = "<group>"; };
 		50CCA2828E5DEA8799BE2ACC /* PureModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PureModels.swift; sourceTree = "<group>"; };
 		50DD954B11024EFCFE5CFAA7 /* DevToolkitLogic.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DevToolkitLogic.swift; sourceTree = "<group>"; };
 		52100BA17131CE56EF103F79 /* NotchWidget.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = NotchWidget.entitlements; sourceTree = "<group>"; };
@@ -1160,6 +1162,7 @@
 				F49D3A20C7CFE9C60DB8CBC3 /* LiveActivity.swift */,
 				E908464AA33EDC69CFBCDF86 /* LocationProvider.swift */,
 				C27D02B11E830B27979CC716 /* MagneticDrop.swift */,
+				50A79D1E1BC5B76D52EDE8FC /* MeetingMode.swift */,
 				813CF5ACE0591AF47CA5C5F6 /* MeetingNotesLogic.swift */,
 				1951F9A6444DB9F503B2FD2B /* MeetingSummaryLogic.swift */,
 				572FFE43DE13E5E3A4C818F2 /* ModuleLayout.swift */,
@@ -2016,6 +2019,7 @@
 				971BE20BFA381D487A601FC5 /* MathEngine.swift in Sources */,
 				A89C797DB626E953AFF87B9E /* MathText.swift in Sources */,
 				559DB140309458EAB8AD6BFF /* MediaKeyInterceptor.swift in Sources */,
+				D8B45C10E1494DA30C0CD58F /* MeetingMode.swift in Sources */,
 				499529CC2C4C7885D964686F /* MeetingNotesLogic.swift in Sources */,
 				F804974BDB3706ABE17FDD0B /* MeetingSummaryLogic.swift in Sources */,
 				44AA1315926A7EB7858B9E73 /* MemoryGameView.swift in Sources */,
@@ -2404,7 +2408,7 @@
 				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Manual;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 168;
+				CURRENT_PROJECT_VERSION = 169;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = "";
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -2420,7 +2424,7 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 2.1.41;
+				MARKETING_VERSION = 2.1.42;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -2538,7 +2542,7 @@
 				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Manual;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 168;
+				CURRENT_PROJECT_VERSION = 169;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = "";
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -2560,7 +2564,7 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 2.1.41;
+				MARKETING_VERSION = 2.1.42;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;

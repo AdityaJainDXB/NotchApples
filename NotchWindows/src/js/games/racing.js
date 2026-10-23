@@ -1014,7 +1014,7 @@
     function setFlag(flag, why) {
       raceCtl.flag = flag; raceCtl.t = 0; raceCtl.warned = false;
       if (flag === 'green') raceCtl.next = clock + 60 + Math.random() * 40;       // the next incident (when you drive for race control) comes a while after the restart
-      if (flag === 'green') for (const r of racers) if (!r.official && r.car.dmg >= 0.9) r.car.dmg = 0.6;      // the crashed car was recovered: it limps on to the pits, and no longer counts as a wreck
+      if (flag === 'green') for (const r of racers) if (!r.official && (r.car.dmg >= 0.9 || r.stopped)) { r.car.dmg = Math.min(r.car.dmg, 0.6); r.stopped = false; }      // the crashed car was recovered: it limps on to the pits, and no longer counts as a wreck
       big.style.fontSize = '22px'; big.style.top = '14%'; big.textContent = (flag === 'green' ? '🟢 ' : flag === 'red' ? '🟥 ' : '🟨 ') + FLAGS[flag][0]; clearTimeout(toastT); toastT = setTimeout(() => { big.textContent = ''; big.style.fontSize = ''; big.style.top = ''; }, 2600);
       const lines = { green: ['Green flag, green flag. Racing resumes!', 'com'], yellow: [`Yellow flag${why ? ', ' + why : ''}. No overtaking there.`, 'eng'], vsc: ['Virtual Safety Car. Slow down, keep to the delta, no overtaking.', 'eng'], sc: ['Safety car, safety car. Close up behind the car in front, no overtaking.', 'eng'], red: ['Red flag, red flag! The race is stopped.', 'com'] };
       say(...lines[flag], 2);
@@ -1024,6 +1024,12 @@
       if (screen !== 'race' || r.official) return;
       const wrecks = racers.filter((x) => !x.official && !x.finished && x.car.dmg >= 0.9).length;
       const want = speed > 42 || wrecks >= 4 ? 'red' : speed > 28 || wrecks >= 2 ? 'sc' : r.car.dmg >= 0.9 ? 'vsc' : 'yellow';
+      // A wrecked computer car stops where it crashed, pulled over at the edge of the road, smoking, until it is seen to.
+      if (r.ai && r.car.dmg >= 0.9) {
+        const l = locate(T, r.car.x, r.car.y, r.idx), q = T.S[l.idx], sg = Math.sign(l.lat) || 1, o = T.width / 2 + 2.5;
+        r.car.x = q.x + q.nx * sg * o; r.car.y = q.y + q.ny * sg * o; r.car.vx = r.car.vy = 0; r.car.spin = 0;
+        r.car.h = Math.atan2(q.ty, q.tx) + sg * 0.5; r.stopped = true;
+      }
       raceCtl.at = { x: r.car.x, y: r.car.y, s: r.sNow || 0, r, checked: false };
       if (RANK[want] > RANK[raceCtl.flag]) setFlag(want, `${r.name} has crashed`);
     }
@@ -1039,8 +1045,9 @@
         C.next = clock + 70 + Math.random() * 50;
       }
       // When each flag ends.
-      if (C.flag === 'yellow' && C.t > 12) setFlag('green');
-      if (C.flag === 'vsc' && C.t > 20) setFlag('green');
+      const waitMed = role === 'med' && C.at && !C.at.checked && C.t < 150;        // the Medical Car has not reached the wreck yet
+      if (C.flag === 'yellow' && C.t > 12 && !waitMed) setFlag('green');
+      if (C.flag === 'vsc' && C.t > 20 && !waitMed) setFlag('green');
       if (C.flag === 'red' && C.t > 9) { for (const r of field) { r.car.dmg = Math.min(r.car.dmg, 0.5); } setFlag('green'); }        // repaired in the stoppage, restart
       if (C.flag === 'sc') {
         const lead = order[0];
@@ -1070,10 +1077,10 @@
           medR = newRacer('med-car', 'Medical Car', OFFICIALS[1], T, 0, { official: true, color: OFFICIALS[1].color, parked: 10 });
           Object.assign(medR.car, { x: q.x + q.nx * o, y: q.y + q.ny * o, h: Math.atan2(q.ty, q.tx) }); racers.push(medR);
         }
-        if (medR && (medR.parked -= dt) <= 0) { racers = racers.filter((r) => r !== medR); medR = null; if (C.at) C.at.checked = true; }
+        if (medR && (medR.parked -= dt) <= 0) { racers = racers.filter((r) => r !== medR); medR = null; if (C.at) { C.at.checked = true; if (C.flag !== 'sc' && C.flag !== 'red') C.at.r.stopped = false; } }
       } else if (C.at && !C.at.checked && C.flag !== 'green') {
         const d = Math.hypot(me.car.x - C.at.x, me.car.y - C.at.y), v = Math.hypot(me.car.vx, me.car.vy);
-        if (d < 16 && v < 3) { C.at.checked = true; C.done++; const pts = Math.max(50, Math.round(300 - C.t * 6)); C.score += pts; C.at.r.car.dmg = Math.min(C.at.r.car.dmg, 0.6); toast(`🚑 Driver checked, all OK: +${pts} · ${C.score} points`); say('The driver is OK. Good work, medical car.', 'com', 2); }
+        if (d < 26 && v < 3) { C.at.checked = true; C.done++; const pts = Math.max(50, Math.round(300 - C.t * 6)); C.score += pts; C.at.r.car.dmg = Math.min(C.at.r.car.dmg, 0.6); C.at.r.stopped = false; toast(`🚑 Driver checked, all OK: +${pts} · ${C.score} points`); if (C.flag !== 'green' && C.flag !== 'sc') setFlag('green'); say('The driver is OK. Good work, medical car.', 'com', 2); }
       }
       // How fast each computer car may go under the flag.
       const sc = role === 'sc' ? me : scR, scS = sc ? sc.prog : 0;
@@ -1178,7 +1185,8 @@
           }
           continue;
         }
-        if (r.parked != null) { c.vx = c.vy = 0; continue; }       // the Medical Car stands by the wreck
+        if (r.parked != null) { c.vx = c.vy = 0; continue; }
+        if (r.stopped) { c.vx = c.vy = 0; emit(r, dt); continue; }      // a wreck waiting at the side of the track       // the Medical Car stands by the wreck
         let inp;
         if (r.ai) { const st = aiState.get(r.id); if (r.finished) st.skill = 0.4; inp = driveAI(T, c, st, dt); }       // after the flag a driver cruises round
         else if (screen === 'done' || r.finished) inp = { throttle: 0, brake: 0.6, steer: 0, hand: 0 };
@@ -1402,7 +1410,7 @@
             else if (lead) { const gap = relDist(me.sNow || 0, lead.sNow || 0); msg = gap < 0 ? `Catch the leader: ${Math.round(-gap)} m behind` : gap > 160 ? 'Too far ahead: slow and let the pack close up' : `Leading the pack: hold about ${Math.round(40 * KMH)} km/h`; }
           } else {
             const A = C.at;
-            if (A && !A.checked && C.flag !== 'green') { const d = Math.hypot(me.car.x - A.x, me.car.y - A.y); msg = d < 16 ? 'Stop beside the car to check on the driver' : `🚑 Crash: ${A.r.name}, ${Math.round(d)} m away`; }
+            if (A && !A.checked && C.flag !== 'green') { const d = Math.hypot(me.car.x - A.x, me.car.y - A.y); msg = d < 26 ? 'Stop beside the car to check on the driver' : `🚑 Crash: ${A.r.name}, ${Math.round(d)} m away`; }
             else msg = 'Waiting for race control: no crash right now';
           }
           if (msg) pill(msg, role === 'sc' ? '#ff9f1a' : '#2f7bff', y);

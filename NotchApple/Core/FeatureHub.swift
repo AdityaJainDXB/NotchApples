@@ -77,12 +77,14 @@ enum FeatureHub {
         EventCountdown.shared.check()
         Insights.shared.pingIfDue()
         if s.rainAlert && s.todayEnabled && Entitlements.shared.canUse(.rainAlert) { RainWatcher.shared.checkIfDue() }
+        let meeting = MeetingMode.shared.enabled
         if s.devicesEnabled {
-            PrivacyMonitor.shared.setRunning(s.privacyIndicator)
+            PrivacyMonitor.shared.setRunning(s.privacyIndicator || meeting)
             if s.accessoryBatteryAlert { DeviceBatteryModel.shared.refreshIfDue(every: 600) }
         } else {
-            PrivacyMonitor.shared.setRunning(false)
+            PrivacyMonitor.shared.setRunning(meeting)
         }
+        MeetingMode.shared.refresh()
         NotificationMirror.shared.setRunning(s.alertsEnabled)
         if s.sportsEnabled || s.liveEnabled { ScoresModel.shared.refreshIfDue() }
         if s.f1Enabled { F1Model.shared.refreshIfDue() }

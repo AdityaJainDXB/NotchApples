@@ -169,6 +169,7 @@ final class PrivacyMonitor: ObservableObject {
             cameraInUse = cam
             LiveActivityCenter.shared.recompute()
         }
+        MeetingMode.shared.refresh()
     }
 
     func toggleMute() {

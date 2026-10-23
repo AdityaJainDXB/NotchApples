@@ -20,6 +20,10 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.1.42", date: "23 October 2026", headline: "Meeting mode, and a real crashed car for the Medical Car", items: [
+            "Meeting mode: while you're on a call (the camera is on, or the microphone has been in use for 20 seconds), the notch goes quiet. Music, scores, notification flashes and the hello stay away; volume and brightness still show. Beside the notch you see the camera or microphone (crossed out when you're muted) and the minutes left in the calendar meeting you're in, or how long the call has been going. It ends by itself when the call does. On by default; Settings → Notch Extras.",
+            "Racing, driving the Medical Car: a crashed car now actually stops at the side of the track, smoking, where the crash happened. Drive up and stop beside it to check on the driver; the yellow flag or Virtual Safety Car stays out until you do (or about 2½ minutes pass), then the car is recovered and racing resumes.",
+        ]),
         ReleaseNote(version: "2.1.41", date: "23 October 2026", headline: "Heat warning, keep the notch out of screen shares, Copy as", items: [
             "\"Hot\" beside the notch: when your Mac gets hot enough that macOS starts slowing it down (a long export, a build, a game), a small amber mark shows beside the notch, red when it's critical, and it goes away as the Mac cools. Settings → Notch Extras → Beside the closed notch.",
             "Privacy: a new switch keeps the notch out of screenshots, screen recordings and screen sharing, so a notification, a message or your clipboard in the notch never shows up in a meeting or a video. It's off by default (so your setup screenshots still show the notch).",

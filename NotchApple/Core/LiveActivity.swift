@@ -83,7 +83,10 @@ final class LiveActivityCenter: ObservableObject {
         let allowed: (LiveActivity) -> Bool = { a in
             hidden.isEmpty || !hidden.contains(ActivityKind.of(symbol: a.symbol, dotOnly: a.dotOnly, musicBars: a.musicBars, hasArtwork: a.artwork != nil, hasGauge: a.gauge != nil))
         }
-        if let hud = hudFlash, allowed(hud) {
+        if MeetingMode.shared.active, let meeting = MeetingMode.shared.liveActivity {
+            // Meeting mode: nothing else competes for attention while you are on a call (volume and brightness still show).
+            next = hudFlash ?? meeting
+        } else if let hud = hudFlash, allowed(hud) {
             next = hud
         } else if let flash = chargingFlash, allowed(flash) {
             next = flash

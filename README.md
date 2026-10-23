@@ -72,10 +72,10 @@ Pick your computer. Both buttons start the download straight away. The Mac link 
   </tr>
   <tr>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.1.41</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.1.42</b></a>
     </td>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 2.1.41 BETA</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 2.1.42 BETA</b></a>
     </td>
   </tr>
   <tr>
@@ -233,6 +233,11 @@ All screenshots use sample data.
 ## What's new
 
 > **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is in the repository's history.
+
+### Mac 2.1.42 · Windows 2.1.42 BETA · 23 October 2026 · 🤫 Meeting mode, and a real crashed car for the Medical Car
+
+- Meeting mode: while you're on a call (the camera is on, or the microphone has been in use for 20 seconds), the notch goes quiet. Music, scores, notification flashes and the hello stay away; volume and brightness still show. Beside the notch you see the camera or microphone (crossed out when you're muted) and the minutes left in the calendar meeting you're in, or how long the call has been going. It ends by itself when the call does. On by default; Settings → Notch Extras.
+- Racing, driving the Medical Car: a crashed car now actually stops at the side of the track, smoking, where the crash happened. Drive up and stop beside it to check on the driver; the yellow flag or Virtual Safety Car stays out until you do (or about 2½ minutes pass), then the car is recovered and racing resumes.
 
 ### Mac 2.1.41 · Windows 2.1.41 BETA · 23 October 2026 · 🌡️ Heat warning, keep the notch out of screen shares, Copy as
 
