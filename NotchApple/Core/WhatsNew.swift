@@ -20,6 +20,11 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.1.39", date: "23 October 2026", headline: "Race control, Safety Car and flags; real-terrain runway fixed", items: [
+            "Flying: real terrain fixed. The runway is back (it was hidden under the real ground), and pressing Start while the real ground is still loading now waits for it instead of starting in half-loaded ground. There's also a ↻ Reload terrain button if it ever looks wrong. Heights are measured from the home airfield; land lower than it becomes low ground instead of flooding, and the real sea stays sea.",
+            "Racing: race control with real flags. A yellow flag when a car hits the barrier (no overtaking there), the Virtual Safety Car for a wreck on track (everyone slows to a set pace), the Safety Car for a big crash (a silver GT with an orange light bar leads the pack until the track is clear, then comes in for a green-flag restart), a red flag for a huge crash or several wrecks (everyone stops, then the race restarts), a blue flag when the leader is about to lap you, and the Medical Car parks by the wreck. Overtaking under a flag, or going too fast under the VSC, earns a 5-second penalty.",
+            "Racing: drive for race control. Choose \"You drive: the Safety Car\" to catch the leader and lead the pack when race control calls it, then pit when it's clear; or \"the Medical Car\" to race to every crash and check on the driver. You score points for each job.",
+        ]),
         ReleaseNote(version: "2.1.38", date: "23 October 2026", headline: "Get help without a GitHub account", items: [
             "Get help without a GitHub account: Settings has a \"Get help or report a problem\" link to a new form on the website. No sign-in is needed. Report a problem on Mac or Windows, a flight sim glitch, suggest a feature, ask a question, show your setup, or ask about your licence. Problems and ideas are posted as GitHub issues for you (your email is never shown), questions and setups go to Discussions, and licence questions stay private and are answered by email. GitHub and plain email still work too.",
         ]),

@@ -1535,13 +1535,15 @@
   }
   function realHeight(x, z) {
     const R = REAL; let h = realRaw(x, z);
-    if (h < -4) h = Math.min(h, 0) - 12;                                                           // heights are above sea level: below it (the seabed) is sea
-    else h = Math.max(h, 1);                                                                       // low flat land (salt flats, deltas) stays dry
-    h += (R.home - h) * (1 - smooth(0, 420, flatDist(x, z)));                                      // the home airfield is level, at its real height
+    // Heights are measured from the home airfield (the runways, towns and roads are built at its level). The real sea stays
+    // sea; land lower than the airfield becomes low, dry land just above the water instead of flooding.
+    if (h < -4) h = -12 + Math.max(h, -400) * 0.2;
+    else { h -= R.home; if (h < 0) h = Math.max(0.6, 1.5 + h * 0.06); }
+    h *= smooth(0, 420, flatDist(x, z));                                                            // the home airfield is level, at height 0
     for (const a of AIRFIELDS) {                                                                   // and so is every other airfield
       const rx = Math.max(0, Math.abs(x - a.x) - a.half - 70), rz = Math.max(0, Math.abs(z - a.z) - a.len / 2 - 40), rd = Math.hypot(rx, rz);
       if (rd > 420) continue;
-      const pad = Math.max(3, realRaw(a.x, a.z));
+      const pad = Math.max(3, realRaw(a.x, a.z) - R.home);
       h += (pad - h) * (1 - smooth(20, 420, rd));
     }
     const edge = Math.max(Math.abs(x), Math.abs(z));
@@ -1597,7 +1599,7 @@
     }
     const mpp = (40075016.686 * Math.cos(la)) / (n * 256);
     const R = { lat, lon, mpp, N, H, cx: (fx - tx0) * 256, cy: (fy - ty0) * 256, home: 0 };
-    REAL = R; R.home = Math.max(3, realRaw(0, -700));       // the home airfield sits at the real height of the ground there
+    REAL = R; R.home = Math.max(0, realRaw(0, -700));       // the home airfield sits at the real height of the ground there
     await imgJob;
     return R;
   }
@@ -4734,7 +4736,12 @@
     // Real terrain (an option): the actual ground of the place you picked, loaded from the elevation tiles.
     let realOn = read('realterrain', false), placeAt = read('realat', null);
     /// Moves the game to a place: its landmark, and its real hills and coast when real terrain is on.
+    let realBusy = false, realAfter = null;
     async function applyPlace(reg, at) {
+      realBusy = true;
+      try { await applyPlaceNow(reg, at); } finally { realBusy = false; if (realAfter) { const f = realAfter; realAfter = null; f(); } }
+    }
+    async function applyPlaceNow(reg, at) {
       if (at) { placeAt = at; write('realat', at); }
       const where = placeAt && (placeAt.lat || placeAt.lon) ? placeAt : null;
       if (realOn && where) {
@@ -5174,6 +5181,7 @@
     // ---- starting a flight
     let howOpen = false;
     function start() {
+      if (realBusy && mode.id === 'free') { toast('Loading the real terrain… starting in a moment', 2500); realAfter = () => start(); return; }   // never start in half-loaded ground
       write('howseen_' + mode.id, true); howOpen = false;
       if (mode.id === 'war') { plane = PLANES.find((p) => p.id === (warVeh === 'tank' || warVeh === 'soldier' ? 'f16' : warVeh === 'heli' ? 'ah64' : warVeh)) || PLANES[0]; useBattlefield(warField); }
       else { restorePlane(); useBattlefield(''); }
@@ -9274,6 +9282,7 @@
             <b>${p.name}</b><i>${p.kind}</i>${statBar('Speed', p.max / 300)}${statBar('Agility', p.roll / 4.2)}${statBar('Easy', (p.stability - 1.5) / 1.2)}</div>`).join('')}`).join('')}</div></div>
           <div class="pg-hint" style="margin-top:4px"><b>${plane.name}</b> · ${plane.blurb}</div>
           <h2>2 · Where in the world?</h2><div class="pg-row"><select data-region>${REGIONS.map((x) => `<option value="${x.id}" ${x.id === regionId ? 'selected' : ''}>${x.id ? x.name + ' · ' + x.lm : '🏔️ Home valley'}</option>`).join('')}</select>
+            ${realOn ? '<button data-a="realreload" title="Load the real ground and the imagery again">↻ Reload terrain</button>' : ''}
             <button data-a="realterrain" class="${realOn ? 'pg-on' : ''}" title="Use the real hills, mountains and coast of the place (downloaded elevation tiles)">🛰 Real terrain: ${realOn ? 'On' : 'Off'}</button>
             <button data-a="mine" title="Pick the scenery nearest to where you are">📍 My location</button>
             <input data-place maxlength="40" placeholder="Type a city or country" style="width:150px"><button data-a="goplace">Go</button></div>
@@ -9415,6 +9424,7 @@
         const a = n.dataset.a;
         if (a === 'restart' && mode.id === 'war' && war && screen === 'fly') { paused = false; renderUI(); warQuickRespawn(); root.focus(); }
         else if (a === 'start' || a === 'again' || a === 'restart') onStartPress(a);
+        else if (a === 'realreload') { REAL = null; REAL_IMG = null; const reg = regionOf(regionId); applyPlace(reg, placeAt || (reg.id ? { lat: reg.lat, lon: reg.lon, name: reg.name } : null)).then(() => renderUI()); }
         else if (a === 'realterrain') { realOn = !realOn; write('realterrain', realOn); const reg = regionOf(regionId); applyPlace(reg, placeAt || (reg.id ? { lat: reg.lat, lon: reg.lon, name: reg.name } : null)).then(() => renderUI()); }
         else if (a === 'worldmap') { mapOpen = true; renderUI(); }
         else if (a === 'mapclose') { mapOpen = false; renderUI(); }

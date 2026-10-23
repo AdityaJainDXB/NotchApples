@@ -377,6 +377,11 @@
   /// How far from the edge of the road the solid barriers stand (m).
   const WALL = 7;
   const WHEELBASE = 2.8, CAR_LEN = 4.6, CAR_W = 2.0;
+  /// The race officials' cars: the Safety Car (a fast silver GT with an orange light bar) and the Medical Car.
+  const OFFICIALS = [
+    { id: 'sc', name: 'Safety Car', blurb: 'Lead the field when there is a big crash: catch the leader, hold the pace, and come in when it is clear.', accel: 17, vmax: 72, grip: 19, steer: 0.52, loose: 0.1, brake: 34, color: '#c9ced4', down: 0.08, gears: 7, idle: 900, redline: 7200, cyl: 8, tone: 'v8', tough: 1.6 },
+    { id: 'med', name: 'Medical Car', blurb: 'Race to every crash, check on the driver, and get back out of the way.', accel: 15, vmax: 66, grip: 16, steer: 0.55, loose: 0.1, brake: 30, color: '#f2f2f2', down: 0.03, gears: 7, idle: 900, redline: 6800, cyl: 6, tone: 'gt', tough: 1.6 },
+  ];
   /// What each car looks like (metres): length, width, body bottom and belt line, cabin from c1 (back) to c0 (front) with
   /// sloping screens (ws, bs) up to the roof, wheel sizes and places, and the details that make it that car.
   const CAR_SHAPES = {
@@ -384,6 +389,8 @@
     drift: { len: 4.3, w: 1.8, z0: 0.22, belt: 0.8, c0: 0.45, c1: -1.15, ws: 0.6, bs: 0.35, tuck: 0.25, roof: 1.27, r: 0.33, rBig: 1, fWheel: 0.8, rWheel: 0.8, nose: 0.2, tail: 0.12, ducktail: true },
     muscle: { len: 4.85, w: 1.95, z0: 0.26, belt: 0.86, c0: 0.1, c1: -1.45, ws: 0.6, bs: 0.6, tuck: 0.3, roof: 1.33, r: 0.36, rBig: 1.04, fWheel: 0.9, rWheel: 0.85, nose: 0.1, tail: 0.08, hood: true, stripe: '#111' },
     hatch: { len: 4.05, w: 1.78, z0: 0.24, belt: 0.85, c0: 0.55, c1: -1.75, ws: 0.6, bs: 0.15, tuck: 0.22, roof: 1.46, r: 0.32, rBig: 1, fWheel: 0.72, rWheel: 0.62, nose: 0.25, tail: 0.1, roofBody: true, wing: 1.48, wingCol: null },
+    sc: { len: 4.6, w: 1.98, z0: 0.2, belt: 0.78, c0: 0.5, c1: -1.25, ws: 0.65, bs: 0.45, tuck: 0.32, roof: 1.27, r: 0.35, rBig: 1, fWheel: 0.85, rWheel: 0.85, nose: 0.3, tail: 0.18, splitter: true, wing: 1.12, hood: true, lights: ['#ff9f1a', '#ffd23f'] },
+    med: { len: 4.7, w: 1.9, z0: 0.24, belt: 0.86, c0: 0.6, c1: -1.95, ws: 0.6, bs: 0.12, tuck: 0.2, roof: 1.5, r: 0.34, rBig: 1, fWheel: 0.8, rWheel: 0.7, nose: 0.25, tail: 0.1, roofBody: true, stripe: '#e53935', lights: ['#2f7bff', '#ff2a2a'] },
     gt3: { len: 4.6, w: 2.05, z0: 0.16, belt: 0.74, c0: 0.4, c1: -1.15, ws: 0.6, bs: 0.5, tuck: 0.35, roof: 1.2, r: 0.35, rBig: 1.05, fWheel: 0.85, rWheel: 0.8, nose: 0.3, tail: 0.15, splitter: true, wing: 1.28, hood: true },
     super: { len: 4.6, w: 2.05, z0: 0.14, belt: 0.66, c0: 0.25, c1: -0.95, ws: 0.95, bs: 0.65, tuck: 0.4, roof: 1.12, r: 0.35, rBig: 1.06, fWheel: 0.9, rWheel: 0.85, nose: 0.42, tail: 0.25, splitter: true, wing: 1.0 },
   };
@@ -489,6 +496,7 @@
     if (loc.s < -6 && !T.closed) vt = c.spec.vmax;
     if (inPit) { vt = Math.min(vt, P.limit * 0.92); const bx = st.boxS ?? P.box; if (!st.served && rel > bx - 30 && rel < bx + 2) vt = Math.min(vt, Math.max(0, (bx + 1 - rel) * 0.8)); }      // the limiter, then stop in the box
     const vf = c.vf;
+    if (st.cap != null) vt = Math.min(vt, st.cap);                       // race control: yellow, VSC, Safety Car, red flag
     const throttle = vf < vt ? clamp((vt - vf) / 6, 0.15, 1) : 0;
     const brake = vf > vt * 1.12 ? clamp((vf - vt) / 14, 0.1, 1) : 0;
     if (st.stuck > 1.5) { st.rev = 1.2; st.stuck = 0; }
@@ -556,7 +564,7 @@
   /// Finishers by their time plus any penalty, then everyone else by how far they got.
   function ranking(racers) {
     const ft = (r) => r.finishT + (r.pen || 0);
-    return racers.slice().sort((a, b) => (a.finished && b.finished) ? ft(a) - ft(b) : a.finished ? -1 : b.finished ? 1 : b.prog - a.prog);
+    return racers.filter((r) => !r.official).sort((a, b) => (a.finished && b.finished) ? ft(a) - ft(b) : a.finished ? -1 : b.finished ? 1 : b.prog - a.prog);
   }
 
   /// A solid barrier a little way past the edge of the road. A car that reaches it bounces off, scrapes along it, is twisted
@@ -695,6 +703,7 @@
     let trackId = store.get('track', 'hoval'), carId = store.get('car', 'gt'), lapsSel = store.get('laps', 3), rivals = store.get('rivals', 3), level = store.get('level', 'normal');
     let myName = store.get('name', ''), myId = Math.random().toString(36).slice(2, 8);
     if (!myName) { myName = 'Driver ' + Math.floor(1000 + Math.random() * 9000); store.set('name', myName); }
+    let role = store.get('role', 'race');               // race | sc (drive the Safety Car) | med (drive the Medical Car)
     let viewMode = store.get('view', 'chase');          // top | chase | cockpit
     const hostSound = () => (typeof window.NotchHostSound === 'boolean' ? window.NotchHostSound : null);
     let soundOn = hostSound() ?? store.get('sound', true);
@@ -707,7 +716,7 @@
     /// A track id from a message: a built-in one, one of ours, or a friend's drawn track sent along as a code.
     const resolveTrack = (id, code) => { if (findDef(id)) return id; const d = code && decodeTrack(code); if (d && d.id === id) { tempDefs[id] = d; return id; } return null; };
     if (!findDef(trackId)) trackId = 'hoval';
-    const carSpec = (id) => CARS.find((c) => c.id === id) || CARS[0];
+    const carSpec = (id) => CARS.find((c) => c.id === id) || OFFICIALS.find((c) => c.id === id) || CARS[0];
 
     // ---- state
     let screen = 'menu';                 // menu | lobby | countdown | race | done
@@ -760,6 +769,8 @@
         row('Rivals', ...[0, 1, 3, 5, 7, 9, 11, 15].map(mk)),
         row('Level', ...Object.entries(LEVELS).map(([id, l]) => btn(l.label, id === level ? 'on' : '', () => { level = id; store.set('level', id); showMenu(); }))),
         bestLine(),
+        row('You drive', ...[['race', '🏎️ A race car'], ['sc', '🚓 The Safety Car'], ['med', '🚑 The Medical Car']].map(([id, l]) => btn(l, id === role ? 'on' : '', () => { role = id; store.set('role', id); showMenu(); }))),
+        ...(role !== 'race' ? [hint(role === 'sc' ? 'You are the Safety Car: when race control calls it, catch the leader, lead the pack at a steady pace, then come into the pit lane when it is clear.' : 'You are the Medical Car: when there is a crash, race to it, stop beside the car to check on the driver, then get out of the way.')] : []),
         row('View', ...[['top', 'Top-down'], ['chase', 'Chase'], ['cockpit', 'Cockpit']].map(([id, l]) => btn(l, id === viewMode ? 'on' : '', () => { viewMode = id; store.set('view', id); showMenu(); })), btn(soundOn ? '🔊 Sound' : '🔇 Sound off', '', () => { setSound(!soundOn); showMenu(); }), btn(radioOn ? '📻 Radio' : '📻 Radio off', '', () => { radioOn = !radioOn; store.set('radio', radioOn); if (!radioOn) hush(); showMenu(); })),
         row('', btn('Start race', 'go', () => { backToDesign = false; startLocalRace(); }), btn('✏️ Track designer', '', () => openDesigner(findDef(trackId) && findDef(trackId).custom ? findDef(trackId) : null))),
         row('Online', btn('Create room', '', () => openRoom(true)), (() => { const i = document.createElement('input'); i.placeholder = 'CODE'; i.maxLength = 8; i.id = 'rc-code'; return i; })(), btn('Join', '', () => { const c = NET.normCode(root.querySelector('#rc-code').value); if (!c) { toast('That code is 6 letters and numbers.'); return; } openRoom(false, c); })),
@@ -773,11 +784,13 @@
     // ---- starting a race
     function setupRace(entries, laps) {
       T = getTrack(trackId); raceLaps = T.closed ? laps : 1; T.laps = raceLaps;
-      racers = entries.map((e, slot) => newRacer(e.id, e.name, carSpec(e.car), T, slot, { color: e.color, ai: !!e.ai, remote: !!e.remote, lastMsg: 0 }));
+      racers = entries.map((e, slot) => newRacer(e.id, e.name, carSpec(e.car), T, slot, { color: e.color, ai: !!e.ai, remote: !!e.remote, lastMsg: 0, official: !!e.official }));
       me = racers.find((r) => r.id === myId) || racers[0];
       aiState.clear();
       racers.forEach((r, i) => { if (r.ai) aiState.set(r.id, { idx: -1, lane: ((i % 5) - 2) * 0.35, skill: LEVELS[level].skill * (0.94 + 0.06 * ((i * 7) % 5) / 4), stuck: 0, rev: 0, go: false }); });
       for (const r of racers) { r.car.vx = r.car.vy = 0; progress(r, T, 0); r.lapStart = 0; }
+      raceCtl = { flag: 'green', t: 0, at: null, score: 0, next: 50 + Math.random() * 30, done: 0 };
+      { const P = pitInfo(T), off = racers.find((r) => r.official); if (P && off) { const q = T.S[((Math.round((P.b - 70) / T.step) % T.m) + T.m) % T.m]; off.car.x = q.x + q.nx * P.side * P.lane; off.car.y = q.y + q.ny * P.side * P.lane; off.car.h = Math.atan2(q.ty, q.tx); off.idx = -1; off.inLane = true; off.served = true; } }   // the officials wait at the pit exit
       { const P = pitInfo(T); if (P) racers.forEach((r, i) => { r.boxS = clamp((i - (racers.length - 1) / 2) * 13, P.a + 95, P.b - 95); const st = aiState.get(r.id); if (st) st.boxS = r.boxS; }); }       // every car has its own pit box
       skids = []; clock = 0; cdLeft = 3.2; screen = 'countdown'; ui.replaceChildren(); doneT = 0;
       big.style.fontSize = ''; big.style.top = '';
@@ -785,8 +798,9 @@
     }
     function startLocalRace() {
       T = getTrack(trackId);
-      const entries = [{ id: myId, name: myName, car: carId, color: carSpec(carId).color }];
-      for (let i = 0; i < rivals; i++) entries.push({ id: 'ai' + i, name: AI_NAMES[i % AI_NAMES.length], car: carId === 'f1' || carId === 'gt3' ? carId : CARS[(i + 1) % CARS.length].id, color: AI_COLORS[i % AI_COLORS.length], ai: true });   // F1 and GT3 race their own kind
+      const official = role !== 'race' && getTrack(trackId).closed;
+      const entries = [{ id: myId, name: official ? (role === 'sc' ? 'Safety Car' : 'Medical Car') : myName, car: official ? role : carId, color: carSpec(official ? role : carId).color, official }];
+      for (let i = 0; i < (official ? Math.max(rivals, 7) : rivals); i++) entries.push({ id: 'ai' + i, name: AI_NAMES[i % AI_NAMES.length], car: carId === 'f1' || carId === 'gt3' ? carId : CARS[(i + 1) % CARS.length].id, color: AI_COLORS[i % AI_COLORS.length], ai: true });   // F1 and GT3 race their own kind
       // The player starts at the back of a small field, so there is someone to catch.
       entries.push(entries.shift());
       setupRace(entries, lapsSel);
@@ -989,6 +1003,107 @@
       else if (me && Math.abs(r.prog - me.prog) < 300) say(`Big moment there for ${r.name}!`, 'com', 1);
     }
 
+    // ---- race control: flags, the Virtual Safety Car, the Safety Car and the red flag. Race control watches the crashes:
+    // a car in the barrier brings out the yellow flag; a wreck stopped on track the Virtual Safety Car (everyone slows to a
+    // set pace, no overtaking); a big crash the Safety Car, which leads the pack until the track is clear; a huge one, or
+    // several wrecks, the red flag (everyone stops). Breaking the rules under a flag earns a penalty.
+    let raceCtl = { flag: 'green', t: 0, at: null, score: 0, next: 60, done: 0 };
+    let scR = null, medR = null;
+    const FLAGS = { green: ['GREEN FLAG', '#21c46b'], yellow: ['YELLOW FLAG', '#ffd23f'], vsc: ['VIRTUAL SAFETY CAR', '#ffd23f'], sc: ['SAFETY CAR', '#ffd23f'], red: ['RED FLAG', '#e53935'] };
+    const RANK = { green: 0, yellow: 1, vsc: 2, sc: 3, red: 4 };
+    function setFlag(flag, why) {
+      raceCtl.flag = flag; raceCtl.t = 0; raceCtl.warned = false;
+      big.style.fontSize = '22px'; big.style.top = '14%'; big.textContent = (flag === 'green' ? '🟢 ' : flag === 'red' ? '🟥 ' : '🟨 ') + FLAGS[flag][0]; clearTimeout(toastT); toastT = setTimeout(() => { big.textContent = ''; big.style.fontSize = ''; big.style.top = ''; }, 2600);
+      const lines = { green: ['Green flag, green flag. Racing resumes!', 'com'], yellow: [`Yellow flag${why ? ', ' + why : ''}. No overtaking there.`, 'eng'], vsc: ['Virtual Safety Car. Slow down, keep to the delta, no overtaking.', 'eng'], sc: ['Safety car, safety car. Close up behind the car in front, no overtaking.', 'eng'], red: ['Red flag, red flag! The race is stopped.', 'com'] };
+      say(...lines[flag], 2);
+    }
+    /// A crash was reported: decide which flag it needs (only ever making things more serious, never less).
+    function incident(r, speed) {
+      if (screen !== 'race' || r.official) return;
+      const wrecks = racers.filter((x) => !x.official && !x.finished && x.car.dmg >= 0.9).length;
+      const want = speed > 42 || wrecks >= 4 ? 'red' : speed > 28 || wrecks >= 2 ? 'sc' : r.car.dmg >= 0.9 ? 'vsc' : 'yellow';
+      raceCtl.at = { x: r.car.x, y: r.car.y, s: r.sNow || 0, r, checked: false };
+      if (RANK[want] > RANK[raceCtl.flag]) setFlag(want, `${r.name} has crashed`);
+    }
+    /// Every step of the race: the flag's clock, the pace each car may go, and the rules for the player.
+    function raceTick(dt) {
+      if (screen !== 'race') return;
+      const C = raceCtl; C.t += dt;
+      const field = racers.filter((r) => !r.official && !r.finished), order = ranking(racers).filter((r) => !r.finished);
+      // As an official, the race throws up an incident now and then (otherwise you would wait all day).
+      if (role !== 'race' && C.flag === 'green' && clock > C.next) {
+        const vic = field.filter((r) => r.ai && r.lap >= 0)[Math.floor(Math.random() * field.length)];
+        if (vic) { vic.car.dmg = 0.95; vic.car.vx *= 0.15; vic.car.vy *= 0.15; vic.car.spin += 2.5; crash(vic, vic.car.x, vic.car.y, 30, '#d8d8d8'); incident(vic, Math.random() < 0.6 ? 30 : 22); }
+        C.next = clock + 70 + Math.random() * 50;
+      }
+      // When each flag ends.
+      if (C.flag === 'yellow' && C.t > 12) setFlag('green');
+      if (C.flag === 'vsc' && C.t > 20) setFlag('green');
+      if (C.flag === 'red' && C.t > 9) { for (const r of field) { r.car.dmg = Math.min(r.car.dmg, 0.5); } setFlag('green'); }        // repaired in the stoppage, restart
+      if (C.flag === 'sc') {
+        const lead = order[0];
+        if (role !== 'sc' && !scR && lead) {       // the Safety Car comes out just ahead of the leader
+          const i = ((lead.idx + Math.round(90 / T.step)) % T.m + T.m) % T.m, q = T.S[i];
+          scR = newRacer('sc-car', 'Safety Car', OFFICIALS[0], T, 0, { official: true, ai: true, color: OFFICIALS[0].color });
+          Object.assign(scR.car, { x: q.x, y: q.y, h: Math.atan2(q.ty, q.tx), vx: q.tx * 25, vy: q.ty * 25 });
+          racers.push(scR); aiState.set(scR.id, { idx: -1, lane: 0, skill: 0.9, stuck: 0, rev: 0, go: true, cap: 30 });
+        }
+        const sc = role === 'sc' ? me : scR;
+        if (sc && !sc.inLane) C.scOut = true;
+        if (sc && C.t > 50 && !sc.inLane) {
+          if (!C.inWarned) { C.inWarned = true; say('Safety car in this lap.', 'eng', 2); toast(role === 'sc' ? '🚓 Clear! Come into the pit lane this lap' : 'Safety car in this lap'); }
+          if (role !== 'sc') { const st = aiState.get(scR.id); st.pitting = true; st.served = true; }
+        }
+        if (sc && C.t > 50 && sc.inLane && C.scOut) {
+          if (role === 'sc') { C.score += 150; C.done++; toast(`🚓 Safety Car period done: +150 · ${C.score} points`); }
+          setFlag('green'); C.inWarned = false; C.scOut = false;
+        }
+        if (C.t > 120) { setFlag('green'); C.inWarned = false; C.scOut = false; }        // never stuck under the Safety Car
+      }
+      if (C.flag !== 'sc' && scR && (scR.inLane || C.flag === 'green')) { racers = racers.filter((r) => r !== scR); aiState.delete(scR.id); scR = null; }
+      // The Medical Car (driven by the computer unless you are driving it) parks by the wreck for a while.
+      if (role !== 'med') {
+        if ((C.flag === 'sc' || C.flag === 'red' || C.flag === 'vsc') && C.at && !medR && !C.at.checked) {
+          const i = ((locate(T, C.at.x, C.at.y).idx - Math.round(14 / T.step)) % T.m + T.m) % T.m, q = T.S[i], o = T.width / 2 - 3;
+          medR = newRacer('med-car', 'Medical Car', OFFICIALS[1], T, 0, { official: true, color: OFFICIALS[1].color, parked: 10 });
+          Object.assign(medR.car, { x: q.x + q.nx * o, y: q.y + q.ny * o, h: Math.atan2(q.ty, q.tx) }); racers.push(medR);
+        }
+        if (medR && (medR.parked -= dt) <= 0) { racers = racers.filter((r) => r !== medR); medR = null; if (C.at) C.at.checked = true; }
+      } else if (C.at && !C.at.checked && C.flag !== 'green') {
+        const d = Math.hypot(me.car.x - C.at.x, me.car.y - C.at.y), v = Math.hypot(me.car.vx, me.car.vy);
+        if (d < 16 && v < 3) { C.at.checked = true; C.done++; const pts = Math.max(50, Math.round(300 - C.t * 6)); C.score += pts; C.at.r.car.dmg = Math.min(C.at.r.car.dmg, 0.6); toast(`🚑 Driver checked, all OK: +${pts} · ${C.score} points`); say('The driver is OK. Good work, medical car.', 'com', 2); }
+      }
+      // How fast each computer car may go under the flag.
+      const sc = role === 'sc' ? me : scR, scS = sc ? sc.prog : 0;
+      order.forEach((r, k) => {
+        const st = aiState.get(r.id); if (!st) return;
+        const vmax = r.car.spec.vmax, ahead = k > 0 ? order[k - 1] : null, gap = ahead ? ahead.prog - r.prog : 1e9;
+        let cap = null;
+        if (C.flag === 'red') cap = 0;
+        else if (C.flag === 'vsc') cap = vmax * 0.45;
+        else if (C.flag === 'sc') { cap = vmax * 0.62; if (k === 0 && sc && scS - r.prog > 0 && scS - r.prog < 160) cap = Math.max(8, Math.hypot(sc.car.vx, sc.car.vy) * (scS - r.prog > 30 ? 1.05 : 0.9)); }
+        else if (C.flag === 'yellow' && C.at && Math.abs(relDist(r.sNow || 0, C.at.s)) < 160) cap = vmax * 0.6;
+        if (cap != null && C.flag !== 'red' && ahead && gap < 22) cap = Math.min(cap, Math.hypot(ahead.car.vx, ahead.car.vy) * (gap < 12 ? 0.85 : 1));    // no overtaking: stay behind
+        st.cap = cap;
+      });
+      if (scR) { const st = aiState.get(scR.id); if (st && !st.pitting) st.cap = 30; }
+      // The rules for you (in a race car): no overtaking under a flag, and keep to the VSC pace.
+      if (role === 'race' && me && !me.finished) {
+        const myRank = order.indexOf(me), v = Math.hypot(me.car.vx, me.car.vy);
+        if (C.flag !== 'green' && C.flag !== 'red' && me.lastRank != null && myRank >= 0 && myRank < me.lastRank && !me.inLane) {
+          const passed = order[myRank + 1];
+          const zone = C.flag !== 'yellow' || (C.at && Math.abs(relDist(me.sNow || 0, C.at.s)) < 160);
+          if (passed && zone && !passed.inLane && passed.car.dmg < 0.9 && (!me.flagPenT || clock - me.flagPenT > 8)) { me.flagPenT = clock; penalize(me, 5, C.flag === 'yellow' ? 'overtaking under yellow flags' : C.flag === 'vsc' ? 'overtaking under the Virtual Safety Car' : 'overtaking behind the Safety Car'); }
+        }
+        if (C.flag === 'vsc') { if (v > me.car.spec.vmax * 0.45 * 1.12) me.vscOver = (me.vscOver || 0) + dt; if (me.vscOver > 2.5 && !me.vscPen) { me.vscPen = true; penalize(me, 5, 'going too fast under the Virtual Safety Car'); } } else { me.vscOver = 0; me.vscPen = false; }
+        if (C.flag === 'red' && C.t > 4 && v > 6 && !C.warned) { C.warned = true; toast('🟥 RED FLAG: slow down and stop'); }
+        me.lastRank = myRank;
+      }
+      // A blue flag when the leader is about to lap you.
+      if (me && !me.official) { const lap = order.find((r) => r !== me && r.prog - me.prog > T.length * 0.85 && Math.hypot(r.car.x - me.car.x, r.car.y - me.car.y) < 70); me.blue = !!lap; }
+    }
+    const relDist = (s1, s2) => { const L = T.length; let d = ((s1 - s2) % L + L) % L; if (d > L / 2) d -= L; return d; };
+
     // ---- the stewards (FIA style): time penalties are added to a driver's race time at the end.
     function penalize(r, sec, why) {
       r.pen = (r.pen || 0) + sec; r.penWhy = why;
@@ -1017,6 +1132,7 @@
       const near = me && Math.hypot(me.car.x - x, me.car.y - y);
       if (r === me) shake = Math.max(shake, clamp(speed / 22, 0.2, 1.4));
       radioCrash(r, speed);
+      if (speed > 16 || r.car.dmg >= 0.9) incident(r, speed);
       if (near != null && near < 140) crashSound(power * (r === me ? 1 : clamp(1 - near / 140, 0.1, 0.6)));
       if (parts.length > 900) parts.splice(0, parts.length - 900);
     }
@@ -1048,6 +1164,7 @@
       }
       if (screen !== 'race' && screen !== 'done') return;
       clock += dt;
+      raceTick(dt);
       for (const r of racers) {
         const c = r.car;
         if (r.remote) {
@@ -1059,6 +1176,7 @@
           }
           continue;
         }
+        if (r.parked != null) { c.vx = c.vy = 0; continue; }       // the Medical Car stands by the wreck
         let inp;
         if (r.ai) { const st = aiState.get(r.id); if (r.finished) st.skill = 0.4; inp = driveAI(T, c, st, dt); }       // after the flag a driver cruises round
         else if (screen === 'done' || r.finished) inp = { throttle: 0, brake: 0.6, steer: 0, hand: 0 };
@@ -1125,6 +1243,7 @@
       if (remoteSmoke(dt)) { /* smoke from friends' damaged cars */ }
       for (const r of racers) {
         if (r.remote) continue;
+        if (r.official) { const l = locate(T, r.car.x, r.car.y, r.idx); r.idx = l.idx; r.lat = l.lat; r.sNow = T.closed ? ((l.s % T.length) + T.length) % T.length : l.s; r.prog = r.sNow + Math.max(0, ...racers.filter((x) => !x.official).map((x) => Math.floor(x.prog / T.length))) * T.length; continue; }
         const was = r.finished;
         progress(r, T, clock);
         if (r.finished && !was && net) net.link.send({ t: 'fin', id: myId, ft: Math.round(r.finishT * 100) / 100, pn: r.pen || 0 });
@@ -1133,7 +1252,8 @@
       radioTick();
       if (me && me.car.shifted !== lastShift) { lastShift = me.car.shifted; paddle = 0.18; }
       if (net && screen === 'race' && me) { net.sendAcc = (net.sendAcc || 0) + dt; if (net.sendAcc > 0.1) { net.sendAcc = 0; net.link.send(NET.packState(myId, me)); } }
-      if (screen === 'race' && racers.every((r) => r.finished) || (screen === 'race' && me && me.finished && racers.filter((r) => !r.remote && !r.ai).every((r) => r.finished) && clock - me.finishT > 6 && !net)) showResults();
+      const racing = racers.filter((r) => !r.official);
+      if (screen === 'race' && racing.length && racing.every((r) => r.finished) || (screen === 'race' && me && me.finished && racing.filter((r) => !r.remote && !r.ai).every((r) => r.finished) && clock - me.finishT > 6 && !net)) showResults();
       if (screen === 'race' && net && me && me.finished && clock - me.finishT > 14) showResults();
       if (screen === 'race' && me && me.finished && !net && clock - me.finishT > 2.5) showResults();
     }
@@ -1149,6 +1269,7 @@
       if (screen === 'done') return;
       screen = 'done'; doneT = clock; big.textContent = '';
       const order = ranking(racers), tbl = document.createElement('table'); tbl.className = 'rc-tbl';
+      if (me && me.official) { card(head(role === 'sc' ? `🚓 Safety Car: ${raceCtl.score} points` : `🚑 Medical Car: ${raceCtl.score} points`), hint(`${raceCtl.done} ${role === 'sc' ? 'Safety Car period' : 'rescue'}${raceCtl.done === 1 ? '' : 's'} handled. Thank you, race control!`), row('', btn('Again', 'go', startLocalRace), btn('Menu', '', () => { closeNet(); showMenu(); }))); screen = 'done'; doneT = clock; big.textContent = ''; return; }
       order.forEach((r, i) => { const tr = tbl.insertRow(); tr.className = r === me ? 'me' : ''; tr.insertCell().textContent = String(i + 1); tr.insertCell().textContent = r.name; tr.insertCell().textContent = r.finished ? fmt(r.finishT + (r.pen || 0)) + (r.pen ? ` (incl. +${r.pen}s)` : '') : 'DNF'; tr.insertCell().textContent = r.bestLap ? 'best lap ' + fmt(r.bestLap) : ''; });
       const mePos = order.indexOf(me) + 1;
       card(head(mePos === 1 ? '🏆 You won!' : `You finished ${mePos}${['st', 'nd', 'rd'][mePos - 1] || 'th'}`), tbl,
@@ -1235,7 +1356,7 @@
       g.textAlign = 'left'; g.fillStyle = 'rgba(8,12,22,.6)';
       g.beginPath(); g.roundRect(8 * s, 8 * s, 138 * s, 64 * s, 8 * s); g.fill();
       g.fillStyle = '#fff'; g.font = `800 ${24 * s}px system-ui`;
-      g.fillText(`${pos}`, 16 * s, 40 * s); const pw = g.measureText(`${pos}`).width; g.font = `600 ${11 * s}px system-ui`; g.fillStyle = 'rgba(255,255,255,.7)'; g.fillText(`/ ${racers.length}`, 16 * s + pw + 4 * s, 40 * s);
+      const posTxt = me.official ? (role === 'sc' ? '🚓' : '🚑') : `${pos}`; g.fillText(posTxt, 16 * s, 40 * s); const pw = g.measureText(posTxt).width; g.font = `600 ${11 * s}px system-ui`; g.fillStyle = 'rgba(255,255,255,.7)'; g.fillText(me.official ? `${raceCtl.score} pts` : `/ ${racers.filter((r) => !r.official).length}`, 16 * s + pw + 4 * s, 40 * s);
       g.fillStyle = '#fff'; g.font = `700 ${12 * s}px system-ui`;
       g.fillText(T.closed ? `Lap ${clamp(me.lap + 1, 1, raceLaps)}/${raceLaps}` : `${Math.round(clamp(me.prog, 0, T.length))} / ${Math.round(T.length)} m`, 16 * s, 58 * s);
       g.textAlign = 'right'; g.font = `700 ${13 * s}px system-ui`; g.fillText(screen === 'countdown' ? '0:00.00' : fmt(me.finished ? me.finishT : clock), 138 * s, 28 * s);
@@ -1261,6 +1382,28 @@
         if (me.pen) { g.fillStyle = '#ff4d4d'; g.textAlign = 'left'; g.fillText(`+${me.pen}s PENALTY`, 16 * s, 100 * s); g.textAlign = 'center'; }
         g.textAlign = 'left'; g.font = `700 ${10 * s}px system-ui`; g.fillStyle = wear > 0.7 ? '#ff4d4d' : wear > 0.45 ? '#ffd166' : 'rgba(255,255,255,.75)';
         g.fillText(`TYRES ${Math.round((1 - wear) * 100)}%${me.tl ? ` · TRACK LIMITS ${Math.min(me.tl, 3)}/3` : ''}`, 16 * s, 114 * s);
+      }
+      // Race control: the flag that is out, the blue flag, and what to do when you drive for race control.
+      if (screen === 'race') {
+        const C = raceCtl, pill = (txt, col, y) => { g.font = `900 ${12 * s}px system-ui`; const tw = g.measureText(txt).width; g.fillStyle = 'rgba(8,12,22,.75)'; g.beginPath(); g.roundRect(W / 2 - tw / 2 - 22 * s, y - 14 * s, tw + 34 * s, 20 * s, 10 * s); g.fill(); g.fillStyle = col; g.fillRect(W / 2 - tw / 2 - 16 * s, y - 9 * s, 9 * s, 10 * s); g.fillStyle = '#fff'; g.textAlign = 'center'; g.fillText(txt, W / 2 + 6 * s, y); };
+        let y = H - 76 * s;
+        if (C.flag !== 'green') { pill(C.flag === 'yellow' ? 'YELLOW FLAG · NO OVERTAKING' : C.flag === 'vsc' ? `VIRTUAL SAFETY CAR · MAX ${Math.round(me.car.spec.vmax * 0.45 * KMH)} km/h` : C.flag === 'sc' ? 'SAFETY CAR · NO OVERTAKING' : 'RED FLAG · STOP', FLAGS[C.flag][1], y); y -= 24 * s; }
+        if (me.blue) { pill('BLUE FLAG · LET THE LEADER THROUGH', '#2f7bff', y); y -= 24 * s; }
+        if (me.official) {
+          const lead = ranking(racers).find((r) => !r.finished);
+          let msg = '';
+          if (role === 'sc') {
+            if (C.flag !== 'sc') msg = me.inLane ? 'Waiting at the pit exit for race control' : 'No Safety Car needed: come back to the pit lane';
+            else if (C.t > 50) msg = 'Track clear: into the pit lane this lap';
+            else if (me.inLane) msg = 'Go! Out of the pit lane and catch the leader';
+            else if (lead) { const gap = relDist(me.sNow || 0, lead.sNow || 0); msg = gap < 0 ? `Catch the leader: ${Math.round(-gap)} m behind` : gap > 160 ? 'Too far ahead: slow and let the pack close up' : `Leading the pack: hold about ${Math.round(30 * KMH)} km/h`; }
+          } else {
+            const A = C.at;
+            if (A && !A.checked && C.flag !== 'green') { const d = Math.hypot(me.car.x - A.x, me.car.y - A.y); msg = d < 16 ? 'Stop beside the car to check on the driver' : `🚑 Crash: ${A.r.name}, ${Math.round(d)} m away`; }
+            else msg = 'Waiting for race control: no crash right now';
+          }
+          if (msg) pill(msg, role === 'sc' ? '#ff9f1a' : '#2f7bff', y);
+        }
       }
       if (me.car.onGrass) { g.fillStyle = '#ff9f43'; g.font = `800 ${12 * s}px system-ui`; g.textAlign = 'center'; g.fillText('OFF TRACK', W / 2, viewMode === 'cockpit' ? H * 0.2 : 24 * s); }
       if (me.car.hit > 0.6 && viewMode !== 'top') { g.fillStyle = `rgba(255,40,40,${(me.car.hit - 0.6) * 0.3})`; g.fillRect(0, 0, W, H); }
@@ -1382,6 +1525,7 @@
             for (const sv of [-0.55, 0.55]) solid([[wu + 0.08, sv - 0.04], [wu + 0.08, sv + 0.04], [wu - 0.08, sv + 0.04], [wu - 0.08, sv - 0.04]], zt, wz, '#151515');
             solid([[wu + 0.25, -Wd + 0.05], [wu + 0.25, Wd - 0.05], [wu - 0.2, Wd - 0.05], [wu - 0.2, -Wd + 0.05]], wz, wz + 0.06, P.wingCol || '#151515');
           }
+          if (P.lights) { const on = (Math.floor(performance.now() / 160) % 2) === 0; solid([[0.15, -0.55], [0.15, 0.55], [-0.15, 0.55], [-0.15, -0.55]], P.roof, P.roof + 0.12, '#222'); solid([[0.12, -0.5], [0.12, -0.05], [-0.12, -0.05], [-0.12, -0.5]], P.roof + 0.12, P.roof + 0.2, on ? P.lights[0] : '#333'); solid([[0.12, 0.05], [0.12, 0.5], [-0.12, 0.5], [-0.12, 0.05]], P.roof + 0.12, P.roof + 0.2, on ? '#333' : P.lights[1]); }    // the light bar
           if (P.ducktail) solid([[-L + 0.35, -Wd + 0.2], [-L + 0.35, Wd - 0.2], [-L + 0.05, Wd - 0.2], [-L + 0.05, -Wd + 0.2]], zt, zt + 0.12, body);
           if (P.stripe) solid([[L - 0.55, -0.18], [L - 0.55, 0.18], [c0 + 0.3, 0.18], [c0 + 0.3, -0.18]], zt + (P.hood ? 0.081 : 0.002), zt + (P.hood ? 0.09 : 0.012), P.stripe);
           for (const f of F) f.d = f.v.reduce((m, p) => m + p[0], 0) / f.v.length;
@@ -1458,7 +1602,7 @@
       const ps = parts.map((p) => ({ p, c: cam(p.x, p.y, p.z) })).filter((o) => o.c[0] > (o.p.k === 'smoke' ? 4 : NEAR) && o.c[0] < 300).sort((a, b) => b.c[0] - a.c[0]);
       for (const { p, c: pc } of ps) {
         const [sx, sy] = scr(pc), u = Math.min(F / pc[0], H * 0.12);
-        if (p.k === 'smoke') { const v = p.dark * 255 | 0; g.fillStyle = p.dust ? `rgba(150,120,80,${clamp(p.life, 0, 1) * 0.35})` : `rgba(${v},${v},${v},${clamp(p.life, 0, 1) * 0.42})`; g.beginPath(); g.arc(sx, sy, p.size * u, 0, 7); g.fill(); }
+        if (p.k === 'smoke') { const v = p.dark * 255 | 0, near = clamp((pc[0] - 4) / 14, 0, 1); g.fillStyle = p.dust ? `rgba(150,120,80,${clamp(p.life, 0, 1) * 0.35 * near})` : `rgba(${v},${v},${v},${clamp(p.life, 0, 1) * 0.42 * near})`; g.beginPath(); g.arc(sx, sy, Math.min(p.size * u, H * 0.08), 0, 7); g.fill(); }      // smoke right by the camera fades out instead of filling the screen
         else if (p.k === 'fire') { g.fillStyle = `rgba(255,${120 + Math.random() * 110 | 0},30,${clamp(p.life * 2, 0, 1)})`; g.beginPath(); g.arc(sx, sy, p.size * u, 0, 7); g.fill(); }
         else if (p.k === 'spark') { g.fillStyle = '#ffe08a'; const z = Math.max(1.5, 0.25 * u); g.fillRect(sx - z / 2, sy - z / 2, z, z); }
         else { g.save(); g.translate(sx, sy); g.rotate(p.rot); g.fillStyle = p.col; g.fillRect(-p.size * u / 2, -p.size * u / 3, p.size * u, p.size * u * 0.66); g.restore(); }
@@ -1701,7 +1845,7 @@
 
     const api = {
       key, suspend() { suspended = true; keys.clear(); audioKill(); hush(); }, resume() { suspended = false; last = performance.now(); }, setSoundEnabled(on) { setSound(on); },
-      _state: () => ({ screen, racers, me, T, clock, net }),
+      _state: () => ({ screen, racers, me, T, clock, net, raceCtl, force: (i, sp) => { const r = racers.filter((x) => x.ai && !x.official)[i]; r.car.dmg = 0.95; incident(r, sp); return r.name; } }),
     };
     window.NotchRaceGame.current = api;
     return function stop() {

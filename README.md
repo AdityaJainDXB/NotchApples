@@ -72,10 +72,10 @@ Pick your computer. Both buttons start the download straight away. The Mac link 
   </tr>
   <tr>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.1.38</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.1.39</b></a>
     </td>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 2.1.38 BETA</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 2.1.39 BETA</b></a>
     </td>
   </tr>
   <tr>
@@ -233,6 +233,12 @@ All screenshots use sample data.
 ## What's new
 
 > **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is in the repository's history.
+
+### Mac 2.1.39 · Windows 2.1.39 BETA · 23 October 2026 · 🚓 Race control, Safety Car and flags; real-terrain runway fixed
+
+- Flying: real terrain fixed. The runway is back (it was hidden under the real ground), and pressing Start while the real ground is still loading now waits for it instead of starting in half-loaded ground. There's also a ↻ Reload terrain button if it ever looks wrong. Heights are measured from the home airfield; land lower than it becomes low ground instead of flooding, and the real sea stays sea.
+- Racing: race control with real flags. A yellow flag when a car hits the barrier (no overtaking there), the Virtual Safety Car for a wreck on track (everyone slows to a set pace), the Safety Car for a big crash (a silver GT with an orange light bar leads the pack until the track is clear, then comes in for a green-flag restart), a red flag for a huge crash or several wrecks (everyone stops, then the race restarts), a blue flag when the leader is about to lap you, and the Medical Car parks by the wreck. Overtaking under a flag, or going too fast under the VSC, earns a 5-second penalty.
+- Racing: drive for race control. Choose "You drive: the Safety Car" to catch the leader and lead the pack when race control calls it, then pit when it's clear; or "the Medical Car" to race to every crash and check on the driver. You score points for each job.
 
 ### Mac 2.1.38 · Windows 2.1.38 BETA · 23 October 2026 · 🙋 Get help without a GitHub account
 
