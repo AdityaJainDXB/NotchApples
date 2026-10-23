@@ -772,3 +772,22 @@ console.log(`\n${passed} passed. Wrote test/fixture.json for the Swift tests.`);
   });
   globalThis.fetch = ltcFetch;
 }
+
+await test('support without a GitHub account: a public report becomes an issue with its labels, a private one only goes to the inbox, bots are refused', async () => {
+  const posts = []; const prevFetch = globalThis.fetch;
+  globalThis.fetch = async (url, init) => { if (String(url).startsWith('https://api.github.com/')) { posts.push({ url: String(url), body: JSON.parse(init.body) }); return new Response(JSON.stringify({ html_url: 'https://github.com/AdityaJainDXB/NotchApples/issues/99', number: 99 }), { status: 201 }); } return prevFetch(url, init); };
+  env.GITHUB_TOKEN = 'test'; mails.length = 0;
+  const r = await call('/support', { kind: 'mac', title: 'Notch flickers', text: 'It flickers when I open Safari full screen.', email: 'user@example.com', version: '2.1.37', system: 'macOS 26', t: Date.now() - 20000 });
+  assert.equal(r.url, 'https://github.com/AdityaJainDXB/NotchApples/issues/99');
+  assert.deepEqual(posts[0].body.labels, ['bug', 'mac', 'from-website']); assert.match(posts[0].body.title, /^\[Mac\] Notch flickers/);
+  assert.ok(!posts[0].body.body.includes('user@example.com'), 'the email is never published');
+  assert.ok(mails.some((m) => m.to === 'user@example.com') && mails.some((m) => m.to === 'notchapple.support@gmail.com'), 'the sender gets a receipt and the inbox a copy');
+  posts.length = 0; mails.length = 0;
+  const p = await call('/support', { kind: 'support', title: 'Key not working', text: 'My Pro key says invalid after I moved Macs.', email: 'buyer@example.com', t: Date.now() - 20000 });
+  assert.equal(p.url, null); assert.equal(posts.length, 0, 'licence questions are never posted publicly'); assert.ok(mails.some((m) => m.to === 'notchapple.support@gmail.com' && m.text.includes('buyer@example.com')));
+  assert.equal((await call('/support', { kind: 'support', title: 'Key not working', text: 'No email given here at all.', t: Date.now() - 20000 })).status, 400, 'a private question needs an email');
+  assert.equal((await call('/support', { kind: 'mac', title: 'x', text: 'short', t: Date.now() - 20000 })).status, 400);
+  const bot = await call('/support', { kind: 'mac', title: 'Buy cheap pills', text: 'spam spam spam spam spam', website: 'http://spam', t: Date.now() - 20000 });
+  assert.equal(bot.url, null); assert.equal(posts.length, 0, 'the trap field stops bots');
+  delete env.GITHUB_TOKEN; globalThis.fetch = prevFetch;
+});

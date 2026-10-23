@@ -1,5 +1,7 @@
 # Getting help with Notch Apple
 
+No GitHub account? Use the **[form on the website](https://adityajaindxb.github.io/NotchApples/support.html)**: no sign-in, it covers everything below, and it is posted here for you (licence and payment questions stay private). If nothing else works, email notchapple.support@gmail.com.
+
 | I want to... | Go here |
 |---|---|
 | Report something broken | [New issue](https://github.com/AdityaJainDXB/NotchApples/issues/new/choose), pick Mac, Windows or Flight simulator |

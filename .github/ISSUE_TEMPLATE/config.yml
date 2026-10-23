@@ -1,5 +1,8 @@
 blank_issues_enabled: false
 contact_links:
+  - name: No GitHub account? Use the form on the website
+    url: https://adityajaindxb.github.io/NotchApples/support.html
+    about: Report a problem, suggest a feature, ask or show your setup without signing in. It is posted here for you.
   - name: Ask a question or chat
     url: https://github.com/AdityaJainDXB/NotchApples/discussions/categories/q-a
     about: How do I...? Questions are answered fastest in Discussions.

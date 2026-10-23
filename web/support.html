@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Get help and send ideas | Notch Apple</title>
+<meta name="description" content="Report a problem, suggest a feature, ask a question or show your setup. No account or sign-in needed.">
+<link rel="canonical" href="https://adityajaindxb.github.io/NotchApples/support.html">
+<style>
+:root{color-scheme:dark;--bg:#09080d;--panel:#13111a;--line:rgba(255,255,255,.09);--tx:#f3f1f8;--mut:#a7a2b5;--ac:#9b7bff;--ok:#6ee7a8;--warn:#ffd28a}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.6 -apple-system,BlinkMacSystemFont,system-ui,sans-serif;padding:clamp(24px,5vw,64px) 16px}
+main{max-width:46rem;margin:0 auto}
+a{color:#cdbfff}
+h1{font-size:clamp(28px,5vw,40px);line-height:1.1;letter-spacing:-.03em;margin:0 0 12px;text-wrap:balance}
+h2{font-size:18px;margin:28px 0 10px;letter-spacing:-.01em}
+p.lede{color:var(--mut);margin:0 0 24px;max-width:62ch;text-wrap:pretty}
+.ways{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:0 0 8px}
+.way{background:var(--panel);box-shadow:inset 0 0 0 1px var(--line);border-radius:14px;padding:12px 14px;font-size:14px;color:var(--mut)}
+.way b{display:block;color:var(--tx);font-size:15px;margin-bottom:2px}
+.way.best{box-shadow:inset 0 0 0 1px rgba(155,123,255,.6)}
+.kinds{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:0 0 18px}
+.kind{all:unset;cursor:pointer;background:var(--panel);box-shadow:inset 0 0 0 1px var(--line);border-radius:12px;padding:10px 12px;font-size:14px;line-height:1.35;transition:box-shadow .15s,background .15s}
+.kind span{display:block;font-size:20px;margin-bottom:2px}
+.kind:hover{background:#1a1724}
+.kind[aria-pressed="true"]{box-shadow:inset 0 0 0 2px var(--ac);background:#1c1730}
+.kind:focus-visible{outline:2px solid var(--ac);outline-offset:2px}
+form{background:var(--panel);box-shadow:inset 0 0 0 1px var(--line);border-radius:16px;padding:18px}
+label{display:block;font-size:14px;color:var(--mut);margin:12px 0 4px}
+input,textarea,select{width:100%;font:inherit;color:var(--tx);background:#0d0c13;border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+textarea{min-height:150px;resize:vertical}
+input:focus,textarea:focus,select:focus{outline:2px solid var(--ac);outline-offset:0;border-color:transparent}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.hint{font-size:13px;color:var(--mut);margin:4px 0 0}
+button.send{margin-top:16px;font:inherit;font-weight:700;color:#fff;background:#6a4ad8;border:0;border-radius:12px;padding:11px 20px;cursor:pointer}
+button.send:disabled{opacity:.55;cursor:wait}
+.msg{margin-top:14px;padding:12px 14px;border-radius:12px;font-size:15px}
+.msg.ok{background:rgba(110,231,168,.1);color:var(--ok)}
+.msg.err{background:rgba(255,210,138,.1);color:var(--warn)}
+.trap{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
+small{color:var(--mut)}
+@media (max-width:640px){.ways{grid-template-columns:1fr}.kinds{grid-template-columns:repeat(2,1fr)}.row{grid-template-columns:1fr}}
+@media (prefers-reduced-motion:reduce){.kind{transition:none}}
+</style>
+<link rel="stylesheet" href="assets/feel.css">
+</head>
+<body>
+<main>
+  <p><a href="index.html">&larr; Notch Apple</a></p>
+  <h1>Get help, report a problem, send an idea</h1>
+  <p class="lede">You don't need a GitHub account. Fill in the form below and it goes straight to the people who build Notch Apple. Problems and ideas are posted as public issues so everyone can follow them; licence and payment questions stay private.</p>
+
+  <div class="ways">
+    <div class="way best"><b>1 · This form</b>No sign-in. Leave your email if you want an answer by email.</div>
+    <div class="way"><b>2 · GitHub</b>Have an account? <a href="https://github.com/AdityaJainDXB/NotchApples/issues/new/choose" target="_blank" rel="noopener">Open an issue</a> or <a href="https://github.com/AdityaJainDXB/NotchApples/discussions" target="_blank" rel="noopener">join a discussion</a>.</div>
+    <div class="way"><b>3 · Email</b>If nothing else works: <a href="mailto:notchapple.support@gmail.com">notchapple.support@gmail.com</a></div>
+  </div>
+
+  <h2>What is it about?</h2>
+  <div class="kinds" role="group" aria-label="What is it about">
+    <button class="kind" data-kind="mac" aria-pressed="false"><span>🍎</span>Problem on Mac</button>
+    <button class="kind" data-kind="windows" aria-pressed="false"><span>🪟</span>Problem on Windows</button>
+    <button class="kind" data-kind="feature" aria-pressed="false"><span>💡</span>Suggest a feature</button>
+    <button class="kind" data-kind="flight" aria-pressed="false"><span>✈️</span>Flight sim glitch</button>
+    <button class="kind" data-kind="help" aria-pressed="false"><span>🙋</span>Help or feedback</button>
+    <button class="kind" data-kind="question" aria-pressed="false"><span>❓</span>Ask a question</button>
+    <button class="kind" data-kind="setup" aria-pressed="false"><span>🖼️</span>Show your setup</button>
+    <button class="kind" data-kind="support" aria-pressed="false"><span>🔑</span>Support and licences</button>
+  </div>
+
+  <form id="f" novalidate>
+    <label for="title">Title</label>
+    <input id="title" maxlength="120" placeholder="A short summary" required>
+    <label for="text" id="textLabel">What happened?</label>
+    <textarea id="text" maxlength="6000" required></textarea>
+    <p class="hint" id="textHint"></p>
+    <div class="row">
+      <div><label for="version">Notch Apple version <small>(optional)</small></label><input id="version" maxlength="40" placeholder="e.g. 2.1.37 (Settings → Updates)"></div>
+      <div><label for="system">Your system <small>(optional)</small></label><input id="system" maxlength="80" placeholder="e.g. macOS 26, MacBook Air M3"></div>
+    </div>
+    <label for="email">Your email <small id="emailNote">(optional: to get an answer by email; never shown publicly)</small></label>
+    <input id="email" type="email" maxlength="254" autocomplete="email" placeholder="you@example.com">
+    <div class="trap" aria-hidden="true"><label for="website">Leave this empty</label><input id="website" tabindex="-1" autocomplete="off"></div>
+    <button class="send" id="send" type="submit">Send</button>
+    <div id="msg" class="msg" hidden role="status" aria-live="polite"></div>
+  </form>
+  <p><small>What we keep: what you write, and your email only if you give it (so we can reply). Public kinds are posted to the project's GitHub page without your email. See <a href="terms.html">privacy and terms</a>.</small></p>
+</main>
+<script>
+const API = 'https://notchapple-licenses.adityajain1225.workers.dev';
+const opened = Date.now();
+const GUIDE = {
+  mac: ['What happened?', 'What did you do, what did you expect, and what happened instead? Steps to make it happen again help a lot.'],
+  windows: ['What happened?', 'What did you do, what did you expect, and what happened instead? Steps to make it happen again help a lot.'],
+  feature: ['What would you like?', 'What should it do, and what would it help you with?'],
+  flight: ['What went wrong in the flight sim?', 'Which plane and mode, where you were flying, and what happened (a crash, a stuck control, a visual glitch).'],
+  help: ['How can we help?', 'Ask for help or tell us what you think.'],
+  question: ['Your question', 'Questions are posted in Discussions, where others can answer too.'],
+  setup: ['Tell us about your setup', 'Which features you use, your theme, your tips. Link a screenshot if you like (for example from Imgur).'],
+  support: ['What do you need help with?', 'Licence keys, payments, refunds, devices. This stays private: we answer you by email. Never send your key in full.'],
+};
+let kind = new URLSearchParams(location.search).get('kind') || '';
+const pick = (k) => {
+  kind = k;
+  document.querySelectorAll('.kind').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.kind === k)));
+  const g = GUIDE[k] || ['What happened?', ''];
+  document.getElementById('textLabel').textContent = g[0]; document.getElementById('textHint').textContent = g[1];
+  document.getElementById('emailNote').textContent = k === 'support' ? '(needed: we answer licence and payment questions by email; never shown publicly)' : '(optional: to get an answer by email; never shown publicly)';
+};
+document.querySelectorAll('.kind').forEach((b) => b.addEventListener('click', () => { pick(b.dataset.kind); document.getElementById('title').focus(); }));
+if (GUIDE[kind]) pick(kind);
+const show = (text, ok, html) => { const m = document.getElementById('msg'); m.hidden = false; m.className = 'msg ' + (ok ? 'ok' : 'err'); if (html) m.innerHTML = html; else m.textContent = text; };
+document.getElementById('f').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  if (!kind) { show('Pick what it is about first (the buttons above).', false); return; }
+  const v = (id) => document.getElementById(id).value.trim();
+  const btn = document.getElementById('send'); btn.disabled = true; btn.textContent = 'Sending…';
+  try {
+    const r = await fetch(API + '/support', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ kind, title: v('title'), text: v('text'), version: v('version'), system: v('system'), email: v('email'), website: v('website'), t: opened }) });
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(j.error || 'Something went wrong. Please try again, or use email.');
+    if (j.url) {
+      const a = document.createElement('a'); a.href = j.url; a.target = '_blank'; a.rel = 'noopener'; a.textContent = j.url;
+      const m = document.getElementById('msg'); m.hidden = false; m.className = 'msg ok'; m.textContent = 'Thanks! It is posted here (anyone can read it, no account needed): '; m.append(a);
+    } else show(`Thanks! We got it${v('email') ? ' and will answer you by email' : ''}.${j.ref ? ' Your reference: ' + j.ref + '.' : ''}`, true);
+    document.getElementById('f').reset(); if (kind) pick(kind);
+  } catch (err) { show(err.message, false); }
+  finally { btn.disabled = false; btn.textContent = 'Send'; }
+});
+</script>
+</body>
+</html>

@@ -1,18 +1,18 @@
 {
-  "version": "2.1.19",
-  "title": "Notch Apple 2.1.19 · New game: Capture the Flag",
-  "notes": "**New game: Capture the Flag**\n\n- New game: Capture the Flag, in the Games tab on Mac and Windows. Two teams fight round walls and crates: steal the other team's flag, carry it home to your own base (your own flag has to be there to score), and be first to 2, 3 or 5 captures or lead when the clock runs out. A flag you drop goes home when your team touches it or after 14 seconds, and whoever carries a flag runs faster and takes less damage.\n- Play against computer teams (2 to 5 players a side, Easy, Normal or Hard, they attack, defend and chase flag thieves), or online with friends: Quick match joins an open game, or Host a game and share the 6-letter code. Empty places are filled by the computer, and with no connection it plays the computer.\n- Controls: W A S D move, the mouse aims, click or Space shoots (or the arrow keys to aim without a mouse), M mutes.\n\nInstall: download the DMG below and drag Notch Apple to Applications, or `brew upgrade --cask notch-apple`.\n",
-  "published": "2026-10-22T13:55:37Z",
-  "dmg": "https://github.com/AdityaJainDXB/NotchApples/releases/download/v2.1.19/NotchApple-2.1.19.dmg",
-  "dmgSize": 51688042,
-  "page": "https://github.com/AdityaJainDXB/NotchApples/releases/tag/v2.1.19",
+  "version": "2.1.37",
+  "title": "Notch Apple 2.1.37 · Track assistant, 20 new monuments, satellite imagery",
+  "notes": "## Notch Apple 2.1.37\n\n- Racing: a track assistant in the track designer. Type what you want (\"21 chicanes and 4 hairpins\", \"a fast 5 km circuit\", \"a desert sprint with three hairpins, called Dune Run\") and it builds that track, checks it against the track rules and opens it to preview and edit. \"Another version\" gives a different layout. Or give it a picture of a circuit (📷 From a picture, or drop or paste an image, such as a map of Yas Marina) and it traces the layout into a drivable track.\n- Flying: 20 more places with their own monuments: Delhi (India Gate, Qutub Minar), Agra (Taj Mahal), Mumbai (Gateway of India), Abu Dhabi (Sheikh Zayed Grand Mosque), Rome (Colosseum), Athens (Parthenon), Moscow (St Basil's), Istanbul (Blue Mosque), Berlin (Brandenburg Gate and TV tower), Rio (Christ the Redeemer), Toronto (CN Tower), Seattle (Space Needle), Kuala Lumpur (Petronas Towers), Singapore (Marina Bay Sands), Shanghai (Oriental Pearl Tower), Beijing (Temple of Heaven), Seoul (N Seoul Tower), Bangkok (Wat Arun), Barcelona (Sagrada Família) and Riyadh (Kingdom Centre).\n- Real terrain now shows real satellite imagery of the place (Sentinel-2 cloudless by EOX, CC BY 4.0, contains modified Copernicus Sentinel data 2016) on top of its real heights, and trees grow only where the imagery shows forest.\n",
+  "published": "2026-10-23T11:29:35Z",
+  "dmg": "https://github.com/AdityaJainDXB/NotchApples/releases/download/v2.1.37/NotchApple-2.1.37.dmg",
+  "dmgSize": 51926452,
+  "page": "https://github.com/AdityaJainDXB/NotchApples/releases/tag/v2.1.37",
   "stars": 3,
   "windows": {
-    "version": "2.1.18",
-    "notes": "**Racing game: race friends in cars**\n\n- New Racing game in the Games tab (Mac and Windows): top-down cars on a straight sprint, a curved circuit or a mixed track with straights, a hairpin and a chicane. Pick a Street GT, a Drift King or a Muscle car, and race 0 to 5 computer rivals at Easy, Normal or Hard.\n- Drive with the arrows or W A S D, brake and reverse with the down key, and tap Space for the handbrake to drift round corners (skid marks and a drift score). Lap times, the best race time and a minimap are kept on your computer.\n- Race friends online: choose Create room and share the 6-letter code, friends type it under Join, and the host starts the race for everyone (up to 8 drivers). Planes can already race through hoops in Plane's Hoop Rush and Time Trial; racing planes with friends is next.\n",
-    "url": "https://github.com/AdityaJainDXB/NotchApples/releases/download/win-v2.1.18/Notch.apple_2.1.18_x64-setup.exe",
-    "sha256": "9fdfe3bd1c48b4ef8626c5b102cabc5111d2e6eed23a506849df2a5c124d1b11",
-    "size": 6027455,
-    "page": "https://github.com/AdityaJainDXB/NotchApples/releases/tag/win-v2.1.18"
+    "version": "2.1.36",
+    "notes": "## Notch Apple for Windows 2.1.36 (BETA)\n\n- Racing: serve a time penalty at your pit stop, like in F1. Press Q after getting a penalty: at your next stop the car stands still in the box for the penalty time before the crew goes to work, and the penalty is cleared from your race time. Press Q again to keep it added at the finish instead. Computer drivers serve theirs at their stops too.\n",
+    "url": "https://github.com/AdityaJainDXB/NotchApples/releases/download/win-v2.1.36/Notch.apple_2.1.36_x64-setup.exe",
+    "sha256": "7df7d150a6dba0e96e8bb0b228140429dd80d23738611a7e3a2a2e99538e7cd3",
+    "size": 6097159,
+    "page": "https://github.com/AdityaJainDXB/NotchApples/releases/tag/win-v2.1.36"
   }
 }

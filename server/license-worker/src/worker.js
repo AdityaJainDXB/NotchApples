@@ -455,6 +455,68 @@ async function unsubscribe(env, url) {
   return new Response(`<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>Unsubscribe</title><body style="font:16px system-ui;max-width:32rem;margin:20vh auto;padding:0 1rem;color:#222"><p>${msg}</p>`, { status: ok ? 200 : 400, headers: { 'content-type': 'text/html; charset=utf-8' } });
 }
 
+// MARK: Support without a GitHub account
+// The website's support form: anyone can report a problem, suggest a feature, ask, or show their setup, without signing in.
+// Public kinds become a GitHub issue (with the same labels as the issue forms) or a Discussion, posted by the project's bot
+// token (GITHUB_TOKEN, a fine-grained token with Issues and Discussions write on this one repository). The sender's email,
+// if they give one, is never published: it is kept so replies can be emailed, and support/licence questions stay private
+// and go only to the support inbox. Without a token, everything goes to the support inbox by email instead.
+
+const SUPPORT_KINDS = {
+  mac: { title: '[Mac] ', labels: ['bug', 'mac'], name: 'Problem in the Mac app' },
+  windows: { title: '[Windows] ', labels: ['bug', 'windows'], name: 'Problem in the Windows app' },
+  feature: { title: '[Idea] ', labels: ['enhancement'], name: 'Feature idea' },
+  flight: { title: '[Flight sim] ', labels: ['bug', 'flight-sim'], name: 'Flight simulator glitch' },
+  help: { title: '[Help] ', labels: ['question'], name: 'Help or feedback' },
+  question: { discussion: 'Q&A', name: 'Question' },
+  setup: { discussion: 'Show and tell', name: 'My setup' },
+  support: { private: true, name: 'Support or licence' },
+};
+const REPO = 'AdityaJainDXB/NotchApples';
+const SUPPORT_TO = (env) => env.SUPPORT_TO || 'notchapple.support@gmail.com';
+async function github(env, path, body, graphql = false) {
+  const r = await fetch(`https://api.github.com/${graphql ? 'graphql' : path}`, { method: 'POST', headers: { Authorization: `Bearer ${env.GITHUB_TOKEN}`, 'content-type': 'application/json', 'user-agent': 'notchapple-support', accept: 'application/vnd.github+json' }, body: JSON.stringify(body) });
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok || j.errors) throw new Error(`github ${r.status} ${JSON.stringify(j.errors || j.message || '').slice(0, 200)}`);
+  return j;
+}
+async function supportPost(env, request, body) {
+  if (body.website) return { ok: true, url: null };                                  // the hidden trap field: a bot filled it in
+  if (Number(body.t) > 0 && Date.now() - Number(body.t) < 4000) throw new HTTPError(400, 'That was very quick. Please read it through and send again.');
+  await addressLimit(env, request, 'support', 4);
+  const k = SUPPORT_KINDS[body.kind]; if (!k) throw new HTTPError(400, 'Pick what this is about.');
+  const clean = (v, n) => String(v || '').replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f]/g, '').trim().slice(0, n);
+  const title = clean(body.title, 120), text = clean(body.text, 6000), email = String(body.email || '').trim().slice(0, 254);
+  const version = clean(body.version, 40), system = clean(body.system, 80);
+  if (title.length < 4) throw new HTTPError(400, 'Give it a short title.');
+  if (text.length < 10) throw new HTTPError(400, 'Describe it in a few more words.');
+  if (email && !validEmail(email)) throw new HTTPError(400, "That email address doesn't look right (or leave it empty).");
+  if (k.private && !email) throw new HTTPError(400, 'Leave your email so we can answer you (licence and payment questions are answered privately).');
+  const meta = [version && `Version: ${version}`, system && `System: ${system}`].filter(Boolean).join(' · ');
+  const publicBody = `${text}\n\n${meta ? meta + '\n\n' : ''}---\n_Sent from the website without a GitHub account${email ? '. The sender left an email address (kept private): replies here are emailed to them' : ''}._`;
+  const id = hex(randomBytes(6));
+  let url = null;
+  if (env.GITHUB_TOKEN && !k.private) {
+    try {
+      if (k.discussion) {
+        const q = await github(env, '', { query: 'query { repository(owner: "AdityaJainDXB", name: "NotchApples") { id discussionCategories(first: 25) { nodes { id name } } } }' }, true);
+        const repo = q.data.repository, cat = repo.discussionCategories.nodes.find((c) => c.name.toLowerCase() === k.discussion.toLowerCase());
+        if (!cat) throw new Error('no category');
+        const m = await github(env, '', { query: 'mutation($r: ID!, $c: ID!, $t: String!, $b: String!) { createDiscussion(input: { repositoryId: $r, categoryId: $c, title: $t, body: $b }) { discussion { url number } } }', variables: { r: repo.id, c: cat.id, t: title, b: publicBody } }, true);
+        url = m.data.createDiscussion.discussion.url;
+      } else {
+        const j = await github(env, `repos/${REPO}/issues`, { title: k.title + title, body: publicBody, labels: [...k.labels, 'from-website'] });
+        url = j.html_url;
+      }
+    } catch (e) { console.error('Support post to GitHub failed', String(e)); url = null; }
+  }
+  if (email) await putJSON(env, `ticket:${id}`, { email, kind: body.kind, title, url, at: Date.now() }, 400 * 86400);
+  // The support inbox always hears about it (the whole report, for the private kinds and whenever GitHub was not reached).
+  await sendMail(env, SUPPORT_TO(env), `[${k.name}] ${title}`, `${url ? `Posted: ${url}\n\n` : 'Not posted publicly.\n\n'}${text}\n\n${meta}\nFrom: ${email || '(no email left)'}\nTicket: ${id}`);
+  if (email) await sendMail(env, email, `We got your message: ${title}`, `Thanks for writing to Notch Apple.\n\nWe got your ${k.name.toLowerCase()} and will look at it soon.${url ? `\n\nYou can follow it here (no account needed to read): ${url}` : "\n\nWe'll answer you by email."}\n\nYour reference: ${id}\n\nNotch Apple support`);
+  return { ok: true, url, ref: id, private: !url };
+}
+
 // MARK: Routes
 
 class HTTPError extends Error { constructor(status, message, extra = {}) { super(message); this.status = status; this.extra = extra; } }
@@ -1161,9 +1223,10 @@ export default {
         await audit(env, path, { id: result.id }, result);
         return json(result);
       }
-      if (Number(request.headers.get('content-length') || 0) > 4096) throw new HTTPError(413, 'Too large');
+      const maxBody = path === '/support' ? 16384 : 4096;       // a support report can be longer than the other requests
+      if (Number(request.headers.get('content-length') || 0) > maxBody) throw new HTTPError(413, 'Too large');
       const text = await request.text();
-      if (text.length > 4096) throw new HTTPError(413, 'Too large');
+      if (text.length > maxBody) throw new HTTPError(413, 'Too large');
       let body; try { body = JSON.parse(text || '{}'); } catch { throw new HTTPError(400, 'Bad JSON'); }
       if (path.startsWith('/admin/')) {
         await adminGate(env, request);
@@ -1175,6 +1238,7 @@ export default {
         case '/telemetry/ping': await addressLimit(env, request, 'ins', 60); return json(await Insights.ping(env, body));
         case '/telemetry/glitch': await addressLimit(env, request, 'ins', 60); return json(await Insights.glitch(env, body));
         case '/feedback': await addressLimit(env, request, 'ins', 60); return json(await Insights.feedback(env, body));
+        case '/support': return json(await supportPost(env, request, body));
         case '/order': return json(await order(env, body));
         case '/claim': return json(await claim(env, body));
         case '/promo': return json(await promo(env, body));
