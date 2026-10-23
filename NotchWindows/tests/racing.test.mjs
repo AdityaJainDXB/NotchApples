@@ -247,3 +247,27 @@ test('the designer refuses a bend tighter than the barrier stands from the road,
   assert.equal(t.ok, false, 'scaled down until the tightest bend is under 24 m');
   assert.match(t.why, /too tight/i);
 });
+
+// ---- the pit lane and the stewards
+test('every circuit has a pit lane on the outside of the start straight; sprints have none; a fence stops a car crossing', () => {
+  for (const def of R.TRACKS) {
+    const T = R.buildTrack(def), P = R.pitInfo(T);
+    if (!def.closed) { assert.equal(P, null, `${def.id} is a sprint`); continue; }
+    assert.ok(P && P.a < -100 && P.b > 100 && P.outer > P.inner && P.lane > P.inner && P.lane < P.outer, `${def.id} pit lane`);
+    // The lane is on the outside: a point out there is further from the middle of the circuit than the road.
+    const cx = T.S.reduce((m, q) => m + q.x, 0) / T.m, cy = T.S.reduce((m, q) => m + q.y, 0) / T.m, q = T.S[0];
+    const out = Math.hypot(q.x + q.nx * P.side * P.lane - cx, q.y + q.ny * P.side * P.lane - cy), road = Math.hypot(q.x - cx, q.y - cy);
+    assert.ok(out > road, `${def.id}: the pit lane is outside the circuit`);
+  }
+  const T = track('circuit');
+  assert.ok(Math.abs(R.relS(T, 5)) === 5 && Math.abs(R.relS(T, T.length - 5) + 5) < 1e-6, 'distance from the line, both ways');
+  const q = T.S[10], c = R.newCar(car('gt'), q.x + q.nx * 20, q.y + q.ny * 20, Math.atan2(q.ny, q.nx)); c.vx = q.nx * 15; c.vy = q.ny * 15;
+  const hit = R.fence(c, q, 1, 20, 18, true);
+  assert.ok(hit > 10, 'the wall was hit'); assert.ok(c.vx * q.nx + c.vy * q.ny < 0, 'bounced back');
+});
+
+test('worn tyres grip less', () => {
+  // The same fast turn: on worn tyres the car turns less (it runs wide).
+  const run = (wear) => { const c = R.newCar(car('gt'), 0, 0, 0); c.wear = wear; for (let i = 0; i < 60 * 6; i++) R.stepCar(c, GO, 1 / 60, 1); const h0 = c.h; for (let i = 0; i < 60 * 2; i++) R.stepCar(c, { throttle: 1, brake: 0, steer: 1, hand: 0 }, 1 / 60, 1); return Math.abs(c.h - h0); };
+  assert.ok(run(1) < run(0) * 0.92, `turned ${run(1).toFixed(2)} on worn tyres vs ${run(0).toFixed(2)} on new`);
+});

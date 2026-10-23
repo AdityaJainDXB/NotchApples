@@ -20,6 +20,13 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.1.31", date: "23 October 2026", headline: "Pit lane, FIA penalties, real-looking cars, and a Mac-style hello", items: [
+            "Hello from the notch, Mac style: the notch now writes \"hello\" in the same flowing handwriting as the Mac's own welcome screen, stroke by stroke, then shows your name.",
+            "Racing cars look like real cars: every car has its own body shape, a glass cabin with sloping windscreens, round wheels that turn, headlights and brake lights, and its details (the GT3's splitter and big rear wing, the hot hatch's roof spoiler, the muscle car's bonnet stripe, the supercar's low wedge).",
+            "A real pit lane on every circuit: on the start straight, with an entry, a pit wall, an exit and an 80 km/h limiter. Every car has its own pit box; stop in yours for new tyres and repairs (a longer stop if the car is damaged). The engineer calls you in: \"Box, box.\"",
+            "Tyres wear, faster when you slide, and worn tyres grip less. The HUD shows how much tyre you have left. Computer drivers pit for tyres and damage too.",
+            "FIA-style time penalties, added to your race time: track limits (three warnings, the black-and-white flag, then 5 seconds each time), causing a collision (5 seconds, 10 for a big hit), and speeding into the pit lane (5 seconds). The results show each driver's penalties.",
+        ]),
         ReleaseNote(version: "2.1.30", date: "23 October 2026", headline: "A bigger world: far islands, a world map, coins and a passport", items: [
             "A much bigger world: the ocean around the home island now reaches more than three times as far, with six new far islands, each with its own airport: Sunset Key, Volcano Isle, Fjord Point, Eastport, Reef Harbour and Frost Island. They're a long flight across open sea, so check your fuel. Start at any of them from the menu.",
             "World map (Free Flight menu → 🗺 World map): the home island, all eleven airports and where you are.",

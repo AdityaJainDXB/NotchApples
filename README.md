@@ -72,10 +72,10 @@ Pick your computer. Both buttons start the download straight away. The Mac link 
   </tr>
   <tr>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.1.30</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.1.31</b></a>
     </td>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 2.1.30 BETA</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 2.1.31 BETA</b></a>
     </td>
   </tr>
   <tr>
@@ -233,6 +233,14 @@ All screenshots use sample data.
 ## What's new
 
 > **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is in the repository's history.
+
+### Mac 2.1.31 · Windows 2.1.31 BETA · 23 October 2026 · 🏁 Pit lane, FIA penalties, real-looking cars, and a Mac-style hello
+
+- Hello from the notch, Mac style: the notch now writes "hello" in the same flowing handwriting as the Mac's own welcome screen, stroke by stroke, then shows your name.
+- Racing cars look like real cars: every car has its own body shape, a glass cabin with sloping windscreens, round wheels that turn, headlights and brake lights, and its details (the GT3's splitter and big rear wing, the hot hatch's roof spoiler, the muscle car's bonnet stripe, the supercar's low wedge).
+- A real pit lane on every circuit: on the start straight, with an entry, a pit wall, an exit and an 80 km/h limiter. Every car has its own pit box; stop in yours for new tyres and repairs (a longer stop if the car is damaged). The engineer calls you in: "Box, box."
+- Tyres wear, faster when you slide, and worn tyres grip less. The HUD shows how much tyre you have left. Computer drivers pit for tyres and damage too.
+- FIA-style time penalties, added to your race time: track limits (three warnings, the black-and-white flag, then 5 seconds each time), causing a collision (5 seconds, 10 for a big hit), and speeding into the pit lane (5 seconds). The results show each driver's penalties.
 
 ### Mac 2.1.30 · Windows 2.1.30 BETA · 23 October 2026 · 🌍 A bigger world: far islands, a world map, coins and a passport
 

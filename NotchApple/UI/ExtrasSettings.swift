@@ -37,7 +37,7 @@ struct ExtrasSettings: View {
                 Toggle("Say hello when I open my Mac", isOn: $helloOn)
                 TextField("Your name", text: $helloName, prompt: Text("Your name"))
                 Button("Play it now") { HelloAnimation.show(force: true) }.disabled(!helloOn)
-            } header: { Text("Hello from the notch") } footer: { Text("A Formula One car races across the notch and says hello, when Notch Apple starts and when your Mac wakes up.") }
+            } header: { Text("Hello from the notch") } footer: { Text("The notch writes \"hello\" by hand, Mac style, with your name under it: when Notch Apple starts and when your Mac wakes up.") }
             Section {
                 HStack {
                     Button("Show everything") { setHidden([]) }

@@ -195,6 +195,16 @@
   /// How far from the edge of the road the solid barriers stand (m).
   const WALL = 7;
   const WHEELBASE = 2.8, CAR_LEN = 4.6, CAR_W = 2.0;
+  /// What each car looks like (metres): length, width, body bottom and belt line, cabin from c1 (back) to c0 (front) with
+  /// sloping screens (ws, bs) up to the roof, wheel sizes and places, and the details that make it that car.
+  const CAR_SHAPES = {
+    gt: { len: 4.5, w: 1.95, z0: 0.24, belt: 0.82, c0: 0.55, c1: -1.25, ws: 0.65, bs: 0.45, tuck: 0.32, roof: 1.3, r: 0.34, rBig: 1, fWheel: 0.85, rWheel: 0.85, nose: 0.28, tail: 0.18, hood: true },
+    drift: { len: 4.3, w: 1.8, z0: 0.22, belt: 0.8, c0: 0.45, c1: -1.15, ws: 0.6, bs: 0.35, tuck: 0.25, roof: 1.27, r: 0.33, rBig: 1, fWheel: 0.8, rWheel: 0.8, nose: 0.2, tail: 0.12, ducktail: true },
+    muscle: { len: 4.85, w: 1.95, z0: 0.26, belt: 0.86, c0: 0.1, c1: -1.45, ws: 0.6, bs: 0.6, tuck: 0.3, roof: 1.33, r: 0.36, rBig: 1.04, fWheel: 0.9, rWheel: 0.85, nose: 0.1, tail: 0.08, hood: true, stripe: '#111' },
+    hatch: { len: 4.05, w: 1.78, z0: 0.24, belt: 0.85, c0: 0.55, c1: -1.75, ws: 0.6, bs: 0.15, tuck: 0.22, roof: 1.46, r: 0.32, rBig: 1, fWheel: 0.72, rWheel: 0.62, nose: 0.25, tail: 0.1, roofBody: true, wing: 1.48, wingCol: null },
+    gt3: { len: 4.6, w: 2.05, z0: 0.16, belt: 0.74, c0: 0.4, c1: -1.15, ws: 0.6, bs: 0.5, tuck: 0.35, roof: 1.2, r: 0.35, rBig: 1.05, fWheel: 0.85, rWheel: 0.8, nose: 0.3, tail: 0.15, splitter: true, wing: 1.28, hood: true },
+    super: { len: 4.6, w: 2.05, z0: 0.14, belt: 0.66, c0: 0.25, c1: -0.95, ws: 0.95, bs: 0.65, tuck: 0.4, roof: 1.12, r: 0.35, rBig: 1.06, fWheel: 0.9, rWheel: 0.85, nose: 0.42, tail: 0.25, splitter: true, wing: 1.0 },
+  };
 
   /// Which gear the car is in and how fast the engine is turning, from its speed. A gear gives a share of the top speed;
   /// the box changes up near the redline and down well below it, with a short pause (shiftT) in which the revs drop.
@@ -240,7 +250,7 @@
     c.steerA += (target - c.steerA) * (1 - Math.exp(-dt * 9));
     const wd = vf0 * Math.tan(c.steerA) / WHEELBASE;
     const power = inp.throttle * Math.abs(c.steerA) / sp.steer;
-    let grip = sp.grip * surf * (1 + (sp.down || 0) * (vf0 * vf0) / (sp.vmax * sp.vmax)) * (1 - sp.loose * 0.5 * power * clamp(Math.abs(vf0) / 30, 0, 1));
+    let grip = sp.grip * (1 - 0.32 * clamp(c.wear || 0, 0, 1)) * surf * (1 + (sp.down || 0) * (vf0 * vf0) / (sp.vmax * sp.vmax)) * (1 - sp.loose * 0.5 * power * clamp(Math.abs(vf0) / 30, 0, 1));
     let w;
     const slip = c.vl / Math.max(Math.abs(c.vf), 5);        // how far sideways the car is travelling (last step)
     if (inp.hand) { w = clamp(wd * 1.25, -2, 2); grip *= 0.3; }
@@ -280,7 +290,8 @@
     const loc = locate(T, c.x, c.y, st.idx); st.idx = loc.idx;
     const speed = Math.hypot(c.vx, c.vy), look = 12 + speed * 0.5;
     const ahead = (d) => { const i = T.closed ? (loc.idx + Math.round(d / T.step)) % T.m : Math.min(T.m - 1, loc.idx + Math.round(d / T.step)); return T.S[i]; };
-    const q = ahead(look), off = st.lane * T.width * 0.28;
+    const P = st.pitting ? pitInfo(T) : null, rel = P ? relS(T, loc.s) : 0, inPit = P && rel > P.a - 10 && rel < P.b;
+    const q = ahead(look), off = inPit ? P.side * (rel < P.a + 40 || rel > P.b - 40 ? (T.width / 2 + P.lane) / 2 + 2 : P.lane) : st.lane * T.width * 0.28;
     const px = q.x + q.nx * off, py = q.y + q.ny * off;
     const want = Math.atan2(py - c.y, px - c.x);
     const err = wrapPi(want - c.h);
@@ -294,6 +305,7 @@
       if (k > 0.0005) { const vc = Math.max(14, Math.sqrt(gripA / k)); vt = Math.min(vt, Math.sqrt(vc * vc + 2 * dec * d)); }
     }
     if (loc.s < -6 && !T.closed) vt = c.spec.vmax;
+    if (inPit) { vt = Math.min(vt, P.limit * 0.92); const bx = st.boxS ?? P.box; if (!st.served && rel > bx - 30 && rel < bx + 2) vt = Math.min(vt, Math.max(0, (bx + 1 - rel) * 0.8)); }      // the limiter, then stop in the box
     const vf = c.vf;
     const throttle = vf < vt ? clamp((vt - vf) / 6, 0.15, 1) : 0;
     const brake = vf > vt * 1.12 ? clamp((vf - vt) / 14, 0.1, 1) : 0;
@@ -333,8 +345,36 @@
   }
 
   /// Finishers by time, then everyone else by how far they got.
+  /// Where the pit lane is on a closed track: along the start straight on the outside of the circuit, from `a` metres before
+  /// the line to `b` after it (entry in the first 80 m, exit in the last 80). The lane runs between the pit wall (`inner`)
+  /// and the outer wall (`outer`), measured from the middle of the road towards `side` (+1 right, -1 left). Null on a sprint.
+  function pitInfo(T) {
+    if (!T.closed) return null;
+    if (T.pit !== undefined) return T.pit;
+    const turn = T.S.reduce((m, q) => m + q.k, 0), side = turn > 0 ? -1 : 1, wd = T.width / 2;
+    const a = -Math.min(260, T.length * 0.12), b = Math.min(240, T.length * 0.11);
+    T.pit = { side, a, b, inner: wd + WALL, lane: wd + WALL + 7.5, outer: wd + WALL + 14, box: 0, limit: 80 / KMH };
+    return T.pit;
+  }
+  /// The distance from the start line along a closed track, from -L/2 to L/2.
+  const relS = (T, s) => { const L = T.length; return ((((s % L) + L) % L) + L / 2) % L - L / 2; };
+  /// A wall along the track at `limit` metres to one side (`side`), that a car on the near side (`below`: lat < limit) may
+  /// not cross: bounce, scrape and damage, like the barriers. `lat` is measured towards `side`. Returns the impact speed.
+  function fence(c, q, side, lat, limit, below) {
+    const over = below ? lat - limit : limit - lat;
+    if (over <= 0) return 0;
+    const dir = side * (below ? 1 : -1), nx = q.nx * dir, ny = q.ny * dir;
+    c.x -= nx * over; c.y -= ny * over;
+    const vn = c.vx * nx + c.vy * ny;
+    if (vn <= 0) return 0;
+    c.vx -= 1.25 * vn * nx; c.vy -= 1.25 * vn * ny; c.vx *= 0.9; c.vy *= 0.9;
+    hurt(c, vn, 6, 40);
+    return vn;
+  }
+  /// Finishers by their time plus any penalty, then everyone else by how far they got.
   function ranking(racers) {
-    return racers.slice().sort((a, b) => (a.finished && b.finished) ? a.finishT - b.finishT : a.finished ? -1 : b.finished ? 1 : b.prog - a.prog);
+    const ft = (r) => r.finishT + (r.pen || 0);
+    return racers.slice().sort((a, b) => (a.finished && b.finished) ? ft(a) - ft(b) : a.finished ? -1 : b.finished ? 1 : b.prog - a.prog);
   }
 
   /// A solid barrier a little way past the edge of the road. A car that reaches it bounces off, scrapes along it, is twisted
@@ -556,6 +596,7 @@
       aiState.clear();
       racers.forEach((r, i) => { if (r.ai) aiState.set(r.id, { idx: -1, lane: ((i % 5) - 2) * 0.35, skill: LEVELS[level].skill * (0.94 + 0.06 * ((i * 7) % 5) / 4), stuck: 0, rev: 0, go: false }); });
       for (const r of racers) { r.car.vx = r.car.vy = 0; progress(r, T, 0); r.lapStart = 0; }
+      { const P = pitInfo(T); if (P) racers.forEach((r, i) => { r.boxS = clamp((i - (racers.length - 1) / 2) * 13, P.a + 95, P.b - 95); const st = aiState.get(r.id); if (st) st.boxS = r.boxS; }); }       // every car has its own pit box
       skids = []; clock = 0; cdLeft = 3.2; screen = 'countdown'; ui.replaceChildren(); doneT = 0;
       big.style.fontSize = ''; big.style.top = '';
       parts = []; audioUp();
@@ -609,7 +650,7 @@
         r.net = { x: m.x, y: m.y, h: m.h, vx: m.vx, vy: m.vy, at: performance.now() };
         r.lap = m.lap; r.prog = m.pr; r.car.drifting = !!m.dr; r.car.dmg = clamp(Number(m.dm) || 0, 0, 1); r.lastMsg = performance.now();
       } else if (m.t === 'fin') {
-        const r = racers.find((x) => x.id === m.id && x.remote); if (r && !r.finished) { r.finished = true; r.finishT = Number(m.ft) || clock; }
+        const r = racers.find((x) => x.id === m.id && x.remote); if (r && !r.finished) { r.finished = true; r.finishT = Number(m.ft) || clock; r.pen = clamp(Number(m.pn) || 0, 0, 120); }
       }
     }
     function showLobby() {
@@ -754,6 +795,7 @@
         }
         radioLap = me.lap;
       }
+      if (((me.car.wear || 0) > 0.7 || me.car.dmg > 0.5) && !me.boxCalled && pitInfo(T) && me.lap < raceLaps - 1) { me.boxCalled = true; say('Box, box. Box this lap for new tyres.', 'eng', 2); }
       if (me.car.dmg > 0.55 && !radioWarned) { radioWarned = true; say('We have damage on the car. Take it easy, bring it home.', 'eng', 2); }
     }
     function radioStart() { radioPos = 0; radioLap = me ? me.lap : -1; radioWarned = false; radioLast = false; say("And it's lights out, and away we go!", 'com', 2); }
@@ -762,6 +804,25 @@
       if (speed < 16) return;
       if (r === me) { say('Are you OK? Check the car.', 'eng', 2); setTimeout(() => say(`Oh! ${me.name} is in the wall!`, 'com', 1), 1600); }
       else if (me && Math.abs(r.prog - me.prog) < 300) say(`Big moment there for ${r.name}!`, 'com', 1);
+    }
+
+    // ---- the stewards (FIA style): time penalties are added to a driver's race time at the end.
+    function penalize(r, sec, why) {
+      r.pen = (r.pen || 0) + sec; r.penWhy = why;
+      if (r === me) { toast(`⚠ ${sec}-second time penalty: ${why}`); say(`You have a ${sec === 5 ? 'five' : 'ten'} second time penalty, for ${why}.`, 'eng', 2); }
+      else if (me && Math.abs(r.prog - me.prog) < 400) say(`${sec} second penalty for ${r.name}.`, 'com', 1);
+    }
+    function trackLimits(r) {
+      r.tl = (r.tl || 0) + 1;
+      if (r.tl >= 4) penalize(r, 5, 'track limits');
+      else if (r === me) { if (r.tl === 3) { toast('🏁 Black and white flag: next time is a penalty'); say('Black and white flag. One more and it is a penalty.', 'eng', 2); } else { toast(`Track limits: warning ${r.tl} of 3`); say('Track limits. Careful.', 'eng', 1); } }
+    }
+    /// Who caused a collision: the car that was moving into the other one more. Five seconds, ten for a big hit.
+    function blame(A, B, hit) {
+      const dx = B.car.x - A.car.x, dy = B.car.y - A.car.y, l = Math.hypot(dx, dy) || 1;
+      const aInto = (A.prevV ? A.prevV[0] * dx + A.prevV[1] * dy : 0) / l, bInto = (B.prevV ? -(B.prevV[0] * dx + B.prevV[1] * dy) : 0) / l;
+      const f = aInto > bInto + 3 ? A : bInto > aInto + 3 ? B : null; if (!f || (f.blameT && clock - f.blameT < 4)) return;
+      f.blameT = clock; penalize(f, hit > 22 ? 10 : 5, 'causing a collision');
     }
 
     // ---- crashes you can see: sparks, flying bits of bodywork, smoke from a hurt car, flames from a wreck, tyre smoke
@@ -821,17 +882,46 @@
         else inp = playerInput();
         if (r.ai && !r.finished && me && !net) { const lead = r.prog - me.prog; if (lead < -80) inp.throttle = Math.min(1, inp.throttle * 1.05 + 0.05); }
         const loc = locate(T, c.x, c.y, r.idx);
-        const edge = T.width / 2, off = Math.abs(loc.lat);
-        const surf = off > edge + 1.5 ? 0.55 : 1;
+        const edge = T.width / 2, off = Math.abs(loc.lat), P = pitInfo(T), rel = P ? relS(T, loc.s) : 1e9;
+        const pitSide = P && rel > P.a && rel < P.b && loc.lat * P.side > edge + 1;          // on the pit side of the start straight
+        const surf = off > edge + 1.5 && !(pitSide && loc.lat * P.side < P.outer) ? 0.55 : 1;   // the pit lane and its entry and exit are tarmac
+        if (r.service > 0) { inp = { throttle: 0, brake: 1, steer: 0, hand: 0 }; c.vx = c.vy = 0; }    // jacked up in the box
         stepCar(c, inp, dt, surf);
-        // The barrier: a real wall a little way past the run-off. Hitting it bounces, scrapes, spins and damages the car.
-        const after = locate(T, c.x, c.y, loc.idx), imp = wallHit(c, T, after);
+        const after = locate(T, c.x, c.y, loc.idx);
+        let imp = 0;
+        if (P && rel > P.a - 20 && rel < P.b + 20 && after.lat * P.side > 0) {
+          // The pit lane: an outer wall, and a pit wall between the lane and the track except at the entry and the exit.
+          const lat = after.lat * P.side, q = T.S[after.idx], mid = rel > P.a + 80 && rel < P.b - 80;
+          imp = fence(c, q, P.side, lat, P.outer, true);
+          if (mid && !r.inLane) imp = Math.max(imp, fence(c, q, P.side, lat, P.inner - 1, true));
+          if (mid && r.inLane) imp = Math.max(imp, fence(c, q, P.side, lat, P.inner + 1, false));
+          const was = r.inLane;
+          if (!r.inLane && lat > P.inner - 2 && rel < P.a + 80) r.inLane = true;
+          if (r.inLane && (rel > P.b - 5 || lat < edge)) { r.inLane = false; r.served = false; }
+          if (r.inLane && !was && Math.hypot(c.vx, c.vy) > P.limit * 1.08) penalize(r, 5, 'speeding in the pit lane');
+          if (r.inLane) {
+            const v = Math.hypot(c.vx, c.vy); if (v > P.limit) { c.vx *= P.limit / v; c.vy *= P.limit / v; }      // the pit limiter
+            if (Math.abs(rel - (r.boxS ?? P.box)) < 6 && v < 1.5 && !r.served) {
+              r.service = (r.service || 0) + dt;
+              const need = 2.4 + (c.dmg > 0.3 ? 2.5 * c.dmg : 0);
+              if (r.service >= need) { c.dmg = 0; c.wear = 0; c.pull = 0; r.service = 0; r.served = true; if (r.ai) { const st = aiState.get(r.id); st.pitting = false; st.served = true; } if (r === me) { toast(`Pit stop: ${need.toFixed(1)} s · new tyres${need > 2.5 ? ', damage repaired' : ''}`); say('Good stop, good stop. Go, go, go!', 'eng', 2); } }
+            } else if (r.service > 0 && v > 2) r.service = 0;
+          }
+        } else { imp = wallHit(c, T, after); r.inLane = false; }
         if (imp > 3) { const q = T.S[after.idx], sg = Math.sign(after.lat) || 1; crash(r, c.x + q.nx * sg * 1.1, c.y + q.ny * sg * 1.1, imp, '#d8d8d8'); }
+        // Tyres wear with distance and much faster in slides.
+        const vNow = Math.hypot(c.vx, c.vy); if (vNow > 3 && !r.finished) c.wear = Math.min(1, (c.wear || 0) + dt * (0.0011 + Math.abs(c.vl) * 0.0016 + (c.drifting ? 0.004 : 0)) * (c.spec.id === 'f1' ? 1.25 : 1));
+        // Track limits (FIA): all four wheels past the white line counts. Warnings, the black-and-white flag, then 5 seconds.
+        if (screen === 'race' && !r.finished && !r.inLane && !pitSide && off > edge + CAR_W / 2 + 0.4 && vNow > 12) { if (!r.offTL) { r.offTL = true; trackLimits(r); } }
+        else if (off < edge) r.offTL = false;
+        // The computer drivers come in for tyres or repairs when they need them (not on the last lap).
+        if (r.ai && P && !r.finished) { const st = aiState.get(r.id); if (!st.pitting && !st.served && (c.dmg > 0.45 || (c.wear || 0) > 0.72) && r.lap < raceLaps - 1 && rel > P.a - 600 && rel < P.a - 250) st.pitting = true; if (st.served && !r.inLane && rel > P.b) st.served = false; }
         emit(r, dt);
         if (c.drifting && skids.length < 1400) { skids.push([c.x - Math.cos(c.h) * 1.4 - Math.sin(c.h) * 0.8, c.y - Math.sin(c.h) * 1.4 + Math.cos(c.h) * 0.8, c.h], [c.x - Math.cos(c.h) * 1.4 + Math.sin(c.h) * 0.8, c.y - Math.sin(c.h) * 1.4 - Math.cos(c.h) * 0.8, c.h]); }
         if (r === me && c.drifting) r.drift += dt * Math.abs(c.vl);
       }
       if (skids.length > 1300) skids.splice(0, skids.length - 1300);
+      for (const r of racers) r.prevV = [r.car.vx, r.car.vy];
       for (let i = 0; i < racers.length; i++) for (let j = i + 1; j < racers.length; j++) {
         const A = racers[i], B = racers[j];
         if (A.remote && B.remote) continue;
@@ -842,6 +932,7 @@
           continue;
         }
         const hit = collide(A.car, B.car);
+        if (hit > 12 && screen === 'race') blame(A, B, hit);
         if (hit > 3) crash(A === me ? A : B, (A.car.x + B.car.x) / 2, (A.car.y + B.car.y) / 2, hit, (A === me ? B : A).color || B.car.spec.color);
       }
       stepParts(dt);
@@ -850,7 +941,7 @@
         if (r.remote) continue;
         const was = r.finished;
         progress(r, T, clock);
-        if (r.finished && !was && net) net.link.send({ t: 'fin', id: myId, ft: Math.round(r.finishT * 100) / 100 });
+        if (r.finished && !was && net) net.link.send({ t: 'fin', id: myId, ft: Math.round(r.finishT * 100) / 100, pn: r.pen || 0 });
         if (r.finished && !was && r === me) finishedMe();
       }
       radioTick();
@@ -872,7 +963,7 @@
       if (screen === 'done') return;
       screen = 'done'; doneT = clock; big.textContent = '';
       const order = ranking(racers), tbl = document.createElement('table'); tbl.className = 'rc-tbl';
-      order.forEach((r, i) => { const tr = tbl.insertRow(); tr.className = r === me ? 'me' : ''; tr.insertCell().textContent = String(i + 1); tr.insertCell().textContent = r.name; tr.insertCell().textContent = r.finished ? fmt(r.finishT) : 'DNF'; tr.insertCell().textContent = r.bestLap ? 'best lap ' + fmt(r.bestLap) : ''; });
+      order.forEach((r, i) => { const tr = tbl.insertRow(); tr.className = r === me ? 'me' : ''; tr.insertCell().textContent = String(i + 1); tr.insertCell().textContent = r.name; tr.insertCell().textContent = r.finished ? fmt(r.finishT + (r.pen || 0)) + (r.pen ? ` (incl. +${r.pen}s)` : '') : 'DNF'; tr.insertCell().textContent = r.bestLap ? 'best lap ' + fmt(r.bestLap) : ''; });
       const mePos = order.indexOf(me) + 1;
       card(head(mePos === 1 ? '🏆 You won!' : `You finished ${mePos}${['st', 'nd', 'rd'][mePos - 1] || 'th'}`), tbl,
         hint(`${me.newBest ? 'New best time! ' : ''}${me.drift > 1 ? 'Drift score ' + Math.round(me.drift * 10) : ''}`),
@@ -917,6 +1008,16 @@
       drawLine(0, '#fff'); if (!T.closed) drawLine(T.length, '#fff');
       // The barriers each side.
       for (const sg of [-1, 1]) { const o = sg * (T.width / 2 + WALL); g.beginPath(); T.S.forEach((q, i) => { const x = q.x + q.nx * o, y = q.y + q.ny * o; i ? g.lineTo(x, y) : g.moveTo(x, y); }); if (T.closed) g.closePath(); g.strokeStyle = '#c9ccd2'; g.lineWidth = 1; g.stroke(); }
+      // The pit lane along the start straight.
+      { const Pd = pitInfo(T); if (Pd) {
+        const seg = T.S.filter((q) => { const r0 = relS(T, q.s); return r0 > Pd.a && r0 < Pd.b; });
+        const line = (o) => { g.beginPath(); seg.forEach((q, i) => { const x = q.x + q.nx * o * Pd.side, y = q.y + q.ny * o * Pd.side; i ? g.lineTo(x, y) : g.moveTo(x, y); }); };
+        line((T.width / 2 + Pd.outer) / 2 + 0.6); g.strokeStyle = '#3b3e45'; g.lineWidth = Pd.outer - T.width / 2 - 1; g.stroke();
+        line(Pd.outer); g.strokeStyle = '#c9ccd2'; g.lineWidth = 1; g.stroke();
+        const mid = seg.filter((q) => { const r0 = relS(T, q.s); return r0 > Pd.a + 80 && r0 < Pd.b - 80; });
+        g.beginPath(); mid.forEach((q, i) => { const x = q.x + q.nx * Pd.inner * Pd.side, y = q.y + q.ny * Pd.inner * Pd.side; i ? g.lineTo(x, y) : g.moveTo(x, y); }); g.strokeStyle = '#eee'; g.lineWidth = 0.8; g.stroke();
+        for (const r of racers) { if (r.boxS == null) continue; const bq = T.S[(Math.round(r.boxS / T.step) % T.m + T.m) % T.m]; g.fillStyle = r === me ? '#4fe09a' : '#ffd23f'; g.save(); g.translate(bq.x + bq.nx * Pd.lane * Pd.side, bq.y + bq.ny * Pd.lane * Pd.side); g.rotate(Math.atan2(bq.ty, bq.tx)); g.fillRect(-5, -3, 10, 6); g.restore(); }
+      } }
       // Skid marks.
       g.fillStyle = 'rgba(15,15,15,.45)';
       for (const s of skids) { g.save(); g.translate(s[0], s[1]); g.rotate(s[2]); g.fillRect(-0.7, -0.25, 1.6, 0.5); g.restore(); }
@@ -964,6 +1065,14 @@
       }
       if (c.dmg > 0.03) { g.textAlign = 'left'; g.font = `800 ${10 * s}px system-ui`; g.fillStyle = c.dmg > 0.75 ? '#ff4d4d' : c.dmg > 0.4 ? '#ff9f43' : '#ffd166'; g.fillText(c.dmg >= 1 ? 'WRECKED: limping home' : `DAMAGE ${Math.round(c.dmg * 100)}%`, 16 * s, 86 * s); }
       if (me.car.drifting) { g.fillStyle = '#ffd166'; g.font = `900 ${14 * s}px system-ui`; g.textAlign = 'center'; g.fillText(`DRIFT  ${Math.round(me.drift * 10)}`, W / 2, H - 16 * s); }
+      {
+        const wear = me.car.wear || 0, y0 = (viewMode === 'cockpit' ? H * 0.24 : 40 * s);
+        g.textAlign = 'center'; g.font = `800 ${12 * s}px system-ui`;
+        if (me.inLane) { g.fillStyle = '#4fe09a'; g.fillText(me.service > 0 ? `PIT STOP… ${me.service.toFixed(1)}s` : 'PIT LANE · LIMITER 80 km/h', W / 2, y0 + 16 * s); }
+        if (me.pen) { g.fillStyle = '#ff4d4d'; g.textAlign = 'left'; g.fillText(`+${me.pen}s PENALTY`, 16 * s, 100 * s); g.textAlign = 'center'; }
+        g.textAlign = 'left'; g.font = `700 ${10 * s}px system-ui`; g.fillStyle = wear > 0.7 ? '#ff4d4d' : wear > 0.45 ? '#ffd166' : 'rgba(255,255,255,.75)';
+        g.fillText(`TYRES ${Math.round((1 - wear) * 100)}%${me.tl ? ` · TRACK LIMITS ${Math.min(me.tl, 3)}/3` : ''}`, 16 * s, 114 * s);
+      }
       if (me.car.onGrass) { g.fillStyle = '#ff9f43'; g.font = `800 ${12 * s}px system-ui`; g.textAlign = 'center'; g.fillText('OFF TRACK', W / 2, viewMode === 'cockpit' ? H * 0.2 : 24 * s); }
       if (me.car.hit > 0.6 && viewMode !== 'top') { g.fillStyle = `rgba(255,40,40,${(me.car.hit - 0.6) * 0.3})`; g.fillRect(0, 0, W, H); }
       // Minimap.
@@ -1051,10 +1160,43 @@
           for (const f of F) f.d = f.v.reduce((m, p) => m + p[0], 0) / f.v.length;
           F.sort((x, y) => y.d - x.d).forEach((f) => poly(f.v, f.col));
         } else {
-          for (const [u, v] of [[1.45, 0.98], [1.45, -0.98], [-1.45, 0.98], [-1.45, -0.98]]) box(k.x + Math.cos(k.h) * u - Math.sin(k.h) * v, k.y + Math.sin(k.h) * u + Math.cos(k.h) * v, k.h, 0, 0.78, 0.34, 0.55, '#151515');      // wheels on the road
-          box(k.x, k.y, k.h, 0.22, CAR_LEN, CAR_W, 0.7, body);
-          box(k.x - Math.cos(k.h) * 0.3, k.y - Math.sin(k.h) * 0.3, k.h, 0.92, 2.1, 1.65, 0.5, '#1d2533');
-          if (k.spec.id === 'gt3') box(k.x - Math.cos(k.h) * 2.1, k.y - Math.sin(k.h) * 2.1, k.h, 1.15, 0.35, 1.9, 0.08, '#111');
+          // A road or race car from its silhouette: a lower body with a shaped nose and tail, a glass cabin whose screens
+          // slope, lights, wings and four round wheels, all drawn together far to near.
+          const ca = Math.cos(k.h), sa = Math.sin(k.h), at = (u, v, z) => cam(k.x + ca * u - sa * v, k.y + sa * u + ca * v, z), F = [];
+          const face = (pts, col) => F.push({ v: pts, col });
+          const solid = (fp, z0, z1, col) => { for (let i = 0; i < fp.length; i++) { const p = fp[i], q = fp[(i + 1) % fp.length]; face([at(p[0], p[1], z0), at(q[0], q[1], z0), at(q[0], q[1], z1), at(p[0], p[1], z1)], shade(col, i % 2 ? 0.68 : 0.84)); } face(fp.map((p) => at(p[0], p[1], z1)), shade(col, 1.06)); };
+          // A frustum: a footprint at z0 and a (smaller) one at z1: sloping screens and a roof.
+          const cabin = (lo, hi, z0, z1, glass, roof) => { for (let i = 0; i < lo.length; i++) { const a = lo[i], b = lo[(i + 1) % lo.length], c = hi[(i + 1) % hi.length], d = hi[i]; face([at(a[0], a[1], z0), at(b[0], b[1], z0), at(c[0], c[1], z1), at(d[0], d[1], z1)], glass); } face(hi.map((p) => at(p[0], p[1], z1)), roof); };
+          const wheel = (u0, v0, r, w) => {
+            const vs = [v0 - w / 2, v0 + w / 2], out = v0 > 0 ? vs[1] : vs[0], N = 10, ring = (v) => Array.from({ length: N }, (_, i) => { const t = (i / N) * Math.PI * 2 + (k.spinW || 0); return at(u0 + Math.cos(t) * r, v, r + Math.sin(t) * r); });
+            const a0 = ring(vs[0]), a1 = ring(vs[1]);
+            for (let i = 0; i < N; i++) face([a0[i], a0[(i + 1) % N], a1[(i + 1) % N], a1[i]], i % 2 ? '#121212' : '#1b1b1b');
+            face(out === vs[1] ? a1 : a0, '#262626');
+            face(Array.from({ length: N }, (_, i) => { const t = (i / N) * Math.PI * 2 + (k.spinW || 0) * 0.2; return at(u0 + Math.cos(t) * r * 0.6, out + (v0 > 0 ? 0.01 : -0.01), r + Math.sin(t) * r * 0.6); }), '#a0a5ad');
+          };
+          const P = CAR_SHAPES[k.spec.id] || CAR_SHAPES.gt, L = P.len / 2, Wd = P.w / 2, n = P.nose, t = P.tail, zb = P.z0, zt = P.belt;
+          const glass = '#1a2433', roofCol = P.roofBody ? body : '#151a22';
+          // Wheels first (they sit under the body), then the body, the cabin and the details.
+          wheel(L - P.fWheel, Wd - 0.12, P.r, 0.3); wheel(L - P.fWheel, -(Wd - 0.12), P.r, 0.3); wheel(-L + P.rWheel, Wd - 0.1, P.r * P.rBig, 0.34); wheel(-L + P.rWheel, -(Wd - 0.1), P.r * P.rBig, 0.34);
+          solid([[L, -Wd + n], [L, Wd - n], [L - 0.5, Wd], [-L + 0.35, Wd], [-L, Wd - t], [-L, -Wd + t], [-L + 0.35, -Wd], [L - 0.5, -Wd]], zb, zt, body);
+          if (P.hood) solid([[L - 0.6, -0.42], [L - 0.6, 0.42], [P.c0 + 0.3, 0.5], [P.c0 + 0.3, -0.5]], zt, zt + 0.08, shade(body, 0.92));
+          const c0 = P.c0, c1 = P.c1, cw = Wd - 0.12, tw = Wd - P.tuck;
+          cabin([[c0, -cw], [c0, cw], [c1, cw], [c1, -cw]], [[c0 - P.ws, -tw], [c0 - P.ws, tw], [c1 + P.bs, tw], [c1 + P.bs, -tw]], zt, P.roof, glass, roofCol);
+          solid([[L - 0.02, -Wd + n + 0.05], [L - 0.02, -Wd + n + 0.45], [L - 0.12, -Wd + n + 0.45], [L - 0.12, -Wd + n + 0.05]], zt - 0.18, zt - 0.06, '#fff6c8');
+          solid([[L - 0.02, Wd - n - 0.45], [L - 0.02, Wd - n - 0.05], [L - 0.12, Wd - n - 0.05], [L - 0.12, Wd - n - 0.45]], zt - 0.18, zt - 0.06, '#fff6c8');
+          const brakeLit = r === me && keys.has('down') ? '#ff2a2a' : '#8a1414';
+          solid([[-L + 0.1, -Wd + t + 0.02], [-L + 0.1, -Wd + t + 0.5], [-L, -Wd + t + 0.5], [-L, -Wd + t + 0.02]], zt - 0.2, zt - 0.08, brakeLit);
+          solid([[-L + 0.1, Wd - t - 0.5], [-L + 0.1, Wd - t - 0.02], [-L, Wd - t - 0.02], [-L, Wd - t - 0.5]], zt - 0.2, zt - 0.08, brakeLit);
+          if (P.splitter) solid([[L + 0.08, -Wd], [L + 0.08, Wd], [L - 0.25, Wd], [L - 0.25, -Wd]], zb - 0.06, zb, '#111');
+          if (P.wing) {
+            const wu = -L + 0.3, wz = P.wing;
+            for (const sv of [-0.55, 0.55]) solid([[wu + 0.08, sv - 0.04], [wu + 0.08, sv + 0.04], [wu - 0.08, sv + 0.04], [wu - 0.08, sv - 0.04]], zt, wz, '#151515');
+            solid([[wu + 0.25, -Wd + 0.05], [wu + 0.25, Wd - 0.05], [wu - 0.2, Wd - 0.05], [wu - 0.2, -Wd + 0.05]], wz, wz + 0.06, P.wingCol || '#151515');
+          }
+          if (P.ducktail) solid([[-L + 0.35, -Wd + 0.2], [-L + 0.35, Wd - 0.2], [-L + 0.05, Wd - 0.2], [-L + 0.05, -Wd + 0.2]], zt, zt + 0.12, body);
+          if (P.stripe) solid([[L - 0.55, -0.18], [L - 0.55, 0.18], [c0 + 0.3, 0.18], [c0 + 0.3, -0.18]], zt + (P.hood ? 0.081 : 0.002), zt + (P.hood ? 0.09 : 0.012), P.stripe);
+          for (const f of F) f.d = f.v.reduce((m, p) => m + p[0], 0) / f.v.length;
+          F.sort((x, y) => y.d - x.d).forEach((f) => poly(f.v, f.col));
         }
       };
       // Sky and ground.
@@ -1101,7 +1243,18 @@
         }
         // Barriers: armco on poles, red and white blocks round the bends.
         const bc = curvy ? (Math.floor(a.s / 4) % 2 ? '#e8e8e8' : '#c0392b') : '#b9bec6';
-        strip(a, b, -wall, -wall, bc, 0, 0.95); strip(a, b, wall, wall, bc, 0, 0.95);
+        const Pd = pitInfo(T), relD = Pd ? relS(T, a.s) : 1e9, inPitD = Pd && relD > Pd.a && relD < Pd.b;
+        if (inPitD) {
+          // The pit lane: tarmac out to the outer wall, a white pit wall between it and the track (open at the entry and exit),
+          // a dashed lane line and the box marked in yellow.
+          const sd = Pd.side, midD = relD > Pd.a + 80 && relD < Pd.b - 80;
+          strip(a, b, sd * (wd + 1.2), sd * Pd.outer, '#3b3e45');
+          if (Math.floor(a.s / 6) % 2 === 0) strip(a, b, sd * (Pd.lane - 3.6), sd * (Pd.lane - 3.3), '#e8e8e8');
+          for (const r of racers) if (r.boxS != null && Math.abs(relD - r.boxS) < 6 && (Math.abs(relD - r.boxS) > 4.5)) strip(a, b, sd * (Pd.lane - 3.3), sd * (Pd.lane + 3.3), r === me ? '#4fe09a' : '#ffd23f');
+          if (midD) strip(a, b, sd * Pd.inner, sd * Pd.inner, '#e6e6e6', 0, 1.1);
+          strip(a, b, sd * Pd.outer, sd * Pd.outer, '#b9bec6', 0, 1.6);
+          strip(a, b, -sd * wall, -sd * wall, bc, 0, 0.95);
+        } else { strip(a, b, -wall, -wall, bc, 0, 0.95); strip(a, b, wall, wall, bc, 0, 0.95); }
         const items = bucket.get(k); if (items) items.forEach((f) => f());
       }
       // Smoke, flames, sparks and bits of car, far to near.
@@ -1324,6 +1477,6 @@
     setSoundEnabled: (on) => { window.NotchHostSound = !!on; const c = window.NotchRaceGame.current; if (c) c.setSoundEnabled(on); },
     resume: () => { const c = window.NotchRaceGame.current; if (c) c.resume(); },
     current: null,
-    _test: { checkTrack, encodeTrack, decodeTrack, customDef, GROUNDS, TRACKS, CARS, buildTrack, locate, gridSlot, newCar, stepCar, driveAI, newRacer, progress, ranking, collide, wallHit, hurt, gearbox, NET, fmt, LEVELS },
+    _test: { pitInfo, relS, fence, checkTrack, encodeTrack, decodeTrack, customDef, GROUNDS, TRACKS, CARS, buildTrack, locate, gridSlot, newCar, stepCar, driveAI, newRacer, progress, ranking, collide, wallHit, hurt, gearbox, NET, fmt, LEVELS },
   };
 })();
