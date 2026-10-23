@@ -199,3 +199,51 @@ test('a track survives being shared as a code, and broken codes are refused', ()
   let t = 0; while (!r.finished && t < 240) { R.stepCar(r.car, R.driveAI(T, r.car, st, 1 / 60), 1 / 60, 1); R.progress(r, T, t); t += 1 / 60; }
   assert.ok(r.finished, 'finished the drawn loop');
 });
+
+// One step the way the game does it: the car moves, then the barrier holds it in.
+function gameStep(T, r, inp, dt = 1 / 120) {
+  const loc = R.locate(T, r.car.x, r.car.y, r.idx);
+  R.stepCar(r.car, inp, dt, Math.abs(loc.lat) > T.width / 2 + 1.5 ? 0.55 : 1);
+  const after = R.locate(T, r.car.x, r.car.y, loc.idx);
+  R.wallHit(r.car, T, after);
+  R.progress(r, T, 0);
+  return R.locate(T, r.car.x, r.car.y, r.idx);
+}
+
+test('the barriers are solid: a car driven flat out at the wall, at any angle, on any track, stays on the road side of it', () => {
+  for (const def of R.TRACKS) {
+    const T = R.buildTrack(def), wallD = T.width / 2 + 7;
+    for (const spec of [R.CARS[0], R.CARS[R.CARS.length - 1], R.CARS.find((c) => c.id === 'f1') || R.CARS[1]]) {
+      for (const ang of [-1.3, -0.7, -0.25, 0.25, 0.7, 1.3]) for (const at of [30, Math.floor(T.m / 3), Math.floor(T.m * 0.6)]) {
+        const q = T.S[Math.min(at, T.m - 3)], r = R.newRacer('x', 'x', spec, T, 0);
+        r.car.x = q.x; r.car.y = q.y; r.car.h = Math.atan2(q.ty, q.tx) + ang; r.car.vx = Math.cos(r.car.h) * 45; r.car.vy = Math.sin(r.car.h) * 45; r.idx = at;
+        let worst = 0;
+        for (let t = 0; t < 8; t += 1 / 120) { const loc = gameStep(T, r, { throttle: 1, brake: 0, steer: Math.sign(ang) * 0.3, hand: 0 }); worst = Math.max(worst, Math.abs(loc.lat)); }
+        assert.ok(worst <= wallD + 0.6, `${def.id}/${spec.id}: reached ${worst.toFixed(1)} m from the middle, the barrier is at ${wallD} m`);
+      }
+    }
+  }
+});
+
+test('the computer drivers never get past a barrier either, over a whole race', () => {
+  for (const def of R.TRACKS) {
+    const T = R.buildTrack(def), wallD = T.width / 2 + 7; T.laps = def.closed ? 2 : 1;
+    const racers = R.CARS.slice(0, 5).map((spec, i) => R.newRacer('a' + i, 'AI' + i, spec, T, i));
+    const st = racers.map((r, i) => ({ idx: -1, lane: (i - 2) * 0.4, skill: 0.98, stuck: 0, rev: 0, go: true }));
+    let worst = 0;
+    for (let t = 0; t < 240 && !racers.every((r) => r.finished); t += 1 / 60) {
+      racers.forEach((r, i) => { if (r.finished) st[i].skill = 0.4; const loc = gameStep(T, r, R.driveAI(T, r.car, st[i], 1 / 60), 1 / 60); R.progress(r, T, t); worst = Math.max(worst, Math.abs(loc.lat)); });
+      for (let i = 0; i < racers.length; i++) for (let j = i + 1; j < racers.length; j++) R.collide(racers[i].car, racers[j].car);
+    }
+    assert.ok(worst <= wallD + 0.6, `${def.id}: an AI car got ${worst.toFixed(1)} m from the middle (the barrier is at ${wallD} m)`);
+  }
+});
+
+test('the designer refuses a bend tighter than the barrier stands from the road, which would fold the inside barrier over itself', () => {
+  const mixed = R.TRACKS.find((t) => t.id === 'mixed');
+  const scaled = (k) => ({ name: 'tight', closed: true, width: mixed.width, laps: 3, look: 'green', pts: mixed.pts.map(([x, y]) => [Math.round(x * k), Math.round(y * k)]) });
+  assert.equal(R.checkTrack(scaled(1)).ok, true, 'the real mixed track is fine');
+  const t = R.checkTrack(scaled(0.68));
+  assert.equal(t.ok, false, 'scaled down until the tightest bend is under 24 m');
+  assert.match(t.why, /too tight/i);
+});

@@ -72,10 +72,10 @@ Pick your computer. Both buttons start the download straight away. The Mac link 
   </tr>
   <tr>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.1.25</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.1.26</b></a>
     </td>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 2.1.25 BETA</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 2.1.26 BETA</b></a>
     </td>
   </tr>
   <tr>
@@ -233,6 +233,11 @@ All screenshots use sample data.
 ## What's new
 
 > **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is in the repository's history.
+
+### Mac 2.1.26 · Windows 2.1.26 BETA · 23 October 2026 · 🏎️ Racing: cars sit on the road and barriers are solid
+
+- Racing: cars now sit on top of the track in the chase view. The road used to be drawn over the back of a car (and over other cars), which made it look sunk into the tarmac. Cars now have wheels, a shadow and a full underside on the road.
+- The barriers beside the road are solid for every car, including the computer drivers: nothing gets through them, on any track. Tracks you draw in the designer are now checked so a tight bend or two close sections cannot let the barrier fold over and let cars through.
 
 ### Mac 2.1.25 · Windows 2.1.25 BETA · 22 October 2026 · 🏁 Plane racing with friends
 
