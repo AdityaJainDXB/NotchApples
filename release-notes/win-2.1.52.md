@@ -1,0 +1,3 @@
+## Notch Apple for Windows 2.1.52 (BETA)
+
+- Racing, a smart race engineer: ask anything on the radio (“what should I do on the formation lap?”, “what's the status of the car?”, “can I make these tyres last?”) by pressing Enter in the open radio and type it. The AI you set up in the AI tab answers in a sentence or two on the radio, knowing your race right then: position, gaps and who is around you, tyres and their age, damage, penalties, the flag, laps to go, and whether you're on the formation lap. Without an AI set up, the built-in answers are used as before, and the number keys still give instant answers. Only the question and that race summary are sent, to the AI provider you chose.

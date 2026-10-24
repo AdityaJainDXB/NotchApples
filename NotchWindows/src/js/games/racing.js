@@ -875,6 +875,7 @@
 .rc-sel{font:inherit;font-size:12px;color:#fff;background:#1d2230;border:1px solid rgba(255,255,255,.18);border-radius:8px;padding:5px 8px;max-width:260px}
 .rc-med{position:absolute;left:50%;bottom:16%;transform:translateX(-50%);width:min(560px,90%);background:rgba(8,12,22,.92);color:#fff;border-radius:14px;padding:14px 16px;font:500 13px system-ui;box-shadow:0 8px 30px rgba(0,0,0,.5)}.rc-med b{font-size:14px}.rc-med p{margin:6px 0}.rc-med .dim{opacity:.7;font-size:12px}.rc-med-row{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}.rc-med-btn{font:600 12px system-ui;color:#fff;background:#2a3142;border:0;border-radius:9px;padding:8px 10px;cursor:pointer;text-align:left;flex:1 1 45%}.rc-med-btn:hover{background:#39425a}.rc-med-btn.red{background:#b3262b}.rc-med-btn.yellow{background:#b38a12}.rc-med-btn.green{background:#1f8a4c}
 .rc-check{display:flex;align-items:center;gap:8px;padding:5px 8px;border-radius:8px;background:rgba(255,255,255,.05);margin:3px 0;font-size:12px}.rc-check.done{background:rgba(60,220,120,.16)}.rc-check span{margin-left:auto;color:#4fe09a;font-weight:800}.rc-check kbd{background:#2a3142;border-radius:4px;padding:0 5px}
+.rc-ask{display:block;width:260px;margin-top:6px;font:inherit;font-size:12px;color:#fff;background:#1d2230;border:1px solid rgba(255,255,255,.25);border-radius:7px;padding:5px 8px}.rc-radio .dim{opacity:.65;font-size:11px;margin-top:3px}
 .rc-radio{position:absolute;left:12px;bottom:12px;background:rgba(8,12,22,.88);color:#fff;border-radius:10px;padding:10px 12px;font:600 12px system-ui;display:flex;flex-direction:column;gap:3px;pointer-events:none}.rc-radio b{color:#4fe09a;margin-bottom:3px}.rc-radio kbd{display:inline-block;min-width:16px;text-align:center;background:#2a3142;border-radius:4px;padding:0 4px;margin-right:4px}
 .rc-lights{position:absolute;left:50%;top:9%;transform:translateX(-50%);display:flex;gap:8px;padding:8px 10px;background:#111;border-radius:8px;box-shadow:0 4px 18px rgba(0,0,0,.6);pointer-events:none}.rc-lights[hidden]{display:none}.rc-lights b{display:flex;flex-direction:column;gap:5px;padding:5px;background:#222;border-radius:5px}.rc-lights i{width:22px;height:22px;border-radius:50%;background:#3a0b0b;box-shadow:inset 0 2px 4px rgba(0,0,0,.6)}.rc-lights b.on i{background:radial-gradient(circle at 40% 35%,#ff8a80,#ff1a1a 55%,#a00);box-shadow:0 0 14px #ff2a2a}
 .rc-big{position:absolute;left:0;right:0;top:26%;text-align:center;font-size:64px;font-weight:900;text-shadow:0 3px 14px rgba(0,0,0,.7);pointer-events:none}
@@ -1159,6 +1160,7 @@
         if ((k === 't' || k === ' ') && screen === 'radiocheck') { radioCheckTalk(); return; }
         if (screen === 'radiocheck' && /^[1-6]$/.test(k)) { radioCheckLine(Number(k), false); return; }
         if (radioUI && /^[1-7]$/.test(k)) { radioAsk(Number(k)); return; }
+        if (radioUI && k === 'enter' && aiAvailable()) { radioType(); return; }
         if (screen === 'design') { if (k === 'escape') showMenu(); else if (k === 'z') designUndo(); return; }
         if (k === 'escape' && screen !== 'menu') { closeNet(); paused = false; if (backToDesign && ds) { screen = 'design'; designUI(); } else showMenu(); return; }
         if (k === 'v' && screen !== 'menu' && screen !== 'lobby') { viewMode = { top: 'chase', chase: 'cockpit', cockpit: 'top' }[viewMode] || 'chase'; store.set('view', viewMode); toast({ top: 'Top-down view', chase: 'Chase view', cockpit: 'Cockpit view' }[viewMode]); return; }
@@ -1188,22 +1190,74 @@
     }
     function radioStopListening() { if (!radioListening) return; radioListening = false; if (NATIVE_RADIO()) NATIVE_RADIO().postMessage('stop'); else if (radioRec) { try { radioRec.stop(); } catch { /* already stopped */ } } }
     /// What you said, from the Mac app or the browser.
+    let skipHeard = false;       // the listening was stopped to type instead: what came back is not a question
     function heard(text) {
+      if (skipHeard) { skipHeard = false; return; }
       const t = String(text || '').toLowerCase().trim();
       if (onHeard) { onHeard(t); return; }
       if (!t) { toast("📻 Didn't catch that. Try again, or press a number"); return; }
-      toast(`📻 You: “${t}”`); radioAsk(radioMatch(t), true);
+      toast(`📻 You: “${t}”`); engineerAnswer(t);
+    }
+    // ---- the race engineer's brain: any question goes to the AI you set up in the AI tab (on the Mac through the app, on
+    // Windows through the app's AI), with a snapshot of your race, and comes back as a short radio answer. With no AI set
+    // up (or no answer in 12 s) the built-in answers are used.
+    let askSeq = 0; const askWait = new Map();
+    function aiAvailable() { return !!(NATIVE_RADIO() || window.NotchRaceAI); }
+    function askAI(system, question) {
+      return new Promise((done) => {
+        const id = ++askSeq, timer = setTimeout(() => { askWait.delete(id); done(null); }, 12000);
+        askWait.set(id, (txt) => { clearTimeout(timer); askWait.delete(id); done(txt || null); });
+        if (NATIVE_RADIO()) NATIVE_RADIO().postMessage({ kind: 'ask', id, system, question });
+        else if (window.NotchRaceAI) Promise.resolve(window.NotchRaceAI(system, question)).then((x) => askWait.get(id) && askWait.get(id)(x), () => askWait.get(id) && askWait.get(id)(null));
+        else askWait.get(id)(null);
+      });
+    }
+    /// Everything the engineer can see on the pit wall right now, in plain words.
+    function raceSnapshot() {
+      if (!me) return 'No race running.';
+      const order = ranking(racers).filter((r) => !r.dnf), i = order.indexOf(me), ahead = order[i - 1], behind = order[i + 1];
+      const gap = (a, b) => (a && b && a.gapL != null && b.gapL != null ? `${Math.abs(b.gapL - a.gapL).toFixed(1)} s` : 'unknown');
+      const ty = TYRES[me.car.tyre] || TYRES.M, P = pitInfo(T), C = raceCtl;
+      const phase = screen === 'formation' ? 'formation lap (follow the car ahead, no overtaking, warm the tyres, stop in your own grid box)' : screen === 'countdown' ? 'on the grid, the five start lights are coming on' : screen === 'race' ? 'racing' : screen;
+      const lines = [
+        `Session: ${phase}. Track: ${(findDef(trackId) || {}).name || 'circuit'}, ${(T.length / 1000).toFixed(1)} km${T.closed ? `, lap ${clamp(me.lap + 1, 1, raceLaps)} of ${raceLaps}` : ', a sprint'}.`,
+        me.official ? `You are the ${role === 'sc' ? 'Safety Car' : 'Medical Car'} driver (race control), not racing.` : `Position: P${i + 1} of ${order.length}.${ahead ? ` Ahead: ${ahead.name}, ${gap(ahead, me)}.` : ' Leading.'}${behind ? ` Behind: ${behind.name}, ${gap(me, behind)}.` : ''}`,
+        `Car: ${me.car.spec.name}. Damage ${Math.round(me.car.dmg * 100)}%. Tyres: ${ty.name}, ${Math.max(0, me.lap - (me.tyreLap || 0))} laps old, ${Math.round((1 - (me.car.wear || 0)) * 100)}% left. Pit stops so far: ${me.pits || 0}. Next set if you pit: ${(TYRES[me.nextTyre] || TYRES.M).name}.`,
+        `Last lap ${me.lapTimes.length ? fmt(me.lapTimes[me.lapTimes.length - 1]) : 'none yet'}, best ${me.bestLap ? fmt(me.bestLap) : 'none yet'}. Speed ${Math.round(Math.hypot(me.car.vx, me.car.vy) * KMH)} km/h.`,
+        `Flag: ${C.flag}${C.flag === 'sc' ? ' (Safety Car out, no overtaking)' : C.flag === 'vsc' ? ' (Virtual Safety Car, keep to the delta)' : ''}.${me.pen ? ` Penalties: ${me.pen} s (${me.penWhy || ''}), can be served at a pit stop with Q.` : ''}${me.tl ? ` Track limits warnings: ${me.tl} of 3.` : ''}${me.inLane ? ' In the pit lane now (limiter 80 km/h).' : ''}`,
+        `Pit lane: ${P ? 'entry just before the start line, stop in your own box' : 'none on this track'}. Controls: Y picks the next tyres, Q serves a penalty at the stop, radio option 7 retires the car, L the timing tower.`,
+      ];
+      return lines.join('\n');
+    }
+    async function engineerAnswer(question) {
+      if (!aiAvailable()) { radioAsk(radioMatch(question), true); return; }
+      toast('🎧 …');
+      const system = `You are ${me && !me.official ? `${myName || 'the driver'}'s race engineer` : 'race control'} in a motor racing game, talking on the team radio. Answer in one or two short spoken sentences (under 35 words), calm and direct like a Formula 1 engineer, using the live data below when it matters. No lists, no markdown, no emoji. If the question is not about the race, answer in a word or two and bring the focus back to driving.\n\nLive data:\n${raceSnapshot()}`;
+      const reply = await askAI(system, question);
+      if (!reply) { radioAsk(radioMatch(question), true); return; }
+      const clean = reply.replace(/[*_#`>]/g, '').replace(/\s+/g, ' ').trim().slice(0, 280);
+      say(clean, me && me.official ? 'com' : 'eng', 2); toast(`🎧 ${clean}`);
     }
     function radioOpen() {
       if (radioUI) return;
       radioUI = document.createElement('div'); radioUI.className = 'rc-radio';
       const talk = radioListen();
-      radioUI.innerHTML = `<b>📻 Radio: ${talk ? `speak now, then ${me && me.car.spec.id === 'f1' ? 'Space' : 'T'} to send (or press a number)` : 'press a number (T closes)'}</b>` + RADIO_Q.map((q, i) => `<div><kbd>${i + 1}</kbd> ${q}</div>`).join('');
+      const typeHint = aiAvailable() ? ' · Enter: type any question' : '';
+      radioUI.innerHTML = `<b>📻 Radio: ${talk ? `speak now, then ${me && me.car.spec.id === 'f1' ? 'Space' : 'T'} to send (or press a number)` : 'press a number (T closes)'}</b>` + RADIO_Q.map((q, i) => `<div><kbd>${i + 1}</kbd> ${q}</div>`).join('') + (typeHint ? `<div class="dim">${typeHint.slice(3)}</div>` : '');
       root.append(radioUI); click();
       clearTimeout(radioT); radioT = setTimeout(radioSend, talk ? 8000 : 10000);
     }
     /// T or Space again: send what you said (or just close the radio).
     function radioSend() { const was = radioListening; radioStopListening(); if (radioUI) { radioUI.remove(); radioUI = null; } clearTimeout(radioT); if (was) toast('📻 …'); }
+    /// Type a question to the engineer (the car keeps going straight while you type; Enter sends, Esc cancels).
+    function radioType() {
+      if (!radioUI || radioUI.querySelector('input')) return;
+      clearTimeout(radioT); if (radioListening) { skipHeard = true; radioStopListening(); }
+      const i = document.createElement('input'); i.className = 'rc-ask'; i.placeholder = 'Ask your engineer anything…'; i.maxLength = 160;
+      i.style.pointerEvents = 'auto';
+      i.onkeydown = (e) => { e.stopPropagation(); if (e.key === 'Enter') { const q = i.value.trim(); radioClose(); root.focus(); if (q) { toast(`📻 You: “${q}”`); engineerAnswer(q); } } else if (e.key === 'Escape') { radioClose(); root.focus(); } };
+      radioUI.append(i); keys.clear(); setTimeout(() => i.focus(), 0);
+    }
     function radioClose() { clearTimeout(radioT); radioStopListening(); radioRec = null; if (radioUI) { radioUI.remove(); radioUI = null; } }
     /// The engineer's answer, from what is happening in the race right now.
     function radioAsk(n, spoken) {
@@ -2609,7 +2663,7 @@
     raf = requestAnimationFrame(frame);
 
     const api = {
-      radioHeard: heard, radioPermission: (ok) => { store.set('voice', ok ? 'on' : 'off'); toast(ok ? '🎙 Microphone on: talk to your engineer on the radio' : 'No microphone: the radio works with the number keys'); if (screen === 'menu') showMenu(); },
+      radioHeard: heard, radioAnswer: (id, txt) => { const f = askWait.get(id); if (f) f(txt); }, radioPermission: (ok) => { store.set('voice', ok ? 'on' : 'off'); toast(ok ? '🎙 Microphone on: talk to your engineer on the radio' : 'No microphone: the radio works with the number keys'); if (screen === 'menu') showMenu(); },
       key, suspend() { suspended = true; keys.clear(); audioKill(); hush(); }, resume() { suspended = false; last = performance.now(); }, setSoundEnabled(on) { setSound(on); },
       _state: () => ({ screen, racers, me, T, clock, net, raceCtl, autoMe: () => { me.ai = true; const st = { idx: -1, lane: 0, skill: 0.95, stuck: 0, rev: 0, go: true, cap: 55, served: true }; aiState.set(me.id, st); return st; }, force: (i, sp) => { const r = racers.filter((x) => x.ai && !x.official)[i]; r.car.dmg = 0.95; incident(r, sp); return r.name; } }),
     };
@@ -2626,6 +2680,7 @@
     mount,
     key: (k, down) => { const c = window.NotchRaceGame.current; if (c) c.key(k, down); },
     radioHeard: (t) => { const c = window.NotchRaceGame.current; if (c) c.radioHeard(t); },
+    radioAnswer: (id, t) => { const c = window.NotchRaceGame.current; if (c) c.radioAnswer(id, t); },
     radioPermission: (ok) => { const c = window.NotchRaceGame.current; if (c) c.radioPermission(ok); },
     suspend: () => { const c = window.NotchRaceGame.current; if (c) c.suspend(); },
     setSoundEnabled: (on) => { window.NotchHostSound = !!on; const c = window.NotchRaceGame.current; if (c) c.setSoundEnabled(on); },

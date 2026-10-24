@@ -20,6 +20,9 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.1.52", date: "24 October 2026", headline: "A race engineer you can ask anything", items: [
+            "Racing, a smart race engineer: ask anything on the radio (“what should I do on the formation lap?”, “what's the status of the car?”, “can I make these tyres last?”) by voice, or press Enter in the open radio and type it. The AI you set up in the AI tab answers in a sentence or two on the radio, knowing your race right then: position, gaps and who is around you, tyres and their age, damage, penalties, the flag, laps to go, and whether you're on the formation lap. Without an AI set up, the built-in answers are used as before, and the number keys still give instant answers. Only the question and that race summary are sent, to the AI provider you chose.",
+        ]),
         ReleaseNote(version: "2.1.51", date: "24 October 2026", headline: "A live timing tower and tyre compounds", items: [
             "Racing, a live timing tower (like issue #35 asked for the F1 tracker): position, driver, the gap to the car ahead or to the leader (real time gaps, measured where each car passed the same point), the last lap (green when it's that driver's best), the tyre and how many laps it has done, and pit stops. Cars in the pits show PIT, cars out of the race OUT. L switches between the interval, the gap to the leader and hiding the tower.",
             "Racing, tyre compounds: Soft (grippiest, wears fast), Medium and Hard (a bit slower, lasts much longer). Pick your starting tyres in the menu, and press Y to choose the tyres for your next pit stop. The other drivers start on a mix and choose their own at their stops. Your engineer tells you the compound and its age when you ask about tyres, and which set you'll get when you ask about boxing.",

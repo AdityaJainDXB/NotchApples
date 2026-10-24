@@ -6,6 +6,7 @@ import { el, load, save } from '../store.js';
 import { segmented } from '../ui.js';
 import { cookie, runner, breakout, memory } from './games-extra.js';
 import { blackjack, solitaire } from './games-cards.js';
+import * as AI from '../services/ai.js';
 
 export function render(root) {
   let game = load('games.last', '2048'), stop = () => {};
@@ -122,6 +123,8 @@ function racing(host) {
   const box = el('div', { style: 'position:absolute;inset:0' });
   host.replaceChildren(box);
   let stop = () => {}, gone = false;
+  // The race engineer can use the AI set up in the AI tab to answer any question about your race (null when there is none).
+  window.NotchRaceAI = async (system, question) => (AI.ready() ? AI.ask(question, { system }) : null);
   import('../games/racing.js').then(() => { if (!gone) { stop = window.NotchRaceGame.mount(box); box.firstElementChild && box.firstElementChild.focus(); } });
   return () => { gone = true; host.style.position = ''; stop(); };
 }

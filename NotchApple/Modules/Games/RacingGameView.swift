@@ -53,7 +53,23 @@ private struct RacingWebView: NSViewRepresentable {
         /// ("start") and stops when you send ("stop"); what you said goes back to the game, which answers it. Speech is
         /// recognised on this Mac whenever it can be (the same dictation as the AI tab).
         func userContentController(_ controller: WKUserContentController, didReceive message: WKScriptMessage) {
-            guard let web, let what = message.body as? String else { return }
+            guard let web else { return }
+            // A question for the race engineer: the AI you set up in the AI tab answers it, knowing the state of your race.
+            if let ask = message.body as? [String: Any], ask["kind"] as? String == "ask", let id = ask["id"] as? Int,
+               let question = ask["question"] as? String, let system = ask["system"] as? String {
+                Task { @MainActor in
+                    var out = ""
+                    do {
+                        let config = AIConfig.shared
+                        for try await piece in AIClient.stream([ChatMessage(role: .user, text: question)], provider: config.provider, model: config.model, system: system) { out += piece }
+                    } catch { out = "" }
+                    let reply = MathText.plain(out).trimmingCharacters(in: .whitespacesAndNewlines)
+                    guard let data = try? JSONSerialization.data(withJSONObject: [reply]), let arg = String(data: data, encoding: .utf8) else { return }
+                    web.evaluateJavaScript("window.NotchRaceGame && NotchRaceGame.radioAnswer && NotchRaceGame.radioAnswer(\(id), \(arg)[0])", completionHandler: nil)
+                }
+                return
+            }
+            guard let what = message.body as? String else { return }
             switch what {
             case "permission":
                 AVCaptureDevice.requestAccess(for: .audio) { mic in
