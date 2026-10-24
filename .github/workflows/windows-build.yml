@@ -59,11 +59,10 @@ jobs:
           # Tagged releases only read the cache. Saving a new ~600 MB copy on every release filled the 10 GB limit.
           save-if: ${{ github.event_name == 'workflow_dispatch' }}
 
-      - name: Install Tauri CLI
-        run: cargo install tauri-cli --version "=2.12.1" --locked
-
+      # The Tauri CLI, ready-built from npm (the same 2.12.1 as the Rust crate). `cargo install tauri-cli` compiled it
+      # from source on every release, 8 to 10 minutes of each build.
       - name: Build installers
-        run: cargo tauri build
+        run: npx --yes @tauri-apps/cli@2.12.1 build
 
       - name: Launch check (the app must start and stay running)
         shell: pwsh
