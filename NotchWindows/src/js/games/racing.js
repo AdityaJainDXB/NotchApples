@@ -121,9 +121,15 @@
 
   /// The start grid: row by row behind the line, two cars across.
   function gridSlot(T, slot) {
-    const q = T.S[0], row = Math.floor(slot / 2), side = (slot % 2 ? 1 : -1) * T.width * 0.2;
+    const row = Math.floor(slot / 2), side = (slot % 2 ? 1 : -1) * T.width * 0.2;
     const back = -(10 + row * 9 + (slot % 2) * 4);
-    return { x: q.x + q.tx * back + q.nx * side, y: q.y + q.ty * back + q.ny * side, h: Math.atan2(q.ty, q.tx) };
+    if (T.closed) {          // along the road itself, so a long grid follows a bend before the line instead of leaving the track
+      const f = ((T.length + back) % T.length) / T.step, i = Math.floor(f) % T.m, a = T.S[i], b = T.S[(i + 1) % T.m], u = f - Math.floor(f);
+      const x = a.x + (b.x - a.x) * u, y = a.y + (b.y - a.y) * u;
+      return { x: x + a.nx * side, y: y + a.ny * side, h: Math.atan2(a.ty, a.tx), s: back };
+    }
+    const q = T.S[0];
+    return { x: q.x + q.tx * back + q.nx * side, y: q.y + q.ty * back + q.ny * side, h: Math.atan2(q.ty, q.tx), s: back };
   }
 
   /// Is a drawn track drivable? Returns { ok, why, T }: enough points, long enough, no bend tighter than the road is wide,
@@ -288,6 +294,35 @@
   }
   /// A circuit traced from a picture of its layout (RGBA pixels, w x h): the road line is the biggest connected shape that
   /// stands out from the background; it is thinned to a centre line, followed round, scaled to `km` long and checked.
+  /// The edge of the biggest enclosed background area in `mask` (1 = line), followed round in order: pixel indices, or
+  /// null when there is no big enough enclosed area.
+  function infieldEdge(mask, w, h) {
+    const out = new Uint8Array(w * h), st = [];
+    for (let x = 0; x < w; x++) for (const y of [0, h - 1]) { const k = y * w + x; if (!mask[k] && !out[k]) { out[k] = 1; st.push(k); } }
+    for (let y = 0; y < h; y++) for (const x of [0, w - 1]) { const k = y * w + x; if (!mask[k] && !out[k]) { out[k] = 1; st.push(k); } }
+    while (st.length) { const k = st.pop(), x = k % w, y = (k / w) | 0; for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) { const xx = x + dx, yy = y + dy; if (xx < 0 || yy < 0 || xx >= w || yy >= h) continue; const j = yy * w + xx; if (!mask[j] && !out[j]) { out[j] = 1; st.push(j); } } }
+    // Enclosed areas: label them and keep the biggest.
+    const lab = new Int32Array(w * h); let best = 0, bestN = 0, L = 0;
+    for (let i = 0; i < w * h; i++) {
+      if (mask[i] || out[i] || lab[i]) continue; L++; let n = 0; const q = [i]; lab[i] = L;
+      while (q.length) { const k = q.pop(), x = k % w, y = (k / w) | 0; n++; for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) { const xx = x + dx, yy = y + dy; if (xx < 0 || yy < 0 || xx >= w || yy >= h) continue; const j = yy * w + xx; if (!mask[j] && !out[j] && !lab[j]) { lab[j] = L; q.push(j); } } }
+      if (n > bestN) { bestN = n; best = L; }
+    }
+    if (bestN < w * h * 0.02) return null;
+    const inR = (x, y) => x >= 0 && y >= 0 && x < w && y < h && lab[y * w + x] === best;
+    // Follow its edge round (Moore neighbour tracing).
+    let sx = -1, sy = -1; for (let i = 0; i < w * h && sx < 0; i++) if (lab[i] === best) { sx = i % w; sy = (i / w) | 0; }
+    const D = [[-1, 0], [-1, -1], [0, -1], [1, -1], [1, 0], [1, 1], [0, 1], [-1, 1]], loop = [];
+    let cx = sx, cy = sy, dir = 0;
+    for (let guard = 0; guard < w * h; guard++) {
+      loop.push(cy * w + cx);
+      let found = false;
+      for (let t = 0; t < 8; t++) { const d = (dir + t) % 8, nx = cx + D[d][0], ny = cy + D[d][1]; if (inR(nx, ny)) { cx = nx; cy = ny; dir = (d + 6) % 8; found = true; break; } }
+      if (!found || (cx === sx && cy === sy && loop.length > 2)) break;
+    }
+    return loop.length >= 40 ? loop : null;
+  }
+
   function traceImage(px, w, h, km = 4.6) {
     // Background: the most common colour round the edge. The track: pixels that differ from it a lot.
     const key = (o) => ((px[o] >> 4) << 8) | ((px[o + 1] >> 4) << 4) | (px[o + 2] >> 4), hist = new Map();
@@ -302,58 +337,75 @@
     for (let i = 0; i < 64; i++) { wB += H[i]; if (!wB) continue; const wF = w * h - wB; if (!wF) break; sumB += i * H[i]; const mB = sumB / wB, mF = (sum - sumB) / wF, v = wB * wF * (mB - mF) ** 2; if (v > best) { best = v; th = i; } }
     const cut = Math.max(40, (th + 0.5) / 64 * mx);
     let mask = new Uint8Array(w * h); for (let i = 0; i < w * h; i++) mask[i] = diff[i] > cut ? 1 : 0;
-    // The biggest connected shape (8-way).
-    const lab = new Int32Array(w * h); let bestL = 0, bestN = 0, L = 0;
-    for (let i = 0; i < w * h; i++) {
-      if (!mask[i] || lab[i]) continue; L++; let n = 0; const st = [i]; lab[i] = L;
-      while (st.length) { const j = st.pop(); n++; const x = j % w, y = (j / w) | 0; for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) { const xx = x + dx, yy = y + dy; if (xx < 0 || yy < 0 || xx >= w || yy >= h) continue; const k = yy * w + xx; if (mask[k] && !lab[k]) { lab[k] = L; st.push(k); } } }
-      if (n > bestN) { bestN = n; bestL = L; }
-    }
-    if (bestN < 80) return { def: null, why: "Couldn't find a track line in that picture. Try a clear map of the circuit on a plain background." };
-    for (let i = 0; i < w * h; i++) mask[i] = lab[i] === bestL ? 1 : 0;
-    // Fill small holes, then thin to a one-pixel centre line (Zhang–Suen).
-    const at = (m, x, y) => (x < 0 || y < 0 || x >= w || y >= h ? 0 : m[y * w + x]);
-    for (let changed = true, pass = 0; changed && pass < 200; pass++) {
-      changed = false;
-      for (const step of [0, 1]) {
-        const del = [];
-        for (let y = 1; y < h - 1; y++) for (let x = 1; x < w - 1; x++) {
-          if (!mask[y * w + x]) continue;
-          const p = [at(mask, x, y - 1), at(mask, x + 1, y - 1), at(mask, x + 1, y), at(mask, x + 1, y + 1), at(mask, x, y + 1), at(mask, x - 1, y + 1), at(mask, x - 1, y), at(mask, x - 1, y - 1)];
-          const B = p.reduce((a, b) => a + b, 0); if (B < 2 || B > 6) continue;
-          let A = 0; for (let k = 0; k < 8; k++) if (!p[k] && p[(k + 1) % 8]) A++; if (A !== 1) continue;
-          if (step === 0 ? (p[0] * p[2] * p[4] || p[2] * p[4] * p[6]) : (p[0] * p[2] * p[6] || p[0] * p[4] * p[6])) continue;
-          del.push(y * w + x);
-        }
-        if (del.length) { changed = true; for (const k of del) mask[k] = 0; }
+    // First choice: the edge of the infield. A circuit encloses an area; the biggest area of background that does not reach
+    // the picture's edge is the infield, and its edge follows the track all the way round. Labels, DRS boxes and legends
+    // drawn outside the loop are ignored this way.
+    let loop = infieldEdge(mask, w, h);
+    if (!loop) {
+      // The biggest connected shape (8-way).
+      const lab = new Int32Array(w * h); let bestL = 0, bestN = 0, L = 0;
+      for (let i = 0; i < w * h; i++) {
+        if (!mask[i] || lab[i]) continue; L++; let n = 0; const st = [i]; lab[i] = L;
+        while (st.length) { const j = st.pop(); n++; const x = j % w, y = (j / w) | 0; for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) { const xx = x + dx, yy = y + dy; if (xx < 0 || yy < 0 || xx >= w || yy >= h) continue; const k = yy * w + xx; if (mask[k] && !lab[k]) { lab[k] = L; st.push(k); } } }
+        if (n > bestN) { bestN = n; bestL = L; }
       }
-    }
-    // Trim the loose ends (labels, pit lane stubs) until only loops are left, then follow the longest one round.
-    const nb = (k) => { const x = k % w, y = (k / w) | 0, out = []; for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) { if (!dx && !dy) continue; const xx = x + dx, yy = y + dy; if (xx >= 0 && yy >= 0 && xx < w && yy < h && mask[yy * w + xx]) out.push(yy * w + xx); } return out; };
-    for (let pass = 0; pass < 400; pass++) { let cut2 = 0; for (let k = 0; k < w * h; k++) if (mask[k] && nb(k).length <= 1) { mask[k] = 0; cut2++; } if (!cut2) break; }
-    let start = -1; for (let k = 0; k < w * h; k++) if (mask[k]) { start = k; break; }
-    if (start < 0) return { def: null, why: "The line in that picture doesn't close into a circuit. Try a picture where the whole track is one clear loop." };
-    const seen = new Uint8Array(w * h), loop = [start]; seen[start] = 1; let cur = start, prev = -1;
-    for (let guard = 0; guard < w * h; guard++) {
-      const cand = nb(cur).filter((k) => !seen[k]);
-      if (!cand.length) break;
-      // Go straight on where the line branches (keeps to the main loop at a junction).
-      let nx = cand[0];
-      if (cand.length > 1 && prev >= 0) { const dx0 = (cur % w) - (prev % w), dy0 = ((cur / w) | 0) - ((prev / w) | 0); nx = cand.reduce((b, k) => { const dx = (k % w) - (cur % w), dy = ((k / w) | 0) - ((cur / w) | 0), sb = (b % w) - (cur % w), tb = ((b / w) | 0) - ((cur / w) | 0); return dx * dx0 + dy * dy0 > sb * dx0 + tb * dy0 ? k : b; }, cand[0]); }
-      seen[nx] = 1; loop.push(nx); prev = cur; cur = nx;
+      if (bestN < 80) return { def: null, why: "Couldn't find a track line in that picture. Try a clear map of the circuit on a plain background." };
+      for (let i = 0; i < w * h; i++) mask[i] = lab[i] === bestL ? 1 : 0;
+      // Fill small holes, then thin to a one-pixel centre line (Zhang–Suen).
+      const at = (m, x, y) => (x < 0 || y < 0 || x >= w || y >= h ? 0 : m[y * w + x]);
+      for (let changed = true, pass = 0; changed && pass < 200; pass++) {
+        changed = false;
+        for (const step of [0, 1]) {
+          const del = [];
+          for (let y = 1; y < h - 1; y++) for (let x = 1; x < w - 1; x++) {
+            if (!mask[y * w + x]) continue;
+            const p = [at(mask, x, y - 1), at(mask, x + 1, y - 1), at(mask, x + 1, y), at(mask, x + 1, y + 1), at(mask, x, y + 1), at(mask, x - 1, y + 1), at(mask, x - 1, y), at(mask, x - 1, y - 1)];
+            const B = p.reduce((a, b) => a + b, 0); if (B < 2 || B > 6) continue;
+            let A = 0; for (let k = 0; k < 8; k++) if (!p[k] && p[(k + 1) % 8]) A++; if (A !== 1) continue;
+            if (step === 0 ? (p[0] * p[2] * p[4] || p[2] * p[4] * p[6]) : (p[0] * p[2] * p[6] || p[0] * p[4] * p[6])) continue;
+            del.push(y * w + x);
+          }
+          if (del.length) { changed = true; for (const k of del) mask[k] = 0; }
+        }
+      }
+      // Trim the loose ends (labels, pit lane stubs) until only loops are left, then follow the longest one round.
+      const nb = (k) => { const x = k % w, y = (k / w) | 0, out = []; for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) { if (!dx && !dy) continue; const xx = x + dx, yy = y + dy; if (xx >= 0 && yy >= 0 && xx < w && yy < h && mask[yy * w + xx]) out.push(yy * w + xx); } return out; };
+      for (let pass = 0; pass < 400; pass++) { let cut2 = 0; for (let k = 0; k < w * h; k++) if (mask[k] && nb(k).length <= 1) { mask[k] = 0; cut2++; } if (!cut2) break; }
+      let start = -1; for (let k = 0; k < w * h; k++) if (mask[k]) { start = k; break; }
+      if (start < 0) return { def: null, why: "The line in that picture doesn't close into a circuit. Try a picture where the whole track is one clear loop." };
+      const seen = new Uint8Array(w * h); loop = [start]; seen[start] = 1; let cur = start, prev = -1;
+      for (let guard = 0; guard < w * h; guard++) {
+        const cand = nb(cur).filter((k) => !seen[k]);
+        if (!cand.length) break;
+        // Go straight on where the line branches (keeps to the main loop at a junction).
+        let nx = cand[0];
+        if (cand.length > 1 && prev >= 0) { const dx0 = (cur % w) - (prev % w), dy0 = ((cur / w) | 0) - ((prev / w) | 0); nx = cand.reduce((b, k) => { const dx = (k % w) - (cur % w), dy = ((k / w) | 0) - ((cur / w) | 0), sb = (b % w) - (cur % w), tb = ((b / w) | 0) - ((cur / w) | 0); return dx * dx0 + dy * dy0 > sb * dx0 + tb * dy0 ? k : b; }, cand[0]); }
+        seen[nx] = 1; loop.push(nx); prev = cur; cur = nx;
+      }
     }
     if (loop.length < 40) return { def: null, why: "That picture's track line is too small or broken. Try a bigger, clearer layout." };
     // Smooth, scale to a real length, simplify, and check (bigger if a bend is too tight).
     let P = loop.map((k) => [k % w, (k / w) | 0]);
     for (let r = 0; r < 3; r++) P = P.map((p, i) => { const a = P[(i - 2 + P.length) % P.length], b = P[(i - 1 + P.length) % P.length], c = P[(i + 1) % P.length], d = P[(i + 2) % P.length]; return [(a[0] + b[0] + p[0] + c[0] + d[0]) / 5, (a[1] + b[1] + p[1] + c[1] + d[1]) / 5]; });
+    // Labels, corner numbers and sector colours leave little kinks in the line: keep only the real shape (corners that
+    // matter at the picture's scale), then round it off again.
+    { const xs = P.map((p) => p[0]), ys = P.map((p) => p[1]), tol = Math.hypot(Math.max(...xs) - Math.min(...xs), Math.max(...ys) - Math.min(...ys)) * 0.008;
+      const rdp = (pts) => { if (pts.length < 3) return pts; const a = pts[0], b = pts[pts.length - 1], L = Math.hypot(b[0] - a[0], b[1] - a[1]) || 1; let mi = 0, md = 0; for (let i = 1; i < pts.length - 1; i++) { const d = Math.abs((b[0] - a[0]) * (a[1] - pts[i][1]) - (a[0] - pts[i][0]) * (b[1] - a[1])) / L; if (d > md) { md = d; mi = i; } } return md > tol ? rdp(pts.slice(0, mi + 1)).slice(0, -1).concat(rdp(pts.slice(mi))) : [a, b]; };
+      const half = Math.floor(P.length / 2); let Q = rdp(P.slice(0, half + 1)).slice(0, -1).concat(rdp(P.slice(half).concat([P[0]])).slice(0, -1));
+      for (let r = 0; r < 2; r++) Q = Q.flatMap((p, i) => { const n = Q[(i + 1) % Q.length]; return [[p[0] * 0.75 + n[0] * 0.25, p[1] * 0.75 + n[1] * 0.25], [p[0] * 0.25 + n[0] * 0.75, p[1] * 0.25 + n[1] * 0.75]]; });
+      if (Q.length >= 12) P = Q; }
     let len = 0; for (let i = 0; i < P.length; i++) { const a = P[i], b = P[(i + 1) % P.length]; len += Math.hypot(b[0] - a[0], b[1] - a[1]); }
     const cx = P.reduce((m, p) => m + p[0], 0) / P.length, cy = P.reduce((m, p) => m + p[1], 0) / P.length;
+    let lastWhy = '';
     for (let attempt = 0; attempt < 10; attempt++) {
-      const k = (km * 1000 * (1 + attempt * 0.18)) / len, Q = P.map((p) => [(p[0] - cx) * k, (p[1] - cy) * k]);
+      const want = km * 1000 * (1 + attempt * 0.12);
+      if (want > 8000) return { def: null, why: `Traced the layout, but it doesn't make a drivable track (${(lastWhy || '').toLowerCase().replace(/\.$/, '')}). Try a cleaner picture (just the track line), or pick the circuit from the F1 tracks.` };
+      const k = want / len, Q = P.map((p) => [(p[0] - cx) * k, (p[1] - cy) * k]);
       const pts = evenPts(Q, true).map((p) => [Math.round(p[0]), Math.round(p[1])]);
-      const def = customDef({ name: 'Traced circuit', closed: true, width: 30, look: 'green', laps: 3, pts });
+      const def = customDef({ name: 'Traced circuit', closed: true, width: 15, look: 'green', laps: 3, pts });
       const ck = checkTrack(def);
       if (ck.ok) return { def, why: '', T: ck.T };
+      lastWhy = ck.why;
       if (attempt === 9) return { def: null, why: `Traced the layout, but ${ck.why.toLowerCase()}` };
     }
     return { def: null, why: 'Could not make it drivable.' };
@@ -748,7 +800,7 @@
 
     // ---- state
     let screen = 'menu';                 // menu | lobby | countdown | race | done
-    let T = getTrack(trackId), racers = [], me = null, raceLaps = 3, clock = 0, cdLeft = 0, alive = true, paused = false, suspended = false, startSeq = null, formT = 0, formHold = 1, formSkip = false, cranes = [], gridMarks = [];
+    let T = getTrack(trackId), racers = [], me = null, raceLaps = 3, clock = 0, cdLeft = 0, alive = true, paused = false, suspended = false, startSeq = null, medF = null, formT = 0, formHold = 1, formSkip = false, cranes = [], gridMarks = [];
     const keys = new Set();
     let skids = [], parts = [], camX = 0, camY = 0, shake = 0, doneT = 0, chaseYaw = 0, backToDesign = false, ds = null, lastShift = 0, paddle = 0;
     let net = null;                      // { link, code, host, players: Map, cfg, status }
@@ -805,7 +857,7 @@
         row('', btn('Start race', 'go', () => { backToDesign = false; startLocalRace(); }), btn('✏️ Track designer', '', () => openDesigner(findDef(trackId) && findDef(trackId).custom ? findDef(trackId) : null))),
         row('Online', btn('Create room', '', () => openRoom(true)), (() => { const i = document.createElement('input'); i.placeholder = 'CODE'; i.maxLength = 8; i.id = 'rc-code'; return i; })(), btn('Join', '', () => { const c = NET.normCode(root.querySelector('#rc-code').value); if (!c) { toast('That code is 6 letters and numbers.'); return; } openRoom(false, c); })),
         row('Name', name),
-        hint('Hold T: talk to your race engineer (then 1 to 6) · N: skip the formation lap'),
+        hint('T (or Space in the F1 car): talk to your race engineer, then 1 to 6 · N: skip the formation lap'),
         hint('↑ W gas · ↓ S brake and reverse · ← → A D steer · Space handbrake (drift) · V view (top, chase, cockpit) · M sound · Q serve a penalty at your pit stop · R restart · P pause · Esc menu'));
     }
 
@@ -815,6 +867,7 @@
     // ---- starting a race
     function setupRace(entries, laps, hold) {
       T = getTrack(trackId); raceLaps = T.closed ? laps : 1; T.laps = raceLaps;
+      scR = null; medR = null; medF = null;         // nothing left over from the last race
       racers = entries.map((e, slot) => newRacer(e.id, e.name, carSpec(e.car), T, slot, { color: e.color, ai: !!e.ai, remote: !!e.remote, lastMsg: 0, official: !!e.official }));
       me = racers.find((r) => r.id === myId) || racers[0];
       aiState.clear();
@@ -823,7 +876,7 @@
       racers.forEach((r, i) => { if (r.ai) { const grid = (i % 2 ? 1 : -1) * 0.2 / 0.28; aiState.set(r.id, { idx: -1, lane: grid, pref: (Math.random() * 2 - 1) * 0.7, laneT: 3 + Math.random() * 7, react: 0.17 + Math.random() * 0.16 + (Math.random() < 0.12 ? 0.25 : 0), skill: LEVELS[level].skill * (0.97 + Math.random() * 0.03), corner: LEVELS[level].corner * (0.95 + Math.random() * 0.05), brakes: LEVELS[level].brakes * (0.94 + Math.random() * 0.06), defend: LEVELS[level].defend, slip: (LEVELS[level].slip || 1) * (0.25 + Math.random() * 1.6), oops: 0, oopsT: 0, oopsK: '', stuck: 0, rev: 0, go: false }); } });
       for (const r of racers) { r.car.vx = r.car.vy = 0; progress(r, T, 0); r.lapStart = 0; }
       raceCtl = { flag: 'green', t: 0, at: null, score: 0, next: 8 + Math.random() * 17, done: 0, first: true };     // driving for race control: the first incident comes soon, at a random moment (8 to 25 s)
-      { const P = pitInfo(T), off = racers.find((r) => r.official); if (P && off) { const q = T.S[((Math.round((P.b - 70) / T.step) % T.m) + T.m) % T.m]; off.car.x = q.x + q.nx * P.side * P.lane; off.car.y = q.y + q.ny * P.side * P.lane; off.car.h = Math.atan2(q.ty, q.tx); off.idx = -1; off.inLane = true; off.served = true; } }   // the officials wait at the pit exit
+      { const off = racers.find((r) => r.official); if (off) toPitExit(off); }   // the officials wait at the pit exit
       { const P = pitInfo(T); if (P) racers.forEach((r, i) => { r.boxS = clamp((i - (racers.length - 1) / 2) * 13, P.a + 95, P.b - 95); const st = aiState.get(r.id); if (st) st.boxS = r.boxS; }); }       // every car has its own pit box
       // The start: five red lights come on one a second (a beep each), then after a random hold of 0.2 to 3 seconds they all
       // go out. Go on the gas before that and it is a jump start (a 5-second penalty); after it, your reaction time counts.
@@ -831,17 +884,31 @@
       const holdS = Number.isFinite(hold) ? clamp(hold, 0.2, 3) : 0.2 + Math.random() * 2.8;
       gantry.hidden = false; gantry.querySelectorAll('b').forEach((b) => b.classList.remove('on'));
       racers.forEach((r, i) => { r.slot = i; });
-      gridMarks = racers.filter((r) => !r.official).map((r) => { const g = gridSlot(T, r.slot), q = T.S[0]; return { s: (g.x - q.x) * q.tx + (g.y - q.y) * q.ty + CAR_LEN / 2 + 0.6, o: (g.x - q.x) * q.nx + (g.y - q.y) * q.ny }; });
+      gridMarks = racers.filter((r) => !r.official).map((r) => { const g = gridSlot(T, r.slot); return { s: g.s + CAR_LEN / 2 + 0.6, o: (r.slot % 2 ? 1 : -1) * T.width * 0.2 }; });
       // A formation lap first (closed tracks, not online): one slow lap behind the pole sitter, no overtaking, then every car
       // stops in its own grid box and the lights begin. Otherwise straight to the lights.
       if (formOn && T.closed && !net && racers.filter((r) => !r.official).length > 1) {
         screen = 'formation'; formT = 0; formHold = holdS; formSkip = false;
-        for (const r of racers) { r.gridded = false; r.formGo = false; r.formWarned = false; r.formJudged = false; }
+        for (const r of racers) { r.gridded = false; r.formGo = false; r.formFrom = null; r.formWarned = false; r.formJudged = false; }
+        // Like F1: the Medical Car follows the field round the formation lap and the first lap (the computer drives it unless
+        // you do), a good way back. Driving the Safety Car, you start behind the field too and go back to the pit exit for the start.
+        const offMe = racers.find((r) => r.official);
+        if (offMe) { behindGrid(offMe, 25); offMe.lap = -1; offMe.sLap = null; }
+        if (role !== 'med') {
+          medF = newRacer('med-follow', 'Medical Car', OFFICIALS[1], T, 0, { official: true, ai: true, color: OFFICIALS[1].color });
+          behindGrid(medF, role === 'sc' ? 45 : 25); medF.lap = -1; medF.sLap = null; racers.push(medF);
+          aiState.set(medF.id, { idx: -1, lane: 0, skill: 0.9, stuck: 0, rev: 0, go: true, cap: 0, raceLine: false, t: 99 });
+        }
         say('Formation lap. Get some heat in the tyres, and find your grid box.', 'eng', 2);
       } else beginLights(holdS);
       big.style.fontSize = ''; big.style.top = '';
       parts = []; audioUp();
     }
+    function toPitExit(off) { const P = pitInfo(T); if (!P) return; const q = T.S[((Math.round((P.b - 70) / T.step) % T.m) + T.m) % T.m]; off.car.x = q.x + q.nx * P.side * P.lane; off.car.y = q.y + q.ny * P.side * P.lane; off.car.h = Math.atan2(q.ty, q.tx); off.car.vx = off.car.vy = 0; off.idx = -1; off.inLane = true; off.served = true; }
+    /// Puts a car behind the last grid box, `extra` metres further back.
+    function behindGrid(r, extra) { const n = racers.filter((x) => !x.official).length, g = gridSlot(T, n + (n % 2)), f = ((T.length + g.s - extra) % T.length) / T.step, q = T.S[Math.floor(f) % T.m]; r.car.x = q.x; r.car.y = q.y; r.car.h = Math.atan2(q.ty, q.tx); r.car.vx = r.car.vy = 0; r.idx = -1; r.inLane = false; }
+    /// The progress of an official car (it counts its own laps and never finishes).
+    function officialProgress(r) { const l = locate(T, r.car.x, r.car.y, r.idx); r.idx = l.idx; r.lat = l.lat; r.sNow = T.closed ? ((l.s % T.length) + T.length) % T.length : l.s; if (T.closed) { const L = T.length; if (r.sLap == null) r.sLap = r.sNow; if (r.sLap > L * 0.75 && r.sNow < L * 0.25) r.lap++; else if (r.sLap < L * 0.25 && r.sNow > L * 0.75) r.lap--; r.sLap = r.sNow; r.prog = r.lap * L + r.sNow; } else r.prog = r.sNow; }
     /// The start procedure proper: five red lights, then a random hold, then lights out.
     function beginLights(hold) {
       screen = 'countdown';
@@ -932,37 +999,37 @@
         if (k === 'p' && (screen === 'race' || screen === 'countdown' || screen === 'formation')) { paused = !paused; big.textContent = paused ? 'PAUSED' : ''; return; }
         if (k === 'r' && (screen === 'race' || screen === 'done') && !net) { startLocalRace(); return; }
         if (k === 'n' && screen === 'formation') { formSkip = true; return; }
-        if (k === 't' && me && (screen === 'race' || screen === 'formation' || screen === 'countdown')) { radioOpen(); return; }
-        if (radioUI && /^[1-6]$/.test(k)) { radioAsk(Number(k)); return; }
+        // The radio: T (or Space in the Formula One car, which has no handbrake) opens it and it stays open while you drive.
+        if ((k === 't' || k === ' ' && me && me.car.spec.id === 'f1') && me && (screen === 'race' || screen === 'formation' || screen === 'countdown')) { if (radioUI) radioClose(); else radioOpen(); return; }
+        if (radioUI && /^[1-7]$/.test(k)) { radioAsk(Number(k)); return; }
         if (screen === 'design') { if (k === 'escape') showMenu(); else if (k === 'z') designUndo(); return; }
         if (k === 'escape' && screen !== 'menu') { closeNet(); paused = false; if (backToDesign && ds) { screen = 'design'; designUI(); } else showMenu(); return; }
         if (k === 'v' && screen !== 'menu' && screen !== 'lobby') { viewMode = { top: 'chase', chase: 'cockpit', cockpit: 'top' }[viewMode] || 'chase'; store.set('view', viewMode); toast({ top: 'Top-down view', chase: 'Chase view', cockpit: 'Cockpit view' }[viewMode]); return; }
         if (k === 'q' && me && (me.pen || 0) > 0 && (me.inLane || screen === 'race') && !(me.service > 0)) { me.servePen = !me.servePen; toast(me.servePen ? `You will serve your ${me.pen} s penalty at your next pit stop` : 'Penalty will be added to your race time instead'); if (me.servePen) say(`Copy. We will serve the ${me.pen === 5 ? 'five' : me.pen === 10 ? 'ten' : me.pen} second penalty at the stop.`, 'eng', 1); return; }
         if (k === 'm') { setSound(!soundOn); toast(soundOn ? 'Sound on' : 'Sound off'); if (screen === 'menu') showMenu(); return; }
       }
-      if (!down && k === 't') radioRelease();
       const m = KEYMAP[k]; if (m) { if (down) keys.add(m); else keys.delete(m); }
     }
     // ---- talking to your race engineer: hold T, then press 1 to 6 (or, where the computer can hear you, just ask)
-    let radioUI = null, radioRec = null;
-    const RADIO_Q = ['Gap to the cars around me?', 'How are my tyres?', 'Should I box?', 'Where am I? Laps to go?', 'How is my pace?', 'How is the car?'];
+    let radioUI = null, radioRec = null, radioT = 0;
+    const RADIO_Q = ['Gap to the cars around me?', 'How are my tyres?', 'Should I box?', 'Where am I? Laps to go?', 'How is my pace?', 'How is the car?', 'Retire the car'];
     function radioOpen() {
       if (radioUI) return;
       radioUI = document.createElement('div'); radioUI.className = 'rc-radio';
-      radioUI.innerHTML = '<b>📻 Radio: press a number</b>' + RADIO_Q.map((q, i) => `<div><kbd>${i + 1}</kbd> ${q}</div>`).join('');
+      radioUI.innerHTML = '<b>📻 Radio: press a number (T closes)</b>' + RADIO_Q.map((q, i) => `<div><kbd>${i + 1}</kbd> ${q}</div>`).join('');
       root.append(radioUI); click();
+      clearTimeout(radioT); radioT = setTimeout(radioClose, 10000);
       const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
       if (SR) {
         try {
           radioRec = new SR(); radioRec.lang = 'en-GB'; radioRec.interimResults = false; radioRec.maxAlternatives = 1;
-          radioRec.onresult = (e) => { const t = String(e.results[0][0].transcript || '').toLowerCase(); toast(`📻 You: “${t}”`); radioAsk(/gap|ahead|behind|front/.test(t) ? 1 : /tyre|tire|wear|grip/.test(t) ? 2 : /box|pit|stop/.test(t) ? 3 : /position|place|where|lap|left|go/.test(t) ? 4 : /pace|fast|quick|slow|doing|time/.test(t) ? 5 : /car|damage|wing|broken/.test(t) ? 6 : 0, true); };
+          radioRec.onresult = (e) => { const t = String(e.results[0][0].transcript || '').toLowerCase(); toast(`📻 You: “${t}”`); radioAsk(/retire|give up|stop the car|park/.test(t) ? 7 : /gap|ahead|behind|front/.test(t) ? 1 : /tyre|tire|wear|grip/.test(t) ? 2 : /box|pit|stop/.test(t) ? 3 : /position|place|where|lap|left|go/.test(t) ? 4 : /pace|fast|quick|slow|doing|time/.test(t) ? 5 : /car|damage|wing|broken/.test(t) ? 6 : 0, true); };
           radioRec.onerror = () => {}; radioRec.start();
           radioUI.firstChild.textContent = '📻 Radio: speak, or press a number';
         } catch { radioRec = null; }
       }
     }
-    function radioRelease() { if (radioRec) { try { radioRec.stop(); } catch { /* already stopped */ } } setTimeout(() => { if (radioUI && !radioRec) radioClose(); }, 150); radioRec = null; setTimeout(radioClose, 2500); }
-    function radioClose() { if (radioUI) { radioUI.remove(); radioUI = null; } }
+    function radioClose() { clearTimeout(radioT); if (radioRec) { try { radioRec.stop(); } catch { /* already stopped */ } radioRec = null; } if (radioUI) { radioUI.remove(); radioUI = null; } }
     /// The engineer's answer, from what is happening in the race right now.
     function radioAsk(n, spoken) {
       radioClose(); if (!me) return;
@@ -977,6 +1044,7 @@
       else if (n === 3) { const need = (wear > 0.6 || me.car.dmg > 0.4) && me.lap < raceLaps - 1; a = need ? 'Yes, box this lap. Box, box.' : me.lap >= raceLaps - 1 ? 'Negative, stay out to the end.' : 'Negative, stay out. Tyres are fine.'; if (me.pen) a += ` We can serve your ${me.pen} second penalty at the stop, press Q.`; }
       else if (n === 4) a = `You are P${i + 1} of ${order.length}, ${laps} ${laps === 1 ? 'lap' : 'laps'} to go.` + (me.bestLap ? ` Your best is ${fmt(me.bestLap)}.` : '');
       else if (n === 5) a = last && aLast ? (last < aLast ? `You were ${(aLast - last).toFixed(1)} quicker than ${ahead.name} last lap. Keep pushing.` : `${ahead.name} was ${(last - aLast).toFixed(1)} quicker last lap. Look at your braking.`) : last ? `Last lap ${fmt(last)}. Good pace.` : 'No lap time yet. Get your head down.';
+      else if (n === 7) { if (me.official || !pitInfo(T)) a = 'Negative, there is no pit lane here.'; else { me.retiring = true; a = 'Copy. We are retiring the car. Follow the green line into the pit lane and stop in your box.'; } }
       else if (n === 6) a = me.car.dmg < 0.1 ? 'Car looks good, no damage.' : me.car.dmg < 0.4 ? `Some damage, about ${Math.round(me.car.dmg * 100)} percent. You can carry on.` : `Big damage, ${Math.round(me.car.dmg * 100)} percent. Box for repairs.`;
       else a = 'Say again, you are breaking up.';
       if (screen !== 'race' && n !== 0) a = screen === 'formation' ? 'Formation lap. Warm the tyres, stay in line, and find your grid box.' : 'Focus on the lights. Wait for them to go out.';
@@ -1048,10 +1116,16 @@
     const synth = () => (typeof window.speechSynthesis !== 'undefined' ? window.speechSynthesis : null);
     const hush = () => { try { synth() && synth().cancel(); } catch { /* no voices */ } };
     const pickVoice = (who) => {
-      const vs = (synth() && synth().getVoices()) || [], en = vs.filter((v) => /^en/i.test(v.lang));
-      const pref = who === 'com' ? [/Daniel/, /Arthur/, /Oliver/, /en-GB/i, /Google UK English Male/] : [/Fred/, /Alex/, /Tom/, /Aaron/, /en-US/i, /Google US English/];
-      for (const re of pref) { const v = en.find((x) => re.test(x.name) || re.test(x.lang)); if (v) return v; }
-      return en[0] || null;
+      // The most natural voice the computer has: the neural and premium voices first, the robotic novelty voices never.
+      // The engineer is a calm British voice, the commentator a different one.
+      const vs = (synth() && synth().getVoices()) || [], en = vs.filter((v) => /^en/i.test(v.lang) && !/Fred|Albert|Bad News|Bahh|Bells|Boing|Bubbles|Cellos|Good News|Jester|Organ|Superstar|Trinoids|Whisper|Wobble|Zarvox|Junior|Ralph|Kathy|Princess|Deranged|Hysterical|Pipe|Grandma|Grandpa|Rocko|Eddy|Flo|Reed|Sandy|Shelley/i.test(v.name));
+      const quality = (v) => (/Natural|Neural|Premium|Enhanced|Online|Siri/i.test(v.name) ? 10 : 0) + (v.localService === false ? 1 : 0);
+      const want = who === 'com' ? [/Ryan|Thomas|Oliver|Arthur|Daniel|Jamie|Google UK English Male/i, /en-GB/i, /Guy|Davis|Nathan|Evan|Aaron/i] : [/Jamie|Daniel|Arthur|Oliver|Ryan|Thomas|Google UK English Male/i, /en-GB|en-AU|en-IE/i, /Guy|Evan|Nathan|Aaron|Alex/i];
+      const used = who === 'com' ? pickVoice.eng : null;
+      const score = (v) => quality(v) * 3 + want.reduce((m, re, i) => (re.test(v.name) || re.test(v.lang) ? Math.max(m, 9 - i * 3) : m), 0) - (used && v.name === used ? 20 : 0);
+      const best = en.slice().sort((a, b) => score(b) - score(a))[0] || null;
+      if (who !== 'com' && best) pickVoice.eng = best.name;
+      return best;
     };
     /// One beep of the start lights.
     function beep(f) {
@@ -1076,14 +1150,14 @@
       lastTalk = now;
       const u = new SpeechSynthesisUtterance(text), v = pickVoice(who);
       if (v) u.voice = v;
-      u.rate = who === 'com' ? 1.18 : 1.06; u.pitch = who === 'com' ? 1.08 : 0.88; u.volume = 1;
+      u.rate = who === 'com' ? 1.12 : 1.02; u.pitch = 1; u.volume = 1;
       if (who === 'eng') { click(); u.onend = () => click(); }
       try { sp.speak(u); } catch { /* no voice */ }
     }
     const ord = (n) => `P${n}`;
     /// Called every step of the race: decides what the engineer or the commentator has to say.
     function radioTick() {
-      if (!me || !radioOn || screen !== 'race' || net && !me) return;
+      if (!me || !radioOn || screen !== 'race' || net && !me || me.official) return;      // an official hears race control, not an engineer
       const order = ranking(racers), pos = order.indexOf(me) + 1;
       if (clock > 6 && pos !== radioPos && radioPos) {
         if (pos < radioPos) say(pos === 1 ? `${ord(1)}! You're leading the race. Great move.` : `${ord(pos)}. Nice move, keep it up.`, 'eng');
@@ -1107,6 +1181,12 @@
     function radioFinish(pos) { say(pos === 1 ? `${me.name} takes the chequered flag! What a drive!` : `${me.name} crosses the line in ${ord(pos)}.`, 'com', 2); setTimeout(() => say(pos === 1 ? 'P1! Get in there! Unbelievable job.' : pos <= 3 ? `${ord(pos)}, podium! Great job, mate.` : `${ord(pos)}. Good effort, we go again.`, 'eng', 1), 3400); }
     function radioCrash(r, speed) {
       if (speed < 16) return;
+      if (me && me.official) {          // race control talks to the Safety Car and the Medical Car
+        if (r === me) return;
+        const ahead = Math.round(((r.prog - me.prog) % T.length + T.length) % T.length);
+        say(`Race control. ${r.name} has crashed, ${ahead} metres ahead of you.`, 'com', 2); toast(`📡 Race control: ${r.name} has crashed, ${ahead} m ahead`);
+        return;
+      }
       if (r === me) { say('Are you OK? Check the car.', 'eng', 2); setTimeout(() => say(`Oh! ${me.name} is in the wall!`, 'com', 1), 1600); }
       else if (me && Math.abs(r.prog - me.prog) < 300) say(`Big moment there for ${r.name}!`, 'com', 1);
     }
@@ -1183,6 +1263,14 @@
         const pool = field.filter((r) => r.ai && r.lap >= 0), vic = pool[Math.floor(Math.random() * pool.length)];
         if (vic) { vic.car.dmg = 0.95; vic.car.vx *= 0.15; vic.car.vy *= 0.15; vic.car.spin += 2.5; crash(vic, vic.car.x, vic.car.y, 30, '#d8d8d8'); incident(vic, C.first && role === 'sc' ? 32 : Math.random() < 0.6 ? 30 : 22); C.first = false; }      // as the Safety Car, the first one always brings you out
         C.next = clock + 45 + Math.random() * 90;
+      }
+      // The Medical Car follows the field round the first lap, a good way back, then goes into the pits.
+      if (medF) {
+        const st = aiState.get(medF.id), last = field.reduce((m, x) => (!x.dnf && (!m || x.prog < m.prog) ? x : m), null);
+        if (st && !st.pitting) { const gap = last ? last.prog - medF.prog : 999; st.cap = clamp((last ? Math.hypot(last.car.vx, last.car.vy) : 30) + (gap - 150) * 0.3, 0, medF.car.spec.vmax * 0.85); st.raceLine = false; }
+        const P = pitInfo(T), rel = P ? relS(T, medF.sNow || 0) : 0;
+        if (st && !st.pitting && (medF.lap >= 0 && P && rel > P.a - 700 && rel < P.a - 60 && clock > 20 || clock > 240)) { st.pitting = true; st.served = true; st.cap = null; }
+        if (medF.inLane && st && st.pitting && clock > 20) { racers = racers.filter((r) => r !== medF); aiState.delete(medF.id); medF = null; }
       }
       // When each flag ends.
       const waitMed = (role === 'med' && C.at && !C.at.checked && C.t < 150) || cranes.some((k) => !k.done) && C.t < 120;        // the Medical Car or a crane is still at work
@@ -1312,6 +1400,11 @@
       for (let i = 0; i < 3 + power * 6; i++) parts.push({ k: 'smoke', x: x + (Math.random() - 0.5) * 2, y: y + (Math.random() - 0.5) * 2, z: 0.5, vx: (Math.random() - 0.5) * 3, vy: (Math.random() - 0.5) * 3, vz: 1, life: 1 + Math.random(), size: 1 + power * 2, dark: 0.35 });
       const near = me && Math.hypot(me.car.x - x, me.car.y - y);
       if (r === me) shake = Math.max(shake, clamp(speed / 22, 0.2, 1.4));
+      // Into the barrier: the car check (tyres and damage) shows for a minute, and the engineer reads it out.
+      if (r === me && speed > 8 && !me.official && screen === 'race') {
+        me.checkUntil = clock + 60;
+        setTimeout(() => { if (me && !me.official) say(`Car check. Tyres ${Math.round((1 - (me.car.wear || 0)) * 100)} percent, damage ${Math.round(me.car.dmg * 100)} percent.${me.car.dmg > 0.45 ? ' Box this lap for repairs.' : ' You can carry on.'}`, 'eng', 2); }, 2200);
+      }
       radioCrash(r, speed);
       if (speed > 16 || r.car.dmg >= 0.9) incident(r, speed);
       if (near != null && near < 140) crashSound(power * (r === me ? 1 : clamp(1 - near / 140, 0.1, 0.6)));
@@ -1336,15 +1429,30 @@
     }
 
     // ---- the formation lap: everyone at a gentle pace behind the car in front, in grid order, then into the grid boxes
-    const slotS = (r) => { const g = gridSlot(T, r.slot), q = T.S[0]; return { x: g.x, y: g.y, h: g.h, rel: (g.x - q.x) * q.tx + (g.y - q.y) * q.ty }; };
+    const slotS = (r) => { const g = gridSlot(T, r.slot); return { x: g.x, y: g.y, h: g.h, rel: g.s }; };
     function formationTick(dt) {
       formT += dt;
-      const field = racers.filter((r) => !r.official).sort((a, b) => a.slot - b.slot);
+      const field = racers.filter((r) => !r.official && !r.dsq).sort((a, b) => a.slot - b.slot);
       for (const r of racers) {
         const c = r.car;
-        if (r.gridded || r.official) { c.vx = c.vy = 0; continue; }
+        if (r.gridded) { c.vx = c.vy = 0; continue; }
+        if (r.official) {
+          let inp;
+          if (r === me && !me.ai) inp = playerInput();
+          else {
+            const st = aiState.get(r.id), last = field.filter((x) => !x.dsq).reduce((m, x) => (!m || x.prog < m.prog ? x : m), null), gap = last ? last.prog - r.prog : 999;
+            st.go = true; st.t = 99; st.stuck = 0; st.rev = 0; st.raceLine = false; st.lane = 0;
+            st.cap = last ? clamp(Math.hypot(last.car.vx, last.car.vy) + (gap - 70) * 0.4, 0, 45) : 0;
+            if (field.every((x) => x.gridded)) st.cap = 0;
+            inp = driveAI(T, c, st, dt);
+          }
+          stepCar(c, inp, dt, 1); wallHit(c, T, locate(T, c.x, c.y, r.idx)); officialProgress(r);
+          continue;
+        }
+        if (r.dsq) { c.vx = c.vy = 0; continue; }
         const box = slotS(r), loc = locate(T, c.x, c.y, r.idx), rel = relS(T, loc.s), v = Math.hypot(c.vx, c.vy);
-        if (rel > 60) r.formGo = true;        // under way: the next time it reaches the grid, it stops
+        if (r.formFrom == null) r.formFrom = r.prog;
+        if (r.prog - r.formFrom > T.length * 0.6) r.formGo = true;        // most of the lap done: the next time it reaches the grid, it stops
         const toBox = box.rel - rel;           // metres to its box along the road (once round)
         let inp;
         if (r.ai || r === me && me.ai) {
@@ -1370,7 +1478,7 @@
       }
       for (const r of racers) r.prevV = [r.car.vx, r.car.vy];
       // Cars are solid on the formation lap too.
-      const solid = racers.filter((r) => !r.official);
+      const solid = racers.filter((r) => !r.official && !r.dsq);
       for (let i = 0; i < solid.length; i++) for (let j = i + 1; j < solid.length; j++) { const A = solid[i], B = solid[j], hit = collide(A.car, B.car); if (hit > 3) crash(A === me ? A : B, (A.car.x + B.car.x) / 2, (A.car.y + B.car.y) / 2, hit, (A === me ? B : A).color || B.car.spec.color); if (A.gridded && hit) { A.gridded = false; } if (B.gridded && hit) { B.gridded = false; } }
       // FIA: no overtaking on the formation lap (unless you were delayed and are taking your place back). Pass a car that
       // started ahead of you and you get the black-and-white flag; still ahead of it when you reach your grid box: 5 seconds.
@@ -1381,12 +1489,20 @@
         if (!ahead.length) me.formWarned = false;
         if (me.gridded && !me.formJudged) { me.formJudged = true; if (ahead.length) penalize(me, 5, 'overtaking on the formation lap'); }
       }
-      const all = racers.filter((r) => !r.official);
+      if (medF && formT > 3) for (const r of solid) {
+        if (r.dsq || r.gridded || r.prog > medF.prog - 2) continue;
+        r.dsq = r.dnf = true; r.parked = 1e9; r.gridded = true; toPitExit(r); r.inLane = true;
+        toast(r === me ? '⬛ DISQUALIFIED: you fell behind the Medical Car on the formation lap' : `⬛ ${r.name} is disqualified: behind the Medical Car on the formation lap`);
+        if (r === me) say('We are disqualified. We fell behind the medical car. I am sorry.', 'eng', 2);
+      }
+      const all = racers.filter((r) => !r.official && !r.dsq);
       if (all.every((r) => r.gridded) || formT > T.length / 30 + 45 || formSkip) {
         if (me && !me.official && !me.ai && !me.formJudged) { me.formJudged = true; if (passedCars().length) penalize(me, 5, 'overtaking on the formation lap'); }
         for (const r of all) if (!r.gridded) gridIt(r, slotS(r));
         for (const r of racers) { if (r.official) continue; r.lap = -1; r.topLap = undefined; r.lapTimes = []; r.lapStart = 0; r.idx = -1; r.sLap = undefined; progress(r, T, 0); r.lap = -1; r.prog = -T.length + r.sNow; }
         for (const st of aiState.values()) { st.cap = null; st.go = false; st.t = null; st.raceLine = undefined; }
+        for (const r of racers) { if (!r.official) continue; if (r === medF || role === 'med') behindGrid(r, 30); else toPitExit(r); r.lap = -1; r.sLap = null; officialProgress(r); }
+        if (medF) { const st = aiState.get(medF.id); st.raceLine = false; st.t = null; }
         { const P = pitInfo(T); if (P) { const ai = aiState.get(me.id); if (me.ai && ai) ai.served = true; } }
         beginLights(formHold);
       }
@@ -1490,12 +1606,25 @@
             // In your own box and nearly stopped: the crew catches the car and holds it (so a held brake can't turn into reverse).
             if (!r.served && (r.service > 0 || (Math.abs(rel - (r.boxS ?? P.box)) < 8 && v < 5))) {
               c.vx = c.vy = 0;
+              if (r === me && me.retiring) { me.retiring = false; me.dnf = true; me.retiredT = clock; r.parked = 1e9; toast('🏳 Retired. The car is in the garage'); say('Car is in the garage. Thanks for the effort today.', 'eng', 2); continue; }
+              if (r === me && !me.ai && !(r.service > 0)) {
+                // Arriving crooked costs time: the crew has to line the car up.
+                const q = T.S[after.idx], ang = Math.abs(wrapPi(c.h - Math.atan2(q.ty, q.tx)));
+                me.pitExtra = ang > 0.2 ? 1.2 : 0; me.pitIn = playerInput();
+                if (me.pitExtra) toast('Crooked in the box: the crew loses time lining you up');
+              }
+              if (r === me && !me.ai) {
+                // Steering or throttle while the crew works: the jack and the wheel guns lose time.
+                const pi = playerInput(), was = me.pitIn || {};
+                if ((pi.steer && !was.steer) || (pi.throttle && !was.throttle)) { me.pitExtra = (me.pitExtra || 0) + 0.5; toast('Wait for the crew! +0.5 s'); }
+                me.pitIn = pi;
+              }
               r.service = (r.service || 0) + dt;
               // FIA style: a time penalty can be served at a stop: the car stands still for it before anyone may work on it.
               if (r.ai && r.pen > 0) r.servePen = true;
-              const wait = r.servePen ? (r.pen || 0) : 0, need = wait + 2.4 + (c.dmg > 0.3 ? 2.5 * c.dmg : 0);
+              const wait = r.servePen ? (r.pen || 0) : 0, need = wait + 2.4 + (c.dmg > 0.3 ? 2.5 * c.dmg : 0) + (r === me ? me.pitExtra || 0 : 0);
               if (wait && r.service >= wait && !r.penDone) { r.penDone = true; if (r === me) { toast(`Penalty served (${wait} s). The crew goes to work.`); say('Penalty served. Go, go on the tyres.', 'eng', 2); } }
-              if (r.service >= need) { if (wait) { r.pen = 0; r.servePen = false; } r.penDone = false; c.dmg = 0; c.wear = 0; c.pull = 0; r.service = 0; r.served = true; if (r.ai) { const st = aiState.get(r.id); st.served = true; /* it keeps following the pit lane to the exit */ } if (r === me) { toast(`Pit stop: ${need.toFixed(1)} s · new tyres${need > 2.5 ? ', damage repaired' : ''}`); say('Good stop, good stop. Go, go, go!', 'eng', 2); } }
+              if (r.service >= need) { if (r === me) me.pitExtra = 0; if (wait) { r.pen = 0; r.servePen = false; } r.penDone = false; c.dmg = 0; c.wear = 0; c.pull = 0; r.service = 0; r.served = true; if (r.ai) { const st = aiState.get(r.id); st.served = true; /* it keeps following the pit lane to the exit */ } if (r === me) { toast(`Pit stop: ${need.toFixed(1)} s · new tyres${need > 2.5 ? ', damage repaired' : ''}`); say('Good stop, good stop. Go, go, go!', 'eng', 2); } }
             } else if (r.service > 0 && v > 2) r.service = 0;
           }
         } else { imp = wallHit(c, T, after); r.inLane = false; }
@@ -1544,6 +1673,7 @@
       if (screen === 'race' && racing.length && racing.every((r) => r.finished) || (screen === 'race' && me && me.finished && racing.filter((r) => !r.remote && !r.ai).every((r) => r.finished) && clock - me.finishT > 6 && !net)) showResults();
       if (screen === 'race' && net && me && me.finished && clock - me.finishT > 14) showResults();
       if (screen === 'race' && me && me.finished && !net && clock - me.finishT > 2.5) showResults();
+      if (screen === 'race' && me && me.dnf && me.retiredT != null && clock - me.retiredT > 3) showResults();
     }
     function finishedMe() {
       const key = `best.${trackId}.${carId}`, b = store.get(key, null) || {};
@@ -1708,6 +1838,27 @@
       g.fillStyle = 'rgba(8,12,22,.6)'; g.beginPath(); g.roundRect(mx, my, mw, mh, 8 * s); g.fill();
       g.strokeStyle = 'rgba(255,255,255,.8)'; g.lineWidth = 2 * s; g.beginPath(); T.S.forEach((q, i) => { const p = mp(q.x, q.y); i ? g.lineTo(p[0], p[1]) : g.moveTo(p[0], p[1]); }); if (T.closed) g.closePath(); g.stroke();
       for (const r of racers) { const p = mp(r.car.x, r.car.y); g.fillStyle = r === me ? '#fff' : (r.color || '#aaa'); g.beginPath(); g.arc(p[0], p[1], (r === me ? 3.6 : 2.6) * s, 0, 7); g.fill(); }
+      // The car check after a hit: four tyres coloured by wear and the body by damage, for a minute.
+      if (me.checkUntil > clock && screen === 'race') {
+        const bx = 12 * s, by = H - 190 * s, bw = 92 * s, bh = 112 * s, wear = me.car.wear || 0, dm = me.car.dmg;
+        const col = (x) => (x < 0.35 ? '#3ad07a' : x < 0.65 ? '#ffd23f' : '#ff4d4d');
+        g.fillStyle = 'rgba(8,12,22,.8)'; g.beginPath(); g.roundRect(bx, by, bw, bh, 10 * s); g.fill();
+        g.fillStyle = '#fff'; g.font = `800 ${9 * s}px system-ui`; g.textAlign = 'center'; g.fillText('CAR CHECK', bx + bw / 2, by + 13 * s);
+        const cx = bx + bw / 2, cy = by + 58 * s, side = Math.sign(me.car.pull || 1);
+        g.fillStyle = col(dm); g.beginPath(); g.roundRect(cx - 11 * s, cy - 30 * s, 22 * s, 60 * s, 7 * s); g.fill();          // body
+        g.fillStyle = col(Math.min(1, dm * 1.3)); g.fillRect(cx - 17 * s, cy - 36 * s, 34 * s, 5 * s);                           // front wing
+        for (const [tx, ty, front] of [[-1, -1, 1], [1, -1, 1], [-1, 1, 0], [1, 1, 0]]) { const tw = wear * (front ? 1.06 : 0.94) + (tx === side ? dm * 0.15 : 0); g.fillStyle = col(tw); g.beginPath(); g.roundRect(cx + tx * 17 * s - 5 * s, cy + ty * 19 * s - 8 * s, 10 * s, 16 * s, 3 * s); g.fill(); }
+        g.fillStyle = '#fff'; g.font = `700 ${8.5 * s}px system-ui`; g.fillText(`Tyres ${Math.round((1 - wear) * 100)}% · Damage ${Math.round(dm * 100)}%`, bx + bw / 2, by + bh - 7 * s);
+        g.textAlign = 'left';
+      }
+      // Where a car has crashed: a red map pin (pulsing) while race control deals with it.
+      const pins = []; if (raceCtl.at && raceCtl.flag !== 'green' && !raceCtl.at.r.dnf) pins.push([raceCtl.at.x, raceCtl.at.y]); for (const k of cranes) if (!k.done) pins.push([k.r.car.x, k.r.car.y]);
+      for (const [px, py] of pins) {
+        const [cx, cy] = mp(px, py), pr = (4 + Math.sin(performance.now() / 180) * 1.2) * s;
+        g.fillStyle = 'rgba(255,40,40,.25)'; g.beginPath(); g.arc(cx, cy, pr * 2.2, 0, 7); g.fill();
+        g.fillStyle = '#ff2a2a'; g.beginPath(); g.moveTo(cx, cy); g.arc(cx, cy - 7 * s, 4.2 * s, Math.PI * 0.8, Math.PI * 2.2); g.closePath(); g.fill();
+        g.fillStyle = '#fff'; g.beginPath(); g.arc(cx, cy - 7 * s, 1.6 * s, 0, 7); g.fill();
+      }
     }
 
     // ---- the 3D views: a chase camera behind the car, or the driver's seat with the wheel, the gears and the revs.
@@ -1858,7 +2009,7 @@
           }
         });
       }
-      const ground = T.ground, road = '#3a3d44';
+      const ground = T.ground, road = '#3a3d44', Pd0 = pitInfo(T);
       for (let k = N; k >= -back; k--) {
         let i = idx0 + k;
         if (T.closed) i = ((i % T.m) + T.m) % T.m; else if (i < 0 || i >= T.m - 1) continue;
@@ -1869,6 +2020,15 @@
         strip(a, b, -wd - 1.2, -wd, curvy ? kerb : '#e8e8e8'); strip(a, b, wd, wd + 1.2, curvy ? kerb : '#e8e8e8');
         if (Math.floor(a.s / 8) % 2 === 0) strip(a, b, -0.18, 0.18, 'rgba(255,255,255,.75)');
         if (i === 0 || (!T.closed && i >= T.m - 3)) for (let q = 0; q < 8; q++) strip(a, b, -wd + (q * T.width) / 8, -wd + ((q + 1) * T.width) / 8, q % 2 ? '#111' : '#fff');
+        if (me && me.retiring && Pd0) {        // retiring: a green line from where you are, into the pit lane, to your box
+          const rd = relS(T, a.s), meRel = relS(T, me.sNow || 0), boxR = me.boxS ?? Pd0.box;
+          let ahead = rd - meRel; if (ahead < -5) ahead += T.length;
+          const toEntry = Pd0.a - rd;
+          if (ahead >= 0 && ahead < 900 && (rd < boxR || toEntry > 0 || ahead < T.length / 2)) {
+            const intoLane = rd > Pd0.a ? Pd0.side * Pd0.lane : toEntry < 160 ? Pd0.side * (Pd0.lane * (1 - toEntry / 160)) : 0;
+            if (!(rd > boxR && rd < Pd0.b)) strip(a, b, intoLane - 0.6, intoLane + 0.6, 'rgba(60,230,120,.75)');
+          }
+        }
         for (const gb of gridMarks) {          // grid boxes: a white line across the front of each place, and short legs back
           let d = gb.s - a.s; if (T.closed) d = ((d % T.length) + T.length) % T.length;
           if (d < 0 || d >= T.step) continue;
@@ -1899,6 +2059,7 @@
           // a dashed lane line and the box marked in yellow.
           const sd = Pd.side, midD = relD > Pd.a + 80 && relD < Pd.b - 80;
           strip(a, b, sd * (wd + 1.2), sd * Pd.outer, '#3b3e45');
+          if (me && me.retiring && relD < (me.boxS ?? Pd.box) + 3) strip(a, b, sd * Pd.lane - 0.6, sd * Pd.lane + 0.6, 'rgba(60,230,120,.75)');
           if (Math.floor(a.s / 6) % 2 === 0) strip(a, b, sd * (Pd.lane - 3.6), sd * (Pd.lane - 3.3), '#e8e8e8');
           if (relD < Pd.a + 80) {        // the entry: a solid white line peeling off the track, and chevrons pointing in
             const k0 = (relD - Pd.a) / 80, o = T.width / 2 + (Pd.inner - T.width / 2) * k0;
