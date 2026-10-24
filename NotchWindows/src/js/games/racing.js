@@ -836,7 +836,7 @@
       // stops in its own grid box and the lights begin. Otherwise straight to the lights.
       if (formOn && T.closed && !net && racers.filter((r) => !r.official).length > 1) {
         screen = 'formation'; formT = 0; formHold = holdS; formSkip = false;
-        for (const r of racers) { r.gridded = false; r.formGo = false; }
+        for (const r of racers) { r.gridded = false; r.formGo = false; r.formWarned = false; r.formJudged = false; }
         say('Formation lap. Get some heat in the tyres, and find your grid box.', 'eng', 2);
       } else beginLights(holdS);
       big.style.fontSize = ''; big.style.top = '';
@@ -1350,8 +1350,12 @@
         if (r.ai || r === me && me.ai) {
           const st = aiState.get(r.id), k = field.indexOf(r), ahead = k > 0 ? field[k - 1] : null;
           st.go = true; st.t = Math.max(st.t || 0, 99); st.lane = (r.slot % 2 ? 1 : -1) * 0.2 / 0.28; st.pref = st.lane; st.tr = null; st.side = 0; st.defT = 0; st.oops = 0;
+          st.stuck = 0; st.rev = 0;       // slowing in the queue is not being stuck: never reverse on the formation lap
+          st.raceLine = false;              // and no racing line: each car keeps to its own side of the grid
           let cap = c.spec.vmax * 0.5;
-          if (ahead && !ahead.gridded) { const gap = (ahead.prog - r.prog); cap = Math.min(cap + (gap > 40 ? 8 : 0), Math.max(0, Math.hypot(ahead.car.vx, ahead.car.vy) + (gap - 18) * 0.5)); }
+          // Follow the car ahead at 18 m on the lap; on the run into the grid (boxes 4 m apart, alternate sides) close right up.
+          const near = r.formGo && toBox < 160;
+          if (ahead && !ahead.gridded) { const gap = (ahead.prog - r.prog); cap = Math.min(cap + (gap > 40 ? 8 : 0), Math.max(near ? 2 : 0, Math.hypot(ahead.car.vx, ahead.car.vy) + (gap - (near ? 2.5 : 18)) * 0.5)); }
           if (r.formGo && toBox < 140 && toBox > -4) cap = Math.min(cap, Math.sqrt(Math.max(0, 2 * 4 * (toBox + 0.3))));      // brake to a stop in the box
           st.cap = cap; inp = driveAI(T, c, st, dt);
         } else inp = playerInput();
@@ -1360,15 +1364,29 @@
         progress(r, T, 0);
         // Stopped in (or next to) the box: lined up exactly on its marks.
         const vNow = Math.hypot(c.vx, c.vy), lat = Math.abs((c.x - box.x) * -Math.sin(box.h) + (c.y - box.y) * Math.cos(box.h));
-        if (r.formGo && Math.abs(toBox) < (r === me ? 7 : 2.5) && vNow < (r === me ? 4 : 1.2) && lat < 4) { gridIt(r, box); if (r === me) { toast('In your grid box'); } }
+        const human = r === me && !me.ai;
+        if (r.formGo && Math.abs(toBox) < (human ? 7 : 3) && vNow < (human ? 4 : 1.2) && (!human || lat < 4)) { gridIt(r, box); if (r === me) { toast('In your grid box'); } }
         else if (r === me && r.formGo && toBox < -12 && !r.ai) { gridIt(r, box); toast('You passed your grid box: put back on your marks'); }
       }
       for (const r of racers) r.prevV = [r.car.vx, r.car.vy];
+      // Cars are solid on the formation lap too.
+      const solid = racers.filter((r) => !r.official);
+      for (let i = 0; i < solid.length; i++) for (let j = i + 1; j < solid.length; j++) { const A = solid[i], B = solid[j], hit = collide(A.car, B.car); if (hit > 3) crash(A === me ? A : B, (A.car.x + B.car.x) / 2, (A.car.y + B.car.y) / 2, hit, (A === me ? B : A).color || B.car.spec.color); if (A.gridded && hit) { A.gridded = false; } if (B.gridded && hit) { B.gridded = false; } }
+      // FIA: no overtaking on the formation lap (unless you were delayed and are taking your place back). Pass a car that
+      // started ahead of you and you get the black-and-white flag; still ahead of it when you reach your grid box: 5 seconds.
+      const passedCars = () => solid.filter((r) => r !== me && r.slot < me.slot && !r.stopped && r.prog < me.prog - 3 && !(r.gridded && !me.gridded));
+      if (me && !me.official && !me.ai) {
+        const ahead = passedCars();
+        if (ahead.length && !me.formWarned) { me.formWarned = true; toast('🏁 Black-and-white flag: no overtaking on the formation lap. Give the place back'); say('No overtaking on the formation lap. Give the place back.', 'eng', 2); }
+        if (!ahead.length) me.formWarned = false;
+        if (me.gridded && !me.formJudged) { me.formJudged = true; if (ahead.length) penalize(me, 5, 'overtaking on the formation lap'); }
+      }
       const all = racers.filter((r) => !r.official);
       if (all.every((r) => r.gridded) || formT > T.length / 30 + 45 || formSkip) {
+        if (me && !me.official && !me.ai && !me.formJudged) { me.formJudged = true; if (passedCars().length) penalize(me, 5, 'overtaking on the formation lap'); }
         for (const r of all) if (!r.gridded) gridIt(r, slotS(r));
         for (const r of racers) { if (r.official) continue; r.lap = -1; r.topLap = undefined; r.lapTimes = []; r.lapStart = 0; r.idx = -1; r.sLap = undefined; progress(r, T, 0); r.lap = -1; r.prog = -T.length + r.sNow; }
-        for (const st of aiState.values()) { st.cap = null; st.go = false; st.t = null; }
+        for (const st of aiState.values()) { st.cap = null; st.go = false; st.t = null; st.raceLine = undefined; }
         { const P = pitInfo(T); if (P) { const ai = aiState.get(me.id); if (me.ai && ai) ai.served = true; } }
         beginLights(formHold);
       }

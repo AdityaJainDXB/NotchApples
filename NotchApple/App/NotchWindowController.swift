@@ -1036,9 +1036,13 @@ final class NotchWindowController {
 
     /// `force` is for something you did on purpose (Esc, the close button, the shortcut, opening Settings). Anything automatic
     /// (a click elsewhere, a Space change, hover, a swipe) leaves a pinned notch open.
+    /// While a sheet the notch opened is on screen (a file picker, for example), the notch stays open under it.
+    static var holdOpen = 0
+
     func collapse(force: Bool = false) {
         guard state.isExpanded else { return }
         if SettingsManager.shared.stickyNotch && !force { return }
+        if Self.holdOpen > 0 && !force { return }
         hoverWork?.cancel()
         openedByHover = false
         pinnedByClick = false

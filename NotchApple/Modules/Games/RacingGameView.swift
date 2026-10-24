@@ -52,8 +52,16 @@ private struct RacingWebView: NSViewRepresentable {
             panel.allowedContentTypes = [.image]
             panel.allowsMultipleSelection = false
             panel.message = "Pick a picture of a circuit to turn into a track"
+            // The notch window floats above normal windows, so the picker opens one level above it (it used to open behind
+            // the notch, out of reach), and the notch stays open until a picture is chosen.
+            panel.level = NSWindow.Level(rawValue: (webView.window?.level ?? .statusBar).rawValue + 1)
+            NotchWindowController.holdOpen += 1
             NSApp.activate(ignoringOtherApps: true)
-            panel.begin { response in completionHandler(response == .OK ? panel.urls : nil) }
+            panel.begin { response in
+                NotchWindowController.holdOpen = max(0, NotchWindowController.holdOpen - 1)
+                completionHandler(response == .OK ? panel.urls : nil)
+            }
+            panel.orderFrontRegardless()
         }
 
         /// True when the key went to the game (and should go no further).

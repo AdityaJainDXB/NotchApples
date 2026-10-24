@@ -20,6 +20,10 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.1.47", date: "24 October 2026", headline: "Pictures in the track designer, and a proper formation lap", items: [
+            "Racing, track designer: “From a picture” works on the Mac now. The file picker used to open behind the notch, out of reach; it now opens in front of it, and the notch stays open until you have picked a picture.",
+            "Racing, formation lap: cars are solid (they can touch and be damaged), the car in front no longer reverses while the queue slows, and every car parks in its own grid box. FIA rules: overtaking on the formation lap brings the black-and-white flag (give the place back); still ahead of a car that started in front of you when you reach your grid box is a 5-second penalty. Taking your own place back after being delayed is allowed.",
+        ]),
         ReleaseNote(version: "2.1.46", date: "24 October 2026", headline: "A real F1 start, much harder racing, and talk to your engineer", items: [
             "Racing, a real start: a formation lap behind the pole sitter (no overtaking), every car stops in its own painted grid box, then five red lights come on one a second with a beep each, a random hold of 0.2 to 3 seconds, and lights out. Go before the lights are out and it's a jump start (5-second penalty); after them, your reaction time is shown. N skips the formation lap, and the menu can turn it off.",
             "Racing is much harder: every driver races the same car as you, corners at the real grip limit (downforce included), brakes late, takes a proper racing line (out, apex, out) and defends the inside when you attack. Everyone gets a slipstream behind another car, so passing takes a real move. Hard is properly hard now; Easy and Normal are still there.",

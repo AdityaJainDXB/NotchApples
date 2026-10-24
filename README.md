@@ -72,10 +72,10 @@ Pick your computer. Both buttons start the download straight away. The Mac link 
   </tr>
   <tr>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.1.46</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.1.47</b></a>
     </td>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 2.1.46 BETA</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 2.1.47 BETA</b></a>
     </td>
   </tr>
   <tr>
@@ -233,6 +233,11 @@ All screenshots use sample data.
 ## What's new
 
 > **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is in the repository's history.
+
+### Mac 2.1.47 · Windows 2.1.47 BETA · 24 October 2026 · 🏁 Pictures in the track designer, and a proper formation lap
+
+- Racing, track designer: “From a picture” works on the Mac now. The file picker used to open behind the notch, out of reach; it now opens in front of it, and the notch stays open until you have picked a picture.
+- Racing, formation lap: cars are solid (they can touch and be damaged), the car in front no longer reverses while the queue slows, and every car parks in its own grid box. FIA rules: overtaking on the formation lap brings the black-and-white flag (give the place back); still ahead of a car that started in front of you when you reach your grid box is a 5-second penalty. Taking your own place back after being delayed is allowed.
 
 ### Mac 2.1.46 · Windows 2.1.46 BETA · 24 October 2026 · 🚦 A real F1 start, much harder racing, and talk to your engineer
 
