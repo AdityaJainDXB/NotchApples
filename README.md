@@ -72,10 +72,10 @@ Pick your computer. Both buttons start the download straight away. The Mac link 
   </tr>
   <tr>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.1.53</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.1.54</b></a>
     </td>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 2.1.53 BETA</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 2.1.54 BETA</b></a>
     </td>
   </tr>
   <tr>
@@ -233,6 +233,11 @@ All screenshots use sample data.
 ## What's new
 
 > **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is in the repository's history.
+
+### Mac 2.1.54 · Windows 2.1.54 BETA · 24 October 2026 · ✨ A livelier notch, and smoother racing explained
+
+- Smoother, livelier notch: a burst of confetti when you tick off a to-do, buttons that dip with a spring when you press them, three pulsing dots while the AI is thinking and a light that runs round its answer while it's still arriving, your name coming into focus word by word in the hello, and notifications that slide in one after another. All follow the iPhone Duo setting and Reduce Motion.
+- Racing: when macOS Low Power Mode is on, the Mac's web engine draws the game at 30 frames a second instead of 60; the race now tells you so once (plug in or switch Low Power Mode off for smooth 60). The timing tower no longer covers the tyre line when you drive the Safety Car or the Medical Car.
 
 ### Mac 2.1.53 · Windows 2.1.53 BETA · 24 October 2026 · 🔧 Race engineer: typing on the Mac, and clear reasons when it can't answer
 

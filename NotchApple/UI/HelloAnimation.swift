@@ -98,12 +98,13 @@ private struct HelloView: View {
                 .frame(width: w * 0.58, height: (w * 0.58) * 200 / 638)
                 .offset(y: notchHeight + 6)
                 .opacity(grown ? 1 : 0)
-                if !name.isEmpty {
-                    Text(name)
+                if !name.isEmpty && nameOn {
+                    // The name comes into focus word by word.
+                    BlurRevealText(text: name, stagger: 0.09)
                         .font(.system(size: 14, weight: .semibold, design: .rounded))
                         .foregroundStyle(.white.opacity(0.92))
-                        .opacity(nameOn ? 1 : 0)
                         .offset(y: h - 26)
+                        .transition(.opacity)
                 }
             }
             .frame(width: w, height: h, alignment: .top)

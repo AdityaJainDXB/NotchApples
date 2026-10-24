@@ -2147,7 +2147,7 @@
       // tyre and how many laps it has done, and pit stops. A big field shows the top eight and the cars round you.
       if (towerMode && (screen === 'race' || screen === 'done') && T.closed) {
         const all = ranking(racers).filter((r) => !r.dsq), mi = all.indexOf(me), rowsIdx = all.length <= 12 ? all.map((_, i) => i) : [...new Set([...Array(8).keys(), ...[mi - 1, mi, mi + 1].filter((i) => i >= 8 && i < all.length)])];
-        const x0 = 8 * s, y0 = (me.official ? 80 : 124) * s, rh = 12.5 * s, wdt = 182 * s, L = T.length;
+        const x0 = 8 * s, y0 = 124 * s, rh = 12.5 * s, wdt = 182 * s, L = T.length;
         g.fillStyle = 'rgba(8,12,22,.66)'; g.beginPath(); g.roundRect(x0, y0, wdt, rh * rowsIdx.length + 16 * s, 7 * s); g.fill();
         g.font = `700 ${7.5 * s}px system-ui`; g.fillStyle = 'rgba(255,255,255,.55)'; g.textAlign = 'left';
         g.fillText(towerMode === 1 ? 'INTERVAL' : 'TO LEADER', x0 + 52 * s, y0 + 10 * s); g.fillText('LAST', x0 + 96 * s, y0 + 10 * s); g.fillText('TYRE', x0 + 134 * s, y0 + 10 * s); g.fillText('PIT', x0 + 164 * s, y0 + 10 * s);
@@ -2657,6 +2657,8 @@
       if (!alive) return;
       raf = requestAnimationFrame(frame);
       const dt = Math.min(0.05, (t - last) / 1000); last = t;
+      // Running at about 30 frames a second while the Mac is in Low Power Mode (WebKit halves web animation then): say so once.
+      if (screen === 'race' && !frame.lowTold) { frame.n = (frame.n || 0) + 1; frame.sum = (frame.sum || 0) + dt; if (frame.n >= 90) { if (frame.sum / frame.n > 0.026 && window.NotchLowPower) { frame.lowTold = true; toast('🔋 Low Power Mode is limiting the race to 30 frames a second: plug in or switch it off for smooth 60'); } frame.n = 0; frame.sum = 0; } }
       const hs = hostSound(); if (hs !== null && hs !== soundOn) setSound(hs);     // the app's Sound switch wins
       if (suspended) return;
       if (!paused) { let left = dt; while (left > 1e-4) { const h = Math.min(left, 1 / 120); update(h); left -= h; } if (shake > 0) shake = Math.max(0, shake - dt * 2.5); if (paddle > 0) paddle -= dt; }

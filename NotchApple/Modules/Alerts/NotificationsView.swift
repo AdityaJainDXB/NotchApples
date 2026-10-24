@@ -186,7 +186,7 @@ struct NotificationsView: View {
                 if let status { Text(status).font(.system(size: 11)).foregroundStyle(Theme.textSecondary) }
                 ScrollView {
                     VStack(spacing: 6) {
-                        ForEach(mirror.items) { item in row(item) }
+                        ForEach(Array(mirror.items.enumerated()), id: \.element.id) { i, item in row(item).staggeredAppear(index: i) }
                     }
                 }
             }

@@ -20,6 +20,10 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.1.54", date: "24 October 2026", headline: "A livelier notch, and smoother racing explained", items: [
+            "Smoother, livelier notch: a burst of confetti when you tick off a to-do, buttons that dip with a spring when you press them, three pulsing dots while the AI is thinking and a light that runs round its answer while it's still arriving, your name coming into focus word by word in the hello, and notifications that slide in one after another. All follow the iPhone Duo setting and Reduce Motion.",
+            "Racing: when macOS Low Power Mode is on, the Mac's web engine draws the game at 30 frames a second instead of 60; the race now tells you so once (plug in or switch Low Power Mode off for smooth 60). The timing tower no longer covers the tyre line when you drive the Safety Car or the Medical Car.",
+        ]),
         ReleaseNote(version: "2.1.53", date: "24 October 2026", headline: "Race engineer: typing on the Mac, and clear reasons when it can't answer", items: [
             "Racing, race engineer fixes: on the Mac, typing a question (Enter in the open radio) now works in the notch: the box gets the keyboard instead of your letters going to the car. When the AI or the voice radio can't answer, the race now says why, for example that the microphone or speech recognition is switched off for Notch Apple in System Settings, or the AI provider's own error (a missing key, a busy model), instead of quietly giving the quick answer. With voice switched off, opening the radio tells you where to switch it on.",
         ]),

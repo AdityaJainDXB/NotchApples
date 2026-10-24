@@ -154,7 +154,7 @@ private struct RacingWebView: NSViewRepresentable {
     func makeNSView(context: Context) -> RacingWKWebView {
         let config = WKWebViewConfiguration()
         config.mediaTypesRequiringUserActionForPlayback = []
-        config.userContentController.addUserScript(WKUserScript(source: "window.NotchHostSound=\(GameSound.enabled);", injectionTime: .atDocumentStart, forMainFrameOnly: true))
+        config.userContentController.addUserScript(WKUserScript(source: "window.NotchHostSound=\(GameSound.enabled); window.NotchLowPower=\(ProcessInfo.processInfo.isLowPowerModeEnabled);", injectionTime: .atDocumentStart, forMainFrameOnly: true))
         config.userContentController.add(context.coordinator, name: "radio")
         let view = RacingWKWebView(frame: .zero, configuration: config)
         view.uiDelegate = context.coordinator
@@ -171,7 +171,8 @@ private struct RacingWebView: NSViewRepresentable {
     }
 
     func updateNSView(_ nsView: RacingWKWebView, context: Context) {
-        nsView.evaluateJavaScript("window.NotchHostSound=\(soundOn); window.NotchRaceGame && window.NotchRaceGame.setSoundEnabled && window.NotchRaceGame.setSoundEnabled(\(soundOn))")
+        // Low Power Mode makes WebKit draw web pages at 30 frames a second; the game tells you when that is why it isn't smooth.
+        nsView.evaluateJavaScript("window.NotchLowPower=\(ProcessInfo.processInfo.isLowPowerModeEnabled); window.NotchHostSound=\(soundOn); window.NotchRaceGame && window.NotchRaceGame.setSoundEnabled && window.NotchRaceGame.setSoundEnabled(\(soundOn))")
     }
 
     static func dismantleNSView(_ nsView: RacingWKWebView, coordinator: Coordinator) {

@@ -762,7 +762,7 @@ struct ClaudeChatView: View {
                     if model.messages.isEmpty && model.input == nil && model.textInput == nil { emptyState }
                     ForEach(model.messages) { Bubble(message: $0, streaming: model.isSending && $0.id == model.messages.last?.id).id($0.id) }
                     if model.isSending, model.messages.last?.text.isEmpty ?? true {
-                        ProgressView().controlSize(.small).padding(.leading, 6).id("typing")
+                        PulseDots().padding(.leading, 10).padding(.vertical, 6).id("typing")
                     }
                     Color.clear.frame(height: 1).id("bottom")
                 }
@@ -970,6 +970,8 @@ private struct Bubble: View {
                 RoundedRectangle(cornerRadius: 14, style: .continuous)
                     .fill(isUser ? AnyShapeStyle(Theme.accentGradient) : AnyShapeStyle(Color.white.opacity(0.08)))
             )
+            .borderBeam(streaming && !isUser)          // a light runs round the answer while it is still arriving
+            .animation(.easeOut(duration: 0.3), value: streaming)
             .onHover { hovering = $0 }
             if !isUser { Spacer(minLength: 30) }
         }

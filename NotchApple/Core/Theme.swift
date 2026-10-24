@@ -146,7 +146,7 @@ struct IconButton: View {
                 .background(Circle().fill(hovering ? Theme.surfaceHover : .clear))
                 .contentShape(Circle())
         }
-        .buttonStyle(.plain)
+        .buttonStyle(PressDepthStyle())
         .onHover { hovering = $0 }
         .help(help)
         .accessibilityLabel(help)

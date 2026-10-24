@@ -123,6 +123,7 @@ struct TodoView: View {
     @ObservedObject private var entitlements = Entitlements.shared
     @State private var new = ""
     @State private var chosen: TodoPriority = .medium
+    @State private var burst: [UUID: Int] = [:]          // a confetti burst each time a to-do is ticked off
     @State private var toReminders = false
     @FocusState private var focused: Bool
 
@@ -224,10 +225,16 @@ struct TodoView: View {
         let high = item.priority == .high && !item.done
         return HStack(spacing: 8) {
             Capsule().fill(item.done ? Color.clear : item.priority.colour).frame(width: 3, height: 22)
-            Button { withAnimation(Theme.spring) { todos.toggle(item) } } label: {
+            Button {
+                let finishing = !item.done
+                withAnimation(Theme.spring) { todos.toggle(item) }
+                if finishing { burst[item.id, default: 0] += 1 }
+            } label: {
                 Image(systemName: item.done ? "checkmark.circle.fill" : "circle").font(.system(size: 15))
                     .foregroundStyle(item.done ? Color.green : item.priority.colour)
+                    .contentTransition(.symbolEffect(.replace))
             }
+            .confetti(trigger: burst[item.id] ?? 0)
             .buttonStyle(.plain)
             .accessibilityLabel(item.done ? "Mark not done" : "Mark done")
             VStack(alignment: .leading, spacing: 0) {

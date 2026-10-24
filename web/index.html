@@ -328,6 +328,19 @@ section{padding:clamp(80px,9vw,128px) 0;position:relative}
 .plan{padding:34px 30px;display:flex;flex-direction:column}
 .plan+.plan{border-left:1px solid var(--line)}
 .plan.best{background:linear-gradient(180deg,rgba(118,80,238,.2),rgba(118,80,238,.05) 70%)}
+/* Border Beam: a light that runs round the featured plan */
+@property --beam{syntax:'<angle>';initial-value:0deg;inherits:false}
+.plan.best{position:relative;isolation:isolate}
+.plan.best::after{content:"";position:absolute;inset:0;border-radius:inherit;padding:1.5px;background:conic-gradient(from var(--beam),transparent 0 62%,#8b6dff 80%,#5cc8ff 92%,transparent);-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;animation:beam 5s linear infinite;pointer-events:none}
+@keyframes beam{to{--beam:360deg}}
+/* Text Shimmer: a highlight sweeps across the main download button now and then */
+#dlBtn{position:relative;overflow:hidden}
+#dlBtn::after{content:"";position:absolute;inset:0;background:linear-gradient(105deg,transparent 30%,rgba(255,255,255,.32) 50%,transparent 70%);transform:translateX(-120%);animation:sweep 3.6s ease-in-out 1.5s infinite;pointer-events:none}
+@keyframes sweep{0%{transform:translateX(-120%)}45%,100%{transform:translateX(120%)}}
+/* Blur Reveal: section headings come into focus word by word */
+.js .sh.rv h2 .w{display:inline-block;filter:blur(6px);opacity:0;transform:translateY(6px);transition:filter .6s var(--ease-out),opacity .6s var(--ease-out),transform .6s var(--ease-out);transition-delay:calc(var(--i)*55ms)}
+.js .sh.rv.in h2 .w{filter:none;opacity:1;transform:none}
+.js .sh.rv:not(.in) h2 .w{animation:revealFallback .01s 2.8s forwards}
 .plan .nm{display:flex;align-items:center;gap:10px;font-weight:600;font-size:17px}
 .plan .pr{font-size:48px;letter-spacing:-.04em;font-weight:600;margin:14px 0 2px;font-variant-numeric:tabular-nums}
 .plan .pr small{font-size:15px;color:var(--mut);letter-spacing:0;font-weight:500;margin-left:6px}
@@ -531,6 +544,8 @@ footer{background:linear-gradient(180deg,transparent,rgba(118,80,238,.06))}
   *,*:before,*:after{animation-duration:.01ms!important;animation-iteration-count:1!important}
   .rv,.sa-media img,.lb img,.mobile-menu,.seg .pill,.win,.notch{transition-property:opacity!important}
   .js .rv:not(.in){transform:none;filter:none}
+  .plan.best::after,#dlBtn::after{animation:none}#dlBtn::after{display:none}
+  .js .sh.rv h2 .w{filter:none;opacity:1;transform:none;transition:none}
   .sa-media img{transform:none;filter:none}
 }
 </style>
@@ -1098,6 +1113,8 @@ function pickStep(){
 addEventListener('scroll',()=>{if(!stepRaf)stepRaf=requestAnimationFrame(pickStep)},{passive:true});addEventListener('resize',pickStep);pickStep();
 
 /* ---------- reveal on scroll (content is never left hidden) ---------- */
+/* Blur Reveal: wrap each word of the plain section headings, so they can come into focus one by one */
+if(!reduce)$$('.sh.rv h2').forEach(h=>{if(h.children.length)return;const words=h.textContent.trim().split(/\s+/);h.setAttribute('aria-label',h.textContent.trim());h.innerHTML=words.map((w,i)=>`<span class="w" aria-hidden="true" style="--i:${i}">${w.replace(/&/g,'&amp;').replace(/</g,'&lt;')}</span>`).join(' ')});
 const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target)}}),{threshold:.12,rootMargin:'0px 0px -6% 0px'});
 $$('.rv').forEach(el=>io.observe(el));
 setTimeout(()=>$$('.rv').forEach(el=>el.classList.add('in')),4000);
@@ -1287,7 +1304,9 @@ fromSite.then(site=>site||Promise.all([
   }
   if(stars!==null){
     const a=document.createElement('a');a.href='https://github.com/AdityaJainDXB/NotchApples';a.rel='noopener';a.target='_blank';
-    a.textContent='\u2605 '+stars.toLocaleString()+' on GitHub';el.append(v?' \u00b7 ':'',a);
+    a.textContent='\u2605 '+stars.toLocaleString()+' on GitHub';
+    /* Rolling digits: the count climbs to its value once it has loaded */
+    if(!reduce&&stars>0){const t0=performance.now(),d=900;const step=t=>{const k=Math.min(1,(t-t0)/d),e=1-Math.pow(1-k,3);a.textContent='\u2605 '+Math.round(stars*e).toLocaleString()+' on GitHub';if(k<1)requestAnimationFrame(step)};requestAnimationFrame(step)}el.append(v?' \u00b7 ':'',a);
   }
   if(dmg){$('#dlBtn').href=dmg.browser_download_url;$('#dlSize').textContent='DMG, '+(dmg.size/1048576).toFixed(0)+' MB, free, source-available licence'}
 });
