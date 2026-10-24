@@ -57,6 +57,21 @@ export function render(root) {
         iconBtn('⟳', 'Refresh', refreshAll)));
       tower.append(el('div', { class: 'tiny faint' }, live.state === 'in' ? 'Running order · gaps appear when F1 publishes the timing' : 'Provisional order'));
       tower.append(...live.order.map((o) => row(o.pos, o.code, o.name, o.team)));
+    } else if (d.timing) {
+      // The latest session's timing (OpenF1): tyre and its age, gap, lap times and pit stops.
+      const t = d.timing, TY = { SOFT: ['S', '#ff3b3b'], MEDIUM: ['M', '#ffd23f'], HARD: ['H', '#f2f2f2'], INTERMEDIATE: ['I', '#3ad07a'], WET: ['W', '#3a8dff'] };
+      tower.append(el('div', { class: 'hstack' }, el('span', { class: 'title grow ellipsis' }, t.title), iconBtn('⟳', 'Refresh', refreshAll)));
+      tower.append(el('div', { class: 'tiny faint' }, `Latest session · ${t.race ? 'gap · last lap' : 'gap to fastest · best lap'} · tyre (laps on it) · pit stops`));
+      tower.append(...t.rows.map((r) => { const ty = TY[r.tyre] || ['', 'transparent'], mine = r.code && F.followed() === r.code;
+        return el('div', { class: 'item clickable', style: `padding:3px 6px;gap:6px;${mine ? 'background:rgba(255,255,255,.12)' : ''}`, title: `${r.name} · best ${r.best || '–'} · last ${r.last || '–'} · ${r.laps} laps`, onclick: () => { F.follow(r.code); paint(); } },
+          el('span', { class: 'num', style: 'width:22px;font-weight:700;text-align:right' }, String(r.pos)),
+          el('span', { style: `width:3px;height:14px;border-radius:2px;background:${r.colour || F.colourOf(r.team)}` }),
+          el('span', { class: 'mono', style: 'width:36px;font-weight:700' }, r.code || ''),
+          el('span', { style: `width:14px;height:14px;border-radius:50%;border:2px solid ${ty[1]};font-size:8px;font-weight:900;display:inline-flex;align-items:center;justify-content:center;color:${ty[1]}` }, ty[0]),
+          el('span', { class: 'num tiny dim', style: 'width:16px' }, r.age ? String(r.age) : ''),
+          el('span', { class: 'num small grow' }, r.pos === 1 ? (t.race ? 'Leader' : 'Fastest') : (t.race ? r.interval || r.gap : r.gap)),
+          el('span', { class: 'num tiny dim' }, t.race ? r.last || r.best : r.best),
+          el('span', { class: 'num tiny dim', style: 'width:22px;text-align:right' }, r.pits ? `${r.pits}×` : '')); }));
     } else if (d.last) {
       tower.append(el('div', { class: 'hstack' }, el('span', { class: 'title grow ellipsis' }, d.last.name), iconBtn('⟳', 'Refresh', refreshAll)));
       tower.append(el('div', { class: 'tiny faint' }, 'Last race · final classification'));

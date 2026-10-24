@@ -19,7 +19,35 @@ export const colourOf = (team = '') => Object.entries(TEAM_COLOURS).find(([k]) =
 
 const SESSION_NAMES = { FirstPractice: 'Practice 1', SecondPractice: 'Practice 2', ThirdPractice: 'Practice 3', SprintQualifying: 'Sprint Qualifying', SprintShootout: 'Sprint Shootout', Sprint: 'Sprint', Qualifying: 'Qualifying' };
 
-const data = { weekend: null, drivers: [], teams: [], last: null, live: null, at: 0 };
+const data = { weekend: null, drivers: [], teams: [], last: null, live: null, timing: null, at: 0 };
+const OF1 = 'https://api.openf1.org/v1/';
+
+export const lapText = (s) => { if (!(s > 0)) return ''; const m = Math.floor(s / 60), r = s - m * 60; return m ? `${m}:${r.toFixed(3).padStart(6, '0')}` : r.toFixed(3); };
+/// The timing table for a session from OpenF1's lists: the order (by best lap outside races), last and best laps, the
+/// tyre and its age in laps, pit stops and gaps.
+export function buildTiming(session, drv, pos, laps, stints, pits, ivals) {
+  const isRace = session.session_type === 'Race', place = {}, best = {}, last = {}, lapN = {}, stint = {}, pitN = {}, gapL = {}, gapA = {};
+  for (const p of pos) place[p.driver_number] = p.position;
+  for (const l of laps) { const n = l.driver_number; lapN[n] = Math.max(lapN[n] || 0, l.lap_number || 0); if (l.lap_duration > 0) { last[n] = l.lap_duration; if (!(best[n] <= l.lap_duration)) best[n] = l.lap_duration; } }
+  for (const st of stints) stint[st.driver_number] = st;
+  for (const p of pits) pitN[p.driver_number] = (pitN[p.driver_number] || 0) + 1;
+  const g = (v) => (typeof v === 'number' ? `+${v.toFixed(3)}` : v || '');
+  for (const i of ivals) { gapL[i.driver_number] = g(i.gap_to_leader); gapA[i.driver_number] = g(i.interval); }
+  const fastest = Math.min(...Object.values(best));
+  let rows = drv.map((d) => { const n = d.driver_number, st = stint[n], ln = lapN[n] || 0;
+    return { num: n, pos: place[n] || 99, code: d.name_acronym, name: d.full_name, team: d.team_name || '', colour: d.team_colour ? `#${d.team_colour}` : null,
+      gap: isRace ? gapL[n] || '' : best[n] && best[n] !== fastest ? `+${(best[n] - fastest).toFixed(3)}` : '', interval: isRace ? gapA[n] || '' : '',
+      last: lapText(last[n]), best: lapText(best[n]), bestS: best[n] || Infinity, tyre: st?.compound || '', age: st ? (st.tyre_age_at_start || 0) + Math.max(0, ln - (st.lap_start ?? ln) + 1) : 0, pits: pitN[n] || 0, laps: ln }; });
+  rows = isRace ? rows.sort((a, b) => a.pos - b.pos) : rows.sort((a, b) => a.bestS - b.bestS).map((r, i) => ({ ...r, pos: i + 1 }));
+  return { title: `${session.session_name} · ${session.location || ''}`, race: isRace, rows };
+}
+export async function loadTiming() {
+  const s = (await getJSON(`${OF1}sessions?session_key=latest`))?.[0];
+  if (!s) { data.timing = null; return; }
+  const q = `?session_key=${s.session_key}`, get1 = (e) => getJSON(OF1 + e + q).catch(() => []);
+  const [drv, pos, laps, stints, pits, ivals] = await Promise.all(['drivers', 'position', 'laps', 'stints', 'pit', 'intervals'].map(get1));
+  data.timing = Array.isArray(drv) && drv.length ? buildTiming(s, drv, pos || [], Array.isArray(laps) ? laps : [], Array.isArray(stints) ? stints : [], Array.isArray(pits) ? pits : [], Array.isArray(ivals) ? ivals : []) : null;
+}
 export const get = () => data;
 export const followed = () => load('f1.follow', '');
 export const follow = (code) => { save('f1.follow', followed() === code ? '' : code); refresh(); };
@@ -74,7 +102,7 @@ export async function loadLive() {
 }
 
 export async function loadAll() {
-  await Promise.allSettled([loadSchedule(), loadStandings(), loadLast()]);
+  await Promise.allSettled([loadSchedule(), loadStandings(), loadLast(), loadTiming()]);
   await loadLive().catch(() => {});
   data.at = Date.now();
   refresh();

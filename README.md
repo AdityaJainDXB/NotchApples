@@ -72,10 +72,10 @@ Pick your computer. Both buttons start the download straight away. The Mac link 
   </tr>
   <tr>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.1.49</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.1.50</b></a>
     </td>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 2.1.49 BETA</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 2.1.50 BETA</b></a>
     </td>
   </tr>
   <tr>
@@ -233,6 +233,12 @@ All screenshots use sample data.
 ## What's new
 
 > **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is in the repository's history.
+
+### Mac 2.1.50 · Windows 2.1.50 BETA · 24 October 2026 · 🎙 Talk to your engineer, the Medical Car on foot, and full F1 timing
+
+- Racing, talk to your race engineer out loud: the first time you open Racing it asks whether to use the microphone. With it on, open the radio (T, or Space in the Formula One car), say your question (“how are my tyres?”, “should I box?”, “what's the gap?”), and press again to send; the engineer answers with the live numbers. Your words are turned into text on your Mac. Without the microphone the radio works with the number keys, as before. Before your first Formula One race there's a short radio check: send each of the six lines once.
+- Racing, driving the Medical Car: race control tells you how the driver sounds on the way. At the crash, press F to get out, then pick the right question to ask the driver (only one tells you how they really are), stay with them for 5 to 30 seconds depending on how bad it is, and give your evaluation: red (serious), yellow or green (minor). Then you drive them back to the pits, and the Safety Car asks whether you're finished or going round one more lap. Each step scores.
+- F1: the timing tower is back with the full data (GitHub issue #35): for the latest session, each driver's tyre and how many laps it has done, gap (to the leader in races, to the fastest lap in practice and qualifying), last and best laps, and pit stops. F1 has locked its own timing archive, so this now comes from OpenF1's free data.
 
 ### Mac 2.1.49 · Windows 2.1.49 BETA · 24 October 2026 · 🏆 All 24 circuits of the 2026 F1 calendar, and a smarter track assistant
 
@@ -2121,7 +2127,7 @@ Per-app volume and EQ use Core Audio process taps, which arrived in macOS 14.2. 
   - the AI provider you chose (Gemini, Groq, OpenRouter, DeepSeek, Anthropic or OpenAI), using your own key, and only when you ask: your question, the image you captured or pasted, and that conversation. With **Ollama** or **Apple Intelligence** nothing leaves your Mac, and the notch shows **On this Mac**
   - `api.github.com` to check for updates (can be turned off) and `github.com` to download one you accept
   - `open-meteo.com` for weather (and the cities you add to the forecast, Pro)
-  - `site.api.espn.com` for public scores in Sports, Live, F1 and Tennis, and `api.jolpi.ca` / F1's public timing archive for F1: nothing about you is sent
+  - `site.api.espn.com` for public scores in Sports, Live, F1 and Tennis, and `api.jolpi.ca` / `api.openf1.org` / F1's public timing archive for F1: nothing about you is sent
   - the plugin gallery's list and the plugins you choose to install, from `raw.githubusercontent.com` (Ultimate)
   - iCloud Drive, only for settings, notes and to-dos you choose to sync
   - your own iPhone on your local Wi-Fi, only if you turn on the iPhone companion (Ultimate); nothing leaves your network

@@ -50,6 +50,7 @@ final class F1Model: ObservableObject {
         let lastLap: String
         let bestLap: String
         let tyre: String
+        let tyreAge: Int     // laps on this set of tyres
         let laps: Int
         let pits: Int
         let inPit: Bool
@@ -226,6 +227,9 @@ final class F1Model: ObservableObject {
             // F1's own live-timing feed is not reachable (it now refuses unsigned requests). With no session on, show the latest
             // final classification (race, sprint or qualifying) from Jolpica; failing that the order from ESPN. Never leave the
             // spinner running.
+            // First choice: OpenF1's free data for the latest finished session (lap times, tyres and their age, pit stops,
+            // gaps), then the final classification from Jolpica, then the order from ESPN.
+            if await loadOpenF1() { return }
             await loadLastClassification()
             if cars.isEmpty { await loadLiveOrder(weekend?.sessions.last(where: { $0.start <= .now })) }
             return
@@ -269,9 +273,11 @@ final class F1Model: ObservableObject {
         cars = lines.compactMap { number, l -> Car? in
             guard let pos = Int(l["Position"] as? String ?? "") else { return nil }
             let d = drivers_[number] ?? [:]
-            let tyre = ((stints[number]?["Stints"] as? [[String: Any]])?.last?["Compound"] as? String)
-                ?? (((stints[number]?["Stints"] as? [String: [String: Any]]).flatMap { s in s.keys.compactMap(Int.init).max().flatMap { s[String($0)] } })?["Compound"] as? String)
-                ?? ""
+            // The current stint: its tyre, and how many laps those tyres have done (TotalLaps counts laps on them before this stint too).
+            let stint = ((stints[number]?["Stints"] as? [[String: Any]])?.last)
+                ?? ((stints[number]?["Stints"] as? [String: [String: Any]]).flatMap { s in s.keys.compactMap(Int.init).max().flatMap { s[String($0)] } })
+            let tyre = stint?["Compound"] as? String ?? ""
+            let tyreAge = stint?["TotalLaps"] as? Int ?? (stint?["TotalLaps"] as? String).flatMap(Int.init) ?? 0
             // Races show the gap to the leader; practice and qualifying the gap to the fastest lap.
             var gap = value(l["GapToLeader"]).isEmpty ? value(l["TimeDiffToFastest"]) : value(l["GapToLeader"])
             var interval = value(l["IntervalToPositionAhead"]).isEmpty ? value(l["TimeDiffToPositionAhead"]) : value(l["IntervalToPositionAhead"])
@@ -289,7 +295,7 @@ final class F1Model: ObservableObject {
                        colour: Color(hex: d["TeamColour"] as? String ?? "888888"),
                        gap: gap, interval: interval,
                        lastLap: value(l["LastLapTime"]), bestLap: best,
-                       tyre: tyre, laps: l["NumberOfLaps"] as? Int ?? 0, pits: l["NumberOfPitStops"] as? Int ?? 0,
+                       tyre: tyre, tyreAge: tyreAge, laps: l["NumberOfLaps"] as? Int ?? 0, pits: l["NumberOfPitStops"] as? Int ?? 0,
                        inPit: isLive && (l["InPit"] as? Bool ?? false),   // after a session every car is "in the pit"
                        out: (l["Retired"] as? Bool ?? false) || (l["Stopped"] as? Bool ?? false) || (l["KnockedOut"] as? Bool ?? false))
         }.sorted { $0.position < $1.position }
@@ -331,7 +337,7 @@ final class F1Model: ObservableObject {
             let colour = d["TeamColour"] as? String ?? r.flatMap { Self.teamColours[$0.teamID] } ?? "888888"
             return Car(number: d["RacingNumber"] as? String ?? code, position: order, code: code,
                        team: d["TeamName"] as? String ?? r?.team ?? "", colour: Color(hex: colour),
-                       gap: "", interval: "", lastLap: "", bestLap: "", tyre: "", laps: 0, pits: 0, inPit: false, out: false)
+                       gap: "", interval: "", lastLap: "", bestLap: "", tyre: "", tyreAge: 0, laps: 0, pits: 0, inPit: false, out: false)
         }.sorted { $0.position < $1.position }
         sessionTitle = "\((event["name"] as? String) ?? weekend?.name ?? "Formula 1") · \(sessionName)"
         sessionType = sessionName == "Race" || sessionName == "Sprint" ? "Race" : sessionName
@@ -374,7 +380,7 @@ final class F1Model: ObservableObject {
             let gap = isQuali ? "" : ((r["Time"] as? [String: Any])?["time"] as? String ?? (finished ? status : status))
             return Car(number: d["permanentNumber"] as? String ?? code, position: pos, code: code, team: con?["name"] as? String ?? "",
                        colour: Color(hex: colour), gap: pos == 1 && !isQuali ? "" : gap, interval: "", lastLap: "", bestLap: isQuali ? qBest : fastest,
-                       tyre: "", laps: Int(r["laps"] as? String ?? "") ?? 0, pits: 0, inPit: false, out: !finished)
+                       tyre: "", tyreAge: 0, laps: Int(r["laps"] as? String ?? "") ?? 0, pits: 0, inPit: false, out: !finished)
         }.sorted { $0.position < $1.position }
         guard !list.isEmpty else { return }
         cars = list
@@ -445,6 +451,68 @@ final class F1Model: ObservableObject {
     }
 
     // MARK: Helpers
+
+    // MARK: OpenF1 (api.openf1.org: free, no account; a session's data is complete once it has finished)
+
+    private static func list(_ path: String) async -> [[String: Any]] {
+        guard let url = URL(string: "https://api.openf1.org/v1/" + path),
+              let (data, response) = try? await URLSession.shared.data(for: URLRequest(url: url, cachePolicy: .reloadIgnoringLocalCacheData, timeoutInterval: 20)),
+              (response as? HTTPURLResponse)?.statusCode == 200 else { return [] }
+        return (try? JSONSerialization.jsonObject(with: data) as? [[String: Any]]) ?? []
+    }
+
+    static func lapText(_ secs: Double?) -> String {
+        guard let secs, secs > 0 else { return "" }
+        let m = Int(secs) / 60, rest = secs - Double(m * 60)
+        return m > 0 ? String(format: "%d:%06.3f", m, rest) : String(format: "%.3f", rest)
+    }
+
+    /// The latest session from OpenF1: the order, last and best laps, tyre and its age, pit stops, and gaps. False when
+    /// OpenF1 has nothing (then the other sources are tried).
+    private func loadOpenF1() async -> Bool {
+        guard let session = await Self.list("sessions?session_key=latest").first, let key = session["session_key"] as? Int else { return false }
+        let q = "?session_key=\(key)"
+        async let dJ = Self.list("drivers" + q)
+        async let pJ = Self.list("position" + q)
+        async let lJ = Self.list("laps" + q)
+        async let sJ = Self.list("stints" + q)
+        async let pitJ = Self.list("pit" + q)
+        async let iJ = Self.list("intervals" + q)
+        let (drv, pos, laps, stints, pits, ivals) = await (dJ, pJ, lJ, sJ, pitJ, iJ)
+        guard !drv.isEmpty else { return false }
+        let num = { (d: [String: Any]) in (d["driver_number"] as? Int).map(String.init) ?? "" }
+        var place: [String: Int] = [:]; for p in pos { if let n = p["position"] as? Int { place[num(p)] = n } }       // the last one counts
+        var best: [String: Double] = [:], last: [String: Double] = [:], lapCount: [String: Int] = [:]
+        for l in laps {
+            let n = num(l); lapCount[n] = max(lapCount[n] ?? 0, l["lap_number"] as? Int ?? 0)
+            if let t = l["lap_duration"] as? Double { last[n] = t; if t < (best[n] ?? .infinity) { best[n] = t } }
+        }
+        var stint: [String: [String: Any]] = [:]; for st in stints { stint[num(st)] = st }
+        var pitN: [String: Int] = [:]; for p in pits { pitN[num(p), default: 0] += 1 }
+        var gapL: [String: String] = [:], gapA: [String: String] = [:]
+        let gapText = { (v: Any?) -> String in if let d = v as? Double { return String(format: "+%.3f", d) }; return v as? String ?? "" }
+        for i in ivals { gapL[num(i)] = gapText(i["gap_to_leader"]); gapA[num(i)] = gapText(i["interval"]) }
+        let type = session["session_type"] as? String ?? "", isRace = type == "Race"
+        let fastest = best.values.min()
+        var rows = drv.map { d -> Car in
+            let n = num(d), st = stint[n], laps = lapCount[n] ?? 0
+            let age = st.map { ($0["tyre_age_at_start"] as? Int ?? 0) + max(0, laps - ($0["lap_start"] as? Int ?? laps) + 1) } ?? 0
+            let gap = isRace ? (gapL[n] ?? "") : (best[n].flatMap { b in fastest.map { b == $0 ? "" : String(format: "+%.3f", b - $0) } } ?? "")
+            return Car(number: n, position: place[n] ?? 99, code: d["name_acronym"] as? String ?? n, team: d["team_name"] as? String ?? "",
+                       colour: Color(hex: d["team_colour"] as? String ?? "888888"), gap: gap, interval: isRace ? (gapA[n] ?? "") : gap,
+                       lastLap: Self.lapText(last[n]), bestLap: Self.lapText(best[n]), tyre: st?["compound"] as? String ?? "", tyreAge: age,
+                       laps: laps, pits: pitN[n] ?? 0, inPit: false, out: false)
+        }
+        // Practice and qualifying are ordered by the best lap.
+        if !isRace { rows.sort { (best[$0.number] ?? .infinity) < (best[$1.number] ?? .infinity) }; rows = rows.enumerated().map { i, c in Car(number: c.number, position: i + 1, code: c.code, team: c.team, colour: c.colour, gap: c.gap, interval: c.interval, lastLap: c.lastLap, bestLap: c.bestLap, tyre: c.tyre, tyreAge: c.tyreAge, laps: c.laps, pits: c.pits, inPit: false, out: c.laps == 0) } }
+        else { rows.sort { $0.position < $1.position } }
+        sessionTitle = "\(session["session_name"] as? String ?? "Session") · \(session["location"] as? String ?? "")"
+        sessionType = isRace ? "Race" : type
+        status = "Finalised"; orderOnly = false; error = nil; isLive = false
+        cars = rows
+        LiveActivityCenter.shared.recompute()
+        return !rows.isEmpty
+    }
 
     private static func json(_ url: URL) async -> [String: Any]? {
         guard let (data, response) = try? await URLSession.shared.data(for: URLRequest(url: url, cachePolicy: .reloadIgnoringLocalCacheData, timeoutInterval: 15)),

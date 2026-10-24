@@ -76,6 +76,9 @@ struct F1View: View {
             RoundedRectangle(cornerRadius: 1.5).fill(c.colour).frame(width: 3, height: 14)
             Text(c.code).font(.system(size: 11, weight: .bold, design: .monospaced)).foregroundStyle(c.out ? Theme.textSecondary : .white).frame(width: 34, alignment: .leading)
             tyre(c.tyre)
+            // Tyre age (laps on this set) and pit stops, when the timing has them.
+            Text(c.tyreAge > 0 ? "\(c.tyreAge)" : "").font(.system(size: 9, weight: .medium).monospacedDigit()).foregroundStyle(Theme.textSecondary).frame(width: 14, alignment: .leading)
+                .help(c.tyreAge > 0 ? "\(c.tyreAge) laps on these tyres" : "")
             Text(f1.orderOnly ? c.team : c.out ? "OUT" : c.inPit ? "PIT" : (c.position == 1 ? (f1.sessionType == "Race" ? "Leader" : "Fastest") : (f1.sessionType == "Race" ? c.interval : c.gap)))
                 .font(.system(size: 11, weight: .medium).monospacedDigit())
                 .foregroundStyle(c.inPit ? .yellow : c.out ? .red.opacity(0.8) : .white)
@@ -83,6 +86,11 @@ struct F1View: View {
             // Races: the last lap. Practice and qualifying: the best lap, which is what decides the order.
             Text(f1.sessionType == "Race" ? (c.lastLap.isEmpty ? c.bestLap : c.lastLap) : (c.bestLap.isEmpty ? c.lastLap : c.bestLap))
                 .font(.system(size: 10).monospacedDigit()).foregroundStyle(Theme.textSecondary)
+                .help(c.bestLap.isEmpty ? "" : "Best lap \(c.bestLap)\(c.lastLap.isEmpty ? "" : " · last lap \(c.lastLap)")")
+            if c.pits > 0 {
+                Text("\(c.pits)×").font(.system(size: 9, weight: .semibold).monospacedDigit()).foregroundStyle(Theme.textSecondary)
+                    .help("\(c.pits) pit stop\(c.pits == 1 ? "" : "s")")
+            }
         }
         .padding(.horizontal, 6).padding(.vertical, 3)
         .background(followed ? Theme.accent.opacity(0.25) : .clear, in: RoundedRectangle(cornerRadius: 6))

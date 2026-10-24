@@ -11,6 +11,8 @@
 import SwiftUI
 import WebKit
 import UniformTypeIdentifiers
+import AVFoundation
+import Speech
 
 struct RacingGameView: View {
     var body: some View {
@@ -42,9 +44,37 @@ private struct RacingWebView: NSViewRepresentable {
 
     /// Forwards the game's keys to the page whenever the web view doesn't have the keyboard itself (the notch is a
     /// non-activating panel, and focus can sit elsewhere in it), so the arrows, W A S D and Space always drive the car.
-    @MainActor final class Coordinator: NSObject, WKUIDelegate {
+    @MainActor final class Coordinator: NSObject, WKUIDelegate, WKScriptMessageHandler {
         weak var web: RacingWKWebView?
         var monitor: Any?
+        private var heard = ""
+
+        /// The race radio: the game asks for the microphone ("permission"), starts listening when you open the radio
+        /// ("start") and stops when you send ("stop"); what you said goes back to the game, which answers it. Speech is
+        /// recognised on this Mac whenever it can be (the same dictation as the AI tab).
+        func userContentController(_ controller: WKUserContentController, didReceive message: WKScriptMessage) {
+            guard let web, let what = message.body as? String else { return }
+            switch what {
+            case "permission":
+                AVCaptureDevice.requestAccess(for: .audio) { mic in
+                    SFSpeechRecognizer.requestAuthorization { status in
+                        Task { @MainActor in web.evaluateJavaScript("window.NotchRaceGame && NotchRaceGame.radioPermission && NotchRaceGame.radioPermission(\(mic && status == .authorized))") }
+                    }
+                }
+            case "start":
+                heard = ""
+                VoiceInput.shared.start { [weak self] text in self?.heard = text }
+            case "stop":
+                // A moment for the last words to come through, then send what was heard.
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.7) { [weak self] in
+                    guard let self else { return }
+                    VoiceInput.shared.stop()
+                    guard let data = try? JSONSerialization.data(withJSONObject: [self.heard]), let arg = String(data: data, encoding: .utf8) else { return }
+                    self.web?.evaluateJavaScript("window.NotchRaceGame && NotchRaceGame.radioHeard && NotchRaceGame.radioHeard(\(arg)[0])")
+                }
+            default: break
+            }
+        }
 
         /// The track designer's "From a picture" button: a file picker for an image of a circuit.
         func webView(_ webView: WKWebView, runOpenPanelWith parameters: WKOpenPanelParameters, initiatedByFrame frame: WKFrameInfo, completionHandler: @escaping @MainActor @Sendable ([URL]?) -> Void) {
@@ -85,6 +115,7 @@ private struct RacingWebView: NSViewRepresentable {
         let config = WKWebViewConfiguration()
         config.mediaTypesRequiringUserActionForPlayback = []
         config.userContentController.addUserScript(WKUserScript(source: "window.NotchHostSound=\(GameSound.enabled);", injectionTime: .atDocumentStart, forMainFrameOnly: true))
+        config.userContentController.add(context.coordinator, name: "radio")
         let view = RacingWKWebView(frame: .zero, configuration: config)
         view.uiDelegate = context.coordinator
         view.setValue(false, forKey: "drawsBackground")
@@ -106,6 +137,8 @@ private struct RacingWebView: NSViewRepresentable {
     static func dismantleNSView(_ nsView: RacingWKWebView, coordinator: Coordinator) {
         if let m = coordinator.monitor { NSEvent.removeMonitor(m) }
         coordinator.monitor = nil
+        nsView.configuration.userContentController.removeScriptMessageHandler(forName: "radio")   // it holds the coordinator
+        if VoiceInput.shared.isListening { VoiceInput.shared.stop() }
         // Leaving the game ends the race and stops the engine sound.
         nsView.evaluateJavaScript("window.NotchRaceGame && window.NotchRaceGame.suspend && window.NotchRaceGame.suspend()")
         nsView.loadHTMLString("", baseURL: nil)

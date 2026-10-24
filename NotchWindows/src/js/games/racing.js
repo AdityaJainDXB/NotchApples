@@ -871,6 +871,8 @@
 .rc-pair{display:flex;gap:10px;align-items:center;margin:4px 0}.rc-prev{border-radius:8px;flex:none}
 .rc-stats{min-width:170px}.rc-stats div{display:flex;align-items:center;gap:6px;font-size:10px;font-weight:500}.rc-stats span{width:56px;opacity:.75}.rc-stats i{flex:1;height:6px;border-radius:3px;background:rgba(255,255,255,.12);overflow:hidden}.rc-stats b{display:block;height:100%}
 .rc-sel{font:inherit;font-size:12px;color:#fff;background:#1d2230;border:1px solid rgba(255,255,255,.18);border-radius:8px;padding:5px 8px;max-width:260px}
+.rc-med{position:absolute;left:50%;bottom:16%;transform:translateX(-50%);width:min(560px,90%);background:rgba(8,12,22,.92);color:#fff;border-radius:14px;padding:14px 16px;font:500 13px system-ui;box-shadow:0 8px 30px rgba(0,0,0,.5)}.rc-med b{font-size:14px}.rc-med p{margin:6px 0}.rc-med .dim{opacity:.7;font-size:12px}.rc-med-row{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}.rc-med-btn{font:600 12px system-ui;color:#fff;background:#2a3142;border:0;border-radius:9px;padding:8px 10px;cursor:pointer;text-align:left;flex:1 1 45%}.rc-med-btn:hover{background:#39425a}.rc-med-btn.red{background:#b3262b}.rc-med-btn.yellow{background:#b38a12}.rc-med-btn.green{background:#1f8a4c}
+.rc-check{display:flex;align-items:center;gap:8px;padding:5px 8px;border-radius:8px;background:rgba(255,255,255,.05);margin:3px 0;font-size:12px}.rc-check.done{background:rgba(60,220,120,.16)}.rc-check span{margin-left:auto;color:#4fe09a;font-weight:800}.rc-check kbd{background:#2a3142;border-radius:4px;padding:0 5px}
 .rc-radio{position:absolute;left:12px;bottom:12px;background:rgba(8,12,22,.88);color:#fff;border-radius:10px;padding:10px 12px;font:600 12px system-ui;display:flex;flex-direction:column;gap:3px;pointer-events:none}.rc-radio b{color:#4fe09a;margin-bottom:3px}.rc-radio kbd{display:inline-block;min-width:16px;text-align:center;background:#2a3142;border-radius:4px;padding:0 4px;margin-right:4px}
 .rc-lights{position:absolute;left:50%;top:9%;transform:translateX(-50%);display:flex;gap:8px;padding:8px 10px;background:#111;border-radius:8px;box-shadow:0 4px 18px rgba(0,0,0,.6);pointer-events:none}.rc-lights[hidden]{display:none}.rc-lights b{display:flex;flex-direction:column;gap:5px;padding:5px;background:#222;border-radius:5px}.rc-lights i{width:22px;height:22px;border-radius:50%;background:#3a0b0b;box-shadow:inset 0 2px 4px rgba(0,0,0,.6)}.rc-lights b.on i{background:radial-gradient(circle at 40% 35%,#ff8a80,#ff1a1a 55%,#a00);box-shadow:0 0 14px #ff2a2a}
 .rc-big{position:absolute;left:0;right:0;top:26%;text-align:center;font-size:64px;font-weight:900;text-shadow:0 3px 14px rgba(0,0,0,.7);pointer-events:none}
@@ -951,12 +953,15 @@
     const bestLine = () => { const b = store.get(`best.${trackId}.${carId}`, null); return hint(b ? `Your best here: ${b.lap ? 'lap ' + fmt(b.lap) + ' · ' : ''}race ${fmt(b.race)}` : 'No time set here yet.'); };
 
     function showMenu() {
-      gantry.hidden = true;
+      gantry.hidden = true; medJob = null; medClose(); radioClose();
       screen = 'menu'; big.textContent = ''; ui.classList.remove('rc-side'); hush();
       const name = document.createElement('input'); name.value = myName; name.maxLength = 14; name.style.width = '120px'; name.style.textTransform = 'none'; name.style.letterSpacing = '0';
       name.onchange = () => { myName = (name.value || myName).trim().slice(0, 14) || myName; store.set('name', myName); };
       const mk = (n) => btn(String(n), n === rivals ? 'on' : '', () => { rivals = n; store.set('rivals', n); showMenu(); });
+      // The first time: may the game use the microphone, so you can talk to your race engineer?
+      const voiceAsk = store.get('voice', '') === '' && canHear() ? [row('🎙 Radio', hint('Talk to your race engineer out loud during a race? Your words are turned into text on this computer and never stored.'), btn('Allow the microphone', 'go', askMic), btn('Not now', '', () => { store.set('voice', 'off'); showMenu(); }))] : [];
       card(head('🏎️ Racing'),
+        ...voiceAsk,
         ...pickers(showMenu),
         row('Rivals', ...[0, 1, 3, 5, 7, 9, 11, 15].map(mk)),
         row('Level', ...Object.entries(LEVELS).map(([id, l]) => btn(l.label, id === level ? 'on' : '', () => { level = id; store.set('level', id); showMenu(); }))),
@@ -965,11 +970,41 @@
         row('You drive', ...[['race', '🏎️ A race car'], ['sc', '🚓 The Safety Car'], ['med', '🚑 The Medical Car']].map(([id, l]) => btn(l, id === role ? 'on' : '', () => { role = id; store.set('role', id); showMenu(); }))),
         ...(role !== 'race' ? [hint(role === 'sc' ? 'You are the Safety Car: when race control calls it, catch the leader, lead the pack at a steady pace, then come into the pit lane when it is clear.' : 'You are the Medical Car: when there is a crash, race to it, stop beside the car to check on the driver, then get out of the way.')] : []),
         row('View', ...[['top', 'Top-down'], ['chase', 'Chase'], ['cockpit', 'Cockpit']].map(([id, l]) => btn(l, id === viewMode ? 'on' : '', () => { viewMode = id; store.set('view', id); showMenu(); })), btn(soundOn ? '🔊 Sound' : '🔇 Sound off', '', () => { setSound(!soundOn); showMenu(); }), btn(radioOn ? '📻 Radio' : '📻 Radio off', '', () => { radioOn = !radioOn; store.set('radio', radioOn); if (!radioOn) hush(); showMenu(); })),
-        row('', btn('Start race', 'go', () => { backToDesign = false; startLocalRace(); }), btn('✏️ Track designer', '', () => openDesigner(findDef(trackId) && findDef(trackId).custom ? findDef(trackId) : null))),
+        row('', btn('Start race', 'go', () => { backToDesign = false; if (carId === 'f1' && role === 'race' && !store.get('radioDone', false)) openRadioCheck(); else startLocalRace(); }), btn('✏️ Track designer', '', () => openDesigner(findDef(trackId) && findDef(trackId).custom ? findDef(trackId) : null))),
         row('Online', btn('Create room', '', () => openRoom(true)), (() => { const i = document.createElement('input'); i.placeholder = 'CODE'; i.maxLength = 8; i.id = 'rc-code'; return i; })(), btn('Join', '', () => { const c = NET.normCode(root.querySelector('#rc-code').value); if (!c) { toast('That code is 6 letters and numbers.'); return; } openRoom(false, c); })),
         row('Name', name),
+        ...(canHear() ? [row('Voice radio', btn(voiceOn() ? '🎙 On' : '🎙 Off', voiceOn() ? 'on' : '', () => { if (voiceOn()) { store.set('voice', 'off'); showMenu(); } else askMic(); }))] : []),
         hint('T (or Space in the F1 car): talk to your race engineer, then 1 to 6 · N: skip the formation lap'),
         hint('↑ W gas · ↓ S brake and reverse · ← → A D steer · Space handbrake (drift) · V view (top, chase, cockpit) · M sound · Q serve a penalty at your pit stop · R restart · P pause · Esc menu'));
+    }
+
+    /// Asks for the microphone (the Mac app shows its own permission prompt; a browser asks the first time it listens).
+    function askMic() { if (NATIVE_RADIO()) NATIVE_RADIO().postMessage('permission'); else { store.set('voice', 'on'); showMenu(); } }
+
+    // ---- the radio check: before your first Formula One race, say (or send) each of the six radio lines once, and hear
+    // the engineer answer. Without a microphone the number keys send them.
+    const CHECK_REPLY = ['Gap ahead is one point two, gap behind is zero point eight. Copy.', 'Tyres are good, about twenty laps left in them.', 'Negative, stay out, stay out.', 'You are P five, ten laps to go.', 'Pace is good, you are matching the leader.', 'Car looks fine, no damage.'];
+    let checkDone = new Set();
+    function openRadioCheck() {
+      screen = 'radiocheck'; checkDone = new Set(); hush(); drawRadioCheck();
+      say('Radio check. Let us make sure we can hear each other before the race.', 'eng', 2);
+    }
+    function drawRadioCheck() {
+      const talk = voiceOn() && canHear();
+      const lines = RADIO_Q.slice(0, 6).map((q, i) => { const d = document.createElement('div'); d.className = 'rc-check' + (checkDone.has(i + 1) ? ' done' : ''); d.innerHTML = `<kbd>${i + 1}</kbd> “${q}” <span>${checkDone.has(i + 1) ? '✓' : ''}</span>`; return d; });
+      card(head('📻 Radio check'), hint(talk ? 'Before your first Formula One race: press Space (or T), say each line, then press Space again to send it. Your engineer answers. (The number keys work too.)' : 'Before your first Formula One race: send each line with its number key and hear your engineer answer. (Allow the microphone in the menu to talk out loud.)'),
+        ...lines, hint(radioListening ? '🎙 Listening… press Space to send' : `${checkDone.size} of 6 done`), row('', btn('Back', '', showMenu)));
+    }
+    function radioCheckLine(n, spoken) {
+      if (n < 1 || n > 6) return;
+      checkDone.add(n); say(CHECK_REPLY[n - 1], 'eng', 2); toast(`🎧 ${CHECK_REPLY[n - 1]}`);
+      if (checkDone.size === 6) { store.set('radioDone', true); setTimeout(() => { if (screen === 'radiocheck') { toast('📻 Radio check done. Good luck out there!'); startLocalRace(); } }, 2600); }
+      drawRadioCheck();
+    }
+    function radioCheckTalk() {
+      if (radioListening) { radioStopListening(); drawRadioCheck(); return; }
+      onHeard = (t) => { onHeard = null; const n = radioMatch(t); if (n >= 1 && n <= 6) { toast(`📻 You: “${t}”`); radioCheckLine(n, true); } else { toast(t ? `📻 “${t}”: that isn't one of the six. Try again` : "📻 Didn't catch that. Try again"); drawRadioCheck(); } };
+      if (!radioListen()) { onHeard = null; toast('Use the number keys (the microphone is off)'); } drawRadioCheck();
     }
 
     let toastT = null;
@@ -978,7 +1013,7 @@
     // ---- starting a race
     function setupRace(entries, laps, hold) {
       T = getTrack(trackId); raceLaps = T.closed ? laps : 1; T.laps = raceLaps;
-      scR = null; medR = null; medF = null;         // nothing left over from the last race
+      scR = null; medR = null; medF = null; medJob = null; medClose();         // nothing left over from the last race
       racers = entries.map((e, slot) => newRacer(e.id, e.name, carSpec(e.car), T, slot, { color: e.color, ai: !!e.ai, remote: !!e.remote, lastMsg: 0, official: !!e.official }));
       me = racers.find((r) => r.id === myId) || racers[0];
       aiState.clear();
@@ -1110,8 +1145,11 @@
         if (k === 'p' && (screen === 'race' || screen === 'countdown' || screen === 'formation')) { paused = !paused; big.textContent = paused ? 'PAUSED' : ''; return; }
         if (k === 'r' && (screen === 'race' || screen === 'done') && !net) { startLocalRace(); return; }
         if (k === 'n' && screen === 'formation') { formSkip = true; return; }
+        if (k === 'f' && role === 'med' && screen === 'race') { medGetOut(); return; }
         // The radio: T (or Space in the Formula One car, which has no handbrake) opens it and it stays open while you drive.
-        if ((k === 't' || k === ' ' && me && me.car.spec.id === 'f1') && me && (screen === 'race' || screen === 'formation' || screen === 'countdown')) { if (radioUI) radioClose(); else radioOpen(); return; }
+        if ((k === 't' || k === ' ' && me && me.car.spec.id === 'f1') && me && (screen === 'race' || screen === 'formation' || screen === 'countdown')) { if (radioUI) radioSend(); else radioOpen(); return; }
+        if ((k === 't' || k === ' ') && screen === 'radiocheck') { radioCheckTalk(); return; }
+        if (screen === 'radiocheck' && /^[1-6]$/.test(k)) { radioCheckLine(Number(k), false); return; }
         if (radioUI && /^[1-7]$/.test(k)) { radioAsk(Number(k)); return; }
         if (screen === 'design') { if (k === 'escape') showMenu(); else if (k === 'z') designUndo(); return; }
         if (k === 'escape' && screen !== 'menu') { closeNet(); paused = false; if (backToDesign && ds) { screen = 'design'; designUI(); } else showMenu(); return; }
@@ -1124,23 +1162,41 @@
     // ---- talking to your race engineer: hold T, then press 1 to 6 (or, where the computer can hear you, just ask)
     let radioUI = null, radioRec = null, radioT = 0;
     const RADIO_Q = ['Gap to the cars around me?', 'How are my tyres?', 'Should I box?', 'Where am I? Laps to go?', 'How is my pace?', 'How is the car?', 'Retire the car'];
+    // Talking out loud: the Mac app's own speech recognition (on this Mac when it can), else the browser's where it has
+    // one. Only when you allowed the microphone; otherwise the radio works with the number keys.
+    const NATIVE_RADIO = () => (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.radio) || null;
+    const voiceOn = () => store.get('voice', '') === 'on';
+    // (The Windows app's web view lists speech recognition but cannot reach a recognition service, so it is not offered there.)
+    const canHear = () => !!(NATIVE_RADIO() || (!(window.__TAURI__ || window.__TAURI_INTERNALS__) && (window.SpeechRecognition || window.webkitSpeechRecognition)));
+    const radioMatch = (t) => (/retire|give up|stop the car|park/.test(t) ? 7 : /gap|ahead|behind|front/.test(t) ? 1 : /tyre|tire|wear|grip/.test(t) ? 2 : /box|pit|stop/.test(t) ? 3 : /position|place|where|lap|left|go/.test(t) ? 4 : /pace|fast|quick|slow|doing|time/.test(t) ? 5 : /car|damage|wing|broken/.test(t) ? 6 : 0);
+    let radioListening = false, onHeard = null;
+    function radioListen() {
+      if (!voiceOn() || !canHear()) return false;
+      radioListening = true;
+      if (NATIVE_RADIO()) { NATIVE_RADIO().postMessage('start'); return true; }
+      const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+      try { radioRec = new SR(); radioRec.lang = 'en-GB'; radioRec.interimResults = false; radioRec.maxAlternatives = 1; radioRec.onresult = (e) => heard(String(e.results[0][0].transcript || '')); radioRec.onerror = (e) => { if (e && e.error !== 'aborted' && e.error !== 'no-speech') toast("🎙 The computer couldn't listen. Use the number keys"); }; radioRec.start(); } catch { radioRec = null; radioListening = false; }
+      return radioListening;
+    }
+    function radioStopListening() { if (!radioListening) return; radioListening = false; if (NATIVE_RADIO()) NATIVE_RADIO().postMessage('stop'); else if (radioRec) { try { radioRec.stop(); } catch { /* already stopped */ } } }
+    /// What you said, from the Mac app or the browser.
+    function heard(text) {
+      const t = String(text || '').toLowerCase().trim();
+      if (onHeard) { onHeard(t); return; }
+      if (!t) { toast("📻 Didn't catch that. Try again, or press a number"); return; }
+      toast(`📻 You: “${t}”`); radioAsk(radioMatch(t), true);
+    }
     function radioOpen() {
       if (radioUI) return;
       radioUI = document.createElement('div'); radioUI.className = 'rc-radio';
-      radioUI.innerHTML = '<b>📻 Radio: press a number (T closes)</b>' + RADIO_Q.map((q, i) => `<div><kbd>${i + 1}</kbd> ${q}</div>`).join('');
+      const talk = radioListen();
+      radioUI.innerHTML = `<b>📻 Radio: ${talk ? `speak now, then ${me && me.car.spec.id === 'f1' ? 'Space' : 'T'} to send (or press a number)` : 'press a number (T closes)'}</b>` + RADIO_Q.map((q, i) => `<div><kbd>${i + 1}</kbd> ${q}</div>`).join('');
       root.append(radioUI); click();
-      clearTimeout(radioT); radioT = setTimeout(radioClose, 10000);
-      const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-      if (SR) {
-        try {
-          radioRec = new SR(); radioRec.lang = 'en-GB'; radioRec.interimResults = false; radioRec.maxAlternatives = 1;
-          radioRec.onresult = (e) => { const t = String(e.results[0][0].transcript || '').toLowerCase(); toast(`📻 You: “${t}”`); radioAsk(/retire|give up|stop the car|park/.test(t) ? 7 : /gap|ahead|behind|front/.test(t) ? 1 : /tyre|tire|wear|grip/.test(t) ? 2 : /box|pit|stop/.test(t) ? 3 : /position|place|where|lap|left|go/.test(t) ? 4 : /pace|fast|quick|slow|doing|time/.test(t) ? 5 : /car|damage|wing|broken/.test(t) ? 6 : 0, true); };
-          radioRec.onerror = () => {}; radioRec.start();
-          radioUI.firstChild.textContent = '📻 Radio: speak, or press a number';
-        } catch { radioRec = null; }
-      }
+      clearTimeout(radioT); radioT = setTimeout(radioSend, talk ? 8000 : 10000);
     }
-    function radioClose() { clearTimeout(radioT); if (radioRec) { try { radioRec.stop(); } catch { /* already stopped */ } radioRec = null; } if (radioUI) { radioUI.remove(); radioUI = null; } }
+    /// T or Space again: send what you said (or just close the radio).
+    function radioSend() { const was = radioListening; radioStopListening(); if (radioUI) { radioUI.remove(); radioUI = null; } clearTimeout(radioT); if (was) toast('📻 …'); }
+    function radioClose() { clearTimeout(radioT); radioStopListening(); radioRec = null; if (radioUI) { radioUI.remove(); radioUI = null; } }
     /// The engineer's answer, from what is happening in the race right now.
     function radioAsk(n, spoken) {
       radioClose(); if (!me) return;
@@ -1329,7 +1385,12 @@
         r.car.x = q.x + q.nx * sg * o; r.car.y = q.y + q.ny * sg * o; r.car.vx = r.car.vy = 0; r.car.spin = 0;
         r.car.h = Math.atan2(q.ty, q.tx) + sg * 0.5; r.stopped = true;
       }
-      raceCtl.at = { x: r.car.x, y: r.car.y, s: r.sNow || 0, r, checked: false };
+      const sev = speed > 32 ? 'red' : speed > 22 ? 'yellow' : 'green';
+      raceCtl.at = { x: r.car.x, y: r.car.y, s: r.sNow || 0, r, checked: false, sev };
+      if (role === 'med' && me && !medJob) {
+        const how = { green: 'The driver is talking on the radio and says he is OK.', yellow: 'The driver reports pain in his neck.', red: 'No response from the driver. Hurry.' }[sev];
+        setTimeout(() => { say(`Race control. Medical car, ${r.name} has crashed. ${how}`, 'com', 2); toast(`📡 Race control: ${r.name} has crashed. ${how}`); }, 1200);
+      }
       if (RANK[want] > RANK[raceCtl.flag]) setFlag(want, `${r.name} has crashed`);
     }
     /// Every step of the race: the flag's clock, the pace each car may go, and the rules for the player.
@@ -1365,6 +1426,76 @@
         if (Math.random() < rate * dt) { const k = Math.random(); st.oopsK = k < 0.45 ? 'wide' : k < 0.78 ? 'lock' : 'spin'; st.oops = st.oopsK === 'wide' ? 0.6 + Math.random() * 0.8 : st.oopsK === 'lock' ? 0.3 + Math.random() * 0.5 : 0.5 + Math.random() * 0.4; st.oopsS = (Math.random() < 0.5 ? -1 : 1) * (0.2 + Math.random() * 0.4); }
       }
     }
+    // ---- driving the Medical Car: get to the crash, get out (F), talk to the driver, treat them, judge how badly they are
+    // hurt (red, yellow, green), take them back to the pits, and tell the Safety Car whether you are done.
+    let medJob = null, medUI = null;
+    const MED_Q = [
+      { q: 'Can you tell me your name, and where does it hurt?', right: true },
+      { q: 'Do you want to get back in the race?', a: 'Is the car OK? Can I carry on?' },
+      { q: 'What happened? Did someone hit you?', a: 'The back stepped out at the exit and I lost it.' },
+      { q: 'Shall I call your team for you?', a: 'They know, they are on the radio already.' },
+    ];
+    const MED_A = { green: (n) => `I'm ${n}. I'm fine, honestly. My wrist is a bit sore.`, yellow: (n) => `It's… ${n}. My neck hurts, and my lower back.`, red: () => 'I… I can\'t… my chest… I can\'t feel my left leg.' };
+    function medPanel(html, buttons) {
+      if (!medUI) { medUI = document.createElement('div'); medUI.className = 'rc-med'; root.append(medUI); }
+      medUI.innerHTML = html; const row = document.createElement('div'); row.className = 'rc-med-row';
+      for (const [label, cls, fn] of buttons) { const b = document.createElement('button'); b.className = 'rc-med-btn ' + (cls || ''); b.textContent = label; b.onclick = (e) => { e.stopPropagation(); fn(); }; row.append(b); }
+      medUI.append(row);
+    }
+    function medClose() { if (medUI) { medUI.remove(); medUI = null; } }
+    function medTick(dt) {
+      const C = raceCtl;
+      if (!medJob && C.at && !C.at.checked && C.flag !== 'green') medJob = { stage: 'go', at: C.at };
+      const J = medJob; if (!J) return;
+      const r = J.at.r, d = Math.hypot(me.car.x - J.at.x, me.car.y - J.at.y), v = Math.hypot(me.car.vx, me.car.vy);
+      J.t = (J.t || 0) + dt;
+      if (J.stage === 'go') { me.medHint = d < 26 && v < 3; return; }
+      me.medHint = false;
+      if (J.stage === 'treat') {
+        J.left -= dt;
+        if (J.left > 0) { if (Math.floor(J.left * 2) !== J.shown) { J.shown = Math.floor(J.left * 2); medPanel(`<b>🚑 Treating ${r.name}</b><p>Stay with the driver… ${Math.ceil(J.left)} s</p>`, []); } return; }
+        J.stage = 'triage';
+        medPanel(`<b>🚑 Your evaluation</b><p>How badly is ${r.name} hurt?</p>`, [['Red: serious', 'red', () => medJudge('red')], ['Yellow: moderate', 'yellow', () => medJudge('yellow')], ['Green: minor', 'green', () => medJudge('green')]]);
+        return;
+      }
+      if (J.stage === 'transport') {
+        if (!J.asked && J.t > 6) {
+          J.asked = true;
+          say('Safety car to medical car. Are you finished, or one more lap?', 'com', 2);
+          medPanel('<b>🚓 Safety Car</b><p>Medical car, are you finished, or one more lap?</p>', [['Finished: back to the pits now', 'green', () => { J.more = false; medClose(); toast('Copy: come in this lap'); }], ['One more lap', '', () => { J.more = true; J.lap0 = me.lap; medClose(); toast('Copy: one more lap'); }]]);
+        }
+        const P = pitInfo(T), rel = P ? relS(T, me.sNow || 0) : 0;
+        if (me.inLane && J.asked && (!J.more || me.lap > J.lap0)) {
+          C.score += 120; C.done++; toast(`🏥 ${r.name} is at the medical centre: +120 · ${C.score} points`); say('Driver delivered to the medical centre. Thank you, medical car.', 'com', 2);
+          medJob = null; medClose(); if (C.flag !== 'green' && C.flag !== 'sc' && C.flag !== 'red') setFlag('green');
+        }
+        if (J.t > 240) { medJob = null; medClose(); }
+      }
+    }
+    /// F: out of the Medical Car at the crash (or back in).
+    function medGetOut() {
+      const J = medJob; if (!J || J.stage !== 'go' || !me.medHint) return;
+      J.stage = 'talk'; me.medOut = true; me.medHint = false; J.tries = 0; me.car.vx = me.car.vy = 0;
+      const sev = J.at.sev || 'yellow', name = J.at.r.name, qs = MED_Q.slice().sort(() => Math.random() - 0.5);
+      const ask = (q) => {
+        if (q.right) {
+          const pts = J.tries ? 40 : 100; raceCtl.score += pts;
+          J.stage = 'heard';
+          medPanel(`<b>🗣 ${name}</b><p>“${MED_A[sev](name)}”</p><p class="dim">The right question (+${pts}). Now treat the driver.</p>`, [['Treat the driver', 'green', () => { J.stage = 'treat'; J.left = { green: 5 + Math.random() * 5, yellow: 12 + Math.random() * 8, red: 22 + Math.random() * 8 }[sev]; }]]);
+        } else { J.tries++; medPanel(`<b>🗣 ${name}</b><p>“${q.a}”</p><p class="dim">That doesn't tell you how they are. Ask something else.</p>`, qs.map((x) => [x.q, '', () => ask(x)])); }
+      };
+      say(`Hello, I'm with the medical team. Stay still for me.`, 'eng', 2);
+      medPanel(`<b>🚑 You are out of the car, with ${name}</b><p>What do you ask the driver?</p>`, qs.map((x) => [x.q, '', () => ask(x)]));
+    }
+    function medJudge(guess) {
+      const J = medJob, sev = J.at.sev || 'yellow', right = guess === sev, name = J.at.r.name;
+      raceCtl.score += right ? 150 : -50;
+      J.at.checked = true; me.medOut = false; J.stage = 'transport'; J.t = 0;
+      const word = { red: 'serious', yellow: 'moderate', green: 'minor' }[sev];
+      medPanel(`<b>${right ? '✅ Right call' : '❌ Not quite'}</b><p>${right ? '' : `It was ${word}. `}${name} is in the Medical Car. Take them back to the pit lane.</p>`, []);
+      setTimeout(() => { if (medJob === J && !J.asked) medClose(); }, 3500);
+      say(right ? `Good call. Bring ${name} back to the medical centre.` : `Race control. The doctors say it is ${word}. Bring ${name} in.`, 'com', 2);
+    }
     function raceTick(dt) {
       if (screen !== 'race') return;
       const C = raceCtl; C.t += dt;
@@ -1384,7 +1515,7 @@
         if (medF.inLane && st && st.pitting && clock > 20) { racers = racers.filter((r) => r !== medF); aiState.delete(medF.id); medF = null; }
       }
       // When each flag ends.
-      const waitMed = (role === 'med' && C.at && !C.at.checked && C.t < 150) || cranes.some((k) => !k.done) && C.t < 120;        // the Medical Car or a crane is still at work
+      const waitMed = (role === 'med' && (C.at && !C.at.checked || medJob) && C.t < 240) || cranes.some((k) => !k.done) && C.t < 120;        // the Medical Car or a crane is still at work
       if (C.flag === 'yellow' && C.t > 12 && !waitMed) setFlag('green');
       if (C.flag === 'vsc' && C.t > 20 && !waitMed) setFlag('green');
       if (C.flag === 'red' && C.t > 9) { for (const r of field) { r.car.dmg = Math.min(r.car.dmg, 0.5); } setFlag('green'); }        // repaired in the stoppage, restart
@@ -1426,10 +1557,7 @@
           Object.assign(medR.car, { x: q.x + q.nx * o, y: q.y + q.ny * o, h: Math.atan2(q.ty, q.tx) }); racers.push(medR);
         }
         if (medR && (medR.parked -= dt) <= 0) { racers = racers.filter((r) => r !== medR); medR = null; if (C.at) { C.at.checked = true; if (C.flag !== 'sc' && C.flag !== 'red') C.at.r.stopped = false; } }
-      } else if (C.at && !C.at.checked && C.flag !== 'green') {
-        const d = Math.hypot(me.car.x - C.at.x, me.car.y - C.at.y), v = Math.hypot(me.car.vx, me.car.vy);
-        if (d < 26 && v < 3) { C.at.checked = true; C.done++; const pts = Math.max(50, Math.round(300 - C.t * 6)); C.score += pts; C.at.r.car.dmg = Math.min(C.at.r.car.dmg, 0.6); C.at.r.stopped = false; toast(`🚑 Driver checked, all OK: +${pts} · ${C.score} points`); if (C.flag !== 'green' && C.flag !== 'sc') setFlag('green'); say('The driver is OK. Good work, medical car.', 'com', 2); }
-      }
+      } else medTick(dt);
       // How fast each computer car may go under the flag.
       const sc = role === 'sc' ? me : scR, scS = sc ? sc.prog : 0;
       order.forEach((r, k) => {
@@ -1687,6 +1815,7 @@
         let inp;
         if (r.ai) { const st = aiState.get(r.id); if (r.finished) st.skill = 0.4; if (screen === 'race' && !r.official) aiAware(r, st, dt); inp = driveAI(T, c, st, dt); }       // after the flag a driver cruises round
         else if (screen === 'done' || r.finished) inp = { throttle: 0, brake: 0.6, steer: 0, hand: 0 };
+        else if (r === me && me.medOut) { c.vx = c.vy = 0; inp = { throttle: 0, brake: 0, steer: 0, hand: 0 }; }     // you are out of the car
         else inp = playerInput();
         if (r.ai && !r.finished && me && !net) { const lead = r.prog - me.prog; if (lead < -80) inp.throttle = Math.min(1, inp.throttle * 1.05 + 0.05); }
         const loc = locate(T, c.x, c.y, r.idx);
@@ -1915,6 +2044,10 @@
         g.fillText(`TYRES ${Math.round((1 - wear) * 100)}%${me.tl ? ` · TRACK LIMITS ${Math.min(me.tl, 3)}/3` : ''}`, 16 * s, 114 * s);
       }
       // Race control: the flag that is out, the blue flag, and what to do when you drive for race control.
+      if (screen === 'race' && me && me.medHint && !me.medOut) {
+        g.font = `900 ${13 * s}px system-ui`; g.textAlign = 'center'; const txt = 'PRESS F TO GET OUT AND CHECK ON THE DRIVER', tw = g.measureText(txt).width;
+        g.fillStyle = 'rgba(8,12,22,.8)'; g.beginPath(); g.roundRect(W / 2 - tw / 2 - 14 * s, H * 0.62, tw + 28 * s, 26 * s, 13 * s); g.fill(); g.fillStyle = '#ff5a5a'; g.fillText(txt, W / 2, H * 0.62 + 18 * s); g.textAlign = 'left';
+      }
       if (screen === 'formation' && me && !me.official) {
         g.font = `900 ${12 * s}px system-ui`; g.textAlign = 'center';
         const txt = me.gridded ? 'ON THE GRID · WAIT FOR THE LIGHTS' : me.formGo ? (() => { const d = Math.round(slotS(me).rel - relS(T, me.sNow || 0)); return d > 6 ? `FORMATION LAP · YOUR GRID BOX IN ${d} m` : 'FORMATION LAP · STOP IN YOUR GRID BOX'; })() : 'FORMATION LAP · FOLLOW THE CAR AHEAD · NO OVERTAKING';
@@ -2436,6 +2569,7 @@
     raf = requestAnimationFrame(frame);
 
     const api = {
+      radioHeard: heard, radioPermission: (ok) => { store.set('voice', ok ? 'on' : 'off'); toast(ok ? '🎙 Microphone on: talk to your engineer on the radio' : 'No microphone: the radio works with the number keys'); if (screen === 'menu') showMenu(); },
       key, suspend() { suspended = true; keys.clear(); audioKill(); hush(); }, resume() { suspended = false; last = performance.now(); }, setSoundEnabled(on) { setSound(on); },
       _state: () => ({ screen, racers, me, T, clock, net, raceCtl, autoMe: () => { me.ai = true; const st = { idx: -1, lane: 0, skill: 0.95, stuck: 0, rev: 0, go: true, cap: 55, served: true }; aiState.set(me.id, st); return st; }, force: (i, sp) => { const r = racers.filter((x) => x.ai && !x.official)[i]; r.car.dmg = 0.95; incident(r, sp); return r.name; } }),
     };
@@ -2451,6 +2585,8 @@
   window.NotchRaceGame = {
     mount,
     key: (k, down) => { const c = window.NotchRaceGame.current; if (c) c.key(k, down); },
+    radioHeard: (t) => { const c = window.NotchRaceGame.current; if (c) c.radioHeard(t); },
+    radioPermission: (ok) => { const c = window.NotchRaceGame.current; if (c) c.radioPermission(ok); },
     suspend: () => { const c = window.NotchRaceGame.current; if (c) c.suspend(); },
     setSoundEnabled: (on) => { window.NotchHostSound = !!on; const c = window.NotchRaceGame.current; if (c) c.setSoundEnabled(on); },
     resume: () => { const c = window.NotchRaceGame.current; if (c) c.resume(); },
