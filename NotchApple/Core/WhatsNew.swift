@@ -20,6 +20,9 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.1.53", date: "24 October 2026", headline: "Race engineer: typing on the Mac, and clear reasons when it can't answer", items: [
+            "Racing, race engineer fixes: on the Mac, typing a question (Enter in the open radio) now works in the notch: the box gets the keyboard instead of your letters going to the car. When the AI or the voice radio can't answer, the race now says why, for example that the microphone or speech recognition is switched off for Notch Apple in System Settings, or the AI provider's own error (a missing key, a busy model), instead of quietly giving the quick answer. With voice switched off, opening the radio tells you where to switch it on.",
+        ]),
         ReleaseNote(version: "2.1.52", date: "24 October 2026", headline: "A race engineer you can ask anything", items: [
             "Racing, a smart race engineer: ask anything on the radio (“what should I do on the formation lap?”, “what's the status of the car?”, “can I make these tyres last?”) by voice, or press Enter in the open radio and type it. The AI you set up in the AI tab answers in a sentence or two on the radio, knowing your race right then: position, gaps and who is around you, tyres and their age, damage, penalties, the flag, laps to go, and whether you're on the formation lap. Without an AI set up, the built-in answers are used as before, and the number keys still give instant answers. Only the question and that race summary are sent, to the AI provider you chose.",
         ]),

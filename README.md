@@ -72,10 +72,10 @@ Pick your computer. Both buttons start the download straight away. The Mac link 
   </tr>
   <tr>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.1.52</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.1.53</b></a>
     </td>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 2.1.52 BETA</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 2.1.53 BETA</b></a>
     </td>
   </tr>
   <tr>
@@ -233,6 +233,10 @@ All screenshots use sample data.
 ## What's new
 
 > **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is in the repository's history.
+
+### Mac 2.1.53 · Windows 2.1.53 BETA · 24 October 2026 · 🔧 Race engineer: typing on the Mac, and clear reasons when it can't answer
+
+- Racing, race engineer fixes: on the Mac, typing a question (Enter in the open radio) now works in the notch: the box gets the keyboard instead of your letters going to the car. When the AI or the voice radio can't answer, the race now says why, for example that the microphone or speech recognition is switched off for Notch Apple in System Settings, or the AI provider's own error (a missing key, a busy model), instead of quietly giving the quick answer. With voice switched off, opening the radio tells you where to switch it on.
 
 ### Mac 2.1.52 · Windows 2.1.52 BETA · 24 October 2026 · 🎧 A race engineer you can ask anything
 
