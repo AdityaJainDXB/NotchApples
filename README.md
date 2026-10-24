@@ -72,10 +72,10 @@ Pick your computer. Both buttons start the download straight away. The Mac link 
   </tr>
   <tr>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.1.45</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.1.46</b></a>
     </td>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 2.1.45 BETA</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 2.1.46 BETA</b></a>
     </td>
   </tr>
   <tr>
@@ -233,6 +233,15 @@ All screenshots use sample data.
 ## What's new
 
 > **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is in the repository's history.
+
+### Mac 2.1.46 · Windows 2.1.46 BETA · 24 October 2026 · 🚦 A real F1 start, much harder racing, and talk to your engineer
+
+- Racing, a real start: a formation lap behind the pole sitter (no overtaking), every car stops in its own painted grid box, then five red lights come on one a second with a beep each, a random hold of 0.2 to 3 seconds, and lights out. Go before the lights are out and it's a jump start (5-second penalty); after them, your reaction time is shown. N skips the formation lap, and the menu can turn it off.
+- Racing is much harder: every driver races the same car as you, corners at the real grip limit (downforce included), brakes late, takes a proper racing line (out, apex, out) and defends the inside when you attack. Everyone gets a slipstream behind another car, so passing takes a real move. Hard is properly hard now; Easy and Normal are still there.
+- Talk to your race engineer: hold T and press 1 to 6 (gaps, tyres, should I box, position and laps to go, pace, damage), and the engineer answers with the live numbers. Where the computer understands speech, you can just ask while holding T.
+- Recovery cranes: a wrecked or stuck car is lifted over the barrier by a crane and is out of the race (DNF), instead of sitting on the track. Flags stay out until the crane is done. Running into a stopped or wrecked car is no longer your penalty.
+- Safety Car: nobody can pass the Safety Car, whether the computer or you drive it; cars it hasn't reached yet slow down until it is in front of them. A car in the pit lane under the Safety Car no longer holds up everyone behind it. The Safety Car and Medical Car never get penalties or track-limit warnings, and you can reverse the Safety Car in the pit lane again.
+- Sound: the engine is quieter and drops under the team radio, so you can hear your engineer. A spin on the start line no longer counts as an extra lap.
 
 ### Mac 2.1.45 · Windows 2.1.45 BETA · 23 October 2026 · 🏎️ Watch F1, and live timing as big as you like
 
