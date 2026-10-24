@@ -523,6 +523,8 @@
   /// the back end lets go under power while turning), brake (m/s²). down: extra grip from downforce at top speed (a fraction).
   /// gears, idle and redline (rpm) drive the gearbox, the dashboard and the engine sound; cyl is the engine's cylinder count
   /// and tone its character (the sound); tough is how well the body takes a knock (1 is a normal road car).
+  /// Tyre compounds: grip (times the car's own) and how fast they wear. Softs are quicker and go off fast; hards last.
+  const TYRES = { S: { name: 'Soft', grip: 1.06, wear: 1.6, col: '#ff3b3b' }, M: { name: 'Medium', grip: 1, wear: 1, col: '#ffd23f' }, H: { name: 'Hard', grip: 0.95, wear: 0.6, col: '#f2f2f2' } };
   const CARS = [
     { id: 'gt', name: 'Street GT', blurb: 'Grippy and forgiving. Fast through the bends.', accel: 15, vmax: 66, grip: 17, steer: 0.52, loose: 0.12, brake: 30, color: '#3aa0ff', down: 0.05, gears: 6, idle: 900, redline: 7500, cyl: 6, tone: 'gt', tough: 1 },
     { id: 'drift', name: 'Drift King', blurb: 'Lets go easily. Tap Space to slide round corners.', accel: 14, vmax: 62, grip: 12.5, steer: 0.6, loose: 0.42, brake: 26, color: '#ff4d6d', down: 0, gears: 6, idle: 850, redline: 8000, cyl: 4, tone: 'hatch', tough: 1 },
@@ -597,7 +599,7 @@
     c.steerA += (target - c.steerA) * (1 - Math.exp(-dt * 9));
     const wd = vf0 * Math.tan(c.steerA) / WHEELBASE;
     const power = inp.throttle * Math.abs(c.steerA) / sp.steer;
-    let grip = sp.grip * (1 - 0.32 * clamp(c.wear || 0, 0, 1)) * surf * (1 + (sp.down || 0) * (vf0 * vf0) / (sp.vmax * sp.vmax)) * (1 - sp.loose * 0.5 * power * clamp(Math.abs(vf0) / 30, 0, 1));
+    let grip = sp.grip * ((TYRES[c.tyre] || TYRES.M).grip) * (1 - 0.32 * clamp(c.wear || 0, 0, 1)) * surf * (1 + (sp.down || 0) * (vf0 * vf0) / (sp.vmax * sp.vmax)) * (1 - sp.loose * 0.5 * power * clamp(Math.abs(vf0) / 30, 0, 1));
     let w;
     const slip = c.vl / Math.max(Math.abs(c.vf), 5);        // how far sideways the car is travelling (last step)
     if (inp.hand) { w = clamp(wd * 1.25, -2, 2); grip *= 0.3; }
@@ -658,7 +660,7 @@
     // The fastest each bend allows: the tyres hold up to grip x (1 + downforce x (v / vmax)^2) sideways, and the driver uses
     // `corner` of that (the car can turn at up to 1.2 x grip before it slides). Worn tyres and damage are allowed for.
     let vt = c.spec.vmax * st.skill;
-    const sp = c.spec, g0 = sp.grip * 1.2 * (st.corner ?? 0.88) * (1 - 0.32 * clamp(c.wear || 0, 0, 1)) * (1 - 0.15 * c.dmg), dn = (sp.down || 0) / (sp.vmax * sp.vmax);
+    const sp = c.spec, g0 = sp.grip * ((TYRES[c.tyre] || TYRES.M).grip) * 1.2 * (st.corner ?? 0.88) * (1 - 0.32 * clamp(c.wear || 0, 0, 1)) * (1 - 0.15 * c.dmg), dn = (sp.down || 0) / (sp.vmax * sp.vmax);
     const dec = sp.brake * (st.brakes ?? 0.8) * (st.tr ? 0.85 : 1);        // in traffic, a little earlier on the brakes
     for (let d = 0; d <= 30 + speed * speed / (2 * dec); d += T.step * 2) {
       const k = Math.abs(ahead(d).k) * 0.85;      // the racing line opens the bend out a little
@@ -909,7 +911,7 @@
 
     // ---- state
     let screen = 'menu';                 // menu | lobby | countdown | race | done
-    let T = getTrack(trackId), racers = [], me = null, raceLaps = 3, clock = 0, cdLeft = 0, alive = true, paused = false, suspended = false, startSeq = null, medF = null, formT = 0, formHold = 1, formSkip = false, cranes = [], gridMarks = [];
+    let T = getTrack(trackId), racers = [], me = null, raceLaps = 3, clock = 0, cdLeft = 0, alive = true, paused = false, suspended = false, startSeq = null, passAt = new Map(), myTyre = store.get('tyre', 'M'), towerMode = store.get('tower', 1), medF = null, formT = 0, formHold = 1, formSkip = false, cranes = [], gridMarks = [];
     const keys = new Set();
     let skids = [], parts = [], camX = 0, camY = 0, shake = 0, doneT = 0, chaseYaw = 0, backToDesign = false, ds = null, lastShift = 0, paddle = 0;
     let net = null;                      // { link, code, host, players: Map, cfg, status }
@@ -965,6 +967,7 @@
         ...pickers(showMenu),
         row('Rivals', ...[0, 1, 3, 5, 7, 9, 11, 15].map(mk)),
         row('Level', ...Object.entries(LEVELS).map(([id, l]) => btn(l.label, id === level ? 'on' : '', () => { level = id; store.set('level', id); showMenu(); }))),
+        row('Tyres', ...Object.entries(TYRES).map(([id, t]) => btn(`${t.name}`, id === myTyre ? 'on' : '', () => { myTyre = id; store.set('tyre', id); showMenu(); })), hint({ S: 'Grippy, wears fast', M: 'In between', H: 'Slower, lasts long' }[myTyre])),
         row('Start', btn('Formation lap', formOn ? 'on' : '', () => { formOn = true; store.set('formation', true); showMenu(); }), btn('Straight to the lights', formOn ? '' : 'on', () => { formOn = false; store.set('formation', false); showMenu(); })),
         bestLine(),
         row('You drive', ...[['race', '🏎️ A race car'], ['sc', '🚓 The Safety Car'], ['med', '🚑 The Medical Car']].map(([id, l]) => btn(l, id === role ? 'on' : '', () => { role = id; store.set('role', id); showMenu(); }))),
@@ -974,7 +977,7 @@
         row('Online', btn('Create room', '', () => openRoom(true)), (() => { const i = document.createElement('input'); i.placeholder = 'CODE'; i.maxLength = 8; i.id = 'rc-code'; return i; })(), btn('Join', '', () => { const c = NET.normCode(root.querySelector('#rc-code').value); if (!c) { toast('That code is 6 letters and numbers.'); return; } openRoom(false, c); })),
         row('Name', name),
         ...(canHear() ? [row('Voice radio', btn(voiceOn() ? '🎙 On' : '🎙 Off', voiceOn() ? 'on' : '', () => { if (voiceOn()) { store.set('voice', 'off'); showMenu(); } else askMic(); }))] : []),
-        hint('T (or Space in the F1 car): talk to your race engineer, then 1 to 6 · N: skip the formation lap'),
+        hint('T (or Space in the F1 car): talk to your race engineer, then 1 to 7 · N: skip the formation lap · L: timing tower · Y: tyres for your next stop'),
         hint('↑ W gas · ↓ S brake and reverse · ← → A D steer · Space handbrake (drift) · V view (top, chase, cockpit) · M sound · Q serve a penalty at your pit stop · R restart · P pause · Esc menu'));
     }
 
@@ -1021,6 +1024,9 @@
       // make a mistake). Off the line they hold the side of the grid they started on, then drift to their own line.
       racers.forEach((r, i) => { if (r.ai) { const grid = (i % 2 ? 1 : -1) * 0.2 / 0.28; aiState.set(r.id, { idx: -1, lane: grid, pref: (Math.random() * 2 - 1) * 0.7, laneT: 3 + Math.random() * 7, react: 0.17 + Math.random() * 0.16 + (Math.random() < 0.12 ? 0.25 : 0), skill: LEVELS[level].skill * (0.97 + Math.random() * 0.03), corner: LEVELS[level].corner * (0.95 + Math.random() * 0.05), brakes: LEVELS[level].brakes * (0.94 + Math.random() * 0.06), defend: LEVELS[level].defend, slip: (LEVELS[level].slip || 1) * (0.25 + Math.random() * 1.6), oops: 0, oopsT: 0, oopsK: '', stuck: 0, rev: 0, go: false }); } });
       for (const r of racers) { r.car.vx = r.car.vy = 0; progress(r, T, 0); r.lapStart = 0; }
+      // Tyres: your choice from the menu; the others start on a mix (softs for a fast start, hards to run long).
+      for (const r of racers) { const x = Math.random(); r.car.tyre = r === me ? myTyre : x < 0.35 ? 'S' : x < 0.75 ? 'M' : 'H'; r.tyreLap = 0; r.pits = 0; r.code = String(r.name || '').replace(/[^A-Za-z]/g, '').slice(0, 3).toUpperCase() || 'CAR'; }
+      me.nextTyre = myTyre === 'S' ? 'M' : 'H'; passAt = new Map();
       raceCtl = { flag: 'green', t: 0, at: null, score: 0, next: 8 + Math.random() * 17, done: 0, first: true };     // driving for race control: the first incident comes soon, at a random moment (8 to 25 s)
       { const off = racers.find((r) => r.official); if (off) toPitExit(off); }   // the officials wait at the pit exit
       { const P = pitInfo(T); if (P) racers.forEach((r, i) => { r.boxS = clamp((i - (racers.length - 1) / 2) * 13, P.a + 95, P.b - 95); const st = aiState.get(r.id); if (st) st.boxS = r.boxS; }); }       // every car has its own pit box
@@ -1145,6 +1151,8 @@
         if (k === 'p' && (screen === 'race' || screen === 'countdown' || screen === 'formation')) { paused = !paused; big.textContent = paused ? 'PAUSED' : ''; return; }
         if (k === 'r' && (screen === 'race' || screen === 'done') && !net) { startLocalRace(); return; }
         if (k === 'n' && screen === 'formation') { formSkip = true; return; }
+        if (k === 'l' && me && screen !== 'menu') { towerMode = (towerMode + 1) % 3; store.set('tower', towerMode); toast(['Timing tower hidden', 'Timing tower: gap to the car ahead', 'Timing tower: gap to the leader'][towerMode]); return; }
+        if (k === 'y' && me && !me.official && screen !== 'menu') { me.nextTyre = { S: 'M', M: 'H', H: 'S' }[me.nextTyre || 'M']; toast(`Next pit stop: ${TYRES[me.nextTyre].name} tyres`); return; }
         if (k === 'f' && role === 'med' && screen === 'race') { medGetOut(); return; }
         // The radio: T (or Space in the Formula One car, which has no handbrake) opens it and it stays open while you drive.
         if ((k === 't' || k === ' ' && me && me.car.spec.id === 'f1') && me && (screen === 'race' || screen === 'formation' || screen === 'countdown')) { if (radioUI) radioSend(); else radioOpen(); return; }
@@ -1206,9 +1214,10 @@
       const wear = me.car.wear || 0, laps = Math.max(0, raceLaps - Math.max(0, me.lap)), perLap = me.lap > 0 ? wear / me.lap : 0.1;
       const last = me.lapTimes[me.lapTimes.length - 1], aLast = ahead && ahead.lapTimes[ahead.lapTimes.length - 1];
       let a;
-      if (n === 1) a = (ahead ? `Gap to ${ahead.name} ahead is ${secs(ahead.prog - me.prog)}. ` : 'You are leading. ') + (behind ? `${behind.name} is ${secs(me.prog - behind.prog)} behind.` : 'Nobody behind you.');
-      else if (n === 2) a = `Tyres at ${Math.round((1 - wear) * 100)} percent. ` + (wear > 0.7 ? 'They are gone, we need to box.' : perLap > 0 ? `About ${Math.max(0, Math.floor((0.72 - wear) / perLap))} more laps in them.` : 'They are fine, keep pushing.');
-      else if (n === 3) { const need = (wear > 0.6 || me.car.dmg > 0.4) && me.lap < raceLaps - 1; a = need ? 'Yes, box this lap. Box, box.' : me.lap >= raceLaps - 1 ? 'Negative, stay out to the end.' : 'Negative, stay out. Tyres are fine.'; if (me.pen) a += ` We can serve your ${me.pen} second penalty at the stop, press Q.`; }
+      const gapTo = (a2, b2) => (a2.gapL != null && b2.gapL != null ? Math.abs(b2.gapL - a2.gapL).toFixed(1) : secs(a2.prog - b2.prog));
+      if (n === 1) a = (ahead ? `Gap to ${ahead.name} ahead is ${gapTo(ahead, me)}. ` : 'You are leading. ') + (behind ? `${behind.name} is ${gapTo(me, behind)} behind.` : 'Nobody behind you.');
+      else if (n === 2) a = `${(TYRES[me.car.tyre] || TYRES.M).name}s, ${Math.max(0, me.lap - (me.tyreLap || 0))} laps old, at ${Math.round((1 - wear) * 100)} percent. ` + (wear > 0.7 ? 'They are gone, we need to box.' : perLap > 0 ? `About ${Math.max(0, Math.floor((0.72 - wear) / perLap))} more laps in them.` : 'They are fine, keep pushing.');
+      else if (n === 3) { const need = (wear > 0.6 || me.car.dmg > 0.4) && me.lap < raceLaps - 1; a = need ? `Yes, box this lap. Box, box. We will fit the ${(TYRES[me.nextTyre] || TYRES.M).name.toLowerCase()}s (Y to change).` : me.lap >= raceLaps - 1 ? 'Negative, stay out to the end.' : 'Negative, stay out. Tyres are fine.'; if (me.pen) a += ` We can serve your ${me.pen} second penalty at the stop, press Q.`; }
       else if (n === 4) a = `You are P${i + 1} of ${order.length}, ${laps} ${laps === 1 ? 'lap' : 'laps'} to go.` + (me.bestLap ? ` Your best is ${fmt(me.bestLap)}.` : '');
       else if (n === 5) a = last && aLast ? (last < aLast ? `You were ${(aLast - last).toFixed(1)} quicker than ${ahead.name} last lap. Keep pushing.` : `${ahead.name} was ${(last - aLast).toFixed(1)} quicker last lap. Look at your braking.`) : last ? `Last lap ${fmt(last)}. Good pace.` : 'No lap time yet. Get your head down.';
       else if (n === 7) { if (me.official || !pitInfo(T)) a = 'Negative, there is no pit lane here.'; else { me.retiring = true; a = 'Copy. We are retiring the car. Follow the green line into the pit lane and stop in your box.'; } }
@@ -1864,13 +1873,13 @@
               if (r.ai && r.pen > 0) r.servePen = true;
               const wait = r.servePen ? (r.pen || 0) : 0, need = wait + 2.4 + (c.dmg > 0.3 ? 2.5 * c.dmg : 0) + (r === me ? me.pitExtra || 0 : 0);
               if (wait && r.service >= wait && !r.penDone) { r.penDone = true; if (r === me) { toast(`Penalty served (${wait} s). The crew goes to work.`); say('Penalty served. Go, go on the tyres.', 'eng', 2); } }
-              if (r.service >= need) { if (r === me) me.pitExtra = 0; if (wait) { r.pen = 0; r.servePen = false; } r.penDone = false; c.dmg = 0; c.wear = 0; c.pull = 0; r.service = 0; r.served = true; if (r.ai) { const st = aiState.get(r.id); st.served = true; /* it keeps following the pit lane to the exit */ } if (r === me) { toast(`Pit stop: ${need.toFixed(1)} s · new tyres${need > 2.5 ? ', damage repaired' : ''}`); say('Good stop, good stop. Go, go, go!', 'eng', 2); } }
+              if (r.service >= need) { if (r === me) me.pitExtra = 0; if (wait) { r.pen = 0; r.servePen = false; } r.penDone = false;  r.pits = (r.pits || 0) + 1; r.tyreLap = Math.max(0, r.lap); { const left = raceLaps - Math.max(0, r.lap); c.tyre = r === me && !me.ai ? me.nextTyre || 'M' : left > raceLaps * 0.55 && left > 3 ? 'H' : left > 2 ? 'M' : 'S'; } c.dmg = 0; c.wear = 0; c.pull = 0; r.service = 0; r.served = true; if (r.ai) { const st = aiState.get(r.id); st.served = true; /* it keeps following the pit lane to the exit */ } if (r === me) { toast(`Pit stop: ${need.toFixed(1)} s · new ${TYRES[c.tyre].name.toLowerCase()}s${need > 2.5 ? ', damage repaired' : ''}`); say('Good stop, good stop. Go, go, go!', 'eng', 2); } }
             } else if (r.service > 0 && v > 2) r.service = 0;
           }
         } else { imp = wallHit(c, T, after); r.inLane = false; }
         if (imp > 3) { const q = T.S[after.idx], sg = Math.sign(after.lat) || 1; crash(r, c.x + q.nx * sg * 1.1, c.y + q.ny * sg * 1.1, imp, '#d8d8d8'); }
         // Tyres wear with distance and much faster in slides.
-        const vNow = Math.hypot(c.vx, c.vy); if (vNow > 3 && !r.finished) c.wear = Math.min(1, (c.wear || 0) + dt * (0.0011 + Math.abs(c.vl) * 0.0016 + (c.drifting ? 0.004 : 0)) * (c.spec.id === 'f1' ? 1.25 : 1));
+        const vNow = Math.hypot(c.vx, c.vy); if (vNow > 3 && !r.finished) c.wear = Math.min(1, (c.wear || 0) + dt * (0.0011 + Math.abs(c.vl) * 0.0016 + (c.drifting ? 0.004 : 0)) * (c.spec.id === 'f1' ? 1.25 : 1) * ((TYRES[c.tyre] || TYRES.M).wear));
         // Track limits (FIA): all four wheels past the white line counts. Warnings, the black-and-white flag, then 5 seconds.
         if (screen === 'race' && !r.finished && !r.inLane && !pitSide && off > edge + CAR_W / 2 + 0.4 && vNow > 12) { if (!r.offTL) { r.offTL = true; trackLimits(r); } }
         else if (off < edge) r.offTL = false;
@@ -1903,6 +1912,7 @@
         if (r.official) { const l = locate(T, r.car.x, r.car.y, r.idx); r.idx = l.idx; r.lat = l.lat; r.sNow = T.closed ? ((l.s % T.length) + T.length) % T.length : l.s; if (T.closed) { const L = T.length; if (r.sLap > L * 0.75 && r.sNow < L * 0.25) r.lap++; else if (r.sLap < L * 0.25 && r.sNow > L * 0.75) r.lap--; r.sLap = r.sNow; r.prog = r.lap * L + r.sNow; } else r.prog = r.sNow; continue; }      // its own laps, like a race car (it never finishes)
         const was = r.finished;
         progress(r, T, clock);
+        if (screen === 'race' && !r.dnf) { const k = Math.floor(r.prog / 25); if (!passAt.has(k)) passAt.set(k, clock); r.gapL = clock - passAt.get(k); }
         if (r.finished && !was && net) net.link.send({ t: 'fin', id: myId, ft: Math.round(r.finishT * 100) / 100, pn: r.pen || 0 });
         if (r.finished && !was && r === me) finishedMe();
       }
@@ -2041,7 +2051,7 @@
         if (me.pen && !(me.service > 0)) { g.fillStyle = '#ffd23f'; g.font = `700 ${10 * s}px system-ui`; g.fillText(me.servePen ? `✓ Serving your +${me.pen}s penalty at the next stop (Q to cancel)` : `Q: serve your +${me.pen}s penalty at your next pit stop`, W / 2, y0 + 48 * s); g.font = `800 ${12 * s}px system-ui`; }
         if (me.pen) { g.fillStyle = '#ff4d4d'; g.textAlign = 'left'; g.fillText(`+${me.pen}s PENALTY`, 16 * s, 100 * s); g.textAlign = 'center'; }
         g.textAlign = 'left'; g.font = `700 ${10 * s}px system-ui`; g.fillStyle = wear > 0.7 ? '#ff4d4d' : wear > 0.45 ? '#ffd166' : 'rgba(255,255,255,.75)';
-        g.fillText(`TYRES ${Math.round((1 - wear) * 100)}%${me.tl ? ` · TRACK LIMITS ${Math.min(me.tl, 3)}/3` : ''}`, 16 * s, 114 * s);
+        g.fillText(`${(TYRES[me.car.tyre] || TYRES.M).name.toUpperCase()} ${Math.round((1 - wear) * 100)}% · ${Math.max(0, me.lap - (me.tyreLap || 0))} LAPS${me.tl ? ` · TRACK LIMITS ${Math.min(me.tl, 3)}/3` : ''}`, 16 * s, 114 * s);
       }
       // Race control: the flag that is out, the blue flag, and what to do when you drive for race control.
       if (screen === 'race' && me && me.medHint && !me.medOut) {
@@ -2076,6 +2086,36 @@
       }
       if (me.car.onGrass) { g.fillStyle = '#ff9f43'; g.font = `800 ${12 * s}px system-ui`; g.textAlign = 'center'; g.fillText('OFF TRACK', W / 2, viewMode === 'cockpit' ? H * 0.2 : 24 * s); }
       if (me.car.hit > 0.6 && viewMode !== 'top') { g.fillStyle = `rgba(255,40,40,${(me.car.hit - 0.6) * 0.3})`; g.fillRect(0, 0, W, H); }
+      // The timing tower (L: gap to the car ahead, gap to the leader, or hidden): position, driver, gap, last lap,
+      // tyre and how many laps it has done, and pit stops. A big field shows the top eight and the cars round you.
+      if (towerMode && (screen === 'race' || screen === 'done') && T.closed) {
+        const all = ranking(racers).filter((r) => !r.dsq), mi = all.indexOf(me), rowsIdx = all.length <= 12 ? all.map((_, i) => i) : [...new Set([...Array(8).keys(), ...[mi - 1, mi, mi + 1].filter((i) => i >= 8 && i < all.length)])];
+        const x0 = 8 * s, y0 = (me.official ? 80 : 124) * s, rh = 12.5 * s, wdt = 182 * s, L = T.length;
+        g.fillStyle = 'rgba(8,12,22,.66)'; g.beginPath(); g.roundRect(x0, y0, wdt, rh * rowsIdx.length + 16 * s, 7 * s); g.fill();
+        g.font = `700 ${7.5 * s}px system-ui`; g.fillStyle = 'rgba(255,255,255,.55)'; g.textAlign = 'left';
+        g.fillText(towerMode === 1 ? 'INTERVAL' : 'TO LEADER', x0 + 52 * s, y0 + 10 * s); g.fillText('LAST', x0 + 96 * s, y0 + 10 * s); g.fillText('TYRE', x0 + 134 * s, y0 + 10 * s); g.fillText('PIT', x0 + 164 * s, y0 + 10 * s);
+        let prev = null;
+        rowsIdx.forEach((i, n) => {
+          const r = all[i], y = y0 + 16 * s + n * rh + rh * 0.72, lead = all[0];
+          if (r === me) { g.fillStyle = 'rgba(255,255,255,.14)'; g.fillRect(x0 + 2 * s, y - rh * 0.78, wdt - 4 * s, rh); }
+          g.font = `800 ${8.5 * s}px system-ui`; g.fillStyle = '#fff'; g.textAlign = 'right'; g.fillText(String(i + 1), x0 + 14 * s, y);
+          g.fillStyle = r.color || r.car.spec.color; g.fillRect(x0 + 17 * s, y - 7.5 * s, 2.5 * s, 9 * s);
+          g.textAlign = 'left'; g.fillStyle = r.dnf ? 'rgba(255,255,255,.4)' : '#fff'; g.font = `800 ${8.5 * s}px ui-monospace, monospace`; g.fillText(r === me ? (myName || 'YOU').slice(0, 3).toUpperCase() : r.code || '', x0 + 22 * s, y);
+          // Gap: from when each car passed the same point; laps down when a lap or more behind.
+          let gap = '';
+          if (r.dnf) gap = 'OUT'; else if (r.inLane) gap = 'PIT'; else if (i === 0) gap = towerMode === 1 ? 'LEADER' : `L${clamp(r.lap + 1, 1, raceLaps)}`;
+          else { const down = Math.floor((lead.prog - r.prog) / L); const ref = towerMode === 1 ? all[i - 1] : lead; const dl = Math.floor((ref.prog - r.prog) / L);
+            gap = dl >= 1 ? `+${dl} LAP${dl > 1 ? 'S' : ''}` : r.gapL != null && ref.gapL != null ? `+${Math.max(0, r.gapL - (towerMode === 1 ? ref.gapL : 0)).toFixed(1)}` : ''; if (down < 0) gap = ''; }
+          g.font = `600 ${8 * s}px system-ui`; g.fillStyle = gap === 'PIT' ? '#ffd23f' : gap === 'OUT' ? '#ff6b6b' : '#fff'; g.fillText(gap, x0 + 52 * s, y);
+          const lt = r.lapTimes[r.lapTimes.length - 1]; g.fillStyle = r.bestLap && lt === r.bestLap ? '#4fe09a' : 'rgba(255,255,255,.8)'; g.fillText(lt ? fmt(lt) : '', x0 + 96 * s, y);
+          const ty = TYRES[r.car.tyre] || TYRES.M; g.strokeStyle = ty.col; g.lineWidth = 1.4 * s; g.beginPath(); g.arc(x0 + 138 * s, y - 3 * s, 4 * s, 0, 7); g.stroke();
+          g.fillStyle = ty.col; g.font = `900 ${5.5 * s}px system-ui`; g.textAlign = 'center'; g.fillText(r.car.tyre || 'M', x0 + 138 * s, y - 1 * s);
+          g.textAlign = 'left'; g.font = `600 ${7.5 * s}px system-ui`; g.fillStyle = 'rgba(255,255,255,.7)'; g.fillText(String(Math.max(0, r.lap - (r.tyreLap || 0))), x0 + 145 * s, y);
+          g.fillText(r.pits ? String(r.pits) : '', x0 + 166 * s, y);
+          prev = r;
+        });
+        if (me.inLane && !me.official) { g.font = `700 ${8 * s}px system-ui`; g.fillStyle = '#ffd23f'; g.fillText(`Y: tyres for this stop: ${(TYRES[me.nextTyre] || TYRES.M).name}`, x0 + 4 * s, y0 + rh * rowsIdx.length + 28 * s); }
+      }
       // Minimap.
       const mw = 96 * s, mh = 96 * s, mx = W - mw - 8 * s, my = 8 * s, [x0, y0, x1, y1] = T.bounds, k = Math.min((mw - 12 * s) / (x1 - x0 || 1), (mh - 12 * s) / (y1 - y0 || 1));
       const mp = (x, y) => [mx + 6 * s + (x - x0) * k + ((mw - 12 * s) - (x1 - x0) * k) / 2, my + 6 * s + (y - y0) * k + ((mh - 12 * s) - (y1 - y0) * k) / 2];

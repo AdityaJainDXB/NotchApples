@@ -1,0 +1,4 @@
+## Notch Apple for Windows 2.1.51 (BETA)
+
+- Racing, a live timing tower (like issue #35 asked for the F1 tracker): position, driver, the gap to the car ahead or to the leader (real time gaps, measured where each car passed the same point), the last lap (green when it's that driver's best), the tyre and how many laps it has done, and pit stops. Cars in the pits show PIT, cars out of the race OUT. L switches between the interval, the gap to the leader and hiding the tower.
+- Racing, tyre compounds: Soft (grippiest, wears fast), Medium and Hard (a bit slower, lasts much longer). Pick your starting tyres in the menu, and press Y to choose the tyres for your next pit stop. The other drivers start on a mix and choose their own at their stops. Your engineer tells you the compound and its age when you ask about tyres, and which set you'll get when you ask about boxing.

@@ -72,10 +72,10 @@ Pick your computer. Both buttons start the download straight away. The Mac link 
   </tr>
   <tr>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.1.50</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.1.51</b></a>
     </td>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 2.1.50 BETA</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 2.1.51 BETA</b></a>
     </td>
   </tr>
   <tr>
@@ -233,6 +233,11 @@ All screenshots use sample data.
 ## What's new
 
 > **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is in the repository's history.
+
+### Mac 2.1.51 · Windows 2.1.51 BETA · 24 October 2026 · ⏱ A live timing tower and tyre compounds
+
+- Racing, a live timing tower (like issue #35 asked for the F1 tracker): position, driver, the gap to the car ahead or to the leader (real time gaps, measured where each car passed the same point), the last lap (green when it's that driver's best), the tyre and how many laps it has done, and pit stops. Cars in the pits show PIT, cars out of the race OUT. L switches between the interval, the gap to the leader and hiding the tower.
+- Racing, tyre compounds: Soft (grippiest, wears fast), Medium and Hard (a bit slower, lasts much longer). Pick your starting tyres in the menu, and press Y to choose the tyres for your next pit stop. The other drivers start on a mix and choose their own at their stops. Your engineer tells you the compound and its age when you ask about tyres, and which set you'll get when you ask about boxing.
 
 ### Mac 2.1.50 · Windows 2.1.50 BETA · 24 October 2026 · 🎙 Talk to your engineer, the Medical Car on foot, and full F1 timing
 
