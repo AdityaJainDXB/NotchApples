@@ -294,3 +294,16 @@ test('the track assistant traces a circuit from a picture of its layout', () => 
   const blank = new Uint8ClampedArray(w * h * 4).fill(240); for (let i = 3; i < blank.length; i += 4) blank[i] = 255;
   assert.equal(R.traceImage(blank, w, h).def, null, 'a blank picture gives no track');
 });
+
+test('the 2026 F1 calendar: 24 real circuits, each drivable, at its real length, starting on a straight', () => {
+  assert.equal(R.F1_CAL.length, 24);
+  const real = { f1au: 5278, f1cn: 5451, f1jp: 5807, f1bh: 5412, f1sa: 6174, f1mi: 5412, f1ca: 4361, f1mc: 3337, f1es: 4657, f1at: 4318, f1gb: 5891, f1be: 7004, f1hu: 4381, f1nl: 4259, f1it: 5793, f1md: 5474, f1az: 6003, f1sg: 4940, f1us: 5513, f1mx: 4304, f1br: 4309, f1lv: 6201, f1qa: 5419, f1ae: 5281 };
+  for (const d of R.F1_CAL) {
+    const T = R.buildTrack(d), lim = 1 / (d.width / 2 + 7 + 1);
+    assert.ok(Math.abs(T.length - real[d.id]) / real[d.id] < 0.12, `${d.id} is ${Math.round(T.length)} m`);
+    assert.ok(T.S.every((q) => Math.abs(q.k) < lim), `${d.id}: no bend tighter than its barriers allow`);
+    const P = R.pitInfo(T); let k = 0; for (let s = -100; s <= 100; s += T.step) k = Math.max(k, Math.abs(T.S[((Math.round(s / T.step) % T.m) + T.m) % T.m].k));
+    assert.ok(k < 0.02, `${d.id}: the start is on a straight (${k})`); assert.ok(P && P.b > P.a);
+  }
+  assert.equal(R.matchF1('build Yas Marina').id, 'f1ae'); assert.equal(R.matchF1('a Monza style track'), null); assert.equal(R.matchF1('a fast track'), null);
+});

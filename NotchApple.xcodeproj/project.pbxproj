@@ -184,6 +184,7 @@
 		6B8B6E4E81A1516B985E3F45 /* TennisLogic.swift in Sources */ = {isa = PBXBuildFile; fileRef = 04C0A62497E02145E6D99DC6 /* TennisLogic.swift */; };
 		6CB3126DF2584324131FE504 /* LICENSE-Tunnelblick.txt in Resources */ = {isa = PBXBuildFile; fileRef = C0762062E088CCC2C44948C8 /* LICENSE-Tunnelblick.txt */; };
 		6D2CC9DC5AA478EFEBAC4D05 /* NowPlayingMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = ACD60817F03707C0A2A93064 /* NowPlayingMonitor.swift */; };
+		6D96FF364E174A53999C3E56 /* f1-circuits-MIT.txt in Resources */ = {isa = PBXBuildFile; fileRef = 34F952B86642DE0DBEC8CD4F /* f1-circuits-MIT.txt */; };
 		6EB4C5BE5A0101A1A21F64D6 /* PermissionsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81150E6B4F5BE3E2EB5CE1A1 /* PermissionsView.swift */; };
 		6EC70695CC1B08B90E01D311 /* TourLogic.swift in Sources */ = {isa = PBXBuildFile; fileRef = 755B22C2370E85554D2C56DF /* TourLogic.swift */; };
 		6FE62A468735A640B08A7BD1 /* ClaudeClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6747ADA828FF1D33683B30C8 /* ClaudeClient.swift */; };
@@ -513,6 +514,7 @@
 		32AC64225D56273C94C4F18F /* LidFoldSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LidFoldSettings.swift; sourceTree = "<group>"; };
 		33BEEDB2663AD6544E5061C7 /* ShortcutsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShortcutsView.swift; sourceTree = "<group>"; };
 		34E21597A89BA509A323CB7C /* VoiceNotesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceNotesView.swift; sourceTree = "<group>"; };
+		34F952B86642DE0DBEC8CD4F /* f1-circuits-MIT.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = "f1-circuits-MIT.txt"; sourceTree = "<group>"; };
 		3718F42274C479A025DF477B /* NotchApple.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = NotchApple.entitlements; sourceTree = "<group>"; };
 		39D51C103147744A114FA26F /* HelloAnimation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HelloAnimation.swift; sourceTree = "<group>"; };
 		3A4853F4F991B88D8892FD18 /* NamedTimers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NamedTimers.swift; sourceTree = "<group>"; };
@@ -1581,6 +1583,7 @@
 		D12E7801259160045F46AB13 /* LICENSES */ = {
 			isa = PBXGroup;
 			children = (
+				34F952B86642DE0DBEC8CD4F /* f1-circuits-MIT.txt */,
 				2322D56CD828DF3443E53CC5 /* LidAngleSensor-Apache-2.0.txt */,
 				831411156E1371B3FCF69187 /* NOTICE.md */,
 				8AFC7FE5E490233091CC0AC2 /* Purge-MIT.txt */,
@@ -1873,6 +1876,7 @@
 				AA519CEBD27CD812DD518136 /* Tunnelblick.dmg in Resources */,
 				68E148D5C8B7CEA4F02B859A /* ctf-logic.js in Resources */,
 				94134084A487BEB193A089C3 /* ctf.js in Resources */,
+				6D96FF364E174A53999C3E56 /* f1-circuits-MIT.txt in Resources */,
 				2F27B29ABFD1084E8B37A8A4 /* klick in Resources */,
 				14BB6F024439C7EDE0DCBD2C /* nowplaying.js in Resources */,
 				2006B2451159E4A12E70E69B /* plane-sim.js in Resources */,
@@ -2408,7 +2412,7 @@
 				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Manual;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 175;
+				CURRENT_PROJECT_VERSION = 176;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = "";
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -2424,7 +2428,7 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 2.1.48;
+				MARKETING_VERSION = 2.1.49;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -2542,7 +2546,7 @@
 				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Manual;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 175;
+				CURRENT_PROJECT_VERSION = 176;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = "";
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -2564,7 +2568,7 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 2.1.48;
+				MARKETING_VERSION = 2.1.49;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;

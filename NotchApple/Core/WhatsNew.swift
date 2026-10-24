@@ -20,6 +20,10 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.1.49", date: "24 October 2026", headline: "All 24 circuits of the 2026 F1 calendar, and a smarter track assistant", items: [
+            "Racing: the whole 2026 Formula 1 calendar, 24 real circuits from Australia (Albert Park) to Abu Dhabi (Yas Marina): Shanghai, Suzuka, Bahrain, Jeddah, Miami, Montréal, Monaco, Barcelona, the Red Bull Ring, Silverstone, Spa, the Hungaroring, Zandvoort, Monza, Madrid, Baku, Singapore, Austin, Mexico City, Interlagos, Las Vegas and Lusail. Pick one under “F1 2026” in the menu. Each is the real layout at its real length (from the open f1-circuits map data), with the start on the main straight and the pit lane beside it.",
+            "Racing, track assistant: new tracks look like real circuits instead of squares: an irregular loop with straights of different lengths, corners of every size both ways, hairpins with long straights in and out, and the chicanes and corners you asked for. Ask for a real circuit by name (“Yas Marina”, “Silverstone”, “the Monaco GP”) and you get the real layout. When you give a length, it adds only as many features as fit.",
+        ]),
         ReleaseNote(version: "2.1.48", date: "24 October 2026", headline: "Formation lap fixes, Medical Car follows the field, retire and car check", items: [
             "Racing, formation lap fixed: your car no longer gets stuck in its grid box a few seconds in, and the grid now follows the road, so the back rows of a big field start on the track instead of in the sand behind it.",
             "Racing, Safety Car and Medical Car: you can drive them straight away, formation lap included. The Medical Car now follows the field round the formation lap and the first lap, a good way back, then goes into the pits (like F1); a car that falls behind it on the formation lap is disqualified. Driving for race control, you hear race control (who has crashed and how far ahead), not a race engineer, and a red pin on the mini map shows where the crash is.",

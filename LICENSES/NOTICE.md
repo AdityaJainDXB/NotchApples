@@ -8,6 +8,7 @@ text of each is in this folder.
 | Still (Akshay Sharma and Kavish Shah) <https://github.com/kavishshahh (project: Still)> | MIT | Lid Fold: projection math, gesture state, screen snapshot, Metal shader | `Still-MIT.txt` |
 | Purge (Jithin Sabu) <https://github.com/jithin-sabu/purge-app> | MIT | Cleaner: safety allowlist, scan policies, delete rules | `Purge-MIT.txt` |
 | LidAngleSensor (Sam Henri Gold) <https://github.com/samhenrigold/LidAngleSensor> | Apache License 2.0 | Lid Fold: how the lid-angle sensor is found and read (device match, HID feature report layout) | `LidAngleSensor-Apache-2.0.txt` |
+| f1-circuits (Tomislav Bacinger) <https://github.com/bacinger/f1-circuits> | MIT | Racing: the real layouts of the 24 circuits on the 2026 F1 calendar (converted to metres and smoothed) | `f1-circuits-MIT.txt` |
 
 ## Apache License 2.0 notice (LidAngleSensor)
 
