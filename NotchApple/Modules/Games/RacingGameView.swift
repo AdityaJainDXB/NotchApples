@@ -58,14 +58,16 @@ private struct RacingWebView: NSViewRepresentable {
             if let ask = message.body as? [String: Any], ask["kind"] as? String == "ask", let id = ask["id"] as? Int,
                let question = ask["question"] as? String, let system = ask["system"] as? String {
                 Task { @MainActor in
-                    var out = ""
+                    var out = "", problem = ""
+                    let config = AIConfig.shared
                     do {
-                        let config = AIConfig.shared
                         for try await piece in AIClient.stream([ChatMessage(role: .user, text: question)], provider: config.provider, model: config.model, system: system) { out += piece }
-                    } catch { out = "" }
+                    } catch { out = ""; problem = "\(config.provider.title): \(error.localizedDescription)" }
                     let reply = MathText.plain(out).trimmingCharacters(in: .whitespacesAndNewlines)
-                    guard let data = try? JSONSerialization.data(withJSONObject: [reply]), let arg = String(data: data, encoding: .utf8) else { return }
-                    web.evaluateJavaScript("window.NotchRaceGame && NotchRaceGame.radioAnswer && NotchRaceGame.radioAnswer(\(id), \(arg)[0])", completionHandler: nil)
+                    if reply.isEmpty && problem.isEmpty { problem = "\(config.provider.title) gave no answer" }
+                    // The answer, or why there is none (shown in the race, so a missing key or a busy model is plain to see).
+                    guard let data = try? JSONSerialization.data(withJSONObject: [reply, problem]), let arg = String(data: data, encoding: .utf8) else { return }
+                    web.evaluateJavaScript("window.NotchRaceGame && NotchRaceGame.radioAnswer && NotchRaceGame.radioAnswer(\(id), \(arg)[0], \(arg)[1])", completionHandler: nil)
                 }
                 return
             }
@@ -79,12 +81,29 @@ private struct RacingWebView: NSViewRepresentable {
                 }
             case "start":
                 heard = ""
+                // Say plainly when the microphone or speech recognition is switched off for the app.
+                if AVCaptureDevice.authorizationStatus(for: .audio) == .denied || AVCaptureDevice.authorizationStatus(for: .audio) == .restricted {
+                    problem("The microphone is off for Notch Apple: turn it on in System Settings → Privacy & Security → Microphone"); return
+                }
+                if SFSpeechRecognizer.authorizationStatus() == .denied || SFSpeechRecognizer.authorizationStatus() == .restricted {
+                    problem("Speech recognition is off for Notch Apple: turn it on in System Settings → Privacy & Security → Speech Recognition"); return
+                }
                 VoiceInput.shared.start { [weak self] text in self?.heard = text }
+                DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) { [weak self] in
+                    if let p = VoiceInput.shared.problem { self?.problem(p) }
+                }
+            case "focus":
+                // Typing a question: the notch's window takes the keyboard and the page gets it (not the game's keys).
+                NSApp.activate(ignoringOtherApps: true)
+                web.window?.makeKey()
+                web.window?.makeFirstResponder(web)
             case "stop":
                 // A moment for the last words to come through, then send what was heard.
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.7) { [weak self] in
                     guard let self else { return }
+                    let p = VoiceInput.shared.problem
                     VoiceInput.shared.stop()
+                    if self.heard.isEmpty, let p { self.problem(p); return }
                     guard let data = try? JSONSerialization.data(withJSONObject: [self.heard]), let arg = String(data: data, encoding: .utf8) else { return }
                     self.web?.evaluateJavaScript("window.NotchRaceGame && NotchRaceGame.radioHeard && NotchRaceGame.radioHeard(\(arg)[0])")
                 }
@@ -108,6 +127,11 @@ private struct RacingWebView: NSViewRepresentable {
                 completionHandler(response == .OK ? panel.urls : nil)
             }
             panel.orderFrontRegardless()
+        }
+
+        private func problem(_ text: String) {
+            guard let data = try? JSONSerialization.data(withJSONObject: [text]), let arg = String(data: data, encoding: .utf8) else { return }
+            web?.evaluateJavaScript("window.NotchRaceGame && NotchRaceGame.radioProblem && NotchRaceGame.radioProblem(\(arg)[0])", completionHandler: nil)
         }
 
         /// True when the key went to the game (and should go no further).

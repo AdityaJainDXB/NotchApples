@@ -1205,10 +1205,10 @@
     function aiAvailable() { return !!(NATIVE_RADIO() || window.NotchRaceAI); }
     function askAI(system, question) {
       return new Promise((done) => {
-        const id = ++askSeq, timer = setTimeout(() => { askWait.delete(id); done(null); }, 12000);
+        const id = ++askSeq, timer = setTimeout(() => { askWait.delete(id); toast('🎧 No answer from the AI in 12 seconds, so here is the quick answer'); done(null); }, 12000);
         askWait.set(id, (txt) => { clearTimeout(timer); askWait.delete(id); done(txt || null); });
         if (NATIVE_RADIO()) NATIVE_RADIO().postMessage({ kind: 'ask', id, system, question });
-        else if (window.NotchRaceAI) Promise.resolve(window.NotchRaceAI(system, question)).then((x) => askWait.get(id) && askWait.get(id)(x), () => askWait.get(id) && askWait.get(id)(null));
+        else if (window.NotchRaceAI) Promise.resolve(window.NotchRaceAI(system, question)).then((x) => askWait.get(id) && askWait.get(id)(x), (e) => { toast(`🎧 The AI didn't answer: ${String((e && e.message) || e).slice(0, 140)}`); if (askWait.get(id)) askWait.get(id)(null); });
         else askWait.get(id)(null);
       });
     }
@@ -1242,6 +1242,7 @@
       if (radioUI) return;
       radioUI = document.createElement('div'); radioUI.className = 'rc-radio';
       const talk = radioListen();
+      if (!talk && canHear() && !voiceOn() && !radioOpen.told) { radioOpen.told = true; setTimeout(() => toast('🎙 Voice is off: switch on “Voice radio” in the Racing menu to talk out loud'), 400); }
       const typeHint = aiAvailable() ? ' · Enter: type any question' : '';
       radioUI.innerHTML = `<b>📻 Radio: ${talk ? `speak now, then ${me && me.car.spec.id === 'f1' ? 'Space' : 'T'} to send (or press a number)` : 'press a number (T closes)'}</b>` + RADIO_Q.map((q, i) => `<div><kbd>${i + 1}</kbd> ${q}</div>`).join('') + (typeHint ? `<div class="dim">${typeHint.slice(3)}</div>` : '');
       root.append(radioUI); click();
@@ -1256,7 +1257,9 @@
       const i = document.createElement('input'); i.className = 'rc-ask'; i.placeholder = 'Ask your engineer anything…'; i.maxLength = 160;
       i.style.pointerEvents = 'auto';
       i.onkeydown = (e) => { e.stopPropagation(); if (e.key === 'Enter') { const q = i.value.trim(); radioClose(); root.focus(); if (q) { toast(`📻 You: “${q}”`); engineerAnswer(q); } } else if (e.key === 'Escape') { radioClose(); root.focus(); } };
-      radioUI.append(i); keys.clear(); setTimeout(() => i.focus(), 0);
+      radioUI.append(i); keys.clear();
+      if (NATIVE_RADIO()) NATIVE_RADIO().postMessage('focus');        // on the Mac, the notch's window takes the keyboard for the box
+      setTimeout(() => i.focus(), 0); setTimeout(() => i.focus(), 150);
     }
     function radioClose() { clearTimeout(radioT); radioStopListening(); radioRec = null; if (radioUI) { radioUI.remove(); radioUI = null; } }
     /// The engineer's answer, from what is happening in the race right now.
@@ -2663,7 +2666,9 @@
     raf = requestAnimationFrame(frame);
 
     const api = {
-      radioHeard: heard, radioAnswer: (id, txt) => { const f = askWait.get(id); if (f) f(txt); }, radioPermission: (ok) => { store.set('voice', ok ? 'on' : 'off'); toast(ok ? '🎙 Microphone on: talk to your engineer on the radio' : 'No microphone: the radio works with the number keys'); if (screen === 'menu') showMenu(); },
+      radioHeard: heard, radioAnswer: (id, txt, err) => { if (err) toast(`🎧 The AI didn't answer: ${String(err).slice(0, 140)}`); const f = askWait.get(id); if (f) f(txt); },
+      radioProblem: (msg) => { radioListening = false; toast(`🎙 ${String(msg).slice(0, 160)}`); },
+      radioPermission: (ok) => { store.set('voice', ok ? 'on' : 'off'); toast(ok ? '🎙 Microphone on: talk to your engineer on the radio' : 'No microphone: the radio works with the number keys'); if (screen === 'menu') showMenu(); },
       key, suspend() { suspended = true; keys.clear(); audioKill(); hush(); }, resume() { suspended = false; last = performance.now(); }, setSoundEnabled(on) { setSound(on); },
       _state: () => ({ screen, racers, me, T, clock, net, raceCtl, autoMe: () => { me.ai = true; const st = { idx: -1, lane: 0, skill: 0.95, stuck: 0, rev: 0, go: true, cap: 55, served: true }; aiState.set(me.id, st); return st; }, force: (i, sp) => { const r = racers.filter((x) => x.ai && !x.official)[i]; r.car.dmg = 0.95; incident(r, sp); return r.name; } }),
     };
@@ -2680,7 +2685,8 @@
     mount,
     key: (k, down) => { const c = window.NotchRaceGame.current; if (c) c.key(k, down); },
     radioHeard: (t) => { const c = window.NotchRaceGame.current; if (c) c.radioHeard(t); },
-    radioAnswer: (id, t) => { const c = window.NotchRaceGame.current; if (c) c.radioAnswer(id, t); },
+    radioAnswer: (id, t, e) => { const c = window.NotchRaceGame.current; if (c) c.radioAnswer(id, t, e); },
+    radioProblem: (m) => { const c = window.NotchRaceGame.current; if (c) c.radioProblem(m); },
     radioPermission: (ok) => { const c = window.NotchRaceGame.current; if (c) c.radioPermission(ok); },
     suspend: () => { const c = window.NotchRaceGame.current; if (c) c.suspend(); },
     setSoundEnabled: (on) => { window.NotchHostSound = !!on; const c = window.NotchRaceGame.current; if (c) c.setSoundEnabled(on); },
