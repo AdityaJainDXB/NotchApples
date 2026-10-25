@@ -38,6 +38,14 @@ NotchWindows/src/js/services/claudeusage.js
 
 # build output, scratch and local tool state
 **/target/
+**/.venv/
+**/node_modules/
+**/dist/
+**/.next/
+**/.astro/
+.svelte-kit/
+.vscode/
+.idea/
 .dragtest/
 brag-output/
 .agents/
