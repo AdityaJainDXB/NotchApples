@@ -20,6 +20,10 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.1.58", date: "25 October 2026", headline: "A real pit crew, and a boost you can feel", items: [
+            "Racing, pit crew: every stop now has a real crew in 3D, seven people per car: four wheel gunners with impact wrenches, a jack man, a tyre carrier and the engineer. The car lifts on its jack, and the wrench, jack and wheel-seat sounds are timed to each wheel. The wheels stay on the car in this version.",
+            "Racing, F1 boost: B boosts from the battery, which now gives about 26% more acceleration at 2 seconds and about 12% more top speed, and lasts about twice as long, so you can use it for a real overtake.",
+        ]),
         ReleaseNote(version: "2.1.57", date: "25 October 2026", headline: "Boost, DRS, rain and breakdowns, and the formation-lap skip fixed", items: [
             "Racing: skipping the formation lap with N no longer leaves cars steering into the wall (or your view glitching) at lights out.",
             "Racing, F1 cars: B boosts from the battery (a meter above the speed shows what's left; braking recharges it), and E opens DRS when you're within a second of the car ahead from lap 2 (braking closes it). The computer drivers use both. Slipstream is stronger, and the HUD shows when you're in it.",

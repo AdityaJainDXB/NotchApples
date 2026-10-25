@@ -2006,7 +2006,7 @@
           const human = r === me && !me.ai, f1 = c.spec.id === 'f1';
           if (f1) {
             const want = human ? keys.has('boost') && inp.throttle > 0 : r.ai && (c.ers > 0.35 && Math.abs(c.vf) > c.spec.vmax * 0.6 && Math.random() < 0.6);
-            if (want && c.ers > 0) { c.ers = Math.max(0, c.ers - dt / 7); c.accelAdd += 5; c.vmaxK *= 1.04; r.boosting = true; } else r.boosting = false;
+            if (want && c.ers > 0) { c.ers = Math.max(0, c.ers - dt / 14); c.accelAdd += 8; c.vmaxK *= 1.1; r.boosting = true; } else r.boosting = false;
             if (inp.brake > 0 && Math.abs(c.vf) > 10) c.ers = Math.min(1, c.ers + dt * 0.14); else c.ers = Math.min(1, c.ers + dt * 0.006);
           }
           if (r.ai && !human) r.drsOn = drsOk(r) && Math.abs(c.vf) > c.spec.vmax * 0.55;

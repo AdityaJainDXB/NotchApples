@@ -72,10 +72,10 @@ Pick your computer. Both buttons start the download straight away. The Mac link 
   </tr>
   <tr>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.1.57</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.1.58</b></a>
     </td>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 2.1.57 BETA</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 2.1.58 BETA</b></a>
     </td>
   </tr>
   <tr>
@@ -243,6 +243,11 @@ All screenshots use sample data.
 
 - Plane: leaving the game while you are in a shared Battle now also leaves the room and stops its background timers, so it no longer keeps a connection open.
 - Racing: other drivers' names in a shared race are cleaned of markup before they are shown.
+
+### Mac 2.1.58 · Windows 2.1.58 BETA · 25 October 2026 · 🏎️ A real pit crew, and a boost you can feel
+
+- Racing, pit crew: every stop now has a real crew in 3D, seven people per car: four wheel gunners with impact wrenches, a jack man, a tyre carrier and the engineer. The car lifts on its jack, and the wrench, jack and wheel-seat sounds are timed to each wheel. The wheels stay on the car in this version.
+- Racing, F1 boost: B boosts from the battery, which now gives about 26% more acceleration at 2 seconds and about 12% more top speed, and lasts about twice as long, so you can use it for a real overtake.
 
 ### Mac 2.1.57 · Windows 2.1.57 BETA · 25 October 2026 · 🌧 Boost, DRS, rain and breakdowns, and the formation-lap skip fixed
 

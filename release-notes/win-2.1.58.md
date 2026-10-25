@@ -1,0 +1,4 @@
+## Notch Apple for Windows 2.1.58 (BETA)
+
+- Racing, pit crew: every stop now has a real crew in 3D, seven people per car: four wheel gunners with impact wrenches, a jack man, a tyre carrier and the engineer. The car lifts on its jack, and the wrench, jack and wheel-seat sounds are timed to each wheel. The wheels stay on the car in this version.
+- Racing, F1 boost: B boosts from the battery, which now gives about 26% more acceleration at 2 seconds and about 12% more top speed, and lasts about twice as long, so you can use it for a real overtake.
