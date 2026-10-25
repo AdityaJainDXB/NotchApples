@@ -9649,6 +9649,8 @@
 
     return () => {
       alive = false; cancelAnimationFrame(raf); cancelSpeech(); skyLeave(); praceLeave(true);
+      try { netLeave(true); } catch { /* not in a shared battle */ }
+      clearInterval(bgTimer); bgTimer = 0;
       window.removeEventListener('keydown', kd); window.removeEventListener('keyup', ku); window.removeEventListener('blur', blur);
       document.removeEventListener('visibilitychange', hidden);
       try { ac?.close(); } catch { /* already closed */ }

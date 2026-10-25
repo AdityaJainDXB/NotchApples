@@ -1,18 +1,18 @@
 {
-  "version": "2.1.37",
-  "title": "Notch Apple 2.1.37 · Track assistant, 20 new monuments, satellite imagery",
-  "notes": "## Notch Apple 2.1.37\n\n- Racing: a track assistant in the track designer. Type what you want (\"21 chicanes and 4 hairpins\", \"a fast 5 km circuit\", \"a desert sprint with three hairpins, called Dune Run\") and it builds that track, checks it against the track rules and opens it to preview and edit. \"Another version\" gives a different layout. Or give it a picture of a circuit (📷 From a picture, or drop or paste an image, such as a map of Yas Marina) and it traces the layout into a drivable track.\n- Flying: 20 more places with their own monuments: Delhi (India Gate, Qutub Minar), Agra (Taj Mahal), Mumbai (Gateway of India), Abu Dhabi (Sheikh Zayed Grand Mosque), Rome (Colosseum), Athens (Parthenon), Moscow (St Basil's), Istanbul (Blue Mosque), Berlin (Brandenburg Gate and TV tower), Rio (Christ the Redeemer), Toronto (CN Tower), Seattle (Space Needle), Kuala Lumpur (Petronas Towers), Singapore (Marina Bay Sands), Shanghai (Oriental Pearl Tower), Beijing (Temple of Heaven), Seoul (N Seoul Tower), Bangkok (Wat Arun), Barcelona (Sagrada Família) and Riyadh (Kingdom Centre).\n- Real terrain now shows real satellite imagery of the place (Sentinel-2 cloudless by EOX, CC BY 4.0, contains modified Copernicus Sentinel data 2016) on top of its real heights, and trees grow only where the imagery shows forest.\n",
-  "published": "2026-10-23T11:29:35Z",
-  "dmg": "https://github.com/AdityaJainDXB/NotchApples/releases/download/v2.1.37/NotchApple-2.1.37.dmg",
-  "dmgSize": 51926452,
-  "page": "https://github.com/AdityaJainDXB/NotchApples/releases/tag/v2.1.37",
+  "version": "2.1.54",
+  "title": "Notch Apple 2.1.54 · Notch Apple 2.1.54 · A livelier notch, and smoother racing explained",
+  "notes": "## Notch Apple 2.1.54\n\n- Smoother, livelier notch: a burst of confetti when you tick off a to-do, buttons that dip with a spring when you press them, three pulsing dots while the AI is thinking and a light that runs round its answer while it's still arriving, your name coming into focus word by word in the hello, and notifications that slide in one after another. All follow the iPhone Duo setting and Reduce Motion.\n- Racing: when macOS Low Power Mode is on, the Mac's web engine draws the game at 30 frames a second instead of 60; the race now tells you so once (plug in or switch Low Power Mode off for smooth 60). The timing tower no longer covers the tyre line when you drive the Safety Car or the Medical Car.\n",
+  "published": "2026-10-24T14:37:09Z",
+  "dmg": "https://github.com/AdityaJainDXB/NotchApples/releases/download/v2.1.54/NotchApple-2.1.54.dmg",
+  "dmgSize": 52180295,
+  "page": "https://github.com/AdityaJainDXB/NotchApples/releases/tag/v2.1.54",
   "stars": 3,
   "windows": {
-    "version": "2.1.36",
-    "notes": "## Notch Apple for Windows 2.1.36 (BETA)\n\n- Racing: serve a time penalty at your pit stop, like in F1. Press Q after getting a penalty: at your next stop the car stands still in the box for the penalty time before the crew goes to work, and the penalty is cleared from your race time. Press Q again to keep it added at the finish instead. Computer drivers serve theirs at their stops too.\n",
-    "url": "https://github.com/AdityaJainDXB/NotchApples/releases/download/win-v2.1.36/Notch.apple_2.1.36_x64-setup.exe",
-    "sha256": "7df7d150a6dba0e96e8bb0b228140429dd80d23738611a7e3a2a2e99538e7cd3",
-    "size": 6097159,
-    "page": "https://github.com/AdityaJainDXB/NotchApples/releases/tag/win-v2.1.36"
+    "version": "2.1.54",
+    "notes": "",
+    "url": "https://github.com/AdityaJainDXB/NotchApples/releases/download/win-v2.1.54/Notch.apple_2.1.54_x64-setup.exe",
+    "sha256": "c97c53c7eedc9d418df9593cb4b37ae493d1f82d66fca50d4bcd2e7fb350f1bb",
+    "size": 6243155,
+    "page": "https://github.com/AdityaJainDXB/NotchApples/releases/tag/win-v2.1.54"
   }
 }

@@ -1103,7 +1103,7 @@
       if (!net || m.id === myId) return;
       if (m.t === 'hi') {
         const known = net.players.has(m.id);
-        net.players.set(m.id, { id: m.id, name: String(m.name || 'Driver').slice(0, 14), car: CARS.some((c) => c.id === m.car) ? m.car : 'gt', host: !!m.host });
+        net.players.set(m.id, { id: m.id, name: String(m.name || 'Driver').replace(/[<>&"'`]/g, '').slice(0, 14) || 'Driver', car: CARS.some((c) => c.id === m.car) ? m.car : 'gt', host: !!m.host });
         net.seen.set(m.id, performance.now());
         if (m.host && !net.host && screen === 'lobby' && resolveTrack(m.tr, m.td)) { trackId = m.tr; T = getTrack(trackId); lapsSel = [1, 3, 5].includes(m.lp) ? m.lp : lapsSel; }
         if (!known) { hello(); if (screen === 'lobby') showLobby(); }
