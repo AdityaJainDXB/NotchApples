@@ -604,7 +604,7 @@
     let a = 0;
     if (inp.throttle > 0) a += sp.accel * inp.throttle * clamp(1 - (Math.max(0, vf0) / (sp.vmax * surf)) ** 2, 0, 1) * (vf0 < 0 ? 1.6 : 1);
     if (inp.brake > 0) a += vf0 > 1.5 ? -sp.brake * inp.brake : -sp.accel * 0.55 * inp.brake * clamp(1 + vf0 / 18, 0, 1);
-    a -= 0.0002 * vf0 * Math.abs(vf0) + (Math.abs(vf0) > 0.2 ? 0.35 * Math.sign(vf0) : 0);
+    a -= 0.0002 * (1 - 0.4 * (c.tow || 0)) * vf0 * Math.abs(vf0) + (Math.abs(vf0) > 0.2 ? 0.35 * Math.sign(vf0) : 0);   // slipstream: less air drag when tucked in
     if (surf < 1) a -= (1 - surf) * 9 * Math.sign(vf0) * Math.min(1, Math.abs(vf0) / 12);
     if (inp.hand) a -= 7 * Math.sign(vf0) * Math.min(1, Math.abs(vf0) / 8);
     c.vx += fx * a * dt; c.vy += fy * a * dt;
@@ -1667,8 +1667,25 @@
       r.stopNeed = need;
       if (u >= 1 && !r.crewLeave) r.crewLeave = clock + 2.5;
     }
+    /// The crowd: 'cheer' runs from 0 (quiet) to 1 (roaring). Overtakes near you cheer them up; they settle again over a few seconds.
+    let cheer = 0, cheerPrev = null, lastCheer = -99;
+    function cheerUp(v) {
+      if (clock - lastCheer < 2.5) return;
+      lastCheer = clock; cheer = Math.max(cheer, v); crowdSound(v);
+    }
+    /// A crowd swell: a long band of noise that rises and falls, louder for a bigger cheer.
+    function crowdSound(v) {
+      if (!soundOn || !audioUp() || !au) return;
+      const t = ac.currentTime;
+      for (const [f, q, g0] of [[1300, 0.6, 0.14], [2100, 0.8, 0.05]]) {
+        const sr = ac.createBufferSource(); sr.buffer = au.nb; const fl = ac.createBiquadFilter(); fl.type = 'bandpass'; fl.frequency.value = f; fl.Q.value = q;
+        const gg = ac.createGain(); gg.gain.setValueAtTime(0.0001, t); gg.gain.exponentialRampToValueAtTime(g0 * v, t + 0.5); gg.gain.exponentialRampToValueAtTime(0.0001, t + 2.6);
+        sr.connect(fl); fl.connect(gg); gg.connect(au.master); sr.start(t, Math.random()); sr.stop(t + 2.7);
+      }
+    }
     function raceTick(dt) {
       trouble(dt);
+      cheer = Math.max(0, cheer - dt * 0.3);
       if (screen !== 'race') return;
       const C = raceCtl; C.t += dt;
       const field = racers.filter((r) => !r.official && !r.finished), order = ranking(racers).filter((r) => !r.finished);
@@ -1686,6 +1703,10 @@
         if (st && !st.pitting && (medF.lap >= 0 && P && rel > P.a - 700 && rel < P.a - 60 && clock > 20 || clock > 240)) { st.pitting = true; st.served = true; st.cap = null; }
         if (medF.inLane && st && st.pitting && clock > 20) { racers = racers.filter((r) => r !== medF); aiState.delete(medF.id); medF = null; }
       }
+      // Overtakes: a car gaining a place within 160 m of you makes the crowd cheer (you passing, or being passed, both count).
+      { const idxNow = new Map(order.map((r, i) => [r.id, i]));
+        if (cheerPrev && me) for (const r of order) { const was = cheerPrev.get(r.id); if (was != null && idxNow.get(r.id) < was && Math.hypot(r.car.x - me.car.x, r.car.y - me.car.y) < 160) cheerUp(r === me ? 1 : 0.8); }
+        cheerPrev = idxNow; }
       // When each flag ends.
       const waitMed = (role === 'med' && (C.at && !C.at.checked || medJob) && C.t < 240) || cranes.some((k) => !k.done) && C.t < 120;        // the Medical Car or a crane is still at work
       if (C.flag === 'yellow' && C.t > 12 && !waitMed) setFlag('green');
@@ -2013,9 +2034,14 @@
           if (r.drsOn && (!drsOk(r) || inp.brake > 0)) { r.drsOn = false; if (r === me) toast('DRS closed'); }
           if (r.drsOn) { c.vmaxK *= 1.07; c.accelAdd += 1.5; }
         }
-        if (screen === 'race' && !r.inLane && Math.abs(c.vf || 0) > 25) {
-          const ca = Math.cos(c.h), sa = Math.sin(c.h);
-          for (const o of racers) { if (o === r || o.parked != null || o.stopped) continue; const dx = o.car.x - c.x, dy = o.car.y - c.y, f = dx * ca + dy * sa, l = Math.abs(-dx * sa + dy * ca); if (f > 4 && f < 40 && l < 2.2) { const tow = 0.0002 * c.vf * c.vf * (1 - f / 40); r.towT = 0.3; c.vx += ca * tow * dt; c.vy += sa * tow * dt; break; } }
+        {   // Slipstream: the car directly behind another (within 40 m, in its tyre tracks) gets the air it leaves, up to 35% less drag.
+          let want = 0;
+          if (screen === 'race' && !r.inLane && Math.abs(c.vf || 0) > 15) {
+            const ca = Math.cos(c.h), sa = Math.sin(c.h);
+            for (const o of racers) { if (o === r || o.parked != null || o.stopped || o.dnf) continue; const dx = o.car.x - c.x, dy = o.car.y - c.y, f = dx * ca + dy * sa, l = Math.abs(-dx * sa + dy * ca); if (f > 4 && f < 70 && l < 2.5) { want = Math.max(want, clamp(1 - (f - 4) / 66, 0, 1)); } }
+          }
+          c.tow = (c.tow || 0) + (want - (c.tow || 0)) * (1 - Math.exp(-dt * 4));      // builds up over a moment, not instantly
+          r.towT = c.tow > 0.2 ? 0.3 : Math.max(0, (r.towT || 0) - dt);
         }
         stepCar(c, inp, dt, surf);
         if (r.inLane && !r.official && c.vf < 0) { c.vx = c.vy = 0; c.vf = 0; }       // no reversing in the pit lane for race cars: the brake just holds the car
@@ -2570,6 +2596,23 @@
               if (T.scenery === 'pines') { g.fillStyle = '#5a3d22'; g.fillRect(sx - 0.25 * u, sy - hgt * 0.25, 0.5 * u, hgt * 0.25); g.fillStyle = T.ground === GROUND.snow ? '#2f5a44' : '#244d2c'; g.beginPath(); g.moveTo(sx, sy - hgt); g.lineTo(sx - 2.4 * u, sy - hgt * 0.2); g.lineTo(sx + 2.4 * u, sy - hgt * 0.2); g.fill(); }
               else if (T.scenery === 'cacti') { g.fillStyle = '#3f7a3a'; g.fillRect(sx - 0.35 * u, sy - hgt, 0.7 * u, hgt); g.fillRect(sx - 1.2 * u, sy - hgt * 0.7, 0.85 * u, 0.4 * u); g.fillRect(sx - 1.2 * u, sy - hgt * 0.95, 0.4 * u, hgt * 0.3); }
               else { g.fillStyle = '#5a3d22'; g.fillRect(sx - 0.3 * u, sy - hgt * 0.45, 0.6 * u, hgt * 0.45); g.fillStyle = '#2f6b33'; g.beginPath(); g.arc(sx, sy - hgt * 0.62, 2.6 * u, 0, 7); g.fill(); }
+            }
+          }
+        }
+        // Grandstands: tiers of seats on the straights, outside the barrier, with a crowd that bobs and cheers.
+        if (i % 10 === 0 && Math.abs(a.k) < 0.0008 && !(Pd0 && relS(T, a.s) > Pd0.a - 100 && relS(T, a.s) < Pd0.b + 100)) {
+          const side = hash01(i, 33) < 0.5 ? -1 : 1, L = 36, hd = Math.atan2(a.ty, a.tx), now = performance.now() / 1000;
+          const ox = (u, v) => [a.x + a.tx * u + a.nx * side * (wall + v), a.y + a.ty * u + a.ny * side * (wall + v)];
+          const shirts = ['#e63946', '#f4a261', '#2a9d8f', '#e9c46a', '#8ab17d', '#ffffff', '#457b9d', '#c77dff'];
+          for (let j = 0; j < 3; j++) {
+            const off = 4 + j * 2.2, z0 = j * 0.9;
+            const [cx, cy] = ox(L / 2, off + 1.1);
+            box(cx, cy, hd, z0, L, 2.2, 0.9, j % 2 ? '#3a4150' : '#2d3442');     // the tier's seats
+            for (let k = 0; k < 9; k++) {
+              const [px, py] = ox(4 + k * 3.4, off + 0.7), bob = cheer * (0.08 + 0.1 * Math.sin(now * 10 + k * 1.3 + j * 2));
+              const col = shirts[(k * 3 + j * 5 + i) % shirts.length];
+              box(px, py, hd, z0 + 0.9, 0.34, 0.42, 0.62 + bob, col);            // body
+              box(px, py, hd, z0 + 1.52 + bob, 0.28, 0.28, 0.28, '#e9b98e');     // head
             }
           }
         }

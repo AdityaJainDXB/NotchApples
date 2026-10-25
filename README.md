@@ -72,10 +72,10 @@ Pick your computer. Both buttons start the download straight away. The Mac link 
   </tr>
   <tr>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.1.58</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.1.59</b></a>
     </td>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 2.1.58 BETA</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 2.1.59 BETA</b></a>
     </td>
   </tr>
   <tr>
@@ -243,6 +243,11 @@ All screenshots use sample data.
 
 - Plane: leaving the game while you are in a shared Battle now also leaves the room and stops its background timers, so it no longer keeps a connection open.
 - Racing: other drivers' names in a shared race are cleaned of markup before they are shown.
+
+### Mac 2.1.59 · Windows 2.1.59 BETA · 25 October 2026 · 🏎️ Slipstream and grandstands
+
+- Racing, slipstream: a car tucked in behind another now gets up to 40% less air drag while close, so the tow builds over a straight instead of giving only a tiny push. The HUD shows when you're in the tow.
+- Racing, grandstands: three-tier stands along the straights outside the barriers, with a crowd that bobs and cheers when you pass or are passed within 160 metres.
 
 ### Mac 2.1.58 · Windows 2.1.58 BETA · 25 October 2026 · 🏎️ A real pit crew, and a boost you can feel
 

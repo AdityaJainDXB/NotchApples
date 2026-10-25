@@ -20,6 +20,10 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.1.59", date: "25 October 2026", headline: "Slipstream and grandstands", items: [
+            "Racing, slipstream: a car tucked in behind another now gets up to 40% less air drag while close, so the tow builds over a straight instead of giving only a tiny push. The HUD shows when you're in the tow.",
+            "Racing, grandstands: three-tier stands along the straights outside the barriers, with a crowd that bobs and cheers when you pass or are passed within 160 metres.",
+        ]),
         ReleaseNote(version: "2.1.58", date: "25 October 2026", headline: "A real pit crew, and a boost you can feel", items: [
             "Racing, pit crew: every stop now has a real crew in 3D, seven people per car: four wheel gunners with impact wrenches, a jack man, a tyre carrier and the engineer. The car lifts on its jack, and the wrench, jack and wheel-seat sounds are timed to each wheel. The wheels stay on the car in this version.",
             "Racing, F1 boost: B boosts from the battery, which now gives about 26% more acceleration at 2 seconds and about 12% more top speed, and lasts about twice as long, so you can use it for a real overtake.",

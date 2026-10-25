@@ -1,0 +1,4 @@
+## Notch Apple for Windows 2.1.59 (BETA)
+
+- Racing, slipstream: a car tucked in behind another now gets up to 40% less air drag while close, so the tow builds over a straight instead of giving only a tiny push. The HUD shows when you're in the tow.
+- Racing, grandstands: three-tier stands along the straights outside the barriers, with a crowd that bobs and cheers when you pass or are passed within 160 metres.
