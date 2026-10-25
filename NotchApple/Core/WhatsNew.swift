@@ -20,6 +20,9 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.1.59.1", date: "25 October 2026", headline: "Crowd cheer fix", items: [
+            "Racing: the grandstand crowd's cheering sound now plays for the full 2.7 seconds instead of cutting off at 1-2 (the noise buffer wasn't set to loop).",
+        ]),
         ReleaseNote(version: "2.1.59", date: "25 October 2026", headline: "Slipstream and grandstands", items: [
             "Racing, slipstream: a car tucked in behind another now gets up to 40% less air drag while close, so the tow builds over a straight instead of giving only a tiny push. The HUD shows when you're in the tow.",
             "Racing, grandstands: three-tier stands along the straights outside the barriers, with a crowd that bobs and cheers when you pass or are passed within 160 metres.",
