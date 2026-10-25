@@ -8,11 +8,11 @@
   "page": "https://github.com/AdityaJainDXB/NotchApples/releases/tag/v2.1.54",
   "stars": 3,
   "windows": {
-    "version": "2.1.54",
-    "notes": "",
-    "url": "https://github.com/AdityaJainDXB/NotchApples/releases/download/win-v2.1.54/Notch.apple_2.1.54_x64-setup.exe",
-    "sha256": "c97c53c7eedc9d418df9593cb4b37ae493d1f82d66fca50d4bcd2e7fb350f1bb",
-    "size": 6243155,
-    "page": "https://github.com/AdityaJainDXB/NotchApples/releases/tag/win-v2.1.54"
+    "version": "2.1.55",
+    "notes": "## Notch Apple for Windows 2.1.55 (BETA)\n\n- Plane: leaving the game while in a shared Battle now also leaves the room and stops its background timers.\n- Racing: other drivers' names in a shared race are cleaned of markup before they are shown.\n",
+    "url": "https://github.com/AdityaJainDXB/NotchApples/releases/download/win-v2.1.55/Notch.apple_2.1.55_x64-setup.exe",
+    "sha256": "ce9533f2e0fa601d3d928def8e6ce34023d8461a0729cc861ec92a01e7a63f79",
+    "size": 6244999,
+    "page": "https://github.com/AdityaJainDXB/NotchApples/releases/tag/win-v2.1.55"
   }
 }
