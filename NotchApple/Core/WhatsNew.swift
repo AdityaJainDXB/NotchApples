@@ -20,6 +20,9 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.1.60", date: "25 October 2026", headline: "Hills and elevation in the 3D view", items: [
+            "Racing: tracks now have elevation. The 3D view draws every track with its ups and downs, car physics respond to gravity on slopes (uphill slows you, downhill speeds you up), and the track editor can set a height on any point. Tracks with elevation can be shared with friends.",
+        ] as [String]),
         ReleaseNote(version: "2.1.59.2", date: "25 October 2026", headline: "Louder crowd cheers", items: [
             "Racing: the grandstand crowd's cheering sound is louder and reaches full volume instantly (was ramping up over half a second and cutting off), with a third frequency band for a fuller, more crowd-like swell.",
         ]),

@@ -99,16 +99,16 @@
   /// The centre line of a track, sampled about every 4 m: position, direction, the distance along it (s) and its curvature.
   function buildTrack(def) {
     const P = def.pts, n = P.length, closed = def.closed;
-    const at = (i) => closed ? P[((i % n) + n) % n] : P[clamp(i, 0, n - 1)];
+    const at = (i) => { const p = closed ? P[((i % n) + n) % n] : P[clamp(i, 0, n - 1)]; return [p[0], p[1], p[2] || 0]; };
     const dense = [], segs = closed ? n : n - 1;
     for (let i = 0; i < segs; i++) {
       const p0 = at(i - 1), p1 = at(i), p2 = at(i + 1), p3 = at(i + 2);
       for (let k = 0; k < 24; k++) {
         const t = k / 24, t2 = t * t, t3 = t2 * t;
-        dense.push([0, 1].map((a) => 0.5 * ((2 * p1[a]) + (-p0[a] + p2[a]) * t + (2 * p0[a] - 5 * p1[a] + 4 * p2[a] - p3[a]) * t2 + (-p0[a] + 3 * p1[a] - 3 * p2[a] + p3[a]) * t3)));
+        dense.push([0, 1, 2].map((a) => 0.5 * ((2 * p1[a]) + (-p0[a] + p2[a]) * t + (2 * p0[a] - 5 * p1[a] + 4 * p2[a] - p3[a]) * t2 + (-p0[a] + 3 * p1[a] - 3 * p2[a] + p3[a]) * t3)));
       }
     }
-    if (!closed) dense.push(P[n - 1].slice());
+    if (!closed) dense.push([P[n - 1][0], P[n - 1][1], P[n - 1][2] || 0]);
     // Resample at an even spacing.
     const step = 4, out = [dense[0]];
     let carry = 0;
@@ -116,7 +116,7 @@
       const a = dense[i - 1], b = dense[i % dense.length];
       let d = Math.hypot(b[0] - a[0], b[1] - a[1]);
       let pos = 0;
-      while (carry + (d - pos) >= step) { pos += step - carry; carry = 0; const f = pos / d; out.push([a[0] + (b[0] - a[0]) * f, a[1] + (b[1] - a[1]) * f]); }
+      while (carry + (d - pos) >= step) { pos += step - carry; carry = 0; const f = pos / d; out.push([a[0] + (b[0] - a[0]) * f, a[1] + (b[1] - a[1]) * f, a[2] + (b[2] - a[2]) * f]); }
       carry += d - pos;
     }
     if (closed && Math.hypot(out[out.length - 1][0] - out[0][0], out[out.length - 1][1] - out[0][1]) < step * 0.5) out.pop();
@@ -124,16 +124,16 @@
     for (let i = 0; i < m; i++) {
       const a = out[closed ? (i - 1 + m) % m : Math.max(0, i - 1)], b = out[closed ? (i + 1) % m : Math.min(m - 1, i + 1)];
       const tx = b[0] - a[0], ty = b[1] - a[1], l = Math.hypot(tx, ty) || 1;
-      S.push({ x: out[i][0], y: out[i][1], tx: tx / l, ty: ty / l, nx: -ty / l, ny: tx / l, s: i * step, k: 0 });
+      S.push({ x: out[i][0], y: out[i][1], tx: tx / l, ty: ty / l, nx: -ty / l, ny: tx / l, s: i * step, k: 0, z: out[i][2] || 0 });
     }
     for (let i = 0; i < m; i++) {
       const a = S[closed ? (i - 1 + m) % m : Math.max(0, i - 1)], b = S[closed ? (i + 1) % m : Math.min(m - 1, i + 1)];
       S[i].k = wrapPi(Math.atan2(b.ty, b.tx) - Math.atan2(a.ty, a.tx)) / (closed ? 2 * step : (i === 0 || i === m - 1 ? step : 2 * step));
     }
     const length = closed ? m * step : (m - 1) * step;
-    let x0 = 1e9, x1 = -1e9, y0 = 1e9, y1 = -1e9;
-    for (const q of S) { x0 = Math.min(x0, q.x); x1 = Math.max(x1, q.x); y0 = Math.min(y0, q.y); y1 = Math.max(y1, q.y); }
-    return { id: def.id, def, name: def.name, closed, width: def.width, laps: def.laps, S, m, step, length, bounds: [x0, y0, x1, y1], ground: def.ground || GROUND.green, scenery: def.scenery || 'trees', grip: def.grip || 1 };
+    let x0 = 1e9, x1 = -1e9, y0 = 1e9, y1 = -1e9, z0 = 1e9, z1 = -1e9;
+    for (const q of S) { x0 = Math.min(x0, q.x); x1 = Math.max(x1, q.x); y0 = Math.min(y0, q.y); y1 = Math.max(y1, q.y); z0 = Math.min(z0, q.z); z1 = Math.max(z1, q.z); }
+    return { id: def.id, def, name: def.name, closed, width: def.width, laps: def.laps, S, m, step, length, bounds: [x0, y0, x1, y1], zBounds: [z0, z1], ground: def.ground || GROUND.green, scenery: def.scenery || 'trees', grip: def.grip || 1 };
   }
 
   /// Where a point is on the track: the nearest centre-line sample (searched near `hint`, or everywhere if none), the
@@ -146,6 +146,19 @@
     else for (let o = -30; o <= 30; o++) { const i = T.closed ? ((hint + o) % m + m) % m : hint + o; if (i >= 0 && i < m) test(i); }
     const q = T.S[best], dx = x - q.x, dy = y - q.y;
     return { idx: best, s: q.s + dx * q.tx + dy * q.ty, lat: dx * q.nx + dy * q.ny };
+  }
+  /// The track's height at a position on (or near) the centre line, by interpolating the z of the surrounding samples.
+  function trackHeight(T, loc) {
+    const a = T.S[loc.idx], b = T.S[T.closed ? (loc.idx + 1) % T.m : loc.idx + 1];
+    const f = clamp((loc.s - a.s) / T.step, 0, 1);
+    return (a.z || 0) + ((b.z || 0) - (a.z || 0)) * f;
+  }
+  /// The track gradient projected onto the car's heading: positive when the car faces uphill, negative downhill.
+  function trackSlope(T, c, loc) {
+    const a = T.S[loc.idx], b = T.S[T.closed ? (loc.idx + 1) % T.m : loc.idx + 1];
+    const len = Math.hypot(b.x - a.x, b.y - a.y) || 1;
+    const cosA = (Math.cos(c.h) * (b.x - a.x) + Math.sin(c.h) * (b.y - a.y)) / len;
+    return ((b.z || 0) - (a.z || 0)) / len * cosA;
   }
 
   /// The start grid: row by row behind the line, two cars across.
@@ -190,7 +203,7 @@
   const b64e = (str) => (typeof btoa === 'function' ? btoa(unescape(encodeURIComponent(str))) : Buffer.from(str, 'utf8').toString('base64')).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
   const b64d = (str) => { const t = str.replace(/-/g, '+').replace(/_/g, '/'); return typeof atob === 'function' ? decodeURIComponent(escape(atob(t))) : Buffer.from(t, 'base64').toString('utf8'); };
   function encodeTrack(def) {
-    return 'NR1' + b64e(JSON.stringify({ n: String(def.name || 'My track').slice(0, 24), c: def.closed ? 1 : 0, w: def.width, g: def.look || 'green', l: def.laps || 3, p: def.pts.flatMap((p) => [Math.round(p[0]), Math.round(p[1])]) }));
+    return 'NR1' + b64e(JSON.stringify({ n: String(def.name || 'My track').slice(0, 24), c: def.closed ? 1 : 0, w: def.width, g: def.look || 'green', l: def.laps || 3, v: 2, p: def.pts.flatMap((p) => [Math.round(p[0]), Math.round(p[1]), Math.round(p[2] || 0)]) }));
   }
   const hashStr = (str) => { let h = 2166136261; for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); } return (h >>> 0).toString(36); };
   /// A track from a code, or null if the code is not a valid, drivable track.
@@ -199,15 +212,17 @@
       const raw = String(code || '').trim().replace(/\s+/g, '');
       if (!raw.startsWith('NR1') || raw.length > 9000) return null;
       const o = JSON.parse(b64d(raw.slice(3)));
-      if (!o || !Array.isArray(o.p) || o.p.length % 2 || o.p.length > 440) return null;
-      const pts = []; for (let i = 0; i < o.p.length; i += 2) { const x = Number(o.p[i]), y = Number(o.p[i + 1]); if (!isFinite(x) || !isFinite(y) || Math.abs(x) > 6000 || Math.abs(y) > 6000) return null; pts.push([x, y]); }
+      if (!o || !Array.isArray(o.p) || (o.p.length % (o.v >= 2 ? 3 : 2)) || o.p.length > 440 * (o.v >= 2 ? 3 : 2)) return null;
+      const sp = o.v >= 2 ? 3 : 2;
+      const pts = []; for (let i = 0; i < o.p.length; i += sp) { const x = Number(o.p[i]), y = Number(o.p[i + 1]), z = sp === 3 ? Number(o.p[i + 2]) : 0; if (!isFinite(x) || !isFinite(y) || !isFinite(z) || Math.abs(x) > 6000 || Math.abs(y) > 6000 || Math.abs(z) > 500) return null; pts.push([x, y, z]); }
       return customDef({ name: String(o.n || 'Shared track').slice(0, 24), closed: !!o.c, width: [26, 32, 40].includes(o.w) ? o.w : 32, look: GROUNDS[o.g] ? o.g : 'green', laps: [1, 3, 5, 10, 20].includes(o.l) ? o.l : 3, pts }, true);
     } catch { return null; }
   }
   /// A full track definition from what the designer keeps. Returns null if it is not drivable (when `check` is set).
   function customDef(d, check) {
     const look = GROUNDS[d.look] ? d.look : 'green', gr = GROUNDS[look];
-    const def = { id: 'c-' + hashStr(JSON.stringify([d.closed ? 1 : 0, d.width, look, d.pts])), name: d.name || 'My track', kind: '★ ' + (d.name || 'Mine').slice(0, 12), custom: true, closed: !!d.closed, width: d.width || 32, laps: d.closed ? (d.laps || 3) : 1, look, blurb: `Your own ${d.closed ? 'circuit' : 'sprint'}.`, ground: gr.ground, scenery: gr.scenery, grip: gr.grip, pts: d.pts.map((p) => [p[0] + 0, p[1] + 0]) };
+    const pts = d.pts.map((p) => [p[0] + 0, p[1] + 0, (p[2] || 0) + 0]);
+    const def = { id: 'c-' + hashStr(JSON.stringify([d.closed ? 1 : 0, d.width, look, pts])), name: d.name || 'My track', kind: '★ ' + (d.name || 'Mine').slice(0, 12), custom: true, closed: !!d.closed, width: d.width || 32, laps: d.closed ? (d.laps || 3) : 1, look, blurb: `Your own ${d.closed ? 'circuit' : 'sprint'}.`, ground: gr.ground, scenery: gr.scenery, grip: gr.grip, pts };
     if (check && !checkTrack(def).ok) return null;
     return def;
   }
@@ -589,11 +604,11 @@
   }
 
   function newCar(spec, x, y, h) {
-    return { spec, x, y, h, vx: 0, vy: 0, yaw: 0, steerA: 0, vf: 0, vl: 0, drifting: false, onGrass: false, bump: 0, gear: 0, rpm: spec.idle || 900, shiftT: 0, dmg: 0, spin: 0, pull: 0, hit: 0 };
+    return { spec, x, y, h, vx: 0, vy: 0, vz: 0, z: 0, yaw: 0, steerA: 0, vf: 0, vl: 0, drifting: false, onGrass: false, bump: 0, gear: 0, rpm: spec.idle || 900, shiftT: 0, dmg: 0, spin: 0, pull: 0, hit: 0 };
   }
 
   /// One physics step. `inp` is { throttle 0..1, brake 0..1, steer -1..1 (+ is right), hand 0/1 }. `surf` is 1 on the road, less on grass.
-  function stepCar(c, inp, dt, surf = 1) {
+  function stepCar(c, inp, dt, surf = 1, slope = 0) {
     const sp0 = c.spec, dmgK = 1 - 0.4 * c.dmg;        // a damaged car is slower, and its steering pulls to one side
     let sp = c.dmg > 0 ? { ...sp0, vmax: sp0.vmax * dmgK, accel: sp0.accel * (1 - 0.3 * c.dmg), grip: sp0.grip * (1 - 0.3 * c.dmg) } : sp0;
     // Boost (the battery) and DRS (the open rear wing): more power and less drag. A puncture or a dead engine takes it away.
@@ -607,6 +622,7 @@
     a -= 0.0002 * (1 - 0.4 * (c.tow || 0)) * vf0 * Math.abs(vf0) + (Math.abs(vf0) > 0.2 ? 0.35 * Math.sign(vf0) : 0);   // slipstream: less air drag when tucked in
     if (surf < 1) a -= (1 - surf) * 9 * Math.sign(vf0) * Math.min(1, Math.abs(vf0) / 12);
     if (inp.hand) a -= 7 * Math.sign(vf0) * Math.min(1, Math.abs(vf0) / 8);
+    a -= 9.8 * slope;                                                                                                       // gravity on slopes: uphill slows, downhill speeds up
     c.vx += fx * a * dt; c.vy += fy * a * dt;
     // Steering: the wheel angle fades with speed. The tyres can only hold so much sideways push, which is what makes
     // the car run wide when you ask too much, and slide when the back lets go (a loose car under power, or the handbrake).
@@ -1827,9 +1843,9 @@
     // ---- crashes you can see: sparks, flying bits of bodywork, smoke from a hurt car, flames from a wreck, tyre smoke
     function crash(r, x, y, speed, col) {
       const power = clamp(speed / 35, 0, 1), n = Math.min(70, 8 + speed * 1.6);
-      for (let i = 0; i < n; i++) { const a = Math.random() * 6.283, v = 4 + Math.random() * (6 + speed * 0.5); parts.push({ k: 'spark', x, y, z: 0.5, vx: Math.cos(a) * v + r.car.vx * 0.3, vy: Math.sin(a) * v + r.car.vy * 0.3, vz: 2 + Math.random() * 6, life: 0.25 + Math.random() * 0.45, size: 0.18 }); }
-      if (speed > 11) for (let i = 0; i < Math.min(16, speed / 2.5); i++) { const a = Math.random() * 6.283, v = 3 + Math.random() * speed * 0.35; parts.push({ k: 'debris', x, y, z: 0.6, vx: Math.cos(a) * v + r.car.vx * 0.4, vy: Math.sin(a) * v + r.car.vy * 0.4, vz: 2 + Math.random() * 7, life: 2 + Math.random() * 2.5, size: 0.25 + Math.random() * 0.55, col: Math.random() < 0.6 ? (r.color || r.car.spec.color) : col || '#222', rot: Math.random() * 6, vr: (Math.random() - 0.5) * 18 }); }
-      for (let i = 0; i < 3 + power * 6; i++) parts.push({ k: 'smoke', x: x + (Math.random() - 0.5) * 2, y: y + (Math.random() - 0.5) * 2, z: 0.5, vx: (Math.random() - 0.5) * 3, vy: (Math.random() - 0.5) * 3, vz: 1, life: 1 + Math.random(), size: 1 + power * 2, dark: 0.35 });
+      for (let i = 0; i < n; i++) { const a = Math.random() * 6.283, v = 4 + Math.random() * (6 + speed * 0.5); parts.push({ k: 'spark', x, y, z: 0.5 + (r.car.z || 0), vx: Math.cos(a) * v + r.car.vx * 0.3, vy: Math.sin(a) * v + r.car.vy * 0.3, vz: 2 + Math.random() * 6, life: 0.25 + Math.random() * 0.45, size: 0.18 }); }
+      if (speed > 11) for (let i = 0; i < Math.min(16, speed / 2.5); i++) { const a = Math.random() * 6.283, v = 3 + Math.random() * speed * 0.35; parts.push({ k: 'debris', x, y, z: 0.6 + (r.car.z || 0), vx: Math.cos(a) * v + r.car.vx * 0.4, vy: Math.sin(a) * v + r.car.vy * 0.4, vz: 2 + Math.random() * 7, life: 2 + Math.random() * 2.5, size: 0.25 + Math.random() * 0.55, col: Math.random() < 0.6 ? (r.color || r.car.spec.color) : col || '#222', rot: Math.random() * 6, vr: (Math.random() - 0.5) * 18 }); }
+      for (let i = 0; i < 3 + power * 6; i++) parts.push({ k: 'smoke', x: x + (Math.random() - 0.5) * 2, y: y + (Math.random() - 0.5) * 2, z: 0.5 + (r.car.z || 0), vx: (Math.random() - 0.5) * 3, vy: (Math.random() - 0.5) * 3, vz: 1, life: 1 + Math.random(), size: 1 + power * 2, dark: 0.35 });
       const near = me && Math.hypot(me.car.x - x, me.car.y - y);
       if (r === me) shake = Math.max(shake, clamp(speed / 22, 0.2, 1.4));
       // Into the barrier: the car check (tyres and damage) shows for a minute, and the engineer reads it out.
@@ -1845,9 +1861,9 @@
     /// What a car gives off each step: smoke when it is hurt (black and with flames when it is wrecked), and tyre smoke in a slide.
     function emit(r, dt) {
       const c = r.car, bx = c.x - Math.cos(c.h) * 1.8, by = c.y - Math.sin(c.h) * 1.8;
-      if (c.dmg > 0.4 && Math.random() < c.dmg * dt * 16) parts.push({ k: 'smoke', x: c.x + Math.cos(c.h) * 1.4, y: c.y + Math.sin(c.h) * 1.4, z: 1, vx: c.vx * 0.2 + (Math.random() - 0.5), vy: c.vy * 0.2 + (Math.random() - 0.5), vz: 1.6, life: 1.4 + Math.random(), size: 0.8 + c.dmg, dark: c.dmg > 0.75 ? 0.15 : 0.45 });
-      if (c.dmg > 0.92 && Math.random() < dt * 30) parts.push({ k: 'fire', x: c.x + Math.cos(c.h) * 1.2 + (Math.random() - 0.5), y: c.y + Math.sin(c.h) * 1.2 + (Math.random() - 0.5), z: 0.8, vx: c.vx * 0.5, vy: c.vy * 0.5, vz: 2.5, life: 0.35 + Math.random() * 0.3, size: 0.7 });
-      if ((c.drifting || (c.onGrass && Math.hypot(c.vx, c.vy) > 10)) && Math.random() < dt * 26) parts.push({ k: 'smoke', x: bx + (Math.random() - 0.5) * 1.6, y: by + (Math.random() - 0.5) * 1.6, z: 0.3, vx: (Math.random() - 0.5) * 1.5, vy: (Math.random() - 0.5) * 1.5, vz: 0.7, life: 0.8 + Math.random() * 0.6, size: 0.7, dark: c.onGrass ? 0.55 : 0.85, dust: c.onGrass });
+      if (c.dmg > 0.4 && Math.random() < c.dmg * dt * 16) parts.push({ k: 'smoke', x: c.x + Math.cos(c.h) * 1.4, y: c.y + Math.sin(c.h) * 1.4, z: 1 + (c.z || 0), vx: c.vx * 0.2 + (Math.random() - 0.5), vy: c.vy * 0.2 + (Math.random() - 0.5), vz: 1.6, life: 1.4 + Math.random(), size: 0.8 + c.dmg, dark: c.dmg > 0.75 ? 0.15 : 0.45 });
+      if (c.dmg > 0.92 && Math.random() < dt * 30) parts.push({ k: 'fire', x: c.x + Math.cos(c.h) * 1.2 + (Math.random() - 0.5), y: c.y + Math.sin(c.h) * 1.2 + (Math.random() - 0.5), z: 0.8 + (c.z || 0), vx: c.vx * 0.5, vy: c.vy * 0.5, vz: 2.5, life: 0.35 + Math.random() * 0.3, size: 0.7 });
+      if ((c.drifting || (c.onGrass && Math.hypot(c.vx, c.vy) > 10)) && Math.random() < dt * 26) parts.push({ k: 'smoke', x: bx + (Math.random() - 0.5) * 1.6, y: by + (Math.random() - 0.5) * 1.6, z: 0.3 + (c.z || 0), vx: (Math.random() - 0.5) * 1.5, vy: (Math.random() - 0.5) * 1.5, vz: 0.7, life: 0.8 + Math.random() * 0.6, size: 0.7, dark: c.onGrass ? 0.55 : 0.85, dust: c.onGrass });
     }
     function remoteSmoke(dt) { for (const r of racers) if (r.remote) emit(r, dt); return false; }
     function stepParts(dt) {
@@ -1878,7 +1894,7 @@
             if (field.every((x) => x.gridded)) st.cap = 0;
             inp = driveAI(T, c, st, dt);
           }
-          stepCar(c, inp, dt, 1); wallHit(c, T, locate(T, c.x, c.y, r.idx)); officialProgress(r);
+          stepCar(c, inp, dt, 1); const fLoc = locate(T, c.x, c.y, r.idx); c.z = trackHeight(T, fLoc); wallHit(c, T, fLoc); officialProgress(r);
           continue;
         }
         if (r.dsq) { c.vx = c.vy = 0; continue; }
@@ -1900,7 +1916,7 @@
           st.cap = cap; inp = driveAI(T, c, st, dt);
         } else inp = playerInput();
         stepCar(c, inp, dt, 1);
-        const after = locate(T, c.x, c.y, loc.idx); wallHit(c, T, after);
+        const after = locate(T, c.x, c.y, loc.idx); c.z = trackHeight(T, after); wallHit(c, T, after);
         progress(r, T, 0);
         // Stopped in (or next to) the box: lined up exactly on its marks.
         const vNow = Math.hypot(c.vx, c.vy), lat = Math.abs((c.x - box.x) * -Math.sin(box.h) + (c.y - box.y) * Math.cos(box.h));
@@ -2005,6 +2021,7 @@
             const age = Math.min(0.4, (performance.now() - r.net.at) / 1000), k = 1 - Math.exp(-dt * 9);
             const gx = r.net.x + r.net.vx * age, gy = r.net.y + r.net.vy * age;
             c.x += (gx - c.x) * k; c.y += (gy - c.y) * k; c.h += wrapPi(r.net.h - c.h) * k; c.vx = r.net.vx; c.vy = r.net.vy;
+            c.z = trackHeight(T, locate(T, c.x, c.y, r.idx));
           }
           continue;
         }
@@ -2043,9 +2060,11 @@
           c.tow = (c.tow || 0) + (want - (c.tow || 0)) * (1 - Math.exp(-dt * 4));      // builds up over a moment, not instantly
           r.towT = c.tow > 0.2 ? 0.3 : Math.max(0, (r.towT || 0) - dt);
         }
-        stepCar(c, inp, dt, surf);
+        const slope = trackSlope(T, c, loc);
+        stepCar(c, inp, dt, surf, slope);
         if (r.inLane && !r.official && c.vf < 0) { c.vx = c.vy = 0; c.vf = 0; }       // no reversing in the pit lane for race cars: the brake just holds the car
         const after = locate(T, c.x, c.y, loc.idx);
+        c.z = trackHeight(T, after);
         let imp = 0;
         if (P && rel > P.a - 20 && rel < P.b + 20 && after.lat * P.side > 0) {
           // The pit lane: an outer wall, and a pit wall between the lane and the track except at the entry and the exit.
@@ -2388,7 +2407,7 @@
       const yaw = cock ? c.h : chaseYaw, cs = Math.cos(yaw), sn = Math.sin(yaw);
       const jx = shake > 0 ? (Math.random() - 0.5) * shake * 0.5 : 0, jz = shake > 0 ? (Math.random() - 0.5) * shake * 0.3 : 0;
       const camBack = low ? 6.2 : 8.5, ex = (cock ? c.x - Math.cos(c.h) * 0.3 : c.x - cs * camBack) + jx, ey = (cock ? c.y - Math.sin(c.h) * 0.3 : c.y - sn * camBack) + jx;
-      const ez = (cock ? (sp.id === 'f1' ? 0.78 : 1.12) : low ? 1.9 : 3.1) + jz;
+      const ez = (cock ? (sp.id === 'f1' ? 0.78 : 1.12) : low ? 1.9 : 3.1) + jz + (c.z || 0);
       const F = (W / 2) / Math.tan((cock ? 1.3 : 1.12) / 2), hy = H * (cock ? 0.44 : low ? 0.4 : 0.36), NEAR = 0.35;
       let liftZ = 0;      // a car hanging from a recovery crane is drawn this high
       const cam = (x, y, z) => { const dx = x - ex, dy = y - ey; return [dx * cs + dy * sn, -dx * sn + dy * cs, z + liftZ - ez]; };
@@ -2403,10 +2422,13 @@
         if (out.length < 3) return;
         g.beginPath(); out.forEach((p, i) => { const q = scr(p); i ? g.lineTo(q[0], q[1]) : g.moveTo(q[0], q[1]); }); g.closePath(); g.fillStyle = fill; g.fill();
       };
-      // A strip along the road from offset o0 to o1 (metres, + is right), at height z0..z1 when it stands up (a barrier).
-      const strip = (a, b, o0, o1, fill, z0 = 0, z1 = 0) => {
-        if (z1 > z0) poly([cam(a.x + a.nx * o0, a.y + a.ny * o0, z0), cam(b.x + b.nx * o0, b.y + b.ny * o0, z0), cam(b.x + b.nx * o0, b.y + b.ny * o0, z1), cam(a.x + a.nx * o0, a.y + a.ny * o0, z1)], fill);
-        else poly([cam(a.x + a.nx * o0, a.y + a.ny * o0, z0), cam(b.x + b.nx * o0, b.y + b.ny * o0, z0), cam(b.x + b.nx * o1, b.y + b.ny * o1, z0), cam(a.x + a.nx * o1, a.y + a.ny * o1, z0)], fill);
+      // A strip along the road from offset o0 to o1 (metres, + is right), at height za at endpoint a and zb at endpoint b.
+      const strip = (a, b, o0, o1, fill, za = 0, zb = za) => {
+        poly([cam(a.x + a.nx * o0, a.y + a.ny * o0, za), cam(b.x + b.nx * o0, b.y + b.ny * o0, zb), cam(b.x + b.nx * o1, b.y + b.ny * o1, zb), cam(a.x + a.nx * o1, a.y + a.ny * o1, za)], fill);
+      };
+      // A vertical face (a barrier or wall) at offset o, from base height za at a to base height zb at b, rising H metres.
+      const bar = (a, b, o, fill, za, zb, H) => {
+        poly([cam(a.x + a.nx * o, a.y + a.ny * o, za), cam(b.x + b.nx * o, b.y + b.ny * o, zb), cam(b.x + b.nx * o, b.y + b.ny * o, zb + H), cam(a.x + a.nx * o, a.y + a.ny * o, za + H)], fill);
       };
       const box = (x, y, h, z0, L, Wd, Hh, col) => {
         const ca = Math.cos(h), sa = Math.sin(h), pt = (u, v, z) => cam(x + ca * u - sa * v, y + sa * u + ca * v, z);
@@ -2420,11 +2442,11 @@
       const carModel = (r) => {
         const k = r.car, col = r.color || k.spec.color, dm = 1, body = col;      // damage shows in how the car drives (and the smoke), not as black paint
         // Its shadow on the road, so it is plainly standing on it.
-        { const ca = Math.cos(k.h), sa = Math.sin(k.h), hl = CAR_LEN / 2 + 0.5, hw = CAR_W / 2 + 0.45, pt = (u, v) => cam(k.x + ca * u - sa * v, k.y + sa * u + ca * v, 0.02);
+        { const ca = Math.cos(k.h), sa = Math.sin(k.h), hl = CAR_LEN / 2 + 0.5, hw = CAR_W / 2 + 0.45, pt = (u, v) => cam(k.x + ca * u - sa * v, k.y + sa * u + ca * v, 0.02 + (k.z || 0));
           poly([pt(hl, -hw), pt(hl, hw), pt(-hl, hw), pt(-hl, -hw)], 'rgba(0,0,0,.38)'); }
         if (k.spec.id === 'f1') {
           // An open-wheel car built from shaped pieces (footprints in car space, u forward and v right), drawn together far to near.
-          const ca = Math.cos(k.h), sa = Math.sin(k.h), at = (u, v, z) => cam(k.x + ca * u - sa * v, k.y + sa * u + ca * v, z), F = [];
+          const ca = Math.cos(k.h), sa = Math.sin(k.h), at = (u, v, z) => cam(k.x + ca * u - sa * v, k.y + sa * u + ca * v, z + (k.z || 0)), F = [];
           const solid = (fp, z0, z1, col) => {
             for (let i = 0; i < fp.length; i++) { const p = fp[i], q = fp[(i + 1) % fp.length]; F.push({ v: [at(p[0], p[1], z0), at(q[0], q[1], z0), at(q[0], q[1], z1), at(p[0], p[1], z1)], col: shade(col, i % 2 ? 0.66 : 0.82) }); }
             F.push({ v: fp.map((p) => at(p[0], p[1], z1)), col: shade(col, 1.05) });
@@ -2456,7 +2478,7 @@
         } else {
           // A road or race car from its silhouette: a lower body with a shaped nose and tail, a glass cabin whose screens
           // slope, lights, wings and four round wheels, all drawn together far to near.
-          const ca = Math.cos(k.h), sa = Math.sin(k.h), at = (u, v, z) => cam(k.x + ca * u - sa * v, k.y + sa * u + ca * v, z), F = [];
+          const ca = Math.cos(k.h), sa = Math.sin(k.h), at = (u, v, z) => cam(k.x + ca * u - sa * v, k.y + sa * u + ca * v, z + (k.z || 0)), F = [];
           const face = (pts, col) => F.push({ v: pts, col });
           const solid = (fp, z0, z1, col) => { for (let i = 0; i < fp.length; i++) { const p = fp[i], q = fp[(i + 1) % fp.length]; face([at(p[0], p[1], z0), at(q[0], q[1], z0), at(q[0], q[1], z1), at(p[0], p[1], z1)], shade(col, i % 2 ? 0.68 : 0.84)); } face(fp.map((p) => at(p[0], p[1], z1)), shade(col, 1.06)); };
           // A frustum: a footprint at z0 and a (smaller) one at z1: sloping screens and a roof.
@@ -2509,14 +2531,14 @@
         const leave = r.crewLeave ? clamp((clock - (r.crewLeave - 2.5)) / 2.5, 0, 1) : 0;   // walking back to the wall after the stop
         const person = (bu, bv, col, reach) => {
           const [wx, wy] = at(bu, bv + leave * (bv > 0 ? 7 : -7));
-          box(wx, wy, c.h, 0, 0.24, 0.36, 0.85, '#1f2430');                 // legs
-          box(wx, wy, c.h, 0.85, 0.28, 0.5, 0.62, col);                    // overalls
-          box(wx, wy, c.h, 1.47, 0.2, 0.2, 0.24, '#e9b98e');               // head
-          box(wx, wy, c.h, 1.6, 0.23, 0.22, 0.08, '#f2f2f2');              // helmet
+          box(wx, wy, c.h, c.z, 0.24, 0.36, 0.85, '#1f2430');                 // legs
+          box(wx, wy, c.h, c.z + 0.85, 0.28, 0.5, 0.62, col);                    // overalls
+          box(wx, wy, c.h, c.z + 1.47, 0.2, 0.2, 0.24, '#e9b98e');               // head
+          box(wx, wy, c.h, c.z + 1.6, 0.23, 0.22, 0.08, '#f2f2f2');              // helmet
           if (reach) {                                                     // an arm out to the wheel, with the gun
             const [tx, ty] = at(reach[0], reach[1]), dx = tx - wx, dy = ty - wy, len = Math.hypot(dx, dy) || 0.1, ang = Math.atan2(dy, dx);
-            box((wx + tx) / 2, (wy + ty) / 2, ang, 1.12, len, 0.12, 0.12, col);
-            box(tx, ty, ang, 1.1, 0.22, 0.12, 0.14, '#f5c400');
+            box((wx + tx) / 2, (wy + ty) / 2, ang, c.z + 1.12, len, 0.12, 0.12, col);
+            box(tx, ty, ang, c.z + 1.1, 0.22, 0.12, 0.14, '#f5c400');
           }
         };
         // Four wheel gunners: out beside their wheel, stepping in and reaching for the nut while their wheel is off.
@@ -2527,11 +2549,11 @@
           person(bu, bv, r.color || c.spec.color, ramp > 0 ? [wu, wv] : null);
         }
         person(-1.8, 0, '#f5f5f5');                                        // the jack man, at the rear
-        if (u > 0.03 && u < 0.14) { const [jx, jy] = at(-0.3, 0); box(jx, jy, c.h, 0, 0.7, 0.3, 0.12, '#8a949e'); }   // the jack
+        if (u > 0.03 && u < 0.14) { const [jx, jy] = at(-0.3, 0); box(jx, jy, c.h, c.z, 0.7, 0.3, 0.12, '#8a949e'); }   // the jack
         person(2.8, -3.4, '#f5f5f5');                                      // the tyre carrier
-        if (u > 0.09 && u < 0.34) { const [ax, ay] = at(2.8, -3.4); box(ax, ay, c.h, 0.6, 0.45, 0.2, 0.45, '#111'); }   // a tyre
+        if (u > 0.09 && u < 0.34) { const [ax, ay] = at(2.8, -3.4); box(ax, ay, c.h, c.z + 0.6, 0.45, 0.2, 0.45, '#111'); }   // a tyre
         person(4.8, 2.6, '#e8e8e8');                                       // the engineer
-        const [bx, by] = at(4.8, 2.6); box(bx, by, c.h, 1.3, 0.05, 0.9, 0.6, '#ffffff');   // the pit board
+        const [bx, by] = at(4.8, 2.6); box(bx, by, c.h, c.z + 1.3, 0.05, 0.9, 0.6, '#ffffff');   // the pit board
       };
 
       for (const r of racers) {
@@ -2544,16 +2566,18 @@
       }
       // Recovery cranes: a yellow truck behind the barrier, its arm over the car and a cable down to it.
       for (const k of cranes) {
-        let kk = locate(T, k.x, k.y).idx - idx0; if (T.closed) { if (kk > T.m / 2) kk -= T.m; if (kk < -T.m / 2) kk += T.m; }
+        let kk = (locate(T, k.x, k.y).idx) - idx0; if (T.closed) { if (kk > T.m / 2) kk -= T.m; if (kk < -T.m / 2) kk += T.m; }
         if (kk < -back || kk > N) continue;
+        const kLoc = locate(T, k.x, k.y);       // track sample the crane is nearest to: for its ground height
         put(Math.max(kk - 1, -back), () => {
-          box(k.x, k.y, k.h, 0.3, 6.5, 2.5, 2.4, '#e8b400'); box(k.x + Math.cos(k.h) * 3.6, k.y + Math.sin(k.h) * 3.6, k.h, 0.3, 1.8, 2.4, 2.9, '#c99a00');
-          const c = k.r.car, tip = [c.x, c.y, 3.2 + (k.r.lift || 0) + 2.2], base = [k.x, k.y, 2.9];
+          const kZ = trackHeight(T, kLoc);
+          box(k.x, k.y, k.h, 0.3 + kZ, 6.5, 2.5, 2.4, '#e8b400'); box(k.x + Math.cos(k.h) * 3.6, k.y + Math.sin(k.h) * 3.6, k.h, 0.3 + kZ, 1.8, 2.4, 2.9, '#c99a00');
+          const c = k.r.car, tip = [c.x, c.y, 3.2 + (k.r.lift || 0) + 2.2 + (c.z || 0)], base = [k.x, k.y, 2.9 + kZ];
           const A = cam(base[0], base[1], base[2]), B = cam(tip[0], tip[1], tip[2]);
           if (A[0] > NEAR && B[0] > NEAR) {
             const [ax, ay] = scr(A), [bx, by] = scr(B), w = Math.max(1.5, (F / A[0]) * 0.45);
             g.strokeStyle = '#f2c200'; g.lineWidth = w; g.lineCap = 'round'; g.beginPath(); g.moveTo(ax, ay); g.lineTo(bx, by); g.stroke();
-            const C2 = cam(c.x, c.y, 1.3 + (k.r.lift || 0)); if (C2[0] > NEAR) { const [cx, cy] = scr(C2); g.strokeStyle = '#222'; g.lineWidth = Math.max(1, w * 0.25); g.beginPath(); g.moveTo(bx, by); g.lineTo(cx, cy); g.stroke(); }
+            const C2 = cam(c.x, c.y, 1.3 + (k.r.lift || 0) + (c.z || 0)); if (C2[0] > NEAR) { const [cx, cy] = scr(C2); g.strokeStyle = '#222'; g.lineWidth = Math.max(1, w * 0.25); g.beginPath(); g.moveTo(bx, by); g.lineTo(cx, cy); g.stroke(); }
           }
         });
       }
@@ -2563,34 +2587,34 @@
         if (T.closed) i = ((i % T.m) + T.m) % T.m; else if (i < 0 || i >= T.m - 1) continue;
         const a = T.S[i], b = T.S[T.closed ? (i + 1) % T.m : i + 1], band = Math.floor(a.s / 12) % 2;
         strip(a, b, -wall - 60, -wd - 1.2, shade(ground, band ? 0.93 : 1.04)); strip(a, b, wd + 1.2, wall + 60, shade(ground, band ? 0.93 : 1.04));
-        strip(a, b, -wd, wd, band ? '#383b42' : road);
+        strip(a, b, -wd, wd, band ? '#383b42' : road, a.z, b.z);
         const kerb = Math.floor(a.s / 4) % 2 ? '#e8e8e8' : '#d63a3a', curvy = Math.abs(a.k) > 0.004;
-        strip(a, b, -wd - 1.2, -wd, curvy ? kerb : '#e8e8e8'); strip(a, b, wd, wd + 1.2, curvy ? kerb : '#e8e8e8');
-        if (Math.floor(a.s / 8) % 2 === 0) strip(a, b, -0.18, 0.18, 'rgba(255,255,255,.75)');
-        if (i === 0 || (!T.closed && i >= T.m - 3)) for (let q = 0; q < 8; q++) strip(a, b, -wd + (q * T.width) / 8, -wd + ((q + 1) * T.width) / 8, q % 2 ? '#111' : '#fff');
+        strip(a, b, -wd - 1.2, -wd, curvy ? kerb : '#e8e8e8', a.z, b.z); strip(a, b, wd, wd + 1.2, curvy ? kerb : '#e8e8e8', a.z, b.z);
+        if (Math.floor(a.s / 8) % 2 === 0) strip(a, b, -0.18, 0.18, 'rgba(255,255,255,.75)', a.z + 0.01, b.z + 0.01);
+        if (i === 0 || (!T.closed && i >= T.m - 3)) for (let q = 0; q < 8; q++) strip(a, b, -wd + (q * T.width) / 8, -wd + ((q + 1) * T.width) / 8, q % 2 ? '#111' : '#fff', a.z, b.z);
         if (me && me.retiring && Pd0) {        // retiring: a green line from where you are, into the pit lane, to your box
           const rd = relS(T, a.s), meRel = relS(T, me.sNow || 0), boxR = me.boxS ?? Pd0.box;
           let ahead = rd - meRel; if (ahead < -5) ahead += T.length;
           const toEntry = Pd0.a - rd;
           if (ahead >= 0 && ahead < 900 && (rd < boxR || toEntry > 0 || ahead < T.length / 2)) {
             const intoLane = rd > Pd0.a ? Pd0.side * Pd0.lane : toEntry < 160 ? Pd0.side * (Pd0.lane * (1 - toEntry / 160)) : 0;
-            if (!(rd > boxR && rd < Pd0.b)) strip(a, b, intoLane - 0.6, intoLane + 0.6, 'rgba(60,230,120,.75)');
+            if (!(rd > boxR && rd < Pd0.b)) strip(a, b, intoLane - 0.6, intoLane + 0.6, 'rgba(60,230,120,.75)', a.z, b.z);
           }
         }
         for (const gb of gridMarks) {          // grid boxes: a white line across the front of each place, and short legs back
           let d = gb.s - a.s; if (T.closed) d = ((d % T.length) + T.length) % T.length;
           if (d < 0 || d >= T.step) continue;
-          const px = a.x + a.tx * d, py = a.y + a.ty * d, ln = (u0, u1, v0, v1) => poly([cam(px + a.tx * u0 + a.nx * v0, py + a.ty * u0 + a.ny * v0, 0.01), cam(px + a.tx * u0 + a.nx * v1, py + a.ty * u0 + a.ny * v1, 0.01), cam(px + a.tx * u1 + a.nx * v1, py + a.ty * u1 + a.ny * v1, 0.01), cam(px + a.tx * u1 + a.nx * v0, py + a.ty * u1 + a.ny * v0, 0.01)], '#f4f4f4');
+          const px = a.x + a.tx * d, py = a.y + a.ty * d, pz = (a.z || 0) + ((b.z || 0) - (a.z || 0)) * (d / T.step), ln = (u0, u1, v0, v1) => poly([cam(px + a.tx * u0 + a.nx * v0, py + a.ty * u0 + a.ny * v0, pz + 0.01), cam(px + a.tx * u0 + a.nx * v1, py + a.ty * u0 + a.ny * v1, pz + 0.01), cam(px + a.tx * u1 + a.nx * v1, py + a.ty * u1 + a.ny * v1, pz + 0.01), cam(px + a.tx * u1 + a.nx * v0, py + a.ty * u1 + a.ny * v0, pz + 0.01)], '#f4f4f4');
           ln(-0.25, 0.25, gb.o - 1.9, gb.o + 1.9); ln(-2.4, 0, gb.o - 1.9, gb.o - 1.65); ln(-2.4, 0, gb.o + 1.65, gb.o + 1.9);
         }
         // Scenery: deterministic from the sample number, so it is always in the same place.
         const h1 = hash01(i, 3);
         if (T.scenery !== 'none' && h1 < 0.18) {
           const side = hash01(i, 5) < 0.5 ? -1 : 1, off = side * (wall + 6 + hash01(i, 7) * 34), x = a.x + a.nx * off, y = a.y + a.ny * off;
-          if (T.scenery === 'blocks') box(x, y, Math.atan2(a.ty, a.tx), 0, 16, 12, 8 + hash01(i, 9) * 26, ['#7d8590', '#9a8f84', '#6f7e8c', '#a3a3a3'][Math.floor(hash01(i, 11) * 4)]);
-          else if (T.scenery === 'tyres') box(x, y, 0, 0, 1.4, 1.4, 1.2, '#1b1b1b');
+          if (T.scenery === 'blocks') box(x, y, Math.atan2(a.ty, a.tx), a.z, 16, 12, 8 + hash01(i, 9) * 26, ['#7d8590', '#9a8f84', '#6f7e8c', '#a3a3a3'][Math.floor(hash01(i, 11) * 4)]);
+          else if (T.scenery === 'tyres') box(x, y, 0, a.z, 1.4, 1.4, 1.2, '#1b1b1b');
           else {
-            const p = cam(x, y, 0);
+            const p = cam(x, y, a.z);
             if (p[0] > NEAR) {
               const [sx, sy] = scr(p), u = F / p[0], hgt = (T.scenery === 'cacti' ? 4 : 9 + hash01(i, 13) * 6) * u;
               if (T.scenery === 'pines') { g.fillStyle = '#5a3d22'; g.fillRect(sx - 0.25 * u, sy - hgt * 0.25, 0.5 * u, hgt * 0.25); g.fillStyle = T.ground === GROUND.snow ? '#2f5a44' : '#244d2c'; g.beginPath(); g.moveTo(sx, sy - hgt); g.lineTo(sx - 2.4 * u, sy - hgt * 0.2); g.lineTo(sx + 2.4 * u, sy - hgt * 0.2); g.fill(); }
@@ -2605,7 +2629,7 @@
           const ox = (u, v) => [a.x + a.tx * u + a.nx * side * (wall + v), a.y + a.ty * u + a.ny * side * (wall + v)];
           const shirts = ['#e63946', '#f4a261', '#2a9d8f', '#e9c46a', '#8ab17d', '#ffffff', '#457b9d', '#c77dff'];
           for (let j = 0; j < 3; j++) {
-            const off = 4 + j * 2.2, z0 = j * 0.9;
+            const off = 4 + j * 2.2, z0 = a.z + j * 0.9;
             const [cx, cy] = ox(L / 2, off + 1.1);
             box(cx, cy, hd, z0, L, 2.2, 0.9, j % 2 ? '#3a4150' : '#2d3442');     // the tier's seats
             for (let k = 0; k < 9; k++) {
@@ -2623,24 +2647,24 @@
           // The pit lane: tarmac out to the outer wall, a white pit wall between it and the track (open at the entry and exit),
           // a dashed lane line and the box marked in yellow.
           const sd = Pd.side, midD = relD > Pd.a + 80 && relD < Pd.b - 80;
-          strip(a, b, sd * (wd + 1.2), sd * Pd.outer, '#3b3e45');
-          if (me && me.retiring && relD < (me.boxS ?? Pd.box) + 3) strip(a, b, sd * Pd.lane - 0.6, sd * Pd.lane + 0.6, 'rgba(60,230,120,.75)');
-          if (Math.floor(a.s / 6) % 2 === 0) strip(a, b, sd * (Pd.lane - 3.6), sd * (Pd.lane - 3.3), '#e8e8e8');
+          strip(a, b, sd * (wd + 1.2), sd * Pd.outer, '#3b3e45', a.z, b.z);
+          if (me && me.retiring && relD < (me.boxS ?? Pd.box) + 3) strip(a, b, sd * Pd.lane - 0.6, sd * Pd.lane + 0.6, 'rgba(60,230,120,.75)', a.z, b.z);
+          if (Math.floor(a.s / 6) % 2 === 0) strip(a, b, sd * (Pd.lane - 3.6), sd * (Pd.lane - 3.3), '#e8e8e8', a.z, b.z);
           if (relD < Pd.a + 80) {        // the entry: a solid white line peeling off the track, and chevrons pointing in
             const k0 = (relD - Pd.a) / 80, o = T.width / 2 + (Pd.inner - T.width / 2) * k0;
-            strip(a, b, sd * o, sd * (o + 0.35), '#ffffff');
-            if (Math.floor(relD / 8) % 2 === 0) strip(a, b, sd * (o + 1.5), sd * (Pd.outer - 1), 'rgba(255,255,255,.55)');
+            strip(a, b, sd * o, sd * (o + 0.35), '#ffffff', a.z, b.z);
+            if (Math.floor(relD / 8) % 2 === 0) strip(a, b, sd * (o + 1.5), sd * (Pd.outer - 1), 'rgba(255,255,255,.55)', a.z, b.z);
           }
-          if (relD > Pd.b - 80) { const k0 = (Pd.b - relD) / 80, o = T.width / 2 + (Pd.inner - T.width / 2) * k0; strip(a, b, sd * o, sd * (o + 0.35), '#ffffff'); }
-          for (const r of racers) if (r.boxS != null && Math.abs(relD - r.boxS) < 6 && (Math.abs(relD - r.boxS) > 4.5)) strip(a, b, sd * (Pd.lane - 3.3), sd * (Pd.lane + 3.3), r === me ? '#4fe09a' : '#ffd23f');
-          if (midD) strip(a, b, sd * Pd.inner, sd * Pd.inner, '#e6e6e6', 0, 1.1);
-          strip(a, b, sd * Pd.outer, sd * Pd.outer, '#b9bec6', 0, 1.6);
-          strip(a, b, -sd * wall, -sd * wall, bc, 0, 0.95);
-        } else { strip(a, b, -wall, -wall, bc, 0, 0.95); strip(a, b, wall, wall, bc, 0, 0.95); }
+          if (relD > Pd.b - 80) { const k0 = (Pd.b - relD) / 80, o = T.width / 2 + (Pd.inner - T.width / 2) * k0; strip(a, b, sd * o, sd * (o + 0.35), '#ffffff', a.z, b.z); }
+          for (const r of racers) if (r.boxS != null && Math.abs(relD - r.boxS) < 6 && (Math.abs(relD - r.boxS) > 4.5)) strip(a, b, sd * (Pd.lane - 3.3), sd * (Pd.lane + 3.3), r === me ? '#4fe09a' : '#ffd23f', a.z, b.z);
+          if (midD) bar(a, b, sd * Pd.inner, '#e6e6e6', a.z, b.z, 1.1);
+          bar(a, b, sd * Pd.outer, '#b9bec6', a.z, b.z, 1.6);
+          bar(a, b, -sd * wall, bc, a.z, b.z, 0.95);
+        } else { bar(a, b, -wall, bc, a.z, b.z, 0.95); bar(a, b, wall, bc, a.z, b.z, 0.95); }
         const items = bucket.get(k); if (items) items.forEach((f) => f());
       }
       // The pit entry, marked so you can find it: a "PIT IN" board over the entry while it is ahead of you.
-      { const Pd = pitInfo(T); if (Pd && !me.inLane) { const ei = ((Math.round((Pd.a + 25) / T.step) % T.m) + T.m) % T.m, q = T.S[ei], pc = cam(q.x + q.nx * Pd.side * Pd.lane, q.y + q.ny * Pd.side * Pd.lane, 3.2); if (pc[0] > NEAR && pc[0] < 600) { const [sx, sy] = scr(pc), k = clamp(40 / pc[0], 0.45, 1.4); g.font = `900 ${Math.round(15 * k * dpr)}px system-ui`; const tw = g.measureText('PIT IN').width; g.fillStyle = 'rgba(10,12,18,.85)'; g.fillRect(sx - tw / 2 - 8 * k * dpr, sy - 20 * k * dpr, tw + 16 * k * dpr, 26 * k * dpr); g.fillStyle = '#ffd23f'; g.textAlign = 'center'; g.fillText('PIT IN', sx, sy); } } }
+      { const Pd = pitInfo(T); if (Pd && !me.inLane) { const ei = ((Math.round((Pd.a + 25) / T.step) % T.m) + T.m) % T.m, q = T.S[ei], pc = cam(q.x + q.nx * Pd.side * Pd.lane, q.y + q.ny * Pd.side * Pd.lane, 3.2 + (q.z || 0)); if (pc[0] > NEAR && pc[0] < 600) { const [sx, sy] = scr(pc), k = clamp(40 / pc[0], 0.45, 1.4); g.font = `900 ${Math.round(15 * k * dpr)}px system-ui`; const tw = g.measureText('PIT IN').width; g.fillStyle = 'rgba(10,12,18,.85)'; g.fillRect(sx - tw / 2 - 8 * k * dpr, sy - 20 * k * dpr, tw + 16 * k * dpr, 26 * k * dpr); g.fillStyle = '#ffd23f'; g.textAlign = 'center'; g.fillText('PIT IN', sx, sy); } } }
       // Smoke, flames, sparks and bits of car, far to near.
       const ps = parts.map((p) => ({ p, c: cam(p.x, p.y, p.z) })).filter((o) => o.c[0] > (o.p.k === 'smoke' ? 4 : NEAR) && o.c[0] < 300).sort((a, b) => b.c[0] - a.c[0]);
       for (const { p, c: pc } of ps) {
@@ -2918,6 +2942,6 @@
     setSoundEnabled: (on) => { window.NotchHostSound = !!on; const c = window.NotchRaceGame.current; if (c) c.setSoundEnabled(on); },
     resume: () => { const c = window.NotchRaceGame.current; if (c) c.resume(); },
     current: null,
-    _test: { parseRequest, generateTrack, traceImage, simplifyPts, pitInfo, relS, fence, checkTrack, encodeTrack, decodeTrack, customDef, GROUNDS, TRACKS, F1_CAL, matchF1, CARS, buildTrack, locate, gridSlot, newCar, stepCar, driveAI, newRacer, progress, ranking, collide, wallHit, hurt, gearbox, NET, fmt, LEVELS },
+    _test: { parseRequest, generateTrack, traceImage, simplifyPts, pitInfo, relS, fence, checkTrack, encodeTrack, decodeTrack, customDef, GROUNDS, TRACKS, F1_CAL, matchF1, CARS, buildTrack, locate, trackHeight, trackSlope, gridSlot, newCar, stepCar, driveAI, newRacer, progress, ranking, collide, wallHit, hurt, gearbox, NET, fmt, LEVELS },
   };
 })();

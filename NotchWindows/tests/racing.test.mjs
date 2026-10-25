@@ -307,3 +307,51 @@ test('the 2026 F1 calendar: 24 real circuits, each drivable, at its real length,
   }
   assert.equal(R.matchF1('build Yas Marina').id, 'f1ae'); assert.equal(R.matchF1('a Monza style track'), null); assert.equal(R.matchF1('a fast track'), null);
 });
+
+// ---- hills: 3D elevation
+test('a track with elevation round-trips through sharing and gains z on its samples', () => {
+  const pts = Array.from({ length: 12 }, (_, i) => [Math.round(Math.cos((i / 12) * Math.PI * 2) * 420), Math.round(Math.sin((i / 12) * Math.PI * 2) * 300), (i === 0 ? 0 : i * 5)]);
+  const def = R.customDef({ name: 'Hilly loop', closed: true, width: 40, look: 'snow', laps: 5, pts });
+  const code = R.encodeTrack(def), back = R.decodeTrack(code);
+  assert.ok(code.startsWith('NR1') && back, 'decoded');
+  assert.deepEqual(back.pts, def.pts, 'points survived the round-trip');
+  assert.equal(back.id, def.id, 'id survived the round-trip');
+  const T = R.buildTrack(def);
+  assert.ok(T.S.every((q) => q.z !== undefined), 'every sample has a z');
+  assert.ok(Math.abs(T.S[0].z) < 0.1, 'the start is at ground level');
+  assert.ok(T.S.some((q) => q.z > 5), 'some samples are uphill');
+});
+
+test('trackHeight and trackSlope find the elevation and gradient at a position', () => {
+  const T = R.buildTrack(R.TRACKS.find((t) => t.id === 'zandvoort'));
+  const loc = R.locate(T, T.S[0].x, T.S[0].y, 0);
+  assert.ok(Math.abs(R.trackHeight(T, loc) - (T.S[0].z || 0)) < 0.1, 'height matches the nearest sample');
+  // On a flat track the slope is zero everywhere.
+  assert.ok(Math.abs(R.trackSlope(T, { x: 0, y: 0, z: 0, h: 0 }, loc)) < 0.001, 'flat track has no slope');
+});
+
+test('gravity on slopes: uphill slows a coasting car, downhill speeds it up', () => {
+  // A flat track — we test gravity directly through stepCar's slope parameter.
+  const T = R.buildTrack(R.TRACKS.find((t) => t.id === 'zandvoort'));
+  const c = R.newCar(R.CARS.find((x) => x.id === 'gt'), T.S[0].x + T.S[0].nx * (T.width / 2 - 2), T.S[0].y + T.S[0].ny * (T.width / 2 - 2), Math.atan2(T.S[0].ty, T.S[0].tx));
+  c.vx = Math.cos(c.h) * 15; c.vy = Math.sin(c.h) * 15;          // rolling at a modest speed
+  const v0 = Math.hypot(c.vx, c.vy);
+  // Uphill: the car should slow down.
+  let cu = { ...c }; R.stepCar(cu, { throttle: 0, brake: 0, steer: 0, hand: 0 }, 1 / 60, 1, 0.08);
+  assert.ok(Math.hypot(cu.vx, cu.vy) < v0, 'uphill slope slows the car');
+  // Downhill: the car should speed up.
+  let cd = { ...c }; R.stepCar(cd, { throttle: 0, brake: 0, steer: 0, hand: 0 }, 1 / 60, 1, -0.08);
+  assert.ok(Math.hypot(cd.vx, cd.vy) > v0, 'downhill slope speeds the car up');
+});
+
+test('a round code with z elevation produces a drivable track', () => {
+  const pts = Array.from({ length: 16 }, (_, i) => { const a = (i / 16) * Math.PI * 2; return [Math.round(Math.cos(a) * 500), Math.round(Math.sin(a) * 350), i < 8 ? i * 8 : (16 - i) * 8]; });
+  const def = R.customDef({ name: 'Roller', closed: true, width: 40, look: 'hills', pts });
+  const back = R.decodeTrack(R.encodeTrack(def));
+  assert.ok(back, 'decoded from a code');
+  const T = R.buildTrack(back); T.laps = 1;
+  const r = R.newRacer('ai', 'ai', R.CARS.find((x) => x.id === 'gt3' || x.id === 'gt'), T, 0);
+  const st = { idx: -1, lane: 0, skill: 0.9, stuck: 0, rev: 0, go: true };
+  let t = 0; while (!r.finished && t < 300) { R.stepCar(r.car, R.driveAI(T, r.car, st, 1 / 60), 1 / 60, 1, R.trackSlope(T, r.car, R.locate(T, r.car.x, r.car.y, r.idx))); R.progress(r, T, t); t += 1 / 60; r.car.z = R.trackHeight(T, R.locate(T, r.car.x, r.car.y, r.idx)); }
+  assert.ok(r.finished, 'the AI finished the hilly track');
+});

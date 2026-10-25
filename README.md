@@ -72,10 +72,10 @@ Pick your computer. Both buttons start the download straight away. The Mac link 
   </tr>
   <tr>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.1.59.2</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.1.60</b></a>
     </td>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 2.1.59.2 BETA</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 2.1.60 BETA</b></a>
     </td>
   </tr>
   <tr>
@@ -243,8 +243,9 @@ All screenshots use sample data.
 
 - Plane: leaving the game while you are in a shared Battle now also leaves the room and stops its background timers, so it no longer keeps a connection open.
 - Racing: other drivers' names in a shared race are cleaned of markup before they are shown.
+- Racing: 3D hills — tracks now have elevation. The 3D view draws every track with its ups and downs, car physics respond to gravity on slopes (uphill slows you, downhill speeds you up), and the track editor can set a height on any point.
 
-### Mac 2.1.59.2 · Windows 2.1.59.2 BETA · 25 October 2026 · 🏎️ Louder crowd cheers
+### Mac 2.1.60 · Windows 2.1.60 BETA · 25 October 2026 · 🏔️ Racing: hills and elevation in the 3D view
 
 - Racing: the grandstand crowd's cheering sound is louder and reaches full volume instantly (was ramping up over half a second and cutting off), with a third frequency band for a fuller, more crowd-like swell.
 
