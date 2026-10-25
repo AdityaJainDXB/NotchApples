@@ -1677,9 +1677,9 @@
     function crowdSound(v) {
       if (!soundOn || !audioUp() || !au) return;
       const t = ac.currentTime;
-      for (const [f, q, g0] of [[1300, 0.6, 0.14], [2100, 0.8, 0.05]]) {
+      for (const [f, q, g0] of [[800, 1.0, 0.2], [1300, 0.6, 0.3], [2100, 0.8, 0.15]]) {
         const sr = ac.createBufferSource(); sr.buffer = au.nb; sr.loop = true; const fl = ac.createBiquadFilter(); fl.type = 'bandpass'; fl.frequency.value = f; fl.Q.value = q;
-        const gg = ac.createGain(); gg.gain.setValueAtTime(0.0001, t); gg.gain.exponentialRampToValueAtTime(g0 * v, t + 0.5); gg.gain.exponentialRampToValueAtTime(0.0001, t + 2.6);
+        const gg = ac.createGain(); gg.gain.setValueAtTime(0.0001, t); gg.gain.exponentialRampToValueAtTime(g0 * v, t + 0.05); gg.gain.exponentialRampToValueAtTime(0.0001, t + 2.6);
         sr.connect(fl); fl.connect(gg); gg.connect(au.master); sr.start(t, Math.random()); sr.stop(t + 2.7);
       }
     }

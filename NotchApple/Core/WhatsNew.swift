@@ -20,6 +20,9 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.1.59.2", date: "25 October 2026", headline: "Louder crowd cheers", items: [
+            "Racing: the grandstand crowd's cheering sound is louder and reaches full volume instantly (was ramping up over half a second and cutting off), with a third frequency band for a fuller, more crowd-like swell.",
+        ]),
         ReleaseNote(version: "2.1.59.1", date: "25 October 2026", headline: "Crowd cheer fix", items: [
             "Racing: the grandstand crowd's cheering sound now plays for the full 2.7 seconds instead of cutting off at 1-2 (the noise buffer wasn't set to loop).",
         ]),

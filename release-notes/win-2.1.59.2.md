@@ -1,0 +1,3 @@
+## Notch Apple for Windows 2.1.59.2 (BETA)
+
+- Racing: the grandstand crowd's cheering sound is louder and reaches full volume instantly, with a third frequency band for a fuller, more crowd-like swell.

@@ -72,10 +72,10 @@ Pick your computer. Both buttons start the download straight away. The Mac link 
   </tr>
   <tr>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.1.59.1</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.1.59.2</b></a>
     </td>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 2.1.59.1 BETA</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 2.1.59.2 BETA</b></a>
     </td>
   </tr>
   <tr>
@@ -243,6 +243,10 @@ All screenshots use sample data.
 
 - Plane: leaving the game while you are in a shared Battle now also leaves the room and stops its background timers, so it no longer keeps a connection open.
 - Racing: other drivers' names in a shared race are cleaned of markup before they are shown.
+
+### Mac 2.1.59.2 · Windows 2.1.59.2 BETA · 25 October 2026 · 🏎️ Louder crowd cheers
+
+- Racing: the grandstand crowd's cheering sound is louder and reaches full volume instantly (was ramping up over half a second and cutting off), with a third frequency band for a fuller, more crowd-like swell.
 
 ### Mac 2.1.59.1 · Windows 2.1.59.1 BETA · 25 October 2026 · 🏎️ Crowd cheer fix
 
