@@ -524,8 +524,12 @@
   /// gears, idle and redline (rpm) drive the gearbox, the dashboard and the engine sound; cyl is the engine's cylinder count
   /// and tone its character (the sound); tough is how well the body takes a knock (1 is a normal road car).
   /// Tyre compounds: grip (times the car's own) and how fast they wear. Softs are quicker and go off fast; hards last.
-  /// Tyre compounds: grip (times the car's own) and how fast they wear. Softs are quicker and go off fast; hards last.
   /// Intermediates and wets are for rain: on a dry track they are slow and wear out quickly, and slicks in the rain slide.
+  /// The stop, as fractions of the whole stop: jack up, wheels off and on (front left, rear left, front right, rear right), jack down.
+  const CREW_EV = [[0.03, 'jack'], [0.09, 'off', 'FL'], [0.26, 'on', 'FL'], [0.11, 'off', 'RL'], [0.28, 'on', 'RL'], [0.13, 'off', 'FR'], [0.30, 'on', 'FR'], [0.15, 'off', 'RR'], [0.32, 'on', 'RR'], [0.86, 'jack']];
+  const CREW_WIN = { FL: [0.09, 0.28], RL: [0.11, 0.30], FR: [0.13, 0.32], RR: [0.15, 0.34] };
+  const CREW_WHEEL = { FL: [1.3, 0.9], FR: [1.3, -0.9], RL: [-1.3, 0.9], RR: [-1.3, -0.9] };
+  const smooth01 = (x) => x * x * (3 - 2 * x);
   const TYRES = { S: { name: 'Soft', grip: 1.06, wear: 1.6, col: '#ff3b3b' }, M: { name: 'Medium', grip: 1, wear: 1, col: '#ffd23f' }, H: { name: 'Hard', grip: 0.95, wear: 0.6, col: '#f2f2f2' }, I: { name: 'Intermediate', grip: 0.9, wear: 1.3, col: '#3ad07a', rain: 1 }, W: { name: 'Wet', grip: 0.84, wear: 1.5, col: '#3a8dff', rain: 2 } };
   let WET = 0;          // how wet the track is now, 0 dry to 1 soaked (set by the race; read by the tyres)
   /// The grip a car's tyres have on this track surface right now (a puncture takes most of it away).
@@ -1626,6 +1630,43 @@
         incident(me, 30);
       }
     }
+    /// The pit crew's tools and sounds, and the timeline of each stop. `kind`: 'gun' (impact wrench), 'jack' (hydraulic jack)
+    /// or 'clunk' (a wheel seated on its hub). Louder for your own car, quieter for cars further away.
+    function crewSound(kind, vol) {
+      if (!soundOn || !audioUp() || !au || vol <= 0) return;
+      const t = ac.currentTime;
+      const burst = (f, q, g0, t0, dur) => { const sr = ac.createBufferSource(); sr.buffer = au.nb; const fl = ac.createBiquadFilter(); fl.type = 'bandpass'; fl.frequency.value = f; fl.Q.value = q; const gg = ac.createGain(); gg.gain.setValueAtTime(0.0001, t0); gg.gain.exponentialRampToValueAtTime(g0, t0 + 0.004); gg.gain.exponentialRampToValueAtTime(0.0001, t0 + dur); sr.connect(fl); fl.connect(gg); gg.connect(au.master); sr.start(t0, Math.random()); sr.stop(t0 + dur + 0.02); };
+      if (kind === 'gun') {
+        // A pneumatic impact wrench: a rattle of short hard bursts with a little pitch wobble, about half a second long.
+        for (let i = 0; i < 14; i++) burst(2200 + Math.random() * 900, 1.6, 0.22 * vol, t + i * 0.036 + Math.random() * 0.008, 0.028);
+        burst(900, 0.9, 0.05 * vol, t, 0.5);
+      } else if (kind === 'jack') {
+        // The hydraulic jack: a long hiss that falls in pitch, with a low pump under it.
+        burst(900, 0.7, 0.16 * vol, t, 1.1);
+        const o = ac.createOscillator(), og = ac.createGain(); o.type = 'square'; o.frequency.setValueAtTime(120, t); o.frequency.linearRampToValueAtTime(70, t + 0.9);
+        og.gain.setValueAtTime(0.05 * vol, t); og.gain.exponentialRampToValueAtTime(0.0001, t + 1); o.connect(og); og.connect(au.master); o.start(t); o.stop(t + 1.05);
+      } else if (kind === 'clunk') {
+        // A wheel dropped on its hub: one heavy thump.
+        const o = ac.createOscillator(), og = ac.createGain(); o.type = 'sine'; o.frequency.setValueAtTime(130, t); o.frequency.exponentialRampToValueAtTime(55, t + 0.14);
+        og.gain.setValueAtTime(0.42 * vol, t); og.gain.exponentialRampToValueAtTime(0.0001, t + 0.18); o.connect(og); og.connect(au.master); o.start(t); o.stop(t + 0.2);
+      }
+    }
+    /// Once a step of a stop: plays each event's sound once, lifts the car on its jack while the wheels are off, and sends
+    /// the crew off to the wall when the stop is done.
+    function pitCrewTick(r, c, need) {
+      const u = clamp((r.service || 0) / need, 0, 1);
+      if ((r.service || 0) <= 0.15 || !r.crewDone) r.crewDone = {};
+      const vol = r === me ? 1 : clamp(1 - Math.hypot(c.x - me.car.x, c.y - me.car.y) / 350, 0, 0.35);
+      CREW_EV.forEach((ev, i) => {
+        if (u < ev[0] || r.crewDone[i]) return;
+        r.crewDone[i] = 1;
+        if (ev[1] === 'jack') crewSound('jack', vol);
+        else { crewSound('gun', vol); if (ev[1] === 'on') setTimeout(() => crewSound('clunk', vol), 220); }
+      });
+      r.stopLift = 0.22 * smooth01(clamp((u - 0.03) / 0.08, 0, 1)) * (1 - smooth01(clamp((u - 0.86) / 0.08, 0, 1)));
+      r.stopNeed = need;
+      if (u >= 1 && !r.crewLeave) r.crewLeave = clock + 2.5;
+    }
     function raceTick(dt) {
       trouble(dt);
       if (screen !== 'race') return;
@@ -2012,6 +2053,7 @@
               // FIA style: a time penalty can be served at a stop: the car stands still for it before anyone may work on it.
               if (r.ai && r.pen > 0) r.servePen = true;
               const wait = r.servePen ? (r.pen || 0) : 0, need = wait + 2.4 + (c.dmg > 0.3 ? 2.5 * c.dmg : 0) + (r === me ? me.pitExtra || 0 : 0);
+              pitCrewTick(r, c, need);
               if (wait && r.service >= wait && !r.penDone) { r.penDone = true; if (r === me) { toast(`Penalty served (${wait} s). The crew goes to work.`); say('Penalty served. Go, go on the tyres.', 'eng', 2); } }
               if (r.service >= need) { if (r === me) me.pitExtra = 0; if (wait) { r.pen = 0; r.servePen = false; } r.penDone = false;  r.pits = (r.pits || 0) + 1; r.tyreLap = Math.max(0, r.lap); { const left = raceLaps - Math.max(0, r.lap); c.tyre = r === me && !me.ai ? me.nextTyre || 'M' : (WET > 0.6 ? 'W' : WET > 0.25 ? 'I' : left > raceLaps * 0.55 && left > 3 ? 'H' : left > 2 ? 'M' : 'S'); } c.puncture = false; c.dmg = 0; c.wear = 0; c.pull = 0; r.service = 0; r.served = true; if (r.ai) { const st = aiState.get(r.id); st.served = true; /* it keeps following the pit lane to the exit */ } if (r === me) { toast(`Pit stop: ${need.toFixed(1)} s · new ${TYRES[c.tyre].name.toLowerCase()}s${need > 2.5 ? ', damage repaired' : ''}`); say('Good stop, good stop. Go, go, go!', 'eng', 2); } }
             } else if (r.service > 0 && v > 2) r.service = 0;
@@ -2434,12 +2476,45 @@
       // The road, from far to near, with whatever stands by it in between.
       const N = Math.min(150, T.closed ? T.m - 4 : 150), back = cock ? 1 : 4, idx0 = me.idx, wd = T.width / 2, wall = wd + WALL;
       const bucket = new Map(), put = (k, f) => { if (!bucket.has(k)) bucket.set(k, []); bucket.get(k).push(f); };
+      // The pit crew: seven people per car, drawn with the car they are working on (in the 3D views).
+      const drawCrew = (r) => {
+        const c = r.car, ca = Math.cos(c.h), sa = Math.sin(c.h), u = clamp((r.service || 0) / (r.stopNeed || 2.5), 0, 1);
+        const at = (bu, bv) => [c.x + ca * bu - sa * bv, c.y + sa * bu + ca * bv];
+        const leave = r.crewLeave ? clamp((clock - (r.crewLeave - 2.5)) / 2.5, 0, 1) : 0;   // walking back to the wall after the stop
+        const person = (bu, bv, col, reach) => {
+          const [wx, wy] = at(bu, bv + leave * (bv > 0 ? 7 : -7));
+          box(wx, wy, c.h, 0, 0.24, 0.36, 0.85, '#1f2430');                 // legs
+          box(wx, wy, c.h, 0.85, 0.28, 0.5, 0.62, col);                    // overalls
+          box(wx, wy, c.h, 1.47, 0.2, 0.2, 0.24, '#e9b98e');               // head
+          box(wx, wy, c.h, 1.6, 0.23, 0.22, 0.08, '#f2f2f2');              // helmet
+          if (reach) {                                                     // an arm out to the wheel, with the gun
+            const [tx, ty] = at(reach[0], reach[1]), dx = tx - wx, dy = ty - wy, len = Math.hypot(dx, dy) || 0.1, ang = Math.atan2(dy, dx);
+            box((wx + tx) / 2, (wy + ty) / 2, ang, 1.12, len, 0.12, 0.12, col);
+            box(tx, ty, ang, 1.1, 0.22, 0.12, 0.14, '#f5c400');
+          }
+        };
+        // Four wheel gunners: out beside their wheel, stepping in and reaching for the nut while their wheel is off.
+        for (const w of ['FL', 'FR', 'RL', 'RR']) {
+          const [wu, wv] = CREW_WHEEL[w], win = CREW_WIN[w];
+          const ramp = clamp((u - win[0]) / 0.02, 0, 1) * clamp((win[1] - u) / 0.02, 0, 1);
+          const bu = wu * 1.9 + (wu * 1.15 - wu * 1.9) * ramp, bv = wv * 2.7 + (wv * 1.35 - wv * 2.7) * ramp;
+          person(bu, bv, r.color || c.spec.color, ramp > 0 ? [wu, wv] : null);
+        }
+        person(-1.8, 0, '#f5f5f5');                                        // the jack man, at the rear
+        if (u > 0.03 && u < 0.14) { const [jx, jy] = at(-0.3, 0); box(jx, jy, c.h, 0, 0.7, 0.3, 0.12, '#8a949e'); }   // the jack
+        person(2.8, -3.4, '#f5f5f5');                                      // the tyre carrier
+        if (u > 0.09 && u < 0.34) { const [ax, ay] = at(2.8, -3.4); box(ax, ay, c.h, 0.6, 0.45, 0.2, 0.45, '#111'); }   // a tyre
+        person(4.8, 2.6, '#e8e8e8');                                       // the engineer
+        const [bx, by] = at(4.8, 2.6); box(bx, by, c.h, 1.3, 0.05, 0.9, 0.6, '#ffffff');   // the pit board
+      };
+
       for (const r of racers) {
         if (r === me && cock) continue;
         let kk = r.idx - idx0; if (T.closed) { if (kk > T.m / 2) kk -= T.m; if (kk < -T.m / 2) kk += T.m; }
         // A car is 4.6 m long and a road strip 4 m, so its rear lies over the strips nearer the camera: it is painted after those
         // (two strips nearer than the one it is on), or the road would be drawn over its underside and wheels and sink it into the track.
-        if (kk >= -back && kk <= N) put(Math.max(kk - 2, -back), () => { liftZ = r.lift || 0; carModel(r); liftZ = 0; });
+        if (kk >= -back && kk <= N) put(Math.max(kk - 2, -back), () => { liftZ = (r.lift || 0) + (r.stopLift || 0); carModel(r); liftZ = 0; });
+        if (kk >= -back && kk <= N && (r.service > 0 || (r.crewLeave && clock < r.crewLeave + 1))) put(Math.max(kk - 2, -back), () => drawCrew(r));
       }
       // Recovery cranes: a yellow truck behind the barrier, its arm over the car and a cable down to it.
       for (const k of cranes) {
