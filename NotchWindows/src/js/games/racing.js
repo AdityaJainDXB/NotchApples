@@ -201,7 +201,7 @@
       const o = JSON.parse(b64d(raw.slice(3)));
       if (!o || !Array.isArray(o.p) || o.p.length % 2 || o.p.length > 440) return null;
       const pts = []; for (let i = 0; i < o.p.length; i += 2) { const x = Number(o.p[i]), y = Number(o.p[i + 1]); if (!isFinite(x) || !isFinite(y) || Math.abs(x) > 6000 || Math.abs(y) > 6000) return null; pts.push([x, y]); }
-      return customDef({ name: String(o.n || 'Shared track').slice(0, 24), closed: !!o.c, width: [26, 32, 40].includes(o.w) ? o.w : 32, look: GROUNDS[o.g] ? o.g : 'green', laps: [1, 3, 5].includes(o.l) ? o.l : 3, pts }, true);
+      return customDef({ name: String(o.n || 'Shared track').slice(0, 24), closed: !!o.c, width: [26, 32, 40].includes(o.w) ? o.w : 32, look: GROUNDS[o.g] ? o.g : 'green', laps: [1, 3, 5, 10, 20].includes(o.l) ? o.l : 3, pts }, true);
     } catch { return null; }
   }
   /// A full track definition from what the designer keeps. Returns null if it is not drivable (when `check` is set).
@@ -348,7 +348,7 @@
       // Close the loop: spread the small leftover gap along the whole lap.
       if (!sprint) { const ex = x, ey = y; for (let i = 0; i < pts.length; i++) { const k = i / (pts.length - 1); pts[i] = [pts[i][0] - ex * k, pts[i][1] - ey * k]; } pts.pop(); }
       const simple = evenPts(pts, !sprint).map((p) => [Math.round(p[0]), Math.round(p[1])]);
-      const def = customDef({ name: req.name || describeReq(req, hp, ch), closed: !sprint, width: W, look: req.look, laps: req.laps && [1, 3, 5].includes(req.laps) ? req.laps : 3, pts: simple });
+      const def = customDef({ name: req.name || describeReq(req, hp, ch), closed: !sprint, width: W, look: req.look, laps: req.laps && [1, 3, 5, 10, 20].includes(req.laps) ? req.laps : 3, pts: simple });
       const ck = checkTrack(def);
       if (ck.ok) return { def, why: '', T: ck.T, counts: { hp, ch, corners: extraCorners } };
       if (attempt === 13) return { def: null, why: ck.why };
@@ -524,7 +524,16 @@
   /// gears, idle and redline (rpm) drive the gearbox, the dashboard and the engine sound; cyl is the engine's cylinder count
   /// and tone its character (the sound); tough is how well the body takes a knock (1 is a normal road car).
   /// Tyre compounds: grip (times the car's own) and how fast they wear. Softs are quicker and go off fast; hards last.
-  const TYRES = { S: { name: 'Soft', grip: 1.06, wear: 1.6, col: '#ff3b3b' }, M: { name: 'Medium', grip: 1, wear: 1, col: '#ffd23f' }, H: { name: 'Hard', grip: 0.95, wear: 0.6, col: '#f2f2f2' } };
+  /// Tyre compounds: grip (times the car's own) and how fast they wear. Softs are quicker and go off fast; hards last.
+  /// Intermediates and wets are for rain: on a dry track they are slow and wear out quickly, and slicks in the rain slide.
+  const TYRES = { S: { name: 'Soft', grip: 1.06, wear: 1.6, col: '#ff3b3b' }, M: { name: 'Medium', grip: 1, wear: 1, col: '#ffd23f' }, H: { name: 'Hard', grip: 0.95, wear: 0.6, col: '#f2f2f2' }, I: { name: 'Intermediate', grip: 0.9, wear: 1.3, col: '#3ad07a', rain: 1 }, W: { name: 'Wet', grip: 0.84, wear: 1.5, col: '#3a8dff', rain: 2 } };
+  let WET = 0;          // how wet the track is now, 0 dry to 1 soaked (set by the race; read by the tyres)
+  /// The grip a car's tyres have on this track surface right now (a puncture takes most of it away).
+  const tyreGrip = (c) => {
+    const t = TYRES[c.tyre] || TYRES.M, w = WET;
+    const k = !t.rain ? t.grip * (1 - 0.55 * w) : t.rain === 1 ? t.grip * (1 + 0.12 * w - 0.25 * Math.max(0, w - 0.65)) : t.grip * (1 + 0.16 * w);
+    return k * (c.puncture ? 0.55 : 1);
+  };
   const CARS = [
     { id: 'gt', name: 'Street GT', blurb: 'Grippy and forgiving. Fast through the bends.', accel: 15, vmax: 66, grip: 17, steer: 0.52, loose: 0.12, brake: 30, color: '#3aa0ff', down: 0.05, gears: 6, idle: 900, redline: 7500, cyl: 6, tone: 'gt', tough: 1 },
     { id: 'drift', name: 'Drift King', blurb: 'Lets go easily. Tap Space to slide round corners.', accel: 14, vmax: 62, grip: 12.5, steer: 0.6, loose: 0.42, brake: 26, color: '#ff4d6d', down: 0, gears: 6, idle: 850, redline: 8000, cyl: 4, tone: 'hatch', tough: 1 },
@@ -582,7 +591,9 @@
   /// One physics step. `inp` is { throttle 0..1, brake 0..1, steer -1..1 (+ is right), hand 0/1 }. `surf` is 1 on the road, less on grass.
   function stepCar(c, inp, dt, surf = 1) {
     const sp0 = c.spec, dmgK = 1 - 0.4 * c.dmg;        // a damaged car is slower, and its steering pulls to one side
-    const sp = c.dmg > 0 ? { ...sp0, vmax: sp0.vmax * dmgK, accel: sp0.accel * (1 - 0.25 * c.dmg), grip: sp0.grip * (1 - 0.15 * c.dmg) } : sp0;
+    let sp = c.dmg > 0 ? { ...sp0, vmax: sp0.vmax * dmgK, accel: sp0.accel * (1 - 0.3 * c.dmg), grip: sp0.grip * (1 - 0.3 * c.dmg) } : sp0;
+    // Boost (the battery) and DRS (the open rear wing): more power and less drag. A puncture or a dead engine takes it away.
+    if (c.vmaxK || c.accelAdd || c.puncture || c.engineDead) sp = { ...sp, vmax: sp.vmax * (c.vmaxK || 1) * (c.puncture ? 0.72 : 1), accel: c.engineDead ? 0 : sp.accel + (c.accelAdd || 0) };
     let fx = Math.cos(c.h), fy = Math.sin(c.h);
     const vf0 = c.vx * fx + c.vy * fy;
     // Engine, brakes, reversing and drag, all along the body.
@@ -595,11 +606,11 @@
     c.vx += fx * a * dt; c.vy += fy * a * dt;
     // Steering: the wheel angle fades with speed. The tyres can only hold so much sideways push, which is what makes
     // the car run wide when you ask too much, and slide when the back lets go (a loose car under power, or the handbrake).
-    const target = clamp(clamp(inp.steer, -1, 1) + c.pull * c.dmg, -1, 1) * sp.steer / (1 + (vf0 / 26) * (vf0 / 26));
+    const target = clamp(clamp(inp.steer, -1, 1) + c.pull * (c.dmg * 1.8 + (c.puncture ? 1.2 : 0)), -1, 1) * sp.steer / (1 + (vf0 / 26) * (vf0 / 26));
     c.steerA += (target - c.steerA) * (1 - Math.exp(-dt * 9));
     const wd = vf0 * Math.tan(c.steerA) / WHEELBASE;
     const power = inp.throttle * Math.abs(c.steerA) / sp.steer;
-    let grip = sp.grip * ((TYRES[c.tyre] || TYRES.M).grip) * (1 - 0.32 * clamp(c.wear || 0, 0, 1)) * surf * (1 + (sp.down || 0) * (vf0 * vf0) / (sp.vmax * sp.vmax)) * (1 - sp.loose * 0.5 * power * clamp(Math.abs(vf0) / 30, 0, 1));
+    let grip = sp.grip * tyreGrip(c) * (1 - 0.32 * clamp(c.wear || 0, 0, 1)) * surf * (1 + (sp.down || 0) * (vf0 * vf0) / (sp.vmax * sp.vmax)) * (1 - sp.loose * 0.5 * power * clamp(Math.abs(vf0) / 30, 0, 1));
     let w;
     const slip = c.vl / Math.max(Math.abs(c.vf), 5);        // how far sideways the car is travelling (last step)
     if (inp.hand) { w = clamp(wd * 1.25, -2, 2); grip *= 0.3; }
@@ -660,7 +671,7 @@
     // The fastest each bend allows: the tyres hold up to grip x (1 + downforce x (v / vmax)^2) sideways, and the driver uses
     // `corner` of that (the car can turn at up to 1.2 x grip before it slides). Worn tyres and damage are allowed for.
     let vt = c.spec.vmax * st.skill;
-    const sp = c.spec, g0 = sp.grip * ((TYRES[c.tyre] || TYRES.M).grip) * 1.2 * (st.corner ?? 0.88) * (1 - 0.32 * clamp(c.wear || 0, 0, 1)) * (1 - 0.15 * c.dmg), dn = (sp.down || 0) / (sp.vmax * sp.vmax);
+    const sp = c.spec, g0 = sp.grip * tyreGrip(c) * 1.2 * (st.corner ?? 0.88) * (1 - 0.32 * clamp(c.wear || 0, 0, 1)) * (1 - 0.15 * c.dmg), dn = (sp.down || 0) / (sp.vmax * sp.vmax);
     const dec = sp.brake * (st.brakes ?? 0.8) * (st.tr ? 0.85 : 1);        // in traffic, a little earlier on the brakes
     for (let d = 0; d <= 30 + speed * speed / (2 * dec); d += T.step * 2) {
       const k = Math.abs(ahead(d).k) * 0.85;      // the racing line opens the bend out a little
@@ -912,7 +923,7 @@
 
     // ---- state
     let screen = 'menu';                 // menu | lobby | countdown | race | done
-    let T = getTrack(trackId), racers = [], me = null, raceLaps = 3, clock = 0, cdLeft = 0, alive = true, paused = false, suspended = false, startSeq = null, passAt = new Map(), myTyre = store.get('tyre', 'M'), towerMode = store.get('tower', 1), medF = null, formT = 0, formHold = 1, formSkip = false, cranes = [], gridMarks = [];
+    let T = getTrack(trackId), racers = [], me = null, raceLaps = 3, clock = 0, cdLeft = 0, alive = true, paused = false, suspended = false, startSeq = null, weatherMode = store.get('weather', 'mixed'), weather = { target: 0, at: 1e9, dryAt: 1e9, told: 0 }, passAt = new Map(), myTyre = store.get('tyre', 'M'), towerMode = store.get('tower', 1), medF = null, formT = 0, formHold = 1, formSkip = false, cranes = [], gridMarks = [];
     const keys = new Set();
     let skids = [], parts = [], camX = 0, camY = 0, shake = 0, doneT = 0, chaseYaw = 0, backToDesign = false, ds = null, lastShift = 0, paddle = 0;
     let net = null;                      // { link, code, host, players: Map, cfg, status }
@@ -950,7 +961,7 @@
       cal.append(new Option('Choose a Grand Prix…', ''), ...F1_CAL.map((t) => new Option(`R${t.rnd} · ${t.name}`, t.id, false, t.id === trackId)));
       cal.onchange = () => { if (!cal.value) return; trackId = cal.value; store.set('track', trackId); T = getTrack(trackId); onChange(); };
       const out = [row('Track', ...tracks), row('F1 2026', cal), tInfo, row('Car', ...cars), cInfo];
-      if (withLaps && getTrack(trackId).closed) out.splice(2, 0, row('Laps', ...[1, 3, 5].map((n) => btn(String(n), n === lapsSel ? 'on' : '', () => { lapsSel = n; store.set('laps', n); onChange(); }))));
+      if (withLaps && getTrack(trackId).closed) out.splice(2, 0, row('Laps', ...[1, 3, 5, 10, 20].map((n) => btn(String(n), n === lapsSel ? 'on' : '', () => { lapsSel = n; store.set('laps', n); onChange(); }))));
       return out;
     };
     const bestLine = () => { const b = store.get(`best.${trackId}.${carId}`, null); return hint(b ? `Your best here: ${b.lap ? 'lap ' + fmt(b.lap) + ' · ' : ''}race ${fmt(b.race)}` : 'No time set here yet.'); };
@@ -968,7 +979,8 @@
         ...pickers(showMenu),
         row('Rivals', ...[0, 1, 3, 5, 7, 9, 11, 15].map(mk)),
         row('Level', ...Object.entries(LEVELS).map(([id, l]) => btn(l.label, id === level ? 'on' : '', () => { level = id; store.set('level', id); showMenu(); }))),
-        row('Tyres', ...Object.entries(TYRES).map(([id, t]) => btn(`${t.name}`, id === myTyre ? 'on' : '', () => { myTyre = id; store.set('tyre', id); showMenu(); })), hint({ S: 'Grippy, wears fast', M: 'In between', H: 'Slower, lasts long' }[myTyre])),
+        row('Tyres', ...Object.entries(TYRES).map(([id, t]) => btn(`${t.name}`, id === myTyre ? 'on' : '', () => { myTyre = id; store.set('tyre', id); showMenu(); })), hint({ S: 'Grippy, wears fast', M: 'In between', H: 'Slower, lasts long', I: 'For a damp track', W: 'For heavy rain' }[myTyre])),
+        row('Weather', ...[['dry', 'Dry'], ['mixed', 'Changeable'], ['wet', 'Wet']].map(([id, l]) => btn(l, id === weatherMode ? 'on' : '', () => { weatherMode = id; store.set('weather', id); showMenu(); }))),
         row('Start', btn('Formation lap', formOn ? 'on' : '', () => { formOn = true; store.set('formation', true); showMenu(); }), btn('Straight to the lights', formOn ? '' : 'on', () => { formOn = false; store.set('formation', false); showMenu(); })),
         bestLine(),
         row('You drive', ...[['race', '🏎️ A race car'], ['sc', '🚓 The Safety Car'], ['med', '🚑 The Medical Car']].map(([id, l]) => btn(l, id === role ? 'on' : '', () => { role = id; store.set('role', id); showMenu(); }))),
@@ -978,7 +990,7 @@
         row('Online', btn('Create room', '', () => openRoom(true)), (() => { const i = document.createElement('input'); i.placeholder = 'CODE'; i.maxLength = 8; i.id = 'rc-code'; return i; })(), btn('Join', '', () => { const c = NET.normCode(root.querySelector('#rc-code').value); if (!c) { toast('That code is 6 letters and numbers.'); return; } openRoom(false, c); })),
         row('Name', name),
         ...(canHear() ? [row('Voice radio', btn(voiceOn() ? '🎙 On' : '🎙 Off', voiceOn() ? 'on' : '', () => { if (voiceOn()) { store.set('voice', 'off'); showMenu(); } else askMic(); }))] : []),
-        hint('T (or Space in the F1 car): talk to your race engineer, then 1 to 7 · N: skip the formation lap · L: timing tower · Y: tyres for your next stop'),
+        hint('T (or Space in the F1 car): talk to your race engineer, then 1 to 7 · N: skip the formation lap · L: timing tower · Y: tyres for your next stop · B: boost (F1) · E: DRS'),
         hint('↑ W gas · ↓ S brake and reverse · ← → A D steer · Space handbrake (drift) · V view (top, chase, cockpit) · M sound · Q serve a penalty at your pit stop · R restart · P pause · Esc menu'));
     }
 
@@ -1026,8 +1038,15 @@
       racers.forEach((r, i) => { if (r.ai) { const grid = (i % 2 ? 1 : -1) * 0.2 / 0.28; aiState.set(r.id, { idx: -1, lane: grid, pref: (Math.random() * 2 - 1) * 0.7, laneT: 3 + Math.random() * 7, react: 0.17 + Math.random() * 0.16 + (Math.random() < 0.12 ? 0.25 : 0), skill: LEVELS[level].skill * (0.97 + Math.random() * 0.03), corner: LEVELS[level].corner * (0.95 + Math.random() * 0.05), brakes: LEVELS[level].brakes * (0.94 + Math.random() * 0.06), defend: LEVELS[level].defend, slip: (LEVELS[level].slip || 1) * (0.25 + Math.random() * 1.6), oops: 0, oopsT: 0, oopsK: '', stuck: 0, rev: 0, go: false }); } });
       for (const r of racers) { r.car.vx = r.car.vy = 0; progress(r, T, 0); r.lapStart = 0; }
       // Tyres: your choice from the menu; the others start on a mix (softs for a fast start, hards to run long).
+      // The weather: dry, wet from the start, or changeable (rain may come in partway through, and may dry out again).
+      { const lapS = T.length / 45, dur = lapS * raceLaps;
+        weather = { target: 0, at: 1e9, dryAt: 1e9, told: 0 }; WET = 0;
+        if (weatherMode === 'wet') { WET = 0.55 + Math.random() * 0.4; weather.target = WET; }
+        else if (weatherMode === 'mixed' && T.closed && raceLaps >= 3 && Math.random() < 0.55) { weather.at = dur * (0.2 + Math.random() * 0.35); weather.rain = 0.45 + Math.random() * 0.55; if (Math.random() < 0.4) weather.dryAt = weather.at + dur * (0.25 + Math.random() * 0.2); } }
+      for (const r of racers) { r.car.ers = 1; r.failLap = 0; r.car.puncture = false; r.car.engineDead = false; r.drsOn = false; }
       for (const r of racers) { const x = Math.random(); r.car.tyre = r === me ? myTyre : x < 0.35 ? 'S' : x < 0.75 ? 'M' : 'H'; r.tyreLap = 0; r.pits = 0; r.code = String(r.name || '').replace(/[^A-Za-z]/g, '').slice(0, 3).toUpperCase() || 'CAR'; }
-      me.nextTyre = myTyre === 'S' ? 'M' : 'H'; passAt = new Map();
+      for (const r of racers) if (r !== me && WET > 0.3) r.car.tyre = WET > 0.6 ? 'W' : 'I';
+      me.nextTyre = WET > 0.3 ? myTyre : myTyre === 'S' ? 'M' : 'H'; passAt = new Map();
       raceCtl = { flag: 'green', t: 0, at: null, score: 0, next: 8 + Math.random() * 17, done: 0, first: true };     // driving for race control: the first incident comes soon, at a random moment (8 to 25 s)
       { const off = racers.find((r) => r.official); if (off) toPitExit(off); }   // the officials wait at the pit exit
       { const P = pitInfo(T); if (P) racers.forEach((r, i) => { r.boxS = clamp((i - (racers.length - 1) / 2) * 13, P.a + 95, P.b - 95); const st = aiState.get(r.id); if (st) st.boxS = r.boxS; }); }       // every car has its own pit box
@@ -1105,12 +1124,12 @@
         const known = net.players.has(m.id);
         net.players.set(m.id, { id: m.id, name: String(m.name || 'Driver').replace(/[<>&"'`]/g, '').slice(0, 14) || 'Driver', car: CARS.some((c) => c.id === m.car) ? m.car : 'gt', host: !!m.host });
         net.seen.set(m.id, performance.now());
-        if (m.host && !net.host && screen === 'lobby' && resolveTrack(m.tr, m.td)) { trackId = m.tr; T = getTrack(trackId); lapsSel = [1, 3, 5].includes(m.lp) ? m.lp : lapsSel; }
+        if (m.host && !net.host && screen === 'lobby' && resolveTrack(m.tr, m.td)) { trackId = m.tr; T = getTrack(trackId); lapsSel = [1, 3, 5, 10, 20].includes(m.lp) ? m.lp : lapsSel; }
         if (!known) { hello(); if (screen === 'lobby') showLobby(); }
         else if (screen === 'lobby') showLobby();
       } else if (m.t === 'go' && screen === 'lobby' && Array.isArray(m.order)) {
         if (!resolveTrack(m.tr, m.td)) return;
-        trackId = m.tr; lapsSel = [1, 3, 5].includes(m.lp) ? m.lp : 3;
+        trackId = m.tr; lapsSel = [1, 3, 5, 10, 20].includes(m.lp) ? m.lp : 3;
         const entries = [];
         for (const id of m.order) {
           const p = id === myId ? { id: myId, name: myName, car: carId } : net.players.get(id);
@@ -1145,15 +1164,16 @@
     }
 
     // ---- input
-    const KEYMAP = { arrowup: 'up', w: 'up', arrowdown: 'down', s: 'down', arrowleft: 'left', a: 'left', arrowright: 'right', d: 'right', ' ': 'hand' };
+    const KEYMAP = { b: 'boost', arrowup: 'up', w: 'up', arrowdown: 'down', s: 'down', arrowleft: 'left', a: 'left', arrowright: 'right', d: 'right', ' ': 'hand' };
     function key(name, down) {
       const k = String(name).toLowerCase();
       if (down) {
         if (k === 'p' && (screen === 'race' || screen === 'countdown' || screen === 'formation')) { paused = !paused; big.textContent = paused ? 'PAUSED' : ''; return; }
         if (k === 'r' && (screen === 'race' || screen === 'done') && !net) { startLocalRace(); return; }
         if (k === 'n' && screen === 'formation') { formSkip = true; return; }
+        if (k === 'e' && me && screen === 'race' && !me.official) { if (me.drsOn) { me.drsOn = false; } else if (drsOk(me)) { me.drsOn = true; toast('DRS open'); } else toast(me.lap < 1 ? 'DRS is enabled from lap 2' : 'DRS: get within 1 second of the car ahead'); return; }
         if (k === 'l' && me && screen !== 'menu') { towerMode = (towerMode + 1) % 3; store.set('tower', towerMode); toast(['Timing tower hidden', 'Timing tower: gap to the car ahead', 'Timing tower: gap to the leader'][towerMode]); return; }
-        if (k === 'y' && me && !me.official && screen !== 'menu') { me.nextTyre = { S: 'M', M: 'H', H: 'S' }[me.nextTyre || 'M']; toast(`Next pit stop: ${TYRES[me.nextTyre].name} tyres`); return; }
+        if (k === 'y' && me && !me.official && screen !== 'menu') { me.nextTyre = { S: 'M', M: 'H', H: 'I', I: 'W', W: 'S' }[me.nextTyre || 'M']; toast(`Next pit stop: ${TYRES[me.nextTyre].name} tyres`); return; }
         if (k === 'f' && role === 'med' && screen === 'race') { medGetOut(); return; }
         // The radio: T (or Space in the Formula One car, which has no handbrake) opens it and it stays open while you drive.
         if ((k === 't' || k === ' ' && me && me.car.spec.id === 'f1') && me && (screen === 'race' || screen === 'formation' || screen === 'countdown')) { if (radioUI) radioSend(); else radioOpen(); return; }
@@ -1562,7 +1582,52 @@
       setTimeout(() => { if (medJob === J && !J.asked) medClose(); }, 3500);
       say(right ? `Good call. Bring ${name} back to the medical centre.` : `Race control. The doctors say it is ${word}. Bring ${name} in.`, 'com', 2);
     }
+    /// DRS can be opened from lap 2, under green flags, within a second of the car ahead (not in the pit lane).
+    function drsOk(r) {
+      if (raceCtl.flag !== 'green' || r.lap < 1 || r.inLane || r.gapL == null) return false;
+      const order = ranking(racers).filter((x) => !x.dnf), i = order.indexOf(r), a = order[i - 1];
+      return !!a && a.gapL != null && r.gapL - a.gapL < 1.0 && r.gapL - a.gapL >= 0;
+    }
+    /// Weather, breakdowns and big crashes, once a step.
+    function trouble(dt) {
+      // The weather moves towards its target slowly (a track takes a minute or so to get wet, and longer to dry).
+      if (clock > weather.at && weather.target < (weather.rain || 0) && clock < weather.dryAt) weather.target = weather.rain;
+      if (clock > weather.dryAt) weather.target = 0;
+      WET += clamp(weather.target - WET, -dt / 120, dt / 50);
+      if (me && !me.official && !me.dnf) {
+        const slick = !(TYRES[me.car.tyre] || {}).rain;
+        if (weather.told === 0 && weather.at < 1e9 && clock > weather.at - 60) { weather.told = 1; say('Rain is coming in about a minute. Have a think about tyres.', 'eng', 2); toast('🌧 Rain expected in about a minute'); }
+        if (weather.told <= 1 && WET > 0.25 && slick) { weather.told = 2; say('It is raining. Box this lap for intermediates. Box, box.', 'eng', 2); toast('🌧 Rain: box for intermediates (Y picks the tyres)'); me.nextTyre = WET > 0.6 ? 'W' : 'I'; }
+        if (weather.told === 2 && WET < 0.12 && !slick) { weather.told = 3; say('Track is drying. Box for slicks when you are ready.', 'eng', 2); me.nextTyre = 'M'; }
+      }
+      // Breakdowns, in races of five laps or more: a puncture (pit for new tyres) or, rarely, the engine (out of the race).
+      if (raceLaps >= 5) for (const r of racers) {
+        if (r.official || r.dnf || r.finished || r.lap < 1 || r.failLap === r.lap) continue;
+        r.failLap = r.lap;
+        const c = r.car;
+        if (!c.puncture && Math.random() < 0.012 + 0.03 * (c.wear || 0)) {
+          c.puncture = true; c.pull = (Math.random() < 0.5 ? -1 : 1) * 0.35;
+          if (r === me) { say('Puncture, puncture! Bring it back to the pits, box this lap.', 'eng', 2); toast('💥 Puncture: box this lap'); }
+          else if (r.ai) { const st = aiState.get(r.id); if (st) st.pitting = true; if (me && Math.abs(r.prog - me.prog) < 600) say(`${r.name} has a puncture!`, 'com', 1); }
+        } else if (!c.engineDead && Math.random() < 0.004) {
+          c.engineDead = true;
+          if (r === me) { say('We have lost the engine. Retire the car. Pull over somewhere safe.', 'eng', 2); toast('🔥 Engine failure: pull over, your race is over'); }
+          else if (me && Math.abs(r.prog - me.prog) < 800) say(`Smoke from the back of ${r.name}! That is an engine failure.`, 'com', 1);
+        }
+      }
+      // A dead engine: once the car has rolled to a stop, it is out.
+      for (const r of racers) if (r.car.engineDead && !r.dnf && Math.hypot(r.car.vx, r.car.vy) < 2 && clock > 3) {
+        if (r === me) { me.dnf = true; me.retiredT = clock; me.stopped = true; } else if (r.ai) { r.car.dmg = Math.max(r.car.dmg, 0.9); incident(r, 12); }
+      }
+      // A big crash into the barrier ends your race too: the car can't be driven on.
+      if (me && !me.official && !me.dnf && me.car.dmg >= 0.9 && screen === 'race') {
+        me.dnf = true; me.retiredT = clock + 3; me.stopped = true; me.car.vx = me.car.vy = 0;
+        say('Are you OK? Talk to me. The car is too badly damaged, we are out.', 'eng', 2); toast('💥 Too much damage: your race is over');
+        incident(me, 30);
+      }
+    }
     function raceTick(dt) {
+      trouble(dt);
       if (screen !== 'race') return;
       const C = raceCtl; C.t += dt;
       const field = racers.filter((r) => !r.official && !r.finished), order = ranking(racers).filter((r) => !r.finished);
@@ -1805,7 +1870,12 @@
         if (me && !me.official && !me.ai && !me.formJudged) { me.formJudged = true; if (passedCars().length) penalize(me, 5, 'overtaking on the formation lap'); }
         for (const r of all) if (!r.gridded) gridIt(r, slotS(r));
         for (const r of racers) { if (r.official) continue; r.lap = -1; r.topLap = undefined; r.lapTimes = []; r.lapStart = 0; r.idx = -1; r.sLap = undefined; progress(r, T, 0); r.lap = -1; r.prog = -T.length + r.sNow; }
-        for (const st of aiState.values()) { st.cap = null; st.go = false; st.t = null; st.raceLine = undefined; }
+        // Everyone is on the grid now (skipping with N teleports cars from wherever they were on the lap): forget where the
+        // drivers last were on the track, so they steer by the grid and not by the corner they were in, and put the camera
+        // straight behind your car.
+        for (const st of aiState.values()) { st.cap = null; st.go = false; st.t = null; st.raceLine = undefined; st.idx = -1; st.tr = null; st.side = 0; st.stuck = 0; st.rev = 0; st.oops = 0; st.pitting = false; }
+        for (const r of racers) { r.idx = -1; r.car.steerA = 0; r.car.spin = 0; r.car.vf = 0; r.car.vl = 0; }
+        if (me) chaseYaw = me.car.h;
         for (const r of racers) { if (!r.official) continue; if (r === medF || role === 'med') behindGrid(r, 30); else toPitExit(r); r.lap = -1; r.sLap = null; officialProgress(r); }
         if (medF) { const st = aiState.get(medF.id); st.raceLine = false; st.t = null; }
         { const P = pitInfo(T); if (P) { const ai = aiState.get(me.id); if (me.ai && ai) ai.served = true; } }
@@ -1889,9 +1959,22 @@
         const pitSide = P && rel > P.a && rel < P.b && loc.lat * P.side > edge + 1;          // on the pit side of the start straight
         const surf = off > edge + 1.5 && !(pitSide && loc.lat * P.side < P.outer) ? 0.55 : 1;   // the pit lane and its entry and exit are tarmac
         if (r.service > 0) { inp = { throttle: 0, brake: 1, steer: 0, hand: 0 }; c.vx = c.vy = 0; }    // jacked up in the box
+        // Boost (F1 cars, B, from the battery) and DRS (E, within a second of the car ahead): set what the car gets this step.
+        c.vmaxK = 1; c.accelAdd = 0; r.towT = Math.max(0, (r.towT || 0) - dt);
+        if (screen === 'race' && !r.official && !r.finished) {
+          const human = r === me && !me.ai, f1 = c.spec.id === 'f1';
+          if (f1) {
+            const want = human ? keys.has('boost') && inp.throttle > 0 : r.ai && (c.ers > 0.35 && Math.abs(c.vf) > c.spec.vmax * 0.6 && Math.random() < 0.6);
+            if (want && c.ers > 0) { c.ers = Math.max(0, c.ers - dt / 7); c.accelAdd += 5; c.vmaxK *= 1.04; r.boosting = true; } else r.boosting = false;
+            if (inp.brake > 0 && Math.abs(c.vf) > 10) c.ers = Math.min(1, c.ers + dt * 0.14); else c.ers = Math.min(1, c.ers + dt * 0.006);
+          }
+          if (r.ai && !human) r.drsOn = drsOk(r) && Math.abs(c.vf) > c.spec.vmax * 0.55;
+          if (r.drsOn && (!drsOk(r) || inp.brake > 0)) { r.drsOn = false; if (r === me) toast('DRS closed'); }
+          if (r.drsOn) { c.vmaxK *= 1.07; c.accelAdd += 1.5; }
+        }
         if (screen === 'race' && !r.inLane && Math.abs(c.vf || 0) > 25) {
           const ca = Math.cos(c.h), sa = Math.sin(c.h);
-          for (const o of racers) { if (o === r || o.parked != null || o.stopped) continue; const dx = o.car.x - c.x, dy = o.car.y - c.y, f = dx * ca + dy * sa, l = Math.abs(-dx * sa + dy * ca); if (f > 4 && f < 40 && l < 2.2) { const tow = 0.00012 * c.vf * c.vf * (1 - f / 40); c.vx += ca * tow * dt; c.vy += sa * tow * dt; break; } }
+          for (const o of racers) { if (o === r || o.parked != null || o.stopped) continue; const dx = o.car.x - c.x, dy = o.car.y - c.y, f = dx * ca + dy * sa, l = Math.abs(-dx * sa + dy * ca); if (f > 4 && f < 40 && l < 2.2) { const tow = 0.0002 * c.vf * c.vf * (1 - f / 40); r.towT = 0.3; c.vx += ca * tow * dt; c.vy += sa * tow * dt; break; } }
         }
         stepCar(c, inp, dt, surf);
         if (r.inLane && !r.official && c.vf < 0) { c.vx = c.vy = 0; c.vf = 0; }       // no reversing in the pit lane for race cars: the brake just holds the car
@@ -1930,7 +2013,7 @@
               if (r.ai && r.pen > 0) r.servePen = true;
               const wait = r.servePen ? (r.pen || 0) : 0, need = wait + 2.4 + (c.dmg > 0.3 ? 2.5 * c.dmg : 0) + (r === me ? me.pitExtra || 0 : 0);
               if (wait && r.service >= wait && !r.penDone) { r.penDone = true; if (r === me) { toast(`Penalty served (${wait} s). The crew goes to work.`); say('Penalty served. Go, go on the tyres.', 'eng', 2); } }
-              if (r.service >= need) { if (r === me) me.pitExtra = 0; if (wait) { r.pen = 0; r.servePen = false; } r.penDone = false;  r.pits = (r.pits || 0) + 1; r.tyreLap = Math.max(0, r.lap); { const left = raceLaps - Math.max(0, r.lap); c.tyre = r === me && !me.ai ? me.nextTyre || 'M' : left > raceLaps * 0.55 && left > 3 ? 'H' : left > 2 ? 'M' : 'S'; } c.dmg = 0; c.wear = 0; c.pull = 0; r.service = 0; r.served = true; if (r.ai) { const st = aiState.get(r.id); st.served = true; /* it keeps following the pit lane to the exit */ } if (r === me) { toast(`Pit stop: ${need.toFixed(1)} s · new ${TYRES[c.tyre].name.toLowerCase()}s${need > 2.5 ? ', damage repaired' : ''}`); say('Good stop, good stop. Go, go, go!', 'eng', 2); } }
+              if (r.service >= need) { if (r === me) me.pitExtra = 0; if (wait) { r.pen = 0; r.servePen = false; } r.penDone = false;  r.pits = (r.pits || 0) + 1; r.tyreLap = Math.max(0, r.lap); { const left = raceLaps - Math.max(0, r.lap); c.tyre = r === me && !me.ai ? me.nextTyre || 'M' : (WET > 0.6 ? 'W' : WET > 0.25 ? 'I' : left > raceLaps * 0.55 && left > 3 ? 'H' : left > 2 ? 'M' : 'S'); } c.puncture = false; c.dmg = 0; c.wear = 0; c.pull = 0; r.service = 0; r.served = true; if (r.ai) { const st = aiState.get(r.id); st.served = true; /* it keeps following the pit lane to the exit */ } if (r === me) { toast(`Pit stop: ${need.toFixed(1)} s · new ${TYRES[c.tyre].name.toLowerCase()}s${need > 2.5 ? ', damage repaired' : ''}`); say('Good stop, good stop. Go, go, go!', 'eng', 2); } }
             } else if (r.service > 0 && v > 2) r.service = 0;
           }
         } else { imp = wallHit(c, T, after); r.inLane = false; }
@@ -1941,7 +2024,7 @@
         if (screen === 'race' && !r.finished && !r.inLane && !pitSide && off > edge + CAR_W / 2 + 0.4 && vNow > 12) { if (!r.offTL) { r.offTL = true; trackLimits(r); } }
         else if (off < edge) r.offTL = false;
         // The computer drivers come in for tyres or repairs when they need them (not on the last lap).
-        if (r.ai && P && !r.finished) { const st = aiState.get(r.id); if (!st.pitting && !st.served && (c.dmg > 0.45 || (c.wear || 0) > 0.72) && r.lap < raceLaps - 1 && rel > P.a - 600 && rel < P.a - 250) st.pitting = true; if (st.pitting && st.served && !r.inLane && rel > P.b - 5) st.pitting = false; if (st.served && !st.pitting && !r.inLane && rel > P.b) st.served = false; }
+        if (r.ai && P && !r.finished) { const st = aiState.get(r.id); if (!st.pitting && !st.served && (c.dmg > 0.45 || (c.wear || 0) > 0.72 || c.puncture || (WET > 0.3 && !(TYRES[c.tyre] || {}).rain) || (WET < 0.12 && (TYRES[c.tyre] || {}).rain)) && (r.lap < raceLaps - 1 || c.puncture) && rel > P.a - 600 && rel < P.a - 250) st.pitting = true; if (st.pitting && st.served && !r.inLane && rel > P.b - 5) st.pitting = false; if (st.served && !st.pitting && !r.inLane && rel > P.b) st.served = false; }
         emit(r, dt);
         if (c.drifting && skids.length < 1400) { skids.push([c.x - Math.cos(c.h) * 1.4 - Math.sin(c.h) * 0.8, c.y - Math.sin(c.h) * 1.4 + Math.cos(c.h) * 0.8, c.h], [c.x - Math.cos(c.h) * 1.4 + Math.sin(c.h) * 0.8, c.y - Math.sin(c.h) * 1.4 - Math.cos(c.h) * 0.8, c.h]); }
         if (r === me && c.drifting) r.drift += dt * Math.abs(c.vl);
@@ -2066,7 +2149,6 @@
         g.fillStyle = '#fff6c2'; g.fillRect(CAR_LEN / 2 - 0.5, -CAR_W / 2 + 0.2, 0.5, 0.45); g.fillRect(CAR_LEN / 2 - 0.5, CAR_W / 2 - 0.65, 0.5, 0.45);
         if (keys.has('down') && r === me) { g.fillStyle = '#ff2b2b'; g.fillRect(-CAR_LEN / 2, -CAR_W / 2 + 0.2, 0.4, 0.5); g.fillRect(-CAR_LEN / 2, CAR_W / 2 - 0.7, 0.4, 0.5); }
         g.restore();
-        if (c.dmg > 0.3) { g.save(); g.translate(c.x, c.y); g.rotate(c.h); g.fillStyle = `rgba(0,0,0,${c.dmg * 0.45})`; g.beginPath(); g.roundRect(-CAR_LEN / 2, -CAR_W / 2, CAR_LEN, CAR_W, 0.6); g.fill(); g.restore(); }
         if (r !== me) { g.fillStyle = '#fff'; g.font = '3.2px system-ui'; g.textAlign = 'center'; g.fillText(r.name, c.x, c.y - 3); }
       }
       for (const p of parts) {
@@ -2080,6 +2162,14 @@
     }
     function drawHud() {
       const s = Math.min(W, H) / 400, order = ranking(racers), pos = order.indexOf(me) + 1;
+      // Rain: a grey sky and streaks, heavier the wetter the track.
+      if (WET > 0.04 && (screen === 'race' || screen === 'done' || screen === 'countdown' || screen === 'formation')) {
+        g.fillStyle = `rgba(70,80,96,${(WET * 0.32).toFixed(3)})`; g.fillRect(0, 0, W, H);
+        g.strokeStyle = `rgba(200,215,235,${(0.18 + WET * 0.3).toFixed(3)})`; g.lineWidth = Math.max(1, s * 0.7); g.beginPath();
+        const n = Math.round(40 + WET * 160), t = performance.now() / 1000;
+        for (let i = 0; i < n; i++) { const x = ((i * 97.3 + t * 90) % W + W) % W, y = ((i * 57.1 + t * 900) % H + H) % H; g.moveTo(x, y); g.lineTo(x - 3 * s, y + 14 * s); }
+        g.stroke();
+      }
       g.textAlign = 'left'; g.fillStyle = 'rgba(8,12,22,.6)';
       g.beginPath(); g.roundRect(8 * s, 8 * s, 138 * s, 64 * s, 8 * s); g.fill();
       g.fillStyle = '#fff'; g.font = `800 ${24 * s}px system-ui`;
@@ -2097,6 +2187,22 @@
         g.font = `900 ${24 * s}px system-ui`; g.fillStyle = rr > 0.92 ? '#ff4d4d' : '#ffd166'; g.fillText(gearName(c), W - 142 * s, H - 26 * s);
         g.fillStyle = 'rgba(255,255,255,.15)'; g.fillRect(W - 142 * s, H - 18 * s, 126 * s, 5 * s);
         g.fillStyle = rr > 0.92 ? '#ff4d4d' : rr > 0.75 ? '#ffd166' : '#4fe09a'; g.fillRect(W - 142 * s, H - 18 * s, 126 * s * rr, 5 * s);
+      }
+      // Battery (F1 boost on B), DRS (E), slipstream and the weather, just above the speed panel.
+      if (screen === 'race' && !me.official) {
+        let x = W - 150 * s, y = H - 74 * s;
+        g.textAlign = 'left'; g.font = `800 ${9 * s}px system-ui`;
+        if (c.spec.id === 'f1') {
+          g.fillStyle = 'rgba(8,12,22,.6)'; g.beginPath(); g.roundRect(x, y - 14 * s, 142 * s, 16 * s, 5 * s); g.fill();
+          g.fillStyle = me.boosting ? '#ffd23f' : '#fff'; g.fillText('BATTERY', x + 6 * s, y - 3 * s);
+          g.fillStyle = 'rgba(255,255,255,.15)'; g.fillRect(x + 56 * s, y - 9 * s, 80 * s, 6 * s);
+          g.fillStyle = (c.ers || 0) < 0.2 ? '#ff6b6b' : me.boosting ? '#ffd23f' : '#3aa0ff'; g.fillRect(x + 56 * s, y - 9 * s, 80 * s * (c.ers || 0), 6 * s);
+          y -= 19 * s;
+        }
+        const drs = me.drsOn ? ['DRS OPEN', '#3ad07a'] : drsOk(me) ? ['DRS: PRESS E', '#ffd23f'] : ['DRS', 'rgba(255,255,255,.35)'];
+        g.fillStyle = 'rgba(8,12,22,.6)'; g.beginPath(); g.roundRect(x, y - 14 * s, 70 * s, 16 * s, 5 * s); g.fill(); g.fillStyle = drs[1]; g.fillText(drs[0], x + 6 * s, y - 3 * s);
+        if (me.towT > 0) { g.fillStyle = 'rgba(8,12,22,.6)'; g.beginPath(); g.roundRect(x + 74 * s, y - 14 * s, 68 * s, 16 * s, 5 * s); g.fill(); g.fillStyle = '#9ad7ff'; g.fillText('SLIPSTREAM', x + 79 * s, y - 3 * s); }
+        if (WET > 0.04) { y -= 19 * s; g.fillStyle = 'rgba(8,12,22,.6)'; g.beginPath(); g.roundRect(x, y - 14 * s, 142 * s, 16 * s, 5 * s); g.fill(); g.fillStyle = '#9ad7ff'; g.fillText(`🌧 TRACK ${WET > 0.6 ? 'SOAKED' : WET > 0.25 ? 'WET' : 'DAMP'} · ${TYRES[c.tyre].rain ? 'RAIN TYRES' : 'SLICKS'}`, x + 6 * s, y - 3 * s); }
       }
       if (c.dmg > 0.03) { g.textAlign = 'left'; g.font = `800 ${10 * s}px system-ui`; g.fillStyle = c.dmg > 0.75 ? '#ff4d4d' : c.dmg > 0.4 ? '#ff9f43' : '#ffd166'; g.fillText(c.dmg >= 1 ? 'WRECKED: limping home' : `DAMAGE ${Math.round(c.dmg * 100)}%`, 16 * s, 86 * s); }
       if (me.car.drifting) { g.fillStyle = '#ffd166'; g.font = `900 ${14 * s}px system-ui`; g.textAlign = 'center'; g.fillText(`DRIFT  ${Math.round(me.drift * 10)}`, W / 2, H - 16 * s); }
@@ -2244,7 +2350,7 @@
         faces.sort((a, b) => b.d - a.d).forEach((f) => poly(f.v, f.col));
       };
       const carModel = (r) => {
-        const k = r.car, col = r.color || k.spec.color, dm = 1 - k.dmg * 0.4, body = k.dmg > 0.2 ? shade(col, dm) : col;
+        const k = r.car, col = r.color || k.spec.color, dm = 1, body = col;      // damage shows in how the car drives (and the smoke), not as black paint
         // Its shadow on the road, so it is plainly standing on it.
         { const ca = Math.cos(k.h), sa = Math.sin(k.h), hl = CAR_LEN / 2 + 0.5, hw = CAR_W / 2 + 0.45, pt = (u, v) => cam(k.x + ca * u - sa * v, k.y + sa * u + ca * v, 0.02);
           poly([pt(hl, -hw), pt(hl, hw), pt(-hl, hw), pt(-hl, -hw)], 'rgba(0,0,0,.38)'); }
@@ -2515,7 +2621,7 @@
         row('', ...[[true, 'Loop'], [false, 'Sprint']].map(([v, l]) => btn(l, ds.closed === v ? 'on' : '', () => designEdit(() => { ds.closed = v; })))),
         row('', ...[[26, 'Narrow'], [32, 'Normal'], [40, 'Wide']].map(([v, l]) => btn(l, ds.width === v ? 'on' : '', () => designEdit(() => { ds.width = v; })))),
         row('', ...Object.entries(GROUNDS).map(([id, gr]) => btn(gr.label, ds.look === id ? 'on' : '', () => { ds.look = id; designUI(); }))),
-        ...(ds.closed ? [row('Laps', ...[1, 3, 5].map((n) => btn(String(n), ds.laps === n ? 'on' : '', () => { ds.laps = n; designUI(); })))] : []),
+        ...(ds.closed ? [row('Laps', ...[1, 3, 5, 10, 20].map((n) => btn(String(n), ds.laps === n ? 'on' : '', () => { ds.laps = n; designUI(); })))] : []),
         status,
         hint('🤖 Track assistant: say what you want, or give it a picture of a circuit'),
         (() => { const box = document.createElement('div'); box.className = 'rc-ai';

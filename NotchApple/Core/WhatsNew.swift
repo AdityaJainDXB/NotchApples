@@ -20,6 +20,12 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.1.57", date: "25 October 2026", headline: "Boost, DRS, rain and breakdowns, and the formation-lap skip fixed", items: [
+            "Racing: skipping the formation lap with N no longer leaves cars steering into the wall (or your view glitching) at lights out.",
+            "Racing, F1 cars: B boosts from the battery (a meter above the speed shows what's left; braking recharges it), and E opens DRS when you're within a second of the car ahead from lap 2 (braking closes it). The computer drivers use both. Slipstream is stronger, and the HUD shows when you're in it.",
+            "Racing, weather: dry, wet, or changeable (rain can arrive partway through and dry out again). Slicks slide in the rain, so pit for intermediates or wets (Y picks the tyres); your engineer calls it on the radio, and the others pit too.",
+            "Racing, things go wrong: in races of 5 laps or more, a puncture can force a pit stop and, rarely, an engine fails and the car is out. Your engineer tells you to box or retire. A big crash into the barrier now ends your race too. Damage no longer paints the car black: it shows in the smoke and in a car that's slower and pulls to one side. Races can now be 10 or 20 laps long.",
+        ]),
         ReleaseNote(version: "2.1.54", date: "24 October 2026", headline: "A livelier notch, and smoother racing explained", items: [
             "Smoother, livelier notch: a burst of confetti when you tick off a to-do, buttons that dip with a spring when you press them, three pulsing dots while the AI is thinking and a light that runs round its answer while it's still arriving, your name coming into focus word by word in the hello, and notifications that slide in one after another. All follow the iPhone Duo setting and Reduce Motion.",
             "Racing: when macOS Low Power Mode is on, the Mac's web engine draws the game at 30 frames a second instead of 60; the race now tells you so once (plug in or switch Low Power Mode off for smooth 60). The timing tower no longer covers the tyre line when you drive the Safety Car or the Medical Car.",

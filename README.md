@@ -72,10 +72,10 @@ Pick your computer. Both buttons start the download straight away. The Mac link 
   </tr>
   <tr>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.1.54</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.1.57</b></a>
     </td>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 2.1.56 BETA</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 2.1.57 BETA</b></a>
     </td>
   </tr>
   <tr>
@@ -243,6 +243,13 @@ All screenshots use sample data.
 
 - Plane: leaving the game while you are in a shared Battle now also leaves the room and stops its background timers, so it no longer keeps a connection open.
 - Racing: other drivers' names in a shared race are cleaned of markup before they are shown.
+
+### Mac 2.1.57 · Windows 2.1.57 BETA · 25 October 2026 · 🌧 Boost, DRS, rain and breakdowns, and the formation-lap skip fixed
+
+- Racing: skipping the formation lap with N no longer leaves cars steering into the wall (or your view glitching) at lights out.
+- Racing, F1 cars: B boosts from the battery (a meter above the speed shows what's left; braking recharges it), and E opens DRS when you're within a second of the car ahead from lap 2 (braking closes it). The computer drivers use both. Slipstream is stronger, and the HUD shows when you're in it.
+- Racing, weather: dry, wet, or changeable (rain can arrive partway through and dry out again). Slicks slide in the rain, so pit for intermediates or wets (Y picks the tyres); your engineer calls it on the radio, and the others pit too.
+- Racing, things go wrong: in races of 5 laps or more, a puncture can force a pit stop and, rarely, an engine fails and the car is out. Your engineer tells you to box or retire. A big crash into the barrier now ends your race too. Damage no longer paints the car black: it shows in the smoke and in a car that's slower and pulls to one side. Races can now be 10 or 20 laps long.
 
 ### Mac 2.1.54 · Windows 2.1.54 BETA · 24 October 2026 · ✨ A livelier notch, and smoother racing explained
 
