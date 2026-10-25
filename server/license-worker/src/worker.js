@@ -473,7 +473,7 @@ const SUPPORT_KINDS = {
   support: { private: true, name: 'Support or licence' },
 };
 const REPO = 'AdityaJainDXB/NotchApples';
-const SUPPORT_TO = (env) => env.SUPPORT_TO || 'notchapple.support@gmail.com';
+const SUPPORT_TO = (env) => env.SUPPORT_TO || 'notchapples.support@gmail.com';
 async function github(env, path, body, graphql = false) {
   const r = await fetch(`https://api.github.com/${graphql ? 'graphql' : path}`, { method: 'POST', headers: { Authorization: `Bearer ${env.GITHUB_TOKEN}`, 'content-type': 'application/json', 'user-agent': 'notchapple-support', accept: 'application/vnd.github+json' }, body: JSON.stringify(body) });
   const j = await r.json().catch(() => ({}));
@@ -493,7 +493,8 @@ async function supportPost(env, request, body) {
   if (email && !validEmail(email)) throw new HTTPError(400, "That email address doesn't look right (or leave it empty).");
   if (k.private && !email) throw new HTTPError(400, 'Leave your email so we can answer you (licence and payment questions are answered privately).');
   const meta = [version && `Version: ${version}`, system && `System: ${system}`].filter(Boolean).join(' · ');
-  const publicBody = `${text}\n\n${meta ? meta + '\n\n' : ''}---\n_Sent from the website without a GitHub account${email ? '. The sender left an email address (kept private): replies here are emailed to them' : ''}._`;
+  const noPing = (t) => String(t).replace(/@(?=\w)/g, '@\u200b');   // no @mentions that notify real GitHub users
+  const publicBody = `${noPing(text)}\n\n${meta ? meta + '\n\n' : ''}---\n_Sent from the website without a GitHub account${email ? '. The sender left an email address (kept private): replies here are emailed to them' : ''}._`;
   const id = hex(randomBytes(6));
   let url = null;
   if (env.GITHUB_TOKEN && !k.private) {
@@ -513,7 +514,7 @@ async function supportPost(env, request, body) {
   if (email) await putJSON(env, `ticket:${id}`, { email, kind: body.kind, title, url, at: Date.now() }, 400 * 86400);
   // The support inbox always hears about it (the whole report, for the private kinds and whenever GitHub was not reached).
   await sendMail(env, SUPPORT_TO(env), `[${k.name}] ${title}`, `${url ? `Posted: ${url}\n\n` : 'Not posted publicly.\n\n'}${text}\n\n${meta}\nFrom: ${email || '(no email left)'}\nTicket: ${id}`);
-  if (email) await sendMail(env, email, `We got your message: ${title}`, `Thanks for writing to Notch Apple.\n\nWe got your ${k.name.toLowerCase()} and will look at it soon.${url ? `\n\nYou can follow it here (no account needed to read): ${url}` : "\n\nWe'll answer you by email."}\n\nYour reference: ${id}\n\nNotch Apple support`);
+  if (email) await sendMail(env, email, 'We got your message to Notch Apple', `Thanks for writing to Notch Apple.\n\nWe got your ${k.name.toLowerCase()} and will look at it soon.${url ? `\n\nYou can follow it here (no account needed to read): ${url}` : "\n\nWe'll answer you by email."}\n\nYour reference: ${id}\n\nNotch Apple support`);
   return { ok: true, url, ref: id, private: !url };
 }
 
@@ -1239,7 +1240,7 @@ export default {
         case '/telemetry/glitch': await addressLimit(env, request, 'ins', 60); return json(await Insights.glitch(env, body));
         case '/feedback': await addressLimit(env, request, 'ins', 60); return json(await Insights.feedback(env, body));
         case '/support': return json(await supportPost(env, request, body));
-        case '/order': return json(await order(env, body));
+        case '/order': if (body.remind === true) await addressLimit(env, request, 'order', 6); return json(await order(env, body));
         case '/claim': return json(await claim(env, body));
         case '/promo': return json(await promo(env, body));
         case '/recover': return json(await recover(env, body));

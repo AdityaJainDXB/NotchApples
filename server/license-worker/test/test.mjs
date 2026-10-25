@@ -781,10 +781,10 @@ await test('support without a GitHub account: a public report becomes an issue w
   assert.equal(r.url, 'https://github.com/AdityaJainDXB/NotchApples/issues/99');
   assert.deepEqual(posts[0].body.labels, ['bug', 'mac', 'from-website']); assert.match(posts[0].body.title, /^\[Mac\] Notch flickers/);
   assert.ok(!posts[0].body.body.includes('user@example.com'), 'the email is never published');
-  assert.ok(mails.some((m) => m.to === 'user@example.com') && mails.some((m) => m.to === 'notchapple.support@gmail.com'), 'the sender gets a receipt and the inbox a copy');
+  assert.ok(mails.some((m) => m.to === 'user@example.com') && mails.some((m) => m.to === 'notchapples.support@gmail.com'), 'the sender gets a receipt and the inbox a copy');
   posts.length = 0; mails.length = 0;
   const p = await call('/support', { kind: 'support', title: 'Key not working', text: 'My Pro key says invalid after I moved Macs.', email: 'buyer@example.com', t: Date.now() - 20000 });
-  assert.equal(p.url, null); assert.equal(posts.length, 0, 'licence questions are never posted publicly'); assert.ok(mails.some((m) => m.to === 'notchapple.support@gmail.com' && m.text.includes('buyer@example.com')));
+  assert.equal(p.url, null); assert.equal(posts.length, 0, 'licence questions are never posted publicly'); assert.ok(mails.some((m) => m.to === 'notchapples.support@gmail.com' && m.text.includes('buyer@example.com')));
   assert.equal((await call('/support', { kind: 'support', title: 'Key not working', text: 'No email given here at all.', t: Date.now() - 20000 })).status, 400, 'a private question needs an email');
   assert.equal((await call('/support', { kind: 'mac', title: 'x', text: 'short', t: Date.now() - 20000 })).status, 400);
   const bot = await call('/support', { kind: 'mac', title: 'Buy cheap pills', text: 'spam spam spam spam spam', website: 'http://spam', t: Date.now() - 20000 });

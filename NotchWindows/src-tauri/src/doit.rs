@@ -221,6 +221,7 @@ pub fn doit_screen() -> Screen {
 
 #[tauri::command]
 pub async fn doit_click(x: i32, y: i32, button: String, count: u32) -> Result<(), String> {
+    require_armed()?;
     tauri::async_runtime::spawn_blocking(move || {
         #[cfg(windows)]
         synth::click(x, y, button == "right", count);
@@ -233,6 +234,7 @@ pub async fn doit_click(x: i32, y: i32, button: String, count: u32) -> Result<()
 
 #[tauri::command]
 pub async fn doit_type(text: String) -> Result<(), String> {
+    require_armed()?;
     tauri::async_runtime::spawn_blocking(move || {
         #[cfg(windows)]
         synth::type_text(&text);
@@ -245,6 +247,7 @@ pub async fn doit_type(text: String) -> Result<(), String> {
 
 #[tauri::command]
 pub async fn doit_key(combo: String) -> Result<(), String> {
+    require_armed()?;
     let vks = synth::parse_combo(&combo)?;
     tauri::async_runtime::spawn_blocking(move || {
         #[cfg(windows)]
@@ -259,6 +262,7 @@ pub async fn doit_key(combo: String) -> Result<(), String> {
 /// Scrolls the wheel (notches; positive dy scrolls down) at the pointer, or at the given physical pixel.
 #[tauri::command]
 pub async fn doit_scroll(x: Option<i32>, y: Option<i32>, dx: i32, dy: i32) -> Result<(), String> {
+    require_armed()?;
     tauri::async_runtime::spawn_blocking(move || {
         #[cfg(windows)]
         synth::scroll(x.zip(y), dx, dy);
@@ -282,6 +286,12 @@ async fn tokio_sleep(ms: u64) {
 const STATUS: &str = "doit-status";
 const HOTKEY: &str = "Ctrl+Alt+Escape";
 static HOTKEY_ID: AtomicU32 = AtomicU32::new(0);
+static ARMED: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+
+/// Input is only synthesised while a run is armed (doit_arm), so a stray call from the page cannot drive the mouse or keyboard.
+fn require_armed() -> Result<(), String> {
+    if ARMED.load(Ordering::Relaxed) { Ok(()) } else { Err("No Do it run is active.".into()) }
+}
 
 /// True (and handled) when `id` is the Stop shortcut.
 pub fn on_shortcut(app: &AppHandle, id: u32) -> bool {
@@ -298,6 +308,7 @@ pub fn on_shortcut(app: &AppHandle, id: u32) -> bool {
 #[tauri::command]
 pub fn doit_arm(app: AppHandle, on: bool) -> Result<bool, String> {
     use tauri_plugin_global_shortcut::{GlobalShortcutExt, Shortcut};
+    ARMED.store(on, Ordering::Relaxed);
     let mut hotkey_ok = false;
     if let Ok(shortcut) = HOTKEY.parse::<Shortcut>() {
         let gs = app.global_shortcut();

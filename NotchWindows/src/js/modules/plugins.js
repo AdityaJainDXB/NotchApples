@@ -17,7 +17,7 @@ export function render(root) {
         if (!alive) return;
         if (o.error) { body.replaceChildren(el('div', { class: 'err' }, o.error)); return; }
         body.replaceChildren(el('div', { style: 'font-weight:700' }, o.parsed.title), ...o.parsed.lines.map((l) => (l.href ? el('a', { onclick: () => openUrl(l.href) }, l.text)
-          : l.run ? el('a', { onclick: () => invoke('run_command', { command: l.run }).then((x) => toast(x.slice(0, 200) || 'Done')) }, `▶ ${l.text}`) : el('div', { class: 'small' }, l.text))));
+          : l.run ? el('a', { onclick: () => { if (!confirm(`This plugin wants to run:\n\n${l.run}\n\nRun it?`)) return; invoke('run_command', { command: l.run }).then((x) => toast(x.slice(0, 200) || 'Done')); } }, `▶ ${l.text}`) : el('div', { class: 'small' }, l.text))));
       };
       run(); timers.push(setInterval(run, Math.max(5, p.interval) * 1000));
       return card;

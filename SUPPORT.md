@@ -1,6 +1,6 @@
 # Getting help with Notch Apple
 
-No GitHub account? Use the **[form on the website](https://adityajaindxb.github.io/NotchApples/support.html)**: no sign-in, it covers everything below, and it is posted here for you (licence and payment questions stay private). If nothing else works, email notchapple.support@gmail.com.
+No GitHub account? Use the **[form on the website](https://adityajaindxb.github.io/NotchApples/support.html)**: no sign-in, it covers everything below, and it is posted here for you (licence and payment questions stay private). If nothing else works, email notchapples.support@gmail.com.
 
 | I want to... | Go here |
 |---|---|
@@ -16,4 +16,4 @@ No GitHub account? Use the **[form on the website](https://adityajaindxb.github.
 - Never post a licence key, access code or password. Redact screenshots.
 - Telemetry is opt-in and anonymous. See the privacy page on the website.
 
-Security problems: please do not open a public issue. Email notchapple.support@gmail.com.
+Security problems: please do not open a public issue. Email notchapples.support@gmail.com.
