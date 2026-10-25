@@ -15,13 +15,14 @@ const sh = (cmd, args) => { try { return execFileSync(cmd, args, { cwd: root, en
 
 // 1. The sitemap: every public page, and nothing else (the admin page, forwarding stub and 404 stay out).
 const hidden = new Set(['admin.html', 'legacy.html', '404.html']);
-const pages = readdirSync(web).filter((f) => f.endsWith('.html') && !hidden.has(f)).sort((a, b) => (a === 'index.html' ? -1 : b === 'index.html' ? 1 : a.localeCompare(b)));
+const pages = readdirSync(web).filter((f) => f.endsWith('.html') && !hidden.has(f) && !/^google[0-9a-f]+\.html$/.test(f))   // not the Search Console verification file
+  .sort((a, b) => (a === 'index.html' ? -1 : b === 'index.html' ? 1 : a.localeCompare(b)));
 const sitemapPath = join(web, 'sitemap.xml');
 const old = existsSync(sitemapPath) ? readFileSync(sitemapPath, 'utf8') : '';
-const meta = (page) => { const url = page === 'index.html' ? BASE : BASE + page; const m = old.match(new RegExp(`<url><loc>${url.replace(/[.*+?^${}()|[\]\\\\]/g, '\\\\$&')}</loc><lastmod>([^<]*)</lastmod><changefreq>([^<]*)</changefreq><priority>([^<]*)</priority></url>`)); return { url, last: m?.[1], freq: m?.[2] || 'monthly', prio: m?.[3] || '0.5' }; };
+const meta = (page) => { const url = page === 'index.html' ? BASE : BASE + page; const m = old.match(new RegExp(`<url><loc>${url.replace(/[.*+?^${}()|[\]\\\\]/g, '\\\\$&')}</loc><lastmod>([^<]*)</lastmod>`)); return { url, last: m?.[1] }; };
 const changed = new Set(sh('git', ['diff', '--name-only', 'HEAD', '--', 'web']).split('\n'));
 const today = new Date().toISOString().slice(0, 10);
-const entries = pages.map((p) => { const m = meta(p); const last = changed.has(`web/${p}`) || !m.last ? today : m.last; return `  <url><loc>${m.url}</loc><lastmod>${last}</lastmod><changefreq>${m.freq}</changefreq><priority>${m.prio}</priority></url>`; });
+const entries = pages.map((p) => { const m = meta(p); const last = changed.has(`web/${p}`) || !m.last ? today : m.last; return `  <url><loc>${m.url}</loc><lastmod>${last}</lastmod></url>`; });
 const sitemap = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${entries.join('\n')}\n</urlset>\n`;
 if (sitemap !== old) { writeFileSync(sitemapPath, sitemap); console.log('sitemap.xml rebuilt'); } else console.log('sitemap.xml is right');
 

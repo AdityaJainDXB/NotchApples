@@ -1,0 +1,19 @@
+# Notch Apple
+
+> A free, source-available app that turns the MacBook notch (or a small pill at the top of a Windows screen) into a command center: capture anything on screen and ask AI to solve, explain or translate it, with music, live sports and F1, clipboard history, window snapping and about thirty more optional tools beside it.
+
+- Runs on: macOS 14 or newer (no notch needed); Windows 10 or 11, 64-bit (beta)
+- Price: free; optional one-time upgrades, Pro $1 and Ultimate $5 (no subscription, no account)
+- AI: free providers (Gemini, Groq, OpenRouter free models) or fully local with Ollama; your own key
+- Licence: Notch Apple Source-Available License
+- Not made by or affiliated with Apple
+
+## Pages
+- [Home and download](https://adityajaindxb.github.io/NotchApples/): features, screenshots, FAQ, what's new
+- [Pricing](https://adityajaindxb.github.io/NotchApples/pro.html): Free, Pro and Ultimate
+- [Help and feedback](https://adityajaindxb.github.io/NotchApples/support.html): report a problem or suggest a feature, no sign-in
+- [Terms, refunds and privacy](https://adityajaindxb.github.io/NotchApples/terms.html)
+
+## More
+- [Source code and documentation](https://github.com/AdityaJainDXB/NotchApples)
+- [Releases and downloads](https://github.com/AdityaJainDXB/NotchApples/releases)
