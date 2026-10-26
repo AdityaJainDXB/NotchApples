@@ -46,8 +46,12 @@ struct BrowserView: View {
         }
         .animation(.easeOut(duration: 0.15), value: model.isLoading)
         .onAppear {
+            NotchPrefs.bigBrowserOpen = true
             model.restoreIfNeeded()
             if !model.hasPage { addressFocused = true }
+        }
+        .onDisappear {
+            NotchPrefs.bigBrowserOpen = false
         }
     }
 

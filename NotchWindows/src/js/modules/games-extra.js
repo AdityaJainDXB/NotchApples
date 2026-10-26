@@ -58,44 +58,72 @@ export class CookieEngine {
 }
 
 export function cookie(host) {
-  const KEY = 'games.cookie.save';
-  const e = new CookieEngine(load(KEY, {}));
-  e.applyOffline();
-  const total = el('div', { class: 'big num' }), rate = el('div', { class: 'dim' });
-  const cookieBtn = el('button', { class: 'cookie-btn', title: 'Click!', 'aria-label': 'Cookie' }, '🍪');
-  const pops = el('div', { style: 'position:absolute;inset:0;pointer-events:none;overflow:hidden' });
-  const shop = el('div', { class: 'col gap-6 scroll', style: 'flex:1;min-height:0' });
-  let last = Date.now(), lastSave = Date.now();
+  const URL = "https://cookieclicker.eu/cookieclicker/";
 
-  const paint = () => {
-    total.textContent = `${cookieFormat(e.cookies)} cookies`;
-    rate.textContent = `${cookieFormat(e.cps)} per second · ${e.clickValue} per click`;
-    const rows = [];
-    const up = e.nextUpgrade;
-    rows.push(el('button', { class: 'btn quiet', style: 'justify-content:space-between;width:100%', disabled: up === null || e.cookies < up, onclick: () => { e.buyUpgrade(); paint(); } },
-      el('span', {}, up === null ? 'Click power maxed' : `Double click power (×${e.clickValue * 2})`), el('span', { class: 'num dim' }, up === null ? '' : cookieFormat(up))));
-    for (const b of BUILDINGS) {
-      if (!e.isUnlocked(b)) continue;
-      rows.push(el('button', { class: 'btn quiet', style: 'justify-content:space-between;width:100%', disabled: e.cookies < e.cost(b), onclick: () => { e.buy(b); paint(); } },
-        el('span', { class: 'hstack' }, el('span', {}, b.glyph), `${b.name}`, el('span', { class: 'tiny dim' }, `×${e.count(b.id)}`)), el('span', { class: 'num dim' }, cookieFormat(e.cost(b)))));
-    }
-    shop.replaceChildren(...rows);
+  const showErrorMessage = (msg) => {
+    const err = el('div', { class: 'card col', style: 'position:absolute;inset:0;z-index:10;background:rgba(0,0,0,.8);justify-content:center;align-items:center;text-align:center;padding:20px;color:white;font-weight:bold' }, msg);
+    host.append(err);
+    setTimeout(() => err.remove(), 5000);
   };
-  const pop = (n) => {
-    const p = el('div', { style: `position:absolute;left:calc(50% + ${Math.round(Math.random() * 60 - 30)}px);top:38%;font-weight:800;color:var(--accent-bright);animation:cookie-pop .9s ease-out forwards` }, `+${cookieFormat(n)}`);
-    pops.append(p); setTimeout(() => p.remove(), 900);
-  };
-  cookieBtn.addEventListener('click', () => { pop(e.click()); total.textContent = `${cookieFormat(e.cookies)} cookies`; });
-  const t = setInterval(() => {
-    const now = Date.now(); e.tick((now - last) / 1000); last = now;
-    if (now - lastSave > 5000) { save(KEY, e); lastSave = now; }
+
+  const loadNative = () => {
+    const KEY = 'games.cookie.save';
+    const e = new CookieEngine(load(KEY, {}));
+    e.applyOffline();
+    const total = el('div', { class: 'big num' }), rate = el('div', { class: 'dim' });
+    const cookieBtn = el('button', { class: 'cookie-btn', title: 'Click!', 'aria-label': 'Cookie' }, '🍪');
+    const pops = el('div', { style: 'position:absolute;inset:0;pointer-events:none;overflow:hidden' });
+    const shop = el('div', { class: 'col gap-6 scroll', style: 'flex:1;min-height:0' });
+    let last = Date.now(), lastSave = Date.now();
+
+    const paint = () => {
+      total.textContent = `${cookieFormat(e.cookies)} cookies`;
+      rate.textContent = `${cookieFormat(e.cps)} per second · ${e.clickValue} per click`;
+      const rows = [];
+      const up = e.nextUpgrade;
+      rows.push(el('button', { class: 'btn quiet', style: 'justify-content:space-between;width:100%', disabled: up === null || e.cookies < up, onclick: () => { e.buyUpgrade(); paint(); } },
+        el('span', {}, up === null ? 'Click power maxed' : `Double click power (×${e.clickValue * 2})`), el('span', { class: 'num dim' }, up === null ? '' : cookieFormat(up))));
+      for (const b of BUILDINGS) {
+        if (!e.isUnlocked(b)) continue;
+        rows.push(el('button', { class: 'btn quiet', style: 'justify-content:space-between;width:100%', disabled: e.cookies < e.cost(b), onclick: () => { e.buy(b); paint(); } },
+          el('span', { class: 'hstack' }, el('span', {}, b.glyph), `${b.name}`, el('span', { class: 'tiny dim' }, `×${e.count(b.id)}`)), el('span', { class: 'num dim' }, cookieFormat(e.cost(b)))));
+      }
+      shop.replaceChildren(...rows);
+    };
+    const pop = (n) => {
+      const p = el('div', { style: `position:absolute;left:calc(50% + ${Math.round(Math.random() * 60 - 30)}px);top:38%;font-weight:800;color:var(--accent-bright);animation:cookie-pop .9s ease-out forwards` }, `+${cookieFormat(n)}`);
+      pops.append(p); setTimeout(() => p.remove(), 900);
+    };
+    cookieBtn.addEventListener('click', () => { pop(e.click()); total.textContent = `${cookieFormat(e.cookies)} cookies`; });
+    const t = setInterval(() => {
+      const now = Date.now(); e.tick((now - last) / 1000); last = now;
+      if (now - lastSave > 5000) { save(KEY, e); lastSave = now; }
+      paint();
+    }, 100);
     paint();
-  }, 100);
-  paint();
-  host.replaceChildren(el('div', { class: 'row fill', style: 'gap:16px;width:100%' },
-    el('div', { class: 'card col', style: 'flex:1;align-items:center;justify-content:center;position:relative' }, total, rate, cookieBtn, pops),
-    el('div', { class: 'card col', style: 'flex:1;min-width:0' }, el('div', { class: 'section-title' }, 'Shop'), shop)));
-  return () => { clearInterval(t); save(KEY, e); };
+    const content = el('div', { class: 'row fill', style: 'gap:16px;width:100%' },
+      el('div', { class: 'card col', style: 'flex:1;align-items:center;justify-content:center;position:relative' }, total, rate, cookieBtn, pops),
+      el('div', { class: 'card col', style: 'flex:1;min-width:0' }, el('div', { class: 'section-title' }, 'Shop'), shop));
+    host.replaceChildren(content);
+    return () => { clearInterval(t); save(KEY, e); };
+  };
+
+  const iframe = el('iframe', { src: URL, style: 'width:100%;height:100%;border:none;background:var(--surface)' });
+
+  fetch(URL, { mode: 'no-cors' })
+    .then(() => {
+      host.replaceChildren(iframe);
+    })
+    .catch(() => {
+      showErrorMessage("Game unavailable. Loading local version...");
+      setTimeout(() => {
+        loadNative();
+      }, 5000);
+    });
+
+  return () => {
+    host.replaceChildren();
+  };
 }
 
 // ---------------------------------------------------------------- Runner

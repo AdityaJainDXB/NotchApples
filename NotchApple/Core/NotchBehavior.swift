@@ -40,6 +40,10 @@ enum NotchPrefs {
     @MainActor static var bigGameOpen = false
     static let bigGameSize = CGSize(width: 960, height: 600)
 
+    /// Set while the browser is open: the panel grows to fit a better web view.
+    @MainActor static var bigBrowserOpen = false
+    static let bigBrowserSize = CGSize(width: 1100, height: 700)
+
     /// The panel size this Mac may use: custom sizes need Pro.
     @MainActor static var panelSize: CGSize {
         var size = defaultSize
@@ -47,6 +51,7 @@ enum NotchPrefs {
             size = CGSize(width: panelWidth.clamped(to: widthRange), height: panelHeight.clamped(to: heightRange))
         }
         if bigGameOpen { size = CGSize(width: max(size.width, bigGameSize.width), height: max(size.height, bigGameSize.height)) }
+        if bigBrowserOpen { size = CGSize(width: max(size.width, bigBrowserSize.width), height: max(size.height, bigBrowserSize.height)) }
         return size
     }
 }
