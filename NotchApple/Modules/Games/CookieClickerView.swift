@@ -23,7 +23,7 @@ struct CookieWebView: NSViewRepresentable {
     func makeNSView(context: Context) -> CookieWKWebView {
         let web = CookieWKWebView()
         web.navigationDelegate = web
-        web.load(URL(string: "https://cookieclicker.eu/cookieclicker/")!)
+        web.load(URLRequest(url: URL(string: "https://cookieclicker.eu/cookieclicker/")!))
         web.onFail = onFail
         return web
     }
@@ -122,6 +122,7 @@ struct CookieClickerView: View {
         }
     }
 
+    @ViewBuilder
     private var nativeGame: some View {
         let e = model.engine
         HStack(alignment: .top, spacing: 14) {
