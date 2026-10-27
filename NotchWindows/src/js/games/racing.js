@@ -655,7 +655,7 @@
     c.steerA += (target - c.steerA) * (1 - Math.exp(-dt * 9));
     const wd = vf0 * Math.tan(c.steerA) / WHEELBASE;
     const power = inp.throttle * Math.abs(c.steerA) / sp.steer;
-    let grip = sp.grip * tyreGrip(c) * (1 - 0.32 * clamp(c.wear || 0, 0, 1)) * surf * (1 + (sp.down || 0) * (vf0 * vf0) / (sp.vmax * sp.vmax)) * (1 - sp.loose * 0.5 * power * clamp(Math.abs(vf0) / 30, 0, 1)) * clamp(1 + (vf0 * vf0 * curv) / 100, 0, 5);
+    let grip = sp.grip * tyreGrip(c) * (1 - 0.32 * clamp(c.wear || 0, 0, 1)) * surf * (1 + (sp.down || 0) * (vf0 * vf0) / (sp.vmax * sp.vmax)) * (1 - sp.loose * 0.5 * power * clamp(Math.abs(vf0) / 30, 0, 1)) * clamp(1 + (vf0 * vf0 * curv) / 200, 0, 5);
     let w;
     const slip = c.vl / Math.max(Math.abs(c.vf), 5);        // how far sideways the car is travelling (last step)
     if (inp.hand) { w = clamp(wd * 1.25, -2, 2); grip *= 0.3; }
