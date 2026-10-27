@@ -75,7 +75,7 @@ Pick your computer. Both buttons start the download straight away. The Mac link 
       <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.1.63</b></a>
     </td>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 2.1.62 BETA</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 2.1.64 BETA</b></a>
     </td>
   </tr>
   <tr>
@@ -244,6 +244,10 @@ All screenshots use sample data.
 - Plane: leaving the game while you are in a shared Battle now also leaves the room and stops its background timers, so it no longer keeps a connection open.
 - Racing: other drivers' names in a shared race are cleaned of markup before they are shown.
 - Racing: 3D hills — tracks now have elevation. The 3D view draws every track with its ups and downs, car physics respond to gravity on slopes (uphill slows you, downhill speeds you up), and the track editor can set a height on any point.
+
+### Windows 2.1.64 BETA · 27 October 2026 · 🪄 Do It works again
+
+- Do It no longer gets stuck. Starting a task could freeze on "starting" because the little status window with the Stop button was opened in a way Windows can't handle. Now it opens properly, and every step (screenshot, AI answer, click, typing) has a time limit, so a run that can't go on stops with a message instead of hanging.
 
 ### Mac 2.1.63 · 27 October 2026 · 📍 Put the notch anywhere
 

@@ -305,8 +305,10 @@ pub fn on_shortcut(app: &AppHandle, id: u32) -> bool {
 }
 
 /// A run starts (true) or ends (false): Ctrl+Alt+Esc is the Stop shortcut and the status window is shown only while it runs.
+/// Async on purpose: on Windows, building a window inside a synchronous command deadlocks (the command runs on the
+/// main thread, which the new window needs), and that left Do It stuck on "starting".
 #[tauri::command]
-pub fn doit_arm(app: AppHandle, on: bool) -> Result<bool, String> {
+pub async fn doit_arm(app: AppHandle, on: bool) -> Result<bool, String> {
     use tauri_plugin_global_shortcut::{GlobalShortcutExt, Shortcut};
     ARMED.store(on, Ordering::Relaxed);
     let mut hotkey_ok = false;
