@@ -12,7 +12,10 @@
       "Bash(find /usr/local/bin /usr/bin /bin /opt/homebrew/bin -name gh 2>/dev/null)",
       "Bash(git tag *)",
       "Bash(env)",
-      "Bash(gh run *)"
+      "Bash(gh run *)",
+      "Bash(git pull *)",
+      "Bash(git stash *)",
+      "Bash(./scripts/prune-releases.sh)"
     ]
   }
 }

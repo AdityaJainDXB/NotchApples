@@ -17,8 +17,8 @@ struct MessengerMessage: Identifiable, Equatable {
     let text: String
     let date: Date
     let isMine: Bool
-    let fileData: Data?
-    let fileName: String?
+    let fileData: Data? = nil
+    let fileName: String? = nil
     /// System notices such as "PurplePanda#402 joined".
     var isNotice = false
 }
@@ -31,9 +31,9 @@ struct MessengerEnvelope: Codable {
     let id: UUID
     let senderID: String
     let sender: String
-    let text: String?
-    let fileData: Data?
-    let fileName: String?
+    let text: String? = nil
+    let fileData: Data? = nil
+    let fileName: String? = nil
     let ts: Date
 }
 
