@@ -20,6 +20,10 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.1.63", date: "27 October 2026", headline: "Put the notch anywhere", items: [
+            "Move the notch anywhere: Settings → Notch → Adjust placement of notch. Drag the notch where you want it on the screen (it snaps to the top edge and the centre line), then Confirm placement, Reset to top centre or Cancel. It keeps the same shape and way up, and clicking it still slides the panel down out of it.",
+            "Fixed: the Mac build of 2.1.62 failed to compile (sending a file in Messenger), so 2.1.62 never came out for Mac. This release includes everything from 2.1.62.",
+        ]),
         ReleaseNote(version: "2.1.60", date: "25 October 2026", headline: "Hills and elevation in the 3D view", items: [
             "Racing: tracks now have elevation. The 3D view draws every track with its ups and downs, car physics respond to gravity on slopes (uphill slows you, downhill speeds you up), and the track editor can set a height on any point. Tracks with elevation can be shared with friends.",
         ] as [String]),

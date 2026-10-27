@@ -645,7 +645,9 @@ final class NotchWindowController {
         guard let screen = targetScreen, !state.isExpanded, !state.isAutoHidden, !SettingsManager.shared.isNotchHidden else { return }
         let p = NSEvent.mouseLocation
         let halfWidth = NotchPrefs.edgeTrigger == "edge" ? screen.frame.width / 2 : state.notchSize.width + 100
-        let inZone = p.y >= screen.frame.maxY - 2 && abs(p.x - screen.frame.midX) <= halfWidth && screen.frame.contains(CGPoint(x: p.x, y: p.y - 1))
+        // A notch moved away from the top edge opens from its own hover area instead.
+        let centre = NotchPrefs.anchor(on: screen, width: state.notchSize.width).x
+        let inZone = NotchPrefs.isAtTop && p.y >= screen.frame.maxY - 2 && abs(p.x - (NotchPrefs.edgeTrigger == "edge" ? screen.frame.midX : centre)) <= halfWidth && screen.frame.contains(CGPoint(x: p.x, y: p.y - 1))
         if inZone {
             guard edgeWork == nil else { return }
             let work = DispatchWorkItem { [weak self] in
@@ -802,9 +804,20 @@ final class NotchWindowController {
         panel.setFrame(frame(size: state.expandedSize, on: screen), display: false)
     }
 
+    /// Both windows hang from the notch's chosen place (the top centre unless moved), so opening still slides
+    /// down out of the notch wherever it is. A wide panel is kept on the screen.
     private func frame(size: CGSize, on screen: NSScreen) -> NSRect {
-        NSRect(x: screen.frame.midX - size.width / 2, y: screen.frame.maxY - size.height,
-               width: size.width, height: size.height)
+        let a = NotchPrefs.anchor(on: screen, width: state.notchSize.width), f = screen.frame
+        let x = min(max(a.x - size.width / 2, f.minX), f.maxX - size.width)
+        let y = max(a.y - size.height, f.minY)
+        return NSRect(x: x, y: y, width: size.width, height: size.height)
+    }
+
+    /// Settings → Notch → Adjust placement of notch: drag the notch anywhere, then confirm.
+    func adjustPlacement() {
+        guard let screen = targetScreen else { return }
+        collapse(force: true)
+        NotchPlacementEditor.open(on: screen, notchSize: state.notchSize) { [weak self] in self?.reposition() }
     }
 
     func toggle() { state.isExpanded ? collapse(force: true) : expand() }
@@ -936,8 +949,8 @@ final class NotchWindowController {
         guard down else { dragOpened = false; stopDragPolling(); return }
         guard !dragOpened, !state.isExpanded, board.changeCount != dragChangeCountAtPress,
               board.types?.contains(.fileURL) == true, let screen = targetScreen else { return }
-        let p = NSEvent.mouseLocation, f = screen.frame
-        guard p.y > f.maxY - 70, abs(p.x - f.midX) < 240 else { return }
+        let p = NSEvent.mouseLocation, a = NotchPrefs.anchor(on: screen, width: state.notchSize.width)
+        guard p.y > a.y - 70, p.y <= a.y + 2, abs(p.x - a.x) < 240 else { return }
         dragOpened = true
         DragLog.log.notice("drag near the notch: opening")
         openForDrop()
@@ -988,7 +1001,8 @@ final class NotchWindowController {
         peekHost.sizingOptions = []
         panel.contentView = peekHost
         let size = CGSize(width: max(state.notchSize.width + 160, 320), height: 34)
-        panel.setFrame(NSRect(x: screen.frame.midX - size.width / 2, y: screen.frame.maxY - state.notchSize.height - size.height - 4,
+        let a = NotchPrefs.anchor(on: screen, width: state.notchSize.width)
+        panel.setFrame(NSRect(x: a.x - size.width / 2, y: a.y - state.notchSize.height - size.height - 4,
                               width: size.width, height: size.height), display: true)
         panel.alphaValue = 0
         panel.orderFrontRegardless()

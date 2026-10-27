@@ -18,6 +18,21 @@ import SwiftUI
 // MARK: - Preferences
 
 enum NotchPrefs {
+    /// Where the closed notch sits (Settings → Notch → Adjust placement of notch): its centre as a fraction of the
+    /// screen's width and its top as points below the top of the screen. The default is the top centre.
+    @AppStorage("notch.placementX") static var placementX = 0.5
+    @AppStorage("notch.placementY") static var placementY = 0.0
+
+    /// The top centre of the closed notch on a screen, kept fully on that screen.
+    static func anchor(on screen: NSScreen, width: CGFloat) -> NSPoint {
+        let f = screen.frame, half = min(width / 2, f.width / 2)
+        let x = min(max(f.minX + f.width * placementX, f.minX + half), f.maxX - half)
+        let y = f.maxY - min(max(placementY, 0), f.height - 60)
+        return NSPoint(x: x, y: y)
+    }
+
+    static var isAtTop: Bool { placementY < 1 }
+
     @AppStorage("notch.hoverDelay") static var hoverDelay = 0.15
     @AppStorage("notch.autoHideFullscreen") static var autoHideFullscreen = true
     /// Keep the notch on screen over full-screen apps (for Macs without a hardware notch, where it would

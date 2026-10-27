@@ -72,7 +72,7 @@ Pick your computer. Both buttons start the download straight away. The Mac link 
   </tr>
   <tr>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.1.62</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.1.63</b></a>
     </td>
     <td align="center">
       <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 2.1.62 BETA</b></a>
@@ -244,6 +244,11 @@ All screenshots use sample data.
 - Plane: leaving the game while you are in a shared Battle now also leaves the room and stops its background timers, so it no longer keeps a connection open.
 - Racing: other drivers' names in a shared race are cleaned of markup before they are shown.
 - Racing: 3D hills — tracks now have elevation. The 3D view draws every track with its ups and downs, car physics respond to gravity on slopes (uphill slows you, downhill speeds you up), and the track editor can set a height on any point.
+
+### Mac 2.1.63 · 27 October 2026 · 📍 Put the notch anywhere
+
+- Move the notch anywhere: Settings → Notch → Adjust placement of notch. Drag the notch where you want it on the screen (it snaps to the top edge and the centre line), then Confirm placement, Reset to top centre or Cancel. It keeps the same shape and way up, and clicking it still slides the panel down out of it.
+- Fixed: the Mac build of 2.1.62 failed to compile (sending a file in Messenger), so 2.1.62 never came out for Mac. This release includes everything from 2.1.62.
 
 ### Mac 2.1.60 · Windows 2.1.60 BETA · 25 October 2026 · 🏔️ Racing: hills and elevation in the 3D view
 

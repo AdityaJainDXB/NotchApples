@@ -33,6 +33,16 @@ struct NotchSettings: View {
 
     var body: some View {
         Form {
+            Section {
+                LabeledContent {
+                    Button("Adjust placement of notch") { notch?.adjustPlacement() }
+                } label: {
+                    Text("Placement")
+                    Text("Drag the notch anywhere on the screen, then confirm. It still opens by sliding down out of itself.")
+                }
+            } header: {
+                Text("Notch placement")
+            }
             Section("Top bar") {
                 TopBarSwitches()
             }

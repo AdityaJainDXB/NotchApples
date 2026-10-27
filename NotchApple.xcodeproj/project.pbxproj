@@ -152,6 +152,7 @@
 		54CD01E3A05200B4078306CB /* Still-MIT.txt in Resources */ = {isa = PBXBuildFile; fileRef = F626925A0B733CB3009A7B57 /* Still-MIT.txt */; };
 		551145056941A04D36C2B5A2 /* AIPure.swift in Sources */ = {isa = PBXBuildFile; fileRef = B3E33F2560D7769C54AC98C1 /* AIPure.swift */; };
 		553912A7F74AE2BD3C03C4CD /* CompanionPairing.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E7ACC6F1129AAB5813B46CB /* CompanionPairing.swift */; };
+		C1D2E3F4A5B60718293A4B6E /* NotchPlacementEditor.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1E2F3A4B5C60718293A4B7F /* NotchPlacementEditor.swift */; };
 		559ACE16871EEAB029D13015 /* NotchSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 68B9FDCF64AD3B173A4D3440 /* NotchSettings.swift */; };
 		559DB140309458EAB8AD6BFF /* MediaKeyInterceptor.swift in Sources */ = {isa = PBXBuildFile; fileRef = D27AA020801BE2A842BE0732 /* MediaKeyInterceptor.swift */; };
 		55B5D9E2B9828B9D1E5F5470 /* Motion.swift in Sources */ = {isa = PBXBuildFile; fileRef = B790EEB4462E110FE4001DEE /* Motion.swift */; };
@@ -579,6 +580,7 @@
 		66DBB35434CEBAA72E675AD4 /* OpenRouterFallback.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenRouterFallback.swift; sourceTree = "<group>"; };
 		6747ADA828FF1D33683B30C8 /* ClaudeClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClaudeClient.swift; sourceTree = "<group>"; };
 		67D16800EDB504F3DA0705BE /* SnapDropController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SnapDropController.swift; sourceTree = "<group>"; };
+		D1E2F3A4B5C60718293A4B7F /* NotchPlacementEditor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotchPlacementEditor.swift; sourceTree = "<group>"; };
 		68B9FDCF64AD3B173A4D3440 /* NotchSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotchSettings.swift; sourceTree = "<group>"; };
 		69B4A0D4B7C6F5540FABA3AE /* RacingGame.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = RacingGame.html; sourceTree = "<group>"; };
 		69FFE07B5C8CD7AE23B2DDA7 /* DuoAnimation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DuoAnimation.swift; sourceTree = "<group>"; };
@@ -991,6 +993,7 @@
 				4894C776E7909EF42A1F97E9 /* ModuleOrganizer.swift */,
 				B790EEB4462E110FE4001DEE /* Motion.swift */,
 				1C5A54FB338D3A1C23699078 /* NotchRootView.swift */,
+				D1E2F3A4B5C60718293A4B7F /* NotchPlacementEditor.swift */,
 				68B9FDCF64AD3B173A4D3440 /* NotchSettings.swift */,
 				9A7251824E64423A2B944890 /* OnboardingView.swift */,
 				AEE864984A3F4F0633B5BE65 /* PageChips.swift */,
@@ -2051,6 +2054,7 @@
 				FAB1EFFAB5CBA5F0A84E1C3B /* NotchGestures.swift in Sources */,
 				5DCFF5FAC0FB3C4B22AE8E7B /* NotchMessengerView.swift in Sources */,
 				94FE896FD0765E79EB83E825 /* NotchRootView.swift in Sources */,
+				C1D2E3F4A5B60718293A4B6E /* NotchPlacementEditor.swift in Sources */,
 				559ACE16871EEAB029D13015 /* NotchSettings.swift in Sources */,
 				BFA1CCA183B16AE648A0EA3F /* NotchStatsView.swift in Sources */,
 				EA8BCEA5F012BD96146FA293 /* NotchTranslatorView.swift in Sources */,
@@ -2432,7 +2436,7 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 2.1.60;
+				MARKETING_VERSION = 2.1.63;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -2572,7 +2576,7 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 2.1.60;
+				MARKETING_VERSION = 2.1.63;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
