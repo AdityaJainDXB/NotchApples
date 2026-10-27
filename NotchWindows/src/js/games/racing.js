@@ -655,7 +655,7 @@
     c.steerA += (target - c.steerA) * (1 - Math.exp(-dt * 9));
     const wd = vf0 * Math.tan(c.steerA) / WHEELBASE;
     const power = inp.throttle * Math.abs(c.steerA) / sp.steer;
-    let grip = sp.grip * tyreGrip(c) * (1 - 0.32 * clamp(c.wear || 0, 0, 1)) * surf * (1 + (sp.down || 0) * (vf0 * vf0) / (sp.vmax * sp.vmax)) * (1 - sp.loose * 0.5 * power * clamp(Math.abs(vf0) / 30, 0, 1)) * clamp(1 + (vf0 * vf0 * curv) / 9.8, 0, 5);
+    let grip = sp.grip * tyreGrip(c) * (1 - 0.32 * clamp(c.wear || 0, 0, 1)) * surf * (1 + (sp.down || 0) * (vf0 * vf0) / (sp.vmax * sp.vmax)) * (1 - sp.loose * 0.5 * power * clamp(Math.abs(vf0) / 30, 0, 1)) * clamp(1 + (vf0 * vf0 * curv) / 100, 0, 5);
     let w;
     const slip = c.vl / Math.max(Math.abs(c.vf), 5);        // how far sideways the car is travelling (last step)
     if (inp.hand) { w = clamp(wd * 1.25, -2, 2); grip *= 0.3; }
@@ -2272,7 +2272,7 @@
       g.setTransform(1, 0, 0, 1, 0, 0);
       if (view) drawHud();
     }
-    function drawHud() {
+    function drawHud() { if (me) { g.fillStyle = "white"; g.font = "12px monospace"; g.fillText(`Z: ${me.car.z.toFixed(2)}m | Slope: ${(me.car.slope || 0).toFixed(3)}`, 20, 20); }
       const s = Math.min(W, H) / 400, order = ranking(racers), pos = order.indexOf(me) + 1;
       // Rain: a grey sky and streaks, heavier the wetter the track.
       if (WET > 0.04 && (screen === 'race' || screen === 'done' || screen === 'countdown' || screen === 'formation')) {
@@ -2611,7 +2611,7 @@
         let i = idx0 + k;
         if (T.closed) i = ((i % T.m) + T.m) % T.m; else if (i < 0 || i >= T.m - 1) continue;
         const a = T.S[i], b = T.S[T.closed ? (i + 1) % T.m : i + 1], band = Math.floor(a.s / 12) % 2;
-        strip(a, b, -wall - 60, -wd - 1.2, shade(ground, band ? 0.93 : 1.04)); strip(a, b, wd + 1.2, wall + 60, shade(ground, band ? 0.93 : 1.04));
+        strip(a, b, -wall - 60, -wd - 1.2, shade(ground, band ? 0.93 : 1.04), a.z, b.z); strip(a, b, wd + 1.2, wall + 60, shade(ground, band ? 0.93 : 1.04), a.z, b.z);
         strip(a, b, -wd, wd, band ? '#383b42' : road, a.z, b.z);
         const kerb = Math.floor(a.s / 4) % 2 ? '#e8e8e8' : '#d63a3a', curvy = Math.abs(a.k) > 0.004;
         strip(a, b, -wd - 1.2, -wd, curvy ? kerb : '#e8e8e8', a.z, b.z); strip(a, b, wd, wd + 1.2, curvy ? kerb : '#e8e8e8', a.z, b.z);
