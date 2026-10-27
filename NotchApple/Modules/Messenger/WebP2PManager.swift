@@ -29,7 +29,6 @@
 //  Note: short numeric codes are easy to guess. Anyone who knows (or guesses)
 //  the code can join, so longer room names are more private. The UI says so.
 //
-
 import Foundation
 import CryptoKit
 
@@ -131,19 +130,19 @@ final class WebP2PManager: ObservableObject {
 
     // MARK: Messaging
 
-    func send(_ text: String) {
-        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmed.isEmpty, state == .joined else { return }
-        let env = publish(kind: .message, text: String(trimmed.prefix(2000)))
+    func send(_ text: String? = nil, fileData: Data? = nil, fileName: String? = nil) {
+        let trimmed = text?.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard trimmed != nil || fileData != nil, state == .joined else { return }
+        let env = publish(kind: .message, text: trimmed != nil ? String(trimmed!.prefix(2000)) : nil, fileData: fileData, fileName: fileName)
         seenIDs.insert(env.id)
         messages.append(MessengerMessage(id: env.id, senderID: identity.senderID, sender: identity.handle,
-                                         text: trimmed, date: env.ts, isMine: true))
+                                         text: trimmed ?? "", date: env.ts, isMine: true, fileData: fileData, fileName: fileName))
     }
 
     @discardableResult
-    private func publish(kind: MessengerEnvelope.Kind, text: String?) -> MessengerEnvelope {
+    private func publish(kind: MessengerEnvelope.Kind, text: String?, fileData: Data? = nil, fileName: String? = nil) -> MessengerEnvelope {
         let env = MessengerEnvelope(kind: kind, id: UUID(), senderID: identity.senderID,
-                                    sender: identity.handle, text: text, ts: .now)
+                                    sender: identity.handle, text: text, fileData: fileData, fileName: fileName, ts: .now)
         // Only publish once at least one relay is live (timers can fire while reconnecting).
         guard state == .joined || kind == .leave,
               let key, let topic, let json = try? JSONEncoder().encode(env),
@@ -200,12 +199,12 @@ final class WebP2PManager: ObservableObject {
             seenIDs.insert(env.id)
             if let m = members.removeValue(forKey: env.senderID) { notice("\(m.handle) left") }
         case .message:
-            guard !isMe, !seenIDs.contains(env.id), let text = env.text else { return }
+            guard !isMe, !seenIDs.contains(env.id) else { return }
             seenIDs.insert(env.id)
             if members[env.senderID] == nil { notice("\(env.sender) joined") }
             members[env.senderID] = (String(env.sender.prefix(32)), .now)
             messages.append(MessengerMessage(id: env.id, senderID: env.senderID, sender: String(env.sender.prefix(32)),
-                                             text: String(text.prefix(2000)), date: env.ts, isMine: false))
+                                             text: env.text ?? "", date: env.ts, isMine: false, fileData: env.fileData, fileName: env.fileName))
             MessengerNotifier.shared.incoming(messages[messages.count - 1], source: "Room #\(room ?? "")")
         }
     }

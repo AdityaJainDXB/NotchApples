@@ -98,7 +98,7 @@ struct CookieClickerView: View {
     @State private var showingError = false
 
     var body: some View {
-        ZStack {
+        ZStack(alignment: .bottomTrailing) {
             if loadFailed {
                 nativeGame
             } else {
@@ -107,6 +107,14 @@ struct CookieClickerView: View {
                     showingError = true
                     DispatchQueue.main.asyncAfter(deadline: .now() + 5) { showingError = false }
                 }
+
+                Button("Classic") { loadFailed = true }
+                    .font(.system(size: 10, weight: .bold))
+                    .foregroundStyle(.white.opacity(0.6))
+                    .padding(6)
+                    .background(Color.black.opacity(0.4), in: Capsule())
+                    .padding(8)
+                    .zIndex(1)
             }
 
             if showingError {

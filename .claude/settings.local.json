@@ -4,7 +4,15 @@
       "Bash(git add *)",
       "Bash(git commit *)",
       "Bash(git push *)",
-      "Bash(git config *)"
+      "Bash(git config *)",
+      "Bash(./scripts/prune-releases.sh --dry-run)",
+      "Bash(gh --version)",
+      "Bash(find /usr/local/bin /usr/bin /bin -name gh 2>/dev/null)",
+      "Bash(brew --version)",
+      "Bash(find /usr/local/bin /usr/bin /bin /opt/homebrew/bin -name gh 2>/dev/null)",
+      "Bash(git tag *)",
+      "Bash(env)",
+      "Bash(gh run *)"
     ]
   }
 }

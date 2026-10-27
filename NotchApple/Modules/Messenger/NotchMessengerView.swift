@@ -7,6 +7,7 @@
 //
 
 import SwiftUI
+import AppKit
 
 struct NotchMessengerView: View {
     enum Mode: String, CaseIterable { case nearby, room }
@@ -188,6 +189,10 @@ struct NotchMessengerView: View {
 
     private var inputBar: some View {
         HStack(spacing: 6) {
+            Button { selectFile() } label: {
+                Image(systemName: "paperclip").font(.system(size: 15)).frame(width: 28, height: 28).contentShape(Rectangle())
+            }
+            .buttonStyle(.plain).foregroundStyle(Theme.textSecondary).help("Attach file")
             ForEach(Self.emoji, id: \.self) { e in
                 Button { draft += e } label: {
                     Text(e).font(.system(size: 15)).frame(width: 28, height: 28).contentShape(Rectangle())
@@ -202,8 +207,19 @@ struct NotchMessengerView: View {
                 .onSubmit(send)
             Button(action: send) { Image(systemName: "arrow.up") }
                 .buttonStyle(PurpleButtonStyle())
-                .disabled(!canSend || draft.trimmingCharacters(in: .whitespaces).isEmpty)
+                .disabled(!canSend || (draft.trimmingCharacters(in: .whitespaces).isEmpty))
                 .help("Send (Return)")
+        }
+    }
+
+    private func selectFile() {
+        let panel = NSOpenPanel()
+        panel.allowsMultipleSelection = false
+        panel.canChooseDirectories = false
+        if panel.runModal() == .OK, let url = panel.url {
+            if let data = try? Data(contentsOf: url) {
+                send(fileData: data, fileName: url.lastPathComponent)
+            }
         }
     }
 
@@ -230,18 +246,39 @@ private struct MessengerBubble: View {
                         Text(message.sender).font(.system(size: 11, weight: .semibold))
                             .foregroundStyle(MessengerMessage.color(for: message.senderID))
                     }
-                    Text(message.text)
-                        .font(.system(size: 13)).foregroundStyle(.white).textSelection(.enabled)
-                        .padding(.horizontal, 12).padding(.vertical, 7)
-                        .background(
-                            RoundedRectangle(cornerRadius: 14, style: .continuous)
-                                .fill(message.isMine ? AnyShapeStyle(Theme.accentGradient) : AnyShapeStyle(Theme.surfaceHover))
-                        )
+                    VStack(alignment: message.isMine ? .trailing : .leading, spacing: 4) {
+                        if let data = message.fileData, let name = message.fileName {
+                            Button { openFile(name: name, data: data) } label: {
+                                Label(name, systemImage: "doc.fill")
+                                    .font(.system(size: 12, weight: .medium))
+                                    .foregroundStyle(.white)
+                                    .padding(.horizontal, 8).padding(.vertical, 4)
+                                    .background(Theme.accent.opacity(0.5), in: Capsule())
+                            }
+                            .buttonStyle(.plain)
+                        }
+                        if !message.text.isEmpty {
+                            Text(message.text)
+                                .font(.system(size: 13)).foregroundStyle(.white).textSelection(.enabled)
+                                .padding(.horizontal, 12).padding(.vertical, 7)
+                                .background(
+                                    RoundedRectangle(cornerRadius: 14, style: .continuous)
+                                        .fill(message.isMine ? AnyShapeStyle(Theme.accentGradient) : AnyShapeStyle(Theme.surfaceHover))
+                                )
+                        }
+                    }
                     Text(message.date, style: .time).font(.system(size: 10)).foregroundStyle(Theme.textSecondary)
                 }
                 if !message.isMine { Spacer(minLength: 80) }
             }
         }
+    }
+
+    private func openFile(name: String, data: Data) {
+        let tempDir = FileManager.default.temporaryDirectory
+        let fileURL = tempDir.appendingPathComponent(name)
+        try? data.write(to: fileURL)
+        NSWorkspace.shared.open(fileURL)
     }
 
     private var avatar: some View {

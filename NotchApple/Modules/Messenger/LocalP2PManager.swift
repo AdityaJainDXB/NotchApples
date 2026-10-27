@@ -85,18 +85,18 @@ final class LocalP2PManager: NSObject, ObservableObject {
 
     // MARK: Messaging
 
-    func send(_ text: String) {
-        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmed.isEmpty else { return }
-        let envelope = broadcast(kind: .message, text: String(trimmed.prefix(2000)))
+    func send(_ text: String? = nil, fileData: Data? = nil, fileName: String? = nil) {
+        let trimmed = text?.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard trimmed != nil || fileData != nil else { return }
+        let envelope = broadcast(kind: .message, text: trimmed != nil ? String(trimmed!.prefix(2000)) : nil, fileData: fileData, fileName: fileName)
         messages.append(MessengerMessage(id: envelope.id, senderID: identity.senderID, sender: identity.handle,
-                                         text: trimmed, date: envelope.ts, isMine: true))
+                                         text: trimmed ?? "", date: envelope.ts, isMine: true, fileData: fileData, fileName: fileName))
     }
 
     @discardableResult
-    private func broadcast(kind: MessengerEnvelope.Kind, text: String?) -> MessengerEnvelope {
+    private func broadcast(kind: MessengerEnvelope.Kind, text: String?, fileData: Data? = nil, fileName: String? = nil) -> MessengerEnvelope {
         let envelope = MessengerEnvelope(kind: kind, id: UUID(), senderID: identity.senderID,
-                                         sender: identity.handle, text: text, ts: .now)
+                                         sender: identity.handle, text: text, fileData: fileData, fileName: fileName, ts: .now)
         if let session, !session.connectedPeers.isEmpty, let data = try? JSONEncoder().encode(envelope) {
             try? session.send(data, toPeers: session.connectedPeers, with: .reliable)
         }
@@ -108,9 +108,9 @@ final class LocalP2PManager: NSObject, ObservableObject {
         senderIDs[peer] = env.senderID
         switch env.kind {
         case .message:
-            guard let text = env.text, !messages.contains(where: { $0.id == env.id }) else { return }
+            guard !messages.contains(where: { $0.id == env.id }) else { return }
             messages.append(MessengerMessage(id: env.id, senderID: env.senderID, sender: env.sender,
-                                             text: String(text.prefix(2000)), date: env.ts, isMine: false))
+                                             text: env.text ?? "", date: env.ts, isMine: false, fileData: env.fileData, fileName: env.fileName))
             MessengerNotifier.shared.incoming(messages[messages.count - 1], source: "Nearby Wi-Fi")
         case .presence, .leave:
             break
