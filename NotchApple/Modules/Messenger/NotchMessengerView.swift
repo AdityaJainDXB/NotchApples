@@ -218,7 +218,7 @@ struct NotchMessengerView: View {
         panel.canChooseDirectories = false
         if panel.runModal() == .OK, let url = panel.url {
             if let data = try? Data(contentsOf: url) {
-                if mode == .nearby { local.send(fileData: data, fileName: url.lastPathComponent) } else { web.send(fileData: data, fileName: url.lastPathComponent) }
+                mode == .nearby ? local.send(fileData: data, fileName: url.lastPathComponent) : web.send(fileData: data, fileName: url.lastPathComponent)
             }
         }
     }
