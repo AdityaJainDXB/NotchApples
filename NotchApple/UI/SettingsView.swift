@@ -556,6 +556,29 @@ private struct ShortcutsSettings: View {
     var body: some View {
         Form {
             Section {
+                Toggle(isOn: $settings.brightnessBlackout) {
+                    Text("⌥A turns the screen brightness to zero and back")
+                    Text("Press Option+A to black out the built-in display and the keyboard backlight, press it again to restore the level it had. Needs Accessibility. The key no longer types \"å\" while this is on.")
+                }
+                .onChange(of: settings.brightnessBlackout) { _, _ in AppDelegate.current?.applyBrightnessBlackoutPreference() }
+                HStack {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Reset keyboard brightness")
+                        Text("⌥A also switches the keyboard backlight off. If it is ever stuck dark, this turns automatic brightness back on and restores a normal level.")
+                            .font(.caption).foregroundStyle(.secondary)
+                    }
+                    Spacer()
+                    Button("Reset") { BrightnessBlackout.shared.resetKeyboardBrightness() }
+                }
+                if settings.brightnessBlackout && !AXIsProcessTrusted() {
+                    Label("Allow Notch Apple in System Settings → Privacy & Security → Accessibility. ⌥A starts working the moment you do.",
+                          systemImage: "exclamationmark.triangle.fill")
+                        .font(.callout).foregroundStyle(.orange)
+                }
+            } header: {
+                Text("Black screen")
+            }
+            Section {
                 Toggle(isOn: $settings.invisibilityHotkeyEnabled) {
                     Text("Hide the notch with \(binding.label)")
                     Text("Press \(binding.label) from anywhere on your Mac to instantly hide or reveal the notch.")
@@ -659,20 +682,6 @@ private struct GeneralSettings: View {
                          : "Needs Accessibility (System Settings → Privacy & Security → Accessibility). Until you allow it, only the macOS pop-up shows, so the two never overlap.")
                 }
                 .disabled(!settings.showSystemHUD)
-                Toggle(isOn: $settings.brightnessBlackout) {
-                    Text("⌥A turns the screen brightness to zero and back")
-                    Text("Press Option+A to black out the built-in display and the keyboard backlight, press it again to restore the level it had. Needs Accessibility. The key no longer types \"å\" while this is on.")
-                }
-                .onChange(of: settings.brightnessBlackout) { _, _ in AppDelegate.current?.applyBrightnessBlackoutPreference() }
-                HStack {
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text("Reset keyboard brightness")
-                        Text("⌥A also switches the keyboard backlight off. If it is ever stuck dark, this turns automatic brightness back on and restores a normal level.")
-                            .font(.caption).foregroundStyle(.secondary)
-                    }
-                    Spacer()
-                    Button("Reset") { BrightnessBlackout.shared.resetKeyboardBrightness() }
-                }
                 Toggle(isOn: $settings.showRecordingIndicator) {
                     Text("Show a dot on the notch while the screen is recorded")
                     Text("Works for Notch Apple's own recordings and the system recorder (⌘⇧5). Other recording apps can't be detected.")

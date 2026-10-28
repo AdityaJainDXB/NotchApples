@@ -350,10 +350,23 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         applyBrightnessBlackoutPreference()
     }
 
-    /// ⌥A toggles the screen to zero brightness and back.
+    /// ⌥A toggles the screen to zero brightness and back. On for everyone (switched on once for anyone who had it off);
+    /// without Accessibility it can't start yet, so it checks again every few seconds and starts once it is allowed.
     func applyBrightnessBlackoutPreference() {
-        BrightnessBlackout.shared.setEnabled(SettingsManager.shared.brightnessBlackout)
+        let d = UserDefaults.standard
+        if !d.bool(forKey: "ui.brightnessBlackout.autoEnabled") {
+            d.set(true, forKey: "ui.brightnessBlackout.autoEnabled")
+            SettingsManager.shared.brightnessBlackout = true
+        }
+        blackoutRetry?.invalidate(); blackoutRetry = nil
+        let on = SettingsManager.shared.brightnessBlackout
+        if BrightnessBlackout.shared.setEnabled(on) || !on { return }
+        blackoutRetry = Timer.scheduledTimer(withTimeInterval: 5, repeats: true) { [weak self] t in
+            guard SettingsManager.shared.brightnessBlackout else { t.invalidate(); return }
+            if BrightnessBlackout.shared.setEnabled(true) { t.invalidate(); self?.blackoutRetry = nil }
+        }
     }
+    private var blackoutRetry: Timer?
 
     @objc func relaunchApp() { AppRelauncher.relaunch() }
     @objc func quitApp() { NSApp.terminate(nil) }

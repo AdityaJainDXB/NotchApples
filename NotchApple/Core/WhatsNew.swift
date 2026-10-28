@@ -20,6 +20,9 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.1.69", date: "28 October 2026", headline: "⌥A black screen for everyone", items: [
+            "⌥A black screen is now on for everyone and listed first in Settings → Shortcuts & Hotkeys. Press Option+A to turn the screen and keyboard backlight off, and again to bring them back. If Accessibility isn't allowed yet, Settings says so, and ⌥A starts working the moment you allow it, without restarting the app.",
+        ]),
         ReleaseNote(version: "2.1.68", date: "28 October 2026", headline: "Smoother hills", items: [
             "Racing, hills: the car no longer shakes on hills. The road height is smoothed along the track, so the slope, tilt and grip no longer jump every few metres.",
         ]),

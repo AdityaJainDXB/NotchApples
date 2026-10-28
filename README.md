@@ -72,7 +72,7 @@ Pick your computer. Both buttons start the download straight away. The Mac link 
   </tr>
   <tr>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.1.68</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.1.69</b></a>
     </td>
     <td align="center">
       <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 2.1.68 BETA</b></a>
@@ -233,6 +233,10 @@ All screenshots use sample data.
 ## What's new
 
 > **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is in the repository's history.
+
+### Mac 2.1.69 · 28 October 2026 · 🌑 ⌥A black screen for everyone
+
+- ⌥A black screen is now on for everyone and listed first in Settings → Shortcuts & Hotkeys. Press Option+A to turn the screen and keyboard backlight off, and again to bring them back. If Accessibility isn't allowed yet, Settings says so, and ⌥A starts working the moment you allow it, without restarting the app.
 
 ### Windows 2.1.56 BETA · 25 October 2026 · 🔒 Safer Do it and plugins
 
