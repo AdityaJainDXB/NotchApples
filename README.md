@@ -72,10 +72,10 @@ Pick your computer. Both buttons start the download straight away. The Mac link 
   </tr>
   <tr>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.1.63</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.1.67</b></a>
     </td>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 2.1.64 BETA</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 2.1.67 BETA</b></a>
     </td>
   </tr>
   <tr>
@@ -248,6 +248,13 @@ All screenshots use sample data.
 ### Windows 2.1.64 BETA · 27 October 2026 · 🪄 Do It works again
 
 - Do It no longer gets stuck. Starting a task could freeze on "starting" because the little status window with the Stop button was opened in a way Windows can't handle. Now it opens properly, and every step (screenshot, AI answer, click, typing) has a time limit, so a run that can't go on stops with a message instead of hanging.
+
+### Mac 2.1.67 · Windows 2.1.67 BETA · 28 October 2026 · 🏁 Hills that look right, a real slipstream, and crowds
+
+- Racing, hills: the road now rises and falls smoothly on the F1 circuits (no more jumps where the track changed height), with a steepest grade of about 7%.
+- Racing, hills: the car tilts nose up going uphill and nose down going downhill, so it no longer sinks into the road at crests and dips.
+- Racing, slipstream: a car tucked in behind another now gets up to 40% less air drag, so the gain builds while you stay close.
+- Racing, crowds: stands line some straights, and the crowd bobs and cheers when an overtake happens near you.
 
 ### Mac 2.1.63 · 27 October 2026 · 📍 Put the notch anywhere
 

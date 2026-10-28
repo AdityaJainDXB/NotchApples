@@ -20,6 +20,12 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.1.67", date: "28 October 2026", headline: "Hills that look right, a real slipstream, and crowds", items: [
+            "Racing, hills: the road now rises and falls smoothly on the F1 circuits (no more jumps where the track changed height), with a steepest grade of about 7%.",
+            "Racing, hills: the car tilts nose up going uphill and nose down going downhill, so it no longer sinks into the road at crests and dips.",
+            "Racing, slipstream: a car tucked in behind another now gets up to 40% less air drag, so the gain builds while you stay close.",
+            "Racing, crowds: stands line some straights, and the crowd bobs and cheers when an overtake happens near you.",
+        ]),
         ReleaseNote(version: "2.1.63", date: "27 October 2026", headline: "Put the notch anywhere", items: [
             "Move the notch anywhere: Settings → Notch → Adjust placement of notch. Drag the notch where you want it on the screen (it snaps to the top edge and the centre line), then Confirm placement, Reset to top centre or Cancel. It keeps the same shape and way up, and clicking it still slides the panel down out of it.",
             "Fixed: the Mac build of 2.1.62 failed to compile (sending a file in Messenger), so 2.1.62 never came out for Mac. This release includes everything from 2.1.62.",
