@@ -72,10 +72,10 @@ Pick your computer. Both buttons start the download straight away. The Mac link 
   </tr>
   <tr>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.1.67</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.1.68</b></a>
     </td>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 2.1.67 BETA</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 2.1.68 BETA</b></a>
     </td>
   </tr>
   <tr>
@@ -248,6 +248,10 @@ All screenshots use sample data.
 ### Windows 2.1.64 BETA · 27 October 2026 · 🪄 Do It works again
 
 - Do It no longer gets stuck. Starting a task could freeze on "starting" because the little status window with the Stop button was opened in a way Windows can't handle. Now it opens properly, and every step (screenshot, AI answer, click, typing) has a time limit, so a run that can't go on stops with a message instead of hanging.
+
+### Mac 2.1.68 · Windows 2.1.68 BETA · 28 October 2026 · 🪨 Smoother hills
+
+- Racing, hills: the road height is smoothed along the track, so the car no longer shakes on the hills.
 
 ### Mac 2.1.67 · Windows 2.1.67 BETA · 28 October 2026 · 🏁 Hills that look right, a real slipstream, and crowds
 

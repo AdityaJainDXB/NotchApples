@@ -144,9 +144,15 @@
       const tx = b[0] - a[0], ty = b[1] - a[1], l = Math.hypot(tx, ty) || 1;
       S.push({ x: out[i][0], y: out[i][1], tx: tx / l, ty: ty / l, nx: -ty / l, ny: tx / l, s: i * step, k: 0, z: out[i][2] || 0 });
     }
+    // Smooth the heights along the road (a light blur, a few passes): the raw samples step a little at every 4 m, which
+    // made the car's slope, pitch and grip jump every sample, so it shook on hills. The shape of the road is unchanged.
+    for (let pass = 0; pass < 4; pass++) {
+      const zs = S.map((q, i) => (S[closed ? (i - 1 + m) % m : Math.max(0, i - 1)].z + 2 * q.z + S[closed ? (i + 1) % m : Math.min(m - 1, i + 1)].z) / 4);
+      S.forEach((q, i) => { q.z = zs[i]; });
+    }
     for (let i = 0; i < m; i++) {
       const a = S[closed ? (i - 1 + m) % m : Math.max(0, i - 1)], b = S[closed ? (i + 1) % m : Math.min(m - 1, i + 1)];
-      S[i].k = wrapPi(Math.atan2(b.ty, b.tx) - Math.atan2(a.ty, a.tx)) / (closed ? 2 * step : (i === 0 || i === m - 1 ? step : 2 * step));
+      S[i].k =wrapPi(Math.atan2(b.ty, b.tx) - Math.atan2(a.ty, a.tx)) / (closed ? 2 * step : (i === 0 || i === m - 1 ? step : 2 * step));
     }
     const length = closed ? m * step : (m - 1) * step;
     let x0 = 1e9, x1 = -1e9, y0 = 1e9, y1 = -1e9, z0 = 1e9, z1 = -1e9;

@@ -20,6 +20,9 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.1.68", date: "28 October 2026", headline: "Smoother hills", items: [
+            "Racing, hills: the car no longer shakes on hills. The road height is smoothed along the track, so the slope, tilt and grip no longer jump every few metres.",
+        ]),
         ReleaseNote(version: "2.1.67", date: "28 October 2026", headline: "Hills that look right, a real slipstream, and crowds", items: [
             "Racing, hills: the road now rises and falls smoothly on the F1 circuits (no more jumps where the track changed height), with a steepest grade of about 7%.",
             "Racing, hills: the car tilts nose up going uphill and nose down going downhill, so it no longer sinks into the road at crests and dips.",

@@ -1,0 +1,3 @@
+## Notch Apple for Windows 2.1.68 (BETA)
+
+- Racing, hills: the car no longer shakes on hills. The road height is smoothed along the track, so the slope, tilt and grip no longer jump every few metres.
