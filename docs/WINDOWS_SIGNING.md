@@ -15,3 +15,11 @@ Windows shows an "unknown publisher" warning for an installer that is not signed
 3. SignPath requires the build to run on GitHub-hosted runners from a tagged commit, which it already does.
 
 Until a certificate exists, nothing here is signed and Windows will warn.
+
+## "It's flagged as a virus" (Defender / SmartScreen)
+
+The cause is almost always that the installer and `notch-apple.exe` are **unsigned and new**, and the app does things antivirus heuristics watch for: a keyboard hook (key sounds), `SendInput` and screen capture (Do It), and an update helper script that waits for the app to close and runs the downloaded installer. Code cannot remove that. What works, in order:
+
+1. **Sign the build** (plan above). This is the real fix and the only one that lasts.
+2. **Report the false positive** to Microsoft for each new release: https://www.microsoft.com/wdsi/filesubmission (choose "Software developer", upload the `-setup.exe`). Other vendors have similar forms. This usually clears Defender within a day or two.
+3. Already done in code: PowerShell is no longer started with `-ExecutionPolicy Bypass` for the file converter.

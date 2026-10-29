@@ -240,7 +240,7 @@ Expand-Archive -LiteralPath $env:NA_IN -DestinationPath $env:NA_OUT"#;
 
 fn powershell(script: &str, input: &str, output: &str, format: &str, seconds: u64) -> Result<String, String> {
     let mut cmd = std::process::Command::new("powershell.exe");
-    cmd.args(["-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-Command", script])
+    cmd.args(["-NoProfile", "-NonInteractive", "-Command", script])
         .env("NA_IN", input)
         .env("NA_OUT", output)
         .env("NA_FMT", format);
