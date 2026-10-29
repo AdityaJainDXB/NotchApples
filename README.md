@@ -75,7 +75,7 @@ Pick your computer. Both buttons start the download straight away. The Mac link 
       <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.1.70</b></a>
     </td>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 2.1.68 BETA</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 2.1.71 BETA</b></a>
     </td>
   </tr>
   <tr>
@@ -233,6 +233,10 @@ All screenshots use sample data.
 ## What's new
 
 > **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is in the repository's history.
+
+### Windows 2.1.71 BETA · 29 October 2026 · 🪄 Do It matches the Mac
+
+- Do It on Windows now works exactly like Do It on the Mac. Same engine and instructions to the AI, the same 40-step limit, the same pauses between steps, and the same floating bar with Approve, Skip and Stop. The notch just folds away while it works (it is no longer hidden, which could leave it stuck on starting), and the tab looks like the Mac one: status, Confirm every step, Clear, and your questions and answers in the chat. Any step that stalls now ends the run with a message that says which step.
 
 ### Mac 2.1.70 · 29 October 2026 · 🏠 Home cards stay on Home; own tab is a Settings option
 

@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Do It</title>
 <style>
-  html, body { margin: 0; height: 100%; overflow: hidden; background: #16161a; color: #f2f2f5; font: 13px/1 "Segoe UI", system-ui, sans-serif; user-select: none; }
+  html, body { margin: 0; height: 100%; overflow: hidden; background: #16161a; color: #f2f2f5; font: 12px/1 "Segoe UI", system-ui, sans-serif; user-select: none; }
   body { display: flex; align-items: center; gap: 10px; padding: 0 8px 0 14px; box-sizing: border-box; border: 1px solid #34343c; border-radius: 12px; }
   .dot { width: 9px; height: 9px; border-radius: 50%; background: #5ac8fa; flex: none; animation: p 1.2s ease-in-out infinite; }
   .dot.wait { background: #ffb340; animation: none; }
@@ -13,11 +13,18 @@
   #t { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   button { flex: none; border: 0; border-radius: 8px; padding: 7px 14px; background: #e5484d; color: #fff; font: 600 12px "Segoe UI", system-ui, sans-serif; cursor: pointer; }
   button:hover { background: #f0585d; }
+  button.ok { background: #7c5cff; }
+  button.ok:hover { background: #8d70ff; }
+  button.quiet { background: #34343c; }
+  button.quiet:hover { background: #42424c; }
+  .hidden { display: none; }
 </style>
 </head>
 <body>
 <span class="dot" id="d"></span>
 <span id="t">Do It · starting…</span>
+<button id="a" class="ok hidden">Approve</button>
+<button id="k" class="quiet hidden">Skip</button>
 <button id="s" title="Stop (Ctrl+Alt+Esc)">Stop</button>
 <script>
   const T = window.__TAURI__;
@@ -27,7 +34,10 @@
     text.textContent = String(p.text || '');
     text.title = text.textContent;
     dot.classList.toggle('wait', !!p.waiting);
+    for (const id of ['a', 'k']) document.getElementById(id).classList.toggle('hidden', !p.approve);
   });
+  document.getElementById('a').addEventListener('click', () => T?.event.emit('doit-approve', true));
+  document.getElementById('k').addEventListener('click', () => T?.event.emit('doit-approve', false));
   document.getElementById('s').addEventListener('click', () => T?.event.emit('doit-stop', {}));
 </script>
 </body>

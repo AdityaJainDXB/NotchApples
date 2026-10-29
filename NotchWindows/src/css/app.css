@@ -578,8 +578,8 @@ body[data-perf="lite"] .ws-step { animation: none; }
 .di-log { flex: 1; gap: 6px; min-height: 0; padding: 2px 4px 2px 0; }
 .di-msg { padding: 7px 11px; border-radius: 12px; font-size: 12.5px; line-height: 1.35; max-width: 88%; white-space: pre-wrap; overflow-wrap: anywhere; }
 .di-msg.user { align-self: flex-end; background: var(--accent); color: var(--on-accent); }
-.di-msg.say, .di-msg.info { align-self: flex-start; background: var(--surface); color: var(--text-dim); font-size: 11.5px; }
-.di-msg.ask, .di-msg.confirm { align-self: flex-start; background: color-mix(in srgb, var(--warn) 16%, var(--surface)); border: 1px solid color-mix(in srgb, var(--warn) 50%, transparent); color: var(--text); font-weight: 600; }
+.di-msg.say, .di-msg.agent, .di-msg.info { align-self: flex-start; background: var(--surface); color: var(--text-dim); font-size: 11.5px; }
+.di-msg.ask, .di-msg.confirm, .di-msg.question { align-self: flex-start; background: color-mix(in srgb, var(--warn) 16%, var(--surface)); border: 1px solid color-mix(in srgb, var(--warn) 50%, transparent); color: var(--text); font-weight: 600; }
 .di-msg.error { align-self: flex-start; background: color-mix(in srgb, var(--bad) 16%, var(--surface)); color: var(--bad); }
 .di-notice:empty { display: none; }
 .di-approve { gap: 8px; padding: 6px 8px; border-radius: 10px; background: var(--surface); }

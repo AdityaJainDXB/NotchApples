@@ -284,6 +284,8 @@ async fn tokio_sleep(ms: u64) {
 }
 
 const STATUS: &str = "doit-status";
+/// The status bar is as wide as the Mac one (520), so Approve, Skip and Stop all fit.
+const BAR_W: f64 = 520.0;
 const HOTKEY: &str = "Ctrl+Alt+Escape";
 static HOTKEY_ID: AtomicU32 = AtomicU32::new(0);
 static ARMED: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
@@ -339,7 +341,7 @@ fn show_status(app: &AppHandle) -> Result<(), String> {
     }
     let w = WebviewWindowBuilder::new(app, STATUS, WebviewUrl::App("doit-status.html".into()))
         .title("Do It")
-        .inner_size(340.0, 44.0)
+        .inner_size(BAR_W, 44.0)
         .decorations(false)
         .resizable(false)
         .always_on_top(true)
@@ -357,7 +359,7 @@ fn place(app: &AppHandle, w: &tauri::WebviewWindow) {
     if let Ok(Some(m)) = app.primary_monitor() {
         let s = m.scale_factor();
         let (mw, mh) = (m.size().width as f64, m.size().height as f64);
-        let x = m.position().x as f64 + (mw - 340.0 * s) / 2.0;
+        let x = m.position().x as f64 + (mw - BAR_W * s) / 2.0;
         let y = m.position().y as f64 + mh - (44.0 + 64.0) * s;
         let _ = w.set_position(tauri::PhysicalPosition::new(x as i32, y as i32));
     }
