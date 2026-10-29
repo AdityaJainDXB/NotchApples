@@ -20,6 +20,9 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.1.70", date: "29 October 2026", headline: "Home cards stay on Home", items: [
+            "Home cards (Clipboard, Now Playing, Notes and the rest) now start on Home for everyone, and the first-run tour no longer asks where each feature should live. To turn a card into its own tab, go to Settings → Modules, find it under Home widgets and open its … menu → Make its own tab. The same menu can show it closed on Home, move it to Non-Necessities or turn it off.",
+        ]),
         ReleaseNote(version: "2.1.69", date: "28 October 2026", headline: "⌥A black screen for everyone", items: [
             "⌥A black screen is now on for everyone and listed first in Settings → Shortcuts & Hotkeys. Press Option+A to turn the screen and keyboard backlight off, and again to bring them back. If Accessibility isn't allowed yet, Settings says so, and ⌥A starts working the moment you allow it, without restarting the app.",
         ]),

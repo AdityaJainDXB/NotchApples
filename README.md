@@ -72,7 +72,7 @@ Pick your computer. Both buttons start the download straight away. The Mac link 
   </tr>
   <tr>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.1.69</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.1.70</b></a>
     </td>
     <td align="center">
       <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 2.1.68 BETA</b></a>
@@ -233,6 +233,10 @@ All screenshots use sample data.
 ## What's new
 
 > **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is in the repository's history.
+
+### Mac 2.1.70 · 29 October 2026 · 🏠 Home cards stay on Home; own tab is a Settings option
+
+- Home cards (Clipboard, Now Playing, Notes and the rest) now start on Home for everyone, and the first-run tour no longer asks where each feature should live. To turn a card into its own tab, go to Settings → Modules, find it under Home widgets and open its … menu → Make its own tab. The same menu can show it closed on Home, move it to Non-Necessities or turn it off.
 
 ### Mac 2.1.69 · 28 October 2026 · 🌑 ⌥A black screen for everyone
 

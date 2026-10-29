@@ -53,8 +53,6 @@ final class TourModel: ObservableObject {
 struct TourView: View {
     @ObservedObject private var tour = TourModel.shared
     @EnvironmentObject private var state: NotchState
-    @State private var draft: [Module: LayoutChoice] = [:]
-    @State private var homeStyle: ModuleLayoutLogic.HomeStyle = ModuleLayout.shared.savedHomeStyle ?? ModuleLayout.shared.defaultHomeStyle
 
     var body: some View {
         VStack(spacing: 10) {
@@ -63,16 +61,12 @@ struct TourView: View {
                     Capsule().fill(i <= tour.step ? Theme.accentBright : Theme.surface).frame(height: 4)
                 }
             }
-            // Steps scroll when the notch is small, so nothing is ever cut off. The last step scrolls its own list.
+            // Steps scroll when the notch is small, so nothing is ever cut off.
             GeometryReader { geo in
-                if TourLogic.isLast(tour.step) {
-                    content.frame(width: geo.size.width, height: geo.size.height)
-                } else {
-                    ScrollView(.vertical) {
-                        content.frame(width: geo.size.width, height: geo.size.height > 260 ? geo.size.height : nil)
-                    }
-                    .scrollIndicators(.hidden)
+                ScrollView(.vertical) {
+                    content.frame(width: geo.size.width, height: geo.size.height > 260 ? geo.size.height : nil)
                 }
+                .scrollIndicators(.hidden)
             }
             .id(tour.step)
             .transition(.opacity)
@@ -82,13 +76,12 @@ struct TourView: View {
                 Spacer()
                 Text("\(tour.step + 1) of \(TourLogic.stepCount)").font(.system(size: 11)).foregroundStyle(Theme.textSecondary)
                 if TourLogic.isLast(tour.step) {
-                    Button("Finish") { applyDraft(); tour.finish() }.buttonStyle(PurpleButtonStyle())
+                    Button("Finish") { tour.finish() }.buttonStyle(PurpleButtonStyle())
                 } else {
                     Button("Next") { withAnimation(Theme.snappy()) { tour.step = TourLogic.next(tour.step) } }.buttonStyle(PurpleButtonStyle())
                 }
             }
         }
-        .onAppear { if draft.isEmpty { for m in ModuleLayout.managedModules { draft[m] = ModuleLayout.shared.choice(m) } } }
     }
 
     @ViewBuilder private var content: some View {
@@ -100,14 +93,8 @@ struct TourView: View {
         case 4: NonNecessitiesStep()
         case 5: SharingStep()
         case 6: FullScreenStep()
-        case 7: LidFoldStep()
-        default: LayoutStep(draft: $draft, homeStyle: $homeStyle)
+        default: LidFoldStep()
         }
-    }
-
-    private func applyDraft() {
-        for (m, c) in draft { ModuleLayout.shared.set(c, for: m) }
-        ModuleLayout.shared.setHomeStyle(homeStyle)
     }
 }
 
@@ -314,45 +301,6 @@ private struct LidFoldStep: View {
             .buttonStyle(PurpleButtonStyle(prominent: false)).disabled(!fold.enabled)
             Text(fold.enabled ? fold.status : "Switch it on to preview. The preview closes the notch for a few seconds; open it again to carry on.")
                 .font(.system(size: 10)).foregroundStyle(Theme.textSecondary).fixedSize(horizontal: false, vertical: true)
-        }
-    }
-}
-
-private struct LayoutStep: View {
-    @Binding var draft: [Module: LayoutChoice]
-    @Binding var homeStyle: ModuleLayoutLogic.HomeStyle
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text("Where should everything live?").font(.system(size: 18, weight: .bold)).foregroundStyle(.white)
-            HStack(spacing: 10) {
-                Text("Home screen").font(.system(size: 12, weight: .semibold)).foregroundStyle(.white)
-                Picker("", selection: $homeStyle) {
-                    ForEach(ModuleLayoutLogic.HomeStyle.allCases) { Text($0.title).tag($0) }
-                }
-                .pickerStyle(.segmented).labelsHidden().frame(width: 190)
-                Text(homeStyle == .classic ? "Weather, battery and your next events, as before." : "Cards you pick below. Nothing picked shows Classic.")
-                    .font(.system(size: 11)).foregroundStyle(Theme.textSecondary).lineLimit(2).fixedSize(horizontal: false, vertical: true)
-            }
-            Text("Pick a place for each reorganised feature. Change any of this later in Settings → Modules & Layout.")
-                .font(.system(size: 11)).foregroundStyle(Theme.textSecondary).fixedSize(horizontal: false, vertical: true)
-            ScrollView {
-                LazyVGrid(columns: [GridItem(.adaptive(minimum: 230), spacing: 12)], spacing: 6) {
-                    ForEach(ModuleLayout.managedModules) { m in
-                        HStack(spacing: 8) {
-                            Image(systemName: m.symbol).frame(width: 18).foregroundStyle(Theme.accentBright)
-                            Text(m.title).font(.system(size: 12, weight: .medium)).foregroundStyle(.white).lineLimit(1)
-                            Spacer(minLength: 4)
-                            LayoutPicker(module: m, draft: Binding(get: { draft[m] ?? .disabled }, set: { draft[m] = $0 }), compact: true)
-                        }
-                        .padding(.horizontal, 10).frame(height: 32)
-                        .background(Theme.surface, in: RoundedRectangle(cornerRadius: 9))
-                    }
-                }
-                .padding(.bottom, 10)
-            }
-            .scrollIndicators(.hidden)
-            .mask(LinearGradient(stops: [.init(color: .black, location: 0), .init(color: .black, location: 0.92), .init(color: .clear, location: 1)], startPoint: .top, endPoint: .bottom))
         }
     }
 }

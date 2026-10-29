@@ -818,15 +818,26 @@ private struct HomeScreenSettings: View {
                             .disabled(index == 0).help("Move up")
                         Button { withAnimation { layout.moveHome(module, by: 1) } } label: { Image(systemName: "chevron.down") }
                             .disabled(index == items.count - 1).help("Move down")
-                        Button { withAnimation { layout.removeFromHome(module) } } label: { Image(systemName: "minus.circle") }
-                            .help("Take off Home (it gets its own tab)")
+                        Menu {
+                            Button { withAnimation { layout.removeFromHome(module) } } label: { Label("Make its own tab", systemImage: "rectangle.on.rectangle") }
+                            if layout.choice(module) == .homeHidden {
+                                Button { withAnimation { layout.setHomeClosed(false, for: module) } } label: { Label("Show open on Home", systemImage: "chevron.down") }
+                            } else if ModuleLayoutLogic.homeAccordions.contains(module.rawValue) {
+                                Button { withAnimation { layout.setHomeClosed(true, for: module) } } label: { Label("Show closed on Home (click to open)", systemImage: "chevron.right") }
+                            }
+                            Button { withAnimation { layout.set(.nonNecessities, for: module) } } label: { Label("Move to Non-Necessities", systemImage: "tray") }
+                            Divider()
+                            Button(role: .destructive) { withAnimation { layout.set(.disabled, for: module) } } label: { Label("Turn off", systemImage: "power") }
+                        } label: { Image(systemName: "ellipsis.circle") }
+                            .menuStyle(.borderlessButton).menuIndicator(.hidden).fixedSize()
+                            .help("More: make it its own tab, show it closed, or turn it off")
                     }
                     .buttonStyle(.borderless)
                 }
             } header: {
                 Text("Home widgets")
             } footer: {
-                Text("Reorder the widgets you added. They show in this order on the Widgets Home.")
+                Text("Reorder the widgets you added. They show in this order on the Widgets Home. Use the … menu to turn one into its own tab.")
             }
         }
     }
