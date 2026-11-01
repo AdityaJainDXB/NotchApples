@@ -72,10 +72,10 @@ Pick your computer. Both buttons start the download straight away. The Mac link 
   </tr>
   <tr>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.1.70</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.1.72</b></a>
     </td>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 2.1.71 BETA</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 2.1.72 BETA</b></a>
     </td>
   </tr>
   <tr>
@@ -233,6 +233,11 @@ All screenshots use sample data.
 ## What's new
 
 > **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is in the repository's history.
+
+### Mac 2.1.72 · Windows 2.1.72 BETA · 1 November 2026 · ⛰️ Real hills on the F1 circuits
+
+- Racing, hills: every car now starts on the road (cars used to spawn under it) and no road is steeper than a real one, so tracks drawn with huge height steps (like Mountain Pass) now drive smoothly.
+- Racing, F1 circuits: new elevation for all the circuits, following the 2026 circuit notes: Spa about 104 m of relief (Eau Rouge to the Raidillon crest climbs 30 m), Red Bull Ring about 65 m, Suzuka, Monaco, COTA and Interlagos about 40 m, Hungaroring about 35 m, Barcelona and Baku about 30 m, Madrid 26 m, with the street circuits and Mexico City flat.
 
 ### Windows 2.1.71 BETA · 29 October 2026 · 🪄 Do It matches the Mac
 

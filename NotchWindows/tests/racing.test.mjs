@@ -318,7 +318,7 @@ test('a track with elevation round-trips through sharing and gains z on its samp
   assert.equal(back.id, def.id, 'id survived the round-trip');
   const T = R.buildTrack(def);
   assert.ok(T.S.every((q) => q.z !== undefined), 'every sample has a z');
-  assert.ok(Math.abs(T.S[0].z) < 1, 'the start is at ground level (the heights are smoothed, so it can sit a little up the first rise)');
+  assert.ok(T.S.every((q) => q.z > -1 && q.z < 56), 'the heights stay within what was drawn (the steepest drop is eased, so the start can sit up the first rise)');
   assert.ok(T.S.some((q) => q.z > 5), 'some samples are uphill');
 });
 
@@ -354,4 +354,34 @@ test('a round code with z elevation produces a drivable track', () => {
   const st = { idx: -1, lane: 0, skill: 0.9, stuck: 0, rev: 0, go: true };
   let t = 0; while (!r.finished && t < 300) { R.stepCar(r.car, R.driveAI(T, r.car, st, 1 / 60), 1 / 60, 1, R.trackSlope(T, r.car, R.locate(T, r.car.x, r.car.y, r.idx))); R.progress(r, T, t); t += 1 / 60; r.car.z = R.trackHeight(T, R.locate(T, r.car.x, r.car.y, r.idx)); }
   assert.ok(r.finished, 'the AI finished the hilly track');
+});
+
+test('no road is steeper than a real one, even a track drawn with huge height steps (Mountain Pass)', () => {
+  const MP = 'NR1eyJuIjoiTW91bnRhaW4gUGFzcyIsImMiOjEsInciOjQwLCJnIjoiZ3JlZW4iLCJsIjozLCJ2IjoyLCJwIjpbNTAwLDAsMCw0ODMsMTI5LDQwLDQzMywyNTAsLTMwLDM1NCwzNTQsNTAsMjUwLDQzMywtNTAsMTI5LDQ4MywyMCwwLDUwMCwtNDUsLTEyOSw0ODMsMzUsLTI1MCw0MzMsLTEwLC0zNTQsMzU0LDQ4LC00MzMsMjUwLC01NSwtNDgzLDEyOSwyNSwtNTAwLDAsLTIwLC00ODMsLTEyOSw0MiwtNDMzLC0yNTAsLTM1LC0zNTQsLTM1NCwxNSwtMjUwLC00MzMsNTAsLTEyOSwtNDgzLC00MCwwLC01MDAsMzAsMTI5LC00ODMsLTQ4LDI1MCwtNDMzLDEyLDM1NCwtMzU0LDM4LDQzMywtMjUwLC0yNSw0ODMsLTEyOSwwXX0';
+  const defs = [R.decodeTrack(MP), ...R.F1_CAL];
+  assert.ok(defs[0], 'Mountain Pass decodes');
+  for (const def of defs) {
+    const T = R.buildTrack(def);
+    let worst = 0;
+    for (let i = 0; i < T.m; i++) worst = Math.max(worst, Math.abs(T.S[(i + 1) % T.m].z - T.S[i].z) / T.step);
+    assert.ok(worst <= 0.175, `${def.id} climbs at ${(worst * 100).toFixed(1)}%`);
+  }
+});
+
+test('every car starts on the road, at the height of the road under it', () => {
+  for (const id of ['f1be', 'f1mc', 'f1br', 'f1at']) {
+    const T = R.buildTrack(R.F1_CAL.find((t) => t.id === id));
+    for (let slot = 0; slot < 20; slot++) {
+      const r = R.newRacer('t' + slot, 'T', car('f1'), T, slot);
+      assert.ok(Math.abs(r.car.z - R.trackHeight(T, R.locate(T, r.car.x, r.car.y))) < 0.01, `${id} slot ${slot} sits on the road`);
+    }
+  }
+});
+
+test('the F1 circuits have at least the relief given in the 2026 circuit notes (Spa ~104 m, Red Bull Ring ~65 m, Suzuka/Monaco/COTA/Interlagos ~40 m ...) and the flat ones stay flat', () => {
+  const range = (id) => { const T = R.buildTrack(R.F1_CAL.find((t) => t.id === id)); const zs = T.S.map((q) => q.z); return Math.max(...zs) - Math.min(...zs); };
+  const atLeast = { f1be: 100, f1at: 64, f1jp: 39.5, f1mc: 39.5, f1us: 39.5, f1br: 39.5, f1hu: 34.5, f1es: 29.5, f1az: 29.5, f1md: 25.5 };
+  for (const [id, m] of Object.entries(atLeast)) assert.ok(range(id) >= m, `${id} is ${range(id).toFixed(1)} m, needs ${m}`);
+  for (const id of ['f1au', 'f1cn', 'f1mi', 'f1ca', 'f1sg', 'f1mx', 'f1lv', 'f1ae']) assert.ok(range(id) < 8, `${id} is near flat`);
+  for (const id of ['f1gb', 'f1nl', 'f1it', 'f1qa']) assert.ok(range(id) < 20, `${id} is mild`);
 });

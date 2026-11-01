@@ -1,0 +1,4 @@
+## Notch Apple for Windows 2.1.72 (BETA)
+
+- Racing, hills: every car now starts on the road (cars used to spawn under it) and no road is steeper than a real one, so tracks drawn with huge height steps (like Mountain Pass) now drive smoothly.
+- Racing, F1 circuits: new elevation for all the circuits, following the 2026 circuit notes: Spa about 104 m of relief (Eau Rouge to the Raidillon crest climbs 30 m), Red Bull Ring about 65 m, Suzuka, Monaco, COTA and Interlagos about 40 m, Hungaroring about 35 m, Barcelona and Baku about 30 m, Madrid 26 m, with the street circuits and Mexico City flat.

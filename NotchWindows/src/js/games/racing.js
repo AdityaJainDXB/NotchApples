@@ -70,21 +70,42 @@
   // f1-circuits data set by Tomislav Bacinger, MIT licence, github.com/bacinger/f1-circuits), as steps between points every 12 m, in tenths of a metre. They are drawn at
   // their real length (the tightest hairpins opened out a little, to 18 m at the middle of the road), on a 16 m wide road.
   
-  /// Height of each F1 circuit along its lap, as a fraction of the lap (0 to 1). Smooth and periodic, so the lap closes
-  /// without a step; the steepest grade on each is about 7%.
+  /// Height of each F1 circuit along its lap, from the 2026 circuit notes (F1_2026_Circuits_Elevation_and_Changes): [distance from
+  /// the start line in km, height in m above the start line] at the crests and the dips, joined by smooth rises and falls (it wraps
+  /// round, so the lap closes without a step). The total relief of each follows those notes: Spa ~104 m (Eau Rouge bottom to the
+  /// Raidillon crest is about 30 m), Red Bull Ring ~65 m, Suzuka, Monaco, COTA and Interlagos ~40 m, Hungaroring ~35 m,
+  /// Barcelona ~30 m, Baku ~30 m, Madrid 26 m (lowest at T2, highest at T7); the flat street circuits stay flat.
+  const hillProfile = (len, keys) => (u) => {
+    const n = keys.length; let x = (((u % 1) + 1) % 1) * len, i = n - 1;
+    if (x >= keys[0][0]) for (let k = 0; k < n; k++) { if (keys[k][0] <= x) i = k; else break; } else x += len;
+    const a = keys[i], b = keys[(i + 1) % n], bx = i + 1 < n ? b[0] : len + b[0], t = clamp((x - a[0]) / (bx - a[0] || 1), 0, 1);
+    return a[1] + (b[1] - a[1]) * (1 - Math.cos(Math.PI * t)) / 2;
+  };
   const F1_ELEV = {
-    f1au: (u) => 5 * Math.sin(2 * Math.PI * 2 * u),
-    f1cn: (u) => 8 * Math.sin(2 * Math.PI * 2 * u),
-    f1jp: (u) => 10 * Math.sin(2 * Math.PI * 3 * u),
-    f1za: (u) => 5 * Math.sin(2 * Math.PI * 2 * u),
-    f1be: (u) => 18 * Math.sin(2 * Math.PI * u) + 8 * Math.sin(4 * Math.PI * u + 1),
-    f1mc: (u) => 12 * Math.sin(2 * Math.PI * u),
-    f1nl: (u) => 4 * Math.sin(2 * Math.PI * 4 * u) + 2 * Math.sin(2 * Math.PI * 7 * u),
-    f1at: (u) => 6 * Math.sin(2 * Math.PI * 3 * u),
-    f1gb: (u) => 5 * Math.sin(2 * Math.PI * 2 * u),
-    f1hu: (u) => 8 * Math.sin(2 * Math.PI * 6 * u),
-    f1qa: (u) => 3 * Math.sin(2 * Math.PI * 3 * u),
-    f1ae: (u) => 5 * Math.sin(2 * Math.PI * 4 * u),
+    f1au: hillProfile(5.278, [[0, 0], [1.2, 1], [2.8, -1.5], [4.0, 0.5]]),
+    f1cn: hillProfile(5.451, [[0, 0], [1.5, 1.5], [3.2, -1], [4.4, 1]]),
+    f1jp: hillProfile(5.807, [[0, 0], [0.5, -7], [0.8, -9], [1.6, 12], [2.1, 16], [2.7, 4], [3.1, -14], [3.9, 10], [4.3, 26], [4.9, 6], [5.4, -6]]),
+    f1bh: hillProfile(5.412, [[0, 0], [0.8, -2], [1.6, 2], [2.6, 5], [3.6, -1], [4.6, 4], [5.0, 1]]),
+    f1sa: hillProfile(6.175, [[0, 0], [1.5, 1], [3.2, -1], [5, 1]]),
+    f1mi: hillProfile(5.412, [[0, 0], [1.4, 1.5], [3.0, -1], [4.4, 1]]),
+    f1ca: hillProfile(4.361, [[0, 0], [1.4, 1], [2.8, -1], [3.6, 0.5]]),
+    f1mc: hillProfile(3.337, [[0, 0], [0.25, -2], [0.5, 14], [0.85, 39], [1.1, 35], [1.3, 23], [1.55, 16], [1.75, 3], [2.0, -4], [2.6, -5], [3.0, -2]]),
+    f1es: hillProfile(4.657, [[0, 0], [0.7, 6], [1.2, 16], [1.8, 6], [2.6, -6], [3.2, -14], [3.9, -6], [4.4, -2]]),
+    f1at: hillProfile(4.318, [[0, 0], [0.2, -2], [0.45, 6], [1.0, 34], [1.7, 64], [2.3, 6], [2.8, 20], [3.3, 40], [3.9, 14], [4.2, 3]]),
+    f1gb: hillProfile(5.891, [[0, 0], [0.9, -1], [1.6, -4], [2.4, -2], [3.4, 6], [4.3, 10], [5.0, 6], [5.6, 2]]),
+    f1be: hillProfile(7.004, [[0, 0], [0.4, -6], [0.95, -18], [1.3, 12], [1.9, 48], [2.45, 82], [2.9, 70], [3.5, 38], [4.0, 28], [4.4, 14], [4.9, 8], [5.4, -14], [5.8, -22], [6.3, -12], [6.7, -4]]),
+    f1hu: hillProfile(4.381, [[0, 0], [0.5, -10], [1.1, -20], [1.7, -6], [2.3, 8], [2.9, 16], [3.5, 6], [4.0, -1]]),
+    f1nl: hillProfile(4.259, [[0, 0], [0.5, 3], [1.0, -1], [1.6, 6], [2.2, 2], [2.8, 8], [3.4, 2], [3.9, -1]]),
+    f1it: hillProfile(5.793, [[0, 0], [0.7, -3], [1.5, -5], [2.4, -1], [3.3, 2], [4.0, 5], [4.7, 3], [5.3, 1]]),
+    f1md: hillProfile(5.416, [[0, 3], [0.35, 0], [0.9, 8], [1.45, 26], [1.7, 16], [2.2, 18], [2.7, 10], [3.3, 8], [3.9, 12], [4.5, 6], [5.0, 3]]),
+    f1az: hillProfile(6.003, [[0, 0], [0.9, -2], [1.8, -6], [2.5, -3], [3.0, 8], [3.5, 18], [3.9, 26], [4.4, 12], [5.0, 4], [5.6, 1]]),
+    f1sg: hillProfile(4.94, [[0, 0], [1.2, 1.5], [2.4, -1], [3.6, 1.5]]),
+    f1us: hillProfile(5.513, [[0, 0], [0.35, 24], [0.55, 36], [1.1, 14], [1.7, 6], [2.6, 10], [3.2, 18], [3.8, 8], [4.4, 0], [5.0, -4]]),
+    f1mx: hillProfile(4.304, [[0, 0], [1.2, 1], [2.6, -1], [3.5, 0.5]]),
+    f1br: hillProfile(4.309, [[0, 0], [0.3, 3], [0.6, -8], [1.2, -20], [1.9, -28], [2.6, -24], [3.2, -18], [3.8, -37], [4.1, -14]]),
+    f1lv: hillProfile(6.201, [[0, 0], [1.5, 1.5], [3.4, -1], [5, 1]]),
+    f1qa: hillProfile(5.419, [[0, 0], [1.0, 2], [2.0, -1], [3.0, 3], [4.0, 0], [4.8, -1]]),
+    f1ae: hillProfile(5.281, [[0, 0], [1.0, 2], [2.0, -1], [3.5, 2], [4.5, -1]]),
   };
 
   const F1_CAL = [
@@ -143,6 +164,17 @@
       const a = out[closed ? (i - 1 + m) % m : Math.max(0, i - 1)], b = out[closed ? (i + 1) % m : Math.min(m - 1, i + 1)];
       const tx = b[0] - a[0], ty = b[1] - a[1], l = Math.hypot(tx, ty) || 1;
       S.push({ x: out[i][0], y: out[i][1], tx: tx / l, ty: ty / l, nx: -ty / l, ny: tx / l, s: i * step, k: 0, z: out[i][2] || 0 });
+    }
+    // No road is steeper than a real one: the steepest part of Raidillon at Spa is about 17%. Where the heights climb or drop
+    // faster than that (a track drawn with big height steps), they are pulled in: the highest points are cut down and the lowest
+    // filled in by the same amount, the most each sample may differ from its neighbour being what a 17% grade allows.
+    {
+      const gmax = 0.17 * step, hi = S.map((q) => q.z), lo = S.map((q) => q.z), laps = closed ? 2 : 1;
+      for (let lap = 0; lap < laps; lap++) {
+        for (let i = 1; i < m + (closed ? m : 0); i++) { const a = (i - 1) % m, b = i % m; hi[b] = Math.min(hi[b], hi[a] + gmax); lo[b] = Math.max(lo[b], lo[a] - gmax); }
+        for (let i = m - 2 - (closed ? 0 : 0); i >= -(closed ? m : 0); i--) { const a = ((i + 1) % m + m) % m, b = ((i % m) + m) % m; hi[b] = Math.min(hi[b], hi[a] + gmax); lo[b] = Math.max(lo[b], lo[a] - gmax); }
+      }
+      for (let i = 0; i < m; i++) S[i].z = (hi[i] + lo[i]) / 2;
     }
     // Smooth the heights along the road (a light blur, a few passes): the raw samples step a little at every 4 m, which
     // made the car's slope, pitch and grip jump every sample, so it shook on hills. The shape of the road is unchanged.
@@ -746,6 +778,7 @@
   function newRacer(id, name, spec, T, slot, extra) {
     const g = gridSlot(T, slot), c = newCar(spec, g.x, g.y, g.h);
     const loc = locate(T, c.x, c.y), L = T.length, sLap = T.closed ? ((loc.s % L) + L) % L : 0;
+    c.z = trackHeight(T, loc);       // on the road from the first frame, not at sea level under it
   return Object.assign({ id, name, car: c, T, lap: T.closed ? -1 : 0, sLap, prog: T.closed ? sLap - L : loc.s, finished: false, finishT: 0, lapStart: 0, lapTimes: [], bestLap: 0, idx: loc.idx, drift: 0, sNow: 0, lat: 0 }, extra || {});
   }
 
@@ -1122,7 +1155,7 @@
     }
     function toPitExit(off) { const P = pitInfo(T); if (!P) return; const q = T.S[((Math.round((P.b - 70) / T.step) % T.m) + T.m) % T.m]; off.car.x = q.x + q.nx * P.side * P.lane; off.car.y = q.y + q.ny * P.side * P.lane; off.car.h = Math.atan2(q.ty, q.tx); off.car.vx = off.car.vy = 0; off.idx = -1; off.inLane = true; off.served = true; }
     /// Puts a car behind the last grid box, `extra` metres further back.
-    function behindGrid(r, extra) { const n = racers.filter((x) => !x.official).length, g = gridSlot(T, n + (n % 2)), f = ((T.length + g.s - extra) % T.length) / T.step, q = T.S[Math.floor(f) % T.m]; r.car.x = q.x; r.car.y = q.y; r.car.h = Math.atan2(q.ty, q.tx); r.car.vx = r.car.vy = 0; r.idx = -1; r.inLane = false; }
+    function behindGrid(r, extra) { const n = racers.filter((x) => !x.official).length, g = gridSlot(T, n + (n % 2)), f = ((T.length + g.s - extra) % T.length) / T.step, q = T.S[Math.floor(f) % T.m]; r.car.x = q.x; r.car.y = q.y; r.car.h = Math.atan2(q.ty, q.tx); r.car.vx = r.car.vy = 0; r.idx = -1; r.inLane = false; r.car.z = trackHeight(T, locate(T, r.car.x, r.car.y)); }
     /// The progress of an official car (it counts its own laps and never finishes).
     function officialProgress(r) { const l = locate(T, r.car.x, r.car.y, r.idx); r.idx = l.idx; r.lat = l.lat; r.sNow = T.closed ? ((l.s % T.length) + T.length) % T.length : l.s; if (T.closed) { const L = T.length; if (r.sLap == null) r.sLap = r.sNow; if (r.sLap > L * 0.75 && r.sNow < L * 0.25) r.lap++; else if (r.sLap < L * 0.25 && r.sNow > L * 0.75) r.lap--; r.sLap = r.sNow; r.prog = r.lap * L + r.sNow; } else r.prog = r.sNow; }
     /// The start procedure proper: five red lights, then a random hold, then lights out.

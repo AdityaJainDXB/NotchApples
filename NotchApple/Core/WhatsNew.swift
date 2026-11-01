@@ -20,6 +20,10 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.1.72", date: "1 November 2026", headline: "Real hills on the F1 circuits", items: [
+            "Racing, hills: every car now starts on the road (cars used to spawn under it) and no road is steeper than a real one, so tracks drawn with huge height steps (like Mountain Pass) now drive smoothly.",
+            "Racing, F1 circuits: new elevation for all the circuits, following the 2026 circuit notes: Spa about 104 m of relief (Eau Rouge to the Raidillon crest climbs 30 m), Red Bull Ring about 65 m, Suzuka, Monaco, COTA and Interlagos about 40 m, Hungaroring about 35 m, Barcelona and Baku about 30 m, Madrid 26 m, with the street circuits and Mexico City flat.",
+        ]),
         ReleaseNote(version: "2.1.70", date: "29 October 2026", headline: "Home cards stay on Home", items: [
             "Home cards (Clipboard, Now Playing, Notes and the rest) now start on Home for everyone, and the first-run tour no longer asks where each feature should live. To turn a card into its own tab, go to Settings → Modules, find it under Home widgets and open its … menu → Make its own tab. The same menu can show it closed on Home, move it to Non-Necessities or turn it off.",
         ]),
