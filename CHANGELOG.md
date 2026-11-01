@@ -4,6 +4,10 @@ Every Notch Apple release, newest first. The latest few are also on the [README]
 
 > **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is in the repository's history.
 
+### Mac 2.1.75 · 1 November 2026 · 🧹 The lock screen card is gone
+
+- Removed the experimental "Music on the lock screen" card that came with 2.1.74: it did not show on the lock screen. Everything else is unchanged.
+
 ### Mac 2.1.74 · Windows 2.1.74 BETA · 1 November 2026 · 🔒 Music on the lock screen and a fairer race
 
 - Lock screen (new, experimental, off by default): while your Mac is locked and music plays, a card at the top of the screen shows the song, the current lyric line (lyrics need Pro) and the battery. Turn it on in the Now Playing tab, "Music on the lock screen".

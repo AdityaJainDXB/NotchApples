@@ -20,6 +20,9 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.1.75", date: "1 November 2026", headline: "The lock screen card is gone", items: [
+            "Removed the experimental \"Music on the lock screen\" card that came with 2.1.74: it did not show on the lock screen. Everything else is unchanged.",
+        ]),
         ReleaseNote(version: "2.1.74", date: "1 November 2026", headline: "Music on the lock screen and a fairer race", items: [
             "Lock screen (new, experimental, off by default): while your Mac is locked and music plays, a card at the top of the screen shows the song, the current lyric line (lyrics need Pro) and the battery. Turn it on in the Now Playing tab, \"Music on the lock screen\".",
             "Racing, new rule: leave the track and come back in front of a car you were behind and you must let it back through within 10 seconds, or take a 5 second time penalty. The computer drivers follow it too.",

@@ -76,7 +76,7 @@ Pick your computer. Both buttons start the download straight away. The Mac link 
   </tr>
   <tr>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.1.74</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.1.75</b></a>
     </td>
     <td align="center">
       <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 2.1.74 BETA</b></a>
@@ -149,6 +149,10 @@ On a Mac without a notch, a slim pill appears at the top center of the menu bar 
 More screenshots of the capture overlay, the AI answer, the settings and the Windows app are in [docs/SCREENSHOTS.md](docs/SCREENSHOTS.md).
 
 ## What's new
+
+### Mac 2.1.75 · 1 November 2026 · 🧹 The lock screen card is gone
+
+- Removed the experimental "Music on the lock screen" card that came with 2.1.74: it did not show on the lock screen. Everything else is unchanged.
 
 ### Mac 2.1.74 · Windows 2.1.74 BETA · 1 November 2026 · 🔒 Music on the lock screen and a fairer race
 
