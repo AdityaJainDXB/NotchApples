@@ -1,18 +1,18 @@
 {
-  "version": "2.1.60",
-  "title": "Notch Apple 2.1.60",
-  "notes": "### Mac 2.1.60 · 25 October 2026 · 🏔️ Hills and elevation in the 3D racing view\n\n**Racing: 3D hills — tracks now have elevation.** The 3D view draws every track with its ups and downs, car physics respond to gravity on slopes (uphill slows you down, downhill speeds you up), and the track editor can set a height on any point. Tracks with elevation can be shared with friends.\n\n- Tracks with elevation can be saved and shared with a code, just like flat tracks.\n- Car physics on slopes: gravity pulls the car downhill and resists uphill climbs, so you'll naturally slow on climbs and speed up on descents without touching the throttle.\n- The 3D camera follows the car's height, so you see the road rise and fall as you drive.\n- Barriers, grandstands, pit crew, and all scenery are drawn at the correct track height.\n",
-  "published": "2026-10-25T15:08:09Z",
-  "dmg": "https://github.com/AdityaJainDXB/NotchApples/releases/download/v2.1.60/NotchApple-2.1.60.dmg",
-  "dmgSize": 52194475,
-  "page": "https://github.com/AdityaJainDXB/NotchApples/releases/tag/v2.1.60",
+  "version": "2.1.73",
+  "title": "Notch Apple 2.1.73 · Notch Apple 2.1.73 · A new racing HUD, cameras and smooth hills",
+  "notes": "## Notch Apple 2.1.73\n\n- Racing, bumps: the car no longer judders going up or down hills. The road height, slope and curve are now smooth between track samples.\n- Racing, start: fixed the road disappearing on the grid after the formation lap.\n- Racing, new look: a broadcast-style timing tower, a sector and lap-time panel, the car condition with four tyre rings, and a dash with the battery, gear, rev lights and speed. Press L to switch the tower between gaps to you and gaps to the leader.\n- Racing, cameras: a new Halo cam (press V), and the first-person view now has an F1 steering wheel with a screen, shift lights and gloved hands that turn the wheel.\n- Racing, start lights: the five lights now hang from an overhead gantry, four lamps to a pod.\n- Racing, pit stops: a PIT LANE panel with your time in the lane and the stop time, and the pit crew in the team colour.\n- Racing, cars: F1 cars have a front wing with endplates, sidepods, an airbox, a halo and a bigger rear wing, with the tyre compound colour on the sidewall.\n",
+  "published": "2026-11-01T14:34:59Z",
+  "dmg": "https://github.com/AdityaJainDXB/NotchApples/releases/download/v2.1.73/NotchApple-2.1.73.dmg",
+  "dmgSize": 52278782,
+  "page": "https://github.com/AdityaJainDXB/NotchApples/releases/tag/v2.1.73",
   "stars": 3,
   "windows": {
-    "version": "2.1.59",
+    "version": "2.1.73",
     "notes": "",
-    "url": "https://github.com/AdityaJainDXB/NotchApples/releases/download/win-v2.1.59/Notch.apple_2.1.59_x64-setup.exe",
-    "sha256": "49a5c5e0b0bea21b85e643ba0b6c392516b9ef56992fd46beadcc2a1823e89a5",
-    "size": 6248014,
-    "page": "https://github.com/AdityaJainDXB/NotchApples/releases/tag/win-v2.1.59"
+    "url": "https://github.com/AdityaJainDXB/NotchApples/releases/download/win-v2.1.73/Notch.apple_2.1.73_x64-setup.exe",
+    "sha256": "29ec168ed65ad407344468304033ed2c537029647927428aac9649b4c3e7aa21",
+    "size": 6257116,
+    "page": "https://github.com/AdityaJainDXB/NotchApples/releases/tag/win-v2.1.73"
   }
 }

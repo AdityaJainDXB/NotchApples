@@ -13,8 +13,8 @@ packages:
 settings:
   base:
     SWIFT_VERSION: "5.0"
-    MARKETING_VERSION: "2.1.73"
-    CURRENT_PROJECT_VERSION: "190"
+    MARKETING_VERSION: "2.1.74"
+    CURRENT_PROJECT_VERSION: "191"
     CODE_SIGN_IDENTITY: "-"
     CODE_SIGN_STYLE: Manual
     DEVELOPMENT_TEAM: ""
@@ -108,6 +108,7 @@ targets:
       - NotchApple/Core/TourLogic.swift
       - NotchApple/Core/ClaudeLimitsLogic.swift
       - NotchApple/Core/TodoLogic.swift
+      - NotchApple/Core/LockScreenLogic.swift
       - NotchApple/Core/ReleaseNotesLogic.swift
       - NotchApple/Core/UpdateCadenceLogic.swift
       - NotchApple/Core/UpdateSigning.swift

@@ -4,6 +4,11 @@ Every Notch Apple release, newest first. The latest few are also on the [README]
 
 > **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is in the repository's history.
 
+### Mac 2.1.74 · Windows 2.1.74 BETA · 1 November 2026 · 🔒 Music on the lock screen and a fairer race
+
+- Lock screen (new, experimental, off by default): while your Mac is locked and music plays, a card at the top of the screen shows the song, the current lyric line (lyrics need Pro) and the battery. Turn it on in the Now Playing tab, "Music on the lock screen".
+- Racing, new rule: leave the track and come back in front of a car you were behind and you must let it back through within 10 seconds, or take a 5 second time penalty. The computer drivers follow it too.
+
 ### Mac 2.1.73 · Windows 2.1.73 BETA · 1 November 2026 · 🎥 A new racing HUD, cameras and smooth hills
 
 - Racing, bumps: the car no longer judders going up or down hills. The road height, slope and curve are now smooth between track samples.

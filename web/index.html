@@ -115,6 +115,18 @@ section[id],header[id],[id].anchor{scroll-margin-top:84px}
 /* ============ Hero ============ */
 .hero{position:relative;padding:132px 0 0;overflow:hidden}
 .hero:before{content:"";position:absolute;left:50%;top:-30%;width:1100px;height:900px;transform:translateX(-50%);background:radial-gradient(closest-side,rgba(118,80,238,.22),transparent 72%);pointer-events:none}
+/* The hero scene: a dusk landscape behind the headline. Its layers sit at different depths, so they drift past each other as you scroll. */
+.scene{position:absolute;left:0;right:0;top:0;height:min(980px,128vh);pointer-events:none;z-index:0;overflow:hidden;-webkit-mask-image:linear-gradient(#000 58%,transparent);mask-image:linear-gradient(#000 58%,transparent)}
+.scene .sky{position:absolute;inset:0;background:linear-gradient(180deg,#09080d 0%,#0f0c1f 26%,#1c1340 48%,#35216f 66%,#6c42b4 80%,#b77ac8 92%,#e9a9cf 100%);opacity:.92}
+.scene .glow{position:absolute;left:50%;top:62%;width:1400px;height:520px;transform:translateX(-50%);background:radial-gradient(closest-side,rgba(255,196,224,.55),rgba(205,150,235,.22) 55%,transparent 78%)}
+.scene .cloud{position:absolute;border-radius:50%;background:rgba(214,196,255,.2);filter:blur(46px);animation:cloud 60s ease-in-out infinite alternate}
+.scene .c1{left:6%;top:30%;width:420px;height:92px}.scene .c2{right:4%;top:40%;width:520px;height:110px;animation-duration:75s;animation-direction:alternate-reverse}.scene .c3{left:38%;top:52%;width:360px;height:70px;background:rgba(255,205,230,.16);animation-duration:90s}
+@keyframes cloud{to{transform:translate3d(90px,0,0)}}
+.scene .hill{position:absolute;left:-4%;width:108%;height:46%;bottom:0;transform:translate3d(0,calc(var(--sy,0px) * var(--k,0)),0);will-change:transform}
+.scene .h1{--k:.34;bottom:18%}.scene .h2{--k:.2;bottom:9%}.scene .h3{--k:.08;bottom:0}
+.scene .grain{position:absolute;inset:0;opacity:.07;mix-blend-mode:overlay;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E")}
+.hero-top,.hero .laptop,.hero .facts{z-index:1}
+@media(prefers-reduced-motion:reduce){.scene .cloud{animation:none}.scene .hill{transform:none;will-change:auto}}
 .hero-top{position:relative;display:grid;grid-template-columns:1.25fr 1fr;gap:48px;align-items:end}
 h1{font-size:clamp(48px,7.6vw,96px);line-height:.98;letter-spacing:-.04em;font-weight:600}
 h1 .l2{display:block;color:var(--mut)}
@@ -577,6 +589,15 @@ footer{background:linear-gradient(180deg,transparent,rgba(118,80,238,.06))}
 </div>
 <button class="totop" id="toTop" aria-label="Back to top"><i class="ph ph-arrow-up"></i></button>
 <header class="hero" id="top">
+  <div class="scene" aria-hidden="true">
+    <div class="sky"></div>
+    <div class="glow"></div>
+    <i class="cloud c1"></i><i class="cloud c2"></i><i class="cloud c3"></i>
+    <svg class="hill h1" viewBox="0 0 1440 360" preserveAspectRatio="none"><defs><linearGradient id="hg1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#4a2f94"/><stop offset="1" stop-color="#1a1238"/></linearGradient></defs><path fill="url(#hg1)" d="M0 190C180 120 330 110 520 150S860 230 1040 160 1300 70 1440 120V360H0Z"/></svg>
+    <svg class="hill h2" viewBox="0 0 1440 360" preserveAspectRatio="none"><defs><linearGradient id="hg2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2c1b5c"/><stop offset="1" stop-color="#120d28"/></linearGradient></defs><path fill="url(#hg2)" d="M0 230C220 160 400 190 620 215S1000 170 1200 205 1380 190 1440 170V360H0Z"/></svg>
+    <svg class="hill h3" viewBox="0 0 1440 360" preserveAspectRatio="none"><path fill="#0b0912" d="M0 285C260 235 470 275 720 262S1130 232 1440 270V360H0Z"/></svg>
+    <div class="grain"></div>
+  </div>
   <div class="wrap">
     <div class="hero-top">
       <h1><span class="intro" style="--i:0">The notch,</span> <span class="l2 intro" style="--i:1">put to work.</span></h1>
@@ -1083,6 +1104,8 @@ function tick(){const now=new Date();$('#clocks').innerHTML=cities.map(([n,z])=>
 tick();setInterval(()=>{if(demoVisible&&!reduce)tick()},10000);
 
 /* ---------- nav: tuck the notch's links away once past the hero ---------- */
+/* Hero scene parallax: one passive scroll listener, one write per frame, off when motion is reduced */
+if(!reduce){const hero=$('.hero');let queued=0;if(hero)addEventListener('scroll',()=>{if(queued)return;queued=requestAnimationFrame(()=>{queued=0;hero.style.setProperty('--sy',Math.min(scrollY,1100)+'px')})},{passive:true})}
 new IntersectionObserver(es=>document.documentElement.classList.toggle('compact',!es[0].isIntersecting),{rootMargin:'-120px 0px 0px 0px'}).observe($('.hero-top'));
 const menuBtn=$('#menuBtn'),mm=$('#mobileMenu');
 function setMenu(on){mm.classList.toggle('on',on);menuBtn.setAttribute('aria-expanded',on);menuBtn.innerHTML=on?'<i class="ph ph-x"></i>':'<i class="ph ph-list"></i>';if(on){const a=mm.querySelector('a');a&&a.focus({preventScroll:true})}}

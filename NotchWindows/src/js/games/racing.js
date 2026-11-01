@@ -1915,6 +1915,24 @@
       if (r.tl >= 4) penalize(r, 5, 'track limits');
       else if (r === me) { if (r.tl === 3) { toast('🏁 Black and white flag: next time is a penalty'); say('Black and white flag. One more and it is a penalty.', 'eng', 2); } else { toast(`Track limits: warning ${r.tl} of 3`); say('Track limits. Careful.', 'eng', 1); } }
     }
+    // Leaving the track and gaining an advantage (FIA): a car that is off the track for a moment and comes back in front of a car it
+    // was behind must let it back through, or take 5 seconds. Only under green, and not for a car that has crashed or stopped.
+    function excursionStart(r) {
+      r.excur = racers.filter((o) => o !== r && !o.official && !o.dnf && o.prog > r.prog && o.prog - r.prog < 120);
+    }
+    function excursionEnd(r) {
+      const ex = r.excur; r.excur = null;
+      if (!ex || r.official || r.finished || r.inLane || r.advDebt || raceCtl.flag !== 'green') return;
+      const passed = ex.find((o) => !o.dnf && !o.stopped && !o.inLane && o.car.dmg < 0.9 && o.prog < r.prog - 0.5);
+      if (!passed) return;
+      r.advDebt = { o: passed, until: clock + 10 };
+      if (r === me) { toast(`⚠ You left the track and came back in front of ${passed.name}: let them past within 10 s or take 5 seconds`); say(`You gained a place off the track. Give it back to ${passed.name}, or it is a five second penalty.`, 'eng', 2); }
+    }
+    function advantageTick(r) {
+      const d = r.advDebt; if (!d) return;
+      if (d.o.prog > r.prog || d.o.dnf) { r.advDebt = null; if (r === me) toast('Position given back: no penalty'); }
+      else if (clock > d.until) { r.advDebt = null; penalize(r, 5, 'leaving the track and gaining an advantage'); }
+    }
     /// Who caused a collision: the car that was moving into the other one more. Five seconds, ten for a big hit.
     function blame(A, B, hit) {
       const down = (r) => r.stopped || r.dnf || r.car.dmg >= 0.9 || Math.hypot(r.prevV ? r.prevV[0] : 0, r.prevV ? r.prevV[1] : 0) < 3;
@@ -2193,8 +2211,9 @@
         // Tyres wear with distance and much faster in slides.
         const vNow = Math.hypot(c.vx, c.vy); if (vNow > 3 && !r.finished) c.wear = Math.min(1, (c.wear || 0) + dt * (0.0011 + Math.abs(c.vl) * 0.0016 + (c.drifting ? 0.004 : 0)) * (c.spec.id === 'f1' ? 1.25 : 1) * ((TYRES[c.tyre] || TYRES.M).wear));
         // Track limits (FIA): all four wheels past the white line counts. Warnings, the black-and-white flag, then 5 seconds.
-        if (screen === 'race' && !r.finished && !r.inLane && !pitSide && off > edge + CAR_W / 2 + 0.4 && vNow > 12) { if (!r.offTL) { r.offTL = true; trackLimits(r); } }
-        else if (off < edge) r.offTL = false;
+        if (screen === 'race' && !r.finished && !r.inLane && !pitSide && off > edge + CAR_W / 2 + 0.4 && vNow > 12) { if (!r.offTL) { r.offTL = true; trackLimits(r); excursionStart(r); } }
+        else if (off < edge) { if (r.offTL) excursionEnd(r); r.offTL = false; }
+        advantageTick(r);
         // The computer drivers come in for tyres or repairs when they need them (not on the last lap).
         if (r.ai && P && !r.finished) { const st = aiState.get(r.id); if (!st.pitting && !st.served && (c.dmg > 0.45 || (c.wear || 0) > 0.72 || c.puncture || (WET > 0.3 && !(TYRES[c.tyre] || {}).rain) || (WET < 0.12 && (TYRES[c.tyre] || {}).rain)) && (r.lap < raceLaps - 1 || c.puncture) && rel > P.a - 600 && rel < P.a - 250) st.pitting = true; if (st.pitting && st.served && !r.inLane && rel > P.b - 5) st.pitting = false; if (st.served && !st.pitting && !r.inLane && rel > P.b) st.served = false; }
         emit(r, dt);
