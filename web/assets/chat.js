@@ -1,8 +1,10 @@
-/* A small helper on the website that answers simple questions about Notch Apple.
+/* A small helper on the website that answers questions about Notch Apple.
  *
- * It is not a language model: it matches the question against the entries in faq.json (written from this site and the
- * README) and shows the best one, or says it is not sure and points to GitHub. It runs entirely in the page: nothing you
- * type is sent anywhere. Answers are shown as plain text (links are checked first), so nothing in the data can run. */
+ * First it matches the question against the entries in faq.json (written from this site and the README) and, when one
+ * fits, shows it straight away; nothing is sent anywhere. When none fits, the question (and the last few messages) goes
+ * to the project's own server (POST /ask on the licence worker), which asks Google Gemini using only Notch Apple's docs.
+ * If that server can't be reached the helper says it is not sure and points to GitHub. Answers are shown as plain text
+ * (links are checked first), so nothing in the data or the AI's reply can run. */
 (function () {
   'use strict';
 
@@ -89,7 +91,7 @@
     return n;
   }
 
-  function mount(entries) {
+  function mount(entries, server) {
     var eng = engine(entries);
     var reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
     var fab = el('button', { class: 'nc-fab', type: 'button', 'aria-haspopup': 'dialog', 'aria-expanded': 'false', 'aria-label': 'Ask a question about Notch Apple' });
@@ -105,13 +107,14 @@
     var input = el('input', { class: 'nc-in', type: 'text', maxlength: '200', placeholder: 'e.g. How much is Pro?', 'aria-label': 'Your question' });
     var send = el('button', { class: 'nc-send', type: 'submit' }, 'Send');
     form.append(input, send);
-    var foot = el('div', { class: 'nc-foot' }, 'Answers come from this site and the README. Nothing you type leaves this page.');
+    var foot = el('div', { class: 'nc-foot' }, server ? 'Common questions are answered on this page. Anything else is sent to our AI (Google Gemini) to answer from the Notch Apple docs, so please don\u2019t type anything private.' : 'Answers come from this site and the README. Nothing you type leaves this page.');
     panel.append(head, log, chips, form, foot);
     document.body.append(fab, panel);
 
-    function say(text, who, link) {
+    function say(text, who, link, tag) {
       var m = el('div', { class: 'nc-msg nc-' + who });
       m.append(el('p', null, text));
+      if (tag) m.append(el('small', { class: 'nc-tag' }, tag));
       if (link) { var href = safeHref(link[1]); if (href) { var a = el('a', { href: href }, link[0] + ' →'); if (/^https:/.test(href)) { a.setAttribute('target', '_blank'); a.setAttribute('rel', 'noopener'); } m.append(a); } }
       log.append(m); log.scrollTop = log.scrollHeight;
     }
@@ -126,25 +129,41 @@
     var starters = ['Is it really free?', 'How do I install it on a Mac?', 'Does it work on Windows?', 'Is my data private? Does it track me?']
       .map(function (q) { return entries.filter(function (e) { return e.q === q; })[0]; }).filter(Boolean);
 
+    var history = [];   // the last few turns, sent along with a question the FAQ could not answer
+    function remember(role, content) { history.push({ role: role, content: String(content).slice(0, 400) }); if (history.length > 6) history.shift(); }
+    function notSure(r) {
+      say('I am not sure about that one. Try one of these, or ask on GitHub where the developers can answer properly.', 'bot', ['Open an issue', 'https://github.com/AdityaJainDXB/NotchApples/issues']);
+      setChips(r.related.length ? r.related : starters);
+    }
+    var busy = false;
+    function askAi(q, r) {
+      busy = true; send.disabled = true;
+      var wait = el('div', { class: 'nc-msg nc-bot' }); wait.append(el('p', null, 'Thinking\u2026')); log.append(wait); log.scrollTop = log.scrollHeight;
+      var ctl = window.AbortController ? new AbortController() : null, timer = setTimeout(function () { if (ctl) ctl.abort(); }, 15000);
+      fetch(server.replace(/\/+$/, '') + '/ask', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ q: q, history: history.slice(0, -1) }), signal: ctl ? ctl.signal : undefined })
+        .then(function (res) { return res.ok ? res.json() : Promise.reject(res.status); })
+        .then(function (d) { if (!d || typeof d.a !== 'string' || !d.a) return Promise.reject(0); wait.remove(); say(d.a, 'bot', null, 'AI answer, from the Notch Apple docs'); remember('assistant', d.a); setChips(r.related.length ? r.related : starters); })
+        .catch(function () { wait.remove(); notSure(r); })
+        .then(function () { clearTimeout(timer); busy = false; send.disabled = false; input.focus(); });
+    }
+
     function ask(q) {
       q = String(q || '').trim().slice(0, 200);
-      if (!q) return;
+      if (!q || busy) return;
       input.focus();   // a chip that was just used is replaced, so keep the keyboard where it can continue
-      say(q, 'me');
-      if (GREETING.test(q) && tokens(q).length <= 1) { say('Hello! I can answer simple questions about Notch Apple: price, installing, shortcuts, privacy, the flight simulator and more.', 'bot'); setChips(starters); return; }
+      say(q, 'me'); remember('user', q);
+      if (GREETING.test(q) && tokens(q).length <= 1) { say('Hello! I can answer questions about Notch Apple: price, installing, shortcuts, privacy, the AI, the flight simulator and more.', 'bot'); setChips(starters); return; }
       if (THANKS.test(q) && tokens(q).length <= 1) { say('You are welcome!', 'bot'); return; }
       var r = eng.answer(q);
-      if (r.entry) { say(r.entry.a, 'bot', r.entry.link); setChips(r.related); }
-      else {
-        say('I am not sure about that one. Try one of these, or ask on GitHub where the developers can answer properly.', 'bot', ['Open an issue', 'https://github.com/AdityaJainDXB/NotchApples/issues']);
-        setChips(r.related.length ? r.related : starters);
-      }
+      if (r.entry) { say(r.entry.a, 'bot', r.entry.link); remember('assistant', r.entry.a); setChips(r.related); }
+      else if (server) askAi(q, r);
+      else notSure(r);
     }
 
     var lastFocus = null;
     function open() {
       lastFocus = document.activeElement; panel.hidden = false; fab.setAttribute('aria-expanded', 'true'); fab.classList.add('nc-hide');
-      if (!log.children.length) { say('Hi! Ask me a simple question about Notch Apple, or pick one below.', 'bot'); setChips(starters); }
+      if (!log.children.length) { say('Hi! Ask me anything about Notch Apple, or pick one below.', 'bot'); setChips(starters); }
       setTimeout(function () { input.focus(); }, reduce ? 0 : 30);
     }
     function shut() { panel.hidden = true; fab.setAttribute('aria-expanded', 'false'); fab.classList.remove('nc-hide'); var back = lastFocus && lastFocus !== document.body && document.contains(lastFocus) ? lastFocus : fab; back.focus(); }   // (Safari does not focus a button when it is clicked, so fall back to the button)
@@ -158,8 +177,10 @@
   }
 
   function start() {
-    fetch('assets/faq.json').then(function (r) { return r.ok ? r.json() : []; }).then(function (data) {
-      if (Array.isArray(data) && data.length) mount(data);
+    // The AI's server is the licence worker already named in api.json; without it the helper works from the FAQ alone.
+    var api = fetch('api.json').then(function (r) { return r.ok ? r.json() : {}; }).then(function (j) { var u = j && j.licenseServer; return typeof u === 'string' && /^https:\/\/[a-z0-9.-]+$/i.test(u) ? u : ''; }).catch(function () { return ''; });
+    Promise.all([fetch('assets/faq.json').then(function (r) { return r.ok ? r.json() : []; }), api]).then(function (res) {
+      if (Array.isArray(res[0]) && res[0].length) mount(res[0], res[1]);
     }).catch(function () { /* no helper if the data can't load: the page works the same */ });
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();

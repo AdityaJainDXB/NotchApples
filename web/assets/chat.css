@@ -25,3 +25,4 @@
 .nc-foot{padding:0 16px 12px;color:#8b85a0;font-size:11.5px}
 @media (prefers-reduced-motion:reduce){.nc-panel{animation:none}.nc-fab{transition:none}}
 @media (max-width:480px){.nc-fab-t{display:none}.nc-fab{padding:0 8px}}
+.nc-tag{display:block;margin-top:6px;font-size:11px;color:#8b8698}

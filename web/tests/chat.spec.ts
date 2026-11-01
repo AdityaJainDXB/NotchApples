@@ -9,9 +9,10 @@ async function open(page: Page, path: string) {
   }
 }
 
-test('the helper opens, answers from the FAQ, admits when it is unsure, and sends nothing anywhere', async ({ page }) => {
+test('the helper opens, answers from the FAQ, admits when it is unsure, and sends nothing anywhere unless the FAQ cannot answer', async ({ page }) => {
   const outside: string[] = [];
-  page.on('request', (r) => { const u = new URL(r.url()); if (!['localhost', '127.0.0.1'].includes(u.hostname) && !u.protocol.startsWith('data')) outside.push(r.url()); });
+  await page.route('**/ask', (r) => r.fulfill({ status: 503, contentType: 'application/json', body: '{"error":"busy"}' }));   // the AI server is down: fall back to the FAQ's honest answer
+  page.on('request', (r) => { const u = new URL(r.url()); if (!['localhost', '127.0.0.1'].includes(u.hostname) && !u.protocol.startsWith('data') && u.pathname !== '/ask') outside.push(r.url()); });
   await open(page, '/index.html');
   const fab = page.getByRole('button', { name: 'Ask a question about Notch Apple' });
   await expect(fab).toBeVisible();
@@ -25,7 +26,7 @@ test('the helper opens, answers from the FAQ, admits when it is unsure, and send
   await expect(dialog).toContainText('Pro is $1 and Ultimate is $5');
   await expect(dialog.getByRole('link', { name: /Pricing page/ })).toHaveAttribute('href', 'pro.html');
 
-  await page.getByLabel('Your question').fill('what is the weather in paris');
+  await page.getByLabel('Your question').fill('recommend a good pizza recipe');
   await page.keyboard.press('Enter');
   await expect(dialog).toContainText('I am not sure about that one');
   await expect(dialog.getByRole('link', { name: /Open an issue/ })).toHaveAttribute('href', /github\.com\/AdityaJainDXB\/NotchApples\/issues$/);
@@ -37,6 +38,22 @@ test('the helper opens, answers from the FAQ, admits when it is unsure, and send
   await expect(dialog).toBeHidden();
   await expect(fab).toBeFocused();
   expect(outside, 'nothing leaves the page').toEqual([]);
+});
+
+test('a question the FAQ cannot answer goes to the AI, and only that question', async ({ page }) => {
+  const sent: any[] = [];
+  await page.route('**/ask', async (r) => { sent.push(JSON.parse(r.request().postData() || '{}')); await r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ a: 'Notch Apple can show your battery in the Today tab. <b>x</b>' }) }); });
+  await open(page, '/index.html');
+  await page.getByRole('button', { name: 'Ask a question about Notch Apple' }).click();
+  await page.getByLabel('Your question').fill('recommend a good pizza recipe');
+  await page.keyboard.press('Enter');
+  const dialog = page.getByRole('dialog', { name: 'Ask about Notch Apple' });
+  await expect(dialog).toContainText('Notch Apple can show your battery in the Today tab.');
+  await expect(dialog).toContainText('AI answer');
+  expect(await page.locator('.nc-log b').count(), 'the AI reply is text, never markup').toBe(0);
+  expect(sent).toHaveLength(1);
+  expect(sent[0].q).toBe('recommend a good pizza recipe');
+  expect(Object.keys(sent[0]).sort()).toEqual(['history', 'q']);
 });
 
 test('HTML in a question or in the data is never turned into markup', async ({ page }) => {

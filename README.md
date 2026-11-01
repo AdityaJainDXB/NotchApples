@@ -255,7 +255,7 @@ Thank you. 💜
 
 ## Donate 💜
 
-Notch Apple is free and made by three high school developers. Donating is **completely optional**: it doesn't unlock anything, it just supports continued development. If it's useful to you, you can donate any amount in **Bitcoin, Ethereum, Solana or Litecoin**. Send on each coin's own network (not a token):
+Notch Apple is free and made by four high school developers. Donating is **completely optional**: it doesn't unlock anything, it just supports continued development. If it's useful to you, you can donate any amount in **Bitcoin, Ethereum, Solana or Litecoin**. Send on each coin's own network (not a token):
 
 | Coin | Address |
 |---|---|

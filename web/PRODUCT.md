@@ -20,7 +20,7 @@ Plain, specific, friendly. Short sentences. Names real keys, real providers, rea
 - Single static `index.html` on GitHub Pages; no build step, no framework.
 - Brand colour is the app icon's violet; the app UI is dark.
 - Keep: SEO meta and structured data, the admin easter egg (3 clicks on the footer line), the end-of-page loop back to the top, the GitHub latest-release fetch.
-- Made by three high school developers; the site can say so.
+- Made by four high school developers; the site can say so.
 
 ## Mode
 Persuade (landing page).

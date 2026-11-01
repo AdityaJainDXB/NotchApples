@@ -1,6 +1,6 @@
 # Contributing to Notch Apple
 
-Thanks for helping! Notch Apple is source-available (see [LICENSE](LICENSE)) and built by three high school developers, so every issue, idea and pull request helps.
+Thanks for helping! Notch Apple is source-available (see [LICENSE](LICENSE)) and built by four high school developers, so every issue, idea and pull request helps.
 
 ## Reporting a bug
 
