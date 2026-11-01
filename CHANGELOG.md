@@ -982,7 +982,7 @@ Claude Code dot, Claude usage tracker, Smart Home, clipboard link, developer too
 
 ### 1.24.0 · 4 October 2026 · Notch Apple on your iPhone
 
-- **Ultimate · [iPhone companion](#iphone-companion):** send text and links to the notch, see the Mac's battery and music, and control music, timers and Keep Awake. It works over your Wi-Fi with no server, and every message is encrypted.
+- **Ultimate · [iPhone companion](docs/FEATURES.md#iphone-companion):** send text and links to the notch, see the Mac's battery and music, and control music, timers and Keep Awake. It works over your Wi-Fi with no server, and every message is encrypted.
 - **Shortcuts on iPhone:** "Send to Mac notch" and "Get Mac status", including from the share sheet.
 - **Pro · Browser video:** speed (0.5× to 3×) and skip 10 seconds for video and podcasts in Safari, Chrome, Arc, Brave or Edge.
 - Support email: **notchapples.support@gmail.com**.
@@ -998,7 +998,7 @@ Claude Code dot, Claude usage tracker, Smart Home, clipboard link, developer too
 - **Peek:** rest the pointer on the closed notch for a one-line glance (what's playing, your next event or the weather). Click to open.
 - **Swipe down to open** (Settings → Notch), and a **countdown** beside the notch 15 minutes before your next event.
 - **Undo** for deleting notes, to-dos, clipboard items, shelf files and Home widgets (⌘Z works too).
-- **Focus:** with a Shortcuts automation the notch stays quiet or steps aside while a Focus is on; with Pro it switches to the matching profile. [How](#focus).
+- **Focus:** with a Shortcuts automation the notch stays quiet or steps aside while a Focus is on; with Pro it switches to the matching profile. [How](docs/FEATURES.md#focus).
 - **AppleScript:** `tell application "Notch Apple" to run notch command "timer?minutes=5"`.
 - **Pro:** Do Not Disturb toggle, send to-dos to Things or Todoist, drag-and-drop in Home.
 
@@ -1045,7 +1045,7 @@ Claude Code dot, Claude usage tracker, Smart Home, clipboard link, developer too
 - **Pro · Markets:** a watchlist of stocks and crypto with today's change and a chart; pin one beside the notch.
 - **Pro · Live flight status:** altitude and speed of a tracked flight while it's in the air, pinned beside the notch.
 - **Pro · More teams:** follow up to five more teams in Sports; live scores take turns beside the notch.
-- **Ultimate · [Live Activities API](#live-activities-api):** show your own builds, uploads or anything else beside the notch from Terminal, Shortcuts or an app.
+- **Ultimate · [Live Activities API](docs/REFERENCE.md#live-activities-api):** show your own builds, uploads or anything else beside the notch from Terminal, Shortcuts or an app.
 - **Ultimate · Two at once:** two activities share the notch, one in each ear.
 
 ### 1.17.0 · 4 October 2026 · A notch that fits how you work
@@ -1306,7 +1306,7 @@ The full list for every release is on the [website](https://adityajaindxb.github
 
 - **F1** *(add-on)*: Formula 1 in the notch: the live running order during sessions, then the full classification with gaps, tyres, laps and the flag, plus the weekend schedule in your time zone with a countdown, and driver and team standings. Click a driver to follow them, and during a session their position and the lap show beside the closed notch.
 - **Updates**: when a new release is out you get a notification, an **Update** button in the notch and a card in Settings → Updates: choose **Update** or **Not now**. Turn automatic checks off there if you prefer.
-- Donate in Bitcoin, Ethereum, Solana or Litecoin: see [Donate](#donate-).
+- Donate in Bitcoin, Ethereum, Solana or Litecoin: see [Donate](README.md#donate-).
 
 #### New in 1.14.3
 

@@ -60,3 +60,8 @@ brag-output-*/
 .claude-flow/
 .swarm/
 ruvector.db
+
+# Local Claude Code files (permissions, launch config, locks)
+.claude/settings.local.json
+.claude/launch.json
+.claude/scheduled_tasks.lock
