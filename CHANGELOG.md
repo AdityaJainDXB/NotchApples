@@ -4,6 +4,11 @@ Every Notch Apple release, newest first. The latest few are also on the [README]
 
 > **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is in the repository's history.
 
+### Mac 2.1.76 · Windows 2.1.76 BETA · 1 November 2026 · 🏁 A fairer race
+
+- Racing, leaving the track: the rule is stricter and easier to see. Come back in front of a car you were behind, or close on one by more than 10 m while off the track (cutting a corner), and a countdown on screen tells you to give the place back within 10 seconds or take 5 seconds. It now also applies under yellow flags.
+- Racing: messages now show below the timing tower instead of over it.
+
 ### Mac 2.1.75 · 1 November 2026 · 🧹 The lock screen card is gone
 
 - Removed the experimental "Music on the lock screen" card that came with 2.1.74: it did not show on the lock screen. Everything else is unchanged.

@@ -20,6 +20,10 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.1.76", date: "1 November 2026", headline: "A fairer race", items: [
+            "Racing, leaving the track: the rule is stricter and easier to see. Come back in front of a car you were behind, or close on one by more than 10 m while off the track (cutting a corner), and a countdown on screen tells you to give the place back within 10 seconds or take 5 seconds. It now also applies under yellow flags.",
+            "Racing: messages now show below the timing tower instead of over it.",
+        ]),
         ReleaseNote(version: "2.1.75", date: "1 November 2026", headline: "The lock screen card is gone", items: [
             "Removed the experimental \"Music on the lock screen\" card that came with 2.1.74: it did not show on the lock screen. Everything else is unchanged.",
         ]),

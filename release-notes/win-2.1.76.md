@@ -1,0 +1,4 @@
+## Notch Apple for Windows 2.1.76 (BETA)
+
+- Racing, leaving the track: the rule is stricter and easier to see. Come back in front of a car you were behind, or close on one by more than 10 m while off the track (cutting a corner), and a countdown on screen tells you to give the place back within 10 seconds or take 5 seconds. It now also applies under yellow flags.
+- Racing: messages now show below the timing tower instead of over it.

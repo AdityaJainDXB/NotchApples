@@ -1129,7 +1129,7 @@
     }
 
     let toastT = null;
-    function toast(msg) { big.style.fontSize = '20px'; big.style.top = '8%'; big.textContent = msg; clearTimeout(toastT); toastT = setTimeout(() => { big.textContent = ''; big.style.fontSize = ''; big.style.top = ''; }, 2600); }
+    function toast(msg) { big.style.fontSize = '20px'; big.style.top = '21%'; big.textContent = msg; clearTimeout(toastT); toastT = setTimeout(() => { big.textContent = ''; big.style.fontSize = ''; big.style.top = ''; }, 2600); }
 
     // ---- starting a race
     function setupRace(entries, laps, hold) {
@@ -1918,19 +1918,30 @@
     // Leaving the track and gaining an advantage (FIA): a car that is off the track for a moment and comes back in front of a car it
     // was behind must let it back through, or take 5 seconds. Only under green, and not for a car that has crashed or stopped.
     function excursionStart(r) {
-      r.excur = racers.filter((o) => o !== r && !o.official && !o.dnf && o.prog > r.prog && o.prog - r.prog < 120);
+      r.excur = racers.filter((o) => o !== r && !o.official && !o.dnf && o.prog > r.prog && o.prog - r.prog < 120).map((o) => [o, o.prog - r.prog]);
     }
     function excursionEnd(r) {
       const ex = r.excur; r.excur = null;
-      if (!ex || r.official || r.finished || r.inLane || r.advDebt || raceCtl.flag !== 'green') return;
-      const passed = ex.find((o) => !o.dnf && !o.stopped && !o.inLane && o.car.dmg < 0.9 && o.prog < r.prog - 0.5);
-      if (!passed) return;
-      r.advDebt = { o: passed, until: clock + 10 };
-      if (r === me) { toast(`⚠ You left the track and came back in front of ${passed.name}: let them past within 10 s or take 5 seconds`); say(`You gained a place off the track. Give it back to ${passed.name}, or it is a five second penalty.`, 'eng', 2); }
+      if (!ex || r.official || r.finished || r.inLane || r.advDebt || !(raceCtl.flag === 'green' || raceCtl.flag === 'yellow')) return;
+      // A car you were behind is now behind you (a place gained), or you closed on it by more than 10 m while you were off the track.
+      let culprit = null, kind = '', gap = 0;
+      for (const [o, g0] of ex) {
+        if (o.dnf || o.stopped || o.inLane || o.car.dmg >= 0.9) continue;
+        const g1 = o.prog - r.prog;
+        if (g1 < -0.5) { culprit = o; kind = 'place'; gap = g0; break; }
+        if (!culprit && g0 - g1 > 10) { culprit = o; kind = 'time'; gap = g0; }
+      }
+      if (!culprit) return;
+      r.advDebt = { o: culprit, until: clock + 10, kind, gap };
+      if (r === me) {
+        toast(kind === 'place' ? `⚠ You left the track and came back in front of ${culprit.name}: let them past within 10 s or take 5 seconds` : `⚠ You left the track and gained time on ${culprit.name}: drop back within 10 s or take 5 seconds`);
+        say(kind === 'place' ? `You gained a place off the track. Give it back to ${culprit.name}, or it is a five second penalty.` : `You gained time off the track. Drop back from ${culprit.name}, or it is a five second penalty.`, 'eng', 2);
+      }
     }
     function advantageTick(r) {
       const d = r.advDebt; if (!d) return;
-      if (d.o.prog > r.prog || d.o.dnf) { r.advDebt = null; if (r === me) toast('Position given back: no penalty'); }
+      const given = d.kind === 'place' ? d.o.prog > r.prog : d.o.prog - r.prog >= d.gap - 4;
+      if (given || d.o.dnf) { r.advDebt = null; if (r === me) toast('Position given back: no penalty'); }
       else if (clock > d.until) { r.advDebt = null; penalize(r, 5, 'leaving the track and gaining an advantage'); }
     }
     /// Who caused a collision: the car that was moving into the other one more. Five seconds, ten for a big hit.
@@ -2540,6 +2551,13 @@
           }
           if (msg) pill(msg, role === 'sc' ? '#ff9f1a' : '#2f7bff', y);
         }
+      }
+      // Leaving the track and gaining an advantage: what to do, and for how long.
+      if (me.advDebt && (screen === 'race' || screen === 'done')) {
+        const d = me.advDebt, left = Math.max(0, d.until - clock), txt = d.kind === 'place' ? `LET ${d.o.name.toUpperCase()} BACK THROUGH · ${left.toFixed(0)}s` : `DROP BACK FROM ${d.o.name.toUpperCase()} · ${left.toFixed(0)}s`;
+        g.font = `900 ${12 * s}px system-ui`; g.textAlign = 'center'; const tw2 = g.measureText(txt).width;
+        g.fillStyle = 'rgba(8,13,28,.92)'; g.beginPath(); g.roundRect(W / 2 - tw2 / 2 - 16 * s, 62 * s, tw2 + 32 * s, 24 * s, 12 * s); g.fill();
+        g.fillStyle = left < 3 ? '#ff4d4d' : '#ffd23f'; g.fillText(txt, W / 2, 78.5 * s); g.textAlign = 'left';
       }
       // The pit lane panel: how long you have been in the lane and the stop itself.
       if (me.inLane && !me.official && (screen === 'race' || screen === 'done')) {

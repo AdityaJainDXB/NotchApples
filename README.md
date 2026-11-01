@@ -76,10 +76,10 @@ Pick your computer. Both buttons start the download straight away. The Mac link 
   </tr>
   <tr>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.1.75</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.1.76</b></a>
     </td>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 2.1.74 BETA</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 2.1.76 BETA</b></a>
     </td>
   </tr>
   <tr>
@@ -150,6 +150,11 @@ More screenshots of the capture overlay, the AI answer, the settings and the Win
 
 ## What's new
 
+### Mac 2.1.76 · Windows 2.1.76 BETA · 1 November 2026 · 🏁 A fairer race
+
+- Racing, leaving the track: the rule is stricter and easier to see. Come back in front of a car you were behind, or close on one by more than 10 m while off the track (cutting a corner), and a countdown on screen tells you to give the place back within 10 seconds or take 5 seconds. It now also applies under yellow flags.
+- Racing: messages now show below the timing tower instead of over it.
+
 ### Mac 2.1.75 · 1 November 2026 · 🧹 The lock screen card is gone
 
 - Removed the experimental "Music on the lock screen" card that came with 2.1.74: it did not show on the lock screen. Everything else is unchanged.
@@ -158,16 +163,6 @@ More screenshots of the capture overlay, the AI answer, the settings and the Win
 
 - Lock screen (new, experimental, off by default): while your Mac is locked and music plays, a card at the top of the screen shows the song, the current lyric line (lyrics need Pro) and the battery. Turn it on in the Now Playing tab, "Music on the lock screen".
 - Racing, new rule: leave the track and come back in front of a car you were behind and you must let it back through within 10 seconds, or take a 5 second time penalty. The computer drivers follow it too.
-
-### Mac 2.1.73 · Windows 2.1.73 BETA · 1 November 2026 · 🎥 A new racing HUD, cameras and smooth hills
-
-- Racing, bumps: the car no longer judders going up or down hills. The road height, slope and curve are now smooth between track samples.
-- Racing, start: fixed the road disappearing on the grid after the formation lap.
-- Racing, new look: a broadcast-style timing tower, a sector and lap-time panel, the car condition with four tyre rings, and a dash with the battery, gear, rev lights and speed. Press L to switch the tower between gaps to you and gaps to the leader.
-- Racing, cameras: a new Halo cam (press V), and the first-person view now has an F1 steering wheel with a screen, shift lights and gloved hands that turn the wheel.
-- Racing, start lights: the five lights now hang from an overhead gantry, four lamps to a pod.
-- Racing, pit stops: a PIT LANE panel with your time in the lane and the stop time, and the pit crew in the team colour.
-- Racing, cars: F1 cars have a front wing with endplates, sidepods, an airbox, a halo and a bigger rear wing, with the tyre compound colour on the sidewall.
 
 Every earlier release is in the [changelog](CHANGELOG.md).
 
