@@ -55,3 +55,8 @@ brag-output/
 # Admin access codes (made by server/license-worker/scripts/admin-keys.mjs)
 .env.admin.keys*
 brag-output-*/
+
+# Local tooling data (agent plugins): never part of the app
+.claude-flow/
+.swarm/
+ruvector.db

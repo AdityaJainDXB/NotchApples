@@ -72,10 +72,10 @@ Pick your computer. Both buttons start the download straight away. The Mac link 
   </tr>
   <tr>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.1.72</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.1.73</b></a>
     </td>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 2.1.72 BETA</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 2.1.73 BETA</b></a>
     </td>
   </tr>
   <tr>
@@ -233,6 +233,16 @@ All screenshots use sample data.
 ## What's new
 
 > **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is in the repository's history.
+
+### Mac 2.1.73 · Windows 2.1.73 BETA · 1 November 2026 · 🎥 A new racing HUD, cameras and smooth hills
+
+- Racing, bumps: the car no longer judders going up or down hills. The road height, slope and curve are now smooth between track samples.
+- Racing, start: fixed the road disappearing on the grid after the formation lap.
+- Racing, new look: a broadcast-style timing tower, a sector and lap-time panel, the car condition with four tyre rings, and a dash with the battery, gear, rev lights and speed. Press L to switch the tower between gaps to you and gaps to the leader.
+- Racing, cameras: a new Halo cam (press V), and the first-person view now has an F1 steering wheel with a screen, shift lights and gloved hands that turn the wheel.
+- Racing, start lights: the five lights now hang from an overhead gantry, four lamps to a pod.
+- Racing, pit stops: a PIT LANE panel with your time in the lane and the stop time, and the pit crew in the team colour.
+- Racing, cars: F1 cars have a front wing with endplates, sidepods, an airbox, a halo and a bigger rear wing, with the tyre compound colour on the sidewall.
 
 ### Mac 2.1.72 · Windows 2.1.72 BETA · 1 November 2026 · ⛰️ Real hills on the F1 circuits
 

@@ -385,3 +385,26 @@ test('the F1 circuits have at least the relief given in the 2026 circuit notes (
   for (const id of ['f1au', 'f1cn', 'f1mi', 'f1ca', 'f1sg', 'f1mx', 'f1lv', 'f1ae']) assert.ok(range(id) < 8, `${id} is near flat`);
   for (const id of ['f1gb', 'f1nl', 'f1it', 'f1qa']) assert.ok(range(id) < 20, `${id} is mild`);
 });
+
+test('the road height is smooth under a moving car: no jump in height or slope as it crosses from one sample to the next, up or down hill', () => {
+  const car0 = car('f1');
+  for (const id of ['f1be', 'f1at', 'f1br', 'f1us']) {
+    const T = R.buildTrack(R.F1_CAL.find((t) => t.id === id)), c = R.newCar(car0, 0, 0, 0);
+    let idx = -1, pz, ps, worstZ = 0, worstS = 0;
+    for (let s = 0; s < T.length; s += 0.7) {
+      const i = Math.floor(s / T.step) % T.m, q = T.S[i], q2 = T.S[(i + 1) % T.m], u = (s - q.s) / T.step;
+      c.x = q.x + (q2.x - q.x) * u; c.y = q.y + (q2.y - q.y) * u; c.h = Math.atan2(q.ty, q.tx);
+      const loc = R.locate(T, c.x, c.y, idx); idx = loc.idx;
+      const z = R.trackHeight(T, loc), sl = R.trackSlope(T, c, loc);
+      if (pz !== undefined) { worstZ = Math.max(worstZ, Math.abs(z - pz)); worstS = Math.max(worstS, Math.abs(sl - ps)); }
+      pz = z; ps = sl;
+    }
+    assert.ok(worstZ < 0.14, `${id} height steps by ${worstZ.toFixed(3)} m per 0.7 m`);
+    assert.ok(worstS < 0.008, `${id} slope steps by ${(worstS * 100).toFixed(2)}%`);
+  }
+});
+
+test('a car put on the grid is found on the road at once, so the road is drawn (not left at index -1)', () => {
+  const T = R.buildTrack(R.F1_CAL.find((t) => t.id === 'f1be')), r = R.newRacer('t', 'T', car('f1'), T, 3);
+  assert.ok(r.idx >= 0 && r.idx < T.m, 'on the road');
+});

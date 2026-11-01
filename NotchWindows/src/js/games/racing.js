@@ -201,20 +201,47 @@
     if (hint == null || hint < 0) for (let i = 0; i < m; i++) test(i);
     else for (let o = -30; o <= 30; o++) { const i = T.closed ? ((hint + o) % m + m) % m : hint + o; if (i >= 0 && i < m) test(i); }
     const q = T.S[best], dx = x - q.x, dy = y - q.y;
-    return { idx: best, s: q.s + dx * q.tx + dy * q.ty, lat: dx * q.nx + dy * q.ny };
+    return { idx: best, s: q.s + dx * q.tx + dy * q.ty, lat: dx * q.nx + dy * q.ny, x, y };
   }
-  /// The track's height at a position on (or near) the centre line, by interpolating the z of the surrounding samples.
-  function trackHeight(T, loc) {
-    const a = T.S[loc.idx], b = T.S[T.closed ? (loc.idx + 1) % T.m : loc.idx + 1];
-    const f = clamp((loc.s - a.s) / T.step, 0, 1);
-    return (a.z || 0) + ((b.z || 0) - (a.z || 0)) * f;
+  /// The two centre-line samples a position lies between (the nearest sample is on either side of the car, so this picks the
+  /// segment that really holds it), how far along that segment it is (0 to 1), and the samples either side of the pair.
+  function seg(T, loc) {
+    const m = T.m, a0 = T.S[loc.idx], at = (k) => T.S[T.closed ? ((k % m) + m) % m : clamp(k, 0, m - 2 + 1)];
+    // How far along a segment the car's position projects. (Measured along the segment itself, not the nearest sample's tangent,
+    // so it does not jump on a bend when the nearest sample changes.)
+    const along = (a, b) => { const dx = b.x - a.x, dy = b.y - a.y; return ((loc.x - a.x) * dx + (loc.y - a.y) * dy) / (dx * dx + dy * dy || 1); };
+    let ia = loc.idx, f;
+    if (loc.x === undefined) { const back = loc.s < a0.s; ia = back ? loc.idx - 1 : loc.idx; f = (loc.s - a0.s) / T.step + (back ? 1 : 0); }
+    else { f = along(a0, at(ia + 1)); if (f < 0 && (T.closed || ia > 0)) { ia -= 1; f = along(at(ia), a0); } }
+    if (T.closed) ia = ((ia % m) + m) % m; else ia = clamp(ia, 0, m - 2);
+    return { a: at(ia), b: at(ia + 1), p: at(ia - 1), n: at(ia + 2), f: clamp(f, 0, 1) };
   }
+  /// The road height and its gradient (rise per metre along the road) at a position: a smooth curve through the samples (cubic,
+  /// each sample's slope taken from its neighbours), so the slope never jumps as the car crosses a sample, which made it judder
+  /// on climbs.
+  function roadZ(T, loc) {
+    const { a, b, p, n, f } = seg(T, loc), st = T.step, za = a.z || 0, zb = b.z || 0;
+    const ma = ((zb - (p.z || 0)) / 2) / st * st, mb = (((n.z || 0) - za) / 2) / st * st;     // slopes in metres per segment
+    const f2 = f * f, f3 = f2 * f;
+    const z = (2 * f3 - 3 * f2 + 1) * za + (f3 - 2 * f2 + f) * ma + (-2 * f3 + 3 * f2) * zb + (f3 - f2) * mb;
+    const dz = ((6 * f2 - 6 * f) * za + (3 * f2 - 4 * f + 1) * ma + (-6 * f2 + 6 * f) * zb + (3 * f2 - 2 * f) * mb) / st;
+    return { z, dz, a, b };
+  }
+  /// The track's height at a position on (or near) the centre line.
+  function trackHeight(T, loc) { return roadZ(T, loc).z; }
   /// The track gradient projected onto the car's heading: positive when the car faces uphill, negative downhill.
   function trackSlope(T, c, loc) {
-    const a = T.S[loc.idx], b = T.S[T.closed ? (loc.idx + 1) % T.m : loc.idx + 1];
+    const { dz, a, b } = roadZ(T, loc);
     const len = Math.hypot(b.x - a.x, b.y - a.y) || 1;
     const cosA = (Math.cos(c.h) * (b.x - a.x) + Math.sin(c.h) * (b.y - a.y)) / len;
-    return ((b.z || 0) - (a.z || 0)) / len * cosA;
+    return dz * cosA;
+  }
+
+  /// How sharply the road bends up or down at a position (1/m: negative over a crest, positive in a dip), blended between the
+  /// samples either side so it changes smoothly instead of stepping at each one.
+  function roadCurv(T, loc) {
+    const { a, b, p, n, f } = seg(T, loc), k = (u, v, w) => ((u.z || 0) - 2 * (v.z || 0) + (w.z || 0)) / (T.step * T.step);
+    return k(p, a, b) * (1 - f) + k(a, b, n) * f;
   }
 
   /// The start grid: row by row behind the line, two cars across.
@@ -965,7 +992,7 @@
 .rc-check{display:flex;align-items:center;gap:8px;padding:5px 8px;border-radius:8px;background:rgba(255,255,255,.05);margin:3px 0;font-size:12px}.rc-check.done{background:rgba(60,220,120,.16)}.rc-check span{margin-left:auto;color:#4fe09a;font-weight:800}.rc-check kbd{background:#2a3142;border-radius:4px;padding:0 5px}
 .rc-ask{display:block;width:260px;margin-top:6px;font:inherit;font-size:12px;color:#fff;background:#1d2230;border:1px solid rgba(255,255,255,.25);border-radius:7px;padding:5px 8px}.rc-radio .dim{opacity:.65;font-size:11px;margin-top:3px}
 .rc-radio{position:absolute;left:12px;bottom:12px;background:rgba(8,12,22,.88);color:#fff;border-radius:10px;padding:10px 12px;font:600 12px system-ui;display:flex;flex-direction:column;gap:3px;pointer-events:none}.rc-radio b{color:#4fe09a;margin-bottom:3px}.rc-radio kbd{display:inline-block;min-width:16px;text-align:center;background:#2a3142;border-radius:4px;padding:0 4px;margin-right:4px}
-.rc-lights{position:absolute;left:50%;top:9%;transform:translateX(-50%);display:flex;gap:8px;padding:8px 10px;background:#111;border-radius:8px;box-shadow:0 4px 18px rgba(0,0,0,.6);pointer-events:none}.rc-lights[hidden]{display:none}.rc-lights b{display:flex;flex-direction:column;gap:5px;padding:5px;background:#222;border-radius:5px}.rc-lights i{width:22px;height:22px;border-radius:50%;background:#3a0b0b;box-shadow:inset 0 2px 4px rgba(0,0,0,.6)}.rc-lights b.on i{background:radial-gradient(circle at 40% 35%,#ff8a80,#ff1a1a 55%,#a00);box-shadow:0 0 14px #ff2a2a}
+.rc-lights{position:absolute;left:50%;top:5%;transform:translateX(-50%);display:flex;gap:14px;padding:24px 16px 12px;background:linear-gradient(#0a0b10,#171a22);border-radius:12px 12px 6px 6px;box-shadow:0 6px 22px rgba(0,0,0,.65),inset 0 1px 0 rgba(255,255,255,.08);pointer-events:none}.rc-lights::before{content:'F1 RACE';position:absolute;top:6px;left:0;right:0;text-align:center;font:italic 900 11px system-ui;letter-spacing:.34em;color:#e9ecf3;opacity:.88}.rc-lights::after{content:'';position:absolute;left:12%;right:12%;top:-8px;height:8px;background:#20232c;border-radius:3px 3px 0 0}.rc-lights[hidden]{display:none}.rc-lights b{position:relative;display:grid;grid-template-columns:repeat(2,17px);gap:5px;padding:7px;background:#040405;border-radius:5px;box-shadow:0 0 0 1px #20232c,0 3px 6px rgba(0,0,0,.7)}.rc-lights b::before{content:'';position:absolute;left:50%;top:-9px;width:3px;height:9px;margin-left:-1.5px;background:#2b2f3a}.rc-lights i{width:17px;height:17px;border-radius:50%;background:#2a0808;box-shadow:inset 0 2px 4px rgba(0,0,0,.7)}.rc-lights b.on i{background:radial-gradient(circle at 40% 35%,#ff9a8f,#ff1a1a 55%,#a00);box-shadow:0 0 14px 2px #ff2a2a}
 .rc-big{position:absolute;left:0;right:0;top:26%;text-align:center;font-size:64px;font-weight:900;text-shadow:0 3px 14px rgba(0,0,0,.7);pointer-events:none}
 `;
 
@@ -974,7 +1001,7 @@
     const root = document.createElement('div'); root.className = 'rc'; root.tabIndex = 0;
     const cv = document.createElement('canvas'), ui = document.createElement('div'), big = document.createElement('div'), gantry = document.createElement('div');
     ui.className = 'rc-ui'; big.className = 'rc-big'; gantry.className = 'rc-lights'; gantry.hidden = true;
-    gantry.innerHTML = '<b><i></i><i></i></b>'.repeat(5);
+    gantry.innerHTML = '<b><i></i><i></i><i></i><i></i></b>'.repeat(5);
     root.append(cv, ui, big, gantry); host.replaceChildren(root);
     const g = cv.getContext('2d');
 
@@ -984,7 +1011,7 @@
     if (!myName) { myName = 'Driver ' + Math.floor(1000 + Math.random() * 9000); store.set('name', myName); }
     let formOn = store.get('formation', true);         // a formation lap before the start
     let role = store.get('role', 'race');               // race | sc (drive the Safety Car) | med (drive the Medical Car)
-    let viewMode = store.get('view', 'chase');          // top | chase | cockpit
+    let viewMode = store.get('view', 'chase');          // top | chase | cockpit | halo
     const hostSound = () => (typeof window.NotchHostSound === 'boolean' ? window.NotchHostSound : null);
     let soundOn = hostSound() ?? store.get('sound', true);
     // Tracks drawn in the designer (kept on this computer), and ones only borrowed for now (a friend's, or a test drive).
@@ -1002,6 +1029,7 @@
     let screen = 'menu';                 // menu | lobby | countdown | race | done
     let T = getTrack(trackId), racers = [], me = null, raceLaps = 3, clock = 0, cdLeft = 0, alive = true, paused = false, suspended = false, startSeq = null, weatherMode = store.get('weather', 'mixed'), weather = { target: 0, at: 1e9, dryAt: 1e9, told: 0 }, passAt = new Map(), myTyre = store.get('tyre', 'M'), towerMode = store.get('tower', 1), medF = null, formT = 0, formHold = 1, formSkip = false, cranes = [], gridMarks = [];
     const keys = new Set();
+    let wheelA = 0, wheelT = 0;       // the wheel in the first-person view: its turn now, and when it was last drawn
     let skids = [], parts = [], camX = 0, camY = 0, shake = 0, doneT = 0, chaseYaw = 0, backToDesign = false, ds = null, lastShift = 0, paddle = 0;
     let net = null;                      // { link, code, host, players: Map, cfg, status }
     const aiState = new Map();
@@ -1062,7 +1090,7 @@
         bestLine(),
         row('You drive', ...[['race', '🏎️ A race car'], ['sc', '🚓 The Safety Car'], ['med', '🚑 The Medical Car']].map(([id, l]) => btn(l, id === role ? 'on' : '', () => { role = id; store.set('role', id); showMenu(); }))),
         ...(role !== 'race' ? [hint(role === 'sc' ? 'You are the Safety Car: when race control calls it, catch the leader, lead the pack at a steady pace, then come into the pit lane when it is clear.' : 'You are the Medical Car: when there is a crash, race to it, stop beside the car to check on the driver, then get out of the way.')] : []),
-        row('View', ...[['top', 'Top-down'], ['chase', 'Chase'], ['cockpit', 'Cockpit']].map(([id, l]) => btn(l, id === viewMode ? 'on' : '', () => { viewMode = id; store.set('view', id); showMenu(); })), btn(soundOn ? '🔊 Sound' : '🔇 Sound off', '', () => { setSound(!soundOn); showMenu(); }), btn(radioOn ? '📻 Radio' : '📻 Radio off', '', () => { radioOn = !radioOn; store.set('radio', radioOn); if (!radioOn) hush(); showMenu(); })),
+        row('View', ...[['top', 'Top-down'], ['chase', 'Chase'], ['cockpit', 'Cockpit'], ['halo', 'Halo cam']].map(([id, l]) => btn(l, id === viewMode ? 'on' : '', () => { viewMode = id; store.set('view', id); showMenu(); })), btn(soundOn ? '🔊 Sound' : '🔇 Sound off', '', () => { setSound(!soundOn); showMenu(); }), btn(radioOn ? '📻 Radio' : '📻 Radio off', '', () => { radioOn = !radioOn; store.set('radio', radioOn); if (!radioOn) hush(); showMenu(); })),
         row('', btn('Start race', 'go', () => { backToDesign = false; if (carId === 'f1' && role === 'race' && !store.get('radioDone', false)) openRadioCheck(); else startLocalRace(); }), btn('✏️ Track designer', '', () => openDesigner(findDef(trackId) && findDef(trackId).custom ? findDef(trackId) : null))),
         row('Online', btn('Create room', '', () => openRoom(true)), (() => { const i = document.createElement('input'); i.placeholder = 'CODE'; i.maxLength = 8; i.id = 'rc-code'; return i; })(), btn('Join', '', () => { const c = NET.normCode(root.querySelector('#rc-code').value); if (!c) { toast('That code is 6 letters and numbers.'); return; } openRoom(false, c); })),
         row('Name', name),
@@ -1260,7 +1288,7 @@
         if (radioUI && k === 'enter' && aiAvailable()) { radioType(); return; }
         if (screen === 'design') { if (k === 'escape') showMenu(); else if (k === 'z') designUndo(); return; }
         if (k === 'escape' && screen !== 'menu') { closeNet(); paused = false; if (backToDesign && ds) { screen = 'design'; designUI(); } else showMenu(); return; }
-        if (k === 'v' && screen !== 'menu' && screen !== 'lobby') { viewMode = { top: 'chase', chase: 'cockpit', cockpit: 'top' }[viewMode] || 'chase'; store.set('view', viewMode); toast({ top: 'Top-down view', chase: 'Chase view', cockpit: 'Cockpit view' }[viewMode]); return; }
+        if (k === 'v' && screen !== 'menu' && screen !== 'lobby') { viewMode = { top: 'chase', chase: 'cockpit', cockpit: 'halo', halo: 'top' }[viewMode] || 'chase'; store.set('view', viewMode); toast({ top: 'Top-down view', chase: 'Chase view', cockpit: 'Cockpit view', halo: 'Halo cam' }[viewMode]); return; }
         if (k === 'q' && me && (me.pen || 0) > 0 && (me.inLane || screen === 'race') && !(me.service > 0)) { me.servePen = !me.servePen; toast(me.servePen ? `You will serve your ${me.pen} s penalty at your next pit stop` : 'Penalty will be added to your race time instead'); if (me.servePen) say(`Copy. We will serve the ${me.pen === 5 ? 'five' : me.pen === 10 ? 'ten' : me.pen} second penalty at the stop.`, 'eng', 1); return; }
         if (k === 'm') { setSound(!soundOn); toast(soundOn ? 'Sound on' : 'Sound off'); if (screen === 'menu') showMenu(); return; }
       }
@@ -2009,7 +2037,7 @@
         // drivers last were on the track, so they steer by the grid and not by the corner they were in, and put the camera
         // straight behind your car.
         for (const st of aiState.values()) { st.cap = null; st.go = false; st.t = null; st.raceLine = undefined; st.idx = -1; st.tr = null; st.side = 0; st.stuck = 0; st.rev = 0; st.oops = 0; st.pitting = false; }
-        for (const r of racers) { r.idx = -1; r.car.steerA = 0; r.car.spin = 0; r.car.vf = 0; r.car.vl = 0; }
+        for (const r of racers) { r.idx = locate(T, r.car.x, r.car.y).idx; r.car.steerA = 0; r.car.spin = 0; r.car.vf = 0; r.car.vl = 0; }       // (not -1: the road is drawn from where the cars are, and nothing updates that on the grid)
         if (me) chaseYaw = me.car.h;
         for (const r of racers) { if (!r.official) continue; if (r === medF || role === 'med') behindGrid(r, 30); else toPitExit(r); r.lap = -1; r.sLap = null; officialProgress(r); }
         if (medF) { const st = aiState.get(medF.id); st.raceLine = false; st.t = null; }
@@ -2117,7 +2145,7 @@
           c.tow = (c.tow || 0) + (want - (c.tow || 0)) * (1 - Math.exp(-dt * 4));      // builds up over a moment, not instantly
           r.towT = c.tow > 0.2 ? 0.3 : Math.max(0, (r.towT || 0) - dt);
         }
-        const slope = trackSlope(T, c, loc), sPrev = T.S[T.closed ? (loc.idx - 1 + T.m) % T.m : Math.max(0, loc.idx - 1)], sCurr = T.S[loc.idx], sNext = T.S[T.closed ? (loc.idx + 1) % T.m : Math.min(T.m - 1, loc.idx + 1)], curv = (sNext.z - 2 * sCurr.z + sPrev.z) / (T.step * T.step);
+        const slope = trackSlope(T, c, loc), curv = roadCurv(T, loc);
         stepCar(c, inp, dt, surf, slope, curv);
         if (r.inLane && !r.official && c.vf < 0) { c.vx = c.vy = 0; c.vf = 0; }       // no reversing in the pit lane for race cars: the brake just holds the car
         const after = locate(T, c.x, c.y, loc.idx);
@@ -2304,6 +2332,129 @@
       g.setTransform(1, 0, 0, 1, 0, 0);
       if (view) drawHud();
     }
+    // ---- the broadcast-style HUD: a timing tower with the lap, a sector and lap-time panel, the car's condition with its four tyres,
+    // and a dash with the battery, gear, revs and speed.
+    let pitIn = null;
+    const sectors = { me: null, lap: -9, sec: -1, t0: 0, times: [null, null, null], col: [null, null, null], pb: [1e9, 1e9, 1e9] };
+    function sectorTick() {
+      if (sectors.me !== me) Object.assign(sectors, { me, lap: -9, sec: -1, t0: clock, times: [null, null, null], col: [null, null, null], pb: [1e9, 1e9, 1e9] });
+      if (!T.closed || me.lap < 0) { sectors.lap = -9; return; }
+      const sec = clamp(Math.floor(clamp((me.sLap || 0) / T.length, 0, 0.9999) * 3), 0, 2);
+      const closeSec = (i) => { const t = clock - sectors.t0; sectors.times[i] = t; sectors.col[i] = t <= sectors.pb[i] ? '#3ad07a' : '#ffd23f'; sectors.pb[i] = Math.min(sectors.pb[i], t); };
+      if (me.lap !== sectors.lap) { if (sectors.lap >= 0 && sectors.sec === 2) closeSec(2); sectors.lap = me.lap; sectors.sec = sec; sectors.t0 = clock; sectors.times = [null, null, null]; sectors.col = [null, null, null]; }
+      else if (sec !== sectors.sec) { if (sectors.sec >= 0 && sectors.sec < 2 && sec === sectors.sec + 1) closeSec(sectors.sec); sectors.sec = sec; sectors.t0 = clock; }
+    }
+    const fmtLap = (t) => { const m = Math.floor(t / 60), sc = (t - m * 60).toFixed(3).padStart(6, '0'); return m ? `${m}:${sc}` : sc; };
+    const ring = (cx, cy, r, frac, col, lw) => {
+      g.lineWidth = lw; g.strokeStyle = 'rgba(255,255,255,.16)'; g.beginPath(); g.arc(cx, cy, r, 0, Math.PI * 2); g.stroke();
+      if (frac > 0.005) { g.lineCap = 'round'; g.strokeStyle = col; g.beginPath(); g.arc(cx, cy, r, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * clamp(frac, 0, 1)); g.stroke(); g.lineCap = 'butt'; }
+    };
+    /// Which cars the tower lists (the top five, or all of a small field, and you if you are further back) and where it ends.
+    function towerLayout(s, order) {
+      const all = order.filter((r) => !r.dsq), mi = all.indexOf(me), rows = !towerMode || !T.closed || !(screen === 'race' || screen === 'done' || screen === 'countdown' || screen === 'formation') ? [] : all.length <= 8 ? all.map((_, i) => i) : [...new Set([0, 1, 2, 3, mi >= 4 ? mi : 4])];
+      return { all, rows, mi, bottom: 8 * s + 22 * s + 15 * s + rows.length * 14.5 * s + (rows.length ? 5 * s : 2 * s) };
+    }
+    function drawTower(s, tw) {
+      const x0 = 8 * s, y0 = 8 * s, wd = 156 * s, rh = 14.5 * s, { all, rows } = tw, L = T.length;
+      g.fillStyle = 'rgba(8,13,28,.94)'; g.beginPath(); g.roundRect(x0, y0, wd, tw.bottom - y0, 5 * s); g.fill();
+      g.fillStyle = '#e10600'; g.fillRect(x0, y0, 3.5 * s, 22 * s);
+      g.textAlign = 'left'; g.fillStyle = '#fff'; g.font = `italic 900 ${14 * s}px system-ui`; g.fillText('F1', x0 + 10 * s, y0 + 16 * s); const fw = g.measureText('F1').width;
+      g.font = `800 ${11 * s}px system-ui`; g.fillText(me.official ? (role === 'sc' ? 'SAFETY CAR' : 'MEDICAL CAR') : 'RACE', x0 + 14 * s + fw, y0 + 15.5 * s);
+      g.fillStyle = 'rgba(255,255,255,.07)'; g.fillRect(x0, y0 + 22 * s, wd, 15 * s);
+      g.textAlign = 'center'; g.fillStyle = 'rgba(255,255,255,.85)'; g.font = `700 ${9 * s}px system-ui`;
+      g.fillText(T.closed ? 'LAP ' : 'DISTANCE', x0 + wd / 2 - (T.closed ? 9 * s : 0), y0 + 33 * s);
+      g.fillStyle = '#fff'; g.font = `900 ${10 * s}px system-ui`;
+      if (T.closed) g.fillText(`${clamp(me.lap + 1, 1, raceLaps)} / ${raceLaps}`, x0 + wd / 2 + 14 * s, y0 + 33 * s); else g.fillText(`${Math.round(clamp(me.prog, 0, T.length))} / ${Math.round(T.length)} m`, x0 + wd / 2 + 30 * s, y0 + 33 * s);
+      rows.forEach((i, n) => {
+        const r = all[i], y = y0 + 37 * s + n * rh, yb = y + rh * 0.7;
+        g.fillStyle = r === me ? 'rgba(86,98,140,.55)' : n % 2 ? 'rgba(255,255,255,.035)' : 'rgba(255,255,255,0)'; g.fillRect(x0, y, wd, rh);
+        g.textAlign = 'left'; g.font = `800 ${8.5 * s}px system-ui`; g.fillStyle = '#fff'; g.fillText(String(i + 1), x0 + 6 * s, yb);
+        g.fillStyle = r.color || r.car.spec.color; g.fillRect(x0 + 21 * s, y + 2.5 * s, 2.6 * s, rh - 5 * s);
+        g.fillStyle = r.dnf ? 'rgba(255,255,255,.4)' : '#fff'; g.font = `700 ${8.5 * s}px system-ui`;
+        const nm = (r === me ? myName : r.name || r.code || '').toUpperCase(); g.fillText(nm.length > 9 ? nm.slice(0, 9) : nm, x0 + 28 * s, yb);
+        const ty = TYRES[r.car.tyre] || TYRES.M; g.strokeStyle = ty.col; g.lineWidth = 1.3 * s; g.beginPath(); g.arc(x0 + 100 * s, y + rh / 2, 4 * s, 0, 7); g.stroke();
+        g.fillStyle = ty.col; g.font = `900 ${5.2 * s}px system-ui`; g.textAlign = 'center'; g.fillText(r.car.tyre || 'M', x0 + 100 * s, y + rh / 2 + 1.9 * s);
+        // The gap: to you (negative ahead of you, positive behind), or to the leader.
+        let gap = '', col = '#fff';
+        if (r.dnf) { gap = 'OUT'; col = '#ff6b6b'; } else if (r.inLane) { gap = 'PIT'; col = '#ffd23f'; }
+        else if (towerMode === 2) { if (i === 0) gap = 'LEADER'; else { const dl = Math.floor((all[0].prog - r.prog) / L); gap = dl >= 1 ? `+${dl} LAP${dl > 1 ? 'S' : ''}` : r.gapL != null ? `+${Math.max(0, r.gapL).toFixed(3)}` : ''; } }
+        else if (r === me) { gap = ''; }
+        else { const dl = Math.round((r.prog - me.prog) / L); if (Math.abs(dl) >= 1) gap = `${dl > 0 ? '+' : '-'}${Math.abs(dl)} LAP${Math.abs(dl) > 1 ? 'S' : ''}`; else if (r.gapL != null && me.gapL != null) gap = `${r.gapL - me.gapL > 0 ? '+' : '-'}${Math.abs(r.gapL - me.gapL).toFixed(3)}`; }
+        g.textAlign = 'right'; g.font = `700 ${8 * s}px ui-monospace, monospace`; g.fillStyle = col; g.fillText(gap, x0 + wd - 6 * s, yb);
+      });
+      if (me.inLane && !me.official) { g.textAlign = 'left'; g.font = `700 ${8 * s}px system-ui`; g.fillStyle = '#ffd23f'; g.fillText(`Y: tyres for this stop: ${(TYRES[me.nextTyre] || TYRES.M).name}`, x0, tw.bottom + 11 * s); }
+    }
+    /// Top right: the three sectors, your position and the current lap time.
+    function drawLapPanel(s, pos, nCars) {
+      const pw = 172 * s, ph = 42 * s, x = W - 8 * s - pw, y = 8 * s, frac = T.closed ? clamp((me.sLap || 0) / T.length, 0, 0.9999) * 3 : 0;
+      g.fillStyle = 'rgba(8,13,28,.94)'; g.beginPath(); g.roundRect(x, y, pw, ph, 4 * s); g.fill();
+      for (let i = 0; i < 3; i++) {
+        const cx = x + (pw / 3) * i, cw = pw / 3;
+        g.textAlign = 'center'; g.font = `700 ${6.5 * s}px system-ui`; g.fillStyle = 'rgba(255,255,255,.6)'; g.fillText('S' + (i + 1), cx + cw / 2, y + 8.5 * s);
+        g.fillStyle = 'rgba(255,255,255,.14)'; g.fillRect(cx + 3 * s, y + 11 * s, cw - 6 * s, 2.4 * s);
+        if (sectors.col[i]) { g.fillStyle = sectors.col[i]; g.fillRect(cx + 3 * s, y + 11 * s, cw - 6 * s, 2.4 * s); }
+        else if (T.closed && me.lap >= 0 && frac >= i && frac < i + 1) { g.fillStyle = '#fff'; g.fillRect(cx + 3 * s, y + 11 * s, (cw - 6 * s) * (frac - i), 2.4 * s); }
+      }
+      g.textAlign = 'left'; g.fillStyle = '#fff';
+      const posTxt = me.official ? (role === 'sc' ? '🚓' : '🚑') : String(pos);
+      g.font = `900 ${19 * s}px system-ui`; g.fillText(posTxt, x + 8 * s, y + 35 * s); const pwid = g.measureText(posTxt).width;
+      g.font = `600 ${9 * s}px system-ui`; g.fillStyle = 'rgba(255,255,255,.7)'; g.fillText(me.official ? `${raceCtl.score} pts` : `/ ${nCars}`, x + 11 * s + pwid, y + 35 * s);
+      const lt = screen === 'countdown' || screen === 'formation' ? 0 : me.finished ? me.finishT : T.closed && me.lap >= 0 ? clock - me.lapStart : clock;
+      g.textAlign = 'right'; g.fillStyle = '#fff'; g.font = `800 ${15 * s}px ui-monospace, monospace`; g.fillText(fmtLap(Math.max(0, lt)), x + pw - 8 * s, y + 34 * s);
+      g.fillStyle = '#e10600'; g.fillRect(x, y + ph - 2.4 * s, pw, 2.4 * s);
+      if (me.bestLap) { g.textAlign = 'right'; g.font = `600 ${7 * s}px system-ui`; g.fillStyle = 'rgba(255,255,255,.6)'; g.fillText('BEST ' + fmtLap(me.bestLap), x + pw, y + ph + 9 * s); }
+    }
+    /// The car's condition: the four tyres (what is left of each) around a top view of the car, green to red with the damage.
+    function drawCondition(s) {
+      const c = me.car, wear = c.wear || 0, dm = clamp(c.dmg || 0, 0, 1), w = 122 * s, h = 112 * s, x = 8 * s, y = H - h - 8 * s, cx = x + w / 2, cy = y + h / 2 + 2 * s;
+      g.fillStyle = 'rgba(8,13,28,.82)'; g.beginPath(); g.roundRect(x, y, w, h, 7 * s); g.fill();
+      const health = (v) => (v < 0.34 ? '#6fe05a' : v < 0.6 ? '#ffd23f' : v < 0.82 ? '#ff9f43' : '#ff4d4d');
+      // Rings: front left, front right, rear left, rear right.
+      const f = [1.1, 1.0, 0.92, 0.98], pos = [[x + 21 * s, y + 24 * s], [x + w - 21 * s, y + 24 * s], [x + 21 * s, y + h - 24 * s], [x + w - 21 * s, y + h - 24 * s]];
+      pos.forEach(([px, py], i) => {
+        const left = c.puncture && i === 0 ? 0 : clamp(1 - wear * f[i], 0, 1), col = left > 0.55 ? '#7ee05a' : left > 0.3 ? '#ffd23f' : left > 0.12 ? '#ff9f43' : '#ff4d4d';
+        ring(px, py, 12.5 * s, left, col, 2.8 * s);
+        g.fillStyle = '#fff'; g.textAlign = 'center'; g.font = `800 ${7.6 * s}px system-ui`; g.fillText(Math.round(left * 100) + '%', px, py + 2.7 * s);
+      });
+      // The car from above.
+      const bc = health(dm);
+      g.fillStyle = bc; g.globalAlpha = 0.92;
+      g.beginPath(); g.roundRect(cx - 5 * s, cy - 24 * s, 10 * s, 50 * s, 4 * s); g.fill();                  // body
+      g.beginPath(); g.roundRect(cx - 12 * s, cy - 30 * s, 24 * s, 4.5 * s, 2 * s); g.fill();                // front wing
+      g.beginPath(); g.roundRect(cx - 10 * s, cy + 22 * s, 20 * s, 5 * s, 2 * s); g.fill();                  // rear wing
+      g.beginPath(); g.moveTo(cx - 5 * s, cy - 4 * s); g.lineTo(cx - 14 * s, cy + 4 * s); g.lineTo(cx - 14 * s, cy + 14 * s); g.lineTo(cx - 5 * s, cy + 16 * s); g.fill();   // sidepods
+      g.beginPath(); g.moveTo(cx + 5 * s, cy - 4 * s); g.lineTo(cx + 14 * s, cy + 4 * s); g.lineTo(cx + 14 * s, cy + 14 * s); g.lineTo(cx + 5 * s, cy + 16 * s); g.fill();
+      g.globalAlpha = 1;
+      g.fillStyle = '#1b2236'; for (const [tx, ty] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) { g.beginPath(); g.roundRect(cx + tx * 15.5 * s - 3 * s, cy + (ty < 0 ? -22 : 17) * s - 5.5 * s, 6 * s, 11 * s, 2 * s); g.fill(); }
+      g.fillStyle = 'rgba(255,255,255,.75)'; g.textAlign = 'center'; g.font = `800 ${6.5 * s}px system-ui`;
+      g.fillText(`${(TYRES[c.tyre] || TYRES.M).name.toUpperCase()}`, cx, y + 9 * s);
+      if (dm > 0.03) { g.fillStyle = bc; g.fillText(`DMG ${Math.round(dm * 100)}%`, cx, y + h - 4 * s); }
+    }
+    /// The dash along the bottom: the battery (or the tyres, in a car without one), the gear with the rev lights and the ERS mode, and speed and revs.
+    function drawDash(s, kmh, rr) {
+      const c = me.car, f1 = c.spec.id === 'f1', cx = W / 2, cy = H - 38 * s, r = 29 * s, gap = 86 * s;
+      // Rev lights.
+      for (let i = 0; i < 15; i++) { const lit = rr * 15 > i, col = i < 5 ? '#3ad07a' : i < 10 ? '#ff4d4d' : '#4da3ff'; g.fillStyle = lit ? col : 'rgba(255,255,255,.14)'; g.beginPath(); g.arc(cx + (i - 7) * 6.2 * s, cy - 34 * s, 2 * s, 0, 7); g.fill(); }
+      // Left: the battery.
+      const bat = f1 ? clamp(c.ers || 0, 0, 1) : clamp(1 - (c.wear || 0), 0, 1), batCol = me.boosting ? '#ffd23f' : bat < 0.2 ? '#ff6b6b' : f1 ? '#d7e84a' : '#7ee05a';
+      g.fillStyle = 'rgba(8,13,28,.88)'; g.beginPath(); g.arc(cx - gap, cy, r + 4 * s, 0, 7); g.fill();
+      ring(cx - gap, cy, r, bat, batCol, 4.2 * s);
+      g.textAlign = 'center'; g.fillStyle = 'rgba(255,255,255,.7)'; g.font = `700 ${7 * s}px system-ui`; g.fillText(f1 ? 'BATT' : 'TYRE', cx - gap, cy - 11 * s);
+      g.fillStyle = '#fff'; g.font = `900 ${17 * s}px system-ui`; g.fillText(Math.round(bat * 100) + '%', cx - gap, cy + 8 * s);
+      // Right: speed and revs.
+      g.fillStyle = 'rgba(8,13,28,.88)'; g.beginPath(); g.arc(cx + gap, cy, r + 4 * s, 0, 7); g.fill();
+      ring(cx + gap, cy, r, rr, rr > 0.92 ? '#ff4d4d' : '#fff', 4.2 * s);
+      g.fillStyle = 'rgba(255,255,255,.7)'; g.font = `700 ${6 * s}px system-ui`; g.fillText('KPH', cx + gap, cy - 15 * s);
+      g.fillStyle = '#fff'; g.font = `900 ${17 * s}px system-ui`; g.fillText(String(kmh), cx + gap, cy + 1 * s);
+      g.fillStyle = 'rgba(255,255,255,.7)'; g.font = `700 ${6 * s}px system-ui`; g.fillText('RPM', cx + gap, cy + 9.5 * s);
+      g.fillStyle = '#fff'; g.font = `800 ${8.5 * s}px system-ui`; g.fillText(String(Math.round(c.rpm)), cx + gap, cy + 18.5 * s);
+      // Middle: the gear.
+      g.fillStyle = 'rgba(8,13,28,.82)'; g.beginPath(); g.roundRect(cx - 38 * s, cy - 28 * s, 76 * s, 62 * s, 8 * s); g.fill();
+      g.fillStyle = rr > 0.92 ? '#ff4d4d' : '#fff'; g.font = `900 ${40 * s}px system-ui`; g.fillText(gearName(c), cx, cy + 12 * s);
+      g.font = `700 ${6.3 * s}px system-ui`; g.fillStyle = me.boosting ? '#ffd23f' : 'rgba(255,255,255,.7)';
+      if (f1) g.fillText(me.boosting ? 'OVERTAKE ERS MODE' : 'BALANCED ERS MODE', cx, cy + 25 * s);
+    }
+
     function drawHud() {
       const s = Math.min(W, H) / 400, order = ranking(racers), pos = order.indexOf(me) + 1;
       // Rain: a grey sky and streaks, heavier the wetter the track.
@@ -2314,51 +2465,31 @@
         for (let i = 0; i < n; i++) { const x = ((i * 97.3 + t * 90) % W + W) % W, y = ((i * 57.1 + t * 900) % H + H) % H; g.moveTo(x, y); g.lineTo(x - 3 * s, y + 14 * s); }
         g.stroke();
       }
-      g.textAlign = 'left'; g.fillStyle = 'rgba(8,12,22,.6)';
-      g.beginPath(); g.roundRect(8 * s, 8 * s, 138 * s, 64 * s, 8 * s); g.fill();
-      g.fillStyle = '#fff'; g.font = `800 ${24 * s}px system-ui`;
-      const posTxt = me.official ? (role === 'sc' ? '🚓' : '🚑') : `${pos}`; g.fillText(posTxt, 16 * s, 40 * s); const pw = g.measureText(posTxt).width; g.font = `600 ${11 * s}px system-ui`; g.fillStyle = 'rgba(255,255,255,.7)'; g.fillText(me.official ? `${raceCtl.score} pts` : `/ ${racers.filter((r) => !r.official).length}`, 16 * s + pw + 4 * s, 40 * s);
-      g.fillStyle = '#fff'; g.font = `700 ${12 * s}px system-ui`;
-      g.fillText(T.closed ? `Lap ${clamp(me.lap + 1, 1, raceLaps)}/${raceLaps}` : `${Math.round(clamp(me.prog, 0, T.length))} / ${Math.round(T.length)} m`, 16 * s, 58 * s);
-      g.textAlign = 'right'; g.font = `700 ${13 * s}px system-ui`; g.fillText(screen === 'countdown' || screen === 'formation' ? '0:00.00' : fmt(me.finished ? me.finishT : clock), 138 * s, 28 * s);
-      g.font = `500 ${10 * s}px system-ui`; g.fillStyle = 'rgba(255,255,255,.7)'; g.fillText(me.bestLap ? 'best ' + fmt(me.bestLap) : '', 138 * s, 58 * s);
+      const inCar = viewMode === 'cockpit' || viewMode === 'halo', tw = towerLayout(s, order), nY = tw.bottom + 14 * s;
+      sectorTick(); drawTower(s, tw); drawLapPanel(s, pos, racers.filter((r) => !r.official).length);
       // Speed, gear, revs and damage (the cockpit has its own on the wheel).
       const kmh = Math.round(Math.hypot(me.car.vx, me.car.vy) * KMH), c = me.car, rr = clamp((c.rpm - c.spec.idle) / (c.spec.redline - c.spec.idle), 0, 1);
-      if (viewMode !== 'cockpit') {
-        g.fillStyle = 'rgba(8,12,22,.6)'; g.beginPath(); g.roundRect(W - 150 * s, H - 64 * s, 142 * s, 56 * s, 8 * s); g.fill();
-        g.fillStyle = '#fff'; g.textAlign = 'right'; g.font = `800 ${26 * s}px system-ui`; g.fillText(String(kmh), W - 44 * s, H - 26 * s);
-        g.font = `600 ${10 * s}px system-ui`; g.fillStyle = 'rgba(255,255,255,.7)'; g.textAlign = 'left'; g.fillText('km/h', W - 40 * s, H - 26 * s);
-        g.font = `900 ${24 * s}px system-ui`; g.fillStyle = rr > 0.92 ? '#ff4d4d' : '#ffd166'; g.fillText(gearName(c), W - 142 * s, H - 26 * s);
-        g.fillStyle = 'rgba(255,255,255,.15)'; g.fillRect(W - 142 * s, H - 18 * s, 126 * s, 5 * s);
-        g.fillStyle = rr > 0.92 ? '#ff4d4d' : rr > 0.75 ? '#ffd166' : '#4fe09a'; g.fillRect(W - 142 * s, H - 18 * s, 126 * s * rr, 5 * s);
-      }
-      // Battery (F1 boost on B), DRS (E), slipstream and the weather, just above the speed panel.
+      if (viewMode !== 'cockpit') drawDash(s, kmh, rr);
+      // DRS (E), slipstream and the weather, stacked bottom right.
       if (screen === 'race' && !me.official) {
-        let x = W - 150 * s, y = H - 74 * s;
+        let x = W - 150 * s, y = H - 22 * s;
         g.textAlign = 'left'; g.font = `800 ${9 * s}px system-ui`;
-        if (c.spec.id === 'f1') {
-          g.fillStyle = 'rgba(8,12,22,.6)'; g.beginPath(); g.roundRect(x, y - 14 * s, 142 * s, 16 * s, 5 * s); g.fill();
-          g.fillStyle = me.boosting ? '#ffd23f' : '#fff'; g.fillText('BATTERY', x + 6 * s, y - 3 * s);
-          g.fillStyle = 'rgba(255,255,255,.15)'; g.fillRect(x + 56 * s, y - 9 * s, 80 * s, 6 * s);
-          g.fillStyle = (c.ers || 0) < 0.2 ? '#ff6b6b' : me.boosting ? '#ffd23f' : '#3aa0ff'; g.fillRect(x + 56 * s, y - 9 * s, 80 * s * (c.ers || 0), 6 * s);
-          y -= 19 * s;
-        }
         const drs = me.drsOn ? ['DRS OPEN', '#3ad07a'] : drsOk(me) ? ['DRS: PRESS E', '#ffd23f'] : ['DRS', 'rgba(255,255,255,.35)'];
         g.fillStyle = 'rgba(8,12,22,.6)'; g.beginPath(); g.roundRect(x, y - 14 * s, 70 * s, 16 * s, 5 * s); g.fill(); g.fillStyle = drs[1]; g.fillText(drs[0], x + 6 * s, y - 3 * s);
         if (me.towT > 0) { g.fillStyle = 'rgba(8,12,22,.6)'; g.beginPath(); g.roundRect(x + 74 * s, y - 14 * s, 68 * s, 16 * s, 5 * s); g.fill(); g.fillStyle = '#9ad7ff'; g.fillText('SLIPSTREAM', x + 79 * s, y - 3 * s); }
         if (WET > 0.04) { y -= 19 * s; g.fillStyle = 'rgba(8,12,22,.6)'; g.beginPath(); g.roundRect(x, y - 14 * s, 142 * s, 16 * s, 5 * s); g.fill(); g.fillStyle = '#9ad7ff'; g.fillText(`🌧 TRACK ${WET > 0.6 ? 'SOAKED' : WET > 0.25 ? 'WET' : 'DAMP'} · ${TYRES[c.tyre].rain ? 'RAIN TYRES' : 'SLICKS'}`, x + 6 * s, y - 3 * s); }
       }
-      if (c.dmg > 0.03) { g.textAlign = 'left'; g.font = `800 ${10 * s}px system-ui`; g.fillStyle = c.dmg > 0.75 ? '#ff4d4d' : c.dmg > 0.4 ? '#ff9f43' : '#ffd166'; g.fillText(c.dmg >= 1 ? 'WRECKED: limping home' : `DAMAGE ${Math.round(c.dmg * 100)}%`, 16 * s, 86 * s); }
-      if (me.car.drifting) { g.fillStyle = '#ffd166'; g.font = `900 ${14 * s}px system-ui`; g.textAlign = 'center'; g.fillText(`DRIFT  ${Math.round(me.drift * 10)}`, W / 2, H - 16 * s); }
+      if (c.dmg > 0.03) { g.textAlign = 'left'; g.font = `800 ${10 * s}px system-ui`; g.fillStyle = c.dmg > 0.75 ? '#ff4d4d' : c.dmg > 0.4 ? '#ff9f43' : '#ffd166'; g.fillText(c.dmg >= 1 ? 'WRECKED: limping home' : `DAMAGE ${Math.round(c.dmg * 100)}%`, 10 * s, nY); }
+      if (me.car.drifting) { g.fillStyle = '#ffd166'; g.font = `900 ${14 * s}px system-ui`; g.textAlign = 'center'; g.fillText(`DRIFT  ${Math.round(me.drift * 10)}`, W / 2, H - 82 * s); }
       {
-        const wear = me.car.wear || 0, y0 = (viewMode === 'cockpit' ? H * 0.24 : 40 * s);
+        const wear = me.car.wear || 0, y0 = (inCar ? H * 0.24 : 40 * s) + (me.inLane ? 16 * s : 0);
         g.textAlign = 'center'; g.font = `800 ${12 * s}px system-ui`;
         { const Pd = pitInfo(T); if (Pd && !me.inLane) { const r0 = relS(T, me.sNow || 0), d = Pd.a - r0; if (d > 0 && d < 450) { g.fillStyle = '#ffd23f'; g.fillText(`PIT ENTRY ${Pd.side > 0 ? 'ON THE RIGHT ▶' : '◀ ON THE LEFT'} IN ${Math.round(d)} m`, W / 2, y0 + 32 * s); } } }
         if (me.inLane) { g.fillStyle = '#4fe09a'; const wait = me.servePen ? (me.pen || 0) : 0; g.fillText(me.service > 0 ? (wait && me.service < wait ? `SERVING PENALTY… ${(wait - me.service).toFixed(1)}s` : `PIT STOP… ${(me.service - wait).toFixed(1)}s`) : (() => { const d = Math.round((me.boxS ?? 0) - relS(T, me.sNow || 0)); return me.served ? 'PIT LANE · LIMITER 80 km/h' : d > 8 ? `PIT LANE · LIMITER 80 km/h · YOUR BOX (GREEN) IN ${d} m` : d < -8 ? 'PIT LANE · YOU PASSED YOUR BOX' : 'PIT LANE · BRAKE: STOP IN YOUR GREEN BOX'; })(), W / 2, y0 + 16 * s); }
         if (me.pen && !(me.service > 0)) { g.fillStyle = '#ffd23f'; g.font = `700 ${10 * s}px system-ui`; g.fillText(me.servePen ? `✓ Serving your +${me.pen}s penalty at the next stop (Q to cancel)` : `Q: serve your +${me.pen}s penalty at your next pit stop`, W / 2, y0 + 48 * s); g.font = `800 ${12 * s}px system-ui`; }
-        if (me.pen) { g.fillStyle = '#ff4d4d'; g.textAlign = 'left'; g.fillText(`+${me.pen}s PENALTY`, 16 * s, 100 * s); g.textAlign = 'center'; }
+        if (me.pen) { g.fillStyle = '#ff4d4d'; g.textAlign = 'left'; g.fillText(`+${me.pen}s PENALTY`, 10 * s, nY + 14 * s); g.textAlign = 'center'; }
         g.textAlign = 'left'; g.font = `700 ${10 * s}px system-ui`; g.fillStyle = wear > 0.7 ? '#ff4d4d' : wear > 0.45 ? '#ffd166' : 'rgba(255,255,255,.75)';
-        g.fillText(`${(TYRES[me.car.tyre] || TYRES.M).name.toUpperCase()} ${Math.round((1 - wear) * 100)}% · ${Math.max(0, me.lap - (me.tyreLap || 0))} LAPS${me.tl ? ` · TRACK LIMITS ${Math.min(me.tl, 3)}/3` : ''}`, 16 * s, 114 * s);
+        g.fillText(`${(TYRES[me.car.tyre] || TYRES.M).name.toUpperCase()} ${Math.round((1 - wear) * 100)}% · ${Math.max(0, me.lap - (me.tyreLap || 0))} LAPS${me.tl ? ` · TRACK LIMITS ${Math.min(me.tl, 3)}/3` : ''}`, 10 * s, nY + 28 * s);
       }
       // Race control: the flag that is out, the blue flag, and what to do when you drive for race control.
       if (screen === 'race' && me && me.medHint && !me.medOut) {
@@ -2368,11 +2499,11 @@
       if (screen === 'formation' && me && !me.official) {
         g.font = `900 ${12 * s}px system-ui`; g.textAlign = 'center';
         const txt = me.gridded ? 'ON THE GRID · WAIT FOR THE LIGHTS' : me.formGo ? (() => { const d = Math.round(slotS(me).rel - relS(T, me.sNow || 0)); return d > 6 ? `FORMATION LAP · YOUR GRID BOX IN ${d} m` : 'FORMATION LAP · STOP IN YOUR GRID BOX'; })() : 'FORMATION LAP · FOLLOW THE CAR AHEAD · NO OVERTAKING';
-        const tw = g.measureText(txt).width; g.fillStyle = 'rgba(8,12,22,.75)'; g.beginPath(); g.roundRect(W / 2 - tw / 2 - 14 * s, H - 92 * s, tw + 28 * s, 24 * s, 12 * s); g.fill(); g.fillStyle = '#ffd23f'; g.fillText(txt, W / 2, H - 75 * s);
+        const tw = g.measureText(txt).width; g.fillStyle = 'rgba(8,12,22,.75)'; g.beginPath(); g.roundRect(W / 2 - tw / 2 - 14 * s, H - 118 * s, tw + 28 * s, 24 * s, 12 * s); g.fill(); g.fillStyle = '#ffd23f'; g.fillText(txt, W / 2, H - 101 * s);
       }
       if (screen === 'race') {
         const C = raceCtl, pill = (txt, col, y) => { g.font = `900 ${12 * s}px system-ui`; const tw = g.measureText(txt).width; g.fillStyle = 'rgba(8,12,22,.75)'; g.beginPath(); g.roundRect(W / 2 - tw / 2 - 22 * s, y - 14 * s, tw + 34 * s, 20 * s, 10 * s); g.fill(); g.fillStyle = col; g.fillRect(W / 2 - tw / 2 - 16 * s, y - 9 * s, 9 * s, 10 * s); g.fillStyle = '#fff'; g.textAlign = 'center'; g.fillText(txt, W / 2 + 6 * s, y); };
-        let y = H - 76 * s;
+        let y = H - 108 * s;
         if (C.flag !== 'green') { pill(C.flag === 'yellow' ? 'YELLOW FLAG · NO OVERTAKING' : C.flag === 'vsc' ? `VIRTUAL SAFETY CAR · MAX ${Math.round(me.car.spec.vmax * 0.45 * KMH)} km/h` : C.flag === 'sc' ? (C.restart ? 'SAFETY CAR IN · RESTART AT THE LINE' : C.inWarned ? 'SAFETY CAR IN THIS LAP · NO OVERTAKING' : 'SAFETY CAR · STAY BEHIND IT') : 'RED FLAG · STOP', FLAGS[C.flag][1], y); y -= 24 * s; }
         if (me.blue) { pill('BLUE FLAG · LET THE LEADER THROUGH', '#2f7bff', y); y -= 24 * s; }
         if (me.official) {
@@ -2391,57 +2522,27 @@
           if (msg) pill(msg, role === 'sc' ? '#ff9f1a' : '#2f7bff', y);
         }
       }
-      if (me.car.onGrass) { g.fillStyle = '#ff9f43'; g.font = `800 ${12 * s}px system-ui`; g.textAlign = 'center'; g.fillText('OFF TRACK', W / 2, viewMode === 'cockpit' ? H * 0.2 : 24 * s); }
+      // The pit lane panel: how long you have been in the lane and the stop itself.
+      if (me.inLane && !me.official && (screen === 'race' || screen === 'done')) {
+        if (pitIn == null) pitIn = clock;
+        const pw2 = 150 * s, px = W / 2 - pw2 / 2, py = 10 * s, lane = clock - pitIn, stop = me.service > 0 ? Math.max(0, me.service - (me.servePen ? (me.pen || 0) : 0)) : null;
+        g.fillStyle = 'rgba(8,13,28,.94)'; g.beginPath(); g.roundRect(px, py, pw2, 38 * s, 3 * s); g.fill();
+        g.fillStyle = '#1d2f66'; g.fillRect(px, py, pw2, 11 * s); g.fillStyle = '#fff'; g.font = `900 ${7.5 * s}px system-ui`; g.textAlign = 'center'; g.fillText('PIT LANE', px + pw2 / 2, py + 8.2 * s);
+        g.fillStyle = 'rgba(255,255,255,.14)'; g.fillRect(px + pw2 / 2, py + 14 * s, 1 * s, 20 * s);
+        g.fillStyle = 'rgba(255,255,255,.6)'; g.font = `700 ${6.5 * s}px system-ui`; g.fillText('PIT', px + pw2 * 0.25, py + 20 * s); g.fillText('STOP TIME', px + pw2 * 0.75, py + 20 * s);
+        g.fillStyle = '#fff'; g.font = `800 ${13 * s}px ui-monospace, monospace`; g.fillText(lane.toFixed(1), px + pw2 * 0.25, py + 33 * s); g.fillText(stop == null ? '- - -' : stop.toFixed(1), px + pw2 * 0.75, py + 33 * s);
+      } else pitIn = null;
+      if (me.car.onGrass) { g.fillStyle = '#ff9f43'; g.font = `800 ${12 * s}px system-ui`; g.textAlign = 'center'; g.fillText('OFF TRACK', W / 2, inCar ? H * 0.2 : 24 * s); }
       if (me.car.hit > 0.6 && viewMode !== 'top') { g.fillStyle = `rgba(255,40,40,${(me.car.hit - 0.6) * 0.3})`; g.fillRect(0, 0, W, H); }
-      // The timing tower (L: gap to the car ahead, gap to the leader, or hidden): position, driver, gap, last lap,
-      // tyre and how many laps it has done, and pit stops. A big field shows the top eight and the cars round you.
-      if (towerMode && (screen === 'race' || screen === 'done') && T.closed) {
-        const all = ranking(racers).filter((r) => !r.dsq), mi = all.indexOf(me), rowsIdx = all.length <= 12 ? all.map((_, i) => i) : [...new Set([...Array(8).keys(), ...[mi - 1, mi, mi + 1].filter((i) => i >= 8 && i < all.length)])];
-        const x0 = 8 * s, y0 = 124 * s, rh = 12.5 * s, wdt = 182 * s, L = T.length;
-        g.fillStyle = 'rgba(8,12,22,.66)'; g.beginPath(); g.roundRect(x0, y0, wdt, rh * rowsIdx.length + 16 * s, 7 * s); g.fill();
-        g.font = `700 ${7.5 * s}px system-ui`; g.fillStyle = 'rgba(255,255,255,.55)'; g.textAlign = 'left';
-        g.fillText(towerMode === 1 ? 'INTERVAL' : 'TO LEADER', x0 + 52 * s, y0 + 10 * s); g.fillText('LAST', x0 + 96 * s, y0 + 10 * s); g.fillText('TYRE', x0 + 134 * s, y0 + 10 * s); g.fillText('PIT', x0 + 164 * s, y0 + 10 * s);
-        let prev = null;
-        rowsIdx.forEach((i, n) => {
-          const r = all[i], y = y0 + 16 * s + n * rh + rh * 0.72, lead = all[0];
-          if (r === me) { g.fillStyle = 'rgba(255,255,255,.14)'; g.fillRect(x0 + 2 * s, y - rh * 0.78, wdt - 4 * s, rh); }
-          g.font = `800 ${8.5 * s}px system-ui`; g.fillStyle = '#fff'; g.textAlign = 'right'; g.fillText(String(i + 1), x0 + 14 * s, y);
-          g.fillStyle = r.color || r.car.spec.color; g.fillRect(x0 + 17 * s, y - 7.5 * s, 2.5 * s, 9 * s);
-          g.textAlign = 'left'; g.fillStyle = r.dnf ? 'rgba(255,255,255,.4)' : '#fff'; g.font = `800 ${8.5 * s}px ui-monospace, monospace`; g.fillText(r === me ? (myName || 'YOU').slice(0, 3).toUpperCase() : r.code || '', x0 + 22 * s, y);
-          // Gap: from when each car passed the same point; laps down when a lap or more behind.
-          let gap = '';
-          if (r.dnf) gap = 'OUT'; else if (r.inLane) gap = 'PIT'; else if (i === 0) gap = towerMode === 1 ? 'LEADER' : `L${clamp(r.lap + 1, 1, raceLaps)}`;
-          else { const down = Math.floor((lead.prog - r.prog) / L); const ref = towerMode === 1 ? all[i - 1] : lead; const dl = Math.floor((ref.prog - r.prog) / L);
-            gap = dl >= 1 ? `+${dl} LAP${dl > 1 ? 'S' : ''}` : r.gapL != null && ref.gapL != null ? `+${Math.max(0, r.gapL - (towerMode === 1 ? ref.gapL : 0)).toFixed(1)}` : ''; if (down < 0) gap = ''; }
-          g.font = `600 ${8 * s}px system-ui`; g.fillStyle = gap === 'PIT' ? '#ffd23f' : gap === 'OUT' ? '#ff6b6b' : '#fff'; g.fillText(gap, x0 + 52 * s, y);
-          const lt = r.lapTimes[r.lapTimes.length - 1]; g.fillStyle = r.bestLap && lt === r.bestLap ? '#4fe09a' : 'rgba(255,255,255,.8)'; g.fillText(lt ? fmt(lt) : '', x0 + 96 * s, y);
-          const ty = TYRES[r.car.tyre] || TYRES.M; g.strokeStyle = ty.col; g.lineWidth = 1.4 * s; g.beginPath(); g.arc(x0 + 138 * s, y - 3 * s, 4 * s, 0, 7); g.stroke();
-          g.fillStyle = ty.col; g.font = `900 ${5.5 * s}px system-ui`; g.textAlign = 'center'; g.fillText(r.car.tyre || 'M', x0 + 138 * s, y - 1 * s);
-          g.textAlign = 'left'; g.font = `600 ${7.5 * s}px system-ui`; g.fillStyle = 'rgba(255,255,255,.7)'; g.fillText(String(Math.max(0, r.lap - (r.tyreLap || 0))), x0 + 145 * s, y);
-          g.fillText(r.pits ? String(r.pits) : '', x0 + 166 * s, y);
-          prev = r;
-        });
-        if (me.inLane && !me.official) { g.font = `700 ${8 * s}px system-ui`; g.fillStyle = '#ffd23f'; g.fillText(`Y: tyres for this stop: ${(TYRES[me.nextTyre] || TYRES.M).name}`, x0 + 4 * s, y0 + rh * rowsIdx.length + 28 * s); }
-      }
+      // The timing tower (L: gaps to you, gaps to the leader, or only the lap) is drawn at the top left, above.
       // Minimap.
-      const mw = 96 * s, mh = 96 * s, mx = W - mw - 8 * s, my = 8 * s, [x0, y0, x1, y1] = T.bounds, k = Math.min((mw - 12 * s) / (x1 - x0 || 1), (mh - 12 * s) / (y1 - y0 || 1));
+      const mw = 84 * s, mh = 84 * s, mx = W - mw - 8 * s, my = 56 * s + (me.bestLap ? 9 * s : 0), [x0, y0, x1, y1] = T.bounds, k = Math.min((mw - 12 * s) / (x1 - x0 || 1), (mh - 12 * s) / (y1 - y0 || 1));
       const mp = (x, y) => [mx + 6 * s + (x - x0) * k + ((mw - 12 * s) - (x1 - x0) * k) / 2, my + 6 * s + (y - y0) * k + ((mh - 12 * s) - (y1 - y0) * k) / 2];
       g.fillStyle = 'rgba(8,12,22,.6)'; g.beginPath(); g.roundRect(mx, my, mw, mh, 8 * s); g.fill();
       g.strokeStyle = 'rgba(255,255,255,.8)'; g.lineWidth = 2 * s; g.beginPath(); T.S.forEach((q, i) => { const p = mp(q.x, q.y); i ? g.lineTo(p[0], p[1]) : g.moveTo(p[0], p[1]); }); if (T.closed) g.closePath(); g.stroke();
       for (const r of racers) { const p = mp(r.car.x, r.car.y); g.fillStyle = r === me ? '#fff' : (r.color || '#aaa'); g.beginPath(); g.arc(p[0], p[1], (r === me ? 3.6 : 2.6) * s, 0, 7); g.fill(); }
-      // The car check after a hit: four tyres coloured by wear and the body by damage, for a minute.
-      if (me.checkUntil > clock && screen === 'race') {
-        const bx = 12 * s, by = H - 190 * s, bw = 92 * s, bh = 112 * s, wear = me.car.wear || 0, dm = me.car.dmg;
-        const col = (x) => (x < 0.35 ? '#3ad07a' : x < 0.65 ? '#ffd23f' : '#ff4d4d');
-        g.fillStyle = 'rgba(8,12,22,.8)'; g.beginPath(); g.roundRect(bx, by, bw, bh, 10 * s); g.fill();
-        g.fillStyle = '#fff'; g.font = `800 ${9 * s}px system-ui`; g.textAlign = 'center'; g.fillText('CAR CHECK', bx + bw / 2, by + 13 * s);
-        const cx = bx + bw / 2, cy = by + 58 * s, side = Math.sign(me.car.pull || 1);
-        g.fillStyle = col(dm); g.beginPath(); g.roundRect(cx - 11 * s, cy - 30 * s, 22 * s, 60 * s, 7 * s); g.fill();          // body
-        g.fillStyle = col(Math.min(1, dm * 1.3)); g.fillRect(cx - 17 * s, cy - 36 * s, 34 * s, 5 * s);                           // front wing
-        for (const [tx, ty, front] of [[-1, -1, 1], [1, -1, 1], [-1, 1, 0], [1, 1, 0]]) { const tw = wear * (front ? 1.06 : 0.94) + (tx === side ? dm * 0.15 : 0); g.fillStyle = col(tw); g.beginPath(); g.roundRect(cx + tx * 17 * s - 5 * s, cy + ty * 19 * s - 8 * s, 10 * s, 16 * s, 3 * s); g.fill(); }
-        g.fillStyle = '#fff'; g.font = `700 ${8.5 * s}px system-ui`; g.fillText(`Tyres ${Math.round((1 - wear) * 100)}% · Damage ${Math.round(dm * 100)}%`, bx + bw / 2, by + bh - 7 * s);
-        g.textAlign = 'left';
-      }
+      // The car's condition (the four tyres and the damage), bottom left.
+      if ((screen === 'race' || screen === 'done' || screen === 'formation' || screen === 'countdown') && !me.official) drawCondition(s);
       // Where a car has crashed: a red map pin (pulsing) while race control deals with it.
       const pins = []; if (raceCtl.at && raceCtl.flag !== 'green' && !raceCtl.at.r.dnf) pins.push([raceCtl.at.x, raceCtl.at.y]); for (const k of cranes) if (!k.done) pins.push([k.r.car.x, k.r.car.y]);
       for (const [px, py] of pins) {
@@ -2457,15 +2558,15 @@
     const shade = (hex, k) => { const n = parseInt(hex.slice(1), 16); const f = (v) => clamp(Math.round(v * k), 0, 255); return `rgb(${f(n >> 16)},${f((n >> 8) & 255)},${f(n & 255)})`; };
     const hash01 = (i, salt = 0) => { let h = Math.imul((i + 1) * 374761393 + salt * 668265263, 1274126177); h ^= h >>> 13; h = Math.imul(h, 1103515245); return ((h ^ (h >>> 16)) >>> 0) / 4294967296; };
     function draw3D(mode) {
-      const c = me.car, sp = c.spec, cock = mode === 'cockpit';
+      const c = me.car, sp = c.spec, halo = mode === 'halo', cock = mode === 'cockpit' || halo;
       if (!cock) chaseYaw += wrapPi(c.h - chaseYaw) * 0.14; else chaseYaw = c.h;
       for (const r of racers) r.car.spinW = ((r.car.spinW || 0) - (r.car.vf || 0) * 0.016 / 0.36) % (Math.PI * 2);
       const low = sp.id === 'f1';
       const yaw = cock ? c.h : chaseYaw, cs = Math.cos(yaw), sn = Math.sin(yaw);
       const jx = shake > 0 ? (Math.random() - 0.5) * shake * 0.5 : 0, jz = shake > 0 ? (Math.random() - 0.5) * shake * 0.3 : 0;
       const camBack = low ? 6.2 : 8.5, ex = (cock ? c.x - Math.cos(c.h) * 0.3 : c.x - cs * camBack) + jx, ey = (cock ? c.y - Math.sin(c.h) * 0.3 : c.y - sn * camBack) + jx;
-      const ez = (cock ? (sp.id === 'f1' ? 0.78 : 1.12) : low ? 1.9 : 3.1) + jz + (c.z || 0);
-      const F = (W / 2) / Math.tan((cock ? 1.3 : 1.12) / 2), hy = H * (cock ? 0.44 : low ? 0.4 : 0.36), NEAR = 0.35;
+      const ez = (halo ? 1.02 : cock ? (sp.id === 'f1' ? 0.78 : 1.12) : low ? 1.9 : 3.1) + jz + (c.z || 0);
+      const F = (W / 2) / Math.tan((halo ? 1.4 : cock ? 1.3 : 1.12) / 2), hy = H * (halo ? 0.4 : cock ? 0.44 : low ? 0.4 : 0.36), NEAR = 0.35;
       let liftZ = 0;      // a car hanging from a recovery crane is drawn this high
       let pitchRef = null;   // while a car is drawn: it tilts nose up or down with the road under it
       const cam = (x, y, z) => { const dx = x - ex, dy = y - ey; const tz = pitchRef ? ((x - pitchRef.x) * pitchRef.ca + (y - pitchRef.y) * pitchRef.sa) * pitchRef.p : 0; return [dx * cs + dy * sn, -dx * sn + dy * cs, z + tz + liftZ - ez]; };
@@ -2503,35 +2604,53 @@
         { const ca = Math.cos(k.h), sa = Math.sin(k.h), hl = CAR_LEN / 2 + 0.5, hw = CAR_W / 2 + 0.45, pt = (u, v) => cam(k.x + ca * u - sa * v, k.y + sa * u + ca * v, 0.02 + (k.z || 0));
           poly([pt(hl, -hw), pt(hl, hw), pt(-hl, hw), pt(-hl, -hw)], 'rgba(0,0,0,.38)'); }
         if (k.spec.id === 'f1') {
-          // An open-wheel car built from shaped pieces (footprints in car space, u forward and v right), drawn together far to near.
+          // An open-wheel car built from shaped pieces (footprints in car space, u forward and v right), drawn together far to near:
+          // a multi-element front wing with tall endplates, a long nose, sidepods with an undercut and an inlet, an airbox, a halo
+          // arching over the driver, a big rear wing and tyres with the compound's colour on the sidewall.
           const ca = Math.cos(k.h), sa = Math.sin(k.h), at = (u, v, z) => cam(k.x + ca * u - sa * v, k.y + sa * u + ca * v, z + (k.z || 0)), F = [];
-          const solid = (fp, z0, z1, col) => {
-            for (let i = 0; i < fp.length; i++) { const p = fp[i], q = fp[(i + 1) % fp.length]; F.push({ v: [at(p[0], p[1], z0), at(q[0], q[1], z0), at(q[0], q[1], z1), at(p[0], p[1], z1)], col: shade(col, i % 2 ? 0.66 : 0.82) }); }
-            F.push({ v: fp.map((p) => at(p[0], p[1], z1)), col: shade(col, 1.05) });
+          const solid = (fp, z0, z1, col, l = 0) => {
+            for (let i = 0; i < fp.length; i++) { const p = fp[i], q = fp[(i + 1) % fp.length]; F.push({ v: [at(p[0], p[1], z0), at(q[0], q[1], z0), at(q[0], q[1], z1), at(p[0], p[1], z1)], col: shade(col, i % 2 ? 0.66 : 0.82), l }); }
+            F.push({ v: fp.map((p) => at(p[0], p[1], z1)), col: shade(col, 1.05), l });
           };
+          const tyreCol = (TYRES[k.tyre] || TYRES.M).col;
           const wheel = (u0, v0, r, w) => {
-            const vs = [v0 - w / 2, v0 + w / 2], out = v0 > 0 ? vs[1] : vs[0], N = 10, ring = (v) => Array.from({ length: N }, (_, i) => { const t = (i / N) * Math.PI * 2 + (k.spinW || 0); return at(u0 + Math.cos(t) * r, v, r + Math.sin(t) * r); });
+            const vs = [v0 - w / 2, v0 + w / 2], out = v0 > 0 ? vs[1] : vs[0], N = 12, off = v0 > 0 ? 0.012 : -0.012, ring = (v) => Array.from({ length: N }, (_, i) => { const t = (i / N) * Math.PI * 2 + (k.spinW || 0); return at(u0 + Math.cos(t) * r, v, r + Math.sin(t) * r); });
+            const disc = (f, o, l, col) => F.push({ v: Array.from({ length: N }, (_, i) => { const t = (i / N) * Math.PI * 2 + (k.spinW || 0); return at(u0 + Math.cos(t) * r * f, out + o, r + Math.sin(t) * r * f); }), col, l });
             const a0 = ring(vs[0]), a1 = ring(vs[1]);
-            for (let i = 0; i < N; i++) F.push({ v: [a0[i], a0[(i + 1) % N], a1[(i + 1) % N], a1[i]], col: i % 2 ? '#121212' : '#1b1b1b' });
-            F.push({ v: out === vs[1] ? a1 : a0, col: '#2b2b2b' });
-            F.push({ v: Array.from({ length: N }, (_, i) => { const t = (i / N) * Math.PI * 2; return at(u0 + Math.cos(t) * r * 0.55, out + (v0 > 0 ? 0.01 : -0.01), r + Math.sin(t) * r * 0.55); }), col: '#8a8f99' });
+            for (let i = 0; i < N; i++) F.push({ v: [a0[i], a0[(i + 1) % N], a1[(i + 1) % N], a1[i]], col: i % 2 ? '#101010' : '#1a1a1a', l: 0 });
+            F.push({ v: out === vs[1] ? a1 : a0, col: tyreCol, l: 1 });       // the compound's colour on the sidewall
+            disc(0.8, off, 2, '#15161a'); disc(0.5, off * 1.6, 3, '#9aa0aa'); disc(0.14, off * 2, 4, '#2a2d34');
           };
-          const dark = '#16181d', accent = shade(body, 0.55);
+          const dark = '#16181d', accent = shade(body, 0.55), trim = '#f4f5f8';
           solid([[1.1, -0.82], [1.1, 0.82], [-1.9, 0.72], [-1.9, -0.72]], 0.04, 0.09, dark);                                  // floor
-          solid([[2.75, -0.95], [2.75, 0.95], [2.35, 0.95], [2.35, -0.95]], 0.07, 0.13, dark);                                  // front wing
-          solid([[2.7, -0.97], [2.7, -0.92], [2.3, -0.92], [2.3, -0.97]], 0.07, 0.3, accent); solid([[2.7, 0.92], [2.7, 0.97], [2.3, 0.97], [2.3, 0.92]], 0.07, 0.3, accent);
-          solid([[2.6, -0.12], [2.6, 0.12], [0.95, 0.32], [0.95, -0.32]], 0.16, 0.42, body);                                    // nose
+          solid([[2.8, -1.0], [2.8, 1.0], [2.4, 1.0], [2.4, -1.0]], 0.06, 0.1, dark);                                          // front wing, main plane
+          solid([[2.62, -0.92], [2.62, 0.92], [2.36, 0.92], [2.36, -0.92]], 0.15, 0.19, accent);                              // upper flap
+          for (const sv of [-1, 1]) solid([[2.82, sv * 1.03], [2.82, sv * 0.97], [2.3, sv * 0.97], [2.3, sv * 1.03]], 0.05, 0.36, body);   // endplates
+          solid([[2.45, -0.05], [2.45, 0.05], [2.2, 0.05], [2.2, -0.05]], 0.1, 0.2, dark);                                    // the pylon from the nose to the wing
+          solid([[2.65, -0.11], [2.65, 0.11], [0.95, 0.32], [0.95, -0.32]], 0.16, 0.42, body);                                  // nose
+          solid([[2.55, -0.04], [2.55, 0.04], [1.0, 0.1], [1.0, -0.1]], 0.42, 0.435, trim, 1);                                  // a stripe down it
           solid([[0.95, -0.38], [0.95, 0.38], [-0.7, 0.45], [-0.7, -0.45]], 0.1, 0.6, body);                                    // tub
-          solid([[0.45, -0.9], [0.45, 0.9], [-1.3, 0.62], [-1.3, -0.62]], 0.1, 0.5, body);                                      // sidepods
-          solid([[-0.35, -0.34], [-0.35, 0.34], [-2.0, 0.12], [-2.0, -0.12]], 0.4, 0.88, body);                                 // engine cover and airbox
+          solid([[0.5, -0.92], [0.5, 0.92], [-1.3, 0.6], [-1.3, -0.6]], 0.1, 0.3, body);                                       // sidepods, the wide lower part
+          solid([[0.42, -0.78], [0.42, 0.78], [-1.3, 0.5], [-1.3, -0.5]], 0.3, 0.54, body);                                     // and the narrower top: an undercut
+          for (const sv of [-1, 1]) {
+            solid([[0.5, sv * 0.8], [0.5, sv * 0.46], [0.4, sv * 0.46], [0.4, sv * 0.8]], 0.16, 0.5, '#0b0c10', 1);              // the inlet
+            solid([[0.2, sv * 0.62], [0.2, sv * 0.4], [-1.1, sv * 0.34], [-1.1, sv * 0.48]], 0.54, 0.562, trim, 1);              // a stripe on the pod
+          }
+          solid([[-0.35, -0.34], [-0.35, 0.34], [-2.0, 0.12], [-2.0, -0.12]], 0.4, 0.88, body);                                 // engine cover
+          solid([[-0.42, -0.15], [-0.42, 0.15], [-0.62, 0.13], [-0.62, -0.13]], 0.8, 0.93, '#0b0c10', 1);                        // the airbox
           solid([[-0.6, -0.02], [-0.6, 0.02], [-1.9, 0.02], [-1.9, -0.02]], 0.88, 1.02, accent);                                // shark fin
-          solid([[-0.05, -0.15], [-0.05, 0.15], [-0.4, 0.15], [-0.4, -0.15]], 0.55, 0.82, '#f2c230');                          // helmet
-          solid([[0.55, -0.04], [0.55, 0.04], [-0.35, 0.04], [-0.35, -0.04]], 0.82, 0.88, dark);                                // halo
-          solid([[0.5, -0.33], [0.5, -0.27], [0.35, -0.27], [0.35, -0.33]], 0.58, 0.86, dark); solid([[0.5, 0.27], [0.5, 0.33], [0.35, 0.33], [0.35, 0.27]], 0.58, 0.86, dark);
-          solid([[-2.1, -0.85], [-2.1, 0.85], [-2.5, 0.85], [-2.5, -0.85]], 0.78, 0.92, body); solid([[-2.15, -0.85], [-2.15, 0.85], [-2.45, 0.85], [-2.45, -0.85]], 0.92, 0.98, dark);   // rear wing
-          solid([[-2.05, -0.88], [-2.05, -0.82], [-2.55, -0.82], [-2.55, -0.88]], 0.35, 1.02, accent); solid([[-2.05, 0.82], [-2.05, 0.88], [-2.55, 0.88], [-2.55, 0.82]], 0.35, 1.02, accent);
+          solid([[-0.05, -0.15], [-0.05, 0.15], [-0.4, 0.15], [-0.4, -0.15]], 0.55, 0.82, '#f2c230', 1);                         // helmet
+          solid([[-0.04, -0.12], [-0.04, 0.12], [-0.1, 0.12], [-0.1, -0.12]], 0.66, 0.77, '#10131a', 2);                         // its visor
+          solid([[0.58, -0.05], [0.58, 0.05], [0.47, 0.05], [0.47, -0.05]], 0.5, 0.9, dark, 1);                                  // the halo: the pillar at the front
+          for (const sv of [-1, 1]) {
+            solid([[0.56, sv * 0.3], [0.56, sv * 0.24], [-0.36, sv * 0.32], [-0.36, sv * 0.38]], 0.86, 0.94, accent, 1);         // the arms of the arch
+            solid([[0.2, sv * 0.35], [0.2, sv * 0.29], [0.08, sv * 0.29], [0.08, sv * 0.35]], 0.56, 0.9, dark, 1);
+          }
+          for (const sv of [-1, 1]) solid([[-2.1, sv * 0.9], [-2.1, sv * 0.84], [-2.55, sv * 0.84], [-2.55, sv * 0.9]], 0.3, 1.1, accent);   // rear wing endplates
+          solid([[-2.1, -0.85], [-2.1, 0.85], [-2.5, 0.85], [-2.5, -0.85]], 0.8, 0.92, body); solid([[-2.15, -0.85], [-2.15, 0.85], [-2.45, 0.85], [-2.45, -0.85]], 0.92, 0.98, dark);   // rear wing
+          solid([[-2.5, -0.06], [-2.5, 0.06], [-2.56, 0.06], [-2.56, -0.06]], 0.5, 0.62, '#ff2a2a', 1);                          // the rain light
           wheel(1.75, -0.92, 0.34, 0.34); wheel(1.75, 0.92, 0.34, 0.34); wheel(-1.6, -0.88, 0.37, 0.42); wheel(-1.6, 0.88, 0.37, 0.42);
-          for (const f of F) f.d = f.v.reduce((m, p) => m + p[0], 0) / f.v.length;
+          for (const f of F) f.d = f.v.reduce((m, p) => m + p[0], 0) / f.v.length - (f.l || 0) * 0.04;
           F.sort((x, y) => y.d - x.d).forEach((f) => poly(f.v, f.col));
         } else {
           // A road or race car from its silhouette: a lower body with a shaped nose and tail, a glass cabin whose screens
@@ -2580,6 +2699,7 @@
       g.setTransform(1, 0, 0, 1, 0, 0); g.fillStyle = sky; g.fillRect(0, 0, W, hy + 2); g.fillStyle = T.ground; g.fillRect(0, hy, W, H - hy);
       g.fillStyle = shade(T.ground, 0.8); g.fillRect(0, hy, W, Math.max(2, H * 0.01));
       // The road, from far to near, with whatever stands by it in between.
+      for (const r of racers) if (r.idx == null || r.idx < 0) r.idx = locate(T, r.car.x, r.car.y).idx;      // a car just put somewhere (the grid, a pit exit) is found on the road before it is drawn
       const N = Math.min(150, T.closed ? T.m - 4 : 150), back = cock ? 1 : 4, idx0 = me.idx, wd = T.width / 2, wall = wd + WALL;
       const bucket = new Map(), put = (k, f) => { if (!bucket.has(k)) bucket.set(k, []); bucket.get(k).push(f); };
       // The pit crew: seven people per car, drawn with the car they are working on (in the 3D views).
@@ -2592,7 +2712,8 @@
           box(wx, wy, c.h, c.z, 0.24, 0.36, 0.85, '#1f2430');                 // legs
           box(wx, wy, c.h, c.z + 0.85, 0.28, 0.5, 0.62, col);                    // overalls
           box(wx, wy, c.h, c.z + 1.47, 0.2, 0.2, 0.24, '#e9b98e');               // head
-          box(wx, wy, c.h, c.z + 1.6, 0.23, 0.22, 0.08, '#f2f2f2');              // helmet
+          box(wx, wy, c.h, c.z + 1.6, 0.23, 0.22, 0.1, shade(col, 1.15));         // helmet, in the team's colour
+          box(wx + Math.cos(c.h) * 0.07, wy + Math.sin(c.h) * 0.07, c.h, c.z + 1.5, 0.12, 0.18, 0.1, '#10131a');   // visor
           if (reach) {                                                     // an arm out to the wheel, with the gun
             const [tx, ty] = at(reach[0], reach[1]), dx = tx - wx, dy = ty - wy, len = Math.hypot(dx, dy) || 0.1, ang = Math.atan2(dy, dx);
             box((wx + tx) / 2, (wy + ty) / 2, ang, c.z + 1.12, len, 0.12, 0.12, col);
@@ -2606,11 +2727,11 @@
           const bu = wu * 1.9 + (wu * 1.15 - wu * 1.9) * ramp, bv = wv * 2.7 + (wv * 1.35 - wv * 2.7) * ramp;
           person(bu, bv, r.color || c.spec.color, ramp > 0 ? [wu, wv] : null);
         }
-        person(-1.8, 0, '#f5f5f5');                                        // the jack man, at the rear
+        person(-1.8, 0, r.color || c.spec.color);                                        // the jack man, at the rear
         if (u > 0.03 && u < 0.14) { const [jx, jy] = at(-0.3, 0); box(jx, jy, c.h, c.z, 0.7, 0.3, 0.12, '#8a949e'); }   // the jack
-        person(2.8, -3.4, '#f5f5f5');                                      // the tyre carrier
+        person(2.8, -3.4, r.color || c.spec.color);                                      // the tyre carrier
         if (u > 0.09 && u < 0.34) { const [ax, ay] = at(2.8, -3.4); box(ax, ay, c.h, c.z + 0.6, 0.45, 0.2, 0.45, '#111'); }   // a tyre
-        person(4.8, 2.6, '#e8e8e8');                                       // the engineer
+        person(4.8, 2.6, r.color || c.spec.color);                                       // the engineer
         const [bx, by] = at(4.8, 2.6); box(bx, by, c.h, c.z + 1.3, 0.05, 0.9, 0.6, '#ffffff');   // the pit board
       };
 
@@ -2739,7 +2860,44 @@
         else if (p.k === 'spark') { g.fillStyle = '#ffe08a'; const z = Math.max(1.5, 0.25 * u); g.fillRect(sx - z / 2, sy - z / 2, z, z); }
         else { g.save(); g.translate(sx, sy); g.rotate(p.rot); g.fillStyle = p.col; g.fillRect(-p.size * u / 2, -p.size * u / 3, p.size * u, p.size * u * 0.66); g.restore(); }
       }
-      if (cock) drawCockpit();
+      if (halo) drawHalo(); else if (cock) drawCockpit();
+    }
+    /// The halo camera: the driver's eye just behind the halo of an F1 car, looking over the nose, with the halo arching overhead,
+    /// the front tyres either side and the dash on the wheel in front. (Other cars show the plain cockpit nose.)
+    function drawHalo() {
+      const c = me.car, sp = c.spec, s = Math.min(W, H) / 400, col = sp.color || '#2a8f9a', ang = (c.steerA / (sp.steer || 1)) * 0.5;
+      const tilt = clamp(-(c.yaw || 0) * 0.02, -0.06, 0.06);
+      g.save(); g.translate(W / 2, H); g.rotate(tilt); g.translate(-W / 2, -H);
+      // The front tyres, turning a little with the steering, and their wishbones.
+      for (const sx of [-1, 1]) {
+        const cx = W / 2 + sx * W * 0.31, cy = H * 0.66;
+        g.save(); g.translate(cx, cy); g.rotate(ang * 0.35);
+        g.fillStyle = '#0d0e11'; g.beginPath(); g.roundRect(-W * 0.085, -H * 0.2, W * 0.17, H * 0.5, W * 0.045); g.fill();
+        g.fillStyle = '#17191f'; g.beginPath(); g.roundRect(-W * 0.07, -H * 0.18, W * 0.14, H * 0.1, W * 0.03); g.fill();
+        g.strokeStyle = shade(col, 0.9); g.lineWidth = 2.2 * s; g.beginPath(); g.moveTo(-W * 0.07, -H * 0.04); g.lineTo(-W * 0.07 + (sx > 0 ? 1 : 0) * W * 0.14, -H * 0.02); g.stroke();
+        g.restore();
+        g.strokeStyle = '#1a1c22'; g.lineWidth = 3 * s; g.beginPath(); g.moveTo(W / 2 + sx * W * 0.1, H * 0.76); g.lineTo(W / 2 + sx * W * 0.24, H * 0.62); g.moveTo(W / 2 + sx * W * 0.12, H * 0.8); g.lineTo(W / 2 + sx * W * 0.24, H * 0.7); g.stroke();
+      }
+      // The bodywork in front: the engine cover and the nose.
+      g.fillStyle = '#c9ced6'; g.beginPath(); g.moveTo(W * 0.3, H); g.lineTo(W * 0.4, H * 0.66); g.lineTo(W * 0.46, H * 0.55); g.lineTo(W * 0.54, H * 0.55); g.lineTo(W * 0.6, H * 0.66); g.lineTo(W * 0.7, H); g.closePath(); g.fill();
+      g.fillStyle = '#9aa1ac'; g.beginPath(); g.moveTo(W * 0.46, H * 0.55); g.lineTo(W * 0.5, H * 0.52); g.lineTo(W * 0.54, H * 0.55); g.lineTo(W * 0.5, H); g.closePath(); g.fill();
+      g.fillStyle = shade(col, 0.8); g.beginPath(); g.moveTo(W * 0.4, H * 0.66); g.lineTo(W * 0.3, H); g.lineTo(W * 0.36, H); g.lineTo(W * 0.44, H * 0.6); g.fill(); g.beginPath(); g.moveTo(W * 0.6, H * 0.66); g.lineTo(W * 0.7, H); g.lineTo(W * 0.64, H); g.lineTo(W * 0.56, H * 0.6); g.fill();
+      // The halo: a thick arc over the top, its centre pillar down to the nose.
+      g.lineCap = 'round';
+      g.strokeStyle = shade(col, 0.55); g.lineWidth = 30 * s; g.beginPath(); g.moveTo(W * 0.16, H * 0.98); g.bezierCurveTo(W * 0.2, H * 0.3, W * 0.8, H * 0.3, W * 0.84, H * 0.98); g.stroke();
+      g.strokeStyle = col; g.lineWidth = 24 * s; g.beginPath(); g.moveTo(W * 0.16, H * 0.98); g.bezierCurveTo(W * 0.2, H * 0.3, W * 0.8, H * 0.3, W * 0.84, H * 0.98); g.stroke();
+      g.strokeStyle = 'rgba(255,255,255,.35)'; g.lineWidth = 4 * s; g.beginPath(); g.moveTo(W * 0.175, H * 0.9); g.bezierCurveTo(W * 0.22, H * 0.34, W * 0.5, H * 0.3, W * 0.5, H * 0.3); g.stroke();
+      g.strokeStyle = shade(col, 0.7); g.lineWidth = 11 * s; g.beginPath(); g.moveTo(W / 2, H * 0.305); g.lineTo(W / 2, H * 0.54); g.stroke();
+      g.lineCap = 'butt';
+      // The mirrors, left and right, showing the nearest car behind.
+      const behind = racers.filter((r) => r !== me && r.prog < me.prog && me.prog - r.prog < 80).sort((a, b) => b.prog - a.prog)[0];
+      for (const sx of [-1, 1]) {
+        const mx = W / 2 + sx * W * 0.405, my = H * 0.52, mw = W * 0.075, mh = H * 0.12;
+        g.fillStyle = '#111'; g.beginPath(); g.roundRect(mx - mw / 2 - 3 * s, my - mh / 2 - 3 * s, mw + 6 * s, mh + 6 * s, 5 * s); g.fill();
+        g.fillStyle = '#8fa7b8'; g.beginPath(); g.roundRect(mx - mw / 2, my - mh / 2, mw, mh, 4 * s); g.fill();
+        if (behind) { const d = me.prog - behind.prog, w = clamp(34 / Math.max(d, 4), 3, 22) * s; g.fillStyle = behind.color || behind.car.spec.color; g.fillRect(mx - w / 2, my - 2 * s, w, 5 * s); }
+      }
+      g.restore();
     }
     /// The driver's view: the car's nose (or an F1 car's halo), the dashboard, the shift lights and a steering wheel that turns
     /// with the front wheels, showing the gear and the speed; the paddles flash at each change.
@@ -2765,19 +2923,51 @@
       }
       // Shift lights.
       const n = 10, lw = 9 * s, top = H * (f1 ? 0.7 : 0.66);
-      for (let i = 0; i < n; i++) { const on = rr > i / n, col = i < 4 ? '#29d36b' : i < 7 ? '#ffcc33' : '#ff3b3b'; g.fillStyle = on ? (rr > 0.95 && (Date.now() / 70 | 0) % 2 ? '#5aa8ff' : col) : 'rgba(255,255,255,.08)'; g.beginPath(); g.arc(W / 2 + (i - (n - 1) / 2) * lw * 1.3, top, lw / 2, 0, 7); g.fill(); }
-      // The wheel turns with the front wheels (about a quarter turn either way).
-      const ang = (c.steerA / sp.steer) * 1.7, R0 = 78 * s;
-      g.save(); g.translate(W / 2, H * 0.97); g.rotate(ang);
-      const kmh = Math.round(Math.hypot(c.vx, c.vy) * KMH);
+      if (!f1) for (let i = 0; i < n; i++) { const on = rr > i / n, col = i < 4 ? '#29d36b' : i < 7 ? '#ffcc33' : '#ff3b3b'; g.fillStyle = on ? (rr > 0.95 && (Date.now() / 70 | 0) % 2 ? '#5aa8ff' : col) : 'rgba(255,255,255,.08)'; g.beginPath(); g.arc(W / 2 + (i - (n - 1) / 2) * lw * 1.3, top, lw / 2, 0, 7); g.fill(); }
+      // The wheel turns with the front wheels (about a quarter turn either way), a little behind your hands on the keys, as a driver's
+      // hands take a moment to turn it and ease it back.
+      const tgt = clamp(c.steerA / sp.steer, -1, 1) * (f1 ? 1.9 : 1.7), nowT = performance.now(), dtW = Math.min(0.1, (nowT - (wheelT || nowT)) / 1000); wheelT = nowT;
+      wheelA += (tgt - wheelA) * (1 - Math.exp(-dtW * (f1 ? 16 : 40)));
+      const ang = f1 ? wheelA : tgt, R0 = (f1 ? 80 : 78) * s, wcy = H * (f1 ? 0.9 : 0.97), kmh = Math.round(Math.hypot(c.vx, c.vy) * KMH);
+      const sleeve = shade(sp.color || '#aa2222', 0.85);
       if (f1) {
-        g.fillStyle = '#16171b'; g.beginPath(); g.roundRect(-R0 * 1.25, -R0 * 0.95, R0 * 2.5, R0 * 0.95, 18 * s); g.fill();
-        g.fillStyle = '#2a2c33'; g.fillRect(-R0 * 1.25, -R0 * 0.95, R0 * 0.35, R0 * 0.95); g.fillRect(R0 * 0.9, -R0 * 0.95, R0 * 0.35, R0 * 0.95);
-        g.fillStyle = '#06210f'; g.beginPath(); g.roundRect(-R0 * 0.5, -R0 * 0.82, R0, R0 * 0.48, 6 * s); g.fill();
-        g.fillStyle = paddle > 0 ? '#ffd166' : '#3a3d46'; g.fillRect(-R0 * 1.15, -R0 * 1.15, R0 * 0.5, 8 * s); g.fillRect(R0 * 0.65, -R0 * 1.15, R0 * 0.5, 8 * s);
-        g.fillStyle = '#4fe09a'; g.textAlign = 'center'; g.font = `900 ${28 * s}px system-ui`; g.fillText(gearName(c), 0, -R0 * 0.44);
-        g.font = `700 ${9 * s}px system-ui`; g.fillStyle = '#fff'; g.fillText(`${kmh}`, -R0 * 0.36, -R0 * 0.62); g.fillText('km/h', -R0 * 0.36, -R0 * 0.48); g.fillText(`${(c.rpm / 1000).toFixed(1)}k`, R0 * 0.36, -R0 * 0.62); g.fillText('rpm', R0 * 0.36, -R0 * 0.48);
-        for (const sx of [-1, 1]) { g.fillStyle = '#222'; g.beginPath(); g.ellipse(sx * R0 * 1.08, -R0 * 0.45, 16 * s, 26 * s, 0, 0, 7); g.fill(); }
+        // The arms, from the shoulders to the hands on the grips (the hands follow the wheel round).
+        for (const sx of [-1, 1]) {
+          const hx = sx * R0 * 1.12, hy = -R0 * 0.42, wx = W / 2 + hx * Math.cos(ang) - hy * Math.sin(ang), wy = wcy + hx * Math.sin(ang) + hy * Math.cos(ang);
+          g.lineCap = 'round'; g.strokeStyle = sleeve; g.lineWidth = 26 * s; g.beginPath(); g.moveTo(W / 2 + sx * W * 0.34, H * 1.08); g.quadraticCurveTo(W / 2 + sx * W * 0.3, H * 0.86, wx + sx * 6 * s, wy + 10 * s); g.stroke();
+          g.strokeStyle = shade(sp.color || '#aa2222', 1.1); g.lineWidth = 5 * s; g.beginPath(); g.moveTo(W / 2 + sx * W * 0.325, H * 1.05); g.quadraticCurveTo(W / 2 + sx * W * 0.285, H * 0.88, wx + sx * 8 * s, wy + 12 * s); g.stroke(); g.lineCap = 'butt';
+        }
+      }
+      g.save(); g.translate(W / 2, wcy); g.rotate(ang);
+      if (f1) {
+        // The wheel: a carbon body with the screen in the middle, the shift lights above it, the rotary dials below and a grip each side.
+        g.fillStyle = '#121317'; g.beginPath(); g.moveTo(-R0 * 1.3, -R0 * 0.75); g.quadraticCurveTo(-R0 * 1.3, -R0 * 1.0, -R0 * 1.0, -R0 * 1.0); g.lineTo(R0 * 1.0, -R0 * 1.0); g.quadraticCurveTo(R0 * 1.3, -R0 * 1.0, R0 * 1.3, -R0 * 0.75);
+        g.lineTo(R0 * 1.22, R0 * 0.28); g.quadraticCurveTo(R0 * 1.1, R0 * 0.5, R0 * 0.8, R0 * 0.5); g.lineTo(-R0 * 0.8, R0 * 0.5); g.quadraticCurveTo(-R0 * 1.1, R0 * 0.5, -R0 * 1.22, R0 * 0.28); g.closePath(); g.fill();
+        g.strokeStyle = '#2a2d36'; g.lineWidth = 2 * s; g.stroke();
+        g.fillStyle = '#1b1d24'; g.beginPath(); g.roundRect(-R0 * 0.62, -R0 * 0.9, R0 * 1.24, R0 * 0.78, 6 * s); g.fill();
+        // The shift lights.
+        for (let i = 0; i < 15; i++) { g.fillStyle = rr * 15 > i ? (i < 5 ? '#3ad07a' : i < 10 ? '#ff4d4d' : '#4da3ff') : 'rgba(255,255,255,.16)'; g.beginPath(); g.arc((i - 7) * R0 * 0.078, -R0 * 0.94, 2.1 * s, 0, 7); g.fill(); }
+        // The screen: gear, speed, position and the battery.
+        g.fillStyle = '#05080c'; g.beginPath(); g.roundRect(-R0 * 0.56, -R0 * 0.84, R0 * 1.12, R0 * 0.66, 4 * s); g.fill();
+        g.textAlign = 'center'; g.fillStyle = '#fff'; g.font = `900 ${31 * s}px system-ui`; g.fillText(gearName(c), 0, -R0 * 0.38);
+        g.font = `800 ${8 * s}px system-ui`; g.textAlign = 'left'; g.fillStyle = '#9fd0ff'; g.fillText(String(kmh), -R0 * 0.5, -R0 * 0.7); g.font = `600 ${5.5 * s}px system-ui`; g.fillStyle = 'rgba(255,255,255,.6)'; g.fillText('KPH', -R0 * 0.5, -R0 * 0.6);
+        g.textAlign = 'right'; g.font = `800 ${8 * s}px system-ui`; g.fillStyle = '#fff'; g.fillText('P' + (ranking(racers).indexOf(me) + 1), R0 * 0.5, -R0 * 0.7); g.font = `600 ${5.5 * s}px system-ui`; g.fillStyle = 'rgba(255,255,255,.6)'; g.fillText(me.boosting ? 'OVERTAKE' : 'BALANCED', R0 * 0.5, -R0 * 0.6);
+        g.fillStyle = 'rgba(255,255,255,.14)'; g.fillRect(-R0 * 0.5, -R0 * 0.27, R0, 4 * s); g.fillStyle = me.boosting ? '#ffd23f' : (c.ers || 0) < 0.2 ? '#ff6b6b' : '#3ad07a'; g.fillRect(-R0 * 0.5, -R0 * 0.27, R0 * clamp(c.ers || 0, 0, 1), 4 * s);
+        // Dials and buttons.
+        const dials = [[-0.7, 0.05, '#e6b422'], [-0.3, 0.3, '#ff7a1a'], [0.05, 0.12, '#c9a227'], [0.38, 0.3, '#8e6bd6'], [0.72, 0.06, '#e6b422']];
+        for (const [dx, dy, dc] of dials) { g.fillStyle = '#0b0c10'; g.beginPath(); g.arc(dx * R0, dy * R0, 10 * s, 0, 7); g.fill(); g.strokeStyle = dc; g.lineWidth = 2.4 * s; g.beginPath(); g.arc(dx * R0, dy * R0, 8 * s, 0, 7); g.stroke(); g.strokeStyle = '#fff'; g.lineWidth = 1.2 * s; g.beginPath(); g.moveTo(dx * R0, dy * R0); g.lineTo(dx * R0 + 5 * s, dy * R0 - 4 * s); g.stroke(); }
+        for (const [bx, by, bc2] of [[-0.95, -0.55, '#3ad07a'], [0.95, -0.55, '#ff4d4d'], [-0.95, -0.28, '#ffd23f'], [0.95, -0.28, '#4da3ff'], [-0.5, -0.05, '#fff'], [0.5, -0.05, '#fff']]) { g.fillStyle = bc2; g.beginPath(); g.arc(bx * R0, by * R0, 3.4 * s, 0, 7); g.fill(); }
+        g.fillStyle = paddle > 0 ? '#ffd166' : '#3a3d46'; g.fillRect(-R0 * 1.15, -R0 * 1.14, R0 * 0.5, 7 * s); g.fillRect(R0 * 0.65, -R0 * 1.14, R0 * 0.5, 7 * s);
+        // The gloved hands on the grips.
+        for (const sx of [-1, 1]) {
+          g.save(); g.translate(sx * R0 * 1.1, -R0 * 0.38);
+          g.fillStyle = sleeve; g.beginPath(); g.roundRect(-13 * s, 6 * s, 26 * s, 18 * s, 7 * s); g.fill();                  // the cuff
+          g.fillStyle = '#f2f2f4'; g.beginPath(); g.roundRect(-12 * s, -16 * s, 24 * s, 28 * s, 9 * s); g.fill();             // the glove
+          g.fillStyle = '#d4d6dc'; for (let k = 0; k < 4; k++) { g.beginPath(); g.roundRect(-11 * s + k * 5.8 * s, -18 * s, 5 * s, 12 * s, 2.4 * s); g.fill(); }  // fingers
+          g.fillStyle = '#fff'; g.beginPath(); g.ellipse(-sx * 9 * s, -3 * s, 6 * s, 9 * s, -sx * 0.5, 0, 7); g.fill();       // thumb
+          g.fillStyle = sleeve; g.fillRect(-5 * s, -2 * s, 10 * s, 4 * s);                                                    // a stripe on the glove
+          g.restore();
+        }
       } else {
         g.lineWidth = 13 * s; g.strokeStyle = '#18191d'; g.beginPath(); g.arc(0, -R0, R0, 0, 7); g.stroke();
         g.lineWidth = 3 * s; g.strokeStyle = '#ffd166'; g.beginPath(); g.arc(0, -R0, R0, -Math.PI / 2 - 0.08, -Math.PI / 2 + 0.08); g.stroke();
@@ -3007,6 +3197,6 @@
     setSoundEnabled: (on) => { window.NotchHostSound = !!on; const c = window.NotchRaceGame.current; if (c) c.setSoundEnabled(on); },
     resume: () => { const c = window.NotchRaceGame.current; if (c) c.resume(); },
     current: null,
-    _test: { parseRequest, generateTrack, traceImage, simplifyPts, pitInfo, relS, fence, checkTrack, encodeTrack, decodeTrack, customDef, GROUNDS, TRACKS, F1_CAL, matchF1, CARS, buildTrack, locate, trackHeight, trackSlope, gridSlot, newCar, stepCar, driveAI, newRacer, progress, ranking, collide, wallHit, hurt, gearbox, NET, fmt, LEVELS },
+    _test: { parseRequest, generateTrack, traceImage, simplifyPts, pitInfo, relS, fence, checkTrack, encodeTrack, decodeTrack, customDef, GROUNDS, TRACKS, F1_CAL, matchF1, CARS, buildTrack, locate, trackHeight, trackSlope, roadCurv, gridSlot, newCar, stepCar, driveAI, newRacer, progress, ranking, collide, wallHit, hurt, gearbox, NET, fmt, LEVELS },
   };
 })();

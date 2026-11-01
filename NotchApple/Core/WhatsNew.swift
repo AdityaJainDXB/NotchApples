@@ -20,6 +20,15 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.1.73", date: "1 November 2026", headline: "A new racing HUD, cameras and smooth hills", items: [
+            "Racing, bumps: the car no longer judders going up or down hills. The road height, slope and curve are now smooth between track samples.",
+            "Racing, start: fixed the road disappearing on the grid after the formation lap.",
+            "Racing, new look: a broadcast-style timing tower, a sector and lap-time panel, the car condition with four tyre rings, and a dash with the battery, gear, rev lights and speed. Press L to switch the tower between gaps to you and gaps to the leader.",
+            "Racing, cameras: a new Halo cam (press V), and the first-person view now has an F1 steering wheel with a screen, shift lights and gloved hands that turn the wheel.",
+            "Racing, start lights: the five lights now hang from an overhead gantry, four lamps to a pod.",
+            "Racing, pit stops: a PIT LANE panel with your time in the lane and the stop time, and the pit crew in the team colour.",
+            "Racing, cars: F1 cars have a front wing with endplates, sidepods, an airbox, a halo and a bigger rear wing, with the tyre compound colour on the sidewall.",
+        ]),
         ReleaseNote(version: "2.1.72", date: "1 November 2026", headline: "Real hills on the F1 circuits", items: [
             "Racing, hills: every car now starts on the road (cars used to spawn under it) and no road is steeper than a real one, so tracks drawn with huge height steps (like Mountain Pass) now drive smoothly.",
             "Racing, F1 circuits: new elevation for all the circuits, following the 2026 circuit notes: Spa about 104 m of relief (Eau Rouge to the Raidillon crest climbs 30 m), Red Bull Ring about 65 m, Suzuka, Monaco, COTA and Interlagos about 40 m, Hungaroring about 35 m, Barcelona and Baku about 30 m, Madrid 26 m, with the street circuits and Mexico City flat.",
