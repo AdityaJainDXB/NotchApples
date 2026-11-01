@@ -408,3 +408,60 @@ test('a car put on the grid is found on the road at once, so the road is drawn (
   const T = R.buildTrack(R.F1_CAL.find((t) => t.id === 'f1be')), r = R.newRacer('t', 'T', car('f1'), T, 3);
   assert.ok(r.idx >= 0 && r.idx < T.m, 'on the road');
 });
+
+test('banking: the Madring, Zandvoort and Yas Marina have banked corners, tilted so the outside edge is higher; straights and other circuits stay flat', () => {
+  const T = (id) => R.buildTrack(R.F1_CAL.find((t) => t.id === id));
+  const maxBank = (t) => Math.max(...t.S.map((q) => Math.abs(q.roll))) * 180 / Math.PI;
+  assert.ok(maxBank(T('f1md')) > 13, 'La Monumental is about 13.5 degrees (24%)');
+  assert.ok(maxBank(T('f1nl')) > 16, 'Zandvoort T3 and T14 are about 18 degrees');
+  assert.ok(maxBank(T('f1ae')) > 5, 'Yas Marina T9');
+  for (const id of ['f1be', 'f1it', 'f1mc', 'f1at']) assert.equal(maxBank(T(id)), 0, `${id} has no banking`);
+  for (const id of ['f1md', 'f1nl', 'f1ae']) {
+    const t = T(id), tilted = t.S.map((q, i) => [q, i]).filter(([q]) => Math.abs(q.roll) > 0.05);
+    assert.ok(tilted.length > 10, `${id} has banked samples`);
+    // the bend's direction over the sample and its neighbours (the very edge of a bend can curve the other way for a moment)
+    const turn = (i) => { let k = 0; for (let j = -6; j <= 6; j++) k += t.S[(i + j + t.m) % t.m].k; return k; };
+    const right = tilted.filter(([q, i]) => q.roll * turn(i) > 0).length;
+    assert.ok(right / tilted.length > 0.95, `${id}: the road is banked towards the inside of the bend (${right} of ${tilted.length})`);
+  }
+  // The outside edge is higher than the inside edge, by about the width times the tilt.
+  const t = T('f1md'), i = t.S.reduce((b, q, n) => (Math.abs(q.roll) > Math.abs(t.S[b].roll) ? n : b), 0), q = t.S[i], w = t.width / 2;
+  const hi = R.trackHeight(t, { idx: i, s: q.s, lat: Math.sign(q.k) > 0 ? -w : w }), lo = R.trackHeight(t, { idx: i, s: q.s, lat: Math.sign(q.k) > 0 ? w : -w });
+  assert.ok(hi - lo > 2 * w * Math.tan(0.2), `the outside is ${(hi - lo).toFixed(2)} m above the inside`);
+  assert.ok(Math.abs(R.trackHeight(t, { idx: i, s: q.s, lat: 0 }) - (hi + lo) / 2) < 0.05, 'the middle of the road sits halfway');
+});
+
+test('banking from a shared code: a fourth number per point, capped at 24 degrees; codes without it still load', () => {
+  const ring = (n, r, bank) => Array.from({ length: n }, (_, i) => [Math.round(Math.cos((i / n) * Math.PI * 2) * r), Math.round(Math.sin((i / n) * Math.PI * 2) * r), 0, bank]);
+  const def = R.customDef({ name: 'Bowl', closed: true, width: 32, look: 'green', laps: 3, pts: ring(24, 200, 15) });
+  const back = R.decodeTrack(R.encodeTrack(def));
+  assert.ok(back, 'a code with banking decodes');
+  assert.deepEqual(back.pts, def.pts, 'the banking survived the round-trip');
+  const roll = (d) => Math.max(...R.buildTrack(d).S.map((q) => Math.abs(q.roll))) * 180 / Math.PI;
+  assert.ok(roll(back) > 14 && roll(back) <= 15.01, 'a ring banked at 15 degrees');
+  const steep = R.decodeTrack(R.encodeTrack({ ...def, pts: ring(24, 200, 40) }));
+  assert.ok(steep && Math.max(...steep.pts.map((p) => p[3])) === 24, 'a bank steeper than 24 degrees is capped when a code is made');
+  const hand = Buffer.from(JSON.stringify({ n: 'Wall', c: 1, w: 32, g: 'green', l: 3, v: 3, p: ring(24, 200, 40).flat() })).toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  assert.equal(R.decodeTrack('NR1' + hand), null, 'and a hand-made code with a bank steeper than 24 degrees is refused');
+  const plain = R.customDef({ name: 'Flat', closed: true, width: 32, look: 'green', laps: 3, pts: ring(24, 200, 0) });
+  assert.equal(JSON.parse(Buffer.from(R.encodeTrack(plain).slice(3).replace(/-/g, '+').replace(/_/g, '/'), 'base64').toString()).v, 2, 'a flat track keeps the old format');
+});
+
+test('the up-and-down of the road is felt: a car is pressed into a dip (more grip) and goes light over a crest (less grip, weaker brakes)', () => {
+  const run = (curv, brake) => {
+    const c = R.newCar(car('f1'), 0, 0, 0); c.vx = 70; c.vy = 0;
+    for (let i = 0; i < (brake ? 15 : 90); i++) R.stepCar(c, { throttle: brake ? 0 : 0.6, brake: brake ? 1 : 0, steer: brake ? 0 : 0.5, hand: 0 }, 1 / 60, 1, 0, curv);
+    return c;
+  };
+  const dip = run(0.0015, false), flat = run(0, false), crest = run(-0.0015, false);
+  const turned = (c) => Math.abs(Math.atan2(c.vy, c.vx));
+  assert.ok(turned(dip) >= turned(flat) - 0.01 && turned(flat) > turned(crest) + 0.2, `it turns as much in a dip (${turned(dip).toFixed(2)}) as flat (${turned(flat).toFixed(2)}) and much less over a crest (${turned(crest).toFixed(2)})`);
+  const speedAfter = (curv) => { const c = run(curv, true); return Math.hypot(c.vx, c.vy); };
+  assert.ok(speedAfter(-0.0015) > speedAfter(0) && speedAfter(0) > speedAfter(0.0015), 'braking over a crest slows the car less than flat, and in a dip more');
+});
+
+test('every circuit has a vertical curvature on its samples (the computer drivers use it for corner speed)', () => {
+  const T = R.buildTrack(R.F1_CAL.find((t) => t.id === 'f1be'));
+  assert.ok(T.S.every((q) => Number.isFinite(q.zk)), 'a number on every sample');
+  assert.ok(T.S.some((q) => q.zk < -0.0002) && T.S.some((q) => q.zk > 0.0002), 'Spa has both crests and dips');
+});

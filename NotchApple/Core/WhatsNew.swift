@@ -20,6 +20,11 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.1.77", date: "1 November 2026", headline: "Banking and hills you can feel", items: [
+            "Racing, banking: the banked corners are now banked. La Monumental at the Madring is a steep 24 degree wall, the Hugenholtzbocht (T3) and the last corner (T14) at Zandvoort are about 20 degrees, and T9 at Yas Marina about 10. The outside edge and the barriers rise, the car rolls into the bank and the camera leans with it. A banked corner holds the car far better: it can take La Monumental about a third faster than a flat corner, and the computer drivers do too.",
+            "Racing, hills you can feel: the camera now pitches up on a climb and over a crest, and the eye dips in a compression. A crest makes the car light (less grip, weaker brakes) and a dip presses it down (more grip). The computer drivers slow down for corners on a crest. A small readout above the dash shows the climb or drop and the banking.",
+            "Racing, shared tracks can carry banking: a track code can now include a bank angle (up to 24 degrees) for each point. Older codes still work.",
+        ]),
         ReleaseNote(version: "2.1.76", date: "1 November 2026", headline: "A fairer race", items: [
             "Racing, leaving the track: the rule is stricter and easier to see. Come back in front of a car you were behind, or close on one by more than 10 m while off the track (cutting a corner), and a countdown on screen tells you to give the place back within 10 seconds or take 5 seconds. It now also applies under yellow flags.",
             "Racing: messages now show below the timing tower instead of over it.",

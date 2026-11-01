@@ -4,6 +4,12 @@ Every Notch Apple release, newest first. The latest few are also on the [README]
 
 > **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is in the repository's history.
 
+### Mac 2.1.77 · Windows 2.1.77 BETA · 1 November 2026 · 🏎️ Banking and hills you can feel
+
+- Racing, banking: the banked corners are now banked. La Monumental at the Madring is a steep 24 degree wall, the Hugenholtzbocht (T3) and the last corner (T14) at Zandvoort are about 20 degrees, and T9 at Yas Marina about 10. The outside edge and the barriers rise, the car rolls into the bank and the camera leans with it. A banked corner holds the car far better: it can take La Monumental about a third faster than a flat corner, and the computer drivers do too.
+- Racing, hills you can feel: the camera now pitches up on a climb and over a crest, and the eye dips in a compression. A crest makes the car light (less grip, weaker brakes) and a dip presses it down (more grip). The computer drivers slow down for corners on a crest. A small readout above the dash shows the climb or drop and the banking.
+- Racing, shared tracks can carry banking: a track code can now include a bank angle (up to 24 degrees) for each point. Older codes still work.
+
 ### Mac 2.1.76 · Windows 2.1.76 BETA · 1 November 2026 · 🏁 A fairer race
 
 - Racing, leaving the track: the rule is stricter and easier to see. Come back in front of a car you were behind, or close on one by more than 10 m while off the track (cutting a corner), and a countdown on screen tells you to give the place back within 10 seconds or take 5 seconds. It now also applies under yellow flags.

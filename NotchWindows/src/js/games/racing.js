@@ -97,7 +97,7 @@
     f1hu: hillProfile(4.381, [[0, 0], [0.5, -10], [1.1, -20], [1.7, -6], [2.3, 8], [2.9, 16], [3.5, 6], [4.0, -1]]),
     f1nl: hillProfile(4.259, [[0, 0], [0.5, 3], [1.0, -1], [1.6, 6], [2.2, 2], [2.8, 8], [3.4, 2], [3.9, -1]]),
     f1it: hillProfile(5.793, [[0, 0], [0.7, -3], [1.5, -5], [2.4, -1], [3.3, 2], [4.0, 5], [4.7, 3], [5.3, 1]]),
-    f1md: hillProfile(5.416, [[0, 3], [0.35, 0], [0.9, 8], [1.45, 26], [1.7, 16], [2.2, 18], [2.7, 10], [3.3, 8], [3.9, 12], [4.5, 6], [5.0, 3]]),
+    f1md: hillProfile(5.416, [[0, 3], [0.35, 0], [0.9, 8], [1.45, 26], [1.7, 16], [2.2, 18], [2.7, 10], [3.0, 8], [3.3, 18], [4.0, 12], [4.5, 6], [5.0, 3]]),
     f1az: hillProfile(6.003, [[0, 0], [0.9, -2], [1.8, -6], [2.5, -3], [3.0, 8], [3.5, 18], [3.9, 26], [4.4, 12], [5.0, 4], [5.6, 1]]),
     f1sg: hillProfile(4.94, [[0, 0], [1.2, 1.5], [2.4, -1], [3.6, 1.5]]),
     f1us: hillProfile(5.513, [[0, 0], [0.35, 24], [0.55, 36], [1.1, 14], [1.7, 6], [2.6, 10], [3.2, 18], [3.8, 8], [4.4, 0], [5.0, -4]]),
@@ -106,6 +106,16 @@
     f1lv: hillProfile(6.201, [[0, 0], [1.5, 1.5], [3.4, -1], [5, 1]]),
     f1qa: hillProfile(5.419, [[0, 0], [1.0, 2], [2.0, -1], [3.0, 3], [4.0, 0], [4.8, -1]]),
     f1ae: hillProfile(5.281, [[0, 0], [1.0, 2], [2.0, -1], [3.5, 2], [4.5, -1]]),
+  };
+
+  /// Banking of the circuits that have it, in degrees at the crest of the bank, by distance from the start line in km (the road
+  /// tilts so the outside edge is higher; which way is read from the way the bend turns). La Monumental at the Madring is drawn at
+  /// the steepest the game allows (24 degrees, the 24% of the circuit's notes shown as a wall), the Hugenholtzbocht (T3) and the
+  /// last corner (T14) at Zandvoort about 20 degrees, T9 at Yas Marina about 10.
+  const F1_BANK = {
+    f1md: hillProfile(5.416, [[0, 0], [3.0, 0], [3.07, 24], [3.14, 24], [3.22, 0]]),
+    f1nl: hillProfile(4.259, [[0, 0], [0.82, 0], [0.87, 19], [0.95, 20], [1.02, 0], [3.45, 0], [3.55, 19], [3.9, 20], [4.0, 0]]),
+    f1ae: hillProfile(5.281, [[0, 0], [3.4, 0], [3.5, 10], [3.7, 10], [3.8, 0]]),
   };
 
   const F1_CAL = [
@@ -133,21 +143,21 @@
     ['f1lv', 22, 'Las Vegas GP', 'Las Vegas', GROUND.night, 'blocks', 1, 'Round 22 of the 2026 calendar: the real Las Vegas Street Circuit layout, 6.201 km, a street circuit.', [3111,8275,80,-89,80,-90,79,-89,80,-90,80,-90,80,-89,80,-90,79,-89,80,-90,80,-90,80,-89,80,-90,80,-89,81,-89,80,-89,80,-89,81,-89,80,-90,79,-90,75,-93,67,-100,42,-112,2,-119,-48,-109,-84,-85,-103,-60,-113,-41,-117,-27,-119,-12,-120,3,-118,19,-114,37,-108,53,-104,60,-102,62,-98,69,-89,81,-85,85,-85,84,-89,80,-100,67,-111,45,-116,30,-118,20,-120,2,-118,-21,-114,-36,-112,-43,-108,-54,-99,-66,-90,-80,-79,-90,-72,-96,-69,-98,-59,-104,-45,-112,-33,-115,-16,-119,-3,-120,-1,-120,-1,-120,-1,-120,-1,-120,-1,-120,-1,-120,-1,-120,-1,-120,-1,-120,-1,-120,-1,-120,-1,-120,0,-120,-1,-120,-1,-120,-1,-120,-1,-120,-1,-120,-1,-120,-1,-120,-1,-120,-1,-120,-1,-120,-1,-120,-1,-120,-1,-120,-1,-120,-1,-120,-1,-120,-1,-120,-1,-120,-1,-120,-1,-120,-1,-120,-1,-120,-1,-120,-1,-120,-1,-120,-1,-120,-1,-120,-1,-120,-1,-120,-1,-120,-1,-120,-1,-120,-1,-120,-1,-120,-1,-120,-1,-120,-1,-120,-1,-120,-1,-120,-1,-120,-1,-120,-1,-120,-1,-120,-1,-120,-1,-120,-1,-120,-1,-120,-1,-119,-1,-120,-1,-120,-1,-120,-1,-120,-1,-120,-1,-120,0,-120,3,-120,29,-116,76,-90,113,-38,119,-4,120,2,120,2,120,2,120,2,120,2,120,2,120,2,120,2,120,2,120,2,120,2,120,2,120,2,120,1,120,0,120,0,120,-2,119,-13,118,-26,112,-42,99,-66,89,-81,85,-84,85,-86,80,-88,74,-95,67,-100,56,-106,50,-109,46,-111,36,-114,26,-117,19,-118,14,-120,5,-119,-24,-117,-78,-88,-113,-40,-117,-27,-102,-61,-69,-97,-32,-115,-6,-119,26,-117,53,-108,59,-104,60,-104,57,-106,53,-107,48,-110,23,-117,-25,-116,-74,-93,-102,-63,-116,-32,-119,-15,-119,-11,-120,-7,-120,-4,-120,-3,-120,-3,-120,-3,-120,-3,-120,-3,-120,-3,-120,-3,-120,-3,-120,-3,-120,-3,-120,-3,-119,-3,-120,-3,-120,-3,-120,-3,-120,-3,-120,-3,-120,-3,-120,-3,-120,-3,-120,-3,-120,-8,-119,-15,-119,-17,-119,-17,-118,-17,-119,-17,-119,-17,-119,-18,-118,-20,-114,-35,-109,-50,-107,-56,-98,-68,-89,-81,-84,-86,-83,-86,-79,-91,-65,-100,-57,-106,-55,-106,-55,-107,-55,-107,-54,-107,-50,-109,-47,-110,-47,-111,-47,-110,-48,-110,-47,-111,-47,-110,-47,-110,-47,-111,-50,-109,-61,-103,-77,-92,-83,-86,-85,-85,-91,-78,-97,-71,-99,-68,-103,-61,-111,-47,-112,-41,-114,-39,-114,-38,-114,-37,-114,-37,-114,-36,-116,-31,-118,-24,-117,-24,-118,-23,-119,-18,-118,11,-94,72,-55,106,-45,112,-51,108,-54,107,-55,107,-55,107,-55,106,-54,107,-55,107,-55,107,-54,107,-55,106,-55,107,-55,107,-55,106,-56,106,-56,106,-56,107,-56,106,-57,106,-57,105,-59,105,-60,103,-61,104,-60,104,-59,104,-60,104,-60,104,-60,104,-60,104,-60,104,-60,104,-60,104,-57,105,-51,109,-50,109,-49,109,-50,110,-49,109,-49,110,-47,110,-41,113,-36,114,-35,115,-34,115,-35,115,-34,115,-34,115,-34,115,-33,116,-34,115,-33,115,-34,115,-34,115,-34,115,-33,116,-33,115,-28,117,-24,117,-23,118,-22,118,-22,118,-21,118,-21,118,-20,119,-20,118,-16,119,-15,119,-14,119,-14,119,-14,119,-14,120,-10,119,-7,120,-6,120,-5,120,-7,120,-6,119,-7,120,-6,120,-4,120,-1,120,1,120,1,120,1,120,0,120,1,120,1,120,1,120,1,120,1,120,0,120,1,120,2,120,1,120,2,120,1,120,2,120,1,120,1,120,0,120,0,120,0,120,0,120,-2,120,-4,120,-4,120,-4,120,-5,120,-4,119,-5,120,-4,120,-5,120,-4,120,-4,120,-5,120,-4,120,-5,120,-4,120,-5,120,-4,120,-5,119,-4,120,-4,120,-5,120,-4,120,-5,120,-4,120,-5,120,-4,120,-4,120,-4,120,-3,120,-2,120,-2,120,-2,120,-2,120,-2,120,-3,120,-2,120,-2,119,-2,120,-2,120,-2,120,-2,120,-2,120,0,120,0,120,0,120,0,120,0,120,0,120,-3,120,-4,120,-4,120,-5,120,-5,120,-5,120,-5,120,1,120,32,114,87,80,115,32,118,23,107,52,94,75,87,83,89,80,96,72,103,61,108,52,115,34,118,24,119,17,119,8,120,3,120,2,120,2,120,3,120,2,120,2,120,3,120,2,120,2,120,3,120,2,120,1,120,-1,120,-2,120,-1,120,-2,120,-2,120,-2,120,-1,120,-2,120,-2,120,-2,120,-2,120,-1,120,-2,120,-2,120,-2,120,-1,120,-1,120,0,120,0,120,1,120,1,120,1,120,0,120,1,120,1,120,0,120,1,120,1,120,1,120,0,120,0,120,-1,120,-1,120,-1,120,-2,120,-1,120,-3,120,-7,119,-13,119,-16,119,-16,119,-16,119,-16,118,-20,118,-21,118,-22,118,-22,118,-22,117,-26,114,-39,108,-52,101,-64,94,-74,87,-83,82,-88,80,-89,80,-90,79,-89,80,-90]],
     ['f1qa', 23, 'Qatar GP', 'Lusail', GROUND.desert, 'cacti', 0, 'Round 23 of the 2026 calendar: the real Losail International Circuit layout, 5.380 km.', [-4592,2945,-58,-105,-58,-105,-58,-105,-58,-105,-58,-105,-57,-106,-58,-105,-58,-105,-58,-105,-58,-105,-57,-105,-58,-105,-58,-106,-58,-105,-58,-105,-57,-105,-58,-105,-58,-105,-58,-106,-58,-105,-57,-105,-58,-105,-58,-105,-58,-105,-58,-106,-57,-105,-58,-105,-59,-105,-59,-104,-58,-105,-59,-105,-58,-104,-59,-105,-59,-105,-58,-105,-58,-104,-53,-108,-34,-115,-14,-119,6,-120,30,-116,55,-106,77,-91,94,-75,105,-57,115,-35,119,-12,120,9,115,32,107,53,103,62,103,62,103,62,102,62,103,62,103,62,103,62,102,62,103,62,103,62,102,62,103,62,104,61,107,53,115,35,119,10,119,-12,116,-30,106,-55,91,-79,75,-93,58,-105,35,-115,14,-119,2,-120,-3,-120,-4,-119,-4,-120,-3,-120,-4,-120,-3,-120,-4,-120,-4,-120,-3,-120,2,-120,14,-119,27,-117,40,-113,54,-107,67,-99,78,-92,80,-89,81,-89,80,-89,81,-89,81,-88,80,-89,81,-89,81,-89,81,-89,80,-88,81,-89,81,-89,81,-89,80,-88,81,-89,81,-89,81,-89,80,-88,81,-89,81,-89,81,-89,80,-89,81,-88,81,-89,81,-89,80,-89,84,-85,94,-75,108,-51,117,-27,119,-9,119,11,115,34,106,56,95,73,88,82,87,83,87,82,87,83,87,83,85,84,78,91,57,105,34,115,11,119,-11,120,-33,115,-57,105,-74,95,-79,89,-81,89,-81,88,-81,89,-82,88,-81,89,-81,88,-81,89,-81,88,-81,89,-81,88,-81,88,-81,89,-81,88,-81,89,-81,89,-78,91,-61,103,-23,116,23,117,70,96,103,61,117,22,118,-18,114,-39,111,-44,112,-44,111,-45,112,-44,111,-45,111,-44,112,-45,111,-45,112,-44,111,-45,112,-44,111,-45,111,-44,112,-45,111,-44,112,-45,111,-45,111,-44,112,-45,111,-44,112,-45,112,-43,115,-31,120,-11,119,10,116,30,108,52,94,74,75,93,54,107,33,115,14,119,-9,120,-37,114,-57,105,-73,95,-86,84,-92,77,-88,81,-82,88,-79,91,-75,93,-70,97,-68,99,-63,102,-59,105,-53,108,-45,111,-43,112,-40,113,-35,115,-28,116,-22,118,-26,118,-37,113,-55,107,-73,95,-91,78,-104,58,-113,42,-116,31,-116,29,-117,29,-116,29,-117,28,-116,29,-117,29,-116,28,-117,29,-116,29,-116,30,-114,37,-106,56,-89,80,-60,103,-29,116,-4,120,21,118,56,105,74,95,80,89,83,87,85,84,90,79,95,74,96,72,96,72,100,66,104,61,104,58,106,58,108,52,112,43,113,39,114,39,115,33,117,28,117,27,117,24,119,16,120,9,120,8,120,3,119,-7,120,-10,119,-11,120,-11,119,-13,119,-13,120,-14,119,-13,119,-14,119,-13,120,-14,119,-13,119,-14,119,-13,120,-14,119,-13,119,-14,119,-13,120,-14,119,-13,119,-11,120,5,117,26,112,44,106,55,100,67,91,78,79,90,72,96,64,102,58,105,57,105,56,106,57,106,57,105,57,106,56,106,49,110,31,115,10,120,-9,119,-31,116,-51,108,-60,104,-63,102,-64,102,-63,102,-64,102,-64,101,-63,102,-64,102,-64,101,-63,102,-64,102,-66,100,-79,90,-97,70,-110,49,-115,33,-119,9,-120,-10,-118,-20,-118,-24,-117,-23,-118,-24,-118,-24,-117,-23,-118,-24,-118,-24,-117,-23,-118,-24,-118,-23,-117,-24,-118,-24,-118,-23,-117,-24,-118,-24,-117,-23,-118,-24,-118,-23,-118,-22,-119,-12,-120,6,-116,27,-109,51,-94,74,-80,89,-66,100,-56,106,-56,107,-55,106,-55,107,-55,107,-55,106,-55,107,-55,106,-55,107,-55,107,-55,106,-55,107,-56,106,-55,107,-55,107,-55,106,-55,107,-55,106,-55,107,-55,107,-55,106,-55,107,-55,106,-56,107,-55,107,-55,106,-55,107,-55,107,-55,106,-61,103,-74,95,-87,82,-100,66,-112,42,-118,18,-120,-2,-117,-27,-109,-50,-96,-71,-83,-86,-68,-99,-58,-105,-59,-105,-58,-105,-58,-105,-58,-105,-58,-105,-58,-105,-58,-105,-59,-105,-58,-105,-58,-105,-58,-105,-58,-105,-58,-105,-58,-105,-59,-105,-58,-104,-58,-105,-58,-105,-58,-105,-58,-105,-59,-105,-58,-105,-58,-105,-58,-105,-58,-105,-58,-105,-58,-105,-59,-105,-58,-105,-58,-105,-58,-105,-58,-105,-58,-105,-58,-105,-59,-105,-58,-105,-58,-105,-58,-105,-58,-105,-58,-105,-59,-105,-58,-105,-58,-105,-58,-105,-58,-105,-58,-105,-58,-105,-59,-105,-58,-104,-58,-105]],
     ['f1ae', 24, 'Abu Dhabi GP', 'Yas Marina', GROUND.desert, 'blocks', 0, 'Round 24 of the 2026 calendar: the real Yas Marina Circuit layout, 5.281 km.', [-127,-680,119,-16,119,-16,119,-16,119,-16,119,-16,119,-16,119,-15,119,-16,119,-16,119,-16,119,-16,119,-16,119,-16,119,-15,119,-16,118,-16,119,-16,119,-16,119,-16,119,-20,113,-39,93,-74,64,-101,33,-115,-2,-119,-26,-117,-28,-117,-28,-117,-27,-117,-28,-116,-27,-117,-27,-117,-28,-117,-27,-117,-28,-116,-27,-117,-27,-117,-28,-117,-28,-117,-34,-115,-45,-111,-60,-103,-78,-92,-91,-77,-103,-62,-111,-45,-114,-37,-115,-35,-114,-36,-115,-35,-114,-38,-111,-46,-108,-53,-102,-61,-98,-71,-90,-78,-85,-85,-80,-90,-73,-95,-60,-103,-46,-111,-37,-114,-24,-118,-9,-119,4,-120,16,-119,24,-118,32,-115,35,-115,33,-116,30,-116,30,-116,31,-116,29,-116,25,-117,17,-119,16,-119,14,-119,9,-120,3,-120,-1,-120,-6,-120,-11,-119,-12,-120,-15,-119,-14,-119,-15,-119,-15,-119,-15,-119,-15,-119,-15,-119,-15,-119,-15,-119,-15,-119,-15,-119,-15,-119,-15,-120,-15,-119,-15,-119,-15,-119,-15,-119,-15,-119,-15,-119,-16,-119,-19,-118,-32,-116,-56,-105,-83,-87,-104,-57,-118,-19,-116,27,-96,70,-69,98,-50,109,-41,113,-39,114,-37,114,-32,115,-27,117,-26,117,-25,118,-26,117,-30,116,-35,115,-38,114,-39,113,-38,114,-39,114,-38,113,-38,114,-39,114,-38,113,-39,114,-38,114,-39,113,-38,114,-38,114,-39,113,-38,114,-39,114,-38,113,-39,114,-38,114,-38,113,-39,114,-38,114,-39,114,-38,113,-39,114,-38,114,-38,113,-39,114,-38,114,-39,113,-38,114,-39,113,-39,114,-38,114,-39,113,-39,114,-38,113,-39,114,-39,114,-38,113,-39,114,-39,113,-38,114,-39,114,-38,113,-39,114,-38,114,-38,114,-39,113,-38,114,-39,114,-38,113,-39,114,-37,114,-34,115,-32,116,-31,115,-32,116,-31,116,-32,116,-33,115,-35,115,-36,114,-37,115,-36,114,-36,114,-36,115,-36,114,-37,115,-36,114,-36,115,-36,114,-37,114,-38,114,-39,114,-38,113,-38,114,-38,114,-39,114,-38,113,-38,114,-38,114,-38,114,-15,118,35,112,92,74,117,25,119,-9,120,3,107,49,69,98,39,113,31,116,31,116,31,116,31,115,31,116,32,116,36,115,43,112,46,111,49,109,53,108,57,105,64,101,68,100,69,98,72,96,76,92,80,90,80,90,84,85,88,82,90,79,91,79,92,77,93,76,94,74,94,74,95,74,94,74,94,74,95,75,94,74,95,74,94,74,94,74,95,74,94,74,94,74,95,74,94,75,95,74,94,74,94,74,94,75,95,73,96,72,97,71,98,69,99,67,101,66,101,64,102,64,103,61,105,58,105,58,107,55,108,53,108,52,108,52,108,52,109,50,109,50,110,49,109,49,109,50,109,51,109,51,108,51,109,52,108,51,109,50,110,48,111,45,115,37,118,19,120,-2,117,-22,113,-41,104,-60,88,-80,72,-97,54,-106,39,-114,21,-118,-1,-120,-18,-118,-32,-116,-46,-110,-62,-103,-80,-89,-91,-78,-101,-64,-110,-49,-116,-31,-118,-18,-120,-13,-119,-10,-120,-10,-119,-9,-120,-10,-120,-10,-119,-10,-120,-9,-119,-10,-120,-10,-120,-9,-119,-10,-120,-10,-119,-11,-120,-13,-118,-19,-117,-26,-113,-40,-107,-55,-103,-62,-102,-63,-102,-63,-102,-64,-102,-63,-102,-63,-101,-64,-99,-67,-90,-80,-69,-98,-45,-111,-33,-115,-27,-117,-26,-117,-26,-118,-25,-117,-26,-117,-24,-117,-14,-119,23,-117,81,-87,110,-44,118,-23,119,-19,118,-18,119,-19,117,-24,114,-38,100,-66,75,-93,41,-112,17,-119,4,-119,1,-120,0,-120,-2,-120,-10,-120,-37,-114,-75,-92,-104,-59,-115,-32,-119,-19,-119,-8,-120,1,-120,9,-119,14,-119,17,-119,17,-118,18,-119,18,-119,18,-118,18,-119,18,-119,18,-118,18,-119,18,-119,17,-119,16,-119,11,-120,3,-120,-6,-119,-16,-115,-33,-104,-59,-87,-81,-72,-97,-62,-102,-58,-106,-57,-105,-57,-105,-58,-106,-58,-105,-59,-104,-62,-103,-63,-102,-60,-104,-53,-107,-38,-114,-22,-118,-8,-120,16,-118,55,-105,96,-70,114,-37,118,-21,119,-18,119,-17,118,-17,119,-17,119,-17,119,-18,119,-17,118,-17,119,-17,119,-17,119,-17,118,-17,119,-17,119,-17,119,-17,119,-18,118,-17,119,-17,119,-17,119,-17]],
-  ].map(([id, rnd, name, kind, ground, scenery, street, blurb, flat]) => { const pts = []; let x = 0, y = 0; for (let i = 0; i < flat.length; i += 2) { x += flat[i]; y += flat[i + 1]; pts.push([x / 10, y / 10, 0]); } const sAt = [0]; for (let k = 1; k < pts.length; k++) sAt.push(sAt[k - 1] + Math.hypot(pts[k][0] - pts[k - 1][0], pts[k][1] - pts[k - 1][1])); const L = (sAt[sAt.length - 1] + Math.hypot(pts[0][0] - pts[pts.length - 1][0], pts[0][1] - pts[pts.length - 1][1])) || 1; if (F1_ELEV[id]) for (let k = 0; k < pts.length; k++) pts[k][2] = F1_ELEV[id](sAt[k] / L); return { id, rnd, name: `${name} (${kind})`, kind, f1: true, closed: true, width: street ? 15 : 16, laps: 3, blurb, ground, scenery, pts }; });
+  ].map(([id, rnd, name, kind, ground, scenery, street, blurb, flat]) => { const pts = []; let x = 0, y = 0; for (let i = 0; i < flat.length; i += 2) { x += flat[i]; y += flat[i + 1]; pts.push([x / 10, y / 10, 0]); } const sAt = [0]; for (let k = 1; k < pts.length; k++) sAt.push(sAt[k - 1] + Math.hypot(pts[k][0] - pts[k - 1][0], pts[k][1] - pts[k - 1][1])); const L = (sAt[sAt.length - 1] + Math.hypot(pts[0][0] - pts[pts.length - 1][0], pts[0][1] - pts[pts.length - 1][1])) || 1; if (F1_ELEV[id]) for (let k = 0; k < pts.length; k++) pts[k][2] = F1_ELEV[id](sAt[k] / L); return { id, rnd, name: `${name} (${kind})`, kind, f1: true, closed: true, width: street ? 15 : 16, laps: 3, blurb, ground, scenery, pts, bank: F1_BANK[id] || null }; });
 
   /// The centre line of a track, sampled about every 4 m: position, direction, the distance along it (s) and its curvature.
   function buildTrack(def) {
     const P = def.pts, n = P.length, closed = def.closed;
-    const at = (i) => { const p = closed ? P[((i % n) + n) % n] : P[clamp(i, 0, n - 1)]; return [p[0], p[1], p[2] || 0]; };
+    const at = (i) => { const p = closed ? P[((i % n) + n) % n] : P[clamp(i, 0, n - 1)]; return [p[0], p[1], p[2] || 0, p[3] || 0]; };
     const dense = [], segs = closed ? n : n - 1;
     for (let i = 0; i < segs; i++) {
       const p0 = at(i - 1), p1 = at(i), p2 = at(i + 1), p3 = at(i + 2);
       for (let k = 0; k < 24; k++) {
         const t = k / 24, t2 = t * t, t3 = t2 * t;
-        dense.push([0, 1, 2].map((a) => 0.5 * ((2 * p1[a]) + (-p0[a] + p2[a]) * t + (2 * p0[a] - 5 * p1[a] + 4 * p2[a] - p3[a]) * t2 + (-p0[a] + 3 * p1[a] - 3 * p2[a] + p3[a]) * t3)));
+        dense.push([0, 1, 2, 3].map((a) => 0.5 * ((2 * p1[a]) + (-p0[a] + p2[a]) * t + (2 * p0[a] - 5 * p1[a] + 4 * p2[a] - p3[a]) * t2 + (-p0[a] + 3 * p1[a] - 3 * p2[a] + p3[a]) * t3)));
       }
     }
-    if (!closed) dense.push([P[n - 1][0], P[n - 1][1], P[n - 1][2] || 0]);
+    if (!closed) dense.push([P[n - 1][0], P[n - 1][1], P[n - 1][2] || 0, P[n - 1][3] || 0]);
     // Resample at an even spacing.
     const step = 4, out = [dense[0]];
     let carry = 0;
@@ -155,7 +165,7 @@
       const a = dense[i - 1], b = dense[i % dense.length];
       let d = Math.hypot(b[0] - a[0], b[1] - a[1]);
       let pos = 0;
-      while (carry + (d - pos) >= step) { pos += step - carry; carry = 0; const f = pos / d; out.push([a[0] + (b[0] - a[0]) * f, a[1] + (b[1] - a[1]) * f, a[2] + (b[2] - a[2]) * f]); }
+      while (carry + (d - pos) >= step) { pos += step - carry; carry = 0; const f = pos / d; out.push([a[0] + (b[0] - a[0]) * f, a[1] + (b[1] - a[1]) * f, a[2] + (b[2] - a[2]) * f, a[3] + (b[3] - a[3]) * f]); }
       carry += d - pos;
     }
     if (closed && Math.hypot(out[out.length - 1][0] - out[0][0], out[out.length - 1][1] - out[0][1]) < step * 0.5) out.pop();
@@ -163,7 +173,7 @@
     for (let i = 0; i < m; i++) {
       const a = out[closed ? (i - 1 + m) % m : Math.max(0, i - 1)], b = out[closed ? (i + 1) % m : Math.min(m - 1, i + 1)];
       const tx = b[0] - a[0], ty = b[1] - a[1], l = Math.hypot(tx, ty) || 1;
-      S.push({ x: out[i][0], y: out[i][1], tx: tx / l, ty: ty / l, nx: -ty / l, ny: tx / l, s: i * step, k: 0, z: out[i][2] || 0 });
+      S.push({ x: out[i][0], y: out[i][1], tx: tx / l, ty: ty / l, nx: -ty / l, ny: tx / l, s: i * step, k: 0, z: out[i][2] || 0, bm: out[i][3] || 0, bk: 0, roll: 0 });
     }
     // No road is steeper than a real one: the steepest part of Raidillon at Spa is about 17%. Where the heights climb or drop
     // faster than that (a track drawn with big height steps), they are pulled in: the highest points are cut down and the lowest
@@ -187,6 +197,22 @@
       S[i].k =wrapPi(Math.atan2(b.ty, b.tx) - Math.atan2(a.ty, a.tx)) / (closed ? 2 * step : (i === 0 || i === m - 1 ? step : 2 * step));
     }
     const length = closed ? m * step : (m - 1) * step;
+    const idxZ = (i) => (closed ? ((i % m) + m) % m : clamp(i, 0, m - 1));
+    // Banking: the road tilts across its width in a banked corner, the outside edge higher. How much comes from the circuit's profile
+    // or from the points (degrees, never more than 24); which way comes from the way the bend turns. A few passes smooth it.
+    {
+      const roll = new Array(m).fill(0), idxAt = (i) => (closed ? ((i % m) + m) % m : clamp(i, 0, m - 1));
+      for (let i = 0; i < m; i++) {
+        const mag = clamp((def.bank ? def.bank(i / m) : S[i].bm) || 0, 0, 24);
+        if (!mag) continue;
+        let ks = 0; for (let j = -6; j <= 6; j++) ks += S[idxAt(i + j)].k;
+        ks /= 13;
+        roll[i] = Math.sign(ks) * mag * clamp(Math.abs(ks) / 0.004, 0, 1) * Math.PI / 180;      // only where there is a real bend (radius under about 250 m)
+      }
+      for (let pass = 0; pass < 3; pass++) { const sm = roll.map((v, i) => (roll[idxAt(i - 1)] + 2 * v + roll[idxAt(i + 1)]) / 4); for (let i = 0; i < m; i++) roll[i] = sm[i]; }
+      for (let i = 0; i < m; i++) { S[i].roll = roll[i]; S[i].bk = Math.tan(roll[i]); }
+    }
+    for (let i = 0; i < m; i++) S[i].zk = (S[idxZ(i + 1)].z - 2 * S[i].z + S[idxZ(i - 1)].z) / (step * step);       // how sharply the road crests (negative) or dips (positive)
     let x0 = 1e9, x1 = -1e9, y0 = 1e9, y1 = -1e9, z0 = 1e9, z1 = -1e9;
     for (const q of S) { x0 = Math.min(x0, q.x); x1 = Math.max(x1, q.x); y0 = Math.min(y0, q.y); y1 = Math.max(y1, q.y); z0 = Math.min(z0, q.z); z1 = Math.max(z1, q.z); }
     return { id: def.id, def, name: def.name, closed, width: def.width, laps: def.laps, S, m, step, length, bounds: [x0, y0, x1, y1], zBounds: [z0, z1], ground: def.ground || GROUND.green, scenery: def.scenery || 'trees', grip: def.grip || 1 };
@@ -228,7 +254,15 @@
     return { z, dz, a, b };
   }
   /// The track's height at a position on (or near) the centre line.
-  function trackHeight(T, loc) { return roadZ(T, loc).z; }
+  function trackHeight(T, loc) {
+    const bk = roadBank(T, loc), edge = T.width / 2 + 1.4;
+    return roadZ(T, loc).z - (bk ? clamp(loc.lat || 0, -edge, edge) * bk : 0);        // a banked road is higher on its outside edge
+  }
+  /// The tilt of the road across its width at a position: rise per metre towards the left, so a positive value means the right edge is lower.
+  function roadBank(T, loc) {
+    const { a, b, f } = seg(T, loc);
+    return (a.bk || 0) * (1 - f) + (b.bk || 0) * f;
+  }
   /// The track gradient projected onto the car's heading: positive when the car faces uphill, negative downhill.
   function trackSlope(T, c, loc) {
     const { dz, a, b } = roadZ(T, loc);
@@ -286,7 +320,8 @@
   const b64e = (str) => (typeof btoa === 'function' ? btoa(unescape(encodeURIComponent(str))) : Buffer.from(str, 'utf8').toString('base64')).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
   const b64d = (str) => { const t = str.replace(/-/g, '+').replace(/_/g, '/'); return typeof atob === 'function' ? decodeURIComponent(escape(atob(t))) : Buffer.from(t, 'base64').toString('utf8'); };
   function encodeTrack(def) {
-    return 'NR1' + b64e(JSON.stringify({ n: String(def.name || 'My track').slice(0, 24), c: def.closed ? 1 : 0, w: def.width, g: def.look || 'green', l: def.laps || 3, v: 2, p: def.pts.flatMap((p) => [Math.round(p[0]), Math.round(p[1]), Math.round(p[2] || 0)]) }));
+    const banked = def.pts.some((p) => p[3]);        // a code only carries a fourth number per point (banking, degrees) when a point has some
+    return 'NR1' + b64e(JSON.stringify({ n: String(def.name || 'My track').slice(0, 24), c: def.closed ? 1 : 0, w: def.width, g: def.look || 'green', l: def.laps || 3, v: banked ? 3 : 2, p: def.pts.flatMap((p) => [Math.round(p[0]), Math.round(p[1]), Math.round(p[2] || 0), ...(banked ? [Math.round(clamp(p[3] || 0, 0, 24))] : [])]) }));
   }
   const hashStr = (str) => { let h = 2166136261; for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); } return (h >>> 0).toString(36); };
   /// A track from a code, or null if the code is not a valid, drivable track.
@@ -295,16 +330,16 @@
       const raw = String(code || '').trim().replace(/\s+/g, '');
       if (!raw.startsWith('NR1') || raw.length > 9000) return null;
       const o = JSON.parse(b64d(raw.slice(3)));
-      if (!o || !Array.isArray(o.p) || (o.p.length % (o.v >= 2 ? 3 : 2)) || o.p.length > 440 * (o.v >= 2 ? 3 : 2)) return null;
-      const sp = o.v >= 2 ? 3 : 2;
-      const pts = []; for (let i = 0; i < o.p.length; i += sp) { const x = Number(o.p[i]), y = Number(o.p[i + 1]), z = sp === 3 ? Number(o.p[i + 2]) : 0; if (!isFinite(x) || !isFinite(y) || !isFinite(z) || Math.abs(x) > 6000 || Math.abs(y) > 6000 || Math.abs(z) > 500) return null; pts.push([x, y, z]); }
+      const sp = o.v >= 3 ? 4 : o.v >= 2 ? 3 : 2;
+      if (!o || !Array.isArray(o.p) || (o.p.length % sp) || o.p.length > 440 * sp) return null;
+      const pts = []; for (let i = 0; i < o.p.length; i += sp) { const x = Number(o.p[i]), y = Number(o.p[i + 1]), z = sp >= 3 ? Number(o.p[i + 2]) : 0, bk = sp === 4 ? Number(o.p[i + 3]) : 0; if (!isFinite(x) || !isFinite(y) || !isFinite(z) || !isFinite(bk) || Math.abs(x) > 6000 || Math.abs(y) > 6000 || Math.abs(z) > 500 || bk < 0 || bk > 24) return null; pts.push(sp === 4 ? [x, y, z, bk] : [x, y, z]); }
       return customDef({ name: String(o.n || 'Shared track').slice(0, 24), closed: !!o.c, width: [26, 32, 40].includes(o.w) ? o.w : 32, look: GROUNDS[o.g] ? o.g : 'green', laps: [1, 3, 5, 10, 20].includes(o.l) ? o.l : 3, pts }, true);
     } catch { return null; }
   }
   /// A full track definition from what the designer keeps. Returns null if it is not drivable (when `check` is set).
   function customDef(d, check) {
     const look = GROUNDS[d.look] ? d.look : 'green', gr = GROUNDS[look];
-    const pts = d.pts.map((p) => [p[0] + 0, p[1] + 0, (p[2] || 0) + 0]);
+    const pts = d.pts.map((p) => (p[3] ? [p[0] + 0, p[1] + 0, (p[2] || 0) + 0, p[3] + 0] : [p[0] + 0, p[1] + 0, (p[2] || 0) + 0]));
     const def = { id: 'c-' + hashStr(JSON.stringify([d.closed ? 1 : 0, d.width, look, pts])), name: d.name || 'My track', kind: '★ ' + (d.name || 'Mine').slice(0, 12), custom: true, closed: !!d.closed, width: d.width || 32, laps: d.closed ? (d.laps || 3) : 1, look, blurb: `Your own ${d.closed ? 'circuit' : 'sprint'}.`, ground: gr.ground, scenery: gr.scenery, grip: gr.grip, pts };
     if (check && !checkTrack(def).ok) return null;
     return def;
@@ -691,7 +726,7 @@
   }
 
   /// One physics step. `inp` is { throttle 0..1, brake 0..1, steer -1..1 (+ is right), hand 0/1 }. `surf` is 1 on the road, less on grass.
-  function stepCar(c, inp, dt, surf = 1, slope = 0, curv = 0) {
+  function stepCar(c, inp, dt, surf = 1, slope = 0, curv = 0, bankK = 1) {
     const sp0 = c.spec, dmgK = 1 - 0.4 * c.dmg;        // a damaged car is slower, and its steering pulls to one side
     let sp = c.dmg > 0 ? { ...sp0, vmax: sp0.vmax * dmgK, accel: sp0.accel * (1 - 0.3 * c.dmg), grip: sp0.grip * (1 - 0.3 * c.dmg) } : sp0;
     // Boost (the battery) and DRS (the open rear wing): more power and less drag. A puncture or a dead engine takes it away.
@@ -701,7 +736,8 @@
     // Engine, brakes, reversing and drag, all along the body.
     let a = 0;
     if (inp.throttle > 0) a += sp.accel * inp.throttle * clamp(1 - (Math.max(0, vf0) / (sp.vmax * surf)) ** 2, 0, 1) * (vf0 < 0 ? 1.6 : 1);
-    if (inp.brake > 0) a += vf0 > 1.5 ? -sp.brake * inp.brake : -sp.accel * 0.55 * inp.brake * clamp(1 + vf0 / 18, 0, 1);
+    const vLoad = clamp(1 + 0.8 * (vf0 * vf0 * curv) / 9.8, 0.5, 1.5);       // the same load decides how hard the brakes can bite: over a crest the wheels lock sooner
+    if (inp.brake > 0) a += vf0 > 1.5 ? -sp.brake * inp.brake * vLoad : -sp.accel * 0.55 * inp.brake * clamp(1 + vf0 / 18, 0, 1);
     a -= 0.0002 * (1 - 0.4 * (c.tow || 0)) * vf0 * Math.abs(vf0) + (Math.abs(vf0) > 0.2 ? 0.35 * Math.sign(vf0) : 0);   // slipstream: less air drag when tucked in
     if (surf < 1) a -= (1 - surf) * 9 * Math.sign(vf0) * Math.min(1, Math.abs(vf0) / 12);
     if (inp.hand) a -= 7 * Math.sign(vf0) * Math.min(1, Math.abs(vf0) / 8);
@@ -713,7 +749,7 @@
     c.steerA += (target - c.steerA) * (1 - Math.exp(-dt * 9));
     const wd = vf0 * Math.tan(c.steerA) / WHEELBASE;
     const power = inp.throttle * Math.abs(c.steerA) / sp.steer;
-    let grip = sp.grip * tyreGrip(c) * (1 - 0.32 * clamp(c.wear || 0, 0, 1)) * surf * (1 + (sp.down || 0) * (vf0 * vf0) / (sp.vmax * sp.vmax)) * (1 - sp.loose * 0.5 * power * clamp(Math.abs(vf0) / 30, 0, 1)) * clamp(1 + (vf0 * vf0 * curv) / 200, 0, 5);
+    let grip = sp.grip * tyreGrip(c) * (1 - 0.32 * clamp(c.wear || 0, 0, 1)) * surf * (1 + (sp.down || 0) * (vf0 * vf0) / (sp.vmax * sp.vmax)) * (1 - sp.loose * 0.5 * power * clamp(Math.abs(vf0) / 30, 0, 1)) * clamp(1 + 0.8 * (vf0 * vf0 * curv) / 9.8, 0.35, 1.9) * clamp(bankK, 0.5, 3);      // pressed into a dip (more grip), light over a crest (less)
     let w;
     const slip = c.vl / Math.max(Math.abs(c.vf), 5);        // how far sideways the car is travelling (last step)
     if (inp.hand) { w = clamp(wd * 1.25, -2, 2); grip *= 0.3; }
@@ -777,8 +813,8 @@
     const sp = c.spec, g0 = sp.grip * tyreGrip(c) * 1.2 * (st.corner ?? 0.88) * (1 - 0.32 * clamp(c.wear || 0, 0, 1)) * (1 - 0.15 * c.dmg), dn = (sp.down || 0) / (sp.vmax * sp.vmax);
     const dec = sp.brake * (st.brakes ?? 0.8) * (st.tr ? 0.85 : 1);        // in traffic, a little earlier on the brakes
     for (let d = 0; d <= 30 + speed * speed / (2 * dec); d += T.step * 2) {
-      const k = Math.abs(ahead(d).k) * 0.85;      // the racing line opens the bend out a little
-      if (k > 0.0005) { const den = 1 - g0 * dn / k, vc = den > 0.02 ? Math.max(14, Math.sqrt(g0 / k / den)) : sp.vmax; vt = Math.min(vt, Math.sqrt(vc * vc + 2 * dec * Math.max(0, d - 4))); }
+      const sa = ahead(d), k = Math.abs(sa.k) * 0.85, gb = g0;      // the racing line opens the bend out a little; a bank adds to what the tyres hold, below
+      if (k > 0.0005) { const den = 1 - gb * dn / k, vflat = den > 0.02 ? Math.max(14, Math.sqrt(gb / k / den)) : sp.vmax, tb = Math.abs(sa.bk || 0), sb = tb / Math.sqrt(1 + tb * tb), bm = tb > 0.01 ? Math.sqrt(1 + 1.4 * sb + 9.8 * sb / Math.max(gb, 9.8)) : 1, lk = clamp(1 + 0.8 * (vflat * vflat * (sa.zk || 0)) / 9.8, 0.5, 1.6), vc = Math.min(sp.vmax, vflat * bm * Math.sqrt(lk)); vt = Math.min(vt, Math.sqrt(vc * vc + 2 * dec * Math.max(0, d - 4))); }
     }
     if (loc.s < -6 && !T.closed) vt = c.spec.vmax;
     if (inPit) { vt = Math.min(vt, P.limit * 0.92); const bx = st.boxS ?? P.box; if (!st.served && rel > bx - 30 && rel < bx + 2) vt = Math.min(vt, Math.max(0, (bx + 1 - rel) * 0.8)); }      // the limiter, then stop in the box
@@ -1029,6 +1065,8 @@
     let screen = 'menu';                 // menu | lobby | countdown | race | done
     let T = getTrack(trackId), racers = [], me = null, raceLaps = 3, clock = 0, cdLeft = 0, alive = true, paused = false, suspended = false, startSeq = null, weatherMode = store.get('weather', 'mixed'), weather = { target: 0, at: 1e9, dryAt: 1e9, told: 0 }, passAt = new Map(), myTyre = store.get('tyre', 'M'), towerMode = store.get('tower', 1), medF = null, formT = 0, formHold = 1, formSkip = false, cranes = [], gridMarks = [];
     const keys = new Set();
+    let camPitchA = 0, camBobA = 0;   // the camera's nose-up angle with the climb, and the eye's dip in a compression
+    let camRollA = 0;                 // how far the camera leans with a banked road (radians, smoothed)
     let wheelA = 0, wheelT = 0;       // the wheel in the first-person view: its turn now, and when it was last drawn
     let skids = [], parts = [], camX = 0, camY = 0, shake = 0, doneT = 0, chaseYaw = 0, backToDesign = false, ds = null, lastShift = 0, paddle = 0;
     let net = null;                      // { link, code, host, players: Map, cfg, status }
@@ -2175,7 +2213,12 @@
           r.towT = c.tow > 0.2 ? 0.3 : Math.max(0, (r.towT || 0) - dt);
         }
         const slope = trackSlope(T, c, loc), curv = roadCurv(T, loc);
-        stepCar(c, inp, dt, surf, slope, curv);
+        // On a banked corner the road presses the car down harder, so the tyres hold more (about 1.4 x sin of the tilt on top: +57% at 24 degrees),
+        // and gravity pulls the car down the bank as well (below). Together a car takes the steepest banking about a third faster than a flat corner.
+        // Turning towards the high side instead (the wrong way round) loses grip.
+        let bankK = 1; { const bk0 = roadBank(T, loc); if (bk0 && Math.abs(loc.lat) < T.width / 2 + 1.2) { const sn = Math.abs(Math.sin(Math.atan(bk0))), kk = T.S[loc.idx].k * Math.sign(bk0); bankK = kk >= 0 ? 1 + 1.4 * sn : 1 - 0.8 * sn; } }
+        stepCar(c, inp, dt, surf, slope, curv, bankK);
+        { const bk = roadBank(T, loc); if (bk && Math.abs(loc.lat) < T.width / 2 + 1.2) { const q = T.S[loc.idx], gB = 9.8 * bk / Math.sqrt(1 + bk * bk) * dt; c.vx += q.nx * gB; c.vy += q.ny * gB; } }     // on a bank gravity pulls the car down it, which is what holds it in the corner
         if (r.inLane && !r.official && c.vf < 0) { c.vx = c.vy = 0; c.vf = 0; }       // no reversing in the pit lane for race cars: the brake just holds the car
         const after = locate(T, c.x, c.y, loc.idx);
         c.z = trackHeight(T, after);
@@ -2500,6 +2543,17 @@
       // Speed, gear, revs and damage (the cockpit has its own on the wheel).
       const kmh = Math.round(Math.hypot(me.car.vx, me.car.vy) * KMH), c = me.car, rr = clamp((c.rpm - c.spec.idle) / (c.spec.redline - c.spec.idle), 0, 1);
       if (viewMode !== 'cockpit') drawDash(s, kmh, rr);
+      // The road under you: how steep the climb or drop is, and how banked it is.
+      if ((screen === 'race' || screen === 'done') && !me.official) {
+        const lq = locate(T, c.x, c.y, me.idx), sl = trackSlope(T, c, lq) * 100, onRoad = Math.abs(lq.lat) < T.width / 2 + 1.5, bkDeg = onRoad ? Math.abs(Math.atan(roadBank(T, lq))) * 180 / Math.PI : 0, bits = [];
+        if (Math.abs(sl) >= 2) bits.push(`${sl > 0 ? '▲' : '▼'} ${Math.abs(sl).toFixed(0)}%`);
+        if (bkDeg >= 3) bits.push(`BANKED ${bkDeg.toFixed(0)}°`);
+        if (bits.length) {
+          const txt = bits.join('  ·  '); g.font = `800 ${9.5 * s}px system-ui`; g.textAlign = 'center'; const tw3 = g.measureText(txt).width;
+          g.fillStyle = 'rgba(8,13,28,.82)'; g.beginPath(); g.roundRect(W / 2 - tw3 / 2 - 10 * s, H - 97 * s, tw3 + 20 * s, 18 * s, 9 * s); g.fill();
+          g.fillStyle = Math.abs(sl) >= 2 ? (sl > 0 ? '#ffd23f' : '#6fe0ff') : '#cdbfff'; g.fillText(txt, W / 2, H - 84.5 * s); g.textAlign = 'left';
+        }
+      }
       // DRS (E), slipstream and the weather, stacked bottom right.
       if (screen === 'race' && !me.official) {
         let x = W - 150 * s, y = H - 22 * s;
@@ -2602,11 +2656,15 @@
       const yaw = cock ? c.h : chaseYaw, cs = Math.cos(yaw), sn = Math.sin(yaw);
       const jx = shake > 0 ? (Math.random() - 0.5) * shake * 0.5 : 0, jz = shake > 0 ? (Math.random() - 0.5) * shake * 0.3 : 0;
       const camBack = low ? 6.2 : 8.5, ex = (cock ? c.x - Math.cos(c.h) * 0.3 : c.x - cs * camBack) + jx, ey = (cock ? c.y - Math.sin(c.h) * 0.3 : c.y - sn * camBack) + jx;
-      const ez = (halo ? 1.02 : cock ? (sp.id === 'f1' ? 0.78 : 1.12) : low ? 1.9 : 3.1) + jz + (c.z || 0);
+      // The camera feels the road: it pitches up on a climb and down over a crest, the eye drops in a compression and lifts when the car goes light.
+      { const lq = locate(T, c.x, c.y, me.idx), sl = trackSlope(T, c, lq), cv = roadCurv(T, lq), v = Math.hypot(c.vx, c.vy);
+        const wantP = clamp(Math.atan(sl) * (cock ? 0.85 : 0.55), -0.2, 0.2), az = clamp(v * v * cv, -12, 22), wantB = -clamp(az * 0.011, -0.16, 0.26) * (cock ? 1 : 0.8);
+        camPitchA += (wantP - camPitchA) * 0.1; camBobA += (wantB - camBobA) * 0.14; }
+      const ez = camBobA + (halo ? 1.02 : cock ? (sp.id === 'f1' ? 0.78 : 1.12) : low ? 1.9 : 3.1) + jz + (c.z || 0);
       const F = (W / 2) / Math.tan((halo ? 1.4 : cock ? 1.3 : 1.12) / 2), hy = H * (halo ? 0.4 : cock ? 0.44 : low ? 0.4 : 0.36), NEAR = 0.35;
       let liftZ = 0;      // a car hanging from a recovery crane is drawn this high
       let pitchRef = null;   // while a car is drawn: it tilts nose up or down with the road under it
-      const cam = (x, y, z) => { const dx = x - ex, dy = y - ey; const tz = pitchRef ? ((x - pitchRef.x) * pitchRef.ca + (y - pitchRef.y) * pitchRef.sa) * pitchRef.p : 0; return [dx * cs + dy * sn, -dx * sn + dy * cs, z + tz + liftZ - ez]; };
+      const cam = (x, y, z) => { const dx = x - ex, dy = y - ey, xx = dx * cs + dy * sn; const tz = pitchRef ? ((x - pitchRef.x) * pitchRef.ca + (y - pitchRef.y) * pitchRef.sa) * pitchRef.p + ((y - pitchRef.y) * pitchRef.ca - (x - pitchRef.x) * pitchRef.sa) * (pitchRef.r || 0) : 0; return [xx, -dx * sn + dy * cs, z + tz + liftZ - ez - xx * camPitchA]; };
       const scr = (p) => [W / 2 + (p[1] / p[0]) * F, hy - (p[2] / p[0]) * F];
       const poly = (pts, fill) => {
         const out = [];
@@ -2619,11 +2677,13 @@
         g.beginPath(); out.forEach((p, i) => { const q = scr(p); i ? g.lineTo(q[0], q[1]) : g.moveTo(q[0], q[1]); }); g.closePath(); g.fillStyle = fill; g.fill();
       };
       // A strip along the road from offset o0 to o1 (metres, + is right), at height za at endpoint a and zb at endpoint b.
+      const bankEdge = T.width / 2 + 1.4, bankZ = (q, o) => (q.bk ? -clamp(o, -bankEdge, bankEdge) * q.bk : 0);   // how much a banked road is raised (or lowered) at an offset
       const strip = (a, b, o0, o1, fill, za = 0, zb = za) => {
-        poly([cam(a.x + a.nx * o0, a.y + a.ny * o0, za), cam(b.x + b.nx * o0, b.y + b.ny * o0, zb), cam(b.x + b.nx * o1, b.y + b.ny * o1, zb), cam(a.x + a.nx * o1, a.y + a.ny * o1, za)], fill);
+        poly([cam(a.x + a.nx * o0, a.y + a.ny * o0, za + bankZ(a, o0)), cam(b.x + b.nx * o0, b.y + b.ny * o0, zb + bankZ(b, o0)), cam(b.x + b.nx * o1, b.y + b.ny * o1, zb + bankZ(b, o1)), cam(a.x + a.nx * o1, a.y + a.ny * o1, za + bankZ(a, o1))], fill);
       };
       // A vertical face (a barrier or wall) at offset o, from base height za at a to base height zb at b, rising H metres.
       const bar = (a, b, o, fill, za, zb, H) => {
+        za += bankZ(a, o); zb += bankZ(b, o);
         poly([cam(a.x + a.nx * o, a.y + a.ny * o, za), cam(b.x + b.nx * o, b.y + b.ny * o, zb), cam(b.x + b.nx * o, b.y + b.ny * o, zb + H), cam(a.x + a.nx * o, a.y + a.ny * o, za + H)], fill);
       };
       const box = (x, y, h, z0, L, Wd, Hh, col) => {
@@ -2731,10 +2791,15 @@
         }
       };
       // Sky and ground.
-      const night = T.ground === GROUND.night, sky = g.createLinearGradient(0, 0, 0, hy);
+      const hz = hy + F * camPitchA;      // where the horizon is now: it drops on a climb and rises over a crest
+      const night = T.ground === GROUND.night, sky = g.createLinearGradient(0, 0, 0, hz);
       sky.addColorStop(0, night ? '#05070d' : '#3d86d1'); sky.addColorStop(1, night ? '#1a2235' : '#cfe4f4');
-      g.setTransform(1, 0, 0, 1, 0, 0); g.fillStyle = sky; g.fillRect(0, 0, W, hy + 2); g.fillStyle = T.ground; g.fillRect(0, hy, W, H - hy);
-      g.fillStyle = shade(T.ground, 0.8); g.fillRect(0, hy, W, Math.max(2, H * 0.01));
+      // The camera leans with a banked road, so the horizon tilts in the banked corners: most in the cockpit and halo views, less behind the car.
+      { const lc = locate(T, c.x, c.y, me.idx), want = Math.abs(lc.lat) < T.width / 2 + 1.5 ? Math.atan(roadBank(T, lc)) * (cock ? 0.9 : 0.55) : 0; camRollA += (want - camRollA) * 0.12; }
+      g.setTransform(1, 0, 0, 1, 0, 0);
+      if (Math.abs(camRollA) > 0.002) { g.translate(W / 2, hz); g.rotate(-camRollA); g.translate(-W / 2, -hz); }
+      g.fillStyle = sky; g.fillRect(-W, -2 * H, 3 * W, hz + 2 * H + 2); g.fillStyle = T.ground; g.fillRect(-W, hz, 3 * W, 3 * H);
+      g.fillStyle = shade(T.ground, 0.8); g.fillRect(-W, hz, 3 * W, Math.max(2, H * 0.01));
       // The road, from far to near, with whatever stands by it in between.
       for (const r of racers) if (r.idx == null || r.idx < 0) r.idx = locate(T, r.car.x, r.car.y).idx;      // a car just put somewhere (the grid, a pit exit) is found on the road before it is drawn
       const N = Math.min(150, T.closed ? T.m - 4 : 150), back = cock ? 1 : 4, idx0 = me.idx, wd = T.width / 2, wall = wd + WALL;
@@ -2782,7 +2847,7 @@
           // The road height under the nose and the tail: the car tilts to match (nose down going downhill, up going up).
           const c0 = r.car, ca0 = Math.cos(c0.h), sa0 = Math.sin(c0.h), half = WHEELBASE / 2;
           const zF = trackHeight(T, locate(T, c0.x + ca0 * half, c0.y + sa0 * half, r.idx)), zR = trackHeight(T, locate(T, c0.x - ca0 * half, c0.y - sa0 * half, r.idx));
-          pitchRef = { x: c0.x, y: c0.y, ca: ca0, sa: sa0, p: (zF - zR) / WHEELBASE };
+          pitchRef = { x: c0.x, y: c0.y, ca: ca0, sa: sa0, p: (zF - zR) / WHEELBASE, r: -roadBank(T, locate(T, c0.x, c0.y, r.idx)) };
           carModel(r); pitchRef = null; liftZ = 0;
         });
         if (kk >= -back && kk <= N && (r.service > 0 || (r.crewLeave && clock < r.crewLeave + 1))) put(Math.max(kk - 2, -back), () => drawCrew(r));
@@ -2834,10 +2899,10 @@
         const h1 = hash01(i, 3);
         if (T.scenery !== 'none' && h1 < 0.18) {
           const side = hash01(i, 5) < 0.5 ? -1 : 1, off = side * (wall + 6 + hash01(i, 7) * 34), x = a.x + a.nx * off, y = a.y + a.ny * off;
-          if (T.scenery === 'blocks') box(x, y, Math.atan2(a.ty, a.tx), a.z, 16, 12, 8 + hash01(i, 9) * 26, ['#7d8590', '#9a8f84', '#6f7e8c', '#a3a3a3'][Math.floor(hash01(i, 11) * 4)]);
-          else if (T.scenery === 'tyres') box(x, y, 0, a.z, 1.4, 1.4, 1.2, '#1b1b1b');
+          if (T.scenery === 'blocks') box(x, y, Math.atan2(a.ty, a.tx), a.z + bankZ(a, off), 16, 12, 8 + hash01(i, 9) * 26, ['#7d8590', '#9a8f84', '#6f7e8c', '#a3a3a3'][Math.floor(hash01(i, 11) * 4)]);
+          else if (T.scenery === 'tyres') box(x, y, 0, a.z + bankZ(a, off), 1.4, 1.4, 1.2, '#1b1b1b');
           else {
-            const p = cam(x, y, a.z);
+            const p = cam(x, y, a.z + bankZ(a, off));
             if (p[0] > NEAR) {
               const [sx, sy] = scr(p), u = F / p[0], hgt = (T.scenery === 'cacti' ? 4 : 9 + hash01(i, 13) * 6) * u;
               if (T.scenery === 'pines') { g.fillStyle = '#5a3d22'; g.fillRect(sx - 0.25 * u, sy - hgt * 0.25, 0.5 * u, hgt * 0.25); g.fillStyle = T.ground === GROUND.snow ? '#2f5a44' : '#244d2c'; g.beginPath(); g.moveTo(sx, sy - hgt); g.lineTo(sx - 2.4 * u, sy - hgt * 0.2); g.lineTo(sx + 2.4 * u, sy - hgt * 0.2); g.fill(); }
@@ -2852,7 +2917,7 @@
           const ox = (u, v) => [a.x + a.tx * u + a.nx * side * (wall + v), a.y + a.ty * u + a.ny * side * (wall + v)];
           const shirts = ['#e63946', '#f4a261', '#2a9d8f', '#e9c46a', '#8ab17d', '#ffffff', '#457b9d', '#c77dff'];
           for (let j = 0; j < 3; j++) {
-            const off = wall + 12 + j * 2.2, z0 = a.z + j * 0.9;
+            const off = wall + 12 + j * 2.2, z0 = a.z + j * 0.9 + bankZ(a, side * wall);
             const [cx, cy] = ox(L / 2, off + 1.1);
             box(cx, cy, hd, z0, L, 2.2, 0.9, j % 2 ? '#3a4150' : '#2d3442');     // the tier's seats
             for (let k = 0; k < 9; k++) {
@@ -2897,6 +2962,7 @@
         else if (p.k === 'spark') { g.fillStyle = '#ffe08a'; const z = Math.max(1.5, 0.25 * u); g.fillRect(sx - z / 2, sy - z / 2, z, z); }
         else { g.save(); g.translate(sx, sy); g.rotate(p.rot); g.fillStyle = p.col; g.fillRect(-p.size * u / 2, -p.size * u / 3, p.size * u, p.size * u * 0.66); g.restore(); }
       }
+      g.setTransform(1, 0, 0, 1, 0, 0);      // the car you sit in leans with the camera, so what is drawn on it is not tilted
       if (halo) drawHalo(); else if (cock) drawCockpit();
     }
     /// The halo camera: the driver's eye just behind the halo of an F1 car, looking over the nose, with the halo arching overhead,
@@ -3234,6 +3300,6 @@
     setSoundEnabled: (on) => { window.NotchHostSound = !!on; const c = window.NotchRaceGame.current; if (c) c.setSoundEnabled(on); },
     resume: () => { const c = window.NotchRaceGame.current; if (c) c.resume(); },
     current: null,
-    _test: { parseRequest, generateTrack, traceImage, simplifyPts, pitInfo, relS, fence, checkTrack, encodeTrack, decodeTrack, customDef, GROUNDS, TRACKS, F1_CAL, matchF1, CARS, buildTrack, locate, trackHeight, trackSlope, roadCurv, gridSlot, newCar, stepCar, driveAI, newRacer, progress, ranking, collide, wallHit, hurt, gearbox, NET, fmt, LEVELS },
+    _test: { parseRequest, generateTrack, traceImage, simplifyPts, pitInfo, relS, fence, checkTrack, encodeTrack, decodeTrack, customDef, GROUNDS, TRACKS, F1_CAL, matchF1, CARS, buildTrack, locate, trackHeight, trackSlope, roadCurv, roadBank, F1_BANK, gridSlot, newCar, stepCar, driveAI, newRacer, progress, ranking, collide, wallHit, hurt, gearbox, NET, fmt, LEVELS },
   };
 })();
