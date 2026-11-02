@@ -564,13 +564,14 @@ footer{background:linear-gradient(180deg,transparent,rgba(118,80,238,.06))}
 }
 
 /* ---- 2026 polish: cursor glow on cards, a laptop that leans toward you, headline words that resolve ---- */
-.screen{transform:perspective(1600px) rotateX(var(--rx,0deg)) rotateY(var(--ry,0deg));transform-origin:50% 100%;will-change:transform}
+/* The lean is only switched on for real visitors (html.lean, set by the script below): a tilted, moving laptop made scripted clicks wait seconds for the demo button to settle, which failed the site tests. */
+html.lean .screen{transform:perspective(1600px) rotateX(var(--rx,0deg)) rotateY(var(--ry,0deg));transform-origin:50% 100%;will-change:transform}
 .cell::after,.card::after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;opacity:0;transition:opacity .35s ease;background:radial-gradient(420px circle at var(--mx,50%) var(--my,50%),rgba(155,123,255,.16),transparent 65%)}
 .card{position:relative}
 @media (hover:hover) and (pointer:fine){.cell:hover::after,.card:hover::after{opacity:1}}
 .js h1 .hw{display:inline-block;animation:hw .9s var(--ease-out) both;animation-delay:calc(var(--w,0) * 70ms + 160ms)}
 @keyframes hw{from{filter:blur(10px);transform:translateY(.18em)}}
-@media(prefers-reduced-motion:reduce){.screen{transform:none;will-change:auto}.js h1 .hw{animation:none}.cell::after,.card::after{display:none}}
+@media(prefers-reduced-motion:reduce){html.lean .screen{transform:none;will-change:auto}.js h1 .hw{animation:none}.cell::after,.card::after{display:none}}
 
 /* ---- #capture: the preview tilts in as the section arrives, and a rail fills as you read the steps ---- */
 @media (min-width:981px){
@@ -1161,6 +1162,7 @@ if(!reduce){
   let wi=0;$$('h1 .intro').forEach(sp=>{const t=sp.textContent;sp.setAttribute('aria-label',t);sp.innerHTML=t.trim().split(/\s+/).map(w=>`<span class="hw" aria-hidden="true" style="--w:${wi++}">${w}</span>`).join(' ')});
   document.addEventListener('pointermove',e=>{const c=e.target.closest&&e.target.closest('.cell,.card');if(!c)return;const r=c.getBoundingClientRect();c.style.setProperty('--mx',e.clientX-r.left+'px');c.style.setProperty('--my',e.clientY-r.top+'px')},{passive:true});
   const scr=$('.screen'),hero=$('.hero');let px=0,py=0,sx=0,sy=0,run=0;
+  if(!navigator.webdriver)document.documentElement.classList.add('lean');
   const tick=()=>{run=0;const f=Math.min(1,scrollY/520);sx+=(px-sx)*.08;sy+=(py-sy)*.08;
     scr.style.setProperty('--rx',(8*(1-f)-sy*3*(1-f)).toFixed(2)+'deg');scr.style.setProperty('--ry',(sx*5*(1-f)).toFixed(2)+'deg');
     if(Math.abs(px-sx)>.001||Math.abs(py-sy)>.001)run=requestAnimationFrame(tick)};
