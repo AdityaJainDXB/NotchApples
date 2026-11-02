@@ -539,6 +539,8 @@ test('qualifying: the grid is Q3, then the Q2 casualties, then the Q1 casualties
   assert.deepEqual(grid.slice(10, 15), R.qualiOrder(q2.out).map((r) => r.id), 'P11-P15: the Q2 knocked out');
   assert.deepEqual(grid.slice(15), R.qualiOrder(q1.out).map((r) => r.id), 'P16-P20: the Q1 knocked out');
   assert.ok(Math.max(...q2.through.map((r) => r.best)) < Math.min(...q2.out.map((r) => r.best)), 'the Q2 cut was made by time');
+});
+
 test('Monaco: the Fairmont hairpin is a real hairpin (a turn of 150 degrees or more in 70 m of road) and the tunnel is a covered stretch of the lap', () => {
   const T = R.buildTrack(R.F1_CAL.find((t) => t.id === 'f1mc')), win = Math.round(70 / T.step);
   let best = 0;
