@@ -39,6 +39,13 @@ final class NotchPanel: NSPanel {
     override var canBecomeKey: Bool { true }
     override var canBecomeMain: Bool { false }
 
+    /// A key nobody in the notch wants (a game's key the page did not claim, a stray letter) would otherwise ring the system alert
+    /// beep (the "bonk"). The notch is not a document, so it stays quiet.
+    override func noResponder(for eventSelector: Selector) {
+        if eventSelector == #selector(NSResponder.keyDown(with:)) { return }
+        super.noResponder(for: eventSelector)
+    }
+
     /// The notch must sit flush at the very top of the screen. By default macOS nudges a window that overlaps the
     /// menu bar down below it; returning the frame unchanged keeps the notch exactly where the controller put it.
     override func constrainFrameRect(_ frameRect: NSRect, to screen: NSScreen?) -> NSRect { frameRect }
