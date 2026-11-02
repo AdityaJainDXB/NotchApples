@@ -539,4 +539,25 @@ test('qualifying: the grid is Q3, then the Q2 casualties, then the Q1 casualties
   assert.deepEqual(grid.slice(10, 15), R.qualiOrder(q2.out).map((r) => r.id), 'P11-P15: the Q2 knocked out');
   assert.deepEqual(grid.slice(15), R.qualiOrder(q1.out).map((r) => r.id), 'P16-P20: the Q1 knocked out');
   assert.ok(Math.max(...q2.through.map((r) => r.best)) < Math.min(...q2.out.map((r) => r.best)), 'the Q2 cut was made by time');
+test('Monaco: the Fairmont hairpin is a real hairpin (a turn of 150 degrees or more in 70 m of road) and the tunnel is a covered stretch of the lap', () => {
+  const T = R.buildTrack(R.F1_CAL.find((t) => t.id === 'f1mc')), win = Math.round(70 / T.step);
+  let best = 0;
+  for (let i = 0; i < T.m; i++) { let turn = 0; for (let j = 0; j < win; j++) { const a = T.S[(i + j) % T.m], b = T.S[(i + j + 1) % T.m]; turn += Math.abs(Math.atan2(a.tx * b.ty - a.ty * b.tx, a.tx * b.tx + a.ty * b.ty)); } best = Math.max(best, turn); }
+  assert.ok(best > 2.6, `the tightest 70 m of Monaco turns ${(best * 180 / Math.PI).toFixed(0)} degrees`);
+  const LM = R.buildLandmarks(T), len = (LM.tunnel.i1 - LM.tunnel.i0) * T.step;
+  assert.ok(LM.tunnel && len > 250 && len < 450, `the tunnel is ${len} m`);
+  assert.ok(Math.abs(T.length - 3337) / 3337 < 0.1, 'it keeps its real length');
+});
+
+test('landmarks: only real circuits have them, every one stands on the lap, and the Yas Marina hotel straddles a straight', () => {
+  for (const id of Object.keys(R.F1_LM)) assert.ok(R.F1_CAL.some((d) => d.id === id), `${id} is a calendar circuit`);
+  for (const id of Object.keys(R.F1_LM)) {
+    const T = R.buildTrack(R.F1_CAL.find((d) => d.id === id)), LM = R.buildLandmarks(T);
+    assert.ok(LM.ranges.length + LM.at.size > 0, `${id} has landmarks`);
+    for (const i of LM.at.keys()) assert.ok(i >= 0 && i < T.m, `${id} landmark at ${i}`);
+    for (const r of LM.ranges) assert.ok(r.i0 >= 0 && r.i1 < T.m && r.i0 !== r.i1, `${id} ${r.k} range`);
+  }
+  const T = R.buildTrack(R.F1_CAL.find((d) => d.id === 'f1ae')), LM = R.buildLandmarks(T), br = [...LM.at.values()].flat().find((it) => it.k === 'bridge');
+  assert.ok(br, 'the hotel bridge'); for (let j = -8; j <= 8; j++) assert.ok(Math.abs(T.S[(br.i + j + T.m) % T.m].k) < 0.003, 'it stands over a straight');
+  assert.ok(LM.twi > 0 && !R.buildLandmarks(R.buildTrack(R.F1_CAL.find((d) => d.id === 'f1au'))).twi, 'only Yas Marina is a twilight race');
 });
