@@ -15,7 +15,7 @@ extension GamesView.Game {
     /// Games that get the shared Full screen button.
     var hasFullScreenButton: Bool {
         switch self {
-        case .plane, .racing, .ctf, .solitaire: false
+        case .plane, .racing, .ctf, .chess, .solitaire: false
         default: true
         }
     }

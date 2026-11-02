@@ -205,6 +205,9 @@
     { id: 'b52', cat: 'mil', name: 'B-52 Stratofortress', kind: 'Heavy bomber', blurb: 'A huge swept high wing, four engines and a bomb bay for forty bombs, with gunners who shoot back at fighters. Slow to turn: line up every run early.',
       stall: 62, cruise: 165, max: 245, thrust: 7.2, authority: 0.75, pitch: 0.8, roll: 0.45, yaw: 0.18, stability: 2.5, gear: 2.4, scale: 1, cam: 3.0,
       span: 15, wingY: 0.7, wingZ: 0.8, nose: -14, tail: 14.5, gLimit: 3.5, wingX: 1.7, tailZ: 5.6, tailX: 5.5 },
+    { id: 'b2', cat: 'mil', name: 'B-2 Spirit', kind: 'Stealth bomber', blurb: 'A black flying wing with no tail at all: four buried engines and a bomb bay for sixteen precision bombs. Smooth and slippery, but slow to turn: plan every run early.',
+      stall: 60, cruise: 175, max: 255, thrust: 7.2, authority: 0.78, pitch: 0.9, roll: 0.62, yaw: 0.15, stability: 2.2, gear: 1.8, scale: 1, cam: 3.1,
+      span: 14.2, wingY: 0.0, wingZ: 3.6, nose: -5.8, tail: 6.0, gLimit: 4, wingX: 2.4, tailZ: 4.4, tailX: 2.4 },
     // Helicopters: the rotor does the lifting (`rotor`), so the wing numbers are only for show. `rotorLift` is the
     // disc's thrust in g at full collective (1.25 is enough to climb out of ground effect), `rotorR` the blade
     // length used for ground effect, and thrust stays 0: the engine only drives the rotor. Lift comes from the
@@ -250,6 +253,7 @@
     f22: { retract: true, gearTime: 3, tailPitch: 14, engine: 'jet', engines: 2, n1Idle: 30, ab: true, dial: 'FIGHTER', flapNotches: [0, 0.5, 1], flapLabels: ['UP', 'T/O', 'LAND'], fuel: 1500, vr: 1.2, vfe: 1.9, vno: 1.3, gpws: 'betty' },
     a10: { retract: true, gearTime: 3, tailPitch: 12, engine: 'jet', engines: 2, n1Idle: 28, dial: 'FIGHTER', flapNotches: [0, 0.5, 1], flapLabels: ['UP', 'T/O', 'LAND'], fuel: 1800, vr: 1.2, vfe: 1.9, vno: 1.3, gpws: 'betty' },
     b52: { retract: true, gearTime: 6, tailPitch: 8, engine: 'jet', engines: 4, n1Idle: 26, dial: 'AIRLINER', flapNotches: [0, 0.3, 0.6, 1], flapLabels: ['UP', '1', '2', 'FULL'], fuel: 2200, vr: 1.2, vfe: 1.5, vno: 1.3, gpws: 'betty' },
+    b2: { retract: true, gearTime: 5, tailPitch: 7, engine: 'jet', engines: 4, n1Idle: 26, dial: 'AIRLINER', flapNotches: [0, 0.3, 0.6, 1], flapLabels: ['UP', '1', '2', 'FULL'], fuel: 2300, vr: 1.2, vfe: 1.5, vno: 1.3, gpws: 'betty' },
     su27: { retract: true, gearTime: 3, tailPitch: 14, engine: 'jet', engines: 2, n1Idle: 30, ab: true, dial: 'FIGHTER', flapNotches: [0, 0.5, 1], flapLabels: ['UP', 'T/O', 'LAND'], fuel: 1600, vr: 1.2, vfe: 1.9, vno: 1.3, gpws: 'betty' },
     // Helicopters: `turboshaft` drives the rotor (its own gauge, spool and sound), and the throttle is the
     // collective. No flaps (the flap field is only cosmetic here); the tail rotor is the yaw control.
@@ -1207,9 +1211,52 @@
     return { body: b, dyn: W.dyn, gears: W.gears, lights: W.lights, fans: [], flame: { at: nz[0] === 0 ? [0, nz[1], nz[2] + 0.25] : nz, mesh: flame, diamonds: dia } };
   }
 
+  /// The B-2: a flying wing. One swept planform whose leading edge comes to a point at the nose and whose trailing edge is the
+  /// famous double-W, thick in the middle (where the crew and the bomb bays are) and thin at the tips; no fuselage, no fin, no
+  /// tail planes. Elevons fill the outer trailing edge (they pitch and roll it), split drag rudders open on top of the tips,
+  /// the engines are buried in the wing (a dark inlet on top, a slot above the trailing edge) and there is a tricycle gear.
+  function b2Build(P) {
+    const b = new Builder(), W = { b, dyn: [], gears: [], lights: [], fans: [], engs: [], spec: P }, C = hex, semi = P.span, tan = (d) => Math.tan(d * DEG);
+    const top = C('#3a3d43'), bot = C('#2c2f34'), dark = [0.05, 0.05, 0.06], seam = C('#1f2125'), glass = [0.04, 0.06, 0.09];
+    const le = (s) => -5.8 + s * tan(33);
+    // The trailing edge steps: a beaver-tail in the middle, a notch, then it runs back and out to the tip. { s, te, th }
+    const planform = [{ s: 0, te: 6.0, th: 0.078 }, { s: 1.9, te: 5.7, th: 0.07 }, { s: 3.0, te: 3.1, th: 0.06 }, { s: 8.4, te: 4.5, th: 0.05 }, { s: semi, te: 3.95, th: 0.04 }];
+    const secs = planform.map(({ s, te, th }) => ({ s, le: le(s), c: te - le(s), th }));
+    const wings = {};
+    for (const side of [-1, 1]) {
+      const cs = [{ kind: 'flaperon', s0: 3.2, s1: 8.2, c0: 0.78, side }, { kind: 'aileron', s0: 8.6, s1: semi - 0.5, c0: 0.68, side }];
+      const sp = [{ s0: semi - 3.6, s1: semi - 1.2, u0: 0.62, u1: 0.84, side }];
+      wings[side] = wingBuild(W, wingFrame(side, 0, 0), secs, { col: top, colB: bot, cs, sp, camber: 0.004 });
+    }
+    // Crew windows, the engine inlets and exhausts, the weapons-bay doors: dark patches laid on the skin.
+    const skin = (side, s, u, up = 1, off = 0.012) => wings[side].pt(s, u, up, off);
+    for (const side of [-1, 1]) {
+      b.quad(skin(side, 0.35, 0.03), skin(side, 0.35, 0.075), skin(side, 0.95, 0.09), skin(side, 0.95, 0.04), glass, [0, -0.3, -4.4]);        // cockpit
+      b.quad(skin(side, 2.05, 0.2), skin(side, 2.05, 0.255), skin(side, 3.1, 0.24), skin(side, 3.1, 0.19), dark, [0, -0.3, -2.4]);               // inlet
+      b.quad(skin(side, 2.3, 0.84), skin(side, 2.3, 0.88), skin(side, 3.0, 0.8), skin(side, 3.0, 0.76), dark, [0, -0.3, 4.0]);                    // exhaust
+      for (const sgn of [1, -1]) {                                                                                                               // weapons-bay seams
+        b.quad(skin(side, 0.5, 0.43, sgn, 0.006), skin(side, 0.58, 0.43, sgn, 0.006), skin(side, 0.58, 0.62, sgn, 0.006), skin(side, 0.5, 0.62, sgn, 0.006), seam, [0, 0, 0.5]);
+        b.quad(skin(side, 1.45, 0.43, sgn, 0.006), skin(side, 1.53, 0.43, sgn, 0.006), skin(side, 1.53, 0.62, sgn, 0.006), skin(side, 1.45, 0.62, sgn, 0.006), seam, [0, 0, 0.5]);
+      }
+    }
+    // ---- undercarriage: two main legs under the thick part of the wing, a nose leg under the cockpit
+    const wr = 0.3, ww = 0.17;
+    for (const side of [-1, 1]) mainLeg(W, side * 2.7, wings[side].pt(2.7, 0.55, -1)[1] + 0.05, 0.4, P.gear, wr, ww, [-0.3, 0.3], 2, true, 0.07);
+    noseLeg(W, 0, wings[1].pt(0.001, 0.24, -1)[1] + 0.05, -3.9, P.gear, wr * 0.8, ww * 0.8, 2, true, 0.055);
+    // ---- lights
+    for (const side of [-1, 1]) {
+      addLight(W, side < 0 ? 'navR' : 'navG', add(wings[side].pt(semi, 0.5, 1), [side * 0.03, 0.03, 0]), 0.05);
+      addLight(W, 'strobe', add(wings[side].pt(semi * 0.55, 0.9, 1), [0, 0.05, 0]), 0.05);
+    }
+    addLight(W, 'navW', [0, 0.1, 5.9], 0.045); addLight(W, 'beacon', [0, wings[1].pt(0.5, 0.5, 1)[1] + 0.05, 0.2], 0.05);
+    addLight(W, 'land', [0, -0.6, -3.9], 0.06); addLight(W, 'taxi', [0, -0.55, -3.6], 0.045);
+    return { body: b, dyn: W.dyn, gears: W.gears, lights: W.lights, fans: W.fans, engs: W.engs };
+  }
+
   /// Builds one aircraft's meshes: { body, dyn (control surfaces), gears, lights, fans, prop, disc, propAt, flame }.
   function buildPlane(id) {
     const P = PLANES.find((p) => p.id === id);
+    if (id === 'b2') return b2Build(P);
     if (LINERS[id]) return linerBuild(P, LINERS[id]);
     if (GA[id]) return gaBuild(P, GA[id]);
     if (id === 'a10') {
@@ -1551,6 +1598,7 @@
   }
   /// Satellite imagery for real terrain: Sentinel-2 cloudless (2016) by EOX, from tiles.maps.eox.at (CC BY 4.0, contains
   /// modified Copernicus Sentinel data 2016). The tiles round the place are pasted into one picture laid over the ground.
+  let IMG_ON = false;          // the satellite imagery switch (off by default): real terrain shape without the photo on it
   let REAL_IMG = null;        // { canvas, x0, z0, w, h, v, px (the pixels) }
   /// Is there forest at (x, z) on the satellite picture (a dark, green pixel)? Without a picture there are no trees.
   function realForest(x, z) {
@@ -1581,7 +1629,7 @@
   /// Fetches the elevation tiles round (lat, lon) and turns real terrain on (or off with null). Resolves when ready.
   async function loadReal(lat, lon) {
     if (lat == null) { REAL = null; REAL_IMG = null; return null; }
-    const imgJob = loadImagery(lat, lon).catch(() => { REAL_IMG = null; });
+    const imgJob = IMG_ON ? loadImagery(lat, lon).catch(() => { REAL_IMG = null; }) : (REAL_IMG = null, Promise.resolve());
     const n = 2 ** REAL_Z, fx = ((lon + 180) / 360) * n, la = lat * Math.PI / 180, fy = ((1 - Math.log(Math.tan(la) + 1 / Math.cos(la)) / Math.PI) / 2) * n;
     const tx0 = Math.floor(fx) - Math.floor(REAL_TILES / 2) + (fx % 1 > 0.5 ? 1 : 0), ty0 = Math.floor(fy) - Math.floor(REAL_TILES / 2) + (fy % 1 > 0.5 ? 1 : 0);
     const N = REAL_TILES * 256, H = new Float32Array(N * N);
@@ -2992,7 +3040,7 @@
     rock: { roll: 0.14, grip: 0.6, skid: 0.7, soft: 1.2 },
   };
   /// Arcade handling rates (radians/s turn, m/s climb, minimum speed) for Easy and Automatic.
-  const ARCADE_RATES = { f16: { turn: 0.87, climb: 30, dive: 95, vmin: 70 }, a10: { turn: 0.52, climb: 20, dive: 70, vmin: 60 }, f15: { turn: 0.7, climb: 42, dive: 105, vmin: 95 }, su27: { turn: 0.5, climb: 24, dive: 85, vmin: 70 }, b52: { turn: 0.31, climb: 12, dive: 30, vmin: 70 } };
+  const ARCADE_RATES = { f16: { turn: 0.87, climb: 30, dive: 95, vmin: 70 }, a10: { turn: 0.52, climb: 20, dive: 70, vmin: 60 }, f15: { turn: 0.7, climb: 42, dive: 105, vmin: 95 }, su27: { turn: 0.5, climb: 24, dive: 85, vmin: 70 }, b52: { turn: 0.31, climb: 12, dive: 30, vmin: 70 }, b2: { turn: 0.34, climb: 14, dive: 34, vmin: 68 } };
   const AP_SIGN = { roll: 1, pitch: 1 };   // which way the stick moves the aircraft (checked in the autopilot tests)
   const gauss = () => (Math.random() + Math.random() + Math.random() - 1.5) * 2;
   // ---- weather settings (Fly menu, saved): a runway-relative wind (crosswind and head/tail wind, in knots) and a turbulence level
@@ -4735,6 +4783,7 @@
     }
     // Real terrain (an option): the actual ground of the place you picked, loaded from the elevation tiles.
     let realOn = read('realterrain', false), placeAt = read('realat', null);
+    IMG_ON = read('imagery', false);
     /// Moves the game to a place: its landmark, and its real hills and coast when real terrain is on.
     let realBusy = false, realAfter = null;
     async function applyPlace(reg, at) {
@@ -5973,6 +6022,7 @@
       { id: 'f15', name: 'Interceptor', icon: '🚀', blurb: 'The fastest jet, with 12 missiles and a light gun but no bombs. Thin armour: kill fighters first, never trade hits.' },
       { id: 'su27', name: 'Heavy Striker', icon: '🦅', blurb: 'A big twin-engine jet that carries 16 bombs, 8 missiles and a strong gun, and takes a beating. Turns slowly.' },
       { id: 'b52', name: 'Bomber', icon: '💣', blurb: 'Carries 40 bombs and has gunners who shoot at fighters.' },
+      { id: 'b2', name: 'Stealth Bomber', icon: '🦇', blurb: 'The B-2 Spirit: a flying wing with 24 precision bombs and 8 flares, no guns and no gunners. Slow to turn, so line up each run early.' },
       { id: 'soldier', name: 'Soldier', icon: '🎖️', blurb: 'On foot with a scoped rifle (right-click or Z for 4x and 10x), grenades and a helmet. Enemy riflemen march at you.' },
       { id: 'heli', name: 'Helicopter', icon: '🚁', blurb: 'An Apache gunship. Fly in, land and press E to get out with a rifle and an RPG, and E again beside it to climb back in. Flies like a helicopter: no arcade help.' },
       { id: 'tank', name: 'Tank', icon: '🪖', blurb: 'Drive on the ground with a turret and a big gun.' },
@@ -6005,9 +6055,10 @@
     const footScoped = () => !!(mode.id === 'war' && war && war.foot && screen === 'fly' && war.zoomI > 0);
     /// How far a place is from the middle of the current front (the battle travels, so "the edge" is measured from here).
     const warDist = (x, z) => Math.hypot(x - war.cx, z - war.cz);
-    const warStartAlt = () => (plane.id === 'b52' ? 1100 : plane.rotor ? 140 : 450);
+    const warStartAlt = () => (plane.id === 'b52' || plane.id === 'b2' ? 1100 : plane.rotor ? 140 : 450);
     function warLoadout(p) {
       if (p.id === 'b52') return { gun: 0, bombs: 40, missiles: 0, flares: 12, hp: 170, stick: 0.11, gunners: true };
+      if (p.id === 'b2') return { gun: 0, bombs: 24, missiles: 0, flares: 8, hp: 150, stick: 0.12 };
       if (p.id === 'f15') return { gun: 260, bombs: 0, missiles: 12, flares: 24, hp: 75, stick: 0.2 };
       if (p.id === 'su27') return { gun: 650, bombs: 16, missiles: 8, flares: 16, hp: 135, stick: 0.2 };
       if (p.id === 'a10') return { gun: 1100, bombs: 8, missiles: 4, flares: 16, hp: 150, stick: 0.2 };
@@ -9283,6 +9334,7 @@
           <div class="pg-hint" style="margin-top:4px"><b>${plane.name}</b> · ${plane.blurb}</div>
           <h2>2 · Where in the world?</h2><div class="pg-row"><select data-region>${REGIONS.map((x) => `<option value="${x.id}" ${x.id === regionId ? 'selected' : ''}>${x.id ? x.name + ' · ' + x.lm : '🏔️ Home valley'}</option>`).join('')}</select>
             ${realOn ? '<button data-a="realreload" title="Load the real ground and the imagery again">↻ Reload terrain</button>' : ''}
+            ${realOn ? `<button data-a="imagery" class="${IMG_ON ? 'pg-on' : ''}" title="Paint the real satellite photo (Sentinel-2) over the real terrain. Needs a download, so it is off until you want it">🗺 Satellite imagery: ${IMG_ON ? 'On' : 'Off'}</button>` : ''}
             <button data-a="realterrain" class="${realOn ? 'pg-on' : ''}" title="Use the real hills, mountains and coast of the place (downloaded elevation tiles)">🛰 Real terrain: ${realOn ? 'On' : 'Off'}</button>
             <button data-a="mine" title="Pick the scenery nearest to where you are">📍 My location</button>
             <input data-place maxlength="40" placeholder="Type a city or country" style="width:150px"><button data-a="goplace">Go</button></div>
@@ -9425,6 +9477,7 @@
         if (a === 'restart' && mode.id === 'war' && war && screen === 'fly') { paused = false; renderUI(); warQuickRespawn(); root.focus(); }
         else if (a === 'start' || a === 'again' || a === 'restart') onStartPress(a);
         else if (a === 'realreload') { REAL = null; REAL_IMG = null; const reg = regionOf(regionId); applyPlace(reg, placeAt || (reg.id ? { lat: reg.lat, lon: reg.lon, name: reg.name } : null)).then(() => renderUI()); }
+        else if (a === 'imagery') { IMG_ON = !IMG_ON; write('imagery', IMG_ON); REAL = null; REAL_IMG = null; const reg = regionOf(regionId); applyPlace(reg, placeAt || (reg.id ? { lat: reg.lat, lon: reg.lon, name: reg.name } : null)).then(() => renderUI()); }
         else if (a === 'realterrain') { realOn = !realOn; write('realterrain', realOn); const reg = regionOf(regionId); applyPlace(reg, placeAt || (reg.id ? { lat: reg.lat, lon: reg.lon, name: reg.name } : null)).then(() => renderUI()); }
         else if (a === 'worldmap') { mapOpen = true; renderUI(); }
         else if (a === 'mapclose') { mapOpen = false; renderUI(); }

@@ -20,6 +20,12 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.1.83", date: "2 November 2026", headline: "Chess, a B-2 bomber and a satellite switch", items: [
+            "Chess (new) in the Games menu: play the computer at four levels (Beginner, Casual, Club, Strong) or a friend online. Online uses a 6-character room code, the same kind the Plane and Racing games use: open a room, share the code, your friend joins. Castling, en passant, promotion, check, checkmate, stalemate and draws are all handled, with a move list, undo against the computer, flip board and resign.",
+            "Plane: the B-2 Spirit stealth bomber is in the hangar, a black flying wing with no tail. In Battle it is a new vehicle (24 precision bombs, 8 flares, no guns).",
+            "Plane: satellite imagery is now its own switch, off by default. Real terrain gives you the real hills and coast; turn on Satellite imagery (only shown with Real terrain) to paint the real photo over them.",
+            "Racing: the Safety Car and the Medical Car now feel hills and banked corners on the formation lap, like every other car (they already did during the race).",
+        ]),
         ReleaseNote(version: "2.1.82", date: "2 November 2026", headline: "Friends: your code in view", items: [
             "Friends: your own friend code is now always in view at the bottom right of the Friends screen, with a Copy button and a QR button, so it is easy to share without opening Settings.",
             "Friends: removed the confusing “Paste a QR image” button under the code box. To add someone, type or paste their code (or their notchapple://friend link); to be added, show your code or QR.",

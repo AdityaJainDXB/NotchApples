@@ -725,6 +725,16 @@
     return { spec, x, y, h, vx: 0, vy: 0, vz: 0, z: 0, yaw: 0, steerA: 0, vf: 0, vl: 0, drifting: false, onGrass: false, bump: 0, gear: 0, rpm: spec.idle || 900, shiftT: 0, dmg: 0, spin: 0, pull: 0, hit: 0 };
   }
 
+  /// One physics step on the real road: the hill (slope), the bend's lateral load (curv), and a banked corner's extra grip and the pull of
+  /// gravity down it. Every car uses this, race cars and the Safety and Medical Cars alike, in a race and on the formation lap.
+  function stepOnRoad(T, c, inp, dt, surf, loc) {
+    const slope = trackSlope(T, c, loc), curv = roadCurv(T, loc), bk = roadBank(T, loc), onBank = bk && Math.abs(loc.lat) < T.width / 2 + 1.2;
+    let bankK = 1;
+    if (onBank) { const sn = Math.abs(Math.sin(Math.atan(bk))), kk = T.S[loc.idx].k * Math.sign(bk); bankK = kk >= 0 ? 1 + 1.4 * sn : 1 - 0.8 * sn; }
+    stepCar(c, inp, dt, surf, slope, curv, bankK);
+    if (onBank) { const q = T.S[loc.idx], gB = 9.8 * bk / Math.sqrt(1 + bk * bk) * dt; c.vx += q.nx * gB; c.vy += q.ny * gB; }
+  }
+
   /// One physics step. `inp` is { throttle 0..1, brake 0..1, steer -1..1 (+ is right), hand 0/1 }. `surf` is 1 on the road, less on grass.
   function stepCar(c, inp, dt, surf = 1, slope = 0, curv = 0, bankK = 1) {
     const sp0 = c.spec, dmgK = 1 - 0.4 * c.dmg;        // a damaged car is slower, and its steering pulls to one side
@@ -2046,7 +2056,7 @@
             if (field.every((x) => x.gridded)) st.cap = 0;
             inp = driveAI(T, c, st, dt);
           }
-          stepCar(c, inp, dt, 1); const fLoc = locate(T, c.x, c.y, r.idx); c.z = trackHeight(T, fLoc); wallHit(c, T, fLoc); officialProgress(r);
+          stepOnRoad(T, c, inp, dt, 1, locate(T, c.x, c.y, r.idx)); const fLoc = locate(T, c.x, c.y, r.idx); c.z = trackHeight(T, fLoc); wallHit(c, T, fLoc); officialProgress(r);
           continue;
         }
         if (r.dsq) { c.vx = c.vy = 0; continue; }
@@ -2067,7 +2077,7 @@
           if (r.formGo && toBox < 140 && toBox > -4) cap = Math.min(cap, Math.sqrt(Math.max(0, 2 * 4 * (toBox + 0.3))));      // brake to a stop in the box
           st.cap = cap; inp = driveAI(T, c, st, dt);
         } else inp = playerInput();
-        stepCar(c, inp, dt, 1);
+        stepOnRoad(T, c, inp, dt, 1, loc);
         const after = locate(T, c.x, c.y, loc.idx); c.z = trackHeight(T, after); wallHit(c, T, after);
         progress(r, T, 0);
         // Stopped in (or next to) the box: lined up exactly on its marks.

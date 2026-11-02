@@ -1,0 +1,16 @@
+<!doctype html>
+<!-- Chess in the Mac app's Games tab: ChessGameView loads this page in a web view. The game itself is chess.js with its rules in
+     chess-logic.js, the same files the Windows app uses (NotchWindows/src/js/games/, copied in as resources). -->
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>html, body { margin: 0; height: 100%; overflow: hidden; background: transparent; } #game { position: absolute; inset: 0; }</style>
+</head>
+<body>
+  <div id="game"></div>
+  <script src="chess-logic.js"></script>
+  <script src="chess.js"></script>
+  <script>window.NotchChessGame.mount(document.getElementById('game'));</script>
+</body>
+</html>

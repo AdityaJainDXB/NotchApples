@@ -76,10 +76,10 @@ Pick your computer. Both buttons start the download straight away. The Mac link 
   </tr>
   <tr>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.1.82</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.1.83</b></a>
     </td>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 2.1.82 BETA</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 2.1.83 BETA</b></a>
     </td>
   </tr>
   <tr>
@@ -150,6 +150,14 @@ More screenshots of the capture overlay, the AI answer, the settings and the Win
 
 ## What's new
 
+### Mac 2.1.83 · Windows 2.1.83 BETA · 2 November 2026 · ♞ Chess, a B-2 bomber and a satellite switch
+
+- Chess (new) in the Games menu: play the computer at four levels (Beginner, Casual, Club, Strong) or a friend online. Online uses a 6-character room code, the same kind the Plane and Racing games use: open a room, share the code, your friend joins. Castling, en passant, promotion, check, checkmate, stalemate and draws are all handled, with a move list, undo against the computer, flip board and resign.
+- Plane: the B-2 Spirit stealth bomber is in the hangar, a black flying wing with no tail. In Battle it is a new vehicle (24 precision bombs, 8 flares, no guns).
+- Plane: satellite imagery is now its own switch, off by default. Real terrain gives you the real hills and coast; turn on Satellite imagery (only shown with Real terrain) to paint the real photo over them.
+- Racing: the Safety Car and the Medical Car now feel hills and banked corners on the formation lap, like every other car (they already did during the race).
+- Chess, the B-2 Spirit, the satellite imagery switch and the Safety and Medical Car fix are the same as on the Mac: the games are shared. Untested on real Windows hardware.
+
 ### Mac 2.1.82 · Windows 2.1.82 BETA · 2 November 2026 · 👥 Friends: your code in view, and Windows
 
 - Friends: your own friend code is now always in view at the bottom right of the Friends screen, with a Copy button and a QR button, so it is easy to share without opening Settings.
@@ -163,13 +171,6 @@ More screenshots of the capture overlay, the AI answer, the settings and the Win
 - Remote control (new, experimental, Ultimate): tap the hand in the iPhone app and the Mac replays your taps, drags, two-finger scrolling and keys. It needs three things on the Mac: Allow remote control (off by default), May control for that iPhone, and Accessibility. A red hand shows beside the notch and a notification appears while it is in use; Stop in Settings → iPhone or Control-Option-Shift-K ends it at once, and it ends if the Mac sleeps or locks.
 - The iPhone app has a key bar (⌘ shortcuts, arrows, Esc, Tab, typing) and now shows what the notch is showing, alerts such as a low battery, and, only if you switch each on in Settings → iPhone, the Mac's clipboard, newest notes and open to-dos.
 - Not included: an iPhone Live Activity (it needs a separate widget extension and a paid Apple Developer account for updates when the app is closed). Update the iPhone app too (NotchAppleCompanion.ipa); phones paired before keep working.
-
-### Mac 2.1.80 · 2 November 2026 · 📱 Watch your Mac from your iPhone
-
-- Remote view (new, experimental, Ultimate): the paired iPhone can watch this Mac's screen live. Open the iPhone app and tap Watch this Mac's screen; pinch to zoom, drag to move, pick a display. It is off until you turn on Allow viewing this Mac's screen in Settings → iPhone, needs Screen Recording, shows an eye beside the notch while someone is watching, and has a Stop button. View only: no control yet.
-- Away from your Wi-Fi: install Tailscale on the Mac and the iPhone, then in the iPhone app choose Connect over Tailscale or by address. Settings → iPhone shows the Mac's Tailscale address and port (47813, changeable). The Mac only accepts connections from your own Wi-Fi or Tailscale, never the public internet, and the pairing code and sealed requests are unchanged.
-- The iPhone app says clearly when Tailscale is off, the Mac is asleep or the key is wrong. Update the iPhone app too (NotchAppleCompanion.ipa in this release); phones paired before keep working.
-- Friends: the message when the server isn't ready is clearer and wraps instead of being cut off.
 
 Every earlier release is in the [changelog](CHANGELOG.md).
 
