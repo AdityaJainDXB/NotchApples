@@ -27,8 +27,8 @@ final class ScreenRecordingDetector {
 
     func start() {
         guard timer == nil else { return }
-        // Scanning the process list is the costly part, so every 4 s (8 s in Low Power Mode).
-        timer = Power.timer(4) { [weak self] in self?.poll() }
+        // Scanning the process list is the costly part, so every 6 s (12 s in Low Power Mode).
+        timer = Power.timer(6) { [weak self] in self?.poll() }
         poll()
     }
 

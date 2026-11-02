@@ -33,8 +33,9 @@ final class MeetingMode: ObservableObject {
             active = onCall
             since = onCall ? .now : nil
         }
+        let changed = onCall != (event != nil)
         event = onCall ? currentEvent() : nil
-        LiveActivityCenter.shared.recompute()
+        if changed || onCall { LiveActivityCenter.shared.recompute() }      // a quiet poll changes nothing, so it wakes nothing
     }
 
     /// The calendar event happening right now (if the calendar is allowed), for "12m left".

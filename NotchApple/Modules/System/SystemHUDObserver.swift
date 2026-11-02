@@ -175,7 +175,7 @@ final class SystemHUDObserver {
         brightnessTimer?.invalidate()
         brightnessTimer = nil
         guard !Power.isIdle, SettingsManager.shared.showSystemHUD else { return }
-        let base: TimeInterval = MediaKeyInterceptor.shared.isRunning ? 1.0 : 0.25
+        let base: TimeInterval = MediaKeyInterceptor.shared.isRunning ? 2.0 : 0.5
         brightnessTimer = Power.timer(base) { [weak self] in self?.pollBrightness() }
     }
 

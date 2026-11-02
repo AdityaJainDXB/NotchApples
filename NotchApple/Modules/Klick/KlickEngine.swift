@@ -133,6 +133,7 @@ final class KlickEngine: ObservableObject {
         }
         needsAccessibility = !Self.hasKeyAccess
         startAudio()
+        scheduleIdleStop()
     }
 
     private func stop() {
@@ -179,6 +180,22 @@ final class KlickEngine: ObservableObject {
         player.scheduleBuffer(buffer, at: nil, options: .interrupts)
         if !player.isPlaying { player.play() }
         if kind != "up" { lastKey = .now }
+        scheduleIdleStop()
+    }
+
+    /// The audio engine keeps the sound hardware awake, so it is switched off 15 s after the last click and started again by the next one.
+    private var idleStop: DispatchWorkItem?
+    private func scheduleIdleStop() {
+        idleStop?.cancel()
+        let work = DispatchWorkItem { [weak self] in
+            MainActor.assumeIsolated {
+                guard let self, self.engine.isRunning, Date.now.timeIntervalSince(self.lastKey) >= 14 else { return }
+                self.players.forEach { $0.stop() }
+                self.engine.stop()
+            }
+        }
+        idleStop = work
+        DispatchQueue.main.asyncAfter(deadline: .now() + 15, execute: work)
     }
 
     /// The sound of a few keys, to hear a pack before you choose it.

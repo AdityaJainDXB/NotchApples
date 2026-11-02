@@ -37,6 +37,6 @@ function run(argv) {
       last = o.art ? JSON.stringify(Object.assign({}, o, { art: undefined })) : line;
       out.writeData($(line + '\n').dataUsingEncoding($.NSUTF8StringEncoding));
     }
-    delay(interval);
+    delay(o.playing ? interval : interval * 3);      // nothing playing: look a third as often
   }
 }

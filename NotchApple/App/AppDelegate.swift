@@ -179,6 +179,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         guard SettingsManager.shared.messengerEnabled else { return }
         MessengerNotifier.shared.requestAuthorizationIfNeeded()
         LocalP2PManager.shared.start()
+        // Nearby discovery keeps the Wi-Fi radio busy: pause it while the screen is asleep or the session is switched out.
+        Power.onChange.append { if Power.isIdle { LocalP2PManager.shared.stop() } else { LocalP2PManager.shared.start() } }
         if let room = UserDefaults.standard.string(forKey: "messenger.activeRoom") {
             WebP2PManager.shared.join(room)
         }

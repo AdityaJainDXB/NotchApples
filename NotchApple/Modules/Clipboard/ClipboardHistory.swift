@@ -91,7 +91,7 @@ final class ClipboardHistory: ObservableObject {
         load()
         lastChangeCount = NSPasteboard.general.changeCount
         // Reading changeCount is cheap; tolerance lets macOS batch the wake-ups.
-        timer = Power.timer(0.6) { [weak self] in self?.poll() }
+        timer = Power.timer(1.0) { [weak self] in self?.poll() }
     }
 
     func stop() {
