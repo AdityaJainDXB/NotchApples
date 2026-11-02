@@ -4,6 +4,16 @@ Every Notch Apple release, newest first. The latest few are also on the [README]
 
 > **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is in the repository's history.
 
+### Mac 2.1.84 · 2 November 2026 · 🏁 Park in your own grid box
+
+- Racing: no start lights on the formation lap any more; the five lights now appear only once every car is on the grid.
+- Racing: you park in your grid box however you like. Stop anywhere inside your box, at any angle, and you stay exactly where you stopped (no more snapping or teleporting onto the marks). If you overshoot, reverse back into it.
+
+### Windows 2.1.84 BETA · 2 November 2026 · 🪄 Do It says what it is waiting for
+
+- Do It now tells you which AI and model it is asking, and counts the seconds ("Thinking · 12 s") while it waits. If the AI hasn't answered after 90 seconds the run stops and says which one was slow. For Do It, pick Gemini (its key is free) in Settings → AI.
+- The file converter no longer starts PowerShell with the execution-policy bypass, which some antivirus programs dislike.
+
 ### Mac 2.1.83 · Windows 2.1.83 BETA · 2 November 2026 · ♞ Chess, a B-2 bomber and a satellite switch
 
 - Chess (new) in the Games menu: play the computer at four levels (Beginner, Casual, Club, Strong) or a friend online. Online uses a 6-character room code, the same kind the Plane and Racing games use: open a room, share the code, your friend joins. Castling, en passant, promotion, check, checkmate, stalemate and draws are all handled, with a move list, undo against the computer, flip board and resign.

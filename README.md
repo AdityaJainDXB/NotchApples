@@ -76,7 +76,7 @@ Pick your computer. Both buttons start the download straight away. The Mac link 
   </tr>
   <tr>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.1.83</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.1.84</b></a>
     </td>
     <td align="center">
       <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 2.1.84 BETA</b></a>
@@ -150,6 +150,11 @@ More screenshots of the capture overlay, the AI answer, the settings and the Win
 
 ## What's new
 
+### Mac 2.1.84 · 2 November 2026 · 🏁 Park in your own grid box
+
+- Racing: no start lights on the formation lap any more; the five lights now appear only once every car is on the grid.
+- Racing: you park in your grid box however you like. Stop anywhere inside your box, at any angle, and you stay exactly where you stopped (no more snapping or teleporting onto the marks). If you overshoot, reverse back into it.
+
 ### Windows 2.1.84 BETA · 2 November 2026 · 🪄 Do It says what it is waiting for
 
 - Do It on Windows now tells you which AI and model it is asking, and counts the seconds ("Thinking · 12 s") while it waits. If the AI hasn't answered after 90 seconds the run stops and says which one was slow. For Do It, pick Gemini (its key is free) in Settings → AI.
@@ -162,20 +167,6 @@ More screenshots of the capture overlay, the AI answer, the settings and the Win
 - Plane: satellite imagery is now its own switch, off by default. Real terrain gives you the real hills and coast; turn on Satellite imagery (only shown with Real terrain) to paint the real photo over them.
 - Racing: the Safety Car and the Medical Car now feel hills and banked corners on the formation lap, like every other car (they already did during the race).
 - Chess, the B-2 Spirit, the satellite imagery switch and the Safety and Medical Car fix are the same as on the Mac: the games are shared. Untested on real Windows hardware.
-
-### Mac 2.1.82 · Windows 2.1.82 BETA · 2 November 2026 · 👥 Friends: your code in view, and Windows
-
-- Friends: your own friend code is now always in view at the bottom right of the Friends screen, with a Copy button and a QR button, so it is easy to share without opening Settings.
-- Friends: removed the confusing “Paste a QR image” button under the code box. To add someone, type or paste their code (or their notchapple://friend link); to be added, show your code or QR.
-- Friends now works for everyone: the relay has been updated, so friend codes, requests and chat connect.
-- Friends (BETA, new): private end-to-end encrypted chat by friend code in Messenger, compatible with the Mac app: add by code, accept or block requests, sent / delivered / read, typing, safety number, nicknames, Delete all my chat data. Your code is always shown at the bottom right with Copy and QR. Untested on real Windows hardware; Pro, like Rooms.
-- Windows stores the friend keys and history in files in the app data folder (not in Windows Credential Manager), so treat the PC's user profile as the protection.
-
-### Mac 2.1.81 · 2 November 2026 · 🖱️ Control your Mac from your iPhone
-
-- Remote control (new, experimental, Ultimate): tap the hand in the iPhone app and the Mac replays your taps, drags, two-finger scrolling and keys. It needs three things on the Mac: Allow remote control (off by default), May control for that iPhone, and Accessibility. A red hand shows beside the notch and a notification appears while it is in use; Stop in Settings → iPhone or Control-Option-Shift-K ends it at once, and it ends if the Mac sleeps or locks.
-- The iPhone app has a key bar (⌘ shortcuts, arrows, Esc, Tab, typing) and now shows what the notch is showing, alerts such as a low battery, and, only if you switch each on in Settings → iPhone, the Mac's clipboard, newest notes and open to-dos.
-- Not included: an iPhone Live Activity (it needs a separate widget extension and a paid Apple Developer account for updates when the app is closed). Update the iPhone app too (NotchAppleCompanion.ipa); phones paired before keep working.
 
 Every earlier release is in the [changelog](CHANGELOG.md).
 

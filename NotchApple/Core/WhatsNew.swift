@@ -20,6 +20,10 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.1.84", date: "2 November 2026", headline: "Park in your own grid box", items: [
+            "Racing: no start lights on the formation lap any more; the five lights now appear only once every car is on the grid.",
+            "Racing: you park in your grid box however you like. Stop anywhere inside your box, at any angle, and you stay exactly where you stopped (no more snapping or teleporting onto the marks). If you overshoot, reverse back into it.",
+        ]),
         ReleaseNote(version: "2.1.83", date: "2 November 2026", headline: "Chess, a B-2 bomber and a satellite switch", items: [
             "Chess (new) in the Games menu: play the computer at four levels (Beginner, Casual, Club, Strong) or a friend online. Online uses a 6-character room code, the same kind the Plane and Racing games use: open a room, share the code, your friend joins. Castling, en passant, promotion, check, checkmate, stalemate and draws are all handled, with a move list, undo against the computer, flip board and resign.",
             "Plane: the B-2 Spirit stealth bomber is in the hangar, a black flying wing with no tail. In Battle it is a new vehicle (24 precision bombs, 8 flares, no guns).",
