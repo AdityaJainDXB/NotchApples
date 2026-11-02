@@ -76,10 +76,10 @@ Pick your computer. Both buttons start the download straight away. The Mac link 
   </tr>
   <tr>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.1.87</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.1.88</b></a>
     </td>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 2.1.86 BETA</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 2.1.88 BETA</b></a>
     </td>
   </tr>
   <tr>
@@ -150,6 +150,10 @@ More screenshots of the capture overlay, the AI answer, the settings and the Win
 
 ## What's new
 
+### Mac 2.1.88 · Windows 2.1.88 BETA · 2 November 2026 · ♣️ Poker on Windows
+
+- Poker is now in the Windows Games tab: play-money Texas Hold’em against the computer (blinds 10 and 20, check or call, raise 20, or fold), with a chip stack that is remembered. It uses the same hand ranking and computer opponent as the Mac app. Untested on real Windows hardware.
+
 ### Mac 2.1.87 · 2 November 2026 · 🔇 No more error beep
 
 - No more system “bonk” beep in the notch when you press a key nothing uses: in the games (E, Q, G and the other keys a game does not claim) and anywhere else in the notch with no text box focused.
@@ -162,13 +166,6 @@ More screenshots of the capture overlay, the AI answer, the settings and the Win
 - Racing: real circuits look real. Monaco has a proper tight hairpin, the Fairmont Hotel, a covered tunnel with lit walls and a flash of sun at the exit, and the harbour with yachts. Yas Marina has the big billboards, grandstands, the hotel over the road, the marina and a sunset-to-night sky. Skylines and landmarks for Singapore, Las Vegas, Miami, Suzuka, Spa, Austin and Monza too.
 - Lighter on the battery: brightness, clipboard and screen-recording checks run less often, the Now Playing helper backs off when nothing is playing, the keyboard-click audio engine sleeps when you stop typing, and nearby Wi-Fi discovery now runs only while the Messenger tab is open (messages from people on your Wi-Fi no longer notify you while the notch is closed).
 - Same racing changes as the Mac. The battery changes are Mac-only. Untested on real Windows hardware.
-
-### Mac 2.1.85 · Windows 2.1.85 BETA · 2 November 2026 · 🌡️ Tyre and brake temperatures
-
-- Racing: tyre and brake temperatures are on the car panel (bottom left), one pair per wheel. Tyres warm up with speed, cornering, braking and sliding and cool in the air; the discs heat when you brake and cool on the straights. The best grip is between about 80 and 110 °C: cold or overheated tyres grip a little less, and a disc over 800 °C fades. New tyres from a pit stop start pre-warmed.
-- Racing: under a yellow flag, the Virtual Safety Car or the Safety Car you now get 8 seconds to slow down before any overtaking or speeding penalty can apply.
-- Racing: no start lights on the formation lap, and you park in your grid box however you like (these were Mac-only in 2.1.84; Windows now has them too).
-- Same racing changes as the Mac. Untested on real Windows hardware.
 
 Every earlier release is in the [changelog](CHANGELOG.md).
 

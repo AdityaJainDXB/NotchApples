@@ -1,6 +1,6 @@
 // Blackjack and Solitaire for the Games tab. The rules live in games/cardslogic.js.
 import { el, load, save } from '../store.js';
-import { makeDeck, shuffle, bjValue, bjOutcome, isBlackjack, dealerShouldHit, solDeal, canPlaceTableau, canPlaceFoundation, solWon } from '../games/cardslogic.js';
+import { makeDeck, shuffle, bjValue, bjOutcome, isBlackjack, dealerShouldHit, solDeal, canPlaceTableau, canPlaceFoundation, solWon, pokerRank, pokerCompare, pokerStrength, POKER_HANDS } from '../games/cardslogic.js';
 import { cardEl, fanEl } from '../games/cardui.js';
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -108,4 +108,66 @@ export function solitaire(host) {
   }
   newGame();
   return () => {};
+}
+
+/// Heads-up Texas Hold'em for play money against the computer: blinds 10 and 20, check or call, raise 20, or fold. Same table as the Mac app.
+export function poker(host) {
+  let bank = load('games.poker.bank', 500), cpuBank = 500, deck = [], you = [], cpu = [], board = [], pot = 0, toCall = 0, street = 'done', msg = 'Deal a hand of Texas Hold’em.', reveal = false, alive = true;
+  if (!(bank >= 1)) { bank = 500; save('games.poker.bank', bank); }
+  const SHOWN = { preflop: 0, flop: 3, turn: 4, river: 5, done: 5 }, NAME = { preflop: 'Pre-flop', flop: 'Flop', turn: 'Turn', river: 'River', done: 'Hand over' };
+  const root = el('div', { class: 'col', style: 'align-items:center;gap:6px;min-width:420px' });
+  host.replaceChildren(root);
+  const row = (cards, up, w = 46) => (cards.length ? fanEl(cards, { width: w, hideFrom: up ? -1 : 0 }) : el('div', { style: `height:${w * 1.4 + 26}px;opacity:.4` }, '—'));
+  function paint() {
+    if (!alive) return;
+    const shown = board.slice(0, SHOWN[street]);
+    root.replaceChildren(
+      el('div', { class: 'hstack small', style: 'gap:18px;justify-content:space-between;width:100%;max-width:380px' }, el('b', {}, `You · ${bank}`), el('b', { style: 'color:var(--accent,#a78bfa)' }, `Pot ${pot}`), el('b', {}, `CPU · ${cpuBank}`)),
+      el('div', { class: 'tiny dim' }, `Other player · ${reveal ? 'showdown' : 'cards hidden'}`),
+      row(cpu, reveal),
+      el('div', { class: 'tiny dim' }, `${NAME[street]} · Community cards`),
+      shown.length ? fanEl(shown, { width: 46 }) : el('div', { style: 'height:90px;opacity:.4' }, '—'),
+      row(you, true),
+      el('div', { class: 'tiny dim' }, 'Your cards'),
+      el('div', { style: 'min-height:34px;font-weight:700;text-align:center;max-width:380px' }, msg),
+      street === 'done'
+        ? el('button', { class: 'btn small primary', onclick: deal }, 'Deal')
+        : el('div', { class: 'hstack', style: 'gap:6px' },
+            el('button', { class: 'btn small primary', disabled: bank < toCall, onclick: checkOrCall }, toCall === 0 ? 'Check' : `Call ${toCall}`),
+            el('button', { class: 'btn small', disabled: bank <= toCall, onclick: raise }, 'Raise 20'),
+            el('button', { class: 'btn small quiet', onclick: fold }, 'Fold')));
+  }
+  const draw = () => deck.pop();
+  const keep = () => save('games.poker.bank', bank);
+  function deal() {
+    if (bank < 1) bank = 500; if (cpuBank < 20) cpuBank = 500;
+    deck = shuffle(makeDeck()); you = [draw(), draw()]; cpu = [draw(), draw()]; board = [draw(), draw(), draw(), draw(), draw()];
+    bank -= 20; cpuBank -= 10; pot = 30; toCall = 10; street = 'preflop'; reveal = false; msg = 'Blinds are in. Call 10, raise, or fold.'; keep(); paint();
+  }
+  const advance = () => { street = { preflop: 'flop', flop: 'turn', turn: 'river' }[street] || (showdown(), 'done'); };
+  function checkOrCall() {
+    const paid = Math.min(toCall, bank); bank -= paid; pot += paid; toCall = 0;
+    if (street === 'river') showdown(); else { advance(); msg = `${NAME[street]}: check or raise.`; }
+    keep(); paint();
+  }
+  function raise() {
+    const paid = Math.min(bank, toCall + 20);
+    if (paid <= toCall) return checkOrCall();
+    bank -= paid; pot += paid;
+    const cost = Math.min(cpuBank, paid);
+    if (pokerStrength(cpu, board.slice(0, SHOWN[street])) < 0.28 && cost >= 20 && Math.random() * 100 < 62) { bank += pot; pot = 0; street = 'done'; reveal = false; msg = 'The other player folds. You take the pot.'; }
+    else { cpuBank -= cost; pot += cost; if (cost < paid || street === 'river') showdown(); else { advance(); msg = `Called. ${NAME[street]}: check, raise, or fold.`; } }
+    keep(); paint();
+  }
+  function fold() { cpuBank += pot; pot = 0; street = 'done'; reveal = false; msg = 'You fold. Deal another hand when you’re ready.'; keep(); paint(); }
+  function showdown() {
+    reveal = true; street = 'done';
+    const p = pokerRank([...you, ...board]), c = pokerRank([...cpu, ...board]), cmp = pokerCompare(p, c);
+    if (cmp > 0) { bank += pot; msg = `You win the ${pot}-chip pot with ${POKER_HANDS[p.category].toLowerCase()}.`; }
+    else if (cmp < 0) { cpuBank += pot; msg = `The other player wins the ${pot}-chip pot with ${POKER_HANDS[c.category].toLowerCase()}.`; }
+    else { const half = Math.floor(pot / 2); bank += half; cpuBank += pot - half; msg = `Split pot: ${pot} chips.`; }
+    pot = 0;
+  }
+  paint();
+  return () => { alive = false; };
 }

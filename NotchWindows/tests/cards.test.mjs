@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { loadModule } from './load.mjs';
-const { makeDeck, shuffle, bjValue, bjOutcome, isBlackjack, dealerShouldHit, solDeal, canPlaceTableau, canPlaceFoundation, solWon } = await loadModule('games/cardslogic.js');
+const { makeDeck, shuffle, bjValue, bjOutcome, isBlackjack, dealerShouldHit, solDeal, canPlaceTableau, canPlaceFoundation, solWon, pokerRank, pokerCompare, pokerStrength } = await loadModule('games/cardslogic.js');
 
 const h = (...r) => r.map((rank) => ({ rank, suit: 'spades' }));
 test('deck has 52 distinct cards and a shuffle keeps them', () => {
@@ -37,4 +37,26 @@ test('solitaire deal and rules', () => {
   assert.equal(canPlaceFoundation({ rank: '2', suit: 'clubs' }, [{ rank: 'A', suit: 'clubs' }]), true);
   assert.equal(canPlaceFoundation({ rank: '2', suit: 'hearts' }, [{ rank: 'A', suit: 'clubs' }]), false);
   assert.equal(solWon({ found: [new Array(13), new Array(13), new Array(13), new Array(13)] }), true);
+});
+
+const pc = (...x) => x.map(([rank, suit]) => ({ rank, suit }));
+test('poker hand ranks, the wheel and kickers (the same vectors as the Mac tests)', () => {
+  const royal = pokerRank(pc(['A', 'spades'], ['K', 'spades'], ['Q', 'spades'], ['J', 'spades'], ['10', 'spades'], ['2', 'clubs'], ['3', 'hearts']));
+  const quads = pokerRank(pc(['9', 'spades'], ['9', 'hearts'], ['9', 'clubs'], ['9', 'diamonds'], ['A', 'spades'], ['2', 'clubs'], ['3', 'hearts']));
+  const wheel = pokerRank(pc(['A', 'spades'], ['2', 'hearts'], ['3', 'clubs'], ['4', 'diamonds'], ['5', 'spades'], ['9', 'clubs'], ['K', 'hearts']));
+  assert.equal(royal.category, 8); assert.equal(quads.category, 7); assert.deepEqual(wheel, { category: 4, kickers: [5] });
+  assert.ok(pokerCompare(royal, quads) > 0);
+  const pairA = pokerRank(pc(['A', 'spades'], ['A', 'hearts'], ['K', 'clubs'], ['7', 'diamonds'], ['4', 'spades']));
+  const pairAlow = pokerRank(pc(['A', 'clubs'], ['A', 'diamonds'], ['Q', 'clubs'], ['7', 'hearts'], ['4', 'clubs']));
+  assert.ok(pokerCompare(pairA, pairAlow) > 0, 'the king kicker beats the queen');
+  assert.equal(pokerCompare(pairA, pairA), 0);
+  assert.equal(pokerRank(pc(['A', 'spades'], ['K', 'spades'])), null);
+  const full = pokerRank(pc(['K', 'spades'], ['K', 'hearts'], ['K', 'clubs'], ['2', 'diamonds'], ['2', 'spades']));
+  assert.deepEqual(full, { category: 6, kickers: [13, 2] });
+  const twoPair = pokerRank(pc(['Q', 'spades'], ['Q', 'hearts'], ['5', 'clubs'], ['5', 'diamonds'], ['9', 'spades']));
+  assert.deepEqual(twoPair, { category: 2, kickers: [12, 5, 9] });
+});
+test('the computer values pairs and high cards', () => {
+  assert.ok(pokerStrength(pc(['A', 'spades'], ['A', 'hearts']), []) > pokerStrength(pc(['7', 'spades'], ['2', 'hearts']), []));
+  assert.ok(pokerStrength(pc(['9', 'spades'], ['2', 'hearts']), pc(['9', 'clubs'], ['4', 'hearts'], ['K', 'spades'])) > pokerStrength(pc(['9', 'spades'], ['2', 'hearts']), []));
 });

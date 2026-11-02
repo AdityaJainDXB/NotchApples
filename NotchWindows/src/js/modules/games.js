@@ -5,7 +5,7 @@
 import { el, load, save } from '../store.js';
 import { segmented } from '../ui.js';
 import { cookie, runner, breakout, memory } from './games-extra.js';
-import { blackjack, solitaire } from './games-cards.js';
+import { blackjack, solitaire, poker } from './games-cards.js';
 import * as AI from '../services/ai.js';
 
 export function render(root) {
@@ -29,8 +29,8 @@ export function render(root) {
   const onFull = () => { const on = document.fullscreenElement === board; board.style.cssText = on ? 'display:flex;justify-content:center;align-items:flex-start;background:#0d0b14;overflow:auto;padding-top:2vh' : ''; fit(); setTimeout(fit, 80); };
   document.addEventListener('fullscreenchange', onFull);
   const fullBtn = el('button', { class: 'btn small', title: 'Make this game fill the screen (Esc leaves)', onclick: () => { if (document.fullscreenElement === board) document.exitFullscreen?.(); else board.requestFullscreen?.().catch?.(() => {}); } }, '⛶ Full screen');
-  const pick = (g) => { stop(); game = g; save('games.last', g); fullBtn.style.display = (g === 'plane' || g === 'racing' || g === 'ctf' || g === 'chess') ? 'none' : ''; stop = ({ 2048: g2048, snake, reaction, cookie, runner, breakout, memory, plane, racing, ctf, chess, blackjack, solitaire })[g](board) || (() => {}); requestAnimationFrame(fit); setTimeout(fit, 120); };
-  root.append(el('div', { class: 'col fill' }, segmented([{ value: '2048', label: '2048' }, { value: 'snake', label: 'Snake' }, { value: 'reaction', label: 'Reaction' }, { value: 'cookie', label: 'Cookie Clicker' }, { value: 'runner', label: 'Runner' }, { value: 'breakout', label: 'Breakout' }, { value: 'memory', label: 'Memory' }, { value: 'plane', label: '✈️ Plane' }, { value: 'racing', label: '🏎️ Racing' }, { value: 'ctf', label: '🚩 Capture the Flag' }, { value: 'chess', label: '♞ Chess' }, { value: 'blackjack', label: '🃏 Blackjack' }, { value: 'solitaire', label: '♠️ Solitaire' }], game, pick), el('div', { style: 'display:flex;justify-content:flex-end' }, fullBtn), board));
+  const pick = (g) => { stop(); game = g; save('games.last', g); fullBtn.style.display = (g === 'plane' || g === 'racing' || g === 'ctf' || g === 'chess') ? 'none' : ''; stop = ({ 2048: g2048, snake, reaction, cookie, runner, breakout, memory, plane, racing, ctf, chess, blackjack, solitaire, poker })[g](board) || (() => {}); requestAnimationFrame(fit); setTimeout(fit, 120); };
+  root.append(el('div', { class: 'col fill' }, segmented([{ value: '2048', label: '2048' }, { value: 'snake', label: 'Snake' }, { value: 'reaction', label: 'Reaction' }, { value: 'cookie', label: 'Cookie Clicker' }, { value: 'runner', label: 'Runner' }, { value: 'breakout', label: 'Breakout' }, { value: 'memory', label: 'Memory' }, { value: 'plane', label: '✈️ Plane' }, { value: 'racing', label: '🏎️ Racing' }, { value: 'ctf', label: '🚩 Capture the Flag' }, { value: 'chess', label: '♞ Chess' }, { value: 'blackjack', label: '🃏 Blackjack' }, { value: 'solitaire', label: '♠️ Solitaire' }, { value: 'poker', label: '♣️ Poker' }], game, pick), el('div', { style: 'display:flex;justify-content:flex-end' }, fullBtn), board));
   pick(game);
   return () => { ro.disconnect(); stop(); document.removeEventListener('fullscreenchange', onFull); if (document.fullscreenElement === board) document.exitFullscreen?.(); };
 }

@@ -20,6 +20,9 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.1.88", date: "2 November 2026", headline: "Poker on Windows", items: [
+            "Nothing new on the Mac in this version: it matches 2.1.87. (Poker has been on the Mac for a while; this release brings it to Windows.)",
+        ]),
         ReleaseNote(version: "2.1.87", date: "2 November 2026", headline: "No more error beep", items: [
             "No more system “bonk” beep in the notch when you press a key nothing uses: in the games (E, Q, G and the other keys a game does not claim) and anywhere else in the notch with no text box focused.",
         ]),
