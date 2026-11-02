@@ -168,6 +168,8 @@
     }
     function shut() { panel.hidden = true; fab.setAttribute('aria-expanded', 'false'); fab.classList.remove('nc-hide'); var back = lastFocus && lastFocus !== document.body && document.contains(lastFocus) ? lastFocus : fab; back.focus(); }   // (Safari does not focus a button when it is clicked, so fall back to the button)
     fab.addEventListener('click', open);
+    // The app's "Ask a question" link opens the site with ?ask=1: start with the helper open.
+    if (/[?&]ask=1(&|$)/.test(location.search)) open();
     close.addEventListener('click', shut);
     // Escape closes it from anywhere while it is open (not only from inside the panel).
     document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !panel.hidden) { e.stopPropagation(); shut(); } }, true);

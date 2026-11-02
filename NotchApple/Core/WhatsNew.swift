@@ -20,6 +20,10 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.1.78", date: "2 November 2026", headline: "Ask a question from the app", items: [
+            "Ask a question: Settings → About on the Mac, and the Windows settings, have a new \"Ask a question\" link that opens the website with the Ask box already open.",
+            "The website's Ask box now answers questions about Notch Apple that its built-in answers did not cover, using Google Gemini (with Groq as a backup when Gemini is busy), from the Notch Apple docs. It knows far more modules than before. Nothing is sent until a question needs the AI, and the box says so.",
+        ]),
         ReleaseNote(version: "2.1.77", date: "1 November 2026", headline: "Banking and hills you can feel", items: [
             "Racing, banking: the banked corners are now banked. La Monumental at the Madring is a steep 24 degree wall, the Hugenholtzbocht (T3) and the last corner (T14) at Zandvoort are about 20 degrees, and T9 at Yas Marina about 10. The outside edge and the barriers rise, the car rolls into the bank and the camera leans with it. A banked corner holds the car far better: it can take La Monumental about a third faster than a flat corner, and the computer drivers do too.",
             "Racing, hills you can feel: the camera now pitches up on a climb and over a crest, and the eye dips in a compression. A crest makes the car light (less grip, weaker brakes) and a dip presses it down (more grip). The computer drivers slow down for corners on a crest. A small readout above the dash shows the climb or drop and the banking.",

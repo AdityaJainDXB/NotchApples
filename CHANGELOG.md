@@ -4,6 +4,11 @@ Every Notch Apple release, newest first. The latest few are also on the [README]
 
 > **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is in the repository's history.
 
+### Mac 2.1.78 · Windows 2.1.78 BETA · 2 November 2026 · 💬 Ask a question from the app
+
+- Ask a question: Settings → About on the Mac, and the Windows settings, have a new "Ask a question" link that opens the website with the Ask box already open.
+- The website's Ask box now answers questions about Notch Apple that its built-in answers did not cover, using Google Gemini (with Groq as a backup when Gemini is busy), from the Notch Apple docs. It knows far more modules than before. Nothing is sent until a question needs the AI, and the box says so.
+
 ### Mac 2.1.77 · Windows 2.1.77 BETA · 1 November 2026 · 🏎️ Banking and hills you can feel
 
 - Racing, banking: the banked corners are now banked. La Monumental at the Madring is a steep 24 degree wall, the Hugenholtzbocht (T3) and the last corner (T14) at Zandvoort are about 20 degrees, and T9 at Yas Marina about 10. The outside edge and the barriers rise, the car rolls into the bank and the camera leans with it. A banked corner holds the car far better: it can take La Monumental about a third faster than a flat corner, and the computer drivers do too.

@@ -56,6 +56,11 @@ test('a question the FAQ cannot answer goes to the AI, and only that question', 
   expect(Object.keys(sent[0]).sort()).toEqual(['history', 'q']);
 });
 
+test('?ask=1 opens the helper straight away (the app links here)', async ({ page }) => {
+  await open(page, '/index.html?ask=1');
+  await expect(page.getByRole('dialog', { name: 'Ask about Notch Apple' })).toBeVisible();
+});
+
 test('HTML in a question or in the data is never turned into markup', async ({ page }) => {
   await open(page, '/index.html');
   await page.getByRole('button', { name: 'Ask a question about Notch Apple' }).click();

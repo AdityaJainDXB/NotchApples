@@ -76,10 +76,10 @@ Pick your computer. Both buttons start the download straight away. The Mac link 
   </tr>
   <tr>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.1.77</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.1.78</b></a>
     </td>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 2.1.77 BETA</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 2.1.78 BETA</b></a>
     </td>
   </tr>
   <tr>
@@ -150,6 +150,11 @@ More screenshots of the capture overlay, the AI answer, the settings and the Win
 
 ## What's new
 
+### Mac 2.1.78 · Windows 2.1.78 BETA · 2 November 2026 · 💬 Ask a question from the app
+
+- Ask a question: Settings → About on the Mac, and the Windows settings, have a new "Ask a question" link that opens the website with the Ask box already open.
+- The website's Ask box now answers questions about Notch Apple that its built-in answers did not cover, using Google Gemini (with Groq as a backup when Gemini is busy), from the Notch Apple docs. It knows far more modules than before. Nothing is sent until a question needs the AI, and the box says so.
+
 ### Mac 2.1.77 · Windows 2.1.77 BETA · 1 November 2026 · 🏎️ Banking and hills you can feel
 
 - Racing, banking: the banked corners are now banked. La Monumental at the Madring is a steep 24 degree wall, the Hugenholtzbocht (T3) and the last corner (T14) at Zandvoort are about 20 degrees, and T9 at Yas Marina about 10. The outside edge and the barriers rise, the car rolls into the bank and the camera leans with it. A banked corner holds the car far better: it can take La Monumental about a third faster than a flat corner, and the computer drivers do too.
@@ -160,10 +165,6 @@ More screenshots of the capture overlay, the AI answer, the settings and the Win
 
 - Racing, leaving the track: the rule is stricter and easier to see. Come back in front of a car you were behind, or close on one by more than 10 m while off the track (cutting a corner), and a countdown on screen tells you to give the place back within 10 seconds or take 5 seconds. It now also applies under yellow flags.
 - Racing: messages now show below the timing tower instead of over it.
-
-### Mac 2.1.75 · 1 November 2026 · 🧹 The lock screen card is gone
-
-- Removed the experimental "Music on the lock screen" card that came with 2.1.74: it did not show on the lock screen. Everything else is unchanged.
 
 Every earlier release is in the [changelog](CHANGELOG.md).
 
