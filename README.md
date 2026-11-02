@@ -76,10 +76,10 @@ Pick your computer. Both buttons start the download straight away. The Mac link 
   </tr>
   <tr>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.1.85</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.1.86</b></a>
     </td>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 2.1.85 BETA</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 2.1.86 BETA</b></a>
     </td>
   </tr>
   <tr>
@@ -150,6 +150,15 @@ More screenshots of the capture overlay, the AI answer, the settings and the Win
 
 ## What's new
 
+### Mac 2.1.86 · Windows 2.1.86 BETA · 2 November 2026 · 🏁 Qualifying, clean start and real circuits
+
+- Racing: qualifying. Pick Session in the menu: cars leave the pit lane, set an out lap, a push lap and an in lap, and the slowest are knocked out after Q1 and Q2 before the top 10 fight for pole in Q3. There is a timing screen between segments, a live classification and a result screen, then the race starts from the qualifying grid.
+- Racing: Clean start mode (off by default). Every car starts in the pit lane, drives out on a setup lap to its own grid box, then the formation lap, then the lights.
+- Racing: manual gearbox. Press G (or pick Manual in the menu): E shifts up, Q shifts down, with a rev limiter and engine braking. DRS moves to X and serving a penalty to C while manual is on.
+- Racing: real circuits look real. Monaco has a proper tight hairpin, the Fairmont Hotel, a covered tunnel with lit walls and a flash of sun at the exit, and the harbour with yachts. Yas Marina has the big billboards, grandstands, the hotel over the road, the marina and a sunset-to-night sky. Skylines and landmarks for Singapore, Las Vegas, Miami, Suzuka, Spa, Austin and Monza too.
+- Lighter on the battery: brightness, clipboard and screen-recording checks run less often, the Now Playing helper backs off when nothing is playing, the keyboard-click audio engine sleeps when you stop typing, and nearby Wi-Fi discovery now runs only while the Messenger tab is open (messages from people on your Wi-Fi no longer notify you while the notch is closed).
+- Same racing changes as the Mac. The battery changes are Mac-only. Untested on real Windows hardware.
+
 ### Mac 2.1.85 · Windows 2.1.85 BETA · 2 November 2026 · 🌡️ Tyre and brake temperatures
 
 - Racing: tyre and brake temperatures are on the car panel (bottom left), one pair per wheel. Tyres warm up with speed, cornering, braking and sliding and cool in the air; the discs heat when you brake and cool on the straights. The best grip is between about 80 and 110 °C: cold or overheated tyres grip a little less, and a disc over 800 °C fades. New tyres from a pit stop start pre-warmed.
@@ -161,11 +170,6 @@ More screenshots of the capture overlay, the AI answer, the settings and the Win
 
 - Racing: no start lights on the formation lap any more; the five lights now appear only once every car is on the grid.
 - Racing: you park in your grid box however you like. Stop anywhere inside your box, at any angle, and you stay exactly where you stopped (no more snapping or teleporting onto the marks). If you overshoot, reverse back into it.
-
-### Windows 2.1.84 BETA · 2 November 2026 · 🪄 Do It says what it is waiting for
-
-- Do It on Windows now tells you which AI and model it is asking, and counts the seconds ("Thinking · 12 s") while it waits. If the AI hasn't answered after 90 seconds the run stops and says which one was slow. For Do It, pick Gemini (its key is free) in Settings → AI.
-- The file converter no longer starts PowerShell with the execution-policy bypass, which some antivirus programs dislike.
 
 Every earlier release is in the [changelog](CHANGELOG.md).
 

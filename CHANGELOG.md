@@ -4,6 +4,15 @@ Every Notch Apple release, newest first. The latest few are also on the [README]
 
 > **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is in the repository's history.
 
+### Mac 2.1.86 · Windows 2.1.86 BETA · 2 November 2026 · 🏁 Qualifying, clean start and real circuits
+
+- Racing: qualifying. Pick Session in the menu: cars leave the pit lane, set an out lap, a push lap and an in lap, and the slowest are knocked out after Q1 and Q2 before the top 10 fight for pole in Q3. There is a timing screen between segments, a live classification and a result screen, then the race starts from the qualifying grid.
+- Racing: Clean start mode (off by default). Every car starts in the pit lane, drives out on a setup lap to its own grid box, then the formation lap, then the lights.
+- Racing: manual gearbox. Press G (or pick Manual in the menu): E shifts up, Q shifts down, with a rev limiter and engine braking. DRS moves to X and serving a penalty to C while manual is on.
+- Racing: real circuits look real. Monaco has a proper tight hairpin, the Fairmont Hotel, a covered tunnel with lit walls and a flash of sun at the exit, and the harbour with yachts. Yas Marina has the big billboards, grandstands, the hotel over the road, the marina and a sunset-to-night sky. Skylines and landmarks for Singapore, Las Vegas, Miami, Suzuka, Spa, Austin and Monza too.
+- Lighter on the battery: brightness, clipboard and screen-recording checks run less often, the Now Playing helper backs off when nothing is playing, the keyboard-click audio engine sleeps when you stop typing, and nearby Wi-Fi discovery now runs only while the Messenger tab is open (messages from people on your Wi-Fi no longer notify you while the notch is closed).
+- Same racing changes as the Mac. The battery changes are Mac-only. Untested on real Windows hardware.
+
 ### Mac 2.1.85 · Windows 2.1.85 BETA · 2 November 2026 · 🌡️ Tyre and brake temperatures
 
 - Racing: tyre and brake temperatures are on the car panel (bottom left), one pair per wheel. Tyres warm up with speed, cornering, braking and sliding and cool in the air; the discs heat when you brake and cool on the straights. The best grip is between about 80 and 110 °C: cold or overheated tyres grip a little less, and a disc over 800 °C fades. New tyres from a pit stop start pre-warmed.
