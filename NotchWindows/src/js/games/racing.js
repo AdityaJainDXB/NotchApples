@@ -1275,6 +1275,10 @@
     let camRollA = 0;                 // how far the camera leans with a banked road (radians, smoothed)
     let tunAmt = 0, tunFlash = 0, tunWas = false;      // the tunnel at Monaco: how far inside you are (0 to 1, eased), the sunlight flash on the way out
     const skyCache = new Map();         // each circuit's skyline strips, painted once
+    const WHEEL = { steeringSpeed: 10, returnSpeed: 7 };          // how fast the wheel turns toward the keys, and how fast it centres itself when they are let go (per second)
+    const WHEEL_LOCK_DEG = { default: 180, gt3: 270 };            // full lock each way, in degrees
+    // The wheel's centre, in the drawing's own coordinates (y up is negative): the F1 wheel body spans -1 to +0.5 R0, a round wheel's rim is centred at -R0.
+    const wheelPivot = (R0) => (me && me.car.spec.id === 'f1' ? -0.25 * R0 : -R0);
     let wheelA = 0, wheelT = 0;       // the wheel in the first-person view: its turn now, and when it was last drawn
     let skids = [], parts = [], camX = 0, camY = 0, shake = 0, doneT = 0, chaseYaw = 0, backToDesign = false, ds = null, lastShift = 0, paddle = 0;
     let net = null;                      // { link, code, host, players: Map, cfg, status }
@@ -3739,19 +3743,26 @@
       if (!f1) for (let i = 0; i < n; i++) { const on = rr > i / n, col = i < 4 ? '#29d36b' : i < 7 ? '#ffcc33' : '#ff3b3b'; g.fillStyle = on ? (rr > 0.95 && (Date.now() / 70 | 0) % 2 ? '#5aa8ff' : col) : 'rgba(255,255,255,.08)'; g.beginPath(); g.arc(W / 2 + (i - (n - 1) / 2) * lw * 1.3, top, lw / 2, 0, 7); g.fill(); }
       // The wheel turns with the front wheels (about a quarter turn either way), a little behind your hands on the keys, as a driver's
       // hands take a moment to turn it and ease it back.
-      const tgt = clamp(c.steerA / sp.steer, -1, 1) * (f1 ? 1.9 : 1.7), nowT = performance.now(), dtW = Math.min(0.1, (nowT - (wheelT || nowT)) / 1000); wheelT = nowT;
-      wheelA += (tgt - wheelA) * (1 - Math.exp(-dtW * (f1 ? 16 : 40)));
-      const ang = f1 ? wheelA : tgt, R0 = (f1 ? 80 : 78) * s, wcy = H * (f1 ? 0.9 : 0.97), kmh = Math.round(Math.hypot(c.vx, c.vy) * KMH);
+      // Raw input (-1 left … +1 right) maps linearly to the wheel angle, full lock being WHEEL_LOCK_DEG either way, and the wheel eases toward
+      // it at steeringSpeed (turning in) or returnSpeed (centring when the keys are let go), frame-rate independent. The wheel is only
+      // ever rotated about its own centre (below), never moved.
+      const raw = (keys.has('right') ? 1 : 0) - (keys.has('left') ? 1 : 0), tgt = raw * (WHEEL_LOCK_DEG[sp.id] || WHEEL_LOCK_DEG.default) * Math.PI / 180;
+      const nowT = performance.now(), dtW = Math.min(0.1, (nowT - (wheelT || nowT)) / 1000); wheelT = nowT;
+      const wSpeed = raw !== 0 && Math.sign(raw) === Math.sign(wheelA || raw) ? WHEEL.steeringSpeed : WHEEL.returnSpeed;
+      wheelA += (tgt - wheelA) * (1 - Math.exp(-dtW * wSpeed));
+      const ang = wheelA, R0 = (f1 ? 80 : 78) * s, wcy = H * (f1 ? 0.9 : 0.97), kmh = Math.round(Math.hypot(c.vx, c.vy) * KMH);
       const sleeve = shade(sp.color || '#aa2222', 0.85);
       if (f1) {
         // The arms, from the shoulders to the hands on the grips (the hands follow the wheel round).
         for (const sx of [-1, 1]) {
-          const hx = sx * R0 * 1.12, hy = -R0 * 0.42, wx = W / 2 + hx * Math.cos(ang) - hy * Math.sin(ang), wy = wcy + hx * Math.sin(ang) + hy * Math.cos(ang);
+          const hx = sx * R0 * 1.12, hy = -R0 * 0.42, dx = hx, dy = hy - wheelPivot(R0), wx = W / 2 + dx * Math.cos(ang) - dy * Math.sin(ang), wy = wcy + wheelPivot(R0) + dx * Math.sin(ang) + dy * Math.cos(ang);
           g.lineCap = 'round'; g.strokeStyle = sleeve; g.lineWidth = 26 * s; g.beginPath(); g.moveTo(W / 2 + sx * W * 0.34, H * 1.08); g.quadraticCurveTo(W / 2 + sx * W * 0.3, H * 0.86, wx + sx * 6 * s, wy + 10 * s); g.stroke();
           g.strokeStyle = shade(sp.color || '#aa2222', 1.1); g.lineWidth = 5 * s; g.beginPath(); g.moveTo(W / 2 + sx * W * 0.325, H * 1.05); g.quadraticCurveTo(W / 2 + sx * W * 0.285, H * 0.88, wx + sx * 8 * s, wy + 12 * s); g.stroke(); g.lineCap = 'butt';
         }
       }
-      g.save(); g.translate(W / 2, wcy); g.rotate(ang);
+      // Rotate about the wheel's own centre (the hub): move the origin there, turn, and move back, so the drawing below is unchanged.
+      const pivY = wheelPivot(R0);
+      g.save(); g.translate(W / 2, wcy + pivY); g.rotate(ang); g.translate(0, -pivY);
       if (f1) {
         // The wheel: a carbon body with the screen in the middle, the shift lights above it, the rotary dials below and a grip each side.
         g.fillStyle = '#121317'; g.beginPath(); g.moveTo(-R0 * 1.3, -R0 * 0.75); g.quadraticCurveTo(-R0 * 1.3, -R0 * 1.0, -R0 * 1.0, -R0 * 1.0); g.lineTo(R0 * 1.0, -R0 * 1.0); g.quadraticCurveTo(R0 * 1.3, -R0 * 1.0, R0 * 1.3, -R0 * 0.75);
