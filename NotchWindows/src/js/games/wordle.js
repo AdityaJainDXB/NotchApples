@@ -56,7 +56,7 @@
     host.innerHTML = '';
     const root = h('div', 'wd'); root.tabIndex = 0; host.append(root);
 
-    let mode = 'daily';                                          // 'daily' | 'practice'
+    let mode = 'daily';                                          // 'daily' | 'practice' | 'nyt'
     let today = L.dateKey(new Date());
     let daily = null, practice = null;                           // { answer, guesses, status: 'play' | 'won' | 'lost' }
     let stats = { ...L.newStats(), ...store.get('stats', {}) };
@@ -72,7 +72,23 @@
     function newPractice() { practice = { answer: L.randomWord(WORDS.answers, null, last), guesses: [], status: 'play' }; last = practice.answer; cur = ''; }
     loadDaily();
 
-    const game = () => (mode === 'daily' ? daily : practice);
+    // The NYT puzzle: today's answer is read from the New York Times' public puzzle feed by the host app (the page cannot do it
+    // itself), once a day. Offline or blocked, it says so and the other modes keep working. Nothing here uses their name or look.
+    let nyt = null, nytBusy = false;
+    const hasNyt = () => typeof window.NotchHostFetch === 'function';
+    async function loadNyt() {
+      const key = L.dateKey(new Date()), saved = store.get('nyt', null);
+      if (saved && saved.key === key) { nyt = saved; render(); return; }
+      if (nytBusy) return;
+      nytBusy = true; nyt = null; say('Fetching today’s puzzle…', '', 0); render();
+      try {
+        const j = JSON.parse(await window.NotchHostFetch(`https://www.nytimes.com/svc/wordle/v2/${key}.json`)), a = String(j.solution || '').toLowerCase();
+        if (!/^[a-z]{5}$/.test(a)) throw new Error('unreadable');
+        nyt = { key, answer: a, no: j.days_since_launch || null, guesses: [], status: 'play' }; store.set('nyt', nyt); say('', '', 0);
+      } catch { mode = 'daily'; say('Couldn’t reach today’s NYT puzzle. Are you online?', 'lose', 4000); }
+      nytBusy = false; cur = ''; render();
+    }
+    const game = () => (mode === 'daily' ? daily : mode === 'nyt' ? (nyt || { key: '', answer: '', guesses: [], status: 'loading' }) : practice);
     function say(text, cls, ms) {
       msg = text; msgClass = cls || ''; clearTimeout(msgTimer);
       if (ms) msgTimer = setTimeout(() => { msg = ''; msgClass = ''; render(); }, ms);
@@ -86,7 +102,7 @@
     }
     async function share() {
       const g = game();
-      const ok = await copy(L.shareText(mode === 'daily' ? g.key : '', g.guesses, g.answer, mode === 'practice'));
+      const ok = await copy(L.shareText(mode === 'daily' ? g.key : mode === 'nyt' ? `NYT puzzle ${g.no || g.key}` : '', g.guesses, g.answer, mode === 'practice'));
       if (!alive) return;
       say(ok ? 'Result copied to the clipboard' : 'Could not copy the result', ok ? '' : 'lose', 2500);
       render();
@@ -96,25 +112,26 @@
       const g = game();
       if (g.status !== 'play') return;
       if (cur.length < L.LEN) { say('Not enough letters', '', 1500); shake = true; render(); return; }
-      if (!VALID.has(cur)) { say('Not in the word list', '', 1500); shake = true; render(); return; }
+      if (mode !== 'nyt' && !VALID.has(cur)) { say('Not in the word list', '', 1500); shake = true; render(); return; }
       g.guesses.push(cur); cur = '';
       const won = g.guesses[g.guesses.length - 1] === g.answer;
       if (won || g.guesses.length >= L.TRIES) {
         g.status = won ? 'won' : 'lost';
         if (mode === 'daily') { stats = L.record(stats, g.key, won, g.guesses.length); store.set('stats', stats); }
         say(won ? PRAISE[g.guesses.length - 1] : g.answer.toUpperCase(), won ? 'win' : 'lose', 0);
-        if (mode === 'daily') saveDaily();
+        if (mode === 'daily') saveDaily(); else if (mode === 'nyt') store.set('nyt', g);
         render();
         share();                                             // copied when the puzzle ends
         return;
       }
-      if (mode === 'daily') saveDaily();
+      if (mode === 'daily') saveDaily(); else if (mode === 'nyt') store.set('nyt', g);
       say('', '', 0); render();
     }
 
     function press(k) {
       if (!alive) return false;
       if (mode === 'daily' && L.dateKey(new Date()) !== today) { loadDaily(); render(); }   // the day turned over while it was open
+      if (mode === 'nyt' && nyt && L.dateKey(new Date()) !== nyt.key) { nyt = null; loadNyt(); return false; }
       const g = game();
       if (k === 'Enter') { submit(); return true; }
       if (g.status !== 'play') return false;
@@ -128,12 +145,17 @@
       const g = game();
       root.replaceChildren();
       const head = h('div', 'wd-head');
-      const title = h('h1', '', 'Daily Word'); title.append(h('small', '', mode === 'daily' ? today : 'Practice'));
+      const title = h('h1', '', 'Daily Word'); title.append(h('small', '', mode === 'daily' ? today : mode === 'nyt' ? 'NYT puzzle' : 'Practice'));
       const streak = h('span', 'wd-streak', `🔥 ${L.currentStreak(stats, today)}`); streak.title = `Streak · best ${stats.best} · won ${stats.won} of ${stats.played}`;
       const bD = h('button', mode === 'daily' ? 'on' : '', 'Daily'), bP = h('button', mode === 'practice' ? 'on' : '', 'Practice');
       bD.onclick = () => { mode = 'daily'; cur = ''; shake = false; say('', ''); render(); root.focus(); };
       bP.onclick = () => { if (mode !== 'practice' || !practice) newPractice(); mode = 'practice'; cur = ''; shake = false; say('', ''); render(); root.focus(); };
       head.append(title, streak, bD, bP);
+      if (hasNyt()) {
+        const bN = h('button', mode === 'nyt' ? 'on' : '', 'NYT puzzle'); bN.title = 'Today’s puzzle from The New York Times (needs the internet). Any five-letter word is accepted.';
+        bN.onclick = () => { mode = 'nyt'; cur = ''; shake = false; say('', ''); render(); root.focus(); loadNyt(); };
+        head.append(bN);
+      }
 
       const m = h('div', 'wd-msg' + (msgClass ? ' ' + msgClass : ''), msg);
 
@@ -162,7 +184,8 @@
         kb.append(kr);
       }
       root.append(head, m, wrap);
-      if (g.status !== 'play') {
+      if (g.status === 'loading') { /* waiting for today's puzzle: the message above says so */ }
+      else if (g.status !== 'play') {
         const end = h('div', 'wd-end'), bShare = h('button', '', 'Copy result'), bMore = h('button', 'on', mode === 'daily' ? 'Practice with another word' : 'Another word');
         bShare.onclick = () => share();
         bMore.onclick = () => { newPractice(); mode = 'practice'; say('', ''); render(); root.focus(); };

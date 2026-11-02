@@ -16,10 +16,12 @@ struct WebScriptGameView: View {
     let global: String
     let title: String
     var usesSound = false
+    /// Lets the page read the day's NYT puzzle (see PuzzleFetcher); no other address can be fetched.
+    var fetchesNYTPuzzle = false
 
     var body: some View {
         if let url = Bundle.main.url(forResource: page, withExtension: "html") {
-            WebScriptGameWebView(url: url, global: global, usesSound: usesSound)
+            WebScriptGameWebView(url: url, global: global, usesSound: usesSound, fetchesNYTPuzzle: fetchesNYTPuzzle)
                 .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
         } else {
             Text("\(title) is missing from this copy of Notch Apple.")
@@ -33,6 +35,7 @@ private struct WebScriptGameWebView: NSViewRepresentable {
     let url: URL
     let global: String
     let usesSound: Bool
+    let fetchesNYTPuzzle: Bool
     @AppStorage(GameSound.key) private var soundOn = true
 
     /// Forwards the keys to the page whenever the web view doesn't have the keyboard itself.
@@ -61,6 +64,11 @@ private struct WebScriptGameWebView: NSViewRepresentable {
     func makeNSView(context: Context) -> CtfWKWebView {
         let config = WKWebViewConfiguration()
         config.userContentController.addUserScript(WKUserScript(source: "window.NotchHostSound=\(GameSound.enabled);", injectionTime: .atDocumentStart, forMainFrameOnly: true))
+        if fetchesNYTPuzzle {
+            // The page cannot read the NYT feed itself (no CORS), so this hands it a function that asks the app, for that one address only.
+            config.userContentController.addScriptMessageHandler(PuzzleFetcher(), contentWorld: .page, name: "hostFetch")
+            config.userContentController.addUserScript(WKUserScript(source: "window.NotchHostFetch=function(u){return window.webkit.messageHandlers.hostFetch.postMessage(u);};", injectionTime: .atDocumentStart, forMainFrameOnly: true))
+        }
         let view = CtfWKWebView(frame: .zero, configuration: config)   // takes the first click: the notch is a non-activating panel
         view.setValue(false, forKey: "drawsBackground")
         view.loadFileURL(url, allowingReadAccessTo: url.deletingLastPathComponent())
@@ -86,5 +94,20 @@ private struct WebScriptGameWebView: NSViewRepresentable {
         let g = coordinator.global
         nsView.evaluateJavaScript("window.\(g) && window.\(g).suspend && window.\(g).suspend()")
         nsView.loadHTMLString("", baseURL: nil)
+    }
+}
+
+/// Answers the Daily Word page's request for the day's NYT puzzle (https://www.nytimes.com/svc/wordle/v2/YYYY-MM-DD.json) and nothing else.
+private final class PuzzleFetcher: NSObject, WKScriptMessageHandlerWithReply {
+    func userContentController(_ controller: WKUserContentController, didReceive message: WKScriptMessage) async -> (Any?, String?) {
+        guard let text = message.body as? String,
+              text.range(of: #"^https://www\.nytimes\.com/svc/wordle/v2/\d{4}-\d{2}-\d{2}\.json$"#, options: .regularExpression) != nil,
+              let url = URL(string: text) else { return (nil, "blocked") }
+        var request = URLRequest(url: url, timeoutInterval: 10)
+        request.httpShouldHandleCookies = false
+        guard let (data, response) = try? await URLSession.shared.data(for: request),
+              (response as? HTTPURLResponse)?.statusCode == 200,
+              let body = String(data: data, encoding: .utf8) else { return (nil, "unavailable") }
+        return (body, nil)
     }
 }

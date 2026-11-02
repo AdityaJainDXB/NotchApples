@@ -11,6 +11,6 @@ import SwiftUI
 
 struct DailyWordGameView: View {
     var body: some View {
-        WebScriptGameView(page: "DailyWordGame", global: "NotchWordleGame", title: "Daily Word")
+        WebScriptGameView(page: "DailyWordGame", global: "NotchWordleGame", title: "Daily Word", fetchesNYTPuzzle: true)
     }
 }

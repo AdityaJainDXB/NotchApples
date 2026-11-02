@@ -7,6 +7,7 @@ import { segmented } from '../ui.js';
 import { cookie, runner, breakout, memory } from './games-extra.js';
 import { blackjack, solitaire, poker } from './games-cards.js';
 import * as AI from '../services/ai.js';
+import { http } from '../native.js';
 
 export function render(root) {
   let game = load('games.last', '2048'), stop = () => {};
@@ -154,6 +155,11 @@ function tetris(host) {
 /// Daily Word: a five-letter word puzzle, one a day, with a streak and a Practice mode (games/wordle.js, rules in wordle-logic.js,
 /// words in wordle-words.js). The same script runs in the Mac app's web view.
 function wordle(host) {
+  // Daily Word may read today's NYT puzzle; the page cannot (no CORS), so the host does it, for that one address only.
+  window.NotchHostFetch = async (url) => {
+    if (!/^https:\/\/www\.nytimes\.com\/svc\/wordle\/v2\/\d{4}-\d{2}-\d{2}\.json$/.test(url)) throw new Error('blocked');
+    const r = await http(url, { timeout: 10000 }); if (!r.ok) throw new Error('http ' + r.status); return r.text;
+  };
   host.style.position = 'relative';
   const box = el('div', { style: 'position:absolute;inset:0' });
   host.replaceChildren(box);
