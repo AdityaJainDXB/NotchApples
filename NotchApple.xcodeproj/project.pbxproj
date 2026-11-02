@@ -431,6 +431,16 @@
 		FE3D6ECF5839F6424299C168 /* PairDropTransport.swift in Sources */ = {isa = PBXBuildFile; fileRef = 60BBAE46119383151A1CEF4F /* PairDropTransport.swift */; };
 		FE43DDD0B6B1D40DDF4D57DB /* PlaneGameView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E93AE854D51B41D40C00311 /* PlaneGameView.swift */; };
 		FE4B2AD2AEC221AE439CCA63 /* EntitlementLogic.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF862F91B226950E4FE3D0F0 /* EntitlementLogic.swift */; };
+		440066559A6656C90BD5482A /* tetris-logic.js in Resources */ = {isa = PBXBuildFile; fileRef = 8B0E7153BF7C3706D85C524E /* tetris-logic.js */; };
+		15637EBB8E3B91D26AB4A829 /* tetris.js in Resources */ = {isa = PBXBuildFile; fileRef = 90A29B9FA5FF5180BC0DBC0E /* tetris.js */; };
+		4D35DB41D94E5EFAF89FC43C /* wordle-words.js in Resources */ = {isa = PBXBuildFile; fileRef = A95249F512C17B8ED411FA64 /* wordle-words.js */; };
+		E9BB8BDB5EBA456BF92D5D98 /* wordle-logic.js in Resources */ = {isa = PBXBuildFile; fileRef = 5FA52F8B2B19B8F89A50F8A8 /* wordle-logic.js */; };
+		67B0BC8D3B1939A9B4DDBE45 /* wordle.js in Resources */ = {isa = PBXBuildFile; fileRef = 065E5751F75143A5F61DEBC2 /* wordle.js */; };
+		F8D0A9F94F03E7914C0F87F1 /* TetrisGame.html in Resources */ = {isa = PBXBuildFile; fileRef = CF642B0C3A4ACDD7F9FCC589 /* TetrisGame.html */; };
+		360DDFCFC69E290D9F945FFA /* DailyWordGame.html in Resources */ = {isa = PBXBuildFile; fileRef = 7F8499FF30499A90EBB4108E /* DailyWordGame.html */; };
+		5D52613C2813C40D2AFFBB14 /* TetrisGameView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D1278220AD2CF1337349E45 /* TetrisGameView.swift */; };
+		CEFA30C14D732F64CB79ABCC /* DailyWordGameView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94978278947BEC540A2123E7 /* DailyWordGameView.swift */; };
+		DAEE36452BCF48385971F1BB /* WebScriptGame.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B9DB165C23115661FFB0DF9 /* WebScriptGame.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -827,6 +837,16 @@
 		FC6F714640D09B5653DF1D9F /* nowplaying.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = nowplaying.js; sourceTree = "<group>"; };
 		FD3462AB4990D112534C8581 /* WallpaperView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WallpaperView.swift; sourceTree = "<group>"; };
 		FF6150902E8344F80FB20C62 /* BambuCloudLogic.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BambuCloudLogic.swift; sourceTree = "<group>"; };
+		8B0E7153BF7C3706D85C524E /* tetris-logic.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = "tetris-logic.js"; sourceTree = "<group>"; };
+		90A29B9FA5FF5180BC0DBC0E /* tetris.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = tetris.js; sourceTree = "<group>"; };
+		A95249F512C17B8ED411FA64 /* wordle-words.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = "wordle-words.js"; sourceTree = "<group>"; };
+		5FA52F8B2B19B8F89A50F8A8 /* wordle-logic.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = "wordle-logic.js"; sourceTree = "<group>"; };
+		065E5751F75143A5F61DEBC2 /* wordle.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = wordle.js; sourceTree = "<group>"; };
+		CF642B0C3A4ACDD7F9FCC589 /* TetrisGame.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = TetrisGame.html; sourceTree = "<group>"; };
+		7F8499FF30499A90EBB4108E /* DailyWordGame.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = DailyWordGame.html; sourceTree = "<group>"; };
+		4D1278220AD2CF1337349E45 /* TetrisGameView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TetrisGameView.swift; sourceTree = "<group>"; };
+		94978278947BEC540A2123E7 /* DailyWordGameView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DailyWordGameView.swift; sourceTree = "<group>"; };
+		4B9DB165C23115661FFB0DF9 /* WebScriptGame.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebScriptGame.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -879,6 +899,11 @@
 				22BC3DD953937929570782CA /* ctf.js */,
 				DC8C118088B36E22640A6C5F /* plane-sim.js */,
 				2D061AD1D52BA8268B11B374 /* racing.js */,
+				8B0E7153BF7C3706D85C524E /* tetris-logic.js */,
+				90A29B9FA5FF5180BC0DBC0E /* tetris.js */,
+				A95249F512C17B8ED411FA64 /* wordle-words.js */,
+				5FA52F8B2B19B8F89A50F8A8 /* wordle-logic.js */,
+				065E5751F75143A5F61DEBC2 /* wordle.js */,
 			);
 			path = games;
 			sourceTree = "<group>";
@@ -1683,6 +1708,8 @@
 				1D75D90CD0ED25880BFFC38F /* BackgroundMusic-LICENSE.txt */,
 				404B8C35377E3958184925BE /* BackgroundMusic.pkg */,
 				5CD7E7A5A6BDA52E46DFD022 /* ChessGame.html */,
+				7F8499FF30499A90EBB4108E /* DailyWordGame.html */,
+				CF642B0C3A4ACDD7F9FCC589 /* TetrisGame.html */,
 				A672525103785D34A18DE037 /* CtfGame.html */,
 				6E8B16EE4068BC4835F8B4C0 /* GoogleService-Info.plist */,
 				97CC70FFD067091FDE1231BB /* Info.plist */,
@@ -1758,6 +1785,9 @@
 				D7A6010DC875A7E233DADA89 /* BreakoutGameView.swift */,
 				BDFCAAEEC42B9E9ABD4338DC /* CardsLogic.swift */,
 				49D5D99FC7CB30C200B06B3A /* ChessGameView.swift */,
+				94978278947BEC540A2123E7 /* DailyWordGameView.swift */,
+				4D1278220AD2CF1337349E45 /* TetrisGameView.swift */,
+				4B9DB165C23115661FFB0DF9 /* WebScriptGame.swift */,
 				702334063347B78DDA56DB8A /* CookieClickerView.swift */,
 				9D4FADAB2335D1E735AA1EF8 /* CtfGameView.swift */,
 				4A2294A11AF6369D10835393 /* GameEngines.swift */,
@@ -1925,6 +1955,8 @@
 				CEB54EB841EFFF09AB43ADFE /* BackgroundMusic-LICENSE.txt in Resources */,
 				0BDD91775E21B5BEDDF33463 /* BackgroundMusic.pkg in Resources */,
 				75E7FF65808969DFE9C8EC56 /* ChessGame.html in Resources */,
+				360DDFCFC69E290D9F945FFA /* DailyWordGame.html in Resources */,
+				F8D0A9F94F03E7914C0F87F1 /* TetrisGame.html in Resources */,
 				1EC2FF6307A13D94AA0D2FFD /* CtfGame.html in Resources */,
 				CFAB476520EEBC0E831DF7DE /* GoogleService-Info.plist in Resources */,
 				6CB3126DF2584324131FE504 /* LICENSE-Tunnelblick.txt in Resources */,
@@ -1939,6 +1971,11 @@
 				AA519CEBD27CD812DD518136 /* Tunnelblick.dmg in Resources */,
 				1CDD70B39C1813273FFFD232 /* chess-logic.js in Resources */,
 				F645FA1F8EA68212CBDD7333 /* chess.js in Resources */,
+				440066559A6656C90BD5482A /* tetris-logic.js in Resources */,
+				15637EBB8E3B91D26AB4A829 /* tetris.js in Resources */,
+				4D35DB41D94E5EFAF89FC43C /* wordle-words.js in Resources */,
+				E9BB8BDB5EBA456BF92D5D98 /* wordle-logic.js in Resources */,
+				67B0BC8D3B1939A9B4DDBE45 /* wordle.js in Resources */,
 				68E148D5C8B7CEA4F02B859A /* ctf-logic.js in Resources */,
 				94134084A487BEB193A089C3 /* ctf.js in Resources */,
 				6D96FF364E174A53999C3E56 /* f1-circuits-MIT.txt in Resources */,
@@ -1997,6 +2034,9 @@
 				D1AD60DD92666BA2745017D8 /* CassetteView.swift in Sources */,
 				92FA1F0A869CEDCC1DD5584D /* ChatHistory.swift in Sources */,
 				623E5EBDE04C0E5A61B55868 /* ChessGameView.swift in Sources */,
+				CEFA30C14D732F64CB79ABCC /* DailyWordGameView.swift in Sources */,
+				5D52613C2813C40D2AFFBB14 /* TetrisGameView.swift in Sources */,
+				DAEE36452BCF48385971F1BB /* WebScriptGame.swift in Sources */,
 				C91A005EA4ED8AC410BAF839 /* ClaudeChatView.swift in Sources */,
 				6FE62A468735A640B08A7BD1 /* ClaudeClient.swift in Sources */,
 				4A233680E7FADB441B86E878 /* ClaudeCodeStatus.swift in Sources */,

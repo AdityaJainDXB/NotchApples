@@ -83,7 +83,7 @@ Cheap, useful, two-platform ideas rise to the top. The top 50 are the build list
 | 65 | Localhost ports: which dev servers are running, click to open _(lsof / netstat)_ | Developers | Mac + Windows | Pro | 4 | 3 | 15.0 | Later |
 | 66 | Weekly review: focus hours, screen time, to-dos done | Productivity | Mac + Windows | Pro | 4 | 3 | 15.0 | Later |
 | 67 | Paste stack: copy several things, paste them in order | Productivity | Mac + Windows | Pro | 4 | 3 | 15.0 | Later |
-| 68 | Daily word puzzle | Games | Mac + Windows | Free | 4 | 3 | 15.0 | Later |
+| 68 | Daily word puzzle | Games | Mac + Windows | Free | 4 | 3 | 15.0 | Built, not released |
 | 69 | Shared focus session with friends in a room _(Uses the encrypted room relay)_ | Social | Mac + Windows | Pro | 4 | 3 | 15.0 | Later |
 | 70 | Shared shopping or to-do list in a room | Social | Mac + Windows | Pro | 4 | 3 | 15.0 | Later |
 | 71 | Home Assistant: lights, switches and scenes from the notch _(Home Assistant also bridges Hue and many others)_ | Integrations | Mac + Windows | Ultimate | 4 | 3 | 15.0 | Later |
@@ -96,7 +96,7 @@ Cheap, useful, two-platform ideas rise to the top. The top 50 are the build list
 | 78 | Todoist and Google Tasks sync | Integrations | Mac + Windows | Pro | 4 | 4 | 12.0 | Later |
 | 79 | Pull-request inbox: count of review requests _(GitHub token)_ | Developers | Mac + Windows | Pro | 3 | 3 | 11.2 | Later |
 | 80 | Drag-to-arrange cards on Today | Customization | Mac + Windows | Pro | 3 | 3 | 11.2 | Later |
-| 81 | Tetris | Games | Mac + Windows | Free | 3 | 3 | 11.2 | Later |
+| 81 | Tetris | Games | Mac + Windows | Free | 3 | 3 | 11.2 | Built, not released |
 | 82 | Daily trivia question _(Bundled question set, works offline)_ | Games | Mac + Windows | Free | 3 | 3 | 11.2 | Later |
 | 83 | Tic-tac-toe against someone in your Messenger room | Games | Mac + Windows | Free | 3 | 3 | 11.2 | Later |
 | 84 | Send small files in Messenger | Social | Mac + Windows | Pro | 3 | 3 | 11.2 | Later |

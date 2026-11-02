@@ -1,0 +1,18 @@
+<!doctype html>
+<!-- Daily Word in the Mac app's Games tab: DailyWordGameView loads this page in a web view. The game itself is wordle.js with its rules
+     in wordle-logic.js and its word lists in wordle-words.js, the same files the Windows app uses (NotchWindows/src/js/games/,
+     copied in as resources). -->
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>html, body { margin: 0; height: 100%; overflow: hidden; background: transparent; } #game { position: absolute; inset: 0; }</style>
+</head>
+<body>
+  <div id="game"></div>
+  <script src="wordle-words.js"></script>
+  <script src="wordle-logic.js"></script>
+  <script src="wordle.js"></script>
+  <script>window.NotchWordleGame.mount(document.getElementById('game'));</script>
+</body>
+</html>

@@ -4,8 +4,8 @@
 //
 //  A Full screen button for the small games (2048, Snake, Breakout, Memory, Reaction, Cookies, Runner, Blackjack, Poker):
 //  the same game opens in its own window that fills the screen, drawn at the panel's size and scaled up evenly, so it
-//  is easy to see from a distance. Solitaire has its own (cards sized to fit); Plane, Racing and Capture the Flag are
-//  web games that already fill a bigger panel.
+//  is easy to see from a distance. Solitaire has its own (cards sized to fit); Plane, Racing, Capture the Flag, Chess,
+//  Tetris and Daily Word are web games that already fill a bigger panel.
 //
 
 import SwiftUI
@@ -15,7 +15,7 @@ extension GamesView.Game {
     /// Games that get the shared Full screen button.
     var hasFullScreenButton: Bool {
         switch self {
-        case .plane, .racing, .ctf, .chess, .solitaire: false
+        case .plane, .racing, .ctf, .chess, .tetris, .dailyWord, .solitaire: false
         default: true
         }
     }

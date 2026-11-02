@@ -45,6 +45,17 @@ targets:
         buildPhase: resources
       - path: NotchWindows/src/js/games/chess.js
         buildPhase: resources
+      # Tetris and Daily Word are shared with the Windows app too.
+      - path: NotchWindows/src/js/games/tetris-logic.js
+        buildPhase: resources
+      - path: NotchWindows/src/js/games/tetris.js
+        buildPhase: resources
+      - path: NotchWindows/src/js/games/wordle-words.js
+        buildPhase: resources
+      - path: NotchWindows/src/js/games/wordle-logic.js
+        buildPhase: resources
+      - path: NotchWindows/src/js/games/wordle.js
+        buildPhase: resources
       # Klick's keyboard sounds, shared with the Windows app (scripts/klick_sounds.py makes them).
       - path: NotchWindows/src/sounds/klick
         type: folder
