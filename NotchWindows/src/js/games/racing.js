@@ -1173,7 +1173,7 @@
         row('Rivals', ...[0, 1, 3, 5, 7, 9, 11, 15].map(mk)),
         row('Level', ...Object.entries(LEVELS).map(([id, l]) => btn(l.label, id === level ? 'on' : '', () => { level = id; store.set('level', id); showMenu(); }))),
         row('Tyres', ...Object.entries(TYRES).map(([id, t]) => btn(`${t.name}`, id === myTyre ? 'on' : '', () => { myTyre = id; store.set('tyre', id); showMenu(); })), hint({ S: 'Grippy, wears fast', M: 'In between', H: 'Slower, lasts long', I: 'For a damp track', W: 'For heavy rain' }[myTyre])),
-        row('Gearbox', btn('Automatic', !manualOn ? 'on' : '', () => { manualOn = false; store.set('manual', false); showMenu(); }), btn('Manual', manualOn ? 'on' : '', () => { manualOn = true; store.set('manual', true); showMenu(); }), hint(manualOn ? 'Q shifts up, E shifts down (G switches in a race). DRS moves to X, serving a penalty to C. Watch the rev limiter.' : 'The car changes gear for you. Pick Manual, or press G, to shift yourself with Q and E.')),
+        row('Gearbox', btn('Automatic', !manualOn ? 'on' : '', () => { manualOn = false; store.set('manual', false); showMenu(); }), btn('Manual', manualOn ? 'on' : '', () => { manualOn = true; store.set('manual', true); showMenu(); }), hint(manualOn ? 'E shifts up, Q shifts down (G switches in a race). DRS moves to X, serving a penalty to C. Watch the rev limiter.' : 'The car changes gear for you. Pick Manual, or press G, to shift yourself with E and Q.')),
         row('Weather', ...[['dry', 'Dry'], ['mixed', 'Changeable'], ['wet', 'Wet']].map(([id, l]) => btn(l, id === weatherMode ? 'on' : '', () => { weatherMode = id; store.set('weather', id); showMenu(); }))),
         row('Start', btn('Formation lap', formOn ? 'on' : '', () => { formOn = true; store.set('formation', true); showMenu(); }), btn('Straight to the lights', formOn ? '' : 'on', () => { formOn = false; store.set('formation', false); showMenu(); })),
         bestLine(),
@@ -1185,7 +1185,7 @@
         row('Name', name),
         ...(canHear() ? [row('Voice radio', btn(voiceOn() ? '🎙 On' : '🎙 Off', voiceOn() ? 'on' : '', () => { if (voiceOn()) { store.set('voice', 'off'); showMenu(); } else askMic(); }))] : []),
         hint('T (or Space in the F1 car): talk to your race engineer, then 1 to 7 · N: skip the formation lap · L: timing tower · Y: tyres for your next stop · B: boost (F1) · E: DRS'),
-        hint('↑ W gas · ↓ S brake and reverse · ← → A D steer · Space handbrake (drift) · V view (top, chase, cockpit) · G manual gearbox (Q up, E down) · M sound · Q serve a penalty at your pit stop · R restart · P pause · Esc menu'));
+        hint('↑ W gas · ↓ S brake and reverse · ← → A D steer · Space handbrake (drift) · V view (top, chase, cockpit) · G manual gearbox (E up, Q down) · M sound · Q serve a penalty at your pit stop · R restart · P pause · Esc menu'));
     }
 
     /// Asks for the microphone (the Mac app shows its own permission prompt; a browser asks the first time it listens).
@@ -1365,8 +1365,8 @@
         if (k === 'p' && (screen === 'race' || screen === 'countdown' || screen === 'formation')) { paused = !paused; big.textContent = paused ? 'PAUSED' : ''; return; }
         if (k === 'r' && (screen === 'race' || screen === 'done') && !net) { startLocalRace(); return; }
         if (k === 'n' && screen === 'formation') { formSkip = true; return; }
-        if (k === 'g' && screen !== 'menu') { manualOn = !manualOn; store.set('manual', manualOn); if (me) me.car.manual = manualOn; toast(manualOn ? 'Manual gearbox: Q up, E down (DRS moves to X)' : 'Automatic gearbox'); return; }
-        if (manualOn && (k === 'q' || k === 'e') && me && !me.official && screen !== 'menu') { me.car.shiftReq = k === 'q' ? 1 : -1; return; }
+        if (k === 'g' && screen !== 'menu') { manualOn = !manualOn; store.set('manual', manualOn); if (me) me.car.manual = manualOn; toast(manualOn ? 'Manual gearbox: E up, Q down (DRS moves to X)' : 'Automatic gearbox'); return; }
+        if (manualOn && (k === 'q' || k === 'e') && me && !me.official && screen !== 'menu') { me.car.shiftReq = k === 'e' ? 1 : -1; return; }
         if (k === (manualOn ? 'x' : 'e') && me && screen === 'race' && !me.official) { if (me.drsOn) { me.drsOn = false; } else if (drsOk(me)) { me.drsOn = true; toast('DRS open'); } else toast(me.lap < 1 ? 'DRS is enabled from lap 2' : 'DRS: get within 1 second of the car ahead'); return; }
         if (k === 'l' && me && screen !== 'menu') { towerMode = (towerMode + 1) % 3; store.set('tower', towerMode); toast(['Timing tower hidden', 'Timing tower: gap to the car ahead', 'Timing tower: gap to the leader'][towerMode]); return; }
         if (k === 'y' && me && !me.official && screen !== 'menu') { me.nextTyre = { S: 'M', M: 'H', H: 'I', I: 'W', W: 'S' }[me.nextTyre || 'M']; toast(`Next pit stop: ${TYRES[me.nextTyre].name} tyres`); return; }
@@ -2587,7 +2587,7 @@
       // Middle: the gear.
       g.fillStyle = 'rgba(8,13,28,.82)'; g.beginPath(); g.roundRect(cx - 38 * s, cy - 28 * s, 76 * s, 62 * s, 8 * s); g.fill();
       g.fillStyle = rr > 0.92 ? '#ff4d4d' : '#fff'; g.font = `900 ${40 * s}px system-ui`; g.fillText(gearName(c), cx, cy + 12 * s);
-      if (c.manual) { g.font = `800 ${7 * s}px system-ui`; g.fillStyle = '#ffd23f'; g.fillText('MANUAL · Q▲ E▼', cx, cy + 24 * s); }
+      if (c.manual) { g.font = `800 ${7 * s}px system-ui`; g.fillStyle = '#ffd23f'; g.fillText('MANUAL · E▲ Q▼', cx, cy + 24 * s); }
       g.font = `700 ${6.3 * s}px system-ui`; g.fillStyle = me.boosting ? '#ffd23f' : 'rgba(255,255,255,.7)';
       if (f1) g.fillText(me.boosting ? 'OVERTAKE ERS MODE' : 'BALANCED ERS MODE', cx, cy + 25 * s);
     }
