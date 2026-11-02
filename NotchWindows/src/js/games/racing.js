@@ -849,7 +849,7 @@
     // Off the start and side by side with another car, a driver keeps their own lane (the whole field can't take one apex).
     const crowd = (st.t ?? 99) < (st.laneT || 0) + 2 ? 0.15 : st.side ? 0.25 : 1;
     const own = st.lane * T.width * 0.28, lineW = clamp(Math.abs(line) / (half * 0.5), 0, 1) * (st.defT > 0 ? 0.2 : 1) * crowd;
-    const q = ahead(look), off = inPit ? P.side * (rel < P.a + 40 || rel > P.b - 40 ? (T.width / 2 + P.lane) / 2 + 2 : P.lane) : clamp(own * (1 - lineW) + line * lineW, -half, half);
+    const q = ahead(look), off = inPit ? P.side * (rel < P.a + 40 || rel > P.b - 40 ? (T.width / 2 + P.lane) / 2 + 2 : P.lane + (st.pitOff || 0)) : clamp(own * (1 - lineW) + line * lineW, -half, half);
     const px = q.x + q.nx * off, py = q.y + q.ny * off;
     const want = Math.atan2(py - c.y, px - c.x);
     const err = wrapPi(want - c.h);
@@ -947,6 +947,40 @@
   function ranking(racers) {
     const ft = (r) => r.finishT + (r.pen || 0);
     return racers.filter((r) => !r.official).sort((a, b) => (!!a.dnf !== !!b.dnf) ? (a.dnf ? 1 : -1) : (a.finished && b.finished) ? ft(a) - ft(b) : a.finished ? -1 : b.finished ? 1 : b.prog - a.prog);
+  }
+
+  // ---- Qualifying: the knock-out format (pure logic, no game state)
+  /// How many cars run in each segment of qualifying for a field of `n`. With 20 cars it is the real thing: 20, 15, 10 (the
+  /// slowest 5 out after Q1, the slowest 5 out after Q2, ten fight for pole in Q3). Smaller fields cut a quarter each time
+  /// (at most 5); under 8 cars there are two segments, under 4 just one.
+  function qualiSizes(n) {
+    if (n < 4) return [n];
+    if (n < 8) return [n, n - Math.floor(n / 3)];
+    if (n >= 20) return [n, n - 5, 10];
+    const e = Math.min(5, Math.max(1, Math.round(n / 4)));
+    return [n, n - e, n - 2 * e];
+  }
+  /// The classification: best lap first (the earlier one wins a tie); a car with no time comes after every car with one.
+  function qualiOrder(rows) {
+    return rows.slice().sort((a, b) => {
+      const ta = a.best > 0, tb = b.best > 0;
+      if (ta !== tb) return ta ? -1 : 1;
+      if (ta && a.best !== b.best) return a.best - b.best;
+      if (ta && (a.at || 0) !== (b.at || 0)) return (a.at || 0) - (b.at || 0);
+      return (a.seed || 0) - (b.seed || 0);
+    });
+  }
+  /// The cut at the end of a segment: the fastest `keep` go through, the rest are knocked out (both lists in classification order).
+  function qualiKnockout(rows, keep) {
+    const o = qualiOrder(rows);
+    return { through: o.slice(0, keep), out: o.slice(keep) };
+  }
+  /// The starting grid (ids, pole first): the last segment's classification, then the cars knocked out in the one before (fastest
+  /// first), and so on back to Q1. `outs` holds each segment's knocked-out rows, Q1 first.
+  function qualiGrid(finalRows, outs) {
+    const ids = qualiOrder(finalRows).map((r) => r.id);
+    for (let i = outs.length - 1; i >= 0; i--) for (const r of qualiOrder(outs[i])) ids.push(r.id);
+    return ids;
   }
 
   /// A solid barrier a little way past the edge of the road. A car that reaches it bounces off, scrapes along it, is twisted
@@ -1069,7 +1103,7 @@
 .rc-card button:hover{filter:brightness(1.2)}
 .rc-card input{font:inherit;color:#fff;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.2);border-radius:8px;padding:5px 8px;width:92px;text-transform:uppercase;letter-spacing:2px}
 .rc-hint{opacity:.7;font-weight:500;font-size:11px;margin:3px 0}
-.rc-tbl{border-collapse:collapse;margin:6px 0;min-width:220px}.rc-tbl td{padding:2px 8px}.rc-tbl tr.me{background:rgba(91,108,255,.35)}
+.rc-tbl{border-collapse:collapse;margin:6px 0;min-width:220px}.rc-tbl td{padding:2px 8px}.rc-tbl tr.me{background:rgba(91,108,255,.35)}.rc-tbl td.num{text-align:right;font-variant-numeric:tabular-nums}.rc-tbl tr.out td{color:#ff8a8a}.rc-tbl tr.cut td{border-top:2px solid #e10600}
 .rc-ui.rc-side{justify-content:flex-start;align-items:stretch;padding:8px}.rc-ui.rc-side .rc-card{max-width:230px;font-size:11px}.rc-ai textarea{width:100%;box-sizing:border-box;font:inherit;color:#fff;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.2);border-radius:8px;padding:5px 7px;resize:vertical}.rc-ui.rc-side .rc-row{margin:3px 0}
 .rc-pair{display:flex;gap:10px;align-items:center;margin:4px 0}.rc-prev{border-radius:8px;flex:none}
 .rc-stats{min-width:170px}.rc-stats div{display:flex;align-items:center;gap:6px;font-size:10px;font-weight:500}.rc-stats span{width:56px;opacity:.75}.rc-stats i{flex:1;height:6px;border-radius:3px;background:rgba(255,255,255,.12);overflow:hidden}.rc-stats b{display:block;height:100%}
@@ -1096,6 +1130,9 @@
     let myName = store.get('name', ''), myId = Math.random().toString(36).slice(2, 8);
     if (!myName) { myName = 'Driver ' + Math.floor(1000 + Math.random() * 9000); store.set('name', myName); }
     let formOn = store.get('formation', true);         // a formation lap before the start
+    let cleanOn = store.get('clean', false);           // Clean start: every car begins in the pit lane and drives out on a setup lap to its own grid box
+    let sessionSel = store.get('session', 'race');     // race | quali (qualifying first, then the race from the grid it sets)
+    let qual = null, qualEntries = null, lastGrid = null, setupT = 0, setupSkip = false;
     let role = store.get('role', 'race');               // race | sc (drive the Safety Car) | med (drive the Medical Car)
     let viewMode = store.get('view', 'chase');          // top | chase | cockpit | halo
     const hostSound = () => (typeof window.NotchHostSound === 'boolean' ? window.NotchHostSound : null);
@@ -1161,7 +1198,7 @@
 
     function showMenu() {
       gantry.hidden = true; medJob = null; medClose(); radioClose();
-      screen = 'menu'; big.textContent = ''; ui.classList.remove('rc-side'); hush();
+      screen = 'menu'; big.textContent = ''; ui.classList.remove('rc-side'); hush(); qual = null; qualEntries = null; lastGrid = null;
       const name = document.createElement('input'); name.value = myName; name.maxLength = 14; name.style.width = '120px'; name.style.textTransform = 'none'; name.style.letterSpacing = '0';
       name.onchange = () => { myName = (name.value || myName).trim().slice(0, 14) || myName; store.set('name', myName); };
       const mk = (n) => btn(String(n), n === rivals ? 'on' : '', () => { rivals = n; store.set('rivals', n); showMenu(); });
@@ -1176,11 +1213,13 @@
         row('Gearbox', btn('Automatic', !manualOn ? 'on' : '', () => { manualOn = false; store.set('manual', false); showMenu(); }), btn('Manual', manualOn ? 'on' : '', () => { manualOn = true; store.set('manual', true); showMenu(); }), hint(manualOn ? 'Q shifts up, E shifts down (G switches in a race). DRS moves to X, serving a penalty to C. Watch the rev limiter.' : 'The car changes gear for you. Pick Manual, or press G, to shift yourself with Q and E.')),
         row('Weather', ...[['dry', 'Dry'], ['mixed', 'Changeable'], ['wet', 'Wet']].map(([id, l]) => btn(l, id === weatherMode ? 'on' : '', () => { weatherMode = id; store.set('weather', id); showMenu(); }))),
         row('Start', btn('Formation lap', formOn ? 'on' : '', () => { formOn = true; store.set('formation', true); showMenu(); }), btn('Straight to the lights', formOn ? '' : 'on', () => { formOn = false; store.set('formation', false); showMenu(); })),
+        row('Clean start', btn('Off', !cleanOn ? 'on' : '', () => { cleanOn = false; store.set('clean', false); showMenu(); }), btn('On', cleanOn ? 'on' : '', () => { cleanOn = true; store.set('clean', true); showMenu(); }), hint(cleanOn ? 'Every car starts in the pit lane and drives out on a setup lap to its own grid box, then the formation lap and the lights.' : 'The cars begin on the grid. Switch on for a pit-lane start with a setup lap.')),
+        row('Session', btn('Race', sessionSel === 'race' ? 'on' : '', () => { sessionSel = 'race'; store.set('session', 'race'); showMenu(); }), btn('Qualifying, then the race', sessionSel === 'quali' ? 'on' : '', () => { sessionSel = 'quali'; store.set('session', 'quali'); showMenu(); }), hint(sessionSel === 'quali' ? 'Q1, Q2 and Q3 from the pit lane: the slowest are knocked out, and the race starts from the grid you set.' : 'Straight to the race.')),
         bestLine(),
         row('You drive', ...[['race', '🏎️ A race car'], ['sc', '🚓 The Safety Car'], ['med', '🚑 The Medical Car']].map(([id, l]) => btn(l, id === role ? 'on' : '', () => { role = id; store.set('role', id); showMenu(); }))),
         ...(role !== 'race' ? [hint(role === 'sc' ? 'You are the Safety Car: when race control calls it, catch the leader, lead the pack at a steady pace, then come into the pit lane when it is clear.' : 'You are the Medical Car: when there is a crash, race to it, stop beside the car to check on the driver, then get out of the way.')] : []),
         row('View', ...[['top', 'Top-down'], ['chase', 'Chase'], ['cockpit', 'Cockpit'], ['halo', 'Halo cam']].map(([id, l]) => btn(l, id === viewMode ? 'on' : '', () => { viewMode = id; store.set('view', id); showMenu(); })), btn(soundOn ? '🔊 Sound' : '🔇 Sound off', '', () => { setSound(!soundOn); showMenu(); }), btn(radioOn ? '📻 Radio' : '📻 Radio off', '', () => { radioOn = !radioOn; store.set('radio', radioOn); if (!radioOn) hush(); showMenu(); })),
-        row('', btn('Start race', 'go', () => { backToDesign = false; if (carId === 'f1' && role === 'race' && !store.get('radioDone', false)) openRadioCheck(); else startLocalRace(); }), btn('✏️ Track designer', '', () => openDesigner(findDef(trackId) && findDef(trackId).custom ? findDef(trackId) : null))),
+        row('', btn(sessionSel === 'quali' && qualiOk() ? 'Start qualifying' : 'Start race', 'go', () => { backToDesign = false; if (carId === 'f1' && role === 'race' && !store.get('radioDone', false)) openRadioCheck(); else startSession(); }), btn('✏️ Track designer', '', () => openDesigner(findDef(trackId) && findDef(trackId).custom ? findDef(trackId) : null))),
         row('Online', btn('Create room', '', () => openRoom(true)), (() => { const i = document.createElement('input'); i.placeholder = 'CODE'; i.maxLength = 8; i.id = 'rc-code'; return i; })(), btn('Join', '', () => { const c = NET.normCode(root.querySelector('#rc-code').value); if (!c) { toast('That code is 6 letters and numbers.'); return; } openRoom(false, c); })),
         row('Name', name),
         ...(canHear() ? [row('Voice radio', btn(voiceOn() ? '🎙 On' : '🎙 Off', voiceOn() ? 'on' : '', () => { if (voiceOn()) { store.set('voice', 'off'); showMenu(); } else askMic(); }))] : []),
@@ -1208,7 +1247,7 @@
     function radioCheckLine(n, spoken) {
       if (n < 1 || n > 6) return;
       checkDone.add(n); say(CHECK_REPLY[n - 1], 'eng', 2); toast(`🎧 ${CHECK_REPLY[n - 1]}`);
-      if (checkDone.size === 6) { store.set('radioDone', true); setTimeout(() => { if (screen === 'radiocheck') { toast('📻 Radio check done. Good luck out there!'); startLocalRace(); } }, 2600); }
+      if (checkDone.size === 6) { store.set('radioDone', true); setTimeout(() => { if (screen === 'radiocheck') { toast('📻 Radio check done. Good luck out there!'); startSession(); } }, 2600); }
       drawRadioCheck();
     }
     function radioCheckTalk() {
@@ -1220,8 +1259,11 @@
     let toastT = null;
     function toast(msg) { big.style.fontSize = '20px'; big.style.top = '21%'; big.textContent = msg; clearTimeout(toastT); toastT = setTimeout(() => { big.textContent = ''; big.style.fontSize = ''; big.style.top = ''; }, 2600); }
 
+    /// A driver's pace: how close to the limit they drive, how hard they use the tyres in corners and how late they brake. It is rolled
+    /// once per driver (qualifying keeps it for the race), around the level's figures.
+    const paceFor = () => ({ skill: LEVELS[level].skill * (0.97 + Math.random() * 0.03), corner: LEVELS[level].corner * (0.95 + Math.random() * 0.05), brakes: LEVELS[level].brakes * (0.94 + Math.random() * 0.06) });
     // ---- starting a race
-    function setupRace(entries, laps, hold) {
+    function setupRace(entries, laps, hold, mode) {
       T = getTrack(trackId); raceLaps = T.closed ? laps : 1; T.laps = raceLaps;
       scR = null; medR = null; medF = null; medJob = null; medClose();         // nothing left over from the last race
       racers = entries.map((e, slot) => newRacer(e.id, e.name, carSpec(e.car), T, slot, { color: e.color, ai: !!e.ai, remote: !!e.remote, lastMsg: 0, official: !!e.official }));
@@ -1229,7 +1271,7 @@
       aiState.clear();
       // Every race is different: each driver gets a random pace, line, reaction off the line and temperament (how often they
       // make a mistake). Off the line they hold the side of the grid they started on, then drift to their own line.
-      racers.forEach((r, i) => { if (r.ai) { const grid = (i % 2 ? 1 : -1) * 0.2 / 0.28; aiState.set(r.id, { idx: -1, lane: grid, pref: (Math.random() * 2 - 1) * 0.7, laneT: 3 + Math.random() * 7, react: 0.17 + Math.random() * 0.16 + (Math.random() < 0.12 ? 0.25 : 0), skill: LEVELS[level].skill * (0.97 + Math.random() * 0.03), corner: LEVELS[level].corner * (0.95 + Math.random() * 0.05), brakes: LEVELS[level].brakes * (0.94 + Math.random() * 0.06), defend: LEVELS[level].defend, slip: (LEVELS[level].slip || 1) * (0.25 + Math.random() * 1.6), oops: 0, oopsT: 0, oopsK: '', stuck: 0, rev: 0, go: false }); } });
+      racers.forEach((r, i) => { if (r.ai) { const grid = (i % 2 ? 1 : -1) * 0.2 / 0.28, pc = entries[i].pace || paceFor(); aiState.set(r.id, { idx: -1, lane: grid, pref: (Math.random() * 2 - 1) * 0.7, laneT: 3 + Math.random() * 7, react: 0.17 + Math.random() * 0.16 + (Math.random() < 0.12 ? 0.25 : 0), skill: pc.skill, corner: pc.corner, brakes: pc.brakes, defend: LEVELS[level].defend, slip: (LEVELS[level].slip || 1) * (0.25 + Math.random() * 1.6), oops: 0, oopsT: 0, oopsK: '', stuck: 0, rev: 0, go: false }); } });
       for (const r of racers) { r.car.vx = r.car.vy = 0; progress(r, T, 0); r.lapStart = 0; }
       // Tyres: your choice from the menu; the others start on a mix (softs for a fast start, hards to run long).
       // The weather: dry, wet from the start, or changeable (rain may come in partway through, and may dry out again).
@@ -1243,7 +1285,7 @@
       me.nextTyre = WET > 0.3 ? myTyre : myTyre === 'S' ? 'M' : 'H'; passAt = new Map();
       raceCtl = { flag: 'green', t: 0, at: null, score: 0, next: 8 + Math.random() * 17, done: 0, first: true };     // driving for race control: the first incident comes soon, at a random moment (8 to 25 s)
       { const off = racers.find((r) => r.official); if (off) toPitExit(off); }   // the officials wait at the pit exit
-      { const P = pitInfo(T); if (P) racers.forEach((r, i) => { r.boxS = clamp((i - (racers.length - 1) / 2) * 13, P.a + 95, P.b - 95); const st = aiState.get(r.id); if (st) st.boxS = r.boxS; }); }       // every car has its own pit box
+      { const P = pitInfo(T); if (P) racers.forEach((r, i) => { r.boxS = clamp(((cleanOn && role === 'race' ? -1 : 1) * (i - (racers.length - 1) / 2)) * 13, P.a + 95, P.b - 95); const st = aiState.get(r.id); if (st) st.boxS = r.boxS; }); }       // every car has its own pit box
       // The start: five red lights come on one a second (a beep each), then after a random hold of 0.2 to 3 seconds they all
       // go out. Go on the gas before that and it is a jump start (a 5-second penalty); after it, your reaction time counts.
       skids = []; clock = 0; ui.replaceChildren(); doneT = 0; cranes = [];
@@ -1253,22 +1295,28 @@
       gridMarks = racers.filter((r) => !r.official).map((r) => { const g = gridSlot(T, r.slot); return { s: g.s + CAR_LEN / 2 + 0.6, o: (r.slot % 2 ? 1 : -1) * T.width * 0.2 }; });
       // A formation lap first (closed tracks, not online): one slow lap behind the pole sitter, no overtaking, then every car
       // stops in its own grid box and the lights begin. Otherwise straight to the lights.
-      if (formOn && T.closed && !net && racers.filter((r) => !r.official).length > 1) {
-        screen = 'formation'; formT = 0; formHold = holdS; formSkip = false;
-        for (const r of racers) { r.gridded = false; r.formGo = false; r.formFrom = null; r.formWarned = false; r.formJudged = false; r.passedBox = false; }
-        // Like F1: the Medical Car follows the field round the formation lap and the first lap (the computer drives it unless
-        // you do), a good way back. Driving the Safety Car, you start behind the field too and go back to the pit exit for the start.
-        const offMe = racers.find((r) => r.official);
-        if (offMe) { behindGrid(offMe, 25); offMe.lap = -1; offMe.sLap = null; }
-        if (role !== 'med') {
-          medF = newRacer('med-follow', 'Medical Car', OFFICIALS[1], T, 0, { official: true, ai: true, color: OFFICIALS[1].color });
-          behindGrid(medF, role === 'sc' ? 45 : 25); medF.lap = -1; medF.sLap = null; racers.push(medF);
-          aiState.set(medF.id, { idx: -1, lane: 0, skill: 0.9, stuck: 0, rev: 0, go: true, cap: 0, raceLine: false, t: 99 });
-        }
-        say('Formation lap. Get some heat in the tyres, and find your grid box.', 'eng', 2);
-      } else beginLights(holdS);
+      const duel = T.closed && !net && racers.filter((r) => !r.official).length > 1;
+      if (mode === 'quali') beginQualifying();
+      else if (cleanOn && duel && role === 'race' && pitInfo(T)) beginSetupLap(holdS);
+      else if (formOn && duel) beginFormation(holdS);
+      else beginLights(holdS);
       big.style.fontSize = ''; big.style.top = '';
       parts = []; audioUp();
+    }
+    /// The formation lap: one slow lap behind the pole sitter, no overtaking, then every car stops in its own grid box.
+    function beginFormation(holdS) {
+      screen = 'formation'; formT = 0; formHold = holdS; formSkip = false;
+      for (const r of racers) { r.gridded = false; r.formGo = false; r.formFrom = null; r.formWarned = false; r.formJudged = false; r.passedBox = false; }
+      // Like F1: the Medical Car follows the field round the formation lap and the first lap (the computer drives it unless
+      // you do), a good way back. Driving the Safety Car, you start behind the field too and go back to the pit exit for the start.
+      const offMe = racers.find((r) => r.official);
+      if (offMe) { behindGrid(offMe, 25); offMe.lap = -1; offMe.sLap = null; }
+      if (role !== 'med') {
+        medF = newRacer('med-follow', 'Medical Car', OFFICIALS[1], T, 0, { official: true, ai: true, color: OFFICIALS[1].color });
+        behindGrid(medF, role === 'sc' ? 45 : 25); medF.lap = -1; medF.sLap = null; racers.push(medF);
+        aiState.set(medF.id, { idx: -1, lane: 0, skill: 0.9, stuck: 0, rev: 0, go: true, cap: 0, raceLine: false, t: 99 });
+        }
+        say('Formation lap. Get some heat in the tyres, and find your grid box.', 'eng', 2);
     }
     function toPitExit(off) { const P = pitInfo(T); if (!P) return; const q = T.S[((Math.round((P.b - 70) / T.step) % T.m) + T.m) % T.m]; off.car.x = q.x + q.nx * P.side * P.lane; off.car.y = q.y + q.ny * P.side * P.lane; off.car.h = Math.atan2(q.ty, q.tx); off.car.vx = off.car.vy = 0; off.idx = -1; off.inLane = true; off.served = true; }
     /// Puts a car behind the last grid box, `extra` metres further back.
@@ -1282,9 +1330,8 @@
       cdLeft = 1.2 + 5 + hold;
       gantry.hidden = false; gantry.querySelectorAll('b').forEach((b) => b.classList.remove('on'));
     }
-    function startLocalRace() {
-      T = getTrack(trackId);
-      const official = role !== 'race' && getTrack(trackId).closed;
+    /// The drivers of a local session: you and the computer's, with fresh names and cars (the same for qualifying and its race).
+    function fieldEntries(official) {
       const entries = [{ id: myId, name: official ? (role === 'sc' ? 'Safety Car' : 'Medical Car') : myName, car: official ? role : carId, color: carSpec(official ? role : carId).color, official }];
       // A new field every race: the rivals' names, cars and grid places are shuffled.
       const shuffle = (a) => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
@@ -1292,7 +1339,275 @@
       for (let i = 0; i < (official ? Math.max(rivals, 7) : rivals); i++) entries.push({ id: 'ai' + i, name: names[i % names.length], car: carId, color: colors[i % colors.length], ai: true });   // everyone in the same car as you
       // The player starts at the back of a small field, so there is someone to catch.
       entries.push(entries.shift());
-      setupRace(entries, lapsSel);
+      return entries;
+    }
+    function startLocalRace() {
+      T = getTrack(trackId);
+      // After qualifying, the race starts from the grid it set (pole first), with the same drivers.
+      if (lastGrid && qualEntries) { setupRace(lastGrid.map((id) => qualEntries.find((e) => e.id === id)).filter(Boolean), lapsSel); return; }
+      setupRace(fieldEntries(role !== 'race' && getTrack(trackId).closed), lapsSel);
+    }
+
+    // ---- clean start: every car begins in the pit lane and drives out on a setup lap to its own grid box
+    /// Puts a racer in its own pit box (`out` metres further towards the outer wall, for the garage) and on the right lap number.
+    function toPitBox(r, out = 0) {
+      const P = pitInfo(T), L = T.length, c = r.car, q = T.S[((Math.round(r.boxS / T.step) % T.m) + T.m) % T.m];
+      c.x = q.x + q.nx * P.side * (P.lane + out); c.y = q.y + q.ny * P.side * (P.lane + out); c.h = Math.atan2(q.ty, q.tx);
+      c.vx = c.vy = 0; c.vf = 0; c.vl = 0; c.spin = 0; c.steerA = 0; c.yaw = 0;
+      const l = locate(T, c.x, c.y), s = ((l.s % L) + L) % L;
+      c.z = trackHeight(T, l); r.idx = l.idx; r.lat = l.lat;
+      r.lap = relS(T, l.s) >= 0 ? 0 : -1; r.topLap = r.lap; r.sLap = s; r.sNow = s; r.prog = r.lap * L + s; r.lapStart = 0;      // (a box after the line has already crossed it)
+      r.inLane = true; r.served = true; r.service = 0; r.gridded = false; r.formGo = false; r.formFrom = null; r.stopped = false;
+    }
+    function beginSetupLap(holdS) {
+      screen = 'setup'; setupT = 0; setupSkip = false; formHold = holdS; gantry.hidden = true;
+      for (const r of racers) {
+        if (r.official) continue;
+        toPitBox(r); r.parked = undefined; r.passedBox = false;
+        const st = aiState.get(r.id);
+        if (st) { st.pitting = true; st.served = true; st.cap = 0; st.go = true; st.t = 99; st.idx = -1; st.pitOff = 0; st.boxS = r.boxS; }
+      }
+      say('Setup lap. Drive out of the pit lane, round to the grid, and park in your own box.', 'eng', 2);
+      toast('Clean start: leave the pit lane and park in your grid box');
+    }
+    /// The setup lap: the cars leave the pit lane pole first, a couple of seconds apart, and each stops in its own grid box (the
+    /// computer's cars exactly on their marks; you park however you like inside yours). The physics is the main loop's.
+    function setupControl(dt) {
+      setupT += dt;
+      const L = T.length, field = racers.filter((r) => !r.official && !r.dsq).sort((a, b) => a.slot - b.slot);
+      field.forEach((r, k) => {
+        if (r.gridded) return;
+        const c = r.car, human = r === me && !me.ai, box = slotS(r), loc = locate(T, c.x, c.y, r.idx), rel = relS(T, loc.s), toBox = box.rel - rel, vNow = Math.hypot(c.vx, c.vy);
+        if (r.formFrom == null) r.formFrom = r.prog;
+        if (r.prog - r.formFrom > L * 0.6) r.formGo = true;
+        if (human) {
+          const lat = Math.abs((c.x - box.x) * -Math.sin(box.h) + (c.y - box.y) * Math.cos(box.h));
+          if (r.formGo && Math.abs(toBox) < 3.2 && lat < 2.4 && vNow < 0.7) { r.gridded = true; r.parked = 1e9; c.vx = c.vy = 0; c.spin = 0; toast('In your grid box'); }
+          else if (r.formGo && toBox < -5 && !r.passedBox) { r.passedBox = true; toast('You passed your grid box: reverse back into it'); }
+          return;
+        }
+        const st = aiState.get(r.id), ahead = k > 0 ? field[k - 1] : null;
+        st.go = true; st.t = Math.max(st.t || 0, 99); st.lane = (r.slot % 2 ? 1 : -1) * 0.2 / 0.28; st.pref = st.lane; st.tr = null; st.side = 0; st.defT = 0; st.oops = 0; st.stuck = 0; st.rev = 0; st.raceLine = false;
+        let cap = c.spec.vmax * 0.5;
+        if (setupT < 2 + k * 2.4) cap = 0;                       // released one by one, pole first
+        else {
+          const near = r.formGo && toBox < 160;
+          if (ahead && !ahead.gridded) { const gap = ahead.prog - r.prog; cap = Math.min(cap + (gap > 40 ? 8 : 0), Math.max(near ? 2 : 0, Math.hypot(ahead.car.vx, ahead.car.vy) + (gap - (near ? 2.5 : 18)) * 0.5)); }
+          if (r.formGo && toBox < 140 && toBox > -4) cap = Math.min(cap, Math.sqrt(Math.max(0, 2 * 4 * (toBox + 0.3))));
+        }
+        st.cap = cap;
+        if (r.formGo && Math.abs(toBox) < 3 && vNow < 1.2) { gridIt(r, box); r.parked = 1e9; }
+      });
+      if (field.every((r) => r.gridded) || setupT > L / 20 + 60 + 2.4 * field.length || setupSkip) finishSetup(field);
+    }
+    /// Everyone is in their grid box: forget the setup lap and go on to the formation lap (or straight to the lights).
+    function finishSetup(field) {
+      for (const r of field) if (!r.gridded) gridIt(r, slotS(r));
+      for (const r of racers) {
+        r.parked = undefined; r.inLane = false; r.served = false; r.service = 0; r.formGo = false; r.formFrom = null; r.car.vx = r.car.vy = 0;
+        if (r.official) continue;
+        r.lap = -1; r.topLap = undefined; r.lapTimes = []; r.lapStart = 0; r.idx = -1; r.sLap = undefined; progress(r, T, 0); r.lap = -1; r.prog = -T.length + r.sNow;
+        r.idx = locate(T, r.car.x, r.car.y).idx; r.car.steerA = 0; r.car.spin = 0; r.car.vf = 0; r.car.vl = 0;
+      }
+      for (const st of aiState.values()) { st.cap = null; st.go = false; st.t = null; st.raceLine = undefined; st.idx = -1; st.tr = null; st.side = 0; st.stuck = 0; st.rev = 0; st.oops = 0; st.pitting = false; st.served = false; st.pitOff = 0; }
+      if (me) chaseYaw = me.car.h;
+      if (formOn) beginFormation(formHold); else beginLights(formHold);
+    }
+
+    // ---- qualifying: Q1, Q2 and Q3 with a knock-out after the first two, from the pit lane, then the race from the grid it sets
+    const QPUSH = (p) => ({ skill: Math.min(1, p.skill * 1.04), corner: Math.min(0.99, p.corner * 1.06), brakes: Math.min(0.97, p.brakes * 1.05) });      // flat out, on a fresh set
+    const qualiOk = () => sessionSel === 'quali' && role === 'race' && !net && rivals >= 1 && getTrack(trackId).closed;
+    function startSession() {
+      lastGrid = null; qualEntries = null;
+      if (sessionSel === 'quali' && !qualiOk()) toast(rivals < 1 ? 'Qualifying needs at least one rival: starting the race' : 'Qualifying needs a circuit: starting the race');
+      if (qualiOk()) startQualifying(); else startLocalRace();
+    }
+    function startQualifying() {
+      T = getTrack(trackId);
+      const entries = fieldEntries(false);
+      for (const e of entries) if (e.ai) e.pace = paceFor();
+      qualEntries = entries; lastGrid = null;
+      setupRace(entries, lapsSel, undefined, 'quali');
+    }
+    const lapCache = {};
+    /// How long a quick lap takes the computer's drivers here: one is driven round on its own, out of sight (so the segments are the right length).
+    function calibrateLap(spec) {
+      const key = `${T.length | 0}.${spec.id}.${level}`;
+      if (lapCache[key]) return lapCache[key];
+      const L = T.length, q = T.S[0], c = newCar(spec, q.x, q.y, Math.atan2(q.ty, q.tx)), p = QPUSH({ skill: LEVELS[level].skill, corner: LEVELS[level].corner, brakes: LEVELS[level].brakes }), h = 1 / 60;
+      const st = { idx: -1, lane: 0, skill: p.skill, corner: p.corner, brakes: p.brakes, stuck: 0, rev: 0, go: true, t: 99, react: 0 };
+      c.t0 = c.t1 = c.t2 = c.t3 = 92;
+      let prev = 0, t = 0, t0 = -1, lap = L / 45;
+      for (let i = 0; i < 60 * 900; i++, t += h) {
+        const inp = driveAI(T, c, st, h);
+        stepOnRoad(T, c, inp, h, 1, locate(T, c.x, c.y, st.idx));
+        const l = locate(T, c.x, c.y, st.idx), s = ((l.s % L) + L) % L; c.z = trackHeight(T, l);
+        if (prev > L * 0.75 && s < L * 0.25) { if (t0 < 0) t0 = t; else { lap = t - t0; break; } }
+        prev = s;
+      }
+      return (lapCache[key] = lap);
+    }
+    function beginQualifying() {
+      const spec = carSpec(carId), mine = racers.filter((r) => !r.official);
+      T.laps = 1e6; raceCtl = { flag: 'green', t: 0, at: null, score: 0, next: 1e9, done: 0, first: false };
+      const Q = qual = { n: mine.length, sizes: qualiSizes(mine.length), seg: 0, state: 'run', t: 0, len: 0, outs: [], segRows: [], rec: new Map(), alive: new Set(mine.map((r) => r.id)), ff: false, flagged: false, grid: null, lapEst: calibrateLap(spec) };
+      Q.names = ['Q1', 'Q2', 'Q3'].slice(0, Q.sizes.length);
+      if (Q.sizes.length === 1) Q.names = ['QUALIFYING'];
+      mine.forEach((r, i) => { r.seed = i; r.q = { phase: 'garage', goAt: 0, runsLeft: 2, prevS: null, lastX: -99, outside: false, lapStart: 0, invalid: false, last: 0, pits0: 0, lapK: 1 }; const st = aiState.get(r.id); if (st) st.base = { skill: st.skill, corner: st.corner, brakes: st.brakes }; });
+      me.nextTyre = WET > 0.3 ? myTyre : 'S'; if (WET <= 0.3) me.car.tyre = 'S';           // softs for a fast lap (Y changes your next set)
+      for (const r of mine) if (r !== me) r.car.tyre = WET > 0.6 ? 'W' : WET > 0.25 ? 'I' : 'S';
+      startSegment(0);
+      chaseYaw = me.car.h; say(`Qualifying. ${Q.names.length > 1 ? 'Three' : 'One'} segment${Q.names.length > 1 ? 's' : ''}: set a fast lap on fresh tyres. Out lap, push lap, in lap.`, 'eng', 2);
+    }
+    function startSegment(n) {
+      const Q = qual, order = racers.filter((r) => !r.official && Q.alive.has(r.id));
+      Q.seg = n; Q.t = 0; Q.state = 'run'; Q.rec = new Map(); Q.ff = false; Q.flagged = false; Q.len = Q.lapEst * [8, 7, 6][Math.min(n, 2)];
+      for (let i = order.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [order[i], order[j]] = [order[j], order[i]]; }      // who goes out first is down to the team
+      for (const r of racers) {
+        if (r.official) continue;
+        toPitBox(r, 3.2); const c = r.car, q = r.q, st = aiState.get(r.id);
+        if (!Q.alive.has(r.id)) { r.parked = 1e9; q.phase = 'out-of-it'; continue; }
+        r.parked = undefined; q.phase = 'garage'; q.runsLeft = 2; q.prevS = null; q.lastX = -99; q.outside = false; q.invalid = false; q.last = 0;
+        q.goAt = r === me ? 0 : 1.5 + order.indexOf(r) * 3.6 + Math.random() * 1.2 + (Math.random() < 0.2 ? Q.lapEst * (0.45 + Math.random() * 0.4) : 0);
+        // a new set for every segment, cold from the blankets
+        c.tyre = r === me ? (n === 0 ? c.tyre : me.nextTyre || 'S') : WET > 0.6 ? 'W' : WET > 0.25 ? 'I' : 'S';
+        c.wear = 0; c.dmg = 0; c.puncture = false; c.pull = 0; c.t0 = c.t1 = c.t2 = c.t3 = 58; r.tyreLap = 0; r.nextTyre = undefined;
+        if (st) { st.pitting = true; st.served = true; st.cap = 0; st.go = true; st.t = 99; st.idx = -1; st.pitOff = 3.2; st.raceLine = false; st.tr = null; st.boxS = r.boxS; }
+      }
+      screen = 'quali'; ui.replaceChildren(); big.textContent = ''; clock = 0; chaseYaw = me.car.h;
+      toast(`${Q.names[n]} · ${Q.len < 90 ? Math.round(Q.len) + ' s' : Math.round(Q.len / 60) + ' min'} · the pit exit is open${me.ai ? '' : ': press W to go out'}`);
+    }
+    /// The classification right now: each car's best lap in this segment (the cars still in it).
+    const qualiRows = () => racers.filter((r) => !r.official && qual.alive.has(r.id)).map((r) => qual.rec.get(r.id) || { id: r.id, best: 0, at: 0, seed: r.seed });
+    function qualiSet(r, lt, t) {
+      const Q = qual, was = Q.rec.get(r.id) || { id: r.id, best: 0, at: 0, seed: r.seed };
+      const rec = Object.assign({}, was, { laps: (was.laps || 0) + 1 });
+      if (!was.best || lt < was.best) { rec.best = lt; rec.at = t; }
+      Q.rec.set(r.id, rec);
+      if (r === me) {
+        const pos = qualiOrder(qualiRows()).findIndex((x) => x.id === r.id) + 1, better = !was.best || lt < was.best;
+        toast(`${fmtLap(lt)} · P${pos}${better ? '' : ' (slower than your best)'}`); say(better ? `${fmtLap(lt)}. That puts us ${ord(pos)}.` : `${fmtLap(lt)}. Not an improvement.`, 'eng');
+      }
+    }
+    function qualiCross(r, t) {
+      const Q = qual, q = r.q;
+      if (q.phase === 'out') {
+        if (Q.t >= Q.len) { q.phase = 'in'; q.pits0 = r.pits || 0; if (r === me) toast('The session is over: come into the pits'); return; }
+        q.phase = 'push'; q.lapStart = t; q.invalid = false; q.lapK = 0.992 + Math.random() * 0.008;
+        if (r === me) toast('⏱ Push lap: go!');
+      } else if (q.phase === 'push') {
+        const lt = t - q.lapStart; q.last = lt; q.phase = 'cool';
+        if (q.invalid) { if (r === me) toast(`Lap deleted (${fmtLap(lt)}): all four wheels were over the white line`); } else qualiSet(r, lt, t);
+      }
+    }
+    /// How each computer driver drives its out lap (gently, tyres coming up to temperature), push lap (flat out) and in lap.
+    function qualiPace(r, st, kind) {
+      const b = st.base, vmax = r.car.spec.vmax, side = pitInfo(T).side;
+      if (kind === 'push') { const p = QPUSH(b), k = r.q.lapK; st.skill = p.skill * k; st.corner = p.corner * k; st.brakes = p.brakes * k; st.cap = null; st.raceLine = undefined; st.pref = 0; }
+      else if (kind === 'out') { st.skill = b.skill; st.corner = b.corner * 0.93; st.brakes = b.brakes; st.cap = vmax * 0.8; st.raceLine = false; st.pref = side * 0.95; }
+      else { st.skill = b.skill; st.corner = b.corner * 0.8; st.brakes = b.brakes; st.cap = vmax * 0.7; st.raceLine = false; st.pref = side * 0.95; }
+    }
+    function qualiControl(dt) {
+      const Q = qual; if (!Q || Q.state !== 'run') return;
+      Q.t += dt;
+      const P = pitInfo(T), L = T.length, left = Q.len - Q.t, open = left > 0, live = racers.filter((r) => !r.official && Q.alive.has(r.id)), keep = Q.seg < Q.sizes.length - 1 ? Q.sizes[Q.seg + 1] : Q.n;
+      if (!open && !Q.flagged) { Q.flagged = true; toast('🏁 Chequered flag. If you are on a push lap, finish it, then come in'); say('Chequered flag. Finish the lap and come in.', 'eng', 2); }
+      for (const r of live) {
+        const q = r.q, c = r.car, st = aiState.get(r.id), human = r === me && !me.ai, v = Math.hypot(c.vx, c.vy), s = r.sNow || 0, rel = relS(T, s);
+        if (q.prevS != null && q.prevS > L * 0.75 && s < L * 0.25 && !r.inLane && Q.t - q.lastX > 12) { q.lastX = Q.t; qualiCross(r, Q.t - s / Math.max(v, 8)); }       // the timing line
+        q.prevS = s;
+        if (!r.inLane) q.outside = true;
+        if (q.phase === 'push' && !q.invalid && !r.inLane && Math.abs(r.lat) > T.width / 2 + CAR_W / 2 + 0.4 && v > 12) { q.invalid = true; if (human) { toast('⚠ Lap deleted: all four wheels over the white line'); say('Track limits. That lap will be deleted.', 'eng', 2); } }
+        if (human && q.phase === 'garage' && r.inLane && v > 2 && !(r.service > 0)) { q.phase = 'out'; q.outside = false; q.runsLeft--; }
+        if ((q.phase === 'out' || q.phase === 'push' || q.phase === 'cool') && r.inLane && q.outside) { q.phase = 'in'; q.pits0 = r.pits || 0; if (human) toast('Into the pit lane: stop in your box'); }
+        if (q.phase === 'in' && !r.inLane && rel > P.b - 10 && v > 5 && human) { q.phase = 'out'; q.outside = true; }          // drove through without stopping: out again
+        if (q.phase === 'in' && (r.pits || 0) > q.pits0) {                                                                       // the crew has fitted a fresh set: back in the garage
+          const rank = qualiOrder(qualiRows()).findIndex((x) => x.id === r.id), wants = rank < 0 || rank >= keep - 2 || Math.random() < 0.55;
+          q.phase = open && left > Q.lapEst * 1.1 && q.runsLeft > 0 && (human || wants) ? 'garage' : 'done';
+          q.goAt = Q.t + 6 + Math.random() * 30;
+        }
+        if (!open && q.phase === 'garage') q.phase = 'done';
+        if (human) continue;
+        // ---- the computer's driver
+        if (!open && q.phase === 'out') { q.phase = 'in'; q.pits0 = r.pits || 0; }                          // too late for a lap: straight into the pits
+        q.stuckT = !r.inLane && v < 2 && q.phase !== 'garage' && q.phase !== 'done' ? (q.stuckT || 0) + dt : 0;
+        if (q.stuckT > 8) {                                                                                 // spun off or wedged: the recovery truck takes it back to its garage
+          q.stuckT = 0; toPitBox(r, 3.2); c.dmg = 0; c.wear = 0; r.pits = (r.pits || 0) + 1;
+          q.phase = open && left > Q.lapEst * 1.1 && q.runsLeft > 0 ? 'garage' : 'done'; q.goAt = Q.t + 8; continue;
+        }
+        st.stuck = 0; st.rev = 0; st.go = true; st.t = Math.max(st.t || 0, 99); st.side = 0; st.defT = 0; st.oops = 0;
+        const ph = q.phase;
+        if (ph === 'garage' || ph === 'done') { st.cap = 0; st.pitOff = 3.2; st.pitting = true; st.served = true; st.raceLine = false; }
+        if (ph === 'garage' && open && q.runsLeft > 0 && Q.t >= q.goAt && left > Q.lapEst * 0.9) { q.phase = 'out'; q.outside = false; q.runsLeft--; }
+        if (q.phase === 'out') { qualiPace(r, st, 'out'); st.pitOff = -3; }
+        else if (q.phase === 'push') { qualiPace(r, st, 'push'); st.pitOff = -3; }
+        else if (q.phase === 'cool' || q.phase === 'in') {
+          qualiPace(r, st, 'cool');
+          if (!r.inLane && rel > P.a - 600 && rel < P.a - 250) { st.pitting = true; st.served = false; }                         // heads for the pits
+          st.pitOff = r.inLane && (r.boxS ?? P.box) - rel < 45 ? 3.2 : -3;                                                     // keeps to the fast side of the lane, then pulls into its own box
+        }
+        // other cars: no passing in the lane and none on slow laps; a quick car stuck behind a slow one loses its lap
+        st.tr = null;
+        for (const o of live) {
+          if (o === r || o.q.phase === 'garage' || o.q.phase === 'done' || !!o.inLane !== !!r.inLane) continue;
+          const d = (((o.sNow || 0) - s) % L + L) % L;
+          if (d < 3 || d > 55 || Math.abs((o.lat || 0) - (r.lat || 0)) > 2.6 || st.tr && st.tr.d <= d) continue;
+          st.tr = { v: Math.hypot(o.car.vx, o.car.vy), d };
+        }
+      }
+      if (!open && (live.every((r) => r.q.phase === 'done') || Q.t > Q.len + Q.lapEst * 3.2)) endSegment();
+    }
+    /// The segment is over: the cut, everyone back to their garage, and the timing screen.
+    function endSegment() {
+      const Q = qual, n = Q.seg, last = n >= Q.sizes.length - 1, keep = last ? Q.n : Q.sizes[n + 1];
+      const rows = qualiOrder(qualiRows());
+      Q.segRows[n] = rows;
+      if (!last) { const ko = qualiKnockout(rows, keep); Q.outs.push(ko.out); for (const o of ko.out) Q.alive.delete(o.id); }
+      Q.state = 'break';
+      for (const r of racers) { if (r.official) continue; toPitBox(r, 3.2); r.parked = 1e9; r.car.vx = r.car.vy = 0; }
+      showQualiTiming();
+    }
+    function qualiTable(Q, rows, keep) {
+      const tbl = document.createElement('table'), lead = rows.length && rows[0].best > 0 ? rows[0].best : 0; tbl.className = 'rc-tbl';
+      rows.forEach((o, i) => {
+        const r = racers.find((x) => x.id === o.id), tr = tbl.insertRow(); tr.className = (r === me ? 'me ' : '') + (keep != null && i >= keep ? 'out ' : '') + (keep != null && i === keep ? 'cut' : '');
+        tr.insertCell().textContent = String(i + 1); tr.insertCell().textContent = r ? (r === me ? myName : r.name) : '';
+        const t = tr.insertCell(); t.textContent = o.best > 0 ? fmtLap(o.best) : 'no time'; t.className = 'num';
+        const gp = tr.insertCell(); gp.textContent = o.best > 0 && i > 0 ? `+${(o.best - lead).toFixed(3)}` : ''; gp.className = 'num';
+        tr.insertCell().textContent = keep != null && i >= keep ? 'OUT' : '';
+      });
+      return tbl;
+    }
+    function showQualiTiming() {
+      const Q = qual, n = Q.seg, last = n >= Q.sizes.length - 1;
+      screen = 'qbreak'; ui.classList.remove('rc-side'); big.textContent = ''; hush();
+      if (last) { showQualiResult(); return; }
+      const rows = Q.segRows[n], keep = Q.sizes[n + 1], mePos = rows.findIndex((o) => o.id === me.id) + 1, out = !Q.alive.has(me.id), next = Q.names[n + 1];
+      const tyres = Q.alive.has(me.id) ? [row(`Tyres for ${next}`, ...['S', 'M', 'H', ...(WET > 0.25 ? ['I', 'W'] : [])].map((id) => btn(TYRES[id].name, (me.nextTyre || 'S') === id ? 'on' : '', () => { me.nextTyre = id; showQualiTiming(); })))] : [];
+      card(head(`${Q.names[n]} · timing`), hint(out ? (mePos ? `You are knocked out in P${mePos}. The session carries on without you.` : 'You were knocked out earlier. The session carries on without you.') : `You are through to ${next} in P${mePos}. The slowest ${rows.length - keep} are out.`),
+        qualiTable(Q, rows, keep), ...tyres, row('', btn(out ? `Watch ${next}` : `Start ${next}`, 'go', () => startSegment(n + 1)), btn('Menu', '', showMenu)));
+    }
+    function showQualiResult() {
+      const Q = qual, n = Q.seg, rows = Q.segRows[n], ids = qualiGrid(rows, Q.outs); Q.grid = ids;
+      const time = (id) => { for (let i = Q.segRows.length - 1; i >= 0; i--) { const o = Q.segRows[i].find((x) => x.id === id); if (o) return o.best > 0 ? o.best : 0; } return 0; };
+      const tbl = document.createElement('table'), pole = time(ids[0]); tbl.className = 'rc-tbl';
+      ids.forEach((id, i) => {
+        const r = racers.find((x) => x.id === id), tr = tbl.insertRow(), t = time(id); tr.className = r === me ? 'me' : '';
+        tr.insertCell().textContent = String(i + 1); tr.insertCell().textContent = r === me ? myName : r.name;
+        const c1 = tr.insertCell(); c1.textContent = t > 0 ? fmtLap(t) : 'no time'; c1.className = 'num';
+        const c2 = tr.insertCell(); c2.textContent = t > 0 && i > 0 ? `+${(t - pole).toFixed(3)}` : ''; c2.className = 'num';
+        tr.insertCell().textContent = i < Q.sizes[Q.sizes.length - 1] ? Q.names[Q.names.length - 1] : '';
+      });
+      const myPos = ids.indexOf(me.id) + 1; screen = 'qdone';
+      card(head(myPos === 1 ? '🏆 You are on pole!' : `Qualifying: you start P${myPos}`), hint(`Pole: ${racers.find((x) => x.id === ids[0]).name === myName ? 'you' : racers.find((x) => x.id === ids[0]).name}, ${fmtLap(pole)}`), tbl,
+        row('', btn('Start the race', 'go', () => { lastGrid = ids; startLocalRace(); }), btn('Qualify again', '', startQualifying), btn('Menu', '', showMenu)));
+    }
+    /// How fast time runs: normal while you drive, faster while you wait in the garage (or are out) so the other cars' laps fly by.
+    function qualWarp() {
+      const Q = qual; if (screen !== 'quali' || !Q || Q.state !== 'run' || !me) return 1;
+      const ph = me.q && me.q.phase, idle = !Q.alive.has(me.id) || ph === 'garage' && !(me.service > 0) || ph === 'done';
+      if (!idle || keys.has('up') || keys.has('down')) return 1;
+      return Q.ff || !Q.alive.has(me.id) ? 16 : 4;
     }
 
     // ---- online rooms
@@ -1362,9 +1677,12 @@
     function key(name, down) {
       const k = String(name).toLowerCase();
       if (down) {
-        if (k === 'p' && (screen === 'race' || screen === 'countdown' || screen === 'formation')) { paused = !paused; big.textContent = paused ? 'PAUSED' : ''; return; }
+        if (k === 'p' && (screen === 'race' || screen === 'countdown' || screen === 'formation' || screen === 'setup' || screen === 'quali')) { paused = !paused; big.textContent = paused ? 'PAUSED' : ''; return; }
         if (k === 'r' && (screen === 'race' || screen === 'done') && !net) { startLocalRace(); return; }
         if (k === 'n' && screen === 'formation') { formSkip = true; return; }
+        if (k === 'n' && screen === 'setup') { setupSkip = true; return; }
+        if (k === 'n' && screen === 'quali' && qual) { qual.ff = true; return; }
+        if (k === 'r' && (screen === 'quali' || screen === 'qbreak' || screen === 'qdone') && qual) { startQualifying(); return; }
         if (k === 'g' && screen !== 'menu') { manualOn = !manualOn; store.set('manual', manualOn); if (me) me.car.manual = manualOn; toast(manualOn ? 'Manual gearbox: Q up, E down (DRS moves to X)' : 'Automatic gearbox'); return; }
         if (manualOn && (k === 'q' || k === 'e') && me && !me.official && screen !== 'menu') { me.car.shiftReq = k === 'q' ? 1 : -1; return; }
         if (k === (manualOn ? 'x' : 'e') && me && screen === 'race' && !me.official) { if (me.drsOn) { me.drsOn = false; } else if (drsOk(me)) { me.drsOn = true; toast('DRS open'); } else toast(me.lap < 1 ? 'DRS is enabled from lap 2' : 'DRS: get within 1 second of the car ahead'); return; }
@@ -1531,7 +1849,7 @@
       return ac;
     }
     function soundTick() {
-      const run = me && (screen === 'race' || screen === 'countdown' || screen === 'formation' || screen === 'done') && !paused && !suspended;
+      const run = me && (screen === 'race' || screen === 'countdown' || screen === 'formation' || screen === 'setup' || screen === 'quali' || screen === 'done') && !paused && !suspended;
       if (!run || !soundOn) { if (au) { const t = ac.currentTime; au.eng.gain.setTargetAtTime(0, t, 0.05); for (const n of [au.squeal, au.wind, au.rumble]) n.g.gain.setTargetAtTime(0, t, 0.05); } return; }
       if (!audioUp() || !au) return;
       const c = me.car, sp = c.spec, t = ac.currentTime, tone = TONES[sp.tone] || TONES.gt;
@@ -2218,10 +2536,11 @@
         startSeq.reacted = true; const rt = clock;
         toast(`Reaction ${rt.toFixed(3)} s${rt < 0.2 ? ' · lightning!' : rt < 0.3 ? ' · good start' : rt > 0.6 ? ' · slow away' : ''}`);
       }
-      if (screen !== 'race' && screen !== 'done') return;
+      if (screen === 'setup') setupControl(dt); else if (screen === 'quali') qualiControl(dt);
+      if (screen !== 'race' && screen !== 'done' && screen !== 'setup' && screen !== 'quali') return;
       clock += dt;
-      craneTick(dt);
-      raceTick(dt);
+      if (screen === 'race' || screen === 'done') craneTick(dt);
+      if (screen === 'race' || screen === 'done') raceTick(dt);        // (weather, breakdowns and race control: not in qualifying or on the setup lap)
       for (const r of racers) {
         const c = r.car;
         if (r.remote) {
@@ -2241,7 +2560,7 @@
         else if (screen === 'done' || r.finished) inp = { throttle: 0, brake: 0.6, steer: 0, hand: 0 };
         else if (r === me && me.medOut) { c.vx = c.vy = 0; inp = { throttle: 0, brake: 0, steer: 0, hand: 0 }; }     // you are out of the car
         else inp = playerInput();
-        if (r.ai && !r.finished && me && !net) { const lead = r.prog - me.prog; if (lead < -80) inp.throttle = Math.min(1, inp.throttle * 1.05 + 0.05); }
+        if (r.ai && !r.finished && me && !net && screen === 'race') { const lead = r.prog - me.prog; if (lead < -80) inp.throttle = Math.min(1, inp.throttle * 1.05 + 0.05); }
         const loc = locate(T, c.x, c.y, r.idx);
         const edge = T.width / 2, off = Math.abs(loc.lat), P = pitInfo(T), rel = P ? relS(T, loc.s) : 1e9;
         const pitSide = P && rel > P.a && rel < P.b && loc.lat * P.side > edge + 1;          // on the pit side of the start straight
@@ -2314,7 +2633,7 @@
               const wait = r.servePen ? (r.pen || 0) : 0, need = wait + 2.4 + (c.dmg > 0.3 ? 2.5 * c.dmg : 0) + (r === me ? me.pitExtra || 0 : 0);
               pitCrewTick(r, c, need);
               if (wait && r.service >= wait && !r.penDone) { r.penDone = true; if (r === me) { toast(`Penalty served (${wait} s). The crew goes to work.`); say('Penalty served. Go, go on the tyres.', 'eng', 2); } }
-              if (r.service >= need) { if (r === me) me.pitExtra = 0; if (wait) { r.pen = 0; r.servePen = false; } r.penDone = false;  r.pits = (r.pits || 0) + 1; r.tyreLap = Math.max(0, r.lap); { const left = raceLaps - Math.max(0, r.lap); c.tyre = r === me && !me.ai ? me.nextTyre || 'M' : (WET > 0.6 ? 'W' : WET > 0.25 ? 'I' : left > raceLaps * 0.55 && left > 3 ? 'H' : left > 2 ? 'M' : 'S'); } c.puncture = false; c.dmg = 0; c.wear = 0; c.pull = 0; c.t0 = c.t1 = c.t2 = c.t3 = 78; r.service = 0; r.served = true; if (r.ai) { const st = aiState.get(r.id); st.served = true; /* it keeps following the pit lane to the exit */ } if (r === me) { toast(`Pit stop: ${need.toFixed(1)} s · new ${TYRES[c.tyre].name.toLowerCase()}s${need > 2.5 ? ', damage repaired' : ''}`); say('Good stop, good stop. Go, go, go!', 'eng', 2); } }
+              if (r.service >= need) { if (r === me) me.pitExtra = 0; if (wait) { r.pen = 0; r.servePen = false; } r.penDone = false;  r.pits = (r.pits || 0) + 1; r.tyreLap = Math.max(0, r.lap); { const left = raceLaps - Math.max(0, r.lap); c.tyre = r === me && !me.ai ? me.nextTyre || 'M' : screen === 'quali' ? (WET > 0.6 ? 'W' : WET > 0.25 ? 'I' : 'S') : (WET > 0.6 ? 'W' : WET > 0.25 ? 'I' : left > raceLaps * 0.55 && left > 3 ? 'H' : left > 2 ? 'M' : 'S'); } c.puncture = false; c.dmg = 0; c.wear = 0; c.pull = 0; c.t0 = c.t1 = c.t2 = c.t3 = screen === 'quali' ? 60 : 78; r.service = 0; r.served = true; if (r.ai) { const st = aiState.get(r.id); st.served = true; /* it keeps following the pit lane to the exit */ } if (r === me) { toast(`Pit stop: ${need.toFixed(1)} s · new ${TYRES[c.tyre].name.toLowerCase()}s${need > 2.5 ? ', damage repaired' : ''}`); say('Good stop, good stop. Go, go, go!', 'eng', 2); } }
             } else if (r.service > 0 && v > 2) r.service = 0;
           }
         } else { imp = wallHit(c, T, after); r.inLane = false; }
@@ -2535,6 +2854,47 @@
       g.fillStyle = '#e10600'; g.fillRect(x, y + ph - 2.4 * s, pw, 2.4 * s);
       if (me.bestLap) { g.textAlign = 'right'; g.font = `600 ${7 * s}px system-ui`; g.fillStyle = 'rgba(255,255,255,.6)'; g.fillText('BEST ' + fmtLap(me.bestLap), x + pw, y + ph + 9 * s); }
     }
+    /// Qualifying: the live classification (top left), the clock and your lap (top right), and what to do next. Returns where it ends.
+    function drawQualiHud(s) {
+      const Q = qual, rows = qualiOrder(qualiRows()), mi = rows.findIndex((o) => o.id === me.id), cut = Q.seg < Q.sizes.length - 1 ? Q.sizes[Q.seg + 1] : -1, lead = rows.length && rows[0].best > 0 ? rows[0].best : 0;
+      const idx = [...new Set([0, 1, 2, 3, 4, cut - 2, cut - 1, cut, cut + 1, mi].filter((i) => i >= 0 && i < rows.length))].sort((a, b) => a - b);
+      const x0 = 8 * s, y0 = 8 * s, wd = 164 * s, rh = 14 * s, bottom = y0 + 37 * s + idx.length * rh + 4 * s, left = Math.max(0, Q.len - Q.t), mm = Math.floor(left / 60), ss = String(Math.floor(left % 60)).padStart(2, '0');
+      g.fillStyle = 'rgba(8,13,28,.94)'; g.beginPath(); g.roundRect(x0, y0, wd, bottom - y0, 5 * s); g.fill();
+      g.fillStyle = '#e10600'; g.fillRect(x0, y0, 3.5 * s, 22 * s);
+      g.textAlign = 'left'; g.fillStyle = '#fff'; g.font = `italic 900 ${14 * s}px system-ui`; g.fillText('F1', x0 + 10 * s, y0 + 16 * s); const fw = g.measureText('F1').width;
+      g.font = `800 ${11 * s}px system-ui`; g.fillText(Q.names[Q.seg], x0 + 14 * s + fw, y0 + 15.5 * s);
+      g.textAlign = 'right'; g.font = `800 ${12 * s}px ui-monospace, monospace`; g.fillStyle = Q.t >= Q.len ? '#ffd23f' : '#fff'; g.fillText(Q.t >= Q.len ? 'FLAG' : `${mm}:${ss}`, x0 + wd - 6 * s, y0 + 16 * s);
+      g.fillStyle = 'rgba(255,255,255,.07)'; g.fillRect(x0, y0 + 22 * s, wd, 15 * s);
+      g.textAlign = 'center'; g.fillStyle = Q.t >= Q.len ? '#ffd23f' : '#4fe09a'; g.font = `800 ${8.5 * s}px system-ui`; g.fillText(Q.t >= Q.len ? 'SESSION OVER · FINISH YOUR LAP' : 'PIT EXIT OPEN', x0 + wd / 2, y0 + 33 * s);
+      idx.forEach((i, n) => {
+        const o = rows[i], r = racers.find((x) => x.id === o.id), y = y0 + 37 * s + n * rh, yb = y + rh * 0.7, out = cut >= 0 && i >= cut;
+        g.fillStyle = r === me ? 'rgba(86,98,140,.55)' : n % 2 ? 'rgba(255,255,255,.035)' : 'rgba(255,255,255,0)'; g.fillRect(x0, y, wd, rh);
+        if (i === cut) { g.fillStyle = '#e10600'; g.fillRect(x0, y - 0.8 * s, wd, 1.6 * s); }
+        g.textAlign = 'left'; g.font = `800 ${8.5 * s}px system-ui`; g.fillStyle = '#fff'; g.fillText(String(i + 1), x0 + 6 * s, yb);
+        g.fillStyle = r.color || r.car.spec.color; g.fillRect(x0 + 21 * s, y + 2.5 * s, 2.6 * s, rh - 5 * s);
+        g.fillStyle = out ? '#ff9a9a' : '#fff'; g.font = `700 ${8.5 * s}px system-ui`;
+        const nm = (r === me ? myName : r.name || r.code || '').toUpperCase(); g.fillText(nm.length > 9 ? nm.slice(0, 9) : nm, x0 + 28 * s, yb);
+        const ty = TYRES[r.car.tyre] || TYRES.M; g.strokeStyle = ty.col; g.lineWidth = 1.3 * s; g.beginPath(); g.arc(x0 + 96 * s, y + rh / 2, 4 * s, 0, 7); g.stroke();
+        g.fillStyle = ty.col; g.font = `900 ${5.2 * s}px system-ui`; g.textAlign = 'center'; g.fillText(r.car.tyre || 'M', x0 + 96 * s, y + rh / 2 + 1.9 * s);
+        const ph = r.q && r.q.phase, txt = r.inLane ? 'PIT' : ph === 'push' ? 'PUSH' : o.best > 0 ? (i === 0 ? fmtLap(o.best) : `+${(o.best - lead).toFixed(3)}`) : ph === 'out' ? 'OUT LAP' : '—';
+        g.textAlign = 'right'; g.font = `700 ${8 * s}px ui-monospace, monospace`; g.fillStyle = r.inLane ? '#ffd23f' : ph === 'push' ? '#4fe09a' : '#fff'; g.fillText(txt, x0 + wd - 6 * s, yb);
+      });
+      // Top right: where you are, and your lap.
+      const q = me.q || {}, pw = 172 * s, ph2 = 42 * s, x = W - 8 * s - pw, y = 8 * s, mine = Q.rec.get(me.id), L = T.length, phase = Q.alive.has(me.id) ? q.phase : 'out-of-it';
+      g.fillStyle = 'rgba(8,13,28,.94)'; g.beginPath(); g.roundRect(x, y, pw, ph2, 4 * s); g.fill();
+      g.textAlign = 'left'; g.fillStyle = 'rgba(255,255,255,.65)'; g.font = `800 ${7.5 * s}px system-ui`;
+      g.fillText({ garage: 'IN THE GARAGE', out: 'OUT LAP', push: 'PUSH LAP', cool: 'IN LAP', in: 'IN LAP', done: 'IN THE GARAGE', 'out-of-it': 'KNOCKED OUT' }[phase] || '', x + 8 * s, y + 11 * s);
+      g.fillStyle = '#fff'; g.font = `900 ${19 * s}px system-ui`; g.fillText(mi >= 0 ? `P${mi + 1}` : '—', x + 8 * s, y + 35 * s);
+      const lt = phase === 'push' ? Q.t - q.lapStart : q.last;
+      g.textAlign = 'right'; g.fillStyle = phase === 'push' ? (q.invalid ? '#ff6b6b' : '#4fe09a') : '#fff'; g.font = `800 ${15 * s}px ui-monospace, monospace`; g.fillText(lt > 0 ? fmtLap(lt) : '0:00.000', x + pw - 8 * s, y + 34 * s);
+      g.fillStyle = '#e10600'; g.fillRect(x, y + ph2 - 2.4 * s, pw * clamp((me.sNow || 0) / L, 0, 1), 2.4 * s);
+      if (mine && mine.best) { g.textAlign = 'right'; g.font = `600 ${7 * s}px system-ui`; g.fillStyle = 'rgba(255,255,255,.6)'; g.fillText('BEST ' + fmtLap(mine.best), x + pw, y + ph2 + 9 * s); }
+      // What to do now.
+      const me0 = Q.alive.has(me.id) ? q.phase : 'out-of-it', warp = qualWarp();
+      const msg = warp > 1 && me0 !== 'out-of-it' ? '⏩ FAST-FORWARD · PRESS W TO GO OUT' : me0 === 'garage' && Q.t < Q.len ? 'PIT EXIT OPEN · PRESS W TO GO OUT · Y: TYRES' : me0 === 'out-of-it' ? '⏩ KNOCKED OUT · THE SESSION CARRIES ON' : me0 === 'out' ? 'OUT LAP · WARM THE TYRES · LEAVE A GAP' : me0 === 'cool' || me0 === 'in' ? 'IN LAP · CROSS THE LINE, THEN PIT ENTRY · STOP IN YOUR BOX' : '';
+      if (msg) { g.font = `900 ${12 * s}px system-ui`; g.textAlign = 'center'; const tw2 = g.measureText(msg).width; g.fillStyle = 'rgba(8,12,22,.75)'; g.beginPath(); g.roundRect(W / 2 - tw2 / 2 - 14 * s, H - 118 * s, tw2 + 28 * s, 24 * s, 12 * s); g.fill(); g.fillStyle = '#ffd23f'; g.fillText(msg, W / 2, H - 101 * s); }
+      return bottom;
+    }
     /// The car's condition: the four tyres (what is left of each) around a top view of the car, green to red with the damage.
     function drawCondition(s) {
       const c = me.car, wear = c.wear || 0, dm = clamp(c.dmg || 0, 0, 1), w = 168 * s, h = 112 * s, x = 8 * s, y = H - h - 8 * s, cx = x + w / 2, cy = y + h / 2 + 2 * s;
@@ -2595,20 +2955,22 @@
     function drawHud() {
       const s = Math.min(W, H) / 400, order = ranking(racers), pos = order.indexOf(me) + 1;
       // Rain: a grey sky and streaks, heavier the wetter the track.
-      if (WET > 0.04 && (screen === 'race' || screen === 'done' || screen === 'countdown' || screen === 'formation')) {
+      if (WET > 0.04 && (screen === 'race' || screen === 'done' || screen === 'countdown' || screen === 'formation' || screen === 'setup' || screen === 'quali' || screen === 'qbreak')) {
         g.fillStyle = `rgba(70,80,96,${(WET * 0.32).toFixed(3)})`; g.fillRect(0, 0, W, H);
         g.strokeStyle = `rgba(200,215,235,${(0.18 + WET * 0.3).toFixed(3)})`; g.lineWidth = Math.max(1, s * 0.7); g.beginPath();
         const n = Math.round(40 + WET * 160), t = performance.now() / 1000;
         for (let i = 0; i < n; i++) { const x = ((i * 97.3 + t * 90) % W + W) % W, y = ((i * 57.1 + t * 900) % H + H) % H; g.moveTo(x, y); g.lineTo(x - 3 * s, y + 14 * s); }
         g.stroke();
       }
-      const inCar = viewMode === 'cockpit' || viewMode === 'halo', tw = towerLayout(s, order), nY = tw.bottom + 14 * s;
-      sectorTick(); drawTower(s, tw); drawLapPanel(s, pos, racers.filter((r) => !r.official).length);
+      const inCar = viewMode === 'cockpit' || viewMode === 'halo', tw = towerLayout(s, order);
+      let nY = tw.bottom + 14 * s;
+      if ((screen === 'quali' || screen === 'qbreak' || screen === 'qdone') && qual) nY = drawQualiHud(s) + 14 * s;
+      else { sectorTick(); drawTower(s, tw); drawLapPanel(s, pos, racers.filter((r) => !r.official).length); }
       // Speed, gear, revs and damage (the cockpit has its own on the wheel).
       const kmh = Math.round(Math.hypot(me.car.vx, me.car.vy) * KMH), c = me.car, rr = clamp((c.rpm - c.spec.idle) / (c.spec.redline - c.spec.idle), 0, 1);
       if (viewMode !== 'cockpit') drawDash(s, kmh, rr);
       // The road under you: how steep the climb or drop is, and how banked it is.
-      if ((screen === 'race' || screen === 'done') && !me.official) {
+      if ((screen === 'race' || screen === 'done' || screen === 'quali') && !me.official) {
         const lq = locate(T, c.x, c.y, me.idx), sl = trackSlope(T, c, lq) * 100, onRoad = Math.abs(lq.lat) < T.width / 2 + 1.5, bkDeg = onRoad ? Math.abs(Math.atan(roadBank(T, lq))) * 180 / Math.PI : 0, bits = [];
         if (Math.abs(sl) >= 2) bits.push(`${sl > 0 ? '▲' : '▼'} ${Math.abs(sl).toFixed(0)}%`);
         if (bkDeg >= 3) bits.push(`BANKED ${bkDeg.toFixed(0)}°`);
@@ -2644,9 +3006,10 @@
         g.font = `900 ${13 * s}px system-ui`; g.textAlign = 'center'; const txt = 'PRESS F TO GET OUT AND CHECK ON THE DRIVER', tw = g.measureText(txt).width;
         g.fillStyle = 'rgba(8,12,22,.8)'; g.beginPath(); g.roundRect(W / 2 - tw / 2 - 14 * s, H * 0.62, tw + 28 * s, 26 * s, 13 * s); g.fill(); g.fillStyle = '#ff5a5a'; g.fillText(txt, W / 2, H * 0.62 + 18 * s); g.textAlign = 'left';
       }
-      if (screen === 'formation' && me && !me.official) {
+      if ((screen === 'formation' || screen === 'setup') && me && !me.official) {
         g.font = `900 ${12 * s}px system-ui`; g.textAlign = 'center';
-        const txt = me.gridded ? 'ON THE GRID · WAIT FOR THE LIGHTS' : me.formGo ? (() => { const d = Math.round(slotS(me).rel - relS(T, me.sNow || 0)); return d > 6 ? `FORMATION LAP · YOUR GRID BOX IN ${d} m` : 'FORMATION LAP · STOP IN YOUR GRID BOX'; })() : 'FORMATION LAP · FOLLOW THE CAR AHEAD · NO OVERTAKING';
+        const lapName = screen === 'setup' ? 'SETUP' : 'FORMATION';
+        const txt = me.gridded ? 'ON THE GRID · WAIT FOR THE LIGHTS' : me.formGo ? (() => { const d = Math.round(slotS(me).rel - relS(T, me.sNow || 0)); return d > 6 ? `${lapName} LAP · YOUR GRID BOX IN ${d} m` : `${lapName} LAP · STOP IN YOUR GRID BOX`; })() : screen === 'setup' ? (me.inLane ? 'SETUP LAP · LEAVE THE PIT LANE · 80 km/h LIMIT' : 'SETUP LAP · DRIVE ROUND TO YOUR GRID BOX') : 'FORMATION LAP · FOLLOW THE CAR AHEAD · NO OVERTAKING';
         const tw = g.measureText(txt).width; g.fillStyle = 'rgba(8,12,22,.75)'; g.beginPath(); g.roundRect(W / 2 - tw / 2 - 14 * s, H - 118 * s, tw + 28 * s, 24 * s, 12 * s); g.fill(); g.fillStyle = '#ffd23f'; g.fillText(txt, W / 2, H - 101 * s);
       }
       if (screen === 'race') {
@@ -2678,7 +3041,7 @@
         g.fillStyle = left < 3 ? '#ff4d4d' : '#ffd23f'; g.fillText(txt, W / 2, 78.5 * s); g.textAlign = 'left';
       }
       // The pit lane panel: how long you have been in the lane and the stop itself.
-      if (me.inLane && !me.official && (screen === 'race' || screen === 'done')) {
+      if (me.inLane && !me.official && (screen === 'race' || screen === 'done' || screen === 'quali' || screen === 'setup')) {
         if (pitIn == null) pitIn = clock;
         const pw2 = 150 * s, px = W / 2 - pw2 / 2, py = 10 * s, lane = clock - pitIn, stop = me.service > 0 ? Math.max(0, me.service - (me.servePen ? (me.pen || 0) : 0)) : null;
         g.fillStyle = 'rgba(8,13,28,.94)'; g.beginPath(); g.roundRect(px, py, pw2, 38 * s, 3 * s); g.fill();
@@ -2697,7 +3060,7 @@
       g.strokeStyle = 'rgba(255,255,255,.8)'; g.lineWidth = 2 * s; g.beginPath(); T.S.forEach((q, i) => { const p = mp(q.x, q.y); i ? g.lineTo(p[0], p[1]) : g.moveTo(p[0], p[1]); }); if (T.closed) g.closePath(); g.stroke();
       for (const r of racers) { const p = mp(r.car.x, r.car.y); g.fillStyle = r === me ? '#fff' : (r.color || '#aaa'); g.beginPath(); g.arc(p[0], p[1], (r === me ? 3.6 : 2.6) * s, 0, 7); g.fill(); }
       // The car's condition (the four tyres and the damage), bottom left.
-      if ((screen === 'race' || screen === 'done' || screen === 'formation' || screen === 'countdown') && !me.official) drawCondition(s);
+      if ((screen === 'race' || screen === 'done' || screen === 'formation' || screen === 'setup' || screen === 'quali' || screen === 'qbreak' || screen === 'countdown') && !me.official) drawCondition(s);
       // Where a car has crashed: a red map pin (pulsing) while race control deals with it.
       const pins = []; if (raceCtl.at && raceCtl.flag !== 'green' && !raceCtl.at.r.dnf) pins.push([raceCtl.at.x, raceCtl.at.y]); for (const k of cranes) if (!k.done) pins.push([k.r.car.x, k.r.car.y]);
       for (const [px, py] of pins) {
@@ -3331,7 +3694,7 @@
       if (screen === 'race' && !frame.lowTold) { frame.n = (frame.n || 0) + 1; frame.sum = (frame.sum || 0) + dt; if (frame.n >= 90) { if (frame.sum / frame.n > 0.026 && window.NotchLowPower) { frame.lowTold = true; toast('🔋 Low Power Mode is limiting the race to 30 frames a second: plug in or switch it off for smooth 60'); } frame.n = 0; frame.sum = 0; } }
       const hs = hostSound(); if (hs !== null && hs !== soundOn) setSound(hs);     // the app's Sound switch wins
       if (suspended) return;
-      if (!paused) { let left = dt; while (left > 1e-4) { const h = Math.min(left, 1 / 120); update(h); left -= h; } if (shake > 0) shake = Math.max(0, shake - dt * 2.5); if (paddle > 0) paddle -= dt; }
+      if (!paused) { let left = dt * qualWarp(); while (left > 1e-4) { const h = Math.min(left, 1 / 120); update(h); left -= h; } if (shake > 0) shake = Math.max(0, shake - dt * 2.5); if (paddle > 0) paddle -= dt; }
       draw(); soundTick();
     }
     showMenu();
@@ -3342,7 +3705,7 @@
       radioProblem: (msg) => { radioListening = false; toast(`🎙 ${String(msg).slice(0, 160)}`); },
       radioPermission: (ok) => { store.set('voice', ok ? 'on' : 'off'); toast(ok ? '🎙 Microphone on: talk to your engineer on the radio' : 'No microphone: the radio works with the number keys'); if (screen === 'menu') showMenu(); },
       key, suspend() { suspended = true; keys.clear(); audioKill(); hush(); }, resume() { suspended = false; last = performance.now(); }, setSoundEnabled(on) { setSound(on); },
-      _state: () => ({ screen, racers, me, T, clock, net, raceCtl, autoMe: () => { me.ai = true; const st = { idx: -1, lane: 0, skill: 0.95, stuck: 0, rev: 0, go: true, cap: 55, served: true }; aiState.set(me.id, st); return st; }, force: (i, sp) => { const r = racers.filter((x) => x.ai && !x.official)[i]; r.car.dmg = 0.95; incident(r, sp); return r.name; } }),
+      _state: () => ({ screen, racers, me, T, clock, net, raceCtl, qual, aiState, wet: WET, autoMe: () => { me.ai = true; const st = { idx: -1, lane: 0, skill: 0.95, stuck: 0, rev: 0, go: true, cap: 55, served: true }; aiState.set(me.id, st); return st; }, force: (i, sp) => { const r = racers.filter((x) => x.ai && !x.official)[i]; r.car.dmg = 0.95; incident(r, sp); return r.name; } }),
     };
     window.NotchRaceGame.current = api;
     return function stop() {
@@ -3364,6 +3727,6 @@
     setSoundEnabled: (on) => { window.NotchHostSound = !!on; const c = window.NotchRaceGame.current; if (c) c.setSoundEnabled(on); },
     resume: () => { const c = window.NotchRaceGame.current; if (c) c.resume(); },
     current: null,
-    _test: { parseRequest, generateTrack, traceImage, simplifyPts, pitInfo, relS, fence, checkTrack, encodeTrack, decodeTrack, customDef, GROUNDS, TRACKS, F1_CAL, matchF1, CARS, buildTrack, locate, trackHeight, trackSlope, roadCurv, roadBank, F1_BANK, gridSlot, newCar, stepCar, driveAI, newRacer, progress, ranking, collide, wallHit, hurt, gearbox, NET, fmt, LEVELS },
+    _test: { qualiSizes, qualiOrder, qualiKnockout, qualiGrid, parseRequest, generateTrack, traceImage, simplifyPts, pitInfo, relS, fence, checkTrack, encodeTrack, decodeTrack, customDef, GROUNDS, TRACKS, F1_CAL, matchF1, CARS, buildTrack, locate, trackHeight, trackSlope, roadCurv, roadBank, F1_BANK, gridSlot, newCar, stepCar, driveAI, newRacer, progress, ranking, collide, wallHit, hurt, gearbox, NET, fmt, LEVELS },
   };
 })();
