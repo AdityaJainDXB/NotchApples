@@ -105,7 +105,9 @@
     }
     return function get() {
       if (token) { var t = token; token = null; return Promise.resolve(t); }
-      return load().then(function () {
+      // A check that never finishes (blocked script, a browser that cannot run it) must not leave "Thinking…" up for ever.
+      var limit = new Promise(function (res, rej) { setTimeout(function () { waiting = null; rej(new Error('captcha-timeout')); }, 25000); });
+      return Promise.race([limit, load().then(function () {
         return new Promise(function (res, rej) {
           waiting = res;
           if (!box) { box = document.createElement('div'); box.className = 'nc-ts'; document.body.appendChild(box); }
@@ -113,7 +115,7 @@
           if (widget == null) widget = window.turnstile.render(box, { sitekey: siteKey, appearance: 'interaction-only', callback: cb, 'error-callback': function () { rej(new Error('captcha')); }, 'expired-callback': function () { token = null; } });
           else window.turnstile.reset(widget);
         });
-      });
+      })]);
     };
   }
 
