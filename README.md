@@ -76,10 +76,10 @@ Pick your computer. Both buttons start the download straight away. The Mac link 
   </tr>
   <tr>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.1.89</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.1.90</b></a>
     </td>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 2.1.89 BETA</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 2.1.90 BETA</b></a>
     </td>
   </tr>
   <tr>
@@ -150,6 +150,13 @@ More screenshots of the capture overlay, the AI answer, the settings and the Win
 
 ## What's new
 
+### Mac 2.1.90 · Windows 2.1.90 BETA · 2 November 2026 · 🛡️ Safer games and file opening
+
+- Cookie Clicker now always uses the built-in game. It no longer loads a third-party website (cookieclicker.eu) when you open the tab, so nothing is contacted and your progress is always the saved one.
+- Files received in Messenger are saved in a fresh folder under a cleaned-up name and shown in Finder instead of being opened straight away, so a received file can never launch itself or be written outside its folder.
+- Daily Word can optionally use today's New York Times puzzle (fetched on request from one fixed address, nothing sent about you).
+- The volume and brightness HUD keeps retrying to take over the media keys until Accessibility is allowed, with no restart needed.
+
 ### Mac 2.1.89 · Windows 2.1.89 BETA · 2 November 2026 · 🧱 Tetris and Daily Word
 
 - Tetris (new) in the Games menu: the classic 10×20 well with a 7-piece bag, rotation with wall kicks, hold, a 3-piece preview, a ghost piece, soft and hard drop, line-clear scoring, levels that speed up every 10 lines and a saved best score. Arrows or A/D/S move, Up or W rotates, Space hard-drops, C holds, P pauses. It uses no timers or animation while you are not playing.
@@ -159,10 +166,6 @@ More screenshots of the capture overlay, the AI answer, the settings and the Win
 ### Mac 2.1.88 · Windows 2.1.88 BETA · 2 November 2026 · ♣️ Poker on Windows
 
 - Poker is now in the Windows Games tab: play-money Texas Hold’em against the computer (blinds 10 and 20, check or call, raise 20, or fold), with a chip stack that is remembered. It uses the same hand ranking and computer opponent as the Mac app. Untested on real Windows hardware.
-
-### Mac 2.1.87 · 2 November 2026 · 🔇 No more error beep
-
-- No more system “bonk” beep in the notch when you press a key nothing uses: in the games (E, Q, G and the other keys a game does not claim) and anywhere else in the notch with no text box focused.
 
 Every earlier release is in the [changelog](CHANGELOG.md).
 

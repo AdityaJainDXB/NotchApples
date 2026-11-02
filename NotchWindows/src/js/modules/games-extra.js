@@ -58,14 +58,6 @@ export class CookieEngine {
 }
 
 export function cookie(host) {
-  const URL = "https://cookieclicker.eu/cookieclicker/";
-
-  const showErrorMessage = (msg) => {
-    const err = el('div', { class: 'card col', style: 'position:absolute;inset:0;z-index:10;background:rgba(0,0,0,.8);justify-content:center;align-items:center;text-align:center;padding:20px;color:white;font-weight:bold' }, msg);
-    host.append(err);
-    setTimeout(() => err.remove(), 5000);
-  };
-
   const loadNative = () => {
     const KEY = 'games.cookie.save';
     const e = new CookieEngine(load(KEY, {}));
@@ -108,22 +100,7 @@ export function cookie(host) {
     return () => { clearInterval(t); save(KEY, e); };
   };
 
-  const iframe = el('iframe', { src: URL, style: 'width:100%;height:100%;border:none;background:var(--surface)' });
-
-  fetch(URL, { mode: 'no-cors' })
-    .then(() => {
-      host.replaceChildren(iframe);
-    })
-    .catch(() => {
-      showErrorMessage("Game unavailable. Loading local version...");
-      setTimeout(() => {
-        loadNative();
-      }, 5000);
-    });
-
-  return () => {
-    host.replaceChildren();
-  };
+  return loadNative();
 }
 
 // ---------------------------------------------------------------- Runner

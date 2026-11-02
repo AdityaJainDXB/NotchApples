@@ -283,10 +283,17 @@ private struct MessengerBubble: View {
     }
 
     private func openFile(name: String, data: Data) {
-        let tempDir = FileManager.default.temporaryDirectory
-        let fileURL = tempDir.appendingPathComponent(name)
-        try? data.write(to: fileURL)
-        NSWorkspace.shared.open(fileURL)
+        // The name comes from the sender: keep only its last component and put it in a fresh folder,
+        // and reveal it in Finder instead of running it, so a received file can never launch itself.
+        let safe = URL(fileURLWithPath: name).lastPathComponent
+        guard !safe.isEmpty, safe != ".", safe != ".." else { return }
+        let dir = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString, isDirectory: true)
+        let fileURL = dir.appendingPathComponent(safe)
+        do {
+            try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+            try data.write(to: fileURL)
+        } catch { return }
+        NSWorkspace.shared.activateFileViewerSelecting([fileURL])
     }
 
     private var avatar: some View {

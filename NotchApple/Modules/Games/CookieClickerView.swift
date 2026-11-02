@@ -10,25 +10,6 @@
 
 import AppKit
 import SwiftUI
-import WebKit
-
-final class CookieWKWebView: WKWebView, WKNavigationDelegate {
-    var onFail: (() -> Void)?
-    func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error) { onFail?() }
-    func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: Error) { onFail?() }
-}
-
-struct CookieWebView: NSViewRepresentable {
-    let onFail: () -> Void
-    func makeNSView(context: Context) -> CookieWKWebView {
-        let web = CookieWKWebView()
-        web.navigationDelegate = web
-        web.load(URLRequest(url: URL(string: "https://cookieclicker.eu/cookieclicker/")!))
-        web.onFail = onFail
-        return web
-    }
-    func updateNSView(_ nsView: CookieWKWebView, context: Context) {}
-}
 
 @MainActor
 final class CookieModel: ObservableObject {
@@ -94,41 +75,8 @@ struct CookieClickerView: View {
     @StateObject private var model = CookieModel()
     @State private var pressed = false
     @State private var confirmReset = false
-    @State private var loadFailed = false
-    @State private var showingError = false
 
-    var body: some View {
-        ZStack(alignment: .bottomTrailing) {
-            if loadFailed {
-                nativeGame
-            } else {
-                CookieWebView {
-                    loadFailed = true
-                    showingError = true
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 5) { showingError = false }
-                }
-
-                Button("Classic") { loadFailed = true }
-                    .font(.system(size: 10, weight: .bold))
-                    .foregroundStyle(.white.opacity(0.6))
-                    .padding(6)
-                    .background(Color.black.opacity(0.4), in: Capsule())
-                    .padding(8)
-                    .zIndex(1)
-            }
-
-            if showingError {
-                Text("Game unavailable. Loading local version...")
-                    .font(.system(size: 12, weight: .bold))
-                    .foregroundStyle(.white)
-                    .padding()
-                    .background(Color.black.opacity(0.8))
-                    .cornerRadius(10)
-                    .transition(.opacity)
-                    .zIndex(1)
-            }
-        }
-    }
+    var body: some View { nativeGame }
 
     @ViewBuilder
     private var nativeGame: some View {

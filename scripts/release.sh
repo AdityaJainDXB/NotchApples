@@ -13,8 +13,9 @@ if [ "$PATCH" -ge 100 ]; then
   echo "Version $VERSION is past the rollover: 2.0.100 is 2.1.0, so $VERSION should be $MAJ.$((MIN + PATCH / 100)).$((PATCH % 100)). Edit MARKETING_VERSION in project.yml (and the notes, README and WhatsNew) first."; exit 1
 fi
 export REQUIRE_PREMIUM=1     # an official release must contain the Ultimate modules (private repository)
-scripts/build_dmg.sh >/dev/null 2>&1 || true
 DMG="dist/NotchApple-$VERSION.dmg"
+rm -f "$DMG"   # never ship a leftover DMG from an earlier run if this build fails
+scripts/build_dmg.sh >/dev/null 2>&1 || true
 [ -f "$DMG" ] || { echo "No $DMG"; exit 1; }
 M=$(hdiutil attach -nobrowse -readonly "$DMG" 2>/dev/null | grep -o '/Volumes/.*' | head -1)
 ARCHS=$(lipo -archs "$M/Notch Apple.app/Contents/MacOS/Notch Apple"); V=$(/usr/libexec/PlistBuddy -c "Print CFBundleShortVersionString" "$M/Notch Apple.app/Contents/Info.plist")

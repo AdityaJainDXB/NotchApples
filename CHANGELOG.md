@@ -4,6 +4,13 @@ Every Notch Apple release, newest first. The latest few are also on the [README]
 
 > **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is in the repository's history.
 
+### Mac 2.1.90 · Windows 2.1.90 BETA · 2 November 2026 · 🛡️ Safer games and file opening
+
+- Cookie Clicker now always uses the built-in game. It no longer loads a third-party website (cookieclicker.eu) when you open the tab, so nothing is contacted and your progress is always the saved one.
+- Files received in Messenger are saved in a fresh folder under a cleaned-up name and shown in Finder instead of being opened straight away, so a received file can never launch itself or be written outside its folder.
+- Daily Word can optionally use today's New York Times puzzle (fetched on request from one fixed address, nothing sent about you).
+- The volume and brightness HUD keeps retrying to take over the media keys until Accessibility is allowed, with no restart needed.
+
 ### Mac 2.1.89 · Windows 2.1.89 BETA · 2 November 2026 · 🧱 Tetris and Daily Word
 
 - Tetris (new) in the Games menu: the classic 10×20 well with a 7-piece bag, rotation with wall kicks, hold, a 3-piece preview, a ghost piece, soft and hard drop, line-clear scoring, levels that speed up every 10 lines and a saved best score. Arrows or A/D/S move, Up or W rotates, Space hard-drops, C holds, P pauses. It uses no timers or animation while you are not playing.

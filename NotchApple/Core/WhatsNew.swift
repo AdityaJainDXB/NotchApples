@@ -20,6 +20,12 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.1.90", date: "2 November 2026", headline: "Safer games and file opening", items: [
+            "Cookie Clicker now always uses the built-in game. It no longer loads a third-party website (cookieclicker.eu) when you open the tab, so nothing is contacted and your progress is always the saved one.",
+            "Files received in Messenger are saved in a fresh folder under a cleaned-up name and shown in Finder instead of being opened straight away, so a received file can never launch itself or be written outside its folder.",
+            "Daily Word can optionally use today's New York Times puzzle (fetched on request from one fixed address, nothing sent about you).",
+            "The volume and brightness HUD keeps retrying to take over the media keys until Accessibility is allowed, with no restart needed.",
+        ]),
         ReleaseNote(version: "2.1.89", date: "2 November 2026", headline: "Tetris and Daily Word", items: [
             "Tetris (new) in the Games menu: the classic 10×20 well with a 7-piece bag, rotation with wall kicks, hold, a 3-piece preview, a ghost piece, soft and hard drop, line-clear scoring, levels that speed up every 10 lines and a saved best score. Arrows or A/D/S move, Up or W rotates, Space hard-drops, C holds, P pauses. It uses no timers or animation while you are not playing.",
             "Daily Word (new) in the Games menu: a five-letter word puzzle with six guesses and green, yellow and grey feedback. Everyone gets the same word on the same day (no network needed), your result is saved, there is a streak counter and an emoji result to copy, and a Practice mode for extra words.",
