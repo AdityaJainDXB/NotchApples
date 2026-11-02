@@ -1073,23 +1073,47 @@ export function cleanAskRequest(body) {
   return { q, history };
 }
 
+// The provider sometimes answers 429 or 5xx ("high demand") for a moment. So: try the main model up to three times, with a
+// short wait between tries (ASK_RETRY_MS, default 700 ms, doubled each time), and if it still fails try env.ASK_FALLBACK_MODEL
+// (optional; no model name is built in) up to twice. Only 429, 5xx and network errors are retried; any other answer (a bad key
+// or model name) skips straight to the next model. If everything fails the visitor sees the same "helper is busy" message.
+const ASK_BUSY = 'The helper is busy. Try again in a minute.';
+const askRetryable = (status) => status === 429 || status >= 500;
+
+async function askModel(env, model, messages) {
+  const url = `${(env.AI_BASE || AI_DEFAULT_BASE).replace(/\/+$/, '')}/chat/completions`;
+  const wait = Number.isFinite(Number(env.ASK_RETRY_MS)) && env.ASK_RETRY_MS !== undefined && env.ASK_RETRY_MS !== '' ? Number(env.ASK_RETRY_MS) : 700;
+  const tries = model === (env.AI_MODEL || AI_DEFAULT_MODEL) ? 3 : 2;
+  for (let i = 0; i < tries; i++) {
+    if (i > 0 && wait > 0) await new Promise((res) => setTimeout(res, wait * 2 ** (i - 1)));
+    let r;
+    try {
+      r = await fetch(url, { method: 'POST', headers: { 'content-type': 'application/json', authorization: `Bearer ${env.AI_API_KEY}` },
+        body: JSON.stringify({ model, temperature: 0.3, max_tokens: 500, messages }) });
+    } catch { console.error('Ask: network error from', model); continue; }
+    if (r.ok) {
+      const data = await r.json().catch(() => null);
+      const a = String(data?.choices?.[0]?.message?.content || '').replace(/[*_`#]+/g, '').trim().slice(0, 1200);
+      if (a) return a;
+      console.error('Ask: empty answer from', model); continue;
+    }
+    console.error('Ask: provider answered', r.status, 'for', model, (await r.text()).slice(0, 300));
+    if (!askRetryable(r.status)) break;
+  }
+  return '';
+}
+
 async function askSite(env, request, body) {
   if (!aiOn(env)) throw new HTTPError(503, "The helper's AI isn't switched on.");
   const { q, history } = cleanAskRequest(body);
   await addressLimit(env, request, 'ask', 6);
   const day = await (await env.AI_QUOTA.get(env.AI_QUOTA.idFromName('site-ask')).fetch('https://quota/', { method: 'POST', body: JSON.stringify({ limit: Number(env.ASK_DAILY) || 1500 }) })).json();
   if (!day.ok) throw new HTTPError(429, 'The helper has answered a lot of questions today. Please try again tomorrow, or ask on GitHub.');
-  let r;
-  try {
-    r = await fetch(`${(env.AI_BASE || AI_DEFAULT_BASE).replace(/\/+$/, '')}/chat/completions`, {
-      method: 'POST', headers: { 'content-type': 'application/json', authorization: `Bearer ${env.AI_API_KEY}` },
-      body: JSON.stringify({ model: env.AI_MODEL || AI_DEFAULT_MODEL, temperature: 0.3, max_tokens: 500,
-        messages: [{ role: 'system', content: ASK_SYSTEM + KNOWLEDGE }, ...history, { role: 'user', content: q }] }) });
-  } catch { throw new HTTPError(503, 'The helper is busy. Try again in a minute.'); }
-  if (!r.ok) { console.error('Ask: provider answered', r.status, (await r.text()).slice(0, 300)); throw new HTTPError(503, 'The helper is busy. Try again in a minute.'); }
-  const data = await r.json().catch(() => null);
-  const a = String(data?.choices?.[0]?.message?.content || '').replace(/[*_`#]+/g, '').trim().slice(0, 1200);
-  if (!a) throw new HTTPError(503, 'The helper is busy. Try again in a minute.');
+  const messages = [{ role: 'system', content: ASK_SYSTEM + KNOWLEDGE }, ...history, { role: 'user', content: q }];
+  const main = env.AI_MODEL || AI_DEFAULT_MODEL, fallback = String(env.ASK_FALLBACK_MODEL || '').trim();
+  let a = await askModel(env, main, messages);
+  if (!a && fallback && fallback !== main) a = await askModel(env, fallback, messages);
+  if (!a) throw new HTTPError(503, ASK_BUSY);
   return { a };
 }
 
