@@ -79,7 +79,7 @@ Pick your computer. Both buttons start the download straight away. The Mac link 
       <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.1.83</b></a>
     </td>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 2.1.83 BETA</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 2.1.84 BETA</b></a>
     </td>
   </tr>
   <tr>
@@ -149,6 +149,11 @@ On a Mac without a notch, a slim pill appears at the top center of the menu bar 
 More screenshots of the capture overlay, the AI answer, the settings and the Windows app are in [docs/SCREENSHOTS.md](docs/SCREENSHOTS.md).
 
 ## What's new
+
+### Windows 2.1.84 BETA · 2 November 2026 · 🪄 Do It says what it is waiting for
+
+- Do It on Windows now tells you which AI and model it is asking, and counts the seconds ("Thinking · 12 s") while it waits. If the AI hasn't answered after 90 seconds the run stops and says which one was slow. For Do It, pick Gemini (its key is free) in Settings → AI.
+- The file converter no longer starts PowerShell with the execution-policy bypass, which some antivirus programs dislike.
 
 ### Mac 2.1.83 · Windows 2.1.83 BETA · 2 November 2026 · ♞ Chess, a B-2 bomber and a satellite switch
 
