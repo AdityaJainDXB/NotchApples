@@ -44,6 +44,7 @@ struct NotchMessengerView: View {
             if mode == .nearby { local.start() }
         }
         .onChange(of: mode) { _, new in if new == .nearby { local.start() } }
+        .onDisappear { local.stop() }
     }
 
     // MARK: Header

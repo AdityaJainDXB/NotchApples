@@ -178,9 +178,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         GlobalHotkeyManager.shared.register(.stopRemote) { RemoteViewHub.shared.stopAll("Stopped from the Mac keyboard.") }
         guard SettingsManager.shared.messengerEnabled else { return }
         MessengerNotifier.shared.requestAuthorizationIfNeeded()
-        LocalP2PManager.shared.start()
-        // Nearby discovery keeps the Wi-Fi radio busy: pause it while the screen is asleep or the session is switched out.
-        Power.onChange.append { if Power.isIdle { LocalP2PManager.shared.stop() } else { LocalP2PManager.shared.start() } }
+        // Nearby Wi-Fi discovery keeps the radio busy, so it starts only while the Messenger tab is open (NotchMessengerView).
         if let room = UserDefaults.standard.string(forKey: "messenger.activeRoom") {
             WebP2PManager.shared.join(room)
         }
