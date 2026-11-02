@@ -494,3 +494,49 @@ test('manual gearbox: you choose the gear, the rev limiter holds the top speed o
   assert.ok(Math.hypot(c.vx, c.vy) > v1, 'second gear is faster');
   c.shiftReq = -1; R.stepCar(c, GO, dt, 1); assert.equal(c.gear, 1);
 });
+
+// ---- qualifying: the knock-out format
+const qrows = (times) => times.map((best, i) => ({ id: 'c' + i, best, at: i, seed: i }));
+
+test('qualifying: 20 cars run 20, 15 and 10; smaller fields cut a quarter, and tiny ones just run', () => {
+  assert.deepEqual(R.qualiSizes(20), [20, 15, 10]);
+  assert.deepEqual(R.qualiSizes(24), [24, 19, 10], 'a big field is cut to ten for Q3');
+  assert.deepEqual(R.qualiSizes(16), [16, 12, 8]);
+  assert.deepEqual(R.qualiSizes(10), [10, 7, 4]);
+  assert.deepEqual(R.qualiSizes(6), [6, 4]);
+  assert.deepEqual(R.qualiSizes(2), [2]);
+  for (let n = 1; n <= 30; n++) { const s = R.qualiSizes(n); assert.equal(s[0], n); assert.ok(s.every((v, i) => v >= 1 && (!i || v < s[i - 1]) || s.length === 1), `sizes for ${n}: ${s}`); }
+});
+
+test('qualifying: the slowest five are knocked out, the rest go through fastest first', () => {
+  const rows = qrows([91.2, 90.1, 93.4, 92.0, 90.9, 95.1, 89.7, 94.2, 91.8, 92.6, 93.0, 90.4, 96.0, 91.1, 92.2, 93.9, 94.8, 90.0, 95.5, 92.9]);
+  const { through, out } = R.qualiKnockout(rows, 15);
+  assert.equal(through.length, 15); assert.equal(out.length, 5);
+  assert.deepEqual(out.map((r) => r.best), [94.8, 95.1, 95.5, 96.0, 94.2].sort((a, b) => a - b), 'the five slowest');
+  assert.equal(through[0].best, 89.7, 'the fastest is first');
+  assert.ok(through.every((r, i) => !i || r.best >= through[i - 1].best), 'sorted by time');
+  assert.ok(Math.max(...through.map((r) => r.best)) < Math.min(...out.map((r) => r.best)), 'everyone through beat everyone out');
+});
+
+test('qualifying: a car with no time goes out before any car with one, and a tied time goes to whoever set it first', () => {
+  const rows = [{ id: 'a', best: 0, seed: 0 }, { id: 'b', best: 100.5, at: 40, seed: 1 }, { id: 'c', best: 100.5, at: 20, seed: 2 }, { id: 'd', best: 99, at: 10, seed: 3 }, { id: 'e', best: 0, seed: 4 }];
+  assert.deepEqual(R.qualiOrder(rows).map((r) => r.id), ['d', 'c', 'b', 'a', 'e']);
+  const { through, out } = R.qualiKnockout(rows, 3);
+  assert.deepEqual(through.map((r) => r.id), ['d', 'c', 'b']);
+  assert.deepEqual(out.map((r) => r.id), ['a', 'e']);
+  assert.deepEqual(R.qualiKnockout(rows, 5).out, [], 'nobody is cut when everyone fits');
+});
+
+test('qualifying: the grid is Q3, then the Q2 casualties, then the Q1 casualties, each fastest first', () => {
+  const times = Array.from({ length: 20 }, (_, i) => 90 + ((i * 7) % 20) * 0.1 + i * 0.001);       // twenty different lap times
+  const q1 = R.qualiKnockout(qrows(times), 15);
+  const q2 = R.qualiKnockout(q1.through.map((r) => ({ ...r, best: r.best + 0.05 })), 10);          // a second segment: everyone a little different
+  const q3 = q2.through.map((r, i) => ({ ...r, best: 89 + (q2.through.length - i) * 0.01 }));       // Q3 reverses their order
+  const grid = R.qualiGrid(q3, [q1.out, q2.out]);
+  assert.equal(grid.length, 20); assert.equal(new Set(grid).size, 20, 'every car appears once');
+  assert.equal(grid[0], q2.through[q2.through.length - 1].id, 'pole is the fastest in Q3');
+  assert.deepEqual(grid.slice(0, 10), R.qualiOrder(q3).map((r) => r.id));
+  assert.deepEqual(grid.slice(10, 15), R.qualiOrder(q2.out).map((r) => r.id), 'P11-P15: the Q2 knocked out');
+  assert.deepEqual(grid.slice(15), R.qualiOrder(q1.out).map((r) => r.id), 'P16-P20: the Q1 knocked out');
+  assert.ok(Math.max(...q2.through.map((r) => r.best)) < Math.min(...q2.out.map((r) => r.best)), 'the Q2 cut was made by time');
+});
