@@ -1,10 +1,27 @@
 // Messenger (Pro): end-to-end encrypted rooms, compatible with the Mac app.
-import { el, timeAgo } from '../store.js';
+import { el, load, save, timeAgo } from '../store.js';
 import { invoke } from '../native.js';
-import { toast, prompt } from '../ui.js';
+import { toast, prompt, segmented } from '../ui.js';
 import * as MS from '../services/messenger.js';
 
+/// Messenger has two modes: Rooms (join a chat by a shared code) and Friends (private chat with people you add by friend code).
 export function render(root) {
+  let mode = load('messenger.mode', 'rooms'), stop = null;
+  const body = el('div', { class: 'col fill', style: 'min-height:0' });
+  const switcher = segmented([{ value: 'rooms', label: 'Rooms' }, { value: 'friends', label: 'Friends' }], mode, (m) => { mode = m; save('messenger.mode', m); show(); });
+  async function show() {
+    const mine = {}; show.current = mine;
+    stop?.(); stop = null; body.replaceChildren();
+    const cleanup = mode === 'friends' ? (await import('./messengerfriends.js')).render(body) : renderRooms(body);
+    if (show.current !== mine) cleanup?.(); else stop = cleanup;
+  }
+  root.append(el('div', { class: 'col fill', style: 'gap:8px' }, el('div', { class: 'hstack' }, switcher), body));
+  show();
+  return () => { show.current = null; stop?.(); };
+}
+
+// Rooms: end-to-end encrypted rooms joined by a code (unchanged).
+function renderRooms(root) {
   const wrap = el('div', { class: 'col fill' });
   root.append(wrap);
   const code = el('input', { class: 'field', placeholder: 'Room code, e.g. #study-group (longer = more private)' });

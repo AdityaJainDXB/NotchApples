@@ -20,6 +20,7 @@ mod claude_usage;
 mod clip;
 mod extras;
 mod files;
+mod friendsstore;
 mod hello;
 mod icons;
 mod index;
@@ -516,6 +517,7 @@ fn main() {
             app_info, quit_app, notify, set_autostart, get_autostart, register_shortcuts,
             window::set_expanded, window::set_glass, window::set_layout, window::set_hidden, window::set_hide_in_fullscreen,
             net::http,
+            friendsstore::friends_file_get, friendsstore::friends_file_set, friendsstore::friends_file_delete,
             clip::clipboard_pause, clip::clipboard_copy_text, clip::clipboard_copy_image, clip::clipboard_forget,
             awake::set_keep_awake, awake::keep_awake_state,
             system_stats, top_processes, transliterate, capture_screen,
