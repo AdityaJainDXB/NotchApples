@@ -4,7 +4,7 @@ Every Notch Apple release, newest first. The latest few are also on the [README]
 
 > **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is in the repository's history.
 
-### Mac 2.1.90 · Windows 2.1.90 BETA · 2 November 2026 · 🛡️ Safer games and file opening
+### Mac 2.1.90 · Windows 2.1.91 BETA · 2 November 2026 · 🛡️ Safer games and file opening
 
 - Cookie Clicker now always uses the built-in game. It no longer loads a third-party website (cookieclicker.eu) when you open the tab, so nothing is contacted and your progress is always the saved one.
 - Files received in Messenger are saved in a fresh folder under a cleaned-up name and shown in Finder instead of being opened straight away, so a received file can never launch itself or be written outside its folder.

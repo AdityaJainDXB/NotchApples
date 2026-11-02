@@ -1334,10 +1334,10 @@ export default {
         case '/feedback': await addressLimit(env, request, 'ins', 60); return json(await Insights.feedback(env, body));
         case '/ask': return json(await askSite(env, request, body), 200, { 'cache-control': 'no-store' });
         case '/support': return json(await supportPost(env, request, body));
-        case '/order': await addressLimit(env, request, 'orderany', 30); if (body.remind === true) await addressLimit(env, request, 'order', 6); return json(await order(env, body));
-        case '/claim': await addressLimit(env, request, 'claim', 10); return json(await claim(env, body));
-        case '/promo': await addressLimit(env, request, 'promo', 10); return json(await promo(env, body));
-        case '/recover': await addressLimit(env, request, 'recover', 4); return json(await recover(env, body));
+        case '/order': await addressLimit(env, request, 'orderany', 60); if (body.remind === true) await addressLimit(env, request, 'order', 6); return json(await order(env, body));
+        case '/claim': await addressLimit(env, request, 'claim', 60); return json(await claim(env, body));
+        case '/promo': await addressLimit(env, request, 'promo', 30); return json(await promo(env, body));
+        case '/recover': await addressLimit(env, request, 'recover', 20); return json(await recover(env, body));
         case '/activate': return json(await activate(env, body, true));
         case '/deactivate': return json(await activate(env, body, false));
         case '/entitle': return json(await entitle(env, body));
