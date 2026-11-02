@@ -349,10 +349,24 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     func applyMediaKeyPreference() {
         let s = SettingsManager.shared
         let wasRunning = MediaKeyInterceptor.shared.isRunning
-        MediaKeyInterceptor.shared.setEnabled(s.showSystemHUD && s.replaceSystemHUD)
+        let want = s.showSystemHUD && s.replaceSystemHUD
+        mediaKeyRetry?.invalidate(); mediaKeyRetry = nil
+        MediaKeyInterceptor.shared.setEnabled(want)
         if wasRunning != MediaKeyInterceptor.shared.isRunning { SystemHUDObserver.shared.retuneBrightnessPolling() }
+        // Without Accessibility the keys cannot be caught and macOS shows its own volume and brightness bars. A new version of the app
+        // is a new signature to macOS, which can drop the permission until it is switched off and on again, so this keeps checking
+        // (every 10 s) and takes the keys back as soon as it is allowed, with no restart.
+        if want, !MediaKeyInterceptor.shared.isRunning {
+            mediaKeyRetry = Timer.scheduledTimer(withTimeInterval: 10, repeats: true) { [weak self] t in
+                let s = SettingsManager.shared
+                guard s.showSystemHUD && s.replaceSystemHUD else { t.invalidate(); self?.mediaKeyRetry = nil; return }
+                if MediaKeyInterceptor.shared.setEnabled(true) { t.invalidate(); self?.mediaKeyRetry = nil; SystemHUDObserver.shared.retuneBrightnessPolling() }
+            }
+            mediaKeyRetry?.tolerance = 5
+        }
         applyBrightnessBlackoutPreference()
     }
+    private var mediaKeyRetry: Timer?
 
     /// ⌥A toggles the screen to zero brightness and back. On for everyone (switched on once for anyone who had it off);
     /// without Accessibility it can't start yet, so it checks again every few seconds and starts once it is allowed.
