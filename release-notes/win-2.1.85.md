@@ -1,0 +1,6 @@
+## Notch Apple for Windows 2.1.85 (BETA)
+
+- Racing: tyre and brake temperatures are on the car panel (bottom left), one pair per wheel. Tyres warm up with speed, cornering, braking and sliding and cool in the air; the discs heat when you brake and cool on the straights. The best grip is between about 80 and 110 °C: cold or overheated tyres grip a little less, and a disc over 800 °C fades. New tyres from a pit stop start pre-warmed.
+- Racing: under a yellow flag, the Virtual Safety Car or the Safety Car you now get 8 seconds to slow down before any overtaking or speeding penalty can apply.
+- Racing: no start lights on the formation lap, and you park in your grid box however you like (these were Mac-only in 2.1.84; Windows now has them too).
+- Same racing changes as the Mac. Untested on real Windows hardware.

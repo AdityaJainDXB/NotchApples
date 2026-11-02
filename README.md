@@ -76,10 +76,10 @@ Pick your computer. Both buttons start the download straight away. The Mac link 
   </tr>
   <tr>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.1.84</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.1.85</b></a>
     </td>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 2.1.84 BETA</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 2.1.85 BETA</b></a>
     </td>
   </tr>
   <tr>
@@ -150,6 +150,13 @@ More screenshots of the capture overlay, the AI answer, the settings and the Win
 
 ## What's new
 
+### Mac 2.1.85 · Windows 2.1.85 BETA · 2 November 2026 · 🌡️ Tyre and brake temperatures
+
+- Racing: tyre and brake temperatures are on the car panel (bottom left), one pair per wheel. Tyres warm up with speed, cornering, braking and sliding and cool in the air; the discs heat when you brake and cool on the straights. The best grip is between about 80 and 110 °C: cold or overheated tyres grip a little less, and a disc over 800 °C fades. New tyres from a pit stop start pre-warmed.
+- Racing: under a yellow flag, the Virtual Safety Car or the Safety Car you now get 8 seconds to slow down before any overtaking or speeding penalty can apply.
+- Racing: no start lights on the formation lap, and you park in your grid box however you like (these were Mac-only in 2.1.84; Windows now has them too).
+- Same racing changes as the Mac. Untested on real Windows hardware.
+
 ### Mac 2.1.84 · 2 November 2026 · 🏁 Park in your own grid box
 
 - Racing: no start lights on the formation lap any more; the five lights now appear only once every car is on the grid.
@@ -159,14 +166,6 @@ More screenshots of the capture overlay, the AI answer, the settings and the Win
 
 - Do It on Windows now tells you which AI and model it is asking, and counts the seconds ("Thinking · 12 s") while it waits. If the AI hasn't answered after 90 seconds the run stops and says which one was slow. For Do It, pick Gemini (its key is free) in Settings → AI.
 - The file converter no longer starts PowerShell with the execution-policy bypass, which some antivirus programs dislike.
-
-### Mac 2.1.83 · Windows 2.1.83 BETA · 2 November 2026 · ♞ Chess, a B-2 bomber and a satellite switch
-
-- Chess (new) in the Games menu: play the computer at four levels (Beginner, Casual, Club, Strong) or a friend online. Online uses a 6-character room code, the same kind the Plane and Racing games use: open a room, share the code, your friend joins. Castling, en passant, promotion, check, checkmate, stalemate and draws are all handled, with a move list, undo against the computer, flip board and resign.
-- Plane: the B-2 Spirit stealth bomber is in the hangar, a black flying wing with no tail. In Battle it is a new vehicle (24 precision bombs, 8 flares, no guns).
-- Plane: satellite imagery is now its own switch, off by default. Real terrain gives you the real hills and coast; turn on Satellite imagery (only shown with Real terrain) to paint the real photo over them.
-- Racing: the Safety Car and the Medical Car now feel hills and banked corners on the formation lap, like every other car (they already did during the race).
-- Chess, the B-2 Spirit, the satellite imagery switch and the Safety and Medical Car fix are the same as on the Mac: the games are shared. Untested on real Windows hardware.
 
 Every earlier release is in the [changelog](CHANGELOG.md).
 

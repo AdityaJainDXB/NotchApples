@@ -669,8 +669,27 @@
   const tyreGrip = (c) => {
     const t = TYRES[c.tyre] || TYRES.M, w = WET;
     const k = !t.rain ? t.grip * (1 - 0.55 * w) : t.rain === 1 ? t.grip * (1 + 0.12 * w - 0.25 * Math.max(0, w - 0.65)) : t.grip * (1 + 0.16 * w);
-    return k * (c.puncture ? 0.55 : 1);
+    return k * (c.puncture ? 0.55 : 1) * tyreTempK(c);
   };
+  /// Tyre and brake temperatures, per wheel (front left, front right, rear left, rear right): c.t0..c.t3 tyres, c.b0..c.b3 brake discs, in °C.
+  /// The tyres heat up with speed, cornering, braking and sliding, and cool in the airflow; the best grip is between 80 and 110 °C.
+  /// Discs heat in proportion to the speed they shed and cool faster the quicker the car goes; a very hot disc fades.
+  const TW = ['t0', 't1', 't2', 't3'], BW = ['b0', 'b1', 'b2', 'b3'];
+  const tyreAvg = (c) => ((c.t0 ?? 60) + (c.t1 ?? 60) + (c.t2 ?? 60) + (c.t3 ?? 60)) / 4;
+  const tyreTempK = (c) => { const T = tyreAvg(c); return T < 80 ? 1 - 0.0016 * (80 - T) : T > 110 ? 1 - 0.0012 * Math.min(60, T - 110) : 1; };
+  const brakeFade = (c) => { const B = Math.max(c.b0 ?? 0, c.b1 ?? 0); return 1 - 0.25 * clamp((B - 800) / 300, 0, 1); };
+  function thermal(c, inp, dt) {
+    const amb = 32 - 14 * WET, v = Math.abs(c.vf), turn = Math.abs(c.vf * c.yaw), slide = Math.abs(c.vl), side = c.steerA > 0 ? 1 : -1;
+    const kT = 0.04 + 0.0012 * v, kB = 0.03 + 0.007 * v + (c.onGrass ? 0.02 : 0), share = [0.62, 0.62, 0.38, 0.38];
+    const brk = (inp.brake || 0) * (v > 1.5 ? 1 : 0) + (inp.hand ? 0.4 : 0), thr = inp.throttle || 0;
+    for (let i = 0; i < 4; i++) {
+      const front = i < 2, outer = (i % 2 === 0 ? 1 : -1) * side, load = 1 + 0.3 * outer * Math.min(1, turn / 12);
+      const heat = (2.5 * Math.min(1, v / 8) + 0.035 * v + 0.18 * turn * load + 0.55 * slide + (front ? 0.05 * brk * v : 0.025 * thr * v)) * (c.onGrass ? 0.7 : 1);
+      c[TW[i]] = (c[TW[i]] ?? amb + 25) + (heat - kT * ((c[TW[i]] ?? amb + 25) - amb)) * dt;
+      const b = c[BW[i]] ?? amb + 10;
+      c[BW[i]] = clamp(b + (2.8 * brk * v * share[i] / 0.5 - kB * (b - amb - 20)) * dt, amb, 1150);
+    }
+  }
   const CARS = [
     { id: 'gt', name: 'Street GT', blurb: 'Grippy and forgiving. Fast through the bends.', accel: 15, vmax: 66, grip: 17, steer: 0.52, loose: 0.12, brake: 30, color: '#3aa0ff', down: 0.05, gears: 6, idle: 900, redline: 7500, cyl: 6, tone: 'gt', tough: 1 },
     { id: 'drift', name: 'Drift King', blurb: 'Lets go easily. Tap Space to slide round corners.', accel: 14, vmax: 62, grip: 12.5, steer: 0.6, loose: 0.42, brake: 26, color: '#ff4d6d', down: 0, gears: 6, idle: 850, redline: 8000, cyl: 4, tone: 'hatch', tough: 1 },
@@ -722,7 +741,7 @@
   }
 
   function newCar(spec, x, y, h) {
-    return { spec, x, y, h, vx: 0, vy: 0, vz: 0, z: 0, yaw: 0, steerA: 0, vf: 0, vl: 0, drifting: false, onGrass: false, bump: 0, gear: 0, rpm: spec.idle || 900, shiftT: 0, dmg: 0, spin: 0, pull: 0, hit: 0 };
+    return { spec, x, y, h, vx: 0, vy: 0, vz: 0, z: 0, yaw: 0, steerA: 0, vf: 0, vl: 0, drifting: false, onGrass: false, bump: 0, gear: 0, rpm: spec.idle || 900, shiftT: 0, dmg: 0, spin: 0, pull: 0, hit: 0, t0: 48, t1: 48, t2: 48, t3: 48, b0: 45, b1: 45, b2: 45, b3: 45 };
   }
 
   /// One physics step on the real road: the hill (slope), the bend's lateral load (curv), and a banked corner's extra grip and the pull of
@@ -747,7 +766,7 @@
     let a = 0;
     if (inp.throttle > 0) a += sp.accel * inp.throttle * clamp(1 - (Math.max(0, vf0) / (sp.vmax * surf)) ** 2, 0, 1) * (vf0 < 0 ? 1.6 : 1);
     const vLoad = clamp(1 + 0.8 * (vf0 * vf0 * curv) / 9.8, 0.5, 1.5);       // the same load decides how hard the brakes can bite: over a crest the wheels lock sooner
-    if (inp.brake > 0) a += vf0 > 1.5 ? -sp.brake * inp.brake * vLoad : -sp.accel * 0.55 * inp.brake * clamp(1 + vf0 / 18, 0, 1);
+    if (inp.brake > 0) a += vf0 > 1.5 ? -sp.brake * inp.brake * vLoad * brakeFade(c) : -sp.accel * 0.55 * inp.brake * clamp(1 + vf0 / 18, 0, 1);
     a -= 0.0002 * (1 - 0.4 * (c.tow || 0)) * vf0 * Math.abs(vf0) + (Math.abs(vf0) > 0.2 ? 0.35 * Math.sign(vf0) : 0);   // slipstream: less air drag when tucked in
     if (surf < 1) a -= (1 - surf) * 9 * Math.sign(vf0) * Math.min(1, Math.abs(vf0) / 12);
     if (inp.hand) a -= 7 * Math.sign(vf0) * Math.min(1, Math.abs(vf0) / 8);
@@ -789,6 +808,7 @@
     c.onGrass = surf < 1;
     c.hit = Math.max(0, c.hit - dt * 3);
     gearbox(c, dt, inp.throttle);
+    thermal(c, inp, dt);
     return c;
   }
 
@@ -1604,6 +1624,7 @@
     let raceCtl = { flag: 'green', t: 0, at: null, score: 0, next: 60, done: 0 };
     let scR = null, medR = null;
     const FLAGS = { green: ['GREEN FLAG', '#21c46b'], yellow: ['YELLOW FLAG', '#ffd23f'], vsc: ['VIRTUAL SAFETY CAR', '#ffd23f'], sc: ['SAFETY CAR', '#ffd23f'], red: ['RED FLAG', '#e53935'] };
+    const FLAG_GRACE = 8;       // seconds after a yellow flag, VSC or Safety Car before overtaking or speed penalties apply
     const RANK = { green: 0, yellow: 1, vsc: 2, sc: 3, red: 4 };
     function setFlag(flag, why) {
       raceCtl.flag = flag; raceCtl.t = 0; raceCtl.warned = false; raceCtl.lap0 = null; raceCtl.restart = false; raceCtl.inWarned = false; raceCtl.scOut = false;
@@ -1930,18 +1951,18 @@
       if (scR) { const st = aiState.get(scR.id); if (st && !st.pitting) { const gap = order[0] ? scR.prog - order[0].prog : 0; st.cap = gap > 90 ? 18 : gap > 40 ? 30 : 40; } }       // the Safety Car waits until the leader is right behind it
       // The rules for you (in a race car): no overtaking under a flag, and keep to the VSC pace.
       if (role === 'race' && me && !me.finished) {
-        const myRank = order.indexOf(me), v = Math.hypot(me.car.vx, me.car.vy);
-        if (C.flag !== 'green' && C.flag !== 'red' && me.lastRank != null && myRank >= 0 && myRank < me.lastRank && !me.inLane) {
+        const myRank = order.indexOf(me), v = Math.hypot(me.car.vx, me.car.vy), grace = C.t < FLAG_GRACE;      // a new flag gives the drivers a few seconds to slow down before any penalty
+        if (!grace && C.flag !== 'green' && C.flag !== 'red' && me.lastRank != null && myRank >= 0 && myRank < me.lastRank && !me.inLane) {
           const passed = order[myRank + 1];
           const zone = C.flag !== 'yellow' || (C.at && Math.abs(relDist(me.sNow || 0, C.at.s)) < 160);
           if (passed && zone && !passed.inLane && passed.car.dmg < 0.9 && (!me.flagPenT || clock - me.flagPenT > 8)) { me.flagPenT = clock; penalize(me, 5, C.flag === 'yellow' ? 'overtaking under yellow flags' : C.flag === 'vsc' ? 'overtaking under the Virtual Safety Car' : 'overtaking behind the Safety Car'); }
         }
-        if (C.flag === 'sc' && scR && !scR.inLane && !me.inLane) {      // overtaking the Safety Car itself
+        if (!grace && C.flag === 'sc' && scR && !scR.inLane && !me.inLane) {      // overtaking the Safety Car itself
           const ahead = me.prog > scR.prog + 4;
           if (ahead && me.scBehind && (!me.scPenT || clock - me.scPenT > 10)) { me.scPenT = clock; penalize(me, 10, 'overtaking the Safety Car'); }
           me.scBehind = !ahead;
         } else me.scBehind = true;
-        if (C.flag === 'vsc') { if (v > me.car.spec.vmax * 0.45 * 1.12) me.vscOver = (me.vscOver || 0) + dt; if (me.vscOver > 2.5 && !me.vscPen) { me.vscPen = true; penalize(me, 5, 'going too fast under the Virtual Safety Car'); } } else { me.vscOver = 0; me.vscPen = false; }
+        if (C.flag === 'vsc') { if (!grace && v > me.car.spec.vmax * 0.45 * 1.12) me.vscOver = (me.vscOver || 0) + dt; if (me.vscOver > 2.5 && !me.vscPen) { me.vscPen = true; penalize(me, 5, 'going too fast under the Virtual Safety Car'); } } else { me.vscOver = 0; me.vscPen = false; }
         if (C.flag === 'red' && C.t > 4 && v > 6 && !C.warned) { C.warned = true; toast('🟥 RED FLAG: slow down and stop'); }
         me.lastRank = myRank;
       }
@@ -2270,7 +2291,7 @@
               const wait = r.servePen ? (r.pen || 0) : 0, need = wait + 2.4 + (c.dmg > 0.3 ? 2.5 * c.dmg : 0) + (r === me ? me.pitExtra || 0 : 0);
               pitCrewTick(r, c, need);
               if (wait && r.service >= wait && !r.penDone) { r.penDone = true; if (r === me) { toast(`Penalty served (${wait} s). The crew goes to work.`); say('Penalty served. Go, go on the tyres.', 'eng', 2); } }
-              if (r.service >= need) { if (r === me) me.pitExtra = 0; if (wait) { r.pen = 0; r.servePen = false; } r.penDone = false;  r.pits = (r.pits || 0) + 1; r.tyreLap = Math.max(0, r.lap); { const left = raceLaps - Math.max(0, r.lap); c.tyre = r === me && !me.ai ? me.nextTyre || 'M' : (WET > 0.6 ? 'W' : WET > 0.25 ? 'I' : left > raceLaps * 0.55 && left > 3 ? 'H' : left > 2 ? 'M' : 'S'); } c.puncture = false; c.dmg = 0; c.wear = 0; c.pull = 0; r.service = 0; r.served = true; if (r.ai) { const st = aiState.get(r.id); st.served = true; /* it keeps following the pit lane to the exit */ } if (r === me) { toast(`Pit stop: ${need.toFixed(1)} s · new ${TYRES[c.tyre].name.toLowerCase()}s${need > 2.5 ? ', damage repaired' : ''}`); say('Good stop, good stop. Go, go, go!', 'eng', 2); } }
+              if (r.service >= need) { if (r === me) me.pitExtra = 0; if (wait) { r.pen = 0; r.servePen = false; } r.penDone = false;  r.pits = (r.pits || 0) + 1; r.tyreLap = Math.max(0, r.lap); { const left = raceLaps - Math.max(0, r.lap); c.tyre = r === me && !me.ai ? me.nextTyre || 'M' : (WET > 0.6 ? 'W' : WET > 0.25 ? 'I' : left > raceLaps * 0.55 && left > 3 ? 'H' : left > 2 ? 'M' : 'S'); } c.puncture = false; c.dmg = 0; c.wear = 0; c.pull = 0; c.t0 = c.t1 = c.t2 = c.t3 = 78; r.service = 0; r.served = true; if (r.ai) { const st = aiState.get(r.id); st.served = true; /* it keeps following the pit lane to the exit */ } if (r === me) { toast(`Pit stop: ${need.toFixed(1)} s · new ${TYRES[c.tyre].name.toLowerCase()}s${need > 2.5 ? ', damage repaired' : ''}`); say('Good stop, good stop. Go, go, go!', 'eng', 2); } }
             } else if (r.service > 0 && v > 2) r.service = 0;
           }
         } else { imp = wallHit(c, T, after); r.inLane = false; }
@@ -2492,7 +2513,7 @@
     }
     /// The car's condition: the four tyres (what is left of each) around a top view of the car, green to red with the damage.
     function drawCondition(s) {
-      const c = me.car, wear = c.wear || 0, dm = clamp(c.dmg || 0, 0, 1), w = 122 * s, h = 112 * s, x = 8 * s, y = H - h - 8 * s, cx = x + w / 2, cy = y + h / 2 + 2 * s;
+      const c = me.car, wear = c.wear || 0, dm = clamp(c.dmg || 0, 0, 1), w = 168 * s, h = 112 * s, x = 8 * s, y = H - h - 8 * s, cx = x + w / 2, cy = y + h / 2 + 2 * s;
       g.fillStyle = 'rgba(8,13,28,.82)'; g.beginPath(); g.roundRect(x, y, w, h, 7 * s); g.fill();
       const health = (v) => (v < 0.34 ? '#6fe05a' : v < 0.6 ? '#ffd23f' : v < 0.82 ? '#ff9f43' : '#ff4d4d');
       // Rings: front left, front right, rear left, rear right.
@@ -2501,6 +2522,11 @@
         const left = c.puncture && i === 0 ? 0 : clamp(1 - wear * f[i], 0, 1), col = left > 0.55 ? '#7ee05a' : left > 0.3 ? '#ffd23f' : left > 0.12 ? '#ff9f43' : '#ff4d4d';
         ring(px, py, 12.5 * s, left, col, 2.8 * s);
         g.fillStyle = '#fff'; g.textAlign = 'center'; g.font = `800 ${7.6 * s}px system-ui`; g.fillText(Math.round(left * 100) + '%', px, py + 2.7 * s);
+        // Temperatures beside the ring, towards the car: the tyre (blue cold, green in its window, orange then red too hot) and the brake disc.
+        const tt = c[TW[i]] ?? 50, bt = c[BW[i]] ?? 50, tc = tt < 70 ? '#6cb8ff' : tt < 112 ? '#7ee05a' : tt < 135 ? '#ff9f43' : '#ff4d4d', bc2 = bt < 250 ? '#8fa3c7' : bt < 600 ? '#ffd23f' : bt < 850 ? '#ff9f43' : '#ff4d4d';
+        g.textAlign = i % 2 ? 'right' : 'left'; const tx = i % 2 ? px - 16 * s : px + 16 * s;
+        g.font = `800 ${8.4 * s}px ui-monospace, monospace`; g.fillStyle = tc; g.fillText(Math.round(tt) + '°', tx, py - 0.5 * s);
+        g.font = `700 ${7.2 * s}px ui-monospace, monospace`; g.fillStyle = bc2; g.fillText(Math.round(bt) + '°', tx, py + 8.5 * s);
       });
       // The car from above.
       const bc = health(dm);
@@ -2513,7 +2539,7 @@
       g.globalAlpha = 1;
       g.fillStyle = '#1b2236'; for (const [tx, ty] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) { g.beginPath(); g.roundRect(cx + tx * 15.5 * s - 3 * s, cy + (ty < 0 ? -22 : 17) * s - 5.5 * s, 6 * s, 11 * s, 2 * s); g.fill(); }
       g.fillStyle = 'rgba(255,255,255,.75)'; g.textAlign = 'center'; g.font = `800 ${6.5 * s}px system-ui`;
-      g.fillText(`${(TYRES[c.tyre] || TYRES.M).name.toUpperCase()}`, cx, y + 9 * s);
+      g.fillText(`${(TYRES[c.tyre] || TYRES.M).name.toUpperCase()} · TYRE / BRAKE °C`, cx, y + 9 * s);
       if (dm > 0.03) { g.fillStyle = bc; g.fillText(`DMG ${Math.round(dm * 100)}%`, cx, y + h - 4 * s); }
     }
     /// The dash along the bottom: the battery (or the tyres, in a car without one), the gear with the rev lights and the ERS mode, and speed and revs.

@@ -20,6 +20,10 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.1.85", date: "2 November 2026", headline: "Tyre and brake temperatures", items: [
+            "Racing: tyre and brake temperatures are on the car panel (bottom left), one pair per wheel. Tyres warm up with speed, cornering, braking and sliding and cool in the air; the discs heat when you brake and cool on the straights. The best grip is between about 80 and 110 °C: cold or overheated tyres grip a little less, and a disc over 800 °C fades. New tyres from a pit stop start pre-warmed.",
+            "Racing: under a yellow flag, the Virtual Safety Car or the Safety Car you now get 8 seconds to slow down before any overtaking or speeding penalty can apply.",
+        ]),
         ReleaseNote(version: "2.1.84", date: "2 November 2026", headline: "Park in your own grid box", items: [
             "Racing: no start lights on the formation lap any more; the five lights now appear only once every car is on the grid.",
             "Racing: you park in your grid box however you like. Stop anywhere inside your box, at any angle, and you stay exactly where you stopped (no more snapping or teleporting onto the marks). If you overshoot, reverse back into it.",

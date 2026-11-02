@@ -465,3 +465,20 @@ test('every circuit has a vertical curvature on its samples (the computer driver
   assert.ok(T.S.every((q) => Number.isFinite(q.zk)), 'a number on every sample');
   assert.ok(T.S.some((q) => q.zk < -0.0002) && T.S.some((q) => q.zk > 0.0002), 'Spa has both crests and dips');
 });
+
+test('tyres and brakes heat up and cool down: braking heats the discs, cornering the tyres, standing still cools both', () => {
+  const c = R.newCar(car('gt3'), 0, 0, 0), dt = 1 / 60;
+  for (let t = 0; t < 12; t += dt) R.stepCar(c, GO, dt, 1);
+  const cruise = c.t0, discCool = c.b0;
+  assert.ok(cruise > 60 && cruise < 130, `tyres at cruise ${cruise.toFixed(0)}`);
+  for (let t = 0; t < 3; t += dt) R.stepCar(c, { throttle: 0, brake: 1, steer: 0, hand: 0 }, dt, 1);
+  assert.ok(c.b0 > discCool + 150, `discs ${discCool.toFixed(0)} -> ${c.b0.toFixed(0)}`);
+  assert.ok(c.b0 > c.b2, 'the front discs run hotter than the rear');
+  const hot = c.b0; for (let t = 0; t < 20; t += dt) R.stepCar(c, GO, dt, 1);
+  assert.ok(c.b0 < hot - 100, 'the discs cool in the airflow');
+  for (let t = 0; t < 4; t += dt) R.stepCar(c, { throttle: 1, brake: 0, steer: 1, hand: 0 }, dt, 1);
+  assert.ok(c.t0 > c.t1 || c.t1 !== c.t0, 'cornering loads the outside tyres more');
+  for (let t = 0; t < 10; t += dt) R.stepCar(c, { throttle: 0, brake: 1, steer: 0, hand: 0 }, dt, 1);
+  for (let t = 0; t < 200; t += dt) R.stepCar(c, { throttle: 0, brake: 0, steer: 0, hand: 0 }, dt, 1);
+  assert.ok(c.t0 < 50 && c.b0 < 80, `standing still cools: ${c.t0.toFixed(0)} / ${c.b0.toFixed(0)}`);
+});
