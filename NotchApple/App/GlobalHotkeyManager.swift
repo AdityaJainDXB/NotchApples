@@ -160,6 +160,7 @@ final class GlobalHotkeyManager {
         case quickCapture = 9                  // Quick note from anywhere, ⌃⌥J
         // Window snapping, ⌃⌥ + key.
         case snapLeft = 10, snapRight, snapTop, snapBottom, snapMaximize, snapCenter, snapRestore
+        case stopRemote = 17                   // Ends any iPhone remote view or control at once, Control-Option-Shift-K
 
         static let windowKeys: [Key] = [.snapLeft, .snapRight, .snapTop, .snapBottom, .snapMaximize, .snapCenter, .snapRestore]
 
@@ -174,6 +175,7 @@ final class GlobalHotkeyManager {
             case .foldDismiss: UInt32(kVK_Escape)
             case .panic: UInt32(kVK_ANSI_P)
             case .quickCapture: UInt32(kVK_ANSI_J)
+            case .stopRemote: UInt32(kVK_ANSI_K)
             case .snapLeft: UInt32(kVK_LeftArrow)
             case .snapRight: UInt32(kVK_RightArrow)
             case .snapTop: UInt32(kVK_UpArrow)
@@ -192,7 +194,7 @@ final class GlobalHotkeyManager {
             case .palette: HotkeyBinding.palette.modifiers
             case .foldToggle: HotkeyBinding.lidFold.modifiers
             case .closeNotch, .foldDismiss: 0
-            case .panic: UInt32(controlKey | optionKey | shiftKey)
+            case .panic, .stopRemote: UInt32(controlKey | optionKey | shiftKey)
             case .quickCapture: UInt32(controlKey | optionKey)
             default: UInt32(controlKey | optionKey)
             }

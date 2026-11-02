@@ -174,6 +174,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         MessengerNotifier.shared.start()
         FriendsClient.shared.startIfActive()
         LiveActivityCenter.shared.providers.append { RemoteViewHub.shared.liveActivity }
+        RemoteViewHub.shared.watchSystem()
+        GlobalHotkeyManager.shared.register(.stopRemote) { RemoteViewHub.shared.stopAll("Stopped from the Mac keyboard.") }
         guard SettingsManager.shared.messengerEnabled else { return }
         MessengerNotifier.shared.requestAuthorizationIfNeeded()
         LocalP2PManager.shared.start()

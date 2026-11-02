@@ -4,6 +4,12 @@ Every Notch Apple release, newest first. The latest few are also on the [README]
 
 > **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is in the repository's history.
 
+### Mac 2.1.81 · 2 November 2026 · 🖱️ Control your Mac from your iPhone
+
+- Remote control (new, experimental, Ultimate): tap the hand in the iPhone app and the Mac replays your taps, drags, two-finger scrolling and keys. It needs three things on the Mac: Allow remote control (off by default), May control for that iPhone, and Accessibility. A red hand shows beside the notch and a notification appears while it is in use; Stop in Settings → iPhone or Control-Option-Shift-K ends it at once, and it ends if the Mac sleeps or locks.
+- The iPhone app has a key bar (⌘ shortcuts, arrows, Esc, Tab, typing) and now shows what the notch is showing, alerts such as a low battery, and, only if you switch each on in Settings → iPhone, the Mac's clipboard, newest notes and open to-dos.
+- Not included: an iPhone Live Activity (it needs a separate widget extension and a paid Apple Developer account for updates when the app is closed). Update the iPhone app too (NotchAppleCompanion.ipa); phones paired before keep working.
+
 ### Mac 2.1.80 · 2 November 2026 · 📱 Watch your Mac from your iPhone
 
 - Remote view (new, experimental, Ultimate): the paired iPhone can watch this Mac's screen live. Open the iPhone app and tap Watch this Mac's screen; pinch to zoom, drag to move, pick a display. It is off until you turn on Allow viewing this Mac's screen in Settings → iPhone, needs Screen Recording, shows an eye beside the notch while someone is watching, and has a Stop button. View only: no control yet.

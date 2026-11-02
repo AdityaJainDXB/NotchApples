@@ -22,6 +22,11 @@ final class RemoteViewClient: ObservableObject {
     @Published private(set) var currentDisplay: Int?
     @Published private(set) var size = CGSize.zero
     @Published private(set) var framesPerSecond = 0
+    /// The Mac is replaying this phone's touches and keys.
+    @Published private(set) var controlOn = false
+    /// The Mac says this phone may ask to control it (its switches are on).
+    @Published private(set) var controlAllowed = false
+    @Published var notice: String?
 
     private var conn: NWConnection?
     private var send: Companion.StreamCipher?
@@ -74,11 +79,26 @@ final class RemoteViewClient: ObservableObject {
         watchdog?.invalidate(); watchdog = nil
         if opened, var cipher = send, let c = conn, let packet = try? cipher.seal(.info, Companion.encodeNote(.init(kind: "bye"))) { c.send(content: packet, completion: .contentProcessed { _ in c.cancel() }) }
         else { conn?.cancel() }
-        conn = nil; send = nil; recv = nil; opened = false; generation += 1
+        conn = nil; send = nil; recv = nil; opened = false; generation += 1; controlOn = false
         if !quiet { state = .idle }
     }
 
     func choose(display: Int) { start(display: display) }
+
+    /// Asks the Mac to let this phone control it (or to stop). The Mac answers with a `control` note.
+    func setControl(_ on: Bool) {
+        if !on { controlOn = false }
+        guard var cipher = send, let c = conn, let packet = try? cipher.seal(.info, Companion.encodeNote(.init(kind: "control", text: on ? "on" : "off"))) else { return }
+        send = cipher
+        c.send(content: packet, completion: .contentProcessed { _ in })
+    }
+
+    /// One touch or key for the Mac to replay (only while control is on).
+    func sendInput(_ event: Companion.InputEvent) {
+        guard controlOn, var cipher = send, let c = conn, let packet = try? cipher.seal(.input, Companion.encodeInput(event)) else { return }
+        send = cipher
+        c.send(content: packet, completion: .contentProcessed { _ in })
+    }
 
     private func fail(_ message: String, generation g: Int) {
         guard g == generation else { return }
@@ -157,6 +177,11 @@ final class RemoteViewClient: ObservableObject {
         case "layout":
             currentDisplay = note.display
             if let w = note.width, let h = note.height { size = CGSize(width: w, height: h) }
+            controlAllowed = note.controlAllowed ?? false
+        case "control":
+            controlOn = note.text == "on"
+            if let allowed = note.controlAllowed { controlAllowed = allowed }
+        case "notice": notice = note.text
         case "bye": fail(note.text ?? "The session ended.", generation: g)
         case "error", "permission": fail(note.text ?? "The Mac couldn't show its screen.", generation: g)
         default: break

@@ -340,6 +340,7 @@
 		C25F856CABCC1156DF674B6D /* FullScreenLyrics.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4649C21487D880C8DF7A14F8 /* FullScreenLyrics.swift */; };
 		C307D2D56FA7AA856D332C08 /* BambuStatusLogic.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9B1DDFF63CC24F5C23FA1225 /* BambuStatusLogic.swift */; };
 		C3ADEF24FDB35B2A799680AF /* TennisModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A56383B7805BC8A0AF01CB6 /* TennisModel.swift */; };
+		C51EAAF218B746BE1EE29D65 /* RemoteInput.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2DCDE205F022345FA4997A8 /* RemoteInput.swift */; };
 		C5CB119C0BE108708E65FC9E /* LocalP2PManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 700E54998678B97CA020EA9E /* LocalP2PManager.swift */; };
 		C66AB6DBBE6A8C411CA73585 /* NamedTimerLogic.swift in Sources */ = {isa = PBXBuildFile; fileRef = 869FA0DCFB5761CB6BB319C2 /* NamedTimerLogic.swift */; };
 		C6704B893CA4C4D32A413A19 /* VPNManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 281C97D2743323428F5ACD8F /* VPNManager.swift */; };
@@ -687,6 +688,7 @@
 		A22CAB6FA5F9EADB1A7E3B86 /* SnippetVariables.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SnippetVariables.swift; sourceTree = "<group>"; };
 		A259F6D85DF7D7125ED8DA20 /* RichText.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RichText.swift; sourceTree = "<group>"; };
 		A280B5F6BC95664645C9444F /* UpdateSigning.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdateSigning.swift; sourceTree = "<group>"; };
+		A2DCDE205F022345FA4997A8 /* RemoteInput.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemoteInput.swift; sourceTree = "<group>"; };
 		A2F817CBD2CC66E658282B91 /* ConvertView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConvertView.swift; sourceTree = "<group>"; };
 		A3EBCD0478E4EF6B8B5FDA7F /* RacingGameView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RacingGameView.swift; sourceTree = "<group>"; };
 		A672525103785D34A18DE037 /* CtfGame.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = CtfGame.html; sourceTree = "<group>"; };
@@ -1214,6 +1216,7 @@
 				50CCA2828E5DEA8799BE2ACC /* PureModels.swift */,
 				6E7257E185D98B4E05674B7F /* QuickAnswerLogic.swift */,
 				97239C5312CEE57CDB5E326B /* ReleaseNotesLogic.swift */,
+				A2DCDE205F022345FA4997A8 /* RemoteInput.swift */,
 				7AD1597271C7FDA56841F1D6 /* RemoteView.swift */,
 				E333C9ABF7AC014274F64237 /* RequiredSetup.swift */,
 				E7EE75D24E20F68ED45BAC0A /* SandboxMigration.swift */,
@@ -2139,6 +2142,7 @@
 				6A1241D5888266447A677633 /* RadarModel.swift in Sources */,
 				9F8F1D24DD4B77A8B3ED11C1 /* RadarView.swift in Sources */,
 				B1D5C73DA5343AEC67AEA413 /* ReleaseNotesLogic.swift in Sources */,
+				C51EAAF218B746BE1EE29D65 /* RemoteInput.swift in Sources */,
 				62DA70460F765C4149101D13 /* RemoteView.swift in Sources */,
 				9A2C6A4BDCB6FDE201E61B4D /* RequiredSetup.swift in Sources */,
 				44EC11F43A710DD3413C3795 /* RequiredUpdateView.swift in Sources */,
@@ -2490,7 +2494,7 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 2.1.80;
+				MARKETING_VERSION = 2.1.81;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -2630,7 +2634,7 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 2.1.80;
+				MARKETING_VERSION = 2.1.81;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;

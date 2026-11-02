@@ -6,6 +6,11 @@
 //  over Tailscale, from anywhere. A stream is one long connection started by a sealed `stream` request (CompanionServer),
 //  then sealed, counted packets both ways (CompanionKit/CompanionStream.swift): JPEG frames out, small notes in.
 //
+//  Control (stage two): a separate switch, "Allow remote control", off by default, AND a per-phone permission set on the Mac
+//  AND Accessibility. While a phone is controlling, the notch shows a red hand, a notification appears, and the stream can be
+//  stopped from Settings or with ⌃⌥⇧K. Control ends by itself when the Mac sleeps or locks, the phone disconnects, or any
+//  permission is taken away.
+//
 //  Safety: off until "Allow viewing this Mac's screen" is switched on; only for a phone you paired; Screen Recording must be
 //  granted; the notch shows an eye while anyone is watching and Settings has a Stop button; the stream ends if the phone
 //  disconnects, the Mac sleeps or the app quits. Notch Apple's own windows are left out of the picture.
@@ -17,6 +22,7 @@ import CryptoKit
 import Network
 import ScreenCaptureKit
 import SwiftUI
+import UserNotifications
 
 @MainActor
 final class RemoteViewHub: ObservableObject {
@@ -24,6 +30,8 @@ final class RemoteViewHub: ObservableObject {
 
     /// Off by default: watching the screen is more sensitive than the other things a paired phone can do.
     @AppStorage("companion.allowView") var allowView = false { didSet { if !allowView { stopAll("Viewing was switched off on the Mac.") } } }
+    /// A second, separate switch: watching and controlling are different things. Off by default.
+    @AppStorage("companion.allowControl") var allowControl = false { didSet { if !allowControl { endAllControl("Remote control was switched off on the Mac.") } } }
     @Published private(set) var sessions: [RemoteViewSession] = []
     @Published private(set) var screenAccess = ScreenPermission.isGranted
 
@@ -32,6 +40,7 @@ final class RemoteViewHub: ObservableObject {
     /// What the closed notch shows while someone is watching.
     var liveActivity: LiveActivity? {
         guard let first = sessions.first else { return nil }
+        if let c = sessions.first(where: { $0.controlling }) { return LiveActivity(symbol: "hand.point.up.left.fill", label: "Controlled", tint: .systemRed, leftText: String(c.phoneName.prefix(10)), pulse: true) }
         return LiveActivity(symbol: "eye.fill", label: sessions.count > 1 ? "\(sessions.count) viewing" : String(first.phoneName.prefix(10)), tint: .systemOrange, pulse: true)
     }
 
@@ -39,6 +48,31 @@ final class RemoteViewHub: ObservableObject {
 
     func stopAll(_ reason: String = "The Mac ended the session.") {
         for s in sessions { s.stop(reason) }
+    }
+
+    /// Ends control but keeps watching (used for sleep, lock, and when a permission is taken away).
+    func endAllControl(_ reason: String) { for s in sessions where s.controlling { s.endControl(reason) } }
+
+    private var watching = false
+    /// Control and viewing stop when the Mac sleeps; control stops when it locks.
+    func watchSystem() {
+        guard !watching else { return }
+        watching = true
+        let ws = NSWorkspace.shared.notificationCenter
+        ws.addObserver(forName: NSWorkspace.willSleepNotification, object: nil, queue: .main) { [weak self] _ in Task { @MainActor in self?.stopAll("The Mac went to sleep.") } }
+        DistributedNotificationCenter.default().addObserver(forName: Notification.Name("com.apple.screenIsLocked"), object: nil, queue: .main) { [weak self] _ in
+            Task { @MainActor in self?.endAllControl("The Mac was locked.") }
+        }
+    }
+
+    /// A phone started or stopped controlling: tell the person, and update the notch.
+    fileprivate func controlChanged(_ s: RemoteViewSession, on: Bool) {
+        let content = UNMutableNotificationContent()
+        content.title = on ? "\(s.phoneName) is controlling this Mac" : "Remote control ended"
+        content.body = on ? "Press ⌃⌥⇧K or use Stop in Settings → iPhone to end it." : "Nobody is controlling this Mac now."
+        UNUserNotificationCenter.current().add(UNNotificationRequest(identifier: "remote-control", content: content, trigger: nil))
+        objectWillChange.send()
+        LiveActivityCenter.shared.recompute()
     }
 
     fileprivate func add(_ s: RemoteViewSession) { sessions.append(s); LiveActivityCenter.shared.recompute() }
@@ -62,7 +96,7 @@ final class RemoteViewHub: ObservableObject {
         }
         guard !displays.isEmpty else { return (Companion.Message(type: .error, text: "The Mac has no screen to show."), {}) }
         let macNonce = Companion.newNonce()
-        let session = RemoteViewSession(conn: conn, phoneName: phone.name, token: token, macNonce: macNonce, phoneNonce: phoneNonce, displays: displays,
+        let session = RemoteViewSession(conn: conn, phoneID: phone.id, phoneName: phone.name, token: token, macNonce: macNonce, phoneNonce: phoneNonce, displays: displays,
                                         display: request.display, edge: request.edge ?? 1280)
         add(session)
         let infos = displays.map { Companion.DisplayInfo(id: Int($0.displayID), name: RemoteViewSession.name(of: $0), width: $0.width, height: $0.height) }
@@ -91,6 +125,10 @@ private final class StreamGate: @unchecked Sendable {
 final class RemoteViewSession: NSObject, SCStreamOutput, SCStreamDelegate, ObservableObject {
     let phoneName: String
     private let conn: NWConnection
+    let phoneID: String
+    /// True while this phone's taps and keys are being replayed on the Mac.
+    @Published private(set) var controlling = false
+    private var limiter = Companion.InputLimiter()
     private let gate: StreamGate
     private var recv: Companion.StreamCipher
     private var buffer = Data()
@@ -102,8 +140,9 @@ final class RemoteViewSession: NSObject, SCStreamOutput, SCStreamDelegate, Obser
     private var ended = false
     private var keepalive: Timer?
 
-    init(conn: NWConnection, phoneName: String, token: Data, macNonce: Data, phoneNonce: Data, displays: [SCDisplay], display wanted: Int?, edge: Int) {
+    init(conn: NWConnection, phoneID: String, phoneName: String, token: Data, macNonce: Data, phoneNonce: Data, displays: [SCDisplay], display wanted: Int?, edge: Int) {
         self.conn = conn
+        self.phoneID = phoneID
         self.phoneName = phoneName
         gate = StreamGate(send: .init(key: Companion.streamKey(token: token, macNonce: macNonce, phoneNonce: phoneNonce, .macToPhone)), edge: min(max(edge, 320), 2560))
         recv = .init(key: Companion.streamKey(token: token, macNonce: macNonce, phoneNonce: phoneNonce, .phoneToMac))
@@ -150,7 +189,7 @@ final class RemoteViewSession: NSObject, SCStreamOutput, SCStreamDelegate, Obser
         try s.addStreamOutput(self, type: .screen, sampleHandlerQueue: queue)
         try await s.startCapture()
         stream = s
-        send(.info, Companion.encodeNote(.init(kind: "layout", display: Int(display.displayID), width: w, height: h, controlAllowed: false)))
+        send(.info, Companion.encodeNote(.init(kind: "layout", display: Int(display.displayID), width: w, height: h, controlAllowed: mayControl)))
     }
 
     private func size(for d: SCDisplay, scale: Double) -> (Int, Int) {
@@ -161,6 +200,7 @@ final class RemoteViewSession: NSObject, SCStreamOutput, SCStreamDelegate, Obser
 
     func stop(_ reason: String = "The session ended.") {
         guard !ended else { return }
+        if controlling { controlling = false; RemoteViewHub.shared.controlChanged(self, on: false) }
         ended = true
         keepalive?.invalidate()
         send(.info, Companion.encodeNote(.init(kind: "bye", text: reason)))
@@ -192,8 +232,16 @@ final class RemoteViewSession: NSObject, SCStreamOutput, SCStreamDelegate, Obser
     }
 
     private func handle(_ type: Companion.PacketType, _ payload: Data) {
-        guard type == .info, let note = Companion.decodeNote(payload) else { return }   // (input packets arrive in the control stage)
+        if type == .input {
+            guard controlling, mayControl, limiter.allow(now: ProcessInfo.processInfo.systemUptime), RemoteInput.trusted,
+                  let event = Companion.decodeInput(payload) else { return }
+            RemoteInput.perform(event, in: CGDisplayBounds(display.displayID))
+            return
+        }
+        guard type == .info, let note = Companion.decodeNote(payload) else { return }
         switch note.kind {
+        case "control":
+            if note.text == "on" { beginControl() } else { endControl("The phone stopped controlling.") }
         case "ack":
             guard let n = note.ack else { return }
             gate.sync { g in
@@ -208,6 +256,39 @@ final class RemoteViewSession: NSObject, SCStreamOutput, SCStreamDelegate, Obser
         case "bye": stop("The phone ended the session.")
         default: break
         }
+    }
+
+    // MARK: Control
+
+    /// All three must hold: the Mac's switch, this phone's permission (set on the Mac), and Accessibility.
+    private var mayControl: Bool {
+        RemoteViewHub.shared.allowControl && CompanionServer.shared.phones.first { $0.id == phoneID }?.canControl == true && RemoteInput.trusted
+    }
+
+    private func beginControl() {
+        guard !controlling else { return }
+        let hub = RemoteViewHub.shared
+        let reason: String? = !hub.allowControl ? "Remote control is turned off on the Mac. Turn on “Allow remote control” in Settings → iPhone."
+            : CompanionServer.shared.phones.first(where: { $0.id == phoneID })?.canControl != true ? "This iPhone isn't allowed to control the Mac. Allow it in Settings → iPhone on the Mac."
+            : !RemoteInput.trusted ? "The Mac needs Accessibility for Notch Apple to be controlled. Allow it in System Settings → Privacy & Security → Accessibility."
+            : nil
+        if let reason {
+            if !RemoteInput.trusted, hub.allowControl { _ = AXIsProcessTrustedWithOptions([kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String: true] as CFDictionary) }
+            send(.info, Companion.encodeNote(.init(kind: "control", text: "denied", controlAllowed: false))); send(.info, Companion.encodeNote(.init(kind: "notice", text: reason)))
+            return
+        }
+        controlling = true
+        limiter = Companion.InputLimiter(now: ProcessInfo.processInfo.systemUptime)
+        send(.info, Companion.encodeNote(.init(kind: "control", text: "on", controlAllowed: true)))
+        RemoteViewHub.shared.controlChanged(self, on: true)
+    }
+
+    func endControl(_ reason: String) {
+        guard controlling else { return }
+        controlling = false
+        send(.info, Companion.encodeNote(.init(kind: "control", text: "off", controlAllowed: mayControl)))
+        send(.info, Companion.encodeNote(.init(kind: "notice", text: reason)))
+        RemoteViewHub.shared.controlChanged(self, on: false)
     }
 
     // MARK: Frames

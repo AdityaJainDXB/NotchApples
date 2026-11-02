@@ -60,7 +60,14 @@ enum Companion {
         var timer: String?
         var notchOpen: Bool
         var tier: String
+        // What the Mac chose to show on the phone (each is off on the Mac until switched on in Settings → iPhone).
+        var clipboard: String? = nil
+        var notes: [String]? = nil          // the first line of the newest notes
+        var todos: [TodoLine]? = nil
+        var alerts: [String]? = nil         // what the notch is showing right now, and warnings such as a low battery
     }
+
+    struct TodoLine: Codable, Equatable { var text: String; var done: Bool }
 
     static let controlActions: [(id: String, title: String, symbol: String)] = [
         ("playPause", "Play / Pause", "playpause.fill"), ("previous", "Previous", "backward.fill"), ("next", "Next", "forward.fill"),

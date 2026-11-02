@@ -151,6 +151,53 @@ extension Companion {
         var controlAllowed: Bool? = nil  // layout: whether the Mac lets this phone control it (stage d)
     }
 
+    // MARK: Control
+
+    /// One thing the person does on the phone, replayed on the Mac. Positions are fractions (0...1) of the picture, so they
+    /// don't depend on either screen's size.
+    struct InputEvent: Codable, Equatable {
+        var kind: String                 // move, down, up, drag, rdown, rup, scroll, text, key, shortcut
+        var x: Double? = nil
+        var y: Double? = nil
+        var dx: Double? = nil            // scroll, in points
+        var dy: Double? = nil
+        var text: String? = nil          // text: what to type; key and shortcut: a key name or one letter
+        var mods: [String]? = nil        // shortcut/key/click: cmd, shift, alt, ctrl
+        var count: Int? = nil            // down: 1, 2 (double click) or 3
+    }
+
+    static func encodeInput(_ e: InputEvent) -> Data { (try? JSONEncoder().encode(e)) ?? Data() }
+    static func decodeInput(_ d: Data) -> InputEvent? { try? JSONDecoder().decode(InputEvent.self, from: d) }
+
+    /// At most `perSecond` events a second (with a short burst), so a stuck or hostile client can't flood the Mac.
+    struct InputLimiter {
+        let perSecond: Double, burst: Double
+        private var tokens: Double
+        private var last: TimeInterval
+        init(perSecond: Double = 200, burst: Double = 60, now: TimeInterval = 0) { self.perSecond = perSecond; self.burst = burst; tokens = burst; last = now }
+        mutating func allow(now: TimeInterval) -> Bool {
+            tokens = min(burst, tokens + max(0, now - last) * perSecond); last = now
+            guard tokens >= 1 else { return false }
+            tokens -= 1; return true
+        }
+    }
+
+    /// macOS virtual key codes (stable since the first Macs), for the keys the phone can press.
+    static func keyCode(_ name: String) -> UInt16? {
+        let n = name.lowercased()
+        let named: [String: UInt16] = ["return": 36, "tab": 48, "space": 49, "delete": 51, "escape": 53, "forwarddelete": 117,
+                                       "left": 123, "right": 124, "down": 125, "up": 126, "home": 115, "end": 119, "pageup": 116, "pagedown": 121]
+        if let c = named[n] { return c }
+        let letters: [Character: UInt16] = ["a": 0, "s": 1, "d": 2, "f": 3, "h": 4, "g": 5, "z": 6, "x": 7, "c": 8, "v": 9, "b": 11, "q": 12, "w": 13,
+                                            "e": 14, "r": 15, "y": 16, "t": 17, "1": 18, "2": 19, "3": 20, "4": 21, "6": 22, "5": 23, "=": 24, "9": 25,
+                                            "7": 26, "-": 27, "8": 28, "0": 29, "]": 30, "o": 31, "u": 32, "[": 33, "i": 34, "p": 35, "l": 37, "j": 38,
+                                            "'": 39, "k": 40, ";": 41, "\\": 42, ",": 43, "/": 44, "n": 45, "m": 46, ".": 47, "`": 50]
+        return n.count == 1 ? letters[n.first!] : nil
+    }
+
+    static let maxTypedText = 500
+    static let controlKeys = ["return", "delete", "forwarddelete", "tab", "escape", "space", "left", "right", "up", "down", "home", "end", "pageup", "pagedown"]
+
     static func encodeNote(_ note: StreamNote) -> Data { (try? JSONEncoder().encode(note)) ?? Data() }
     static func decodeNote(_ data: Data) -> StreamNote? { try? JSONDecoder().decode(StreamNote.self, from: data) }
 

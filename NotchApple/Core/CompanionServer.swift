@@ -22,6 +22,8 @@ struct PairedPhone: Codable, Identifiable, Equatable {
     var lastSeen: Date?
     /// The newest request counter this phone has sent; nil for a phone whose app doesn't send one yet.
     var lastSeq: Int64?
+    /// Set on the Mac: this phone may control the Mac (when "Allow remote control" is on). Absent means no.
+    var canControl: Bool?
 }
 
 struct CompanionItem: Identifiable, Equatable {
@@ -39,6 +41,10 @@ final class CompanionServer: ObservableObject {
     @AppStorage("companion.enabled") var enabled = false { didSet { apply() } }
     @AppStorage("companion.copyText") var copyText = true
     @AppStorage("companion.openLinks") var openLinks = false
+    /// What a paired phone may see of the notch's content. All off until switched on here: they are personal.
+    @AppStorage("companion.share.clipboard") var shareClipboard = false
+    @AppStorage("companion.share.notes") var shareNotes = false
+    @AppStorage("companion.share.todos") var shareTodos = false
     /// The port the Mac listens on, so a phone can reach it by address (for example over Tailscale). Changing it restarts the listener.
     @AppStorage("companion.port") var port = Int(Companion.defaultPort) { didSet { if enabled { apply() } } }
     @Published private(set) var phones: [PairedPhone] = []
@@ -109,6 +115,13 @@ final class CompanionServer: ObservableObject {
         codeTimer = Timer.scheduledTimer(withTimeInterval: 120, repeats: false) { _ in
             Task { @MainActor in self.code = nil; self.codeExpires = nil }
         }
+    }
+
+    func setControl(_ phone: PairedPhone, _ on: Bool) {
+        guard let i = phones.firstIndex(where: { $0.id == phone.id }) else { return }
+        phones[i].canControl = on ? true : nil
+        save()
+        if !on { for s in RemoteViewHub.shared.sessions where s.phoneID == phone.id { s.endControl("This iPhone's control permission was removed on the Mac.") } }
     }
 
     func remove(_ phone: PairedPhone) {
@@ -271,10 +284,18 @@ final class CompanionServer: ObservableObject {
         let b = LiveActivityCenter.battery()
         let music = DemoHooks.isDemo ? nil : NowPlayingMonitor.shared.current
         let timer = CountdownTimer.shared
-        return Companion.Status(macName: Host.current().localizedName ?? "Mac", battery: b?.percent, charging: b?.charging ?? false,
+        var s = Companion.Status(macName: Host.current().localizedName ?? "Mac", battery: b?.percent, charging: b?.charging ?? false,
                                 playing: music?.isPlaying ?? false, title: music?.title, artist: music?.artist,
                                 timer: timer.timerRunning ? FocusTimer.format(timer.remaining) : nil,
                                 notchOpen: AppDelegate.current?.notch?.isOpen ?? false, tier: Entitlements.shared.tier.name)
+        if shareClipboard, let text = NSPasteboard.general.string(forType: .string), !text.isEmpty { s.clipboard = String(text.prefix(1000)) }
+        if shareNotes { s.notes = NotesStore.shared.notes.prefix(8).map { String($0.text.split(separator: "\n", omittingEmptySubsequences: true).first?.prefix(120) ?? "Empty note") } }
+        if shareTodos { s.todos = TodoStore.shared.items.filter { !$0.done }.prefix(12).map { Companion.TodoLine(text: String($0.text.prefix(120)), done: false) } }
+        var alerts: [String] = []
+        if let a = LiveActivityCenter.shared.current, let label = a.label ?? a.leftText { alerts.append(label) }
+        if let b, b.percent <= 20, !b.charging { alerts.append("Battery low: \(b.percent)%") }
+        s.alerts = alerts
+        return s
     }
 }
 
@@ -329,6 +350,8 @@ struct CompanionSettings: View {
                                     .font(.caption).foregroundStyle(.secondary)
                             }
                             Spacer()
+                            Toggle("May control", isOn: Binding(get: { p.canControl == true }, set: { server.setControl(p, $0) })).toggleStyle(.checkbox)
+                                .help("Lets this iPhone click and type on this Mac, when “Allow remote control” is on")
                             Button("Remove", role: .destructive) { server.remove(p) }
                         }
                     }
@@ -336,6 +359,15 @@ struct CompanionSettings: View {
                     Text("Paired iPhones")
                 }
 
+                Section {
+                    Toggle("The clipboard", isOn: $server.shareClipboard)
+                    Toggle("Notes (the first line of the newest)", isOn: $server.shareNotes)
+                    Toggle("To-dos (open tasks)", isOn: $server.shareTodos)
+                } header: {
+                    Text("Shown on the iPhone")
+                } footer: {
+                    Text("Now Playing, battery, timers and what the notch is showing are always shown to a paired iPhone. The clipboard, notes and to-dos are personal, so they stay off until you switch them on.")
+                }
                 Section {
                     Toggle("Copy text from the iPhone to the clipboard", isOn: $server.copyText)
                     Toggle("Open links from the iPhone right away", isOn: $server.openLinks)
@@ -374,10 +406,18 @@ struct CompanionSettings: View {
             }
             ForEach(hub.sessions.indices, id: \.self) { i in
                 HStack {
-                    Label("\(hub.sessions[i].phoneName) is watching", systemImage: "eye.fill").foregroundStyle(.orange)
+                    Label(hub.sessions[i].controlling ? "\(hub.sessions[i].phoneName) is controlling" : "\(hub.sessions[i].phoneName) is watching",
+                          systemImage: hub.sessions[i].controlling ? "hand.point.up.left.fill" : "eye.fill").foregroundStyle(hub.sessions[i].controlling ? .red : .orange)
                     Spacer()
                     Button("Stop", role: .destructive) { hub.sessions[i].stop("The Mac ended the session.") }
                 }
+            }
+            Toggle(isOn: $hub.allowControl) {
+                Text("Allow remote control")
+                Text("A paired iPhone that you allow below can click, type and scroll on this Mac. Off by default. Needs Accessibility. Shows a red hand beside the notch and a notification while it is in use; Control-Option-Shift-K stops it at once.")
+            }
+            if hub.allowControl && !RemoteInput.trusted {
+                LabeledContent("Accessibility") { Button("Allow…") { _ = AXIsProcessTrustedWithOptions([kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String: true] as CFDictionary) } }
             }
             LabeledContent("Tailscale") {
                 if tailscale.isEmpty { Text("Not running on this Mac").foregroundStyle(.secondary) }

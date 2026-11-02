@@ -86,4 +86,26 @@ final class CompanionStreamTests: XCTestCase {
         let old = Data(#"{"type":"status","version":1}"#.utf8)   // a message from before streams existed
         XCTAssertEqual(try JSONDecoder().decode(Companion.Message.self, from: old).type, .status)
     }
+
+    func testInputEventsKeyNamesAndTheRateLimit() throws {
+        let e = Companion.InputEvent(kind: "down", x: 0.25, y: 0.75, count: 2)
+        XCTAssertEqual(Companion.decodeInput(Companion.encodeInput(e)), e)
+        XCTAssertNil(Companion.decodeInput(Data("{\"nope\":1}".utf8)))
+        XCTAssertEqual(Companion.keyCode("return"), 36); XCTAssertEqual(Companion.keyCode("C"), 8); XCTAssertEqual(Companion.keyCode("left"), 123)
+        XCTAssertNil(Companion.keyCode("f13")); XCTAssertNil(Companion.keyCode("ab"))
+        var limiter = Companion.InputLimiter(perSecond: 100, burst: 10, now: 0)
+        let first = (0..<30).filter { _ in limiter.allow(now: 0) }.count
+        XCTAssertEqual(first, 10, "a burst is capped")
+        XCTAssertTrue(limiter.allow(now: 0.05), "and it refills over time")
+        let later = (0..<1000).filter { i in limiter.allow(now: 1 + Double(i) * 0.001) }.count
+        XCTAssertGreaterThanOrEqual(later, 100); XCTAssertLessThanOrEqual(later, 112)   // about 100 a second, plus what the burst allows
+    }
+
+    func testStatusWithPhoneContentRoundTripsAndOldStatusStillDecodes() throws {
+        var s = Companion.Status(macName: "Mac", battery: 50, charging: false, playing: false, title: nil, artist: nil, timer: nil, notchOpen: false, tier: "Ultimate")
+        s.clipboard = "hello"; s.notes = ["a"]; s.todos = [.init(text: "t", done: false)]; s.alerts = ["Timer 3:00"]
+        XCTAssertEqual(try JSONDecoder().decode(Companion.Status.self, from: JSONEncoder().encode(s)), s)
+        let old = Data(#"{"macName":"M","charging":false,"playing":false,"notchOpen":false,"tier":"Pro"}"#.utf8)
+        XCTAssertNil(try JSONDecoder().decode(Companion.Status.self, from: old).clipboard)
+    }
 }

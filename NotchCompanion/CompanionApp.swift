@@ -153,10 +153,26 @@ struct MainView: View {
                 if let text = client.reach.text { Text(text).foregroundStyle(.orange) }
             }
 
+            if let s = client.status {
+                if let alerts = s.alerts, !alerts.isEmpty {
+                    Section("On the notch now") { ForEach(alerts, id: \.self) { Label($0, systemImage: "bell") } }
+                }
+                if let clip = s.clipboard {
+                    Section {
+                        Text(clip).lineLimit(6).textSelection(.enabled)
+                        Button("Copy to this iPhone") { UIPasteboard.general.string = clip }
+                    } header: { Text("Mac's clipboard") }
+                }
+                if let notes = s.notes, !notes.isEmpty { Section("Notes") { ForEach(Array(notes.enumerated()), id: \.offset) { Text($0.element).lineLimit(2) } } }
+                if let todos = s.todos, !todos.isEmpty {
+                    Section("To-do") { ForEach(Array(todos.enumerated()), id: \.offset) { Label($0.element.text, systemImage: $0.element.done ? "checkmark.circle.fill" : "circle") } }
+                }
+            }
+
             Section {
-                NavigationLink { RemoteScreenView() } label: { Label("Watch this Mac's screen", systemImage: "display") }
+                NavigationLink { RemoteScreenView() } label: { Label("Watch or control this Mac's screen", systemImage: "display") }
             } footer: {
-                Text("Turn on “Allow viewing this Mac's screen” in Notch Apple → Settings → iPhone on the Mac. Away from your Wi-Fi? Pair by address over Tailscale.")
+                Text("Turn on “Allow viewing this Mac's screen” (and, to control it, “Allow remote control” and this iPhone's permission) in Notch Apple → Settings → iPhone on the Mac. Away from your Wi-Fi? Pair by address over Tailscale. The clipboard, notes and to-dos show here only if you switch them on there.")
             }
 
             Section {

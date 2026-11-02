@@ -76,7 +76,7 @@ Pick your computer. Both buttons start the download straight away. The Mac link 
   </tr>
   <tr>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.1.80</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.1.81</b></a>
     </td>
     <td align="center">
       <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 2.1.78 BETA</b></a>
@@ -150,6 +150,12 @@ More screenshots of the capture overlay, the AI answer, the settings and the Win
 
 ## What's new
 
+### Mac 2.1.81 · 2 November 2026 · 🖱️ Control your Mac from your iPhone
+
+- Remote control (new, experimental, Ultimate): tap the hand in the iPhone app and the Mac replays your taps, drags, two-finger scrolling and keys. It needs three things on the Mac: Allow remote control (off by default), May control for that iPhone, and Accessibility. A red hand shows beside the notch and a notification appears while it is in use; Stop in Settings → iPhone or Control-Option-Shift-K ends it at once, and it ends if the Mac sleeps or locks.
+- The iPhone app has a key bar (⌘ shortcuts, arrows, Esc, Tab, typing) and now shows what the notch is showing, alerts such as a low battery, and, only if you switch each on in Settings → iPhone, the Mac's clipboard, newest notes and open to-dos.
+- Not included: an iPhone Live Activity (it needs a separate widget extension and a paid Apple Developer account for updates when the app is closed). Update the iPhone app too (NotchAppleCompanion.ipa); phones paired before keep working.
+
 ### Mac 2.1.80 · 2 November 2026 · 📱 Watch your Mac from your iPhone
 
 - Remote view (new, experimental, Ultimate): the paired iPhone can watch this Mac's screen live. Open the iPhone app and tap Watch this Mac's screen; pinch to zoom, drag to move, pick a display. It is off until you turn on Allow viewing this Mac's screen in Settings → iPhone, needs Screen Recording, shows an eye beside the notch while someone is watching, and has a Stop button. View only: no control yet.
@@ -164,11 +170,6 @@ More screenshots of the capture overlay, the AI answer, the settings and the Win
 - Notifications: a new message or request shows a count on the Messenger tab and the closed notch's dot, plus a macOS notification (message text can be hidden in Settings → Messenger) that stays quiet while a Focus is on.
 - Privacy tools: block list, remove friend, rate limits on requests, and Delete all my chat data. Nearby Wi-Fi and anonymous rooms are unchanged.
 - Needs the new relay: Friends works once the Notch Apple rooms relay has been updated (the project owner deploys it); until then the Friends screen shows that it can't connect. Windows can't use Friends yet, and Mac and Windows friends will be able to talk once it arrives there.
-
-### Mac 2.1.78 · Windows 2.1.78 BETA · 2 November 2026 · 💬 Ask a question from the app
-
-- Ask a question: Settings → About on the Mac, and the Windows settings, have a new "Ask a question" link that opens the website with the Ask box already open.
-- The website's Ask box now answers questions about Notch Apple that its built-in answers did not cover, using Google Gemini (with Groq as a backup when Gemini is busy), from the Notch Apple docs. It knows far more modules than before. Nothing is sent until a question needs the AI, and the box says so.
 
 Every earlier release is in the [changelog](CHANGELOG.md).
 

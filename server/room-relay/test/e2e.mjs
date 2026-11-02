@@ -66,6 +66,7 @@ bobSock.ws.send(JSON.stringify({ ack: [live.id] }));
 await call('DELETE', `/f/allow/${tokenB.hash}`, { as: bob, box: boxB });
 assert.equal((await call('POST', '/f/send', { body: { to: boxB, token: accOpened.body.token, blob: msg } })).status, 403);
 assert.equal((await call('POST', '/f/wipe', { body: {}, as: alice, box: boxA })).status, 200);
+assert.equal((await call('POST', '/f/wipe', { body: {}, as: bob, box: boxB })).status, 200);
 assert.equal((await call('GET', `/f/key/${boxA}`)).status, 404);
 bobSock.ws.close(); aliceSock.ws.close();
 console.log('end-to-end: ok');
