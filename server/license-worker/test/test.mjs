@@ -414,12 +414,14 @@ env.AI_QUOTA = {
   idFromName: (n) => n,
   get: (id) => { if (!quotaObjects.has(id)) { const m = new Map(); quotaObjects.set(id, new AiQuota({ storage: { get: async (k) => m.get(k), put: async (k, v) => { m.set(k, v); }, delete: async (k) => { m.delete(k); } } })); } const o = quotaObjects.get(id); return { fetch: (url, init) => o.fetch(new Request(url, init)) }; },
 };
-let upstreamSeen = null, upstreamStatus = 200;
+let upstreamSeen = null, upstreamStatus = 200, upstreamPlan = null, upstreamLog = [];
 const realFetch = globalThis.fetch;
 globalThis.fetch = async (url, init) => {
   if (String(url).includes('ai.test/v1/chat/completions')) {
     upstreamSeen = { url: String(url), headers: init.headers, body: JSON.parse(init.body) };
-    if (upstreamStatus !== 200) return new Response('provider says: key AIza-secret over quota', { status: upstreamStatus });
+    upstreamLog.push(upstreamSeen.body.model);
+    if (upstreamPlan) { const st = upstreamPlan(upstreamSeen.body.model, upstreamLog.length); if (st !== 200) return new Response('provider says: high demand', { status: st }); }
+    else if (upstreamStatus !== 200) return new Response('provider says: key AIza-secret over quota', { status: upstreamStatus });
     return new Response(JSON.stringify({ choices: [{ message: { role: 'assistant', content: 'hello from the provider' } }] }), { headers: { 'content-type': 'application/json' } });
   }
   return realFetch(url, init);
@@ -507,8 +509,34 @@ await test('Ask: answers from the server key and its own knowledge, trims what i
   assert.equal(upstreamSeen.body.messages.at(-1).content, 'How much is Pro?');
   for (let i = 0; i < 6; i++) await ask('again', '8.8.8.8');
   assert.equal((await ask('one too many', '8.8.8.8')).status, 429);
-  upstreamStatus = 500; assert.equal((await ask('busy?', '7.7.7.7')).status, 503); upstreamStatus = 200;
+  env.ASK_RETRY_MS = '0'; upstreamStatus = 500; assert.equal((await ask('busy?', '7.7.7.7')).status, 503); upstreamStatus = 200; delete env.ASK_RETRY_MS;
   env.ASK_DAILY = '1'; assert.equal((await ask('over the day', '6.6.6.6')).status, 429); delete env.ASK_DAILY;
+});
+await test('Ask: retries a busy provider, then tries the fallback model, then gives the same busy message', async () => {
+  const ask = (q, ip) => worker.fetch(new Request('https://w.test/ask', { method: 'POST', body: JSON.stringify({ q }), headers: { 'cf-connecting-ip': ip } }), env);
+  env.ASK_RETRY_MS = '0';
+  const run = async (plan, ip) => { upstreamLog = []; upstreamPlan = plan; const r = await ask('How much is Pro?', ip); upstreamPlan = null; return r; };
+  // one 503, then fine: same model, answered
+  let r = await run((m, n) => (n === 1 ? 503 : 200), '5.5.1.1');
+  assert.equal(r.status, 200); assert.deepEqual(upstreamLog, ['server-chosen-model', 'server-chosen-model']);
+  // 429 twice then fine: still the main model (three tries)
+  r = await run((m, n) => (n <= 2 ? 429 : 200), '5.5.1.2');
+  assert.equal(r.status, 200); assert.equal(upstreamLog.length, 3); assert.ok(upstreamLog.every((m) => m === 'server-chosen-model'));
+  // main always busy and no fallback set: three tries, then the busy message
+  r = await run(() => 503, '5.5.1.3');
+  assert.equal(r.status, 503); assert.equal(upstreamLog.length, 3); assert.ok(!(await r.text()).includes('high demand'));
+  // fallback set: main fails three times, the fallback answers
+  env.ASK_FALLBACK_MODEL = 'backup-model';
+  r = await run((m) => (m === 'backup-model' ? 200 : 503), '5.5.1.4');
+  assert.equal(r.status, 200); assert.deepEqual(upstreamLog, ['server-chosen-model', 'server-chosen-model', 'server-chosen-model', 'backup-model']);
+  // a bad key/model (400) is not retried, but the fallback is still tried
+  r = await run((m) => (m === 'backup-model' ? 200 : 400), '5.5.1.5');
+  assert.equal(r.status, 200); assert.deepEqual(upstreamLog, ['server-chosen-model', 'backup-model']);
+  // everything busy: same message as before
+  r = await run(() => 503, '5.5.1.6');
+  assert.equal(r.status, 503); assert.equal(upstreamLog.length, 5);
+  assert.equal((await r.json()).error, 'The helper is busy. Try again in a minute.');
+  delete env.ASK_FALLBACK_MODEL; delete env.ASK_RETRY_MS;
 });
 const post = (body, ip = '1.1.1.1') => call('/plane/score', body, { 'cf-connecting-ip': ip });
 const board = async (mode, period = 'all') => (await worker.fetch(new Request(`https://w.test/plane/board?mode=${mode}&period=${period}`), env)).json();
