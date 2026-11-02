@@ -8,11 +8,11 @@
   "page": "https://github.com/AdityaJainDXB/NotchApples/releases/tag/v2.1.90",
   "stars": 3,
   "windows": {
-    "version": "2.1.89",
-    "notes": "",
-    "url": "https://github.com/AdityaJainDXB/NotchApples/releases/download/win-v2.1.89/Notch.apple_2.1.89_x64-setup.exe",
-    "sha256": "e3df667ebd82b275171ecdafadaa128abb68181fbcaa686bed9c25b7b2e42ef6",
-    "size": 6344239,
-    "page": "https://github.com/AdityaJainDXB/NotchApples/releases/tag/win-v2.1.89"
+    "version": "2.1.91",
+    "notes": "## Notch Apple for Windows 2.1.91 (BETA)\n\n- Cookie Clicker now always uses the built-in game (no third-party website, no 5-second wait, and no leftover timer when you switch games).\n- Friends chat history keeps saving once it grows large (a size limit in how it was encoded stopped saves after roughly 1,000 messages).\n- Daily Word can optionally use today's New York Times puzzle, fetched on request from one fixed address.\n- Same as 2.1.90 (2.1.90 was never published for Windows because its automated check failed).\n",
+    "url": "https://github.com/AdityaJainDXB/NotchApples/releases/download/win-v2.1.91/Notch.apple_2.1.91_x64-setup.exe",
+    "sha256": "68ca924f6bb6d0195ba12a45aaac83c384ae08d5c1b18fa130b795ee08043357",
+    "size": 6343725,
+    "page": "https://github.com/AdityaJainDXB/NotchApples/releases/tag/win-v2.1.91"
   }
 }
