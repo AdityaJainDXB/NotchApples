@@ -11,6 +11,7 @@ async function open(page: Page, path: string) {
 
 test('the helper opens, answers from the FAQ, admits when it is unsure, and sends nothing anywhere unless the FAQ cannot answer', async ({ page }) => {
   const outside: string[] = [];
+  await page.route('**/api.json', (r) => r.fulfill({ contentType: 'application/json', body: JSON.stringify({ licenseServer: 'https://notchapple-licenses.adityajain1225.workers.dev' }) }));   // no Turnstile key: the plain path
   await page.route('**/ask', (r) => r.fulfill({ status: 503, contentType: 'application/json', body: '{"error":"busy"}' }));   // the AI server is down: fall back to the FAQ's honest answer
   page.on('request', (r) => { const u = new URL(r.url()); if (!['localhost', '127.0.0.1'].includes(u.hostname) && !u.protocol.startsWith('data') && u.pathname !== '/ask') outside.push(r.url()); });
   await open(page, '/index.html');
@@ -42,6 +43,7 @@ test('the helper opens, answers from the FAQ, admits when it is unsure, and send
 
 test('a question the FAQ cannot answer goes to the AI, and only that question', async ({ page }) => {
   const sent: any[] = [];
+  await page.route('**/api.json', (r) => r.fulfill({ contentType: 'application/json', body: JSON.stringify({ licenseServer: 'https://notchapple-licenses.adityajain1225.workers.dev' }) }));   // no Turnstile key: the plain path
   await page.route('**/ask', async (r) => { sent.push(JSON.parse(r.request().postData() || '{}')); await r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ a: 'Notch Apple can show your battery in the Today tab. <b>x</b>' }) }); });
   await open(page, '/index.html');
   await page.getByRole('button', { name: 'Ask a question about Notch Apple' }).click();
