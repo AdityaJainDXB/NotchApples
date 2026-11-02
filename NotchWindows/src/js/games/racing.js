@@ -722,10 +722,30 @@
 
   /// Which gear the car is in and how fast the engine is turning, from its speed. A gear gives a share of the top speed;
   /// the box changes up near the redline and down well below it, with a short pause (shiftT) in which the revs drop.
+  /// The speed a gear runs out at, m/s.
+  const gearTop = (sp, n) => sp.vmax * 1.04 * Math.pow(n / sp.gears, 0.88);
+  /// Manual gearbox: how much of the engine's push reaches the road in the gear you chose. Too fast for the gear and the rev
+  /// limiter cuts in (0); far below its power band the engine labours.
+  function manualPower(c) {
+    if (!c.manual || c.gear < 1) return 1;
+    const v = Math.abs(c.vf), hi = gearTop(c.spec, c.gear), lo = c.gear > 1 ? gearTop(c.spec, c.gear - 1) * 0.6 : 0;
+    if (v > hi) return clamp(1 - (v - hi) / 3, 0, 1);
+    return v < lo ? clamp(v / Math.max(lo, 1), 0.18, 1) : 1;
+  }
   function gearbox(c, dt, throttle) {
-    const sp = c.spec, v = Math.abs(c.vf), top = (n) => sp.vmax * 1.04 * Math.pow(n / sp.gears, 0.88);
+    const sp = c.spec, v = Math.abs(c.vf), top = (n) => gearTop(sp, n);
     if (c.shiftT > 0) c.shiftT = Math.max(0, c.shiftT - dt);
-    if (c.vf < -0.5) { c.gear = -1; }
+    if (c.manual && c.vf >= -0.5) {
+      // You change gear: Q up, E down. Neutral only when stopped; the engine is held at the rev limiter above the gear's top speed.
+      if (c.gear < 1) c.gear = (v > 0.8 || throttle > 0) ? 1 : 0;
+      if (c.shiftReq && c.shiftT === 0) {
+        if (c.shiftReq > 0 && c.gear < sp.gears && c.gear >= 1) { c.gear++; c.shiftT = 0.16; c.shifted = (c.shifted || 0) + 1; }
+        else if (c.shiftReq < 0 && c.gear > 1) { c.gear--; c.shiftT = 0.1; c.shifted = (c.shifted || 0) + 1; }
+      }
+      c.shiftReq = 0;
+      if (c.gear >= 1 && v > top(c.gear) * 1.04) { c.vx *= 1 - dt * 0.9; c.vy *= 1 - dt * 0.9; }      // engine braking when the gear is too low for the speed
+    } else if (c.vf < -0.5) { c.gear = -1; }
+    else if (c.manual) { /* handled above */ }
     else if (v < 0.8 && throttle === 0) { c.gear = 0; }
     else {
       if (c.gear < 1) c.gear = 1;
@@ -764,7 +784,7 @@
     const vf0 = c.vx * fx + c.vy * fy;
     // Engine, brakes, reversing and drag, all along the body.
     let a = 0;
-    if (inp.throttle > 0) a += sp.accel * inp.throttle * clamp(1 - (Math.max(0, vf0) / (sp.vmax * surf)) ** 2, 0, 1) * (vf0 < 0 ? 1.6 : 1);
+    if (inp.throttle > 0) a += sp.accel * inp.throttle * manualPower(c) * clamp(1 - (Math.max(0, vf0) / (sp.vmax * surf)) ** 2, 0, 1) * (vf0 < 0 ? 1.6 : 1);
     const vLoad = clamp(1 + 0.8 * (vf0 * vf0 * curv) / 9.8, 0.5, 1.5);       // the same load decides how hard the brakes can bite: over a crest the wheels lock sooner
     if (inp.brake > 0) a += vf0 > 1.5 ? -sp.brake * inp.brake * vLoad * brakeFade(c) : -sp.accel * 0.55 * inp.brake * clamp(1 + vf0 / 18, 0, 1);
     a -= 0.0002 * (1 - 0.4 * (c.tow || 0)) * vf0 * Math.abs(vf0) + (Math.abs(vf0) > 0.2 ? 0.35 * Math.sign(vf0) : 0);   // slipstream: less air drag when tucked in
@@ -1093,7 +1113,7 @@
 
     // ---- state
     let screen = 'menu';                 // menu | lobby | countdown | race | done
-    let T = getTrack(trackId), racers = [], me = null, raceLaps = 3, clock = 0, cdLeft = 0, alive = true, paused = false, suspended = false, startSeq = null, weatherMode = store.get('weather', 'mixed'), weather = { target: 0, at: 1e9, dryAt: 1e9, told: 0 }, passAt = new Map(), myTyre = store.get('tyre', 'M'), towerMode = store.get('tower', 1), medF = null, formT = 0, formHold = 1, formSkip = false, cranes = [], gridMarks = [];
+    let T = getTrack(trackId), racers = [], me = null, raceLaps = 3, clock = 0, cdLeft = 0, alive = true, paused = false, suspended = false, startSeq = null, weatherMode = store.get('weather', 'mixed'), weather = { target: 0, at: 1e9, dryAt: 1e9, told: 0 }, passAt = new Map(), myTyre = store.get('tyre', 'M'), towerMode = store.get('tower', 1), manualOn = store.get('manual', false), medF = null, formT = 0, formHold = 1, formSkip = false, cranes = [], gridMarks = [];
     const keys = new Set();
     let camPitchA = 0, camBobA = 0;   // the camera's nose-up angle with the climb, and the eye's dip in a compression
     let camRollA = 0;                 // how far the camera leans with a banked road (radians, smoothed)
@@ -1153,6 +1173,7 @@
         row('Rivals', ...[0, 1, 3, 5, 7, 9, 11, 15].map(mk)),
         row('Level', ...Object.entries(LEVELS).map(([id, l]) => btn(l.label, id === level ? 'on' : '', () => { level = id; store.set('level', id); showMenu(); }))),
         row('Tyres', ...Object.entries(TYRES).map(([id, t]) => btn(`${t.name}`, id === myTyre ? 'on' : '', () => { myTyre = id; store.set('tyre', id); showMenu(); })), hint({ S: 'Grippy, wears fast', M: 'In between', H: 'Slower, lasts long', I: 'For a damp track', W: 'For heavy rain' }[myTyre])),
+        row('Gearbox', btn('Automatic', !manualOn ? 'on' : '', () => { manualOn = false; store.set('manual', false); showMenu(); }), btn('Manual', manualOn ? 'on' : '', () => { manualOn = true; store.set('manual', true); showMenu(); }), hint(manualOn ? 'Q shifts up, E shifts down (G switches in a race). DRS moves to X, serving a penalty to C. Watch the rev limiter.' : 'The car changes gear for you. Pick Manual, or press G, to shift yourself with Q and E.')),
         row('Weather', ...[['dry', 'Dry'], ['mixed', 'Changeable'], ['wet', 'Wet']].map(([id, l]) => btn(l, id === weatherMode ? 'on' : '', () => { weatherMode = id; store.set('weather', id); showMenu(); }))),
         row('Start', btn('Formation lap', formOn ? 'on' : '', () => { formOn = true; store.set('formation', true); showMenu(); }), btn('Straight to the lights', formOn ? '' : 'on', () => { formOn = false; store.set('formation', false); showMenu(); })),
         bestLine(),
@@ -1164,7 +1185,7 @@
         row('Name', name),
         ...(canHear() ? [row('Voice radio', btn(voiceOn() ? '🎙 On' : '🎙 Off', voiceOn() ? 'on' : '', () => { if (voiceOn()) { store.set('voice', 'off'); showMenu(); } else askMic(); }))] : []),
         hint('T (or Space in the F1 car): talk to your race engineer, then 1 to 7 · N: skip the formation lap · L: timing tower · Y: tyres for your next stop · B: boost (F1) · E: DRS'),
-        hint('↑ W gas · ↓ S brake and reverse · ← → A D steer · Space handbrake (drift) · V view (top, chase, cockpit) · M sound · Q serve a penalty at your pit stop · R restart · P pause · Esc menu'));
+        hint('↑ W gas · ↓ S brake and reverse · ← → A D steer · Space handbrake (drift) · V view (top, chase, cockpit) · G manual gearbox (Q up, E down) · M sound · Q serve a penalty at your pit stop · R restart · P pause · Esc menu'));
     }
 
     /// Asks for the microphone (the Mac app shows its own permission prompt; a browser asks the first time it listens).
@@ -1344,7 +1365,9 @@
         if (k === 'p' && (screen === 'race' || screen === 'countdown' || screen === 'formation')) { paused = !paused; big.textContent = paused ? 'PAUSED' : ''; return; }
         if (k === 'r' && (screen === 'race' || screen === 'done') && !net) { startLocalRace(); return; }
         if (k === 'n' && screen === 'formation') { formSkip = true; return; }
-        if (k === 'e' && me && screen === 'race' && !me.official) { if (me.drsOn) { me.drsOn = false; } else if (drsOk(me)) { me.drsOn = true; toast('DRS open'); } else toast(me.lap < 1 ? 'DRS is enabled from lap 2' : 'DRS: get within 1 second of the car ahead'); return; }
+        if (k === 'g' && screen !== 'menu') { manualOn = !manualOn; store.set('manual', manualOn); if (me) me.car.manual = manualOn; toast(manualOn ? 'Manual gearbox: Q up, E down (DRS moves to X)' : 'Automatic gearbox'); return; }
+        if (manualOn && (k === 'q' || k === 'e') && me && !me.official && screen !== 'menu') { me.car.shiftReq = k === 'q' ? 1 : -1; return; }
+        if (k === (manualOn ? 'x' : 'e') && me && screen === 'race' && !me.official) { if (me.drsOn) { me.drsOn = false; } else if (drsOk(me)) { me.drsOn = true; toast('DRS open'); } else toast(me.lap < 1 ? 'DRS is enabled from lap 2' : 'DRS: get within 1 second of the car ahead'); return; }
         if (k === 'l' && me && screen !== 'menu') { towerMode = (towerMode + 1) % 3; store.set('tower', towerMode); toast(['Timing tower hidden', 'Timing tower: gap to the car ahead', 'Timing tower: gap to the leader'][towerMode]); return; }
         if (k === 'y' && me && !me.official && screen !== 'menu') { me.nextTyre = { S: 'M', M: 'H', H: 'I', I: 'W', W: 'S' }[me.nextTyre || 'M']; toast(`Next pit stop: ${TYRES[me.nextTyre].name} tyres`); return; }
         if (k === 'f' && role === 'med' && screen === 'race') { medGetOut(); return; }
@@ -1357,7 +1380,7 @@
         if (screen === 'design') { if (k === 'escape') showMenu(); else if (k === 'z') designUndo(); return; }
         if (k === 'escape' && screen !== 'menu') { closeNet(); paused = false; if (backToDesign && ds) { screen = 'design'; designUI(); } else showMenu(); return; }
         if (k === 'v' && screen !== 'menu' && screen !== 'lobby') { viewMode = { top: 'chase', chase: 'cockpit', cockpit: 'halo', halo: 'top' }[viewMode] || 'chase'; store.set('view', viewMode); toast({ top: 'Top-down view', chase: 'Chase view', cockpit: 'Cockpit view', halo: 'Halo cam' }[viewMode]); return; }
-        if (k === 'q' && me && (me.pen || 0) > 0 && (me.inLane || screen === 'race') && !(me.service > 0)) { me.servePen = !me.servePen; toast(me.servePen ? `You will serve your ${me.pen} s penalty at your next pit stop` : 'Penalty will be added to your race time instead'); if (me.servePen) say(`Copy. We will serve the ${me.pen === 5 ? 'five' : me.pen === 10 ? 'ten' : me.pen} second penalty at the stop.`, 'eng', 1); return; }
+        if (k === (manualOn ? 'c' : 'q') && me && (me.pen || 0) > 0 && (me.inLane || screen === 'race') && !(me.service > 0)) { me.servePen = !me.servePen; toast(me.servePen ? `You will serve your ${me.pen} s penalty at your next pit stop` : 'Penalty will be added to your race time instead'); if (me.servePen) say(`Copy. We will serve the ${me.pen === 5 ? 'five' : me.pen === 10 ? 'ten' : me.pen} second penalty at the stop.`, 'eng', 1); return; }
         if (k === 'm') { setSound(!soundOn); toast(soundOn ? 'Sound on' : 'Sound off'); if (screen === 'menu') showMenu(); return; }
       }
       const m = KEYMAP[k]; if (m) { if (down) keys.add(m); else keys.delete(m); }
@@ -2296,6 +2319,7 @@
           }
         } else { imp = wallHit(c, T, after); r.inLane = false; }
         if (imp > 3) { const q = T.S[after.idx], sg = Math.sign(after.lat) || 1; crash(r, c.x + q.nx * sg * 1.1, c.y + q.ny * sg * 1.1, imp, '#d8d8d8'); }
+        if (r === me) c.manual = manualOn;
         // Tyres wear with distance and much faster in slides.
         const vNow = Math.hypot(c.vx, c.vy); if (vNow > 3 && !r.finished) c.wear = Math.min(1, (c.wear || 0) + dt * (0.0011 + Math.abs(c.vl) * 0.0016 + (c.drifting ? 0.004 : 0)) * (c.spec.id === 'f1' ? 1.25 : 1) * ((TYRES[c.tyre] || TYRES.M).wear));
         // Track limits (FIA): all four wheels past the white line counts. Warnings, the black-and-white flag, then 5 seconds.
@@ -2563,6 +2587,7 @@
       // Middle: the gear.
       g.fillStyle = 'rgba(8,13,28,.82)'; g.beginPath(); g.roundRect(cx - 38 * s, cy - 28 * s, 76 * s, 62 * s, 8 * s); g.fill();
       g.fillStyle = rr > 0.92 ? '#ff4d4d' : '#fff'; g.font = `900 ${40 * s}px system-ui`; g.fillText(gearName(c), cx, cy + 12 * s);
+      if (c.manual) { g.font = `800 ${7 * s}px system-ui`; g.fillStyle = '#ffd23f'; g.fillText('MANUAL · Q▲ E▼', cx, cy + 24 * s); }
       g.font = `700 ${6.3 * s}px system-ui`; g.fillStyle = me.boosting ? '#ffd23f' : 'rgba(255,255,255,.7)';
       if (f1) g.fillText(me.boosting ? 'OVERTAKE ERS MODE' : 'BALANCED ERS MODE', cx, cy + 25 * s);
     }

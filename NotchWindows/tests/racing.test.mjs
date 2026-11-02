@@ -482,3 +482,15 @@ test('tyres and brakes heat up and cool down: braking heats the discs, cornering
   for (let t = 0; t < 200; t += dt) R.stepCar(c, { throttle: 0, brake: 0, steer: 0, hand: 0 }, dt, 1);
   assert.ok(c.t0 < 50 && c.b0 < 80, `standing still cools: ${c.t0.toFixed(0)} / ${c.b0.toFixed(0)}`);
 });
+
+test('manual gearbox: you choose the gear, the rev limiter holds the top speed of a gear, and downshifting works', () => {
+  const c = R.newCar(car('gt3'), 0, 0, 0), dt = 1 / 60; c.manual = true;
+  for (let t = 0; t < 6; t += dt) R.stepCar(c, GO, dt, 1);
+  assert.equal(c.gear, 1, 'no automatic shifting');
+  assert.ok(Math.hypot(c.vx, c.vy) < car('gt3').vmax * 0.5, 'held in first gear at the limiter');
+  const v1 = Math.hypot(c.vx, c.vy);
+  c.shiftReq = 1; R.stepCar(c, GO, dt, 1); assert.equal(c.gear, 2);
+  for (let t = 0; t < 8; t += dt) R.stepCar(c, GO, dt, 1);
+  assert.ok(Math.hypot(c.vx, c.vy) > v1, 'second gear is faster');
+  c.shiftReq = -1; R.stepCar(c, GO, dt, 1); assert.equal(c.gear, 1);
+});
