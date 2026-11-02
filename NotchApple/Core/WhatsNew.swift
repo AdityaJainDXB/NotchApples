@@ -20,6 +20,11 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.1.82", date: "2 November 2026", headline: "Friends: your code in view", items: [
+            "Friends: your own friend code is now always in view at the bottom right of the Friends screen, with a Copy button and a QR button, so it is easy to share without opening Settings.",
+            "Friends: removed the confusing “Paste a QR image” button under the code box. To add someone, type or paste their code (or their notchapple://friend link); to be added, show your code or QR.",
+            "Friends now works for everyone: the relay has been updated, so friend codes, requests and chat connect.",
+        ]),
         ReleaseNote(version: "2.1.81", date: "2 November 2026", headline: "Control your Mac from your iPhone", items: [
             "Remote control (new, experimental, Ultimate): tap the hand in the iPhone app and the Mac replays your taps, drags, two-finger scrolling and keys. It needs three things on the Mac: Allow remote control (off by default), May control for that iPhone, and Accessibility. A red hand shows beside the notch and a notification appears while it is in use; Stop in Settings → iPhone or Control-Option-Shift-K ends it at once, and it ends if the Mac sleeps or locks.",
             "The iPhone app has a key bar (⌘ shortcuts, arrows, Esc, Tab, typing) and now shows what the notch is showing, alerts such as a low battery, and, only if you switch each on in Settings → iPhone, the Mac's clipboard, newest notes and open to-dos.",

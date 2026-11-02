@@ -91,7 +91,34 @@
     return n;
   }
 
-  function mount(entries, server) {
+  /** Cloudflare Turnstile, only when the site is set up for it (api.json has turnstileSiteKey): a token goes with each AI question,
+   *  and the server checks it. Nothing is loaded from Cloudflare until someone actually asks the AI something. */
+  function turnstile(siteKey) {
+    var widget = null, box = null, ready = null, token = null, waiting = null;
+    function load() {
+      if (ready) return ready;
+      ready = new Promise(function (res, rej) {
+        var s = document.createElement('script'); s.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit'; s.async = true;
+        s.onload = res; s.onerror = function () { ready = null; rej(new Error('captcha')); }; document.head.appendChild(s);
+      });
+      return ready;
+    }
+    return function get() {
+      if (token) { var t = token; token = null; return Promise.resolve(t); }
+      return load().then(function () {
+        return new Promise(function (res, rej) {
+          waiting = res;
+          if (!box) { box = document.createElement('div'); box.className = 'nc-ts'; document.body.appendChild(box); }
+          var cb = function (t) { if (waiting) { var w = waiting; waiting = null; w(t); } else token = t; };
+          if (widget == null) widget = window.turnstile.render(box, { sitekey: siteKey, appearance: 'interaction-only', callback: cb, 'error-callback': function () { rej(new Error('captcha')); }, 'expired-callback': function () { token = null; } });
+          else window.turnstile.reset(widget);
+        });
+      });
+    };
+  }
+
+  function mount(entries, server, siteKey) {
+    var getToken = siteKey ? turnstile(siteKey) : null;
     var eng = engine(entries);
     var reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
     var fab = el('button', { class: 'nc-fab', type: 'button', 'aria-haspopup': 'dialog', 'aria-expanded': 'false', 'aria-label': 'Ask a question about Notch Apple' });
@@ -107,7 +134,7 @@
     var input = el('input', { class: 'nc-in', type: 'text', maxlength: '200', placeholder: 'e.g. How much is Pro?', 'aria-label': 'Your question' });
     var send = el('button', { class: 'nc-send', type: 'submit' }, 'Send');
     form.append(input, send);
-    var foot = el('div', { class: 'nc-foot' }, server ? 'Common questions are answered on this page. Anything else is sent to our AI (Google Gemini, or Groq if Gemini is busy) to answer from the Notch Apple docs, so please don\u2019t type anything private.' : 'Answers come from this site and the README. Nothing you type leaves this page.');
+    var foot = el('div', { class: 'nc-foot' }, server ? 'Common questions are answered on this page. Anything else is sent to our AI (Google Gemini, or Groq if Gemini is busy) to answer from the Notch Apple docs, so please don\u2019t type anything private.' + (siteKey ? ' A quick Cloudflare check protects it from bots.' : '') : 'Answers come from this site and the README. Nothing you type leaves this page.');
     panel.append(head, log, chips, form, foot);
     document.body.append(fab, panel);
 
@@ -140,7 +167,8 @@
       busy = true; send.disabled = true;
       var wait = el('div', { class: 'nc-msg nc-bot' }); wait.append(el('p', null, 'Thinking\u2026')); log.append(wait); log.scrollTop = log.scrollHeight;
       var ctl = window.AbortController ? new AbortController() : null, timer = setTimeout(function () { if (ctl) ctl.abort(); }, 15000);
-      fetch(server.replace(/\/+$/, '') + '/ask', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ q: q, history: history.slice(0, -1) }), signal: ctl ? ctl.signal : undefined })
+      (getToken ? getToken() : Promise.resolve(undefined))
+        .then(function (cf) { return fetch(server.replace(/\/+$/, '') + '/ask', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ q: q, history: history.slice(0, -1), cf: cf }), signal: ctl ? ctl.signal : undefined }); })
         .then(function (res) { return res.ok ? res.json() : Promise.reject(res.status); })
         .then(function (d) { if (!d || typeof d.a !== 'string' || !d.a) return Promise.reject(0); wait.remove(); say(d.a, 'bot', null, 'AI answer, from the Notch Apple docs'); remember('assistant', d.a); setChips(r.related.length ? r.related : starters); })
         .catch(function () { wait.remove(); notSure(r); })
@@ -180,9 +208,9 @@
 
   function start() {
     // The AI's server is the licence worker already named in api.json; without it the helper works from the FAQ alone.
-    var api = fetch('api.json').then(function (r) { return r.ok ? r.json() : {}; }).then(function (j) { var u = j && j.licenseServer; return typeof u === 'string' && /^https:\/\/[a-z0-9.-]+$/i.test(u) ? u : ''; }).catch(function () { return ''; });
+    var api = fetch('api.json').then(function (r) { return r.ok ? r.json() : {}; }).then(function (j) { var u = j && j.licenseServer, k = j && j.turnstileSiteKey; return { server: typeof u === 'string' && /^https:\/\/[a-z0-9.-]+$/i.test(u) ? u : '', siteKey: typeof k === 'string' && /^[0-9A-Za-z_-]{8,64}$/.test(k) ? k : '' }; }).catch(function () { return { server: '', siteKey: '' }; });
     Promise.all([fetch('assets/faq.json').then(function (r) { return r.ok ? r.json() : []; }), api]).then(function (res) {
-      if (Array.isArray(res[0]) && res[0].length) mount(res[0], res[1]);
+      if (Array.isArray(res[0]) && res[0].length) mount(res[0], res[1].server, res[1].siteKey);
     }).catch(function () { /* no helper if the data can't load: the page works the same */ });
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();

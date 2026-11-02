@@ -1107,9 +1107,21 @@ async function askProvider(env, { name, base, key, model, tries }, messages) {
   return '';
 }
 
+/** Cloudflare Turnstile: when TURNSTILE_SECRET is set, a question must carry a token the visitor's browser got by passing the check
+ *  (and the token is verified here, since a check only the page makes can be skipped). Without the secret nothing changes. */
+export async function turnstileOk(env, token, ip) {
+  if (!env.TURNSTILE_SECRET) return true;
+  if (typeof token !== 'string' || token.length < 10 || token.length > 2100) return false;
+  try {
+    const r = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', { method: 'POST', body: new URLSearchParams({ secret: env.TURNSTILE_SECRET, response: token, remoteip: ip || '' }) });
+    return (await r.json()).success === true;
+  } catch { return false; }
+}
+
 async function askSite(env, request, body) {
   if (!aiOn(env)) throw new HTTPError(503, "The helper's AI isn't switched on.");
   const { q, history } = cleanAskRequest(body);
+  if (!(await turnstileOk(env, body.cf, request.headers.get('cf-connecting-ip')))) throw new HTTPError(403, 'Please complete the check and try again.');
   await addressLimit(env, request, 'ask', 6);
   const day = await (await env.AI_QUOTA.get(env.AI_QUOTA.idFromName('site-ask')).fetch('https://quota/', { method: 'POST', body: JSON.stringify({ limit: Number(env.ASK_DAILY) || 1500 }) })).json();
   if (!day.ok) throw new HTTPError(429, 'The helper has answered a lot of questions today. Please try again tomorrow, or ask on GitHub.');

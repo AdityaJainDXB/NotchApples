@@ -417,6 +417,10 @@ env.AI_QUOTA = {
 let upstreamSeen = null, upstreamStatus = 200, upstreamPlan = null, upstreamLog = [];
 const realFetch = globalThis.fetch;
 globalThis.fetch = async (url, init) => {
+  if (String(url).includes('challenges.cloudflare.com')) {
+    const f = new URLSearchParams(String(init.body));
+    return new Response(JSON.stringify({ success: f.get('secret') === 'ts-secret' && f.get('response') === 'good-token-12345' }), { headers: { 'content-type': 'application/json' } });
+  }
   if (/(ai\.test\/v1|alt\.test\/v1|api\.groq\.com\/openai\/v1)\/chat\/completions/.test(String(url))) {
     upstreamSeen = { url: String(url), headers: init.headers, body: JSON.parse(init.body) };
     upstreamLog.push(upstreamSeen.body.model);
@@ -585,6 +589,18 @@ await test('Ask: a second provider answers when the first is busy; it is skipped
 });
 const post = (body, ip = '1.1.1.1') => call('/plane/score', body, { 'cf-connecting-ip': ip });
 const board = async (mode, period = 'all') => (await worker.fetch(new Request(`https://w.test/plane/board?mode=${mode}&period=${period}`), env)).json();
+
+await test('Ask: with Turnstile switched on a question needs a token Cloudflare accepts; without the secret nothing changes', async () => {
+  const ask = (cf, ip) => worker.fetch(new Request('https://w.test/ask', { method: 'POST', body: JSON.stringify({ q: 'How much is Pro?', cf }), headers: { 'cf-connecting-ip': ip } }), env);
+  assert.equal((await ask(undefined, '4.4.1.1')).status, 200, 'no secret set: as before');
+  env.TURNSTILE_SECRET = 'ts-secret';
+  assert.equal((await ask(undefined, '4.4.1.2')).status, 403, 'no token');
+  assert.equal((await ask('short', '4.4.1.3')).status, 403, 'a junk token');
+  assert.equal((await ask('x'.repeat(3000), '4.4.1.4')).status, 403, 'an enormous token');
+  assert.equal((await ask('bad-token-abcdefgh', '4.4.1.5')).status, 403, 'a token Cloudflare refuses');
+  assert.equal((await ask('good-token-12345', '4.4.1.6')).status, 200, 'a token Cloudflare accepts');
+  delete env.TURNSTILE_SECRET;
+});
 
 await test('World board: scores are accepted, sorted the right way for each mode and shown top first', async () => {
   for (const [name, score] of [['Ana', 12], ['Ben', 30], ['Cy', 21]]) assert.equal((await post({ mode: 'hoops', name, plane: 'c172', score }, `10.0.0.${score}`)).ok, true);

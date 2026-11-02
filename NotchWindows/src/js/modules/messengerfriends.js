@@ -21,7 +21,17 @@ export function render(root) {
   const side = el('div', { class: 'col gap-6', style: 'width:210px;flex:none;min-height:0' });
   const pane = el('div', { class: 'col gap-6', style: 'flex:1;min-width:0;min-height:0' });
   wrap.append(side, pane);
-  root.append(wrap);
+  // Your own code, always in view at the bottom right, so it is easy to read out or copy.
+  const codeBar = el('div', { class: 'hstack', style: 'justify-content:flex-end;gap:8px;flex:none' });
+  root.append(wrap, codeBar);
+  function paintCodeBar() {
+    const me = FR.identity();
+    if (!me) { codeBar.replaceChildren(); return; }
+    codeBar.replaceChildren(el('span', { class: 'tiny dim' }, 'Your code'),
+      el('b', { class: 'selectable', style: 'font-family:ui-monospace,Consolas,monospace' }, L.displayCode(me.code)),
+      button('Copy', () => invoke('clipboard_copy_text', { text: L.displayCode(me.code) }).then(() => toast('Friend code copied')), { small: true, kind: 'quiet' }),
+      button('QR', () => myCode(), { small: true, kind: 'quiet', title: 'Show your QR code' }));
+  }
 
   // Kept between repaints, so typing is never interrupted.
   const addInput = el('input', { class: 'field', placeholder: 'Friend code or link', style: 'min-width:0;flex:1' });
@@ -90,8 +100,9 @@ export function render(root) {
         inc.length ? [section('Requests'), ...inc.map(requestRow)] : null,
         pend.length ? [section('Waiting for an answer'), ...pend.map(pendingRow)] : null,
         section('Friends'),
-        fr.length ? fr.map(friendRow) : el('div', { class: 'tiny dim' }, 'Press “My code” to share yours, or add someone’s.')));
+        fr.length ? fr.map(friendRow) : el('div', { class: 'tiny dim' }, 'Type a friend’s code above to add them, or share yours (bottom right).')));
     if (refocus) addInput.focus();
+    paintCodeBar();
   }
 
   function bubble(m, friend) {

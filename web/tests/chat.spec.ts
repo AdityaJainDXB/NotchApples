@@ -61,6 +61,24 @@ test('?ask=1 opens the helper straight away (the app links here)', async ({ page
   await expect(page.getByRole('dialog', { name: 'Ask about Notch Apple' })).toBeVisible();
 });
 
+test('with a Turnstile site key the AI question carries a token, and Cloudflare is only contacted when the AI is asked', async ({ page }) => {
+  const sent: any[] = [];
+  await page.route('**/api.json', (r) => r.fulfill({ contentType: 'application/json', body: JSON.stringify({ licenseServer: 'https://notchapple-licenses.adityajain1225.workers.dev', turnstileSiteKey: '1x00000000000000000000AA' }) }));
+  await page.route('https://challenges.cloudflare.com/**', (r) => r.fulfill({ contentType: 'text/javascript', body: 'window.turnstile={render:function(el,o){setTimeout(function(){o.callback("token-from-cloudflare")},20);return 1},reset:function(){}};' }));
+  await page.route('**/ask', async (r) => { sent.push(JSON.parse(r.request().postData() || '{}')); await r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ a: 'Checked answer.' }) }); });
+  let cloudflare = 0; page.on('request', (r) => { if (r.url().includes('challenges.cloudflare.com')) cloudflare++; });
+  await open(page, '/index.html');
+  await page.getByRole('button', { name: 'Ask a question about Notch Apple' }).click();
+  await page.getByLabel('Your question').fill('how much does pro cost');
+  await page.keyboard.press('Enter');
+  await expect(page.getByRole('dialog', { name: 'Ask about Notch Apple' })).toContainText('Pro is $1');
+  expect(cloudflare, 'a question the FAQ answers never touches Cloudflare').toBe(0);
+  await page.getByLabel('Your question').fill('recommend a good pizza recipe');
+  await page.keyboard.press('Enter');
+  await expect(page.getByRole('dialog', { name: 'Ask about Notch Apple' })).toContainText('Checked answer.');
+  expect(sent).toHaveLength(1); expect(sent[0].cf).toBe('token-from-cloudflare');
+});
+
 test('HTML in a question or in the data is never turned into markup', async ({ page }) => {
   await open(page, '/index.html');
   await page.getByRole('button', { name: 'Ask a question about Notch Apple' }).click();

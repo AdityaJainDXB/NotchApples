@@ -76,10 +76,10 @@ Pick your computer. Both buttons start the download straight away. The Mac link 
   </tr>
   <tr>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.1.81</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.1.82</b></a>
     </td>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 2.1.78 BETA</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 2.1.82 BETA</b></a>
     </td>
   </tr>
   <tr>
@@ -150,6 +150,14 @@ More screenshots of the capture overlay, the AI answer, the settings and the Win
 
 ## What's new
 
+### Mac 2.1.82 · Windows 2.1.82 BETA · 2 November 2026 · 👥 Friends: your code in view, and Windows
+
+- Friends: your own friend code is now always in view at the bottom right of the Friends screen, with a Copy button and a QR button, so it is easy to share without opening Settings.
+- Friends: removed the confusing “Paste a QR image” button under the code box. To add someone, type or paste their code (or their notchapple://friend link); to be added, show your code or QR.
+- Friends now works for everyone: the relay has been updated, so friend codes, requests and chat connect.
+- Friends (BETA, new): private end-to-end encrypted chat by friend code in Messenger, compatible with the Mac app: add by code, accept or block requests, sent / delivered / read, typing, safety number, nicknames, Delete all my chat data. Your code is always shown at the bottom right with Copy and QR. Untested on real Windows hardware; Pro, like Rooms.
+- Windows stores the friend keys and history in files in the app data folder (not in Windows Credential Manager), so treat the PC's user profile as the protection.
+
 ### Mac 2.1.81 · 2 November 2026 · 🖱️ Control your Mac from your iPhone
 
 - Remote control (new, experimental, Ultimate): tap the hand in the iPhone app and the Mac replays your taps, drags, two-finger scrolling and keys. It needs three things on the Mac: Allow remote control (off by default), May control for that iPhone, and Accessibility. A red hand shows beside the notch and a notification appears while it is in use; Stop in Settings → iPhone or Control-Option-Shift-K ends it at once, and it ends if the Mac sleeps or locks.
@@ -162,14 +170,6 @@ More screenshots of the capture overlay, the AI answer, the settings and the Win
 - Away from your Wi-Fi: install Tailscale on the Mac and the iPhone, then in the iPhone app choose Connect over Tailscale or by address. Settings → iPhone shows the Mac's Tailscale address and port (47813, changeable). The Mac only accepts connections from your own Wi-Fi or Tailscale, never the public internet, and the pairing code and sealed requests are unchanged.
 - The iPhone app says clearly when Tailscale is off, the Mac is asleep or the key is wrong. Update the iPhone app too (NotchAppleCompanion.ipa in this release); phones paired before keep working.
 - Friends: the message when the server isn't ready is clearer and wraps instead of being cut off.
-
-### Mac 2.1.79 · 2 November 2026 · 👥 Friends: private chat
-
-- Friends (new, in Messenger): a third mode for private chat with people you add by a short friend code. Your code is in Settings → Messenger (with a QR). Adding someone sends a request they must accept (or block) before either of you can message, so a code alone never lets a stranger write to you.
-- Each friend gets a chat with sent, delivered and read, a typing indicator, nicknames, and a safety number to compare out loud. Messages are end-to-end encrypted; if your friend is offline the server keeps only the encrypted message for up to 14 days and deletes it when it arrives. History stays on your Mac.
-- Notifications: a new message or request shows a count on the Messenger tab and the closed notch's dot, plus a macOS notification (message text can be hidden in Settings → Messenger) that stays quiet while a Focus is on.
-- Privacy tools: block list, remove friend, rate limits on requests, and Delete all my chat data. Nearby Wi-Fi and anonymous rooms are unchanged.
-- Needs the new relay: Friends works once the Notch Apple rooms relay has been updated (the project owner deploys it); until then the Friends screen shows that it can't connect. Windows can't use Friends yet, and Mac and Windows friends will be able to talk once it arrives there.
 
 Every earlier release is in the [changelog](CHANGELOG.md).
 

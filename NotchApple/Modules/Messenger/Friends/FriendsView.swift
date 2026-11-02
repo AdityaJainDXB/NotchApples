@@ -21,6 +21,8 @@ struct FriendsView: View {
     @State private var renaming = false
     @State private var aliasDraft = ""
     @State private var confirmRemove = false
+    @State private var showQR = false
+    @State private var copiedCode = false
 
     var body: some View {
         HStack(alignment: .top, spacing: 10) {
@@ -28,6 +30,7 @@ struct FriendsView: View {
             Divider().opacity(0.3)
             if let box = selected, let friend = client.book.record(box), friend.status == .active { chat(friend) } else { placeholder }
         }
+        .overlay(alignment: .bottomTrailing) { myCodePill }
         .onAppear { client.activate(); if selected == nil { selected = client.friends.first?.box } }
         .onDisappear { client.viewing = nil }
         .onChange(of: selected) { _, new in client.viewing = new; if let new { client.markRead(new) } }
@@ -49,7 +52,6 @@ struct FriendsView: View {
                     .buttonStyle(PurpleButtonStyle()).disabled(adding || addText.trimmingCharacters(in: .whitespaces).isEmpty)
                     .help("Send a friend request. They have to accept before either of you can message.")
             }
-            Button("Paste a QR image") { addFromClipboardImage() }.buttonStyle(.link).font(.system(size: 10)).foregroundStyle(Theme.textSecondary)
             if let note = addNote { Text(note).font(.system(size: 10)).foregroundStyle(.orange).fixedSize(horizontal: false, vertical: true) }
             ScrollView {
                 VStack(alignment: .leading, spacing: 4) {
@@ -57,7 +59,7 @@ struct FriendsView: View {
                     if !client.pending.isEmpty { sectionLabel("Waiting for an answer"); ForEach(client.pending) { pendingRow($0) } }
                     sectionLabel("Friends")
                     if client.friends.isEmpty {
-                        Text("Your code is in Settings → Messenger. Share it, or add someone's.")
+                        Text("Type a friend's code above to add them, or share yours (bottom right).")
                             .font(.system(size: 10)).foregroundStyle(Theme.textSecondary).fixedSize(horizontal: false, vertical: true)
                     }
                     ForEach(client.friends) { friendRow($0) }
@@ -133,11 +135,29 @@ struct FriendsView: View {
         }
     }
 
-    private func addFromClipboardImage() {
-        guard let image = NSPasteboard.general.readObjects(forClasses: [NSImage.self])?.first as? NSImage, let tiff = image.tiffRepresentation,
-              let ci = CIImage(data: tiff), let detector = CIDetector(ofType: CIDetectorTypeQRCode, context: nil, options: nil),
-              let text = (detector.features(in: ci).first as? CIQRCodeFeature)?.messageString else { addNote = "Copy a picture of the QR code first, then press this."; return }
-        addText = text; add()
+    /// Your own code, always in view at the bottom right, so it is easy to read out or copy; the QR shows the same code.
+    private var myCodePill: some View {
+        HStack(spacing: 6) {
+            Text("Your code").font(.system(size: 10)).foregroundStyle(Theme.textSecondary)
+            Text(Friends.displayCode(client.identity.code)).font(.system(size: 13, weight: .bold, design: .monospaced)).foregroundStyle(.white).textSelection(.enabled)
+            Button { NSPasteboard.general.clearContents(); NSPasteboard.general.setString(Friends.displayCode(client.identity.code), forType: .string)
+                copiedCode = true; DispatchQueue.main.asyncAfter(deadline: .now() + 2) { copiedCode = false } } label: {
+                Image(systemName: copiedCode ? "checkmark" : "doc.on.doc").font(.system(size: 11))
+            }.buttonStyle(.plain).foregroundStyle(Theme.accentBright).help("Copy your friend code")
+            Button { showQR = true } label: { Image(systemName: "qrcode").font(.system(size: 12)) }
+                .buttonStyle(.plain).foregroundStyle(Theme.accentBright).help("Show your QR code")
+                .popover(isPresented: $showQR) {
+                    VStack(spacing: 8) {
+                        if let qr = FriendsSettingsSection.qr(client.identity.link) { Image(nsImage: qr).interpolation(.none).resizable().frame(width: 170, height: 170) }
+                        Text(Friends.displayCode(client.identity.code)).font(.system(size: 14, weight: .bold, design: .monospaced))
+                        Text("A friend scans this with their camera, or types the code.").font(.system(size: 11)).foregroundStyle(.secondary).frame(width: 190)
+                    }.padding(14)
+                }
+        }
+        .padding(.horizontal, 10).padding(.vertical, 5)
+        .background(.black.opacity(0.35), in: Capsule())
+        .overlay(Capsule().stroke(Color.white.opacity(0.12)))
+        .padding(4)
     }
 
     // MARK: Chat

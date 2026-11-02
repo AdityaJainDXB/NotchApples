@@ -1,18 +1,18 @@
 {
-  "version": "2.1.73",
-  "title": "Notch Apple 2.1.73 · Notch Apple 2.1.73 · A new racing HUD, cameras and smooth hills",
-  "notes": "## Notch Apple 2.1.73\n\n- Racing, bumps: the car no longer judders going up or down hills. The road height, slope and curve are now smooth between track samples.\n- Racing, start: fixed the road disappearing on the grid after the formation lap.\n- Racing, new look: a broadcast-style timing tower, a sector and lap-time panel, the car condition with four tyre rings, and a dash with the battery, gear, rev lights and speed. Press L to switch the tower between gaps to you and gaps to the leader.\n- Racing, cameras: a new Halo cam (press V), and the first-person view now has an F1 steering wheel with a screen, shift lights and gloved hands that turn the wheel.\n- Racing, start lights: the five lights now hang from an overhead gantry, four lamps to a pod.\n- Racing, pit stops: a PIT LANE panel with your time in the lane and the stop time, and the pit crew in the team colour.\n- Racing, cars: F1 cars have a front wing with endplates, sidepods, an airbox, a halo and a bigger rear wing, with the tyre compound colour on the sidewall.\n",
-  "published": "2026-11-01T14:34:59Z",
-  "dmg": "https://github.com/AdityaJainDXB/NotchApples/releases/download/v2.1.73/NotchApple-2.1.73.dmg",
-  "dmgSize": 52278782,
-  "page": "https://github.com/AdityaJainDXB/NotchApples/releases/tag/v2.1.73",
+  "version": "2.1.81",
+  "title": "Notch Apple 2.1.81 · Notch Apple 2.1.81: control your Mac from your iPhone",
+  "notes": "## Notch Apple 2.1.81\n\n- Remote control (new, experimental, Ultimate): tap the hand in the iPhone app and the Mac replays your taps, drags, two-finger scrolling and keys. It needs three things on the Mac: Allow remote control (off by default), May control for that iPhone, and Accessibility. A red hand shows beside the notch and a notification appears while it is in use; Stop in Settings → iPhone or Control-Option-Shift-K ends it at once, and it ends if the Mac sleeps or locks.\n- The iPhone app has a key bar (⌘ shortcuts, arrows, Esc, Tab, typing) and now shows what the notch is showing, alerts such as a low battery, and, only if you switch each on in Settings → iPhone, the Mac's clipboard, newest notes and open to-dos.\n- Not included: an iPhone Live Activity (it needs a separate widget extension and a paid Apple Developer account for updates when the app is closed). Update the iPhone app too (NotchAppleCompanion.ipa); phones paired before keep working.\n",
+  "published": "2026-11-02T06:08:27Z",
+  "dmg": "https://github.com/AdityaJainDXB/NotchApples/releases/download/v2.1.81/NotchApple-2.1.81.dmg",
+  "dmgSize": 53036178,
+  "page": "https://github.com/AdityaJainDXB/NotchApples/releases/tag/v2.1.81",
   "stars": 3,
   "windows": {
-    "version": "2.1.73",
+    "version": "2.1.78",
     "notes": "",
-    "url": "https://github.com/AdityaJainDXB/NotchApples/releases/download/win-v2.1.73/Notch.apple_2.1.73_x64-setup.exe",
-    "sha256": "29ec168ed65ad407344468304033ed2c537029647927428aac9649b4c3e7aa21",
-    "size": 6257116,
-    "page": "https://github.com/AdityaJainDXB/NotchApples/releases/tag/win-v2.1.73"
+    "url": "https://github.com/AdityaJainDXB/NotchApples/releases/download/win-v2.1.78/Notch.apple_2.1.78_x64-setup.exe",
+    "sha256": "4a41d408cafc04b5d4015e9ee8e76ff384c79731e5f1390c6a176c77f81a3da6",
+    "size": 6262591,
+    "page": "https://github.com/AdityaJainDXB/NotchApples/releases/tag/win-v2.1.78"
   }
 }
