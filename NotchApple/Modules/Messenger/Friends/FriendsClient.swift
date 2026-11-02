@@ -124,6 +124,8 @@ final class FriendsClient: ObservableObject {
     private func explain(_ status: Int, _ json: [String: Any]) -> String {
         switch status {
         case 0: return "Can't reach the server. Check your internet connection."
+        case 404 where json["error"] as? String == "Not found" || json.isEmpty:
+            return "Friends isn't switched on at the server yet: the Notch Apple rooms relay needs updating (its owner deploys it)."
         case 429: return "Too many tries. Wait a minute and try again."
         case 507: return "Their mailbox is full."
         default: return (json["error"] as? String) ?? "Something went wrong (\(status))."

@@ -4,6 +4,13 @@ Every Notch Apple release, newest first. The latest few are also on the [README]
 
 > **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is in the repository's history.
 
+### Mac 2.1.80 · 2 November 2026 · 📱 Watch your Mac from your iPhone
+
+- Remote view (new, experimental, Ultimate): the paired iPhone can watch this Mac's screen live. Open the iPhone app and tap Watch this Mac's screen; pinch to zoom, drag to move, pick a display. It is off until you turn on Allow viewing this Mac's screen in Settings → iPhone, needs Screen Recording, shows an eye beside the notch while someone is watching, and has a Stop button. View only: no control yet.
+- Away from your Wi-Fi: install Tailscale on the Mac and the iPhone, then in the iPhone app choose Connect over Tailscale or by address. Settings → iPhone shows the Mac's Tailscale address and port (47813, changeable). The Mac only accepts connections from your own Wi-Fi or Tailscale, never the public internet, and the pairing code and sealed requests are unchanged.
+- The iPhone app says clearly when Tailscale is off, the Mac is asleep or the key is wrong. Update the iPhone app too (NotchAppleCompanion.ipa in this release); phones paired before keep working.
+- Friends: the message when the server isn't ready is clearer and wraps instead of being cut off.
+
 ### Mac 2.1.79 · 2 November 2026 · 👥 Friends: private chat
 
 - Friends (new, in Messenger): a third mode for private chat with people you add by a short friend code. Your code is in Settings → Messenger (with a QR). Adding someone sends a request they must accept (or block) before either of you can message, so a code alone never lets a stranger write to you.

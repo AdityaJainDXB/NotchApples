@@ -76,7 +76,7 @@ Pick your computer. Both buttons start the download straight away. The Mac link 
   </tr>
   <tr>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.1.79</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.1.80</b></a>
     </td>
     <td align="center">
       <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 2.1.78 BETA</b></a>
@@ -150,6 +150,13 @@ More screenshots of the capture overlay, the AI answer, the settings and the Win
 
 ## What's new
 
+### Mac 2.1.80 · 2 November 2026 · 📱 Watch your Mac from your iPhone
+
+- Remote view (new, experimental, Ultimate): the paired iPhone can watch this Mac's screen live. Open the iPhone app and tap Watch this Mac's screen; pinch to zoom, drag to move, pick a display. It is off until you turn on Allow viewing this Mac's screen in Settings → iPhone, needs Screen Recording, shows an eye beside the notch while someone is watching, and has a Stop button. View only: no control yet.
+- Away from your Wi-Fi: install Tailscale on the Mac and the iPhone, then in the iPhone app choose Connect over Tailscale or by address. Settings → iPhone shows the Mac's Tailscale address and port (47813, changeable). The Mac only accepts connections from your own Wi-Fi or Tailscale, never the public internet, and the pairing code and sealed requests are unchanged.
+- The iPhone app says clearly when Tailscale is off, the Mac is asleep or the key is wrong. Update the iPhone app too (NotchAppleCompanion.ipa in this release); phones paired before keep working.
+- Friends: the message when the server isn't ready is clearer and wraps instead of being cut off.
+
 ### Mac 2.1.79 · 2 November 2026 · 👥 Friends: private chat
 
 - Friends (new, in Messenger): a third mode for private chat with people you add by a short friend code. Your code is in Settings → Messenger (with a QR). Adding someone sends a request they must accept (or block) before either of you can message, so a code alone never lets a stranger write to you.
@@ -162,12 +169,6 @@ More screenshots of the capture overlay, the AI answer, the settings and the Win
 
 - Ask a question: Settings → About on the Mac, and the Windows settings, have a new "Ask a question" link that opens the website with the Ask box already open.
 - The website's Ask box now answers questions about Notch Apple that its built-in answers did not cover, using Google Gemini (with Groq as a backup when Gemini is busy), from the Notch Apple docs. It knows far more modules than before. Nothing is sent until a question needs the AI, and the box says so.
-
-### Mac 2.1.77 · Windows 2.1.77 BETA · 1 November 2026 · 🏎️ Banking and hills you can feel
-
-- Racing, banking: the banked corners are now banked. La Monumental at the Madring is a steep 24 degree wall, the Hugenholtzbocht (T3) and the last corner (T14) at Zandvoort are about 20 degrees, and T9 at Yas Marina about 10. The outside edge and the barriers rise, the car rolls into the bank and the camera leans with it. A banked corner holds the car far better: it can take La Monumental about a third faster than a flat corner, and the computer drivers do too.
-- Racing, hills you can feel: the camera now pitches up on a climb and over a crest, and the eye dips in a compression. A crest makes the car light (less grip, weaker brakes) and a dip presses it down (more grip). The computer drivers slow down for corners on a crest. A small readout above the dash shows the climb or drop and the banking.
-- Racing, shared tracks can carry banking: a track code can now include a bank angle (up to 24 degrees) for each point. Older codes still work.
 
 Every earlier release is in the [changelog](CHANGELOG.md).
 

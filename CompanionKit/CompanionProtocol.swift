@@ -32,7 +32,7 @@ enum Companion {
 
     /// Everything the phone can ask. Unused fields are nil.
     struct Message: Codable, Equatable {
-        enum Kind: String, Codable { case pair, paired, push, status, control, ok, error }
+        enum Kind: String, Codable { case pair, paired, push, status, control, ok, error, stream }
         var type: Kind
         var name: String? = nil          // pair: the phone's name; paired: the Mac's name
         var device: String? = nil        // paired: the phone's new ID
@@ -44,6 +44,10 @@ enum Companion {
         var version: Int? = Companion.protocolVersion
         var epk: String? = nil           // pair: the phone's ephemeral public key (base64)
         var seq: Int64? = nil            // every request after pairing: a rising counter (see checkSequence)
+        var nonce: String? = nil         // stream: the sender's fresh 16-byte nonce (base64); the reply carries the Mac's
+        var display: Int? = nil          // stream request: which display to show (nil = the main one)
+        var edge: Int? = nil             // stream request: the longest side of the picture the phone wants, in pixels
+        var displays: [DisplayInfo]? = nil   // stream reply: the displays that can be shown
     }
 
     struct Status: Codable, Equatable {

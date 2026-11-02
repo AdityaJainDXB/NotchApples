@@ -163,6 +163,10 @@ From the iPhone you can:
 - After that, every message is sealed with a key only your phone and Mac have.
 - In Shortcuts you get **Send to Mac notch** and **Get Mac status**.
 
+**Remote view (new in 2.1.80, experimental).** The paired iPhone can watch the Mac's screen live: open the iPhone app → **Watch this Mac's screen** (pinch to zoom, drag to move, a menu to pick the display). It is **off until you turn on "Allow viewing this Mac's screen"** in Settings → iPhone, needs Screen Recording for Notch Apple, and shows an eye beside the notch while anyone is watching (Settings has a **Stop** button). Pictures are JPEG, and quality and size adapt to the connection. It is view-only: you can't control the Mac yet.
+
+To reach the Mac when the phone is **not on the same Wi-Fi**, install [Tailscale](https://tailscale.com) on both devices (same account). Settings → iPhone shows the Mac's Tailscale address and port (47813 by default). In the iPhone app choose **Connect over Tailscale or by address**, enter the address, the port and the pairing code. Nothing is opened to the public internet: the Mac refuses connections from anywhere but your own Wi-Fi or tailnet, and every request is still sealed with the pairing key. The phone says clearly when Tailscale is off, the Mac is asleep, or the key is wrong. Details and what is not protected: [docs/PLAN_REMOTE_AND_FRIENDS.md](PLAN_REMOTE_AND_FRIENDS.md).
+
 ![iPhone companion](screenshots/iphone-companion.png)
 
 ## Focus

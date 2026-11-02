@@ -173,6 +173,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private func startMessengerInBackground() {
         MessengerNotifier.shared.start()
         FriendsClient.shared.startIfActive()
+        LiveActivityCenter.shared.providers.append { RemoteViewHub.shared.liveActivity }
         guard SettingsManager.shared.messengerEnabled else { return }
         MessengerNotifier.shared.requestAuthorizationIfNeeded()
         LocalP2PManager.shared.start()

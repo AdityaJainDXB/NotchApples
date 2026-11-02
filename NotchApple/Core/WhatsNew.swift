@@ -20,6 +20,12 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.1.80", date: "2 November 2026", headline: "Watch your Mac from your iPhone", items: [
+            "Remote view (new, experimental, Ultimate): the paired iPhone can watch this Mac's screen live. Open the iPhone app and tap Watch this Mac's screen; pinch to zoom, drag to move, pick a display. It is off until you turn on Allow viewing this Mac's screen in Settings → iPhone, needs Screen Recording, shows an eye beside the notch while someone is watching, and has a Stop button. View only: no control yet.",
+            "Away from your Wi-Fi: install Tailscale on the Mac and the iPhone, then in the iPhone app choose Connect over Tailscale or by address. Settings → iPhone shows the Mac's Tailscale address and port (47813, changeable). The Mac only accepts connections from your own Wi-Fi or Tailscale, never the public internet, and the pairing code and sealed requests are unchanged.",
+            "The iPhone app says clearly when Tailscale is off, the Mac is asleep or the key is wrong. Update the iPhone app too (NotchAppleCompanion.ipa in this release); phones paired before keep working.",
+            "Friends: the message when the server isn't ready is clearer and wraps instead of being cut off.",
+        ]),
         ReleaseNote(version: "2.1.79", date: "2 November 2026", headline: "Friends: private chat", items: [
             "Friends (new, in Messenger): a third mode for private chat with people you add by a short friend code. Your code is in Settings → Messenger (with a QR). Adding someone sends a request they must accept (or block) before either of you can message, so a code alone never lets a stranger write to you.",
             "Each friend gets a chat with sent, delivered and read, a typing indicator, nicknames, and a safety number to compare out loud. Messages are end-to-end encrypted; if your friend is offline the server keeps only the encrypted message for up to 14 days and deletes it when it arrives. History stays on your Mac.",

@@ -36,6 +36,9 @@ struct PairView: View {
     @StateObject private var client = CompanionClient.shared
     @State private var chosen: Chosen?
     @State private var code = ""
+    @State private var showAddress = false
+    @State private var address = ""
+    @State private var port = String(Companion.defaultPort)
     @FocusState private var codeFocused: Bool
 
     var body: some View {
@@ -52,9 +55,33 @@ struct PairView: View {
             } footer: {
                 Text("On the Mac, open Notch Apple → Settings → iPhone, turn on the iPhone companion and press Pair an iPhone. Both need to be on the same Wi-Fi.")
             }
+            Section {
+                Button { showAddress = true } label: { Label("Connect over Tailscale or by address", systemImage: "network") }
+            } footer: {
+                Text("Not on the same Wi-Fi? Install Tailscale on this iPhone and the Mac (same account), then enter the Mac's Tailscale address shown in Notch Apple → Settings → iPhone.")
+            }
             if let m = client.message { Text(m).foregroundStyle(.orange) }
         }
         .onAppear { client.browse() }
+        .sheet(isPresented: $showAddress) {
+            NavigationStack {
+                Form {
+                    Section {
+                        TextField("Mac's address, e.g. 100.101.102.103", text: $address).keyboardType(.numbersAndPunctuation).textInputAutocapitalization(.never).autocorrectionDisabled()
+                        TextField("Port", text: $port).keyboardType(.numberPad)
+                        TextField("12-character pairing code", text: $code).textInputAutocapitalization(.characters).autocorrectionDisabled().font(.system(.body, design: .monospaced))
+                    } footer: { Text("On the Mac press Pair an iPhone in Settings → iPhone; it shows the address, the port and the code.") }
+                    Button(client.busy ? "Pairing…" : "Pair") {
+                        Task { await client.pair(target: .address(address.trimmingCharacters(in: .whitespaces), Int(port) ?? Int(Companion.defaultPort)), label: address, code: code); if client.pairing != nil { showAddress = false } }
+                    }
+                    .disabled(Companion.normalizedCode(code) == nil || address.trimmingCharacters(in: .whitespaces).isEmpty || client.busy)
+                    if let m = client.message { Text(m).foregroundStyle(.orange) }
+                }
+                .navigationTitle("Connect by address")
+                .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Cancel") { showAddress = false } } }
+            }
+            .presentationDetents([.medium, .large])
+        }
         .sheet(item: $chosen) { c in
             NavigationStack {
                 Form {
@@ -122,7 +149,15 @@ struct MainView: View {
                     }
                 }
                 .frame(maxWidth: .infinity)
-            } header: { Text(client.pairing?.macName ?? "Mac") }
+            } header: { Text(client.pairing?.macName ?? "Mac") } footer: {
+                if let text = client.reach.text { Text(text).foregroundStyle(.orange) }
+            }
+
+            Section {
+                NavigationLink { RemoteScreenView() } label: { Label("Watch this Mac's screen", systemImage: "display") }
+            } footer: {
+                Text("Turn on “Allow viewing this Mac's screen” in Notch Apple → Settings → iPhone on the Mac. Away from your Wi-Fi? Pair by address over Tailscale.")
+            }
 
             Section {
                 TextField("Text or a link", text: $text, axis: .vertical).lineLimit(1...5)

@@ -37,9 +37,9 @@ struct FriendsView: View {
 
     private var sidebar: some View {
         VStack(alignment: .leading, spacing: 8) {
-            HStack(spacing: 5) {
-                Circle().fill(linkColor).frame(width: 7, height: 7)
-                Text(linkText).font(.system(size: 11)).foregroundStyle(Theme.textSecondary).lineLimit(1)
+            HStack(alignment: .top, spacing: 5) {
+                Circle().fill(linkColor).frame(width: 7, height: 7).padding(.top, 4)
+                Text(linkText).font(.system(size: 11)).foregroundStyle(Theme.textSecondary).lineLimit(5).fixedSize(horizontal: false, vertical: true)
             }
             HStack(spacing: 4) {
                 TextField("Friend code", text: $addText)

@@ -16,7 +16,44 @@ import Security
 final class CompanionClient: ObservableObject {
     static let shared = CompanionClient()
 
-    struct Pairing: Codable { var macName: String; var service: String; var device: String; var token: String }
+    struct Pairing: Codable {
+        var macName: String; var service: String; var device: String; var token: String
+        /// Set when this Mac was reached by address (Tailscale) rather than found on the Wi-Fi.
+        var host: String? = nil
+        var port: Int? = nil
+        var target: Target { host.map { .address($0, port ?? Int(Companion.defaultPort)) } ?? .bonjour(service) }
+    }
+
+    /// How to reach the Mac: found on this Wi-Fi by name, or by address (a Tailscale address like 100.x.y.z).
+    enum Target: Sendable, Equatable {
+        case bonjour(String), address(String, Int)
+        var endpoint: NWEndpoint {
+            switch self {
+            case .bonjour(let name): .service(name: name, type: Companion.serviceType, domain: "local.", interface: nil)
+            case .address(let host, let port): .hostPort(host: NWEndpoint.Host(host), port: NWEndpoint.Port(rawValue: UInt16(clamping: port)) ?? NWEndpoint.Port(rawValue: Companion.defaultPort)!)
+            }
+        }
+        var isTailscale: Bool { if case .address(let h, _) = self { return h.hasPrefix("100.") || h.hasSuffix(".ts.net") }; return false }
+    }
+
+    /// What the phone knows about the link to the Mac, in words a person can act on.
+    enum Reach: Equatable {
+        case unknown, connected
+        case tailscaleOff        // no route to the Tailscale address
+        case asleep              // reachable network, no answer
+        case wrongKey            // the Mac closed the connection or couldn't open our request
+        case offline             // no usable network
+        var text: String? {
+            switch self {
+            case .unknown, .connected: nil
+            case .tailscaleOff: "Tailscale looks off. Open the Tailscale app on this iPhone and turn it on, and check it's on on the Mac too."
+            case .asleep: "The Mac isn't answering. It may be asleep, off, or the iPhone companion is turned off in its Settings."
+            case .wrongKey: "The Mac refused this phone. Its key may have changed or it was removed: unpair here and pair again."
+            case .offline: "This iPhone has no network connection."
+            }
+        }
+    }
+    @Published private(set) var reach: Reach = .unknown
 
     @Published private(set) var found: [String] = []          // Bonjour service names
     @Published private(set) var pairing: Pairing?
@@ -49,7 +86,9 @@ final class CompanionClient: ObservableObject {
 
     // MARK: Pairing
 
-    func pair(with service: String, code: String) async {
+    func pair(with service: String, code: String) async { await pair(target: .bonjour(service), label: service, code: code) }
+
+    func pair(target: Target, label: String, code: String) async {
         busy = true; defer { busy = false }
         guard let code = Companion.normalizedCode(code) else { message = "A pairing code has 12 letters and numbers."; return }
         let codeKey = Companion.pairingKey(code: code)
@@ -59,18 +98,36 @@ final class CompanionClient: ObservableObject {
         let phonePublic = mine.publicKey.rawRepresentation
         do {
             let reply = try await Self.send(Companion.Message(type: .pair, name: deviceName, epk: phonePublic.base64EncodedString()),
-                                            device: Companion.pairDevice, key: codeKey, service: service) { env in
+                                            device: Companion.pairDevice, key: codeKey, target: target) { env in
                 guard let macPublic = env.e.flatMap({ Data(base64Encoded: $0) }) else { return nil }
                 return try? Companion.pairingSessionKey(code: codeKey, mine: mine, theirs: macPublic, phonePublic: phonePublic, macPublic: macPublic)
             }
             guard reply.type == .paired, let device = reply.device, let token = reply.token else { message = "The Mac didn't accept that code."; return }
-            let p = Pairing(macName: reply.name ?? service, service: service, device: device, token: token)
+            var p = Pairing(macName: reply.name ?? label, service: label, device: device, token: token)
+            if case .address(let h, let port) = target { p.host = h; p.port = port }
             Keychain.save(p)
             pairing = p
             message = nil
             await refresh()
         } catch {
             message = "Couldn't pair: check the code (it works once, for 2 minutes, and stops after 5 wrong tries) and that both are on the same Wi-Fi."
+        }
+    }
+
+    /// Turns a failure into one of the states the phone can tell a person about.
+    nonisolated static func classify(_ error: Error, target: Target) -> Reach {
+        if let e = error as? NWError, case .posix(let code) = e {
+            switch code {
+            case .ENETUNREACH, .EHOSTUNREACH, .ENETDOWN: return target.isTailscale ? .tailscaleOff : .offline
+            case .ECONNREFUSED, .ECONNRESET: return .wrongKey
+            case .ETIMEDOUT: return .asleep
+            default: break
+            }
+        }
+        switch (error as? URLError)?.code {
+        case .timedOut: return .asleep
+        case .cannotDecodeContentData, .networkConnectionLost: return .wrongKey
+        default: return target.isTailscale ? .tailscaleOff : .asleep
         }
     }
 
@@ -86,12 +143,14 @@ final class CompanionClient: ObservableObject {
         var msg = msg
         msg.seq = nextSequence()
         do {
-            let reply = try await Self.send(msg, device: p.device, key: Companion.key(token: token), service: p.service)
+            let reply = try await Self.send(msg, device: p.device, key: Companion.key(token: token), target: p.target)
+            reach = .connected
             if let s = reply.status { status = s }
             if reply.type == .error { message = reply.text } else { message = reply.text }
             return reply
         } catch {
-            message = "Can't reach \(p.macName). Is it on the same Wi-Fi, with the iPhone companion turned on in Settings → iPhone?"
+            reach = Self.classify(error, target: p.target)
+            message = reach.text ?? "Can't reach \(p.macName). Is it on the same Wi-Fi, with the iPhone companion turned on in Settings → iPhone?"
             return nil
         }
     }
@@ -107,6 +166,8 @@ final class CompanionClient: ObservableObject {
 
     private var deviceName: String { "iPhone" }
 
+    func nextStreamSequence() -> Int64 { nextSequence() }
+
     /// The clock in milliseconds, kept rising even if the clock goes back. Stored so it survives the app restarting.
     private func nextSequence() -> Int64 {
         let defaults = UserDefaults.standard
@@ -117,10 +178,10 @@ final class CompanionClient: ObservableObject {
 
     /// One request per connection; gives up after 8 seconds. `replyKey` works the key out from the reply when it isn't the
     /// one the request was sealed with (pairing); otherwise the reply is opened with `key`.
-    nonisolated static func send(_ msg: Companion.Message, device: String, key: SymmetricKey, service: String,
+    nonisolated static func send(_ msg: Companion.Message, device: String, key: SymmetricKey, target: Target,
                                  replyKey: ((Companion.Envelope) -> SymmetricKey?)? = nil) async throws -> Companion.Message {
         let frame = try Companion.seal(msg, from: device, key: key)
-        let conn = NWConnection(to: .service(name: service, type: Companion.serviceType, domain: "local.", interface: nil), using: .tcp)
+        let conn = NWConnection(to: target.endpoint, using: .tcp)
         return try await withCheckedThrowingContinuation { cont in
             let done = Once()
             func finish(_ r: Result<Companion.Message, Error>) {

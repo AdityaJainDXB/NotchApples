@@ -39,6 +39,8 @@ final class CompanionServer: ObservableObject {
     @AppStorage("companion.enabled") var enabled = false { didSet { apply() } }
     @AppStorage("companion.copyText") var copyText = true
     @AppStorage("companion.openLinks") var openLinks = false
+    /// The port the Mac listens on, so a phone can reach it by address (for example over Tailscale). Changing it restarts the listener.
+    @AppStorage("companion.port") var port = Int(Companion.defaultPort) { didSet { if enabled { apply() } } }
     @Published private(set) var phones: [PairedPhone] = []
     @Published private(set) var code: String?
     @Published private(set) var codeExpires: Date?
@@ -49,6 +51,8 @@ final class CompanionServer: ObservableObject {
     @Published private(set) var pairingNote: String?
 
     private var listener: NWListener?
+    /// Connections that became remote view streams (they are exempt from the 10-second limit).
+    private var streaming = Set<ObjectIdentifier>()
     private var codeTimer: Timer?
     /// Wrong pairing attempts against the current code; five and it is dead.
     private var attempts = Companion.PairingAttempts()
@@ -66,18 +70,27 @@ final class CompanionServer: ObservableObject {
         do {
             let params = NWParameters.tcp
             params.includePeerToPeer = false
-            let l = try NWListener(using: params)
+            // A fixed port, so the phone can connect by address; if it is taken, fall back to any free one (Bonjour still finds us).
+            let wanted = NWEndpoint.Port(rawValue: UInt16(clamping: port)) ?? NWEndpoint.Port(rawValue: Companion.defaultPort)!
+            let l: NWListener
+            if let fixed = try? NWListener(using: params, on: wanted) { l = fixed } else { l = try NWListener(using: params); problem = "Port \(port) is in use, so this Mac is reachable by name on the Wi-Fi only." }
             l.service = NWListener.Service(name: Host.current().localizedName ?? "Mac", type: Companion.serviceType)
             l.stateUpdateHandler = { state in
                 Task { @MainActor in
                     switch state {
-                    case .ready: self.listening = true; self.problem = nil
+                    case .ready: self.listening = true; if self.problem?.hasPrefix("Port ") != true { self.problem = nil }
                     case .failed(let e): self.listening = false; self.problem = "Couldn't listen on the network: \(e.localizedDescription)"
                     default: break
                     }
                 }
             }
-            l.newConnectionHandler = { conn in Task { @MainActor in self.handle(conn) } }
+            l.newConnectionHandler = { conn in
+                Task { @MainActor in
+                    // Only private networks and Tailscale may talk to us; anything else is closed before a word is read.
+                    guard case .hostPort(let host, _) = conn.endpoint, Companion.isPrivatePeer("\(host)") else { conn.cancel(); return }
+                    self.handle(conn)
+                }
+            }
             l.start(queue: .main)
             listener = l
         } catch {
@@ -112,8 +125,8 @@ final class CompanionServer: ObservableObject {
     private func handle(_ conn: NWConnection) {
         conn.start(queue: .main)
         receive(conn, buffer: Data())
-        // Never keep a connection longer than 10 seconds.
-        DispatchQueue.main.asyncAfter(deadline: .now() + 10) { conn.cancel() }
+        // Never keep a connection longer than 10 seconds, unless it has turned into a remote view stream.
+        DispatchQueue.main.asyncAfter(deadline: .now() + 10) { if !self.streaming.contains(ObjectIdentifier(conn)) { conn.cancel() } }
     }
 
     private func receive(_ conn: NWConnection, buffer: Data) {
@@ -154,6 +167,7 @@ final class CompanionServer: ObservableObject {
             let decision = Companion.checkSequence(last: phones[i].lastSeq, seq: msg.seq, now: .now)
             if decision.accepted {
                 if decision.newLast != phones[i].lastSeq { phones[i].lastSeq = decision.newLast; save() }
+                if msg.type == .stream { openStream(conn, phone: phones[i], token: token, request: msg); return }
                 reply = handle(msg, from: phones[i])
             } else {
                 reply = Companion.Message(type: .error, text: decision.reason ?? "That request was refused.")
@@ -163,6 +177,22 @@ final class CompanionServer: ObservableObject {
             conn.send(content: data, completion: .contentProcessed { _ in conn.cancel() })
         } else {
             conn.cancel()
+        }
+    }
+
+    /// A `stream` request: answer it (an error, or the first reply of a remote view) and, on success, keep the connection for the stream.
+    private func openStream(_ conn: NWConnection, phone: PairedPhone, token: Data, request: Companion.Message) {
+        streaming.insert(ObjectIdentifier(conn))
+        Task { @MainActor in
+            let key = Companion.key(token: token)
+            guard let result = await RemoteViewHub.shared.open(conn: conn, phone: phone, token: token, request: request),
+                  let data = try? Companion.seal(result.reply, from: "mac", key: key) else { self.streaming.remove(ObjectIdentifier(conn)); conn.cancel(); return }
+            if result.reply.type == .stream {
+                conn.send(content: data, completion: .contentProcessed { _ in Task { @MainActor in result.start() } })
+            } else {
+                self.streaming.remove(ObjectIdentifier(conn))
+                conn.send(content: data, completion: .contentProcessed { _ in conn.cancel() })
+            }
         }
     }
 
@@ -252,6 +282,8 @@ final class CompanionServer: ObservableObject {
 struct CompanionSettings: View {
     @ObservedObject private var server = CompanionServer.shared
     @ObservedObject private var entitlements = Entitlements.shared
+    @ObservedObject private var hub = RemoteViewHub.shared
+    @State private var tailscale = Companion.tailscaleAddresses()
 
     var body: some View {
         Form {
@@ -275,6 +307,7 @@ struct CompanionSettings: View {
             }
 
             if server.enabled && entitlements.canUse(.iphoneCompanion) {
+                remoteViewSection
                 Section {
                     if let code = server.code, let expires = server.codeExpires {
                         HStack {
@@ -324,5 +357,38 @@ struct CompanionSettings: View {
             }
         }
         .formStyle(.grouped)
+    }
+
+    /// Reaching this Mac from anywhere, and letting a paired phone watch the screen.
+    @ViewBuilder private var remoteViewSection: some View {
+        Section {
+            Toggle(isOn: $hub.allowView) {
+                Text("Allow viewing this Mac's screen")
+                Text("A paired iPhone can watch this screen live. Off by default. While someone is watching, the notch shows an eye and you can stop it here.")
+            }
+            if hub.allowView {
+                LabeledContent("Screen Recording") {
+                    if hub.screenAccess { Label("Allowed", systemImage: "checkmark.circle.fill").foregroundStyle(.green) }
+                    else { Button("Allow…") { _ = ScreenPermission.request(); ScreenPermission.openSettings() } }
+                }
+            }
+            ForEach(hub.sessions.indices, id: \.self) { i in
+                HStack {
+                    Label("\(hub.sessions[i].phoneName) is watching", systemImage: "eye.fill").foregroundStyle(.orange)
+                    Spacer()
+                    Button("Stop", role: .destructive) { hub.sessions[i].stop("The Mac ended the session.") }
+                }
+            }
+            LabeledContent("Tailscale") {
+                if tailscale.isEmpty { Text("Not running on this Mac").foregroundStyle(.secondary) }
+                else { Text(tailscale.map { "\($0):\(server.port)" }.joined(separator: "  ")).textSelection(.enabled).font(.system(.body, design: .monospaced)) }
+            }
+            Stepper("Port \(server.port)", value: $server.port, in: 1024...65535)
+        } header: {
+            Text("Remote view")
+        } footer: {
+            Text("To reach this Mac when your phone isn't on the same Wi-Fi, install Tailscale on both and sign in to the same account. In the iPhone app choose Connect over Tailscale and enter the address above. Nothing is opened to the public internet: only your own devices on your Wi-Fi or tailnet can connect, and the phone must be paired. Use Tailscale's access controls to limit it to your phone.")
+        }
+        .onAppear { tailscale = Companion.tailscaleAddresses(); hub.refreshAccess() }
     }
 }

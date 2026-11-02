@@ -43,6 +43,10 @@ public func XCTAssertNil(_ e: @autoclosure () throws -> Any?, _ m: @autoclosure 
 public func XCTAssertNotNil(_ e: @autoclosure () throws -> Any?, _ m: @autoclosure () -> String = "", file: StaticString = #filePath, line: UInt = #line) {
     check(file, line) { if try e() == nil { report("XCTAssertNotNil failed", m(), file, line) } }
 }
+public func XCTAssertThrowsError<T>(_ e: @autoclosure () throws -> T, _ m: @autoclosure () -> String = "", file: StaticString = #filePath, line: UInt = #line, _ handler: (Error) -> Void = { _ in }) {
+    __xctAssertions += 1
+    do { _ = try e(); report("XCTAssertThrowsError", "did not throw. " + m(), file, line) } catch { handler(error) }
+}
 public func XCTFail(_ m: String = "", file: StaticString = #filePath, line: UInt = #line) { __xctAssertions += 1; report("XCTFail", m, file, line) }
 public func XCTAssertLessThan<T: Comparable>(_ a: @autoclosure () throws -> T, _ b: @autoclosure () throws -> T, _ m: @autoclosure () -> String = "", file: StaticString = #filePath, line: UInt = #line) {
     check(file, line) { let x = try a(), y = try b(); if !(x < y) { report("XCTAssertLessThan failed: \(x) !< \(y)", m(), file, line) } }
