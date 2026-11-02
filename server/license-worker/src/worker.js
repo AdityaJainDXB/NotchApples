@@ -1074,30 +1074,34 @@ export function cleanAskRequest(body) {
 }
 
 // The provider sometimes answers 429 or 5xx ("high demand") for a moment. So: try the main model up to three times, with a
-// short wait between tries (ASK_RETRY_MS, default 700 ms, doubled each time), and if it still fails try env.ASK_FALLBACK_MODEL
-// (optional; no model name is built in) up to twice. Only 429, 5xx and network errors are retried; any other answer (a bad key
-// or model name) skips straight to the next model. If everything fails the visitor sees the same "helper is busy" message.
+// short wait between tries (ASK_RETRY_MS, default 700 ms, doubled each time), then env.ASK_FALLBACK_MODEL on the same key
+// (optional) up to twice, then a second provider (ASK_ALT_BASE, default Groq's OpenAI-compatible endpoint, with ASK_ALT_KEY and
+// ASK_ALT_MODEL; skipped silently unless both the key and the model are set) up to twice. Nothing about a model or a provider is
+// built in except that default base. Only 429, 5xx and network errors are retried; any other answer (a bad key or model name)
+// skips straight to the next step. A provider's own error text and keys are only ever logged by status, never returned. If
+// everything fails the visitor sees the same "helper is busy" message.
 const ASK_BUSY = 'The helper is busy. Try again in a minute.';
+const ASK_ALT_DEFAULT_BASE = 'https://api.groq.com/openai/v1';
 const askRetryable = (status) => status === 429 || status >= 500;
 
-async function askModel(env, model, messages) {
-  const url = `${(env.AI_BASE || AI_DEFAULT_BASE).replace(/\/+$/, '')}/chat/completions`;
+/** One OpenAI-compatible provider: the same request and the same answer cleaning for every provider. */
+async function askProvider(env, { name, base, key, model, tries }, messages) {
+  const url = `${String(base).replace(/\/+$/, '')}/chat/completions`;
   const wait = Number.isFinite(Number(env.ASK_RETRY_MS)) && env.ASK_RETRY_MS !== undefined && env.ASK_RETRY_MS !== '' ? Number(env.ASK_RETRY_MS) : 700;
-  const tries = model === (env.AI_MODEL || AI_DEFAULT_MODEL) ? 3 : 2;
   for (let i = 0; i < tries; i++) {
     if (i > 0 && wait > 0) await new Promise((res) => setTimeout(res, wait * 2 ** (i - 1)));
     let r;
     try {
-      r = await fetch(url, { method: 'POST', headers: { 'content-type': 'application/json', authorization: `Bearer ${env.AI_API_KEY}` },
+      r = await fetch(url, { method: 'POST', headers: { 'content-type': 'application/json', authorization: `Bearer ${key}` },
         body: JSON.stringify({ model, temperature: 0.3, max_tokens: 500, messages }) });
-    } catch { console.error('Ask: network error from', model); continue; }
+    } catch { console.error('Ask: network error from', name, model); continue; }
     if (r.ok) {
       const data = await r.json().catch(() => null);
       const a = String(data?.choices?.[0]?.message?.content || '').replace(/[*_`#]+/g, '').trim().slice(0, 1200);
       if (a) return a;
-      console.error('Ask: empty answer from', model); continue;
+      console.error('Ask: empty answer from', name, model); continue;
     }
-    console.error('Ask: provider answered', r.status, 'for', model, (await r.text()).slice(0, 300));
+    console.error('Ask: provider answered', r.status, 'for', name, model);
     if (!askRetryable(r.status)) break;
   }
   return '';
@@ -1111,10 +1115,16 @@ async function askSite(env, request, body) {
   if (!day.ok) throw new HTTPError(429, 'The helper has answered a lot of questions today. Please try again tomorrow, or ask on GitHub.');
   const messages = [{ role: 'system', content: ASK_SYSTEM + KNOWLEDGE }, ...history, { role: 'user', content: q }];
   const main = env.AI_MODEL || AI_DEFAULT_MODEL, fallback = String(env.ASK_FALLBACK_MODEL || '').trim();
-  let a = await askModel(env, main, messages);
-  if (!a && fallback && fallback !== main) a = await askModel(env, fallback, messages);
-  if (!a) throw new HTTPError(503, ASK_BUSY);
-  return { a };
+  const base = env.AI_BASE || AI_DEFAULT_BASE, key = env.AI_API_KEY;
+  const altKey = String(env.ASK_ALT_KEY || '').trim(), altModel = String(env.ASK_ALT_MODEL || '').trim();
+  const steps = [{ name: 'main', base, key, model: main, tries: 3 }];
+  if (fallback && fallback !== main) steps.push({ name: 'fallback', base, key, model: fallback, tries: 2 });
+  if (altKey && altModel) steps.push({ name: 'alt', base: String(env.ASK_ALT_BASE || '').trim() || ASK_ALT_DEFAULT_BASE, key: altKey, model: altModel, tries: 2 });
+  for (const step of steps) {
+    const a = await askProvider(env, step, messages);
+    if (a) return { a };
+  }
+  throw new HTTPError(503, ASK_BUSY);
 }
 
 // MARK: The Plane game's world leaderboard

@@ -2,7 +2,7 @@
  *
  * First it matches the question against the entries in faq.json (written from this site and the README) and, when one
  * fits, shows it straight away; nothing is sent anywhere. When none fits, the question (and the last few messages) goes
- * to the project's own server (POST /ask on the licence worker), which asks Google Gemini using only Notch Apple's docs.
+ * to the project's own server (POST /ask on the licence worker), which asks Google Gemini (or Groq if Gemini is busy) using only Notch Apple's docs.
  * If that server can't be reached the helper says it is not sure and points to GitHub. Answers are shown as plain text
  * (links are checked first), so nothing in the data or the AI's reply can run. */
 (function () {
@@ -107,7 +107,7 @@
     var input = el('input', { class: 'nc-in', type: 'text', maxlength: '200', placeholder: 'e.g. How much is Pro?', 'aria-label': 'Your question' });
     var send = el('button', { class: 'nc-send', type: 'submit' }, 'Send');
     form.append(input, send);
-    var foot = el('div', { class: 'nc-foot' }, server ? 'Common questions are answered on this page. Anything else is sent to our AI (Google Gemini) to answer from the Notch Apple docs, so please don\u2019t type anything private.' : 'Answers come from this site and the README. Nothing you type leaves this page.');
+    var foot = el('div', { class: 'nc-foot' }, server ? 'Common questions are answered on this page. Anything else is sent to our AI (Google Gemini, or Groq if Gemini is busy) to answer from the Notch Apple docs, so please don\u2019t type anything private.' : 'Answers come from this site and the README. Nothing you type leaves this page.');
     panel.append(head, log, chips, form, foot);
     document.body.append(fab, panel);
 
