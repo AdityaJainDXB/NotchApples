@@ -76,7 +76,7 @@ Pick your computer. Both buttons start the download straight away. The Mac link 
   </tr>
   <tr>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.1.86</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.1.87</b></a>
     </td>
     <td align="center">
       <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 2.1.86 BETA</b></a>
@@ -150,6 +150,10 @@ More screenshots of the capture overlay, the AI answer, the settings and the Win
 
 ## What's new
 
+### Mac 2.1.87 · 2 November 2026 · 🔇 No more error beep
+
+- No more system “bonk” beep in the notch when you press a key nothing uses: in the games (E, Q, G and the other keys a game does not claim) and anywhere else in the notch with no text box focused.
+
 ### Mac 2.1.86 · Windows 2.1.86 BETA · 2 November 2026 · 🏁 Qualifying, clean start and real circuits
 
 - Racing: qualifying. Pick Session in the menu: cars leave the pit lane, set an out lap, a push lap and an in lap, and the slowest are knocked out after Q1 and Q2 before the top 10 fight for pole in Q3. There is a timing screen between segments, a live classification and a result screen, then the race starts from the qualifying grid.
@@ -165,11 +169,6 @@ More screenshots of the capture overlay, the AI answer, the settings and the Win
 - Racing: under a yellow flag, the Virtual Safety Car or the Safety Car you now get 8 seconds to slow down before any overtaking or speeding penalty can apply.
 - Racing: no start lights on the formation lap, and you park in your grid box however you like (these were Mac-only in 2.1.84; Windows now has them too).
 - Same racing changes as the Mac. Untested on real Windows hardware.
-
-### Mac 2.1.84 · 2 November 2026 · 🏁 Park in your own grid box
-
-- Racing: no start lights on the formation lap any more; the five lights now appear only once every car is on the grid.
-- Racing: you park in your grid box however you like. Stop anywhere inside your box, at any angle, and you stay exactly where you stopped (no more snapping or teleporting onto the marks). If you overshoot, reverse back into it.
 
 Every earlier release is in the [changelog](CHANGELOG.md).
 

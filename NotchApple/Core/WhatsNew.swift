@@ -20,6 +20,9 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.1.87", date: "2 November 2026", headline: "No more error beep", items: [
+            "No more system “bonk” beep in the notch when you press a key nothing uses: in the games (E, Q, G and the other keys a game does not claim) and anywhere else in the notch with no text box focused.",
+        ]),
         ReleaseNote(version: "2.1.86", date: "2 November 2026", headline: "Qualifying, clean start and real circuits", items: [
             "Racing: qualifying. Pick Session in the menu: cars leave the pit lane, set an out lap, a push lap and an in lap, and the slowest are knocked out after Q1 and Q2 before the top 10 fight for pole in Q3. There is a timing screen between segments, a live classification and a result screen, then the race starts from the qualifying grid.",
             "Racing: Clean start mode (off by default). Every car starts in the pit lane, drives out on a setup lap to its own grid box, then the formation lap, then the lights.",
