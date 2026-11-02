@@ -1,18 +1,18 @@
 {
-  "version": "2.1.81",
-  "title": "Notch Apple 2.1.81 · Notch Apple 2.1.81: control your Mac from your iPhone",
-  "notes": "## Notch Apple 2.1.81\n\n- Remote control (new, experimental, Ultimate): tap the hand in the iPhone app and the Mac replays your taps, drags, two-finger scrolling and keys. It needs three things on the Mac: Allow remote control (off by default), May control for that iPhone, and Accessibility. A red hand shows beside the notch and a notification appears while it is in use; Stop in Settings → iPhone or Control-Option-Shift-K ends it at once, and it ends if the Mac sleeps or locks.\n- The iPhone app has a key bar (⌘ shortcuts, arrows, Esc, Tab, typing) and now shows what the notch is showing, alerts such as a low battery, and, only if you switch each on in Settings → iPhone, the Mac's clipboard, newest notes and open to-dos.\n- Not included: an iPhone Live Activity (it needs a separate widget extension and a paid Apple Developer account for updates when the app is closed). Update the iPhone app too (NotchAppleCompanion.ipa); phones paired before keep working.\n",
-  "published": "2026-11-02T06:08:27Z",
-  "dmg": "https://github.com/AdityaJainDXB/NotchApples/releases/download/v2.1.81/NotchApple-2.1.81.dmg",
-  "dmgSize": 53036178,
-  "page": "https://github.com/AdityaJainDXB/NotchApples/releases/tag/v2.1.81",
+  "version": "2.1.89",
+  "title": "Notch Apple 2.1.89 · Notch Apple 2.1.89: Tetris and Daily Word",
+  "notes": "## Notch Apple 2.1.89\n\n- Tetris (new) in the Games menu: the classic 10×20 well with a 7-piece bag, rotation with wall kicks, hold, a 3-piece preview, a ghost piece, soft and hard drop, line-clear scoring, levels that speed up every 10 lines and a saved best score. Arrows or A/D/S move, Up or W rotates, Space hard-drops, C holds, P pauses. It uses no timers or animation while you are not playing.\n- Daily Word (new) in the Games menu: a five-letter word puzzle with six guesses and green, yellow and grey feedback. Everyone gets the same word on the same day (no network needed), your result is saved, there is a streak counter and an emoji result to copy, and a Practice mode for extra words.\n",
+  "published": "2026-11-02T14:27:09Z",
+  "dmg": "https://github.com/AdityaJainDXB/NotchApples/releases/download/v2.1.89/NotchApple-2.1.89.dmg",
+  "dmgSize": 53137129,
+  "page": "https://github.com/AdityaJainDXB/NotchApples/releases/tag/v2.1.89",
   "stars": 3,
   "windows": {
-    "version": "2.1.78",
+    "version": "2.1.89",
     "notes": "",
-    "url": "https://github.com/AdityaJainDXB/NotchApples/releases/download/win-v2.1.78/Notch.apple_2.1.78_x64-setup.exe",
-    "sha256": "4a41d408cafc04b5d4015e9ee8e76ff384c79731e5f1390c6a176c77f81a3da6",
-    "size": 6262591,
-    "page": "https://github.com/AdityaJainDXB/NotchApples/releases/tag/win-v2.1.78"
+    "url": "https://github.com/AdityaJainDXB/NotchApples/releases/download/win-v2.1.89/Notch.apple_2.1.89_x64-setup.exe",
+    "sha256": "e3df667ebd82b275171ecdafadaa128abb68181fbcaa686bed9c25b7b2e42ef6",
+    "size": 6344239,
+    "page": "https://github.com/AdityaJainDXB/NotchApples/releases/tag/win-v2.1.89"
   }
 }
