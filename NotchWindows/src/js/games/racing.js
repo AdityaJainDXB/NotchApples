@@ -1207,14 +1207,14 @@
       // go out. Go on the gas before that and it is a jump start (a 5-second penalty); after it, your reaction time counts.
       skids = []; clock = 0; ui.replaceChildren(); doneT = 0; cranes = [];
       const holdS = Number.isFinite(hold) ? clamp(hold, 0.2, 3) : 0.2 + Math.random() * 2.8;
-      gantry.hidden = false; gantry.querySelectorAll('b').forEach((b) => b.classList.remove('on'));
+      gantry.hidden = true;           // the start lights only appear once everyone is on the grid (beginLights)
       racers.forEach((r, i) => { r.slot = i; });
       gridMarks = racers.filter((r) => !r.official).map((r) => { const g = gridSlot(T, r.slot); return { s: g.s + CAR_LEN / 2 + 0.6, o: (r.slot % 2 ? 1 : -1) * T.width * 0.2 }; });
       // A formation lap first (closed tracks, not online): one slow lap behind the pole sitter, no overtaking, then every car
       // stops in its own grid box and the lights begin. Otherwise straight to the lights.
       if (formOn && T.closed && !net && racers.filter((r) => !r.official).length > 1) {
         screen = 'formation'; formT = 0; formHold = holdS; formSkip = false;
-        for (const r of racers) { r.gridded = false; r.formGo = false; r.formFrom = null; r.formWarned = false; r.formJudged = false; }
+        for (const r of racers) { r.gridded = false; r.formGo = false; r.formFrom = null; r.formWarned = false; r.formJudged = false; r.passedBox = false; }
         // Like F1: the Medical Car follows the field round the formation lap and the first lap (the computer drives it unless
         // you do), a good way back. Driving the Safety Car, you start behind the field too and go back to the pit exit for the start.
         const offMe = racers.find((r) => r.official);
@@ -2083,8 +2083,11 @@
         // Stopped in (or next to) the box: lined up exactly on its marks.
         const vNow = Math.hypot(c.vx, c.vy), lat = Math.abs((c.x - box.x) * -Math.sin(box.h) + (c.y - box.y) * Math.cos(box.h));
         const human = r === me && !me.ai;
-        if (r.formGo && Math.abs(toBox) < (human ? 7 : 3) && vNow < (human ? 4 : 1.2) && (!human || lat < 4)) { gridIt(r, box); if (r === me) { toast('In your grid box'); } }
-        else if (r === me && r.formGo && toBox < -12 && !r.ai) { gridIt(r, box); toast('You passed your grid box: put back on your marks'); }
+        // The computer's cars are lined up exactly on their marks. You park however you like: once you are stopped inside your
+        // box (any angle, anywhere in it) you are on the grid where you are; you are never moved. Overshoot it and reverse back.
+        if (!human) { if (r.formGo && Math.abs(toBox) < 3 && vNow < 1.2) gridIt(r, box); }
+        else if (r.formGo && Math.abs(toBox) < 3.2 && lat < 2.4 && vNow < 0.7) { r.gridded = true; c.vx = c.vy = 0; c.spin = 0; toast('In your grid box'); }
+        else if (r.formGo && toBox < -5 && !r.passedBox) { r.passedBox = true; toast('You passed your grid box: reverse back into it'); }
       }
       for (const r of racers) r.prevV = [r.car.vx, r.car.vy];
       // Cars are solid on the formation lap too.
