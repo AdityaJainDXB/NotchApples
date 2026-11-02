@@ -417,7 +417,7 @@ env.AI_QUOTA = {
 let upstreamSeen = null, upstreamStatus = 200, upstreamPlan = null, upstreamLog = [];
 const realFetch = globalThis.fetch;
 globalThis.fetch = async (url, init) => {
-  if (String(url).includes('ai.test/v1/chat/completions')) {
+  if (/(ai\.test\/v1|alt\.test\/v1|api\.groq\.com\/openai\/v1)\/chat\/completions/.test(String(url))) {
     upstreamSeen = { url: String(url), headers: init.headers, body: JSON.parse(init.body) };
     upstreamLog.push(upstreamSeen.body.model);
     if (upstreamPlan) { const st = upstreamPlan(upstreamSeen.body.model, upstreamLog.length); if (st !== 200) return new Response('provider says: high demand', { status: st }); }
@@ -537,6 +537,51 @@ await test('Ask: retries a busy provider, then tries the fallback model, then gi
   assert.equal(r.status, 503); assert.equal(upstreamLog.length, 5);
   assert.equal((await r.json()).error, 'The helper is busy. Try again in a minute.');
   delete env.ASK_FALLBACK_MODEL; delete env.ASK_RETRY_MS;
+});
+await test('Ask: a second provider answers when the first is busy; it is skipped unless configured; no key or provider text is ever returned or logged', async () => {
+  const ask = (q, ip) => worker.fetch(new Request('https://w.test/ask', { method: 'POST', body: JSON.stringify({ q }), headers: { 'cf-connecting-ip': ip } }), env);
+  const logged = []; const realErr = console.error; console.error = (...a) => { logged.push(a.join(' ')); };
+  const texts = [];
+  env.ASK_RETRY_MS = '0';
+  const run = async (plan, ip) => { upstreamLog = []; upstreamPlan = plan; const r = await ask('How much is Pro?', ip); upstreamPlan = null; const t = await r.text(); texts.push(t); return { status: r.status, text: t }; };
+  const gemini = (m) => m !== 'alt-model';
+  try {
+    // alt not configured: skipped, the first provider's trouble gives the busy message and nothing goes to the alt
+    let r = await run(() => 503, '5.5.2.1');
+    assert.equal(r.status, 503); assert.deepEqual(upstreamLog, ['server-chosen-model', 'server-chosen-model', 'server-chosen-model']);
+    // a key without a model, or a model without a key: still skipped
+    env.ASK_ALT_KEY = 'alt-secret-key'; r = await run(() => 503, '5.5.2.2'); assert.equal(r.status, 503); assert.equal(upstreamLog.length, 3);
+    delete env.ASK_ALT_KEY; env.ASK_ALT_MODEL = 'alt-model'; r = await run(() => 503, '5.5.2.3'); assert.equal(r.status, 503); assert.equal(upstreamLog.length, 3);
+    // configured: Gemini fails three times, the alt answers with the same prompt and history, its own key and base
+    env.ASK_ALT_KEY = 'alt-secret-key'; env.ASK_ALT_BASE = 'https://alt.test/v1';
+    r = await run((m) => (gemini(m) ? 503 : 200), '5.5.2.4');
+    assert.equal(r.status, 200); assert.equal(JSON.parse(r.text).a, 'hello from the provider');
+    assert.deepEqual(upstreamLog, ['server-chosen-model', 'server-chosen-model', 'server-chosen-model', 'alt-model']);
+    assert.equal(upstreamSeen.url, 'https://alt.test/v1/chat/completions');
+    assert.equal(upstreamSeen.headers.authorization, 'Bearer alt-secret-key', 'the alt provider gets its own key');
+    assert.ok(upstreamSeen.body.messages[0].content.includes('Is it really free?'), 'the same knowledge is in the prompt');
+    assert.equal(upstreamSeen.body.messages.at(-1).content, 'How much is Pro?');
+    // the fallback model is tried before the alt provider
+    env.ASK_FALLBACK_MODEL = 'backup-model';
+    r = await run((m) => (gemini(m) ? 503 : 200), '5.5.2.5');
+    assert.deepEqual(upstreamLog, ['server-chosen-model', 'server-chosen-model', 'server-chosen-model', 'backup-model', 'backup-model', 'alt-model']);
+    delete env.ASK_FALLBACK_MODEL;
+    // the alt is retried (twice) on 429/5xx, and a 400 from it is not
+    r = await run((m, n) => (gemini(m) || n === 4 ? 503 : 200), '5.5.2.6');
+    assert.equal(r.status, 200); assert.deepEqual(upstreamLog.slice(3), ['alt-model', 'alt-model']);
+    r = await run((m) => (gemini(m) ? 503 : 400), '5.5.2.7');
+    assert.equal(r.status, 503); assert.deepEqual(upstreamLog.slice(3), ['alt-model']);
+    // both providers fail: the same busy message, and no provider text
+    r = await run(() => 503, '5.5.2.8');
+    assert.equal(r.status, 503); assert.equal(JSON.parse(r.text).error, 'The helper is busy. Try again in a minute.'); assert.equal(upstreamLog.length, 5);
+    // the default base is Groq's when ASK_ALT_BASE is not set
+    delete env.ASK_ALT_BASE; r = await run((m) => (gemini(m) ? 503 : 200), '5.5.2.9');
+    assert.equal(upstreamSeen.url, 'https://api.groq.com/openai/v1/chat/completions');
+  } finally {
+    console.error = realErr; delete env.ASK_ALT_KEY; delete env.ASK_ALT_MODEL; delete env.ASK_ALT_BASE; delete env.ASK_RETRY_MS; delete env.ASK_FALLBACK_MODEL; upstreamPlan = null;
+  }
+  for (const t of [...texts, ...logged]) for (const secret of ['alt-secret-key', 'server-secret-key', 'high demand', 'provider says']) assert.ok(!t.includes(secret), `"${secret}" must not appear in a response or a log`);
+  assert.ok(logged.length > 0);
 });
 const post = (body, ip = '1.1.1.1') => call('/plane/score', body, { 'cf-connecting-ip': ip });
 const board = async (mode, period = 'all') => (await worker.fetch(new Request(`https://w.test/plane/board?mode=${mode}&period=${period}`), env)).json();
