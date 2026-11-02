@@ -14,6 +14,7 @@
 		0310ED990FCB271126B822E2 /* ToolsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6DC662D269E6349FC6792A11 /* ToolsView.swift */; };
 		035650D735E7B4C68380B632 /* NamedTimerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0F548E2157A119D180EAC46E /* NamedTimerTests.swift */; };
 		03CA426E2F3ED3EFE9A5467C /* UpdateSigning.swift in Sources */ = {isa = PBXBuildFile; fileRef = A280B5F6BC95664645C9444F /* UpdateSigning.swift */; };
+		04684D26EDA66D2AAF6B69C0 /* tetris-logic.js in Resources */ = {isa = PBXBuildFile; fileRef = E54CA8A98C84920280698482 /* tetris-logic.js */; };
 		04DA84BD772511B028648D4E /* GlobalHotkeyManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0ECABC7EEC9804BECB1923C7 /* GlobalHotkeyManager.swift */; };
 		05C365A595AA0926BE9B5BB9 /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A7251824E64423A2B944890 /* OnboardingView.swift */; };
 		07D699E3624DBDC3C40D3A6D /* AIExtras.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED43344457B89969F8103870 /* AIExtras.swift */; };
@@ -69,6 +70,7 @@
 		2257C6B3EE6E3A5CA537C51E /* MagneticDropZone.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9E934112FC7E1F768777E6F5 /* MagneticDropZone.swift */; };
 		22E6064B9B045D8365F1A2A9 /* SolitaireView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0C3A6E52CAC2AAC502D9AD8 /* SolitaireView.swift */; };
 		2386441F130CA43774F8A976 /* ShortcutRecorder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1AD68AAB70138C11AD1C119D /* ShortcutRecorder.swift */; };
+		23ABBEC48B822E5003CB7CD3 /* TetrisGameView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B7EA8815F62F07817CF14BB6 /* TetrisGameView.swift */; };
 		23DEAFF7A9EA628D504552A1 /* AppLauncher.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B4A357F34CF825E961ADEF4 /* AppLauncher.swift */; };
 		242C7B0C09B073631A588CBE /* DownloadWatcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F22844E48EEA4FEBD1273E0 /* DownloadWatcher.swift */; };
 		2451D6C550A6B50F33FB0D88 /* LocationProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = E908464AA33EDC69CFBCDF86 /* LocationProvider.swift */; };
@@ -76,6 +78,7 @@
 		260DC3E3C52E0B1023D405F4 /* FocusTimer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C191B301A7AE40F175BA044 /* FocusTimer.swift */; };
 		26B0D2A8600059E93BC78637 /* MeetingNotesTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3A2D492850F6E7302EE68BC /* MeetingNotesTests.swift */; };
 		26D09B0E866D702D64C68CEB /* AcknowledgementsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E215AC0F99CCC1E81AC1732 /* AcknowledgementsView.swift */; };
+		26F5863DB636C5DCF506B2CE /* wordle.js in Resources */ = {isa = PBXBuildFile; fileRef = AAEC0E1A6526DE9FE3CCD09C /* wordle.js */; };
 		28B64F942027DAED884BDCAC /* UpdateCadenceLogic.swift in Sources */ = {isa = PBXBuildFile; fileRef = 223DF7525EF47087BAD0DD8B /* UpdateCadenceLogic.swift */; };
 		29326D872AE0DC306AFD1986 /* Tunnelblick-ABOUT.txt in Resources */ = {isa = PBXBuildFile; fileRef = EDBEAF142EDDBD8BE070A009 /* Tunnelblick-ABOUT.txt */; };
 		29BC5405E9AA7A285A647076 /* TodayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DD6D3003087F986015A60A7 /* TodayView.swift */; };
@@ -85,6 +88,7 @@
 		2F00F4820CC8D8244358FD73 /* WellbeingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1477CCE52DD2917B95D907D7 /* WellbeingTests.swift */; };
 		2F27B29ABFD1084E8B37A8A4 /* klick in Resources */ = {isa = PBXBuildFile; fileRef = DA0A248DCE35D87F12F7F090 /* klick */; };
 		2F2BB8758A33F01A26DCAE37 /* EmojiLogic.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13FC643EA773D7A3D0B5AE0A /* EmojiLogic.swift */; };
+		2FDCE1119457CE3E7FE50065 /* wordle-words.js in Resources */ = {isa = PBXBuildFile; fileRef = D10652D36DC40822ECB87F39 /* wordle-words.js */; };
 		3047EFBDB9AA12F3A0363F97 /* PlayingCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9795A1C10F28E9E390AFB5F /* PlayingCardView.swift */; };
 		305D3067C2952F9CDCE2C833 /* Entitlements.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBF521DE52E4227ABF0CCC29 /* Entitlements.swift */; };
 		308B02A5703FF92FD435BE97 /* SmartHomeLogic.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99A4B06A001F63424485AE1E /* SmartHomeLogic.swift */; };
@@ -191,6 +195,7 @@
 		6A2F399B560987263E252476 /* ReleaseNotesLogicTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E14503320310AD4B1E118141 /* ReleaseNotesLogicTests.swift */; };
 		6A30212C990F6328E97BF9CB /* AppleIntelligence.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAD3012040BD25D1B90DFD5E /* AppleIntelligence.swift */; };
 		6A45649B04783F57F515062D /* UpdateChecker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 91C60D5E0497858899252D40 /* UpdateChecker.swift */; };
+		6AB495D5E6ACD75DA68D38DB /* TetrisGame.html in Resources */ = {isa = PBXBuildFile; fileRef = 0DE90B09AD35DC66704E3CCF /* TetrisGame.html */; };
 		6ABF6D5978A7B4BE2953326D /* FriendsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48D65188BC3EC790726F2FFB /* FriendsView.swift */; };
 		6B8B6E4E81A1516B985E3F45 /* TennisLogic.swift in Sources */ = {isa = PBXBuildFile; fileRef = 04C0A62497E02145E6D99DC6 /* TennisLogic.swift */; };
 		6BC06407F5C36E7D16E1BE03 /* FriendsLogic.swift in Sources */ = {isa = PBXBuildFile; fileRef = EBEDBA84C93009A8851E98B6 /* FriendsLogic.swift */; };
@@ -222,6 +227,7 @@
 		7A85EB5E3B86FFC6A10557E1 /* CompanionPairing.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E7ACC6F1129AAB5813B46CB /* CompanionPairing.swift */; };
 		7AD5B26CCD47C4B789FA217F /* AIModes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44CAF8A30126F03D6A230ED7 /* AIModes.swift */; };
 		7B128EEA15D6A4918D365964 /* FriendsClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 45A5C027BD4B67CE5182EE27 /* FriendsClient.swift */; };
+		7B585A54684C47977CA762E6 /* tetris.js in Resources */ = {isa = PBXBuildFile; fileRef = 34E60A6D24A27DF650F178FD /* tetris.js */; };
 		7BE7835157820B158696A5F2 /* GeminiFallbackLogic.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0C24B75034156B4EB2E82381 /* GeminiFallbackLogic.swift */; };
 		7CCB2190EF8F817D6DDFC3A5 /* ClipboardLink.swift in Sources */ = {isa = PBXBuildFile; fileRef = 59BC3F5D6F85A5FDFC39D94F /* ClipboardLink.swift */; };
 		7E59E9FB95878ACFAF45A095 /* NotificationsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E45CA4DA23D38E6A1DBA06F /* NotificationsView.swift */; };
@@ -254,6 +260,7 @@
 		92FA1F0A869CEDCC1DD5584D /* ChatHistory.swift in Sources */ = {isa = PBXBuildFile; fileRef = 70487D33E613C8A9A0DFA36C /* ChatHistory.swift */; };
 		93711D06AFB52CE8586619D2 /* RadarLogic.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0597034617E0E4011F1C53B0 /* RadarLogic.swift */; };
 		94134084A487BEB193A089C3 /* ctf.js in Resources */ = {isa = PBXBuildFile; fileRef = 22BC3DD953937929570782CA /* ctf.js */; };
+		94A1DAACE593691EEA463858 /* DailyWordGameView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEB323B15181A7CBF33193DE /* DailyWordGameView.swift */; };
 		94FE896FD0765E79EB83E825 /* NotchRootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C5A54FB338D3A1C23699078 /* NotchRootView.swift */; };
 		9509D27C41EB45F32569CEA8 /* BambuManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = F173F2DD0E8CE0B158D9A906 /* BambuManager.swift */; };
 		953C24EAF0E356448322CD23 /* VPNTunnel.swift in Sources */ = {isa = PBXBuildFile; fileRef = D6446A004FCDC55C0BF6957C /* VPNTunnel.swift */; };
@@ -273,6 +280,7 @@
 		9E99DCB7265462DA9D8D7095 /* CommandPalette.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2B877B3FC56AA179FD7FEAE /* CommandPalette.swift */; };
 		9EF85961675894ED65B9F776 /* ProductKeys.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13BA89CC14259A92057EDFDC /* ProductKeys.swift */; };
 		9F191E816E9E31973BFAF4EC /* ThermalWatcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0406E58D7528F932C40B864E /* ThermalWatcher.swift */; };
+		9F4611D5539832BF29924626 /* DailyWordGame.html in Resources */ = {isa = PBXBuildFile; fileRef = 076DA6D06B8B6E4AF8639E32 /* DailyWordGame.html */; };
 		9F68FFA4EE2970516B9AA33A /* DevToolkitTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7CC31FE35B8BD0245C7DD53D /* DevToolkitTests.swift */; };
 		9F8F1D24DD4B77A8B3ED11C1 /* RadarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E0227AD2AD08AA73D5BFC1A9 /* RadarView.swift */; };
 		9F9EC854E119ACE78147C2FE /* ClaudeClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6747ADA828FF1D33683B30C8 /* ClaudeClient.swift */; };
@@ -387,6 +395,7 @@
 		DC37742E9DC53226546E0A45 /* WindowManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 98A8EB2467586B8A5E087088 /* WindowManager.swift */; };
 		DC5EDBF914623CEC9EBB91A6 /* TennisLogicTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9342B7403A92BBB1CB6A292A /* TennisLogicTests.swift */; };
 		DC7461BFDC665BFD1AA83154 /* CompanionStream.swift in Sources */ = {isa = PBXBuildFile; fileRef = D355C3297A8F345EABACAE42 /* CompanionStream.swift */; };
+		DCB6015E6E30EB360D1FD19D /* wordle-logic.js in Resources */ = {isa = PBXBuildFile; fileRef = 5C9AA52A7E88086BA19CE4A6 /* wordle-logic.js */; };
 		DCE9CF6CAF6F38227D18150F /* F1Model.swift in Sources */ = {isa = PBXBuildFile; fileRef = 466B2516F7D15E3C623784BC /* F1Model.swift */; };
 		DDDDB7E81AB5751C2D7A3F80 /* ShortcutsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33BEEDB2663AD6544E5061C7 /* ShortcutsView.swift */; };
 		DE787D98D8EB9B7B2E4CB705 /* F1View.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1EFD1D83C7FB4561E3A2CC27 /* F1View.swift */; };
@@ -409,6 +418,7 @@
 		EADE473BE2A43DB53FDBF7CE /* QuickAddView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 709B6D7DF73EDC5126DF68D8 /* QuickAddView.swift */; };
 		EADFB965825FD7A0DE5D5731 /* RadarLogic.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0597034617E0E4011F1C53B0 /* RadarLogic.swift */; };
 		EB53320B29FB664836E79985 /* WebP2PManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = E07ED38955AE546C7637D5B9 /* WebP2PManager.swift */; };
+		EE0A4D311D76B8E3CEB0DF0B /* WebScriptGame.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5DDB1DB48C93BECF97137C8 /* WebScriptGame.swift */; };
 		EEDB5DD5A9BC5F7A72305996 /* SecretLogic.swift in Sources */ = {isa = PBXBuildFile; fileRef = A86F7ABE9C93935F6764DF17 /* SecretLogic.swift */; };
 		EF02204760AC6C1EDD00A135 /* CompanionPairing.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E7ACC6F1129AAB5813B46CB /* CompanionPairing.swift */; };
 		F256EABCE0810FC5545ED857 /* MathEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 52CE6E000FE00226413E9D0B /* MathEngine.swift */; };
@@ -431,16 +441,6 @@
 		FE3D6ECF5839F6424299C168 /* PairDropTransport.swift in Sources */ = {isa = PBXBuildFile; fileRef = 60BBAE46119383151A1CEF4F /* PairDropTransport.swift */; };
 		FE43DDD0B6B1D40DDF4D57DB /* PlaneGameView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E93AE854D51B41D40C00311 /* PlaneGameView.swift */; };
 		FE4B2AD2AEC221AE439CCA63 /* EntitlementLogic.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF862F91B226950E4FE3D0F0 /* EntitlementLogic.swift */; };
-		440066559A6656C90BD5482A /* tetris-logic.js in Resources */ = {isa = PBXBuildFile; fileRef = 8B0E7153BF7C3706D85C524E /* tetris-logic.js */; };
-		15637EBB8E3B91D26AB4A829 /* tetris.js in Resources */ = {isa = PBXBuildFile; fileRef = 90A29B9FA5FF5180BC0DBC0E /* tetris.js */; };
-		4D35DB41D94E5EFAF89FC43C /* wordle-words.js in Resources */ = {isa = PBXBuildFile; fileRef = A95249F512C17B8ED411FA64 /* wordle-words.js */; };
-		E9BB8BDB5EBA456BF92D5D98 /* wordle-logic.js in Resources */ = {isa = PBXBuildFile; fileRef = 5FA52F8B2B19B8F89A50F8A8 /* wordle-logic.js */; };
-		67B0BC8D3B1939A9B4DDBE45 /* wordle.js in Resources */ = {isa = PBXBuildFile; fileRef = 065E5751F75143A5F61DEBC2 /* wordle.js */; };
-		F8D0A9F94F03E7914C0F87F1 /* TetrisGame.html in Resources */ = {isa = PBXBuildFile; fileRef = CF642B0C3A4ACDD7F9FCC589 /* TetrisGame.html */; };
-		360DDFCFC69E290D9F945FFA /* DailyWordGame.html in Resources */ = {isa = PBXBuildFile; fileRef = 7F8499FF30499A90EBB4108E /* DailyWordGame.html */; };
-		5D52613C2813C40D2AFFBB14 /* TetrisGameView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D1278220AD2CF1337349E45 /* TetrisGameView.swift */; };
-		CEFA30C14D732F64CB79ABCC /* DailyWordGameView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94978278947BEC540A2123E7 /* DailyWordGameView.swift */; };
-		DAEE36452BCF48385971F1BB /* WebScriptGame.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B9DB165C23115661FFB0DF9 /* WebScriptGame.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -481,6 +481,7 @@
 		0597034617E0E4011F1C53B0 /* RadarLogic.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RadarLogic.swift; sourceTree = "<group>"; };
 		0650E2DE70AE8CA13EB15838 /* CompanionStreamTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompanionStreamTests.swift; sourceTree = "<group>"; };
 		06B519562B43BC0E7646A8A7 /* WellbeingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WellbeingView.swift; sourceTree = "<group>"; };
+		076DA6D06B8B6E4AF8639E32 /* DailyWordGame.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = DailyWordGame.html; sourceTree = "<group>"; };
 		08FCD39C305D6997D25CE2CB /* NotchKit */ = {isa = PBXFileReference; lastKnownFileType = folder; name = NotchKit; path = Packages/NotchKit; sourceTree = SOURCE_ROOT; };
 		0918F482C2DF3A150F375D22 /* CompanionServer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompanionServer.swift; sourceTree = "<group>"; };
 		0A2A98A73E13E924C3E3852B /* AIProviders.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIProviders.swift; sourceTree = "<group>"; };
@@ -489,6 +490,7 @@
 		0B152DA9BC593AFE18B270D7 /* EntitlementService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EntitlementService.swift; sourceTree = "<group>"; };
 		0C24B75034156B4EB2E82381 /* GeminiFallbackLogic.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GeminiFallbackLogic.swift; sourceTree = "<group>"; };
 		0D6E9B42DF5F2A2A2C87FC38 /* MemoryGameView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemoryGameView.swift; sourceTree = "<group>"; };
+		0DE90B09AD35DC66704E3CCF /* TetrisGame.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = TetrisGame.html; sourceTree = "<group>"; };
 		0DF352A799B96D3FE708E1D5 /* RunnerGameView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RunnerGameView.swift; sourceTree = "<group>"; };
 		0E3BAE4C0E01FBAA695558C6 /* RemoteScreenView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemoteScreenView.swift; sourceTree = "<group>"; };
 		0ECABC7EEC9804BECB1923C7 /* GlobalHotkeyManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlobalHotkeyManager.swift; sourceTree = "<group>"; };
@@ -546,6 +548,7 @@
 		32AC64225D56273C94C4F18F /* LidFoldSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LidFoldSettings.swift; sourceTree = "<group>"; };
 		33BEEDB2663AD6544E5061C7 /* ShortcutsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShortcutsView.swift; sourceTree = "<group>"; };
 		34E21597A89BA509A323CB7C /* VoiceNotesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceNotesView.swift; sourceTree = "<group>"; };
+		34E60A6D24A27DF650F178FD /* tetris.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = tetris.js; sourceTree = "<group>"; };
 		34F952B86642DE0DBEC8CD4F /* f1-circuits-MIT.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = "f1-circuits-MIT.txt"; sourceTree = "<group>"; };
 		3718F42274C479A025DF477B /* NotchApple.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = NotchApple.entitlements; sourceTree = "<group>"; };
 		39D51C103147744A114FA26F /* HelloAnimation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HelloAnimation.swift; sourceTree = "<group>"; };
@@ -601,6 +604,7 @@
 		59BC3F5D6F85A5FDFC39D94F /* ClipboardLink.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClipboardLink.swift; sourceTree = "<group>"; };
 		5A7687E5F02BA5A9C7ECCC75 /* WellbeingLogic.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WellbeingLogic.swift; sourceTree = "<group>"; };
 		5C151FE67E6474F51CD20219 /* HotCornerLogic.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HotCornerLogic.swift; sourceTree = "<group>"; };
+		5C9AA52A7E88086BA19CE4A6 /* wordle-logic.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = "wordle-logic.js"; sourceTree = "<group>"; };
 		5CD7E7A5A6BDA52E46DFD022 /* ChessGame.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = ChessGame.html; sourceTree = "<group>"; };
 		5D272CF7B938DCD55B7EF450 /* NotchWidget.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = NotchWidget.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		5D5440E6913CD26F8F12FBAE /* NotchTranslatorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotchTranslatorView.swift; sourceTree = "<group>"; };
@@ -715,6 +719,7 @@
 		A86F7ABE9C93935F6764DF17 /* SecretLogic.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SecretLogic.swift; sourceTree = "<group>"; };
 		A9E160C9C8DBBE561F7DD2AD /* SharedStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedStore.swift; sourceTree = "<group>"; };
 		AADA082C5E44226B4E0DE49F /* HabitLogic.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HabitLogic.swift; sourceTree = "<group>"; };
+		AAEC0E1A6526DE9FE3CCD09C /* wordle.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = wordle.js; sourceTree = "<group>"; };
 		ABF7BDDF60590D89D51048A8 /* SystemWatchTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SystemWatchTests.swift; sourceTree = "<group>"; };
 		ACD60817F03707C0A2A93064 /* NowPlayingMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NowPlayingMonitor.swift; sourceTree = "<group>"; };
 		AD19B5322ACB9565E2C06FBB /* IOKitLidAngleProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IOKitLidAngleProvider.swift; sourceTree = "<group>"; };
@@ -731,6 +736,7 @@
 		B694C02A230B240E8F014EF6 /* GameSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameSupport.swift; sourceTree = "<group>"; };
 		B790EEB4462E110FE4001DEE /* Motion.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Motion.swift; sourceTree = "<group>"; };
 		B7C3D9C59308AA6B8575910B /* BambuCamera.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BambuCamera.swift; sourceTree = "<group>"; };
+		B7EA8815F62F07817CF14BB6 /* TetrisGameView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TetrisGameView.swift; sourceTree = "<group>"; };
 		B993F7F09793CD0D62447987 /* RadarModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RadarModel.swift; sourceTree = "<group>"; };
 		B9AE3E9758D2882B557A695A /* SportsModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SportsModel.swift; sourceTree = "<group>"; };
 		BA2C469BADF06F41DC91609C /* ForecastView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ForecastView.swift; sourceTree = "<group>"; };
@@ -770,6 +776,7 @@
 		D03274B71DE9E1F3D3567E7E /* SystemStatsWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SystemStatsWidget.swift; sourceTree = "<group>"; };
 		D077F8329BD06B571E7C0A86 /* FoldSurface.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoldSurface.swift; sourceTree = "<group>"; };
 		D0C3A6E52CAC2AAC502D9AD8 /* SolitaireView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SolitaireView.swift; sourceTree = "<group>"; };
+		D10652D36DC40822ECB87F39 /* wordle-words.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = "wordle-words.js"; sourceTree = "<group>"; };
 		D151A71D3F7B4B4F846173CD /* NotchApple.sdef */ = {isa = PBXFileReference; path = NotchApple.sdef; sourceTree = "<group>"; };
 		D2080B6F1BB18CC9E7A42044 /* ActivationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActivationView.swift; sourceTree = "<group>"; };
 		D24E86D5C7113199B225E101 /* KlickEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KlickEngine.swift; sourceTree = "<group>"; };
@@ -779,6 +786,7 @@
 		D44262024B7083EA1EAA9099 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		D47EB2F7C24DD6B0DA17C7B0 /* ScreenRecorder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenRecorder.swift; sourceTree = "<group>"; };
 		D4869B6FF4992EF60CE2B773 /* NotchAppleTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = NotchAppleTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		D5DDB1DB48C93BECF97137C8 /* WebScriptGame.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebScriptGame.swift; sourceTree = "<group>"; };
 		D6446A004FCDC55C0BF6957C /* VPNTunnel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VPNTunnel.swift; sourceTree = "<group>"; };
 		D7A6010DC875A7E233DADA89 /* BreakoutGameView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BreakoutGameView.swift; sourceTree = "<group>"; };
 		D953A904B3EF07B407F31F5C /* MessengerNotifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessengerNotifier.swift; sourceTree = "<group>"; };
@@ -789,6 +797,7 @@
 		DBB5D5B8C80009365348035A /* Profiles.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Profiles.swift; sourceTree = "<group>"; };
 		DC8C118088B36E22640A6C5F /* plane-sim.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = "plane-sim.js"; sourceTree = "<group>"; };
 		DE0214365333F995AA52AB71 /* TimeZonePlaces.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimeZonePlaces.swift; sourceTree = "<group>"; };
+		DEB323B15181A7CBF33193DE /* DailyWordGameView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DailyWordGameView.swift; sourceTree = "<group>"; };
 		DF3138F3979E5F005365A41F /* ShareView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareView.swift; sourceTree = "<group>"; };
 		DF862F91B226950E4FE3D0F0 /* EntitlementLogic.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EntitlementLogic.swift; sourceTree = "<group>"; };
 		E00E473ED3B2F7D0519BBA97 /* FoldOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoldOverlay.swift; sourceTree = "<group>"; };
@@ -802,6 +811,7 @@
 		E26901871B9937AEB263FD76 /* ConvertFormats.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConvertFormats.swift; sourceTree = "<group>"; };
 		E333C9ABF7AC014274F64237 /* RequiredSetup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RequiredSetup.swift; sourceTree = "<group>"; };
 		E43BFD01B43AA99D60FB3B9D /* CompanionPairingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompanionPairingTests.swift; sourceTree = "<group>"; };
+		E54CA8A98C84920280698482 /* tetris-logic.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = "tetris-logic.js"; sourceTree = "<group>"; };
 		E56AAC7ADE87A47F1E7862C3 /* NotchWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotchWidget.swift; sourceTree = "<group>"; };
 		E6FBB87EB9AFEA3906A669FC /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
 		E70B519149BF56D597E57B03 /* FeedbackView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeedbackView.swift; sourceTree = "<group>"; };
@@ -837,16 +847,6 @@
 		FC6F714640D09B5653DF1D9F /* nowplaying.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = nowplaying.js; sourceTree = "<group>"; };
 		FD3462AB4990D112534C8581 /* WallpaperView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WallpaperView.swift; sourceTree = "<group>"; };
 		FF6150902E8344F80FB20C62 /* BambuCloudLogic.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BambuCloudLogic.swift; sourceTree = "<group>"; };
-		8B0E7153BF7C3706D85C524E /* tetris-logic.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = "tetris-logic.js"; sourceTree = "<group>"; };
-		90A29B9FA5FF5180BC0DBC0E /* tetris.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = tetris.js; sourceTree = "<group>"; };
-		A95249F512C17B8ED411FA64 /* wordle-words.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = "wordle-words.js"; sourceTree = "<group>"; };
-		5FA52F8B2B19B8F89A50F8A8 /* wordle-logic.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = "wordle-logic.js"; sourceTree = "<group>"; };
-		065E5751F75143A5F61DEBC2 /* wordle.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = wordle.js; sourceTree = "<group>"; };
-		CF642B0C3A4ACDD7F9FCC589 /* TetrisGame.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = TetrisGame.html; sourceTree = "<group>"; };
-		7F8499FF30499A90EBB4108E /* DailyWordGame.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = DailyWordGame.html; sourceTree = "<group>"; };
-		4D1278220AD2CF1337349E45 /* TetrisGameView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TetrisGameView.swift; sourceTree = "<group>"; };
-		94978278947BEC540A2123E7 /* DailyWordGameView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DailyWordGameView.swift; sourceTree = "<group>"; };
-		4B9DB165C23115661FFB0DF9 /* WebScriptGame.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebScriptGame.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -899,11 +899,11 @@
 				22BC3DD953937929570782CA /* ctf.js */,
 				DC8C118088B36E22640A6C5F /* plane-sim.js */,
 				2D061AD1D52BA8268B11B374 /* racing.js */,
-				8B0E7153BF7C3706D85C524E /* tetris-logic.js */,
-				90A29B9FA5FF5180BC0DBC0E /* tetris.js */,
-				A95249F512C17B8ED411FA64 /* wordle-words.js */,
-				5FA52F8B2B19B8F89A50F8A8 /* wordle-logic.js */,
-				065E5751F75143A5F61DEBC2 /* wordle.js */,
+				E54CA8A98C84920280698482 /* tetris-logic.js */,
+				34E60A6D24A27DF650F178FD /* tetris.js */,
+				5C9AA52A7E88086BA19CE4A6 /* wordle-logic.js */,
+				D10652D36DC40822ECB87F39 /* wordle-words.js */,
+				AAEC0E1A6526DE9FE3CCD09C /* wordle.js */,
 			);
 			path = games;
 			sourceTree = "<group>";
@@ -1708,15 +1708,15 @@
 				1D75D90CD0ED25880BFFC38F /* BackgroundMusic-LICENSE.txt */,
 				404B8C35377E3958184925BE /* BackgroundMusic.pkg */,
 				5CD7E7A5A6BDA52E46DFD022 /* ChessGame.html */,
-				7F8499FF30499A90EBB4108E /* DailyWordGame.html */,
-				CF642B0C3A4ACDD7F9FCC589 /* TetrisGame.html */,
 				A672525103785D34A18DE037 /* CtfGame.html */,
+				076DA6D06B8B6E4AF8639E32 /* DailyWordGame.html */,
 				6E8B16EE4068BC4835F8B4C0 /* GoogleService-Info.plist */,
 				97CC70FFD067091FDE1231BB /* Info.plist */,
 				3718F42274C479A025DF477B /* NotchApple.entitlements */,
 				D151A71D3F7B4B4F846173CD /* NotchApple.sdef */,
 				2E9887FE2DA1B017814CA1B5 /* PlaneGame.html */,
 				69B4A0D4B7C6F5540FABA3AE /* RacingGame.html */,
+				0DE90B09AD35DC66704E3CCF /* TetrisGame.html */,
 				718E8EA92709BA7168C47260 /* Scripts */,
 				D506FAC9BF7EB2007D0D1C92 /* Tunnelblick */,
 			);
@@ -1785,11 +1785,9 @@
 				D7A6010DC875A7E233DADA89 /* BreakoutGameView.swift */,
 				BDFCAAEEC42B9E9ABD4338DC /* CardsLogic.swift */,
 				49D5D99FC7CB30C200B06B3A /* ChessGameView.swift */,
-				94978278947BEC540A2123E7 /* DailyWordGameView.swift */,
-				4D1278220AD2CF1337349E45 /* TetrisGameView.swift */,
-				4B9DB165C23115661FFB0DF9 /* WebScriptGame.swift */,
 				702334063347B78DDA56DB8A /* CookieClickerView.swift */,
 				9D4FADAB2335D1E735AA1EF8 /* CtfGameView.swift */,
+				DEB323B15181A7CBF33193DE /* DailyWordGameView.swift */,
 				4A2294A11AF6369D10835393 /* GameEngines.swift */,
 				E0C8A8EBFAB59EBC323417FC /* GameFullScreen.swift */,
 				B694C02A230B240E8F014EF6 /* GameSupport.swift */,
@@ -1803,6 +1801,8 @@
 				6284BA6BCADE6A64DB75D681 /* SnakeGameView.swift */,
 				264A2A3E4ADCB8D6919DC502 /* SnakeGameViewModel.swift */,
 				D0C3A6E52CAC2AAC502D9AD8 /* SolitaireView.swift */,
+				B7EA8815F62F07817CF14BB6 /* TetrisGameView.swift */,
+				D5DDB1DB48C93BECF97137C8 /* WebScriptGame.swift */,
 			);
 			path = Games;
 			sourceTree = "<group>";
@@ -1955,9 +1955,8 @@
 				CEB54EB841EFFF09AB43ADFE /* BackgroundMusic-LICENSE.txt in Resources */,
 				0BDD91775E21B5BEDDF33463 /* BackgroundMusic.pkg in Resources */,
 				75E7FF65808969DFE9C8EC56 /* ChessGame.html in Resources */,
-				360DDFCFC69E290D9F945FFA /* DailyWordGame.html in Resources */,
-				F8D0A9F94F03E7914C0F87F1 /* TetrisGame.html in Resources */,
 				1EC2FF6307A13D94AA0D2FFD /* CtfGame.html in Resources */,
+				9F4611D5539832BF29924626 /* DailyWordGame.html in Resources */,
 				CFAB476520EEBC0E831DF7DE /* GoogleService-Info.plist in Resources */,
 				6CB3126DF2584324131FE504 /* LICENSE-Tunnelblick.txt in Resources */,
 				3DF5E21ACEFE3B997230D098 /* LidAngleSensor-Apache-2.0.txt in Resources */,
@@ -1967,15 +1966,11 @@
 				5DA036B0487FEFE1B56816D4 /* Purge-MIT.txt in Resources */,
 				62345AC43148BC9A9FEF68F0 /* RacingGame.html in Resources */,
 				54CD01E3A05200B4078306CB /* Still-MIT.txt in Resources */,
+				6AB495D5E6ACD75DA68D38DB /* TetrisGame.html in Resources */,
 				29326D872AE0DC306AFD1986 /* Tunnelblick-ABOUT.txt in Resources */,
 				AA519CEBD27CD812DD518136 /* Tunnelblick.dmg in Resources */,
 				1CDD70B39C1813273FFFD232 /* chess-logic.js in Resources */,
 				F645FA1F8EA68212CBDD7333 /* chess.js in Resources */,
-				440066559A6656C90BD5482A /* tetris-logic.js in Resources */,
-				15637EBB8E3B91D26AB4A829 /* tetris.js in Resources */,
-				4D35DB41D94E5EFAF89FC43C /* wordle-words.js in Resources */,
-				E9BB8BDB5EBA456BF92D5D98 /* wordle-logic.js in Resources */,
-				67B0BC8D3B1939A9B4DDBE45 /* wordle.js in Resources */,
 				68E148D5C8B7CEA4F02B859A /* ctf-logic.js in Resources */,
 				94134084A487BEB193A089C3 /* ctf.js in Resources */,
 				6D96FF364E174A53999C3E56 /* f1-circuits-MIT.txt in Resources */,
@@ -1983,6 +1978,11 @@
 				14BB6F024439C7EDE0DCBD2C /* nowplaying.js in Resources */,
 				2006B2451159E4A12E70E69B /* plane-sim.js in Resources */,
 				3FBC19E8D908EA1C0914AA07 /* racing.js in Resources */,
+				04684D26EDA66D2AAF6B69C0 /* tetris-logic.js in Resources */,
+				7B585A54684C47977CA762E6 /* tetris.js in Resources */,
+				DCB6015E6E30EB360D1FD19D /* wordle-logic.js in Resources */,
+				2FDCE1119457CE3E7FE50065 /* wordle-words.js in Resources */,
+				26F5863DB636C5DCF506B2CE /* wordle.js in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2034,9 +2034,6 @@
 				D1AD60DD92666BA2745017D8 /* CassetteView.swift in Sources */,
 				92FA1F0A869CEDCC1DD5584D /* ChatHistory.swift in Sources */,
 				623E5EBDE04C0E5A61B55868 /* ChessGameView.swift in Sources */,
-				CEFA30C14D732F64CB79ABCC /* DailyWordGameView.swift in Sources */,
-				5D52613C2813C40D2AFFBB14 /* TetrisGameView.swift in Sources */,
-				DAEE36452BCF48385971F1BB /* WebScriptGame.swift in Sources */,
 				C91A005EA4ED8AC410BAF839 /* ClaudeChatView.swift in Sources */,
 				6FE62A468735A640B08A7BD1 /* ClaudeClient.swift in Sources */,
 				4A233680E7FADB441B86E878 /* ClaudeCodeStatus.swift in Sources */,
@@ -2062,6 +2059,7 @@
 				1DFBDF1634055E59A1AF201C /* Converter.swift in Sources */,
 				47F3262131C954B32DF79D99 /* CookieClickerView.swift in Sources */,
 				0F3F35C29DCE3595C506A304 /* CtfGameView.swift in Sources */,
+				94A1DAACE593691EEA463858 /* DailyWordGameView.swift in Sources */,
 				CD90A054724EB2DEDC4FEE75 /* DemoHooks.swift in Sources */,
 				4C0F7D796DCC0A288B9322F6 /* DevToolkitLogic.swift in Sources */,
 				A0A0F5485BA1A9A4A4CA4A7A /* DevToolsView.swift in Sources */,
@@ -2240,6 +2238,7 @@
 				6B8B6E4E81A1516B985E3F45 /* TennisLogic.swift in Sources */,
 				C3ADEF24FDB35B2A799680AF /* TennisModel.swift in Sources */,
 				C0DE4A0B6EE69BF33D224196 /* TennisView.swift in Sources */,
+				23ABBEC48B822E5003CB7CD3 /* TetrisGameView.swift in Sources */,
 				3426BA9EDEDB4808A6BEF8BA /* Theme.swift in Sources */,
 				9F191E816E9E31973BFAF4EC /* ThermalWatcher.swift in Sources */,
 				7183022F97E2F24A2958AA4A /* TimeZonePlaces.swift in Sources */,
@@ -2270,6 +2269,7 @@
 				F8A4E924A9464942DA8D3067 /* WallpaperView.swift in Sources */,
 				7E8386EF609533C3CF5608D8 /* WeatherService.swift in Sources */,
 				EB53320B29FB664836E79985 /* WebP2PManager.swift in Sources */,
+				EE0A4D311D76B8E3CEB0DF0B /* WebScriptGame.swift in Sources */,
 				F26CAE9CFE110DCD23C422BC /* WellbeingLogic.swift in Sources */,
 				A4F72615CBBF12DE8EA12022 /* WellbeingView.swift in Sources */,
 				CAED309713A89A35F4C679CE /* WhatsNew.swift in Sources */,
@@ -2550,7 +2550,7 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 2.1.88;
+				MARKETING_VERSION = 2.1.89;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -2690,7 +2690,7 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 2.1.88;
+				MARKETING_VERSION = 2.1.89;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;

@@ -76,10 +76,10 @@ Pick your computer. Both buttons start the download straight away. The Mac link 
   </tr>
   <tr>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.1.88</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.1.89</b></a>
     </td>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 2.1.88 BETA</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 2.1.89 BETA</b></a>
     </td>
   </tr>
   <tr>
@@ -150,6 +150,12 @@ More screenshots of the capture overlay, the AI answer, the settings and the Win
 
 ## What's new
 
+### Mac 2.1.89 · Windows 2.1.89 BETA · 2 November 2026 · 🧱 Tetris and Daily Word
+
+- Tetris (new) in the Games menu: the classic 10×20 well with a 7-piece bag, rotation with wall kicks, hold, a 3-piece preview, a ghost piece, soft and hard drop, line-clear scoring, levels that speed up every 10 lines and a saved best score. Arrows or A/D/S move, Up or W rotates, Space hard-drops, C holds, P pauses. It uses no timers or animation while you are not playing.
+- Daily Word (new) in the Games menu: a five-letter word puzzle with six guesses and green, yellow and grey feedback. Everyone gets the same word on the same day (no network needed), your result is saved, there is a streak counter and an emoji result to copy, and a Practice mode for extra words.
+- Tetris and Daily Word are the same as on the Mac. Untested on real Windows hardware.
+
 ### Mac 2.1.88 · Windows 2.1.88 BETA · 2 November 2026 · ♣️ Poker on Windows
 
 - Poker is now in the Windows Games tab: play-money Texas Hold’em against the computer (blinds 10 and 20, check or call, raise 20, or fold), with a chip stack that is remembered. It uses the same hand ranking and computer opponent as the Mac app. Untested on real Windows hardware.
@@ -157,15 +163,6 @@ More screenshots of the capture overlay, the AI answer, the settings and the Win
 ### Mac 2.1.87 · 2 November 2026 · 🔇 No more error beep
 
 - No more system “bonk” beep in the notch when you press a key nothing uses: in the games (E, Q, G and the other keys a game does not claim) and anywhere else in the notch with no text box focused.
-
-### Mac 2.1.86 · Windows 2.1.86 BETA · 2 November 2026 · 🏁 Qualifying, clean start and real circuits
-
-- Racing: qualifying. Pick Session in the menu: cars leave the pit lane, set an out lap, a push lap and an in lap, and the slowest are knocked out after Q1 and Q2 before the top 10 fight for pole in Q3. There is a timing screen between segments, a live classification and a result screen, then the race starts from the qualifying grid.
-- Racing: Clean start mode (off by default). Every car starts in the pit lane, drives out on a setup lap to its own grid box, then the formation lap, then the lights.
-- Racing: manual gearbox. Press G (or pick Manual in the menu): E shifts up, Q shifts down, with a rev limiter and engine braking. DRS moves to X and serving a penalty to C while manual is on.
-- Racing: real circuits look real. Monaco has a proper tight hairpin, the Fairmont Hotel, a covered tunnel with lit walls and a flash of sun at the exit, and the harbour with yachts. Yas Marina has the big billboards, grandstands, the hotel over the road, the marina and a sunset-to-night sky. Skylines and landmarks for Singapore, Las Vegas, Miami, Suzuka, Spa, Austin and Monza too.
-- Lighter on the battery: brightness, clipboard and screen-recording checks run less often, the Now Playing helper backs off when nothing is playing, the keyboard-click audio engine sleeps when you stop typing, and nearby Wi-Fi discovery now runs only while the Messenger tab is open (messages from people on your Wi-Fi no longer notify you while the notch is closed).
-- Same racing changes as the Mac. The battery changes are Mac-only. Untested on real Windows hardware.
 
 Every earlier release is in the [changelog](CHANGELOG.md).
 
