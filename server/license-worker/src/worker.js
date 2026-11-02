@@ -1093,8 +1093,8 @@ async function askProvider(env, { name, base, key, model, tries }, messages) {
     let r;
     try {
       r = await fetch(url, { method: 'POST', headers: { 'content-type': 'application/json', authorization: `Bearer ${key}` },
-        body: JSON.stringify({ model, temperature: 0.3, max_tokens: 500, messages }) });
-    } catch { console.error('Ask: network error from', name, model); continue; }
+        body: JSON.stringify({ model, temperature: 0.3, max_tokens: 500, messages }), signal: AbortSignal.timeout(Number(env.ASK_TIMEOUT_MS) || 6000) });
+    } catch (e) { console.error('Ask: network error or timeout from', name, model, String(e && e.name)); if (e && (e.name === 'TimeoutError' || e.name === 'AbortError')) break; continue; }   // a provider that is too slow: try the next one, don't wait again
     if (r.ok) {
       const data = await r.json().catch(() => null);
       const a = String(data?.choices?.[0]?.message?.content || '').replace(/[*_`#]+/g, '').trim().slice(0, 1200);

@@ -166,7 +166,7 @@
     function askAi(q, r) {
       busy = true; send.disabled = true;
       var wait = el('div', { class: 'nc-msg nc-bot' }); wait.append(el('p', null, 'Thinking\u2026')); log.append(wait); log.scrollTop = log.scrollHeight;
-      var ctl = window.AbortController ? new AbortController() : null, timer = setTimeout(function () { if (ctl) ctl.abort(); }, 15000);
+      var ctl = window.AbortController ? new AbortController() : null, timer = setTimeout(function () { if (ctl) ctl.abort(); }, 30000);
       (getToken ? getToken() : Promise.resolve(undefined))
         .then(function (cf) { return fetch(server.replace(/\/+$/, '') + '/ask', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ q: q, history: history.slice(0, -1), cf: cf }), signal: ctl ? ctl.signal : undefined }); })
         .then(function (res) { return res.ok ? res.json() : Promise.reject(res.status); })
