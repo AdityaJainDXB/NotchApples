@@ -20,6 +20,9 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.1.92", date: "2 November 2026", headline: "A steering wheel that turns on the spot", items: [
+            "Racing: the first-person steering wheel now turns about its own centre instead of swinging sideways (it used to pivot about the bottom of the rim). Full lock is 180° either way, 270° in the GT3, the wheel eases toward your keys and centres itself smoothly when you let go, and it turns the same at any speed.",
+        ]),
         ReleaseNote(version: "2.1.90", date: "2 November 2026", headline: "Safer games and file opening", items: [
             "Cookie Clicker now always uses the built-in game. It no longer loads a third-party website (cookieclicker.eu) when you open the tab, so nothing is contacted and your progress is always the saved one.",
             "Files received in Messenger are saved in a fresh folder under a cleaned-up name and shown in Finder instead of being opened straight away, so a received file can never launch itself or be written outside its folder.",
