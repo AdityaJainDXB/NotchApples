@@ -13,7 +13,7 @@ packages:
 settings:
   base:
     SWIFT_VERSION: "5.0"
-    MARKETING_VERSION: "2.1.78"
+    MARKETING_VERSION: "2.1.79"
     CURRENT_PROJECT_VERSION: "194"
     CODE_SIGN_IDENTITY: "-"
     CODE_SIGN_STYLE: Manual
@@ -120,6 +120,7 @@ targets:
       - NotchApple/Modules/BambuStatusChecker/BambuCloudLogic.swift
       - NotchApple/Modules/BambuStatusChecker/BambuCameraLogic.swift
       - NotchApple/Core/UpdateFeedLogic.swift
+      - NotchApple/Modules/Messenger/Friends/FriendsLogic.swift
       - NotchApple/Modules/Tennis/TennisLogic.swift
       - NotchApple/Core/ClaudeUsageLogic.swift
       - NotchApple/Core/SmartHomeLogic.swift

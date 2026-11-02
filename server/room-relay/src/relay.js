@@ -7,6 +7,9 @@
 // made from the code, so this relay never sees room names or message text. Nothing is
 // written to storage or logged; frames are only passed between open sockets.
 
+import { Mailbox, FriendRate, routeFriends } from './friends.js';
+export { Mailbox, FriendRate };
+
 const TOPIC = /^notchapple-v1-[0-9a-f]{40}$/;
 // Clipboard Link (Ultimate) rooms live under /clip/<topic>/ws?p=<pass> and need a pass from the licence server. The pass
 // is a short-lived signed note that says "Ultimate", with no key or device in it, so the relay still learns nothing about
@@ -53,6 +56,7 @@ export default {
   async fetch(request, env) {
     const url = new URL(request.url);
     if (url.pathname === '/') return new Response('Notch Apple rooms relay');
+    if (url.pathname.startsWith('/f/')) return routeFriends(request, env);   // Friends mailboxes (src/friends.js)
     const clip = url.pathname.match(/^\/clip\/([^/]+)\/ws$/);
     if (clip) {
       if (!TOPIC.test(clip[1])) return new Response('Not found', { status: 404 });

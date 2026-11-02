@@ -21,8 +21,9 @@ Derived values:
 - `box = hex( SHA-256("notchapple-friends-v1|box|" + CODE)[0..16] )` (32 hex characters). The server only ever sees `box`,
   never the code. Code and `box` are different lengths and unrelated by anything but this hash.
 - `fp = SHA-256( signPub || dhPub )[0..16]`: the key fingerprint, used in QR codes.
-- **Safety number** between A and B: `SHA-256( sort(A.signPub||A.dhPub, B.signPub||B.dhPub) concatenated )`, shown as 12 groups of
-  5 digits (each group is 5 bytes mod 100000). Both phones show the same 60 digits; reading them aloud proves no one is in the middle.
+- **Safety number** between A and B: order the two byte strings `signPub||dhPub` by their lowercase hex (smaller first), `h1 = SHA-256(first||second)`,
+  `bytes = h1 || SHA-256(h1)`; group *i* (0…11) is `uint32BigEndian(bytes[4i..4i+4]) mod 100000`, zero-padded to 5 digits, groups joined by spaces.
+  Both people see the same 60 digits; reading them aloud proves no one is in the middle.
 
 QR / link form of a code: `notchapple://friend?c=<CODE>&k=<base64url fp>`. When a friend is added from this form the client
 checks the keys the server returns against `fp`, so a malicious server cannot swap keys. A **typed** code has no `fp`; for those
@@ -45,7 +46,7 @@ The server stores no names, codes, texts or friend lists. It cannot tell which t
 All endpoints are under `https://<relay>/f/`. Bodies are JSON, UTF-8, ≤ 24 KB.
 
 **Owner-authenticated** calls (reading your own mailbox, changing `allow`, wiping) carry the header
-`x-nf-auth: <ts>.<sigB64url>` where `ts` is milliseconds and
+`x-nf-auth: <ts>.<sigB64url>` (plus `x-nf-box: <box>` on `PUT /f/allow`, `DELETE /f/allow/{hash}` and `POST /f/wipe`, so the front door knows which mailbox) where `ts` is milliseconds and
 `sig = Ed25519(sign, "nf1\n" + METHOD + "\n" + path + "\n" + ts + "\n" + hex(SHA-256(body)))`. The server checks the signature
 with the stored `sign`, requires `|now − ts| ≤ 5 min` and `ts > lastAuth`, then sets `lastAuth = ts`. The client uses
 `max(now, lastSent + 1)`.
@@ -71,15 +72,16 @@ Every blob is `sealed(recipientDH, kind, inner)`:
 ```
 eph      = fresh X25519 key pair
 shared   = X25519(eph.private, recipientDH)
-key      = HKDF-SHA256(ikm = shared, salt = "notchapple-friends-v1", info = "seal|" + recipientBox + "|" + eph.public, 32 B)
+key      = HKDF-SHA256(ikm = shared, salt = "notchapple-friends-v1", info = "seal|" + recipientBox + "|" + base64url(eph.public), 32 B)
 nonce    = 12 random bytes
-blob     = eph.public (32) || nonce (12) || AES-256-GCM(key, nonce, plaintext = inner, aad = recipientBox + "|" + kind) || tag (16)
+blob     = base64url( eph.public (32) || nonce (12) || AES-256-GCM(key, nonce, plaintext = inner, aad = recipientBox + "|" + kind) || tag (16) )
 ```
 
-`kind` is `req` or `msg`. The inner plaintext is JSON `{ "b": <body object>, "s": <sigB64url> }` where
-`s = Ed25519(sender.sign, "nf1-inner\n" + recipientBox + "\n" + kind + "\n" + canonicalBodyJSON)`. A sealed box alone is anonymous
+`kind` is `req` or `msg`. The inner plaintext is JSON `{ "b": <string>, "s": <sigB64url> }` where `b` is the body **serialised once, as a JSON string** by the sender and
+`s = Ed25519(sender.sign, "nf1-inner\n" + recipientBox + "\n" + kind + "\n" + b)`. The receiver verifies `b` exactly as received and
+only then parses it, so there is no canonical-JSON problem between Swift and JavaScript. A sealed box alone is anonymous
 (anyone can seal to a public key), so the signature is what proves the sender; the recipient verifies it with the friend's
-`sign` key and drops anything that fails. `canonicalBodyJSON` is the body with keys sorted and no spaces.
+`sign` key and drops anything that fails.
 
 Properties: only the recipient can read it; the sender is authenticated; a fresh ephemeral key per message gives
 sender-side forward secrecy. It does **not** give recipient-side forward secrecy (see the threat model; a ratchet is v2).

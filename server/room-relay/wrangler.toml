@@ -11,3 +11,17 @@ class_name = "Room"
 [[migrations]]
 tag = "v1"
 new_sqlite_classes = ["Room"]
+
+# Friends (private chat): one mailbox per friend code (stores sealed messages for up to 14 days, never readable by the
+# server) and a small rate-limit counter. Both are on the free plan (SQLite-backed Durable Objects).
+[[durable_objects.bindings]]
+name = "MAILBOX"
+class_name = "Mailbox"
+
+[[durable_objects.bindings]]
+name = "FRIEND_RATE"
+class_name = "FriendRate"
+
+[[migrations]]
+tag = "v2"
+new_sqlite_classes = ["Mailbox", "FriendRate"]

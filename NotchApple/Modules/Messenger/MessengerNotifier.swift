@@ -21,9 +21,12 @@ final class MessengerNotifier: NSObject, ObservableObject {
     @AppStorage("messenger.notify") var notificationsEnabled = true
     @AppStorage("messenger.notifyPreview") var showPreview = true
 
+    /// Everything unread: the nearby and room chats plus Friends. The dot on the notch and on the tab follow this.
     @Published private(set) var unread = 0 {
         didSet { onUnreadChange(unread) }
     }
+    private var chatUnread = 0
+    private var friendsUnread = 0
 
     /// Wired up by the notch window controller.
     var isMessengerVisible: () -> Bool = { false }
@@ -49,7 +52,7 @@ final class MessengerNotifier: NSObject, ObservableObject {
     func incoming(_ message: MessengerMessage, source: String) {
         guard !message.isMine, !message.isNotice else { return }
         if isMessengerVisible() { return }
-        unread += 1
+        chatUnread += 1; unread = chatUnread + friendsUnread
         guard notificationsEnabled else { return }
 
         let content = UNMutableNotificationContent()
@@ -64,9 +67,38 @@ final class MessengerNotifier: NSObject, ObservableObject {
 
     /// Called when Messenger becomes visible.
     func markAllRead() {
-        guard unread > 0 else { return }
-        unread = 0
+        guard chatUnread > 0 else { return }
+        chatUnread = 0; unread = friendsUnread
         center.removeAllDeliveredNotifications()
+    }
+
+    // MARK: Friends
+
+    /// Friends keeps its own per-friend counts; this is their sum, so the notch's dot and the tab's badge include them.
+    func setFriendsUnread(_ n: Int) { friendsUnread = n; unread = chatUnread + friendsUnread }
+
+    /// A message from a friend whose chat isn't open. Quiet while a Focus is on (the unread dot still shows).
+    func friendMessage(from name: String, box: String, text: String, id: String) {
+        guard notificationsEnabled, !FocusBridge.hushes else { return }
+        let content = UNMutableNotificationContent()
+        content.title = name
+        content.subtitle = "Friends"
+        content.body = showPreview ? text : "New message"
+        content.sound = .default
+        content.threadIdentifier = "messenger.friend.\(box)"
+        center.add(UNNotificationRequest(identifier: id, content: content, trigger: nil))
+    }
+
+    /// A friend request or an accepted request.
+    func friendEvent(title: String, body: String, id: String) {
+        guard notificationsEnabled, !FocusBridge.hushes else { return }
+        let content = UNMutableNotificationContent()
+        content.title = title
+        content.subtitle = "Friends"
+        content.body = body
+        content.sound = .default
+        content.threadIdentifier = "messenger.friends"
+        center.add(UNNotificationRequest(identifier: id, content: content, trigger: nil))
     }
 }
 

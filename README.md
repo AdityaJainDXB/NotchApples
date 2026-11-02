@@ -76,7 +76,7 @@ Pick your computer. Both buttons start the download straight away. The Mac link 
   </tr>
   <tr>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.1.78</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.1.79</b></a>
     </td>
     <td align="center">
       <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 2.1.78 BETA</b></a>
@@ -150,6 +150,14 @@ More screenshots of the capture overlay, the AI answer, the settings and the Win
 
 ## What's new
 
+### Mac 2.1.79 · 2 November 2026 · 👥 Friends: private chat
+
+- Friends (new, in Messenger): a third mode for private chat with people you add by a short friend code. Your code is in Settings → Messenger (with a QR). Adding someone sends a request they must accept (or block) before either of you can message, so a code alone never lets a stranger write to you.
+- Each friend gets a chat with sent, delivered and read, a typing indicator, nicknames, and a safety number to compare out loud. Messages are end-to-end encrypted; if your friend is offline the server keeps only the encrypted message for up to 14 days and deletes it when it arrives. History stays on your Mac.
+- Notifications: a new message or request shows a count on the Messenger tab and the closed notch's dot, plus a macOS notification (message text can be hidden in Settings → Messenger) that stays quiet while a Focus is on.
+- Privacy tools: block list, remove friend, rate limits on requests, and Delete all my chat data. Nearby Wi-Fi and anonymous rooms are unchanged.
+- Needs the new relay: Friends works once the Notch Apple rooms relay has been updated (the project owner deploys it); until then the Friends screen shows that it can't connect. Windows can't use Friends yet, and Mac and Windows friends will be able to talk once it arrives there.
+
 ### Mac 2.1.78 · Windows 2.1.78 BETA · 2 November 2026 · 💬 Ask a question from the app
 
 - Ask a question: Settings → About on the Mac, and the Windows settings, have a new "Ask a question" link that opens the website with the Ask box already open.
@@ -160,11 +168,6 @@ More screenshots of the capture overlay, the AI answer, the settings and the Win
 - Racing, banking: the banked corners are now banked. La Monumental at the Madring is a steep 24 degree wall, the Hugenholtzbocht (T3) and the last corner (T14) at Zandvoort are about 20 degrees, and T9 at Yas Marina about 10. The outside edge and the barriers rise, the car rolls into the bank and the camera leans with it. A banked corner holds the car far better: it can take La Monumental about a third faster than a flat corner, and the computer drivers do too.
 - Racing, hills you can feel: the camera now pitches up on a climb and over a crest, and the eye dips in a compression. A crest makes the car light (less grip, weaker brakes) and a dip presses it down (more grip). The computer drivers slow down for corners on a crest. A small readout above the dash shows the climb or drop and the banking.
 - Racing, shared tracks can carry banking: a track code can now include a bank angle (up to 24 degrees) for each point. Older codes still work.
-
-### Mac 2.1.76 · Windows 2.1.76 BETA · 1 November 2026 · 🏁 A fairer race
-
-- Racing, leaving the track: the rule is stricter and easier to see. Come back in front of a car you were behind, or close on one by more than 10 m while off the track (cutting a corner), and a countdown on screen tells you to give the place back within 10 seconds or take 5 seconds. It now also applies under yellow flags.
-- Racing: messages now show below the timing tower instead of over it.
 
 Every earlier release is in the [changelog](CHANGELOG.md).
 

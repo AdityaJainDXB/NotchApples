@@ -172,6 +172,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     /// nearby Wi-Fi discovery (if allowed) and the last room you were in.
     private func startMessengerInBackground() {
         MessengerNotifier.shared.start()
+        FriendsClient.shared.startIfActive()
         guard SettingsManager.shared.messengerEnabled else { return }
         MessengerNotifier.shared.requestAuthorizationIfNeeded()
         LocalP2PManager.shared.start()

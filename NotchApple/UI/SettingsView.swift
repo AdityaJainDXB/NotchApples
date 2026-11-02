@@ -1399,6 +1399,7 @@ private struct MessengerSettings: View {
             } header: {
                 Text("Nearby Wi-Fi")
             }
+            FriendsSettingsSection()
             Section {
                 Button(cleared ? "Cleared" : "Clear chat history and disconnect", role: .destructive) {
                     LocalP2PManager.shared.stop(); LocalP2PManager.shared.clear()

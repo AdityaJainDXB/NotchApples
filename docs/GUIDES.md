@@ -25,6 +25,10 @@ Open the notch and click the 💬 tab. Your handle (for example `MistyOwl#769`) 
 
 **Join a room.** Type any room code and press **Join**. Everyone who enters the same code (`#Cafe-Study`, `cafe-study` and `CAFE-STUDY ` all count as the same) is in the same room and shown as "3 online".
 
+**Friends (private chat with people you know).** Pick **Friends** in the mode switch. Every install has a random **friend code** (10 letters and numbers, like `7KQ2M-X4PTB`), shown with a Copy button and a QR code in **Settings → Messenger → Friends**. To add someone, type or paste their code (or a picture of their QR, copied to the clipboard, with **Paste a QR image**) and press the person icon. They get a small notification and choose **Accept** or **Block**. Until they accept, neither of you can send a message, so a code on its own never lets a stranger write to you.
+
+Each friend has their own chat with *sent / delivered / read* and a "typing…" line. If they are offline, the encrypted message waits on the server for up to 14 days and is deleted as soon as it arrives. Messages are encrypted on your Mac and only your friend's Mac can read them; the server sees random IDs and encrypted data, never names, codes or text. Press **Safety number** in a chat and read the numbers out (in person or on a call): if they match on both Macs, nobody is in the middle. Right-click a friend for **Nickname**, **Remove friend** and **Block**. **Delete all my chat data** in Settings wipes your friends, history and block list here and on the server (your friend code stays). History is stored only on your Mac. The technical details and what is not protected (for example the server can see *when* messages are sent) are in [docs/FRIENDS_PROTOCOL.md](FRIENDS_PROTOCOL.md) and [docs/PLAN_REMOTE_AND_FRIENDS.md](PLAN_REMOTE_AND_FRIENDS.md).
+
 How rooms stay private:
 - The code is hashed on your Mac with SHA-256 into two separate values: a topic name for the relay, and a 256-bit AES-GCM key.
 - The relay only ever sees a random-looking topic and encrypted bytes. It never sees the room name, your handle or your messages.

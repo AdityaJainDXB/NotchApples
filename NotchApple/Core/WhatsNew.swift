@@ -20,6 +20,13 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.1.79", date: "2 November 2026", headline: "Friends: private chat", items: [
+            "Friends (new, in Messenger): a third mode for private chat with people you add by a short friend code. Your code is in Settings → Messenger (with a QR). Adding someone sends a request they must accept (or block) before either of you can message, so a code alone never lets a stranger write to you.",
+            "Each friend gets a chat with sent, delivered and read, a typing indicator, nicknames, and a safety number to compare out loud. Messages are end-to-end encrypted; if your friend is offline the server keeps only the encrypted message for up to 14 days and deletes it when it arrives. History stays on your Mac.",
+            "Notifications: a new message or request shows a count on the Messenger tab and the closed notch's dot, plus a macOS notification (message text can be hidden in Settings → Messenger) that stays quiet while a Focus is on.",
+            "Privacy tools: block list, remove friend, rate limits on requests, and Delete all my chat data. Nearby Wi-Fi and anonymous rooms are unchanged.",
+            "Needs the new relay: Friends works once the Notch Apple rooms relay has been updated (the project owner deploys it); until then the Friends screen shows that it can't connect. Windows can't use Friends yet, and Mac and Windows friends will be able to talk once it arrives there.",
+        ]),
         ReleaseNote(version: "2.1.78", date: "2 November 2026", headline: "Ask a question from the app", items: [
             "Ask a question: Settings → About on the Mac, and the Windows settings, have a new \"Ask a question\" link that opens the website with the Ask box already open.",
             "The website's Ask box now answers questions about Notch Apple that its built-in answers did not cover, using Google Gemini (with Groq as a backup when Gemini is busy), from the Notch Apple docs. It knows far more modules than before. Nothing is sent until a question needs the AI, and the box says so.",

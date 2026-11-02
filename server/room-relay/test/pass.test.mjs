@@ -2,13 +2,19 @@
 // The relay holds only the public key, so this test swaps in a throwaway public key and checks that a pass from any
 // other key, a changed pass, a Pro pass, an expired pass and a full token are all refused.
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { readFileSync, mkdtempSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { pathToFileURL } from 'node:url';
 
 const src = readFileSync(new URL('../src/relay.js', import.meta.url), 'utf8');
 const pair = await crypto.subtle.generateKey({ name: 'Ed25519' }, true, ['sign', 'verify']);
 const raw = btoa(String.fromCharCode(...new Uint8Array(await crypto.subtle.exportKey('raw', pair.publicKey))));
-const patched = src.replace(/const PUBLIC_KEY = '[^']+';/, `const PUBLIC_KEY = '${raw}';`);
-const { passOk, allowFrame } = await import('data:text/javascript;base64,' + Buffer.from(patched).toString('base64'));
+const friendsUrl = new URL('../src/friends.js', import.meta.url).href;
+const patched = src.replace(/const PUBLIC_KEY = '[^']+';/, `const PUBLIC_KEY = '${raw}';`).replace("'./friends.js'", `'${friendsUrl}'`);
+const tmp = mkdtempSync(join(tmpdir(), 'relay-'));
+writeFileSync(join(tmp, 'relay.mjs'), patched);
+const { passOk, allowFrame } = await import(pathToFileURL(join(tmp, 'relay.mjs')).href);
 
 const b64u = (b) => btoa(String.fromCharCode(...b)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 const mint = async (payload, kind = 'pass1', key = pair.privateKey) => {

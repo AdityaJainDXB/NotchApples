@@ -10,7 +10,7 @@ import SwiftUI
 import AppKit
 
 struct NotchMessengerView: View {
-    enum Mode: String, CaseIterable { case nearby, room }
+    enum Mode: String, CaseIterable { case nearby, room, friends }
 
     @AppStorage("messenger.mode") private var mode: Mode = .nearby
     @AppStorage("messenger.lastRoom") private var lastRoom = ""
@@ -24,14 +24,18 @@ struct NotchMessengerView: View {
     private static let emoji = ["👋", "😂", "👍", "❤️", "🔥", "🎉"]
 
     private var messages: [MessengerMessage] { mode == .nearby ? local.messages : web.messages }
-    private var canSend: Bool { mode == .nearby ? !local.connectedPeers.isEmpty : web.state == .joined }
+    private var canSend: Bool { mode == .nearby ? !local.connectedPeers.isEmpty : web.state == .joined }   // (rooms and nearby; Friends has its own screen)
 
     var body: some View {
         VStack(spacing: 10) {
             header
-            if mode == .room { roomBar }
-            chatLog
-            inputBar
+            if mode == .friends {
+                FriendsView()
+            } else {
+                if mode == .room { roomBar }
+                chatLog
+                inputBar
+            }
         }
         .onAppear {
             MessengerNotifier.shared.markAllRead()
@@ -49,8 +53,9 @@ struct NotchMessengerView: View {
             Picker("Mode", selection: $mode) {
                 Label("Nearby Wi-Fi", systemImage: "wifi").tag(Mode.nearby)
                 Label("Anonymous room", systemImage: "globe").tag(Mode.room)
+                Label("Friends", systemImage: "person.2.fill").tag(Mode.friends)
             }
-            .pickerStyle(.segmented).labelsHidden().frame(width: 290)
+            .pickerStyle(.segmented).labelsHidden().frame(width: 390)
 
             HStack(spacing: 5) {
                 Circle().fill(statusColor).frame(width: 8, height: 8)
@@ -66,6 +71,7 @@ struct NotchMessengerView: View {
     private var statusColor: Color {
         switch mode {
         case .nearby: local.connectedPeers.isEmpty ? .orange : .green
+        case .friends: .green
         case .room:
             switch web.state {
             case .joined: .green
@@ -79,6 +85,7 @@ struct NotchMessengerView: View {
     private var statusText: String {
         switch mode {
         case .nearby: return local.status
+        case .friends: return "End-to-end encrypted"
         case .room:
             switch web.state {
             case .idle: return "Not in a room"

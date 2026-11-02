@@ -32,6 +32,8 @@ enum KeychainHelper {
         case licenseKey = "license.key"
         case todoistToken = "todoist.token"
         case companionPhones = "companion.phones"
+        case friendsIdentity = "friends.identity"
+        case friendsVaultKey = "friends.vaultKey"
         case homeAssistantToken = "homeassistant.token"
         case clipboardLinkCode = "clipboardlink.code"
         case bambuAccessCodes = "bambu.accessCodes"

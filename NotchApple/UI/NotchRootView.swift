@@ -323,8 +323,11 @@ private struct TabButton: View {
                 .overlay(alignment: .topTrailing) {
                     // Unread messages badge.
                     if module == .messenger && notifier.unread > 0 && !active {
-                        Circle().fill(Theme.accentBright).frame(width: 9, height: 9)
-                            .overlay(Circle().stroke(Theme.deep, lineWidth: 2))
+                        Text(notifier.unread > 9 ? "9+" : "\(notifier.unread)")
+                            .font(.system(size: 8, weight: .bold)).foregroundStyle(.white)
+                            .padding(.horizontal, 3.5).frame(minWidth: 13, minHeight: 13)
+                            .background(Capsule().fill(Theme.accentBright))
+                            .overlay(Capsule().stroke(Theme.deep, lineWidth: 1.5))
                             .offset(x: -2, y: 2)
                     }
                 }
