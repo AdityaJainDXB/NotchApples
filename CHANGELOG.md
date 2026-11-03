@@ -4,6 +4,11 @@ Every Notch Apple release, newest first. The latest few are also on the [README]
 
 > **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is in the repository's history.
 
+### Mac 2.1.94 · Windows 2.1.94 BETA · 3 November 2026 · 💬 The new AI message box, on Windows too
+
+- Mac: AI tab: the provider picker (shown before you add a key) is now a plain menu too. The old picker was a popover that could crash the app when you moved over its list (fixes the crash reports in issues 43 and 44).
+- Windows: The AI tab has the new message box: the text on top, and under it drop-down menus for the provider, the model and the effort (Low, Medium, High: how hard it thinks) with Send at the right. The old searchable model popup is gone. Untested on real Windows hardware.
+
 ### Mac 2.1.93 · 3 November 2026 · 💬 A simpler AI message box
 
 - AI tab: a new message box. The text sits on top and, under it, drop-down menus for the provider, the model and the effort (Low, Medium, High: how hard it thinks) with Send at the right. The old searchable model popover is gone. Effort adds a line to the instructions every provider gets, so it works on all of them.

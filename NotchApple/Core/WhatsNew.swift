@@ -20,6 +20,9 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.1.94", date: "3 November 2026", headline: "The new AI message box, on Windows too", items: [
+            "AI tab: the provider picker (shown before you add a key) is now a plain menu too. The old picker was a popover that could crash the app when you moved over its list (fixes the crash reports in issues 43 and 44).",
+        ]),
         ReleaseNote(version: "2.1.93", date: "3 November 2026", headline: "A simpler AI message box", items: [
             "AI tab: a new message box. The text sits on top and, under it, drop-down menus for the provider, the model and the effort (Low, Medium, High: how hard it thinks) with Send at the right. The old searchable model popover is gone. Effort adds a line to the instructions every provider gets, so it works on all of them.",
         ]),
