@@ -17,7 +17,7 @@ export function render(root) {
   // to fit instead of being cut off. Plane and Racing fill the space themselves.
   const fit = () => {
     const inner = board.firstElementChild;
-    if (!inner || game === 'plane' || game === 'racing' || game === 'ctf' || game === 'chess' || game === 'tetris' || game === 'wordle') return;
+    if (!inner || game === 'plane' || game === 'racing' || game === 'ctf' || game === 'chess' || game === 'tetris' || game === 'wordle' || game === 'trivia') return;
     inner.style.transform = ''; inner.style.marginBottom = ''; inner.style.transformOrigin = 'center top';
     const w = inner.offsetWidth, h = inner.offsetHeight;
     if (!w || !h) return;
@@ -30,8 +30,8 @@ export function render(root) {
   const onFull = () => { const on = document.fullscreenElement === board; board.style.cssText = on ? 'display:flex;justify-content:center;align-items:flex-start;background:#0d0b14;overflow:auto;padding-top:2vh' : ''; fit(); setTimeout(fit, 80); };
   document.addEventListener('fullscreenchange', onFull);
   const fullBtn = el('button', { class: 'btn small', title: 'Make this game fill the screen (Esc leaves)', onclick: () => { if (document.fullscreenElement === board) document.exitFullscreen?.(); else board.requestFullscreen?.().catch?.(() => {}); } }, '⛶ Full screen');
-  const pick = (g) => { stop(); game = g; save('games.last', g); fullBtn.style.display = (g === 'plane' || g === 'racing' || g === 'ctf' || g === 'chess' || g === 'tetris' || g === 'wordle') ? 'none' : ''; stop = ({ 2048: g2048, snake, reaction, cookie, runner, breakout, memory, plane, racing, ctf, chess, tetris, wordle, blackjack, solitaire, poker })[g](board) || (() => {}); requestAnimationFrame(fit); setTimeout(fit, 120); };
-  root.append(el('div', { class: 'col fill' }, segmented([{ value: '2048', label: '2048' }, { value: 'snake', label: 'Snake' }, { value: 'reaction', label: 'Reaction' }, { value: 'cookie', label: 'Cookie Clicker' }, { value: 'runner', label: 'Runner' }, { value: 'breakout', label: 'Breakout' }, { value: 'memory', label: 'Memory' }, { value: 'plane', label: '✈️ Plane' }, { value: 'racing', label: '🏎️ Racing' }, { value: 'ctf', label: '🚩 Capture the Flag' }, { value: 'chess', label: '♞ Chess' }, { value: 'tetris', label: '🧱 Tetris' }, { value: 'wordle', label: '🔤 Daily Word' }, { value: 'blackjack', label: '🃏 Blackjack' }, { value: 'solitaire', label: '♠️ Solitaire' }, { value: 'poker', label: '♣️ Poker' }], game, pick), el('div', { style: 'display:flex;justify-content:flex-end' }, fullBtn), board));
+  const pick = (g) => { stop(); game = g; save('games.last', g); fullBtn.style.display = (g === 'plane' || g === 'racing' || g === 'ctf' || g === 'chess' || g === 'tetris' || g === 'wordle' || g === 'trivia') ? 'none' : ''; stop = ({ 2048: g2048, snake, reaction, cookie, runner, breakout, memory, plane, racing, ctf, chess, tetris, wordle, trivia, blackjack, solitaire, poker })[g](board) || (() => {}); requestAnimationFrame(fit); setTimeout(fit, 120); };
+  root.append(el('div', { class: 'col fill' }, segmented([{ value: '2048', label: '2048' }, { value: 'snake', label: 'Snake' }, { value: 'reaction', label: 'Reaction' }, { value: 'cookie', label: 'Cookie Clicker' }, { value: 'runner', label: 'Runner' }, { value: 'breakout', label: 'Breakout' }, { value: 'memory', label: 'Memory' }, { value: 'plane', label: '✈️ Plane' }, { value: 'racing', label: '🏎️ Racing' }, { value: 'ctf', label: '🚩 Capture the Flag' }, { value: 'chess', label: '♞ Chess' }, { value: 'tetris', label: '🧱 Tetris' }, { value: 'wordle', label: '🔤 Daily Word' }, { value: 'trivia', label: '❓ Daily Trivia' }, { value: 'blackjack', label: '🃏 Blackjack' }, { value: 'solitaire', label: '♠️ Solitaire' }, { value: 'poker', label: '♣️ Poker' }], game, pick), el('div', { style: 'display:flex;justify-content:flex-end' }, fullBtn), board));
   pick(game);
   return () => { ro.disconnect(); stop(); document.removeEventListener('fullscreenchange', onFull); if (document.fullscreenElement === board) document.exitFullscreen?.(); };
 }
@@ -165,6 +165,17 @@ function wordle(host) {
   host.replaceChildren(box);
   let stop = () => {}, gone = false;
   import('../games/wordle-words.js').then(() => import('../games/wordle-logic.js')).then(() => import('../games/wordle.js')).then(() => { if (!gone) stop = window.NotchWordleGame.mount(box); });
+  return () => { gone = true; host.style.position = ''; stop(); };
+}
+
+/// Daily Trivia: one multiple-choice question a day, with a streak and a Practice round (games/trivia.js, rules in trivia-logic.js,
+/// questions in trivia-questions.js). The same script runs in the Mac app's web view. Works offline; nothing runs in the background.
+function trivia(host) {
+  host.style.position = 'relative';
+  const box = el('div', { style: 'position:absolute;inset:0' });
+  host.replaceChildren(box);
+  let stop = () => {}, gone = false;
+  import('../games/trivia-questions.js').then(() => import('../games/trivia-logic.js')).then(() => import('../games/trivia.js')).then(() => { if (!gone) stop = window.NotchTriviaGame.mount(box); });
   return () => { gone = true; host.style.position = ''; stop(); };
 }
 

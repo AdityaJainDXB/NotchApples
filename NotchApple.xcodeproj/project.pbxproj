@@ -79,6 +79,11 @@
 		26B0D2A8600059E93BC78637 /* MeetingNotesTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3A2D492850F6E7302EE68BC /* MeetingNotesTests.swift */; };
 		26D09B0E866D702D64C68CEB /* AcknowledgementsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E215AC0F99CCC1E81AC1732 /* AcknowledgementsView.swift */; };
 		26F5863DB636C5DCF506B2CE /* wordle.js in Resources */ = {isa = PBXBuildFile; fileRef = AAEC0E1A6526DE9FE3CCD09C /* wordle.js */; };
+		6D5CCA98BBC564E231338537 /* DailyTriviaGameView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF08B44AE8464DB043F12F7B /* DailyTriviaGameView.swift */; };
+		6142D0F5EE2FE3B49FD934F1 /* DailyTriviaGame.html in Resources */ = {isa = PBXBuildFile; fileRef = 9BB8AB6C8DDCE85AC51A0D14 /* DailyTriviaGame.html */; };
+		3AEF4D2554EB25B37906DC6F /* trivia.js in Resources */ = {isa = PBXBuildFile; fileRef = A64A6B7D31EFC7333EFA8750 /* trivia.js */; };
+		4D81632964C7F8BFFA120E9B /* trivia-logic.js in Resources */ = {isa = PBXBuildFile; fileRef = B112FD349DE41B0CC5DAD8CC /* trivia-logic.js */; };
+		DB5CAB068356E0DE6B9CB630 /* trivia-questions.js in Resources */ = {isa = PBXBuildFile; fileRef = 7351A69B0FD8D223DDB92EF0 /* trivia-questions.js */; };
 		28B64F942027DAED884BDCAC /* UpdateCadenceLogic.swift in Sources */ = {isa = PBXBuildFile; fileRef = 223DF7525EF47087BAD0DD8B /* UpdateCadenceLogic.swift */; };
 		29326D872AE0DC306AFD1986 /* Tunnelblick-ABOUT.txt in Resources */ = {isa = PBXBuildFile; fileRef = EDBEAF142EDDBD8BE070A009 /* Tunnelblick-ABOUT.txt */; };
 		29BC5405E9AA7A285A647076 /* TodayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DD6D3003087F986015A60A7 /* TodayView.swift */; };
@@ -720,6 +725,11 @@
 		A9E160C9C8DBBE561F7DD2AD /* SharedStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedStore.swift; sourceTree = "<group>"; };
 		AADA082C5E44226B4E0DE49F /* HabitLogic.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HabitLogic.swift; sourceTree = "<group>"; };
 		AAEC0E1A6526DE9FE3CCD09C /* wordle.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = wordle.js; sourceTree = "<group>"; };
+		EF08B44AE8464DB043F12F7B /* DailyTriviaGameView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DailyTriviaGameView.swift; sourceTree = "<group>"; };
+		9BB8AB6C8DDCE85AC51A0D14 /* DailyTriviaGame.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = DailyTriviaGame.html; sourceTree = "<group>"; };
+		A64A6B7D31EFC7333EFA8750 /* trivia.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = trivia.js; sourceTree = "<group>"; };
+		B112FD349DE41B0CC5DAD8CC /* trivia-logic.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = "trivia-logic.js"; sourceTree = "<group>"; };
+		7351A69B0FD8D223DDB92EF0 /* trivia-questions.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = "trivia-questions.js"; sourceTree = "<group>"; };
 		ABF7BDDF60590D89D51048A8 /* SystemWatchTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SystemWatchTests.swift; sourceTree = "<group>"; };
 		ACD60817F03707C0A2A93064 /* NowPlayingMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NowPlayingMonitor.swift; sourceTree = "<group>"; };
 		AD19B5322ACB9565E2C06FBB /* IOKitLidAngleProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IOKitLidAngleProvider.swift; sourceTree = "<group>"; };
@@ -904,6 +914,9 @@
 				5C9AA52A7E88086BA19CE4A6 /* wordle-logic.js */,
 				D10652D36DC40822ECB87F39 /* wordle-words.js */,
 				AAEC0E1A6526DE9FE3CCD09C /* wordle.js */,
+				A64A6B7D31EFC7333EFA8750 /* trivia.js */,
+				B112FD349DE41B0CC5DAD8CC /* trivia-logic.js */,
+				7351A69B0FD8D223DDB92EF0 /* trivia-questions.js */,
 			);
 			path = games;
 			sourceTree = "<group>";
@@ -1710,6 +1723,7 @@
 				5CD7E7A5A6BDA52E46DFD022 /* ChessGame.html */,
 				A672525103785D34A18DE037 /* CtfGame.html */,
 				076DA6D06B8B6E4AF8639E32 /* DailyWordGame.html */,
+				9BB8AB6C8DDCE85AC51A0D14 /* DailyTriviaGame.html */,
 				6E8B16EE4068BC4835F8B4C0 /* GoogleService-Info.plist */,
 				97CC70FFD067091FDE1231BB /* Info.plist */,
 				3718F42274C479A025DF477B /* NotchApple.entitlements */,
@@ -1788,6 +1802,7 @@
 				702334063347B78DDA56DB8A /* CookieClickerView.swift */,
 				9D4FADAB2335D1E735AA1EF8 /* CtfGameView.swift */,
 				DEB323B15181A7CBF33193DE /* DailyWordGameView.swift */,
+				EF08B44AE8464DB043F12F7B /* DailyTriviaGameView.swift */,
 				4A2294A11AF6369D10835393 /* GameEngines.swift */,
 				E0C8A8EBFAB59EBC323417FC /* GameFullScreen.swift */,
 				B694C02A230B240E8F014EF6 /* GameSupport.swift */,
@@ -1957,6 +1972,7 @@
 				75E7FF65808969DFE9C8EC56 /* ChessGame.html in Resources */,
 				1EC2FF6307A13D94AA0D2FFD /* CtfGame.html in Resources */,
 				9F4611D5539832BF29924626 /* DailyWordGame.html in Resources */,
+				6142D0F5EE2FE3B49FD934F1 /* DailyTriviaGame.html in Resources */,
 				CFAB476520EEBC0E831DF7DE /* GoogleService-Info.plist in Resources */,
 				6CB3126DF2584324131FE504 /* LICENSE-Tunnelblick.txt in Resources */,
 				3DF5E21ACEFE3B997230D098 /* LidAngleSensor-Apache-2.0.txt in Resources */,
@@ -1983,6 +1999,9 @@
 				DCB6015E6E30EB360D1FD19D /* wordle-logic.js in Resources */,
 				2FDCE1119457CE3E7FE50065 /* wordle-words.js in Resources */,
 				26F5863DB636C5DCF506B2CE /* wordle.js in Resources */,
+				3AEF4D2554EB25B37906DC6F /* trivia.js in Resources */,
+				4D81632964C7F8BFFA120E9B /* trivia-logic.js in Resources */,
+				DB5CAB068356E0DE6B9CB630 /* trivia-questions.js in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2060,6 +2079,7 @@
 				47F3262131C954B32DF79D99 /* CookieClickerView.swift in Sources */,
 				0F3F35C29DCE3595C506A304 /* CtfGameView.swift in Sources */,
 				94A1DAACE593691EEA463858 /* DailyWordGameView.swift in Sources */,
+				6D5CCA98BBC564E231338537 /* DailyTriviaGameView.swift in Sources */,
 				CD90A054724EB2DEDC4FEE75 /* DemoHooks.swift in Sources */,
 				4C0F7D796DCC0A288B9322F6 /* DevToolkitLogic.swift in Sources */,
 				A0A0F5485BA1A9A4A4CA4A7A /* DevToolsView.swift in Sources */,

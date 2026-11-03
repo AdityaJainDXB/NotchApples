@@ -6,7 +6,7 @@
 //  the same game opens in its own window that fills the screen, drawn at the panel's size and scaled up evenly, so it
 //  is easy to see from a distance. Plane and Racing open their own copy of the web game in a window that fills the screen
 //  (the notch closes, and ⌘W closes the window). Solitaire has its own (cards sized to fit); Capture the Flag, Chess,
-//  Tetris and Daily Word are web games that already fill a bigger panel.
+//  Tetris, Daily Word and Daily Trivia are web games that already fill a bigger panel.
 //
 
 import SwiftUI
@@ -16,7 +16,7 @@ extension GamesView.Game {
     /// Games that get the shared Full screen button.
     var hasFullScreenButton: Bool {
         switch self {
-        case .ctf, .chess, .tetris, .dailyWord, .solitaire: false
+        case .ctf, .chess, .tetris, .dailyWord, .dailyTrivia, .solitaire: false
         default: true
         }
     }
