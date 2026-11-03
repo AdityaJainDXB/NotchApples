@@ -20,6 +20,10 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.1.99", date: "3 November 2026", headline: "Racing fixed, and everything from 2.1.98", items: [
+            "Fix: Racing crashed as soon as you opened it in 2.1.98 (a crash in the new leaderboard button), which is why 2.1.98 was withdrawn. It opens and plays normally again. Sorry about that.",
+            "The friends leaderboard button in Daily Word and Daily Trivia now stays on screen, and your Daily Trivia streak can join a leaderboard too. This includes everything from 2.1.98: Daily Trivia, tic-tac-toe in Messenger rooms and the optional friends leaderboards.",
+        ]),
         ReleaseNote(version: "2.1.98", date: "3 November 2026", headline: "Trivia, tic-tac-toe in rooms and friends leaderboards", items: [
             "Daily Trivia (new) in the Games menu: one multiple-choice question a day from a bundled set of 420 (science, history, geography, nature, sport, food, tech and general knowledge), the same for everyone on the same day, with no network. You see the right answer and a short explanation, there is a streak counter and a copyable result, and a Practice mode of five random questions.",
             "Messenger: play tic-tac-toe with someone in a room. Press Play tic-tac-toe in a room, the other person accepts, and you take turns; both apps check every move, and rematch works. Rooms only for now (not Nearby Wi-Fi), and older versions of the app simply ignore the game messages.",

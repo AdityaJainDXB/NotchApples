@@ -1,0 +1,5 @@
+## Notch Apple for Windows 2.1.99 (BETA)
+
+- Fix: Racing crashed as soon as you opened it in 2.1.98 (a crash in the new leaderboard button), which is why 2.1.98 was withdrawn. It opens and plays normally again. Sorry about that.
+- The friends leaderboard button in Daily Word and Daily Trivia now stays on screen, and your Daily Trivia streak can join a leaderboard too. This includes everything from 2.1.98: Daily Trivia, tic-tac-toe in Messenger rooms and the optional friends leaderboards.
+- Same fixes as the Mac. Untested on real Windows hardware.

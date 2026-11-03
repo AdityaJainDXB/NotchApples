@@ -76,10 +76,10 @@ Pick your computer. Both buttons start the download straight away. The Mac link 
   </tr>
   <tr>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.1.98</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.1.99</b></a>
     </td>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 2.1.98 BETA</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 2.1.99 BETA</b></a>
     </td>
   </tr>
   <tr>
@@ -150,6 +150,12 @@ More screenshots of the capture overlay, the AI answer, the settings and the Win
 
 ## What's new
 
+### Mac 2.1.99 · Windows 2.1.99 BETA · 3 November 2026 · 🏁 Racing fixed, and everything from 2.1.98
+
+- Fix: Racing crashed as soon as you opened it in 2.1.98 (a crash in the new leaderboard button), which is why 2.1.98 was withdrawn. It opens and plays normally again. Sorry about that.
+- The friends leaderboard button in Daily Word and Daily Trivia now stays on screen, and your Daily Trivia streak can join a leaderboard too. This includes everything from 2.1.98: Daily Trivia, tic-tac-toe in Messenger rooms and the optional friends leaderboards.
+- Same fixes as the Mac. Untested on real Windows hardware.
+
 ### Mac 2.1.98 · Windows 2.1.98 BETA · 3 November 2026 · ❓ Trivia, tic-tac-toe in rooms and friends leaderboards
 
 - Daily Trivia (new) in the Games menu: one multiple-choice question a day from a bundled set of 420 (science, history, geography, nature, sport, food, tech and general knowledge), the same for everyone on the same day, with no network. You see the right answer and a short explanation, there is a streak counter and a copyable result, and a Practice mode of five random questions.
@@ -161,10 +167,6 @@ More screenshots of the capture overlay, the AI answer, the settings and the Win
 
 - Racing: no more Mac error beep during qualifying and the setup lap. The game now claims every key while a session is running (it only did so in the race, the countdown and the formation lap), and the full-screen game window no longer beeps at keys nothing uses.
 - Same Racing key fix as the Mac. Untested on real Windows hardware.
-
-### Mac 2.1.96 · 3 November 2026 · 🖥️ Racing and Plane in full screen
-
-- Games: Racing and Plane now have a Full screen button (bottom-right corner of the game). It opens the game in its own window that fills the screen and closes the notch; ⌘W closes the window and ends the game. Plane opens its own copy, so the flight the notch keeps for you is not disturbed.
 
 Every earlier release is in the [changelog](CHANGELOG.md).
 

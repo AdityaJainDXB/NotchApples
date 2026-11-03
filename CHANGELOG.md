@@ -4,6 +4,12 @@ Every Notch Apple release, newest first. The latest few are also on the [README]
 
 > **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is in the repository's history.
 
+### Mac 2.1.99 · Windows 2.1.99 BETA · 3 November 2026 · 🏁 Racing fixed, and everything from 2.1.98
+
+- Fix: Racing crashed as soon as you opened it in 2.1.98 (a crash in the new leaderboard button), which is why 2.1.98 was withdrawn. It opens and plays normally again. Sorry about that.
+- The friends leaderboard button in Daily Word and Daily Trivia now stays on screen, and your Daily Trivia streak can join a leaderboard too. This includes everything from 2.1.98: Daily Trivia, tic-tac-toe in Messenger rooms and the optional friends leaderboards.
+- Same fixes as the Mac. Untested on real Windows hardware.
+
 ### Mac 2.1.98 · Windows 2.1.98 BETA · 3 November 2026 · ❓ Trivia, tic-tac-toe in rooms and friends leaderboards
 
 - Daily Trivia (new) in the Games menu: one multiple-choice question a day from a bundled set of 420 (science, history, geography, nature, sport, food, tech and general knowledge), the same for everyone on the same day, with no network. You see the right answer and a short explanation, there is a streak counter and a copyable result, and a Practice mode of five random questions.
