@@ -111,7 +111,7 @@ Cheap, useful, two-platform ideas rise to the top. The top 50 are the build list
 | 93 | Like the current Spotify song _(Needs Spotify sign-in)_ | System | Mac + Windows | Pro | 3 | 4 | 9.0 | Later |
 | 94 | Philips Hue direct control _(Bridge pairing and a self-signed certificate)_ | Integrations | Mac + Windows | Ultimate | 3 | 4 | 9.0 | Later |
 | 95 | Redact faces and text in screenshots | Privacy | Mac + Windows | Ultimate | 2 | 4 | 6.0 | Later |
-| 96 | Game leaderboards across friends _(Needs a score server)_ | Games | Mac + Windows | Pro | 2 | 4 | 6.0 | Later |
+| 96 | Game leaderboards across friends _(Needs a score server)_ | Games | Mac + Windows | Pro | 2 | 4 | 6.0 | Built, not released (needs the worker deployed) |
 | 97 | Windows: notification peek on hover _(Needs native window sizing)_ | Windows parity | Windows | Free | 3 | 4 | 6.0 | Later |
 | 98 | Daily step and activity goal _(Needs HealthKit, which a non-sandboxed Mac app cannot read)_ | Wellbeing | Mac | Pro | 2 | 4 | 4.0 | Not possible |
 | 99 | Windows: brightness gauge _(Needs WMI)_ | Windows parity | Windows | Free | 2 | 4 | 4.0 | Later |

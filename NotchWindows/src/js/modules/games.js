@@ -106,7 +106,7 @@ function plane(host) {
     planeGame = { box, stop: () => {}, gone: false };
     const g = planeGame;
     import('../services/weather.js').then((w) => w.location()).then((l) => { window.NotchDeviceLocation = { lat: l.lat, lon: l.lon, name: l.name }; }).catch(() => {});
-    import('../games/plane-sim.js').then(() => { if (!g.gone) g.stop = window.NotchPlaneGame.mount(box); });
+    import('../games/leaderboard.js').then(() => import('../games/plane-sim.js')).then(() => { if (!g.gone) g.stop = window.NotchPlaneGame.mount(box); });
   } else if (window.NotchPlaneGame && window.NotchPlaneGame.resume) window.NotchPlaneGame.resume();
   host.replaceChildren(planeGame.box);
   return () => {
@@ -126,7 +126,7 @@ function racing(host) {
   let stop = () => {}, gone = false;
   // The race engineer can use the AI set up in the AI tab to answer any question about your race (null when there is none).
   window.NotchRaceAI = async (system, question) => (AI.ready() ? AI.ask(question, { system }) : null);
-  import('../games/racing.js').then(() => { if (!gone) { stop = window.NotchRaceGame.mount(box); box.firstElementChild && box.firstElementChild.focus(); } });
+  import('../games/leaderboard.js').then(() => import('../games/racing.js')).then(() => { if (!gone) { stop = window.NotchRaceGame.mount(box); box.firstElementChild && box.firstElementChild.focus(); } });
   return () => { gone = true; host.style.position = ''; stop(); };
 }
 
@@ -148,7 +148,7 @@ function tetris(host) {
   const box = el('div', { style: 'position:absolute;inset:0' });
   host.replaceChildren(box);
   let stop = () => {}, gone = false;
-  import('../games/tetris-logic.js').then(() => import('../games/tetris.js')).then(() => { if (!gone) stop = window.NotchTetrisGame.mount(box); });
+  import('../games/leaderboard.js').then(() => import('../games/tetris-logic.js')).then(() => import('../games/tetris.js')).then(() => { if (!gone) stop = window.NotchTetrisGame.mount(box); });
   return () => { gone = true; host.style.position = ''; stop(); };
 }
 
@@ -164,7 +164,7 @@ function wordle(host) {
   const box = el('div', { style: 'position:absolute;inset:0' });
   host.replaceChildren(box);
   let stop = () => {}, gone = false;
-  import('../games/wordle-words.js').then(() => import('../games/wordle-logic.js')).then(() => import('../games/wordle.js')).then(() => { if (!gone) stop = window.NotchWordleGame.mount(box); });
+  import('../games/leaderboard.js').then(() => import('../games/wordle-words.js')).then(() => import('../games/wordle-logic.js')).then(() => import('../games/wordle.js')).then(() => { if (!gone) stop = window.NotchWordleGame.mount(box); });
   return () => { gone = true; host.style.position = ''; stop(); };
 }
 

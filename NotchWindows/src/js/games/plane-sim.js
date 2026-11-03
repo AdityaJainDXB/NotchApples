@@ -4732,6 +4732,7 @@
     const hud = document.createElement('canvas');
     const ui = document.createElement('div'); ui.className = 'pg-ui';
     root.append(cv, hud, ui); host.replaceChildren(root);
+    if (window.NotchLeaderboard) window.NotchLeaderboard.button(root, { games: () => MODES.filter((m) => m.id !== 'free').map((m) => ({ id: 'plane:' + m.id, label: m.name, kind: m.id === 'trial' ? 'time' : 'points', best: () => { const b = read(`board.${m.id}`, [])[0]; return b ? Math.round(m.id === 'trial' ? b.score * 1000 : b.score) : null; } })) });   // Friends leaderboard (off until the player opts in)
     const gl = cv.getContext('webgl', { antialias: true }) || cv.getContext('experimental-webgl');
     const h2 = hud.getContext('2d');
     if (!gl) { ui.innerHTML = '<div class="pg-menu"><h1>✈️ Plane</h1><p class="pg-hint">This computer\'s graphics don\'t support WebGL, which the 3D plane game needs.</p></div>'; return () => {}; }
@@ -5290,6 +5291,7 @@
       praceEnd(kind, value);
       screen = 'result';
       result = { kind, value, label, best: false, rank: 0, report };
+      if (window.NotchLeaderboard && value != null && value > 0 && mode.id !== 'free' && (mode.id !== 'trial' || kind === 'done')) window.NotchLeaderboard.submit('plane:' + mode.id, Math.round(mode.id === 'trial' ? value * 1000 : value));   // sent only if the player opted in and joined a board
       muteAudio();
       cancelSpeech();
       const board = read(`board.${mode.id}`, []);

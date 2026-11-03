@@ -1242,6 +1242,7 @@
     ui.className = 'rc-ui'; big.className = 'rc-big'; gantry.className = 'rc-lights'; gantry.hidden = true;
     gantry.innerHTML = '<b><i></i><i></i><i></i><i></i></b>'.repeat(5);
     root.append(cv, ui, big, gantry); host.replaceChildren(root);
+    if (window.NotchLeaderboard) window.NotchLeaderboard.button(root, { games: () => TRACKS.filter((t) => t.closed).map((t) => ({ id: 'racing:' + t.id, label: t.name + ' · best lap', kind: 'time', best: () => { const b = store.get(`best.${t.id}.${carId}`, null); return b && b.lap ? Math.round(b.lap * 1000) : null; } })), current: 'racing:' + trackId });   // Friends leaderboard (off until the player opts in)
     const g = cv.getContext('2d');
 
     // ---- settings kept between visits
@@ -2821,6 +2822,7 @@
       if (me.bestLap && (!upd.lap || me.bestLap < upd.lap)) upd.lap = me.bestLap;
       if (!upd.race || me.finishT < upd.race) { upd.race = me.finishT; me.newBest = true; }
       store.set(key, upd);
+      if (window.NotchLeaderboard && upd.lap && T.closed && TRACKS.some((t) => t.id === trackId)) window.NotchLeaderboard.submit('racing:' + trackId, Math.round(upd.lap * 1000));   // best lap in ms, sent only if the player opted in
       radioFinish(ranking(racers).indexOf(me) + 1);
     }
     function showResults() {

@@ -25,3 +25,14 @@ class_name = "FriendRate"
 [[migrations]]
 tag = "v2"
 new_sqlite_classes = ["Mailbox", "FriendRate"]
+
+# Friends leaderboards (docs/LEADERBOARDS.md): one object per board code hash. It keeps each game's best scores for 90 days
+# (a display name, a score, a day, a hashed random device id; no addresses, no accounts). Free plan (SQLite-backed).
+# Rate limiting reuses the FRIEND_RATE counter above, so there is nothing else to create.
+[[durable_objects.bindings]]
+name = "BOARD"
+class_name = "Board"
+
+[[migrations]]
+tag = "v3"
+new_sqlite_classes = ["Board"]

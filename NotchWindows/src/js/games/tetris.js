@@ -33,6 +33,7 @@
     ensureStyle();
     host.innerHTML = '';
     const root = document.createElement('div'); root.className = 'tt'; root.tabIndex = 0;
+    if (window.NotchLeaderboard) window.NotchLeaderboard.button(root, { games: () => [{ id: 'tetris', label: 'Tetris score', kind: 'points', best: () => best }] });   // Friends leaderboard (off until the player opts in)
     const wrap = document.createElement('div'); wrap.className = 'tt-wrap';
     const cv = document.createElement('canvas'); cv.width = SIZE * SCALE; cv.height = SIZE * SCALE;
     wrap.append(cv);
@@ -149,6 +150,7 @@
     function finish() {
       state = 'over'; clearTimeout(timer); timer = 0;
       if (g.score > best) { best = g.score; store.set('best', best); }
+      if (window.NotchLeaderboard) window.NotchLeaderboard.submit('tetris', g.score);   // sent only if the player opted in and joined a board
       sfx.over();
     }
     function start() { g = L.createGame(); state = 'playing'; draw(); schedule(); }

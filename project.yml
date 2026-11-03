@@ -29,6 +29,9 @@ targets:
       - CompanionKit
       - path: LICENSES
         buildPhase: resources
+      # Friends leaderboards (optional, off by default) are used by Plane, Racing, Tetris and Daily Word; shared with the Windows app.
+      - path: NotchWindows/src/js/games/leaderboard.js
+        buildPhase: resources
       # The Plane game's engine is shared with the Windows app.
       - path: NotchWindows/src/js/games/plane-sim.js
         buildPhase: resources
