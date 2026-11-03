@@ -76,10 +76,10 @@ Pick your computer. Both buttons start the download straight away. The Mac link 
   </tr>
   <tr>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.1.99</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.2.0</b></a>
     </td>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 2.1.99 BETA</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 2.2.0 BETA</b></a>
     </td>
   </tr>
   <tr>
@@ -150,6 +150,12 @@ More screenshots of the capture overlay, the AI answer, the settings and the Win
 
 ## What's new
 
+### Mac 2.2.0 · Windows 2.2.0 BETA · 3 November 2026 · 🖥️ Hide the notch with the lid closed
+
+- Notch: a new “Built-in display only” choice under Settings → Notch → Displays → Show the notch on. With it, the notch is hidden on every screen while the MacBook lid is closed (for example when you work on an external monitor), and it comes back when the lid opens.
+- Racing: the announcer now says lap times properly. 1:28.360 was being read as “1 hour 28 minutes 36 seconds”; it now says “1 minute 28 point 3 6 0 seconds”.
+- The Racing announcer fix is the same as on the Mac. (The notch display choice is Mac only.) Untested on real Windows hardware.
+
 ### Mac 2.1.99 · Windows 2.1.99 BETA · 3 November 2026 · 🏁 Racing fixed, and everything from 2.1.98
 
 - Fix: Racing crashed as soon as you opened it in 2.1.98 (a crash in the new leaderboard button), which is why 2.1.98 was withdrawn. It opens and plays normally again. Sorry about that.
@@ -162,11 +168,6 @@ More screenshots of the capture overlay, the AI answer, the settings and the Win
 - Messenger: play tic-tac-toe with someone in a room. Press Play tic-tac-toe in a room, the other person accepts, and you take turns; both apps check every move, and rematch works. Rooms only for now (not Nearby Wi-Fi), and older versions of the app simply ignore the game messages.
 - Friends leaderboards (optional, off by default) for Racing, Tetris, Plane and Daily Word: share a 6-character board code with friends and see a top 20. Nothing is sent unless you switch sharing on and join a board, and only the game, the score, the name you type and a random id are sent. The leaderboard server is being switched on separately, so until then the panel says it cannot reach the leaderboard.
 - Same as the Mac. Untested on real Windows hardware.
-
-### Mac 2.1.97 · Windows 2.1.97 BETA · 3 November 2026 · 🔇 No more beeps in qualifying
-
-- Racing: no more Mac error beep during qualifying and the setup lap. The game now claims every key while a session is running (it only did so in the race, the countdown and the formation lap), and the full-screen game window no longer beeps at keys nothing uses.
-- Same Racing key fix as the Mac. Untested on real Windows hardware.
 
 Every earlier release is in the [changelog](CHANGELOG.md).
 

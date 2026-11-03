@@ -20,6 +20,10 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.2.0", date: "3 November 2026", headline: "Hide the notch with the lid closed", items: [
+            "Notch: a new “Built-in display only” choice under Settings → Notch → Displays → Show the notch on. With it, the notch is hidden on every screen while the MacBook lid is closed (for example when you work on an external monitor), and it comes back when the lid opens.",
+            "Racing: the announcer now says lap times properly. 1:28.360 was being read as “1 hour 28 minutes 36 seconds”; it now says “1 minute 28 point 3 6 0 seconds”.",
+        ]),
         ReleaseNote(version: "2.1.99", date: "3 November 2026", headline: "Racing fixed, and everything from 2.1.98", items: [
             "Fix: Racing crashed as soon as you opened it in 2.1.98 (a crash in the new leaderboard button), which is why 2.1.98 was withdrawn. It opens and plays normally again. Sorry about that.",
             "The friends leaderboard button in Daily Word and Daily Trivia now stays on screen, and your Daily Trivia streak can join a leaderboard too. This includes everything from 2.1.98: Daily Trivia, tic-tac-toe in Messenger rooms and the optional friends leaderboards.",

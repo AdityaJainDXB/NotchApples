@@ -4,6 +4,12 @@ Every Notch Apple release, newest first. The latest few are also on the [README]
 
 > **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is in the repository's history.
 
+### Mac 2.2.0 · Windows 2.2.0 BETA · 3 November 2026 · 🖥️ Hide the notch with the lid closed
+
+- Notch: a new “Built-in display only” choice under Settings → Notch → Displays → Show the notch on. With it, the notch is hidden on every screen while the MacBook lid is closed (for example when you work on an external monitor), and it comes back when the lid opens.
+- Racing: the announcer now says lap times properly. 1:28.360 was being read as “1 hour 28 minutes 36 seconds”; it now says “1 minute 28 point 3 6 0 seconds”.
+- The Racing announcer fix is the same as on the Mac. (The notch display choice is Mac only.) Untested on real Windows hardware.
+
 ### Mac 2.1.99 · Windows 2.1.99 BETA · 3 November 2026 · 🏁 Racing fixed, and everything from 2.1.98
 
 - Fix: Racing crashed as soon as you opened it in 2.1.98 (a crash in the new leaderboard button), which is why 2.1.98 was withdrawn. It opens and plays normally again. Sorry about that.
