@@ -175,7 +175,7 @@ function trivia(host) {
   const box = el('div', { style: 'position:absolute;inset:0' });
   host.replaceChildren(box);
   let stop = () => {}, gone = false;
-  import('../games/trivia-questions.js').then(() => import('../games/trivia-logic.js')).then(() => import('../games/trivia.js')).then(() => { if (!gone) stop = window.NotchTriviaGame.mount(box); });
+  import('../games/leaderboard.js').then(() => import('../games/trivia-questions.js')).then(() => import('../games/trivia-logic.js')).then(() => import('../games/trivia.js')).then(() => { if (!gone) stop = window.NotchTriviaGame.mount(box); });
   return () => { gone = true; host.style.position = ''; stop(); };
 }
 

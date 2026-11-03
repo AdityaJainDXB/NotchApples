@@ -49,6 +49,7 @@
     ensureStyle();
     host.innerHTML = '';
     const root = h('div', 'tv'); root.tabIndex = 0; host.append(root);
+    if (window.NotchLeaderboard) window.NotchLeaderboard.button(host, { games: () => [{ id: 'trivia', label: 'Daily Trivia streak', kind: 'days', best: () => stats.best }] });   // Friends leaderboard (off until the player opts in)
 
     let mode = 'daily';                                          // 'daily' | 'practice'
     let today = L.dateKey(new Date());
@@ -93,7 +94,8 @@
       if (mode === 'daily') {
         if (daily.choice != null) return;
         daily.choice = i; store.set('daily', daily);
-        stats = L.record(stats, daily.key, i === QS[daily.qi].a); store.set('stats', stats);
+        stats = L.record(stats, daily.key, i === QS[daily.qi].a); store.set('stats', stats); if (window.NotchLeaderboard) window.NotchLeaderboard.submit('trivia', stats.streak);   // sent only if the player opted in and joined a board
+
       } else {
         if (practiceDone() || prac.choices[prac.step] != null) return;
         prac.choices[prac.step] = i;

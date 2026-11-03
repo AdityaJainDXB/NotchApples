@@ -1242,7 +1242,6 @@
     ui.className = 'rc-ui'; big.className = 'rc-big'; gantry.className = 'rc-lights'; gantry.hidden = true;
     gantry.innerHTML = '<b><i></i><i></i><i></i><i></i></b>'.repeat(5);
     root.append(cv, ui, big, gantry); host.replaceChildren(root);
-    if (window.NotchLeaderboard) window.NotchLeaderboard.button(root, { games: () => TRACKS.filter((t) => t.closed).map((t) => ({ id: 'racing:' + t.id, label: t.name + ' · best lap', kind: 'time', best: () => { const b = store.get(`best.${t.id}.${carId}`, null); return b && b.lap ? Math.round(b.lap * 1000) : null; } })), current: 'racing:' + trackId });   // Friends leaderboard (off until the player opts in)
     const g = cv.getContext('2d');
 
     // ---- settings kept between visits
@@ -1271,6 +1270,7 @@
     // ---- state
     let screen = 'menu';                 // menu | lobby | countdown | race | done
     let T = getTrack(trackId), racers = [], me = null, raceLaps = 3, clock = 0, cdLeft = 0, alive = true, paused = false, suspended = false, startSeq = null, weatherMode = store.get('weather', 'mixed'), weather = { target: 0, at: 1e9, dryAt: 1e9, told: 0 }, passAt = new Map(), myTyre = store.get('tyre', 'M'), towerMode = store.get('tower', 1), manualOn = store.get('manual', false), medF = null, formT = 0, formHold = 1, formSkip = false, cranes = [], gridMarks = [];
+    if (window.NotchLeaderboard) window.NotchLeaderboard.button(root, { games: () => TRACKS.filter((t) => t.closed).map((t) => ({ id: 'racing:' + t.id, label: t.name + ' · best lap', kind: 'time', best: () => { const b = store.get(`best.${t.id}.${carId}`, null); return b && b.lap ? Math.round(b.lap * 1000) : null; } })), current: 'racing:' + trackId });   // Friends leaderboard (off until the player opts in)
     const keys = new Set();
     let camPitchA = 0, camBobA = 0;   // the camera's nose-up angle with the climb, and the eye's dip in a compression
     let camRollA = 0;                 // how far the camera leans with a banked road (radians, smoothed)

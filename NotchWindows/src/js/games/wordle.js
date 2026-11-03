@@ -55,7 +55,7 @@
     ensureStyle();
     host.innerHTML = '';
     const root = h('div', 'wd'); root.tabIndex = 0; host.append(root);
-    if (window.NotchLeaderboard) window.NotchLeaderboard.button(root, { games: () => [{ id: 'wordle', label: 'Daily Word streak', kind: 'days', best: () => stats.best }] });   // Friends leaderboard (off until the player opts in)
+    if (window.NotchLeaderboard) window.NotchLeaderboard.button(host, { games: () => [{ id: 'wordle', label: 'Daily Word streak', kind: 'days', best: () => stats.best }] });   // Friends leaderboard (off until the player opts in)
 
     let mode = 'daily';                                          // 'daily' | 'practice' | 'nyt'
     let today = L.dateKey(new Date());
