@@ -76,7 +76,7 @@ Pick your computer. Both buttons start the download straight away. The Mac link 
   </tr>
   <tr>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.1.94</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.1.95</b></a>
     </td>
     <td align="center">
       <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 2.1.94 BETA</b></a>
@@ -150,6 +150,10 @@ More screenshots of the capture overlay, the AI answer, the settings and the Win
 
 ## What's new
 
+### Mac 2.1.95 · 3 November 2026 · 🔒 Lock only the tabs you choose
+
+- Security: a new “Only lock some tabs” option (off by default) in Settings → Security. With Lock Notch Apple on, you are asked to unlock only when you open one of the tabs you pick (Messages, Search and Games are ticked to start with; you can add Clipboard, Notes, AI, Shelf, Voice notes and Browser). Every other tab opens as normal, and the tab bar stays visible so you can move to one that is not locked. Thanks to ReyanshSingh404 for the idea.
+
 ### Mac 2.1.94 · Windows 2.1.94 BETA · 3 November 2026 · 💬 The new AI message box, on Windows too
 
 - Mac: AI tab: the provider picker (shown before you add a key) is now a plain menu too. The old picker was a popover that could crash the app when you moved over its list (fixes the crash reports in issues 43 and 44).
@@ -158,11 +162,6 @@ More screenshots of the capture overlay, the AI answer, the settings and the Win
 ### Mac 2.1.93 · 3 November 2026 · 💬 A simpler AI message box
 
 - AI tab: a new message box. The text sits on top and, under it, drop-down menus for the provider, the model and the effort (Low, Medium, High: how hard it thinks) with Send at the right. The old searchable model popover is gone. Effort adds a line to the instructions every provider gets, so it works on all of them.
-
-### Mac 2.1.92 · Windows 2.1.92 BETA · 2 November 2026 · 🏎️ A steering wheel that turns on the spot
-
-- Racing: the first-person steering wheel now turns about its own centre instead of swinging sideways (it used to pivot about the bottom of the rim). Full lock is 180° either way, 270° in the GT3, the wheel eases toward your keys and centres itself smoothly when you let go, and it turns the same at any speed.
-- Same as on the Mac. Untested on real Windows hardware.
 
 Every earlier release is in the [changelog](CHANGELOG.md).
 

@@ -20,6 +20,9 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.1.95", date: "3 November 2026", headline: "Lock only the tabs you choose", items: [
+            "Security: a new “Only lock some tabs” option (off by default) in Settings → Security. With Lock Notch Apple on, you are asked to unlock only when you open one of the tabs you pick (Messages, Search and Games are ticked to start with; you can add Clipboard, Notes, AI, Shelf, Voice notes and Browser). Every other tab opens as normal, and the tab bar stays visible so you can move to one that is not locked. Thanks to ReyanshSingh404 for the idea.",
+        ]),
         ReleaseNote(version: "2.1.94", date: "3 November 2026", headline: "The new AI message box, on Windows too", items: [
             "AI tab: the provider picker (shown before you add a key) is now a plain menu too. The old picker was a popover that could crash the app when you moved over its list (fixes the crash reports in issues 43 and 44).",
         ]),
