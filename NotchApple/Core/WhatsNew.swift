@@ -20,6 +20,9 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.1.93", date: "3 November 2026", headline: "A simpler AI message box", items: [
+            "AI tab: a new message box. The text sits on top and, under it, drop-down menus for the provider, the model and the effort (Low, Medium, High: how hard it thinks) with Send at the right. The old searchable model popover is gone. Effort adds a line to the instructions every provider gets, so it works on all of them.",
+        ]),
         ReleaseNote(version: "2.1.92", date: "2 November 2026", headline: "A steering wheel that turns on the spot", items: [
             "Racing: the first-person steering wheel now turns about its own centre instead of swinging sideways (it used to pivot about the bottom of the rim). Full lock is 180° either way, 270° in the GT3, the wheel eases toward your keys and centres itself smoothly when you let go, and it turns the same at any speed.",
         ]),

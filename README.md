@@ -76,7 +76,7 @@ Pick your computer. Both buttons start the download straight away. The Mac link 
   </tr>
   <tr>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.1.92</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.1.93</b></a>
     </td>
     <td align="center">
       <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 2.1.92 BETA</b></a>
@@ -150,6 +150,10 @@ More screenshots of the capture overlay, the AI answer, the settings and the Win
 
 ## What's new
 
+### Mac 2.1.93 · 3 November 2026 · 💬 A simpler AI message box
+
+- AI tab: a new message box. The text sits on top and, under it, drop-down menus for the provider, the model and the effort (Low, Medium, High: how hard it thinks) with Send at the right. The old searchable model popover is gone. Effort adds a line to the instructions every provider gets, so it works on all of them.
+
 ### Mac 2.1.92 · Windows 2.1.92 BETA · 2 November 2026 · 🏎️ A steering wheel that turns on the spot
 
 - Racing: the first-person steering wheel now turns about its own centre instead of swinging sideways (it used to pivot about the bottom of the rim). Full lock is 180° either way, 270° in the GT3, the wheel eases toward your keys and centres itself smoothly when you let go, and it turns the same at any speed.
@@ -161,12 +165,6 @@ More screenshots of the capture overlay, the AI answer, the settings and the Win
 - Files received in Messenger are saved in a fresh folder under a cleaned-up name and shown in Finder instead of being opened straight away, so a received file can never launch itself or be written outside its folder.
 - Daily Word can optionally use today's New York Times puzzle (fetched on request from one fixed address, nothing sent about you).
 - The volume and brightness HUD keeps retrying to take over the media keys until Accessibility is allowed, with no restart needed.
-
-### Mac 2.1.89 · Windows 2.1.89 BETA · 2 November 2026 · 🧱 Tetris and Daily Word
-
-- Tetris (new) in the Games menu: the classic 10×20 well with a 7-piece bag, rotation with wall kicks, hold, a 3-piece preview, a ghost piece, soft and hard drop, line-clear scoring, levels that speed up every 10 lines and a saved best score. Arrows or A/D/S move, Up or W rotates, Space hard-drops, C holds, P pauses. It uses no timers or animation while you are not playing.
-- Daily Word (new) in the Games menu: a five-letter word puzzle with six guesses and green, yellow and grey feedback. Everyone gets the same word on the same day (no network needed), your result is saved, there is a streak counter and an emoji result to copy, and a Practice mode for extra words.
-- Tetris and Daily Word are the same as on the Mac. Untested on real Windows hardware.
 
 Every earlier release is in the [changelog](CHANGELOG.md).
 

@@ -4,6 +4,10 @@ Every Notch Apple release, newest first. The latest few are also on the [README]
 
 > **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is in the repository's history.
 
+### Mac 2.1.93 · 3 November 2026 · 💬 A simpler AI message box
+
+- AI tab: a new message box. The text sits on top and, under it, drop-down menus for the provider, the model and the effort (Low, Medium, High: how hard it thinks) with Send at the right. The old searchable model popover is gone. Effort adds a line to the instructions every provider gets, so it works on all of them.
+
 ### Mac 2.1.92 · Windows 2.1.92 BETA · 2 November 2026 · 🏎️ A steering wheel that turns on the spot
 
 - Racing: the first-person steering wheel now turns about its own centre instead of swinging sideways (it used to pivot about the bottom of the rim). Full lock is 180° either way, 270° in the GT3, the wheel eases toward your keys and centres itself smoothly when you let go, and it turns the same at any speed.
