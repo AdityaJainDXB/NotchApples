@@ -13,9 +13,11 @@ import SwiftUI
 import WebKit
 
 struct PlaneGameView: View {
+    /// True in the Full screen window: its own copy of the game, apart from the one the notch keeps between visits.
+    var standalone = false
     var body: some View {
         if let url = Bundle.main.url(forResource: "PlaneGame", withExtension: "html") {
-            PlaneWebView(url: url)
+            PlaneWebView(url: url, standalone: standalone)
                 .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
         } else {
             Text("The Plane game is missing from this copy of Notch Apple.")
@@ -82,6 +84,7 @@ enum PlaneGameControl {
 
 private struct PlaneWebView: NSViewRepresentable {
     let url: URL
+    var standalone = false
     /// The Games sidebar's Sound switch: it also turns the game's engine, warnings and effects on and off.
     @AppStorage(GameSound.key) private var soundOn = true
 
@@ -90,6 +93,7 @@ private struct PlaneWebView: NSViewRepresentable {
     @MainActor final class Coordinator {
         weak var web: PlaneWKWebView?
         var monitor: Any?
+        var standalone = false
 
         /// True when the key went to the game (and should go no further).
         func forward(_ e: NSEvent) -> Bool {
@@ -110,7 +114,7 @@ private struct PlaneWebView: NSViewRepresentable {
 
     func makeNSView(context: Context) -> PlaneWKWebView {
         // Coming back to a game that is being kept: the same web view, with the flight as it was.
-        if let kept = PlaneGameControl.kept {
+        if !standalone, let kept = PlaneGameControl.kept {
             let coordinator = context.coordinator
             coordinator.web = kept
             PlaneGameControl.web = kept
@@ -141,9 +145,12 @@ private struct PlaneWebView: NSViewRepresentable {
         DispatchQueue.main.async { view.window?.makeFirstResponder(view) }
         let coordinator = context.coordinator
         coordinator.web = view
-        PlaneGameControl.web = view
-        PlaneGameControl.kept = view
-        PlaneGameControl.owner = ObjectIdentifier(coordinator)
+        coordinator.standalone = standalone
+        if !standalone {
+            PlaneGameControl.web = view
+            PlaneGameControl.kept = view
+            PlaneGameControl.owner = ObjectIdentifier(coordinator)
+        }
         coordinator.monitor = NSEvent.addLocalMonitorForEvents(matching: [.keyDown, .keyUp]) { [weak coordinator] event in
             let consumed = MainActor.assumeIsolated { coordinator?.forward(event) ?? false }
             return consumed ? nil : event
@@ -158,6 +165,11 @@ private struct PlaneWebView: NSViewRepresentable {
     static func dismantleNSView(_ nsView: PlaneWKWebView, coordinator: Coordinator) {
         if let m = coordinator.monitor { NSEvent.removeMonitor(m) }
         coordinator.monitor = nil
+        if coordinator.standalone {      // the Full screen window: nothing is kept, the page is dropped (the game and its sound stop)
+            nsView.evaluateJavaScript("window.NotchPlaneGame && window.NotchPlaneGame.suspend && window.NotchPlaneGame.suspend()")
+            nsView.loadHTMLString("", baseURL: nil)
+            return
+        }
         guard PlaneGameControl.owner == ObjectIdentifier(coordinator) else { return }     // a newer copy has taken over
         PlaneGameControl.owner = nil
         if PlaneGameControl.web === nsView { PlaneGameControl.web = nil }

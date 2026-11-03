@@ -4,7 +4,8 @@
 //
 //  A Full screen button for the small games (2048, Snake, Breakout, Memory, Reaction, Cookies, Runner, Blackjack, Poker):
 //  the same game opens in its own window that fills the screen, drawn at the panel's size and scaled up evenly, so it
-//  is easy to see from a distance. Solitaire has its own (cards sized to fit); Plane, Racing, Capture the Flag, Chess,
+//  is easy to see from a distance. Plane and Racing open their own copy of the web game in a window that fills the screen
+//  (the notch closes, and ⌘W closes the window). Solitaire has its own (cards sized to fit); Capture the Flag, Chess,
 //  Tetris and Daily Word are web games that already fill a bigger panel.
 //
 
@@ -15,7 +16,7 @@ extension GamesView.Game {
     /// Games that get the shared Full screen button.
     var hasFullScreenButton: Bool {
         switch self {
-        case .plane, .racing, .ctf, .chess, .tetris, .dailyWord, .solitaire: false
+        case .ctf, .chess, .tetris, .dailyWord, .solitaire: false
         default: true
         }
     }
@@ -50,13 +51,18 @@ enum GameWindow {
             if !w.styleMask.contains(.fullScreen) { w.toggleFullScreen(nil) }
             return
         }
-        let w = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 1040, height: 640),
-                         styleMask: [.titled, .closable, .miniaturizable, .resizable], backing: .buffered, defer: false)
+        let w = GameNSWindow(contentRect: NSRect(x: 0, y: 0, width: 1040, height: 640),
+                             styleMask: [.titled, .closable, .miniaturizable, .resizable], backing: .buffered, defer: false)
         w.title = game.rawValue
         w.isReleasedWhenClosed = false
         w.collectionBehavior = [.fullScreenPrimary]
         w.appearance = NSAppearance(named: .darkAqua)
-        w.contentView = NSHostingView(rootView: GameFullView(game: game))
+        switch game {
+        case .plane: w.contentView = NSHostingView(rootView: PlaneGameView(standalone: true).background(Color.black).preferredColorScheme(.dark))
+        case .racing: w.contentView = NSHostingView(rootView: RacingGameView().background(Color.black).preferredColorScheme(.dark))
+        default: w.contentView = NSHostingView(rootView: GameFullView(game: game))
+        }
+        if game == .plane || game == .racing { AppDelegate.current?.notch?.closeNotch() }      // one copy of the game at a time
         w.minSize = NSSize(width: 520, height: 320)
         w.center()
         let key = game.rawValue
@@ -67,6 +73,16 @@ enum GameWindow {
         NSApp.activate(ignoringOtherApps: true)
         w.makeKeyAndOrderFront(nil)
         w.toggleFullScreen(nil)
+    }
+}
+
+/// A game window that also closes with ⌘W (the app has no Window menu to do it).
+final class GameNSWindow: NSWindow {
+    override func performKeyEquivalent(with event: NSEvent) -> Bool {
+        if event.type == .keyDown, event.modifierFlags.intersection(.deviceIndependentFlagsMask) == .command, event.charactersIgnoringModifiers == "w" {
+            performClose(nil); return true
+        }
+        return super.performKeyEquivalent(with: event)
     }
 }
 

@@ -81,7 +81,7 @@ struct GamesView: View {
             .frame(width: 130)
             .frame(maxHeight: .infinity, alignment: .top)
             GlassCard { Self.content(for: game) }
-            .overlay(alignment: .topTrailing) { if game.hasFullScreenButton { GameFullScreenButton(game: game).padding(6) } }
+            .overlay(alignment: (game == .plane || game == .racing) ? .bottomTrailing : .topTrailing) { if game.hasFullScreenButton { GameFullScreenButton(game: game).padding(6) } }
             .id(game)
         }
         // The Plane and Racing games are drawn for a bigger panel: grow the notch while one is open, and shrink it back after.
