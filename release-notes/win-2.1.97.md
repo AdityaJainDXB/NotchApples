@@ -1,0 +1,4 @@
+## Notch Apple for Windows 2.1.97 (BETA)
+
+- Racing: no more Mac error beep during qualifying and the setup lap. The game now claims every key while a session is running (it only did so in the race, the countdown and the formation lap), and the full-screen game window no longer beeps at keys nothing uses.
+- Same Racing key fix as the Mac. Untested on real Windows hardware.

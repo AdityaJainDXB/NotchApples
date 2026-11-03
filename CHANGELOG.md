@@ -4,6 +4,11 @@ Every Notch Apple release, newest first. The latest few are also on the [README]
 
 > **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is in the repository's history.
 
+### Mac 2.1.97 · Windows 2.1.97 BETA · 3 November 2026 · 🔇 No more beeps in qualifying
+
+- Racing: no more Mac error beep during qualifying and the setup lap. The game now claims every key while a session is running (it only did so in the race, the countdown and the formation lap), and the full-screen game window no longer beeps at keys nothing uses.
+- Same Racing key fix as the Mac. Untested on real Windows hardware.
+
 ### Mac 2.1.96 · 3 November 2026 · 🖥️ Racing and Plane in full screen
 
 - Games: Racing and Plane now have a Full screen button (bottom-right corner of the game). It opens the game in its own window that fills the screen and closes the notch; ⌘W closes the window and ends the game. Plane opens its own copy, so the flight the notch keeps for you is not disturbed.

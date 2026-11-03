@@ -20,6 +20,9 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.1.97", date: "3 November 2026", headline: "No more beeps in qualifying", items: [
+            "Racing: no more Mac error beep during qualifying and the setup lap. The game now claims every key while a session is running (it only did so in the race, the countdown and the formation lap), and the full-screen game window no longer beeps at keys nothing uses.",
+        ]),
         ReleaseNote(version: "2.1.96", date: "3 November 2026", headline: "Racing and Plane in full screen", items: [
             "Games: Racing and Plane now have a Full screen button (bottom-right corner of the game). It opens the game in its own window that fills the screen and closes the notch; ⌘W closes the window and ends the game. Plane opens its own copy, so the flight the notch keeps for you is not disturbed.",
         ]),
