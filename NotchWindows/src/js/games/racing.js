@@ -1942,7 +1942,7 @@
       if (screen !== 'race' && n !== 0) a = screen === 'formation' ? 'Formation lap. Warm the tyres, stay in line, and find your grid box.' : 'Focus on the lights. Wait for them to go out.';
       setTimeout(() => { say(a, 'eng', 2); toast(`🎧 ${a}`); }, 600);
     }
-    const onKd = (e) => { if (!root.isConnected || (e.target && /^(input|textarea|select)$/i.test(e.target.tagName)) || e.metaKey || e.ctrlKey) return; if (KEYMAP[e.key.toLowerCase()] && (screen === 'race' || screen === 'countdown' || screen === 'formation')) e.preventDefault(); if (!e.repeat) key(e.key, true); };
+    const onKd = (e) => { if (!root.isConnected || (e.target && /^(input|textarea|select)$/i.test(e.target.tagName)) || e.metaKey || e.ctrlKey) return; if (screen !== 'menu' && screen !== 'design') e.preventDefault();      // the game owns every key while it is running (qualifying, the setup lap and the breaks too), so the Mac never beeps at one it ignored if (!e.repeat) key(e.key, true); };
     const onKu = (e) => key(e.key, false);
     window.addEventListener('keydown', onKd); window.addEventListener('keyup', onKu);
     root.addEventListener('mousedown', () => { if (!/input/i.test(document.activeElement && document.activeElement.tagName)) root.focus(); });

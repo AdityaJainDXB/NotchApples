@@ -84,6 +84,12 @@ final class GameNSWindow: NSWindow {
         }
         return super.performKeyEquivalent(with: event)
     }
+
+    /// A key nobody wants would ring the system alert beep: the game window stays quiet, like the notch.
+    override func noResponder(for eventSelector: Selector) {
+        if eventSelector == #selector(NSResponder.keyDown(with:)) { return }
+        super.noResponder(for: eventSelector)
+    }
 }
 
 /// The small round button in a game's corner.
