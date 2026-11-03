@@ -153,6 +153,9 @@
 		4F8945FFF59B50DD983D51A3 /* ScreenCaptureActions.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBF8382AEA6C022EC53D433C /* ScreenCaptureActions.swift */; };
 		4FC9841CB1364996A1E4D349 /* ConvertEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9421252B3647F418E2F023A2 /* ConvertEngine.swift */; };
 		5017D7AB333DCC40EBD7CDBB /* MessengerModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 033E65EDFD61BEE79967253B /* MessengerModels.swift */; };
+		7C1D2E3F4A5B60718293A4B7 /* TicTacToeLogic.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C1D2E3F4A5B60718293A4B5 /* TicTacToeLogic.swift */; };
+		7C1D2E3F4A5B60718293A4B8 /* TicTacToeLogic.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C1D2E3F4A5B60718293A4B5 /* TicTacToeLogic.swift */; };
+		7C1D2E3F4A5B60718293A4B9 /* TicTacToeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C1D2E3F4A5B60718293A4B6 /* TicTacToeTests.swift */; };
 		51643321A40F4AD935486255 /* TennisLogic.swift in Sources */ = {isa = PBXBuildFile; fileRef = 04C0A62497E02145E6D99DC6 /* TennisLogic.swift */; };
 		5174EDF6C440F48CA52463BC /* TodoLogic.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F05BAECF9EDAF2F5A745F05 /* TodoLogic.swift */; };
 		52C413B65A11064EEAA44395 /* SystemStatsWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = D03274B71DE9E1F3D3567E7E /* SystemStatsWidget.swift */; };
@@ -479,6 +482,8 @@
 		025431FF9865CF1BAEDF1A2D /* CassetteView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CassetteView.swift; sourceTree = "<group>"; };
 		0335700922F2B064E7FC742F /* NotesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotesView.swift; sourceTree = "<group>"; };
 		033E65EDFD61BEE79967253B /* MessengerModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessengerModels.swift; sourceTree = "<group>"; };
+		7C1D2E3F4A5B60718293A4B5 /* TicTacToeLogic.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TicTacToeLogic.swift; sourceTree = "<group>"; };
+		7C1D2E3F4A5B60718293A4B6 /* TicTacToeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TicTacToeTests.swift; sourceTree = "<group>"; };
 		03F5574ACA9594C95D90C1CB /* HabitsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HabitsView.swift; sourceTree = "<group>"; };
 		0406E58D7528F932C40B864E /* ThermalWatcher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThermalWatcher.swift; sourceTree = "<group>"; };
 		04C0A62497E02145E6D99DC6 /* TennisLogic.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TennisLogic.swift; sourceTree = "<group>"; };
@@ -1182,6 +1187,7 @@
 				4ACC8DF8A2FA28D337D2DC0F /* SnippetVariablesTests.swift */,
 				ABF7BDDF60590D89D51048A8 /* SystemWatchTests.swift */,
 				9342B7403A92BBB1CB6A292A /* TennisLogicTests.swift */,
+				7C1D2E3F4A5B60718293A4B6 /* TicTacToeTests.swift */,
 				6E232DC7A1E5C4A3A89FF53F /* TodoLogicTests.swift */,
 				84C42A558F1064C50BD9A506 /* TourLogicTests.swift */,
 				C8FE35A81A2E2DCED5EAE8D1 /* UpdateCadenceLogicTests.swift */,
@@ -1465,6 +1471,7 @@
 			children = (
 				700E54998678B97CA020EA9E /* LocalP2PManager.swift */,
 				033E65EDFD61BEE79967253B /* MessengerModels.swift */,
+				7C1D2E3F4A5B60718293A4B5 /* TicTacToeLogic.swift */,
 				D953A904B3EF07B407F31F5C /* MessengerNotifier.swift */,
 				643FFB36BCE34E64BBD52883 /* NotchMessengerView.swift */,
 				E07ED38955AE546C7637D5B9 /* WebP2PManager.swift */,
@@ -2157,6 +2164,7 @@
 				F804974BDB3706ABE17FDD0B /* MeetingSummaryLogic.swift in Sources */,
 				44AA1315926A7EB7858B9E73 /* MemoryGameView.swift in Sources */,
 				5017D7AB333DCC40EBD7CDBB /* MessengerModels.swift in Sources */,
+				7C1D2E3F4A5B60718293A4B7 /* TicTacToeLogic.swift in Sources */,
 				028C6C33AD6C682F03B0695B /* MessengerNotifier.swift in Sources */,
 				EA6A5158CB578D683DE18C94 /* MirrorView.swift in Sources */,
 				714569EF33B9BB6066BF09DD /* ModelPicker.swift in Sources */,
@@ -2416,6 +2424,8 @@
 				A9A0F9DA61106AE2ABAD71CC /* SystemWatchTests.swift in Sources */,
 				51643321A40F4AD935486255 /* TennisLogic.swift in Sources */,
 				DC5EDBF914623CEC9EBB91A6 /* TennisLogicTests.swift in Sources */,
+				7C1D2E3F4A5B60718293A4B8 /* TicTacToeLogic.swift in Sources */,
+				7C1D2E3F4A5B60718293A4B9 /* TicTacToeTests.swift in Sources */,
 				5174EDF6C440F48CA52463BC /* TodoLogic.swift in Sources */,
 				66D14933037AA4515567B0A2 /* TodoLogicTests.swift in Sources */,
 				6EC70695CC1B08B90E01D311 /* TourLogic.swift in Sources */,

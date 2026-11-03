@@ -32,7 +32,10 @@ struct NotchMessengerView: View {
             if mode == .friends {
                 FriendsView()
             } else {
-                if mode == .room { roomBar }
+                if mode == .room {
+                    roomBar
+                    if let game = web.game { TicTacToeCard(web: web, game: game, myID: identity.senderID) }
+                }
                 chatLog
                 inputBar
             }
@@ -114,6 +117,11 @@ struct NotchMessengerView: View {
                 }
                 .buttonStyle(PurpleButtonStyle(prominent: false))
                 .help("Copy this room's code to share it")
+            }
+            if mode == .room, web.state == .joined, web.game?.isFinished ?? true {
+                Button { web.inviteToTicTacToe() } label: { Label("Tic-tac-toe", systemImage: "gamecontroller") }
+                    .buttonStyle(PurpleButtonStyle(prominent: false))
+                    .help("Invite the room to a game of tic-tac-toe")
             }
             if web.state == .joined || web.state == .connecting {
                 Button("Leave") { web.leave() }.buttonStyle(PurpleButtonStyle(prominent: false))
@@ -302,5 +310,111 @@ private struct MessengerBubble: View {
             .frame(width: 26, height: 26)
             .background(MessengerMessage.color(for: message.senderID).gradient, in: Circle())
             .accessibilityHidden(true)
+    }
+}
+
+
+/// The tic-tac-toe card above the chat: an invite with Accept, or the 3x3 board with whose turn it is and Rematch.
+/// The rules are in TicTacToeLogic.swift; this only draws them and sends the player's choices.
+private struct TicTacToeCard: View {
+    @ObservedObject var web: WebP2PManager
+    let game: TicTacToeGame
+    let myID: String
+
+    private var myMark: TTTMark? { game.mark(of: myID) }
+    private var myTurn: Bool { game.status == .playing && game.turnPlayer == myID }
+
+    var body: some View {
+        VStack(spacing: 8) {
+            switch game.status {
+            case .invited, .cancelled: invite
+            default: board
+            }
+        }
+        .padding(10).frame(maxWidth: .infinity)
+        .background(Theme.surface, in: RoundedRectangle(cornerRadius: 10))
+    }
+
+    private var invite: some View {
+        VStack(spacing: 6) {
+            Text("🎮 " + inviteLine).font(.system(size: 12)).foregroundStyle(Theme.textSecondary).multilineTextAlignment(.center)
+            if game.status == .cancelled {
+                Button("Close") { web.closeTicTacToe() }.buttonStyle(PurpleButtonStyle(prominent: false))
+            } else if game.inviter == myID {
+                Button("Cancel invite") { web.cancelTicTacToeInvite() }.buttonStyle(PurpleButtonStyle(prominent: false))
+            } else if game.accepted != myID {
+                Button("Accept") { web.acceptTicTacToe() }.buttonStyle(PurpleButtonStyle())
+            }
+        }
+    }
+
+    private var inviteLine: String {
+        let who = web.gameName(game.inviter), mark = game.inviterMark.rawValue
+        if game.status == .cancelled { return "\(who) cancelled the tic-tac-toe invite." }
+        if game.inviter == myID { return "Waiting for someone to accept your tic-tac-toe invite (you play \(mark))…" }
+        if game.accepted == myID { return "Waiting for \(who) to start (they play \(mark))…" }
+        return "\(who) invites you to tic-tac-toe. They play \(mark)."
+    }
+
+    private var statusLine: String {
+        switch game.status {
+        case .won:
+            if let mark = myMark { return game.winner == mark ? "You won! 🎉" : "\(web.gameName(opponent)) won" }
+            return "\(web.gameName(game.winner == .x ? game.x : game.o)) won"
+        case .draw: return "A draw"
+        case .ended: return "\(web.gameName(game.leaver)) left the game"
+        default: return myTurn ? "Your turn" : "\(web.gameName(game.turnPlayer))'s turn"
+        }
+    }
+
+    private var opponent: String? { myMark == .x ? game.o : game.x }
+
+    private var headline: String {
+        if let mark = myMark {
+            return "You are \(mark.rawValue) · \(web.gameName(opponent)) is \(mark == .x ? "O" : "X")"
+        }
+        return "Watching \(web.gameName(game.x)) (X) vs \(web.gameName(game.o)) (O)"
+    }
+
+    private var board: some View {
+        VStack(spacing: 8) {
+            Text("🎮 Tic-tac-toe · " + headline).font(.system(size: 11)).foregroundStyle(Theme.textSecondary)
+            VStack(spacing: 4) {
+                ForEach(0..<3, id: \.self) { row in
+                    HStack(spacing: 4) {
+                        ForEach(0..<3, id: \.self) { col in cell(row * 3 + col) }
+                    }
+                }
+            }
+            Text(statusLine).font(.system(size: 12, weight: myTurn ? .bold : .regular)).foregroundStyle(.white)
+            HStack(spacing: 8) {
+                if (game.status == .won || game.status == .draw), myMark != nil {
+                    let asked = game.rematch.contains(myID)
+                    Button(asked ? "Waiting for a rematch…" : "Rematch") { web.rematchTicTacToe() }
+                        .buttonStyle(PurpleButtonStyle(prominent: !asked)).disabled(asked)
+                }
+                if game.status == .playing, myMark != nil {
+                    Button("Leave game") { web.leaveTicTacToe() }.buttonStyle(PurpleButtonStyle(prominent: false))
+                }
+                if game.status != .playing {
+                    Button("Close") { web.closeTicTacToe() }.buttonStyle(PurpleButtonStyle(prominent: false))
+                }
+            }
+        }
+    }
+
+    private func cell(_ i: Int) -> some View {
+        let mark = game.board[i]
+        let win = game.line?.contains(i) ?? false
+        return Button { web.playTicTacToe(i) } label: {
+            Text(mark?.rawValue ?? "")
+                .font(.system(size: 24, weight: .heavy)).foregroundStyle(.white)
+                .frame(width: 46, height: 46)
+                .background(win ? AnyShapeStyle(Theme.accentGradient) : AnyShapeStyle(Theme.surfaceHover),
+                            in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+        }
+        .buttonStyle(.plain)
+        .disabled(!TicTacToe.canMove(game, id: myID, cell: i))
+        .accessibilityLabel("Cell \(i + 1)" + (mark.map { ", \($0.rawValue)" } ?? ""))
     }
 }

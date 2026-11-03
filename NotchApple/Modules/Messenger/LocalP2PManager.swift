@@ -108,12 +108,13 @@ final class LocalP2PManager: NSObject, ObservableObject {
         senderIDs[peer] = env.senderID
         switch env.kind {
         case .message:
+            guard env.game == nil else { return }
             guard !messages.contains(where: { $0.id == env.id }) else { return }
             messages.append(MessengerMessage(id: env.id, senderID: env.senderID, sender: env.sender,
                                              text: env.text ?? "", date: env.ts, isMine: false, fileData: env.fileData, fileName: env.fileName))
             MessengerNotifier.shared.incoming(messages[messages.count - 1], source: "Nearby Wi-Fi")
-        case .presence, .leave:
-            break
+        case .presence, .leave, .game:
+            break   // games are played in rooms, not on Nearby Wi-Fi
         }
     }
 
