@@ -76,7 +76,7 @@ Pick your computer. Both buttons start the download straight away. The Mac link 
   </tr>
   <tr>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.1.95</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.1.96</b></a>
     </td>
     <td align="center">
       <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 2.1.94 BETA</b></a>
@@ -150,6 +150,10 @@ More screenshots of the capture overlay, the AI answer, the settings and the Win
 
 ## What's new
 
+### Mac 2.1.96 · 3 November 2026 · 🖥️ Racing and Plane in full screen
+
+- Games: Racing and Plane now have a Full screen button (bottom-right corner of the game). It opens the game in its own window that fills the screen and closes the notch; ⌘W closes the window and ends the game. Plane opens its own copy, so the flight the notch keeps for you is not disturbed.
+
 ### Mac 2.1.95 · 3 November 2026 · 🔒 Lock only the tabs you choose
 
 - Security: a new “Only lock some tabs” option (off by default) in Settings → Security. With Lock Notch Apple on, you are asked to unlock only when you open one of the tabs you pick (Messages, Search and Games are ticked to start with; you can add Clipboard, Notes, AI, Shelf, Voice notes and Browser). Every other tab opens as normal, and the tab bar stays visible so you can move to one that is not locked. Thanks to ReyanshSingh404 for the idea.
@@ -158,10 +162,6 @@ More screenshots of the capture overlay, the AI answer, the settings and the Win
 
 - Mac: AI tab: the provider picker (shown before you add a key) is now a plain menu too. The old picker was a popover that could crash the app when you moved over its list (fixes the crash reports in issues 43 and 44).
 - Windows: The AI tab has the new message box: the text on top, and under it drop-down menus for the provider, the model and the effort (Low, Medium, High: how hard it thinks) with Send at the right. The old searchable model popup is gone. Untested on real Windows hardware.
-
-### Mac 2.1.93 · 3 November 2026 · 💬 A simpler AI message box
-
-- AI tab: a new message box. The text sits on top and, under it, drop-down menus for the provider, the model and the effort (Low, Medium, High: how hard it thinks) with Send at the right. The old searchable model popover is gone. Effort adds a line to the instructions every provider gets, so it works on all of them.
 
 Every earlier release is in the [changelog](CHANGELOG.md).
 

@@ -20,6 +20,9 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.1.96", date: "3 November 2026", headline: "Racing and Plane in full screen", items: [
+            "Games: Racing and Plane now have a Full screen button (bottom-right corner of the game). It opens the game in its own window that fills the screen and closes the notch; ⌘W closes the window and ends the game. Plane opens its own copy, so the flight the notch keeps for you is not disturbed.",
+        ]),
         ReleaseNote(version: "2.1.95", date: "3 November 2026", headline: "Lock only the tabs you choose", items: [
             "Security: a new “Only lock some tabs” option (off by default) in Settings → Security. With Lock Notch Apple on, you are asked to unlock only when you open one of the tabs you pick (Messages, Search and Games are ticked to start with; you can add Clipboard, Notes, AI, Shelf, Voice notes and Browser). Every other tab opens as normal, and the tab bar stays visible so you can move to one that is not locked. Thanks to ReyanshSingh404 for the idea.",
         ]),

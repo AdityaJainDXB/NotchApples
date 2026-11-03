@@ -4,6 +4,10 @@ Every Notch Apple release, newest first. The latest few are also on the [README]
 
 > **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is in the repository's history.
 
+### Mac 2.1.96 · 3 November 2026 · 🖥️ Racing and Plane in full screen
+
+- Games: Racing and Plane now have a Full screen button (bottom-right corner of the game). It opens the game in its own window that fills the screen and closes the notch; ⌘W closes the window and ends the game. Plane opens its own copy, so the flight the notch keeps for you is not disturbed.
+
 ### Mac 2.1.95 · 3 November 2026 · 🔒 Lock only the tabs you choose
 
 - Security: a new “Only lock some tabs” option (off by default) in Settings → Security. With Lock Notch Apple on, you are asked to unlock only when you open one of the tabs you pick (Messages, Search and Games are ticked to start with; you can add Clipboard, Notes, AI, Shelf, Voice notes and Browser). Every other tab opens as normal, and the tab bar stays visible so you can move to one that is not locked. Thanks to ReyanshSingh404 for the idea.
