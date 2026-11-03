@@ -751,6 +751,8 @@ final class NotchWindowController {
             return NSScreen.screens.first { $0.frame.contains(NSEvent.mouseLocation) } ?? NSScreen.main
         case "main":
             return NSScreen.screens.first ?? NSScreen.main
+        case "builtinOnly":
+            return NSScreen.screens.first { $0.safeAreaInsets.top > 0 }      // none with the lid closed: the notch is then hidden (see reposition)
         default:
             return NSScreen.screens.first { $0.safeAreaInsets.top > 0 } ?? NSScreen.main
         }
@@ -781,8 +783,24 @@ final class NotchWindowController {
         reposition()
     }
 
+    /// True while "Built-in display only" is chosen and the MacBook's own screen is not in use (lid closed): the notch is taken off every display.
+    private var suppressed = false
+
     /// Recomputes the notch size and positions both windows.
     func reposition() {
+        let wasSuppressed = suppressed
+        suppressed = SettingsManager.shared.notchDisplayMode == "builtinOnly" && targetScreen == nil
+        if suppressed {
+            if state.isExpanded { collapse(force: true) }
+            trigger.orderOut(nil); panel.orderOut(nil)         // kept out every time, in case something else ordered a window in
+            return
+        }
+        defer {
+            if wasSuppressed {      // the MacBook screen is back (lid opened) or the setting changed: show the notch again
+                trigger.orderFrontRegardless()
+                panel.alphaValue = 0; panel.ignoresMouseEvents = true; panel.orderFrontRegardless()
+            }
+        }
         guard let screen = targetScreen else { return }
         if screen.safeAreaInsets.top > 0,
            let left = screen.auxiliaryTopLeftArea, let right = screen.auxiliaryTopRightArea {
@@ -867,7 +885,7 @@ final class NotchWindowController {
     func closeNotch() { collapse(force: true) }
 
     func expand() {
-        guard !state.isExpanded else { return }
+        guard !state.isExpanded, !suppressed else { return }
         // Opening (⌘E, the menu-bar icon) always brings a hidden notch back.
         if SettingsManager.shared.isNotchHidden { setInvisible(false) }
         openedByHover = false   // the hover path sets this back to true right after

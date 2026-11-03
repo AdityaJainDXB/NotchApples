@@ -220,6 +220,7 @@ private struct DisplayTabsSection: View {
                 Text("Built-in display").tag("builtin")
                 Text("The display with the pointer").tag("pointer")
                 Text("Main display (menu bar)").tag("main")
+                Text("Built-in display only (hidden when the lid is closed)").tag("builtinOnly")
             }
             .onChange(of: settings.notchDisplayMode) { _, _ in AppDelegate.current?.notch?.applyDisplayMode() }
             if let screen {
