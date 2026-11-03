@@ -11,7 +11,7 @@ const src = readFileSync(new URL('../src/relay.js', import.meta.url), 'utf8');
 const pair = await crypto.subtle.generateKey({ name: 'Ed25519' }, true, ['sign', 'verify']);
 const raw = btoa(String.fromCharCode(...new Uint8Array(await crypto.subtle.exportKey('raw', pair.publicKey))));
 const friendsUrl = new URL('../src/friends.js', import.meta.url).href;
-const patched = src.replace(/const PUBLIC_KEY = '[^']+';/, `const PUBLIC_KEY = '${raw}';`).replace("'./friends.js'", `'${friendsUrl}'`);
+const patched = src.replace(/const PUBLIC_KEY = '[^']+';/, `const PUBLIC_KEY = '${raw}';`).replace("'./friends.js'", `'${friendsUrl}'`).replace("'./scores.js'", `'${new URL('../src/scores.js', import.meta.url).href}'`);
 const tmp = mkdtempSync(join(tmpdir(), 'relay-'));
 writeFileSync(join(tmp, 'relay.mjs'), patched);
 const { passOk, allowFrame } = await import(pathToFileURL(join(tmp, 'relay.mjs')).href);

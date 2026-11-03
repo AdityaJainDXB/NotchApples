@@ -115,6 +115,7 @@
 		3F254351E36FC4D87B8E2B96 /* PairDropLogic.swift in Sources */ = {isa = PBXBuildFile; fileRef = BEECBD83B2FC19C70E5139BE /* PairDropLogic.swift */; };
 		3F7C4BE3C38EF2FC14E0B0FA /* RunnerGameView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DF352A799B96D3FE708E1D5 /* RunnerGameView.swift */; };
 		3FBC19E8D908EA1C0914AA07 /* racing.js in Resources */ = {isa = PBXBuildFile; fileRef = 2D061AD1D52BA8268B11B374 /* racing.js */; };
+		A1B2C3D4E5F60718293A4B5D /* leaderboard.js in Resources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F60718293A4B5C /* leaderboard.js */; };
 		4098B0C40272540FC563BC1F /* NotchAppleApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9B61EC777F0D6D3611243246 /* NotchAppleApp.swift */; };
 		40EA84F2B3F7DA5A6424D3E6 /* SecretLogicTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9C96FDC91C63EFDECAAA8BA3 /* SecretLogicTests.swift */; };
 		4132D2810197CE3A0F8A6429 /* HotCornerLogic.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C151FE67E6474F51CD20219 /* HotCornerLogic.swift */; };
@@ -540,6 +541,7 @@
 		295575A04EF33302E9D9A7FE /* AppIcon.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; path = AppIcon.icns; sourceTree = "<group>"; };
 		2BDB8BD41E7ADF271C9499F9 /* SystemWatch.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SystemWatch.swift; sourceTree = "<group>"; };
 		2D061AD1D52BA8268B11B374 /* racing.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = racing.js; sourceTree = "<group>"; };
+		A1B2C3D4E5F60718293A4B5C /* leaderboard.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = leaderboard.js; sourceTree = "<group>"; };
 		2E9887FE2DA1B017814CA1B5 /* PlaneGame.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = PlaneGame.html; sourceTree = "<group>"; };
 		2FDF0D52167C63FBB161D611 /* SystemHUDObserver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SystemHUDObserver.swift; sourceTree = "<group>"; };
 		3047710BA5AC2CDBD910608B /* ProjectFocusLogic.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectFocusLogic.swift; sourceTree = "<group>"; };
@@ -899,6 +901,7 @@
 				22BC3DD953937929570782CA /* ctf.js */,
 				DC8C118088B36E22640A6C5F /* plane-sim.js */,
 				2D061AD1D52BA8268B11B374 /* racing.js */,
+				A1B2C3D4E5F60718293A4B5C /* leaderboard.js */,
 				E54CA8A98C84920280698482 /* tetris-logic.js */,
 				34E60A6D24A27DF650F178FD /* tetris.js */,
 				5C9AA52A7E88086BA19CE4A6 /* wordle-logic.js */,
@@ -1978,6 +1981,7 @@
 				14BB6F024439C7EDE0DCBD2C /* nowplaying.js in Resources */,
 				2006B2451159E4A12E70E69B /* plane-sim.js in Resources */,
 				3FBC19E8D908EA1C0914AA07 /* racing.js in Resources */,
+				A1B2C3D4E5F60718293A4B5D /* leaderboard.js in Resources */,
 				04684D26EDA66D2AAF6B69C0 /* tetris-logic.js in Resources */,
 				7B585A54684C47977CA762E6 /* tetris.js in Resources */,
 				DCB6015E6E30EB360D1FD19D /* wordle-logic.js in Resources */,

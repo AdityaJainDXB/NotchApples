@@ -55,6 +55,7 @@
     ensureStyle();
     host.innerHTML = '';
     const root = h('div', 'wd'); root.tabIndex = 0; host.append(root);
+    if (window.NotchLeaderboard) window.NotchLeaderboard.button(root, { games: () => [{ id: 'wordle', label: 'Daily Word streak', kind: 'days', best: () => stats.best }] });   // Friends leaderboard (off until the player opts in)
 
     let mode = 'daily';                                          // 'daily' | 'practice' | 'nyt'
     let today = L.dateKey(new Date());
@@ -117,7 +118,7 @@
       const won = g.guesses[g.guesses.length - 1] === g.answer;
       if (won || g.guesses.length >= L.TRIES) {
         g.status = won ? 'won' : 'lost';
-        if (mode === 'daily') { stats = L.record(stats, g.key, won, g.guesses.length); store.set('stats', stats); }
+        if (mode === 'daily') { stats = L.record(stats, g.key, won, g.guesses.length); store.set('stats', stats); if (window.NotchLeaderboard) window.NotchLeaderboard.submit('wordle', stats.streak); }   // sent only if the player opted in
         say(won ? PRAISE[g.guesses.length - 1] : g.answer.toUpperCase(), won ? 'win' : 'lose', 0);
         if (mode === 'daily') saveDaily(); else if (mode === 'nyt') store.set('nyt', g);
         render();
