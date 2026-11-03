@@ -60,6 +60,9 @@ final class WebP2PManager: ObservableObject {
     }
     @Published private(set) var memberCount = 0
     @Published private(set) var messages: [MessengerMessage] = []
+    /// The tic-tac-toe game in this room, if any (rules in TicTacToeLogic.swift), and the handles of the people in it.
+    @Published private(set) var game: TicTacToeGame?
+    @Published private(set) var gameNames: [String: String] = [:]
 
     private var key: SymmetricKey?
     private var topic: String?
@@ -108,6 +111,7 @@ final class WebP2PManager: ObservableObject {
         topic = "notchapple-v1-\(topicHash.prefix(40))"    // valid for both ntfy and MQTT
         state = .connecting
         generation += 1
+        game = nil; gameNames = [:]
         for i in Self.relays.indices { connect(i) }
         scheduleGiveUpCheck()
     }
@@ -122,6 +126,7 @@ final class WebP2PManager: ObservableObject {
         for link in links.values { link.socket.cancel(with: .normalClosure, reason: nil) }
         links = [:]
         members = [:]
+        game = nil; gameNames = [:]
         state = .idle
         room = nil
     }
@@ -140,9 +145,10 @@ final class WebP2PManager: ObservableObject {
     }
 
     @discardableResult
-    private func publish(kind: MessengerEnvelope.Kind, text: String?, fileData: Data? = nil, fileName: String? = nil) -> MessengerEnvelope {
+    private func publish(kind: MessengerEnvelope.Kind, text: String?, fileData: Data? = nil, fileName: String? = nil,
+                         game: TicTacToeMessage? = nil) -> MessengerEnvelope {
         let env = MessengerEnvelope(kind: kind, id: UUID(), senderID: identity.senderID,
-                                    sender: identity.handle, text: text, fileData: fileData, fileName: fileName, ts: .now)
+                                    sender: identity.handle, text: text, fileData: fileData, fileName: fileName, game: game, ts: .now)
         // Only publish once at least one relay is live (timers can fire while reconnecting).
         guard state == .joined || kind == .leave,
               let key, let topic, let json = try? JSONEncoder().encode(env),
@@ -197,9 +203,19 @@ final class WebP2PManager: ObservableObject {
         case .leave:
             guard !seenIDs.contains(env.id) else { return }
             seenIDs.insert(env.id)
-            if let m = members.removeValue(forKey: env.senderID) { notice("\(m.handle) left") }
+            if let m = members.removeValue(forKey: env.senderID) { notice("\(m.handle) left"); playerGone(env.senderID) }
+        case .game:
+            guard !isMe, !seenIDs.contains(env.id), let g = env.game else { return }
+            seenIDs.insert(env.id)
+            applyGame(g, from: env.senderID, name: String(env.sender.prefix(32)))
         case .message:
             guard !isMe, !seenIDs.contains(env.id) else { return }
+            if let g = env.game {
+                // A tic-tac-toe invite: older apps show its text line; this one shows the game card instead of a chat bubble.
+                seenIDs.insert(env.id)
+                applyGame(g, from: env.senderID, name: String(env.sender.prefix(32)))
+                return
+            }
             seenIDs.insert(env.id)
             if members[env.senderID] == nil { notice("\(env.sender) joined") }
             members[env.senderID] = (String(env.sender.prefix(32)), .now)
@@ -208,6 +224,66 @@ final class WebP2PManager: ObservableObject {
             MessengerNotifier.shared.incoming(messages[messages.count - 1], source: "Room #\(room ?? "")")
         }
     }
+
+    // MARK: Tic-tac-toe
+
+    /// A name for a sender ID: "You", a room member's handle, or the name remembered from the game messages.
+    func gameName(_ id: String?) -> String {
+        guard let id else { return "Someone" }
+        if id == identity.senderID { return "You" }
+        return members[id]?.handle ?? gameNames[id] ?? "Someone"
+    }
+
+    /// Applies a game message from `from`. The inviter answers the first accept with a start message.
+    @discardableResult
+    private func applyGame(_ msg: TicTacToeMessage, from: String, name: String? = nil) -> Bool {
+        let before = game
+        let next = TicTacToe.reduce(before, msg, from: from)
+        guard next != before else { return false }
+        if let name { gameNames[from] = name }
+        game = next
+        guard let g = next else { return true }
+        if msg.op == "invite" { notice("\(gameName(from)) invited the room to play tic-tac-toe") }
+        if msg.op == "accept", g.status == .invited, g.inviter == identity.senderID, g.accepted == from {
+            sendGame(TicTacToe.start(g, acceptor: from))
+        }
+        if before?.status != g.status {
+            switch g.status {
+            case .draw: notice("Tic-tac-toe: a draw")
+            case .won: notice("Tic-tac-toe: \(gameName(g.winner == .x ? g.x : g.o)) won")
+            case .ended: notice("Tic-tac-toe ended: \(gameName(g.leaver)) left the game")
+            default: break
+            }
+        }
+        return true
+    }
+
+    /// A player left the room (or went quiet): their game is over. The rules ignore this for anyone who is not playing.
+    private func playerGone(_ id: String) {
+        guard let g = game else { return }
+        applyGame(TicTacToe.quit(gid: g.gid), from: id)
+    }
+
+    /// Checks a message of ours against our own state first, so an illegal move is never sent, then applies and sends it.
+    @discardableResult
+    private func sendGame(_ msg: TicTacToeMessage) -> Bool {
+        guard state == .joined, applyGame(msg, from: identity.senderID, name: identity.handle) else { return false }
+        if msg.op == "invite" {
+            publish(kind: .message, text: "🎮 Tic-tac-toe invite (update Notch Apple to play)", game: msg)
+        } else {
+            publish(kind: .game, text: nil, game: msg)
+        }
+        return true
+    }
+
+    func inviteToTicTacToe() { sendGame(TicTacToe.invite(gid: TicTacToe.newGameID(), mark: Bool.random() ? .x : .o)) }
+    func acceptTicTacToe() { if let g = game, g.status == .invited { sendGame(TicTacToe.accept(gid: g.gid)) } }
+    func cancelTicTacToeInvite() { if let g = game, g.status == .invited { sendGame(TicTacToe.cancel(gid: g.gid)) } }
+    func playTicTacToe(_ cell: Int) { if let g = game { sendGame(TicTacToe.move(g, cell: cell)) } }
+    func rematchTicTacToe() { if let g = game { sendGame(TicTacToe.rematch(g)) } }
+    func leaveTicTacToe() { if let g = game { sendGame(TicTacToe.quit(gid: g.gid)) } }
+    /// Closes a finished game's board (nothing is sent).
+    func closeTicTacToe() { if let g = game, g.isFinished { game = nil } }
 
     private func notice(_ text: String) {
         messages.append(MessengerMessage(id: UUID(), senderID: "system", sender: "", text: text,
@@ -352,7 +428,9 @@ final class WebP2PManager: ObservableObject {
                 self.publish(kind: .presence, text: nil)
                 // Drop members we haven't heard from in 75 s.
                 let cutoff = Date.now.addingTimeInterval(-75)
+                let gone = self.members.filter { $0.value.lastSeen <= cutoff }.keys
                 self.members = self.members.filter { $0.value.lastSeen > cutoff }
+                for id in gone { self.playerGone(id) }
             }
         }
         pingTimer = Timer.scheduledTimer(withTimeInterval: 30, repeats: true) { [weak self] _ in

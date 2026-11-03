@@ -25,7 +25,9 @@ struct MessengerMessage: Identifiable, Equatable {
 
 /// What goes over the wire. Kept tiny and versioned.
 struct MessengerEnvelope: Codable {
-    enum Kind: String, Codable { case message, presence, leave }
+    /// `game` carries tic-tac-toe moves. Older apps can't decode it and skip those envelopes, which is the safe outcome;
+    /// the game invite is sent as a normal `message` with a plain-text line instead, so older apps just show that text.
+    enum Kind: String, Codable { case message, presence, leave, game }
     var v = 2
     let kind: Kind
     let id: UUID
@@ -34,6 +36,8 @@ struct MessengerEnvelope: Codable {
     var text: String? = nil
     var fileData: Data? = nil
     var fileName: String? = nil
+    /// Tic-tac-toe payload (see TicTacToeLogic.swift). Older apps ignore this key.
+    var game: TicTacToeMessage? = nil
     let ts: Date
 }
 

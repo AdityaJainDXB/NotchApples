@@ -98,7 +98,7 @@ Cheap, useful, two-platform ideas rise to the top. The top 50 are the build list
 | 80 | Drag-to-arrange cards on Today | Customization | Mac + Windows | Pro | 3 | 3 | 11.2 | Later |
 | 81 | Tetris | Games | Mac + Windows | Free | 3 | 3 | 11.2 | Built, not released |
 | 82 | Daily trivia question _(Bundled question set, works offline)_ | Games | Mac + Windows | Free | 3 | 3 | 11.2 | Later |
-| 83 | Tic-tac-toe against someone in your Messenger room | Games | Mac + Windows | Free | 3 | 3 | 11.2 | Later |
+| 83 | Tic-tac-toe against someone in your Messenger room | Games | Mac + Windows | Free | 3 | 3 | 11.2 | Built, not released |
 | 84 | Send small files in Messenger | Social | Mac + Windows | Pro | 3 | 3 | 11.2 | Later |
 | 85 | Notion quick-add | Integrations | Mac + Windows | Pro | 3 | 3 | 11.2 | Later |
 | 86 | Incoming triggers: run a notch action from a webhook | Integrations | Mac + Windows | Ultimate | 3 | 3 | 11.2 | Later |

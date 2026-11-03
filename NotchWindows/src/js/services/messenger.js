@@ -9,16 +9,20 @@
 //    Swift's default Date encoding (seconds since 1 Jan 2001), sealed with
 //    AES-GCM and sent as base64 of nonce(12) | ciphertext | tag(16).
 //  • Everyone announces themselves every 30 s, which builds the "online" list.
+//  • Tic-tac-toe rides on the same envelope: an optional `game` object (rules in games/tictactoe-logic.js). The invite is a normal
+//    'message' with a plain-text line, so older apps show it as text; every other game message has kind 'game', which older
+//    apps (Mac and Windows) skip without touching anything else.
 
 import { load, save, uid } from '../store.js';
 import { http, notify } from '../native.js';
 import { provide, refresh } from '../activity.js';
+import * as G from '../games/tictactoe-logic.js';
 
 const RELAY = 'ntfy.sh';
 const SWIFT_EPOCH = 978307200; // 2001-01-01 in Unix seconds
 
 const listeners = new Set();
-const st = { state: 'idle', room: null, error: null, members: new Map(), messages: [], unread: 0 };
+const st = { state: 'idle', room: null, error: null, members: new Map(), messages: [], unread: 0, game: null };
 let ws = null, key = null, topic = null, presenceTimer = null, retry = 0;
 const seen = new Set();
 
@@ -82,7 +86,7 @@ export async function join(raw) {
   if (!room) return;
   leave(true);
   st.room = room;
-  st.messages = []; st.members = new Map(); st.error = null; st.unread = 0;
+  st.messages = []; st.members = new Map(); st.error = null; st.unread = 0; st.game = null;
   key = await crypto.subtle.importKey('raw', await sha(`notchapple-room-key|${room}`), 'AES-GCM', false, ['encrypt', 'decrypt']);
   topic = `notchapple-v1-${hex(await sha(`notchapple-room-topic|${room}`)).slice(0, 40)}`;
   save('messenger.room', room);
@@ -94,7 +98,7 @@ export function leave(keepRoom = false) {
   if (!keepRoom) save('messenger.room', null);
   clearInterval(presenceTimer); presenceTimer = null;
   if (ws) { ws.onclose = null; ws.close(); ws = null; }
-  st.state = 'idle'; st.members = new Map();
+  st.state = 'idle'; st.members = new Map(); st.game = null;
   if (!keepRoom) { st.room = null; st.messages = []; }
   emit();
 }
@@ -127,15 +131,16 @@ function connect() {
 
 function prune() {
   const now = Date.now();
-  for (const [id, m] of st.members) if (now - m.lastSeen > 75_000) st.members.delete(id);
+  for (const [id, m] of st.members) if (now - m.lastSeen > 75_000) { st.members.delete(id); playerGone(id, m.handle); }
   emit();
 }
 
-async function publish(kind, text) {
+async function publish(kind, text, game) {
   if (!key || !topic) return null;
   const me = identity();
   const env = { v: 1, kind, id: uid().toUpperCase(), senderID: me.senderID, sender: me.handle, ts: Date.now() / 1000 - SWIFT_EPOCH };
   if (text) env.text = text;
+  if (game) env.game = game;
   try {
     await http(`https://${RELAY}/${topic}`, { method: 'POST', body: await seal(env), headers: { Cache: 'no', Firebase: 'no' }, timeout: 15000 });
   } catch (e) { st.error = e.message; emit(); }
@@ -167,7 +172,19 @@ async function receive(env) {
     }
   } else if (env.kind === 'leave') {
     const m = st.members.get(env.senderID);
-    if (m) { st.members.delete(env.senderID); notice(`${m.handle} left`); }
+    if (m) { st.members.delete(env.senderID); notice(`${m.handle} left`); playerGone(env.senderID, m.handle); }
+  } else if ((env.kind === 'game' || env.kind === 'message') && env.game && typeof env.game === 'object') {
+    // Tic-tac-toe. Our own messages were applied when we sent them; repeats (one per relay) are dropped by ID.
+    if (!isMe && !seen.has(env.id)) {
+      seen.add(env.id);
+      if (applyGame(env.game, env.senderID, name) && env.game.op === 'invite') {
+        const { isExpanded, activeTab } = await import('../app.js');
+        if (!(isExpanded() && activeTab() === 'messenger')) {
+          st.unread++;
+          if (load('messenger.notify', true)) notify(`${name} · #${st.room}`, 'invited the room to play tic-tac-toe');
+        }
+      }
+    }
   } else if (env.kind === 'message' && !isMe && !seen.has(env.id) && env.text) {
     seen.add(env.id);
     if (!st.members.has(env.senderID)) notice(`${name} joined`);
@@ -184,6 +201,49 @@ async function receive(env) {
 }
 
 export const markRead = () => { st.unread = 0; emit(); };
+
+// ---- tic-tac-toe (rules in games/tictactoe-logic.js; both sides run the same reduce) ----
+
+export const nameOf = (id) => (id === identity().senderID ? 'You' : st.members.get(id)?.handle || st.game?.names?.[id] || 'Someone');
+
+/// Applies a game message from `from`. Returns true when it changed the game. The inviter answers the first accept with 'start'.
+function applyGame(msg, from, name) {
+  const before = st.game, next = G.reduce(before, msg, from);
+  if (next === before) return false;
+  const names = { ...(before && before.gid === next.gid ? before.names : null), ...(name ? { [from]: name } : null) };
+  st.game = { ...next, names };
+  const me = identity().senderID;
+  if (msg.op === 'invite') notice(`${name || nameOf(from)} invited the room to play tic-tac-toe`);
+  if (msg.op === 'accept' && next.status === 'invited' && next.inviter === me && next.accepted === from) sendGame(G.startMsg(next, from));
+  if (before && before.status !== next.status && (next.status === 'won' || next.status === 'draw' || next.status === 'ended')) {
+    notice(next.status === 'draw' ? 'Tic-tac-toe: a draw'
+      : next.status === 'won' ? `Tic-tac-toe: ${nameOf(next.winner === 'X' ? next.x : next.o)} won`
+        : `Tic-tac-toe ended: ${nameOf(next.leaver)} left the game`);
+  }
+  emit();
+  return true;
+}
+
+/// A player left the room (or went quiet): their game is over. The rules ignore this for anyone who is not playing.
+function playerGone(id, name) { if (st.game) applyGame(G.quitMsg(st.game.gid), id, name); }
+
+/// Checks a message of ours against our own state first, so an illegal move is never sent, then applies and sends it.
+function sendGame(msg) {
+  if (st.state !== 'joined') return false;
+  if (!applyGame(msg, identity().senderID, identity().handle)) return false;
+  if (msg.op === 'invite') publish('message', '🎮 Tic-tac-toe invite (update Notch Apple to play)', msg);
+  else publish('game', undefined, msg);
+  return true;
+}
+
+export const gameInvite = () => sendGame(G.inviteMsg(G.newGameId(), crypto.getRandomValues(new Uint8Array(1))[0] % 2 ? 'X' : 'O'));
+export const gameAccept = () => st.game?.status === 'invited' && sendGame(G.acceptMsg(st.game.gid));
+export const gameCancel = () => st.game?.status === 'invited' && sendGame(G.cancelMsg(st.game.gid));
+export const gameMove = (cell) => !!st.game && sendGame(G.moveMsg(st.game, cell));
+export const gameRematch = () => !!st.game && sendGame(G.rematchMsg(st.game));
+export const gameQuit = () => !!st.game && sendGame(G.quitMsg(st.game.gid));
+/// Closes a finished game's board (nothing is sent).
+export function gameClose() { if (st.game && ['won', 'draw', 'ended', 'cancelled'].includes(st.game.status)) { st.game = null; emit(); } }
 
 export function start() {
   // Rejoin the room you were in.
