@@ -4,6 +4,13 @@ Every Notch Apple release, newest first. The latest few are also on the [README]
 
 > **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is in the repository's history.
 
+### Mac 2.1.98 · Windows 2.1.98 BETA · 3 November 2026 · ❓ Trivia, tic-tac-toe in rooms and friends leaderboards
+
+- Daily Trivia (new) in the Games menu: one multiple-choice question a day from a bundled set of 420 (science, history, geography, nature, sport, food, tech and general knowledge), the same for everyone on the same day, with no network. You see the right answer and a short explanation, there is a streak counter and a copyable result, and a Practice mode of five random questions.
+- Messenger: play tic-tac-toe with someone in a room. Press Play tic-tac-toe in a room, the other person accepts, and you take turns; both apps check every move, and rematch works. Rooms only for now (not Nearby Wi-Fi), and older versions of the app simply ignore the game messages.
+- Friends leaderboards (optional, off by default) for Racing, Tetris, Plane and Daily Word: share a 6-character board code with friends and see a top 20. Nothing is sent unless you switch sharing on and join a board, and only the game, the score, the name you type and a random id are sent. The leaderboard server is being switched on separately, so until then the panel says it cannot reach the leaderboard.
+- Same as the Mac. Untested on real Windows hardware.
+
 ### Mac 2.1.97 · Windows 2.1.97 BETA · 3 November 2026 · 🔇 No more beeps in qualifying
 
 - Racing: no more Mac error beep during qualifying and the setup lap. The game now claims every key while a session is running (it only did so in the race, the countdown and the formation lap), and the full-screen game window no longer beeps at keys nothing uses.

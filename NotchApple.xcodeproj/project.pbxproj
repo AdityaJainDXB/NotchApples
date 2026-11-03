@@ -79,11 +79,6 @@
 		26B0D2A8600059E93BC78637 /* MeetingNotesTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3A2D492850F6E7302EE68BC /* MeetingNotesTests.swift */; };
 		26D09B0E866D702D64C68CEB /* AcknowledgementsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E215AC0F99CCC1E81AC1732 /* AcknowledgementsView.swift */; };
 		26F5863DB636C5DCF506B2CE /* wordle.js in Resources */ = {isa = PBXBuildFile; fileRef = AAEC0E1A6526DE9FE3CCD09C /* wordle.js */; };
-		6D5CCA98BBC564E231338537 /* DailyTriviaGameView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF08B44AE8464DB043F12F7B /* DailyTriviaGameView.swift */; };
-		6142D0F5EE2FE3B49FD934F1 /* DailyTriviaGame.html in Resources */ = {isa = PBXBuildFile; fileRef = 9BB8AB6C8DDCE85AC51A0D14 /* DailyTriviaGame.html */; };
-		3AEF4D2554EB25B37906DC6F /* trivia.js in Resources */ = {isa = PBXBuildFile; fileRef = A64A6B7D31EFC7333EFA8750 /* trivia.js */; };
-		4D81632964C7F8BFFA120E9B /* trivia-logic.js in Resources */ = {isa = PBXBuildFile; fileRef = B112FD349DE41B0CC5DAD8CC /* trivia-logic.js */; };
-		DB5CAB068356E0DE6B9CB630 /* trivia-questions.js in Resources */ = {isa = PBXBuildFile; fileRef = 7351A69B0FD8D223DDB92EF0 /* trivia-questions.js */; };
 		28B64F942027DAED884BDCAC /* UpdateCadenceLogic.swift in Sources */ = {isa = PBXBuildFile; fileRef = 223DF7525EF47087BAD0DD8B /* UpdateCadenceLogic.swift */; };
 		29326D872AE0DC306AFD1986 /* Tunnelblick-ABOUT.txt in Resources */ = {isa = PBXBuildFile; fileRef = EDBEAF142EDDBD8BE070A009 /* Tunnelblick-ABOUT.txt */; };
 		29BC5405E9AA7A285A647076 /* TodayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DD6D3003087F986015A60A7 /* TodayView.swift */; };
@@ -116,11 +111,11 @@
 		3CA4EF6A5CB50C34DBC7693C /* PluginPinningTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE3BD872313722C8CCED84A1 /* PluginPinningTests.swift */; };
 		3DEAFC4359632CB4DF71ECE1 /* DevicesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99DF8E198CA571FF54F70A9B /* DevicesView.swift */; };
 		3DF5E21ACEFE3B997230D098 /* LidAngleSensor-Apache-2.0.txt in Resources */ = {isa = PBXBuildFile; fileRef = 2322D56CD828DF3443E53CC5 /* LidAngleSensor-Apache-2.0.txt */; };
+		3E81A92EEAECBFB0CE3105DC /* TicTacToeLogic.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FBA2BCF0B2D57BAD4E68BAD /* TicTacToeLogic.swift */; };
 		3EFFED94F8F614109390BB82 /* BrowserMedia.swift in Sources */ = {isa = PBXBuildFile; fileRef = 878D1B5C95884945FA120D5E /* BrowserMedia.swift */; };
 		3F254351E36FC4D87B8E2B96 /* PairDropLogic.swift in Sources */ = {isa = PBXBuildFile; fileRef = BEECBD83B2FC19C70E5139BE /* PairDropLogic.swift */; };
 		3F7C4BE3C38EF2FC14E0B0FA /* RunnerGameView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DF352A799B96D3FE708E1D5 /* RunnerGameView.swift */; };
 		3FBC19E8D908EA1C0914AA07 /* racing.js in Resources */ = {isa = PBXBuildFile; fileRef = 2D061AD1D52BA8268B11B374 /* racing.js */; };
-		A1B2C3D4E5F60718293A4B5D /* leaderboard.js in Resources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F60718293A4B5C /* leaderboard.js */; };
 		4098B0C40272540FC563BC1F /* NotchAppleApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9B61EC777F0D6D3611243246 /* NotchAppleApp.swift */; };
 		40EA84F2B3F7DA5A6424D3E6 /* SecretLogicTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9C96FDC91C63EFDECAAA8BA3 /* SecretLogicTests.swift */; };
 		4132D2810197CE3A0F8A6429 /* HotCornerLogic.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C151FE67E6474F51CD20219 /* HotCornerLogic.swift */; };
@@ -153,10 +148,8 @@
 		4F3206332D56F0A6B0295ADB /* CompanionServer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0918F482C2DF3A150F375D22 /* CompanionServer.swift */; };
 		4F8945FFF59B50DD983D51A3 /* ScreenCaptureActions.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBF8382AEA6C022EC53D433C /* ScreenCaptureActions.swift */; };
 		4FC9841CB1364996A1E4D349 /* ConvertEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9421252B3647F418E2F023A2 /* ConvertEngine.swift */; };
+		4FDD201056401D9B0D0BDA0C /* trivia.js in Resources */ = {isa = PBXBuildFile; fileRef = ABC5932929FD1B6531B3A198 /* trivia.js */; };
 		5017D7AB333DCC40EBD7CDBB /* MessengerModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 033E65EDFD61BEE79967253B /* MessengerModels.swift */; };
-		7C1D2E3F4A5B60718293A4B7 /* TicTacToeLogic.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C1D2E3F4A5B60718293A4B5 /* TicTacToeLogic.swift */; };
-		7C1D2E3F4A5B60718293A4B8 /* TicTacToeLogic.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C1D2E3F4A5B60718293A4B5 /* TicTacToeLogic.swift */; };
-		7C1D2E3F4A5B60718293A4B9 /* TicTacToeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C1D2E3F4A5B60718293A4B6 /* TicTacToeTests.swift */; };
 		51643321A40F4AD935486255 /* TennisLogic.swift in Sources */ = {isa = PBXBuildFile; fileRef = 04C0A62497E02145E6D99DC6 /* TennisLogic.swift */; };
 		5174EDF6C440F48CA52463BC /* TodoLogic.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F05BAECF9EDAF2F5A745F05 /* TodoLogic.swift */; };
 		52C413B65A11064EEAA44395 /* SystemStatsWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = D03274B71DE9E1F3D3567E7E /* SystemStatsWidget.swift */; };
@@ -216,6 +209,7 @@
 		6FE62A468735A640B08A7BD1 /* ClaudeClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6747ADA828FF1D33683B30C8 /* ClaudeClient.swift */; };
 		709E896250FAEFF79F133F38 /* RacingGameView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3EBCD0478E4EF6B8B5FDA7F /* RacingGameView.swift */; };
 		710669E0D8B0E602B1A7EBAE /* AIProviders.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A2A98A73E13E924C3E3852B /* AIProviders.swift */; };
+		71209F4E17822D59CB5C793F /* trivia-logic.js in Resources */ = {isa = PBXBuildFile; fileRef = 56D47BB0880A6DF4C4EF0718 /* trivia-logic.js */; };
 		714569EF33B9BB6066BF09DD /* ModelPicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE038BF6AC791874D167F53C /* ModelPicker.swift */; };
 		7183022F97E2F24A2958AA4A /* TimeZonePlaces.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE0214365333F995AA52AB71 /* TimeZonePlaces.swift */; };
 		71AFDBFC2EDD78D160371170 /* QuickAnswerLogic.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E7257E185D98B4E05674B7F /* QuickAnswerLogic.swift */; };
@@ -250,12 +244,14 @@
 		8360703F9BC1E35F13FEFE5C /* NotchApple.sdef in Resources */ = {isa = PBXBuildFile; fileRef = D151A71D3F7B4B4F846173CD /* NotchApple.sdef */; };
 		8364E6132EE5D1467B0AE042 /* PureModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50CCA2828E5DEA8799BE2ACC /* PureModels.swift */; };
 		8448BDF83380A1CEA5D4D0DF /* ClaudeUsageLogic.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7765304556C50213C9EC28B5 /* ClaudeUsageLogic.swift */; };
+		8460C7B9801ED1DA98774B5A /* trivia-questions.js in Resources */ = {isa = PBXBuildFile; fileRef = 32D06B8C0EEB83055D155499 /* trivia-questions.js */; };
 		873C65522A58DF2D9C3DA0FE /* BambuView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 835EE0C2C25A42D5ED838335 /* BambuView.swift */; };
 		874BC0D84B434A3CE5910FCD /* MusicLevelMeter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48EF75FD565DB103E4CEEB07 /* MusicLevelMeter.swift */; };
 		880D84E2318736493AA2E9B6 /* PairDropLogic.swift in Sources */ = {isa = PBXBuildFile; fileRef = BEECBD83B2FC19C70E5139BE /* PairDropLogic.swift */; };
 		89D2D78C9DCFB72087A5E56A /* MeetingSummaryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 772CBD2EBA6BACD49192A470 /* MeetingSummaryTests.swift */; };
 		8BCB6AEF7F4C85ABA9B85148 /* SportsModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9AE3E9758D2882B557A695A /* SportsModel.swift */; };
 		8C27BC78398B102731018B42 /* ClaudeUsagePaceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1AA637D9531681F5007585BF /* ClaudeUsagePaceTests.swift */; };
+		8C329389C8C1FAE5D6CD17CA /* leaderboard.js in Resources */ = {isa = PBXBuildFile; fileRef = A66CB935BCADED569CB8D3B2 /* leaderboard.js */; };
 		8C3F0D0E48E872177E7E9185 /* LidFoldSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32AC64225D56273C94C4F18F /* LidFoldSettings.swift */; };
 		8D9C634799394FF300D4F4F6 /* ConvertData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4673BC1E6E78BC4B0DFCCDFC /* ConvertData.swift */; };
 		8DBF9A93F2E74BE25D8C3741 /* PanicHide.swift in Sources */ = {isa = PBXBuildFile; fileRef = 47E065BB9B31FD505442E472 /* PanicHide.swift */; };
@@ -274,6 +270,7 @@
 		9509D27C41EB45F32569CEA8 /* BambuManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = F173F2DD0E8CE0B158D9A906 /* BambuManager.swift */; };
 		953C24EAF0E356448322CD23 /* VPNTunnel.swift in Sources */ = {isa = PBXBuildFile; fileRef = D6446A004FCDC55C0BF6957C /* VPNTunnel.swift */; };
 		95F0DCA7EC7ADAF67E355EC3 /* ShareView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF3138F3979E5F005365A41F /* ShareView.swift */; };
+		971879CC1D053C625A4809D2 /* TicTacToeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE3C5425B88619B7DE0DDC3F /* TicTacToeTests.swift */; };
 		971BE20BFA381D487A601FC5 /* MathEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 52CE6E000FE00226413E9D0B /* MathEngine.swift */; };
 		974248CDF1FAA3E6952359D8 /* SnippetVariables.swift in Sources */ = {isa = PBXBuildFile; fileRef = A22CAB6FA5F9EADB1A7E3B86 /* SnippetVariables.swift */; };
 		97C87D7865B82ECEB80B9E60 /* LiveActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = F49D3A20C7CFE9C60DB8CBC3 /* LiveActivity.swift */; };
@@ -354,6 +351,7 @@
 		C0BDDB82DF40271C84791F6E /* UpdateCadenceLogicTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C8FE35A81A2E2DCED5EAE8D1 /* UpdateCadenceLogicTests.swift */; };
 		C0DE4A0B6EE69BF33D224196 /* TennisView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE3DF37ECFE22BA6B80763D9 /* TennisView.swift */; };
 		C0F51A45A30EFE4AE68F92F5 /* UpdateFeedLogic.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1CB3E4938594C70774215625 /* UpdateFeedLogic.swift */; };
+		C1139D9D6C460A85EC9FDD58 /* TicTacToeLogic.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FBA2BCF0B2D57BAD4E68BAD /* TicTacToeLogic.swift */; };
 		C120C97882F28CA5E083E84F /* PlaneGame.html in Resources */ = {isa = PBXBuildFile; fileRef = 2E9887FE2DA1B017814CA1B5 /* PlaneGame.html */; };
 		C12ACE0DDAC8010E001B8997 /* ModuleLayoutLogic.swift in Sources */ = {isa = PBXBuildFile; fileRef = C8EDB281E38038EB25BFB0D2 /* ModuleLayoutLogic.swift */; };
 		C217FFAF78CA31177B4BD619 /* FriendsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 691158E02F20C5E16831E6FF /* FriendsTests.swift */; };
@@ -365,6 +363,7 @@
 		C66AB6DBBE6A8C411CA73585 /* NamedTimerLogic.swift in Sources */ = {isa = PBXBuildFile; fileRef = 869FA0DCFB5761CB6BB319C2 /* NamedTimerLogic.swift */; };
 		C6704B893CA4C4D32A413A19 /* VPNManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 281C97D2743323428F5ACD8F /* VPNManager.swift */; };
 		C7E011E3E6578C0F925D2E4D /* ModuleLayoutTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAD8B98D0C5A260C98386133 /* ModuleLayoutTests.swift */; };
+		C8498011350804A76A4E17CC /* DailyTriviaGame.html in Resources */ = {isa = PBXBuildFile; fileRef = 5EB79DEF5F1A0049764636C6 /* DailyTriviaGame.html */; };
 		C8D6BA93557B9964E383EA8F /* CompanionProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8945C0BF0272BD283A250BDC /* CompanionProtocol.swift */; };
 		C8D956D4F40952369A4498AA /* ConvertView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2F817CBD2CC66E658282B91 /* ConvertView.swift */; };
 		C91A005EA4ED8AC410BAF839 /* ClaudeChatView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 76A2AE80E039AD25E2029A03 /* ClaudeChatView.swift */; };
@@ -409,6 +408,7 @@
 		DDDDB7E81AB5751C2D7A3F80 /* ShortcutsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33BEEDB2663AD6544E5061C7 /* ShortcutsView.swift */; };
 		DE787D98D8EB9B7B2E4CB705 /* F1View.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1EFD1D83C7FB4561E3A2CC27 /* F1View.swift */; };
 		DFC0C10C61F488FC1CE273A4 /* FoldShader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 60E39552D413F32D02D5FFD0 /* FoldShader.swift */; };
+		DFEDE6722BDF5310FD00615D /* DailyTriviaGameView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D6CD970482476F8CC5C56D7E /* DailyTriviaGameView.swift */; };
 		E06CB949FD19F2F0CBC0A6B2 /* BambuCloudLogic.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF6150902E8344F80FB20C62 /* BambuCloudLogic.swift */; };
 		E0E40F939970A6AB282C7437 /* WeatherService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 92FC7E64A4478DE0F57D42E4 /* WeatherService.swift */; };
 		E169C6F5EBEE22CEB32E76C5 /* MeetingSummaryLogic.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1951F9A6444DB9F503B2FD2B /* MeetingSummaryLogic.swift */; };
@@ -483,8 +483,6 @@
 		025431FF9865CF1BAEDF1A2D /* CassetteView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CassetteView.swift; sourceTree = "<group>"; };
 		0335700922F2B064E7FC742F /* NotesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotesView.swift; sourceTree = "<group>"; };
 		033E65EDFD61BEE79967253B /* MessengerModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessengerModels.swift; sourceTree = "<group>"; };
-		7C1D2E3F4A5B60718293A4B5 /* TicTacToeLogic.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TicTacToeLogic.swift; sourceTree = "<group>"; };
-		7C1D2E3F4A5B60718293A4B6 /* TicTacToeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TicTacToeTests.swift; sourceTree = "<group>"; };
 		03F5574ACA9594C95D90C1CB /* HabitsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HabitsView.swift; sourceTree = "<group>"; };
 		0406E58D7528F932C40B864E /* ThermalWatcher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThermalWatcher.swift; sourceTree = "<group>"; };
 		04C0A62497E02145E6D99DC6 /* TennisLogic.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TennisLogic.swift; sourceTree = "<group>"; };
@@ -534,6 +532,7 @@
 		1E93AE854D51B41D40C00311 /* PlaneGameView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaneGameView.swift; sourceTree = "<group>"; };
 		1EC00C3A3694AC867DD418EC /* AccessCodeManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccessCodeManager.swift; sourceTree = "<group>"; };
 		1EFD1D83C7FB4561E3A2CC27 /* F1View.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = F1View.swift; sourceTree = "<group>"; };
+		1FBA2BCF0B2D57BAD4E68BAD /* TicTacToeLogic.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TicTacToeLogic.swift; sourceTree = "<group>"; };
 		1FBE15E7D341F0CD34FF68F7 /* LinkShelfLogic.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LinkShelfLogic.swift; sourceTree = "<group>"; };
 		21DB33F0188BFD9B3D8FA4C3 /* ClipboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClipboardView.swift; sourceTree = "<group>"; };
 		223DF7525EF47087BAD0DD8B /* UpdateCadenceLogic.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdateCadenceLogic.swift; sourceTree = "<group>"; };
@@ -551,13 +550,13 @@
 		295575A04EF33302E9D9A7FE /* AppIcon.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; path = AppIcon.icns; sourceTree = "<group>"; };
 		2BDB8BD41E7ADF271C9499F9 /* SystemWatch.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SystemWatch.swift; sourceTree = "<group>"; };
 		2D061AD1D52BA8268B11B374 /* racing.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = racing.js; sourceTree = "<group>"; };
-		A1B2C3D4E5F60718293A4B5C /* leaderboard.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = leaderboard.js; sourceTree = "<group>"; };
 		2E9887FE2DA1B017814CA1B5 /* PlaneGame.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = PlaneGame.html; sourceTree = "<group>"; };
 		2FDF0D52167C63FBB161D611 /* SystemHUDObserver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SystemHUDObserver.swift; sourceTree = "<group>"; };
 		3047710BA5AC2CDBD910608B /* ProjectFocusLogic.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectFocusLogic.swift; sourceTree = "<group>"; };
 		321AEDF869EDFDD140BAC7F0 /* ModuleContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModuleContentView.swift; sourceTree = "<group>"; };
 		326EBD11D0EF6CA885B78559 /* CompanionClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompanionClient.swift; sourceTree = "<group>"; };
 		32AC64225D56273C94C4F18F /* LidFoldSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LidFoldSettings.swift; sourceTree = "<group>"; };
+		32D06B8C0EEB83055D155499 /* trivia-questions.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = "trivia-questions.js"; sourceTree = "<group>"; };
 		33BEEDB2663AD6544E5061C7 /* ShortcutsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShortcutsView.swift; sourceTree = "<group>"; };
 		34E21597A89BA509A323CB7C /* VoiceNotesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceNotesView.swift; sourceTree = "<group>"; };
 		34E60A6D24A27DF650F178FD /* tetris.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = tetris.js; sourceTree = "<group>"; };
@@ -612,6 +611,7 @@
 		526D84DF56B341F78C517FDE /* MathEngineTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MathEngineTests.swift; sourceTree = "<group>"; };
 		52CE6E000FE00226413E9D0B /* MathEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MathEngine.swift; sourceTree = "<group>"; };
 		544025FBBA4060D5F307DDCA /* WallpaperEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WallpaperEngine.swift; sourceTree = "<group>"; };
+		56D47BB0880A6DF4C4EF0718 /* trivia-logic.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = "trivia-logic.js"; sourceTree = "<group>"; };
 		572FFE43DE13E5E3A4C818F2 /* ModuleLayout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModuleLayout.swift; sourceTree = "<group>"; };
 		59BC3F5D6F85A5FDFC39D94F /* ClipboardLink.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClipboardLink.swift; sourceTree = "<group>"; };
 		5A7687E5F02BA5A9C7ECCC75 /* WellbeingLogic.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WellbeingLogic.swift; sourceTree = "<group>"; };
@@ -622,6 +622,7 @@
 		5D5440E6913CD26F8F12FBAE /* NotchTranslatorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotchTranslatorView.swift; sourceTree = "<group>"; };
 		5E45CA4DA23D38E6A1DBA06F /* NotificationsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationsView.swift; sourceTree = "<group>"; };
 		5E6BBA7A9A73D3E56B7234B9 /* DevToolsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DevToolsView.swift; sourceTree = "<group>"; };
+		5EB79DEF5F1A0049764636C6 /* DailyTriviaGame.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = DailyTriviaGame.html; sourceTree = "<group>"; };
 		6030017749EA1C8346BCA6DF /* HoldToConfirm.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HoldToConfirm.swift; sourceTree = "<group>"; };
 		60BBAE46119383151A1CEF4F /* PairDropTransport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PairDropTransport.swift; sourceTree = "<group>"; };
 		60D028DAE4C9C74C6193B75F /* HotCornerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HotCornerTests.swift; sourceTree = "<group>"; };
@@ -725,6 +726,7 @@
 		A2DCDE205F022345FA4997A8 /* RemoteInput.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemoteInput.swift; sourceTree = "<group>"; };
 		A2F817CBD2CC66E658282B91 /* ConvertView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConvertView.swift; sourceTree = "<group>"; };
 		A3EBCD0478E4EF6B8B5FDA7F /* RacingGameView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RacingGameView.swift; sourceTree = "<group>"; };
+		A66CB935BCADED569CB8D3B2 /* leaderboard.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = leaderboard.js; sourceTree = "<group>"; };
 		A672525103785D34A18DE037 /* CtfGame.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = CtfGame.html; sourceTree = "<group>"; };
 		A7241EE0C2D1B5C9875023CE /* VPNTunnelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VPNTunnelTests.swift; sourceTree = "<group>"; };
 		A867CACABB3FC748CD5D0638 /* LinksShelf.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LinksShelf.swift; sourceTree = "<group>"; };
@@ -732,15 +734,12 @@
 		A9E160C9C8DBBE561F7DD2AD /* SharedStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedStore.swift; sourceTree = "<group>"; };
 		AADA082C5E44226B4E0DE49F /* HabitLogic.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HabitLogic.swift; sourceTree = "<group>"; };
 		AAEC0E1A6526DE9FE3CCD09C /* wordle.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = wordle.js; sourceTree = "<group>"; };
-		EF08B44AE8464DB043F12F7B /* DailyTriviaGameView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DailyTriviaGameView.swift; sourceTree = "<group>"; };
-		9BB8AB6C8DDCE85AC51A0D14 /* DailyTriviaGame.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = DailyTriviaGame.html; sourceTree = "<group>"; };
-		A64A6B7D31EFC7333EFA8750 /* trivia.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = trivia.js; sourceTree = "<group>"; };
-		B112FD349DE41B0CC5DAD8CC /* trivia-logic.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = "trivia-logic.js"; sourceTree = "<group>"; };
-		7351A69B0FD8D223DDB92EF0 /* trivia-questions.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = "trivia-questions.js"; sourceTree = "<group>"; };
+		ABC5932929FD1B6531B3A198 /* trivia.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = trivia.js; sourceTree = "<group>"; };
 		ABF7BDDF60590D89D51048A8 /* SystemWatchTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SystemWatchTests.swift; sourceTree = "<group>"; };
 		ACD60817F03707C0A2A93064 /* NowPlayingMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NowPlayingMonitor.swift; sourceTree = "<group>"; };
 		AD19B5322ACB9565E2C06FBB /* IOKitLidAngleProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IOKitLidAngleProvider.swift; sourceTree = "<group>"; };
 		AE3BD872313722C8CCED84A1 /* PluginPinningTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PluginPinningTests.swift; sourceTree = "<group>"; };
+		AE3C5425B88619B7DE0DDC3F /* TicTacToeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TicTacToeTests.swift; sourceTree = "<group>"; };
 		AEE864984A3F4F0633B5BE65 /* PageChips.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PageChips.swift; sourceTree = "<group>"; };
 		B04639220ABBD701F4F5AB0A /* CardsLogicTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardsLogicTests.swift; sourceTree = "<group>"; };
 		B16F24E7C42EBCCB3F46202A /* LicenseKey.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LicenseKey.swift; sourceTree = "<group>"; };
@@ -805,6 +804,7 @@
 		D4869B6FF4992EF60CE2B773 /* NotchAppleTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = NotchAppleTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		D5DDB1DB48C93BECF97137C8 /* WebScriptGame.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebScriptGame.swift; sourceTree = "<group>"; };
 		D6446A004FCDC55C0BF6957C /* VPNTunnel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VPNTunnel.swift; sourceTree = "<group>"; };
+		D6CD970482476F8CC5C56D7E /* DailyTriviaGameView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DailyTriviaGameView.swift; sourceTree = "<group>"; };
 		D7A6010DC875A7E233DADA89 /* BreakoutGameView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BreakoutGameView.swift; sourceTree = "<group>"; };
 		D953A904B3EF07B407F31F5C /* MessengerNotifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessengerNotifier.swift; sourceTree = "<group>"; };
 		D95BC205F9AD85B9383E0C9D /* ScreenCapture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenCapture.swift; sourceTree = "<group>"; };
@@ -914,17 +914,17 @@
 				47B08D0E9864B3CC96B3F02F /* chess.js */,
 				3B249F7C71D18A1BD0D8E788 /* ctf-logic.js */,
 				22BC3DD953937929570782CA /* ctf.js */,
+				A66CB935BCADED569CB8D3B2 /* leaderboard.js */,
 				DC8C118088B36E22640A6C5F /* plane-sim.js */,
 				2D061AD1D52BA8268B11B374 /* racing.js */,
-				A1B2C3D4E5F60718293A4B5C /* leaderboard.js */,
 				E54CA8A98C84920280698482 /* tetris-logic.js */,
 				34E60A6D24A27DF650F178FD /* tetris.js */,
+				56D47BB0880A6DF4C4EF0718 /* trivia-logic.js */,
+				32D06B8C0EEB83055D155499 /* trivia-questions.js */,
+				ABC5932929FD1B6531B3A198 /* trivia.js */,
 				5C9AA52A7E88086BA19CE4A6 /* wordle-logic.js */,
 				D10652D36DC40822ECB87F39 /* wordle-words.js */,
 				AAEC0E1A6526DE9FE3CCD09C /* wordle.js */,
-				A64A6B7D31EFC7333EFA8750 /* trivia.js */,
-				B112FD349DE41B0CC5DAD8CC /* trivia-logic.js */,
-				7351A69B0FD8D223DDB92EF0 /* trivia-questions.js */,
 			);
 			path = games;
 			sourceTree = "<group>";
@@ -1190,7 +1190,7 @@
 				4ACC8DF8A2FA28D337D2DC0F /* SnippetVariablesTests.swift */,
 				ABF7BDDF60590D89D51048A8 /* SystemWatchTests.swift */,
 				9342B7403A92BBB1CB6A292A /* TennisLogicTests.swift */,
-				7C1D2E3F4A5B60718293A4B6 /* TicTacToeTests.swift */,
+				AE3C5425B88619B7DE0DDC3F /* TicTacToeTests.swift */,
 				6E232DC7A1E5C4A3A89FF53F /* TodoLogicTests.swift */,
 				84C42A558F1064C50BD9A506 /* TourLogicTests.swift */,
 				C8FE35A81A2E2DCED5EAE8D1 /* UpdateCadenceLogicTests.swift */,
@@ -1474,9 +1474,9 @@
 			children = (
 				700E54998678B97CA020EA9E /* LocalP2PManager.swift */,
 				033E65EDFD61BEE79967253B /* MessengerModels.swift */,
-				7C1D2E3F4A5B60718293A4B5 /* TicTacToeLogic.swift */,
 				D953A904B3EF07B407F31F5C /* MessengerNotifier.swift */,
 				643FFB36BCE34E64BBD52883 /* NotchMessengerView.swift */,
+				1FBA2BCF0B2D57BAD4E68BAD /* TicTacToeLogic.swift */,
 				E07ED38955AE546C7637D5B9 /* WebP2PManager.swift */,
 				FD4B2C31DFD0B9D5796F2993 /* Friends */,
 			);
@@ -1732,8 +1732,8 @@
 				404B8C35377E3958184925BE /* BackgroundMusic.pkg */,
 				5CD7E7A5A6BDA52E46DFD022 /* ChessGame.html */,
 				A672525103785D34A18DE037 /* CtfGame.html */,
+				5EB79DEF5F1A0049764636C6 /* DailyTriviaGame.html */,
 				076DA6D06B8B6E4AF8639E32 /* DailyWordGame.html */,
-				9BB8AB6C8DDCE85AC51A0D14 /* DailyTriviaGame.html */,
 				6E8B16EE4068BC4835F8B4C0 /* GoogleService-Info.plist */,
 				97CC70FFD067091FDE1231BB /* Info.plist */,
 				3718F42274C479A025DF477B /* NotchApple.entitlements */,
@@ -1811,8 +1811,8 @@
 				49D5D99FC7CB30C200B06B3A /* ChessGameView.swift */,
 				702334063347B78DDA56DB8A /* CookieClickerView.swift */,
 				9D4FADAB2335D1E735AA1EF8 /* CtfGameView.swift */,
+				D6CD970482476F8CC5C56D7E /* DailyTriviaGameView.swift */,
 				DEB323B15181A7CBF33193DE /* DailyWordGameView.swift */,
-				EF08B44AE8464DB043F12F7B /* DailyTriviaGameView.swift */,
 				4A2294A11AF6369D10835393 /* GameEngines.swift */,
 				E0C8A8EBFAB59EBC323417FC /* GameFullScreen.swift */,
 				B694C02A230B240E8F014EF6 /* GameSupport.swift */,
@@ -1981,8 +1981,8 @@
 				0BDD91775E21B5BEDDF33463 /* BackgroundMusic.pkg in Resources */,
 				75E7FF65808969DFE9C8EC56 /* ChessGame.html in Resources */,
 				1EC2FF6307A13D94AA0D2FFD /* CtfGame.html in Resources */,
+				C8498011350804A76A4E17CC /* DailyTriviaGame.html in Resources */,
 				9F4611D5539832BF29924626 /* DailyWordGame.html in Resources */,
-				6142D0F5EE2FE3B49FD934F1 /* DailyTriviaGame.html in Resources */,
 				CFAB476520EEBC0E831DF7DE /* GoogleService-Info.plist in Resources */,
 				6CB3126DF2584324131FE504 /* LICENSE-Tunnelblick.txt in Resources */,
 				3DF5E21ACEFE3B997230D098 /* LidAngleSensor-Apache-2.0.txt in Resources */,
@@ -2001,18 +2001,18 @@
 				94134084A487BEB193A089C3 /* ctf.js in Resources */,
 				6D96FF364E174A53999C3E56 /* f1-circuits-MIT.txt in Resources */,
 				2F27B29ABFD1084E8B37A8A4 /* klick in Resources */,
+				8C329389C8C1FAE5D6CD17CA /* leaderboard.js in Resources */,
 				14BB6F024439C7EDE0DCBD2C /* nowplaying.js in Resources */,
 				2006B2451159E4A12E70E69B /* plane-sim.js in Resources */,
 				3FBC19E8D908EA1C0914AA07 /* racing.js in Resources */,
-				A1B2C3D4E5F60718293A4B5D /* leaderboard.js in Resources */,
 				04684D26EDA66D2AAF6B69C0 /* tetris-logic.js in Resources */,
 				7B585A54684C47977CA762E6 /* tetris.js in Resources */,
+				71209F4E17822D59CB5C793F /* trivia-logic.js in Resources */,
+				8460C7B9801ED1DA98774B5A /* trivia-questions.js in Resources */,
+				4FDD201056401D9B0D0BDA0C /* trivia.js in Resources */,
 				DCB6015E6E30EB360D1FD19D /* wordle-logic.js in Resources */,
 				2FDCE1119457CE3E7FE50065 /* wordle-words.js in Resources */,
 				26F5863DB636C5DCF506B2CE /* wordle.js in Resources */,
-				3AEF4D2554EB25B37906DC6F /* trivia.js in Resources */,
-				4D81632964C7F8BFFA120E9B /* trivia-logic.js in Resources */,
-				DB5CAB068356E0DE6B9CB630 /* trivia-questions.js in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2089,8 +2089,8 @@
 				1DFBDF1634055E59A1AF201C /* Converter.swift in Sources */,
 				47F3262131C954B32DF79D99 /* CookieClickerView.swift in Sources */,
 				0F3F35C29DCE3595C506A304 /* CtfGameView.swift in Sources */,
+				DFEDE6722BDF5310FD00615D /* DailyTriviaGameView.swift in Sources */,
 				94A1DAACE593691EEA463858 /* DailyWordGameView.swift in Sources */,
-				6D5CCA98BBC564E231338537 /* DailyTriviaGameView.swift in Sources */,
 				CD90A054724EB2DEDC4FEE75 /* DemoHooks.swift in Sources */,
 				4C0F7D796DCC0A288B9322F6 /* DevToolkitLogic.swift in Sources */,
 				A0A0F5485BA1A9A4A4CA4A7A /* DevToolsView.swift in Sources */,
@@ -2168,7 +2168,6 @@
 				F804974BDB3706ABE17FDD0B /* MeetingSummaryLogic.swift in Sources */,
 				44AA1315926A7EB7858B9E73 /* MemoryGameView.swift in Sources */,
 				5017D7AB333DCC40EBD7CDBB /* MessengerModels.swift in Sources */,
-				7C1D2E3F4A5B60718293A4B7 /* TicTacToeLogic.swift in Sources */,
 				028C6C33AD6C682F03B0695B /* MessengerNotifier.swift in Sources */,
 				EA6A5158CB578D683DE18C94 /* MirrorView.swift in Sources */,
 				714569EF33B9BB6066BF09DD /* ModelPicker.swift in Sources */,
@@ -2273,6 +2272,7 @@
 				23ABBEC48B822E5003CB7CD3 /* TetrisGameView.swift in Sources */,
 				3426BA9EDEDB4808A6BEF8BA /* Theme.swift in Sources */,
 				9F191E816E9E31973BFAF4EC /* ThermalWatcher.swift in Sources */,
+				C1139D9D6C460A85EC9FDD58 /* TicTacToeLogic.swift in Sources */,
 				7183022F97E2F24A2958AA4A /* TimeZonePlaces.swift in Sources */,
 				FD3C4D12C2C02652A4D6A729 /* TimerView.swift in Sources */,
 				1B28E6933512791CD9E4C469 /* TodayExtras.swift in Sources */,
@@ -2428,8 +2428,8 @@
 				A9A0F9DA61106AE2ABAD71CC /* SystemWatchTests.swift in Sources */,
 				51643321A40F4AD935486255 /* TennisLogic.swift in Sources */,
 				DC5EDBF914623CEC9EBB91A6 /* TennisLogicTests.swift in Sources */,
-				7C1D2E3F4A5B60718293A4B8 /* TicTacToeLogic.swift in Sources */,
-				7C1D2E3F4A5B60718293A4B9 /* TicTacToeTests.swift in Sources */,
+				3E81A92EEAECBFB0CE3105DC /* TicTacToeLogic.swift in Sources */,
+				971879CC1D053C625A4809D2 /* TicTacToeTests.swift in Sources */,
 				5174EDF6C440F48CA52463BC /* TodoLogic.swift in Sources */,
 				66D14933037AA4515567B0A2 /* TodoLogicTests.swift in Sources */,
 				6EC70695CC1B08B90E01D311 /* TourLogic.swift in Sources */,
@@ -2584,7 +2584,7 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 2.1.97;
+				MARKETING_VERSION = 2.1.98;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -2724,7 +2724,7 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 2.1.97;
+				MARKETING_VERSION = 2.1.98;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
