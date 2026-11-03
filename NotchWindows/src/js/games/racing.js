@@ -782,6 +782,11 @@
   const CREW_WIN = { FL: [0.09, 0.28], RL: [0.11, 0.30], FR: [0.13, 0.32], RR: [0.15, 0.34] };
   const CREW_WHEEL = { FL: [1.3, 0.9], FR: [1.3, -0.9], RL: [-1.3, 0.9], RR: [-1.3, -0.9] };
   const smooth01 = (x) => x * x * (3 - 2 * x);
+  /// A lap time as the voice should say it. Written as 1:28.360 the voice reads a clock ("1 hour 28 minutes 36 seconds"), so it is spelled out:
+  /// "1 minute 28 point 3 6 0 seconds" (and "59 point 3 6 0 seconds" for under a minute).
+  const spokenTimes = (text) => String(text)
+    .replace(/(\d+):(\d{2})\.(\d{1,3})/g, (_, m, sc, f) => `${+m} ${+m === 1 ? 'minute' : 'minutes'} ${+sc} point ${[...f].join(' ')} seconds`)
+    .replace(/(^|[^\d.:])(\d{1,2})\.(\d{3})(?![\d])/g, (_, pre, sc, f) => `${pre}${+sc} point ${[...f].join(' ')} seconds`);
   const TYRES = { S: { name: 'Soft', grip: 1.06, wear: 1.6, col: '#ff3b3b' }, M: { name: 'Medium', grip: 1, wear: 1, col: '#ffd23f' }, H: { name: 'Hard', grip: 0.95, wear: 0.6, col: '#f2f2f2' }, I: { name: 'Intermediate', grip: 0.9, wear: 1.3, col: '#3ad07a', rain: 1 }, W: { name: 'Wet', grip: 0.84, wear: 1.5, col: '#3a8dff', rain: 2 } };
   let WET = 0;          // how wet the track is now, 0 dry to 1 soaked (set by the race; read by the tyres)
   /// The grip a car's tyres have on this track surface right now (a puncture takes most of it away).
@@ -2044,7 +2049,7 @@
       if ((sp.speaking || now - lastTalk < 2500) && pri < 2) return;
       if (pri >= 2) sp.cancel();
       lastTalk = now;
-      const u = new SpeechSynthesisUtterance(text), v = pickVoice(who);
+      const u = new SpeechSynthesisUtterance(spokenTimes(text)), v = pickVoice(who);
       if (v) u.voice = v;
       u.rate = who === 'com' ? 1.12 : 1.02; u.pitch = 1; u.volume = 1;
       if (who === 'eng') { click(); u.onend = () => click(); }
@@ -4023,6 +4028,6 @@
     setSoundEnabled: (on) => { window.NotchHostSound = !!on; const c = window.NotchRaceGame.current; if (c) c.setSoundEnabled(on); },
     resume: () => { const c = window.NotchRaceGame.current; if (c) c.resume(); },
     current: null,
-    _test: { buildLandmarks, F1_LM, qualiSizes, qualiOrder, qualiKnockout, qualiGrid, parseRequest, generateTrack, traceImage, simplifyPts, pitInfo, relS, fence, checkTrack, encodeTrack, decodeTrack, customDef, GROUNDS, TRACKS, F1_CAL, matchF1, CARS, buildTrack, locate, trackHeight, trackSlope, roadCurv, roadBank, F1_BANK, gridSlot, newCar, stepCar, driveAI, newRacer, progress, ranking, collide, wallHit, hurt, gearbox, NET, fmt, LEVELS },
+    _test: { spokenTimes, buildLandmarks, F1_LM, qualiSizes, qualiOrder, qualiKnockout, qualiGrid, parseRequest, generateTrack, traceImage, simplifyPts, pitInfo, relS, fence, checkTrack, encodeTrack, decodeTrack, customDef, GROUNDS, TRACKS, F1_CAL, matchF1, CARS, buildTrack, locate, trackHeight, trackSlope, roadCurv, roadBank, F1_BANK, gridSlot, newCar, stepCar, driveAI, newRacer, progress, ranking, collide, wallHit, hurt, gearbox, NET, fmt, LEVELS },
   };
 })();

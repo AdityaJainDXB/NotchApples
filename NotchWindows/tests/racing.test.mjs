@@ -563,3 +563,10 @@ test('landmarks: only real circuits have them, every one stands on the lap, and 
   assert.ok(br, 'the hotel bridge'); for (let j = -8; j <= 8; j++) assert.ok(Math.abs(T.S[(br.i + j + T.m) % T.m].k) < 0.003, 'it stands over a straight');
   assert.ok(LM.twi > 0 && !R.buildLandmarks(R.buildTrack(R.F1_CAL.find((d) => d.id === 'f1au'))).twi, 'only Yas Marina is a twilight race');
 });
+
+test('the announcer says a lap time as minutes and seconds, never as a clock', () => {
+  assert.equal(R.spokenTimes('1:28.360. That puts us P2.'), '1 minute 28 point 3 6 0 seconds. That puts us P2.');
+  assert.equal(R.spokenTimes('Best lap 2:05.040'), 'Best lap 2 minutes 5 point 0 4 0 seconds');
+  assert.equal(R.spokenTimes('59.123. Not an improvement.'), '59 point 1 2 3 seconds. Not an improvement.');
+  assert.equal(R.spokenTimes('Gap 0.4 seconds, box this lap'), 'Gap 0.4 seconds, box this lap');
+});
