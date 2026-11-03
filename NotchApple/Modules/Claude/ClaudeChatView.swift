@@ -32,6 +32,12 @@ final class AIConfig: ObservableObject {
             d.set(true, forKey: "ai.setupDone")
         }
     }
+    @AppStorage("ai.effort") private var effortRaw = AIEffort.medium.rawValue
+    /// How hard the assistant works on an answer (the Effort menu in the message box).
+    var effort: AIEffort {
+        get { AIEffort(rawValue: effortRaw) ?? .medium }
+        set { objectWillChange.send(); effortRaw = newValue.rawValue }
+    }
     @AppStorage("ai.models") private var modelsJSON = "{}"
     @Published private(set) var availableModels: [AIProvider: [String]] = [:]
     @Published private(set) var loadingModels = false
@@ -641,11 +647,8 @@ struct ClaudeChatView: View {
 
     private var providerBar: some View {
         HStack(spacing: 8) {
-            ProviderPicker(config: config)
-
-            if config.provider.isConfigured {
-                ModelPicker(config: config)
-            }
+            // Once a provider is set up, its menus live in the message box; until then the provider is chosen here.
+            if !config.provider.isConfigured { ProviderPicker(config: config) }
             Spacer()
             badge(config.provider.likelySupportsVision(config.model) ? "Sees images" : "Text only",
                   symbol: config.provider.likelySupportsVision(config.model) ? "eye" : "eye.slash")
@@ -862,44 +865,51 @@ struct ClaudeChatView: View {
         .labelStyle(.titleAndIcon)
     }
 
+    /// The message box: the text on top, and under it the menus (provider, model, effort) at the left and Send at the right.
     private var inputBar: some View {
-        HStack(spacing: 8) {
-            Menu {
-                ForEach(CaptureManager.Mode.allCases) { m in
-                    Button(m.title) { CaptureManager.shared.captureToAI(m) }
-                }
-                Divider()
-                Button("Paste image or text (⌘⇧V)") { model.pasteFromClipboard() }
-                Button("Use selected text") { model.useSelectedText() }
-                Divider()
-                Toggle("Attach a screenshot to the next message", isOn: $model.attachScreen)
-            } label: {
-                Image(systemName: model.attachScreen ? "display.and.arrow.down" : "viewfinder")
-            } primaryAction: {
-                CaptureManager.shared.captureToAI()
-            }
-            .menuStyle(.borderlessButton).fixedSize()
-            .help("Capture (\(HotkeyBinding.capture.label)); hold for more options")
-
-            AIExtrasBar(model: model)
-
-            TextField(placeholder, text: $model.draft)
+        VStack(alignment: .leading, spacing: 4) {
+            TextField(placeholder, text: $model.draft, axis: .vertical)
+                .lineLimit(1...4)
                 .textFieldStyle(.plain)
                 .focused($fieldFocused)
-                .padding(.horizontal, 12).padding(.vertical, 8)
-                .background(Color.white.opacity(0.08), in: Capsule())
+                .padding(.horizontal, 6).padding(.top, 4)
                 .onSubmit(model.send)
+            HStack(spacing: 2) {
+                Menu {
+                    ForEach(CaptureManager.Mode.allCases) { m in
+                        Button(m.title) { CaptureManager.shared.captureToAI(m) }
+                    }
+                    Divider()
+                    Button("Paste image or text (⌘⇧V)") { model.pasteFromClipboard() }
+                    Button("Use selected text") { model.useSelectedText() }
+                    Divider()
+                    Toggle("Attach a screenshot to the next message", isOn: $model.attachScreen)
+                } label: {
+                    Image(systemName: model.attachScreen ? "display.and.arrow.down" : "viewfinder")
+                } primaryAction: {
+                    CaptureManager.shared.captureToAI()
+                }
+                .menuStyle(.borderlessButton).fixedSize()
+                .help("Capture (\(HotkeyBinding.capture.label)); hold for more options")
+                .padding(.horizontal, 4)
 
-            if model.isSending {
-                Button(action: model.stop) { Image(systemName: "stop.fill") }
-                    .buttonStyle(PurpleButtonStyle()).help("Stop (⌘.)").accessibilityLabel("Stop")
-            } else {
-                Button(action: model.send) { Image(systemName: "arrow.up") }
-                    .buttonStyle(PurpleButtonStyle())
-                    .disabled(model.draft.isEmpty && model.input == nil && model.textInput == nil)
-                    .help("Send (Return)").accessibilityLabel("Send")
+                AIExtrasBar(model: model)
+                ComposerMenus(config: config)
+                Spacer(minLength: 4)
+                if model.isSending {
+                    Button(action: model.stop) { Image(systemName: "stop.fill") }
+                        .buttonStyle(PurpleButtonStyle()).help("Stop (⌘.)").accessibilityLabel("Stop")
+                } else {
+                    Button(action: model.send) { Image(systemName: "arrow.up") }
+                        .buttonStyle(PurpleButtonStyle())
+                        .disabled(model.draft.isEmpty && model.input == nil && model.textInput == nil)
+                        .help("Send (Return)").accessibilityLabel("Send")
+                }
             }
         }
+        .padding(6)
+        .background(RoundedRectangle(cornerRadius: 14, style: .continuous).fill(Color.white.opacity(0.07)))
+        .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).strokeBorder(Color.white.opacity(fieldFocused ? 0.28 : 0.12)))
     }
 
     private var placeholder: String {

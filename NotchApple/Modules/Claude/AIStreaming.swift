@@ -72,6 +72,7 @@ extension AIClient {
     static func system(for mode: AIMode?) -> String {
         var s = systemPrompt + " Use Markdown. Write math in LaTeX ($…$ inline, $$…$$ for display)."
         if mode == .answerOnly { s += " Be extremely brief." }
+        s += AIEffort.current.hint
         return s
     }
 
