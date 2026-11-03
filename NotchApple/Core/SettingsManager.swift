@@ -256,6 +256,17 @@ final class SettingsManager: ObservableObject {
     @AppStorage(Module.translator.storageKey) var translatorEnabled = false
     @AppStorage(Module.stats.storageKey) var statsEnabled = false
     @AppStorage(Module.security.storageKey) var securityEnabled = false
+    /// Off by default. With "Lock Notch Apple" on, this asks to unlock only on the tabs chosen in `securityLockedTabs` (the others open
+    /// as normal): the prompt shows when the tab you land on, or switch to, is one of them (issue 45).
+    @AppStorage("security.onlyTabs") var securityOnlyTabs = false
+    @AppStorage("security.lockedTabs") var securityLockedTabs = "games,search,messenger"
+    func isLockedTab(_ m: Module) -> Bool { securityLockedTabs.split(separator: ",").contains { $0 == m.rawValue } }
+    func setLockedTab(_ m: Module, _ on: Bool) {
+        var set = Set(securityLockedTabs.split(separator: ",").map(String.init))
+        if on { set.insert(m.rawValue) } else { set.remove(m.rawValue) }
+        securityLockedTabs = Module.allCases.map(\.rawValue).filter(set.contains).joined(separator: ",")
+        objectWillChange.send()
+    }
     @AppStorage(Module.timer.storageKey) var timerEnabled = false
     @AppStorage(Module.snippets.storageKey) var snippetsEnabled = false
     @AppStorage(Module.shortcuts.storageKey) var shortcutsEnabled = false

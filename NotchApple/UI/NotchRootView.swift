@@ -172,7 +172,7 @@ struct NotchRootView: View {
 
     @ViewBuilder
     private var expandedContent: some View {
-        if settings.securityEnabled && !state.isUnlocked {
+        if settings.securityEnabled && !settings.securityOnlyTabs && !state.isUnlocked {
             LockView().insetInNotch().overlay(alignment: .topTrailing) { closeButton }
         } else if let required = updater.requiredUpdate {
             RequiredUpdateView(release: required).insetInNotch().overlay(alignment: .topTrailing) { closeButton }
@@ -272,6 +272,9 @@ struct NotchRootView: View {
                 Button("Open Settings") { state.close(); AppDelegate.openSettingsWindow() }.buttonStyle(PurpleButtonStyle())
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
+        } else if settings.securityEnabled && settings.securityOnlyTabs && !state.isUnlocked && settings.isLockedTab(state.selected) {
+            // "Only lock some tabs": the header stays so you can move to a tab that is not locked.
+            LockView()
         } else if let feature = state.selected.feature, !entitlements.canUse(feature) {
             // Pro tabs show what they do and how to unlock them.
             ActivationModalView(feature: feature)

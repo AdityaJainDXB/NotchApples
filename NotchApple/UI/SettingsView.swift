@@ -720,6 +720,17 @@ private struct AuthenticationSettings: View {
                     Text("Lock Notch Apple")
                     Text("Ask to unlock every time the notch opens.")
                 }
+                if settings.securityEnabled {
+                    Toggle(isOn: $settings.securityOnlyTabs) {
+                        Text("Only lock some tabs")
+                        Text("Off by default. Ask to unlock only when you open one of the tabs below (or switch to it); every other tab opens as normal.")
+                    }
+                    if settings.securityOnlyTabs {
+                        ForEach([Module.messenger, .search, .games, .clipboard, .notes, .claude, .shelf, .voiceNotes, .browser], id: \.self) { m in
+                            Toggle(m.title, isOn: Binding(get: { settings.isLockedTab(m) }, set: { settings.setLockedTab(m, $0) }))
+                        }
+                    }
+                }
             }
             Section {
                 LabeledContent("Face") {
