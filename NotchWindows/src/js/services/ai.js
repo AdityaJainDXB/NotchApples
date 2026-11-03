@@ -81,9 +81,19 @@ export const savedPrompts = () => load('ai.savedPrompts', [
   { title: "Explain like I'm 12", text: "Explain this like I'm 12: " },
 ]);
 
+/// How hard the assistant works on an answer (the Effort menu in the message box): Low is quick and short, High thinks it through, Medium
+/// changes nothing. It is added to the instructions every provider gets, so it works the same on all of them.
+export const EFFORTS = {
+  low: { name: 'Low', hint: ' Answer quickly and keep it short; do not over-explain.' },
+  medium: { name: 'Medium', hint: '' },
+  high: { name: 'High', hint: ' Think the problem through step by step and check your work before you answer, then give a thorough answer.' },
+};
+export const effort = () => { const e = load('ai.effort', 'medium'); return EFFORTS[e] ? e : 'medium'; };
+export const setEffort = (e) => { if (EFFORTS[e]) save('ai.effort', e); };
+
 export function systemPrompt() {
   const p = activePersona();
-  return BASE_SYSTEM + (p ? `\n\nStanding instructions from the user (persona "${p.name}"): ${p.instructions}` : '');
+  return BASE_SYSTEM + EFFORTS[effort()].hint + (p ? `\n\nStanding instructions from the user (persona "${p.name}"): ${p.instructions}` : '');
 }
 
 // ---- slash commands (Pro) ----

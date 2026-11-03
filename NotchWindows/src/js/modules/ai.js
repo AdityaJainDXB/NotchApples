@@ -21,70 +21,54 @@ export function render(root, opts = {}) {
   let busy = false;
 
   const log = el('div', { class: 'col scroll', style: 'flex:1;gap:10px;padding:2px 4px 2px 0' });
-  const input = el('textarea', { class: 'field', rows: 1, placeholder: 'Ask anything…  (Shift+Enter for a new line)', style: 'min-height:36px;max-height:120px;flex:1' });
+  const input = el('textarea', { class: 'field', rows: 1, placeholder: 'Ask anything…  (Shift+Enter for a new line)', style: 'min-height:36px;max-height:120px;width:100%' });
   const sendBtn = el('button', { class: 'icon-btn solid', title: 'Send (Enter)' }, '↑');
   const notice = el('div', { class: 'small dim', style: 'min-height:14px' });
   const chips = el('div', { class: 'hstack wrap', style: 'gap:4px' });
   const slashBox = el('div', { class: 'col gap-4 hidden', style: 'max-height:150px;overflow:auto' });
 
   // ---- toolbar ----
-  const providerSel = el('select', { class: 'field auto', title: 'Provider' },
-    ...Object.entries(AI.PROVIDERS).map(([id, p]) => el('option', { value: id, selected: id === AI.provider() }, p.name)));
-  // A searchable model picker: type to filter, Enter picks the first match, hovering a model previews what we know of it.
+  // The message box has three drop-down menus under the text (provider, model, effort), in one pill style; each opens above its pill.
   let modelList = [];
-  const modelBtn = el('button', { class: 'field auto model-btn', type: 'button', title: 'Model', 'aria-haspopup': 'listbox', style: 'max-width:220px;text-align:left' });
-  function paintModelBtn() { modelBtn.textContent = `${AI.modelOf(AI.provider())} ▾`; }
+  const pill = (title) => el('button', { class: 'dd-pill', type: 'button', title, 'aria-haspopup': 'menu' });
+  const providerPill = pill('Provider'), modelPill = pill('Model'), effortPill = pill('How hard it thinks: Low is quick and short, High thinks it through');
+  const paintPills = () => {
+    const p = AI.provider();
+    providerPill.textContent = `${(AI.PROVIDERS[p] || {}).name || p} ▾`;
+    modelPill.textContent = `${AI.modelOf(p)} ▾`; modelPill.style.maxWidth = '180px';
+    effortPill.textContent = `🧠 ${AI.EFFORTS[AI.effort()].name} ▾`;
+  };
   async function paintModels() {
     const p = AI.provider(), current = AI.modelOf(p);
-    paintModelBtn();
+    paintPills();
     const list = await AI.listModels(p);
     const ids = new Set(); modelList = [];
     for (const m of [{ id: current, label: current }, ...(p === 'openRouter' ? list.filter((x) => x.free) : list)]) {
       if (ids.has(m.id)) continue; ids.add(m.id); modelList.push(m);
     }
   }
-  function openModelPicker() {
-    document.querySelector('.model-pop')?.remove();
-    const p = AI.provider(), cur = AI.modelOf(p), info = AI.PROVIDERS[p] || {};
-    const search = el('input', { class: 'field', placeholder: 'Search models', 'aria-label': 'Search models', style: 'width:100%' });
-    const list = el('div', { class: 'model-list', role: 'listbox' });
-    const card = el('div', { class: 'model-card hidden' });
-    const pop = el('div', { class: 'model-pop' }, el('div', { class: 'col', style: 'gap:6px;width:240px' }, search, list), card);
-    const r = modelBtn.getBoundingClientRect();
-    pop.style.left = `${Math.max(8, Math.min(r.left, innerWidth - 480))}px`; pop.style.top = `${r.bottom + 4}px`;
-    const close = () => { pop.remove(); document.removeEventListener('pointerdown', away, true); document.removeEventListener('keydown', esc, true); };
-    const away = (e) => { if (!pop.contains(e.target) && e.target !== modelBtn) close(); };
+  /// A drop-down menu above `anchor`: `items` are { label, on, run } or { heading }. Picking one closes it; Escape or a click away too.
+  function dropMenu(anchor, items) {
+    document.querySelector('.dd-menu')?.remove();
+    const menu = el('div', { class: 'dd-menu', role: 'menu' }, ...items.map((it) => it.heading
+      ? el('div', { class: 'dd-head' }, it.heading)
+      : el('button', { class: `model-row${it.on ? ' on' : ''}`, type: 'button', role: 'menuitemradio', 'aria-checked': !!it.on, onclick: () => { close(); it.run(); } }, it.label)));
+    const r = anchor.getBoundingClientRect();
+    menu.style.left = `${Math.max(8, Math.min(r.left, innerWidth - 240))}px`; menu.style.bottom = `${innerHeight - r.top + 4}px`;
+    const close = () => { menu.remove(); document.removeEventListener('pointerdown', away, true); document.removeEventListener('keydown', esc, true); };
+    const away = (e) => { if (!menu.contains(e.target) && e.target !== anchor) close(); };
     const esc = (e) => { if (e.key === 'Escape') { e.stopPropagation(); close(); } };
-    const pick = async (id) => {
-      if (id === '__custom') { close(); const { prompt } = await import('../ui.js'); const v = await prompt('Model name', { placeholder: 'e.g. gemini-3.8-pro', value: cur }); if (v) AI.setModel(p, v); }
-      else { AI.setModel(p, id); close(); }
-      paintModels();
-    };
-    const show = (m) => {
-      if (!m) { card.classList.add('hidden'); return; }
-      const local = p === 'ollama' || p === 'apple';
-      card.replaceChildren(el('b', {}, m.id), el('div', { class: 'tiny faint' }, info.name || p),
-        el('div', { class: 'tiny' }, local ? '🔒 Runs on this computer: nothing leaves it' : '☁️ Answered by the provider you chose'),
-        m.id === cur ? el('div', { class: 'tiny' }, '✓ Selected') : null);
-      card.classList.remove('hidden');
-    };
-    const paintList = () => {
-      const q = search.value.trim().toLowerCase();
-      const rows = modelList.filter((m) => !q || m.id.toLowerCase().includes(q) || (m.label || '').toLowerCase().includes(q));
-      list.replaceChildren(...rows.map((m) => {
-        const row = el('button', { class: `model-row${m.id === cur ? ' on' : ''}`, type: 'button', role: 'option', 'aria-selected': m.id === cur, onclick: () => pick(m.id) }, m.label || m.id);
-        row.onmouseenter = row.onfocus = () => show(m);
-        return row;
-      }), el('button', { class: 'model-row', type: 'button', onclick: () => pick('__custom') }, 'Other model…'));
-      show(null);   // the preview closes when the search changes
-    };
-    search.addEventListener('input', paintList);
-    search.addEventListener('keydown', (e) => { if (e.key === 'Enter') { const first = list.querySelector('.model-row'); first?.click(); } });
-    document.body.append(pop); paintList(); search.focus();
+    document.body.append(menu); menu.querySelector('.model-row.on')?.scrollIntoView({ block: 'nearest' });
     setTimeout(() => { document.addEventListener('pointerdown', away, true); document.addEventListener('keydown', esc, true); });
   }
-  modelBtn.addEventListener('click', openModelPicker);
-  providerSel.addEventListener('change', () => { AI.setProvider(providerSel.value); paintModels(); keyHint(); });
+  providerPill.addEventListener('click', () => dropMenu(providerPill, Object.entries(AI.PROVIDERS).map(([id, pr]) => ({ label: pr.name, on: id === AI.provider(), run: () => { AI.setProvider(id); paintModels(); keyHint(); } }))));
+  modelPill.addEventListener('click', () => {
+    const p = AI.provider(), cur = AI.modelOf(p);
+    dropMenu(modelPill, [{ heading: (AI.PROVIDERS[p] || {}).name || p },
+      ...modelList.map((m) => ({ label: m.label || m.id, on: m.id === cur, run: () => { AI.setModel(p, m.id); paintModels(); } })),
+      { label: 'Other model…', run: async () => { const { prompt } = await import('../ui.js'); const v = await prompt('Model name', { placeholder: 'e.g. gemini-3.8-pro', value: cur }); if (v) { AI.setModel(p, v); paintModels(); } } }]);
+  });
+  effortPill.addEventListener('click', () => dropMenu(effortPill, [{ heading: 'Effort' }, ...Object.entries(AI.EFFORTS).map(([id, e]) => ({ label: e.name, on: id === AI.effort(), run: () => { AI.setEffort(id); paintPills(); } }))]));
 
   const webBtn = iconBtn('🌐', 'Search the web for answers (Pro)', () => {
     if (!canUse('webSearch')) return locked('webSearch');
@@ -338,9 +322,9 @@ export function render(root, opts = {}) {
   // ---- layout ----
 
   root.append(el('div', { class: 'col fill', style: 'gap:8px' },
-    el('div', { class: 'hstack' }, providerSel, modelBtn, el('div', { class: 'spacer' }), webBtn, shotBtn, fileBtn, voiceBtn, speakBtn, moreBtn),
+    el('div', { class: 'hstack' }, el('div', { class: 'spacer' }), webBtn, shotBtn, fileBtn, voiceBtn, speakBtn, moreBtn),
     log, slashBox, tray, notice,
-    el('div', { class: 'hstack', style: 'align-items:flex-end' }, input, sendBtn)));
+    el('div', { class: 'composer' }, input, el('div', { class: 'hstack composer-bar' }, providerPill, modelPill, effortPill, el('div', { class: 'spacer' }), sendBtn))));
 
   paintModels();
   keyHint();

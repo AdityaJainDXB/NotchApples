@@ -679,3 +679,13 @@ body[data-perf="lite"] .ws-step { animation: none; }
   .btn.quiet, .btn.ghost, .seg, .chip { border-color: rgba(255,255,255,.5); }
   :where(a, button, [role="button"], input, select, summary):focus-visible { outline: 3px solid #fff; outline-offset: 3px; }
 }
+
+/* The AI message box: the text above, three drop-down pills (provider, model, effort) and Send below (modules/ai.js) */
+.composer { border: 1px solid rgba(255,255,255,.14); border-radius: 14px; background: rgba(255,255,255,.06); padding: 6px; display: flex; flex-direction: column; gap: 4px; }
+.composer:focus-within { border-color: rgba(255,255,255,.3); }
+.composer textarea.field { background: transparent; border: 0; box-shadow: none; resize: none; padding: 6px 8px; }
+.composer-bar { gap: 4px; align-items: center; }
+.dd-pill { border: 0; border-radius: 999px; background: rgba(255,255,255,.07); color: rgba(255,255,255,.85); font-size: 12px; font-weight: 500; padding: 4px 10px; cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.dd-pill:hover, .dd-pill:focus-visible { background: rgba(255,255,255,.14); outline: none; }
+.dd-menu { position: fixed; z-index: 1000; display: flex; flex-direction: column; gap: 2px; padding: 6px; min-width: 170px; max-width: 280px; max-height: 300px; overflow: auto; border-radius: 12px; background: var(--panel, #1c1c1e); border: 1px solid rgba(255,255,255,.12); box-shadow: 0 12px 32px rgba(0,0,0,.5); }
+.dd-head { font-size: 10px; text-transform: uppercase; letter-spacing: .06em; opacity: .55; padding: 4px 8px 2px; }
