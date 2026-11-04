@@ -48,7 +48,7 @@ test('every apron is paved, so the nose wheel never digs in there', () => {
 test('the autopilot turns to a new heading and holds a new height', () => {
   for (const id of ['c172', 'a320']) {
     const p = PLANES.find((q) => q.id === id), f = new Flight(p);
-    f.reset([2000, 1500, 11000], 0, p.cruise, false, 0);
+    f.reset([2000, 2300, 11000], 0, p.cruise, false, 0);     // high enough that the ground ahead never raises its height (and within a light aircraft's ceiling)
     for (let i = 0; i < 20 * 60; i++) f.step(1 / 60, { pitch: 0, roll: 0, yaw: 0, throttle: 0.7 }, world);
     assert.ok(f.apEngage(), 'engages in the air');
     f.ap.hdg += 0.5; f.ap.alt += 100;
@@ -148,4 +148,32 @@ test('a clean start needs the battery before the starter will turn', () => {
   f.battery = true; assert.equal(f.engineStart(), 'ok');
   const pr = T.procedure(f, world, { took: false });
   assert.ok(pr.steps.some((x) => /Battery on/.test(x.t)) && pr.steps.some((x) => /Beacon on/.test(x.t)));
+});
+
+test('the autopilot climbs over rising ground and never hands the aircraft back low down', () => {
+  for (const id of ['c172', 'a320', 'f16', 'b737']) {
+    const p = PLANES.find((q) => q.id === id), f = new Flight(p);
+    f.reset([2000, 1500, 11000], 0, p.cruise, false, 0);      // heading for the mountains: the ground rises to about 1,500 m in 9 km
+    for (let i = 0; i < 20 * 60; i++) f.step(1 / 60, { pitch: 0, roll: 0, yaw: 0, throttle: 0.7 }, world);
+    assert.ok(f.apEngage(), `${id} engages`);
+    let minAgl = 1e9;
+    for (let i = 0; i < 200 * 60 && !f.crashed; i++) {
+      f.step(1 / 60, { pitch: 0, roll: 0, yaw: 0, throttle: 0 }, world); f.events.length = 0;
+      minAgl = Math.min(minAgl, f.pos[1] - f.s.gear * (f.s.scale || 1) - T.groundAt(world, f.pos[0], f.pos[2]));
+      assert.ok(f.ap.on, `${id} still flying itself at ${(i / 60).toFixed(0)} s`);
+    }
+    assert.ok(!f.crashed && minAgl > 40, `${id} cleared the ground (lowest ${minAgl.toFixed(0)} m)`);
+  }
+});
+
+test('the autopilot engaged just after take-off climbs to a safe height and keeps a sensible speed', () => {
+  for (const id of ['c172', 'a320', 'f16']) {
+    const p = PLANES.find((q) => q.id === id), f = new Flight(p);
+    f.reset([2000, T.groundAt(world, 2000, 11000) + 70, 11000], 0, p.stall * 1.4, false, 0);
+    for (let i = 0; i < 2 * 60; i++) f.step(1 / 60, { pitch: 0.2, roll: 0, yaw: 0, throttle: 0.5 }, world);
+    assert.ok(f.apEngage(), `${id} engages low`);
+    for (let i = 0; i < 90 * 60 && !f.crashed; i++) { f.step(1 / 60, { pitch: 0, roll: 0, yaw: 0, throttle: 0 }, world); f.events.length = 0; }
+    assert.ok(!f.crashed && f.ap.on, `${id} still flying`);
+    assert.ok(f.ias > p.cruise * 0.7, `${id} at a proper speed (${f.ias.toFixed(0)} of cruise ${p.cruise})`);
+  }
 });

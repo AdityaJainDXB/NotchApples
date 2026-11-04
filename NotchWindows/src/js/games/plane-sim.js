@@ -3335,8 +3335,21 @@
     /// The autopilot: holds a heading (banking up to 25 degrees), a height (climbing or descending gently) and a speed.
     apEngage() {
       if (this.s.rotor || this.crashed || this.onGround) return false;
-      this.ap = { on: true, hdg: this.heading, alt: this.pos[1], spd: Math.max(this.ias, this.s.stall * 1.35), i: 0 };
+      this.ap = { on: true, hdg: this.heading, alt: this.pos[1], spd: this.apCruise(), i: 0, pi: 0, over: 0 };
       return true;
+    }
+    /// The speed the autopilot flies at: what you were doing if that is already brisk, otherwise 80% of the aircraft's cruise speed (never
+    /// less than 1.5 times the stall), so engaging it right after take-off does not leave it crawling along at the edge of a stall.
+    apCruise() { const s = this.s; return Math.max(this.ias, s.stall * 1.5, s.cruise * 0.8); }
+    /// The highest ground within the next 60 s along the way (and 200 m either side), looked at four times a second.
+    apTerrain(world, dt) {
+      const a = this.ap; a.tT = (a.tT || 0) - dt;
+      if (a.tT > 0 && a.terr !== undefined) return a.terr;
+      a.tT = 0.25;
+      const hs = Math.hypot(this.vel[0], this.vel[2]) || 1, dx = this.vel[0] / hs, dz = this.vel[2] / hs;
+      let hi = groundAt(world, this.pos[0], this.pos[2]);
+      for (let d = 250; d <= Math.min(hs * 60, 30000); d += 250) for (const side of [-1, 0, 1]) { hi = Math.max(hi, groundAt(world, this.pos[0] + dx * d - dz * side * 200, this.pos[2] + dz * d + dx * side * 200)); }
+      return (a.terr = hi);
     }
     /// Arms the approach mode on the runway whose ILS the aircraft is on (the autopilot comes on if it was off).
     apApproach(world) {
@@ -3351,9 +3364,8 @@
     apInput(input, dt, world) {
       const a = this.ap, s = this.s;
       // Taking hold of the stick or running out of safe speed hands the aircraft back.
-      if (Math.abs(input.pitch) > 0.35 || Math.abs(input.roll) > 0.35 || this.inStall || this.onGround || this.damage.L === false || this.damage.R === false) { a.on = false; this.events.push({ type: 'apoff' }); return input; }
-      // Low and not on an approach: it hands back rather than flying a height-hold into the ground.
-      if (a.mode !== 'appr' && this.pos[1] - s.gear * (s.scale || 1) - groundAt(world, this.pos[0], this.pos[2]) < 60) { a.on = false; this.events.push({ type: 'apoff' }); return input; }
+      a.over = (Math.abs(input.pitch) > 0.35 || Math.abs(input.roll) > 0.35) ? (a.over || 0) + dt : 0;
+      if (a.over > 0.35 || this.inStall || this.onGround || this.damage.L === false || this.damage.R === false) { a.on = false; this.events.push({ type: 'apoff' }); return input; }
       let vsApp = null;
       if (a.mode === 'appr') {
         // Flying the ILS: steer onto the localiser course, hold level until the glideslope comes down to us, then follow it.
@@ -3370,11 +3382,25 @@
       let he = a.hdg - this.heading; while (he > Math.PI) he -= 2 * Math.PI; while (he < -Math.PI) he += 2 * Math.PI;
       const bankT = clamp(he * 1.1, -0.44, 0.44);
       const roll = clamp((bankT - this.bank) * 2.0 + 0, -0.6, 0.6);
-      const vsT = vsApp != null ? vsApp : clamp((a.alt - this.pos[1]) * 0.08, -6, 6) * (s.cat === 'ga' ? 0.6 : 1);
-      const pitch = clamp((vsT - this.vel[1]) * 0.06, -0.4, 0.4);
-      a.i = clamp(a.i + (a.spd - this.ias) * dt * 0.02, -0.5, 0.5);
+      // The height it holds is the one you set, or the ground ahead plus a safe margin if that is higher: it climbs over a mountain or away
+      // from the water instead of flying into it (and keeps climbing rather than giving the aircraft back low down).
+      let vsT, danger = false;
+      if (vsApp != null) vsT = vsApp;
+      else {
+        const clear = (s.cat === 'ga' ? 130 : 200) + this.speed * 0.4, floor = this.apTerrain(world, dt) + clear;
+        const want = Math.max(a.alt, floor), up = want > a.alt + 1;
+        danger = up && this.pos[1] < floor + 30;
+        vsT = clamp((want - this.pos[1]) * 0.08, -6, up ? (s.cat === 'ga' ? 7 : s.cat === 'mil' ? 30 : 13) : 6) * (s.cat === 'ga' && !up ? 0.6 : 1);
+      }
+      // Too slow for comfort: nose level or down and full power, before it can ever stall.
+      const slow = this.ias < s.stall * 1.25;
+      if (slow && vsT > 0) vsT = 0;
+      const verr = vsT - this.vel[1];
+      const pitch = clamp(verr * 0.06, -0.4, danger ? 0.6 : 0.4);
+      a.i = clamp(a.i + (a.spd - this.ias) * dt * 0.04, -0.5, 0.5);
       // (the throttle lever moves at a rate set by input.throttle, so ask for the movement that reaches the wanted setting)
-      const throttle = clamp((clamp(0.5 + (a.spd - this.ias) * 0.05 + a.i, 0.05, 1) - this.throttle) * 3, -1, 1);
+      const wantThr = slow || danger ? 1 : clamp(0.5 + (a.spd - this.ias) * 0.05 + a.i, 0.05, 1);
+      const throttle = clamp((wantThr - this.throttle) * 3, -1, 1);
       return { ...input, roll: roll * AP_SIGN.roll, pitch: pitch * AP_SIGN.pitch, yaw: 0, throttle };
     }
 

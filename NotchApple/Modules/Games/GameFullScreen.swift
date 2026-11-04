@@ -59,7 +59,7 @@ enum GameWindow {
         w.appearance = NSAppearance(named: .darkAqua)
         switch game {
         case .plane: w.contentView = NSHostingView(rootView: PlaneGameView(standalone: true).background(Color.black).preferredColorScheme(.dark))
-        case .racing: w.contentView = NSHostingView(rootView: RacingGameView().background(Color.black).preferredColorScheme(.dark))
+        case .racing: w.contentView = NSHostingView(rootView: RacingGameView(standalone: true).background(Color.black).preferredColorScheme(.dark))
         default: w.contentView = NSHostingView(rootView: GameFullView(game: game))
         }
         if game == .plane || game == .racing { AppDelegate.current?.notch?.closeNotch() }      // one copy of the game at a time

@@ -15,9 +15,11 @@ import AVFoundation
 import Speech
 
 struct RacingGameView: View {
+    /// True in the Full screen window: its own copy of the game, apart from the one the notch keeps between visits.
+    var standalone = false
     var body: some View {
         if let url = Bundle.main.url(forResource: "RacingGame", withExtension: "html") {
-            RacingWebView(url: url)
+            RacingWebView(url: url, standalone: standalone)
                 .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
         } else {
             Text("The Racing game is missing from this copy of Notch Apple.")
@@ -37,8 +39,34 @@ final class RacingWKWebView: WKWebView {
     }
 }
 
+/// The Racing game's web view, kept between visits like the Plane game: closing the notch or switching tab pauses the race and mutes
+/// it, and coming back puts it back as it was (it is let go of after an hour away).
+@MainActor
+enum RacingGameControl {
+    fileprivate static var kept: RacingWKWebView?
+    private static var releaseTask: Task<Void, Never>?
+    fileprivate static var owner: ObjectIdentifier?
+
+    fileprivate static func setAside(_ view: RacingWKWebView) {
+        view.evaluateJavaScript("window.NotchRaceGame && window.NotchRaceGame.suspend && window.NotchRaceGame.suspend()")
+        releaseTask?.cancel()
+        releaseTask = Task { @MainActor in
+            try? await Task.sleep(for: .seconds(3600))
+            guard !Task.isCancelled, owner == nil else { return }
+            kept?.loadHTMLString("", baseURL: nil)       // stops the game loop and the engine sound
+            kept = nil
+        }
+    }
+
+    fileprivate static func bringBack(_ view: RacingWKWebView) {
+        releaseTask?.cancel(); releaseTask = nil
+        view.evaluateJavaScript("window.NotchRaceGame && window.NotchRaceGame.resume && window.NotchRaceGame.resume()")
+    }
+}
+
 private struct RacingWebView: NSViewRepresentable {
     let url: URL
+    var standalone = false
     /// The Games sidebar's Sound switch: it turns the engine, tyres and crash sounds on and off too.
     @AppStorage(GameSound.key) private var soundOn = true
 
@@ -47,6 +75,7 @@ private struct RacingWebView: NSViewRepresentable {
     @MainActor final class Coordinator: NSObject, WKUIDelegate, WKScriptMessageHandler {
         weak var web: RacingWKWebView?
         var monitor: Any?
+        var standalone = false
         private var heard = ""
 
         /// The race radio: the game asks for the microphone ("permission"), starts listening when you open the radio
@@ -152,6 +181,22 @@ private struct RacingWebView: NSViewRepresentable {
     func makeCoordinator() -> Coordinator { Coordinator() }
 
     func makeNSView(context: Context) -> RacingWKWebView {
+        // Coming back to a race that is being kept: the same web view, with the race as it was.
+        if !standalone, let kept = RacingGameControl.kept {
+            let coordinator = context.coordinator
+            coordinator.web = kept
+            RacingGameControl.owner = ObjectIdentifier(coordinator)
+            kept.uiDelegate = coordinator
+            kept.configuration.userContentController.removeScriptMessageHandler(forName: "radio")
+            kept.configuration.userContentController.add(coordinator, name: "radio")
+            coordinator.monitor = NSEvent.addLocalMonitorForEvents(matching: [.keyDown, .keyUp]) { [weak coordinator] event in
+                let consumed = MainActor.assumeIsolated { coordinator?.forward(event) ?? false }
+                return consumed ? nil : event
+            }
+            RacingGameControl.bringBack(kept)
+            DispatchQueue.main.async { kept.window?.makeFirstResponder(kept) }
+            return kept
+        }
         let config = WKWebViewConfiguration()
         config.mediaTypesRequiringUserActionForPlayback = []
         config.userContentController.addUserScript(WKUserScript(source: "window.NotchHostSound=\(GameSound.enabled); window.NotchLowPower=\(ProcessInfo.processInfo.isLowPowerModeEnabled);", injectionTime: .atDocumentStart, forMainFrameOnly: true))
@@ -163,6 +208,8 @@ private struct RacingWebView: NSViewRepresentable {
         DispatchQueue.main.async { view.window?.makeFirstResponder(view) }
         let coordinator = context.coordinator
         coordinator.web = view
+        coordinator.standalone = standalone
+        if !standalone { RacingGameControl.kept = view; RacingGameControl.owner = ObjectIdentifier(coordinator) }
         coordinator.monitor = NSEvent.addLocalMonitorForEvents(matching: [.keyDown, .keyUp]) { [weak coordinator] event in
             let consumed = MainActor.assumeIsolated { coordinator?.forward(event) ?? false }
             return consumed ? nil : event
@@ -180,8 +227,14 @@ private struct RacingWebView: NSViewRepresentable {
         coordinator.monitor = nil
         nsView.configuration.userContentController.removeScriptMessageHandler(forName: "radio")   // it holds the coordinator
         if VoiceInput.shared.isListening { VoiceInput.shared.stop() }
-        // Leaving the game ends the race and stops the engine sound.
-        nsView.evaluateJavaScript("window.NotchRaceGame && window.NotchRaceGame.suspend && window.NotchRaceGame.suspend()")
-        nsView.loadHTMLString("", baseURL: nil)
+        if coordinator.standalone {      // the Full screen window: nothing is kept, the page is dropped (the race and its sound stop)
+            nsView.evaluateJavaScript("window.NotchRaceGame && window.NotchRaceGame.suspend && window.NotchRaceGame.suspend()")
+            nsView.loadHTMLString("", baseURL: nil)
+            return
+        }
+        guard RacingGameControl.owner == ObjectIdentifier(coordinator) else { return }     // a newer copy has taken over
+        RacingGameControl.owner = nil
+        // Not destroyed: the race is paused, muted and kept for when the notch opens again.
+        RacingGameControl.setAside(nsView)
     }
 }
