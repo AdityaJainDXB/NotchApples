@@ -76,10 +76,10 @@ Pick your computer. Both buttons start the download straight away. The Mac link 
   </tr>
   <tr>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.2.0</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.2.1</b></a>
     </td>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 2.2.0 BETA</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 2.2.1 BETA</b></a>
     </td>
   </tr>
   <tr>
@@ -150,6 +150,12 @@ More screenshots of the capture overlay, the AI answer, the settings and the Win
 
 ## What's new
 
+### Mac 2.2.1 · Windows 2.2.1 BETA · 4 November 2026 · ✈️ A safer autopilot, and Racing keeps its place
+
+- Racing: close the notch or switch tab with a race running and it now pauses and mutes, and comes back exactly as you left it (it used to start over). It is let go of after an hour away.
+- Plane: the autopilot now flies like one. It looks 60 seconds ahead and climbs over mountains or away from the water instead of flying into them (and keeps flying rather than handing you the controls low down), it holds about 80% of the aircraft’s cruise speed instead of crawling at the speed you engaged at, and a resting mouse or a brush of a key no longer switches it off (you have to hold the stick for about a third of a second).
+- The autopilot fix is the same as on the Mac. (Racing keeping its place when the notch closes is Mac only.) Untested on real Windows hardware.
+
 ### Mac 2.2.0 · Windows 2.2.0 BETA · 3 November 2026 · 🖥️ Hide the notch with the lid closed
 
 - Notch: a new “Built-in display only” choice under Settings → Notch → Displays → Show the notch on. With it, the notch is hidden on every screen while the MacBook lid is closed (for example when you work on an external monitor), and it comes back when the lid opens.
@@ -161,13 +167,6 @@ More screenshots of the capture overlay, the AI answer, the settings and the Win
 - Fix: Racing crashed as soon as you opened it in 2.1.98 (a crash in the new leaderboard button), which is why 2.1.98 was withdrawn. It opens and plays normally again. Sorry about that.
 - The friends leaderboard button in Daily Word and Daily Trivia now stays on screen, and your Daily Trivia streak can join a leaderboard too. This includes everything from 2.1.98: Daily Trivia, tic-tac-toe in Messenger rooms and the optional friends leaderboards.
 - Same fixes as the Mac. Untested on real Windows hardware.
-
-### Mac 2.1.98 · Windows 2.1.98 BETA · 3 November 2026 · ❓ Trivia, tic-tac-toe in rooms and friends leaderboards
-
-- Daily Trivia (new) in the Games menu: one multiple-choice question a day from a bundled set of 420 (science, history, geography, nature, sport, food, tech and general knowledge), the same for everyone on the same day, with no network. You see the right answer and a short explanation, there is a streak counter and a copyable result, and a Practice mode of five random questions.
-- Messenger: play tic-tac-toe with someone in a room. Press Play tic-tac-toe in a room, the other person accepts, and you take turns; both apps check every move, and rematch works. Rooms only for now (not Nearby Wi-Fi), and older versions of the app simply ignore the game messages.
-- Friends leaderboards (optional, off by default) for Racing, Tetris, Plane and Daily Word: share a 6-character board code with friends and see a top 20. Nothing is sent unless you switch sharing on and join a board, and only the game, the score, the name you type and a random id are sent. The leaderboard server is being switched on separately, so until then the panel says it cannot reach the leaderboard.
-- Same as the Mac. Untested on real Windows hardware.
 
 Every earlier release is in the [changelog](CHANGELOG.md).
 

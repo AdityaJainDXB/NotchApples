@@ -4,6 +4,12 @@ Every Notch Apple release, newest first. The latest few are also on the [README]
 
 > **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is in the repository's history.
 
+### Mac 2.2.1 · Windows 2.2.1 BETA · 4 November 2026 · ✈️ A safer autopilot, and Racing keeps its place
+
+- Racing: close the notch or switch tab with a race running and it now pauses and mutes, and comes back exactly as you left it (it used to start over). It is let go of after an hour away.
+- Plane: the autopilot now flies like one. It looks 60 seconds ahead and climbs over mountains or away from the water instead of flying into them (and keeps flying rather than handing you the controls low down), it holds about 80% of the aircraft’s cruise speed instead of crawling at the speed you engaged at, and a resting mouse or a brush of a key no longer switches it off (you have to hold the stick for about a third of a second).
+- The autopilot fix is the same as on the Mac. (Racing keeping its place when the notch closes is Mac only.) Untested on real Windows hardware.
+
 ### Mac 2.2.0 · Windows 2.2.0 BETA · 3 November 2026 · 🖥️ Hide the notch with the lid closed
 
 - Notch: a new “Built-in display only” choice under Settings → Notch → Displays → Show the notch on. With it, the notch is hidden on every screen while the MacBook lid is closed (for example when you work on an external monitor), and it comes back when the lid opens.

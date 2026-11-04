@@ -20,6 +20,10 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.2.1", date: "4 November 2026", headline: "A safer autopilot, and Racing keeps its place", items: [
+            "Racing: close the notch or switch tab with a race running and it now pauses and mutes, and comes back exactly as you left it (it used to start over). It is let go of after an hour away.",
+            "Plane: the autopilot now flies like one. It looks 60 seconds ahead and climbs over mountains or away from the water instead of flying into them (and keeps flying rather than handing you the controls low down), it holds about 80% of the aircraft’s cruise speed instead of crawling at the speed you engaged at, and a resting mouse or a brush of a key no longer switches it off (you have to hold the stick for about a third of a second).",
+        ]),
         ReleaseNote(version: "2.2.0", date: "3 November 2026", headline: "Hide the notch with the lid closed", items: [
             "Notch: a new “Built-in display only” choice under Settings → Notch → Displays → Show the notch on. With it, the notch is hidden on every screen while the MacBook lid is closed (for example when you work on an external monitor), and it comes back when the lid opens.",
             "Racing: the announcer now says lap times properly. 1:28.360 was being read as “1 hour 28 minutes 36 seconds”; it now says “1 minute 28 point 3 6 0 seconds”.",
