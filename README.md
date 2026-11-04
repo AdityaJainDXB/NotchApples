@@ -76,10 +76,10 @@ Pick your computer. Both buttons start the download straight away. The Mac link 
   </tr>
   <tr>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.2.1</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.2.2</b></a>
     </td>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 2.2.1 BETA</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 2.2.2 BETA</b></a>
     </td>
   </tr>
   <tr>
@@ -150,6 +150,12 @@ More screenshots of the capture overlay, the AI answer, the settings and the Win
 
 ## What's new
 
+### Mac 2.2.2 · Windows 2.2.2 BETA · 4 November 2026 · 🏎️ Leave button and the right car in the diagram
+
+- Racing: a small Leave button on the left edge during a race or session takes you back to the Racing menu (the same as Esc). It is faint until you hover over it. It matters now that a race is kept when you close the notch.
+- Racing: the tyre and damage diagram (bottom left) now shows the car you are driving. The GT3, the street cars, the supercar, the muscle car, the hatchback, the Safety Car and the Medical Car each get a closed-car shape with glass and their own details (wing, splitter, stripes, light bar), instead of a Formula One car. The Formula One car keeps its open-wheel diagram.
+- Same as the Mac, except the race is not kept when you change game (that is Mac only). Untested on real Windows hardware.
+
 ### Mac 2.2.1 · Windows 2.2.1 BETA · 4 November 2026 · ✈️ A safer autopilot, and Racing keeps its place
 
 - Racing: close the notch or switch tab with a race running and it now pauses and mutes, and comes back exactly as you left it (it used to start over). It is let go of after an hour away.
@@ -161,12 +167,6 @@ More screenshots of the capture overlay, the AI answer, the settings and the Win
 - Notch: a new “Built-in display only” choice under Settings → Notch → Displays → Show the notch on. With it, the notch is hidden on every screen while the MacBook lid is closed (for example when you work on an external monitor), and it comes back when the lid opens.
 - Racing: the announcer now says lap times properly. 1:28.360 was being read as “1 hour 28 minutes 36 seconds”; it now says “1 minute 28 point 3 6 0 seconds”.
 - The Racing announcer fix is the same as on the Mac. (The notch display choice is Mac only.) Untested on real Windows hardware.
-
-### Mac 2.1.99 · Windows 2.1.99 BETA · 3 November 2026 · 🏁 Racing fixed, and everything from 2.1.98
-
-- Fix: Racing crashed as soon as you opened it in 2.1.98 (a crash in the new leaderboard button), which is why 2.1.98 was withdrawn. It opens and plays normally again. Sorry about that.
-- The friends leaderboard button in Daily Word and Daily Trivia now stays on screen, and your Daily Trivia streak can join a leaderboard too. This includes everything from 2.1.98: Daily Trivia, tic-tac-toe in Messenger rooms and the optional friends leaderboards.
-- Same fixes as the Mac. Untested on real Windows hardware.
 
 Every earlier release is in the [changelog](CHANGELOG.md).
 

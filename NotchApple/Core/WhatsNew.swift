@@ -20,6 +20,10 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.2.2", date: "4 November 2026", headline: "Leave button and the right car in the diagram", items: [
+            "Racing: a small Leave button on the left edge during a race or session takes you back to the Racing menu (the same as Esc). It is faint until you hover over it. It matters now that a race is kept when you close the notch.",
+            "Racing: the tyre and damage diagram (bottom left) now shows the car you are driving. The GT3, the street cars, the supercar, the muscle car, the hatchback, the Safety Car and the Medical Car each get a closed-car shape with glass and their own details (wing, splitter, stripes, light bar), instead of a Formula One car. The Formula One car keeps its open-wheel diagram.",
+        ]),
         ReleaseNote(version: "2.2.1", date: "4 November 2026", headline: "A safer autopilot, and Racing keeps its place", items: [
             "Racing: close the notch or switch tab with a race running and it now pauses and mutes, and comes back exactly as you left it (it used to start over). It is let go of after an hour away.",
             "Plane: the autopilot now flies like one. It looks 60 seconds ahead and climbs over mountains or away from the water instead of flying into them (and keeps flying rather than handing you the controls low down), it holds about 80% of the aircraft’s cruise speed instead of crawling at the speed you engaged at, and a resting mouse or a brush of a key no longer switches it off (you have to hold the stick for about a third of a second).",

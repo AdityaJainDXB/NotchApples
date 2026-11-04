@@ -787,6 +787,18 @@
   const spokenTimes = (text) => String(text)
     .replace(/(\d+):(\d{2})\.(\d{1,3})/g, (_, m, sc, f) => `${+m} ${+m === 1 ? 'minute' : 'minutes'} ${+sc} point ${[...f].join(' ')} seconds`)
     .replace(/(^|[^\d.:])(\d{1,2})\.(\d{3})(?![\d])/g, (_, pre, sc, f) => `${pre}${+sc} point ${[...f].join(' ')} seconds`);
+  /// How each closed car looks from above in the condition panel: half width and half length (in panel units), where the glass sits
+  /// (front and back, from the middle), and what sets it apart. Unknown cars use the street GT.
+  const CAR_PLAN = {
+    gt: { w: 12, L: 26, cab: [-7, 12] },
+    drift: { w: 11.5, L: 25, cab: [-5, 12], wing: 1 },
+    muscle: { w: 12.5, L: 28, cab: [0, 16], stripe: 1 },
+    hatch: { w: 11.5, L: 23, cab: [-10, 14] },
+    gt3: { w: 13, L: 27, cab: [-5, 10], wing: 2, split: 1 },
+    super: { w: 13, L: 27, cab: [-4, 10], wing: 1, wedge: 1, split: 1 },
+    sc: { w: 12, L: 28, cab: [-8, 16], bar: '#ffb000' },
+    med: { w: 12, L: 28, cab: [-8, 16], bar: '#ff3b3b', cross: 1 },
+  };
   const TYRES = { S: { name: 'Soft', grip: 1.06, wear: 1.6, col: '#ff3b3b' }, M: { name: 'Medium', grip: 1, wear: 1, col: '#ffd23f' }, H: { name: 'Hard', grip: 0.95, wear: 0.6, col: '#f2f2f2' }, I: { name: 'Intermediate', grip: 0.9, wear: 1.3, col: '#3ad07a', rain: 1 }, W: { name: 'Wet', grip: 0.84, wear: 1.5, col: '#3a8dff', rain: 2 } };
   let WET = 0;          // how wet the track is now, 0 dry to 1 soaked (set by the race; read by the tyres)
   /// The grip a car's tyres have on this track surface right now (a puncture takes most of it away).
@@ -3054,16 +3066,33 @@
         g.font = `800 ${8.4 * s}px ui-monospace, monospace`; g.fillStyle = tc; g.fillText(Math.round(tt) + '°', tx, py - 0.5 * s);
         g.font = `700 ${7.2 * s}px ui-monospace, monospace`; g.fillStyle = bc2; g.fillText(Math.round(bt) + '°', tx, py + 8.5 * s);
       });
-      // The car from above.
+      // The car from above, drawn as the car you are in (an open-wheel Formula One car, or a closed car with its own shape), tinted by the damage.
       const bc = health(dm);
-      g.fillStyle = bc; g.globalAlpha = 0.92;
-      g.beginPath(); g.roundRect(cx - 5 * s, cy - 24 * s, 10 * s, 50 * s, 4 * s); g.fill();                  // body
-      g.beginPath(); g.roundRect(cx - 12 * s, cy - 30 * s, 24 * s, 4.5 * s, 2 * s); g.fill();                // front wing
-      g.beginPath(); g.roundRect(cx - 10 * s, cy + 22 * s, 20 * s, 5 * s, 2 * s); g.fill();                  // rear wing
-      g.beginPath(); g.moveTo(cx - 5 * s, cy - 4 * s); g.lineTo(cx - 14 * s, cy + 4 * s); g.lineTo(cx - 14 * s, cy + 14 * s); g.lineTo(cx - 5 * s, cy + 16 * s); g.fill();   // sidepods
-      g.beginPath(); g.moveTo(cx + 5 * s, cy - 4 * s); g.lineTo(cx + 14 * s, cy + 4 * s); g.lineTo(cx + 14 * s, cy + 14 * s); g.lineTo(cx + 5 * s, cy + 16 * s); g.fill();
-      g.globalAlpha = 1;
-      g.fillStyle = '#1b2236'; for (const [tx, ty] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) { g.beginPath(); g.roundRect(cx + tx * 15.5 * s - 3 * s, cy + (ty < 0 ? -22 : 17) * s - 5.5 * s, 6 * s, 11 * s, 2 * s); g.fill(); }
+      if (c.spec.id === 'f1') {
+        g.fillStyle = bc; g.globalAlpha = 0.92;
+        g.beginPath(); g.roundRect(cx - 5 * s, cy - 24 * s, 10 * s, 50 * s, 4 * s); g.fill();                  // body
+        g.beginPath(); g.roundRect(cx - 12 * s, cy - 30 * s, 24 * s, 4.5 * s, 2 * s); g.fill();                // front wing
+        g.beginPath(); g.roundRect(cx - 10 * s, cy + 22 * s, 20 * s, 5 * s, 2 * s); g.fill();                  // rear wing
+        g.beginPath(); g.moveTo(cx - 5 * s, cy - 4 * s); g.lineTo(cx - 14 * s, cy + 4 * s); g.lineTo(cx - 14 * s, cy + 14 * s); g.lineTo(cx - 5 * s, cy + 16 * s); g.fill();   // sidepods
+        g.beginPath(); g.moveTo(cx + 5 * s, cy - 4 * s); g.lineTo(cx + 14 * s, cy + 4 * s); g.lineTo(cx + 14 * s, cy + 14 * s); g.lineTo(cx + 5 * s, cy + 16 * s); g.fill();
+        g.globalAlpha = 1;
+        g.fillStyle = '#1b2236'; for (const [tx, ty] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) { g.beginPath(); g.roundRect(cx + tx * 15.5 * s - 3 * s, cy + (ty < 0 ? -22 : 17) * s - 5.5 * s, 6 * s, 11 * s, 2 * s); g.fill(); }
+      } else {
+        const P = CAR_PLAN[c.spec.id] || CAR_PLAN.gt, w = P.w * s, L = P.L * s, wy = L * 0.62;
+        // the four tyres sit at the corners, just outside the body
+        g.fillStyle = '#1b2236'; for (const [tx, ty] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) { g.beginPath(); g.roundRect(cx + tx * (w + 1.2 * s) - 3 * s, cy + ty * wy - 5.5 * s, 6 * s, 11 * s, 2 * s); g.fill(); }
+        g.fillStyle = bc; g.globalAlpha = 0.92;
+        g.beginPath(); g.roundRect(cx - w, cy - L, 2 * w, 2 * L, (P.wedge ? 11 : 8) * s); g.fill();             // the body
+        if (P.wedge) { g.beginPath(); g.moveTo(cx - w, cy - L * 0.5); g.lineTo(cx - w * 0.45, cy - L - 2 * s); g.lineTo(cx + w * 0.45, cy - L - 2 * s); g.lineTo(cx + w, cy - L * 0.5); g.fill(); }   // a low pointed nose
+        if (P.split) { g.beginPath(); g.roundRect(cx - w * 1.04, cy - L - 3 * s, w * 2.08, 3.4 * s, 1.5 * s); g.fill(); }       // front splitter
+        if (P.wing) { g.beginPath(); g.roundRect(cx - w * (P.wing > 1 ? 1.12 : 0.9), cy + L - 1.5 * s, w * (P.wing > 1 ? 2.24 : 1.8), (P.wing > 1 ? 5.5 : 3.6) * s, 1.5 * s); g.fill(); }   // rear wing
+        g.globalAlpha = 1;
+        g.fillStyle = '#1b2236'; g.beginPath(); g.roundRect(cx - w * 0.72, cy + P.cab[0] * s, w * 1.44, (P.cab[1] - P.cab[0]) * s, 4 * s); g.fill();           // the glass
+        g.fillStyle = bc; g.globalAlpha = 0.5; g.beginPath(); g.roundRect(cx - w * 0.5, cy + (P.cab[0] + 3.5) * s, w, (P.cab[1] - P.cab[0] - 7) * s, 3 * s); g.fill(); g.globalAlpha = 1;   // the roof
+        if (P.stripe) { const bh = L + P.cab[0] * s - 4 * s; g.fillStyle = 'rgba(255,255,255,.55)'; g.fillRect(cx - 1.8 * s, cy - L + 2 * s, 1.4 * s, bh); g.fillRect(cx + 0.4 * s, cy - L + 2 * s, 1.4 * s, bh); }   // bonnet stripes
+        if (P.bar) { g.fillStyle = P.bar; g.fillRect(cx - w * 0.45, cy + (P.cab[0] + 5) * s, w * 0.9, 2.2 * s); }       // the light bar on the roof
+        if (P.cross) { g.fillStyle = '#ff3b3b'; g.fillRect(cx - 1.1 * s, cy + (P.cab[0] + 9) * s, 2.2 * s, 7 * s); g.fillRect(cx - 3.5 * s, cy + (P.cab[0] + 11.4) * s, 7 * s, 2.2 * s); }   // the medical cross
+      }
       g.fillStyle = 'rgba(255,255,255,.75)'; g.textAlign = 'center'; g.font = `800 ${6.5 * s}px system-ui`;
       g.fillText(`${(TYRES[c.tyre] || TYRES.M).name.toUpperCase()} · TYRE / BRAKE °C`, cx, y + 9 * s);
       if (dm > 0.03) { g.fillStyle = bc; g.fillText(`DMG ${Math.round(dm * 100)}%`, cx, y + h - 4 * s); }

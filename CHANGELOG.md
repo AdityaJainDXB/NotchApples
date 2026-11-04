@@ -4,6 +4,12 @@ Every Notch Apple release, newest first. The latest few are also on the [README]
 
 > **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is in the repository's history.
 
+### Mac 2.2.2 · Windows 2.2.2 BETA · 4 November 2026 · 🏎️ Leave button and the right car in the diagram
+
+- Racing: a small Leave button on the left edge during a race or session takes you back to the Racing menu (the same as Esc). It is faint until you hover over it. It matters now that a race is kept when you close the notch.
+- Racing: the tyre and damage diagram (bottom left) now shows the car you are driving. The GT3, the street cars, the supercar, the muscle car, the hatchback, the Safety Car and the Medical Car each get a closed-car shape with glass and their own details (wing, splitter, stripes, light bar), instead of a Formula One car. The Formula One car keeps its open-wheel diagram.
+- Same as the Mac, except the race is not kept when you change game (that is Mac only). Untested on real Windows hardware.
+
 ### Mac 2.2.1 · Windows 2.2.1 BETA · 4 November 2026 · ✈️ A safer autopilot, and Racing keeps its place
 
 - Racing: close the notch or switch tab with a race running and it now pauses and mutes, and comes back exactly as you left it (it used to start over). It is let go of after an hour away.
