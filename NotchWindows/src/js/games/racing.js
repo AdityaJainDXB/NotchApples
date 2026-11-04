@@ -1232,6 +1232,7 @@
 .rc-pair{display:flex;gap:10px;align-items:center;margin:4px 0}.rc-prev{border-radius:8px;flex:none}
 .rc-stats{min-width:170px}.rc-stats div{display:flex;align-items:center;gap:6px;font-size:10px;font-weight:500}.rc-stats span{width:56px;opacity:.75}.rc-stats i{flex:1;height:6px;border-radius:3px;background:rgba(255,255,255,.12);overflow:hidden}.rc-stats b{display:block;height:100%}
 .rc-sel{font:inherit;font-size:12px;color:#fff;background:#1d2230;border:1px solid rgba(255,255,255,.18);border-radius:8px;padding:5px 8px;max-width:260px}
+.rc-leave{position:absolute;left:6px;top:46%;z-index:25;width:26px;height:56px;border:1px solid rgba(255,255,255,.22);border-radius:13px;background:rgba(8,12,24,.62);color:#fff;font:700 12px system-ui;cursor:pointer;opacity:.5;padding:0;display:flex;align-items:center;justify-content:center;writing-mode:vertical-rl}.rc-leave:hover,.rc-leave:focus-visible{opacity:1;background:rgba(190,40,60,.85);outline:none}.rc-leave[hidden]{display:none}
 .rc-med{position:absolute;left:50%;bottom:16%;transform:translateX(-50%);width:min(560px,90%);background:rgba(8,12,22,.92);color:#fff;border-radius:14px;padding:14px 16px;font:500 13px system-ui;box-shadow:0 8px 30px rgba(0,0,0,.5)}.rc-med b{font-size:14px}.rc-med p{margin:6px 0}.rc-med .dim{opacity:.7;font-size:12px}.rc-med-row{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}.rc-med-btn{font:600 12px system-ui;color:#fff;background:#2a3142;border:0;border-radius:9px;padding:8px 10px;cursor:pointer;text-align:left;flex:1 1 45%}.rc-med-btn:hover{background:#39425a}.rc-med-btn.red{background:#b3262b}.rc-med-btn.yellow{background:#b38a12}.rc-med-btn.green{background:#1f8a4c}
 .rc-check{display:flex;align-items:center;gap:8px;padding:5px 8px;border-radius:8px;background:rgba(255,255,255,.05);margin:3px 0;font-size:12px}.rc-check.done{background:rgba(60,220,120,.16)}.rc-check span{margin-left:auto;color:#4fe09a;font-weight:800}.rc-check kbd{background:#2a3142;border-radius:4px;padding:0 5px}
 .rc-ask{display:block;width:260px;margin-top:6px;font:inherit;font-size:12px;color:#fff;background:#1d2230;border:1px solid rgba(255,255,255,.25);border-radius:7px;padding:5px 8px}.rc-radio .dim{opacity:.65;font-size:11px;margin-top:3px}
@@ -1247,6 +1248,12 @@
     ui.className = 'rc-ui'; big.className = 'rc-big'; gantry.className = 'rc-lights'; gantry.hidden = true;
     gantry.innerHTML = '<b><i></i><i></i><i></i><i></i></b>'.repeat(5);
     root.append(cv, ui, big, gantry); host.replaceChildren(root);
+    // A small Leave button at the side while a race or session is on: the same as Esc, back to the game's home screen. (The game is kept
+    // between visits on the Mac, so without it you could come back to a race you cannot get out of.)
+    const leaveBtn = document.createElement('button'); leaveBtn.className = 'rc-leave'; leaveBtn.type = 'button'; leaveBtn.hidden = true; leaveBtn.textContent = 'Leave'; leaveBtn.title = 'Leave this race and go back to the Racing menu (Esc)'; leaveBtn.setAttribute('aria-label', 'Leave to the menu');
+    leaveBtn.onmousedown = (e) => e.stopPropagation();
+    leaveBtn.onclick = (e) => { e.stopPropagation(); if (screen !== 'menu' && screen !== 'design') { closeNet(); paused = false; if (backToDesign && ds) { screen = 'design'; designUI(); } else showMenu(); } root.focus(); };
+    root.append(leaveBtn);
     const g = cv.getContext('2d');
 
     // ---- settings kept between visits
@@ -3995,6 +4002,7 @@
       if (screen === 'race' && !frame.lowTold) { frame.n = (frame.n || 0) + 1; frame.sum = (frame.sum || 0) + dt; if (frame.n >= 90) { if (frame.sum / frame.n > 0.026 && window.NotchLowPower) { frame.lowTold = true; toast('🔋 Low Power Mode is limiting the race to 30 frames a second: plug in or switch it off for smooth 60'); } frame.n = 0; frame.sum = 0; } }
       const hs = hostSound(); if (hs !== null && hs !== soundOn) setSound(hs);     // the app's Sound switch wins
       if (suspended) return;
+      { const want = screen === 'menu' || screen === 'design'; if (leaveBtn.hidden !== want) leaveBtn.hidden = want; }
       if (!paused) { let left = dt * qualWarp(); while (left > 1e-4) { const h = Math.min(left, 1 / 120); update(h); left -= h; } if (shake > 0) shake = Math.max(0, shake - dt * 2.5); if (paddle > 0) paddle -= dt; }
       draw(); soundTick();
     }
