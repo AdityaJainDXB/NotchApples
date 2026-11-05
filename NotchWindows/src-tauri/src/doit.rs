@@ -139,6 +139,34 @@ pub mod synth {
             }
         }
 
+        /// Presses the left button at the first point, drags the pointer through the rest and lets go at the last: one pen stroke.
+        /// `go` says whether to carry on (false once the run is stopped), and the button is always released.
+        pub fn drag(points: &[(i32, i32)], go: &dyn Fn() -> bool) {
+            let Some(&(x0, y0)) = points.first() else { return };
+            unsafe {
+                let _ = SetCursorPos(x0, y0);
+            }
+            pause(60);
+            send(&[mouse(MOUSEEVENTF_LEFTDOWN, 0)]);
+            pause(40);
+            let mut at = (x0, y0);
+            for &(x, y) in points.iter().skip(1) {
+                if !go() {
+                    break;
+                }
+                unsafe {
+                    let _ = SetCursorPos(x, y);
+                }
+                at = (x, y);
+                pause(7);
+            }
+            unsafe {
+                let _ = SetCursorPos(at.0, at.1);
+            }
+            send(&[mouse(MOUSEEVENTF_LEFTUP, 0)]);
+            pause(60);
+        }
+
         /// Scrolls at the pointer, or at (x, y) when given. dy > 0 scrolls down, dx > 0 scrolls right, in wheel notches.
         pub fn scroll(at: Option<(i32, i32)>, dx: i32, dy: i32) {
             if let Some((x, y)) = at {
@@ -259,6 +287,25 @@ pub async fn doit_key(combo: String) -> Result<(), String> {
     .map_err(|e| e.to_string())
 }
 
+/// One pen stroke: the left button goes down at the first physical pixel, the pointer is dragged through the rest and the button comes up
+/// at the last. The page fills the stroke in with small steps (services/doitgeometry.js); this only plays them. Stops (and lets go) the
+/// moment the run is stopped.
+#[tauri::command]
+pub async fn doit_drag(points: Vec<(i32, i32)>) -> Result<(), String> {
+    require_armed()?;
+    if points.len() < 2 || points.len() > 700 {
+        return Err("A pen stroke needs 2 to 700 points.".into());
+    }
+    tauri::async_runtime::spawn_blocking(move || {
+        #[cfg(windows)]
+        synth::drag(&points, &|| ARMED.load(Ordering::Relaxed));
+        #[cfg(not(windows))]
+        let _ = points;
+    })
+    .await
+    .map_err(|e| e.to_string())
+}
+
 /// Scrolls the wheel (notches; positive dy scrolls down) at the pointer, or at the given physical pixel.
 #[tauri::command]
 pub async fn doit_scroll(x: Option<i32>, y: Option<i32>, dx: i32, dy: i32) -> Result<(), String> {
@@ -365,10 +412,10 @@ fn place(app: &AppHandle, w: &tauri::WebviewWindow) {
     }
 }
 
-/// A JPEG of the main screen (base64), with the status window hidden for the instant of the capture. The notch is
+/// A JPEG of the main screen (base64), or of the part of it a zoom asks for, with the status window hidden for the instant of the capture. The notch is
 /// hidden by the page for the whole run, so unlike capture_screen this never shows it again.
 #[tauri::command]
-pub async fn doit_capture(app: AppHandle) -> Result<String, String> {
+pub async fn doit_capture(app: AppHandle, region: Option<Vec<f64>>) -> Result<String, String> {
     let status = app.get_webview_window(STATUS);
     let was_visible = status.as_ref().map(|w| w.is_visible().unwrap_or(false)).unwrap_or(false);
     if was_visible {
@@ -376,9 +423,10 @@ pub async fn doit_capture(app: AppHandle) -> Result<String, String> {
             let _ = w.hide();
         }
     }
-    let shot = tauri::async_runtime::spawn_blocking(|| {
+    // `region` is [x0, y0, x1, y1] on the 0 to 1000 grid of the whole screen (a zoom); none is the whole screen.
+    let shot = tauri::async_runtime::spawn_blocking(move || {
         std::thread::sleep(std::time::Duration::from_millis(160));
-        crate::grab_screen(1568)
+        crate::grab_screen_region(1568, region)
     })
     .await
     .map_err(|e| e.to_string())?;

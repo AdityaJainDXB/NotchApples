@@ -200,6 +200,12 @@ async fn capture_screen(app: AppHandle) -> Result<String, String> {
 }
 
 fn grab_screen(longest_edge: u32) -> Result<String, String> {
+    grab_screen_region(longest_edge, None)
+}
+
+/// The primary screen as a base64 JPEG no longer than `longest_edge` on its longest side. With `region` ([x0, y0, x1, y1] on a 0 to 1000
+/// grid over the whole screen) only that part is sent, at the display's own detail (Do It's zoom: small formulas become readable).
+pub(crate) fn grab_screen_region(longest_edge: u32, region: Option<Vec<f64>>) -> Result<String, String> {
     let monitors = xcap::Monitor::all().map_err(|e| e.to_string())?;
     let monitor = monitors
         .into_iter()
@@ -207,7 +213,18 @@ fn grab_screen(longest_edge: u32) -> Result<String, String> {
         .ok_or("no primary monitor")?;
     let rgba = monitor.capture_image().map_err(|e| e.to_string())?;
     let (w, h) = (rgba.width(), rgba.height());
-    let dynamic = image::DynamicImage::ImageRgba8(rgba);
+    let mut dynamic = image::DynamicImage::ImageRgba8(rgba);
+    if let Some(r) = region.as_ref().filter(|r| r.len() == 4 && r.iter().all(|v| v.is_finite())) {
+        let cl = |v: f64| v.clamp(0.0, 1000.0) / 1000.0;
+        let (x0, x1) = (cl(r[0].min(r[2])), cl(r[0].max(r[2])));
+        let (y0, y1) = (cl(r[1].min(r[3])), cl(r[1].max(r[3])));
+        let px = (x0 * w as f64) as u32;
+        let py = (y0 * h as f64) as u32;
+        let pw = (((x1 - x0) * w as f64) as u32).max(8).min(w - px.min(w - 1));
+        let ph = (((y1 - y0) * h as f64) as u32).max(8).min(h - py.min(h - 1));
+        dynamic = dynamic.crop_imm(px.min(w - 1), py.min(h - 1), pw, ph);
+    }
+    let (w, h) = (dynamic.width(), dynamic.height());
     let longest = w.max(h);
     let resized = if longest > longest_edge {
         let f = longest_edge as f32 / longest as f32;
@@ -532,7 +549,7 @@ fn main() {
             hello::hello_available, hello::hello_verify,
             input::paste_text, input::paste_now, input::dictate,
             klick::klick_set,
-            doit::doit_screen, doit::doit_click, doit::doit_type, doit::doit_key, doit::doit_scroll, doit::doit_sleep, doit::doit_arm, doit::doit_capture,
+            doit::doit_screen, doit::doit_click, doit::doit_type, doit::doit_key, doit::doit_scroll, doit::doit_drag, doit::doit_sleep, doit::doit_arm, doit::doit_capture,
             convert::convert_tools,
             convert::convert_read,
             convert::convert_write,
