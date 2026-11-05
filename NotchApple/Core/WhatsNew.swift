@@ -22,7 +22,7 @@ enum WhatsNew {
     static let releases: [ReleaseNote] = [
         ReleaseNote(version: "2.2.4", date: "5 November 2026", headline: "Files and group chats in Friends", items: [
             "Friends: a paperclip next to the message box sends a file to a friend or a group (up to 160 KB, so photos, screenshots and documents; not videos). Files are encrypted like messages and kept encrypted on your Mac. Click one to show it in Finder; it is never opened for you.",
-            "Friends: group chats. Tap + next to Groups, name it and tick friends to add (up to 20 people). Each message is encrypted separately for each member. You see messages only from group members who are also your friends, and the group warns you when some members are not. Mac only for now: Windows friends do not see files or group messages yet.",
+            "Friends: group chats. Tap + next to Groups, name it and tick friends to add (up to 20 people). Each message is encrypted separately for each member. You see messages only from group members who are also your friends, and the group warns you when some members are not. Windows has the same two features (Windows 2.2.4), and they work between Windows and Mac friends.",
         ]),
         ReleaseNote(version: "2.2.3", date: "5 November 2026", headline: "A crash fixed in nearby Messenger", items: [
             "Fix: a crash in nearby (Wi-Fi) Messenger. Apple’s chat networking kept calling back on a connection the app had already let go of, and the app quit. The connection is now held a little longer, and nearby discovery stops five minutes after you leave the Messenger tab instead of straight away (fixes issue 50).",

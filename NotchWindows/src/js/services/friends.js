@@ -40,6 +40,10 @@ export const incoming = () => L.incoming(vault);
 export const pending = () => L.pending(vault);
 export const messages = (box) => L.messagesOf(vault, box);
 export const unread = () => L.totalUnread(vault);
+export const groups = () => L.groupsSorted(vault);
+export const group = (key) => L.group(vault, key);
+/** Who sent a group message, as a name (someone who isn't my friend can't send into a group, so this is nearly always known). */
+export const nameOfBox = (box) => { const f = box ? L.record(vault, box) : null; return f ? L.displayName(f) : 'Someone'; };
 export const displayNick = () => L.clean(settings.nick) || L.clean(load('messenger.identity', null)?.handle) || 'Someone';
 
 // ---- the three files
@@ -84,6 +88,28 @@ async function loadVault() {
     const raw = C.unb64u(text), plain = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: raw.slice(0, 12) }, vaultKey, raw.slice(12));
     return L.normalizeVault(JSON.parse(new TextDecoder().decode(plain)));
   } catch { return L.newVault(); }
+}
+
+// Files that came with messages: one sealed file each (the same vault key), named by a hash of the id, never inside the history.
+const fileNameOf = async (id) => `f-${await C.sha256hex(`${id}`)}`;
+async function saveFileBytes(id, bytes) {
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const ct = new Uint8Array(await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, vaultKey, bytes));
+  const out = new Uint8Array(12 + ct.length); out.set(iv); out.set(ct, 12);
+  await file.set(await fileNameOf(id), C.b64u(out));
+}
+async function loadFileBytes(id) {
+  try {
+    const text = await file.get(await fileNameOf(id));
+    if (!text) return null;
+    const raw = C.unb64u(text);
+    return new Uint8Array(await crypto.subtle.decrypt({ name: 'AES-GCM', iv: raw.slice(0, 12) }, vaultKey, raw.slice(12)));
+  } catch { return null; }
+}
+async function deleteFileBytes(ids) { for (const id of ids) { try { await file.del(await fileNameOf(id)); } catch { /* already gone */ } } }
+async function clearFileBytes() {
+  if (hasTauri) { try { await invoke('friends_files_clear'); } catch (e) { console.error(e); } return; }
+  for (const k of Object.keys(localStorage)) if (k.startsWith('friends.file.f-')) localStorage.removeItem(k);
 }
 
 let readyPromise = null;
@@ -266,12 +292,152 @@ async function processMessage(blob) {
       st.typing.delete(friend.box);
       break;
     }
+    case 'grp': {
+      const known = typeof body.g === 'string' && !!L.group(vault, L.groupKey(body.g));
+      const g = L.receiveGroup(vault, friend.box, body, me.box);
+      if (g && !known) tell('New group', `${L.displayName(friend)} added you to ${g.name}.`);
+      break;
+    }
+    case 'gmsg': {
+      const m = L.receiveGroupMessage(vault, friend.box, body.g, body.id, body.text, body.ts);
+      const g = m && L.group(vault, L.groupKey(body.g));
+      if (!m || !g) return;
+      if (st.viewing === L.groupKey(g.id) && (await watching())) L.markGroupRead(vault, L.groupKey(g.id));
+      else tell(`${L.displayName(friend)} in ${g.name}`, String(m.text).slice(0, 200));
+      break;
+    }
+    case 'gleave': if (typeof body.g === 'string') L.receiveLeave(vault, friend.box, body.g); break;
+    case 'chunk': await receiveChunk(body, friend); break;
     case 'rcpt':
       if (typeof body.id === 'string') L.setState(vault, friend.box, body.id, body.state === 'read' ? 'read' : 'delivered');
       break;
-    case 'gone': L.remove(vault, friend.box); if (st.viewing === friend.box) st.viewing = null; break;
+    case 'gone': deleteFileBytes(L.fileIds(vault, friend.box)); L.remove(vault, friend.box); if (st.viewing === friend.box) st.viewing = null; break;
     default: break;
   }
+}
+
+// ---- files
+
+/** Files being put back together from their chunks (kept in memory only; a partial file is dropped after 10 minutes). */
+const partials = new Map();
+
+async function receiveChunk(body, friend) {
+  const done = L.receiveChunk(vault, partials, friend.box, body);
+  if (!done) return;
+  const m = L.receiveFile(vault, friend.box, done.group, done.id, done.name, done.bytes.length);
+  if (!m) return;
+  await saveFileBytes(done.id, done.bytes);
+  const g = done.group ? L.group(vault, L.groupKey(done.group)) : null;
+  const viewKey = g ? L.groupKey(g.id) : friend.box;
+  const here = st.viewing === viewKey && (await watching());
+  if (here) { if (g) L.markGroupRead(vault, viewKey); else L.markRead(vault, friend.box); }
+  else tell(g ? `${L.displayName(friend)} in ${g.name}` : L.displayName(friend), `Sent a file: ${m.file.name}`);
+  if (!g && settings.receipts) sendReceipt(friend, done.id, here ? 'read' : 'delivered');
+}
+
+const MAX_KB = L.MAX_FILE_BYTES / 1000;
+const stdB64 = (bytes) => { let s = ''; for (let i = 0; i < bytes.length; i += 8192) s += String.fromCharCode(...bytes.subarray(i, i + 8192)); return btoa(s); };
+const stdBytes = (b64) => Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
+
+/** Sends a file (a path from the file picker) to one friend or a group. Returns a message when it can't (too big, unreadable). */
+export async function sendFile(path, key) {
+  await ready();
+  let read;
+  try { read = await invoke('read_file_base64', { path }); } catch (e) { return typeof e === 'string' && /larger than|folder/.test(e) ? tooBig(e) : "Couldn't read that file."; }
+  const bytes = stdBytes(read.data), name = L.cleanFileName(read.name);
+  if (bytes.length > L.MAX_FILE_BYTES) return tooBig(bytes.length);
+  if (!bytes.length || !name) return "Couldn't read that file.";
+  const id = uid().toUpperCase(), info = { name, size: bytes.length };
+  let to, gid = null;
+  if (L.isGroupKey(key)) {
+    const g = L.group(vault, key);
+    if (!g) return 'That group is gone.';
+    to = g.members.map((b) => L.record(vault, b)).filter((f) => f && f.status === 'active'); gid = g.id;
+    if (!to.length) return 'No one in this group is your friend yet, so there is no one to send to.';
+    L.addMineToGroup(vault, key, id, '', info);
+  } else {
+    const f = L.record(vault, key);
+    if (!f || f.status !== 'active') return 'Not friends yet.';
+    to = [f];
+    L.addMineFile(vault, key, id, info);
+  }
+  await saveFileBytes(id, bytes);
+  persist();
+  deliverFile(id, name, bytes, gid, key, to);
+  return null;
+}
+const tooBig = (n) => (typeof n === 'number'
+  ? `That file is ${Math.ceil(n / 1000)} KB. Files up to ${MAX_KB} KB can be sent in a chat (photos, screenshots and documents are fine; videos are too big).`
+  : `That file is too big. Files up to ${MAX_KB} KB can be sent in a chat (photos, screenshots and documents are fine; videos are too big).`);
+
+async function deliverFile(id, name, bytes, gid, historyKey, to) {
+  const bodies = L.chunkBodies(me.box, id, name, bytes, gid, Date.now(), C.b64u);
+  let reached = 0, lastStatus = 200;
+  for (const friend of to) {
+    if (!friend.sendToken) continue;
+    let ok = true;
+    for (const b of bodies) {
+      const r = await post(friend, b);
+      if (r.status !== 200) { ok = false; lastStatus = r.status; break; }
+    }
+    if (ok) reached++;
+  }
+  L.setState(vault, historyKey, id, reached > 0 ? 'sent' : 'failed');
+  if (reached < to.length) st.lastProblem = reached === 0 ? explain(lastStatus, {}) : `The file reached ${reached} of ${to.length} people.`;
+  persist();
+}
+
+/** Puts a received file in a fresh temp folder and shows it in Explorer. It is never opened for you. */
+export async function reveal(id, name) {
+  const bytes = await loadFileBytes(id), safe = L.cleanFileName(name);
+  if (!bytes || !safe) { st.lastProblem = 'That file is no longer on this PC.'; emit(); return; }
+  try {
+    const path = await invoke('friends_stage_file', { name: safe, base64: stdB64(bytes) });
+    await invoke('reveal_path', { path });
+  } catch (e) { st.lastProblem = String(e); emit(); }
+}
+
+// ---- groups
+
+/** Makes a group of friends and invites them. Returns a message when it didn't work. */
+export function createGroup(name, members) {
+  if (!members.length) return 'Pick at least one friend.';
+  if (members.length >= L.MAX_GROUP_MEMBERS) return `A group can have up to ${L.MAX_GROUP_MEMBERS} people.`;
+  const g = L.createGroup(vault, name, members);
+  if (!g) return `Couldn't make the group (${L.MAX_GROUPS} groups at most, and everyone must be a friend).`;
+  persist();
+  for (const box of g.members) { const f = L.record(vault, box); if (f && f.status === 'active') post(f, L.groupInviteBody(me.box, g, Date.now())); }
+  return null;
+}
+
+const reachable = (g) => g.members.map((b) => L.record(vault, b)).filter((f) => f && f.status === 'active');
+
+export function sendToGroup(text, key) {
+  const t = String(text || '').trim(), g = L.group(vault, key);
+  if (!t || L.charCount(t) > L.MAX_TEXT || !g) return;
+  const id = uid().toUpperCase(), to = reachable(g);
+  L.addMineToGroup(vault, key, id, t); persist();
+  if (!to.length) { L.setState(vault, key, id, 'failed'); st.lastProblem = 'No one in this group is your friend yet, so there is no one to send to.'; persist(); return; }
+  deliverToGroup(id, t, g, to);
+}
+async function deliverToGroup(id, text, g, to) {
+  let reached = 0;
+  for (const friend of to) {
+    const r = await post(friend, { t: 'gmsg', from: me.box, g: g.id, id, text, ts: Date.now() });
+    if (r.status === 200) reached++; else if (r.status !== 403) st.lastProblem = explain(r.status, r.json);
+  }
+  L.setState(vault, L.groupKey(g.id), id, reached > 0 ? 'sent' : 'failed');
+  persist();
+}
+
+export function leaveGroup(key) {
+  const g = L.group(vault, key);
+  if (!g) return;
+  for (const f of reachable(g)) post(f, { t: 'gleave', from: me.box, g: g.id, ts: Date.now() });
+  const files = L.leaveGroup(vault, key);
+  if (st.viewing === key) st.viewing = null;
+  deleteFileBytes(files);
+  persist();
 }
 
 async function processLive(blob) {
@@ -342,6 +508,7 @@ export async function accept(box) {
 
 export function block(box) {
   const hash = L.record(vault, box)?.myTokenHash;
+  deleteFileBytes(L.fileIds(vault, box));
   L.block(vault, box); if (st.viewing === box) st.viewing = null;
   persist();
   if (hash) call('DELETE', `/f/allow/${hash}`, undefined, true);
@@ -352,6 +519,7 @@ export function remove(box) {
   if (!r) return;
   const hash = r.myTokenHash;
   if (r.status === 'active') sendControl('gone', r);
+  deleteFileBytes(L.fileIds(vault, box));
   L.remove(vault, box); if (st.viewing === box) st.viewing = null;
   persist();
   if (hash) call('DELETE', `/f/allow/${hash}`, undefined, true);
@@ -367,6 +535,7 @@ export async function deleteEverything() {
   await call('POST', '/f/wipe', {}, true);
   vault = L.newVault(); claimed = false; st.typing = new Set(); savePending = false; clearTimeout(saveTimer);
   await file.del('vault');
+  await clearFileBytes();
   emit();
   if (settings.active) connect();
 }
@@ -380,6 +549,7 @@ async function post(friend, body, live = false) {
 }
 
 export function send(text, box) {
+  if (L.isGroupKey(box)) return sendToGroup(text, box);
   const t = String(text || '').trim();
   const friend = L.record(vault, box);
   if (!t || L.charCount(t) > L.MAX_TEXT || !friend || friend.status !== 'active') return;
@@ -388,6 +558,18 @@ export function send(text, box) {
   deliver(id, t, friend);
 }
 export function retry(id, box) {
+  if (L.isGroupKey(box)) {   // a group message that failed (a file is not retried, like the Mac)
+    const g = L.group(vault, box), m = messages(box).find((x) => x.id === id && x.mine && x.state === 'failed');
+    if (!g || !m || m.file || !L.retryState(vault, box, id)) return;
+    persist(); deliverToGroup(id, m.text, g, reachable(g));
+    return;
+  }
+  const m0 = messages(box).find((x) => x.id === id && x.mine && x.state === 'failed' && x.file);
+  if (m0) {
+    const f = L.record(vault, box);
+    if (f && L.retryState(vault, box, id)) loadFileBytes(id).then((bytes) => { if (bytes) { persist(); deliverFile(id, m0.file.name, bytes, null, box, [f]); } else { L.setState(vault, box, id, 'failed'); persist(); } });
+    return;
+  }
   const friend = L.record(vault, box), m = messages(box).find((x) => x.id === id);
   if (!friend || !m || !L.retryState(vault, box, id)) return;
   persist(); deliver(id, m.text, friend);
@@ -421,6 +603,7 @@ export function typingChanged(box) {
 
 /** The chat is on screen: clear the unread count and tell the friend (if receipts are on). */
 export function markRead(box) {
+  if (L.isGroupKey(box)) { L.markGroupRead(vault, box); persist(); return; }   // no receipts in groups
   L.markRead(vault, box);
   const friend = L.record(vault, box);
   if (settings.receipts && friend) for (const m of messages(box).slice(-20)) if (!m.mine) sendReceipt(friend, m.id, 'read');

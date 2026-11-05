@@ -137,7 +137,7 @@ is synced to iCloud or included in the settings export.
   Windows 10/11), otherwise Rust (`x25519-dalek`, `ed25519-dalek`, `aes-gcm`, `hkdf`) behind Tauri commands. A shared test vector file
   (`server/room-relay/test/friends-vectors.json`) is checked by the Swift, JS and server tests so all three agree byte for byte.
 
-## Files and groups (Mac client; additive, no server change)
+## Files and groups (Mac 2.2.4 and the Windows port; additive, no server change)
 
 New body types inside the same sealed `msg` blobs. Older clients ignore keys and `t` values they do not know, so nothing breaks.
 
@@ -149,3 +149,5 @@ New body types inside the same sealed `msg` blobs. Older clients ignore keys and
 | `gleave` | `from, g` | The sender left the group. |
 
 There is no group server. A group message is sealed and sent once per member over the existing friend links, so everyone only receives from members who are also their friends. File names are reduced to their last path component and never opened automatically: the Mac shows the file in Finder.
+
+**Windows.** The Windows app (`NotchWindows/src/js/services/friendslogic.js` for the rules, `friends.js` for the network and disk, `modules/messengerfriends.js` for the screen) sends and accepts the same `chunk`, `grp`, `gmsg` and `gleave` bodies with the same field names (`g, gname, gm, fname, fn, fi, fd`) and the same limits, so Mac and Windows friends see each other's files and group messages. Differences in how each app keeps things, none of which show on the wire: the Windows vault has a `groups` array (a vault saved before groups existed loads as "no groups"); received and sent files are stored one sealed file each next to the vault (`Friends\f-<sha256 of the id>.bin`, AES-GCM under the vault key) and shown in Explorer, never opened; a partial file is kept in memory only. `NotchWindows/tests/friendsfiles.test.mjs` checks the rules, and that a worst-case sealed chunk (8,000 bytes, 64-character ids, an 80-character name that JSON must escape) is about 15,200 characters, under the relay's 22,000 (`MAX_MSG_BLOB`). **Status: written and unit-tested in Node, but not yet run on real Windows hardware or against a real Mac.**

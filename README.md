@@ -79,7 +79,7 @@ Pick your computer. Both buttons start the download straight away. The Mac link 
       <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.2.4</b></a>
     </td>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 2.2.2 BETA</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 2.2.4 BETA</b></a>
     </td>
   </tr>
   <tr>
@@ -150,10 +150,10 @@ More screenshots of the capture overlay, the AI answer, the settings and the Win
 
 ## What's new
 
-### Mac 2.2.4 · 5 November 2026 · 💬 Files and group chats in Friends
+### Mac 2.2.4 · Windows 2.2.4 BETA · 5 November 2026 · 💬 Files and group chats in Friends
 
 - Friends: a paperclip next to the message box sends a file to a friend or a group (up to 160 KB, so photos, screenshots and documents; not videos). Files are encrypted like messages and kept encrypted on your Mac. Click one to show it in Finder; it is never opened for you.
-- Friends: group chats. Tap + next to Groups, name it and tick friends to add (up to 20 people). Each message is encrypted separately for each member. You see messages only from group members who are also your friends, and the group warns you when some members are not. Mac only for now: Windows friends do not see files or group messages yet.
+- Friends: group chats. Tap + next to Groups, name it and tick friends to add (up to 20 people). Each message is encrypted separately for each member. You see messages only from group members who are also your friends, and the group warns you when some members are not. Windows has the same two features, and they work between Windows and Mac friends.
 
 ### Mac 2.2.3 · 5 November 2026 · 🛠️ A crash fixed in nearby Messenger
 
