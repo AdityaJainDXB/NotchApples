@@ -76,7 +76,7 @@ Pick your computer. Both buttons start the download straight away. The Mac link 
   </tr>
   <tr>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.2.6</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.2.7</b></a>
     </td>
     <td align="center">
       <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 2.2.4 BETA</b></a>
@@ -150,6 +150,10 @@ More screenshots of the capture overlay, the AI answer, the settings and the Win
 
 ## What's new
 
+### Mac 2.2.7 · 5 November 2026 · 🎮 Connect Four, Rock Paper Scissors and Battleship
+
+- Messenger: more two-player games in rooms and in friend chats. The new Games menu next to the chat invites someone to Connect Four, Rock Paper Scissors (first to two) or Battleship, as well as tic-tac-toe. Rock Paper Scissors picks and Battleship fleets are locked in with a hash first, so nobody can change their pick or lie about a hit: when a Battleship game ends, both fleets are revealed and checked. Mac only for now: Windows cannot play these yet.
+
 ### Mac 2.2.6 · 5 November 2026 · 🎮 Tic-tac-toe fits the notch
 
 - Messenger: the notch now opens taller while a tic-tac-toe board is showing (in a room or a friend chat), so the board and the chat fit instead of running off the bottom edge. It goes back to normal when you close the board.
@@ -157,11 +161,6 @@ More screenshots of the capture overlay, the AI answer, the settings and the Win
 ### Mac 2.2.5 · 5 November 2026 · 🎮 Tic-tac-toe with your friends
 
 - Friends: a Tic-tac-toe button in a friend chat invites that friend to a game, played on a board above the chat with Accept, Rematch and Leave game. The moves are encrypted like messages. Mac only for now: Windows friends cannot play yet.
-
-### Mac 2.2.4 · Windows 2.2.4 BETA · 5 November 2026 · 💬 Files and group chats in Friends
-
-- Friends: a paperclip next to the message box sends a file to a friend or a group (up to 160 KB, so photos, screenshots and documents; not videos). Files are encrypted like messages and kept encrypted on your Mac. Click one to show it in Finder; it is never opened for you.
-- Friends: group chats. Tap + next to Groups, name it and tick friends to add (up to 20 people). Each message is encrypted separately for each member. You see messages only from group members who are also your friends, and the group warns you when some members are not. Windows has the same two features, and they work between Windows and Mac friends.
 
 Every earlier release is in the [changelog](CHANGELOG.md).
 

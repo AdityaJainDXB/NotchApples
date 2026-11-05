@@ -246,7 +246,7 @@ final class FriendsClient: ObservableObject {
         case "rcpt":
             if let id = body.id, let state = body.state { book.setState(box: friend.box, id: id, state == "read" ? .read : .delivered) }
         case "gone":
-            games[friend.box] = nil
+            games[friend.box] = nil; plays[friend.box] = nil
             book.remove(box: friend.box)
         case "grp":
             let known = body.g.map { book.group(Friends.groupKey($0)) != nil } ?? true
@@ -264,6 +264,8 @@ final class FriendsClient: ObservableObject {
             receiveChunk(body, from: friend)
         case "game":
             if let m = body.ttt { applyGame(m, from: friend.box, in: friend.box) }
+        case "play":
+            if let m = body.play { play(friend.box).receive(m, from: friend.box) }
         default: break
         }
     }
@@ -333,7 +335,7 @@ final class FriendsClient: ObservableObject {
         let hash = r.myTokenHash
         if r.status == .active { sendControl("gone", to: r) }
         store.deleteFiles(messages(box).filter { $0.file != nil }.map(\.id))
-        games[box] = nil
+        games[box] = nil; plays[box] = nil
         book.remove(box: box); persist()
         if let hash { Task { _ = await call("DELETE", "/f/allow/\(hash)", owner: true) } }
     }
@@ -611,6 +613,29 @@ final class FriendsClient: ObservableObject {
         body.ttt = msg
         sendSealed(body, to: friend)
         return true
+    }
+
+    /// Connect Four, Rock Paper Scissors and Battleship with this friend (rules in TwoPlayerGames.swift). Kept in memory only.
+    private var plays: [String: PlayController] = [:]
+    func play(_ box: String) -> PlayController {
+        if let p = plays[box] { return p }
+        let p = PlayController(myID: identity.box)
+        p.name = { [weak self] id in
+            guard let self, let id else { return "Someone" }
+            return id == self.identity.box ? "You" : (self.book.record(id)?.displayName ?? "Someone")
+        }
+        p.transport = { [weak self] m in
+            guard let self, let friend = self.book.record(box), friend.status == .active else { return }
+            var body = FriendBody(t: "play", from: self.identity.box, ts: Int64(Date().timeIntervalSince1970 * 1000))
+            body.play = m
+            self.sendSealed(body, to: friend)
+        }
+        p.onEvent = { [weak self] text in
+            guard let self, self.viewing != box else { return }
+            MessengerNotifier.shared.friendEvent(title: "Game", body: text, id: "play-\(UUID().uuidString)")
+        }
+        plays[box] = p
+        return p
     }
 
     func inviteToTicTacToe(_ box: String) { if games[box]?.isFinished ?? true { sendGame(TicTacToe.invite(gid: TicTacToe.newGameID(), mark: Bool.random() ? .x : .o), to: box) } }

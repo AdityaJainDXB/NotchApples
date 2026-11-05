@@ -321,10 +321,7 @@ struct FriendsView: View {
                 Text(friend.displayName).font(.system(size: 13, weight: .semibold)).foregroundStyle(.white)
                 if client.typing.contains(friend.box) { Text("typing…").font(.system(size: 11)).foregroundStyle(Theme.accentBright) }
                 Spacer()
-                if client.games[friend.box]?.isFinished ?? true {
-                    Button { client.inviteToTicTacToe(friend.box) } label: { Label("Tic-tac-toe", systemImage: "gamecontroller") }
-                        .buttonStyle(PurpleButtonStyle(prominent: false)).help("Invite \(friend.displayName) to a game of tic-tac-toe")
-                }
+                FriendGamesMenu(client: client, box: friend.box, play: client.play(friend.box))
                 Button { showSafety = true } label: { Label("Safety number", systemImage: "checkmark.shield") }
                     .buttonStyle(PurpleButtonStyle(prominent: false)).help("Compare these numbers with your friend to be sure nobody is in the middle")
                     .popover(isPresented: $showSafety) { safety(friend) }
@@ -339,6 +336,7 @@ struct FriendsView: View {
                 Button("Remove", role: .destructive) { client.remove(friend.box); selected = nil }
             }
             if let game = client.games[friend.box] { TicTacToeCard(io: gameIO(friend.box), game: game, myID: client.identity.box) }
+            PlayCard(play: client.play(friend.box), source: "friend-play")
             messageList(friend.box, empty: "Say hi. Messages are encrypted on this Mac; the server only holds them until \(friend.displayName) is online.", group: false)
             if let problem = client.lastProblem { Text(problem).font(.system(size: 10)).foregroundStyle(.orange) }
             composer(key: friend.box, typing: true) { send(friend) }
@@ -375,6 +373,18 @@ struct FriendsView: View {
             Button("Save") { client.setAlias(friend.box, aliasDraft); renaming = false }
         }
         .padding(14)
+    }
+}
+
+/// The Games menu in a friend chat; it watches that chat's games so it hides while one is open.
+private struct FriendGamesMenu: View {
+    @ObservedObject var client: FriendsClient
+    let box: String
+    @ObservedObject var play: PlayController
+    var body: some View {
+        if client.games[box]?.isFinished ?? true, !play.isActive {
+            GamesMenu(tictactoe: { client.inviteToTicTacToe(box) }, start: { play.invite($0) })
+        }
     }
 }
 

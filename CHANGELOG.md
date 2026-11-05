@@ -4,6 +4,10 @@ Every Notch Apple release, newest first. The latest few are also on the [README]
 
 > **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is in the repository's history.
 
+### Mac 2.2.7 · 5 November 2026 · 🎮 Connect Four, Rock Paper Scissors and Battleship
+
+- Messenger: more two-player games in rooms and in friend chats. The new Games menu next to the chat invites someone to Connect Four, Rock Paper Scissors (first to two) or Battleship, as well as tic-tac-toe. Rock Paper Scissors picks and Battleship fleets are locked in with a hash first, so nobody can change their pick or lie about a hit: when a Battleship game ends, both fleets are revealed and checked. Mac only for now: Windows cannot play these yet.
+
 ### Mac 2.2.6 · 5 November 2026 · 🎮 Tic-tac-toe fits the notch
 
 - Messenger: the notch now opens taller while a tic-tac-toe board is showing (in a room or a friend chat), so the board and the chat fit instead of running off the bottom edge. It goes back to normal when you close the board.

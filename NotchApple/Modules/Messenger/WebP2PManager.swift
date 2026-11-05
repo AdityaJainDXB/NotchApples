@@ -76,6 +76,19 @@ final class WebP2PManager: ObservableObject {
     private var seenIDs = Set<UUID>()
     private let identity = MessengerIdentity.shared
 
+    /// Connect Four, Rock Paper Scissors and Battleship in this room (rules in TwoPlayerGames.swift).
+    lazy var play: PlayController = {
+        let p = PlayController(myID: identity.senderID)
+        p.name = { [weak self] in self?.gameName($0) ?? "Someone" }
+        p.transport = { [weak self] m in
+            guard let self, self.state == .joined else { return }
+            if m.op == "invite" { self.publish(kind: .message, text: "🎮 \(PlayKind(rawValue: m.g)?.title ?? "Game") invite (update Notch Apple to play)", play: m) }
+            else { self.publish(kind: .play, text: nil, play: m) }
+        }
+        p.onEvent = { [weak self] text in self?.notice(text) }
+        return p
+    }()
+
     var memberHandles: [String] { members.values.map(\.handle).sorted() }
 
     // MARK: Room lifecycle
@@ -111,7 +124,7 @@ final class WebP2PManager: ObservableObject {
         topic = "notchapple-v1-\(topicHash.prefix(40))"    // valid for both ntfy and MQTT
         state = .connecting
         generation += 1
-        game = nil; gameNames = [:]
+        game = nil; gameNames = [:]; play.reset()
         for i in Self.relays.indices { connect(i) }
         scheduleGiveUpCheck()
     }
@@ -126,7 +139,7 @@ final class WebP2PManager: ObservableObject {
         for link in links.values { link.socket.cancel(with: .normalClosure, reason: nil) }
         links = [:]
         members = [:]
-        game = nil; gameNames = [:]
+        game = nil; gameNames = [:]; play.reset()
         state = .idle
         room = nil
     }
@@ -146,9 +159,9 @@ final class WebP2PManager: ObservableObject {
 
     @discardableResult
     private func publish(kind: MessengerEnvelope.Kind, text: String?, fileData: Data? = nil, fileName: String? = nil,
-                         game: TicTacToeMessage? = nil) -> MessengerEnvelope {
+                         game: TicTacToeMessage? = nil, play: PlayMessage? = nil) -> MessengerEnvelope {
         let env = MessengerEnvelope(kind: kind, id: UUID(), senderID: identity.senderID,
-                                    sender: identity.handle, text: text, fileData: fileData, fileName: fileName, game: game, ts: .now)
+                                    sender: identity.handle, text: text, fileData: fileData, fileName: fileName, game: game, play: play, ts: .now)
         // Only publish once at least one relay is live (timers can fire while reconnecting).
         guard state == .joined || kind == .leave,
               let key, let topic, let json = try? JSONEncoder().encode(env),
@@ -203,13 +216,25 @@ final class WebP2PManager: ObservableObject {
         case .leave:
             guard !seenIDs.contains(env.id) else { return }
             seenIDs.insert(env.id)
-            if let m = members.removeValue(forKey: env.senderID) { notice("\(m.handle) left"); playerGone(env.senderID) }
+            if let m = members.removeValue(forKey: env.senderID) { notice("\(m.handle) left"); playerGone(env.senderID); play.playerGone(env.senderID) }
         case .game:
             guard !isMe, !seenIDs.contains(env.id), let g = env.game else { return }
             seenIDs.insert(env.id)
             applyGame(g, from: env.senderID, name: String(env.sender.prefix(32)))
+        case .play:
+            guard !isMe, !seenIDs.contains(env.id), let p = env.play else { return }
+            seenIDs.insert(env.id)
+            gameNames[env.senderID] = String(env.sender.prefix(32))
+            play.receive(p, from: env.senderID)
         case .message:
             guard !isMe, !seenIDs.contains(env.id) else { return }
+            if let p = env.play {
+                // A Connect Four / Rock Paper Scissors / Battleship invite: older apps show its text line, this one the game card.
+                seenIDs.insert(env.id)
+                gameNames[env.senderID] = String(env.sender.prefix(32))
+                play.receive(p, from: env.senderID)
+                return
+            }
             if let g = env.game {
                 // A tic-tac-toe invite: older apps show its text line; this one shows the game card instead of a chat bubble.
                 seenIDs.insert(env.id)

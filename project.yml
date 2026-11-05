@@ -13,7 +13,7 @@ packages:
 settings:
   base:
     SWIFT_VERSION: "5.0"
-    MARKETING_VERSION: "2.2.6"
+    MARKETING_VERSION: "2.2.7"
     CURRENT_PROJECT_VERSION: "195"
     CODE_SIGN_IDENTITY: "-"
     CODE_SIGN_STYLE: Manual
@@ -147,6 +147,7 @@ targets:
       - NotchApple/Core/UpdateFeedLogic.swift
       - NotchApple/Modules/Messenger/Friends/FriendsLogic.swift
       - NotchApple/Modules/Messenger/TicTacToeLogic.swift
+      - NotchApple/Modules/Messenger/TwoPlayerGames.swift
       - NotchApple/Modules/Tennis/TennisLogic.swift
       - NotchApple/Core/ClaudeUsageLogic.swift
       - NotchApple/Core/SmartHomeLogic.swift

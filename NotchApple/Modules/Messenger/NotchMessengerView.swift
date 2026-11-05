@@ -38,6 +38,7 @@ struct NotchMessengerView: View {
                 if mode == .room {
                     roomBar
                     if let game = web.game { TicTacToeCard(io: .room(web), game: game, myID: identity.senderID) }
+                    PlayCard(play: web.play, source: "room-play")
                 }
                 chatLog
                 inputBar
@@ -126,11 +127,7 @@ struct NotchMessengerView: View {
                 .buttonStyle(PurpleButtonStyle(prominent: false))
                 .help("Copy this room's code to share it")
             }
-            if mode == .room, web.state == .joined, web.game?.isFinished ?? true {
-                Button { web.inviteToTicTacToe() } label: { Label("Tic-tac-toe", systemImage: "gamecontroller") }
-                    .buttonStyle(PurpleButtonStyle(prominent: false))
-                    .help("Invite the room to a game of tic-tac-toe")
-            }
+            if mode == .room { RoomGamesMenu(web: web, play: web.play) }
             if web.state == .joined || web.state == .connecting {
                 Button("Leave") { web.leave() }.buttonStyle(PurpleButtonStyle(prominent: false))
             } else {
@@ -321,6 +318,17 @@ private struct MessengerBubble: View {
     }
 }
 
+
+/// The Games menu in the room bar; it watches the room's game so it hides while one is open.
+private struct RoomGamesMenu: View {
+    @ObservedObject var web: WebP2PManager
+    @ObservedObject var play: PlayController
+    var body: some View {
+        if web.state == .joined, web.game?.isFinished ?? true, !play.isActive {
+            GamesMenu(tictactoe: { web.inviteToTicTacToe() }, start: { play.invite($0) })
+        }
+    }
+}
 
 /// What the card needs from whoever hosts the game (a room or a friend), so one card serves both.
 struct TTTIO {

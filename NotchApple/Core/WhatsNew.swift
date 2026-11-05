@@ -20,6 +20,9 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.2.7", date: "5 November 2026", headline: "Connect Four, Rock Paper Scissors and Battleship", items: [
+            "Messenger: more two-player games in rooms and in friend chats. The new Games menu next to the chat invites someone to Connect Four, Rock Paper Scissors (first to two) or Battleship, as well as tic-tac-toe. Rock Paper Scissors picks and Battleship fleets are locked in with a hash first, so nobody can change their pick or lie about a hit: when a Battleship game ends, both fleets are revealed and checked. Mac only for now: Windows cannot play these yet.",
+        ]),
         ReleaseNote(version: "2.2.6", date: "5 November 2026", headline: "Tic-tac-toe fits the notch", items: [
             "Messenger: the notch now opens taller while a tic-tac-toe board is showing (in a room or a friend chat), so the board and the chat fit instead of running off the bottom edge. It goes back to normal when you close the board.",
         ]),
