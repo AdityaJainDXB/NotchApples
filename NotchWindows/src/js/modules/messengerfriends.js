@@ -185,10 +185,10 @@ export function render(root) {
         accept: () => FR.tttAccept(box), cancel: () => FR.tttCancel(box), close: () => FR.tttClose(box),
         move: (i) => FR.tttMove(box, i), rematch: () => FR.tttRematch(box), quit: () => FR.tttQuit(box),
       }),
-      PUI.playCard(play),
+      PUI.playCard(play, 'friend'),
     ].filter(Boolean);
     gameBox.replaceChildren(...cards);
-    PUI.grow('friend', cards.length > 0);
+    PUI.grow('friend', cards.length > 0, cards.some((c) => c.dataset?.tall === '1'));
   }
 
   function paintChat(friend) {

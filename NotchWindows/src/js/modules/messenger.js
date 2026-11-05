@@ -62,9 +62,9 @@ function renderRooms(root) {
         ? PUI.gamesButton({ tictactoe: () => MS.gameInvite(), start: (kind) => MS.play.invite(kind) }) : null,
       el('button', { class: 'btn small quiet', onclick: () => invoke('clipboard_copy_text', { text: st.room }).then(() => toast('Room code copied')) }, 'Copy code'),
       el('button', { class: 'btn small danger', onclick: () => MS.leave() }, 'Leave')].filter(Boolean));   // (replaceChildren(null) would write the word "null")
-    const cards = [gamePanel(st), PUI.playCard(MS.play)].filter(Boolean);
+    const cards = [gamePanel(st), PUI.playCard(MS.play, 'room')].filter(Boolean);
     gameBox.replaceChildren(...cards);
-    PUI.grow('room', cards.length > 0);   // the notch opens bigger while a board is up
+    PUI.grow('room', cards.length > 0, cards.some((c) => c.dataset?.tall === '1'));   // the notch opens bigger while a board is up
     log.replaceChildren(...st.messages.map((m) => (m.notice ? el('div', { class: 'tiny faint', style: 'text-align:center' }, m.text)
       : el('div', { style: `display:flex;flex-direction:column;align-items:${m.mine ? 'flex-end' : 'flex-start'}` },
         m.mine ? null : el('div', { class: 'tiny faint' }, m.sender),

@@ -23,9 +23,15 @@
 //   g = "c4" | "rps" | "bs" | "ch" | "ck", gid = game id, x/o = start: who goes first / the other, r = round (0, then +1 per rematch),
 //   n = move number (c4, bs, ch, ck) or game within the match (rps), a, b, h, s as above. Every field but g, op and gid is optional.
 
-export const KINDS = ['c4', 'rps', 'bs', 'ch', 'ck'];
-export const TITLES = { c4: 'Connect Four', rps: 'Rock Paper Scissors', bs: 'Battleship', ch: 'Chess', ck: 'Checkers' };
-export const EMOJI = { c4: '🔴', rps: '✊', bs: '🚢', ch: '♟️', ck: '⚫' };
+// "rl" (Rocket League) and "sk" (Scribble) only use the lobby here (invite, accept, start, quit, cancel, rematch): once started, both chats open
+// the same live web game (games/rocket.js, games/scribble.js) on a room relay, so there are no moves in the session.
+export const KINDS = ['c4', 'rps', 'bs', 'ch', 'ck', 'rl', 'sk'];
+export const TITLES = { c4: 'Connect Four', rps: 'Rock Paper Scissors', bs: 'Battleship', ch: 'Chess', ck: 'Checkers', rl: 'Rocket League', sk: 'Scribble' };
+export const EMOJI = { c4: '🔴', rps: '✊', bs: '🚢', ch: '♟️', ck: '⚫', rl: '🚀', sk: '✏️' };
+/** The web games: the page's global, its two files, and how tall their window is in a chat. */
+export const WEB_GAMES = { rl: { global: 'NotchRocketGame', files: ['rocket-logic.js', 'rocket.js'], height: 350 }, sk: { global: 'NotchScribbleGame', files: ['scribble-logic.js', 'scribble.js'], height: 460 } };
+/** The room both players' web games join: the first six characters of the game id, upper case (the game id alphabet is the room code alphabet). */
+export const roomCodeOf = (gid) => String(gid).slice(0, 6).toUpperCase();
 export const C4 = { cols: 7, rows: 6 };
 export const RPS = { wins: 2, names: ['Rock', 'Paper', 'Scissors'], emoji: ['✊', '✋', '✌️'] };
 /** True when pick `a` beats pick `b` (0 rock, 1 paper, 2 scissors). */
@@ -480,6 +486,7 @@ function apply(s, m, idx) {
   if (s.kind === 'rps') return applyRPS(s, m, idx);
   if (s.kind === 'ch') return applyChess(s, m, idx);
   if (s.kind === 'ck') return applyCheckers(s, m, idx);
+  if (s.kind === 'rl' || s.kind === 'sk') return false;     // only the lobby is in the session; the game runs live between the two web views
   return applyBattleship(s, m, idx);
 }
 

@@ -30,7 +30,7 @@ test('Chess and Checkers messages have exactly the Mac field names', () => {
   assert.deepEqual(P.boardMoveMsg(s, 8, 0, 'n'), { g: 'ch', op: 'move', gid: 'g1', r: 0, n: 0, a: 8, b: 0, s: 'n' });
   assert.deepEqual(P.boardMoveMsg(started('ck'), 40, 33), { g: 'ck', op: 'move', gid: 'g1', r: 0, n: 0, a: 40, b: 33 });
   assert.deepEqual(P.inviteMsg('ch', 'x'), { g: 'ch', op: 'invite', gid: 'x' });
-  assert.deepEqual(P.KINDS.slice(3), ['ch', 'ck']);
+  assert.deepEqual(P.KINDS.slice(3, 5), ['ch', 'ck']);
   assert.equal(P.TITLES.ch, 'Chess');
   assert.equal(P.TITLES.ck, 'Checkers');
   const wire = JSON.parse('{"g":"ch","op":"move","gid":"abc","r":1,"n":3,"a":52,"b":36}');   // as Swift's JSONEncoder writes it (no nil fields)

@@ -2,7 +2,7 @@
 // card for Connect Four, Rock Paper Scissors, Battleship, Chess and Checkers (an invite with Accept, then the board, then Rematch). The Mac's
 // PlayCards.swift is the model. The rules are in tictactoe-logic.js and twoplayer-logic.js; this file only draws them and passes
 // the player's choices on, so rooms (services/messenger.js) and friend chats (services/friends.js) share it.
-import { el } from '../store.js';
+import { el, load } from '../store.js';
 import { button, menu } from '../ui.js';
 import * as P from './twoplayer-logic.js';
 import * as T from './tictactoe-logic.js';
@@ -10,12 +10,49 @@ import * as T from './tictactoe-logic.js';
 // ---- the notch grows while a board is showing (800 x 600 at least, like the Mac) ----
 
 const growing = new Map();
-/** Tells the window a board is (or is no longer) on screen in `source` ('room' or 'friend'). Safe to call on every repaint. */
-export function grow(source, on) {
-  on = !!on;
-  if (growing.get(source) === on) return;
-  growing.set(source, on);
-  import('../app.js').then((a) => a.chatGame?.(source, on)).catch(() => {});
+/** Tells the window a board is (or is no longer) on screen in `source` ('room' or 'friend'); `tall` for a web game (Rocket League, Scribble),
+ *  which needs more room than a board. Safe to call on every repaint. Turning a source off also ends its web games. */
+export function grow(source, on, tall = false) {
+  on = !!on; tall = on && !!tall;
+  if (!on) reapWebGames(source, null);
+  const key = `${on}|${tall}`;
+  if (growing.get(source) === key) return;
+  growing.set(source, key);
+  import('../app.js').then((a) => a.chatGame?.(source, on, tall)).catch(() => {});
+}
+
+// ---- Rocket League and Scribble: the same live web game as the Games tab, pointed at a room ----
+
+/** The web games on screen, by `${source}|${gid}`. Chats repaint their cards often, so the page is built once and moved into each new card. */
+const webGames = new Map();
+const joinedAsGuest = new Set();                    // Scribble in a room: games this person joined although they were not one of the two who started it
+
+/** Stops the web games of `source` except `keep` (a key), so leaving a game, a chat or the tab ends it. */
+function reapWebGames(source, keep) {
+  for (const [key, g] of webGames) {
+    if (!key.startsWith(`${source}|`) || key === keep) continue;
+    g.gone = true;
+    try { g.stop?.(); } catch { /* already gone */ }
+    webGames.delete(key);
+  }
+}
+
+function webGame(s, host, source) {
+  const key = `${source}|${s.gid}`;
+  let g = webGames.get(key);
+  if (!g) {
+    const info = P.WEB_GAMES[s.kind];
+    const box = el('div', { style: `position:relative;width:100%;max-width:760px;height:${info.height}px;border-radius:10px;overflow:hidden;flex:none` });
+    g = { box, stop: null, gone: false };
+    webGames.set(key, g);
+    const name = String(load('messenger.identity', null)?.handle || 'Player').slice(0, 14);
+    import(`./${info.files[0]}`).then(() => import(`./${info.files[1]}`)).then(() => {
+      if (g.gone) return;
+      g.stop = window[info.global].mount(box, { room: P.roomCodeOf(s.gid), host, name });
+      box.firstElementChild?.focus?.();
+    }).catch(() => { box.textContent = `${P.TITLES[s.kind]} could not start.`; });
+  }
+  return g.box;
 }
 
 // ---- the Games menu ----
@@ -77,11 +114,13 @@ export function tttCard(g, me, nm, act) {
 // ---- Connect Four, Rock Paper Scissors, Battleship ----
 
 /** The card for the controller's current game (`createPlayController`), or null when there is none. */
-export function playCard(play) {
+export function playCard(play, source = 'friend') {
   const s = play.session;
-  if (!s) return null;
+  if (!s) { reapWebGames(source, null); return null; }
+  if (!(P.WEB_GAMES[s.kind] && s.status === 'playing')) reapWebGames(source, null);
   const me = P.indexOf(s, play.myID), nm = play.name;
   if (s.status === 'invited' || s.status === 'cancelled') return inviteCard(play, s);
+  if (P.WEB_GAMES[s.kind]) return webCard(play, s, me, source);          // Rocket League and Scribble have no board: the live game is the card
   const myTurn = (() => {
     if (s.status !== 'playing' || me === null) return false;
     if (s.kind === 'c4') return s.c4.moves % 2 === me;
@@ -99,6 +138,33 @@ export function playCard(play) {
       s.status === 'finished' && me !== null ? (() => { const asked = s.rematch.includes(play.myID); return btn(asked ? 'Waiting for a rematch…' : 'Rematch', () => play.rematch(), asked ? 'quiet' : '', asked); })() : null,
       s.status === 'playing' && me !== null ? btn('Leave game', () => play.leave(), 'quiet') : null,
       s.status !== 'playing' ? btn('Close', () => play.close(), 'quiet') : null));
+}
+
+/** The card for Rocket League and Scribble: once started, the live game itself. Whoever started it or accepted plays; in a room with Scribble,
+ *  anyone else may join as a guest. */
+function webCard(play, s, me, source) {
+  const key = `${source}|${s.gid}`;
+  let body;
+  const joined = s.kind === 'sk' && joinedAsGuest.has(s.gid);
+  if (s.status === 'playing' && (me !== null || joined)) {
+    reapWebGames(source, key);
+    body = webGame(s, me === 0, source);
+  } else if (s.status === 'playing' && s.kind === 'sk') {
+    body = btn('Join the game', () => { joinedAsGuest.add(s.gid); try { play.onChange(); } catch { /* repaint failed */ } });
+  } else if (s.status === 'playing') body = dim(`Watching a ${P.TITLES[s.kind]} match`);
+  else body = dim(P.TITLES[s.kind]);
+  const line = s.status === 'finished' ? 'The game is over' : s.status === 'ended' ? `${play.name(s.leaver)} left the game`
+    : s.kind === 'rl' ? 'Drive: A D or ← →. Jump: Space or W (again to dash). Boost: Shift or X.'
+      : s.status === 'playing' && me === null && !joined ? 'Anyone in the room can join the game.' : 'Draw the word you are given; type your guesses.';
+  const c = card(
+    dim(`${P.EMOJI[s.kind]} ${P.TITLES[s.kind]} · ${headline(play, s, me)}`),
+    body,
+    el('div', { class: 'small', style: 'text-align:center' }, line),
+    el('div', { class: 'hstack' },
+      s.status === 'playing' && me !== null ? btn('Leave game', () => play.leave(), 'quiet') : null,
+      s.status !== 'playing' ? btn('Close', () => play.close(), 'quiet') : null));
+  if (s.status === 'playing' && (me !== null || joined)) c.dataset.tall = '1';           // the window opens taller for a live game
+  return c;
 }
 
 function inviteCard(play, s) {
@@ -121,6 +187,8 @@ function headline(play, s, me) {
   if (s.kind === 'rps') return `You vs ${other} · first to ${P.RPS.wins}`;
   if (s.kind === 'ch') return `You are ${me === 0 ? 'white' : 'black'} · ${other} is ${me === 0 ? 'black' : 'white'}`;
   if (s.kind === 'ck') return `You are ${me === 0 ? 'red' : 'white'} · ${other} is ${me === 0 ? 'white' : 'red'}`;
+  if (s.kind === 'rl') return `You are ${me === 0 ? 'Blue' : 'Orange'} · ${other} is ${me === 0 ? 'Orange' : 'Blue'}`;
+  if (s.kind === 'sk') return `You and ${other}${me === 0 ? ' · you start the game' : ''}`;
   return `You vs ${other}`;
 }
 

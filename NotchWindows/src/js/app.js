@@ -502,15 +502,21 @@ export async function openPalette(initial = '') {
 /// Messenger boards on screen ('room', 'friend'): while any is up the panel is at least 800 x 600, like the Mac.
 const chatGames = new Set();
 const CHAT_GAME_SIZE = { width: 800, height: 600 };
-export function chatGame(source, on) {
-  if (chatGames.has(source) === !!on) return;
+/// A live web game (Rocket League, Scribble) above the chat needs more room than a board: at least 900 x 720.
+const tallChatGames = new Set();
+const TALL_CHAT_GAME_SIZE = { width: 900, height: 720 };
+export function chatGame(source, on, tall = false) {
+  on = !!on; tall = on && !!tall;
+  if (chatGames.has(source) === on && tallChatGames.has(source) === tall) return;
   if (on) chatGames.add(source); else chatGames.delete(source);
+  if (tall) tallChatGames.add(source); else tallChatGames.delete(source);
   sendLayout();
 }
 function sendLayout() {
   const sizeName = canUse('notchResize') ? pref('ui.size') : 'standard';
   const size = { ...(SIZES[sizeName] || SIZES.standard) };
   if (chatGames.size) { size.width = Math.max(size.width, CHAT_GAME_SIZE.width); size.height = Math.max(size.height, CHAT_GAME_SIZE.height); }
+  if (tallChatGames.size) { size.width = Math.max(size.width, TALL_CHAT_GAME_SIZE.width); size.height = Math.max(size.height, TALL_CHAT_GAME_SIZE.height); }
   invoke('set_layout', { layout: { position: pref('ui.position'), inset: pref('ui.inset'), ...size } }).catch(console.error);
 }
 
