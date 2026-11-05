@@ -17,4 +17,3 @@ Things we decided to do later, not now. Newest ideas at the top of each list. Se
 ## Small things
 
 - **GitHub social preview image:** `docs/social-preview.png` (the "hello" card) is ready; upload it by hand in the repo's Settings → Social preview if wanted (GitHub has no way to set it from code).
-- **Notch Apple AI and Security wording:** none pending.
