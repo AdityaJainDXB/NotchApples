@@ -150,6 +150,12 @@ More screenshots of the capture overlay, the AI answer, the settings and the Win
 
 ## What's new
 
+### Mac 2.2.10 · Windows 2.2.10 BETA · 5 November 2026 · 🚀 Rocket League
+
+- Games: Rocket League, a side-on car soccer game (the one asked for in issue 52). Drive, jump, dash with a second jump and use boost to knock the ball into the other team's goal. Boost pads on the floor refill your tank, a match is three minutes with a golden goal if it ends level, and the computer plays at Easy, Normal or Hard in 1 v 1 or 2 v 2. Play a friend online with a room code, the same way as Capture the Flag and Racing. A D or the arrows drive, Space or W jump (press again in the air to dash), Shift or X boost.
+- Messenger: Rocket League is in the Games menu in friend chats and rooms. The invite works like the other games: they press Accept and both of you land in the same online match above the chat, the one who invited playing Blue. Mac only for now in chats; Windows has Rocket League in its Games tab.
+- Windows: Games: Rocket League, side-on car soccer with boost, a dash and boost pads, against computer players (Easy, Normal, Hard; 1 v 1 or 2 v 2) or a friend online with a room code. Plays against the Mac app's Rocket League. Not yet in Windows friend chats. Untested on real Windows hardware.
+
 ### Mac 2.2.9 · 5 November 2026 · 📈 Token Trail in the Claude Usage tab
 
 - Claude Usage (Ultimate): a new Classic | Token Trail switch at the top of the tab. Token Trail is the view from the Token Trail app, built into the notch: lifetime tokens, peak day, longest task and streaks; today, 7 days and 30 days with an API-equivalent value; your 5-hour session with its burn rate and pace; a monthly budget in dollars with a notification at 80% and 100%; a heatmap of every day for a year; top models and projects; the weekdays and hours you work best; your costliest sessions; and insights such as cache hit rate. It reads Claude Code's logs on this Mac (the first read takes a few seconds, later launches use a saved copy). Classic is unchanged and stays the default.
@@ -161,10 +167,6 @@ More screenshots of the capture overlay, the AI answer, the settings and the Win
 - Messenger: bigger files. A file in a friend chat or group can now be up to 2 MB (it was 160 KB), and a file in an anonymous room is sent in pieces up to 2 MB too (before, anything much over 8 KB could silently never arrive). Pieces are paced and retried, and a room tells you when a file did not arrive completely. This needs the updated relay, which is already live. An older app ignores a friend-chat file bigger than 160 KB without telling the sender.
 - Windows: Messenger: Connect Four, Rock Paper Scissors and Battleship in rooms and in Friends chats, and tic-tac-toe in Friends chats, from the Games menu next to the chat. Rock Paper Scissors picks and Battleship fleets are locked in with a hash first and checked at the end, so cheating shows. The notch grows to at least 800 by 600 while a board is showing.
 - Windows: Plays against the Mac app (2.2.7 and 2.2.8) with the same messages. Windows cannot play Chess or Checkers yet, and its file limit is still 160 KB, so it ignores bigger files from Mac friends. Both are coming. Untested on real Windows hardware.
-
-### Mac 2.2.7 · 5 November 2026 · 🎮 Connect Four, Rock Paper Scissors and Battleship
-
-- Messenger: more two-player games in rooms and in friend chats. The new Games menu next to the chat invites someone to Connect Four, Rock Paper Scissors (first to two) or Battleship, as well as tic-tac-toe. Rock Paper Scissors picks and Battleship fleets are locked in with a hash first, so nobody can change their pick or lie about a hit: when a Battleship game ends, both fleets are revealed and checked. Mac only for now: Windows cannot play these yet.
 
 Every earlier release is in the [changelog](CHANGELOG.md).
 

@@ -20,6 +20,10 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.2.10", date: "5 November 2026", headline: "Rocket League", items: [
+            "Games: Rocket League, a side-on car soccer game (the one asked for in issue 52). Drive, jump, dash with a second jump and use boost to knock the ball into the other team's goal. Boost pads on the floor refill your tank, a match is three minutes with a golden goal if it ends level, and the computer plays at Easy, Normal or Hard in 1 v 1 or 2 v 2. Play a friend online with a room code, the same way as Capture the Flag and Racing. A D or the arrows drive, Space or W jump (press again in the air to dash), Shift or X boost.",
+            "Messenger: Rocket League is in the Games menu in friend chats and rooms. The invite works like the other games: they press Accept and both of you land in the same online match above the chat, the one who invited playing Blue. Mac only for now in chats; Windows has Rocket League in its Games tab.",
+        ]),
         ReleaseNote(version: "2.2.9", date: "5 November 2026", headline: "Token Trail in the Claude Usage tab", items: [
             "Claude Usage (Ultimate): a new Classic | Token Trail switch at the top of the tab. Token Trail is the view from the Token Trail app, built into the notch: lifetime tokens, peak day, longest task and streaks; today, 7 days and 30 days with an API-equivalent value; your 5-hour session with its burn rate and pace; a monthly budget in dollars with a notification at 80% and 100%; a heatmap of every day for a year; top models and projects; the weekdays and hours you work best; your costliest sessions; and insights such as cache hit rate. It reads Claude Code's logs on this Mac (the first read takes a few seconds, later launches use a saved copy). Classic is unchanged and stays the default.",
             "Not in the notch version yet: importing a Claude chat export and the weekly and cumulative charts. The Token Trail app still has them.",
