@@ -1,6 +1,6 @@
-// Connect Four, Rock Paper Scissors and Battleship for two people in a Messenger room or a friend chat: the rules with no screen,
-// no network and no imports (so Node tests load this file as it is). A port of NotchApple/Modules/Messenger/TwoPlayerGames.swift
-// (rules) and PlayController.swift (the session controller); keep them in step. The JSON field names and values are the Mac's, so
+// Connect Four, Rock Paper Scissors, Battleship, Chess and Checkers for two people in a Messenger room or a friend chat: the rules with
+// no screen, no network and no imports (so Node tests load this file as it is). A port of NotchApple/Modules/Messenger/TwoPlayerGames.swift
+// (rules), BoardGames.swift (Chess and Checkers) and PlayController.swift (the session controller); keep them in step. The JSON field names and values are the Mac's, so
 // Mac and Windows play each other (docs/FRIENDS_PROTOCOL.md, "Two-player games").
 //
 // Both players run the same `reduce` on every game message, their own included, so they always agree:
@@ -17,15 +17,15 @@
 //                        both fleets are revealed and checked against the hash and against every answer given.
 //
 // Wire message (PlayMessage), op = invite | accept | start | cancel | quit | rematch   (lobby, same for every game)
-//                                | move                                                (Connect Four: a = column)
+//                                | move                                                (Connect Four: a = column; Chess and Checkers: a = from square, b = to square, s = promotion q r b n)
 //                                | commit | reveal                                     (Rock Paper Scissors: h hash; a pick, s salt)
 //                                | ready | shoot | result | reveal                     (Battleship: h hash; a cell, b answer; s "board:salt")
-//   g = "c4" | "rps" | "bs", gid = game id, x/o = start: who goes first / the other, r = round (0, then +1 per rematch),
-//   n = move number (c4, bs) or game within the match (rps), a, b, h, s as above. Every field but g, op and gid is optional.
+//   g = "c4" | "rps" | "bs" | "ch" | "ck", gid = game id, x/o = start: who goes first / the other, r = round (0, then +1 per rematch),
+//   n = move number (c4, bs, ch, ck) or game within the match (rps), a, b, h, s as above. Every field but g, op and gid is optional.
 
-export const KINDS = ['c4', 'rps', 'bs'];
-export const TITLES = { c4: 'Connect Four', rps: 'Rock Paper Scissors', bs: 'Battleship' };
-export const EMOJI = { c4: '🔴', rps: '✊', bs: '🚢' };
+export const KINDS = ['c4', 'rps', 'bs', 'ch', 'ck'];
+export const TITLES = { c4: 'Connect Four', rps: 'Rock Paper Scissors', bs: 'Battleship', ch: 'Chess', ck: 'Checkers' };
+export const EMOJI = { c4: '🔴', rps: '✊', bs: '🚢', ch: '♟️', ck: '⚫' };
 export const C4 = { cols: 7, rows: 6 };
 export const RPS = { wins: 2, names: ['Rock', 'Paper', 'Scissors'], emoji: ['✊', '✋', '✌️'] };
 /** True when pick `a` beats pick `b` (0 rock, 1 paper, 2 scissors). */
@@ -137,6 +137,252 @@ export function answer(board, shot, cell) {
   return all.every((i) => shot.has(i)) ? 10 + all.length : 1;
 }
 
+
+// ---- Chess and Checkers (BoardGames.swift) ----
+//
+// Squares are numbered 0..63, row by row from the top-left (row 0 is the far side from the first player). The first player is white
+// in Chess and moves up the screen in Checkers. Both players run the same rules on every message, and an illegal move changes nothing.
+
+const inside = (r, c) => r >= 0 && r < 8 && c >= 0 && c < 8;
+const KNIGHT_STEPS = [[-2, -1], [-2, 1], [-1, -2], [-1, 2], [1, -2], [1, 2], [2, -1], [2, 1]];
+const KING_STEPS = [[-1, -1], [-1, 0], [-1, 1], [0, -1], [0, 1], [1, -1], [1, 0], [1, 1]];
+const ROOK_DIRS = [[-1, 0], [1, 0], [0, -1], [0, 1]];
+const BISHOP_DIRS = [[-1, -1], [-1, 1], [1, -1], [1, 1]];
+export const CHESS_PROMOTIONS = ['q', 'r', 'b', 'n'];
+
+/** A new chess game. Uppercase is white (the first player), lowercase black, "." empty. Row 0 is rank 8. `outcome` is null while the game
+ *  goes on, else checkmate, stalemate, fifty, repetition or material. */
+export const newChess = () => ({
+  board: Array.from('rnbqkbnrpppppppp' + '.'.repeat(32) + 'PPPPPPPPRNBQKBNR'),
+  turn: 0,
+  castle: [true, true, true, true],        // white kingside, white queenside, black kingside, black queenside
+  enPassant: null,                         // the square a pawn that just moved two squares passed over
+  quiet: 0,                                // half-moves since the last capture or pawn move
+  moves: 0,                                // half-moves played (also the message number)
+  last: null,                              // [from, to] of the last move
+  check: false,                            // the side to move is in check
+  outcome: null,
+  seen: {},
+});
+
+export const chessSide = (ch, sq) => { const c = ch.board[sq]; return c === '.' ? null : (c === c.toUpperCase() ? 0 : 1); };
+export const chessKingSquare = (ch, side) => ch.board.indexOf(side === 0 ? 'K' : 'k');
+/** The player who delivered checkmate, if that is how it ended. */
+export const chessWinnerIndex = (ch) => (ch.outcome === 'checkmate' ? 1 - ch.turn : null);
+
+/** True when a piece of `by` could capture on `square` (ignoring pins). */
+export function chessAttacked(ch, square, by) {
+  const r = Math.floor(square / 8), c = square % 8, b = ch.board;
+  const piece = (x) => (by === 0 ? x.toUpperCase() : x);
+  const pr = r + (by === 0 ? 1 : -1);
+  for (const dc of [-1, 1]) if (inside(pr, c + dc) && b[pr * 8 + c + dc] === piece('p')) return true;
+  for (const [dr, dc] of KNIGHT_STEPS) if (inside(r + dr, c + dc) && b[(r + dr) * 8 + c + dc] === piece('n')) return true;
+  for (const [dr, dc] of KING_STEPS) if (inside(r + dr, c + dc) && b[(r + dr) * 8 + c + dc] === piece('k')) return true;
+  for (const [dirs, kinds] of [[ROOK_DIRS, ['r', 'q']], [BISHOP_DIRS, ['b', 'q']]]) {
+    for (const [dr, dc] of dirs) {
+      let rr = r + dr, cc = c + dc;
+      while (inside(rr, cc)) {
+        const x = b[rr * 8 + cc];
+        if (x !== '.') { if (kinds.some((k) => piece(k) === x)) return true; break; }
+        rr += dr; cc += dc;
+      }
+    }
+  }
+  return false;
+}
+
+/** Where the piece on `from` could go before the "don't leave your king in check" rule. */
+function chessPseudoTargets(ch, from) {
+  const me = chessSide(ch, from);
+  if (me === null) return [];
+  const r = Math.floor(from / 8), c = from % 8, b = ch.board, out = [];
+  const addIfFreeOrEnemy = (rr, cc) => { if (inside(rr, cc) && chessSide(ch, rr * 8 + cc) !== me) out.push(rr * 8 + cc); };
+  const kind = b[from].toLowerCase();
+  if (kind === 'p') {
+    const dir = me === 0 ? -1 : 1, start = me === 0 ? 6 : 1;
+    if (inside(r + dir, c) && b[(r + dir) * 8 + c] === '.') {
+      out.push((r + dir) * 8 + c);
+      if (r === start && b[(r + 2 * dir) * 8 + c] === '.') out.push((r + 2 * dir) * 8 + c);
+    }
+    for (const dc of [-1, 1]) {
+      if (!inside(r + dir, c + dc)) continue;
+      const to = (r + dir) * 8 + c + dc, other = chessSide(ch, to);
+      if (other !== null && other !== me) out.push(to); else if (to === ch.enPassant) out.push(to);
+    }
+  } else if (kind === 'n') {
+    for (const [dr, dc] of KNIGHT_STEPS) addIfFreeOrEnemy(r + dr, c + dc);
+  } else if (kind === 'k') {
+    for (const [dr, dc] of KING_STEPS) addIfFreeOrEnemy(r + dr, c + dc);
+    const home = me === 0 ? 60 : 4;
+    if (from === home && !ch.check) {
+      const rook = me === 0 ? 'R' : 'r';
+      if (ch.castle[me * 2] && b[home + 3] === rook && b[home + 1] === '.' && b[home + 2] === '.' && !chessAttacked(ch, home + 1, 1 - me)) out.push(home + 2);
+      if (ch.castle[me * 2 + 1] && b[home - 4] === rook && b[home - 1] === '.' && b[home - 2] === '.' && b[home - 3] === '.' && !chessAttacked(ch, home - 1, 1 - me)) out.push(home - 2);
+    }
+  } else {
+    const dirs = kind === 'r' ? ROOK_DIRS : kind === 'b' ? BISHOP_DIRS : [...ROOK_DIRS, ...BISHOP_DIRS];
+    for (const [dr, dc] of dirs) {
+      let rr = r + dr, cc = c + dc;
+      while (inside(rr, cc)) {
+        const owner = chessSide(ch, rr * 8 + cc);
+        if (owner === me) break;
+        out.push(rr * 8 + cc);
+        if (owner !== null) break;
+        rr += dr; cc += dc;
+      }
+    }
+  }
+  return out;
+}
+
+/** Moves the piece (and the rook when castling, the captured pawn when taking en passant) without checking anything. */
+function chessPlace(ch, from, to, promotion) {
+  const b = ch.board;
+  let piece = b[from];
+  const pawn = piece === 'P' || piece === 'p';
+  if (pawn && to === ch.enPassant && b[to] === '.' && from % 8 !== to % 8) b[Math.floor(from / 8) * 8 + (to % 8)] = '.';
+  if ((piece === 'K' || piece === 'k') && Math.abs((to % 8) - (from % 8)) === 2) {
+    const kingside = to % 8 > from % 8;
+    const rookFrom = kingside ? from + 3 : from - 4, rookTo = kingside ? from + 1 : from - 1;
+    b[rookTo] = b[rookFrom]; b[rookFrom] = '.';
+  }
+  if (pawn && (Math.floor(to / 8) === 0 || Math.floor(to / 8) === 7)) {
+    const chosen = promotion || 'q';
+    piece = piece === 'P' ? chosen.toUpperCase() : chosen;
+  }
+  b[to] = piece; b[from] = '.';
+}
+
+/** Squares the piece on `from` may legally move to now (empty if it isn't that side's turn or the game is over). */
+export function chessLegalTargets(ch, from) {
+  if (ch.outcome !== null || !Number.isInteger(from) || from < 0 || from > 63) return [];
+  const me = chessSide(ch, from);
+  if (me === null || me !== ch.turn) return [];
+  return chessPseudoTargets(ch, from).filter((to) => {
+    const copy = { ...ch, board: ch.board.slice() };       // (only the board is touched; `seen` is shared and left alone)
+    chessPlace(copy, from, to, 'q');
+    const king = chessKingSquare(copy, me);
+    return king >= 0 && !chessAttacked(copy, king, 1 - me);
+  });
+}
+
+export const chessIsPromotion = (ch, from, to) => (ch.board[from] === 'P' && Math.floor(to / 8) === 0) || (ch.board[from] === 'p' && Math.floor(to / 8) === 7);
+
+/** Neither side can ever give mate: only kings, or kings and one knight or bishop. */
+export function chessInsufficientMaterial(ch) {
+  const rest = ch.board.filter((x) => x !== '.' && x !== 'K' && x !== 'k');
+  return rest.length === 0 || (rest.length === 1 && 'nNbB'.includes(rest[0]));
+}
+
+/** Plays a legal move on `ch` (changed in place). `promotion` is q, r, b or n and only matters when a pawn reaches the last row (queen if
+ *  missing). Returns false, having changed nothing, when the move is not legal. */
+export function chessPlay(ch, from, to, promotion) {
+  if (!chessLegalTargets(ch, from).includes(to)) return false;
+  if (promotion != null && !CHESS_PROMOTIONS.includes(promotion)) return false;
+  const me = ch.turn, piece = ch.board[from], pawn = piece === 'P' || piece === 'p';
+  const capture = ch.board[to] !== '.' || (pawn && to === ch.enPassant);
+  chessPlace(ch, from, to, promotion);
+  // Castling rights go when the king or a rook moves, or a rook is taken.
+  if (piece === 'K') { ch.castle[0] = false; ch.castle[1] = false; }
+  if (piece === 'k') { ch.castle[2] = false; ch.castle[3] = false; }
+  for (const sq of [from, to]) {
+    if (sq === 63) ch.castle[0] = false; else if (sq === 56) ch.castle[1] = false; else if (sq === 7) ch.castle[2] = false; else if (sq === 0) ch.castle[3] = false;
+  }
+  ch.enPassant = pawn && Math.abs(to - from) === 16 ? (from + to) / 2 : null;
+  ch.quiet = capture || pawn ? 0 : ch.quiet + 1;
+  ch.turn = 1 - me; ch.moves += 1; ch.last = [from, to];
+  const king = chessKingSquare(ch, ch.turn);
+  ch.check = king >= 0 ? chessAttacked(ch, king, me) : false;
+  const key = `${ch.board.join('')}|${ch.turn}|${ch.castle.join(',')}|${ch.enPassant ?? -1}`;
+  ch.seen[key] = (ch.seen[key] || 0) + 1;
+  let canMove = false;
+  for (let sq = 0; sq < 64 && !canMove; sq++) canMove = chessLegalTargets(ch, sq).length > 0;
+  if (!canMove) ch.outcome = ch.check ? 'checkmate' : 'stalemate';
+  else if (ch.quiet >= 100) ch.outcome = 'fifty';
+  else if (ch.seen[key] >= 3) ch.outcome = 'repetition';
+  else if (chessInsufficientMaterial(ch)) ch.outcome = 'material';
+  return true;
+}
+
+export const chessDescribe = (outcome) => ({
+  checkmate: 'Checkmate', stalemate: 'Stalemate', fifty: 'Draw: fifty moves without a capture or pawn move',
+  repetition: 'Draw: the same position three times', material: 'Draw: not enough pieces left to mate',
+}[outcome] || '');
+
+/** A new checkers game (English draughts, 8 x 8). "a"/"A" is the first player's man/king (starts at the bottom, moves up), "b"/"B" the
+ *  second player's. Pieces live on dark squares (row + column odd). `winnerIndex` null with `over` set means a draw. */
+export const newCheckers = () => {
+  const board = Array(64).fill('.');
+  for (let sq = 0; sq < 64; sq++) {
+    if ((Math.floor(sq / 8) + (sq % 8)) % 2 === 1) { if (Math.floor(sq / 8) < 3) board[sq] = 'b'; else if (Math.floor(sq / 8) > 4) board[sq] = 'a'; }
+  }
+  return { board, turn: 0, chain: null, moves: 0, quiet: 0, last: null, over: false, winnerIndex: null };
+};
+
+const ckSide = (k, sq) => { const x = k.board[sq]; return x === 'a' || x === 'A' ? 0 : x === 'b' || x === 'B' ? 1 : null; };
+const ckIsKing = (k, sq) => k.board[sq] === 'A' || k.board[sq] === 'B';
+const ckDirections = (k, sq) => (ckIsKing(k, sq) ? [[-1, -1], [-1, 1], [1, -1], [1, 1]] : ckSide(k, sq) === 0 ? [[-1, -1], [-1, 1]] : [[1, -1], [1, 1]]);
+
+function ckJumps(k, sq) {
+  const me = ckSide(k, sq);
+  if (me === null) return [];
+  const r = Math.floor(sq / 8), c = sq % 8, out = [];
+  for (const [dr, dc] of ckDirections(k, sq)) {
+    if (inside(r + 2 * dr, c + 2 * dc) && ckSide(k, (r + dr) * 8 + c + dc) === 1 - me && k.board[(r + 2 * dr) * 8 + c + 2 * dc] === '.') out.push((r + 2 * dr) * 8 + c + 2 * dc);
+  }
+  return out;
+}
+function ckSteps(k, sq) {
+  const r = Math.floor(sq / 8), c = sq % 8, out = [];
+  for (const [dr, dc] of ckDirections(k, sq)) if (inside(r + dr, c + dc) && k.board[(r + dr) * 8 + c + dc] === '.') out.push((r + dr) * 8 + c + dc);
+  return out;
+}
+
+/** True when `side` has a capture available somewhere (then it must capture). */
+export function checkersMustCapture(k, side) {
+  for (let sq = 0; sq < 64; sq++) if (ckSide(k, sq) === side && ckJumps(k, sq).length) return true;
+  return false;
+}
+
+/** Squares the piece on `from` may move to now (a jump while one is compulsory or in progress). */
+export function checkersLegalTargets(k, from) {
+  if (k.over || !Number.isInteger(from) || from < 0 || from > 63 || ckSide(k, from) !== k.turn) return [];
+  if (k.chain !== null) return from === k.chain ? ckJumps(k, from) : [];
+  return checkersMustCapture(k, k.turn) ? ckJumps(k, from) : ckSteps(k, from);
+}
+
+/** Plays a legal move on `k` (changed in place). A jump continues with the same piece while another jump is possible, and stops when a
+ *  man is crowned. Every hop is one move (and one message). Returns false, having changed nothing, when it is not legal. */
+export function checkersPlay(k, from, to) {
+  if (!checkersLegalTargets(k, from).includes(to)) return false;
+  const me = k.turn, wasKing = ckIsKing(k, from);
+  const jumped = Math.abs(Math.floor(to / 8) - Math.floor(from / 8)) === 2;
+  if (jumped) k.board[((Math.floor(from / 8) + Math.floor(to / 8)) / 2) * 8 + (from % 8 + (to % 8)) / 2] = '.';
+  k.board[to] = k.board[from]; k.board[from] = '.';
+  let crowned = false;
+  if (!wasKing && Math.floor(to / 8) === (me === 0 ? 0 : 7)) { k.board[to] = me === 0 ? 'A' : 'B'; crowned = true; }
+  k.moves += 1; k.last = [from, to];
+  k.quiet = jumped || !wasKing ? 0 : k.quiet + 1;
+  if (jumped && !crowned && ckJumps(k, to).length) k.chain = to; else { k.chain = null; k.turn = 1 - me; }
+  // The game is over when the side to move has nothing left to move, or after a long stretch with no progress.
+  if (k.chain === null) {
+    let canMove = false;
+    for (let sq = 0; sq < 64 && !canMove; sq++) canMove = checkersLegalTargets(k, sq).length > 0;
+    if (!canMove) { k.over = true; k.winnerIndex = me; } else if (k.quiet >= 80) { k.over = true; k.winnerIndex = null; }
+  }
+  return true;
+}
+
+/** Where `id` may move the piece on `from` right now in Chess or Checkers (empty when it is not their turn). */
+export function boardTargets(s, id, from) {
+  if (!s || s.status !== 'playing') return [];
+  const me = indexOf(s, id);
+  if (me === null) return [];
+  if (s.kind === 'ch') return s.chess.turn === me ? chessLegalTargets(s.chess, from) : [];
+  if (s.kind === 'ck') return s.checkers.turn === me ? checkersLegalTargets(s.checkers, from) : [];
+  return [];
+}
+
 // ---- messages from the network ----
 
 const isInt = (v, lo, hi) => Number.isInteger(v) && v >= lo && v <= hi;
@@ -157,7 +403,10 @@ export function parse(raw) {
     case 'invite': case 'accept': case 'quit': case 'cancel': return m;
     case 'start': return ok(isId(m.x) && isId(m.o) && m.x !== m.o);
     case 'rematch': return ok(isInt(m.r, 0, 1000));
-    case 'move': return ok(isInt(m.r, 0, 1000) && isInt(m.n, 0, 100) && isInt(m.a, 0, 6));
+    case 'move':
+      if (!isInt(m.r, 0, 1000)) return null;
+      if (m.g === 'ch' || m.g === 'ck') return ok(isInt(m.n, 0, 800) && isInt(m.a, 0, 63) && isInt(m.b, 0, 63) && (m.s === undefined || CHESS_PROMOTIONS.includes(m.s)));   // a from, b to, s promotion
+      return ok(isInt(m.n, 0, 100) && isInt(m.a, 0, 6));
     case 'commit': return ok(isInt(m.r, 0, 1000) && isInt(m.n, 0, 10) && isHex64(m.h));
     case 'reveal': {
       if (!isInt(m.r, 0, 1000) || typeof m.s !== 'string') return null;
@@ -192,6 +441,7 @@ function fresh(kind, gid, inviter) {
     c4: { cells: Array(42).fill(0), moves: 0, line: null, last: null },
     rps: { n: 0, commit: [null, null], reveal: [null, null], score: [0, 0], last: null, lastWinner: null },
     bs: { commit: [null, null], moves: 0, pendingCell: null, shots: [Array(100).fill(0), Array(100).fill(0)], sunk: [[], []], hits: [0, 0], revealed: [null, null] },
+    chess: newChess(), checkers: newCheckers(),
     stash: [],
   };
 }
@@ -228,7 +478,23 @@ function finish(s, winnerIndex) {
 function apply(s, m, idx) {
   if (s.kind === 'c4') return applyConnectFour(s, m, idx);
   if (s.kind === 'rps') return applyRPS(s, m, idx);
+  if (s.kind === 'ch') return applyChess(s, m, idx);
+  if (s.kind === 'ck') return applyCheckers(s, m, idx);
   return applyBattleship(s, m, idx);
+}
+
+function applyChess(s, m, idx) {
+  const ch = s.chess;
+  if (m.op !== 'move' || m.n !== ch.moves || idx !== ch.turn || m.a === undefined || m.b === undefined || !chessPlay(ch, m.a, m.b, m.s)) return false;
+  if (ch.outcome !== null) finish(s, chessWinnerIndex(ch));
+  return true;
+}
+
+function applyCheckers(s, m, idx) {
+  const k = s.checkers;
+  if (m.op !== 'move' || m.n !== k.moves || idx !== k.turn || m.a === undefined || m.b === undefined || !checkersPlay(k, m.a, m.b)) return false;
+  if (k.over) finish(s, k.winnerIndex);
+  return true;
 }
 
 function applyConnectFour(s, m, idx) {
@@ -362,7 +628,7 @@ export function reduce(state, raw, from) {
         s.round += 1; s.rematch = []; s.winner = null;
         [s.p1, s.p2] = [s.p2, s.p1];
         const f = fresh(s.kind, s.gid, s.inviter);
-        s.c4 = f.c4; s.rps = f.rps; s.bs = f.bs; s.stash = [];
+        s.c4 = f.c4; s.rps = f.rps; s.bs = f.bs; s.chess = f.chess; s.checkers = f.checkers; s.stash = [];
         s.status = 'playing';
       }
       return s;
@@ -393,6 +659,10 @@ export const rematchMsg = (s) => ({ g: s.kind, op: 'rematch', gid: s.gid, r: s.r
 export const startMsg = (s, acceptor, inviterFirst = secureRandom() < 0.5) =>
   ({ g: s.kind, op: 'start', gid: s.gid, x: inviterFirst ? s.inviter : acceptor, o: inviterFirst ? acceptor : s.inviter });
 export const moveMsg = (s, column) => ({ g: s.kind, op: 'move', gid: s.gid, r: s.round, n: s.c4.moves, a: column });
+/** Chess and Checkers: a move from one square to another (`promotion` only for a pawn reaching the last row in Chess). */
+export const boardMoveMsg = (s, from, to, promotion) => ({
+  g: s.kind, op: 'move', gid: s.gid, r: s.round, n: s.kind === 'ch' ? s.chess.moves : s.checkers.moves, a: from, b: to, ...(promotion ? { s: promotion } : null),
+});
 export const commitMsg = (s, pick, salt) => ({ g: s.kind, op: 'commit', gid: s.gid, r: s.round, n: s.rps.n, h: rpsCommit(pick, salt) });
 export const revealMsg = (s, pick, salt) => ({ g: s.kind, op: 'reveal', gid: s.gid, r: s.round, n: s.rps.n, a: pick, s: salt });
 export const readyMsg = (s, board, salt) => ({ g: s.kind, op: 'ready', gid: s.gid, r: s.round, h: fleetCommit(board, salt) });
@@ -505,6 +775,11 @@ export function createPlayController({ myID: myIdOrFn, name = () => 'Someone', t
     /** The opponent left the room or the app: their game is over. */
     playerGone(id) { const s = s0(); if (s && s.status === 'playing') applyMsg(quitMsg(s), id); },
     drop(column) { const s = s0(); if (s) send(moveMsg(s, column)); },
+    /** Chess and Checkers: move the piece on `from` to `to` (an illegal move is never sent). */
+    move(from, to, promotion) {
+      const s = s0();
+      if (s && boardTargets(s, idOf(), from).includes(to)) send(boardMoveMsg(s, from, to, promotion));   // (checked first, so a move out of turn is not even stashed or sent)
+    },
     /** Rock Paper Scissors: lock in a pick. Only the hash leaves this PC until both picks are in. */
     pick(choice) {
       const s = s0(), me = s ? indexOf(s, idOf()) : null;

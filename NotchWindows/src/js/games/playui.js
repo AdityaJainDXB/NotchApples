@@ -1,5 +1,5 @@
 // The screens for the two-player games in a Messenger room or a friend chat: the Games menu, the tic-tac-toe card, and the
-// card for Connect Four, Rock Paper Scissors and Battleship (an invite with Accept, then the board, then Rematch). The Mac's
+// card for Connect Four, Rock Paper Scissors, Battleship, Chess and Checkers (an invite with Accept, then the board, then Rematch). The Mac's
 // PlayCards.swift is the model. The rules are in tictactoe-logic.js and twoplayer-logic.js; this file only draws them and passes
 // the player's choices on, so rooms (services/messenger.js) and friend chats (services/friends.js) share it.
 import { el } from '../store.js';
@@ -86,9 +86,11 @@ export function playCard(play) {
     if (s.status !== 'playing' || me === null) return false;
     if (s.kind === 'c4') return s.c4.moves % 2 === me;
     if (s.kind === 'rps') return s.rps.commit[me] === null;
+    if (s.kind === 'ch') return s.chess.turn === me;
+    if (s.kind === 'ck') return s.checkers.turn === me;
     return P.bothReady(s.bs) ? P.shooter(s.bs) === me : !play.iCommittedFleet;
   })();
-  const board = s.kind === 'c4' ? connectFour(play, s) : s.kind === 'rps' ? rps(play, s, me) : battleship(play, s, me);
+  const board = s.kind === 'c4' ? connectFour(play, s) : s.kind === 'rps' ? rps(play, s, me) : s.kind === 'bs' ? battleship(play, s, me) : boardGame(play, s, me);
   return card(
     dim(`${P.EMOJI[s.kind]} ${P.TITLES[s.kind]} · ${headline(play, s, me)}`),
     board,
@@ -117,17 +119,26 @@ function headline(play, s, me) {
   const other = nm(P.playerAt(s, 1 - me));
   if (s.kind === 'c4') return `You are ${me === 0 ? 'red' : 'yellow'} · ${other} is ${me === 0 ? 'yellow' : 'red'}`;
   if (s.kind === 'rps') return `You vs ${other} · first to ${P.RPS.wins}`;
+  if (s.kind === 'ch') return `You are ${me === 0 ? 'white' : 'black'} · ${other} is ${me === 0 ? 'black' : 'white'}`;
+  if (s.kind === 'ck') return `You are ${me === 0 ? 'red' : 'white'} · ${other} is ${me === 0 ? 'white' : 'red'}`;
   return `You vs ${other}`;
 }
 
 function statusLine(play, s, me, myTurn) {
   const nm = play.name;
   if (s.status === 'finished') {
-    if (s.winner === null) return 'A draw';
-    return me !== null && s.winner === play.myID ? 'You won! 🎉' : `${nm(s.winner)} won`;
+    const reason = s.kind === 'ch' ? P.chessDescribe(s.chess.outcome) : '';
+    if (s.winner === null) return reason || 'A draw';
+    const result = me !== null && s.winner === play.myID ? 'You won! 🎉' : `${nm(s.winner)} won`;
+    return reason ? `${reason} · ${result}` : result;
   }
   if (s.status === 'ended') return `${nm(s.leaver)} left the game`;
   if (s.kind === 'c4') return myTurn ? 'Your turn' : `${nm(P.playerAt(s, s.c4.moves % 2))}'s turn`;
+  if (s.kind === 'ch') return myTurn ? (s.chess.check ? 'Your turn · you are in check' : 'Your turn') : `${nm(P.playerAt(s, s.chess.turn))}'s turn${s.chess.check ? ' · in check' : ''}`;
+  if (s.kind === 'ck') {
+    const k = s.checkers;
+    return myTurn ? (k.chain !== null ? 'Keep jumping with the same piece' : P.checkersMustCapture(k, k.turn) ? 'Your turn · you must capture' : 'Your turn') : `${nm(P.playerAt(s, k.turn))}'s turn`;
+  }
   if (me === null) return 'Playing…';
   const other = nm(P.playerAt(s, 1 - me));
   if (s.kind === 'rps') {
@@ -155,6 +166,63 @@ function connectFour(play, s) {
     }, ...Array.from({ length: P.C4.rows }, (_, row) => disc(row * P.C4.cols + col)));
   }));
 }
+
+// ---- Chess and Checkers ----
+
+const GLYPH = { k: '♚', q: '♛', r: '♜', b: '♝', n: '♞', p: '♟︎' };
+/** The piece I have picked up, and a pawn move waiting for the choice of piece to crown it. Kept here because the card is redrawn on every change. */
+const hand = { gid: null, moves: -1, picked: null, promoting: null };
+
+function boardGame(play, s, me) {
+  const game = s.kind === 'ch' ? s.chess : s.checkers;
+  if (hand.gid !== s.gid || hand.moves !== game.moves) { hand.gid = s.gid; hand.moves = game.moves; hand.picked = null; hand.promoting = null; }
+  const flip = me === 1;                                    // the second player sees the board turned round, so their pieces are at the bottom
+  const targets = hand.picked !== null ? P.boardTargets(s, play.myID, hand.picked) : [];
+  const last = game.last || [];
+  const kingInCheck = s.kind === 'ch' && s.chess.check ? P.chessKingSquare(s.chess, s.chess.turn) : -1;
+  const repaint = () => { try { play.onChange(); } catch { /* the screen repaints on the next change */ } };
+  const tap = (square) => {
+    if (s.status !== 'playing' || me === null) return;
+    if (hand.picked !== null && P.boardTargets(s, play.myID, hand.picked).includes(square)) {
+      if (s.kind === 'ch' && P.chessIsPromotion(s.chess, hand.picked, square)) { hand.promoting = { from: hand.picked, to: square }; repaint(); return; }
+      const from = hand.picked;
+      hand.picked = null;
+      play.move(from, square);
+    } else {
+      hand.promoting = null;
+      hand.picked = P.boardTargets(s, play.myID, square).length ? square : null;
+    }
+    repaint();
+  };
+  const piece = (square) => {
+    if (s.kind === 'ch') {
+      const c = s.chess.board[square];
+      if (c === '.') return null;
+      const white = c === c.toUpperCase();
+      return el('span', { style: `font-size:26px;line-height:1;color:${white ? '#fff' : '#000'};text-shadow:${white ? '0 0 2px #000,0 0 1px #000' : '0 0 2px rgba(255,255,255,.7)'}` }, GLYPH[c.toLowerCase()] || '?');
+    }
+    const c = s.checkers.board[square];
+    if (c === '.') return null;
+    return el('span', { style: `width:26px;height:26px;box-sizing:border-box;border-radius:50%;border:1.5px solid rgba(0,0,0,.45);display:grid;place-items:center;font-size:14px;line-height:1;background:${c === 'a' || c === 'A' ? '#d92626' : '#ebebeb'};color:${c === 'A' ? '#f5c518' : '#000'}` }, c === c.toUpperCase() ? '♛' : '');
+  };
+  const cells = [];
+  for (let row = 0; row < 8; row++) {
+    for (let col = 0; col < 8; col++) {
+      const square = (flip ? 7 - row : row) * 8 + (flip ? 7 - col : col);
+      const dark = (Math.floor(square / 8) + (square % 8)) % 2 === 1;
+      const tint = [last.includes(square) ? 'rgba(255,215,0,.28)' : null, hand.picked === square ? 'rgba(60,200,90,.45)' : null, kingInCheck === square ? 'rgba(230,50,50,.5)' : null].filter(Boolean);
+      cells.push(el('button', {
+        disabled: s.status !== 'playing' || me === null, onclick: () => tap(square), 'aria-label': `Square ${row + 1}, ${col + 1}`,
+        style: `position:relative;width:34px;height:34px;padding:0;border:0;border-radius:0;display:grid;place-items:center;cursor:${s.status === 'playing' && me !== null ? 'pointer' : 'default'};background:${tint.map((t) => `linear-gradient(${t},${t}),`).join('')}${dark ? '#8c6140' : '#ebd6b0'}`,
+      }, piece(square), targets.includes(square) ? el('span', { style: 'position:absolute;width:10px;height:10px;border-radius:50%;background:rgba(60,200,90,.8)' }) : null));
+    }
+  }
+  const grid = el('div', { style: 'display:grid;grid-template-columns:repeat(8,34px);border-radius:4px;overflow:hidden;border:1px solid rgba(0,0,0,.5)' }, ...cells);
+  const crown = hand.promoting && me !== null ? el('div', { class: 'hstack', style: 'gap:6px' }, dim('Crown the pawn as'),
+    ...CROWNS.map((code) => btn(GLYPH[code], () => { const { from, to } = hand.promoting; hand.promoting = null; hand.picked = null; play.move(from, to, code); }, code === 'q' ? '' : 'quiet'))) : null;
+  return el('div', { class: 'col gap-6', style: 'align-items:center' }, grid, crown);
+}
+const CROWNS = ['q', 'r', 'b', 'n'];
 
 // ---- Rock Paper Scissors ----
 

@@ -166,7 +166,7 @@ export function render(root) {
   const gamesSlot = el('div', { class: 'hstack' });   // the Games button, while no game is open
   const gameBox = el('div', { style: 'flex:none' });   // the game card above the chat
   const groupNote = el('div', { class: 'tiny', style: 'color:var(--warn,#e0a030)' });
-  const clip = button('📎', attach, { kind: 'quiet', title: `Send a file (up to ${L.MAX_FILE_BYTES / 1000} KB). It is encrypted like a message.` });
+  const clip = button('📎', attach, { kind: 'quiet', title: `Send a file (up to ${L.MAX_FILE_TEXT}). It is encrypted like a message.` });
   function send() {
     const box = selected; if (!box || !draft.value.trim()) return;
     FR.st.lastProblem = null; FR.send(draft.value, box); draft.value = '';
