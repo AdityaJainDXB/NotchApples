@@ -231,6 +231,7 @@
 		75E7FF65808969DFE9C8EC56 /* ChessGame.html in Resources */ = {isa = PBXBuildFile; fileRef = 5CD7E7A5A6BDA52E46DFD022 /* ChessGame.html */; };
 		7651FFF0A83FB22D9BD7AE4C /* SettingsManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA5B0C58A3CF928A968E10F8 /* SettingsManager.swift */; };
 		7692E3EA74EEE6D464BFA6F2 /* ClaudeCodeStatusLogic.swift in Sources */ = {isa = PBXBuildFile; fileRef = EAD839322181D4146F3C658C /* ClaudeCodeStatusLogic.swift */; };
+		76F8D56FE975F50F06D1671B /* DoItGeometry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 45249414D86E2FEEDAAA8AC1 /* DoItGeometry.swift */; };
 		76F9AA1BB00ED5DD56E9B2BB /* SystemWatch.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BDB8BD41E7ADF271C9499F9 /* SystemWatch.swift */; };
 		777EE2CF4832CD05B28ECAA6 /* TwoPlayerGames.swift in Sources */ = {isa = PBXBuildFile; fileRef = 74F9DD1ED3B9968B73847DC4 /* TwoPlayerGames.swift */; };
 		781F31C499F96282756DF6BF /* LinksShelf.swift in Sources */ = {isa = PBXBuildFile; fileRef = A867CACABB3FC748CD5D0638 /* LinksShelf.swift */; };
@@ -238,6 +239,7 @@
 		78EA17E4D183FA6D44954626 /* WallpaperLogic.swift in Sources */ = {isa = PBXBuildFile; fileRef = 940C2E169AC16EED8E3B6F5C /* WallpaperLogic.swift */; };
 		79EEF6851708FE25A5F5D52F /* WallpaperEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 544025FBBA4060D5F307DDCA /* WallpaperEngine.swift */; };
 		7A85EB5E3B86FFC6A10557E1 /* CompanionPairing.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E7ACC6F1129AAB5813B46CB /* CompanionPairing.swift */; };
+		7AC9653A722F4971D2C680AF /* DoItGeometryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 737F56550092636CD2B51F2F /* DoItGeometryTests.swift */; };
 		7AD5B26CCD47C4B789FA217F /* AIModes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44CAF8A30126F03D6A230ED7 /* AIModes.swift */; };
 		7B128EEA15D6A4918D365964 /* FriendsClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 45A5C027BD4B67CE5182EE27 /* FriendsClient.swift */; };
 		7B585A54684C47977CA762E6 /* tetris.js in Resources */ = {isa = PBXBuildFile; fileRef = 34E60A6D24A27DF650F178FD /* tetris.js */; };
@@ -603,6 +605,7 @@
 		43E8EC10867E8777B7DF6B51 /* ClaudeLimitsService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClaudeLimitsService.swift; sourceTree = "<group>"; };
 		44CAF8A30126F03D6A230ED7 /* AIModes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIModes.swift; sourceTree = "<group>"; };
 		44EC19E1838745C95B5759DF /* GamesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GamesView.swift; sourceTree = "<group>"; };
+		45249414D86E2FEEDAAA8AC1 /* DoItGeometry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DoItGeometry.swift; sourceTree = "<group>"; };
 		45A5C027BD4B67CE5182EE27 /* FriendsClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FriendsClient.swift; sourceTree = "<group>"; };
 		4649C21487D880C8DF7A14F8 /* FullScreenLyrics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FullScreenLyrics.swift; sourceTree = "<group>"; };
 		466B2516F7D15E3C623784BC /* F1Model.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = F1Model.swift; sourceTree = "<group>"; };
@@ -672,6 +675,7 @@
 		70487D33E613C8A9A0DFA36C /* ChatHistory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatHistory.swift; sourceTree = "<group>"; };
 		709B6D7DF73EDC5126DF68D8 /* QuickAddView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuickAddView.swift; sourceTree = "<group>"; };
 		71D699ADE6DA2C5CFA3760DD /* EntitlementLogicTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EntitlementLogicTests.swift; sourceTree = "<group>"; };
+		737F56550092636CD2B51F2F /* DoItGeometryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DoItGeometryTests.swift; sourceTree = "<group>"; };
 		74F9DD1ED3B9968B73847DC4 /* TwoPlayerGames.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TwoPlayerGames.swift; sourceTree = "<group>"; };
 		755B22C2370E85554D2C56DF /* TourLogic.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TourLogic.swift; sourceTree = "<group>"; };
 		75CDCA4D3C86F0827F694E96 /* FileSearchManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileSearchManager.swift; sourceTree = "<group>"; };
@@ -1198,6 +1202,7 @@
 				E43BFD01B43AA99D60FB3B9D /* CompanionPairingTests.swift */,
 				0650E2DE70AE8CA13EB15838 /* CompanionStreamTests.swift */,
 				7CC31FE35B8BD0245C7DD53D /* DevToolkitTests.swift */,
+				737F56550092636CD2B51F2F /* DoItGeometryTests.swift */,
 				8E7717EC924C749DB1265AC2 /* EmojiTests.swift */,
 				71D699ADE6DA2C5CFA3760DD /* EntitlementLogicTests.swift */,
 				691158E02F20C5E16831E6FF /* FriendsTests.swift */,
@@ -1275,6 +1280,7 @@
 				0918F482C2DF3A150F375D22 /* CompanionServer.swift */,
 				6FFA9D604A028F627FC52A01 /* DemoHooks.swift */,
 				50DD954B11024EFCFE5CFAA7 /* DevToolkitLogic.swift */,
+				45249414D86E2FEEDAAA8AC1 /* DoItGeometry.swift */,
 				1940B20688933C3A74510BE8 /* EmojiData.swift */,
 				13FC643EA773D7A3D0B5AE0A /* EmojiLogic.swift */,
 				DF862F91B226950E4FE3D0F0 /* EntitlementLogic.swift */,
@@ -2146,6 +2152,7 @@
 				A0A0F5485BA1A9A4A4CA4A7A /* DevToolsView.swift in Sources */,
 				3DEAFC4359632CB4DF71ECE1 /* DevicesView.swift in Sources */,
 				D6AD6B43EA61C6526CBC888C /* DoItAgent.swift in Sources */,
+				76F8D56FE975F50F06D1671B /* DoItGeometry.swift in Sources */,
 				E520C0932205D238B274BCE2 /* DoItView.swift in Sources */,
 				242C7B0C09B073631A588CBE /* DownloadWatcher.swift in Sources */,
 				5357AD94F379A579A17BE07D /* DuoAnimation.swift in Sources */,
@@ -2431,6 +2438,7 @@
 				F3C7A9A25D260F232F140B77 /* Converter.swift in Sources */,
 				549C20A234C9F9EC43C884CD /* DevToolkitLogic.swift in Sources */,
 				9F68FFA4EE2970516B9AA33A /* DevToolkitTests.swift in Sources */,
+				7AC9653A722F4971D2C680AF /* DoItGeometryTests.swift in Sources */,
 				9C187C448D6DEB34039A6C37 /* EmojiData.swift in Sources */,
 				2F2BB8758A33F01A26DCAE37 /* EmojiLogic.swift in Sources */,
 				167DA8D8AF6622347293894F /* EmojiTests.swift in Sources */,
@@ -2630,7 +2638,7 @@
 				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Manual;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 198;
+				CURRENT_PROJECT_VERSION = 199;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = "";
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -2646,7 +2654,7 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 2.2.10;
+				MARKETING_VERSION = 2.2.11;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -2764,7 +2772,7 @@
 				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Manual;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 198;
+				CURRENT_PROJECT_VERSION = 199;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = "";
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -2786,7 +2794,7 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 2.2.10;
+				MARKETING_VERSION = 2.2.11;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;

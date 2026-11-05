@@ -46,10 +46,14 @@ struct PlayCard: View {
             }
             .padding(10).frame(maxWidth: .infinity)
             .background(Theme.surface, in: RoundedRectangle(cornerRadius: 10))
-            .onAppear { NotchPrefs.chatGame(source, true) }
+            .onAppear { NotchPrefs.chatGame(source, true, tall: needsTallPanel(s)) }
+            .onChange(of: needsTallPanel(s)) { _, tall in NotchPrefs.chatGame(source, true, tall: tall) }
             .onDisappear { NotchPrefs.chatGame(source, false) }
         }
     }
+
+    /// A Rocket League match is a whole arena above the chat, so the notch needs to grow further than for a board game.
+    private func needsTallPanel(_ s: PlaySession) -> Bool { s.kind == .rocket && s.status == .playing }
 
     // MARK: Invite
 

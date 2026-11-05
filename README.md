@@ -150,6 +150,11 @@ More screenshots of the capture overlay, the AI answer, the settings and the Win
 
 ## What's new
 
+### Mac 2.2.11 · 5 November 2026 · ✍️ Do It does advanced maths
+
+- Do It (Ultimate): advanced maths. It can now draw with the pen: handwrite an equation into a handwriting or drawing area (MathType's drawing view, Notes, Freeform), or plot a graph with axes, key points and a smooth curve. It can drag, and zoom in to read small formulas and hit tiny toolbar buttons. It works the problem out first and keeps a scratchpad of the solution, so a long task no longer forgets the answer it worked out, and it checks what it entered by zooming in. It types formulas in text or LaTeX form and Unicode symbols (√ ∫ ∑ π ≤ ², etc.), or clicks an equation editor's templates (fractions, roots, integrals, matrices) and fills in each slot. A task can now take up to 80 steps (it was 40), and long drawings no longer freeze the app, so Stop always works.
+- Fix: Rocket League in a friend chat or room. The notch now grows taller while a match is showing, so its corners stay rounded and the whole arena fits instead of running off the bottom edge.
+
 ### Mac 2.2.10 · Windows 2.2.10 BETA · 5 November 2026 · 🚀 Rocket League
 
 - Games: Rocket League, a side-on car soccer game (the one asked for in issue 52). Drive, jump, dash with a second jump and use boost to knock the ball into the other team's goal. Boost pads on the floor refill your tank, a match is three minutes with a golden goal if it ends level, and the computer plays at Easy, Normal or Hard in 1 v 1 or 2 v 2. Play a friend online with a room code, the same way as Capture the Flag and Racing. A D or the arrows drive, Space or W jump (press again in the air to dash), Shift or X boost.
@@ -161,13 +166,6 @@ More screenshots of the capture overlay, the AI answer, the settings and the Win
 
 - Claude Usage (Ultimate): a new Classic | Token Trail switch at the top of the tab. Token Trail is the view from the Token Trail app, built into the notch: lifetime tokens, peak day, longest task and streaks; today, 7 days and 30 days with an API-equivalent value; your 5-hour session with its burn rate and pace; a monthly budget in dollars with a notification at 80% and 100%; a heatmap of every day for a year; top models and projects; the weekdays and hours you work best; your costliest sessions; and insights such as cache hit rate. It reads Claude Code's logs on this Mac (the first read takes a few seconds, later launches use a saved copy). Classic is unchanged and stays the default.
 - Not in the notch version yet: importing a Claude chat export and the weekly and cumulative charts. The Token Trail app still has them.
-
-### Mac 2.2.8 · Windows 2.2.8 BETA · 5 November 2026 · ♟️ Chess, Checkers and bigger files
-
-- Messenger: Chess and Checkers join the Games menu, in rooms and in friend chats. Chess has check, checkmate, stalemate, castling, en passant, promotion and draws; Checkers has compulsory captures, multi-jumps and kings. Pick a piece and its legal squares light up; the second player sees the board turned round. Mac only for now: Windows cannot play Chess or Checkers yet.
-- Messenger: bigger files. A file in a friend chat or group can now be up to 2 MB (it was 160 KB), and a file in an anonymous room is sent in pieces up to 2 MB too (before, anything much over 8 KB could silently never arrive). Pieces are paced and retried, and a room tells you when a file did not arrive completely. This needs the updated relay, which is already live. An older app ignores a friend-chat file bigger than 160 KB without telling the sender.
-- Windows: Messenger: Connect Four, Rock Paper Scissors and Battleship in rooms and in Friends chats, and tic-tac-toe in Friends chats, from the Games menu next to the chat. Rock Paper Scissors picks and Battleship fleets are locked in with a hash first and checked at the end, so cheating shows. The notch grows to at least 800 by 600 while a board is showing.
-- Windows: Plays against the Mac app (2.2.7 and 2.2.8) with the same messages. Windows cannot play Chess or Checkers yet, and its file limit is still 160 KB, so it ignores bigger files from Mac friends. Both are coming. Untested on real Windows hardware.
 
 Every earlier release is in the [changelog](CHANGELOG.md).
 

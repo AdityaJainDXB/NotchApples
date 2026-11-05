@@ -20,6 +20,10 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.2.11", date: "5 November 2026", headline: "Do It does advanced maths", items: [
+            "Do It (Ultimate): advanced maths. It can now draw with the pen: handwrite an equation into a handwriting or drawing area (MathType's drawing view, Notes, Freeform), or plot a graph with axes, key points and a smooth curve. It can drag, and zoom in to read small formulas and hit tiny toolbar buttons. It works the problem out first and keeps a scratchpad of the solution, so a long task no longer forgets the answer it worked out, and it checks what it entered by zooming in. It types formulas in text or LaTeX form and Unicode symbols (√ ∫ ∑ π ≤ ², etc.), or clicks an equation editor's templates (fractions, roots, integrals, matrices) and fills in each slot. A task can now take up to 80 steps (it was 40), and long drawings no longer freeze the app, so Stop always works.",
+            "Fix: Rocket League in a friend chat or room. The notch now grows taller while a match is showing, so its corners stay rounded and the whole arena fits instead of running off the bottom edge.",
+        ]),
         ReleaseNote(version: "2.2.10", date: "5 November 2026", headline: "Rocket League", items: [
             "Games: Rocket League, a side-on car soccer game (the one asked for in issue 52). Drive, jump, dash with a second jump and use boost to knock the ball into the other team's goal. Boost pads on the floor refill your tank, a match is three minutes with a golden goal if it ends level, and the computer plays at Easy, Normal or Hard in 1 v 1 or 2 v 2. Play a friend online with a room code, the same way as Capture the Flag and Racing. A D or the arrows drive, Space or W jump (press again in the air to dash), Shift or X boost.",
             "Messenger: Rocket League is in the Games menu in friend chats and rooms. The invite works like the other games: they press Accept and both of you land in the same online match above the chat, the one who invited playing Blue. Mac only for now in chats; Windows has Rocket League in its Games tab.",

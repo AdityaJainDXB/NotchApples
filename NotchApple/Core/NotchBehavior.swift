@@ -62,9 +62,16 @@ enum NotchPrefs {
     /// Messenger sources (the room, a friend chat) that are showing a tic-tac-toe board: the panel grows so the board and the chat fit.
     @MainActor static var chatGameSources = Set<String>()
     static let chatGameSize = CGSize(width: 800, height: 600)
-    @MainActor static func chatGame(_ source: String, _ on: Bool) {
-        guard chatGameSources.contains(source) != on else { return }
+    /// Sources showing a bigger game (a Rocket League match above the chat): the panel grows further, or its corners would square off.
+    @MainActor static var tallChatGameSources = Set<String>()
+    static let tallChatGameSize = CGSize(width: 900, height: 720)
+    /// `tall` says whether the game needs the taller size; leave it out to keep what was set before (turning a source off clears both).
+    @MainActor static func chatGame(_ source: String, _ on: Bool, tall: Bool? = nil) {
+        let wasOn = chatGameSources.contains(source), wasTall = tallChatGameSources.contains(source)
+        let nowTall = on && (tall ?? wasTall)
+        guard wasOn != on || wasTall != nowTall else { return }
         if on { chatGameSources.insert(source) } else { chatGameSources.remove(source) }
+        if nowTall { tallChatGameSources.insert(source) } else { tallChatGameSources.remove(source) }
         AppDelegate.current?.notch?.reposition()
     }
 
@@ -76,6 +83,7 @@ enum NotchPrefs {
         }
         if bigGameOpen { size = CGSize(width: max(size.width, bigGameSize.width), height: max(size.height, bigGameSize.height)) }
         if !chatGameSources.isEmpty { size = CGSize(width: max(size.width, chatGameSize.width), height: max(size.height, chatGameSize.height)) }
+        if !tallChatGameSources.isEmpty { size = CGSize(width: max(size.width, tallChatGameSize.width), height: max(size.height, tallChatGameSize.height)) }
         if bigBrowserOpen { size = CGSize(width: max(size.width, bigBrowserSize.width), height: max(size.height, bigBrowserSize.height)) }
         return size
     }

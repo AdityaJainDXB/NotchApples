@@ -27,7 +27,9 @@ enum ScreenCapture {
     /// Longest edge sent to Claude. Keeps requests small and fast.
     private static let maxEdge: CGFloat = 1568
 
-    static func captureBase64JPEG() async throws -> String {
+    /// `region` (0 to 1000 over the whole screen) captures only that part, at the display's full detail, for the Do It agent's zoom:
+    /// small formulas and toolbar buttons become readable. Nil is the whole screen, as before.
+    static func captureBase64JPEG(region: GridRect? = nil) async throws -> String {
         // Ask first: without permission ScreenCaptureKit fails with a vague error.
         if !ScreenPermission.isGranted {
             await MainActor.run { _ = ScreenPermission.request() }
@@ -44,13 +46,18 @@ enum ScreenCapture {
         let ownApps = content.applications.filter { $0.processID == ownPID }
         let filter = SCContentFilter(display: display, excludingApplications: ownApps, exceptingWindows: [])
 
-        let scale = min(1, maxEdge / CGFloat(max(display.width, display.height)))
+        let scale = region == nil ? min(1, maxEdge / CGFloat(max(display.width, display.height))) : 1   // a zoom keeps the display's own detail
         let config = SCStreamConfiguration()
         config.width = Int(CGFloat(display.width) * scale * 2)   // *2 for Retina, then downscaled below
         config.height = Int(CGFloat(display.height) * scale * 2)
         config.showsCursor = false
 
         let cgImage = try await SCScreenshotManager.captureImage(contentFilter: filter, configuration: config)
+        if let r = region {
+            let w = CGFloat(cgImage.width), h = CGFloat(cgImage.height)
+            let box = CGRect(x: CGFloat(r.x0) / 1000 * w, y: CGFloat(r.y0) / 1000 * h, width: CGFloat(r.width) / 1000 * w, height: CGFloat(r.height) / 1000 * h).integral
+            if let cropped = cgImage.cropping(to: box) { return try encode(cropped) }
+        }
         return try encode(cgImage)
     }
 
