@@ -4,6 +4,12 @@ Every Notch Apple release, newest first. The latest few are also on the [README]
 
 > **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is in the repository's history.
 
+### Mac 2.2.13 · Windows 2.2.13 BETA · 5 November 2026 · ✏️ Scribble: draw and guess
+
+- Games: Scribble, a draw-and-guess game like scribble.io. Each turn one player is offered three words, picks one and draws it, and the others type guesses: the faster you guess, the more you score (the drawer scores too). Letters of the word are revealed as time runs out, a guess one letter off says it is close, and a game is three rounds with up to 10 players. Computer players take part at Easy, Normal or Hard: they draw simple pictures and guess honestly, from the length of the word and the letters shown, never from the drawing. Play alone against 0 to 5 computers, or online with a room code (the host can add computers too).
+- Messenger: Scribble is in the Games menu in friend chats and rooms. In an open room anyone can press Join the game, not only the first person to accept. The word you must draw and your own guesses are encrypted between you and the host, because the relay shows every message to everyone. Windows has Scribble in its Games tab, not yet in chats.
+- Windows: Games: Scribble, a draw-and-guess game, against computer players (Easy, Normal, Hard) or friends online with a room code. Plays against the Mac app's Scribble. Not yet in Windows friend chats and rooms. Untested on real Windows hardware.
+
 ### Windows 2.2.12 BETA · 5 November 2026 · ✍️ Do It draws and zooms on Windows
 
 - Do It (Ultimate): advanced maths on Windows, the same as the Mac's 2.2.11. It can draw with the pen (handwrite an equation into a handwriting or drawing area such as MathType's drawing view, OneNote or Paint, or plot a graph with axes, key points and a smooth curve), drag, and zoom in to read small formulas and hit tiny toolbar buttons. It works the problem out first and keeps a scratchpad of the solution so a long task does not forget it, checks what it entered by zooming in, types formulas in text or LaTeX form and Unicode symbols, or clicks an equation editor's templates. A task can now take up to 80 steps (it was 40). Stop lets go of the mouse button at once, even in the middle of a stroke. Untested on real Windows hardware.
