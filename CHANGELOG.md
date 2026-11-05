@@ -4,6 +4,11 @@ Every Notch Apple release, newest first. The latest few are also on the [README]
 
 > **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is in the repository's history.
 
+### Mac 2.2.9 · 5 November 2026 · 📈 Token Trail in the Claude Usage tab
+
+- Claude Usage (Ultimate): a new Classic | Token Trail switch at the top of the tab. Token Trail is the view from the Token Trail app, built into the notch: lifetime tokens, peak day, longest task and streaks; today, 7 days and 30 days with an API-equivalent value; your 5-hour session with its burn rate and pace; a monthly budget in dollars with a notification at 80% and 100%; a heatmap of every day for a year; top models and projects; the weekdays and hours you work best; your costliest sessions; and insights such as cache hit rate. It reads Claude Code's logs on this Mac (the first read takes a few seconds, later launches use a saved copy). Classic is unchanged and stays the default.
+- Not in the notch version yet: importing a Claude chat export and the weekly and cumulative charts. The Token Trail app still has them.
+
 ### Mac 2.2.8 · Windows 2.2.8 BETA · 5 November 2026 · ♟️ Chess, Checkers and bigger files
 
 - Messenger: Chess and Checkers join the Games menu, in rooms and in friend chats. Chess has check, checkmate, stalemate, castling, en passant, promotion and draws; Checkers has compulsory captures, multi-jumps and kings. Pick a piece and its legal squares light up; the second player sees the board turned round. Mac only for now: Windows cannot play Chess or Checkers yet.

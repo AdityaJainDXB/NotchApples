@@ -20,6 +20,10 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.2.9", date: "5 November 2026", headline: "Token Trail in the Claude Usage tab", items: [
+            "Claude Usage (Ultimate): a new Classic | Token Trail switch at the top of the tab. Token Trail is the view from the Token Trail app, built into the notch: lifetime tokens, peak day, longest task and streaks; today, 7 days and 30 days with an API-equivalent value; your 5-hour session with its burn rate and pace; a monthly budget in dollars with a notification at 80% and 100%; a heatmap of every day for a year; top models and projects; the weekdays and hours you work best; your costliest sessions; and insights such as cache hit rate. It reads Claude Code's logs on this Mac (the first read takes a few seconds, later launches use a saved copy). Classic is unchanged and stays the default.",
+            "Not in the notch version yet: importing a Claude chat export and the weekly and cumulative charts. The Token Trail app still has them.",
+        ]),
         ReleaseNote(version: "2.2.8", date: "5 November 2026", headline: "Chess, Checkers and bigger files", items: [
             "Messenger: Chess and Checkers join the Games menu, in rooms and in friend chats. Chess has check, checkmate, stalemate, castling, en passant, promotion and draws; Checkers has compulsory captures, multi-jumps and kings. Pick a piece and its legal squares light up; the second player sees the board turned round. Mac only for now: Windows cannot play Chess or Checkers yet.",
             "Messenger: bigger files. A file in a friend chat or group can now be up to 2 MB (it was 160 KB), and a file in an anonymous room is sent in pieces up to 2 MB too (before, anything much over 8 KB could silently never arrive). Pieces are paced and retried, and a room tells you when a file did not arrive completely. This needs the updated relay, which is already live. An older app ignores a friend-chat file bigger than 160 KB without telling the sender.",
