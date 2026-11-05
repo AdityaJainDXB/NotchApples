@@ -6,6 +6,7 @@ import { el } from '../store.js';
 import { activate, format } from '../license.js';
 import { openUrl } from '../native.js';
 import { FEATURES, tierLabel } from '../features.js';
+import { verifyFlow } from './security.js';
 
 export const BUY_URL = 'https://adityajaindxb.github.io/NotchApples/pro.html';
 
@@ -35,13 +36,18 @@ export function keyField(onDone) {
     button.disabled = false;
     button.textContent = 'Unlock';
     if (r.ok) { onDone(r.tier); return; }
+    if (r.needVerify) {      // this key belongs to an email: confirm this PC with a code before activating
+      host.replaceChildren(verifyFlow(r.key, r, (done) => onDone(done.tier)));
+      return;
+    }
     error.textContent = r.error;
     input.animate(
       [{ transform: 'translateX(0)' }, { transform: 'translateX(-9px)' }, { transform: 'translateX(9px)' },
        { transform: 'translateX(-5px)' }, { transform: 'translateX(0)' }],
       { duration: 320, easing: 'ease-in-out' });
   });
-  return el('div', { class: 'col', style: 'align-items:center;gap:6px;width:100%' }, input, error, button);
+  const host = el('div', { class: 'col', style: 'align-items:center;gap:6px;width:100%' }, input, error, button);
+  return host;
 }
 
 /// The card a locked tab shows: what it does, and how to unlock it.

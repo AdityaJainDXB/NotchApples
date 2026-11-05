@@ -14,6 +14,10 @@
 //   POST /promo    {code, email}          one Pro key per promo code
 //   POST /recover  {email, txid?}         emails the keys bought with that address (never shows them)
 //   POST /activate {key, device}          soft limit of DEVICE_LIMIT Macs per key
+//   POST /otp/start {key, device, email}  emails a 6-digit code to the key's owner (a key belongs to one email; see BIND_REQUIRE)
+//   POST /otp/verify {key, device, email, code, name?}  checks it, binds the key to that email if it has none, registers the device
+//   POST /totp/setup | /totp/confirm | /totp/disable {key, device, code?}  optional authenticator app (Google/Microsoft Authenticator)
+//   POST /security {key, device}          whether the key has an email and an authenticator
 //   POST /deactivate {key, device}
 //   POST /entitle  {key, device, name?}   the same checks as /activate, then two short-lived signed tokens:
 //                                         `token` (Authorization: Bearer for GET /asset/<id>) and `pass` (an anonymous
@@ -668,12 +672,232 @@ async function activate(env, body, add) {
     if (name && rec.deviceNames?.[body.device] !== name) { rec.deviceNames = { ...rec.deviceNames, [body.device]: name }; await putJSON(env, `key:${k.keyId}`, rec); }
     return { ok: true, tier: TIER_NAME[k.tier] };
   }
+  // A new device needs a one-time code sent to the key's email (see otpStart / otpVerify). Off until BIND_REQUIRE is "1", so apps
+  // that cannot ask for the code yet keep working. Devices that are already registered never see this: they just carry on.
+  if (bindOn(env) && !rec.revoked && !(rec.trusted || []).includes(body.device)) return verifyNeeded(rec);
+  return await addDevice(env, k, rec, body.device, name);
+}
+
+async function addDevice(env, k, rec, device, name, trust = false) {
+  if (trust && !(rec.trusted ||= []).includes(device)) rec.trusted.push(device);   // verified once: deactivating and coming back later needs no code
   const limit = Number(env.DEVICE_LIMIT || 3);
+  if (rec.devices.includes(device)) return { ok: true, tier: TIER_NAME[k.tier] };
   if (rec.devices.length >= limit) return { ok: false, reason: 'limit', limit };
-  rec.devices.push(body.device);
-  if (name) rec.deviceNames = { ...rec.deviceNames, [body.device]: name };
+  rec.devices.push(device);
+  if (name) rec.deviceNames = { ...rec.deviceNames, [device]: name };
   await putJSON(env, `key:${k.keyId}`, rec);
   return { ok: true, tier: TIER_NAME[k.tier] };
+}
+
+// MARK: Email verification: a key belongs to one email address
+//
+// A key is bound to one email: the address it was bought with, or for a key that has none yet, the first address that proves it
+// owns its inbox. A device that is not registered yet must then enter a six-digit code sent to that address. The server stores
+// only a salted hash of the email, so the person types their address; a wrong address gets the same answer as a right one and no
+// email, so nobody can learn which address a key belongs to. A leaked key alone is useless: the thief cannot read the inbox.
+const OTP_TTL = 600, OTP_TRIES = 5, OTP_COOLDOWN = 60, OTP_PER_HOUR = 6;
+const bindOn = (env) => env.BIND_REQUIRE === '1';
+const maskEmail = (e) => { const [u, d] = e.trim().toLowerCase().split('@'); return `${u.slice(0, 1)}${'•'.repeat(Math.max(2, Math.min(u.length - 1, 6)))}@${d}`; };
+
+function verifyNeeded(rec) {
+  return { ok: false, reason: 'verify', bound: !!rec.emailHash, hint: rec.emailHint || null,
+    error: rec.emailHash
+      ? 'This key belongs to an email address. Update Notch Apple, then confirm with the code we email you to use it on this device.'
+      : 'Confirm your email address to use this key on a new device. Update Notch Apple to continue.' };
+}
+
+const otpHash = (env, keyId, device, code) => sha256(`${env.EMAIL_PEPPER || ''}|otp|${keyId}|${device}|${code}`);
+const sameText = (a, b) => { if (a.length !== b.length) return false; let d = 0; for (let i = 0; i < a.length; i++) d |= a.charCodeAt(i) ^ b.charCodeAt(i); return d === 0; };
+
+function sixDigits() {
+  const buf = new Uint32Array(1), limit = 4294967296 - (4294967296 % 1000000);
+  do crypto.getRandomValues(buf); while (buf[0] >= limit);
+  return String(buf[0] % 1000000).padStart(6, '0');
+}
+
+/** Counts a send against a bucket (a key or an address): at most OTP_PER_HOUR an hour and one per OTP_COOLDOWN seconds. */
+async function otpBudget(env, bucket, now) {
+  const id = `otprate:${bucket}`, r = (await getJSON(env, id)) || { n: 0, last: 0, t0: now };
+  if (now - r.t0 > 3600e3) { r.n = 0; r.t0 = now; }
+  if (now - r.last < OTP_COOLDOWN * 1000) throw new HTTPError(429, `Wait a minute before asking for another code.`, { wait: Math.ceil((OTP_COOLDOWN * 1000 - (now - r.last)) / 1000) });
+  if (r.n >= OTP_PER_HOUR) throw new HTTPError(429, 'Too many codes requested. Try again in an hour.');
+  r.n++; r.last = now;
+  await putJSON(env, id, r, 3600);
+}
+
+async function otpPrepare(env, body) {
+  const k = await verifyKey(env, body.key);
+  if (!k) throw new HTTPError(400, "That key isn't valid.");
+  if (typeof body.device !== 'string' || !/^[0-9a-f]{64}$/.test(body.device)) throw new HTTPError(400, 'Missing device.');
+  if (!validEmail(body.email)) throw new HTTPError(400, 'Enter a valid email address.');
+  const revoked = (await revokedIds(env)).includes(k.keyId);
+  const rec = (await getJSON(env, `key:${k.keyId}`)) || { tier: k.tier, source: 'unknown', devices: [] };
+  // A key that is already in use but has no email yet can be given one only from a device that already uses it. A device hash can't be
+  // made from the leaked key alone, so a thief cannot claim an old key before its real owner adds an email.
+  if (!rec.emailHash && rec.devices.length && !rec.devices.includes(body.device) && !revoked) {
+    throw new HTTPError(403, 'This key is already in use. Open Notch Apple on the Mac or PC that already uses it, and add your email there. Need help? notchapples.support@gmail.com');
+  }
+  return { k, rec, revoked, eh: await emailHash(env, body.email) };
+}
+
+/** POST /otp/start {key, device, email}: emails a six-digit code. The answer is the same whether or not the address matches. */
+async function otpStart(env, body, now = Date.now()) {
+  const { k, rec, revoked, eh } = await otpPrepare(env, body);
+  if (revoked || rec.revoked) return { ok: false, reason: 'revoked' };
+  const generic = { ok: true, sent: true, expires: OTP_TTL };
+  if (rec.emailHash && rec.emailHash !== eh) return generic;     // not the owner: say nothing, send nothing
+  await otpBudget(env, `k:${k.keyId}`, now);
+  await otpBudget(env, `e:${eh}`, now);
+  const code = sixDigits();
+  await putJSON(env, `otp:${k.keyId}`, { h: await otpHash(env, k.keyId, body.device, code), eh, tries: 0, exp: now + OTP_TTL * 1000 }, OTP_TTL);
+  const sent = await sendMail(env, body.email.trim(), 'Your Notch Apple code: ' + code,
+    `Your Notch Apple verification code is ${code}\n\nIt works for 10 minutes. Enter it in Notch Apple to use your ${TIER_NAME[k.tier]} key on this device.\n\n` +
+    "If you didn't ask for this, someone has your key but not your inbox. Nothing is lost: just ignore this email.\n\nQuestions? notchapples.support@gmail.com");
+  if (!sent) throw new HTTPError(503, "We couldn't send the email. Try again in a minute.");
+  return generic;
+}
+
+/** POST /otp/verify {key, device, email, code, name?}: checks the code, binds the key to the email if it has none, registers the device. */
+async function otpVerify(env, body, now = Date.now()) {
+  const { k, rec, revoked, eh } = await otpPrepare(env, body);
+  if (revoked || rec.revoked) return { ok: false, reason: 'revoked' };
+  const code = String(body.code || '').replace(/\s+/g, '');
+  const bad = (msg) => { throw new HTTPError(400, msg); };
+  if (!/^\d{6}$/.test(code)) bad('Enter the 6-digit code.');
+  if (body.method === 'totp') {                                   // the authenticator app instead of the email code
+    if (!rec.totp || !rec.emailHash || rec.emailHash !== eh) bad("That code isn't right.");
+    await totpCheck(env, k.keyId, rec, code, now);
+    rec.emailHint = rec.emailHint || maskEmail(body.email);
+    const r = await addDevice(env, k, rec, body.device, deviceName(body.name), true);
+    await putJSON(env, `key:${k.keyId}`, rec);
+    return r.ok ? { ...r, bound: true, first: false, hint: rec.emailHint } : r;
+  }
+  const o = await getJSON(env, `otp:${k.keyId}`);
+  if (!o || o.exp < now) bad('That code has expired. Ask for a new one.');
+  if (o.tries >= OTP_TRIES) { await env.KV.delete(`otp:${k.keyId}`); bad('Too many wrong codes. Ask for a new one.'); }
+  const good = o.eh === eh && sameText(o.h, await otpHash(env, k.keyId, body.device, code));
+  if (!good) {
+    o.tries++;
+    if (o.tries >= OTP_TRIES) await env.KV.delete(`otp:${k.keyId}`); else await putJSON(env, `otp:${k.keyId}`, o, Math.max(60, Math.ceil((o.exp - now) / 1000)));
+    bad(o.tries >= OTP_TRIES ? 'Too many wrong codes. Ask for a new one.' : "That code isn't right.");
+  }
+  await env.KV.delete(`otp:${k.keyId}`);                         // a code works once
+  if (rec.emailHash && rec.emailHash !== eh) bad("That code isn't right.");
+  let first = false;
+  if (!rec.emailHash) {                                           // the first verified address owns the key
+    rec.emailHash = eh; rec.boundAt = now; first = true;
+    const list = (await getJSON(env, `email:${eh}`)) || [];
+    if (!list.some((x) => x.keyId === k.keyId)) { list.push({ keyId: k.keyId, tier: k.tier, key: rec.key || String(body.key).trim() }); await putJSON(env, `email:${eh}`, list); }
+  }
+  rec.emailHint = maskEmail(body.email);
+  const r = await addDevice(env, k, rec, body.device, deviceName(body.name), true);
+  if (!r.ok) { await putJSON(env, `key:${k.keyId}`, rec); return r; }      // verified, but all slots are full: the binding still stands
+  await putJSON(env, `key:${k.keyId}`, rec);
+  return { ...r, bound: true, first, hint: rec.emailHint };
+}
+
+// MARK: Authenticator app (optional): Google Authenticator, Microsoft Authenticator, 1Password, Authy…
+//
+// Standard TOTP (RFC 6238: HMAC-SHA1, 30 s, 6 digits). Set up from a device that already uses the key, and only once the key has an
+// email. Afterwards a new device may enter the app's code instead of waiting for the email. The secret is stored encrypted.
+/** Standard base32 (A-Z, 2-7), the alphabet authenticator apps expect; not the Crockford one used for keys. */
+export function rfc4648(bytes) {
+  const A = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567'; let bits = 0, v = 0, out = '';
+  for (const b of bytes) { v = (v << 8) | b; bits += 8; while (bits >= 5) { out += A[(v >>> (bits - 5)) & 31]; bits -= 5; } }
+  if (bits) out += A[(v << (5 - bits)) & 31];
+  return out;
+}
+const TOTP_STEP = 30, TOTP_TRIES = 8, TOTP_LOCK = 600;
+
+async function totpKey(env) {
+  const raw = await crypto.subtle.digest('SHA-256', enc.encode(`totp|${env.SIGNING_KEY || ''}|${env.EMAIL_PEPPER || ''}`));
+  return crypto.subtle.importKey('raw', raw, 'AES-GCM', false, ['encrypt', 'decrypt']);
+}
+async function sealSecret(env, bytes) {
+  const iv = randomBytes(12), ct = new Uint8Array(await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, await totpKey(env), bytes));
+  return hex(iv) + ':' + hex(ct);
+}
+async function openSecret(env, text) {
+  const [iv, ct] = text.split(':').map((h) => Uint8Array.from(h.match(/../g), (x) => parseInt(x, 16)));
+  return new Uint8Array(await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, await totpKey(env), ct));
+}
+export async function totpCode(secret, counter) {
+  const msg = new Uint8Array(8); new DataView(msg.buffer).setUint32(4, counter);   // counters stay below 2^32 until the year 2106
+  const key = await crypto.subtle.importKey('raw', secret, { name: 'HMAC', hash: 'SHA-1' }, false, ['sign']);
+  const h = new Uint8Array(await crypto.subtle.sign('HMAC', key, msg)), o = h[19] & 15;
+  const n = ((h[o] & 0x7f) << 24) | (h[o + 1] << 16) | (h[o + 2] << 8) | h[o + 3];
+  return String(n % 1000000).padStart(6, '0');
+}
+/** The counter a code matches (this 30 s step or one either side, for clock drift), or null. */
+async function totpMatch(secret, code, now) {
+  const c = Math.floor(now / 1000 / TOTP_STEP);
+  for (const d of [0, -1, 1]) if (sameText(await totpCode(secret, c + d), code)) return c + d;
+  return null;
+}
+/** Checks an authenticator code for a key, with a lock-out after repeated misses and no second use of the same code. Throws on failure. */
+async function totpCheck(env, keyId, rec, code, now) {
+  const lock = (await getJSON(env, `totptry:${keyId}`)) || { n: 0 };
+  if (lock.n >= TOTP_TRIES) throw new HTTPError(429, 'Too many wrong codes. Try again in 10 minutes.');
+  const c = await totpMatch(await openSecret(env, rec.totp.s), code, now);
+  if (c === null || c <= (rec.totp.last || 0)) {
+    await putJSON(env, `totptry:${keyId}`, { n: lock.n + 1 }, TOTP_LOCK);
+    throw new HTTPError(400, "That code isn't right.");
+  }
+  rec.totp.last = c;
+}
+
+async function totpOwner(env, body) {
+  const k = await verifyKey(env, body.key);
+  if (!k) throw new HTTPError(400, "That key isn't valid.");
+  if (typeof body.device !== 'string' || !/^[0-9a-f]{64}$/.test(body.device)) throw new HTTPError(400, 'Missing device.');
+  if ((await revokedIds(env)).includes(k.keyId)) throw new HTTPError(403, 'This key was revoked.');
+  const rec = await getJSON(env, `key:${k.keyId}`);
+  if (!rec || !rec.devices.includes(body.device)) throw new HTTPError(403, 'Open this from a device that already uses the key.');
+  if (!rec.emailHash) throw new HTTPError(400, 'Add your email first.');
+  return { k, rec };
+}
+
+/** POST /totp/setup {key, device}: a fresh secret and the otpauth:// link (the app turns it into a QR code). Nothing is on until /totp/confirm. */
+async function totpSetup(env, body, now = Date.now()) {
+  const { k, rec } = await totpOwner(env, body);
+  if (rec.totp) throw new HTTPError(400, 'An authenticator is already set up. Turn it off first to replace it.');
+  const secret = randomBytes(20), b32 = rfc4648(secret);
+  await putJSON(env, `totppend:${k.keyId}`, { s: await sealSecret(env, secret), exp: now + 600e3 }, 600);
+  const label = encodeURIComponent(`Notch Apple ${TIER_NAME[k.tier]}:${rec.emailHint || 'your key'}`);
+  return { ok: true, secret: b32, uri: `otpauth://totp/${label}?secret=${b32}&issuer=Notch%20Apple&algorithm=SHA1&digits=6&period=${TOTP_STEP}` };
+}
+
+/** POST /totp/confirm {key, device, code}: the first code from the app proves it was scanned; only then is it turned on. */
+async function totpConfirm(env, body, now = Date.now()) {
+  const { k, rec } = await totpOwner(env, body);
+  const p = await getJSON(env, `totppend:${k.keyId}`), code = String(body.code || '').replace(/\s+/g, '');
+  if (!p || p.exp < now) throw new HTTPError(400, 'Setup expired. Start again.');
+  if (!/^\d{6}$/.test(code)) throw new HTTPError(400, 'Enter the 6-digit code from your app.');
+  const c = await totpMatch(await openSecret(env, p.s), code, now);
+  if (c === null) throw new HTTPError(400, "That code isn't right. Check the time on your phone and try the next code.");
+  rec.totp = { s: p.s, last: c, at: now };
+  await putJSON(env, `key:${k.keyId}`, rec);
+  await env.KV.delete(`totppend:${k.keyId}`);
+  return { ok: true };
+}
+
+/** POST /totp/disable {key, device, code}: turns it off; needs a current code from the app. */
+async function totpDisable(env, body, now = Date.now()) {
+  const { k, rec } = await totpOwner(env, body);
+  if (!rec.totp) return { ok: true };
+  await totpCheck(env, k.keyId, rec, String(body.code || '').replace(/\s+/g, ''), now);
+  delete rec.totp;
+  await putJSON(env, `key:${k.keyId}`, rec);
+  return { ok: true };
+}
+
+/** POST /security {key, device}: what the Security screen shows for a device that uses the key. */
+async function securityStatus(env, body) {
+  const { rec } = await totpOwner(env, body).catch(async (e) => {
+    if (!(e instanceof HTTPError) || e.message !== 'Add your email first.') throw e;
+    return { rec: null };
+  });
+  return rec ? { ok: true, email: true, hint: rec.emailHint || null, totp: !!rec.totp } : { ok: true, email: false, hint: null, totp: false };
 }
 
 /// The device's own label ("Aditya's MacBook Pro"): plain text, 40 characters, no control characters. Never required.
@@ -1339,6 +1563,12 @@ export default {
         case '/claim': await addressLimit(env, request, 'claim', 60); return json(await claim(env, body));
         case '/promo': await addressLimit(env, request, 'promo', 30); return json(await promo(env, body));
         case '/recover': await addressLimit(env, request, 'recover', 20); return json(await recover(env, body));
+        case '/otp/start': await addressLimit(env, request, 'otp', 20); return json(await otpStart(env, body));
+        case '/otp/verify': await addressLimit(env, request, 'otpv', 40); return json(await otpVerify(env, body));
+        case '/totp/setup': await addressLimit(env, request, 'totp', 30); return json(await totpSetup(env, body));
+        case '/totp/confirm': await addressLimit(env, request, 'totpc', 40); return json(await totpConfirm(env, body));
+        case '/totp/disable': await addressLimit(env, request, 'totpc', 40); return json(await totpDisable(env, body));
+        case '/security': await addressLimit(env, request, 'sec', 60); return json(await securityStatus(env, body));
         case '/activate': return json(await activate(env, body, true));
         case '/deactivate': return json(await activate(env, body, false));
         case '/entitle': return json(await entitle(env, body));

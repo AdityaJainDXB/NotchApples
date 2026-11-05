@@ -463,6 +463,7 @@ private struct LicenseSettings: View {
                 Text("Deactivating frees this Mac's slot so you can use the key on another one.")
             }
 
+            KeySecuritySection()
             CompareTiers()
             AccountSection()
         }

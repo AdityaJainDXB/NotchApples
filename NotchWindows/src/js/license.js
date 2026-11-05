@@ -186,7 +186,7 @@ let override = null;
 export function setTierOverride(t) { override = t; dispatchEvent(new Event('tierchange')); }
 
 /// 0 Free, 1 Pro, 2 Ultimate.
-export const tier = () => override ?? Math.max(cached?.tier ?? 0, hasOldCode() ? 1 : 0);
+export const tier = () => override ?? (gateLocked() ? 0 : Math.max(cached?.tier ?? 0, hasOldCode() ? 1 : 0));
 export const tierName = () => TIERS[tier()];
 export const can = (needed) => tier() >= needed;
 
@@ -205,6 +205,8 @@ export async function activate(input) {
       const r = await post('/activate', { key: k.text, device: deviceId(), name: 'Windows PC' });
       if (r && r.ok === false && r.reason === 'limit') return { error: `This key is already on ${r.limit} devices. Remove it from one in Settings → Access first.` };
       if (r && r.ok === false && r.reason === 'revoked') return { error: 'This key has been turned off. Email notchapples.support@gmail.com if that seems wrong.' };
+      // The key belongs to an email: this PC must confirm it with a code (or an authenticator app) before it is activated here.
+      if (r && r.ok === false && r.reason === 'verify') return { needVerify: true, key: k.text, bound: !!r.bound, hint: r.hint || null };
     } catch { /* offline: the signature is enough, activation is retried never — that's fine */ }
     localStorage.setItem(SIGNED, k.text);
     cached = k;
@@ -247,4 +249,76 @@ export function format(input) {
   if (s.length <= 5) return s;
   const body = s.slice(5);
   return 'NOTCH-' + body.slice(0, 4) + (body.length > 4 ? '-' + body.slice(4) : '');
+}
+
+// ---- email code (and optional authenticator app) ----
+// A key belongs to one email. A PC that is new to the key proves it owns the inbox: we email a 6-digit code, or the person types the
+// code from an authenticator app they set up before. A PC that already uses the key is never asked.
+
+const serverError = (r) => (r && r.error) || 'Something went wrong. Check your connection and try again.';
+async function call(path, body) {
+  try { return await post(path, body); } catch { return { error: 'Could not reach the server. Check your connection and try again.' }; }
+}
+
+/// Emails a code. Returns { ok } or { error }. The answer is the same for a wrong address, on purpose.
+export async function requestCode(key, email) {
+  const r = await call('/otp/start', { key, device: deviceId(), email: email.trim() });
+  return r.sent ? { ok: true } : { error: r.reason === 'revoked' ? 'This key has been turned off.' : serverError(r) };
+}
+
+/// Checks the code (method 'totp' for the authenticator app), then activates the key on this PC.
+export async function verifyCode(key, email, code, method = 'email') {
+  const r = await call('/otp/verify', { key, device: deviceId(), email: email.trim(), code: code.trim(), method, name: 'Windows PC' });
+  if (r.reason === 'limit') return { error: `This key is already on ${r.limit} devices. Remove it from one in Settings → Access first.` };
+  if (!r.ok) return { error: serverError(r) };
+  const done = await activate(key);
+  if (done.ok) emailConfirmed();
+  return done;
+}
+
+const mine = () => (cached ? { key: cached.text, device: deviceId() } : null);
+/// { email, hint, totp } for this PC's key, or null when there is no signed key or the server can't be reached.
+export async function securityStatus() {
+  const m = mine(); if (!m) return null;
+  const r = await call('/security', m);
+  return r.ok ? r : null;
+}
+export const totpSetup = async () => { const m = mine(); return m ? call('/totp/setup', m) : { error: 'No key on this PC.' }; };
+export const totpConfirm = async (code) => { const m = mine(); return m ? call('/totp/confirm', { ...m, code }) : { error: 'No key on this PC.' }; };
+export const totpDisable = async (code) => { const m = mine(); return m ? call('/totp/disable', { ...m, code }) : { error: 'No key on this PC.' }; };
+/// Adds an email to a key that has none, from a PC that already uses it: emails a code, then confirms it.
+export const addEmailStart = (email) => { const m = mine(); return m ? requestCode(m.key, email) : { error: 'No key on this PC.' }; };
+export const addEmailFinish = async (email, code) => {
+  const m = mine(); if (!m) return { error: 'No key on this PC.' };
+  const r = await call('/otp/verify', { ...m, email: email.trim(), code: code.trim(), method: 'email', name: 'Windows PC' });
+  if (r.ok) emailConfirmed();
+  return r.ok ? { ok: true, hint: r.hint } : { error: serverError(r) };
+};
+
+// ---- the email gate ----
+// After the update that ties each key to one email, a PC whose key has no email yet is asked to set one up before it carries on with
+// paid features (free ones are never affected). Nothing is checked offline, and once the email is set this never asks again.
+
+const GATE = 'license.emailGate', EMAIL_SET = 'license.emailSet';
+const gateLocked = () => localStorage.getItem(GATE) === '1';
+const setGate = (on) => { if (on) localStorage.setItem(GATE, '1'); else localStorage.removeItem(GATE); dispatchEvent(new Event('tierchange')); };
+export const hasSignedKey = () => !!cached;
+/// Call when the email has been confirmed (gate or Settings).
+export function emailConfirmed() { localStorage.setItem(EMAIL_SET, '1'); setGate(false); }
+
+/// null when nothing is needed, or { key, bound, hint } for the "Please set up your email" screen. Also locks paid features until done.
+export async function checkEmailGate() {
+  if (!cached || localStorage.getItem(EMAIL_SET) === '1') return null;
+  const key = cached.text, base = { key, device: deviceId(), name: 'Windows PC' };
+  try {
+    const a = await post('/activate', base);
+    if (a.ok === false) {
+      if (a.reason !== 'verify') return null;
+      setGate(true); return { key, bound: !!a.bound, hint: a.hint || null };
+    }
+    const s = await post('/security', base);
+    if (!s || s.ok !== true) return null;                     // an older server: leave everything as it is
+    if (s.email) { emailConfirmed(); return null; }
+    setGate(true); return { key, bound: false, hint: null };
+  } catch { return null; }
 }

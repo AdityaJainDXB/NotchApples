@@ -247,6 +247,7 @@
 		7B585A54684C47977CA762E6 /* tetris.js in Resources */ = {isa = PBXBuildFile; fileRef = 34E60A6D24A27DF650F178FD /* tetris.js */; };
 		7BE7835157820B158696A5F2 /* GeminiFallbackLogic.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0C24B75034156B4EB2E82381 /* GeminiFallbackLogic.swift */; };
 		7C53773C6C64387C5C3275E7 /* ScribbleGame.html in Resources */ = {isa = PBXBuildFile; fileRef = BBA74EF46CD28A513D70A225 /* ScribbleGame.html */; };
+		7C60A4A19918984C6DAD3CCA /* KeySecurityView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C133B17318DC2CE2EC7B3A4E /* KeySecurityView.swift */; };
 		7CCB2190EF8F817D6DDFC3A5 /* ClipboardLink.swift in Sources */ = {isa = PBXBuildFile; fileRef = 59BC3F5D6F85A5FDFC39D94F /* ClipboardLink.swift */; };
 		7E59E9FB95878ACFAF45A095 /* NotificationsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E45CA4DA23D38E6A1DBA06F /* NotificationsView.swift */; };
 		7E8386EF609533C3CF5608D8 /* WeatherService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 92FC7E64A4478DE0F57D42E4 /* WeatherService.swift */; };
@@ -434,6 +435,7 @@
 		E06CB949FD19F2F0CBC0A6B2 /* BambuCloudLogic.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF6150902E8344F80FB20C62 /* BambuCloudLogic.swift */; };
 		E0E40F939970A6AB282C7437 /* WeatherService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 92FC7E64A4478DE0F57D42E4 /* WeatherService.swift */; };
 		E169C6F5EBEE22CEB32E76C5 /* MeetingSummaryLogic.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1951F9A6444DB9F503B2FD2B /* MeetingSummaryLogic.swift */; };
+		E1DCBB9D6401A4D76D47C028 /* EmailGateWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = AC64B45F3C6CA3BDDB2E35CA /* EmailGateWindow.swift */; };
 		E319EE438B96439F305C073F /* WallpaperLogic.swift in Sources */ = {isa = PBXBuildFile; fileRef = 940C2E169AC16EED8E3B6F5C /* WallpaperLogic.swift */; };
 		E39865B386D35D5DB44EF9D8 /* BrowserModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F23D3171A71FF28676DD18D /* BrowserModel.swift */; };
 		E412A53D0C81965A3220D152 /* KlickView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C927992127D59ADABA0C3063 /* KlickView.swift */; };
@@ -773,6 +775,7 @@
 		AAEC0E1A6526DE9FE3CCD09C /* wordle.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = wordle.js; sourceTree = "<group>"; };
 		ABC5932929FD1B6531B3A198 /* trivia.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = trivia.js; sourceTree = "<group>"; };
 		ABF7BDDF60590D89D51048A8 /* SystemWatchTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SystemWatchTests.swift; sourceTree = "<group>"; };
+		AC64B45F3C6CA3BDDB2E35CA /* EmailGateWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmailGateWindow.swift; sourceTree = "<group>"; };
 		ACD60817F03707C0A2A93064 /* NowPlayingMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NowPlayingMonitor.swift; sourceTree = "<group>"; };
 		AD19B5322ACB9565E2C06FBB /* IOKitLidAngleProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IOKitLidAngleProvider.swift; sourceTree = "<group>"; };
 		AE3BD872313722C8CCED84A1 /* PluginPinningTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PluginPinningTests.swift; sourceTree = "<group>"; };
@@ -806,6 +809,7 @@
 		BFED05958781963B1F7EB56D /* NotchStatsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotchStatsView.swift; sourceTree = "<group>"; };
 		C0261C9487F10782B8FFD351 /* SystemStatsReader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SystemStatsReader.swift; sourceTree = "<group>"; };
 		C0762062E088CCC2C44948C8 /* LICENSE-Tunnelblick.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = "LICENSE-Tunnelblick.txt"; sourceTree = "<group>"; };
+		C133B17318DC2CE2EC7B3A4E /* KeySecurityView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeySecurityView.swift; sourceTree = "<group>"; };
 		C1B46C85D50EF864599EA96B /* BambuSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BambuSettingsView.swift; sourceTree = "<group>"; };
 		C2397F7A422C289191CBD379 /* AIAutomations.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIAutomations.swift; sourceTree = "<group>"; };
 		C27D02B11E830B27979CC716 /* MagneticDrop.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MagneticDrop.swift; sourceTree = "<group>"; };
@@ -1111,10 +1115,12 @@
 				BF6EF909C581BCC04AAEF2AA /* AppActionsMenu.swift */,
 				C2B877B3FC56AA179FD7FEAE /* CommandPalette.swift */,
 				69FFE07B5C8CD7AE23B2DDA7 /* DuoAnimation.swift */,
+				AC64B45F3C6CA3BDDB2E35CA /* EmailGateWindow.swift */,
 				880D308A931930DF080834D9 /* ExtrasSettings.swift */,
 				E70B519149BF56D597E57B03 /* FeedbackView.swift */,
 				39D51C103147744A114FA26F /* HelloAnimation.swift */,
 				6030017749EA1C8346BCA6DF /* HoldToConfirm.swift */,
+				C133B17318DC2CE2EC7B3A4E /* KeySecurityView.swift */,
 				0EE2E453CA2D381EA8DC3001 /* LayoutPicker.swift */,
 				9E934112FC7E1F768777E6F5 /* MagneticDropZone.swift */,
 				321AEDF869EDFDD140BAC7F0 /* ModuleContentView.swift */,
@@ -2171,6 +2177,7 @@
 				E520C0932205D238B274BCE2 /* DoItView.swift in Sources */,
 				242C7B0C09B073631A588CBE /* DownloadWatcher.swift in Sources */,
 				5357AD94F379A579A17BE07D /* DuoAnimation.swift in Sources */,
+				E1DCBB9D6401A4D76D47C028 /* EmailGateWindow.swift in Sources */,
 				B951987EF7BCF13111DBEB86 /* EmojiData.swift in Sources */,
 				6727F0654F52A11CB35B2B6A /* EmojiLogic.swift in Sources */,
 				D0B53274DFFC5E0DC4E3B739 /* EntitlementLogic.swift in Sources */,
@@ -2216,6 +2223,7 @@
 				39F8CFD0D65ADD94D2E6405F /* HotCorners.swift in Sources */,
 				4CA2E42055B5930DC3E6B6E5 /* IOKitLidAngleProvider.swift in Sources */,
 				EA01011686B6160D7F63F35D /* InsightsClient.swift in Sources */,
+				7C60A4A19918984C6DAD3CCA /* KeySecurityView.swift in Sources */,
 				71C400496997AA8DF53FAF5D /* KeychainHelper.swift in Sources */,
 				F420613BC6131ED6AA18EDF3 /* KlickEngine.swift in Sources */,
 				E412A53D0C81965A3220D152 /* KlickView.swift in Sources */,
@@ -2654,7 +2662,7 @@
 				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Manual;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 200;
+				CURRENT_PROJECT_VERSION = 201;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = "";
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -2670,7 +2678,7 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 2.2.13;
+				MARKETING_VERSION = 2.2.15;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -2788,7 +2796,7 @@
 				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Manual;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 200;
+				CURRENT_PROJECT_VERSION = 201;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = "";
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -2810,7 +2818,7 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 2.2.13;
+				MARKETING_VERSION = 2.2.15;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;

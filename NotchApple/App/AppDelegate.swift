@@ -38,6 +38,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         // Now Playing and Messenger are gated: they start now if a code is saved, or the moment one is entered.
         startGatedServices()
+        EmailGateWindow.shared.start()       // a key with no email yet is asked to set one up
         StylePrefs.sync()
         // A Focus left "on" from before a restart must never keep the notch hidden; Shortcuts sets it again.
         FocusBridge.isOn = false

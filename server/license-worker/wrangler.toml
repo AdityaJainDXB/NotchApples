@@ -51,6 +51,9 @@ PRICE_PRO = "1"
 PRICE_ULTIMATE = "5"
 PRICE_UPGRADE = "4"
 DEVICE_LIMIT = "3"
+# "1" = a device new to a key must confirm the key's email with a 6-digit code (or an authenticator app) once. Deploy this version first,
+# ship the app update, then set "1": older apps cannot ask for the code. Devices already registered are never asked.
+BIND_REQUIRE = "0"
 # Ultimate is on sale (approved 4 October 2026); set to "0" to stop selling it.
 ULTIMATE_ON = "1"
 # "brevo" (works with a verified Gmail sender, 300 emails/day free) or "resend" (needs your own domain).

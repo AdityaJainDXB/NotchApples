@@ -53,7 +53,7 @@ final class Entitlements: ObservableObject {
         }.store(in: &cancellables)
     }
 
-    func canUse(_ feature: Feature) -> Bool { !UpdateChecker.isLocked && feature.isReady && feature.isAllowed(at: tier) }
+    func canUse(_ feature: Feature) -> Bool { !UpdateChecker.isLocked && !(Self.emailGateLocked && feature.tier != .free) && feature.isReady && feature.isAllowed(at: tier) }
     func canUse(_ module: Module) -> Bool { !UpdateChecker.isLocked && (module.feature.map(canUse) ?? true) }
 
     /// What's legacy-activated (access code or pre-tier website key) counts as Pro.
@@ -93,6 +93,7 @@ final class Entitlements: ObservableObject {
             case .some(let r) where r["ok"] as? Bool == false:
                 if r["reason"] as? String == "revoked" { throw LicenseKey.Problem.revoked }
                 if r["reason"] as? String == "limit" { throw LicenseKey.Problem.tooManyMacs(r["limit"] as? Int ?? 3) }
+                if r["reason"] as? String == "verify" { throw LicenseKey.Problem.needsVerification(bound: r["bound"] as? Bool ?? false, hint: r["hint"] as? String) }
                 if let e = r["error"] as? String { throw LicenseKey.Problem.server(e) }
             default: break   // offline or server down: allow
             }
@@ -103,6 +104,99 @@ final class Entitlements: ObservableObject {
         lastVerified = Date()
         recompute()
     }
+
+    // MARK: The email gate
+    // After the update that ties keys to an email, a Mac whose key has no email yet is asked to set it up before it carries on with its
+    // paid features. Free features never wait. Nothing is checked until the server answers (offline Macs are left alone), and once the
+    // email is set this never asks again.
+
+    struct EmailGate: Equatable { var key: String; var bound: Bool; var hint: String? }
+    @Published var emailGate: EmailGate?
+    nonisolated static var emailGateLocked: Bool { UserDefaults.standard.bool(forKey: "license.emailGate") }
+    private static let emailSetKey = "license.emailSet"
+
+    func checkEmailGate() async {
+        guard let k = key, !UserDefaults.standard.bool(forKey: Self.emailSetKey), let server = await LicenseServer.url() else { return }
+        let base = ["key": k.text, "device": Self.deviceHash(for: k), "name": Self.deviceLabel]
+        guard let a = await LicenseServer.post(server, "activate", base) else { return }
+        if a["ok"] as? Bool == false {
+            guard a["reason"] as? String == "verify" else { return }               // revoked, full…: not this screen's business
+            setGate(EmailGate(key: k.text, bound: a["bound"] as? Bool ?? false, hint: a["hint"] as? String))
+        } else {
+            guard let s = await LicenseServer.post(server, "security", base), s["ok"] as? Bool == true else { return }   // an older server: leave everything as it is
+            if s["email"] as? Bool == true { UserDefaults.standard.set(true, forKey: Self.emailSetKey); setGate(nil) }
+            else { setGate(EmailGate(key: k.text, bound: false, hint: nil)) }
+        }
+    }
+
+    private func setGate(_ gate: EmailGate?) {
+        UserDefaults.standard.set(gate != nil, forKey: "license.emailGate")
+        emailGate = gate
+        notice = gate == nil ? (notice == Self.emailNotice ? nil : notice) : Self.emailNotice
+        recompute()
+    }
+    static let emailNotice = "Please set up your email to keep using your paid features. Settings → License → Security."
+
+    /// Called when the email is confirmed (from the gate or from Settings).
+    func emailConfirmed() { UserDefaults.standard.set(true, forKey: Self.emailSetKey); setGate(nil) }
+
+    // MARK: Email code and authenticator app
+    // A key belongs to one email. A Mac that is new to the key confirms it once, with a code we email or one from an authenticator app;
+    // after that this Mac is remembered and never asked again (not at launch, not after deactivating and activating again).
+
+    private func secure(_ path: String, _ key: String, _ extra: [String: String] = [:]) async -> [String: Any] {
+        guard case .success(let k) = LicenseKey.parse(key), let server = await LicenseServer.url() else {
+            return ["error": "Couldn't reach the server. Check your connection and try again."]
+        }
+        var body = ["key": k.text, "device": Self.deviceHash(for: k)]
+        body.merge(extra) { $1 }
+        return await LicenseServer.post(server, path, body) ?? ["error": "Couldn't reach the server. Check your connection and try again."]
+    }
+
+    private static func failure(_ r: [String: Any]) -> String? {
+        r["error"] as? String ?? (r["ok"] as? Bool == false ? (r["reason"] as? String == "limit" ? "That key is already on \(r["limit"] as? Int ?? 3) Macs. Deactivate it on one first." : "That didn't work. Try again.") : nil)
+    }
+
+    /// Emails a six-digit code. The answer is the same for a wrong address, on purpose. Returns an error message or nil.
+    func requestCode(key: String, email: String) async -> String? {
+        let r = await secure("otp/start", key, ["email": email.trimmingCharacters(in: .whitespaces)])
+        if r["reason"] as? String == "revoked" { return LicenseKey.Problem.revoked.errorDescription }
+        return r["sent"] as? Bool == true ? nil : (Self.failure(r) ?? "Couldn't send the code.")
+    }
+
+    /// Checks the code (`totp` for an authenticator app), then activates the key on this Mac. Returns an error message or nil.
+    func verify(key: String, email: String, code: String, totp: Bool) async -> String? {
+        let r = await secure("otp/verify", key, ["email": email.trimmingCharacters(in: .whitespaces), "code": code.trimmingCharacters(in: .whitespaces),
+                                                  "method": totp ? "totp" : "email", "name": Self.deviceLabel])
+        if let e = Self.failure(r) { return e }
+        do { try await activate(key); emailConfirmed(); return nil } catch { return error.localizedDescription }
+    }
+
+    /// What Settings shows: whether the key has an email and an authenticator. Nil when offline.
+    func securityStatus() async -> (email: Bool, hint: String?, totp: Bool)? {
+        guard let key = key else { return nil }
+        let r = await secure("security", key.text)
+        guard r["ok"] as? Bool == true else { return nil }
+        return (r["email"] as? Bool ?? false, r["hint"] as? String, r["totp"] as? Bool ?? false)
+    }
+
+    /// Adds an email to a key that has none (from a Mac that already uses it): step 1 emails a code, step 2 confirms it.
+    func addEmailStart(_ email: String) async -> String? { guard let key = key else { return "No key on this Mac." }; return await requestCode(key: key.text, email: email) }
+    func addEmailFinish(_ email: String, code: String) async -> String? {
+        guard let key = key else { return "No key on this Mac." }
+        let e = Self.failure(await secure("otp/verify", key.text, ["email": email.trimmingCharacters(in: .whitespaces), "code": code.trimmingCharacters(in: .whitespaces), "method": "email", "name": Self.deviceLabel]))
+        if e == nil { emailConfirmed() }
+        return e
+    }
+    func totpSetup() async -> (uri: String, secret: String)? {
+        guard let key = key else { return nil }
+        let r = await secure("totp/setup", key.text)
+        guard let u = r["uri"] as? String, let s = r["secret"] as? String else { return nil }
+        return (u, s)
+    }
+    func totpSetupError() async -> String { "Couldn't start setup. Add your email first, or try again." }
+    func totpConfirm(_ code: String) async -> String? { guard let key = key else { return "No key on this Mac." }; return Self.failure(await secure("totp/confirm", key.text, ["code": code])) }
+    func totpDisable(_ code: String) async -> String? { guard let key = key else { return "No key on this Mac." }; return Self.failure(await secure("totp/disable", key.text, ["code": code])) }
 
     /// Frees this Mac's slot on the server (best effort) and removes the key here.
     /// Older activations are removed too, so the Mac goes back to Free.

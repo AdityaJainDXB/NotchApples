@@ -5,11 +5,12 @@ import { THEMES, applyTheme, currentThemeId, customTheme, saveCustom } from '../
 import { MODULES } from '../modules.js';
 import { pref, setPref, SHORTCUT_NAMES, DEFAULTS } from '../prefs.js';
 import { canUse, FEATURES, tierLabel } from '../features.js';
-import { tier, TIERS, maskedCode, deactivate } from '../license.js';
+import { tier, TIERS, maskedCode, deactivate, hasSignedKey } from '../license.js';
 import { isEnabled, setEnabled, tabOrder, setTabOrder, appInfo, registerShortcuts, show } from '../app.js';
 import { setting, toggle, select, segmented, toast, confirm, button, prompt, markdown } from '../ui.js';
 import { icon } from '../icons.js';
 import { keyField, BUY_URL, badge } from './activation.js';
+import { securityCard } from './security.js';
 
 export const PANES = { General, Updates, Appearance, Tabs, Shortcuts, AI, Calendar, Weather, Clipboard, Security, Rules, Automations, Access, About };
 const NAV = { General: ['settings', '#8e8e93'], Updates: ['share', '#30d158'], Appearance: ['appearance', '#bf5af2'], Tabs: ['home', '#5e5ce6'], Shortcuts: ['shortcuts', '#64d2ff'], AI: ['ai', '#ff9f0a'],
@@ -342,6 +343,7 @@ function Access(repaint) {
   return [card('Your plan', el('div', { class: 'hstack', style: 'padding:4px 0' }, el('div', { class: 'big grow' }, TIERS[t]), t ? el('span', { class: 'mono small dim' }, maskedCode()) : null),
     el('div', { class: 'small dim' }, 'Pro is a one-time $1 and Ultimate $5, every future update included. One key works on up to 3 devices, Mac or Windows.')),
   t < 2 ? card(t ? 'Enter a different key' : 'Enter a key', el('div', { style: 'padding:6px 0' }, keyField(() => repaint())), el('div', { class: 'hstack' }, button('Get Pro or Ultimate →', () => openUrl(BUY_URL), { kind: 'quiet' }))) : null,
+  hasSignedKey() ? securityCard(repaint) : null,
   t ? card('', setting('Remove the key from this PC', 'Back to Free here; frees one of your 3 devices.', button('Remove…', async () => { if (await confirm('Remove the key from this PC?', { ok: 'Remove', danger: true })) { await deactivate(); repaint(); } }, { kind: 'danger', small: true }))) : null,
   card('What’s included', ...feats.map(([id, f]) => el('div', { class: 'hstack small', style: 'padding:3px 0' },
     el('span', { style: 'width:16px' }, canUse(id) ? '✓' : ''), el('span', { class: 'grow' }, f.title, el('span', { class: 'tiny faint' }, ` — ${f.mac ? `Mac only: ${f.mac}` : f.detail}`)), badge(id)))),

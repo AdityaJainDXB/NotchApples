@@ -11,6 +11,19 @@ what that does and does not give them, and how the paid features are kept on the
   codes). Neither is in the repository or its history.
 - **Customers.** Keys, device hashes and email hashes live in the server's storage, not in the code.
 
+## Leaked keys: a key belongs to one email
+
+Keys that end up on the internet are made useless by tying each key to one email address (`BIND_REQUIRE=1` on the licence server):
+
+- A key is bound to the email it was bought with. A key with no email (old or admin-issued) is bound by the first address that proves
+  it owns its inbox, and only from a device that already uses the key, so a thief with just the key cannot claim it.
+- A device new to the key must enter a 6-digit code emailed through Brevo (the default), valid 10 minutes, five tries, one email a
+  minute. A wrong address gets the same answer and no email, so nobody learns which address owns a key. The server stores only a
+  salted hash of the email.
+- Optional: an authenticator app (Google or Microsoft Authenticator, via a QR code in Settings) whose code replaces the email code.
+- Asked once per device. Registered devices, app launches and deactivate then activate again never ask. Without a registered device
+  there are no tokens for AI, paid assets or Ultimate rooms, whatever the app says.
+
 ## What a modified build can still do
 
 A copy of the app can be rebuilt with its own licence checks switched off, and then every feature that runs entirely on

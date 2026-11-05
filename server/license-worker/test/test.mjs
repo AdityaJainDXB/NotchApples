@@ -6,7 +6,7 @@
 
 import assert from 'node:assert/strict';
 import { writeFileSync } from 'node:fs';
-import worker, { sendReminders, parseKey, verifyKey, verifyToken, mintToken, b32encode, b32decode, AiQuota, cleanAiRequest, PlaneBoard, PlaneRate, PlaneSky, cleanPilotName, cleanPlaneScore, cleanAskRequest } from '../src/worker.js';
+import worker, { sendReminders, parseKey, verifyKey, verifyToken, mintToken, b32encode, b32decode, AiQuota, cleanAiRequest, PlaneBoard, PlaneRate, PlaneSky, cleanPilotName, cleanPlaneScore, cleanAskRequest, totpCode, rfc4648 } from '../src/worker.js';
 
 const pair = await crypto.subtle.generateKey({ name: 'Ed25519' }, true, ['sign', 'verify']);
 const jwk = await crypto.subtle.exportKey('jwk', pair.privateKey);
@@ -913,3 +913,100 @@ await test('support without a GitHub account: a public report becomes an issue w
   assert.equal(bot.url, null); assert.equal(posts.length, 0, 'the trap field stops bots');
   delete env.GITHUB_TOKEN; globalThis.fetch = prevFetch;
 });
+
+// MARK: Email verification (OTP) and the optional authenticator app
+const codeFrom = () => { const m = mails.at(-1)?.text.match(/code is (\d{6})/); return m && m[1]; };
+const dv = (n) => n.toString(16).padStart(64, 'c');
+await test('OTP: a bought key is bound to its email; a new device needs the emailed code; wrong addresses learn nothing', async () => {
+  env.BIND_REQUIRE = '1';
+  const k = (await call('/admin/issue', { tier: 'pro', email: 'owner@example.com' }, { authorization: 'Bearer admin-test' })).keys?.[0]?.key
+    || (await call('/admin/issue', { tier: 'pro', email: 'owner@example.com' }, { authorization: 'Bearer admin-test' })).key;
+  assert.ok(k);
+  const first = await call('/activate', { key: k, device: dv(1) });
+  assert.equal(first.reason, 'verify'); assert.equal(first.bound, true);
+  mails.length = 0;
+  const thief = await call('/otp/start', { key: k, device: dv(1), email: 'thief@example.com' });
+  assert.equal(thief.sent, true); assert.equal(mails.length, 0, 'no email goes to a wrong address');
+  assert.equal((await call('/otp/start', { key: k, device: dv(1), email: 'Owner@Example.com ' })).sent, true);
+  assert.equal(mails.length, 1); assert.equal(mails[0].to, 'Owner@Example.com');
+  const code = codeFrom();
+  assert.equal((await call('/otp/start', { key: k, device: dv(1), email: 'owner@example.com' })).status, 429, 'one code a minute');
+  const wrongDevice = await call('/otp/verify', { key: k, device: dv(2), email: 'owner@example.com', code });
+  assert.equal(wrongDevice.status, 400, 'a code is for the device that asked');
+  const ok = await call('/otp/verify', { key: k, device: dv(1), email: 'owner@example.com', code, name: 'Test Mac' });
+  assert.equal(ok.ok, true); assert.equal(ok.bound, true); assert.match(ok.hint, /^o•+@example\.com$/);
+  assert.equal((await call('/otp/verify', { key: k, device: dv(1), email: 'owner@example.com', code })).status, 400, 'a code works once');
+  assert.equal((await call('/activate', { key: k, device: dv(1) })).ok, true, 'a registered device just carries on');
+  assert.equal((await call('/entitle', { key: k, device: dv(1) })).ok, true);
+  const other = await call('/entitle', { key: k, device: dv(2) });
+  assert.equal(other.reason, 'verify'); assert.ok(!other.token, 'no tokens for an unverified device');
+  // deactivating and coming back on the same device needs no new code
+  await call('/deactivate', { key: k, device: dv(1) });
+  assert.equal((await call('/activate', { key: k, device: dv(1) })).ok, true, 'a verified device is remembered');
+  assert.equal((await call('/activate', { key: k, device: dv(2) })).reason, 'verify', 'but another device still is not');
+  globalThis.__k = k;
+});
+
+await test('OTP: five wrong guesses burn the code; it expires; revoked keys get nothing', async () => {
+  const k = globalThis.__k; mails.length = 0;
+  const em = 'owner@example.com';
+  // wait out the cooldown by rewinding the rate record
+  for (const key of [...store.keys()].filter((x) => x.startsWith('otprate:'))) store.delete(key);
+  await call('/otp/start', { key: k, device: dv(3), email: em });
+  const real = codeFrom();
+  const guess = real === '000000' ? '111111' : '000000';
+  for (let i = 0; i < 4; i++) assert.equal((await call('/otp/verify', { key: k, device: dv(3), email: em, code: guess })).status, 400);
+  const burned = await call('/otp/verify', { key: k, device: dv(3), email: em, code: guess });
+  assert.match(burned.error, /Too many/);
+  assert.match((await call('/otp/verify', { key: k, device: dv(3), email: em, code: real })).error, /expired|Too many/, 'the real code no longer works');
+  for (const key of [...store.keys()].filter((x) => x.startsWith('otprate:'))) store.delete(key);
+  await call('/otp/start', { key: k, device: dv(3), email: em });
+  const c2 = codeFrom(), rec = JSON.parse(store.get(`otp:${parseKey(k).keyId}`)); rec.exp = Date.now() - 1; store.set(`otp:${parseKey(k).keyId}`, JSON.stringify(rec));
+  assert.match((await call('/otp/verify', { key: k, device: dv(3), email: em, code: c2 })).error, /expired/);
+  assert.equal((await call('/otp/start', { key: leaked, device: dv(3), email: em })).reason, 'revoked');
+});
+
+await test('OTP: an existing key with no email can add one only from a device that already uses it; then it is bound', async () => {
+  env.BIND_REQUIRE = '0';
+  const k = (await call('/admin/issue', { tier: 'ultimate' }, { authorization: 'Bearer admin-test' }));
+  const key = k.key || k.keys[0].key;
+  assert.equal((await call('/activate', { key, device: dv(10) })).ok, true);        // an old, email-less activation
+  env.BIND_REQUIRE = '1';
+  assert.equal((await call('/activate', { key, device: dv(10) })).ok, true, 'existing devices are not interrupted');
+  assert.equal((await call('/activate', { key, device: dv(11) })).reason, 'verify');
+  assert.equal((await call('/otp/start', { key, device: dv(11), email: 'thief@example.com' })).status, 403, 'a thief with only the key cannot claim it');
+  mails.length = 0;
+  assert.equal((await call('/otp/start', { key, device: dv(10), email: 'new@example.com' })).sent, true);
+  const ok = await call('/otp/verify', { key, device: dv(10), email: 'new@example.com', code: codeFrom() });
+  assert.equal(ok.first, true);
+  assert.equal((await call('/otp/start', { key, device: dv(12), email: 'thief@example.com' })).sent, true);
+  assert.equal(mails.length, 1, 'now bound: the thief address gets no second email');
+  const rec = await call('/recover', { email: 'new@example.com' }); assert.equal(rec.ok, true);
+  globalThis.__k2 = key;
+});
+
+await test('Authenticator app: RFC 6238 vector, setup needs an email and an existing device, then replaces the email code, with lock-out and no replay', async () => {
+  assert.equal(await totpCode(new TextEncoder().encode('12345678901234567890'), Math.floor(59 / 30)), '287082');   // RFC 6238 test vector
+  assert.equal(rfc4648(new TextEncoder().encode('foobar')), 'MZXW6YTBOI');
+  const key = globalThis.__k2, d = dv(10);
+  assert.equal((await call('/totp/setup', { key, device: dv(9) })).status, 403);
+  const s = await call('/totp/setup', { key, device: d });
+  assert.match(s.uri, /^otpauth:\/\/totp\/.+secret=[A-Z2-7]+&issuer=Notch%20Apple/);
+  const secret = Uint8Array.from(Buffer.from(s.secret.replace(/=+$/, '').split('').reduce((b, c) => b + 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567'.indexOf(c).toString(2).padStart(5, '0'), '').match(/.{8}/g).map((x) => parseInt(x, 2))));
+  const now = () => Math.floor(Date.now() / 1000 / 30);
+  assert.equal((await call('/totp/confirm', { key, device: d, code: '000000' })).status, 400);
+  assert.equal((await call('/totp/confirm', { key, device: d, code: await totpCode(secret, now()) })).ok, true);
+  assert.deepEqual((({ email, totp }) => ({ email, totp }))(await call('/security', { key, device: d })), { email: true, totp: true });
+  assert.equal((await call('/totp/setup', { key, device: d })).status, 400, 'already on');
+  // a new device signs in with the app's code instead of the email
+  const replay = await call('/otp/verify', { key, device: dv(20), email: 'new@example.com', code: await totpCode(secret, now()), method: 'totp' });
+  assert.equal(replay.status, 400, 'the confirm code cannot be used a second time');
+  const next = await totpCode(secret, now() + 1);
+  const ok = await call('/otp/verify', { key, device: dv(20), email: 'new@example.com', code: next, method: 'totp' });
+  assert.equal(ok.ok, true, JSON.stringify(ok));
+  assert.equal((await call('/otp/verify', { key, device: dv(21), email: 'thief@example.com', code: await totpCode(secret, now() + 1), method: 'totp' })).status, 400, 'wrong email');
+  for (let i = 0; i < 8; i++) await call('/otp/verify', { key, device: dv(22), email: 'new@example.com', code: '999999', method: 'totp' });
+  assert.equal((await call('/otp/verify', { key, device: dv(22), email: 'new@example.com', code: await totpCode(secret, now() + 1), method: 'totp' })).status, 429, 'lock-out after repeated misses');
+  env.BIND_REQUIRE = '0';
+});
+console.log(`\n${passed} passed`);

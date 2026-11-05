@@ -1,0 +1,6 @@
+[required-update]
+## Notch Apple for Windows 2.2.15 (BETA)
+
+- Security: your key now belongs to one email address, so a key that leaks can't be used by anyone else. A PC or Mac that is new to a key must confirm the email once with a 6-digit code sent to it (valid 10 minutes, five tries); after that it is remembered, and opening the app, deactivating and activating again never ask. A wrong address gets the same answer as a right one and no email, so nobody can learn who owns a key. If your key has no email yet, the notch says "Please set up your email" when it starts: you add it with a code, and until you do the paid features stay locked (free features never are).
+- Optional authenticator app: in Settings → License → Security (Windows: Settings → Access) scan a QR code with Google Authenticator, Microsoft Authenticator or 1Password, and a new device can enter the app's code instead of waiting for an email. Turning it off needs a current code.
+- This is a required update: older versions can't confirm the email, so the notch asks you to update.
