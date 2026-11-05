@@ -34,7 +34,7 @@ struct NotchMessengerView: View {
             } else {
                 if mode == .room {
                     roomBar
-                    if let game = web.game { TicTacToeCard(web: web, game: game, myID: identity.senderID) }
+                    if let game = web.game { TicTacToeCard(io: .room(web), game: game, myID: identity.senderID) }
                 }
                 chatLog
                 inputBar
@@ -315,10 +315,22 @@ private struct MessengerBubble: View {
 }
 
 
+/// What the card needs from whoever hosts the game (a room or a friend), so one card serves both.
+struct TTTIO {
+    var name: (String?) -> String
+    var accept: () -> Void, cancel: () -> Void, rematch: () -> Void, leave: () -> Void, close: () -> Void
+    var move: (Int) -> Void
+
+    @MainActor static func room(_ web: WebP2PManager) -> TTTIO {
+        TTTIO(name: { web.gameName($0) }, accept: { web.acceptTicTacToe() }, cancel: { web.cancelTicTacToeInvite() }, rematch: { web.rematchTicTacToe() },
+              leave: { web.leaveTicTacToe() }, close: { web.closeTicTacToe() }, move: { web.playTicTacToe($0) })
+    }
+}
+
 /// The tic-tac-toe card above the chat: an invite with Accept, or the 3x3 board with whose turn it is and Rematch.
 /// The rules are in TicTacToeLogic.swift; this only draws them and sends the player's choices.
-private struct TicTacToeCard: View {
-    @ObservedObject var web: WebP2PManager
+struct TicTacToeCard: View {
+    let io: TTTIO
     let game: TicTacToeGame
     let myID: String
 
@@ -340,17 +352,17 @@ private struct TicTacToeCard: View {
         VStack(spacing: 6) {
             Text("🎮 " + inviteLine).font(.system(size: 12)).foregroundStyle(Theme.textSecondary).multilineTextAlignment(.center)
             if game.status == .cancelled {
-                Button("Close") { web.closeTicTacToe() }.buttonStyle(PurpleButtonStyle(prominent: false))
+                Button("Close") { io.close() }.buttonStyle(PurpleButtonStyle(prominent: false))
             } else if game.inviter == myID {
-                Button("Cancel invite") { web.cancelTicTacToeInvite() }.buttonStyle(PurpleButtonStyle(prominent: false))
+                Button("Cancel invite") { io.cancel() }.buttonStyle(PurpleButtonStyle(prominent: false))
             } else if game.accepted != myID {
-                Button("Accept") { web.acceptTicTacToe() }.buttonStyle(PurpleButtonStyle())
+                Button("Accept") { io.accept() }.buttonStyle(PurpleButtonStyle())
             }
         }
     }
 
     private var inviteLine: String {
-        let who = web.gameName(game.inviter), mark = game.inviterMark.rawValue
+        let who = io.name(game.inviter), mark = game.inviterMark.rawValue
         if game.status == .cancelled { return "\(who) cancelled the tic-tac-toe invite." }
         if game.inviter == myID { return "Waiting for someone to accept your tic-tac-toe invite (you play \(mark))…" }
         if game.accepted == myID { return "Waiting for \(who) to start (they play \(mark))…" }
@@ -360,11 +372,11 @@ private struct TicTacToeCard: View {
     private var statusLine: String {
         switch game.status {
         case .won:
-            if let mark = myMark { return game.winner == mark ? "You won! 🎉" : "\(web.gameName(opponent)) won" }
-            return "\(web.gameName(game.winner == .x ? game.x : game.o)) won"
+            if let mark = myMark { return game.winner == mark ? "You won! 🎉" : "\(io.name(opponent)) won" }
+            return "\(io.name(game.winner == .x ? game.x : game.o)) won"
         case .draw: return "A draw"
-        case .ended: return "\(web.gameName(game.leaver)) left the game"
-        default: return myTurn ? "Your turn" : "\(web.gameName(game.turnPlayer))'s turn"
+        case .ended: return "\(io.name(game.leaver)) left the game"
+        default: return myTurn ? "Your turn" : "\(io.name(game.turnPlayer))'s turn"
         }
     }
 
@@ -372,9 +384,9 @@ private struct TicTacToeCard: View {
 
     private var headline: String {
         if let mark = myMark {
-            return "You are \(mark.rawValue) · \(web.gameName(opponent)) is \(mark == .x ? "O" : "X")"
+            return "You are \(mark.rawValue) · \(io.name(opponent)) is \(mark == .x ? "O" : "X")"
         }
-        return "Watching \(web.gameName(game.x)) (X) vs \(web.gameName(game.o)) (O)"
+        return "Watching \(io.name(game.x)) (X) vs \(io.name(game.o)) (O)"
     }
 
     private var board: some View {
@@ -391,14 +403,14 @@ private struct TicTacToeCard: View {
             HStack(spacing: 8) {
                 if (game.status == .won || game.status == .draw), myMark != nil {
                     let asked = game.rematch.contains(myID)
-                    Button(asked ? "Waiting for a rematch…" : "Rematch") { web.rematchTicTacToe() }
+                    Button(asked ? "Waiting for a rematch…" : "Rematch") { io.rematch() }
                         .buttonStyle(PurpleButtonStyle(prominent: !asked)).disabled(asked)
                 }
                 if game.status == .playing, myMark != nil {
-                    Button("Leave game") { web.leaveTicTacToe() }.buttonStyle(PurpleButtonStyle(prominent: false))
+                    Button("Leave game") { io.leave() }.buttonStyle(PurpleButtonStyle(prominent: false))
                 }
                 if game.status != .playing {
-                    Button("Close") { web.closeTicTacToe() }.buttonStyle(PurpleButtonStyle(prominent: false))
+                    Button("Close") { io.close() }.buttonStyle(PurpleButtonStyle(prominent: false))
                 }
             }
         }
@@ -407,7 +419,7 @@ private struct TicTacToeCard: View {
     private func cell(_ i: Int) -> some View {
         let mark = game.board[i]
         let win = game.line?.contains(i) ?? false
-        return Button { web.playTicTacToe(i) } label: {
+        return Button { io.move(i) } label: {
             Text(mark?.rawValue ?? "")
                 .font(.system(size: 24, weight: .heavy)).foregroundStyle(.white)
                 .frame(width: 46, height: 46)

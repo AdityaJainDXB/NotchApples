@@ -253,4 +253,18 @@ final class FriendsTests: XCTestCase {
         let opened = try XCTUnwrap(FriendCrypto.open(blob: blob, kind: "msg", myBox: you.box, dhSeed: you.dhSeed))
         XCTAssertEqual(FriendBody.decode(opened.text), body)
     }
+
+    func testTicTacToeMovesRideInsideAFriendBody() throws {
+        var body = FriendBody(t: "game", from: "a", ts: 1)
+        body.ttt = TicTacToe.invite(gid: "abc", mark: .x)
+        let back = try XCTUnwrap(FriendBody.decode(body.encoded()))
+        XCTAssertEqual(back, body)
+        // Two friends run the same rules: the inviter starts the game when the friend accepts.
+        var game = TicTacToe.reduce(nil, try XCTUnwrap(back.ttt), from: "a")
+        game = TicTacToe.reduce(game, TicTacToe.accept(gid: "abc"), from: "b")
+        let g = try XCTUnwrap(game)
+        game = TicTacToe.reduce(game, TicTacToe.start(g, acceptor: "b"), from: "a")
+        XCTAssertEqual(game?.status, .playing)
+        XCTAssertEqual(game?.x, "a"); XCTAssertEqual(game?.o, "b")
+    }
 }

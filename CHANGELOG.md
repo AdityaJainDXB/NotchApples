@@ -4,6 +4,10 @@ Every Notch Apple release, newest first. The latest few are also on the [README]
 
 > **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is in the repository's history.
 
+### Mac 2.2.5 · 5 November 2026 · 🎮 Tic-tac-toe with your friends
+
+- Friends: a Tic-tac-toe button in a friend chat invites that friend to a game, played on a board above the chat with Accept, Rematch and Leave game. The moves are encrypted like messages. Mac only for now: Windows friends cannot play yet.
+
 ### Mac 2.2.4 · Windows 2.2.4 BETA · 5 November 2026 · 💬 Files and group chats in Friends
 
 - Friends: a paperclip next to the message box sends a file to a friend or a group (up to 160 KB, so photos, screenshots and documents; not videos). Files are encrypted like messages and kept encrypted on your Mac. Click one to show it in Finder; it is never opened for you.

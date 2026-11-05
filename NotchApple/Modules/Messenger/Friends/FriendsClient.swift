@@ -26,6 +26,8 @@ final class FriendsClient: ObservableObject {
     @Published private(set) var link: Link = .off
     @Published private(set) var book = FriendsBook()
     @Published private(set) var typing: Set<String> = []
+    /// Tic-tac-toe games with friends, by friend box. Kept in memory only: a game ends when the app quits.
+    @Published private(set) var games: [String: TicTacToeGame] = [:]
     /// The friend whose chat is on screen right now (so their messages don't pile up as unread).
     var viewing: String?
 
@@ -244,6 +246,7 @@ final class FriendsClient: ObservableObject {
         case "rcpt":
             if let id = body.id, let state = body.state { book.setState(box: friend.box, id: id, state == "read" ? .read : .delivered) }
         case "gone":
+            games[friend.box] = nil
             book.remove(box: friend.box)
         case "grp":
             let known = body.g.map { book.group(Friends.groupKey($0)) != nil } ?? true
@@ -259,6 +262,8 @@ final class FriendsClient: ObservableObject {
             if let gid = body.g { book.receiveLeave(from: friend.box, group: gid) }
         case "chunk":
             receiveChunk(body, from: friend)
+        case "game":
+            if let m = body.ttt { applyGame(m, from: friend.box, in: friend.box) }
         default: break
         }
     }
@@ -328,6 +333,7 @@ final class FriendsClient: ObservableObject {
         let hash = r.myTokenHash
         if r.status == .active { sendControl("gone", to: r) }
         store.deleteFiles(messages(box).filter { $0.file != nil }.map(\.id))
+        games[box] = nil
         book.remove(box: box); persist()
         if let hash { Task { _ = await call("DELETE", "/f/allow/\(hash)", owner: true) } }
     }
@@ -571,6 +577,50 @@ final class FriendsClient: ObservableObject {
         guard let token = friend.sendToken, let blob = try? FriendCrypto.seal(bodyText: body.encoded(), kind: "msg", from: identity, toBox: friend.box, toDH: friend.dh) else { return }
         Task { _ = await call("POST", "/f/send", body: ["to": friend.box, "token": token, "blob": blob]) }
     }
+
+
+    // MARK: Tic-tac-toe with a friend
+
+    /// "You", the friend's name, or "Someone". Players are identified by mailbox, mine included.
+    func gameName(_ id: String?, friend: String) -> String {
+        guard let id else { return "Someone" }
+        return id == identity.box ? "You" : (book.record(id)?.displayName ?? "Someone")
+    }
+
+    /// Applies a game message (mine or theirs) to this friend's game. The inviter answers the first accept with a start.
+    @discardableResult
+    private func applyGame(_ msg: TicTacToeMessage, from: String, in box: String) -> Bool {
+        guard book.record(box)?.status == .active else { return false }
+        let before = games[box]
+        let next = TicTacToe.reduce(before, msg, from: from)
+        guard next != before else { return false }
+        games[box] = next
+        guard let g = next else { return true }
+        if msg.op == "invite", from != identity.box, viewing != box {
+            MessengerNotifier.shared.friendEvent(title: "Tic-tac-toe", body: "\(gameName(from, friend: box)) invited you to play.", id: "ttt-\(g.gid)")
+        }
+        if msg.op == "accept", g.status == .invited, g.inviter == identity.box, g.accepted == from { sendGame(TicTacToe.start(g, acceptor: from), to: box) }
+        return true
+    }
+
+    /// Checks a message of mine against my own state first, so an illegal move is never sent, then applies and sends it.
+    @discardableResult
+    private func sendGame(_ msg: TicTacToeMessage, to box: String) -> Bool {
+        guard let friend = book.record(box), friend.status == .active, applyGame(msg, from: identity.box, in: box) else { return false }
+        var body = FriendBody(t: "game", from: identity.box, ts: Int64(Date().timeIntervalSince1970 * 1000))
+        body.ttt = msg
+        sendSealed(body, to: friend)
+        return true
+    }
+
+    func inviteToTicTacToe(_ box: String) { if games[box]?.isFinished ?? true { sendGame(TicTacToe.invite(gid: TicTacToe.newGameID(), mark: Bool.random() ? .x : .o), to: box) } }
+    func acceptTicTacToe(_ box: String) { if let g = games[box], g.status == .invited { sendGame(TicTacToe.accept(gid: g.gid), to: box) } }
+    func cancelTicTacToeInvite(_ box: String) { if let g = games[box], g.status == .invited { sendGame(TicTacToe.cancel(gid: g.gid), to: box) } }
+    func playTicTacToe(_ cell: Int, with box: String) { if let g = games[box] { sendGame(TicTacToe.move(g, cell: cell), to: box) } }
+    func rematchTicTacToe(_ box: String) { if let g = games[box] { sendGame(TicTacToe.rematch(g), to: box) } }
+    func leaveTicTacToe(_ box: String) { if let g = games[box] { sendGame(TicTacToe.quit(gid: g.gid), to: box) } }
+    /// Closes a finished game's board (nothing is sent).
+    func closeTicTacToe(_ box: String) { if let g = games[box], g.isFinished { games[box] = nil } }
 
     // MARK: Saving
 

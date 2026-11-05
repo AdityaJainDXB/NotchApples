@@ -202,7 +202,7 @@ enum FriendCrypto {
 
 /// One shape for every body; `t` says which fields matter (see the protocol document).
 struct FriendBody: Codable, Equatable {
-    var t: String                  // req, acc, msg, rcpt, typing, gone, grp, gmsg, gleave, chunk
+    var t: String                  // req, acc, msg, rcpt, typing, gone, grp, gmsg, gleave, chunk, game
     var box: String? = nil         // req, acc: the sender's mailbox
     var from: String? = nil        // msg, rcpt, typing, gone: the sender's mailbox
     var sign: String? = nil        // req, acc: the sender's signing key (base64url)
@@ -221,6 +221,7 @@ struct FriendBody: Codable, Equatable {
     var fn: Int? = nil             // chunk: how many chunks the file has
     var fi: Int? = nil             // chunk: this chunk's position, from 0
     var fd: String? = nil          // chunk: the bytes (base64url)
+    var ttt: TicTacToeMessage? = nil   // game: one tic-tac-toe move or invite (rules in TicTacToeLogic.swift)
 
     func encoded() -> String {
         let enc = JSONEncoder()

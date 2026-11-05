@@ -317,6 +317,10 @@ struct FriendsView: View {
                 Text(friend.displayName).font(.system(size: 13, weight: .semibold)).foregroundStyle(.white)
                 if client.typing.contains(friend.box) { Text("typing…").font(.system(size: 11)).foregroundStyle(Theme.accentBright) }
                 Spacer()
+                if client.games[friend.box]?.isFinished ?? true {
+                    Button { client.inviteToTicTacToe(friend.box) } label: { Label("Tic-tac-toe", systemImage: "gamecontroller") }
+                        .buttonStyle(PurpleButtonStyle(prominent: false)).help("Invite \(friend.displayName) to a game of tic-tac-toe")
+                }
                 Button { showSafety = true } label: { Label("Safety number", systemImage: "checkmark.shield") }
                     .buttonStyle(PurpleButtonStyle(prominent: false)).help("Compare these numbers with your friend to be sure nobody is in the middle")
                     .popover(isPresented: $showSafety) { safety(friend) }
@@ -330,10 +334,17 @@ struct FriendsView: View {
             .confirmationDialog("Remove \(friend.displayName)? They won't be told why, and you can add them again later.", isPresented: $confirmRemove) {
                 Button("Remove", role: .destructive) { client.remove(friend.box); selected = nil }
             }
+            if let game = client.games[friend.box] { TicTacToeCard(io: gameIO(friend.box), game: game, myID: client.identity.box) }
             messageList(friend.box, empty: "Say hi. Messages are encrypted on this Mac; the server only holds them until \(friend.displayName) is online.", group: false)
             if let problem = client.lastProblem { Text(problem).font(.system(size: 10)).foregroundStyle(.orange) }
             composer(key: friend.box, typing: true) { send(friend) }
         }
+    }
+
+    private func gameIO(_ box: String) -> TTTIO {
+        TTTIO(name: { client.gameName($0, friend: box) }, accept: { client.acceptTicTacToe(box) }, cancel: { client.cancelTicTacToeInvite(box) },
+              rematch: { client.rematchTicTacToe(box) }, leave: { client.leaveTicTacToe(box) }, close: { client.closeTicTacToe(box) },
+              move: { client.playTicTacToe($0, with: box) })
     }
 
     private func send(_ friend: FriendRecord) {

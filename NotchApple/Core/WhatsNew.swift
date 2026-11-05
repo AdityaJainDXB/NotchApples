@@ -20,6 +20,9 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.2.5", date: "5 November 2026", headline: "Tic-tac-toe with your friends", items: [
+            "Friends: a Tic-tac-toe button in a friend chat invites that friend to a game, played on a board above the chat with Accept, Rematch and Leave game. The moves are encrypted like messages. Mac only for now: Windows friends cannot play yet.",
+        ]),
         ReleaseNote(version: "2.2.4", date: "5 November 2026", headline: "Files and group chats in Friends", items: [
             "Friends: a paperclip next to the message box sends a file to a friend or a group (up to 160 KB, so photos, screenshots and documents; not videos). Files are encrypted like messages and kept encrypted on your Mac. Click one to show it in Finder; it is never opened for you.",
             "Friends: group chats. Tap + next to Groups, name it and tick friends to add (up to 20 people). Each message is encrypted separately for each member. You see messages only from group members who are also your friends, and the group warns you when some members are not. Windows has the same two features (Windows 2.2.4), and they work between Windows and Mac friends.",

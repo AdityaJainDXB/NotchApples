@@ -76,7 +76,7 @@ Pick your computer. Both buttons start the download straight away. The Mac link 
   </tr>
   <tr>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.2.4</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.2.5</b></a>
     </td>
     <td align="center">
       <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 2.2.4 BETA</b></a>
@@ -150,6 +150,10 @@ More screenshots of the capture overlay, the AI answer, the settings and the Win
 
 ## What's new
 
+### Mac 2.2.5 · 5 November 2026 · 🎮 Tic-tac-toe with your friends
+
+- Friends: a Tic-tac-toe button in a friend chat invites that friend to a game, played on a board above the chat with Accept, Rematch and Leave game. The moves are encrypted like messages. Mac only for now: Windows friends cannot play yet.
+
 ### Mac 2.2.4 · Windows 2.2.4 BETA · 5 November 2026 · 💬 Files and group chats in Friends
 
 - Friends: a paperclip next to the message box sends a file to a friend or a group (up to 160 KB, so photos, screenshots and documents; not videos). Files are encrypted like messages and kept encrypted on your Mac. Click one to show it in Finder; it is never opened for you.
@@ -158,12 +162,6 @@ More screenshots of the capture overlay, the AI answer, the settings and the Win
 ### Mac 2.2.3 · 5 November 2026 · 🛠️ A crash fixed in nearby Messenger
 
 - Fix: a crash in nearby (Wi-Fi) Messenger. Apple’s chat networking kept calling back on a connection the app had already let go of, and the app quit. The connection is now held a little longer, and nearby discovery stops five minutes after you leave the Messenger tab instead of straight away (fixes issue 50).
-
-### Mac 2.2.2 · Windows 2.2.2 BETA · 4 November 2026 · 🏎️ Leave button and the right car in the diagram
-
-- Racing: a small Leave button on the left edge during a race or session takes you back to the Racing menu (the same as Esc). It is faint until you hover over it. It matters now that a race is kept when you close the notch.
-- Racing: the tyre and damage diagram (bottom left) now shows the car you are driving. The GT3, the street cars, the supercar, the muscle car, the hatchback, the Safety Car and the Medical Car each get a closed-car shape with glass and their own details (wing, splitter, stripes, light bar), instead of a Formula One car. The Formula One car keeps its open-wheel diagram.
-- Same as the Mac, except the race is not kept when you change game (that is Mac only). Untested on real Windows hardware.
 
 Every earlier release is in the [changelog](CHANGELOG.md).
 
