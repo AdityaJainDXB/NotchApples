@@ -150,6 +150,10 @@ More screenshots of the capture overlay, the AI answer, the settings and the Win
 
 ## What's new
 
+### Windows 2.2.14 BETA · 5 November 2026 · 🚀 Rocket League and Scribble in Windows chats
+
+- Messenger: Rocket League and Scribble in Windows friend chats and rooms, from the Games menu next to the chat. The invite works like the other games, and when it is accepted the live game opens in the chat itself, already in the same online room as the other player, who can be on Windows or Mac. The one who invited hosts and plays Blue in Rocket League; in a room, Scribble offers a Join the game button to anyone who is not one of the two players. The window opens taller (at least 900 by 720) while a live game is showing, and leaving the game, switching chat or leaving the tab ends it. Untested on real Windows hardware.
+
 ### Mac 2.2.13 · Windows 2.2.13 BETA · 5 November 2026 · ✏️ Scribble: draw and guess
 
 - Games: Scribble, a draw-and-guess game like scribble.io. Each turn one player is offered three words, picks one and draws it, and the others type guesses: the faster you guess, the more you score (the drawer scores too). Letters of the word are revealed as time runs out, a guess one letter off says it is close, and a game is three rounds with up to 10 players. Computer players take part at Easy, Normal or Hard: they draw simple pictures and guess honestly, from the length of the word and the letters shown, never from the drawing. Play alone against 0 to 5 computers, or online with a room code (the host can add computers too).
@@ -159,11 +163,6 @@ More screenshots of the capture overlay, the AI answer, the settings and the Win
 ### Windows 2.2.12 BETA · 5 November 2026 · ✍️ Do It draws and zooms on Windows
 
 - Do It (Ultimate): advanced maths on Windows, the same as the Mac's 2.2.11. It can draw with the pen (handwrite an equation into a handwriting or drawing area such as MathType's drawing view, OneNote or Paint, or plot a graph with axes, key points and a smooth curve), drag, and zoom in to read small formulas and hit tiny toolbar buttons. It works the problem out first and keeps a scratchpad of the solution so a long task does not forget it, checks what it entered by zooming in, types formulas in text or LaTeX form and Unicode symbols, or clicks an equation editor's templates. A task can now take up to 80 steps (it was 40). Stop lets go of the mouse button at once, even in the middle of a stroke. Untested on real Windows hardware.
-
-### Mac 2.2.11 · 5 November 2026 · ✍️ Do It does advanced maths
-
-- Do It (Ultimate): advanced maths. It can now draw with the pen: handwrite an equation into a handwriting or drawing area (MathType's drawing view, Notes, Freeform), or plot a graph with axes, key points and a smooth curve. It can drag, and zoom in to read small formulas and hit tiny toolbar buttons. It works the problem out first and keeps a scratchpad of the solution, so a long task no longer forgets the answer it worked out, and it checks what it entered by zooming in. It types formulas in text or LaTeX form and Unicode symbols (√ ∫ ∑ π ≤ ², etc.), or clicks an equation editor's templates (fractions, roots, integrals, matrices) and fills in each slot. A task can now take up to 80 steps (it was 40), and long drawings no longer freeze the app, so Stop always works.
-- Fix: Rocket League in a friend chat or room. The notch now grows taller while a match is showing, so its corners stay rounded and the whole arena fits instead of running off the bottom edge.
 
 Every earlier release is in the [changelog](CHANGELOG.md).
 

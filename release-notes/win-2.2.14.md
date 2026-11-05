@@ -1,0 +1,3 @@
+## Notch Apple for Windows 2.2.14 (BETA)
+
+- Messenger: Rocket League and Scribble in Windows friend chats and rooms, from the Games menu next to the chat. The invite works like the other games, and when it is accepted the live game opens in the chat itself, already in the same online room as the other player, who can be on Windows or Mac. The one who invited hosts and plays Blue in Rocket League; in a room, Scribble offers a Join the game button to anyone who is not one of the two players. The window opens taller (at least 900 by 720) while a live game is showing, and leaving the game, switching chat or leaving the tab ends it. Untested on real Windows hardware.

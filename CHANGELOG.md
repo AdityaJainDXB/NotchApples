@@ -4,6 +4,10 @@ Every Notch Apple release, newest first. The latest few are also on the [README]
 
 > **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is in the repository's history.
 
+### Windows 2.2.14 BETA · 5 November 2026 · 🚀 Rocket League and Scribble in Windows chats
+
+- Messenger: Rocket League and Scribble in Windows friend chats and rooms, from the Games menu next to the chat. The invite works like the other games, and when it is accepted the live game opens in the chat itself, already in the same online room as the other player, who can be on Windows or Mac. The one who invited hosts and plays Blue in Rocket League; in a room, Scribble offers a Join the game button to anyone who is not one of the two players. The window opens taller (at least 900 by 720) while a live game is showing, and leaving the game, switching chat or leaving the tab ends it. Untested on real Windows hardware.
+
 ### Mac 2.2.13 · Windows 2.2.13 BETA · 5 November 2026 · ✏️ Scribble: draw and guess
 
 - Games: Scribble, a draw-and-guess game like scribble.io. Each turn one player is offered three words, picks one and draws it, and the others type guesses: the faster you guess, the more you score (the drawer scores too). Letters of the word are revealed as time runs out, a guess one letter off says it is close, and a game is three rounds with up to 10 players. Computer players take part at Easy, Normal or Hard: they draw simple pictures and guess honestly, from the length of the word and the letters shown, never from the drawing. Play alone against 0 to 5 computers, or online with a room code (the host can add computers too).
