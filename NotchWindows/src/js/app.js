@@ -499,10 +499,23 @@ export async function openPalette(initial = '') {
 
 // ---------------------------------------------------------------- layout, sounds, look
 
-export function applyLayout() {
+/// Messenger boards on screen ('room', 'friend'): while any is up the panel is at least 800 x 600, like the Mac.
+const chatGames = new Set();
+const CHAT_GAME_SIZE = { width: 800, height: 600 };
+export function chatGame(source, on) {
+  if (chatGames.has(source) === !!on) return;
+  if (on) chatGames.add(source); else chatGames.delete(source);
+  sendLayout();
+}
+function sendLayout() {
   const sizeName = canUse('notchResize') ? pref('ui.size') : 'standard';
-  const size = SIZES[sizeName] || SIZES.standard;
+  const size = { ...(SIZES[sizeName] || SIZES.standard) };
+  if (chatGames.size) { size.width = Math.max(size.width, CHAT_GAME_SIZE.width); size.height = Math.max(size.height, CHAT_GAME_SIZE.height); }
   invoke('set_layout', { layout: { position: pref('ui.position'), inset: pref('ui.inset'), ...size } }).catch(console.error);
+}
+
+export function applyLayout() {
+  sendLayout();
   invoke('set_hide_in_fullscreen', { on: pref('ui.hideFullscreen') }).catch(() => {});
   invoke('set_edge_trigger', { on: pref('ui.edgeTrigger') && canUse('edgeTrigger') }).catch(() => {});
   applyLook();

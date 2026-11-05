@@ -75,6 +75,12 @@ export function normalizeVault(raw) {
 
 export const index = (v, box) => v.friends.findIndex((f) => f.box === box);
 export const record = (v, box) => v.friends.find((f) => f.box === box) || null;
+
+// ---- two-player games in a friend chat (docs/FRIENDS_PROTOCOL.md, "Two-player games"; rules in games/) ----
+/** The body carrying a Connect Four / Rock Paper Scissors / Battleship message. Older apps ignore the unknown `t`. */
+export const playBody = (myBox, play, now = Date.now()) => ({ t: 'play', from: myBox, ts: now, play });
+/** The body carrying a tic-tac-toe message (the Mac sends `t:"game"` with a `ttt` object). */
+export const tttBody = (myBox, ttt, now = Date.now()) => ({ t: 'game', from: myBox, ts: now, ttt });
 export const isBlocked = (v, fp) => v.blocked.includes(fp);
 export const incoming = (v) => v.friends.filter((f) => f.status === 'incoming').sort((a, b) => a.added - b.added);
 export const pending = (v) => v.friends.filter((f) => f.status === 'outgoing').sort((a, b) => a.added - b.added);

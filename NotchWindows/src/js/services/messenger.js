@@ -12,11 +12,14 @@
 //  • Tic-tac-toe rides on the same envelope: an optional `game` object (rules in games/tictactoe-logic.js). The invite is a normal
 //    'message' with a plain-text line, so older apps show it as text; every other game message has kind 'game', which older
 //    apps (Mac and Windows) skip without touching anything else.
+//  • Connect Four, Rock Paper Scissors and Battleship use an optional `play` object (rules in games/twoplayer-logic.js). Their
+//    invite is a normal 'message' with a plain-text line and `play`; every other move has kind 'play', which older apps skip.
 
 import { load, save, uid } from '../store.js';
 import { http, notify } from '../native.js';
 import { provide, refresh } from '../activity.js';
 import * as G from '../games/tictactoe-logic.js';
+import * as P from '../games/twoplayer-logic.js';
 
 const RELAY = 'ntfy.sh';
 const SWIFT_EPOCH = 978307200; // 2001-01-01 in Unix seconds
@@ -25,6 +28,20 @@ const listeners = new Set();
 const st = { state: 'idle', room: null, error: null, members: new Map(), messages: [], unread: 0, game: null };
 let ws = null, key = null, topic = null, presenceTimer = null, retry = 0;
 const seen = new Set();
+const playNames = {};   // sender ID -> handle, for naming players in the games (a player who has gone quiet is no longer a member)
+
+/** Connect Four, Rock Paper Scissors and Battleship in this room (rules and automatic answers: games/twoplayer-logic.js). */
+export const play = P.createPlayController({
+  myID: () => identity().senderID,
+  transport: (m) => {
+    if (st.state !== 'joined') return;
+    if (m.op === 'invite') publish('message', `🎮 ${P.TITLES[m.g] || 'Game'} invite (update Notch Apple to play)`, undefined, m);
+    else publish('play', undefined, undefined, m);
+  },
+  onEvent: (text) => { notice(text); },
+  onChange: () => emit(),
+});
+play.name = (id) => nameOf(id);
 
 export const state = () => st;
 export function subscribe(fn) { listeners.add(fn); fn(st); return () => listeners.delete(fn); }
@@ -86,7 +103,7 @@ export async function join(raw) {
   if (!room) return;
   leave(true);
   st.room = room;
-  st.messages = []; st.members = new Map(); st.error = null; st.unread = 0; st.game = null;
+  st.messages = []; st.members = new Map(); st.error = null; st.unread = 0; st.game = null; play.reset();
   key = await crypto.subtle.importKey('raw', await sha(`notchapple-room-key|${room}`), 'AES-GCM', false, ['encrypt', 'decrypt']);
   topic = `notchapple-v1-${hex(await sha(`notchapple-room-topic|${room}`)).slice(0, 40)}`;
   save('messenger.room', room);
@@ -98,7 +115,7 @@ export function leave(keepRoom = false) {
   if (!keepRoom) save('messenger.room', null);
   clearInterval(presenceTimer); presenceTimer = null;
   if (ws) { ws.onclose = null; ws.close(); ws = null; }
-  st.state = 'idle'; st.members = new Map(); st.game = null;
+  st.state = 'idle'; st.members = new Map(); st.game = null; play.reset();
   if (!keepRoom) { st.room = null; st.messages = []; }
   emit();
 }
@@ -131,16 +148,17 @@ function connect() {
 
 function prune() {
   const now = Date.now();
-  for (const [id, m] of st.members) if (now - m.lastSeen > 75_000) { st.members.delete(id); playerGone(id, m.handle); }
+  for (const [id, m] of st.members) if (now - m.lastSeen > 75_000) { st.members.delete(id); playerGone(id, m.handle); play.playerGone(id); }
   emit();
 }
 
-async function publish(kind, text, game) {
+async function publish(kind, text, game, playMsg) {
   if (!key || !topic) return null;
   const me = identity();
   const env = { v: 1, kind, id: uid().toUpperCase(), senderID: me.senderID, sender: me.handle, ts: Date.now() / 1000 - SWIFT_EPOCH };
   if (text) env.text = text;
   if (game) env.game = game;
+  if (playMsg) env.play = playMsg;
   try {
     await http(`https://${RELAY}/${topic}`, { method: 'POST', body: await seal(env), headers: { Cache: 'no', Firebase: 'no' }, timeout: 15000 });
   } catch (e) { st.error = e.message; emit(); }
@@ -172,7 +190,20 @@ async function receive(env) {
     }
   } else if (env.kind === 'leave') {
     const m = st.members.get(env.senderID);
-    if (m) { st.members.delete(env.senderID); notice(`${m.handle} left`); playerGone(env.senderID, m.handle); }
+    if (m) { st.members.delete(env.senderID); notice(`${m.handle} left`); playerGone(env.senderID, m.handle); play.playerGone(env.senderID); }
+  } else if ((env.kind === 'play' || env.kind === 'message') && env.play && typeof env.play === 'object') {
+    // Connect Four, Rock Paper Scissors, Battleship. Our own messages were applied when we sent them; repeats are dropped by ID.
+    if (!isMe && !seen.has(env.id)) {
+      seen.add(env.id);
+      playNames[env.senderID] = name;
+      if (play.receive(env.play, env.senderID) && env.play.op === 'invite') {
+        const { isExpanded, activeTab } = await import('../app.js');
+        if (!(isExpanded() && activeTab() === 'messenger')) {
+          st.unread++;
+          if (load('messenger.notify', true)) notify(`${name} · #${st.room}`, `invited the room to play ${P.TITLES[env.play.g] || 'a game'}`);
+        }
+      }
+    }
   } else if ((env.kind === 'game' || env.kind === 'message') && env.game && typeof env.game === 'object') {
     // Tic-tac-toe. Our own messages were applied when we sent them; repeats (one per relay) are dropped by ID.
     if (!isMe && !seen.has(env.id)) {
@@ -204,7 +235,7 @@ export const markRead = () => { st.unread = 0; emit(); };
 
 // ---- tic-tac-toe (rules in games/tictactoe-logic.js; both sides run the same reduce) ----
 
-export const nameOf = (id) => (id === identity().senderID ? 'You' : st.members.get(id)?.handle || st.game?.names?.[id] || 'Someone');
+export const nameOf = (id) => (id === identity().senderID ? 'You' : st.members.get(id)?.handle || st.game?.names?.[id] || playNames[id] || 'Someone');
 
 /// Applies a game message from `from`. Returns true when it changed the game. The inviter answers the first accept with 'start'.
 function applyGame(msg, from, name) {
