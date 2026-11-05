@@ -740,6 +740,21 @@ async function otpPrepare(env, body) {
   return { k, rec, revoked, eh: await emailHash(env, body.email) };
 }
 
+
+/** Tells the owner their key is now locked to their email (sent after a code is accepted). Best effort: never blocks the sign-in. */
+async function confirmationMail(env, k, body, first, device) {
+  const what = first ? `Your Notch Apple ${TIER_NAME[k.tier]} key is now activated and locked to this email address.`
+    : `Your Notch Apple ${TIER_NAME[k.tier]} key was just activated on a new device. It stays locked to this email address.`;
+  try {
+    await sendMail(env, body.email.trim(), 'Your Notch Apple key is activated and locked to your email',
+      `${what}\n\n` +
+      `Device: ${deviceName(body.name) || 'a new device'}\n\n` +
+      'From now on, only someone who can read this inbox can use the key on a new device: a friend who has the key but not your email cannot sign in. ' +
+      'Your devices that are already signed in carry on, with no code needed.\n\n' +
+      "If this wasn't you, reply to this email or write to notchapples.support@gmail.com and we'll turn the key off and issue you a new one.");
+  } catch (e) { console.error('confirmation mail failed', e && e.message); }
+}
+
 /** POST /otp/start {key, device, email}: emails a six-digit code. The answer is the same whether or not the address matches. */
 async function otpStart(env, body, now = Date.now()) {
   const { k, rec, revoked, eh } = await otpPrepare(env, body);
@@ -770,6 +785,7 @@ async function otpVerify(env, body, now = Date.now()) {
     rec.emailHint = rec.emailHint || maskEmail(body.email);
     const r = await addDevice(env, k, rec, body.device, deviceName(body.name), true);
     await putJSON(env, `key:${k.keyId}`, rec);
+    if (r.ok) await confirmationMail(env, k, body, false);
     return r.ok ? { ...r, bound: true, first: false, hint: rec.emailHint } : r;
   }
   const o = await getJSON(env, `otp:${k.keyId}`);
@@ -793,6 +809,7 @@ async function otpVerify(env, body, now = Date.now()) {
   const r = await addDevice(env, k, rec, body.device, deviceName(body.name), true);
   if (!r.ok) { await putJSON(env, `key:${k.keyId}`, rec); return r; }      // verified, but all slots are full: the binding still stands
   await putJSON(env, `key:${k.keyId}`, rec);
+  await confirmationMail(env, k, body, first);
   return { ...r, bound: true, first, hint: rec.emailHint };
 }
 

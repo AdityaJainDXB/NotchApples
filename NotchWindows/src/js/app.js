@@ -7,7 +7,7 @@ import { icon } from './icons.js';
 import { current as claudeDot, COLOURS as DOT_COLOURS } from './services/claudecode.js';
 import { load, save, el, watch } from './store.js';
 import { invoke, listen } from './native.js';
-import { loadSaved, tierName, setTierOverride, checkEmailGate } from './license.js';
+import { loadSaved, tierName, setTierOverride, checkEmailGate, storedGate } from './license.js';
 import { canUse } from './features.js';
 import { MODULES, DEFAULT_ON, byId } from './modules.js';
 import { pref, SIZES } from './prefs.js';
@@ -612,6 +612,7 @@ window.addEventListener('theme-changed', () => buildTabs());
   if (info.selftest) setTierOverride(2);
   await loadSaved();
   onTierChange();
+  if (!info.selftest) { const g0 = storedGate(); if (g0) (await import('./modules/emailgate.js')).showEmailGate(g0); }   // a PC already asked stays locked from the first moment, even offline
   if (!info.selftest) checkEmailGate().then(async (gate) => { if (gate) (await import('./modules/emailgate.js')).showEmailGate(gate); }).catch(() => {});
   const { start } = await import('./services/index.js');
   await start();

@@ -150,6 +150,13 @@ More screenshots of the capture overlay, the AI answer, the settings and the Win
 
 ## What's new
 
+### Mac 2.2.16 · Windows 2.2.16 BETA · 5 November 2026 · 🔒 The email gate can't be skipped
+
+- Security: the email setup can no longer be skipped. Until a key's email is confirmed, the notch shows only "Please set up your email" however it is opened, and it stays that way after a restart or while offline (Windows: a full-window screen with no "Not now"). Free features do not need a key and are not affected.
+- After a correct code, the key's email now gets "Your Notch Apple key is activated and locked to your email", naming the device. Only someone who can read that inbox can sign in on a new device: a friend who has the key but not the email gets no code.
+- Settings → License → Security now says what went wrong instead of a vague "couldn't reach the server", and has a Try again button.
+- This is a required update.
+
 ### Mac 2.2.15 · Windows 2.2.15 BETA · 5 November 2026 · 🔐 Keys belong to one email
 
 - Security: your key now belongs to one email address, so a key that leaks can't be used by anyone else. A Mac or PC that is new to a key must confirm the email once with a 6-digit code sent to it (valid 10 minutes, five tries); after that it is remembered, and opening the app, deactivating and activating again never ask. A wrong address gets the same answer as a right one and no email, so nobody can learn who owns a key. If your key has no email yet, the notch says "Please set up your email" when it starts: you add it with a code, and until you do the paid features stay locked (free features never are).
@@ -159,12 +166,6 @@ More screenshots of the capture overlay, the AI answer, the settings and the Win
 ### Windows 2.2.14 BETA · 5 November 2026 · 🚀 Rocket League and Scribble in Windows chats
 
 - Messenger: Rocket League and Scribble in Windows friend chats and rooms, from the Games menu next to the chat. The invite works like the other games, and when it is accepted the live game opens in the chat itself, already in the same online room as the other player, who can be on Windows or Mac. The one who invited hosts and plays Blue in Rocket League; in a room, Scribble offers a Join the game button to anyone who is not one of the two players. The window opens taller (at least 900 by 720) while a live game is showing, and leaving the game, switching chat or leaving the tab ends it. Untested on real Windows hardware.
-
-### Mac 2.2.13 · Windows 2.2.13 BETA · 5 November 2026 · ✏️ Scribble: draw and guess
-
-- Games: Scribble, a draw-and-guess game like scribble.io. Each turn one player is offered three words, picks one and draws it, and the others type guesses: the faster you guess, the more you score (the drawer scores too). Letters of the word are revealed as time runs out, a guess one letter off says it is close, and a game is three rounds with up to 10 players. Computer players take part at Easy, Normal or Hard: they draw simple pictures and guess honestly, from the length of the word and the letters shown, never from the drawing. Play alone against 0 to 5 computers, or online with a room code (the host can add computers too).
-- Messenger: Scribble is in the Games menu in friend chats and rooms. In an open room anyone can press Join the game, not only the first person to accept. The word you must draw and your own guesses are encrypted between you and the host, because the relay shows every message to everyone. Windows has Scribble in its Games tab, not yet in chats.
-- Windows: Games: Scribble, a draw-and-guess game, against computer players (Easy, Normal, Hard) or friends online with a room code. Plays against the Mac app's Scribble. Not yet in Windows friend chats and rooms. Untested on real Windows hardware.
 
 Every earlier release is in the [changelog](CHANGELOG.md).
 

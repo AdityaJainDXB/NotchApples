@@ -47,6 +47,7 @@ final class Entitlements: ObservableObject {
         if let text = KeychainHelper.get(.licenseKey), case .success(let k) = LicenseKey.parse(text) { key = k }
         // Keys from before this check started: the 30 days begin now.
         if key != nil, lastVerified == nil { lastVerified = Date() }
+        restoreGate()
         recompute()
         LicenseState.shared.$isActivated.dropFirst().sink { [weak self] _ in
             DispatchQueue.main.async { self?.recompute() }
@@ -112,6 +113,8 @@ final class Entitlements: ObservableObject {
 
     struct EmailGate: Equatable { var key: String; var bound: Bool; var hint: String? }
     @Published var emailGate: EmailGate?
+    /// Why Settings → Security could not load (what the server said, or that it could not be reached).
+    @Published var securityProblem: String?
     nonisolated static var emailGateLocked: Bool { UserDefaults.standard.bool(forKey: "license.emailGate") }
     private static let emailSetKey = "license.emailSet"
 
@@ -129,8 +132,18 @@ final class Entitlements: ObservableObject {
         }
     }
 
+    /// The gate survives a restart and being offline: a Mac that was asked for its email stays locked until it is set, with no waiting
+    /// for the server at launch to answer.
+    private func restoreGate() {
+        guard Self.emailGateLocked, let k = key, !defaults.bool(forKey: Self.emailSetKey) else { defaults.set(false, forKey: "license.emailGate"); return }
+        emailGate = EmailGate(key: k.text, bound: defaults.bool(forKey: "license.emailGate.bound"), hint: defaults.string(forKey: "license.emailGate.hint"))
+        notice = Self.emailNotice
+    }
+
     private func setGate(_ gate: EmailGate?) {
         UserDefaults.standard.set(gate != nil, forKey: "license.emailGate")
+        UserDefaults.standard.set(gate?.bound ?? false, forKey: "license.emailGate.bound")
+        UserDefaults.standard.set(gate?.hint, forKey: "license.emailGate.hint")
         emailGate = gate
         notice = gate == nil ? (notice == Self.emailNotice ? nil : notice) : Self.emailNotice
         recompute()
@@ -176,7 +189,12 @@ final class Entitlements: ObservableObject {
     func securityStatus() async -> (email: Bool, hint: String?, totp: Bool)? {
         guard let key = key else { return nil }
         let r = await secure("security", key.text)
-        guard r["ok"] as? Bool == true else { return nil }
+        guard r["ok"] as? Bool == true else {
+            // Say what the server answered, so "offline" and "this key isn't registered on this Mac yet" are not the same message.
+            securityProblem = r["error"] as? String ?? "The server didn't answer the way this version expects."
+            return nil
+        }
+        securityProblem = nil
         return (r["email"] as? Bool ?? false, r["hint"] as? String, r["totp"] as? Bool ?? false)
     }
 
@@ -207,7 +225,7 @@ final class Entitlements: ObservableObject {
         KeychainHelper.delete(.licenseKey)
         key = nil
         LicenseState.shared.deactivate()
-        recompute()
+        setGate(nil)
     }
 
     // MARK: Revocation

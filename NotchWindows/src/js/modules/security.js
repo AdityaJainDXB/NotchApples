@@ -63,7 +63,7 @@ export function verifyFlow(key, info, onDone) {
       el('div', { class: 'title' }, authenticator ? 'Authenticator code' : 'Check your email'),
       el('div', { class: 'small dim', style: 'text-align:center;max-width:380px' }, authenticator
         ? 'Open your authenticator app and enter the 6-digit code for Notch Apple.'
-        : `We sent a 6-digit code to ${email}. It works for 10 minutes. Check spam too.`),
+        : `If ${email} is the address this key belongs to, we sent it a 6-digit code (valid 10 minutes, check spam too). If it isn’t, no code is sent: only the key’s owner can sign in on a new device.`),
       emailBox, input, err, go,
       el('button', { class: 'btn quiet small', onclick: authenticator ? step1 : () => step1() }, authenticator ? '← Use an email code instead' : '← Use a different email'));
     input.focus();

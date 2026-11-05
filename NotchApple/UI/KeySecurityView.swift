@@ -122,7 +122,7 @@ struct VerifyKeyView: View {
         case .email:
             bound ? "This key belongs to an email address\(hint.map { " (\($0))" } ?? ""). Enter it and we'll send a code to confirm this Mac. You only do this once per Mac."
                   : "Enter your email address. We'll send a code, and the key will belong to that address from now on."
-        case .code: "We sent a 6-digit code to \(email). It works for 10 minutes. Check spam too."
+        case .code: "If \(email) is the address this key belongs to, we sent it a 6-digit code (valid 10 minutes, check spam too). If it is not, no code is sent: only the key's owner can sign in on a new device."
         case .authenticator: "Enter your email and the 6-digit code your authenticator app shows for Notch Apple."
         }
     }
@@ -178,7 +178,8 @@ struct KeySecuritySection: View {
                     if let info { Text(info).foregroundStyle(.green).font(.callout) }
                     if let error { Text(error).foregroundStyle(.red).font(.callout) }
                 } else {
-                    Text("Couldn't reach the server. Try again when you're online.").foregroundStyle(.secondary)
+                    Text(entitlements.securityProblem ?? "Couldn't reach the server. Try again when you're online.").foregroundStyle(.secondary)
+                    Button("Try again") { Task { loaded = false; await refresh() } }
                 }
             } header: {
                 Text("Security")

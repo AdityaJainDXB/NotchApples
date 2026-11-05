@@ -307,18 +307,22 @@ export const hasSignedKey = () => !!cached;
 export function emailConfirmed() { localStorage.setItem(EMAIL_SET, '1'); setGate(false); }
 
 /// null when nothing is needed, or { key, bound, hint } for the "Please set up your email" screen. Also locks paid features until done.
+/// The gate is remembered: a PC that was asked stays locked after a restart and while offline, until the email is set.
+const GATE_INFO = 'license.emailGate.info';
+export const storedGate = () => { try { return gateLocked() && cached ? { key: cached.text, ...JSON.parse(localStorage.getItem(GATE_INFO) || '{}') } : null; } catch { return null; } };
+const lockWith = (info) => { localStorage.setItem(GATE_INFO, JSON.stringify({ bound: info.bound, hint: info.hint })); setGate(true); return info; };
 export async function checkEmailGate() {
   if (!cached || localStorage.getItem(EMAIL_SET) === '1') return null;
   const key = cached.text, base = { key, device: deviceId(), name: 'Windows PC' };
   try {
     const a = await post('/activate', base);
     if (a.ok === false) {
-      if (a.reason !== 'verify') return null;
-      setGate(true); return { key, bound: !!a.bound, hint: a.hint || null };
+      if (a.reason !== 'verify') return storedGate();
+      return lockWith({ key, bound: !!a.bound, hint: a.hint || null });
     }
     const s = await post('/security', base);
-    if (!s || s.ok !== true) return null;                     // an older server: leave everything as it is
+    if (!s || s.ok !== true) return storedGate();             // an older server: leave everything as it is
     if (s.email) { emailConfirmed(); return null; }
-    setGate(true); return { key, bound: false, hint: null };
-  } catch { return null; }
+    return lockWith({ key, bound: false, hint: null });
+  } catch { return storedGate(); }
 }

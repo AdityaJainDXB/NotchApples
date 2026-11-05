@@ -20,6 +20,12 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.2.16", date: "5 November 2026", headline: "The email gate can't be skipped", items: [
+            "Security: the email setup can no longer be skipped. Until a key's email is confirmed, the notch shows only \"Please set up your email\" however it is opened, and it stays that way after a restart or while offline (Windows: a full-window screen with no \"Not now\"). Free features do not need a key and are not affected.",
+            "After a correct code, the key's email now gets \"Your Notch Apple key is activated and locked to your email\", naming the device. Only someone who can read that inbox can sign in on a new device: a friend who has the key but not the email gets no code.",
+            "Settings → License → Security now says what went wrong instead of a vague \"couldn't reach the server\", and has a Try again button.",
+            "This is a required update.",
+        ]),
         ReleaseNote(version: "2.2.15", date: "5 November 2026", headline: "Your key belongs to one email", items: [
             "Security: your key now belongs to one email address, so a key that leaks can't be used by anyone else. A Mac or PC that is new to a key must confirm the email once with a 6-digit code sent to it (valid 10 minutes, five tries); after that it is remembered, and opening the app, deactivating and activating again never ask. A wrong address gets the same answer as a right one and no email, so nobody can learn who owns a key. If your key has no email yet, the notch says \"Please set up your email\" when it starts: you add it with a code, and until you do the paid features stay locked (free features never are).",
             "Optional authenticator app: in Settings → License → Security (Windows: Settings → Access) scan a QR code with Google Authenticator, Microsoft Authenticator or 1Password, and a new device can enter the app's code instead of waiting for an email. Turning it off needs a current code.",

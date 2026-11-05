@@ -935,6 +935,7 @@ await test('OTP: a bought key is bound to its email; a new device needs the emai
   assert.equal(wrongDevice.status, 400, 'a code is for the device that asked');
   const ok = await call('/otp/verify', { key: k, device: dv(1), email: 'owner@example.com', code, name: 'Test Mac' });
   assert.equal(ok.ok, true); assert.equal(ok.bound, true); assert.match(ok.hint, /^o•+@example\.com$/);
+  const conf = mails.at(-1); assert.equal(conf.to, 'owner@example.com'); assert.match(conf.subject, /activated and locked to your email/); assert.match(conf.text, /Test Mac/);
   assert.equal((await call('/otp/verify', { key: k, device: dv(1), email: 'owner@example.com', code })).status, 400, 'a code works once');
   assert.equal((await call('/activate', { key: k, device: dv(1) })).ok, true, 'a registered device just carries on');
   assert.equal((await call('/entitle', { key: k, device: dv(1) })).ok, true);
@@ -980,7 +981,7 @@ await test('OTP: an existing key with no email can add one only from a device th
   const ok = await call('/otp/verify', { key, device: dv(10), email: 'new@example.com', code: codeFrom() });
   assert.equal(ok.first, true);
   assert.equal((await call('/otp/start', { key, device: dv(12), email: 'thief@example.com' })).sent, true);
-  assert.equal(mails.length, 1, 'now bound: the thief address gets no second email');
+  assert.ok(!mails.some((m) => m.to === 'thief@example.com'), 'now bound: the thief address gets nothing'); assert.equal(mails.filter((m) => /locked to your email/.test(m.subject)).length, 1, 'the owner got the confirmation');
   const rec = await call('/recover', { email: 'new@example.com' }); assert.equal(rec.ok, true);
   globalThis.__k2 = key;
 });

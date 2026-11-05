@@ -42,9 +42,10 @@ final class EmailGateWindow {
     private func close() { window?.close(); window = nil }
 }
 
-private struct EmailGateView: View {
+/// The "Please set up your email" content, shared by the window and the notch.
+struct EmailGateContent: View {
     @ObservedObject private var entitlements = Entitlements.shared
-    var onClose: () -> Void
+    var onCancel: () -> Void
 
     var body: some View {
         HStack(alignment: .top, spacing: 18) {
@@ -54,18 +55,34 @@ private struct EmailGateView: View {
             }
             VStack(alignment: .leading, spacing: 12) {
                 Text("Please set up your email").font(.system(size: 20, weight: .bold)).foregroundStyle(.white)
-                Text("Your \(entitlements.tier.name) key now belongs to one email address, so a key that leaks can't be used by anyone else. Confirm your email with a code to keep using your paid features. It takes a minute and you only do it once.")
+                Text("Your \(entitlements.tier.name) key now belongs to one email address, so a key that leaks can't be used by anyone else. Confirm your email with a code to keep using Notch Apple. It takes a minute and you only do it once.")
                     .font(.system(size: 12)).foregroundStyle(Theme.textSecondary).fixedSize(horizontal: false, vertical: true)
                 if let gate = entitlements.emailGate {
-                    VerifyKeyView(key: gate.key, bound: gate.bound, hint: gate.hint, onDone: onClose, onCancel: onClose)
+                    VerifyKeyView(key: gate.key, bound: gate.bound, hint: gate.hint, onDone: {}, onCancel: onCancel)
                 }
-                Text("Free features keep working either way. \"Cancel\" leaves your paid features locked until this is done.")
+                Text("Notch Apple stays locked until this is done.")
                     .font(.system(size: 11)).foregroundStyle(Theme.textSecondary)
             }
             .frame(width: 420, alignment: .leading)
         }
-        .padding(24)
-        .background(Color(white: 0.09))
-        .preferredColorScheme(.dark)
+    }
+}
+
+private struct EmailGateView: View {
+    var onClose: () -> Void
+    var body: some View {
+        EmailGateContent(onCancel: onClose)
+            .padding(24)
+            .background(Color(white: 0.09))
+            .preferredColorScheme(.dark)
+    }
+}
+
+/// What the notch shows instead of everything else while the email is not set up. It cannot be skipped: closing only closes the notch.
+struct EmailGateNotchView: View {
+    var onClose: () -> Void
+    var body: some View {
+        VStack { Spacer(minLength: 0); EmailGateContent(onCancel: onClose); Spacer(minLength: 0) }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 }
