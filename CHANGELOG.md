@@ -4,6 +4,10 @@ Every Notch Apple release, newest first. The latest few are also on the [README]
 
 > **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is in the repository's history.
 
+### Windows 2.2.12 BETA · 5 November 2026 · ✍️ Do It draws and zooms on Windows
+
+- Do It (Ultimate): advanced maths on Windows, the same as the Mac's 2.2.11. It can draw with the pen (handwrite an equation into a handwriting or drawing area such as MathType's drawing view, OneNote or Paint, or plot a graph with axes, key points and a smooth curve), drag, and zoom in to read small formulas and hit tiny toolbar buttons. It works the problem out first and keeps a scratchpad of the solution so a long task does not forget it, checks what it entered by zooming in, types formulas in text or LaTeX form and Unicode symbols, or clicks an equation editor's templates. A task can now take up to 80 steps (it was 40). Stop lets go of the mouse button at once, even in the middle of a stroke. Untested on real Windows hardware.
+
 ### Mac 2.2.11 · 5 November 2026 · ✍️ Do It does advanced maths
 
 - Do It (Ultimate): advanced maths. It can now draw with the pen: handwrite an equation into a handwriting or drawing area (MathType's drawing view, Notes, Freeform), or plot a graph with axes, key points and a smooth curve. It can drag, and zoom in to read small formulas and hit tiny toolbar buttons. It works the problem out first and keeps a scratchpad of the solution, so a long task no longer forgets the answer it worked out, and it checks what it entered by zooming in. It types formulas in text or LaTeX form and Unicode symbols (√ ∫ ∑ π ≤ ², etc.), or clicks an equation editor's templates (fractions, roots, integrals, matrices) and fills in each slot. A task can now take up to 80 steps (it was 40), and long drawings no longer freeze the app, so Stop always works.

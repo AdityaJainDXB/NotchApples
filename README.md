@@ -150,6 +150,10 @@ More screenshots of the capture overlay, the AI answer, the settings and the Win
 
 ## What's new
 
+### Windows 2.2.12 BETA · 5 November 2026 · ✍️ Do It draws and zooms on Windows
+
+- Do It (Ultimate): advanced maths on Windows, the same as the Mac's 2.2.11. It can draw with the pen (handwrite an equation into a handwriting or drawing area such as MathType's drawing view, OneNote or Paint, or plot a graph with axes, key points and a smooth curve), drag, and zoom in to read small formulas and hit tiny toolbar buttons. It works the problem out first and keeps a scratchpad of the solution so a long task does not forget it, checks what it entered by zooming in, types formulas in text or LaTeX form and Unicode symbols, or clicks an equation editor's templates. A task can now take up to 80 steps (it was 40). Stop lets go of the mouse button at once, even in the middle of a stroke. Untested on real Windows hardware.
+
 ### Mac 2.2.11 · 5 November 2026 · ✍️ Do It does advanced maths
 
 - Do It (Ultimate): advanced maths. It can now draw with the pen: handwrite an equation into a handwriting or drawing area (MathType's drawing view, Notes, Freeform), or plot a graph with axes, key points and a smooth curve. It can drag, and zoom in to read small formulas and hit tiny toolbar buttons. It works the problem out first and keeps a scratchpad of the solution, so a long task no longer forgets the answer it worked out, and it checks what it entered by zooming in. It types formulas in text or LaTeX form and Unicode symbols (√ ∫ ∑ π ≤ ², etc.), or clicks an equation editor's templates (fractions, roots, integrals, matrices) and fills in each slot. A task can now take up to 80 steps (it was 40), and long drawings no longer freeze the app, so Stop always works.
@@ -161,11 +165,6 @@ More screenshots of the capture overlay, the AI answer, the settings and the Win
 - Messenger: Rocket League is in the Games menu in friend chats and rooms. The invite works like the other games: they press Accept and both of you land in the same online match above the chat, the one who invited playing Blue. Mac only for now in chats; Windows has Rocket League in its Games tab.
 - Windows: Games: Rocket League, side-on car soccer with boost, a dash and boost pads, against computer players (Easy, Normal, Hard; 1 v 1 or 2 v 2) or a friend online with a room code. Plays against the Mac app's Rocket League. Not yet in Windows friend chats. Untested on real Windows hardware.
 - Windows: Messenger: Chess and Checkers in rooms and Friends chats (the same rules and messages as the Mac, so Windows and Mac players can play each other), and files up to 2 MB in Friends chats and rooms (it was 160 KB), sent in paced pieces and put back together on the other side. Untested on real Windows hardware.
-
-### Mac 2.2.9 · 5 November 2026 · 📈 Token Trail in the Claude Usage tab
-
-- Claude Usage (Ultimate): a new Classic | Token Trail switch at the top of the tab. Token Trail is the view from the Token Trail app, built into the notch: lifetime tokens, peak day, longest task and streaks; today, 7 days and 30 days with an API-equivalent value; your 5-hour session with its burn rate and pace; a monthly budget in dollars with a notification at 80% and 100%; a heatmap of every day for a year; top models and projects; the weekdays and hours you work best; your costliest sessions; and insights such as cache hit rate. It reads Claude Code's logs on this Mac (the first read takes a few seconds, later launches use a saved copy). Classic is unchanged and stays the default.
-- Not in the notch version yet: importing a Claude chat export and the weekly and cumulative charts. The Token Trail app still has them.
 
 Every earlier release is in the [changelog](CHANGELOG.md).
 
