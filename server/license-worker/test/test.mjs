@@ -270,6 +270,21 @@ await test('Promo codes made in the panel: create, redeem once, see them used, d
   assert.equal((await call('/admin/promo-create', { count: 1 })).status, 401);
 });
 
+await test('Admin: a key can be emailed with a personal intro (for a student, say), and the usual text still follows', async () => {
+  const A = { authorization: 'Bearer admin-test' };
+  const before = mails.length;
+  const r = await call('/admin/issue', { tier: 'pro', email: 'student@example.com', note: 'student promo', intro: 'Hi Sam, good luck with your exams!' }, A);
+  assert.equal(r.emailed, true);
+  const m = mails[before];
+  assert.equal(m.to, 'student@example.com');
+  assert.ok(m.text.startsWith('Hi Sam, good luck with your exams!\n\nThanks for supporting Notch Apple!'), 'the intro comes first');
+  assert.ok(m.text.includes(r.key), 'and the key is in it');
+  const plain = await call('/admin/issue', { tier: 'pro', email: 'x@example.com' }, A);
+  assert.ok(plain.emailed && mails[mails.length - 1].text.startsWith('Thanks for supporting Notch Apple!'), 'no intro: the usual mail');
+  const long = await call('/admin/issue', { tier: 'pro', email: 'y@example.com', intro: 'z'.repeat(3000) }, A);
+  assert.ok(long.emailed && mails[mails.length - 1].text.indexOf('Thanks for supporting') <= 905, 'a very long intro is cut');
+});
+
 await test('Admin panel: batch issue, list, suspend, unsuspend, notes, devices, lockout', async () => {
   const A = { authorization: 'Bearer admin-test' };
   const page = await worker.fetch(new Request('https://x/admin'), env);

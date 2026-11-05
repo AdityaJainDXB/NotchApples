@@ -375,9 +375,10 @@ async function sendMail(env, to, subject, text) {
   return r.ok;
 }
 
-function keyMail(keys) {
+/// `intro` is an optional personal note the owner writes in the admin panel or API (for example for a student), shown above the usual text.
+function keyMail(keys, intro = '') {
   const lines = keys.map((k) => `${TIER_NAME[k.tier]} key:\n${k.key}\n\nActivate in one click: notchapple://activate?key=${encodeURIComponent(k.key)}`);
-  return `Thanks for supporting Notch Apple!\n\n${lines.join('\n\n')}\n\n` +
+  return `${intro ? `${intro}\n\n` : ''}Thanks for supporting Notch Apple!\n\n${lines.join('\n\n')}\n\n` +
     'Or open Notch Apple → Settings → License, paste the key and press Activate.\n' +
     "It's yours for life: every 1.x update is included. Keep this email; if you lose the key, use \"Lost my key?\" on the website.\n\n" +
     'Questions? Just reply to this email, or write to notchapples.support@gmail.com.';
@@ -745,7 +746,7 @@ async function admin(env, path, body) {
     const note = String(body.note || '').slice(0, 200);
     const keys = [];
     for (let i = 0; i < count; i++) keys.push(await issueKey(env, tier, 'admin', body.email || null, { note }));
-    const emailed = body.email ? await sendMail(env, body.email, `Your Notch Apple ${TIER_NAME[tier]} key`, keyMail([{ tier, key: keys[0].key }])) : false;
+    const emailed = body.email ? await sendMail(env, body.email, `Your Notch Apple ${TIER_NAME[tier]} key`, keyMail([{ tier, key: keys[0].key }], String(body.intro || '').slice(0, 900))) : false;
     return count === 1 ? { ...keys[0], emailed } : { keys };
   }
   if (path === '/admin/list') {
@@ -845,7 +846,7 @@ async function admin(env, path, body) {
     const rec = await getJSON(env, `key:${id}`);
     if (!rec?.key) throw new HTTPError(404, 'No key with that ID on the server');
     if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(String(body.email || ''))) throw new HTTPError(400, 'Enter a valid email');
-    const sent = await sendMail(env, body.email, `Your Notch Apple ${TIER_NAME[rec.tier]} key`, keyMail([{ tier: rec.tier, key: rec.key }]));
+    const sent = await sendMail(env, body.email, `Your Notch Apple ${TIER_NAME[rec.tier]} key`, keyMail([{ tier: rec.tier, key: rec.key }], String(body.intro || '').slice(0, 900)));
     return { emailed: sent };
   }
   if (path === '/admin/promo-create') {
