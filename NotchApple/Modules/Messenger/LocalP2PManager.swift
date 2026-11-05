@@ -68,12 +68,27 @@ final class LocalP2PManager: NSObject, ObservableObject {
         advertiser?.stopAdvertisingPeer()
         browser?.stopBrowsingForPeers()
         session?.disconnect()
+        // MultipeerConnectivity goes on calling back on a session's own queue for a while after disconnect(); letting the session go at once
+        // made it message a freed object and the app crashed (issue 50). The old objects are kept alive for a couple of minutes instead.
+        let retired: [AnyObject] = [session, advertiser, browser, peerID].compactMap { $0 as AnyObject? }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 120) { _ = retired }
         advertiser = nil; browser = nil; session = nil; peerID = nil
         connectedPeers = []
         senderIDs = [:]
         isRunning = false
         status = "Off"
     }
+
+    private var stopWork: DispatchWorkItem?
+    /// Stops nearby discovery five minutes after the Messenger tab was left (coming back within that time keeps it running), so it is not
+    /// torn down and rebuilt every time the notch opens and closes.
+    func stopSoon() {
+        stopWork?.cancel()
+        let work = DispatchWorkItem { [weak self] in MainActor.assumeIsolated { self?.stop() } }
+        stopWork = work
+        DispatchQueue.main.asyncAfter(deadline: .now() + 300, execute: work)
+    }
+    func cancelStop() { stopWork?.cancel(); stopWork = nil }
 
     /// Restart so a new handle is advertised.
     func restart() {

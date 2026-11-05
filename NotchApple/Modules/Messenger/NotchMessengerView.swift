@@ -44,10 +44,11 @@ struct NotchMessengerView: View {
             MessengerNotifier.shared.markAllRead()
             MessengerNotifier.shared.requestAuthorizationIfNeeded()
             roomDraft = lastRoom
+            local.cancelStop()
             if mode == .nearby { local.start() }
         }
         .onChange(of: mode) { _, new in if new == .nearby { local.start() } }
-        .onDisappear { local.stop() }
+        .onDisappear { local.stopSoon() }
     }
 
     // MARK: Header
