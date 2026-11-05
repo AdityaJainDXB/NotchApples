@@ -153,6 +153,19 @@ final class BoardGamesTests: XCTestCase {
         XCTAssertEqual(s.leaver, b)
     }
 
+    func testScribbleHasOnlyALobbyInTheSession() throws {
+        var s = try started(.scribble)
+        XCTAssertEqual(s.status, .playing)
+        XCTAssertEqual(PlayKind(rawValue: "sk"), .scribble)
+        XCTAssertEqual(PlayKind.scribble.title, "Scribble")
+        let before = s
+        go(&s, 1, 2, as: a)
+        XCTAssertEqual(s.chess, before.chess, "a stray move changes nothing")
+        XCTAssertEqual(s.status, .playing)
+        s = PlayRules.reduce(s, PlayRules.quit(s), from: a) ?? s
+        XCTAssertEqual(s.status, .ended)
+    }
+
     func testTheGameIdAlphabetMatchesTheRoomCodeAlphabetSoAnyIdMakesAValidCode() {
         for _ in 0..<200 {
             let code = String(PlayRules.newGameID().prefix(6)).uppercased()

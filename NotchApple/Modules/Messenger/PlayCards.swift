@@ -35,6 +35,8 @@ struct PlayCard: View {
     /// Chess and Checkers: the piece I have picked up, and a pawn move waiting for the choice of piece to crown it.
     @State private var picked: Int?
     @State private var promoting: (from: Int, to: Int)?
+    /// Scribble in a room: the game that this person has joined as a guest (anyone in the room may, not only the first to accept).
+    @State private var joinedScribble: String?
 
     var body: some View {
         if let s = play.session {
@@ -53,7 +55,7 @@ struct PlayCard: View {
     }
 
     /// A Rocket League match is a whole arena above the chat, so the notch needs to grow further than for a board game.
-    private func needsTallPanel(_ s: PlaySession) -> Bool { s.kind == .rocket && s.status == .playing }
+    private func needsTallPanel(_ s: PlaySession) -> Bool { (s.kind == .rocket || s.kind == .scribble) && s.status == .playing }
 
     // MARK: Invite
 
@@ -91,6 +93,11 @@ struct PlayCard: View {
             case .chess, .checkers: boardGame(s, me: me)
             case .rocket:
                 if s.status == .playing, let me { RocketMatchView(gid: s.gid, host: me == 0) } else { Text("Watching a Rocket League match").font(.system(size: 11)).foregroundStyle(Theme.textSecondary) }
+            case .scribble:
+                if s.status == .playing, let me { ScribbleMatchView(gid: s.gid, host: me == 0) }
+                else if s.status == .playing, joinedScribble == s.gid { ScribbleMatchView(gid: s.gid, host: false) }
+                else if s.status == .playing { Button("Join the game") { joinedScribble = s.gid }.buttonStyle(PurpleButtonStyle()) }
+                else { Text("Scribble").font(.system(size: 11)).foregroundStyle(Theme.textSecondary) }
             }
             Text(statusLine(s, me: me)).font(.system(size: 12, weight: myTurn(s, me: me) ? .bold : .regular)).foregroundStyle(.white).multilineTextAlignment(.center)
             HStack(spacing: 8) {
@@ -113,6 +120,7 @@ struct PlayCard: View {
         case .chess: return "You are \(me == 0 ? "white" : "black") · \(play.name(other)) is \(me == 0 ? "black" : "white")"
         case .checkers: return "You are \(me == 0 ? "red" : "white") · \(play.name(other)) is \(me == 0 ? "white" : "red")"
         case .rocket: return "You are \(me == 0 ? "Blue" : "Orange") · \(play.name(other)) is \(me == 0 ? "Orange" : "Blue")"
+        case .scribble: return "You and \(play.name(other))" + (me == 0 ? " · you start the game" : "")
         }
     }
 
@@ -124,7 +132,7 @@ struct PlayCard: View {
         case .battleship: return s.bs.bothReady ? s.bs.shooter == me : !play.iCommittedFleet
         case .chess: return s.chess.turn == me
         case .checkers: return s.checkers.turn == me
-        case .rocket: return false
+        case .rocket, .scribble: return false
         }
     }
 
@@ -156,6 +164,7 @@ struct PlayCard: View {
             if myTurn(s, me: me) { return s.checkers.chain != nil ? "Keep jumping with the same piece" : (s.checkers.mustCapture(s.checkers.turn) ? "Your turn · you must capture" : "Your turn") }
             return "\(play.name(s.player(s.checkers.turn)))'s turn"
         case .rocket: return "Drive: A D or ← →. Jump: Space or W (again to dash). Boost: Shift or X."
+        case .scribble: return s.status == .playing && me == nil ? "Anyone in the room can join the game." : "Draw the word you are given; type your guesses."
         }
     }
 

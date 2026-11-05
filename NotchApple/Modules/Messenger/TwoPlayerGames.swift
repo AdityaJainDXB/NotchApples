@@ -22,7 +22,7 @@ import CryptoKit
 import Foundation
 
 enum PlayKind: String, CaseIterable, Equatable {
-    case connect4 = "c4", rps = "rps", battleship = "bs", chess = "ch", checkers = "ck", rocket = "rl"
+    case connect4 = "c4", rps = "rps", battleship = "bs", chess = "ch", checkers = "ck", rocket = "rl", scribble = "sk"
     var title: String {
         switch self {
         case .connect4: "Connect Four"
@@ -31,6 +31,7 @@ enum PlayKind: String, CaseIterable, Equatable {
         case .chess: "Chess"
         case .checkers: "Checkers"
         case .rocket: "Rocket League"
+        case .scribble: "Scribble"
         }
     }
     var emoji: String {
@@ -41,6 +42,7 @@ enum PlayKind: String, CaseIterable, Equatable {
         case .chess: "♟️"
         case .checkers: "⚫"
         case .rocket: "🚀"
+        case .scribble: "✏️"
         }
     }
 }
@@ -357,7 +359,7 @@ extension PlaySession {
         case .battleship: return applyBattleship(m, idx)
         case .chess: return applyChess(m, idx)
         case .checkers: return applyCheckers(m, idx)
-        case .rocket: return false          // the match itself runs live between the two web views (rocket.js); only the lobby is here
+        case .rocket, .scribble: return false          // the game itself runs live between the web views (rocket.js, scribble.js); only the lobby is here
         }
     }
 

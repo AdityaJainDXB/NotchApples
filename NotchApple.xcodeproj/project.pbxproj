@@ -54,6 +54,7 @@
 		1A93A625D4371A2AA20636BF /* RemoteViewClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8C648D5996CD26D8E1A46132 /* RemoteViewClient.swift */; };
 		1B28E6933512791CD9E4C469 /* TodayExtras.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2254DC7F98860645E6CC2E11 /* TodayExtras.swift */; };
 		1B67EF769B1FFADFB7A31A6A /* GeminiFallbackLogic.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0C24B75034156B4EB2E82381 /* GeminiFallbackLogic.swift */; };
+		1BEADF1630E90A87972E9C6E /* scribble.js in Resources */ = {isa = PBXBuildFile; fileRef = 61BD8984A6B45104199977F2 /* scribble.js */; };
 		1CBAB31C782A4307CEAD9136 /* ScreenRecorder.swift in Sources */ = {isa = PBXBuildFile; fileRef = D47EB2F7C24DD6B0DA17C7B0 /* ScreenRecorder.swift */; };
 		1CDD70B39C1813273FFFD232 /* chess-logic.js in Resources */ = {isa = PBXBuildFile; fileRef = 9E671EB985ED2E89E699CA00 /* chess-logic.js */; };
 		1CEE83D2920A754B4BB7ABF0 /* UndoToast.swift in Sources */ = {isa = PBXBuildFile; fileRef = 148943D5BC3CFA31B2C52E23 /* UndoToast.swift */; };
@@ -97,6 +98,7 @@
 		305D3067C2952F9CDCE2C833 /* Entitlements.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBF521DE52E4227ABF0CCC29 /* Entitlements.swift */; };
 		308B02A5703FF92FD435BE97 /* SmartHomeLogic.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99A4B06A001F63424485AE1E /* SmartHomeLogic.swift */; };
 		30DCFA374C50438319E87754 /* ExtrasSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 880D308A931930DF080834D9 /* ExtrasSettings.swift */; };
+		31F4187105F31DFEDE2FB521 /* scribble-logic.js in Resources */ = {isa = PBXBuildFile; fileRef = E1906EBB95299F2C31001F04 /* scribble-logic.js */; };
 		32D7F8B5B7C8D2AF4821EB1D /* ScreenCapture.swift in Sources */ = {isa = PBXBuildFile; fileRef = D95BC205F9AD85B9383E0C9D /* ScreenCapture.swift */; };
 		32E6B4D47E39327BF494D2E5 /* AIStreaming.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6D5AC53B65AF61688CD0A628 /* AIStreaming.swift */; };
 		3357F0168492268B21DE16FB /* TodoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 109E43BCE08792C473471623 /* TodoView.swift */; };
@@ -244,6 +246,7 @@
 		7B128EEA15D6A4918D365964 /* FriendsClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 45A5C027BD4B67CE5182EE27 /* FriendsClient.swift */; };
 		7B585A54684C47977CA762E6 /* tetris.js in Resources */ = {isa = PBXBuildFile; fileRef = 34E60A6D24A27DF650F178FD /* tetris.js */; };
 		7BE7835157820B158696A5F2 /* GeminiFallbackLogic.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0C24B75034156B4EB2E82381 /* GeminiFallbackLogic.swift */; };
+		7C53773C6C64387C5C3275E7 /* ScribbleGame.html in Resources */ = {isa = PBXBuildFile; fileRef = BBA74EF46CD28A513D70A225 /* ScribbleGame.html */; };
 		7CCB2190EF8F817D6DDFC3A5 /* ClipboardLink.swift in Sources */ = {isa = PBXBuildFile; fileRef = 59BC3F5D6F85A5FDFC39D94F /* ClipboardLink.swift */; };
 		7E59E9FB95878ACFAF45A095 /* NotificationsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E45CA4DA23D38E6A1DBA06F /* NotificationsView.swift */; };
 		7E8386EF609533C3CF5608D8 /* WeatherService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 92FC7E64A4478DE0F57D42E4 /* WeatherService.swift */; };
@@ -332,6 +335,7 @@
 		B04F3036E9BBE628D875CCA6 /* ScreenRecordingDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = EAAF61A77914CEADECA550D4 /* ScreenRecordingDetector.swift */; };
 		B050F8E38385A23666F48F72 /* MathText.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78B2FB154D159E0F982419C0 /* MathText.swift */; };
 		B069F2308D10FC9D1865F86E /* AppActionsMenu.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF6EF909C581BCC04AAEF2AA /* AppActionsMenu.swift */; };
+		B0A049343A21AB11F45495FB /* ScribbleGameView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C4E2B88F2329FB0B2F27395D /* ScribbleGameView.swift */; };
 		B1A06B6D0ED69867365EC2AF /* PluginPinning.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84D0C556292784B35ACD5779 /* PluginPinning.swift */; };
 		B1AF23B59772849977B2E69C /* PluginsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 908CD072D0A46C818B89DD0D /* PluginsView.swift */; };
 		B1D5C73DA5343AEC67AEA413 /* ReleaseNotesLogic.swift in Sources */ = {isa = PBXBuildFile; fileRef = 97239C5312CEE57CDB5E326B /* ReleaseNotesLogic.swift */; };
@@ -652,6 +656,7 @@
 		60BBAE46119383151A1CEF4F /* PairDropTransport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PairDropTransport.swift; sourceTree = "<group>"; };
 		60D028DAE4C9C74C6193B75F /* HotCornerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HotCornerTests.swift; sourceTree = "<group>"; };
 		60E39552D413F32D02D5FFD0 /* FoldShader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoldShader.swift; sourceTree = "<group>"; };
+		61BD8984A6B45104199977F2 /* scribble.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = scribble.js; sourceTree = "<group>"; };
 		6284BA6BCADE6A64DB75D681 /* SnakeGameView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SnakeGameView.swift; sourceTree = "<group>"; };
 		643FFB36BCE34E64BBD52883 /* NotchMessengerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotchMessengerView.swift; sourceTree = "<group>"; };
 		66DBB35434CEBAA72E675AD4 /* OpenRouterFallback.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenRouterFallback.swift; sourceTree = "<group>"; };
@@ -792,6 +797,7 @@
 		BA53B7D1995BA4D5C0C0B434 /* AccountSync.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountSync.swift; sourceTree = "<group>"; };
 		BB059E09C64EB491FAF5074E /* PairDropTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PairDropTests.swift; sourceTree = "<group>"; };
 		BB841124163B085F8C4FDD78 /* SettingsBackup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsBackup.swift; sourceTree = "<group>"; };
+		BBA74EF46CD28A513D70A225 /* ScribbleGame.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = ScribbleGame.html; sourceTree = "<group>"; };
 		BDFCAAEEC42B9E9ABD4338DC /* CardsLogic.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardsLogic.swift; sourceTree = "<group>"; };
 		BE038BF6AC791874D167F53C /* ModelPicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelPicker.swift; sourceTree = "<group>"; };
 		BEECBD83B2FC19C70E5139BE /* PairDropLogic.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PairDropLogic.swift; sourceTree = "<group>"; };
@@ -807,6 +813,7 @@
 		C35C9FA48E930832266322C0 /* HotCorners.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HotCorners.swift; sourceTree = "<group>"; };
 		C36CF12DE9E1E3D5F91A7857 /* BambuCameraLogic.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BambuCameraLogic.swift; sourceTree = "<group>"; };
 		C3A2D492850F6E7302EE68BC /* MeetingNotesTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeetingNotesTests.swift; sourceTree = "<group>"; };
+		C4E2B88F2329FB0B2F27395D /* ScribbleGameView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScribbleGameView.swift; sourceTree = "<group>"; };
 		C5B8287EF70546FBB3914E72 /* DoItAgent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DoItAgent.swift; sourceTree = "<group>"; };
 		C5F7CF2FFE504D781512227C /* AppTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppTheme.swift; sourceTree = "<group>"; };
 		C7025C2035FDB06C94F94FBF /* NonNecessitiesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NonNecessitiesView.swift; sourceTree = "<group>"; };
@@ -858,6 +865,7 @@
 		E10EB7314C2DFD8AAF92A92A /* GeminiFallbackTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GeminiFallbackTests.swift; sourceTree = "<group>"; };
 		E14503320310AD4B1E118141 /* ReleaseNotesLogicTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReleaseNotesLogicTests.swift; sourceTree = "<group>"; };
 		E182D36E05020E0FB79C7EA1 /* WallpaperLogicTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WallpaperLogicTests.swift; sourceTree = "<group>"; };
+		E1906EBB95299F2C31001F04 /* scribble-logic.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = "scribble-logic.js"; sourceTree = "<group>"; };
 		E26901871B9937AEB263FD76 /* ConvertFormats.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConvertFormats.swift; sourceTree = "<group>"; };
 		E333C9ABF7AC014274F64237 /* RequiredSetup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RequiredSetup.swift; sourceTree = "<group>"; };
 		E43BFD01B43AA99D60FB3B9D /* CompanionPairingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompanionPairingTests.swift; sourceTree = "<group>"; };
@@ -954,6 +962,8 @@
 				2D061AD1D52BA8268B11B374 /* racing.js */,
 				7F930FB2B441D55D595B0094 /* rocket-logic.js */,
 				4F884BE9AA7D9F947ADE6D46 /* rocket.js */,
+				E1906EBB95299F2C31001F04 /* scribble-logic.js */,
+				61BD8984A6B45104199977F2 /* scribble.js */,
 				E54CA8A98C84920280698482 /* tetris-logic.js */,
 				34E60A6D24A27DF650F178FD /* tetris.js */,
 				56D47BB0880A6DF4C4EF0718 /* trivia-logic.js */,
@@ -1791,6 +1801,7 @@
 				2E9887FE2DA1B017814CA1B5 /* PlaneGame.html */,
 				69B4A0D4B7C6F5540FABA3AE /* RacingGame.html */,
 				07A88400BDE9B46B5841ECB9 /* RocketGame.html */,
+				BBA74EF46CD28A513D70A225 /* ScribbleGame.html */,
 				0DE90B09AD35DC66704E3CCF /* TetrisGame.html */,
 				718E8EA92709BA7168C47260 /* Scripts */,
 				D506FAC9BF7EB2007D0D1C92 /* Tunnelblick */,
@@ -1875,6 +1886,7 @@
 				A3EBCD0478E4EF6B8B5FDA7F /* RacingGameView.swift */,
 				A02EE54C6072F47A369B5DB8 /* RocketGameView.swift */,
 				0DF352A799B96D3FE708E1D5 /* RunnerGameView.swift */,
+				C4E2B88F2329FB0B2F27395D /* ScribbleGameView.swift */,
 				6284BA6BCADE6A64DB75D681 /* SnakeGameView.swift */,
 				264A2A3E4ADCB8D6919DC502 /* SnakeGameViewModel.swift */,
 				D0C3A6E52CAC2AAC502D9AD8 /* SolitaireView.swift */,
@@ -2044,6 +2056,7 @@
 				5DA036B0487FEFE1B56816D4 /* Purge-MIT.txt in Resources */,
 				62345AC43148BC9A9FEF68F0 /* RacingGame.html in Resources */,
 				6BCCA09E923B81E15C051ED3 /* RocketGame.html in Resources */,
+				7C53773C6C64387C5C3275E7 /* ScribbleGame.html in Resources */,
 				54CD01E3A05200B4078306CB /* Still-MIT.txt in Resources */,
 				6AB495D5E6ACD75DA68D38DB /* TetrisGame.html in Resources */,
 				29326D872AE0DC306AFD1986 /* Tunnelblick-ABOUT.txt in Resources */,
@@ -2060,6 +2073,8 @@
 				3FBC19E8D908EA1C0914AA07 /* racing.js in Resources */,
 				A0BB4DE3C45F367B238ACCE3 /* rocket-logic.js in Resources */,
 				3A4F3D7539E971BD64D3BDBE /* rocket.js in Resources */,
+				31F4187105F31DFEDE2FB521 /* scribble-logic.js in Resources */,
+				1BEADF1630E90A87972E9C6E /* scribble.js in Resources */,
 				04684D26EDA66D2AAF6B69C0 /* tetris-logic.js in Resources */,
 				7B585A54684C47977CA762E6 /* tetris.js in Resources */,
 				71209F4E17822D59CB5C793F /* trivia-logic.js in Resources */,
@@ -2302,6 +2317,7 @@
 				B04F3036E9BBE628D875CCA6 /* ScreenRecordingDetector.swift in Sources */,
 				D6AB6D3B477B7BBBEFB85708 /* ScreenTimeView.swift in Sources */,
 				F6E3BFD260D3182D21C66E29 /* ScreenTools.swift in Sources */,
+				B0A049343A21AB11F45495FB /* ScribbleGameView.swift in Sources */,
 				EEDB5DD5A9BC5F7A72305996 /* SecretLogic.swift in Sources */,
 				12C051F6E83B0077BEE52E57 /* SettingsBackup.swift in Sources */,
 				7651FFF0A83FB22D9BD7AE4C /* SettingsManager.swift in Sources */,

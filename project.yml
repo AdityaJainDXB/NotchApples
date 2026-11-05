@@ -48,6 +48,11 @@ targets:
         buildPhase: resources
       - path: NotchWindows/src/js/games/rocket.js
         buildPhase: resources
+      # Scribble (scribble.js and its rules) is shared with the Windows app too.
+      - path: NotchWindows/src/js/games/scribble-logic.js
+        buildPhase: resources
+      - path: NotchWindows/src/js/games/scribble.js
+        buildPhase: resources
       # Chess (chess.js and its rules) is shared with the Windows app too.
       - path: NotchWindows/src/js/games/chess-logic.js
         buildPhase: resources

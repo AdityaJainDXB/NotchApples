@@ -62,7 +62,7 @@ final class PlayController: ObservableObject {
         if s.status == .playing, s.isPlayer(myID), (before?.status != .playing || s.round != before?.round) { newGame(s) }
         guard let me = s.index(of: myID) else { return }
         switch s.kind {
-        case .connect4, .chess, .checkers, .rocket: break
+        case .connect4, .chess, .checkers, .rocket, .scribble: break
         case .rps:
             // Once both picks are committed, show mine (the reveal), unless I am still waiting to pick.
             if s.status == .playing, let pick = myPick, s.rps.commit[me] != nil, s.rps.commit[1 - me] != nil, s.rps.reveal[me] == nil, !sentReveal {
