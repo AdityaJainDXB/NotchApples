@@ -39,9 +39,13 @@ struct FriendsView: View {
         .sheet(isPresented: $showNewGroup) { newGroupSheet }
         .overlay(alignment: .bottomTrailing) { myCodePill }
         .onAppear { client.activate(); if selected == nil { selected = client.friends.first?.box } }
-        .onDisappear { client.viewing = nil }
+        .onDisappear { client.viewing = nil; NotchPrefs.chatGame("friend", false) }
+        .onChange(of: friendGameShowing) { _, on in NotchPrefs.chatGame("friend", on) }
         .onChange(of: selected) { _, new in client.viewing = new; if let new { client.markRead(new) } }
     }
+
+    /// A tic-tac-toe board is on screen in the open friend chat: the notch opens taller (NotchPrefs.chatGame).
+    private var friendGameShowing: Bool { selected.map { client.games[$0] != nil } ?? false }
 
     // MARK: Sidebar
 

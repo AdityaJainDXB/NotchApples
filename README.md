@@ -76,7 +76,7 @@ Pick your computer. Both buttons start the download straight away. The Mac link 
   </tr>
   <tr>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.2.5</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.2.6</b></a>
     </td>
     <td align="center">
       <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 2.2.4 BETA</b></a>
@@ -150,6 +150,10 @@ More screenshots of the capture overlay, the AI answer, the settings and the Win
 
 ## What's new
 
+### Mac 2.2.6 · 5 November 2026 · 🎮 Tic-tac-toe fits the notch
+
+- Messenger: the notch now opens taller while a tic-tac-toe board is showing (in a room or a friend chat), so the board and the chat fit instead of running off the bottom edge. It goes back to normal when you close the board.
+
 ### Mac 2.2.5 · 5 November 2026 · 🎮 Tic-tac-toe with your friends
 
 - Friends: a Tic-tac-toe button in a friend chat invites that friend to a game, played on a board above the chat with Accept, Rematch and Leave game. The moves are encrypted like messages. Mac only for now: Windows friends cannot play yet.
@@ -158,10 +162,6 @@ More screenshots of the capture overlay, the AI answer, the settings and the Win
 
 - Friends: a paperclip next to the message box sends a file to a friend or a group (up to 160 KB, so photos, screenshots and documents; not videos). Files are encrypted like messages and kept encrypted on your Mac. Click one to show it in Finder; it is never opened for you.
 - Friends: group chats. Tap + next to Groups, name it and tick friends to add (up to 20 people). Each message is encrypted separately for each member. You see messages only from group members who are also your friends, and the group warns you when some members are not. Windows has the same two features, and they work between Windows and Mac friends.
-
-### Mac 2.2.3 · 5 November 2026 · 🛠️ A crash fixed in nearby Messenger
-
-- Fix: a crash in nearby (Wi-Fi) Messenger. Apple’s chat networking kept calling back on a connection the app had already let go of, and the app quit. The connection is now held a little longer, and nearby discovery stops five minutes after you leave the Messenger tab instead of straight away (fixes issue 50).
 
 Every earlier release is in the [changelog](CHANGELOG.md).
 

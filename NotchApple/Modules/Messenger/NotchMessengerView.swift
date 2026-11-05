@@ -26,6 +26,9 @@ struct NotchMessengerView: View {
     private var messages: [MessengerMessage] { mode == .nearby ? local.messages : web.messages }
     private var canSend: Bool { mode == .nearby ? !local.connectedPeers.isEmpty : web.state == .joined }   // (rooms and nearby; Friends has its own screen)
 
+    /// A tic-tac-toe board is on screen in the room: the notch opens taller (NotchPrefs.chatGame).
+    private var roomGameShowing: Bool { mode == .room && web.game != nil }
+
     var body: some View {
         VStack(spacing: 10) {
             header
@@ -48,7 +51,11 @@ struct NotchMessengerView: View {
             if mode == .nearby { local.start() }
         }
         .onChange(of: mode) { _, new in if new == .nearby { local.start() } }
-        .onDisappear { local.stopSoon() }
+        .onChange(of: roomGameShowing) { _, on in NotchPrefs.chatGame("room", on) }
+        .onDisappear {
+            local.stopSoon()
+            NotchPrefs.chatGame("room", false); NotchPrefs.chatGame("friend", false)
+        }
     }
 
     // MARK: Header

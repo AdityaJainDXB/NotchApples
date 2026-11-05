@@ -59,6 +59,15 @@ enum NotchPrefs {
     @MainActor static var bigBrowserOpen = false
     static let bigBrowserSize = CGSize(width: 1100, height: 700)
 
+    /// Messenger sources (the room, a friend chat) that are showing a tic-tac-toe board: the panel grows so the board and the chat fit.
+    @MainActor static var chatGameSources = Set<String>()
+    static let chatGameSize = CGSize(width: 800, height: 600)
+    @MainActor static func chatGame(_ source: String, _ on: Bool) {
+        guard chatGameSources.contains(source) != on else { return }
+        if on { chatGameSources.insert(source) } else { chatGameSources.remove(source) }
+        AppDelegate.current?.notch?.reposition()
+    }
+
     /// The panel size this Mac may use: custom sizes need Pro.
     @MainActor static var panelSize: CGSize {
         var size = defaultSize
@@ -66,6 +75,7 @@ enum NotchPrefs {
             size = CGSize(width: panelWidth.clamped(to: widthRange), height: panelHeight.clamped(to: heightRange))
         }
         if bigGameOpen { size = CGSize(width: max(size.width, bigGameSize.width), height: max(size.height, bigGameSize.height)) }
+        if !chatGameSources.isEmpty { size = CGSize(width: max(size.width, chatGameSize.width), height: max(size.height, chatGameSize.height)) }
         if bigBrowserOpen { size = CGSize(width: max(size.width, bigBrowserSize.width), height: max(size.height, bigBrowserSize.height)) }
         return size
     }

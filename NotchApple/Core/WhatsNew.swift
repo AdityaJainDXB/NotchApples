@@ -20,6 +20,9 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.2.6", date: "5 November 2026", headline: "Tic-tac-toe fits the notch", items: [
+            "Messenger: the notch now opens taller while a tic-tac-toe board is showing (in a room or a friend chat), so the board and the chat fit instead of running off the bottom edge. It goes back to normal when you close the board.",
+        ]),
         ReleaseNote(version: "2.2.5", date: "5 November 2026", headline: "Tic-tac-toe with your friends", items: [
             "Friends: a Tic-tac-toe button in a friend chat invites that friend to a game, played on a board above the chat with Accept, Rematch and Leave game. The moves are encrypted like messages. Mac only for now: Windows friends cannot play yet.",
         ]),
