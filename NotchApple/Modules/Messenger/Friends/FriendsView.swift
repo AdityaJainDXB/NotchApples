@@ -23,13 +23,20 @@ struct FriendsView: View {
     @State private var confirmRemove = false
     @State private var showQR = false
     @State private var copiedCode = false
+    @State private var showNewGroup = false
+    @State private var groupName = ""
+    @State private var groupPick = Set<String>()
+    @State private var groupNote: String?
+    @State private var confirmLeave = false
 
     var body: some View {
         HStack(alignment: .top, spacing: 10) {
             sidebar.frame(width: 186)
             Divider().opacity(0.3)
-            if let box = selected, let friend = client.book.record(box), friend.status == .active { chat(friend) } else { placeholder }
+            if let key = selected, Friends.isGroupKey(key), let group = client.group(key) { groupChat(group) }
+            else if let box = selected, let friend = client.book.record(box), friend.status == .active { chat(friend) } else { placeholder }
         }
+        .sheet(isPresented: $showNewGroup) { newGroupSheet }
         .overlay(alignment: .bottomTrailing) { myCodePill }
         .onAppear { client.activate(); if selected == nil { selected = client.friends.first?.box } }
         .onDisappear { client.viewing = nil }
@@ -63,6 +70,18 @@ struct FriendsView: View {
                             .font(.system(size: 10)).foregroundStyle(Theme.textSecondary).fixedSize(horizontal: false, vertical: true)
                     }
                     ForEach(client.friends) { friendRow($0) }
+                    HStack {
+                        sectionLabel("Groups")
+                        Spacer()
+                        Button { groupName = ""; groupPick = []; groupNote = nil; showNewGroup = true } label: { Image(systemName: "plus.circle") }
+                            .buttonStyle(.plain).foregroundStyle(Theme.accentBright).help("Start a group chat with some of your friends")
+                            .disabled(client.friends.isEmpty)
+                    }
+                    if client.groups.isEmpty {
+                        Text(client.friends.isEmpty ? "Add a friend first, then you can make a group." : "Tap + to start a group chat.")
+                            .font(.system(size: 10)).foregroundStyle(Theme.textSecondary).fixedSize(horizontal: false, vertical: true)
+                    }
+                    ForEach(client.groups) { groupRow($0) }
                 }
             }
         }
@@ -110,6 +129,127 @@ struct FriendsView: View {
             Button("Nickname…") { selected = r.box; aliasDraft = r.alias ?? ""; renaming = true }
             Button("Remove friend", role: .destructive) { client.remove(r.box); if selected == r.box { selected = nil } }
             Button("Block", role: .destructive) { client.block(r.box); if selected == r.box { selected = nil } }
+        }
+    }
+
+    private func groupRow(_ g: FriendGroup) -> some View {
+        Button { selected = g.key } label: {
+            HStack(spacing: 6) {
+                Image(systemName: "person.3.fill").font(.system(size: 10)).foregroundStyle(.white)
+                    .frame(width: 22, height: 22).background(MessengerMessage.color(for: g.id).gradient, in: Circle())
+                Text(g.name).font(.system(size: 12, weight: .medium)).foregroundStyle(.white).lineLimit(1)
+                Spacer(minLength: 2)
+                if g.unread > 0 {
+                    Text("\(g.unread)").font(.system(size: 10, weight: .bold)).foregroundStyle(.white).padding(.horizontal, 6).padding(.vertical, 1).background(Theme.accentBright, in: Capsule())
+                }
+            }
+            .padding(.horizontal, 6).padding(.vertical, 4)
+            .background(selected == g.key ? AnyShapeStyle(Theme.surfaceHover) : AnyShapeStyle(Color.clear), in: RoundedRectangle(cornerRadius: 9))
+        }
+        .buttonStyle(.plain)
+        .contextMenu { Button("Leave group", role: .destructive) { client.leaveGroup(g.key); if selected == g.key { selected = nil } } }
+    }
+
+    private var newGroupSheet: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text("New group").font(.system(size: 15, weight: .semibold))
+            TextField("Group name", text: $groupName).textFieldStyle(.roundedBorder)
+            Text("Pick friends to add").font(.system(size: 11)).foregroundStyle(.secondary)
+            ScrollView {
+                VStack(alignment: .leading, spacing: 4) {
+                    ForEach(client.friends) { f in
+                        Toggle(f.displayName, isOn: Binding(get: { groupPick.contains(f.box) }, set: { on in if on { groupPick.insert(f.box) } else { groupPick.remove(f.box) } }))
+                    }
+                }
+            }
+            .frame(height: 150)
+            Text("Everyone in a group sees messages only from people who are also their friends, so add people who know each other. Each message is encrypted separately for each person.")
+                .font(.system(size: 10)).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+            if let note = groupNote { Text(note).font(.system(size: 11)).foregroundStyle(.orange) }
+            HStack {
+                Spacer()
+                Button("Cancel") { showNewGroup = false }
+                Button("Create") {
+                    groupNote = client.createGroup(name: groupName, members: Array(groupPick))
+                    if groupNote == nil { showNewGroup = false; selected = client.groups.first?.key }
+                }
+                .keyboardShortcut(.defaultAction).disabled(groupPick.isEmpty)
+            }
+        }
+        .padding(18).frame(width: 320)
+    }
+
+    private func groupChat(_ g: FriendGroup) -> some View {
+        VStack(spacing: 8) {
+            HStack {
+                Image(systemName: "person.3.fill").foregroundStyle(Theme.accentGradient)
+                VStack(alignment: .leading, spacing: 0) {
+                    Text(g.name).font(.system(size: 13, weight: .semibold)).foregroundStyle(.white)
+                    Text(([ "You" ] + g.members.map { client.name(ofBox: $0) }).joined(separator: ", "))
+                        .font(.system(size: 10)).foregroundStyle(Theme.textSecondary).lineLimit(1)
+                }
+                Spacer()
+                Menu { Button("Leave group", role: .destructive) { confirmLeave = true } } label: { Image(systemName: "ellipsis.circle") }
+                    .menuStyle(.borderlessButton).frame(width: 28)
+            }
+            .confirmationDialog("Leave \(g.name)? Its messages are deleted from this Mac, and the others are told you left.", isPresented: $confirmLeave) {
+                Button("Leave", role: .destructive) { client.leaveGroup(g.key); selected = nil }
+            }
+            if client.unreachable(g) > 0 {
+                Text("\(client.unreachable(g)) in this group aren't your friends, so you can't message or hear from them here.")
+                    .font(.system(size: 10)).foregroundStyle(.orange).frame(maxWidth: .infinity, alignment: .leading)
+            }
+            messageList(g.key, empty: "Say hi to the group. Each message is encrypted for every member who is your friend.", group: true)
+            if let problem = client.lastProblem { Text(problem).font(.system(size: 10)).foregroundStyle(.orange) }
+            composer(key: g.key, typing: false) { sendToGroup(g) }
+        }
+    }
+
+    private func sendToGroup(_ g: FriendGroup) {
+        client.lastProblem = nil
+        client.sendToGroup(draft, key: g.key); draft = ""
+    }
+
+    private func attach(to key: String) {
+        let panel = NSOpenPanel()
+        panel.allowsMultipleSelection = false; panel.canChooseDirectories = false
+        panel.message = "Choose a file to send (up to \(Friends.maxFileBytes / 1000) KB)"
+        if panel.runModal() == .OK, let url = panel.url { client.lastProblem = client.sendFile(url, to: key) }
+    }
+
+    /// The message box, the paperclip and the send button, the same for a friend and a group.
+    private func composer(key: String, typing: Bool, send: @escaping () -> Void) -> some View {
+        HStack(spacing: 6) {
+            Button { attach(to: key) } label: { Image(systemName: "paperclip").font(.system(size: 15)).frame(width: 28, height: 28).contentShape(Rectangle()) }
+                .buttonStyle(.plain).foregroundStyle(Theme.textSecondary).help("Send a file (up to \(Friends.maxFileBytes / 1000) KB). It is encrypted like a message.")
+            TextField("Message", text: $draft)
+                .textFieldStyle(.plain).font(.system(size: 13)).padding(.horizontal, 12).frame(height: 32)
+                .background(Theme.surface, in: Capsule())
+                .onSubmit(send)
+                .onChange(of: draft) { _, new in if typing, !new.isEmpty { client.typingChanged(to: key) } }
+            Button(action: send) { Image(systemName: "arrow.up") }
+                .buttonStyle(PurpleButtonStyle()).disabled(draft.trimmingCharacters(in: .whitespaces).isEmpty).help("Send (Return)")
+        }
+    }
+
+    private func messageList(_ key: String, empty: String, group: Bool) -> some View {
+        ScrollViewReader { proxy in
+            ScrollView {
+                LazyVStack(alignment: .leading, spacing: 6) {
+                    if client.messages(key).isEmpty {
+                        Text(empty).font(.system(size: 11)).foregroundStyle(Theme.textSecondary).frame(maxWidth: .infinity).padding(.top, 20)
+                    }
+                    ForEach(client.messages(key)) { m in
+                        FriendBubble(message: m, senderName: group && !m.mine ? client.name(ofBox: m.by) : nil,
+                                     open: { file in client.reveal(fileID: m.id, name: file.name) }) { client.retry(m.id, in: key) }.id(m.id)
+                    }
+                }
+            }
+            .defaultScrollAnchor(.bottom)
+            .onChange(of: client.messages(key).count) { _, _ in
+                withAnimation(Theme.spring) { proxy.scrollTo(client.messages(key).last?.id, anchor: .bottom) }
+                if client.viewing == key { client.markRead(key) }
+            }
         }
     }
 
@@ -190,32 +330,9 @@ struct FriendsView: View {
             .confirmationDialog("Remove \(friend.displayName)? They won't be told why, and you can add them again later.", isPresented: $confirmRemove) {
                 Button("Remove", role: .destructive) { client.remove(friend.box); selected = nil }
             }
-            ScrollViewReader { proxy in
-                ScrollView {
-                    LazyVStack(alignment: .leading, spacing: 6) {
-                        if client.messages(friend.box).isEmpty {
-                            Text("Say hi. Messages are encrypted on this Mac; the server only holds them until \(friend.displayName) is online.")
-                                .font(.system(size: 11)).foregroundStyle(Theme.textSecondary).frame(maxWidth: .infinity).padding(.top, 20)
-                        }
-                        ForEach(client.messages(friend.box)) { m in FriendBubble(message: m) { client.retry(m.id, in: friend.box) }.id(m.id) }
-                    }
-                }
-                .defaultScrollAnchor(.bottom)
-                .onChange(of: client.messages(friend.box).count) { _, _ in
-                    withAnimation(Theme.spring) { proxy.scrollTo(client.messages(friend.box).last?.id, anchor: .bottom) }
-                    if client.viewing == friend.box { client.markRead(friend.box) }
-                }
-            }
+            messageList(friend.box, empty: "Say hi. Messages are encrypted on this Mac; the server only holds them until \(friend.displayName) is online.", group: false)
             if let problem = client.lastProblem { Text(problem).font(.system(size: 10)).foregroundStyle(.orange) }
-            HStack(spacing: 6) {
-                TextField("Message", text: $draft)
-                    .textFieldStyle(.plain).font(.system(size: 13)).padding(.horizontal, 12).frame(height: 32)
-                    .background(Theme.surface, in: Capsule())
-                    .onSubmit { send(friend) }
-                    .onChange(of: draft) { _, new in if !new.isEmpty { client.typingChanged(to: friend.box) } }
-                Button { send(friend) } label: { Image(systemName: "arrow.up") }
-                    .buttonStyle(PurpleButtonStyle()).disabled(draft.trimmingCharacters(in: .whitespaces).isEmpty).help("Send (Return)")
-            }
+            composer(key: friend.box, typing: true) { send(friend) }
         }
     }
 
@@ -248,15 +365,36 @@ struct FriendsView: View {
 
 private struct FriendBubble: View {
     let message: FriendMessage
+    var senderName: String? = nil
+    var open: (FriendFile) -> Void = { _ in }
     var retry: () -> Void
 
     var body: some View {
         HStack(alignment: .bottom) {
             if message.mine { Spacer(minLength: 60) }
             VStack(alignment: message.mine ? .trailing : .leading, spacing: 2) {
-                Text(message.text).font(.system(size: 13)).foregroundStyle(.white).textSelection(.enabled)
-                    .padding(.horizontal, 12).padding(.vertical, 7)
-                    .background(RoundedRectangle(cornerRadius: 14, style: .continuous).fill(message.mine ? AnyShapeStyle(Theme.accentGradient) : AnyShapeStyle(Theme.surfaceHover)))
+                if let senderName {
+                    Text(senderName).font(.system(size: 11, weight: .semibold)).foregroundStyle(MessengerMessage.color(for: message.by ?? senderName))
+                }
+                if let file = message.file {
+                    Button { open(file) } label: {
+                        HStack(spacing: 6) {
+                            Image(systemName: "doc.fill")
+                            VStack(alignment: .leading, spacing: 0) {
+                                Text(file.name).font(.system(size: 12, weight: .medium)).lineLimit(1).truncationMode(.middle)
+                                Text(Self.size(file.size)).font(.system(size: 10)).opacity(0.7)
+                            }
+                        }
+                        .foregroundStyle(.white).padding(.horizontal, 10).padding(.vertical, 6).frame(maxWidth: 240, alignment: .leading)
+                        .background(RoundedRectangle(cornerRadius: 12, style: .continuous).fill(message.mine ? AnyShapeStyle(Theme.accentGradient) : AnyShapeStyle(Theme.surfaceHover)))
+                    }
+                    .buttonStyle(.plain).help("Show in Finder")
+                }
+                if !message.text.isEmpty {
+                    Text(message.text).font(.system(size: 13)).foregroundStyle(.white).textSelection(.enabled)
+                        .padding(.horizontal, 12).padding(.vertical, 7)
+                        .background(RoundedRectangle(cornerRadius: 14, style: .continuous).fill(message.mine ? AnyShapeStyle(Theme.accentGradient) : AnyShapeStyle(Theme.surfaceHover)))
+                }
                 HStack(spacing: 4) {
                     Text(message.date, style: .time)
                     if message.mine { stateLabel }
@@ -266,6 +404,8 @@ private struct FriendBubble: View {
             if !message.mine { Spacer(minLength: 60) }
         }
     }
+
+    private static func size(_ bytes: Int) -> String { bytes < 1000 ? "\(bytes) B" : String(format: "%.0f KB", Double(bytes) / 1000) }
 
     @ViewBuilder private var stateLabel: some View {
         switch message.state {

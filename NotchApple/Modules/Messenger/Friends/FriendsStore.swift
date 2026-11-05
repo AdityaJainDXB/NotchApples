@@ -49,6 +49,33 @@ final class FriendsStore {
         try? FileManager.default.setAttributes([.posixPermissions: 0o600], ofItemAtPath: fileURL.path)
     }
 
-    /// "Delete all my chat data": the history, friends and block list. The friend code and keys stay (the code is for life).
-    func wipe() { try? FileManager.default.removeItem(at: fileURL) }
+    // MARK: Files that came with messages
+
+    /// One sealed file per received or sent attachment, named by a hash of its id (ids come from other people).
+    private var filesDir: URL {
+        let dir = fileURL.deletingLastPathComponent().appendingPathComponent("files", isDirectory: true)
+        try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        try? FileManager.default.setAttributes([.posixPermissions: 0o700], ofItemAtPath: dir.path)
+        return dir
+    }
+    private func fileURL(_ id: String) -> URL { filesDir.appendingPathComponent(Friends.sha256Hex(Data(id.utf8)) + ".bin") }
+
+    func saveFile(_ id: String, data: Data) {
+        guard let sealed = try? AES.GCM.seal(data, using: vaultKey()).combined else { return }
+        try? sealed.write(to: fileURL(id), options: [.atomic, .completeFileProtection])
+        try? FileManager.default.setAttributes([.posixPermissions: 0o600], ofItemAtPath: fileURL(id).path)
+    }
+
+    func loadFile(_ id: String) -> Data? {
+        guard let data = try? Data(contentsOf: fileURL(id)), let box = try? AES.GCM.SealedBox(combined: data) else { return nil }
+        return try? AES.GCM.open(box, using: vaultKey())
+    }
+
+    func deleteFiles(_ ids: [String]) { for id in ids { try? FileManager.default.removeItem(at: fileURL(id)) } }
+
+    /// "Delete all my chat data": the history, files, friends and block list. The friend code and keys stay (the code is for life).
+    func wipe() {
+        try? FileManager.default.removeItem(at: fileURL)
+        try? FileManager.default.removeItem(at: fileURL.deletingLastPathComponent().appendingPathComponent("files", isDirectory: true))
+    }
 }

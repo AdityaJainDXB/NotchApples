@@ -136,3 +136,16 @@ is synced to iCloud or included in the settings export.
 - **Windows:** the same primitives from the platform WebCrypto where the WebView supports X25519/Ed25519 (WebView2 on current
   Windows 10/11), otherwise Rust (`x25519-dalek`, `ed25519-dalek`, `aes-gcm`, `hkdf`) behind Tauri commands. A shared test vector file
   (`server/room-relay/test/friends-vectors.json`) is checked by the Swift, JS and server tests so all three agree byte for byte.
+
+## Files and groups (Mac client; additive, no server change)
+
+New body types inside the same sealed `msg` blobs. Older clients ignore keys and `t` values they do not know, so nothing breaks.
+
+| `t` | Fields | Meaning |
+| --- | --- | --- |
+| `chunk` | `from, id, fname, fn, fi, fd, g?` | One piece of a file. `id` is the file's message id, `fn` the chunk count (1…20), `fi` this piece (0-based), `fd` up to 8,000 bytes as base64url. The receiver keeps the pieces until all `fn` have arrived, then stores the file and shows one message. Files are at most 160,000 bytes: a sealed blob is limited to about 16 KB by the relay (`MAX_MSG_BLOB`), and a mailbox to 512 KB. A partial file is dropped after 10 minutes. |
+| `grp` | `from, g, gname, gm, ts` | Invite or change for a group: `gm` lists every member's mailbox including the sender's and the receiver's. Accepted only from an active friend who is in `gm`, only if the receiver is in `gm`, and a change only from whoever made the group. Up to 20 members. |
+| `gmsg` | `from, g, id, text, ts` | A group message. Accepted only from a member who is an active friend of the receiver. |
+| `gleave` | `from, g` | The sender left the group. |
+
+There is no group server. A group message is sealed and sent once per member over the existing friend links, so everyone only receives from members who are also their friends. File names are reduced to their last path component and never opened automatically: the Mac shows the file in Finder.

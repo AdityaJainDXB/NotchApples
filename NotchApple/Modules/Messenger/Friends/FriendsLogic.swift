@@ -38,6 +38,20 @@ enum Friends {
     }
 
     /// "ABCDE-FGHJK", for showing and for reading aloud.
+    /// Group chats live in the same message table as friends, under a key no mailbox can have (mailboxes are hex).
+    static func groupKey(_ id: String) -> String { "g:\(id)" }
+    static func isGroupKey(_ key: String) -> Bool { key.hasPrefix("g:") }
+    /// Ids come from other people, so only plain ones are accepted (they also become part of a file name's hash).
+    static func isPlainID(_ id: String) -> Bool {
+        !id.isEmpty && id.count <= 64 && id.unicodeScalars.allSatisfy { ($0.value >= 48 && $0.value <= 57) || ($0.value >= 65 && $0.value <= 90) || ($0.value >= 97 && $0.value <= 122) || $0 == "-" }
+    }
+    /// Files: 8 KB chunks (a sealed message is limited to about 16 KB by the relay), at most 20 of them.
+    static let chunkSize = 8000
+    static let maxChunks = 20
+    static let maxFileBytes = chunkSize * maxChunks
+    static let maxGroupMembers = 20
+    static let maxGroups = 30
+
     static func displayCode(_ code: String) -> String { "\(code.prefix(5))-\(code.dropFirst(5))" }
 
     /// The server's address for a code (32 hex characters); the server never sees the code itself.
@@ -188,7 +202,7 @@ enum FriendCrypto {
 
 /// One shape for every body; `t` says which fields matter (see the protocol document).
 struct FriendBody: Codable, Equatable {
-    var t: String                  // req, acc, msg, rcpt, typing, gone
+    var t: String                  // req, acc, msg, rcpt, typing, gone, grp, gmsg, gleave, chunk
     var box: String? = nil         // req, acc: the sender's mailbox
     var from: String? = nil        // msg, rcpt, typing, gone: the sender's mailbox
     var sign: String? = nil        // req, acc: the sender's signing key (base64url)
@@ -199,6 +213,14 @@ struct FriendBody: Codable, Equatable {
     var text: String? = nil
     var state: String? = nil       // rcpt: delivered or read
     var ts: Int64? = nil
+    // Groups (grp, gmsg, gleave) and files (chunk). Older apps ignore these keys and any `t` they don't know.
+    var g: String? = nil           // grp, gmsg, gleave, chunk: the group id
+    var gname: String? = nil       // grp: the group's name
+    var gm: [String]? = nil        // grp: every member's mailbox, including the sender's and the receiver's
+    var fname: String? = nil       // chunk: the file name
+    var fn: Int? = nil             // chunk: how many chunks the file has
+    var fi: Int? = nil             // chunk: this chunk's position, from 0
+    var fd: String? = nil          // chunk: the bytes (base64url)
 
     func encoded() -> String {
         let enc = JSONEncoder()
@@ -234,6 +256,12 @@ struct FriendRecord: Codable, Identifiable, Equatable {
     }
 }
 
+/// A file that came with a message. The bytes are kept apart, sealed, by FriendsStore (never in the vault itself).
+struct FriendFile: Codable, Equatable {
+    var name: String
+    var size: Int
+}
+
 struct FriendMessage: Codable, Identifiable, Equatable {
     enum State: String, Codable { case sending, sent, delivered, read, failed }
     var id: String
@@ -241,6 +269,20 @@ struct FriendMessage: Codable, Identifiable, Equatable {
     var text: String
     var date: Date
     var state: State
+    var by: String? = nil          // group chats: the mailbox of whoever sent it
+    var file: FriendFile? = nil    // a file instead of (or with) text
+}
+
+/// A group chat. There is no group server: each message is sealed once per member and sent over the existing friend links.
+struct FriendGroup: Codable, Identifiable, Equatable {
+    var id: String
+    var name: String
+    var members: [String]          // everyone else's mailbox (not mine)
+    var creator: String?           // mailbox of whoever made it, or nil if it's mine
+    var unread = 0
+    var lastActivity: Date
+    /// Where this group's messages are kept in `FriendsVault.messages`.
+    var key: String { Friends.groupKey(id) }
 }
 
 /// Everything kept on the device (sealed on disk by FriendsStore).
@@ -249,6 +291,19 @@ struct FriendsVault: Codable, Equatable {
     var messages: [String: [FriendMessage]] = [:]    // by friend box
     var blocked: [String] = []                       // fingerprints (hex) of people I blocked
     var seen: [String] = []                          // recent message ids, so a repeated one is dropped
+    var groups: [FriendGroup] = []
+
+    init() {}
+    /// Written by hand so a vault saved before groups existed still loads (a missing key must not wipe every friend).
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: Keys.self)
+        friends = try c.decodeIfPresent([FriendRecord].self, forKey: .friends) ?? []
+        messages = try c.decodeIfPresent([String: [FriendMessage]].self, forKey: .messages) ?? [:]
+        blocked = try c.decodeIfPresent([String].self, forKey: .blocked) ?? []
+        seen = try c.decodeIfPresent([String].self, forKey: .seen) ?? []
+        groups = try c.decodeIfPresent([FriendGroup].self, forKey: .groups) ?? []
+    }
+    private enum Keys: String, CodingKey { case friends, messages, blocked, seen, groups }
 }
 
 // MARK: - The rules
@@ -336,6 +391,122 @@ struct FriendsBook {
         func rank(_ s: FriendMessage.State) -> Int { switch s { case .failed, .sending: 0; case .sent: 1; case .delivered: 2; case .read: 3 } }
         if state == .failed ? list[i].state == .sending : rank(state) > rank(list[i].state) { list[i].state = state; vault.messages[box] = list }
     }
+
+
+    // MARK: Files and groups
+
+    /// A file's name comes from the sender: one line, no folders, no control characters.
+    static func cleanFileName(_ raw: String?) -> String? {
+        guard let raw else { return nil }
+        let last = raw.split(whereSeparator: { $0 == "/" || $0 == "\\" }).last.map(String.init) ?? ""
+        let s = String(last.unicodeScalars.filter { !$0.properties.isDefaultIgnorableCodePoint && !CharacterSet.controlCharacters.contains($0) }.map(Character.init))
+            .trimmingCharacters(in: .whitespaces)
+        if s.isEmpty || s == "." || s == ".." { return nil }
+        return String(s.prefix(80))
+    }
+
+    func group(_ key: String) -> FriendGroup? { vault.groups.first { $0.key == key } }
+    func groupIndex(_ key: String) -> Int? { vault.groups.firstIndex { $0.key == key } }
+
+    /// I make a group out of friends I already have. Returns nil if it isn't allowed.
+    mutating func createGroup(name: String, members: [String], id: String = UUID().uuidString, now: Date = .now) -> FriendGroup? {
+        let people = Array(Set(members)).filter { record($0)?.status == .active }
+        guard !people.isEmpty, people.count < Friends.maxGroupMembers, vault.groups.count < Friends.maxGroups, Friends.isPlainID(id) else { return nil }
+        let g = FriendGroup(id: id, name: Self.clean(name.replacingOccurrences(of: "\n", with: " ")) ?? "Group", members: people.sorted(), creator: nil, lastActivity: now)
+        vault.groups.append(g)
+        return g
+    }
+
+    /// An invite or a change from a friend. It must list me, and only the person who made the group can change it.
+    mutating func receiveGroup(from box: String, _ body: FriendBody, myBox: String, now: Date = .now) -> FriendGroup? {
+        guard record(box)?.status == .active, let id = body.g, Friends.isPlainID(id), let all = body.gm,
+              all.count <= Friends.maxGroupMembers, all.contains(myBox), all.contains(box), all.allSatisfy({ !$0.isEmpty && $0.count <= 64 }) else { return nil }
+        let others = Array(Set(all)).filter { $0 != myBox }.sorted()
+        let name = Self.clean(body.gname) ?? "Group"
+        if let i = groupIndex(Friends.groupKey(id)) {
+            guard vault.groups[i].creator == box else { return nil }
+            vault.groups[i].name = name; vault.groups[i].members = others
+            return vault.groups[i]
+        }
+        guard vault.groups.count < Friends.maxGroups else { return nil }
+        let g = FriendGroup(id: id, name: name, members: others, creator: box, lastActivity: now)
+        vault.groups.append(g)
+        return g
+    }
+
+    /// A message in a group, from a member who is one of my friends. Returns it if new.
+    mutating func receiveGroupMessage(from box: String, group id: String, id msgID: String, text: String, ts: Int64?, now: Date = .now) -> FriendMessage? {
+        let key = Friends.groupKey(id)
+        guard let gi = groupIndex(key), vault.groups[gi].members.contains(box), record(box)?.status == .active,
+              Friends.isPlainID(msgID), !text.isEmpty, text.count <= 2000, !vault.seen.contains(msgID) else { return nil }
+        remember(msgID)
+        let date = ts.map { min(Date(timeIntervalSince1970: Double($0) / 1000), now) } ?? now
+        var m = FriendMessage(id: msgID, mine: false, text: text, date: date, state: .delivered)
+        m.by = box
+        vault.messages[key, default: []].append(m)
+        vault.groups[gi].unread += 1; vault.groups[gi].lastActivity = now
+        return m
+    }
+
+    /// A finished file, from a friend (one to one, or `group` if it came into a group).
+    mutating func receiveFile(from box: String, group: String?, id: String, name: String, size: Int, ts: Int64? = nil, now: Date = .now) -> FriendMessage? {
+        guard record(box)?.status == .active, Friends.isPlainID(id), size > 0, size <= Friends.maxFileBytes,
+              let name = Self.cleanFileName(name), !vault.seen.contains(id) else { return nil }
+        var m = FriendMessage(id: id, mine: false, text: "", date: now, state: .delivered)
+        m.file = FriendFile(name: name, size: size)
+        if let group {
+            let key = Friends.groupKey(group)
+            guard let gi = groupIndex(key), vault.groups[gi].members.contains(box) else { return nil }
+            m.by = box
+            remember(id)
+            vault.messages[key, default: []].append(m)
+            vault.groups[gi].unread += 1; vault.groups[gi].lastActivity = now
+        } else {
+            guard let i = index(box) else { return nil }
+            remember(id)
+            vault.messages[box, default: []].append(m)
+            vault.friends[i].unread += 1; vault.friends[i].lastActivity = now
+        }
+        return m
+    }
+
+    private mutating func remember(_ id: String) {
+        vault.seen.append(id)
+        if vault.seen.count > Self.seenLimit { vault.seen.removeFirst(vault.seen.count - Self.seenLimit) }
+    }
+
+    /// My own message in a group (text, or a file when `file` is set).
+    mutating func addMineToGroup(_ key: String, id: String, text: String, file: FriendFile? = nil, now: Date = .now) {
+        guard let gi = groupIndex(key) else { return }
+        var m = FriendMessage(id: id, mine: true, text: text, date: now, state: .sending)
+        m.file = file
+        vault.messages[key, default: []].append(m)
+        vault.groups[gi].lastActivity = now
+    }
+
+    /// My own file in a one to one chat.
+    mutating func addMineFile(to box: String, id: String, file: FriendFile, now: Date = .now) {
+        var m = FriendMessage(id: id, mine: true, text: "", date: now, state: .sending)
+        m.file = file
+        vault.messages[box, default: []].append(m)
+        if let i = index(box) { vault.friends[i].lastActivity = now }
+    }
+
+    /// A member says they left.
+    mutating func receiveLeave(from box: String, group id: String) {
+        guard let gi = groupIndex(Friends.groupKey(id)) else { return }
+        vault.groups[gi].members.removeAll { $0 == box }
+    }
+
+    /// I leave (or the group is deleted): it and its history go. Returns the ids of files that were in it.
+    @discardableResult
+    mutating func leaveGroup(_ key: String) -> [String] {
+        let files = (vault.messages[key] ?? []).filter { $0.file != nil }.map(\.id)
+        vault.groups.removeAll { $0.key == key }; vault.messages[key] = nil
+        return files
+    }
+
+    mutating func markGroupRead(_ key: String) { if let i = groupIndex(key) { vault.groups[i].unread = 0 } }
 
     mutating func markRead(box: String) { if let i = index(box) { vault.friends[i].unread = 0 } }
     mutating func setAlias(box: String, _ alias: String?) { if let i = index(box) { vault.friends[i].alias = Self.clean(alias) } }

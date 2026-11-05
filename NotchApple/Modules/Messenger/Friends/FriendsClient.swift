@@ -52,7 +52,13 @@ final class FriendsClient: ObservableObject {
     var pending: [FriendRecord] { book.vault.friends.filter { $0.status == .outgoing }.sorted { $0.added < $1.added } }
     var friends: [FriendRecord] { book.vault.friends.filter { $0.status == .active }.sorted { $0.lastActivity > $1.lastActivity } }
     func messages(_ box: String) -> [FriendMessage] { book.vault.messages[box] ?? [] }
-    var totalUnread: Int { book.vault.friends.reduce(0) { $0 + $1.unread } + incoming.count }
+    var totalUnread: Int { book.vault.friends.reduce(0) { $0 + $1.unread } + book.vault.groups.reduce(0) { $0 + $1.unread } + incoming.count }
+    var groups: [FriendGroup] { book.vault.groups.sorted { $0.lastActivity > $1.lastActivity } }
+    func group(_ key: String) -> FriendGroup? { book.group(key) }
+    /// Who sent a group message, as a name (a person who isn't my friend can't send into a group, so this is nearly always known).
+    func name(ofBox box: String?) -> String { box.flatMap { book.record($0)?.displayName } ?? "Someone" }
+    /// Members of a group that I can't reach (not my friends), who won't get what I send and whose messages I won't see.
+    func unreachable(_ g: FriendGroup) -> Int { g.members.filter { book.record($0)?.status != .active }.count }
 
     // MARK: Starting and stopping
 
@@ -239,6 +245,20 @@ final class FriendsClient: ObservableObject {
             if let id = body.id, let state = body.state { book.setState(box: friend.box, id: id, state == "read" ? .read : .delivered) }
         case "gone":
             book.remove(box: friend.box)
+        case "grp":
+            let known = body.g.map { book.group(Friends.groupKey($0)) != nil } ?? true
+            if let g = book.receiveGroup(from: friend.box, body, myBox: identity.box), !known {
+                MessengerNotifier.shared.friendEvent(title: "New group", body: "\(friend.displayName) added you to \(g.name).", id: "grp-\(g.id)")
+            }
+        case "gmsg":
+            guard let gid = body.g, let id = body.id, let text = body.text,
+                  let m = book.receiveGroupMessage(from: friend.box, group: gid, id: id, text: text, ts: body.ts), let g = book.group(Friends.groupKey(gid)) else { return }
+            if viewing == g.key { book.markGroupRead(g.key) }
+            else { MessengerNotifier.shared.friendMessage(from: "\(friend.displayName) in \(g.name)", box: g.key, text: m.text, id: id) }
+        case "gleave":
+            if let gid = body.g { book.receiveLeave(from: friend.box, group: gid) }
+        case "chunk":
+            receiveChunk(body, from: friend)
         default: break
         }
     }
@@ -298,6 +318,7 @@ final class FriendsClient: ObservableObject {
 
     func block(_ box: String) {
         let hash = book.record(box)?.myTokenHash
+        store.deleteFiles(messages(box).filter { $0.file != nil }.map(\.id))
         book.block(box: box); persist()
         if let hash { Task { _ = await call("DELETE", "/f/allow/\(hash)", owner: true) } }
     }
@@ -306,6 +327,7 @@ final class FriendsClient: ObservableObject {
         guard let r = book.record(box) else { return }
         let hash = r.myTokenHash
         if r.status == .active { sendControl("gone", to: r) }
+        store.deleteFiles(messages(box).filter { $0.file != nil }.map(\.id))
         book.remove(box: box); persist()
         if let hash { Task { _ = await call("DELETE", "/f/allow/\(hash)", owner: true) } }
     }
@@ -334,6 +356,18 @@ final class FriendsClient: ObservableObject {
     }
 
     func retry(_ id: String, in box: String) {
+        if Friends.isGroupKey(box) {
+            guard let g = book.group(box), let m = messages(box).first(where: { $0.id == id && $0.mine && $0.state == .failed }), m.file == nil else { return }
+            if var list = book.vault.messages[box], let i = list.firstIndex(where: { $0.id == id }) { list[i].state = .sending; book.vault.messages[box] = list }
+            let to = g.members.compactMap { book.record($0) }.filter { $0.status == .active }
+            Task { await deliverToGroup(id: id, text: m.text, group: g, to: to) }
+            return
+        }
+        if let m = messages(box).first(where: { $0.id == id && $0.mine && $0.state == .failed }), let file = m.file, let friend = book.record(box), let data = store.loadFile(id) {
+            if var list = book.vault.messages[box], let i = list.firstIndex(where: { $0.id == id }) { list[i].state = .sending; book.vault.messages[box] = list }
+            Task { await deliverFile(id: id, name: file.name, data: data, group: nil, historyKey: box, to: [friend]) }
+            return
+        }
         guard let friend = book.record(box), let m = messages(box).first(where: { $0.id == id && $0.mine && $0.state == .failed }) else { return }
         if var list = book.vault.messages[box], let i = list.firstIndex(where: { $0.id == id }) { list[i].state = .sending; book.vault.messages[box] = list }
         Task { await deliver(id: id, text: m.text, to: friend) }
@@ -379,10 +413,163 @@ final class FriendsClient: ObservableObject {
 
     /// The chat is on screen: clear the unread count and tell the friend (if receipts are on).
     func markRead(_ box: String) {
+        if Friends.isGroupKey(box) { book.markGroupRead(box); persist(); return }
         book.markRead(box: box)
         guard receipts, let friend = book.record(box) else { return }
         for m in messages(box).suffix(20) where !m.mine { sendReceipt(to: friend, id: m.id, state: "read") }
         persist()
+    }
+
+
+    // MARK: Files
+
+    /// A file being put back together from its chunks.
+    private struct Partial { var name: String; var n: Int; var group: String?; var chunks: [Int: Data] = [:]; var started = Date() }
+    private var partials: [String: Partial] = [:]
+
+    private func receiveChunk(_ body: FriendBody, from friend: FriendRecord) {
+        guard let id = body.id, Friends.isPlainID(id), let n = body.fn, let i = body.fi, n >= 1, n <= Friends.maxChunks, i >= 0, i < n,
+              let text = body.fd, text.count <= Friends.chunkSize * 2, let bytes = Friends.unb64u(text), bytes.count <= Friends.chunkSize,
+              let name = FriendsBook.cleanFileName(body.fname), !book.vault.seen.contains(id) else { return }
+        let group = body.g
+        if let group { guard book.group(Friends.groupKey(group))?.members.contains(friend.box) == true else { return } }
+        let key = "\(friend.box)|\(id)"
+        partials = partials.filter { Date().timeIntervalSince($0.value.started) < 600 }          // give up on files that stalled
+        if partials[key] == nil {
+            guard partials.count < 8 else { return }
+            partials[key] = Partial(name: name, n: n, group: group)
+        }
+        guard partials[key]?.n == n else { return }
+        partials[key]?.chunks[i] = bytes
+        guard let part = partials[key], part.chunks.count == n else { return }
+        partials[key] = nil
+        var data = Data()
+        for k in 0..<n { guard let c = part.chunks[k] else { return }; data.append(c) }
+        guard data.count <= Friends.maxFileBytes, let m = book.receiveFile(from: friend.box, group: group, id: id, name: part.name, size: data.count) else { return }
+        store.saveFile(id, data: data)
+        let shown = group.flatMap { book.group(Friends.groupKey($0))?.name }.map { "\(friend.displayName) in \($0)" } ?? friend.displayName
+        let viewKey = group.map(Friends.groupKey) ?? friend.box
+        if viewing == viewKey { group == nil ? book.markRead(box: friend.box) : book.markGroupRead(viewKey) }
+        else { MessengerNotifier.shared.friendMessage(from: shown, box: viewKey, text: "Sent a file: \(m.file?.name ?? "")", id: id) }
+        if group == nil, receipts { sendReceipt(to: friend, id: id, state: viewing == friend.box ? "read" : "delivered") }
+        persist()
+    }
+
+    /// Sends a file to one friend or a group. Returns a message when it can't (too big, unreadable).
+    func sendFile(_ url: URL, to key: String) -> String? {
+        let size = (try? url.resourceValues(forKeys: [.fileSizeKey]).fileSize) ?? 0
+        if size > Friends.maxFileBytes { return "That file is \(size / 1000) KB. Files up to \(Friends.maxFileBytes / 1000) KB can be sent in a chat (photos, screenshots and documents are fine; videos are too big)." }
+        guard let data = try? Data(contentsOf: url), !data.isEmpty, data.count <= Friends.maxFileBytes, let name = FriendsBook.cleanFileName(url.lastPathComponent) else { return "Couldn't read that file." }
+        let id = UUID().uuidString
+        let file = FriendFile(name: name, size: data.count)
+        let to: [FriendRecord]
+        let group: String?
+        if Friends.isGroupKey(key) {
+            guard let g = book.group(key) else { return "That group is gone." }
+            to = g.members.compactMap { book.record($0) }.filter { $0.status == .active }
+            group = g.id
+            guard !to.isEmpty else { return "No one in this group is your friend yet, so there is no one to send to." }
+            book.addMineToGroup(key, id: id, text: "", file: file)
+        } else {
+            guard let f = book.record(key), f.status == .active else { return "Not friends yet." }
+            to = [f]; group = nil
+            book.addMineFile(to: key, id: id, file: file)
+        }
+        store.saveFile(id, data: data)
+        persist()
+        Task { await deliverFile(id: id, name: name, data: data, group: group, historyKey: key, to: to) }
+        return nil
+    }
+
+    private func deliverFile(id: String, name: String, data: Data, group: String?, historyKey: String, to friends: [FriendRecord]) async {
+        let pieces = stride(from: 0, to: data.count, by: Friends.chunkSize).map { data.subdata(in: $0..<min($0 + Friends.chunkSize, data.count)) }
+        var reached = 0, lastStatus = 200
+        for friend in friends {
+            guard let token = friend.sendToken else { continue }
+            var ok = true
+            for (i, piece) in pieces.enumerated() {
+                var body = FriendBody(t: "chunk", from: identity.box, id: id, ts: Int64(Date().timeIntervalSince1970 * 1000))
+                body.g = group; body.fname = name; body.fn = pieces.count; body.fi = i; body.fd = Friends.b64u(piece)
+                guard let blob = try? FriendCrypto.seal(bodyText: body.encoded(), kind: "msg", from: identity, toBox: friend.box, toDH: friend.dh) else { ok = false; break }
+                let r = await call("POST", "/f/send", body: ["to": friend.box, "token": token, "blob": blob])
+                if r.status != 200 { ok = false; lastStatus = r.status; break }
+            }
+            if ok { reached += 1 }
+        }
+        book.setState(box: historyKey, id: id, reached > 0 ? .sent : .failed)
+        if reached < friends.count { lastProblem = reached == 0 ? explain(lastStatus, [:]) : "The file reached \(reached) of \(friends.count) people." }
+        persist()
+    }
+
+    /// Puts a received file in a fresh folder and shows it in Finder; it is never opened for you.
+    func reveal(fileID id: String, name: String) {
+        guard let data = store.loadFile(id), let safe = FriendsBook.cleanFileName(name) else { lastProblem = "That file is no longer on this Mac."; return }
+        let dir = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString, isDirectory: true)
+        let url = dir.appendingPathComponent(safe)
+        do { try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true); try data.write(to: url) } catch { return }
+        NSWorkspace.shared.activateFileViewerSelecting([url])
+    }
+
+    // MARK: Groups
+
+    /// Makes a group of friends and invites them. Returns a message when it didn't work.
+    func createGroup(name: String, members: [String]) -> String? {
+        guard !members.isEmpty else { return "Pick at least one friend." }
+        guard members.count < Friends.maxGroupMembers else { return "A group can have up to \(Friends.maxGroupMembers) people." }
+        guard let g = book.createGroup(name: name, members: members) else { return "Couldn't make the group (\(Friends.maxGroups) groups at most, and everyone must be a friend)." }
+        persist()
+        sendGroupInvite(g)
+        return nil
+    }
+
+    private func sendGroupInvite(_ g: FriendGroup) {
+        for box in g.members {
+            guard let friend = book.record(box), friend.status == .active else { continue }
+            var body = FriendBody(t: "grp", from: identity.box, ts: Int64(Date().timeIntervalSince1970 * 1000))
+            body.g = g.id; body.gname = g.name; body.gm = ([identity.box] + g.members).sorted()
+            sendSealed(body, to: friend)
+        }
+    }
+
+    func sendToGroup(_ text: String, key: String) {
+        let t = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !t.isEmpty, t.count <= 2000, let g = book.group(key) else { return }
+        let to = g.members.compactMap { book.record($0) }.filter { $0.status == .active }
+        let id = UUID().uuidString
+        book.addMineToGroup(key, id: id, text: t); persist()
+        guard !to.isEmpty else { book.setState(box: key, id: id, .failed); lastProblem = "No one in this group is your friend yet, so there is no one to send to."; return }
+        Task { await deliverToGroup(id: id, text: t, group: g, to: to) }
+    }
+
+    private func deliverToGroup(id: String, text: String, group g: FriendGroup, to friends: [FriendRecord]) async {
+        var reached = 0
+        for friend in friends {
+            guard let token = friend.sendToken else { continue }
+            var body = FriendBody(t: "gmsg", from: identity.box, id: id, text: text, ts: Int64(Date().timeIntervalSince1970 * 1000))
+            body.g = g.id
+            guard let blob = try? FriendCrypto.seal(bodyText: body.encoded(), kind: "msg", from: identity, toBox: friend.box, toDH: friend.dh) else { continue }
+            let r = await call("POST", "/f/send", body: ["to": friend.box, "token": token, "blob": blob])
+            if r.status == 200 { reached += 1 } else if r.status != 403 { lastProblem = explain(r.status, r.json) }
+        }
+        book.setState(box: g.key, id: id, reached > 0 ? .sent : .failed)
+        persist()
+    }
+
+    func leaveGroup(_ key: String) {
+        guard let g = book.group(key) else { return }
+        for box in g.members {
+            guard let friend = book.record(box), friend.status == .active else { continue }
+            var body = FriendBody(t: "gleave", from: identity.box, ts: Int64(Date().timeIntervalSince1970 * 1000))
+            body.g = g.id
+            sendSealed(body, to: friend)
+        }
+        store.deleteFiles(book.leaveGroup(key))
+        persist()
+    }
+
+    private func sendSealed(_ body: FriendBody, to friend: FriendRecord) {
+        guard let token = friend.sendToken, let blob = try? FriendCrypto.seal(bodyText: body.encoded(), kind: "msg", from: identity, toBox: friend.box, toDH: friend.dh) else { return }
+        Task { _ = await call("POST", "/f/send", body: ["to": friend.box, "token": token, "blob": blob]) }
     }
 
     // MARK: Saving

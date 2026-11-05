@@ -76,7 +76,7 @@ Pick your computer. Both buttons start the download straight away. The Mac link 
   </tr>
   <tr>
     <td align="center">
-      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.2.3</b></a>
+      <a href="https://github.com/AdityaJainDXB/NotchApples/releases/latest"><b>⬇️&nbsp; Download for Mac<br>(.dmg) · 2.2.4</b></a>
     </td>
     <td align="center">
       <a href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe"><b>⬇️&nbsp; Download for Windows<br>(.exe) · 2.2.2 BETA</b></a>
@@ -150,6 +150,11 @@ More screenshots of the capture overlay, the AI answer, the settings and the Win
 
 ## What's new
 
+### Mac 2.2.4 · 5 November 2026 · 💬 Files and group chats in Friends
+
+- Friends: a paperclip next to the message box sends a file to a friend or a group (up to 160 KB, so photos, screenshots and documents; not videos). Files are encrypted like messages and kept encrypted on your Mac. Click one to show it in Finder; it is never opened for you.
+- Friends: group chats. Tap + next to Groups, name it and tick friends to add (up to 20 people). Each message is encrypted separately for each member. You see messages only from group members who are also your friends, and the group warns you when some members are not. Mac only for now: Windows friends do not see files or group messages yet.
+
 ### Mac 2.2.3 · 5 November 2026 · 🛠️ A crash fixed in nearby Messenger
 
 - Fix: a crash in nearby (Wi-Fi) Messenger. Apple’s chat networking kept calling back on a connection the app had already let go of, and the app quit. The connection is now held a little longer, and nearby discovery stops five minutes after you leave the Messenger tab instead of straight away (fixes issue 50).
@@ -159,12 +164,6 @@ More screenshots of the capture overlay, the AI answer, the settings and the Win
 - Racing: a small Leave button on the left edge during a race or session takes you back to the Racing menu (the same as Esc). It is faint until you hover over it. It matters now that a race is kept when you close the notch.
 - Racing: the tyre and damage diagram (bottom left) now shows the car you are driving. The GT3, the street cars, the supercar, the muscle car, the hatchback, the Safety Car and the Medical Car each get a closed-car shape with glass and their own details (wing, splitter, stripes, light bar), instead of a Formula One car. The Formula One car keeps its open-wheel diagram.
 - Same as the Mac, except the race is not kept when you change game (that is Mac only). Untested on real Windows hardware.
-
-### Mac 2.2.1 · Windows 2.2.1 BETA · 4 November 2026 · ✈️ A safer autopilot, and Racing keeps its place
-
-- Racing: close the notch or switch tab with a race running and it now pauses and mutes, and comes back exactly as you left it (it used to start over). It is let go of after an hour away.
-- Plane: the autopilot now flies like one. It looks 60 seconds ahead and climbs over mountains or away from the water instead of flying into them (and keeps flying rather than handing you the controls low down), it holds about 80% of the aircraft’s cruise speed instead of crawling at the speed you engaged at, and a resting mouse or a brush of a key no longer switches it off (you have to hold the stick for about a third of a second).
-- The autopilot fix is the same as on the Mac. (Racing keeping its place when the notch closes is Mac only.) Untested on real Windows hardware.
 
 Every earlier release is in the [changelog](CHANGELOG.md).
 

@@ -170,4 +170,87 @@ final class FriendsTests: XCTestCase {
         let data = try JSONEncoder().encode(book.vault)
         XCTAssertEqual(try JSONDecoder().decode(FriendsVault.self, from: data), book.vault)
     }
+
+    // MARK: Groups and files
+
+    private func twoFriends() -> (FriendsBook, FriendIdentity, FriendIdentity) {
+        let a = FriendIdentity.generate(), b = FriendIdentity.generate()
+        var book = FriendsBook()
+        for id in [a, b] { _ = book.receiveRequest(request(id)); _ = book.accept(box: id.box, myTokenHash: "h") }
+        return (book, a, b)
+    }
+
+    func testAVaultSavedBeforeGroupsStillLoads() throws {
+        let (book, _, _) = twoFriends()
+        var json = try XCTUnwrap(JSONSerialization.jsonObject(with: JSONEncoder().encode(book.vault)) as? [String: Any])
+        json["groups"] = nil
+        let old = try JSONSerialization.data(withJSONObject: json)
+        let loaded = try JSONDecoder().decode(FriendsVault.self, from: old)
+        XCTAssertEqual(loaded.friends.count, 2, "a missing `groups` key must not wipe the friend list")
+        XCTAssertTrue(loaded.groups.isEmpty)
+    }
+
+    func testMakingAndReceivingAGroup() throws {
+        var (book, a, b) = twoFriends()
+        XCTAssertNil(book.createGroup(name: "x", members: ["not-a-friend"]), "only friends can be added")
+        let g = try XCTUnwrap(book.createGroup(name: "  Study\ngroup ", members: [a.box, b.box]))
+        XCTAssertEqual(g.name, "Study group")
+        XCTAssertEqual(Set(g.members), [a.box, b.box])
+
+        // The other side: Alice's Mac receives the invite from me.
+        let me = FriendIdentity.generate()
+        var theirs = FriendsBook()
+        _ = theirs.receiveRequest(request(me)); _ = theirs.accept(box: me.box, myTokenHash: "h")
+        var invite = FriendBody(t: "grp", from: me.box); invite.g = g.id; invite.gname = "Study"; invite.gm = [me.box, a.box, b.box]
+        XCTAssertNil(theirs.receiveGroup(from: me.box, invite, myBox: "someone-else"), "an invite that doesn't list me is ignored")
+        let got = try XCTUnwrap(theirs.receiveGroup(from: me.box, invite, myBox: a.box))
+        XCTAssertEqual(Set(got.members), [me.box, b.box])
+        XCTAssertEqual(got.creator, me.box)
+        // Only whoever made it can change it.
+        _ = theirs.receiveRequest(request(b)); _ = theirs.accept(box: b.box, myTokenHash: "h")
+        var hijack = invite; hijack.gname = "Hijacked"
+        XCTAssertNil(theirs.receiveGroup(from: b.box, hijack, myBox: a.box))
+        XCTAssertEqual(theirs.group(got.key)?.name, "Study")
+    }
+
+    func testGroupMessagesComeOnlyFromMembersAndOnlyOnce() throws {
+        var (book, a, b) = twoFriends()
+        let g = try XCTUnwrap(book.createGroup(name: "G", members: [a.box]))
+        XCTAssertNotNil(book.receiveGroupMessage(from: a.box, group: g.id, id: "m1", text: "hi", ts: nil))
+        XCTAssertNil(book.receiveGroupMessage(from: a.box, group: g.id, id: "m1", text: "hi", ts: nil), "a repeat is dropped")
+        XCTAssertNil(book.receiveGroupMessage(from: b.box, group: g.id, id: "m2", text: "hi", ts: nil), "b is a friend but not in the group")
+        XCTAssertNil(book.receiveGroupMessage(from: a.box, group: "nope", id: "m3", text: "hi", ts: nil))
+        XCTAssertEqual(book.group(g.key)?.unread, 1)
+        XCTAssertEqual(book.vault.messages[g.key]?.first?.by, a.box)
+        book.receiveLeave(from: a.box, group: g.id)
+        XCTAssertNil(book.receiveGroupMessage(from: a.box, group: g.id, id: "m4", text: "hi", ts: nil), "after leaving they can't post")
+    }
+
+    func testFilesAreCheckedAndKeptApart() throws {
+        var (book, a, _) = twoFriends()
+        XCTAssertEqual(FriendsBook.cleanFileName("../../etc/passwd"), "passwd")
+        XCTAssertEqual(FriendsBook.cleanFileName("C:\\Users\\x\\a.png"), "a.png")
+        XCTAssertNil(FriendsBook.cleanFileName(".."))
+        XCTAssertNil(FriendsBook.cleanFileName("///"))
+        XCTAssertTrue(Friends.isPlainID(UUID().uuidString)); XCTAssertFalse(Friends.isPlainID("../x")); XCTAssertFalse(Friends.isPlainID(""))
+        XCTAssertNil(book.receiveFile(from: a.box, group: nil, id: "f1", name: "x", size: Friends.maxFileBytes + 1), "too big")
+        XCTAssertNil(book.receiveFile(from: "stranger", group: nil, id: "f1", name: "x", size: 10), "only friends")
+        let m = try XCTUnwrap(book.receiveFile(from: a.box, group: nil, id: "f1", name: "a/b.png", size: 10))
+        XCTAssertEqual(m.file, FriendFile(name: "b.png", size: 10))
+        XCTAssertNil(book.receiveFile(from: a.box, group: nil, id: "f1", name: "b.png", size: 10), "the same file twice is dropped")
+        XCTAssertEqual(book.record(a.box)?.unread, 1)
+        // A sealed chunk is far below the relay's ~16 KB limit.
+        XCTAssertEqual(Friends.maxFileBytes, 160_000)
+    }
+
+    func testAChunkFitsTheRelayLimit() throws {
+        let me = FriendIdentity.generate(), you = FriendIdentity.generate()
+        var body = FriendBody(t: "chunk", from: me.box, id: UUID().uuidString, ts: 1)
+        body.g = UUID().uuidString; body.fname = String(repeating: "n", count: 80); body.fn = 20; body.fi = 19
+        body.fd = Friends.b64u(Data((0..<Friends.chunkSize).map { _ in UInt8.random(in: 0...255) }))
+        let blob = try FriendCrypto.seal(bodyText: body.encoded(), kind: "msg", from: me, toBox: you.box, toDH: you.dhPublic)
+        XCTAssertLessThan(blob.count, 22000, "the relay refuses blobs over 22000 characters")
+        let opened = try XCTUnwrap(FriendCrypto.open(blob: blob, kind: "msg", myBox: you.box, dhSeed: you.dhSeed))
+        XCTAssertEqual(FriendBody.decode(opened.text), body)
+    }
 }
