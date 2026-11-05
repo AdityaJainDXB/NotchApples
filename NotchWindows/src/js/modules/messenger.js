@@ -1,7 +1,7 @@
 // Messenger (Pro): end-to-end encrypted rooms, compatible with the Mac app.
 import { el, load, save, timeAgo } from '../store.js';
 import { invoke } from '../native.js';
-import { toast, prompt, segmented } from '../ui.js';
+import { toast, prompt, segmented, button } from '../ui.js';
 import * as MS from '../services/messenger.js';
 import * as PUI from '../games/playui.js';
 
@@ -26,7 +26,22 @@ function renderRooms(root) {
   const wrap = el('div', { class: 'col fill' });
   root.append(wrap);
   const code = el('input', { class: 'field', placeholder: 'Room code, e.g. #study-group (longer = more private)' });
-  const gameBox = el('div'), log = el('div', { class: 'col gap-6 scroll', style: 'flex:1' }), input = el('input', { class: 'field', placeholder: 'Message…' }), head = el('div', { class: 'hstack' });
+  const gameBox = el('div'), log = el('div', { class: 'col gap-6 scroll', style: 'flex:1' }), input = el('input', { class: 'field', placeholder: 'Message…', style: 'flex:1' }), head = el('div', { class: 'hstack' });
+  const bar = el('div', { class: 'hstack', style: 'flex:none' });
+  const size = (n) => (n < 1000 ? `${n} B` : n < 1_000_000 ? `${(n / 1000).toFixed(n < 10000 ? 1 : 0)} KB` : `${(n / 1_000_000).toFixed(1)} MB`);
+  async function attach() {
+    const p = await invoke('pick_file'); if (!p) return;
+    const problem = await MS.sendFile(p);
+    if (problem) toast(problem);
+  }
+  const clip = button('📎', attach, { kind: 'quiet', title: 'Send a file to the room (up to 2 MB, encrypted like a message; the room must be connected to Notch Apple’s relay)' });
+  bar.append(input, clip);
+  // A file is shown in Explorer when clicked. It is never opened for you.
+  const fileBody = (m) => el('a', {
+    style: 'cursor:pointer;display:flex;gap:8px;align-items:center', title: 'Show in Explorer (it is not opened)',
+    onclick: async () => { const problem = await MS.revealFile(m.id); if (problem) toast(problem); },
+  }, el('span', { style: 'font-size:20px' }, '📄'), el('span', { style: 'overflow-wrap:anywhere' }, m.file.name,
+    el('div', { class: 'tiny', style: 'opacity:.7' }, m.failed ? `${size(m.file.size)} · not sent` : m.progress !== undefined ? `${size(m.file.size)} · sending ${Math.round(m.progress * 100)}%` : size(m.file.size))));
   code.onkeydown = (e) => { if (e.key === 'Enter' && code.value.trim()) MS.join(code.value); };
   input.onkeydown = (e) => { if (e.key === 'Enter') { MS.send(input.value); input.value = ''; } };
   function paint(st) {
@@ -53,10 +68,10 @@ function renderRooms(root) {
     log.replaceChildren(...st.messages.map((m) => (m.notice ? el('div', { class: 'tiny faint', style: 'text-align:center' }, m.text)
       : el('div', { style: `display:flex;flex-direction:column;align-items:${m.mine ? 'flex-end' : 'flex-start'}` },
         m.mine ? null : el('div', { class: 'tiny faint' }, m.sender),
-        el('div', { class: 'selectable', style: `max-width:80%;padding:7px 12px;border-radius:14px;white-space:pre-wrap;${m.mine ? 'background:var(--accent);color:var(--on-accent)' : 'background:rgba(255,255,255,.08)'}` }, m.text),
+        el('div', { class: 'selectable', style: `max-width:80%;padding:7px 12px;border-radius:14px;white-space:pre-wrap;overflow-wrap:anywhere;${m.mine ? 'background:var(--accent);color:var(--on-accent)' : 'background:rgba(255,255,255,.08)'}` }, m.file ? fileBody(m) : m.text),
         el('div', { class: 'tiny faint' }, timeAgo(m.at))))));
     if (!st.messages.length) log.append(el('div', { class: 'small dim', style: 'text-align:center;margin-top:30px' }, 'Say hi. Share the room code with people you want here.'));
-    if (!wrap.contains(log)) { wrap.replaceChildren(head, gameBox, log, input); setTimeout(() => input.focus(), 30); }
+    if (!wrap.contains(log)) { wrap.replaceChildren(head, gameBox, log, bar); setTimeout(() => input.focus(), 30); }
     log.scrollTop = log.scrollHeight;
   }
   const off = MS.subscribe(paint);

@@ -30,8 +30,12 @@ const invite = (from, g, members, extra = {}) => ({ t: 'grp', from, g, gname: 'T
 
 test('the limits are the Mac numbers', () => {
   assert.equal(L.CHUNK_SIZE, 8000);
-  assert.equal(L.MAX_CHUNKS, 20);
-  assert.equal(L.MAX_FILE_BYTES, 160000);
+  assert.equal(L.MAX_CHUNKS, 250);
+  assert.equal(L.MAX_FILE_BYTES, 2000000);
+  assert.equal(L.MAX_FILE_TEXT, '2 MB');
+  assert.equal(L.PIECE_GAP_MS, 220);
+  assert.equal(L.RATE_WAIT_MS, 8000);
+  assert.equal(L.RATE_RETRIES, 8);
   assert.equal(L.MAX_GROUP_MEMBERS, 20);
   assert.equal(L.MAX_GROUPS, 30);
   assert.equal(L.PARTIAL_TTL_MS, 600000);
@@ -88,12 +92,12 @@ test('the Swift field names are used on the wire: t, from, id, ts, g, fname, fn,
   assert.deepEqual(Object.keys(L.chunkBodies('box1', 'F3', 'a.txt', Buffer.from('x'), null, 9, b64u)[0]).sort(), ['fd', 'fi', 'fn', 'fname', 'from', 'id', 't', 'ts']);
   const g = L.groupInviteBody('mybox', { id: 'G1', name: 'Trip', members: ['b2', 'b1'] }, 9);
   assert.deepEqual(g, { t: 'grp', from: 'mybox', g: 'G1', gname: 'Trip', gm: ['b1', 'b2', 'mybox'], ts: 9 });
-  assert.equal(L.chunkBodies('b', 'i', 'n', Buffer.alloc(160000), null, 1, b64u).length, 20);
+  assert.equal(L.chunkBodies('b', 'i', 'n', Buffer.alloc(2000000), null, 1, b64u).length, 250);
 });
 
 test('bad chunks are dropped', () => {
   const v = vaultWith(1), parts = new Map();
-  for (const over of [{ id: '../x' }, { id: '' }, { fn: 0 }, { fn: 21 }, { fn: 1.5 }, { fi: -1 }, { fi: 1 }, { fi: 'a' }, { fd: 5 }, { fd: 'a'.repeat(16001) },
+  for (const over of [{ id: '../x' }, { id: '' }, { fn: 0 }, { fn: 251 }, { fn: 1.5 }, { fi: -1 }, { fi: 1 }, { fi: 'a' }, { fd: 5 }, { fd: 'a'.repeat(16001) },
     { fd: b64u(Buffer.alloc(8001)) }, { fd: 'a b!' }, { fname: '..' }, { fname: null }, { g: 'nogroup' }, { g: 5 }]) {
     assert.equal(L.receiveChunk(v, parts, 'box1', chunkBody(over)), null, JSON.stringify(over));
   }
@@ -128,10 +132,10 @@ test('files are never taken from someone who is not an active friend, and a seen
   const v = vaultWith(1);
   assert.equal(L.receiveFile(v, 'nobody', null, 'F9', 'a.txt', 5), null);
   assert.equal(L.receiveFile(v, 'box1', null, 'F9', 'a.txt', 0), null);
-  assert.equal(L.receiveFile(v, 'box1', null, 'F9', 'a.txt', 160001), null);
+  assert.equal(L.receiveFile(v, 'box1', null, 'F9', 'a.txt', 2000001), null);
   assert.equal(L.receiveFile(v, 'box1', null, 'F9', '..', 5), null);
   assert.equal(L.receiveFile(v, 'box1', null, 'bad/id', 'a.txt', 5), null);
-  assert.ok(L.receiveFile(v, 'box1', null, 'F9', 'C:\\x\\a.txt', 160000));
+  assert.ok(L.receiveFile(v, 'box1', null, 'F9', 'C:\\x\\a.txt', 2000000));
   assert.equal(L.messagesOf(v, 'box1')[0].file.name, 'a.txt');
   assert.equal(L.receiveFile(v, 'box1', null, 'F9', 'a.txt', 5), null, 'same id twice');
 });
@@ -314,4 +318,59 @@ test('groups, group history and files survive the JSON round trip; junk groups a
   assert.deepEqual(messy.groups.map((g) => g.id), ['ok']);
   assert.deepEqual(L.normalizeVault({ groups: 'junk' }).groups, []);
   assert.deepEqual(L.normalizeVault(null).groups, []);
+});
+
+test('a 2 MB file is 250 pieces that come back whole, in any order, even from a 20-piece-era sender', () => {
+  const v = vaultWith(1), parts = new Map();
+  const data = Buffer.alloc(2000000, 7); data[0] = 1; data[1999999] = 9;
+  const bodies = L.chunkBodies('box1', 'BIG', 'big.bin', data, null, 5, b64u);
+  assert.equal(bodies.length, 250);
+  assert.ok(bodies.every((b) => b.fn === 250 && b.fd.length <= 10667));
+  let done = null;
+  for (const i of [...bodies.keys()].reverse()) done = L.receiveChunk(v, parts, 'box1', bodies[i]) || done;
+  assert.equal(done.bytes.length, 2000000);
+  assert.equal(done.bytes[0], 1);
+  assert.equal(done.bytes[1999999], 9);
+  assert.equal(parts.size, 0);
+  // One byte more than the limit is 251 pieces: refused on arrival.
+  assert.equal(L.receiveChunk(v, new Map(), 'box1', { ...bodies[0], id: 'BIG2', fn: 251 }), null);
+  // Small files still work.
+  assert.equal(L.chunkBodies('b', 'i', 'n', Buffer.alloc(8000), null, 1, b64u).length, 1);
+  assert.equal(L.chunkBodies('b', 'i', 'n', Buffer.alloc(8001), null, 1, b64u).length, 2);
+});
+
+test('sendPieces paces a big file and retries the same piece after a 429', async () => {
+  const bodies = Array.from({ length: 4 }, (_, i) => ({ i }));
+  const log = [], sleeps = [];
+  let limited = 2;   // piece 1 is refused twice, then goes through
+  const post = async (b) => { log.push(b.i); if (b.i === 1 && limited > 0) { limited--; return { status: 429 }; } return { status: 200 }; };
+  const sleep = async (ms) => { sleeps.push(ms); };
+  const r = await L.sendPieces(bodies, post, sleep);
+  assert.deepEqual(r, { ok: true, status: 200 });
+  assert.deepEqual(log, [0, 1, 1, 1, 2, 3], 'the same piece again, never skipped');
+  assert.deepEqual(sleeps, [220, 8000, 8000, 220, 220, 220], '220 ms between pieces, 8 s after a 429');
+});
+
+test('sendPieces gives up after 8 waits on one piece, and on any other failure', async () => {
+  const sleeps = [];
+  const sleep = async (ms) => { sleeps.push(ms); };
+  let calls = 0;
+  const always429 = async () => { calls++; return { status: 429 }; };
+  assert.deepEqual(await L.sendPieces([{}, {}], always429, sleep), { ok: false, status: 429 });
+  assert.equal(calls, 9, 'one try and eight retries');
+  assert.equal(sleeps.filter((ms) => ms === 8000).length, 8);
+  const log = [];
+  const r = await L.sendPieces([{ i: 0 }, { i: 1 }, { i: 2 }], async (b) => { log.push(b.i); return { status: b.i === 1 ? 403 : 200 }; }, async () => {});
+  assert.deepEqual(r, { ok: false, status: 403 });
+  assert.deepEqual(log, [0, 1], 'stops at the first failure and does not retry it');
+  // A one-piece file has nothing to pace.
+  const s2 = [];
+  assert.deepEqual(await L.sendPieces([{}], async () => ({ status: 200 }), async (ms) => { s2.push(ms); }), { ok: true, status: 200 });
+  assert.deepEqual(s2, []);
+});
+
+test('the sealed size of a full 8,000-byte piece still fits the relay (about 16 KB)', async () => {
+  // (the existing size test covers the sealed blob; this checks the biggest body of a 250-piece file)
+  const bodies = L.chunkBodies('box1', 'BIG', 'big.bin', Buffer.alloc(2000000, 255), null, 5, b64u);
+  assert.ok(JSON.stringify(bodies[249]).length < 11000);
 });
