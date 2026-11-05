@@ -12,6 +12,7 @@
 //   • Runner: jump over spikes and blocks, a little Geometry Dash (RunnerGameView).
 //   • Plane: a 3D flight game with four planes, hoops, a time trial, landings and a leaderboard (PlaneGameView).
 //   • Capture the Flag: a top-down team game against computer players or friends in an online room (CtfGameView).
+//   • Rocket League: side-on car soccer with boost and a dash, against the computer or a friend online (RocketGameView, shared with Windows).
 //   • Racing: top-down cars on a straight, curved or mixed track, with rivals or friends in an online room (RacingGameView).
 //   • Tetris: falling blocks with hold, a preview, a ghost piece and levels (TetrisGameView, shared with Windows).
 //   • Daily Word: a five-letter word puzzle, one a day, with a streak and a Practice mode (DailyWordGameView, shared with Windows).
@@ -23,7 +24,7 @@ import SwiftUI
 
 struct GamesView: View {
     enum Game: String, CaseIterable, Identifiable {
-        case g2048 = "2048", snake = "Snake", breakout = "Breakout", memory = "Memory", reaction = "Reaction", cookies = "Cookies", runner = "Runner", plane = "Plane", racing = "Racing", ctf = "Capture Flag", chess = "Chess", tetris = "Tetris", dailyWord = "Daily Word", dailyTrivia = "Daily Trivia", blackjack = "Blackjack", solitaire = "Solitaire", poker = "Poker"
+        case g2048 = "2048", snake = "Snake", breakout = "Breakout", memory = "Memory", reaction = "Reaction", cookies = "Cookies", runner = "Runner", plane = "Plane", racing = "Racing", ctf = "Capture Flag", rocket = "Rocket League", chess = "Chess", tetris = "Tetris", dailyWord = "Daily Word", dailyTrivia = "Daily Trivia", blackjack = "Blackjack", solitaire = "Solitaire", poker = "Poker"
         var id: String { rawValue }
         var symbol: String {
             switch self {
@@ -37,6 +38,7 @@ struct GamesView: View {
             case .plane: "airplane"
             case .racing: "car.fill"
             case .ctf: "flag.fill"
+            case .rocket: "soccerball"
             case .chess: "crown.fill"
             case .tetris: "square.stack.3d.up.fill"
             case .dailyWord: "textformat.abc"
@@ -49,7 +51,7 @@ struct GamesView: View {
         /// Games drawn for a bigger panel: the notch grows while one is open.
         var isBig: Bool {
             switch self {
-            case .plane, .racing, .ctf, .chess, .tetris, .dailyWord, .dailyTrivia: true
+            case .plane, .racing, .ctf, .rocket, .chess, .tetris, .dailyWord, .dailyTrivia: true
             default: false
             }
         }
@@ -105,6 +107,7 @@ struct GamesView: View {
         case .plane: PlaneGameView()
         case .racing: RacingGameView()
         case .ctf: CtfGameView()
+        case .rocket: RocketGameView()
         case .chess: ChessGameView()
         case .tetris: TetrisGameView()
         case .dailyWord: DailyWordGameView()
@@ -138,6 +141,7 @@ struct GamesView: View {
         case .dailyTrivia: "Daily Trivia. One multiple-choice question a day, the same for everyone. Click an answer or press 1–4. A Practice mode gives five more."
         case .dailyWord: "Daily Word. Guess the 5-letter word in 6 tries. A new word each day, plus a Practice mode."
         case .ctf: "Capture the Flag. W A S D move, the mouse aims, click or Space shoots. Take their flag home. Computer teams or friends online."
+        case .rocket: "Rocket League. A D or ← → drive (and spin in the air), Space or W jump (again in the air to dash), Shift or X boost. Computer players, or a friend online with a room code."
         case .racing: "Racing. ↑ W gas, ↓ S brake, ← → A D steer, Space handbrake, V view (chase, cockpit, top), M sound. 12 tracks, 7 cars, a track designer, online rooms."
         case .plane: "3D flying. ↑ ↓ pitch, ← → roll, A D rudder, W S throttle, F flaps, Space brakes, C camera, P pause."
         }

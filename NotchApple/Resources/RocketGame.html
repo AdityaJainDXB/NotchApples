@@ -1,0 +1,20 @@
+<!doctype html>
+<!-- Rocket League in the Mac app's Games tab and in friend chats and rooms: a web view loads this page. The game itself is
+     rocket.js with its rules in rocket-logic.js, the same files the Windows app uses (NotchWindows/src/js/games/, copied in as
+     resources). A friend chat opens it with ?room=ABC234&host=1&name=Ada so both players land in the same online match. -->
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>html, body { margin: 0; height: 100%; overflow: hidden; background: transparent; } #game { position: absolute; inset: 0; }</style>
+</head>
+<body>
+  <div id="game"></div>
+  <script src="rocket-logic.js"></script>
+  <script src="rocket.js"></script>
+  <script>
+    const q = Object.fromEntries(new URLSearchParams(location.search));
+    window.NotchRocketGame.mount(document.getElementById('game'), { room: q.room, host: q.host === '1', name: q.name });
+  </script>
+</body>
+</html>

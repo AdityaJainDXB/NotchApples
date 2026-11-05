@@ -43,6 +43,11 @@ targets:
         buildPhase: resources
       - path: NotchWindows/src/js/games/ctf.js
         buildPhase: resources
+      # Rocket League (rocket.js and its physics) is shared with the Windows app too.
+      - path: NotchWindows/src/js/games/rocket-logic.js
+        buildPhase: resources
+      - path: NotchWindows/src/js/games/rocket.js
+        buildPhase: resources
       # Chess (chess.js and its rules) is shared with the Windows app too.
       - path: NotchWindows/src/js/games/chess-logic.js
         buildPhase: resources

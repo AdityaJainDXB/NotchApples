@@ -1,6 +1,6 @@
 // Games: 2048, Snake, a reaction test, (as on the Mac) Cookie Clicker, Runner, Breakout and Memory, Plane, a
 // 3D flight game shared with the Mac (games/plane-sim.js), and Racing, a top-down car racing game with online rooms
-// (games/racing.js, also shared with the Mac), and Capture the Flag, a top-down team game with online rooms (games/ctf.js), Chess, Tetris and Daily Word (all shared with the Mac).
+// (games/racing.js, also shared with the Mac), Rocket League, side-on car soccer (games/rocket.js, shared with the Mac), and Capture the Flag, a top-down team game with online rooms (games/ctf.js), Chess, Tetris and Daily Word (all shared with the Mac).
 // Best scores stay on this PC.
 import { el, load, save } from '../store.js';
 import { segmented } from '../ui.js';
@@ -17,7 +17,7 @@ export function render(root) {
   // to fit instead of being cut off. Plane and Racing fill the space themselves.
   const fit = () => {
     const inner = board.firstElementChild;
-    if (!inner || game === 'plane' || game === 'racing' || game === 'ctf' || game === 'chess' || game === 'tetris' || game === 'wordle' || game === 'trivia') return;
+    if (!inner || game === 'plane' || game === 'racing' || game === 'ctf' || game === 'rocket' || game === 'chess' || game === 'tetris' || game === 'wordle' || game === 'trivia') return;
     inner.style.transform = ''; inner.style.marginBottom = ''; inner.style.transformOrigin = 'center top';
     const w = inner.offsetWidth, h = inner.offsetHeight;
     if (!w || !h) return;
@@ -30,8 +30,8 @@ export function render(root) {
   const onFull = () => { const on = document.fullscreenElement === board; board.style.cssText = on ? 'display:flex;justify-content:center;align-items:flex-start;background:#0d0b14;overflow:auto;padding-top:2vh' : ''; fit(); setTimeout(fit, 80); };
   document.addEventListener('fullscreenchange', onFull);
   const fullBtn = el('button', { class: 'btn small', title: 'Make this game fill the screen (Esc leaves)', onclick: () => { if (document.fullscreenElement === board) document.exitFullscreen?.(); else board.requestFullscreen?.().catch?.(() => {}); } }, '⛶ Full screen');
-  const pick = (g) => { stop(); game = g; save('games.last', g); fullBtn.style.display = (g === 'plane' || g === 'racing' || g === 'ctf' || g === 'chess' || g === 'tetris' || g === 'wordle' || g === 'trivia') ? 'none' : ''; stop = ({ 2048: g2048, snake, reaction, cookie, runner, breakout, memory, plane, racing, ctf, chess, tetris, wordle, trivia, blackjack, solitaire, poker })[g](board) || (() => {}); requestAnimationFrame(fit); setTimeout(fit, 120); };
-  root.append(el('div', { class: 'col fill' }, segmented([{ value: '2048', label: '2048' }, { value: 'snake', label: 'Snake' }, { value: 'reaction', label: 'Reaction' }, { value: 'cookie', label: 'Cookie Clicker' }, { value: 'runner', label: 'Runner' }, { value: 'breakout', label: 'Breakout' }, { value: 'memory', label: 'Memory' }, { value: 'plane', label: '✈️ Plane' }, { value: 'racing', label: '🏎️ Racing' }, { value: 'ctf', label: '🚩 Capture the Flag' }, { value: 'chess', label: '♞ Chess' }, { value: 'tetris', label: '🧱 Tetris' }, { value: 'wordle', label: '🔤 Daily Word' }, { value: 'trivia', label: '❓ Daily Trivia' }, { value: 'blackjack', label: '🃏 Blackjack' }, { value: 'solitaire', label: '♠️ Solitaire' }, { value: 'poker', label: '♣️ Poker' }], game, pick), el('div', { style: 'display:flex;justify-content:flex-end' }, fullBtn), board));
+  const pick = (g) => { stop(); game = g; save('games.last', g); fullBtn.style.display = (g === 'plane' || g === 'racing' || g === 'ctf' || g === 'rocket' || g === 'chess' || g === 'tetris' || g === 'wordle' || g === 'trivia') ? 'none' : ''; stop = ({ 2048: g2048, snake, reaction, cookie, runner, breakout, memory, plane, racing, ctf, rocket, chess, tetris, wordle, trivia, blackjack, solitaire, poker })[g](board) || (() => {}); requestAnimationFrame(fit); setTimeout(fit, 120); };
+  root.append(el('div', { class: 'col fill' }, segmented([{ value: '2048', label: '2048' }, { value: 'snake', label: 'Snake' }, { value: 'reaction', label: 'Reaction' }, { value: 'cookie', label: 'Cookie Clicker' }, { value: 'runner', label: 'Runner' }, { value: 'breakout', label: 'Breakout' }, { value: 'memory', label: 'Memory' }, { value: 'plane', label: '✈️ Plane' }, { value: 'racing', label: '🏎️ Racing' }, { value: 'ctf', label: '🚩 Capture the Flag' }, { value: 'rocket', label: '🚀 Rocket League' }, { value: 'chess', label: '♞ Chess' }, { value: 'tetris', label: '🧱 Tetris' }, { value: 'wordle', label: '🔤 Daily Word' }, { value: 'trivia', label: '❓ Daily Trivia' }, { value: 'blackjack', label: '🃏 Blackjack' }, { value: 'solitaire', label: '♠️ Solitaire' }, { value: 'poker', label: '♣️ Poker' }], game, pick), el('div', { style: 'display:flex;justify-content:flex-end' }, fullBtn), board));
   pick(game);
   return () => { ro.disconnect(); stop(); document.removeEventListener('fullscreenchange', onFull); if (document.fullscreenElement === board) document.exitFullscreen?.(); };
 }
@@ -181,6 +181,14 @@ function trivia(host) {
 
 /// Capture the Flag: a top-down team game with computer players or friends in an online room. The same script runs in the Mac
 /// app's web view. It stops when you switch away.
+function rocket(host) {
+  host.style.position = 'relative';
+  const box = el('div', { style: 'position:absolute;inset:0' });
+  host.replaceChildren(box);
+  let stop = () => {}, gone = false;
+  import('../games/rocket-logic.js').then(() => import('../games/rocket.js')).then(() => { if (!gone) { stop = window.NotchRocketGame.mount(box); box.firstElementChild && box.firstElementChild.focus(); } });
+  return () => { gone = true; host.style.position = ''; stop(); };
+}
 function ctf(host) {
   host.style.position = 'relative';
   const box = el('div', { style: 'position:absolute;inset:0' });

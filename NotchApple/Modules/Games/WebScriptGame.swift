@@ -18,11 +18,15 @@ struct WebScriptGameView: View {
     var usesSound = false
     /// Lets the page read the day's NYT puzzle (see PuzzleFetcher); no other address can be fetched.
     var fetchesNYTPuzzle = false
+    /// Parameters for the page (like "room=ABC234&host=1"), read by the page from its address.
+    var query: String? = nil
 
     var body: some View {
-        if let url = Bundle.main.url(forResource: page, withExtension: "html") {
+        if let base = Bundle.main.url(forResource: page, withExtension: "html") {
+            let url = query.flatMap { URL(string: base.absoluteString + "?" + $0) } ?? base
             WebScriptGameWebView(url: url, global: global, usesSound: usesSound, fetchesNYTPuzzle: fetchesNYTPuzzle)
                 .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                .id(url)
         } else {
             Text("\(title) is missing from this copy of Notch Apple.")
                 .font(.system(size: 12)).foregroundStyle(Theme.textSecondary)

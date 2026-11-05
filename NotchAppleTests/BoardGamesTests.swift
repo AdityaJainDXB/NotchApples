@@ -136,6 +136,31 @@ final class BoardGamesTests: XCTestCase {
         XCTAssertEqual(s.chess.moves, 2, "once white has moved, the stashed reply is played")
     }
 
+    // MARK: Rocket League (only the lobby is in the session; the match runs live between the two web views)
+
+    func testRocketLeagueHasALobbyButNoMovesInTheSession() throws {
+        var s = try started(.rocket)
+        XCTAssertEqual(s.status, .playing)
+        XCTAssertEqual(s.p1, a)
+        XCTAssertEqual(PlayKind.rocket.title, "Rocket League")
+        XCTAssertEqual(PlayKind(rawValue: "rl"), .rocket)
+        let before = s
+        go(&s, 1, 2, as: a)
+        XCTAssertEqual(s.chess, before.chess, "a stray move changes no board")
+        XCTAssertEqual(s.status, .playing)
+        s = PlayRules.reduce(s, PlayRules.quit(s), from: b) ?? s
+        XCTAssertEqual(s.status, .ended)
+        XCTAssertEqual(s.leaver, b)
+    }
+
+    func testTheGameIdAlphabetMatchesTheRoomCodeAlphabetSoAnyIdMakesAValidCode() {
+        for _ in 0..<200 {
+            let code = String(PlayRules.newGameID().prefix(6)).uppercased()
+            XCTAssertTrue(code.allSatisfy { "ABCDEFGHJKMNPQRSTUVWXYZ23456789".contains($0) }, code)
+            XCTAssertEqual(code.count, 6)
+        }
+    }
+
     // MARK: Checkers
 
     func testCheckersOpeningMovesAndTurns() throws {

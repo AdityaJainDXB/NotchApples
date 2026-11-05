@@ -85,6 +85,8 @@ struct PlayCard: View {
             case .rps: rps(s, me: me)
             case .battleship: battleship(s, me: me)
             case .chess, .checkers: boardGame(s, me: me)
+            case .rocket:
+                if s.status == .playing, let me { RocketMatchView(gid: s.gid, host: me == 0) } else { Text("Watching a Rocket League match").font(.system(size: 11)).foregroundStyle(Theme.textSecondary) }
             }
             Text(statusLine(s, me: me)).font(.system(size: 12, weight: myTurn(s, me: me) ? .bold : .regular)).foregroundStyle(.white).multilineTextAlignment(.center)
             HStack(spacing: 8) {
@@ -106,6 +108,7 @@ struct PlayCard: View {
         case .battleship: return "You vs \(play.name(other))"
         case .chess: return "You are \(me == 0 ? "white" : "black") · \(play.name(other)) is \(me == 0 ? "black" : "white")"
         case .checkers: return "You are \(me == 0 ? "red" : "white") · \(play.name(other)) is \(me == 0 ? "white" : "red")"
+        case .rocket: return "You are \(me == 0 ? "Blue" : "Orange") · \(play.name(other)) is \(me == 0 ? "Orange" : "Blue")"
         }
     }
 
@@ -117,6 +120,7 @@ struct PlayCard: View {
         case .battleship: return s.bs.bothReady ? s.bs.shooter == me : !play.iCommittedFleet
         case .chess: return s.chess.turn == me
         case .checkers: return s.checkers.turn == me
+        case .rocket: return false
         }
     }
 
@@ -147,6 +151,7 @@ struct PlayCard: View {
         case .checkers:
             if myTurn(s, me: me) { return s.checkers.chain != nil ? "Keep jumping with the same piece" : (s.checkers.mustCapture(s.checkers.turn) ? "Your turn · you must capture" : "Your turn") }
             return "\(play.name(s.player(s.checkers.turn)))'s turn"
+        case .rocket: return "Drive: A D or ← →. Jump: Space or W (again to dash). Boost: Shift or X."
         }
     }
 
