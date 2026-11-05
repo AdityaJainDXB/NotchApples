@@ -91,7 +91,7 @@ pub fn safe_name(raw: &str) -> String {
 pub fn friends_stage_file(name: String, base64: String) -> Result<String, String> {
     use base64::Engine;
     let bytes = base64::engine::general_purpose::STANDARD.decode(base64).map_err(|e| e.to_string())?;
-    if bytes.len() > 200_000 { return Err("Too much data.".into()); }
+    if bytes.len() > 2_000_000 { return Err("Too much data.".into()); }   // a received file is at most 2,000,000 bytes (it was 160,000 before 2.2.8)
     let mut tag = [0u8; 8];
     for (i, b) in std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map(|d| d.as_nanos()).unwrap_or(0).to_le_bytes().iter().take(8).enumerate() { tag[i] = *b; }
     let dir = std::env::temp_dir().join("NotchApple").join("friends").join(tag.iter().map(|b| format!("{b:02x}")).collect::<String>());

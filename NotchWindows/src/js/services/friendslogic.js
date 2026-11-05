@@ -8,10 +8,17 @@ export const CODE_ALPHABET = '0123456789ABCDEFGHJKMNPQRSTVWXYZ';
 export const CODE_LENGTH = 10;
 export const MAX_TEXT = 2000;
 const SEEN_LIMIT = 500;
-/** Files: 8 KB chunks (a sealed message is limited to about 16 KB by the relay), at most 20 of them. Same numbers as the Mac. */
+/** Files: 8 KB chunks (a sealed message is limited to about 16 KB by the relay), at most 250 of them, so 2,000,000 bytes (the relay's
+ *  mailbox holds 4.5 MB). Same numbers as the Mac since 2.2.8; before that it was 20 chunks and 160,000 bytes. */
 export const CHUNK_SIZE = 8000;
-export const MAX_CHUNKS = 20;
+export const MAX_CHUNKS = 250;
 export const MAX_FILE_BYTES = CHUNK_SIZE * MAX_CHUNKS;
+/** "2 MB" for messages. */
+export const MAX_FILE_TEXT = `${MAX_FILE_BYTES / 1_000_000} MB`;
+/** Sending a file: about 4 pieces a second, and when the relay says 429 (too many sends a minute) wait 8 s and send the same piece again, up to 8 times. */
+export const PIECE_GAP_MS = 220;
+export const RATE_WAIT_MS = 8000;
+export const RATE_RETRIES = 8;
 export const MAX_GROUP_MEMBERS = 20;
 export const MAX_GROUPS = 30;
 export const PARTIAL_TTL_MS = 10 * 60 * 1000;
@@ -314,7 +321,7 @@ export const fileIds = (v, key) => (v.messages[key] || []).filter((m) => m.file)
 /**
  * One chunk of a file. `partials` is a Map the caller keeps between calls (files being put back together).
  * Returns { group, id, name, bytes } when the last piece arrives, else null. Nothing is stored here: the caller does that.
- * Limits (same as the Mac): 1…20 chunks of up to 8,000 bytes, a partial file is dropped after 10 minutes, at most 8 at once.
+ * Limits (same as the Mac): 1…250 chunks of up to 8,000 bytes, a partial file is dropped after 10 minutes, at most 8 at once.
  */
 export function receiveChunk(v, partials, from, body, now = Date.now()) {
   const f = record(v, from);
@@ -357,6 +364,21 @@ export function chunkBodies(from, id, name, bytes, group, ts, toB64u) {
     out.push(b);
   }
   return out;
+}
+
+/**
+ * Sends the pieces of a file one after the other with `post(body)` (which resolves to { status }), like the Mac's deliverFile:
+ * a 429 waits RATE_WAIT_MS and sends the same piece again (at most RATE_RETRIES times), and a file of several pieces waits PIECE_GAP_MS
+ * after each one. Stops at the first piece that fails. Returns { ok, status } (status of the failure, or 200).
+ */
+export async function sendPieces(bodies, post, sleep) {
+  for (const b of bodies) {
+    let r = await post(b), waits = 0;
+    while (r.status === 429 && waits < RATE_RETRIES) { waits++; await sleep(RATE_WAIT_MS); r = await post(b); }
+    if (r.status !== 200) return { ok: false, status: r.status };
+    if (bodies.length > 1) await sleep(PIECE_GAP_MS);
+  }
+  return { ok: true, status: 200 };
 }
 
 /** The body of an invite / change for a group: every member's mailbox including mine (the receiver is in the list too). */

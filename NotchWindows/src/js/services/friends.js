@@ -341,7 +341,6 @@ async function receiveChunk(body, friend) {
   if (!g && settings.receipts) sendReceipt(friend, done.id, here ? 'read' : 'delivered');
 }
 
-const MAX_KB = L.MAX_FILE_BYTES / 1000;
 const stdB64 = (bytes) => { let s = ''; for (let i = 0; i < bytes.length; i += 8192) s += String.fromCharCode(...bytes.subarray(i, i + 8192)); return btoa(s); };
 const stdBytes = (b64) => Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
 
@@ -373,20 +372,17 @@ export async function sendFile(path, key) {
   return null;
 }
 const tooBig = (n) => (typeof n === 'number'
-  ? `That file is ${Math.ceil(n / 1000)} KB. Files up to ${MAX_KB} KB can be sent in a chat (photos, screenshots and documents are fine; videos are too big).`
-  : `That file is too big. Files up to ${MAX_KB} KB can be sent in a chat (photos, screenshots and documents are fine; videos are too big).`);
+  ? `That file is ${Math.ceil(n / 1000)} KB. Files up to ${L.MAX_FILE_TEXT} can be sent in a chat (photos, documents and short clips are fine; long videos are too big).`
+  : `That file is too big. Files up to ${L.MAX_FILE_TEXT} can be sent in a chat (photos, documents and short clips are fine; long videos are too big).`);
 
 async function deliverFile(id, name, bytes, gid, historyKey, to) {
   const bodies = L.chunkBodies(me.box, id, name, bytes, gid, Date.now(), C.b64u);
   let reached = 0, lastStatus = 200;
   for (const friend of to) {
     if (!friend.sendToken) continue;
-    let ok = true;
-    for (const b of bodies) {
-      const r = await post(friend, b);
-      if (r.status !== 200) { ok = false; lastStatus = r.status; break; }
-    }
-    if (ok) reached++;
+    // Paced and retried on 429 (L.sendPieces), so a big file is not lost halfway when the relay's per-minute limit is reached.
+    const r = await L.sendPieces(bodies, (b) => post(friend, b), (ms) => new Promise((res) => setTimeout(res, ms)));
+    if (r.ok) reached++; else lastStatus = r.status;
   }
   L.setState(vault, historyKey, id, reached > 0 ? 'sent' : 'failed');
   if (reached < to.length) st.lastProblem = reached === 0 ? explain(lastStatus, {}) : `The file reached ${reached} of ${to.length} people.`;
