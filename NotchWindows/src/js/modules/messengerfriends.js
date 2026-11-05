@@ -70,6 +70,32 @@ export function render(root) {
       f.unread > 0 ? el('span', { class: 'badge' }, String(f.unread)) : null);
     return row;
   }
+  function groupRow(g) {
+    const key = L.groupKey(g.id);
+    return el('div', { class: `item clickable ${selected === key ? 'selected' : ''}`, style: 'padding:5px 8px;gap:8px', onclick: () => select(key),
+      oncontextmenu: (e) => { e.preventDefault(); menu(e, [{ label: 'Leave group', danger: true, run: () => leave(g) }]); } },
+      el('div', { style: 'width:24px;height:24px;border-radius:50%;flex:none;display:grid;place-items:center;font-size:12px;background:rgba(255,255,255,.12)' }, '👥'),
+      el('div', { class: 'main', style: 'font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap' }, g.name),
+      g.unread > 0 ? el('span', { class: 'badge' }, String(g.unread)) : null);
+  }
+  async function leave(g) {
+    if (await confirm(`Leave ${g.name}?`, { ok: 'Leave', danger: true, detail: 'The group and its messages are deleted from this PC. Others are told you left.' })) { const key = L.groupKey(g.id); FR.leaveGroup(key); if (selected === key) select(null); }
+  }
+  function newGroup() {
+    const fr = FR.friends(), picked = new Set(), nameIn = el('input', { class: 'field', placeholder: 'Group name', maxlength: 32 }), note = el('div', { class: 'tiny', style: 'color:var(--warn,#e0a030)' });
+    if (!fr.length) { toast('Add a friend first, then you can make a group.'); return; }
+    const m = modal('New group', [nameIn,
+      el('div', { class: 'col gap-4 scroll', style: 'max-height:200px' }, fr.map((f) => el('label', { class: 'hstack', style: 'gap:8px;cursor:pointer' },
+        el('input', { type: 'checkbox', onchange: (e) => { if (e.target.checked) picked.add(f.box); else picked.delete(f.box); } }), L.displayName(f)))),
+      el('div', { class: 'tiny dim' }, 'Everyone in a group sees messages only from people who are also their friends, so add people who know each other. Each message is encrypted separately for each person.'),
+      note,
+      el('div', { class: 'hstack' }, button('Create', () => {
+        const problem = FR.createGroup(nameIn.value, [...picked]);
+        if (problem) { note.textContent = problem; return; }
+        m.close(); select(L.groupKey(FR.groups()[0].id));
+      }))]);
+    setTimeout(() => nameIn.focus(), 30);
+  }
   function friendMenu(e, f) {
     menu(e, [
       { label: 'Nickname…', run: () => nickname(f) },
@@ -100,24 +126,44 @@ export function render(root) {
         inc.length ? [section('Requests'), ...inc.map(requestRow)] : null,
         pend.length ? [section('Waiting for an answer'), ...pend.map(pendingRow)] : null,
         section('Friends'),
-        fr.length ? fr.map(friendRow) : el('div', { class: 'tiny dim' }, 'Type a friend’s code above to add them, or share yours (bottom right).')));
+        fr.length ? fr.map(friendRow) : el('div', { class: 'tiny dim' }, 'Type a friend’s code above to add them, or share yours (bottom right).'),
+        el('div', { class: 'hstack', style: 'justify-content:space-between;margin-top:6px' }, el('div', { class: 'tiny faint', style: 'text-transform:uppercase;font-weight:700' }, 'Groups'),
+          button('＋', () => newGroup(), { small: true, kind: 'quiet', title: 'Start a group chat with some of your friends' })),
+        FR.groups().length ? FR.groups().map(groupRow) : el('div', { class: 'tiny dim' }, fr.length ? 'Press ＋ to start a group chat.' : 'Add a friend first, then you can make a group.')));
     if (refocus) addInput.focus();
     paintCodeBar();
   }
 
-  function bubble(m, friend) {
+  const size = (n) => (n < 1000 ? `${n} B` : `${(n / 1000).toFixed(n < 10000 ? 1 : 0)} KB`);
+  /** `key` is a friend's box or a group key; `inGroup` shows who sent it and hides delivered / read (there are no receipts in groups). */
+  function bubble(m, key, inGroup) {
+    // A file is shown in Explorer when clicked. It is never opened for you.
+    const body = m.file
+      ? el('a', { style: 'cursor:pointer;display:flex;gap:8px;align-items:center', title: 'Show in Explorer (it is not opened)', onclick: () => FR.reveal(m.id, m.file.name) },
+        el('span', { style: 'font-size:20px' }, '📄'), el('span', { style: 'overflow-wrap:anywhere' }, m.file.name, el('div', { class: 'tiny', style: 'opacity:.7' }, size(m.file.size))))
+      : m.text;
+    const state = inGroup ? { sending: '· sending…', sent: '· sent', delivered: '', read: '' } : STATE;
     return el('div', { style: `display:flex;flex-direction:column;align-items:${m.mine ? 'flex-end' : 'flex-start'}` },
-      el('div', { class: 'selectable', style: `max-width:80%;padding:7px 12px;border-radius:14px;white-space:pre-wrap;overflow-wrap:anywhere;${m.mine ? 'background:var(--accent);color:var(--on-accent)' : 'background:rgba(255,255,255,.08)'}` }, m.text),
+      inGroup && !m.mine ? el('div', { class: 'tiny faint' }, FR.nameOfBox(m.by)) : null,
+      el('div', { class: 'selectable', style: `max-width:80%;padding:7px 12px;border-radius:14px;white-space:pre-wrap;overflow-wrap:anywhere;${m.mine ? 'background:var(--accent);color:var(--on-accent)' : 'background:rgba(255,255,255,.08)'}` }, body),
       el('div', { class: 'tiny faint hstack', style: 'gap:4px' }, fmtTime(m.date),
         m.mine ? (m.state === 'failed'
-          ? el('a', { style: 'color:var(--warn,#e0a030);cursor:pointer', onclick: () => FR.retry(m.id, friend.box) }, '· failed, click to retry')
-          : el('span', { style: m.state === 'read' ? 'color:var(--accent)' : '' }, STATE[m.state])) : null));
+          ? el('a', { style: 'color:var(--warn,#e0a030);cursor:pointer', onclick: () => FR.retry(m.id, key) }, '· failed, click to retry')
+          : el('span', { style: m.state === 'read' ? 'color:var(--accent)' : '' }, state[m.state])) : null));
+  }
+  async function attach() {
+    const key = selected; if (!key) return;
+    const p = await invoke('pick_file'); if (!p) return;
+    FR.st.lastProblem = await FR.sendFile(p, key);
+    paint();
   }
 
   const log = el('div', { class: 'col gap-6 scroll', style: 'flex:1;min-height:0' });
   const typingLine = el('div', { class: 'tiny', style: 'color:var(--accent)' });
   const problem = el('div', { class: 'tiny', style: 'color:var(--warn,#e0a030)' });
   const title = el('div', { class: 'title grow' });
+  const groupNote = el('div', { class: 'tiny', style: 'color:var(--warn,#e0a030)' });
+  const clip = button('📎', attach, { kind: 'quiet', title: `Send a file (up to ${L.MAX_FILE_BYTES / 1000} KB). It is encrypted like a message.` });
   function send() {
     const box = selected; if (!box || !draft.value.trim()) return;
     FR.st.lastProblem = null; FR.send(draft.value, box); draft.value = '';
@@ -132,24 +178,45 @@ export function render(root) {
         el('div', { class: 'hstack' }, title, typingLine,
           button('Safety number', () => safety(friend.box), { small: true, kind: 'quiet', title: 'Compare these numbers with your friend to be sure nobody is in the middle' }),
           button('⋯', (e) => friendMenu(e, FR.book().friends.find((f) => f.box === chatKey) || friend), { small: true, kind: 'quiet' })),
-        log, problem, el('div', { class: 'hstack' }, draft, button('Send', send, { title: 'Send (Enter)' })));
+        log, problem, el('div', { class: 'hstack' }, clip, draft, button('Send', send, { title: 'Send (Enter)' })));
       setTimeout(() => draft.focus(), 30);
     }
     title.textContent = L.displayName(friend);
     typingLine.textContent = FR.st.typing.has(friend.box) ? 'typing…' : '';
     problem.textContent = FR.st.lastProblem || '';
     const msgs = FR.messages(friend.box);
-    log.replaceChildren(...(msgs.length ? msgs.map((m) => bubble(m, friend))
+    log.replaceChildren(...(msgs.length ? msgs.map((m) => bubble(m, friend.box, false))
       : [el('div', { class: 'small dim', style: 'text-align:center;margin-top:30px' }, `Say hi. Messages are encrypted on this PC; the server only holds them until ${L.displayName(friend)} is online.`)]));
     log.scrollTop = log.scrollHeight;
     if (friend.unread > 0) FR.markRead(friend.box);
+  }
+
+  function paintGroup(g) {
+    const key = L.groupKey(g.id);
+    if (chatKey !== key) {
+      chatKey = key;
+      pane.replaceChildren(
+        el('div', { class: 'hstack' }, title, typingLine,
+          button('⋯', (e) => menu(e, [{ label: 'Leave group', danger: true, run: () => leave(FR.group(key) || g) }]), { small: true, kind: 'quiet' })),
+        groupNote, log, problem, el('div', { class: 'hstack' }, clip, draft, button('Send', send, { title: 'Send (Enter)' })));
+      setTimeout(() => draft.focus(), 30);
+    }
+    title.textContent = g.name; typingLine.textContent = '';
+    const out = L.unreachable(FR.book(), g);
+    groupNote.textContent = out ? `${out} in this group aren't your friends, so you can't message or hear from them here.` : '';
+    problem.textContent = FR.st.lastProblem || '';
+    const msgs = FR.messages(key);
+    log.replaceChildren(...(msgs.length ? msgs.map((m) => bubble(m, key, true))
+      : [el('div', { class: 'small dim', style: 'text-align:center;margin-top:30px' }, 'Say hi to the group. Each message is encrypted for every member who is your friend.')]));
+    log.scrollTop = log.scrollHeight;
+    if (g.unread > 0) FR.markRead(key);
   }
 
   function paintPlaceholder() {
     chatKey = null;
     pane.replaceChildren(el('div', { class: 'center' }, el('div', { class: 'col', style: 'align-items:center;gap:10px;max-width:380px;text-align:center' },
       el('div', { style: 'font-size:36px' }, '👥'), el('div', { class: 'title' }, 'Friends'),
-      el('div', { class: 'small dim' }, 'Private, end-to-end encrypted chat with people you add by code, on Mac or Windows. Nobody can message you until you accept them.'),
+      el('div', { class: 'small dim' }, 'Private, end-to-end encrypted chat, files and group chats with people you add by code, on Mac or Windows. Nobody can message you until you accept them.'),
       FR.identity() ? el('div', { class: 'small' }, 'Your code: ', el('b', { class: 'selectable' }, L.displayCode(FR.identity().code))) : null,
       el('div', { class: 'tiny faint' }, 'Windows Friends is a BETA.'))));
   }
@@ -186,8 +253,9 @@ export function render(root) {
 
   function paint() {
     paintSide();
-    const f = selected && FR.book().friends.find((x) => x.box === selected && x.status === 'active');
-    if (f) paintChat(f); else { if (selected) selected = null; paintPlaceholder(); }
+    const g = selected && L.isGroupKey(selected) ? FR.group(selected) : null;
+    const f = selected && !g && FR.book().friends.find((x) => x.box === selected && x.status === 'active');
+    if (g) paintGroup(g); else if (f) paintChat(f); else { if (selected) selected = null; paintPlaceholder(); }
   }
   // Repaint on every change except while a message is being typed in the add box (it is kept, so this is safe anyway).
   const off = FR.subscribe(paint);

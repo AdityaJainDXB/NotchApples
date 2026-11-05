@@ -8,6 +8,14 @@ export const CODE_ALPHABET = '0123456789ABCDEFGHJKMNPQRSTVWXYZ';
 export const CODE_LENGTH = 10;
 export const MAX_TEXT = 2000;
 const SEEN_LIMIT = 500;
+/** Files: 8 KB chunks (a sealed message is limited to about 16 KB by the relay), at most 20 of them. Same numbers as the Mac. */
+export const CHUNK_SIZE = 8000;
+export const MAX_CHUNKS = 20;
+export const MAX_FILE_BYTES = CHUNK_SIZE * MAX_CHUNKS;
+export const MAX_GROUP_MEMBERS = 20;
+export const MAX_GROUPS = 30;
+export const PARTIAL_TTL_MS = 10 * 60 * 1000;
+export const MAX_PARTIALS = 8;
 
 // ---- small helpers (kept local so this file has no imports)
 
@@ -51,7 +59,7 @@ export function clean(raw) {
 
 // ---- the data model
 
-export const newVault = () => ({ friends: [], messages: {}, blocked: [], seen: [] });
+export const newVault = () => ({ friends: [], messages: {}, blocked: [], seen: [], groups: [] });
 /** A vault read back from disk, with anything missing filled in. */
 export function normalizeVault(raw) {
   const v = newVault();
@@ -60,6 +68,8 @@ export function normalizeVault(raw) {
   if (raw.messages && typeof raw.messages === 'object') v.messages = raw.messages;
   if (Array.isArray(raw.blocked)) v.blocked = raw.blocked.filter((x) => typeof x === 'string');
   if (Array.isArray(raw.seen)) v.seen = raw.seen.filter((x) => typeof x === 'string');
+  // A vault saved before groups existed has no `groups`: that must load as "no groups", never wipe the friends.
+  if (Array.isArray(raw.groups)) v.groups = raw.groups.filter((g) => g && typeof g.id === 'string' && Array.isArray(g.members));
   return v;
 }
 
@@ -71,7 +81,7 @@ export const pending = (v) => v.friends.filter((f) => f.status === 'outgoing').s
 export const active = (v) => v.friends.filter((f) => f.status === 'active').sort((a, b) => b.lastActivity - a.lastActivity);
 export const messagesOf = (v, box) => v.messages[box] || [];
 /** The number on the badge: unread messages plus requests waiting for an answer. */
-export const totalUnread = (v) => v.friends.reduce((n, f) => n + (f.unread || 0), 0) + incoming(v).length;
+export const totalUnread = (v) => v.friends.reduce((n, f) => n + (f.unread || 0), 0) + (v.groups || []).reduce((n, g) => n + (g.unread || 0), 0) + incoming(v).length;
 export function displayName(f) {
   if (f.alias) return f.alias;
   if (f.nick) return f.nick;
@@ -174,6 +184,177 @@ export function block(v, box) {
 }
 export function remove(v, box) { v.friends = v.friends.filter((f) => f.box !== box); delete v.messages[box]; }
 export function unblockAll(v) { v.blocked = []; }
+
+// ---- files and groups (the Mac's "Files and groups" in FriendsLogic.swift; wire format in docs/FRIENDS_PROTOCOL.md)
+
+/** Group chats live in the same message table as friends, under a key no mailbox can have (mailboxes are hex). */
+export const groupKey = (id) => `g:${id}`;
+export const isGroupKey = (key) => typeof key === 'string' && key.startsWith('g:');
+/** Ids come from other people, so only plain ones are accepted (they also become part of a stored file's name). */
+export const isPlainID = (id) => typeof id === 'string' && id.length > 0 && id.length <= 64 && /^[0-9A-Za-z-]+$/.test(id);
+
+/** A file's name comes from the sender: one line, no folders, no control characters, 80 characters at most. */
+export function cleanFileName(raw) {
+  if (typeof raw !== 'string') return null;
+  const last = raw.split(/[/\\]/).filter(Boolean).pop() || '';
+  const s = last.replace(/[\p{Default_Ignorable_Code_Point}\p{Cc}]/gu, '').replace(/^[ \t   -   　]+|[ \t   -   　]+$/g, '');
+  if (!s || s === '.' || s === '..') return null;
+  return graphemes(s).slice(0, 80).join('');
+}
+
+export const group = (v, key) => (v.groups || []).find((g) => g.key === key || groupKey(g.id) === key) || null;
+const groupIndex = (v, key) => (v.groups || []).findIndex((g) => groupKey(g.id) === key);
+/** Groups, newest activity first. */
+export const groupsSorted = (v) => [...(v.groups || [])].sort((a, b) => b.lastActivity - a.lastActivity);
+/** Members of a group that I can't reach (not my active friends), who won't get what I send and whose messages I won't see. */
+export const unreachable = (v, g) => g.members.filter((b) => record(v, b)?.status !== 'active').length;
+
+const remember = (v, id) => { v.seen.push(id); if (v.seen.length > SEEN_LIMIT) v.seen.splice(0, v.seen.length - SEEN_LIMIT); };
+const wireDate = (ts, now) => (Number.isFinite(ts) ? Math.min(ts, now) : now);
+
+/** I make a group out of friends I already have. Returns it, or null if that isn't allowed. */
+export function createGroup(v, name, members, id = globalThis.crypto.randomUUID().toUpperCase(), now = Date.now()) {
+  v.groups ||= [];
+  const people = [...new Set(members)].filter((b) => record(v, b)?.status === 'active');
+  if (!people.length || people.length >= MAX_GROUP_MEMBERS || v.groups.length >= MAX_GROUPS || !isPlainID(id)) return null;
+  const g = { id, name: clean(String(name || '').replace(/\n/g, ' ')) || 'Group', members: people.sort(), creator: null, unread: 0, lastActivity: now };
+  v.groups.push(g);
+  return g;
+}
+
+/** An invite or a change from a friend. It must list me, and only the person who made the group can change it. */
+export function receiveGroup(v, from, body, myBox, now = Date.now()) {
+  v.groups ||= [];
+  const all = body && Array.isArray(body.gm) ? body.gm : null;
+  if (record(v, from)?.status !== 'active' || !body || !isPlainID(body.g) || !all || all.length > MAX_GROUP_MEMBERS
+    || !all.every((b) => typeof b === 'string' && b.length > 0 && b.length <= 64) || !all.includes(myBox) || !all.includes(from)) return null;
+  const others = [...new Set(all)].filter((b) => b !== myBox).sort();
+  const name = clean(body.gname) || 'Group';
+  const i = groupIndex(v, groupKey(body.g));
+  if (i >= 0) {
+    if (v.groups[i].creator !== from) return null;
+    v.groups[i].name = name; v.groups[i].members = others;
+    return v.groups[i];
+  }
+  if (v.groups.length >= MAX_GROUPS) return null;
+  const g = { id: body.g, name, members: others, creator: from, unread: 0, lastActivity: now };
+  v.groups.push(g);
+  return g;
+}
+
+/** A message in a group, from a member who is one of my friends. Returns it if new. No receipts for these. */
+export function receiveGroupMessage(v, from, gid, id, text, ts, now = Date.now()) {
+  const key = groupKey(gid), gi = groupIndex(v, key);
+  if (gi < 0 || !v.groups[gi].members.includes(from) || record(v, from)?.status !== 'active'
+    || !isPlainID(id) || typeof text !== 'string' || !text || charCount(text) > MAX_TEXT || v.seen.includes(id)) return null;
+  remember(v, id);
+  const m = { id, mine: false, text, date: wireDate(ts, now), state: 'delivered', by: from };
+  (v.messages[key] ||= []).push(m);
+  v.groups[gi].unread = (v.groups[gi].unread || 0) + 1; v.groups[gi].lastActivity = now;
+  return m;
+}
+
+/** A finished file, from a friend (one to one, or `gid` if it came into a group). */
+export function receiveFile(v, from, gid, id, name, size, now = Date.now()) {
+  const f = record(v, from), clean_ = cleanFileName(name);
+  if (!f || f.status !== 'active' || !isPlainID(id) || !Number.isInteger(size) || size <= 0 || size > MAX_FILE_BYTES || !clean_ || v.seen.includes(id)) return null;
+  const m = { id, mine: false, text: '', date: now, state: 'delivered', file: { name: clean_, size } };
+  if (gid) {
+    const key = groupKey(gid), gi = groupIndex(v, key);
+    if (gi < 0 || !v.groups[gi].members.includes(from)) return null;
+    m.by = from; remember(v, id);
+    (v.messages[key] ||= []).push(m);
+    v.groups[gi].unread = (v.groups[gi].unread || 0) + 1; v.groups[gi].lastActivity = now;
+  } else {
+    remember(v, id);
+    (v.messages[from] ||= []).push(m);
+    f.unread = (f.unread || 0) + 1; f.lastActivity = now;
+  }
+  return m;
+}
+
+/** My own message in a group (text, or a file when `file` is set). */
+export function addMineToGroup(v, key, id, text, file = null, now = Date.now()) {
+  const gi = groupIndex(v, key);
+  if (gi < 0) return;
+  const m = { id, mine: true, text, date: now, state: 'sending' };
+  if (file) m.file = file;
+  (v.messages[key] ||= []).push(m);
+  v.groups[gi].lastActivity = now;
+}
+/** My own file in a one to one chat. */
+export function addMineFile(v, box, id, file, now = Date.now()) {
+  (v.messages[box] ||= []).push({ id, mine: true, text: '', date: now, state: 'sending', file });
+  const f = record(v, box);
+  if (f) f.lastActivity = now;
+}
+
+/** A member says they left. */
+export function receiveLeave(v, from, gid) {
+  const gi = groupIndex(v, groupKey(gid));
+  if (gi >= 0) v.groups[gi].members = v.groups[gi].members.filter((b) => b !== from);
+}
+/** I leave (or the group is deleted): it and its history go. Returns the ids of files that were in it. */
+export function leaveGroup(v, key) {
+  const files = (v.messages[key] || []).filter((m) => m.file).map((m) => m.id);
+  v.groups = (v.groups || []).filter((g) => groupKey(g.id) !== key); delete v.messages[key];
+  return files;
+}
+export function markGroupRead(v, key) { const gi = groupIndex(v, key); if (gi >= 0) v.groups[gi].unread = 0; }
+
+/** The ids of every file in the history, so "delete everything" or removing a friend can drop the stored bytes too. */
+export const fileIds = (v, key) => (v.messages[key] || []).filter((m) => m.file).map((m) => m.id);
+
+/**
+ * One chunk of a file. `partials` is a Map the caller keeps between calls (files being put back together).
+ * Returns { group, id, name, bytes } when the last piece arrives, else null. Nothing is stored here: the caller does that.
+ * Limits (same as the Mac): 1…20 chunks of up to 8,000 bytes, a partial file is dropped after 10 minutes, at most 8 at once.
+ */
+export function receiveChunk(v, partials, from, body, now = Date.now()) {
+  const f = record(v, from);
+  if (!f || f.status !== 'active' || !body) return null;
+  const { id, fn, fi, fd } = body;
+  const name = cleanFileName(body.fname);
+  if (!isPlainID(id) || !Number.isInteger(fn) || !Number.isInteger(fi) || fn < 1 || fn > MAX_CHUNKS || fi < 0 || fi >= fn
+    || typeof fd !== 'string' || fd.length > CHUNK_SIZE * 2 || !/^[A-Za-z0-9_-]*$/.test(fd) || !name || v.seen.includes(id)) return null;
+  const bytes = unb64uBytes(fd);
+  if (!bytes || bytes.length > CHUNK_SIZE) return null;
+  const gid = typeof body.g === 'string' && body.g ? body.g : null;
+  if (body.g !== undefined && body.g !== null && !gid) return null;
+  if (gid && !(group(v, groupKey(gid))?.members.includes(from))) return null;
+  const key = `${from}|${id}`;
+  for (const [k, p] of partials) if (now - p.started >= PARTIAL_TTL_MS) partials.delete(k);   // give up on files that stalled
+  let part = partials.get(key);
+  if (!part) {
+    if (partials.size >= MAX_PARTIALS) return null;
+    part = { name, n: fn, group: gid, chunks: new Map(), started: now };
+    partials.set(key, part);
+  }
+  if (part.n !== fn) return null;
+  part.chunks.set(fi, bytes);
+  if (part.chunks.size !== fn) return null;
+  partials.delete(key);
+  const out = new Uint8Array([...part.chunks.keys()].reduce((n, k) => n + part.chunks.get(k).length, 0));
+  let at = 0;
+  for (let k = 0; k < fn; k++) { const c = part.chunks.get(k); if (!c) return null; out.set(c, at); at += c.length; }
+  if (out.length > MAX_FILE_BYTES) return null;
+  return { group: part.group, id, name: part.name, bytes: out };
+}
+
+/** The pieces of a file to send, each as a `chunk` body (the caller seals one per piece per receiver). */
+export function chunkBodies(from, id, name, bytes, group, ts, toB64u) {
+  const n = Math.max(1, Math.ceil(bytes.length / CHUNK_SIZE)), out = [];
+  for (let i = 0; i < n; i++) {
+    const b = { t: 'chunk', from, id, ts };
+    if (group) b.g = group;
+    b.fname = name; b.fn = n; b.fi = i; b.fd = toB64u(bytes.subarray(i * CHUNK_SIZE, (i + 1) * CHUNK_SIZE));
+    out.push(b);
+  }
+  return out;
+}
+
+/** The body of an invite / change for a group: every member's mailbox including mine (the receiver is in the list too). */
+export const groupInviteBody = (me, g, ts) => ({ t: 'grp', from: me, g: g.id, gname: g.name, gm: [me, ...g.members].sort(), ts });
 
 /** Three rows of four groups, for showing the 60-digit safety number (as the Mac does). */
 export function safetyRows(number) {
