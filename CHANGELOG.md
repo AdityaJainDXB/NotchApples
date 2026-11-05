@@ -4,6 +4,10 @@ Every Notch Apple release, newest first. The latest few are also on the [README]
 
 > **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is in the repository's history.
 
+### Mac 2.2.3 · 5 November 2026 · 🛠️ A crash fixed in nearby Messenger
+
+- Fix: a crash in nearby (Wi-Fi) Messenger. Apple’s chat networking kept calling back on a connection the app had already let go of, and the app quit. The connection is now held a little longer, and nearby discovery stops five minutes after you leave the Messenger tab instead of straight away (fixes issue 50).
+
 ### Mac 2.2.2 · Windows 2.2.2 BETA · 4 November 2026 · 🏎️ Leave button and the right car in the diagram
 
 - Racing: a small Leave button on the left edge during a race or session takes you back to the Racing menu (the same as Esc). It is faint until you hover over it. It matters now that a race is kept when you close the notch.
