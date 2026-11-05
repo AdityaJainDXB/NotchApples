@@ -3,7 +3,7 @@ import { el, load, save, timeAgo } from '../store.js';
 import { invoke } from '../native.js';
 import { toast, prompt, segmented } from '../ui.js';
 import * as MS from '../services/messenger.js';
-import * as G from '../games/tictactoe-logic.js';
+import * as PUI from '../games/playui.js';
 
 /// Messenger has two modes: Rooms (join a chat by a shared code) and Friends (private chat with people you add by friend code).
 export function render(root) {
@@ -31,6 +31,7 @@ function renderRooms(root) {
   input.onkeydown = (e) => { if (e.key === 'Enter') { MS.send(input.value); input.value = ''; } };
   function paint(st) {
     if (!st.room) {
+      PUI.grow('room', false);
       wrap.replaceChildren(el('div', { class: 'center' }, el('div', { class: 'col', style: 'align-items:center;gap:10px;max-width:440px' },
         el('div', { style: 'font-size:36px' }, '💬'), el('div', { class: 'title' }, 'Chat in an encrypted room'),
         el('div', { class: 'small dim' }, 'Everyone with the same code joins the same room, on Mac or Windows. Messages are encrypted on your PC; the relay can’t read them and keeps nothing.'),
@@ -40,13 +41,15 @@ function renderRooms(root) {
       return;
     }
     MS.markRead();
-    head.replaceChildren(el('div', { class: 'grow' }, el('div', { class: 'title' }, `#${st.room}`),
+    head.replaceChildren(...[el('div', { class: 'grow' }, el('div', { class: 'title' }, `#${st.room}`),
       el('div', { class: 'tiny dim' }, st.state === 'joined' ? `${st.members.size + 1} online: you${[...st.members.values()].map((m) => `, ${m.handle}`).join('')}` : st.state === 'connecting' ? 'Connecting…' : st.error || '')),
-      st.state === 'joined' && (!st.game || ['won', 'draw', 'ended', 'cancelled'].includes(st.game.status))
-        ? el('button', { class: 'btn small quiet', title: 'Invite the room to a game', onclick: () => MS.gameInvite() }, '🎮 Tic-tac-toe') : null,
+      st.state === 'joined' && !PUI.tttOpen(st.game) && !MS.play.isActive
+        ? PUI.gamesButton({ tictactoe: () => MS.gameInvite(), start: (kind) => MS.play.invite(kind) }) : null,
       el('button', { class: 'btn small quiet', onclick: () => invoke('clipboard_copy_text', { text: st.room }).then(() => toast('Room code copied')) }, 'Copy code'),
-      el('button', { class: 'btn small danger', onclick: () => MS.leave() }, 'Leave'));
-    gameBox.replaceChildren(...[gamePanel(st)].filter(Boolean));
+      el('button', { class: 'btn small danger', onclick: () => MS.leave() }, 'Leave')].filter(Boolean));   // (replaceChildren(null) would write the word "null")
+    const cards = [gamePanel(st), PUI.playCard(MS.play)].filter(Boolean);
+    gameBox.replaceChildren(...cards);
+    PUI.grow('room', cards.length > 0);   // the notch opens bigger while a board is up
     log.replaceChildren(...st.messages.map((m) => (m.notice ? el('div', { class: 'tiny faint', style: 'text-align:center' }, m.text)
       : el('div', { style: `display:flex;flex-direction:column;align-items:${m.mine ? 'flex-end' : 'flex-start'}` },
         m.mine ? null : el('div', { class: 'tiny faint' }, m.sender),
@@ -56,45 +59,14 @@ function renderRooms(root) {
     if (!wrap.contains(log)) { wrap.replaceChildren(head, gameBox, log, input); setTimeout(() => input.focus(), 30); }
     log.scrollTop = log.scrollHeight;
   }
-  return MS.subscribe(paint);
+  const off = MS.subscribe(paint);
+  return () => { off(); PUI.grow('room', false); };
 }
 
-// The tic-tac-toe card above the chat: an invite with Accept, or the 3x3 board with the score line and Rematch.
+// The tic-tac-toe card above the chat (the card itself is shared with Friends, in games/playui.js).
 function gamePanel(st) {
-  const g = st.game;
-  if (!g) return null;
-  const me = MS.identity().senderID, nm = MS.nameOf;
-  const card = (...kids) => el('div', { class: 'card col gap-6', style: 'padding:10px;margin-bottom:6px;align-items:center' }, ...kids);
-  const btn = (label, fn, kind = '') => el('button', { class: `btn small ${kind}`, onclick: fn }, label);
-  if (g.status === 'invited' || g.status === 'cancelled') {
-    const mine = g.inviter === me;
-    const line = g.status === 'cancelled' ? `${nm(g.inviter)} cancelled the tic-tac-toe invite.`
-      : mine ? `Waiting for someone to accept your tic-tac-toe invite (you play ${g.inviterMark})…`
-        : g.accepted === me ? `Waiting for ${nm(g.inviter)} to start (they play ${g.inviterMark})…`
-          : `${nm(g.inviter)} invites you to tic-tac-toe. They play ${g.inviterMark}.`;
-    return card(el('div', { class: 'small' }, '🎮 ' + line), el('div', { class: 'hstack' },
-      g.status === 'cancelled' ? btn('Close', () => MS.gameClose(), 'quiet')
-        : mine ? btn('Cancel invite', () => MS.gameCancel(), 'quiet')
-          : g.accepted === me ? null : btn('Accept', () => MS.gameAccept())));
-  }
-  const mark = G.markOf(g, me), playing = g.status === 'playing', yours = playing && G.turnPlayer(g) === me;
-  const opp = mark ? nm(mark === 'X' ? g.o : g.x) : null;
-  const status = g.status === 'won' ? (mark ? (g.winner === mark ? 'You won! 🎉' : `${opp} won`) : `${nm(g.winner === 'X' ? g.x : g.o)} won`)
-    : g.status === 'draw' ? 'A draw'
-      : g.status === 'ended' ? `${g.leaver === me ? 'You' : nm(g.leaver)} left the game`
-        : yours ? 'Your turn' : `${nm(G.turnPlayer(g))}'s turn`;
-  const head = mark ? `You are ${mark} · ${opp} is ${mark === 'X' ? 'O' : 'X'}` : `Watching ${nm(g.x)} (X) vs ${nm(g.o)} (O)`;
-  const board = el('div', { style: 'display:grid;grid-template-columns:repeat(3,52px);gap:4px' }, ...g.board.map((c, i) => {
-    const win = g.line?.includes(i);
-    return el('button', {
-      class: 'btn quiet', disabled: !G.canMove(g, me, i), onclick: () => MS.gameMove(i), 'aria-label': `Cell ${i + 1}${c ? ', ' + c : ''}`,
-      style: `width:52px;height:52px;font-size:26px;font-weight:800;padding:0;${win ? 'background:var(--accent);color:var(--on-accent)' : ''}`,
-    }, c || '');
-  }));
-  const asked = g.rematch.includes(me);
-  return card(el('div', { class: 'tiny dim' }, '🎮 Tic-tac-toe · ' + head), board, el('div', { class: 'small', style: yours ? 'font-weight:700' : '' }, status),
-    el('div', { class: 'hstack' },
-      (g.status === 'won' || g.status === 'draw') && mark ? btn(asked ? 'Waiting for a rematch…' : 'Rematch', () => MS.gameRematch(), asked ? 'quiet' : '') : null,
-      playing && mark ? btn('Leave game', () => MS.gameQuit(), 'quiet') : null,
-      !playing ? btn('Close', () => MS.gameClose(), 'quiet') : null));
+  return PUI.tttCard(st.game, MS.identity().senderID, MS.nameOf, {
+    accept: () => MS.gameAccept(), cancel: () => MS.gameCancel(), close: () => MS.gameClose(),
+    move: (i) => MS.gameMove(i), rematch: () => MS.gameRematch(), quit: () => MS.gameQuit(),
+  });
 }

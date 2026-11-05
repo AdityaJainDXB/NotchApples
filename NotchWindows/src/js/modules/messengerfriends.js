@@ -7,6 +7,7 @@ import { toast, prompt, confirm, modal, menu, button, toggle, setting } from '..
 import * as FR from '../services/friends.js';
 import * as L from '../services/friendslogic.js';
 import * as C from '../services/friendscrypto.js';
+import * as PUI from '../games/playui.js';
 
 const hue = (box) => { let h = 0; for (const c of box) h = (h * 31 + c.charCodeAt(0)) % 360; return h; };
 const avatar = (f) => el('div', { style: `width:24px;height:24px;border-radius:50%;flex:none;display:grid;place-items:center;font-size:11px;font-weight:700;color:#fff;background:hsl(${hue(f.box)} 55% 45%)` },
@@ -162,6 +163,8 @@ export function render(root) {
   const typingLine = el('div', { class: 'tiny', style: 'color:var(--accent)' });
   const problem = el('div', { class: 'tiny', style: 'color:var(--warn,#e0a030)' });
   const title = el('div', { class: 'title grow' });
+  const gamesSlot = el('div', { class: 'hstack' });   // the Games button, while no game is open
+  const gameBox = el('div', { style: 'flex:none' });   // the game card above the chat
   const groupNote = el('div', { class: 'tiny', style: 'color:var(--warn,#e0a030)' });
   const clip = button('📎', attach, { kind: 'quiet', title: `Send a file (up to ${L.MAX_FILE_BYTES / 1000} KB). It is encrypted like a message.` });
   function send() {
@@ -171,16 +174,34 @@ export function render(root) {
   draft.onkeydown = (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); } };
   draft.oninput = () => { if (draft.value && selected) FR.typingChanged(selected); };
 
+  /** The Games button and the game card for this friend. The notch grows while a board is showing. */
+  function paintGames(friend) {
+    const box = friend.box, me = FR.identity()?.box, play = FR.play(box), ttt = FR.tttGame(box);
+    if (!me || !play) { gamesSlot.replaceChildren(); gameBox.replaceChildren(); PUI.grow('friend', false); return; }
+    gamesSlot.replaceChildren(...(!PUI.tttOpen(ttt) && !play.isActive
+      ? [PUI.gamesButton({ tictactoe: () => FR.tttInvite(box), start: (kind) => play.invite(kind) })] : []));
+    const cards = [
+      PUI.tttCard(ttt, me, FR.nameOfBoxOrYou, {
+        accept: () => FR.tttAccept(box), cancel: () => FR.tttCancel(box), close: () => FR.tttClose(box),
+        move: (i) => FR.tttMove(box, i), rematch: () => FR.tttRematch(box), quit: () => FR.tttQuit(box),
+      }),
+      PUI.playCard(play),
+    ].filter(Boolean);
+    gameBox.replaceChildren(...cards);
+    PUI.grow('friend', cards.length > 0);
+  }
+
   function paintChat(friend) {
     if (chatKey !== friend.box) {
       chatKey = friend.box;
       pane.replaceChildren(
-        el('div', { class: 'hstack' }, title, typingLine,
+        el('div', { class: 'hstack' }, title, typingLine, gamesSlot,
           button('Safety number', () => safety(friend.box), { small: true, kind: 'quiet', title: 'Compare these numbers with your friend to be sure nobody is in the middle' }),
           button('⋯', (e) => friendMenu(e, FR.book().friends.find((f) => f.box === chatKey) || friend), { small: true, kind: 'quiet' })),
-        log, problem, el('div', { class: 'hstack' }, clip, draft, button('Send', send, { title: 'Send (Enter)' })));
+        gameBox, log, problem, el('div', { class: 'hstack' }, clip, draft, button('Send', send, { title: 'Send (Enter)' })));
       setTimeout(() => draft.focus(), 30);
     }
+    paintGames(friend);
     title.textContent = L.displayName(friend);
     typingLine.textContent = FR.st.typing.has(friend.box) ? 'typing…' : '';
     problem.textContent = FR.st.lastProblem || '';
@@ -192,6 +213,7 @@ export function render(root) {
   }
 
   function paintGroup(g) {
+    PUI.grow('friend', false);
     const key = L.groupKey(g.id);
     if (chatKey !== key) {
       chatKey = key;
@@ -213,7 +235,7 @@ export function render(root) {
   }
 
   function paintPlaceholder() {
-    chatKey = null;
+    chatKey = null; PUI.grow('friend', false);
     pane.replaceChildren(el('div', { class: 'center' }, el('div', { class: 'col', style: 'align-items:center;gap:10px;max-width:380px;text-align:center' },
       el('div', { style: 'font-size:36px' }, '👥'), el('div', { class: 'title' }, 'Friends'),
       el('div', { class: 'small dim' }, 'Private, end-to-end encrypted chat, files and group chats with people you add by code, on Mac or Windows. Nobody can message you until you accept them.'),
@@ -260,5 +282,5 @@ export function render(root) {
   // Repaint on every change except while a message is being typed in the add box (it is kept, so this is safe anyway).
   const off = FR.subscribe(paint);
   if (selected) FR.setViewing(selected);
-  return () => { off(); FR.setViewing(null); };
+  return () => { off(); FR.setViewing(null); PUI.grow('friend', false); };
 }

@@ -12,6 +12,8 @@ import { invoke, hasTauri, http, notify } from '../native.js';
 import { provide, refresh } from '../activity.js';
 import * as C from './friendscrypto.js';
 import * as L from './friendslogic.js';
+import * as TTT from '../games/tictactoe-logic.js';
+import * as P from '../games/twoplayer-logic.js';
 
 const BASE = 'https://notchapple-rooms.adityajain1225.workers.dev';
 const WS_BASE = 'wss://notchapple-rooms.adityajain1225.workers.dev';
@@ -44,6 +46,8 @@ export const groups = () => L.groupsSorted(vault);
 export const group = (key) => L.group(vault, key);
 /** Who sent a group message, as a name (someone who isn't my friend can't send into a group, so this is nearly always known). */
 export const nameOfBox = (box) => { const f = box ? L.record(vault, box) : null; return f ? L.displayName(f) : 'Someone'; };
+/** "You" for me, else the friend's name (the game cards name players by mailbox). */
+export const nameOfBoxOrYou = (box) => (me && box === me.box ? 'You' : nameOfBox(box));
 export const displayNick = () => L.clean(settings.nick) || L.clean(load('messenger.identity', null)?.handle) || 'Someone';
 
 // ---- the three files
@@ -308,10 +312,12 @@ async function processMessage(blob) {
     }
     case 'gleave': if (typeof body.g === 'string') L.receiveLeave(vault, friend.box, body.g); break;
     case 'chunk': await receiveChunk(body, friend); break;
+    case 'game': if (friend.status === 'active' && body.ttt && typeof body.ttt === 'object') applyTtt(body.ttt, friend.box, friend.box); break;
+    case 'play': if (friend.status === 'active' && body.play && typeof body.play === 'object') play(friend.box)?.receive(body.play, friend.box); break;
     case 'rcpt':
       if (typeof body.id === 'string') L.setState(vault, friend.box, body.id, body.state === 'read' ? 'read' : 'delivered');
       break;
-    case 'gone': deleteFileBytes(L.fileIds(vault, friend.box)); L.remove(vault, friend.box); if (st.viewing === friend.box) st.viewing = null; break;
+    case 'gone': dropGames(friend.box); deleteFileBytes(L.fileIds(vault, friend.box)); L.remove(vault, friend.box); if (st.viewing === friend.box) st.viewing = null; break;
     default: break;
   }
 }
@@ -508,6 +514,7 @@ export async function accept(box) {
 
 export function block(box) {
   const hash = L.record(vault, box)?.myTokenHash;
+  dropGames(box);
   deleteFileBytes(L.fileIds(vault, box));
   L.block(vault, box); if (st.viewing === box) st.viewing = null;
   persist();
@@ -519,6 +526,7 @@ export function remove(box) {
   if (!r) return;
   const hash = r.myTokenHash;
   if (r.status === 'active') sendControl('gone', r);
+  dropGames(box);
   deleteFileBytes(L.fileIds(vault, box));
   L.remove(vault, box); if (st.viewing === box) st.viewing = null;
   persist();
@@ -533,12 +541,69 @@ export async function deleteEverything() {
   await ready();
   disconnect();
   await call('POST', '/f/wipe', {}, true);
+  for (const box of [...plays.keys(), ...tttGames.keys()]) dropGames(box);
   vault = L.newVault(); claimed = false; st.typing = new Set(); savePending = false; clearTimeout(saveTimer);
   await file.del('vault');
   await clearFileBytes();
   emit();
   if (settings.active) connect();
 }
+
+// ---- two-player games with a friend (kept in memory only: a game ends if either app quits) ----
+
+const plays = new Map();      // friend box -> the Connect Four / Rock Paper Scissors / Battleship controller (games/twoplayer-logic.js)
+const tttGames = new Map();   // friend box -> the tic-tac-toe game (games/tictactoe-logic.js)
+
+/** The controller for one friend's game (made on first use). It talks over the same sealed friend link as messages. */
+export function play(box) {
+  let c = plays.get(box);
+  if (c) return c;
+  if (!me) return null;   // (the screen only asks once the identity is loaded)
+  c = P.createPlayController({
+    myID: me.box,
+    name: (id) => (id === me.box ? 'You' : nameOfBox(id)),
+    transport: (m) => {
+      const f = L.record(vault, box);
+      if (f?.status === 'active') post(f, L.playBody(me.box, m)).then((r) => { if (r.status === 403) { st.lastProblem = `${L.displayName(f)} removed you or hasn't accepted.`; emit(); } }).catch(() => {});
+    },
+    onEvent: (text) => { if (st.viewing !== box) tell('Game', text); },
+    onChange: () => emit(),
+  });
+  plays.set(box, c);
+  return c;
+}
+/** The friend's tic-tac-toe game state, or null. */
+export const tttGame = (box) => tttGames.get(box) || null;
+
+function applyTtt(msg, from, box) {
+  if (L.record(vault, box)?.status !== 'active') return false;
+  const before = tttGames.get(box) || null, next = TTT.reduce(before, msg, from);
+  if (next === before) return false;
+  tttGames.set(box, next);
+  if (msg.op === 'invite' && from !== me.box && st.viewing !== box) tell('Tic-tac-toe', `${nameOfBox(from)} invited you to play.`);
+  if (msg.op === 'accept' && next.status === 'invited' && next.inviter === me.box && next.accepted === from) sendTtt(TTT.startMsg(next, from), box);
+  emit();
+  return true;
+}
+/** Checks a message of mine against my own state first, so an illegal move is never sent, then applies and sends it. */
+function sendTtt(msg, box) {
+  const f = L.record(vault, box);
+  if (!f || f.status !== 'active' || !applyTtt(msg, me.box, box)) return false;
+  post(f, L.tttBody(me.box, msg)).catch(() => {});
+  return true;
+}
+const tttOpen = (box) => { const g = tttGames.get(box); return !!g && !['won', 'draw', 'ended', 'cancelled'].includes(g.status); };
+export const tttInvite = (box) => !tttOpen(box) && sendTtt(TTT.inviteMsg(TTT.newGameId(), crypto.getRandomValues(new Uint8Array(1))[0] % 2 ? 'X' : 'O'), box);
+export const tttAccept = (box) => tttGames.get(box)?.status === 'invited' && sendTtt(TTT.acceptMsg(tttGames.get(box).gid), box);
+export const tttCancel = (box) => tttGames.get(box)?.status === 'invited' && sendTtt(TTT.cancelMsg(tttGames.get(box).gid), box);
+export const tttMove = (box, cell) => !!tttGames.get(box) && sendTtt(TTT.moveMsg(tttGames.get(box), cell), box);
+export const tttRematch = (box) => !!tttGames.get(box) && sendTtt(TTT.rematchMsg(tttGames.get(box)), box);
+export const tttQuit = (box) => !!tttGames.get(box) && sendTtt(TTT.quitMsg(tttGames.get(box).gid), box);
+/** Closes a finished game's board (nothing is sent). */
+export function tttClose(box) { if (tttGames.has(box) && !tttOpen(box)) { tttGames.delete(box); emit(); } }
+
+/** Forgets every game with a friend (removed, blocked, or all data deleted). */
+function dropGames(box) { plays.get(box)?.reset(); plays.delete(box); tttGames.delete(box); }
 
 // ---- sending
 
