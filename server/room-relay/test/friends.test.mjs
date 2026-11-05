@@ -189,7 +189,7 @@ await test('limits: request cap, mailbox size, request rate, lookups, size of on
   const t = await F.newToken();
   await call('PUT', '/f/allow', { body: { hash: t.hash }, as: m, boxId: b });
   let last = 200;
-  for (let i = 0; i < 301 && last === 200; i++) last = (await call('POST', '/f/send', { body: { to: b, token: t.token, blob: 'AAAA' }, ip: `11.0.${i % 250}.${Math.floor(i / 250)}` })).status;
+  for (let i = 0; i < 701 && last === 200; i++) last = (await call('POST', '/f/send', { body: { to: b, token: t.token, blob: 'AAAA' }, ip: `11.0.${i % 250}.${Math.floor(i / 250)}` })).status;
   assert.equal(last, 507);
   // 3 requests a minute per address and mailbox
   const codes = await F.boxOf('RATELIMIT1');

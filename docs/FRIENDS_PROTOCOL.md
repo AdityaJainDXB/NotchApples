@@ -62,8 +62,8 @@ with the stored `sign`, requires `|now − ts| ≤ 5 min` and `ts > lastAuth`, t
 | `{ack:[ids]}` over the socket | owner | Deletes those items from `queue` / `requests`. |
 | `POST /f/wipe` | owner | Deletes keys, `allow`, `queue`, `requests`. |
 
-Item ids are `<seq>` numbers the server assigns. Blob limits: request ≤ 4 KB, message ≤ 16 KB. A mailbox holds at most 300
-queued messages and 512 KB; past that `/f/send` answers **507** ("their mailbox is full") and nothing is dropped silently.
+Item ids are `<seq>` numbers the server assigns. Blob limits: request ≤ 4 KB, message ≤ 16 KB. A mailbox holds at most 700
+queued messages and 4.5 MB (a 2 MB file is 250 pieces); past that `/f/send` answers **507** ("their mailbox is full") and nothing is dropped silently.
 
 ## 4. Sealing
 
@@ -126,7 +126,7 @@ is synced to iCloud or included in the settings export.
 ## 7. Limits (per rolling minute unless said)
 
 - `/f/req`: 3 per sender-IP-hash per `to`, 10 per sender-IP-hash per hour overall, 20 pending per mailbox.
-- `/f/key`: 30 per IP hash. `/f/send`: 120 per token. `/f/claim`: 5 per IP hash per hour.
+- `/f/key`: 30 per IP hash. `/f/send`: 300 per token. `/f/claim`: 5 per IP hash per hour.
 - WebSocket: one live socket per owner key (a new one replaces the old); 60 frames per second as the rooms relay does.
 - The IP hash is `SHA-256(day + ip)` computed in memory for the limiter; no IP is written to storage or logs.
 
@@ -143,7 +143,7 @@ New body types inside the same sealed `msg` blobs. Older clients ignore keys and
 
 | `t` | Fields | Meaning |
 | --- | --- | --- |
-| `chunk` | `from, id, fname, fn, fi, fd, g?` | One piece of a file. `id` is the file's message id, `fn` the chunk count (1…20), `fi` this piece (0-based), `fd` up to 8,000 bytes as base64url. The receiver keeps the pieces until all `fn` have arrived, then stores the file and shows one message. Files are at most 160,000 bytes: a sealed blob is limited to about 16 KB by the relay (`MAX_MSG_BLOB`), and a mailbox to 512 KB. A partial file is dropped after 10 minutes. |
+| `chunk` | `from, id, fname, fn, fi, fd, g?` | One piece of a file. `id` is the file's message id, `fn` the chunk count (1…250), `fi` this piece (0-based), `fd` up to 8,000 bytes as base64url. The receiver keeps the pieces until all `fn` have arrived, then stores the file and shows one message. Files are at most 2,000,000 bytes (Mac 2.2.8; before that 160,000 and 20 pieces, so an older app silently ignores a file of more than 20 pieces): a sealed blob is limited to about 16 KB by the relay (`MAX_MSG_BLOB`), so a file goes as one message per piece, paced at about 4 a second and retried when the relay answers 429; a mailbox holds 4.5 MB for a friend who is offline. A partial file is dropped after 10 minutes. |
 | `grp` | `from, g, gname, gm, ts` | Invite or change for a group: `gm` lists every member's mailbox including the sender's and the receiver's. Accepted only from an active friend who is in `gm`, only if the receiver is in `gm`, and a change only from whoever made the group. Up to 20 members. |
 | `gmsg` | `from, g, id, text, ts` | A group message. Accepted only from a member who is an active friend of the receiver. |
 | `gleave` | `from, g` | The sender left the group. |

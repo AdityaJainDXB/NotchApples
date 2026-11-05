@@ -62,7 +62,7 @@ final class PlayController: ObservableObject {
         if s.status == .playing, s.isPlayer(myID), (before?.status != .playing || s.round != before?.round) { newGame(s) }
         guard let me = s.index(of: myID) else { return }
         switch s.kind {
-        case .connect4: break
+        case .connect4, .chess, .checkers: break
         case .rps:
             // Once both picks are committed, show mine (the reveal), unless I am still waiting to pick.
             if s.status == .playing, let pick = myPick, s.rps.commit[me] != nil, s.rps.commit[1 - me] != nil, s.rps.reveal[me] == nil, !sentReveal {
@@ -118,6 +118,9 @@ final class PlayController: ObservableObject {
     func close() { if let s = session, s.isFinished { session = nil; fleet = nil; myPick = nil } }
     /// The opponent left the room or the app: their game is over.
     func playerGone(_ id: String) { if let s = session, s.status == .playing { apply(PlayRules.quit(s), from: id) } }
+
+    /// Chess and Checkers: move the piece on `from` to `to` (an illegal move is never sent).
+    func move(from: Int, to: Int, promotion: String? = nil) { if let s = session { send(PlayRules.boardMove(s, from: from, to: to, promotion: promotion)) } }
 
     func drop(column: Int) { if let s = session { send(PlayRules.move(s, column: column)) } }
 

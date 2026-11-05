@@ -217,7 +217,7 @@ struct FriendsView: View {
     private func attach(to key: String) {
         let panel = NSOpenPanel()
         panel.allowsMultipleSelection = false; panel.canChooseDirectories = false
-        panel.message = "Choose a file to send (up to \(Friends.maxFileBytes / 1000) KB)"
+        panel.message = "Choose a file to send (up to \(Friends.maxFileText))"
         if panel.runModal() == .OK, let url = panel.url { client.lastProblem = client.sendFile(url, to: key) }
     }
 
@@ -225,7 +225,7 @@ struct FriendsView: View {
     private func composer(key: String, typing: Bool, send: @escaping () -> Void) -> some View {
         HStack(spacing: 6) {
             Button { attach(to: key) } label: { Image(systemName: "paperclip").font(.system(size: 15)).frame(width: 28, height: 28).contentShape(Rectangle()) }
-                .buttonStyle(.plain).foregroundStyle(Theme.textSecondary).help("Send a file (up to \(Friends.maxFileBytes / 1000) KB). It is encrypted like a message.")
+                .buttonStyle(.plain).foregroundStyle(Theme.textSecondary).help("Send a file (up to \(Friends.maxFileText)). It is encrypted like a message.")
             TextField("Message", text: $draft)
                 .textFieldStyle(.plain).font(.system(size: 13)).padding(.horizontal, 12).frame(height: 32)
                 .background(Theme.surface, in: Capsule())

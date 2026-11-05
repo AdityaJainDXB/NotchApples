@@ -466,7 +466,7 @@ final class FriendsClient: ObservableObject {
     /// Sends a file to one friend or a group. Returns a message when it can't (too big, unreadable).
     func sendFile(_ url: URL, to key: String) -> String? {
         let size = (try? url.resourceValues(forKeys: [.fileSizeKey]).fileSize) ?? 0
-        if size > Friends.maxFileBytes { return "That file is \(size / 1000) KB. Files up to \(Friends.maxFileBytes / 1000) KB can be sent in a chat (photos, screenshots and documents are fine; videos are too big)." }
+        if size > Friends.maxFileBytes { return "That file is \(size / 1000) KB. Files up to \(Friends.maxFileText) can be sent in a chat (photos, documents and short clips are fine; long videos are too big)." }
         guard let data = try? Data(contentsOf: url), !data.isEmpty, data.count <= Friends.maxFileBytes, let name = FriendsBook.cleanFileName(url.lastPathComponent) else { return "Couldn't read that file." }
         let id = UUID().uuidString
         let file = FriendFile(name: name, size: data.count)
@@ -499,8 +499,12 @@ final class FriendsClient: ObservableObject {
                 var body = FriendBody(t: "chunk", from: identity.box, id: id, ts: Int64(Date().timeIntervalSince1970 * 1000))
                 body.g = group; body.fname = name; body.fn = pieces.count; body.fi = i; body.fd = Friends.b64u(piece)
                 guard let blob = try? FriendCrypto.seal(bodyText: body.encoded(), kind: "msg", from: identity, toBox: friend.box, toDH: friend.dh) else { ok = false; break }
-                let r = await call("POST", "/f/send", body: ["to": friend.box, "token": token, "blob": blob])
+                var r = await call("POST", "/f/send", body: ["to": friend.box, "token": token, "blob": blob])
+                // The relay allows a limited number of sends a minute: wait and try the same piece again rather than fail halfway.
+                var waits = 0
+                while r.status == 429, waits < 8 { waits += 1; try? await Task.sleep(nanoseconds: 8_000_000_000); r = await call("POST", "/f/send", body: ["to": friend.box, "token": token, "blob": blob]) }
                 if r.status != 200 { ok = false; lastStatus = r.status; break }
+                if pieces.count > 1 { try? await Task.sleep(nanoseconds: 220_000_000) }   // about 4 pieces a second, under the relay's limit
             }
             if ok { reached += 1 }
         }

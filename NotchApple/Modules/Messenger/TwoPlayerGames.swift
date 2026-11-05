@@ -2,7 +2,7 @@
 //  TwoPlayerGames.swift
 //  Notch Apple
 //
-//  Connect Four, Rock Paper Scissors and Battleship for two people in a Messenger room or a friend chat: the rules with no
+//  Connect Four, Rock Paper Scissors, Battleship, Chess and Checkers for two people in a Messenger room or a friend chat: the rules with no
 //  screen and no network, so tests can run them. Both players run the same `reduce` on every game message, their own
 //  included, so they always agree. A message that is illegal, repeated, stale or from someone who is not playing changes nothing.
 //  A message that arrives too early (messages can swap order) is kept in `stash` and tried again after the next change.
@@ -13,7 +13,7 @@
 //                         game ends both fleets are revealed and checked against the hash and against every answer given.
 //
 //  Wire message (PlayMessage), op = invite | accept | start | cancel | quit | rematch   (lobby, same for every game)
-//                                  | move                                                (Connect Four: a = column)
+//                                  | move                                                (Connect Four: a = column; Chess and Checkers: a = from square, b = to square, s = promotion q r b n)
 //                                  | commit | reveal                                     (Rock Paper Scissors: h hash; a pick, s salt)
 //                                  | ready | shoot | result | reveal                     (Battleship: h hash; a cell, b answer; s board:salt)
 //
@@ -22,12 +22,14 @@ import CryptoKit
 import Foundation
 
 enum PlayKind: String, CaseIterable, Equatable {
-    case connect4 = "c4", rps = "rps", battleship = "bs"
+    case connect4 = "c4", rps = "rps", battleship = "bs", chess = "ch", checkers = "ck"
     var title: String {
         switch self {
         case .connect4: "Connect Four"
         case .rps: "Rock Paper Scissors"
         case .battleship: "Battleship"
+        case .chess: "Chess"
+        case .checkers: "Checkers"
         }
     }
     var emoji: String {
@@ -35,6 +37,8 @@ enum PlayKind: String, CaseIterable, Equatable {
         case .connect4: "🔴"
         case .rps: "✊"
         case .battleship: "🚢"
+        case .chess: "♟️"
+        case .checkers: "⚫"
         }
     }
 }
@@ -77,6 +81,8 @@ struct PlaySession: Equatable {
     var c4 = ConnectFour()
     var rps = RockPaperScissors()
     var bs = Battleship()
+    var chess = Chess()
+    var checkers = Checkers()
     var stash: [PlayStash] = []
 
     var isFinished: Bool { status == .finished || status == .ended || status == .cancelled }
@@ -216,7 +222,12 @@ enum PlayRules {
         case "invite", "accept", "quit", "cancel": return m
         case "start": return isID(m.x) && isID(m.o) && m.x != m.o ? m : nil
         case "rematch": return inRange(m.r, 0, 1000) ? m : nil
-        case "move": return inRange(m.r, 0, 1000) && inRange(m.n, 0, 100) && inRange(m.a, 0, 6) ? m : nil
+        case "move":
+            guard inRange(m.r, 0, 1000) else { return nil }
+            if m.g == PlayKind.chess.rawValue || m.g == PlayKind.checkers.rawValue {       // a = from square, b = to square, s = promotion (q r b n)
+                return inRange(m.n, 0, 800) && inRange(m.a, 0, 63) && inRange(m.b, 0, 63) && (m.s == nil || Chess.promotions.contains(m.s!)) ? m : nil
+            }
+            return inRange(m.n, 0, 100) && inRange(m.a, 0, 6) ? m : nil
         case "commit": return inRange(m.r, 0, 1000) && inRange(m.n, 0, 10) && isHex64(m.h) ? m : nil
         case "reveal":
             guard inRange(m.r, 0, 1000), let s = m.s, s.count >= 1, s.count <= 140 else { return nil }
@@ -261,7 +272,7 @@ enum PlayRules {
             if s.rematch.count == 2 {                       // both asked: the first mover swaps and the game starts again
                 s.round += 1; s.rematch = []; s.winner = nil
                 swap(&s.p1, &s.p2)
-                s.c4 = ConnectFour(); s.rps = RockPaperScissors(); s.bs = Battleship(); s.stash = []
+                s.c4 = ConnectFour(); s.rps = RockPaperScissors(); s.bs = Battleship(); s.chess = Chess(); s.checkers = Checkers(); s.stash = []
                 s.status = .playing
             }
             return s
@@ -300,6 +311,19 @@ enum PlayRules {
         .init(g: s.kind.rawValue, op: "start", gid: s.gid, x: inviterFirst ? s.inviter : acceptor, o: inviterFirst ? acceptor : s.inviter)
     }
     static func move(_ s: PlaySession, column: Int) -> PlayMessage { .init(g: s.kind.rawValue, op: "move", gid: s.gid, r: s.round, n: s.c4.moves, a: column) }
+    /// Chess and Checkers: a move from one square to another (`promotion` only for a pawn reaching the last row in Chess).
+    static func boardMove(_ s: PlaySession, from: Int, to: Int, promotion: String? = nil) -> PlayMessage {
+        .init(g: s.kind.rawValue, op: "move", gid: s.gid, r: s.round, n: s.kind == .chess ? s.chess.moves : s.checkers.moves, a: from, b: to, s: promotion)
+    }
+    /// Where `id` may move the piece on `from` right now in Chess or Checkers (empty when it is not their turn).
+    static func boardTargets(_ s: PlaySession?, id: String, from: Int) -> [Int] {
+        guard let g = s, g.status == .playing, let me = g.index(of: id) else { return [] }
+        switch g.kind {
+        case .chess: return g.chess.turn == me ? g.chess.legalTargets(from) : []
+        case .checkers: return g.checkers.turn == me ? g.checkers.legalTargets(from) : []
+        default: return []
+        }
+    }
     static func commit(_ s: PlaySession, pick: Int, salt: String) -> PlayMessage {
         .init(g: s.kind.rawValue, op: "commit", gid: s.gid, r: s.round, n: s.rps.n, h: rpsCommit(pick: pick, salt: salt))
     }
@@ -329,6 +353,8 @@ extension PlaySession {
         case .connect4: return applyConnectFour(m, idx)
         case .rps: return applyRPS(m, idx)
         case .battleship: return applyBattleship(m, idx)
+        case .chess: return applyChess(m, idx)
+        case .checkers: return applyCheckers(m, idx)
         }
     }
 
@@ -362,6 +388,18 @@ extension PlaySession {
         c4.cells[cell] = idx + 1; c4.moves += 1; c4.last = cell
         if let line = c4.winningLine(through: cell) { c4.line = line; finish(winnerIndex: idx) }
         else if c4.moves == 42 { finish(winnerIndex: nil) }
+        return true
+    }
+
+    private mutating func applyChess(_ m: PlayMessage, _ idx: Int) -> Bool {
+        guard m.op == "move", m.n == chess.moves, idx == chess.turn, let from = m.a, let to = m.b, chess.play(from: from, to: to, promotion: m.s) else { return false }
+        if chess.isOver { finish(winnerIndex: chess.winnerIndex) }
+        return true
+    }
+
+    private mutating func applyCheckers(_ m: PlayMessage, _ idx: Int) -> Bool {
+        guard m.op == "move", m.n == checkers.moves, idx == checkers.turn, let from = m.a, let to = m.b, checkers.play(from: from, to: to) else { return false }
+        if checkers.over { finish(winnerIndex: checkers.winnerIndex) }
         return true
     }
 

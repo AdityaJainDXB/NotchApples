@@ -20,6 +20,10 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.2.8", date: "5 November 2026", headline: "Chess, Checkers and bigger files", items: [
+            "Messenger: Chess and Checkers join the Games menu, in rooms and in friend chats. Chess has check, checkmate, stalemate, castling, en passant, promotion and draws; Checkers has compulsory captures, multi-jumps and kings. Pick a piece and its legal squares light up; the second player sees the board turned round. Mac only for now: Windows cannot play Chess or Checkers yet.",
+            "Messenger: bigger files. A file in a friend chat or group can now be up to 2 MB (it was 160 KB), and a file in an anonymous room is sent in pieces up to 2 MB too (before, anything much over 8 KB could silently never arrive). Pieces are paced and retried, and a room tells you when a file did not arrive completely. This needs the updated relay, which is already live. An older app ignores a friend-chat file bigger than 160 KB without telling the sender.",
+        ]),
         ReleaseNote(version: "2.2.7", date: "5 November 2026", headline: "Connect Four, Rock Paper Scissors and Battleship", items: [
             "Messenger: more two-player games in rooms and in friend chats. The new Games menu next to the chat invites someone to Connect Four, Rock Paper Scissors (first to two) or Battleship, as well as tic-tac-toe. Rock Paper Scissors picks and Battleship fleets are locked in with a hash first, so nobody can change their pick or lie about a hit: when a Battleship game ends, both fleets are revealed and checked. Mac only for now: Windows cannot play these yet.",
         ]),

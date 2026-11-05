@@ -2,7 +2,7 @@
 //  PlayCards.swift
 //  Notch Apple
 //
-//  The screens for Connect Four, Rock Paper Scissors and Battleship in a Messenger room or friend chat: an invite with
+//  The screens for Connect Four, Rock Paper Scissors, Battleship, Chess and Checkers in a Messenger room or friend chat: an invite with
 //  Accept, then the game, then Rematch. The rules are in TwoPlayerGames.swift and the glue in PlayController.swift;
 //  this only draws them and passes the player's choices on.
 //
@@ -32,6 +32,9 @@ struct PlayCard: View {
     let source: String
 
     private var myID: String { play.myID }
+    /// Chess and Checkers: the piece I have picked up, and a pawn move waiting for the choice of piece to crown it.
+    @State private var picked: Int?
+    @State private var promoting: (from: Int, to: Int)?
 
     var body: some View {
         if let s = play.session {
@@ -81,6 +84,7 @@ struct PlayCard: View {
             case .connect4: connectFour(s, me: me)
             case .rps: rps(s, me: me)
             case .battleship: battleship(s, me: me)
+            case .chess, .checkers: boardGame(s, me: me)
             }
             Text(statusLine(s, me: me)).font(.system(size: 12, weight: myTurn(s, me: me) ? .bold : .regular)).foregroundStyle(.white).multilineTextAlignment(.center)
             HStack(spacing: 8) {
@@ -100,6 +104,8 @@ struct PlayCard: View {
         case .connect4: return "You are \(me == 0 ? "red" : "yellow") · \(play.name(other)) is \(me == 0 ? "yellow" : "red")"
         case .rps: return "You vs \(play.name(other)) · first to \(RockPaperScissors.wins)"
         case .battleship: return "You vs \(play.name(other))"
+        case .chess: return "You are \(me == 0 ? "white" : "black") · \(play.name(other)) is \(me == 0 ? "black" : "white")"
+        case .checkers: return "You are \(me == 0 ? "red" : "white") · \(play.name(other)) is \(me == 0 ? "white" : "red")"
         }
     }
 
@@ -109,14 +115,18 @@ struct PlayCard: View {
         case .connect4: return s.c4.moves % 2 == me
         case .rps: return s.rps.commit[me] == nil
         case .battleship: return s.bs.bothReady ? s.bs.shooter == me : !play.iCommittedFleet
+        case .chess: return s.chess.turn == me
+        case .checkers: return s.checkers.turn == me
         }
     }
 
     private func statusLine(_ s: PlaySession, me: Int?) -> String {
         switch s.status {
         case .finished:
-            guard let w = s.winner else { return "A draw" }
-            return me != nil ? (w == myID ? "You won! 🎉" : "\(play.name(w)) won") : "\(play.name(w)) won"
+            let reason = s.kind == .chess ? Chess.describe(outcome: s.chess.outcome ?? "") : ""
+            guard let w = s.winner else { return reason.isEmpty ? "A draw" : reason }
+            let result = me != nil ? (w == myID ? "You won! 🎉" : "\(play.name(w)) won") : "\(play.name(w)) won"
+            return reason.isEmpty ? result : "\(reason) · \(result)"
         case .ended: return "\(play.name(s.leaver)) left the game"
         default: break
         }
@@ -131,6 +141,12 @@ struct PlayCard: View {
             if !s.bs.bothReady { return play.iCommittedFleet ? "Waiting for \(play.name(s.player(1 - me))) to place their ships…" : "Shuffle until you like your fleet, then press Ready" }
             if s.bs.pendingCell != nil { return "Waiting for the answer…" }
             return s.bs.shooter == me ? "Your shot: pick a square in Enemy waters" : "\(play.name(s.player(1 - me))) is aiming…"
+        case .chess:
+            if myTurn(s, me: me) { return s.chess.check ? "Your turn · you are in check" : "Your turn" }
+            return "\(play.name(s.player(s.chess.turn)))'s turn" + (s.chess.check ? " · in check" : "")
+        case .checkers:
+            if myTurn(s, me: me) { return s.checkers.chain != nil ? "Keep jumping with the same piece" : (s.checkers.mustCapture(s.checkers.turn) ? "Your turn · you must capture" : "Your turn") }
+            return "\(play.name(s.player(s.checkers.turn)))'s turn"
         }
     }
 
@@ -159,6 +175,88 @@ struct PlayCard: View {
             .fill(v == 1 ? Color.red : (v == 2 ? Color.yellow : Color.black.opacity(0.55)))
             .frame(width: 26, height: 26)
             .overlay(Circle().stroke(win ? Color.white : (s.c4.last == cell ? Color.white.opacity(0.6) : .clear), lineWidth: win ? 3 : 1.5))
+    }
+
+    // MARK: Chess and Checkers
+
+    private static let chessGlyphs: [Character: String] = ["k": "♚", "q": "♛", "r": "♜", "b": "♝", "n": "♞", "p": "♟\u{FE0E}"]
+
+    /// One 8 x 8 board for both games. The second player sees it turned round, so their own pieces are at the bottom.
+    private func boardGame(_ s: PlaySession, me: Int?) -> some View {
+        let flip = me == 1
+        let targets = picked.map { PlayRules.boardTargets(s, id: myID, from: $0) } ?? []
+        let last = (s.kind == .chess ? s.chess.last : s.checkers.last) ?? []
+        let kingInCheck = s.kind == .chess && s.chess.check ? s.chess.kingSquare(s.chess.turn) : nil
+        return VStack(spacing: 6) {
+            VStack(spacing: 0) {
+                ForEach(0..<8, id: \.self) { row in
+                    HStack(spacing: 0) {
+                        ForEach(0..<8, id: \.self) { col in
+                            let square = (flip ? 7 - row : row) * 8 + (flip ? 7 - col : col)
+                            let dark = ((square / 8) + (square % 8)) % 2 == 1
+                            Button { tapSquare(square, s) } label: {
+                                ZStack {
+                                    Rectangle().fill(dark ? Color(red: 0.55, green: 0.38, blue: 0.25) : Color(red: 0.92, green: 0.84, blue: 0.69))
+                                    if last.contains(square) { Rectangle().fill(Color.yellow.opacity(0.28)) }
+                                    if picked == square { Rectangle().fill(Color.green.opacity(0.45)) }
+                                    if kingInCheck == square { Rectangle().fill(Color.red.opacity(0.5)) }
+                                    piece(s, square)
+                                    if targets.contains(square) { Circle().fill(Color.green.opacity(0.75)).frame(width: 10, height: 10) }
+                                }
+                                .frame(width: 34, height: 34)
+                            }
+                            .buttonStyle(.plain)
+                            .disabled(s.status != .playing || me == nil)
+                            .accessibilityLabel("Square \(row + 1), \(col + 1)")
+                        }
+                    }
+                }
+            }
+            .clipShape(RoundedRectangle(cornerRadius: 4)).overlay(RoundedRectangle(cornerRadius: 4).stroke(Color.black.opacity(0.5), lineWidth: 1))
+            if let p = promoting {
+                HStack(spacing: 6) {
+                    Text("Crown the pawn as").font(.system(size: 11)).foregroundStyle(Theme.textSecondary)
+                    ForEach(["q", "r", "b", "n"], id: \.self) { code in
+                        Button(Self.chessGlyphs[Character(code)] ?? code) { play.move(from: p.from, to: p.to, promotion: code); promoting = nil; picked = nil }
+                            .buttonStyle(PurpleButtonStyle(prominent: code == "q"))
+                    }
+                }
+            }
+        }
+        .onChange(of: s.chess.moves) { _ in picked = nil; promoting = nil }
+        .onChange(of: s.checkers.moves) { _ in picked = nil; promoting = nil }
+    }
+
+    @ViewBuilder
+    private func piece(_ s: PlaySession, _ square: Int) -> some View {
+        if s.kind == .chess {
+            let c = s.chess.board[square]
+            if c != "." {
+                Text(Self.chessGlyphs[Character(c.lowercased())] ?? "?")
+                    .font(.system(size: 26))
+                    .foregroundStyle(c.isUppercase ? Color.white : Color.black)
+                    .shadow(color: c.isUppercase ? .black : .white.opacity(0.6), radius: 0.8)
+            }
+        } else {
+            let c = s.checkers.board[square]
+            if c != "." {
+                Circle().fill(c == "a" || c == "A" ? Color(red: 0.85, green: 0.15, blue: 0.15) : Color(white: 0.92))
+                    .frame(width: 26, height: 26)
+                    .overlay(Circle().stroke(Color.black.opacity(0.45), lineWidth: 1.5))
+                    .overlay(c.isUppercase ? Text("♛").font(.system(size: 14)).foregroundStyle(c == "A" ? Color.yellow : Color.black) : nil)
+            }
+        }
+    }
+
+    private func tapSquare(_ square: Int, _ s: PlaySession) {
+        if let from = picked, PlayRules.boardTargets(s, id: myID, from: from).contains(square) {
+            if s.kind == .chess, s.chess.isPromotion(from: from, to: square) { promoting = (from, square); return }
+            play.move(from: from, to: square)
+            picked = nil
+        } else {
+            promoting = nil
+            picked = PlayRules.boardTargets(s, id: myID, from: square).isEmpty ? nil : square
+        }
     }
 
     // MARK: Rock Paper Scissors

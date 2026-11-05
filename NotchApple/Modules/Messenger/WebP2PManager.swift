@@ -74,6 +74,7 @@ final class WebP2PManager: ObservableObject {
     private var presenceTimer: Timer?
     private var pingTimer: Timer?
     private var seenIDs = Set<UUID>()
+    private var fileParts = FileAssembly()
     private let identity = MessengerIdentity.shared
 
     /// Connect Four, Rock Paper Scissors and Battleship in this room (rules in TwoPlayerGames.swift).
@@ -139,7 +140,7 @@ final class WebP2PManager: ObservableObject {
         for link in links.values { link.socket.cancel(with: .normalClosure, reason: nil) }
         links = [:]
         members = [:]
-        game = nil; gameNames = [:]; play.reset()
+        game = nil; gameNames = [:]; play.reset(); fileParts.reset()
         state = .idle
         room = nil
     }
@@ -151,17 +152,37 @@ final class WebP2PManager: ObservableObject {
     func send(_ text: String? = nil, fileData: Data? = nil, fileName: String? = nil) {
         let trimmed = text?.trimmingCharacters(in: .whitespacesAndNewlines)
         guard trimmed != nil || fileData != nil, state == .joined else { return }
+        if let fileData, fileData.count > RoomFiles.chunkSize { sendInPieces(fileData, name: fileName); return }
         let env = publish(kind: .message, text: trimmed != nil ? String(trimmed!.prefix(2000)) : nil, fileData: fileData, fileName: fileName)
         seenIDs.insert(env.id)
         messages.append(MessengerMessage(id: env.id, senderID: identity.senderID, sender: identity.handle,
                                          text: trimmed ?? "", date: env.ts, isMine: true, fileData: fileData, fileName: fileName))
     }
 
+    /// A file bigger than one frame: shown in the chat at once, then sent as numbered pieces (paced, so the relay's frame limit is respected).
+    private func sendInPieces(_ data: Data, name: String?) {
+        guard data.count <= RoomFiles.maxBytes else { notice("That file is \(data.count / 1_000_000) MB. Rooms can carry files up to \(RoomFiles.maxBytes / 1_000_000) MB."); return }
+        let fid = UUID().uuidString, shownName = RoomFiles.cleanName(name) ?? "file"
+        let pieces = RoomFiles.split(data)
+        let mine = MessengerMessage(id: UUID(), senderID: identity.senderID, sender: identity.handle, text: "", date: .now, isMine: true, fileData: data, fileName: shownName)
+        seenIDs.insert(mine.id)
+        messages.append(mine)
+        Task { [weak self] in
+            for (i, piece) in pieces.enumerated() {
+                guard let self, self.state == .joined else { return }
+                let env = self.publish(kind: .chunk, text: nil, fileData: piece, fileName: shownName, piece: (fid, i, pieces.count))
+                self.seenIDs.insert(env.id)
+                try? await Task.sleep(nanoseconds: 30_000_000)   // about 33 pieces a second, well under the relay's 60 frames a second
+            }
+        }
+    }
+
     @discardableResult
     private func publish(kind: MessengerEnvelope.Kind, text: String?, fileData: Data? = nil, fileName: String? = nil,
-                         game: TicTacToeMessage? = nil, play: PlayMessage? = nil) -> MessengerEnvelope {
-        let env = MessengerEnvelope(kind: kind, id: UUID(), senderID: identity.senderID,
+                         game: TicTacToeMessage? = nil, play: PlayMessage? = nil, piece: (fid: String, i: Int, n: Int)? = nil) -> MessengerEnvelope {
+        var env = MessengerEnvelope(kind: kind, id: UUID(), senderID: identity.senderID,
                                     sender: identity.handle, text: text, fileData: fileData, fileName: fileName, game: game, play: play, ts: .now)
+        if let piece { env.fid = piece.fid; env.fi = piece.i; env.fn = piece.n }
         // Only publish once at least one relay is live (timers can fire while reconnecting).
         guard state == .joined || kind == .leave,
               let key, let topic, let json = try? JSONEncoder().encode(env),
@@ -174,6 +195,7 @@ final class WebP2PManager: ObservableObject {
                 let frame = #"{"event":"message","message":"\#(sealed.base64EncodedString())"}"#
                 link.socket.send(.string(frame)) { _ in }
             case .ntfy(let host):
+                if piece != nil { continue }   // pieces are far bigger than ntfy accepts, and would use up its daily quota for everything else
                 // Publish over HTTPS. `Cache: no` = forward live, store nothing.
                 var request = URLRequest(url: URL(string: "https://\(host)/\(topic)")!)
                 request.httpMethod = "POST"
@@ -226,6 +248,25 @@ final class WebP2PManager: ObservableObject {
             seenIDs.insert(env.id)
             gameNames[env.senderID] = String(env.sender.prefix(32))
             play.receive(p, from: env.senderID)
+        case .chunk:
+            guard !isMe, !seenIDs.contains(env.id), let fid = env.fid, let n = env.fn, let i = env.fi, let bytes = env.fileData, let name = RoomFiles.cleanName(env.fileName) else { return }
+            seenIDs.insert(env.id)
+            for dropped in fileParts.expire() { notice("\"\(dropped)\" didn't arrive completely, so it was dropped. Ask them to send it again.") }
+            let startedWaiting = fileParts.parts["\(env.senderID)|\(fid)"] == nil
+            if let whole = fileParts.add(key: "\(env.senderID)|\(fid)", name: name, n: n, i: i, bytes: bytes) {
+                members[env.senderID] = (String(env.sender.prefix(32)), .now)
+                messages.append(MessengerMessage(id: UUID(), senderID: env.senderID, sender: String(env.sender.prefix(32)),
+                                                 text: "", date: env.ts, isMine: false, fileData: whole.data, fileName: whole.name))
+                MessengerNotifier.shared.incoming(messages[messages.count - 1], source: "Room #\(room ?? "")")
+            } else if startedWaiting {
+                // Say once that a file is on its way, and drop it with a notice if it stalls.
+                notice("\(String(env.sender.prefix(32))) is sending \"\(name)\" (\(n * RoomFiles.chunkSize / 1000) KB at most)…")
+                Task { [weak self] in
+                    try? await Task.sleep(nanoseconds: UInt64(FileAssembly.patience + 5) * 1_000_000_000)
+                    guard let self else { return }
+                    for dropped in self.fileParts.expire() { self.notice("\"\(dropped)\" didn't arrive completely, so it was dropped. Ask them to send it again.") }
+                }
+            }
         case .message:
             guard !isMe, !seenIDs.contains(env.id) else { return }
             if let p = env.play {

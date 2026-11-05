@@ -240,13 +240,13 @@ final class FriendsTests: XCTestCase {
         XCTAssertNil(book.receiveFile(from: a.box, group: nil, id: "f1", name: "b.png", size: 10), "the same file twice is dropped")
         XCTAssertEqual(book.record(a.box)?.unread, 1)
         // A sealed chunk is far below the relay's ~16 KB limit.
-        XCTAssertEqual(Friends.maxFileBytes, 160_000)
+        XCTAssertEqual(Friends.maxFileBytes, 2_000_000)
     }
 
     func testAChunkFitsTheRelayLimit() throws {
         let me = FriendIdentity.generate(), you = FriendIdentity.generate()
         var body = FriendBody(t: "chunk", from: me.box, id: UUID().uuidString, ts: 1)
-        body.g = UUID().uuidString; body.fname = String(repeating: "n", count: 80); body.fn = 20; body.fi = 19
+        body.g = UUID().uuidString; body.fname = String(repeating: "n", count: 80); body.fn = 250; body.fi = 249
         body.fd = Friends.b64u(Data((0..<Friends.chunkSize).map { _ in UInt8.random(in: 0...255) }))
         let blob = try FriendCrypto.seal(bodyText: body.encoded(), kind: "msg", from: me, toBox: you.box, toDH: you.dhPublic)
         XCTAssertLessThan(blob.count, 22000, "the relay refuses blobs over 22000 characters")

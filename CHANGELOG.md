@@ -4,6 +4,13 @@ Every Notch Apple release, newest first. The latest few are also on the [README]
 
 > **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is in the repository's history.
 
+### Mac 2.2.8 · Windows 2.2.8 BETA · 5 November 2026 · ♟️ Chess, Checkers and bigger files
+
+- Messenger: Chess and Checkers join the Games menu, in rooms and in friend chats. Chess has check, checkmate, stalemate, castling, en passant, promotion and draws; Checkers has compulsory captures, multi-jumps and kings. Pick a piece and its legal squares light up; the second player sees the board turned round. Mac only for now: Windows cannot play Chess or Checkers yet.
+- Messenger: bigger files. A file in a friend chat or group can now be up to 2 MB (it was 160 KB), and a file in an anonymous room is sent in pieces up to 2 MB too (before, anything much over 8 KB could silently never arrive). Pieces are paced and retried, and a room tells you when a file did not arrive completely. This needs the updated relay, which is already live. An older app ignores a friend-chat file bigger than 160 KB without telling the sender.
+- Windows: Messenger: Connect Four, Rock Paper Scissors and Battleship in rooms and in Friends chats, and tic-tac-toe in Friends chats, from the Games menu next to the chat. Rock Paper Scissors picks and Battleship fleets are locked in with a hash first and checked at the end, so cheating shows. The notch grows to at least 800 by 600 while a board is showing.
+- Windows: Plays against the Mac app (2.2.7 and 2.2.8) with the same messages. Windows cannot play Chess or Checkers yet, and its file limit is still 160 KB, so it ignores bigger files from Mac friends. Both are coming. Untested on real Windows hardware.
+
 ### Mac 2.2.7 · 5 November 2026 · 🎮 Connect Four, Rock Paper Scissors and Battleship
 
 - Messenger: more two-player games in rooms and in friend chats. The new Games menu next to the chat invites someone to Connect Four, Rock Paper Scissors (first to two) or Battleship, as well as tic-tac-toe. Rock Paper Scissors picks and Battleship fleets are locked in with a hash first, so nobody can change their pick or lie about a hit: when a Battleship game ends, both fleets are revealed and checked. Mac only for now: Windows cannot play these yet.

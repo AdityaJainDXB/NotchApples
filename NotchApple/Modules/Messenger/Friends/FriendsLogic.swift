@@ -45,10 +45,11 @@ enum Friends {
     static func isPlainID(_ id: String) -> Bool {
         !id.isEmpty && id.count <= 64 && id.unicodeScalars.allSatisfy { ($0.value >= 48 && $0.value <= 57) || ($0.value >= 65 && $0.value <= 90) || ($0.value >= 97 && $0.value <= 122) || $0 == "-" }
     }
-    /// Files: 8 KB chunks (a sealed message is limited to about 16 KB by the relay), at most 20 of them.
+    /// Files: 8 KB chunks (a sealed message is limited to about 16 KB by the relay), at most 250 of them.
     static let chunkSize = 8000
-    static let maxChunks = 20
+    static let maxChunks = 250          // 2 MB; the relay mailbox holds 4.5 MB (server/room-relay/src/friends.js)
     static let maxFileBytes = chunkSize * maxChunks
+    static var maxFileText: String { "\(maxFileBytes / 1_000_000) MB" }
     static let maxGroupMembers = 20
     static let maxGroups = 30
 

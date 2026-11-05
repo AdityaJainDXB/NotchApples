@@ -27,7 +27,9 @@ struct MessengerMessage: Identifiable, Equatable {
 struct MessengerEnvelope: Codable {
     /// `game` carries tic-tac-toe moves. Older apps can't decode it and skip those envelopes, which is the safe outcome;
     /// the game invite is sent as a normal `message` with a plain-text line instead, so older apps just show that text.
-    enum Kind: String, Codable { case message, presence, leave, game, play }
+    ///
+    /// `chunk` is one piece of a file too big for one frame (see FileChunks.swift); older apps skip it.
+    enum Kind: String, Codable { case message, presence, leave, game, play, chunk }
     var v = 2
     let kind: Kind
     let id: UUID
@@ -40,6 +42,10 @@ struct MessengerEnvelope: Codable {
     var game: TicTacToeMessage? = nil
     /// Connect Four, Rock Paper Scissors and Battleship (see TwoPlayerGames.swift). Apps from before these games can't decode `play` envelopes and skip them.
     var play: PlayMessage? = nil
+    /// A file in pieces (`Kind.chunk`): the file's id, this piece's number and how many pieces there are. `fileData` holds the piece.
+    var fid: String? = nil
+    var fi: Int? = nil
+    var fn: Int? = nil
     let ts: Date
 }
 

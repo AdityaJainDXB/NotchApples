@@ -67,6 +67,7 @@
 		2006B2451159E4A12E70E69B /* plane-sim.js in Resources */ = {isa = PBXBuildFile; fileRef = DC8C118088B36E22640A6C5F /* plane-sim.js */; };
 		21586C0BF170E4B586EF009A /* ModuleOrganizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4894C776E7909EF42A1F97E9 /* ModuleOrganizer.swift */; };
 		219D17761C8C9DB4C03DCBCF /* VoiceNotesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34E21597A89BA509A323CB7C /* VoiceNotesView.swift */; };
+		21AFBE67E66713A7A429AB55 /* BoardGamesTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFC11D10FE9B3A054D37CE37 /* BoardGamesTests.swift */; };
 		221FEC324BD888DEBD975CB3 /* ProjectFocusTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 18329B6DF3C3AF37BA61B8B4 /* ProjectFocusTests.swift */; };
 		2257C6B3EE6E3A5CA537C51E /* MagneticDropZone.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9E934112FC7E1F768777E6F5 /* MagneticDropZone.swift */; };
 		22E6064B9B045D8365F1A2A9 /* SolitaireView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0C3A6E52CAC2AAC502D9AD8 /* SolitaireView.swift */; };
@@ -132,6 +133,7 @@
 		44EC11F43A710DD3413C3795 /* RequiredUpdateView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83C44AF689790EE02BABEAD5 /* RequiredUpdateView.swift */; };
 		4547BABCB3FFE13CFCB76D3E /* PremiumEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = C85AEAB4DEB03829CF83C705 /* PremiumEntry.swift */; };
 		4652F286983A1979B1888BEC /* BambuCamera.swift in Sources */ = {isa = PBXBuildFile; fileRef = B7C3D9C59308AA6B8575910B /* BambuCamera.swift */; };
+		46C8F5AA85A06719FF9A5A5B /* FileChunks.swift in Sources */ = {isa = PBXBuildFile; fileRef = 098DBF889E6BC562C408CB74 /* FileChunks.swift */; };
 		47EDA92EE30A36DFA8BB4C16 /* ClaudeUsageTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB032195DAEF1B929D59A828 /* ClaudeUsageTests.swift */; };
 		47F3262131C954B32DF79D99 /* CookieClickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 702334063347B78DDA56DB8A /* CookieClickerView.swift */; };
 		488CD0BEB4F2C16BCAF627F2 /* BrightnessBlackout.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4885DCE3ACCF1FF623E1D25F /* BrightnessBlackout.swift */; };
@@ -410,6 +412,7 @@
 		DC7461BFDC665BFD1AA83154 /* CompanionStream.swift in Sources */ = {isa = PBXBuildFile; fileRef = D355C3297A8F345EABACAE42 /* CompanionStream.swift */; };
 		DCB6015E6E30EB360D1FD19D /* wordle-logic.js in Resources */ = {isa = PBXBuildFile; fileRef = 5C9AA52A7E88086BA19CE4A6 /* wordle-logic.js */; };
 		DCE9CF6CAF6F38227D18150F /* F1Model.swift in Sources */ = {isa = PBXBuildFile; fileRef = 466B2516F7D15E3C623784BC /* F1Model.swift */; };
+		DD77808AC84C93F4ED44E0D6 /* BoardGames.swift in Sources */ = {isa = PBXBuildFile; fileRef = 565FBD6851D4877BC775D95B /* BoardGames.swift */; };
 		DDDDB7E81AB5751C2D7A3F80 /* ShortcutsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33BEEDB2663AD6544E5061C7 /* ShortcutsView.swift */; };
 		DE787D98D8EB9B7B2E4CB705 /* F1View.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1EFD1D83C7FB4561E3A2CC27 /* F1View.swift */; };
 		DFC0C10C61F488FC1CE273A4 /* FoldShader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 60E39552D413F32D02D5FFD0 /* FoldShader.swift */; };
@@ -498,6 +501,7 @@
 		076DA6D06B8B6E4AF8639E32 /* DailyWordGame.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = DailyWordGame.html; sourceTree = "<group>"; };
 		08FCD39C305D6997D25CE2CB /* NotchKit */ = {isa = PBXFileReference; lastKnownFileType = folder; name = NotchKit; path = Packages/NotchKit; sourceTree = SOURCE_ROOT; };
 		0918F482C2DF3A150F375D22 /* CompanionServer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompanionServer.swift; sourceTree = "<group>"; };
+		098DBF889E6BC562C408CB74 /* FileChunks.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileChunks.swift; sourceTree = "<group>"; };
 		0A2A98A73E13E924C3E3852B /* AIProviders.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIProviders.swift; sourceTree = "<group>"; };
 		0A6CA5F3A5E0FEF5E725C6BA /* BambuCameraTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BambuCameraTests.swift; sourceTree = "<group>"; };
 		0AAD6AEBA1965B0D8839F58A /* AppRelauncher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppRelauncher.swift; sourceTree = "<group>"; };
@@ -617,6 +621,7 @@
 		526D84DF56B341F78C517FDE /* MathEngineTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MathEngineTests.swift; sourceTree = "<group>"; };
 		52CE6E000FE00226413E9D0B /* MathEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MathEngine.swift; sourceTree = "<group>"; };
 		544025FBBA4060D5F307DDCA /* WallpaperEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WallpaperEngine.swift; sourceTree = "<group>"; };
+		565FBD6851D4877BC775D95B /* BoardGames.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BoardGames.swift; sourceTree = "<group>"; };
 		56D47BB0880A6DF4C4EF0718 /* trivia-logic.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = "trivia-logic.js"; sourceTree = "<group>"; };
 		572FFE43DE13E5E3A4C818F2 /* ModuleLayout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModuleLayout.swift; sourceTree = "<group>"; };
 		59BC3F5D6F85A5FDFC39D94F /* ClipboardLink.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClipboardLink.swift; sourceTree = "<group>"; };
@@ -856,6 +861,7 @@
 		EE8F449DF06A0234C90957EC /* SystemExtras.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SystemExtras.swift; sourceTree = "<group>"; };
 		EF684F6E5D9CB8D0333E6F0C /* FoldCore */ = {isa = PBXFileReference; lastKnownFileType = folder; name = FoldCore; path = Packages/FoldCore; sourceTree = SOURCE_ROOT; };
 		EFADF33A515791B8743E49FB /* LiveView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveView.swift; sourceTree = "<group>"; };
+		EFC11D10FE9B3A054D37CE37 /* BoardGamesTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BoardGamesTests.swift; sourceTree = "<group>"; };
 		F07E1B78F23E06B22957659F /* NotchPlacementEditor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotchPlacementEditor.swift; sourceTree = "<group>"; };
 		F173F2DD0E8CE0B158D9A906 /* BambuManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BambuManager.swift; sourceTree = "<group>"; };
 		F323D82F0AF46D956EA470CA /* Converter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Converter.swift; sourceTree = "<group>"; };
@@ -1164,6 +1170,7 @@
 				0A6CA5F3A5E0FEF5E725C6BA /* BambuCameraTests.swift */,
 				4882C21A4A6F05557459BF6F /* BambuCloudTests.swift */,
 				14A58A151882263600938577 /* BambuPinTests.swift */,
+				EFC11D10FE9B3A054D37CE37 /* BoardGamesTests.swift */,
 				B04639220ABBD701F4F5AB0A /* CardsLogicTests.swift */,
 				1D1C64F3F921E34B6F6E3B22 /* ClaudeCodeStatusTests.swift */,
 				1B17D4FF322D035C7AC1652A /* ClaudeLimitsTests.swift */,
@@ -1482,6 +1489,8 @@
 		928715D8716E7F408FC89AB9 /* Messenger */ = {
 			isa = PBXGroup;
 			children = (
+				565FBD6851D4877BC775D95B /* BoardGames.swift */,
+				098DBF889E6BC562C408CB74 /* FileChunks.swift */,
 				700E54998678B97CA020EA9E /* LocalP2PManager.swift */,
 				033E65EDFD61BEE79967253B /* MessengerModels.swift */,
 				D953A904B3EF07B407F31F5C /* MessengerNotifier.swift */,
@@ -2066,6 +2075,7 @@
 				873C65522A58DF2D9C3DA0FE /* BambuView.swift in Sources */,
 				0A5DC836B5829FB65956058F /* BiometricAuth.swift in Sources */,
 				D2265784620BA51F5B8F79BB /* BlackjackView.swift in Sources */,
+				DD77808AC84C93F4ED44E0D6 /* BoardGames.swift in Sources */,
 				4397402231128D19451B4D3B /* BreakoutGameView.swift in Sources */,
 				488CD0BEB4F2C16BCAF627F2 /* BrightnessBlackout.swift in Sources */,
 				3EFFED94F8F614109390BB82 /* BrowserMedia.swift in Sources */,
@@ -2124,6 +2134,7 @@
 				442C0FCFC8F3FA259F6BA39A /* FaceUnlock.swift in Sources */,
 				1019743E3C501B599ECAE938 /* FeatureHub.swift in Sources */,
 				BAA00FB20215C96021D76875 /* FeedbackView.swift in Sources */,
+				46C8F5AA85A06719FF9A5A5B /* FileChunks.swift in Sources */,
 				CA0E4BF296C64534C899D7F2 /* FileSearchManager.swift in Sources */,
 				68A5D2B46E4A5A70CF45359E /* FileSearchView.swift in Sources */,
 				0B1569487E2F135B049C0FBB /* FileShelf.swift in Sources */,
@@ -2368,6 +2379,7 @@
 				999703452C3B4A7E989FECB4 /* BambuCloudTests.swift in Sources */,
 				2A5DC111EE7812BBD43DED77 /* BambuPinTests.swift in Sources */,
 				C307D2D56FA7AA856D332C08 /* BambuStatusLogic.swift in Sources */,
+				21AFBE67E66713A7A429AB55 /* BoardGamesTests.swift in Sources */,
 				B89F153613A7A2A15BDBC29A /* CardsLogic.swift in Sources */,
 				1FC29FA540EA342E75C6FB1B /* CardsLogicTests.swift in Sources */,
 				9F9EC854E119ACE78147C2FE /* ClaudeClient.swift in Sources */,
@@ -2586,7 +2598,7 @@
 				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Manual;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 195;
+				CURRENT_PROJECT_VERSION = 196;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = "";
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -2602,7 +2614,7 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 2.2.7;
+				MARKETING_VERSION = 2.2.8;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -2720,7 +2732,7 @@
 				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Manual;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 195;
+				CURRENT_PROJECT_VERSION = 196;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = "";
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -2742,7 +2754,7 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 2.2.7;
+				MARKETING_VERSION = 2.2.8;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;

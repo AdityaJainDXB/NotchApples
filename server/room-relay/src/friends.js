@@ -10,7 +10,9 @@ const B64U = /^[A-Za-z0-9_-]+$/;
 const MAX_BODY = 24 * 1024;
 const MAX_REQ_BLOB = 5800;     // ~4 KB once decoded
 const MAX_MSG_BLOB = 22000;    // ~16 KB
-const MAX_QUEUE = 300, MAX_QUEUE_BYTES = 512 * 1024, MAX_REQUESTS = 20, MAX_ALLOW = 500;
+// A mailbox holds what a friend has not collected yet: 700 messages or 4.5 MB (a 2 MB file is 250 pieces of about 15 KB each).
+const MAX_QUEUE = 700, MAX_QUEUE_BYTES = 4.5 * 1024 * 1024, MAX_REQUESTS = 20, MAX_ALLOW = 500;
+const SENDS_PER_MIN = 300;     // per sender token: a file goes out as one message per piece
 const TTL_MS = 14 * 24 * 3600 * 1000;
 const AUTH_WINDOW_MS = 5 * 60 * 1000;
 const CORS = { 'access-control-allow-origin': '*', 'access-control-allow-methods': 'GET, POST, PUT, DELETE, OPTIONS', 'access-control-allow-headers': 'content-type, x-nf-auth' };
@@ -229,7 +231,7 @@ export async function routeFriends(request, env) {
   // Which mailbox, and which limit.
   if (path === '/f/claim') { box = body.box; bucket = 'claim'; max = 5; window = 3600000; }
   else if (path === '/f/req') { box = body.to; bucket = `req:${body.to}`; max = 3; }
-  else if (path === '/f/send') { box = body.to; bucket = `send:${await sha256hex(String(body.token || ''))}`; max = 120; }
+  else if (path === '/f/send') { box = body.to; bucket = `send:${await sha256hex(String(body.token || ''))}`; max = SENDS_PER_MIN; }
   else if (path === '/f/allow' || path === '/f/wipe') { box = body.box || request.headers.get('x-nf-box'); }
   else if (method === 'DELETE') { box = request.headers.get('x-nf-box'); }
   if (!BOX.test(box || '')) return fail(400, 'Bad mailbox.');
