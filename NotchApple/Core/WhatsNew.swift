@@ -20,6 +20,9 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.2.24", date: "6 November 2026", headline: "Licence names Viraj Singh Chadha", items: [
+            "Updated the licence: Viraj Singh Chadha is now named as a collaborator and co-owner. Aditya Jain remains the principal owner with the majority and controlling stake.",
+        ]),
         ReleaseNote(version: "2.2.23", date: "6 November 2026", headline: "A nicer code screen and emails", items: [
             "New: the code screen is redesigned: six cells split 3 + 3 that glow blue where you type, in the email setup window, Settings and on Windows.",
             "New: the emails we send (your verification code and the \"your key is locked to your email\" confirmation) now look like Notch Apple: a dark card with the code in six cells, instead of plain text.",

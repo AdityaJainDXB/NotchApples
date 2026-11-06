@@ -4,6 +4,10 @@ Every Notch Apple release, newest first. The latest few are also on the [README]
 
 > **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is in the repository's history.
 
+### Mac 2.2.24 · Windows 2.2.24 BETA · 6 November 2026 · 📄 Licence names Viraj Singh Chadha
+
+- Updated the licence: Viraj Singh Chadha is now named as a collaborator and co-owner. Aditya Jain remains the principal owner with the majority and controlling stake.
+
 ### Mac 2.2.23 · Windows 2.2.23 BETA · 6 November 2026 · ✨ A nicer code screen and emails
 
 - New: the code screen is redesigned: six cells split 3 + 3 that glow blue where you type, in the email setup window, Settings and on Windows.
