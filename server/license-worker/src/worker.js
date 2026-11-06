@@ -645,30 +645,36 @@ async function deliver(env, orderId, o, source, txid) {
 // MARK: Card payments (Ziina, UAE only)
 
 const ZIINA = 'https://api-v2.ziina.com/api';
-const CARD_FEE_PCT = 0.03, CARD_FEE_FLAT = 1;       // AED: the customer bears the card fee, 3% + AED 1
+const CARD_FEE_PCT = 0.03, CARD_FEE_FLAT = 1;       // UAE, AED: the customer bears the card fee, 3% + AED 1
+// International customers pay in USD with a higher fee (foreign cards cost more): 5% + $0.30 unless CARD_FEE_INTL_PCT / CARD_FEE_INTL_FLAT say otherwise.
+const intlFee = (env) => ({ pct: Number(env.CARD_FEE_INTL_PCT || 5) / 100, flat: Number(env.CARD_FEE_INTL_FLAT || 0.3) });
 
 function aedPrices(env) {
   return { pro: Number(env.PRICE_AED_PRO || 4), ultimate: Number(env.PRICE_AED_ULTIMATE || 10), upgrade: Number(env.PRICE_AED_UPGRADE || 6) };
 }
 
 /** What a card payment costs: the price, the card fee (3% + AED 1) and the total, in AED and in fils (Ziina's unit: 100 fils = 1 AED). */
-export function cardQuote(base) {
+export function cardQuote(base, pct = CARD_FEE_PCT, flat = CARD_FEE_FLAT) {
   const cents = (n) => Math.round(n * 100) / 100;
-  const fee = cents(base * CARD_FEE_PCT + CARD_FEE_FLAT), total = cents(base + fee);
+  const fee = cents(base * pct + flat), total = cents(base + fee);
   return { base: cents(base), fee, total, fils: Math.round(total * 100) };
 }
 
-const inUAE = (env, request) => env.ZIINA_TEST === '1' || (request.headers.get('cf-ipcountry') || '').toUpperCase() === 'AE';
+/** 'ae' (AED, UAE fee) or 'intl' (USD, higher fee), by the visitor's country. In test mode a request may pick one, to test both from anywhere. */
+function cardRegion(env, request, body = {}) {
+  if (env.ZIINA_TEST === '1' && (body.region === 'ae' || body.region === 'intl')) return body.region;
+  return (request.headers.get('cf-ipcountry') || '').toUpperCase() === 'AE' ? 'ae' : 'intl';
+}
 
 /** POST /order {method:'card', tier, email, upgradeFrom?, tip?, coupon?}: starts a Ziina payment and returns the page to pay on. */
 async function cardOrder(env, request, body) {
   if (!env.ZIINA_API_KEY) throw new HTTPError(503, "Card payments aren't switched on yet. Please pay with crypto.");
-  if (!inUAE(env, request)) throw new HTTPError(403, 'Card payment is for customers in the UAE. Please pay with crypto.');
+  const region = cardRegion(env, request, body), cur = region === 'ae' ? 'AED' : 'USD';
   const tier = TIER[body.tier];
   if (!tier) throw new HTTPError(400, 'Choose Pro or Ultimate.');
   if (tier === TIER.ultimate && env.ULTIMATE_ON !== '1') throw new HTTPError(403, 'Ultimate is not on sale yet.');
   if (!validEmail(body.email)) throw new HTTPError(400, 'Enter a valid email address. Your key is sent there.');
-  const p = aedPrices(env);
+  const p = region === 'ae' ? aedPrices(env) : prices(env), fee = region === 'ae' ? { pct: CARD_FEE_PCT, flat: CARD_FEE_FLAT } : intlFee(env);
   let base = tier === TIER.pro ? p.pro : p.ultimate, upgradeFrom = null;
   if (body.upgradeFrom) {
     if (tier !== TIER.ultimate) throw new HTTPError(400, 'Only Pro can be upgraded, to Ultimate.');
@@ -679,22 +685,22 @@ async function cardOrder(env, request, body) {
   }
   let coupon = null;
   if (body.coupon) { coupon = await couponCheck(env, body.coupon, body.email); base = Math.round(base * (1 - COUPON_OFF) * 100) / 100; }
-  base += Math.max(0, Math.min(50, Math.floor(Number(body.tip) || 0)));       // an optional tip, whole AED
-  const q = cardQuote(base);
-  if (q.fils < 200) throw new HTTPError(400, 'The minimum card payment is AED 2.');
+  base += Math.max(0, Math.min(50, Math.floor(Number(body.tip) || 0)));       // an optional tip, whole AED or dollars
+  const q = cardQuote(base, fee.pct, fee.flat);
+  if (q.fils < (cur === 'AED' ? 200 : 100)) throw new HTTPError(400, `The minimum card payment is ${cur === 'AED' ? 'AED 2' : '$1'}.`);
   if (body.remind === true) await leadSave(env, body.email.trim(), body.tier);
   const site = (env.SITE_URL || 'https://adityajaindxb.github.io/NotchApples').replace(/\/+$/, '');
   const id = hex(randomBytes(16));
   const test = env.ZIINA_TEST === '1';
   const r = await fetch(`${ZIINA}/payment_intent`, {
     method: 'POST', headers: { Authorization: `Bearer ${env.ZIINA_API_KEY}`, 'content-type': 'application/json' }, signal: timeout(15000),
-    body: JSON.stringify({ amount: q.fils, currency_code: 'AED', message: `Notch Apple ${TIER_NAME[tier]}${upgradeFrom ? ' (upgrade from Pro)' : ''}`,
+    body: JSON.stringify({ amount: q.fils, currency_code: cur, message: `Notch Apple ${TIER_NAME[tier]}${upgradeFrom ? ' (upgrade from Pro)' : ''}`,
       success_url: `${site}/pro.html?card=${id}`, cancel_url: `${site}/pro.html?cardcancel=1#checkout`, ...(test ? { test: true } : {}) }),
   }).catch(() => null);
   const j = r ? await r.json().catch(() => ({})) : {};
   if (!r || !r.ok || !j.id || !j.redirect_url) { console.error('Ziina intent failed', r && r.status, JSON.stringify(j).slice(0, 300)); throw new HTTPError(502, "We couldn't start the card payment. Try again in a minute, or pay with crypto."); }
-  await putJSON(env, `order:${id}`, { tier, aed: q.total, fils: q.fils, provider: 'ziina', intent: j.id, test, created: Date.now(), email: body.email.trim(), upgradeFrom, coupon, status: 'open' }, ORDER_TTL);
-  return { order: id, tier: body.tier, provider: 'ziina', redirect_url: j.redirect_url, quote: q };
+  await putJSON(env, `order:${id}`, { tier, aed: q.total, cur, fils: q.fils, provider: 'ziina', intent: j.id, test, created: Date.now(), email: body.email.trim(), upgradeFrom, coupon, status: 'open' }, ORDER_TTL);
+  return { order: id, tier: body.tier, provider: 'ziina', redirect_url: j.redirect_url, quote: q, cur };
 }
 
 /** POST /order/card {order}: asks Ziina whether the payment went through; if it did, the key is issued (once). */
@@ -702,18 +708,18 @@ async function cardCheck(env, body) {
   if (typeof body.order !== 'string' || !/^[0-9a-f]{32}$/.test(body.order)) throw new HTTPError(400, 'Missing order.');
   const o = await getJSON(env, `order:${body.order}`);
   if (!o || o.provider !== 'ziina') throw new HTTPError(404, 'That card order has expired. If you paid, use "Lost my key?" with your email or contact us.');
-  if (o.status === 'paid') return { key: o.key, tier: TIER_NAME[o.tier], emailed: o.emailed, again: true, aed: o.aed };
+  if (o.status === 'paid') return { key: o.key, tier: TIER_NAME[o.tier], emailed: o.emailed, again: true, aed: o.aed, cur: o.cur || 'AED' };
   if (!env.ZIINA_API_KEY) throw new HTTPError(503, 'Card payments are not available right now.');
   const r = await fetch(`${ZIINA}/payment_intent/${encodeURIComponent(o.intent)}`, { headers: { Authorization: `Bearer ${env.ZIINA_API_KEY}` }, signal: timeout(15000) }).catch(() => null);
   const j = r && r.ok ? await r.json().catch(() => null) : null;
   if (!j) return { pending: true, message: 'Checking your payment…' };
   if (j.status === 'failed' || j.status === 'canceled') return { failed: true, message: 'The card payment did not go through. You were not charged. Try again.' };
   if (j.status !== 'completed') return { pending: true, message: 'Waiting for the payment to finish…' };
-  if (Number(j.amount) !== o.fils || String(j.currency_code || 'AED').toUpperCase() !== 'AED') throw new HTTPError(400, 'That payment does not match this order. Contact us with your order reference and we will sort it out.');
+  if (Number(j.amount) !== o.fils || String(j.currency_code || o.cur || 'AED').toUpperCase() !== (o.cur || 'AED')) throw new HTTPError(400, 'That payment does not match this order. Contact us with your order reference and we will sort it out.');
   if (await env.KV.get(`tx:ziina:${o.intent}`)) throw new HTTPError(409, 'That payment has already been used for a key.');
   await env.KV.put(`tx:ziina:${o.intent}`, body.order);
   const done = await deliver(env, body.order, o, o.test ? 'card-test' : 'card', o.intent);
-  return { ...done, aed: o.aed };
+  return { ...done, aed: o.aed, cur: o.cur || 'AED' };
 }
 
 async function promo(env, body) {
@@ -1641,7 +1647,7 @@ export default {
     try {
       if (request.method === 'GET') {
         if (path === '/') return json({ ok: true, service: 'Notch Apple licenses' });
-        if (path === '/config') return json({ prices: prices(env), ultimate: env.ULTIMATE_ON === '1', network: env.NETWORK || 'mainnet', wallet: env.WALLET, coins: coinList(env), card: { on: !!env.ZIINA_API_KEY, here: inUAE(env, request), aed: aedPrices(env), fee: { pct: CARD_FEE_PCT * 100, flat: CARD_FEE_FLAT } } });
+        if (path === '/config') return json({ prices: prices(env), ultimate: env.ULTIMATE_ON === '1', network: env.NETWORK || 'mainnet', wallet: env.WALLET, coins: coinList(env), card: { on: !!env.ZIINA_API_KEY, region: cardRegion(env, request), ae: { cur: 'AED', prices: aedPrices(env), fee: { pct: CARD_FEE_PCT * 100, flat: CARD_FEE_FLAT } }, intl: { cur: 'USD', prices: prices(env), fee: { pct: intlFee(env).pct * 100, flat: intlFee(env).flat } } } });
         if (path === '/unsub') return await unsubscribe(env, new URL(request.url));
         if (path === '/admin') return new Response(ADMIN_PAGE, { headers: ADMIN_HEADERS });
         if (path === '/revoked') return json(await revokedList(env), 200, { 'cache-control': 'public, max-age=3600' });

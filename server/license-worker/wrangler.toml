@@ -51,13 +51,16 @@ PRICE_PRO = "1"
 PRICE_ULTIMATE = "5"
 PRICE_UPGRADE = "4"
 DEVICE_LIMIT = "3"
-# Card payments through Ziina, for the UAE only (prices in AED; the customer pays the card fee, 3% + AED 1). They switch on when the
+# Card payments through Ziina: UAE customers pay in AED (the customer pays the card fee, 3% + AED 1). They switch on when the
 # ZIINA_API_KEY secret is set (`npx wrangler secret put ZIINA_API_KEY`). ZIINA_TEST = "1" makes every payment a Ziina test payment
-# (any card works, no money moves) and lifts the UAE-only check; keep it "0" in production.
+# (any card works, no money moves) and lets a test request pick the UAE or international price; keep it "0" in production.
 PRICE_AED_PRO = "4"
 PRICE_AED_ULTIMATE = "10"
 PRICE_AED_UPGRADE = "6"
 ZIINA_TEST = "0"
+# International customers pay by card in USD (the USD prices above) with a higher card fee, paid by the customer.
+CARD_FEE_INTL_PCT = "5"
+CARD_FEE_INTL_FLAT = "0.30"
 # "1" = a device new to a key must confirm the key's email with a 6-digit code (or an authenticator app) once. Deploy this version first,
 # ship the app update, then set "1": older apps cannot ask for the code. Devices already registered are never asked.
 BIND_REQUIRE = "1"

@@ -419,12 +419,12 @@ async function printReceipt(o) {
   const box = $('#printer'), out = $('#prOut'), icon = $('#prIcon'), text = $('#prText');
   const tierName = o.tier === 'ultimate' ? 'Ultimate' : 'Pro', day = new Date().toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
   const esc = t => String(t).replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
-  const aedR = o.cur === 'AED', money = aedR ? `AED ${(+o.total).toFixed(2)}` : `$${o.usd}`;
+  const aedR = o.cur === 'AED' || o.cur === 'USD', cs = o.cur === 'USD' ? '$' : 'AED ', money = aedR ? `${cs}${(+o.total).toFixed(2)}` : `$${o.usd}`;
   $('#prWhat').textContent = `${tierName} · one payment`; $('#prAmt').textContent = money;
   $('#prPaper').innerHTML = `<h4>Receipt</h4><hr><dl>
     <div><dt>Item</dt><dd>Notch Apple ${esc(tierName)}</dd></div>
-    <div><dt>Price</dt><dd>${aedR ? 'AED ' + (+o.base).toFixed(2) : '$' + esc(o.usd)}</dd></div>
-    ${aedR ? `<div><dt>Card fee</dt><dd>AED ${(+o.fee).toFixed(2)}</dd></div><div><dt>Paid by</dt><dd>Card (Ziina)</dd></div>` : `<div><dt>Paid</dt><dd>${esc(o.amount || o.ltc)} ${esc(o.symbol || 'LTC')}</dd></div>`}
+    <div><dt>Price</dt><dd>${aedR ? cs + (+o.base).toFixed(2) : '$' + esc(o.usd)}</dd></div>
+    ${aedR ? `<div><dt>Card fee</dt><dd>${cs}${(+o.fee).toFixed(2)}</dd></div><div><dt>Paid by</dt><dd>Card (Ziina)</dd></div>` : `<div><dt>Paid</dt><dd>${esc(o.amount || o.ltc)} ${esc(o.symbol || 'LTC')}</dd></div>`}
     <div><dt>Order</dt><dd>${esc(String(o.order).slice(0, 12))}</dd></div>
     <div><dt>Date</dt><dd>${esc(day)}</dd></div></dl><hr>
     <dl><div class="tot"><dt>Total paid</dt><dd>${esc(money)}</dd></div></dl><hr>
@@ -502,19 +502,23 @@ function showCoins() {
 }
 
 // Card payments (Ziina): only for customers in the UAE, priced in AED. The customer pays the card fee (3% + AED 1), shown before paying.
-let method = 'crypto', aedP = null, feeInfo = { pct: 3, flat: 1 };
+let method = 'crypto', aedP = null, feeInfo = { pct: 3, flat: 1 }, CUR = 'AED';
 const money2 = n => (Math.round(n * 100) / 100).toFixed(2);
 const quoteFor = base => { const fee = Math.round((base * feeInfo.pct / 100 + feeInfo.flat) * 100) / 100; return { base, fee, total: Math.round((base + fee) * 100) / 100 } };
 function setupCard() {
   const c = config && config.card;
-  if (!c || !c.on || !c.here) return;
-  aedP = c.aed; feeInfo = c.fee || feeInfo; method = 'card';
+  if (!c || !c.on) return;
+  const r = c[c.region === 'ae' ? 'ae' : 'intl'];
+  CUR = r.cur; aedP = r.prices; feeInfo = r.fee; method = 'card';
+  const sym = CUR === 'AED' ? 'AED ' : '$';
   document.querySelectorAll('.methodBox').forEach(b => b.hidden = false);
   document.querySelectorAll('.methodChoice button').forEach(b => b.onclick = () => { method = b.dataset.method; paintMethod() });
-  document.querySelectorAll('[data-price]').forEach(e => { const v = aedP[e.dataset.price]; e.innerHTML = e.classList.contains('pr') ? `AED ${v}<small>once</small>` : `AED ${v}` });
-  $('#proBtn').textContent = `Get Pro, AED ${aedP.pro}`; $('#ultBtn').textContent = `Get Ultimate, AED ${aedP.ultimate}`;
-  $('#tierProName').textContent = `Pro · AED ${aedP.pro}`; $('#tierUltName').textContent = `Ultimate · AED ${aedP.ultimate}`;
-  document.querySelectorAll('[data-tipn]').forEach(e => e.textContent = `+AED ${e.dataset.tipn}`);
+  document.querySelectorAll('[data-price]').forEach(e => { const v = aedP[e.dataset.price]; e.innerHTML = e.classList.contains('pr') ? `${sym}${v}<small>once</small>` : `${sym}${v}` });
+  $('#proBtn').textContent = `Get Pro, ${sym}${aedP.pro}`; $('#ultBtn').textContent = `Get Ultimate, ${sym}${aedP.ultimate}`;
+  $('#tierProName').textContent = `Pro · ${sym}${aedP.pro}`; $('#tierUltName').textContent = `Ultimate · ${sym}${aedP.ultimate}`;
+  document.querySelectorAll('[data-tipn]').forEach(e => e.textContent = `+${sym}${e.dataset.tipn}`);
+  document.querySelectorAll('.methodChoice button[data-method=card] b').forEach(b => b.textContent = `Card · ${CUR}`);
+  if (CUR !== 'AED') document.querySelectorAll('.methodChoice button[data-method=card] span').forEach(s => s.textContent = 'Visa, Mastercard and Apple Pay, through Ziina. Billed in US dollars.');
   paintMethod();
 }
 function paintMethod() {
@@ -524,15 +528,16 @@ function paintMethod() {
 }
 function paintQuote() {
   const card = method === 'card' && aedP;
+  const S = CUR === 'AED' ? 'AED ' : '$';
   const row = (a, b, small = '') => `<div><span>${a}${small ? `<small>${small}</small>` : ''}</span><span>${b}</span></div>`;
   const draw = (el, base, tipv) => {
     if (!card) { el.hidden = true; return }
     const q = quoteFor(base + tipv);
     el.hidden = false;
-    el.innerHTML = row(tipv ? 'Price and tip' : 'Price', `AED ${money2(q.base)}`) + row('Card fee', `AED ${money2(q.fee)}`, `${feeInfo.pct}% + AED ${feeInfo.flat}, paid by you`) + row('Total', `AED ${money2(q.total)}`);
+    el.innerHTML = row(tipv ? 'Price and tip' : 'Price', `${S}${money2(q.base)}`) + row('Card fee', `${S}${money2(q.fee)}`, `${feeInfo.pct}% + ${S}${(Number.isInteger(feeInfo.flat) ? feeInfo.flat : money2(feeInfo.flat))}, paid by you`) + row('Total', `${S}${money2(q.total)}`);
   };
   draw($('#quote'), aedP ? aedP[tier] : 0, tip); draw($('#upQuote'), aedP ? aedP.upgrade : 0, 0);
-  if (aedP) $('#upLabel').textContent = card ? `Upgrade for AED ${money2(quoteFor(aedP.upgrade).total)}` : 'Upgrade for $4';
+  if (aedP) $('#upLabel').textContent = card ? `Upgrade for ${CUR === 'AED' ? 'AED ' : '$'}${money2(quoteFor(aedP.upgrade).total)}` : 'Upgrade for $4';
   $('#orderBtn').lastElementChild.textContent = card ? 'Continue to card payment' : 'Continue to payment';
 }
 async function startCard(btn, statusId, body) {
@@ -540,7 +545,7 @@ async function startCard(btn, statusId, body) {
   busy(btn, true); status(statusId, 'Opening the secure card page…');
   try {
     const r = await api('/order', { ...body, method: 'card' });
-    save('na.card', { order: r.order, tier: r.tier, quote: r.quote });
+    save('na.card', { order: r.order, tier: r.tier, quote: r.quote, cur: r.cur });
     location.href = r.redirect_url;
   } catch (e) { status(statusId, e.message, 'err'); busy(btn, false) }
 }
@@ -555,7 +560,7 @@ async function returnFromCard(id) {
       if (r.key) {
         box.style.display = 'none'; save('na.card', null);
         const q = saved.order === id && saved.quote ? saved.quote : { base: r.aed, fee: 0, total: r.aed };
-        return showKey(r, { tier: r.tier.toLowerCase(), cur: 'AED', base: q.base, fee: q.fee, total: q.total, order: id });
+        return showKey(r, { tier: r.tier.toLowerCase(), cur: r.cur || 'AED', base: q.base, fee: q.fee, total: q.total, order: id });
       }
       if (r.failed) { box.textContent = r.message; $('#forms').style.display = 'block'; return }
     } catch (e) { box.textContent = e.message; $('#forms').style.display = 'block'; return }
