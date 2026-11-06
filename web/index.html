@@ -188,6 +188,18 @@ h1 .l2{display:block;color:var(--mut)}
 .pmenu button:hover{background:rgba(255,255,255,.07)}
 .pmenu i{width:24px;height:24px;border-radius:7px;display:grid;place-items:center;font-style:normal;font-size:12px}
 .views{flex:1;position:relative;min-height:0}
+/* Games tab: pick a game, and the real game loads (only then) into the stage */
+.gcards{display:grid;grid-template-columns:1fr 1fr;gap:10px;height:calc(100% - 22px)}
+.gcard{display:flex;flex-direction:column;justify-content:space-between;gap:8px;text-align:left;font:inherit;color:#fff;cursor:pointer;padding:14px;border-radius:16px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.04);transition:transform .2s var(--ease-out),border-color .2s,background .2s}
+.gcard:hover,.gcard:focus-visible{border-color:var(--p);background:rgba(255,255,255,.07);transform:translateY(-2px)}
+.gcard .gi{font-size:30px;line-height:1}.gcard b{display:block;font-size:15px;letter-spacing:-.01em}.gcard span.d{display:block;color:var(--mut);font-size:11.5px;line-height:1.35;margin-top:3px}
+.gcard .go{align-self:flex-start;font-size:11.5px;font-weight:600;padding:5px 12px;border-radius:99px;background:var(--p);color:#0b0912}
+.gnote{position:absolute;left:0;right:0;bottom:-2px;text-align:center;color:var(--mut);font-size:10.5px}
+.gstage{position:absolute;inset:0;border-radius:14px;overflow:hidden;background:#000;box-shadow:inset 0 0 0 1px rgba(255,255,255,.1)}
+.gstage[hidden]{display:none}
+.gstop{position:absolute;left:8px;top:8px;z-index:3;display:inline-flex;align-items:center;gap:5px;font:600 11px Geist,sans-serif;color:#fff;background:rgba(19,17,26,.78);border:1px solid rgba(255,255,255,.18);border-radius:99px;padding:5px 11px;cursor:pointer}
+.gstop:hover{background:rgba(19,17,26,.95)}
+.gcards.touch .gcard{opacity:.55;cursor:default}.gcards.touch .gcard:hover{transform:none;border-color:rgba(255,255,255,.1)}
 .view{position:absolute;inset:0;display:none;font-size:13px;animation:vin .3s var(--ease-out)}
 .view.on{display:block}
 @keyframes vin{from{opacity:0;transform:translateY(6px)}}
@@ -689,6 +701,14 @@ html.pre .intro,html.pre h1 .hw{animation-play-state:paused}
                 <div class="snapgrid" id="snaps" role="group" aria-label="Window snap zones" style="margin-top:8px"></div>
                 <div class="arr"><button data-tile="split">⬌ Split screen</button><button data-tile="grid">⊞ 4-window grid</button><button data-tile="cols">⫴ 3 columns</button><button data-tile="reset">↺ Reset</button></div>
               </div>
+              <div class="view" data-t="Games" data-i="🎮" data-new="1">
+                <div class="gcards" id="gcards">
+                  <button class="gcard" type="button" data-game="nightshift"><div><div class="gi">🔦</div><b>Night Shift</b><span class="d">Survive 6 hours as the night guard of a toy shop. Cameras, doors, power, and a very patient jack-in-the-box.</span></div><span class="go">▶ Play night 1</span></button>
+                  <button class="gcard" type="button" data-game="tetris"><div><div class="gi">🧱</div><b>Tetris</b><span class="d">The classic, with hold, a ghost piece and levels. Arrow keys, Space to drop.</span></div><span class="go">▶ Play</span></button>
+                </div>
+                <div class="gnote" id="gnote">Real games, running right here. Keyboard needed. Sound is off (press M in a game).</div>
+                <div class="gstage" id="gstage" hidden><button class="gstop" id="gstop" type="button">✕ Back to games</button><div id="gbox" style="position:absolute;inset:0"></div></div>
+              </div>
               <div class="view" data-t="Clipboard" data-i="📋">
                 <div class="filters"><span class="on">All</span><span>Pinned</span><span>Text</span><span>Links</span><span>Images</span><span>Files</span></div>
                 <div class="clip"><div class="ic">🔗</div><div><b>https://github.com/AdityaJainDXB/NotchApples</b><span>📌 Safari, 1 min ago</span></div></div>
@@ -1115,6 +1135,32 @@ document.addEventListener('keydown',e=>{if((e.metaKey||e.ctrlKey)&&e.key.toLower
 document.addEventListener('click',e=>{if(!notch.contains(e.target)&&notch.classList.contains('open')&&!auto)closeN()});
 let demoVisible=true;new IntersectionObserver(es=>{demoVisible=es[0].isIntersecting}).observe($('#demo'));
 setTimeout(function tour(){if(!auto)return;if(!demoVisible){setTimeout(tour,2000);return}openN();let n=0;show(0);const t=setInterval(()=>{if(!auto){clearInterval(t);return}n++;if(n>=views.length){clearInterval(t);closeN();setTimeout(tour,3500);return}show(n)},2300)},1600);
+
+/* ---------- Games tab: the real games, loaded only when someone picks one ---------- */
+const GAMES={
+  nightshift:{files:['assets/games/nightshift-logic.js','assets/games/nightshift.js'],global:'NotchNightShift',sound:'nightshift.sound'},
+  tetris:{files:['assets/games/tetris-logic.js','assets/games/tetris.js'],global:'NotchTetrisGame',sound:'tetris.sound'}
+};
+const loaded={};let stopGame=null;
+const gStage=$('#gstage'),gBox=$('#gbox'),gCards=$('#gcards'),touch=matchMedia('(pointer: coarse)').matches||innerWidth<640;
+if(touch){gCards.classList.add('touch');$('#gnote').textContent='These games need a keyboard. Open this page on a computer to play them, or get the app.'}
+function loadScript(src){return loaded[src]||(loaded[src]=new Promise((ok,no)=>{const e=document.createElement('script');e.src=src;e.onload=ok;e.onerror=()=>no(new Error(src));document.head.appendChild(e)}))}
+async function playGame(id){
+  const g=GAMES[id];if(!g||touch||stopGame)return;
+  try{if(localStorage.getItem(g.sound)===null)localStorage.setItem(g.sound,'false')}catch(e){}   // starts muted; M turns the sound on
+  gCards.style.visibility='hidden';gStage.hidden=false;gBox.textContent='';
+  try{for(const f of g.files)await loadScript(f)}catch(e){endGame();$('#gnote').textContent='Could not load the game. Check your connection and try again.';return}
+  if(gStage.hidden)return;
+  stopGame=window[g.global].mount(gBox);
+  const f=gBox.querySelector('[tabindex]');f&&f.focus({preventScroll:true});
+}
+function endGame(){if(stopGame){try{stopGame()}catch(e){}stopGame=null}gBox.textContent='';gStage.hidden=true;gCards.style.visibility=''}
+$$('.gcard').forEach(b=>b.onclick=e=>{e.stopPropagation();stopAuto();playGame(b.dataset.game)});
+$('#gstop').onclick=e=>{e.stopPropagation();endGame()};
+// Leaving the Games tab, closing the notch or scrolling away stops the game, so nothing keeps running behind the page.
+const gView=$('.view[data-t="Games"]');
+new MutationObserver(()=>{if(!gView.classList.contains('on')||!notch.classList.contains('open'))endGame()}).observe(document.body,{subtree:true,attributes:true,attributeFilter:['class']});
+new IntersectionObserver(es=>{if(!es[0].isIntersecting)endGame()},{threshold:0.1}).observe($('#demo'));
 
 const zones=[[0,0,.5,1],[.5,0,.5,1],[0,0,1,.5],[0,.5,1,.5],[0,0,.667,1],[.333,0,.667,1],[0,0,1,1],[.2,.15,.6,.7],[0,0,.5,.5],[.5,0,.5,.5],[0,.5,.5,.5],[.5,.5,.5,.5],[0,0,.333,1],[.333,0,.333,1],[.667,0,.333,1],[.05,.05,.9,.9]];
 const W1=$('#w1'),W2=$('#w2'),area={x:.02,y:.07,w:.96,h:.9};

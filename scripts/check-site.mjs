@@ -34,6 +34,12 @@ if (existsSync(join(root, 'sitemap.xml'))) {
     if (p && !existsSync(join(root, p))) bad.push(`sitemap.xml: ${p} does not exist`);
   }
 }
+// The games in the demo notch are copies of the real ones (NotchWindows/src/js/games): they must stay identical.
+for (const f of ['nightshift-logic.js', 'nightshift.js', 'tetris-logic.js', 'tetris.js']) {
+  const copy = join(root, 'assets/games', f), real = resolve(root, '../NotchWindows/src/js/games', f);
+  if (!existsSync(copy)) bad.push(`assets/games/${f} is missing (the demo's Games tab needs it)`);
+  else if (existsSync(real) && readFileSync(copy, 'utf8') !== readFileSync(real, 'utf8')) bad.push(`assets/games/${f} differs from NotchWindows/src/js/games/${f}: copy it again (cp NotchWindows/src/js/games/${f} web/assets/games/)`);
+}
 // Search: every public page has a short title, a description that fits a result, and an absolute canonical; the home
 // page's FAQ structured data says exactly what the visible FAQ says.
 for (const [page, html] of Object.entries(htmls)) {
