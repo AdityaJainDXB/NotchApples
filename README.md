@@ -150,6 +150,12 @@ More screenshots of the capture overlay, the AI answer, the settings and the Win
 
 ## What's new
 
+### Mac 2.2.29 · Windows 2.2.29 BETA · 6 November 2026 · 🔦 Night Shift, a new horror game
+
+- New game: Night Shift at Tinker's Toy Emporium (Games → Night Shift). You are the night guard in a closed-down toy shop whose wind-up toys wander at night. Watch them on eleven cameras, shut the left or right door when a light shows one outside, and keep the power up until 6 AM. Doors, lights and the cameras all use power, and if it runs out, the Conductor comes.
+- Four original toys: Clank the tin robot (left door), Petunia the porcelain doll (right door), Grin the jack-in-the-box (it creeps out of its box in the Prize Corner while you are not watching, then sprints for the left door) and the Conductor, a toy train. Night 1 is ready; nights 2 to 5 come in an update.
+- Controls: Q / A left door and light, E / D right door and light, Space or S cameras (or sweep the mouse over the bar), 1-9, 0 and - pick a camera, ← → or the mouse at the sides to look around, P pause, M sound. Everything can be clicked too.
+
 ### Mac 2.2.28 · 6 November 2026 · ▶️ Play it now always plays
 
 - Fix: Settings → Notch Extras → "Play it now" now always plays the greeting. Before, it did nothing if the notch was hidden, Meeting Mode was on or you had just played it, and the greeting window could end up under the notch. It is now drawn at the same level as the notch, so it shows on top.
@@ -157,15 +163,6 @@ More screenshots of the capture overlay, the AI answer, the settings and the Win
 ### Mac 2.2.27 · 6 November 2026 · 🪟 The menu bar dims when the notch opens
 
 - New: when the notch opens, the menu bar of the app you are in (File, Edit, View, Go, Window, Help…) fades down, so the notch no longer sits on top of the last menu names and you can focus on it. Only the menu bar strip dims: your windows are untouched and the menus still work. Switch it off in Settings → Notch Extras → Menu bar.
-
-### Mac 2.2.26 · Windows 2.2.26 BETA · 6 November 2026 · 🏎️ F1 greetings in your team’s colours
-
-- New: F1 greetings. In Settings → Notch Extras (Windows: Settings → Hello from the notch) pick "F1: Lights out" (five start lights, then the car launches), "F1: Flying lap" (the car streaks across the notch past speed lines and a chequered flag) or "F1: Pit stop" (the car brakes into its box, the wheel guns spark, the tyres change and it leaves).
-- New: paint the car as your favourite team: Ferrari red, Mercedes teal, McLaren papaya, Red Bull, Aston Martin, Alpine, Williams, Racing Bulls, Haas, Audi or Cadillac, or Notch Apple purple. On the Mac, "My favourite F1 team" uses the team you follow in the F1 tab.
-- New: every greeting character now has its own scene inside the open notch (a moonlit night for Wisp, a sky for Pip, an orchard for Pomo, a meadow for Mochi, space for Orbit, a soft glow for Notchy), and Notchy has a new look. Mac 2.2.25 was never published, so Mac gets the mascot hellos from 2.2.25 here too.
-- Fix: online racing is much smoother. The other drivers’ cars no longer jump, freeze or vanish: the game now sends and blends their position 20 times a second, a little behind real time, and carries a car on at its own speed if a packet is late.
-- Fix: in plane Battle mode the home base (and its "out of missiles" message) only worked for the host, so the other players never saw it and could not rearm. Every player now has the base.
-- New: the old "home base X km, left or right" arrow is gone. A tall light pillar now stands over the home base, visible to every player from far away, and glows amber and pulses when you are out of missiles or bombs. Fly low and slow into it to rearm.
 
 ## Plugins
 

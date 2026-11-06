@@ -46,12 +46,14 @@
 		14A7FC6AC9FE4D4AE3CDACE8 /* MascotGreeting.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6DC9C2F6E6F455AD29AE54F7 /* MascotGreeting.swift */; };
 		14BB6F024439C7EDE0DCBD2C /* nowplaying.js in Resources */ = {isa = PBXBuildFile; fileRef = FC6F714640D09B5653DF1D9F /* nowplaying.js */; };
 		14DFFBAD9343EABD28237F7C /* OpenRouterFallback.swift in Sources */ = {isa = PBXBuildFile; fileRef = 66DBB35434CEBAA72E675AD4 /* OpenRouterFallback.swift */; };
+		1515E3E2B42DF6C13489EF86 /* nightshift-logic.js in Resources */ = {isa = PBXBuildFile; fileRef = 37F1C8687E79EBFF564BDDDD /* nightshift-logic.js */; };
 		15325A08A26B76C7C296A9C1 /* ClaudeLimitsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1B17D4FF322D035C7AC1652A /* ClaudeLimitsTests.swift */; };
 		161A2A846A70C66AF08D44B2 /* TourLogicTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84C42A558F1064C50BD9A506 /* TourLogicTests.swift */; };
 		167DA8D8AF6622347293894F /* EmojiTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E7717EC924C749DB1265AC2 /* EmojiTests.swift */; };
 		169F563939728B794CAD518C /* LicenseTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8436033AA85EDE8B497C3BE6 /* LicenseTests.swift */; };
 		177A1AEC9D972E4C15CC5804 /* AppIcon.icns in Resources */ = {isa = PBXBuildFile; fileRef = 295575A04EF33302E9D9A7FE /* AppIcon.icns */; };
 		18502910D1E7ADA16732F652 /* RadarLogicTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1847C86013C2B17A1DD2E12A /* RadarLogicTests.swift */; };
+		1991B0E773B918C8002267FC /* NightShiftGameView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8F34C4FF219B86FEF94DB1CF /* NightShiftGameView.swift */; };
 		1A93A625D4371A2AA20636BF /* RemoteViewClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8C648D5996CD26D8E1A46132 /* RemoteViewClient.swift */; };
 		1B28E6933512791CD9E4C469 /* TodayExtras.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2254DC7F98860645E6CC2E11 /* TodayExtras.swift */; };
 		1B67EF769B1FFADFB7A31A6A /* GeminiFallbackLogic.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0C24B75034156B4EB2E82381 /* GeminiFallbackLogic.swift */; };
@@ -192,6 +194,7 @@
 		5DCFF5FAC0FB3C4B22AE8E7B /* NotchMessengerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 643FFB36BCE34E64BBD52883 /* NotchMessengerView.swift */; };
 		5E3C1CC5BAB503490C8F01EA /* ConvertFormats.swift in Sources */ = {isa = PBXBuildFile; fileRef = E26901871B9937AEB263FD76 /* ConvertFormats.swift */; };
 		5F2E6DC4CD761DFB777B0C6B /* SharedStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9E160C9C8DBBE561F7DD2AD /* SharedStore.swift */; };
+		5FC8FBC7D5A465315FB27591 /* nightshift.js in Resources */ = {isa = PBXBuildFile; fileRef = C60D1D2426B0E7E89DA1D3FF /* nightshift.js */; };
 		62345AC43148BC9A9FEF68F0 /* RacingGame.html in Resources */ = {isa = PBXBuildFile; fileRef = 69B4A0D4B7C6F5540FABA3AE /* RacingGame.html */; };
 		623E5EBDE04C0E5A61B55868 /* ChessGameView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49D5D99FC7CB30C200B06B3A /* ChessGameView.swift */; };
 		62DA70460F765C4149101D13 /* RemoteView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AD1597271C7FDA56841F1D6 /* RemoteView.swift */; };
@@ -267,6 +270,7 @@
 		874BC0D84B434A3CE5910FCD /* MusicLevelMeter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48EF75FD565DB103E4CEEB07 /* MusicLevelMeter.swift */; };
 		880D84E2318736493AA2E9B6 /* PairDropLogic.swift in Sources */ = {isa = PBXBuildFile; fileRef = BEECBD83B2FC19C70E5139BE /* PairDropLogic.swift */; };
 		89D2D78C9DCFB72087A5E56A /* MeetingSummaryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 772CBD2EBA6BACD49192A470 /* MeetingSummaryTests.swift */; };
+		8AC40DB03D2FC72A517DC2C8 /* NightShiftGame.html in Resources */ = {isa = PBXBuildFile; fileRef = E738586149316E4446F71A1A /* NightShiftGame.html */; };
 		8BCB6AEF7F4C85ABA9B85148 /* SportsModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9AE3E9758D2882B557A695A /* SportsModel.swift */; };
 		8BCDBF7EFEEA5CE0C29DEB58 /* MascotGreeting.html in Resources */ = {isa = PBXBuildFile; fileRef = 7376B3DA30872E4F07E6DDE1 /* MascotGreeting.html */; };
 		8C27BC78398B102731018B42 /* ClaudeUsagePaceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1AA637D9531681F5007585BF /* ClaudeUsagePaceTests.swift */; };
@@ -594,6 +598,7 @@
 		34E60A6D24A27DF650F178FD /* tetris.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = tetris.js; sourceTree = "<group>"; };
 		34F952B86642DE0DBEC8CD4F /* f1-circuits-MIT.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = "f1-circuits-MIT.txt"; sourceTree = "<group>"; };
 		3718F42274C479A025DF477B /* NotchApple.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = NotchApple.entitlements; sourceTree = "<group>"; };
+		37F1C8687E79EBFF564BDDDD /* nightshift-logic.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = "nightshift-logic.js"; sourceTree = "<group>"; };
 		39D51C103147744A114FA26F /* HelloAnimation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HelloAnimation.swift; sourceTree = "<group>"; };
 		3A4853F4F991B88D8892FD18 /* NamedTimers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NamedTimers.swift; sourceTree = "<group>"; };
 		3A56383B7805BC8A0AF01CB6 /* TennisModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TennisModel.swift; sourceTree = "<group>"; };
@@ -737,6 +742,7 @@
 		8E30AC01CF48D89F98A97E0E /* ClipboardLinkLogic.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClipboardLinkLogic.swift; sourceTree = "<group>"; };
 		8E7717EC924C749DB1265AC2 /* EmojiTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmojiTests.swift; sourceTree = "<group>"; };
 		8E7ACC6F1129AAB5813B46CB /* CompanionPairing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompanionPairing.swift; sourceTree = "<group>"; };
+		8F34C4FF219B86FEF94DB1CF /* NightShiftGameView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NightShiftGameView.swift; sourceTree = "<group>"; };
 		90503DA53EA8A9669CE5AFA7 /* FoldCapture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoldCapture.swift; sourceTree = "<group>"; };
 		908CD072D0A46C818B89DD0D /* PluginsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PluginsView.swift; sourceTree = "<group>"; };
 		91C60D5E0497858899252D40 /* UpdateChecker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdateChecker.swift; sourceTree = "<group>"; };
@@ -827,6 +833,7 @@
 		C4E2B88F2329FB0B2F27395D /* ScribbleGameView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScribbleGameView.swift; sourceTree = "<group>"; };
 		C5B8287EF70546FBB3914E72 /* DoItAgent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DoItAgent.swift; sourceTree = "<group>"; };
 		C5F7CF2FFE504D781512227C /* AppTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppTheme.swift; sourceTree = "<group>"; };
+		C60D1D2426B0E7E89DA1D3FF /* nightshift.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = nightshift.js; sourceTree = "<group>"; };
 		C7025C2035FDB06C94F94FBF /* NonNecessitiesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NonNecessitiesView.swift; sourceTree = "<group>"; };
 		C7158A7331EE1F3B33444FF7 /* TopBarPrefs.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TopBarPrefs.swift; sourceTree = "<group>"; };
 		C7C02C79EB9558F42EE15425 /* NotchBehavior.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotchBehavior.swift; sourceTree = "<group>"; };
@@ -884,6 +891,7 @@
 		E56AAC7ADE87A47F1E7862C3 /* NotchWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotchWidget.swift; sourceTree = "<group>"; };
 		E6FBB87EB9AFEA3906A669FC /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
 		E70B519149BF56D597E57B03 /* FeedbackView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeedbackView.swift; sourceTree = "<group>"; };
+		E738586149316E4446F71A1A /* NightShiftGame.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = NightShiftGame.html; sourceTree = "<group>"; };
 		E7EE75D24E20F68ED45BAC0A /* SandboxMigration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SandboxMigration.swift; sourceTree = "<group>"; };
 		E908464AA33EDC69CFBCDF86 /* LocationProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationProvider.swift; sourceTree = "<group>"; };
 		E9BC705D2AB9550EE9339978 /* ModuleRegistry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModuleRegistry.swift; sourceTree = "<group>"; };
@@ -970,6 +978,8 @@
 				3B249F7C71D18A1BD0D8E788 /* ctf-logic.js */,
 				22BC3DD953937929570782CA /* ctf.js */,
 				A66CB935BCADED569CB8D3B2 /* leaderboard.js */,
+				37F1C8687E79EBFF564BDDDD /* nightshift-logic.js */,
+				C60D1D2426B0E7E89DA1D3FF /* nightshift.js */,
 				DC8C118088B36E22640A6C5F /* plane-sim.js */,
 				2D061AD1D52BA8268B11B374 /* racing.js */,
 				7F930FB2B441D55D595B0094 /* rocket-logic.js */,
@@ -1814,6 +1824,7 @@
 				6E8B16EE4068BC4835F8B4C0 /* GoogleService-Info.plist */,
 				97CC70FFD067091FDE1231BB /* Info.plist */,
 				7376B3DA30872E4F07E6DDE1 /* MascotGreeting.html */,
+				E738586149316E4446F71A1A /* NightShiftGame.html */,
 				3718F42274C479A025DF477B /* NotchApple.entitlements */,
 				D151A71D3F7B4B4F846173CD /* NotchApple.sdef */,
 				2E9887FE2DA1B017814CA1B5 /* PlaneGame.html */,
@@ -1898,6 +1909,7 @@
 				B694C02A230B240E8F014EF6 /* GameSupport.swift */,
 				44EC19E1838745C95B5759DF /* GamesView.swift */,
 				0D6E9B42DF5F2A2A2C87FC38 /* MemoryGameView.swift */,
+				8F34C4FF219B86FEF94DB1CF /* NightShiftGameView.swift */,
 				1E93AE854D51B41D40C00311 /* PlaneGameView.swift */,
 				D9795A1C10F28E9E390AFB5F /* PlayingCardView.swift */,
 				94B2B55E8551857A0B426326 /* PokerView.swift */,
@@ -2070,6 +2082,7 @@
 				3DF5E21ACEFE3B997230D098 /* LidAngleSensor-Apache-2.0.txt in Resources */,
 				8BCDBF7EFEEA5CE0C29DEB58 /* MascotGreeting.html in Resources */,
 				F2926A7C184BC3088FA41CB1 /* NOTICE.md in Resources */,
+				8AC40DB03D2FC72A517DC2C8 /* NightShiftGame.html in Resources */,
 				8360703F9BC1E35F13FEFE5C /* NotchApple.sdef in Resources */,
 				C120C97882F28CA5E083E84F /* PlaneGame.html in Resources */,
 				5DA036B0487FEFE1B56816D4 /* Purge-MIT.txt in Resources */,
@@ -2088,6 +2101,8 @@
 				2F27B29ABFD1084E8B37A8A4 /* klick in Resources */,
 				8C329389C8C1FAE5D6CD17CA /* leaderboard.js in Resources */,
 				1D9F417218462C6873B13217 /* mascots.js in Resources */,
+				1515E3E2B42DF6C13489EF86 /* nightshift-logic.js in Resources */,
+				5FC8FBC7D5A465315FB27591 /* nightshift.js in Resources */,
 				14BB6F024439C7EDE0DCBD2C /* nowplaying.js in Resources */,
 				2006B2451159E4A12E70E69B /* plane-sim.js in Resources */,
 				3FBC19E8D908EA1C0914AA07 /* racing.js in Resources */,
@@ -2279,6 +2294,7 @@
 				24F83028F1AEB920C645968B /* MusicSleepTimer.swift in Sources */,
 				C66AB6DBBE6A8C411CA73585 /* NamedTimerLogic.swift in Sources */,
 				2CBA8151266305CFFA637D9F /* NamedTimers.swift in Sources */,
+				1991B0E773B918C8002267FC /* NightShiftGameView.swift in Sources */,
 				BBAC304513C3A28C3306A3C6 /* NonNecessitiesView.swift in Sources */,
 				4098B0C40272540FC563BC1F /* NotchAppleApp.swift in Sources */,
 				E939E90FAF6BDF621DD802D5 /* NotchBehavior.swift in Sources */,
@@ -2678,7 +2694,7 @@
 				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Manual;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 214;
+				CURRENT_PROJECT_VERSION = 215;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = "";
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -2694,7 +2710,7 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 2.2.28;
+				MARKETING_VERSION = 2.2.29;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -2812,7 +2828,7 @@
 				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Manual;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 214;
+				CURRENT_PROJECT_VERSION = 215;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = "";
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -2834,7 +2850,7 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 2.2.28;
+				MARKETING_VERSION = 2.2.29;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;

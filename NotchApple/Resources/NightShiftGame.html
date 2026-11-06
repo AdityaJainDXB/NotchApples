@@ -1,0 +1,16 @@
+<!doctype html>
+<!-- Night Shift in the Mac app's Games tab: NightShiftGameView loads this page in a web view. The game itself is nightshift.js with its
+     rules in nightshift-logic.js, the same files the Windows app uses (NotchWindows/src/js/games/, copied in as resources). -->
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>html, body { margin: 0; height: 100%; overflow: hidden; background: #000; } #game { position: absolute; inset: 0; }</style>
+</head>
+<body>
+  <div id="game"></div>
+  <script src="nightshift-logic.js"></script>
+  <script src="nightshift.js"></script>
+  <script>window.NotchNightShift.mount(document.getElementById('game'));</script>
+</body>
+</html>

@@ -4,6 +4,12 @@ Every Notch Apple release, newest first. The latest few are also on the [README]
 
 > **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is in the repository's history.
 
+### Mac 2.2.29 · Windows 2.2.29 BETA · 6 November 2026 · 🔦 Night Shift, a new horror game
+
+- New game: Night Shift at Tinker's Toy Emporium (Games → Night Shift). You are the night guard in a closed-down toy shop whose wind-up toys wander at night. Watch them on eleven cameras, shut the left or right door when a light shows one outside, and keep the power up until 6 AM. Doors, lights and the cameras all use power, and if it runs out, the Conductor comes.
+- Four original toys: Clank the tin robot (left door), Petunia the porcelain doll (right door), Grin the jack-in-the-box (it creeps out of its box in the Prize Corner while you are not watching, then sprints for the left door) and the Conductor, a toy train. Night 1 is ready; nights 2 to 5 come in an update.
+- Controls: Q / A left door and light, E / D right door and light, Space or S cameras (or sweep the mouse over the bar), 1-9, 0 and - pick a camera, ← → or the mouse at the sides to look around, P pause, M sound. Everything can be clicked too.
+
 ### Mac 2.2.28 · 6 November 2026 · ▶️ Play it now always plays
 
 - Fix: Settings → Notch Extras → "Play it now" now always plays the greeting. Before, it did nothing if the notch was hidden, Meeting Mode was on or you had just played it, and the greeting window could end up under the notch. It is now drawn at the same level as the notch, so it shows on top.

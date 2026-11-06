@@ -13,8 +13,8 @@ packages:
 settings:
   base:
     SWIFT_VERSION: "5.0"
-    MARKETING_VERSION: "2.2.28"
-    CURRENT_PROJECT_VERSION: "214"
+    MARKETING_VERSION: "2.2.29"
+    CURRENT_PROJECT_VERSION: "215"
     CODE_SIGN_IDENTITY: "-"
     CODE_SIGN_STYLE: Manual
     DEVELOPMENT_TEAM: ""
@@ -65,6 +65,11 @@ targets:
       - path: NotchWindows/src/js/games/tetris-logic.js
         buildPhase: resources
       - path: NotchWindows/src/js/games/tetris.js
+        buildPhase: resources
+      # Night Shift (an original night-guard horror game) is shared with the Windows app too.
+      - path: NotchWindows/src/js/games/nightshift-logic.js
+        buildPhase: resources
+      - path: NotchWindows/src/js/games/nightshift.js
         buildPhase: resources
       - path: NotchWindows/src/js/games/wordle-words.js
         buildPhase: resources

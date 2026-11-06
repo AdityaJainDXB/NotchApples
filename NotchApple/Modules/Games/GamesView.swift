@@ -25,7 +25,7 @@ import SwiftUI
 
 struct GamesView: View {
     enum Game: String, CaseIterable, Identifiable {
-        case g2048 = "2048", snake = "Snake", breakout = "Breakout", memory = "Memory", reaction = "Reaction", cookies = "Cookies", runner = "Runner", plane = "Plane", racing = "Racing", ctf = "Capture Flag", rocket = "Rocket League", scribble = "Scribble", chess = "Chess", tetris = "Tetris", dailyWord = "Daily Word", dailyTrivia = "Daily Trivia", blackjack = "Blackjack", solitaire = "Solitaire", poker = "Poker"
+        case g2048 = "2048", snake = "Snake", breakout = "Breakout", memory = "Memory", reaction = "Reaction", cookies = "Cookies", runner = "Runner", plane = "Plane", racing = "Racing", ctf = "Capture Flag", rocket = "Rocket League", scribble = "Scribble", chess = "Chess", tetris = "Tetris", nightShift = "Night Shift", dailyWord = "Daily Word", dailyTrivia = "Daily Trivia", blackjack = "Blackjack", solitaire = "Solitaire", poker = "Poker"
         var id: String { rawValue }
         var symbol: String {
             switch self {
@@ -43,6 +43,7 @@ struct GamesView: View {
             case .scribble: "pencil.and.scribble"
             case .chess: "crown.fill"
             case .tetris: "square.stack.3d.up.fill"
+            case .nightShift: "flashlight.on.fill"
             case .dailyWord: "textformat.abc"
             case .dailyTrivia: "questionmark.circle.fill"
             case .blackjack: "suit.spade.fill"
@@ -53,7 +54,7 @@ struct GamesView: View {
         /// Games drawn for a bigger panel: the notch grows while one is open.
         var isBig: Bool {
             switch self {
-            case .plane, .racing, .ctf, .rocket, .scribble, .chess, .tetris, .dailyWord, .dailyTrivia: true
+            case .plane, .racing, .ctf, .rocket, .scribble, .chess, .tetris, .nightShift, .dailyWord, .dailyTrivia: true
             default: false
             }
         }
@@ -113,6 +114,7 @@ struct GamesView: View {
         case .scribble: ScribbleGameView()
         case .chess: ChessGameView()
         case .tetris: TetrisGameView()
+        case .nightShift: NightShiftGameView()
         case .dailyWord: DailyWordGameView()
         case .dailyTrivia: DailyTriviaGameView()
         case .blackjack: BlackjackView()
@@ -141,6 +143,7 @@ struct GamesView: View {
         case .poker: "Texas Hold’em against the computer. Check or call, raise 20, or fold. Play chips only."
         case .chess: "Chess. Click a piece, then where it goes. Play the computer (four levels) or a friend online with a room code, the same as the Plane and Racing games."
         case .tetris: "Tetris. ← → move, ↑ rotate, ↓ soft drop, Space drops, C holds, P pauses. Ten lines a level."
+        case .nightShift: "Night Shift. Survive until 6 AM: Q / A left door and light, E / D right, Space cameras, 1-9 pick a camera, ← → look, P pauses."
         case .dailyTrivia: "Daily Trivia. One multiple-choice question a day, the same for everyone. Click an answer or press 1–4. A Practice mode gives five more."
         case .dailyWord: "Daily Word. Guess the 5-letter word in 6 tries. A new word each day, plus a Practice mode."
         case .ctf: "Capture the Flag. W A S D move, the mouse aims, click or Space shoots. Take their flag home. Computer teams or friends online."

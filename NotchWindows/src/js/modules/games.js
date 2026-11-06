@@ -17,7 +17,7 @@ export function render(root) {
   // to fit instead of being cut off. Plane and Racing fill the space themselves.
   const fit = () => {
     const inner = board.firstElementChild;
-    if (!inner || game === 'plane' || game === 'racing' || game === 'ctf' || game === 'rocket' || game === 'scribble' || game === 'chess' || game === 'tetris' || game === 'wordle' || game === 'trivia') return;
+    if (!inner || game === 'plane' || game === 'racing' || game === 'ctf' || game === 'rocket' || game === 'scribble' || game === 'chess' || game === 'tetris' || game === 'nightshift' || game === 'wordle' || game === 'trivia') return;
     inner.style.transform = ''; inner.style.marginBottom = ''; inner.style.transformOrigin = 'center top';
     const w = inner.offsetWidth, h = inner.offsetHeight;
     if (!w || !h) return;
@@ -30,8 +30,8 @@ export function render(root) {
   const onFull = () => { const on = document.fullscreenElement === board; board.style.cssText = on ? 'display:flex;justify-content:center;align-items:flex-start;background:#0d0b14;overflow:auto;padding-top:2vh' : ''; fit(); setTimeout(fit, 80); };
   document.addEventListener('fullscreenchange', onFull);
   const fullBtn = el('button', { class: 'btn small', title: 'Make this game fill the screen (Esc leaves)', onclick: () => { if (document.fullscreenElement === board) document.exitFullscreen?.(); else board.requestFullscreen?.().catch?.(() => {}); } }, '⛶ Full screen');
-  const pick = (g) => { stop(); game = g; save('games.last', g); fullBtn.style.display = (g === 'plane' || g === 'racing' || g === 'ctf' || g === 'rocket' || g === 'scribble' || g === 'chess' || g === 'tetris' || g === 'wordle' || g === 'trivia') ? 'none' : ''; stop = ({ 2048: g2048, snake, reaction, cookie, runner, breakout, memory, plane, racing, ctf, rocket, scribble, chess, tetris, wordle, trivia, blackjack, solitaire, poker })[g](board) || (() => {}); requestAnimationFrame(fit); setTimeout(fit, 120); };
-  root.append(el('div', { class: 'col fill' }, segmented([{ value: '2048', label: '2048' }, { value: 'snake', label: 'Snake' }, { value: 'reaction', label: 'Reaction' }, { value: 'cookie', label: 'Cookie Clicker' }, { value: 'runner', label: 'Runner' }, { value: 'breakout', label: 'Breakout' }, { value: 'memory', label: 'Memory' }, { value: 'plane', label: '✈️ Plane' }, { value: 'racing', label: '🏎️ Racing' }, { value: 'ctf', label: '🚩 Capture the Flag' }, { value: 'rocket', label: '🚀 Rocket League' }, { value: 'scribble', label: '✏️ Scribble' }, { value: 'chess', label: '♞ Chess' }, { value: 'tetris', label: '🧱 Tetris' }, { value: 'wordle', label: '🔤 Daily Word' }, { value: 'trivia', label: '❓ Daily Trivia' }, { value: 'blackjack', label: '🃏 Blackjack' }, { value: 'solitaire', label: '♠️ Solitaire' }, { value: 'poker', label: '♣️ Poker' }], game, pick), el('div', { style: 'display:flex;justify-content:flex-end' }, fullBtn), board));
+  const pick = (g) => { stop(); game = g; save('games.last', g); fullBtn.style.display = (g === 'plane' || g === 'racing' || g === 'ctf' || g === 'rocket' || g === 'scribble' || g === 'chess' || g === 'tetris' || g === 'nightshift' || g === 'wordle' || g === 'trivia') ? 'none' : ''; stop = ({ 2048: g2048, snake, reaction, cookie, runner, breakout, memory, plane, racing, ctf, rocket, scribble, chess, tetris, nightshift, wordle, trivia, blackjack, solitaire, poker })[g](board) || (() => {}); requestAnimationFrame(fit); setTimeout(fit, 120); };
+  root.append(el('div', { class: 'col fill' }, segmented([{ value: '2048', label: '2048' }, { value: 'snake', label: 'Snake' }, { value: 'reaction', label: 'Reaction' }, { value: 'cookie', label: 'Cookie Clicker' }, { value: 'runner', label: 'Runner' }, { value: 'breakout', label: 'Breakout' }, { value: 'memory', label: 'Memory' }, { value: 'plane', label: '✈️ Plane' }, { value: 'racing', label: '🏎️ Racing' }, { value: 'ctf', label: '🚩 Capture the Flag' }, { value: 'rocket', label: '🚀 Rocket League' }, { value: 'scribble', label: '✏️ Scribble' }, { value: 'chess', label: '♞ Chess' }, { value: 'tetris', label: '🧱 Tetris' }, { value: 'nightshift', label: '🔦 Night Shift' }, { value: 'wordle', label: '🔤 Daily Word' }, { value: 'trivia', label: '❓ Daily Trivia' }, { value: 'blackjack', label: '🃏 Blackjack' }, { value: 'solitaire', label: '♠️ Solitaire' }, { value: 'poker', label: '♣️ Poker' }], game, pick), el('div', { style: 'display:flex;justify-content:flex-end' }, fullBtn), board));
   pick(game);
   return () => { ro.disconnect(); stop(); document.removeEventListener('fullscreenchange', onFull); if (document.fullscreenElement === board) document.exitFullscreen?.(); };
 }
@@ -149,6 +149,17 @@ function tetris(host) {
   host.replaceChildren(box);
   let stop = () => {}, gone = false;
   import('../games/leaderboard.js').then(() => import('../games/tetris-logic.js')).then(() => import('../games/tetris.js')).then(() => { if (!gone) stop = window.NotchTetrisGame.mount(box); });
+  return () => { gone = true; host.style.position = ''; stop(); };
+}
+
+/// Night Shift: an original night-guard horror game at Tinker's Toy Emporium (games/nightshift.js, rules in nightshift-logic.js).
+/// The same script runs in the Mac app's web view. It pauses when you switch away.
+function nightshift(host) {
+  host.style.position = 'relative';
+  const box = el('div', { style: 'position:absolute;inset:0' });
+  host.replaceChildren(box);
+  let stop = () => {}, gone = false;
+  import('../games/nightshift-logic.js').then(() => import('../games/nightshift.js')).then(() => { if (!gone) stop = window.NotchNightShift.mount(box); });
   return () => { gone = true; host.style.position = ''; stop(); };
 }
 
