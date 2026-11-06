@@ -265,7 +265,13 @@
       'The Conductor is out tonight, down the east side.\nIt only moves while you are not watching it.',
       'Everyone is restless.\nSave power: shut a door only when a light shows a toy there.',
       'The last night. Every toy is awake. Good luck.'];
+    const CUSTOM_BTN = { x: W / 2 - 80, y: 216, w: 160, h: 30 };
     function nightButtons() { const n = N.LAST_NIGHT, w = n > 3 ? 104 : 120, gap = n > 3 ? 10 : 12, x0 = W / 2 - (n * w + (n - 1) * gap) / 2; return Array.from({ length: n }, (_, i) => ({ night: i + 1, x: x0 + i * (w + gap), y: 170, w, h: 40 })); }
+    let custom = store.get('custom', { clank: 5, petunia: 5, grin: 5, conductor: 0 }), row = 0, customWon = store.get('customWon', 0);
+    custom = N.clampLevels(custom);
+    const CROWS = [['clank', 'Clank', 'tin robot · left door'], ['petunia', 'Petunia', 'doll · right door'], ['grin', 'Grin', 'jack-in-the-box · sprints left'], ['conductor', 'The Conductor', 'toy train · east side']];
+    function startCustom() { store.set('custom', custom); s = N.newCustom(custom); pan = 160; doorAnim.left = doorAnim.right = 0; glitchT = 0; flipT = 0; go('intro'); }
+    const again = () => (s && s.custom ? startCustom() : startNight(s && screen === 'win' && s.night < N.LAST_NIGHT ? s.night + 1 : s ? s.night : open()));
     function startNight(n = s ? s.night : open()) { s = N.newNight(Math.min(n, open())); pan = 160; doorAnim.left = doorAnim.right = 0; glitchT = 0; flipT = 0; go('intro'); }
     function pause() { if (screen === 'play') { go('paused'); } }
     function unpause() { if (screen === 'paused') { go('play'); sfx.startHum(); if (s && s.po && s.po.phase === 'music') sfx.startMusic(); } }
@@ -286,7 +292,7 @@
         else if (e.type === 'music') sfx.startMusic();
         else if (e.type === 'musicEnd') sfx.stopMusic();
         else if (e.type === 'scare') { sfx.stopAll(); sfx.scare(); go('scare'); }
-        else if (e.type === 'six') { sfx.stopAll(); sfx.chime(); beaten = Math.max(beaten, s.night); store.set('beaten', beaten); go('win'); }
+        else if (e.type === 'six') { sfx.stopAll(); sfx.chime(); if (s.custom) { if (Object.values(s.levels).every((v) => v === 20)) { customWon = 1; store.set('customWon', 1); } } else { beaten = Math.max(beaten, s.night); store.set('beaten', beaten); } go('win'); }
       }
     }
 
@@ -311,6 +317,7 @@
       g.fillStyle = '#000'; g.fillRect(0, 0, W, H);
       if (screen === 'menu') return drawMenu();
       if (screen === 'intro') return drawIntro();
+      if (screen === 'custom') return drawCustom();
       if (screen === 'scare') return drawScare();
       if (screen === 'over') return drawOver();
       if (screen === 'win') return drawWin();
@@ -406,7 +413,7 @@
     }
 
     function drawHud() {
-      text(g, N.clock(s.hour), W - 20, 34, 20, '#fff', 'right', 700); text(g, 'Night ' + s.night, W - 20, 52, 11, '#bbb', 'right', 600);
+      text(g, N.clock(s.hour), W - 20, 34, 20, '#fff', 'right', 700); text(g, s.custom ? 'Custom Night' : 'Night ' + s.night, W - 20, 52, 11, '#bbb', 'right', 600);
       text(g, `Power left: ${Math.max(0, Math.ceil(s.power))}%`, 20, H - 34, 13, '#fff', 'left', 700);
       const u = N.usage(s); text(g, 'Usage:', 20, H - 16, 11, '#ddd', 'left', 600);
       for (let i = 0; i < 5; i++) { g.fillStyle = i < u ? (i < 2 ? '#5ad84a' : i < 3 ? '#e8c33a' : '#e84a4a') : 'rgba(255,255,255,.12)'; g.fillRect(70 + i * 12, H - 26, 9, 12); }
@@ -426,7 +433,8 @@
       text(g, 'NIGHT SHIFT', W / 2, 110, 46, '#f2efe6', 'center', 800, 'system-ui, sans-serif');
       text(g, "at Tinker's Toy Emporium", W / 2, 138, 15, '#c8c2b0', 'center', 600, 'system-ui, sans-serif');
       for (const b of nightButtons()) button(b.x, b.y, b.w, b.h, b.night <= open() ? (b.night <= beaten ? '★ Night ' : 'Night ') + b.night : '🔒 Night ' + b.night, b.night === open(), b.night > open());
-      text(g, N.LAST_NIGHT < 5 ? `Nights ${N.LAST_NIGHT + 1} to 5 are coming in an update` : 'Survive all five nights', W / 2, 236, 11, '#8a8a84', 'center', 500);
+      if (N.LAST_NIGHT < 5) text(g, `Nights ${N.LAST_NIGHT + 1} to 5 are coming in an update`, W / 2, 236, 11, '#8a8a84', 'center', 500);
+      button(CUSTOM_BTN.x, CUSTOM_BTN.y, CUSTOM_BTN.w, CUSTOM_BTN.h, (customWon ? '★ ' : '') + 'Custom Night', false);
       text(g, 'Survive from 12 AM to 6 AM. Watch the toys on the cameras,', W / 2, 270, 11, '#bbb', 'center', 500);
       text(g, 'shut a door when one is outside it, and don’t run out of power.', W / 2, 286, 11, '#bbb', 'center', 500);
       text(g, beaten >= 1 ? `★ ${beaten} night${beaten > 1 ? 's' : ''} survived · Enter plays night ${open()}` : 'Enter or click to start · M sound', W / 2, 318, 11, '#e8c33a', 'center', 600);
@@ -439,12 +447,48 @@
       text(g, label, x + w / 2, y + h / 2 + 5, 14, '#fff', 'center', 700, 'system-ui, sans-serif');
       g.globalAlpha = 1;
     }
+    // ---- the custom night: a level from 0 to 20 for each toy
+    const CBTN = { start: [W / 2 - 215, 296, 100, 32], random: [W / 2 - 105, 296, 100, 32], max: [W / 2 + 5, 296, 100, 32], back: [W / 2 + 115, 296, 100, 32] };
+    const rowY = (i) => 104 + i * 42;
+    function drawCustom() {
+      const gr = g.createRadialGradient(W / 2, H / 2, 40, W / 2, H / 2, 380); gr.addColorStop(0, '#16201b'); gr.addColorStop(1, '#000'); g.fillStyle = gr; g.fillRect(0, 0, W, H);
+      text(g, 'CUSTOM NIGHT', W / 2, 52, 28, '#f2efe6', 'center', 800, 'system-ui, sans-serif');
+      text(g, 'Set each toy from 0 (asleep) to 20 (relentless). It stays that way all night.', W / 2, 74, 11, '#aaa', 'center', 500);
+      CROWS.forEach(([id, name, how], i) => {
+        const y = rowY(i), on = i === row;
+        g.fillStyle = on ? 'rgba(232,195,58,.10)' : 'rgba(255,255,255,.04)'; roundRect(g, 70, y - 22, W - 140, 36, 8); g.fill();
+        if (on) { g.strokeStyle = 'rgba(232,195,58,.6)'; g.lineWidth = 1.2; roundRect(g, 70, y - 22, W - 140, 36, 8); g.stroke(); }
+        text(g, name, 86, y - 3, 14, '#fff', 'left', 700, 'system-ui, sans-serif'); text(g, how, 86, y + 9, 9, '#8a8a84', 'left', 500);
+        stepper(W - 230, y - 14, '−'); stepper(W - 106, y - 14, '+');
+        for (let k = 0; k < 20; k++) { g.fillStyle = k < custom[id] ? (k < 7 ? '#5ad84a' : k < 14 ? '#e8c33a' : '#e84a4a') : 'rgba(255,255,255,.12)'; g.fillRect(250 + k * 7.2, y - 8, 5, 14); }
+        text(g, String(custom[id]), W - 168, y + 3, 16, '#fff', 'center', 800);
+      });
+      button(...CBTN.start, 'Start', true); button(...CBTN.random, 'Random', false); button(...CBTN.max, '20 mode', false); button(...CBTN.back, 'Back', false);
+      text(g, customWon ? '★ You have beaten 20 / 20 / 20 / 20' : '↑ ↓ pick a toy · ← → change the level · Enter starts · beat all four at 20 for a star', W / 2, 344, 10, '#e8c33a', 'center', 600);
+    }
+    function stepper(x, y, label) { const over = mouse.x >= x && mouse.x <= x + 28 && mouse.y >= y && mouse.y <= y + 28; g.fillStyle = over ? 'rgba(232,195,58,.25)' : 'rgba(255,255,255,.10)'; roundRect(g, x, y, 28, 28, 6); g.fill(); text(g, label, x + 14, y + 20, 18, '#fff', 'center', 700, 'system-ui, sans-serif'); }
+    function setLevel(i, v) { const id = CROWS[i][0]; custom[id] = Math.max(0, Math.min(20, v)); store.set('custom', custom); sfx.click(); }
+    function customClick(p) {
+      for (let i = 0; i < CROWS.length; i++) { const y = rowY(i); if (p.y >= y - 22 && p.y <= y + 14) { row = i; if (inRect(p, W - 230, y - 14, 28, 28)) setLevel(i, custom[CROWS[i][0]] - (p.shiftKey ? 5 : 1)); else if (inRect(p, W - 106, y - 14, 28, 28)) setLevel(i, custom[CROWS[i][0]] + 1); else if (p.x >= 250 && p.x <= 396) setLevel(i, Math.round((p.x - 250) / 7.2)); return; } }
+      if (inRect(p, ...CBTN.start)) startCustom();
+      else if (inRect(p, ...CBTN.random)) { for (const [id] of CROWS) custom[id] = Math.floor(Math.random() * 21); store.set('custom', custom); sfx.click(); }
+      else if (inRect(p, ...CBTN.max)) { for (const [id] of CROWS) custom[id] = 20; store.set('custom', custom); sfx.click(); }
+      else if (inRect(p, ...CBTN.back)) go('menu');
+    }
+    function customKey(k, repeat) {
+      const id = CROWS[row][0];
+      if (k === 'ArrowUp') { row = (row + 3) % 4; return true; } if (k === 'ArrowDown' || k === 'Tab') { row = (row + 1) % 4; return true; }
+      if (k === 'ArrowLeft') { setLevel(row, custom[id] - 1); return true; } if (k === 'ArrowRight') { setLevel(row, custom[id] + 1); return true; }
+      if (k === 'Enter' && !repeat) { startCustom(); return true; }
+      if (k === 'Backspace') { go('menu'); return true; }
+      return false;
+    }
     function drawIntro() {
       const a = Math.min(1, screenT / 0.8) * Math.min(1, (4.5 - screenT) / 0.6);
       g.globalAlpha = Math.max(0, a);
       text(g, '12:00 AM', W / 2, 150, 38, '#fff', 'center', 700);
-      text(g, ORD[s.night] + ' Night', W / 2, 186, 18, '#ddd', 'center', 600);
-      (INTRO[s.night] || '').split('\n').forEach((line, i) => text(g, line, W / 2, 230 + i * 18, 12, '#aaa', 'center', 500));
+      text(g, s.custom ? 'Custom Night' : ORD[s.night] + ' Night', W / 2, 186, 18, '#ddd', 'center', 600);
+      (s.custom ? [CROWS.map((r) => r[1].split(' ').pop() + ' ' + s.levels[r[0]]).join('   '), 'Survive until 6 AM.'] : (INTRO[s.night] || '').split('\n')).forEach((line, i) => text(g, line, W / 2, 230 + i * 18, 12, '#aaa', 'center', 500));
       g.globalAlpha = 1;
     }
     function drawScare() {
@@ -460,7 +504,7 @@
     function drawOver() {
       g.globalAlpha = 0.25; g.drawImage(noise[Math.floor(clock * 25) % 4], 0, 0, W, H); g.globalAlpha = 1;
       text(g, 'GAME OVER', W / 2, 120, 34, '#e84a4a', 'center', 800, 'system-ui, sans-serif');
-      text(g, `${NAMES[s.over.by]} got you at ${N.clock(s.hour)} on night ${s.night}.`, W / 2, 152, 13, '#ccc', 'center', 600);
+      text(g, `${NAMES[s.over.by]} got you at ${N.clock(s.hour)} ${s.custom ? 'on your custom night' : 'on night ' + s.night}.`, W / 2, 152, 13, '#ccc', 'center', 600);
       text(g, tip(s.over.by), W / 2, 176, 11, '#999', 'center', 500);
       button(W / 2 - 160, 210, 150, 38, 'Try again', true); button(W / 2 + 10, 210, 150, 38, 'Menu', false);
     }
@@ -476,10 +520,10 @@
       text(g, '5', W / 2 - 30, 168 - 50 * k, 48, '#fff', 'right', 800); text(g, '6', W / 2 - 30, 218 - 50 * k, 48, '#fff', 'right', 800);
       g.restore(); text(g, 'AM', W / 2 - 18, 168, 48, '#fff', 'left', 800);
       if (screenT > 2.2) {
-        const next = s.night < N.LAST_NIGHT;
-        text(g, `Night ${s.night} survived!`, W / 2, 220, 16, '#e8c33a', 'center', 700, 'system-ui, sans-serif');
-        text(g, next ? `On to night ${s.night + 1}.` : N.LAST_NIGHT < 5 ? `Nights ${N.LAST_NIGHT + 1} to 5 are coming in an update.` : 'You survived the whole week!', W / 2, 244, 12, '#bbb', 'center', 500);
-        button(W / 2 - 160, 266, 150, 38, next ? `Night ${s.night + 1}` : 'Play again', true); button(W / 2 + 10, 266, 150, 38, 'Menu', false);
+        const next = !s.custom && s.night < N.LAST_NIGHT;
+        text(g, s.custom ? 'Custom night survived!' : `Night ${s.night} survived!`, W / 2, 220, 16, '#e8c33a', 'center', 700, 'system-ui, sans-serif');
+        text(g, s.custom ? (Object.values(s.levels).every((v) => v === 20) ? 'You beat 20 / 20 / 20 / 20. Legend.' : 'Try turning the toys up.') : next ? `On to night ${s.night + 1}.` : N.LAST_NIGHT < 5 ? `Nights ${N.LAST_NIGHT + 1} to 5 are coming in an update.` : 'You survived the whole week!', W / 2, 244, 12, '#bbb', 'center', 500);
+        button(W / 2 - 160, 266, 150, 38, next ? `Night ${s.night + 1}` : s.custom ? 'Again' : 'Play again', true); button(W / 2 + 10, 266, 150, 38, 'Menu', false);
       }
     }
 
@@ -496,13 +540,14 @@
     }
     function onLeave() { mouse = { x: -1, y: -1 }; inBar = false; }
     function onDown(e) {
-      root.focus(); const p = toLocal(e); mouse = p; wake();
-      if (screen === 'menu') { for (const b of nightButtons()) if (b.night <= open() && inRect(p, b.x, b.y, b.w, b.h)) startNight(b.night); return; }
+      root.focus(); const p = toLocal(e); p.shiftKey = e.shiftKey; mouse = p; wake();
+      if (screen === 'menu') { if (inRect(p, CUSTOM_BTN.x, CUSTOM_BTN.y, CUSTOM_BTN.w, CUSTOM_BTN.h)) { go('custom'); return; } for (const b of nightButtons()) if (b.night <= open() && inRect(p, b.x, b.y, b.w, b.h)) startNight(b.night); return; }
+      if (screen === 'custom') return customClick(p);
       if (screen === 'intro') { go('play'); sfx.startHum(); return; }
       if (screen === 'paused') { unpause(); return; }
       if (screen === 'over' || screen === 'win') {
         const y = screen === 'over' ? 210 : 266;
-        if (inRect(p, W / 2 - 160, y, 150, 38)) startNight(screen === 'win' && s.night < N.LAST_NIGHT ? s.night + 1 : s.night); else if (inRect(p, W / 2 + 10, y, 150, 38)) go('menu');
+        if (inRect(p, W / 2 - 160, y, 150, 38)) again(); else if (inRect(p, W / 2 + 10, y, 150, 38)) go('menu');
         return;
       }
       if (screen !== 'play') return;
@@ -518,9 +563,10 @@
       wake();
       if (!down) { if (k === 'ArrowLeft' || k === 'ArrowRight') panVel = 0; return false; }
       if (k === 'm' || k === 'M') { if (!repeat) { sfx.on = !sfx.on; store.set('sound', sfx.on); if (!sfx.on) sfx.stopAll(); else if (screen === 'play') sfx.startHum(); } return true; }
-      if (screen === 'menu') { if (k === 'Enter' || k === ' ') { startNight(open()); return true; } if (/^[1-5]$/.test(k) && +k <= open()) { startNight(+k); return true; } return false; }
+      if (screen === 'menu') { if (k === 'Enter' || k === ' ') { startNight(open()); return true; } if (/^[1-5]$/.test(k) && +k <= open()) { startNight(+k); return true; } if (k === 'c' || k === 'C') { go('custom'); return true; } return false; }
+      if (screen === 'custom') return customKey(k, repeat);
       if (screen === 'intro') { if (k === 'Enter' || k === ' ') { go('play'); sfx.startHum(); return true; } return false; }
-      if (screen === 'over' || screen === 'win') { if (k === 'Enter' || k === ' ') { startNight(screen === 'win' && s.night < N.LAST_NIGHT ? s.night + 1 : s.night); return true; } if (k === 'Escape') return false; return false; }
+      if (screen === 'over' || screen === 'win') { if (k === 'Enter' || k === ' ') { again(); return true; } if (k === 'Escape') return false; return false; }
       if (k === 'p' || k === 'P') { if (!repeat) (screen === 'paused' ? unpause : pause)(); return true; }
       if (screen === 'paused') { if (k === ' ' || k === 'Enter') { unpause(); return true; } return false; }
       if (screen !== 'play' || repeat) return k === 'ArrowLeft' || k === 'ArrowRight' || k === ' ';

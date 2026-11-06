@@ -4,6 +4,11 @@ Every Notch Apple release, newest first. The latest few are also on the [README]
 
 > **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is in the repository's history.
 
+### Mac 2.2.34 · Windows 2.2.34 BETA · 6 November 2026 · 🔦 Night Shift: Custom Night
+
+- New: Night Shift Custom Night (a button under the nights on the menu, or press C). Set each toy, Clank, Petunia, Grin and the Conductor, to any level from 0 (asleep) to 20 (relentless) with the arrows or by clicking the bars. They stay at that level all night, with no hourly rise. Random picks levels for you, and 20 mode turns every toy to the maximum.
+- Beat a custom night with all four toys at 20 and the Custom Night button gets a star. Your levels are remembered, and Again replays the same night.
+
 ### Mac 2.2.33 · Windows 2.2.33 BETA · 6 November 2026 · 🔦 Night Shift: all five nights
 
 - New: Night Shift nights 3, 4 and 5. From night 3 the Conductor, a toy train, comes up the east side to the right door, and it only moves while you are not watching it (listen for its whistle). Each night the toys start busier, and night 5 has every toy awake. Survive all five for the whole week.

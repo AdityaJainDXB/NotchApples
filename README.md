@@ -150,6 +150,11 @@ More screenshots of the capture overlay, the AI answer, the settings and the Win
 
 ## What's new
 
+### Mac 2.2.34 · Windows 2.2.34 BETA · 6 November 2026 · 🔦 Night Shift: Custom Night
+
+- New: Night Shift Custom Night (a button under the nights on the menu, or press C). Set each toy, Clank, Petunia, Grin and the Conductor, to any level from 0 (asleep) to 20 (relentless) with the arrows or by clicking the bars. They stay at that level all night, with no hourly rise. Random picks levels for you, and 20 mode turns every toy to the maximum.
+- Beat a custom night with all four toys at 20 and the Custom Night button gets a star. Your levels are remembered, and Again replays the same night.
+
 ### Mac 2.2.33 · Windows 2.2.33 BETA · 6 November 2026 · 🔦 Night Shift: all five nights
 
 - New: Night Shift nights 3, 4 and 5. From night 3 the Conductor, a toy train, comes up the east side to the right door, and it only moves while you are not watching it (listen for its whistle). Each night the toys start busier, and night 5 has every toy awake. Survive all five for the whole week.
@@ -160,11 +165,6 @@ More screenshots of the capture overlay, the AI answer, the settings and the Win
 
 - New: Night Shift night 2. Survive night 1 and night 2 unlocks in the menu (the menu now has a button for each night, with a star on the ones you have survived). On night 2 the toys are livelier from midnight and Grin is awake from the start, so keep checking the Prize Corner.
 - After 6 AM the next night is one click away, and Enter on the menu plays the next night you haven't survived. Nights 3 to 5 come in an update.
-
-### Mac 2.2.31 · Windows 2.2.31 BETA · 6 November 2026 · 👋 Choose your hello, with previews
-
-- New: after updating, the notch asks once "Choose your hello". Every choice has a picture, and when you point at one the notch plays its animation: the handwritten hello, Notchy, Pomo, Wisp, Mochi, Orbit, Pip, or an F1 greeting
-- The question stays on screen, even if you close and open the notch, until you pick one or press No thanks, which turns greetings off completely. You can change it or turn it off any time: Settings → Notch Extras on the Mac, Settings → General → Hello from the notch on Windows
 
 ## Plugins
 

@@ -123,6 +123,21 @@ test('from night 3 the Conductor comes up the east side, only while you are not 
   assert.deepEqual(s.over, { win: false, by: 'conductor' });
 });
 
+test('a custom night keeps the levels you chose all night: 0 never moves, 20 always moves, and nothing rises by the hour', () => {
+  assert.deepEqual(N.clampLevels({ clank: 99, petunia: -4, grin: 'x', conductor: 7.9 }), { clank: 20, petunia: 0, grin: 0, conductor: 7 });
+  const s = N.newCustom({ clank: 20, petunia: 0, grin: 0, conductor: 0 });
+  assert.equal(s.custom, true); assert.equal(s.night, 0);
+  assert.equal(s.bots.clank.ai, 20); assert.equal(s.bots.petunia.ai, 0);
+  const ev = run(s, 130, () => 0.999);
+  assert.equal(s.bots.clank.ai, 20); assert.equal(s.bots.petunia.ai, 0, 'no hourly rise on a custom night');
+  assert.ok(ev.filter((e) => e.type === 'move' && e.bot === 'clank').length > 5, 'level 20 moves at every chance');
+  assert.equal(ev.filter((e) => e.bot === 'petunia').length, 0, 'level 0 never moves');
+  const z = N.newCustom({ clank: 0, petunia: 0, grin: 0, conductor: 0 }), zev = run(z, 400, () => 0);
+  assert.deepEqual(z.over, { win: true }); assert.equal(zev.filter((e) => e.type === 'move').length, 0, 'an all-zero night is a quiet wait for 6 AM');
+  const m = N.newCustom({ clank: 20, petunia: 20, grin: 20, conductor: 20 });
+  assert.deepEqual(Object.values(m.bots).map((b) => b.ai), [20, 20, 20, 20]);
+});
+
 test('every room on a path exists, and every path leads to a doorway', () => {
   for (const id of Object.keys(N.PATHS)) for (const [from, to] of Object.entries(N.PATHS[id])) {
     assert.ok(N.ROOMS[from], from);

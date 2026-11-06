@@ -57,11 +57,15 @@
   const OFFICE_GRACE = 1.0;        // seconds a toy stands in the office after you lower the cameras, before it jumps
   const CAM_LIMIT = 20;            // seconds the cameras can stay up while a toy is in the office before it pulls them down
 
-  function newNight(night = 1) {
-    const n = NIGHTS[night] ? night : 1, ai = NIGHTS[n].start;
+  /// A custom night: the player picks each toy's level (0 to 20) and they stay that way all night, with no hourly rise.
+  function clampLevels(levels) { const out = {}; for (const id of BOTS) out[id] = Math.max(0, Math.min(20, Math.floor(Number(levels && levels[id]) || 0))); return out; }
+  function newCustom(levels) { return newNight(1, clampLevels(levels)); }
+
+  function newNight(night = 1, levels = null) {
+    const n = NIGHTS[night] ? night : 1, ai = levels || NIGHTS[n].start;
     const bot = (id, i) => ({ id, room: id === 'grin' ? 'prize' : 'stage', ai: ai[id], timer: MOVE_EVERY[id] + i * 0.3, inOffice: false, scareT: 0, upT: 0, stage: 0, running: false, runT: 0, seenRun: false, bangs: 0 });
     return {
-      night: n, t: 0, hour: 0, power: 100,
+      night: levels ? 0 : n, custom: !!levels, levels: levels ? { ...levels } : null, t: 0, hour: 0, power: 100,
       doors: { left: false, right: false }, lights: { left: false, right: false }, jam: { left: false, right: false },
       camUp: false, cam: 'stage', powerOut: false, po: null,
       bots: { clank: bot('clank', 0), petunia: bot('petunia', 1), grin: bot('grin', 2), conductor: bot('conductor', 3) },
@@ -112,7 +116,7 @@
     const hour = Math.min(6, Math.floor(s.t / HOUR));
     while (s.hour < hour) {
       s.hour++;
-      const add = NIGHTS[s.night].add[s.hour] || {};
+      const add = s.custom ? {} : NIGHTS[s.night].add[s.hour] || {};
       for (const id in add) s.bots[id].ai = Math.min(20, s.bots[id].ai + add[id]);
       if (s.hour >= 6) { s.over = { win: true }; s.camUp = false; s.events.push({ type: 'six' }); return s; }
       s.events.push({ type: 'hour', hour: s.hour });
@@ -202,7 +206,7 @@
   /// The clock as shown on screen: "12 AM", "1 AM" … "6 AM".
   const clock = (hour) => (hour === 0 ? '12 AM' : hour + ' AM');
 
-  const api = { HOUR, POWER_PER_UNIT, ROOMS, CAMS, PATHS, NIGHTS, LAST_NIGHT, BOTS, newNight, usage, step, toggleDoor, toggleLight, setCams, selectCam, at, clock };
+  const api = { HOUR, POWER_PER_UNIT, ROOMS, CAMS, PATHS, NIGHTS, LAST_NIGHT, BOTS, newNight, newCustom, clampLevels, usage, step, toggleDoor, toggleLight, setCams, selectCam, at, clock };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   root.NotchNightLogic = api;
 })(typeof window !== 'undefined' ? window : globalThis);
