@@ -75,7 +75,7 @@ struct ActivationModalView: View {
                     VerifyKeyView(key: v.key, bound: v.bound, hint: v.hint, onDone: {
                         verifying = nil
                         withAnimation(Theme.spring) { succeeded = true }
-                    }, onCancel: { verifying = nil })
+                    }, onCancel: { verifying = nil }, remember: true)
                 } else if !succeeded {
                     HStack(spacing: 8) {
                         TextField("Paste your key", text: $code)

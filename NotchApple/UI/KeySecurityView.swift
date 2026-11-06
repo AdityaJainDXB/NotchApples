@@ -74,11 +74,27 @@ struct VerifyKeyView: View {
     let bound: Bool
     let hint: String?
     var onDone: () -> Void
-    var onCancel: () -> Void
+    /// Nil hides the Cancel button (the email gate cannot be cancelled).
+    var onCancel: (() -> Void)?
+    /// Remember a requested code (the email typed and when it was sent) so that leaving to read the email, or restarting the app,
+    /// brings the person back to the code box instead of asking for the email again while the code is still valid.
+    var remember = false
 
     private enum Step { case email, code, authenticator }
-    @State private var step: Step = .email
-    @State private var email = ""
+    @State private var step: Step
+    @State private var email: String
+
+    private static let emailKey = "license.verify.email", sentKey = "license.verify.sentAt", codeLife: TimeInterval = 10 * 60
+
+    init(key: String, bound: Bool, hint: String?, onDone: @escaping () -> Void, onCancel: (() -> Void)? = nil, remember: Bool = false) {
+        self.key = key; self.bound = bound; self.hint = hint; self.onDone = onDone; self.onCancel = onCancel; self.remember = remember
+        let d = UserDefaults.standard
+        let fresh = remember && Date().timeIntervalSince1970 - d.double(forKey: Self.sentKey) < Self.codeLife
+        _step = State(initialValue: fresh ? .code : .email)
+        _email = State(initialValue: remember ? (d.string(forKey: Self.emailKey) ?? "") : "")
+        if remember && !fresh { d.removeObject(forKey: Self.emailKey) }
+    }
+
     @State private var code = ""
     @State private var busy = false
     @State private var error: String?
@@ -105,10 +121,10 @@ struct VerifyKeyView: View {
             if let error { Text(error).font(.system(size: 12, weight: .medium)).foregroundStyle(errorColor).fixedSize(horizontal: false, vertical: true) }
 
             HStack(spacing: 14) {
-                Button("Cancel", action: onCancel)
+                if let onCancel { Button("Cancel", action: onCancel) }
                 switch step {
                 case .email: Button("I use an authenticator app") { step = .authenticator; code = ""; error = nil }
-                case .code: Button("Use a different email") { step = .email; code = ""; error = nil }
+                case .code: Button("Use a different email") { step = .email; code = ""; error = nil; UserDefaults.standard.removeObject(forKey: Self.sentKey) }
                 case .authenticator: Button("Email me a code instead") { step = .email; code = ""; error = nil }
                 }
             }
@@ -133,7 +149,10 @@ struct VerifyKeyView: View {
         Task {
             let e = await Entitlements.shared.requestCode(key: key, email: email)
             busy = false
-            if let e { error = e } else { code = ""; step = .code }
+            if let e { error = e } else {
+                code = ""; step = .code
+                if remember { UserDefaults.standard.set(email, forKey: Self.emailKey); UserDefaults.standard.set(Date().timeIntervalSince1970, forKey: Self.sentKey) }
+            }
         }
     }
 
@@ -143,7 +162,10 @@ struct VerifyKeyView: View {
         Task {
             let e = await Entitlements.shared.verify(key: key, email: email, code: code, totp: step == .authenticator)
             busy = false
-            if let e { error = e } else { onDone() }
+            if let e { error = e } else {
+                UserDefaults.standard.removeObject(forKey: Self.emailKey); UserDefaults.standard.removeObject(forKey: Self.sentKey)
+                onDone()
+            }
         }
     }
 }

@@ -4,6 +4,12 @@ Every Notch Apple release, newest first. The latest few are also on the [README]
 
 > **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is in the repository's history.
 
+### Mac 2.2.17 · Windows 2.2.17 BETA · 6 November 2026 · ✉️ Email setup no longer gets lost
+
+- Fix: setting up your email no longer gets lost. The form is now a window that stays open (it has no close button) while you open your email to find the code, and the notch only points to it. If you do leave, a code you already asked for is remembered for its 10 minutes, so you come back to the code box instead of being asked for your email again. The same on Windows.
+- Anyone who has not confirmed their email yet is asked to now, and the notch stays locked until they do.
+- This is a required update.
+
 ### Mac 2.2.16 · Windows 2.2.16 BETA · 5 November 2026 · 🔒 The email gate can't be skipped
 
 - Security: the email setup can no longer be skipped. Until a key's email is confirmed, the notch shows only "Please set up your email" however it is opened, and it stays that way after a restart or while offline (Windows: a full-window screen with no "Not now"). Free features do not need a key and are not affected.

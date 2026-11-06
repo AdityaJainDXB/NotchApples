@@ -20,6 +20,11 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.2.17", date: "6 November 2026", headline: "Email setup no longer gets lost", items: [
+            "Fix: setting up your email no longer gets lost. The form is now a window that stays open (it has no close button) while you open your email to find the code, and the notch only points to it. If you do leave, a code you already asked for is remembered for its 10 minutes, so you come back to the code box instead of being asked for your email again. The same on Windows.",
+            "Anyone who has not confirmed their email yet is asked to now, and the notch stays locked until they do.",
+            "This is a required update.",
+        ]),
         ReleaseNote(version: "2.2.16", date: "5 November 2026", headline: "The email gate can't be skipped", items: [
             "Security: the email setup can no longer be skipped. Until a key's email is confirmed, the notch shows only \"Please set up your email\" however it is opened, and it stays that way after a restart or while offline (Windows: a full-window screen with no \"Not now\"). Free features do not need a key and are not affected.",
             "After a correct code, the key's email now gets \"Your Notch Apple key is activated and locked to your email\", naming the device. Only someone who can read that inbox can sign in on a new device: a friend who has the key but not the email gets no code.",

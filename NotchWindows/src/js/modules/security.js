@@ -26,13 +26,17 @@ const note = () => el('div', { class: 'err small', style: 'min-height:16px;text-
 export function verifyFlow(key, info, onDone) {
   const wrap = el('div', { class: 'col', style: 'align-items:center;gap:8px;width:100%' });
   let email = '', method = 'email';
+  // A requested code is remembered for its 10 minutes, so leaving to read the email (or a restart) comes back to the code box.
+  const MEM = 'license.verify', LIFE = 10 * 60 * 1000;
+  const remember = (v) => { try { v ? localStorage.setItem(MEM, JSON.stringify({ email: v, at: Date.now() })) : localStorage.removeItem(MEM); } catch { /* private mode: fine */ } };
+  const recall = () => { try { const m = JSON.parse(localStorage.getItem(MEM) || 'null'); return m && Date.now() - m.at < LIFE ? m.email : null; } catch { return null; } };
   const step1 = () => {
     const input = emailInput(), err = note(), go = el('button', { class: 'btn' }, 'Email me a code');
     const send = async () => {
       if (!/^\S+@\S+\.\S+$/.test(input.value.trim())) { err.textContent = 'Enter a valid email address.'; return; }
       go.disabled = true; go.textContent = 'Sending…'; email = input.value.trim();
       const r = await requestCode(key, email); go.disabled = false; go.textContent = 'Email me a code';
-      if (r.ok) step2(); else err.textContent = r.error;
+      if (r.ok) { remember(email); step2(); } else err.textContent = r.error;
     };
     input.addEventListener('keydown', (e) => { if (e.key === 'Enter') send(); });
     go.addEventListener('click', send);
@@ -55,7 +59,7 @@ export function verifyFlow(key, info, onDone) {
       go.disabled = true; go.textContent = 'Checking…';
       const r = await verifyCode(key, addr, input.value, method);
       go.disabled = false; go.textContent = 'Confirm';
-      if (r.ok) onDone(r); else err.textContent = r.error;
+      if (r.ok) { remember(null); onDone(r); } else err.textContent = r.error;
     };
     input.addEventListener('keydown', (e) => { if (e.key === 'Enter') confirm(); });
     go.addEventListener('click', confirm);
@@ -65,10 +69,11 @@ export function verifyFlow(key, info, onDone) {
         ? 'Open your authenticator app and enter the 6-digit code for Notch Apple.'
         : `If ${email} is the address this key belongs to, we sent it a 6-digit code (valid 10 minutes, check spam too). If it isn’t, no code is sent: only the key’s owner can sign in on a new device.`),
       emailBox, input, err, go,
-      el('button', { class: 'btn quiet small', onclick: authenticator ? step1 : () => step1() }, authenticator ? '← Use an email code instead' : '← Use a different email'));
+      el('button', { class: 'btn quiet small', onclick: () => { if (!authenticator) remember(null); step1(); } }, authenticator ? '← Use an email code instead' : '← Use a different email'));
     input.focus();
   };
-  step1();
+  const back = recall();
+  if (back) { email = back; step2(); } else step1();
   return wrap;
 }
 

@@ -1,0 +1,7 @@
+[required-update]
+## Notch Apple for Windows 2.2.17 (BETA)
+
+- Fix: setting up your email no longer gets lost. The form is now a window that stays open (it has no close button) while you open your email to find the code, and the notch only points to it. If you do leave, a code you already asked for is remembered for its 10 minutes, so you come back to the code box instead of being asked for your email again. The same on Windows.
+- Anyone who has not confirmed their email yet is asked to now, and the notch stays locked until they do.
+- This is a required update.
+

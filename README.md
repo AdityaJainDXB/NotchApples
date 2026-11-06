@@ -150,6 +150,12 @@ More screenshots of the capture overlay, the AI answer, the settings and the Win
 
 ## What's new
 
+### Mac 2.2.17 · Windows 2.2.17 BETA · 6 November 2026 · ✉️ Email setup no longer gets lost
+
+- Fix: setting up your email no longer gets lost. The form is now a window that stays open (it has no close button) while you open your email to find the code, and the notch only points to it. If you do leave, a code you already asked for is remembered for its 10 minutes, so you come back to the code box instead of being asked for your email again. The same on Windows.
+- Anyone who has not confirmed their email yet is asked to now, and the notch stays locked until they do.
+- This is a required update.
+
 ### Mac 2.2.16 · Windows 2.2.16 BETA · 5 November 2026 · 🔒 The email gate can't be skipped
 
 - Security: the email setup can no longer be skipped. Until a key's email is confirmed, the notch shows only "Please set up your email" however it is opened, and it stays that way after a restart or while offline (Windows: a full-window screen with no "Not now"). Free features do not need a key and are not affected.
@@ -162,10 +168,6 @@ More screenshots of the capture overlay, the AI answer, the settings and the Win
 - Security: your key now belongs to one email address, so a key that leaks can't be used by anyone else. A Mac or PC that is new to a key must confirm the email once with a 6-digit code sent to it (valid 10 minutes, five tries); after that it is remembered, and opening the app, deactivating and activating again never ask. A wrong address gets the same answer as a right one and no email, so nobody can learn who owns a key. If your key has no email yet, the notch says "Please set up your email" when it starts: you add it with a code, and until you do the paid features stay locked (free features never are).
 - Optional authenticator app: in Settings → License → Security (Windows: Settings → Access) scan a QR code with Google Authenticator, Microsoft Authenticator or 1Password, and a new device can enter the app's code instead of waiting for an email. Turning it off needs a current code.
 - This is a required update: older versions can't confirm the email, so the notch asks you to update.
-
-### Windows 2.2.14 BETA · 5 November 2026 · 🚀 Rocket League and Scribble in Windows chats
-
-- Messenger: Rocket League and Scribble in Windows friend chats and rooms, from the Games menu next to the chat. The invite works like the other games, and when it is accepted the live game opens in the chat itself, already in the same online room as the other player, who can be on Windows or Mac. The one who invited hosts and plays Blue in Rocket League; in a room, Scribble offers a Join the game button to anyone who is not one of the two players. The window opens taller (at least 900 by 720) while a live game is showing, and leaving the game, switching chat or leaving the tab ends it. Untested on real Windows hardware.
 
 Every earlier release is in the [changelog](CHANGELOG.md).
 

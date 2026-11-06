@@ -16,23 +16,37 @@ final class EmailGateWindow {
     static let shared = EmailGateWindow()
     private var window: NSWindow?
     private var cancellable: AnyCancellable?
+    private var activation: NSObjectProtocol?
 
     /// Starts watching the gate and checks it now. Call once at launch.
     func start() {
         cancellable = Entitlements.shared.$emailGate.receive(on: DispatchQueue.main).sink { [weak self] gate in
             if gate == nil { self?.close() } else { self?.show() }
         }
+        // Coming back from reading the email brings the window back, so it is never lost behind the browser.
+        activation = NotificationCenter.default.addObserver(forName: NSApplication.didBecomeActiveNotification, object: nil, queue: .main) { [weak self] _ in
+            Task { @MainActor in if Entitlements.shared.emailGate != nil { self?.bringForward() } }
+        }
         Task { await Entitlements.shared.checkEmailGate() }
     }
 
+    /// Shows the window (or raises it). Called when the notch is opened while the gate is up.
+    func bringForward() {
+        guard Entitlements.shared.emailGate != nil else { return }
+        show()
+    }
+
     private func show() {
-        if let window { window.makeKeyAndOrderFront(nil); NSApp.activate(ignoringOtherApps: true); return }
-        let host = NSHostingController(rootView: EmailGateView(onClose: { [weak self] in self?.close() }))
+        if let window { NSApp.activate(ignoringOtherApps: true); window.makeKeyAndOrderFront(nil); return }
+        let host = NSHostingController(rootView: EmailGateView())
         let w = NSWindow(contentViewController: host)
-        w.title = "Notch Apple"
-        w.styleMask = [.titled, .closable]
+        w.title = "Notch Apple: set up your email"
+        // No close or minimise button: the only way out is confirming the email. A normal window level, so the browser can still be
+        // opened on top of it to read the code.
+        w.styleMask = [.titled]
         w.isReleasedWhenClosed = false
-        w.level = .floating
+        w.hidesOnDeactivate = false
+        w.collectionBehavior = [.fullScreenAuxiliary, .moveToActiveSpace]
         w.center()
         window = w
         NSApp.activate(ignoringOtherApps: true)
@@ -42,10 +56,9 @@ final class EmailGateWindow {
     private func close() { window?.close(); window = nil }
 }
 
-/// The "Please set up your email" content, shared by the window and the notch.
+/// The "Please set up your email" content for the window. It has no Cancel: the notch stays locked until this is done.
 struct EmailGateContent: View {
     @ObservedObject private var entitlements = Entitlements.shared
-    var onCancel: () -> Void
 
     var body: some View {
         HStack(alignment: .top, spacing: 18) {
@@ -58,9 +71,9 @@ struct EmailGateContent: View {
                 Text("Your \(entitlements.tier.name) key now belongs to one email address, so a key that leaks can't be used by anyone else. Confirm your email with a code to keep using Notch Apple. It takes a minute and you only do it once.")
                     .font(.system(size: 12)).foregroundStyle(Theme.textSecondary).fixedSize(horizontal: false, vertical: true)
                 if let gate = entitlements.emailGate {
-                    VerifyKeyView(key: gate.key, bound: gate.bound, hint: gate.hint, onDone: {}, onCancel: onCancel)
+                    VerifyKeyView(key: gate.key, bound: gate.bound, hint: gate.hint, onDone: {}, onCancel: nil, remember: true)
                 }
-                Text("Notch Apple stays locked until this is done.")
+                Text("This window stays open while you check your email. Open your email in your browser, copy the code, and come back here.")
                     .font(.system(size: 11)).foregroundStyle(Theme.textSecondary)
             }
             .frame(width: 420, alignment: .leading)
@@ -69,20 +82,26 @@ struct EmailGateContent: View {
 }
 
 private struct EmailGateView: View {
-    var onClose: () -> Void
     var body: some View {
-        EmailGateContent(onCancel: onClose)
+        EmailGateContent()
             .padding(24)
             .background(Color(white: 0.09))
             .preferredColorScheme(.dark)
     }
 }
 
-/// What the notch shows instead of everything else while the email is not set up. It cannot be skipped: closing only closes the notch.
+/// What the notch shows while the email is not set up: no form (the form lives in the window, which does not disappear when the
+/// notch closes), only a pointer to it.
 struct EmailGateNotchView: View {
-    var onClose: () -> Void
     var body: some View {
-        VStack { Spacer(minLength: 0); EmailGateContent(onCancel: onClose); Spacer(minLength: 0) }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
+        VStack(spacing: 12) {
+            Image(systemName: "envelope.badge.shield.half.filled").font(.system(size: 30)).foregroundStyle(Theme.accentGradient)
+            Text("Please set up your email").font(.system(size: 18, weight: .bold)).foregroundStyle(.white)
+            Text("Finish in the window that opened. It stays open while you check your email.")
+                .font(.system(size: 12)).foregroundStyle(Theme.textSecondary).multilineTextAlignment(.center)
+            Button("Show the window") { EmailGateWindow.shared.bringForward() }.buttonStyle(PurpleButtonStyle())
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .onAppear { EmailGateWindow.shared.bringForward() }
     }
 }
