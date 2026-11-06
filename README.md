@@ -150,6 +150,10 @@ More screenshots of the capture overlay, the AI answer, the settings and the Win
 
 ## What's new
 
+### Mac 2.2.28 · 6 November 2026 · ▶️ Play it now always plays
+
+- Fix: Settings → Notch Extras → "Play it now" now always plays the greeting. Before, it did nothing if the notch was hidden, Meeting Mode was on or you had just played it, and the greeting window could end up under the notch. It is now drawn at the same level as the notch, so it shows on top.
+
 ### Mac 2.2.27 · 6 November 2026 · 🪟 The menu bar dims when the notch opens
 
 - New: when the notch opens, the menu bar of the app you are in (File, Edit, View, Go, Window, Help…) fades down, so the notch no longer sits on top of the last menu names and you can focus on it. Only the menu bar strip dims: your windows are untouched and the menus still work. Switch it off in Settings → Notch Extras → Menu bar.
@@ -162,11 +166,6 @@ More screenshots of the capture overlay, the AI answer, the settings and the Win
 - Fix: online racing is much smoother. The other drivers’ cars no longer jump, freeze or vanish: the game now sends and blends their position 20 times a second, a little behind real time, and carries a car on at its own speed if a packet is late.
 - Fix: in plane Battle mode the home base (and its "out of missiles" message) only worked for the host, so the other players never saw it and could not rearm. Every player now has the base.
 - New: the old "home base X km, left or right" arrow is gone. A tall light pillar now stands over the home base, visible to every player from far away, and glows amber and pulses when you are out of missiles or bombs. Fly low and slow into it to rearm.
-
-### Mac 2.2.25 · Windows 2.2.25 BETA · 6 November 2026 · 👋 Mascots say hello from the notch
-
-- New: the hello from the notch can be a character instead of the handwriting. When your PC opens, the notch opens and Notchy drops out and waves, Pomo bounces across, Pip flies across, Mochi hops across, Orbit circles round and Wisp drifts across, with your name under them. All six are original drawings
-- Pick one in Settings → Notch Extras on the Mac, or Settings → General → Hello from the notch on Windows, where it also plays when the PC wakes up (a Windows beta feature). Handwritten hello stays the default
 
 ## Plugins
 

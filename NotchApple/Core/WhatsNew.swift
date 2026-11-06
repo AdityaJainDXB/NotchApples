@@ -20,6 +20,9 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.2.28", date: "6 November 2026", headline: "Play it now always plays", items: [
+            "Fix: Settings → Notch Extras → \"Play it now\" now always plays the greeting. Before, it did nothing if the notch was hidden, Meeting Mode was on or you had just played it, and the greeting window could end up under the notch. It is now drawn at the same level as the notch, so it shows on top.",
+        ]),
         ReleaseNote(version: "2.2.27", date: "6 November 2026", headline: "The menu bar dims when the notch opens", items: [
             "New: when the notch opens, the menu bar of the app you are in (File, Edit, View, Go, Window, Help…) fades down, so the notch no longer sits on top of the last menu names and you can focus on it. Only the menu bar strip dims: your windows are untouched and the menus still work. Switch it off in Settings → Notch Extras → Menu bar.",
         ]),

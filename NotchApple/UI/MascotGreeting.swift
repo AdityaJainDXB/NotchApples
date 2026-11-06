@@ -70,7 +70,7 @@ enum MascotGreeting {
         let p = NSPanel(contentRect: NSRect(x: screen.frame.midX - size.width / 2, y: screen.frame.maxY - size.height, width: size.width, height: size.height),
                         styleMask: [.borderless, .nonactivatingPanel], backing: .buffered, defer: false)
         p.isOpaque = false; p.backgroundColor = .clear; p.hasShadow = false
-        p.level = .statusBar + 2; p.ignoresMouseEvents = true
+        p.level = NotchPrefs.keepInFullscreen ? .screenSaver : .statusBar + 2; p.ignoresMouseEvents = true      // the same level as the notch itself, so it is never under it
         p.collectionBehavior = [.canJoinAllSpaces, .stationary, .fullScreenAuxiliary, .ignoresCycle]
         p.contentView = web
         p.orderFrontRegardless()
