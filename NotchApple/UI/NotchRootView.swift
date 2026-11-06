@@ -174,11 +174,12 @@ struct NotchRootView: View {
     private var expandedContent: some View {
         if settings.securityEnabled && !settings.securityOnlyTabs && !state.isUnlocked {
             LockView().insetInNotch().overlay(alignment: .topTrailing) { closeButton }
-        } else if entitlements.emailGate != nil {
-            // Before anything else, however the notch was opened: a key with no email confirms one first. Closing only closes the notch.
-            EmailGateNotchView().insetInNotch().overlay(alignment: .topTrailing) { closeButton }
         } else if let required = updater.requiredUpdate {
             RequiredUpdateView(release: required).insetInNotch().overlay(alignment: .topTrailing) { closeButton }
+        } else if entitlements.emailGate != nil {
+            // After a required update (which always comes first), however the notch was opened: a key with no email confirms one first.
+            // The form itself lives in a window; the notch only points to it.
+            EmailGateNotchView().insetInNotch().overlay(alignment: .topTrailing) { closeButton }
         } else if tour.isShowing {
             // Compulsory after the 2.0 update: no skip, it returns until finished.
             TourView().insetInNotch().overlay(alignment: .topTrailing) { closeButton }
