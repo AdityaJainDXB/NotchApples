@@ -65,3 +65,6 @@ ruvector.db
 .claude/settings.local.json
 .claude/launch.json
 .claude/scheduled_tasks.lock
+
+# Local brag videos and their working files (large; never committed)
+BRAG NOV26/
