@@ -4,7 +4,7 @@ Every Notch Apple release, newest first. The latest few are also on the [README]
 
 > **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is in the repository's history.
 
-### Mac 2.2.35 · Windows 2.2.35 BETA · 6 November 2026 · 🔦 A real F1 cockpit and steering wheel
+### Mac 2.2.35 · Windows 2.2.35 BETA · 6 November 2026 · 🏎️ A real F1 cockpit and steering wheel
 
 - New: a realistic first-person F1 cockpit in Racing (View: Cockpit, or press V). You look out over a thin dark carbon halo and its centre pillar, with the front tyres, the livery-coloured sides of the car, the wing mirrors and a carbon cowl in front of you.
 - New: a proper F1 steering wheel, drawn after the real ones: a carbon-fibre body with grips either side, a colour screen (speed, gear, position, lap, battery, DRS) under a row of shift lights, push buttons, five rotary dials with colour-coded rings (the big middle one follows your gear), two paddles, and gloved hands that turn with it.
