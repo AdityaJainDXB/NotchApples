@@ -1,0 +1,5 @@
+# Changes to the licence and to this file need approval from the principal owner.
+# (This only takes effect once branch protection on main has "Require review from Code Owners" turned on.)
+/LICENSE                @AdityaJainDXB
+/LICENSES/              @AdityaJainDXB
+/.github/CODEOWNERS     @AdityaJainDXB
