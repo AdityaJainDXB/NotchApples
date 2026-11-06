@@ -4,6 +4,11 @@ Every Notch Apple release, newest first. The latest few are also on the [README]
 
 > **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is in the repository's history.
 
+### Mac 2.2.31 · Windows 2.2.31 BETA · 6 November 2026 · 👋 Choose your hello, with previews
+
+- New: after updating, the notch asks once "Choose your hello". Every choice has a picture, and when you point at one the notch plays its animation: the handwritten hello, Notchy, Pomo, Wisp, Mochi, Orbit, Pip, or an F1 greeting
+- The question stays on screen, even if you close and open the notch, until you pick one or press No thanks, which turns greetings off completely. You can change it or turn it off any time: Settings → Notch Extras on the Mac, Settings → General → Hello from the notch on Windows
+
 ### Mac 2.2.29 · Windows 2.2.30 BETA · 6 November 2026 · 🔦 Night Shift, a new horror game
 
 - New game: Night Shift at Tinker's Toy Emporium (Games → Night Shift). You are the night guard in a closed-down toy shop whose wind-up toys wander at night. Watch them on eleven cameras, shut the left or right door when a light shows one outside, and keep the power up until 6 AM. Doors, lights and the cameras all use power, and if it runs out, the Conductor comes.

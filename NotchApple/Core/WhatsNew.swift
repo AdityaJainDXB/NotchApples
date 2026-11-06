@@ -20,6 +20,10 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.2.31", date: "6 November 2026", headline: "Choose your hello, with previews", items: [
+            "New: after updating, the notch asks once \"Choose your hello\". Every choice has a picture, and when you point at one the notch plays its animation: the handwritten hello, Notchy, Pomo, Wisp, Mochi, Orbit, Pip, or an F1 greeting",
+            "The question stays on screen, even if you close and open the notch, until you pick one or press No thanks, which turns greetings off completely. You can change it or turn it off any time: Settings → Notch Extras on the Mac, Settings → General → Hello from the notch on Windows"
+        ]),
         ReleaseNote(version: "2.2.29", date: "6 November 2026", headline: "Night Shift, a new horror game", items: [
             "New game: Night Shift at Tinker's Toy Emporium (Games → Night Shift). You are the night guard in a closed-down toy shop whose wind-up toys wander at night. Watch them on eleven cameras, shut the left or right door when a light shows one outside, and keep the power up until 6 AM. Doors, lights and the cameras all use power, and if it runs out, the Conductor comes.",
             "Four original toys: Clank the tin robot (left door), Petunia the porcelain doll (right door), Grin the jack-in-the-box (it creeps out of its box in the Prize Corner while you are not watching, then sprints for the left door) and the Conductor, a toy train. Night 1 is ready; nights 2 to 5 come in an update.",

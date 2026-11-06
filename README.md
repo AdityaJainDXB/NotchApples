@@ -150,6 +150,11 @@ More screenshots of the capture overlay, the AI answer, the settings and the Win
 
 ## What's new
 
+### Mac 2.2.31 · Windows 2.2.31 BETA · 6 November 2026 · 👋 Choose your hello, with previews
+
+- New: after updating, the notch asks once "Choose your hello". Every choice has a picture, and when you point at one the notch plays its animation: the handwritten hello, Notchy, Pomo, Wisp, Mochi, Orbit, Pip, or an F1 greeting
+- The question stays on screen, even if you close and open the notch, until you pick one or press No thanks, which turns greetings off completely. You can change it or turn it off any time: Settings → Notch Extras on the Mac, Settings → General → Hello from the notch on Windows
+
 ### Mac 2.2.29 · Windows 2.2.30 BETA · 6 November 2026 · 🔦 Night Shift, a new horror game
 
 - New game: Night Shift at Tinker's Toy Emporium (Games → Night Shift). You are the night guard in a closed-down toy shop whose wind-up toys wander at night. Watch them on eleven cameras, shut the left or right door when a light shows one outside, and keep the power up until 6 AM. Doors, lights and the cameras all use power, and if it runs out, the Conductor comes.
@@ -160,9 +165,6 @@ More screenshots of the capture overlay, the AI answer, the settings and the Win
 
 - Fix: Settings → Notch Extras → "Play it now" now always plays the greeting. Before, it did nothing if the notch was hidden, Meeting Mode was on or you had just played it, and the greeting window could end up under the notch. It is now drawn at the same level as the notch, so it shows on top.
 
-### Mac 2.2.27 · 6 November 2026 · 🪟 The menu bar dims when the notch opens
-
-- New: when the notch opens, the menu bar of the app you are in (File, Edit, View, Go, Window, Help…) fades down, so the notch no longer sits on top of the last menu names and you can focus on it. Only the menu bar strip dims: your windows are untouched and the menus still work. Switch it off in Settings → Notch Extras → Menu bar.
 
 ## Plugins
 
