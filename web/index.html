@@ -1091,7 +1091,7 @@ brew install --cask notch-apple</code></pre>
     <div class="brand"><a href="#top" class="logo"><img src="assets/icon-48.png" alt="" width="26" height="26"> Notch Apple</a><p>The notch, put to work. Free to start and source-available, for macOS and Windows.</p></div>
     <div><h4>Product</h4><ul><li><a href="#download">Download</a></li><li><a href="community.html">What people ask for</a></li><li><a href="support.html">Get help or report a problem</a></li><li><a href="#features">Features</a></li><li><a href="#screenshots">Screenshots</a></li><li><a href="#new">What's new</a></li><li><a href="pro.html">Pricing</a></li></ul></div>
     <div><h4>Project</h4><ul><li><a href="https://github.com/AdityaJainDXB/NotchApples" target="_blank" rel="noopener">GitHub</a></li><li><a href="https://github.com/AdityaJainDXB/NotchApples#readme" target="_blank" rel="noopener">Documentation</a></li><li><a href="https://github.com/AdityaJainDXB/NotchApples/releases" target="_blank" rel="noopener">Releases</a></li><li><a href="https://github.com/AdityaJainDXB/NotchApples/issues" target="_blank" rel="noopener">Report an issue</a></li></ul></div>
-    <div><h4>About</h4><ul><li><a href="#donate">Donate</a></li><li><a href="#privacy">Privacy</a></li><li><a href="terms.html">Terms and refunds</a></li><li><a href="https://github.com/AdityaJainDXB/NotchApples/blob/main/LICENSE" target="_blank" rel="noopener">Source-Available License</a></li></ul></div>
+    <div><h4>About</h4><ul><li><a href="#donate">Donate</a></li><li><a href="#privacy">Privacy</a></li><li><a href="cookie-policy.html">Cookie policy</a></li><li><a href="#" data-cookie-settings>Cookie settings</a></li><li><a href="terms.html">Terms and refunds</a></li><li><a href="https://github.com/AdityaJainDXB/NotchApples/blob/main/LICENSE" target="_blank" rel="noopener">Source-Available License</a></li></ul></div>
   </div>
   <div class="footbar"><span id="footVer">Notch Apple</span><span id="footMade">Made by four high school developers</span></div>
 </div></footer>
@@ -1580,6 +1580,8 @@ $('#timeline').innerHTML=rest.slice(0,4).map(relHTML).join('')+`<details class="
 function ghGet(path,slim){
   const k='gh:'+path;let c=null;try{c=JSON.parse(localStorage.getItem(k)||'null')}catch(e){}
   if(c&&Date.now()-c.t<36e5)return Promise.resolve(c.d);
+  let ok=false;try{const v=JSON.parse(localStorage.getItem('na-consent'));ok=!!(v&&v.v===1&&v.thirdparty===true)}catch(e){}
+  if(!ok)return Promise.resolve(c&&c.d);   // GitHub is only asked after an opt-in
   return fetch('https://api.github.com/repos/AdityaJainDXB/NotchApples'+path).then(r=>r.ok?r.json():null).then(j=>{
     if(!j)return c&&c.d;const d=slim(j);try{localStorage.setItem(k,JSON.stringify({t:Date.now(),d}))}catch(e){}return d
   }).catch(()=>c&&c.d);
@@ -1657,6 +1659,7 @@ function upd(){t=false;const max=document.documentElement.scrollHeight-innerHeig
 addEventListener('scroll',()=>{if(!t){t=true;requestAnimationFrame(upd)}},{passive:true});addEventListener('resize',upd);upd();
 top.onclick=()=>scrollTo({top:0,behavior:reduce?'auto':'smooth'})})();
 </script>
+<script src="assets/consent.js" defer></script>
 <script src="assets/chat.js" defer></script>
 <style>.students{text-align:center;font-size:13.5px;color:#cfc9b8;margin:0 auto 18px;max-width:640px;line-height:1.5}.students a{color:#e8c33a;text-decoration:underline}.uaebanner{display:flex;align-items:center;justify-content:center;gap:8px;margin:0 auto 18px;max-width:max-content;padding:8px 16px;border-radius:999px;font-size:13.5px;color:#d8f5e6;background:rgba(80,200,140,.1);box-shadow:inset 0 0 0 1px rgba(120,230,180,.35)}.uaebanner[hidden]{display:none}</style>
 <script>

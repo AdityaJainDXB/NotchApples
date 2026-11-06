@@ -10,7 +10,9 @@ export default defineConfig({
   workers: 2,
   retries: 1,
   reporter: 'list',
-  use: { baseURL: 'http://localhost:8123', trace: 'on-first-retry' },
+  // Tests start as a visitor who already chose (so the consent banner does not cover the page); tests/consent.spec.ts starts fresh.
+  use: { baseURL: 'http://localhost:8123', trace: 'on-first-retry',
+    storageState: { cookies: [], origins: [{ origin: 'http://localhost:8123', localStorage: [{ name: 'na-consent', value: JSON.stringify({ v: 1, t: 1, thirdparty: true }) }] }] } },
   projects: [
     { name: 'desktop', use: { ...devices['Desktop Chrome'] } },
     { name: 'mobile', use: { ...devices['iPhone 13'], browserName: 'chromium' } },
