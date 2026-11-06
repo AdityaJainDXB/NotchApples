@@ -1570,7 +1570,7 @@ top.onclick=()=>scrollTo({top:0,behavior:reduce?'auto':'smooth'})})();
 <style>.uaebanner{display:flex;align-items:center;justify-content:center;gap:8px;margin:0 auto 18px;max-width:max-content;padding:8px 16px;border-radius:999px;font-size:13.5px;color:#d8f5e6;background:rgba(80,200,140,.1);box-shadow:inset 0 0 0 1px rgba(120,230,180,.35)}.uaebanner[hidden]{display:none}</style>
 <script>
 // UAE visitors see the AED prices (the worker tells us the country; see pro.html for the checkout).
-(async () => {
+const uaePrices = async () => {
   try {
     const c = (await (await fetch('https://notchapple-licenses.adityajain1225.workers.dev/config')).json()).card;
     if (!c || !c.on || c.region !== 'ae') return;
@@ -1579,7 +1579,10 @@ top.onclick=()=>scrollTo({top:0,behavior:reduce?'auto':'smooth'})})();
     document.getElementById('uaeBanner').hidden = false;
     const f = document.getElementById('payFine'); if (f) f.firstChild.textContent = 'Pay by card (AED, through Ziina) or in Bitcoin, Ethereum, Solana or Litecoin, key emailed to you. ';
   } catch (e) { /* the page keeps its dollar prices */ }
-})();
+};
+// Only when the prices come into view (the page contacts nothing before that).
+const plansEl = document.querySelector('#pro .plans');
+if (plansEl && 'IntersectionObserver' in window) { const io = new IntersectionObserver((en) => { if (en.some((x) => x.isIntersecting)) { io.disconnect(); uaePrices(); } }, { rootMargin: '200px' }); io.observe(plansEl); }
 </script>
 </body>
 </html>
