@@ -7,6 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		14A7FC6AC9FE4D4AE3CDACE8 /* MascotGreeting.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6DC9C2F6E6F455AD29AE54F7 /* MascotGreeting.swift */; };
+		1D9F417218462C6873B13217 /* mascots.js in Resources */ = {isa = PBXBuildFile; fileRef = F3AFED57764B805B3A659A96 /* mascots.js */; };
+		8BCDBF7EFEEA5CE0C29DEB58 /* MascotGreeting.html in Resources */ = {isa = PBXBuildFile; fileRef = 7376B3DA30872E4F07E6DDE1 /* MascotGreeting.html */; };
 		00DDB2C1BC9ABCAA43C21ADD /* AudioView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB93272E84FBD56F3B4F7BA4 /* AudioView.swift */; };
 		00E0A82DFB418DB5808C68C7 /* VPNView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19CE2857208E57529A83DED6 /* VPNView.swift */; };
 		016F2ADAB254656E793EA5F8 /* ClipboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 21DB33F0188BFD9B3D8FA4C3 /* ClipboardView.swift */; };
@@ -501,6 +504,9 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		6DC9C2F6E6F455AD29AE54F7 /* MascotGreeting.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MascotGreeting.swift; sourceTree = "<group>"; };
+		F3AFED57764B805B3A659A96 /* mascots.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = mascots.js; sourceTree = "<group>"; };
+		7376B3DA30872E4F07E6DDE1 /* MascotGreeting.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = MascotGreeting.html; sourceTree = "<group>"; };
 		00AA70E8C578D3F81476B1FB /* WallpaperLibrary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WallpaperLibrary.swift; sourceTree = "<group>"; };
 		01CAAECC14FFA955E98BC7DB /* SmartHomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmartHomeView.swift; sourceTree = "<group>"; };
 		023AF917ACD38E560C4DD67B /* NotchWindow+LevelFix.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "NotchWindow+LevelFix.swift"; sourceTree = "<group>"; };
@@ -962,6 +968,7 @@
 				3B249F7C71D18A1BD0D8E788 /* ctf-logic.js */,
 				22BC3DD953937929570782CA /* ctf.js */,
 				A66CB935BCADED569CB8D3B2 /* leaderboard.js */,
+				F3AFED57764B805B3A659A96 /* mascots.js */,
 				DC8C118088B36E22640A6C5F /* plane-sim.js */,
 				2D061AD1D52BA8268B11B374 /* racing.js */,
 				7F930FB2B441D55D595B0094 /* rocket-logic.js */,
@@ -1119,6 +1126,7 @@
 				880D308A931930DF080834D9 /* ExtrasSettings.swift */,
 				E70B519149BF56D597E57B03 /* FeedbackView.swift */,
 				39D51C103147744A114FA26F /* HelloAnimation.swift */,
+				6DC9C2F6E6F455AD29AE54F7 /* MascotGreeting.swift */,
 				6030017749EA1C8346BCA6DF /* HoldToConfirm.swift */,
 				C133B17318DC2CE2EC7B3A4E /* KeySecurityView.swift */,
 				0EE2E453CA2D381EA8DC3001 /* LayoutPicker.swift */,
@@ -1805,6 +1813,7 @@
 				3718F42274C479A025DF477B /* NotchApple.entitlements */,
 				D151A71D3F7B4B4F846173CD /* NotchApple.sdef */,
 				2E9887FE2DA1B017814CA1B5 /* PlaneGame.html */,
+				7376B3DA30872E4F07E6DDE1 /* MascotGreeting.html */,
 				69B4A0D4B7C6F5540FABA3AE /* RacingGame.html */,
 				07A88400BDE9B46B5841ECB9 /* RocketGame.html */,
 				BBA74EF46CD28A513D70A225 /* ScribbleGame.html */,
@@ -2074,6 +2083,8 @@
 				6D96FF364E174A53999C3E56 /* f1-circuits-MIT.txt in Resources */,
 				2F27B29ABFD1084E8B37A8A4 /* klick in Resources */,
 				8C329389C8C1FAE5D6CD17CA /* leaderboard.js in Resources */,
+				1D9F417218462C6873B13217 /* mascots.js in Resources */,
+				8BCDBF7EFEEA5CE0C29DEB58 /* MascotGreeting.html in Resources */,
 				14BB6F024439C7EDE0DCBD2C /* nowplaying.js in Resources */,
 				2006B2451159E4A12E70E69B /* plane-sim.js in Resources */,
 				3FBC19E8D908EA1C0914AA07 /* racing.js in Resources */,
@@ -2290,6 +2301,7 @@
 				B3D4300884C5014B30FC14AF /* PeekView.swift in Sources */,
 				6EB4C5BE5A0101A1A21F64D6 /* PermissionsView.swift in Sources */,
 				FE43DDD0B6B1D40DDF4D57DB /* PlaneGameView.swift in Sources */,
+				14A7FC6AC9FE4D4AE3CDACE8 /* MascotGreeting.swift in Sources */,
 				A71B44C05445BABFE5FF485B /* PlayCards.swift in Sources */,
 				124AF8450CFADD15C8A6716E /* PlayController.swift in Sources */,
 				3047EFBDB9AA12F3A0363F97 /* PlayingCardView.swift in Sources */,

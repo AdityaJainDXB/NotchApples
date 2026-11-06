@@ -94,7 +94,7 @@ const commands = {
   doit_capture: (a) => { (window.__doitCalls ??= []).push(['capture', a]); return 'AAAA'; }, doit_arm: () => true, doit_sleep: () => {},
   doit_click: (a) => { (window.__doitCalls ??= []).push(['click', a]); }, doit_type: (a) => { (window.__doitCalls ??= []).push(['type', a]); },
   doit_key: (a) => { (window.__doitCalls ??= []).push(['key', a]); }, doit_scroll: (a) => { (window.__doitCalls ??= []).push(['scroll', a]); }, doit_drag: (a) => { (window.__doitCalls ??= []).push(['drag', a]); },
-  lyrics_overlay_show: () => {}, lyrics_overlay_hide: () => {},
+  lyrics_overlay_show: () => {}, lyrics_overlay_hide: () => {}, greeting_show: () => {}, greeting_hide: () => {},
   convert_tools: () => ({ word: false, powerpoint: false, excel: false, libreoffice: false, ffmpeg: false }),
   convert_pick: () => ['C:\\Users\\you\\Pictures\\holiday.heic', 'C:\\Users\\you\\Documents\\Report.pptx'],
   convert_temp_dir: () => 'C:\\Temp',

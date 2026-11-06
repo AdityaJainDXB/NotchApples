@@ -405,6 +405,63 @@ fn lyrics_overlay_hide(app: AppHandle) {
     }
 }
 
+/// The greeting: a transparent, click-through window at the top centre of the main screen that plays a mascot (or the
+/// handwritten hello) across a drawing of the open notch (see src/mascot-greeting.html and js/mascots.js). It closes itself.
+#[tauri::command]
+async fn greeting_show(app: AppHandle, id: String, name: String, notch_height: f64) -> Result<(), String> {
+    const W: f64 = 420.0;
+    let notch_height = notch_height.clamp(20.0, 80.0);
+    let h = notch_height + 112.0;
+    let monitor = app
+        .primary_monitor()
+        .ok()
+        .flatten()
+        .or_else(|| app.get_webview_window("notch").and_then(|w| w.current_monitor().ok().flatten()))
+        .ok_or("no monitor")?;
+    let scale = monitor.scale_factor();
+    let screen = monitor.size().to_logical::<f64>(scale);
+    let origin = monitor.position().to_logical::<f64>(scale);
+    if let Some(old) = app.get_webview_window("greeting") {
+        let _ = old.close();
+    }
+    let params = serde_json::json!({ "id": id, "name": name, "notchHeight": notch_height, "width": W, "height": h });
+    let window = WebviewWindowBuilder::new(&app, "greeting", WebviewUrl::App("mascot-greeting.html".into()))
+        .title("Notch Apple: Hello")
+        .inner_size(W, h)
+        .position(origin.x + (screen.width - W) / 2.0, origin.y)
+        .decorations(false)
+        .transparent(true)
+        .shadow(false)
+        .resizable(false)
+        .always_on_top(true)
+        .skip_taskbar(true)
+        .focused(false)
+        .focusable(false)
+        .visible_on_all_workspaces(true)
+        .initialization_script(format!("window.NOTCH_MASCOT = {};", params))
+        .build()
+        .map_err(|e| e.to_string())?;
+    let _ = window.set_ignore_cursor_events(true);
+    // The animation lasts about 5 to 6 seconds (the handwriting a little longer); close the window after it, for sure.
+    let handle = app.clone();
+    let wait = if id == "hello" { 8 } else { 7 };
+    tauri::async_runtime::spawn(async move {
+        tokio::time::sleep(std::time::Duration::from_secs(wait)).await;
+        if let Some(w) = handle.get_webview_window("greeting") {
+            let _ = w.close();
+        }
+    });
+    Ok(())
+}
+
+/// Closes the greeting window early (for example when the notch is hidden).
+#[tauri::command]
+fn greeting_hide(app: AppHandle) {
+    if let Some(w) = app.get_webview_window("greeting") {
+        let _ = w.close();
+    }
+}
+
 // ---- automated UI check (CI) --------------------------------------------
 
 /// Saves a screenshot of the notch window (CI only).
@@ -539,7 +596,7 @@ fn main() {
             awake::set_keep_awake, awake::keep_awake_state,
             system_stats, top_processes, transliterate, capture_screen,
             installed_apps, path_info, launch_app, open_path, reveal_path, open_url,
-            pick_app, pick_folder, pick_file, open_browser, lyrics_overlay_show, lyrics_overlay_hide,
+            pick_app, pick_folder, pick_file, open_browser, lyrics_overlay_show, lyrics_overlay_hide, greeting_show, greeting_hide,
             index::search_files, index::set_search_folders, index::search_status,
             icons::icons,
             watch::screen_time, watch::set_edge_trigger, watch::privacy_now, watch::foreground_now, watch::minimize_external,

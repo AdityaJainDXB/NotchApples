@@ -1,0 +1,20 @@
+<!doctype html>
+<!-- The mascot greeting: MascotGreeting.swift shows this page in a see-through window over the notch. The drawing and the
+     moves are mascots.js, the same file the Windows app uses (NotchWindows/src/js/mascots.js, copied in as a resource). -->
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>html, body { margin: 0; background: transparent; overflow: hidden; }</style>
+</head>
+<body>
+  <div id="host"></div>
+  <script src="mascots.js"></script>
+  <script>
+    var c = window.NOTCH_MASCOT || {};
+    window.NotchMascots.play(document.getElementById('host'), {
+      id: c.id, name: c.name, notchHeight: c.notchHeight, width: c.width, height: c.height,
+      onDone: function () { try { window.webkit.messageHandlers.mascotDone.postMessage(1); } catch (e) {} }
+    });
+  </script>
+</body>
+</html>

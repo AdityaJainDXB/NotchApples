@@ -53,6 +53,11 @@ enum HelloAnimation {
         lastShown = Date()
         panel?.orderOut(nil)
         let notchH = max(screen.safeAreaInsets.top, screen.frame.maxY - screen.visibleFrame.maxY, 24)
+        if MascotGreeting.isMascot {   // a character instead of the handwriting (Settings → Notch Extras)
+            MascotGreeting.show(id: MascotGreeting.current, name: name, screen: screen, notchHeight: notchH)
+            return
+        }
+        MascotGreeting.close()
         let size = CGSize(width: 420, height: notchH + (name.isEmpty ? 92 : 112))
         let p = NSPanel(contentRect: NSRect(x: screen.frame.midX - size.width / 2, y: screen.frame.maxY - size.height, width: size.width, height: size.height),
                         styleMask: [.borderless, .nonactivatingPanel], backing: .buffered, defer: false)

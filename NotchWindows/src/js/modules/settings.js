@@ -80,6 +80,23 @@ function notificationToggle() {
 }
 const prefToggle = (key, gate) => toggle(pref(key), (v) => { if (gate && !canUse(gate)) { toast(`${FEATURES[gate].title} is part of ${tierLabel(FEATURES[gate].tier)}.`); return; } setPref(key, v); });
 
+function helloCard() {
+  const G = () => import('../services/greeting.js');
+  const nameBox = el('input', { class: 'field', placeholder: 'Your name', maxlength: 24, style: 'width:160px' });
+  const pick = el('div');
+  G().then((g) => {
+    nameBox.value = g.name();
+    nameBox.addEventListener('change', () => g.setName(nameBox.value));
+    pick.append(select(g.CHARACTERS.map((c) => ({ value: c.id, label: `${c.name}: ${c.how}` })), g.character(), (v) => g.setCharacter(v)));
+  });
+  return card('Hello from the notch',
+    setting('Say hello when I open my PC', 'When Notch Apple starts and when this PC wakes up, the notch opens and says hello with your name. Nothing is sent anywhere.',
+      toggle(load('hello.on', true) !== false, (v) => G().then((g) => g.setOn(v)))),
+    setting('Your name', 'Shown under the hello. Stays on this PC.', nameBox),
+    setting('Greeting', 'Written by hand like the Mac, or a character that moves across the notch.', pick),
+    el('div', { class: 'hstack', style: 'padding-top:6px' }, button('Play it now', () => G().then((g) => { g.setName(nameBox.value); g.show(true); }))));
+}
+
 function General(repaint, opts) {
   const auto = toggle(false, (v) => invoke('set_autostart', { on: v }).catch((e) => toast(e.message, { error: true })));
   invoke('get_autostart').then((on) => { auto.querySelector('input').checked = on; });
@@ -88,6 +105,7 @@ function General(repaint, opts) {
     card('Startup',
       setting('Start with Windows', 'Notch Apple opens quietly when you sign in.', auto),
       el('div', { class: 'tiny dim', style: 'padding-top:6px' }, 'Updates now have their own section.')),
+    helloCard(),
     card('The notch',
       setting('Position', 'Where the pill sits on the top edge.', segmented([{ value: 'left', label: 'Left' }, { value: 'center', label: 'Centre' }, { value: 'right', label: 'Right' }], pref('ui.position'), (v) => setPref('ui.position', v))),
       setting('Size', canUse('notchResize') ? '' : 'Small and Large are part of Pro.', sizeSel),
