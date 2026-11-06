@@ -27,6 +27,7 @@ func qrImage(_ text: String, size: CGFloat = 150) -> Image? {
 
 private struct CodeField: View {
     @Binding var text: String
+    var focus: FocusState<Bool>.Binding
     var onSubmit: () -> Void
     var body: some View {
         TextField("6-digit code", text: $text)
@@ -34,6 +35,7 @@ private struct CodeField: View {
             .font(.system(size: 20, weight: .bold, design: .monospaced))
             .multilineTextAlignment(.center)
             .foregroundStyle(.white)
+            .focused(focus)
             .frame(width: 170, height: 38)
             .background(Theme.surface, in: RoundedRectangle(cornerRadius: 10))
             .overlay(RoundedRectangle(cornerRadius: 10).strokeBorder(Theme.separator))
@@ -47,6 +49,7 @@ private struct CodeField: View {
 
 private struct EmailField: View {
     @Binding var text: String
+    var focus: FocusState<Bool>.Binding
     var onSubmit: () -> Void
     var body: some View {
         TextField("you@gmail.com", text: $text)
@@ -54,6 +57,7 @@ private struct EmailField: View {
             .font(.system(size: 14, weight: .medium))
             .foregroundStyle(.white)
             .autocorrectionDisabled()
+            .focused(focus)
             .padding(.horizontal, 12).frame(minWidth: 240).frame(height: 36)
             .background(Theme.surface, in: RoundedRectangle(cornerRadius: 10))
             .overlay(RoundedRectangle(cornerRadius: 10).strokeBorder(Theme.separator))
@@ -98,6 +102,8 @@ struct VerifyKeyView: View {
     @State private var code = ""
     @State private var busy = false
     @State private var error: String?
+    @FocusState private var focused: Bool
+    @FocusState private var emailFocused: Bool
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
@@ -108,13 +114,13 @@ struct VerifyKeyView: View {
             switch step {
             case .email:
                 HStack(spacing: 8) {
-                    EmailField(text: $email, onSubmit: send)
+                    EmailField(text: $email, focus: $focused, onSubmit: send)
                     Button(busy ? "Sending…" : "Email me a code", action: send).buttonStyle(PurpleButtonStyle()).disabled(busy || !validEmail(email))
                 }
             case .code, .authenticator:
-                if step == .authenticator { EmailField(text: $email, onSubmit: confirm) }
+                if step == .authenticator { EmailField(text: $email, focus: $emailFocused, onSubmit: confirm) }
                 HStack(spacing: 8) {
-                    CodeField(text: $code, onSubmit: confirm)
+                    CodeField(text: $code, focus: $focused, onSubmit: confirm)
                     Button(busy ? "Checking…" : "Confirm", action: confirm).buttonStyle(PurpleButtonStyle()).disabled(busy || code.count != 6 || !validEmail(email))
                 }
             }
@@ -131,6 +137,8 @@ struct VerifyKeyView: View {
             .buttonStyle(.plain).font(.system(size: 11)).foregroundStyle(Theme.accent)
         }
         .frame(maxWidth: 420, alignment: .leading)
+        .onAppear { DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) { focused = true } }
+        .onChange(of: step) { _, new in DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { if new == .authenticator { emailFocused = true } else { focused = true } } }
     }
 
     private var subtitle: String {

@@ -150,6 +150,11 @@ More screenshots of the capture overlay, the AI answer, the settings and the Win
 
 ## What's new
 
+### Mac 2.2.19 · 6 November 2026 · ⌨️ The email box accepts typing
+
+- Fix: in Settings → License, the email box (and the code box) did not accept typing. The email setup window was grabbing the keyboard back every time the app was clicked, so typing in Settings went to the wrong window. It no longer does that, and the email and code boxes are now ready to type in straight away.
+- This is a required update.
+
 ### Mac 2.2.18 · 6 November 2026 · 🔧 Required update shows before the email screen
 
 - Fix: a required update now always shows in the notch before the email screen, so a Mac that is waiting to confirm its email still sees "Update Notch Apple" and can update. Before, the email screen came first and hid the update.
@@ -159,13 +164,6 @@ More screenshots of the capture overlay, the AI answer, the settings and the Win
 
 - Fix: setting up your email no longer gets lost. The form is now a window that stays open (it has no close button) while you open your email to find the code, and the notch only points to it. If you do leave, a code you already asked for is remembered for its 10 minutes, so you come back to the code box instead of being asked for your email again. The same on Windows.
 - Anyone who has not confirmed their email yet is asked to now, and the notch stays locked until they do.
-- This is a required update.
-
-### Mac 2.2.16 · Windows 2.2.16 BETA · 5 November 2026 · 🔒 The email gate can't be skipped
-
-- Security: the email setup can no longer be skipped. Until a key's email is confirmed, the notch shows only "Please set up your email" however it is opened, and it stays that way after a restart or while offline (Windows: a full-window screen with no "Not now"). Free features do not need a key and are not affected.
-- After a correct code, the key's email now gets "Your Notch Apple key is activated and locked to your email", naming the device. Only someone who can read that inbox can sign in on a new device: a friend who has the key but not the email gets no code.
-- Settings → License → Security now says what went wrong instead of a vague "couldn't reach the server", and has a Try again button.
 - This is a required update.
 
 Every earlier release is in the [changelog](CHANGELOG.md).

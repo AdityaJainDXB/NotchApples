@@ -20,6 +20,10 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.2.19", date: "6 November 2026", headline: "The email box accepts typing", items: [
+            "Fix: in Settings → License, the email box (and the code box) did not accept typing. The email setup window was grabbing the keyboard back every time the app was clicked, so typing in Settings went to the wrong window. It no longer does that, and the email and code boxes are now ready to type in straight away.",
+            "This is a required update.",
+        ]),
         ReleaseNote(version: "2.2.18", date: "6 November 2026", headline: "Required update shows before the email screen", items: [
             "Fix: a required update now always shows in the notch before the email screen, so a Mac that is waiting to confirm its email still sees \"Update Notch Apple\" and can update. Before, the email screen came first and hid the update.",
             "This is a required update.",

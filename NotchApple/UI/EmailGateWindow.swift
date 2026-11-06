@@ -16,16 +16,11 @@ final class EmailGateWindow {
     static let shared = EmailGateWindow()
     private var window: NSWindow?
     private var cancellable: AnyCancellable?
-    private var activation: NSObjectProtocol?
 
     /// Starts watching the gate and checks it now. Call once at launch.
     func start() {
         cancellable = Entitlements.shared.$emailGate.receive(on: DispatchQueue.main).sink { [weak self] gate in
             if gate == nil { self?.close() } else { self?.show() }
-        }
-        // Coming back from reading the email brings the window back, so it is never lost behind the browser.
-        activation = NotificationCenter.default.addObserver(forName: NSApplication.didBecomeActiveNotification, object: nil, queue: .main) { [weak self] _ in
-            Task { @MainActor in if Entitlements.shared.emailGate != nil { self?.bringForward() } }
         }
         Task { await Entitlements.shared.checkEmailGate() }
     }
