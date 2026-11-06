@@ -4,6 +4,11 @@ Every Notch Apple release, newest first. The latest few are also on the [README]
 
 > **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is in the repository's history.
 
+### Mac 2.2.32 · Windows 2.2.32 BETA · 6 November 2026 · 🔦 Night Shift: night 2
+
+- New: Night Shift night 2. Survive night 1 and night 2 unlocks in the menu (the menu now has a button for each night, with a star on the ones you have survived). On night 2 the toys are livelier from midnight and Grin is awake from the start, so keep checking the Prize Corner.
+- After 6 AM the next night is one click away, and Enter on the menu plays the next night you haven't survived. Nights 3 to 5 come in an update.
+
 ### Mac 2.2.31 · Windows 2.2.31 BETA · 6 November 2026 · 👋 Choose your hello, with previews
 
 - New: after updating, the notch asks once "Choose your hello". Every choice has a picture, and when you point at one the notch plays its animation: the handwritten hello, Notchy, Pomo, Wisp, Mochi, Orbit, Pip, or an F1 greeting
