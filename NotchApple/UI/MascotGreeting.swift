@@ -121,39 +121,56 @@ final class GreetingPrefs: ObservableObject {
     }
 }
 
+/// The picker page (MascotGreeting.html in picker mode): a picture of every choice, and a preview of the notch that plays the
+/// one you point at. A click selects it and tells Swift.
+struct GreetingPickerWeb: NSViewRepresentable {
+    @Binding var picked: String
+
+    func makeCoordinator() -> Coordinator { Coordinator(picked: $picked) }
+
+    func makeNSView(context: Context) -> WKWebView {
+        let params: [String: Any] = ["picker": true, "selected": picked, "name": HelloAnimation.name, "team": MascotGreeting.team]
+        let json = (try? JSONSerialization.data(withJSONObject: params)).flatMap { String(data: $0, encoding: .utf8) } ?? "{}"
+        let config = WKWebViewConfiguration()
+        config.userContentController.addUserScript(WKUserScript(source: "window.NOTCH_MASCOT=\(json);", injectionTime: .atDocumentStart, forMainFrameOnly: true))
+        config.userContentController.add(context.coordinator, name: "mascotPick")
+        let web = WKWebView(frame: .zero, configuration: config)
+        web.setValue(false, forKey: "drawsBackground")
+        if let page = Bundle.main.url(forResource: "MascotGreeting", withExtension: "html") {
+            web.loadFileURL(page, allowingReadAccessTo: page.deletingLastPathComponent())
+        }
+        return web
+    }
+
+    func updateNSView(_ nsView: WKWebView, context: Context) {}
+
+    static func dismantleNSView(_ nsView: WKWebView, coordinator: Coordinator) {
+        nsView.configuration.userContentController.removeScriptMessageHandler(forName: "mascotPick")
+    }
+
+    final class Coordinator: NSObject, WKScriptMessageHandler {
+        var picked: Binding<String>
+        init(picked: Binding<String>) { self.picked = picked }
+        func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
+            guard let id = message.body as? String else { return }
+            Task { @MainActor in picked.wrappedValue = id }
+        }
+    }
+}
+
 /// Shown once inside the notch after installing or updating. `done(true)` = a hello was chosen (play it), `done(false)` = no thanks.
 struct GreetingChooserView: View {
     let done: (Bool) -> Void
     @ObservedObject private var prefs = GreetingPrefs.shared
-    @State private var picked = MascotGreeting.handwriting
-
-    private var options: [(id: String, name: String, how: String)] {
-        [(MascotGreeting.handwriting, "Handwritten hello", "Written by hand, Mac style")] + MascotGreeting.all
-    }
+    @State private var picked = MascotGreeting.current
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
+        VStack(alignment: .leading, spacing: 8) {
             Text("Choose your hello").font(.system(size: 18, weight: .bold, design: .rounded)).foregroundStyle(.white)
-            Text("When you open your Mac, the notch can say hello: written by hand, or a little character that moves across the notch. You can change it or turn it off any time in Settings → Notch Extras.")
+            Text("Point at a choice to see it play in the notch, then pick one. You can change it or turn it off any time in Settings → Notch Extras.")
                 .font(.system(size: 12)).foregroundStyle(Theme.textSecondary)
-            ScrollView {
-                LazyVGrid(columns: [GridItem(.flexible(), spacing: 8), GridItem(.flexible(), spacing: 8)], spacing: 8) {
-                    ForEach(options, id: \.id) { option in
-                        Button { picked = option.id } label: {
-                            VStack(alignment: .leading, spacing: 1) {
-                                Text(option.name).font(.system(size: 12, weight: .semibold)).foregroundStyle(.white)
-                                Text(option.how).font(.system(size: 10)).foregroundStyle(Theme.textSecondary).lineLimit(1)
-                            }
-                            .padding(.horizontal, 10).padding(.vertical, 7)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .background(RoundedRectangle(cornerRadius: 10, style: .continuous).fill(picked == option.id ? Theme.accent.opacity(0.35) : Color.white.opacity(0.06)))
-                            .overlay(RoundedRectangle(cornerRadius: 10, style: .continuous).stroke(picked == option.id ? Theme.accent : Color.clear, lineWidth: 1.5))
-                        }
-                        .buttonStyle(.plain)
-                    }
-                }
-            }
-            .frame(maxHeight: 150)
+            GreetingPickerWeb(picked: $picked)
+                .frame(height: 236)
             HStack {
                 Button("No thanks") { prefs.decline(); done(false) }
                     .buttonStyle(.plain).foregroundStyle(Theme.textSecondary).font(.system(size: 12))

@@ -433,7 +433,66 @@
     return { stop: function () { clearTimeout(t1); clearTimeout(t2); grow.cancel(); run.cancel(); finish(); } };
   }
 
-  var api = { list: LIST, ids: IDS, teams: TEAMS, teamOf: teamOf, scene: function (id, o) { return SCENES[id] ? SCENES[id].svg(o || {}) : ''; }, helloPath: [HELLO_H1, HELLO_H2], svg: svg, greeting: greeting, greetingFor: greetingFor, play: play, size: SIZE };
+  // ---- the "Choose your hello" picker --------------------------------------------------------------------------------
+  // A small picture of every choice, and a preview of the open notch on the left that plays the choice you point at (the real
+  // greeting, scaled down, looping). Leaving the tiles goes back to the choice that is selected. Used by the Mac app (in a web
+  // view) and the Windows app, so both look the same.
+  function mk(css, tag) { var n = document.createElement(tag || 'div'); n.style.cssText = css; return n; }
+  function esc(t) { return String(t).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+  function thumb(id, team) {
+    if (id === 'hello') {
+      return '<svg viewBox="0 0 638 200" width="100%" height="100%" style="padding:6px;box-sizing:border-box"><defs><linearGradient id="hth" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="638" y2="0"><stop offset="0" stop-color="#5cc7ff"/><stop offset=".33" stop-color="#bf80ff"/><stop offset=".66" stop-color="#ff739e"/><stop offset="1" stop-color="#ffbd4d"/></linearGradient></defs><path d="' + HELLO_H1 + '" fill="none" stroke="url(#hth)" stroke-width="22" stroke-linecap="round" stroke-linejoin="round"/><path d="' + HELLO_H2 + '" fill="none" stroke="url(#hth)" stroke-width="22" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+    }
+    return svg(id, { team: team || '' }).replace(/ width="[\d.]+" height="[\d.]+"/, ' width="100%" height="100%"');
+  }
+  /// options: { selected, name, team, choices, onPick(id) }. Returns { stop(), selected() }.
+  function picker(host, options) {
+    var o = options || {};
+    var choices = o.choices || [{ id: 'hello', name: 'Handwritten hello', how: 'Written by hand, Mac style' }].concat(LIST);
+    var selected = choices.some(function (c) { return c.id === o.selected; }) ? o.selected : choices[0].id, current = null, seq = 0, run = null, timer = null, stopped = false;
+    host.innerHTML = '';
+    host.style.cssText += ';display:flex;gap:14px;align-items:flex-start;width:100%;box-sizing:border-box;font:13px system-ui,-apple-system,"Segoe UI",sans-serif;color:#fff;user-select:none;-webkit-user-select:none';
+    var left = mk('flex:none;width:300px'), frame = mk('position:relative;width:300px;height:103px;overflow:hidden;border-radius:12px;background:#0d0d12');
+    var stage = mk('position:absolute;left:0;top:0;width:420px;height:144px;transform:scale(.714);transform-origin:0 0');
+    var title = mk('margin-top:8px;font-weight:600;font-size:13px'), how = mk('font-size:11px;opacity:.7;margin-top:1px');
+    frame.appendChild(stage); left.appendChild(frame); left.appendChild(title); left.appendChild(how);
+    var grid = mk('flex:1;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;min-width:0');
+    var tiles = {};
+    choices.forEach(function (c) {
+      var t = mk('display:flex;gap:8px;align-items:center;padding:4px 8px;border-radius:10px;cursor:pointer;min-width:0;border:1.5px solid transparent;background:rgba(255,255,255,.06)');
+      var pic = mk('flex:none;width:34px;height:34px;border-radius:8px;background:#0d0d12;overflow:hidden;display:flex;align-items:center;justify-content:center');
+      pic.innerHTML = thumb(c.id, o.team);
+      var nm = mk('font-weight:600;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0'); nm.textContent = c.name;
+      t.appendChild(pic); t.appendChild(nm);
+      t.onmouseenter = function () { show(c.id); };
+      t.onclick = function () { selected = c.id; paint(); show(c.id, true); if (o.onPick) o.onPick(c.id); };
+      grid.appendChild(t); tiles[c.id] = t;
+    });
+    grid.onmouseleave = function () { show(selected); };
+    host.appendChild(left); host.appendChild(grid);
+    function paint() {
+      choices.forEach(function (c) {
+        var on = c.id === selected;
+        tiles[c.id].style.borderColor = on ? '#7650ee' : 'transparent';
+        tiles[c.id].style.background = on ? 'rgba(118,80,238,.35)' : 'rgba(255,255,255,.06)';
+      });
+    }
+    function replay() {
+      var token = ++seq;
+      if (run) run.stop();
+      var c = choices.filter(function (x) { return x.id === current; })[0] || choices[0];
+      title.textContent = c.name; how.textContent = c.how;
+      run = play(stage, { id: current, name: o.name, team: o.team, notchHeight: 32, width: 420, height: 144, onDone: function () {
+        if (token !== seq) return;
+        timer = setTimeout(function () { if (!stopped && token === seq && host.isConnected) replay(); }, 900);
+      } });
+    }
+    function show(id, force) { if (id === current && !force) return; current = id; clearTimeout(timer); replay(); }
+    paint(); show(selected);
+    return { stop: function () { stopped = true; seq++; clearTimeout(timer); if (run) run.stop(); }, selected: function () { return selected; } };
+  }
+
+  var api = { picker: picker, thumb: thumb, list: LIST, ids: IDS, teams: TEAMS, teamOf: teamOf, scene: function (id, o) { return SCENES[id] ? SCENES[id].svg(o || {}) : ''; }, helloPath: [HELLO_H1, HELLO_H2], svg: svg, greeting: greeting, greetingFor: greetingFor, play: play, size: SIZE };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   root.NotchMascots = api;
 })(typeof window !== 'undefined' ? window : globalThis);

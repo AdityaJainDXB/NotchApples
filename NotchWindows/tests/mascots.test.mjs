@@ -64,3 +64,12 @@ test('an unknown or missing character falls back to the handwritten hello', () =
   assert.equal(G.character(), 'pip');
   assert.equal(G.isOn(), true);
 });
+
+test('the picker draws a small picture for every choice, the handwriting and the F1 cars included', () => {
+  assert.equal(typeof M.picker, 'function');
+  for (const id of ['hello', ...M.ids]) {
+    const pic = M.thumb(id, 'ferrari');
+    assert.match(pic, /^<svg /, id);
+    assert.match(pic.match(/^<svg [^>]*>/)[0], /width="100%" height="100%"/, `${id}: the picture scales to its tile`);
+  }
+});
