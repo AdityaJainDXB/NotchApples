@@ -4,6 +4,10 @@ Every Notch Apple release, newest first. The latest few are also on the [README]
 
 > **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is in the repository's history.
 
+### Mac 2.2.37 · 6 November 2026 · 🔐 Authenticator setup works
+
+- Fix: setting up the authenticator app (Settings → License → Security) did not work for anyone: the box for the 6-digit code was inside the Settings form, which did not take typing. Setting it up, turning it off and adding your email now each open their own window, with a bigger QR code, a setup key to type by hand, and the six-cell code box.
+
 ### Mac 2.2.36 · Windows 2.2.36 BETA · 6 November 2026 · 🏎️ GT3-style steering wheel
 
 - New: GT3-style steering wheel for the road and GT cars in Racing (First-person view). It is drawn after real sim-racing and GT3 wheels: a flat-topped, flat-bottomed carbon wheel with big rubber grips either side and open spaces between the grip and the plate, two columns of coloured push buttons each side, four rotary dials with coloured rings, your team's colour disc in the middle, a stripe along the bottom, a strip of shift lights, the paddles behind and gloved hands on the grips.
