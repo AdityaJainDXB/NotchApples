@@ -1,0 +1,52 @@
+# Only the principal owner may change the licence. If anyone else pushes a change to these files, this puts them back to what
+# they were before the push and opens an issue so the owner can see it. Every other push is left alone.
+# (Not a hard lock: someone with write access could also edit or delete this workflow. For a hard lock, turn on branch
+# protection with "Require review from Code Owners", which then applies to all changes.)
+name: License guard
+
+on:
+  push:
+    branches: [main]
+    paths: ['LICENSE', 'LICENSES/**', '.github/CODEOWNERS', '.github/workflows/license-guard.yml']
+
+permissions:
+  contents: write
+  issues: write
+
+jobs:
+  guard:
+    # The owner may change these files; the guard's own revert commit must not trigger it again.
+    if: github.actor != 'AdityaJainDXB' && github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Put the licence files back
+        env:
+          BEFORE: ${{ github.event.before }}
+          ACTOR: ${{ github.actor }}
+          SHA: ${{ github.sha }}
+        run: |
+          set -e
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          PATHS="LICENSE LICENSES .github/CODEOWNERS .github/workflows/license-guard.yml"
+          CHANGED=$(git diff --name-only "$BEFORE" "$SHA" -- $PATHS)
+          [ -n "$CHANGED" ] || exit 0
+          for p in $PATHS; do
+            if git cat-file -e "$BEFORE:$p" 2>/dev/null; then git checkout "$BEFORE" -- "$p"; else git rm -rq --ignore-unmatch -- "$p"; fi
+          done
+          git commit -m "License guard: undo a change to the licence files by $ACTOR (only the owner may change them)" || exit 0
+          git push origin HEAD:main
+          printf '%s\n' "$CHANGED" > /tmp/changed.txt
+      - name: Tell the owner
+        if: hashFiles('/tmp/changed.txt') != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ACTOR: ${{ github.actor }}
+          SHA: ${{ github.sha }}
+        run: |
+          [ -f /tmp/changed.txt ] || exit 0
+          gh issue create --repo "$GITHUB_REPOSITORY" --title "Licence files changed by $ACTOR, undone" \
+            --body "Commit $SHA by @$ACTOR changed: $(tr '\n' ' ' < /tmp/changed.txt). The guard put them back. If the change was meant, @AdityaJainDXB can make it." || true
