@@ -150,6 +150,11 @@ More screenshots of the capture overlay, the AI answer, the settings and the Win
 
 ## What's new
 
+### Mac 2.2.18 · 6 November 2026 · 🔧 Required update shows before the email screen
+
+- Fix: a required update now always shows in the notch before the email screen, so a Mac that is waiting to confirm its email still sees "Update Notch Apple" and can update. Before, the email screen came first and hid the update.
+- This is a required update.
+
 ### Mac 2.2.17 · Windows 2.2.17 BETA · 6 November 2026 · ✉️ Email setup no longer gets lost
 
 - Fix: setting up your email no longer gets lost. The form is now a window that stays open (it has no close button) while you open your email to find the code, and the notch only points to it. If you do leave, a code you already asked for is remembered for its 10 minutes, so you come back to the code box instead of being asked for your email again. The same on Windows.
@@ -162,12 +167,6 @@ More screenshots of the capture overlay, the AI answer, the settings and the Win
 - After a correct code, the key's email now gets "Your Notch Apple key is activated and locked to your email", naming the device. Only someone who can read that inbox can sign in on a new device: a friend who has the key but not the email gets no code.
 - Settings → License → Security now says what went wrong instead of a vague "couldn't reach the server", and has a Try again button.
 - This is a required update.
-
-### Mac 2.2.15 · Windows 2.2.15 BETA · 5 November 2026 · 🔐 Keys belong to one email
-
-- Security: your key now belongs to one email address, so a key that leaks can't be used by anyone else. A Mac or PC that is new to a key must confirm the email once with a 6-digit code sent to it (valid 10 minutes, five tries); after that it is remembered, and opening the app, deactivating and activating again never ask. A wrong address gets the same answer as a right one and no email, so nobody can learn who owns a key. If your key has no email yet, the notch says "Please set up your email" when it starts: you add it with a code, and until you do the paid features stay locked (free features never are).
-- Optional authenticator app: in Settings → License → Security (Windows: Settings → Access) scan a QR code with Google Authenticator, Microsoft Authenticator or 1Password, and a new device can enter the app's code instead of waiting for an email. Turning it off needs a current code.
-- This is a required update: older versions can't confirm the email, so the notch asks you to update.
 
 Every earlier release is in the [changelog](CHANGELOG.md).
 

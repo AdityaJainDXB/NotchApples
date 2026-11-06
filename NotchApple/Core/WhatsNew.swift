@@ -20,6 +20,10 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.2.18", date: "6 November 2026", headline: "Required update shows before the email screen", items: [
+            "Fix: a required update now always shows in the notch before the email screen, so a Mac that is waiting to confirm its email still sees \"Update Notch Apple\" and can update. Before, the email screen came first and hid the update.",
+            "This is a required update.",
+        ]),
         ReleaseNote(version: "2.2.17", date: "6 November 2026", headline: "Email setup no longer gets lost", items: [
             "Fix: setting up your email no longer gets lost. The form is now a window that stays open (it has no close button) while you open your email to find the code, and the notch only points to it. If you do leave, a code you already asked for is remembered for its 10 minutes, so you come back to the code box instead of being asked for your email again. The same on Windows.",
             "Anyone who has not confirmed their email yet is asked to now, and the notch stays locked until they do.",
