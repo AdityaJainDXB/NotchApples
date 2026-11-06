@@ -216,13 +216,6 @@ struct KeySecuritySection: View {
     @State private var status: (email: Bool, hint: String?, totp: Bool)?
     @State private var loaded = false
 
-    // add email
-    @State private var email = ""
-    @State private var emailSent = false
-    // authenticator
-    @State private var setup: (uri: String, secret: String)?
-    @State private var code = ""
-    @State private var busy = false
     @State private var error: String?
     @State private var info: String?
 
@@ -257,27 +250,7 @@ struct KeySecuritySection: View {
             Label("Add your email to protect this key", systemImage: "exclamationmark.shield").foregroundStyle(.orange)
             Text("Your key has no email yet. Add one: we send a code to confirm it, and the key then works on a new device only with a code from that inbox.")
                 .font(.callout).foregroundStyle(.secondary)
-            if !emailSent {
-                HStack {
-                    TextField("Your email address", text: $email).textFieldStyle(.roundedBorder).autocorrectionDisabled()
-                    Button("Email me a code") {
-                        run { if let e = await entitlements.addEmailStart(email) { error = e } else { emailSent = true; code = "" } }
-                    }.disabled(busy || !validEmail(email))
-                }
-            } else {
-                Text("We sent a code to \(email).").font(.callout)
-                HStack {
-                    TextField("6-digit code", text: $code).textFieldStyle(.roundedBorder).monospaced().frame(width: 130)
-                        .onChange(of: code) { _, new in let d = String(new.filter(\.isNumber).prefix(6)); if d != new { code = d } }
-                    Button("Confirm") {
-                        run {
-                            if let e = await entitlements.addEmailFinish(email, code: code) { error = e }
-                            else { info = "Email added. Your key is now protected."; emailSent = false; await refresh() }
-                        }
-                    }.disabled(busy || code.count != 6)
-                    Button("Cancel") { emailSent = false; error = nil }
-                }
-            }
+            Button("Add my email…") { KeySecurityWindow.shared.show(.addEmail) { info = "Email added. Your key is now protected."; Task { await refresh() } } }
         }
     }
 
@@ -285,48 +258,139 @@ struct KeySecuritySection: View {
         if status.totp {
             VStack(alignment: .leading, spacing: 8) {
                 Label("Authenticator app is on: a new device can use its code instead of the email.", systemImage: "lock.shield.fill")
-                HStack {
-                    TextField("Current code", text: $code).textFieldStyle(.roundedBorder).monospaced().frame(width: 130)
-                        .onChange(of: code) { _, new in let d = String(new.filter(\.isNumber).prefix(6)); if d != new { code = d } }
-                    Button("Turn off", role: .destructive) {
-                        run { if let e = await entitlements.totpDisable(code) { error = e } else { info = "Authenticator app turned off."; code = ""; await refresh() } }
-                    }.disabled(busy || code.count != 6)
-                }
-            }
-        } else if let setup {
-            VStack(alignment: .leading, spacing: 8) {
-                Text("1. Scan this with Google Authenticator, Microsoft Authenticator or another app").font(.callout)
-                if let img = qrImage(setup.uri) { img.resizable().interpolation(.none).frame(width: 150, height: 150).padding(8).background(.white, in: RoundedRectangle(cornerRadius: 10)) }
-                Text("Can't scan? Enter this key by hand:").font(.caption).foregroundStyle(.secondary)
-                Text(setup.secret).monospaced().textSelection(.enabled).font(.callout)
-                Text("2. Enter the 6-digit code it shows").font(.callout)
-                HStack {
-                    TextField("6-digit code", text: $code).textFieldStyle(.roundedBorder).monospaced().frame(width: 130)
-                        .onChange(of: code) { _, new in let d = String(new.filter(\.isNumber).prefix(6)); if d != new { code = d } }
-                    Button("Turn on") {
-                        run { if let e = await entitlements.totpConfirm(code) { error = e } else { info = "Authenticator app is on."; self.setup = nil; code = ""; await refresh() } }
-                    }.disabled(busy || code.count != 6)
-                    Button("Cancel") { self.setup = nil; code = ""; error = nil }
-                }
+                Button("Turn off…", role: .destructive) { KeySecurityWindow.shared.show(.turnOff) { info = "Authenticator app turned off."; Task { await refresh() } } }
             }
         } else {
             VStack(alignment: .leading, spacing: 6) {
                 Text("Optional: confirm a new device with an authenticator app instead of waiting for an email.").font(.callout).foregroundStyle(.secondary)
-                Button("Set up an authenticator app…") {
-                    run { if let s = await entitlements.totpSetup() { setup = s; code = "" } else { error = await entitlements.totpSetupError() } }
-                }.disabled(busy)
+                Button("Set up an authenticator app…") { KeySecurityWindow.shared.show(.authenticator) { info = "Authenticator app is on."; Task { await refresh() } } }
             }
         }
-    }
-
-    private func run(_ work: @escaping () async -> Void) {
-        guard !busy else { return }
-        busy = true; error = nil; info = nil
-        Task { await work(); busy = false }
     }
 
     private func refresh() async {
         status = await entitlements.securityStatus()
         loaded = true
     }
+}
+
+/// Add an email, set up the authenticator app, or turn it off: each in its own window. The boxes in the Settings form did not reliably take
+/// typing (the same reason confirming a key's email has a window), and a window also stays open while you pick up your phone.
+@MainActor
+final class KeySecurityWindow {
+    enum Mode { case addEmail, authenticator, turnOff }
+    static let shared = KeySecurityWindow()
+    private var window: NSWindow?
+
+    func show(_ mode: Mode, onDone: @escaping () -> Void) {
+        close()
+        let view = SecurityWindowView(mode: mode, onDone: { [weak self] in self?.close(); onDone() }, onCancel: { [weak self] in self?.close() })
+        let w = NSWindow(contentViewController: NSHostingController(rootView: view))
+        w.title = mode == .addEmail ? "Notch Apple: add your email" : "Notch Apple: authenticator app"
+        w.styleMask = [.titled, .closable]
+        w.isReleasedWhenClosed = false
+        w.hidesOnDeactivate = false
+        w.center()
+        window = w
+        NSApp.activate(ignoringOtherApps: true)
+        w.makeKeyAndOrderFront(nil)
+    }
+    private func close() { window?.close(); window = nil }
+}
+
+private struct SecurityWindowView: View {
+    let mode: KeySecurityWindow.Mode
+    var onDone: () -> Void
+    var onCancel: () -> Void
+    @StateObject private var entitlements = Entitlements.shared
+    @FocusState private var focused: Bool
+    @State private var email = ""
+    @State private var emailSent = false
+    @State private var setup: (uri: String, secret: String)?
+    @State private var code = ""
+    @State private var busy = false
+    @State private var loading = false
+    @State private var error: String?
+    @State private var finished: String?
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            switch mode {
+            case .addEmail: addEmail
+            case .authenticator: authenticator
+            case .turnOff: turnOff
+            }
+            if let finished { Label(finished, systemImage: "checkmark.circle.fill").foregroundStyle(.green) }
+            if let error { Text(error).foregroundStyle(errorColor).font(.callout) }
+        }
+        .padding(24)
+        .frame(width: 440)
+        .background(Color(white: 0.09))
+        .preferredColorScheme(.dark)
+        .task { if mode == .authenticator { await start() } else { focused = true } }
+    }
+
+    private func work(_ job: @escaping () async -> Void) {
+        guard !busy else { return }
+        busy = true; error = nil
+        Task { await job(); busy = false }
+    }
+    private func done(_ message: String) {
+        finished = message
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.1) { onDone() }
+    }
+    private func start() async {
+        loading = true; error = nil
+        if let s = await entitlements.totpSetup() { setup = s; code = ""; focused = true } else { error = await entitlements.totpSetupError() }
+        loading = false
+    }
+
+    private var addEmail: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Add your email").font(.title3.weight(.semibold))
+            if !emailSent {
+                Text("We send a code to confirm it. After that the key works on a new device only with a code from this inbox.").font(.callout).foregroundStyle(.secondary)
+                EmailField(text: $email, focus: $focused, onSubmit: sendEmail)
+                HStack { Button("Email me a code", action: sendEmail).disabled(busy || !validEmail(email)); Button("Cancel", action: onCancel) }
+            } else {
+                Text("We sent a code to \(email) (valid 10 minutes, check spam too).").font(.callout).foregroundStyle(.secondary)
+                CodeField(text: $code, focus: $focused, onSubmit: confirmEmail)
+                HStack { Button("Confirm", action: confirmEmail).disabled(busy || code.count != 6); Button("Back") { emailSent = false; code = ""; error = nil; focused = true } }
+            }
+        }
+    }
+    private func sendEmail() { guard validEmail(email) else { return }; work { if let e = await entitlements.addEmailStart(email) { error = e } else { emailSent = true; code = ""; focused = true } } }
+    private func confirmEmail() { guard code.count == 6 else { return }; work { if let e = await entitlements.addEmailFinish(email, code: code) { error = e } else { done("Email added. Your key is now protected.") } } }
+
+    private var authenticator: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Set up an authenticator app").font(.title3.weight(.semibold))
+            if loading { ProgressView("Getting your code…") }
+            else if let setup {
+                Text("1. Open Google Authenticator, Microsoft Authenticator or another app, add an account and scan this").font(.callout)
+                if let img = qrImage(setup.uri, size: 170) {
+                    img.resizable().interpolation(.none).frame(width: 170, height: 170).padding(14).background(.white, in: RoundedRectangle(cornerRadius: 12)).frame(maxWidth: .infinity)
+                }
+                Text("Can't scan? Choose \"Enter a setup key\" in the app and type this:").font(.caption).foregroundStyle(.secondary)
+                Text(setup.secret).monospaced().textSelection(.enabled).font(.callout)
+                Text("2. Type the 6-digit code the app now shows for Notch Apple").font(.callout)
+                CodeField(text: $code, focus: $focused, onSubmit: turnOn)
+                HStack { Button("Turn on", action: turnOn).disabled(busy || code.count != 6); Button("Cancel", action: onCancel) }
+            } else {
+                Button("Try again") { Task { await start() } }
+                Button("Close", action: onCancel)
+            }
+        }
+    }
+    private func turnOn() { guard code.count == 6 else { return }; work { if let e = await entitlements.totpConfirm(code) { error = e } else { done("Authenticator app is on.") } } }
+
+    private var turnOff: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Turn off the authenticator app").font(.title3.weight(.semibold))
+            Text("Enter the 6-digit code your app shows now. A new device will then confirm with an email code again.").font(.callout).foregroundStyle(.secondary)
+            CodeField(text: $code, focus: $focused, onSubmit: turnOffNow)
+            HStack { Button("Turn off", role: .destructive, action: turnOffNow).disabled(busy || code.count != 6); Button("Cancel", action: onCancel) }
+        }
+    }
+    private func turnOffNow() { guard code.count == 6 else { return }; work { if let e = await entitlements.totpDisable(code) { error = e } else { done("Authenticator app turned off.") } } }
 }
