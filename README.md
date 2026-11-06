@@ -150,6 +150,11 @@ More screenshots of the capture overlay, the AI answer, the settings and the Win
 
 ## What's new
 
+### Mac 2.2.36 · Windows 2.2.36 BETA · 6 November 2026 · 🏎️ GT3-style steering wheel
+
+- New: GT3-style steering wheel for the road and GT cars in Racing (First-person view). It is drawn after real sim-racing and GT3 wheels: a flat-topped, flat-bottomed carbon wheel with big rubber grips either side and open spaces between the grip and the plate, two columns of coloured push buttons each side, four rotary dials with coloured rings, your team's colour disc in the middle, a stripe along the bottom, a strip of shift lights, the paddles behind and gloved hands on the grips.
+- It turns, centres, shakes over kerbs and lights the paddle you press, exactly like the F1 wheel (up to ±270° for GT3 cars). The F1 cars keep their F1 wheel from 2.2.35.
+
 ### Mac 2.2.35 · Windows 2.2.35 BETA · 6 November 2026 · 🏎️ A real F1 cockpit and steering wheel
 
 - New: a realistic first-person F1 cockpit in Racing (View: Cockpit, or press V). You look out over a thin dark carbon halo and its centre pillar, with the front tyres, the livery-coloured sides of the car, the wing mirrors and a carbon cowl in front of you.
@@ -161,12 +166,6 @@ More screenshots of the capture overlay, the AI answer, the settings and the Win
 
 - New: Night Shift Custom Night (a button under the nights on the menu, or press C). Set each toy, Clank, Petunia, Grin and the Conductor, to any level from 0 (asleep) to 20 (relentless) with the arrows or by clicking the bars. They stay at that level all night, with no hourly rise. Random picks levels for you, and 20 mode turns every toy to the maximum.
 - Beat a custom night with all four toys at 20 and the Custom Night button gets a star. Your levels are remembered, and Again replays the same night.
-
-### Mac 2.2.33 · Windows 2.2.33 BETA · 6 November 2026 · 🔦 Night Shift: all five nights
-
-- New: Night Shift nights 3, 4 and 5. From night 3 the Conductor, a toy train, comes up the east side to the right door, and it only moves while you are not watching it (listen for its whistle). Each night the toys start busier, and night 5 has every toy awake. Survive all five for the whole week.
-- Each night has its own short briefing, and the game-over tip now tells you how to stop the Conductor.
-- On the website: card prices in the UAE are now AED 4.40 for Pro, AED 11 for Ultimate and AED 6.60 to upgrade, and students in Dubai can ask for a free promo code by emailing notchapples.support@gmail.com.
 
 ## Plugins
 

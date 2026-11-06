@@ -3907,6 +3907,80 @@
         g.restore();
       }
     }
+
+    /// A GT3-style wheel for the road and GT cars: a flat-bottomed, flat-topped carbon wheel with big rubber grips either side (open between the
+    /// grip and the plate), two columns of coloured push buttons, four rotary dials with colour rings, the team's disc in the middle, a strip of
+    /// shift lights and the paddles behind. Drawn about its own centre at (0, -R0), which is also what the caller turns it about.
+    function drawGT3Wheel(R0, s, c, sp, rr, sleeve) {
+      const col = sp.color || '#d22', R = R0, X = 1.14;       // the wheel is wider than it is tall
+      g.save(); g.translate(0, -R0);
+      const P = (x, y) => [x * R * X, y * R];
+      // The paddles first, behind the wheel: long blades past the top corners.
+      for (const sx of [-1, 1]) {
+        const lit = (sx > 0 ? padR : padL) > 0;
+        g.save(); g.translate(sx * R * X * 1.2, -R * 0.55); g.rotate(sx * 0.28);
+        g.fillStyle = lit ? '#ffd166' : '#25272d'; g.beginPath(); g.roundRect(-0.07 * R, -0.5 * R, 0.14 * R, 0.78 * R, 0.07 * R); g.fill();
+        g.strokeStyle = 'rgba(255,255,255,.14)'; g.lineWidth = 1; g.stroke(); g.restore();
+      }
+      // The outline (flat top with a shallow dip, flat bottom) with the two openings cut out of it (even-odd fill).
+      const body = new Path2D();
+      const pts = [[-0.5, -0.8], [0, -0.7], [0.5, -0.8]];
+      body.moveTo(...P(-0.5, -0.8)); body.quadraticCurveTo(...P(0, -0.66), ...P(0.5, -0.8));
+      body.bezierCurveTo(...P(0.85, -0.86), ...P(1.18, -0.74), ...P(1.26, -0.38));
+      body.bezierCurveTo(...P(1.34, 0.0), ...P(1.3, 0.5), ...P(1.12, 0.7));
+      body.bezierCurveTo(...P(0.98, 0.84), ...P(0.8, 0.82), ...P(0.5, 0.82));
+      body.lineTo(...P(-0.5, 0.82));
+      body.bezierCurveTo(...P(-0.8, 0.82), ...P(-0.98, 0.84), ...P(-1.12, 0.7));
+      body.bezierCurveTo(...P(-1.3, 0.5), ...P(-1.34, 0.0), ...P(-1.26, -0.38));
+      body.bezierCurveTo(...P(-1.18, -0.74), ...P(-0.85, -0.86), ...P(-0.5, -0.8));
+      body.closePath();
+      for (const sx of [-1, 1]) { const hx = sx * 0.99, w = 0.17, hole = new Path2D(); hole.roundRect((hx - w) * R * X, -0.38 * R, 2 * w * R * X, 1.0 * R, 0.16 * R * X); body.addPath(hole); }
+      g.fillStyle = '#1d1e23'; g.fill(body, 'evenodd');
+      g.lineWidth = 2.4 * s; g.strokeStyle = '#4a4d56'; g.stroke(body);
+      // Stitching along the grips.
+      g.save(); g.setLineDash([3 * s, 3 * s]); g.strokeStyle = 'rgba(255,255,255,.16)'; g.lineWidth = 1 * s;
+      for (const sx of [-1, 1]) { g.beginPath(); g.moveTo(...P(sx * 1.2, -0.55)); g.bezierCurveTo(...P(sx * 1.27, -0.2), ...P(sx * 1.24, 0.35), ...P(sx * 1.06, 0.66)); g.stroke(); }
+      g.restore();
+      // The carbon plate across the middle.
+      const plate = new Path2D();
+      plate.moveTo(...P(-0.84, -0.74)); plate.quadraticCurveTo(...P(0, -0.62), ...P(0.84, -0.74)); plate.lineTo(...P(0.9, 0.34)); plate.quadraticCurveTo(...P(0.8, 0.7), ...P(0.4, 0.72)); plate.lineTo(...P(-0.4, 0.72)); plate.quadraticCurveTo(...P(-0.8, 0.7), ...P(-0.9, 0.34)); plate.closePath();
+      g.fillStyle = '#0b0c0f'; g.fill(plate); g.fillStyle = carbonFill(); g.fill(plate);
+      g.lineWidth = 1.8 * s; g.strokeStyle = '#05060a'; g.stroke(plate);
+      g.save(); g.clip(plate); g.fillStyle = col; g.globalAlpha = 0.9; g.fillRect(-R * X, 0.62 * R, 2 * R * X, 0.2 * R); g.restore(); g.globalAlpha = 1;      // a stripe in the team colour along the bottom
+      // Shift lights across the top of the plate.
+      for (let i = 0; i < 11; i++) { const on = rr * 11 > i, flash = rr > 0.96 && (Date.now() / 70 | 0) % 2; g.fillStyle = on ? (flash ? '#fff' : i < 4 ? '#3ad07a' : i < 8 ? '#ffcc33' : '#ff4d4d') : 'rgba(255,255,255,.13)'; g.beginPath(); g.arc((i - 5) * 0.085 * R * X, -0.62 * R + Math.abs(i - 5) * 0.004 * R, 0.027 * R, 0, 7); g.fill(); }
+      // Push buttons: two columns on each side, coloured caps.
+      const CAPS = ['#3ad07a', '#ff9f43', '#ffd23f', '#4da3ff'];
+      for (const sx of [-1, 1]) for (let col2 = 0; col2 < 2; col2++) for (let row = 0; row < 4; row++) {
+        const bx = sx * (0.78 - col2 * 0.17) * R * X, by = (-0.46 + row * 0.2 + col2 * 0.05) * R, cap = CAPS[(row + (sx > 0 ? 2 : 0) + col2) % 4];
+        g.fillStyle = '#040508'; g.beginPath(); g.arc(bx, by, 0.062 * R, 0, 7); g.fill(); g.fillStyle = cap; g.beginPath(); g.arc(bx, by, 0.046 * R, 0, 7); g.fill();
+        g.fillStyle = 'rgba(255,255,255,.3)'; g.beginPath(); g.arc(bx - 0.014 * R, by - 0.016 * R, 0.02 * R, 0, 7); g.fill();
+      }
+      // Four rotary dials with coloured rings.
+      const DIALS = [[-0.34, -0.1, '#3ad07a', -0.6], [0.34, -0.1, '#ff4d4d', 0.8], [-0.34, 0.33, '#4da3ff', 0.3], [0.34, 0.33, '#b36bff', -1.1]];
+      for (const [dx, dy, ring, pa] of DIALS) {
+        const cx = dx * R * X, cy = dy * R, r = 0.16 * R;
+        g.fillStyle = '#040508'; g.beginPath(); g.arc(cx, cy, r * 1.18, 0, 7); g.fill();
+        g.strokeStyle = ring; g.lineWidth = r * 0.22; g.beginPath(); g.arc(cx, cy, r * 1.02, 0, 7); g.stroke();
+        g.fillStyle = '#16181d'; g.beginPath(); g.arc(cx, cy, r * 0.76, 0, 7); g.fill(); g.strokeStyle = '#2d3038'; g.lineWidth = 1 * s; g.stroke();
+        g.save(); g.translate(cx, cy); g.rotate(pa); g.strokeStyle = '#f4f4f6'; g.lineWidth = Math.max(1.4, r * 0.13); g.lineCap = 'round'; g.beginPath(); g.moveTo(0, -r * 0.1); g.lineTo(0, -r * 0.62); g.stroke(); g.lineCap = 'butt'; g.restore();
+      }
+      // The team's disc in the middle.
+      g.fillStyle = '#05060a'; g.beginPath(); g.arc(0, -0.34 * R, 0.19 * R, 0, 7); g.fill();
+      g.fillStyle = col; g.beginPath(); g.arc(0, -0.34 * R, 0.15 * R, 0, 7); g.fill(); g.fillStyle = 'rgba(255,255,255,.85)'; g.beginPath(); g.arc(0, -0.34 * R, 0.06 * R, 0, 7); g.fill();
+      g.fillStyle = 'rgba(255,255,255,.22)'; g.beginPath(); g.ellipse(-0.04 * R, -0.4 * R, 0.07 * R, 0.04 * R, -0.5, 0, 7); g.fill();
+      // The gloved hands on the grips.
+      for (const sx of [-1, 1]) {
+        g.save(); g.translate(sx * R * X * 1.22, 0.02 * R); g.rotate(sx * 0.08);
+        g.fillStyle = sleeve; g.beginPath(); g.roundRect(-12 * s, 12 * s, 24 * s, 18 * s, 7 * s); g.fill();
+        g.fillStyle = '#f2f2f4'; g.beginPath(); g.roundRect(-12 * s, -16 * s, 24 * s, 30 * s, 9 * s); g.fill();
+        g.fillStyle = '#d4d6dc'; for (let k = 0; k < 4; k++) { g.beginPath(); g.roundRect(-11 * s + k * 5.8 * s, -18 * s, 5 * s, 12 * s, 2.4 * s); g.fill(); }
+        g.fillStyle = '#fff'; g.beginPath(); g.ellipse(-sx * 9 * s, -3 * s, 6 * s, 9 * s, -sx * 0.5, 0, 7); g.fill();
+        g.fillStyle = sleeve; g.fillRect(-5 * s, -2 * s, 10 * s, 4 * s);
+        g.restore();
+      }
+      g.restore();
+    }
     /// The driver's view: the car's nose (or an F1 car's halo), the dashboard, the shift lights and a steering wheel that turns
     /// with the front wheels, showing the gear and the speed; the paddles flash at each change.
     function drawCockpit() {
@@ -3951,13 +4025,7 @@
       if (f1) {
         drawF1Wheel(R0, s, c, sp, rr, kmh, sleeve);
       } else {
-        g.lineWidth = 13 * s; g.strokeStyle = '#18191d'; g.beginPath(); g.arc(0, -R0, R0, 0, 7); g.stroke();
-        g.lineWidth = 3 * s; g.strokeStyle = '#ffd166'; g.beginPath(); g.arc(0, -R0, R0, -Math.PI / 2 - 0.08, -Math.PI / 2 + 0.08); g.stroke();
-        g.fillStyle = '#18191d'; g.fillRect(-R0, -R0 - 7 * s, R0 * 2, 14 * s); g.fillRect(-7 * s, -R0, 14 * s, R0 * 0.9);
-        g.fillStyle = '#26282f'; g.beginPath(); g.arc(0, -R0, 28 * s, 0, 7); g.fill();
-        g.fillStyle = shade(sp.color, 1); g.beginPath(); g.arc(0, -R0, 9 * s, 0, 7); g.fill();
-        g.fillStyle = paddle > 0 ? '#ffd166' : '#3a3d46'; g.fillRect(-R0 - 10 * s, -R0 - 30 * s, 9 * s, 24 * s); g.fillRect(R0 + 1 * s, -R0 - 30 * s, 9 * s, 24 * s);
-        for (const sx of [-1, 1]) { g.fillStyle = '#222'; g.beginPath(); g.ellipse(sx * R0, -R0 + 4 * s, 14 * s, 22 * s, sx * 0.3, 0, 7); g.fill(); }
+        drawGT3Wheel(R0, s, c, sp, rr, sleeve);
       }
       g.restore();
       if (!f1) {

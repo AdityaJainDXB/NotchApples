@@ -4,6 +4,11 @@ Every Notch Apple release, newest first. The latest few are also on the [README]
 
 > **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is in the repository's history.
 
+### Mac 2.2.36 · Windows 2.2.36 BETA · 6 November 2026 · 🏎️ GT3-style steering wheel
+
+- New: GT3-style steering wheel for the road and GT cars in Racing (First-person view). It is drawn after real sim-racing and GT3 wheels: a flat-topped, flat-bottomed carbon wheel with big rubber grips either side and open spaces between the grip and the plate, two columns of coloured push buttons each side, four rotary dials with coloured rings, your team's colour disc in the middle, a stripe along the bottom, a strip of shift lights, the paddles behind and gloved hands on the grips.
+- It turns, centres, shakes over kerbs and lights the paddle you press, exactly like the F1 wheel (up to ±270° for GT3 cars). The F1 cars keep their F1 wheel from 2.2.35.
+
 ### Mac 2.2.35 · Windows 2.2.35 BETA · 6 November 2026 · 🏎️ A real F1 cockpit and steering wheel
 
 - New: a realistic first-person F1 cockpit in Racing (View: Cockpit, or press V). You look out over a thin dark carbon halo and its centre pillar, with the front tyres, the livery-coloured sides of the car, the wing mirrors and a carbon cowl in front of you.
