@@ -6204,6 +6204,7 @@
       b.box([0, 0, 1.7], [1.0, 0.04, 0.5], [0.4, 0.4, 0.42]); b.box([0, 0, 1.7], [0.04, 1.0, 0.5], [0.4, 0.4, 0.42]);
       m.missile = upload(b);
       b = new Builder(); b.cone([0, 0, 0], 1, 1, 0.05, [1, 1, 1], 18); m.crater = upload(b);
+      b = new Builder(); rod(b, [0, 0, 0], [0, 2200, 0], 16, 16, [1, 1, 1], 14); m.pillar = upload(b);     // the home base's light pillar
       return m;
     })();
     PUFF.clod = { life: [1, 2.2], size: [1.4, 3.6], col: () => [0.3, 0.22, 0.13], glow: 0, rise: 0, grav: 9.8, a: 0.9 };
@@ -6319,6 +6320,13 @@
       else if (what === 'medkit') { if (war.medkit <= 0) { toast('No medkits', 900); return; } if (war.hp >= war.maxHp) { toast('Health is full', 900); return; } war.medkit--; war.hp = war.maxHp; war.healCool = 2.0; toast('Full health', 900); }
       noise(0.1, 0.12, 600);
     }
+    /// The home base: land (or fly low and slow) along its runway to rearm. Every player works it out from the same centre and radius,
+    /// so the host and the other players always have it in the same place (at sea it is the carrier).
+    function warPlaceBase() {
+      const R = war.R;
+      war.base = war.arena.archipelago ? { x: war.cx + 300, z: war.cz + R * 0.55, ship: true, deck: 16.6 } : { x: war.cx + 520, z: war.cz + R * 0.6 };
+      if (war.vehicle === 'plane' && !war.base.ship) clearTrees(W, war.base.x - 40, war.base.x + 90, war.base.z - 520, war.base.z + 520);
+    }
     function warSpawnWave() {
       war.wave++;
       const n = war.wave, d = war.d;
@@ -6329,8 +6337,7 @@
         toast(`ON TO THE NEXT FRONT: ${(ahead / 1000).toFixed(1)} km ahead`, 3500); warFeed(`The front moves on ${(ahead / 1000).toFixed(1)} km`);
       }
       const R = war.R;
-      war.base = { x: war.cx + 520, z: war.cz + R * 0.6 };     // the home base: land (or fly low and slow) along its runway to rearm
-      if (war.arena.archipelago) { war.base = { x: war.cx + 300, z: war.cz + R * 0.55, ship: true, deck: 16.6 }; }     // at sea, the home base is your carrier
+      warPlaceBase();
       if (war.vehicle === 'plane' && war.arena.archipelago) {
         // Enemy warships out on the water: more each wave.
         for (let i = 0; i < Math.min(1 + Math.ceil(n / 2), 4); i++) {
@@ -6340,7 +6347,6 @@
           const K = WAR_KINDS.warship; war.ground.push({ nid: ++war.gidn, kind: 'warship', pos: [x, 0, z], heading: warRand() * 6.28, turret: 0, hp: K.hp * d.hp, maxHp: K.hp * d.hp, r: K.r, pts: K.pts, cool: 4, t: 0, burning: 0, lastHit: null, speed: 4, hunt: false, dead: false, ship: true });
         }
       }
-      if (war.vehicle === 'plane' && !war.base.ship) clearTrees(W, war.base.x - 40, war.base.x + 90, war.base.z - 520, war.base.z + 520);
       if (n >= 3) achieve('wave3');
       const clusters = war.foot ? 0 : Math.min(2 + Math.ceil(n / 2), 5);
       for (let c = 0; c < clusters; c++) {
@@ -7300,7 +7306,7 @@
         // The home base: out of missiles (or bombs), come down the runway low and slow, and the ground crew rearms you.
         const bx = flight.pos[0] - war.base.x, bz = flight.pos[2] - war.base.z, agl = flight.pos[1] - (war.base.ship ? war.base.deck : Math.max(groundAt(W, flight.pos[0], flight.pos[2]), 0));
         const empty = war.missiles === 0 || (war.L.bombs > 0 && war.bombs === 0), onStrip = Math.abs(bx) < (war.base.ship ? 26 : 40) && Math.abs(bz) < (war.base.ship ? 170 : 470) && agl < 45 && agl > -6 && flight.ias < plane.stall * 2.6;
-        if (empty && !onStrip) { const dist = Math.hypot(bx, bz), turn = wrapPi(Math.atan2(-bx, bz) - flight.heading); if (!war.warnT || war.warnT < 0.1) { war.warn = `OUT OF ${war.missiles === 0 ? 'MISSILES' : 'BOMBS'}: HOME BASE ${(dist / 1000).toFixed(1)} km ${Math.abs(turn) < 0.3 ? 'AHEAD' : turn > 0 ? '◀ LEFT' : 'RIGHT ▶'} · fly low and slow down its ${war.base.ship ? 'deck (your carrier)' : 'runway'}`; war.warnT = 0.3; } }
+        if (empty && !onStrip) { if (!war.warnT || war.warnT < 0.1) { war.warn = `OUT OF ${war.missiles === 0 ? 'MISSILES' : 'BOMBS'}: fly low and slow into the light pillar`; war.warnT = 0.3; } }
         if (empty && onStrip) {
           war.rearmT = (war.rearmT || 0) + dt; war.warn = `REARMING… ${Math.max(0, 1.5 - war.rearmT).toFixed(1)}s`; war.warnT = 0.3;
           if (war.rearmT >= 1.5) { war.missiles = war.L.missiles; war.bombs = war.L.bombs; war.gun = war.L.gun; war.flares = war.L.flares; war.hp = Math.min(war.maxHp, war.hp + war.maxHp * 0.3); war.rearmT = 0; toast('🛠 Rearmed: missiles, bombs, gun and flares full', 2600); }
@@ -7405,6 +7411,14 @@
       if (war.net) for (const o of war.net.others.values()) if (o.heli && planeMeshes[o.heli.id]) warDrawAircraft({ id: o.heli.id, spec: PLANES.find((q) => q.id === o.heli.id), pos: o.heli.pos, q: o.heli.q, state: 'fly' }, teamTint(o), 0);
       for (const c of war.craters) draw(warMeshes.crater, model([0, 0, 0, 1], c.p, c.r), [0.1, 0.085, 0.07]);
       if (war.base && war.vehicle === 'plane') draw(war.base.ship ? warMeshes.carrier : warMeshes.runway, model([0, 0, 0, 1], [war.base.x, war.base.ship ? -2 : Math.max(groundAt(W, war.base.x, war.base.z), 0), war.base.z]), [1, 1, 1]);
+      if (war.base && war.vehicle === 'plane' && !war.dead && warMeshes.pillar) {
+        // A tall light pillar over the home base, visible to every player from far away: fly low and slow to it to rearm.
+        const empty = war.missiles === 0 || (war.L.bombs > 0 && war.bombs === 0), pulse = 0.5 + 0.5 * Math.sin(performance.now() / 380);
+        gl.enable(gl.BLEND); gl.depthMask(false);
+        gl.uniform1f(U.alpha, empty ? 0.34 + 0.2 * pulse : 0.16);
+        draw(warMeshes.pillar, model([0, 0, 0, 1], [war.base.x, war.base.ship ? 0 : Math.max(groundAt(W, war.base.x, war.base.z), 0), war.base.z]), empty ? [1, 0.82, 0.25] : [0.35, 0.9, 1], 1.4);
+        gl.uniform1f(U.alpha, 1); gl.depthMask(true); gl.disable(gl.BLEND);
+      }
       for (const g of war.ground) {
         const tint = g.dead ? [0.2, 0.18, 0.17] : [1, 1, 1], q = qheading(g.heading), at = [g.pos[0], g.pos[1], g.pos[2]];
         if (INF.has(g.kind)) {
@@ -8230,6 +8244,7 @@
       war.wave = m.n; war.score = m.sc; war.kills = m.kl; war.waveClear = false; war.wavePause = 1e9;
       war.appliedWave = m.n; war.guided = 2; if (Number.isFinite(m.cx) && Number.isFinite(m.cz) && Math.abs(m.cx) < 20000 && Math.abs(m.cz) < 20000) { if (m.n > 1 && (m.cx !== war.cx || m.cz !== war.cz)) toast('ON TO THE NEXT FRONT', 3000); war.cx = m.cx; war.cz = m.cz; } if (Number.isFinite(m.R) && m.R > 300 && m.R < 20000) { if (war.grows && m.R > war.R + 1 && m.n > 1) toast(`⬆ The battlefield grows: ${Math.round(m.R)} m across the middle`, 3000); war.R = m.R; }
       war.waveGround = m.g.length; war.waveFighters = Number.isInteger(m.af) ? m.af : 0; war.briefingT = 4;
+      warPlaceBase();          // the other players need the home base too: it was only ever set up on the host
       war.ground = m.g.map((g) => ({ nid: g.i, kind: g.k, pos: [g.x, g.y, g.z], heading: g.h, turret: g.h, hp: g.hp, maxHp: g.mx, r: WAR_KINDS[g.k].r, pts: WAR_KINDS[g.k].pts, dead: !!g.d, speed: g.s, burning: 0, cool: 1e9, t: 0 }));
       toast(`WAVE ${m.n}`, 1800); beep(520, 0.15, 'square', 0.07);
     }

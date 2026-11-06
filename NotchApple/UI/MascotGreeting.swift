@@ -23,7 +23,24 @@ enum MascotGreeting {
         ("mochi", "Mochi", "Hops across the notch"),
         ("orbit", "Orbit", "Circles around the notch"),
         ("pip", "Pip", "Flies across the notch"),
+        ("f1lights", "F1: Lights out", "Five start lights, then your team’s car launches"),
+        ("f1lap", "F1: Flying lap", "Your team’s car streaks across the notch"),
+        ("f1pit", "F1: Pit stop", "Your team’s car pits for fresh tyres"),
     ]
+    /// The F1 teams a car can be painted as (the same list as mascots.js; "notch" is Notch Apple's own purple).
+    static let teams: [(id: String, name: String)] = [
+        ("notch", "Notch Apple purple"), ("ferrari", "Ferrari"), ("mercedes", "Mercedes"), ("redbull", "Red Bull"), ("mclaren", "McLaren"),
+        ("aston", "Aston Martin"), ("alpine", "Alpine"), ("williams", "Williams"), ("racingbulls", "Racing Bulls"), ("haas", "Haas"),
+        ("audi", "Audi"), ("cadillac", "Cadillac"),
+    ]
+    static let teamKey = "hello.team"
+    /// The team the car is painted as: the one picked in Settings, else your favourite team from the F1 tab, else Notch purple.
+    static var team: String {
+        let picked = UserDefaults.standard.string(forKey: teamKey) ?? ""
+        return picked.isEmpty ? (UserDefaults.standard.string(forKey: "f1.team") ?? "") : picked
+    }
+    /// What is sent to the page: the character, and for an F1 car the team after a colon ("f1lap:ferrari").
+    static var pageID: String { current.hasPrefix("f1") ? "\(current):\(team)" : current }
 
     /// The chosen character's id, or "hello" for the handwriting.
     static var current: String {

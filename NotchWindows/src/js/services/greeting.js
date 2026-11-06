@@ -15,11 +15,18 @@ export const CHARACTERS = [
   { id: 'mochi', name: 'Mochi', how: 'Hops across the notch' },
   { id: 'orbit', name: 'Orbit', how: 'Circles around the notch' },
   { id: 'pip', name: 'Pip', how: 'Flies across the notch' },
+  { id: 'f1lights', name: 'F1: Lights out', how: 'Five start lights, then your team\u2019s car launches' },
+  { id: 'f1lap', name: 'F1: Flying lap', how: 'Your team\u2019s car streaks across the notch' },
+  { id: 'f1pit', name: 'F1: Pit stop', how: 'Your team\u2019s car pits for fresh tyres' },
 ];
+/// The F1 teams a car can be painted as (the same ids as mascots.js; a test keeps them equal).
+export const TEAMS = [['notch', 'Notch Apple purple'], ['ferrari', 'Ferrari'], ['mercedes', 'Mercedes'], ['redbull', 'Red Bull'], ['mclaren', 'McLaren'], ['aston', 'Aston Martin'], ['alpine', 'Alpine'], ['williams', 'Williams'], ['racingbulls', 'Racing Bulls'], ['haas', 'Haas'], ['audi', 'Audi'], ['cadillac', 'Cadillac']];
 
 export const isOn = () => load('hello.on', true) !== false;
 export const name = () => String(load('hello.name', '') || '').trim().slice(0, 24);
 export const character = () => { const c = load('hello.character', 'hello'); return CHARACTERS.some((x) => x.id === c) ? c : 'hello'; };
+export const team = () => { const t = load('hello.team', ''); return TEAMS.some((x) => x[0] === t) ? t : ''; };
+export const setTeam = (v) => save('hello.team', v);
 export const setOn = (v) => save('hello.on', !!v);
 export const setName = (v) => save('hello.name', String(v || '').trim().slice(0, 24));
 export const setCharacter = (v) => save('hello.character', v);
@@ -31,7 +38,8 @@ export async function show(force = false) {
   if (!hasTauri || !isOn()) return;
   if (!force && Date.now() - last < 20000) return;
   last = Date.now();
-  await invoke('greeting_show', { id: character(), name: name(), notchHeight: 34 }).catch(() => {});
+  const c = character();
+  await invoke('greeting_show', { id: c.startsWith('f1') ? `${c}:${team()}` : c, name: name(), notchHeight: 34 }).catch(() => {});
 }
 
 export function start() {

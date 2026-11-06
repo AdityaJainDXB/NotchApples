@@ -54,7 +54,7 @@ enum HelloAnimation {
         panel?.orderOut(nil)
         let notchH = max(screen.safeAreaInsets.top, screen.frame.maxY - screen.visibleFrame.maxY, 24)
         if MascotGreeting.isMascot {   // a character instead of the handwriting (Settings → Notch Extras)
-            MascotGreeting.show(id: MascotGreeting.current, name: name, screen: screen, notchHeight: notchH)
+            MascotGreeting.show(id: MascotGreeting.pageID, name: name, screen: screen, notchHeight: notchH)
             return
         }
         MascotGreeting.close()

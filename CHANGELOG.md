@@ -4,6 +4,15 @@ Every Notch Apple release, newest first. The latest few are also on the [README]
 
 > **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is in the repository's history.
 
+### Mac 2.2.26 · Windows 2.2.26 BETA · 6 November 2026 · 🏎️ F1 greetings in your team’s colours
+
+- New: F1 greetings. In Settings → Notch Extras (Windows: Settings → Hello from the notch) pick "F1: Lights out" (five start lights, then the car launches), "F1: Flying lap" (the car streaks across the notch past speed lines and a chequered flag) or "F1: Pit stop" (the car brakes into its box, the wheel guns spark, the tyres change and it leaves).
+- New: paint the car as your favourite team: Ferrari red, Mercedes teal, McLaren papaya, Red Bull, Aston Martin, Alpine, Williams, Racing Bulls, Haas, Audi or Cadillac, or Notch Apple purple. On the Mac, "My favourite F1 team" uses the team you follow in the F1 tab.
+- New: every greeting character now has its own scene inside the open notch (a moonlit night for Wisp, a sky for Pip, an orchard for Pomo, a meadow for Mochi, space for Orbit, a soft glow for Notchy), and Notchy has a new look. Mac 2.2.25 was never published, so Mac gets the mascot hellos from 2.2.25 here too.
+- Fix: online racing is much smoother. The other drivers’ cars no longer jump, freeze or vanish: the game now sends and blends their position 20 times a second, a little behind real time, and carries a car on at its own speed if a packet is late.
+- Fix: in plane Battle mode the home base (and its "out of missiles" message) only worked for the host, so the other players never saw it and could not rearm. Every player now has the base.
+- New: the old "home base X km, left or right" arrow is gone. A tall light pillar now stands over the home base, visible to every player from far away, and glows amber and pulses when you are out of missiles or bombs. Fly low and slow into it to rearm.
+
 ### Mac 2.2.25 · Windows 2.2.25 BETA · 6 November 2026 · 👋 Mascots say hello from the notch
 
 - New: the hello from the notch can be a character instead of the handwriting. When your PC opens, the notch opens and Notchy drops out and waves, Pomo bounces across, Pip flies across, Mochi hops across, Orbit circles round and Wisp drifts across, with your name under them. All six are original drawings

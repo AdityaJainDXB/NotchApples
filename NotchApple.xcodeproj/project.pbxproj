@@ -7,9 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		14A7FC6AC9FE4D4AE3CDACE8 /* MascotGreeting.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6DC9C2F6E6F455AD29AE54F7 /* MascotGreeting.swift */; };
-		1D9F417218462C6873B13217 /* mascots.js in Resources */ = {isa = PBXBuildFile; fileRef = F3AFED57764B805B3A659A96 /* mascots.js */; };
-		8BCDBF7EFEEA5CE0C29DEB58 /* MascotGreeting.html in Resources */ = {isa = PBXBuildFile; fileRef = 7376B3DA30872E4F07E6DDE1 /* MascotGreeting.html */; };
 		00DDB2C1BC9ABCAA43C21ADD /* AudioView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB93272E84FBD56F3B4F7BA4 /* AudioView.swift */; };
 		00E0A82DFB418DB5808C68C7 /* VPNView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19CE2857208E57529A83DED6 /* VPNView.swift */; };
 		016F2ADAB254656E793EA5F8 /* ClipboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 21DB33F0188BFD9B3D8FA4C3 /* ClipboardView.swift */; };
@@ -46,6 +43,7 @@
 		12C051F6E83B0077BEE52E57 /* SettingsBackup.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB841124163B085F8C4FDD78 /* SettingsBackup.swift */; };
 		13A990C6CA3F55B655C3D818 /* SecretLogic.swift in Sources */ = {isa = PBXBuildFile; fileRef = A86F7ABE9C93935F6764DF17 /* SecretLogic.swift */; };
 		1420BEF1F9AE0A256FD141B3 /* FoldSurface.swift in Sources */ = {isa = PBXBuildFile; fileRef = D077F8329BD06B571E7C0A86 /* FoldSurface.swift */; };
+		14A7FC6AC9FE4D4AE3CDACE8 /* MascotGreeting.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6DC9C2F6E6F455AD29AE54F7 /* MascotGreeting.swift */; };
 		14BB6F024439C7EDE0DCBD2C /* nowplaying.js in Resources */ = {isa = PBXBuildFile; fileRef = FC6F714640D09B5653DF1D9F /* nowplaying.js */; };
 		14DFFBAD9343EABD28237F7C /* OpenRouterFallback.swift in Sources */ = {isa = PBXBuildFile; fileRef = 66DBB35434CEBAA72E675AD4 /* OpenRouterFallback.swift */; };
 		15325A08A26B76C7C296A9C1 /* ClaudeLimitsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1B17D4FF322D035C7AC1652A /* ClaudeLimitsTests.swift */; };
@@ -61,6 +59,7 @@
 		1CBAB31C782A4307CEAD9136 /* ScreenRecorder.swift in Sources */ = {isa = PBXBuildFile; fileRef = D47EB2F7C24DD6B0DA17C7B0 /* ScreenRecorder.swift */; };
 		1CDD70B39C1813273FFFD232 /* chess-logic.js in Resources */ = {isa = PBXBuildFile; fileRef = 9E671EB985ED2E89E699CA00 /* chess-logic.js */; };
 		1CEE83D2920A754B4BB7ABF0 /* UndoToast.swift in Sources */ = {isa = PBXBuildFile; fileRef = 148943D5BC3CFA31B2C52E23 /* UndoToast.swift */; };
+		1D9F417218462C6873B13217 /* mascots.js in Resources */ = {isa = PBXBuildFile; fileRef = F3AFED57764B805B3A659A96 /* mascots.js */; };
 		1DA0B71A05D5AA548E158EE8 /* MarketsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2600981443BE101B7F8049FD /* MarketsView.swift */; };
 		1DB53AAAACAEAA8E54FAF460 /* BambuStatusLogic.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9B1DDFF63CC24F5C23FA1225 /* BambuStatusLogic.swift */; };
 		1DE8C804925122B4612596F1 /* PairDropTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB059E09C64EB491FAF5074E /* PairDropTests.swift */; };
@@ -269,6 +268,7 @@
 		880D84E2318736493AA2E9B6 /* PairDropLogic.swift in Sources */ = {isa = PBXBuildFile; fileRef = BEECBD83B2FC19C70E5139BE /* PairDropLogic.swift */; };
 		89D2D78C9DCFB72087A5E56A /* MeetingSummaryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 772CBD2EBA6BACD49192A470 /* MeetingSummaryTests.swift */; };
 		8BCB6AEF7F4C85ABA9B85148 /* SportsModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9AE3E9758D2882B557A695A /* SportsModel.swift */; };
+		8BCDBF7EFEEA5CE0C29DEB58 /* MascotGreeting.html in Resources */ = {isa = PBXBuildFile; fileRef = 7376B3DA30872E4F07E6DDE1 /* MascotGreeting.html */; };
 		8C27BC78398B102731018B42 /* ClaudeUsagePaceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1AA637D9531681F5007585BF /* ClaudeUsagePaceTests.swift */; };
 		8C329389C8C1FAE5D6CD17CA /* leaderboard.js in Resources */ = {isa = PBXBuildFile; fileRef = A66CB935BCADED569CB8D3B2 /* leaderboard.js */; };
 		8C3F0D0E48E872177E7E9185 /* LidFoldSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32AC64225D56273C94C4F18F /* LidFoldSettings.swift */; };
@@ -504,9 +504,6 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		6DC9C2F6E6F455AD29AE54F7 /* MascotGreeting.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MascotGreeting.swift; sourceTree = "<group>"; };
-		F3AFED57764B805B3A659A96 /* mascots.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = mascots.js; sourceTree = "<group>"; };
-		7376B3DA30872E4F07E6DDE1 /* MascotGreeting.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = MascotGreeting.html; sourceTree = "<group>"; };
 		00AA70E8C578D3F81476B1FB /* WallpaperLibrary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WallpaperLibrary.swift; sourceTree = "<group>"; };
 		01CAAECC14FFA955E98BC7DB /* SmartHomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmartHomeView.swift; sourceTree = "<group>"; };
 		023AF917ACD38E560C4DD67B /* NotchWindow+LevelFix.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "NotchWindow+LevelFix.swift"; sourceTree = "<group>"; };
@@ -677,6 +674,7 @@
 		6D1D3CB4DD45527CA986357A /* FileSearchView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileSearchView.swift; sourceTree = "<group>"; };
 		6D5AC53B65AF61688CD0A628 /* AIStreaming.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIStreaming.swift; sourceTree = "<group>"; };
 		6DC662D269E6349FC6792A11 /* ToolsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToolsView.swift; sourceTree = "<group>"; };
+		6DC9C2F6E6F455AD29AE54F7 /* MascotGreeting.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MascotGreeting.swift; sourceTree = "<group>"; };
 		6E232DC7A1E5C4A3A89FF53F /* TodoLogicTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodoLogicTests.swift; sourceTree = "<group>"; };
 		6E3AACE5DE410E31472973B9 /* PairDropService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PairDropService.swift; sourceTree = "<group>"; };
 		6E7257E185D98B4E05674B7F /* QuickAnswerLogic.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuickAnswerLogic.swift; sourceTree = "<group>"; };
@@ -688,6 +686,7 @@
 		70487D33E613C8A9A0DFA36C /* ChatHistory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatHistory.swift; sourceTree = "<group>"; };
 		709B6D7DF73EDC5126DF68D8 /* QuickAddView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuickAddView.swift; sourceTree = "<group>"; };
 		71D699ADE6DA2C5CFA3760DD /* EntitlementLogicTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EntitlementLogicTests.swift; sourceTree = "<group>"; };
+		7376B3DA30872E4F07E6DDE1 /* MascotGreeting.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = MascotGreeting.html; sourceTree = "<group>"; };
 		737F56550092636CD2B51F2F /* DoItGeometryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DoItGeometryTests.swift; sourceTree = "<group>"; };
 		74F9DD1ED3B9968B73847DC4 /* TwoPlayerGames.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TwoPlayerGames.swift; sourceTree = "<group>"; };
 		755B22C2370E85554D2C56DF /* TourLogic.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TourLogic.swift; sourceTree = "<group>"; };
@@ -903,6 +902,7 @@
 		F07E1B78F23E06B22957659F /* NotchPlacementEditor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotchPlacementEditor.swift; sourceTree = "<group>"; };
 		F173F2DD0E8CE0B158D9A906 /* BambuManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BambuManager.swift; sourceTree = "<group>"; };
 		F323D82F0AF46D956EA470CA /* Converter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Converter.swift; sourceTree = "<group>"; };
+		F3AFED57764B805B3A659A96 /* mascots.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = mascots.js; sourceTree = "<group>"; };
 		F3E027F4B2B51B24BE31C8AA /* GeminiFallback.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GeminiFallback.swift; sourceTree = "<group>"; };
 		F49D3A20C7CFE9C60DB8CBC3 /* LiveActivity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveActivity.swift; sourceTree = "<group>"; };
 		F5ADCED15F89DDEB6FD1BC44 /* PurgeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PurgeView.swift; sourceTree = "<group>"; };
@@ -968,7 +968,6 @@
 				3B249F7C71D18A1BD0D8E788 /* ctf-logic.js */,
 				22BC3DD953937929570782CA /* ctf.js */,
 				A66CB935BCADED569CB8D3B2 /* leaderboard.js */,
-				F3AFED57764B805B3A659A96 /* mascots.js */,
 				DC8C118088B36E22640A6C5F /* plane-sim.js */,
 				2D061AD1D52BA8268B11B374 /* racing.js */,
 				7F930FB2B441D55D595B0094 /* rocket-logic.js */,
@@ -1126,11 +1125,11 @@
 				880D308A931930DF080834D9 /* ExtrasSettings.swift */,
 				E70B519149BF56D597E57B03 /* FeedbackView.swift */,
 				39D51C103147744A114FA26F /* HelloAnimation.swift */,
-				6DC9C2F6E6F455AD29AE54F7 /* MascotGreeting.swift */,
 				6030017749EA1C8346BCA6DF /* HoldToConfirm.swift */,
 				C133B17318DC2CE2EC7B3A4E /* KeySecurityView.swift */,
 				0EE2E453CA2D381EA8DC3001 /* LayoutPicker.swift */,
 				9E934112FC7E1F768777E6F5 /* MagneticDropZone.swift */,
+				6DC9C2F6E6F455AD29AE54F7 /* MascotGreeting.swift */,
 				321AEDF869EDFDD140BAC7F0 /* ModuleContentView.swift */,
 				4894C776E7909EF42A1F97E9 /* ModuleOrganizer.swift */,
 				B790EEB4462E110FE4001DEE /* Motion.swift */,
@@ -1419,6 +1418,7 @@
 		67D82EF908B305E8D965A376 /* js */ = {
 			isa = PBXGroup;
 			children = (
+				F3AFED57764B805B3A659A96 /* mascots.js */,
 				2468DBE40C82375AF42F0C6E /* games */,
 			);
 			path = js;
@@ -1810,10 +1810,10 @@
 				076DA6D06B8B6E4AF8639E32 /* DailyWordGame.html */,
 				6E8B16EE4068BC4835F8B4C0 /* GoogleService-Info.plist */,
 				97CC70FFD067091FDE1231BB /* Info.plist */,
+				7376B3DA30872E4F07E6DDE1 /* MascotGreeting.html */,
 				3718F42274C479A025DF477B /* NotchApple.entitlements */,
 				D151A71D3F7B4B4F846173CD /* NotchApple.sdef */,
 				2E9887FE2DA1B017814CA1B5 /* PlaneGame.html */,
-				7376B3DA30872E4F07E6DDE1 /* MascotGreeting.html */,
 				69B4A0D4B7C6F5540FABA3AE /* RacingGame.html */,
 				07A88400BDE9B46B5841ECB9 /* RocketGame.html */,
 				BBA74EF46CD28A513D70A225 /* ScribbleGame.html */,
@@ -2065,6 +2065,7 @@
 				CFAB476520EEBC0E831DF7DE /* GoogleService-Info.plist in Resources */,
 				6CB3126DF2584324131FE504 /* LICENSE-Tunnelblick.txt in Resources */,
 				3DF5E21ACEFE3B997230D098 /* LidAngleSensor-Apache-2.0.txt in Resources */,
+				8BCDBF7EFEEA5CE0C29DEB58 /* MascotGreeting.html in Resources */,
 				F2926A7C184BC3088FA41CB1 /* NOTICE.md in Resources */,
 				8360703F9BC1E35F13FEFE5C /* NotchApple.sdef in Resources */,
 				C120C97882F28CA5E083E84F /* PlaneGame.html in Resources */,
@@ -2084,7 +2085,6 @@
 				2F27B29ABFD1084E8B37A8A4 /* klick in Resources */,
 				8C329389C8C1FAE5D6CD17CA /* leaderboard.js in Resources */,
 				1D9F417218462C6873B13217 /* mascots.js in Resources */,
-				8BCDBF7EFEEA5CE0C29DEB58 /* MascotGreeting.html in Resources */,
 				14BB6F024439C7EDE0DCBD2C /* nowplaying.js in Resources */,
 				2006B2451159E4A12E70E69B /* plane-sim.js in Resources */,
 				3FBC19E8D908EA1C0914AA07 /* racing.js in Resources */,
@@ -2252,6 +2252,7 @@
 				D442F62588EAFE9B1C318E33 /* MagneticDrop.swift in Sources */,
 				2257C6B3EE6E3A5CA537C51E /* MagneticDropZone.swift in Sources */,
 				1DA0B71A05D5AA548E158EE8 /* MarketsView.swift in Sources */,
+				14A7FC6AC9FE4D4AE3CDACE8 /* MascotGreeting.swift in Sources */,
 				971BE20BFA381D487A601FC5 /* MathEngine.swift in Sources */,
 				A89C797DB626E953AFF87B9E /* MathText.swift in Sources */,
 				559DB140309458EAB8AD6BFF /* MediaKeyInterceptor.swift in Sources */,
@@ -2301,7 +2302,6 @@
 				B3D4300884C5014B30FC14AF /* PeekView.swift in Sources */,
 				6EB4C5BE5A0101A1A21F64D6 /* PermissionsView.swift in Sources */,
 				FE43DDD0B6B1D40DDF4D57DB /* PlaneGameView.swift in Sources */,
-				14A7FC6AC9FE4D4AE3CDACE8 /* MascotGreeting.swift in Sources */,
 				A71B44C05445BABFE5FF485B /* PlayCards.swift in Sources */,
 				124AF8450CFADD15C8A6716E /* PlayController.swift in Sources */,
 				3047EFBDB9AA12F3A0363F97 /* PlayingCardView.swift in Sources */,
@@ -2674,7 +2674,7 @@
 				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Manual;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 211;
+				CURRENT_PROJECT_VERSION = 212;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = "";
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -2690,7 +2690,7 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 2.2.25;
+				MARKETING_VERSION = 2.2.26;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -2808,7 +2808,7 @@
 				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Manual;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 211;
+				CURRENT_PROJECT_VERSION = 212;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = "";
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -2830,7 +2830,7 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 2.2.25;
+				MARKETING_VERSION = 2.2.26;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;

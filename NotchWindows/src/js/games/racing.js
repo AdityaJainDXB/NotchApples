@@ -1797,7 +1797,9 @@
         if (entries.some((e) => e.id === myId)) setupRace(entries, lapsSel, Number(m.hd));
       } else if (m.t === 's' && (screen === 'race' || screen === 'countdown' || screen === 'done')) {
         const r = racers.find((x) => x.id === m.id && x.remote); if (!r) return;
+        if (![m.x, m.y, m.h, m.vx, m.vy].every(Number.isFinite)) return;
         r.net = { x: m.x, y: m.y, h: m.h, vx: m.vx, vy: m.vy, at: performance.now() };
+        (r.snaps || (r.snaps = [])).push(r.net); if (r.snaps.length > 16) r.snaps.shift();     // the last second or so of where the friend was
         r.lap = m.lap; r.prog = m.pr; r.car.drifting = !!m.dr; r.car.dmg = clamp(Number(m.dm) || 0, 0, 1); r.lastMsg = performance.now();
       } else if (m.t === 'fin') {
         const r = racers.find((x) => x.id === m.id && x.remote); if (r && !r.finished) { r.finished = true; r.finishT = Number(m.ft) || clock; r.pen = clamp(Number(m.pn) || 0, 0, 120); }
@@ -2697,11 +2699,22 @@
       for (const r of racers) {
         const c = r.car;
         if (r.remote) {
-          // A friend's car glides to where it last said it was, carried on by its speed.
-          if (r.net) {
-            const age = Math.min(0.4, (performance.now() - r.net.at) / 1000), k = 1 - Math.exp(-dt * 9);
-            const gx = r.net.x + r.net.vx * age, gy = r.net.y + r.net.vy * age;
-            c.x += (gx - c.x) * k; c.y += (gy - c.y) * k; c.h += wrapPi(r.net.h - c.h) * k; c.vx = r.net.vx; c.vy = r.net.vy;
+          // A friend's car is drawn about 100 ms in the past, blended between the two updates around that moment, so it moves
+          // smoothly even when packets arrive unevenly; if the next update is late it carries on at its own speed (for at most
+          // 0.35 s), and if it is far off it jumps straight there.
+          const S = r.snaps;
+          if (S && S.length) {
+            const t = performance.now() - 100;
+            let a = null, b2 = null;
+            for (let i = S.length - 1; i >= 0; i--) if (S[i].at <= t) { a = S[i]; b2 = S[i + 1] || null; break; }
+            let gx, gy, gh, gvx, gvy;
+            if (!a) { a = S[0]; gx = a.x; gy = a.y; gh = a.h; gvx = a.vx; gvy = a.vy; }
+            else if (b2) { const u = clamp((t - a.at) / Math.max(1, b2.at - a.at), 0, 1); gx = a.x + (b2.x - a.x) * u; gy = a.y + (b2.y - a.y) * u; gh = a.h + wrapPi(b2.h - a.h) * u; gvx = a.vx + (b2.vx - a.vx) * u; gvy = a.vy + (b2.vy - a.vy) * u; }
+            else { const age = Math.min(0.35, (t - a.at) / 1000); gx = a.x + a.vx * age; gy = a.y + a.vy * age; gh = a.h; gvx = a.vx; gvy = a.vy; }
+            const err = Math.hypot(gx - c.x, gy - c.y);
+            if (!r.shown || err > Math.max(120, Math.hypot(gvx, gvy) * 0.6)) { c.x = gx; c.y = gy; c.h = gh; r.shown = true; }
+            else { const k = 1 - Math.exp(-dt * 20); c.x += (gx - c.x) * k; c.y += (gy - c.y) * k; c.h += wrapPi(gh - c.h) * k; }
+            c.vx = gvx; c.vy = gvy;
             c.z = trackHeight(T, locate(T, c.x, c.y, r.idx));
           }
           continue;
@@ -2833,7 +2846,7 @@
       }
       radioTick();
       if (me && me.car.shifted !== lastShift) { lastShift = me.car.shifted; paddle = 0.18; }
-      if (net && screen === 'race' && me) { net.sendAcc = (net.sendAcc || 0) + dt; if (net.sendAcc > 0.1) { net.sendAcc = 0; net.link.send(NET.packState(myId, me)); } }
+      if (net && screen === 'race' && me) { net.sendAcc = (net.sendAcc || 0) + dt; if (net.sendAcc > 0.05) { net.sendAcc = 0; net.link.send(NET.packState(myId, me)); } }
       const racing = racers.filter((r) => !r.official && !r.dnf);
       if (screen === 'race' && racing.length && racing.every((r) => r.finished) || (screen === 'race' && me && me.finished && racing.filter((r) => !r.remote && !r.ai).every((r) => r.finished) && clock - me.finishT > 6 && !net)) showResults();
       if (screen === 'race' && net && me && me.finished && clock - me.finishT > 14) showResults();

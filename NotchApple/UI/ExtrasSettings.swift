@@ -20,6 +20,7 @@ struct ExtrasSettings: View {
     @AppStorage(CapturePrivacy.key) private var hideFromCapture = false
     @AppStorage(HelloAnimation.nameKey) private var helloName = ""
     @AppStorage(MascotGreeting.characterKey) private var helloCharacter = MascotGreeting.handwriting
+    @AppStorage(MascotGreeting.teamKey) private var helloTeam = ""
 
     /// A switch for one kind of thing that can appear beside the closed notch.
     private func kindBinding(_ kind: ActivityKind) -> Binding<Bool> {
@@ -44,6 +45,10 @@ struct ExtrasSettings: View {
                     Text("Handwritten hello").tag(MascotGreeting.handwriting)
                     ForEach(MascotGreeting.all, id: \.id) { m in Text("\(m.name): \(m.how)").tag(m.id) }
                 }.disabled(!helloOn)
+                Picker("F1 car livery", selection: $helloTeam) {
+                    Text("My favourite F1 team").tag("")
+                    ForEach(MascotGreeting.teams, id: \.id) { t in Text(t.name).tag(t.id) }
+                }.disabled(!helloOn || !helloCharacter.hasPrefix("f1"))
                 Button("Play it now") { HelloAnimation.show(force: true) }.disabled(!helloOn)
             } header: { Text("Hello from the notch") } footer: { Text("When Notch Apple starts and when your Mac wakes up, the notch opens and says hello with your name: written by hand, Mac style, or by a character that moves across the notch their own way.") }
             Section {

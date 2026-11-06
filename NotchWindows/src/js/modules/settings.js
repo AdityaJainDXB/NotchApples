@@ -83,17 +83,19 @@ const prefToggle = (key, gate) => toggle(pref(key), (v) => { if (gate && !canUse
 function helloCard() {
   const G = () => import('../services/greeting.js');
   const nameBox = el('input', { class: 'field', placeholder: 'Your name', maxlength: 24, style: 'width:160px' });
-  const pick = el('div');
+  const pick = el('div'), livery = el('div');
   G().then((g) => {
     nameBox.value = g.name();
     nameBox.addEventListener('change', () => g.setName(nameBox.value));
     pick.append(select(g.CHARACTERS.map((c) => ({ value: c.id, label: `${c.name}: ${c.how}` })), g.character(), (v) => g.setCharacter(v)));
+    livery.append(select([{ value: '', label: 'Notch Apple purple' }, ...g.TEAMS.slice(1).map((t) => ({ value: t[0], label: t[1] }))], g.team(), (v) => g.setTeam(v)));
   });
   return card('Hello from the notch',
     setting('Say hello when I open my PC', 'When Notch Apple starts and when this PC wakes up, the notch opens and says hello with your name. Nothing is sent anywhere.',
       toggle(load('hello.on', true) !== false, (v) => G().then((g) => g.setOn(v)))),
     setting('Your name', 'Shown under the hello. Stays on this PC.', nameBox),
     setting('Greeting', 'Written by hand like the Mac, or a character that moves across the notch.', pick),
+    setting('F1 car livery', 'For the F1 greetings: paint the car in your favourite team\u2019s colours (Ferrari red, Mercedes teal and so on).', livery),
     el('div', { class: 'hstack', style: 'padding-top:6px' }, button('Play it now', () => G().then((g) => { g.setName(nameBox.value); g.show(true); }))));
 }
 
