@@ -360,7 +360,19 @@ async function coinOrder(env, c, o) {
 
 // MARK: Mail
 
+const MAIL_PER_DAY = 10;       // most mails one address can get from us in 24 hours, whatever asked for them
+
+/** Stops anyone using us to flood an inbox: after MAIL_PER_DAY mails in 24 hours an address gets no more until the day is over. */
+async function mailAllowed(env, to) {
+  if (!env.KV || to === SUPPORT_TO(env)) return true;
+  const id = `mailcap:${await emailHash(env, to)}`, n = Number(await env.KV.get(id)) || 0;
+  if (n >= MAIL_PER_DAY) { console.error('Mail capped for an address (' + n + ' in 24h)'); return false; }
+  await env.KV.put(id, String(n + 1), { expirationTtl: 86400 });
+  return true;
+}
+
 async function sendMail(env, to, subject, text, html) {
+  if (!(await mailAllowed(env, to))) return false;
   if (env.MAIL_LOG) { env.MAIL_LOG.push({ to, subject, text, html }); return true; }
   if (!env.MAIL_API_KEY || !env.MAIL_FROM) return false;
   let r;

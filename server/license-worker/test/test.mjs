@@ -1061,4 +1061,10 @@ await test('Card (Ziina): UAE only, AED prices with the 3% + AED 1 fee, paid onl
  assert.equal(cfg.card.intl.fee.pct, 5);
   delete env.ZIINA_API_KEY; globalThis.fetch = prev;
 });
+await test('Mail cap: one address cannot be flooded with mail from us', async () => {
+  const before = mails.length;
+  for (let i = 0; i < 14; i++) await call('/support', { kind: 'question', title: 'Flood test ' + i, text: 'a question long enough to be accepted', email: 'victim@example.com' }, { 'cf-connecting-ip': '9.9.9.' + i });
+  const got = mails.slice(before).filter((m) => m.to === 'victim@example.com').length;
+  assert.ok(got <= 10, 'at most 10 mails to one address in a day, got ' + got);
+});
 console.log(`\n${passed} passed`);
