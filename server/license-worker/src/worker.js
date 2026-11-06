@@ -361,18 +361,22 @@ async function coinOrder(env, c, o) {
 // MARK: Mail
 
 const MAIL_PER_DAY = 10;       // most mails one address can get from us in 24 hours, whatever asked for them
+const COLD_PER_DAY = (env) => Number(env.COLD_PER_DAY || 2);        // most mails nobody at that address asked for (a support confirmation, a reminder) in 24 hours
 
-/** Stops anyone using us to flood an inbox: after MAIL_PER_DAY mails in 24 hours an address gets no more until the day is over. */
-async function mailAllowed(env, to) {
+/** Stops anyone using us to flood an inbox. `cold` marks a mail the address's owner did not request (it is only there because
+    someone typed the address into a form): those get a much lower daily cap on top of the overall one. */
+async function mailAllowed(env, to, cold) {
   if (!env.KV || to === SUPPORT_TO(env)) return true;
-  const id = `mailcap:${await emailHash(env, to)}`, n = Number(await env.KV.get(id)) || 0;
-  if (n >= MAIL_PER_DAY) { console.error('Mail capped for an address (' + n + ' in 24h)'); return false; }
-  await env.KV.put(id, String(n + 1), { expirationTtl: 86400 });
+  const eh = await emailHash(env, to);
+  const slots = [[`mailcap:${eh}`, MAIL_PER_DAY], ...(cold ? [[`mailcold:${eh}`, COLD_PER_DAY(env)]] : [])];
+  const counts = await Promise.all(slots.map(async ([id]) => Number(await env.KV.get(id)) || 0));
+  if (slots.some(([, cap], i) => counts[i] >= cap)) { console.error('Mail capped for an address' + (cold ? ' (cold)' : '')); return false; }
+  await Promise.all(slots.map(([id], i) => env.KV.put(id, String(counts[i] + 1), { expirationTtl: 86400 })));
   return true;
 }
 
-async function sendMail(env, to, subject, text, html) {
-  if (!(await mailAllowed(env, to))) return false;
+async function sendMail(env, to, subject, text, html, cold = false) {
+  if (!(await mailAllowed(env, to, cold))) return false;
   if (env.MAIL_LOG) { env.MAIL_LOG.push({ to, subject, text, html }); return true; }
   if (!env.MAIL_API_KEY || !env.MAIL_FROM) return false;
   let r;
@@ -475,7 +479,7 @@ async function sendReminders(env, now = Date.now()) {
         lead.coupon = coupon;
       }
       const m = reminderMail(env, lead, step, eh, coupon, await unsubToken(env, eh));
-      if (!(await sendMail(env, lead.email, m.subject, m.text))) continue;              // try again at the next run
+      if (!(await sendMail(env, lead.email, m.subject, m.text, undefined, true))) continue;              // try again at the next run
       sent++;
       if (step + 1 >= REMIND_DAYS.length) await env.KV.delete(name);
       else await putJSON(env, name, { ...lead, sent: step + 1 }, LEAD_TTL);
@@ -552,7 +556,7 @@ async function supportPost(env, request, body) {
   if (email) await putJSON(env, `ticket:${id}`, { email, kind: body.kind, title, url, at: Date.now() }, 400 * 86400);
   // The support inbox always hears about it (the whole report, for the private kinds and whenever GitHub was not reached).
   await sendMail(env, SUPPORT_TO(env), `[${k.name}] ${title}`, `${url ? `Posted: ${url}\n\n` : 'Not posted publicly.\n\n'}${text}\n\n${meta}\nFrom: ${email || '(no email left)'}\nTicket: ${id}`);
-  if (email) await sendMail(env, email, 'We got your message to Notch Apple', `Thanks for writing to Notch Apple.\n\nWe got your ${k.name.toLowerCase()} and will look at it soon.${url ? `\n\nYou can follow it here (no account needed to read): ${url}` : "\n\nWe'll answer you by email."}\n\nYour reference: ${id}\n\nNotch Apple support`);
+  if (email) await sendMail(env, email, 'We got your message to Notch Apple', `Thanks for writing to Notch Apple.\n\nWe got your ${k.name.toLowerCase()} and will look at it soon.${url ? `\n\nYou can follow it here (no account needed to read): ${url}` : "\n\nWe'll answer you by email."}\n\nYour reference: ${id}\n\nNotch Apple support`, undefined, true);
   return { ok: true, url, ref: id, private: !url };
 }
 
