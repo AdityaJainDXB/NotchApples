@@ -19,7 +19,9 @@ export function qr(text, size = 156) {
 }
 
 const codeInput = () => el('input', { class: 'field mono', placeholder: '6-digit code', inputmode: 'numeric', maxlength: '7', autocomplete: 'one-time-code', style: 'max-width:200px;text-align:center;font-size:18px;letter-spacing:4px;font-weight:700' });
-const emailInput = (v = '') => el('input', { class: 'field', type: 'email', placeholder: 'you@gmail.com', autocomplete: 'email', value: v, style: 'max-width:340px;text-align:center' });
+const emailInput = (v = '') => el('input', { class: 'field', type: 'email', 'aria-label': 'Your email address', autocomplete: 'email', value: v, style: 'max-width:340px;text-align:center' });
+/// An email box with a plain label above it (no example address, which people mistook for text they had to edit).
+const labelled = (input) => el('label', { class: 'col', style: 'align-items:center;gap:3px;width:100%' }, el('span', { class: 'tiny dim' }, 'Your email address'), input);
 const note = () => el('div', { class: 'err small', style: 'min-height:16px;text-align:center' });
 
 /// Shown when a key needs this PC confirmed. `onDone(result)` gets { ok, tier } from the finished activation.
@@ -45,7 +47,7 @@ export function verifyFlow(key, info, onDone) {
       el('div', { class: 'small dim', style: 'text-align:center;max-width:380px' }, info.bound
         ? `This key belongs to an email address${info.hint ? ` (${info.hint})` : ''}. Enter it and we’ll send a code to confirm this PC.`
         : 'Enter your email address. We’ll send a code, and the key will belong to that address from now on.'),
-      input, err, go,
+      labelled(input), err, go,
       el('button', { class: 'btn quiet small', onclick: () => step2(true) }, 'I use an authenticator app'));
     input.focus();
   };
@@ -68,7 +70,7 @@ export function verifyFlow(key, info, onDone) {
       el('div', { class: 'small dim', style: 'text-align:center;max-width:380px' }, authenticator
         ? 'Open your authenticator app and enter the 6-digit code for Notch Apple.'
         : `If ${email} is the address this key belongs to, we sent it a 6-digit code (valid 10 minutes, check spam too). If it isn’t, no code is sent: only the key’s owner can sign in on a new device.`),
-      emailBox, input, err, go,
+      emailBox ? labelled(emailBox) : null, input, err, go,
       el('button', { class: 'btn quiet small', onclick: () => { if (!authenticator) remember(null); step1(); } }, authenticator ? '← Use an email code instead' : '← Use a different email'));
     input.focus();
   };
@@ -103,7 +105,7 @@ function emailSetup(repaint) {
       go.disabled = true; const addr = input.value.trim(); const r = await addEmailStart(addr); go.disabled = false;
       if (r.ok) finish(addr); else err.textContent = r.error;
     });
-    wrap.replaceChildren(intro, input, err, go);
+    wrap.replaceChildren(intro, labelled(input), err, go);
   };
   const finish = (addr) => {
     const code = codeInput(), err = note(), go = el('button', { class: 'btn small' }, 'Confirm');

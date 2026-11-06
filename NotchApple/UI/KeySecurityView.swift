@@ -52,17 +52,20 @@ private struct EmailField: View {
     var focus: FocusState<Bool>.Binding
     var onSubmit: () -> Void
     var body: some View {
-        TextField("you@gmail.com", text: $text)
-            .textFieldStyle(.plain)
-            .font(.system(size: 14, weight: .medium))
-            .foregroundStyle(.white)
-            .autocorrectionDisabled()
-            .focused(focus)
-            .padding(.horizontal, 12).frame(minWidth: 240).frame(height: 36)
-            .background(Theme.surface, in: RoundedRectangle(cornerRadius: 10))
-            .overlay(RoundedRectangle(cornerRadius: 10).strokeBorder(Theme.separator))
-            .onSubmit(onSubmit)
-            .accessibilityLabel("Email address")
+        VStack(alignment: .leading, spacing: 4) {
+            Text("Your email address").font(.system(size: 11, weight: .semibold)).foregroundStyle(Theme.textSecondary)
+            TextField("", text: $text)
+                .textFieldStyle(.plain)
+                .font(.system(size: 14, weight: .medium))
+                .foregroundStyle(.white)
+                .autocorrectionDisabled()
+                .focused(focus)
+                .padding(.horizontal, 12).frame(minWidth: 240).frame(height: 36)
+                .background(Theme.surface, in: RoundedRectangle(cornerRadius: 10))
+                .overlay(RoundedRectangle(cornerRadius: 10).strokeBorder(Theme.separator))
+                .onSubmit(onSubmit)
+                .accessibilityLabel("Your email address")
+        }
     }
 }
 
@@ -227,7 +230,7 @@ struct KeySecuritySection: View {
                 .font(.callout).foregroundStyle(.secondary)
             if !emailSent {
                 HStack {
-                    TextField("you@gmail.com", text: $email).textFieldStyle(.roundedBorder).autocorrectionDisabled()
+                    TextField("Your email address", text: $email).textFieldStyle(.roundedBorder).autocorrectionDisabled()
                     Button("Email me a code") {
                         run { if let e = await entitlements.addEmailStart(email) { error = e } else { emailSent = true; code = "" } }
                     }.disabled(busy || !validEmail(email))

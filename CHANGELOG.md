@@ -4,6 +4,10 @@ Every Notch Apple release, newest first. The latest few are also on the [README]
 
 > **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is in the repository's history.
 
+### Mac 2.2.21 · Windows 2.2.21 BETA · 6 November 2026 · ✉️ A clearer email box
+
+- Fix: the email box no longer shows an example address (you@gmail.com) that people took for text they had to edit. It is empty, with a plain label "Your email address" above it, in the email setup window, Settings and on Windows.
+
 ### Mac 2.2.20 · 6 November 2026 · ⌨️ Confirming a key opens its own window
 
 - Fix: when you paste a key in Settings → License (or in the notch) and it asks you to confirm your email, the email and code boxes now work. The confirmation opens in its own window that stays open while you check your email, instead of being squeezed into the Settings form where the boxes could not be typed in.

@@ -20,6 +20,9 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.2.21", date: "6 November 2026", headline: "A clearer email box", items: [
+            "Fix: the email box no longer shows an example address (you@gmail.com) that people took for text they had to edit. It is empty, with a plain label \"Your email address\" above it, in the email setup window, Settings and on Windows.",
+        ]),
         ReleaseNote(version: "2.2.20", date: "6 November 2026", headline: "Confirming a key opens its own window", items: [
             "Fix: when you paste a key in Settings → License (or in the notch) and it asks you to confirm your email, the email and code boxes now work. The confirmation opens in its own window that stays open while you check your email, instead of being squeezed into the Settings form where the boxes could not be typed in.",
             "This is a required update.",
