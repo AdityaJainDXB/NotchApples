@@ -20,6 +20,12 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.2.35", date: "6 November 2026", headline: "A real F1 cockpit and steering wheel", items: [
+            "New: a realistic first-person F1 cockpit in Racing (View: Cockpit, or press V). You look out over a thin dark carbon halo and its centre pillar, with the front tyres, the livery-coloured sides of the car, the wing mirrors and a carbon cowl in front of you.",
+            "New: a proper F1 steering wheel, drawn after the real ones: a carbon-fibre body with grips either side, a colour screen (speed, gear, position, lap, battery, DRS) under a row of shift lights, push buttons, five rotary dials with colour-coded rings (the big middle one follows your gear), two paddles, and gloved hands that turn with it.",
+            "The wheel really turns up to ±180° (360° lock to lock) at low speed and less the faster you go, as a driver turns it. It centres itself when you let go, firmer at speed, and shakes a little over kerbs, on the grass and when the tyres slide. The front tyres turn with it (the inner one a little more), and the paddle you press lights up.",
+            "New controls: [ and ] (as well as Q and E) are the down and up paddles in the manual gearbox, with a short lockout so a double tap is one shift. H turns the pit limiter on (80 km/h), K arms launch mode (be on the throttle at lights out for a strong getaway), and J shows a telemetry bar with steering angle, gear, speed and DRS.",
+        ]),
         ReleaseNote(version: "2.2.34", date: "6 November 2026", headline: "Night Shift: Custom Night", items: [
             "New: Night Shift Custom Night (a button under the nights on the menu, or press C). Set each toy, Clank, Petunia, Grin and the Conductor, to any level from 0 (asleep) to 20 (relentless) with the arrows or by clicking the bars. They stay at that level all night, with no hourly rise. Random picks levels for you, and 20 mode turns every toy to the maximum.",
             "Beat a custom night with all four toys at 20 and the Custom Night button gets a star. Your levels are remembered, and Again replays the same night.",

@@ -1300,11 +1300,15 @@
     let camRollA = 0;                 // how far the camera leans with a banked road (radians, smoothed)
     let tunAmt = 0, tunFlash = 0, tunWas = false;      // the tunnel at Monaco: how far inside you are (0 to 1, eased), the sunlight flash on the way out
     const skyCache = new Map();         // each circuit's skyline strips, painted once
-    const WHEEL = { steeringSpeed: 10, returnSpeed: 7 };          // how fast the wheel turns toward the keys, and how fast it centres itself when they are let go (per second)
-    const WHEEL_LOCK_DEG = { default: 180, gt3: 270 };            // full lock each way, in degrees
+    // The steering wheel. Raw input (-1 left … +1 right) is scaled by `saturation` and shaped by `curve` (1 = linear), and the wheel turns toward
+    // it at steeringSpeed; let go and it centres itself at returnSpeed, firmer the faster the car goes (self-alignment). Full lock is ±180° for
+    // an F1 car (360° lock to lock). `shake` is the kerb and slip jitter in degrees at full effect.
+    const WHEEL = { steeringSpeed: 10, returnSpeed: 6, speedReturn: 1.6, saturation: 1, curve: 1, shake: 2.2 };
+    const WHEEL_LOCK_DEG = { default: 180, gt3: 270, f1: 180 };    // full lock each way, in degrees
+    const PIT_LIMITER_KMH = 80, PADDLE_LOCKOUT = 0.1;
     // The wheel's centre, in the drawing's own coordinates (y up is negative): the F1 wheel body spans -1 to +0.5 R0, a round wheel's rim is centred at -R0.
     const wheelPivot = (R0) => (me && me.car.spec.id === 'f1' ? -0.25 * R0 : -R0);
-    let wheelA = 0, wheelT = 0;       // the wheel in the first-person view: its turn now, and when it was last drawn
+    let wheelA = 0, wheelJit = 0, padL = 0, padR = 0, lastPaddleT = 0, hudOn = store.get('hud', false), carbonPat = null;     // the wheel's turn (rad), its jitter, the paddles' flash times, the debounce clock, the telemetry panel
     let skids = [], parts = [], camX = 0, camY = 0, shake = 0, doneT = 0, chaseYaw = 0, backToDesign = false, ds = null, lastShift = 0, paddle = 0;
     let net = null;                      // { link, code, host, players: Map, cfg, status }
     const aiState = new Map();
@@ -1835,8 +1839,16 @@
         if (k === 'n' && screen === 'setup') { setupSkip = true; return; }
         if (k === 'n' && screen === 'quali' && qual) { qual.ff = true; return; }
         if (k === 'r' && (screen === 'quali' || screen === 'qbreak' || screen === 'qdone') && qual) { startQualifying(); return; }
-        if (k === 'g' && screen !== 'menu') { manualOn = !manualOn; store.set('manual', manualOn); if (me) me.car.manual = manualOn; toast(manualOn ? 'Manual gearbox: E up, Q down (DRS moves to X)' : 'Automatic gearbox'); return; }
-        if (manualOn && (k === 'q' || k === 'e') && me && !me.official && screen !== 'menu') { me.car.shiftReq = k === 'e' ? 1 : -1; return; }
+        if (k === 'g' && screen !== 'menu') { manualOn = !manualOn; store.set('manual', manualOn); if (me) me.car.manual = manualOn; toast(manualOn ? 'Manual gearbox: E / ] up, Q / [ down (DRS moves to X)' : 'Automatic gearbox'); return; }
+        // The paddles: Q / E (and [ / ]) shift down / up in the manual gearbox, with a short lockout so a double tap is one shift.
+        if ((k === '[' || k === ']' || (manualOn && (k === 'q' || k === 'e'))) && me && !me.official && screen !== 'menu') {
+          if (!manualOn) { toast('Press G for the manual gearbox, then use the paddles'); return; }
+          const nowP = performance.now(); if (nowP - lastPaddleT < PADDLE_LOCKOUT * 1000) return; lastPaddleT = nowP;
+          const up = k === 'e' || k === ']'; me.car.shiftReq = up ? 1 : -1; if (up) padR = 0.2; else padL = 0.2; return;
+        }
+        if (k === 'h' && me && !me.official && screen !== 'menu') { me.limiter = !me.limiter; toast(me.limiter ? `Pit limiter ON: ${PIT_LIMITER_KMH} km/h` : 'Pit limiter off'); return; }
+        if (k === 'k' && me && !me.official && (screen === 'formation' || screen === 'countdown' || screen === 'race')) { me.launchArmed = !me.launchArmed; toast(me.launchArmed ? 'Launch mode ARMED: be on the throttle at lights out' : 'Launch mode off'); return; }
+        if (k === 'j' && screen !== 'menu') { hudOn = !hudOn; store.set('hud', hudOn); toast(hudOn ? 'Telemetry panel on' : 'Telemetry panel off'); return; }
         if (k === (manualOn ? 'x' : 'e') && me && screen === 'race' && !me.official) { if (me.drsOn) { me.drsOn = false; } else if (drsOk(me)) { me.drsOn = true; toast('DRS open'); } else toast(me.lap < 1 ? 'DRS is enabled from lap 2' : 'DRS: get within 1 second of the car ahead'); return; }
         if (k === 'l' && me && screen !== 'menu') { towerMode = (towerMode + 1) % 3; store.set('tower', towerMode); toast(['Timing tower hidden', 'Timing tower: gap to the car ahead', 'Timing tower: gap to the leader'][towerMode]); return; }
         if (k === 'y' && me && !me.official && screen !== 'menu') { me.nextTyre = { S: 'M', M: 'H', H: 'I', I: 'W', W: 'S' }[me.nextTyre || 'M']; toast(`Next pit stop: ${TYRES[me.nextTyre].name} tyres`); return; }
@@ -2671,6 +2683,22 @@
     }
 
     // ---- the simulation
+    /// The wheel, every physics step (not only when it is drawn), so the front tyres and the cockpit wheel always agree.
+    function stepWheel(dt) {
+      if (!me) return;
+      const c = me.car, sp = c.spec, lock = (WHEEL_LOCK_DEG[sp.id] || WHEEL_LOCK_DEG.default) * Math.PI / 180, speedK = clamp(Math.hypot(c.vx, c.vy) / (sp.vmax || 60), 0, 1);
+      let raw = clamp(((keys.has('right') ? 1 : 0) - (keys.has('left') ? 1 : 0)) * WHEEL.saturation, -1, 1);
+      raw = Math.sign(raw) * Math.pow(Math.abs(raw), WHEEL.curve);
+      const turningIn = raw !== 0 && Math.sign(raw) === Math.sign(wheelA || raw);
+      const rate = turningIn ? WHEEL.steeringSpeed : WHEEL.returnSpeed * (1 + WHEEL.speedReturn * speedK);
+      // The faster the car, the less the driver turns the wheel for the same input: full ±180° at a crawl (a hairpin), about a third of that flat out.
+      const reach = lock * (1 - 0.65 * Math.pow(speedK, 0.7));
+      wheelA = clamp(wheelA + (raw * reach - wheelA) * (1 - Math.exp(-dt * rate)), -lock, lock);
+      // Kerb and slip jitter: stronger with speed and when the tyres lose grip or the car is off the road.
+      const t = performance.now() / 1000, amp = ((c.drifting ? 0.7 : 0) + (c.onGrass ? 1 : 0) + clamp(Math.abs(c.bump || 0), 0, 1) * 0.6) * (0.25 + 0.75 * speedK);
+      wheelJit = amp * WHEEL.shake * (Math.PI / 180) * (Math.sin(t * 83) + Math.sin(t * 127 + 1.3) * 0.7) / 1.7;
+      padL = Math.max(0, padL - dt); padR = Math.max(0, padR - dt);
+    }
     function update(dt) {
       if (screen === 'formation') { formationTick(dt); return; }
       if (screen === 'countdown') {
@@ -2680,7 +2708,8 @@
         // Moving before the lights go out: a jump start.
         if (S.lit >= 1 && !S.jump && me && !me.official && !me.ai && playerInput().throttle > 0) { S.jump = true; toast('⚠ JUMP START'); say('Jump start! That will be a penalty.', 'eng', 2); }
         if (cdLeft <= 0) {
-          screen = 'race'; clock = 0; gantry.querySelectorAll('b').forEach((b) => b.classList.remove('on')); setTimeout(() => { if (screen === 'race') gantry.hidden = true; }, 1500);
+          screen = 'race'; clock = 0;
+          if (me && me.launchArmed) { me.launchArmed = false; me.launchT = keys.has('up') ? 2.4 : 0; toast(me.launchT ? 'Launch! Perfect getaway' : 'Launch missed: be on the throttle at lights out'); } gantry.querySelectorAll('b').forEach((b) => b.classList.remove('on')); setTimeout(() => { if (screen === 'race') gantry.hidden = true; }, 1500);
           radioStart(); for (const s of aiState.values()) s.go = true;
           if (S.jump) penalize(me, 5, 'a jump start');
         }
@@ -2691,6 +2720,7 @@
         startSeq.reacted = true; const rt = clock;
         toast(`Reaction ${rt.toFixed(3)} s${rt < 0.2 ? ' · lightning!' : rt < 0.3 ? ' · good start' : rt > 0.6 ? ' · slow away' : ''}`);
       }
+      stepWheel(dt);
       if (screen === 'setup') setupControl(dt); else if (screen === 'quali') qualiControl(dt);
       if (screen !== 'race' && screen !== 'done' && screen !== 'setup' && screen !== 'quali') return;
       clock += dt;
@@ -2744,6 +2774,7 @@
           if (r.ai && !human) r.drsOn = drsOk(r) && Math.abs(c.vf) > c.spec.vmax * 0.55;
           if (r.drsOn && (!drsOk(r) || inp.brake > 0)) { r.drsOn = false; if (r === me) toast('DRS closed'); }
           if (r.drsOn) { c.vmaxK *= 1.07; c.accelAdd += 1.5; }
+          if (r === me && r.launchT > 0 && !r.limiter) { c.accelAdd += 4 * Math.min(1, r.launchT / 1.2); r.launchT = Math.max(0, r.launchT - dt); }      // launch mode: a strong, fading push off the line
         }
         {   // Slipstream: the car directly behind another (within 40 m, in its tyre tracks) gets the air it leaves, up to 35% less drag.
           let want = 0;
@@ -2760,6 +2791,7 @@
         // Turning towards the high side instead (the wrong way round) loses grip.
         let bankK = 1; { const bk0 = roadBank(T, loc); if (bk0 && Math.abs(loc.lat) < T.width / 2 + 1.2) { const sn = Math.abs(Math.sin(Math.atan(bk0))), kk = T.S[loc.idx].k * Math.sign(bk0); bankK = kk >= 0 ? 1 + 1.4 * sn : 1 - 0.8 * sn; } }
         stepCar(c, inp, dt, surf, slope, curv, bankK);
+        if (r === me && r.limiter) { const v = Math.hypot(c.vx, c.vy), lim = PIT_LIMITER_KMH / KMH; if (v > lim) { c.vx *= lim / v; c.vy *= lim / v; } }      // the pit limiter button
         { const bk = roadBank(T, loc); if (bk && Math.abs(loc.lat) < T.width / 2 + 1.2) { const q = T.S[loc.idx], gB = 9.8 * bk / Math.sqrt(1 + bk * bk) * dt; c.vx += q.nx * gB; c.vy += q.ny * gB; } }     // on a bank gravity pulls the car down it, which is what holds it in the corner
         if (r.inLane && !r.official && c.vf < 0) { c.vx = c.vy = 0; c.vf = 0; }       // no reversing in the pit lane for race cars: the brake just holds the car
         const after = locate(T, c.x, c.y, loc.idx);
@@ -3163,6 +3195,18 @@
           g.fillStyle = 'rgba(8,13,28,.82)'; g.beginPath(); g.roundRect(W / 2 - tw3 / 2 - 10 * s, H - 97 * s, tw3 + 20 * s, 18 * s, 9 * s); g.fill();
           g.fillStyle = Math.abs(sl) >= 2 ? (sl > 0 ? '#ffd23f' : '#6fe0ff') : '#cdbfff'; g.fillText(txt, W / 2, H - 84.5 * s); g.textAlign = 'left';
         }
+      }
+      // The telemetry panel (J): steering angle, gear, speed, DRS and the buttons that are on.
+      if (hudOn && me && !me.official) {
+        const lockD = WHEEL_LOCK_DEG[c.spec.id] || WHEEL_LOCK_DEG.default, deg = Math.round(wheelA * 180 / Math.PI), kmhT = Math.round(Math.hypot(c.vx, c.vy) * KMH);
+        const rows = [['STEER', `${deg > 0 ? '+' : ''}${deg}°`, Math.abs(deg) > lockD * 0.95 ? '#ff9f43' : '#fff'], ['GEAR', gearName(c), '#fff'], ['SPEED', `${kmhT} km/h`, me.limiter ? '#ffb02e' : '#fff'],
+          ['DRS', me.drsOn ? 'OPEN' : drsOk(me) ? 'AVAILABLE' : 'OFF', me.drsOn ? '#3ad07a' : drsOk(me) ? '#ffd23f' : 'rgba(255,255,255,.4)']];
+        if (me.limiter) rows.push(['LIMITER', `${PIT_LIMITER_KMH} km/h`, '#ffb02e']); if (me.launchArmed) rows.push(['LAUNCH', 'ARMED', '#ff6b6b']);
+        // One line along the top centre, clear of the timing tower, the mirrors and the wheel.
+        const cw = 62 * s, pw = cw * rows.length + 16 * s, px = W / 2 - pw / 2, py = 8 * s;
+        g.fillStyle = 'rgba(8,12,22,.66)'; g.beginPath(); g.roundRect(px, py, pw, 26 * s, 8 * s); g.fill();
+        rows.forEach(([a, b, col], i) => { const x = px + 8 * s + i * cw + cw / 2; g.textAlign = 'center'; g.font = `700 ${6 * s}px system-ui`; g.fillStyle = 'rgba(255,255,255,.5)'; g.fillText(a, x, py + 10 * s); g.font = `800 ${9 * s}px system-ui`; g.fillStyle = col; g.fillText(b, x, py + 21 * s); });
+        g.textAlign = 'left';
       }
       // DRS (E), slipstream and the weather, stacked bottom right.
       if (screen === 'race' && !me.official) {
@@ -3737,30 +3781,45 @@
     }
     /// The halo camera: the driver's eye just behind the halo of an F1 car, looking over the nose, with the halo arching overhead,
     /// the front tyres either side and the dash on the wheel in front. (Other cars show the plain cockpit nose.)
-    function drawHalo() {
-      const c = me.car, sp = c.spec, s = Math.min(W, H) / 400, col = sp.color || '#2a8f9a', ang = (c.steerA / (sp.steer || 1)) * 0.5;
+    function drawHalo(dash = false) {
+      const c = me.car, sp = c.spec, s = Math.min(W, H) / 400, col = sp.color || '#2a8f9a', ang = (wheelA / ((WHEEL_LOCK_DEG[sp.id] || WHEEL_LOCK_DEG.default) * Math.PI / 180)) * 0.5;
       const tilt = clamp(-(c.yaw || 0) * 0.02, -0.06, 0.06);
       g.save(); g.translate(W / 2, H); g.rotate(tilt); g.translate(-W / 2, -H);
       // The front tyres, turning a little with the steering, and their wishbones.
       for (const sx of [-1, 1]) {
         const cx = W / 2 + sx * W * 0.31, cy = H * 0.66;
-        g.save(); g.translate(cx, cy); g.rotate(ang * 0.35);
+        g.save(); g.translate(cx, cy); g.rotate(ang * 0.35 * (1 + 0.16 * sx * Math.sign(ang)));      // the inner tyre turns more (Ackermann)
         g.fillStyle = '#0d0e11'; g.beginPath(); g.roundRect(-W * 0.085, -H * 0.2, W * 0.17, H * 0.5, W * 0.045); g.fill();
         g.fillStyle = '#17191f'; g.beginPath(); g.roundRect(-W * 0.07, -H * 0.18, W * 0.14, H * 0.1, W * 0.03); g.fill();
         g.strokeStyle = shade(col, 0.9); g.lineWidth = 2.2 * s; g.beginPath(); g.moveTo(-W * 0.07, -H * 0.04); g.lineTo(-W * 0.07 + (sx > 0 ? 1 : 0) * W * 0.14, -H * 0.02); g.stroke();
         g.restore();
         g.strokeStyle = '#1a1c22'; g.lineWidth = 3 * s; g.beginPath(); g.moveTo(W / 2 + sx * W * 0.1, H * 0.76); g.lineTo(W / 2 + sx * W * 0.24, H * 0.62); g.moveTo(W / 2 + sx * W * 0.12, H * 0.8); g.lineTo(W / 2 + sx * W * 0.24, H * 0.7); g.stroke();
       }
+      if (dash) {
+        // The cockpit as the driver sees it: the livery-coloured sides of the monocoque either side, a dark carbon cowl across the front
+        // of the cockpit with the wheel in front of it, and the front tyres and wing endplates beyond.
+        for (const sx of [-1, 1]) {
+          g.fillStyle = shade(col, 0.5); g.beginPath(); g.moveTo(W / 2 + sx * W * 0.5, H * 0.5); g.lineTo(W / 2 + sx * W * 0.2, H * 0.57); g.lineTo(W / 2 + sx * W * 0.13, H); g.lineTo(W / 2 + sx * W * 0.5, H); g.closePath(); g.fill();
+          g.strokeStyle = shade(col, 1.15); g.lineWidth = 2.2 * s; g.beginPath(); g.moveTo(W / 2 + sx * W * 0.5, H * 0.5); g.lineTo(W / 2 + sx * W * 0.2, H * 0.57); g.stroke();
+          g.fillStyle = 'rgba(0,0,0,.35)'; g.beginPath(); g.moveTo(W / 2 + sx * W * 0.5, H * 0.62); g.lineTo(W / 2 + sx * W * 0.22, H * 0.7); g.lineTo(W / 2 + sx * W * 0.16, H); g.lineTo(W / 2 + sx * W * 0.5, H); g.closePath(); g.fill();
+          g.strokeStyle = '#15171c'; g.lineWidth = 3.4 * s; g.beginPath(); g.moveTo(W / 2 + sx * W * 0.41, H * 0.55); g.lineTo(W / 2 + sx * W * 0.47, H * 0.5); g.stroke();      // the mirror stalk
+        }
+        g.fillStyle = carbonFill(); g.beginPath(); g.moveTo(W * 0.3, H * 0.6); g.quadraticCurveTo(W * 0.5, H * 0.545, W * 0.7, H * 0.6); g.lineTo(W * 0.74, H); g.lineTo(W * 0.26, H); g.closePath(); g.fill();
+        g.fillStyle = 'rgba(0,0,0,.45)'; g.fill();
+        g.strokeStyle = '#2a2d35'; g.lineWidth = 2 * s; g.beginPath(); g.moveTo(W * 0.3, H * 0.6); g.quadraticCurveTo(W * 0.5, H * 0.545, W * 0.7, H * 0.6); g.stroke();
+        for (const [lx, lc] of [[0.44, '#3ad07a'], [0.47, '#3ad07a'], [0.53, '#ffd23f'], [0.56, '#ff4d4d']]) { g.fillStyle = lc; g.beginPath(); g.arc(W * lx, H * 0.568, 1.8 * s, 0, 7); g.fill(); }
+      } else {
       // The bodywork in front: the engine cover and the nose.
       g.fillStyle = '#c9ced6'; g.beginPath(); g.moveTo(W * 0.3, H); g.lineTo(W * 0.4, H * 0.66); g.lineTo(W * 0.46, H * 0.55); g.lineTo(W * 0.54, H * 0.55); g.lineTo(W * 0.6, H * 0.66); g.lineTo(W * 0.7, H); g.closePath(); g.fill();
       g.fillStyle = '#9aa1ac'; g.beginPath(); g.moveTo(W * 0.46, H * 0.55); g.lineTo(W * 0.5, H * 0.52); g.lineTo(W * 0.54, H * 0.55); g.lineTo(W * 0.5, H); g.closePath(); g.fill();
       g.fillStyle = shade(col, 0.8); g.beginPath(); g.moveTo(W * 0.4, H * 0.66); g.lineTo(W * 0.3, H); g.lineTo(W * 0.36, H); g.lineTo(W * 0.44, H * 0.6); g.fill(); g.beginPath(); g.moveTo(W * 0.6, H * 0.66); g.lineTo(W * 0.7, H); g.lineTo(W * 0.64, H); g.lineTo(W * 0.56, H * 0.6); g.fill();
+      }
       // The halo: a thick arc over the top, its centre pillar down to the nose.
       g.lineCap = 'round';
-      g.strokeStyle = shade(col, 0.55); g.lineWidth = 30 * s; g.beginPath(); g.moveTo(W * 0.16, H * 0.98); g.bezierCurveTo(W * 0.2, H * 0.3, W * 0.8, H * 0.3, W * 0.84, H * 0.98); g.stroke();
-      g.strokeStyle = col; g.lineWidth = 24 * s; g.beginPath(); g.moveTo(W * 0.16, H * 0.98); g.bezierCurveTo(W * 0.2, H * 0.3, W * 0.8, H * 0.3, W * 0.84, H * 0.98); g.stroke();
-      g.strokeStyle = 'rgba(255,255,255,.35)'; g.lineWidth = 4 * s; g.beginPath(); g.moveTo(W * 0.175, H * 0.9); g.bezierCurveTo(W * 0.22, H * 0.34, W * 0.5, H * 0.3, W * 0.5, H * 0.3); g.stroke();
-      g.strokeStyle = shade(col, 0.7); g.lineWidth = 11 * s; g.beginPath(); g.moveTo(W / 2, H * 0.305); g.lineTo(W / 2, H * 0.54); g.stroke();
+      g.strokeStyle = '#050608'; g.lineWidth = (dash ? 16 : 30) * s; g.beginPath(); g.moveTo(W * 0.16, H * 0.98); g.bezierCurveTo(W * 0.2, H * 0.3, W * 0.8, H * 0.3, W * 0.84, H * 0.98); g.stroke();
+      g.strokeStyle = dash ? '#161a20' : col; g.lineWidth = (dash ? 10 : 24) * s; g.beginPath(); g.moveTo(W * 0.16, H * 0.98); g.bezierCurveTo(W * 0.2, H * 0.3, W * 0.8, H * 0.3, W * 0.84, H * 0.98); g.stroke();
+      g.strokeStyle = dash ? 'rgba(255,255,255,.16)' : 'rgba(255,255,255,.35)'; g.lineWidth = (dash ? 2 : 4) * s; g.beginPath(); g.moveTo(W * 0.175, H * 0.9); g.bezierCurveTo(W * 0.22, H * 0.34, W * 0.5, H * 0.3, W * 0.5, H * 0.3); g.stroke();
+      g.strokeStyle = dash ? '#12151a' : shade(col, 0.7); g.lineWidth = (dash ? 8 : 11) * s; g.beginPath(); g.moveTo(W / 2, H * 0.305); g.lineTo(W / 2, H * (dash ? 0.58 : 0.54)); g.stroke();
       g.lineCap = 'butt';
       // The mirrors, left and right, showing the nearest car behind.
       const behind = racers.filter((r) => r !== me && r.prog < me.prog && me.prog - r.prog < 80).sort((a, b) => b.prog - a.prog)[0];
@@ -3772,15 +3831,89 @@
       }
       g.restore();
     }
+
+    /// A modern Formula 1 steering wheel, drawn about its own centre (the caller rotates it): a carbon-fibre body that flares into a grip each
+    /// side, a colour screen with the shift lights above it, push buttons either side, a row of rotary dials with colour-coded rings below,
+    /// and the shift paddles behind (the right one flashes on an upshift, the left one on a downshift).
+    function carbonFill() {
+      if (carbonPat) return carbonPat;
+      const k = document.createElement('canvas'); k.width = k.height = 8; const x = k.getContext('2d');
+      x.fillStyle = '#0d0f13'; x.fillRect(0, 0, 8, 8); x.fillStyle = '#181b21'; x.fillRect(0, 0, 4, 4); x.fillRect(4, 4, 4, 4); x.fillStyle = 'rgba(255,255,255,.04)'; x.fillRect(0, 0, 4, 1); x.fillRect(4, 4, 4, 1);
+      return (carbonPat = g.createPattern(k, 'repeat'));
+    }
+    function drawF1Wheel(R0, s, c, sp, rr, kmh, sleeve) {
+      const col = sp.color || '#d22', gearN = gearName(c), pos = ranking(racers).indexOf(me) + 1;
+      // The paddles first, behind the body.
+      for (const sx of [-1, 1]) {
+        const lit = (sx > 0 ? padR : padL) > 0 || (paddle > 0 && false);
+        g.save(); g.translate(sx * R0 * 1.5, -R0 * 0.95); g.rotate(sx * 0.35);
+        g.fillStyle = lit ? '#ffd166' : '#23262d'; g.beginPath(); g.roundRect(-0.07 * R0, -0.42 * R0, 0.14 * R0, 0.6 * R0, 0.06 * R0); g.fill();
+        g.strokeStyle = 'rgba(255,255,255,.12)'; g.lineWidth = 1; g.stroke();
+        g.fillStyle = lit ? '#7a5a00' : '#61656f'; g.font = `800 ${5 * s}px system-ui`; g.textAlign = 'center'; g.fillText(sx > 0 ? '+' : '−', 0, -0.28 * R0);
+        g.restore();
+      }
+      // The body: left half described, mirrored for the right.
+      const P0 = [0, -0.96], SEG = [[-0.5, -0.96, -1.1, -0.96, -1.38, -0.78], [-1.58, -0.62, -1.62, -0.1, -1.55, 0.3], [-1.5, 0.58, -1.35, 0.68, -1.1, 0.64], [-0.8, 0.6, -0.4, 0.5, 0, 0.62]];
+      const body = new Path2D(); body.moveTo(P0[0] * R0, P0[1] * R0);
+      for (const q of SEG) body.bezierCurveTo(q[0] * R0, q[1] * R0, q[2] * R0, q[3] * R0, q[4] * R0, q[5] * R0);
+      for (let i = SEG.length - 1; i >= 0; i--) { const q = SEG[i], from = i ? [SEG[i - 1][4], SEG[i - 1][5]] : P0; body.bezierCurveTo(-q[2] * R0, q[3] * R0, -q[0] * R0, q[1] * R0, -from[0] * R0, from[1] * R0); }
+      g.fillStyle = '#0b0c0f'; g.fill(body); g.fillStyle = carbonFill(); g.fill(body);
+      g.lineWidth = 2.2 * s; g.strokeStyle = '#05060a'; g.stroke(body);
+      g.save(); g.clip(body); g.lineWidth = 3 * s; g.strokeStyle = shade(col, 0.95); g.globalAlpha = 0.9; g.stroke(body); g.restore(); g.globalAlpha = 1;      // a livery stripe round the edge
+      // The grips: dark rubber with finger grooves.
+      for (const sx of [-1, 1]) {
+        g.save(); g.translate(sx * R0 * 1.38, -0.04 * R0); g.rotate(sx * 0.1);
+        g.fillStyle = '#16171b'; g.beginPath(); g.roundRect(-0.27 * R0, -0.66 * R0, 0.54 * R0, 1.32 * R0, 0.24 * R0); g.fill();
+        g.strokeStyle = '#26282e'; g.lineWidth = 1.4 * s; g.stroke();
+        g.strokeStyle = '#08090b'; g.lineWidth = 1.6 * s; for (let k = 0; k < 4; k++) { const y = (0.0 + k * 0.17) * R0; g.beginPath(); g.moveTo(-0.22 * R0, y); g.lineTo(0.22 * R0, y); g.stroke(); }
+        g.restore();
+      }
+      // The shift lights, along the top.
+      for (let i = 0; i < 15; i++) { const on = rr * 15 > i, flash = rr > 0.96 && (Date.now() / 70 | 0) % 2; g.fillStyle = on ? (flash ? '#fff' : i < 5 ? '#3ad07a' : i < 10 ? '#ff4d4d' : '#4da3ff') : 'rgba(255,255,255,.14)'; g.beginPath(); g.arc((i - 7) * R0 * 0.088, -0.9 * R0, 0.036 * R0, 0, 7); g.fill(); }
+      // The screen.
+      g.fillStyle = '#020304'; g.beginPath(); g.roundRect(-0.72 * R0, -0.84 * R0, 1.44 * R0, 0.78 * R0, 0.07 * R0); g.fill(); g.strokeStyle = '#2b2f38'; g.lineWidth = 1.6 * s; g.stroke();
+      g.fillStyle = '#06141b'; g.beginPath(); g.roundRect(-0.68 * R0, -0.8 * R0, 1.36 * R0, 0.7 * R0, 0.05 * R0); g.fill();
+      g.textAlign = 'left'; g.fillStyle = '#7fd4ff'; g.font = `800 ${9 * s}px system-ui`; g.fillText(String(kmh), -0.63 * R0, -0.66 * R0); g.font = `600 ${5 * s}px system-ui`; g.fillStyle = 'rgba(255,255,255,.55)'; g.fillText('KM/H', -0.63 * R0, -0.58 * R0);
+      g.textAlign = 'right'; g.fillStyle = '#fff'; g.font = `800 ${9 * s}px system-ui`; g.fillText('P' + pos, 0.63 * R0, -0.66 * R0); g.font = `600 ${5 * s}px system-ui`; g.fillStyle = 'rgba(255,255,255,.55)'; g.fillText(`LAP ${Math.min(me.lap + 1, raceLaps)}/${raceLaps}`, 0.63 * R0, -0.58 * R0);
+      g.textAlign = 'center'; g.fillStyle = rr > 0.92 ? '#ff6b6b' : '#fff'; g.font = `900 ${34 * s}px system-ui`; g.fillText(gearN, 0, -0.34 * R0);
+      g.fillStyle = 'rgba(255,255,255,.14)'; g.fillRect(-0.6 * R0, -0.2 * R0, 1.2 * R0, 0.05 * R0); g.fillStyle = me.boosting ? '#ffd23f' : (c.ers || 0) < 0.2 ? '#ff6b6b' : '#3ad07a'; g.fillRect(-0.6 * R0, -0.2 * R0, 1.2 * R0 * clamp(c.ers || 0, 0, 1), 0.05 * R0);
+      g.font = `800 ${5 * s}px system-ui`; g.textAlign = 'left'; g.fillStyle = me.drsOn ? '#3ad07a' : drsOk(me) ? '#ffd23f' : 'rgba(255,255,255,.3)'; g.fillText('DRS', -0.63 * R0, -0.13 * R0);
+      g.textAlign = 'right'; g.fillStyle = me.limiter ? '#ffb02e' : me.launchArmed ? '#ff6b6b' : 'rgba(255,255,255,.3)'; g.fillText(me.limiter ? 'PIT 80' : me.launchArmed ? 'LAUNCH' : 'ERS', 0.63 * R0, -0.13 * R0); g.textAlign = 'center';
+      // Push buttons, each side: coloured caps with a letter.
+      const BTN = [[-1.0, -0.66, 0.13, '#3ad07a', 'N'], [-1.22, -0.4, 0.085, '#b36bff', ''], [-0.93, -0.38, 0.085, '#ffd23f', 'OT'], [-1.2, -0.17, 0.075, '#ff7a1a', ''], [1.0, -0.66, 0.13, '#ff4d4d', 'PL'], [1.22, -0.4, 0.085, '#4dc3ff', ''], [0.93, -0.38, 0.085, '#ffd23f', '+1'], [1.2, -0.17, 0.075, '#3ad07a', '']];
+      for (const [bx, by, br, bc, label] of BTN) {
+        g.fillStyle = '#05060a'; g.beginPath(); g.arc(bx * R0, by * R0, (br + 0.025) * R0, 0, 7); g.fill();
+        g.fillStyle = bc; g.beginPath(); g.arc(bx * R0, by * R0, br * R0, 0, 7); g.fill();
+        g.fillStyle = 'rgba(255,255,255,.28)'; g.beginPath(); g.arc((bx - br * 0.25) * R0, (by - br * 0.3) * R0, br * 0.45 * R0, 0, 7); g.fill();
+        if (label) { g.fillStyle = '#0a0a0c'; g.font = `900 ${Math.max(4, br * 55) * s / 1}px system-ui`; g.fillText(label, bx * R0, by * R0 + br * 0.3 * R0); }
+      }
+      // The rotary dials: a ring of coloured positions, a black knob and a pointer. The big middle one shows the gear.
+      const DIALS = [[-0.95, 0.2, 0.2, -0.9], [-0.5, 0.36, 0.2, 0.7], [0, 0.26, 0.27, -2.4 + (clamp(c.gear || 0, 0, sp.gears || 8) / (sp.gears || 8)) * 4.8], [0.5, 0.36, 0.2, -0.4], [0.95, 0.2, 0.2, 1.2]];
+      for (const [dx, dy, dr, pa] of DIALS) {
+        const cx = dx * R0, cy = dy * R0, r = dr * R0;
+        g.fillStyle = '#060709'; g.beginPath(); g.arc(cx, cy, r * 1.14, 0, 7); g.fill();
+        for (let k = 0; k < 12; k++) { g.strokeStyle = `hsl(${k * 30},85%,55%)`; g.lineWidth = r * 0.2; g.beginPath(); g.arc(cx, cy, r * 0.93, k / 12 * 6.2832 + 0.05, (k + 1) / 12 * 6.2832 - 0.05); g.stroke(); }
+        g.fillStyle = '#101216'; g.beginPath(); g.arc(cx, cy, r * 0.7, 0, 7); g.fill(); g.strokeStyle = '#2a2d35'; g.lineWidth = 1.2 * s; g.stroke();
+        g.save(); g.translate(cx, cy); g.rotate(pa); g.strokeStyle = '#f4f4f6'; g.lineWidth = Math.max(1.5, r * 0.12); g.lineCap = 'round'; g.beginPath(); g.moveTo(0, -r * 0.12); g.lineTo(0, -r * 0.62); g.stroke(); g.lineCap = 'butt'; g.restore();
+      }
+      // The gloved hands on the grips.
+      for (const sx of [-1, 1]) {
+        g.save(); g.translate(sx * R0 * 1.38, -R0 * 0.04); g.rotate(sx * 0.1);
+        g.fillStyle = sleeve; g.beginPath(); g.roundRect(-13 * s, 8 * s, 26 * s, 18 * s, 7 * s); g.fill();
+        g.fillStyle = '#f2f2f4'; g.beginPath(); g.roundRect(-12 * s, -16 * s, 24 * s, 28 * s, 9 * s); g.fill();
+        g.fillStyle = '#d4d6dc'; for (let k = 0; k < 4; k++) { g.beginPath(); g.roundRect(-11 * s + k * 5.8 * s, -18 * s, 5 * s, 12 * s, 2.4 * s); g.fill(); }
+        g.fillStyle = '#fff'; g.beginPath(); g.ellipse(-sx * 9 * s, -3 * s, 6 * s, 9 * s, -sx * 0.5, 0, 7); g.fill();
+        g.fillStyle = sleeve; g.fillRect(-5 * s, -2 * s, 10 * s, 4 * s);
+        g.restore();
+      }
+    }
     /// The driver's view: the car's nose (or an F1 car's halo), the dashboard, the shift lights and a steering wheel that turns
     /// with the front wheels, showing the gear and the speed; the paddles flash at each change.
     function drawCockpit() {
       const c = me.car, sp = c.spec, s = Math.min(W, H) / 400, f1 = sp.id === 'f1', rr = clamp((c.rpm - sp.idle) / (sp.redline - sp.idle), 0, 1);
       g.setTransform(1, 0, 0, 1, 0, 0);
       if (f1) {
-        g.fillStyle = shade(sp.color, 0.85); g.beginPath(); g.moveTo(W / 2 - 40 * s, H); g.lineTo(W / 2 - 9 * s, H * 0.6); g.lineTo(W / 2 + 9 * s, H * 0.6); g.lineTo(W / 2 + 40 * s, H); g.fill();
-        g.fillStyle = '#111'; g.fillRect(W / 2 - 5 * s, 0, 10 * s, H * 0.5); g.beginPath(); g.moveTo(0, H * 0.22); g.quadraticCurveTo(W / 2, -H * 0.02, W, H * 0.22); g.lineTo(W, H * 0.16); g.quadraticCurveTo(W / 2, -H * 0.08, 0, H * 0.16); g.fill();
-        g.fillStyle = '#0c0d10'; g.beginPath(); g.moveTo(0, H); g.lineTo(0, H * 0.74); g.quadraticCurveTo(W * 0.2, H * 0.7, W * 0.32, H * 0.8); g.lineTo(W * 0.68, H * 0.8); g.quadraticCurveTo(W * 0.8, H * 0.7, W, H * 0.74); g.lineTo(W, H); g.fill();
+        drawHalo(true);
       } else {
         g.fillStyle = '#0c0d10';
         g.beginPath(); g.moveTo(0, 0); g.lineTo(W * 0.07, 0); g.lineTo(W * 0.02, H * 0.72); g.lineTo(0, H * 0.75); g.fill();
@@ -3802,16 +3935,12 @@
       // Raw input (-1 left … +1 right) maps linearly to the wheel angle, full lock being WHEEL_LOCK_DEG either way, and the wheel eases toward
       // it at steeringSpeed (turning in) or returnSpeed (centring when the keys are let go), frame-rate independent. The wheel is only
       // ever rotated about its own centre (below), never moved.
-      const raw = (keys.has('right') ? 1 : 0) - (keys.has('left') ? 1 : 0), tgt = raw * (WHEEL_LOCK_DEG[sp.id] || WHEEL_LOCK_DEG.default) * Math.PI / 180;
-      const nowT = performance.now(), dtW = Math.min(0.1, (nowT - (wheelT || nowT)) / 1000); wheelT = nowT;
-      const wSpeed = raw !== 0 && Math.sign(raw) === Math.sign(wheelA || raw) ? WHEEL.steeringSpeed : WHEEL.returnSpeed;
-      wheelA += (tgt - wheelA) * (1 - Math.exp(-dtW * wSpeed));
-      const ang = wheelA, R0 = (f1 ? 80 : 78) * s, wcy = H * (f1 ? 0.9 : 0.97), kmh = Math.round(Math.hypot(c.vx, c.vy) * KMH);
+      const ang = wheelA + wheelJit, R0 = f1 ? Math.min(W * 0.122, H * 0.25) : 78 * s, wcy = H * (f1 ? 0.8 : 0.97), kmh = Math.round(Math.hypot(c.vx, c.vy) * KMH);
       const sleeve = shade(sp.color || '#aa2222', 0.85);
       if (f1) {
         // The arms, from the shoulders to the hands on the grips (the hands follow the wheel round).
         for (const sx of [-1, 1]) {
-          const hx = sx * R0 * 1.12, hy = -R0 * 0.42, dx = hx, dy = hy - wheelPivot(R0), wx = W / 2 + dx * Math.cos(ang) - dy * Math.sin(ang), wy = wcy + wheelPivot(R0) + dx * Math.sin(ang) + dy * Math.cos(ang);
+          const hx = sx * R0 * 1.4, hy = -R0 * 0.1, dx = hx, dy = hy - wheelPivot(R0), wx = W / 2 + dx * Math.cos(ang) - dy * Math.sin(ang), wy = wcy + wheelPivot(R0) + dx * Math.sin(ang) + dy * Math.cos(ang);
           g.lineCap = 'round'; g.strokeStyle = sleeve; g.lineWidth = 26 * s; g.beginPath(); g.moveTo(W / 2 + sx * W * 0.34, H * 1.08); g.quadraticCurveTo(W / 2 + sx * W * 0.3, H * 0.86, wx + sx * 6 * s, wy + 10 * s); g.stroke();
           g.strokeStyle = shade(sp.color || '#aa2222', 1.1); g.lineWidth = 5 * s; g.beginPath(); g.moveTo(W / 2 + sx * W * 0.325, H * 1.05); g.quadraticCurveTo(W / 2 + sx * W * 0.285, H * 0.88, wx + sx * 8 * s, wy + 12 * s); g.stroke(); g.lineCap = 'butt';
         }
@@ -3820,34 +3949,7 @@
       const pivY = wheelPivot(R0);
       g.save(); g.translate(W / 2, wcy + pivY); g.rotate(ang); g.translate(0, -pivY);
       if (f1) {
-        // The wheel: a carbon body with the screen in the middle, the shift lights above it, the rotary dials below and a grip each side.
-        g.fillStyle = '#121317'; g.beginPath(); g.moveTo(-R0 * 1.3, -R0 * 0.75); g.quadraticCurveTo(-R0 * 1.3, -R0 * 1.0, -R0 * 1.0, -R0 * 1.0); g.lineTo(R0 * 1.0, -R0 * 1.0); g.quadraticCurveTo(R0 * 1.3, -R0 * 1.0, R0 * 1.3, -R0 * 0.75);
-        g.lineTo(R0 * 1.22, R0 * 0.28); g.quadraticCurveTo(R0 * 1.1, R0 * 0.5, R0 * 0.8, R0 * 0.5); g.lineTo(-R0 * 0.8, R0 * 0.5); g.quadraticCurveTo(-R0 * 1.1, R0 * 0.5, -R0 * 1.22, R0 * 0.28); g.closePath(); g.fill();
-        g.strokeStyle = '#2a2d36'; g.lineWidth = 2 * s; g.stroke();
-        g.fillStyle = '#1b1d24'; g.beginPath(); g.roundRect(-R0 * 0.62, -R0 * 0.9, R0 * 1.24, R0 * 0.78, 6 * s); g.fill();
-        // The shift lights.
-        for (let i = 0; i < 15; i++) { g.fillStyle = rr * 15 > i ? (i < 5 ? '#3ad07a' : i < 10 ? '#ff4d4d' : '#4da3ff') : 'rgba(255,255,255,.16)'; g.beginPath(); g.arc((i - 7) * R0 * 0.078, -R0 * 0.94, 2.1 * s, 0, 7); g.fill(); }
-        // The screen: gear, speed, position and the battery.
-        g.fillStyle = '#05080c'; g.beginPath(); g.roundRect(-R0 * 0.56, -R0 * 0.84, R0 * 1.12, R0 * 0.66, 4 * s); g.fill();
-        g.textAlign = 'center'; g.fillStyle = '#fff'; g.font = `900 ${31 * s}px system-ui`; g.fillText(gearName(c), 0, -R0 * 0.38);
-        g.font = `800 ${8 * s}px system-ui`; g.textAlign = 'left'; g.fillStyle = '#9fd0ff'; g.fillText(String(kmh), -R0 * 0.5, -R0 * 0.7); g.font = `600 ${5.5 * s}px system-ui`; g.fillStyle = 'rgba(255,255,255,.6)'; g.fillText('KPH', -R0 * 0.5, -R0 * 0.6);
-        g.textAlign = 'right'; g.font = `800 ${8 * s}px system-ui`; g.fillStyle = '#fff'; g.fillText('P' + (ranking(racers).indexOf(me) + 1), R0 * 0.5, -R0 * 0.7); g.font = `600 ${5.5 * s}px system-ui`; g.fillStyle = 'rgba(255,255,255,.6)'; g.fillText(me.boosting ? 'OVERTAKE' : 'BALANCED', R0 * 0.5, -R0 * 0.6);
-        g.fillStyle = 'rgba(255,255,255,.14)'; g.fillRect(-R0 * 0.5, -R0 * 0.27, R0, 4 * s); g.fillStyle = me.boosting ? '#ffd23f' : (c.ers || 0) < 0.2 ? '#ff6b6b' : '#3ad07a'; g.fillRect(-R0 * 0.5, -R0 * 0.27, R0 * clamp(c.ers || 0, 0, 1), 4 * s);
-        // Dials and buttons.
-        const dials = [[-0.7, 0.05, '#e6b422'], [-0.3, 0.3, '#ff7a1a'], [0.05, 0.12, '#c9a227'], [0.38, 0.3, '#8e6bd6'], [0.72, 0.06, '#e6b422']];
-        for (const [dx, dy, dc] of dials) { g.fillStyle = '#0b0c10'; g.beginPath(); g.arc(dx * R0, dy * R0, 10 * s, 0, 7); g.fill(); g.strokeStyle = dc; g.lineWidth = 2.4 * s; g.beginPath(); g.arc(dx * R0, dy * R0, 8 * s, 0, 7); g.stroke(); g.strokeStyle = '#fff'; g.lineWidth = 1.2 * s; g.beginPath(); g.moveTo(dx * R0, dy * R0); g.lineTo(dx * R0 + 5 * s, dy * R0 - 4 * s); g.stroke(); }
-        for (const [bx, by, bc2] of [[-0.95, -0.55, '#3ad07a'], [0.95, -0.55, '#ff4d4d'], [-0.95, -0.28, '#ffd23f'], [0.95, -0.28, '#4da3ff'], [-0.5, -0.05, '#fff'], [0.5, -0.05, '#fff']]) { g.fillStyle = bc2; g.beginPath(); g.arc(bx * R0, by * R0, 3.4 * s, 0, 7); g.fill(); }
-        g.fillStyle = paddle > 0 ? '#ffd166' : '#3a3d46'; g.fillRect(-R0 * 1.15, -R0 * 1.14, R0 * 0.5, 7 * s); g.fillRect(R0 * 0.65, -R0 * 1.14, R0 * 0.5, 7 * s);
-        // The gloved hands on the grips.
-        for (const sx of [-1, 1]) {
-          g.save(); g.translate(sx * R0 * 1.1, -R0 * 0.38);
-          g.fillStyle = sleeve; g.beginPath(); g.roundRect(-13 * s, 6 * s, 26 * s, 18 * s, 7 * s); g.fill();                  // the cuff
-          g.fillStyle = '#f2f2f4'; g.beginPath(); g.roundRect(-12 * s, -16 * s, 24 * s, 28 * s, 9 * s); g.fill();             // the glove
-          g.fillStyle = '#d4d6dc'; for (let k = 0; k < 4; k++) { g.beginPath(); g.roundRect(-11 * s + k * 5.8 * s, -18 * s, 5 * s, 12 * s, 2.4 * s); g.fill(); }  // fingers
-          g.fillStyle = '#fff'; g.beginPath(); g.ellipse(-sx * 9 * s, -3 * s, 6 * s, 9 * s, -sx * 0.5, 0, 7); g.fill();       // thumb
-          g.fillStyle = sleeve; g.fillRect(-5 * s, -2 * s, 10 * s, 4 * s);                                                    // a stripe on the glove
-          g.restore();
-        }
+        drawF1Wheel(R0, s, c, sp, rr, kmh, sleeve);
       } else {
         g.lineWidth = 13 * s; g.strokeStyle = '#18191d'; g.beginPath(); g.arc(0, -R0, R0, 0, 7); g.stroke();
         g.lineWidth = 3 * s; g.strokeStyle = '#ffd166'; g.beginPath(); g.arc(0, -R0, R0, -Math.PI / 2 - 0.08, -Math.PI / 2 + 0.08); g.stroke();
