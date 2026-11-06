@@ -138,16 +138,19 @@ tr.k:hover td{background:rgba(255,255,255,.025)}
 
     <section class="card" id="promoCard" style="grid-column:1/-1">
       <h2>Promo codes</h2>
-      <p class="dim small" style="margin-bottom:8px">Each code gives one free Pro key, once. The code is shown only when you create it; only a hash is stored.</p>
+      <p class="dim small" style="margin-bottom:8px">Make a code for one person. <b>100%</b> is a free Pro key (used in the Promo code tab); <b>1 to 99%</b> takes that much off a Pro or Ultimate purchase (used in the Discount code box at checkout). Each code works once. The code is shown only when you create it; only a hash is stored.</p>
       <div class="row" style="gap:8px;flex-wrap:wrap;margin-bottom:8px">
         <input id="pCount" class="field" type="number" min="1" max="50" value="1" style="width:90px" title="How many codes">
-        <input id="pNote" class="field" maxlength="200" placeholder="Note (e.g. giveaway)" style="flex:1;min-width:180px">
+        <input id="pPercent" class="field" type="number" min="1" max="100" value="100" style="width:110px" title="Percent off: 100 is a free Pro key, 1 to 99 is a discount at checkout" placeholder="% off">
+        <input id="pDays" class="field" type="number" min="0" max="3650" value="0" style="width:120px" title="Valid for this many days (0 = no limit)" placeholder="Days (0 = no limit)">
+        <input id="pEmail" class="field" type="email" maxlength="200" placeholder="Only for this email (optional)" style="min-width:210px">
+        <input id="pNote" class="field" maxlength="200" placeholder="Note (e.g. giveaway)" style="flex:1;min-width:160px">
         <button class="btn pri" id="pBtn">Create codes</button>
       </div>
       <div class="err" id="pErr"></div>
       <div class="out" id="pOut"></div>
       <div class="row" id="pActs" style="display:none;margin:8px 0"><button class="btn sm" id="pCopy">Copy all</button></div>
-      <div class="tablewrap"><table><thead><tr><th>Code ID</th><th>Status</th><th>Key</th><th>Created</th><th>Note</th><th></th></tr></thead><tbody id="pRows"><tr><td colspan="6" class="dim">Loading…</td></tr></tbody></table></div>
+      <div class="tablewrap"><table><thead><tr><th>Code ID</th><th>Discount</th><th>Status</th><th>Key</th><th>Created</th><th>Note</th><th></th></tr></thead><tbody id="pRows"><tr><td colspan="7" class="dim">Loading…</td></tr></tbody></table></div>
     </section>
     <section class="card" id="auditCard" style="grid-column:1/-1">
       <h2>Activity</h2>
@@ -370,19 +373,23 @@ async function openKey(ref) {
 }
 
 // ---- promo codes
+let serverPercent = false;   // set once the server says it knows percentage codes; an older server would quietly make FREE keys
 async function loadPromos() {
   try {
     const r = await api('promo-list');
-    $('pRows').innerHTML = r.rows.length ? r.rows.map((x) => '<tr><td class="mono">' + esc(x.id) + '</td><td>' + (x.used ? '<span class="st-ok">Used</span>' : '<span class="dim">Unused</span>') + '</td><td class="mono">' + esc(x.keyId || '–') + '</td><td>' + fmtDate(x.created) + '</td><td>' + esc(x.note) + '</td><td>' + (x.used ? '' : '<button class="btn sm bad" data-del="' + esc(x.hash) + '">Delete</button>') + '</td></tr>').join('') : '<tr><td colspan="6" class="dim">No panel-made codes yet.</td></tr>';
-  } catch (e) { $('pRows').innerHTML = '<tr><td colspan="6" class="st-bad">' + esc(e.message) + '</td></tr>'; }
+    serverPercent = !!r.percentCodes;
+    $('pRows').innerHTML = r.rows.length ? r.rows.map((x) => '<tr><td class="mono">' + esc(x.id) + '</td><td>' + (x.percent < 100 ? esc(x.percent) + '% off' : 'Free Pro key') + (x.locked ? ' <span class="dim">· one email</span>' : '') + (x.exp ? ' <span class="dim">· until ' + fmtDate(x.exp) + '</span>' : '') + '</td><td>' + (x.used ? '<span class="st-ok">Used</span>' : '<span class="dim">Unused</span>') + '</td><td class="mono">' + esc(x.keyId || '–') + '</td><td>' + fmtDate(x.created) + '</td><td>' + esc(x.note) + '</td><td>' + (x.used ? '' : '<button class="btn sm bad" data-del="' + esc(x.hash) + '">Delete</button>') + '</td></tr>').join('') : '<tr><td colspan="7" class="dim">No panel-made codes yet.</td></tr>';
+  } catch (e) { $('pRows').innerHTML = '<tr><td colspan="7" class="st-bad">' + esc(e.message) + '</td></tr>'; }
 }
 $('pRows').onclick = async (e) => { const b = e.target.closest('button[data-del]'); if (!b || !confirm('Delete this unused promo code?')) return; try { await api('promo-delete', { hash: b.dataset.del }); toast('Deleted'); loadPromos(); } catch (er) { toast(er.message); } };
 let lastPromos = [];
 $('pBtn').onclick = async () => {
   $('pErr').textContent = ''; $('pBtn').disabled = true;
+  const pct = Number($('pPercent').value) || 100;
+  if (pct < 100 && !serverPercent) { $('pErr').textContent = 'The license server is still the old version, so a percentage code would become a free Pro key. Deploy it first: cd server/license-worker && npx wrangler deploy'; $('pBtn').disabled = false; return; }
   try {
-    const r = await api('promo-create', { count: Number($('pCount').value) || 1, note: $('pNote').value.trim() });
-    lastPromos = r.codes; $('pOut').textContent = r.codes.join('\n'); $('pOut').style.display = 'block'; $('pActs').style.display = 'flex'; loadPromos();
+    const r = await api('promo-create', { count: Number($('pCount').value) || 1, percent: Number($('pPercent').value) || 100, days: Number($('pDays').value) || 0, email: $('pEmail').value.trim(), note: $('pNote').value.trim() });
+    lastPromos = r.codes; $('pOut').textContent = r.codes.join('\n') + (r.percent < 100 ? '\n(' + r.percent + '% off at checkout)' : '\n(free Pro key)'); $('pOut').style.display = 'block'; $('pActs').style.display = 'flex'; loadPromos();
   } catch (e) { $('pErr').textContent = e.message; }
   $('pBtn').disabled = false;
 };

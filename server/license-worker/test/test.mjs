@@ -270,6 +270,45 @@ await test('Promo codes made in the panel: create, redeem once, see them used, d
   assert.equal((await call('/admin/promo-create', { count: 1 })).status, 401);
 });
 
+await test('Promo codes with a percentage: a discount at checkout, once, for one email, until a date; 100% stays a free key', async () => {
+  const H = { authorization: 'Bearer admin-test' };
+  assert.equal((await call('/admin/promo-create', { count: 1, percent: 0 }, H)).status, 400, 'percent must be 1 to 100');
+  assert.equal((await call('/admin/promo-create', { count: 1, percent: 101 }, H)).status, 400);
+  const made = await call('/admin/promo-create', { count: 1, percent: 25, note: 'friend' }, H);
+  assert.equal(made.percent, 25);
+  const code = made.codes[0];
+  const asKey = await call('/promo', { code, email: 'a@example.com' });
+  assert.equal(asKey.status, 400); assert.match(asKey.error, /25% off/, 'a percentage code is not a free key');
+  const full = await call('/order', { tier: 'pro', email: 'a@example.com' });
+  const cut = await call('/order', { tier: 'pro', email: 'a@example.com', coupon: code });
+  assert.ok(Math.abs(cut.usd - full.usd * 0.75) < 0.011, `25% off: ${full.usd} -> ${cut.usd}`);
+  assert.equal(cut.percent, 25);
+  assert.equal((await call('/order', { tier: 'pro', email: 'a@example.com', coupon: code.toLowerCase() })).status, 200, 'typed in lower case');
+  chain.set(txid(7001), { paid: cut.litoshi, time: Math.floor(Date.now() / 1000) + 5 });
+  assert.ok((await call('/claim', { order: cut.order, txid: txid(7001) })).key, 'paid');
+  assert.equal((await call('/order', { tier: 'pro', email: 'a@example.com', coupon: code })).status, 400, 'a paid code is used up');
+  assert.equal((await call('/promo', { code, email: 'a@example.com' })).status, 409);
+  const list = await call('/admin/promo-list', {}, H);
+  assert.ok(list.rows.some((r) => r.percent === 25 && r.used), 'the list shows the percentage and that it was used');
+  assert.equal(list.percentCodes, true, 'the admin page can tell this server knows percentage codes');
+  // For one email address.
+  const mine = await call('/admin/promo-create', { count: 1, percent: 50, email: 'Sam@Example.com' }, H);
+  assert.equal(mine.locked, true);
+  assert.equal((await call('/order', { tier: 'pro', email: 'other@example.com', coupon: mine.codes[0] })).status, 400, 'only for that email');
+  assert.ok((await call('/order', { tier: 'pro', email: 'sam@example.com', coupon: mine.codes[0] })).usd > 0);
+  assert.equal((await call('/admin/promo-create', { count: 2, percent: 10, email: 'x@example.com' }, H)).status, 400, 'an email lock needs one code');
+  // Until a date.
+  const soon = await call('/admin/promo-create', { count: 1, percent: 10, days: 1 }, H);
+  assert.equal((await call('/order', { tier: 'pro', email: 'a@example.com', coupon: soon.codes[0] })).status, 200);
+  const real = Date.now; Date.now = () => real() + 2 * 86400000;
+  try { assert.equal((await call('/order', { tier: 'pro', email: 'a@example.com', coupon: soon.codes[0] })).status, 400, 'expired'); } finally { Date.now = real; }
+  // A 100% code is a free key: it is not a discount.
+  const free = await call('/admin/promo-create', { count: 1 }, H);
+  const askDiscount = await call('/order', { tier: 'pro', email: 'a@example.com', coupon: free.codes[0] });
+  assert.equal(askDiscount.status, 400); assert.match(askDiscount.error, /free Pro key/);
+  assert.equal((await call('/promo', { code: free.codes[0], email: 'free@example.com' })).status, 200, 'and still works in the Promo tab');
+});
+
 await test('Admin: a key can be emailed with a personal intro (for a student, say), and the usual text still follows', async () => {
   const A = { authorization: 'Bearer admin-test' };
   const before = mails.length;

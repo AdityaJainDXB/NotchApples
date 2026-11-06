@@ -11,7 +11,7 @@
 // so a payment seen on the public blockchain can't be claimed by anyone else.
 //
 // Also:
-//   POST /promo    {code, email}          one Pro key per promo code
+//   POST /promo    {code, email}          one Pro key per free (100%) promo code; percentage codes are used as a discount at checkout
 //   POST /recover  {email, txid?}         emails the keys bought with that address (never shows them)
 //   POST /activate {key, device}          soft limit of DEVICE_LIMIT Macs per key
 //   POST /otp/start {key, device, email}  emails a 6-digit code to the key's owner (a key belongs to one email; see BIND_REQUIRE)
@@ -353,7 +353,7 @@ async function coinOrder(env, c, o) {
     await putJSON(env, `order:${id}`, { tier: o.tier, usd: o.usd, coin: c.id, units: units.toString(), created, email: o.email, upgradeFrom: o.upgradeFrom, coupon: o.coupon, status: 'open' }, ORDER_TTL);
     const amount = fmtUnits(units, dec);
     const uri = c.id === 'eth' ? `ethereum:${wallet}?value=${units}` : `${c.uri}:${wallet}?amount=${amount}`;
-    return { order: id, tier: o.tierName, usd: o.usd, coin: c.id, symbol: c.symbol, amount, units: units.toString(), wallet, uri, price, expires: created + ORDER_TTL * 1000 };
+    return { order: id, tier: o.tierName, usd: o.usd, ...(o.percent ? { percent: o.percent } : {}), coin: c.id, symbol: c.symbol, amount, units: units.toString(), wallet, uri, price, expires: created + ORDER_TTL * 1000 };
   }
   throw new HTTPError(503, 'Checkout is busy. Try again in a minute.');
 }
@@ -443,11 +443,31 @@ async function leadSave(env, email, tierName) {
   await putJSON(env, `lead:${eh}`, { email, tier: tierName === 'ultimate' ? 'ultimate' : 'pro', created: Date.now(), sent: 0 }, LEAD_TTL);
 }
 
+/** The percentage a promo code made in the admin page gives: 1 to 99 is a discount at checkout, 100 (or nothing stored) is a free Pro key. */
+const promoPercent = (made) => { const n = Math.floor(Number(made && made.percent)); return n >= 1 && n <= 100 ? n : 100; };
+
+/** Checks a discount code typed at checkout and returns { code, off } (off = the share taken off the price, 0.2 = 20%).
+ *  Two kinds: the 20% comeback coupon from a reminder email, and a promo code the owner made with a percentage off (valid once,
+ *  optionally for one email address and until a date). A promo code worth 100% is a free key: it is used in the Promo code tab. */
 async function couponCheck(env, raw, email) {
   const code = String(raw || '').trim().toUpperCase();
-  const cp = /^BACK20-[A-Z2-9]{8}$/.test(code) ? await getJSON(env, `coupon:${code}`) : null;
-  if (!cp || cp.used || cp.exp < Date.now() || cp.eh !== await emailHash(env, email)) throw new HTTPError(400, "That discount code isn't valid for this email, or it has already been used.");
-  return code;
+  const bad = () => new HTTPError(400, "That discount code isn't valid for this email, or it has already been used.");
+  if (/^BACK20-[A-Z2-9]{8}$/.test(code)) {
+    const cp = await getJSON(env, `coupon:${code}`);
+    if (!cp || cp.used || cp.exp < Date.now() || cp.eh !== await emailHash(env, email)) throw bad();
+    return { code, off: COUPON_OFF };
+  }
+  const plain = code.replace(/[^A-Z0-9]/g, '');
+  if (plain.length === 17 && plain.startsWith('PROMO')) {
+    const h = await sha256(plain);
+    const made = await getJSON(env, `promocode:${h}`);
+    if (!made) throw bad();
+    const pct = promoPercent(made);
+    if (pct >= 100) throw new HTTPError(400, 'That code gives a free Pro key. Enter it in the Promo code tab instead.');
+    if (await env.KV.get(`promo:${h}`) || (made.exp && made.exp < Date.now()) || (made.eh && made.eh !== await emailHash(env, email))) throw bad();
+    return { code: `PROMO-${plain.slice(5, 9)}-${plain.slice(9, 13)}-${plain.slice(13, 17)}`, off: pct / 100 };
+  }
+  throw bad();
 }
 
 function reminderMail(env, lead, step, eh, coupon, token) {
@@ -582,8 +602,8 @@ async function order(env, body) {
     usd = p.upgrade; upgradeFrom = k.keyId;
   }
   // A 20% comeback coupon (from the last reminder email), valid for the address it was sent to.
-  let coupon = null;
-  if (body.coupon) { coupon = await couponCheck(env, body.coupon, body.email); usd = Math.round(usd * (1 - COUPON_OFF) * 100) / 100; }
+  let coupon = null, percent = 0;
+  if (body.coupon) { const c = await couponCheck(env, body.coupon, body.email); coupon = c.code; percent = Math.round(c.off * 100); usd = Math.round(usd * (1 - c.off) * 100) / 100; }
   // Pay what you want: an optional tip on top (whole dollars, up to $50).
   const tip = Math.max(0, Math.min(50, Math.floor(Number(body.tip) || 0)));
   usd += tip;
@@ -591,7 +611,7 @@ async function order(env, body) {
   const coin = String(body.coin || 'ltc').toLowerCase();
   if (coin !== 'ltc') {
     if (!COINS[coin]) throw new HTTPError(400, 'Choose Litecoin, Bitcoin, Ethereum or Solana.');
-    return coinOrder(env, COINS[coin], { tier, tierName: body.tier, usd, upgradeFrom, email: body.email.trim(), coupon });
+    return coinOrder(env, COINS[coin], { tier, tierName: body.tier, usd, upgradeFrom, email: body.email.trim(), coupon, percent });
   }
   const price = await ltcPrice(env);
   const base = Math.ceil((usd / price) * 1e4) * 1e4;       // round up to 0.0001 LTC
@@ -603,7 +623,7 @@ async function order(env, body) {
     const created = Date.now();
     await env.KV.put(`amount:${litoshi}`, id, { expirationTtl: ORDER_TTL });
     await putJSON(env, `order:${id}`, { tier, usd, litoshi, created, email: body.email.trim(), upgradeFrom, coupon, status: 'open' }, ORDER_TTL);
-    return { order: id, tier: body.tier, usd, coin: 'ltc', symbol: 'LTC', amount: ltc(litoshi), uri: `litecoin:${env.WALLET}?amount=${ltc(litoshi)}`, ltc: ltc(litoshi), litoshi, wallet: env.WALLET, price, expires: created + ORDER_TTL * 1000 };
+    return { order: id, tier: body.tier, usd, ...(percent ? { percent } : {}), coin: 'ltc', symbol: 'LTC', amount: ltc(litoshi), uri: `litecoin:${env.WALLET}?amount=${ltc(litoshi)}`, ltc: ltc(litoshi), litoshi, wallet: env.WALLET, price, expires: created + ORDER_TTL * 1000 };
   }
   throw new HTTPError(503, 'Checkout is busy. Try again in a minute.');
 }
@@ -651,7 +671,8 @@ async function deliver(env, orderId, o, source, txid) {
     if (old) { old.upgradedTo = keyId; await putJSON(env, `key:${o.upgradeFrom}`, old); }
   }
   const emailed = await sendMail(env, o.email, `Your Notch Apple ${TIER_NAME[o.tier]} key`, keyMail([{ tier: o.tier, key }]));
-  if (o.coupon) { const cp = await getJSON(env, `coupon:${o.coupon}`); if (cp) await putJSON(env, `coupon:${o.coupon}`, { ...cp, used: true }, 30 * 86400); }
+  if (o.coupon && String(o.coupon).startsWith('PROMO-')) await env.KV.put(`promo:${await sha256(String(o.coupon).replace(/-/g, ''))}`, keyId);   // a percentage promo code: used once
+  else if (o.coupon) { const cp = await getJSON(env, `coupon:${o.coupon}`); if (cp) await putJSON(env, `coupon:${o.coupon}`, { ...cp, used: true }, 30 * 86400); }
   await env.KV.delete(`lead:${await emailHash(env, o.email)}`);                      // bought: no more reminders
   const done = { ...o, status: 'paid', txid, keyId, key, emailed, email: undefined, emailHash: await emailHash(env, o.email) };
   await putJSON(env, `order:${orderId}`, done);
@@ -704,8 +725,8 @@ async function cardOrder(env, request, body) {
     if ((await revokedIds(env)).includes(k.keyId)) throw new HTTPError(400, 'That Pro key has been revoked.');
     base = p.upgrade; upgradeFrom = k.keyId;
   }
-  let coupon = null;
-  if (body.coupon) { coupon = await couponCheck(env, body.coupon, body.email); base = Math.round(base * (1 - COUPON_OFF) * 100) / 100; }
+  let coupon = null, percent = 0;
+  if (body.coupon) { const c = await couponCheck(env, body.coupon, body.email); coupon = c.code; percent = Math.round(c.off * 100); base = Math.round(base * (1 - c.off) * 100) / 100; }
   base += Math.max(0, Math.min(50, Math.floor(Number(body.tip) || 0)));       // an optional tip, whole AED or dollars
   const q = cardQuote(base, fee.pct, fee.flat);
   if (q.fils < (cur === 'AED' ? 200 : 100)) throw new HTTPError(400, `The minimum card payment is ${cur === 'AED' ? 'AED 2' : '$1'}.`);
@@ -721,7 +742,7 @@ async function cardOrder(env, request, body) {
   const j = r ? await r.json().catch(() => ({})) : {};
   if (!r || !r.ok || !j.id || !j.redirect_url) { console.error('Ziina intent failed', r && r.status, JSON.stringify(j).slice(0, 300)); throw new HTTPError(502, "We couldn't start the card payment. Try again in a minute, or pay with crypto."); }
   await putJSON(env, `order:${id}`, { tier, aed: q.total, cur, fils: q.fils, provider: 'ziina', intent: j.id, test, created: Date.now(), email: body.email.trim(), upgradeFrom, coupon, status: 'open' }, ORDER_TTL);
-  return { order: id, tier: body.tier, provider: 'ziina', redirect_url: j.redirect_url, quote: q, cur };
+  return { order: id, tier: body.tier, provider: 'ziina', redirect_url: j.redirect_url, quote: q, cur, ...(percent ? { percent } : {}) };
 }
 
 /** POST /order/card {order}: asks Ziina whether the payment went through; if it did, the key is issued (once). */
@@ -751,6 +772,12 @@ async function promo(env, body) {
   const made = await getJSON(env, `promocode:${h}`);
   if (!PROMOS.has(h) && !made && !String(env.TEST_PROMOS || '').split(',').includes(h)) throw new HTTPError(400, "That promo code isn't valid.");
   if (PROMOS_USED_BEFORE.has(h) || (await env.KV.get(`promo:${h}`))) throw new HTTPError(409, 'That promo code has already been used.');
+  if (made) {
+    if (made.exp && made.exp < Date.now()) throw new HTTPError(400, 'That promo code has expired.');
+    if (made.eh && made.eh !== await emailHash(env, body.email)) throw new HTTPError(400, 'That promo code is for a different email address.');
+    const pct = promoPercent(made);
+    if (pct < 100) throw new HTTPError(400, `That code gives ${pct}% off. Enter it in the Discount code box when you buy.`);
+  }
   await env.KV.put(`promo:${h}`, 'claiming');
   const { key, keyId } = await issueKey(env, TIER.pro, 'promo', body.email.trim(), { promo: h });
   await env.KV.put(`promo:${h}`, keyId);
@@ -1103,7 +1130,7 @@ async function audit(env, path, body, result) {
       '/admin/devices': () => (body.device ? 'one device freed' : 'all devices freed'),
       '/admin/email': () => 'key emailed',
       '/admin/note': () => 'note changed',
-      '/admin/promo-create': () => `${result?.codes?.length || 0} promo codes`,
+      '/admin/promo-create': () => `${result?.codes?.length || 0} promo codes (${result?.percent ?? 100}%)`,
       '/admin/asset-put': () => `asset ${body.id || ''}`,
       '/admin/asset-delete': () => `asset ${body.id || ''} removed`,
     }[path]?.() || '';
@@ -1227,16 +1254,24 @@ async function admin(env, path, body) {
   if (path === '/admin/promo-create') {
     const n = Math.min(50, Math.max(1, Math.floor(Number(body.count) || 1)));
     const note = String(body.note || '').slice(0, 200);
+    // Each code can be a free Pro key (100, the default) or a percentage off at checkout (1 to 99), valid for some days and for one email.
+    const percent = Math.floor(body.percent === undefined || body.percent === '' ? 100 : Number(body.percent));
+    if (!(percent >= 1 && percent <= 100)) throw new HTTPError(400, 'Percent must be 1 to 100 (100 is a free Pro key).');
+    const days = Math.max(0, Math.min(3650, Math.floor(Number(body.days) || 0)));
+    const lockEmail = String(body.email || '').trim();
+    if (lockEmail && !validEmail(lockEmail)) throw new HTTPError(400, 'That email address is not valid.');
+    if (lockEmail && n > 1) throw new HTTPError(400, 'A code for one email address: make one code at a time.');
+    const extra = { ...(percent < 100 ? { percent } : {}), ...(days ? { exp: Date.now() + days * 86400000 } : {}), ...(lockEmail ? { eh: await emailHash(env, lockEmail) } : {}) };
     const A = 'ABCDEFGHJKMNPQRSTVWXYZ23456789';
     const codes = [];
     for (let i = 0; i < n; i++) {
       const r = crypto.getRandomValues(new Uint8Array(12));
       const c = [...r].map((b) => A[b % A.length]).join('');
       const code = `PROMO-${c.slice(0, 4)}-${c.slice(4, 8)}-${c.slice(8, 12)}`;
-      await putJSON(env, `promocode:${await sha256(code.replace(/-/g, ''))}`, { created: Date.now(), note });
+      await putJSON(env, `promocode:${await sha256(code.replace(/-/g, ''))}`, { created: Date.now(), note, ...extra });
       codes.push(code);
     }
-    return { codes };   // shown once: only a hash is stored
+    return { codes, percent, exp: extra.exp || null, locked: !!lockEmail };   // shown once: only a hash is stored
   }
   if (path === '/admin/promo-list') {
     const page = await env.KV.list({ prefix: 'promocode:', cursor: body.cursor || undefined, limit: 200 });
@@ -1244,9 +1279,9 @@ async function admin(env, path, body) {
     for (const { name } of page.keys) {
       const h = name.slice(10), r = await getJSON(env, name);
       const used = await env.KV.get(`promo:${h}`);
-      rows.push({ id: h.slice(0, 12), hash: h, created: r?.created, note: r?.note || '', used: !!used, keyId: used && used !== 'claiming' ? used : null });
+      rows.push({ id: h.slice(0, 12), hash: h, created: r?.created, note: r?.note || '', percent: promoPercent(r), exp: r?.exp || null, locked: !!r?.eh, used: !!used, keyId: used && used !== 'claiming' ? used : null });
     }
-    return { rows: rows.sort((a, b) => (b.created || 0) - (a.created || 0)), cursor: page.list_complete ? null : page.cursor };
+    return { rows: rows.sort((a, b) => (b.created || 0) - (a.created || 0)), cursor: page.list_complete ? null : page.cursor, percentCodes: true };   // percentCodes: this server understands percentage promo codes (the admin page checks)
   }
   if (path === '/admin/promo-delete') {
     const h = String(body.hash || '');

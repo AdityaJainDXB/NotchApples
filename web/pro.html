@@ -260,7 +260,8 @@ footer{border-top:1px solid var(--line);padding:30px 0 44px;color:var(--dim);fon
           <label for="email">Email (your key is sent here; used only for that and "Lost my key?")</label>
           <input id="email" type="email" placeholder="you@example.com" autocomplete="email">
           <label class="muted" style="display:flex;gap:8px;align-items:flex-start;font-weight:400;margin:8px 0"><input type="checkbox" id="remind" style="margin-top:3px"><span>Email me a reminder if I don't finish (at most three emails over six days, the last with 20% off). Unsubscribe any time.</span></label>
-          <div id="couponRow" hidden><label for="coupon">Discount code (20% off, for the email it was sent to)</label><input id="coupon" placeholder="BACK20-XXXXXXXX" autocomplete="off" autocapitalize="characters"></div>
+          <p class="muted" id="couponLink" style="margin:6px 0"><a href="#" id="couponOpen">Have a discount code?</a></p>
+          <div id="couponRow" hidden><label for="coupon">Discount code (a percentage off; each code works once)</label><input id="coupon" placeholder="PROMO-XXXX-XXXX-XXXX or BACK20-XXXXXXXX" autocomplete="off" autocapitalize="characters" spellcheck="false"></div>
           <div class="quote" id="quote" hidden></div>
           <button class="btn" id="orderBtn"><span class="spin"></span><span>Continue to payment</span></button>
           <div class="status" id="orderStatus"></div>
@@ -286,7 +287,7 @@ footer{border-top:1px solid var(--line);padding:30px 0 44px;color:var(--dim);fon
       </div>
 
       <div class="pane" id="promo">
-        <p class="muted">Each promo code gives one Pro key, once.</p>
+        <p class="muted">A promo code gives one free Pro key, once. If your code is a percentage off instead, enter it in the <b>Discount code</b> box when you buy.</p>
         <label for="code">Promo code</label>
         <input id="code" class="mono" placeholder="PROMO-XXXX-XXXX-XXXX" autocomplete="off" spellcheck="false">
         <label for="promoEmail">Email (your key is sent here)</label>
@@ -478,7 +479,7 @@ function paying(o) {
   save('na.order', o);
   $('#forms').style.display = 'none'; $('#paying').style.display = 'block';
   const sym = o.symbol || 'LTC', amount = o.amount || o.ltc, cname = (COIN_NAMES[o.coin || 'ltc'] || 'Litecoin');
-  $('#payFor').textContent = `${o.tier === 'ultimate' ? (o.usd === 4 ? 'Upgrade to Ultimate' : 'Ultimate') : 'Pro'} · $${o.usd}` + (o.price ? ` (1 ${sym} = $${(+o.price).toFixed(2)})` : '');
+  $('#payFor').textContent = `${o.tier === 'ultimate' ? (o.usd === 4 ? 'Upgrade to Ultimate' : 'Ultimate') : 'Pro'} · $${o.usd}` + (o.percent ? ` · ${o.percent}% off applied` : '') + (o.price ? ` (1 ${sym} = $${(+o.price).toFixed(2)})` : '');
   $('#amt').textContent = amount + ' ' + sym; $('#addr').textContent = o.wallet; $('#addrLabel').textContent = `To this ${cname} address`;
   const note = COIN_NOTES[o.coin || 'ltc']; $('#coinNote').style.display = note ? 'block' : 'none'; $('#coinNote').textContent = note || '';
   $('#txid').placeholder = o.coin === 'eth' ? '0x… (66 characters), or an explorer link' : o.coin === 'sol' ? 'The long transaction signature, or an explorer link' : '64 characters, or an explorer link';
@@ -597,7 +598,9 @@ async function startOrder(btn, statusId, body) {
 let tip = 0;
 document.querySelectorAll('#tipChoice button').forEach(b => b.onclick = () => { document.querySelectorAll('#tipChoice button').forEach(x => x.classList.remove('on')); b.classList.add('on'); tip = +b.dataset.tip; paintQuote() });
 const urlCoupon = (new URLSearchParams(location.search).get('coupon') || '').toUpperCase().replace(/[^A-Z0-9-]/g, '').slice(0, 20);
-if (urlCoupon) { $('#coupon').value = urlCoupon; $('#couponRow').hidden = false; }
+const openCoupon = () => { $('#couponRow').hidden = false; $('#couponLink').hidden = true; $('#coupon').focus(); };
+if (urlCoupon) { $('#coupon').value = urlCoupon; $('#couponRow').hidden = false; $('#couponLink').hidden = true; }
+$('#couponOpen').onclick = (e) => { e.preventDefault(); openCoupon(); };
 $('#orderBtn').onclick = () => startOrder($('#orderBtn'), '#orderStatus', { tier, email: $('#email').value, tip, remind: $('#remind').checked, coupon: $('#coupon').value.trim() || undefined });
 $('#upBtn').onclick = () => {
   const k = $('#upKey').value.trim();
