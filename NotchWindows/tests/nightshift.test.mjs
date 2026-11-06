@@ -98,11 +98,20 @@ test('the blackout: the music plays, then the dark, then the Conductor, unless 6
   assert.deepEqual(w.over, { win: true }, '6 AM saves you in the dark');
 });
 
+test('night 2 is busier than night 1 from the start, and Grin is awake', () => {
+  const a = N.newNight(1), b = N.newNight(2);
+  for (const id of ['clank', 'petunia', 'grin']) assert.ok(b.bots[id].ai > a.bots[id].ai, id);
+  assert.equal(b.bots.conductor.ai, 0, 'the Conductor still only comes in a blackout');
+  assert.equal(b.night, 2);
+  const s = N.newNight(2); const ev = run(s, 400, () => 0.99);
+  assert.deepEqual(s.over, { win: true }, 'with no moves it still ends at 6 AM'); assert.ok(ev.some((e) => e.type === 'six'));
+});
+
 test('every room on a path exists, and every path leads to a doorway', () => {
   for (const id of Object.keys(N.PATHS)) for (const [from, to] of Object.entries(N.PATHS[id])) {
     assert.ok(N.ROOMS[from], from);
     for (const r of to) assert.ok(N.ROOMS[r] || /Door$/.test(r), r);
   }
-  assert.equal(N.LAST_NIGHT, 1);
+  assert.equal(N.LAST_NIGHT, 2);
   assert.equal(N.newNight(1).bots.grin.room, 'prize');
 });

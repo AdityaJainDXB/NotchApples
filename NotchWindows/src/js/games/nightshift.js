@@ -256,7 +256,11 @@
     fit();
 
     function go(next) { screen = next; screenT = 0; if (next !== 'play') sfx.stopHum(); if (next !== 'play' && next !== 'paused') sfx.stopMusic(); }
-    function startNight() { s = N.newNight(1); pan = 160; doorAnim.left = doorAnim.right = 0; glitchT = 0; flipT = 0; go('intro'); }
+    // The nights you can pick: every night up to the one after the last you survived (and no further than the nights that exist).
+    const open = () => Math.min(N.LAST_NIGHT, beaten + 1);
+    const ORD = ['', '1st', '2nd', '3rd', '4th', '5th'];
+    function nightButtons() { const n = N.LAST_NIGHT, w = 120, gap = 12, x0 = W / 2 - (n * w + (n - 1) * gap) / 2; return Array.from({ length: n }, (_, i) => ({ night: i + 1, x: x0 + i * (w + gap), y: 170, w, h: 40 })); }
+    function startNight(n = s ? s.night : open()) { s = N.newNight(Math.min(n, open())); pan = 160; doorAnim.left = doorAnim.right = 0; glitchT = 0; flipT = 0; go('intro'); }
     function pause() { if (screen === 'play') { go('paused'); } }
     function unpause() { if (screen === 'paused') { go('play'); sfx.startHum(); if (s && s.po && s.po.phase === 'music') sfx.startMusic(); } }
 
@@ -415,24 +419,26 @@
       g.globalAlpha = 0.05; g.drawImage(noise[Math.floor(clock * 20) % 4], 0, 0, W, H); g.globalAlpha = 1;
       text(g, 'NIGHT SHIFT', W / 2, 110, 46, '#f2efe6', 'center', 800, 'system-ui, sans-serif');
       text(g, "at Tinker's Toy Emporium", W / 2, 138, 15, '#c8c2b0', 'center', 600, 'system-ui, sans-serif');
-      button(W / 2 - 90, 170, 180, 40, beaten >= 1 ? 'Night 1 again' : 'Start Night 1', true);
-      text(g, 'Nights 2 to 5 are coming in an update', W / 2, 236, 11, '#8a8a84', 'center', 500);
+      for (const b of nightButtons()) button(b.x, b.y, b.w, b.h, b.night <= open() ? (b.night <= beaten ? '★ Night ' : 'Night ') + b.night : '🔒 Night ' + b.night, b.night === open(), b.night > open());
+      text(g, N.LAST_NIGHT < 5 ? `Nights ${N.LAST_NIGHT + 1} to 5 are coming in an update` : 'Survive all five nights', W / 2, 236, 11, '#8a8a84', 'center', 500);
       text(g, 'Survive from 12 AM to 6 AM. Watch the toys on the cameras,', W / 2, 270, 11, '#bbb', 'center', 500);
       text(g, 'shut a door when one is outside it, and don’t run out of power.', W / 2, 286, 11, '#bbb', 'center', 500);
-      text(g, beaten >= 1 ? '★ Night 1 survived' : 'Enter or click to start · M sound', W / 2, 318, 11, '#e8c33a', 'center', 600);
+      text(g, beaten >= 1 ? `★ ${beaten} night${beaten > 1 ? 's' : ''} survived · Enter plays night ${open()}` : 'Enter or click to start · M sound', W / 2, 318, 11, '#e8c33a', 'center', 600);
     }
-    function button(x, y, w, h, label, hot) {
-      const over = mouse.x >= x && mouse.x <= x + w && mouse.y >= y && mouse.y <= y + h;
+    function button(x, y, w, h, label, hot, locked) {
+      const over = !locked && mouse.x >= x && mouse.x <= x + w && mouse.y >= y && mouse.y <= y + h;
+      if (locked) g.globalAlpha = 0.45;
       g.fillStyle = over || hot ? 'rgba(232,195,58,.18)' : 'rgba(255,255,255,.08)'; roundRect(g, x, y, w, h, 8); g.fill();
       g.strokeStyle = over ? '#e8c33a' : 'rgba(255,255,255,.4)'; g.lineWidth = 1.5; roundRect(g, x, y, w, h, 8); g.stroke();
       text(g, label, x + w / 2, y + h / 2 + 5, 14, '#fff', 'center', 700, 'system-ui, sans-serif');
+      g.globalAlpha = 1;
     }
     function drawIntro() {
       const a = Math.min(1, screenT / 0.8) * Math.min(1, (4.5 - screenT) / 0.6);
       g.globalAlpha = Math.max(0, a);
       text(g, '12:00 AM', W / 2, 150, 38, '#fff', 'center', 700);
-      text(g, '1st Night', W / 2, 186, 18, '#ddd', 'center', 600);
-      text(g, 'The toys wander at night. Keep them out until 6 AM.', W / 2, 230, 12, '#aaa', 'center', 500);
+      text(g, ORD[s.night] + ' Night', W / 2, 186, 18, '#ddd', 'center', 600);
+      text(g, s.night === 1 ? 'The toys wander at night. Keep them out until 6 AM.' : s.night === 2 ? 'They are livelier tonight. Grin is awake from the start: check the Prize Corner.' : 'Watch the power.', W / 2, 230, 12, '#aaa', 'center', 500);
       g.globalAlpha = 1;
     }
     function drawScare() {
@@ -464,9 +470,10 @@
       text(g, '5', W / 2 - 30, 168 - 50 * k, 48, '#fff', 'right', 800); text(g, '6', W / 2 - 30, 218 - 50 * k, 48, '#fff', 'right', 800);
       g.restore(); text(g, 'AM', W / 2 - 18, 168, 48, '#fff', 'left', 800);
       if (screenT > 2.2) {
-        text(g, 'Night 1 survived!', W / 2, 220, 16, '#e8c33a', 'center', 700, 'system-ui, sans-serif');
-        text(g, 'Nights 2 to 5 are coming in an update.', W / 2, 244, 12, '#bbb', 'center', 500);
-        button(W / 2 - 160, 266, 150, 38, 'Play again', true); button(W / 2 + 10, 266, 150, 38, 'Menu', false);
+        const next = s.night < N.LAST_NIGHT;
+        text(g, `Night ${s.night} survived!`, W / 2, 220, 16, '#e8c33a', 'center', 700, 'system-ui, sans-serif');
+        text(g, next ? `On to night ${s.night + 1}.` : N.LAST_NIGHT < 5 ? `Nights ${N.LAST_NIGHT + 1} to 5 are coming in an update.` : 'You survived the whole week!', W / 2, 244, 12, '#bbb', 'center', 500);
+        button(W / 2 - 160, 266, 150, 38, next ? `Night ${s.night + 1}` : 'Play again', true); button(W / 2 + 10, 266, 150, 38, 'Menu', false);
       }
     }
 
@@ -484,12 +491,12 @@
     function onLeave() { mouse = { x: -1, y: -1 }; inBar = false; }
     function onDown(e) {
       root.focus(); const p = toLocal(e); mouse = p; wake();
-      if (screen === 'menu') { if (inRect(p, W / 2 - 90, 170, 180, 40)) startNight(); return; }
+      if (screen === 'menu') { for (const b of nightButtons()) if (b.night <= open() && inRect(p, b.x, b.y, b.w, b.h)) startNight(b.night); return; }
       if (screen === 'intro') { go('play'); sfx.startHum(); return; }
       if (screen === 'paused') { unpause(); return; }
       if (screen === 'over' || screen === 'win') {
         const y = screen === 'over' ? 210 : 266;
-        if (inRect(p, W / 2 - 160, y, 150, 38)) startNight(); else if (inRect(p, W / 2 + 10, y, 150, 38)) go('menu');
+        if (inRect(p, W / 2 - 160, y, 150, 38)) startNight(screen === 'win' && s.night < N.LAST_NIGHT ? s.night + 1 : s.night); else if (inRect(p, W / 2 + 10, y, 150, 38)) go('menu');
         return;
       }
       if (screen !== 'play') return;
@@ -505,9 +512,9 @@
       wake();
       if (!down) { if (k === 'ArrowLeft' || k === 'ArrowRight') panVel = 0; return false; }
       if (k === 'm' || k === 'M') { if (!repeat) { sfx.on = !sfx.on; store.set('sound', sfx.on); if (!sfx.on) sfx.stopAll(); else if (screen === 'play') sfx.startHum(); } return true; }
-      if (screen === 'menu') { if (k === 'Enter' || k === ' ') { startNight(); return true; } return false; }
+      if (screen === 'menu') { if (k === 'Enter' || k === ' ') { startNight(open()); return true; } if (/^[1-5]$/.test(k) && +k <= open()) { startNight(+k); return true; } return false; }
       if (screen === 'intro') { if (k === 'Enter' || k === ' ') { go('play'); sfx.startHum(); return true; } return false; }
-      if (screen === 'over' || screen === 'win') { if (k === 'Enter' || k === ' ') { startNight(); return true; } if (k === 'Escape') return false; return false; }
+      if (screen === 'over' || screen === 'win') { if (k === 'Enter' || k === ' ') { startNight(screen === 'win' && s.night < N.LAST_NIGHT ? s.night + 1 : s.night); return true; } if (k === 'Escape') return false; return false; }
       if (k === 'p' || k === 'P') { if (!repeat) (screen === 'paused' ? unpause : pause)(); return true; }
       if (screen === 'paused') { if (k === ' ' || k === 'Enter') { unpause(); return true; } return false; }
       if (screen !== 'play' || repeat) return k === 'ArrowLeft' || k === 'ArrowRight' || k === ' ';
