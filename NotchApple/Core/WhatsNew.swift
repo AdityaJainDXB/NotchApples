@@ -20,6 +20,10 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.2.22", date: "6 November 2026", headline: "Gemini model list and a new default model", items: [
+            "Fix: on Windows the model list in AI chat showed squashed, unreadable rows, so it was easy to pick the wrong model. It is readable again, and (like the Mac) it only lists Gemini chat models, never image, voice or embedding ones. If one of those was picked earlier, Gemini Do It and chat now use the default instead of failing",
+            "New default: everyone who hasn't chosen a Gemini model now gets Gemini 3.5 Flash-Lite (Mac and Windows). A model you picked yourself stays"
+        ]),
         ReleaseNote(version: "2.2.21", date: "6 November 2026", headline: "A clearer email box", items: [
             "Fix: the email box no longer shows an example address (you@gmail.com) that people took for text they had to edit. It is empty, with a plain label \"Your email address\" above it, in the email setup window, Settings and on Windows.",
         ]),

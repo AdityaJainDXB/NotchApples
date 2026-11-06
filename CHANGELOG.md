@@ -4,6 +4,11 @@ Every Notch Apple release, newest first. The latest few are also on the [README]
 
 > **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is in the repository's history.
 
+### Mac 2.2.22 · Windows 2.2.22 BETA · 6 November 2026 · 🔧 Gemini model list and a new default model
+
+- Fix: on Windows the model list in AI chat showed squashed, unreadable rows, so it was easy to pick the wrong model. It is readable again, and (like the Mac) it only lists Gemini chat models, never image, voice or embedding ones. If one of those was picked earlier, Gemini Do It and chat now use the default instead of failing
+- New default: everyone who hasn't chosen a Gemini model now gets Gemini 3.5 Flash-Lite (Mac and Windows). A model you picked yourself stays
+
 ### Mac 2.2.21 · Windows 2.2.21 BETA · 6 November 2026 · ✉️ A clearer email box
 
 - Fix: the email box no longer shows an example address (you@gmail.com) that people took for text they had to edit. It is empty, with a plain label "Your email address" above it, in the email setup window, Settings and on Windows.
