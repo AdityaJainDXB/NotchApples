@@ -95,7 +95,7 @@ export const activeTab = () => active;
 
 export function buildTabs() {
   const order = tabOrder().map(byId).filter((m) => m && isEnabled(m.id) && m.id !== 'settings');   // Settings is pinned at the right of the header
-  if (active !== 'settings' && active !== 'welcome' && active !== 'weeklyupdates' && !order.some((m) => m.id === active)) active = order[0]?.id ?? 'settings';
+  if (active !== 'settings' && active !== 'welcome' && active !== 'weeklyupdates' && active !== 'greetingchoice' && !order.some((m) => m.id === active)) active = order[0]?.id ?? 'settings';
   const mode = pref('ui.compactTabs');
   // "auto": names when they fit, icons only (except the active tab) when they don't.
   const compact = mode !== 'names';  // like the Mac: icons, with the name on the open tab
@@ -169,7 +169,7 @@ document.addEventListener('update-available', (e) => {
 /// Shows a tab. `opts` are passed to the module (e.g. a search query).
 let switching = 0;
 export async function show(id, opts) {
-  const welcome = id === 'welcome' || id === 'weeklyupdates';   // the feature chooser and the one-time weekly-updates question: not tabs, never remembered as the last tab
+  const welcome = id === 'welcome' || id === 'weeklyupdates' || id === 'greetingchoice';   // the feature chooser and the one-time weekly-updates question: not tabs, never remembered as the last tab
   if (!welcome && !byId(id)) id = 'today';
   if (!welcome && !isEnabled(id) && id !== 'settings') setEnabled(id, true);
   const wasActive = active;
@@ -194,7 +194,8 @@ export async function show(id, opts) {
   page.replaceChildren();
   page.classList.remove('fade'); void page.offsetWidth; page.classList.add('fade');
 
-  const m = id === 'weeklyupdates' ? { id, name: 'Updates', icon: '🗓', load: () => import('./modules/weeklyupdates.js') }
+  const m = id === 'greetingchoice' ? { id, name: 'Hello', icon: '👋', load: () => import('./modules/greetingchoice.js') }
+    : id === 'weeklyupdates' ? { id, name: 'Updates', icon: '🗓', load: () => import('./modules/weeklyupdates.js') }
     : welcome ? { id: 'welcome', name: 'Welcome', icon: '👋', load: () => import('./modules/welcome.js') } : byId(id);
   if (!allowed(m)) {
     const { renderUpgrade } = await import('./modules/activation.js');
@@ -289,7 +290,9 @@ export async function expand(tab, opts) {
   buildTabs.overflowed = false;
   // A first launch starts with the feature chooser (an existing setup that already has tabs chosen skips it).
   const firstRun = !load('onboarding.done', false) && load('modules.enabled', null) === null;
-  show(firstRun ? 'welcome' : (tab || active), opts);
+  // After installing or updating, the notch asks once which hello to use (or none): it stays until answered, however often it is closed and opened.
+  const greetingDue = !firstRun && tab !== 'weeklyupdates' && !load('hello.chosen', false) && load('ui.welcomed', false);
+  show(firstRun ? 'welcome' : greetingDue ? 'greetingchoice' : (tab || active), opts);
   if (!firstRun) import('./services/insights.js').then((m) => m.noteOpened()).catch(() => {});   // the feedback card, every three to four weeks
   await nextFrame();
   body.classList.remove('swap');

@@ -22,7 +22,7 @@ enum HelloAnimation {
     /// At launch: ask for the name the first time, then say hello.
     static func start() {
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
-            if !UserDefaults.standard.bool(forKey: askedKey) { askName() }
+            if isOn && !UserDefaults.standard.bool(forKey: askedKey) { askName() }
             show()
         }
     }

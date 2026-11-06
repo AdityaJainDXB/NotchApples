@@ -40,7 +40,7 @@ struct ExtrasSettings: View {
     var body: some View {
         Form {
             Section {
-                Toggle("Say hello when I open my Mac", isOn: $helloOn)
+                Toggle("Say hello when I open my Mac (turn off for no greetings at all)", isOn: $helloOn)
                 TextField("Your name", text: $helloName, prompt: Text("Your name"))
                 Picker("Greeting", selection: $helloCharacter) {
                     Text("Handwritten hello").tag(MascotGreeting.handwriting)

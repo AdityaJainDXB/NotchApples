@@ -9,6 +9,7 @@
 //
 
 import AppKit
+import SwiftUI
 import WebKit
 
 @MainActor
@@ -93,5 +94,73 @@ enum MascotGreeting {
         func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
             Task { @MainActor in finished() }
         }
+    }
+}
+
+/// Whether the one-time "choose your hello" has been answered. After installing or updating it comes back every time the
+/// notch opens until the person picks a hello or says no thanks (which turns greetings off; Settings → Notch Extras turns them on again).
+@MainActor
+final class GreetingPrefs: ObservableObject {
+    static let shared = GreetingPrefs()
+    private static let chosenKey = "hello.chosen"
+    @Published private(set) var revision = 0
+
+    var chosen: Bool { UserDefaults.standard.bool(forKey: Self.chosenKey) }
+
+    func choose(_ id: String) {
+        UserDefaults.standard.set(id, forKey: MascotGreeting.characterKey)
+        UserDefaults.standard.set(true, forKey: HelloAnimation.onKey)
+        UserDefaults.standard.set(true, forKey: Self.chosenKey)
+        revision += 1
+    }
+
+    func decline() {
+        UserDefaults.standard.set(false, forKey: HelloAnimation.onKey)
+        UserDefaults.standard.set(true, forKey: Self.chosenKey)
+        revision += 1
+    }
+}
+
+/// Shown once inside the notch after installing or updating. `done(true)` = a hello was chosen (play it), `done(false)` = no thanks.
+struct GreetingChooserView: View {
+    let done: (Bool) -> Void
+    @ObservedObject private var prefs = GreetingPrefs.shared
+    @State private var picked = MascotGreeting.handwriting
+
+    private var options: [(id: String, name: String, how: String)] {
+        [(MascotGreeting.handwriting, "Handwritten hello", "Written by hand, Mac style")] + MascotGreeting.all
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text("Choose your hello").font(.system(size: 18, weight: .bold, design: .rounded)).foregroundStyle(.white)
+            Text("When you open your Mac, the notch can say hello: written by hand, or a little character that moves across the notch. You can change it or turn it off any time in Settings → Notch Extras.")
+                .font(.system(size: 12)).foregroundStyle(Theme.textSecondary)
+            ScrollView {
+                LazyVGrid(columns: [GridItem(.flexible(), spacing: 8), GridItem(.flexible(), spacing: 8)], spacing: 8) {
+                    ForEach(options, id: \.id) { option in
+                        Button { picked = option.id } label: {
+                            VStack(alignment: .leading, spacing: 1) {
+                                Text(option.name).font(.system(size: 12, weight: .semibold)).foregroundStyle(.white)
+                                Text(option.how).font(.system(size: 10)).foregroundStyle(Theme.textSecondary).lineLimit(1)
+                            }
+                            .padding(.horizontal, 10).padding(.vertical, 7)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .background(RoundedRectangle(cornerRadius: 10, style: .continuous).fill(picked == option.id ? Theme.accent.opacity(0.35) : Color.white.opacity(0.06)))
+                            .overlay(RoundedRectangle(cornerRadius: 10, style: .continuous).stroke(picked == option.id ? Theme.accent : Color.clear, lineWidth: 1.5))
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+            }
+            .frame(maxHeight: 150)
+            HStack {
+                Button("No thanks") { prefs.decline(); done(false) }
+                    .buttonStyle(.plain).foregroundStyle(Theme.textSecondary).font(.system(size: 12))
+                Spacer()
+                Button("Use this hello") { prefs.choose(picked); done(true) }.buttonStyle(PurpleButtonStyle())
+            }
+        }
+        .padding(.top, 6)
     }
 }

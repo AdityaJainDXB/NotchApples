@@ -91,7 +91,7 @@ function helloCard() {
     livery.append(select([{ value: '', label: 'Notch Apple purple' }, ...g.TEAMS.slice(1).map((t) => ({ value: t[0], label: t[1] }))], g.team(), (v) => g.setTeam(v)));
   });
   return card('Hello from the notch',
-    setting('Say hello when I open my PC', 'When Notch Apple starts and when this PC wakes up, the notch opens and says hello with your name. Nothing is sent anywhere.',
+    setting('Say hello when I open my PC', 'When Notch Apple starts and when this PC wakes up, the notch opens and says hello with your name. Turn this off for no greetings at all. Nothing is sent anywhere.',
       toggle(load('hello.on', true) !== false, (v) => G().then((g) => g.setOn(v)))),
     setting('Your name', 'Shown under the hello. Stays on this PC.', nameBox),
     setting('Greeting', 'Written by hand like the Mac, or a character that moves across the notch.', pick),

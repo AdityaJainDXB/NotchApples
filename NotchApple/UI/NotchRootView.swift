@@ -92,6 +92,7 @@ struct NotchRootView: View {
     @ObservedObject private var patchLog = PatchLog.shared
     @ObservedObject private var tour = TourModel.shared
     @ObservedObject private var topBar = TopBarPrefs.shared
+    @ObservedObject private var greeting = GreetingPrefs.shared
 
     @Namespace private var duoSpace
     /// The tab that was showing before this switch, so the new page knows which side to slide in from.
@@ -188,6 +189,12 @@ struct NotchRootView: View {
         } else if !topBar.chosen {
             // Once, after installing or updating: pick which header buttons to keep.
             TopBarChooserView().insetInNotch().overlay(alignment: .topTrailing) { closeButton }
+        } else if !greeting.chosen {
+            // Once, after installing or updating: pick a hello (or no greeting). It stays until answered, however often the notch is closed and opened.
+            GreetingChooserView { chose in
+                state.close()
+                if chose { DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) { HelloAnimation.show(force: true) } }
+            }.insetInNotch().overlay(alignment: .topTrailing) { closeButton }
         } else if updater.reminderDue, let release = updater.reminderRelease {
             // Every 4th or 5th time the notch is opened while an update is waiting.
             RequiredUpdateView(release: release, skippable: true).insetInNotch().overlay(alignment: .topTrailing) { closeButton }
