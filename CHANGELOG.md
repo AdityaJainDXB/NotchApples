@@ -4,6 +4,12 @@ Every Notch Apple release, newest first. The latest few are also on the [README]
 
 > **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is in the repository's history.
 
+### Mac 2.2.33 · Windows 2.2.33 BETA · 6 November 2026 · 🔦 Night Shift: all five nights
+
+- New: Night Shift nights 3, 4 and 5. From night 3 the Conductor, a toy train, comes up the east side to the right door, and it only moves while you are not watching it (listen for its whistle). Each night the toys start busier, and night 5 has every toy awake. Survive all five for the whole week.
+- Each night has its own short briefing, and the game-over tip now tells you how to stop the Conductor.
+- On the website: card prices in the UAE are now AED 4.40 for Pro, AED 11 for Ultimate and AED 6.60 to upgrade, and students in Dubai can ask for a free promo code by emailing notchapples.support@gmail.com.
+
 ### Mac 2.2.32 · Windows 2.2.32 BETA · 6 November 2026 · 🔦 Night Shift: night 2
 
 - New: Night Shift night 2. Survive night 1 and night 2 unlocks in the menu (the menu now has a button for each night, with a star on the ones you have survived). On night 2 the toys are livelier from midnight and Grin is awake from the start, so keep checking the Prize Corner.

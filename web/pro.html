@@ -111,6 +111,7 @@ input:focus,textarea:focus{box-shadow:inset 0 0 0 1.5px var(--ac),0 0 0 4px rgba
 .quote div:last-child{border:0;color:var(--tx);font-weight:700;font-size:16px}
 .quote small{display:block;font-weight:400;color:var(--mut);font-size:12px}
 input[type=checkbox]{width:20px;height:20px;flex:none;accent-color:#7c5cff;cursor:pointer;margin:2px 0 0}
+.students{text-align:center;font-size:13.5px;color:#cfc9b8;margin:0 auto 18px;max-width:640px;line-height:1.5}.students a{color:#e8c33a;text-decoration:underline}
 .uaebanner{display:flex;align-items:center;justify-content:center;gap:8px;margin:0 auto 18px;max-width:max-content;padding:8px 16px;border-radius:999px;font-size:13.5px;color:#d8f5e6;background:rgba(80,200,140,.1);box-shadow:inset 0 0 0 1px rgba(120,230,180,.35)}.uaebanner[hidden]{display:none}
 .warn{background:rgba(255,190,90,.07);box-shadow:inset 0 0 0 1px rgba(255,190,90,.28);color:#ffe2b0;border-radius:12px;padding:12px 14px;font-size:13.5px;margin-top:14px}
 .status{margin-top:14px;font-size:14px;min-height:22px}.status.err{color:var(--red)}.status.ok{color:var(--ok)}
@@ -167,7 +168,8 @@ footer{border-top:1px solid var(--line);padding:30px 0 44px;color:var(--dim);fon
   <h1>Free for everyone.<br><span>Pay once for more.</span></h1>
   <p class="lead">No subscriptions, no account, no renewals. Buy a key once and keep it for life, with every future update included. The app has no ads in every tier, and it counts nothing about you unless you choose to share an anonymous user count.</p>
 
-  <p class="uaebanner" id="uaeBanner" hidden><b>UAE price</b> · a discount for all customers in the UAE: Pro AED 4, Ultimate AED 10</p>
+  <p class="uaebanner" id="uaeBanner" hidden><b>UAE price</b> · a discount for all customers in the UAE: Pro AED 4.40, Ultimate AED 11</p>
+  <p class="students">🎓 <b>Students in Dubai:</b> ask for a free promo code. Send an email to <a href="mailto:notchapples.support@gmail.com?subject=Student%20promo%20code">notchapples.support@gmail.com</a></p>
   <div class="plans">
     <div class="plan">
       <h3>Free</h3><div class="pr" data-price="free">$0</div><p class="sub">The complete notch.</p>
@@ -354,7 +356,7 @@ footer{border-top:1px solid var(--line);padding:30px 0 44px;color:var(--dim);fon
   <h2>Questions</h2>
   <section class="faq" id="faqs">
     <div><h3>Is it really one payment?</h3><p>Yes. Pro is $1 and Ultimate is $5, once. There are no subscriptions, renewals or expiry dates, and every future update is included, 2.0 and beyond.</p></div>
-    <div><h3>Student discount?</h3><p>Students can ask for a free Pro promo code: <a href="https://github.com/AdityaJainDXB/NotchApples/issues/new?labels=payment&title=Student%20promo%20code" style="text-decoration:underline">open a request</a> (no proof needed, just be honest).</p></div>
+    <div><h3>Student discount?</h3><p>Students can ask for a free Pro promo code: <a href="https://github.com/AdityaJainDXB/NotchApples/issues/new?labels=payment&title=Student%20promo%20code" style="text-decoration:underline">open a request</a> (no proof needed, just be honest). Students in Dubai can also send an email to <a href="mailto:notchapples.support@gmail.com?subject=Student%20promo%20code" style="text-decoration:underline">notchapples.support@gmail.com</a>.</p></div>
     <div><h3>Can I pay more?</h3><p>Yes, add a tip at checkout. It all goes to four high school developers, and it's hugely appreciated.</p></div>
     <div><h3>How does activation work?</h3><p>Your key is signed by our license server. The app checks the signature on your Mac, offline, using a public key built into the app. When you activate, the app tells the server a one-way hash of your Mac (so a key works on up to 3 Macs); nothing else.</p></div>
     <div><h3>I have Pro. How do I upgrade?</h3><p>Use the Upgrade tab: paste your Pro key and pay the $4 difference. You get a new Ultimate key; your Pro key keeps working until you replace it.</p></div>
@@ -526,11 +528,12 @@ let card = null, region = 'intl';
 function applyRegion(rg) {
   region = rg; const r = card[rg];
   CUR = r.cur; aedP = r.prices; feeInfo = r.fee;
-  const sym = CUR === 'AED' ? 'AED ' : '$';
+  const sym = CUR === 'AED' ? 'AED ' : '$', m = (v) => (Number.isInteger(+v) ? String(v) : (+v).toFixed(2));
   $('#uaeBanner').hidden = CUR !== 'AED';
-  document.querySelectorAll('[data-price]').forEach(e => { const v = e.dataset.price === 'free' ? 0 : aedP[e.dataset.price]; e.innerHTML = e.classList.contains('pr') && e.dataset.price !== 'free' ? `${sym}${v}<small>once</small>` : `${sym}${v}` });
-  $('#proBtn').textContent = `Get Pro, ${sym}${aedP.pro}`; $('#ultBtn').textContent = `Get Ultimate, ${sym}${aedP.ultimate}`;
-  $('#tierProName').textContent = `Pro · ${sym}${aedP.pro}`; $('#tierUltName').textContent = `Ultimate · ${sym}${aedP.ultimate}`;
+  if (CUR === 'AED') $('#uaeBanner').innerHTML = `<b>UAE price</b> · a discount for all customers in the UAE: Pro AED ${m(aedP.pro)}, Ultimate AED ${m(aedP.ultimate)}`;
+  document.querySelectorAll('[data-price]').forEach(e => { const v = e.dataset.price === 'free' ? 0 : m(aedP[e.dataset.price]); e.innerHTML = e.classList.contains('pr') && e.dataset.price !== 'free' ? `${sym}${v}<small>once</small>` : `${sym}${v}` });
+  $('#proBtn').textContent = `Get Pro, ${sym}${m(aedP.pro)}`; $('#ultBtn').textContent = `Get Ultimate, ${sym}${m(aedP.ultimate)}`;
+  $('#tierProName').textContent = `Pro · ${sym}${m(aedP.pro)}`; $('#tierUltName').textContent = `Ultimate · ${sym}${m(aedP.ultimate)}`;
   document.querySelectorAll('[data-tipn]').forEach(e => e.textContent = `+${sym}${e.dataset.tipn}`);
   document.querySelectorAll('.methodChoice button[data-method=card] b').forEach(b => b.textContent = `Card · ${CUR}`);
   document.querySelectorAll('.methodChoice button[data-method=card] span').forEach(s => s.textContent = CUR === 'AED' ? 'Visa, Mastercard and Apple Pay, through Ziina. UAE only.' : 'Visa, Mastercard and Apple Pay, through Ziina. Billed in US dollars.');

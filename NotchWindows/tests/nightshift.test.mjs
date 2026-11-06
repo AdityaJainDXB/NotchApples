@@ -107,11 +107,27 @@ test('night 2 is busier than night 1 from the start, and Grin is awake', () => {
   assert.deepEqual(s.over, { win: true }, 'with no moves it still ends at 6 AM'); assert.ok(ev.some((e) => e.type === 'six'));
 });
 
+test('from night 3 the Conductor comes up the east side, only while you are not watching it, and a shut right door sends it back', () => {
+  assert.ok(N.newNight(3).bots.conductor.ai > 0);
+  for (let n = 2; n <= 5; n++) for (const id of ['clank', 'petunia', 'grin']) assert.ok(N.newNight(n).bots[id].ai >= N.newNight(n - 1).bots[id].ai, `night ${n} ${id}`);
+  const s = N.newNight(3), c = s.bots.conductor; c.ai = 20;
+  N.setCams(s, true); N.selectCam(s, 'stage'); c.timer = 0.01; N.step(s, 0.05, () => 0);
+  assert.equal(c.room, 'stage', 'watched: it stays put');
+  N.selectCam(s, 'dining'); c.timer = 0.01; N.step(s, 0.05, () => 0);
+  assert.equal(c.room, 'dining', 'not watched: it moves');
+  c.room = 'rightDoor'; N.setCams(s, false); N.toggleDoor(s, 'right'); c.timer = 0.01; N.step(s, 0.05, () => 0);
+  assert.equal(c.room, 'eastHall', 'the shut door sends it back');
+  c.room = 'rightDoor'; N.toggleDoor(s, 'right'); c.timer = 0.01; N.step(s, 0.05, () => 0);
+  assert.equal(c.inOffice, true);
+  for (let t = 0; t < 2 && !s.over; t += 0.05) N.step(s, 0.05, () => 0.99);
+  assert.deepEqual(s.over, { win: false, by: 'conductor' });
+});
+
 test('every room on a path exists, and every path leads to a doorway', () => {
   for (const id of Object.keys(N.PATHS)) for (const [from, to] of Object.entries(N.PATHS[id])) {
     assert.ok(N.ROOMS[from], from);
     for (const r of to) assert.ok(N.ROOMS[r] || /Door$/.test(r), r);
   }
-  assert.equal(N.LAST_NIGHT, 2);
+  assert.equal(N.LAST_NIGHT, 5);
   assert.equal(N.newNight(1).bots.grin.room, 'prize');
 });

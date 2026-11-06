@@ -1072,29 +1072,29 @@ await test('Card (Ziina): UAE only, AED prices with the 3% + AED 1 fee, paid onl
   const o = await call('/order', { method: 'card', tier: 'pro', email: 'card@example.com' }, ae);
   assert.equal(o.status, 200, JSON.stringify(o));
   const pid = 'pi_' + (intents.size - 1);
-  assert.equal(seen[0].amount, 512); assert.equal(seen[0].currency_code, 'AED'); assert.match(seen[0].success_url, /pro\.html\?card=[0-9a-f]{32}$/);
-  assert.equal(o.quote.total, 5.12);
+  assert.equal(seen[0].amount, 553); assert.equal(seen[0].currency_code, 'AED'); assert.match(seen[0].success_url, /pro\.html\?card=[0-9a-f]{32}$/);
+  assert.equal(o.quote.total, 5.53);
   assert.equal((await call('/order/card', { order: o.order })).pending, true, 'not paid yet: no key');
   intents.get(pid).status = 'completed'; intents.get(pid).amount = 100;
   assert.equal((await call('/order/card', { order: o.order })).status, 400, 'a different amount is refused');
-  intents.get(pid).amount = 512;
+  intents.get(pid).amount = 553;
   const paid = await call('/order/card', { order: o.order });
   assert.equal(paid.status, 200, JSON.stringify(paid)); assert.match(paid.key, /^NTCH-PRO-/);
   const again = await call('/order/card', { order: o.order });
   assert.equal(again.key, paid.key); assert.equal(again.again, true);
   assert.equal(mails.filter((m) => m.to === 'card@example.com' && /key/.test(m.subject)).length, 1, 'one key mail');
-  // Ultimate, and the AED 6 upgrade from Pro
+  // Ultimate, and the AED 6.60 upgrade from Pro
   const u = await call('/order', { method: 'card', tier: 'ultimate', email: 'up@example.com', upgradeFrom: paid.key }, ae);
-  assert.equal(u.status, 200, JSON.stringify(u)); assert.equal(seen[1].amount, 718);
+  assert.equal(u.status, 200, JSON.stringify(u)); assert.equal(seen[1].amount, 780);
   const ult = await call('/order', { method: 'card', tier: 'ultimate', email: 'u2@example.com' }, ae);
-  assert.equal(seen[2].amount, 1130, JSON.stringify(ult));
+  assert.equal(seen[2].amount, 1233, JSON.stringify(ult));
   const getCfg = async (h) => (await worker.fetch(new Request('https://w.test/config', { headers: h }), env)).json();
   const cfg = await getCfg(ae);
-  assert.equal(cfg.card.on, true); assert.equal(cfg.card.region, 'ae'); assert.deepEqual(cfg.card.ae.prices, { pro: 4, ultimate: 10, upgrade: 6 });
+  assert.equal(cfg.card.on, true); assert.equal(cfg.card.region, 'ae'); assert.deepEqual(cfg.card.ae.prices, { pro: 4.4, ultimate: 11, upgrade: 6.6 });
   assert.equal((await getCfg(us)).card.region, 'intl'); assert.equal((await getCfg(us)).card.detected, true);
   const none = await getCfg({}); assert.equal(none.card.detected, false, 'no country header: undetected');
   const pickAe = await call('/order', { method: 'card', region: 'ae', tier: 'pro', email: 'pick@example.com' }, {});
-  assert.equal(seen.at(-1).currency_code, 'AED', JSON.stringify(pickAe)); assert.equal(seen.at(-1).amount, 512, 'undetected country: the customer picks AED');
+  assert.equal(seen.at(-1).currency_code, 'AED', JSON.stringify(pickAe)); assert.equal(seen.at(-1).amount, 553, 'undetected country: the customer picks AED');
   const noPick = await call('/order', { method: 'card', region: 'ae', tier: 'pro', email: 'pick2@example.com' }, us);
   assert.equal(seen.at(-1).currency_code, 'USD', JSON.stringify(noPick)); assert.equal(seen.at(-1).amount, 135, 'a known foreign country cannot pick the UAE price');
  assert.equal(cfg.card.intl.fee.pct, 5);

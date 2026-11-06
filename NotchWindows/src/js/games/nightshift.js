@@ -219,6 +219,7 @@
       jam() { tone(160, 0.15, 'square', 0.08); tone(150, 0.15, 'square', 0.08, null, 0.18); },
       scare() { tone(600, 1.2, 'sawtooth', 0.32, 120); tone(900, 1.2, 'square', 0.18, 200); burst(1.2, 0.45, 5000, 'highpass'); },
       down() { tone(300, 1.6, 'sawtooth', 0.12, 30); },
+      toot() { tone(740, 0.25, 'triangle', 0.06); tone(988, 0.35, 'triangle', 0.05, null, 0.18); },
       chime() { [523, 659, 784, 1047, 784, 1047].forEach((f, i) => tone(f, 0.9, 'triangle', 0.14, null, i * 0.35)); },
       startHum() { if (!ok() || hum) return; const len = ctx.sampleRate * 2, buf = ctx.createBuffer(1, len, ctx.sampleRate), d = buf.getChannelData(0); for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1; const src = ctx.createBufferSource(), f = ctx.createBiquadFilter(), v = ctx.createGain(); src.buffer = buf; src.loop = true; f.type = 'lowpass'; f.frequency.value = 160; v.gain.value = 0.05; src.connect(f).connect(v).connect(ctx.destination); src.start(); hum = src; },
       stopHum() { if (hum) { try { hum.stop(); } catch { /* already stopped */ } hum = null; } },
@@ -259,7 +260,12 @@
     // The nights you can pick: every night up to the one after the last you survived (and no further than the nights that exist).
     const open = () => Math.min(N.LAST_NIGHT, beaten + 1);
     const ORD = ['', '1st', '2nd', '3rd', '4th', '5th'];
-    function nightButtons() { const n = N.LAST_NIGHT, w = 120, gap = 12, x0 = W / 2 - (n * w + (n - 1) * gap) / 2; return Array.from({ length: n }, (_, i) => ({ night: i + 1, x: x0 + i * (w + gap), y: 170, w, h: 40 })); }
+    const INTRO = ['', 'The toys wander at night. Keep them out until 6 AM.',
+      'They are livelier tonight.\nGrin is awake from the start: check the Prize Corner.',
+      'The Conductor is out tonight, down the east side.\nIt only moves while you are not watching it.',
+      'Everyone is restless.\nSave power: shut a door only when a light shows a toy there.',
+      'The last night. Every toy is awake. Good luck.'];
+    function nightButtons() { const n = N.LAST_NIGHT, w = n > 3 ? 104 : 120, gap = n > 3 ? 10 : 12, x0 = W / 2 - (n * w + (n - 1) * gap) / 2; return Array.from({ length: n }, (_, i) => ({ night: i + 1, x: x0 + i * (w + gap), y: 170, w, h: 40 })); }
     function startNight(n = s ? s.night : open()) { s = N.newNight(Math.min(n, open())); pan = 160; doorAnim.left = doorAnim.right = 0; glitchT = 0; flipT = 0; go('intro'); }
     function pause() { if (screen === 'play') { go('paused'); } }
     function unpause() { if (screen === 'paused') { go('play'); sfx.startHum(); if (s && s.po && s.po.phase === 'music') sfx.startMusic(); } }
@@ -271,7 +277,7 @@
         else if (e.type === 'light') { sfx.light(); if (e.seen && e.seen.length) sfx.sting(); }
         else if (e.type === 'cams') { sfx.cams(); flipT = 0.22; }
         else if (e.type === 'cam') { sfx.click(); glitchT = Math.max(glitchT, 0.12); }
-        else if (e.type === 'move') { if (e.seen) { sfx.glitch(); glitchT = 0.9; } else if (/Corner|Door/.test(e.to)) sfx.steps(); }
+        else if (e.type === 'move') { if (e.seen) { sfx.glitch(); glitchT = 0.9; } else if (e.bot === 'conductor') sfx.toot(); else if (/Corner|Door/.test(e.to)) sfx.steps(); }
         else if (e.type === 'leave') sfx.steps();
         else if (e.type === 'run') sfx.run();
         else if (e.type === 'bang') sfx.bang();
@@ -408,7 +414,7 @@
         g.fillStyle = inBar ? 'rgba(255,255,255,.35)' : 'rgba(255,255,255,.18)'; g.fillRect(200, H - 26, 240, 18); g.strokeStyle = 'rgba(255,255,255,.6)'; g.strokeRect(200, H - 26, 240, 18);
         text(g, s.camUp ? '▼  CAMERAS  ▼' : '▲  CAMERAS (Space)  ▲', W / 2, H - 13, 10, '#fff', 'center', 700);
       }
-      if (s.t < 15 && !s.camUp) text(g, 'Q / A left door and light · E / D right · Space cameras · ← → look', W / 2, H - 36, 10, 'rgba(255,255,255,.8)', 'center', 600);
+      if (s.t < 15 && !s.camUp) text(g, 'Q / A left door and light · E / D right · Space cameras · ← → look', W / 2, H - 52, 10, 'rgba(255,255,255,.8)', 'center', 600);
     }
 
     function drawMenu() {
@@ -438,7 +444,7 @@
       g.globalAlpha = Math.max(0, a);
       text(g, '12:00 AM', W / 2, 150, 38, '#fff', 'center', 700);
       text(g, ORD[s.night] + ' Night', W / 2, 186, 18, '#ddd', 'center', 600);
-      text(g, s.night === 1 ? 'The toys wander at night. Keep them out until 6 AM.' : s.night === 2 ? 'They are livelier tonight. Grin is awake from the start: check the Prize Corner.' : 'Watch the power.', W / 2, 230, 12, '#aaa', 'center', 500);
+      (INTRO[s.night] || '').split('\n').forEach((line, i) => text(g, line, W / 2, 230 + i * 18, 12, '#aaa', 'center', 500));
       g.globalAlpha = 1;
     }
     function drawScare() {
@@ -460,7 +466,7 @@
     }
     function tip(id) {
       return id === 'grin' ? 'Tip: check the Prize Corner (CAM 1C) often. When Grin is gone, shut the left door.'
-        : id === 'conductor' ? 'Tip: save power. Shut doors only when a light shows a toy there.'
+        : id === 'conductor' ? (s.powerOut ? 'Tip: save power. Shut doors only when a light shows a toy there.' : 'Tip: the Conductor creeps up the east side while you are not watching. Keep an eye on CAM 4B and the right door.')
           : id === 'clank' ? 'Tip: Clank comes to the left door. Use the left light, and shut the door if it is there.'
             : 'Tip: Petunia comes to the right door. Use the right light, and shut the door if she is there.';
     }

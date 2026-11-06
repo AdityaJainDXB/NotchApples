@@ -54,9 +54,9 @@ DEVICE_LIMIT = "3"
 # Card payments through Ziina: UAE customers pay in AED (the customer pays the card fee, 3% + AED 1). They switch on when the
 # ZIINA_API_KEY secret is set (`npx wrangler secret put ZIINA_API_KEY`). ZIINA_TEST = "1" makes every payment a Ziina test payment
 # (any card works, no money moves) and lets a test request pick the UAE or international price; keep it "0" in production.
-PRICE_AED_PRO = "4"
-PRICE_AED_ULTIMATE = "10"
-PRICE_AED_UPGRADE = "6"
+PRICE_AED_PRO = "4.4"
+PRICE_AED_ULTIMATE = "11"
+PRICE_AED_UPGRADE = "6.6"
 ZIINA_TEST = "0"
 # International customers pay by card in USD (the USD prices above) with a higher card fee, paid by the customer.
 CARD_FEE_INTL_PCT = "5"

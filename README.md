@@ -150,6 +150,12 @@ More screenshots of the capture overlay, the AI answer, the settings and the Win
 
 ## What's new
 
+### Mac 2.2.33 · Windows 2.2.33 BETA · 6 November 2026 · 🔦 Night Shift: all five nights
+
+- New: Night Shift nights 3, 4 and 5. From night 3 the Conductor, a toy train, comes up the east side to the right door, and it only moves while you are not watching it (listen for its whistle). Each night the toys start busier, and night 5 has every toy awake. Survive all five for the whole week.
+- Each night has its own short briefing, and the game-over tip now tells you how to stop the Conductor.
+- On the website: card prices in the UAE are now AED 4.40 for Pro, AED 11 for Ultimate and AED 6.60 to upgrade, and students in Dubai can ask for a free promo code by emailing notchapples.support@gmail.com.
+
 ### Mac 2.2.32 · Windows 2.2.32 BETA · 6 November 2026 · 🔦 Night Shift: night 2
 
 - New: Night Shift night 2. Survive night 1 and night 2 unlocks in the menu (the menu now has a button for each night, with a star on the ones you have survived). On night 2 the toys are livelier from midnight and Grin is awake from the start, so keep checking the Prize Corner.
@@ -159,12 +165,6 @@ More screenshots of the capture overlay, the AI answer, the settings and the Win
 
 - New: after updating, the notch asks once "Choose your hello". Every choice has a picture, and when you point at one the notch plays its animation: the handwritten hello, Notchy, Pomo, Wisp, Mochi, Orbit, Pip, or an F1 greeting
 - The question stays on screen, even if you close and open the notch, until you pick one or press No thanks, which turns greetings off completely. You can change it or turn it off any time: Settings → Notch Extras on the Mac, Settings → General → Hello from the notch on Windows
-
-### Mac 2.2.29 · Windows 2.2.30 BETA · 6 November 2026 · 🔦 Night Shift, a new horror game
-
-- New game: Night Shift at Tinker's Toy Emporium (Games → Night Shift). You are the night guard in a closed-down toy shop whose wind-up toys wander at night. Watch them on eleven cameras, shut the left or right door when a light shows one outside, and keep the power up until 6 AM. Doors, lights and the cameras all use power, and if it runs out, the Conductor comes.
-- Four original toys: Clank the tin robot (left door), Petunia the porcelain doll (right door), Grin the jack-in-the-box (it creeps out of its box in the Prize Corner while you are not watching, then sprints for the left door) and the Conductor, a toy train. Night 1 is ready; nights 2 to 5 come in an update.
-- Controls: Q / A left door and light, E / D right door and light, Space or S cameras (or sweep the mouse over the bar), 1-9, 0 and - pick a camera, ← → or the mouse at the sides to look around, P pause, M sound. Everything can be clicked too.
 
 ## Plugins
 

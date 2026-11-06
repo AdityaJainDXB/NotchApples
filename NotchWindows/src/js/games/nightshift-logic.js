@@ -53,7 +53,7 @@
     4: { start: { clank: 7, petunia: 6, grin: 5, conductor: 2 }, add: { 2: { clank: 1 }, 3: { clank: 1, petunia: 1, grin: 1 }, 4: { clank: 1, petunia: 1, grin: 1 } } },
     5: { start: { clank: 10, petunia: 9, grin: 8, conductor: 4 }, add: { 2: { clank: 1 }, 3: { clank: 1, petunia: 1, grin: 1 }, 4: { clank: 1, petunia: 1, grin: 1 } } },
   };
-  const LAST_NIGHT = 2;            // the nights you can play so far (3 to 5 are being tuned)
+  const LAST_NIGHT = 5;            // all five nights
   const OFFICE_GRACE = 1.0;        // seconds a toy stands in the office after you lower the cameras, before it jumps
   const CAM_LIMIT = 20;            // seconds the cameras can stay up while a toy is in the office before it pulls them down
 

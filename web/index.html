@@ -927,7 +927,7 @@ html.pre .intro,html.pre h1 .hw{animation-play-state:paused}
 
 <section id="pro"><div class="wrap">
   <div class="sh rv"><h2>Free for everyone. Pay once for more.</h2><p class="lede">No subscription, no account, no renewals. Every future update is included.</p></div>
-  <p class="uaebanner" id="uaeBanner" hidden><b>UAE price</b> · a discount for all customers in the UAE: Pro AED 4, Ultimate AED 10</p>
+  <p class="uaebanner" id="uaeBanner" hidden><b>UAE price</b> · a discount for all customers in the UAE: Pro AED 4.40, Ultimate AED 11</p>
   <div class="plans rv">
     <div class="plan">
       <div class="nm">Free</div>
@@ -972,6 +972,7 @@ html.pre .intro,html.pre h1 .hw{animation-play-state:paused}
     </div>
   </div>
   <p class="fine" id="payFine">Paid in Bitcoin, Ethereum, Solana or Litecoin, key emailed to you. Students can ask for a free Pro code. <a href="pro.html#promo">Have a promo code?</a></p>
+  <p class="students">🎓 <b>Students in Dubai:</b> ask for a free promo code. Send an email to <a href="mailto:notchapples.support@gmail.com?subject=Student%20promo%20code">notchapples.support@gmail.com</a></p>
 </div></section>
 
 <section id="screenshots"><div class="wrap">
@@ -1567,16 +1568,16 @@ addEventListener('scroll',()=>{if(!t){t=true;requestAnimationFrame(upd)}},{passi
 top.onclick=()=>scrollTo({top:0,behavior:reduce?'auto':'smooth'})})();
 </script>
 <script src="assets/chat.js" defer></script>
-<style>.uaebanner{display:flex;align-items:center;justify-content:center;gap:8px;margin:0 auto 18px;max-width:max-content;padding:8px 16px;border-radius:999px;font-size:13.5px;color:#d8f5e6;background:rgba(80,200,140,.1);box-shadow:inset 0 0 0 1px rgba(120,230,180,.35)}.uaebanner[hidden]{display:none}</style>
+<style>.students{text-align:center;font-size:13.5px;color:#cfc9b8;margin:0 auto 18px;max-width:640px;line-height:1.5}.students a{color:#e8c33a;text-decoration:underline}.uaebanner{display:flex;align-items:center;justify-content:center;gap:8px;margin:0 auto 18px;max-width:max-content;padding:8px 16px;border-radius:999px;font-size:13.5px;color:#d8f5e6;background:rgba(80,200,140,.1);box-shadow:inset 0 0 0 1px rgba(120,230,180,.35)}.uaebanner[hidden]{display:none}</style>
 <script>
 // UAE visitors see the AED prices (the worker tells us the country; see pro.html for the checkout).
 const uaePrices = async () => {
   try {
     const c = (await (await fetch('https://notchapple-licenses.adityajain1225.workers.dev/config')).json()).card;
     if (!c || !c.on || c.region !== 'ae') return;
-    const p = c.ae.prices;
-    document.querySelectorAll('#pro [data-price]').forEach(e => { const v = e.dataset.price === 'free' ? 0 : p[e.dataset.price]; e.innerHTML = e.dataset.price === 'free' ? 'AED 0' : 'AED ' + v + '<small>once</small>'; });
-    document.getElementById('uaeBanner').hidden = false;
+    const p = c.ae.prices, m = (v) => (Number.isInteger(+v) ? String(v) : (+v).toFixed(2));
+    document.querySelectorAll('#pro [data-price]').forEach(e => { const v = e.dataset.price === 'free' ? 0 : m(p[e.dataset.price]); e.innerHTML = e.dataset.price === 'free' ? 'AED 0' : 'AED ' + v + '<small>once</small>'; });
+    const ban = document.getElementById('uaeBanner'); ban.innerHTML = '<b>UAE price</b> · a discount for all customers in the UAE: Pro AED ' + m(p.pro) + ', Ultimate AED ' + m(p.ultimate); ban.hidden = false;
     const f = document.getElementById('payFine'); if (f) f.firstChild.textContent = 'Pay by card (AED, through Ziina) or in Bitcoin, Ethereum, Solana or Litecoin, key emailed to you. ';
   } catch (e) { /* the page keeps its dollar prices */ }
 };

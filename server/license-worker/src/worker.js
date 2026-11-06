@@ -687,7 +687,7 @@ const CARD_FEE_PCT = 0.03, CARD_FEE_FLAT = 1;       // UAE, AED: the customer be
 const intlFee = (env) => ({ pct: Number(env.CARD_FEE_INTL_PCT || 5) / 100, flat: Number(env.CARD_FEE_INTL_FLAT || 0.3) });
 
 function aedPrices(env) {
-  return { pro: Number(env.PRICE_AED_PRO || 4), ultimate: Number(env.PRICE_AED_ULTIMATE || 10), upgrade: Number(env.PRICE_AED_UPGRADE || 6) };
+  return { pro: Number(env.PRICE_AED_PRO || 4.4), ultimate: Number(env.PRICE_AED_ULTIMATE || 11), upgrade: Number(env.PRICE_AED_UPGRADE || 6.6) };
 }
 
 /** What a card payment costs: the price, the card fee (3% + AED 1) and the total, in AED and in fils (Ziina's unit: 100 fils = 1 AED). */
