@@ -662,9 +662,14 @@ export function cardQuote(base, pct = CARD_FEE_PCT, flat = CARD_FEE_FLAT) {
 
 /** 'ae' (AED, UAE fee) or 'intl' (USD, higher fee), by the visitor's country. In test mode a request may pick one, to test both from anywhere. */
 function cardRegion(env, request, body = {}) {
-  if (env.ZIINA_TEST === '1' && (body.region === 'ae' || body.region === 'intl')) return body.region;
-  return (request.headers.get('cf-ipcountry') || '').toUpperCase() === 'AE' ? 'ae' : 'intl';
+  const pick = body.region === 'ae' || body.region === 'intl' ? body.region : null;
+  if (env.ZIINA_TEST === '1' && pick) return pick;
+  const c = (request.headers.get('cf-ipcountry') || '').toUpperCase();
+  if (!c || c === 'XX' || c === 'T1') return pick || 'intl';       // country unknown (or Tor): the customer says which price applies
+  return c === 'AE' ? 'ae' : 'intl';
 }
+/** Whether Cloudflare could tell where the visitor is; if not, the page offers an AED / USD switch. */
+const countryKnown = (request) => { const c = (request.headers.get('cf-ipcountry') || '').toUpperCase(); return !!c && c !== 'XX' && c !== 'T1'; };
 
 /** POST /order {method:'card', tier, email, upgradeFrom?, tip?, coupon?}: starts a Ziina payment and returns the page to pay on. */
 async function cardOrder(env, request, body) {
@@ -1647,7 +1652,7 @@ export default {
     try {
       if (request.method === 'GET') {
         if (path === '/') return json({ ok: true, service: 'Notch Apple licenses' });
-        if (path === '/config') return json({ prices: prices(env), ultimate: env.ULTIMATE_ON === '1', network: env.NETWORK || 'mainnet', wallet: env.WALLET, coins: coinList(env), card: { on: !!env.ZIINA_API_KEY, region: cardRegion(env, request), ae: { cur: 'AED', prices: aedPrices(env), fee: { pct: CARD_FEE_PCT * 100, flat: CARD_FEE_FLAT } }, intl: { cur: 'USD', prices: prices(env), fee: { pct: intlFee(env).pct * 100, flat: intlFee(env).flat } } } });
+        if (path === '/config') return json({ prices: prices(env), ultimate: env.ULTIMATE_ON === '1', network: env.NETWORK || 'mainnet', wallet: env.WALLET, coins: coinList(env), card: { on: !!env.ZIINA_API_KEY, region: cardRegion(env, request), detected: countryKnown(request), ae: { cur: 'AED', prices: aedPrices(env), fee: { pct: CARD_FEE_PCT * 100, flat: CARD_FEE_FLAT } }, intl: { cur: 'USD', prices: prices(env), fee: { pct: intlFee(env).pct * 100, flat: intlFee(env).flat } } } });
         if (path === '/unsub') return await unsubscribe(env, new URL(request.url));
         if (path === '/admin') return new Response(ADMIN_PAGE, { headers: ADMIN_HEADERS });
         if (path === '/revoked') return json(await revokedList(env), 200, { 'cache-control': 'public, max-age=3600' });

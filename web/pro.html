@@ -508,17 +508,27 @@ const quoteFor = base => { const fee = Math.round((base * feeInfo.pct / 100 + fe
 function setupCard() {
   const c = config && config.card;
   if (!c || !c.on) return;
-  const r = c[c.region === 'ae' ? 'ae' : 'intl'];
-  CUR = r.cur; aedP = r.prices; feeInfo = r.fee; method = 'card';
-  const sym = CUR === 'AED' ? 'AED ' : '$';
+  card = c; method = 'card';
   document.querySelectorAll('.methodBox').forEach(b => b.hidden = false);
   document.querySelectorAll('.methodChoice button').forEach(b => b.onclick = () => { method = b.dataset.method; paintMethod() });
+  applyRegion(c.region === 'ae' ? 'ae' : 'intl');
+  if (c.detected === false) {      // the country could not be told: the customer says which price applies
+    document.querySelectorAll('.methodBox').forEach(b => { const w = document.createElement('div');
+      w.innerHTML = '<p class="muted" style="font-size:13px;margin:10px 0 6px">We couldn\u2019t tell where you are. Pay in:</p><div class="choice regionChoice"><button data-region="ae"><b>AED</b><span>For customers in the UAE</span></button><button data-region="intl" class="on"><b>US dollars</b><span>Everywhere else</span></button></div>'; b.append(w) });
+    document.querySelectorAll('.regionChoice button').forEach(b => b.onclick = () => { applyRegion(b.dataset.region); document.querySelectorAll('.regionChoice button').forEach(x => x.classList.toggle('on', x.dataset.region === region)) });
+  }
+}
+let card = null, region = 'intl';
+function applyRegion(rg) {
+  region = rg; const r = card[rg];
+  CUR = r.cur; aedP = r.prices; feeInfo = r.fee;
+  const sym = CUR === 'AED' ? 'AED ' : '$';
   document.querySelectorAll('[data-price]').forEach(e => { const v = aedP[e.dataset.price]; e.innerHTML = e.classList.contains('pr') ? `${sym}${v}<small>once</small>` : `${sym}${v}` });
   $('#proBtn').textContent = `Get Pro, ${sym}${aedP.pro}`; $('#ultBtn').textContent = `Get Ultimate, ${sym}${aedP.ultimate}`;
   $('#tierProName').textContent = `Pro · ${sym}${aedP.pro}`; $('#tierUltName').textContent = `Ultimate · ${sym}${aedP.ultimate}`;
   document.querySelectorAll('[data-tipn]').forEach(e => e.textContent = `+${sym}${e.dataset.tipn}`);
   document.querySelectorAll('.methodChoice button[data-method=card] b').forEach(b => b.textContent = `Card · ${CUR}`);
-  if (CUR !== 'AED') document.querySelectorAll('.methodChoice button[data-method=card] span').forEach(s => s.textContent = 'Visa, Mastercard and Apple Pay, through Ziina. Billed in US dollars.');
+  document.querySelectorAll('.methodChoice button[data-method=card] span').forEach(s => s.textContent = CUR === 'AED' ? 'Visa, Mastercard and Apple Pay, through Ziina. UAE only.' : 'Visa, Mastercard and Apple Pay, through Ziina. Billed in US dollars.');
   paintMethod();
 }
 function paintMethod() {
@@ -544,7 +554,7 @@ async function startCard(btn, statusId, body) {
   if (!validEmail(body.email)) return status(statusId, 'Enter a valid email address. Your key is sent there.', 'err', false);
   busy(btn, true); status(statusId, 'Opening the secure card page…');
   try {
-    const r = await api('/order', { ...body, method: 'card' });
+    const r = await api('/order', { ...body, method: 'card', region });
     save('na.card', { order: r.order, tier: r.tier, quote: r.quote, cur: r.cur });
     location.href = r.redirect_url;
   } catch (e) { status(statusId, e.message, 'err'); busy(btn, false) }

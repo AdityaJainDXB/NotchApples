@@ -1052,7 +1052,13 @@ await test('Card (Ziina): UAE only, AED prices with the 3% + AED 1 fee, paid onl
   const getCfg = async (h) => (await worker.fetch(new Request('https://w.test/config', { headers: h }), env)).json();
   const cfg = await getCfg(ae);
   assert.equal(cfg.card.on, true); assert.equal(cfg.card.region, 'ae'); assert.deepEqual(cfg.card.ae.prices, { pro: 4, ultimate: 10, upgrade: 6 });
-  assert.equal((await getCfg(us)).card.region, 'intl'); assert.equal(cfg.card.intl.fee.pct, 5);
+  assert.equal((await getCfg(us)).card.region, 'intl'); assert.equal((await getCfg(us)).card.detected, true);
+  const none = await getCfg({}); assert.equal(none.card.detected, false, 'no country header: undetected');
+  const pickAe = await call('/order', { method: 'card', region: 'ae', tier: 'pro', email: 'pick@example.com' }, {});
+  assert.equal(seen.at(-1).currency_code, 'AED', JSON.stringify(pickAe)); assert.equal(seen.at(-1).amount, 512, 'undetected country: the customer picks AED');
+  const noPick = await call('/order', { method: 'card', region: 'ae', tier: 'pro', email: 'pick2@example.com' }, us);
+  assert.equal(seen.at(-1).currency_code, 'USD', JSON.stringify(noPick)); assert.equal(seen.at(-1).amount, 135, 'a known foreign country cannot pick the UAE price');
+ assert.equal(cfg.card.intl.fee.pct, 5);
   delete env.ZIINA_API_KEY; globalThis.fetch = prev;
 });
 console.log(`\n${passed} passed`);
