@@ -96,3 +96,31 @@ a 429 here only slows a checkout, it doesn't lose one.
 `server/license-worker/test` exists; add a test that sends `limit + 1` requests to each route and checks the last one is a 429
 and that a different address is unaffected, and one that fires two `/claim` requests for the same order at once and checks
 only one key is issued. Run against `wrangler dev --local`, and against the `testnet` environment before mainnet.
+
+
+## Turnstile (Cloudflare's CAPTCHA alternative)
+
+The site key `0x4AAAAAAFwRtKJEPiIb5ZJS` is public and lives in `web/api.json` (`turnstileSiteKey`). It protects two things, each with its own
+`action` so a token for one cannot be used for the other:
+
+| Where | action | Worker check |
+|---|---|---|
+| The helper's "Ask" chat (`web/assets/chat.js`) | `ask` | `POST /ask` |
+| The support form (`web/support.html`) | `support` | `POST /support` |
+
+Nothing from Cloudflare loads until someone asks the helper or sends a message. Each token works once; the widget is reset for every message.
+
+**The server only enforces it once the secret is set.** Until then the pages still get tokens but the worker ignores them. To switch it on, run in
+`server/license-worker` (paste the secret key from Cloudflare dashboard → Turnstile → the widget → Secret key when asked; never put it in a file or
+a message):
+
+```bash
+npx wrangler secret put TURNSTILE_SECRET
+```
+
+The worker then rejects a message unless Cloudflare says the token is real (`success`), the `action` is the right one, and the `hostname` is one of
+`TURNSTILE_HOSTS` (default `adityajaindxb.github.io,notch.cc.cd`). A Cloudflare error or timeout (8 s) fails closed.
+
+In the dashboard, the widget's **Hostnames** must include `adityajaindxb.github.io` (and `notch.cc.cd` if pages are ever served there), or the
+widget will refuse to run on the site. To check it end to end, send a support message and confirm it arrives, then reuse the same request body: the
+second try must be refused (a token works once).

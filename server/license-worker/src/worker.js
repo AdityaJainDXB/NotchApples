@@ -546,6 +546,7 @@ async function supportPost(env, request, body) {
   if (body.website) return { ok: true, url: null };                                  // the hidden trap field: a bot filled it in
   if (Number(body.t) > 0 && Date.now() - Number(body.t) < 4000) throw new HTTPError(400, 'That was very quick. Please read it through and send again.');
   await addressLimit(env, request, 'support', 4);
+  if (!(await turnstileOk(env, body.cf, request.headers.get('cf-connecting-ip'), 'support'))) throw new HTTPError(403, 'Please complete the check and try again.');
   const k = SUPPORT_KINDS[body.kind]; if (!k) throw new HTTPError(400, 'Pick what this is about.');
   const clean = (v, n) => String(v || '').replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f]/g, '').trim().slice(0, n);
   const title = clean(body.title, 120), text = clean(body.text, 6000), email = String(body.email || '').trim().slice(0, 254);
@@ -1709,19 +1710,26 @@ async function askProvider(env, { name, base, key, model, tries }, messages) {
 
 /** Cloudflare Turnstile: when TURNSTILE_SECRET is set, a question must carry a token the visitor's browser got by passing the check
  *  (and the token is verified here, since a check only the page makes can be skipped). Without the secret nothing changes. */
-export async function turnstileOk(env, token, ip) {
+export async function turnstileOk(env, token, ip, action) {
   if (!env.TURNSTILE_SECRET) return true;
   if (typeof token !== 'string' || token.length < 10 || token.length > 2100) return false;
   try {
-    const r = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', { method: 'POST', body: new URLSearchParams({ secret: env.TURNSTILE_SECRET, response: token, remoteip: ip || '' }) });
-    return (await r.json()).success === true;
+    const r = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
+      method: 'POST', signal: AbortSignal.timeout(8000), body: new URLSearchParams({ secret: env.TURNSTILE_SECRET, response: token, remoteip: ip || '' }) });
+    if (!r.ok) return false;                                                            // fail closed
+    const v = await r.json();
+    if (v.success !== true) return false;
+    // The token must be for this surface (a token from the support form is no good for the helper) and come from our own pages.
+    if (action && v.action !== action) return false;
+    const hosts = String(env.TURNSTILE_HOSTS || 'adityajaindxb.github.io,notch.cc.cd').split(',').map((h) => h.trim().toLowerCase()).filter(Boolean);
+    return hosts.includes(String(v.hostname || '').toLowerCase());
   } catch { return false; }
 }
 
 async function askSite(env, request, body) {
   if (!aiOn(env)) throw new HTTPError(503, "The helper's AI isn't switched on.");
   const { q, history } = cleanAskRequest(body);
-  if (!(await turnstileOk(env, body.cf, request.headers.get('cf-connecting-ip')))) throw new HTTPError(403, 'Please complete the check and try again.');
+  if (!(await turnstileOk(env, body.cf, request.headers.get('cf-connecting-ip'), 'ask'))) throw new HTTPError(403, 'Please complete the check and try again.');
   await addressLimit(env, request, 'ask', 6);
   const day = await (await env.AI_QUOTA.get(env.AI_QUOTA.idFromName('site-ask')).fetch('https://quota/', { method: 'POST', body: JSON.stringify({ limit: Number(env.ASK_DAILY) || 1500 }) })).json();
   if (!day.ok) throw new HTTPError(429, 'The helper has answered a lot of questions today. Please try again tomorrow, or ask on GitHub.');

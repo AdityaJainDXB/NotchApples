@@ -6,7 +6,7 @@
 
 import assert from 'node:assert/strict';
 import { writeFileSync } from 'node:fs';
-import worker, { cardQuote, sendReminders, parseKey, verifyKey, verifyToken, mintToken, b32encode, b32decode, AiQuota, cleanAiRequest, PlaneBoard, PlaneRate, PlaneSky, cleanPilotName, cleanPlaneScore, cleanAskRequest, totpCode, rfc4648 } from '../src/worker.js';
+import worker, { turnstileOk as worker_turnstile, cardQuote, sendReminders, parseKey, verifyKey, verifyToken, mintToken, b32encode, b32decode, AiQuota, cleanAiRequest, PlaneBoard, PlaneRate, PlaneSky, cleanPilotName, cleanPlaneScore, cleanAskRequest, totpCode, rfc4648 } from '../src/worker.js';
 
 const pair = await crypto.subtle.generateKey({ name: 'Ed25519' }, true, ['sign', 'verify']);
 const jwk = await crypto.subtle.exportKey('jwk', pair.privateKey);
@@ -473,7 +473,7 @@ const realFetch = globalThis.fetch;
 globalThis.fetch = async (url, init) => {
   if (String(url).includes('challenges.cloudflare.com')) {
     const f = new URLSearchParams(String(init.body));
-    return new Response(JSON.stringify({ success: f.get('secret') === 'ts-secret' && f.get('response') === 'good-token-12345' }), { headers: { 'content-type': 'application/json' } });
+    return new Response(JSON.stringify({ success: f.get('secret') === 'ts-secret' && f.get('response') === 'good-token-12345', action: 'ask', hostname: 'adityajaindxb.github.io' }), { headers: { 'content-type': 'application/json' } });
   }
   if (/(ai\.test\/v1|alt\.test\/v1|api\.groq\.com\/openai\/v1)\/chat\/completions/.test(String(url))) {
     upstreamSeen = { url: String(url), headers: init.headers, body: JSON.parse(init.body) };
@@ -1187,5 +1187,39 @@ await test('Passkeys: add one from a device that uses the key; a new device then
   const real = Date.now; Date.now = () => real() + 6 * 60 * 1000;
   try { assert.equal((await call('/passkey/options', { ticket: t4 })).status, 410); assert.equal((await call('/passkey/status', { ticket: t4 })).status, 'expired'); } finally { Date.now = real; }
   env.BIND_REQUIRE = '0';
+});
+await test('Turnstile: a token must be real, for this surface and from our own site; a failed or unreachable check lets nothing through', async () => {
+  const prev = globalThis.fetch; let answer = { success: true, action: 'support', hostname: 'adityajaindxb.github.io' }, status = 200, boom = false, seen = null;
+  globalThis.fetch = async (url, init) => {
+    if (String(url).includes('challenges.cloudflare.com')) { if (boom) throw new Error('down'); seen = init; return new Response(JSON.stringify(answer), { status }); }
+    return prev(url, init);
+  };
+  try {
+    const tok = 'x'.repeat(40);
+    assert.equal(await worker_turnstile({}, 'nothing'), true, 'no secret set: nothing changes');
+    const e = { TURNSTILE_SECRET: 's3cret' };
+    assert.equal(await worker_turnstile(e, tok, '1.2.3.4', 'support'), true);
+    assert.match(String(seen.body), /secret=s3cret/); assert.match(String(seen.body), /remoteip=1\.2\.3\.4/);
+    assert.equal(await worker_turnstile(e, tok, '1.2.3.4', 'ask'), false, 'a support token cannot be used for the helper');
+    answer = { success: true, action: 'support', hostname: 'evil.example' };
+    assert.equal(await worker_turnstile(e, tok, '', 'support'), false, 'a token from another site');
+    assert.equal(await worker_turnstile({ ...e, TURNSTILE_HOSTS: 'evil.example' }, tok, '', 'support'), true, 'the allowed sites can be changed');
+    answer = { success: false, 'error-codes': ['invalid-input-response'] };
+    assert.equal(await worker_turnstile(e, tok, '', 'support'), false);
+    answer = { success: true, action: 'support', hostname: 'notch.cc.cd' }; status = 500;
+    assert.equal(await worker_turnstile(e, tok, '', 'support'), false, 'an error from Cloudflare fails closed');
+    status = 200; boom = true;
+    assert.equal(await worker_turnstile(e, tok, '', 'support'), false, 'no answer fails closed');
+    boom = false;
+    assert.equal(await worker_turnstile(e, 'short', '', 'support'), false, 'a missing token');
+    // the support form asks for it, the helper too
+    env.TURNSTILE_SECRET = 's3cret'; env.TURNSTILE_HOSTS = 'adityajaindxb.github.io';
+    answer = { success: true, action: 'support', hostname: 'adityajaindxb.github.io' };
+    const base = { kind: 'question', title: 'Turnstile test', text: 'a question long enough to be accepted', t: Date.now() - 10000 };
+    assert.equal((await call('/support', base, { 'cf-connecting-ip': '8.8.4.1' })).status, 403, 'no token: refused');
+    assert.notEqual((await call('/support', { ...base, cf: tok }, { 'cf-connecting-ip': '8.8.4.2' })).status, 403, 'a good token goes through');
+    answer = { success: true, action: 'ask', hostname: 'adityajaindxb.github.io' };
+    assert.equal((await call('/support', { ...base, cf: tok }, { 'cf-connecting-ip': '8.8.4.3' })).status, 403, "the helper's token is not a support token");
+  } finally { globalThis.fetch = prev; delete env.TURNSTILE_SECRET; delete env.TURNSTILE_HOSTS; }
 });
 console.log(`\n${passed} passed`);

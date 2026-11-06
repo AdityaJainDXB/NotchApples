@@ -112,7 +112,7 @@
           waiting = res;
           if (!box) { box = document.createElement('div'); box.className = 'nc-ts'; document.body.appendChild(box); }
           var cb = function (t) { if (waiting) { var w = waiting; waiting = null; w(t); } else token = t; };
-          if (widget == null) widget = window.turnstile.render(box, { sitekey: siteKey, appearance: 'interaction-only', callback: cb, 'error-callback': function () { rej(new Error('captcha')); }, 'expired-callback': function () { token = null; } });
+          if (widget == null) widget = window.turnstile.render(box, { sitekey: siteKey, action: 'ask', appearance: 'interaction-only', callback: cb, 'error-callback': function () { rej(new Error('captcha')); }, 'expired-callback': function () { token = null; } });
           else window.turnstile.reset(widget);
         });
       })]);

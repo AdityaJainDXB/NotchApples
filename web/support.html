@@ -123,13 +123,30 @@ const pick = (k) => {
 document.querySelectorAll('.kind').forEach((b) => b.addEventListener('click', () => { pick(b.dataset.kind); document.getElementById('title').focus(); }));
 if (GUIDE[kind]) pick(kind);
 const show = (text, ok, html) => { const m = document.getElementById('msg'); m.hidden = false; m.className = 'msg ' + (ok ? 'ok' : 'err'); if (html) m.innerHTML = html; else m.textContent = text; };
+/* Cloudflare Turnstile: when api.json has a site key, a token goes with the message and the server checks it. Nothing is loaded from Cloudflare
+   until someone sends a message, and the check is invisible unless Cloudflare wants an interaction. */
+let tsKey = null, tsWidget = null, tsReady = null, tsWait = null;
+fetch('api.json').then((r) => (r.ok ? r.json() : {})).then((j) => { tsKey = (j && j.turnstileSiteKey) || null; }).catch(() => {});
+function tsToken() {
+  if (!tsKey) return Promise.resolve(undefined);
+  tsReady = tsReady || new Promise((res, rej) => { const s = document.createElement('script'); s.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit'; s.async = true; s.defer = true; s.onload = res; s.onerror = () => { tsReady = null; rej(new Error('The check could not load. Check your connection, or use email.')); }; document.head.appendChild(s); });
+  return tsReady.then(() => new Promise((res, rej) => {
+    const limit = setTimeout(() => { tsWait = null; rej(new Error('The check took too long. Please try again, or use email.')); }, 25000);
+    tsWait = { ok: (t) => { clearTimeout(limit); res(t); }, no: () => { clearTimeout(limit); rej(new Error('The check failed. Please try again, or use email.')); } };
+    let box = document.getElementById('tsBox'); if (!box) { box = document.createElement('div'); box.id = 'tsBox'; box.style.margin = '12px 0'; document.getElementById('send').before(box); }
+    // A token works once, so the same widget is reset for every message; its callbacks answer whoever is waiting now.
+    if (tsWidget == null) tsWidget = window.turnstile.render(box, { sitekey: tsKey, action: 'support', appearance: 'interaction-only', callback: (t) => tsWait && tsWait.ok(t), 'error-callback': () => tsWait && tsWait.no() });
+    else window.turnstile.reset(tsWidget);
+  }));
+}
 document.getElementById('f').addEventListener('submit', async (e) => {
   e.preventDefault();
   if (!kind) { show('Pick what it is about first (the buttons above).', false); return; }
   const v = (id) => document.getElementById(id).value.trim();
   const btn = document.getElementById('send'); btn.disabled = true; btn.textContent = 'Sending…';
   try {
-    const r = await fetch(API + '/support', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ kind, title: v('title'), text: v('text'), version: v('version'), system: v('system'), email: v('email'), website: v('website'), t: opened }) });
+    const cf = await tsToken().catch(() => undefined);      // if the check cannot run here, send anyway: the server decides whether that is enough
+    const r = await fetch(API + '/support', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ cf, kind, title: v('title'), text: v('text'), version: v('version'), system: v('system'), email: v('email'), website: v('website'), t: opened }) });
     const j = await r.json().catch(() => ({}));
     if (!r.ok) throw new Error(j.error || 'Something went wrong. Please try again, or use email.');
     if (j.url) {
