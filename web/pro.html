@@ -106,6 +106,10 @@ input:focus,textarea:focus{box-shadow:inset 0 0 0 1.5px var(--ac),0 0 0 4px rgba
 .field code.big{font-size:20px;font-weight:500;color:var(--ac-ink)}
 .mini{display:inline-flex;align-items:center;height:30px;border:0;background:rgba(255,255,255,.08);color:var(--tx);border-radius:99px;padding:0 13px;font:600 12.5px Geist,system-ui;cursor:pointer;white-space:nowrap;transition:transform 160ms var(--ease-out),background-color .2s}
 .mini:active{transform:scale(.96)}.mini:hover{background:rgba(255,255,255,.14)}
+.quote{margin-top:14px;border-radius:14px;padding:6px 16px;box-shadow:inset 0 0 0 1px var(--line2);background:rgba(255,255,255,.03);font-size:14px}
+.quote div{display:flex;justify-content:space-between;gap:12px;padding:8px 0;border-bottom:1px solid var(--line2);color:var(--mut)}
+.quote div:last-child{border:0;color:var(--tx);font-weight:700;font-size:16px}
+.quote small{display:block;font-weight:400;color:var(--mut);font-size:12px}
 .warn{background:rgba(255,190,90,.07);box-shadow:inset 0 0 0 1px rgba(255,190,90,.28);color:#ffe2b0;border-radius:12px;padding:12px 14px;font-size:13.5px;margin-top:14px}
 .status{margin-top:14px;font-size:14px;min-height:22px}.status.err{color:var(--red)}.status.ok{color:var(--ok)}
 .status a{color:var(--ac-ink);text-decoration:underline;font-size:13.5px}
@@ -175,7 +179,7 @@ footer{border-top:1px solid var(--line);padding:30px 0 44px;color:var(--dim);fon
       <a class="btn ghost" href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe">Download for Windows</a>
     </div>
     <div class="plan">
-      <h3>Pro</h3><div class="pr">$1<small>once</small></div><p class="sub">Power, depth and polish.</p>
+      <h3>Pro</h3><div class="pr" data-price="pro">$1<small>once</small></div><p class="sub">Power, depth and polish.</p>
       <ul>
         <li><b>Notch Apple AI included</b>: ask without setting up any key (a daily allowance; your own keys still work). The cheapest way to an AI that lives in your notch: about your screen, with web search and voice, one shortcut away over any app</li>
         <li>AI about your screen, images and PDFs; web search with sources; personas, slash commands, voice</li>
@@ -186,11 +190,11 @@ footer{border-top:1px solid var(--line);padding:30px 0 44px;color:var(--dim);fon
         <li>Klick keyboard sounds, including premium sounds downloaded with your key</li>
         <li>Messenger, Audio, VPN, Voice Notes, Screen Time, Launcher, Snippets, Mirror, Focus, sync</li>
       </ul>
-      <button class="btn" data-buy="pro">Get Pro, $1</button>
+      <button class="btn" data-buy="pro" id="proBtn">Get Pro, $1</button>
     </div>
     <div class="plan best">
       <span class="badge">Best value</span>
-      <h3>Ultimate</h3><div class="pr">$5<small>once</small></div><p class="sub">Everything in Pro, plus the platform.</p>
+      <h3>Ultimate</h3><div class="pr" data-price="ultimate">$5<small>once</small></div><p class="sub">Everything in Pro, plus the platform.</p>
       <ul>
         <li>Everything in Pro</li>
         <li>Live Activities API for your own apps and scripts, two activities at once</li>
@@ -204,7 +208,7 @@ footer{border-top:1px solid var(--line);padding:30px 0 44px;color:var(--dim);fon
         <li>iPhone companion (sideload with Sideloadly)</li>
         <li class="soon">Apple Watch</li>
       </ul>
-      <p class="muted" style="font-size:13px;margin:-12px 0 6px">Apple Watch is planned. Already have Pro? Upgrade for $4.</p>
+      <p class="muted" style="font-size:13px;margin:-12px 0 6px">Apple Watch is planned. Already have Pro? Upgrade for <span data-price="upgrade">$4</span>.</p>
       <button class="btn" data-buy="ultimate" id="ultBtn">Get Ultimate, $5</button>
     </div>
   </div>
@@ -229,15 +233,22 @@ footer{border-top:1px solid var(--line);padding:30px 0 44px;color:var(--dim);fon
         <div id="start">
           <label style="margin-top:0">Tier</label>
           <div class="choice" id="tierChoice">
-            <button class="on" data-tier="pro"><b>Pro · $1</b><span>One-time. Every Pro feature.</span></button>
-            <button data-tier="ultimate"><b>Ultimate · $5</b><span>Everything, now and as it ships.</span></button>
+            <button class="on" data-tier="pro"><b id="tierProName">Pro · $1</b><span>One-time. Every Pro feature.</span></button>
+            <button data-tier="ultimate"><b id="tierUltName">Ultimate · $5</b><span>Everything, now and as it ships.</span></button>
           </div>
           <label>Add a tip? (optional, it goes to four high school developers)</label>
           <div class="choice" id="tipChoice" style="grid-template-columns:repeat(4,1fr)">
             <button class="on" data-tip="0"><b>No tip</b></button>
-            <button data-tip="1"><b>+$1</b></button>
-            <button data-tip="3"><b>+$3</b></button>
-            <button data-tip="5"><b>+$5</b></button>
+            <button data-tip="1"><b data-tipn="1">+$1</b></button>
+            <button data-tip="3"><b data-tipn="3">+$3</b></button>
+            <button data-tip="5"><b data-tipn="5">+$5</b></button>
+          </div>
+          <div class="methodBox" hidden>
+            <label>Pay with</label>
+            <div class="choice methodChoice">
+              <button class="on" data-method="card"><b>Card · AED</b><span>Visa, Mastercard and Apple Pay, through Ziina. UAE only.</span></button>
+              <button data-method="crypto"><b>Crypto</b><span>Bitcoin, Ethereum, Solana or Litecoin</span></button>
+            </div>
           </div>
           <div id="coinBox" style="display:none">
             <label>Pay with</label>
@@ -247,18 +258,27 @@ footer{border-top:1px solid var(--line);padding:30px 0 44px;color:var(--dim);fon
           <input id="email" type="email" placeholder="you@example.com" autocomplete="email">
           <label class="muted" style="display:flex;gap:8px;align-items:flex-start;font-weight:400;margin:8px 0"><input type="checkbox" id="remind" style="margin-top:3px"><span>Email me a reminder if I don't finish (at most three emails over six days, the last with 20% off). Unsubscribe any time.</span></label>
           <div id="couponRow" hidden><label for="coupon">Discount code (20% off, for the email it was sent to)</label><input id="coupon" placeholder="BACK20-XXXXXXXX" autocomplete="off" autocapitalize="characters"></div>
+          <div class="quote" id="quote" hidden></div>
           <button class="btn" id="orderBtn"><span class="spin"></span><span>Continue to payment</span></button>
           <div class="status" id="orderStatus"></div>
         </div>
       </div>
 
       <div class="pane" id="upgrade">
-        <p class="muted">Already have Pro? Pay just the $4 difference. Your Pro key keeps working until you activate the new Ultimate key.</p>
-        <label for="upKey">Your Pro key</label>
+        <p class="muted">Already have Pro? Pay just the <span data-price="upgrade">$4</span> difference. Your Pro key keeps working until you activate the new Ultimate key.</p>
+        <div class="methodBox" hidden>
+            <label>Pay with</label>
+            <div class="choice methodChoice">
+              <button class="on" data-method="card"><b>Card · AED</b><span>Visa, Mastercard and Apple Pay, through Ziina. UAE only.</span></button>
+              <button data-method="crypto"><b>Crypto</b><span>Bitcoin, Ethereum, Solana or Litecoin</span></button>
+            </div>
+          </div>
+          <label for="upKey">Your Pro key</label>
         <textarea id="upKey" class="mono" rows="3" placeholder="NTCH-PRO-…" spellcheck="false"></textarea>
         <label for="upEmail">Email for the new key</label>
         <input id="upEmail" type="email" placeholder="you@example.com" autocomplete="email">
-        <button class="btn" id="upBtn"><span class="spin"></span><span>Upgrade for $4</span></button>
+        <div class="quote" id="upQuote" hidden></div>
+        <button class="btn" id="upBtn"><span class="spin"></span><span id="upLabel">Upgrade for $4</span></button>
         <div class="status" id="upStatus"></div>
       </div>
 
@@ -369,7 +389,7 @@ $('#cmp').innerHTML = ROWS.map(r => r.length === 1 ? `<tr class="grp"><td colspa
 function tab(name) { document.querySelectorAll('.tabs button,.pane').forEach(x => x.classList.remove('on')); $(`[data-p=${name}]`).classList.add('on'); $('#' + name).classList.add('on') }
 document.querySelectorAll('.tabs button').forEach(b => b.onclick = () => tab(b.dataset.p));
 let tier = 'pro';
-document.querySelectorAll('#tierChoice button').forEach(b => b.onclick = () => { if (b.disabled) return; document.querySelectorAll('#tierChoice button').forEach(x => x.classList.remove('on')); b.classList.add('on'); tier = b.dataset.tier });
+document.querySelectorAll('#tierChoice button').forEach(b => b.onclick = () => { if (b.disabled) return; document.querySelectorAll('#tierChoice button').forEach(x => x.classList.remove('on')); b.classList.add('on'); tier = b.dataset.tier; paintQuote() });
 document.querySelectorAll('[data-buy]').forEach(b => b.onclick = () => { $(`#tierChoice [data-tier=${b.dataset.buy}]`).click(); tab('buy'); $('#checkout').scrollIntoView({ behavior: 'smooth' }); setTimeout(() => $('#email').focus(), 500) });
 const hash = location.hash.slice(1);
 if (['upgrade', 'promo', 'recover'].includes(hash)) { tab(hash); setTimeout(() => $('#checkout').scrollIntoView(), 50) }
@@ -399,14 +419,15 @@ async function printReceipt(o) {
   const box = $('#printer'), out = $('#prOut'), icon = $('#prIcon'), text = $('#prText');
   const tierName = o.tier === 'ultimate' ? 'Ultimate' : 'Pro', day = new Date().toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
   const esc = t => String(t).replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
-  $('#prWhat').textContent = `${tierName} · one payment`; $('#prAmt').textContent = `$${o.usd}`;
+  const aedR = o.cur === 'AED', money = aedR ? `AED ${(+o.total).toFixed(2)}` : `$${o.usd}`;
+  $('#prWhat').textContent = `${tierName} · one payment`; $('#prAmt').textContent = money;
   $('#prPaper').innerHTML = `<h4>Receipt</h4><hr><dl>
     <div><dt>Item</dt><dd>Notch Apple ${esc(tierName)}</dd></div>
-    <div><dt>Price</dt><dd>$${esc(o.usd)}</dd></div>
-    <div><dt>Paid</dt><dd>${esc(o.amount || o.ltc)} ${esc(o.symbol || 'LTC')}</dd></div>
+    <div><dt>Price</dt><dd>${aedR ? 'AED ' + (+o.base).toFixed(2) : '$' + esc(o.usd)}</dd></div>
+    ${aedR ? `<div><dt>Card fee</dt><dd>AED ${(+o.fee).toFixed(2)}</dd></div><div><dt>Paid by</dt><dd>Card (Ziina)</dd></div>` : `<div><dt>Paid</dt><dd>${esc(o.amount || o.ltc)} ${esc(o.symbol || 'LTC')}</dd></div>`}
     <div><dt>Order</dt><dd>${esc(String(o.order).slice(0, 12))}</dd></div>
     <div><dt>Date</dt><dd>${esc(day)}</dd></div></dl><hr>
-    <dl><div class="tot"><dt>Total paid</dt><dd>$${esc(o.usd)}</dd></div></dl><hr>
+    <dl><div class="tot"><dt>Total paid</dt><dd>${esc(money)}</dd></div></dl><hr>
     <p style="text-align:center">Thank you. Your key is below.<br>No subscription, ever.</p>`;
   box.hidden = false; out.className = 'pr-out';
   icon.innerHTML = '<span class="spin2"></span>'; text.textContent = 'Processing your order';
@@ -444,7 +465,7 @@ let config = null;
     const b = $('#tierChoice [data-tier=ultimate]'); b.disabled = true; b.querySelector('span').textContent = 'Coming soon, with its first features.';
     $('#ultBtn').disabled = true; $('#ultBtn').textContent = 'Coming soon'; $('#upBtn').disabled = true;
   }
-  showCoins();
+  showCoins(); setupCard();
   const open = load('na.order'); if (open && open.expires > Date.now()) paying(open);
 })();
 function offline(html) { const w = $('#offline'); w.innerHTML = html; w.style.display = 'block'; document.querySelectorAll('#orderBtn,#upBtn,#promoBtn,#recBtn,#ultBtn').forEach(b => b.disabled = true) }
@@ -479,14 +500,83 @@ function showCoins() {
   $('#coinChoice').style.gridTemplateColumns = `repeat(${order.length},1fr)`;
   document.querySelectorAll('#coinChoice button').forEach(b => b.onclick = () => { coin = b.dataset.coin; document.querySelectorAll('#coinChoice button').forEach(x => x.classList.toggle('on', x === b)) });
 }
+
+// Card payments (Ziina): only for customers in the UAE, priced in AED. The customer pays the card fee (3% + AED 1), shown before paying.
+let method = 'crypto', aedP = null, feeInfo = { pct: 3, flat: 1 };
+const money2 = n => (Math.round(n * 100) / 100).toFixed(2);
+const quoteFor = base => { const fee = Math.round((base * feeInfo.pct / 100 + feeInfo.flat) * 100) / 100; return { base, fee, total: Math.round((base + fee) * 100) / 100 } };
+function setupCard() {
+  const c = config && config.card;
+  if (!c || !c.on || !c.here) return;
+  aedP = c.aed; feeInfo = c.fee || feeInfo; method = 'card';
+  document.querySelectorAll('.methodBox').forEach(b => b.hidden = false);
+  document.querySelectorAll('.methodChoice button').forEach(b => b.onclick = () => { method = b.dataset.method; paintMethod() });
+  document.querySelectorAll('[data-price]').forEach(e => { const v = aedP[e.dataset.price]; e.innerHTML = e.classList.contains('pr') ? `AED ${v}<small>once</small>` : `AED ${v}` });
+  $('#proBtn').textContent = `Get Pro, AED ${aedP.pro}`; $('#ultBtn').textContent = `Get Ultimate, AED ${aedP.ultimate}`;
+  $('#tierProName').textContent = `Pro · AED ${aedP.pro}`; $('#tierUltName').textContent = `Ultimate · AED ${aedP.ultimate}`;
+  document.querySelectorAll('[data-tipn]').forEach(e => e.textContent = `+AED ${e.dataset.tipn}`);
+  paintMethod();
+}
+function paintMethod() {
+  document.querySelectorAll('.methodChoice button').forEach(b => b.classList.toggle('on', b.dataset.method === method));
+  $('#coinBox').style.display = method !== 'card' && ((config && config.coins) || []).length > 1 ? 'block' : 'none';
+  paintQuote();
+}
+function paintQuote() {
+  const card = method === 'card' && aedP;
+  const row = (a, b, small = '') => `<div><span>${a}${small ? `<small>${small}</small>` : ''}</span><span>${b}</span></div>`;
+  const draw = (el, base, tipv) => {
+    if (!card) { el.hidden = true; return }
+    const q = quoteFor(base + tipv);
+    el.hidden = false;
+    el.innerHTML = row(tipv ? 'Price and tip' : 'Price', `AED ${money2(q.base)}`) + row('Card fee', `AED ${money2(q.fee)}`, `${feeInfo.pct}% + AED ${feeInfo.flat}, paid by you`) + row('Total', `AED ${money2(q.total)}`);
+  };
+  draw($('#quote'), aedP ? aedP[tier] : 0, tip); draw($('#upQuote'), aedP ? aedP.upgrade : 0, 0);
+  if (aedP) $('#upLabel').textContent = card ? `Upgrade for AED ${money2(quoteFor(aedP.upgrade).total)}` : 'Upgrade for $4';
+  $('#orderBtn').lastElementChild.textContent = card ? 'Continue to card payment' : 'Continue to payment';
+}
+async function startCard(btn, statusId, body) {
+  if (!validEmail(body.email)) return status(statusId, 'Enter a valid email address. Your key is sent there.', 'err', false);
+  busy(btn, true); status(statusId, 'Opening the secure card page…');
+  try {
+    const r = await api('/order', { ...body, method: 'card' });
+    save('na.card', { order: r.order, tier: r.tier, quote: r.quote });
+    location.href = r.redirect_url;
+  } catch (e) { status(statusId, e.message, 'err'); busy(btn, false) }
+}
+// Back from Ziina: ?card=ORDER. Ask the server (which asks Ziina) until the payment shows as completed, then show the key.
+async function returnFromCard(id) {
+  $('#forms').style.display = 'none'; $('#paying').style.display = 'none';
+  const box = $('#offline'); box.style.display = 'block'; box.textContent = 'Confirming your card payment. Keep this page open…';
+  const saved = load('na.card') || {};
+  for (let i = 0; i < 60; i++) {
+    try {
+      const r = await api('/order/card', { order: id });
+      if (r.key) {
+        box.style.display = 'none'; save('na.card', null);
+        const q = saved.order === id && saved.quote ? saved.quote : { base: r.aed, fee: 0, total: r.aed };
+        return showKey(r, { tier: r.tier.toLowerCase(), cur: 'AED', base: q.base, fee: q.fee, total: q.total, order: id });
+      }
+      if (r.failed) { box.textContent = r.message; $('#forms').style.display = 'block'; return }
+    } catch (e) { box.textContent = e.message; $('#forms').style.display = 'block'; return }
+    await sleep(3000);
+  }
+  box.textContent = 'The payment is taking longer than usual. If you were charged, your key is emailed to you in a few minutes, or use "Lost my key?" with your email.'; $('#forms').style.display = 'block';
+}
+{
+  const q = new URLSearchParams(location.search), id = q.get('card');
+  if (/^[0-9a-f]{32}$/.test(id || '')) addEventListener('load', () => returnFromCard(id));
+  else if (q.get('cardcancel')) addEventListener('load', () => { const b = $('#offline'); b.style.display = 'block'; b.textContent = 'The card payment was cancelled. You were not charged.' });
+}
 async function startOrder(btn, statusId, body) {
+  if (method === 'card' && aedP) return startCard(btn, statusId, body);
   body = { ...body, coin };
   if (!validEmail(body.email)) return status(statusId, 'Enter a valid email address. Your key is sent there.', 'err', false);
   busy(btn, true); status(statusId, 'Getting your exact amount…');
   try { paying(await api('/order', body)); status(statusId, '') } catch (e) { status(statusId, e.message, 'err') } finally { busy(btn, false) }
 }
 let tip = 0;
-document.querySelectorAll('#tipChoice button').forEach(b => b.onclick = () => { document.querySelectorAll('#tipChoice button').forEach(x => x.classList.remove('on')); b.classList.add('on'); tip = +b.dataset.tip });
+document.querySelectorAll('#tipChoice button').forEach(b => b.onclick = () => { document.querySelectorAll('#tipChoice button').forEach(x => x.classList.remove('on')); b.classList.add('on'); tip = +b.dataset.tip; paintQuote() });
 const urlCoupon = (new URLSearchParams(location.search).get('coupon') || '').toUpperCase().replace(/[^A-Z0-9-]/g, '').slice(0, 20);
 if (urlCoupon) { $('#coupon').value = urlCoupon; $('#couponRow').hidden = false; }
 $('#orderBtn').onclick = () => startOrder($('#orderBtn'), '#orderStatus', { tier, email: $('#email').value, tip, remind: $('#remind').checked, coupon: $('#coupon').value.trim() || undefined });

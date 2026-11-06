@@ -6,7 +6,7 @@
 
 import assert from 'node:assert/strict';
 import { writeFileSync } from 'node:fs';
-import worker, { sendReminders, parseKey, verifyKey, verifyToken, mintToken, b32encode, b32decode, AiQuota, cleanAiRequest, PlaneBoard, PlaneRate, PlaneSky, cleanPilotName, cleanPlaneScore, cleanAskRequest, totpCode, rfc4648 } from '../src/worker.js';
+import worker, { cardQuote, sendReminders, parseKey, verifyKey, verifyToken, mintToken, b32encode, b32decode, AiQuota, cleanAiRequest, PlaneBoard, PlaneRate, PlaneSky, cleanPilotName, cleanPlaneScore, cleanAskRequest, totpCode, rfc4648 } from '../src/worker.js';
 
 const pair = await crypto.subtle.generateKey({ name: 'Ed25519' }, true, ['sign', 'verify']);
 const jwk = await crypto.subtle.exportKey('jwk', pair.privateKey);
@@ -1009,5 +1009,44 @@ await test('Authenticator app: RFC 6238 vector, setup needs an email and an exis
   for (let i = 0; i < 8; i++) await call('/otp/verify', { key, device: dv(22), email: 'new@example.com', code: '999999', method: 'totp' });
   assert.equal((await call('/otp/verify', { key, device: dv(22), email: 'new@example.com', code: await totpCode(secret, now() + 1), method: 'totp' })).status, 429, 'lock-out after repeated misses');
   env.BIND_REQUIRE = '0';
+});
+await test('Card (Ziina): UAE only, AED prices with the 3% + AED 1 fee, paid only when Ziina says completed for the exact amount, one key per payment', async () => {
+  assert.deepEqual(cardQuote(4), { base: 4, fee: 1.12, total: 5.12, fils: 512 });
+  assert.deepEqual(cardQuote(10), { base: 10, fee: 1.3, total: 11.3, fils: 1130 });
+  assert.equal(cardQuote(6).fils, 718);
+  const seen = []; const intents = new Map(); const prev = globalThis.fetch;
+  globalThis.fetch = async (url, init) => {
+    if (String(url).startsWith('https://api-v2.ziina.com/api/payment_intent')) {
+      assert.equal(init.headers.Authorization, 'Bearer zk_test', 'the API key goes in a Bearer header');
+      if (init.method === 'POST') { const b = JSON.parse(init.body); const id = 'pi_' + intents.size; intents.set(id, { id, amount: b.amount, currency_code: b.currency_code, status: 'requires_payment_instrument' }); seen.push(b); return new Response(JSON.stringify({ id, redirect_url: 'https://pay.ziina.com/x/' + id, status: 'requires_payment_instrument' })); }
+      return new Response(JSON.stringify(intents.get(String(url).split('/').pop())));
+    }
+    return prev(url, init);
+  };
+  const ae = { 'cf-ipcountry': 'AE' }, us = { 'cf-ipcountry': 'US' };
+  assert.equal((await call('/order', { method: 'card', tier: 'pro', email: 'a@b.co' }, ae)).status, 503, 'off until the API key is set');
+  env.ZIINA_API_KEY = 'zk_test';
+  assert.equal((await call('/order', { method: 'card', tier: 'pro', email: 'a@b.co' }, us)).status, 403, 'not in the UAE');
+  const o = await call('/order', { method: 'card', tier: 'pro', email: 'card@example.com' }, ae);
+  assert.equal(o.status, 200, JSON.stringify(o));
+  assert.equal(seen[0].amount, 512); assert.equal(seen[0].currency_code, 'AED'); assert.match(seen[0].success_url, /pro\.html\?card=[0-9a-f]{32}$/);
+  assert.equal(o.quote.total, 5.12);
+  assert.equal((await call('/order/card', { order: o.order })).pending, true, 'not paid yet: no key');
+  intents.get('pi_0').status = 'completed'; intents.get('pi_0').amount = 100;
+  assert.equal((await call('/order/card', { order: o.order })).status, 400, 'a different amount is refused');
+  intents.get('pi_0').amount = 512;
+  const paid = await call('/order/card', { order: o.order });
+  assert.equal(paid.status, 200, JSON.stringify(paid)); assert.match(paid.key, /^NTCH-PRO-/);
+  const again = await call('/order/card', { order: o.order });
+  assert.equal(again.key, paid.key); assert.equal(again.again, true);
+  assert.equal(mails.filter((m) => m.to === 'card@example.com' && /key/.test(m.subject)).length, 1, 'one key mail');
+  // Ultimate, and the AED 6 upgrade from Pro
+  const u = await call('/order', { method: 'card', tier: 'ultimate', email: 'up@example.com', upgradeFrom: paid.key }, ae);
+  assert.equal(u.status, 200, JSON.stringify(u)); assert.equal(seen[1].amount, 718);
+  const ult = await call('/order', { method: 'card', tier: 'ultimate', email: 'u2@example.com' }, ae);
+  assert.equal(seen[2].amount, 1130, JSON.stringify(ult));
+  const cfg = await call('/config', undefined, ae);
+  assert.equal(cfg.card.on, true); assert.deepEqual(cfg.card.aed, { pro: 4, ultimate: 10, upgrade: 6 });
+  delete env.ZIINA_API_KEY; globalThis.fetch = prev;
 });
 console.log(`\n${passed} passed`);
