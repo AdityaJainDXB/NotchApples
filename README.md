@@ -150,6 +150,11 @@ More screenshots of the capture overlay, the AI answer, the settings and the Win
 
 ## What's new
 
+### Mac 2.2.20 · 6 November 2026 · ⌨️ Confirming a key opens its own window
+
+- Fix: when you paste a key in Settings → License (or in the notch) and it asks you to confirm your email, the email and code boxes now work. The confirmation opens in its own window that stays open while you check your email, instead of being squeezed into the Settings form where the boxes could not be typed in.
+- This is a required update.
+
 ### Mac 2.2.19 · 6 November 2026 · ⌨️ The email box accepts typing
 
 - Fix: in Settings → License, the email box (and the code box) did not accept typing. The email setup window was grabbing the keyboard back every time the app was clicked, so typing in Settings went to the wrong window. It no longer does that, and the email and code boxes are now ready to type in straight away.
@@ -158,12 +163,6 @@ More screenshots of the capture overlay, the AI answer, the settings and the Win
 ### Mac 2.2.18 · 6 November 2026 · 🔧 Required update shows before the email screen
 
 - Fix: a required update now always shows in the notch before the email screen, so a Mac that is waiting to confirm its email still sees "Update Notch Apple" and can update. Before, the email screen came first and hid the update.
-- This is a required update.
-
-### Mac 2.2.17 · Windows 2.2.17 BETA · 6 November 2026 · ✉️ Email setup no longer gets lost
-
-- Fix: setting up your email no longer gets lost. The form is now a window that stays open (it has no close button) while you open your email to find the code, and the notch only points to it. If you do leave, a code you already asked for is remembered for its 10 minutes, so you come back to the code box instead of being asked for your email again. The same on Windows.
-- Anyone who has not confirmed their email yet is asked to now, and the notch stays locked until they do.
 - This is a required update.
 
 Every earlier release is in the [changelog](CHANGELOG.md).

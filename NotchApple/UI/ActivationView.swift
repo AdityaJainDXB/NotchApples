@@ -71,11 +71,17 @@ struct ActivationModalView: View {
                         .fixedSize(horizontal: false, vertical: true)
                 }
 
-                if let v = verifying, !succeeded {
-                    VerifyKeyView(key: v.key, bound: v.bound, hint: v.hint, onDone: {
-                        verifying = nil
-                        withAnimation(Theme.spring) { succeeded = true }
-                    }, onCancel: { verifying = nil }, remember: true)
+                if verifying != nil, !succeeded {
+                    // The confirmation lives in its own window (not in this form), so its boxes always take typing.
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Confirm your email").font(.system(size: 17, weight: .bold)).foregroundStyle(.white)
+                        Text("This key belongs to an email address. Finish in the window that just opened. It stays open while you check your email.")
+                            .font(.system(size: 12)).foregroundStyle(Theme.textSecondary).fixedSize(horizontal: false, vertical: true)
+                        HStack(spacing: 12) {
+                            Button("Show the window") { KeyVerifyWindow.shared.bringForward() }.buttonStyle(PurpleButtonStyle())
+                            Button("Use a different key") { verifying = nil }.buttonStyle(.plain).font(.system(size: 11)).foregroundStyle(Theme.accent)
+                        }
+                    }
                 } else if !succeeded {
                     HStack(spacing: 8) {
                         TextField("Paste your key", text: $code)
@@ -140,7 +146,13 @@ struct ActivationModalView: View {
                     try await entitlements.activate(code)
                     withAnimation(Theme.spring) { succeeded = true }
                 } catch LicenseKey.Problem.needsVerification(let bound, let hint) {
-                    verifying = (code.trimmingCharacters(in: .whitespacesAndNewlines), bound, hint)
+                    let pasted = code.trimmingCharacters(in: .whitespacesAndNewlines)
+                    focused = false
+                    verifying = (pasted, bound, hint)
+                    KeyVerifyWindow.shared.show(key: pasted, bound: bound, hint: hint) {
+                        verifying = nil
+                        withAnimation(Theme.spring) { succeeded = true }
+                    }
                 } catch {
                     fail(error.localizedDescription)
                 }

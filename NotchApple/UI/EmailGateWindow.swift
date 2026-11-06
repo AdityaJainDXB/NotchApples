@@ -100,3 +100,44 @@ struct EmailGateNotchView: View {
         .onAppear { EmailGateWindow.shared.bringForward() }
     }
 }
+
+
+/// Confirming a key from Settings or the notch (a key someone just pasted that belongs to an email). It is its own window, not part of the
+/// Settings form, so the boxes always take typing, and it stays open while the person reads the email.
+@MainActor
+final class KeyVerifyWindow {
+    static let shared = KeyVerifyWindow()
+    private var window: NSWindow?
+
+    func show(key: String, bound: Bool, hint: String?, onDone: @escaping () -> Void) {
+        close()
+        let view = KeyVerifyWindowView(key: key, bound: bound, hint: hint,
+                                       onDone: { [weak self] in self?.close(); onDone() },
+                                       onCancel: { [weak self] in self?.close() })
+        let w = NSWindow(contentViewController: NSHostingController(rootView: view))
+        w.title = "Notch Apple: confirm your email"
+        w.styleMask = [.titled, .closable]
+        w.isReleasedWhenClosed = false
+        w.hidesOnDeactivate = false
+        w.center()
+        window = w
+        NSApp.activate(ignoringOtherApps: true)
+        w.makeKeyAndOrderFront(nil)
+    }
+
+    func bringForward() { if let window { NSApp.activate(ignoringOtherApps: true); window.makeKeyAndOrderFront(nil) } }
+    private func close() { window?.close(); window = nil }
+}
+
+private struct KeyVerifyWindowView: View {
+    let key: String, bound: Bool, hint: String?
+    var onDone: () -> Void
+    var onCancel: () -> Void
+    var body: some View {
+        VerifyKeyView(key: key, bound: bound, hint: hint, onDone: onDone, onCancel: onCancel, remember: true)
+            .padding(24)
+            .frame(width: 480)
+            .background(Color(white: 0.09))
+            .preferredColorScheme(.dark)
+    }
+}

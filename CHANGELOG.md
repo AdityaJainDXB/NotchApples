@@ -4,6 +4,11 @@ Every Notch Apple release, newest first. The latest few are also on the [README]
 
 > **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is in the repository's history.
 
+### Mac 2.2.20 · 6 November 2026 · ⌨️ Confirming a key opens its own window
+
+- Fix: when you paste a key in Settings → License (or in the notch) and it asks you to confirm your email, the email and code boxes now work. The confirmation opens in its own window that stays open while you check your email, instead of being squeezed into the Settings form where the boxes could not be typed in.
+- This is a required update.
+
 ### Mac 2.2.19 · 6 November 2026 · ⌨️ The email box accepts typing
 
 - Fix: in Settings → License, the email box (and the code box) did not accept typing. The email setup window was grabbing the keyboard back every time the app was clicked, so typing in Settings went to the wrong window. It no longer does that, and the email and code boxes are now ready to type in straight away.
