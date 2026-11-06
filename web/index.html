@@ -683,9 +683,9 @@ html.pre .intro,html.pre h1 .hw{animation-play-state:paused}
                 <div class="g c2" style="grid-template-columns:1fr 1.5fr">
                   <div class="box"><small>Tuesday</small><div class="big">29 September</div><div style="margin-top:10px;font-size:22px">☀️ 24° <small style="display:inline;font-size:12px">Clear, Cupertino</small></div><small style="margin-top:auto;padding-top:40px">🔋 92%</small></div>
                   <div class="box"><small>Up next</small>
-                    <div class="ev"><i></i><div><b>Design review</b><span>11:00 to 11:45</span></div><em class="now">Now</em></div>
-                    <div class="ev"><i style="background:#fb923c"></i><div><b>Lunch with Sam</b><span>12:45 to 13:45</span></div></div>
-                    <div class="ev"><i style="background:#4ade80"></i><div><b>Gym</b><span>16:15 to 17:15</span></div></div>
+                    <div class="ev"><i></i><div><b>Design review</b><span id="ev1">11:00 to 11:45</span></div><em class="now">Now</em></div>
+                    <div class="ev"><i style="background:#fb923c"></i><div><b>Lunch with Sam</b><span id="ev2">12:45 to 13:45</span></div></div>
+                    <div class="ev"><i style="background:#4ade80"></i><div><b>Gym</b><span id="ev3">16:15 to 17:15</span></div></div>
                   </div>
                 </div>
               </div>
@@ -722,7 +722,7 @@ html.pre .intro,html.pre h1 .hw{animation-play-state:paused}
               <div class="view" data-t="Tools" data-i="🧰">
                 <div class="g c2" style="grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr">
                   <div class="box tool"><small>🔤 Text Grab</small><div class="big" style="font-size:18px">Copy text from screen</div><small>Copied 142 characters</small></div>
-                  <div class="box tool"><small>☕ Keep Awake</small><div class="big">1 hour</div><small>Awake until 10:41</small></div>
+                  <div class="box tool"><small>☕ Keep Awake</small><div class="big">1 hour</div><small>Awake until <span id="awakeUntil">10:41</span></small></div>
                   <div class="box tool"><small>🎨 Color Picker</small><div class="big">#9B7BFF</div><div class="swatches"><i style="background:#9b7bff"></i><i style="background:#f472b6"></i><i style="background:#38bdf8"></i><i style="background:#facc15"></i></div></div>
                   <div class="box tool"><small>🧮 Calculator</small><div style="font-family:var(--mono);color:var(--mut)">(12.5 + 7) × 3</div><div class="big">= 58.5</div></div>
                 </div>
@@ -1186,7 +1186,11 @@ setInterval(()=>{if(!demoVisible||reduce)return;const r=7.6+Math.random()*1.6,c=
 const cities=[['London','Europe/London'],['New York','America/New_York'],['Tokyo','Asia/Tokyo']];
 function tick(){const now=new Date();$('#clocks').innerHTML=cities.map(([n,z])=>{const h=+now.toLocaleString('en-GB',{hour:'2-digit',hour12:false,timeZone:z});return `<div class="box clock"><small>${h>=7&&h<19?'☀️':'🌙'} ${n}</small><b>${now.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',timeZone:z})}</b></div>`}).join('');
   $('#clock').textContent=now.toLocaleDateString([],{weekday:'short'})+' '+now.toLocaleTimeString([],{hour:'numeric',minute:'2-digit'})}
-tick();setInterval(()=>{if(demoVisible&&!reduce)tick()},10000);
+/* The demo's own times follow the visitor's device clock: events sit around "now", Keep Awake runs for an hour from now. */
+function demoTimes(){const now=new Date(),f=(d)=>d.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',hour12:false}),base=new Date(Math.floor(now.getTime()/9e5)*9e5-9e5),at=(m)=>new Date(base.getTime()+m*6e4),span=(a,b)=>f(at(a))+' to '+f(at(b));
+  const set=(id,t)=>{const e=$('#'+id);if(e)e.textContent=t};
+  set('ev1',span(0,45));set('ev2',span(75,135));set('ev3',span(210,270));set('awakeUntil',f(new Date(now.getTime()+36e5)))}
+demoTimes();tick();setInterval(()=>{if(demoVisible&&!reduce){tick();demoTimes()}},10000);
 
 /* ---------- nav: tuck the notch's links away once past the hero ---------- */
 /* Preloader: counts up, then shrinks into the notch. Only on a first human visit (see the flag in <head>). */
