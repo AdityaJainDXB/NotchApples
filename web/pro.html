@@ -345,7 +345,7 @@ footer{border-top:1px solid var(--line);padding:30px 0 44px;color:var(--dim);fon
       <a class="btn ghost" href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe" style="max-width:460px;margin:10px auto 0">Download for Windows</a>
     </div>
   </div>
-  <p class="note">Payments go straight to the developer's crypto wallets (Bitcoin, Ethereum, Solana or Litecoin). No card details, no payment company. <a href="terms.html" style="text-decoration:underline">Terms and refunds</a></p>
+  <p class="note">Pay by card (through Ziina, which handles your card details; we never see them) or in crypto (Bitcoin, Ethereum, Solana or Litecoin), sent straight to the developer's wallets. <a href="terms.html" style="text-decoration:underline">Terms and refunds</a></p>
 
   <h2>Questions</h2>
   <section class="faq" id="faqs">
@@ -390,7 +390,7 @@ function tab(name) { document.querySelectorAll('.tabs button,.pane').forEach(x =
 document.querySelectorAll('.tabs button').forEach(b => b.onclick = () => tab(b.dataset.p));
 let tier = 'pro';
 document.querySelectorAll('#tierChoice button').forEach(b => b.onclick = () => { if (b.disabled) return; document.querySelectorAll('#tierChoice button').forEach(x => x.classList.remove('on')); b.classList.add('on'); tier = b.dataset.tier; paintQuote() });
-document.querySelectorAll('[data-buy]').forEach(b => b.onclick = () => { $(`#tierChoice [data-tier=${b.dataset.buy}]`).click(); tab('buy'); $('#checkout').scrollIntoView({ behavior: 'smooth' }); setTimeout(() => $('#email').focus(), 500) });
+document.querySelectorAll('[data-buy]').forEach(b => b.onclick = () => { save('na.order', null); $('#paying').style.display = 'none'; $('#forms').style.display = 'block'; $(`#tierChoice [data-tier=${b.dataset.buy}]`).click(); tab('buy'); $('#checkout').scrollIntoView({ behavior: 'smooth' }); setTimeout(() => $('#email').focus(), 500) });
 const hash = location.hash.slice(1);
 if (['upgrade', 'promo', 'recover'].includes(hash)) { tab(hash); setTimeout(() => $('#checkout').scrollIntoView(), 50) }
 
