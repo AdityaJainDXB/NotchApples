@@ -150,6 +150,11 @@ More screenshots of the capture overlay, the AI answer, the settings and the Win
 
 ## What's new
 
+### Mac 2.2.25 · Windows 2.2.25 BETA · 6 November 2026 · 👋 Mascots say hello from the notch
+
+- New: the hello from the notch can be a character instead of the handwriting. When your PC opens, the notch opens and Notchy drops out and waves, Pomo bounces across, Pip flies across, Mochi hops across, Orbit circles round and Wisp drifts across, with your name under them. All six are original drawings
+- Pick one in Settings → Notch Extras on the Mac, or Settings → General → Hello from the notch on Windows, where it also plays when the PC wakes up (a Windows beta feature). Handwritten hello stays the default
+
 ### Mac 2.2.24 · Windows 2.2.24 BETA · 6 November 2026 · 📄 Licence names Viraj Singh Chadha
 
 - Updated the licence: Viraj Singh Chadha is now named as a collaborator and co-owner. Aditya Jain remains the principal owner with the majority and controlling stake.
@@ -159,12 +164,6 @@ More screenshots of the capture overlay, the AI answer, the settings and the Win
 - New: the code screen is redesigned: six cells split 3 + 3 that glow blue where you type, in the email setup window, Settings and on Windows.
 - New: the emails we send (your verification code and the "your key is locked to your email" confirmation) now look like Notch Apple: a dark card with the code in six cells, instead of plain text.
 
-### Mac 2.2.22 · Windows 2.2.22 BETA · 6 November 2026 · 🔧 Gemini model list and a new default model
-
-- Fix: on Windows the model list in AI chat showed squashed, unreadable rows, so it was easy to pick the wrong model. It is readable again, and (like the Mac) it only lists Gemini chat models, never image, voice or embedding ones. If one of those was picked earlier, Gemini Do It and chat now use the default instead of failing
-- New default: everyone who hasn't chosen a Gemini model now gets Gemini 3.5 Flash-Lite (Mac and Windows). A model you picked yourself stays
-
-Every earlier release is in the [changelog](CHANGELOG.md).
 
 ## Plugins
 
