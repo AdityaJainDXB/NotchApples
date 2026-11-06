@@ -110,6 +110,8 @@ input:focus,textarea:focus{box-shadow:inset 0 0 0 1.5px var(--ac),0 0 0 4px rgba
 .quote div{display:flex;justify-content:space-between;gap:12px;padding:8px 0;border-bottom:1px solid var(--line2);color:var(--mut)}
 .quote div:last-child{border:0;color:var(--tx);font-weight:700;font-size:16px}
 .quote small{display:block;font-weight:400;color:var(--mut);font-size:12px}
+input[type=checkbox]{width:20px;height:20px;flex:none;accent-color:#7c5cff;cursor:pointer;margin:2px 0 0}
+.uaebanner{display:flex;align-items:center;justify-content:center;gap:8px;margin:0 auto 18px;max-width:max-content;padding:8px 16px;border-radius:999px;font-size:13.5px;color:#d8f5e6;background:rgba(80,200,140,.1);box-shadow:inset 0 0 0 1px rgba(120,230,180,.35)}.uaebanner[hidden]{display:none}
 .warn{background:rgba(255,190,90,.07);box-shadow:inset 0 0 0 1px rgba(255,190,90,.28);color:#ffe2b0;border-radius:12px;padding:12px 14px;font-size:13.5px;margin-top:14px}
 .status{margin-top:14px;font-size:14px;min-height:22px}.status.err{color:var(--red)}.status.ok{color:var(--ok)}
 .status a{color:var(--ac-ink);text-decoration:underline;font-size:13.5px}
@@ -165,9 +167,10 @@ footer{border-top:1px solid var(--line);padding:30px 0 44px;color:var(--dim);fon
   <h1>Free for everyone.<br><span>Pay once for more.</span></h1>
   <p class="lead">No subscriptions, no account, no renewals. Buy a key once and keep it for life, with every future update included. The app has no ads in every tier, and it counts nothing about you unless you choose to share an anonymous user count.</p>
 
+  <p class="uaebanner" id="uaeBanner" hidden><b>UAE price</b> · a discount for all customers in the UAE: Pro AED 4, Ultimate AED 10</p>
   <div class="plans">
     <div class="plan">
-      <h3>Free</h3><div class="pr">$0</div><p class="sub">The complete notch.</p>
+      <h3>Free</h3><div class="pr" data-price="free">$0</div><p class="sub">The complete notch.</p>
       <ul>
         <li>Now Playing with album art, visualizer, timers, battery and AirPods</li>
         <li>Calendar, weather, world clock, clipboard history, quick notes, file shelf</li>
@@ -523,7 +526,8 @@ function applyRegion(rg) {
   region = rg; const r = card[rg];
   CUR = r.cur; aedP = r.prices; feeInfo = r.fee;
   const sym = CUR === 'AED' ? 'AED ' : '$';
-  document.querySelectorAll('[data-price]').forEach(e => { const v = aedP[e.dataset.price]; e.innerHTML = e.classList.contains('pr') ? `${sym}${v}<small>once</small>` : `${sym}${v}` });
+  $('#uaeBanner').hidden = CUR !== 'AED';
+  document.querySelectorAll('[data-price]').forEach(e => { const v = e.dataset.price === 'free' ? 0 : aedP[e.dataset.price]; e.innerHTML = e.classList.contains('pr') && e.dataset.price !== 'free' ? `${sym}${v}<small>once</small>` : `${sym}${v}` });
   $('#proBtn').textContent = `Get Pro, ${sym}${aedP.pro}`; $('#ultBtn').textContent = `Get Ultimate, ${sym}${aedP.ultimate}`;
   $('#tierProName').textContent = `Pro · ${sym}${aedP.pro}`; $('#tierUltName').textContent = `Ultimate · ${sym}${aedP.ultimate}`;
   document.querySelectorAll('[data-tipn]').forEach(e => e.textContent = `+${sym}${e.dataset.tipn}`);
