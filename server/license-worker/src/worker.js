@@ -760,7 +760,9 @@ async function cardCheck(env, body) {
   if (Number(j.amount) !== o.fils || String(j.currency_code || o.cur || 'AED').toUpperCase() !== (o.cur || 'AED')) throw new HTTPError(400, 'That payment does not match this order. Contact us with your order reference and we will sort it out.');
   if (await env.KV.get(`tx:ziina:${o.intent}`)) throw new HTTPError(409, 'That payment has already been used for a key.');
   await env.KV.put(`tx:ziina:${o.intent}`, body.order);
-  const done = await deliver(env, body.order, o, o.test ? 'card-test' : 'card', o.intent);
+  let done;
+  try { done = await deliver(env, body.order, o, o.test ? 'card-test' : 'card', o.intent); }
+  catch (e) { await env.KV.delete(`tx:ziina:${o.intent}`).catch(() => {}); throw e; } // a failed delivery must not lock a paying customer out of a retry
   return { ...done, aed: o.aed, cur: o.cur || 'AED' };
 }
 

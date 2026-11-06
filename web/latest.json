@@ -1,18 +1,18 @@
 {
-  "version": "2.1.90",
-  "title": "Notch Apple 2.1.90 · Safer games and file opening",
-  "notes": "## Notch Apple 2.1.90\n\n- Cookie Clicker now always uses the built-in game. It no longer loads a third-party website (cookieclicker.eu) when you open the tab, so nothing is contacted and your progress is always the saved one.\n- Files received in Messenger are saved in a fresh folder under a cleaned-up name and shown in Finder instead of being opened straight away, so a received file can never launch itself or be written outside its folder.\n- Daily Word can optionally use today's New York Times puzzle (fetched on request from one fixed address, nothing sent about you).\n- The volume and brightness HUD keeps retrying to take over the media keys until Accessibility is allowed, with no restart needed.\n",
-  "published": "2026-11-02T17:00:34Z",
-  "dmg": "https://github.com/AdityaJainDXB/NotchApples/releases/download/v2.1.90/NotchApple-2.1.90.dmg",
-  "dmgSize": 53137105,
-  "page": "https://github.com/AdityaJainDXB/NotchApples/releases/tag/v2.1.90",
+  "version": "2.2.34",
+  "title": "Notch Apple 2.2.34 · Night Shift: Custom Night",
+  "notes": "## Notch Apple 2.2.34\n\n- New: Night Shift Custom Night (a button under the nights on the menu, or press C). Set each toy, Clank, Petunia, Grin and the Conductor, to any level from 0 (asleep) to 20 (relentless) with the arrows or by clicking the bars. They stay at that level all night, with no hourly rise. Random picks levels for you, and 20 mode turns every toy to the maximum.\n- Beat a custom night with all four toys at 20 and the Custom Night button gets a star. Your levels are remembered, and Again replays the same night.\n",
+  "published": "2026-11-06T14:35:56Z",
+  "dmg": "https://github.com/AdityaJainDXB/NotchApples/releases/download/v2.2.34/NotchApple-2.2.34.dmg",
+  "dmgSize": 54888911,
+  "page": "https://github.com/AdityaJainDXB/NotchApples/releases/tag/v2.2.34",
   "stars": 3,
   "windows": {
-    "version": "2.1.91",
-    "notes": "## Notch Apple for Windows 2.1.91 (BETA)\n\n- Cookie Clicker now always uses the built-in game (no third-party website, no 5-second wait, and no leftover timer when you switch games).\n- Friends chat history keeps saving once it grows large (a size limit in how it was encoded stopped saves after roughly 1,000 messages).\n- Daily Word can optionally use today's New York Times puzzle, fetched on request from one fixed address.\n- Same as 2.1.90 (2.1.90 was never published for Windows because its automated check failed).\n",
-    "url": "https://github.com/AdityaJainDXB/NotchApples/releases/download/win-v2.1.91/Notch.apple_2.1.91_x64-setup.exe",
-    "sha256": "68ca924f6bb6d0195ba12a45aaac83c384ae08d5c1b18fa130b795ee08043357",
-    "size": 6343725,
-    "page": "https://github.com/AdityaJainDXB/NotchApples/releases/tag/win-v2.1.91"
+    "version": "2.2.33",
+    "notes": "",
+    "url": "https://github.com/AdityaJainDXB/NotchApples/releases/download/win-v2.2.33/Notch.apple_2.2.33_x64-setup.exe",
+    "sha256": "b5e24f890fab0d0cc4b9024686c01b318792c0348f32e649aed790b6a77d44e9",
+    "size": 6521125,
+    "page": "https://github.com/AdityaJainDXB/NotchApples/releases/tag/win-v2.2.33"
   }
 }
