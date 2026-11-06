@@ -477,6 +477,7 @@
 		FE3D6ECF5839F6424299C168 /* PairDropTransport.swift in Sources */ = {isa = PBXBuildFile; fileRef = 60BBAE46119383151A1CEF4F /* PairDropTransport.swift */; };
 		FE43DDD0B6B1D40DDF4D57DB /* PlaneGameView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E93AE854D51B41D40C00311 /* PlaneGameView.swift */; };
 		FE4B2AD2AEC221AE439CCA63 /* EntitlementLogic.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF862F91B226950E4FE3D0F0 /* EntitlementLogic.swift */; };
+		FF1FF034ABBFF7EAE84C052B /* MenuBarDimmer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 019362E9195F4E2D5087F587 /* MenuBarDimmer.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -505,6 +506,7 @@
 
 /* Begin PBXFileReference section */
 		00AA70E8C578D3F81476B1FB /* WallpaperLibrary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WallpaperLibrary.swift; sourceTree = "<group>"; };
+		019362E9195F4E2D5087F587 /* MenuBarDimmer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarDimmer.swift; sourceTree = "<group>"; };
 		01CAAECC14FFA955E98BC7DB /* SmartHomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmartHomeView.swift; sourceTree = "<group>"; };
 		023AF917ACD38E560C4DD67B /* NotchWindow+LevelFix.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "NotchWindow+LevelFix.swift"; sourceTree = "<group>"; };
 		025431FF9865CF1BAEDF1A2D /* CassetteView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CassetteView.swift; sourceTree = "<group>"; };
@@ -1130,6 +1132,7 @@
 				0EE2E453CA2D381EA8DC3001 /* LayoutPicker.swift */,
 				9E934112FC7E1F768777E6F5 /* MagneticDropZone.swift */,
 				6DC9C2F6E6F455AD29AE54F7 /* MascotGreeting.swift */,
+				019362E9195F4E2D5087F587 /* MenuBarDimmer.swift */,
 				321AEDF869EDFDD140BAC7F0 /* ModuleContentView.swift */,
 				4894C776E7909EF42A1F97E9 /* ModuleOrganizer.swift */,
 				B790EEB4462E110FE4001DEE /* Motion.swift */,
@@ -2260,6 +2263,7 @@
 				499529CC2C4C7885D964686F /* MeetingNotesLogic.swift in Sources */,
 				F804974BDB3706ABE17FDD0B /* MeetingSummaryLogic.swift in Sources */,
 				44AA1315926A7EB7858B9E73 /* MemoryGameView.swift in Sources */,
+				FF1FF034ABBFF7EAE84C052B /* MenuBarDimmer.swift in Sources */,
 				5017D7AB333DCC40EBD7CDBB /* MessengerModels.swift in Sources */,
 				028C6C33AD6C682F03B0695B /* MessengerNotifier.swift in Sources */,
 				EA6A5158CB578D683DE18C94 /* MirrorView.swift in Sources */,
@@ -2674,7 +2678,7 @@
 				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Manual;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 212;
+				CURRENT_PROJECT_VERSION = 213;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = "";
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -2690,7 +2694,7 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 2.2.26;
+				MARKETING_VERSION = 2.2.27;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -2808,7 +2812,7 @@
 				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Manual;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 212;
+				CURRENT_PROJECT_VERSION = 213;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = "";
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -2830,7 +2834,7 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 2.2.26;
+				MARKETING_VERSION = 2.2.27;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;

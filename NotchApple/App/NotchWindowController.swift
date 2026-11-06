@@ -898,6 +898,7 @@ final class NotchWindowController {
         // with the same curve that closing uses.
         hidePeek()
         withAnimation(Duo.open) { state.isExpanded = true }
+        MenuBarDimmer.shared.show(on: targetScreen, below: panel.level)     // the menu bar of the app you are in fades down
         NotchFeedback.opened()
         installMonitors()
     }
@@ -1089,6 +1090,7 @@ final class NotchWindowController {
         // stay on for good, so clicking outside never closed the notch again and people were stuck (2.0.6 fix).
         if SettingsManager.shared.stickyNotch { SettingsManager.shared.stickyNotch = false }
         withAnimation(Duo.close) { state.isExpanded = false }
+        MenuBarDimmer.shared.hide()
         NotchFeedback.closed()
         // Re-lock biometric gate every time the notch closes.
         state.isUnlocked = false

@@ -150,6 +150,10 @@ More screenshots of the capture overlay, the AI answer, the settings and the Win
 
 ## What's new
 
+### Mac 2.2.27 · 6 November 2026 · 🪟 The menu bar dims when the notch opens
+
+- New: when the notch opens, the menu bar of the app you are in (File, Edit, View, Go, Window, Help…) fades down, so the notch no longer sits on top of the last menu names and you can focus on it. Only the menu bar strip dims: your windows are untouched and the menus still work. Switch it off in Settings → Notch Extras → Menu bar.
+
 ### Mac 2.2.26 · Windows 2.2.26 BETA · 6 November 2026 · 🏎️ F1 greetings in your team’s colours
 
 - New: F1 greetings. In Settings → Notch Extras (Windows: Settings → Hello from the notch) pick "F1: Lights out" (five start lights, then the car launches), "F1: Flying lap" (the car streaks across the notch past speed lines and a chequered flag) or "F1: Pit stop" (the car brakes into its box, the wheel guns spark, the tyres change and it leaves).
@@ -163,10 +167,6 @@ More screenshots of the capture overlay, the AI answer, the settings and the Win
 
 - New: the hello from the notch can be a character instead of the handwriting. When your PC opens, the notch opens and Notchy drops out and waves, Pomo bounces across, Pip flies across, Mochi hops across, Orbit circles round and Wisp drifts across, with your name under them. All six are original drawings
 - Pick one in Settings → Notch Extras on the Mac, or Settings → General → Hello from the notch on Windows, where it also plays when the PC wakes up (a Windows beta feature). Handwritten hello stays the default
-
-### Mac 2.2.24 · Windows 2.2.24 BETA · 6 November 2026 · 📄 Licence names Viraj Singh Chadha
-
-- Updated the licence: Viraj Singh Chadha is now named as a collaborator and co-owner. Aditya Jain remains the principal owner with the majority and controlling stake.
 
 ## Plugins
 

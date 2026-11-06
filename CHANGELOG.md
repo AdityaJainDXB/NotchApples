@@ -4,6 +4,10 @@ Every Notch Apple release, newest first. The latest few are also on the [README]
 
 > **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is in the repository's history.
 
+### Mac 2.2.27 · 6 November 2026 · 🪟 The menu bar dims when the notch opens
+
+- New: when the notch opens, the menu bar of the app you are in (File, Edit, View, Go, Window, Help…) fades down, so the notch no longer sits on top of the last menu names and you can focus on it. Only the menu bar strip dims: your windows are untouched and the menus still work. Switch it off in Settings → Notch Extras → Menu bar.
+
 ### Mac 2.2.26 · Windows 2.2.26 BETA · 6 November 2026 · 🏎️ F1 greetings in your team’s colours
 
 - New: F1 greetings. In Settings → Notch Extras (Windows: Settings → Hello from the notch) pick "F1: Lights out" (five start lights, then the car launches), "F1: Flying lap" (the car streaks across the notch past speed lines and a chequered flag) or "F1: Pit stop" (the car brakes into its box, the wheel guns spark, the tyres change and it leaves).

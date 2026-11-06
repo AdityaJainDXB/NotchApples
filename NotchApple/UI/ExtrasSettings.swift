@@ -21,6 +21,7 @@ struct ExtrasSettings: View {
     @AppStorage(HelloAnimation.nameKey) private var helloName = ""
     @AppStorage(MascotGreeting.characterKey) private var helloCharacter = MascotGreeting.handwriting
     @AppStorage(MascotGreeting.teamKey) private var helloTeam = ""
+    @AppStorage(MenuBarDimmer.key) private var dimMenuBar = true
 
     /// A switch for one kind of thing that can appear beside the closed notch.
     private func kindBinding(_ kind: ActivityKind) -> Binding<Bool> {
@@ -51,6 +52,9 @@ struct ExtrasSettings: View {
                 }.disabled(!helloOn || !helloCharacter.hasPrefix("f1"))
                 Button("Play it now") { HelloAnimation.show(force: true) }.disabled(!helloOn)
             } header: { Text("Hello from the notch") } footer: { Text("When Notch Apple starts and when your Mac wakes up, the notch opens and says hello with your name: written by hand, Mac style, or by a character that moves across the notch their own way.") }
+            Section {
+                Toggle("Dim the menu bar while the notch is open", isOn: $dimMenuBar)
+            } header: { Text("Menu bar") } footer: { Text("When the notch opens, the menu bar of the app you are in (File, Edit, View, Go, Window, Help) fades down so the notch is what you look at. Only the menu bar strip dims: your windows are untouched and you can still click the menus. It needs no permission.") }
             Section {
                 HStack {
                     Button("Show everything") { setHidden([]) }

@@ -20,6 +20,9 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.2.27", date: "6 November 2026", headline: "The menu bar dims when the notch opens", items: [
+            "New: when the notch opens, the menu bar of the app you are in (File, Edit, View, Go, Window, Help…) fades down, so the notch no longer sits on top of the last menu names and you can focus on it. Only the menu bar strip dims: your windows are untouched and the menus still work. Switch it off in Settings → Notch Extras → Menu bar.",
+        ]),
         ReleaseNote(version: "2.2.26", date: "6 November 2026", headline: "F1 greetings in your team’s colours", items: [
             "New: F1 greetings. In Settings → Notch Extras (Windows: Settings → Hello from the notch) pick \"F1: Lights out\" (five start lights, then the car launches), \"F1: Flying lap\" (the car streaks across the notch past speed lines and a chequered flag) or \"F1: Pit stop\" (the car brakes into its box, the wheel guns spark, the tyres change and it leaves).",
             "New: paint the car as your favourite team: Ferrari red, Mercedes teal, McLaren papaya, Red Bull, Aston Martin, Alpine, Williams, Racing Bulls, Haas, Audi or Cadillac, or Notch Apple purple. On the Mac, \"My favourite F1 team\" uses the team you follow in the F1 tab.",
