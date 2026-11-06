@@ -360,23 +360,43 @@ async function coinOrder(env, c, o) {
 
 // MARK: Mail
 
-async function sendMail(env, to, subject, text) {
-  if (env.MAIL_LOG) { env.MAIL_LOG.push({ to, subject, text }); return true; }
+async function sendMail(env, to, subject, text, html) {
+  if (env.MAIL_LOG) { env.MAIL_LOG.push({ to, subject, text, html }); return true; }
   if (!env.MAIL_API_KEY || !env.MAIL_FROM) return false;
   let r;
   if (env.MAIL_PROVIDER === 'resend') {
     r = await fetch('https://api.resend.com/emails', {
       method: 'POST', headers: { Authorization: `Bearer ${env.MAIL_API_KEY}`, 'content-type': 'application/json' },
-      body: JSON.stringify({ from: env.MAIL_FROM, to: [to], subject, text }),
+      body: JSON.stringify(html ? { from: env.MAIL_FROM, to: [to], subject, text, html } : { from: env.MAIL_FROM, to: [to], subject, text }),
     });
   } else {
     r = await fetch('https://api.brevo.com/v3/smtp/email', {
       method: 'POST', headers: { 'api-key': env.MAIL_API_KEY, 'content-type': 'application/json' },
-      body: JSON.stringify({ sender: { email: env.MAIL_FROM, name: 'Notch Apples' }, to: [{ email: to }], subject, textContent: text }),
+      body: JSON.stringify({ sender: { email: env.MAIL_FROM, name: 'Notch Apples' }, to: [{ email: to }], subject, textContent: text, ...(html ? { htmlContent: html } : {}) }),
     });
   }
   if (!r.ok) console.error('Email not sent', env.MAIL_PROVIDER, r.status, (await r.text()).slice(0, 300));
   return r.ok;
+}
+
+const escHtml = (t) => String(t).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
+/** A dark, simple card for our own mails (inline styles only: mail apps ignore scripts and most stylesheets).
+    `code` shows as six digit cells split 3 + 3; `rows` are [label, value] lines; `lines` are paragraphs. */
+function mailHtml({ title, lines = [], code = '', rows = [], foot = '', badge = 'Notch Apple' }) {
+  const cell = (d) => `<td style="width:46px;height:58px;text-align:center;background:#1c1d22;border:1px solid #3a3d4a;border-radius:12px;font:300 30px/58px 'Helvetica Neue',Arial,sans-serif;color:#f2f3f7">${escHtml(d)}</td>`;
+  const gap = '<td style="width:8px"></td>';
+  const digits = code ? [...String(code)].map(cell) : [];
+  const codeBlock = code ? `<table role="presentation" align="center" style="margin:26px auto 8px;border-collapse:separate"><tr>${digits.slice(0, 3).join(gap)}<td style="width:16px;text-align:center;color:#555966">&ndash;</td>${digits.slice(3).join(gap)}</tr></table>` : '';
+  const rowsHtml = rows.length ? `<table role="presentation" style="width:100%;margin:18px 0 4px;border-top:1px solid #2a2c35">${rows.map(([a, b]) => `<tr><td style="padding:10px 0;font-size:13px;color:#8b8f9d;border-bottom:1px solid #2a2c35">${escHtml(a)}</td><td style="padding:10px 0;font-size:13px;color:#ececef;text-align:right;border-bottom:1px solid #2a2c35">${escHtml(b)}</td></tr>`).join('')}</table>` : '';
+  const paras = lines.map((l) => `<p style="margin:14px 0 0;font-size:15px;line-height:1.55;color:#b9bcc7">${escHtml(l)}</p>`).join('');
+  return `<!doctype html><html><body style="margin:0;padding:0;background:#0a0a0c"><table role="presentation" width="100%" style="background:#0a0a0c;padding:32px 12px"><tr><td align="center">
+<table role="presentation" width="100%" style="max-width:520px;background:#121317;border:1px solid #2a2c35;border-radius:24px;font-family:'Helvetica Neue',Arial,sans-serif">
+<tr><td style="padding:30px 32px 6px"><div style="font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#7f8fff;font-weight:600">${escHtml(badge)}</div>
+<h1 style="margin:10px 0 0;font-size:24px;line-height:1.25;font-weight:600;color:#ececef">${escHtml(title)}</h1></td></tr>
+<tr><td style="padding:0 32px 30px">${codeBlock}${paras}${rowsHtml}</td></tr>
+<tr><td style="padding:16px 32px;border-top:1px solid #2a2c35;font-size:12px;line-height:1.5;color:#6c707d;text-align:center">${escHtml(foot || 'Questions? notchapples.support@gmail.com')}</td></tr>
+</table></td></tr></table></body></html>`;
 }
 
 /// `intro` is an optional personal note the owner writes in the admin panel or API (for example for a student), shown above the usual text.
@@ -746,12 +766,17 @@ async function confirmationMail(env, k, body, first, device) {
   const what = first ? `Your Notch Apple ${TIER_NAME[k.tier]} key is now activated and locked to this email address.`
     : `Your Notch Apple ${TIER_NAME[k.tier]} key was just activated on a new device. It stays locked to this email address.`;
   try {
+    const dev = deviceName(body.name) || 'a new device';
+    const html = mailHtml({ title: 'Your key is locked to your email', badge: 'Key activated',
+      lines: [what, 'From now on, only someone who can read this inbox can use the key on a new device. A friend who has the key but not your email cannot sign in. Your devices that are already signed in carry on with no code.',
+        "If this wasn't you, reply to this email and we'll turn the key off and issue you a new one."],
+      rows: [['Device', dev], ['Plan', TIER_NAME[k.tier]]] });
     await sendMail(env, body.email.trim(), 'Your Notch Apple key is activated and locked to your email',
       `${what}\n\n` +
       `Device: ${deviceName(body.name) || 'a new device'}\n\n` +
       'From now on, only someone who can read this inbox can use the key on a new device: a friend who has the key but not your email cannot sign in. ' +
       'Your devices that are already signed in carry on, with no code needed.\n\n' +
-      "If this wasn't you, reply to this email or write to notchapples.support@gmail.com and we'll turn the key off and issue you a new one.");
+      "If this wasn't you, reply to this email or write to notchapples.support@gmail.com and we'll turn the key off and issue you a new one.", html);
   } catch (e) { console.error('confirmation mail failed', e && e.message); }
 }
 
@@ -765,9 +790,12 @@ async function otpStart(env, body, now = Date.now()) {
   await otpBudget(env, `e:${eh}`, now);
   const code = sixDigits();
   await putJSON(env, `otp:${k.keyId}`, { h: await otpHash(env, k.keyId, body.device, code), eh, tries: 0, exp: now + OTP_TTL * 1000 }, OTP_TTL);
+  const html = mailHtml({ title: 'Verify it\u2019s you', badge: 'Security check', code,
+    lines: [`Enter this code in Notch Apple to use your ${TIER_NAME[k.tier]} key on this device. It works for 10 minutes. Please don\u2019t share it with anyone.`,
+      "If you didn't ask for this, someone has your key but not your inbox. Nothing is lost: just ignore this email."] });
   const sent = await sendMail(env, body.email.trim(), 'Your Notch Apple code: ' + code,
     `Your Notch Apple verification code is ${code}\n\nIt works for 10 minutes. Enter it in Notch Apple to use your ${TIER_NAME[k.tier]} key on this device.\n\n` +
-    "If you didn't ask for this, someone has your key but not your inbox. Nothing is lost: just ignore this email.\n\nQuestions? notchapples.support@gmail.com");
+    "If you didn't ask for this, someone has your key but not your inbox. Nothing is lost: just ignore this email.\n\nQuestions? notchapples.support@gmail.com", html);
   if (!sent) throw new HTTPError(503, "We couldn't send the email. Try again in a minute.");
   return generic;
 }

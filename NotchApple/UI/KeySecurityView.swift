@@ -25,25 +25,54 @@ func qrImage(_ text: String, size: CGFloat = 150) -> Image? {
     return Image(decorative: cg, scale: 2).interpolation(.none)
 }
 
+/// Six digit cells split 3 + 3 over one real text field (typing, paste and autofill all work); the next cell glows blue.
 private struct CodeField: View {
     @Binding var text: String
     var focus: FocusState<Bool>.Binding
     var onSubmit: () -> Void
-    var body: some View {
-        TextField("6-digit code", text: $text)
-            .textFieldStyle(.plain)
-            .font(.system(size: 20, weight: .bold, design: .monospaced))
-            .multilineTextAlignment(.center)
-            .foregroundStyle(.white)
-            .focused(focus)
-            .frame(width: 170, height: 38)
-            .background(Theme.surface, in: RoundedRectangle(cornerRadius: 10))
-            .overlay(RoundedRectangle(cornerRadius: 10).strokeBorder(Theme.separator))
-            .onChange(of: text) { _, new in
-                let digits = String(new.filter(\.isNumber).prefix(6))
-                if digits != new { text = digits }
+
+    private func cell(_ i: Int) -> some View {
+        let digits = Array(text)
+        let lit = focus.wrappedValue && i == min(digits.count, 5)
+        return ZStack {
+            RoundedRectangle(cornerRadius: 12)
+                .fill(LinearGradient(colors: [.white.opacity(0.045), .white.opacity(0.015)], startPoint: .top, endPoint: .bottom))
+            RoundedRectangle(cornerRadius: 12)
+                .strokeBorder(lit ? Color(red: 0.73, green: 0.78, blue: 1).opacity(0.55) : .white.opacity(0.08), lineWidth: 1)
+            if i < digits.count {
+                Text(String(digits[i])).font(.system(size: 24, weight: .light)).foregroundStyle(Color(red: 0.95, green: 0.95, blue: 0.97))
+            } else if lit {
+                Rectangle().fill(Color(red: 0.73, green: 0.78, blue: 1)).frame(width: 1.5, height: 24)
             }
-            .onSubmit(onSubmit)
+        }
+        .frame(width: 36, height: 46)
+        .shadow(color: lit ? Color(red: 0.59, green: 0.69, blue: 1).opacity(0.45) : .clear, radius: 8)
+        .animation(.easeOut(duration: 0.25), value: lit)
+    }
+
+    var body: some View {
+        ZStack {
+            HStack(spacing: 6) {
+                ForEach(0..<3, id: \.self) { cell($0) }
+                Capsule().fill(.white.opacity(0.2)).frame(width: 8, height: 1.5).padding(.horizontal, 3)
+                ForEach(3..<6, id: \.self) { cell($0) }
+            }
+            .allowsHitTesting(false)
+            TextField("", text: $text)
+                .textFieldStyle(.plain)
+                .focused(focus)
+                .foregroundStyle(.clear).tint(.clear)
+                .opacity(0.02)
+                .onChange(of: text) { _, new in
+                    let digits = String(new.filter(\.isNumber).prefix(6))
+                    if digits != new { text = digits }
+                }
+                .onSubmit(onSubmit)
+                .accessibilityLabel("6-digit code")
+        }
+        .frame(width: 6 * 36 + 5 * 6 + 14, height: 46)
+        .contentShape(Rectangle())
+        .onTapGesture { focus.wrappedValue = true }
     }
 }
 

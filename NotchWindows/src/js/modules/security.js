@@ -18,7 +18,23 @@ export function qr(text, size = 156) {
   return c;
 }
 
-const codeInput = () => el('input', { class: 'field mono', placeholder: '6-digit code', inputmode: 'numeric', maxlength: '7', autocomplete: 'one-time-code', style: 'max-width:200px;text-align:center;font-size:18px;letter-spacing:4px;font-weight:700' });
+/// Six digit cells split 3 + 3 over one real input (so typing, paste and one-time-code autofill all work). `.value` is the digits.
+const codeInput = () => {
+  const real = el('input', { class: 'codereal', inputmode: 'numeric', maxlength: '7', autocomplete: 'one-time-code', 'aria-label': '6-digit code' });
+  const cells = Array.from({ length: 6 }, () => el('span', { class: 'codecell' }));
+  const box = el('div', { class: 'codebox' }, ...cells.slice(0, 3), el('i', { class: 'codedash' }), ...cells.slice(3), real);
+  const paint = () => {
+    const d = real.value.replace(/\D/g, '').slice(0, 6);
+    if (d !== real.value) real.value = d;
+    cells.forEach((c, i) => { c.textContent = d[i] || ''; c.classList.toggle('lit', document.activeElement === real && i === Math.min(d.length, 5)); c.classList.toggle('full', !!d[i]); });
+  };
+  ['input', 'focus', 'blur'].forEach((ev) => real.addEventListener(ev, paint));
+  box.addEventListener('click', () => real.focus());
+  Object.defineProperty(box, 'value', { get: () => real.value, set: (v) => { real.value = v; paint(); } });
+  box.focus = () => { real.focus(); paint(); };
+  paint();
+  return box;
+};
 const emailInput = (v = '') => el('input', { class: 'field', type: 'email', 'aria-label': 'Your email address', autocomplete: 'email', value: v, style: 'max-width:340px;text-align:center' });
 /// An email box with a plain label above it (no example address, which people mistook for text they had to edit).
 const labelled = (input) => el('label', { class: 'col', style: 'align-items:center;gap:3px;width:100%' }, el('span', { class: 'tiny dim' }, 'Your email address'), input);

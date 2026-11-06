@@ -690,3 +690,15 @@ body[data-perf="lite"] .ws-step { animation: none; }
 .dd-pill:hover, .dd-pill:focus-visible { background: rgba(255,255,255,.14); outline: none; }
 .dd-menu { position: fixed; z-index: 1000; display: flex; flex-direction: column; gap: 2px; padding: 6px; min-width: 170px; max-width: 280px; max-height: 300px; overflow: auto; border-radius: 12px; background: var(--panel, #1c1c1e); border: 1px solid rgba(255,255,255,.12); box-shadow: 0 12px 32px rgba(0,0,0,.5); }
 .dd-head { font-size: 10px; text-transform: uppercase; letter-spacing: .06em; opacity: .55; padding: 4px 8px 2px; }
+
+/* one-time code: six cells, 3 + 3, lit in blue where you type */
+.codebox { position: relative; display: flex; align-items: center; justify-content: center; gap: 8px; cursor: text; margin: 6px 0; }
+.codecell { width: 40px; height: 52px; display: grid; place-items: center; border-radius: 14px; font: 300 26px var(--font, system-ui); color: #f2f3f7;
+  background: linear-gradient(180deg, rgba(255,255,255,.045), rgba(255,255,255,.015)); box-shadow: inset 0 1px 0 rgba(255,255,255,.07), inset 0 0 0 1px rgba(255,255,255,.07);
+  transition: box-shadow .35s, background .35s; }
+.codecell.lit { box-shadow: inset 0 1px 0 rgba(255,255,255,.12), inset 0 0 0 1px rgba(185,200,255,.55), 0 0 24px -6px rgba(150,175,255,.55); }
+.codecell.lit:empty::after { content: ''; width: 1.5px; height: 26px; background: #b9c8ff; animation: codeblink 1s steps(1) infinite; }
+@keyframes codeblink { 50% { opacity: 0; } }
+.codedash { width: 8px; height: 1.5px; background: rgba(255,255,255,.2); border-radius: 1px; }
+.codereal { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; border: 0; background: none; cursor: text; }
+@media (prefers-reduced-motion: reduce) { .codecell.lit:empty::after { animation: none; } }
