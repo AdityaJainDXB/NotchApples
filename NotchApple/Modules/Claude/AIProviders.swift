@@ -102,7 +102,7 @@ enum AIProvider: String, CaseIterable, Identifiable, Codable {
     /// Used until the live list loads, or if it can't.
     var fallbackModel: String {
         switch self {
-        case .gemini: "gemini-3.8-flash"
+        case .gemini: "gemini-3.5-flash-lite"
         case .groq: "openai/gpt-oss-120b"
         case .openRouter: "meta-llama/llama-3.3-70b-instruct:free"
         case .ollama: "llama3.2"

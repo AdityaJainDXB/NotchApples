@@ -11,7 +11,7 @@ import { WORKER, entitleInfo } from '../license.js';
 import { token as entitlementToken } from './entitle.js';
 
 export const PROVIDERS = {
-  gemini:     { name: 'Google Gemini', free: 'Free key', keyUrl: 'https://aistudio.google.com/apikey', def: 'gemini-3.8-flash', images: true, pdf: true },
+  gemini:     { name: 'Google Gemini', free: 'Free key', keyUrl: 'https://aistudio.google.com/apikey', def: 'gemini-3.5-flash-lite', images: true, pdf: true },
   openRouter: { name: 'OpenRouter', free: 'Free models', base: 'https://openrouter.ai/api/v1', keyUrl: 'https://openrouter.ai/keys', def: 'meta-llama/llama-3.3-70b-instruct:free', images: true },
   groq:       { name: 'Groq', free: 'Free tier', base: 'https://api.groq.com/openai/v1', keyUrl: 'https://console.groq.com/keys', def: 'openai/gpt-oss-120b' },
   ollama:     { name: 'Ollama (this PC)', free: 'Runs on this PC', base: 'http://localhost:11434/v1', keyUrl: 'https://ollama.com/download', def: 'llama3.2', noKey: true },
@@ -27,7 +27,23 @@ const BASE_SYSTEM = "You are a helpful assistant living in the user's notch on t
 
 export const keyOf = (p) => load(`ai.key.${p}`, '');
 export const setKey = (p, v) => save(`ai.key.${p}`, v.trim());
-export const modelOf = (p) => load(`ai.model.${p}`, PROVIDERS[p]?.def || '');
+/// Same rule as the Mac's model list: only Gemini chat models, never the image, voice, embedding or live ones.
+export const isGeminiChatModel = (id) => /^gemini/.test(id) && !['tts', 'image', 'embedding', 'live', 'audio'].some((w) => id.includes(w));
+/// Same ranking as the Mac: flash and newer models first, previews and experiments last.
+export function geminiRank(id) {
+  let score = 0;
+  if (id.includes('flash')) score += 10;
+  if (id.includes('latest')) score += 2;
+  if (id.includes('exp') || id.includes('preview')) score -= 5;
+  const v = parseFloat(id.split('-')[1]);
+  if (!Number.isNaN(v)) score += Math.trunc(v * 10);
+  return score;
+}
+/// A model picked earlier (when the list showed image models too) that cannot chat falls back to the default, so Do It and Chat never get stuck on it.
+export const modelOf = (p) => {
+  const m = load(`ai.model.${p}`, PROVIDERS[p]?.def || '');
+  return p === 'gemini' && m && !isGeminiChatModel(m) ? PROVIDERS.gemini.def : m;
+};
 export const setModel = (p, v) => save(`ai.model.${p}`, v.trim());
 export const provider = () => { const p = load('ai.provider', 'gemini'); return PROVIDERS[p] ? p : 'gemini'; };
 export const setProvider = (p) => save('ai.provider', p);
@@ -45,7 +61,9 @@ export async function listModels(p) {
     if (p === 'gemini' && keyOf(p)) {
       const j = await getJSON('https://generativelanguage.googleapis.com/v1beta/models?pageSize=200', { headers: { 'x-goog-api-key': keyOf(p) } });
       list = (j.models || []).filter((m) => (m.supportedGenerationMethods || []).includes('generateContent'))
-        .map((m) => ({ id: m.name.replace(/^models\//, ''), label: m.displayName || m.name }));
+        .map((m) => ({ id: m.name.replace(/^models\//, ''), label: m.displayName || m.name }))
+        .filter((m) => isGeminiChatModel(m.id))
+        .sort((a, b) => geminiRank(b.id) - geminiRank(a.id));
     } else if (p === 'openRouter') {
       const j = await getJSON('https://openrouter.ai/api/v1/models');
       list = (j.data || []).map((m) => ({ id: m.id, label: m.name || m.id,

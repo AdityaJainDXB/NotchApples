@@ -18,7 +18,7 @@ enum ModelPickerLogic {
 
 enum GeminiFallbackLogic {
     /// Used after the live model list, and when it can't be loaded.
-    static let known = ["gemini-3.8-flash", "gemini-3-flash", "gemini-2.5-flash", "gemini-2.5-flash-lite", "gemini-2.0-flash"]
+    static let known = ["gemini-3.5-flash-lite", "gemini-3.8-flash", "gemini-3-flash", "gemini-2.5-flash", "gemini-2.5-flash-lite", "gemini-2.0-flash"]
 
     /// How many different models are tried for one request.
     static let maxAttempts = 4

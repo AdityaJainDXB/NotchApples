@@ -605,6 +605,7 @@ body[data-perf="lite"] .ws-step { animation: none; }
 /* Model picker (modules/ai.js) */
 .model-pop { position: fixed; z-index: 1000; display: flex; gap: 10px; padding: 10px; border-radius: 12px; background: var(--panel, #1c1c1e); border: 1px solid rgba(255,255,255,.12); box-shadow: 0 12px 32px rgba(0,0,0,.5); }
 .model-list { display: flex; flex-direction: column; gap: 2px; max-height: 240px; overflow: auto; }
+.model-row, .dd-head { flex: none; }
 .model-row { text-align: left; border: 0; background: none; color: inherit; padding: 6px 8px; border-radius: 6px; cursor: pointer; font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .model-row:hover, .model-row:focus-visible { background: rgba(255,255,255,.1); outline: none; }
 .model-row.on::after { content: ' ✓'; }

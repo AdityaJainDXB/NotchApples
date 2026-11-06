@@ -59,8 +59,17 @@ final class AIConfig: ObservableObject {
     }
 
     func model(for p: AIProvider) -> String {
-        if let m = chosen[p.rawValue], !m.isEmpty { return m }
+        if let m = chosen[p.rawValue], !m.isEmpty {
+            // A Gemini image, voice or embedding model picked earlier can't chat or run Do It: use the default instead.
+            if p == .gemini, !m.hasPrefix("gemini") || ["tts", "image", "embedding", "live", "audio"].contains(where: m.contains) { return p.fallbackModel }
+            return m
+        }
         if p == .claude, let legacy = UserDefaults.standard.string(forKey: "claude.model") { return legacy }
+        // Everyone who hasn't picked a Gemini model gets Gemini 3.5 Flash-Lite (unless the live list says it's gone).
+        if p == .gemini {
+            if let list = availableModels[p], !list.isEmpty, !list.contains(p.fallbackModel) { return list[0] }
+            return p.fallbackModel
+        }
         return availableModels[p]?.first ?? p.fallbackModel
     }
 

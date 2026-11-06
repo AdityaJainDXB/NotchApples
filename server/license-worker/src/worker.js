@@ -1223,7 +1223,7 @@ async function assetPut(env, request, url) {
 // app modified to skip its licence checks has no token, so the server refuses it.
 
 const AI_DEFAULT_BASE = 'https://generativelanguage.googleapis.com/v1beta/openai';
-const AI_DEFAULT_MODEL = 'gemini-3.8-flash';
+const AI_DEFAULT_MODEL = 'gemini-3.5-flash-lite';
 const aiLimit = (env, tier) => Number(tier === 2 ? env.AI_LIMIT_ULTIMATE || 200 : env.AI_LIMIT_PRO || 60);
 export const aiOn = (env) => !!env.AI_API_KEY;
 
