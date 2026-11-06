@@ -206,7 +206,7 @@ export async function activate(input) {
       if (r && r.ok === false && r.reason === 'limit') return { error: `This key is already on ${r.limit} devices. Remove it from one in Settings → Access first.` };
       if (r && r.ok === false && r.reason === 'revoked') return { error: 'This key has been turned off. Email notchapples.support@gmail.com if that seems wrong.' };
       // The key belongs to an email: this PC must confirm it with a code (or an authenticator app) before it is activated here.
-      if (r && r.ok === false && r.reason === 'verify') return { needVerify: true, key: k.text, bound: !!r.bound, hint: r.hint || null };
+      if (r && r.ok === false && r.reason === 'verify') return { needVerify: true, key: k.text, bound: !!r.bound, hint: r.hint || null, passkey: !!r.passkey };
     } catch { /* offline: the signature is enough, activation is retried never — that's fine */ }
     localStorage.setItem(SIGNED, k.text);
     cached = k;
@@ -283,6 +283,30 @@ export async function securityStatus() {
   const r = await call('/security', m);
   return r.ok ? r : null;
 }
+// ---- passkeys: Touch ID (macOS) or Windows Hello, in the browser. The app gets a ticket, opens the website's passkey page, and waits for the
+// ticket to be approved. The passkey stays in the browser or password manager; the app never holds it.
+export const passkeyBegin = async (purpose, key) => { const m = key ? { key, device: deviceId() } : mine(); return m ? call('/passkey/begin', { ...m, purpose }) : { error: 'No key on this PC.' }; };
+/// Waits (about five minutes) for the page to finish. Returns { ok } or { error }.
+export async function passkeyWait(ticket, cancelled = () => false) {
+  for (let i = 0; i < 165; i++) {
+    if (cancelled()) return { error: 'Cancelled.' };
+    const r = await call('/passkey/status', { ticket });
+    if (r.status === 'approved') return { ok: true };
+    if (r.status === 'expired') return { error: 'That took too long. Start again.' };
+    await new Promise((res) => setTimeout(res, 2000));
+  }
+  return { error: 'That took too long. Start again.' };
+}
+/// A new PC, confirmed by an approved passkey ticket: registers it and activates the key here.
+export async function passkeyActivate(key, ticket) {
+  const r = await call('/passkey/activate', { key, device: deviceId(), ticket, name: 'Windows PC' });
+  if (r.reason === 'limit') return { error: `This key is already on ${r.limit} devices. Remove it from one in Settings → Access first.` };
+  if (!r.ok) return { error: serverError(r) };
+  const done = await activate(key);
+  if (done.ok) emailConfirmed();
+  return done;
+}
+export const passkeyRemove = async (ticket) => { const m = mine(); return m ? call('/passkey/remove', { ...m, ticket }) : { error: 'No key on this PC.' }; };
 export const totpSetup = async () => { const m = mine(); return m ? call('/totp/setup', m) : { error: 'No key on this PC.' }; };
 export const totpConfirm = async (code) => { const m = mine(); return m ? call('/totp/confirm', { ...m, code }) : { error: 'No key on this PC.' }; };
 export const totpDisable = async (code) => { const m = mine(); return m ? call('/totp/disable', { ...m, code }) : { error: 'No key on this PC.' }; };
@@ -310,7 +334,7 @@ export function emailConfirmed() { localStorage.setItem(EMAIL_SET, '1'); setGate
 /// The gate is remembered: a PC that was asked stays locked after a restart and while offline, until the email is set.
 const GATE_INFO = 'license.emailGate.info';
 export const storedGate = () => { try { return gateLocked() && cached ? { key: cached.text, ...JSON.parse(localStorage.getItem(GATE_INFO) || '{}') } : null; } catch { return null; } };
-const lockWith = (info) => { localStorage.setItem(GATE_INFO, JSON.stringify({ bound: info.bound, hint: info.hint })); setGate(true); return info; };
+const lockWith = (info) => { localStorage.setItem(GATE_INFO, JSON.stringify({ bound: info.bound, hint: info.hint, passkey: !!info.passkey })); setGate(true); return info; };
 export async function checkEmailGate() {
   if (!cached || localStorage.getItem(EMAIL_SET) === '1') return null;
   const key = cached.text, base = { key, device: deviceId(), name: 'Windows PC' };
@@ -318,11 +342,11 @@ export async function checkEmailGate() {
     const a = await post('/activate', base);
     if (a.ok === false) {
       if (a.reason !== 'verify') return storedGate();
-      return lockWith({ key, bound: !!a.bound, hint: a.hint || null });
+      return lockWith({ key, bound: !!a.bound, hint: a.hint || null, passkey: !!a.passkey });
     }
     const s = await post('/security', base);
     if (!s || s.ok !== true) return storedGate();             // an older server: leave everything as it is
-    if (s.email) { emailConfirmed(); return null; }
+    if (s.email || s.passkeys > 0) { emailConfirmed(); return null; }       // an email, or a passkey instead, protects the key
     return lockWith({ key, bound: false, hint: null });
   } catch { return storedGate(); }
 }

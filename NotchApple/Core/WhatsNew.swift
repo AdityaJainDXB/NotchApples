@@ -20,6 +20,11 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.2.38", date: "6 November 2026", headline: "Passkeys: Touch ID to confirm a new device", items: [
+            "New: passkeys. In Settings → License → Security (Mac) or Settings → Access (Windows) choose \"Add a passkey\". Your browser opens a small page on our website, you confirm with Touch ID (or Windows Hello, or your device PIN), and the key now has a passkey. It lives in your browser or password manager (iCloud Keychain, Google, 1Password), so it syncs between your devices and the app never holds it.",
+            "A second Mac or PC then confirms itself with that passkey: paste the key, choose \"Use a passkey\", approve in the browser, and it carries on by itself. No email code is needed, and a key with a passkey and no email cannot be claimed by someone who only has the key. Email and the authenticator app still work, and you can remove the passkey any time.",
+            "Apple's own passkey system needs a paid Apple Developer account, so this one runs through a page on our website and your browser instead.",
+        ]),
         ReleaseNote(version: "2.2.37", date: "6 November 2026", headline: "Authenticator setup works", items: [
             "Fix: setting up the authenticator app (Settings → License → Security) did not work for anyone: the box for the 6-digit code was inside the Settings form, which did not take typing. Setting it up, turning it off and adding your email now each open their own window, with a bigger QR code, a setup key to type by hand, and the six-cell code box.",
         ]),

@@ -94,7 +94,7 @@ final class Entitlements: ObservableObject {
             case .some(let r) where r["ok"] as? Bool == false:
                 if r["reason"] as? String == "revoked" { throw LicenseKey.Problem.revoked }
                 if r["reason"] as? String == "limit" { throw LicenseKey.Problem.tooManyMacs(r["limit"] as? Int ?? 3) }
-                if r["reason"] as? String == "verify" { throw LicenseKey.Problem.needsVerification(bound: r["bound"] as? Bool ?? false, hint: r["hint"] as? String) }
+                if r["reason"] as? String == "verify" { throw LicenseKey.Problem.needsVerification(bound: r["bound"] as? Bool ?? false, hint: r["hint"] as? String, passkey: r["passkey"] as? Bool ?? false) }
                 if let e = r["error"] as? String { throw LicenseKey.Problem.server(e) }
             default: break   // offline or server down: allow
             }
@@ -111,7 +111,9 @@ final class Entitlements: ObservableObject {
     // paid features. Free features never wait. Nothing is checked until the server answers (offline Macs are left alone), and once the
     // email is set this never asks again.
 
-    struct EmailGate: Equatable { var key: String; var bound: Bool; var hint: String? }
+    struct EmailGate: Equatable { var key: String; var bound: Bool; var hint: String?; var passkey = false }
+    /// What Settings → Security shows about a key.
+    struct SecurityStatus { var email: Bool; var hint: String?; var totp: Bool; var passkeys: Int }
     @Published var emailGate: EmailGate?
     /// Why Settings → Security could not load (what the server said, or that it could not be reached).
     @Published var securityProblem: String?
@@ -124,10 +126,11 @@ final class Entitlements: ObservableObject {
         guard let a = await LicenseServer.post(server, "activate", base) else { return }
         if a["ok"] as? Bool == false {
             guard a["reason"] as? String == "verify" else { return }               // revoked, full…: not this screen's business
-            setGate(EmailGate(key: k.text, bound: a["bound"] as? Bool ?? false, hint: a["hint"] as? String))
+            setGate(EmailGate(key: k.text, bound: a["bound"] as? Bool ?? false, hint: a["hint"] as? String, passkey: a["passkey"] as? Bool ?? false))
         } else {
             guard let s = await LicenseServer.post(server, "security", base), s["ok"] as? Bool == true else { return }   // an older server: leave everything as it is
-            if s["email"] as? Bool == true { UserDefaults.standard.set(true, forKey: Self.emailSetKey); setGate(nil) }
+            // An email, or a passkey instead, protects the key.
+            if s["email"] as? Bool == true || (s["passkeys"] as? Int ?? 0) > 0 { UserDefaults.standard.set(true, forKey: Self.emailSetKey); setGate(nil) }
             else { setGate(EmailGate(key: k.text, bound: false, hint: nil)) }
         }
     }
@@ -136,7 +139,7 @@ final class Entitlements: ObservableObject {
     /// for the server at launch to answer.
     private func restoreGate() {
         guard Self.emailGateLocked, let k = key, !defaults.bool(forKey: Self.emailSetKey) else { defaults.set(false, forKey: "license.emailGate"); return }
-        emailGate = EmailGate(key: k.text, bound: defaults.bool(forKey: "license.emailGate.bound"), hint: defaults.string(forKey: "license.emailGate.hint"))
+        emailGate = EmailGate(key: k.text, bound: defaults.bool(forKey: "license.emailGate.bound"), hint: defaults.string(forKey: "license.emailGate.hint"), passkey: defaults.bool(forKey: "license.emailGate.passkey"))
         notice = Self.emailNotice
     }
 
@@ -144,6 +147,7 @@ final class Entitlements: ObservableObject {
         UserDefaults.standard.set(gate != nil, forKey: "license.emailGate")
         UserDefaults.standard.set(gate?.bound ?? false, forKey: "license.emailGate.bound")
         UserDefaults.standard.set(gate?.hint, forKey: "license.emailGate.hint")
+        UserDefaults.standard.set(gate?.passkey ?? false, forKey: "license.emailGate.passkey")
         emailGate = gate
         notice = gate == nil ? (notice == Self.emailNotice ? nil : notice) : Self.emailNotice
         recompute()
@@ -186,7 +190,7 @@ final class Entitlements: ObservableObject {
     }
 
     /// What Settings shows: whether the key has an email and an authenticator. Nil when offline.
-    func securityStatus() async -> (email: Bool, hint: String?, totp: Bool)? {
+    func securityStatus() async -> SecurityStatus? {
         guard let key = key else { return nil }
         let r = await secure("security", key.text)
         guard r["ok"] as? Bool == true else {
@@ -195,7 +199,7 @@ final class Entitlements: ObservableObject {
             return nil
         }
         securityProblem = nil
-        return (r["email"] as? Bool ?? false, r["hint"] as? String, r["totp"] as? Bool ?? false)
+        return SecurityStatus(email: r["email"] as? Bool ?? false, hint: r["hint"] as? String, totp: r["totp"] as? Bool ?? false, passkeys: r["passkeys"] as? Int ?? 0)
     }
 
     /// Adds an email to a key that has none (from a Mac that already uses it): step 1 emails a code, step 2 confirms it.
@@ -215,6 +219,48 @@ final class Entitlements: ObservableObject {
     func totpSetupError() async -> String { "Couldn't start setup. Add your email first, or try again." }
     func totpConfirm(_ code: String) async -> String? { guard let key = key else { return "No key on this Mac." }; return Self.failure(await secure("totp/confirm", key.text, ["code": code])) }
     func totpDisable(_ code: String) async -> String? { guard let key = key else { return "No key on this Mac." }; return Self.failure(await secure("totp/disable", key.text, ["code": code])) }
+
+    // MARK: Passkeys (Touch ID in the browser)
+    // Apple's own passkey system needs a paid developer account, so this uses a web page instead (passkey.html on the website): the app asks the
+    // server for a ticket, opens the page, the browser asks for Touch ID (or Windows Hello), and the app waits for the ticket to be approved.
+    // The passkey itself lives in the browser or password manager and syncs between a person's devices; the app never holds it.
+
+    struct PasskeyTicket { let id: String; let url: URL }
+
+    /// A ticket and the page to open, for `purpose` add, verify or remove. `key` is for a Mac that is new to the key (verify).
+    func passkeyBegin(_ purpose: String, key: String? = nil) async -> (ticket: PasskeyTicket?, error: String?) {
+        guard let text = key ?? self.key?.text else { return (nil, "No key on this Mac.") }
+        let r = await secure("passkey/begin", text, ["purpose": purpose])
+        guard let id = r["ticket"] as? String, let u = r["url"] as? String, let url = URL(string: u) else { return (nil, r["error"] as? String ?? "Couldn't start. Try again.") }
+        return (PasskeyTicket(id: id, url: url), nil)
+    }
+
+    /// Waits (up to about five minutes) for the page to finish. Nil when it was approved, else what went wrong.
+    func passkeyWait(_ ticket: String) async -> String? {
+        guard let server = await LicenseServer.url() else { return "Couldn't reach the server. Check your connection and try again." }
+        for _ in 0..<165 {
+            if Task.isCancelled { return "Cancelled." }
+            if let r = await LicenseServer.post(server, "passkey/status", ["ticket": ticket]) {
+                if r["status"] as? String == "approved" { return nil }
+                if r["status"] as? String == "expired" { return "That took too long. Start again." }
+            }
+            try? await Task.sleep(nanoseconds: 2_000_000_000)
+        }
+        return "That took too long. Start again."
+    }
+
+    /// A new Mac, confirmed by an approved passkey ticket: registers it and activates the key here. Nil on success, else a message.
+    func passkeyActivate(key: String, ticket: String) async -> String? {
+        let r = await secure("passkey/activate", key, ["ticket": ticket, "name": Self.deviceLabel])
+        if let e = Self.failure(r) { return e }
+        do { try await activate(key); emailConfirmed(); return nil } catch { return error.localizedDescription }
+    }
+
+    /// Takes the passkeys off the key, after an approved passkey ticket proves you hold one.
+    func passkeyRemove(ticket: String) async -> String? {
+        guard let key = key else { return "No key on this Mac." }
+        return Self.failure(await secure("passkey/remove", key.text, ["ticket": ticket]))
+    }
 
     /// Frees this Mac's slot on the server (best effort) and removes the key here.
     /// Older activations are removed too, so the Mac goes back to Free.

@@ -150,6 +150,12 @@ More screenshots of the capture overlay, the AI answer, the settings and the Win
 
 ## What's new
 
+### Mac 2.2.38 · Windows 2.2.38 BETA · 6 November 2026 · 🗝️ Passkeys: Touch ID to confirm a new device
+
+- New: passkeys. In Settings → License → Security (Mac) or Settings → Access (Windows) choose "Add a passkey". Your browser opens a small page on our website, you confirm with Touch ID (or Windows Hello, or your device PIN), and the key now has a passkey. It lives in your browser or password manager (iCloud Keychain, Google, 1Password), so it syncs between your devices and the app never holds it.
+- A second Mac or PC then confirms itself with that passkey: paste the key, choose "Use a passkey", approve in the browser, and it carries on by itself. No email code is needed, and a key with a passkey and no email cannot be claimed by someone who only has the key. Email and the authenticator app still work, and you can remove the passkey any time.
+- Apple's own passkey system needs a paid Apple Developer account, so this one runs through a page on our website and your browser instead.
+
 ### Mac 2.2.37 · 6 November 2026 · 🔐 Authenticator setup works
 
 - Fix: setting up the authenticator app (Settings → License → Security) did not work for anyone: the box for the 6-digit code was inside the Settings form, which did not take typing. Setting it up, turning it off and adding your email now each open their own window, with a bigger QR code, a setup key to type by hand, and the six-cell code box.
@@ -158,13 +164,6 @@ More screenshots of the capture overlay, the AI answer, the settings and the Win
 
 - New: GT3-style steering wheel for the road and GT cars in Racing (First-person view). It is drawn after real sim-racing and GT3 wheels: a flat-topped, flat-bottomed carbon wheel with big rubber grips either side and open spaces between the grip and the plate, two columns of coloured push buttons each side, four rotary dials with coloured rings, your team's colour disc in the middle, a stripe along the bottom, a strip of shift lights, the paddles behind and gloved hands on the grips.
 - It turns, centres, shakes over kerbs and lights the paddle you press, exactly like the F1 wheel (up to ±270° for GT3 cars). The F1 cars keep their F1 wheel from 2.2.35.
-
-### Mac 2.2.35 · Windows 2.2.35 BETA · 6 November 2026 · 🏎️ A real F1 cockpit and steering wheel
-
-- New: a realistic first-person F1 cockpit in Racing (View: Cockpit, or press V). You look out over a thin dark carbon halo and its centre pillar, with the front tyres, the livery-coloured sides of the car, the wing mirrors and a carbon cowl in front of you.
-- New: a proper F1 steering wheel, drawn after the real ones: a carbon-fibre body with grips either side, a colour screen (speed, gear, position, lap, battery, DRS) under a row of shift lights, push buttons, five rotary dials with colour-coded rings (the big middle one follows your gear), two paddles, and gloved hands that turn with it.
-- The wheel really turns up to ±180° (360° lock to lock) at low speed and less the faster you go, as a driver turns it. It centres itself when you let go, firmer at speed, and shakes a little over kerbs, on the grass and when the tyres slide. The front tyres turn with it (the inner one a little more), and the paddle you press lights up.
-- New controls: [ and ] (as well as Q and E) are the down and up paddles in the manual gearbox, with a short lockout so a double tap is one shift. H turns the pit limiter on (80 km/h), K arms launch mode (be on the throttle at lights out for a strong getaway), and J shows a telemetry bar with steering angle, gear, speed and DRS.
 
 ## Plugins
 

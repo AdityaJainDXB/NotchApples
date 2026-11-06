@@ -145,11 +145,11 @@ struct ActivationModalView: View {
                 do {
                     try await entitlements.activate(code)
                     withAnimation(Theme.spring) { succeeded = true }
-                } catch LicenseKey.Problem.needsVerification(let bound, let hint) {
+                } catch LicenseKey.Problem.needsVerification(let bound, let hint, let passkey) {
                     let pasted = code.trimmingCharacters(in: .whitespacesAndNewlines)
                     focused = false
                     verifying = (pasted, bound, hint)
-                    KeyVerifyWindow.shared.show(key: pasted, bound: bound, hint: hint) {
+                    KeyVerifyWindow.shared.show(key: pasted, bound: bound, hint: hint, passkey: passkey) {
                         verifying = nil
                         withAnimation(Theme.spring) { succeeded = true }
                     }

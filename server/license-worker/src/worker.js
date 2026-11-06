@@ -844,6 +844,189 @@ async function addDevice(env, k, rec, device, name, trust = false) {
   return { ok: true, tier: TIER_NAME[k.tier] };
 }
 
+// MARK: Passkeys (WebAuthn): Touch ID or Windows Hello on a web page, no Apple developer account needed
+//
+// A key can have a passkey: a credential kept by the person's browser or password manager (iCloud Keychain, Google, 1Password…) that
+// syncs between their devices. The app never sees it. To add one, or to confirm a new device with it, the app asks for a short-lived
+// TICKET and opens passkey.html with it; the page asks this server for a challenge, the browser asks for Touch ID, and the answer is
+// checked here (signature, challenge, our site, "user verified"). The app then sees the ticket become approved. The page never holds
+// the key, and the key never goes in a web address. The page must stay on PASSKEY_RP_ID: move the site and old passkeys stop working.
+const PK_TTL = 300, PK_MAX = 5;
+const pkRp = (env) => ({ id: env.PASSKEY_RP_ID || 'adityajaindxb.github.io', origin: env.PASSKEY_ORIGIN || 'https://adityajaindxb.github.io', name: 'Notch Apple' });
+const sha256b = async (bytes) => new Uint8Array(await crypto.subtle.digest('SHA-256', bytes));
+const sameBytes = (a, b) => a.length === b.length && a.every((v, i) => v === b[i]);
+
+/** A small CBOR reader: just what a passkey's answer uses (whole numbers, byte and text strings, lists and maps). */
+export function cborDecode(bytes) {
+  let i = 0;
+  const read = () => {
+    const first = bytes[i++], type = first >> 5, info = first & 31;
+    let n = info;
+    if (info === 24) n = bytes[i++];
+    else if (info === 25) { n = (bytes[i] << 8) | bytes[i + 1]; i += 2; }
+    else if (info === 26) { n = bytes[i] * 2 ** 24 + (bytes[i + 1] << 16) + (bytes[i + 2] << 8) + bytes[i + 3]; i += 4; }
+    else if (info > 26) throw new Error('cbor');
+    if (type === 0) return n;
+    if (type === 1) return -1 - n;
+    if (type === 2) { const v = bytes.slice(i, i + n); if (v.length !== n) throw new Error('cbor'); i += n; return v; }
+    if (type === 3) { const v = new TextDecoder().decode(bytes.slice(i, i + n)); i += n; return v; }
+    if (type === 4) { const a = []; for (let k = 0; k < n; k++) a.push(read()); return a; }
+    if (type === 5) { const m = new Map(); for (let k = 0; k < n; k++) { const key = read(); m.set(key, read()); } return m; }
+    throw new Error('cbor');
+  };
+  return { value: read(), end: i };
+}
+
+/** The signature a passkey gives is DER (two big integers); WebCrypto wants the raw 64 bytes. */
+function derToRaw(sig) {
+  let i = 2; if (sig[0] !== 0x30) throw new Error('sig');
+  if (sig[1] & 0x80) i += sig[1] & 0x7f;
+  const out = new Uint8Array(64);
+  for (let part = 0; part < 2; part++) {
+    if (sig[i++] !== 0x02) throw new Error('sig');
+    let len = sig[i++], start = i; i += len;
+    while (len > 32 && sig[start] === 0) { start++; len--; }
+    if (len > 32) throw new Error('sig');
+    out.set(sig.slice(start, start + len), part * 32 + 32 - len);
+  }
+  return out;
+}
+
+function parseAuthData(a) {
+  if (a.length < 37) throw new Error('authData');
+  const out = { rpIdHash: a.slice(0, 32), flags: a[32], count: new DataView(a.buffer, a.byteOffset + 33, 4).getUint32(0) };
+  if (out.flags & 0x40) {
+    const idLen = (a[53] << 8) | a[54];
+    out.id = a.slice(55, 55 + idLen);
+    out.cose = cborDecode(a.slice(55 + idLen)).value;
+  }
+  return out;
+}
+
+async function pkClient(env, ticket, body, type) {
+  let data;
+  try { data = JSON.parse(new TextDecoder().decode(unb64u(body.clientDataJSON))); } catch { throw new HTTPError(400, 'That answer was not readable.'); }
+  if (data.type !== type || data.challenge !== ticket.challenge || data.origin !== pkRp(env).origin || data.crossOrigin === true) throw new HTTPError(400, "That passkey answer doesn't match this request.");
+}
+
+async function pkTicket(env, body, now = Date.now()) {
+  const id = String(body.ticket || '');
+  if (!/^[0-9a-f]{32}$/.test(id)) throw new HTTPError(400, 'Missing request.');
+  const t = await getJSON(env, `pk:${id}`);
+  if (!t || t.exp < now) throw new HTTPError(410, 'This passkey request expired. Go back to Notch Apple and start again.');
+  return { id, t };
+}
+
+/** POST /passkey/begin {key, device, purpose: add | verify | remove}: a ticket, and the page to open. */
+async function passkeyBegin(env, body, now = Date.now()) {
+  const purpose = body.purpose;
+  if (!['add', 'verify', 'remove'].includes(purpose)) throw new HTTPError(400, 'Choose add, verify or remove.');
+  const k = await verifyKey(env, body.key);
+  if (!k) throw new HTTPError(400, "That key isn't valid.");
+  if (typeof body.device !== 'string' || !/^[0-9a-f]{64}$/.test(body.device)) throw new HTTPError(400, 'Missing device.');
+  if ((await revokedIds(env)).includes(k.keyId)) throw new HTTPError(403, 'This key was revoked.');
+  const rec = await getJSON(env, `key:${k.keyId}`);
+  if (!rec) throw new HTTPError(400, "That key isn't valid.");
+  const registered = rec.devices.includes(body.device), have = (rec.passkeys || []).length;
+  if (purpose === 'add') {
+    if (!registered) throw new HTTPError(403, 'Open this from a device that already uses the key.');
+    if (have >= PK_MAX) throw new HTTPError(400, `A key can have ${PK_MAX} passkeys. Remove one first.`);
+  } else if (purpose === 'remove') {
+    if (!registered) throw new HTTPError(403, 'Open this from a device that already uses the key.');
+    if (!have) throw new HTTPError(400, 'This key has no passkey.');
+  } else if (!have) throw new HTTPError(400, 'This key has no passkey.');
+  const ticket = hex(randomBytes(16)), rp = pkRp(env);
+  await putJSON(env, `pk:${ticket}`, { k: k.keyId, device: body.device, purpose, challenge: b64u(randomBytes(32)), exp: now + PK_TTL * 1000, status: 'open', tries: 0 }, PK_TTL + 60);
+  return { ok: true, ticket, url: `${rp.origin}/NotchApples/passkey.html#t=${ticket}`, expires: PK_TTL };
+}
+
+/** POST /passkey/options {ticket}: what the page needs to ask the browser. Public: a ticket is a secret only the app holds. */
+async function passkeyOptions(env, body) {
+  const { t } = await pkTicket(env, body);
+  const rec = await getJSON(env, `key:${t.k}`), rp = pkRp(env), ids = (rec?.passkeys || []).map((c) => c.id);
+  return { ok: true, purpose: t.purpose, challenge: t.challenge, rp: { id: rp.id, name: rp.name },
+    user: { id: b64u((await sha256b(enc.encode(t.k))).slice(0, 16)), name: 'Notch Apple key', displayName: 'Notch Apple key' },
+    credentials: ids, timeout: 120000 };
+}
+
+/** POST /passkey/finish {ticket, id, clientDataJSON, attestationObject | authenticatorData + signature}: checks the browser's answer. */
+async function passkeyFinish(env, body, now = Date.now()) {
+  const { id: tid, t } = await pkTicket(env, body, now);
+  if (t.status !== 'open') throw new HTTPError(409, 'This request was already answered.');
+  if (++t.tries > 6) { t.exp = 0; await putJSON(env, `pk:${tid}`, t, 60); throw new HTTPError(429, 'Too many tries. Start again.'); }
+  const fail = async (status, msg) => { await putJSON(env, `pk:${tid}`, t, PK_TTL + 60); throw new HTTPError(status, msg); };
+  const rec = await getJSON(env, `key:${t.k}`), rp = pkRp(env), rpHash = await sha256b(enc.encode(rp.id));
+  if (!rec) await fail(400, "That key isn't valid.");
+  const credId = String(body.id || '');
+  try {
+    if (t.purpose === 'add') {
+      await pkClient(env, t, body, 'webauthn.create');
+      const att = cborDecode(unb64u(body.attestationObject)).value, auth = parseAuthData(att.get('authData'));
+      if (!sameBytes(auth.rpIdHash, rpHash)) throw new HTTPError(400, 'That passkey was made for another site.');
+      if (!(auth.flags & 0x01) || !(auth.flags & 0x04) || !(auth.flags & 0x40)) throw new HTTPError(400, 'The passkey was not confirmed with Touch ID or your device PIN.');
+      const c = auth.cose;
+      if (!c || c.get(1) !== 2 || c.get(3) !== -7 || c.get(-1) !== 1) throw new HTTPError(400, 'This passkey type is not supported. Use another passkey.');
+      if (b64u(auth.id) !== credId) throw new HTTPError(400, 'That passkey answer is inconsistent.');
+      rec.passkeys = (rec.passkeys || []).filter((x) => x.id !== credId);
+      if (rec.passkeys.length >= PK_MAX) throw new HTTPError(400, 'This key already has the most passkeys.');
+      rec.passkeys.push({ id: credId, x: b64u(c.get(-2)), y: b64u(c.get(-3)), n: auth.count, at: now });
+      await putJSON(env, `key:${t.k}`, rec);
+    } else {
+      await pkClient(env, t, body, 'webauthn.get');
+      const cred = (rec.passkeys || []).find((x) => x.id === credId);
+      if (!cred) throw new HTTPError(400, "That passkey isn't on this key.");
+      const authBytes = unb64u(body.authenticatorData), auth = parseAuthData(authBytes);
+      if (!sameBytes(auth.rpIdHash, rpHash)) throw new HTTPError(400, 'That passkey was made for another site.');
+      if (!(auth.flags & 0x01) || !(auth.flags & 0x04)) throw new HTTPError(400, 'The passkey was not confirmed with Touch ID or your device PIN.');
+      const pub = await crypto.subtle.importKey('jwk', { kty: 'EC', crv: 'P-256', x: cred.x, y: cred.y, ext: true }, { name: 'ECDSA', namedCurve: 'P-256' }, false, ['verify']);
+      const signed = new Uint8Array([...authBytes, ...(await sha256b(unb64u(body.clientDataJSON)))]);
+      let ok = false; try { ok = await crypto.subtle.verify({ name: 'ECDSA', hash: 'SHA-256' }, pub, derToRaw(unb64u(body.signature)), signed); } catch { ok = false; }
+      if (!ok) throw new HTTPError(400, 'That passkey could not be verified.');
+      if (cred.n > 0 && auth.count > 0 && auth.count <= cred.n) throw new HTTPError(400, 'That passkey looks copied. Use another one.');
+      if (auth.count > cred.n) { cred.n = auth.count; await putJSON(env, `key:${t.k}`, rec); }
+    }
+  } catch (e) {
+    if (e instanceof HTTPError) await fail(e.status, e.message);
+    await fail(400, 'That passkey answer could not be read.');
+  }
+  t.status = 'approved';
+  await putJSON(env, `pk:${tid}`, t, PK_TTL + 60);
+  return { ok: true, purpose: t.purpose };
+}
+
+/** POST /passkey/status {ticket}: the app waits on this until the page has finished. */
+async function passkeyStatus(env, body, now = Date.now()) {
+  const id = String(body.ticket || '');
+  if (!/^[0-9a-f]{32}$/.test(id)) throw new HTTPError(400, 'Missing request.');
+  const t = await getJSON(env, `pk:${id}`);
+  if (!t || t.exp < now) return { ok: true, status: 'expired' };
+  return { ok: true, status: t.status, purpose: t.purpose };
+}
+
+/** POST /passkey/activate {key, device, name, ticket}: a new device, confirmed by an approved passkey ticket (used once). */
+async function passkeyActivate(env, body, now = Date.now()) {
+  const { id, t } = await pkTicket(env, body, now);
+  const k = await verifyKey(env, body.key);
+  if (!k || t.k !== k.keyId || t.device !== body.device || t.purpose !== 'verify' || t.status !== 'approved') throw new HTTPError(400, 'That passkey confirmation is not valid. Start again.');
+  if ((await revokedIds(env)).includes(k.keyId)) return { ok: false, reason: 'revoked' };
+  const rec = await getJSON(env, `key:${k.keyId}`);
+  if (!rec) throw new HTTPError(400, "That key isn't valid.");
+  await env.KV.delete(`pk:${id}`);                                  // one use
+  const r = await addDevice(env, k, rec, body.device, deviceName(body.name), true);
+  return r.ok ? { ...r, bound: true, first: false, hint: rec.emailHint || null } : r;
+}
+
+/** POST /passkey/remove {key, device, ticket}: takes the passkeys off a key, after an approved passkey ticket proves you hold one. */
+async function passkeyRemove(env, body, now = Date.now()) {
+  const { id, t } = await pkTicket(env, body, now);
+  const { k, rec } = await keyOwner(env, body);
+  if (t.k !== k.keyId || t.device !== body.device || t.purpose !== 'remove' || t.status !== 'approved') throw new HTTPError(400, 'That passkey confirmation is not valid. Start again.');
+  await env.KV.delete(`pk:${id}`);
+  delete rec.passkeys;
+  await putJSON(env, `key:${k.keyId}`, rec);
+  return { ok: true };
+}
+
 // MARK: Email verification: a key belongs to one email address
 //
 // A key is bound to one email: the address it was bought with, or for a key that has none yet, the first address that proves it
@@ -855,7 +1038,7 @@ const bindOn = (env) => env.BIND_REQUIRE === '1';
 const maskEmail = (e) => { const [u, d] = e.trim().toLowerCase().split('@'); return `${u.slice(0, 1)}${'•'.repeat(Math.max(2, Math.min(u.length - 1, 6)))}@${d}`; };
 
 function verifyNeeded(rec) {
-  return { ok: false, reason: 'verify', bound: !!rec.emailHash, hint: rec.emailHint || null,
+  return { ok: false, reason: 'verify', bound: !!rec.emailHash || !!(rec.passkeys || []).length, passkey: !!(rec.passkeys || []).length, hint: rec.emailHint || null,
     error: rec.emailHash
       ? 'This key belongs to an email address. Update Notch Apple, then confirm with the code we email you to use it on this device.'
       : 'Confirm your email address to use this key on a new device. Update Notch Apple to continue.' };
@@ -889,6 +1072,9 @@ async function otpPrepare(env, body) {
   const rec = (await getJSON(env, `key:${k.keyId}`)) || { tier: k.tier, source: 'unknown', devices: [] };
   // A key that is already in use but has no email yet can be given one only from a device that already uses it. A device hash can't be
   // made from the leaked key alone, so a thief cannot claim an old key before its real owner adds an email.
+  if (!rec.emailHash && (rec.passkeys || []).length && !rec.devices.includes(body.device) && !revoked) {
+    throw new HTTPError(403, 'This key is protected by a passkey. Confirm with the passkey instead (Use a passkey).');
+  }
   if (!rec.emailHash && rec.devices.length && !rec.devices.includes(body.device) && !revoked) {
     throw new HTTPError(403, 'This key is already in use. Open Notch Apple on the Mac or PC that already uses it, and add your email there. Need help? notchapples.support@gmail.com');
   }
@@ -1026,15 +1212,19 @@ async function totpCheck(env, keyId, rec, code, now) {
   rec.totp.last = c;
 }
 
-async function totpOwner(env, body) {
+async function keyOwner(env, body) {
   const k = await verifyKey(env, body.key);
   if (!k) throw new HTTPError(400, "That key isn't valid.");
   if (typeof body.device !== 'string' || !/^[0-9a-f]{64}$/.test(body.device)) throw new HTTPError(400, 'Missing device.');
   if ((await revokedIds(env)).includes(k.keyId)) throw new HTTPError(403, 'This key was revoked.');
   const rec = await getJSON(env, `key:${k.keyId}`);
   if (!rec || !rec.devices.includes(body.device)) throw new HTTPError(403, 'Open this from a device that already uses the key.');
-  if (!rec.emailHash) throw new HTTPError(400, 'Add your email first.');
   return { k, rec };
+}
+async function totpOwner(env, body) {
+  const o = await keyOwner(env, body);
+  if (!o.rec.emailHash) throw new HTTPError(400, 'Add your email first.');
+  return o;
 }
 
 /** POST /totp/setup {key, device}: a fresh secret and the otpauth:// link (the app turns it into a QR code). Nothing is on until /totp/confirm. */
@@ -1073,11 +1263,8 @@ async function totpDisable(env, body, now = Date.now()) {
 
 /** POST /security {key, device}: what the Security screen shows for a device that uses the key. */
 async function securityStatus(env, body) {
-  const { rec } = await totpOwner(env, body).catch(async (e) => {
-    if (!(e instanceof HTTPError) || e.message !== 'Add your email first.') throw e;
-    return { rec: null };
-  });
-  return rec ? { ok: true, email: true, hint: rec.emailHint || null, totp: !!rec.totp } : { ok: true, email: false, hint: null, totp: false };
+  const { rec } = await keyOwner(env, body);
+  return { ok: true, email: !!rec.emailHash, hint: rec.emailHint || null, totp: !!rec.totp, passkeys: (rec.passkeys || []).length };
 }
 
 /// The device's own label ("Aditya's MacBook Pro"): plain text, 40 characters, no control characters. Never required.
@@ -1758,6 +1945,12 @@ export default {
         case '/totp/confirm': await addressLimit(env, request, 'totpc', 40); return json(await totpConfirm(env, body));
         case '/totp/disable': await addressLimit(env, request, 'totpc', 40); return json(await totpDisable(env, body));
         case '/security': await addressLimit(env, request, 'sec', 60); return json(await securityStatus(env, body));
+        case '/passkey/begin': await addressLimit(env, request, 'pkb', 30); return json(await passkeyBegin(env, body));
+        case '/passkey/options': await addressLimit(env, request, 'pko', 60); return json(await passkeyOptions(env, body));
+        case '/passkey/finish': await addressLimit(env, request, 'pkf', 40); return json(await passkeyFinish(env, body));
+        case '/passkey/status': await addressLimit(env, request, 'pks', 400); return json(await passkeyStatus(env, body));
+        case '/passkey/activate': await addressLimit(env, request, 'pka', 30); return json(await passkeyActivate(env, body));
+        case '/passkey/remove': await addressLimit(env, request, 'pkr', 30); return json(await passkeyRemove(env, body));
         case '/activate': return json(await activate(env, body, true));
         case '/deactivate': return json(await activate(env, body, false));
         case '/entitle': return json(await entitle(env, body));

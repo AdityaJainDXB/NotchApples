@@ -278,7 +278,7 @@ struct LicenseKey: Equatable {
     enum Problem: LocalizedError, Equatable {
         case notAKey, tampered, wrongTier, revoked, tooManyMacs(Int), server(String)
         /// The key belongs to an email address: this Mac must confirm it with a code first.
-        case needsVerification(bound: Bool, hint: String?)
+        case needsVerification(bound: Bool, hint: String?, passkey: Bool)
         var errorDescription: String? {
             switch self {
             case .notAKey: "That doesn't look like a Notch Apple key. Copy the whole key, from NTCH- to the end."

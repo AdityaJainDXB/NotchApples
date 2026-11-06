@@ -109,6 +109,8 @@ struct VerifyKeyView: View {
     let key: String
     let bound: Bool
     let hint: String?
+    /// The key has a passkey: offer "Use a passkey (Touch ID)", which opens the website's passkey page in the browser.
+    var passkey = false
     var onDone: () -> Void
     /// Nil hides the Cancel button (the email gate cannot be cancelled).
     var onCancel: (() -> Void)?
@@ -116,14 +118,14 @@ struct VerifyKeyView: View {
     /// brings the person back to the code box instead of asking for the email again while the code is still valid.
     var remember = false
 
-    private enum Step { case email, code, authenticator }
+    private enum Step { case email, code, authenticator, passkey }
     @State private var step: Step
     @State private var email: String
 
     private static let emailKey = "license.verify.email", sentKey = "license.verify.sentAt", codeLife: TimeInterval = 10 * 60
 
-    init(key: String, bound: Bool, hint: String?, onDone: @escaping () -> Void, onCancel: (() -> Void)? = nil, remember: Bool = false) {
-        self.key = key; self.bound = bound; self.hint = hint; self.onDone = onDone; self.onCancel = onCancel; self.remember = remember
+    init(key: String, bound: Bool, hint: String?, passkey: Bool = false, onDone: @escaping () -> Void, onCancel: (() -> Void)? = nil, remember: Bool = false) {
+        self.key = key; self.bound = bound; self.hint = hint; self.passkey = passkey; self.onDone = onDone; self.onCancel = onCancel; self.remember = remember
         let d = UserDefaults.standard
         let fresh = remember && Date().timeIntervalSince1970 - d.double(forKey: Self.sentKey) < Self.codeLife
         _step = State(initialValue: fresh ? .code : .email)
@@ -139,7 +141,7 @@ struct VerifyKeyView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
-            Text(step == .email ? "Confirm it's you" : (step == .code ? "Check your email" : "Authenticator code"))
+            Text(step == .email ? "Confirm it's you" : (step == .code ? "Check your email" : (step == .passkey ? "Use your passkey" : "Authenticator code")))
                 .font(.system(size: 17, weight: .bold)).foregroundStyle(.white)
             Text(subtitle).font(.system(size: 12)).foregroundStyle(Theme.textSecondary).fixedSize(horizontal: false, vertical: true)
 
@@ -148,6 +150,11 @@ struct VerifyKeyView: View {
                 HStack(spacing: 8) {
                     EmailField(text: $email, focus: $focused, onSubmit: send)
                     Button(busy ? "Sending…" : "Email me a code", action: send).buttonStyle(PurpleButtonStyle()).disabled(busy || !validEmail(email))
+                }
+            case .passkey:
+                HStack(spacing: 10) {
+                    if busy { ProgressView().controlSize(.small) }
+                    Button(busy ? "Waiting for your browser…" : "Open my browser", action: usePasskey).buttonStyle(PurpleButtonStyle()).disabled(busy)
                 }
             case .code, .authenticator:
                 if step == .authenticator { EmailField(text: $email, focus: $emailFocused, onSubmit: confirm) }
@@ -161,9 +168,12 @@ struct VerifyKeyView: View {
             HStack(spacing: 14) {
                 if let onCancel { Button("Cancel", action: onCancel) }
                 switch step {
-                case .email: Button("I use an authenticator app") { step = .authenticator; code = ""; error = nil }
+                case .email:
+                    Button("I use an authenticator app") { step = .authenticator; code = ""; error = nil }
+                    if passkey { Button("Use a passkey (Touch ID)") { step = .passkey; error = nil } }
                 case .code: Button("Use a different email") { step = .email; code = ""; error = nil; UserDefaults.standard.removeObject(forKey: Self.sentKey) }
                 case .authenticator: Button("Email me a code instead") { step = .email; code = ""; error = nil }
+                case .passkey: Button("Email me a code instead") { step = .email; error = nil }
                 }
             }
             .buttonStyle(.plain).font(.system(size: 11)).foregroundStyle(Theme.accent)
@@ -180,6 +190,7 @@ struct VerifyKeyView: View {
                   : "Enter your email address. We'll send a code, and the key will belong to that address from now on."
         case .code: "If \(email) is the address this key belongs to, we sent it a 6-digit code (valid 10 minutes, check spam too). If it is not, no code is sent: only the key's owner can sign in on a new device."
         case .authenticator: "Enter your email and the 6-digit code your authenticator app shows for Notch Apple."
+        case .passkey: "Your browser opens a page on our website. Confirm with Touch ID (or your device PIN) there, then come back: this Mac continues by itself. No email is needed."
         }
     }
 
@@ -193,6 +204,20 @@ struct VerifyKeyView: View {
                 code = ""; step = .code
                 if remember { UserDefaults.standard.set(email, forKey: Self.emailKey); UserDefaults.standard.set(Date().timeIntervalSince1970, forKey: Self.sentKey) }
             }
+        }
+    }
+
+    private func usePasskey() {
+        guard !busy else { return }
+        busy = true; error = nil
+        Task {
+            let b = await Entitlements.shared.passkeyBegin("verify", key: key)
+            guard let ticket = b.ticket else { busy = false; error = b.error; return }
+            NSWorkspace.shared.open(ticket.url)
+            if let e = await Entitlements.shared.passkeyWait(ticket.id) { busy = false; error = e; return }
+            let e = await Entitlements.shared.passkeyActivate(key: key, ticket: ticket.id)
+            busy = false
+            if let e { error = e } else { UserDefaults.standard.removeObject(forKey: Self.emailKey); UserDefaults.standard.removeObject(forKey: Self.sentKey); onDone() }
         }
     }
 
@@ -213,7 +238,7 @@ struct VerifyKeyView: View {
 /// Settings → License → Security.
 struct KeySecuritySection: View {
     @StateObject private var entitlements = Entitlements.shared
-    @State private var status: (email: Bool, hint: String?, totp: Bool)?
+    @State private var status: Entitlements.SecurityStatus?
     @State private var loaded = false
 
     @State private var error: String?
@@ -225,11 +250,14 @@ struct KeySecuritySection: View {
                 if !loaded {
                     Text("Checking…").foregroundStyle(.secondary)
                 } else if let status {
-                    if !status.email { addEmail } else {
+                    if status.email {
                         Label("This key belongs to \(status.hint ?? "your email"). A new device confirms with a code we email you, once.", systemImage: "checkmark.shield.fill")
                             .foregroundStyle(.green)
                         authenticator(status)
-                    }
+                    } else if status.passkeys > 0 {
+                        Label("This key is protected by your passkey. A new device confirms with it, once. No email is needed.", systemImage: "checkmark.shield.fill").foregroundStyle(.green)
+                    } else { addEmail }
+                    passkeyBlock(status)
                     if let info { Text(info).foregroundStyle(.green).font(.callout) }
                     if let error { Text(error).foregroundStyle(.red).font(.callout) }
                 } else {
@@ -254,7 +282,19 @@ struct KeySecuritySection: View {
         }
     }
 
-    @ViewBuilder private func authenticator(_ status: (email: Bool, hint: String?, totp: Bool)) -> some View {
+    @ViewBuilder private func passkeyBlock(_ status: Entitlements.SecurityStatus) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            if status.passkeys > 0 {
+                Label("Passkey is on: a new Mac or PC can confirm with Touch ID instead of a code. It syncs through iCloud Keychain, Google or your password manager.", systemImage: "touchid")
+                Button("Remove the passkey…", role: .destructive) { KeySecurityWindow.shared.show(.removePasskey) { info = "Passkey removed."; Task { await refresh() } } }
+            } else {
+                Text("Optional: use a passkey (Touch ID, or Windows Hello) to confirm a new device, with no email code. It opens your browser for a moment.").font(.callout).foregroundStyle(.secondary)
+                Button("Add a passkey (Touch ID)…") { KeySecurityWindow.shared.show(.addPasskey) { info = "Passkey is on."; Task { await refresh() } } }
+            }
+        }
+    }
+
+    @ViewBuilder private func authenticator(_ status: Entitlements.SecurityStatus) -> some View {
         if status.totp {
             VStack(alignment: .leading, spacing: 8) {
                 Label("Authenticator app is on: a new device can use its code instead of the email.", systemImage: "lock.shield.fill")
@@ -278,7 +318,7 @@ struct KeySecuritySection: View {
 /// typing (the same reason confirming a key's email has a window), and a window also stays open while you pick up your phone.
 @MainActor
 final class KeySecurityWindow {
-    enum Mode { case addEmail, authenticator, turnOff }
+    enum Mode { case addEmail, authenticator, turnOff, addPasskey, removePasskey }
     static let shared = KeySecurityWindow()
     private var window: NSWindow?
 
@@ -286,7 +326,7 @@ final class KeySecurityWindow {
         close()
         let view = SecurityWindowView(mode: mode, onDone: { [weak self] in self?.close(); onDone() }, onCancel: { [weak self] in self?.close() })
         let w = NSWindow(contentViewController: NSHostingController(rootView: view))
-        w.title = mode == .addEmail ? "Notch Apple: add your email" : "Notch Apple: authenticator app"
+        w.title = mode == .addEmail ? "Notch Apple: add your email" : (mode == .addPasskey || mode == .removePasskey ? "Notch Apple: passkey" : "Notch Apple: authenticator app")
         w.styleMask = [.titled, .closable]
         w.isReleasedWhenClosed = false
         w.hidesOnDeactivate = false
@@ -319,6 +359,7 @@ private struct SecurityWindowView: View {
             case .addEmail: addEmail
             case .authenticator: authenticator
             case .turnOff: turnOff
+            case .addPasskey, .removePasskey: passkeyFlow
             }
             if let finished { Label(finished, systemImage: "checkmark.circle.fill").foregroundStyle(.green) }
             if let error { Text(error).foregroundStyle(errorColor).font(.callout) }
@@ -327,7 +368,7 @@ private struct SecurityWindowView: View {
         .frame(width: 440)
         .background(Color(white: 0.09))
         .preferredColorScheme(.dark)
-        .task { if mode == .authenticator { await start() } else { focused = true } }
+        .task { if mode == .authenticator { await start() } else if mode == .addPasskey || mode == .removePasskey { await startPasskey() } else { focused = true } }
     }
 
     private func work(_ job: @escaping () async -> Void) {
@@ -383,6 +424,34 @@ private struct SecurityWindowView: View {
         }
     }
     private func turnOn() { guard code.count == 6 else { return }; work { if let e = await entitlements.totpConfirm(code) { error = e } else { done("Authenticator app is on.") } } }
+
+    @State private var passkeyURL: URL?
+    private var passkeyFlow: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text(mode == .addPasskey ? "Add a passkey" : "Remove the passkey").font(.title3.weight(.semibold))
+            Text(mode == .addPasskey
+                 ? "Your browser opens a page on our website. Confirm with Touch ID (or your device PIN) there, then come back. The passkey stays in your browser or password manager and syncs with your other devices."
+                 : "Your browser opens a page on our website. Confirm with your passkey there, then come back. New devices will use the email code again.")
+                .font(.callout).foregroundStyle(.secondary)
+            if loading || (passkeyURL != nil && finished == nil && error == nil) { HStack(spacing: 8) { ProgressView().controlSize(.small); Text("Waiting for your browser…").font(.callout) } }
+            HStack {
+                if let passkeyURL, finished == nil { Button("Open the page again") { NSWorkspace.shared.open(passkeyURL) } }
+                if error != nil && finished == nil { Button("Try again") { Task { await startPasskey() } } }
+                Button("Cancel", action: onCancel)
+            }
+        }
+    }
+    private func startPasskey() async {
+        loading = true; error = nil; passkeyURL = nil
+        let b = await entitlements.passkeyBegin(mode == .addPasskey ? "add" : "remove")
+        loading = false
+        guard let ticket = b.ticket else { error = b.error; return }
+        passkeyURL = ticket.url
+        NSWorkspace.shared.open(ticket.url)
+        if let e = await entitlements.passkeyWait(ticket.id) { error = e; return }
+        if mode == .addPasskey { done("Passkey is on.") }
+        else if let e = await entitlements.passkeyRemove(ticket: ticket.id) { error = e } else { done("Passkey removed.") }
+    }
 
     private var turnOff: some View {
         VStack(alignment: .leading, spacing: 12) {

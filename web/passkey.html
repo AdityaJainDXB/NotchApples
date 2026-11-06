@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Notch Apple passkey</title>
+<meta name="color-scheme" content="dark">
+<link rel="icon" href="assets/icon-48.png">
+<style>
+:root{--bg:#0a0912;--card:#14121c;--line:rgba(255,255,255,.1);--tx:#f2eff8;--mut:#a39fb4;--ac:#8b6bff;--ok:#4ade80;--bad:#ff7a8a}
+*{box-sizing:border-box}body{margin:0;min-height:100vh;display:grid;place-items:center;background:radial-gradient(900px 500px at 50% -10%,#2a1c5c,var(--bg));color:var(--tx);font:16px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;padding:20px}
+.card{width:min(440px,100%);background:var(--card);border:1px solid var(--line);border-radius:22px;padding:30px 28px;text-align:center;box-shadow:0 30px 80px -30px #000}
+.logo{width:52px;height:52px;border-radius:13px;margin:0 auto 14px;display:block}
+h1{font-size:22px;margin:0 0 6px;letter-spacing:-.01em}p{color:var(--mut);margin:0 0 20px;font-size:15px}
+button{font:inherit;font-weight:600;color:#0b0912;background:var(--ac);border:0;border-radius:99px;padding:13px 26px;cursor:pointer;min-width:220px}
+button:hover{filter:brightness(1.1)}button:disabled{opacity:.55;cursor:default}
+.msg{margin-top:18px;min-height:24px;font-size:14.5px}.msg.ok{color:var(--ok)}.msg.bad{color:var(--bad)}
+small{display:block;margin-top:20px;color:var(--mut);font-size:12.5px}
+</style>
+</head>
+<body>
+<main class="card">
+  <img class="logo" src="assets/icon-180.png" alt="" width="52" height="52">
+  <h1 id="title">Notch Apple passkey</h1>
+  <p id="lead">Open this page from Notch Apple.</p>
+  <button id="go" type="button" hidden>Continue with Touch ID</button>
+  <div class="msg" id="msg" role="status" aria-live="polite"></div>
+  <small id="note">Your passkey stays in your browser or password manager. Notch Apple never sees it.</small>
+</main>
+<script>
+// The page Notch Apple opens to add a passkey to your key, to confirm a new Mac or PC with it, or to remove it. The app gives this page a
+// short-lived ticket in the address (never your key); the page asks the licence server for a challenge, your browser asks for Touch ID,
+// Windows Hello or your device PIN, and the answer goes back to the server. The app then carries on by itself.
+const WORKER = 'https://notchapple-licenses.adityajain1225.workers.dev';
+const $ = (id) => document.getElementById(id);
+const ticket = (new URLSearchParams(location.hash.slice(1)).get('t') || '').trim();
+addEventListener('hashchange', () => location.reload());     // a new request in a tab that is already open starts fresh
+const b64u = (buf) => btoa(String.fromCharCode(...new Uint8Array(buf))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+const unb64u = (t) => { const s = t.replace(/-/g, '+').replace(/_/g, '/'); return Uint8Array.from(atob(s.padEnd(Math.ceil(s.length / 4) * 4, '=')), (c) => c.charCodeAt(0)); };
+const say = (text, cls = '') => { $('msg').textContent = text; $('msg').className = 'msg ' + cls; };
+async function api(path, body) {
+  const r = await fetch(WORKER + path, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) });
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok || j.error) throw new Error(j.error || 'The server did not answer. Try again.');
+  return j;
+}
+const TEXT = {
+  add: ['Add a passkey', 'Use Touch ID, Windows Hello or your device PIN to create a passkey for your Notch Apple key. It syncs with your other devices through iCloud Keychain, Google or your password manager.', 'Create a passkey'],
+  verify: ['Confirm this device', 'Use your passkey to confirm the Mac or PC you are setting up. No email is needed.', 'Continue with my passkey'],
+  remove: ['Remove the passkey', 'Confirm with your passkey to take it off this key. New devices will use the email code again.', 'Confirm with my passkey'],
+};
+(async () => {
+  if (!/^[0-9a-f]{32}$/.test(ticket)) { say('This link is not complete. Go back to Notch Apple and start again.', 'bad'); return; }
+  if (!window.PublicKeyCredential) { say('This browser cannot use passkeys. Try Safari, Chrome, Edge or Firefox on a recent system.', 'bad'); return; }
+  let o;
+  try { o = await api('/passkey/options', { ticket }); } catch (e) { say(e.message, 'bad'); return; }
+  const [title, lead, button] = TEXT[o.purpose] || TEXT.add;
+  $('title').textContent = title; $('lead').textContent = lead; $('go').textContent = button; $('go').hidden = false;
+  const ids = (o.credentials || []).map((id) => ({ type: 'public-key', id: unb64u(id) }));
+  $('go').onclick = async () => {
+    $('go').disabled = true; say('Waiting for you to confirm…');
+    try {
+      let cred, body;
+      if (o.purpose === 'add') {
+        cred = await navigator.credentials.create({ publicKey: {
+          challenge: unb64u(o.challenge), rp: o.rp, user: { id: unb64u(o.user.id), name: o.user.name, displayName: o.user.displayName },
+          pubKeyCredParams: [{ type: 'public-key', alg: -7 }], excludeCredentials: ids, timeout: o.timeout, attestation: 'none',
+          authenticatorSelection: { residentKey: 'required', requireResidentKey: true, userVerification: 'required' } } });
+        body = { ticket, id: cred.id, clientDataJSON: b64u(cred.response.clientDataJSON), attestationObject: b64u(cred.response.attestationObject) };
+      } else {
+        cred = await navigator.credentials.get({ publicKey: { challenge: unb64u(o.challenge), rpId: o.rp.id, allowCredentials: ids, userVerification: 'required', timeout: o.timeout } });
+        body = { ticket, id: cred.id, clientDataJSON: b64u(cred.response.clientDataJSON), authenticatorData: b64u(cred.response.authenticatorData), signature: b64u(cred.response.signature) };
+      }
+      await api('/passkey/finish', body);
+      $('go').hidden = true; say('Done. Go back to Notch Apple: it carries on by itself. You can close this tab.', 'ok');
+    } catch (e) {
+      $('go').disabled = false;
+      say(e && e.name === 'NotAllowedError' ? 'That was cancelled or timed out. Press the button to try again.' : (e && e.name === 'InvalidStateError' ? 'This device already has a passkey for the key.' : (e && e.message) || 'That did not work. Try again.'), 'bad');
+    }
+  };
+})();
+</script>
+</body>
+</html>

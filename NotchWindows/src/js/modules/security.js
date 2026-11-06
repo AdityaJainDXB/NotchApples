@@ -2,7 +2,8 @@
 // (the default), or with a code from an authenticator app (Google or Microsoft Authenticator) the owner set up earlier.
 
 import { el } from '../store.js';
-import { requestCode, verifyCode, securityStatus, totpSetup, totpConfirm, totpDisable, addEmailStart, addEmailFinish } from '../license.js';
+import { requestCode, verifyCode, securityStatus, totpSetup, totpConfirm, totpDisable, addEmailStart, addEmailFinish, passkeyBegin, passkeyWait, passkeyActivate, passkeyRemove } from '../license.js';
+import { openUrl } from '../native.js';
 import { toast } from '../ui.js';
 import qrcode from '../vendor/qrcode.js';
 import { stringToBytes } from '../vendor/qrcode-utf8.js';
@@ -64,8 +65,27 @@ export function verifyFlow(key, info, onDone) {
         ? `This key belongs to an email address${info.hint ? ` (${info.hint})` : ''}. Enter it and we’ll send a code to confirm this PC.`
         : 'Enter your email address. We’ll send a code, and the key will belong to that address from now on.'),
       labelled(input), err, go,
-      el('button', { class: 'btn quiet small', onclick: () => step2(true) }, 'I use an authenticator app'));
+      el('button', { class: 'btn quiet small', onclick: () => step2(true) }, 'I use an authenticator app'),
+      info.passkey ? el('button', { class: 'btn quiet small', onclick: () => stepPasskey() }, 'Use a passkey (Windows Hello / Touch ID)') : null);
     input.focus();
+  };
+  /// The key has a passkey: open the website's passkey page, wait for it to be approved, then activate this PC. No email needed.
+  const stepPasskey = async () => {
+    const err = note(), go = el('button', { class: 'btn' }, 'Open my browser');
+    const run = async () => {
+      err.textContent = ''; go.disabled = true; go.textContent = 'Waiting for your browser…';
+      const b = await passkeyBegin('verify', key);
+      if (!b.ticket) { err.textContent = b.error || 'Could not start.'; go.disabled = false; go.textContent = 'Open my browser'; return; }
+      openUrl(b.url);
+      const w = await passkeyWait(b.ticket);
+      if (!w.ok) { err.textContent = w.error; go.disabled = false; go.textContent = 'Open my browser'; return; }
+      const r = await passkeyActivate(key, b.ticket);
+      if (r.ok) { remember(null); onDone(r); } else { err.textContent = r.error; go.disabled = false; go.textContent = 'Open my browser'; }
+    };
+    go.addEventListener('click', run);
+    wrap.replaceChildren(el('div', { class: 'title' }, 'Use your passkey'),
+      el('div', { class: 'small dim', style: 'text-align:center;max-width:380px' }, 'Your browser opens a page on our website. Confirm with Windows Hello, Touch ID or your device PIN there, then come back: this PC continues by itself. No email is needed.'),
+      err, go, el('button', { class: 'btn quiet small', onclick: () => step1() }, '← Email me a code instead'));
   };
   const step2 = (authenticator = false) => {
     method = authenticator ? 'totp' : 'email';
@@ -101,14 +121,42 @@ export function securityCard(repaint) {
   securityStatus().then((st) => {
     const body = [];
     if (!st) body.push(el('div', { class: 'small dim' }, 'Couldn’t reach the server. Try again when you’re online.'));
-    else if (!st.email) body.push(emailSetup(repaint));
+    else if (!st.email && !st.passkeys) { body.push(emailSetup(repaint)); body.push(passkeyBlock(st, repaint)); }
+    else if (!st.email) { body.push(el('div', { class: 'small' }, '✓ This key is protected by your passkey. A new device confirms with it, once. No email is needed.')); body.push(passkeyBlock(st, repaint)); }
     else {
       body.push(el('div', { class: 'small' }, `✓ Your key belongs to ${st.hint || 'your email'}. A new device must confirm with a code we email you.`));
       body.push(st.totp ? totpOff(repaint) : totpOn(repaint));
+      body.push(passkeyBlock(st, repaint));
     }
     box.replaceChildren(el('div', { class: 'section-title' }, 'Security'), ...body);
   });
   return box;
+}
+
+/// Add a passkey (Touch ID or Windows Hello in the browser), or remove it.
+function passkeyBlock(st, repaint) {
+  const wrap = el('div', { class: 'col', style: 'gap:6px' }), err = note();
+  const flow = async (purpose, finish) => {
+    err.textContent = '';
+    const b = await passkeyBegin(purpose);
+    if (!b.ticket) { err.textContent = b.error || 'Could not start.'; return; }
+    openUrl(b.url);
+    toast('Confirm in your browser, then come back.');
+    const w = await passkeyWait(b.ticket);
+    if (!w.ok) { err.textContent = w.error; return; }
+    const r = await finish(b.ticket);
+    if (r.ok) repaint(); else err.textContent = r.error || 'That did not work.';
+  };
+  if (st.passkeys > 0) {
+    const go = el('button', { class: 'btn small danger' }, 'Remove the passkey');
+    go.addEventListener('click', async () => { go.disabled = true; await flow('remove', passkeyRemove); go.disabled = false; });
+    wrap.append(el('div', { class: 'small' }, '✓ Passkey is on: a new PC or Mac can confirm with Windows Hello or Touch ID instead of a code. It syncs through your browser or password manager.'), go, err);
+  } else {
+    const go = el('button', { class: 'btn small quiet' }, 'Add a passkey');
+    go.addEventListener('click', async () => { go.disabled = true; await flow('add', async () => ({ ok: true })); go.disabled = false; });
+    wrap.append(el('div', { class: 'small dim' }, 'Optional: use a passkey (Windows Hello, or Touch ID on a Mac) to confirm a new device with no email code. It opens your browser for a moment.'), go, err);
+  }
+  return wrap;
 }
 
 function emailSetup(repaint) {

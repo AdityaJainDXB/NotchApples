@@ -66,7 +66,7 @@ struct EmailGateContent: View {
                 Text("Your \(entitlements.tier.name) key now belongs to one email address, so a key that leaks can't be used by anyone else. Confirm your email with a code to keep using Notch Apple. It takes a minute and you only do it once.")
                     .font(.system(size: 12)).foregroundStyle(Theme.textSecondary).fixedSize(horizontal: false, vertical: true)
                 if let gate = entitlements.emailGate {
-                    VerifyKeyView(key: gate.key, bound: gate.bound, hint: gate.hint, onDone: {}, onCancel: nil, remember: true)
+                    VerifyKeyView(key: gate.key, bound: gate.bound, hint: gate.hint, passkey: gate.passkey, onDone: {}, onCancel: nil, remember: true)
                 }
                 Text("This window stays open while you check your email. Open your email in your browser, copy the code, and come back here.")
                     .font(.system(size: 11)).foregroundStyle(Theme.textSecondary)
@@ -109,9 +109,9 @@ final class KeyVerifyWindow {
     static let shared = KeyVerifyWindow()
     private var window: NSWindow?
 
-    func show(key: String, bound: Bool, hint: String?, onDone: @escaping () -> Void) {
+    func show(key: String, bound: Bool, hint: String?, passkey: Bool = false, onDone: @escaping () -> Void) {
         close()
-        let view = KeyVerifyWindowView(key: key, bound: bound, hint: hint,
+        let view = KeyVerifyWindowView(key: key, bound: bound, hint: hint, passkey: passkey,
                                        onDone: { [weak self] in self?.close(); onDone() },
                                        onCancel: { [weak self] in self?.close() })
         let w = NSWindow(contentViewController: NSHostingController(rootView: view))
@@ -130,11 +130,11 @@ final class KeyVerifyWindow {
 }
 
 private struct KeyVerifyWindowView: View {
-    let key: String, bound: Bool, hint: String?
+    let key: String, bound: Bool, hint: String?, passkey: Bool
     var onDone: () -> Void
     var onCancel: () -> Void
     var body: some View {
-        VerifyKeyView(key: key, bound: bound, hint: hint, onDone: onDone, onCancel: onCancel, remember: true)
+        VerifyKeyView(key: key, bound: bound, hint: hint, passkey: passkey, onDone: onDone, onCancel: onCancel, remember: true)
             .padding(24)
             .frame(width: 480)
             .background(Color(white: 0.09))

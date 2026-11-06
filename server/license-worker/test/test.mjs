@@ -1107,4 +1107,85 @@ await test('Mail cap: one address cannot be flooded with mail from us', async ()
   assert.ok(got <= 2, 'a mail nobody asked for: at most 2 a day to one address, got ' + got);
   env.COLD_PER_DAY = '99';
 });
+await test('Passkeys: add one from a device that uses the key; a new device then needs it; the checks refuse copies, wrong sites and unconfirmed answers', async () => {
+  env.BIND_REQUIRE = '1';
+  const rpId = 'adityajaindxb.github.io', origin = 'https://adityajaindxb.github.io';
+  // ---- a software authenticator (what a browser's Touch ID passkey does)
+  const pair = await crypto.subtle.generateKey({ name: 'ECDSA', namedCurve: 'P-256' }, true, ['sign', 'verify']);
+  const pub = await crypto.subtle.exportKey('jwk', pair.publicKey);
+  const credId = crypto.getRandomValues(new Uint8Array(16));
+  const cat = (...a) => { const o = new Uint8Array(a.reduce((n, x) => n + x.length, 0)); let i = 0; for (const x of a) { o.set(x, i); i += x.length; } return o; };
+  const sha = async (b) => new Uint8Array(await crypto.subtle.digest('SHA-256', b));
+  const b64 = (u) => Buffer.from(u).toString('base64url');
+  const head = (t, n) => (n < 24 ? [(t << 5) | n] : n < 256 ? [(t << 5) | 24, n] : [(t << 5) | 25, n >> 8, n & 255]);
+  const cbor = (v) => {
+    if (typeof v === 'number') return Uint8Array.from(v >= 0 ? head(0, v) : head(1, -1 - v));
+    if (typeof v === 'string') { const e = new TextEncoder().encode(v); return cat(Uint8Array.from(head(3, e.length)), e); }
+    if (v instanceof Uint8Array) return cat(Uint8Array.from(head(2, v.length)), v);
+    if (v instanceof Map) return cat(Uint8Array.from(head(5, v.size)), ...[...v].flatMap(([a, b]) => [cbor(a), cbor(b)]));
+    throw new Error('cbor');
+  };
+  const rpHash = await sha(new TextEncoder().encode(rpId));
+  const authData = (flags, count, attested) => cat(rpHash, Uint8Array.of(flags), Uint8Array.of(count >>> 24, count >>> 16 & 255, count >>> 8 & 255, count & 255),
+    ...(attested ? [new Uint8Array(16), Uint8Array.of(0, credId.length), credId, cbor(new Map([[1, 2], [3, -7], [-1, 1], [-2, Buffer.from(pub.x, 'base64url')], [-3, Buffer.from(pub.y, 'base64url')]]))] : []));
+  const clientData = (type, challenge, o = origin) => new TextEncoder().encode(JSON.stringify({ type, challenge, origin: o, crossOrigin: false }));
+  const rawToDer = (r) => { const int = (b) => { let x = [...b]; while (x.length > 1 && x[0] === 0) x.shift(); if (x[0] & 0x80) x.unshift(0); return [0x02, x.length, ...x]; }; const body = [...int(r.slice(0, 32)), ...int(r.slice(32))]; return Uint8Array.from([0x30, body.length, ...body]); };
+  const create = async (ticket, o = {}) => {
+    const opt = await call('/passkey/options', { ticket });
+    const cd = clientData(o.type || 'webauthn.create', o.challenge || opt.challenge, o.origin);
+    return call('/passkey/finish', { ticket, id: b64(credId), clientDataJSON: b64(cd), attestationObject: b64(cbor(new Map([['fmt', 'none'], ['attStmt', new Map()], ['authData', authData(o.flags ?? 0x45, 0, true)]]))) });
+  };
+  const assert_ = async (ticket, o = {}) => {
+    const opt = await call('/passkey/options', { ticket });
+    const cd = clientData('webauthn.get', o.challenge || opt.challenge, o.origin), ad = authData(o.flags ?? 0x05, o.count ?? 0, false);
+    const sig = new Uint8Array(await crypto.subtle.sign({ name: 'ECDSA', hash: 'SHA-256' }, pair.privateKey, cat(ad, await sha(cd))));
+    return call('/passkey/finish', { ticket, id: b64(credId), clientDataJSON: b64(cd), authenticatorData: b64(ad), signature: b64(o.badSig ? new Uint8Array(64) : rawToDer(sig)) });
+  };
+  // ---- a key in use on one device, with no email
+  env.BIND_REQUIRE = '0';
+  const key = (await call('/admin/issue', { tier: 'pro' }, { authorization: 'Bearer admin-test' })).key;
+  assert.equal((await call('/activate', { key, device: dv(40) })).ok, true);
+  env.BIND_REQUIRE = '1';
+  assert.deepEqual(await call('/security', { key, device: dv(40) }), { status: 200, ok: true, email: false, hint: null, totp: false, passkeys: 0 });
+  assert.equal((await call('/passkey/begin', { key, device: dv(41), purpose: 'add' })).status, 403, 'a device that does not use the key cannot add one');
+  assert.equal((await call('/passkey/begin', { key, device: dv(40), purpose: 'verify' })).status, 400, 'nothing to verify with yet');
+  // ---- adding one: a wrong challenge, a wrong site and an unconfirmed (no Touch ID) answer are refused
+  const t1 = (await call('/passkey/begin', { key, device: dv(40), purpose: 'add' })).ticket;
+  assert.match((await call('/passkey/begin', { key, device: dv(40), purpose: 'add' })).url, /passkey\.html#t=[0-9a-f]{32}$/);
+  assert.equal((await create(t1, { challenge: 'AAAA' })).status, 400, 'wrong challenge');
+  assert.equal((await create(t1, { origin: 'https://evil.example' })).status, 400, 'wrong site');
+  assert.equal((await create(t1, { flags: 0x41 })).status, 400, 'not user-verified (no Touch ID)');
+  assert.equal((await call('/passkey/status', { ticket: t1 })).status, 'open');
+  const added = await create(t1);
+  assert.equal(added.ok, true, JSON.stringify(added));
+  assert.equal((await call('/passkey/status', { ticket: t1 })).status, 'approved');
+  assert.equal((await create(t1)).status, 409, 'a ticket answers once');
+  assert.equal((await call('/security', { key, device: dv(40) })).passkeys, 1);
+  // ---- the key is now protected by the passkey, even with no email
+  assert.deepEqual(Object.assign({}, await call('/activate', { key, device: dv(42) })), { status: 200, ok: false, reason: 'verify', bound: true, passkey: true, hint: null, error: (await call('/activate', { key, device: dv(42) })).error });
+  assert.equal((await call('/otp/start', { key, device: dv(42), email: 'thief@example.com' })).status, 403, 'a thief cannot put their email on a passkey-protected key');
+  // ---- a new device confirms with the passkey
+  const t2 = (await call('/passkey/begin', { key, device: dv(42), purpose: 'verify' })).ticket;
+  assert.equal((await call('/passkey/activate', { key, device: dv(42), ticket: t2 })).status, 400, 'not approved yet');
+  assert.equal((await assert_(t2, { badSig: true })).status, 400, 'a bad signature');
+  assert.equal((await assert_(t2, { flags: 0x01 })).status, 400, 'no Touch ID');
+  const ok = await assert_(t2);
+  assert.equal(ok.ok, true, JSON.stringify(ok));
+  assert.equal((await call('/passkey/activate', { key, device: dv(43), ticket: t2 })).status, 400, 'the ticket belongs to the device that asked');
+  const act = await call('/passkey/activate', { key, device: dv(42), ticket: t2, name: 'Second Mac' });
+  assert.equal(act.ok, true, JSON.stringify(act));
+  assert.equal((await call('/activate', { key, device: dv(42) })).ok, true, 'registered now');
+  assert.equal((await call('/passkey/activate', { key, device: dv(42), ticket: t2 })).status, 410, 'a ticket is used once');
+  // ---- removing it needs the passkey again
+  const t3 = (await call('/passkey/begin', { key, device: dv(40), purpose: 'remove' })).ticket;
+  assert.equal((await call('/passkey/remove', { key, device: dv(40), ticket: t3 })).status, 400, 'not approved');
+  assert.equal((await assert_(t3)).ok, true);
+  assert.equal((await call('/passkey/remove', { key, device: dv(40), ticket: t3 })).ok, true);
+  assert.equal((await call('/security', { key, device: dv(40) })).passkeys, 0);
+  // ---- a ticket that has run out
+  const t4 = (await call('/passkey/begin', { key, device: dv(40), purpose: 'add' })).ticket;
+  const real = Date.now; Date.now = () => real() + 6 * 60 * 1000;
+  try { assert.equal((await call('/passkey/options', { ticket: t4 })).status, 410); assert.equal((await call('/passkey/status', { ticket: t4 })).status, 'expired'); } finally { Date.now = real; }
+  env.BIND_REQUIRE = '0';
+});
 console.log(`\n${passed} passed`);

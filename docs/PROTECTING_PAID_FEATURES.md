@@ -98,3 +98,34 @@ allowance (in `wrangler.toml`). A free provider tier is shared by every user, so
 1. **Move more Ultimate work private** as it is written, and the Pro modules that are large and self-contained.
 2. **Premium content, regularly.** New themes, sound packs and aircraft added through `assets.mjs` never touch the repository.
 3. **Close the open relay path** for Messenger once it sends a pass too.
+
+
+## Passkeys: Touch ID or Windows Hello to confirm a new device
+
+A key can also have a **passkey**, instead of (or as well as) an email. It is for people who do not want to use an email code, and it lets a
+second Mac or PC confirm itself with Touch ID or Windows Hello.
+
+**Why it is a web page.** Apple's own passkey API needs the "associated domains" entitlement, which only a paid Apple Developer account can sign.
+The app is ad-hoc signed, so it cannot use it. Instead the app opens `web/passkey.html` in the browser, and the browser does the passkey
+(WebAuthn). The passkey lives in the browser or password manager (iCloud Keychain, Google, 1Password) and syncs between the person's devices;
+the app and this server only ever see the public half.
+
+**The flow** (all in `server/license-worker/src/worker.js`, "MARK: Passkeys"):
+
+1. The app asks `POST /passkey/begin {key, device, purpose}` (purpose `add`, `verify` or `remove`) for a short-lived **ticket** (5 minutes, one use)
+   and gets the page address `…/passkey.html#t=TICKET`. The key never goes in the address.
+2. The page asks `POST /passkey/options {ticket}` for a challenge, the browser asks for Touch ID, and the page sends the answer to
+   `POST /passkey/finish`. The server checks the challenge, the origin, the site hash, that the user was verified (not just present), and for a
+   sign-in the ES256 signature; a copied passkey (a signature counter that goes back) is refused.
+3. The app polls `POST /passkey/status {ticket}` until it says `approved`, then calls `POST /passkey/activate` (a new device) or
+   `POST /passkey/remove`.
+
+**Rules.** Adding or removing a passkey needs a device that already uses the key. A key with a passkey and no email cannot be given an email by
+a thief on a new device. A key may have up to 5 passkeys. A passkey is required to be a "resident" credential with user verification.
+
+**Keep the site where it is.** A passkey is tied to `PASSKEY_RP_ID` (default `adityajaindxb.github.io`, with `PASSKEY_ORIGIN`). If the website
+moves to another domain, existing passkeys stop working until the owner adds new ones (the email code still works). `notch.cc.cd` only forwards
+to the GitHub Pages address, so the page must be opened on the GitHub Pages address, which the app does.
+
+**Tests.** `server/license-worker/test/test.mjs` has a software passkey (WebCrypto) that goes through add, a new device, remove, a bad
+signature, no Touch ID, the wrong site, a copied passkey and reused or expired tickets.
