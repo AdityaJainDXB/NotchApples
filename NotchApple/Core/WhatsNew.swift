@@ -20,6 +20,10 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.2.23", date: "6 November 2026", headline: "A nicer code screen and emails", items: [
+            "New: the code screen is redesigned: six cells split 3 + 3 that glow blue where you type, in the email setup window, Settings and on Windows.",
+            "New: the emails we send (your verification code and the \"your key is locked to your email\" confirmation) now look like Notch Apple: a dark card with the code in six cells, instead of plain text.",
+        ]),
         ReleaseNote(version: "2.2.22", date: "6 November 2026", headline: "Gemini model list and a new default model", items: [
             "Fix: on Windows the model list in AI chat showed squashed, unreadable rows, so it was easy to pick the wrong model. It is readable again, and (like the Mac) it only lists Gemini chat models, never image, voice or embedding ones. If one of those was picked earlier, Gemini Do It and chat now use the default instead of failing",
             "New default: everyone who hasn't chosen a Gemini model now gets Gemini 3.5 Flash-Lite (Mac and Windows). A model you picked yourself stays"

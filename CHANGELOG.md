@@ -4,6 +4,11 @@ Every Notch Apple release, newest first. The latest few are also on the [README]
 
 > **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is in the repository's history.
 
+### Mac 2.2.23 · Windows 2.2.23 BETA · 6 November 2026 · ✨ A nicer code screen and emails
+
+- New: the code screen is redesigned: six cells split 3 + 3 that glow blue where you type, in the email setup window, Settings and on Windows.
+- New: the emails we send (your verification code and the "your key is locked to your email" confirmation) now look like Notch Apple: a dark card with the code in six cells, instead of plain text.
+
 ### Mac 2.2.22 · Windows 2.2.22 BETA · 6 November 2026 · 🔧 Gemini model list and a new default model
 
 - Fix: on Windows the model list in AI chat showed squashed, unreadable rows, so it was easy to pick the wrong model. It is readable again, and (like the Mac) it only lists Gemini chat models, never image, voice or embedding ones. If one of those was picked earlier, Gemini Do It and chat now use the default instead of failing

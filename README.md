@@ -150,6 +150,11 @@ More screenshots of the capture overlay, the AI answer, the settings and the Win
 
 ## What's new
 
+### Mac 2.2.23 · Windows 2.2.23 BETA · 6 November 2026 · ✨ A nicer code screen and emails
+
+- New: the code screen is redesigned: six cells split 3 + 3 that glow blue where you type, in the email setup window, Settings and on Windows.
+- New: the emails we send (your verification code and the "your key is locked to your email" confirmation) now look like Notch Apple: a dark card with the code in six cells, instead of plain text.
+
 ### Mac 2.2.22 · Windows 2.2.22 BETA · 6 November 2026 · 🔧 Gemini model list and a new default model
 
 - Fix: on Windows the model list in AI chat showed squashed, unreadable rows, so it was easy to pick the wrong model. It is readable again, and (like the Mac) it only lists Gemini chat models, never image, voice or embedding ones. If one of those was picked earlier, Gemini Do It and chat now use the default instead of failing
@@ -158,16 +163,6 @@ More screenshots of the capture overlay, the AI answer, the settings and the Win
 ### Mac 2.2.21 · Windows 2.2.21 BETA · 6 November 2026 · ✉️ A clearer email box
 
 - Fix: the email box no longer shows an example address (you@gmail.com) that people took for text they had to edit. It is empty, with a plain label "Your email address" above it, in the email setup window, Settings and on Windows.
-
-### Mac 2.2.20 · 6 November 2026 · ⌨️ Confirming a key opens its own window
-
-- Fix: when you paste a key in Settings → License (or in the notch) and it asks you to confirm your email, the email and code boxes now work. The confirmation opens in its own window that stays open while you check your email, instead of being squeezed into the Settings form where the boxes could not be typed in.
-- This is a required update.
-
-### Mac 2.2.19 · 6 November 2026 · ⌨️ The email box accepts typing
-
-- Fix: in Settings → License, the email box (and the code box) did not accept typing. The email setup window was grabbing the keyboard back every time the app was clicked, so typing in Settings went to the wrong window. It no longer does that, and the email and code boxes are now ready to type in straight away.
-- This is a required update.
 
 Every earlier release is in the [changelog](CHANGELOG.md).
 
