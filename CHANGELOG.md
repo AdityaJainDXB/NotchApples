@@ -4,6 +4,10 @@ Every Notch Apple release, newest first. The latest few are also on the [README]
 
 > **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is in the repository's history.
 
+### Mac 2.2.39 · 6 November 2026 · 🪟 Passkey and authenticator windows wrap their text
+
+- Fix: the passkey, authenticator and add-email windows cut their explanation off with "…"; they now show all of it.
+
 ### Mac 2.2.38 · Windows 2.2.38 BETA · 6 November 2026 · 🗝️ Passkeys: Touch ID to confirm a new device
 
 - New: passkeys. In Settings → License → Security (Mac) or Settings → Access (Windows) choose "Add a passkey". Your browser opens a small page on our website, you confirm with Touch ID (or Windows Hello, or your device PIN), and the key now has a passkey. It lives in your browser or password manager (iCloud Keychain, Google, 1Password), so it syncs between your devices and the app never holds it.

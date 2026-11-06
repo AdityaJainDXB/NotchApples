@@ -362,7 +362,7 @@ private struct SecurityWindowView: View {
             case .addPasskey, .removePasskey: passkeyFlow
             }
             if let finished { Label(finished, systemImage: "checkmark.circle.fill").foregroundStyle(.green) }
-            if let error { Text(error).foregroundStyle(errorColor).font(.callout) }
+            if let error { Text(error).foregroundStyle(errorColor).font(.callout).fixedSize(horizontal: false, vertical: true) }
         }
         .padding(24)
         .frame(width: 440)
@@ -390,11 +390,11 @@ private struct SecurityWindowView: View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Add your email").font(.title3.weight(.semibold))
             if !emailSent {
-                Text("We send a code to confirm it. After that the key works on a new device only with a code from this inbox.").font(.callout).foregroundStyle(.secondary)
+                Text("We send a code to confirm it. After that the key works on a new device only with a code from this inbox.").font(.callout).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
                 EmailField(text: $email, focus: $focused, onSubmit: sendEmail)
                 HStack { Button("Email me a code", action: sendEmail).disabled(busy || !validEmail(email)); Button("Cancel", action: onCancel) }
             } else {
-                Text("We sent a code to \(email) (valid 10 minutes, check spam too).").font(.callout).foregroundStyle(.secondary)
+                Text("We sent a code to \(email) (valid 10 minutes, check spam too).").font(.callout).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
                 CodeField(text: $code, focus: $focused, onSubmit: confirmEmail)
                 HStack { Button("Confirm", action: confirmEmail).disabled(busy || code.count != 6); Button("Back") { emailSent = false; code = ""; error = nil; focused = true } }
             }
@@ -408,7 +408,7 @@ private struct SecurityWindowView: View {
             Text("Set up an authenticator app").font(.title3.weight(.semibold))
             if loading { ProgressView("Getting your code…") }
             else if let setup {
-                Text("1. Open Google Authenticator, Microsoft Authenticator or another app, add an account and scan this").font(.callout)
+                Text("1. Open Google Authenticator, Microsoft Authenticator or another app, add an account and scan this").font(.callout).fixedSize(horizontal: false, vertical: true)
                 if let img = qrImage(setup.uri, size: 170) {
                     img.resizable().interpolation(.none).frame(width: 170, height: 170).padding(14).background(.white, in: RoundedRectangle(cornerRadius: 12)).frame(maxWidth: .infinity)
                 }
@@ -432,7 +432,7 @@ private struct SecurityWindowView: View {
             Text(mode == .addPasskey
                  ? "Your browser opens a page on our website. Confirm with Touch ID (or your device PIN) there, then come back. The passkey stays in your browser or password manager and syncs with your other devices."
                  : "Your browser opens a page on our website. Confirm with your passkey there, then come back. New devices will use the email code again.")
-                .font(.callout).foregroundStyle(.secondary)
+                .font(.callout).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
             if loading || (passkeyURL != nil && finished == nil && error == nil) { HStack(spacing: 8) { ProgressView().controlSize(.small); Text("Waiting for your browser…").font(.callout) } }
             HStack {
                 if let passkeyURL, finished == nil { Button("Open the page again") { NSWorkspace.shared.open(passkeyURL) } }
@@ -456,7 +456,7 @@ private struct SecurityWindowView: View {
     private var turnOff: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Turn off the authenticator app").font(.title3.weight(.semibold))
-            Text("Enter the 6-digit code your app shows now. A new device will then confirm with an email code again.").font(.callout).foregroundStyle(.secondary)
+            Text("Enter the 6-digit code your app shows now. A new device will then confirm with an email code again.").font(.callout).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
             CodeField(text: $code, focus: $focused, onSubmit: turnOffNow)
             HStack { Button("Turn off", role: .destructive, action: turnOffNow).disabled(busy || code.count != 6); Button("Cancel", action: onCancel) }
         }

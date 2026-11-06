@@ -20,6 +20,9 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.2.39", date: "6 November 2026", headline: "Passkey and authenticator windows wrap their text", items: [
+            "Fix: the passkey, authenticator and add-email windows cut their explanation off with \"…\"; they now show all of it.",
+        ]),
         ReleaseNote(version: "2.2.38", date: "6 November 2026", headline: "Passkeys: Touch ID to confirm a new device", items: [
             "New: passkeys. In Settings → License → Security (Mac) or Settings → Access (Windows) choose \"Add a passkey\". Your browser opens a small page on our website, you confirm with Touch ID (or Windows Hello, or your device PIN), and the key now has a passkey. It lives in your browser or password manager (iCloud Keychain, Google, 1Password), so it syncs between your devices and the app never holds it.",
             "A second Mac or PC then confirms itself with that passkey: paste the key, choose \"Use a passkey\", approve in the browser, and it carries on by itself. No email code is needed, and a key with a passkey and no email cannot be claimed by someone who only has the key. Email and the authenticator app still work, and you can remove the passkey any time.",

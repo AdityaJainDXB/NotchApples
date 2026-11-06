@@ -150,6 +150,10 @@ More screenshots of the capture overlay, the AI answer, the settings and the Win
 
 ## What's new
 
+### Mac 2.2.39 · 6 November 2026 · 🪟 Passkey and authenticator windows wrap their text
+
+- Fix: the passkey, authenticator and add-email windows cut their explanation off with "…"; they now show all of it.
+
 ### Mac 2.2.38 · Windows 2.2.38 BETA · 6 November 2026 · 🗝️ Passkeys: Touch ID to confirm a new device
 
 - New: passkeys. In Settings → License → Security (Mac) or Settings → Access (Windows) choose "Add a passkey". Your browser opens a small page on our website, you confirm with Touch ID (or Windows Hello, or your device PIN), and the key now has a passkey. It lives in your browser or password manager (iCloud Keychain, Google, 1Password), so it syncs between your devices and the app never holds it.
@@ -159,11 +163,6 @@ More screenshots of the capture overlay, the AI answer, the settings and the Win
 ### Mac 2.2.37 · 6 November 2026 · 🔐 Authenticator setup works
 
 - Fix: setting up the authenticator app (Settings → License → Security) did not work for anyone: the box for the 6-digit code was inside the Settings form, which did not take typing. Setting it up, turning it off and adding your email now each open their own window, with a bigger QR code, a setup key to type by hand, and the six-cell code box.
-
-### Mac 2.2.36 · Windows 2.2.36 BETA · 6 November 2026 · 🏎️ GT3-style steering wheel
-
-- New: GT3-style steering wheel for the road and GT cars in Racing (First-person view). It is drawn after real sim-racing and GT3 wheels: a flat-topped, flat-bottomed carbon wheel with big rubber grips either side and open spaces between the grip and the plate, two columns of coloured push buttons each side, four rotary dials with coloured rings, your team's colour disc in the middle, a stripe along the bottom, a strip of shift lights, the paddles behind and gloved hands on the grips.
-- It turns, centres, shakes over kerbs and lights the paddle you press, exactly like the F1 wheel (up to ±270° for GT3 cars). The F1 cars keep their F1 wheel from 2.2.35.
 
 ## Plugins
 
