@@ -1,6 +1,6 @@
 cask "notch-apple" do
-  version "2.2.29"
-  sha256 "a2f709f00a3258078cff20b42c57dcd682e9773f61a228f55703a1b943ffadc2"
+  version "2.2.31"
+  sha256 "a015da0124ec9cc0fdc7e6cc23df4feeca3a987c309d77fbf7d358381dc16177"
 
   url "https://github.com/AdityaJainDXB/NotchApples/releases/download/v#{version}/NotchApple-#{version}.dmg"
   name "Notch Apple"
