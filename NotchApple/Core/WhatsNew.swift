@@ -48,7 +48,7 @@ enum WhatsNew {
         ReleaseNote(version: "2.2.33", date: "6 November 2026", headline: "Night Shift: all five nights", items: [
             "New: Night Shift nights 3, 4 and 5. From night 3 the Conductor, a toy train, comes up the east side to the right door, and it only moves while you are not watching it (listen for its whistle). Each night the toys start busier, and night 5 has every toy awake. Survive all five for the whole week.",
             "Each night has its own short briefing, and the game-over tip now tells you how to stop the Conductor.",
-            "On the website: card prices in the UAE are now AED 4.40 for Pro, AED 11 for Ultimate and AED 6.60 to upgrade, and students in Dubai can ask for a free promo code by emailing notchapples.support@gmail.com.",
+            "On the website: card prices in the UAE are now AED 4.40 for Pro, AED 11 for Ultimate and AED 6.60 to upgrade, and students in Dubai can ask for a discount code by emailing notchapples.support@gmail.com.",
         ]),
         ReleaseNote(version: "2.2.32", date: "6 November 2026", headline: "Night Shift: night 2", items: [
             "New: Night Shift night 2. Survive night 1 and night 2 unlocks in the menu (the menu now has a button for each night, with a star on the ones you have survived). On night 2 the toys are livelier from midnight and Grin is awake from the start, so keep checking the Prize Corner.",
