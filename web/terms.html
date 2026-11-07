@@ -22,16 +22,37 @@
 <meta name="twitter:image" content="https://adityajaindxb.github.io/NotchApples/assets/og-hello.jpg">
 <link rel="icon" href="assets/icon-48.png" type="image/png" sizes="48x48">
 <link rel="apple-touch-icon" href="assets/icon-180.png">
-<link rel="preload" href="assets/fonts/archivo-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="assets/fonts/geist-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="assets/fonts/fonts.css">
-<link rel="stylesheet" href="assets/site.css">
+<style>
+:root{--bg:#09080d;--line:rgba(255,255,255,.08);--tx:#f3f1f8;--mut:#a7a2b5;--dim:#8b8698;--ac-ink:#cdbfff;--mono:"Geist Mono",ui-monospace,Menlo,monospace}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scrollbar-color:#2c2838 var(--bg)}
+body{background:var(--bg);color:var(--tx);font:17px/1.7 Geist,-apple-system,system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+::selection{background:rgba(155,123,255,.38);color:#fff}
+:focus-visible{outline:2px solid var(--ac-ink);outline-offset:3px;border-radius:6px}
+a{color:var(--tx);text-decoration:underline;text-decoration-color:rgba(205,191,255,.45);text-underline-offset:3px}
+a:hover{text-decoration-color:var(--ac-ink)}
+.notchnav{position:sticky;top:0;z-index:5;display:flex;justify-content:center}
+.nn{position:relative;display:flex;align-items:center;gap:6px;height:52px;padding:0 8px 0 16px;background:#050408;border-radius:0 0 22px 22px;box-shadow:0 10px 30px -10px rgba(0,0,0,.8)}
+.nn a{text-decoration:none}
+.logo{display:flex;align-items:center;gap:9px;font-weight:600;font-size:15px;padding-right:8px}.logo img{width:24px;height:24px;border-radius:6px}
+.nn .back{font-size:14px;color:var(--mut);padding:7px 12px;border-radius:99px;transition:color .2s,background-color .2s}.nn .back:hover{color:var(--tx);background:rgba(255,255,255,.07)}
+main{max-width:680px;margin:0 auto;padding:88px 24px 96px}
+h1{font-size:clamp(38px,5.4vw,56px);letter-spacing:-.04em;line-height:1.02;font-weight:600;margin-bottom:16px}
+main>p:first-of-type{color:var(--dim);font-size:15px;padding-bottom:28px;border-bottom:1px solid var(--line)}
+h2{font-size:25px;letter-spacing:-.02em;font-weight:600;margin:44px 0 10px}
+p,li{color:var(--mut);margin:10px 0;text-wrap:pretty}
+ul{padding-left:22px}li::marker{color:#5a5569}
+footer{border-top:1px solid var(--line);padding:30px 24px 44px;color:var(--dim);font-size:14px;text-align:center}
+@media(max-width:560px){body{font-size:16px}main{padding:64px 16px 72px}}
+</style>
 <link rel="stylesheet" href="assets/chat.css">
 <link rel="stylesheet" href="assets/feel.css">
 </head>
 <body>
-<a class="skip" href="#main">Skip to content</a>
-<nav class="notchnav sub" aria-label="Main"><div class="nn"><a class="logo" href="./"><img src="assets/icon-48.png" alt="" width="24" height="24"> Notch Apple</a><a class="back" href="pro.html">Pricing</a></div></nav>
-<main class="prose" id="main">
+<nav class="notchnav" aria-label="Main"><div class="nn"><a class="logo" href="./"><img src="assets/icon-48.png" alt="" width="24" height="24"> Notch Apple</a><a class="back" href="pro.html">Pricing</a></div></nav>
+<main>
 <h1>Terms and refunds</h1>
 <p>Last updated 4 October 2026 (lifetime updates and tips added). Plain English, because this is a small project run by four high school developers.</p>
 
@@ -73,7 +94,6 @@
 <p>Cookies and browser storage on this website: see the <a href="cookie-policy.html">cookie policy</a> (<a href="#" data-cookie-settings>cookie settings</a>).</p>
 <p>Email <a href="mailto:notchapples.support@gmail.com">notchapples.support@gmail.com</a> (purchases, refunds, lost keys), or open a <a href="https://github.com/AdityaJainDXB/NotchApples/issues">GitHub issue</a>.</p>
 </main>
-<footer class="sitefoot"><a href="./">Home</a> &nbsp;·&nbsp; <a href="cookie-policy.html">Cookie policy</a> &nbsp;·&nbsp; <a href="support.html">Help</a></footer>
 <script src="assets/consent.js" defer></script>
 <script src="assets/social.js" defer></script>
 <script src="assets/chat.js" defer></script>

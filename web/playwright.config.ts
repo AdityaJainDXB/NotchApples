@@ -21,6 +21,5 @@ export default defineConfig({
     { name: 'pixel', use: { ...devices['Pixel 7'] } },
     ...firefox,
   ],
-  // The stock `http.server` listens with a backlog of 5, so a page with several stylesheets loaded by two workers at once gets connections reset. A longer backlog makes the test server behave like a real host.
-  webServer: { command: `python3 -c "import http.server as h; h.ThreadingHTTPServer.request_queue_size=128; h.test(h.SimpleHTTPRequestHandler, h.ThreadingHTTPServer, port=8123)"`, url: 'http://localhost:8123', reuseExistingServer: true },
+  webServer: { command: 'python3 -m http.server 8123', url: 'http://localhost:8123', reuseExistingServer: true },
 });

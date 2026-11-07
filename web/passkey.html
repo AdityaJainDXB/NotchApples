@@ -7,15 +7,14 @@
 <title>Notch Apple passkey</title>
 <meta name="color-scheme" content="dark">
 <link rel="icon" href="assets/icon-48.png">
-<link rel="stylesheet" href="assets/fonts/fonts.css">
 <style>
-:root{--bg:#0b0812;--card:#13101d;--line:rgba(255,255,255,.1);--tx:#f2eff8;--mut:#a39fb4;--ac:#8b6bff;--ok:#4ade80;--bad:#ff7a8a}
-*{box-sizing:border-box}body{margin:0;min-height:100vh;display:grid;place-items:center;background:var(--bg);color:var(--tx);font:16px/1.5 Archivo,-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;padding:20px}
-.card{width:min(440px,100%);background:var(--card);border:1px solid var(--line);border-radius:10px;padding:36px 32px;text-align:center;box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.24)}
-.logo{width:52px;height:52px;border-radius:12px;margin:0 auto 18px;display:block}
-h1{font-size:30px;margin:0 0 8px;letter-spacing:-.03em;font-weight:780;font-stretch:118%;line-height:1.05}p{color:var(--mut);margin:0 0 20px;font-size:15px}
-button{font:inherit;font-weight:600;color:#fff;background:#6139e0;border:0;border-radius:10px;padding:15px 28px;cursor:pointer;min-width:220px;font-stretch:108%}
-button:hover{background:#6a43ea}button:disabled{opacity:.55;cursor:default}
+:root{--bg:#0a0912;--card:#14121c;--line:rgba(255,255,255,.1);--tx:#f2eff8;--mut:#a39fb4;--ac:#8b6bff;--ok:#4ade80;--bad:#ff7a8a}
+*{box-sizing:border-box}body{margin:0;min-height:100vh;display:grid;place-items:center;background:radial-gradient(900px 500px at 50% -10%,#2a1c5c,var(--bg));color:var(--tx);font:16px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;padding:20px}
+.card{width:min(440px,100%);background:var(--card);border:1px solid var(--line);border-radius:22px;padding:30px 28px;text-align:center;box-shadow:0 30px 80px -30px #000}
+.logo{width:52px;height:52px;border-radius:13px;margin:0 auto 14px;display:block}
+h1{font-size:22px;margin:0 0 6px;letter-spacing:-.01em}p{color:var(--mut);margin:0 0 20px;font-size:15px}
+button{font:inherit;font-weight:600;color:#0b0912;background:var(--ac);border:0;border-radius:99px;padding:13px 26px;cursor:pointer;min-width:220px}
+button:hover{filter:brightness(1.1)}button:disabled{opacity:.55;cursor:default}
 .msg{margin-top:18px;min-height:24px;font-size:14.5px}.msg.ok{color:var(--ok)}.msg.bad{color:var(--bad)}
 small{display:block;margin-top:20px;color:var(--mut);font-size:12.5px}
 </style>
