@@ -20,6 +20,9 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.2.45", date: "7 November 2026", headline: "Clear chat works with an unpinned notch", items: [
+            "Fix: with the notch not pinned, pressing Clear chat just closed the notch and deleted nothing, because the confirmation was a separate system window and the notch closes when it loses focus. The confirmation now appears inside the notch, so Clear chat works pinned or not.",
+        ]),
         ReleaseNote(version: "2.2.44", date: "7 November 2026", headline: "Clear chat now shows its confirmation", items: [
             "Fix: Clear chat did nothing on the Mac. Choosing Clear chat… in a friend chat or group menu now always shows the confirmation (it was competing with the Remove friend / Leave group confirmation), and clearing then works as described in 2.2.43.",
         ]),

@@ -150,6 +150,11 @@ More screenshots of the capture overlay, the AI answer, the settings and the Win
 
 ## What's new
 
+### Mac 2.2.45 · Windows 2.2.45 BETA · 7 November 2026 · 🧹 Clear chat works with an unpinned notch
+
+- Fix: with the notch not pinned, pressing Clear chat just closed the notch and deleted nothing, because the confirmation was a separate system window and the notch closes when it loses focus. The confirmation now appears inside the notch, so Clear chat works pinned or not.
+- Windows: no change in this version (its confirmation already appears inside the app). The Windows app has not been tested on real Windows hardware.
+
 ### Mac 2.2.44 · Windows 2.2.44 BETA · 7 November 2026 · 🧹 Clear chat now shows its confirmation
 
 - Fix: Clear chat did nothing on the Mac. Choosing Clear chat… in a friend chat or group menu now always shows the confirmation (it was competing with the Remove friend / Leave group confirmation), and clearing then works as described in 2.2.43.
@@ -161,12 +166,6 @@ More screenshots of the capture overlay, the AI answer, the settings and the Win
 - Messages sent before the clear are gone and messages sent after it are kept, even when one crosses the clear on its way, so an old message can never come back. Anything still waiting for them on Notch Apple's server for that chat is removed as well.
 - The honest limits: Notch Apple removes its own copies. It cannot erase screenshots, anything the other person copied or saved outside the app, or a modified app that ignores the request. An older Notch Apple (before 2.2.43) ignores the clear and keeps its history, so both of you need this version. Windows cannot take back a notification it has already shown.
 - Needs the relay update to remove messages still queued on the server; without it the clear still works, applied when the other app next connects. Games in progress are not part of the history and are left alone. The Windows app has not been tested on real Windows hardware.
-
-### Mac 2.2.42 · Windows 2.2.42 BETA · 7 November 2026 · ⛰️ Every Racing track has real elevation
-
-- New: every track in Racing now has its own elevation, from real data where there is some. Baku climbs about 34 m through the old town to the castle section (turn 13) and runs back down to the sea front; Spa is 104 m from La Source to the Raidillon crest; the Red Bull Ring, Suzuka, Monaco, Interlagos, COTA, Hungaroring and Barcelona match their published figures. Shanghai, Bahrain, Zandvoort, Monza, Silverstone, Singapore, Montreal and Abu Dhabi were too flat and now follow theirs.
-- New: the made-up tracks have hills that suit them: a mountain pass over a col, six hairpins up a hillside, a cliff-top coast road, desert dunes, a hilly city, a small kart hill. The Spa, Zandvoort and Monza style tracks follow the real circuits, and Zandvoort's Tarzan and last corner are banked. The speedway oval and the frozen lake stay level.
-- The roads stay drivable: no slope is steeper than 17%, and the cockpit and chase cameras and the car's grip react to the hills as before.
 
 ## Plugins
 

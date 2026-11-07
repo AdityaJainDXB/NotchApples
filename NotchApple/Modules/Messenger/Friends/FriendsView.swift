@@ -38,10 +38,9 @@ struct FriendsView: View {
             else if let box = selected, let friend = client.book.record(box), friend.status == .active { chat(friend) } else { placeholder }
         }
         .sheet(isPresented: $showNewGroup) { newGroupSheet }
-        // One dialog for both kinds of chat, on the outer view: two confirmation dialogs stacked on one header (Clear + Remove/Leave) made SwiftUI show neither.
-        .confirmationDialog(clearTitle, isPresented: $confirmClear, titleVisibility: .visible) {
-            Button(clearButton, role: .destructive) { if let key = selected { client.clearChat(key); draft = "" } }
-        } message: { Text(Self.clearWarning(who: clearWho)) }
+        // Shown inside the notch, not as a system dialog: a dialog is another window, and an unpinned notch closes the moment it loses focus,
+        // which hid the confirmation and made Clear chat look like it did nothing.
+        .overlay { if confirmClear { clearCard } }
         .overlay(alignment: .bottomTrailing) { myCodePill }
         .onAppear { client.activate(); if selected == nil { selected = client.friends.first?.box } }
         .onDisappear { client.viewing = nil; NotchPrefs.chatGame("friend", false) }
@@ -353,6 +352,25 @@ struct FriendsView: View {
             messageList(friend.box, empty: "Say hi. Messages are encrypted on this Mac; the server only holds them until \(friend.displayName) is online.", group: false)
             if let problem = client.lastProblem { Text(problem).font(.system(size: 10)).foregroundStyle(.orange) }
             composer(key: friend.box, typing: true) { send(friend) }
+        }
+    }
+
+    private var clearCard: some View {
+        ZStack {
+            Color.black.opacity(0.55).onTapGesture { confirmClear = false }
+            VStack(alignment: .leading, spacing: 10) {
+                Text(clearTitle).font(.system(size: 14, weight: .semibold)).foregroundStyle(.white)
+                Text(Self.clearWarning(who: clearWho)).font(.system(size: 11)).foregroundStyle(Theme.textSecondary).fixedSize(horizontal: false, vertical: true)
+                HStack {
+                    Spacer()
+                    Button("Cancel") { confirmClear = false }.buttonStyle(PurpleButtonStyle(prominent: false))
+                    Button(clearButton) { if let key = selected { client.clearChat(key); draft = "" }; confirmClear = false }
+                        .buttonStyle(PurpleButtonStyle())
+                }
+            }
+            .padding(14).frame(maxWidth: 380)
+            .background(Theme.surface, in: RoundedRectangle(cornerRadius: 14))
+            .overlay(RoundedRectangle(cornerRadius: 14).stroke(Color.white.opacity(0.15)))
         }
     }
 

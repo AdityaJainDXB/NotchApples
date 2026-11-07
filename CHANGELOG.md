@@ -4,6 +4,11 @@ Every Notch Apple release, newest first. The latest few are also on the [README]
 
 > **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is in the repository's history.
 
+### Mac 2.2.45 · Windows 2.2.45 BETA · 7 November 2026 · 🧹 Clear chat works with an unpinned notch
+
+- Fix: with the notch not pinned, pressing Clear chat just closed the notch and deleted nothing, because the confirmation was a separate system window and the notch closes when it loses focus. The confirmation now appears inside the notch, so Clear chat works pinned or not.
+- Windows: no change in this version (its confirmation already appears inside the app). The Windows app has not been tested on real Windows hardware.
+
 ### Mac 2.2.44 · Windows 2.2.44 BETA · 7 November 2026 · 🧹 Clear chat now shows its confirmation
 
 - Fix: Clear chat did nothing on the Mac. Choosing Clear chat… in a friend chat or group menu now always shows the confirmation (it was competing with the Remove friend / Leave group confirmation), and clearing then works as described in 2.2.43.
