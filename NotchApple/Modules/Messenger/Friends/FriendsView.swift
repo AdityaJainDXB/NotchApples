@@ -28,6 +28,7 @@ struct FriendsView: View {
     @State private var groupPick = Set<String>()
     @State private var groupNote: String?
     @State private var confirmLeave = false
+    @State private var confirmClear = false
 
     var body: some View {
         HStack(alignment: .top, spacing: 10) {
@@ -131,6 +132,7 @@ struct FriendsView: View {
         .buttonStyle(.plain)
         .contextMenu {
             Button("Nickname…") { selected = r.box; aliasDraft = r.alias ?? ""; renaming = true }
+            Button("Clear chat…", role: .destructive) { selected = r.box; confirmClear = true }
             Button("Remove friend", role: .destructive) { client.remove(r.box); if selected == r.box { selected = nil } }
             Button("Block", role: .destructive) { client.block(r.box); if selected == r.box { selected = nil } }
         }
@@ -151,7 +153,10 @@ struct FriendsView: View {
             .background(selected == g.key ? AnyShapeStyle(Theme.surfaceHover) : AnyShapeStyle(Color.clear), in: RoundedRectangle(cornerRadius: 9))
         }
         .buttonStyle(.plain)
-        .contextMenu { Button("Leave group", role: .destructive) { client.leaveGroup(g.key); if selected == g.key { selected = nil } } }
+        .contextMenu {
+            Button("Clear chat…", role: .destructive) { selected = g.key; confirmClear = true }
+            Button("Leave group", role: .destructive) { client.leaveGroup(g.key); if selected == g.key { selected = nil } }
+        }
     }
 
     private var newGroupSheet: some View {
@@ -193,9 +198,15 @@ struct FriendsView: View {
                         .font(.system(size: 10)).foregroundStyle(Theme.textSecondary).lineLimit(1)
                 }
                 Spacer()
-                Menu { Button("Leave group", role: .destructive) { confirmLeave = true } } label: { Image(systemName: "ellipsis.circle") }
+                Menu {
+                    Button("Clear chat…", role: .destructive) { confirmClear = true }
+                    Button("Leave group", role: .destructive) { confirmLeave = true }
+                } label: { Image(systemName: "ellipsis.circle") }
                     .menuStyle(.borderlessButton).frame(width: 28)
             }
+            .confirmationDialog("Clear this group chat for everyone?", isPresented: $confirmClear, titleVisibility: .visible) {
+                Button("Clear chat for everyone", role: .destructive) { client.clearChat(g.key); draft = "" }
+            } message: { Text(Self.clearWarning(who: "everyone in \(g.name)")) }
             .confirmationDialog("Leave \(g.name)? Its messages are deleted from this Mac, and the others are told you left.", isPresented: $confirmLeave) {
                 Button("Leave", role: .destructive) { client.leaveGroup(g.key); selected = nil }
             }
@@ -245,7 +256,7 @@ struct FriendsView: View {
                     }
                     ForEach(client.messages(key)) { m in
                         FriendBubble(message: m, senderName: group && !m.mine ? client.name(ofBox: m.by) : nil,
-                                     open: { file in client.reveal(fileID: m.id, name: file.name) }) { client.retry(m.id, in: key) }.id(m.id)
+                                     open: { file in client.reveal(fileID: m.id, name: file.name, chat: key) }) { client.retry(m.id, in: key) }.id(m.id)
                     }
                 }
             }
@@ -327,11 +338,15 @@ struct FriendsView: View {
                     .popover(isPresented: $showSafety) { safety(friend) }
                 Menu {
                     Button("Nickname…") { aliasDraft = friend.alias ?? ""; renaming = true }
+                    Button("Clear chat…", role: .destructive) { confirmClear = true }
                     Button("Remove friend", role: .destructive) { confirmRemove = true }
                     Button("Block", role: .destructive) { client.block(friend.box); selected = nil }
                 } label: { Image(systemName: "ellipsis.circle") }.menuStyle(.borderlessButton).frame(width: 28)
             }
             .popover(isPresented: $renaming) { nicknameEditor(friend) }
+            .confirmationDialog("Clear this chat?", isPresented: $confirmClear, titleVisibility: .visible) {
+                Button("Clear chat for both of us", role: .destructive) { client.clearChat(friend.box); draft = "" }
+            } message: { Text(Self.clearWarning(who: friend.displayName)) }
             .confirmationDialog("Remove \(friend.displayName)? They won't be told why, and you can add them again later.", isPresented: $confirmRemove) {
                 Button("Remove", role: .destructive) { client.remove(friend.box); selected = nil }
             }
@@ -341,6 +356,13 @@ struct FriendsView: View {
             if let problem = client.lastProblem { Text(problem).font(.system(size: 10)).foregroundStyle(.orange) }
             composer(key: friend.box, typing: true) { send(friend) }
         }
+    }
+
+    /// What "Clear chat" does and does not do, in plain words (the same limits are in docs/GUIDES.md).
+    static func clearWarning(who: String) -> String {
+        "This deletes the whole chat for you and for \(who), including files saved from it, and cannot be undone. You both stay friends. "
+        + "Notch Apple removes its own copies on both sides. It can't erase screenshots, anything copied or saved outside the app, or a modified app that ignores the request. "
+        + "If \(who) is offline it is applied when they come online, and only an up-to-date Notch Apple honours it."
     }
 
     private func gameIO(_ box: String) -> TTTIO {
@@ -395,6 +417,13 @@ private struct FriendBubble: View {
     var retry: () -> Void
 
     var body: some View {
+        if message.isNotice {
+            Text(message.text).font(.system(size: 11)).italic().foregroundStyle(Theme.textSecondary)
+                .frame(maxWidth: .infinity).padding(.vertical, 6).accessibilityLabel(message.text)
+        } else { bubble }
+    }
+
+    private var bubble: some View {
         HStack(alignment: .bottom) {
             if message.mine { Spacer(minLength: 60) }
             VStack(alignment: message.mine ? .trailing : .leading, spacing: 2) {

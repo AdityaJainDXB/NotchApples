@@ -254,6 +254,205 @@ final class FriendsTests: XCTestCase {
         XCTAssertEqual(FriendBody.decode(opened.text), body)
     }
 
+    // MARK: Clear chat
+
+    private func clr(_ epoch: Int, g: String? = nil, ts: Int64? = nil) -> FriendBody {
+        var b = FriendBody(t: "clr", from: "x", ts: ts ?? Int64(Date().timeIntervalSince1970 * 1000)); b.ce = epoch; b.g = g; return b
+    }
+
+    func testClearingLocallyWipesEverythingButKeepsTheFriend() throws {
+        var (book, a, _) = twoFriends()
+        _ = book.receiveMessage(from: a.box, id: "m1", text: "secret", ts: nil)
+        book.addMine(to: a.box, id: "m2", text: "my private words")
+        _ = book.receiveFile(from: a.box, group: nil, id: "f1", name: "x.png", size: 10)
+        book.addMineFile(to: a.box, id: "f2", file: FriendFile(name: "y.png", size: 5))
+        XCTAssertEqual(book.record(a.box)?.unread, 2)
+        let out = try XCTUnwrap(book.clearChat(a.box))
+        XCTAssertEqual(Set(out.files), ["f1", "f2"], "the caller must delete these saved files")
+        XCTAssertEqual(out.epoch, 1)
+        let left = book.vault.messages[a.box] ?? []
+        XCTAssertEqual(left.count, 1, "only the line that says it was cleared is left")
+        XCTAssertEqual(left.first?.text, "You cleared this chat")
+        XCTAssertEqual(book.record(a.box)?.unread, 0)
+        XCTAssertEqual(book.record(a.box)?.status, .active, "clearing never unfriends")
+        XCTAssertNil(book.clearChat("g:nothing"), "an unknown chat can't be cleared")
+        let json = String(decoding: try JSONEncoder().encode(book.vault), as: UTF8.self)
+        XCTAssertFalse(json.contains("secret") || json.contains("private words") || json.contains("x.png") || json.contains("y.png"), "no text of the old chat is left anywhere in the vault")
+    }
+
+    func testAClearArrivingOnlineWipesTheOldChatAndLeavesOneLine() throws {
+        var (book, a, _) = twoFriends()
+        _ = book.receiveMessage(from: a.box, id: "m1", text: "old", ts: nil)
+        book.addMine(to: a.box, id: "m2", text: "old mine")
+        _ = book.receiveFile(from: a.box, group: nil, id: "f1", name: "x.png", size: 10)
+        let out = try XCTUnwrap(book.receiveClear(from: a.box, clr(1)))
+        XCTAssertEqual(out.files, ["f1"])
+        let left = book.vault.messages[a.box] ?? []
+        XCTAssertEqual(left.map(\.text), ["\(book.record(a.box)!.displayName) cleared this chat"])
+        XCTAssertEqual(book.record(a.box)?.unread, 0)
+        XCTAssertNil(book.receiveClear(from: a.box, clr(1)), "the same clear twice does nothing more")
+        XCTAssertEqual(book.vault.messages[a.box]?.count, 1)
+    }
+
+    func testAClearThatWaitedOfflineStillKeepsWhatCameAfterIt() throws {
+        // I was offline. The friend sent two messages, cleared, then sent one more (epoch 1). The relay hands them over in order.
+        var (book, a, _) = twoFriends()
+        _ = book.receiveMessage(from: a.box, id: "m1", text: "before 1", ts: nil, ce: 0)
+        _ = book.receiveMessage(from: a.box, id: "m2", text: "before 2", ts: nil, ce: 0)
+        XCTAssertNotNil(book.receiveClear(from: a.box, clr(1)))
+        XCTAssertNotNil(book.receiveMessage(from: a.box, id: "m3", text: "after", ts: nil, ce: 1))
+        XCTAssertEqual((book.vault.messages[a.box] ?? []).filter { !$0.isNotice }.map(\.text), ["after"])
+        XCTAssertEqual(book.record(a.box)?.unread, 1)
+    }
+
+    func testAMessageThatOvertakesTheClearSurvivesIt() throws {
+        // The message sent after the clear (epoch 1) reaches me before the clear does. Old messages still go when the clear arrives.
+        var (book, a, _) = twoFriends()
+        _ = book.receiveMessage(from: a.box, id: "old", text: "old", ts: nil, ce: 0)
+        XCTAssertNotNil(book.receiveMessage(from: a.box, id: "new", text: "new", ts: nil, ce: 1))
+        XCTAssertNotNil(book.receiveClear(from: a.box, clr(1)))
+        XCTAssertEqual((book.vault.messages[a.box] ?? []).filter { !$0.isNotice }.map(\.text), ["new"])
+    }
+
+    func testAMessageFromBeforeTheClearCannotComeBack() throws {
+        var (book, a, _) = twoFriends()
+        _ = book.receiveMessage(from: a.box, id: "m1", text: "old", ts: nil, ce: 0)
+        _ = try XCTUnwrap(book.clearChat(a.box))                     // I clear: epoch 1
+        // A late copy of the old message (a relay retry, the friend's retry button) and a pre-clear message of theirs arrive.
+        XCTAssertNil(book.receiveMessage(from: a.box, id: "m1", text: "old", ts: nil, ce: 0))
+        XCTAssertNil(book.receiveMessage(from: a.box, id: "m9", text: "sent before they heard", ts: nil, ce: 0))
+        XCTAssertNil(book.receiveFile(from: a.box, group: nil, id: "f9", name: "x.png", size: 4, ce: 0))
+        XCTAssertNotNil(book.receiveMessage(from: a.box, id: "m10", text: "after", ts: nil, ce: 1), "a message from after the clear is kept")
+        // And what I send now carries the new epoch, so they keep it.
+        book.addMine(to: a.box, id: "mine2", text: "new")
+        XCTAssertEqual(book.vault.messages[a.box]?.last?.ce, 1)
+        // An older clear arriving late does nothing.
+        XCTAssertNil(book.receiveClear(from: a.box, clr(1)))
+    }
+
+    func testTwoPeopleClearingAtTheSameTimeEndUpClean() throws {
+        var (book, a, _) = twoFriends()
+        book.addMine(to: a.box, id: "m1", text: "x")
+        let mine = try XCTUnwrap(book.clearChat(a.box))
+        XCTAssertNil(book.receiveClear(from: a.box, clr(mine.epoch)), "their clear has the same epoch: already applied")
+        XCTAssertEqual(book.vault.messages[a.box]?.count, 1)
+        // Their later clear (epoch 2) still works.
+        XCTAssertNotNil(book.receiveClear(from: a.box, clr(2)))
+        XCTAssertEqual(book.epoch(a.box), 2)
+    }
+
+    func testClearsAreCheckedLikeEverythingElse() throws {
+        var (book, a, b) = twoFriends()
+        _ = book.receiveMessage(from: a.box, id: "m1", text: "keep me", ts: nil)
+        XCTAssertNil(book.receiveClear(from: "stranger", clr(1)), "only a friend can clear")
+        XCTAssertNil(book.receiveClear(from: a.box, clr(0)))
+        XCTAssertNil(book.receiveClear(from: a.box, clr(-4)))
+        XCTAssertNil(book.receiveClear(from: a.box, clr(FriendsBook.maxEpoch + 1)))
+        var wrongType = clr(1); wrongType.t = "msg"
+        XCTAssertNil(book.receiveClear(from: a.box, wrongType))
+        var noEpoch = clr(1); noEpoch.ce = nil
+        XCTAssertNil(book.receiveClear(from: a.box, noEpoch))
+        XCTAssertNil(book.receiveClear(from: a.box, clr(1, g: "nope")), "a group that doesn't exist")
+        XCTAssertEqual(book.vault.messages[a.box]?.count, 1, "nothing was wiped by any of those")
+        // A friend can only clear their own chat with me, never someone else's.
+        _ = book.receiveMessage(from: b.box, id: "b1", text: "b", ts: nil)
+        XCTAssertNotNil(book.receiveClear(from: a.box, clr(1)))
+        XCTAssertEqual(book.vault.messages[b.box]?.count, 1)
+    }
+
+    func testClearingAGroupWipesItForEveryoneAndKeepsTheGroup() throws {
+        var (book, a, b) = twoFriends()
+        let g = try XCTUnwrap(book.createGroup(name: "G", members: [a.box, b.box]))
+        _ = book.receiveGroupMessage(from: a.box, group: g.id, id: "g1", text: "hello", ts: nil)
+        book.addMineToGroup(g.key, id: "g2", text: "mine")
+        _ = book.receiveFile(from: b.box, group: g.id, id: "gf", name: "x.png", size: 3)
+        // Any member can clear it; a friend who is not in the group cannot.
+        var c = FriendsBook()
+        let outsider = FriendIdentity.generate()
+        _ = book.receiveRequest(request(outsider)); _ = book.accept(box: outsider.box, myTokenHash: "h")
+        XCTAssertNil(book.receiveClear(from: outsider.box, clr(1, g: g.id)))
+        let out = try XCTUnwrap(book.receiveClear(from: b.box, clr(1, g: g.id)))
+        XCTAssertEqual(out.files, ["gf"])
+        XCTAssertNotNil(book.group(g.key), "the group stays")
+        XCTAssertEqual(book.group(g.key)?.unread, 0)
+        XCTAssertEqual(book.vault.messages[g.key]?.count, 1)
+        // Messages from the clearing round still drop out; a group message from after it is kept.
+        XCTAssertNil(book.receiveGroupMessage(from: a.box, group: g.id, id: "g3", text: "late old", ts: nil, ce: 0))
+        XCTAssertNotNil(book.receiveGroupMessage(from: a.box, group: g.id, id: "g4", text: "new", ts: nil, ce: 1))
+        // My own clear of a group.
+        let mine = try XCTUnwrap(book.clearChat(g.key))
+        XCTAssertEqual(mine.epoch, 2)
+        XCTAssertEqual(book.vault.messages[g.key]?.count, 1)
+        c.vault = book.vault
+    }
+
+    func testMessagesFromAnAppThatKnowsNothingAboutClearingAreJudgedByTime() throws {
+        var (book, a, _) = twoFriends()
+        let clearedAt = Date(timeIntervalSince1970: 1_800_000_000)
+        _ = try XCTUnwrap(book.clearChat(a.box, now: clearedAt))
+        let before = Int64(clearedAt.timeIntervalSince1970 * 1000) - 5_000, after = Int64(clearedAt.timeIntervalSince1970 * 1000) + 5_000
+        let later = clearedAt.addingTimeInterval(60)
+        XCTAssertNil(book.receiveMessage(from: a.box, id: "o1", text: "sent before", ts: before, now: later), "no epoch, older than the clear")
+        XCTAssertNotNil(book.receiveMessage(from: a.box, id: "o2", text: "sent after", ts: after, now: later))
+    }
+
+    func testAnAppThatDoesNotKnowTheClearTypeIgnoresItSafely() throws {
+        // The body of a clear is ordinary JSON with a `t` older apps have no case for, so their switch falls through to "ignore".
+        let wire = clr(3, g: "G1").encoded()
+        let known = ["req", "acc", "msg", "rcpt", "typing", "gone", "grp", "gmsg", "gleave", "chunk", "game", "play"]   // what 2.2.42 understands
+        let decoded = try XCTUnwrap(FriendBody.decode(wire))
+        XCTAssertFalse(known.contains(decoded.t))
+        // And an old app's own decoder (which has no `ce` field) still reads the body: unknown keys are skipped.
+        struct Old: Codable { var t: String; var from: String?; var ts: Int64?; var g: String? }
+        let old = try JSONDecoder().decode(Old.self, from: Data(wire.utf8))
+        XCTAssertEqual(old.t, "clr")
+        // New messages carry the epoch in a key old apps skip, and old apps' messages (no key) are still accepted by us.
+        var m = FriendBody(t: "msg", from: "x", id: "i", text: "hi", ts: 1); m.ce = 2
+        XCTAssertEqual(try JSONDecoder().decode(Old.self, from: Data(m.encoded().utf8)).t, "msg")
+        XCTAssertNil(FriendBody.decode(#"{"t":"msg","id":"i","text":"hi"}"#)?.ce)
+    }
+
+    func testAVaultSavedBeforeClearingStillLoadsAndAClearSurvivesRestart() throws {
+        var (book, a, _) = twoFriends()
+        _ = book.receiveMessage(from: a.box, id: "m1", text: "x", ts: nil)
+        var json = try XCTUnwrap(JSONSerialization.jsonObject(with: JSONEncoder().encode(book.vault)) as? [String: Any])
+        json["clears"] = nil; json["pendingClears"] = nil
+        let loaded = try JSONDecoder().decode(FriendsVault.self, from: JSONSerialization.data(withJSONObject: json))
+        XCTAssertEqual(loaded.friends.count, 2); XCTAssertTrue(loaded.clears.isEmpty)
+        // Clear, "quit the app", reopen: the epoch and the clear still waiting to be delivered are both remembered.
+        let out = try XCTUnwrap(book.clearChat(a.box))
+        book.queueClear(a.box, epoch: out.epoch, at: out.at, to: [a.box])
+        let reopened = try JSONDecoder().decode(FriendsVault.self, from: JSONEncoder().encode(book.vault))
+        var again = FriendsBook(); again.vault = reopened
+        XCTAssertEqual(again.epoch(a.box), 1)
+        XCTAssertEqual(again.vault.pendingClears[a.box]?.to, [a.box])
+        XCTAssertNil(again.receiveMessage(from: a.box, id: "late", text: "old", ts: nil, ce: 0))
+        again.clearDelivered(a.box, epoch: out.epoch, to: a.box)
+        XCTAssertNil(again.vault.pendingClears[a.box], "once everyone has it nothing is left to send")
+    }
+
+    func testPendingClearsMergeAndNewerWins() {
+        var book = FriendsBook()
+        book.queueClear("k", epoch: 1, at: 10, to: ["a", "b"])
+        book.queueClear("k", epoch: 1, at: 10, to: ["b", "c"])
+        XCTAssertEqual(book.vault.pendingClears["k"]?.to, ["a", "b", "c"])
+        book.queueClear("k", epoch: 2, at: 20, to: ["a"])
+        XCTAssertEqual(book.vault.pendingClears["k"], PendingClear(epoch: 2, at: 20, to: ["a"]), "a newer clear replaces the older one")
+        book.queueClear("k", epoch: 1, at: 10, to: ["z"])
+        XCTAssertEqual(book.vault.pendingClears["k"]?.epoch, 2, "an older one never overrides")
+        book.clearDelivered("k", epoch: 1, to: "a")
+        XCTAssertEqual(book.vault.pendingClears["k"]?.to, ["a"], "delivering the older epoch changes nothing")
+    }
+
+    func testRelayTagsAreOpaqueAndDifferPerLinkAndPerChat() {
+        let t1 = FriendsBook.chatTag(token: "tokenA", key: "chat1")
+        XCTAssertEqual(t1.count, 32)
+        XCTAssertEqual(t1, FriendsBook.chatTag(token: "tokenA", key: "chat1"))
+        XCTAssertNotEqual(t1, FriendsBook.chatTag(token: "tokenB", key: "chat1"), "two mailboxes can't tell a group's messages belong together")
+        XCTAssertNotEqual(t1, FriendsBook.chatTag(token: "tokenA", key: "chat2"))
+        XCTAssertFalse(t1.contains("chat1"))
+    }
+
     func testTicTacToeMovesRideInsideAFriendBody() throws {
         var body = FriendBody(t: "game", from: "a", ts: 1)
         body.ttt = TicTacToe.invite(gid: "abc", mark: .x)

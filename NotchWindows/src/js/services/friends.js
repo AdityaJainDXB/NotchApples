@@ -239,6 +239,7 @@ async function handle(text) {
       attempt = 0; st.link = 'online'; st.problem = '';
       for (const it of obj.requests || []) if (Number.isInteger(it.id) && typeof it.blob === 'string') { await processRequest(it.blob); acks.push(it.id); }
       for (const it of obj.queue || []) if (Number.isInteger(it.id) && typeof it.blob === 'string') { await processMessage(it.blob); acks.push(it.id); }
+      flushClears().catch(() => {});   // a clear that could not be sent earlier (offline, or the app was closed)
       break;
     case 'req': if (Number.isInteger(obj.id) && typeof obj.blob === 'string') { await processRequest(obj.blob); acks.push(obj.id); } break;
     case 'msg': if (Number.isInteger(obj.id) && typeof obj.blob === 'string') { await processMessage(obj.blob); acks.push(obj.id); } break;
@@ -287,7 +288,7 @@ async function processMessage(blob) {
       break;
     }
     case 'msg': {
-      const m = L.receiveMessage(vault, friend.box, body.id, body.text, body.ts);
+      const m = L.receiveMessage(vault, friend.box, body.id, body.text, body.ts, Date.now(), body.ce);
       if (!m) return;
       const here = st.viewing === friend.box && (await watching());
       if (here) L.markRead(vault, friend.box);
@@ -303,7 +304,7 @@ async function processMessage(blob) {
       break;
     }
     case 'gmsg': {
-      const m = L.receiveGroupMessage(vault, friend.box, body.g, body.id, body.text, body.ts);
+      const m = L.receiveGroupMessage(vault, friend.box, body.g, body.id, body.text, body.ts, Date.now(), body.ce);
       const g = m && L.group(vault, L.groupKey(body.g));
       if (!m || !g) return;
       if (st.viewing === L.groupKey(g.id) && (await watching())) L.markGroupRead(vault, L.groupKey(g.id));
@@ -312,6 +313,8 @@ async function processMessage(blob) {
     }
     case 'gleave': if (typeof body.g === 'string') L.receiveLeave(vault, friend.box, body.g); break;
     case 'chunk': await receiveChunk(body, friend); break;
+    // "Clear chat" from the other side (or a group member). Apps from before it was added never reach this: they ignore the unknown type.
+    case 'clr': { const out = L.receiveClear(vault, friend.box, body); if (out) await forget(out); break; }
     case 'game': if (friend.status === 'active' && body.ttt && typeof body.ttt === 'object') applyTtt(body.ttt, friend.box, friend.box); break;
     case 'play': if (friend.status === 'active' && body.play && typeof body.play === 'object') play(friend.box)?.receive(body.play, friend.box); break;
     case 'rcpt':
@@ -330,7 +333,7 @@ const partials = new Map();
 async function receiveChunk(body, friend) {
   const done = L.receiveChunk(vault, partials, friend.box, body);
   if (!done) return;
-  const m = L.receiveFile(vault, friend.box, done.group, done.id, done.name, done.bytes.length);
+  const m = L.receiveFile(vault, friend.box, done.group, done.id, done.name, done.bytes.length, Date.now(), done.ce, done.ts);
   if (!m) return;
   await saveFileBytes(done.id, done.bytes);
   const g = done.group ? L.group(vault, L.groupKey(done.group)) : null;
@@ -376,12 +379,16 @@ const tooBig = (n) => (typeof n === 'number'
   : `That file is too big. Files up to ${L.MAX_FILE_TEXT} can be sent in a chat (photos, documents and short clips are fine; long videos are too big).`);
 
 async function deliverFile(id, name, bytes, gid, historyKey, to) {
-  const bodies = L.chunkBodies(me.box, id, name, bytes, gid, Date.now(), C.b64u);
+  const mine = messages(historyKey).find((m) => m.id === id);
+  if (!mine) return;                                                    // cleared before it started
+  const bodies = L.chunkBodies(me.box, id, name, bytes, gid, Date.now(), C.b64u, mine.ce ?? L.epochOf(vault, historyKey));
+  const gone = () => !messages(historyKey).some((m) => m.id === id);   // cleared while the pieces were going out: stop
   let reached = 0, lastStatus = 200;
   for (const friend of to) {
     if (!friend.sendToken) continue;
     // Paced and retried on 429 (L.sendPieces), so a big file is not lost halfway when the relay's per-minute limit is reached.
-    const r = await L.sendPieces(bodies, (b) => post(friend, b), (ms) => new Promise((res) => setTimeout(res, ms)));
+    const r = await L.sendPieces(bodies, (b) => (gone() ? Promise.resolve({ status: 0, json: {} }) : post(friend, b, false, historyKey)), (ms) => new Promise((res) => setTimeout(res, ms)));
+    if (gone()) return;
     if (r.ok) reached++; else lastStatus = r.status;
   }
   L.setState(vault, historyKey, id, reached > 0 ? 'sent' : 'failed');
@@ -390,11 +397,12 @@ async function deliverFile(id, name, bytes, gid, historyKey, to) {
 }
 
 /** Puts a received file in a fresh temp folder and shows it in Explorer. It is never opened for you. */
-export async function reveal(id, name) {
+export async function reveal(id, name, chat = null) {
   const bytes = await loadFileBytes(id), safe = L.cleanFileName(name);
   if (!bytes || !safe) { st.lastProblem = 'That file is no longer on this PC.'; emit(); return; }
   try {
     const path = await invoke('friends_stage_file', { name: safe, base64: stdB64(bytes) });
+    if (chat) (staged.get(chat) || staged.set(chat, []).get(chat)).push(path);   // remembered so "Clear chat" can delete this copy too
     await invoke('reveal_path', { path });
   } catch (e) { st.lastProblem = String(e); emit(); }
 }
@@ -425,7 +433,9 @@ export function sendToGroup(text, key) {
 async function deliverToGroup(id, text, g, to) {
   let reached = 0;
   for (const friend of to) {
-    const r = await post(friend, { t: 'gmsg', from: me.box, g: g.id, id, text, ts: Date.now() });
+    const mine = messages(L.groupKey(g.id)).find((m) => m.id === id);
+    if (!mine) return;                                                    // cleared while sending: do not send it
+    const r = await post(friend, { t: 'gmsg', from: me.box, g: g.id, id, text, ts: Date.now(), ce: mine.ce ?? L.epochOf(vault, L.groupKey(g.id)) }, false, L.groupKey(g.id));
     if (r.status === 200) reached++; else if (r.status !== 403) st.lastProblem = explain(r.status, r.json);
   }
   L.setState(vault, L.groupKey(g.id), id, reached > 0 ? 'sent' : 'failed');
@@ -511,7 +521,7 @@ export async function accept(box) {
 export function block(box) {
   const hash = L.record(vault, box)?.myTokenHash;
   dropGames(box);
-  deleteFileBytes(L.fileIds(vault, box));
+  deleteFileBytes(L.fileIds(vault, box)); unstage(box);
   L.block(vault, box); if (st.viewing === box) st.viewing = null;
   persist();
   if (hash) call('DELETE', `/f/allow/${hash}`, undefined, true);
@@ -523,7 +533,7 @@ export function remove(box) {
   const hash = r.myTokenHash;
   if (r.status === 'active') sendControl('gone', r);
   dropGames(box);
-  deleteFileBytes(L.fileIds(vault, box));
+  deleteFileBytes(L.fileIds(vault, box)); unstage(box);
   L.remove(vault, box); if (st.viewing === box) st.viewing = null;
   persist();
   if (hash) call('DELETE', `/f/allow/${hash}`, undefined, true);
@@ -543,6 +553,64 @@ export async function deleteEverything() {
   await clearFileBytes();
   emit();
   if (settings.active) connect();
+}
+
+// ---- Clear chat
+//
+// Wipes one chat (a friend's, or a group's) on this PC and on every other participant's. The friend stays. Messages sent before the
+// clear are gone, messages sent after it survive (clear epochs, L.clearChat). The other side gets a sealed, signed `clr` control
+// message over the friend link; if they are offline it waits on the relay like any message. What is still queued on the relay for
+// that chat is taken back first (/f/purge). Copies outside the app (screenshots, saved or copied files) are out of reach, and a toast
+// that Windows already showed cannot be taken back.
+
+const staged = new Map();   // chat key -> paths of copies put in the temp folder for Explorer
+function unstage(key) { const paths = staged.get(key); staged.delete(key); if (paths?.length) invoke('friends_unstage', { paths }).catch(() => {}); }
+let flushing = false;
+
+/** Clears a chat for everyone in it. `key` is a friend's mailbox or a group key. Returns true when there was such a chat. */
+export function clearChat(key) {
+  const out = L.clearChat(vault, key);
+  if (!out) return false;
+  forget(out);
+  const boxes = L.isGroupKey(key) ? (L.group(vault, key)?.members || []) : [key];
+  L.queueClear(vault, key, out.epoch, out.at, boxes.filter((b) => L.record(vault, b)?.status === 'active'));
+  persist();
+  flushClears().catch(() => {});
+  return true;
+}
+
+/** Everything on this PC that belonged to a cleared chat besides the messages themselves: saved files, half-received files, copies
+ *  put in the temp folder for Explorer, receipts bookkeeping and the typing/problem lines. */
+async function forget(out) {
+  const gid = L.isGroupKey(out.key) ? out.key.slice(2) : null;
+  for (const [k, p] of [...partials]) if (gid ? p.group === gid : (!p.group && k.startsWith(`${out.key}|`))) partials.delete(k);
+  const gone = new Set(out.files);
+  for (const k of [...receiptsSent]) if (gone.has(k.split('|')[0])) receiptsSent.delete(k);
+  unstage(out.key);
+  st.typing.delete(out.key); st.lastProblem = null;
+  await deleteFileBytes(out.files);
+  emit();
+}
+
+/** Tells everyone who still has to be told about a clear. Safe to call again and again; runs when a clear is made and whenever the link comes up. */
+export async function flushClears() {
+  if (flushing || !me) return;
+  flushing = true;
+  try {
+    for (const [key, pending] of Object.entries(vault.pendingClears)) {
+      for (const box of [...pending.to]) {
+        const friend = L.record(vault, box);
+        if (!friend || friend.status !== 'active' || !friend.sendToken) { L.clearDelivered(vault, key, pending.epoch, box); continue; }
+        // 1. take back what is still waiting for them from this chat (best effort: an older relay answers 404 and that is fine)
+        await call('POST', '/f/purge', { to: box, token: friend.sendToken, tag: await L.chatTag(C.sha256hex, friend.sendToken, key) });
+        // 2. then the clear itself, so it can never be purged by the step above
+        const r = await post(friend, L.clearBody(me.box, key, pending.epoch, pending.at));
+        // 403: they removed us, so there is no one to tell. Anything else that is not 200 is tried again later.
+        if (r.status === 200 || r.status === 403) L.clearDelivered(vault, key, pending.epoch, box);
+        else if (r.status !== 0) st.lastProblem = explain(r.status, r.json);
+      }
+    }
+  } finally { flushing = false; persist(); }
 }
 
 // ---- two-player games with a friend (kept in memory only: a game ends if either app quits) ----
@@ -603,10 +671,12 @@ function dropGames(box) { plays.get(box)?.reset(); plays.delete(box); tttGames.d
 
 // ---- sending
 
-async function post(friend, body, live = false) {
+/** `chat` (a friend's box or a group key) labels the message for the relay, so a later "Clear chat" can take back what is still queued. */
+async function post(friend, body, live = false, chat = null) {
   if (!friend.sendToken) return { status: 0, json: {} };
   const blob = await sealTo('msg', body, friend.box, friend.dh);
-  return call('POST', '/f/send', { to: friend.box, token: friend.sendToken, blob, ...(live ? { live: true } : {}) });
+  const tag = chat ? await L.chatTag(C.sha256hex, friend.sendToken, chat) : null;
+  return call('POST', '/f/send', { to: friend.box, token: friend.sendToken, blob, ...(tag ? { tag } : {}), ...(live ? { live: true } : {}) });
 }
 
 export function send(text, box) {
@@ -636,7 +706,10 @@ export function retry(id, box) {
   persist(); deliver(id, m.text, friend);
 }
 async function deliver(id, text, friend) {
-  const r = await post(friend, { t: 'msg', from: me.box, id, text, ts: Date.now() });
+  // If the chat was cleared while this waited, the message is gone and must not be sent (it would come back to life on their side).
+  const mine = messages(friend.box).find((m) => m.id === id);
+  if (!mine) return;
+  const r = await post(friend, { t: 'msg', from: me.box, id, text, ts: Date.now(), ce: mine.ce ?? L.epochOf(vault, friend.box) }, false, friend.box);
   L.setState(vault, friend.box, id, r.status === 200 ? 'sent' : 'failed');
   if (r.status === 403) st.lastProblem = `${L.displayName(friend)} removed you or hasn't accepted.`;
   else if (r.status !== 200) st.lastProblem = explain(r.status, r.json);
@@ -648,7 +721,7 @@ function sendReceipt(friend, id, state) {
   const key = `${id}|${state}`;
   if (!friend.sendToken || receiptsSent.has(key)) return;
   receiptsSent.add(key);
-  post(friend, { t: 'rcpt', from: me.box, id, state, ts: Date.now() });
+  post(friend, { t: 'rcpt', from: me.box, id, state, ts: Date.now() }, false, friend.box);
 }
 function sendControl(type, friend) { post(friend, { t: type, from: me.box, ts: Date.now() }); }
 

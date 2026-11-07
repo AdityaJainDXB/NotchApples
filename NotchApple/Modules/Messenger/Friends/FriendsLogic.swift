@@ -222,6 +222,7 @@ struct FriendBody: Codable, Equatable {
     var fn: Int? = nil             // chunk: how many chunks the file has
     var fi: Int? = nil             // chunk: this chunk's position, from 0
     var fd: String? = nil          // chunk: the bytes (base64url)
+    var ce: Int? = nil             // msg, gmsg, chunk: the clear epoch of the chat the sender was in; clr: the new epoch
     var ttt: TicTacToeMessage? = nil   // game: one tic-tac-toe move or invite (rules in TicTacToeLogic.swift)
     var play: PlayMessage? = nil       // play: Connect Four, Rock Paper Scissors or Battleship (rules in TwoPlayerGames.swift)
 
@@ -274,6 +275,22 @@ struct FriendMessage: Codable, Identifiable, Equatable {
     var state: State
     var by: String? = nil          // group chats: the mailbox of whoever sent it
     var file: FriendFile? = nil    // a file instead of (or with) text
+    var ce: Int? = nil             // the chat's clear epoch when this was sent (nil from an app that predates "Clear chat")
+    var kind: String? = nil        // "clear": the one line left behind by "Clear chat" ("Sam cleared this chat"); never counted as unread
+    var isNotice: Bool { kind != nil }
+}
+
+/// "Clear chat" bookkeeping for one chat: the newest clear this device knows about. A message that was sent before it is dropped.
+struct ClearMark: Codable, Equatable {
+    var epoch: Int
+    var at: Int64                  // milliseconds since 1970 on the clearer's clock (only used for messages from apps that predate clearing)
+}
+
+/// A clear I still have to deliver to some members (the app was offline, or closed before it went out). Kept across restarts.
+struct PendingClear: Codable, Equatable {
+    var epoch: Int
+    var at: Int64
+    var to: [String]               // mailboxes still to tell
 }
 
 /// A group chat. There is no group server: each message is sealed once per member and sent over the existing friend links.
@@ -295,6 +312,8 @@ struct FriendsVault: Codable, Equatable {
     var blocked: [String] = []                       // fingerprints (hex) of people I blocked
     var seen: [String] = []                          // recent message ids, so a repeated one is dropped
     var groups: [FriendGroup] = []
+    var clears: [String: ClearMark] = [:]            // by chat key (a friend's box or "g:<id>")
+    var pendingClears: [String: PendingClear] = [:]
 
     init() {}
     /// Written by hand so a vault saved before groups existed still loads (a missing key must not wipe every friend).
@@ -305,8 +324,10 @@ struct FriendsVault: Codable, Equatable {
         blocked = try c.decodeIfPresent([String].self, forKey: .blocked) ?? []
         seen = try c.decodeIfPresent([String].self, forKey: .seen) ?? []
         groups = try c.decodeIfPresent([FriendGroup].self, forKey: .groups) ?? []
+        clears = try c.decodeIfPresent([String: ClearMark].self, forKey: .clears) ?? [:]
+        pendingClears = try c.decodeIfPresent([String: PendingClear].self, forKey: .pendingClears) ?? [:]
     }
-    private enum Keys: String, CodingKey { case friends, messages, blocked, seen, groups }
+    private enum Keys: String, CodingKey { case friends, messages, blocked, seen, groups, clears, pendingClears }
 }
 
 // MARK: - The rules
@@ -372,19 +393,23 @@ struct FriendsBook {
     }
 
     /// A message from an active friend. Returns it if new.
-    mutating func receiveMessage(from box: String, id: String, text: String, ts: Int64?, now: Date = .now) -> FriendMessage? {
+    mutating func receiveMessage(from box: String, id: String, text: String, ts: Int64?, now: Date = .now, ce: Int? = nil) -> FriendMessage? {
         guard let i = index(box), vault.friends[i].status == .active, !id.isEmpty, id.count <= 64, !text.isEmpty, text.count <= 2000 else { return nil }
         if vault.seen.contains(id) { return nil }
-        vault.seen.append(id); if vault.seen.count > Self.seenLimit { vault.seen.removeFirst(vault.seen.count - Self.seenLimit) }
         let date = ts.map { min(Date(timeIntervalSince1970: Double($0) / 1000), now) } ?? now
-        let m = FriendMessage(id: id, mine: false, text: text, date: date, state: .delivered)
+        if isStale(key: box, ce: ce, date: date) { return nil }          // sent before the chat was cleared
+        vault.seen.append(id); if vault.seen.count > Self.seenLimit { vault.seen.removeFirst(vault.seen.count - Self.seenLimit) }
+        var m = FriendMessage(id: id, mine: false, text: text, date: date, state: .delivered)
+        m.ce = ce
         vault.messages[box, default: []].append(m)
         vault.friends[i].unread += 1; vault.friends[i].lastActivity = now
         return m
     }
 
     mutating func addMine(to box: String, id: String, text: String, now: Date = .now) {
-        vault.messages[box, default: []].append(FriendMessage(id: id, mine: true, text: text, date: now, state: .sending))
+        var m = FriendMessage(id: id, mine: true, text: text, date: now, state: .sending)
+        m.ce = epoch(box)
+        vault.messages[box, default: []].append(m)
         if let i = index(box) { vault.friends[i].lastActivity = now }
     }
 
@@ -438,25 +463,27 @@ struct FriendsBook {
     }
 
     /// A message in a group, from a member who is one of my friends. Returns it if new.
-    mutating func receiveGroupMessage(from box: String, group id: String, id msgID: String, text: String, ts: Int64?, now: Date = .now) -> FriendMessage? {
+    mutating func receiveGroupMessage(from box: String, group id: String, id msgID: String, text: String, ts: Int64?, now: Date = .now, ce: Int? = nil) -> FriendMessage? {
         let key = Friends.groupKey(id)
         guard let gi = groupIndex(key), vault.groups[gi].members.contains(box), record(box)?.status == .active,
               Friends.isPlainID(msgID), !text.isEmpty, text.count <= 2000, !vault.seen.contains(msgID) else { return nil }
-        remember(msgID)
         let date = ts.map { min(Date(timeIntervalSince1970: Double($0) / 1000), now) } ?? now
+        if isStale(key: key, ce: ce, date: date) { return nil }
+        remember(msgID)
         var m = FriendMessage(id: msgID, mine: false, text: text, date: date, state: .delivered)
-        m.by = box
+        m.by = box; m.ce = ce
         vault.messages[key, default: []].append(m)
         vault.groups[gi].unread += 1; vault.groups[gi].lastActivity = now
         return m
     }
 
     /// A finished file, from a friend (one to one, or `group` if it came into a group).
-    mutating func receiveFile(from box: String, group: String?, id: String, name: String, size: Int, ts: Int64? = nil, now: Date = .now) -> FriendMessage? {
+    mutating func receiveFile(from box: String, group: String?, id: String, name: String, size: Int, ts: Int64? = nil, now: Date = .now, ce: Int? = nil) -> FriendMessage? {
         guard record(box)?.status == .active, Friends.isPlainID(id), size > 0, size <= Friends.maxFileBytes,
               let name = Self.cleanFileName(name), !vault.seen.contains(id) else { return nil }
+        if isStale(key: group.map(Friends.groupKey) ?? box, ce: ce, date: ts.map { min(Date(timeIntervalSince1970: Double($0) / 1000), now) } ?? now) { return nil }
         var m = FriendMessage(id: id, mine: false, text: "", date: now, state: .delivered)
-        m.file = FriendFile(name: name, size: size)
+        m.file = FriendFile(name: name, size: size); m.ce = ce
         if let group {
             let key = Friends.groupKey(group)
             guard let gi = groupIndex(key), vault.groups[gi].members.contains(box) else { return nil }
@@ -473,6 +500,105 @@ struct FriendsBook {
         return m
     }
 
+    // MARK: Clear chat
+    //
+    // Every chat has a clear epoch (0 until it is first cleared). A clear raises it; every message carries the epoch its sender was in
+    // (`ce`). A message from before the newest clear is dropped, one from after it is kept, wherever and whenever it arrives, so a
+    // clear and a message that cross each other can never bring old messages back. Messages from an app that predates clearing carry
+    // no epoch; for those the time the clear was made decides. See docs/FRIENDS_PROTOCOL.md, "Clear chat".
+
+    static let maxEpoch = 1_000_000
+
+    func epoch(_ key: String) -> Int { vault.clears[key]?.epoch ?? 0 }
+
+    /// True when a message was sent before the newest clear of this chat (so it must not be shown).
+    func isStale(key: String, ce: Int?, date: Date) -> Bool {
+        guard let mark = vault.clears[key] else { return false }
+        if let ce { return ce < mark.epoch }
+        return Int64(date.timeIntervalSince1970 * 1000) <= mark.at
+    }
+
+    struct ClearOutcome: Equatable {
+        var key: String
+        var epoch: Int
+        var at: Int64
+        var files: [String]            // ids of saved files that were in the chat (the caller deletes the bytes)
+    }
+
+    private func clearableKey(_ key: String) -> Bool {
+        Friends.isGroupKey(key) ? group(key) != nil : record(key)?.status == .active
+    }
+
+    /// I clear a chat: everything in it goes, for me, and a single line says so. The caller then tells the others (see `PendingClear`).
+    mutating func clearChat(_ key: String, now: Date = .now) -> ClearOutcome? {
+        guard clearableKey(key) else { return nil }
+        let old = vault.messages[key] ?? []
+        let next = min(Self.maxEpoch, max(epoch(key), old.compactMap(\.ce).max() ?? 0) + 1)
+        let at = Int64(now.timeIntervalSince1970 * 1000)
+        vault.clears[key] = ClearMark(epoch: next, at: at)
+        var notice = FriendMessage(id: "clear-\(next)", mine: true, text: "You cleared this chat", date: now, state: .sent)
+        notice.ce = next; notice.kind = "clear"
+        vault.messages[key] = [notice]
+        resetCounts(key, now: now)
+        return ClearOutcome(key: key, epoch: next, at: at, files: old.filter { $0.file != nil }.map(\.id))
+    }
+
+    /// A clear from a friend (already checked: signature good). Returns what was removed, or nil if it was refused or already applied.
+    /// In a group, any member who is one of my friends may clear it for everyone.
+    mutating func receiveClear(from box: String, _ body: FriendBody, now: Date = .now) -> ClearOutcome? {
+        guard body.t == "clr", record(box)?.status == .active, let epoch = body.ce, epoch >= 1, epoch <= Self.maxEpoch else { return nil }
+        let key: String
+        if let g = body.g {
+            guard Friends.isPlainID(g), let gi = groupIndex(Friends.groupKey(g)), vault.groups[gi].members.contains(box) else { return nil }
+            key = Friends.groupKey(g)
+        } else { key = box }
+        guard epoch > self.epoch(key) else { return nil }                      // already applied, or an older clear arriving late
+        let nowMs = Int64(now.timeIntervalSince1970 * 1000)
+        let at = min(body.ts ?? nowMs, nowMs)
+        let old = vault.messages[key] ?? []
+        // What survives: messages sent after the clear (they may have overtaken it), and nothing else.
+        let kept = old.filter { m in
+            if let ce = m.ce { return ce >= epoch }
+            return !m.mine && Int64(m.date.timeIntervalSince1970 * 1000) > at
+        }
+        let name = record(box)?.displayName ?? "Someone"
+        vault.clears[key] = ClearMark(epoch: epoch, at: at)
+        var notice = FriendMessage(id: "clear-\(epoch)", mine: false, text: "\(name) cleared this chat", date: now, state: .delivered)
+        notice.ce = epoch; notice.kind = "clear"
+        vault.messages[key] = [notice] + kept
+        resetCounts(key, now: now)
+        let keptIDs = Set(kept.map(\.id))
+        return ClearOutcome(key: key, epoch: epoch, at: at, files: old.filter { $0.file != nil && !keptIDs.contains($0.id) }.map(\.id))
+    }
+
+    /// Unread count and activity time follow what is left in the chat; nothing about the old messages survives in them.
+    private mutating func resetCounts(_ key: String, now: Date) {
+        let unread = (vault.messages[key] ?? []).filter { !$0.mine && !$0.isNotice }.count
+        if Friends.isGroupKey(key) { if let gi = groupIndex(key) { vault.groups[gi].unread = unread; vault.groups[gi].lastActivity = now } }
+        else if let i = index(key) { vault.friends[i].unread = unread; vault.friends[i].lastActivity = now }
+    }
+
+    /// Writes down that these members still have to be told about a clear (kept across restarts until each one has it).
+    mutating func queueClear(_ key: String, epoch: Int, at: Int64, to boxes: [String]) {
+        var p = vault.pendingClears[key]
+        if let have = p, have.epoch > epoch { return }
+        if p == nil || p!.epoch < epoch { p = PendingClear(epoch: epoch, at: at, to: []) }
+        p!.to = Array(Set(p!.to + boxes)).sorted()
+        vault.pendingClears[key] = p
+    }
+    /// One member has the clear (or can never get it): stop trying for them.
+    mutating func clearDelivered(_ key: String, epoch: Int, to box: String) {
+        guard var p = vault.pendingClears[key], p.epoch == epoch else { return }
+        p.to.removeAll { $0 == box }
+        vault.pendingClears[key] = p.to.isEmpty ? nil : p
+    }
+
+    /// The tag a message carries on the relay so a clear can take back what is still queued: opaque, and different for every
+    /// friend link, so the relay cannot tell that two mailboxes' messages belong to one group.
+    static func chatTag(token: String, key: String) -> String {
+        String(Friends.sha256Hex(Data("notchapple-clear-v1|\(token)|\(key)".utf8)).prefix(32))
+    }
+
     private mutating func remember(_ id: String) {
         vault.seen.append(id)
         if vault.seen.count > Self.seenLimit { vault.seen.removeFirst(vault.seen.count - Self.seenLimit) }
@@ -482,7 +608,7 @@ struct FriendsBook {
     mutating func addMineToGroup(_ key: String, id: String, text: String, file: FriendFile? = nil, now: Date = .now) {
         guard let gi = groupIndex(key) else { return }
         var m = FriendMessage(id: id, mine: true, text: text, date: now, state: .sending)
-        m.file = file
+        m.file = file; m.ce = epoch(key)
         vault.messages[key, default: []].append(m)
         vault.groups[gi].lastActivity = now
     }
@@ -490,7 +616,7 @@ struct FriendsBook {
     /// My own file in a one to one chat.
     mutating func addMineFile(to box: String, id: String, file: FriendFile, now: Date = .now) {
         var m = FriendMessage(id: id, mine: true, text: "", date: now, state: .sending)
-        m.file = file
+        m.file = file; m.ce = epoch(box)
         vault.messages[box, default: []].append(m)
         if let i = index(box) { vault.friends[i].lastActivity = now }
     }
@@ -506,6 +632,7 @@ struct FriendsBook {
     mutating func leaveGroup(_ key: String) -> [String] {
         let files = (vault.messages[key] ?? []).filter { $0.file != nil }.map(\.id)
         vault.groups.removeAll { $0.key == key }; vault.messages[key] = nil
+        vault.clears[key] = nil; vault.pendingClears[key] = nil
         return files
     }
 
@@ -519,9 +646,9 @@ struct FriendsBook {
         guard let i = index(box) else { return }
         let fp = Friends.hex(vault.friends[i].fingerprint)
         if !vault.blocked.contains(fp) { vault.blocked.append(fp) }
-        vault.friends.remove(at: i); vault.messages[box] = nil
+        vault.friends.remove(at: i); vault.messages[box] = nil; vault.clears[box] = nil; vault.pendingClears[box] = nil
     }
-    mutating func remove(box: String) { vault.friends.removeAll { $0.box == box }; vault.messages[box] = nil }
+    mutating func remove(box: String) { vault.friends.removeAll { $0.box == box }; vault.messages[box] = nil; vault.clears[box] = nil; vault.pendingClears[box] = nil }
     mutating func unblockAll() { vault.blocked = [] }
 
     /// Names are shown to the person who received them, so keep them short, single-line and free of control characters.

@@ -34,7 +34,8 @@ the safety number is the check.
 ```
 keys      { sign, dh, claimedAt }          set once by /claim
 allow     set of sha256(sendToken)         who may send messages here
-queue     ordered sealed blobs             deleted on ack or after 14 days
+queue     ordered sealed blobs             deleted on ack, on /f/purge, or after 14 days (each also keeps the hash of the send token that
+                                           queued it and, if the sender gave one, an opaque `tag`; see "Clear chat" below)
 requests  ordered sealed friend requests   max 20 pending
 lastAuth  highest auth timestamp seen      replay guard
 ```
@@ -56,7 +57,8 @@ with the stored `sign`, requires `|now − ts| ≤ 5 min` and `ts > lastAuth`, t
 | `POST /f/claim {box, sign, dh}` | self-signed with `sign` over the body, `ts` as above | First use of a `box` stores the keys. Same keys again: 200. Different keys for a claimed box: **409**. |
 | `GET /f/key/{box}` | none | `{sign, dh}` of a claimed box, else 404. Rate limited (§7). |
 | `POST /f/req {to, blob}` | none | A sealed friend request into `to`'s `requests`. Always answers `202`, whether or not `to` exists. |
-| `POST /f/send {to, token, blob, live?}` | `token` | A sealed message. Needs `sha256(token) ∈ allow(to)`, else **403**. `live:true` (typing) is forwarded to open sockets and never stored. |
+| `POST /f/send {to, token, blob, live?, tag?}` | `token` | A sealed message. Needs `sha256(token) ∈ allow(to)`, else **403**. `live:true` (typing) is forwarded to open sockets and never stored. `tag` (8–64 characters of `A-Za-z0-9_-`, optional) labels the queued item with the chat it belongs to; anything that is not a valid tag is simply not kept. |
+| `POST /f/purge {to, token, tag}` | `token` | **Clear chat.** Deletes from `to`'s queue every item that was queued with this same token and this same `tag`, and answers `{ok:true, removed:n}`. Needs `sha256(token) ∈ allow(to)`, else **403**, so only a friend that mailbox accepted can ask, and it can only ever remove what that same friend queued, never another friend's messages and never another chat's. Rate limited to 30 a minute per token. A relay from before 2.2.43 answers **404**; clients ignore that. |
 | `PUT /f/allow {hash}` / `DELETE /f/allow/{hash}` | owner | Add or revoke one `sha256(sendToken)` in my `allow`. Max 500. |
 | `GET /f/ws/{box}` (WebSocket) | owner (header or `?a=<ts>.<sig>`) | Live delivery. On open the server sends `{requests:[…], queue:[…]}`, then pushes new items. |
 | `{ack:[ids]}` over the socket | owner | Deletes those items from `queue` / `requests`. |
@@ -151,6 +153,34 @@ New body types inside the same sealed `msg` blobs. Older clients ignore keys and
 There is no group server. A group message is sealed and sent once per member over the existing friend links, so everyone only receives from members who are also their friends. File names are reduced to their last path component and never opened automatically: the Mac shows the file in Finder.
 
 **Windows.** The Windows app (`NotchWindows/src/js/services/friendslogic.js` for the rules, `friends.js` for the network and disk, `modules/messengerfriends.js` for the screen) sends and accepts the same `chunk`, `grp`, `gmsg` and `gleave` bodies with the same field names (`g, gname, gm, fname, fn, fi, fd`) and the same limits, so Mac and Windows friends see each other's files and group messages. Differences in how each app keeps things, none of which show on the wire: the Windows vault has a `groups` array (a vault saved before groups existed loads as "no groups"); received and sent files are stored one sealed file each next to the vault (`Friends\f-<sha256 of the id>.bin`, AES-GCM under the vault key) and shown in Explorer, never opened; a partial file is kept in memory only. `NotchWindows/tests/friendsfiles.test.mjs` checks the rules, and that a worst-case sealed chunk (8,000 bytes, 64-character ids, an 80-character name that JSON must escape) is about 15,200 characters, under the relay's 22,000 (`MAX_MSG_BLOB`). **2 MB files on Windows (matches Mac 2.2.8).** `MAX_CHUNKS` is 250 and `MAX_FILE_BYTES` 2,000,000 in `friendslogic.js`; the sender uses `sendPieces` there, the same as the Mac's `deliverFile`: about 220 ms between pieces, and when `/f/send` answers 429 it waits 8 s and sends the same piece again, up to 8 times per piece, then stops and marks the message failed. A Windows app from before this change drops a file of more than 20 pieces without telling the sender, the same as an older Mac. A received file is staged for Explorer by the `friends_stage_file` command, whose limit was raised to 2,000,000 bytes (it was 200,000, which would have refused the file in the last step). Tests: `friendsfiles.test.mjs` (250 pieces, 2,000,000 bytes, pacing and retry). **Status: written and unit-tested in Node, but not yet run on real Windows hardware or against a real Mac.**
+
+## Clear chat (Mac 2.2.43 and Windows 2.2.43; additive, and one new relay call)
+
+Either person in a one-to-one chat, or any member of a group, can wipe that chat for everybody in it. The friendship or group stays; only the conversation goes. **Notch Apple removes its own copies. It cannot erase screenshots, anything a person copied or saved outside the app, or a modified client that ignores the request.** An app from before 2.2.43 does not know the message and ignores it (below), so both people need the new version for a clear to take effect on their side.
+
+**Wire.** One new body type in the same sealed `msg` blobs, signed like every other:
+
+| `t` | Fields | Meaning |
+| --- | --- | --- |
+| `clr` | `from, ce, ts, g?` | "I cleared this chat." `ce` is the chat's new **clear epoch** (an integer, 1 to 1,000,000), `ts` is when it was made (milliseconds), and `g` is the group id for a group chat (absent for a one-to-one chat). Sent to the friend, or to every member who is an active friend for a group. |
+
+`msg`, `gmsg` and `chunk` bodies gain one optional field, `ce`: the sender's clear epoch for that chat when the message was written (0 if it was never cleared). Older apps skip fields they do not know.
+
+**Epochs (ordering).** Every chat has an epoch on each device, 0 until the first clear. Clearing sets it to `max(own epoch, highest `ce` seen in the chat) + 1`. A receiver applies `clr` only if the sender is an active friend (for a group: a member of it) and `ce` is greater than its own epoch for that chat; the same or an older clear is ignored, so applying twice is harmless. Applying it:
+
+- removes every message whose `ce` is **lower** than the new epoch, keeps those with an equal or higher `ce` (they were sent after the clear and happened to arrive before it), and puts one line in the chat, "<name> cleared this chat";
+- deletes the saved files of the removed messages, half-received file pieces of that chat, copies placed in the temp folder for Finder/Explorer, delivered Mac notifications for the chat, and resets the unread count;
+- from then on drops any message, file piece or receipt-bearing message whose `ce` is lower than the epoch, which is what stops an old message that is retried, queued or delivered late from coming back.
+
+Messages from apps that predate clearing carry no `ce`. For those the clear's `ts` decides: a message with no epoch dated at or before the newest clear's time is dropped (clocks differ between devices, so this one case is best effort). Two people clearing at the same moment both reach epoch N+1 and each ignores the other's equal clear, so the result is the same on both sides. In a group, a member whose app was offline past the relay's 14 days misses the clear, and its later messages (still on the old epoch) are dropped by the others until it catches up; it keeps its own copy of the old messages until then.
+
+**On the relay.** A message is queued for an offline friend as usual and waits until they connect, so a clear sent to an offline friend waits behind the earlier messages and is applied when they come online (the old messages are applied first and then wiped, in order). To also remove what is *still queued* for that chat, the sender labels each queued message with `tag = hex(SHA-256("notchapple-clear-v1|" + sendToken + "|" + chatKey))[0..32)` (`chatKey` is the friend's `box` for a one-to-one chat, `g:<id>` for a group) and, when clearing, first calls `POST /f/purge` for each recipient with the same token and tag, **then** sends the `clr` (so the purge can never remove the clear). The tag is different for every friend link, so the relay cannot tell that messages in two mailboxes belong to one group, and it contains nothing readable. What a relay deploy changes: it adds `/f/purge`, the optional `tag` on `/f/send`, and two small fields (`th`, `tag`) on newly queued items. Without the deploy, clearing still works through the `clr` message itself; only the early removal of still-queued items is missing, and the receiver's epoch rule drops those items on arrival anyway.
+
+**Delivery.** The sender keeps a small list of members that have not been told yet (`pendingClears`, in the sealed local history), tries again whenever the connection comes up, and forgets a member when the relay accepts the `clr` or answers 403 (they removed us). A message that was written before the clear and is still waiting to be sent when the clear happens is not sent.
+
+**Versions.** An older app has no case for `t:"clr"` and ignores it, so its history stays; the sender cannot know that. The docs and the confirmation dialog say so. A newer app that sees a `clr` with extra unknown fields still applies it. A `clr` whose epoch is missing, not an integer, zero, negative or above 1,000,000, whose type is wrong, or from someone who is not an active friend (or not in the group) is ignored.
+
+**What is not touched.** Two-player games in progress are kept in memory only and are not part of the history; they are left alone. The friend's name, safety number and block list are unchanged. Message ids stay in a short list of recent ids (`seen`, 500 at most) used to drop repeats; the ids are random and contain nothing of the text. **Windows** cannot take back a toast it has already shown (the Mac removes its delivered notifications for the chat); it does delete the copies it staged in the temp folder (`friends_unstage`, which only accepts paths made by `friends_stage_file`). Tests: Mac `FriendsTests.testClear…`, Windows `tests/friendsclear.test.mjs`, relay `test/friends.test.mjs` ("clear chat"). **Status: written and unit-tested; the Windows app has not been run on real Windows hardware, and the relay change needs `npx wrangler deploy` in `server/room-relay` before the early removal works.**
 
 ## Two-player games (Mac client and the Windows port; additive)
 

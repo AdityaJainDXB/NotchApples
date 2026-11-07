@@ -74,10 +74,21 @@ export function render(root) {
   function groupRow(g) {
     const key = L.groupKey(g.id);
     return el('div', { class: `item clickable ${selected === key ? 'selected' : ''}`, style: 'padding:5px 8px;gap:8px', onclick: () => select(key),
-      oncontextmenu: (e) => { e.preventDefault(); menu(e, [{ label: 'Leave group', danger: true, run: () => leave(g) }]); } },
+      oncontextmenu: (e) => { e.preventDefault(); menu(e, [{ label: 'Clear chat…', danger: true, run: () => clearChat(key, `everyone in ${g.name}`, true) }, { label: 'Leave group', danger: true, run: () => leave(g) }]); } },
       el('div', { style: 'width:24px;height:24px;border-radius:50%;flex:none;display:grid;place-items:center;font-size:12px;background:rgba(255,255,255,.12)' }, '👥'),
       el('div', { class: 'main', style: 'font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap' }, g.name),
       g.unread > 0 ? el('span', { class: 'badge' }, String(g.unread)) : null);
+  }
+  /** "Clear chat": the exact scope and the honest limits are in the dialog, the same words as on the Mac (docs/GUIDES.md). */
+  async function clearChat(key, who, group) {
+    const ok = await confirm(group ? 'Clear this group chat for everyone?' : 'Clear this chat?', {
+      ok: group ? 'Clear chat for everyone' : 'Clear chat for both of us', danger: true,
+      detail: `This deletes the whole chat for you and for ${who}, including files saved from it, and cannot be undone. ${group ? 'The group stays. ' : 'You both stay friends. '}`
+        + 'Notch Apple removes its own copies on both sides. It can\u2019t erase screenshots, anything copied or saved outside the app, or a modified app that ignores the request. '
+        + `If ${group ? 'someone' : who} is offline it is applied when they come online, and only an up-to-date Notch Apple honours it.` });
+    if (!ok) return;
+    FR.clearChat(key); draft.value = '';
+    toast('Chat cleared');
   }
   async function leave(g) {
     if (await confirm(`Leave ${g.name}?`, { ok: 'Leave', danger: true, detail: 'The group and its messages are deleted from this PC. Others are told you left.' })) { const key = L.groupKey(g.id); FR.leaveGroup(key); if (selected === key) select(null); }
@@ -100,6 +111,7 @@ export function render(root) {
   function friendMenu(e, f) {
     menu(e, [
       { label: 'Nickname…', run: () => nickname(f) },
+      { label: 'Clear chat…', danger: true, run: () => clearChat(f.box, L.displayName(f), false) },
       { label: 'Remove friend', danger: true, run: () => removeFriend(f) },
       { label: 'Block', danger: true, run: () => { FR.block(f.box); if (selected === f.box) select(null); } },
     ]);
@@ -138,9 +150,11 @@ export function render(root) {
   const size = (n) => (n < 1000 ? `${n} B` : `${(n / 1000).toFixed(n < 10000 ? 1 : 0)} KB`);
   /** `key` is a friend's box or a group key; `inGroup` shows who sent it and hides delivered / read (there are no receipts in groups). */
   function bubble(m, key, inGroup) {
+    // The one line "Clear chat" leaves behind.
+    if (m.kind) return el('div', { class: 'tiny dim', style: 'text-align:center;font-style:italic;padding:6px 0' }, m.text);
     // A file is shown in Explorer when clicked. It is never opened for you.
     const body = m.file
-      ? el('a', { style: 'cursor:pointer;display:flex;gap:8px;align-items:center', title: 'Show in Explorer (it is not opened)', onclick: () => FR.reveal(m.id, m.file.name) },
+      ? el('a', { style: 'cursor:pointer;display:flex;gap:8px;align-items:center', title: 'Show in Explorer (it is not opened)', onclick: () => FR.reveal(m.id, m.file.name, key) },
         el('span', { style: 'font-size:20px' }, '📄'), el('span', { style: 'overflow-wrap:anywhere' }, m.file.name, el('div', { class: 'tiny', style: 'opacity:.7' }, size(m.file.size))))
       : m.text;
     const state = inGroup ? { sending: '· sending…', sent: '· sent', delivered: '', read: '' } : STATE;
@@ -219,7 +233,7 @@ export function render(root) {
       chatKey = key;
       pane.replaceChildren(
         el('div', { class: 'hstack' }, title, typingLine,
-          button('⋯', (e) => menu(e, [{ label: 'Leave group', danger: true, run: () => leave(FR.group(key) || g) }]), { small: true, kind: 'quiet' })),
+          button('⋯', (e) => menu(e, [{ label: 'Clear chat…', danger: true, run: () => clearChat(key, `everyone in ${(FR.group(key) || g).name}`, true) }, { label: 'Leave group', danger: true, run: () => leave(FR.group(key) || g) }]), { small: true, kind: 'quiet' })),
         groupNote, log, problem, el('div', { class: 'hstack' }, clip, draft, button('Send', send, { title: 'Send (Enter)' })));
       setTimeout(() => draft.focus(), 30);
     }

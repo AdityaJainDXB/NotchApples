@@ -89,6 +89,15 @@ final class MessengerNotifier: NSObject, ObservableObject {
         center.add(UNNotificationRequest(identifier: id, content: content, trigger: nil))
     }
 
+    /// "Clear chat": takes back the banners and Notification Centre entries already shown for one friend chat (a friend's box or a group key).
+    func removeFriendNotifications(chat key: String) {
+        let thread = "messenger.friend.\(key)"
+        UNUserNotificationCenter.current().getDeliveredNotifications { delivered in
+            let ids = delivered.filter { $0.request.content.threadIdentifier == thread }.map { $0.request.identifier }
+            if !ids.isEmpty { UNUserNotificationCenter.current().removeDeliveredNotifications(withIdentifiers: ids) }
+        }
+    }
+
     /// A friend request or an accepted request.
     func friendEvent(title: String, body: String, id: String) {
         guard notificationsEnabled, !FocusBridge.hushes else { return }

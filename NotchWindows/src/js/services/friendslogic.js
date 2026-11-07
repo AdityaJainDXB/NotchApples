@@ -66,7 +66,7 @@ export function clean(raw) {
 
 // ---- the data model
 
-export const newVault = () => ({ friends: [], messages: {}, blocked: [], seen: [], groups: [] });
+export const newVault = () => ({ friends: [], messages: {}, blocked: [], seen: [], groups: [], clears: {}, pendingClears: {} });
 /** A vault read back from disk, with anything missing filled in. */
 export function normalizeVault(raw) {
   const v = newVault();
@@ -77,6 +77,10 @@ export function normalizeVault(raw) {
   if (Array.isArray(raw.seen)) v.seen = raw.seen.filter((x) => typeof x === 'string');
   // A vault saved before groups existed has no `groups`: that must load as "no groups", never wipe the friends.
   if (Array.isArray(raw.groups)) v.groups = raw.groups.filter((g) => g && typeof g.id === 'string' && Array.isArray(g.members));
+  // Same for "Clear chat" (Windows 2.2.43): a vault saved before it loads as "nothing cleared yet".
+  const isObj = (x) => x && typeof x === 'object' && !Array.isArray(x);
+  if (isObj(raw.clears)) for (const [k, m] of Object.entries(raw.clears)) if (isObj(m) && Number.isInteger(m.epoch) && Number.isFinite(m.at)) v.clears[k] = { epoch: m.epoch, at: m.at };
+  if (isObj(raw.pendingClears)) for (const [k, p] of Object.entries(raw.pendingClears)) if (isObj(p) && Number.isInteger(p.epoch) && Number.isFinite(p.at) && Array.isArray(p.to)) v.pendingClears[k] = { epoch: p.epoch, at: p.at, to: p.to.filter((b) => typeof b === 'string') };
   return v;
 }
 
@@ -150,21 +154,23 @@ export function receiveAcceptance(v, body, now = Date.now()) {
 }
 
 /** A message from an active friend. Returns it if new, else null. */
-export function receiveMessage(v, from, id, text, ts, now = Date.now()) {
+export function receiveMessage(v, from, id, text, ts, now = Date.now(), ce = undefined) {
   const f = record(v, from);
   if (!f || f.status !== 'active' || typeof id !== 'string' || !id || charCount(id) > 64 || typeof text !== 'string' || !text || charCount(text) > MAX_TEXT) return null;
   if (v.seen.includes(id)) return null;
+  const date = Number.isFinite(ts) ? Math.min(ts, now) : now;
+  if (isStale(v, from, ce, date)) return null;           // sent before the chat was cleared
   v.seen.push(id);
   if (v.seen.length > SEEN_LIMIT) v.seen.splice(0, v.seen.length - SEEN_LIMIT);
-  const date = Number.isFinite(ts) ? Math.min(ts, now) : now;
   const m = { id, mine: false, text, date, state: 'delivered' };
+  if (Number.isInteger(ce)) m.ce = ce;
   (v.messages[from] ||= []).push(m);
   f.unread = (f.unread || 0) + 1; f.lastActivity = now;
   return m;
 }
 
 export function addMine(v, box, id, text, now = Date.now()) {
-  (v.messages[box] ||= []).push({ id, mine: true, text, date: now, state: 'sending' });
+  (v.messages[box] ||= []).push({ id, mine: true, text, date: now, state: 'sending', ce: epochOf(v, box) });
   const f = record(v, box);
   if (f) f.lastActivity = now;
 }
@@ -193,9 +199,9 @@ export function block(v, box) {
   if (i < 0) return;
   const fp = v.friends[i].fp;
   if (fp && !v.blocked.includes(fp)) v.blocked.push(fp);
-  v.friends.splice(i, 1); delete v.messages[box];
+  v.friends.splice(i, 1); delete v.messages[box]; delete v.clears[box]; delete v.pendingClears[box];
 }
-export function remove(v, box) { v.friends = v.friends.filter((f) => f.box !== box); delete v.messages[box]; }
+export function remove(v, box) { v.friends = v.friends.filter((f) => f.box !== box); delete v.messages[box]; delete v.clears[box]; delete v.pendingClears[box]; }
 export function unblockAll(v) { v.blocked = []; }
 
 // ---- files and groups (the Mac's "Files and groups" in FriendsLogic.swift; wire format in docs/FRIENDS_PROTOCOL.md)
@@ -256,22 +262,26 @@ export function receiveGroup(v, from, body, myBox, now = Date.now()) {
 }
 
 /** A message in a group, from a member who is one of my friends. Returns it if new. No receipts for these. */
-export function receiveGroupMessage(v, from, gid, id, text, ts, now = Date.now()) {
+export function receiveGroupMessage(v, from, gid, id, text, ts, now = Date.now(), ce = undefined) {
   const key = groupKey(gid), gi = groupIndex(v, key);
   if (gi < 0 || !v.groups[gi].members.includes(from) || record(v, from)?.status !== 'active'
     || !isPlainID(id) || typeof text !== 'string' || !text || charCount(text) > MAX_TEXT || v.seen.includes(id)) return null;
+  if (isStale(v, key, ce, wireDate(ts, now))) return null;
   remember(v, id);
   const m = { id, mine: false, text, date: wireDate(ts, now), state: 'delivered', by: from };
+  if (Number.isInteger(ce)) m.ce = ce;
   (v.messages[key] ||= []).push(m);
   v.groups[gi].unread = (v.groups[gi].unread || 0) + 1; v.groups[gi].lastActivity = now;
   return m;
 }
 
 /** A finished file, from a friend (one to one, or `gid` if it came into a group). */
-export function receiveFile(v, from, gid, id, name, size, now = Date.now()) {
+export function receiveFile(v, from, gid, id, name, size, now = Date.now(), ce = undefined, ts = undefined) {
   const f = record(v, from), clean_ = cleanFileName(name);
   if (!f || f.status !== 'active' || !isPlainID(id) || !Number.isInteger(size) || size <= 0 || size > MAX_FILE_BYTES || !clean_ || v.seen.includes(id)) return null;
+  if (isStale(v, gid ? groupKey(gid) : from, ce, wireDate(ts, now))) return null;
   const m = { id, mine: false, text: '', date: now, state: 'delivered', file: { name: clean_, size } };
+  if (Number.isInteger(ce)) m.ce = ce;
   if (gid) {
     const key = groupKey(gid), gi = groupIndex(v, key);
     if (gi < 0 || !v.groups[gi].members.includes(from)) return null;
@@ -290,14 +300,14 @@ export function receiveFile(v, from, gid, id, name, size, now = Date.now()) {
 export function addMineToGroup(v, key, id, text, file = null, now = Date.now()) {
   const gi = groupIndex(v, key);
   if (gi < 0) return;
-  const m = { id, mine: true, text, date: now, state: 'sending' };
+  const m = { id, mine: true, text, date: now, state: 'sending', ce: epochOf(v, key) };
   if (file) m.file = file;
   (v.messages[key] ||= []).push(m);
   v.groups[gi].lastActivity = now;
 }
 /** My own file in a one to one chat. */
 export function addMineFile(v, box, id, file, now = Date.now()) {
-  (v.messages[box] ||= []).push({ id, mine: true, text: '', date: now, state: 'sending', file });
+  (v.messages[box] ||= []).push({ id, mine: true, text: '', date: now, state: 'sending', file, ce: epochOf(v, box) });
   const f = record(v, box);
   if (f) f.lastActivity = now;
 }
@@ -310,7 +320,7 @@ export function receiveLeave(v, from, gid) {
 /** I leave (or the group is deleted): it and its history go. Returns the ids of files that were in it. */
 export function leaveGroup(v, key) {
   const files = (v.messages[key] || []).filter((m) => m.file).map((m) => m.id);
-  v.groups = (v.groups || []).filter((g) => groupKey(g.id) !== key); delete v.messages[key];
+  v.groups = (v.groups || []).filter((g) => groupKey(g.id) !== key); delete v.messages[key]; delete v.clears[key]; delete v.pendingClears[key];
   return files;
 }
 export function markGroupRead(v, key) { const gi = groupIndex(v, key); if (gi >= 0) v.groups[gi].unread = 0; }
@@ -335,12 +345,14 @@ export function receiveChunk(v, partials, from, body, now = Date.now()) {
   const gid = typeof body.g === 'string' && body.g ? body.g : null;
   if (body.g !== undefined && body.g !== null && !gid) return null;
   if (gid && !(group(v, groupKey(gid))?.members.includes(from))) return null;
+  const chatKey = gid ? groupKey(gid) : from;
+  if (isStale(v, chatKey, body.ce, wireDate(body.ts, now))) return null;          // a piece from before the chat was cleared
   const key = `${from}|${id}`;
   for (const [k, p] of partials) if (now - p.started >= PARTIAL_TTL_MS) partials.delete(k);   // give up on files that stalled
   let part = partials.get(key);
   if (!part) {
     if (partials.size >= MAX_PARTIALS) return null;
-    part = { name, n: fn, group: gid, chunks: new Map(), started: now };
+    part = { name, n: fn, group: gid, ce: Number.isInteger(body.ce) ? body.ce : undefined, chunks: new Map(), started: now };
     partials.set(key, part);
   }
   if (part.n !== fn) return null;
@@ -351,14 +363,15 @@ export function receiveChunk(v, partials, from, body, now = Date.now()) {
   let at = 0;
   for (let k = 0; k < fn; k++) { const c = part.chunks.get(k); if (!c) return null; out.set(c, at); at += c.length; }
   if (out.length > MAX_FILE_BYTES) return null;
-  return { group: part.group, id, name: part.name, bytes: out };
+  return { group: part.group, id, name: part.name, bytes: out, ce: part.ce, ts: body.ts };
 }
 
 /** The pieces of a file to send, each as a `chunk` body (the caller seals one per piece per receiver). */
-export function chunkBodies(from, id, name, bytes, group, ts, toB64u) {
+export function chunkBodies(from, id, name, bytes, group, ts, toB64u, ce = undefined) {
   const n = Math.max(1, Math.ceil(bytes.length / CHUNK_SIZE)), out = [];
   for (let i = 0; i < n; i++) {
     const b = { t: 'chunk', from, id, ts };
+    if (Number.isInteger(ce)) b.ce = ce;
     if (group) b.g = group;
     b.fname = name; b.fn = n; b.fi = i; b.fd = toB64u(bytes.subarray(i * CHUNK_SIZE, (i + 1) * CHUNK_SIZE));
     out.push(b);
@@ -389,3 +402,93 @@ export function safetyRows(number) {
   const g = String(number).split(' ');
   return [0, 4, 8].map((i) => g.slice(i, i + 4).join('  '));
 }
+
+// ---- Clear chat (docs/FRIENDS_PROTOCOL.md, "Clear chat"; the Mac's FriendsBook.clearChat / receiveClear)
+//
+// Every chat has a clear epoch (0 until it is first cleared). A clear raises it; every message carries the epoch its sender was in
+// (`ce`). A message from before the newest clear is dropped, one from after it is kept, wherever and whenever it arrives, so a clear
+// and a message that cross each other can never bring old messages back. Messages from an app that predates clearing carry no
+// epoch; for those the time the clear was made decides.
+
+export const MAX_EPOCH = 1_000_000;
+export const epochOf = (v, key) => v.clears?.[key]?.epoch || 0;
+
+/** True when a message was sent before the newest clear of this chat (so it must not be shown). `date` is ms since 1970. */
+export function isStale(v, key, ce, date) {
+  const mark = v.clears?.[key];
+  if (!mark) return false;
+  if (Number.isInteger(ce)) return ce < mark.epoch;
+  return date <= mark.at;
+}
+
+const clearable = (v, key) => (isGroupKey(key) ? !!group(v, key) : record(v, key)?.status === 'active');
+const isNotice = (m) => !!m.kind;
+
+/** Unread count and activity time follow what is left in the chat; nothing about the old messages survives in them. */
+function resetCounts(v, key, now) {
+  const unread = (v.messages[key] || []).filter((m) => !m.mine && !isNotice(m)).length;
+  if (isGroupKey(key)) { const gi = groupIndex(v, key); if (gi >= 0) { v.groups[gi].unread = unread; v.groups[gi].lastActivity = now; } }
+  else { const f = record(v, key); if (f) { f.unread = unread; f.lastActivity = now; } }
+}
+
+/**
+ * I clear a chat (a friend's box or a group key): everything in it goes, for me, and a single line says so. The friend or group stays.
+ * Returns { key, epoch, at, files } (`files` = ids of saved files the caller must delete), or null when there is no such chat.
+ */
+export function clearChat(v, key, now = Date.now()) {
+  if (!clearable(v, key)) return null;
+  const old = v.messages[key] || [];
+  const epoch = Math.min(MAX_EPOCH, Math.max(epochOf(v, key), ...old.map((m) => (Number.isInteger(m.ce) ? m.ce : 0))) + 1);
+  v.clears[key] = { epoch, at: now };
+  v.messages[key] = [{ id: `clear-${epoch}`, mine: true, text: 'You cleared this chat', date: now, state: 'sent', ce: epoch, kind: 'clear' }];
+  resetCounts(v, key, now);
+  return { key, epoch, at: now, files: old.filter((m) => m.file).map((m) => m.id) };
+}
+
+/**
+ * A clear from a friend (already checked: signature good). Returns { key, epoch, at, files } for what was removed, or null when it was
+ * refused or already applied. In a group, any member who is one of my friends may clear it for everyone.
+ */
+export function receiveClear(v, from, body, now = Date.now()) {
+  const epoch = body?.ce;
+  if (!body || body.t !== 'clr' || record(v, from)?.status !== 'active' || !Number.isInteger(epoch) || epoch < 1 || epoch > MAX_EPOCH) return null;
+  let key = from;
+  if (body.g !== undefined && body.g !== null) {
+    if (!isPlainID(body.g) || groupIndex(v, groupKey(body.g)) < 0 || !v.groups[groupIndex(v, groupKey(body.g))].members.includes(from)) return null;
+    key = groupKey(body.g);
+  }
+  if (epoch <= epochOf(v, key)) return null;                   // already applied, or an older clear arriving late
+  const at = Math.min(Number.isFinite(body.ts) ? body.ts : now, now);
+  const old = v.messages[key] || [];
+  // What survives: messages sent after the clear (they may have overtaken it), and nothing else.
+  const kept = old.filter((m) => (Number.isInteger(m.ce) ? m.ce >= epoch : !m.mine && m.date > at));
+  const name = displayName(record(v, from));
+  v.clears[key] = { epoch, at };
+  v.messages[key] = [{ id: `clear-${epoch}`, mine: false, text: `${name} cleared this chat`, date: now, state: 'delivered', ce: epoch, kind: 'clear' }, ...kept];
+  resetCounts(v, key, now);
+  const keptIds = new Set(kept.map((m) => m.id));
+  return { key, epoch, at, files: old.filter((m) => m.file && !keptIds.has(m.id)).map((m) => m.id) };
+}
+
+/** The `clr` body to send to one participant. */
+export const clearBody = (me, key, epoch, at) => { const b = { t: 'clr', from: me, ts: at, ce: epoch }; if (isGroupKey(key)) b.g = key.slice(2); return b; };
+
+/** Writes down that these members still have to be told about a clear (kept across restarts until each one has it). */
+export function queueClear(v, key, epoch, at, to) {
+  let p = v.pendingClears[key];
+  if (p && p.epoch > epoch) return;
+  if (!p || p.epoch < epoch) p = { epoch, at, to: [] };
+  p.to = [...new Set([...p.to, ...to])].sort();
+  v.pendingClears[key] = p;
+}
+/** One member has the clear (or can never get it): stop trying for them. */
+export function clearDelivered(v, key, epoch, box) {
+  const p = v.pendingClears[key];
+  if (!p || p.epoch !== epoch) return;
+  p.to = p.to.filter((b) => b !== box);
+  if (!p.to.length) delete v.pendingClears[key];
+}
+
+/** The label a message carries on the relay so a clear can take back what is still queued: opaque, and different for every friend
+ *  link, so the relay cannot tell that two mailboxes' messages belong to one group. `sha256hex` is friendscrypto's. */
+export const chatTag = async (sha256hex, token, key) => (await sha256hex(`notchapple-clear-v1|${token}|${key}`)).slice(0, 32);

@@ -101,6 +101,30 @@ pub fn friends_stage_file(name: String, base64: String) -> Result<String, String
     Ok(path.to_string_lossy().to_string())
 }
 
+/// True for a path made by `friends_stage_file`: <temp>/NotchApple/friends/<16 hex>/<one file name>. Nothing else may be deleted through it.
+pub fn is_staged_path(path: &std::path::Path, temp: &std::path::Path) -> bool {
+    let root = temp.join("NotchApple").join("friends");
+    let Ok(rel) = path.strip_prefix(&root) else { return false };
+    let parts: Vec<_> = rel.components().collect();
+    parts.len() == 2
+        && parts.iter().all(|c| matches!(c, std::path::Component::Normal(_)))
+        && parts[0].as_os_str().to_str().map_or(false, |d| d.len() == 16 && d.bytes().all(|b| b.is_ascii_hexdigit() && !b.is_ascii_uppercase()))
+}
+
+/// "Clear chat": deletes copies that `friends_stage_file` put in the temp folder for Explorer. Anything else in the list is skipped.
+#[tauri::command]
+pub fn friends_unstage(paths: Vec<String>) -> Result<u32, String> {
+    let temp = std::env::temp_dir();
+    let mut n = 0;
+    for p in paths.iter().take(500) {
+        let path = std::path::PathBuf::from(p);
+        if is_staged_path(&path, &temp) {
+            if let Some(dir) = path.parent() { if std::fs::remove_dir_all(dir).is_ok() { n += 1; } }
+        }
+    }
+    Ok(n)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -108,6 +132,17 @@ mod tests {
     fn file_names_are_checked() {
         assert!(is_file_name(&format!("f-{}", "a".repeat(64))));
         assert!(!is_file_name("f-../../x") && !is_file_name("identity") && !is_file_name(&format!("f-{}", "A".repeat(64))));
+    }
+    #[test]
+    fn only_staged_copies_can_be_unstaged() {
+        let t = std::path::Path::new("/tmp");
+        assert!(is_staged_path(&t.join("NotchApple/friends/0123456789abcdef/a.png"), t));
+        assert!(!is_staged_path(&t.join("NotchApple/friends/0123456789abcdef"), t), "the folder itself");
+        assert!(!is_staged_path(&t.join("NotchApple/friends/0123456789abcdef/x/a.png"), t), "too deep");
+        assert!(!is_staged_path(&t.join("NotchApple/friends/../../etc/passwd"), t));
+        assert!(!is_staged_path(&t.join("NotchApple/friends/xyz/a.png"), t), "not one of our folders");
+        assert!(!is_staged_path(&t.join("Other/friends/0123456789abcdef/a.png"), t));
+        assert!(!is_staged_path(std::path::Path::new("/home/me/a.png"), t));
     }
     #[test]
     fn staged_names_are_safe() {

@@ -150,6 +150,13 @@ More screenshots of the capture overlay, the AI answer, the settings and the Win
 
 ## What's new
 
+### Mac 2.2.43 · Windows 2.2.43 BETA · 7 November 2026 · 🧹 Clear chat in Friends
+
+- New: **Clear chat** in Friends. Open the ⋯ menu of a friend chat or a group (or right-click the friend or group) and choose Clear chat…. After you confirm, the whole conversation is deleted for you and, by an encrypted message, for the other person (everyone, in a group): messages, drafts, unread counts, files saved from the chat, half-received files, and (on Mac) the notifications already shown. You stay friends and each side keeps one line, "You cleared this chat" or "Sam cleared this chat". Either person can do it, with no approval from the other, and if they are offline it is applied when they come online.
+- Messages sent before the clear are gone and messages sent after it are kept, even when one crosses the clear on its way, so an old message can never come back. Anything still waiting for them on Notch Apple's server for that chat is removed as well.
+- The honest limits: Notch Apple removes its own copies. It cannot erase screenshots, anything the other person copied or saved outside the app, or a modified app that ignores the request. An older Notch Apple (before 2.2.43) ignores the clear and keeps its history, so both of you need this version. Windows cannot take back a notification it has already shown.
+- Needs the relay update to remove messages still queued on the server; without it the clear still works, applied when the other app next connects. Games in progress are not part of the history and are left alone. The Windows app has not been tested on real Windows hardware.
+
 ### Mac 2.2.42 · Windows 2.2.42 BETA · 7 November 2026 · ⛰️ Every Racing track has real elevation
 
 - New: every track in Racing now has its own elevation, from real data where there is some. Baku climbs about 34 m through the old town to the castle section (turn 13) and runs back down to the sea front; Spa is 104 m from La Source to the Raidillon crest; the Red Bull Ring, Suzuka, Monaco, Interlagos, COTA, Hungaroring and Barcelona match their published figures. Shanghai, Bahrain, Zandvoort, Monza, Silverstone, Singapore, Montreal and Abu Dhabi were too flat and now follow theirs.
@@ -159,10 +166,6 @@ More screenshots of the capture overlay, the AI answer, the settings and the Win
 ### Mac 2.2.41 · Windows 2.2.41 BETA · 7 November 2026 · 🏎️ The steering wheel turns on the formation lap and in the countdown
 
 - Fix: in the first-person views of Racing, the steering wheel stayed still during the formation lap and the pre-race countdown while the car steered. It now turns the whole time, in every car and every mode.
-
-### Mac 2.2.40 · 7 November 2026 · ⌨️ ⌃⌥N opens the notch
-
-- New: ⌃⌥N opens and closes the notch from anywhere, as the website says. ⌘E still works, and you can change either in Settings → Shortcuts. If you recorded ⌃⌥N as your own notch shortcut, nothing changes.
 
 ## Plugins
 

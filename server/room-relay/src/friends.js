@@ -7,6 +7,7 @@
 const BOX = /^[0-9a-f]{32}$/;
 const HASH = /^[0-9a-f]{64}$/;
 const B64U = /^[A-Za-z0-9_-]+$/;
+const TAG = /^[A-Za-z0-9_-]{8,64}$/;   // an opaque per-chat label a sender may attach to a queued message (see purge)
 const MAX_BODY = 24 * 1024;
 const MAX_REQ_BLOB = 5800;     // ~4 KB once decoded
 const MAX_MSG_BLOB = 22000;    // ~16 KB
@@ -72,6 +73,7 @@ export class Mailbox {
     }
     if (method === 'POST' && path === '/f/req') return this.addRequest(body);
     if (method === 'POST' && path === '/f/send') return this.addMessage(body);
+    if (method === 'POST' && path === '/f/purge') return this.purge(body);
 
     // Everything below is for the mailbox's owner.
     const header = request.headers.get('x-nf-auth') || '';
@@ -148,10 +150,30 @@ export class Mailbox {
     const count = (await this.s.get('qCount')) || 0, bytes = (await this.s.get('qBytes')) || 0;
     if (count >= MAX_QUEUE || bytes + body.blob.length > MAX_QUEUE_BYTES) return fail(507, 'Their mailbox is full.');
     const id = await this.seq();
-    await this.s.put(`q:${pad(id)}`, { blob: body.blob, at: Date.now() });
+    // `th` (who sent it: the hash of the send token) and `tag` (which chat, an opaque label) are kept only so the sender can take
+    // back what is still waiting when they clear that chat (/f/purge). Old clients send no tag and nothing changes for them.
+    const item = { blob: body.blob, at: Date.now(), th: hash };
+    if (typeof body.tag === 'string' && TAG.test(body.tag)) item.tag = body.tag;
+    await this.s.put(`q:${pad(id)}`, item);
     await this.s.put('qCount', count + 1); await this.s.put('qBytes', bytes + body.blob.length);
     this.push({ type: 'msg', id, blob: body.blob });
     return reply({ ok: true, id });
+  }
+
+  /**
+   * "Clear chat": the sender takes back the messages and file pieces of one chat that this mailbox's owner has not collected yet.
+   * Allowed only to whoever holds a send token for this mailbox (`sha256(token) ∈ allow`), and it removes only what was queued by that
+   * same token with that same tag, so nobody can touch another friend's messages or another chat. Answers 200 with how many were removed.
+   */
+  async purge(body) {
+    if (typeof body.token !== 'string' || !B64U.test(body.token) || typeof body.tag !== 'string' || !TAG.test(body.tag)) return fail(400, 'Bad request.');
+    let hash; try { hash = await sha256hex(unb64u(body.token)); } catch { return fail(400, 'Bad request.'); }
+    if (!(await this.s.get(`a:${hash}`))) return fail(403, 'They have not accepted you.');
+    let removed = 0;
+    for (const [k, v] of await this.s.list({ prefix: 'q:' })) {
+      if (v.th === hash && v.tag === body.tag) { await this.drop(k, v); removed++; }
+    }
+    return reply({ ok: true, removed });
   }
 
   /** Sends to every open socket; returns how many. */
@@ -220,7 +242,7 @@ export async function routeFriends(request, env) {
   if (method === 'GET' && m && m[1] === 'key') { box = m[2]; bucket = 'key'; max = 30; }
   else if (method === 'GET' && m && m[1] === 'ws') { box = m[2]; }
   else if (method === 'DELETE' && m && m[1] === 'allow') { box = null; }
-  else if (!['/f/claim', '/f/req', '/f/send', '/f/allow', '/f/wipe'].includes(path)) return fail(404, 'Not found');
+  else if (!['/f/claim', '/f/req', '/f/send', '/f/purge', '/f/allow', '/f/wipe'].includes(path)) return fail(404, 'Not found');
 
   let text = null, body = {};
   if (method === 'POST' || method === 'PUT') {
@@ -232,6 +254,7 @@ export async function routeFriends(request, env) {
   if (path === '/f/claim') { box = body.box; bucket = 'claim'; max = 5; window = 3600000; }
   else if (path === '/f/req') { box = body.to; bucket = `req:${body.to}`; max = 3; }
   else if (path === '/f/send') { box = body.to; bucket = `send:${await sha256hex(String(body.token || ''))}`; max = SENDS_PER_MIN; }
+  else if (path === '/f/purge') { box = body.to; bucket = `purge:${await sha256hex(String(body.token || ''))}`; max = 30; }
   else if (path === '/f/allow' || path === '/f/wipe') { box = body.box || request.headers.get('x-nf-box'); }
   else if (method === 'DELETE') { box = request.headers.get('x-nf-box'); }
   if (!BOX.test(box || '')) return fail(400, 'Bad mailbox.');

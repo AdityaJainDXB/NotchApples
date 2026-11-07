@@ -197,6 +197,7 @@ final class FriendsClient: ObservableObject {
             attempt = 0; link = .online
             for item in (obj["requests"] as? [[String: Any]] ?? []) { if let id = item["id"] as? Int, let blob = item["blob"] as? String { processRequest(blob); acks.append(id) } }
             for item in (obj["queue"] as? [[String: Any]] ?? []) { if let id = item["id"] as? Int, let blob = item["blob"] as? String { await processMessage(blob); acks.append(id) } }
+            Task { await flushClears() }
         case "req": if let id = obj["id"] as? Int, let blob = obj["blob"] as? String { processRequest(blob); acks.append(id) }
         case "msg": if let id = obj["id"] as? Int, let blob = obj["blob"] as? String { await processMessage(blob); acks.append(id) }
         case "live": if let blob = obj["blob"] as? String { processLive(blob) }
@@ -238,7 +239,7 @@ final class FriendsClient: ObservableObject {
                 MessengerNotifier.shared.friendEvent(title: "Friend request accepted", body: "\(r.displayName) accepted. You can chat now.", id: "acc-\(r.box)")
             }
         case "msg":
-            guard let id = body.id, let text = body.text, let m = book.receiveMessage(from: friend.box, id: id, text: text, ts: body.ts) else { return }
+            guard let id = body.id, let text = body.text, let m = book.receiveMessage(from: friend.box, id: id, text: text, ts: body.ts, ce: body.ce) else { return }
             if viewing == friend.box { book.markRead(box: friend.box) }
             else { MessengerNotifier.shared.friendMessage(from: friend.displayName, box: friend.box, text: m.text, id: id) }
             if receipts { sendReceipt(to: friend, id: id, state: viewing == friend.box ? "read" : "delivered") }
@@ -255,13 +256,16 @@ final class FriendsClient: ObservableObject {
             }
         case "gmsg":
             guard let gid = body.g, let id = body.id, let text = body.text,
-                  let m = book.receiveGroupMessage(from: friend.box, group: gid, id: id, text: text, ts: body.ts), let g = book.group(Friends.groupKey(gid)) else { return }
+                  let m = book.receiveGroupMessage(from: friend.box, group: gid, id: id, text: text, ts: body.ts, ce: body.ce), let g = book.group(Friends.groupKey(gid)) else { return }
             if viewing == g.key { book.markGroupRead(g.key) }
             else { MessengerNotifier.shared.friendMessage(from: "\(friend.displayName) in \(g.name)", box: g.key, text: m.text, id: id) }
         case "gleave":
             if let gid = body.g { book.receiveLeave(from: friend.box, group: gid) }
         case "chunk":
             receiveChunk(body, from: friend)
+        case "clr":
+            // "Clear chat" from the other side (or a group member). Apps from before it was added never reach this line: they ignore the unknown type.
+            if let out = book.receiveClear(from: friend.box, body) { forget(out) }
         case "game":
             if let m = body.ttt { applyGame(m, from: friend.box, in: friend.box) }
         case "play":
@@ -326,6 +330,7 @@ final class FriendsClient: ObservableObject {
     func block(_ box: String) {
         let hash = book.record(box)?.myTokenHash
         store.deleteFiles(messages(box).filter { $0.file != nil }.map(\.id))
+        removeStaged(chat: box)
         book.block(box: box); persist()
         if let hash { Task { _ = await call("DELETE", "/f/allow/\(hash)", owner: true) } }
     }
@@ -335,6 +340,7 @@ final class FriendsClient: ObservableObject {
         let hash = r.myTokenHash
         if r.status == .active { sendControl("gone", to: r) }
         store.deleteFiles(messages(box).filter { $0.file != nil }.map(\.id))
+        removeStaged(chat: box)
         games[box] = nil; plays[box] = nil
         book.remove(box: box); persist()
         if let hash { Task { _ = await call("DELETE", "/f/allow/\(hash)", owner: true) } }
@@ -383,9 +389,12 @@ final class FriendsClient: ObservableObject {
 
     private func deliver(id: String, text: String, to friend: FriendRecord) async {
         guard let token = friend.sendToken else { book.setState(box: friend.box, id: id, .failed); return }
-        let body = FriendBody(t: "msg", from: identity.box, id: id, text: text, ts: Int64(Date().timeIntervalSince1970 * 1000))
+        // If the chat was cleared while this waited, the message is gone and must not be sent (it would come back to life on their side).
+        guard let mine = liveMessage(friend.box, id) else { return }
+        var body = FriendBody(t: "msg", from: identity.box, id: id, text: text, ts: Int64(Date().timeIntervalSince1970 * 1000))
+        body.ce = mine.ce ?? book.epoch(friend.box)
         guard let blob = try? FriendCrypto.seal(bodyText: body.encoded(), kind: "msg", from: identity, toBox: friend.box, toDH: friend.dh) else { book.setState(box: friend.box, id: id, .failed); return }
-        let r = await call("POST", "/f/send", body: ["to": friend.box, "token": token, "blob": blob])
+        let r = await post(friend, token: token, blob: blob, chat: friend.box)
         book.setState(box: friend.box, id: id, r.status == 200 ? .sent : .failed)
         if r.status == 403 { lastProblem = "\(friend.displayName) removed you or hasn't accepted." } else if r.status != 200 { lastProblem = explain(r.status, r.json) }
         persist()
@@ -399,7 +408,7 @@ final class FriendsClient: ObservableObject {
         guard readSent.insert(key).inserted else { return }
         let body = FriendBody(t: "rcpt", from: identity.box, id: id, state: state, ts: Int64(Date().timeIntervalSince1970 * 1000))
         guard let blob = try? FriendCrypto.seal(bodyText: body.encoded(), kind: "msg", from: identity, toBox: friend.box, toDH: friend.dh) else { return }
-        Task { _ = await call("POST", "/f/send", body: ["to": friend.box, "token": token, "blob": blob]) }
+        Task { _ = await post(friend, token: token, blob: blob, chat: friend.box) }
     }
 
     private func sendControl(_ type: String, to friend: FriendRecord) {
@@ -432,7 +441,7 @@ final class FriendsClient: ObservableObject {
     // MARK: Files
 
     /// A file being put back together from its chunks.
-    private struct Partial { var name: String; var n: Int; var group: String?; var chunks: [Int: Data] = [:]; var started = Date() }
+    private struct Partial { var name: String; var n: Int; var group: String?; var ce: Int?; var chunks: [Int: Data] = [:]; var started = Date() }
     private var partials: [String: Partial] = [:]
 
     private func receiveChunk(_ body: FriendBody, from friend: FriendRecord) {
@@ -440,12 +449,16 @@ final class FriendsClient: ObservableObject {
               let text = body.fd, text.count <= Friends.chunkSize * 2, let bytes = Friends.unb64u(text), bytes.count <= Friends.chunkSize,
               let name = FriendsBook.cleanFileName(body.fname), !book.vault.seen.contains(id) else { return }
         let group = body.g
+        // A piece from before the chat was cleared is dropped before anything is kept.
+        let chatKey = group.map(Friends.groupKey) ?? friend.box
+        let sentAt = body.ts.map { Date(timeIntervalSince1970: Double($0) / 1000) } ?? Date()
+        if book.isStale(key: chatKey, ce: body.ce, date: sentAt) { return }
         if let group { guard book.group(Friends.groupKey(group))?.members.contains(friend.box) == true else { return } }
         let key = "\(friend.box)|\(id)"
         partials = partials.filter { Date().timeIntervalSince($0.value.started) < 600 }          // give up on files that stalled
         if partials[key] == nil {
             guard partials.count < 8 else { return }
-            partials[key] = Partial(name: name, n: n, group: group)
+            partials[key] = Partial(name: name, n: n, group: group, ce: body.ce)
         }
         guard partials[key]?.n == n else { return }
         partials[key]?.chunks[i] = bytes
@@ -453,7 +466,7 @@ final class FriendsClient: ObservableObject {
         partials[key] = nil
         var data = Data()
         for k in 0..<n { guard let c = part.chunks[k] else { return }; data.append(c) }
-        guard data.count <= Friends.maxFileBytes, let m = book.receiveFile(from: friend.box, group: group, id: id, name: part.name, size: data.count) else { return }
+        guard data.count <= Friends.maxFileBytes, let m = book.receiveFile(from: friend.box, group: group, id: id, name: part.name, size: data.count, ts: body.ts, ce: part.ce) else { return }
         store.saveFile(id, data: data)
         let shown = group.flatMap { book.group(Friends.groupKey($0))?.name }.map { "\(friend.displayName) in \($0)" } ?? friend.displayName
         let viewKey = group.map(Friends.groupKey) ?? friend.box
@@ -496,13 +509,16 @@ final class FriendsClient: ObservableObject {
             guard let token = friend.sendToken else { continue }
             var ok = true
             for (i, piece) in pieces.enumerated() {
+                // Cleared while the pieces were going out: stop, and send nothing more of it.
+                guard let mine = liveMessage(historyKey, id) else { return }
                 var body = FriendBody(t: "chunk", from: identity.box, id: id, ts: Int64(Date().timeIntervalSince1970 * 1000))
+                body.ce = mine.ce ?? book.epoch(historyKey)
                 body.g = group; body.fname = name; body.fn = pieces.count; body.fi = i; body.fd = Friends.b64u(piece)
                 guard let blob = try? FriendCrypto.seal(bodyText: body.encoded(), kind: "msg", from: identity, toBox: friend.box, toDH: friend.dh) else { ok = false; break }
-                var r = await call("POST", "/f/send", body: ["to": friend.box, "token": token, "blob": blob])
+                var r = await post(friend, token: token, blob: blob, chat: historyKey)
                 // The relay allows a limited number of sends a minute: wait and try the same piece again rather than fail halfway.
                 var waits = 0
-                while r.status == 429, waits < 8 { waits += 1; try? await Task.sleep(nanoseconds: 8_000_000_000); r = await call("POST", "/f/send", body: ["to": friend.box, "token": token, "blob": blob]) }
+                while r.status == 429, waits < 8 { waits += 1; try? await Task.sleep(nanoseconds: 8_000_000_000); r = await post(friend, token: token, blob: blob, chat: historyKey) }
                 if r.status != 200 { ok = false; lastStatus = r.status; break }
                 if pieces.count > 1 { try? await Task.sleep(nanoseconds: 220_000_000) }   // about 4 pieces a second, under the relay's limit
             }
@@ -514,11 +530,12 @@ final class FriendsClient: ObservableObject {
     }
 
     /// Puts a received file in a fresh folder and shows it in Finder; it is never opened for you.
-    func reveal(fileID id: String, name: String) {
+    func reveal(fileID id: String, name: String, chat: String) {
         guard let data = store.loadFile(id), let safe = FriendsBook.cleanFileName(name) else { lastProblem = "That file is no longer on this Mac."; return }
         let dir = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString, isDirectory: true)
         let url = dir.appendingPathComponent(safe)
         do { try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true); try data.write(to: url) } catch { return }
+        staged[chat, default: []].append(dir)           // remembered so "Clear chat" can delete this copy too
         NSWorkspace.shared.activateFileViewerSelecting([url])
     }
 
@@ -557,10 +574,11 @@ final class FriendsClient: ObservableObject {
         var reached = 0
         for friend in friends {
             guard let token = friend.sendToken else { continue }
+            guard let mine = liveMessage(g.key, id) else { return }       // cleared while sending: do not send it
             var body = FriendBody(t: "gmsg", from: identity.box, id: id, text: text, ts: Int64(Date().timeIntervalSince1970 * 1000))
-            body.g = g.id
+            body.g = g.id; body.ce = mine.ce ?? book.epoch(g.key)
             guard let blob = try? FriendCrypto.seal(bodyText: body.encoded(), kind: "msg", from: identity, toBox: friend.box, toDH: friend.dh) else { continue }
-            let r = await call("POST", "/f/send", body: ["to": friend.box, "token": token, "blob": blob])
+            let r = await post(friend, token: token, blob: blob, chat: g.key)
             if r.status == 200 { reached += 1 } else if r.status != 403 { lastProblem = explain(r.status, r.json) }
         }
         book.setState(box: g.key, id: id, reached > 0 ? .sent : .failed)
@@ -584,6 +602,77 @@ final class FriendsClient: ObservableObject {
         Task { _ = await call("POST", "/f/send", body: ["to": friend.box, "token": token, "blob": blob]) }
     }
 
+
+    // MARK: Clear chat
+    //
+    // Wipes one chat (a friend's, or a group's) on this Mac and on every other participant's. The friend stays. Messages sent before the
+    // clear are gone, messages sent after it survive (clear epochs, FriendsBook.clearChat). The other side gets a sealed, signed `clr`
+    // control message over the friend link; if they are offline it waits on the relay like any message. What is still queued on the
+    // relay for that chat is taken back first (/f/purge). Copies outside the app (screenshots, saved or copied files) are out of reach.
+
+    /// Clears a chat for everyone in it. `key` is a friend's mailbox or a group key.
+    func clearChat(_ key: String) {
+        guard let out = book.clearChat(key) else { return }
+        forget(out)
+        let boxes = Friends.isGroupKey(key) ? (book.group(key)?.members ?? []) : [key]
+        book.queueClear(key, epoch: out.epoch, at: out.at, to: boxes.filter { book.record($0)?.status == .active })
+        persist()
+        Task { await flushClears() }
+    }
+
+    /// Everything on this Mac that belonged to a cleared chat besides the messages themselves: saved files, half-received files,
+    /// copies put in the temp folder for Finder, banners already shown, receipts bookkeeping, and the typing/problem lines.
+    private func forget(_ out: FriendsBook.ClearOutcome) {
+        store.deleteFiles(out.files)
+        let gid = Friends.isGroupKey(out.key) ? String(out.key.dropFirst(2)) : nil
+        partials = partials.filter { entry in
+            if let gid { return entry.value.group != gid }
+            return !(entry.value.group == nil && entry.key.hasPrefix("\(out.key)|"))
+        }
+        removeStaged(chat: out.key)
+        let gone = Set(out.files)
+        readSent = readSent.filter { !gone.contains(String($0.split(separator: "|").first ?? "")) }
+        MessengerNotifier.shared.removeFriendNotifications(chat: out.key)
+        typing.remove(out.key); lastProblem = nil
+        MessengerNotifier.shared.setFriendsUnread(totalUnread)
+    }
+
+    private func removeStaged(chat key: String) {
+        for dir in staged[key] ?? [] { try? FileManager.default.removeItem(at: dir) }
+        staged[key] = nil
+    }
+    private var staged: [String: [URL]] = [:]
+    private var flushing = false
+
+    private func liveMessage(_ key: String, _ id: String) -> FriendMessage? { messages(key).first { $0.id == id } }
+
+    /// One send to a friend's mailbox, labelled with the chat it belongs to so a later clear can take it back from the relay.
+    private func post(_ friend: FriendRecord, token: String, blob: String, chat: String) async -> (status: Int, json: [String: Any]) {
+        await call("POST", "/f/send", body: ["to": friend.box, "token": token, "blob": blob, "tag": FriendsBook.chatTag(token: token, key: chat)])
+    }
+
+    /// Tells everyone who still has to be told about a clear. Safe to call again and again; runs when a clear is made and whenever the link comes up.
+    func flushClears() async {
+        guard !flushing else { return }
+        flushing = true; defer { flushing = false }
+        for (key, pending) in book.vault.pendingClears {
+            for box in pending.to {
+                guard let friend = book.record(box), friend.status == .active, let token = friend.sendToken else { book.clearDelivered(key, epoch: pending.epoch, to: box); continue }
+                // 1. take back what is still waiting for them from this chat (best effort: an older relay answers 404 and that is fine)
+                _ = await call("POST", "/f/purge", body: ["to": box, "token": token, "tag": FriendsBook.chatTag(token: token, key: key)])
+                // 2. then the clear itself, so it can never be purged by the step above
+                var body = FriendBody(t: "clr", from: identity.box, ts: pending.at)
+                body.ce = pending.epoch
+                if Friends.isGroupKey(key) { body.g = String(key.dropFirst(2)) }
+                guard let blob = try? FriendCrypto.seal(bodyText: body.encoded(), kind: "msg", from: identity, toBox: box, toDH: friend.dh) else { continue }
+                let r = await call("POST", "/f/send", body: ["to": box, "token": token, "blob": blob])
+                // 403: they removed us, so there is no one to tell. Anything else that is not 200 is tried again later.
+                if r.status == 200 || r.status == 403 { book.clearDelivered(key, epoch: pending.epoch, to: box) }
+                else if r.status != 0 { lastProblem = explain(r.status, r.json) }
+            }
+        }
+        persist()
+    }
 
     // MARK: Tic-tac-toe with a friend
 

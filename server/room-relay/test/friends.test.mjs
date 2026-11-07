@@ -205,6 +205,46 @@ await test('limits: request cap, mailbox size, request rate, lookups, size of on
   assert.equal((await call('POST', '/f/send', { body: { to: b, token: t.token, blob: '!!' }, ip: '6.6.6.7' })).status, 400, 'junk is refused');
 });
 
+await test('clear chat: a sender can take back the still-queued messages of one chat, and only their own', async () => {
+  const owner = await F.newIdentity(), b = await F.boxOf(F.newCode());
+  await claim(owner, b);
+  const t1 = await F.newToken(), t2 = await F.newToken();      // two different friends of the owner
+  for (const t of [t1, t2]) await call('PUT', '/f/allow', { body: { hash: t.hash }, as: owner, boxId: b });
+  const blob = await F.seal(alice, { box: b, dh: owner.dhPub }, 'msg', { t: 'msg', id: 'x', text: 'hi' });
+  const tag = F.b64u(crypto.getRandomValues(new Uint8Array(16))), otherTag = F.b64u(crypto.getRandomValues(new Uint8Array(16)));
+  const send = (t, extra = {}) => call('POST', '/f/send', { body: { to: b, token: t.token, blob, ...extra }, ip: `30.0.${++n % 250}.1` });
+  assert.equal((await send(t1, { tag })).status, 200);
+  assert.equal((await send(t1, { tag })).status, 200);
+  assert.equal((await send(t1, { tag: otherTag })).status, 200, 'another chat of the same friend');
+  assert.equal((await send(t1)).status, 200, 'an old client sends no tag at all');
+  assert.equal((await send(t1, { tag: 'not a tag!!' })).status, 200, 'a junk tag is simply not kept');
+  assert.equal((await send(t2, { tag })).status, 200, 'the same tag text from a different friend');
+  const queued = () => [...box(b).state.map].filter(([k]) => k.startsWith('q:'));
+  assert.equal(queued().length, 6);
+  const purge = (token, tg, to = b) => call('POST', '/f/purge', { body: { to, token, tag: tg }, ip: `31.0.${++n % 250}.1` });
+  // someone without a token for this mailbox can purge nothing
+  assert.equal((await purge(F.b64u(crypto.getRandomValues(new Uint8Array(32))), tag)).status, 403);
+  assert.equal(queued().length, 6);
+  assert.equal((await purge(t1.token, 'x')).status, 400, 'a bad tag is refused');
+  const r = await purge(t1.token, tag);
+  assert.equal(r.status, 200); assert.equal(r.json.removed, 2);
+  const left = queued().map(([, v]) => v);
+  assert.equal(left.length, 4);
+  assert.ok(left.some((v) => v.tag === otherTag), 'other chats of the same friend stay');
+  assert.ok(left.some((v) => v.tag === tag && v.th === t2.hash), "another friend's messages stay, even with the same tag");
+  assert.ok(left.some((v) => !v.tag), 'untagged (older client) messages stay');
+  assert.equal(await box(b).state.storage.get('qCount'), 4, 'the counters follow');
+  assert.equal(await box(b).state.storage.get('qBytes'), 4 * blob.length);
+  assert.equal((await purge(t1.token, tag)).json.removed, 0, 'purging twice is harmless');
+  // a revoked token (friend removed) can no longer purge
+  await call('DELETE', `/f/allow/${t2.hash}`, { as: owner, boxId: b });
+  assert.equal((await purge(t2.token, tag)).status, 403);
+  // a mailbox that does not exist answers like any other call (400 for a bad address)
+  assert.equal((await purge(t1.token, tag, 'nope')).status, 400);
+  // the tag and sender hash are all the server learns: no text
+  assert.ok(!JSON.stringify(left).includes('hi bob'));
+});
+
 await test('items older than 14 days are dropped', async () => {
   const s = box(boxB).state;
   await s.storage.put('q:000000009999', { blob: 'AAAA', at: clock - 15 * 24 * 3600 * 1000 }); await s.storage.put('qCount', 5);
