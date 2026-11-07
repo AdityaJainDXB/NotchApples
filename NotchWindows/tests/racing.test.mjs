@@ -92,7 +92,7 @@ test('computer drivers finish every track, stay on the road, and the lap count i
         if (r.finished) st[i].skill = 0.4;
         const inp = R.driveAI(T, r.car, st[i], 1 / 60);
         const loc = R.locate(T, r.car.x, r.car.y, r.idx);
-        R.stepCar(r.car, inp, 1 / 60, Math.abs(loc.lat) > T.width / 2 + 1.5 ? 0.55 : 1);
+        R.stepOnRoad(T, r.car, inp, 1 / 60, Math.abs(loc.lat) > T.width / 2 + 1.5 ? 0.55 : 1, loc);      // the game's own step: hills, grip and banked corners
         R.progress(r, T, t); steps++; if (Math.abs(r.lat) > T.width / 2 + 1.5 && !r.finished) off++; minLap = Math.max(minLap, r.lap);
       });
       for (let i = 0; i < racers.length; i++) for (let j = i + 1; j < racers.length; j++) R.collide(racers[i].car, racers[j].car);
@@ -380,10 +380,10 @@ test('every car starts on the road, at the height of the road under it', () => {
 
 test('the F1 circuits have at least the relief given in the 2026 circuit notes (Spa ~104 m, Red Bull Ring ~65 m, Suzuka/Monaco/COTA/Interlagos ~40 m ...) and the flat ones stay flat', () => {
   const range = (id) => { const T = R.buildTrack(R.F1_CAL.find((t) => t.id === id)); const zs = T.S.map((q) => q.z); return Math.max(...zs) - Math.min(...zs); };
-  const atLeast = { f1be: 100, f1at: 64, f1jp: 39.5, f1mc: 39.5, f1us: 39.5, f1br: 39.5, f1hu: 34.5, f1es: 29.5, f1az: 29.5, f1md: 25.5 };
+  const atLeast = { f1be: 100, f1at: 64, f1jp: 39.5, f1mc: 39.5, f1us: 35.5, f1br: 39.5, f1hu: 34.5, f1es: 29.5, f1az: 29.5, f1md: 25.5 };
   for (const [id, m] of Object.entries(atLeast)) assert.ok(range(id) >= m, `${id} is ${range(id).toFixed(1)} m, needs ${m}`);
-  for (const id of ['f1au', 'f1cn', 'f1mi', 'f1ca', 'f1sg', 'f1mx', 'f1lv', 'f1ae']) assert.ok(range(id) < 8, `${id} is near flat`);
-  for (const id of ['f1gb', 'f1nl', 'f1it', 'f1qa']) assert.ok(range(id) < 20, `${id} is mild`);
+  for (const id of ['f1au', 'f1cn', 'f1mi', 'f1ca', 'f1sg', 'f1mx', 'f1lv']) assert.ok(range(id) < 8, `${id} is near flat`);
+  for (const id of ['f1gb', 'f1nl', 'f1it', 'f1qa', 'f1ae']) assert.ok(range(id) < 20, `${id} is mild`);
 });
 
 test('the road height is smooth under a moving car: no jump in height or slope as it crosses from one sample to the next, up or down hill', () => {
@@ -569,4 +569,32 @@ test('the announcer says a lap time as minutes and seconds, never as a clock', (
   assert.equal(R.spokenTimes('Best lap 2:05.040'), 'Best lap 2 minutes 5 point 0 4 0 seconds');
   assert.equal(R.spokenTimes('59.123. Not an improvement.'), '59 point 1 2 3 seconds. Not an improvement.');
   assert.equal(R.spokenTimes('Gap 0.4 seconds, box this lap'), 'Gap 0.4 seconds, box this lap');
+});
+
+// Every track has a deliberate elevation profile: the relief built into the road matches the intent in ELEV_INTENT, no grade is
+// steeper than the 17% cap, nothing jumps between samples, and the computer drivers still finish three laps on every track
+// (with the game's own physics step: hills, grip and banked corners).
+test('relief: every track has the elevation it is meant to have, drivable, and the AI still laps it', () => {
+  const defs = R.TRACKS.concat(R.F1_CAL), rows = [];
+  assert.deepEqual(defs.map((d) => d.id).filter((id) => !(id in R.ELEV_INTENT)), [], 'every track has an intended relief');
+  for (const def of defs) {
+    const T = R.buildTrack(def), z = T.S.map((q) => q.z), want = R.ELEV_INTENT[def.id][0];
+    const lo = Math.min(...z), hi = Math.max(...z), relief = hi - lo;
+    let g = 0, jump = 0; for (let i = 0; i < T.m - (def.closed ? 0 : 1); i++) { const d = z[(i + 1) % T.m] - z[i]; g = Math.max(g, Math.abs(d) / T.step); if (i) jump = Math.max(jump, Math.abs(d - (z[i] - z[i - 1]))); }
+    rows.push(`${def.id}\t${want}\t${relief.toFixed(1)}\t${(g * 100).toFixed(1)}%`);
+    assert.ok(Math.abs(relief - want) <= Math.max(1.5, want * 0.15), `${def.id}: wanted ${want} m of relief, built ${relief.toFixed(1)}`);
+    assert.ok(g <= 0.17 + 1e-6, `${def.id}: steepest grade ${(g * 100).toFixed(1)}%`);
+    assert.ok(jump < 0.08, `${def.id}: the slope jumps by ${jump.toFixed(3)} m between samples`);
+    if (def.closed) assert.ok(Math.abs(z[0] - z[T.m - 1]) < 0.3, `${def.id}: the lap closes in height`);
+    T.laps = def.closed ? 3 : 1;
+    const racers = R.CARS.slice(0, 4).map((spec, i) => R.newRacer('a' + i, 'AI' + i, spec, T, i)), st = racers.map(() => ({ idx: -1, lane: 0, skill: 0.9, stuck: 0, rev: 0, go: true }));
+    let t = 0, off = 0, steps = 0;
+    while (!racers.every((r) => r.finished) && t < 900) {
+      racers.forEach((r, i) => { const inp = R.driveAI(T, r.car, st[i], 1 / 60), loc = R.locate(T, r.car.x, r.car.y, r.idx); R.stepOnRoad(T, r.car, inp, 1 / 60, Math.abs(loc.lat) > T.width / 2 + 1.5 ? 0.55 : 1, loc); R.progress(r, T, t); r.car.z = R.trackHeight(T, R.locate(T, r.car.x, r.car.y, r.idx)); steps++; if (Math.abs(r.lat) > T.width / 2 + 1.5 && !r.finished) off++; });
+      t += 1 / 60;
+    }
+    assert.ok(racers.every((r) => r.finished), `${def.id}: AI finished (${t.toFixed(0)} s)`);
+    assert.ok(off / steps < 0.06, `${def.id}: off the road ${(100 * off / steps).toFixed(1)}% of the time`);
+  }
+  if (process.env.RELIEF_TABLE) console.log('track\tintended\tbuilt\tmax grade\n' + rows.join('\n'));
 });

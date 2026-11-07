@@ -70,11 +70,11 @@
   // f1-circuits data set by Tomislav Bacinger, MIT licence, github.com/bacinger/f1-circuits), as steps between points every 12 m, in tenths of a metre. They are drawn at
   // their real length (the tightest hairpins opened out a little, to 18 m at the middle of the road), on a 16 m wide road.
   
-  /// Height of each F1 circuit along its lap, from the 2026 circuit notes (F1_2026_Circuits_Elevation_and_Changes): [distance from
-  /// the start line in km, height in m above the start line] at the crests and the dips, joined by smooth rises and falls (it wraps
-  /// round, so the lap closes without a step). The total relief of each follows those notes: Spa ~104 m (Eau Rouge bottom to the
-  /// Raidillon crest is about 30 m), Red Bull Ring ~65 m, Suzuka, Monaco, COTA and Interlagos ~40 m, Hungaroring ~35 m,
-  /// Barcelona ~30 m, Baku ~30 m, Madrid 26 m (lowest at T2, highest at T7); the flat street circuits stay flat.
+  /// Height of every track along its lap: [distance from the start line in km, height in m above the start line] at the crests and
+  /// the dips, joined by smooth rises and falls (a closed lap wraps round, so it closes without a step; an open track ends on its
+  /// last key). The F1 circuits are in F1_ELEV, the other tracks in TRACK_ELEV, and ELEV_INTENT below says for each how much relief
+  /// (highest minus lowest point, m) it is meant to have and why. The road builder keeps every grade under 17% and smooths the
+  /// heights, so the built relief can differ from the intent by a metre or two (checked by the "relief" test in racing.test.mjs).
   const hillProfile = (len, keys) => (u) => {
     const n = keys.length; let x = (((u % 1) + 1) % 1) * len, i = n - 1;
     if (x >= keys[0][0]) for (let k = 0; k < n; k++) { if (keys[k][0] <= x) i = k; else break; } else x += len;
@@ -83,29 +83,83 @@
   };
   const F1_ELEV = {
     f1au: hillProfile(5.278, [[0, 0], [1.2, 1], [2.8, -1.5], [4.0, 0.5]]),
-    f1cn: hillProfile(5.451, [[0, 0], [1.5, 1.5], [3.2, -1], [4.4, 1]]),
+    f1cn: hillProfile(5.451, [[0, 0], [0.7, 5], [1.6, 3], [3.0, -2.5], [4.2, -0.5]]),        // high at T2, lowest on the long back straight
     f1jp: hillProfile(5.807, [[0, 0], [0.5, -7], [0.8, -9], [1.6, 12], [2.1, 16], [2.7, 4], [3.1, -14], [3.9, 10], [4.3, 26], [4.9, 6], [5.4, -6]]),
-    f1bh: hillProfile(5.412, [[0, 0], [0.8, -2], [1.6, 2], [2.6, 5], [3.6, -1], [4.6, 4], [5.0, 1]]),
-    f1sa: hillProfile(6.175, [[0, 0], [1.5, 1], [3.2, -1], [5, 1]]),
-    f1mi: hillProfile(5.412, [[0, 0], [1.4, 1.5], [3.0, -1], [4.4, 1]]),
-    f1ca: hillProfile(4.361, [[0, 0], [1.4, 1], [2.8, -1], [3.6, 0.5]]),
+    f1bh: hillProfile(5.412, [[0, 0], [0.5, 6], [1.0, 16.5], [1.5, 11], [2.2, 5], [2.9, 9], [3.4, 3], [4.3, 1], [5.0, -0.5]]),      // T4 hairpin the top, the start straight ~15 m below it
+    f1sa: hillProfile(6.175, [[0, 0], [1.5, 1.5], [3.2, -2], [5, 1]]),
+    f1mi: hillProfile(5.412, [[0, 0], [1.4, 2], [3.0, -1.5], [4.4, 1]]),
+    f1ca: hillProfile(4.361, [[0, 0], [1.4, 2.5], [2.8, -2.7], [3.6, 0.5]]),
     f1mc: hillProfile(3.337, [[0, 0], [0.25, -2], [0.5, 14], [0.85, 39], [1.1, 35], [1.3, 23], [1.55, 16], [1.75, 3], [2.0, -4], [2.6, -5], [3.0, -2]]),
     f1es: hillProfile(4.657, [[0, 0], [0.7, 6], [1.2, 16], [1.8, 6], [2.6, -6], [3.2, -14], [3.9, -6], [4.4, -2]]),
-    f1at: hillProfile(4.318, [[0, 0], [0.2, -2], [0.45, 6], [1.0, 34], [1.7, 64], [2.3, 6], [2.8, 20], [3.3, 40], [3.9, 14], [4.2, 3]]),
-    f1gb: hillProfile(5.891, [[0, 0], [0.9, -1], [1.6, -4], [2.4, -2], [3.4, 6], [4.3, 10], [5.0, 6], [5.6, 2]]),
+    f1at: hillProfile(4.318, [[0, 0], [0.2, -2], [0.45, 6], [1.0, 34], [1.7, 63], [2.3, 6], [2.8, 20], [3.3, 40], [3.9, 14], [4.2, 3]]),
+    f1gb: hillProfile(5.891, [[0, 0], [0.9, -1], [1.6, -3], [2.4, -1], [3.4, 4], [4.3, 8], [5.0, 5], [5.6, 2]]),
     f1be: hillProfile(7.004, [[0, 0], [0.4, -6], [0.95, -18], [1.3, 12], [1.9, 48], [2.45, 82], [2.9, 70], [3.5, 38], [4.0, 28], [4.4, 14], [4.9, 8], [5.4, -14], [5.8, -22], [6.3, -12], [6.7, -4]]),
     f1hu: hillProfile(4.381, [[0, 0], [0.5, -10], [1.1, -20], [1.7, -6], [2.3, 8], [2.9, 16], [3.5, 6], [4.0, -1]]),
-    f1nl: hillProfile(4.259, [[0, 0], [0.5, 3], [1.0, -1], [1.6, 6], [2.2, 2], [2.8, 8], [3.4, 2], [3.9, -1]]),
-    f1it: hillProfile(5.793, [[0, 0], [0.7, -3], [1.5, -5], [2.4, -1], [3.3, 2], [4.0, 5], [4.7, 3], [5.3, 1]]),
+    f1nl: hillProfile(4.259, [[0, 0], [0.5, 3], [1.0, -1], [1.6, 7], [2.2, 2], [2.8, 10.5], [3.4, 2], [3.9, -1]]),
+    f1it: hillProfile(5.793, [[0, 0], [0.7, -3], [1.5, -6], [2.4, -1], [3.3, 3], [4.0, 6.5], [4.7, 4], [5.3, 1]]),
     f1md: hillProfile(5.416, [[0, 3], [0.35, 0], [0.9, 8], [1.45, 26], [1.7, 16], [2.2, 18], [2.7, 10], [3.0, 8], [3.3, 18], [4.0, 12], [4.5, 6], [5.0, 3]]),
-    f1az: hillProfile(6.003, [[0, 0], [0.9, -2], [1.8, -6], [2.5, -3], [3.0, 8], [3.5, 18], [3.9, 26], [4.4, 12], [5.0, 4], [5.6, 1]]),
-    f1sg: hillProfile(4.94, [[0, 0], [1.2, 1.5], [2.4, -1], [3.6, 1.5]]),
-    f1us: hillProfile(5.513, [[0, 0], [0.35, 24], [0.55, 36], [1.1, 14], [1.7, 6], [2.6, 10], [3.2, 18], [3.8, 8], [4.4, 0], [5.0, -4]]),
-    f1mx: hillProfile(4.304, [[0, 0], [1.2, 1], [2.6, -1], [3.5, 0.5]]),
-    f1br: hillProfile(4.309, [[0, 0], [0.3, 3], [0.6, -8], [1.2, -20], [1.9, -28], [2.6, -24], [3.2, -18], [3.8, -37], [4.1, -14]]),
-    f1lv: hillProfile(6.201, [[0, 0], [1.5, 1.5], [3.4, -1], [5, 1]]),
-    f1qa: hillProfile(5.419, [[0, 0], [1.0, 2], [2.0, -1], [3.0, 3], [4.0, 0], [4.8, -1]]),
-    f1ae: hillProfile(5.281, [[0, 0], [1.0, 2], [2.0, -1], [3.5, 2], [4.5, -1]]),
+    // Baku: the sea front and the start straight are the low ground; the lap climbs through the old town (the narrow T8-T11 section,
+    // 2.6-2.9 km on this trace) to the castle walls, the top at T13 (3.4 km), then falls through T15-T16 and runs down the long
+    // straight to the line. ~34 m from the sea front to T13 (F1.com 26.8 m, Lapmeta 40 m, the 2026 notes ~30 m).
+    f1az: hillProfile(6.003, [[0, 0], [0.3, -1], [1.0, 2], [1.9, 4], [2.4, 9], [2.65, 16], [2.85, 28], [3.2, 31], [3.43, 34], [3.7, 30], [4.0, 20], [4.5, 11], [4.9, 4], [5.5, 0.5]]),
+    f1sg: hillProfile(4.94, [[0, 0], [1.2, 2.5], [2.4, -2.5], [3.6, 2]]),
+    f1us: hillProfile(5.513, [[0, 0], [0.35, 22], [0.55, 32], [1.1, 12], [1.7, 5], [2.6, 9], [3.2, 16], [3.8, 6], [4.4, -2], [5.0, -4]]),
+    f1mx: hillProfile(4.304, [[0, 0], [1.2, 1.2], [2.6, -1.6], [3.5, 0.5]]),
+    f1br: hillProfile(4.309, [[0, 0], [0.3, 3], [0.6, -8], [1.2, -20], [1.9, -28], [2.6, -24], [3.2, -18], [3.8, -40], [4.1, -14]]),
+    f1lv: hillProfile(6.201, [[0, 0], [1.5, 1.5], [3.4, -1.5], [5, 1]]),
+    f1qa: hillProfile(5.419, [[0, 0], [1.0, 2.5], [2.0, -1.5], [3.0, 3.5], [4.0, 0], [4.8, -1]]),
+    f1ae: hillProfile(5.281, [[0, 0], [0.6, 7], [1.3, 4], [2.0, -1], [3.0, -3.7], [3.9, -1], [4.6, 1.5]]),
+  };
+
+  /// Height of the other tracks (same keys as above; km are measured along the road). The three "style" tracks follow their real
+  /// circuits at the shorter length (Spa's heights are scaled to 0.6 so its famous climbs stay under the 17% grade at 4.3 km);
+  /// the made-up ones follow their setting.
+  const TRACK_ELEV = {
+    hoval: hillProfile(1.93, [[0, 0], [0.5, 3], [0.97, 6], [1.45, 3]]),                                     // a gentle rise to the far hairpin, easy to learn on
+    spa: hillProfile(4.33, [[0, 0], [0.3, 1], [0.72, -16], [0.95, 8], [1.5, 30], [1.95, 45], [2.3, 40], [2.7, 28], [3.2, 10], [3.7, -6], [4.05, -14], [4.25, -6]]),
+    zandvoort: hillProfile(2.96, [[0, 0], [0.35, 2], [0.7, 6], [1.0, 0], [1.4, -3], [1.8, 4], [2.2, 9], [2.6, 3], [2.9, 0]]),
+    monza: hillProfile(3.28, [[0, 0], [0.5, 0.5], [0.9, 3], [1.3, 7], [1.75, 4], [2.2, -6], [2.5, -5], [2.85, -1], [3.1, 0.5]]),
+    sprint: hillProfile(1.6, [[0, 0], [0.4, 3], [0.75, 6], [1.15, 1], [1.6, 3]]),                           // a drag strip is nearly level; a crest and a dip keep the run interesting
+    circuit: hillProfile(2.42, [[0, 0], [0.5, 4], [1.0, 10], [1.5, 6], [2.0, -2]]),
+    mixed: hillProfile(3.63, [[0, 0], [0.6, -2], [1.2, 6], [1.8, 14], [2.4, 8], [3.0, 0]]),
+    gp: hillProfile(4.28, [[0, 0], [0.8, -3], [1.4, 6], [2.0, 16], [2.5, 21], [3.1, 10], [3.7, 2], [4.1, -1]]),
+    oval: null,                                                                                             // a speedway is level; its banking carries the drama
+    street: hillProfile(3.49, [[0, 0], [0.5, 3], [1.1, 9], [1.7, 14], [2.3, 8], [2.9, 3], [3.3, 0]]),      // a hilly city: up one street, down the next
+    alpine: hillProfile(4.02, [[0, 0], [0.5, 12], [1.0, 30], [1.5, 52], [2.0, 70], [2.5, 58], [3.0, 36], [3.5, 14], [3.9, 3]]),
+    hairpins: hillProfile(3.4, [[0, 0], [0.6, 24], [1.2, 52], [1.8, 80], [2.4, 108], [3.0, 134], [3.4, 150]]),   // six hairpins climbing a hillside, ~4.4% on average
+    desert: hillProfile(2.73, [[0, 0], [0.35, 5], [0.7, -1], [1.1, 8], [1.45, 1], [1.9, 12], [2.3, 7], [2.73, 20]]),   // dunes, and a long rise to the finish
+    coast: hillProfile(3.75, [[0, 0], [0.5, 6], [1.0, 22], [1.5, 38], [2.1, 44], [2.6, 30], [3.1, 14], [3.5, 4]]),     // up on to the cliffs, along the top, down to the hairpin at the bay
+    snow: hillProfile(3.68, [[0, 0], [1.0, 0.5], [2.0, -0.5], [3.0, 0.3]]),                                  // a frozen lake is level; only a metre of pressure ridges
+    kart: hillProfile(2.13, [[0, 0], [0.4, 2], [0.8, 6], [1.2, 8], [1.6, 3], [2.0, 0]]),
+  };
+
+  /// Banking of the tracks other than the F1 circuits (same keys as F1_BANK): Zandvoort's Tarzan and its last corner, about 18 degrees.
+  const TRACK_BANK = {
+    zandvoort: hillProfile(2.96, [[0, 0], [0.55, 0], [0.62, 18], [0.8, 18], [0.88, 0], [2.45, 0], [2.52, 18], [2.8, 18], [2.9, 0]]),
+  };
+
+  /// How much relief (highest minus lowest point of the lap, m) each track is meant to have, and where that comes from.
+  const ELEV_INTENT = {
+    f1au: [2.6, 'F1.com: Albert Park 2.6 m, the flattest circuit'], f1cn: [7.4, 'F1.com: Shanghai 7.4 m, high at T2, low on the back straight'],
+    f1jp: [40, 'F1.com 40.4 m; 2026 notes ~40 m'], f1bh: [17, 'F1.com 16.9 m, T4 hairpin the top, start straight ~15 m lower'],
+    f1sa: [3.5, 'estimate: Jeddah is a flat seafront street circuit (no published figure)'], f1mi: [3.5, 'estimate: Miami is built on flat ground (no published figure)'],
+    f1ca: [5.2, 'F1.com: Montreal 5.2 m'], f1mc: [42, 'F1.com: Monaco 42 m, Casino Square to just before La Rascasse'],
+    f1es: [30, 'F1.com: Barcelona 29.6 m, T12 top, T1 bottom'], f1at: [64, 'F1.com: Red Bull Ring 63.5 m'],
+    f1gb: [11.3, 'F1.com: Silverstone 11.3 m'], f1be: [102, 'F1.com: Spa 102.2 m; Eau Rouge to the Raidillon crest ~30 m'],
+    f1hu: [35, 'F1.com: Hungaroring 34.7 m'], f1nl: [12, 'estimate: Zandvoort dunes ~12 m (no published figure), plus banked T3 and T14'],
+    f1it: [12.8, 'F1.com: Monza 12.8 m, lowest between Lesmo 2 and Ascari'], f1md: [26, '2026 notes / Pirelli: Madring 26 m'],
+    f1az: [34, 'F1.com 26.8 m (T13 top, sea front ~24 m below sea level), Lapmeta 40 m, 2026 notes ~30 m'], f1sg: [5.3, 'F1.com: Marina Bay 5.3 m'],
+    f1us: [36, 'F1.com 30.9 m, 2026 notes ~40 m; T1 hill the top'], f1mx: [2.8, 'F1.com: Mexico City 2.8 m (but 2,240 m above the sea)'],
+    f1br: [43, 'F1.com: Interlagos 43 m, T5/Junção the lowest'], f1lv: [3, 'estimate: the Strip is flat (no published figure)'],
+    f1qa: [5, 'estimate: 2026 notes "slight undulation"'], f1ae: [10.7, 'F1.com: Yas Marina 10.7 m, T3 the peak'],
+    hoval: [6, 'made up: a gentle rise to the far hairpin'], spa: [62, 'real Spa 102 m at 0.6 scale: La Source drop, Eau Rouge/Raidillon, Kemmel'],
+    zandvoort: [12, 'real Zandvoort dunes ~12 m, banked Tarzan and last corner'], monza: [13, 'F1.com: Monza 12.8 m'],
+    sprint: [6, 'made up: a drag strip with one crest and a dip'], circuit: [12, 'made up: a flowing loop over a low hill'],
+    mixed: [16, 'made up: rolling countryside'], gp: [24, 'made up: the hairpin on the hill top, the back straight downhill'],
+    oval: [0, 'speedways are level (banking only)'], street: [14, 'made up: a hilly city'],
+    alpine: [70, 'made up: a pass over a col, ~3.5% average'], hairpins: [150, 'made up: six hairpins up a hillside'],
+    desert: [20, 'made up: dunes and a long rise'], coast: [44, 'made up: cliff-top road'],
+    snow: [1, 'a frozen lake is level'], kart: [8, 'made up: a small kart hill'],
   };
 
   /// Banking of the circuits that have it, in degrees at the crest of the bank, by distance from the start line in km (the road
@@ -288,6 +342,7 @@
       carry += d - pos;
     }
     if (closed && Math.hypot(out[out.length - 1][0] - out[0][0], out[out.length - 1][1] - out[0][1]) < step * 0.5) out.pop();
+    { const elev = def.elev || (Object.hasOwn(TRACK_ELEV, def.id) ? TRACK_ELEV[def.id] : null); if (elev) for (let i = 0; i < out.length; i++) out[i][2] = elev(closed ? i / out.length : Math.min(i / (out.length - 1), 1 - 1e-9)); }      // heights by the way along the lap
     const m = out.length, S = [];
     for (let i = 0; i < m; i++) {
       const a = out[closed ? (i - 1 + m) % m : Math.max(0, i - 1)], b = out[closed ? (i + 1) % m : Math.min(m - 1, i + 1)];
@@ -322,7 +377,7 @@
     {
       const roll = new Array(m).fill(0), idxAt = (i) => (closed ? ((i % m) + m) % m : clamp(i, 0, m - 1));
       for (let i = 0; i < m; i++) {
-        const mag = clamp((def.bank ? def.bank(i / m) : S[i].bm) || 0, 0, 24);
+        const mag = clamp((def.bank ? def.bank(i / m) : Object.hasOwn(TRACK_BANK, def.id) ? TRACK_BANK[def.id](i / m) : S[i].bm) || 0, 0, 24);
         if (!mag) continue;
         let ks = 0; for (let j = -6; j <= 6; j++) ks += S[idxAt(i + j)].k;
         ks /= 13;
@@ -4249,6 +4304,6 @@
     setSoundEnabled: (on) => { window.NotchHostSound = !!on; const c = window.NotchRaceGame.current; if (c) c.setSoundEnabled(on); },
     resume: () => { const c = window.NotchRaceGame.current; if (c) c.resume(); },
     current: null,
-    _test: { spokenTimes, buildLandmarks, F1_LM, qualiSizes, qualiOrder, qualiKnockout, qualiGrid, parseRequest, generateTrack, traceImage, simplifyPts, pitInfo, relS, fence, checkTrack, encodeTrack, decodeTrack, customDef, GROUNDS, TRACKS, F1_CAL, matchF1, CARS, buildTrack, locate, trackHeight, trackSlope, roadCurv, roadBank, F1_BANK, gridSlot, newCar, stepCar, driveAI, newRacer, progress, ranking, collide, wallHit, hurt, gearbox, NET, fmt, LEVELS },
+    _test: { stepOnRoad, ELEV_INTENT, F1_ELEV, TRACK_ELEV, spokenTimes, buildLandmarks, F1_LM, qualiSizes, qualiOrder, qualiKnockout, qualiGrid, parseRequest, generateTrack, traceImage, simplifyPts, pitInfo, relS, fence, checkTrack, encodeTrack, decodeTrack, customDef, GROUNDS, TRACKS, F1_CAL, matchF1, CARS, buildTrack, locate, trackHeight, trackSlope, roadCurv, roadBank, F1_BANK, gridSlot, newCar, stepCar, driveAI, newRacer, progress, ranking, collide, wallHit, hurt, gearbox, NET, fmt, LEVELS },
   };
 })();
