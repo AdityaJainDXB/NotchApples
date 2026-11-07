@@ -24,7 +24,7 @@ test('the helper opens, answers from the FAQ, admits when it is unsure, and send
 
   await page.getByLabel('Your question').fill('how much does pro cost');
   await page.keyboard.press('Enter');
-  await expect(dialog).toContainText('Pro is $1 and Ultimate is $5');
+  await expect(dialog).toContainText('Pro is $5 and Ultimate is $15');
   await expect(dialog.getByRole('link', { name: /Pricing page/ })).toHaveAttribute('href', 'pro.html');
 
   await page.getByLabel('Your question').fill('recommend a good pizza recipe');
@@ -73,7 +73,7 @@ test('with a Turnstile site key the AI question carries a token, and Cloudflare 
   await page.getByRole('button', { name: 'Ask a question about Notch Apple' }).click();
   await page.getByLabel('Your question').fill('how much does pro cost');
   await page.keyboard.press('Enter');
-  await expect(page.getByRole('dialog', { name: 'Ask about Notch Apple' })).toContainText('Pro is $1');
+  await expect(page.getByRole('dialog', { name: 'Ask about Notch Apple' })).toContainText('Pro is $5');
   expect(cloudflare, 'a question the FAQ answers never touches Cloudflare').toBe(0);
   await page.getByLabel('Your question').fill('recommend a good pizza recipe');
   await page.keyboard.press('Enter');

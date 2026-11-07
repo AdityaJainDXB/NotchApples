@@ -451,9 +451,9 @@ private struct LicenseSettings: View {
 
             Section {
                 if entitlements.tier == .pro {
-                    Link("Upgrade to Ultimate for $4 →", destination: URL(string: LicenseServer.site + "#upgrade")!)
+                    Link("Upgrade to Ultimate for $10 →", destination: URL(string: LicenseServer.site + "#upgrade")!)
                 } else if entitlements.tier == .free {
-                    Link("Get Pro ($1) or Ultimate ($5) →", destination: URL(string: LicenseServer.site)!)
+                    Link("Get Pro ($5) or Ultimate ($15) →", destination: URL(string: LicenseServer.site)!)
                 }
                 Link("Lost my key?", destination: URL(string: LicenseServer.site + "#recover")!)
                 Link("Terms and refunds", destination: URL(string: "https://adityajaindxb.github.io/NotchApples/terms.html")!)
@@ -977,7 +977,7 @@ private struct ClaudeSettings: View {
 
     var body: some View {
         Form {
-            // What Notch Apple AI gives you, and that it comes with Pro ($1 once), not only Ultimate.
+            // What Notch Apple AI gives you, and that it comes with Pro ($5 once), not only Ultimate.
             Section {
                 VStack(alignment: .leading, spacing: 5) {
                     ForEach(Self.advantages, id: \.0) { icon, text in
@@ -986,7 +986,7 @@ private struct ClaudeSettings: View {
                 }
                 HStack {
                     if entitlements.tier == .free {
-                        Link("Get Pro ($1 once) for Notch Apple AI →", destination: URL(string: LicenseServer.site)!)
+                        Link("Get Pro ($5 once) for Notch Apple AI →", destination: URL(string: LicenseServer.site)!)
                     } else if config.provider != .hosted {
                         Button("Use Notch Apple AI") { config.provider = .hosted }
                     } else {

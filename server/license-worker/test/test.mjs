@@ -28,6 +28,7 @@ const KV = {
 const mails = [];
 const env = {
   KV, SIGNING_KEY: JSON.stringify(jwk), ADMIN_TOKEN: 'admin-test', EMAIL_PEPPER: 'pepper',
+  PRICE_PRO: '1', PRICE_ULTIMATE: '5', PRICE_UPGRADE: '4', PRICE_AED_PRO: '4.4', PRICE_AED_ULTIMATE: '11', PRICE_AED_UPGRADE: '6.6',   // the tests pin their own prices: they check how checkout works, not what it costs today
   WALLET: 'ltc1qtestwallet', NETWORK: 'testnet', ULTIMATE_ON: '1', TEST_LTC_PRICE: '70', MAIL_LOG: mails, COLD_PER_DAY: '99',
 };
 
@@ -1221,5 +1222,16 @@ await test('Turnstile: a token must be real, for this surface and from our own s
     answer = { success: true, action: 'ask', hostname: 'adityajaindxb.github.io' };
     assert.equal((await call('/support', { ...base, cf: tok }, { 'cf-connecting-ip': '8.8.4.3' })).status, 403, "the helper's token is not a support token");
   } finally { globalThis.fetch = prev; delete env.TURNSTILE_SECRET; delete env.TURNSTILE_HOSTS; }
+});
+await test('The live prices in wrangler.toml: Pro $5, Ultimate $15, upgrade $10; UAE AED 18, 55 and 37', async () => {
+  const { readFileSync } = await import('node:fs');
+  const toml = readFileSync(new URL('../wrangler.toml', import.meta.url), 'utf8');
+  for (const [k, v] of [['PRICE_PRO', '5'], ['PRICE_ULTIMATE', '15'], ['PRICE_UPGRADE', '10'], ['PRICE_AED_PRO', '18'], ['PRICE_AED_ULTIMATE', '55'], ['PRICE_AED_UPGRADE', '37']]) {
+    const found = [...toml.matchAll(new RegExp('^' + k + ' = "([^"]*)"', 'gm'))].map((m) => m[1]);
+    assert.ok(found.length > 0 && found.every((x) => x === v), `${k} should be ${v} everywhere in wrangler.toml, found ${found}`);
+  }
+  // The built-in defaults (used when a setting is missing) match too.
+  const src = readFileSync(new URL('../src/worker.js', import.meta.url), 'utf8');
+  assert.ok(src.includes('env.PRICE_PRO || 5') && src.includes('env.PRICE_ULTIMATE || 15') && src.includes('env.PRICE_UPGRADE || 10'));
 });
 console.log(`\n${passed} passed`);

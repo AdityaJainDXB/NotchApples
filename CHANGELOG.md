@@ -4,6 +4,10 @@ Every Notch Apple release, newest first. The latest few are also on the [README]
 
 > **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is in the repository's history.
 
+### Mac 2.2.46 · Windows 2.2.46 BETA · 7 November 2026 · 💳 New prices: Pro $5, Ultimate $15
+
+- Change: Pro is now $5 and Ultimate $15, each paid once. Upgrading from Pro to Ultimate is $10. In the UAE, card prices are AED 18, AED 55 and AED 37 to upgrade. Keys you already have are unchanged and keep every update.
+
 ### Mac 2.2.45 · Windows 2.2.45 BETA · 7 November 2026 · 🧹 Clear chat works with an unpinned notch
 
 - Fix: with the notch not pinned, pressing Clear chat just closed the notch and deleted nothing, because the confirmation was a separate system window and the notch closes when it loses focus. The confirmation now appears inside the notch, so Clear chat works pinned or not.

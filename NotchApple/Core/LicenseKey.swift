@@ -32,8 +32,8 @@ enum Tier: Int, Comparable, CaseIterable, Codable {
     var price: String {
         switch self {
         case .free: "$0"
-        case .pro: "$1 once"
-        case .ultimate: "$5 once"
+        case .pro: "$5 once"
+        case .ultimate: "$15 once"
         }
     }
 }

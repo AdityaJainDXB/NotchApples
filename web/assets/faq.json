@@ -7,7 +7,7 @@
  {
   "q": "Is it really free?",
   "k": "free cost price pay money cheap paid",
-  "a": "Yes. The core app is free. Pro costs $1 and Ultimate costs $5, each paid once, with no subscription and no account. The code is source-available: you can read and build it, but not resell it or unlock the paid features without a key.",
+  "a": "Yes. The core app is free. Pro costs $5 and Ultimate costs $15, each paid once, with no subscription and no account. The code is source-available: you can read and build it, but not resell it or unlock the paid features without a key.",
   "link": [
    "See pricing",
    "pro.html"
@@ -16,7 +16,7 @@
  {
   "q": "How much do Pro and Ultimate cost?",
   "k": "price pro ultimate upgrade buy purchase cost dollars bitcoin ethereum solana litecoin crypto payment",
-  "a": "Pro is $1 and Ultimate is $5, both one-time purchases that include every future update. You pay in Bitcoin, Ethereum, Solana or Litecoin from the pricing page and your key is made when the payment confirms.",
+  "a": "Pro is $5 and Ultimate is $15, both one-time purchases that include every future update. You pay in Bitcoin, Ethereum, Solana or Litecoin from the pricing page and your key is made when the payment confirms.",
   "link": [
    "Pricing page",
    "pro.html"

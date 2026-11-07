@@ -150,6 +150,10 @@ More screenshots of the capture overlay, the AI answer, the settings and the Win
 
 ## What's new
 
+### Mac 2.2.46 · Windows 2.2.46 BETA · 7 November 2026 · 💳 New prices: Pro $5, Ultimate $15
+
+- Change: Pro is now $5 and Ultimate $15, each paid once. Upgrading from Pro to Ultimate is $10. In the UAE, card prices are AED 18, AED 55 and AED 37 to upgrade. Keys you already have are unchanged and keep every update.
+
 ### Mac 2.2.45 · Windows 2.2.45 BETA · 7 November 2026 · 🧹 Clear chat works with an unpinned notch
 
 - Fix: with the notch not pinned, pressing Clear chat just closed the notch and deleted nothing, because the confirmation was a separate system window and the notch closes when it loses focus. The confirmation now appears inside the notch, so Clear chat works pinned or not.
@@ -159,13 +163,6 @@ More screenshots of the capture overlay, the AI answer, the settings and the Win
 
 - Fix: Clear chat did nothing on the Mac. Choosing Clear chat… in a friend chat or group menu now always shows the confirmation (it was competing with the Remove friend / Leave group confirmation), and clearing then works as described in 2.2.43.
 - Windows: no change in this version (the fix is in the Mac app); Clear chat from 2.2.43 stays as it was. The Windows app has not been tested on real Windows hardware.
-
-### Mac 2.2.43 · Windows 2.2.43 BETA · 7 November 2026 · 🧹 Clear chat in Friends
-
-- New: **Clear chat** in Friends. Open the ⋯ menu of a friend chat or a group (or right-click the friend or group) and choose Clear chat…. After you confirm, the whole conversation is deleted for you and, by an encrypted message, for the other person (everyone, in a group): messages, drafts, unread counts, files saved from the chat, half-received files, and (on Mac) the notifications already shown. You stay friends and each side keeps one line, "You cleared this chat" or "Sam cleared this chat". Either person can do it, with no approval from the other, and if they are offline it is applied when they come online.
-- Messages sent before the clear are gone and messages sent after it are kept, even when one crosses the clear on its way, so an old message can never come back. Anything still waiting for them on Notch Apple's server for that chat is removed as well.
-- The honest limits: Notch Apple removes its own copies. It cannot erase screenshots, anything the other person copied or saved outside the app, or a modified app that ignores the request. An older Notch Apple (before 2.2.43) ignores the clear and keeps its history, so both of you need this version. Windows cannot take back a notification it has already shown.
-- Needs the relay update to remove messages still queued on the server; without it the clear still works, applied when the other app next connects. Games in progress are not part of the history and are left alone. The Windows app has not been tested on real Windows hardware.
 
 ## Plugins
 
@@ -213,7 +210,7 @@ Older versions (1.15.3 and earlier) are no longer available to download: they we
 
 Notch Apple is free, and the free tier is complete. Two one-time upgrades add more:
 
-| | Free | Pro · $1 once | Ultimate · $5 once |
+| | Free | Pro · $5 once | Ultimate · $15 once |
 |---|---|---|---|
 | The notch, Now Playing, timers, calendar, weather, clipboard, shelf, F1, sports, games, window snapping, backup | ✓ | ✓ | ✓ |
 | AI: ask anything with your own free key or Ollama | ✓ | ✓ | ✓ |
@@ -227,7 +224,7 @@ The full feature-by-feature plan is in [docs/TIERS.md](docs/TIERS.md).
 
 - **Buy** on the [pricing page](https://adityajaindxb.github.io/NotchApples/pro.html), in Bitcoin, Ethereum, Solana or Litecoin. Each order gets its own exact amount, which is how the payment is matched to you. Your key is shown straight away and emailed.
 - **Activate** in **Settings → License** (paste the key) or with the **Activate in Notch Apple** link. The key is checked on your Mac against a public key built into the app, so it works offline. It works on up to 3 of your Macs; **Deactivate this Mac** frees a slot.
-- **Upgrade** from Pro to Ultimate for the $4 difference. Your Pro key keeps working until you activate the new one.
+- **Upgrade** from Pro to Ultimate for the $10 difference. Your Pro key keeps working until you activate the new one.
 - **Lost your key?** Use **Lost my key?** on the pricing page; it's emailed to the address you bought with.
 - **Keys from before tiers** (`NOTCH-XXXX-XXXX-XXXX` and access codes) keep working as Pro.
 - Refunds are case by case; see the [terms](https://adityajaindxb.github.io/NotchApples/terms.html).
@@ -266,7 +263,7 @@ Notch Apple is free and made by four high school developers. Donating is **compl
 
 (The Ethereum address also receives USDC on Ethereum, and the Solana address USDC on Solana, if you prefer a stable coin.)
 
-Every bit helps and is hugely appreciated. Want more too? [Pro is $1 and Ultimate $5](https://adityajaindxb.github.io/NotchApples/pro.html), each paid once. Donated already? Ask for a free Ultimate key.
+Every bit helps and is hugely appreciated. Want more too? [Pro is $5 and Ultimate $15](https://adityajaindxb.github.io/NotchApples/pro.html), each paid once. Donated already? Ask for a free Ultimate key.
 
 ## License
 

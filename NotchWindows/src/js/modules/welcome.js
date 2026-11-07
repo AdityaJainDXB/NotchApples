@@ -22,7 +22,7 @@ const locked = (m) => !!m.feature && !canUse(m.feature);
 /// "X needs Pro": what it costs, where to buy it, the flyer, and a place to paste the key.
 export function upgradeDialog(m, onUnlocked) {
   const plan = tierLabel(planOf(m));
-  const price = planOf(m) >= 2 ? '$5' : '$1';
+  const price = planOf(m) >= 2 ? '$15' : '$5';
   const dlg = modal(null, el('div', { class: 'upgrade-dlg' },
     el('img', { class: 'flyer', src: 'img/flyer.webp', alt: 'Notch Apple: your MacBook notch, finally useful' }),
     el('div', { class: 'col', style: 'gap:10px;flex:1;min-width:0' },

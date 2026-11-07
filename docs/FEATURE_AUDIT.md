@@ -114,7 +114,7 @@ Tests: see `xcodebuild test -scheme NotchAppleTests` and `node server/license-wo
 | 106 | FREE | Grandfathering | ✅ `NotchApple/Core/LicenseKey.swift:319` | unit tests |
 | 107 | FREE | Restore purchase | ✅ `NotchApple/UI/SettingsView.swift:272` | License screen |
 | 108 | FREE | Terms and refunds | ✅ `NotchApple/UI/SettingsView.swift:285` | live page |
-| 109 | FREE | Upgrade Pro → Ultimate $4 | ✅ `NotchApple/UI/SettingsView.swift:280` | live end-to-end test |
+| 109 | FREE | Upgrade Pro → Ultimate $10 | ✅ `NotchApple/UI/SettingsView.swift:280` | live end-to-end test |
 | 110 | FREE | Opt-in crash reports | ✅ `NotchApple/UI/TrustSettings.swift:210` | Help & Feedback |
 
 ## Principles, UI, UX and licensing

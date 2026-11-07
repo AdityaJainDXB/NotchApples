@@ -361,7 +361,7 @@ function Access(repaint) {
   const t = tier();
   const feats = Object.entries(FEATURES);
   return [card('Your plan', el('div', { class: 'hstack', style: 'padding:4px 0' }, el('div', { class: 'big grow' }, TIERS[t]), t ? el('span', { class: 'mono small dim' }, maskedCode()) : null),
-    el('div', { class: 'small dim' }, 'Pro is a one-time $1 and Ultimate $5, every future update included. One key works on up to 3 devices, Mac or Windows.')),
+    el('div', { class: 'small dim' }, 'Pro is a one-time $5 and Ultimate $15, every future update included. One key works on up to 3 devices, Mac or Windows.')),
   t < 2 ? card(t ? 'Enter a different key' : 'Enter a key', el('div', { style: 'padding:6px 0' }, keyField(() => repaint())), el('div', { class: 'hstack' }, button('Get Pro or Ultimate →', () => openUrl(BUY_URL), { kind: 'quiet' }))) : null,
   hasSignedKey() ? securityCard(repaint) : null,
   t ? card('', setting('Remove the key from this PC', 'Back to Free here; frees one of your 3 devices.', button('Remove…', async () => { if (await confirm('Remove the key from this PC?', { ok: 'Remove', danger: true })) { await deactivate(); repaint(); } }, { kind: 'danger', small: true }))) : null,

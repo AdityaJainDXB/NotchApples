@@ -204,7 +204,7 @@ async function ltcPrice(env) {
 }
 
 function prices(env) {
-  return { pro: Number(env.PRICE_PRO || 1), ultimate: Number(env.PRICE_ULTIMATE || 5), upgrade: Number(env.PRICE_UPGRADE || 4) };
+  return { pro: Number(env.PRICE_PRO || 5), ultimate: Number(env.PRICE_ULTIMATE || 15), upgrade: Number(env.PRICE_UPGRADE || 10) };
 }
 
 // MARK: Litecoin

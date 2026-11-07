@@ -59,7 +59,7 @@ export function renderUpgrade(module, onUnlocked) {
       el('div', { style: 'font-size:38px' }, module.icon),
       el('div', { class: 'title' }, `${module.name} is part of ${name}`),
       el('div', { class: 'small dim' }, module.blurb || f.detail || ''),
-      el('div', { class: 'small faint' }, 'Pro is a one-time $1 and Ultimate $5, with every future update included. One key works on up to 3 devices, Mac or Windows.'),
+      el('div', { class: 'small faint' }, 'Pro is a one-time $5 and Ultimate $15, with every future update included. One key works on up to 3 devices, Mac or Windows.'),
       el('button', { class: 'btn quiet', onclick: () => openUrl(BUY_URL) }, `Get ${name} →`),
       keyField(() => {
         wrap.replaceChildren(el('div', { class: 'center' },
