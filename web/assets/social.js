@@ -3,11 +3,11 @@
 (function () {
   'use strict';
   var PROFILE = 'https://www.instagram.com/notchapples/', DM = 'https://ig.me/m/notchapples';
-  var css = '.na-ig{position:fixed;right:max(16px,env(safe-area-inset-right));z-index:56;font:600 14px/1 Geist,-apple-system,system-ui,sans-serif}' +
-    '.na-ig-b{display:flex;align-items:center;gap:8px;height:44px;padding:0 16px 0 8px;border:0;border-radius:99px;background:#fff;color:#14121b;font:inherit;cursor:pointer;box-shadow:0 8px 24px -8px rgba(0,0,0,.6)}' +
+  var css = '.na-ig{position:fixed;right:max(16px,env(safe-area-inset-right));z-index:56;font:600 14px/1 Archivo,-apple-system,system-ui,sans-serif}' +
+    '.na-ig-b{display:flex;align-items:center;gap:8px;height:44px;padding:0 16px 0 8px;border:0;border-radius:10px;background:#fff;color:#14121b;font:inherit;cursor:pointer;box-shadow:0 8px 24px -8px rgba(0,0,0,.6)}' +
     '.na-ig-b>span:first-child{display:grid;place-items:center;width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#f9a03f,#e1306c 55%,#7a3fd1);color:#fff}' +
     '.na-ig-b svg{width:16px;height:16px}' +
-    '.na-ig-m{position:absolute;right:0;bottom:54px;min-width:210px;padding:6px;border-radius:14px;background:#14121b;border:1px solid rgba(255,255,255,.14);box-shadow:0 18px 44px -10px rgba(0,0,0,.75)}' +
+    '.na-ig-m{position:absolute;right:0;bottom:54px;min-width:210px;padding:6px;border-radius:8px;background:#14121b;border:1px solid rgba(255,255,255,.14);box-shadow:0 18px 44px -10px rgba(0,0,0,.75)}' +
     '.na-ig-m[hidden]{display:none}' +
     '.na-ig-m a{display:block;padding:11px 12px;border-radius:9px;color:#f3f1f8;text-decoration:none;font-weight:550}' +
     '.na-ig-m a small{display:block;margin-top:3px;color:#a7a2b5;font-weight:400;font-size:12.5px}' +

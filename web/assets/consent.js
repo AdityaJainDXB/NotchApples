@@ -25,7 +25,7 @@
   }
 
   var css = '#na-cc,#na-cc *{box-sizing:border-box}' +
-    '#na-cc{position:fixed;z-index:2147483000;left:16px;right:16px;bottom:16px;max-width:560px;font:14.5px/1.5 Geist,-apple-system,system-ui,sans-serif;color:#f3f1f8;background:#14121b;border:1px solid rgba(255,255,255,.14);border-radius:16px;padding:18px 18px 16px;box-shadow:0 24px 60px -12px rgba(0,0,0,.75)}' +
+    '#na-cc{position:fixed;z-index:2147483000;left:16px;right:16px;bottom:16px;max-width:560px;font:14.5px/1.5 Archivo,-apple-system,system-ui,sans-serif;color:#f3f1f8;background:#14121b;border:1px solid rgba(255,255,255,.14);border-radius:10px;padding:18px 18px 16px;box-shadow:0 24px 60px -12px rgba(0,0,0,.75)}' +
     '#na-cc h2{font-size:16px;font-weight:650;margin:0 0 6px;letter-spacing:-.01em}' +
     '#na-cc p{margin:0 0 12px;color:#c4bfd1}' +
     '#na-cc a{color:#e2d9ff;text-underline-offset:3px}' +
