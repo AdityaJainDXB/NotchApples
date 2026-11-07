@@ -38,6 +38,10 @@ struct FriendsView: View {
             else if let box = selected, let friend = client.book.record(box), friend.status == .active { chat(friend) } else { placeholder }
         }
         .sheet(isPresented: $showNewGroup) { newGroupSheet }
+        // One dialog for both kinds of chat, on the outer view: two confirmation dialogs stacked on one header (Clear + Remove/Leave) made SwiftUI show neither.
+        .confirmationDialog(clearTitle, isPresented: $confirmClear, titleVisibility: .visible) {
+            Button(clearButton, role: .destructive) { if let key = selected { client.clearChat(key); draft = "" } }
+        } message: { Text(Self.clearWarning(who: clearWho)) }
         .overlay(alignment: .bottomTrailing) { myCodePill }
         .onAppear { client.activate(); if selected == nil { selected = client.friends.first?.box } }
         .onDisappear { client.viewing = nil; NotchPrefs.chatGame("friend", false) }
@@ -204,9 +208,6 @@ struct FriendsView: View {
                 } label: { Image(systemName: "ellipsis.circle") }
                     .menuStyle(.borderlessButton).frame(width: 28)
             }
-            .confirmationDialog("Clear this group chat for everyone?", isPresented: $confirmClear, titleVisibility: .visible) {
-                Button("Clear chat for everyone", role: .destructive) { client.clearChat(g.key); draft = "" }
-            } message: { Text(Self.clearWarning(who: "everyone in \(g.name)")) }
             .confirmationDialog("Leave \(g.name)? Its messages are deleted from this Mac, and the others are told you left.", isPresented: $confirmLeave) {
                 Button("Leave", role: .destructive) { client.leaveGroup(g.key); selected = nil }
             }
@@ -344,9 +345,6 @@ struct FriendsView: View {
                 } label: { Image(systemName: "ellipsis.circle") }.menuStyle(.borderlessButton).frame(width: 28)
             }
             .popover(isPresented: $renaming) { nicknameEditor(friend) }
-            .confirmationDialog("Clear this chat?", isPresented: $confirmClear, titleVisibility: .visible) {
-                Button("Clear chat for both of us", role: .destructive) { client.clearChat(friend.box); draft = "" }
-            } message: { Text(Self.clearWarning(who: friend.displayName)) }
             .confirmationDialog("Remove \(friend.displayName)? They won't be told why, and you can add them again later.", isPresented: $confirmRemove) {
                 Button("Remove", role: .destructive) { client.remove(friend.box); selected = nil }
             }
@@ -356,6 +354,15 @@ struct FriendsView: View {
             if let problem = client.lastProblem { Text(problem).font(.system(size: 10)).foregroundStyle(.orange) }
             composer(key: friend.box, typing: true) { send(friend) }
         }
+    }
+
+    private var clearIsGroup: Bool { selected.map(Friends.isGroupKey) ?? false }
+    private var clearTitle: String { clearIsGroup ? "Clear this group chat for everyone?" : "Clear this chat?" }
+    private var clearButton: String { clearIsGroup ? "Clear chat for everyone" : "Clear chat for both of us" }
+    private var clearWho: String {
+        guard let key = selected else { return "them" }
+        if Friends.isGroupKey(key) { return "everyone in \(client.group(key)?.name ?? "the group")" }
+        return client.book.record(key)?.displayName ?? "them"
     }
 
     /// What "Clear chat" does and does not do, in plain words (the same limits are in docs/GUIDES.md).

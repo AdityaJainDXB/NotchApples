@@ -150,6 +150,11 @@ More screenshots of the capture overlay, the AI answer, the settings and the Win
 
 ## What's new
 
+### Mac 2.2.44 · Windows 2.2.44 BETA · 7 November 2026 · 🧹 Clear chat now shows its confirmation
+
+- Fix: Clear chat did nothing on the Mac. Choosing Clear chat… in a friend chat or group menu now always shows the confirmation (it was competing with the Remove friend / Leave group confirmation), and clearing then works as described in 2.2.43.
+- Windows: no change in this version (the fix is in the Mac app); Clear chat from 2.2.43 stays as it was. The Windows app has not been tested on real Windows hardware.
+
 ### Mac 2.2.43 · Windows 2.2.43 BETA · 7 November 2026 · 🧹 Clear chat in Friends
 
 - New: **Clear chat** in Friends. Open the ⋯ menu of a friend chat or a group (or right-click the friend or group) and choose Clear chat…. After you confirm, the whole conversation is deleted for you and, by an encrypted message, for the other person (everyone, in a group): messages, drafts, unread counts, files saved from the chat, half-received files, and (on Mac) the notifications already shown. You stay friends and each side keeps one line, "You cleared this chat" or "Sam cleared this chat". Either person can do it, with no approval from the other, and if they are offline it is applied when they come online.
@@ -162,10 +167,6 @@ More screenshots of the capture overlay, the AI answer, the settings and the Win
 - New: every track in Racing now has its own elevation, from real data where there is some. Baku climbs about 34 m through the old town to the castle section (turn 13) and runs back down to the sea front; Spa is 104 m from La Source to the Raidillon crest; the Red Bull Ring, Suzuka, Monaco, Interlagos, COTA, Hungaroring and Barcelona match their published figures. Shanghai, Bahrain, Zandvoort, Monza, Silverstone, Singapore, Montreal and Abu Dhabi were too flat and now follow theirs.
 - New: the made-up tracks have hills that suit them: a mountain pass over a col, six hairpins up a hillside, a cliff-top coast road, desert dunes, a hilly city, a small kart hill. The Spa, Zandvoort and Monza style tracks follow the real circuits, and Zandvoort's Tarzan and last corner are banked. The speedway oval and the frozen lake stay level.
 - The roads stay drivable: no slope is steeper than 17%, and the cockpit and chase cameras and the car's grip react to the hills as before.
-
-### Mac 2.2.41 · Windows 2.2.41 BETA · 7 November 2026 · 🏎️ The steering wheel turns on the formation lap and in the countdown
-
-- Fix: in the first-person views of Racing, the steering wheel stayed still during the formation lap and the pre-race countdown while the car steered. It now turns the whole time, in every car and every mode.
 
 ## Plugins
 

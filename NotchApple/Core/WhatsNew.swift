@@ -20,6 +20,9 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.2.44", date: "7 November 2026", headline: "Clear chat now shows its confirmation", items: [
+            "Fix: Clear chat did nothing on the Mac. Choosing Clear chat… in a friend chat or group menu now always shows the confirmation (it was competing with the Remove friend / Leave group confirmation), and clearing then works as described in 2.2.43.",
+        ]),
         ReleaseNote(version: "2.2.43", date: "7 November 2026", headline: "Clear chat in Friends", items: [
             "New: Clear chat in Friends. Open the ⋯ menu of a friend chat or a group (or right-click the friend or group) and choose Clear chat…. After you confirm, the whole conversation is deleted for you and, by an encrypted message, for the other person (everyone, in a group): messages, drafts, unread counts, files saved from the chat, half-received files and the notifications already shown. You stay friends and each side keeps one line, \"You cleared this chat\" or \"Sam cleared this chat\". Either person can do it, and if they are offline it is applied when they come online.",
             "Messages sent before the clear are gone and messages sent after it are kept, even when one crosses the clear on its way, so an old message can never come back. Anything still waiting for them on Notch Apple's server for that chat is removed as well.",

@@ -4,6 +4,11 @@ Every Notch Apple release, newest first. The latest few are also on the [README]
 
 > **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is in the repository's history.
 
+### Mac 2.2.44 · Windows 2.2.44 BETA · 7 November 2026 · 🧹 Clear chat now shows its confirmation
+
+- Fix: Clear chat did nothing on the Mac. Choosing Clear chat… in a friend chat or group menu now always shows the confirmation (it was competing with the Remove friend / Leave group confirmation), and clearing then works as described in 2.2.43.
+- Windows: no change in this version (the fix is in the Mac app); Clear chat from 2.2.43 stays as it was. The Windows app has not been tested on real Windows hardware.
+
 ### Mac 2.2.43 · Windows 2.2.43 BETA · 7 November 2026 · 🧹 Clear chat in Friends
 
 - New: **Clear chat** in Friends. Open the ⋯ menu of a friend chat or a group (or right-click the friend or group) and choose Clear chat…. After you confirm, the whole conversation is deleted for you and, by an encrypted message, for the other person (everyone, in a group): messages, drafts, unread counts, files saved from the chat, half-received files, and (on Mac) the notifications already shown. You stay friends and each side keeps one line, "You cleared this chat" or "Sam cleared this chat". Either person can do it, with no approval from the other, and if they are offline it is applied when they come online.
