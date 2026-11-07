@@ -20,6 +20,11 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.2.42", date: "7 November 2026", headline: "Every Racing track has real elevation", items: [
+            "New: every track in Racing now has its own elevation, from real data where there is some. Baku climbs about 34 m through the old town to the castle section (turn 13) and runs back down to the sea front; Spa is 104 m from La Source to the Raidillon crest; the Red Bull Ring, Suzuka, Monaco, Interlagos, COTA, Hungaroring and Barcelona match their published figures. Shanghai, Bahrain, Zandvoort, Monza, Silverstone, Singapore, Montreal and Abu Dhabi were too flat and now follow theirs.",
+            "New: the made-up tracks have hills that suit them: a mountain pass over a col, six hairpins up a hillside, a cliff-top coast road, desert dunes, a hilly city, a small kart hill. The Spa, Zandvoort and Monza style tracks follow the real circuits, and Zandvoort's Tarzan and last corner are banked. The speedway oval and the frozen lake stay level.",
+            "The roads stay drivable: no slope is steeper than 17%, and the cockpit and chase cameras and the car's grip react to the hills as before.",
+        ]),
         ReleaseNote(version: "2.2.41", date: "7 November 2026", headline: "The steering wheel turns on the formation lap and in the countdown", items: [
             "Fix: in the first-person views of Racing, the steering wheel stayed still during the formation lap and the pre-race countdown while the car steered. It now turns the whole time, in every car and every mode.",
         ]),
