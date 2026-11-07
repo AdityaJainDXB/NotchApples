@@ -341,7 +341,7 @@ section{padding:clamp(80px,9vw,128px) 0;position:relative}
 .fx{display:grid;grid-template-columns:repeat(3,1fr);gap:0 40px}
 .fi{display:grid;grid-template-columns:40px 1fr;gap:14px;padding:22px 0;border-top:1px solid var(--line);align-items:start}
 .fi .ic{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;background:var(--ac-wash);color:var(--ac-ink);font-size:20px}
-.fi h3{font-size:16.5px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.fi h3{font-size:18px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .fi p{color:var(--mut);font-size:14.5px;margin-top:3px;line-height:1.5}
 .tag{font:500 11px var(--mono);letter-spacing:.02em;color:var(--ac-ink);padding:2px 7px;border-radius:6px;background:var(--ac-wash)}
 .tag.u{color:#ffd28a;background:rgba(255,190,90,.1)}
@@ -361,7 +361,7 @@ section{padding:clamp(80px,9vw,128px) 0;position:relative}
 @keyframes beam{to{--beam:360deg}}
 /* Text Shimmer: a highlight sweeps across the main download button now and then */
 #dlBtn{position:relative;overflow:hidden}
-#dlBtn::after{content:"";position:absolute;inset:0;background:linear-gradient(105deg,transparent 30%,rgba(255,255,255,.32) 50%,transparent 70%);transform:translateX(-120%);animation:sweep 3.6s ease-in-out 1.5s infinite;pointer-events:none}
+#dlBtn::after{content:"";position:absolute;inset:0;background:linear-gradient(105deg,transparent 30%,rgba(255,255,255,.32) 50%,transparent 70%);transform:translateX(-120%);;pointer-events:none}
 @keyframes sweep{0%{transform:translateX(-120%)}45%,100%{transform:translateX(120%)}}
 /* Blur Reveal: section headings come into focus word by word */
 .js .sh.rv h2 .w{display:inline-block;filter:blur(6px);opacity:0;transform:translateY(6px);transition:filter .6s var(--ease-out),opacity .6s var(--ease-out),transform .6s var(--ease-out);transition-delay:calc(var(--i)*55ms)}
@@ -400,7 +400,7 @@ section{padding:clamp(80px,9vw,128px) 0;position:relative}
 .rel{padding:20px 0;border-top:1px solid var(--line)}
 .rel .v{display:flex;gap:12px;align-items:baseline;justify-content:space-between}
 .rel .v b{font:500 13.5px var(--mono);color:var(--tx)}.rel .v span{color:var(--dim);font-size:13.5px}
-.rel h3{font-size:16.5px;margin:4px 0 6px}
+.rel h3{font-size:18px;margin:4px 0 6px}
 .rel ul{margin-left:18px;color:var(--mut);font-size:14.5px;display:grid;gap:3px}
 .older{border-top:1px solid var(--line)}
 .older>summary{padding:18px 0;color:var(--ac-ink);font-weight:600;cursor:pointer;list-style:none}
@@ -469,7 +469,7 @@ footer{border-top:1px solid var(--line);padding:56px 0 36px;color:var(--mut);fon
 .foot .logo{display:flex;align-items:center;gap:10px;font-weight:600;color:var(--tx)}
 .foot .logo img{width:26px;height:26px;border-radius:7px}
 .foot .brand p{margin-top:12px;max-width:34ch}
-.foot h4{font-size:13.5px;color:var(--tx);margin-bottom:12px;font-weight:600}
+.foot h4{font-size:14.5px;color:var(--tx);margin-bottom:12px;font-weight:600}
 .foot ul{list-style:none;display:grid;gap:2px}.foot ul a{display:inline-block;padding:6px 0}
 .foot a{transition:color .2s ease}.foot a:hover{color:var(--tx)}
 .footbar{border-top:1px solid var(--line);margin-top:40px;padding-top:20px;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;font-size:13.5px;color:var(--dim)}
