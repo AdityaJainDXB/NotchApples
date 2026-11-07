@@ -219,8 +219,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private func applyHotkeyPreference() {
         if SettingsManager.shared.globalHotkeyEnabled {
             GlobalHotkeyManager.shared.register(.toggleNotch) { [weak self] in self?.notchController?.toggle() }
+            // ⌃⌥N also opens and closes the notch, unless someone already recorded exactly that as their own notch shortcut.
+            let primary = HotkeyBinding.notch
+            if primary.keyCode == GlobalHotkeyManager.Key.toggleNotchAlt.keyCode && primary.modifiers == GlobalHotkeyManager.Key.toggleNotchAlt.modifiers {
+                GlobalHotkeyManager.shared.unregister(.toggleNotchAlt)
+            } else {
+                GlobalHotkeyManager.shared.register(.toggleNotchAlt) { [weak self] in self?.notchController?.toggle() }
+            }
         } else {
             GlobalHotkeyManager.shared.unregister(.toggleNotch)
+            GlobalHotkeyManager.shared.unregister(.toggleNotchAlt)
         }
         if SettingsManager.shared.captureHotkeyEnabled {
             GlobalHotkeyManager.shared.register(.capture) { CaptureManager.shared.captureToAI() }

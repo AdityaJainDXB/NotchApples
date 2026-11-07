@@ -4,6 +4,10 @@ Every Notch Apple release, newest first. The latest few are also on the [README]
 
 > **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is in the repository's history.
 
+### Mac 2.2.40 · 7 November 2026 · ⌨️ ⌃⌥N opens the notch
+
+- New: ⌃⌥N opens and closes the notch from anywhere, as the website says. ⌘E still works, and you can change either in Settings → Shortcuts. If you recorded ⌃⌥N as your own notch shortcut, nothing changes.
+
 ### Mac 2.2.39 · 6 November 2026 · 🪟 Passkey and authenticator windows wrap their text
 
 - Fix: the passkey, authenticator and add-email windows cut their explanation off with "…"; they now show all of it.

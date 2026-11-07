@@ -20,6 +20,9 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.2.40", date: "7 November 2026", headline: "⌃⌥N opens the notch", items: [
+            "New: ⌃⌥N opens and closes the notch from anywhere, as the website says. ⌘E still works, and you can change either in Settings → Shortcuts. If you recorded ⌃⌥N as your own notch shortcut, nothing changes.",
+        ]),
         ReleaseNote(version: "2.2.39", date: "6 November 2026", headline: "Passkey and authenticator windows wrap their text", items: [
             "Fix: the passkey, authenticator and add-email windows cut their explanation off with \"…\"; they now show all of it.",
         ]),

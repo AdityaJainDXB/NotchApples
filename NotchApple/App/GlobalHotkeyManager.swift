@@ -161,6 +161,7 @@ final class GlobalHotkeyManager {
         // Window snapping, ⌃⌥ + key.
         case snapLeft = 10, snapRight, snapTop, snapBottom, snapMaximize, snapCenter, snapRestore
         case stopRemote = 17                   // Ends any iPhone remote view or control at once, Control-Option-Shift-K
+        case toggleNotchAlt = 18               // ⌃⌥N also opens and closes the notch (the website says so); ⌘E stays the default
 
         static let windowKeys: [Key] = [.snapLeft, .snapRight, .snapTop, .snapBottom, .snapMaximize, .snapCenter, .snapRestore]
 
@@ -176,6 +177,7 @@ final class GlobalHotkeyManager {
             case .panic: UInt32(kVK_ANSI_P)
             case .quickCapture: UInt32(kVK_ANSI_J)
             case .stopRemote: UInt32(kVK_ANSI_K)
+            case .toggleNotchAlt: UInt32(kVK_ANSI_N)
             case .snapLeft: UInt32(kVK_LeftArrow)
             case .snapRight: UInt32(kVK_RightArrow)
             case .snapTop: UInt32(kVK_UpArrow)
@@ -210,7 +212,7 @@ final class GlobalHotkeyManager {
 
     /// While a required update is waiting only opening and closing the notch (which shows the update) still work.
     static func blockedByRequiredUpdate(_ key: Key) -> Bool {
-        UpdateChecker.isLocked && key != .toggleNotch && key != .closeNotch
+        UpdateChecker.isLocked && key != .toggleNotch && key != .toggleNotchAlt && key != .closeNotch
     }
 
     /// Registers `key`. Calling again replaces the action, and re-registers if the key combination has changed.
