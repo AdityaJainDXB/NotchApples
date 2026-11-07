@@ -150,6 +150,10 @@ More screenshots of the capture overlay, the AI answer, the settings and the Win
 
 ## What's new
 
+### Mac 2.2.41 · Windows 2.2.41 BETA · 7 November 2026 · 🏎️ The steering wheel turns on the formation lap and in the countdown
+
+- Fix: in the first-person views of Racing, the steering wheel stayed still during the formation lap and the pre-race countdown while the car steered. It now turns the whole time, in every car and every mode.
+
 ### Mac 2.2.40 · 7 November 2026 · ⌨️ ⌃⌥N opens the notch
 
 - New: ⌃⌥N opens and closes the notch from anywhere, as the website says. ⌘E still works, and you can change either in Settings → Shortcuts. If you recorded ⌃⌥N as your own notch shortcut, nothing changes.
@@ -157,12 +161,6 @@ More screenshots of the capture overlay, the AI answer, the settings and the Win
 ### Mac 2.2.39 · 6 November 2026 · 🪟 Passkey and authenticator windows wrap their text
 
 - Fix: the passkey, authenticator and add-email windows cut their explanation off with "…"; they now show all of it.
-
-### Mac 2.2.38 · Windows 2.2.38 BETA · 6 November 2026 · 🗝️ Passkeys: Touch ID to confirm a new device
-
-- New: passkeys. In Settings → License → Security (Mac) or Settings → Access (Windows) choose "Add a passkey". Your browser opens a small page on our website, you confirm with Touch ID (or Windows Hello, or your device PIN), and the key now has a passkey. It lives in your browser or password manager (iCloud Keychain, Google, 1Password), so it syncs between your devices and the app never holds it.
-- A second Mac or PC then confirms itself with that passkey: paste the key, choose "Use a passkey", approve in the browser, and it carries on by itself. No email code is needed, and a key with a passkey and no email cannot be claimed by someone who only has the key. Email and the authenticator app still work, and you can remove the passkey any time.
-- Apple's own passkey system needs a paid Apple Developer account, so this one runs through a page on our website and your browser instead.
 
 ## Plugins
 

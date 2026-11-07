@@ -4,6 +4,10 @@ Every Notch Apple release, newest first. The latest few are also on the [README]
 
 > **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is in the repository's history.
 
+### Mac 2.2.41 · Windows 2.2.41 BETA · 7 November 2026 · 🏎️ The steering wheel turns on the formation lap and in the countdown
+
+- Fix: in the first-person views of Racing, the steering wheel stayed still during the formation lap and the pre-race countdown while the car steered. It now turns the whole time, in every car and every mode.
+
 ### Mac 2.2.40 · 7 November 2026 · ⌨️ ⌃⌥N opens the notch
 
 - New: ⌃⌥N opens and closes the notch from anywhere, as the website says. ⌘E still works, and you can change either in Settings → Shortcuts. If you recorded ⌃⌥N as your own notch shortcut, nothing changes.

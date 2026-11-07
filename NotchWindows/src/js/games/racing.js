@@ -2700,6 +2700,8 @@
       padL = Math.max(0, padL - dt); padR = Math.max(0, padR - dt);
     }
     function update(dt) {
+      // The wheel first, in every screen: the formation lap and the countdown steer the car too, and return early below.
+      stepWheel(dt);
       if (screen === 'formation') { formationTick(dt); return; }
       if (screen === 'countdown') {
         const S = startSeq; S.t += dt; cdLeft -= dt;
@@ -2720,7 +2722,6 @@
         startSeq.reacted = true; const rt = clock;
         toast(`Reaction ${rt.toFixed(3)} s${rt < 0.2 ? ' · lightning!' : rt < 0.3 ? ' · good start' : rt > 0.6 ? ' · slow away' : ''}`);
       }
-      stepWheel(dt);
       if (screen === 'setup') setupControl(dt); else if (screen === 'quali') qualiControl(dt);
       if (screen !== 'race' && screen !== 'done' && screen !== 'setup' && screen !== 'quali') return;
       clock += dt;

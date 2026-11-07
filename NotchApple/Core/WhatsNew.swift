@@ -20,6 +20,9 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.2.41", date: "7 November 2026", headline: "The steering wheel turns on the formation lap and in the countdown", items: [
+            "Fix: in the first-person views of Racing, the steering wheel stayed still during the formation lap and the pre-race countdown while the car steered. It now turns the whole time, in every car and every mode.",
+        ]),
         ReleaseNote(version: "2.2.40", date: "7 November 2026", headline: "⌃⌥N opens the notch", items: [
             "New: ⌃⌥N opens and closes the notch from anywhere, as the website says. ⌘E still works, and you can change either in Settings → Shortcuts. If you recorded ⌃⌥N as your own notch shortcut, nothing changes.",
         ]),
