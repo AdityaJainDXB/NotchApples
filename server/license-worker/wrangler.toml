@@ -54,13 +54,15 @@ PRICE_UPGRADE = "10"
 # The webhook signing secret is a secret: `npx wrangler secret put WHOP_WEBHOOK_SECRET`. Whop calls POST /whop-webhook.
 WHOP_PLAN_PRO = "plan_gGn8G8h3jEZH7"
 WHOP_PLAN_ULTIMATE = "plan_ZVGFAHcH1iGJ6"
+WHOP_PLAN_PRO_AED = "plan_ebtYN1VAJeNt8"          # the UAE products, priced in AED
+WHOP_PLAN_ULTIMATE_AED = "plan_ArxUVe16TNsAO"
 DEVICE_LIMIT = "3"
 # Card payments through Ziina: UAE customers pay in AED (the customer pays the card fee, 3% + AED 1). They switch on when the
 # ZIINA_API_KEY secret is set (`npx wrangler secret put ZIINA_API_KEY`). ZIINA_TEST = "1" makes every payment a Ziina test payment
 # (any card works, no money moves) and lets a test request pick the UAE or international price; keep it "0" in production.
-PRICE_AED_PRO = "18"
-PRICE_AED_ULTIMATE = "55"
-PRICE_AED_UPGRADE = "37"
+PRICE_AED_PRO = "4.4"
+PRICE_AED_ULTIMATE = "18"
+PRICE_AED_UPGRADE = "13.6"
 ZIINA_TEST = "0"
 # International customers pay by card in USD (the USD prices above) with a higher card fee, paid by the customer.
 CARD_FEE_INTL_PCT = "5"
@@ -95,6 +97,8 @@ PRICE_UPGRADE = "10"
 # The webhook signing secret is a secret: `npx wrangler secret put WHOP_WEBHOOK_SECRET`. Whop calls POST /whop-webhook.
 WHOP_PLAN_PRO = "plan_gGn8G8h3jEZH7"
 WHOP_PLAN_ULTIMATE = "plan_ZVGFAHcH1iGJ6"
+WHOP_PLAN_PRO_AED = "plan_ebtYN1VAJeNt8"          # the UAE products, priced in AED
+WHOP_PLAN_ULTIMATE_AED = "plan_ArxUVe16TNsAO"
 DEVICE_LIMIT = "3"
 ULTIMATE_ON = "1"
 MAIL_PROVIDER = "brevo"

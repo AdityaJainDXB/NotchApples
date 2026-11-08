@@ -1223,10 +1223,10 @@ await test('Turnstile: a token must be real, for this surface and from our own s
     assert.equal((await call('/support', { ...base, cf: tok }, { 'cf-connecting-ip': '8.8.4.3' })).status, 403, "the helper's token is not a support token");
   } finally { globalThis.fetch = prev; delete env.TURNSTILE_SECRET; delete env.TURNSTILE_HOSTS; }
 });
-await test('The live prices in wrangler.toml: Pro $5, Ultimate $15, upgrade $10; UAE AED 18, 55 and 37', async () => {
+await test('The live prices in wrangler.toml: Pro $5, Ultimate $15, upgrade $10; UAE AED 4.40, 18 and 13.60', async () => {
   const { readFileSync } = await import('node:fs');
   const toml = readFileSync(new URL('../wrangler.toml', import.meta.url), 'utf8');
-  for (const [k, v] of [['PRICE_PRO', '5'], ['PRICE_ULTIMATE', '15'], ['PRICE_UPGRADE', '10'], ['PRICE_AED_PRO', '18'], ['PRICE_AED_ULTIMATE', '55'], ['PRICE_AED_UPGRADE', '37']]) {
+  for (const [k, v] of [['PRICE_PRO', '5'], ['PRICE_ULTIMATE', '15'], ['PRICE_UPGRADE', '10'], ['PRICE_AED_PRO', '4.4'], ['PRICE_AED_ULTIMATE', '18'], ['PRICE_AED_UPGRADE', '13.6']]) {
     const found = [...toml.matchAll(new RegExp('^' + k + ' = "([^"]*)"', 'gm'))].map((m) => m[1]);
     assert.ok(found.length > 0 && found.every((x) => x === v), `${k} should be ${v} everywhere in wrangler.toml, found ${found}`);
   }
@@ -1236,7 +1236,7 @@ await test('The live prices in wrangler.toml: Pro $5, Ultimate $15, upgrade $10;
 });
 await test('Whop: a signed payment.succeeded issues one key and emails it; a wrong signature, an old timestamp, another plan and a retry do nothing; a refund turns the key off', async () => {
   const secret = 'ws_testsecret123';
-  Object.assign(env, { WHOP_WEBHOOK_SECRET: secret, WHOP_PLAN_PRO: 'plan_pro_test', WHOP_PLAN_ULTIMATE: 'plan_ult_test' });
+  Object.assign(env, { WHOP_WEBHOOK_SECRET: secret, WHOP_PLAN_PRO: 'plan_pro_test', WHOP_PLAN_ULTIMATE: 'plan_ult_test', WHOP_PLAN_PRO_AED: 'plan_pro_aed_test', WHOP_PLAN_ULTIMATE_AED: 'plan_ult_aed_test' });
   const sign = async (id, ts, raw) => {
     const k = await crypto.subtle.importKey('raw', new TextEncoder().encode(secret), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
     const mac = new Uint8Array(await crypto.subtle.sign('HMAC', k, new TextEncoder().encode(`${id}.${ts}.${raw}`)));
@@ -1258,6 +1258,8 @@ await test('Whop: a signed payment.succeeded issues one key and emails it; a wro
   assert.equal(mails.slice(before).filter((x) => x.to === 'whop.buyer@example.com').length, 1);
   r = await send(pay('pay_2abc', 'plan_ult_test', 'whop.ult@example.com'));
   assert.match(JSON.stringify(mails.find((x) => x.to === 'whop.ult@example.com')), /NTCH-ULTM-/);
+  r = await send(pay('pay_2bbc', 'plan_pro_aed_test', 'whop.aed@example.com')); assert.match(JSON.stringify(mails.find((x) => x.to === 'whop.aed@example.com')), /NTCH-PRO-/, 'the UAE (AED) Pro plan also gives a Pro key');
+  r = await send(pay('pay_2cbc', 'plan_ult_aed_test', 'whop.aedu@example.com')); assert.match(JSON.stringify(mails.find((x) => x.to === 'whop.aedu@example.com')), /NTCH-ULTM-/, 'the UAE (AED) Ultimate plan gives an Ultimate key');
   r = await send(pay('pay_3abc', 'plan_other', 'x@example.com')); assert.match((await r.json()).ignored, /not a Notch Apple plan/);
   r = await send(pay('pay_4abc', 'plan_pro_test', 'x@example.com'), { sig: 'v1,AAAA' }); assert.equal(r.status, 401, 'a wrong signature');
   r = await send(pay('pay_5abc', 'plan_pro_test', 'x@example.com'), { ts: Math.floor(Date.now() / 1000) - 3600 }); assert.equal(r.status, 401, 'an old timestamp');

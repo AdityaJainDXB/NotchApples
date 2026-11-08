@@ -790,7 +790,7 @@ export async function whopVerify(secret, headers, raw, now = Date.now()) {
 }
 
 /** Whop plan id -> tier, from the worker's settings (the plan ids are not secret). */
-const whopTier = (env, planId) => planId && planId === env.WHOP_PLAN_PRO ? TIER.pro : planId && planId === env.WHOP_PLAN_ULTIMATE ? TIER.ultimate : 0;
+const whopTier = (env, planId) => !planId ? 0 : (planId === env.WHOP_PLAN_PRO || planId === env.WHOP_PLAN_PRO_AED) ? TIER.pro : (planId === env.WHOP_PLAN_ULTIMATE || planId === env.WHOP_PLAN_ULTIMATE_AED) ? TIER.ultimate : 0;
 const pick = (o, ...paths) => { for (const p of paths) { let v = o; for (const k of p.split('.')) v = v == null ? v : v[k]; if (v != null && v !== '') return v; } return null; };
 
 /** POST /whop-webhook: Whop tells us a payment succeeded (or was refunded). A success becomes one key, emailed to the buyer, once per payment. */

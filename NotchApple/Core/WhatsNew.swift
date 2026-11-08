@@ -21,7 +21,7 @@ struct ReleaseNote: Identifiable {
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
         ReleaseNote(version: "2.2.46", date: "7 November 2026", headline: "New prices: Pro $5, Ultimate $15", items: [
-            "Change: Pro is now $5 and Ultimate $15, each paid once. Upgrading from Pro to Ultimate is $10. In the UAE, card prices are AED 18, AED 55 and AED 37 to upgrade. Keys you already have are unchanged and keep every update.",
+            "Change: Pro is now $5 and Ultimate $15, each paid once. Upgrading from Pro to Ultimate is $10. In the UAE, card prices are AED 4.40, AED 18 and AED 13.60 to upgrade. Keys you already have are unchanged and keep every update.",
         ]),
         ReleaseNote(version: "2.2.45", date: "7 November 2026", headline: "Clear chat works with an unpinned notch", items: [
             "Fix: with the notch not pinned, pressing Clear chat just closed the notch and deleted nothing, because the confirmation was a separate system window and the notch closes when it loses focus. The confirmation now appears inside the notch, so Clear chat works pinned or not.",

@@ -6,7 +6,7 @@ Every Notch Apple release, newest first. The latest few are also on the [README]
 
 ### Mac 2.2.46 · Windows 2.2.46 BETA · 7 November 2026 · 💳 New prices: Pro $5, Ultimate $15
 
-- Change: Pro is now $5 and Ultimate $15, each paid once. Upgrading from Pro to Ultimate is $10. In the UAE, card prices are AED 18, AED 55 and AED 37 to upgrade. Keys you already have are unchanged and keep every update.
+- Change: Pro is now $5 and Ultimate $15, each paid once. Upgrading from Pro to Ultimate is $10. In the UAE, card prices are AED 4.40, AED 18 and AED 13.60 to upgrade. Keys you already have are unchanged and keep every update.
 
 ### Mac 2.2.45 · Windows 2.2.45 BETA · 7 November 2026 · 🧹 Clear chat works with an unpinned notch
 
