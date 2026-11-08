@@ -100,7 +100,7 @@ final class PrivateGames: ObservableObject {
     func lock(_ id: String = PrivateGames.flightEconomy) {
         UserDefaults.standard.removeObject(forKey: key(id))
         if let url = try? fileURL(id) { try? FileManager.default.removeItem(at: url) }
-        GameWindow.close(id)
+        PrivateGameWindow.close(id)
         revision += 1
     }
 
@@ -128,14 +128,14 @@ final class PrivateGames: ObservableObject {
             lock(id)
             throw Failure.message("The game isn't saved on this Mac any more. Enter your access code again.")
         }
-        GameWindow.show(id: id, file: url, title: st.name)
+        PrivateGameWindow.show(id: id, file: url, title: st.name)
     }
 }
 
-/// A game's window: an ordinary web page with no way into the app.
+/// A private game's window: an ordinary web page with no way into the app.
 @MainActor
-final class GameWindow: NSObject, NSWindowDelegate {
-    private static var windows: [String: GameWindow] = [:]
+final class PrivateGameWindow: NSObject, NSWindowDelegate {
+    private static var windows: [String: PrivateGameWindow] = [:]
     /// The game checks a public GitHub file for newer versions; inside Notch Apple it never talks to GitHub (the server sends updates).
     private static let noUpdateCheck = "(function(){var f=window.fetch;window.fetch=function(u){if(String(u).indexOf('raw.githubusercontent.com')>=0){return Promise.reject(new Error('offline'))}return f.apply(this,arguments)}})();"
 
@@ -148,7 +148,7 @@ final class GameWindow: NSObject, NSWindowDelegate {
             NSApp.activate(ignoringOtherApps: true)
             return
         }
-        let w = GameWindow(id: id, file: file, title: title)
+        let w = PrivateGameWindow(id: id, file: file, title: title)
         windows[id] = w
         w.window.makeKeyAndOrderFront(nil)
         NSApp.activate(ignoringOtherApps: true)
