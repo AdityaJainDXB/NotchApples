@@ -150,7 +150,7 @@ More screenshots of the capture overlay, the AI answer, the settings and the Win
 
 ## What's new
 
-### Mac 2.2.47 · Windows 2.2.47 BETA · 8 November 2026 · 🎮 A new Games menu, and a private game
+### Mac 2.2.48 · Windows 2.2.48 BETA · 8 November 2026 · 🎮 A new Games menu, and a private game
 
 - New: a new menu for the Games tab. Search the games, filter them (Arcade, Flying & racing, Strategy, Cards & board, Online, Daily), jump back into the last three you played, and pick from a card with a picture for every game. Point at a card to see Play
 - New: Flight Economy, an airline and cruise-ship business game, is in the menu as a private game. It opens only with an access code that is given out personally: click its locked card, enter the code, and it unlocks on that device and opens in its own window

@@ -20,7 +20,7 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
-        ReleaseNote(version: "2.2.47", date: "8 November 2026", headline: "A new Games menu, and a private game", items: [
+        ReleaseNote(version: "2.2.48", date: "8 November 2026", headline: "A new Games menu, and a private game", items: [
             "New: a new menu for the Games tab. Search the games, filter them (Arcade, Flying & racing, Strategy, Cards & board, Online, Daily), jump back into the last three you played, and pick from a card with a picture for every game. Point at a card to see Play",
             "New: Flight Economy, an airline and cruise-ship business game, is in the menu as a private game. It opens only with an access code that is given out personally: click its locked card, enter the code, and it unlocks on that device and opens in its own window"
         ]),
