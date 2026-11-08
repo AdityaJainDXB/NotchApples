@@ -4,6 +4,11 @@ Every Notch Apple release, newest first. The latest few are also on the [README]
 
 > **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is in the repository's history.
 
+### Mac 2.2.47 · Windows 2.2.47 BETA · 8 November 2026 · 🎮 A new Games menu, and a private game
+
+- New: a new menu for the Games tab. Search the games, filter them (Arcade, Flying & racing, Strategy, Cards & board, Online, Daily), jump back into the last three you played, and pick from a card with a picture for every game. Point at a card to see Play
+- New: Flight Economy, an airline and cruise-ship business game, is in the menu as a private game. It opens only with an access code that is given out personally: click its locked card, enter the code, and it unlocks on that device and opens in its own window
+
 ### Mac 2.2.46 · Windows 2.2.46 BETA · 7 November 2026 · 💳 New prices: Pro $5, Ultimate $15
 
 - Change: Pro is now $5 and Ultimate $15, each paid once. Upgrading from Pro to Ultimate is $10. In the UAE, card prices are AED 4.40, AED 18 and AED 13.60 to upgrade. Keys you already have are unchanged and keep every update.

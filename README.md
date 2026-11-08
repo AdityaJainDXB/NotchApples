@@ -150,6 +150,11 @@ More screenshots of the capture overlay, the AI answer, the settings and the Win
 
 ## What's new
 
+### Mac 2.2.47 · Windows 2.2.47 BETA · 8 November 2026 · 🎮 A new Games menu, and a private game
+
+- New: a new menu for the Games tab. Search the games, filter them (Arcade, Flying & racing, Strategy, Cards & board, Online, Daily), jump back into the last three you played, and pick from a card with a picture for every game. Point at a card to see Play
+- New: Flight Economy, an airline and cruise-ship business game, is in the menu as a private game. It opens only with an access code that is given out personally: click its locked card, enter the code, and it unlocks on that device and opens in its own window
+
 ### Mac 2.2.46 · Windows 2.2.46 BETA · 7 November 2026 · 💳 New prices: Pro $5, Ultimate $15
 
 - Change: Pro is now $5 and Ultimate $15, each paid once. Upgrading from Pro to Ultimate is $10. In the UAE, card prices are AED 4.40, AED 18 and AED 13.60 to upgrade. Keys you already have are unchanged and keep every update.
@@ -159,10 +164,6 @@ More screenshots of the capture overlay, the AI answer, the settings and the Win
 - Fix: with the notch not pinned, pressing Clear chat just closed the notch and deleted nothing, because the confirmation was a separate system window and the notch closes when it loses focus. The confirmation now appears inside the notch, so Clear chat works pinned or not.
 - Windows: no change in this version (its confirmation already appears inside the app). The Windows app has not been tested on real Windows hardware.
 
-### Mac 2.2.44 · Windows 2.2.44 BETA · 7 November 2026 · 🧹 Clear chat now shows its confirmation
-
-- Fix: Clear chat did nothing on the Mac. Choosing Clear chat… in a friend chat or group menu now always shows the confirmation (it was competing with the Remove friend / Leave group confirmation), and clearing then works as described in 2.2.43.
-- Windows: no change in this version (the fix is in the Mac app); Clear chat from 2.2.43 stays as it was. The Windows app has not been tested on real Windows hardware.
 
 ## Plugins
 
