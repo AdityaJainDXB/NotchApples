@@ -196,7 +196,7 @@ footer{border-top:1px solid var(--line);padding:30px 0 44px;color:var(--dim);fon
         <li>Messenger, Audio, VPN, Voice Notes, Screen Time, Launcher, Snippets, Mirror, Focus, sync</li>
       </ul>
       <button class="btn" data-buy="pro" id="proBtn">Get Pro, $5</button>
-      <p class="muted" style="font-size:13px;margin:8px 0 0;text-align:center"><a href="https://whop.com/checkout/ch_592NS3uitgEidbE/" target="_blank" rel="noopener" style="text-decoration:underline">Or pay Pro ($5) on Whop</a> (card, Apple Pay, Google Pay). Your key is emailed to you.</p>
+      <p class="muted whop-pay" style="font-size:13px;margin:8px 0 0;text-align:center"><a href="https://whop.com/checkout/ch_592NS3uitgEidbE/" target="_blank" rel="noopener" style="text-decoration:underline">Or pay Pro ($5) on Whop</a> (card, Apple Pay, Google Pay). Your key is emailed to you.</p>
     </div>
     <div class="plan best">
       <span class="badge">Best value</span>
@@ -216,7 +216,7 @@ footer{border-top:1px solid var(--line);padding:30px 0 44px;color:var(--dim);fon
       </ul>
       <p class="muted" style="font-size:13px;margin:-12px 0 6px">Apple Watch is planned. Already have Pro? Upgrade for <span data-price="upgrade">$10</span>.</p>
       <button class="btn" data-buy="ultimate" id="ultBtn">Get Ultimate, $15</button>
-      <p class="muted" style="font-size:13px;margin:8px 0 0;text-align:center"><a href="https://whop.com/checkout/ch_keWbl1Cow14HTuq/" target="_blank" rel="noopener" style="text-decoration:underline">Or pay Ultimate ($15) on Whop</a> (card, Apple Pay, Google Pay). Your key is emailed to you.</p>
+      <p class="muted whop-pay" style="font-size:13px;margin:8px 0 0;text-align:center"><a href="https://whop.com/checkout/ch_keWbl1Cow14HTuq/" target="_blank" rel="noopener" style="text-decoration:underline">Or pay Ultimate ($15) on Whop</a> (card, Apple Pay, Google Pay). Your key is emailed to you.</p>
     </div>
   </div>
 
@@ -532,6 +532,7 @@ function applyRegion(rg) {
   CUR = r.cur; aedP = r.prices; feeInfo = r.fee;
   const sym = CUR === 'AED' ? 'AED ' : '$', m = (v) => (Number.isInteger(+v) ? String(v) : (+v).toFixed(2));
   $('#uaeBanner').hidden = CUR !== 'AED';
+  document.querySelectorAll('.whop-pay').forEach((e) => { e.hidden = CUR === 'AED'; });       // Whop charges the standard USD price: UAE customers pay the AED price by card above
   if (CUR === 'AED') $('#uaeBanner').innerHTML = `<b>UAE price</b> · a discount for all customers in the UAE: Pro AED ${m(aedP.pro)}, Ultimate AED ${m(aedP.ultimate)}`;
   document.querySelectorAll('[data-price]').forEach(e => { const v = e.dataset.price === 'free' ? 0 : m(aedP[e.dataset.price]); e.innerHTML = e.classList.contains('pr') && e.dataset.price !== 'free' ? `${sym}${v}<small>once</small>` : `${sym}${v}` });
   $('#proBtn').textContent = `Get Pro, ${sym}${m(aedP.pro)}`; $('#ultBtn').textContent = `Get Ultimate, ${sym}${m(aedP.ultimate)}`;
