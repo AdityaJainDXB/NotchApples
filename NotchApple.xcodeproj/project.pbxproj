@@ -7,6 +7,11 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		859EEB408BB0D3D6D11059AC /* GamesMenuTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE1E2B240A1BA666531C905A /* GamesMenuTests.swift */; };
+		AD294B339A41BC7A6C7A28EC /* GamesMenuLogic.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3BF9A890031FCE78F1EA4EDD /* GamesMenuLogic.swift */; };
+		DC08A6340D30FAA2869AFE3E /* GamesMenuView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 98DEADF2D4778E65FB5AB640 /* GamesMenuView.swift */; };
+		F1CD7BFD6F1DB21AF8CB6A7B /* GamesMenuLogic.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3BF9A890031FCE78F1EA4EDD /* GamesMenuLogic.swift */; };
+		F69C706F82E9BE388F4D5FD0 /* PrivateGame.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5815BC064DA00FB0ECA0DD87 /* PrivateGame.swift */; };
 		00DDB2C1BC9ABCAA43C21ADD /* AudioView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB93272E84FBD56F3B4F7BA4 /* AudioView.swift */; };
 		00E0A82DFB418DB5808C68C7 /* VPNView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19CE2857208E57529A83DED6 /* VPNView.swift */; };
 		016F2ADAB254656E793EA5F8 /* ClipboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 21DB33F0188BFD9B3D8FA4C3 /* ClipboardView.swift */; };
@@ -509,6 +514,10 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		3BF9A890031FCE78F1EA4EDD /* GamesMenuLogic.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GamesMenuLogic.swift; sourceTree = "<group>"; };
+		5815BC064DA00FB0ECA0DD87 /* PrivateGame.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrivateGame.swift; sourceTree = "<group>"; };
+		98DEADF2D4778E65FB5AB640 /* GamesMenuView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GamesMenuView.swift; sourceTree = "<group>"; };
+		EE1E2B240A1BA666531C905A /* GamesMenuTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GamesMenuTests.swift; sourceTree = "<group>"; };
 		00AA70E8C578D3F81476B1FB /* WallpaperLibrary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WallpaperLibrary.swift; sourceTree = "<group>"; };
 		019362E9195F4E2D5087F587 /* MenuBarDimmer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarDimmer.swift; sourceTree = "<group>"; };
 		01CAAECC14FFA955E98BC7DB /* SmartHomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmartHomeView.swift; sourceTree = "<group>"; };
@@ -1276,6 +1285,7 @@
 				A7241EE0C2D1B5C9875023CE /* VPNTunnelTests.swift */,
 				E182D36E05020E0FB79C7EA1 /* WallpaperLogicTests.swift */,
 				1477CCE52DD2917B95D907D7 /* WellbeingTests.swift */,
+				EE1E2B240A1BA666531C905A /* GamesMenuTests.swift */,
 			);
 			path = NotchAppleTests;
 			sourceTree = "<group>";
@@ -1922,6 +1932,9 @@
 				D0C3A6E52CAC2AAC502D9AD8 /* SolitaireView.swift */,
 				B7EA8815F62F07817CF14BB6 /* TetrisGameView.swift */,
 				D5DDB1DB48C93BECF97137C8 /* WebScriptGame.swift */,
+				3BF9A890031FCE78F1EA4EDD /* GamesMenuLogic.swift */,
+				98DEADF2D4778E65FB5AB640 /* GamesMenuView.swift */,
+				5815BC064DA00FB0ECA0DD87 /* PrivateGame.swift */,
 			);
 			path = Games;
 			sourceTree = "<group>";
@@ -2429,6 +2442,9 @@
 				DC37742E9DC53226546E0A45 /* WindowManager.swift in Sources */,
 				72569F25523646AA163A2245 /* WindowsView.swift in Sources */,
 				D14A7182094B0FCB8A57044B /* WorldClockView.swift in Sources */,
+				F1CD7BFD6F1DB21AF8CB6A7B /* GamesMenuLogic.swift in Sources */,
+				DC08A6340D30FAA2869AFE3E /* GamesMenuView.swift in Sources */,
+				F69C706F82E9BE388F4D5FD0 /* PrivateGame.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2572,6 +2588,8 @@
 				CBDEBAF26B73CB33CD959731 /* WallpaperLogicTests.swift in Sources */,
 				09AFE68E8FB4460E02198C74 /* WellbeingLogic.swift in Sources */,
 				2F00F4820CC8D8244358FD73 /* WellbeingTests.swift in Sources */,
+				AD294B339A41BC7A6C7A28EC /* GamesMenuLogic.swift in Sources */,
+				859EEB408BB0D3D6D11059AC /* GamesMenuTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -28,6 +28,7 @@ mod input;
 mod klick;
 mod convert;
 mod doit;
+mod privategame;
 mod media;
 mod net;
 mod phonetic;
@@ -596,7 +597,7 @@ fn main() {
             awake::set_keep_awake, awake::keep_awake_state,
             system_stats, top_processes, transliterate, capture_screen,
             installed_apps, path_info, launch_app, open_path, reveal_path, open_url,
-            pick_app, pick_folder, pick_file, open_browser, lyrics_overlay_show, lyrics_overlay_hide, greeting_show, greeting_hide,
+            pick_app, pick_folder, pick_file, open_browser, lyrics_overlay_show, lyrics_overlay_hide, greeting_show, greeting_hide, privategame::private_game_save, privategame::private_game_open, privategame::private_game_remove,
             index::search_files, index::set_search_folders, index::search_status,
             icons::icons,
             watch::screen_time, watch::set_edge_trigger, watch::privacy_now, watch::foreground_now, watch::minimize_external,

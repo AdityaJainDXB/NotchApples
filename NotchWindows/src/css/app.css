@@ -702,3 +702,46 @@ body[data-perf="lite"] .ws-step { animation: none; }
 .codedash { width: 8px; height: 1.5px; background: rgba(255,255,255,.2); border-radius: 1px; }
 .codereal { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; border: 0; background: none; cursor: text; }
 @media (prefers-reduced-motion: reduce) { .codecell.lit:empty::after { animation: none; } }
+
+/* The Games menu */
+.gm { display: flex; flex-direction: column; gap: 10px; min-height: 0; flex: 1; }
+.gm-top { display: flex; gap: 10px; align-items: center; }
+.gm-search { flex: none; width: 170px; }
+.gm-chips { display: flex; gap: 6px; overflow: auto; scrollbar-width: none; }
+.gm-chips::-webkit-scrollbar { display: none; }
+.gm-chip { flex: none; border: 0; border-radius: 99px; padding: 5px 11px; background: rgba(255,255,255,.07); color: inherit; opacity: .8; font: 600 12px inherit; cursor: pointer; transition: background .15s; }
+.gm-chip:hover { background: rgba(255,255,255,.13); }
+.gm-chip.on { background: #fff; color: #14121c; opacity: 1; }
+.gm-chip small { opacity: .55; margin-left: 4px; font-weight: 500; }
+.gm-scroll { flex: 1; min-height: 0; overflow: auto; padding-bottom: 12px; }
+.gm-h { font-size: 11px; letter-spacing: .06em; text-transform: uppercase; opacity: .5; margin: 2px 0 7px; font-weight: 700; }
+.gm-recent { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 12px; }
+.gm-rc { display: flex; gap: 9px; align-items: center; background: rgba(255,255,255,.06); border-radius: 12px; padding: 8px 10px; cursor: pointer; transition: background .15s; }
+.gm-rc:hover { background: rgba(255,255,255,.1); }
+.gm-rc b { display: block; font-size: 12px; }
+.gm-rc span { font-size: 11px; opacity: .55; }
+.gm-rg { width: 34px; height: 34px; border-radius: 9px; display: grid; place-items: center; font-size: 18px; flex: none; }
+.gm-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; }
+.gm-card { position: relative; border-radius: 14px; background: rgba(255,255,255,.05); overflow: hidden; cursor: pointer; transition: transform .18s cubic-bezier(.2,.9,.3,1.2), box-shadow .18s; border: 1px solid rgba(255,255,255,.06); outline: none; }
+.gm-card:hover, .gm-card:focus-visible { transform: translateY(-3px); box-shadow: 0 10px 22px rgba(0,0,0,.5); }
+.gm-art { height: 64px; display: grid; place-items: center; font-size: 30px; position: relative; }
+.gm-card.lock .gm-art { filter: saturate(.55) brightness(.8); }
+.gm-meta { padding: 7px 10px 9px; }
+.gm-meta b { display: block; font-size: 12.5px; }
+.gm-tags { display: flex; gap: 4px; margin-top: 3px; flex-wrap: wrap; min-height: 15px; }
+.gm-tag { font-size: 9.5px; font-weight: 700; padding: 1px 6px; border-radius: 99px; background: rgba(255,255,255,.1); opacity: .85; }
+.gm-tag.on { background: rgba(110,231,168,.18); color: #6ee7a8; opacity: 1; }
+.gm-tag.new { background: #ff8aa8; color: #3a0a1c; opacity: 1; }
+.gm-tag.d { background: rgba(255,210,138,.2); color: #ffd28a; opacity: 1; }
+.gm-tag.p { background: rgba(205,191,255,.2); color: #cdbfff; opacity: 1; }
+.gm-play { position: absolute; inset: 0; display: grid; place-items: center; background: rgba(10,10,15,.55); opacity: 0; transition: opacity .15s; font-weight: 700; }
+.gm-card:hover .gm-play, .gm-card:focus-visible .gm-play { opacity: 1; }
+.gm-play i { font-style: normal; background: #fff; color: #14121c; border-radius: 99px; padding: 4px 14px; font-size: 12px; }
+.gm-card.lock .gm-play i { background: #cdbfff; }
+.gm-lock { position: absolute; top: 7px; right: 7px; background: rgba(10,10,15,.75); border-radius: 8px; padding: 2px 6px; font-size: 11px; font-weight: 700; color: #ffd28a; }
+.gm-empty { grid-column: 1 / -1; padding: 36px; text-align: center; opacity: .5; }
+.gm-hero { height: 74px; border-radius: 12px; display: grid; place-items: center; font-size: 40px; }
+.gm-code { text-align: center; font: 600 15px ui-monospace, Menlo, Consolas, monospace; letter-spacing: .08em; text-transform: uppercase; }
+.gm-shake { animation: gmshake .3s; }
+@keyframes gmshake { 25% { transform: translateX(-6px); } 75% { transform: translateX(6px); } }
+@media (prefers-reduced-motion: reduce) { .gm-card, .gm-shake { transition: none; animation: none; } }

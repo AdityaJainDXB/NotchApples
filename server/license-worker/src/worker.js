@@ -11,6 +11,7 @@
 // so a payment seen on the public blockchain can't be claimed by anyone else.
 //
 // Also:
+//   POST /game/unlock {code, device, have?}  a private game, opened with an access code made in the admin page
 //   POST /promo    {code, email}          one Pro key per free (100%) promo code; percentage codes are used as a discount at checkout
 //   POST /recover  {email, txid?}         emails the keys bought with that address (never shows them)
 //   POST /activate {key, device}          soft limit of DEVICE_LIMIT Macs per key
@@ -1376,7 +1377,7 @@ const publicRecord = (id, r, revokedList) => ({
 // Every change made in the panel is written down: when, what, which key. Never an email address, a full key
 // or the admin token. Entries live in KV metadata (newest first) and are kept for 180 days.
 const AUDITED = new Set(['/admin/issue', '/admin/suspend', '/admin/unsuspend', '/admin/revoke', '/admin/reissue', '/admin/note',
-  '/admin/devices', '/admin/email', '/admin/promo-create', '/admin/promo-delete', '/admin/test-payment', '/admin/asset-put', '/admin/asset-delete', '/admin/plane-clear']);
+  '/admin/devices', '/admin/email', '/admin/promo-create', '/admin/promo-delete', '/admin/test-payment', '/admin/asset-put', '/admin/asset-delete', '/admin/plane-clear', '/admin/game-create', '/admin/game-revoke', '/admin/game-delete', '/admin/game-put']);
 
 async function audit(env, path, body, result) {
   try {
@@ -1391,6 +1392,10 @@ async function audit(env, path, body, result) {
       '/admin/email': () => 'key emailed',
       '/admin/note': () => 'note changed',
       '/admin/promo-create': () => `${result?.codes?.length || 0} promo codes (${result?.percent ?? 100}%)`,
+      '/admin/game-create': () => `${result?.codes?.length || 0} game codes`,
+      '/admin/game-revoke': () => (result?.revoked ? 'game code cancelled' : 'game code restored'),
+      '/admin/game-delete': () => 'game code deleted',
+      '/admin/game-put': () => `game file ${body.game || ''}`,
       '/admin/asset-put': () => `asset ${body.id || ''}`,
       '/admin/asset-delete': () => `asset ${body.id || ''} removed`,
     }[path]?.() || '';
@@ -1549,6 +1554,46 @@ async function admin(env, path, body) {
     await env.KV.delete(`promocode:${h}`);
     return { deleted: true };
   }
+  if (path === '/admin/game-create') {
+    const game = String(body.game || 'flight-economy');
+    if (!GAMES[game]) throw new HTTPError(400, 'Unknown game.');
+    const n = Math.min(50, Math.max(1, Math.floor(Number(body.count) || 1)));
+    const days = Math.max(0, Math.min(3650, Math.floor(Number(body.days) || 0)));
+    const maxDevices = Math.max(1, Math.min(20, Math.floor(Number(body.devices) || 1)));
+    const note = String(body.note || '').slice(0, 200);
+    const A = 'ABCDEFGHJKMNPQRSTVWXYZ23456789';
+    const codes = [];
+    for (let i = 0; i < n; i++) {
+      const c = [...crypto.getRandomValues(new Uint8Array(12))].map((b) => A[b % A.length]).join('');
+      await putJSON(env, `gamecode:${await sha256(`game|${c}`)}`, { game, created: Date.now(), note, maxDevices, devices: [], ...(days ? { exp: Date.now() + days * 86400000 } : {}) });
+      codes.push(`${c.slice(0, 4)}-${c.slice(4, 8)}-${c.slice(8, 12)}`);
+    }
+    return { codes, game, days, devices: maxDevices };   // shown once: only a hash is stored
+  }
+  if (path === '/admin/game-list') {
+    const page = await env.KV.list({ prefix: 'gamecode:', cursor: body.cursor || undefined, limit: 200 });
+    const rows = [];
+    for (const { name } of page.keys) {
+      const h = name.slice(9), r = await getJSON(env, name);
+      if (r) rows.push({ id: h.slice(0, 12), hash: h, game: r.game, created: r.created, note: r.note || '', devices: (r.devices || []).length, maxDevices: r.maxDevices || 1, exp: r.exp || null, revoked: !!r.revoked });
+    }
+    const file = await env.KV.get('gamefile:flight-economy', 'text');
+    return { rows: rows.sort((a, b) => (b.created || 0) - (a.created || 0)), cursor: page.list_complete ? null : page.cursor, games: Object.keys(GAMES).map((g) => ({ id: g, name: GAMES[g] })), file: file ? { size: file.length, version: (await sha256(file)).slice(0, 12) } : null };
+  }
+  if (path === '/admin/game-revoke') {
+    const h = String(body.hash || '');
+    if (!/^[0-9a-f]{64}$/.test(h)) throw new HTTPError(400, 'hash needed');
+    const r = await getJSON(env, `gamecode:${h}`);
+    if (!r) throw new HTTPError(404, 'No such code.');
+    await putJSON(env, `gamecode:${h}`, { ...r, revoked: body.revoked !== false });
+    return { revoked: body.revoked !== false };
+  }
+  if (path === '/admin/game-delete') {
+    const h = String(body.hash || '');
+    if (!/^[0-9a-f]{64}$/.test(h)) throw new HTTPError(400, 'hash needed');
+    await env.KV.delete(`gamecode:${h}`);
+    return { deleted: true };
+  }
   if (path === '/admin/test-payment') {
     const o = /^[0-9a-f]{32}$/.test(String(body.order)) && await getJSON(env, `order:${body.order}`);
     if (!o) throw new HTTPError(404, 'No such open order');
@@ -1642,6 +1687,51 @@ async function assetPut(env, request, url) {
   const sha = hex(new Uint8Array(await crypto.subtle.digest('SHA-256', bytes)));
   await env.KV.put(`asset:${id}`, bytes, { metadata: { tier, size: bytes.length, sha, type: url.searchParams.get('type') || 'application/octet-stream', at: Date.now() } });
   return { ok: true, id, tier, size: bytes.length, sha };
+}
+
+// MARK: Private games (access codes)
+//
+// A game kept only on this server and opened with a code the owner hands out. The game file is never in the app or a repo: it is
+// uploaded with /admin/game-put and sent to a device only after /game/unlock accepts a code. A code is made in the admin page with an
+// optional end date and a number of devices it may be used on (a device is a random id the app keeps), and can be cancelled.
+// The app keeps the game and the code, and asks again every few days, so a cancelled code stops working.
+
+const GAMES = { 'flight-economy': 'Flight Economy' };
+const GAME_MAX = 5 * 1024 * 1024;
+const normCode = (raw) => String(raw || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+
+/** POST /game/unlock {code, device, have?}: checks a code and returns the game ({html}) unless the device already has this version. */
+async function gameUnlock(env, body) {
+  const code = normCode(body.code);
+  if (code.length !== 12) throw new HTTPError(400, 'Enter the whole access code (12 letters and numbers).');
+  const device = String(body.device || '');
+  if (!/^[A-Za-z0-9_-]{16,64}$/.test(device)) throw new HTTPError(400, 'Missing device id.');
+  const h = await sha256(`game|${code}`);
+  const rec = await getJSON(env, `gamecode:${h}`);
+  if (!rec || !GAMES[rec.game]) throw new HTTPError(403, "That access code isn't valid.");
+  if (rec.revoked) throw new HTTPError(403, 'That access code has been cancelled.');
+  if (rec.exp && rec.exp < Date.now()) throw new HTTPError(403, 'That access code has expired.');
+  const dh = (await sha256(`dev|${device}`)).slice(0, 24), devices = rec.devices || [];
+  if (!devices.includes(dh)) {
+    if (devices.length >= (rec.maxDevices || 1)) throw new HTTPError(409, `That access code is already used on ${devices.length} device${devices.length === 1 ? '' : 's'}.`);
+    await putJSON(env, `gamecode:${h}`, { ...rec, devices: [...devices, dh], firstUsed: rec.firstUsed || Date.now() });
+  }
+  const file = await env.KV.get(`gamefile:${rec.game}`, 'text');
+  if (!file) throw new HTTPError(503, 'The game is not available yet. Try again later.');
+  const version = (await sha256(file)).slice(0, 12);
+  return { ok: true, game: rec.game, name: GAMES[rec.game], version, exp: rec.exp || null, ...(body.have === version ? {} : { html: file }) };
+}
+
+/** POST /admin/game-put?game=flight-economy (raw HTML body): the game file the codes unlock. */
+async function gamePut(env, request, url) {
+  const game = url.searchParams.get('game') || '';
+  if (!GAMES[game]) throw new HTTPError(400, 'Unknown game.');
+  const bytes = new Uint8Array(await request.arrayBuffer());
+  if (!bytes.length || bytes.length > GAME_MAX) throw new HTTPError(413, 'Empty or too large (5 MB at most).');
+  const text = new TextDecoder().decode(bytes);
+  if (!/<html|<!doctype html/i.test(text)) throw new HTTPError(400, 'That is not an HTML page.');
+  await env.KV.put(`gamefile:${game}`, text);
+  return { ok: true, game, size: bytes.length, version: (await sha256(text)).slice(0, 12) };
 }
 
 // MARK: Notch Apple AI (hosted)
@@ -1995,6 +2085,13 @@ export default {
         await audit(env, path, { id: result.id }, result);
         return json(result);
       }
+      if (path === '/admin/game-put') {
+        // A raw HTML upload, like asset-put: same admin sign-in and lock-out.
+        await adminGate(env, request);
+        const result = await gamePut(env, request, new URL(request.url));
+        await audit(env, path, { game: result.game }, result);
+        return json(result);
+      }
       if (path === '/whop-webhook') return await whopWebhook(env, request);        // signed by Whop, its own size limit and no JSON parsing before the signature
       const maxBody = path === '/support' ? 16384 : 4096;       // a support report can be longer than the other requests
       if (Number(request.headers.get('content-length') || 0) > maxBody) throw new HTTPError(413, 'Too large');
@@ -2017,6 +2114,7 @@ export default {
         case '/order/card': await addressLimit(env, request, 'cardcheck', 120); return json(await cardCheck(env, body));
         case '/claim': await addressLimit(env, request, 'claim', 60); return json(await claim(env, body));
         case '/promo': await addressLimit(env, request, 'promo', 30); return json(await promo(env, body));
+        case '/game/unlock': await addressLimit(env, request, 'gameunlock', 20); return json(await gameUnlock(env, body));
         case '/recover': await addressLimit(env, request, 'recover', 20); return json(await recover(env, body));
         case '/otp/start': await addressLimit(env, request, 'otp', 20); return json(await otpStart(env, body));
         case '/otp/verify': await addressLimit(env, request, 'otpv', 40); return json(await otpVerify(env, body));

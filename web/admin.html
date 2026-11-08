@@ -151,6 +151,26 @@ tr.k:hover td{background:rgba(255,255,255,.025)}
       <div class="row" style="margin-top:10px"><span class="dim small" id="count"></span><div class="sp"></div><button class="btn sm" id="more" style="display:none">Load more</button></div>
     </section>
 
+    <section class="card" id="gameCard" style="grid-column:1/-1">
+      <h2>Private game: Flight Economy</h2>
+      <p class="dim small" style="margin-bottom:8px">Only people with one of your access codes can open this game in the notch. The game file lives only on the server. Each code works on the number of devices you choose (one by default), can end on a date, and can be cancelled. The code is shown only when you create it.</p>
+      <div class="row" style="gap:8px;flex-wrap:wrap;margin-bottom:8px;align-items:center">
+        <span class="dim small" id="gFile">Checking the game file…</span>
+        <label class="btn sm" style="cursor:pointer">Upload the game (index.html)<input type="file" id="gUpload" accept=".html,text/html" style="display:none"></label>
+      </div>
+      <div class="row" style="gap:8px;flex-wrap:wrap;margin-bottom:8px">
+        <input id="gCount" class="field" type="number" min="1" max="50" value="1" style="width:90px" title="How many codes">
+        <input id="gDevices" class="field" type="number" min="1" max="20" value="1" style="width:110px" title="Devices one code may be used on" placeholder="Devices">
+        <input id="gDays" class="field" type="number" min="0" max="3650" value="0" style="width:120px" title="Valid for this many days (0 = no limit)" placeholder="Days (0 = no limit)">
+        <input id="gNote" class="field" maxlength="200" placeholder="Who is it for?" style="flex:1;min-width:160px">
+        <button class="btn pri" id="gBtn">Create codes</button>
+      </div>
+      <div class="err" id="gErr"></div>
+      <div class="out" id="gOut"></div>
+      <div class="row" id="gActs" style="display:none;margin:8px 0"><button class="btn sm" id="gCopy">Copy all</button></div>
+      <div class="tablewrap"><table><thead><tr><th>Code ID</th><th>For</th><th>Devices</th><th>Ends</th><th>Status</th><th>Created</th><th></th></tr></thead><tbody id="gRows"><tr><td colspan="7" class="dim">Loading…</td></tr></tbody></table></div>
+    </section>
+
     <section class="card" id="promoCard" style="grid-column:1/-1">
       <h2>Promo codes</h2>
       <p class="dim small" style="margin-bottom:8px">Make a code for one person. <b>100%</b> is a free Pro key (used in the Promo code tab); <b>1 to 99%</b> takes that much off a Pro or Ultimate purchase (used in the Discount code box at checkout). Each code works once. The code is shown only when you create it; only a hash is stored.</p>
@@ -214,7 +234,7 @@ $('logout').onclick = signOut;
 
 async function start() {
   $('login').style.display = 'none'; $('app').style.display = 'block';
-  await Promise.all([loadStats(), loadKeys(true), loadPromos(), loadInsights()]);
+  await Promise.all([loadStats(), loadKeys(true), loadPromos(), loadGames(), loadInsights()]);
 }
 $('refresh').onclick = () => { loadStats(); loadKeys(true); loadInsights(); };
 
@@ -356,6 +376,44 @@ async function openKey(ref) {
     loadStats(); loadKeys(true);
   });
 }
+
+// ---- private game codes
+async function loadGames() {
+  try {
+    const r = await api('game-list');
+    $('gFile').textContent = r.file ? 'Game file on the server: ' + Math.round(r.file.size / 1024) + ' KB, version ' + r.file.version : 'No game file on the server yet: upload it first.';
+    $('gRows').innerHTML = r.rows.length ? r.rows.map((x) => '<tr><td class="mono">' + esc(x.id) + '</td><td>' + esc(x.note || '-') + '</td><td>' + x.devices + ' of ' + x.maxDevices + '</td><td>' + (x.exp ? fmtDate(x.exp) : 'No end') + '</td><td>' + (x.revoked ? '<span class="st-bad">Cancelled</span>' : (x.exp && x.exp < Date.now() ? '<span class="st-bad">Ended</span>' : '<span class="st-ok">Works</span>')) + '</td><td>' + fmtDate(x.created) + '</td><td><button class="btn sm ' + (x.revoked ? 'okb' : 'bad') + '" data-rev="' + esc(x.hash) + '" data-on="' + (x.revoked ? '0' : '1') + '">' + (x.revoked ? 'Restore' : 'Cancel') + '</button> <button class="btn sm bad" data-gdel="' + esc(x.hash) + '">Delete</button></td></tr>').join('') : '<tr><td colspan="7" class="dim">No game codes yet.</td></tr>';
+  } catch (e) { $('gRows').innerHTML = '<tr><td colspan="7" class="st-bad">' + esc(e.message) + '</td></tr>'; }
+}
+$('gRows').onclick = async (e) => {
+  const rv = e.target.closest('button[data-rev]'), dl = e.target.closest('button[data-gdel]');
+  try {
+    if (rv) { await api('game-revoke', { hash: rv.dataset.rev, revoked: rv.dataset.on === '1' }); toast(rv.dataset.on === '1' ? 'Cancelled' : 'Restored'); loadGames(); }
+    else if (dl && confirm('Delete this code? It stops working for good.')) { await api('game-delete', { hash: dl.dataset.gdel }); toast('Deleted'); loadGames(); }
+  } catch (er) { toast(er.message); }
+};
+let lastGameCodes = [];
+$('gBtn').onclick = async () => {
+  $('gErr').textContent = ''; $('gBtn').disabled = true;
+  try {
+    const r = await api('game-create', { game: 'flight-economy', count: Number($('gCount').value) || 1, devices: Number($('gDevices').value) || 1, days: Number($('gDays').value) || 0, note: $('gNote').value.trim() });
+    lastGameCodes = r.codes; $('gOut').textContent = r.codes.join('\n'); $('gOut').style.display = 'block'; $('gActs').style.display = 'flex'; loadGames();
+  } catch (e) { $('gErr').textContent = e.message; }
+  $('gBtn').disabled = false;
+};
+$('gCopy').onclick = () => copy(lastGameCodes.join('\n'));
+$('gUpload').onchange = async (e) => {
+  const f = e.target.files[0]; if (!f) return;
+  $('gErr').textContent = '';
+  try {
+    const r = await fetch((window.NOTCH_API || '') + '/admin/game-put?game=flight-economy', { method: 'POST', headers: { authorization: 'Bearer ' + token }, body: f });
+    const j = await r.json().catch(() => ({}));
+    if (r.status === 401) { signOut(); return; }
+    if (!r.ok) throw new Error(j.error || ('Error ' + r.status));
+    toast('Game uploaded'); loadGames();
+  } catch (er) { $('gErr').textContent = er.message; }
+  e.target.value = '';
+};
 
 // ---- promo codes
 let serverPercent = false;   // set once the server says it knows percentage codes; an older server would quietly make FREE keys

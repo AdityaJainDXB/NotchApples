@@ -254,6 +254,47 @@ await test('Three personal access codes sign in (only their hashes are stored); 
   assert.equal((await call('/admin/stats', {}, { authorization: 'Bearer ' + env.ADMIN_TOKENS.split(',')[0], 'cf-connecting-ip': '9.9.9.9' })).status, 401, 'the hash itself is not a code');
 });
 
+await test('Private game: access codes made in the panel unlock it (one device by default), can expire or be cancelled, and nothing leaks without a code', async () => {
+  const H = { authorization: 'Bearer admin-test' };
+  const dev1 = 'device-one-aaaaaaaaaaaa', dev2 = 'device-two-bbbbbbbbbbbb';
+  const html = '<!doctype html><html><title>Flight Economy</title><body>game</body></html>';
+  const put = await worker.fetch(new Request('https://w.test/admin/game-put?game=flight-economy', { method: 'POST', body: html, headers: H }), env);
+  assert.equal(put.status, 200); const putJson = await put.json(); assert.equal(putJson.size, html.length);
+  assert.equal((await worker.fetch(new Request('https://w.test/admin/game-put?game=flight-economy', { method: 'POST', body: 'not a page', headers: H }), env)).status, 400);
+  // No code, no game.
+  assert.equal((await call('/game/unlock', { code: 'AAAA-BBBB-CCCC', device: dev1 })).status, 403, 'a made-up code');
+  assert.equal((await call('/game/unlock', { code: 'short', device: dev1 })).status, 400);
+  const made = await call('/admin/game-create', { count: 2, note: 'friends' }, H);
+  assert.equal(made.codes.length, 2); assert.match(made.codes[0], /^[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}$/);
+  const code = made.codes[0];
+  const first = await call('/game/unlock', { code, device: dev1 });
+  assert.equal(first.status, 200); assert.equal(first.html, html); assert.equal(first.name, 'Flight Economy'); assert.equal(first.version, putJson.version);
+  const again = await call('/game/unlock', { code: code.toLowerCase().replace(/-/g, ' '), device: dev1, have: first.version });
+  assert.equal(again.status, 200); assert.equal(again.html, undefined, 'the same version is not sent twice');
+  const other = await call('/game/unlock', { code, device: dev2 });
+  assert.equal(other.status, 409); assert.match(other.error, /already used on 1 device/);
+  // More than one device, and a code that ends.
+  const shared = (await call('/admin/game-create', { count: 1, devices: 2, days: 1 }, H)).codes[0];
+  assert.equal((await call('/game/unlock', { code: shared, device: dev1 })).status, 200);
+  assert.equal((await call('/game/unlock', { code: shared, device: dev2 })).status, 200);
+  assert.equal((await call('/game/unlock', { code: shared, device: 'device-three-cccccccccc' })).status, 409);
+  const real = Date.now; Date.now = () => real() + 2 * 86400000;
+  try { const late = await call('/game/unlock', { code: shared, device: dev1 }); assert.equal(late.status, 403); assert.match(late.error, /expired/); } finally { Date.now = real; }
+  // The list, cancelling and deleting.
+  const list = await call('/admin/game-list', {}, H);
+  assert.equal(list.rows.length >= 3, true); assert.equal(list.file.version, putJson.version);
+  const row = list.rows.find((r) => r.note === 'friends' && r.devices === 1);
+  assert.ok(row, 'the list shows how many devices a code is used on');
+  assert.equal((await call('/admin/game-revoke', { hash: row.hash }, H)).revoked, true);
+  const gone = await call('/game/unlock', { code, device: dev1 }); assert.equal(gone.status, 403); assert.match(gone.error, /cancelled/);
+  assert.equal((await call('/admin/game-revoke', { hash: row.hash, revoked: false }, H)).revoked, false);
+  assert.equal((await call('/game/unlock', { code, device: dev1 })).status, 200, 'restored');
+  assert.equal((await call('/admin/game-delete', { hash: row.hash }, H)).deleted, true);
+  assert.equal((await call('/game/unlock', { code, device: dev1 })).status, 403, 'a deleted code no longer works');
+  // The game cannot be fetched as a paid asset either, even with the top licence.
+  assert.equal((await worker.fetch(new Request('https://w.test/asset/games/flight-economy.html'), env)).status === 200, false);
+});
+
 await test('Promo codes made in the panel: create, redeem once, see them used, delete unused', async () => {
   const H = { authorization: 'Bearer admin-test' };
   const made = await call('/admin/promo-create', { count: 2, note: 'giveaway' }, H);

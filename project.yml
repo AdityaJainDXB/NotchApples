@@ -142,6 +142,7 @@ targets:
       - NotchApple/Core/PureModels.swift
       - NotchApple/Core/HotCornerLogic.swift
       - NotchApple/Modules/Games/GameEngines.swift
+      - NotchApple/Modules/Games/GamesMenuLogic.swift
       - NotchApple/Core/ClaudeCodeStatusLogic.swift
       - NotchApple/Modules/Claude/GeminiFallback.swift
       - NotchApple/Modules/Claude/GeminiFallbackLogic.swift

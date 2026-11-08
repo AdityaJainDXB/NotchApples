@@ -62,27 +62,40 @@ struct GamesView: View {
 
     @AppStorage("games.last") private var lastRaw = Game.g2048.rawValue
     @AppStorage(GameSound.key) private var soundOn = true
+    /// The tab opens on the menu of games; picking one shows it with a way back.
+    @State private var showingGame = false
     private var game: Game { Game(rawValue: lastRaw) ?? .g2048 }
 
+    private func open(_ g: Game) {
+        GamesRecents.note(g.menuID)
+        lastRaw = g.rawValue
+        showingGame = true
+    }
+
     var body: some View {
+        Group {
+            if showingGame { gameLayout } else { GamesMenuView(open: open) }
+        }
+        // The Plane and Racing games are drawn for a bigger panel: grow the notch while one is open, and shrink it back after.
+        .onAppear { setBig(showingGame && game.isBig) }
+        .onChange(of: lastRaw) { _, _ in setBig(showingGame && game.isBig) }
+        .onChange(of: showingGame) { _, _ in setBig(showingGame && game.isBig) }
+        .onDisappear { setBig(false) }
+    }
+
+    /// One game, with a column on the left: the way back to the menu, the sound switch and the game's hint.
+    private var gameLayout: some View {
         HStack(alignment: .top, spacing: 12) {
-            // Eight games no longer fit in the notch one above the other, so the list scrolls and the sound switch and
-            // the hint stay put at the bottom, always in view.
-            VStack(alignment: .leading, spacing: 6) {
-                ScrollView(.vertical, showsIndicators: false) {
-                    VStack(spacing: 5) {
-                        ForEach(Game.allCases) { g in
-                            Button { lastRaw = g.rawValue } label: {
-                                Label(g.rawValue, systemImage: g.symbol).font(.system(size: 12, weight: .semibold))
-                                    .frame(maxWidth: .infinity, alignment: .leading)
-                            }
-                            .buttonStyle(PurpleButtonStyle(prominent: g == game))
-                        }
-                    }
+            VStack(alignment: .leading, spacing: 8) {
+                Button { showingGame = false } label: {
+                    Label("All games", systemImage: "chevron.left").font(.system(size: 12, weight: .semibold)).frame(maxWidth: .infinity, alignment: .leading)
                 }
+                .buttonStyle(PurpleButtonStyle())
+                Label(game.rawValue, systemImage: game.symbol).font(.system(size: 13, weight: .bold)).foregroundStyle(.white)
+                Spacer(minLength: 0)
                 Toggle(isOn: $soundOn) { Label("Sound", systemImage: soundOn ? "speaker.wave.2.fill" : "speaker.slash.fill").font(.system(size: 11)) }
                     .toggleStyle(.switch).controlSize(.mini)
-                Text(hint).font(.system(size: 9.5)).foregroundStyle(Theme.textSecondary).lineLimit(3).minimumScaleFactor(0.85)
+                Text(hint).font(.system(size: 9.5)).foregroundStyle(Theme.textSecondary).lineLimit(4).minimumScaleFactor(0.85)
                     .help(hint).fixedSize(horizontal: false, vertical: true)
             }
             .frame(width: 130)
@@ -91,10 +104,6 @@ struct GamesView: View {
             .overlay(alignment: (game == .plane || game == .racing) ? .bottomTrailing : .topTrailing) { if game.hasFullScreenButton { GameFullScreenButton(game: game).padding(6) } }
             .id(game)
         }
-        // The Plane and Racing games are drawn for a bigger panel: grow the notch while one is open, and shrink it back after.
-        .onAppear { setBig(game.isBig) }
-        .onChange(of: lastRaw) { _, _ in setBig(game.isBig) }
-        .onDisappear { setBig(false) }
     }
 
     /// One game's view (the same one the notch shows and the Full screen window scales up).
