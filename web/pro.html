@@ -254,6 +254,7 @@ footer{border-top:1px solid var(--line);padding:30px 0 44px;color:var(--dim);fon
             <label>Pay with</label>
             <div class="choice methodChoice">
               <button class="on" data-method="card"><b>Card · AED</b><span>Visa, Mastercard and Apple Pay, through Ziina. UAE only.</span></button>
+              <button data-method="whop"><b>Whop</b><span>Card, Apple Pay and more, through Whop.</span></button>
               <button data-method="crypto"><b>Crypto</b><span>Bitcoin, Ethereum, Solana or Litecoin</span></button>
             </div>
           </div>
@@ -278,6 +279,7 @@ footer{border-top:1px solid var(--line);padding:30px 0 44px;color:var(--dim);fon
             <label>Pay with</label>
             <div class="choice methodChoice">
               <button class="on" data-method="card"><b>Card · AED</b><span>Visa, Mastercard and Apple Pay, through Ziina. UAE only.</span></button>
+              <button data-method="whop"><b>Whop</b><span>Card, Apple Pay and more, through Whop.</span></button>
               <button data-method="crypto"><b>Crypto</b><span>Bitcoin, Ethereum, Solana or Litecoin</span></button>
             </div>
           </div>
@@ -353,7 +355,7 @@ footer{border-top:1px solid var(--line);padding:30px 0 44px;color:var(--dim);fon
       <a class="btn ghost" href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe" style="max-width:460px;margin:10px auto 0">Download for Windows</a>
     </div>
   </div>
-  <p class="note">Pay by card (through Ziina, which handles your card details; we never see them) or in crypto (Bitcoin, Ethereum, Solana or Litecoin), sent straight to the developer's wallets. <a href="terms.html" style="text-decoration:underline">Terms and refunds</a></p>
+  <p class="note">Pay by card (through Ziina, or through Whop, which handle your card details; we never see them) or in crypto (Bitcoin, Ethereum, Solana or Litecoin), sent straight to the developer's wallets. <a href="terms.html" style="text-decoration:underline">Terms and refunds</a></p>
 
   <h2>Questions</h2>
   <section class="faq" id="faqs">
@@ -540,12 +542,13 @@ function applyRegion(rg) {
   $('#tierProName').textContent = `Pro · ${sym}${m(aedP.pro)}`; $('#tierUltName').textContent = `Ultimate · ${sym}${m(aedP.ultimate)}`;
   document.querySelectorAll('[data-tipn]').forEach(e => e.textContent = `+${sym}${e.dataset.tipn}`);
   document.querySelectorAll('.methodChoice button[data-method=card] b').forEach(b => b.textContent = `Card · ${CUR}`);
+  document.querySelectorAll('.methodChoice button[data-method=whop] span').forEach(sp => sp.textContent = CUR === 'AED' ? 'Card, Apple Pay and more, through Whop. Billed in AED.' : 'Card, Apple Pay, Google Pay and more, through Whop. Billed in US dollars.');
   document.querySelectorAll('.methodChoice button[data-method=card] span').forEach(s => s.textContent = CUR === 'AED' ? 'Visa, Mastercard and Apple Pay, through Ziina. UAE only.' : 'Visa, Mastercard and Apple Pay, through Ziina. Billed in US dollars.');
   paintMethod();
 }
 function paintMethod() {
   document.querySelectorAll('.methodChoice button').forEach(b => b.classList.toggle('on', b.dataset.method === method));
-  $('#coinBox').style.display = method !== 'card' && ((config && config.coins) || []).length > 1 ? 'block' : 'none';
+  $('#coinBox').style.display = method === 'crypto' && ((config && config.coins) || []).length > 1 ? 'block' : 'none';
   paintQuote();
 }
 function paintQuote() {
@@ -595,7 +598,17 @@ async function returnFromCard(id) {
   if (/^[0-9a-f]{32}$/.test(id || '')) addEventListener('load', () => returnFromCard(id));
   else if (q.get('cardcancel')) addEventListener('load', () => { const b = $('#offline'); b.style.display = 'block'; b.textContent = 'The card payment was cancelled. You were not charged.' });
 }
+const WHOP_LINKS = { usd: { pro: 'https://whop.com/checkout/ch_592NS3uitgEidbE/', ultimate: 'https://whop.com/checkout/ch_keWbl1Cow14HTuq/' },
+  aed: { pro: 'https://whop.com/checkout/plan_ebtYN1VAJeNt8', ultimate: 'https://whop.com/checkout/plan_ArxUVe16TNsAO' } };
+/// Whop takes the payment and the license server emails the key to the address given on Whop (a Whop webhook calls the server).
+function startWhop(btn, statusId, body) {
+  if (body.upgradeFrom) return status(statusId, 'Upgrading from Pro is not on Whop yet. Pay with the card (Ziina) or crypto instead.', 'err', false);
+  const url = WHOP_LINKS[CUR === 'AED' ? 'aed' : 'usd'][body.tier === 'ultimate' ? 'ultimate' : 'pro'];
+  status(statusId, 'Opening Whop. Use the email you want your key sent to; it arrives by email after you pay.', '', false);
+  location.href = url;
+}
 async function startOrder(btn, statusId, body) {
+  if (method === 'whop') return startWhop(btn, statusId, body);
   if (method === 'card' && aedP) return startCard(btn, statusId, body);
   body = { ...body, coin };
   if (!validEmail(body.email)) return status(statusId, 'Enter a valid email address. Your key is sent there.', 'err', false);
