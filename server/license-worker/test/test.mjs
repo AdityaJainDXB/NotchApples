@@ -1260,6 +1260,9 @@ await test('Whop: a signed payment.succeeded issues one key and emails it; a wro
   assert.match(JSON.stringify(mails.find((x) => x.to === 'whop.ult@example.com')), /NTCH-ULTM-/);
   r = await send(pay('pay_2bbc', 'plan_pro_aed_test', 'whop.aed@example.com')); assert.match(JSON.stringify(mails.find((x) => x.to === 'whop.aed@example.com')), /NTCH-PRO-/, 'the UAE (AED) Pro plan also gives a Pro key');
   r = await send(pay('pay_2cbc', 'plan_ult_aed_test', 'whop.aedu@example.com')); assert.match(JSON.stringify(mails.find((x) => x.to === 'whop.aedu@example.com')), /NTCH-ULTM-/, 'the UAE (AED) Ultimate plan gives an Ultimate key');
+  // The payload as Whop's current API really sends it: the plan is `variant_id` and the email is `customer_email` (no `plan` or `user.email`).
+  r = await send({ type: 'payment.succeeded', data: { id: 'pay_real1', status: 'paid', substatus: 'succeeded', variant_id: 'plan_pro_aed_test', product_id: 'prod_x', customer_email: 'whop.real@example.com', user: { id: 'user_x', name: 'A B' }, total: { currency: 'aed', amount: '4.40' } } });
+  assert.equal((await r.json()).key, 'sent'); assert.match(JSON.stringify(mails.find((x) => x.to === 'whop.real@example.com')), /NTCH-PRO-/, 'a payment in Whop\'s real shape gives a key');
   r = await send(pay('pay_3abc', 'plan_other', 'x@example.com')); assert.match((await r.json()).ignored, /not a Notch Apple plan/);
   r = await send(pay('pay_4abc', 'plan_pro_test', 'x@example.com'), { sig: 'v1,AAAA' }); assert.equal(r.status, 401, 'a wrong signature');
   r = await send(pay('pay_5abc', 'plan_pro_test', 'x@example.com'), { ts: Math.floor(Date.now() / 1000) - 3600 }); assert.equal(r.status, 401, 'an old timestamp');

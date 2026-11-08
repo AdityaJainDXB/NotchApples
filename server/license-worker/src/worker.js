@@ -817,9 +817,9 @@ async function whopWebhook(env, request) {
 
   const status = pick(d, 'status', 'substatus');
   if (status && !['paid', 'succeeded', 'completed'].includes(String(status).toLowerCase())) return json({ ok: true, ignored: `status ${status}` });
-  const tier = whopTier(env, String(pick(d, 'plan_id', 'plan.id') || ''));
+  const tier = whopTier(env, String(pick(d, 'variant_id', 'plan_id', 'plan.id', 'line_items.0.variant_id') || ''));        // Whop's payment object names the plan `variant_id`
   if (!tier) return json({ ok: true, ignored: 'not a Notch Apple plan' });          // another product on the same Whop account
-  const email = String(pick(d, 'user.email', 'user_email', 'member.user.email', 'email', 'billing_address.email') || '').trim();
+  const email = String(pick(d, 'customer_email', 'user.email', 'user_email', 'member.user.email', 'email', 'billing_address.email') || '').trim();
   if (!validEmail(email)) {
     // Paid but no email to send to: keep the payment so the owner can send the key by hand, and say so.
     await putJSON(env, `whop:nomail:${payId}`, { tier, at: Date.now(), amount: pick(d, 'usd_total', 'total', 'subtotal') }, 90 * 86400);
