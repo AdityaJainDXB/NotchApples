@@ -50,6 +50,10 @@ NETWORK = "mainnet"
 PRICE_PRO = "5"
 PRICE_ULTIMATE = "15"
 PRICE_UPGRADE = "10"
+# Whop (card, Apple Pay and more): the plan ids of the two products, so a Whop payment is matched to a tier. Not secret.
+# The webhook signing secret is a secret: `npx wrangler secret put WHOP_WEBHOOK_SECRET`. Whop calls POST /whop-webhook.
+WHOP_PLAN_PRO = "plan_gGn8G8h3jEZH7"
+WHOP_PLAN_ULTIMATE = "plan_ZVGFAHcH1iGJ6"
 DEVICE_LIMIT = "3"
 # Card payments through Ziina: UAE customers pay in AED (the customer pays the card fee, 3% + AED 1). They switch on when the
 # ZIINA_API_KEY secret is set (`npx wrangler secret put ZIINA_API_KEY`). ZIINA_TEST = "1" makes every payment a Ziina test payment
@@ -87,6 +91,10 @@ NETWORK = "testnet"
 PRICE_PRO = "5"
 PRICE_ULTIMATE = "15"
 PRICE_UPGRADE = "10"
+# Whop (card, Apple Pay and more): the plan ids of the two products, so a Whop payment is matched to a tier. Not secret.
+# The webhook signing secret is a secret: `npx wrangler secret put WHOP_WEBHOOK_SECRET`. Whop calls POST /whop-webhook.
+WHOP_PLAN_PRO = "plan_gGn8G8h3jEZH7"
+WHOP_PLAN_ULTIMATE = "plan_ZVGFAHcH1iGJ6"
 DEVICE_LIMIT = "3"
 ULTIMATE_ON = "1"
 MAIL_PROVIDER = "brevo"

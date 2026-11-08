@@ -1234,4 +1234,42 @@ await test('The live prices in wrangler.toml: Pro $5, Ultimate $15, upgrade $10;
   const src = readFileSync(new URL('../src/worker.js', import.meta.url), 'utf8');
   assert.ok(src.includes('env.PRICE_PRO || 5') && src.includes('env.PRICE_ULTIMATE || 15') && src.includes('env.PRICE_UPGRADE || 10'));
 });
+await test('Whop: a signed payment.succeeded issues one key and emails it; a wrong signature, an old timestamp, another plan and a retry do nothing; a refund turns the key off', async () => {
+  const secret = 'ws_testsecret123';
+  Object.assign(env, { WHOP_WEBHOOK_SECRET: secret, WHOP_PLAN_PRO: 'plan_pro_test', WHOP_PLAN_ULTIMATE: 'plan_ult_test' });
+  const sign = async (id, ts, raw) => {
+    const k = await crypto.subtle.importKey('raw', new TextEncoder().encode(secret), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
+    const mac = new Uint8Array(await crypto.subtle.sign('HMAC', k, new TextEncoder().encode(`${id}.${ts}.${raw}`)));
+    return 'v1,' + btoa(String.fromCharCode(...mac));
+  };
+  const send = async (payload, o = {}) => {
+    const raw = JSON.stringify(payload), id = o.id || 'msg_' + Math.random().toString(36).slice(2), ts = String(o.ts || Math.floor(Date.now() / 1000));
+    const sig = o.sig || (await sign(id, ts, raw));
+    return worker.fetch(new Request('https://x.test/whop-webhook', { method: 'POST', headers: { 'webhook-id': id, 'webhook-timestamp': ts, 'webhook-signature': sig }, body: raw }), env);
+  };
+  const pay = (id, plan, email) => ({ type: 'payment.succeeded', data: { id, status: 'paid', plan: { id: plan }, user: { email } } });
+  const before = mails.length;
+  let r = await send(pay('pay_1abc', 'plan_pro_test', 'whop.buyer@example.com'));
+  assert.equal(r.status, 200); assert.equal((await r.json()).key, 'sent');
+  const m = mails.slice(before).find((x) => x.to === 'whop.buyer@example.com');
+  assert.ok(m, 'the key was emailed'); assert.match(JSON.stringify(m), /NTCH-PRO-/);
+  r = await send(pay('pay_1abc', 'plan_pro_test', 'whop.buyer@example.com'));
+  assert.equal((await r.json()).again, true, 'a retried delivery gives no second key');
+  assert.equal(mails.slice(before).filter((x) => x.to === 'whop.buyer@example.com').length, 1);
+  r = await send(pay('pay_2abc', 'plan_ult_test', 'whop.ult@example.com'));
+  assert.match(JSON.stringify(mails.find((x) => x.to === 'whop.ult@example.com')), /NTCH-ULTM-/);
+  r = await send(pay('pay_3abc', 'plan_other', 'x@example.com')); assert.match((await r.json()).ignored, /not a Notch Apple plan/);
+  r = await send(pay('pay_4abc', 'plan_pro_test', 'x@example.com'), { sig: 'v1,AAAA' }); assert.equal(r.status, 401, 'a wrong signature');
+  r = await send(pay('pay_5abc', 'plan_pro_test', 'x@example.com'), { ts: Math.floor(Date.now() / 1000) - 3600 }); assert.equal(r.status, 401, 'an old timestamp');
+  assert.equal((await worker.fetch(new Request('https://x.test/whop-webhook', { method: 'POST', body: '{}' }), env)).status, 401, 'no signature at all');
+  r = await send({ type: 'payment.succeeded', data: { id: 'pay_6abc', status: 'paid', plan: { id: 'plan_pro_test' } } }); assert.equal((await r.json()).stored, 'no email');
+  // A refund turns that payment's key off.
+  const keyId = (await env.KV.get('tx:whop:pay_1abc')) && (await JSON.parse(await env.KV.get(`order:${await env.KV.get('tx:whop:pay_1abc')}`))).keyId;
+  assert.ok(keyId);
+  r = await send({ type: 'refund.created', data: { id: 'ref_1abc', payment_id: 'pay_1abc' } }); assert.equal((await r.json()).refunded, true);
+  assert.ok((await JSON.parse(await env.KV.get(`key:${keyId}`))).revoked, 'the refunded key is suspended');
+  delete env.WHOP_WEBHOOK_SECRET;
+  assert.equal((await worker.fetch(new Request('https://x.test/whop-webhook', { method: 'POST', body: '{}' }), env)).status, 503, 'not set up');
+});
+
 console.log(`\n${passed} passed`);

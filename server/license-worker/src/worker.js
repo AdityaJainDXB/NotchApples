@@ -767,6 +767,76 @@ async function cardCheck(env, body) {
   return { ...done, aed: o.aed, cur: o.cur || 'AED' };
 }
 
+// MARK: Whop (a second place to pay: card, Apple Pay, Google Pay and more, handled by Whop)
+
+/** Checks a Whop webhook (the Standard Webhooks scheme): HMAC-SHA256 over "id.timestamp.body" keyed with the ws_ signing secret exactly as Whop
+ *  issues it, base64 in "v1,<sig>" (several may be listed), and a timestamp within 5 minutes. */
+export async function whopVerify(secret, headers, raw, now = Date.now()) {
+  if (!secret) return false;
+  const id = headers.get('webhook-id'), ts = headers.get('webhook-timestamp'), sig = headers.get('webhook-signature');
+  if (!id || !ts || !sig || !/^\d{9,12}$/.test(ts) || Math.abs(now / 1000 - Number(ts)) > 300) return false;
+  const k = await crypto.subtle.importKey('raw', enc.encode(secret), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
+  const mac = new Uint8Array(await crypto.subtle.sign('HMAC', k, enc.encode(`${id}.${ts}.${raw}`)));
+  let b = ''; for (const c of mac) b += String.fromCharCode(c);
+  const want = btoa(b);
+  let ok = false;
+  for (const part of sig.split(' ')) {
+    const [v, got] = part.split(',');
+    if (v !== 'v1' || !got || got.length !== want.length) continue;
+    let d = 0; for (let i = 0; i < want.length; i++) d |= want.charCodeAt(i) ^ got.charCodeAt(i);      // constant time
+    if (d === 0) ok = true;
+  }
+  return ok;
+}
+
+/** Whop plan id -> tier, from the worker's settings (the plan ids are not secret). */
+const whopTier = (env, planId) => planId && planId === env.WHOP_PLAN_PRO ? TIER.pro : planId && planId === env.WHOP_PLAN_ULTIMATE ? TIER.ultimate : 0;
+const pick = (o, ...paths) => { for (const p of paths) { let v = o; for (const k of p.split('.')) v = v == null ? v : v[k]; if (v != null && v !== '') return v; } return null; };
+
+/** POST /whop-webhook: Whop tells us a payment succeeded (or was refunded). A success becomes one key, emailed to the buyer, once per payment. */
+async function whopWebhook(env, request) {
+  if (!env.WHOP_WEBHOOK_SECRET) throw new HTTPError(503, 'Whop is not set up.');
+  if (Number(request.headers.get('content-length') || 0) > 262144) throw new HTTPError(413, 'Too large');
+  const raw = await request.text();
+  if (raw.length > 262144) throw new HTTPError(413, 'Too large');
+  if (!(await whopVerify(env.WHOP_WEBHOOK_SECRET, request.headers, raw))) throw new HTTPError(401, 'Bad signature');
+  let ev; try { ev = JSON.parse(raw); } catch { throw new HTTPError(400, 'Bad JSON'); }
+  const d = ev && ev.data ? ev.data : {};
+  const payId = String(pick(d, 'id', 'payment_id', 'payment.id') || '');
+  if (!/^[A-Za-z0-9_-]{4,80}$/.test(payId)) return json({ ok: true, ignored: 'no payment id' });
+
+  if (ev.type === 'refund.created') {
+    // A refunded payment turns its key off (the key stays on record; it can be turned back on in the admin).
+    const pid = String(pick(d, 'payment_id', 'payment.id') || '');
+    const orderId = pid && await env.KV.get(`tx:whop:${pid}`);
+    const o = orderId && await getJSON(env, `order:${orderId}`);
+    if (o && o.keyId) await admin(env, '/admin/suspend', { keyId: o.keyId, reason: `Whop refund ${pid}` });
+    return json({ ok: true, refunded: !!(o && o.keyId) });
+  }
+  if (ev.type !== 'payment.succeeded') return json({ ok: true, ignored: ev.type || 'unknown' });
+
+  const status = pick(d, 'status', 'substatus');
+  if (status && !['paid', 'succeeded', 'completed'].includes(String(status).toLowerCase())) return json({ ok: true, ignored: `status ${status}` });
+  const tier = whopTier(env, String(pick(d, 'plan_id', 'plan.id') || ''));
+  if (!tier) return json({ ok: true, ignored: 'not a Notch Apple plan' });          // another product on the same Whop account
+  const email = String(pick(d, 'user.email', 'user_email', 'member.user.email', 'email', 'billing_address.email') || '').trim();
+  if (!validEmail(email)) {
+    // Paid but no email to send to: keep the payment so the owner can send the key by hand, and say so.
+    await putJSON(env, `whop:nomail:${payId}`, { tier, at: Date.now(), amount: pick(d, 'usd_total', 'total', 'subtotal') }, 90 * 86400);
+    return json({ ok: true, stored: 'no email' });
+  }
+  if (await env.KV.get(`tx:whop:${payId}`)) return json({ ok: true, again: true });          // a retried delivery: one key per payment
+  const orderId = crypto.randomUUID().replace(/-/g, '');
+  await env.KV.put(`tx:whop:${payId}`, orderId);
+  try {
+    await deliver(env, orderId, { tier, email, provider: 'whop', created: Date.now() }, 'whop', payId);
+  } catch (e) {
+    await env.KV.delete(`tx:whop:${payId}`).catch(() => {});       // a failed delivery must not block Whop's retry
+    throw e;
+  }
+  return json({ ok: true, key: 'sent' });
+}
+
 async function promo(env, body) {
   const code = String(body.code || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
   if (code.length !== 17 || !code.startsWith('PROMO')) throw new HTTPError(400, 'Enter the full promo code: PROMO-XXXX-XXXX-XXXX.');
@@ -1925,6 +1995,7 @@ export default {
         await audit(env, path, { id: result.id }, result);
         return json(result);
       }
+      if (path === '/whop-webhook') return await whopWebhook(env, request);        // signed by Whop, its own size limit and no JSON parsing before the signature
       const maxBody = path === '/support' ? 16384 : 4096;       // a support report can be longer than the other requests
       if (Number(request.headers.get('content-length') || 0) > maxBody) throw new HTTPError(413, 'Too large');
       const text = await request.text();
