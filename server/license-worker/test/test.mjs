@@ -439,7 +439,7 @@ const getAsset = async (id, token) => {
   const r = await worker.fetch(new Request('https://w.test/asset/' + id, { headers: token ? { authorization: 'Bearer ' + token } : {} }), env);
   return { status: r.status, bytes: new Uint8Array(await r.arrayBuffer()), sha: r.headers.get('x-sha256') };
 };
-const put = async (id, tier, bytes) => {
+const putAsset = async (id, tier, bytes) => {
   const r = await worker.fetch(new Request(`https://w.test/admin/asset-put?id=${id}&tier=${tier}&type=text/plain`, { method: 'POST', body: bytes, headers: { authorization: 'Bearer admin-test' } }), env);
   return { status: r.status, ...(await r.json()) };
 };
@@ -484,10 +484,10 @@ await test('Tokens: tampered, expired, the wrong kind and a licence key all fail
 await test('Assets: only an admin uploads; the right tier downloads; others get nothing', async () => {
   const body = new TextEncoder().encode('premium content');
   assert.equal((await worker.fetch(new Request('https://w.test/admin/asset-put?id=a.txt&tier=1', { method: 'POST', body, headers: { authorization: 'Bearer wrong' } }), env)).status, 401);
-  assert.equal((await put('gallery/pro.txt', 1, body)).ok, true);
-  assert.equal((await put('gallery/ultimate.txt', 2, body)).ok, true);
-  assert.equal((await put('../escape', 1, body)).status, 400);
-  assert.equal((await put('bad id', 1, body)).status, 400);
+  assert.equal((await putAsset('gallery/pro.txt', 1, body)).ok, true);
+  assert.equal((await putAsset('gallery/ultimate.txt', 2, body)).ok, true);
+  assert.equal((await putAsset('../escape', 1, body)).status, 400);
+  assert.equal((await putAsset('bad id', 1, body)).status, 400);
   const pro = (await call('/entitle', { key: (await call('/admin/issue', { tier: 'pro' }, { authorization: 'Bearer admin-test' })).key, device: devn(401) })).token;
   const ult = (await call('/entitle', { key: (await call('/admin/issue', { tier: 'ultimate' }, { authorization: 'Bearer admin-test' })).key, device: devn(402) })).token;
   const ok = await getAsset('gallery/pro.txt', pro);
