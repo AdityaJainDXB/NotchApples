@@ -1,3 +1,5 @@
+// The private game (private/ is git-ignored): loaded if the file is present in this copy.
+const FLIGHT_ECONOMY = await import('../private/flight-economy.js').then((m) => m.default, () => null);
 // Notch Apple license server: a Cloudflare Worker (free plan) with one KV namespace.
 //
 // It issues product keys signed with Ed25519. The app checks them offline using only the
@@ -1716,10 +1718,27 @@ async function gameUnlock(env, body) {
     if (devices.length >= (rec.maxDevices || 1)) throw new HTTPError(409, `That access code is already used on ${devices.length} device${devices.length === 1 ? '' : 's'}.`);
     await putJSON(env, `gamecode:${h}`, { ...rec, devices: [...devices, dh], firstUsed: rec.firstUsed || Date.now() });
   }
-  const file = await env.KV.get(`gamefile:${rec.game}`, 'text');
+  // The game ships inside the Worker (private/ file, not in git). An upload from the admin page, if any, takes precedence.
+  const bundled = { 'flight-economy': FLIGHT_ECONOMY }[rec.game] || null;
+  const file = (await env.KV.get(`gamefile:${rec.game}`, 'text')) || bundled;
   if (!file) throw new HTTPError(503, 'The game is not available yet. Try again later.');
   const version = (await sha256(file)).slice(0, 12);
   return { ok: true, game: rec.game, name: GAMES[rec.game], version, exp: rec.exp || null, ...(body.have === version ? {} : { html: file }) };
+}
+
+/** POST /game/ultimate {key, device, have?}: an Ultimate license key opens the bundled game, no extra code (not revoked, not on a
+ *  cancelled list). Same file and device rules as /game/unlock. */
+async function gameUltimate(env, body) {
+  const k = await verifyKey(env, String(body.key || ''));
+  if (!k || k.tier !== TIER.ultimate) throw new HTTPError(403, 'Ultimate is needed to play this game.');
+  const rec = await getJSON(env, `key:${k.keyId}`);
+  if (!rec || rec.revoked || (await revokedIds(env)).includes(k.keyId)) throw new HTTPError(403, 'That key has been turned off.');
+  const device = String(body.device || '');
+  if (!/^[A-Za-z0-9_-]{16,64}$/.test(device)) throw new HTTPError(400, 'Missing device id.');
+  const file = (await env.KV.get('gamefile:flight-economy', 'text')) || FLIGHT_ECONOMY;
+  if (!file) throw new HTTPError(503, 'The game is not available yet. Try again later.');
+  const version = (await sha256(file)).slice(0, 12);
+  return { ok: true, game: 'flight-economy', name: GAMES['flight-economy'], version, exp: null, ...(body.have === version ? {} : { html: file }) };
 }
 
 /** POST /admin/game-put?game=flight-economy (raw HTML body): the game file the codes unlock. */
@@ -2115,6 +2134,7 @@ export default {
         case '/claim': await addressLimit(env, request, 'claim', 60); return json(await claim(env, body));
         case '/promo': await addressLimit(env, request, 'promo', 30); return json(await promo(env, body));
         case '/game/unlock': await addressLimit(env, request, 'gameunlock', 20); return json(await gameUnlock(env, body));
+        case '/game/ultimate': await addressLimit(env, request, 'gameunlock', 20); return json(await gameUltimate(env, body));
         case '/recover': await addressLimit(env, request, 'recover', 20); return json(await recover(env, body));
         case '/otp/start': await addressLimit(env, request, 'otp', 20); return json(await otpStart(env, body));
         case '/otp/verify': await addressLimit(env, request, 'otpv', 40); return json(await otpVerify(env, body));

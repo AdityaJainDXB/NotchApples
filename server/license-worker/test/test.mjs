@@ -254,6 +254,20 @@ await test('Three personal access codes sign in (only their hashes are stored); 
   assert.equal((await call('/admin/stats', {}, { authorization: 'Bearer ' + env.ADMIN_TOKENS.split(',')[0], 'cf-connecting-ip': '9.9.9.9' })).status, 401, 'the hash itself is not a code');
 });
 
+await test('Private game: an Ultimate license key opens the game with no extra code; a Pro key or a cancelled Ultimate key does not', async () => {
+  const H = { authorization: 'Bearer admin-test' };
+  const ult = (await call('/admin/issue', { tier: 'ultimate', note: 'game test ultimate' }, H)).key;
+  const pro = (await call('/admin/issue', { tier: 'pro', note: 'game test pro' }, H)).key;
+  const dev = 'ultimate-device-cccccccccc';
+  const ok = await call('/game/ultimate', { key: ult, device: dev });
+  assert.equal(ok.status, 200, JSON.stringify(ok)); const okJson = ok;
+  assert.ok(okJson.html && okJson.html.length > 100, 'the game is sent to an Ultimate key');
+  const again = await call('/game/ultimate', { key: ult, device: dev, have: okJson.version });
+  assert.equal(again.html, undefined, 'a device that has this version gets no copy again');
+  assert.equal((await call('/game/ultimate', { key: pro, device: dev })).status, 403, 'a Pro key is refused');
+  assert.equal((await call('/game/ultimate', { key: 'NTCH-ULTM-AAAA', device: dev })).status, 403, 'a made-up key is refused');
+});
+
 await test('Private game: access codes made in the panel unlock it (one device by default), can expire or be cancelled, and nothing leaks without a code', async () => {
   const H = { authorization: 'Bearer admin-test' };
   const dev1 = 'device-one-aaaaaaaaaaaa', dev2 = 'device-two-bbbbbbbbbbbb';
