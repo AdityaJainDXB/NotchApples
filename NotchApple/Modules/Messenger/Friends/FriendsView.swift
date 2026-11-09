@@ -129,7 +129,7 @@ struct FriendsView: View {
                     Text("\(r.unread)").font(.system(size: 10, weight: .bold)).foregroundStyle(.white).padding(.horizontal, 6).padding(.vertical, 1).background(Theme.accentBright, in: Capsule())
                 }
             }
-            .padding(.horizontal, 6).padding(.vertical, 4)
+            .padding(.horizontal, 6).padding(.vertical, 4).contentShape(Rectangle())
             .background(selected == r.box ? AnyShapeStyle(Theme.surfaceHover) : AnyShapeStyle(Color.clear), in: RoundedRectangle(cornerRadius: 9))
         }
         .buttonStyle(.plain)
@@ -152,7 +152,7 @@ struct FriendsView: View {
                     Text("\(g.unread)").font(.system(size: 10, weight: .bold)).foregroundStyle(.white).padding(.horizontal, 6).padding(.vertical, 1).background(Theme.accentBright, in: Capsule())
                 }
             }
-            .padding(.horizontal, 6).padding(.vertical, 4)
+            .padding(.horizontal, 6).padding(.vertical, 4).contentShape(Rectangle())
             .background(selected == g.key ? AnyShapeStyle(Theme.surfaceHover) : AnyShapeStyle(Color.clear), in: RoundedRectangle(cornerRadius: 9))
         }
         .buttonStyle(.plain)
