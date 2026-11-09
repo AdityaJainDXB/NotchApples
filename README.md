@@ -150,6 +150,12 @@ More screenshots of the capture overlay, the AI answer, the settings and the Win
 
 ## What's new
 
+### Windows 2.2.49 BETA · 9 November 2026 · 🔧 Updater fixes
+
+- Fix: the automatic update no longer opens a black terminal window. The helper that installs the update was started with two options that cancel each other out, so Windows showed its console
+- New: if an update does not install, Notch Apple now says so the next time it starts (a notification, and a box in Settings → Updates with what happened). The box has Run the installer, which opens the installer in its own window, and Open the download page, so nobody has to uninstall and reinstall
+- Note: PCs that still have an older version run the older updater for this one update. If it fails there, use the installer from the download page once; updates after that use the fixed one
+
 ### Mac 2.2.48 · Windows 2.2.48 BETA · 8 November 2026 · 🎮 A new Games menu, and a private game
 
 - New: a new menu for the Games tab. Search the games, filter them (Arcade, Flying & racing, Strategy, Cards & board, Online, Daily), jump back into the last three you played, and pick from a card with a picture for every game. Point at a card to see Play
@@ -158,11 +164,6 @@ More screenshots of the capture overlay, the AI answer, the settings and the Win
 ### Mac 2.2.46 · Windows 2.2.46 BETA · 7 November 2026 · 💳 New prices: Pro $5, Ultimate $15
 
 - Change: Pro is now $5 and Ultimate $15, each paid once. Upgrading from Pro to Ultimate is $10. In the UAE, card prices are AED 4.40, AED 18 and AED 13.60 to upgrade. Keys you already have are unchanged and keep every update.
-
-### Mac 2.2.45 · Windows 2.2.45 BETA · 7 November 2026 · 🧹 Clear chat works with an unpinned notch
-
-- Fix: with the notch not pinned, pressing Clear chat just closed the notch and deleted nothing, because the confirmation was a separate system window and the notch closes when it loses focus. The confirmation now appears inside the notch, so Clear chat works pinned or not.
-- Windows: no change in this version (its confirmation already appears inside the app). The Windows app has not been tested on real Windows hardware.
 
 
 ## Plugins
