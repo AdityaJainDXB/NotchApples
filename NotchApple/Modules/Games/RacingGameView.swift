@@ -15,7 +15,6 @@ import AVFoundation
 import Speech
 
 struct RacingGameView: View {
-    /// True in the Full screen window: its own copy of the game, apart from the one the notch keeps between visits.
     var standalone = false
     var body: some View {
         if let url = Bundle.main.url(forResource: "RacingGame", withExtension: "html") {
@@ -29,20 +28,18 @@ struct RacingGameView: View {
     }
 }
 
-/// A web view that takes the first click (the notch is a non-activating panel) and keeps the keyboard while you race.
 final class RacingWKWebView: WKWebView {
     override func acceptsFirstMouse(for event: NSEvent?) -> Bool { true }
     override var acceptsFirstResponder: Bool { true }
     override func mouseDown(with event: NSEvent) {
         window?.makeFirstResponder(self)
-        super.mouseDown(with: event)
+        super.mouseDown(with event)
     }
 }
 
-/// The Racing game's web view, kept between visits like the Plane game: closing the notch or switching tab pauses the race and mutes
-/// it, and coming back puts it back as it was (it is let go of after an hour away).
 @MainActor
 enum RacingGameControl {
+    fileprivate static weak var web: WKWebView?
     fileprivate static var kept: RacingWKWebView?
     private static var releaseTask: Task<Void, Never>?
     fileprivate static var owner: ObjectIdentifier?
@@ -52,8 +49,8 @@ enum RacingGameControl {
         releaseTask?.cancel()
         releaseTask = Task { @MainActor in
             try? await Task.sleep(for: .seconds(3600))
-            guard !Task.isCancelled, owner == nil else { return }
-            kept?.loadHTMLString("", baseURL: nil)       // stops the game loop and the engine sound
+            guard !Task.isCancelled, web == nil else { return }
+            kept?.loadHTMLString("", baseURL: nil)
             kept = nil
         }
     }
@@ -62,28 +59,30 @@ enum RacingGameControl {
         releaseTask?.cancel(); releaseTask = nil
         view.evaluateJavaScript("window.NotchRaceGame && window.NotchRaceGame.resume && window.NotchRaceGame.resume()")
     }
+
+    static var isRunning: Bool { web != nil }
+
+    @discardableResult
+    static func togglePause() -> Bool {
+        guard let web else { return false }
+        web.evaluateJavaScript("window.NotchRaceGame && window.NotchRaceGame.key && (window.NotchRaceGame.key('p', true), window.NotchRaceGame.key('p', false))")
+        return true
+    }
 }
 
 private struct RacingWebView: NSViewRepresentable {
     let url: URL
     var standalone = false
-    /// The Games sidebar's Sound switch: it turns the engine, tyres and crash sounds on and off too.
     @AppStorage(GameSound.key) private var soundOn = true
 
-    /// Forwards the game's keys to the page whenever the web view doesn't have the keyboard itself (the notch is a
-    /// non-activating panel, and focus can sit elsewhere in it), so the arrows, W A S D and Space always drive the car.
     @MainActor final class Coordinator: NSObject, WKUIDelegate, WKScriptMessageHandler {
         weak var web: RacingWKWebView?
         var monitor: Any?
         var standalone = false
         private var heard = ""
 
-        /// The race radio: the game asks for the microphone ("permission"), starts listening when you open the radio
-        /// ("start") and stops when you send ("stop"); what you said goes back to the game, which answers it. Speech is
-        /// recognised on this Mac whenever it can be (the same dictation as the AI tab).
         func userContentController(_ controller: WKUserContentController, didReceive message: WKScriptMessage) {
             guard let web else { return }
-            // A question for the race engineer: the AI you set up in the AI tab answers it, knowing the state of your race.
             if let ask = message.body as? [String: Any], ask["kind"] as? String == "ask", let id = ask["id"] as? Int,
                let question = ask["question"] as? String, let system = ask["system"] as? String {
                 Task { @MainActor in
@@ -94,7 +93,6 @@ private struct RacingWebView: NSViewRepresentable {
                     } catch { out = ""; problem = "\(config.provider.title): \(error.localizedDescription)" }
                     let reply = MathText.plain(out).trimmingCharacters(in: .whitespacesAndNewlines)
                     if reply.isEmpty && problem.isEmpty { problem = "\(config.provider.title) gave no answer" }
-                    // The answer, or why there is none (shown in the race, so a missing key or a busy model is plain to see).
                     guard let data = try? JSONSerialization.data(withJSONObject: [reply, problem]), let arg = String(data: data, encoding: .utf8) else { return }
                     web.evaluateJavaScript("window.NotchRaceGame && NotchRaceGame.radioAnswer && NotchRaceGame.radioAnswer(\(id), \(arg)[0], \(arg)[1])", completionHandler: nil)
                 }
@@ -110,7 +108,6 @@ private struct RacingWebView: NSViewRepresentable {
                 }
             case "start":
                 heard = ""
-                // Say plainly when the microphone or speech recognition is switched off for the app.
                 if AVCaptureDevice.authorizationStatus(for: .audio) == .denied || AVCaptureDevice.authorizationStatus(for: .audio) == .restricted {
                     problem("The microphone is off for Notch Apple: turn it on in System Settings → Privacy & Security → Microphone"); return
                 }
@@ -122,12 +119,10 @@ private struct RacingWebView: NSViewRepresentable {
                     if let p = VoiceInput.shared.problem { self?.problem(p) }
                 }
             case "focus":
-                // Typing a question: the notch's window takes the keyboard and the page gets it (not the game's keys).
                 NSApp.activate(ignoringOtherApps: true)
                 web.window?.makeKey()
                 web.window?.makeFirstResponder(web)
             case "stop":
-                // A moment for the last words to come through, then send what was heard.
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.7) { [weak self] in
                     guard let self else { return }
                     let p = VoiceInput.shared.problem
@@ -140,14 +135,11 @@ private struct RacingWebView: NSViewRepresentable {
             }
         }
 
-        /// The track designer's "From a picture" button: a file picker for an image of a circuit.
         func webView(_ webView: WKWebView, runOpenPanelWith parameters: WKOpenPanelParameters, initiatedByFrame frame: WKFrameInfo, completionHandler: @escaping @MainActor @Sendable ([URL]?) -> Void) {
             let panel = NSOpenPanel()
             panel.allowedContentTypes = [.image]
             panel.allowsMultipleSelection = false
             panel.message = "Pick a picture of a circuit to turn into a track"
-            // The notch window floats above normal windows, so the picker opens one level above it (it used to open behind
-            // the notch, out of reach), and the notch stays open until a picture is chosen.
             panel.level = NSWindow.Level(rawValue: (webView.window?.level ?? .statusBar).rawValue + 1)
             NotchWindowController.holdOpen += 1
             NSApp.activate(ignoringOtherApps: true)
@@ -160,15 +152,14 @@ private struct RacingWebView: NSViewRepresentable {
 
         private func problem(_ text: String) {
             guard let data = try? JSONSerialization.data(withJSONObject: [text]), let arg = String(data: data, encoding: .utf8) else { return }
-            web?.evaluateJavaScript("window.NotchRaceGame && NotchRaceGame.radioProblem && NotchRaceGame.radioProblem(\(arg)[0])", completionHandler: nil)
+            web?.evaluateJavaScript("window.NotchRaceGame && NotchRaceGame.radioProblem && NotchRaceGame.radioProblem(\(arg)[0])")
         }
 
-        /// True when the key went to the game (and should go no further).
         func forward(_ e: NSEvent) -> Bool {
             guard let web, let window = web.window, e.window === window,
-                  !e.modifierFlags.contains(.command), e.keyCode != 53 else { return false }   // ⌘ shortcuts and Esc stay the notch's
+                  !e.modifierFlags.contains(.command), e.keyCode != 53 else { return false }
             if let responder = window.firstResponder as? NSView, responder === web || responder.isDescendant(of: web) { return false }
-            if NSApp.keyWindow?.firstResponder is NSText { return false }                // typing in a text field elsewhere
+            if NSApp.keyWindow?.firstResponder is NSText { return false }
             let named: [UInt16: String] = [126: "ArrowUp", 125: "ArrowDown", 123: "ArrowLeft", 124: "ArrowRight", 49: " ", 36: "Enter"]
             let key = named[e.keyCode] ?? (e.charactersIgnoringModifiers ?? "").lowercased()
             guard !key.isEmpty, let data = try? JSONSerialization.data(withJSONObject: [key]), let arg = String(data: data, encoding: .utf8) else { return false }
@@ -181,10 +172,10 @@ private struct RacingWebView: NSViewRepresentable {
     func makeCoordinator() -> Coordinator { Coordinator() }
 
     func makeNSView(context: Context) -> RacingWKWebView {
-        // Coming back to a race that is being kept: the same web view, with the race as it was.
         if !standalone, let kept = RacingGameControl.kept {
             let coordinator = context.coordinator
             coordinator.web = kept
+            RacingGameControl.web = kept
             RacingGameControl.owner = ObjectIdentifier(coordinator)
             kept.uiDelegate = coordinator
             kept.configuration.userContentController.removeScriptMessageHandler(forName: "radio")
@@ -202,14 +193,17 @@ private struct RacingWebView: NSViewRepresentable {
         config.userContentController.addUserScript(WKUserScript(source: "window.NotchHostSound=\(GameSound.enabled); window.NotchLowPower=\(ProcessInfo.processInfo.isLowPowerModeEnabled);", injectionTime: .atDocumentStart, forMainFrameOnly: true))
         config.userContentController.add(context.coordinator, name: "radio")
         let view = RacingWKWebView(frame: .zero, configuration: config)
-        view.uiDelegate = context.coordinator
         view.setValue(false, forKey: "drawsBackground")
         view.loadFileURL(url, allowingReadAccessTo: url.deletingLastPathComponent())
         DispatchQueue.main.async { view.window?.makeFirstResponder(view) }
         let coordinator = context.coordinator
         coordinator.web = view
         coordinator.standalone = standalone
-        if !standalone { RacingGameControl.kept = view; RacingGameControl.owner = ObjectIdentifier(coordinator) }
+        if !standalone {
+            RacingGameControl.web = view
+            RacingGameControl.kept = view
+            RacingGameControl.owner = ObjectIdentifier(coordinator)
+        }
         coordinator.monitor = NSEvent.addLocalMonitorForEvents(matching: [.keyDown, .keyUp]) { [weak coordinator] event in
             let consumed = MainActor.assumeIsolated { coordinator?.forward(event) ?? false }
             return consumed ? nil : event
@@ -218,23 +212,22 @@ private struct RacingWebView: NSViewRepresentable {
     }
 
     func updateNSView(_ nsView: RacingWKWebView, context: Context) {
-        // Low Power Mode makes WebKit draw web pages at 30 frames a second; the game tells you when that is why it isn't smooth.
         nsView.evaluateJavaScript("window.NotchLowPower=\(ProcessInfo.processInfo.isLowPowerModeEnabled); window.NotchHostSound=\(soundOn); window.NotchRaceGame && window.NotchRaceGame.setSoundEnabled && window.NotchRaceGame.setSoundEnabled(\(soundOn))")
     }
 
     static func dismantleNSView(_ nsView: RacingWKWebView, coordinator: Coordinator) {
         if let m = coordinator.monitor { NSEvent.removeMonitor(m) }
         coordinator.monitor = nil
-        nsView.configuration.userContentController.removeScriptMessageHandler(forName: "radio")   // it holds the coordinator
+        nsView.configuration.userContentController.removeScriptMessageHandler(forName: "radio")
         if VoiceInput.shared.isListening { VoiceInput.shared.stop() }
-        if coordinator.standalone {      // the Full screen window: nothing is kept, the page is dropped (the race and its sound stop)
+        if coordinator.standalone {
             nsView.evaluateJavaScript("window.NotchRaceGame && window.NotchRaceGame.suspend && window.NotchRaceGame.suspend()")
             nsView.loadHTMLString("", baseURL: nil)
             return
         }
-        guard RacingGameControl.owner == ObjectIdentifier(coordinator) else { return }     // a newer copy has taken over
+        guard RacingGameControl.owner == ObjectIdentifier(coordinator) else { return }
         RacingGameControl.owner = nil
-        // Not destroyed: the race is paused, muted and kept for when the notch opens again.
+        if RacingGameControl.web === nsView { RacingGameControl.web = nil }
         RacingGameControl.setAside(nsView)
     }
 }
