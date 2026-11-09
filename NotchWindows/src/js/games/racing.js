@@ -1202,7 +1202,7 @@
   /// Returns the impact speed (m/s), or 0 when they did not touch.
   function collide(a, b) {
     if (Math.hypot(b.x - a.x, b.y - a.y) > CAR_LEN * 1.3) return 0;
-    const R = 1.0, pts = (c) => { const ca = Math.cos(c.h), sa = Math.sin(c.h); return [[c.x + ca * 1.3, c.y + sa * 1.3], [c.x - ca * 1.3, c.y - sa * 1.3]]; };
+    const R = 1.2, pts = (c) => { const ca = Math.cos(c.h), sa = Math.sin(c.h); return [[c.x + ca * 1.3, c.y + sa * 1.3], [c.x - ca * 1.3, c.y - sa * 1.3]]; };
     let best = null;
     for (const pa of pts(a)) for (const pb of pts(b)) { const d = Math.hypot(pb[0] - pa[0], pb[1] - pa[1]); if (d < 2 * R && (!best || d < best.d)) best = { d, pa, pb }; }
     if (!best) return 0;
