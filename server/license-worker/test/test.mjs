@@ -268,14 +268,6 @@ await test('Private game: access codes made in the panel unlock it (one device b
   assert.equal(made.codes.length, 2); assert.match(made.codes[0], /^[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}$/);
   const code = made.codes[0];
   const first = await call('/game/unlock', { code, device: dev1 });
-
-});
-await test('Private game: an Ultimate license key opens the game with no extra code; a Pro key or a cancelled Ultimate key does not', async () => {
-  const H = { authorization: 'Bearer admin-test' };
-  const ult = (await call('/admin/issue', { tier: 'ultimate', note: 'game test ultimate' }, H)).key;
-  const pro = (await call('/admin/issue', { tier: 'pro', note: 'game test pro' }, H)).key;
-  const dev = 'ultimate-device-cccccccccc';
-  const ok = await call('/game/ultimate', { key: ult, device: dev });
   assert.equal(first.status, 200); assert.equal(first.html, html); assert.equal(first.name, 'Flight Economy'); assert.equal(first.version, putJson.version);
   const again = await call('/game/unlock', { code: code.toLowerCase().replace(/-/g, ' '), device: dev1, have: first.version });
   assert.equal(again.status, 200); assert.equal(again.html, undefined, 'the same version is not sent twice');
@@ -302,6 +294,16 @@ await test('Private game: an Ultimate license key opens the game with no extra c
   // The game cannot be fetched as a paid asset either, even with the top licence.
   assert.equal((await worker.fetch(new Request('https://w.test/asset/games/flight-economy.html'), env)).status === 200, false);
 });
+
+await test('Private game: an Ultimate license key opens the game with no extra code; a Pro key or a cancelled Ultimate key does not', async () => {
+  const H = { authorization: 'Bearer admin-test' };
+  const ult = (await call('/admin/issue', { tier: 'ultimate', note: 'game test ultimate' }, H)).key;
+  const pro = (await call('/admin/issue', { tier: 'pro', note: 'game test pro' }, H)).key;
+  const dev = 'ultimate-device-cccccccccc';
+  const ok = await call('/game/ultimate', { key: ult, device: dev });
+  assert.equal(ok.status, 200); assert.equal(ok.ok, true);
+  assert.equal((await call('/game/ultimate', { key: pro, device: dev })).status, 403);
+});});
 
 await test('Promo codes made in the panel: create, redeem once, see them used, delete unused', async () => {
   const H = { authorization: 'Bearer admin-test' };
