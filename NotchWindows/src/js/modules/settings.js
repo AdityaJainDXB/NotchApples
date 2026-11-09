@@ -172,7 +172,20 @@ function Updates() {
   const checkBtn = button('Check now', check, { kind: 'quiet' });
   actions.append(checkBtn);
   setTimeout(check, 50);
+  // The last update did not install: say what happened and offer the two ways to finish it by hand.
+  const failed = el('div', { class: 'col', style: 'gap:6px;margin-bottom:8px' });
+  import('../services/updates.js').then((U) => U.checkAttempt()).then((a) => {
+    if (!a || a.ok) return;
+    failed.replaceChildren(
+      el('div', { style: 'font-weight:700;color:#ffb347' }, `The update to ${a.to} didn’t install`),
+      el('div', { class: 'small dim' }, 'The automatic update did not finish, so you are still on this version. You can run the installer yourself (it opens its own window), or download it again.'),
+      el('div', { class: 'hstack', style: 'gap:8px' },
+        a.installer_saved ? button('Run the installer', () => invoke('update_run_installer').catch((e) => toast(e.message || String(e), { error: true }))) : null,
+        button('Open the download page', () => invoke('open_browser', { url: 'https://github.com/AdityaJainDXB/NotchApples/releases?q=win-v' }), { kind: 'quiet' })),
+      a.log ? el('pre', { class: 'tiny faint', style: 'white-space:pre-wrap;margin:0;max-height:110px;overflow:auto', title: 'What the update helper wrote to %TEMP%\\NotchApple-Update.log' }, a.log) : null);
+  }).catch(() => {});
   return [card('Software update',
+    failed,
     el('div', { class: 'hstack' }, el('div', { class: 'grow' }, el('div', {}, 'Notch Apple for Windows ', version), status), actions),
     notes,
     setting('Check for updates automatically', 'Checked at startup and every six hours; you’re told once per version.', prefToggle('updates.auto')),

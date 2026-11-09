@@ -41,10 +41,26 @@ export async function check() {
 
 export async function install() {
   if (!available) throw new Error('No update to install.');
-  await invoke('update_install', { url: available.url, sha256: available.sha256, size: available.size });
+  await invoke('update_install', { url: available.url, sha256: available.sha256, size: available.size, version: available.version });
+}
+
+let lastAttempt = null;
+/// How the last update attempt went (null when none was tried): { ok, from, to, log, installer_saved }.
+export const attempt = () => lastAttempt;
+
+/// Asked at start-up: did the update that was started last time actually install? If not, say so once and keep the details for Settings → Updates.
+export async function checkAttempt() {
+  try { lastAttempt = await invoke('update_attempt_result'); } catch { lastAttempt = null; }
+  if (lastAttempt && lastAttempt.ok && lastAttempt.from !== lastAttempt.to) notify('Notch Apple updated', `You now have version ${lastAttempt.to}.`);
+  if (lastAttempt && !lastAttempt.ok && load('updates.failShown', '') !== lastAttempt.to) {
+    save('updates.failShown', lastAttempt.to);
+    notify('The update didn’t install', `Notch Apple ${lastAttempt.to} could not be installed automatically. Open Settings → Updates to finish it.`);
+  }
+  return lastAttempt;
 }
 
 export function start() {
+  setTimeout(() => { checkAttempt(); }, 8_000);
   setTimeout(() => { if (pref('updates.auto')) check(); }, 30_000);
   setInterval(() => { if (pref('updates.auto')) check(); }, 6 * 3600e3);
   provide('update', 5, () => (available && pref('updates.pill') && announce()
