@@ -22,7 +22,7 @@ final class PrivateGames: ObservableObject {
     private let recheck: TimeInterval = 3 * 86_400     // ask the server again after this long
     private let offlineLimit: TimeInterval = 14 * 86_400   // and give up on a game that could not be checked for this long
 
-    struct State: Codable { var code: String; var version: String; var name: String; var checked: Date }
+    struct State: Codable { var code: String; var version: String; var name: String; var checked: Date; var ultimate: Bool? }
 
     /// A sentence for the person: what went wrong. `refused` = the server said no (a bad, ended or cancelled code), `offline` = no answer.
     enum Failure: LocalizedError {
@@ -70,11 +70,20 @@ final class PrivateGames: ObservableObject {
 
     /// One question to the license server. Throws `.refused` when it says no and `.offline` when it doesn't answer.
     private func ask(code: String, have: String?) async throws -> [String: Any] {
+        try await send("game/unlock", ["code": code], have: have)
+    }
+
+    /// The same question with the person's Ultimate license key instead of a code (no extra code is needed).
+    private func askUltimate(key: String, have: String?) async throws -> [String: Any] {
+        try await send("game/ultimate", ["key": key], have: have)
+    }
+
+    private func send(_ path: String, _ extra: [String: Any], have: String?) async throws -> [String: Any] {
         guard let base = await LicenseServer.url() else { throw Failure.offline }
-        var r = URLRequest(url: base.appendingPathComponent("game/unlock"), timeoutInterval: 60)
+        var r = URLRequest(url: base.appendingPathComponent(path), timeoutInterval: 60)
         r.httpMethod = "POST"
         r.setValue("application/json", forHTTPHeaderField: "content-type")
-        var body: [String: Any] = ["code": code, "device": deviceID]
+        var body: [String: Any] = extra.merging(["device": deviceID]) { a, _ in a }
         if let have { body["have"] = have }
         r.httpBody = try? JSONSerialization.data(withJSONObject: body)
         let result: (Data, URLResponse)
@@ -93,7 +102,19 @@ final class PrivateGames: ObservableObject {
         guard (r["game"] as? String) == id else { throw Failure.message("That code is for a different game.") }
         guard let html = r["html"] as? String, !html.isEmpty else { throw Failure.message("The server did not send the game. Try again.") }
         try html.write(to: try fileURL(id), atomically: true, encoding: .utf8)
-        save(State(code: code, version: (r["version"] as? String) ?? "", name: (r["name"] as? String) ?? "Flight Economy", checked: Date()), id)
+        save(State(code: code, version: (r["version"] as? String) ?? "", name: (r["name"] as? String) ?? "Flight Economy", checked: Date(), ultimate: nil), id)
+    }
+
+    /// Ultimate members: the game opens with their license key, no access code. Throws when this Mac has no Ultimate key.
+    func unlockWithLicense(_ id: String = PrivateGames.flightEconomy) async throws {
+        guard let text = KeychainHelper.get(.licenseKey), case .success(let k) = LicenseKey.parse(text), k.tier == .ultimate else {
+            throw Failure.message("Enter your access code first.")
+        }
+        let r = try await askUltimate(key: text, have: nil)
+        guard (r["game"] as? String) == id else { throw Failure.message("That game is not available.") }
+        guard let html = r["html"] as? String, !html.isEmpty else { throw Failure.message("The server did not send the game. Try again.") }
+        try html.write(to: try fileURL(id), atomically: true, encoding: .utf8)
+        save(State(code: "", version: (r["version"] as? String) ?? "", name: (r["name"] as? String) ?? "Flight Economy", checked: Date(), ultimate: true), id)
     }
 
     /// Forgets the code and deletes the saved game (the code was cancelled, or the person asked).
@@ -106,10 +127,17 @@ final class PrivateGames: ObservableObject {
 
     /// Opens the game in its own window. Every few days the code is checked again first (and a newer game version is fetched).
     func open(_ id: String = PrivateGames.flightEconomy) async throws {
+        if state(id) == nil { try await unlockWithLicense(id) }
         guard var st = state(id) else { throw Failure.message("Enter your access code first.") }
         if Date().timeIntervalSince(st.checked) > recheck {
             do {
-                let r = try await ask(code: st.code, have: st.version)
+                var r: [String: Any]
+                if st.ultimate == true {
+                    guard let text = KeychainHelper.get(.licenseKey), case .success = LicenseKey.parse(text) else { throw Failure.refused(403, "Your Ultimate key is no longer on this Mac.") }
+                    r = try await askUltimate(key: text, have: st.version)
+                } else {
+                    r = try await ask(code: st.code, have: st.version)
+                }
                 if let html = r["html"] as? String, !html.isEmpty { try html.write(to: try fileURL(id), atomically: true, encoding: .utf8) }
                 st.version = (r["version"] as? String) ?? st.version
                 st.name = (r["name"] as? String) ?? st.name

@@ -10,6 +10,10 @@ Every Notch Apple release, newest first. The latest few are also on the [README]
 - New: if an update does not install, Notch Apple now says so the next time it starts (a notification, and a box in Settings → Updates with what happened). The box has Run the installer, which opens the installer in its own window, and Open the download page, so nobody has to uninstall and reinstall
 - Note: PCs that still have an older version run the older updater for this one update. If it fails there, use the installer from the download page once; updates after that use the fixed one
 
+### Mac 2.2.50 · Windows 2.2.50 BETA · 9 November 2026 · ✈️ Flight Economy opens with your Ultimate key
+
+- New: Flight Economy opens with your Ultimate license key. No access code needed, on Mac and Windows; existing Ultimate keys get it too. Pro keys do not open it.
+
 ### Mac 2.2.48 · Windows 2.2.48 BETA · 8 November 2026 · 🎮 A new Games menu, and a private game
 
 - New: a new menu for the Games tab. Search the games, filter them (Arcade, Flying & racing, Strategy, Cards & board, Online, Daily), jump back into the last three you played, and pick from a card with a picture for every game. Point at a card to see Play

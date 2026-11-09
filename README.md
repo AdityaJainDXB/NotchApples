@@ -150,6 +150,10 @@ More screenshots of the capture overlay, the AI answer, the settings and the Win
 
 ## What's new
 
+### Mac 2.2.50 · Windows 2.2.50 BETA · 9 November 2026 · ✈️ Flight Economy opens with your Ultimate key
+
+- New: Flight Economy opens with your Ultimate license key. No access code needed, on Mac and Windows; existing Ultimate keys get it too. Pro keys do not open it.
+
 ### Windows 2.2.49 BETA · 9 November 2026 · 🔧 Updater fixes
 
 - Fix: the automatic update no longer opens a black terminal window. The helper that installs the update was started with two options that cancel each other out, so Windows showed its console
@@ -164,7 +168,6 @@ More screenshots of the capture overlay, the AI answer, the settings and the Win
 ### Mac 2.2.46 · Windows 2.2.46 BETA · 7 November 2026 · 💳 New prices: Pro $5, Ultimate $15
 
 - Change: Pro is now $5 and Ultimate $15, each paid once. Upgrading from Pro to Ultimate is $10. In the UAE, card prices are AED 4.40, AED 18 and AED 13.60 to upgrade. Keys you already have are unchanged and keep every update.
-
 
 ## Plugins
 
