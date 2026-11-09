@@ -13,7 +13,7 @@ packages:
 settings:
   base:
     SWIFT_VERSION: "5.0"
-    MARKETING_VERSION: "2.2.50"
+    MARKETING_VERSION: "2.2.51"
     CURRENT_PROJECT_VERSION: "234"
     CODE_SIGN_IDENTITY: "-"
     CODE_SIGN_STYLE: Manual
