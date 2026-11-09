@@ -269,6 +269,7 @@ await test('Private game: access codes made in the panel unlock it (one device b
   const code = made.codes[0];
   const first = await call('/game/unlock', { code, device: dev1 });
 
+});
 await test('Private game: an Ultimate license key opens the game with no extra code; a Pro key or a cancelled Ultimate key does not', async () => {
   const H = { authorization: 'Bearer admin-test' };
   const ult = (await call('/admin/issue', { tier: 'ultimate', note: 'game test ultimate' }, H)).key;
