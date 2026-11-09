@@ -1,18 +1,18 @@
 {
-  "version": "2.2.34",
-  "title": "Notch Apple 2.2.34 · Night Shift: Custom Night",
-  "notes": "## Notch Apple 2.2.34\n\n- New: Night Shift Custom Night (a button under the nights on the menu, or press C). Set each toy, Clank, Petunia, Grin and the Conductor, to any level from 0 (asleep) to 20 (relentless) with the arrows or by clicking the bars. They stay at that level all night, with no hourly rise. Random picks levels for you, and 20 mode turns every toy to the maximum.\n- Beat a custom night with all four toys at 20 and the Custom Night button gets a star. Your levels are remembered, and Again replays the same night.\n",
-  "published": "2026-11-06T14:35:56Z",
-  "dmg": "https://github.com/AdityaJainDXB/NotchApples/releases/download/v2.2.34/NotchApple-2.2.34.dmg",
-  "dmgSize": 54888911,
-  "page": "https://github.com/AdityaJainDXB/NotchApples/releases/tag/v2.2.34",
+  "version": "2.2.50",
+  "title": "Notch Apple 2.2.50 · Flight Economy opens with your Ultimate key",
+  "notes": "## Notch Apple 2.2.50\n\n- New: Flight Economy opens with your Ultimate license key. No access code needed, on Mac and Windows; existing Ultimate keys get it too. Pro keys do not open it.\n",
+  "published": "2026-11-09T14:06:40Z",
+  "dmg": "https://github.com/AdityaJainDXB/NotchApples/releases/download/v2.2.50/NotchApple-2.2.50.dmg",
+  "dmgSize": 55369271,
+  "page": "https://github.com/AdityaJainDXB/NotchApples/releases/tag/v2.2.50",
   "stars": 3,
   "windows": {
-    "version": "2.2.33",
+    "version": "2.2.50",
     "notes": "",
-    "url": "https://github.com/AdityaJainDXB/NotchApples/releases/download/win-v2.2.33/Notch.apple_2.2.33_x64-setup.exe",
-    "sha256": "b5e24f890fab0d0cc4b9024686c01b318792c0348f32e649aed790b6a77d44e9",
-    "size": 6521125,
-    "page": "https://github.com/AdityaJainDXB/NotchApples/releases/tag/win-v2.2.33"
+    "url": "https://github.com/AdityaJainDXB/NotchApples/releases/download/win-v2.2.50/Notch.apple_2.2.50_x64-setup.exe",
+    "sha256": "7abea29a2475be0aa3a5fedd1e584fcde3c383f1f604fc96457aed378a721d3f",
+    "size": 6557274,
+    "page": "https://github.com/AdityaJainDXB/NotchApples/releases/tag/win-v2.2.50"
   }
 }
