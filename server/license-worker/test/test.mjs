@@ -303,7 +303,7 @@ await test('Private game: an Ultimate license key opens the game with no extra c
   const ok = await call('/game/ultimate', { key: ult, device: dev });
   assert.equal(ok.status, 200); assert.equal(ok.ok, true);
   assert.equal((await call('/game/ultimate', { key: pro, device: dev })).status, 403);
-});});
+});
 
 await test('Promo codes made in the panel: create, redeem once, see them used, delete unused', async () => {
   const H = { authorization: 'Bearer admin-test' };
