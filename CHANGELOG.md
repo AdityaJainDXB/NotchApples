@@ -4,6 +4,10 @@ Every Notch Apple release, newest first. The latest few are also on the [README]
 
 > **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is in the repository's history.
 
+### Mac 2.2.54 · 10 November 2026 · 🧹 Purge shows what it has freed
+
+- New (Ultimate): the Purge tab now shows what Purge has freed so far, for example "Freed 40 GB in 22 cleans" and when the last clean was. It reads Purge's own history file on your Mac; nothing is sent anywhere, and Notch Apple still deletes nothing itself
+
 ### Mac 2.2.53 · 10 November 2026 · 🔒 The lock is for Messenger only
 
 - Fix: the lock offer is now only about Messenger. In 2.2.52 it also locked the AI tab, which was not meant to happen. AI opens as normal again, and if you took the offer, AI is unlocked for you automatically. You can still lock any tab you like in Settings → Authentication

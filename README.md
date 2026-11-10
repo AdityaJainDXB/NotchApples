@@ -150,6 +150,10 @@ More screenshots of the capture overlay, the AI answer, the settings and the Win
 
 ## What's new
 
+### Mac 2.2.54 · 10 November 2026 · 🧹 Purge shows what it has freed
+
+- New (Ultimate): the Purge tab now shows what Purge has freed so far, for example "Freed 40 GB in 22 cleans" and when the last clean was. It reads Purge's own history file on your Mac; nothing is sent anywhere, and Notch Apple still deletes nothing itself
+
 ### Mac 2.2.53 · 10 November 2026 · 🔒 The lock is for Messenger only
 
 - Fix: the lock offer is now only about Messenger. In 2.2.52 it also locked the AI tab, which was not meant to happen. AI opens as normal again, and if you took the offer, AI is unlocked for you automatically. You can still lock any tab you like in Settings → Authentication
@@ -160,10 +164,6 @@ More screenshots of the capture overlay, the AI answer, the settings and the Win
 - New (Mac): Settings is easier to scan. The list down the left is now in four groups: the basics, Features, Account and safety, and App
 - New (Windows): a search box at the top of Settings. Type a word and it shows the panes and the settings that match, and opens the first one with the row highlighted
 - Change: small buttons in the notch are easier to hit (the refresh button in Claude Usage, the habit day dots, the priority menu in Todo and others), and hover and press effects now share one timing
-
-### Mac 2.2.50 · Windows 2.2.50 BETA · 9 November 2026 · ✈️ Flight Economy opens with your Ultimate key
-
-- New: Flight Economy opens with your Ultimate license key. No access code needed, on Mac and Windows; existing Ultimate keys get it too. Pro keys do not open it.
 
 ## Plugins
 

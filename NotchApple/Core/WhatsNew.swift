@@ -20,6 +20,9 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.2.54", date: "10 November 2026", headline: "Purge shows what it has freed", items: [
+            "New (Ultimate): the Purge tab now shows what Purge has freed so far, for example \"Freed 40 GB in 22 cleans\" and when the last clean was. It reads Purge's own history file on your Mac; nothing is sent anywhere, and Notch Apple still deletes nothing itself",
+        ]),
         ReleaseNote(version: "2.2.53", date: "10 November 2026", headline: "The lock is for Messenger only", items: [
             "Fix: the lock offer is now only about Messenger. In 2.2.52 it also locked the AI tab, which was not meant to happen. AI opens as normal again, and if you took the offer, AI is unlocked for you automatically. You can still lock any tab you like in Settings → Authentication",
         ]),
