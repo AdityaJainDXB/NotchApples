@@ -16,6 +16,7 @@
 //
 
 import AppKit
+import Combine
 import SwiftUI
 
 /// Borderless, transparent, non-activating panel that can still take keyboard
@@ -168,6 +169,23 @@ final class NotchTriggerView: NSView {
             MusicLevelMeter.shared.stop()
         }
     }
+    /// The status pulse: a coloured glow around the closed notch (Settings → Notch → Status pulse).
+    var pulseColor: NSColor? {
+        didSet {
+            pulseTimer?.invalidate(); pulseTimer = nil
+            if pulseColor != nil, !NSWorkspace.shared.accessibilityDisplayShouldReduceMotion {
+                let t = Timer(timeInterval: 1.0 / 20, repeats: true) { [weak self] _ in
+                    MainActor.assumeIsolated { self?.pulsePhase += 0.35; self?.needsDisplay = true }
+                }
+                RunLoop.main.add(t, forMode: .common)
+                pulseTimer = t
+            }
+            needsDisplay = true
+        }
+    }
+    private var pulseTimer: Timer?
+    private var pulsePhase: CGFloat = 0
+
     /// True while the screen is being recorded: adds a glowing dot and a tooltip.
     var isRecording = false {
         didSet {
@@ -265,6 +283,20 @@ final class NotchTriggerView: NSView {
         let path = Self.notchPath(in: notch, shoulder: shoulder, bottom: min(10, notch.height / 2))
         NSColor.black.setFill()
         path.fill()
+        if let glow = pulseColor {
+            // Steady with Reduce Motion, otherwise it breathes.
+            let alpha: CGFloat = NSWorkspace.shared.accessibilityDisplayShouldReduceMotion ? 0.9 : 0.6 + 0.4 * (0.5 + 0.5 * sin(pulsePhase))
+            NSGraphicsContext.saveGraphicsState()
+            let shadow = NSShadow()
+            shadow.shadowColor = glow.withAlphaComponent(alpha)
+            shadow.shadowBlurRadius = 7
+            shadow.shadowOffset = .zero
+            shadow.set()
+            glow.withAlphaComponent(alpha).setStroke()
+            path.lineWidth = 2
+            path.stroke()
+            NSGraphicsContext.restoreGraphicsState()
+        }
 
         // Content appears once the ears have mostly opened, so text is never squashed.
         if let activity, ear >= Self.earWidth(for: activity) * 0.85 {
@@ -497,6 +529,8 @@ final class NotchWindowController {
     private let panel: NotchPanel
     private let trigger: NotchPanel
     private let triggerView = NotchTriggerView()
+    private var pulseObserver: AnyCancellable?
+    private var pulseTipSet = false
     let state = NotchState()
     private var levelObservers: [NSObjectProtocol] = []
     private var outsideClickMonitor: Any?
@@ -530,6 +564,7 @@ final class NotchWindowController {
 
         triggerView.onClick = { [weak self] in
             guard let self else { return }
+            StatusPulse.shared.dismiss()
             // A video call is about to start: open Today, where the Join button is.
             if !self.state.isExpanded, MeetingWatcher.shared.imminent != nil, SettingsManager.shared.todayEnabled { self.state.selected = .today }
             // Music is showing beside the notch: open Now Playing, like tapping the Dynamic Island.
@@ -577,6 +612,14 @@ final class NotchWindowController {
             self?.updateAutoHide()
         }
         triggerView.onEarSettled = { [weak self] in self?.reposition() }
+        pulseObserver = StatusPulse.shared.$current.receive(on: RunLoop.main).sink { [weak self] active in
+            guard let self else { return }
+            self.triggerView.pulseColor = active.map { a in
+                switch a.color { case .green: NSColor.systemGreen; case .amber: NSColor.systemOrange; case .red: NSColor.systemRed }
+            }
+            if let active { self.triggerView.toolTip = active.message; self.pulseTipSet = true }
+            else if self.pulseTipSet { self.triggerView.toolTip = nil; self.pulseTipSet = false }
+        }
         // Safety net: 0.6 s after any change the notch is at its final size, even if the animation timer stalled.
         let settleSoon: () -> Void = { [weak self] in
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
@@ -886,6 +929,7 @@ final class NotchWindowController {
 
     func expand() {
         guard !state.isExpanded, !suppressed else { return }
+        StatusPulse.shared.dismiss()
         // Opening (⌘E, the menu-bar icon) always brings a hidden notch back.
         if SettingsManager.shared.isNotchHidden { setInvisible(false) }
         openedByHover = false   // the hover path sets this back to true right after
@@ -986,7 +1030,7 @@ final class NotchWindowController {
     private func openForDrop() {
         // A file dragged onto the notch lands in the Shelf, unless you were on Convert (then it's there to convert).
         let convert = state.selected == .convert && SettingsManager.shared.convertEnabled
-        if !convert, SettingsManager.shared.shelfEnabled { state.selected = .shelf }
+        if !convert, SettingsManager.shared.shelfEnabled { state.selected = SettingsManager.shared.shelfTab }
         expand()
     }
 

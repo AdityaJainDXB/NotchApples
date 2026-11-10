@@ -40,7 +40,7 @@ final class SystemWatch: ObservableObject {
         tick += 1
         checkBattery()
         if tick % 15 == 1 { checkDisk() }     // about every 5 minutes
-        if internetAlert { Task { await checkInternet() } }
+        if internetAlert || StatusPulse.shared.isOn("wifi") { Task { await checkInternet() } }
     }
 
     private func checkBattery() {

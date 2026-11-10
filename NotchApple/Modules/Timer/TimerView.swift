@@ -128,6 +128,7 @@ final class CountdownTimer: ObservableObject {
         NSSound(named: "Glass")?.play()
         LiveActivityCenter.shared.flash(LiveActivity(symbol: "bell.fill", label: "Done", tint: .systemYellow), seconds: 6)
         Notifier.post(title: "Timer done", body: "Your \(Self.long(duration)) timer has finished.")
+        StatusPulse.shared.timerFinished("Timer")
     }
 
     // MARK: Formatting

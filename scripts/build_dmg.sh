@@ -7,14 +7,6 @@ scripts/ensure_firebase_config.sh
 # The Ultimate modules (private repository). REQUIRE_PREMIUM=1 (official releases) makes a missing fetch an error.
 scripts/fetch-premium.sh ${REQUIRE_PREMIUM:+--require}
 
-# Tunnelblick's notarized installer is bundled (GPL-2.0, unmodified) but not kept in git.
-TB_DMG=NotchApple/Resources/Tunnelblick/Tunnelblick.dmg
-TB_SHA=73ca843b7720cd9261a7fd6cf53b0901a06f69c25824ef09430e4094f0688ad0
-if [ ! -f "$TB_DMG" ]; then
-  curl -fsSL "https://github.com/Tunnelblick/Tunnelblick/releases/download/v9.0.1/Tunnelblick_9.0.1_build_6491.dmg" -o "$TB_DMG"
-fi
-echo "$TB_SHA  $TB_DMG" | shasum -a 256 -c - >/dev/null || { echo "Tunnelblick checksum mismatch"; exit 1; }
-
 command -v xcodegen >/dev/null && xcodegen generate >/dev/null
 VERSION=$(grep 'MARKETING_VERSION' project.yml | head -1 | sed -E 's/.*"(.*)".*/\1/')
 xcodebuild -project NotchApple.xcodeproj -scheme NotchApple -configuration Release \

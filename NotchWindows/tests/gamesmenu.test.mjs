@@ -63,7 +63,9 @@ test('access codes are cleaned and shown in blocks of four', () => {
 });
 
 test('the Mac list in GamesMenuLogic.swift is the same list', () => {
-  const swift = fs.readFileSync(new URL('../../NotchApple/Modules/Games/GamesMenuLogic.swift', import.meta.url), 'utf8');
+  // A line marked "// Mac only" is a game the Windows app does not have (FNAF 1 plays a web page, and Windows blocks frames).
+  const swift = fs.readFileSync(new URL('../../NotchApple/Modules/Games/GamesMenuLogic.swift', import.meta.url), 'utf8')
+    .split('\n').filter((line) => !line.includes('// Mac only')).join('\n');
   const mac = [...swift.matchAll(/\.init\(id: "(\w+)", name: "([^"]+)", cats: \[([^\]]*)\], tags: \[([^\]]*)\]/g)]
     .map((m) => [m[1], m[2], m[3].match(/"(\w+)"/g)?.map((s) => s.slice(1, -1)) || [], m[4].match(/"([^"]+)"/g)?.map((s) => s.slice(1, -1)) || []]);
   assert.deepEqual(mac, L.GAMES.map((g) => [g.id, g.name, g.cats, g.tags]));

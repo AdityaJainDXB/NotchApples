@@ -382,6 +382,9 @@ function panicCard() {
     setting('Also wipe the clipboard history', 'Pinned items stay.', toggle(load('panic.wipeHistory', true), (v) => save('panic.wipeHistory', v))));
 }
 
+const chatLockOn = () => load('chatlock.on', false) === true;
+const chatCodeSet = () => localStorage.getItem('lock.code.hash') !== null;
+
 function Security(repaint) {
   const avail = el('span', { class: 'tiny dim' }, 'Checking Windows Hello…');
   invoke('hello_available').then((ok) => { avail.textContent = ok ? 'Windows Hello is set up on this PC.' : 'Windows Hello isn’t set up. Set it up in Windows Settings → Accounts → Sign-in options.'; });
@@ -389,7 +392,15 @@ function Security(repaint) {
     if (v && !(await invoke('hello_available').catch(() => false))) { toast('Set up Windows Hello first.', { error: true }); return repaint(); }
     if (v && !(await invoke('hello_verify', { message: 'Turn on the Notch Apple lock' }).catch(() => false))) return repaint();
     setPref('lock.enabled', v);
-  })), setting('Ask again after', '', select([{ value: 0, label: 'Every time' }, { value: 60, label: '1 minute' }, { value: 300, label: '5 minutes' }, { value: 3600, label: '1 hour' }], pref('lock.grace'), (v) => setPref('lock.grace', Number(v)), { cls: 'auto' })), avail)];
+  })), setting('Lock Messenger', 'Ask for Windows Hello or a code before Messenger opens. Only Messenger: every other tab stays as it is.', toggle(chatLockOn(), async (v) => {
+    const C = await import('./chatlock.js');
+    if (!v) { C.setLocked(false); return; }
+    if (!C.hasCode() && !(await invoke('hello_available').catch(() => false))) { toast('Set up Windows Hello or an unlock code first.', { error: true }); return repaint(); }
+    C.setLocked(true);
+  })), setting('Unlock code', 'A 4 to 8 digit code for Messenger, as well as Windows Hello. Kept on this PC as a scrambled value.', el('span', { class: 'hstack' },
+    button(chatCodeSet() ? 'Change code' : 'Set a code', async () => (await import('./chatlock.js')).codeDialog(() => repaint()), { small: true, kind: 'quiet' }),
+    ...(chatCodeSet() ? [button('Remove', async () => { (await import('./chatlock.js')).removeCode(); repaint(); }, { small: true, kind: 'quiet' })] : []))),
+    setting('Ask again after', '', select([{ value: 0, label: 'Every time' }, { value: 60, label: '1 minute' }, { value: 300, label: '5 minutes' }, { value: 3600, label: '1 hour' }], pref('lock.grace'), (v) => setPref('lock.grace', Number(v)), { cls: 'auto' })), avail)];
 }
 
 function Rules(repaint) {

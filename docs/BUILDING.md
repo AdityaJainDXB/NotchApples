@@ -81,10 +81,9 @@ NotchApple/
     Claude/      Messages API client, ScreenCaptureKit capture, chat UI
     Search/      Spotlight (NSMetadataQuery) file search + results UI
     Shelf/       Drop zone + security-scoped bookmarks
-    Sharing/     AirDrop + PairDrop (Network.framework / Bonjour)
+    Sharing/     AirDrop (files)
     Messenger/   Nearby Wi-Fi chat (MultipeerConnectivity) + encrypted rooms (CryptoKit, ntfy / MQTT relay)
     Audio/       CoreAudio routing, native process-tap volume + EQ, BackgroundMusic fallback
-    VPN/         NetworkExtension manager, free server library, VPN Gate, profile import
     NowPlaying/  Music / Spotify distributed-notification monitor
     Windows/     Accessibility window snapping, drag-to-notch snap zones, tiling, saved layouts
 NotchWidget/  WidgetKit extension
@@ -117,7 +116,6 @@ Notch Apple is built to cost nothing, so the public DMG is **ad-hoc signed**. A 
 
 | Capability | Free build | Signed build |
 | --- | --- | --- |
-| **VPN tunnels** (Network Extension entitlement) | Hands the profile to the free WireGuard, Tunnelblick, or OpenVPN Connect app | Connects natively. Add a Packet Tunnel Provider target (`com.notchapple.app.tunnel`, for example with wireguard-apple) and the Network Extension entitlement |
 | **WeatherKit** | Uses [Open-Meteo](https://open-meteo.com), which is free and needs no key | Add the WeatherKit capability and set the Swift flag `-D WEATHERKIT` |
 | **App Group** (widget now-playing) | The widget shows weather and calendar only | Add `group.com.notchapple.shared` to both targets |
 
@@ -125,7 +123,6 @@ Notch Apple is built to cost nothing, so the public DMG is **ad-hoc signed**. A 
 
 | Software | Why | Licence |
 | --- | --- | --- |
-| [Tunnelblick](https://github.com/Tunnelblick/Tunnelblick) 9.0.1 installer, unmodified and notarized by its developer | Connects OpenVPN profiles | GPL-2.0 (licence and source link shipped in the app) |
 | [BackgroundMusic](https://github.com/kyleneideck/BackgroundMusic) 0.5.0 installer, unmodified | Optional per-app audio on macOS 14.0–14.1 | GPL-2.0 |
 | [f1-circuits](https://github.com/bacinger/f1-circuits) map data by Tomislav Bacinger | The real F1 circuit layouts in the Racing game | MIT |
 

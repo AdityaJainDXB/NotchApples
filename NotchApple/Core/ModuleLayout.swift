@@ -125,7 +125,7 @@ final class ModuleLayout: ObservableObject {
     /// Everything shown inside the Non-Necessities tab.
     var nonNecessities: [Module] {
         let all = ModuleLayoutLogic.nonNecessities + ModuleLayoutLogic.homeAccordions + ModuleLayoutLogic.homeWidgets
-        return modules(all, where: { $0 == .nonNecessities })
+        return modules(all, where: { $0 == .nonNecessities }).filter { !SettingsManager.shared.isInsideUtilities($0) }
     }
 
     var hasNonNecessities: Bool { !nonNecessities.isEmpty }

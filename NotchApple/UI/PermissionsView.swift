@@ -211,7 +211,7 @@ struct PermissionsView: View {
             } header: {
                 Text("Features")
             } footer: {
-                Text("Screen recording (Claude → Share Screen), local network (PairDrop, Messenger) and system audio (per-app volume) are asked for the first time you use those features.")
+                Text("Screen recording (Claude → Share Screen), local network (Messenger) and system audio (per-app volume) are asked for the first time you use those features.")
             }
         }
         .formStyle(.grouped)

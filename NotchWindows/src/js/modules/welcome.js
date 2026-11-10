@@ -14,7 +14,7 @@ import { buildTabs, show } from '../app.js';
 // Tabs that have a picture in img/features/. The rest show their icon.
 const PICTURES = new Set(['today', 'ai', 'sports', 'f1', 'nowplaying', 'clipboard', 'notes', 'todo', 'focus', 'timer', 'worldclock',
   'tools', 'shelf', 'windows', 'games', 'markets', 'home', 'audio', 'snippets', 'voicenotes', 'screentime', 'quickadd', 'messenger',
-  'mirror', 'vpn', 'devices', 'live', 'plugins', 'share']);
+  'mirror', 'devices', 'live', 'plugins', 'share']);
 
 const planOf = (m) => (m.feature ? tierOf(m.feature) || 1 : 0);
 const locked = (m) => !!m.feature && !canUse(m.feature);

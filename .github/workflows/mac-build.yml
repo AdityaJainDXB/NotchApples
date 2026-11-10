@@ -28,16 +28,9 @@ jobs:
       - name: Install build tools
         run: brew install xcodegen xcbeautify
 
-      # A release only goes out if the logic and the real PairDrop transfers pass first.
+      # A release only goes out if the logic tests pass first.
       - name: Logic tests
         run: ./scripts/run-app-tests.sh
-
-      - name: PairDrop transfers over loopback
-        run: ./scripts/run-pairdrop-loopback.sh
-
-      # The Mac's PairDrop code and the Windows engine must understand each other, in both directions.
-      - name: PairDrop interop (Mac and Windows engines)
-        run: ./scripts/run-pairdrop-interop.sh
 
       # The Ultimate modules are in a private repository, fetched with a read-only deploy key. An official build fails
       # rather than ship without them.

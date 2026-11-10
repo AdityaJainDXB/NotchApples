@@ -140,7 +140,6 @@
 |---|---|---|
 | Messenger | Pro | PRO |
 | Audio (per-app volume) | Pro | PRO |
-| VPN | Pro | PRO |
 | Voice Notes | Pro | PRO |
 | Screen Time and Focus Blocker | Pro | PRO |
 | Quick Add | Pro | PRO |

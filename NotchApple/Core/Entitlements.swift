@@ -315,7 +315,6 @@ extension Module {
         switch self {
         case .messenger: .messenger
         case .audio: .audio
-        case .vpn: .vpn
         case .voiceNotes: .voiceNotes
         case .screenTime: .screenTime
         case .quickAdd: .quickAdd

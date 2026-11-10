@@ -17,7 +17,7 @@ The table below lists when each is asked for.
 | Permission | Used by | When it's asked |
 | --- | --- | --- |
 | Screen Recording | AI capture (<kbd>⌃⌥S</kbd>), "what's on my screen?", Text Grab | The first time you capture. macOS applies it after Notch Apple restarts; the AI tab offers **Open System Settings** and **Relaunch** if it's missing |
-| Local Network | PairDrop, Messenger (Nearby Wi-Fi) | The first time either looks for nearby devices |
+| Local Network | Messenger (Nearby Wi-Fi) | The first time either looks for nearby devices |
 | Calendars | Widget | When the widget first loads |
 | Touch ID / password | Biometric Lock | Each time you open the notch while the lock is on |
 | Location | Weather | The first time you open Today (approximate location, weather only) |
@@ -94,7 +94,6 @@ Up to five at a time; the most recently updated one shows (two with **Two activi
   - the plugin gallery's list and the plugins you choose to install, from `raw.githubusercontent.com` (Ultimate)
   - iCloud Drive, only for settings, notes and to-dos you choose to sync
   - your own iPhone on your local Wi-Fi, only if you turn on the iPhone companion (Ultimate); nothing leaves your network
-  - `api.github.com` / `raw.githubusercontent.com` for the free VPN server list, and `vpngate.net`, only when you open the VPN tab
   - open.er-api.com for currency rates, only when you convert a currency (Pro)
   - DuckDuckGo, only when you turn on web search in the AI tab (Pro): just your question
   - CoinGecko and Yahoo Finance for Markets (Pro), ADSB.lol for live flight status (Pro) and the Flight Radar tab: only the symbols and flight numbers you add, and your location rounded to about 1 km while the Flight Radar tab is open
@@ -106,7 +105,7 @@ Up to five at a time; the most recently updated one shows (two with **Two activi
   - `speed.cloudflare.com` for the speed test and a tiny Cloudflare page for the internet-drop check, only when you run them or turn the check on
   - Windows only, if you turn on the experimental notification peek: Windows' own notification list on this PC is read (read-only) to flash the newest notification beside the pill. It stays on the PC: nothing is stored or sent, and the temporary copy used when Windows has the list locked is deleted straight away
   - the license server, only if you agree to the anonymous user count or send feedback (a random install id, app version, OS version and plan; the text you typed), and if you activate a signed key: activating or deactivating sends the key and a one-way hash of your Mac (salted per key, so it can't be linked across keys) to enforce the 3-Mac limit, and about once a day it downloads the signed list of turned-off keys (nothing about you is sent). The website's `api.json` says where the server is. Keys are checked offline; without internet, activation still works
-- PairDrop and Nearby Wi-Fi chat never leave your local network.
+- Nearby Wi-Fi chat never leaves your local network.
 - Anonymous room messages are end-to-end encrypted before they leave your Mac, and the relay (`ntfy.sh`, or a public MQTT broker as a fallback) stores nothing.
 - Per-app audio is processed in memory on your Mac. Nothing is recorded.
 - Window management only reads window positions, sizes and titles to arrange them. Saved layouts stay on your Mac.

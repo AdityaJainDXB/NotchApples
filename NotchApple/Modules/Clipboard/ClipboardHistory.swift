@@ -117,6 +117,7 @@ final class ClipboardHistory: ObservableObject {
         // cleared from the clipboard a little later, but only if nothing else has been copied since.
         if UserDefaults.standard.bool(forKey: "clipboard.protectSecrets"), let text = pb.string(forType: .string), SecretLogic.looksSecret(text) {
             let stamp = pb.changeCount
+            Task { @MainActor in StatusPulse.shared.secretCopied() }
             let wait = Double(UserDefaults.standard.object(forKey: "clipboard.secretSeconds") as? Int ?? 30)
             DispatchQueue.main.asyncAfter(deadline: .now() + wait) { [weak self] in
                 guard NSPasteboard.general.changeCount == stamp else { return }

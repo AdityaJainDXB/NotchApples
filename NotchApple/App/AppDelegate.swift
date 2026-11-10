@@ -50,6 +50,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         ClipboardLink.shared.apply()
         WellbeingService.shared.start()
         SystemWatch.shared.start()
+        StatusPulse.shared.start()
         PremiumRegistry.claudeStart?()
         WallpaperEngine.shared.apply()      // a live wallpaper you left on starts again
         NotesCloudSync.shared.syncNow()
@@ -100,8 +101,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         applyClipboardPreference()
         LiveActivityCenter.shared.start()
         FeatureHub.start()
-        // PairDrop listens from launch, so another device can find this Mac without anyone opening the Share tab.
-        applyPairDropPreference()
         SettingsBackup.shared.startSync()
         AccountSync.shared.start()
         // Now Playing is free: it runs whether or not an access code is entered.
@@ -109,6 +108,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         notchController?.applyDisplayMode()
         UpdateChecker.shared.applyPreference()
         showWelcomeOnFirstLaunch()
+        startOpenOnStart()
         if SettingsManager.shared.windowsEnabled { WindowManager.shared.promptOnceIfNeeded() }
 
         // Show/hide the status item live as the preference changes.
@@ -124,7 +124,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 self?.applyHotkeyPreference()
                 self?.applyClipboardPreference()
                 self?.applyMediaKeyPreference()
-                self?.applyPairDropPreference()
                 self?.applyWindowPreferences()
                 self?.applyDisplayModeIfChanged()
                 self?.applyProPreferences()
@@ -201,6 +200,20 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
             Onboarding.show()
         }
+    }
+
+    /// Opens the notch once when the app starts (after login) and once each time the Mac wakes from sleep. It waits for the first-run
+    /// welcome (which has its own window) and does nothing while the notch is hidden, suppressed for a full-screen app, or turned off.
+    private func startOpenOnStart() {
+        func openOnce(after delay: TimeInterval) {
+            DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
+                guard SettingsManager.shared.openOnStart, !SettingsManager.shared.isNotchHidden,
+                      UserDefaults.standard.bool(forKey: "onboarding.permissionsShown") else { return }
+                AppDelegate.current?.notchController?.expand()
+            }
+        }
+        openOnce(after: 1.6)
+        NSWorkspace.shared.notificationCenter.addObserver(forName: NSWorkspace.didWakeNotification, object: nil, queue: .main) { _ in openOnce(after: 2.0) }
     }
 
     /// Records the clipboard in the background whenever the Clipboard module is on.
@@ -397,12 +410,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     @objc func relaunchApp() { AppRelauncher.relaunch() }
     @objc func quitApp() { NSApp.terminate(nil) }
-
-    /// PairDrop runs in the background while the Share module is on, so devices on the Wi-Fi can find this Mac and
-    /// send it files or start a chat with it, whatever tab is open.
-    func applyPairDropPreference() {
-        if SettingsManager.shared.shareEnabled { PairDropService.shared.start() } else { PairDropService.shared.stop() }
-    }
 
     /// Opens the notch (used to show the patch log).
     func openNotch() { notchController?.expand() }

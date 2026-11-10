@@ -115,7 +115,6 @@ const commands = {
   plugin_run: () => `Hello from PowerShell\nIt's ${new Date().toLocaleString([], { weekday: 'long', hour: '2-digit', minute: '2-digit' })}\nPlugin guide | href=https://github.com/AdityaJainDXB/NotchApples`,
   run_command: ({ command }) => `ran: ${command}`,
   update_check: () => null, update_install: () => {},
-  vpn_status: () => ({ connected: null, profiles: [] }), vpn_connect: () => {}, vpn_disconnect: () => {},
   selftest_capture: () => {}, selftest_finish: ({ report }) => console.info('selftest', report),
   downloads_progress: () => [], save_temp_file: ({ name }) => `C:\\Temp\\${name}`, save_file_as: ({ name }) => `C:\\Users\\you\\Downloads\\${name}`,
 };

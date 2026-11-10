@@ -10,6 +10,7 @@ import { invoke, listen } from './native.js';
 import { loadSaved, tierName, setTierOverride, checkEmailGate, storedGate } from './license.js';
 import { canUse } from './features.js';
 import { MODULES, DEFAULT_ON, byId } from './modules.js';
+import { insideUtilities, route } from './modules/utilitieslogic.js';
 import { pref, SIZES } from './prefs.js';
 import { setRenderer, earsFor, refresh as refreshPill } from './activity.js';
 import { toast } from './ui.js';
@@ -94,7 +95,7 @@ export const isExpanded = () => expanded;
 export const activeTab = () => active;
 
 export function buildTabs() {
-  const order = tabOrder().map(byId).filter((m) => m && isEnabled(m.id) && m.id !== 'settings');   // Settings is pinned at the right of the header
+  const order = tabOrder().map(byId).filter((m) => m && isEnabled(m.id) && m.id !== 'settings' && !insideUtilities(enabledIds(), m.id));   // Settings is pinned at the right of the header
   if (active !== 'settings' && active !== 'welcome' && active !== 'weeklyupdates' && active !== 'greetingchoice' && !order.some((m) => m.id === active)) active = order[0]?.id ?? 'settings';
   const mode = pref('ui.compactTabs');
   // "auto": names when they fit, icons only (except the active tab) when they don't.
@@ -169,6 +170,8 @@ document.addEventListener('update-available', (e) => {
 /// Shows a tab. `opts` are passed to the module (e.g. a search query).
 let switching = 0;
 export async function show(id, opts) {
+  // A tab that now lives inside Utilities opens Utilities with that tool showing.
+  if (!opts && id !== 'utilities') { const r = route(enabledIds(), id); id = r.id; opts = r.opts; }
   const welcome = id === 'welcome' || id === 'weeklyupdates' || id === 'greetingchoice';   // the feature chooser and the one-time weekly-updates question: not tabs, never remembered as the last tab
   if (!welcome && !byId(id)) id = 'today';
   if (!welcome && !isEnabled(id) && id !== 'settings') setEnabled(id, true);
@@ -201,6 +204,11 @@ export async function show(id, opts) {
     const { renderUpgrade } = await import('./modules/activation.js');
     if (active === id) page.append(renderUpgrade(m, () => show(id)));
     return;
+  }
+  // Messenger can be locked (Windows Hello or a code), and offers that once, the first time it opens.
+  if (id === 'messenger') {
+    const gated = await (await import('./modules/chatlock.js')).gateMessenger(page, () => { if (active === id) show(id); });
+    if (gated) return;
   }
   try {
     const mod = await m.load();
@@ -404,12 +412,12 @@ listen('shortcut', (action) => {
 listen('edge', () => { if (pref('ui.edgeTrigger') && canUse('edgeTrigger')) expand(); });
 listen('second-instance', (args) => handleArgs(args));
 // Dragging files onto the notch (even closed) opens the Shelf; dropping adds them.
-listen('tauri://drag-enter', () => { if (!expanded) expand(active === 'convert' ? 'convert' : 'shelf'); });
+listen('tauri://drag-enter', () => { if (!expanded) expand(active === 'convert' ? 'convert' : 'shelf'); });   // a tool inside Utilities opens there
 listen('tauri://drag-drop', async (e) => {
   if (active === 'ai' || active === 'shelf' || active === 'convert') return; // those tabs handle drops themselves
   const { addPaths } = await import('./modules/shelf.js');
   await addPaths(e?.paths || []);
-  show('shelf');
+  show(insideUtilities(enabledIds(), 'shelf') ? 'utilities' : 'shelf');
 });
 
 /// Command-line control (Ultimate: Command-line and scripting):

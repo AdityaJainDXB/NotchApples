@@ -58,7 +58,6 @@ export const FEATURES = {
   automations: {"title": "AI automations", "detail": "Prompts that run on a schedule, like a morning summary of your calendar.", "tier": 2},
   messenger: {"title": "Messenger", "detail": "Chat in an end-to-end encrypted room joined by a code; Mac and Windows users can talk in the same room.", "tier": 1},
   audio: {"title": "Audio", "detail": "Per-app volume and output switching.", "tier": 1},
-  vpn: {"title": "VPN", "detail": "Connect to free VPN Gate servers with Windows' built-in VPN, or open your own .ovpn file in OpenVPN.", "tier": 1},
   voiceNotes: {"title": "Voice Notes", "detail": "Record and transcribe voice notes.", "tier": 1},
   screenTime: {"title": "Screen Time", "detail": "See where your time goes and block distractions.", "tier": 1},
   quickAdd: {"title": "Quick Add", "detail": "Add reminders and events in plain English.", "tier": 1},

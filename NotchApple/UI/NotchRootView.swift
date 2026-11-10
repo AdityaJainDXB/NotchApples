@@ -97,6 +97,8 @@ struct NotchRootView: View {
     @Namespace private var duoSpace
     /// The tab that was showing before this switch, so the new page knows which side to slide in from.
     @State private var previousSelected: Module?
+    /// "Suggest a tab for the app you're in": the chip shown for a few seconds after the notch opens.
+    @State private var suggestion: AppContext.Suggestion?
 
     /// +1 when the new tab sits to the right of the old one in the tab bar, -1 when to the left.
     private var slideDirection: CGFloat {
@@ -145,7 +147,7 @@ struct NotchRootView: View {
                     }
                 }
             }
-            if !convert { withAnimation(Theme.spring) { state.selected = .shelf } }
+            if !convert { withAnimation(Theme.spring) { state.selected = settings.shelfTab } }
             return true
         }
         .fontDesign(StylePrefs.fontDesign)
@@ -215,6 +217,16 @@ struct NotchRootView: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
             }
             .overlay(alignment: .bottom) { UndoToast().padding(.bottom, 4) }
+            .overlay(alignment: .bottom) {
+                if let s = suggestion {
+                    AppSuggestionChip(suggestion: s, open: {
+                        withAnimation(Duo.animation) { state.selected = s.tab }
+                        withAnimation(Theme.quick) { suggestion = nil }
+                    }, dismiss: { withAnimation(Theme.quick) { suggestion = nil } })
+                    .padding(.bottom, 40)
+                }
+            }
+            .onAppear(perform: showSuggestion)
             .padding(.horizontal, 18 + Self.expandedShoulder)
             .padding(.bottom, 18)
             .onAppear(perform: ensureValidSelection)
@@ -237,14 +249,34 @@ struct NotchRootView: View {
             // fit, the row scrolls sideways instead of pushing the buttons off the notch.
             ScrollViewReader { proxy in
                 ScrollView(.horizontal, showsIndicators: false) {
+                    let all = state.visibleTabs(settings)
+                    let split = settings.tabBar(visible: all, selected: state.selected)
                     HStack(spacing: 2) {
-                        ForEach(state.visibleTabs(settings)) { module in
+                        ForEach(split.bar) { module in
                             TabButton(module: module, active: state.selected == module,
-                                      compact: state.visibleTabs(settings).count > 6 && state.selected != module,
+                                      compact: split.bar.count > 6 && state.selected != module,
                                       pillSpace: settings.useDuoAnimations ? duoSpace : nil) {
                                 withAnimation(Duo.animation) { state.selected = module }
                             }
                             .id(module)
+                            .contextMenu {
+                                Button(settings.isPinned(module) ? "Unpin from the bar" : "Pin to the bar") { settings.togglePin(module) }
+                                Text("Drag a tab to reorder")
+                            }
+                            .onDrag { NSItemProvider(object: module.rawValue as NSString) }
+                            .onDrop(of: [.plainText], isTargeted: nil) { providers in
+                                guard let provider = providers.first else { return false }
+                                _ = provider.loadObject(ofClass: NSString.self) { text, _ in
+                                    DispatchQueue.main.async {
+                                        if let raw = text as? String, let dragged = Module(rawValue: raw) { settings.moveTab(dragged, before: module, visible: all) }
+                                    }
+                                }
+                                return true
+                            }
+                        }
+                        if !split.more.isEmpty {
+                            MoreTabsMenu(tabs: split.more, select: { module in withAnimation(Duo.animation) { state.selected = module } },
+                                         pin: { settings.togglePin($0) })
                         }
                     }
                 }
@@ -299,8 +331,19 @@ struct NotchRootView: View {
         }
     }
 
+    private func showSuggestion() {
+        let found = AppContext.shared.suggestion(availableTabs: state.visibleTabs(settings), current: state.selected)
+        withAnimation(Theme.spring) { suggestion = found }
+        guard let found else { return }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 8) {
+            if suggestion == found { withAnimation(Theme.quick) { suggestion = nil } }
+        }
+    }
+
     private func ensureValidSelection() {
         let tabs = state.visibleTabs(settings)
+        // A tab that now lives inside Utilities opens Utilities instead.
+        if settings.isInsideUtilities(state.selected), tabs.contains(.utilities) { state.selected = .utilities; return }
         if !tabs.contains(state.selected), let first = tabs.first { state.selected = first }
     }
 }
@@ -356,6 +399,36 @@ private struct TabButton: View {
         .help(module == .messenger && notifier.unread > 0 ? "Messenger · \(notifier.unread) unread" : module.title)
         .accessibilityLabel(module.title)
         .accessibilityAddTraits(active ? .isSelected : [])
+    }
+}
+
+/// The "More" button at the end of the bar: every tab that is not pinned. Choosing one opens it; Pin keeps it on the bar.
+private struct MoreTabsMenu: View {
+    let tabs: [Module]
+    let select: (Module) -> Void
+    let pin: (Module) -> Void
+
+    var body: some View {
+        Menu {
+            ForEach(tabs) { module in
+                Button { select(module) } label: { Label(module.title, systemImage: module.symbol) }
+            }
+            Divider()
+            Menu("Pin to the bar") {
+                ForEach(tabs) { module in Button(module.title) { pin(module) } }
+            }
+        } label: {
+            Label("More", systemImage: "ellipsis")
+                .labelStyle(.titleAndIcon)
+                .font(.system(size: 13, weight: .semibold))
+                .foregroundStyle(Theme.textSecondary)
+                .padding(.horizontal, 11)
+                .frame(height: Theme.minTarget + 2)
+                .contentShape(Capsule())
+        }
+        .menuStyle(.borderlessButton).menuIndicator(.hidden).fixedSize()
+        .help("More tabs (\(tabs.count))")
+        .accessibilityLabel("More tabs")
     }
 }
 

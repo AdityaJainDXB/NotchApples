@@ -185,4 +185,31 @@ enum ModuleLayoutLogic {
         if !shown { list.append(item) }
         return list
     }
+
+    // MARK: Pinned tabs and the More overflow
+
+    /// What the tab bar shows. With nothing pinned, every tab (as before). With some pinned, the pinned tabs plus the tab that is
+    /// open (so you always see where you are), in the saved order; every other tab goes in the More menu.
+    static func tabBar(all: [String], pinned: [String], selected: String) -> (bar: [String], more: [String]) {
+        let pins = Set(pinned).intersection(all)
+        guard !pins.isEmpty else { return (all, []) }
+        let bar = all.filter { pins.contains($0) || $0 == selected }
+        return (bar, all.filter { !bar.contains($0) })
+    }
+
+    /// The pinned list after pinning or unpinning `name`.
+    static func toggledPin(_ name: String, in pinned: [String]) -> [String] {
+        pinned.contains(name) ? pinned.filter { $0 != name } : unique(pinned + [name])
+    }
+
+    /// `list` with `name` moved to where `target` is (dragging one tab onto another). Unknown names change nothing.
+    static func movedBefore(_ name: String, before target: String, in list: [String]) -> [String] {
+        guard name != target, list.contains(name), list.contains(target) else { return list }
+        var out = list.filter { $0 != name }
+        let at = out.firstIndex(of: target) ?? out.count
+        // Dragging to the right lands after the target, to the left before it, like any reorderable list.
+        let from = list.firstIndex(of: name) ?? 0, to = list.firstIndex(of: target) ?? 0
+        out.insert(name, at: from < to ? at + 1 : at)
+        return out
+    }
 }

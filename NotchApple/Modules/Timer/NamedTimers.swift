@@ -69,6 +69,7 @@ final class NamedTimers: ObservableObject {
             NSSound(named: "Glass")?.play()
             for t in finished {
                 Notifier.post(title: "\(t.name) is done", body: "Your \(NamedTimerLogic.clock(t.seconds)) timer has finished.")
+                StatusPulse.shared.timerFinished(t.name)
             }
             LiveActivityCenter.shared.flash(LiveActivity(symbol: "bell.fill", label: String(finished[0].name.prefix(12)), tint: .systemYellow), seconds: 6)
         }

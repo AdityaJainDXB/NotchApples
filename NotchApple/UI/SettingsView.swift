@@ -18,7 +18,7 @@ import UniformTypeIdentifiers
 
 /// Panes in the Settings window. `selection` lets other code jump to a pane.
 enum SettingsTab: String, CaseIterable, Identifiable, Hashable {
-    case general, notch, appearance, profiles, extras, backup, browser, license, shortcuts, permissions, authentication, modules, lidFold, windows, claude, aiHistory, messenger, clipboard, bambu, fileSearch, focus, audio, vpn, widget, iphone, updates, privacy, help, about
+    case general, notch, appearance, profiles, extras, backup, browser, license, shortcuts, permissions, authentication, modules, lidFold, windows, claude, aiHistory, messenger, clipboard, bambu, fileSearch, focus, audio, widget, iphone, updates, privacy, help, about
     static let selection = PassthroughSubject<SettingsTab, Never>()
 
     var id: String { rawValue }
@@ -47,7 +47,6 @@ enum SettingsTab: String, CaseIterable, Identifiable, Hashable {
         case .fileSearch: "File Search"
         case .focus: "Focus"
         case .audio: "Audio"
-        case .vpn: "VPN"
         case .widget: "Widget"
         case .updates: "Updates"
         case .privacy: "Privacy"
@@ -81,7 +80,6 @@ enum SettingsTab: String, CaseIterable, Identifiable, Hashable {
         case .fileSearch: "magnifyingglass"
         case .focus: "timer"
         case .audio: "speaker.wave.2.fill"
-        case .vpn: "lock.shield.fill"
         case .widget: "rectangle.3.group.fill"
         case .updates: "arrow.down.circle.fill"
         case .privacy: "hand.raised.square.fill"
@@ -115,7 +113,6 @@ enum SettingsTab: String, CaseIterable, Identifiable, Hashable {
         case .fileSearch: .purple
         case .focus: .purple
         case .audio: .pink
-        case .vpn: .blue
         case .widget: .teal
         case .updates: .green
         case .privacy: .blue
@@ -172,7 +169,7 @@ extension SettingsTab {
     static var sidebarGroups: [(title: String?, panes: [SettingsTab])] {
         let listed: [(String?, [SettingsTab])] = [
             (nil, [.general, .notch, .appearance, .modules, .shortcuts]),
-            ("Features", [.claude, .aiHistory, .clipboard, .fileSearch, .messenger, .audio, .windows, .lidFold, .browser, .vpn, .bambu, .widget, .iphone, .extras, .profiles]),
+            ("Features", [.claude, .aiHistory, .clipboard, .fileSearch, .messenger, .audio, .windows, .lidFold, .browser, .bambu, .widget, .iphone, .extras, .profiles]),
             ("Account & safety", [.license, .backup, .permissions, .authentication]),
             ("App", [.updates, .help, .about]),
         ]
@@ -318,7 +315,6 @@ struct SettingsView: View {
                 case .fileSearch: FileSearchSettings()
                 case .focus: NotchSettings()   // Focus lives in Notch → Focus now; this only keeps old links working
                 case .audio: AudioSettings()
-                case .vpn: VPNSettings()
                 case .bambu: BambuSettingsView()
                 case .widget: WidgetSettings()
                 case .updates: UpdatesSettings()
@@ -692,6 +688,10 @@ private struct GeneralSettings: View {
                     .onChange(of: launchAtLogin) { _, on in
                         on ? PermissionsModel.shared.enableLoginItem() : PermissionsModel.shared.disableLoginItem()
                     }
+                Toggle(isOn: $settings.openOnStart) {
+                    Text("Open the notch when the Mac starts or wakes")
+                    Text("Opens once after you log in or open the lid, so you see your day first. It closes like normal when you click elsewhere.")
+                }
                 Toggle("Show icon in menu bar", isOn: $settings.showStatusItem)
                 Toggle(isOn: $settings.showSystemHUD) {
                     Text("Show volume and brightness beside the notch")
@@ -1695,74 +1695,6 @@ private struct AudioSettings: View {
             NSWorkspace.shared.open(pkg)
         } else {
             NSWorkspace.shared.open(URL(string: "https://github.com/kyleneideck/BackgroundMusic/releases/latest")!)
-        }
-    }
-}
-
-// MARK: - VPN
-
-private struct VPNSettings: View {
-    @EnvironmentObject private var settings: SettingsManager
-    @StateObject private var vpn = VPNManager.shared
-    @State private var importing = false
-    @State private var search = ""
-
-    private var library: [VPNProfile] {
-        search.isEmpty ? vpn.library : vpn.library.filter { $0.name.localizedCaseInsensitiveContains(search) }
-    }
-
-    var body: some View {
-        Form {
-            Section {
-                Toggle("Show VPN in the notch", isOn: $settings.vpnEnabled)
-                LabeledContent("Status", value: vpn.status == .invalid ? "Not connected" : vpn.status.label)
-                if let msg = vpn.message { Text(msg).font(.callout).foregroundStyle(.secondary) }
-            }
-            Section {
-                if vpn.profiles.isEmpty {
-                    Text("No saved profiles yet.").foregroundStyle(.secondary)
-                }
-                ForEach(vpn.profiles) { p in
-                    HStack {
-                        VStack(alignment: .leading) {
-                            Text(p.name)
-                            Text("\(p.kind.rawValue) · \(p.server)").font(.callout).foregroundStyle(.secondary)
-                        }
-                        Spacer()
-                        Button("Connect") { Task { await vpn.connect(p) } }
-                        Button(role: .destructive) { vpn.remove(p) } label: { Image(systemName: "trash") }
-                            .buttonStyle(.borderless).help("Delete profile")
-                    }
-                }
-                Button("Import .ovpn or .conf file…") { importing = true }
-            } header: { Text("My profiles") }
-            Section {
-                HStack {
-                    TextField("Search country", text: $search)
-                    if vpn.loadingLibrary { ProgressView().controlSize(.small) }
-                    Button(vpn.library.isEmpty ? "Load servers" : "Refresh") { Task { await vpn.loadLibrary() } }
-                }
-                ForEach(library.prefix(60)) { p in
-                    HStack {
-                        VStack(alignment: .leading) {
-                            Text(p.name)
-                            Text(p.credentialsHint ?? "Login shown on the provider's page").font(.callout).foregroundStyle(.secondary)
-                        }
-                        Spacer()
-                        Button("Save") { vpn.add(p) }
-                        Button("Connect") { Task { await vpn.connect(p) } }
-                    }
-                }
-            } header: {
-                Text("Free servers")
-            } footer: {
-                Text("From the free, community-maintained github.com/Zoult/.ovpn library. Servers come and go; if one fails, try another. Connecting opens the profile in the free Tunnelblick or OpenVPN Connect app.")
-            }
-        }
-        .formStyle(.grouped)
-        .task { if vpn.library.isEmpty { await vpn.loadLibrary() } }
-        .fileImporter(isPresented: $importing, allowedContentTypes: [.data, .plainText], allowsMultipleSelection: true) { result in
-            if case .success(let urls) = result { urls.forEach(vpn.importProfile) }
         }
     }
 }

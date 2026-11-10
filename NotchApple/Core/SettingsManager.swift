@@ -12,7 +12,7 @@ import SwiftUI
 
 /// Every optional feature module in the app.
 enum Module: String, CaseIterable, Identifiable {
-    case today, claude, browser, launcher, translator, stats, windows, tools, mirror, worldClock, messenger, clipboard, notes, focus, shelf, share, audio, vpn, nowPlaying, search, timer, snippets, shortcuts, devices, live, f1, tennis, radar, wallpaper, sports, games, alerts, plugins, voiceNotes, screenTime, quickAdd, markets, home, security, cacheCleaner, claudeUsage, smartHome, devTools, wellbeing, utilities, nonNecessities, todo, klick, convert, doIt, bambu
+    case today, claude, browser, launcher, translator, stats, windows, tools, mirror, worldClock, messenger, clipboard, notes, focus, shelf, share, audio, nowPlaying, search, timer, snippets, shortcuts, devices, live, f1, tennis, radar, wallpaper, sports, games, alerts, plugins, voiceNotes, screenTime, quickAdd, markets, home, security, cacheCleaner, claudeUsage, smartHome, devTools, wellbeing, utilities, nonNecessities, todo, klick, convert, doIt, bambu
 
     var id: String { rawValue }
 
@@ -31,7 +31,6 @@ enum Module: String, CaseIterable, Identifiable {
         case .shelf: "Shelf"
         case .share: "Share"
         case .audio: "Audio"
-        case .vpn: "VPN"
         case .nowPlaying: "Now Playing"
         case .search: "Search"
         case .browser: "Browser"
@@ -87,7 +86,6 @@ enum Module: String, CaseIterable, Identifiable {
         case .shelf: "tray.full.fill"
         case .share: "dot.radiowaves.left.and.right"
         case .audio: "speaker.wave.2.fill"
-        case .vpn: "lock.shield.fill"
         case .nowPlaying: "music.note"
         case .search: "magnifyingglass"
         case .browser: "globe"
@@ -141,9 +139,8 @@ enum Module: String, CaseIterable, Identifiable {
         case .clipboard: "Keeps everything you copy, so you can find and copy it again later."
         case .messenger: "Chat anonymously with people on your Wi-Fi, or in an encrypted room joined by code."
         case .shelf: "Drop files and folders into the notch for quick access later."
-        case .share: "AirDrop plus PairDrop — local, serverless sharing with a 6-digit code."
+        case .share: "AirDrop for files: drop them on the card and pick who gets them."
         case .audio: "Output device, master volume, and per-app volume / EQ via BackgroundMusic."
-        case .vpn: "Manage free OpenVPN / WireGuard / IKEv2 profiles."
         case .nowPlaying: "What's playing on your Mac (Music, Spotify, Anghami, browsers…) with album art, controls and lyrics. The cover shows beside the notch while music plays."
         case .launcher: "Add the apps you use most and open them straight from the notch."
         case .browser: "Browse the web and search from the notch, with a start page, back / forward and your choice of search engine."
@@ -172,7 +169,7 @@ enum Module: String, CaseIterable, Identifiable {
         case .markets: "Pro: a watchlist of stocks and crypto with today's change; pin one beside the notch."
         case .home: "Pro: your own dashboard of widgets in small, medium and large sizes."
         case .security: "Require Touch ID / Apple Watch / password to open the notch."
-        case .utilities: "Mac stats, Shelf, World clock, Purge, Convert and your app Launcher on one screen. Tap a panel's title to open the full tool; drop files on Shelf right there."
+        case .utilities: "Mac stats, Shelf, World clock, Purge, Convert and your app Launcher on one screen. Tap a panel's title to open the full tool; drop files on Shelf right there. While this is on, those six tools leave the tab bar and live only here."
         case .wellbeing: "A breathing exercise, break reminders (eyes, water, stretch, posture) and a bedtime nudge. Free; the reminders keep running while the notch is closed."
         case .devTools: "Format JSON, encode and decode, read a JWT, hash, make a UUID, convert timestamps, test a regex, check colour contrast and make a QR code. Free, and everything stays on this Mac."
         case .smartHome: "Ultimate: lights, switches, scenes and more from your own Home Assistant (which also connects Hue, IKEA, Zigbee and Matter). The access token stays on this Mac."
@@ -250,7 +247,6 @@ final class SettingsManager: ObservableObject {
     @AppStorage(Module.shelf.storageKey) var shelfEnabled = true
     @AppStorage(Module.share.storageKey) var shareEnabled = true
     @AppStorage(Module.audio.storageKey) var audioEnabled = true
-    @AppStorage(Module.vpn.storageKey) var vpnEnabled = false
     @AppStorage(Module.nowPlaying.storageKey) var nowPlayingEnabled = true
     @AppStorage(Module.search.storageKey) var searchEnabled = true
     @AppStorage(Module.browser.storageKey) var browserEnabled = false
@@ -370,6 +366,8 @@ final class SettingsManager: ObservableObject {
     @AppStorage("ui.stickyNotch") var stickyNotch = false
     /// Open the notch when the pointer hovers over it, and close it when the pointer leaves. Off by default.
     @AppStorage("ui.hoverToOpen") var hoverToOpen = false
+    /// Open the notch once when the app starts (at login or when launched) and when the Mac wakes from sleep.
+    @AppStorage("ui.openOnStart") var openOnStart = true
     /// Toggle the notch from anywhere with a global shortcut (Carbon hot key, no Accessibility permission needed).
     @AppStorage("ui.globalHotkey") var globalHotkeyEnabled = true
     /// Hide or reveal the whole notch from anywhere with ⌃⌥O (changeable in Settings → Shortcuts & Hotkeys).
@@ -402,7 +400,6 @@ final class SettingsManager: ObservableObject {
         case .shelf: $shelfEnabled
         case .share: $shareEnabled
         case .audio: $audioEnabled
-        case .vpn: $vpnEnabled
         case .nowPlaying: $nowPlayingEnabled
         case .search: $searchEnabled
         case .browser: $browserEnabled
@@ -443,9 +440,18 @@ final class SettingsManager: ObservableObject {
         }
     }
 
+    /// The modules the Utilities tab holds. While Utilities is on, they have no tab of their own: they live there.
+    static let utilitiesMembers: [Module] = [.stats, .shelf, .worldClock, .cacheCleaner, .convert, .launcher]
+
+    /// Is this module shown only inside the Utilities tab right now?
+    func isInsideUtilities(_ module: Module) -> Bool { utilitiesEnabled && Self.utilitiesMembers.contains(module) }
+
+    /// Where a dropped file should land: the Shelf tab, or the Utilities tab that holds the Shelf.
+    var shelfTab: Module { utilitiesEnabled ? .utilities : .shelf }
+
     /// Tabs to show in the notch, in display order.
     var enabledTabs: [Module] {
-        orderedTabs.filter { isEnabled($0) && ModuleLayout.shared.showsTab($0) }
+        orderedTabs.filter { isEnabled($0) && ModuleLayout.shared.showsTab($0) && !isInsideUtilities($0) }
     }
 
     /// The user's tab order (Settings → Appearance), as comma-separated raw values.
@@ -457,6 +463,27 @@ final class SettingsManager: ObservableObject {
         let ids = ModuleLayoutLogic.unique(tabOrderData.split(separator: ",").map(String.init))
         let saved = ids.compactMap { Module(rawValue: $0) }.filter(\.isTab)
         return saved + Module.allCases.filter { $0.isTab && !saved.contains($0) }
+    }
+
+    /// Tabs pinned to the bar (right-click a tab → Pin to the bar). Empty means every tab shows, as before.
+    @AppStorage("ui.pinnedTabs") var pinnedTabsData = ""
+    var pinnedTabs: [String] { pinnedTabsData.split(separator: ",").map(String.init) }
+    func isPinned(_ m: Module) -> Bool { pinnedTabs.contains(m.rawValue) }
+
+    func togglePin(_ m: Module) {
+        objectWillChange.send()
+        pinnedTabsData = ModuleLayoutLogic.toggledPin(m.rawValue, in: pinnedTabs).joined(separator: ",")
+    }
+
+    /// The tabs on the bar and the ones in More, for the tabs `visible` now and the open tab `selected`.
+    func tabBar(visible: [Module], selected: Module) -> (bar: [Module], more: [Module]) {
+        let split = ModuleLayoutLogic.tabBar(all: visible.map(\.rawValue), pinned: pinnedTabs, selected: selected.rawValue)
+        return (split.bar.compactMap(Module.init(rawValue:)), split.more.compactMap(Module.init(rawValue:)))
+    }
+
+    /// Drag `m` onto `target`: it takes that place in the saved tab order.
+    func moveTab(_ m: Module, before target: Module, visible: [Module]) {
+        setEnabledTabOrder(ModuleLayoutLogic.movedBefore(m.rawValue, before: target.rawValue, in: visible.map(\.rawValue)).compactMap(Module.init(rawValue:)))
     }
 
     func setTabOrder(_ tabs: [Module]) {

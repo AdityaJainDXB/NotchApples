@@ -13,6 +13,7 @@
 //        object: nil, userInfo: ["id": "build", "text": "42%", "symbol": "hammer.fill", "progress": 0.42], deliverImmediately: true)
 //    (send "end": true to remove it)
 //
+//  Add pulse=green, amber or red to also glow the closed notch that colour.
 //  Keys: id (required), title (≤ 14 chars, left ear), text (≤ 16 chars, right ear),
 //  symbol (an SF Symbol), progress (0…1, draws a bar), color (RRGGBB), seconds (how long
 //  it stays, default 10 minutes, at most 12 hours). Up to 5 at once; the newest shows.
@@ -54,6 +55,8 @@ final class ExternalActivities {
         guard let id = q["id"]?.prefix(40), !id.isEmpty else { return }
         let key = String(id)
         if end { items[key] = nil; changed(); return }
+        // pulse=green, amber or red also makes the closed notch glow that colour (Settings → Notch → Status pulse).
+        if let color = StatusPulseLogic.color(named: q["pulse"]) { StatusPulse.shared.external(id: key, color: color, text: q["text"] ?? q["title"]) }
         let seconds = min(max(Double(q["seconds"] ?? "") ?? 600, 5), 12 * 3600)
         var item = items[key] ?? Item(id: key, color: .systemPurple, expires: .now, updated: .now)
         if let t = q["title"] { item.title = String(t.prefix(14)) }

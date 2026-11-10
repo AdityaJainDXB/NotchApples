@@ -46,6 +46,8 @@ struct NotchSettings: View {
             Section("Top bar") {
                 TopBarSwitches()
             }
+            StatusPulseSettings()
+            AppContextSettings()
             Section {
                 Toggle(isOn: $weeklyUpdates) {
                     Text("Update at most once a week")

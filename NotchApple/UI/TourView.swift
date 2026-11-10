@@ -135,7 +135,7 @@ private struct Welcome: View {
             Image(systemName: "sparkles").font(.system(size: 38)).foregroundStyle(Theme.accentGradient)
             Text("What's new in this update").font(.system(size: 26, weight: .bold)).foregroundStyle(.white)
             Text("A huge update for efficiency and a more modular notch").font(.system(size: 14, weight: .semibold)).foregroundStyle(Theme.accentBright)
-            Text("A new Home page, a smarter Claude usage tracker, an algebra calculator, fewer tabs, and a PairDrop that works. This short tour shows each change, lets you try the ones you can, and ends by asking where you want things to live.")
+            Text("A new Home page, a smarter Claude usage tracker, an algebra calculator, and fewer tabs. This short tour shows each change, lets you try the ones you can, and ends by asking where you want things to live.")
                 .font(.system(size: 12)).foregroundStyle(Theme.textSecondary).multilineTextAlignment(.center).frame(maxWidth: 520)
             Spacer(minLength: 0)
         }
@@ -224,28 +224,13 @@ private struct NonNecessitiesStep: View {
 }
 
 private struct SharingStep: View {
-    @ObservedObject private var pairDrop = PairDropService.shared
-    @State private var name = ""
     var body: some View {
-        StepLayout(title: "PairDrop works, and chats", text: "File transfer was rebuilt: any file size, folders, a progress bar, wrong codes limited, and “Sent” only when the other device has saved it. New: a private Chat between two devices on the same Wi-Fi, and a name you choose.") {
+        StepLayout(title: "Share is AirDrop for files", text: "Drop files on the Share tab, or choose them, and AirDrop's own picker opens so you can pick who gets them. Share is files only.") {
             VStack(spacing: 10) {
                 HStack { Image(systemName: "doc.fill").foregroundStyle(.white); Image(systemName: "arrow.right").foregroundStyle(Theme.accentBright); Image(systemName: "laptopcomputer").foregroundStyle(.white) }.font(.system(size: 26))
-                HStack(spacing: 6) {
-                    Capsule().fill(Theme.accent.opacity(0.5)).frame(width: 90, height: 22)
-                    Capsule().fill(.white.opacity(0.15)).frame(width: 60, height: 22)
-                }
-                Image(systemName: "bubble.left.and.bubble.right.fill").font(.system(size: 26)).foregroundStyle(Theme.accentGradient)
+                Image(systemName: "airplayaudio").font(.system(size: 26)).foregroundStyle(Theme.accentGradient)
             }
-        } live: {
-            Text("The name others see:").font(.system(size: 11)).foregroundStyle(Theme.textSecondary)
-            HStack {
-                TextField(pairDrop.deviceName, text: $name).textFieldStyle(.roundedBorder).frame(width: 190)
-                    .onSubmit { pairDrop.setUsername(name) }
-                Button("Save") { pairDrop.setUsername(name) }.buttonStyle(PurpleButtonStyle(prominent: false))
-            }
-            Text("Now shown as: \(pairDrop.deviceName)").font(.system(size: 10)).foregroundStyle(Theme.textSecondary)
-        }
-        .onAppear { name = pairDrop.username }
+        } live: { EmptyView() }
     }
 }
 

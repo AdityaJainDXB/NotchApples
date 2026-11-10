@@ -71,10 +71,10 @@ All screenshots use sample data.
 | **Clipboard**: searchable history, pins and filters | **Notes**: quick notes, saved automatically |
 | ![Messenger](screenshots/messenger.png) | ![Focus timer](screenshots/focus.png) |
 | **Messenger**: anonymous, end-to-end-encrypted rooms | **Focus**: Pomodoro timer |
-| ![AirDrop and PairDrop](screenshots/share.png) | ![File Shelf](screenshots/shelf.png) |
-| **Share**: AirDrop and PairDrop | **File Shelf**: drop files into the notch |
-| ![Audio](screenshots/audio.png) | ![VPN](screenshots/vpn.png) |
-| **Audio**: output, master and per-app volume and EQ | **VPN**: your profiles and free servers |
+| ![AirDrop](screenshots/share.png) | ![File Shelf](screenshots/shelf.png) |
+| **Share**: AirDrop for files | **File Shelf**: drop files into the notch |
+| ![Audio](screenshots/audio.png) |
+| **Audio**: output, master and per-app volume and EQ |
 | ![Now Playing](screenshots/nowplaying.png) | ![Settings: Permissions](screenshots/settings-permissions.png) |
 | **Now Playing** | **First launch**: every permission in one place |
 | ![Settings](screenshots/settings-general.png) | ![Settings: Modules](screenshots/settings-modules.png) |
@@ -87,7 +87,7 @@ All screenshots use sample data.
 | **Settings → Messenger** | **Settings → Clipboard** |
 | ![Settings: Focus](screenshots/settings-focus.png) | ![Settings: Audio](screenshots/settings-audio.png) |
 | **Settings → Focus** | **Settings → Audio**: built-in per-app engine |
-| ![Settings: VPN](screenshots/settings-vpn.png) | ![Settings: Widget](screenshots/settings-widget.png) |
-| **Settings → VPN**: free servers and your profiles | **Settings → Widget**: location or a city |
+| ![Settings: Widget](screenshots/settings-widget.png) |
+| **Settings → Widget**: location or a city |
 
 </details>

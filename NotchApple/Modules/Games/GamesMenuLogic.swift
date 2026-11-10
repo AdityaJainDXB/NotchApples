@@ -40,6 +40,7 @@ enum GamesCatalog {
         .init(id: "scribble", name: "Scribble", cats: ["online"], tags: ["Online"], icon: "✏️", art: ["#8a5a14", "#ffc95c"]),
         .init(id: "chess", name: "Chess", cats: ["cards", "online"], tags: ["Online", "2P"], icon: "♟️", art: ["#2a2a35", "#6a6a82"]),
         .init(id: "nightshift", name: "Night Shift", cats: ["arcade"], tags: ["New"], icon: "🔦", art: ["#150a22", "#47206b"]),
+        .init(id: "fnaf", name: "FNAF 1", cats: ["online"], tags: ["New", "Online"], icon: "🐻", art: ["#2a1608", "#b8691f"]),   // Mac only: it plays fnaf1.io in a web view (the Windows app blocks frames)
         .init(id: "tetris", name: "Tetris", cats: ["arcade"], tags: [], icon: "🧱", art: ["#1c2e6b", "#4d7cff"]),
         .init(id: "snake", name: "Snake", cats: ["arcade"], tags: [], icon: "🐍", art: ["#1e5d2a", "#6fe36b"]),
         .init(id: "breakout", name: "Breakout", cats: ["arcade"], tags: [], icon: "🧨", art: ["#7a2a1c", "#ff9a5c"]),

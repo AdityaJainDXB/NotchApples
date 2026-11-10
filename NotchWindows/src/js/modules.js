@@ -78,8 +78,6 @@ export const MODULES = [
     blurb: 'Chat in an end-to-end encrypted room joined by a code. Mac and Windows users can be in the same room.' },
   { id: 'mirror', name: 'Mirror', icon: '🪞', feature: 'mirror', load: () => import('./modules/mirror.js'),
     blurb: 'A mirror using your camera, to check how you look before a call. Nothing is recorded.' },
-  { id: 'vpn', name: 'VPN', icon: '🛡', feature: 'vpn', load: () => import('./modules/vpn.js'),
-    blurb: "Free VPN Gate servers through Windows' built-in VPN, or your own OpenVPN profile." },
   { id: 'devices', name: 'Devices', icon: '🎧', load: () => import('./modules/devices.js'),
     blurb: "What's using your microphone or camera (with a mic mute), your battery and connected devices." },
   { id: 'live', name: 'Parcels & Flights', icon: '📦', note: 'Not recommended: limited usefulness for most situations, low compatibility.', load: () => import('./modules/live.js'),
@@ -98,6 +96,8 @@ export const MODULES = [
     blurb: 'Control your Home Assistant lights, switches, scenes and more. Works with Hue, IKEA, Zigbee and Matter through Home Assistant.' },
   { id: 'claudeusage', name: 'Claude Usage', icon: '📟', feature: 'claudeUsage', load: () => premium('claudeusage'),
     blurb: 'How many tokens Claude Code has used in your 5-hour window, today and this week, with budgets you set yourself. Read from your .claude folder on this PC.' },
+  { id: 'utilities', name: 'Utilities', icon: '🧰', load: () => import('./modules/utilities.js'),
+    blurb: "PC stats, Shelf, World clock, Launcher and Convert on one screen. Click a panel's title to open the full tool. While this is on, those tools leave the tab bar and live only here." },
   { id: 'settings', name: 'Settings', icon: '⚙', load: () => import('./modules/settings.js'),
     blurb: '' },
 ];

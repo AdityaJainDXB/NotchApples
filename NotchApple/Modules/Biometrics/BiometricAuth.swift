@@ -108,8 +108,10 @@ struct LockView: View {
         guard wait == 0 else { return }
         if !final && !LockCodeStore.isRight(c) { if c.count == LockCode.maxLength { tryCode(c, final: true) }; return }
         if LockCodeStore.check(c) {
+            StatusPulse.shared.unlockAttempt(success: true)
             withAnimation(Theme.spring) { state.isUnlocked = true }
         } else {
+            StatusPulse.shared.unlockAttempt(success: false)
             failed = true; code = ""; wait = LockCodeStore.waitRemaining()
         }
     }

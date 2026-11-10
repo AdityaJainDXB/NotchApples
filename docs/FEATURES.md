@@ -4,7 +4,7 @@ Everything Notch Apple can do, and how each part works. Back to the [README](../
 
 ## Features
 
-Every module is **optional** and can be switched on or off in **Settings → Modules**. **Pro** features (AI, Messenger, Audio, VPN, Voice Notes, Screen Time & Focus Blocker, Quick Add) need an access code; everything else, including Now Playing, is free.
+Every module is **optional** and can be switched on or off in **Settings → Modules**. **Pro** features (AI, Messenger, Audio, Voice Notes, Screen Time & Focus Blocker, Quick Add) need an access code; everything else, including Now Playing, is free.
 
 | Module | What it does |
 | --- | --- |
@@ -25,9 +25,8 @@ Every module is **optional** and can be switched on or off in **Settings → Mod
 | 🌐 **Browser** | Add-on: browse the web and search from the notch. Type a website or a search in the address bar (it searches with DuckDuckGo, Google, Bing, Brave or Ecosia, your choice in **Settings → Browser**), with back, forward, reload, a start page with quick links, and a button to open the page in your default browser. It uses the same web engine as Safari and keeps your last page. |
 | 🚀 **Launcher** | Add-on: a shelf of apps you choose. Add as many as you like from the list of installed apps, by dragging an app in, or with **Other…**; click a tile to open it from the notch, drag tiles to reorder, right-click to remove. |
 | 🗂 **File Shelf** | Drag a file onto the notch and it opens straight to the shelf. Files stay there across relaunches thanks to security-scoped bookmarks. Double-click to open, or drag them back out. There's also an **Add files…** button. |
-| 📡 **Share** | Send files with **AirDrop**, or use **PairDrop** between devices on the same Wi-Fi. To receive, just show your 6-digit code. To send, type the other device's code; there's no need to pick the device. No server is involved. |
+| 📡 **Share** | Send files with **AirDrop**: drop them on the card, or choose them, and AirDrop's own picker opens. Files only. (The Windows app has its own nearby sharing with a 6-digit code, since AirDrop is Apple-only.) |
 | 🔊 **Audio** | Pick the output device, set the master volume, and change **per-app volume (0–150%)** and a **10-band per-app EQ** with presets. It's built in on macOS 14.2+, with nothing to install. |
-| 🛡 **VPN** | A built-in list of **free OpenVPN servers** from [Zoult/.ovpn](https://github.com/Zoult/.ovpn) and [VPN Gate](https://www.vpngate.net), or import your own `.ovpn` / `.conf`. See [Using the VPN](GUIDES.md#using-the-vpn). |
 | 🎵 **Now Playing** | Shows what's playing on your Mac: **Apple Music, Spotify, Anghami, browsers, podcasts**, anything in Control Center's Now Playing. Or pick one app to follow. Includes the **album cover**, a progress bar, previous / play / next and synced lyrics. While music plays, the closed notch shows the **album cover and moving bars**, like the iPhone's Dynamic Island; click it to open Now Playing. **New in 2.0.9:** a left / right **speaker balance** slider, and click the song for a **Spotify-style lyrics view** with the cover and a progress bar. |
 | ⏲ **Timer** *(add-on, new)* | A countdown timer with one-click presets (1 min to 1 hr, or any length) and a stopwatch with laps. The time left shows **beside the closed notch**, and you get a sound and notification when it ends. |
 | ✂️ **Snippets** *(add-on, new)* | Saved bits of text (addresses, sign-offs, replies, code). Click one and it's **pasted straight into the app you were using** (copied instead if Accessibility is off). |
@@ -95,7 +94,6 @@ Choose which ones show in **Settings → Notch Extras**.
 
 **Hide the notch with `⌃⌥O`** (change it in **Settings → Shortcuts & Hotkeys**): press it from anywhere to make the notch and its menu-bar icon disappear, and press it again to bring them back. Everything keeps running while it's hidden (music, timers, Messenger), and `⌘E` also brings it back. **Settings → Shortcuts & Hotkeys** shows whether it's visible or hidden and has the on/off switch.
 
-When the VPN module is on, a **VPN On/Off** pill in the notch header shows the tunnel status. The full VPN setup (importing profiles and loading free servers) is under **Settings → VPN**.
 
 ## Window management
 
@@ -281,7 +279,6 @@ the Mac's `⌘J` / `⌃⌥O`.
 | Notification Center widget | Windows widgets are a different system entirely |
 | Window snapping | Windows already has Snap Layouts and PowerToys FancyZones |
 | Per-app volume | Windows has this built into the volume mixer |
-| VPN tab | Tunnelblick is macOS-only; use the OpenVPN GUI for Windows |
 
 ## AI in the notch
 
