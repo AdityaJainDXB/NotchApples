@@ -20,7 +20,7 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
-        ReleaseNote(version: "2.2.51", date: "10 November 2026", headline: "Lock your chats, and settings in groups", items: [
+        ReleaseNote(version: "2.2.52", date: "10 November 2026", headline: "Lock your chats, and settings in groups", items: [
             "New: lock your chats. The first time you open Messenger or AI, Notch Apple offers to ask for Touch ID or a code before they open. Choose a 4 to 8 digit code if you prefer; it is kept on your Mac only, and five wrong tries make it wait. Change it any time in Settings → Authentication → Unlock code",
             "New: Settings is easier to scan. The list down the left is now in four groups: the basics, Features, Account and safety, and App",
             "Change: small buttons in the notch are easier to hit (the refresh button in Claude Usage, the habit day dots, the priority menu in Todo and others), and hover and press effects now share one timing",

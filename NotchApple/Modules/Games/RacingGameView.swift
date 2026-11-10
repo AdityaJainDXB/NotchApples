@@ -33,7 +33,7 @@ final class RacingWKWebView: WKWebView {
     override var acceptsFirstResponder: Bool { true }
     override func mouseDown(with event: NSEvent) {
         window?.makeFirstResponder(self)
-        super.mouseDown(with event)
+        super.mouseDown(with: event)
     }
 }
 
