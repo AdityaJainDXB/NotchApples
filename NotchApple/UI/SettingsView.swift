@@ -168,6 +168,19 @@ extension SettingsTab {
     /// The panes that get a sidebar row.
     static var sidebar: [SettingsTab] { allCases.filter { $0 != .privacy && $0 != .focus } }
 
+    /// The sidebar in labelled groups. A pane nobody listed lands in "More", so a new pane can't go missing.
+    static var sidebarGroups: [(title: String?, panes: [SettingsTab])] {
+        let listed: [(String?, [SettingsTab])] = [
+            (nil, [.general, .notch, .appearance, .modules, .shortcuts]),
+            ("Features", [.claude, .aiHistory, .clipboard, .fileSearch, .messenger, .audio, .windows, .lidFold, .browser, .vpn, .bambu, .widget, .iphone, .extras, .profiles]),
+            ("Account & safety", [.license, .backup, .permissions, .authentication]),
+            ("App", [.updates, .help, .about]),
+        ]
+        let placed = Set(listed.flatMap(\.1))
+        let rest = sidebar.filter { !placed.contains($0) }
+        return listed.map { (title: $0.0, panes: $0.1.filter { sidebar.contains($0) }) } + (rest.isEmpty ? [] : [(title: "More", panes: rest)])
+    }
+
     /// The sidebar row this pane belongs to.
     var sidebarRow: SettingsTab { self == .privacy ? .permissions : self }
 
@@ -238,7 +251,12 @@ struct SettingsView: View {
                         }
                     }
                 }
-                ForEach(SettingsTab.sidebar.filter { $0.sidebarMatches(query) }) { pane in
+                ForEach(SettingsTab.sidebarGroups.indices, id: \.self) { g in
+                let group = SettingsTab.sidebarGroups[g]
+                let shown = group.panes.filter { $0.sidebarMatches(query) }
+                if !shown.isEmpty {
+                Section(query.isEmpty ? (group.title ?? "") : "") {
+                ForEach(shown) { pane in
                 Label {
                     HStack {
                         Text(pane.sidebarTitle)
@@ -259,13 +277,16 @@ struct SettingsView: View {
                 }
                 .tag(pane)
                 }
+                }
+                }
+                }
             }
             .navigationSplitViewColumnWidth(190)
             .searchable(text: $query, placement: .sidebar, prompt: "Search settings")
             .onSubmit(of: .search) {
                 // A feature match comes first: "windows" opens the Windows feature's settings, on its own.
                 if let feature = Module.matching(query).first { openFeature(feature); return }
-                if let first = SettingsTab.sidebar.first(where: { $0.sidebarMatches(query) }) {
+                if let first = SettingsTab.sidebarGroups.flatMap(\.panes).first(where: { $0.sidebarMatches(query) }) {
                     if first == .permissions { chooseGroup = true } else { tab = first }
                 }
             }
