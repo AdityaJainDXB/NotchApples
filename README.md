@@ -150,6 +150,10 @@ More screenshots of the capture overlay, the AI answer, the settings and the Win
 
 ## What's new
 
+### Mac 2.2.53 · 10 November 2026 · 🔒 The lock is for Messenger only
+
+- Fix: the lock offer is now only about Messenger. In 2.2.52 it also locked the AI tab, which was not meant to happen. AI opens as normal again, and if you took the offer, AI is unlocked for you automatically. You can still lock any tab you like in Settings → Authentication
+
 ### Mac 2.2.52 · Windows 2.2.51 BETA · 10 November 2026 · 🔒 Lock your chats, and settings in groups
 
 - New (Mac): lock your chats. The first time you open Messenger or AI, Notch Apple offers to ask for Touch ID or a code before they open. Choose a 4 to 8 digit code if you prefer; it is kept on your Mac only, and five wrong tries make it wait. Change it any time in Settings → Authentication → Unlock code
@@ -160,12 +164,6 @@ More screenshots of the capture overlay, the AI answer, the settings and the Win
 ### Mac 2.2.50 · Windows 2.2.50 BETA · 9 November 2026 · ✈️ Flight Economy opens with your Ultimate key
 
 - New: Flight Economy opens with your Ultimate license key. No access code needed, on Mac and Windows; existing Ultimate keys get it too. Pro keys do not open it.
-
-### Windows 2.2.49 BETA · 9 November 2026 · 🔧 Updater fixes
-
-- Fix: the automatic update no longer opens a black terminal window. The helper that installs the update was started with two options that cancel each other out, so Windows showed its console
-- New: if an update does not install, Notch Apple now says so the next time it starts (a notification, and a box in Settings → Updates with what happened). The box has Run the installer, which opens the installer in its own window, and Open the download page, so nobody has to uninstall and reinstall
-- Note: PCs that still have an older version run the older updater for this one update. If it fails there, use the installer from the download page once; updates after that use the fixed one
 
 ## Plugins
 

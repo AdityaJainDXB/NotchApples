@@ -4,6 +4,10 @@ Every Notch Apple release, newest first. The latest few are also on the [README]
 
 > **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is in the repository's history.
 
+### Mac 2.2.53 · 10 November 2026 · 🔒 The lock is for Messenger only
+
+- Fix: the lock offer is now only about Messenger. In 2.2.52 it also locked the AI tab, which was not meant to happen. AI opens as normal again, and if you took the offer, AI is unlocked for you automatically. You can still lock any tab you like in Settings → Authentication
+
 ### Mac 2.2.52 · Windows 2.2.51 BETA · 10 November 2026 · 🔒 Lock your chats, and settings in groups
 
 - New (Mac): lock your chats. The first time you open Messenger or AI, Notch Apple offers to ask for Touch ID or a code before they open. Choose a 4 to 8 digit code if you prefer; it is kept on your Mac only, and five wrong tries make it wait. Change it any time in Settings → Authentication → Unlock code

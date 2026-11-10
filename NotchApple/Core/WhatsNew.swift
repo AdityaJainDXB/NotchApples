@@ -20,6 +20,9 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.2.53", date: "10 November 2026", headline: "The lock is for Messenger only", items: [
+            "Fix: the lock offer is now only about Messenger. In 2.2.52 it also locked the AI tab, which was not meant to happen. AI opens as normal again, and if you took the offer, AI is unlocked for you automatically. You can still lock any tab you like in Settings → Authentication",
+        ]),
         ReleaseNote(version: "2.2.52", date: "10 November 2026", headline: "Lock your chats, and settings in groups", items: [
             "New: lock your chats. The first time you open Messenger or AI, Notch Apple offers to ask for Touch ID or a code before they open. Choose a 4 to 8 digit code if you prefer; it is kept on your Mac only, and five wrong tries make it wait. Change it any time in Settings → Authentication → Unlock code",
             "New: Settings is easier to scan. The list down the left is now in four groups: the basics, Features, Account and safety, and App",
