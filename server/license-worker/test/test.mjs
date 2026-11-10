@@ -1118,8 +1118,7 @@ await test('Card (Ziina): UAE only, AED prices with the 3% + AED 1 fee, paid onl
   assert.equal((await call('/order', { method: 'card', tier: 'pro', email: 'a@b.co' }, ae)).status, 503, 'off until the API key is set');
   env.ZIINA_API_KEY = 'zk_test';
   const intl = await call('/order', { method: 'card', tier: 'pro', email: 'intl@example.com' }, us);
-  assert.equal(intl.status, 200, JSON.stringify(intl));
-  assert.equal(seen[0].currency_code, 'USD'); assert.equal(seen[0].amount, 135, '$1 + 5% + $0.30 = $1.35 in cents'); assert.equal(intl.cur, 'USD');
+  assert.equal(intl.status, 403, 'Ziina is UAE only: a dollar customer is sent to Whop or crypto'); assert.equal(seen.length, 0, 'and Ziina is not contacted');
   seen.shift();
   const o = await call('/order', { method: 'card', tier: 'pro', email: 'card@example.com' }, ae);
   assert.equal(o.status, 200, JSON.stringify(o));
@@ -1148,7 +1147,7 @@ await test('Card (Ziina): UAE only, AED prices with the 3% + AED 1 fee, paid onl
   const pickAe = await call('/order', { method: 'card', region: 'ae', tier: 'pro', email: 'pick@example.com' }, {});
   assert.equal(seen.at(-1).currency_code, 'AED', JSON.stringify(pickAe)); assert.equal(seen.at(-1).amount, 553, 'undetected country: the customer picks AED');
   const noPick = await call('/order', { method: 'card', region: 'ae', tier: 'pro', email: 'pick2@example.com' }, us);
-  assert.equal(seen.at(-1).currency_code, 'USD', JSON.stringify(noPick)); assert.equal(seen.at(-1).amount, 135, 'a known foreign country cannot pick the UAE price');
+  assert.equal(noPick.status, 403, 'a known foreign country cannot pick the UAE price, and gets no Ziina payment either');
  assert.equal(cfg.card.intl.fee.pct, 5);
   delete env.ZIINA_API_KEY; globalThis.fetch = prev;
 });

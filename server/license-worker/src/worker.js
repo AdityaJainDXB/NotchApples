@@ -716,6 +716,8 @@ const countryKnown = (request) => { const c = (request.headers.get('cf-ipcountry
 async function cardOrder(env, request, body) {
   if (!env.ZIINA_API_KEY) throw new HTTPError(503, "Card payments aren't switched on yet. Please pay with crypto.");
   const region = cardRegion(env, request, body), cur = region === 'ae' ? 'AED' : 'USD';
+  // Ziina is for the UAE only (AED). Anyone paying in dollars uses Whop or crypto.
+  if (region !== 'ae') throw new HTTPError(403, 'Card payments by Ziina are for the UAE only. Pay with Whop or crypto instead.');
   const tier = TIER[body.tier];
   if (!tier) throw new HTTPError(400, 'Choose Pro or Ultimate.');
   if (tier === TIER.ultimate && env.ULTIMATE_ON !== '1') throw new HTTPError(403, 'Ultimate is not on sale yet.');
