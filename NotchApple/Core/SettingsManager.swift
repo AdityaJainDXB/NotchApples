@@ -12,7 +12,7 @@ import SwiftUI
 
 /// Every optional feature module in the app.
 enum Module: String, CaseIterable, Identifiable {
-    case today, claude, browser, launcher, translator, stats, windows, tools, mirror, worldClock, messenger, clipboard, notes, focus, shelf, share, audio, vpn, nowPlaying, search, timer, snippets, shortcuts, devices, live, f1, tennis, radar, wallpaper, sports, games, alerts, plugins, voiceNotes, screenTime, quickAdd, markets, home, security, cacheCleaner, claudeUsage, smartHome, devTools, wellbeing, nonNecessities, todo, klick, convert, doIt, bambu
+    case today, claude, browser, launcher, translator, stats, windows, tools, mirror, worldClock, messenger, clipboard, notes, focus, shelf, share, audio, vpn, nowPlaying, search, timer, snippets, shortcuts, devices, live, f1, tennis, radar, wallpaper, sports, games, alerts, plugins, voiceNotes, screenTime, quickAdd, markets, home, security, cacheCleaner, claudeUsage, smartHome, devTools, wellbeing, utilities, nonNecessities, todo, klick, convert, doIt, bambu
 
     var id: String { rawValue }
 
@@ -65,6 +65,7 @@ enum Module: String, CaseIterable, Identifiable {
         case .smartHome: "Smart Home"
         case .devTools: "Dev Tools"
         case .wellbeing: "Wellbeing"
+        case .utilities: "Utilities"
         case .nonNecessities: "Non-Necessities"
         case .todo: "To-Do"
         case .bambu: "Printer Status"
@@ -120,6 +121,7 @@ enum Module: String, CaseIterable, Identifiable {
         case .smartHome: "lightbulb.fill"
         case .devTools: "hammer.fill"
         case .wellbeing: "leaf.fill"
+        case .utilities: "wrench.and.screwdriver.fill"
         case .nonNecessities: "ellipsis.circle.fill"
         case .todo: "checklist"
         case .bambu: "printer.fill"
@@ -170,6 +172,7 @@ enum Module: String, CaseIterable, Identifiable {
         case .markets: "Pro: a watchlist of stocks and crypto with today's change; pin one beside the notch."
         case .home: "Pro: your own dashboard of widgets in small, medium and large sizes."
         case .security: "Require Touch ID / Apple Watch / password to open the notch."
+        case .utilities: "Mac stats, Shelf, World clock, Purge, Convert and your app Launcher on one screen. Tap a panel's title to open the full tool; drop files on Shelf right there."
         case .wellbeing: "A breathing exercise, break reminders (eyes, water, stretch, posture) and a bedtime nudge. Free; the reminders keep running while the notch is closed."
         case .devTools: "Format JSON, encode and decode, read a JWT, hash, make a UUID, convert timestamps, test a regex, check colour contrast and make a QR code. Free, and everything stays on this Mac."
         case .smartHome: "Ultimate: lights, switches, scenes and more from your own Home Assistant (which also connects Hue, IKEA, Zigbee and Matter). The access token stays on this Mac."
@@ -211,7 +214,7 @@ final class SettingsManager: ObservableObject {
         var defaults: [String: Any] = [Module.today.storageKey: true, Module.claude.storageKey: true]
         offByDefault.forEach { defaults[$0.storageKey] = false }
         // 1.14 add-ons start off for everyone, new and existing installs.
-        [Module.timer, .snippets, .shortcuts, .devices, .live, .f1, .games, .alerts, .plugins, .voiceNotes, .screenTime, .quickAdd, .markets, .home, .cacheCleaner, .claudeUsage, .smartHome, .devTools, .wellbeing].forEach { defaults[$0.storageKey] = false }
+        [Module.timer, .snippets, .shortcuts, .devices, .live, .f1, .games, .alerts, .plugins, .voiceNotes, .screenTime, .quickAdd, .markets, .home, .cacheCleaner, .claudeUsage, .smartHome, .devTools, .wellbeing, .utilities].forEach { defaults[$0.storageKey] = false }
         defaults[Module.sports.storageKey] = true   // everyone gets Sports, tracking Barcelona
         defaults[Module.tennis.storageKey] = true   // 2.0.5: Tennis is on for everyone
         defaults[Module.radar.storageKey] = true    // Flight Radar is on for everyone
@@ -313,6 +316,7 @@ final class SettingsManager: ObservableObject {
     @AppStorage(Module.smartHome.storageKey) var smartHomeEnabled = false
     @AppStorage(Module.devTools.storageKey) var devToolsEnabled = false
     @AppStorage(Module.wellbeing.storageKey) var wellbeingEnabled = false
+    @AppStorage(Module.utilities.storageKey) var utilitiesEnabled = false
     @AppStorage(Module.todo.storageKey) var todoEnabled = false
 
     @AppStorage(Module.bambu.storageKey) var bambuEnabled = false
@@ -432,6 +436,7 @@ final class SettingsManager: ObservableObject {
         case .smartHome: $smartHomeEnabled
         case .devTools: $devToolsEnabled
         case .wellbeing: $wellbeingEnabled
+        case .utilities: $utilitiesEnabled
         case .nonNecessities: .constant(true)
         case .todo: $todoEnabled
         case .bambu: $bambuEnabled

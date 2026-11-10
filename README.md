@@ -150,6 +150,10 @@ More screenshots of the capture overlay, the AI answer, the settings and the Win
 
 ## What's new
 
+### Mac 2.2.55 · 10 November 2026 · 🧰 One Utilities tab
+
+- New: a Utilities tab that puts Mac stats, Shelf, World clock, Purge, Convert and your app Launcher on one screen. Each panel shows what matters at a glance (CPU, memory and battery; what is on your Shelf; the time in your cities; your pinned apps). Tap a panel's title to open the full tool, and drop files straight onto Shelf. It is off by default: turn it on in Settings → Modules & Layout, or accept the offer after updating. Purge and Convert need Ultimate
+
 ### Mac 2.2.54 · 10 November 2026 · 🧹 Purge shows what it has freed
 
 - New (Ultimate): the Purge tab now shows what Purge has freed so far, for example "Freed 40 GB in 22 cleans" and when the last clean was. It reads Purge's own history file on your Mac; nothing is sent anywhere, and Notch Apple still deletes nothing itself
@@ -157,13 +161,6 @@ More screenshots of the capture overlay, the AI answer, the settings and the Win
 ### Mac 2.2.53 · 10 November 2026 · 🔒 The lock is for Messenger only
 
 - Fix: the lock offer is now only about Messenger. In 2.2.52 it also locked the AI tab, which was not meant to happen. AI opens as normal again, and if you took the offer, AI is unlocked for you automatically. You can still lock any tab you like in Settings → Authentication
-
-### Mac 2.2.52 · Windows 2.2.51 BETA · 10 November 2026 · 🔒 Lock your chats, and settings in groups
-
-- New (Mac): lock your chats. The first time you open Messenger or AI, Notch Apple offers to ask for Touch ID or a code before they open. Choose a 4 to 8 digit code if you prefer; it is kept on your Mac only, and five wrong tries make it wait. Change it any time in Settings → Authentication → Unlock code
-- New (Mac): Settings is easier to scan. The list down the left is now in four groups: the basics, Features, Account and safety, and App
-- New (Windows): a search box at the top of Settings. Type a word and it shows the panes and the settings that match, and opens the first one with the row highlighted
-- Change: small buttons in the notch are easier to hit (the refresh button in Claude Usage, the habit day dots, the priority menu in Todo and others), and hover and press effects now share one timing
 
 ## Plugins
 

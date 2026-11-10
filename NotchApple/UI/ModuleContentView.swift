@@ -70,6 +70,7 @@ struct ModuleContentView: View {
         case .smartHome: PremiumSlot(module: .smartHome)
         case .devTools: DevToolsView()
         case .wellbeing: WellbeingView()
+        case .utilities: UtilitiesView()
         case .nonNecessities: NonNecessitiesView()
         case .todo: TodoView()
         case .security: EmptyView()

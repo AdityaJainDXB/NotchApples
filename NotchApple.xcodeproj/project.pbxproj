@@ -324,6 +324,7 @@
 		A26267A7F5F6222E17F6D2B3 /* BrowserView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 774C33C70EBDEB708A71DBC1 /* BrowserView.swift */; };
 		A358C5DCEA06EB17B99C6907 /* ActivationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2080B6F1BB18CC9E7A42044 /* ActivationView.swift */; };
 		A3BD9088984EECCB24AF57C4 /* PatchLogView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3B4A92CA7583AC29102241AF /* PatchLogView.swift */; };
+		9573F2EA690F8EEA274B2E80 /* UtilitiesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 699517F5DB81A5A595B0A064 /* UtilitiesView.swift */; };
 		A4F72615CBBF12DE8EA12022 /* WellbeingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 06B519562B43BC0E7646A8A7 /* WellbeingView.swift */; };
 		A561FED3D648A2B4BEBC4BB9 /* ExternalActivities.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94617614D11E8110B03EB9F7 /* ExternalActivities.swift */; };
 		A6C6C5E596E381B65F1FE6E3 /* ProjectFocusLogic.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3047710BA5AC2CDBD910608B /* ProjectFocusLogic.swift */; };
@@ -530,6 +531,7 @@
 		052621B0F73FFEA23C93C8B2 /* ScreenTools.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenTools.swift; sourceTree = "<group>"; };
 		0597034617E0E4011F1C53B0 /* RadarLogic.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RadarLogic.swift; sourceTree = "<group>"; };
 		0650E2DE70AE8CA13EB15838 /* CompanionStreamTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompanionStreamTests.swift; sourceTree = "<group>"; };
+		699517F5DB81A5A595B0A064 /* UtilitiesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UtilitiesView.swift; sourceTree = "<group>"; };
 		06B519562B43BC0E7646A8A7 /* WellbeingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WellbeingView.swift; sourceTree = "<group>"; };
 		076DA6D06B8B6E4AF8639E32 /* DailyWordGame.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = DailyWordGame.html; sourceTree = "<group>"; };
 		07A88400BDE9B46B5841ECB9 /* RocketGame.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = RocketGame.html; sourceTree = "<group>"; };
@@ -975,6 +977,14 @@
 			path = SmartHome;
 			sourceTree = "<group>";
 		};
+		3FC0481437A0A9073A34E9ED /* Utilities */ = {
+			isa = PBXGroup;
+			children = (
+				699517F5DB81A5A595B0A064 /* UtilitiesView.swift */,
+			);
+			path = Utilities;
+			sourceTree = "<group>";
+		};
 		112C476CF3AD2D4B68464A68 /* Wellbeing */ = {
 			isa = PBXGroup;
 			children = (
@@ -1114,6 +1124,7 @@
 				51479AF227BF0D1A68FFC380 /* Translator */,
 				A9957A263FFF8D86EE6B2B2A /* VPN */,
 				00236DEE8D903F0B7CFA3315 /* Wallpaper */,
+				3FC0481437A0A9073A34E9ED /* Utilities */,
 				112C476CF3AD2D4B68464A68 /* Wellbeing */,
 				5FBEBD2F24CA136CBA09D39A /* Windows */,
 				63B5F483B9A998123FAE1D8E /* WorldClock */,
@@ -2449,6 +2460,7 @@
 				EE0A4D311D76B8E3CEB0DF0B /* WebScriptGame.swift in Sources */,
 				F26CAE9CFE110DCD23C422BC /* WellbeingLogic.swift in Sources */,
 				A4F72615CBBF12DE8EA12022 /* WellbeingView.swift in Sources */,
+				9573F2EA690F8EEA274B2E80 /* UtilitiesView.swift in Sources */,
 				CAED309713A89A35F4C679CE /* WhatsNew.swift in Sources */,
 				DC37742E9DC53226546E0A45 /* WindowManager.swift in Sources */,
 				72569F25523646AA163A2245 /* WindowsView.swift in Sources */,
@@ -2738,7 +2750,7 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 2.2.54;
+				MARKETING_VERSION = 2.2.55;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -2878,7 +2890,7 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 2.2.54;
+				MARKETING_VERSION = 2.2.55;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;

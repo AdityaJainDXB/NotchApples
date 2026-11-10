@@ -20,6 +20,9 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.2.55", date: "10 November 2026", headline: "One Utilities tab", items: [
+            "New: a Utilities tab that puts Mac stats, Shelf, World clock, Purge, Convert and your app Launcher on one screen. Each panel shows what matters at a glance (CPU, memory and battery; what is on your Shelf; the time in your cities; your pinned apps). Tap a panel's title to open the full tool, and drop files straight onto Shelf. It is off by default: turn it on in Settings → Modules & Layout, or accept the offer after updating. Purge and Convert need Ultimate",
+        ]),
         ReleaseNote(version: "2.2.54", date: "10 November 2026", headline: "Purge shows what it has freed", items: [
             "New (Ultimate): the Purge tab now shows what Purge has freed so far, for example \"Freed 40 GB in 22 cleans\" and when the last clean was. It reads Purge's own history file on your Mac; nothing is sent anywhere, and Notch Apple still deletes nothing itself",
         ]),
@@ -1300,6 +1303,9 @@ enum WhatsNew {
 
     /// Optional things introduced in a release, offered once after updating. Only free, safe-to-try settings.
     static let offers: [(version: String, items: [NewFeatureOffer])] = [
+        ("2.2.55", [
+            NewFeatureOffer(id: "utilities", title: "Utilities tab", detail: "Mac stats, Shelf, World clock, Purge, Convert and your Launcher on one screen.", key: Module.utilities.storageKey),
+        ]),
         ("2.0.27", [
             NewFeatureOffer(id: "weeklyupdates", title: "Update at most once a week", detail: "Instead of hearing about every release, get one update prompt a week. Required security updates still appear straight away. You can change this in Settings → Notch or Updates.", key: "updates.weekly"),
         ]),

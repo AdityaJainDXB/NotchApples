@@ -4,6 +4,10 @@ Every Notch Apple release, newest first. The latest few are also on the [README]
 
 > **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is in the repository's history.
 
+### Mac 2.2.55 · 10 November 2026 · 🧰 One Utilities tab
+
+- New: a Utilities tab that puts Mac stats, Shelf, World clock, Purge, Convert and your app Launcher on one screen. Each panel shows what matters at a glance (CPU, memory and battery; what is on your Shelf; the time in your cities; your pinned apps). Tap a panel's title to open the full tool, and drop files straight onto Shelf. It is off by default: turn it on in Settings → Modules & Layout, or accept the offer after updating. Purge and Convert need Ultimate
+
 ### Mac 2.2.54 · 10 November 2026 · 🧹 Purge shows what it has freed
 
 - New (Ultimate): the Purge tab now shows what Purge has freed so far, for example "Freed 40 GB in 22 cleans" and when the last clean was. It reads Purge's own history file on your Mac; nothing is sent anywhere, and Notch Apple still deletes nothing itself
