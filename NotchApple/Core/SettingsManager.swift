@@ -260,14 +260,20 @@ final class SettingsManager: ObservableObject {
     /// as normal): the prompt shows when the tab you land on, or switch to, is one of them (issue 45).
     @AppStorage("security.onlyTabs") var securityOnlyTabs = false
     @AppStorage("security.lockedTabs") var securityLockedTabs = "games,search,messenger"
-    /// The one-time "Lock your chats?" card in the Messenger and AI tabs: set once it was answered either way.
+    /// The one-time "Lock your messages?" card in the Messenger tab: set once it was answered either way.
     @AppStorage("chatLock.offerDone") var chatLockOfferDone = false
-    /// Turns the lock on for the two chat tabs only (everything else opens as normal).
-    func lockChats() {
+    /// Turns the lock on for Messenger only (everything else, AI included, opens as normal).
+    func lockMessages() {
         securityEnabled = true
         securityOnlyTabs = true
-        for m in [Module.messenger, .claude] where !isLockedTab(m) { setLockedTab(m, true) }
+        if !isLockedTab(.messenger) { setLockedTab(.messenger, true) }
         chatLockOfferDone = true
+    }
+    /// 2.2.52 also locked AI when you accepted the offer; that was a mistake. Anyone who took the offer gets AI unlocked, once.
+    func undoAILockFromOffer() {
+        guard chatLockOfferDone, !UserDefaults.standard.bool(forKey: "chatLock.aiUndone") else { return }
+        UserDefaults.standard.set(true, forKey: "chatLock.aiUndone")
+        if isLockedTab(.claude) { setLockedTab(.claude, false) }
     }
     func isLockedTab(_ m: Module) -> Bool { securityLockedTabs.split(separator: ",").contains { $0 == m.rawValue } }
     func setLockedTab(_ m: Module, _ on: Bool) {

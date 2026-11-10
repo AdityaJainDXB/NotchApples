@@ -219,6 +219,7 @@ struct NotchRootView: View {
             .padding(.bottom, 18)
             .onAppear(perform: ensureValidSelection)
             .onAppear { previousSelected = state.selected }
+            .onAppear { settings.undoAILockFromOffer() }
             .onAppear { NotchWidgetCenter.shared.update(selected: state.selected, open: true) }
             .onDisappear { NotchWidgetCenter.shared.update(selected: state.selected, open: false) }
             .onChange(of: state.selected) { _, new in
@@ -289,9 +290,9 @@ struct NotchRootView: View {
         } else if let feature = state.selected.feature, !entitlements.canUse(feature) {
             // Pro tabs show what they do and how to unlock them.
             ActivationModalView(feature: feature)
-        } else if [Module.messenger, .claude].contains(state.selected), !settings.chatLockOfferDone,
-                  !(settings.securityEnabled && (!settings.securityOnlyTabs || settings.isLockedTab(state.selected))) {
-            // The first time a chat opens: offer to lock chats (Touch ID, the Mac password, or a code).
+        } else if state.selected == .messenger, !settings.chatLockOfferDone,
+                  !(settings.securityEnabled && (!settings.securityOnlyTabs || settings.isLockedTab(.messenger))) {
+            // The first time Messenger opens: offer to lock it (Touch ID, the Mac password, or a code).
             ChatLockOffer()
         } else {
             ModuleContentView(module: state.selected)

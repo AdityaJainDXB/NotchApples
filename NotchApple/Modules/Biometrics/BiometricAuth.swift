@@ -178,7 +178,7 @@ struct LockCodeSetupView: View {
     }
 }
 
-/// Shown once, in place of the Messenger or AI tab the first time you open one: lock your chats with Touch ID / your password, or with a code.
+/// Shown once, in place of the Messenger tab the first time you open it: lock your messages with Touch ID / your password, or with a code.
 struct ChatLockOffer: View {
     @EnvironmentObject private var state: NotchState
     @EnvironmentObject private var settings: SettingsManager
@@ -188,8 +188,8 @@ struct ChatLockOffer: View {
     var body: some View {
         VStack(spacing: 10) {
             Image(systemName: BiometricAuth.symbol).font(.system(size: 34, weight: .light)).foregroundStyle(Theme.accentGradient)
-            Text("Lock your chats?").font(.headline).foregroundStyle(.white)
-            Text("Ask for \(BiometricAuth.methodName) or a code before Messenger and AI open. Other tabs stay as they are.")
+            Text("Lock your messages?").font(.headline).foregroundStyle(.white)
+            Text("Ask for \(BiometricAuth.methodName) or a code before Messenger opens. Every other tab stays as it is.")
                 .font(.caption).foregroundStyle(Theme.textSecondary).multilineTextAlignment(.center).frame(maxWidth: 280)
             HStack {
                 Button("Use \(BiometricAuth.methodName)") { lock() }.buttonStyle(PurpleButtonStyle())
@@ -209,7 +209,7 @@ struct ChatLockOffer: View {
 
     /// You just chose it, so this open stays unlocked; the next one asks.
     private func lock() {
-        settings.lockChats()
+        settings.lockMessages()
         state.isUnlocked = true
         onDone()
     }
