@@ -254,6 +254,25 @@ final class FriendsTests: XCTestCase {
         XCTAssertEqual(FriendBody.decode(opened.text), body)
     }
 
+    // MARK: Game challenges (issue #58)
+
+    func testAGameChallengeShowsInTheChatLikeAMessageAndRaisesUnread() throws {
+        var (book, a, _) = twoFriends()
+        let m = try XCTUnwrap(book.receiveChallenge(from: a.box, gid: "gid42", game: "Connect Four"))
+        XCTAssertFalse(m.mine)
+        XCTAssertTrue(m.text.hasPrefix(FriendsBook.challengeLine(name: try XCTUnwrap(book.record(a.box)).displayName, game: "Connect Four")))
+        XCTAssertTrue(m.text.contains("Accept"))
+        XCTAssertEqual(book.record(a.box)?.unread, 1)
+        XCTAssertEqual(book.vault.messages[a.box]?.count, 1)
+        XCTAssertNil(book.receiveChallenge(from: a.box, gid: "gid42", game: "Connect Four"), "the same invite twice is one line")
+        XCTAssertEqual(book.record(a.box)?.unread, 1)
+        XCTAssertNotNil(book.receiveChallenge(from: a.box, gid: "gid43", game: "Chess"))
+        XCTAssertEqual(book.record(a.box)?.unread, 2)
+        XCTAssertNil(book.receiveChallenge(from: "nobody", gid: "g", game: "Chess"))
+        book.markRead(box: a.box)
+        XCTAssertEqual(book.record(a.box)?.unread, 0)
+    }
+
     // MARK: Clear chat
 
     private func clr(_ epoch: Int, g: String? = nil, ts: Int64? = nil) -> FriendBody {

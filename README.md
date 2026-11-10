@@ -150,6 +150,11 @@ More screenshots of the capture overlay, the AI answer, the settings and the Win
 
 ## What's new
 
+### Mac 2.2.57 · Windows 2.2.57 · 10 November 2026 · 🦅 Eagle Ride, and game challenges that notify
+
+- New: Eagle Ride in Games. Glide over a valley as an eagle, steer around trees and rocks with ← → or A D (or the mouse), grab gems, and keep three lives. It speeds up the longer you last, and your best score stays on this Mac. It follows the Games Sound switch and pauses when you close the notch
+- Fix: a game challenge from a friend (Connect Four, Rock Paper Scissors, Battleship, Chess, Checkers, Tic-tac-toe) now arrives like a message. The chat shows "Sam challenged you to Chess", it counts as unread, and you get the same notification, which has an Accept button (issue #58)
+
 ### Mac 2.2.56 · Windows 2.2.56 · 10 November 2026 · 🧰 Less clutter, a smarter notch
 
 - New: the Utilities tab now holds Mac stats, Shelf, World clock, Purge, Convert and Launcher for real. While it is on, those six leave the tab bar and open from inside Utilities (click a panel's title for the full tool). Files dropped on the notch land on the Shelf there
@@ -164,10 +169,6 @@ More screenshots of the capture overlay, the AI answer, the settings and the Win
 ### Mac 2.2.55 · 10 November 2026 · 🧰 One Utilities tab
 
 - New: a Utilities tab that puts Mac stats, Shelf, World clock, Purge, Convert and your app Launcher on one screen. Each panel shows what matters at a glance (CPU, memory and battery; what is on your Shelf; the time in your cities; your pinned apps). Tap a panel's title to open the full tool, and drop files straight onto Shelf. It is off by default: turn it on in Settings → Modules & Layout, or accept the offer after updating. Purge and Convert need Ultimate
-
-### Mac 2.2.54 · 10 November 2026 · 🧹 Purge shows what it has freed
-
-- New (Ultimate): the Purge tab now shows what Purge has freed so far, for example "Freed 40 GB in 22 cleans" and when the last clean was. It reads Purge's own history file on your Mac; nothing is sent anywhere, and Notch Apple still deletes nothing itself
 
 ## Plugins
 

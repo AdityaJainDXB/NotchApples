@@ -35,8 +35,18 @@ final class MessengerNotifier: NSObject, ObservableObject {
 
     private var center: UNUserNotificationCenter { .current() }
 
+    static let challengeCategory = "messenger.challenge"
+    static let acceptAction = "messenger.challenge.accept"
+
     func start() {
         center.delegate = self
+        // A game challenge from a friend has an Accept button right on the notification.
+        let accept = UNNotificationAction(identifier: Self.acceptAction, title: "Accept", options: [])
+        center.getNotificationCategories { existing in
+            var all = existing.filter { $0.identifier != Self.challengeCategory }
+            all.insert(UNNotificationCategory(identifier: Self.challengeCategory, actions: [accept], intentIdentifiers: [], options: []))
+            UNUserNotificationCenter.current().setNotificationCategories(all)
+        }
     }
 
     /// Asks for notification permission the first time it's needed.
@@ -89,6 +99,21 @@ final class MessengerNotifier: NSObject, ObservableObject {
         center.add(UNNotificationRequest(identifier: id, content: content, trigger: nil))
     }
 
+    /// A friend challenged me to a two-player game while their chat is not open: the same banner a message gets ("Sam challenged you to Chess"),
+    /// with an Accept button. Quiet while a Focus is on (the unread count still shows).
+    func friendChallenge(from name: String, box: String, line: String, gid: String) {
+        guard notificationsEnabled, !FocusBridge.hushes else { return }
+        let content = UNMutableNotificationContent()
+        content.title = name
+        content.subtitle = "Friends"
+        content.body = line
+        content.sound = .default
+        content.threadIdentifier = "messenger.friend.\(box)"
+        content.categoryIdentifier = Self.challengeCategory
+        content.userInfo = ["box": box, "gid": gid]
+        center.add(UNNotificationRequest(identifier: "ch-\(gid)", content: content, trigger: nil))
+    }
+
     /// "Clear chat": takes back the banners and Notification Centre entries already shown for one friend chat (a friend's box or a group key).
     func removeFriendNotifications(chat key: String) {
         let thread = "messenger.friend.\(key)"
@@ -122,8 +147,11 @@ extension MessengerNotifier: UNUserNotificationCenterDelegate {
     nonisolated func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse,
                                             withCompletionHandler completionHandler: @escaping () -> Void) {
         let isUpdate = response.notification.request.content.categoryIdentifier == UpdateChecker.notificationCategory
+        let accepting = response.actionIdentifier == Self.acceptAction
+        let box = response.notification.request.content.userInfo["box"] as? String
         Task { @MainActor in
             if isUpdate { AppDelegate.openSettingsWindow(tab: .updates) } else { self.openMessenger() }
+            if accepting, let box { FriendsClient.shared.acceptChallenge(from: box) }
             completionHandler()
         }
     }

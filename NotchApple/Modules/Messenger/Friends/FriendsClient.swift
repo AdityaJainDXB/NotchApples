@@ -691,9 +691,7 @@ final class FriendsClient: ObservableObject {
         guard next != before else { return false }
         games[box] = next
         guard let g = next else { return true }
-        if msg.op == "invite", from != identity.box, viewing != box {
-            MessengerNotifier.shared.friendEvent(title: "Tic-tac-toe", body: "\(gameName(from, friend: box)) invited you to play.", id: "ttt-\(g.gid)")
-        }
+        if msg.op == "invite", from != identity.box { announceChallenge(box: box, gid: g.gid, game: "Tic-tac-toe") }
         if msg.op == "accept", g.status == .invited, g.inviter == identity.box, g.accepted == from { sendGame(TicTacToe.start(g, acceptor: from), to: box) }
         return true
     }
@@ -723,12 +721,28 @@ final class FriendsClient: ObservableObject {
             body.play = m
             self.sendSealed(body, to: friend)
         }
+        p.onInvite = { [weak self] gid, game, _ in self?.announceChallenge(box: box, gid: gid, game: game) }
         p.onEvent = { [weak self] text in
             guard let self, self.viewing != box else { return }
             MessengerNotifier.shared.friendEvent(title: "Game", body: text, id: "play-\(UUID().uuidString)")
         }
         plays[box] = p
         return p
+    }
+
+    /// A friend challenged me to a game: it shows in their chat like a message (unread count, newest in the list) and notifies the same way,
+    /// "X challenged you to <game>", with an Accept button. Quiet while that chat is open. (Issue #58)
+    private func announceChallenge(box: String, gid: String, game: String) {
+        guard let friend = book.record(box), book.receiveChallenge(from: box, gid: gid, game: game) != nil else { return }
+        if viewing == box { book.markRead(box: box) }
+        else { MessengerNotifier.shared.friendChallenge(from: friend.displayName, box: box, line: FriendsBook.challengeLine(name: friend.displayName, game: game), gid: gid) }
+        persist()
+    }
+
+    /// The Accept button on a challenge notification: accepts whichever game that friend has open.
+    func acceptChallenge(from box: String) {
+        if let g = games[box], g.status == .invited, g.inviter != identity.box { acceptTicTacToe(box) }
+        else if let p = plays[box], let s = p.session, s.status == .invited, s.inviter != identity.box { p.accept() }
     }
 
     func inviteToTicTacToe(_ box: String) { if games[box]?.isFinished ?? true { sendGame(TicTacToe.invite(gid: TicTacToe.newGameID(), mark: Bool.random() ? .x : .o), to: box) } }

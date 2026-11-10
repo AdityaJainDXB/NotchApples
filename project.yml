@@ -13,8 +13,8 @@ packages:
 settings:
   base:
     SWIFT_VERSION: "5.0"
-    MARKETING_VERSION: "2.2.56"
-    CURRENT_PROJECT_VERSION: "234"
+    MARKETING_VERSION: "2.2.57"
+    CURRENT_PROJECT_VERSION: "235"
     CODE_SIGN_IDENTITY: "-"
     CODE_SIGN_STYLE: Manual
     DEVELOPMENT_TEAM: ""
@@ -70,6 +70,11 @@ targets:
       - path: NotchWindows/src/js/games/nightshift-logic.js
         buildPhase: resources
       - path: NotchWindows/src/js/games/nightshift.js
+        buildPhase: resources
+      # Eagle Ride (glide, dodge, collect gems) is shared with the Windows app too.
+      - path: NotchWindows/src/js/games/eagle-ride-logic.js
+        buildPhase: resources
+      - path: NotchWindows/src/js/games/eagle-ride.js
         buildPhase: resources
       - path: NotchWindows/src/js/games/wordle-words.js
         buildPhase: resources

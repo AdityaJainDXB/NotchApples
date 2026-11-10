@@ -25,6 +25,9 @@ final class PlayController: ObservableObject {
     var transport: (PlayMessage) -> Void = { _ in }
     /// Told when a game starts, ends or is offered, for a notice in the chat or a notification.
     var onEvent: (String) -> Void = { _ in }
+    /// When set, an invite from the other player goes here (game id, game, who) instead of onEvent's text: a friend chat turns it into a
+    /// chat line, an unread count and a notification with an Accept button.
+    var onInvite: ((_ gid: String, _ game: String, _ from: String) -> Void)?
 
     private var salt = ""                 // for the pick or fleet in play
     private var sentReveal = false
@@ -49,7 +52,9 @@ final class PlayController: ObservableObject {
         guard next != before else { return false }
         session = next
         guard let s = next else { return true }
-        if msg.op == "invite" && from != myID { onEvent("\(name(from)) invited you to play \(s.kind.title).") }
+        if msg.op == "invite" && from != myID {
+            if let onInvite { onInvite(s.gid, s.kind.title, from) } else { onEvent("\(name(from)) invited you to play \(s.kind.title).") }
+        }
         react(to: msg, before: before, after: s)
         return true
     }

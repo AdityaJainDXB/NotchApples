@@ -169,6 +169,17 @@ export function receiveMessage(v, from, id, text, ts, now = Date.now(), ce = und
   return m;
 }
 
+/** The line shown (and notified) when a friend challenges me to a two-player game. */
+export const challengeLine = (name, title) => `🎮 ${name} challenged you to ${title}`;
+
+/** A friend's game invite as a message in their chat, so it counts as unread like any message and shows in the list. Returns it if new
+ *  (a repeat of the same invite is dropped), else null. The Accept button is the game card shown with the chat. */
+export function receiveChallenge(v, from, gid, title, now = Date.now()) {
+  const f = record(v, from);
+  if (!f || typeof gid !== 'string' || !gid) return null;
+  return receiveMessage(v, from, `ch-${gid}`.slice(0, 64), `${challengeLine(displayName(f), String(title))}. Press Accept below to play.`, now, now);
+}
+
 export function addMine(v, box, id, text, now = Date.now()) {
   (v.messages[box] ||= []).push({ id, mine: true, text, date: now, state: 'sending', ce: epochOf(v, box) });
   const f = record(v, box);

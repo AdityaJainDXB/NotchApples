@@ -4,6 +4,18 @@ Every Notch Apple release, newest first. The latest few are also on the [README]
 
 > **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is in the repository's history.
 
+### Mac 2.2.57 · Windows 2.2.57 BETA · 10 November 2026 · 🦅 Eagle Ride, and game challenges that notify
+
+**Mac**
+
+- New: Eagle Ride in Games. Glide over a valley as an eagle, steer around trees and rocks with ← → or A D (or the mouse), grab gems, and keep three lives. It speeds up the longer you last, and your best score stays on this Mac. It follows the Games Sound switch and pauses when you close the notch
+- Fix: a game challenge from a friend (Connect Four, Rock Paper Scissors, Battleship, Chess, Checkers, Tic-tac-toe) now arrives like a message. The chat shows "Sam challenged you to Chess", it counts as unread, and you get the same notification, which has an Accept button (issue #58)
+
+**Windows**
+
+- New: Eagle Ride in Games. Glide over a valley as an eagle, steer around trees and rocks with ← → or A D (or the mouse), grab gems, and keep three lives. It speeds up the longer you last, and your best score stays on this PC. Sound is off until you press M, and it pauses when you switch away
+- Fix: a game challenge from a friend (Connect Four, Rock Paper Scissors, Battleship, Chess, Checkers, Tic-tac-toe) now arrives like a message. The chat shows "Sam challenged you to Chess", it counts as unread, and you get the same notification; open the chat and press Accept (issue #58)
+
 ### Mac 2.2.56 · Windows 2.2.56 BETA · 10 November 2026 · 🧰 Less clutter, a smarter notch
 
 **Mac**

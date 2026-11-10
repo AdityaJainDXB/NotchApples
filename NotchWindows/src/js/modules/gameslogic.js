@@ -22,6 +22,7 @@ export const GAMES = [
   { id: 'scribble', name: 'Scribble', icon: '✏️', art: ['#8a5a14', '#ffc95c'], cats: ['online'], tags: ['Online'] },
   { id: 'chess', name: 'Chess', icon: '♟️', art: ['#2a2a35', '#6a6a82'], cats: ['cards', 'online'], tags: ['Online', '2P'] },
   { id: 'nightshift', name: 'Night Shift', icon: '🔦', art: ['#150a22', '#47206b'], cats: ['arcade'], tags: ['New'] },
+  { id: 'eagle', name: 'Eagle Ride', icon: '🦅', art: ['#87ceeb', '#ffd700'], cats: ['fly'], tags: ['New'] },
   { id: 'tetris', name: 'Tetris', icon: '🧱', art: ['#1c2e6b', '#4d7cff'], cats: ['arcade'], tags: [] },
   { id: 'snake', name: 'Snake', icon: '🐍', art: ['#1e5d2a', '#6fe36b'], cats: ['arcade'], tags: [] },
   { id: 'breakout', name: 'Breakout', icon: '🧨', art: ['#7a2a1c', '#ff9a5c'], cats: ['arcade'], tags: [] },

@@ -406,6 +406,17 @@ struct FriendsBook {
         return m
     }
 
+    /// The line shown (and notified) when a friend challenges me to a two-player game.
+    static func challengeLine(name: String, game: String) -> String { "🎮 \(name) challenged you to \(game)" }
+
+    /// A friend's game invite as a message in their chat, so it counts as unread like any message and moves them up the list. Returns it
+    /// if new (the same invite arriving twice is dropped). The Accept button is the game card shown with the chat.
+    mutating func receiveChallenge(from box: String, gid: String, game: String, now: Date = .now) -> FriendMessage? {
+        guard let f = record(box), !gid.isEmpty else { return nil }
+        let text = Self.challengeLine(name: f.displayName, game: game) + ". Press Accept below to play."
+        return receiveMessage(from: box, id: String("ch-\(gid)".prefix(64)), text: text, ts: nil, now: now)
+    }
+
     mutating func addMine(to box: String, id: String, text: String, now: Date = .now) {
         var m = FriendMessage(id: id, mine: true, text: text, date: now, state: .sending)
         m.ce = epoch(box)

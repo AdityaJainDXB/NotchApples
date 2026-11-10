@@ -19,7 +19,7 @@ export function render(root) {
   // to fit instead of being cut off. Plane and Racing fill the space themselves.
   const fit = () => {
     const inner = board.firstElementChild;
-    if (!inner || game === 'plane' || game === 'racing' || game === 'ctf' || game === 'rocket' || game === 'scribble' || game === 'chess' || game === 'tetris' || game === 'nightshift' || game === 'wordle' || game === 'trivia') return;
+    if (!inner || game === 'plane' || game === 'racing' || game === 'ctf' || game === 'rocket' || game === 'scribble' || game === 'chess' || game === 'tetris' || game === 'nightshift' || game === 'eagle' || game === 'wordle' || game === 'trivia') return;
     inner.style.transform = ''; inner.style.marginBottom = ''; inner.style.transformOrigin = 'center top';
     const w = inner.offsetWidth, h = inner.offsetHeight;
     if (!w || !h) return;
@@ -32,7 +32,7 @@ export function render(root) {
   const onFull = () => { const on = document.fullscreenElement === board; board.style.cssText = on ? 'display:flex;justify-content:center;align-items:flex-start;background:#0d0b14;overflow:auto;padding-top:2vh' : ''; fit(); setTimeout(fit, 80); };
   document.addEventListener('fullscreenchange', onFull);
   const fullBtn = el('button', { class: 'btn small', title: 'Make this game fill the screen (Esc leaves)', onclick: () => { if (document.fullscreenElement === board) document.exitFullscreen?.(); else board.requestFullscreen?.().catch?.(() => {}); } }, '⛶ Full screen');
-  const pick = (g) => { stop(); game = g; save('games.last', g); fullBtn.style.display = (g === 'plane' || g === 'racing' || g === 'ctf' || g === 'rocket' || g === 'scribble' || g === 'chess' || g === 'tetris' || g === 'nightshift' || g === 'wordle' || g === 'trivia') ? 'none' : ''; stop = ({ 2048: g2048, snake, reaction, cookie, runner, breakout, memory, plane, racing, ctf, rocket, scribble, chess, tetris, nightshift, wordle, trivia, blackjack, solitaire, poker, eagle: (host) => { const g = new EagleRideGame(host); return () => g.destroy(); } })[g](board) || (() => {}); requestAnimationFrame(fit); setTimeout(fit, 120); };
+  const pick = (g) => { stop(); game = g; save('games.last', g); fullBtn.style.display = (g === 'plane' || g === 'racing' || g === 'ctf' || g === 'rocket' || g === 'scribble' || g === 'chess' || g === 'tetris' || g === 'nightshift' || g === 'eagle' || g === 'wordle' || g === 'trivia') ? 'none' : ''; stop = ({ 2048: g2048, snake, reaction, cookie, runner, breakout, memory, plane, racing, ctf, rocket, scribble, chess, tetris, nightshift, eagle, wordle, trivia, blackjack, solitaire, poker })[g](board) || (() => {}); requestAnimationFrame(fit); setTimeout(fit, 120); };
   // The menu of games (search, filters, "Jump back in"); picking one shows the game with a way back.
   const title = el('div', { style: 'font-weight:700' });
   const back = el('button', { class: 'btn small quiet', onclick: () => showMenu() }, '‹ All games');
@@ -179,6 +179,17 @@ function nightshift(host) {
   host.replaceChildren(box);
   let stop = () => {}, gone = false;
   import('../games/nightshift-logic.js').then(() => import('../games/nightshift.js')).then(() => { if (!gone) stop = window.NotchNightShift.mount(box); });
+  return () => { gone = true; host.style.position = ''; stop(); };
+}
+
+/// Eagle Ride: glide over a valley, dodge trees and rocks, grab gems (games/eagle-ride.js, rules in eagle-ride-logic.js).
+/// The same script runs in the Mac app's web view. It pauses when you switch away; sound is off until you press M.
+function eagle(host) {
+  host.style.position = 'relative';
+  const box = el('div', { style: 'position:absolute;inset:0' });
+  host.replaceChildren(box);
+  let stop = () => {}, gone = false;
+  import('../games/eagle-ride-logic.js').then(() => import('../games/eagle-ride.js')).then(() => { if (!gone) stop = window.NotchEagleGame.mount(box); });
   return () => { gone = true; host.style.position = ''; stop(); };
 }
 

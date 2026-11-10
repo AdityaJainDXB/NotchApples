@@ -693,7 +693,7 @@ export function canShoot(s, id, cell) {
 // fleet) and answers the opponent automatically (starting the game, revealing, answering shots). The room or the friend chat only
 // passes messages in (`receive`) and carries the ones it sends (`transport`). Games are not saved: they end if the app quits.
 
-export function createPlayController({ myID: myIdOrFn, name = () => 'Someone', transport = () => {}, onEvent = () => {}, onChange = () => {}, random } = {}) {
+export function createPlayController({ myID: myIdOrFn, name = () => 'Someone', transport = () => {}, onEvent = () => {}, onInvite = null, onChange = () => {}, random } = {}) {
   const idOf = typeof myIdOrFn === 'function' ? myIdOrFn : () => myIdOrFn;   // a room's ID is only known once it is needed
   let session = null, fleet = null, myPick = null, salt = '', sentReveal = false, shotsAtMe = new Set();
   const changed = () => { try { api.onChange(); } catch { /* a screen error must not stop the game */ } };
@@ -745,7 +745,11 @@ export function createPlayController({ myID: myIdOrFn, name = () => 'Someone', t
     const next = reduce(before, msg, from);
     if (next === before) return false;
     session = next;
-    if (msg.op === 'invite' && from !== idOf()) api.onEvent(`${api.name(from)} invited you to play ${TITLES[next.kind]}.`);
+    if (msg.op === 'invite' && from !== idOf()) {
+      // A friend chat hands invites to onInvite (a chat line, the unread count and a notification); a room just gets the text.
+      if (typeof api.onInvite === 'function') api.onInvite({ from, gid: next.gid, kind: next.kind, title: TITLES[next.kind] });
+      else api.onEvent(`${api.name(from)} invited you to play ${TITLES[next.kind]}.`);
+    }
     react(msg, before, next);
     changed();
     return true;
@@ -761,7 +765,7 @@ export function createPlayController({ myID: myIdOrFn, name = () => 'Someone', t
   const s0 = () => session;
   const api = {
     get myID() { return idOf(); },
-    name, transport, onEvent, onChange,
+    name, transport, onEvent, onInvite, onChange,
     get session() { return session; },
     get fleet() { return fleet; },
     get myPick() { return myPick; },

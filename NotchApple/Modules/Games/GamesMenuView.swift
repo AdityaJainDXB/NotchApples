@@ -14,7 +14,7 @@ extension GamesView.Game {
     static let menuIDs: [(id: String, game: GamesView.Game)] = [
         ("2048", .g2048), ("snake", .snake), ("breakout", .breakout), ("memory", .memory), ("reaction", .reaction), ("cookie", .cookies),
         ("runner", .runner), ("plane", .plane), ("racing", .racing), ("ctf", .ctf), ("rocket", .rocket), ("scribble", .scribble),
-        ("chess", .chess), ("tetris", .tetris), ("nightshift", .nightShift), ("fnaf", .fnaf), ("wordle", .dailyWord), ("trivia", .dailyTrivia),
+        ("chess", .chess), ("tetris", .tetris), ("nightshift", .nightShift), ("eagle", .eagle), ("fnaf", .fnaf), ("wordle", .dailyWord), ("trivia", .dailyTrivia),
         ("blackjack", .blackjack), ("solitaire", .solitaire), ("poker", .poker),
     ]
     init?(menuID: String) {

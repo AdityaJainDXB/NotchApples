@@ -20,6 +20,10 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.2.57", date: "10 November 2026", headline: "Eagle Ride, and game challenges that notify", items: [
+            "New: Eagle Ride in Games. Glide over a valley as an eagle, steer around trees and rocks with ← → or A D (or the mouse), grab gems, and keep three lives. It speeds up the longer you last, and your best score stays on this Mac. It follows the Games Sound switch and pauses when you close the notch",
+            "Fix: a game challenge from a friend (Connect Four, Rock Paper Scissors, Battleship, Chess, Checkers, Tic-tac-toe) now arrives like a message. The chat shows \"Sam challenged you to Chess\", it counts as unread, and you get the same notification, which has an Accept button (issue #58)",
+        ]),
         ReleaseNote(version: "2.2.56", date: "10 November 2026", headline: "Less clutter, a smarter notch", items: [
             "New: the Utilities tab now holds Mac stats, Shelf, World clock, Purge, Convert and Launcher for real. While it is on, those six leave the tab bar and open from inside Utilities (click a panel's title for the full tool). Files dropped on the notch land on the Shelf there",
             "New: pin the tabs you use most. Right-click a tab to pin it to the bar; every other tab goes in a More menu. Drag tabs to put them in your own order. With nothing pinned, nothing changes",

@@ -631,10 +631,21 @@ export function play(box) {
       if (f?.status === 'active') post(f, L.playBody(me.box, m)).then((r) => { if (r.status === 403) { st.lastProblem = `${L.displayName(f)} removed you or hasn't accepted.`; emit(); } }).catch(() => {});
     },
     onEvent: (text) => { if (st.viewing !== box) tell('Game', text); },
+    onInvite: ({ gid, title }) => { announceChallenge(box, gid, title); },
     onChange: () => emit(),
   });
   plays.set(box, c);
   return c;
+}
+/** A friend challenged me to a game: it shows in their chat like a message (unread count, newest in the list) and notifies the same way,
+ *  with "X challenged you to <game>". Accepting is the card under the chat. Quiet while that chat is open and in view. */
+async function announceChallenge(box, gid, title) {
+  const m = L.receiveChallenge(vault, box, gid, title);
+  if (!m) return;
+  const f = L.record(vault, box);
+  if (st.viewing === box && (await watching())) L.markRead(vault, box);
+  else tell(L.displayName(f), `${L.challengeLine(L.displayName(f), title)}. Open the chat to accept.`);
+  persist();
 }
 /** The friend's tic-tac-toe game state, or null. */
 export const tttGame = (box) => tttGames.get(box) || null;
@@ -644,7 +655,7 @@ function applyTtt(msg, from, box) {
   const before = tttGames.get(box) || null, next = TTT.reduce(before, msg, from);
   if (next === before) return false;
   tttGames.set(box, next);
-  if (msg.op === 'invite' && from !== me.box && st.viewing !== box) tell('Tic-tac-toe', `${nameOfBox(from)} invited you to play.`);
+  if (msg.op === 'invite' && from !== me.box) announceChallenge(box, next.gid, 'Tic-tac-toe');
   if (msg.op === 'accept' && next.status === 'invited' && next.inviter === me.box && next.accepted === from) sendTtt(TTT.startMsg(next, from), box);
   emit();
   return true;

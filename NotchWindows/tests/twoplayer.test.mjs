@@ -703,3 +703,15 @@ test('the same rules run for two friends identified by mailbox, with a Mac-shape
   assert.equal(s.status, 'playing');
   assert.equal(s.p1, B);
 });
+
+test('a friend chat gets the invite through onInvite (with the game id, kind and title); a room still gets the text', () => {
+  const invites = [], events = [];
+  const withHook = P.createPlayController({ myID: b, onInvite: (i) => invites.push(i), onEvent: (t) => events.push(t) });
+  withHook.receive(P.inviteMsg('ch', 'g7'), a);
+  assert.deepEqual(invites, [{ from: a, gid: 'g7', kind: 'ch', title: 'Chess' }]);
+  assert.deepEqual(events, [], 'no second, bare text notification');
+  const room = [];
+  const plain = P.createPlayController({ myID: b, name: (id) => (id === a ? 'Alice' : 'Someone'), onEvent: (t) => room.push(t) });
+  plain.receive(P.inviteMsg('c4', 'g8'), a);
+  assert.deepEqual(room, ['Alice invited you to play Connect Four.']);
+});
