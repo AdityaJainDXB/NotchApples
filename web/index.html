@@ -1302,7 +1302,7 @@ const shots=[
  ['Settings','settings-messenger','Messenger','Handle and notifications'],['Settings','settings-audio','Audio','Built-in engine'],['Settings','settings-vpn','VPN','Profiles and servers'],['Settings','settings-widget','Widget','Location or a city'],['Settings','settings-focus','Focus','Session lengths'],
  ['Flight sim','plane-home','Start screen','Clean start, fly with others, weather and time of day',1],['Flight sim','plane-clean-start','Clean start','Battery, beacon, engine: the checklist walks you through it',1],['Flight sim','plane-night','Night','Glowing runway lights and the tower',1],
  ['Flight sim','plane-ils','ILS approach','Needles, autopilot approach and AI traffic',1],['Flight sim','plane-share','Fly with others','Other Notch pilots, with callsigns',1],
- ['Get Pro','pro','Unlock Pro','In the notch',1],['Get Pro','settings-pro','Pro in Settings','Your tier and key',1],['Get Pro','get-pro-ltc','Pay with Litecoin','The classic checkout'],['Get Pro','get-pro-promo','Promo code','A free key, once per code'],['Get Pro','get-pro-key','Your product key','Made instantly']
+ ['Get Pro','pro','Unlock Pro','In the notch',1],['Get Pro','settings-pro','Pro in Settings','Your tier and key',1],['Get Pro','get-pro-ltc','Pay with Litecoin','The classic checkout'],['Get Pro','get-pro-key','Your product key','Made instantly']
 ];
 const PAGE=9;let gCat='AI',gShown=PAGE;
 ['AI','Notch','Flight sim','Settings','Get Pro'].forEach((c,i)=>{const b=document.createElement('button');b.setAttribute('role','tab');b.setAttribute('aria-selected',i===0);b.dataset.c=c;b.textContent=c;$('#gseg').appendChild(b)});
