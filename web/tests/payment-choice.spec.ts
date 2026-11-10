@@ -17,7 +17,6 @@ for (const [region, tierUrl] of [['intl', 'ch_592NS3uitgEidbE'], ['ae', 'plan_eb
     await page.goto('/pro.html');
     const whop = page.locator('.methodChoice button[data-method=whop]').first();
     await expect(whop).toBeVisible();
-    await expect(page.locator('.methodChoice button[data-method=card]').first()).toBeVisible();
     await expect(page.locator('.methodChoice button[data-method=crypto]').first()).toBeVisible();
     await whop.click();
     await page.locator('#email').fill('buyer@example.com');
@@ -26,3 +25,26 @@ for (const [region, tierUrl] of [['intl', 'ch_592NS3uitgEidbE'], ['ae', 'plan_eb
     expect(went).toContain(tierUrl);
   });
 }
+
+// Ziina (card in AED), promo codes and discount codes are for customers in the UAE only.
+for (const region of ['ae', 'intl'] as const) {
+  test(`Ziina and promo codes are ${region === 'ae' ? 'offered to' : 'hidden from'} a ${region} visitor`, async ({ page }) => {
+    await page.route('**/config', (r) => r.fulfill({ json: config(region), headers: { 'access-control-allow-origin': '*' } }));
+    await page.goto('/pro.html');
+    await expect(page.locator('.methodChoice button[data-method=whop]').first()).toBeVisible();
+    const shown = region === 'ae';
+    for (const sel of ['.methodChoice button[data-method=card]', '#promoTab', '#couponLink', '#faqStudent']) {
+      const el = page.locator(sel).first();
+      if (shown) await expect(el).toBeVisible(); else await expect(el).toBeHidden();
+    }
+    if (!shown) await expect(page.locator('#payNote')).not.toContainText('Ziina');
+  });
+}
+
+test('an outside-UAE visitor who opens #promo lands on the Buy tab', async ({ page }) => {
+  await page.route('**/config', (r) => r.fulfill({ json: config('intl'), headers: { 'access-control-allow-origin': '*' } }));
+  await page.goto('/pro.html#promo');
+  await expect(page.locator('.methodChoice button[data-method=whop]').first()).toBeVisible();
+  await expect(page.locator('#buy')).toHaveClass(/on/);
+  await expect(page.locator('#promo')).not.toHaveClass(/on/);
+});

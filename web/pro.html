@@ -85,6 +85,7 @@ td .ph{font-size:17px;vertical-align:-3px}
 .tabs{position:relative;display:grid;grid-template-columns:repeat(4,1fr);gap:4px;padding:4px;background:rgba(255,255,255,.05);box-shadow:inset 0 0 0 1px var(--line);border-radius:99px;margin-bottom:26px}
 .tabs button{border:0;background:none;color:var(--mut);font:600 13.5px Geist,system-ui;height:38px;padding:0 8px;border-radius:99px;cursor:pointer;transition:color .2s,background-color .25s var(--ease-out);white-space:nowrap}
 .tabs button.on{background:var(--ac-strong);color:#fff;box-shadow:inset 0 1px 0 rgba(255,255,255,.2)}
+.tabs.no-promo{grid-template-columns:repeat(3,1fr)}
 .pane{display:none}.pane.on{display:block;animation:pin .3s var(--ease-out)}
 @keyframes pin{from{opacity:0;transform:translateY(6px)}}
 .muted{color:var(--mut);font-size:14.5px}
@@ -129,7 +130,7 @@ input[type=checkbox]{width:20px;height:20px;flex:none;accent-color:#7c5cff;curso
 .note{font-size:14px;color:var(--dim);text-align:center;margin:20px 0}
 footer{border-top:1px solid var(--line);padding:30px 0 44px;color:var(--dim);font-size:14px;text-align:center}footer a{color:var(--mut);margin:0 10px;transition:color .2s}footer a:hover{color:var(--tx)}
 @media(max-width:860px){.plans{grid-template-columns:1fr}.plan+.plan{border-left:0;border-top:1px solid var(--line)}.plan.best{order:-1}.faq{grid-template-columns:1fr}}
-@media(max-width:560px){.wrap{padding:0 16px}h1{margin-top:64px}.pay{grid-template-columns:1fr;justify-items:center}.card{padding:20px}.tabs{grid-template-columns:1fr 1fr;border-radius:18px}.choice{grid-template-columns:1fr}#tipChoice{grid-template-columns:1fr 1fr!important}.nn .back span{display:none}}
+@media(max-width:560px){.wrap{padding:0 16px}h1{margin-top:64px}.pay{grid-template-columns:1fr;justify-items:center}.card{padding:20px}.tabs{grid-template-columns:1fr 1fr;border-radius:18px}.tabs.no-promo{grid-template-columns:1fr 1fr}.choice{grid-template-columns:1fr}#tipChoice{grid-template-columns:1fr 1fr!important}.nn .back span{display:none}}
 @media(prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition-duration:.01ms!important}html{scroll-behavior:auto}}
 
 /* receipt printer (shown after a payment is confirmed) */
@@ -232,8 +233,8 @@ footer{border-top:1px solid var(--line);padding:30px 0 44px;color:var(--dim);fon
   <div class="card">
     <div id="offline" class="warn" style="display:none;margin:0 0 16px"></div>
     <div id="forms">
-      <div class="tabs" role="tablist">
-        <button class="on" data-p="buy">Buy</button><button data-p="upgrade">Upgrade</button><button data-p="promo">Promo code</button><button data-p="recover">Lost my key?</button>
+      <div class="tabs no-promo" role="tablist">
+        <button class="on" data-p="buy">Buy</button><button data-p="upgrade">Upgrade</button><button data-p="promo" id="promoTab" hidden>Promo code</button><button data-p="recover">Lost my key?</button>
       </div>
 
       <div class="pane on" id="buy">
@@ -265,7 +266,7 @@ footer{border-top:1px solid var(--line);padding:30px 0 44px;color:var(--dim);fon
           <label for="email">Email (your key is sent here; used only for that and "Lost my key?")</label>
           <input id="email" type="email" placeholder="you@example.com" autocomplete="email">
           <label class="muted" style="display:flex;gap:8px;align-items:flex-start;font-weight:400;margin:8px 0"><input type="checkbox" id="remind" style="margin-top:3px"><span>Email me a reminder if I don't finish (at most three emails over six days, the last with 20% off). Unsubscribe any time.</span></label>
-          <p class="muted" id="couponLink" style="margin:6px 0"><a href="#" id="couponOpen">Have a discount code?</a></p>
+          <p class="muted" id="couponLink" style="margin:6px 0" hidden><a href="#" id="couponOpen">Have a discount code?</a></p>
           <div id="couponRow" hidden><label for="coupon">Discount code (a percentage off; each code works once)</label><input id="coupon" placeholder="PROMO-XXXX-XXXX-XXXX or BACK20-XXXXXXXX" autocomplete="off" autocapitalize="characters" spellcheck="false"></div>
           <div class="quote" id="quote" hidden></div>
           <button class="btn" id="orderBtn"><span class="spin"></span><span>Continue to payment</span></button>
@@ -355,12 +356,12 @@ footer{border-top:1px solid var(--line);padding:30px 0 44px;color:var(--dim);fon
       <a class="btn ghost" href="https://github.com/AdityaJainDXB/NotchApples/releases/download/windows-latest/NotchApple-Windows-Setup.exe" style="max-width:460px;margin:10px auto 0">Download for Windows</a>
     </div>
   </div>
-  <p class="note">Pay by card (through Ziina, or through Whop, which handle your card details; we never see them) or in crypto (Bitcoin, Ethereum, Solana or Litecoin), sent straight to the developer's wallets. <a href="terms.html" style="text-decoration:underline">Terms and refunds</a></p>
+  <p class="note" id="payNote">Pay by card (through Ziina, or through Whop, which handle your card details; we never see them) or in crypto (Bitcoin, Ethereum, Solana or Litecoin), sent straight to the developer's wallets. <a href="terms.html" style="text-decoration:underline">Terms and refunds</a></p>
 
   <h2>Questions</h2>
   <section class="faq" id="faqs">
     <div><h3>Is it really one payment?</h3><p>Yes. Pro is $5 and Ultimate is $15, once. There are no subscriptions, renewals or expiry dates, and every future update is included, 2.0 and beyond.</p></div>
-    <div><h3>Student discount?</h3><p>Students in Dubai can ask for a discount code: send an email to <a href="mailto:notchapples.support@gmail.com?subject=Student%20discount%20code" style="text-decoration:underline">notchapples.support@gmail.com</a>. Enter the code in the Discount code box when you buy.</p></div>
+    <div id="faqStudent" hidden><h3>Student discount?</h3><p>Students in Dubai can ask for a discount code: send an email to <a href="mailto:notchapples.support@gmail.com?subject=Student%20discount%20code" style="text-decoration:underline">notchapples.support@gmail.com</a>. Enter the code in the Discount code box when you buy.</p></div>
     <div><h3>Can I pay more?</h3><p>Yes, add a tip at checkout. It all goes to four high school developers, and it's hugely appreciated.</p></div>
     <div><h3>How does activation work?</h3><p>Your key is signed by our license server. The app checks the signature on your Mac, offline, using a public key built into the app. When you activate, the app tells the server a one-way hash of your Mac (so a key works on up to 3 Macs); nothing else.</p></div>
     <div><h3>I have Pro. How do I upgrade?</h3><p>Use the Upgrade tab: paste your Pro key and pay the $10 difference. You get a new Ultimate key; your Pro key keeps working until you replace it.</p></div>
@@ -520,7 +521,7 @@ function setupCard() {
   if (!c || !c.on) return;
   card = c; method = 'card';
   document.querySelectorAll('.methodBox').forEach(b => b.hidden = false);
-  document.querySelectorAll('.methodChoice button').forEach(b => b.onclick = () => { method = b.dataset.method; paintMethod() });
+  document.querySelectorAll('.methodChoice button').forEach(b => b.onclick = () => { method = b.dataset.method; autoWhop = false; paintMethod() });
   applyRegion(c.region === 'ae' ? 'ae' : 'intl');
   if (c.detected === false) {      // the country could not be told: the customer says which price applies
     document.querySelectorAll('.methodBox').forEach(b => { const w = document.createElement('div');
@@ -528,10 +529,11 @@ function setupCard() {
     document.querySelectorAll('.regionChoice button').forEach(b => b.onclick = () => { applyRegion(b.dataset.region); document.querySelectorAll('.regionChoice button').forEach(x => x.classList.toggle('on', x.dataset.region === region)) });
   }
 }
-let card = null, region = 'intl';
+let card = null, region = 'intl', uaeRegion = false, autoWhop = false, couponWanted = false;
 function applyRegion(rg) {
   region = rg; const r = card[rg];
   CUR = r.cur; aedP = r.prices; feeInfo = r.fee;
+  paintUaeOnly(CUR === 'AED');
   const sym = CUR === 'AED' ? 'AED ' : '$', m = (v) => (Number.isInteger(+v) ? String(v) : (+v).toFixed(2));
   $('#uaeBanner').hidden = CUR !== 'AED';
   // Whop has a USD plan and a UAE plan priced in AED: each visitor gets the one for their region.
@@ -546,6 +548,19 @@ function applyRegion(rg) {
   document.querySelectorAll('.methodChoice button[data-method=card] span').forEach(s => s.textContent = CUR === 'AED' ? 'Visa, Mastercard and Apple Pay, through Ziina. UAE only.' : 'Visa, Mastercard and Apple Pay, through Ziina. Billed in US dollars.');
   paintMethod();
 }
+// Ziina (card in AED) and promo or discount codes are for customers in the UAE only. Everyone else pays on Whop or in crypto.
+function paintUaeOnly(uae) {
+  uaeRegion = uae;
+  document.querySelectorAll('.methodChoice button[data-method=card]').forEach(b => b.hidden = !uae);
+  if (!uae && method === 'card') { method = 'whop'; autoWhop = true } else if (uae && autoWhop) { method = 'card'; autoWhop = false }
+  $('#promoTab').hidden = !uae; $('.tabs').classList.toggle('no-promo', !uae);
+  if (!uae && $('#promo').classList.contains('on')) tab('buy');
+  $('#faqStudent').hidden = !uae;
+  paintCoupon();
+  $('#payNote').firstChild.textContent = uae ? "Pay by card (through Ziina, or through Whop, which handle your card details; we never see them) or in crypto (Bitcoin, Ethereum, Solana or Litecoin), sent straight to the developer's wallets. "
+    : "Pay by card through Whop, which handles your card details (we never see them), or in crypto (Bitcoin, Ethereum, Solana or Litecoin), sent straight to the developer's wallets. ";
+}
+function paintCoupon() { $('#couponLink').hidden = !uaeRegion || couponWanted; $('#couponRow').hidden = !uaeRegion || !couponWanted }
 function paintMethod() {
   document.querySelectorAll('.methodChoice button').forEach(b => b.classList.toggle('on', b.dataset.method === method));
   $('#coinBox').style.display = method === 'crypto' && ((config && config.coins) || []).length > 1 ? 'block' : 'none';
@@ -602,7 +617,7 @@ const WHOP_LINKS = { usd: { pro: 'https://whop.com/checkout/ch_592NS3uitgEidbE/'
   aed: { pro: 'https://whop.com/checkout/plan_ebtYN1VAJeNt8', ultimate: 'https://whop.com/checkout/plan_ArxUVe16TNsAO' } };
 /// Whop takes the payment and the license server emails the key to the address given on Whop (a Whop webhook calls the server).
 function startWhop(btn, statusId, body) {
-  if (body.upgradeFrom) return status(statusId, 'Upgrading from Pro is not on Whop yet. Pay with the card (Ziina) or crypto instead.', 'err', false);
+  if (body.upgradeFrom) return status(statusId, uaeRegion ? 'Upgrading from Pro is not on Whop yet. Pay with the card (Ziina) or crypto instead.' : 'Upgrading from Pro is not on Whop yet. Pay with crypto instead.', 'err', false);
   const url = WHOP_LINKS[CUR === 'AED' ? 'aed' : 'usd'][body.tier === 'ultimate' ? 'ultimate' : 'pro'];
   status(statusId, 'Opening Whop. Use the email you want your key sent to; it arrives by email after you pay.', '', false);
   location.href = url;
@@ -618,8 +633,8 @@ async function startOrder(btn, statusId, body) {
 let tip = 0;
 document.querySelectorAll('#tipChoice button').forEach(b => b.onclick = () => { document.querySelectorAll('#tipChoice button').forEach(x => x.classList.remove('on')); b.classList.add('on'); tip = +b.dataset.tip; paintQuote() });
 const urlCoupon = (new URLSearchParams(location.search).get('coupon') || '').toUpperCase().replace(/[^A-Z0-9-]/g, '').slice(0, 20);
-const openCoupon = () => { $('#couponRow').hidden = false; $('#couponLink').hidden = true; $('#coupon').focus(); };
-if (urlCoupon) { $('#coupon').value = urlCoupon; $('#couponRow').hidden = false; $('#couponLink').hidden = true; }
+const openCoupon = () => { couponWanted = true; paintCoupon(); $('#coupon').focus(); };
+if (urlCoupon) { $('#coupon').value = urlCoupon; couponWanted = true; paintCoupon(); }
 $('#couponOpen').onclick = (e) => { e.preventDefault(); openCoupon(); };
 $('#orderBtn').onclick = () => startOrder($('#orderBtn'), '#orderStatus', { tier, email: $('#email').value, tip, remind: $('#remind').checked, coupon: $('#coupon').value.trim() || undefined });
 $('#upBtn').onclick = () => {
