@@ -332,7 +332,6 @@
 		A89C797DB626E953AFF87B9E /* MathText.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78B2FB154D159E0F982419C0 /* MathText.swift */; };
 		A9A0F9DA61106AE2ABAD71CC /* SystemWatchTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABF7BDDF60590D89D51048A8 /* SystemWatchTests.swift */; };
 		A9A33B021A874F5F59E85D96 /* GameSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = B694C02A230B240E8F014EF6 /* GameSupport.swift */; };
-		AA519CEBD27CD812DD518136 /* Tunnelblick.dmg in Resources */ = {isa = PBXBuildFile; fileRef = 46A01968170BB2B7959205B3 /* Tunnelblick.dmg */; };
 		AABC2217E3C2A9F56856E479 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3D5341204537860AAD266BF9 /* AppDelegate.swift */; };
 		AB69ACF80582BCE7DCBFD8CB /* AppRelauncher.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0AAD6AEBA1965B0D8839F58A /* AppRelauncher.swift */; };
 		AC3F95130978AB662D033CAC /* BambuSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1B46C85D50EF864599EA96B /* BambuSettingsView.swift */; };
@@ -636,7 +635,6 @@
 		4649C21487D880C8DF7A14F8 /* FullScreenLyrics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FullScreenLyrics.swift; sourceTree = "<group>"; };
 		466B2516F7D15E3C623784BC /* F1Model.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = F1Model.swift; sourceTree = "<group>"; };
 		4673BC1E6E78BC4B0DFCCDFC /* ConvertData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConvertData.swift; sourceTree = "<group>"; };
-		46A01968170BB2B7959205B3 /* Tunnelblick.dmg */ = {isa = PBXFileReference; path = Tunnelblick.dmg; sourceTree = "<group>"; };
 		47ACBF89621DF199C9208518 /* LinkShelfTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LinkShelfTests.swift; sourceTree = "<group>"; };
 		47B08D0E9864B3CC96B3F02F /* chess.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = chess.js; sourceTree = "<group>"; };
 		47E065BB9B31FD505442E472 /* PanicHide.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PanicHide.swift; sourceTree = "<group>"; };
@@ -1787,14 +1785,6 @@
 			path = LICENSES;
 			sourceTree = "<group>";
 		};
-		D506FAC9BF7EB2007D0D1C92 /* Tunnelblick */ = {
-			isa = PBXGroup;
-			children = (
-				46A01968170BB2B7959205B3 /* Tunnelblick.dmg */,
-			);
-			path = Tunnelblick;
-			sourceTree = "<group>";
-		};
 		D782D439D097DE049AF6F920 /* src */ = {
 			isa = PBXGroup;
 			children = (
@@ -1843,7 +1833,6 @@
 				BBA74EF46CD28A513D70A225 /* ScribbleGame.html */,
 				0DE90B09AD35DC66704E3CCF /* TetrisGame.html */,
 				718E8EA92709BA7168C47260 /* Scripts */,
-				D506FAC9BF7EB2007D0D1C92 /* Tunnelblick */,
 			);
 			path = Resources;
 			sourceTree = "<group>";
@@ -2111,7 +2100,6 @@
 				7C53773C6C64387C5C3275E7 /* ScribbleGame.html in Resources */,
 				54CD01E3A05200B4078306CB /* Still-MIT.txt in Resources */,
 				6AB495D5E6ACD75DA68D38DB /* TetrisGame.html in Resources */,
-				AA519CEBD27CD812DD518136 /* Tunnelblick.dmg in Resources */,
 				1CDD70B39C1813273FFFD232 /* chess-logic.js in Resources */,
 				F645FA1F8EA68212CBDD7333 /* chess.js in Resources */,
 				68E148D5C8B7CEA4F02B859A /* ctf-logic.js in Resources */,
