@@ -39,7 +39,7 @@ struct SnakeGameView: View {
                         .padding(8).background(.black.opacity(0.6), in: Capsule())
                 }
             }
-            .animation(.snappy(duration: 0.2), value: s.alive)
+            .animation(Theme.quick, value: s.alive)
         }
         .onAppear { model.activate() }
         .onDisappear { model.deactivate() }

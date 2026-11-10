@@ -241,7 +241,7 @@ private struct WidgetCard: View {
                     VStack(alignment: .leading, spacing: 2) {
                         Text(t.title).font(.system(size: 13, weight: .semibold)).foregroundStyle(.white).lineLimit(1)
                         Text(t.artist).font(.system(size: 11)).foregroundStyle(Theme.textSecondary).lineLimit(1)
-                        Button { MediaControl.send(.playPause) } label: { Image(systemName: t.isPlaying ? "pause.fill" : "play.fill") }.buttonStyle(.plain).foregroundStyle(.white)
+                        Button { MediaControl.send(.playPause) } label: { Image(systemName: t.isPlaying ? "pause.fill" : "play.fill") }.buttonStyle(.plain).hitTarget().foregroundStyle(.white)
                     }
                 }
             } else { placeholder("Now Playing", "Nothing playing") }

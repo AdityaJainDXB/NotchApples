@@ -442,7 +442,7 @@ private struct NowPlayingCard: View {
                 Button { withAnimation(Theme.spring) { cassette.toggle() } } label: {
                     Image(systemName: cassette ? "rectangle.stack.fill" : "recordingtape").font(.system(size: 11))
                 }
-                .buttonStyle(.plain).foregroundStyle(Theme.accentBright)
+                .buttonStyle(.plain).hitTarget().foregroundStyle(Theme.accentBright)
                 .help(cassette ? "Back to the normal player" : "Cassette mode")
                 .accessibilityLabel(cassette ? "Switch to the normal player" : "Switch to cassette mode")
             }

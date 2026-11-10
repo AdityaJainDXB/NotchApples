@@ -61,7 +61,7 @@ struct WorldClockView: View {
                             Text(Self.city(id)).font(.system(size: 13, weight: .semibold)).foregroundStyle(.white).lineLimit(1)
                             Spacer()
                             Button { remove(id) } label: { Image(systemName: "minus.circle").foregroundStyle(Theme.textSecondary) }
-                                .buttonStyle(.plain).help("Remove")
+                                .buttonStyle(.plain).hitTarget().help("Remove")
                         }
                         Text(now.formatted(Date.FormatStyle(date: .omitted, time: .shortened, timeZone: zone)))
                             .font(.system(size: 26, weight: .semibold, design: .rounded)).monospacedDigit().foregroundStyle(.white)

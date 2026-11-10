@@ -11,6 +11,7 @@ import { setting, toggle, select, segmented, toast, confirm, button, prompt, mar
 import { icon } from '../icons.js';
 import { keyField, BUY_URL, badge } from './activation.js';
 import { securityCard } from './security.js';
+import { buildIndex, search, fold } from './settingssearch.js';
 
 export const PANES = { General, Updates, Appearance, Tabs, Shortcuts, AI, Calendar, Weather, Clipboard, Security, Rules, Automations, Access, About };
 const NAV = { General: ['settings', '#8e8e93'], Updates: ['share', '#30d158'], Appearance: ['appearance', '#bf5af2'], Tabs: ['home', '#5e5ce6'], Shortcuts: ['shortcuts', '#64d2ff'], AI: ['ai', '#ff9f0a'],
@@ -29,16 +30,59 @@ function scrub(k, v) {
   try { return JSON.stringify(JSON.parse(v).map(({ accessCode, ...rest }) => rest)); } catch { return null; }
 }
 
+/// Every setting row of every pane, read once off a pane drawn out of sight (a pane that can't draw just has no rows).
+let rowIndex = null;
+function settingsIndex() {
+  if (rowIndex) return rowIndex;
+  const rows = {};
+  for (const n of Object.keys(PANES)) {
+    try {
+      const holder = el('div', {}, ...[].concat(PANES[n](() => {}, {})));
+      rows[n] = [...holder.querySelectorAll('.setting')].map((r) => ({ name: r.querySelector('.name')?.textContent || '', desc: r.querySelector('.desc')?.textContent || '' }));
+    } catch { rows[n] = []; }
+  }
+  return (rowIndex = buildIndex(rows));
+}
+
 export function render(root, opts = {}) {
   let current = opts.pane || load('settings.pane', 'General');
   if (!PANES[current]) current = 'General';
-  const nav = el('div', { class: 'col gap-4 scroll', style: 'flex:0 0 172px;padding-right:8px;border-right:1px solid var(--border)' });
+  let query = '';
+  let found = [];
+  const list = el('div', { class: 'col gap-4' });
   const body = el('div', { class: 'scroll', style: 'flex:1;padding-right:6px' });
+  const box = el('input', { class: 'input settings-search', type: 'search', placeholder: 'Search settings', 'aria-label': 'Search settings' });
+  const nav = el('div', { class: 'col gap-4 scroll', style: 'flex:0 0 172px;padding-right:8px;border-right:1px solid var(--border)' }, box, list);
+  const open = (n) => { current = n; save('settings.pane', n); paint(); };
+  box.addEventListener('input', () => { query = box.value; found = search(settingsIndex(), query, Object.keys(PANES)); paint(); });
+  box.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && found[0]) open(found[0].pane);
+    if (e.key === 'Escape' && query) { box.value = ''; query = ''; found = []; paint(); e.stopPropagation(); }
+  });
+  /// After a pane opens from a search, bring its first matching row into view and flash it.
+  function markMatches() {
+    const words = fold(query).split(/\s+/).filter(Boolean);
+    if (!words.length) return;
+    let first = null;
+    for (const r of body.querySelectorAll('.setting')) {
+      const t = fold(r.textContent);
+      if (words.every((w) => t.includes(w))) { r.classList.add('search-hit'); first = first || r; }
+    }
+    first?.scrollIntoView({ block: 'center' });
+  }
   function paint() {
-    nav.replaceChildren(...Object.keys(PANES).map((n) => el('div', { class: `navrow ${n === current ? 'selected' : ''}`, onclick: () => { current = n; save('settings.pane', n); paint(); } },
-      el('span', { class: 'tile-ico', style: `background:${NAV[n][1]}` }, icon(NAV[n][0], 17)), el('span', { class: 'main' }, n))));
+    const shown = query ? found.map((f) => f.pane) : Object.keys(PANES);
+    const rows = shown.map((n) => {
+      const hit = query ? found.find((f) => f.pane === n) : null;
+      const sub = hit && hit.rows[0] ? hit.rows[0].name + (hit.rows.length > 1 ? ` +${hit.rows.length - 1}` : '') : '';
+      return el('div', { class: `navrow ${n === current ? 'selected' : ''}`, onclick: () => open(n) },
+        el('span', { class: 'tile-ico', style: `background:${NAV[n][1]}` }, icon(NAV[n][0], 17)),
+        el('span', { class: 'main' }, n, sub ? el('span', { class: 'tiny dim', style: 'display:block;font-weight:400' }, sub) : null));
+    });
+    list.replaceChildren(...(query && !rows.length ? [el('div', { class: 'tiny dim', style: 'padding:6px 8px' }, 'No settings match that.')] : rows));
     body.replaceChildren(el('div', { class: 'col' }, ...[].concat(PANES[current](paint, opts))));
     opts = {};
+    markMatches();
   }
   root.append(el('div', { class: 'row fill' }, nav, body));
   paint();

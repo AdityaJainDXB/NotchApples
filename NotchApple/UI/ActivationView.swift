@@ -103,7 +103,7 @@ struct ActivationModalView: View {
                                     let formatted = AccessCodeManager.format(new)
                                     if formatted != new { code = formatted }
                                 }
-                                if showError { withAnimation(.easeOut(duration: 0.2)) { showError = false } }
+                                if showError { withAnimation(Theme.quick) { showError = false } }
                             }
                             .onSubmit(unlock)
                             .accessibilityLabel("Product key or access code")

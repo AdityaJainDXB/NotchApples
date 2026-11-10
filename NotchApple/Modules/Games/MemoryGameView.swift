@@ -92,7 +92,7 @@ final class MemoryModel: ObservableObject {
         flash(pad)
         Task { [weak self] in
             try? await Task.sleep(for: .milliseconds(160))
-            withAnimation(.easeOut(duration: 0.15)) { self?.lit = nil }
+            withAnimation(Theme.quick) { self?.lit = nil }
         }
         switch engine.press(pad) {
         case .correct:
@@ -140,7 +140,7 @@ struct MemoryGameView: View {
                     GameOverCard(title: "Game over · \(model.score)", detail: model.newBest ? "New best!" : "Best \(model.best)", button: "Play again") { model.start() }
                 }
             }
-            .animation(.snappy(duration: 0.2), value: model.phase)
+            .animation(Theme.quick, value: model.phase)
             Text(model.message).font(.system(size: 11)).foregroundStyle(Theme.textSecondary).frame(maxWidth: .infinity)
         }
         .onAppear { model.activate() }

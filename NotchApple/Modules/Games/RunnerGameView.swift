@@ -109,7 +109,7 @@ struct RunnerGameView: View {
                             .padding(8).background(.black.opacity(0.6), in: Capsule())
                     }
                 }
-                .animation(.snappy(duration: 0.2), value: s.over)
+                .animation(Theme.quick, value: s.over)
         }
         .onAppear { model.activate() }
         .onDisappear { model.deactivate() }

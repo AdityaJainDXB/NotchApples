@@ -77,7 +77,7 @@ struct GamesMenuView: View {
                     .transition(.opacity)
             }
         }
-        .animation(.easeOut(duration: 0.18), value: codeFor?.id)
+        .animation(Theme.quick, value: codeFor?.id)
     }
 
     // MARK: Pieces

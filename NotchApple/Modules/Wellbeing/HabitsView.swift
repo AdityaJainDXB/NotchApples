@@ -73,12 +73,13 @@ struct HabitsView: View {
                     .font(.system(size: 10)).foregroundStyle(Theme.textSecondary)
             }
             Spacer(minLength: 4)
-            HStack(spacing: 5) {
+            HStack(spacing: 0) {
                 ForEach(HabitLogic.lastDays(7, today: store.today), id: \.self) { day in
                     Button { store.toggle(habit, on: day) } label: {
                         Circle().fill(done.contains(day) ? AnyShapeStyle(Theme.accentGradient) : AnyShapeStyle(Theme.surfaceHover))
                             .overlay(Circle().stroke(day == store.today ? Theme.accentBright : .clear, lineWidth: 1.5))
                             .frame(width: 16, height: 16)
+                            .frame(width: 22, height: Theme.minTarget).contentShape(Rectangle())
                     }
                     .buttonStyle(.plain).help(day == store.today ? "Today" : day)
                 }

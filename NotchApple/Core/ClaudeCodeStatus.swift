@@ -26,7 +26,7 @@ final class ClaudeCodeStatus: ObservableObject {
 
     func show(_ new: ClaudeCodeDot) {
         if SettingsManager.shared.claudeCodeScreenFlash { ScreenFlash.show(new.nsColor) }
-        withAnimation(.easeOut(duration: 0.2)) { dot = new }
+        withAnimation(Theme.quick) { dot = new }
         // Beside the closed notch: the notch's own "ear" dot.
         LiveActivityCenter.shared.flash(LiveActivity(symbol: nil, label: nil, tint: new.nsColor, dotOnly: true), seconds: ClaudeCodeStatusLogic.seconds)
         hideWork?.cancel()

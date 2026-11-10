@@ -76,7 +76,7 @@ private struct PlacementView: View {
         .frame(width: screenSize.width, height: screenSize.height)
         .onAppear {
             place = clamp(start)
-            withAnimation(.easeOut(duration: 0.25)) { shown = true }
+            withAnimation(Theme.quick) { shown = true }
         }
         .onExitCommand { finish(nil) }
     }
@@ -138,7 +138,7 @@ private struct PlacementView: View {
         .background(.ultraThickMaterial, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
         .environment(\.colorScheme, .dark)
         .opacity(shown ? 1 : 0)
-        .animation(.easeOut(duration: 0.2), value: menuY)
+        .animation(Theme.quick, value: menuY)
     }
 
     /// The menu sits just under the notch, or above it when the notch is near the bottom.

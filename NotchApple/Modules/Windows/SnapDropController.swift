@@ -195,7 +195,7 @@ private struct SnapDropView: View {
             }
         }
         .frame(width: size.width, height: size.height)
-        .animation(.easeOut(duration: 0.12), value: model.highlighted)
+        .animation(Theme.quick, value: model.highlighted)
     }
 }
 

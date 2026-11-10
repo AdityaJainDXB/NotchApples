@@ -82,7 +82,7 @@ struct FriendsView: View {
                         sectionLabel("Groups")
                         Spacer()
                         Button { groupName = ""; groupPick = []; groupNote = nil; showNewGroup = true } label: { Image(systemName: "plus.circle") }
-                            .buttonStyle(.plain).foregroundStyle(Theme.accentBright).help("Start a group chat with some of your friends")
+                            .buttonStyle(.plain).hitTarget().foregroundStyle(Theme.accentBright).help("Start a group chat with some of your friends")
                             .disabled(client.friends.isEmpty)
                     }
                     if client.groups.isEmpty {
@@ -298,7 +298,7 @@ struct FriendsView: View {
             Button { NSPasteboard.general.clearContents(); NSPasteboard.general.setString(Friends.displayCode(client.identity.code), forType: .string)
                 copiedCode = true; DispatchQueue.main.asyncAfter(deadline: .now() + 2) { copiedCode = false } } label: {
                 Image(systemName: copiedCode ? "checkmark" : "doc.on.doc").font(.system(size: 11))
-            }.buttonStyle(.plain).foregroundStyle(Theme.accentBright).help("Copy your friend code")
+            }.buttonStyle(.plain).hitTarget().foregroundStyle(Theme.accentBright).help("Copy your friend code")
             Button { showQR = true } label: { Image(systemName: "qrcode").font(.system(size: 12)) }
                 .buttonStyle(.plain).foregroundStyle(Theme.accentBright).help("Show your QR code")
                 .popover(isPresented: $showQR) {

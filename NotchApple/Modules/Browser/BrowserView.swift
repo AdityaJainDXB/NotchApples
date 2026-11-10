@@ -44,7 +44,7 @@ struct BrowserView: View {
                 if let error = model.errorMessage { errorCard(error) }
             }
         }
-        .animation(.easeOut(duration: 0.15), value: model.isLoading)
+        .animation(Theme.quick, value: model.isLoading)
         .onAppear {
             NotchPrefs.bigBrowserOpen = true
             model.restoreIfNeeded()

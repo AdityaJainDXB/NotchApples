@@ -42,7 +42,7 @@ struct HoldToConfirmButton<Label: View>: View {
             .onLongPressGesture(minimumDuration: duration, maximumDistance: 24) {
                 done = true
                 action()
-                withAnimation(.easeOut(duration: 0.18)) { progress = 0 }
+                withAnimation(Theme.quick) { progress = 0 }
             } onPressingChanged: { pressing in
                 if pressing {
                     done = false

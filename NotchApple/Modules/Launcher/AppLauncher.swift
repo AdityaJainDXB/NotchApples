@@ -187,7 +187,7 @@ private struct LauncherTile: View {
             .frame(maxWidth: .infinity)
             .background(RoundedRectangle(cornerRadius: 12, style: .continuous).fill(hovering ? Theme.surfaceHover : Theme.surface))
             .scaleEffect(hovering ? 1.04 : 1)
-            .animation(.easeOut(duration: 0.12), value: hovering)
+            .animation(Theme.quick, value: hovering)
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)

@@ -82,7 +82,7 @@ struct CountdownsList: View {
                     Text(entry.item.title).font(.system(size: 13)).foregroundStyle(.white).lineLimit(1)
                     Spacer()
                     Text(WellbeingLogic.countdownLabel(days: entry.days)).font(.system(size: 13, weight: .bold)).foregroundStyle(.white).monospacedDigit()
-                    Button { store.remove(entry.item) } label: { Image(systemName: "xmark") }.buttonStyle(.plain).foregroundStyle(Theme.textSecondary).font(.system(size: 9))
+                    Button { store.remove(entry.item) } label: { Image(systemName: "xmark") }.buttonStyle(.plain).hitTarget().foregroundStyle(Theme.textSecondary).font(.system(size: 9))
                         .help("Remove")
                 }
             }

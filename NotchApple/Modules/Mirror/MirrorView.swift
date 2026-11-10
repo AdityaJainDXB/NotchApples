@@ -113,7 +113,7 @@ struct MirrorView: View {
             }
             .padding(ringLight ? 14 : 0)
             .background(RoundedRectangle(cornerRadius: 26, style: .continuous).fill(ringLight ? Color.white : .clear))
-            .animation(.easeOut(duration: 0.2), value: ringLight)
+            .animation(Theme.quick, value: ringLight)
 
             VStack(alignment: .leading, spacing: 12) {
                 Label("Mirror", systemImage: "person.crop.square").font(.system(size: 13, weight: .semibold)).foregroundStyle(.white)

@@ -183,7 +183,7 @@ struct TodoView: View {
                 }
             } label: {
                 Image(systemName: chosen.flag).foregroundStyle(chosen.colour).font(.system(size: 13))
-                    .frame(width: 26, height: 26).background(Theme.surface, in: Circle())
+                    .frame(width: Theme.minTarget, height: Theme.minTarget).background(Theme.surface, in: Circle())
             }
             .menuStyle(.borderlessButton).fixedSize()
             .help("Priority for the next task: \(chosen.title)")
@@ -276,7 +276,7 @@ struct TodoView: View {
                     Button { withAnimation(Theme.spring) { todos.complete(r) } } label: {
                         Image(systemName: "circle").foregroundStyle(Color(cgColor: r.calendar.cgColor))
                     }
-                    .buttonStyle(.plain).accessibilityLabel("Complete \(r.title ?? "reminder")")
+                    .buttonStyle(.plain).hitTarget().accessibilityLabel("Complete \(r.title ?? "reminder")")
                     Text(r.title ?? "").font(.system(size: 13)).foregroundStyle(.white).lineLimit(2)
                     Spacer()
                     if let due = r.dueDateComponents?.date {

@@ -60,6 +60,11 @@ enum Theme {
         NSWorkspace.shared.accessibilityDisplayShouldReduceMotion ? .easeInOut(duration: 0.15) : .spring(response: 0.3, dampingFraction: 1.0)
     }
 
+    /// The short ease for small feedback (hover, press, a fade, a highlight): one timing everywhere, a plain fade when Reduce Motion is on.
+    static var quick: Animation {
+        NSWorkspace.shared.accessibilityDisplayShouldReduceMotion ? .easeInOut(duration: 0.15) : .easeOut(duration: 0.18)
+    }
+
     /// `.snappy` that honours Reduce Motion.
     static func snappy(_ duration: Double = 0.5) -> Animation {
         NSWorkspace.shared.accessibilityDisplayShouldReduceMotion ? .easeInOut(duration: 0.15) : .snappy(duration: duration)
@@ -124,7 +129,7 @@ struct PurpleButtonStyle: ButtonStyle {
                 .contentShape(Capsule())
                 .opacity(isEnabled ? (configuration.isPressed ? 0.75 : 1) : 0.4)
                 .scaleEffect(configuration.isPressed ? 0.97 : 1)
-                .animation(.easeOut(duration: 0.12), value: configuration.isPressed)
+                .animation(Theme.quick, value: configuration.isPressed)
                 .onHover { hovering = $0 }
         }
     }
@@ -154,6 +159,11 @@ struct IconButton: View {
 }
 
 extension View {
+    /// A click area of at least `Theme.minTarget` points, however small the icon drawn inside it.
+    func hitTarget() -> some View {
+        frame(minWidth: Theme.minTarget, minHeight: Theme.minTarget).contentShape(Rectangle())
+    }
+
     /// Section header used inside modules (sentence case, per HIG › Writing).
     func sectionTitle() -> some View {
         font(.system(size: 12, weight: .semibold))

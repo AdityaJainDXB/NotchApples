@@ -63,7 +63,7 @@ struct NotchTranslatorView: View {
                         .font(.system(size: 11)).foregroundStyle(Theme.textSecondary)
                     if !model.input.isEmpty {
                         Button { model.input = "" } label: { Image(systemName: "xmark.circle.fill") }
-                            .buttonStyle(.plain).foregroundStyle(Theme.textSecondary).help("Clear")
+                            .buttonStyle(.plain).hitTarget().foregroundStyle(Theme.textSecondary).help("Clear")
                     }
                 }
                 ZStack(alignment: .topLeading) {

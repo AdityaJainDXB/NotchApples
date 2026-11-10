@@ -167,7 +167,7 @@ struct BreakoutGameView: View {
                             .offset(y: 30)
                     }
                 }
-                .animation(.snappy(duration: 0.2), value: s.over)
+                .animation(Theme.quick, value: s.over)
             }
         }
         .onAppear { model.activate() }

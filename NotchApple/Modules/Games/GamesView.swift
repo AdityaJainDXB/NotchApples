@@ -252,7 +252,7 @@ struct Game2048View: View {
         }
         guard b != board else { return }
         Self.addTile(&b)
-        withAnimation(.easeOut(duration: 0.12)) { board = b }
+        withAnimation(Theme.quick) { board = b }
         score += gained
         best = max(best, score)
         over = !canMove(b)

@@ -745,3 +745,5 @@ body[data-perf="lite"] .ws-step { animation: none; }
 .gm-shake { animation: gmshake .3s; }
 @keyframes gmshake { 25% { transform: translateX(-6px); } 75% { transform: translateX(6px); } }
 @media (prefers-reduced-motion: reduce) { .gm-card, .gm-shake { transition: none; animation: none; } }
+.settings-search { width: 100%; margin-bottom: 4px; flex-shrink: 0; }
+.setting.search-hit { background: var(--surface); border-radius: 10px; box-shadow: 0 0 0 1px var(--accent); }

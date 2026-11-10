@@ -326,7 +326,7 @@ struct NowPlayingView: View {
 
     var body: some View {
         if showLyrics, monitor.current?.title.isEmpty == false {
-            NowPlayingLyricsView { withAnimation(.easeInOut(duration: 0.2)) { showLyrics = false } }
+            NowPlayingLyricsView { withAnimation(Theme.quick) { showLyrics = false } }
                 .transition(.opacity)
         } else {
             player
@@ -385,7 +385,7 @@ struct NowPlayingView: View {
                             .font(.title3).foregroundStyle(Theme.textSecondary).lineLimit(1)
                     }
                     .contentShape(Rectangle())
-                    .onTapGesture { withAnimation(.easeInOut(duration: 0.2)) { showLyrics = true } }
+                    .onTapGesture { withAnimation(Theme.quick) { showLyrics = true } }
                     .help("Show the lyrics")
                     ProgressRow()
                 } else {
@@ -402,7 +402,7 @@ struct NowPlayingView: View {
                     else { Button("Open Player", action: monitor.openPlayer).buttonStyle(PurpleButtonStyle(prominent: false)) }
                     IconButton(systemImage: cassette ? "photo.fill" : "recordingtape", help: cassette ? "Back to the cover" : "Cassette mode") { withAnimation(Theme.spring) { cassette.toggle() } }
                     if monitor.current?.title.isEmpty == false {
-                        IconButton(systemImage: "quote.bubble.fill", help: "Lyrics") { withAnimation(.easeInOut(duration: 0.2)) { showLyrics = true } }
+                        IconButton(systemImage: "quote.bubble.fill", help: "Lyrics") { withAnimation(Theme.quick) { showLyrics = true } }
                     }
                     Menu {
                         ForEach([15, 30, 45, 60, 90], id: \.self) { m in Button("Pause in \(m) minutes") { sleep.start(minutes: m) } }

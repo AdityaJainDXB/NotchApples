@@ -47,7 +47,7 @@ private struct CodeField: View {
         }
         .frame(width: 36, height: 46)
         .shadow(color: lit ? Color(red: 0.59, green: 0.69, blue: 1).opacity(0.45) : .clear, radius: 8)
-        .animation(.easeOut(duration: 0.25), value: lit)
+        .animation(Theme.quick, value: lit)
     }
 
     var body: some View {
