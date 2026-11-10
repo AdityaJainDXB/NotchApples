@@ -20,6 +20,16 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.2.56", date: "10 November 2026", headline: "Less clutter, a smarter notch", items: [
+            "New: the Utilities tab now holds Mac stats, Shelf, World clock, Purge, Convert and Launcher for real. While it is on, those six leave the tab bar and open from inside Utilities (click a panel's title for the full tool). Files dropped on the notch land on the Shelf there",
+            "New: pin the tabs you use most. Right-click a tab to pin it to the bar; every other tab goes in a More menu. Drag tabs to put them in your own order. With nothing pinned, nothing changes",
+            "New: the notch can suggest a tab for the app you are in (for example the timer in Zoom, Claude in Xcode, Now Playing in Music). A small chip appears for a few seconds after the notch opens. It only reads which app is in front, never what is in it, and each kind of app can be switched off in Settings → Notch",
+            "New: status pulse. The closed notch glows green (done or good), amber (needs you soon) or red (failed or urgent) for the things you choose in Settings → Notch → Status pulse: battery, an event starting in 5 minutes, a timer finishing, internet dropping, a disk almost full, camera or microphone turning on, three wrong unlock codes, an update waiting, a break after 90 minutes, old files on the Shelf, and a copied password. Battery, event soon and your own scripts start on; the rest are off. A script can add pulse=green, amber or red to a live activity. Quiet hours and Reduce Motion are respected",
+            "New: the notch opens by itself when you log in and when the Mac wakes. Turn it off in Settings → General",
+            "New: FNAF 1 in Games, played from fnaf1.io (so it needs the internet). Ads and trackers are blocked and nothing is kept on your Mac",
+            "Changed: Share is now AirDrop for files only. PairDrop (codes, folders and private chat) is gone from the Mac app",
+            "Removed: the VPN tab and its Settings page, and the bundled Tunnelblick installer. Your saved profiles stay on disk but nothing uses them",
+        ]),
         ReleaseNote(version: "2.2.55", date: "10 November 2026", headline: "One Utilities tab", items: [
             "New: a Utilities tab that puts Mac stats, Shelf, World clock, Purge, Convert and your app Launcher on one screen. Each panel shows what matters at a glance (CPU, memory and battery; what is on your Shelf; the time in your cities; your pinned apps). Tap a panel's title to open the full tool, and drop files straight onto Shelf. It is off by default: turn it on in Settings → Modules & Layout, or accept the offer after updating. Purge and Convert need Ultimate",
         ]),
