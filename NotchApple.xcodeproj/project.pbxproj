@@ -49,6 +49,7 @@
 		1515E3E2B42DF6C13489EF86 /* nightshift-logic.js in Resources */ = {isa = PBXBuildFile; fileRef = 37F1C8687E79EBFF564BDDDD /* nightshift-logic.js */; };
 		15325A08A26B76C7C296A9C1 /* ClaudeLimitsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1B17D4FF322D035C7AC1652A /* ClaudeLimitsTests.swift */; };
 		161A2A846A70C66AF08D44B2 /* TourLogicTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84C42A558F1064C50BD9A506 /* TourLogicTests.swift */; };
+		107DE909153E572992749676 /* LockCodeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DCCA6262C8387F4D54A13B90 /* LockCodeTests.swift */; };
 		167DA8D8AF6622347293894F /* EmojiTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E7717EC924C749DB1265AC2 /* EmojiTests.swift */; };
 		169F563939728B794CAD518C /* LicenseTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8436033AA85EDE8B497C3BE6 /* LicenseTests.swift */; };
 		177A1AEC9D972E4C15CC5804 /* AppIcon.icns in Resources */ = {isa = PBXBuildFile; fileRef = 295575A04EF33302E9D9A7FE /* AppIcon.icns */; };
@@ -222,6 +223,7 @@
 		6D96FF364E174A53999C3E56 /* f1-circuits-MIT.txt in Resources */ = {isa = PBXBuildFile; fileRef = 34F952B86642DE0DBEC8CD4F /* f1-circuits-MIT.txt */; };
 		6EB4C5BE5A0101A1A21F64D6 /* PermissionsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81150E6B4F5BE3E2EB5CE1A1 /* PermissionsView.swift */; };
 		6EC70695CC1B08B90E01D311 /* TourLogic.swift in Sources */ = {isa = PBXBuildFile; fileRef = 755B22C2370E85554D2C56DF /* TourLogic.swift */; };
+		DAA614685695559967B58018 /* LockCodeLogic.swift in Sources */ = {isa = PBXBuildFile; fileRef = D84BAFF57EF5B7D59A0A4B30 /* LockCodeLogic.swift */; };
 		6FE62A468735A640B08A7BD1 /* ClaudeClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6747ADA828FF1D33683B30C8 /* ClaudeClient.swift */; };
 		709E896250FAEFF79F133F38 /* RacingGameView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3EBCD0478E4EF6B8B5FDA7F /* RacingGameView.swift */; };
 		710669E0D8B0E602B1A7EBAE /* AIProviders.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A2A98A73E13E924C3E3852B /* AIProviders.swift */; };
@@ -481,6 +483,7 @@
 		F8B74D8067A0CB885DEDFD21 /* BambuMQTT.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1EFD353E5C57381E9C14F7B /* BambuMQTT.swift */; };
 		FAB1EFFAB5CBA5F0A84E1C3B /* NotchGestures.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15E4C40B0E52107163ADD5B8 /* NotchGestures.swift */; };
 		FD07A0E75050DC192CA88460 /* TourLogic.swift in Sources */ = {isa = PBXBuildFile; fileRef = 755B22C2370E85554D2C56DF /* TourLogic.swift */; };
+		D15EA9062F505079802AE701 /* LockCodeLogic.swift in Sources */ = {isa = PBXBuildFile; fileRef = D84BAFF57EF5B7D59A0A4B30 /* LockCodeLogic.swift */; };
 		FD3C4D12C2C02652A4D6A729 /* TimerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BEF54A340D0BE4A8A19E3BCF /* TimerView.swift */; };
 		FD551020755C9139D9226CF7 /* CompanionProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8945C0BF0272BD283A250BDC /* CompanionProtocol.swift */; };
 		FE3D6ECF5839F6424299C168 /* PairDropTransport.swift in Sources */ = {isa = PBXBuildFile; fileRef = 60BBAE46119383151A1CEF4F /* PairDropTransport.swift */; };
@@ -704,6 +707,7 @@
 		737F56550092636CD2B51F2F /* DoItGeometryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DoItGeometryTests.swift; sourceTree = "<group>"; };
 		74F9DD1ED3B9968B73847DC4 /* TwoPlayerGames.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TwoPlayerGames.swift; sourceTree = "<group>"; };
 		755B22C2370E85554D2C56DF /* TourLogic.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TourLogic.swift; sourceTree = "<group>"; };
+		D84BAFF57EF5B7D59A0A4B30 /* LockCodeLogic.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LockCodeLogic.swift; sourceTree = "<group>"; };
 		75CDCA4D3C86F0827F694E96 /* FileSearchManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileSearchManager.swift; sourceTree = "<group>"; };
 		768548256973F1C93565E1FB /* SportsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SportsView.swift; sourceTree = "<group>"; };
 		76A2AE80E039AD25E2029A03 /* ClaudeChatView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClaudeChatView.swift; sourceTree = "<group>"; };
@@ -733,6 +737,7 @@
 		83C44AF689790EE02BABEAD5 /* RequiredUpdateView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RequiredUpdateView.swift; sourceTree = "<group>"; };
 		8436033AA85EDE8B497C3BE6 /* LicenseTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LicenseTests.swift; sourceTree = "<group>"; };
 		84C42A558F1064C50BD9A506 /* TourLogicTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TourLogicTests.swift; sourceTree = "<group>"; };
+		DCCA6262C8387F4D54A13B90 /* LockCodeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LockCodeTests.swift; sourceTree = "<group>"; };
 		84D0C556292784B35ACD5779 /* PluginPinning.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PluginPinning.swift; sourceTree = "<group>"; };
 		85CA8FE61A7F037A9E9A3142 /* LidFoldModule.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LidFoldModule.swift; sourceTree = "<group>"; };
 		85DFE1DEFBC58C92386F9DB7 /* TokenTrailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TokenTrailView.swift; sourceTree = "<group>"; };
@@ -1280,6 +1285,7 @@
 				6E232DC7A1E5C4A3A89FF53F /* TodoLogicTests.swift */,
 				9C1E5BAFF3AE0C0AC13DBBF6 /* TokenTrailTests.swift */,
 				84C42A558F1064C50BD9A506 /* TourLogicTests.swift */,
+				DCCA6262C8387F4D54A13B90 /* LockCodeTests.swift */,
 				C8FE35A81A2E2DCED5EAE8D1 /* UpdateCadenceLogicTests.swift */,
 				26E2CDCE2AD3600E816DD832 /* UpdateFeedTests.swift */,
 				828F805721C574A3258A44F8 /* UpdateSigningTests.swift */,
@@ -1377,6 +1383,7 @@
 				9F05BAECF9EDAF2F5A745F05 /* TodoLogic.swift */,
 				B0C674605BA6B03937B3BC94 /* TokenTrailLogic.swift */,
 				755B22C2370E85554D2C56DF /* TourLogic.swift */,
+				D84BAFF57EF5B7D59A0A4B30 /* LockCodeLogic.swift */,
 				223DF7525EF47087BAD0DD8B /* UpdateCadenceLogic.swift */,
 				91C60D5E0497858899252D40 /* UpdateChecker.swift */,
 				1CB3E4938594C70774215625 /* UpdateFeedLogic.swift */,
@@ -2419,6 +2426,7 @@
 				0310ED990FCB271126B822E2 /* ToolsView.swift in Sources */,
 				BDD8A457FE176FF78D6CB754 /* TopBarPrefs.swift in Sources */,
 				FD07A0E75050DC192CA88460 /* TourLogic.swift in Sources */,
+				DAA614685695559967B58018 /* LockCodeLogic.swift in Sources */,
 				808D60186AAC799AB0BD043A /* TourView.swift in Sources */,
 				5AB8124D1C5F0BA91018A820 /* TranslationManager.swift in Sources */,
 				A7D1F48F2AC33272CBC6837F /* TrustSettings.swift in Sources */,
@@ -2576,6 +2584,8 @@
 				66D14933037AA4515567B0A2 /* TodoLogicTests.swift in Sources */,
 				2A3AF36E267EAA991BDE91BF /* TokenTrailTests.swift in Sources */,
 				6EC70695CC1B08B90E01D311 /* TourLogic.swift in Sources */,
+				D15EA9062F505079802AE701 /* LockCodeLogic.swift in Sources */,
+				107DE909153E572992749676 /* LockCodeTests.swift in Sources */,
 				161A2A846A70C66AF08D44B2 /* TourLogicTests.swift in Sources */,
 				ADA7B95035CEAD9434C62504 /* TwoPlayerGames.swift in Sources */,
 				9DC28FCDCC7F0968D23CFA78 /* UpdateCadenceLogic.swift in Sources */,
@@ -2728,7 +2738,7 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 2.2.50;
+				MARKETING_VERSION = 2.2.51;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -2868,7 +2878,7 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 2.2.50;
+				MARKETING_VERSION = 2.2.51;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;

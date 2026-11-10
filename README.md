@@ -150,6 +150,13 @@ More screenshots of the capture overlay, the AI answer, the settings and the Win
 
 ## What's new
 
+### Mac 2.2.51 · Windows 2.2.51 BETA · 10 November 2026 · 🔒 Lock your chats, and settings in groups
+
+- New (Mac): lock your chats. The first time you open Messenger or AI, Notch Apple offers to ask for Touch ID or a code before they open. Choose a 4 to 8 digit code if you prefer; it is kept on your Mac only, and five wrong tries make it wait. Change it any time in Settings → Authentication → Unlock code
+- New (Mac): Settings is easier to scan. The list down the left is now in four groups: the basics, Features, Account and safety, and App
+- New (Windows): a search box at the top of Settings. Type a word and it shows the panes and the settings that match, and opens the first one with the row highlighted
+- Change: small buttons in the notch are easier to hit (the refresh button in Claude Usage, the habit day dots, the priority menu in Todo and others), and hover and press effects now share one timing
+
 ### Mac 2.2.50 · Windows 2.2.50 BETA · 9 November 2026 · ✈️ Flight Economy opens with your Ultimate key
 
 - New: Flight Economy opens with your Ultimate license key. No access code needed, on Mac and Windows; existing Ultimate keys get it too. Pro keys do not open it.
@@ -159,15 +166,6 @@ More screenshots of the capture overlay, the AI answer, the settings and the Win
 - Fix: the automatic update no longer opens a black terminal window. The helper that installs the update was started with two options that cancel each other out, so Windows showed its console
 - New: if an update does not install, Notch Apple now says so the next time it starts (a notification, and a box in Settings → Updates with what happened). The box has Run the installer, which opens the installer in its own window, and Open the download page, so nobody has to uninstall and reinstall
 - Note: PCs that still have an older version run the older updater for this one update. If it fails there, use the installer from the download page once; updates after that use the fixed one
-
-### Mac 2.2.48 · Windows 2.2.48 BETA · 8 November 2026 · 🎮 A new Games menu, and a private game
-
-- New: a new menu for the Games tab. Search the games, filter them (Arcade, Flying & racing, Strategy, Cards & board, Online, Daily), jump back into the last three you played, and pick from a card with a picture for every game. Point at a card to see Play
-- New: Flight Economy, an airline and cruise-ship business game, is in the menu as a private game. It opens only with an access code that is given out personally: click its locked card, enter the code, and it unlocks on that device and opens in its own window
-
-### Mac 2.2.46 · Windows 2.2.46 BETA · 7 November 2026 · 💳 New prices: Pro $5, Ultimate $15
-
-- Change: Pro is now $5 and Ultimate $15, each paid once. Upgrading from Pro to Ultimate is $10. In the UAE, card prices are AED 4.40, AED 18 and AED 13.60 to upgrade. Keys you already have are unchanged and keep every update.
 
 ## Plugins
 

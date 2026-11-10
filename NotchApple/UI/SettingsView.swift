@@ -732,6 +732,8 @@ private struct AuthenticationSettings: View {
     @State private var enrolled = FaceTemplateStore.isEnrolled
     @State private var sheet: Sheet?
     @State private var result: String?
+    @State private var codeSet = LockCodeStore.isSet
+    @State private var settingCode = false
 
     enum Sheet: Identifiable { case enrol, test; var id: Self { self } }
 
@@ -753,6 +755,23 @@ private struct AuthenticationSettings: View {
                         }
                     }
                 }
+            }
+            Section {
+                LabeledContent("Code") {
+                    if codeSet { Label("Set on this Mac", systemImage: "checkmark.seal.fill").foregroundStyle(.green) }
+                    else { Text("Not set up").foregroundStyle(.secondary) }
+                }
+                HStack {
+                    Button(codeSet ? "Change code…" : "Set a code…") { settingCode = true }
+                    if codeSet {
+                        Spacer()
+                        Button("Remove code", role: .destructive) { LockCodeStore.clear(); codeSet = false }
+                    }
+                }
+            } header: {
+                Text("Unlock code")
+            } footer: {
+                Text("A 4 to 8 digit code that unlocks Notch Apple, as well as Touch ID and your Mac password, which always still work. It is kept on this Mac only, scrambled. After five wrong tries it makes you wait. It keeps people out of your chats; it is not a vault.")
             }
             Section {
                 LabeledContent("Face") {
@@ -780,6 +799,7 @@ private struct AuthenticationSettings: View {
             }
         }
         .formStyle(.grouped)
+        .sheet(isPresented: $settingCode) { LockCodeSetupView { _ in codeSet = LockCodeStore.isSet; settingCode = false } }
         .sheet(item: $sheet) { which in
             VStack(spacing: 16) {
                 Text(which == .enrol ? "Set up face unlock" : "Test face unlock").font(.title3.bold())

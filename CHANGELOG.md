@@ -4,6 +4,13 @@ Every Notch Apple release, newest first. The latest few are also on the [README]
 
 > **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is in the repository's history.
 
+### Mac 2.2.51 · Windows 2.2.51 BETA · 10 November 2026 · 🔒 Lock your chats, and settings in groups
+
+- New (Mac): lock your chats. The first time you open Messenger or AI, Notch Apple offers to ask for Touch ID or a code before they open. Choose a 4 to 8 digit code if you prefer; it is kept on your Mac only, and five wrong tries make it wait. Change it any time in Settings → Authentication → Unlock code
+- New (Mac): Settings is easier to scan. The list down the left is now in four groups: the basics, Features, Account and safety, and App
+- New (Windows): a search box at the top of Settings. Type a word and it shows the panes and the settings that match, and opens the first one with the row highlighted
+- Change: small buttons in the notch are easier to hit (the refresh button in Claude Usage, the habit day dots, the priority menu in Todo and others), and hover and press effects now share one timing
+
 ### Windows 2.2.49 BETA · 9 November 2026 · 🔧 Updater fixes
 
 - Fix: the automatic update no longer opens a black terminal window. The helper that installs the update was started with two options that cancel each other out, so Windows showed its console

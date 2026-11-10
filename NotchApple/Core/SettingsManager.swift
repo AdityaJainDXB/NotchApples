@@ -260,6 +260,15 @@ final class SettingsManager: ObservableObject {
     /// as normal): the prompt shows when the tab you land on, or switch to, is one of them (issue 45).
     @AppStorage("security.onlyTabs") var securityOnlyTabs = false
     @AppStorage("security.lockedTabs") var securityLockedTabs = "games,search,messenger"
+    /// The one-time "Lock your chats?" card in the Messenger and AI tabs: set once it was answered either way.
+    @AppStorage("chatLock.offerDone") var chatLockOfferDone = false
+    /// Turns the lock on for the two chat tabs only (everything else opens as normal).
+    func lockChats() {
+        securityEnabled = true
+        securityOnlyTabs = true
+        for m in [Module.messenger, .claude] where !isLockedTab(m) { setLockedTab(m, true) }
+        chatLockOfferDone = true
+    }
     func isLockedTab(_ m: Module) -> Bool { securityLockedTabs.split(separator: ",").contains { $0 == m.rawValue } }
     func setLockedTab(_ m: Module, _ on: Bool) {
         var set = Set(securityLockedTabs.split(separator: ",").map(String.init))

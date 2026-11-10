@@ -289,6 +289,10 @@ struct NotchRootView: View {
         } else if let feature = state.selected.feature, !entitlements.canUse(feature) {
             // Pro tabs show what they do and how to unlock them.
             ActivationModalView(feature: feature)
+        } else if [Module.messenger, .claude].contains(state.selected), !settings.chatLockOfferDone,
+                  !(settings.securityEnabled && (!settings.securityOnlyTabs || settings.isLockedTab(state.selected))) {
+            // The first time a chat opens: offer to lock chats (Touch ID, the Mac password, or a code).
+            ChatLockOffer()
         } else {
             ModuleContentView(module: state.selected)
         }
