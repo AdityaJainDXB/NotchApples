@@ -23,6 +23,7 @@ enum KeychainHelper {
         case openRouterAPIKey = "openrouter.apiKey"
         case openAIAPIKey = "openai.apiKey"
         case deepSeekAPIKey = "deepseek.apiKey"
+        case customAPIKey = "custom.apiKey"
         case faceTemplate = "faceUnlock.template"
         case activated = "license.activated"
         case activatedCodeHash = "license.codeHash"

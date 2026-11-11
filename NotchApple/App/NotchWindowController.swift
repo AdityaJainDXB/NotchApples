@@ -890,6 +890,12 @@ final class NotchWindowController {
 
     func toggle() { state.isExpanded ? collapse(force: true) : expand() }
 
+    /// Opens the notch on a given tab (the NotchAI dot uses this).
+    func openModule(_ m: Module) {
+        state.selected = m
+        if !state.isExpanded { expand() }
+    }
+
     // MARK: Invisibility (⌃⌥O by default)
 
     /// Fades the whole notch out (or back in). Nothing is torn down while hidden,

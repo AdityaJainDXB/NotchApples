@@ -31,10 +31,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         SandboxMigration.runIfNeeded()
         notchController = NotchWindowController()
         notchController?.show()
+        NotificationCenter.default.addObserver(forName: .notchAIOpen, object: nil, queue: .main) { [weak self] _ in
+            MainActor.assumeIsolated { self?.notchController?.openModule(.notchAI) }
+        }
         HelloAnimation.start()          // the F1 car says hello (asks your name the first time)
         // Optional feature modules: registered always, started only if the user turned them on.
         ModuleRegistry.shared.register(LidFoldModule.shared)
         if LidFoldModule.shared.enabled { LidFoldModule.shared.start() }
+        ModuleRegistry.shared.register(CursorCompanion.shared)
+        CursorCompanion.shared.start()   // no-op unless the user turned the green dot on
 
         // Now Playing and Messenger are gated: they start now if a code is saved, or the moment one is entered.
         startGatedServices()

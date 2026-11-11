@@ -37,6 +37,7 @@ struct ModuleContentView: View {
         case .share: ShareView()
         case .audio: AudioView()
         case .bambu: BambuView()
+        case .notchAI: NotchAIView()
         case .nowPlaying: NowPlayingView()
         case .search: FileSearchView()
         case .browser: BrowserView()

@@ -1007,6 +1007,8 @@ private struct ClaudeSettings: View {
     ]
     @StateObject private var config = AIConfig.shared
     @State private var drafts: [AIProvider: String] = [:]
+    @State private var customURL = AIProvider.customBaseURL
+    @AppStorage(ModelLocality.allowCloudKey) private var allowOllamaCloud = false
     @State private var customModel = ""
     @State private var refresh = 0     // bump to re-read saved-key state
     @State private var testResult: (ok: Bool, message: String)?
@@ -1048,7 +1050,7 @@ private struct ClaudeSettings: View {
                 if config.provider.isConfigured {
                     Picker("Model", selection: Binding(get: { config.model }, set: { config.setModel($0, for: config.provider) })) {
                         let models = config.availableModels[config.provider] ?? []
-                        ForEach(models.contains(config.model) ? models : [config.model] + models, id: \.self) { Text($0).tag($0) }
+                        ForEach(models.contains(config.model) ? models : [config.model] + models, id: \.self) { Text("\($0)  ·  \(ModelLocality.of(provider: config.provider, model: $0).label)").tag($0) }
                     }
                     HStack {
                         TextField("Or type a model ID", text: $customModel)
@@ -1058,6 +1060,12 @@ private struct ClaudeSettings: View {
                         if config.loadingModels { ProgressView().controlSize(.small) }
                     }
                     if let e = config.modelError { Text(e).font(.callout).foregroundStyle(.red) }
+                    LabeledContent("Runs") {
+                        let loc = ModelLocality.of(provider: config.provider, model: config.model)
+                        Label(loc == .local ? (config.provider == .apple ? "On this Mac" : "Locally (this Mac or your network)") : "Remotely, on \(config.provider.title)'s servers",
+                              systemImage: loc.symbol)
+                            .foregroundStyle(loc == .local ? .green : .orange)
+                    }
                     LabeledContent("Images") {
                         Label(config.provider.likelySupportsVision(config.model) ? "This model can read screenshots" : "Text only: pick a vision model to use captures",
                               systemImage: config.provider.likelySupportsVision(config.model) ? "eye" : "eye.slash")
@@ -1125,6 +1133,32 @@ private struct ClaudeSettings: View {
                 LabeledContent("Telemetry") { Text("None").foregroundStyle(.secondary) }
             } header: {
                 Text("Privacy")
+            }
+
+            Section {
+                Toggle("Allow Ollama Cloud models", isOn: $allowOllamaCloud)
+            } header: {
+                Text("Local first")
+            } footer: {
+                Text("Off by default. Models named \"…-cloud\" run on Ollama's servers, not on this Mac, and may be billed. While this is off they are blocked, never used as a fallback, and nothing is sent to them. Local Ollama models at localhost:11434 are always free to use.")
+            }
+            Section {
+                HStack {
+                    TextField("Base URL", text: $customURL, prompt: Text("http://localhost:11434/v1"))
+                        .textFieldStyle(.roundedBorder).autocorrectionDisabled()
+                    Button("Save") {
+                        AIProvider.customBaseURL = customURL.trimmingCharacters(in: .whitespacesAndNewlines)
+                        customURL = AIProvider.customBaseURL
+                        refresh += 1; config.objectWillChange.send()
+                        if config.provider == .custom { config.refreshModels() }
+                    }
+                    .disabled(customURL.trimmingCharacters(in: CharacterSet(charactersIn: "/ ")) == AIProvider.customBaseURL)
+                }
+                keyRow(.custom)
+            } header: {
+                Text("Custom endpoint (OpenAI-compatible)")
+            } footer: {
+                Text("Point at Ollama (http://localhost:11434/v1), LM Studio, vLLM or any server that speaks the OpenAI chat API. The key is optional. Choose \"Custom\" as the provider above, then Test connection. Text goes only to this URL.")
             }
 
             Section {

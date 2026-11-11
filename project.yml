@@ -146,6 +146,8 @@ targets:
       - NotchApple/Modules/Tools/Converter.swift
       - NotchApple/Core/PureModels.swift
       - NotchApple/Core/HotCornerLogic.swift
+      - NotchApple/Core/CompanionMotion.swift
+      - NotchApple/Core/ModelLocality.swift
       - NotchApple/Modules/Games/GameEngines.swift
       - NotchApple/Modules/Games/GamesMenuLogic.swift
       - NotchApple/Core/ClaudeCodeStatusLogic.swift
