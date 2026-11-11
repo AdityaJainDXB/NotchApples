@@ -122,3 +122,17 @@ hotkey, and flipping `ignoresMouseEvents` only while the cursor is inside the do
 2. OK to extend `AIProvider` for a custom OpenAI-compatible endpoint?
 3. Web search source for the Research agent (paid API, or fetch-only)?
 4. Start with milestones 2 to 3 (tab + green dot) as the first slice?
+
+## 10. Local first, in detail (shipped in 2.2.60)
+
+**Scope.** The "Allow cloud and unverified models" switch (off by default) covers NotchAI only: Quick Ask and the NotchAI tab call `NotchAIGuard.check` before any request. Elsewhere in the app a chosen cloud provider works as before, but `AIClient` still refuses Ollama Cloud models and Ollama or custom servers that cannot be verified while the switch is off. App-wide local first is a future milestone. Nothing falls back to another provider automatically.
+
+**How a model is judged** (`ModelLocality.requireVerifiedLocal`). A cloud-looking name is refused with no network at all. Cloud providers and remote custom URLs are refused with no network. Otherwise the server's own `/api/tags` list must show the model with weights on disk (a digest, a non-zero size, no `remote_host` or `remote_model`). A server that does not answer, is not Ollama, or does not list the model fails closed.
+
+**Remembered answer.** A good model list is remembered for 30 seconds per server address (`ModelLocality.TagsCache`). It can only skip the request for a model the list already proved local. Refused, cloud, unlisted and unverifiable models always ask the server again; a failed or non-Ollama answer clears it; changing the custom address clears it; it expires after 30 seconds and a clock that goes backwards never extends it.
+
+**Labels** (`ModelLocality.badge`, display only). `Local` is a model Ollama confirms is installed on this Mac (or Apple Intelligence), `Local network` is a verified model on another device on your network, `Cloud` is a remote server or cloud provider, and `Unverified` is anything that cannot be confirmed (blocked while local first is on). The labels never change what is allowed.
+
+**Quick Ask.** Clicking the dot while Quick Ask is open closes it, and the click that took focus away does not reopen it (`QuickAskRule`).
+
+**Tests.** `scripts/run-app-tests.sh` runs `CustomProviderTests` (locality, remembered answer, labels) with the rest of the suite; `scripts/xctest-ai-stubs.swift` stands in for the `AIEffort` enum that lives next to a SwiftUI view.

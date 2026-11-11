@@ -20,6 +20,14 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.2.60", date: "11 November 2026", headline: "NotchAI, a free assistant with a green dot", items: [
+            "New: NotchAI, a free assistant tab. Chat with the AI you chose in Settings → AI, with streamed answers, Stop and Clear. It is on by default and can be hidden like any tab",
+            "New: an optional green dot that follows your cursor. It is off until you turn it on in NotchAI → Companion. Click it for Quick Ask: one question, one streamed answer, closed by Esc or a click elsewhere. Right-click it to open the NotchAI tab. The dot never calls an AI by itself, so it works with every provider off",
+            "New: a Custom provider in Settings → AI for any OpenAI-compatible server (Ollama, LM Studio, vLLM or a proxy): base URL, optional key (kept in the Keychain), model list and Test connection",
+            "New: Local first for NotchAI. With \"Allow cloud and unverified models\" off (the default), NotchAI only uses Apple Intelligence or a model that Ollama confirms is installed on this Mac. Cloud providers, Ollama Cloud models and anything that can't be verified are refused before anything is sent, and are never used as a fallback. This switch covers NotchAI only: elsewhere in Notch Apple your chosen provider works as before, except that Ollama Cloud models and unverifiable Ollama or custom servers are refused there too while it is off",
+            "New: the model list in Settings → AI says Local, Local network, Cloud or Unverified next to each model",
+            "Feedback welcome: NotchAI is new and has had little time on setups with more than one display, so please report anything odd with the dot",
+        ]),
         ReleaseNote(version: "2.2.59", date: "11 November 2026", headline: "The 2025 F1 grid in Racing", items: [
             "New: the Racing game's local F1 races now have the 2025 F1 grid: ten teams in their team colours, with driver names on the tower. Online rooms and your own car do not have teams yet",
             "Changed: the race rules moved into tested functions, so they behave the same everywhere",

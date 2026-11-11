@@ -4,6 +4,21 @@ Every Notch Apple release, newest first. The latest few are also on the [README]
 
 > **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is in the repository's history.
 
+### Mac 2.2.60 · Windows 2.2.60 BETA · 11 November 2026 · ✨ NotchAI, a free assistant with a green dot
+
+**Mac**
+
+- New: NotchAI, a free assistant tab. Chat with the AI you chose in Settings → AI, with streamed answers, Stop and Clear. It is on by default and can be hidden like any tab
+- New: an optional green dot that follows your cursor. It is off until you turn it on in NotchAI → Companion. Click it for Quick Ask: one question, one streamed answer, closed by Esc or a click elsewhere. Right-click it to open the NotchAI tab. The dot never calls an AI by itself, so it works with every provider off
+- New: a Custom provider in Settings → AI for any OpenAI-compatible server (Ollama, LM Studio, vLLM or a proxy): base URL, optional key (kept in the Keychain), model list and Test connection
+- New: Local first for NotchAI. With "Allow cloud and unverified models" off (the default), NotchAI only uses Apple Intelligence or a model that Ollama confirms is installed on this Mac. Cloud providers, Ollama Cloud models and anything that can't be verified are refused before anything is sent, and are never used as a fallback. This switch covers NotchAI only: elsewhere in Notch Apple your chosen provider works as before, except that Ollama Cloud models and unverifiable Ollama or custom servers are refused there too while it is off
+- New: the model list in Settings → AI says Local, Local network, Cloud or Unverified next to each model
+- Feedback welcome: NotchAI is new and has had little time on setups with more than one display, so please report anything odd with the dot
+
+**Windows**
+
+- No changes in this release. The Windows app moves to 2.2.60 only to stay in step with the Mac, which gets NotchAI (Mac only for now)
+
 ### Mac 2.2.59 · Windows 2.2.59 BETA · 11 November 2026 · 🏎️ The 2025 F1 grid in Racing
 
 **Mac**
