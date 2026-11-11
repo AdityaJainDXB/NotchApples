@@ -4,6 +4,23 @@ Every Notch Apple release, newest first. The latest few are also on the [README]
 
 > **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is in the repository's history.
 
+### Mac 2.2.58 · Windows 2.2.58 BETA · 11 November 2026 · 🤖 Do It: a new engine
+
+**Mac**
+
+- Changed: Do It has a new engine, a big change under the hood. It now reads the app's accessibility tree instead of guessing from pixels, tells you the outcome of every step, notices when it is stuck, and retries with backoff
+- New: Do It has a progress budget instead of the flat 80-step cap. While it is making progress it keeps going; when the budget runs out you get a Continue button
+- Better: scrolling and menus are more reliable in Do It
+- Feedback welcome: this engine is new, so please report anything odd in Do It
+
+**Windows**
+
+- Changed: Do It has a new engine, a big change under the hood. On Windows it now reads the UI through Windows UI Automation, tells you the outcome of every step, notices when it is stuck, and retries with backoff
+- New: Do It has a progress budget instead of the flat 80-step cap; when it runs out you get a Continue button
+- New: Do It detects an elevated (administrator) window it cannot control and tells you, instead of failing silently
+- Better: scrolling and menus are more reliable in Do It
+- Real-world runs of the new engine on Windows are still limited, so feedback is very welcome
+
 ### Mac 2.2.57 · Windows 2.2.57 BETA · 10 November 2026 · 🦅 Eagle Ride, and game challenges that notify
 
 **Mac**

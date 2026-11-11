@@ -150,6 +150,13 @@ More screenshots of the capture overlay, the AI answer, the settings and the Win
 
 ## What's new
 
+### Mac 2.2.58 · Windows 2.2.58 · 11 November 2026 · 🤖 Do It: a new engine
+
+- Changed: Do It has a new engine, a big change under the hood. It now reads the app's accessibility tree instead of guessing from pixels, tells you the outcome of every step, notices when it is stuck, and retries with backoff
+- New: Do It has a progress budget instead of the flat 80-step cap. While it is making progress it keeps going; when the budget runs out you get a Continue button
+- Better: scrolling and menus are more reliable in Do It
+- Feedback welcome: this engine is new, so please report anything odd in Do It
+
 ### Mac 2.2.57 · Windows 2.2.57 · 10 November 2026 · 🦅 Eagle Ride, and game challenges that notify
 
 - New: Eagle Ride in Games. Glide over a valley as an eagle, steer around trees and rocks with ← → or A D (or the mouse), grab gems, and keep three lives. It speeds up the longer you last, and your best score stays on this Mac. It follows the Games Sound switch and pauses when you close the notch
@@ -165,10 +172,6 @@ More screenshots of the capture overlay, the AI answer, the settings and the Win
 - New: FNAF 1 in Games, played from fnaf1.io (so it needs the internet). Ads and trackers are blocked and nothing is kept on your Mac
 - Changed: Share is now AirDrop for files only. PairDrop (codes, folders and private chat) is gone from the Mac app
 - Removed: the VPN tab and its Settings page, and the bundled Tunnelblick installer. Your saved profiles stay on disk but nothing uses them
-
-### Mac 2.2.55 · 10 November 2026 · 🧰 One Utilities tab
-
-- New: a Utilities tab that puts Mac stats, Shelf, World clock, Purge, Convert and your app Launcher on one screen. Each panel shows what matters at a glance (CPU, memory and battery; what is on your Shelf; the time in your cities; your pinned apps). Tap a panel's title to open the full tool, and drop files straight onto Shelf. It is off by default: turn it on in Settings → Modules & Layout, or accept the offer after updating. Purge and Convert need Ultimate
 
 ## Plugins
 

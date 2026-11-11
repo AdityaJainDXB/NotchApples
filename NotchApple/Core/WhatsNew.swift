@@ -20,6 +20,12 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.2.58", date: "11 November 2026", headline: "Do It: a new engine", items: [
+            "Changed: Do It has a new engine, a big change under the hood. It now reads the app's accessibility tree instead of guessing from pixels, tells you the outcome of every step, notices when it is stuck, and retries with backoff",
+            "New: Do It has a progress budget instead of the flat 80-step cap. While it is making progress it keeps going; when the budget runs out you get a Continue button",
+            "Better: scrolling and menus are more reliable in Do It",
+            "Feedback welcome: this engine is new, so please report anything odd in Do It",
+        ]),
         ReleaseNote(version: "2.2.57", date: "10 November 2026", headline: "Eagle Ride, and game challenges that notify", items: [
             "New: Eagle Ride in Games. Glide over a valley as an eagle, steer around trees and rocks with ← → or A D (or the mouse), grab gems, and keep three lives. It speeds up the longer you last, and your best score stays on this Mac. It follows the Games Sound switch and pauses when you close the notch",
             "Fix: a game challenge from a friend (Connect Four, Rock Paper Scissors, Battleship, Chess, Checkers, Tic-tac-toe) now arrives like a message. The chat shows \"Sam challenged you to Chess\", it counts as unread, and you get the same notification, which has an Accept button (issue #58)",
