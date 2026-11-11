@@ -40,6 +40,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         if LidFoldModule.shared.enabled { LidFoldModule.shared.start() }
         ModuleRegistry.shared.register(CursorCompanion.shared)
         CursorCompanion.shared.start()   // no-op unless the user turned the green dot on
+        #if DEBUG
+        // Test hook (DEBUG only): `-notchai.selftest.settings claude` opens that Settings tab at launch.
+        if let raw = UserDefaults.standard.string(forKey: "notchai.selftest.settings"), let tab = SettingsTab(rawValue: raw) {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 2) { SettingsWindowController.shared.show(tab: tab) }
+        }
+        #endif
 
         // Now Playing and Messenger are gated: they start now if a code is saved, or the moment one is entered.
         startGatedServices()

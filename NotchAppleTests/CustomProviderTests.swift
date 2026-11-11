@@ -92,4 +92,24 @@ final class CustomProviderTests: XCTestCase {
         XCTAssertNil(ModelLocality.tagsURL(provider: .custom, customBaseURL: "https://example.com/v1"))
         XCTAssertNil(ModelLocality.tagsURL(provider: .gemini))
     }
+
+    // MARK: Rejected before any network request
+
+    func testCloudNamedModelIsRejectedWithoutAnyRequest() async {
+        // No server is needed (or contacted): the name alone decides, so this returns at once even offline.
+        for provider in [AIProvider.ollama, .custom] {
+            do {
+                try await ModelLocality.requireVerifiedLocal(provider: provider, model: "gpt-oss:120b-cloud")
+                XCTFail("a cloud model must be rejected")
+            } catch let e as AIError {
+                if case .notVerifiedLocal = e {} else { XCTFail("wrong error \(e)") }
+            } catch { XCTFail("wrong error \(error)") }
+        }
+    }
+
+    func testCloudProvidersAreRejectedWithoutAnyRequest() async {
+        do { try await ModelLocality.requireVerifiedLocal(provider: .gemini, model: "gemini-3.5-flash"); XCTFail("must reject") }
+        catch let e as AIError { if case .notVerifiedLocal = e {} else { XCTFail("wrong error") } }
+        catch { XCTFail("wrong error") }
+    }
 }

@@ -93,6 +93,8 @@ enum ModelLocality: String {
         switch provider {
         case .apple: return
         case .ollama, .custom:
+            // Decide from the name first, with no network at all: a cloud-named model never gets as far as a request.
+            if isOllamaCloudName(model) { throw AIError.notVerifiedLocal(model, "the name marks it as an Ollama Cloud model") }
             guard let url = tagsURL(provider: provider) else {
                 throw AIError.notVerifiedLocal(model, "that server isn't on this Mac or your network")
             }

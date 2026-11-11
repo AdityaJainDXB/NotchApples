@@ -1136,11 +1136,11 @@ private struct ClaudeSettings: View {
             }
 
             Section {
-                Toggle("Allow Ollama Cloud models", isOn: $allowOllamaCloud)
+                Toggle("Allow cloud and unverified models", isOn: $allowOllamaCloud)
             } header: {
                 Text("Local first")
             } footer: {
-                Text("Off by default. Models named \"…-cloud\" run on Ollama's servers, not on this Mac, and may be billed. While this is off they are blocked, never used as a fallback, and nothing is sent to them. Local Ollama models at localhost:11434 are always free to use.")
+                Text("Off by default. NotchAI then only uses a model that Ollama confirms is installed on this Mac (or Apple Intelligence). Ollama Cloud models (\"…-cloud\"), cloud providers such as Gemini, and any model whose location can't be verified are refused before anything is sent, and are never used as a fallback. Turn this on only if you accept that prompts may leave this Mac and may be billed. The AI tab's other providers work as before.")
             }
             Section {
                 HStack {

@@ -115,7 +115,13 @@ private struct QuickAskView: View {
     private func send() {
         let q = question.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !q.isEmpty, !busy else { return }
-        let provider = config.provider, model = config.model
+        var provider = config.provider, model = config.model
+        #if DEBUG
+        // Test hook (DEBUG only): pin the provider/model so a self-test never depends on async settings loading.
+        let d = UserDefaults.standard
+        if let p = d.string(forKey: "notchai.selftest.provider").flatMap(AIProvider.init(rawValue:)) { provider = p }
+        if let m = d.string(forKey: "notchai.selftest.model"), !m.isEmpty { model = m }
+        #endif
         answer = ""; failure = nil; busy = true
         CursorCompanion.shared.setState(.thinking)
         task = Task {
