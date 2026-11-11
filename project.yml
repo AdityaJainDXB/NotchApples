@@ -189,6 +189,8 @@ targets:
       - NotchApple/Core/LinkShelfLogic.swift
       - NotchApple/Core/MeetingSummaryLogic.swift
       - NotchApple/Core/EmojiData.swift
+      - NotchApple/Core/DoItGeometry.swift
+      - NotchApple/Core/DoItPolicy.swift
       - CompanionKit
     settings:
       base:

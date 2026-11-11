@@ -86,7 +86,7 @@ pub mod synth {
             KEYEVENTF_KEYUP, KEYEVENTF_UNICODE, MOUSEEVENTF_HWHEEL, MOUSEEVENTF_LEFTDOWN, MOUSEEVENTF_LEFTUP,
             MOUSEEVENTF_RIGHTDOWN, MOUSEEVENTF_RIGHTUP, MOUSEEVENTF_WHEEL, MOUSEINPUT, MOUSE_EVENT_FLAGS, VIRTUAL_KEY,
         };
-        use windows::Win32::UI::WindowsAndMessaging::{GetSystemMetrics, SetCursorPos, SM_CXSCREEN, SM_CYSCREEN};
+        use windows::Win32::UI::WindowsAndMessaging::{GetSystemMetrics, SM_CXSCREEN, SM_CYSCREEN};
 
         /// The primary monitor in physical pixels: (width, height, left, top, scale).
         pub fn screen() -> (i32, i32, i32, i32, f64) {
@@ -128,14 +128,14 @@ pub mod synth {
 
         /// Moves the pointer to physical pixel (x, y) and clicks `count` times (1 or 2, max 3).
         pub fn click(x: i32, y: i32, right: bool, count: u32) {
-            unsafe {
-                let _ = SetCursorPos(x, y);
-            }
-            pause(60);
+            // Like a hand, not a teleport: menus, hover tracking and tooltips need to see the pointer arrive.
+            crate::doit_win::glide_pointer(x, y);
             let (down, up) = if right { (MOUSEEVENTF_RIGHTDOWN, MOUSEEVENTF_RIGHTUP) } else { (MOUSEEVENTF_LEFTDOWN, MOUSEEVENTF_LEFTUP) };
             for _ in 0..count.clamp(1, 3) {
-                send(&[mouse(down, 0), mouse(up, 0)]);
-                pause(40);
+                send(&[mouse(down, 0)]);
+                pause(80);
+                send(&[mouse(up, 0)]);
+                pause(60);
             }
         }
 
@@ -143,26 +143,20 @@ pub mod synth {
         /// `go` says whether to carry on (false once the run is stopped), and the button is always released.
         pub fn drag(points: &[(i32, i32)], go: &dyn Fn() -> bool) {
             let Some(&(x0, y0)) = points.first() else { return };
-            unsafe {
-                let _ = SetCursorPos(x0, y0);
-            }
-            pause(60);
+            crate::doit_win::glide_pointer(x0, y0);
             send(&[mouse(MOUSEEVENTF_LEFTDOWN, 0)]);
-            pause(40);
+            pause(80);
             let mut at = (x0, y0);
             for &(x, y) in points.iter().skip(1) {
                 if !go() {
                     break;
                 }
-                unsafe {
-                    let _ = SetCursorPos(x, y);
-                }
+                crate::doit_win::move_pointer(x, y);
                 at = (x, y);
                 pause(7);
             }
-            unsafe {
-                let _ = SetCursorPos(at.0, at.1);
-            }
+            crate::doit_win::move_pointer(at.0, at.1);
+            pause(40);
             send(&[mouse(MOUSEEVENTF_LEFTUP, 0)]);
             pause(60);
         }
@@ -170,10 +164,7 @@ pub mod synth {
         /// Scrolls at the pointer, or at (x, y) when given. dy > 0 scrolls down, dx > 0 scrolls right, in wheel notches.
         pub fn scroll(at: Option<(i32, i32)>, dx: i32, dy: i32) {
             if let Some((x, y)) = at {
-                unsafe {
-                    let _ = SetCursorPos(x, y);
-                }
-                pause(60);
+                crate::doit_win::glide_pointer(x, y);
             }
             if dy != 0 {
                 send(&[mouse(MOUSEEVENTF_WHEEL, -dy.clamp(-50, 50) * 120)]);
@@ -241,10 +232,106 @@ pub fn doit_screen() -> Screen {
     #[cfg(windows)]
     {
         let (width, height, left, top, scale) = synth::screen();
+        let t = crate::doit_win::target_info();
+        if t.width > 0 && t.height > 0 {
+            return Screen { width: t.width, height: t.height, left: t.left, top: t.top, scale };
+        }
         Screen { width, height, left, top, scale }
     }
     #[cfg(not(windows))]
     Screen { width: 1920, height: 1080, left: 0, top: 0, scale: 1.0 }
+}
+
+/// The foreground window: its title, the monitor it is on, and whether it runs elevated (our input would be ignored).
+#[tauri::command]
+pub fn doit_target() -> crate::doit_win::TargetInfo {
+    #[cfg(windows)]
+    return crate::doit_win::target_info();
+    #[cfg(not(windows))]
+    crate::doit_win::TargetInfo::default()
+}
+
+/// The interactive elements of the foreground window and any open menus (UI Automation), in physical pixels.
+#[tauri::command]
+pub async fn doit_tree() -> Result<Vec<crate::doit_win::TreeElement>, String> {
+    require_armed()?;
+    tauri::async_runtime::spawn_blocking(|| {
+        #[cfg(windows)]
+        return crate::doit_win::tree();
+        #[cfg(not(windows))]
+        Err("Windows only.".to_string())
+    })
+    .await
+    .map_err(|e| e.to_string())?
+}
+
+/// Performs an accessibility action on an element from the last doit_tree: invoke, focus, set_value, select,
+/// select_option (value = the option's name), expand, toggle, scroll_down, scroll_up.
+#[tauri::command]
+pub async fn doit_element(id: usize, action: String, value: Option<String>) -> Result<String, String> {
+    require_armed()?;
+    tauri::async_runtime::spawn_blocking(move || {
+        #[cfg(windows)]
+        return crate::doit_win::element_action(id, &action, value.as_deref().unwrap_or(""));
+        #[cfg(not(windows))]
+        {
+            let _ = (id, action, value);
+            Err("Windows only.".to_string())
+        }
+    })
+    .await
+    .map_err(|e| e.to_string())?
+}
+
+/// Walks a menu path on the foreground window, e.g. ["File", "Save as"].
+#[tauri::command]
+pub async fn doit_menu(path: Vec<String>) -> Result<String, String> {
+    require_armed()?;
+    tauri::async_runtime::spawn_blocking(move || {
+        #[cfg(windows)]
+        return crate::doit_win::menu_path(path);
+        #[cfg(not(windows))]
+        {
+            let _ = path;
+            Err("Windows only.".to_string())
+        }
+    })
+    .await
+    .map_err(|e| e.to_string())?
+}
+
+/// Brings the first open window whose title contains `name` to the front.
+#[tauri::command]
+pub async fn doit_focus_app(name: String) -> Result<String, String> {
+    require_armed()?;
+    tauri::async_runtime::spawn_blocking(move || {
+        #[cfg(windows)]
+        return crate::doit_win::focus_window(&name);
+        #[cfg(not(windows))]
+        {
+            let _ = name;
+            Err("Windows only.".to_string())
+        }
+    })
+    .await
+    .map_err(|e| e.to_string())?
+}
+
+/// A tiny luma signature of the target monitor, for "did the screen change?" (see doitpolicy.js).
+#[tauri::command]
+pub async fn doit_signature() -> Result<Vec<u8>, String> {
+    require_armed()?;
+    tauri::async_runtime::spawn_blocking(|| {
+        #[cfg(windows)]
+        {
+            let t = crate::doit_win::target_info();
+            return crate::grab_signature(if t.width > 0 { Some((t.left, t.top)) } else { None });
+        }
+        #[cfg(not(windows))]
+        crate::grab_signature(None)
+    })
+    .await
+    .map_err(|e| e.to_string())?
 }
 
 #[tauri::command]
@@ -426,6 +513,12 @@ pub async fn doit_capture(app: AppHandle, region: Option<Vec<f64>>) -> Result<St
     // `region` is [x0, y0, x1, y1] on the 0 to 1000 grid of the whole screen (a zoom); none is the whole screen.
     let shot = tauri::async_runtime::spawn_blocking(move || {
         std::thread::sleep(std::time::Duration::from_millis(160));
+        #[cfg(windows)]
+        {
+            let t = crate::doit_win::target_info();
+            return crate::grab_screen_region_at(1568, region, if t.width > 0 { Some((t.left, t.top)) } else { None });
+        }
+        #[cfg(not(windows))]
         crate::grab_screen_region(1568, region)
     })
     .await
