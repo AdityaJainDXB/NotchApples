@@ -1010,6 +1010,7 @@ private struct ClaudeSettings: View {
     @State private var customURL = AIProvider.customBaseURL
     @AppStorage(ModelLocality.allowCloudKey) private var allowOllamaCloud = false
     @State private var customModel = ""
+    @State private var badges: [String: ModelLocality.Badge] = [:]   // Local / Local network / Cloud / Unverified per model
     @State private var refresh = 0     // bump to re-read saved-key state
     @State private var testResult: (ok: Bool, message: String)?
     @State private var testing = false
@@ -1017,6 +1018,22 @@ private struct ClaudeSettings: View {
     @AppStorage("ai.temperature") private var temperature = -1.0
 
     @ObservedObject private var entitlements = Entitlements.shared
+
+    /// Changes whenever the model list or server could have changed, so the Local / Cloud labels are re-read.
+    private var badgeKey: String {
+        "\(config.provider.rawValue)|\(AIProvider.customBaseURL)|\(config.model)|\((config.availableModels[config.provider] ?? []).joined(separator: ","))|\(refresh)"
+    }
+    private func badge(for model: String) -> ModelLocality.Badge {
+        badges[model] ?? ModelLocality.badge(provider: config.provider, model: model, verdict: nil)
+    }
+    private func runsText(_ b: ModelLocality.Badge) -> String {
+        switch b {
+        case .local: config.provider == .apple ? "On this Mac" : "On this Mac (Ollama confirms it is installed here)"
+        case .localNetwork: "On another device on your network (Ollama confirms its weights are there)"
+        case .cloud: "Remotely, on \(config.provider.title)'s servers"
+        case .unverified: "Can't be confirmed as local. Refused while local first is on"
+        }
+    }
 
     var body: some View {
         Form {
@@ -1050,21 +1067,29 @@ private struct ClaudeSettings: View {
                 if config.provider.isConfigured {
                     Picker("Model", selection: Binding(get: { config.model }, set: { config.setModel($0, for: config.provider) })) {
                         let models = config.availableModels[config.provider] ?? []
-                        ForEach(models.contains(config.model) ? models : [config.model] + models, id: \.self) { Text("\($0)  ·  \(ModelLocality.of(provider: config.provider, model: $0).label)").tag($0) }
+                        ForEach(models.contains(config.model) ? models : [config.model] + models, id: \.self) { Text("\($0)  ·  \(badge(for: $0).label)").tag($0) }
+                    }
+                    .task(id: badgeKey) {
+                        let provider = config.provider
+                        let listed = config.availableModels[provider] ?? []
+                        let all = listed.contains(config.model) ? listed : [config.model] + listed
+                        let verdicts = await ModelLocality.verdicts(provider: provider, models: all)
+                        var fresh: [String: ModelLocality.Badge] = [:]
+                        for m in all { fresh[m] = ModelLocality.badge(provider: provider, model: m, verdict: verdicts[m]) }
+                        badges = fresh
                     }
                     HStack {
                         TextField("Or type a model ID", text: $customModel)
                         Button("Use") { config.setModel(customModel, for: config.provider); customModel = "" }
                             .disabled(customModel.isEmpty)
-                        Button("Refresh list") { config.refreshModels() }
+                        Button("Refresh list") { ModelLocality.TagsCache.shared.invalidate(); config.refreshModels() }
                         if config.loadingModels { ProgressView().controlSize(.small) }
                     }
                     if let e = config.modelError { Text(e).font(.callout).foregroundStyle(.red) }
                     LabeledContent("Runs") {
-                        let loc = ModelLocality.of(provider: config.provider, model: config.model)
-                        Label(loc == .local ? (config.provider == .apple ? "On this Mac" : "Locally (this Mac or your network)") : "Remotely, on \(config.provider.title)'s servers",
-                              systemImage: loc.symbol)
-                            .foregroundStyle(loc == .local ? .green : .orange)
+                        let b = badge(for: config.model)
+                        Label(runsText(b), systemImage: b.symbol)
+                            .foregroundStyle(b == .local ? .green : b == .localNetwork ? .teal : b == .unverified ? .yellow : .orange)
                     }
                     LabeledContent("Images") {
                         Label(config.provider.likelySupportsVision(config.model) ? "This model can read screenshots" : "Text only: pick a vision model to use captures",
@@ -1138,9 +1163,9 @@ private struct ClaudeSettings: View {
             Section {
                 Toggle("Allow cloud and unverified models", isOn: $allowOllamaCloud)
             } header: {
-                Text("Local first")
+                Text("Local first (NotchAI only)")
             } footer: {
-                Text("Off by default. NotchAI then only uses a model that Ollama confirms is installed on this Mac (or Apple Intelligence). Ollama Cloud models (\"…-cloud\"), cloud providers such as Gemini, and any model whose location can't be verified are refused before anything is sent, and are never used as a fallback. Turn this on only if you accept that prompts may leave this Mac and may be billed. The AI tab's other providers work as before.")
+                Text("This setting covers NotchAI only: the green dot's Quick Ask and the NotchAI tab. Off by default. NotchAI then only uses a model that Ollama confirms is installed on this Mac (or Apple Intelligence). Ollama Cloud models (\"…-cloud\"), cloud providers such as Gemini, and any model whose location can't be verified are refused before anything is sent, and are never used as a fallback. Turn this on only if you accept that prompts from NotchAI may leave this Mac and may be billed. It does not change the rest of Notch Apple (the Claude tab and other AI features keep using the provider you picked), except that Ollama Cloud models and unverifiable Ollama or custom servers are still refused there while this is off.")
             }
             Section {
                 HStack {

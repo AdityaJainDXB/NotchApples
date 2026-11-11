@@ -61,4 +61,24 @@ final class NotchAITests: XCTestCase {
         XCTAssertEqual(CompanionMotion.trailStrength(velocity: 5000), 1)
         XCTAssertGreaterThan(CompanionMotion.trailStrength(velocity: 900), 0)
     }
+
+    // MARK: Quick Ask and the dot
+
+    func testQuickAskOpensWhenClosed() {
+        XCTAssertTrue(QuickAskRule.shouldOpen(isOpen: false, lastFocusLossClose: nil, now: 100))
+    }
+
+    func testClickingTheDotWhileOpenClosesItInsteadOfOpeningAgain() {
+        XCTAssertFalse(QuickAskRule.shouldOpen(isOpen: true, lastFocusLossClose: nil, now: 100))
+    }
+
+    func testTheClickThatTookFocusAwayDoesNotReopenIt() {
+        XCTAssertFalse(QuickAskRule.shouldOpen(isOpen: false, lastFocusLossClose: 100, now: 100.05))
+        XCTAssertFalse(QuickAskRule.shouldOpen(isOpen: false, lastFocusLossClose: 100, now: 100 + QuickAskRule.reopenGuard - 0.01))
+    }
+
+    func testALaterClickOpensItAgain() {
+        XCTAssertTrue(QuickAskRule.shouldOpen(isOpen: false, lastFocusLossClose: 100, now: 100 + QuickAskRule.reopenGuard + 0.01))
+        XCTAssertTrue(QuickAskRule.shouldOpen(isOpen: false, lastFocusLossClose: 100, now: 99))   // clock went backwards
+    }
 }

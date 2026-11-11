@@ -37,3 +37,16 @@ enum CompanionMotion {
     }
 }
 
+/// Whether a click on the dot should open Quick Ask. Clicking the dot while the panel is open closes it; and if that
+/// same click already closed the panel by taking focus away (the panel closes when it loses focus), the click must not
+/// open it straight back up. Pure so it is unit tested.
+enum QuickAskRule {
+    /// How long after a focus-loss close a dot click still counts as the click that caused it.
+    static let reopenGuard: TimeInterval = 0.35
+
+    static func shouldOpen(isOpen: Bool, lastFocusLossClose: TimeInterval?, now: TimeInterval) -> Bool {
+        if isOpen { return false }
+        if let t = lastFocusLossClose, now - t >= 0, now - t < reopenGuard { return false }
+        return true
+    }
+}

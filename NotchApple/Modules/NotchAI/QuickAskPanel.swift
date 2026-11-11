@@ -8,18 +8,31 @@
 //
 
 import AppKit
+import QuartzCore
 import SwiftUI
 
 @MainActor
 enum QuickAskPanel {
     private static var panel: NSPanel?
 
+    /// When the panel last closed because it lost focus (not by Esc or the dot).
+    private static var lastFocusLossClose: TimeInterval?
+
     static func toggle(near point: CGPoint) {
-        if panel != nil { close() } else { show(near: point) }
+        if panel != nil { close(); return }
+        if QuickAskRule.shouldOpen(isOpen: false, lastFocusLossClose: lastFocusLossClose, now: CACurrentMediaTime()) { show(near: point) }
+    }
+
+    /// Called by the panel when it stops being the key window.
+    fileprivate static func closeForFocusLoss() {
+        guard panel != nil else { return }
+        lastFocusLossClose = CACurrentMediaTime()
+        close()
     }
 
     static func show(near point: CGPoint) {
         close()
+        lastFocusLossClose = nil
         let size = CGSize(width: 340, height: 240)
         let screen = NSScreen.screens.first { $0.frame.contains(point) } ?? NSScreen.main
         let vis = screen?.visibleFrame ?? CGRect(origin: .zero, size: size)
@@ -50,7 +63,7 @@ enum QuickAskPanel {
 private final class AskPanel: NSPanel {
     override var canBecomeKey: Bool { true }
     override func cancelOperation(_ sender: Any?) { QuickAskPanel.close() }
-    override func resignKey() { super.resignKey(); QuickAskPanel.close() }
+    override func resignKey() { super.resignKey(); QuickAskPanel.closeForFocusLoss() }
 }
 
 private struct QuickAskView: View {

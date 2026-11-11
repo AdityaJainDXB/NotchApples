@@ -123,4 +123,188 @@ final class CustomProviderTests: XCTestCase {
         XCTAssertFalse(ModelLocality.allowCloud, "'Allow cloud and unverified models' must be OFF until the user turns it on")
         XCTAssertTrue(ModelLocality.isBlocked(provider: .ollama, model: "gpt-oss:120b-cloud", allowCloud: ModelLocality.allowCloud))
     }
+
+    // MARK: Remembered verification (fast, still fail closed)
+
+    private final class Box<T>: @unchecked Sendable { var value: Result<T, Error>? }
+    private final class Server: @unchecked Sendable {
+        var requests = 0
+        var body: Data
+        var fails = false
+        init(_ body: Data) { self.body = body }
+        func fetch() -> ModelLocality.TagsFetch {
+            { [self] _ in
+                requests += 1
+                if fails { throw URLError(.timedOut) }
+                return body
+            }
+        }
+    }
+    private final class Clock: @unchecked Sendable { var t: TimeInterval = 1_000; func now() -> Date { Date(timeIntervalSince1970: t) } }
+
+    private func tags(_ models: [[String: Any]]) -> Data { try! JSONSerialization.data(withJSONObject: ["models": models]) }
+    private var goodTags: Data {
+        tags([["name": "qwen3:8b-64k", "size": 5_200_000_000, "digest": "a1"],
+              ["name": "plain-but-remote:7b", "size": 0, "digest": "b2", "remote_host": "https://ollama.com:443"]])
+    }
+
+    /// Runs an async check from a synchronous test (the test runner has no async tests).
+    private func run(_ op: @escaping @Sendable () async throws -> Void) -> Error? {
+        let box = Box<Void>(); let sem = DispatchSemaphore(value: 0)
+        Task.detached { do { try await op(); box.value = .success(()) } catch { box.value = .failure(error) }; sem.signal() }
+        sem.wait()
+        if case .failure(let e)? = box.value { return e }
+        return nil
+    }
+    private func verify(_ model: String, provider: AIProvider = .ollama, cache: ModelLocality.TagsCache, clock: Clock, server: Server) -> Error? {
+        run { try await ModelLocality.requireVerifiedLocal(provider: provider, model: model, cache: cache, now: { clock.now() }, fetch: server.fetch()) }
+    }
+
+    func testSecondMessageReusesTheRememberedAnswer() {
+        let cache = ModelLocality.TagsCache(), clock = Clock(), server = Server(goodTags)
+        XCTAssertNil(verify("qwen3:8b-64k", cache: cache, clock: clock, server: server))
+        XCTAssertNil(verify("qwen3:8b-64k", cache: cache, clock: clock, server: server))
+        XCTAssertEqual(server.requests, 1)
+    }
+
+    func testRememberedAnswerExpires() {
+        let cache = ModelLocality.TagsCache(), clock = Clock(), server = Server(goodTags)
+        XCTAssertNil(verify("qwen3:8b-64k", cache: cache, clock: clock, server: server))
+        clock.t += ModelLocality.TagsCache.ttl - 1
+        XCTAssertNil(verify("qwen3:8b-64k", cache: cache, clock: clock, server: server))
+        XCTAssertEqual(server.requests, 1)
+        clock.t += 2
+        XCTAssertNil(verify("qwen3:8b-64k", cache: cache, clock: clock, server: server))
+        XCTAssertEqual(server.requests, 2)
+    }
+
+    func testClockGoingBackwardsDoesNotStretchTheMemory() {
+        let cache = ModelLocality.TagsCache(), clock = Clock(), server = Server(goodTags)
+        XCTAssertNil(verify("qwen3:8b-64k", cache: cache, clock: clock, server: server))
+        clock.t -= 500
+        XCTAssertNil(verify("qwen3:8b-64k", cache: cache, clock: clock, server: server))
+        XCTAssertEqual(server.requests, 2)
+    }
+
+    func testCloudNamedModelNeverReachesTheNetworkOrTheMemory() {
+        let cache = ModelLocality.TagsCache(), clock = Clock(), server = Server(goodTags)
+        XCTAssertNil(verify("qwen3:8b-64k", cache: cache, clock: clock, server: server))
+        XCTAssertNotNil(verify("gpt-oss:120b-cloud", cache: cache, clock: clock, server: server))
+        XCTAssertEqual(server.requests, 1)      // only the first, local model's check
+    }
+
+    func testCloudProvidersAndRemoteCustomURLsNeverReachTheNetwork() {
+        let cache = ModelLocality.TagsCache(), clock = Clock(), server = Server(goodTags)
+        XCTAssertNotNil(verify("gemini-3.5-flash", provider: .gemini, cache: cache, clock: clock, server: server))
+        XCTAssertNotNil(verify("x", provider: .claude, cache: cache, clock: clock, server: server))
+        XCTAssertNotNil(verify("notch-fast", provider: .hosted, cache: cache, clock: clock, server: server))
+        let old = UserDefaults.standard.string(forKey: "ai.custom.baseURL")
+        defer { UserDefaults.standard.set(old, forKey: "ai.custom.baseURL") }
+        AIProvider.customBaseURL = "https://example.com/v1"
+        XCTAssertNotNil(verify("qwen3:8b-64k", provider: .custom, cache: cache, clock: clock, server: server))
+        XCTAssertEqual(server.requests, 0)
+    }
+
+    func testUnlistedModelAsksAgainAndIsRefused() {
+        let cache = ModelLocality.TagsCache(), clock = Clock(), server = Server(goodTags)
+        XCTAssertNil(verify("qwen3:8b-64k", cache: cache, clock: clock, server: server))
+        XCTAssertNotNil(verify("ghost:1b", cache: cache, clock: clock, server: server))
+        XCTAssertEqual(server.requests, 2)
+    }
+
+    func testAModelThatIsNotLocalIsNeverLetThroughFromMemory() {
+        let cache = ModelLocality.TagsCache(), clock = Clock(), server = Server(goodTags)
+        XCTAssertNotNil(verify("plain-but-remote:7b", cache: cache, clock: clock, server: server))
+        XCTAssertNotNil(verify("plain-but-remote:7b", cache: cache, clock: clock, server: server))
+        XCTAssertEqual(server.requests, 2)      // refused models always ask the server again
+    }
+
+    func testAnUnreachableServerFailsClosedAndForgetsTheMemory() {
+        let cache = ModelLocality.TagsCache(), clock = Clock(), server = Server(goodTags)
+        XCTAssertNil(verify("qwen3:8b-64k", cache: cache, clock: clock, server: server))
+        XCTAssertEqual(cache.count, 1)
+        clock.t += ModelLocality.TagsCache.ttl + 1
+        server.fails = true
+        XCTAssertNotNil(verify("qwen3:8b-64k", cache: cache, clock: clock, server: server))
+        XCTAssertEqual(cache.count, 0)
+        server.fails = false
+        XCTAssertNil(verify("qwen3:8b-64k", cache: cache, clock: clock, server: server))
+    }
+
+    func testAServerThatIsNotOllamaFailsClosedAndForgetsTheMemory() {
+        let cache = ModelLocality.TagsCache(), clock = Clock(), server = Server(goodTags)
+        XCTAssertNil(verify("qwen3:8b-64k", cache: cache, clock: clock, server: server))
+        clock.t += ModelLocality.TagsCache.ttl + 1
+        server.body = Data("<html>hi</html>".utf8)
+        XCTAssertNotNil(verify("qwen3:8b-64k", cache: cache, clock: clock, server: server))
+        XCTAssertEqual(cache.count, 0)
+    }
+
+    func testChangingTheCustomAddressForgetsTheSharedMemory() {
+        let old = UserDefaults.standard.string(forKey: "ai.custom.baseURL")
+        defer { UserDefaults.standard.set(old, forKey: "ai.custom.baseURL") }
+        ModelLocality.TagsCache.shared.store([["name": "qwen3:8b"]], for: URL(string: "http://localhost:11434/api/tags")!, now: Date())
+        XCTAssertEqual(ModelLocality.TagsCache.shared.count, 1)
+        AIProvider.customBaseURL = "http://192.168.1.20:1234/v1"
+        XCTAssertEqual(ModelLocality.TagsCache.shared.count, 0)
+    }
+
+    // MARK: Picker labels
+
+    func testBadgesNameWhereAModelRuns() {
+        typealias B = ModelLocality.Badge
+        XCTAssertEqual(ModelLocality.badge(provider: .apple, model: "on-device", verdict: nil), B.local)
+        XCTAssertEqual(ModelLocality.badge(provider: .ollama, model: "qwen3:8b", verdict: .local), B.local)
+        XCTAssertEqual(ModelLocality.badge(provider: .ollama, model: "qwen3:8b", verdict: nil), B.unverified)
+        XCTAssertEqual(ModelLocality.badge(provider: .ollama, model: "qwen3:8b", verdict: .unverified("x")), B.unverified)
+        XCTAssertEqual(ModelLocality.badge(provider: .ollama, model: "x", verdict: .cloud("remote")), B.cloud)
+        XCTAssertEqual(ModelLocality.badge(provider: .ollama, model: "gpt-oss:120b-cloud", verdict: .local), B.cloud)
+        XCTAssertEqual(ModelLocality.badge(provider: .custom, model: "qwen3:8b", customBaseURL: "http://localhost:11434/v1", verdict: .local), B.local)
+        XCTAssertEqual(ModelLocality.badge(provider: .custom, model: "qwen3:8b", customBaseURL: "http://127.0.0.1:11434/v1", verdict: .local), B.local)
+        XCTAssertEqual(ModelLocality.badge(provider: .custom, model: "qwen3:8b", customBaseURL: "http://192.168.1.20:11434/v1", verdict: .local), B.localNetwork)
+        XCTAssertEqual(ModelLocality.badge(provider: .custom, model: "qwen3:8b", customBaseURL: "http://studio.local:11434/v1", verdict: .local), B.localNetwork)
+        XCTAssertEqual(ModelLocality.badge(provider: .custom, model: "qwen3:8b", customBaseURL: "http://192.168.1.20:11434/v1", verdict: nil), B.unverified)
+        XCTAssertEqual(ModelLocality.badge(provider: .custom, model: "qwen3:8b", customBaseURL: "https://example.com/v1", verdict: .local), B.cloud)
+        XCTAssertEqual(ModelLocality.badge(provider: .gemini, model: "gemini-3.5-flash", verdict: nil), B.cloud)
+        XCTAssertEqual(B.local.label, "Local")
+        XCTAssertEqual(B.localNetwork.label, "Local network")
+        XCTAssertEqual(B.cloud.label, "Cloud")
+        XCTAssertEqual(B.unverified.label, "Unverified")
+    }
+
+    func testLoopbackIsOnlyThisMac() {
+        for u in ["http://localhost:1/v1", "http://127.0.0.1:1/v1", "http://[::1]:1/v1"] { XCTAssertTrue(ModelLocality.isLoopbackHost(u), u) }
+        for u in ["http://192.168.1.2/v1", "http://10.0.0.5/v1", "http://studio.local/v1", "https://example.com/v1"] { XCTAssertFalse(ModelLocality.isLoopbackHost(u), u) }
+    }
+
+    func testLabelsDoNotChangeWhatIsBlocked() {
+        // The label logic is display only: the classification and the block rules are exactly as before.
+        XCTAssertEqual(ModelLocality.of(provider: .custom, model: "qwen3:8b", customBaseURL: "http://192.168.1.20:1234/v1"), .local)
+        XCTAssertTrue(ModelLocality.isBlocked(provider: .ollama, model: "x:cloud", allowCloud: false))
+    }
+
+    func testPickerVerdictsUseOneRequestAndFailClosedLabels() {
+        let cache = ModelLocality.TagsCache(), clock = Clock(), server = Server(goodTags)
+        let box = Box<[String: ModelLocality.Verdict]>(); let sem = DispatchSemaphore(value: 0)
+        Task.detached {
+            let v = await ModelLocality.verdicts(provider: .ollama, models: ["qwen3:8b-64k", "plain-but-remote:7b", "ghost:1b"], cache: cache, now: { clock.now() }, fetch: server.fetch())
+            box.value = .success(v); sem.signal()
+        }
+        sem.wait()
+        guard case .success(let v)? = box.value else { return XCTFail("no result") }
+        XCTAssertEqual(server.requests, 1)
+        XCTAssertEqual(v["qwen3:8b-64k"], .local)
+        if case .cloud? = v["plain-but-remote:7b"] {} else { XCTFail("remote model should be cloud") }
+        if case .unverified? = v["ghost:1b"] {} else { XCTFail("unlisted model should be unverified") }
+
+        let down = Server(goodTags); down.fails = true
+        let box2 = Box<[String: ModelLocality.Verdict]>(); let sem2 = DispatchSemaphore(value: 0)
+        Task.detached {
+            let v = await ModelLocality.verdicts(provider: .ollama, models: ["qwen3:8b-64k"], cache: ModelLocality.TagsCache(), now: { clock.now() }, fetch: down.fetch())
+            box2.value = .success(v); sem2.signal()
+        }
+        sem2.wait()
+        guard case .success(let v2)? = box2.value else { return XCTFail("no result") }
+        if case .unverified? = v2["qwen3:8b-64k"] {} else { XCTFail("an unreachable server must leave models unverified") }
+    }
 }

@@ -125,7 +125,7 @@ enum AIProvider: String, CaseIterable, Identifiable, Codable {
     /// The custom endpoint's base URL (no trailing slash), e.g. http://localhost:11434/v1.
     static var customBaseURL: String {
         get { (UserDefaults.standard.string(forKey: "ai.custom.baseURL") ?? "http://localhost:11434/v1").trimmingCharacters(in: CharacterSet(charactersIn: "/ ")) }
-        set { UserDefaults.standard.set(newValue, forKey: "ai.custom.baseURL") }
+        set { UserDefaults.standard.set(newValue, forKey: "ai.custom.baseURL"); ModelLocality.TagsCache.shared.invalidate() }
     }
 
     var apiKey: String? {
