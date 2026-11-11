@@ -20,6 +20,10 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.2.59", date: "11 November 2026", headline: "The 2025 F1 grid in Racing", items: [
+            "New: the Racing game's local F1 races now have the 2025 F1 grid: ten teams in their team colours, with driver names on the tower. Online rooms and your own car do not have teams yet",
+            "Changed: the race rules moved into tested functions, so they behave the same everywhere",
+        ]),
         ReleaseNote(version: "2.2.58", date: "11 November 2026", headline: "Do It: a new engine", items: [
             "Changed: Do It has a new engine, a big change under the hood. It now reads the app's accessibility tree instead of guessing from pixels, tells you the outcome of every step, notices when it is stuck, and retries with backoff",
             "New: Do It has a progress budget instead of the flat 80-step cap. While it is making progress it keeps going; when the budget runs out you get a Continue button",

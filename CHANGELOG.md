@@ -4,6 +4,18 @@ Every Notch Apple release, newest first. The latest few are also on the [README]
 
 > **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is in the repository's history.
 
+### Mac 2.2.59 · Windows 2.2.59 BETA · 11 November 2026 · 🏎️ The 2025 F1 grid in Racing
+
+**Mac**
+
+- New: the Racing game's local F1 races now have the 2025 F1 grid: ten teams in their team colours, with driver names on the tower. Online rooms and your own car do not have teams yet
+- Changed: the race rules moved into tested functions, so they behave the same everywhere
+
+**Windows**
+
+- New: the Racing game's local F1 races now have the 2025 F1 grid: ten teams in their team colours, with driver names on the tower. Online rooms and your own car do not have teams yet
+- Changed: the race rules moved into tested functions, so they behave the same everywhere
+
 ### Mac 2.2.58 · Windows 2.2.58 BETA · 11 November 2026 · 🤖 Do It: a new engine
 
 **Mac**

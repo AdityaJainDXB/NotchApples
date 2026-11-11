@@ -150,6 +150,11 @@ More screenshots of the capture overlay, the AI answer, the settings and the Win
 
 ## What's new
 
+### Mac 2.2.59 · Windows 2.2.59 · 11 November 2026 · 🏎️ The 2025 F1 grid in Racing
+
+- New: the Racing game's local F1 races now have the 2025 F1 grid: ten teams in their team colours, with driver names on the tower. Online rooms and your own car do not have teams yet
+- Changed: the race rules moved into tested functions, so they behave the same everywhere
+
 ### Mac 2.2.58 · Windows 2.2.58 · 11 November 2026 · 🤖 Do It: a new engine
 
 - Changed: Do It has a new engine, a big change under the hood. It now reads the app's accessibility tree instead of guessing from pixels, tells you the outcome of every step, notices when it is stuck, and retries with backoff
@@ -161,17 +166,6 @@ More screenshots of the capture overlay, the AI answer, the settings and the Win
 
 - New: Eagle Ride in Games. Glide over a valley as an eagle, steer around trees and rocks with ← → or A D (or the mouse), grab gems, and keep three lives. It speeds up the longer you last, and your best score stays on this Mac. It follows the Games Sound switch and pauses when you close the notch
 - Fix: a game challenge from a friend (Connect Four, Rock Paper Scissors, Battleship, Chess, Checkers, Tic-tac-toe) now arrives like a message. The chat shows "Sam challenged you to Chess", it counts as unread, and you get the same notification, which has an Accept button (issue #58)
-
-### Mac 2.2.56 · Windows 2.2.56 · 10 November 2026 · 🧰 Less clutter, a smarter notch
-
-- New: the Utilities tab now holds Mac stats, Shelf, World clock, Purge, Convert and Launcher for real. While it is on, those six leave the tab bar and open from inside Utilities (click a panel's title for the full tool). Files dropped on the notch land on the Shelf there
-- New: pin the tabs you use most. Right-click a tab to pin it to the bar; every other tab goes in a More menu. Drag tabs to put them in your own order. With nothing pinned, nothing changes
-- New: the notch can suggest a tab for the app you are in (for example the timer in Zoom, Claude in Xcode, Now Playing in Music). A small chip appears for a few seconds after the notch opens. It only reads which app is in front, never what is in it, and each kind of app can be switched off in Settings → Notch
-- New: status pulse. The closed notch glows green (done or good), amber (needs you soon) or red (failed or urgent) for the things you choose in Settings → Notch → Status pulse: battery, an event starting in 5 minutes, a timer finishing, internet dropping, a disk almost full, camera or microphone turning on, three wrong unlock codes, an update waiting, a break after 90 minutes, old files on the Shelf, and a copied password. Battery, event soon and your own scripts start on; the rest are off. A script can add pulse=green, amber or red to a live activity. Quiet hours and Reduce Motion are respected
-- New: the notch opens by itself when you log in and when the Mac wakes. Turn it off in Settings → General
-- New: FNAF 1 in Games, played from fnaf1.io (so it needs the internet). Ads and trackers are blocked and nothing is kept on your Mac
-- Changed: Share is now AirDrop for files only. PairDrop (codes, folders and private chat) is gone from the Mac app
-- Removed: the VPN tab and its Settings page, and the bundled Tunnelblick installer. Your saved profiles stay on disk but nothing uses them
 
 ## Plugins
 
