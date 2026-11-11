@@ -1227,6 +1227,38 @@
 
   const AI_NAMES = ['Rex', 'Nova', 'Blaze', 'Kit', 'Zed', 'Maya', 'Flash', 'Viper', 'Luca', 'Sora', 'Max', 'Ivy', 'Otto', 'Remy', 'Juno'];
   const AI_COLORS = ['#7bd88f', '#c77dff', '#ff9f43', '#4dd0e1', '#f06292', '#cddc39', '#ef5350', '#90a4ae', '#1e88e5', '#ff7043', '#26a69a', '#ab47bc', '#ffd54f', '#8d6e63', '#78909c'];
+  // ---- Race rules as pure functions (no game state): the tests in racing.test.mjs run these directly.
+  /// How fast a tyre wears per second: more with sliding and drifting, faster for softs, 25% faster in an F1 car.
+  const tyreWearRate = (speed, slide, drifting, wearK, isF1) => (0.0011 + Math.abs(slide) * 0.0016 + (drifting ? 0.004 : 0)) * (isF1 ? 1.25 : 1) * wearK;
+  /// The grip left in a tyre: every compound loses up to 32% of its grip as it wears out.
+  const tyreWearGrip = (compoundGrip, wear) => compoundGrip * (1 - 0.32 * Math.min(1, Math.max(0, wear || 0)));
+  /// The tyre to fit at a stop: wet weather first, then hards early, mediums mid race, softs for a sprint to the flag.
+  const pitTyreChoice = (wet, lapsLeft, raceLaps) => wet > 0.6 ? 'W' : wet > 0.25 ? 'I' : lapsLeft > raceLaps * 0.55 && lapsLeft > 3 ? 'H' : lapsLeft > 2 ? 'M' : 'S';
+  /// A pit stop's standing time: the penalty is served first, then 2.4 s for the tyres, and damage takes longer to repair.
+  const pitServiceTime = (penalty, damage, extra) => (penalty || 0) + 2.4 + (damage > 0.3 ? 2.5 * damage : 0) + (extra || 0);
+  /// DRS: open within one second of the car in front, on green, after lap 1, not in the pit lane.
+  const drsEligible = (flag, lap, inLane, gapToAhead) => flag === 'green' && lap >= 1 && !inLane && gapToAhead != null && gapToAhead >= 0 && gapToAhead < 1.0;
+  /// Track limits: two warnings, the black and white flag on the third, then a 5 s penalty on the fourth and after.
+  const trackLimitStep = (count) => { const n = (count || 0) + 1; return { count: n, action: n >= 4 ? 'penalty' : n === 3 ? 'blackwhite' : 'warning' }; };
+  /// The flag a crash calls: its speed, the number of wrecked cars and the damage decide it.
+  const flagForCrash = (speed, wrecks, damage) => speed > 42 || wrecks >= 4 ? 'red' : speed > 28 || wrecks >= 2 ? 'sc' : damage >= 0.9 ? 'vsc' : 'yellow';
+  /// ERS: the battery drains while deploying (14 s from full), refills hard under braking and slowly otherwise.
+  const ersStep = (ers, deploy, braking, dt) => { const e = deploy && ers > 0 ? Math.max(0, ers - dt / 14) : ers; return braking ? Math.min(1, e + dt * 0.14) : Math.min(1, e + dt * 0.006); };
+  /// The 2025 grid: ten teams, two drivers each, in their livery colours. The F1 car's rivals are drawn from it.
+  const F1_2025 = [
+    { team: 'McLaren', color: '#ff8000', accent: '#47c7fc', drivers: ['Norris', 'Piastri'] },
+    { team: 'Ferrari', color: '#e8002d', accent: '#fff200', drivers: ['Leclerc', 'Hamilton'] },
+    { team: 'Red Bull', color: '#3671c6', accent: '#ffd700', drivers: ['Verstappen', 'Tsunoda'] },
+    { team: 'Mercedes', color: '#27f4d2', accent: '#101010', drivers: ['Russell', 'Antonelli'] },
+    { team: 'Aston Martin', color: '#229971', accent: '#cedc00', drivers: ['Alonso', 'Stroll'] },
+    { team: 'Alpine', color: '#0093cc', accent: '#ff87bc', drivers: ['Gasly', 'Colapinto'] },
+    { team: 'Williams', color: '#64c4ff', accent: '#041e42', drivers: ['Albon', 'Sainz'] },
+    { team: 'Racing Bulls', color: '#6692ff', accent: '#ffffff', drivers: ['Lawson', 'Hadjar'] },
+    { team: 'Kick Sauber', color: '#52e252', accent: '#101010', drivers: ['Hulkenberg', 'Bortoleto'] },
+    { team: 'Haas', color: '#b6babd', accent: '#e10600', drivers: ['Ocon', 'Bearman'] },
+  ];
+  /// The first `n` drivers of the 2025 grid (both cars of a team together), as { name, team, color, accent }.
+  const gridRivals = (n) => { const out = []; for (const t of F1_2025) for (const d of t.drivers) out.push({ name: d, team: t.team, color: t.color, accent: t.accent }); return out.slice(0, Math.max(0, n)); };
   // `slip`: how often a driver makes a mistake (running wide, locking up, a spin), relative to normal.
   // `corner`: how much of the tyres' grip (downforce included) a driver dares to use in a bend; `brakes`: how much of the
   // brakes; `defend`: how often they cover the inside when someone attacks.
@@ -1475,7 +1507,7 @@
     function setupRace(entries, laps, hold, mode) {
       T = getTrack(trackId); raceLaps = T.closed ? laps : 1; T.laps = raceLaps;
       scR = null; medR = null; medF = null; medJob = null; medClose();         // nothing left over from the last race
-      racers = entries.map((e, slot) => newRacer(e.id, e.name, carSpec(e.car), T, slot, { color: e.color, ai: !!e.ai, remote: !!e.remote, lastMsg: 0, official: !!e.official }));
+      racers = entries.map((e, slot) => newRacer(e.id, e.name, carSpec(e.car), T, slot, { color: e.color, ai: !!e.ai, remote: !!e.remote, lastMsg: 0, official: !!e.official, team: e.team || '' }));
       me = racers.find((r) => r.id === myId) || racers[0];
       aiState.clear();
       // Every race is different: each driver gets a random pace, line, reaction off the line and temperament (how often they
@@ -1544,8 +1576,8 @@
       const entries = [{ id: myId, name: official ? (role === 'sc' ? 'Safety Car' : 'Medical Car') : myName, car: official ? role : carId, color: carSpec(official ? role : carId).color, official }];
       // A new field every race: the rivals' names, cars and grid places are shuffled.
       const shuffle = (a) => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
-      const names = shuffle(AI_NAMES.slice()), colors = shuffle(AI_COLORS.slice());
-      for (let i = 0; i < (official ? Math.max(rivals, 7) : rivals); i++) entries.push({ id: 'ai' + i, name: names[i % names.length], car: carId, color: colors[i % colors.length], ai: true });   // everyone in the same car as you
+      const names = shuffle(AI_NAMES.slice()), colors = shuffle(AI_COLORS.slice()), n = official ? Math.max(rivals, 7) : rivals, gp = carId === 'f1' && !official ? gridRivals(n + 1).filter((g) => g.name !== myName).slice(0, n) : null;      // the F1 car races the 2025 grid: real team names and liveries
+      for (let i = 0; i < n; i++) entries.push(gp && gp[i] ? { id: 'ai' + i, name: gp[i].name, team: gp[i].team, car: carId, color: gp[i].color, ai: true } : { id: 'ai' + i, name: names[i % names.length], car: carId, color: colors[i % colors.length], ai: true });   // everyone in the same car as you
       // The player starts at the back of a small field, so there is someone to catch.
       entries.push(entries.shift());
       return entries;
@@ -2201,7 +2233,7 @@
     function incident(r, speed) {
       if (screen !== 'race' || r.official || r.dnf) return;
       const wrecks = racers.filter((x) => !x.official && !x.finished && !x.dnf && x.car.dmg >= 0.9).length;
-      const want = speed > 42 || wrecks >= 4 ? 'red' : speed > 28 || wrecks >= 2 ? 'sc' : r.car.dmg >= 0.9 ? 'vsc' : 'yellow';
+      const want = flagForCrash(speed, wrecks, r.car.dmg);
       // A wrecked computer car stops where it crashed, pulled over at the edge of the road, smoking, until it is seen to.
       if (r.ai && r.car.dmg >= 0.9) {
         const l = locate(T, r.car.x, r.car.y, r.idx), q = T.S[l.idx], sg = Math.sign(l.lat) || 1, o = T.width / 2 + 2.5;
@@ -2321,9 +2353,9 @@
     }
     /// DRS can be opened from lap 2, under green flags, within a second of the car ahead (not in the pit lane).
     function drsOk(r) {
-      if (raceCtl.flag !== 'green' || r.lap < 1 || r.inLane || r.gapL == null) return false;
+      if (r.gapL == null) return false;
       const order = ranking(racers).filter((x) => !x.dnf), i = order.indexOf(r), a = order[i - 1];
-      return !!a && a.gapL != null && r.gapL - a.gapL < 1.0 && r.gapL - a.gapL >= 0;
+      return !!a && a.gapL != null && drsEligible(raceCtl.flag, r.lap, r.inLane, r.gapL - a.gapL);
     }
     /// Weather, breakdowns and big crashes, once a step.
     function trouble(dt) {
@@ -2543,8 +2575,8 @@
     }
     function trackLimits(r) {
       if (r.official) return;
-      r.tl = (r.tl || 0) + 1;
-      if (r.tl >= 4) penalize(r, 5, 'track limits');
+      const step = trackLimitStep(r.tl); r.tl = step.count;
+      if (step.action === 'penalty') penalize(r, 5, 'track limits');
       else if (r === me) { if (r.tl === 3) { toast('🏁 Black and white flag: next time is a penalty'); say('Black and white flag. One more and it is a penalty.', 'eng', 2); } else { toast(`Track limits: warning ${r.tl} of 3`); say('Track limits. Careful.', 'eng', 1); } }
     }
     // Leaving the track and gaining an advantage (FIA): a car that is off the track for a moment and comes back in front of a car it
@@ -2884,7 +2916,7 @@
               r.service = (r.service || 0) + dt;
               // FIA style: a time penalty can be served at a stop: the car stands still for it before anyone may work on it.
               if (r.ai && r.pen > 0) r.servePen = true;
-              const wait = r.servePen ? (r.pen || 0) : 0, need = wait + 2.4 + (c.dmg > 0.3 ? 2.5 * c.dmg : 0) + (r === me ? me.pitExtra || 0 : 0);
+              const wait = r.servePen ? (r.pen || 0) : 0, need = pitServiceTime(wait, c.dmg, r === me ? me.pitExtra : 0);
               pitCrewTick(r, c, need);
               if (wait && r.service >= wait && !r.penDone) { r.penDone = true; if (r === me) { toast(`Penalty served (${wait} s). The crew goes to work.`); say('Penalty served. Go, go on the tyres.', 'eng', 2); } }
               if (r.service >= need) { if (r === me) me.pitExtra = 0; if (wait) { r.pen = 0; r.servePen = false; } r.penDone = false;  r.pits = (r.pits || 0) + 1; r.tyreLap = Math.max(0, r.lap); { const left = raceLaps - Math.max(0, r.lap); c.tyre = r === me && !me.ai ? me.nextTyre || 'M' : screen === 'quali' ? (WET > 0.6 ? 'W' : WET > 0.25 ? 'I' : 'S') : (WET > 0.6 ? 'W' : WET > 0.25 ? 'I' : left > raceLaps * 0.55 && left > 3 ? 'H' : left > 2 ? 'M' : 'S'); } c.puncture = false; c.dmg = 0; c.wear = 0; c.pull = 0; c.t0 = c.t1 = c.t2 = c.t3 = screen === 'quali' ? 60 : 78; r.service = 0; r.served = true; if (r.ai) { const st = aiState.get(r.id); st.served = true; /* it keeps following the pit lane to the exit */ } if (r === me) { toast(`Pit stop: ${need.toFixed(1)} s · new ${TYRES[c.tyre].name.toLowerCase()}s${need > 2.5 ? ', damage repaired' : ''}`); say('Good stop, good stop. Go, go, go!', 'eng', 2); } }
@@ -2894,7 +2926,7 @@
         if (imp > 3) { const q = T.S[after.idx], sg = Math.sign(after.lat) || 1; crash(r, c.x + q.nx * sg * 1.1, c.y + q.ny * sg * 1.1, imp, '#d8d8d8'); }
         if (r === me) c.manual = manualOn;
         // Tyres wear with distance and much faster in slides.
-        const vNow = Math.hypot(c.vx, c.vy); if (vNow > 3 && !r.finished) c.wear = Math.min(1, (c.wear || 0) + dt * (0.0011 + Math.abs(c.vl) * 0.0016 + (c.drifting ? 0.004 : 0)) * (c.spec.id === 'f1' ? 1.25 : 1) * ((TYRES[c.tyre] || TYRES.M).wear));
+        const vNow = Math.hypot(c.vx, c.vy); if (vNow > 3 && !r.finished) c.wear = Math.min(1, (c.wear || 0) + dt * tyreWearRate(vNow, c.vl, c.drifting, (TYRES[c.tyre] || TYRES.M).wear, c.spec.id === 'f1'));
         // Track limits (FIA): all four wheels past the white line counts. Warnings, the black-and-white flag, then 5 seconds.
         if (screen === 'race' && !r.finished && !r.inLane && !pitSide && off > edge + CAR_W / 2 + 0.4 && vNow > 12) { if (!r.offTL) { r.offTL = true; trackLimits(r); excursionStart(r); } }
         else if (off < edge) { if (r.offTL) excursionEnd(r); r.offTL = false; }
@@ -4304,6 +4336,6 @@
     setSoundEnabled: (on) => { window.NotchHostSound = !!on; const c = window.NotchRaceGame.current; if (c) c.setSoundEnabled(on); },
     resume: () => { const c = window.NotchRaceGame.current; if (c) c.resume(); },
     current: null,
-    _test: { stepOnRoad, ELEV_INTENT, F1_ELEV, TRACK_ELEV, spokenTimes, buildLandmarks, F1_LM, qualiSizes, qualiOrder, qualiKnockout, qualiGrid, parseRequest, generateTrack, traceImage, simplifyPts, pitInfo, relS, fence, checkTrack, encodeTrack, decodeTrack, customDef, GROUNDS, TRACKS, F1_CAL, matchF1, CARS, buildTrack, locate, trackHeight, trackSlope, roadCurv, roadBank, F1_BANK, gridSlot, newCar, stepCar, driveAI, newRacer, progress, ranking, collide, wallHit, hurt, gearbox, NET, fmt, LEVELS },
+    _test: { tyreWearRate, tyreWearGrip, pitTyreChoice, pitServiceTime, drsEligible, trackLimitStep, flagForCrash, ersStep, F1_2025, gridRivals, stepOnRoad, ELEV_INTENT, F1_ELEV, TRACK_ELEV, spokenTimes, buildLandmarks, F1_LM, qualiSizes, qualiOrder, qualiKnockout, qualiGrid, parseRequest, generateTrack, traceImage, simplifyPts, pitInfo, relS, fence, checkTrack, encodeTrack, decodeTrack, customDef, GROUNDS, TRACKS, F1_CAL, matchF1, CARS, buildTrack, locate, trackHeight, trackSlope, roadCurv, roadBank, F1_BANK, gridSlot, newCar, stepCar, driveAI, newRacer, progress, ranking, collide, wallHit, hurt, gearbox, NET, fmt, LEVELS },
   };
 })();
