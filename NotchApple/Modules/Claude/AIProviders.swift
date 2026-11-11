@@ -27,6 +27,8 @@ enum AIProvider: String, CaseIterable, Identifiable, Codable {
     case gemini, groq, openRouter, ollama, apple, deepSeek, claude, openAI
     /// Notch Apple AI: included with Pro and Ultimate, answered by the licence server with the project's own AI key.
     case hosted
+    /// Any OpenAI-compatible server the user points at (local Ollama, LM Studio, vLLM, a proxy). Base URL in Settings; key optional.
+    case custom
 
     var id: String { rawValue }
 
@@ -41,6 +43,7 @@ enum AIProvider: String, CaseIterable, Identifiable, Codable {
         case .claude: "Claude"
         case .openAI: "ChatGPT (OpenAI)"
         case .hosted: "Notch Apple AI (included)"
+        case .custom: "Custom (OpenAI-compatible)"
         }
     }
 
@@ -55,11 +58,12 @@ enum AIProvider: String, CaseIterable, Identifiable, Codable {
         case .claude: "Paid, billed to your Anthropic account"
         case .openAI: "Paid, billed to your OpenAI account"
         case .hosted: "Included with Pro and Ultimate: no key to set up, a daily allowance"
+        case .custom: "Your own server: Ollama, LM Studio, vLLM or any OpenAI-compatible URL"
         }
     }
 
     var isFree: Bool { ![.claude, .openAI, .deepSeek].contains(self) }
-    var needsKey: Bool { self != .ollama && self != .apple && self != .hosted }
+    var needsKey: Bool { self != .ollama && self != .apple && self != .hosted && self != .custom }
 
     var keychainKey: KeychainHelper.Key {
         switch self {
@@ -69,6 +73,7 @@ enum AIProvider: String, CaseIterable, Identifiable, Codable {
         case .openRouter: .openRouterAPIKey
         case .openAI: .openAIAPIKey
         case .deepSeek: .deepSeekAPIKey
+        case .custom: .customAPIKey
         case .ollama, .apple, .hosted: .anthropicAPIKey   // unused (no key)
         }
     }
@@ -84,6 +89,7 @@ enum AIProvider: String, CaseIterable, Identifiable, Codable {
         case .claude: URL(string: "https://console.anthropic.com/settings/keys")!
         case .openAI: URL(string: "https://platform.openai.com/api-keys")!
         case .hosted: URL(string: "https://adityajaindxb.github.io/NotchApples/pro.html")!
+        case .custom: URL(string: "https://github.com/ollama/ollama/blob/main/docs/openai.md")!
         }
     }
 
@@ -95,6 +101,7 @@ enum AIProvider: String, CaseIterable, Identifiable, Codable {
         case .claude: "sk-ant-…"
         case .openAI: "sk-…"
         case .deepSeek: "sk-…"
+        case .custom: "optional"
         case .ollama, .apple, .hosted: ""
         }
     }
@@ -111,14 +118,22 @@ enum AIProvider: String, CaseIterable, Identifiable, Codable {
         case .openAI: "gpt-4o-mini"
         case .deepSeek: "deepseek-chat"
         case .hosted: "notch-fast"
+        case .custom: "qwen3:8b"
         }
     }
 
-    var apiKey: String? {
-        needsKey ? KeychainHelper.get(keychainKey).flatMap { $0.isEmpty ? nil : $0 } : nil
+    /// The custom endpoint's base URL (no trailing slash), e.g. http://localhost:11434/v1.
+    static var customBaseURL: String {
+        get { (UserDefaults.standard.string(forKey: "ai.custom.baseURL") ?? "http://localhost:11434/v1").trimmingCharacters(in: CharacterSet(charactersIn: "/ ")) }
+        set { UserDefaults.standard.set(newValue, forKey: "ai.custom.baseURL"); ModelLocality.TagsCache.shared.invalidate() }
     }
 
-    var isConfigured: Bool { !needsKey || apiKey != nil }
+    var apiKey: String? {
+        if self == .custom { return KeychainHelper.get(.customAPIKey).flatMap { $0.isEmpty ? nil : $0 } }
+        return needsKey ? KeychainHelper.get(keychainKey).flatMap { $0.isEmpty ? nil : $0 } : nil
+    }
+
+    var isConfigured: Bool { self == .custom ? !Self.customBaseURL.isEmpty : (!needsKey || apiKey != nil) }
 
     /// Best guess at whether a model accepts images. `false` only when we're
     /// fairly sure it's text-only, so screenshots aren't sent to models that
@@ -135,12 +150,13 @@ enum AIProvider: String, CaseIterable, Identifiable, Codable {
         case .deepSeek: return false    // DeepSeek's API is text-only
         case .apple: return false       // the on-device model reads text only
         case .hosted: return true
+        case .custom: return true       // unknown server; let it decide
         }
     }
 }
 
 enum AIError: LocalizedError {
-    case missingKey(AIProvider), http(Int, String), empty, ollamaNotRunning, allBusy(String)
+    case missingKey(AIProvider), http(Int, String), empty, ollamaNotRunning, allBusy(String), cloudBlocked(String), notVerifiedLocal(String, String)
 
     var errorDescription: String? {
         switch self {
@@ -148,6 +164,8 @@ enum AIError: LocalizedError {
         case .http(let code, let msg): "Error \(code): \(msg)"
         case .allBusy(let tried): "Every free model I tried is busy or rate-limited right now (\(tried)). Wait a minute and ask again, add a little credit on openrouter.ai, or use Gemini, which has a free key at aistudio.google.com." 
         case .empty: "The model returned an empty response."
+        case .notVerifiedLocal(let m, let why): "Local first is on, and \(m) isn't verified to run on this Mac: \(why). Nothing was sent. Pick a local Ollama model, or allow cloud models in Settings → AI."
+        case .cloudBlocked(let m): "\(m) is an Ollama Cloud model: it runs on Ollama's servers, not on this Mac, and may be billed. Nothing was sent. Pick a local model, or allow cloud models in Settings → AI."
         case .ollamaNotRunning: "Ollama isn't running. Install it from ollama.com and run a model (e.g. `ollama run llama3.2`)."
         }
     }
@@ -190,6 +208,8 @@ enum AIClient {
 
     /// One attempt on exactly this model.
     static func sendOnce(_ history: [ChatMessage], provider: AIProvider, model: String) async throws -> String {
+        if ModelLocality.isBlocked(provider: provider, model: model, allowCloud: ModelLocality.allowCloud) { throw AIError.cloudBlocked(model) }
+        if (provider == .ollama || provider == .custom), !ModelLocality.allowCloud { try await ModelLocality.requireVerifiedLocal(provider: provider, model: model) }
         switch provider {
         case .claude: return try await ClaudeClient.send(history, model: model)
         case .gemini: return try await sendGemini(history, model: model)
@@ -197,7 +217,7 @@ enum AIClient {
             var out = ""
             for try await piece in AppleIntelligence.stream(history, system: systemPrompt) { out += piece }
             return out
-        case .groq, .openRouter, .ollama, .openAI, .deepSeek, .hosted: return try await sendOpenAICompatible(history, provider: provider, model: model)
+        case .groq, .openRouter, .ollama, .openAI, .deepSeek, .hosted, .custom: return try await sendOpenAICompatible(history, provider: provider, model: model)
         }
     }
 
@@ -235,6 +255,7 @@ enum AIClient {
         case .ollama: base = "http://localhost:11434/v1"
         case .deepSeek: base = "https://api.deepseek.com/v1"
         case .hosted: base = try await HostedAI.base()
+        case .custom: base = AIProvider.customBaseURL
         default: base = "https://api.openai.com/v1"
         }
         var request = URLRequest(url: URL(string: "\(base)/chat/completions")!)
@@ -244,6 +265,8 @@ enum AIClient {
         if provider == .hosted { request.setValue("Bearer \(try await HostedAI.token())", forHTTPHeaderField: "Authorization") }
         if provider.needsKey {
             guard let key = provider.apiKey else { throw AIError.missingKey(provider) }
+            request.setValue("Bearer \(key)", forHTTPHeaderField: "Authorization")
+        } else if provider == .custom, let key = provider.apiKey {
             request.setValue("Bearer \(key)", forHTTPHeaderField: "Authorization")
         }
         if provider == .openRouter {
@@ -305,6 +328,13 @@ enum AIClient {
                 let json = try await perform(URLRequest(url: URL(string: "http://localhost:11434/api/tags")!))
                 return ((json["models"] as? [[String: Any]]) ?? []).compactMap { $0["name"] as? String }
             } catch { throw AIError.ollamaNotRunning }
+        case .custom:
+            guard let url = URL(string: "\(AIProvider.customBaseURL)/models") else { throw AIError.http(0, "That isn't a valid URL.") }
+            var r = URLRequest(url: url)
+            r.timeoutInterval = 10
+            if let key = provider.apiKey { r.setValue("Bearer \(key)", forHTTPHeaderField: "Authorization") }
+            let json = try await perform(r)
+            return ((json["data"] as? [[String: Any]]) ?? []).compactMap { $0["id"] as? String }.sorted()
         case .groq, .openAI, .deepSeek:
             guard let key = provider.apiKey else { throw AIError.missingKey(provider) }
             let base = provider == .groq ? "https://api.groq.com/openai/v1"

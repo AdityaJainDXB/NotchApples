@@ -86,9 +86,15 @@ extension AIClient {
     /// One attempt on exactly this model.
     static func streamOnce(_ history: [ChatMessage], provider: AIProvider, model: String, system: String) -> AsyncThrowingStream<String, Error> {
         if provider == .apple { return AppleIntelligence.stream(history, system: system) }
+        if ModelLocality.isBlocked(provider: provider, model: model, allowCloud: ModelLocality.allowCloud) {
+            return AsyncThrowingStream { $0.finish(throwing: AIError.cloudBlocked(model)) }
+        }
         return AsyncThrowingStream { continuation in
             let task = Task {
                 do {
+                    if (provider == .ollama || provider == .custom), !ModelLocality.allowCloud {
+                        try await ModelLocality.requireVerifiedLocal(provider: provider, model: model)
+                    }
                     let request = try await makeStreamRequest(history, provider: provider, model: model, system: system)
                     let (bytes, response) = try await URLSession.shared.bytes(for: request)
                     let status = (response as? HTTPURLResponse)?.statusCode ?? 0
@@ -195,6 +201,7 @@ extension AIClient {
             case .ollama: base = "http://localhost:11434/v1"
             case .deepSeek: base = "https://api.deepseek.com/v1"
             case .hosted: base = try await HostedAI.base()
+            case .custom: base = AIProvider.customBaseURL
             default: base = "https://api.openai.com/v1"
             }
             var r = URLRequest(url: URL(string: "\(base)/chat/completions")!)
@@ -204,6 +211,8 @@ extension AIClient {
             if provider == .hosted { r.setValue("Bearer \(try await HostedAI.token())", forHTTPHeaderField: "Authorization") }
             if provider.needsKey {
                 guard let key = provider.apiKey else { throw AIError.missingKey(provider) }
+                r.setValue("Bearer \(key)", forHTTPHeaderField: "Authorization")
+            } else if provider == .custom, let key = provider.apiKey {
                 r.setValue("Bearer \(key)", forHTTPHeaderField: "Authorization")
             }
             if provider == .openRouter {
