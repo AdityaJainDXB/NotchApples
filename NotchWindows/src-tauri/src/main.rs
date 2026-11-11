@@ -28,6 +28,7 @@ mod input;
 mod klick;
 mod convert;
 mod doit;
+mod doit_win;
 mod privategame;
 mod media;
 mod net;
@@ -207,11 +208,30 @@ fn grab_screen(longest_edge: u32) -> Result<String, String> {
 /// The primary screen as a base64 JPEG no longer than `longest_edge` on its longest side. With `region` ([x0, y0, x1, y1] on a 0 to 1000
 /// grid over the whole screen) only that part is sent, at the display's own detail (Do It's zoom: small formulas become readable).
 pub(crate) fn grab_screen_region(longest_edge: u32, region: Option<Vec<f64>>) -> Result<String, String> {
+    grab_screen_region_at(longest_edge, region, None)
+}
+
+/// The monitor whose top-left corner is at `origin` (physical pixels), or the primary one. Lets Do It see the
+/// display its target window is on, not just the primary.
+fn grab_monitor(origin: Option<(i32, i32)>) -> Result<xcap::Monitor, String> {
     let monitors = xcap::Monitor::all().map_err(|e| e.to_string())?;
-    let monitor = monitors
-        .into_iter()
-        .find(|m| m.is_primary().unwrap_or(false))
-        .ok_or("no primary monitor")?;
+    if let Some((x, y)) = origin {
+        if let Some(m) = monitors.iter().find(|m| m.x().unwrap_or(i32::MIN) == x && m.y().unwrap_or(i32::MIN) == y) {
+            return Ok(m.clone());
+        }
+    }
+    monitors.into_iter().find(|m| m.is_primary().unwrap_or(false)).ok_or("no primary monitor".into())
+}
+
+/// A tiny 32x32 luma signature of the monitor at `origin` (or the primary), for Do It's "did the screen change?" check.
+pub(crate) fn grab_signature(origin: Option<(i32, i32)>) -> Result<Vec<u8>, String> {
+    let rgba = grab_monitor(origin)?.capture_image().map_err(|e| e.to_string())?;
+    let small = image::imageops::resize(&image::DynamicImage::ImageRgba8(rgba).to_luma8(), 32, 32, image::imageops::FilterType::Triangle);
+    Ok(small.into_raw())
+}
+
+pub(crate) fn grab_screen_region_at(longest_edge: u32, region: Option<Vec<f64>>, origin: Option<(i32, i32)>) -> Result<String, String> {
+    let monitor = grab_monitor(origin)?;
     let rgba = monitor.capture_image().map_err(|e| e.to_string())?;
     let (w, h) = (rgba.width(), rgba.height());
     let mut dynamic = image::DynamicImage::ImageRgba8(rgba);
@@ -608,6 +628,7 @@ fn main() {
             input::paste_text, input::paste_now, input::dictate,
             klick::klick_set,
             doit::doit_screen, doit::doit_click, doit::doit_type, doit::doit_key, doit::doit_scroll, doit::doit_drag, doit::doit_sleep, doit::doit_arm, doit::doit_capture,
+            doit::doit_tree, doit::doit_element, doit::doit_menu, doit::doit_target, doit::doit_focus_app, doit::doit_signature,
             convert::convert_tools,
             convert::convert_read,
             convert::convert_write,

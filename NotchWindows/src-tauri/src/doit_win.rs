@@ -8,9 +8,61 @@
 //! owns the automation object and the last tree's elements; commands reach it over a channel. Element ids handed to the
 //! page are indexes into that cached list and are only valid until the next tree.
 
-#![cfg(windows)]
-
 use serde::Serialize;
+
+/// What the agent is about to act on: the foreground window, its monitor, and whether it would ignore our input.
+#[derive(Serialize, Default, Clone)]
+pub struct TargetInfo {
+    pub title: String,
+    /// The monitor the foreground window is on, in physical pixels.
+    pub left: i32,
+    pub top: i32,
+    pub width: i32,
+    pub height: i32,
+    /// True when the window runs elevated (as administrator), so our input would be silently ignored (UIPI).
+    pub elevated: bool,
+}
+
+/// One interactive element from the UI Automation tree.
+#[derive(Serialize, Clone)]
+pub struct TreeElement {
+    pub id: usize,
+    pub role: String,
+    pub label: String,
+    pub value: String,
+    /// Physical pixels on the virtual desktop.
+    pub x: i32,
+    pub y: i32,
+    pub w: i32,
+    pub h: i32,
+    pub focused: bool,
+    pub menu: bool,
+    pub front: bool,
+}
+
+/// Where (x) lands on a 0–65535 absolute-input axis that spans the virtual desktop from `v0` for `span` pixels.
+pub fn norm_axis(x: i32, v0: i32, span: i32) -> i32 {
+    (((x - v0) as f64 * 65535.0 / span.max(1) as f64).round() as i32).clamp(0, 65535)
+}
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn absolute_moves_span_the_virtual_desktop() {
+        assert_eq!(super::norm_axis(0, 0, 1920), 0);
+        assert_eq!(super::norm_axis(1920, 0, 1920), 65535);
+        assert_eq!(super::norm_axis(960, 0, 1920), 32768);
+        assert_eq!(super::norm_axis(-1920, -1920, 3840), 0, "a monitor left of the primary starts at 0");
+        assert_eq!(super::norm_axis(5000, 0, 1920), 65535, "out of range stays on the desktop");
+        assert_eq!(super::norm_axis(10, 0, 0), 65535, "a zero-size desktop cannot divide by zero");
+    }
+}
+
+#[cfg(windows)]
+mod imp {
+use super::{TargetInfo, TreeElement};
+
+
 use std::sync::mpsc;
 use std::sync::{Mutex, OnceLock};
 use std::mem::ManuallyDrop;
@@ -82,14 +134,14 @@ pub fn move_pointer(x: i32, y: i32) {
         let vy = GetSystemMetrics(SM_YVIRTUALSCREEN);
         let vw = GetSystemMetrics(SM_CXVIRTUALSCREEN).max(1);
         let vh = GetSystemMetrics(SM_CYVIRTUALSCREEN).max(1);
-        let nx = ((x - vx) as f64 * 65535.0 / vw as f64).round() as i32;
-        let ny = ((y - vy) as f64 * 65535.0 / vh as f64).round() as i32;
+        let nx = super::norm_axis(x, vx, vw);
+        let ny = super::norm_axis(y, vy, vh);
         let input = INPUT {
             r#type: INPUT_MOUSE,
             Anonymous: INPUT_0 {
                 mi: MOUSEINPUT {
-                    dx: nx.clamp(0, 65535),
-                    dy: ny.clamp(0, 65535),
+                    dx: nx,
+                    dy: ny,
                     mouseData: 0,
                     dwFlags: MOUSEEVENTF_MOVE | MOUSEEVENTF_ABSOLUTE | MOUSEEVENTF_VIRTUALDESK,
                     time: 0,
@@ -124,17 +176,6 @@ pub fn glide_pointer(x: i32, y: i32) {
 
 // ---- the target window ---------------------------------------------------------------------------------------------
 
-#[derive(Serialize, Default, Clone)]
-pub struct TargetInfo {
-    pub title: String,
-    /// The monitor the foreground window is on, in physical pixels.
-    pub left: i32,
-    pub top: i32,
-    pub width: i32,
-    pub height: i32,
-    /// True when the window runs elevated (as administrator), so our input would be silently ignored (UIPI).
-    pub elevated: bool,
-}
 
 fn window_title(hwnd: HWND) -> String {
     let mut buf = [0u16; 256];
@@ -234,21 +275,6 @@ pub fn focus_window(name: &str) -> Result<String, String> {
 
 // ---- UI Automation: the element tree and element actions ------------------------------------------------------------
 
-#[derive(Serialize, Clone)]
-pub struct TreeElement {
-    pub id: usize,
-    pub role: String,
-    pub label: String,
-    pub value: String,
-    /// Physical pixels on the virtual desktop.
-    pub x: i32,
-    pub y: i32,
-    pub w: i32,
-    pub h: i32,
-    pub focused: bool,
-    pub menu: bool,
-    pub front: bool,
-}
 
 enum Req {
     Tree(mpsc::Sender<Result<Vec<TreeElement>, String>>),
@@ -627,3 +653,25 @@ fn walk_menu(state: &Uia, path: &[String]) -> Result<String, String> {
         Ok(format!("opened menu {}", path.join(" > ")))
     }
 }
+
+}
+
+#[cfg(windows)]
+pub use imp::*;
+
+// On other platforms (the Mac app has its own engine; cargo test runs on any host) these are inert stand-ins.
+#[cfg(not(windows))]
+mod stub {
+    use super::{TargetInfo, TreeElement};
+    const ONLY: &str = "Windows only.";
+    pub fn move_pointer(_x: i32, _y: i32) {}
+    pub fn glide_pointer(_x: i32, _y: i32) {}
+    pub fn target_info() -> TargetInfo { TargetInfo::default() }
+    pub fn focus_window(_name: &str) -> Result<String, String> { Err(ONLY.into()) }
+    pub fn tree() -> Result<Vec<TreeElement>, String> { Err(ONLY.into()) }
+    pub fn element_action(_id: usize, _action: &str, _value: &str) -> Result<String, String> { Err(ONLY.into()) }
+    pub fn menu_path(_path: Vec<String>) -> Result<String, String> { Err(ONLY.into()) }
+}
+
+#[cfg(not(windows))]
+pub use stub::*;
