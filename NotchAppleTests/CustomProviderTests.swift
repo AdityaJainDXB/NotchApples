@@ -112,4 +112,15 @@ final class CustomProviderTests: XCTestCase {
         catch let e as AIError { if case .notVerifiedLocal = e {} else { XCTFail("wrong error") } }
         catch { XCTFail("wrong error") }
     }
+
+    // MARK: Default semantics
+
+    func testLocalFirstIsOnByDefaultSoCloudAndUnverifiedAreBlocked() {
+        let key = ModelLocality.allowCloudKey
+        let saved = UserDefaults.standard.object(forKey: key)
+        defer { if let saved { UserDefaults.standard.set(saved, forKey: key) } else { UserDefaults.standard.removeObject(forKey: key) } }
+        UserDefaults.standard.removeObject(forKey: key)          // a first launch: nothing saved
+        XCTAssertFalse(ModelLocality.allowCloud, "'Allow cloud and unverified models' must be OFF until the user turns it on")
+        XCTAssertTrue(ModelLocality.isBlocked(provider: .ollama, model: "gpt-oss:120b-cloud", allowCloud: ModelLocality.allowCloud))
+    }
 }
