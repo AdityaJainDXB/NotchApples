@@ -29,22 +29,10 @@ enum ScreenCapture {
 
     /// `region` (0 to 1000 over the whole screen) captures only that part, at the display's full detail, for the Do It agent's zoom:
     /// small formulas and toolbar buttons become readable. Nil is the whole screen, as before.
-    static func captureBase64JPEG(region: GridRect? = nil) async throws -> String {
-        // Ask first: without permission ScreenCaptureKit fails with a vague error.
-        if !ScreenPermission.isGranted {
-            await MainActor.run { _ = ScreenPermission.request() }
-            if !ScreenPermission.isGranted { throw CaptureError.noPermission }
-        }
-        let content = try await SCShareableContent.excludingDesktopWindows(false, onScreenWindowsOnly: true)
-        let screenID = (NSScreen.main?.deviceDescription[NSDeviceDescriptionKey("NSScreenNumber")] as? NSNumber)?.uint32Value
-        guard let display = content.displays.first(where: { $0.displayID == screenID }) ?? content.displays.first else {
-            throw CaptureError.noDisplay
-        }
-
-        // Hide our own notch panel from the capture.
-        let ownPID = ProcessInfo.processInfo.processIdentifier
-        let ownApps = content.applications.filter { $0.processID == ownPID }
-        let filter = SCContentFilter(display: display, excludingApplications: ownApps, exceptingWindows: [])
+    /// `displayID` picks a display (Do It follows the display its target window is on); nil is the main one, as before.
+    static func captureBase64JPEG(region: GridRect? = nil, displayID: CGDirectDisplayID? = nil) async throws -> String {
+        let (display, filter) = try await displayFilter(displayID)
+        _ = display
 
         let scale = region == nil ? min(1, maxEdge / CGFloat(max(display.width, display.height))) : 1   // a zoom keeps the display's own detail
         let config = SCStreamConfiguration()
@@ -59,6 +47,47 @@ enum ScreenCapture {
             if let cropped = cgImage.cropping(to: box) { return try encode(cropped) }
         }
         return try encode(cgImage)
+    }
+
+    /// The chosen display (or the main one) and a filter that hides Notch Apple's own windows.
+    private static func displayFilter(_ displayID: CGDirectDisplayID?) async throws -> (SCDisplay, SCContentFilter) {
+        // Ask first: without permission ScreenCaptureKit fails with a vague error.
+        if !ScreenPermission.isGranted {
+            await MainActor.run { _ = ScreenPermission.request() }
+            if !ScreenPermission.isGranted { throw CaptureError.noPermission }
+        }
+        let content = try await SCShareableContent.excludingDesktopWindows(false, onScreenWindowsOnly: true)
+        let mainID = (NSScreen.main?.deviceDescription[NSDeviceDescriptionKey("NSScreenNumber")] as? NSNumber)?.uint32Value
+        let wantID = displayID ?? mainID
+        guard let display = content.displays.first(where: { $0.displayID == wantID }) ?? content.displays.first else {
+            throw CaptureError.noDisplay
+        }
+        let ownPID = ProcessInfo.processInfo.processIdentifier
+        let ownApps = content.applications.filter { $0.processID == ownPID }
+        return (display, SCContentFilter(display: display, excludingApplications: ownApps, exceptingWindows: []))
+    }
+
+    /// A tiny 32x32 luma signature of the display, for Do It's "did the screen change?" check (see DoItPolicy).
+    static func signature(displayID: CGDirectDisplayID? = nil) async throws -> [UInt8] {
+        let (_, filter) = try await displayFilter(displayID)
+        let config = SCStreamConfiguration()
+        config.width = 32
+        config.height = 32
+        config.showsCursor = false
+        let image = try await SCScreenshotManager.captureImage(contentFilter: filter, configuration: config)
+        guard let data = image.dataProvider?.data, let bytes = CFDataGetBytePtr(data) else { throw CaptureError.encode }
+        let bytesPerRow = image.bytesPerRow, bpp = max(image.bitsPerPixel / 8, 1)
+        var out = [UInt8]()
+        out.reserveCapacity(image.width * image.height)
+        for y in 0..<image.height {
+            for x in 0..<image.width {
+                let p = y * bytesPerRow + x * bpp
+                // Average the first three channels; close enough to luma for change detection.
+                let luma = (Int(bytes[p]) + Int(bytes[p + min(1, bpp - 1)]) + Int(bytes[p + min(2, bpp - 1)])) / 3
+                out.append(UInt8(luma))
+            }
+        }
+        return out
     }
 
     private static func encode(_ image: CGImage) throws -> String {
