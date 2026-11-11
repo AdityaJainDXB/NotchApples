@@ -598,3 +598,52 @@ test('relief: every track has the elevation it is meant to have, drivable, and t
   }
   if (process.env.RELIEF_TABLE) console.log('track\tintended\tbuilt\tmax grade\n' + rows.join('\n'));
 });
+
+test('race rules: tyres wear faster when soft and sliding, and a worn tyre has less grip', () => {
+  const soft = R.tyreWearRate(40, 2, false, 1.6, false), hard = R.tyreWearRate(40, 2, false, 0.6, false);
+  assert.ok(soft > hard * 2.5);
+  assert.ok(R.tyreWearRate(40, 2, true, 1, false) > R.tyreWearRate(40, 2, false, 1, false));
+  assert.ok(R.tyreWearRate(40, 2, false, 1, true) > R.tyreWearRate(40, 2, false, 1, false));
+  assert.equal(R.tyreWearGrip(1, 0), 1);
+  assert.ok(Math.abs(R.tyreWearGrip(1, 1) - 0.68) < 1e-9 && R.tyreWearGrip(1, 5) === R.tyreWearGrip(1, 1));
+});
+
+test('race rules: pit stops fit the right tyre and take longer with a penalty or damage', () => {
+  assert.equal(R.pitTyreChoice(0.8, 10, 20), 'W'); assert.equal(R.pitTyreChoice(0.4, 10, 20), 'I');
+  assert.equal(R.pitTyreChoice(0, 15, 20), 'H'); assert.equal(R.pitTyreChoice(0, 5, 20), 'M'); assert.equal(R.pitTyreChoice(0, 1, 20), 'S');
+  assert.equal(R.pitServiceTime(0, 0, 0), 2.4);
+  assert.equal(R.pitServiceTime(5, 0, 0), 7.4);
+  assert.ok(Math.abs(R.pitServiceTime(0, 0.8, 0) - 4.4) < 1e-9);
+});
+
+test('race rules: DRS opens within a second of the car ahead, on green flags only, never in lap 1 or the pit lane', () => {
+  assert.ok(R.drsEligible('green', 2, false, 0.6));
+  assert.ok(!R.drsEligible('green', 2, false, 1.2) && !R.drsEligible('green', 2, false, -0.1) && !R.drsEligible('green', 2, false, null));
+  assert.ok(!R.drsEligible('yellow', 2, false, 0.6) && !R.drsEligible('sc', 2, false, 0.6));
+  assert.ok(!R.drsEligible('green', 0, false, 0.6) && !R.drsEligible('green', 2, true, 0.6));
+});
+
+test('race rules: track limits give two warnings, the black and white flag, then penalties', () => {
+  assert.deepEqual([0, 1, 2, 3, 4, 9].map((n) => R.trackLimitStep(n).action), ['warning', 'warning', 'blackwhite', 'penalty', 'penalty', 'penalty']);
+  assert.equal(R.trackLimitStep(undefined).count, 1);
+});
+
+test('race rules: a crash calls the yellow, virtual safety car, safety car or red flag by how bad it is', () => {
+  assert.equal(R.flagForCrash(10, 0, 0.3), 'yellow'); assert.equal(R.flagForCrash(10, 1, 0.95), 'vsc');
+  assert.equal(R.flagForCrash(30, 1, 0.5), 'sc'); assert.equal(R.flagForCrash(10, 2, 0.95), 'sc');
+  assert.equal(R.flagForCrash(50, 1, 1), 'red'); assert.equal(R.flagForCrash(10, 4, 1), 'red');
+});
+
+test('race rules: the ERS battery drains when deployed, refills when braking, and never leaves 0..1', () => {
+  assert.ok(Math.abs(R.ersStep(1, true, false, 7) - 0.5 - 7 * 0.006) < 1e-9);
+  assert.equal(R.ersStep(0, true, false, 1), 0.006);
+  assert.equal(R.ersStep(0.95, false, true, 1), 1);
+  let e = 1; for (let i = 0; i < 20; i++) e = R.ersStep(e, true, false, 1); assert.ok(e < 0.1 && e >= 0);
+});
+
+test('the 2025 grid: ten teams of two, each with a livery, and rivals come two to a team', () => {
+  assert.equal(R.F1_2025.length, 10);
+  assert.ok(R.F1_2025.every((t) => t.drivers.length === 2 && /^#[0-9a-f]{6}$/.test(t.color)));
+  const g = R.gridRivals(20); assert.equal(g.length, 20); assert.equal(new Set(g.map((d) => d.name)).size, 20);
+  assert.equal(g[0].team, g[1].team); assert.notEqual(g[1].team, g[2].team); assert.equal(R.gridRivals(3).length, 3);
+});
