@@ -348,6 +348,7 @@ final class FriendsClient: ObservableObject {
 
     func setAlias(_ box: String, _ alias: String?) { book.setAlias(box: box, alias); persist() }
     func unblockAll() { book.unblockAll(); persist() }
+    func unblock(_ fingerprint: String) { book.unblock(fingerprint: fingerprint); persist() }
 
     /// "Delete all my chat data": the server mailbox, the history, friends and block list. The code and keys stay.
     func deleteEverything() async {

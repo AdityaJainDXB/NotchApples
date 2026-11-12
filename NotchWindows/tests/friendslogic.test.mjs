@@ -175,3 +175,27 @@ test('the safety number is shown as three rows of four groups', () => {
   const rows = L.safetyRows('15339 92774 60316 35367 16261 21826 25653 63881 36886 95197 57797 31678');
   assert.deepEqual(rows, ['15339  92774  60316  35367', '16261  21826  25653  63881', '36886  95197  57797  31678']);
 });
+
+test('a blocked person can be unblocked on their own, and then reaches you again', () => {
+  const alice = person(1), bob = person(2), v = L.newVault();
+  L.receiveRequest(v, request(alice), alice.fp); L.receiveRequest(v, request(bob), bob.fp);
+  L.setAlias(v, alice.box, 'Alice from school');
+  L.block(v, alice.box); L.block(v, bob.box);
+  assert.deepEqual(L.blockedPeople(v).map((b) => b.name), ['Alice from school', L.blockedPeople(v)[1].name]);
+  assert.ok(L.blockedPeople(v)[1].name.startsWith('Friend') || L.blockedPeople(v)[1].name.length > 0);
+  L.unblock(v, alice.fp);
+  assert.deepEqual(v.blocked, [bob.fp], 'only Alice is unblocked');
+  assert.equal(v.blockedNames[alice.fp], undefined);
+  assert.equal(L.receiveRequest(v, request(bob), bob.fp).kind, 'ignored', 'Bob is still blocked');
+  assert.notEqual(L.receiveRequest(v, request(alice), alice.fp).kind, 'ignored', 'Alice can send a request again');
+  L.unblock(v, 'not-in-the-list'); assert.deepEqual(v.blocked, [bob.fp], 'an unknown fingerprint changes nothing');
+  L.unblockAll(v); assert.deepEqual(v.blocked, []); assert.deepEqual(v.blockedNames, {});
+});
+
+test('a vault saved before the blocked list had names still loads, and shows a short code', () => {
+  const v = L.normalizeVault({ friends: [], blocked: ['abcd1234'] });
+  assert.deepEqual(v.blockedNames, {});
+  assert.equal(L.blockedPeople(v)[0].name, 'Someone you blocked (ABCD)');
+  const w = L.normalizeVault({ blocked: ['f1'], blockedNames: { f1: 'Sam', other: 'Not blocked', f2: 5 } });
+  assert.deepEqual(w.blockedNames, { f1: 'Sam' }, 'only names of blocked people, only strings');
+});

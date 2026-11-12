@@ -541,6 +541,8 @@ export function remove(box) {
 
 export function setAlias(box, alias) { L.setAlias(vault, box, alias); persist(); }
 export function unblockAll() { L.unblockAll(vault); persist(); }
+export function unblock(fp) { L.unblock(vault, fp); persist(); }
+export const blockedPeople = () => L.blockedPeople(vault);
 
 /** "Delete all my chat data": the server mailbox, the history, friends and block list. The code and keys stay. */
 export async function deleteEverything() {
