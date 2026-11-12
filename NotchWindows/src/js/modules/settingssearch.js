@@ -18,6 +18,7 @@ export const PANE_KEYWORDS = {
   Rules: 'profile work study gaming automatic app rules hide per-app time',
   Automations: 'automation routines actions triggers',
   Access: 'license pro ultimate key activate upgrade buy price restore lost deactivate terms refund',
+  Report: 'bug problem issue crash idea suggestion feature question github feedback broken',
   About: 'version help feedback bug report crash support donate',
 };
 

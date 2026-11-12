@@ -12,13 +12,14 @@ import { icon } from '../icons.js';
 import { keyField, BUY_URL, badge } from './activation.js';
 import { securityCard } from './security.js';
 import { buildIndex, search, searchFeatures, fold } from './settingssearch.js';
+import * as Report from './reportlogic.js';
 
-export const PANES = { General, Updates, Appearance, Tabs, Shortcuts, AI, Calendar, Weather, Clipboard, Security, Rules, Automations, Access, About };
+export const PANES = { General, Updates, Appearance, Tabs, Shortcuts, AI, Calendar, Weather, Clipboard, Security, Rules, Automations, Access, Report: ReportPane, About };
 const NAV = { General: ['settings', '#8e8e93'], Updates: ['share', '#30d158'], Appearance: ['appearance', '#bf5af2'], Tabs: ['home', '#5e5ce6'], Shortcuts: ['shortcuts', '#64d2ff'], AI: ['ai', '#ff9f0a'],
   Calendar: ['calendar', '#ff453a'], Weather: ['weather', '#32ade6'], Clipboard: ['clipboard', '#ffd60a'], Security: ['security', '#ff6b6b'], Rules: ['rules', '#30d158'],
-  Automations: ['automations', '#bf5af2'], Access: ['access', '#0a84ff'], About: ['about', '#5e5ce6'] };
+  Automations: ['automations', '#bf5af2'], Access: ['access', '#0a84ff'], Report: ['about', '#ff453a'], About: ['about', '#5e5ce6'] };
 const ICONS_UPDATES = 1;
-const ICONS = { General: '⚙', Appearance: '🎨', Tabs: '🗂', Shortcuts: '⌨', AI: '✨', Calendar: '📅', Weather: '⛅', Clipboard: '📋', Security: '🔒', Rules: '🧭', Automations: '🤖', Access: '🔑', About: 'ℹ' };
+const ICONS = { Report: '🐞', General: '⚙', Appearance: '🎨', Tabs: '🗂', Shortcuts: '⌨', AI: '✨', Calendar: '📅', Weather: '⛅', Clipboard: '📋', Security: '🔒', Rules: '🧭', Automations: '🤖', Access: '🔑', About: 'ℹ' };
 
 /// Keys that hold a secret (a licence, an AI key, a token, the clipboard-link code): never in a backup, never restored from one.
 const SECRET_KEY = /^(ai\.key\.|license\.|entitle\.|clipsync\.code$)|\.(token|pass|password|secret)$/;
@@ -451,6 +452,24 @@ function Access(repaint) {
   card('What’s included', ...feats.map(([id, f]) => el('div', { class: 'hstack small', style: 'padding:3px 0' },
     el('span', { style: 'width:16px' }, canUse(id) ? '✓' : ''), el('span', { class: 'grow' }, f.title, el('span', { class: 'tiny faint' }, ` — ${f.mac ? `Mac only: ${f.mac}` : f.detail}`)), badge(id)))),
   el('div', { class: 'small dim' }, 'Lost your key? notchapples.support@gmail.com')].filter(Boolean);
+}
+
+function ReportPane() {
+  let kind = 'bug';
+  const info = { platform: 'Windows', version: '…', tier: tierLabel(tier()), system: (navigator.userAgent.match(/Windows NT [\d.]+/) || ['Windows'])[0] };
+  appInfo.then((i) => { info.version = i.version; fill(); }).catch(() => {});
+  const text = el('textarea', { class: 'field', style: 'min-height:130px', placeholder: Report.KINDS[kind].prompt, maxlength: Report.MAX_DESCRIPTION });
+  const count = el('span', { class: 'tiny dim' }, `0/${Report.MAX_DESCRIPTION}`);
+  const send = button('Open on GitHub…', () => openUrl(Report.issueUrl(kind, info, text.value)));
+  const facts = el('div', { class: 'small dim' });
+  function fill() { facts.replaceChildren(...Report.environment(info).map((l) => el('div', {}, l))); }
+  const refresh = () => { count.textContent = `${text.value.length}/${Report.MAX_DESCRIPTION}`; send.disabled = !Report.isReady(text.value); };
+  text.addEventListener('input', refresh);
+  const kinds = segmented(Object.entries(Report.KINDS).map(([value, k]) => ({ value, label: k.title })), kind, (v) => { kind = v; text.placeholder = Report.KINDS[v].prompt; });
+  fill(); refresh();
+  return [card('Report a problem or an idea', kinds, text, el('div', { class: 'hstack' }, count, el('div', { class: 'grow' }), send),
+      el('div', { class: 'tiny dim' }, 'This opens a GitHub issue in your browser, filled in for you. You read it and press Submit yourself; Notch Apple sends nothing. You need a free GitHub account.')),
+    card('What the report says about you', facts, el('div', { class: 'tiny dim', style: 'padding-top:6px' }, 'Only these four lines are added. No keys, notes, history, file names or personal details.'))];
 }
 
 function About() {
