@@ -146,7 +146,7 @@ New body types inside the same sealed `msg` blobs. Older clients ignore keys and
 | `t` | Fields | Meaning |
 | --- | --- | --- |
 | `chunk` | `from, id, fname, fn, fi, fd, g?` | One piece of a file. `id` is the file's message id, `fn` the chunk count (1…250), `fi` this piece (0-based), `fd` up to 8,000 bytes as base64url. The receiver keeps the pieces until all `fn` have arrived, then stores the file and shows one message. Files are at most 2,000,000 bytes (Mac 2.2.8; before that 160,000 and 20 pieces, so an older app silently ignores a file of more than 20 pieces): a sealed blob is limited to about 16 KB by the relay (`MAX_MSG_BLOB`), so a file goes as one message per piece, paced at about 4 a second and retried when the relay answers 429; a mailbox holds 4.5 MB for a friend who is offline. A partial file is dropped after 10 minutes. |
-| `grp` | `from, g, gname, gm, ts` | Invite or change for a group: `gm` lists every member's mailbox including the sender's and the receiver's. Accepted only from an active friend who is in `gm`, only if the receiver is in `gm`, and a change only from whoever made the group. Up to 20 members. |
+| `grp` | `from, g, gname, gm, ts` | Invite or change for a group: `gm` lists every member's mailbox including the sender's and the receiver's. Accepted only from an active friend who is in `gm`, only if the receiver is in `gm`, a full change (rename, remove people) only from whoever made the group, and from any other member only an addition: the list must keep everyone already in, and the name stays. Up to 20 members. |
 | `gmsg` | `from, g, id, text, ts` | A group message. Accepted only from a member who is an active friend of the receiver. |
 | `gleave` | `from, g` | The sender left the group. |
 

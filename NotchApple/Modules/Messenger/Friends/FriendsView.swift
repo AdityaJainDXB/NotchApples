@@ -27,6 +27,7 @@ struct FriendsView: View {
     @State private var groupName = ""
     @State private var groupPick = Set<String>()
     @State private var groupNote: String?
+    @State private var addToGroupKey: String?
     @State private var confirmLeave = false
     @State private var confirmClear = false
 
@@ -41,6 +42,7 @@ struct FriendsView: View {
         // which hid the confirmation and made Clear chat look like it did nothing.
         .overlay { if confirmClear { clearCard } }
         .overlay { if showNewGroup { newGroupCard } }
+        .overlay { if let key = addToGroupKey { addMembersCard(key) } }
         .overlay { if confirmLeave, let key = selected, let g = client.group(key) {
             confirmCard("Leave \(g.name)?", "Its messages are deleted from this Mac, and the others are told you left.", "Leave", close: { confirmLeave = false }) {
                 client.leaveGroup(g.key); selected = nil
@@ -182,6 +184,7 @@ struct FriendsView: View {
         .buttonStyle(.plain)
         .contextMenu {
             Button("Clear chat…", role: .destructive) { selected = g.key; confirmClear = true }
+            Button("Add friends…") { groupPick = []; groupNote = nil; addToGroupKey = g.key }
             Button("Leave group", role: .destructive) { client.leaveGroup(g.key); if selected == g.key { selected = nil } }
         }
     }
@@ -251,6 +254,52 @@ struct FriendsView: View {
         }
     }
 
+    /// Pick more of my friends to add to a group I'm in. Anyone in the group can do this, not just whoever made it.
+    private func addMembersCard(_ key: String) -> some View {
+        let g = client.group(key)
+        let candidates = client.friends.filter { f in !(g?.members.contains(f.box) ?? true) }
+        return ZStack {
+            Color.black.opacity(0.55).onTapGesture { addToGroupKey = nil }
+            VStack(alignment: .leading, spacing: 10) {
+                Text("Add to \(g?.name ?? "group")").font(.system(size: 15, weight: .semibold)).foregroundStyle(Theme.textPrimary)
+                if candidates.isEmpty {
+                    Text("All your friends are already in this group.").font(.system(size: 11)).foregroundStyle(Theme.textSecondary)
+                } else {
+                    ScrollView {
+                        VStack(alignment: .leading, spacing: 4) {
+                            ForEach(candidates) { f in
+                                let on = groupPick.contains(f.box)
+                                Button { if on { groupPick.remove(f.box) } else { groupPick.insert(f.box) } } label: {
+                                    HStack(spacing: 8) {
+                                        Image(systemName: on ? "checkmark.square.fill" : "square").foregroundStyle(on ? Theme.accentBright : Theme.textSecondary)
+                                        Text(f.displayName).font(.system(size: 12)).foregroundStyle(Theme.textPrimary).lineLimit(1)
+                                        Spacer()
+                                    }
+                                    .padding(.horizontal, 8).padding(.vertical, 5).contentShape(Rectangle())
+                                    .background(on ? Theme.surfaceHover : Theme.surface, in: RoundedRectangle(cornerRadius: 8))
+                                }.buttonStyle(.plain)
+                            }
+                        }
+                    }.frame(maxHeight: 150)
+                }
+                Text("You can add your own friends without asking whoever made the group. They only see messages from people who are also their friends.")
+                    .font(.system(size: 10)).foregroundStyle(Theme.textSecondary).fixedSize(horizontal: false, vertical: true)
+                if let note = groupNote { Text(note).font(.system(size: 11)).foregroundStyle(.orange) }
+                HStack {
+                    Spacer()
+                    Button("Cancel") { addToGroupKey = nil }.buttonStyle(PurpleButtonStyle(prominent: false))
+                    Button("Add") {
+                        groupNote = client.addToGroup(key, members: Array(groupPick))
+                        if groupNote == nil { addToGroupKey = nil }
+                    }.buttonStyle(PurpleButtonStyle()).disabled(groupPick.isEmpty)
+                }
+            }
+            .padding(14).frame(maxWidth: 340)
+            .background(Theme.deep, in: RoundedRectangle(cornerRadius: 14))
+            .overlay(RoundedRectangle(cornerRadius: 14).stroke(Theme.separator))
+        }
+    }
+
     private func groupChat(_ g: FriendGroup) -> some View {
         VStack(spacing: 8) {
             HStack {
@@ -262,6 +311,7 @@ struct FriendsView: View {
                 }
                 Spacer()
                 Menu {
+                    Button("Add friends…") { groupPick = []; groupNote = nil; addToGroupKey = g.key }
                     Button("Clear chat…", role: .destructive) { confirmClear = true }
                     Button("Leave group", role: .destructive) { confirmLeave = true }
                 } label: { Image(systemName: "ellipsis.circle") }

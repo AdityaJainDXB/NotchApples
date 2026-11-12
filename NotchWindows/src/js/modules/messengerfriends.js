@@ -79,7 +79,7 @@ export function render(root) {
   function groupRow(g) {
     const key = L.groupKey(g.id);
     return el('div', { class: `item clickable ${selected === key ? 'selected' : ''}`, style: 'padding:5px 8px;gap:8px', onclick: () => select(key),
-      oncontextmenu: (e) => { e.preventDefault(); menu(e, [{ label: 'Clear chat…', danger: true, run: () => clearChat(key, `everyone in ${g.name}`, true) }, { label: 'Leave group', danger: true, run: () => leave(g) }]); } },
+      oncontextmenu: (e) => { e.preventDefault(); menu(e, [{ label: 'Add friends…', run: () => addFriendsToGroup(key) }, { label: 'Clear chat…', danger: true, run: () => clearChat(key, `everyone in ${g.name}`, true) }, { label: 'Leave group', danger: true, run: () => leave(g) }]); } },
       el('div', { style: 'width:24px;height:24px;border-radius:50%;flex:none;display:grid;place-items:center;font-size:12px;background:rgba(255,255,255,.12)' }, '👥'),
       el('div', { class: 'main', style: 'font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap' }, g.name),
       g.unread > 0 ? el('span', { class: 'badge' }, String(g.unread)) : null);
@@ -97,6 +97,24 @@ export function render(root) {
   }
   async function leave(g) {
     if (await confirm(`Leave ${g.name}?`, { ok: 'Leave', danger: true, detail: 'The group and its messages are deleted from this PC. Others are told you left.' })) { const key = L.groupKey(g.id); FR.leaveGroup(key); if (selected === key) select(null); }
+  }
+  /** Add some of my friends to a group I'm in. Anyone in the group can do this, not just whoever made it. */
+  function addFriendsToGroup(key) {
+    const g = FR.group(key);
+    if (!g) return;
+    const picked = new Set(), note = el('div', { class: 'tiny', style: 'color:var(--warn,#e0a030)' });
+    const candidates = FR.friends().filter((f) => !g.members.includes(f.box));
+    const m = modal(`Add to ${g.name}`, [
+      candidates.length ? el('div', { class: 'col gap-4 scroll', style: 'max-height:200px' }, candidates.map((f) => el('label', { class: 'hstack', style: 'gap:8px;cursor:pointer' },
+        el('input', { type: 'checkbox', onchange: (e) => { if (e.target.checked) picked.add(f.box); else picked.delete(f.box); } }), L.displayName(f))))
+        : el('div', { class: 'small dim' }, 'All your friends are already in this group.'),
+      el('div', { class: 'tiny dim' }, 'You can add your own friends without asking whoever made the group. They only see messages from people who are also their friends.'),
+      note,
+      el('div', { class: 'hstack' }, button('Add', () => {
+        const problem = FR.addToGroup(key, [...picked]);
+        if (problem) { note.textContent = problem; return; }
+        m.close(); paintSide();
+      }))]);
   }
   function newGroup() {
     const fr = FR.friends(), picked = new Set(), nameIn = el('input', { class: 'field', placeholder: 'Group name', maxlength: 32 }), note = el('div', { class: 'tiny', style: 'color:var(--warn,#e0a030)' });
@@ -239,7 +257,7 @@ export function render(root) {
       chatKey = key;
       pane.replaceChildren(
         el('div', { class: 'hstack' }, title, typingLine,
-          button('⋯', (e) => menu(e, [{ label: 'Clear chat…', danger: true, run: () => clearChat(key, `everyone in ${(FR.group(key) || g).name}`, true) }, { label: 'Leave group', danger: true, run: () => leave(FR.group(key) || g) }]), { small: true, kind: 'quiet' })),
+          button('⋯', (e) => menu(e, [{ label: 'Add friends…', run: () => addFriendsToGroup(key) }, { label: 'Clear chat…', danger: true, run: () => clearChat(key, `everyone in ${(FR.group(key) || g).name}`, true) }, { label: 'Leave group', danger: true, run: () => leave(FR.group(key) || g) }]), { small: true, kind: 'quiet' })),
         groupNote, log, problem, el('div', { class: 'hstack' }, clip, draft, button('Send', send, { title: 'Send (Enter)' })));
       setTimeout(() => draft.focus(), 30);
     }
