@@ -68,7 +68,7 @@ struct FriendsView: View {
             }
             HStack(spacing: 4) {
                 TextField("Friend code", text: $addText)
-                    .textFieldStyle(.plain).font(.system(size: 12)).padding(.horizontal, 8).frame(height: 28)
+                    .textFieldStyle(.plain).foregroundStyle(Theme.textPrimary).font(.system(size: 12)).padding(.horizontal, 8).frame(height: 28)
                     .background(Theme.surface, in: Capsule()).onSubmit(add)
                 Button(action: add) { Image(systemName: adding ? "hourglass" : "person.badge.plus") }
                     .buttonStyle(PurpleButtonStyle()).disabled(adding || addText.trimmingCharacters(in: .whitespaces).isEmpty)
@@ -193,7 +193,7 @@ struct FriendsView: View {
             Color.black.opacity(0.55).onTapGesture { showNewGroup = false }
             VStack(alignment: .leading, spacing: 10) {
                 Text("New group").font(.system(size: 15, weight: .semibold)).foregroundStyle(Theme.textPrimary)
-                TextField("Group name", text: $groupName).textFieldStyle(.plain).font(.system(size: 12)).padding(.horizontal, 8).frame(height: 28)
+                TextField("Group name", text: $groupName).textFieldStyle(.plain).foregroundStyle(Theme.textPrimary).font(.system(size: 12)).padding(.horizontal, 8).frame(height: 28)
                     .background(Theme.surface, in: RoundedRectangle(cornerRadius: 8))
                 Text("Pick friends to add").font(.system(size: 11)).foregroundStyle(Theme.textSecondary)
                 ScrollView {
@@ -295,7 +295,7 @@ struct FriendsView: View {
             Button { attach(to: key) } label: { Image(systemName: "paperclip").font(.system(size: 15)).frame(width: 28, height: 28).contentShape(Rectangle()) }
                 .buttonStyle(.plain).foregroundStyle(Theme.textSecondary).help("Send a file (up to \(Friends.maxFileText)). It is encrypted like a message.")
             TextField("Message", text: $draft)
-                .textFieldStyle(.plain).font(.system(size: 13)).padding(.horizontal, 12).frame(height: 32)
+                .textFieldStyle(.plain).foregroundStyle(Theme.textPrimary).font(.system(size: 13)).padding(.horizontal, 12).frame(height: 32)
                 .background(Theme.surface, in: Capsule())
                 .onSubmit(send)
                 .onChange(of: draft) { _, new in if typing, !new.isEmpty { client.typingChanged(to: key) } }

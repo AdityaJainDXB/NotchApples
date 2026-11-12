@@ -129,7 +129,7 @@ struct NotchMessengerView: View {
         HStack(spacing: 8) {
             Image(systemName: "number").foregroundStyle(Theme.textSecondary)
             TextField("Room code, e.g. cafe-study or 8821", text: $roomDraft)
-                .textFieldStyle(.plain).font(.system(size: 13))
+                .textFieldStyle(.plain).foregroundStyle(Theme.textPrimary).font(.system(size: 13))
                 .onSubmit(joinRoom)
             if web.state == .joined, let room = web.room {
                 // Share: copy the code so friends can join the same room.
@@ -234,7 +234,7 @@ struct NotchMessengerView: View {
             }
             TextField(canSend ? "Message" : (mode == .nearby ? "Waiting for someone nearby…" : "Join a room to chat"),
                       text: $draft)
-                .textFieldStyle(.plain).font(.system(size: 13))
+                .textFieldStyle(.plain).foregroundStyle(Theme.textPrimary).font(.system(size: 13))
                 .padding(.horizontal, 12).frame(height: 32)
                 .background(Theme.surface, in: Capsule())
                 .onSubmit(send)

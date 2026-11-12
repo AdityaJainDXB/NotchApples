@@ -76,7 +76,7 @@ struct WorldClockView: View {
     private var picker: some View {
         VStack(alignment: .leading, spacing: 6) {
             TextField("Search a city, state or country", text: $search)
-                .textFieldStyle(.plain).padding(8)
+                .textFieldStyle(.plain).foregroundStyle(Theme.textPrimary).padding(8)
                 .background(Theme.surface, in: RoundedRectangle(cornerRadius: 8, style: .continuous))
             ScrollView {
                 VStack(alignment: .leading, spacing: 2) {
