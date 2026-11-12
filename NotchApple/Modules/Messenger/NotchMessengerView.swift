@@ -61,14 +61,26 @@ struct NotchMessengerView: View {
 
     // MARK: Header
 
+    private func modeButton(_ title: String, _ icon: String, _ m: Mode) -> some View {
+        let on = mode == m
+        return Button { mode = m } label: {
+            Label(title, systemImage: icon).font(.system(size: 11, weight: .semibold)).lineLimit(1)
+                .frame(maxWidth: .infinity, minHeight: 24)
+                .foregroundStyle(on ? Theme.onAccent : Theme.textPrimary)
+                .background(on ? AnyShapeStyle(Theme.accentGradient) : AnyShapeStyle(Color.clear), in: Capsule())
+        }
+        .buttonStyle(.plain).accessibilityAddTraits(on ? .isSelected : [])
+    }
+
     private var header: some View {
         HStack(spacing: 10) {
-            Picker("Mode", selection: $mode) {
-                Label("Nearby Wi-Fi", systemImage: "wifi").tag(Mode.nearby)
-                Label("Anonymous room", systemImage: "globe").tag(Mode.room)
-                Label("Friends", systemImage: "person.2.fill").tag(Mode.friends)
+            // Drawn here, not a system segmented control: the system one ignores the theme and shows black labels on dark themes.
+            HStack(spacing: 2) {
+                modeButton("Nearby Wi-Fi", "wifi", .nearby)
+                modeButton("Anonymous room", "globe", .room)
+                modeButton("Friends", "person.2.fill", .friends)
             }
-            .pickerStyle(.segmented).labelsHidden().frame(width: 390)
+            .padding(2).background(Theme.surface, in: Capsule()).frame(width: 390)
 
             HStack(spacing: 5) {
                 Circle().fill(statusColor).frame(width: 8, height: 8)
@@ -76,7 +88,7 @@ struct NotchMessengerView: View {
             }
             Spacer(minLength: 4)
             Label(identity.handle, systemImage: "person.crop.circle.fill")
-                .font(.system(size: 12, weight: .semibold)).foregroundStyle(.white).lineLimit(1)
+                .font(.system(size: 12, weight: .semibold)).foregroundStyle(Theme.textPrimary).lineLimit(1)
                 .help("Your anonymous handle. Change it in Settings → Messenger.")
         }
     }
@@ -272,7 +284,7 @@ private struct MessengerBubble: View {
                             Button { openFile(name: name, data: data) } label: {
                                 Label(name, systemImage: "doc.fill")
                                     .font(.system(size: 12, weight: .medium))
-                                    .foregroundStyle(.white)
+                                    .foregroundStyle(Theme.textPrimary)
                                     .padding(.horizontal, 8).padding(.vertical, 4)
                                     .background(Theme.accent.opacity(0.5), in: Capsule())
                             }
@@ -280,7 +292,7 @@ private struct MessengerBubble: View {
                         }
                         if !message.text.isEmpty {
                             Text(message.text)
-                                .font(.system(size: 13)).foregroundStyle(.white).textSelection(.enabled)
+                                .font(.system(size: 13)).foregroundStyle(message.isMine ? Theme.onAccent : Theme.textPrimary).textSelection(.enabled)
                                 .padding(.horizontal, 12).padding(.vertical, 7)
                                 .background(
                                     RoundedRectangle(cornerRadius: 14, style: .continuous)
@@ -414,7 +426,7 @@ struct TicTacToeCard: View {
                     }
                 }
             }
-            Text(statusLine).font(.system(size: 12, weight: myTurn ? .bold : .regular)).foregroundStyle(.white)
+            Text(statusLine).font(.system(size: 12, weight: myTurn ? .bold : .regular)).foregroundStyle(Theme.textPrimary)
             HStack(spacing: 8) {
                 if (game.status == .won || game.status == .draw), myMark != nil {
                     let asked = game.rematch.contains(myID)
@@ -436,7 +448,7 @@ struct TicTacToeCard: View {
         let win = game.line?.contains(i) ?? false
         return Button { io.move(i) } label: {
             Text(mark?.rawValue ?? "")
-                .font(.system(size: 24, weight: .heavy)).foregroundStyle(.white)
+                .font(.system(size: 24, weight: .heavy)).foregroundStyle(win ? Theme.onAccent : Theme.textPrimary)
                 .frame(width: 46, height: 46)
                 .background(win ? AnyShapeStyle(Theme.accentGradient) : AnyShapeStyle(Theme.surfaceHover),
                             in: RoundedRectangle(cornerRadius: 8, style: .continuous))
