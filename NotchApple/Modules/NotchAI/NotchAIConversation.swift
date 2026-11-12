@@ -65,6 +65,16 @@ final class NotchAIConversation: ObservableObject {
         task?.cancel()
     }
 
+    /// Brings a saved conversation back so it can be continued: its messages, and new replies are saved to the same chat.
+    func load(_ session: ChatSession) {
+        task?.cancel()
+        messages = session.messages.map { ChatMessage(role: $0.role == "user" ? .user : .assistant, text: $0.text) }
+        failure = nil; busy = false
+        sessionID = session.id
+        questionSaved = true
+        CursorCompanion.shared.setState(.idle)
+    }
+
     /// Starts a fresh conversation (the old one stays in AI History).
     func newConversation() {
         task?.cancel()

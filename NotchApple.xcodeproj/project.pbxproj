@@ -369,6 +369,7 @@
 		9F68FFA4EE2970516B9AA33A /* DevToolkitTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7CC31FE35B8BD0245C7DD53D /* DevToolkitTests.swift */; };
 		9F8F1D24DD4B77A8B3ED11C1 /* RadarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E0227AD2AD08AA73D5BFC1A9 /* RadarView.swift */; };
 		9F9EC854E119ACE78147C2FE /* ClaudeClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6747ADA828FF1D33683B30C8 /* ClaudeClient.swift */; };
+		9FDEACA921746943259CF3CF /* NotchAIWorkspace.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2123CC2F5028FB383E903865 /* NotchAIWorkspace.swift */; };
 		9FEE124D15AD0348DC7BBDB1 /* NotchWindow+LevelFix.swift in Sources */ = {isa = PBXBuildFile; fileRef = 023AF917ACD38E560C4DD67B /* NotchWindow+LevelFix.swift */; };
 		A040782D17657A88DAEFF022 /* DoItAX.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF8D816C57E2013807E3A957 /* DoItAX.swift */; };
 		A0A0F5485BA1A9A4A4CA4A7A /* DevToolsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E6BBA7A9A73D3E56B7234B9 /* DevToolsView.swift */; };
@@ -688,6 +689,7 @@
 		1FBA2BCF0B2D57BAD4E68BAD /* TicTacToeLogic.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TicTacToeLogic.swift; sourceTree = "<group>"; };
 		1FBE15E7D341F0CD34FF68F7 /* LinkShelfLogic.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LinkShelfLogic.swift; sourceTree = "<group>"; };
 		205D059FF2604C33360CE928 /* NotchAIMCPTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotchAIMCPTests.swift; sourceTree = "<group>"; };
+		2123CC2F5028FB383E903865 /* NotchAIWorkspace.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotchAIWorkspace.swift; sourceTree = "<group>"; };
 		21DB33F0188BFD9B3D8FA4C3 /* ClipboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClipboardView.swift; sourceTree = "<group>"; };
 		223DF7525EF47087BAD0DD8B /* UpdateCadenceLogic.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdateCadenceLogic.swift; sourceTree = "<group>"; };
 		2254DC7F98860645E6CC2E11 /* TodayExtras.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodayExtras.swift; sourceTree = "<group>"; };
@@ -1654,6 +1656,14 @@
 			path = Core;
 			sourceTree = "<group>";
 		};
+		5E1739E09312FC06BEC39993 /* Workspace */ = {
+			isa = PBXGroup;
+			children = (
+				2123CC2F5028FB383E903865 /* NotchAIWorkspace.swift */,
+			);
+			path = Workspace;
+			sourceTree = "<group>";
+		};
 		5F0C73E4FBAF7B85EF28C088 /* Markets */ = {
 			isa = PBXGroup;
 			children = (
@@ -2206,6 +2216,7 @@
 				97C794CEDD80A5B40FF3C51F /* Teaching */,
 				043A419CDC290421F640A213 /* Visual */,
 				D6E73211C2EB201543816F8F /* Voice */,
+				5E1739E09312FC06BEC39993 /* Workspace */,
 			);
 			path = NotchAI;
 			sourceTree = "<group>";
@@ -2690,6 +2701,7 @@
 				72C9114F535F216A4DEBEA12 /* NotchAIVoiceLogic.swift in Sources */,
 				F29515043F99542AB62C2E4C /* NotchAIVoiceView.swift in Sources */,
 				C9FC070971EC9A0CB0FD4306 /* NotchAIWebSearch.swift in Sources */,
+				9FDEACA921746943259CF3CF /* NotchAIWorkspace.swift in Sources */,
 				4098B0C40272540FC563BC1F /* NotchAppleApp.swift in Sources */,
 				E939E90FAF6BDF621DD802D5 /* NotchBehavior.swift in Sources */,
 				FAB1EFFAB5CBA5F0A84E1C3B /* NotchGestures.swift in Sources */,

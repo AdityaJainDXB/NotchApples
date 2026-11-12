@@ -38,6 +38,7 @@ struct NotchAIView: View {
                         .font(.system(size: 11)).foregroundStyle(Theme.textSecondary).lineLimit(1)
                 }
                 Spacer()
+                Button { NotchAIWorkspaceWindow.open() } label: { Image(systemName: "macwindow") }.buttonStyle(.plain).help("Open the NotchAI window")
                 Picker("", selection: Binding(get: { nav.section }, set: { nav.section = $0 })) { ForEach(Section.allCases) { Text($0.rawValue).tag($0) } }
                     .pickerStyle(.menu).labelsHidden().frame(width: 130)
             }
