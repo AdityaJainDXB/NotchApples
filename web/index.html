@@ -76,16 +76,16 @@ h3{font-size:19px;letter-spacing:-.015em;line-height:1.3}
 section[id],header[id],[id].anchor{scroll-margin-top:84px}
 
 /* ============ Buttons ============ */
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:9px;height:48px;padding:0 22px;border-radius:99px;font:600 15px/1 Geist,sans-serif;background:var(--ac-strong);color:#fff;border:0;cursor:pointer;white-space:nowrap;box-shadow:inset 0 1px 0 rgba(255,255,255,.22),0 8px 20px -10px rgba(0,0,0,.7);transition:transform 160ms var(--ease-out),background-color .2s ease,box-shadow .2s ease;-webkit-tap-highlight-color:transparent}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:9px;height:48px;padding:0 22px;border-radius:14px;font:600 15px/1 Geist,sans-serif;background:radial-gradient(120% 90% at 50% 0%,#6162e4 0%,#4f46dc 55%,#4a42d6 100%);color:#fff;border:1.5px solid #3a33ad;box-shadow:inset 0 1px 1px rgba(255,255,255,.38),inset 0 -2px 4px rgba(24,18,110,.3),0 8px 18px -8px rgba(79,70,220,.7),0 1px 2px rgba(0,0,0,.3);cursor:pointer;white-space:nowrap;transition:transform 160ms var(--ease-out),background-color .2s ease,box-shadow .2s ease;-webkit-tap-highlight-color:transparent}
 .btn .ph{font-size:18px}
 .btn:active{transform:scale(.96)}
-.btn.ghost{background:rgba(255,255,255,.06);box-shadow:inset 0 0 0 1px var(--line2);color:var(--tx)}
+.btn.ghost{background:linear-gradient(180deg,#fff 0%,#f8f9fb 100%);color:#111827;border-color:#e3e4e8;box-shadow:inset 0 -2px 3px rgba(17,24,39,.05),0 8px 18px -10px rgba(0,0,0,.55),0 1px 2px rgba(0,0,0,.2)}
 .btn.sm{height:36px;padding:0 15px;font-size:13.5px}
 .link{display:inline-flex;align-items:center;gap:6px;font-weight:600;color:var(--tx);height:48px;padding:0 6px}
 .link .ph{transition:transform .25s var(--ease-out)}
 @media (hover:hover) and (pointer:fine){
-  .btn:hover{background:#6a44e0}
-  .btn.ghost:hover{background:rgba(255,255,255,.1)}
+  .btn:hover{filter:brightness(1.06)}
+  .btn.ghost:hover{filter:none;background:#fff}
   .link:hover .ph{transform:translate(2px,-2px)}
 }
 
