@@ -461,7 +461,16 @@ final class SettingsManager: ObservableObject {
     static let utilitiesMembers: [Module] = [.stats, .shelf, .worldClock, .cacheCleaner, .convert, .launcher]
 
     /// Is this module shown only inside the Utilities tab right now?
-    func isInsideUtilities(_ module: Module) -> Bool { utilitiesEnabled && Self.utilitiesMembers.contains(module) }
+    /// World Clock is never a tab or an option of its own: it lives in Utilities for everyone. The other members are inside Utilities while it is on.
+    func isInsideUtilities(_ module: Module) -> Bool { Self.utilitiesMembers.contains(module) && (utilitiesEnabled || module == .worldClock) }
+    /// Modules that have no switch or tab of their own anywhere (they are part of Utilities).
+    static let onlyInsideUtilities: Set<Module> = [.worldClock]
+    /// Anyone who had World Clock as its own tab keeps it: Utilities is switched on for them, once, so it does not vanish.
+    func moveWorldClockIntoUtilities() {
+        guard !UserDefaults.standard.bool(forKey: "worldClock.movedToUtilities") else { return }
+        UserDefaults.standard.set(true, forKey: "worldClock.movedToUtilities")
+        if worldClockEnabled && !utilitiesEnabled { utilitiesEnabled = true }
+    }
 
     /// Where a dropped file should land: the Shelf tab, or the Utilities tab that holds the Shelf.
     var shelfTab: Module { utilitiesEnabled ? .utilities : .shelf }

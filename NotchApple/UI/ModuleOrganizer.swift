@@ -26,7 +26,7 @@ struct ModuleOrganizer: View {
 
     var body: some View {
         let on = settings.enabledTabs
-        let off = Module.allCases.filter { $0.isTab && !settings.isEnabled($0) }
+        let off = Module.allCases.filter { $0.isTab && !settings.isEnabled($0) && !SettingsManager.onlyInsideUtilities.contains($0) }
         VStack(alignment: .leading, spacing: 14) {
             zoneHeader("In your notch", detail: on.isEmpty ? "Nothing yet. Add a tab below." : "Drag to reorder. The first tab opens first.")
             LazyVGrid(columns: columns, spacing: 8) {

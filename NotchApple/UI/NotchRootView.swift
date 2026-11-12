@@ -239,6 +239,7 @@ struct NotchRootView: View {
             .onAppear { previousSelected = state.selected }
             .onAppear { settings.undoAILockFromOffer() }
             .onAppear { settings.undoGamesSearchLockFromOffer() }
+            .onAppear { settings.moveWorldClockIntoUtilities() }
             .onAppear { NotchWidgetCenter.shared.update(selected: state.selected, open: true) }
             .onDisappear { NotchWidgetCenter.shared.update(selected: state.selected, open: false) }
             .onChange(of: state.selected) { _, new in

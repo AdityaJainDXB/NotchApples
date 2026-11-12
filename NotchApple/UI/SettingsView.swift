@@ -937,7 +937,7 @@ private struct ModulesSettings: View {
                 HomeScreenSettings()
             }
             Section {
-                ForEach(Module.allCases.filter { $0 != .nonNecessities && $0 != .translator && (router.isolatedModule == nil || $0 == router.isolatedModule) }) { module in
+                ForEach(Module.allCases.filter { $0 != .nonNecessities && $0 != .translator && !SettingsManager.onlyInsideUtilities.contains($0) && (router.isolatedModule == nil || $0 == router.isolatedModule) }) { module in
                     Group {
                     if ModuleLayoutLogic.isManaged(module.rawValue) {
                         // Reorganised features: pick where they live instead of an on/off switch.

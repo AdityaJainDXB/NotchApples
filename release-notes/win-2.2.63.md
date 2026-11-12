@@ -6,3 +6,4 @@
 - Changed: the notch opens at the Mac's size (740 by 420), and Small is a little smaller
 - New: Settings has a Report tab that opens a GitHub issue saying Windows, your version and your plan
 - Fixed: two missing styles in the printer tab (spacing and note text)
+- Changed: World Clock is no longer a tab or an option of its own. It lives in Utilities for everyone, and if you used it before, Utilities is switched on for you so you keep it

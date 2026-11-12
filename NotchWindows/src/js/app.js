@@ -94,7 +94,15 @@ let openedByHover = false;
 export const isExpanded = () => expanded;
 export const activeTab = () => active;
 
+/// Someone who had World Clock as its own tab keeps it: Utilities is switched on for them, once.
+function moveClockIntoUtilities() {
+  if (load('worldclock.moved', false)) return;
+  save('worldclock.moved', true);
+  if (enabledIds().includes('worldclock') && !enabledIds().includes('utilities')) setEnabled('utilities', true);
+}
+
 export function buildTabs() {
+  moveClockIntoUtilities();
   const order = tabOrder().map(byId).filter((m) => m && isEnabled(m.id) && m.id !== 'settings' && !insideUtilities(enabledIds(), m.id));   // Settings is pinned at the right of the header
   if (active !== 'settings' && active !== 'welcome' && active !== 'weeklyupdates' && active !== 'greetingchoice' && !order.some((m) => m.id === active)) active = order[0]?.id ?? 'settings';
   const mode = pref('ui.compactTabs');

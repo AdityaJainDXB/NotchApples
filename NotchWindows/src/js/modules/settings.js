@@ -287,7 +287,7 @@ function Appearance(repaint) {
 function Tabs(repaint) {
   const order = tabOrder();
   return [el('div', { class: 'hstack' }, el('div', { class: 'small dim grow' }, 'Turn tabs on or off. Drag tabs in the bar to reorder them.'), button('Choose with pictures…', () => show('welcome'), { kind: 'quiet' })),
-    ...order.filter((id) => id !== 'settings').map((id) => MODULES.find((m) => m.id === id)).map((m, i, arr) => el('div', { class: 'item', 'data-module': m.id, style: 'border:1px solid var(--border)' },
+    ...order.filter((id) => id !== 'settings' && id !== 'worldclock').map((id) => MODULES.find((m) => m.id === id)).map((m, i, arr) => el('div', { class: 'item', 'data-module': m.id, style: 'border:1px solid var(--border)' },
       el('span', { style: 'font-size:18px;width:24px' }, m.icon),
       el('div', { class: 'main' }, el('div', { class: 'hstack', style: 'gap:6px' }, el('b', {}, m.name), m.feature ? badge(m.feature) : null), el('div', { class: 'tiny dim' }, m.blurb), m.note ? el('div', { class: 'tiny warn', style: 'font-weight:600' }, `(${m.note})`) : null),
       el('button', { class: 'icon-btn', title: 'Move up', onclick: () => { if (i) { const o = tabOrder(); const a = o.indexOf(m.id), b = o.indexOf(arr[i - 1].id); [o[a], o[b]] = [o[b], o[a]]; setTabOrder(o); repaint(); } } }, '↑'),
