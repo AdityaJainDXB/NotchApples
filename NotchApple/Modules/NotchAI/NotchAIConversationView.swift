@@ -82,7 +82,7 @@ struct NotchAIConversationView: View {
     @ViewBuilder
     private func bubble(_ m: ChatMessage) -> some View {
         if m.role == .user {
-            Text(m.text).font(.system(size: fontSize)).foregroundStyle(.white).textSelection(.enabled)
+            Text(m.display ?? m.text).font(.system(size: fontSize)).foregroundStyle(.white).textSelection(.enabled)
                 .padding(8)
                 .frame(maxWidth: .infinity, alignment: .trailing)
                 .background(NotchAIView.green.opacity(0.25), in: RoundedRectangle(cornerRadius: 8))

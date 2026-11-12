@@ -43,10 +43,12 @@ final class NotchAIConversation: ObservableObject {
 
     // MARK: Actions
 
-    func send(_ text: String) {
+    /// `display` is what the bubble shows instead of a long prompt (screen context); `imageBase64` is an optional
+    /// screenshot, kept on that message only.
+    func send(_ text: String, display: String? = nil, imageBase64: String? = nil) {
         let q = text.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !q.isEmpty, !busy else { return }
-        messages.append(ChatMessage(role: .user, text: q))
+        messages.append(ChatMessage(role: .user, text: q, imageBase64: imageBase64, display: display))
         questionSaved = false
         run(question: q)
     }
@@ -89,7 +91,11 @@ final class NotchAIConversation: ObservableObject {
         #endif
         // What the model sees: the chat so far (without the reply being written), trimmed to fit.
         let sent = NotchAIConversationLogic.trimmed(turns, maxCharacters: NotchAIConversationLogic.contextBudget(windowTokens: nil))
-        let history = sent.map { ChatMessage(role: $0.role == "user" ? .user : .assistant, text: $0.text) }
+        var history = sent.map { ChatMessage(role: $0.role == "user" ? .user : .assistant, text: $0.text) }
+        // A screenshot belongs to the question it was attached to, and is only sent with the latest one.
+        if let image = messages.last(where: { $0.role == .user })?.imageBase64, let i = history.lastIndex(where: { $0.role == .user }) {
+            history[i].imageBase64 = image
+        }
         messages.append(ChatMessage(role: .assistant, text: ""))
         let session = sessionID
         CursorCompanion.shared.setState(.thinking)

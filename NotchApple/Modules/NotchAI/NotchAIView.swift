@@ -12,7 +12,7 @@ import SwiftUI
 
 struct NotchAIView: View {
     enum Section: String, CaseIterable, Identifiable {
-        case overview = "Overview", companion = "Companion", chat = "Chat", voice = "Voice"
+        case overview = "Overview", companion = "Companion", chat = "Chat", voice = "Voice", screen = "Screen"
         var id: String { rawValue }
     }
 
@@ -39,13 +39,14 @@ struct NotchAIView: View {
                 }
                 Spacer()
                 Picker("", selection: Binding(get: { nav.section }, set: { nav.section = $0 })) { ForEach(Section.allCases) { Text($0.rawValue).tag($0) } }
-                    .pickerStyle(.segmented).labelsHidden().frame(width: 270)
+                    .pickerStyle(.segmented).labelsHidden().frame(width: 330)
             }
             switch section {
             case .overview: overview
             case .companion: companion
             case .chat: NotchAIConversationView()
             case .voice: NotchAIVoiceView()
+            case .screen: NotchAIScreenView()
             }
         }
     }
@@ -63,7 +64,7 @@ struct NotchAIView: View {
                     statusRow("Where it runs", loc == .local ? "Local: stays on this Mac or your network" : "Cloud: prompts go to \(config.provider.title)",
                               on: loc == .local)
                 }
-                statusRow("Screen awareness", "Coming in a later update (Pro)", on: false, dim: true)
+                statusRow("Screen awareness", NotchAITier.allows(.pro) ? (ScreenIntelligence.shared.isOn ? "On: only when you ask" : "Off") : "Pro", on: ScreenIntelligence.shared.isOn && NotchAITier.allows(.pro), dim: !NotchAITier.allows(.pro))
                 statusRow("Voice", NotchAIVoice.shared.provider.runsLocally ? "Talk and spoken answers, on this Mac" : "Talk and spoken answers (cloud voice)", on: true)
                 statusRow("Agents and computer control", "Coming in a later update (Ultimate)", on: false, dim: true)
                 HStack {
