@@ -85,6 +85,7 @@ struct SearchDocumentTool: TaskTool {
 struct AgentAskTool: TaskTool {
     let id = "agent_ask"
     let risk = ToolRisk.readOnly
+    let timeout: TimeInterval? = 300
     func run(argument: String, results: [String: String]) async throws -> String {
         try await run(argument: argument, results: results, context: TaskContext(agent: AgentCatalog.planner, taskID: UUID(), depth: 0))
     }
@@ -161,6 +162,7 @@ struct BrowserReadTool: TaskTool {
 struct ComputerTaskTool: TaskTool {
     let id = "computer_task"
     let risk = ToolRisk.sensitive
+    let timeout: TimeInterval? = 1_000    // Do It stops itself after 15 minutes
     func run(argument: String, results: [String: String]) async throws -> String {
         let allowed = await MainActor.run { NotchAITier.allows(.ultimate) }
         guard allowed else { throw AgentToolError.notAllowed("Computer control is an Ultimate feature.") }
@@ -176,6 +178,7 @@ struct ComputerTaskTool: TaskTool {
 struct PlanRequestTool: TaskTool {
     let id = "plan_request"
     let risk = ToolRisk.readOnly
+    let timeout: TimeInterval? = 600      // two model calls at most (one repair), each possibly minutes on a local model
     func run(argument: String, results: [String: String]) async throws -> String {
         let agents = await MainActor.run { AgentStore.shared.agents }
         let plan = try await AgentOrchestratorCore.plan(request: argument, agents: agents, knownTools: NotchAIToolCatalog.ids,
@@ -187,6 +190,7 @@ struct PlanRequestTool: TaskTool {
 struct RunPlanTool: TaskTool {
     let id = "run_plan"
     let risk = ToolRisk.readOnly
+    let timeout: TimeInterval? = 3_600    // waits for the delegated steps, which have their own limits
     func run(argument: String, results: [String: String]) async throws -> String {
         try await run(argument: argument, results: results, context: TaskContext(agent: AgentCatalog.planner, taskID: UUID(), depth: 0))
     }
@@ -216,6 +220,7 @@ struct RunReport: Codable {
 struct AnswerRequestTool: TaskTool {
     let id = "answer_request"
     let risk = ToolRisk.readOnly
+    let timeout: TimeInterval? = 60
     func run(argument: String, results: [String: String]) async throws -> String {
         guard let planJSON = results["plan"], let plan = try? JSONDecoder().decode(AgentPlan.self, from: Data(planJSON.utf8)),
               let runJSON = results["run"], let run = try? JSONDecoder().decode(RunReport.self, from: Data(runJSON.utf8)) else {

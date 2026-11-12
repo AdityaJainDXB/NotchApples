@@ -32,9 +32,13 @@ protocol TaskTool: Sendable {
     func run(argument: String, results: [String: String]) async throws -> String
     /// Same, for tools that need to know which agent is asking (model routing). Defaults to the plain version.
     func run(argument: String, results: [String: String], context: TaskContext) async throws -> String
+    /// How long one run of this tool may take; nil uses the engine's default. Model calls need longer: a local model
+    /// that reasons can take minutes.
+    var timeout: TimeInterval? { get }
 }
 
 extension TaskTool {
+    var timeout: TimeInterval? { nil }
     func run(argument: String, results: [String: String], context: TaskContext) async throws -> String {
         try await run(argument: argument, results: results)
     }
@@ -129,7 +133,7 @@ actor TaskEngine {
             let results = Dictionary(t.steps.compactMap { s in s.state == .done ? s.result.map { (s.idempotencyKey, $0) } : nil }, uniquingKeysWith: { a, _ in a })
             do {
                 let context = TaskContext(agent: t.agent, taskID: t.id, depth: t.depth)
-                let result = try await withTimeout(config.stepTimeout) { try await tool.run(argument: step.argument, results: results, context: context) }
+                let result = try await withTimeout(tool.timeout ?? config.stepTimeout) { try await tool.run(argument: step.argument, results: results, context: context) }
                 t.steps[i].state = .done
                 t.steps[i].result = result
                 t.steps[i].error = nil

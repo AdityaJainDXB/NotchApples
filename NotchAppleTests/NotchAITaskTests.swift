@@ -28,6 +28,7 @@ private struct FakeTool: TaskTool {
     let id: String
     let risk: ToolRisk
     let counter: Counter
+    var timeout: TimeInterval? = nil
     var failFirst = 0
     var delay: TimeInterval = 0
     var output: String? = nil
@@ -196,6 +197,19 @@ final class NotchAITaskTests: XCTestCase {
     func testAStepThatTakesTooLongIsStopped() {
         let c = Counter()
         let t = block { await self.engine([FakeTool(id: "read", risk: .readOnly, counter: c, delay: 5)], timeout: 0.2).run(self.task([self.step("read", "a")])) }
+        XCTAssertEqual(t.state, .failed)
+        XCTAssertTrue(t.steps[0].error?.contains("too long") == true)
+    }
+
+    func testAToolCanAskForALongerTimeThanTheDefault() {
+        let c = Counter()
+        let t = block { await self.engine([FakeTool(id: "slow", risk: .readOnly, counter: c, timeout: 3, delay: 0.5)], timeout: 0.2).run(self.task([self.step("slow", "a")])) }
+        XCTAssertEqual(t.state, .completed, "its own 3 s limit applies, not the engine's 0.2 s")
+    }
+
+    func testAToolCanAlsoHaveAShorterLimit() {
+        let c = Counter()
+        let t = block { await self.engine([FakeTool(id: "quick", risk: .readOnly, counter: c, timeout: 0.2, delay: 5)], timeout: 30).run(self.task([self.step("quick", "a")])) }
         XCTAssertEqual(t.state, .failed)
         XCTAssertTrue(t.steps[0].error?.contains("too long") == true)
     }

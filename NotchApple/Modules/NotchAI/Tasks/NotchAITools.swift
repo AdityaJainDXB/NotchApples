@@ -53,6 +53,7 @@ struct ReadFileTool: TaskTool {
 struct AskModelTool: TaskTool {
     let id = "ask_model"
     let risk = ToolRisk.readOnly
+    let timeout: TimeInterval? = 120
     func run(argument: String, results: [String: String]) async throws -> String {
         let pages = results.filter { $0.key.hasPrefix("src") }.sorted { $0.key < $1.key }
             .compactMap { try? JSONDecoder().decode(PageToolResult.self, from: Data($0.value.utf8)) }

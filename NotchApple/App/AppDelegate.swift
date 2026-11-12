@@ -61,6 +61,24 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 for t in NotchAITaskStore.shared.tasks where t.state == .paused { NotchAITaskStore.shared.resume(t.id) }
             }
         }
+        // More test hooks (DEBUG only): `-notchai.selftest.agents "<request>"` runs a multi-agent request;
+        // `-notchai.selftest.workspace YES` opens the workspace window; `-notchai.selftest.overlay YES` draws a sample
+        // annotation for a few seconds; `-notchai.selftest.speak "<text>"` speaks a short phrase.
+        let d = UserDefaults.standard
+        if let req = d.string(forKey: "notchai.selftest.agents") {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 2) { if let why = NotchAIOrchestrator.run(request: req) { NSLog("NotchAI selftest: agents not started: %@", why) } }
+        }
+        if d.bool(forKey: "notchai.selftest.workspace") { DispatchQueue.main.asyncAfter(deadline: .now() + 2) { NotchAIWorkspaceWindow.open() } }
+        if d.bool(forKey: "notchai.selftest.overlay") {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                let step = TeachingStep(instruction: "Click Save to keep your changes", target: "Save", expected: ["Saved"])
+                AnnotationOverlay.shared.show(TeachingLogic.annotations(step: step, number: 2, target: CGRect(x: 0.55, y: 0.45, width: 0.1, height: 0.06)))
+            }
+            DispatchQueue.main.asyncAfter(deadline: .now() + 14) { AnnotationOverlay.shared.hide() }
+        }
+        if let text = d.string(forKey: "notchai.selftest.speak") {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 2) { do { try NotchAIVoice.shared.speakText(text) } catch { NSLog("NotchAI selftest speak failed: %@", error.localizedDescription) } }
+        }
         // Snapshot hook (DEBUG only): `-notchai.selftest.snapshot overview|companion|chat` renders that NotchAI section
         // off-screen to /tmp/notchai-snap-<section>.png, so the UI can be checked without touching the desktop.
         if let name = UserDefaults.standard.string(forKey: "notchai.selftest.snapshot"),
