@@ -25,7 +25,7 @@ import Foundation
 
 enum NotchAIToolCatalog {
     static let descriptions: [String: String] = [
-        "search_web": "searches Wikipedia; input is the query",
+        "search_web": "searches the web with the engine the user chose (DuckDuckGo, their own SearXNG, or Wikipedia); input is the query",
         "fetch_page": "reads a public web page; input is an address or text containing one",
         "read_file": "reads the file the user chose; input is its path",
         "search_document": "finds passages of a long document; input is the question, then a line with --- , then the document text",
@@ -61,9 +61,14 @@ struct SearchWebTool: TaskTool {
     func run(argument: String, results: [String: String]) async throws -> String {
         let q = argument.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !q.isEmpty else { throw AgentToolError.noQuery }
-        let found = try await WikipediaSearchProvider().search(q, limit: 5)
+        let choice = SearchEngineChoice.current()
+        let searxng = UserDefaults.standard.string(forKey: SearchEngineChoice.searxngKey) ?? ""
+        guard let engine = SearchEngineChoice.provider(for: choice, searxngURL: searxng) else {
+            throw WebSearchError.notConfigured("no SearXNG address is set (NotchAI → Research → Search engine)")   // never quietly search elsewhere
+        }
+        let found = try await engine.search(q, limit: 5)
         guard !found.isEmpty else { throw AgentToolError.noResults }
-        return "Wikipedia results for “\(q)”:\n" + found.enumerated().map { "\($0.offset + 1). \($0.element.title) — \($0.element.url.absoluteString)\n   \($0.element.snippet)" }.joined(separator: "\n")
+        return "\(engine.name) results for “\(q)” (the query was sent to \(engine.name)):\n" + found.enumerated().map { "\($0.offset + 1). \($0.element.title) — \($0.element.url.absoluteString)\n   \($0.element.snippet)" }.joined(separator: "\n")
     }
 }
 

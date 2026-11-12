@@ -34,7 +34,7 @@ final class NotchAITaskStore: ObservableObject {
         if let data = try? Data(contentsOf: url), let decoded = try? Self.decoder.decode([NotchAITask].self, from: data) {
             tasks = decoded.map { TaskLogic.recover($0) }       // a task that was mid-run is paused, never repeated
         }
-        let tools: [TaskTool] = [FetchPageTool(), AskModelTool(), ReadFileTool(allowedPath: { await MainActor.run { ResearchAgent.shared.pickedFile?.path } }),
+        let tools: [TaskTool] = [FetchPageTool(), FetchSearchHitTool(), AskModelTool(), ReadFileTool(allowedPath: { await MainActor.run { ResearchAgent.shared.pickedFile?.path } }),
                                  SearchWebTool(), SearchDocumentTool(), AgentAskTool(), ReadScreenTool(), SpeakTool(), BrowserOpenTool(), BrowserReadTool(),
                                  ComputerTaskTool(), PlanRequestTool(), RunPlanTool(), AnswerRequestTool()]
         // A task an orchestrator delegated may only use its agent's tools, even if a plan asked for another.

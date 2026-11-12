@@ -12,8 +12,9 @@
 //  The source list is exactly what was fetched or read; a page that fails is recorded as failed and never cited.
 //  The question goes through the shared conversation and so through the Local-first guard.
 //
-//  Not built yet: a web search engine (SearchProvider has no conformer; no paid API), following links, and an
-//  interactive browser agent.
+//  With no address given the question is searched (DuckDuckGo with no key, the user's own SearXNG, or Wikipedia, chosen
+//  in the Research section; the query goes to that service and the task says so) and the top three results are read.
+//  Not built yet: following links and an interactive browser agent.
 //
 
 import AppKit
@@ -35,9 +36,21 @@ final class ResearchAgent: ObservableObject {
         let q = question.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !q.isEmpty else { status = "Type a question first."; return }
         let urls = ResearchLogic.urls(in: urlText + " " + q)
-        guard !urls.isEmpty else { status = "Paste at least one web address (http or https). There is no built-in web search yet."; return }
-        var steps = urls.prefix(5).enumerated().map { i, u in
-            TaskStep(tool: "fetch_page", title: "Read \(u.host ?? u.absoluteString)", argument: u.absoluteString, risk: .readOnly, idempotencyKey: "src\(i)")
+        var steps: [TaskStep]
+        if urls.isEmpty {
+            // No addresses given: search, then read the top results. The task says which engine the question goes to.
+            let engine = SearchEngineChoice.current()
+            if engine == .searxng, SearXNGSearchProvider.normalizedBase(UserDefaults.standard.string(forKey: SearchEngineChoice.searxngKey) ?? "") == nil {
+                status = "Set your SearXNG address below, or pick another search engine."; return
+            }
+            steps = [TaskStep(tool: "search_web", title: "Search the web (sends your question to \(engine.label))", argument: q, risk: .readOnly, idempotencyKey: "search")]
+            steps += (1...3).map { n in
+                TaskStep(tool: "fetch_search_hit", title: "Read search result \(n)", argument: String(n), risk: .readOnly, idempotencyKey: "src\(n - 1)")
+            }
+        } else {
+            steps = urls.prefix(5).enumerated().map { i, u in
+                TaskStep(tool: "fetch_page", title: "Read \(u.host ?? u.absoluteString)", argument: u.absoluteString, risk: .readOnly, idempotencyKey: "src\(i)")
+            }
         }
         steps.append(TaskStep(tool: "ask_model", title: "Answer from the pages", argument: q, risk: .readOnly, idempotencyKey: "ask"))
         if NotchAITaskStore.shared.start(NotchAITask(title: "Research: \(q)", agent: "research", steps: steps)) {

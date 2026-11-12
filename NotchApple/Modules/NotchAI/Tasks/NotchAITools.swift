@@ -38,6 +38,20 @@ struct FetchPageTool: TaskTool {
     }
 }
 
+/// Opens the nth hit (1-based) of the earlier "search" step. A missing hit is a recorded failure, never a crash, and
+/// the page is read through the same public-web-only fetch as any other.
+struct FetchSearchHitTool: TaskTool {
+    let id = "fetch_search_hit"
+    let risk = ToolRisk.readOnly
+    func run(argument: String, results: [String: String]) async throws -> String {
+        let n = Int(argument.trimmingCharacters(in: .whitespaces)) ?? 1
+        guard let url = SearchOutput.hit(n, in: results["search"] ?? "") else {
+            return encode(PageToolResult(ok: false, title: "Result \(n)", location: "", text: "", truncated: false, error: "the search had no result number \(n)"))
+        }
+        return try await FetchPageTool().run(argument: url.absoluteString, results: results)
+    }
+}
+
 struct ReadFileTool: TaskTool {
     let id = "read_file"
     let risk = ToolRisk.readOnly
