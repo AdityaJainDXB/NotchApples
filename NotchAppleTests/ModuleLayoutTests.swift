@@ -9,15 +9,16 @@ import XCTest
 
 final class ModuleLayoutTests: XCTestCase {
     func testEveryNonNecessityIsManagedAndHasNoHomeOption() {
-        for m in ["focus", "worldClock", "audio", "snippets", "shortcuts", "timer", "plugins", "voiceNotes", "screenTime", "smartHome"] {
+        for m in ["focus", "audio", "snippets", "shortcuts", "timer", "plugins", "voiceNotes", "screenTime", "smartHome"] {
             XCTAssertTrue(ModuleLayoutLogic.isManaged(m), m)
-            XCTAssertEqual(ModuleLayoutLogic.allowed(m), [.standalone, .nonNecessities, .disabled], m)
+            XCTAssertEqual(ModuleLayoutLogic.allowed(m), [.nonNecessities, .disabled], m)         // never its own tab
         }
     }
 
-    func testHomeFeaturesOfferAllFiveChoices() {
+    func testHomeFeaturesOfferFourChoicesAndNeverAnOwnTab() {
         for m in ["clipboard", "nowPlaying", "notes", "devices", "alerts", "todo", "claudeUsage"] {
-            XCTAssertEqual(ModuleLayoutLogic.allowed(m).count, 5, m)
+            XCTAssertEqual(ModuleLayoutLogic.allowed(m).count, 4, m)
+            XCTAssertFalse(ModuleLayoutLogic.allowed(m).contains(.standalone), m)
             XCTAssertTrue(ModuleLayoutLogic.allowed(m).contains(.homeHidden), m)
         }
     }
@@ -47,7 +48,10 @@ final class ModuleLayoutTests: XCTestCase {
     }
 
     func testTheSavedChoiceWinsWhileTheModuleIsOn() {
-        XCTAssertEqual(ModuleLayoutLogic.effective("timer", saved: .standalone, isOn: true), .standalone)
+        XCTAssertEqual(ModuleLayoutLogic.effective("timer", saved: .nonNecessities, isOn: true), .nonNecessities)
+        // A saved "own tab" from an older version is no longer allowed: it goes to the group it belongs to.
+        XCTAssertEqual(ModuleLayoutLogic.effective("timer", saved: .standalone, isOn: true), .nonNecessities)
+        XCTAssertEqual(ModuleLayoutLogic.effective("clipboard", saved: .standalone, isOn: true), .homeExpanded)
         XCTAssertEqual(ModuleLayoutLogic.effective("clipboard", saved: .homeExpanded, isOn: true), .homeExpanded)
     }
 

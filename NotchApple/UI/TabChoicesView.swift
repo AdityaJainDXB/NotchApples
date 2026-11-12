@@ -76,9 +76,10 @@ struct TabChoicesView: View {
                             VStack(alignment: .leading, spacing: 0) {
                                 HStack(spacing: 5) {
                                     Text(m.title).font(.system(size: 12, weight: .medium)).foregroundStyle(Theme.textPrimary)
+                                    if let pick = TabChoicesLogic.labels[id] { tag(pick) }
                                     if let f = m.feature, locked { Text(f.tier.name).font(.system(size: 9, weight: .semibold)).padding(.horizontal, 5).background(Capsule().fill(Theme.surfaceHover)).foregroundStyle(Theme.textSecondary) }
                                 }
-                                Text(fixed ? "Shows up when something is inside it" : m.blurb).font(.system(size: 10)).foregroundStyle(Theme.textSecondary).lineLimit(1)
+                                Text(fixed ? (id == "utilities" ? "Always there: holds Stats, Shelf, World Clock, Purge, Convert and Launcher" : "Shows up when something is inside it") : m.blurb).font(.system(size: 10)).foregroundStyle(Theme.textSecondary).lineLimit(1)
                             }
                         }
                     }
@@ -87,6 +88,14 @@ struct TabChoicesView: View {
                 }
             }
         }
+    }
+
+    /// The label the owner gave this tab, shown on its own row so it reads even when the group is collapsed.
+    private func tag(_ pick: TabPick) -> some View {
+        let color: Color = pick == .recommended ? .green : pick == .notRecommended ? .orange : .blue
+        return Text(pick.title).font(.system(size: 9.5, weight: .semibold)).padding(.horizontal, 7).padding(.vertical, 2)
+            .background(Capsule().fill(color.opacity(0.18))).overlay(Capsule().stroke(color.opacity(0.55), lineWidth: 0.5))
+            .foregroundStyle(color).allowsHitTesting(false)
     }
 
     private func allowed(_ m: Module) -> Bool { m.feature.map { entitlements.canUse($0) } ?? true }

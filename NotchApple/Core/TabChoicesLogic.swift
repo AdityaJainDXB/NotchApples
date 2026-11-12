@@ -38,8 +38,8 @@ enum TabChoicesLogic {
         return d
     }()
 
-    /// Tabs whose switch is not the person's to flip here (Non-Necessities appears whenever something lives inside it).
-    static let alwaysOn: Set<String> = ["nonNecessities"]
+    /// Tabs whose switch is not the person's to flip here: Utilities is always there, and Non-Necessities shows whenever something lives inside it.
+    static let alwaysOn: Set<String> = ["nonNecessities", "utilities"]
 
     /// What a row starts as. A feature the person's plan does not include is left as it is (turning on a locked tab would only show an upgrade card).
     static func startsOn(pick: TabPick, currentlyOn: Bool, entitled: Bool) -> Bool {
