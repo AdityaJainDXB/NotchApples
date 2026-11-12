@@ -449,7 +449,7 @@ final class SettingsManager: ObservableObject {
         case .smartHome: $smartHomeEnabled
         case .devTools: $devToolsEnabled
         case .wellbeing: $wellbeingEnabled
-        case .utilities: $utilitiesEnabled
+        case .utilities: .constant(true)      // Utilities is always there: it holds Stats, Shelf, World Clock, Purge, Convert and Launcher
         case .nonNecessities: .constant(true)
         case .todo: $todoEnabled
         case .bambu: $bambuEnabled
@@ -457,14 +457,14 @@ final class SettingsManager: ObservableObject {
         }
     }
 
-    /// The modules the Utilities tab holds. While Utilities is on, they have no tab of their own: they live there.
+    /// The modules the Utilities tab holds. They never have a tab or a switch of their own: they live there, always.
     static let utilitiesMembers: [Module] = [.stats, .shelf, .worldClock, .cacheCleaner, .convert, .launcher]
 
     /// Is this module shown only inside the Utilities tab right now?
     /// World Clock is never a tab or an option of its own: it lives in Utilities for everyone. The other members are inside Utilities while it is on.
-    func isInsideUtilities(_ module: Module) -> Bool { Self.utilitiesMembers.contains(module) && (utilitiesEnabled || module == .worldClock) }
+    func isInsideUtilities(_ module: Module) -> Bool { Self.utilitiesMembers.contains(module) }
     /// Modules that have no switch or tab of their own anywhere (they are part of Utilities).
-    static let onlyInsideUtilities: Set<Module> = [.worldClock]
+    static let onlyInsideUtilities: Set<Module> = Set(utilitiesMembers)
     /// Anyone who had World Clock as its own tab keeps it: Utilities is switched on for them, once, so it does not vanish.
     func moveWorldClockIntoUtilities() {
         guard !UserDefaults.standard.bool(forKey: "worldClock.movedToUtilities") else { return }
@@ -473,7 +473,7 @@ final class SettingsManager: ObservableObject {
     }
 
     /// Where a dropped file should land: the Shelf tab, or the Utilities tab that holds the Shelf.
-    var shelfTab: Module { utilitiesEnabled ? .utilities : .shelf }
+    var shelfTab: Module { .utilities }
 
     /// Tabs to show in the notch, in display order.
     var enabledTabs: [Module] {
