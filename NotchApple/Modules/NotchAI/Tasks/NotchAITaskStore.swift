@@ -152,6 +152,11 @@ final class NotchAITaskStore: ObservableObject {
         return nil
     }
 
+    #if DEBUG
+    /// Test hook: adds a finished task so a follow-up can be tried without running a whole plan.
+    func debugInsert(_ t: NotchAITask) { tasks.insert(t, at: 0) }
+    #endif
+
     /// Stops an answer that is still being written.
     func stopAnswer(_ id: UUID) { chatHandles[id]?.cancel() }
 
