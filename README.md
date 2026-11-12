@@ -150,6 +150,10 @@ More screenshots of the capture overlay, the AI answer, the settings and the Win
 
 ## What's new
 
+### Mac 2.2.67 · Windows 2.2.67 · 12 November 2026 · 🔊 Volume and brightness stay after updates
+
+- Fixed: the volume and brightness gauge in the notch kept disappearing after an update, because macOS forgot the Accessibility permission every time. The app is now signed with a fixed certificate, so the permission survives future updates. After installing this one, remove Notch Apple from System Settings → Privacy & Security → Accessibility (the − button), add it again and switch it on. That is needed one last time
+
 ### Mac 2.2.66 · Windows 2.2.66 · 12 November 2026 · 📅 Up next shows the real day
 
 - Fixed: the Up next list said Tomorrow for every event after today, so a Saturday event seen on Thursday read Tomorrow. It now shows Today, Tomorrow, the weekday name for the next week (for example Saturday), or the date after that
@@ -157,12 +161,6 @@ More screenshots of the capture overlay, the AI answer, the settings and the Win
 ### Mac 2.2.65 · Windows 2.2.65 · 12 November 2026 · 👥 Add friends to a group
 
 - Fixed: in a Messenger group chat anyone in the group can now add their own friends, not just whoever made it. Open the group's ⋯ menu (or right-click it) and choose Add friends. Only the person who made the group can rename it or remove people. Everyone in the group needs this update for the new people to show up for them
-
-### Mac 2.2.64 · Windows 2.2.64 · 12 November 2026 · Typing, the time pill and volume
-
-- Fixed: text you type in the notch is easier to see. Fields such as a group name, your friend code and several search boxes showed dark text on the dark notch; they now use your theme's text colour
-- Fixed: the date and time pill under the notch now keeps the time up to date, goes away when you move off the notch or open it, and no longer pops up while the notch is closing
-- Fixed: changing the volume with the keys, by scrolling on the notch, or with the slider in Audio no longer freezes or stutters. The changes are now merged and written in the background
 
 ## Plugins
 

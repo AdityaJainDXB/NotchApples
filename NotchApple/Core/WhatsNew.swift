@@ -20,6 +20,9 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.2.67", date: "12 November 2026", headline: "Volume and brightness stay after updates", items: [
+            "- Fixed: the volume and brightness gauge in the notch kept disappearing after an update, because macOS forgot the Accessibility permission every time. The app is now signed with a fixed certificate, so the permission survives future updates. After installing this one, remove Notch Apple from System Settings → Privacy & Security → Accessibility (the − button), add it again and switch it on. That is needed one last time",
+        ]),
         ReleaseNote(version: "2.2.66", date: "12 November 2026", headline: "Up next shows the real day", items: [
             "- Fixed: the Up next list said Tomorrow for every event after today, so a Saturday event seen on Thursday read Tomorrow. It now shows Today, Tomorrow, the weekday name for the next week (for example Saturday), or the date after that",
         ]),

@@ -4,6 +4,16 @@ Every Notch Apple release, newest first. The latest few are also on the [README]
 
 > **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is in the repository's history.
 
+### Mac 2.2.67 · Windows 2.2.67 BETA · 12 November 2026 · 🔊 Volume and brightness stay after updates
+
+**Mac**
+
+- Fixed: the volume and brightness gauge in the notch kept disappearing after an update, because macOS forgot the Accessibility permission every time. The app is now signed with a fixed certificate, so the permission survives future updates. After installing this one, remove Notch Apple from System Settings → Privacy & Security → Accessibility (the − button), add it again and switch it on. That is needed one last time
+
+**Windows**
+
+- No Windows changes in this release. It keeps the same version number as the Mac app
+
 ### Mac 2.2.66 · Windows 2.2.66 BETA · 12 November 2026 · 📅 Up next shows the real day
 
 **Mac**
