@@ -217,13 +217,13 @@ struct NotchRootView: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
             }
             .overlay(alignment: .bottom) { UndoToast().padding(.bottom, 4) }
-            .overlay(alignment: .bottom) {
+            // Below the page, not on top of it: the page gives up that room, so the chip never covers a button or the message bar.
+            .safeAreaInset(edge: .bottom, spacing: 6) {
                 if let s = suggestion {
                     AppSuggestionChip(suggestion: s, open: {
                         withAnimation(Duo.animation) { state.selected = s.tab }
                         withAnimation(Theme.quick) { suggestion = nil }
                     }, dismiss: { withAnimation(Theme.quick) { suggestion = nil } })
-                    .padding(.bottom, 40)
                 }
             }
             .onAppear(perform: showSuggestion)

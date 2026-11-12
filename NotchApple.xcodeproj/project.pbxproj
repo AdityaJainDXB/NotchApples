@@ -221,6 +221,7 @@
 		6B8B6E4E81A1516B985E3F45 /* TennisLogic.swift in Sources */ = {isa = PBXBuildFile; fileRef = 04C0A62497E02145E6D99DC6 /* TennisLogic.swift */; };
 		6BC06407F5C36E7D16E1BE03 /* FriendsLogic.swift in Sources */ = {isa = PBXBuildFile; fileRef = EBEDBA84C93009A8851E98B6 /* FriendsLogic.swift */; };
 		6BCCA09E923B81E15C051ED3 /* RocketGame.html in Resources */ = {isa = PBXBuildFile; fileRef = 07A88400BDE9B46B5841ECB9 /* RocketGame.html */; };
+		6CF5E623305882E36ADB7B95 /* ReportLogic.swift in Sources */ = {isa = PBXBuildFile; fileRef = AF931E5C430C94D1B819C2F6 /* ReportLogic.swift */; };
 		6D2CC9DC5AA478EFEBAC4D05 /* NowPlayingMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = ACD60817F03707C0A2A93064 /* NowPlayingMonitor.swift */; };
 		6D96FF364E174A53999C3E56 /* f1-circuits-MIT.txt in Resources */ = {isa = PBXBuildFile; fileRef = 34F952B86642DE0DBEC8CD4F /* f1-circuits-MIT.txt */; };
 		6E57F0F6C24F51B6E981ABEA /* StatusPulseLogic.swift in Sources */ = {isa = PBXBuildFile; fileRef = 69139F55EDA2594B99B96ED5 /* StatusPulseLogic.swift */; };
@@ -498,8 +499,10 @@
 		FAB1EFFAB5CBA5F0A84E1C3B /* NotchGestures.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15E4C40B0E52107163ADD5B8 /* NotchGestures.swift */; };
 		FB5DD2660F9FB38C0624BE1B /* EagleRideGame.html in Resources */ = {isa = PBXBuildFile; fileRef = 2FBBC6956A3E35BD581200D1 /* EagleRideGame.html */; };
 		FD07A0E75050DC192CA88460 /* TourLogic.swift in Sources */ = {isa = PBXBuildFile; fileRef = 755B22C2370E85554D2C56DF /* TourLogic.swift */; };
+		FD26BC7C158A59A077648FFF /* ReportLogicTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5E5A1E9C17714CF5B1F7E00 /* ReportLogicTests.swift */; };
 		FD3C4D12C2C02652A4D6A729 /* TimerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BEF54A340D0BE4A8A19E3BCF /* TimerView.swift */; };
 		FD551020755C9139D9226CF7 /* CompanionProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8945C0BF0272BD283A250BDC /* CompanionProtocol.swift */; };
+		FD878FBA0485DE1083E6C40B /* ReportLogic.swift in Sources */ = {isa = PBXBuildFile; fileRef = AF931E5C430C94D1B819C2F6 /* ReportLogic.swift */; };
 		FE43DDD0B6B1D40DDF4D57DB /* PlaneGameView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E93AE854D51B41D40C00311 /* PlaneGameView.swift */; };
 		FE4B2AD2AEC221AE439CCA63 /* EntitlementLogic.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF862F91B226950E4FE3D0F0 /* EntitlementLogic.swift */; };
 		FF1FF034ABBFF7EAE84C052B /* MenuBarDimmer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 019362E9195F4E2D5087F587 /* MenuBarDimmer.swift */; };
@@ -829,6 +832,7 @@
 		AE3BD872313722C8CCED84A1 /* PluginPinningTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PluginPinningTests.swift; sourceTree = "<group>"; };
 		AE3C5425B88619B7DE0DDC3F /* TicTacToeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TicTacToeTests.swift; sourceTree = "<group>"; };
 		AEE864984A3F4F0633B5BE65 /* PageChips.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PageChips.swift; sourceTree = "<group>"; };
+		AF931E5C430C94D1B819C2F6 /* ReportLogic.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReportLogic.swift; sourceTree = "<group>"; };
 		B04639220ABBD701F4F5AB0A /* CardsLogicTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardsLogicTests.swift; sourceTree = "<group>"; };
 		B0C674605BA6B03937B3BC94 /* TokenTrailLogic.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TokenTrailLogic.swift; sourceTree = "<group>"; };
 		B16F24E7C42EBCCB3F46202A /* LicenseKey.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LicenseKey.swift; sourceTree = "<group>"; };
@@ -865,6 +869,7 @@
 		C3A2D492850F6E7302EE68BC /* MeetingNotesTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeetingNotesTests.swift; sourceTree = "<group>"; };
 		C4E2B88F2329FB0B2F27395D /* ScribbleGameView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScribbleGameView.swift; sourceTree = "<group>"; };
 		C5B8287EF70546FBB3914E72 /* DoItAgent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DoItAgent.swift; sourceTree = "<group>"; };
+		C5E5A1E9C17714CF5B1F7E00 /* ReportLogicTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReportLogicTests.swift; sourceTree = "<group>"; };
 		C5F7CF2FFE504D781512227C /* AppTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppTheme.swift; sourceTree = "<group>"; };
 		C60D1D2426B0E7E89DA1D3FF /* nightshift.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = nightshift.js; sourceTree = "<group>"; };
 		C7025C2035FDB06C94F94FBF /* NonNecessitiesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NonNecessitiesView.swift; sourceTree = "<group>"; };
@@ -1307,6 +1312,7 @@
 				CD271EAF0A5B1BCB0FD00CF7 /* QuickAnswerTests.swift */,
 				1847C86013C2B17A1DD2E12A /* RadarLogicTests.swift */,
 				E14503320310AD4B1E118141 /* ReleaseNotesLogicTests.swift */,
+				C5E5A1E9C17714CF5B1F7E00 /* ReportLogicTests.swift */,
 				9C96FDC91C63EFDECAAA8BA3 /* SecretLogicTests.swift */,
 				3D60DFF8D29CE5938A540D8E /* SmartHomeTests.swift */,
 				4ACC8DF8A2FA28D337D2DC0F /* SnippetVariablesTests.swift */,
@@ -1405,6 +1411,7 @@
 				97239C5312CEE57CDB5E326B /* ReleaseNotesLogic.swift */,
 				A2DCDE205F022345FA4997A8 /* RemoteInput.swift */,
 				7AD1597271C7FDA56841F1D6 /* RemoteView.swift */,
+				AF931E5C430C94D1B819C2F6 /* ReportLogic.swift */,
 				E333C9ABF7AC014274F64237 /* RequiredSetup.swift */,
 				E7EE75D24E20F68ED45BAC0A /* SandboxMigration.swift */,
 				A86F7ABE9C93935F6764DF17 /* SecretLogic.swift */,
@@ -2415,6 +2422,7 @@
 				C51EAAF218B746BE1EE29D65 /* RemoteInput.swift in Sources */,
 				62DA70460F765C4149101D13 /* RemoteView.swift in Sources */,
 				99555F728FA2FD41822EE607 /* RemoteWebGame.swift in Sources */,
+				6CF5E623305882E36ADB7B95 /* ReportLogic.swift in Sources */,
 				9A2C6A4BDCB6FDE201E61B4D /* RequiredSetup.swift in Sources */,
 				44EC11F43A710DD3413C3795 /* RequiredUpdateView.swift in Sources */,
 				126E862C2EE9FB25FD0AE754 /* RichText.swift in Sources */,
@@ -2621,6 +2629,8 @@
 				18502910D1E7ADA16732F652 /* RadarLogicTests.swift in Sources */,
 				B7B7E4820DCE243CC0A9D546 /* ReleaseNotesLogic.swift in Sources */,
 				6A2F399B560987263E252476 /* ReleaseNotesLogicTests.swift in Sources */,
+				FD878FBA0485DE1083E6C40B /* ReportLogic.swift in Sources */,
+				FD26BC7C158A59A077648FFF /* ReportLogicTests.swift in Sources */,
 				13A990C6CA3F55B655C3D818 /* SecretLogic.swift in Sources */,
 				40EA84F2B3F7DA5A6424D3E6 /* SecretLogicTests.swift in Sources */,
 				308B02A5703FF92FD435BE97 /* SmartHomeLogic.swift in Sources */,

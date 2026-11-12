@@ -120,7 +120,7 @@ enum Module: String, CaseIterable, Identifiable {
         case .smartHome: "lightbulb.fill"
         case .devTools: "hammer.fill"
         case .wellbeing: "leaf.fill"
-        case .utilities: "wrench.and.screwdriver.fill"
+        case .utilities: "briefcase.fill"   // Tools keeps the wrench and screwdriver; two tabs must not share an icon
         case .nonNecessities: "ellipsis.circle.fill"
         case .todo: "checklist"
         case .bambu: "printer.fill"
