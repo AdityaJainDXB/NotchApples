@@ -74,7 +74,7 @@ enum Feature: String, CaseIterable, Identifiable {
     // Ultimate: files and agents
     case convert, doIt
     // Pro: tabs
-    case messenger, audio, vpn, voiceNotes, screenTime, quickAdd, launcher, snippets, mirror, focus
+    case audio, vpn, voiceNotes, screenTime, quickAdd, launcher, snippets, mirror, focus
     // Pro: system and media
     case rainAlert, lyrics, forecast, meetingPlanner, micMute, topProcesses, dndToggle, browserMedia, klick, liveWallpaper
     // Pro: sync
@@ -150,7 +150,6 @@ enum Feature: String, CaseIterable, Identifiable {
         case .voice: "Voice input and read aloud"
         case .clipboardAI: "AI on your clipboard"
         case .automations: "AI automations"
-        case .messenger: "Messenger"
         case .audio: "Audio"
         case .vpn: "VPN"
         case .voiceNotes: "Voice Notes"
@@ -234,7 +233,6 @@ enum Feature: String, CaseIterable, Identifiable {
         case .voice: "Dictate questions and have answers read aloud."
         case .clipboardAI: "Summarise, translate or fix what you copied; the result is copied back."
         case .automations: "Prompts that run on a schedule, like a morning summary of your calendar."
-        case .messenger: "Your chats in the notch."
         case .audio: "Per-app volume and output switching."
         case .vpn: "Connect your VPN from the notch."
         case .voiceNotes: "Record and transcribe voice notes."

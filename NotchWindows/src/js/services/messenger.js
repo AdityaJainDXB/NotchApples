@@ -441,6 +441,6 @@ export function gameClose() { if (st.game && ['won', 'draw', 'ended', 'cancelled
 export function start() {
   // Rejoin the room you were in.
   const room = load('messenger.room', null);
-  if (room) import('../features.js').then((f) => { if (f.canUse('messenger')) join(room); });
+  if (room) join(room);
   provide('messenger', 45, () => (st.unread ? { icon: '💬', label: `${st.unread} new`, tab: 'messenger', title: `#${st.room}` } : null));
 }

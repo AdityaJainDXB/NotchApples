@@ -20,6 +20,9 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.2.62", date: "12 November 2026", headline: "Messenger is free", items: [
+            "- Changed: Messenger is now free. It moved from Pro to the free tier, so everyone can chat in nearby (Wi-Fi) rooms, encrypted rooms joined by a code, and with friends, with nothing to unlock. If you already have Pro, nothing changes for you.",
+        ]),
         ReleaseNote(version: "2.2.61", date: "12 November 2026", headline: "Unblock people in Messenger friends", items: [
             "- Fixed: in Messenger friends you can now unblock people. A new Blocked list in Friends shows who you blocked, each with an Unblock button (also in the Friends settings, next to Unblock all). After unblocking, they can send you a request again, or you can add their friend code. Anyone you blocked before this update shows as \"Someone you blocked (ABCD)\" and can be unblocked the same way",
         ]),

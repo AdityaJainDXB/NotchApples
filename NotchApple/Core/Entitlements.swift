@@ -313,7 +313,6 @@ extension Module {
     /// The paid feature a whole tab belongs to, if any.
     var feature: Feature? {
         switch self {
-        case .messenger: .messenger
         case .audio: .audio
         case .voiceNotes: .voiceNotes
         case .screenTime: .screenTime

@@ -4,6 +4,12 @@ Every Notch Apple release, newest first. The latest few are also on the [README]
 
 > **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is in the repository's history.
 
+### Mac 2.2.62 · Windows 2.2.62 BETA · 12 November 2026 · 💬 Messenger is free
+
+**Mac and Windows**
+
+- Changed: Messenger is now free. It moved from Pro to the free tier, so everyone can chat in nearby (Wi-Fi) rooms, encrypted rooms joined by a code, and with friends, with nothing to unlock. If you already have Pro, nothing changes for you.
+
 ### Mac 2.2.61 · Windows 2.2.61 BETA · 12 November 2026 · 🚫 Unblock people in Messenger friends
 
 **Mac**

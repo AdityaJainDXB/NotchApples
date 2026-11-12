@@ -56,7 +56,6 @@ export const FEATURES = {
   voice: {"title": "Voice input and read aloud", "detail": "Read answers aloud, and dictate with Windows voice typing (Win + H).", "tier": 1},
   clipboardAI: {"title": "AI on your clipboard", "detail": "Summarise, translate or fix what you copied; the result is copied back.", "tier": 1},
   automations: {"title": "AI automations", "detail": "Prompts that run on a schedule, like a morning summary of your calendar.", "tier": 2},
-  messenger: {"title": "Messenger", "detail": "Chat in an end-to-end encrypted room joined by a code; Mac and Windows users can talk in the same room.", "tier": 1},
   audio: {"title": "Audio", "detail": "Per-app volume and output switching.", "tier": 1},
   voiceNotes: {"title": "Voice Notes", "detail": "Record and transcribe voice notes.", "tier": 1},
   screenTime: {"title": "Screen Time", "detail": "See where your time goes and block distractions.", "tier": 1},

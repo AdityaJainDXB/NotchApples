@@ -150,6 +150,10 @@ More screenshots of the capture overlay, the AI answer, the settings and the Win
 
 ## What's new
 
+### Mac 2.2.62 · Windows 2.2.62 · 12 November 2026 · 💬 Messenger is free
+
+- Changed: Messenger is now free. It moved from Pro to the free tier, so everyone can chat in nearby (Wi-Fi) rooms, encrypted rooms joined by a code, and with friends, with nothing to unlock. If you already have Pro, nothing changes for you.
+
 ### Mac 2.2.61 · Windows 2.2.61 · 12 November 2026 · 🚫 Unblock people in Messenger friends
 
 - Fixed: in Messenger friends you can now unblock people. A new Blocked list in Friends shows who you blocked, each with an Unblock button (also in the Friends settings, next to Unblock all). After unblocking, they can send you a request again, or you can add their friend code. Anyone you blocked before this update shows as "Someone you blocked (ABCD)" and can be unblocked the same way
@@ -162,11 +166,6 @@ More screenshots of the capture overlay, the AI answer, the settings and the Win
 - New: Local first for NotchAI. With "Allow cloud and unverified models" off (the default), NotchAI only uses Apple Intelligence or a model that Ollama confirms is installed on this Mac. Cloud providers, Ollama Cloud models and anything that can't be verified are refused before anything is sent, and are never used as a fallback. This switch covers NotchAI only: elsewhere in Notch Apple your chosen provider works as before, except that Ollama Cloud models and unverifiable Ollama or custom servers are refused there too while it is off
 - New: the model list in Settings → AI says Local, Local network, Cloud or Unverified next to each model
 - Feedback welcome: NotchAI is new and has had little time on setups with more than one display, so please report anything odd with the dot
-
-### Mac 2.2.59 · Windows 2.2.59 · 11 November 2026 · 🏎️ The 2025 F1 grid in Racing
-
-- New: the Racing game's local F1 races now have the 2025 F1 grid: ten teams in their team colours, with driver names on the tower. Online rooms and your own car do not have teams yet
-- Changed: the race rules moved into tested functions, so they behave the same everywhere
 
 ## Plugins
 

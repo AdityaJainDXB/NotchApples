@@ -1,0 +1,3 @@
+## Notch Apple for Windows 2.2.62 (BETA)
+
+- Changed: Messenger is now free. It moved from Pro to the free tier, so everyone can chat in nearby (Wi-Fi) rooms, encrypted rooms joined by a code, and with friends, with nothing to unlock. If you already have Pro, nothing changes for you.

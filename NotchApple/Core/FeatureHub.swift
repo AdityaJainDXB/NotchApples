@@ -121,7 +121,7 @@ enum FeatureHub {
         guard messengerPaused else { return }
         messengerPaused = false
         let s = SettingsManager.shared
-        guard s.messengerEnabled, Entitlements.shared.canUse(Feature.messenger) else { return }
+        guard s.messengerEnabled else { return }
         if s.messengerLocalDiscovery { LocalP2PManager.shared.start() }
         if let room = UserDefaults.standard.string(forKey: "messenger.activeRoom") { WebP2PManager.shared.join(room) }
     }

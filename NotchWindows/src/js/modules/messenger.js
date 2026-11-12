@@ -1,4 +1,4 @@
-// Messenger (Pro): end-to-end encrypted rooms, compatible with the Mac app.
+// Messenger (free): end-to-end encrypted rooms, compatible with the Mac app.
 import { el, load, save, timeAgo } from '../store.js';
 import { invoke } from '../native.js';
 import { toast, prompt, segmented, button } from '../ui.js';
