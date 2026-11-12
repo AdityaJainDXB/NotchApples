@@ -56,6 +56,7 @@ struct NotchAIScreenView: View {
                         .frame(maxWidth: .infinity, alignment: .leading) }
                         .frame(height: 90).padding(6).background(Theme.surface, in: RoundedRectangle(cornerRadius: 8))
                 }
+                NotchAITeachingCard().disabled(!unlocked || !screen.isOn)
                 Divider().opacity(0.3)
                 VStack(alignment: .leading, spacing: 4) {
                     HStack {

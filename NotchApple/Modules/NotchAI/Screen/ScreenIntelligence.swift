@@ -90,6 +90,21 @@ final class ScreenIntelligence: ObservableObject {
         try await snapshot(scope: scope, showText: false).0
     }
 
+    /// For teaching mode: the same checks, then the text AND where each piece of text is, so a button can be pointed at.
+    func captureBoxes(scope: ScreenScope = .display) async throws -> (app: String, boxes: [OCRBox], text: String) {
+        guard NotchAITier.allows(.pro) else { throw TeachingError.refused(NotchAITier.lockedMessage(.pro)) }
+        guard isOn else { throw TeachingError.refused("Screen awareness is off. Turn it on first.") }
+        refreshPermission()
+        guard permissionGranted else { throw TeachingError.refused("Screen Recording permission is needed.") }
+        guard let app = lastExternalApp else { throw TeachingError.refused("No app to teach in: click the window you mean first.") }
+        if ScreenContextLogic.isExcluded(bundleID: app.bundleIdentifier ?? "", exclusions: exclusions) { throw TeachingError.refused("\(app.localizedName ?? "That app") is on the exclusion list.") }
+        capturing = true
+        defer { capturing = false }
+        let (image, _) = try await ScreenGrab.capture(app: app, scope: scope)
+        let lines = try await ScreenOCR.recognize(image)
+        return (app.localizedName ?? "the app", lines.map { OCRBox(text: $0.text, box: $0.box) }, ScreenOCR.text(lines))
+    }
+
     private func snapshot(scope: ScreenScope, showText: Bool) async throws -> (ScreenSnapshot, String?) {
         status = nil
         guard NotchAITier.allows(.pro) else { status = NotchAITier.lockedMessage(.pro); throw Failure.refused }
