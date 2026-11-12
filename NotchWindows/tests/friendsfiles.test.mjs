@@ -205,7 +205,7 @@ test('an invite must come from an active friend, list me and the sender, and hav
   assert.equal(g.creator, 'box1'); assert.equal(g.name, 'Trip');
 });
 
-test('only whoever made the group can change it', () => {
+test('only whoever made the group can rename it or remove people; a member can only add', () => {
   const v = vaultWith(1, 2);
   L.receiveGroup(v, 'box1', invite('box1', 'G', ['box1', 'box2', ME]), ME);
   assert.equal(L.receiveGroup(v, 'box2', invite('box2', 'G', ['box2', ME], { gname: 'Mine now' }), ME), null);
@@ -213,10 +213,12 @@ test('only whoever made the group can change it', () => {
   const g = L.receiveGroup(v, 'box1', invite('box1', 'G', ['box1', ME], { gname: 'Renamed' }), ME);
   assert.equal(g.name, 'Renamed'); assert.deepEqual(g.members, ['box1']);
   assert.equal(v.groups.length, 1);
-  // A group I made is never changed by someone else's invite with the same id.
+  // A group I made: a member can add people but never rename it; someone who is not in it changes nothing.
   const mine = L.createGroup(v, 'Mine', ['box2'], 'H');
-  assert.equal(L.receiveGroup(v, 'box2', invite('box2', 'H', ['box2', ME]), ME), null);
-  assert.equal(mine.members.length, 1);
+  L.receiveGroup(v, 'box2', invite('box2', 'H', ['box2', ME], { gname: 'Theirs now' }), ME);
+  assert.equal(mine.name, 'Mine'); assert.equal(mine.members.length, 1);
+  assert.equal(L.receiveGroup(v, 'box1', invite('box1', 'H', ['box1', 'box2', ME]), ME), null, 'not a member of it');
+  assert.deepEqual(mine.members, ['box2']);
 });
 
 test('group messages: only from a member who is an active friend; duplicates dropped; no receipts, unread counts', () => {
