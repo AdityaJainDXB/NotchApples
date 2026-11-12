@@ -4,6 +4,16 @@ Every Notch Apple release, newest first. The latest few are also on the [README]
 
 > **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is in the repository's history.
 
+### Mac 2.2.61 · Windows 2.2.61 BETA · 12 November 2026 · 🚫 Unblock people in Messenger friends
+
+**Mac**
+
+- Fixed: in Messenger friends you can now unblock people. A new Blocked list in Friends shows who you blocked, each with an Unblock button (also in the Friends settings, next to Unblock all). After unblocking, they can send you a request again, or you can add their friend code. Anyone you blocked before this update shows as "Someone you blocked (ABCD)" and can be unblocked the same way
+
+**Windows**
+
+- Fixed: in Messenger friends you can now unblock people. A new Blocked list in Friends shows who you blocked, each with an Unblock button (also in the Friends settings, next to Unblock all). After unblocking, they can send you a request again, or you can add their friend code. Anyone you blocked before this update shows as "Someone you blocked (ABCD)" and can be unblocked the same way
+
 ### Mac 2.2.60 · Windows 2.2.60 BETA · 11 November 2026 · ✨ NotchAI, a free assistant with a green dot
 
 **Mac**

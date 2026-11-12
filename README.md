@@ -150,6 +150,10 @@ More screenshots of the capture overlay, the AI answer, the settings and the Win
 
 ## What's new
 
+### Mac 2.2.61 · Windows 2.2.61 · 12 November 2026 · 🚫 Unblock people in Messenger friends
+
+- Fixed: in Messenger friends you can now unblock people. A new Blocked list in Friends shows who you blocked, each with an Unblock button (also in the Friends settings, next to Unblock all). After unblocking, they can send you a request again, or you can add their friend code. Anyone you blocked before this update shows as "Someone you blocked (ABCD)" and can be unblocked the same way
+
 ### Mac 2.2.60 · Windows 2.2.60 · 11 November 2026 · ✨ NotchAI, a free assistant with a green dot
 
 - New: NotchAI, a free assistant tab. Chat with the AI you chose in Settings → AI, with streamed answers, Stop and Clear. It is on by default and can be hidden like any tab
@@ -163,14 +167,6 @@ More screenshots of the capture overlay, the AI answer, the settings and the Win
 
 - New: the Racing game's local F1 races now have the 2025 F1 grid: ten teams in their team colours, with driver names on the tower. Online rooms and your own car do not have teams yet
 - Changed: the race rules moved into tested functions, so they behave the same everywhere
-
-### Mac 2.2.58 · Windows 2.2.58 · 11 November 2026 · 🤖 Do It: a new engine
-
-- Changed: Do It has a new engine, a big change under the hood. It now reads the app's accessibility tree instead of guessing from pixels, tells you the outcome of every step, notices when it is stuck, and retries with backoff
-- New: Do It has a progress budget instead of the flat 80-step cap. While it is making progress it keeps going; when the budget runs out you get a Continue button
-- Better: scrolling and menus are more reliable in Do It
-- Feedback welcome: this engine is new, so please report anything odd in Do It
-
 
 ## Plugins
 
