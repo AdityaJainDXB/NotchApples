@@ -50,6 +50,9 @@ final class CursorCompanion: ObservableObject, FeatureModule {
     /// Pause following without turning the dot off (it stays where it is).
     @Published var paused = false { didSet { if !paused { kick() } } }
     @Published private(set) var state: CompanionState = .idle
+    /// macOS Settings → Accessibility → Display → Reduce motion. Decorative motion (breathing, pulsing, spinning ring,
+    /// trail) stops; the dot still follows the pointer.
+    @Published private(set) var reduceMotion = NSWorkspace.shared.accessibilityDisplayShouldReduceMotion
 
     static let green = NSColor(srgbRed: 0x22 / 255, green: 0xC5 / 255, blue: 0x5E / 255, alpha: 1)   // #22C55E
 
@@ -67,6 +70,14 @@ final class CursorCompanion: ObservableObject, FeatureModule {
         followDistance = num("notchai.dot.distance", Self.defaults.distance)
         trailOn = d.object(forKey: "notchai.dot.trail") as? Bool ?? true
         breathing = d.object(forKey: "notchai.dot.breathing") as? Bool ?? true
+        NSWorkspace.shared.notificationCenter.addObserver(forName: NSWorkspace.accessibilityDisplayOptionsDidChangeNotification,
+                                                          object: nil, queue: .main) { [weak self] _ in
+            MainActor.assumeIsolated {
+                guard let self else { return }
+                self.reduceMotion = NSWorkspace.shared.accessibilityDisplayShouldReduceMotion
+                self.applyState()
+            }
+        }
     }
 
     func resetAppearance() {
@@ -188,7 +199,7 @@ final class CursorCompanion: ObservableObject, FeatureModule {
         if history.count > 12 { history.removeFirst(history.count - 12) }
         place()
         dotView?.updateTrail(history: history, origin: panel?.frame.origin ?? .zero, canvas: canvas,
-                             visible: trailOn && CompanionMotion.trailStrength(velocity: velocity) > 0,
+                             visible: CompanionMotion.showsTrail(user: trailOn, reduceMotion: reduceMotion, velocity: velocity),
                              strength: CompanionMotion.trailStrength(velocity: velocity))
         updateHover()
         // Settled: stop the timer so an idle dot uses no CPU. A mouse move restarts it.
@@ -207,7 +218,7 @@ final class CursorCompanion: ObservableObject, FeatureModule {
 
     // MARK: Look
     private func applyLook() { dotView?.configure(radius: CGFloat(size) / 2, glow: glow) }
-    private func applyState() { dotView?.apply(state: state, breathing: breathing) }
+    private func applyState() { dotView?.apply(state: state, breathing: breathing, reduceMotion: reduceMotion) }
 
     // MARK: Interaction
     private func dotClicked() {
@@ -289,15 +300,32 @@ private final class DotView: NSView {
         ringLayer.strokeStart = 0; ringLayer.strokeEnd = 0.28
         for t in trailLayers { t.bounds = CGRect(x: 0, y: 0, width: radius * 2, height: radius * 2); t.cornerRadius = radius }
         CATransaction.commit()
-        apply(state: current, breathing: breathing)
+        apply(state: current, breathing: breathing, reduceMotion: reduceMotion)
     }
 
     private var breathing = true
+    private var reduceMotion = false
 
-    func apply(state: CompanionState, breathing: Bool) {
-        current = state; self.breathing = breathing
+    func apply(state: CompanionState, breathing: Bool, reduceMotion: Bool = false) {
+        current = state; self.breathing = breathing; self.reduceMotion = reduceMotion
         for l in [glowLayer, coreLayer, ringLayer] { l.removeAllAnimations() }
         ringLayer.opacity = 0
+        if reduceMotion {
+            // Reduce Motion: show the state with a still look instead of animation.
+            CATransaction.begin(); CATransaction.setDisableActions(true)
+            let scale: (glow: CGFloat, core: CGFloat) = { switch state {
+                case .idle: (1, 1)
+                case .thinking: (1.1, 1)
+                case .listening: (1.3, 1.08)
+                case .speaking: (1.4, 1.1)
+            } }()
+            glowLayer.setAffineTransform(CGAffineTransform(scaleX: scale.glow, y: scale.glow))
+            coreLayer.setAffineTransform(CGAffineTransform(scaleX: scale.core, y: scale.core))
+            ringLayer.opacity = state == .thinking ? 1 : 0     // a still arc: no spinning
+            CATransaction.commit()
+            return
+        }
+        glowLayer.setAffineTransform(.identity); coreLayer.setAffineTransform(.identity)
         switch state {
         case .idle:
             if breathing { pulse(glowLayer, from: 0.9, to: 1.12, duration: 2.6) }
@@ -327,6 +355,7 @@ private final class DotView: NSView {
 
     /// A brief swell when the pointer arrives on the dot (it is now clickable).
     func setHover(_ on: Bool) {
+        if reduceMotion { return }
         let a = CABasicAnimation(keyPath: "transform.scale")
         a.fromValue = coreLayer.presentation()?.value(forKeyPath: "transform.scale") ?? 1
         a.toValue = on ? 1.25 : 1

@@ -14,4 +14,10 @@ enum NotchAIGuard {
         guard !ModelLocality.allowCloud else { return }
         try await ModelLocality.requireVerifiedLocal(provider: provider, model: model)
     }
+
+    /// True when Local first will refuse this provider before any request (a cloud provider while cloud is not allowed).
+    /// Ollama and custom endpoints are decided later, from the server's own model list.
+    static func refusesProvider(_ provider: AIProvider) -> Bool {
+        !ModelLocality.allowCloud && ![.ollama, .custom, .apple].contains(provider)
+    }
 }

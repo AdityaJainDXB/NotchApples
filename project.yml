@@ -148,6 +148,31 @@ targets:
       - NotchApple/Core/HotCornerLogic.swift
       - NotchApple/Core/CompanionMotion.swift
       - NotchApple/Core/ModelLocality.swift
+      - NotchApple/Modules/NotchAI/NotchAIGuard.swift
+      - NotchApple/Core/NotchAIConversationLogic.swift
+      - NotchApple/Core/NotchAIVoiceLogic.swift
+      - NotchApple/Core/ScreenContextLogic.swift
+      - NotchApple/Core/ResearchLogic.swift
+      - NotchApple/Core/NotchAIMemoryLogic.swift
+      - NotchApple/Core/NotchAISkillLogic.swift
+      - NotchApple/Core/NotchAITaskLogic.swift
+      - NotchApple/Core/NotchAITaskEngine.swift
+      - NotchApple/Core/NotchAIAgentLogic.swift
+      - NotchApple/Core/NotchAIDocumentIndex.swift
+      - NotchApple/Core/NotchAIAgentSupport.swift
+      - NotchApple/Core/NotchAIMCP.swift
+      - NotchApple/Core/NotchAIDictationLogic.swift
+      - NotchApple/Core/NotchAITeachingLogic.swift
+      - NotchApple/Core/NotchAIVisualLogic.swift
+      - NotchApple/Modules/NotchAI/Visual/NotchAIVisualScene.swift
+      - NotchApple/Core/NotchAIWebSearch.swift
+      - NotchApple/Core/NotchAIRoutineLogic.swift
+      - NotchApple/Core/NotchAIOfficeReader.swift
+      - NotchApple/Core/NotchAIDocumentLogic.swift
+      - NotchApple/Core/NotchAIOAuth.swift
+      - NotchApple/Core/NotchAIOrchestratorCore.swift
+      - NotchApple/Modules/NotchAI/Screen/ScreenOCR.swift
+      - NotchApple/Core/OllamaDiagnosticsLogic.swift
       - NotchApple/Modules/Games/GameEngines.swift
       - NotchApple/Modules/Games/GamesMenuLogic.swift
       - NotchApple/Core/ClaudeCodeStatusLogic.swift
