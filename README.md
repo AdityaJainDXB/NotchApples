@@ -150,6 +150,14 @@ More screenshots of the capture overlay, the AI answer, the settings and the Win
 
 ## What's new
 
+### Mac 2.2.63 · Windows 2.2.63 · 12 November 2026 · More for NotchAI, and a Report tab
+
+- New: NotchAI chat keeps a history, has Stop and Regenerate, checks your Ollama setup, can start at login and respects Reduce Motion. NotchAI stays local first: cloud and unverified models are refused unless you turn them on
+- New (Pro): NotchAI can search the web with no key (DuckDuckGo, your own SearXNG server, or Wikipedia, your choice in Research), read the top pages and answer with citations. Each question says which service it goes to, and nothing is searched until you ask
+- New (Pro): NotchAI reads Word, Excel and PowerPoint files as well as PDF, text and images, only reading them and never changing them. Drop files on the NotchAI tab or its window to list them in Documents and summarise them
+- New: Settings has a Report tab. It opens a GitHub issue that already says Mac, your version and your plan; you read it and press Submit yourself
+- Fixed: typing in the Settings search box now shows your text
+
 ### Mac 2.2.62 · Windows 2.2.62 · 12 November 2026 · 💬 Messenger is free
 
 - Changed: Messenger is now free. It moved from Pro to the free tier, so everyone can chat in nearby (Wi-Fi) rooms, encrypted rooms joined by a code, and with friends, with nothing to unlock. If you already have Pro, nothing changes for you.
