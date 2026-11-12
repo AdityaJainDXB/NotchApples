@@ -167,6 +167,7 @@ targets:
       - NotchApple/Modules/NotchAI/Visual/NotchAIVisualScene.swift
       - NotchApple/Core/NotchAIWebSearch.swift
       - NotchApple/Core/NotchAIRoutineLogic.swift
+      - NotchApple/Core/NotchAIOfficeReader.swift
       - NotchApple/Core/NotchAIOrchestratorCore.swift
       - NotchApple/Modules/NotchAI/Screen/ScreenOCR.swift
       - NotchApple/Core/OllamaDiagnosticsLogic.swift

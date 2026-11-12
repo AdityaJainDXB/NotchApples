@@ -7,7 +7,7 @@
 //   • Web pages: one "fetch_page" step per public URL the user gives (http/https only, never localhost or the local
 //     network), then an "ask_model" step that asks the model to answer ONLY from the readable text, with [1], [2]
 //     citations.
-//   • Files: a "read_file" step for a file the user picked in a file dialog (text, Markdown, CSV, JSON, code, PDF;
+//   • Files: a "read_file" step for a file the user picked in a file dialog (text, Markdown, CSV, JSON, code, PDF, Word, Excel, PowerPoint;
 //     images through on-device OCR), then "ask_model". Files are only read, never changed.
 //  The source list is exactly what was fetched or read; a page that fails is recorded as failed and never cited.
 //  The question goes through the shared conversation and so through the Local-first guard.
@@ -105,7 +105,8 @@ enum ResearchIO {
     static func read(_ url: URL) async throws -> ResearchSource {
         let kind = ResearchLogic.kind(forExtension: url.pathExtension)
         let size = (try? url.resourceValues(forKeys: [.fileSizeKey]).fileSize) ?? 0
-        if kind != .pdf, kind != .image, size > maxBytes * 2 { throw ResearchError.tooBig }
+        if kind != .pdf, kind != .image, kind != .office, size > maxBytes * 2 { throw ResearchError.tooBig }
+        if kind == .office, size > 25_000_000 { throw ResearchError.tooBig }
         var text: String
         var truncated = false
         switch kind {
@@ -119,6 +120,12 @@ enum ResearchIO {
             guard let img = NSImage(contentsOf: url)?.cgImage(forProposedRect: nil, context: nil, hints: nil) else { throw ResearchError.unreadable }
             text = ScreenOCR.text(try await ScreenOCR.recognize(img))
             if text.isEmpty { throw ResearchError.noText }
+        case .office:
+            guard let ok = OfficeReader.kind(forExtension: url.pathExtension) else { throw ResearchError.unsupported(url.pathExtension) }
+            guard let data = try? Data(contentsOf: url, options: .mappedIfSafe) else { throw ResearchError.unreadable }
+            do { text = try OfficeReader.text(from: data, kind: ok) }
+            catch let e as OfficeReadError { throw ResearchError.office(e.localizedDescription) }
+            if text.count > maxBytes { text = String(text.prefix(maxBytes)); truncated = true }
         case .unsupported:
             throw ResearchError.unsupported(url.pathExtension)
         default:
@@ -132,7 +139,7 @@ enum ResearchIO {
 }
 
 enum ResearchError: LocalizedError {
-    case notPublic, badResponse, status(Int), notText(String), tooBig, unreadable, noText, unsupported(String)
+    case notPublic, badResponse, status(Int), notText(String), tooBig, unreadable, noText, unsupported(String), office(String)
     var errorDescription: String? {
         switch self {
         case .notPublic: "not fetched: only public http(s) addresses are allowed, never this Mac or your network"
@@ -142,7 +149,8 @@ enum ResearchError: LocalizedError {
         case .tooBig: "the file is too large"
         case .unreadable: "the file could not be opened"
         case .noText: "no text was found in it"
-        case .unsupported(let e): "\(e.isEmpty ? "this" : ".\(e)") files are not supported yet (text, Markdown, CSV, JSON, code, PDF and images are)"
+        case .unsupported(let e): "\(e.isEmpty ? "this" : ".\(e)") files are not supported yet (text, Markdown, CSV, JSON, code, PDF, Word .docx, Excel .xlsx, PowerPoint .pptx and images are)"
+        case .office(let why): why
         }
     }
 }
