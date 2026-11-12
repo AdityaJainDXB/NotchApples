@@ -54,6 +54,13 @@ struct NotchAIIntegrationsView: View {
                 Label("This runs a program on your Mac while connected. Only add commands you trust.", systemImage: "exclamationmark.triangle.fill")
                     .font(.system(size: 10)).foregroundStyle(.orange)
             }
+            if remote {
+                Button("Sign in with your browser") {
+                    if store.addRemoteWithBrowserSignIn(name: name, address: address) { adding = false; name = ""; address = ""; key = ""; command = ""; args = "" }
+                }
+                .disabled(name.trimmingCharacters(in: .whitespaces).isEmpty || address.isEmpty)
+                .help("For services that offer sign-in (Gmail, Notion, GitHub and others through their MCP servers). No key to paste.")
+            }
             Button("Add") {
                 let ok = remote ? store.addRemote(name: name, address: address, key: key) : store.addLocal(name: name, command: command, arguments: args)
                 if ok { adding = false; name = ""; address = ""; key = ""; command = ""; args = "" }
@@ -79,12 +86,14 @@ struct NotchAIIntegrationsView: View {
                     Button("Refresh tools") { store.refresh(s.id) }.controlSize(.small)
                     Button("Disconnect") { store.disconnect(s.id) }.controlSize(.small)
                 } else {
-                    Button(state == .expired ? "Reconnect" : "Connect") { store.connect(s.id) }.controlSize(.small).disabled(state == .connecting || !unlocked)
+                    Button(s.oauth == true ? (state == .expired ? "Sign in again" : "Sign in") : (state == .expired ? "Reconnect" : "Connect")) {
+                        if s.oauth == true && state != .disconnected && state != .connecting { store.signIn(s.id) } else if s.oauth == true { store.connect(s.id) } else { store.connect(s.id) }
+                    }.controlSize(.small).disabled(state == .connecting || !unlocked)
                 }
                 Button { store.remove(s.id) } label: { Image(systemName: "trash") }.buttonStyle(.plain).foregroundStyle(.red.opacity(0.8))
             }
             if case .failed(let why) = state { Text(why).font(.system(size: 10)).foregroundStyle(.red) }
-            if state == .expired { Text("The service refused the key. Remove the connector and add it again with a new key.").font(.system(size: 10)).foregroundStyle(.orange) }
+            if state == .expired { Text(s.oauth == true ? "Your sign-in ended. Press Sign in again." : "The service refused the key. Remove the connector and add it again with a new key.").font(.system(size: 10)).foregroundStyle(.orange) }
             if state == .connected {
                 Text(MCPNaming.accessSummary(tools)).font(.system(size: 10)).foregroundStyle(Theme.textSecondary)
                 ForEach(tools, id: \.name) { t in

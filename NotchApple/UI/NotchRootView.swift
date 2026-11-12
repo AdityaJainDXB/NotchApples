@@ -135,6 +135,12 @@ struct NotchRootView: View {
         // Convert when that is the tab showing. The tabs' own drop areas still take their drops first.
         .onDrop(of: [.fileURL], isTargeted: nil) { providers in
             guard state.isExpanded else { return false }
+            // On the NotchAI tab a dropped file goes to NotchAI's documents (read-only), not the Shelf.
+            if state.selected == .notchAI {
+                guard NotchAIDocuments.shared.handleDrop(providers) else { return false }
+                NotchAINav.shared.section = .documents
+                return true
+            }
             DragLog.log.notice("root drop: \(providers.count, privacy: .public) item(s), tab \(state.selected.rawValue, privacy: .public)")
             let convert = state.selected == .convert && settings.convertEnabled
             if !convert, !settings.shelfEnabled { return false }

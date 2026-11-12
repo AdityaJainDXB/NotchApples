@@ -124,7 +124,7 @@ enum Module: String, CaseIterable, Identifiable {
         case .nonNecessities: "ellipsis.circle.fill"
         case .todo: "checklist"
         case .bambu: "printer.fill"
-        case .notchAI: "sparkles"
+        case .notchAI: "cursorarrow.rays"   // the green dot that follows the cursor; AI keeps the sparkles
         }
     }
 

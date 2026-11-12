@@ -146,7 +146,7 @@ enum ResearchLogic {
 
     // MARK: Files
 
-    enum FileKind: String { case text, markdown, csv, json, code, pdf, image, unsupported }
+    enum FileKind: String { case text, markdown, csv, json, code, pdf, image, office, unsupported }
 
     static func kind(forExtension ext: String) -> FileKind {
         switch ext.lowercased() {
@@ -156,6 +156,7 @@ enum ResearchLogic {
         case "json", "yaml", "yml", "xml", "plist", "toml": .json
         case "swift", "js", "ts", "py", "rb", "go", "rs", "java", "kt", "c", "h", "cpp", "m", "sh", "html", "css", "sql": .code
         case "pdf": .pdf
+        case "docx", "xlsx", "pptx": .office
         case "png", "jpg", "jpeg", "heic", "tiff", "gif", "bmp": .image
         default: .unsupported
         }

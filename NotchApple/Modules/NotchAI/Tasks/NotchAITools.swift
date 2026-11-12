@@ -38,6 +38,20 @@ struct FetchPageTool: TaskTool {
     }
 }
 
+/// Opens the nth hit (1-based) of the earlier "search" step. A missing hit is a recorded failure, never a crash, and
+/// the page is read through the same public-web-only fetch as any other.
+struct FetchSearchHitTool: TaskTool {
+    let id = "fetch_search_hit"
+    let risk = ToolRisk.readOnly
+    func run(argument: String, results: [String: String]) async throws -> String {
+        let n = Int(argument.trimmingCharacters(in: .whitespaces)) ?? 1
+        guard let url = SearchOutput.hit(n, in: results["search"] ?? "") else {
+            return encode(PageToolResult(ok: false, title: "Result \(n)", location: "", text: "", truncated: false, error: "the search had no result number \(n)"))
+        }
+        return try await FetchPageTool().run(argument: url.absoluteString, results: results)
+    }
+}
+
 struct ReadFileTool: TaskTool {
     let id = "read_file"
     let risk = ToolRisk.readOnly
@@ -46,6 +60,7 @@ struct ReadFileTool: TaskTool {
     func run(argument: String, results: [String: String]) async throws -> String {
         guard await allowedPath() == argument else { throw ResearchError.unreadable }
         let s = try await ResearchIO.read(URL(fileURLWithPath: argument))
+        await MainActor.run { NotchAIDocuments.shared.record(path: argument) }       // listed in Documents, so the user can see what was used
         return encode(PageToolResult(ok: true, title: s.title, location: s.location, text: s.text, truncated: s.truncated, error: nil))
     }
 }

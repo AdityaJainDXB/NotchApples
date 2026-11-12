@@ -12,7 +12,7 @@ import SwiftUI
 
 struct NotchAIView: View {
     enum Section: String, CaseIterable, Identifiable {
-        case overview = "Overview", companion = "Companion", chat = "Chat", voice = "Voice", screen = "Screen", research = "Research", visual = "Visual", agents = "Agents", integrations = "Integrations", tasks = "Tasks", memory = "Memory", skills = "Skills"
+        case overview = "Overview", companion = "Companion", chat = "Chat", voice = "Voice", screen = "Screen", research = "Research", documents = "Documents", visual = "Visual", agents = "Agents", integrations = "Integrations", tasks = "Tasks", routines = "Routines", memory = "Memory", skills = "Skills"
         var id: String { rawValue }
     }
 
@@ -49,10 +49,12 @@ struct NotchAIView: View {
             case .voice: NotchAIVoiceView()
             case .screen: NotchAIScreenView()
             case .research: NotchAIResearchView()
+            case .documents: NotchAIDocumentsView()
             case .visual: NotchAIVisualView()
             case .agents: NotchAIAgentsView()
             case .integrations: NotchAIIntegrationsView()
             case .tasks: NotchAITasksView()
+            case .routines: NotchAIRoutinesView()
             case .memory: NotchAIMemoryView()
             case .skills: NotchAISkillsView()
             }

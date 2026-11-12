@@ -32,10 +32,11 @@ enum NotchAIWorkspaceWindow {
 }
 
 struct NotchAIWorkspaceView: View {
-    enum Pane: Hashable { case live, conversation(UUID), task(UUID) }
+    enum Pane: Hashable { case live, documents, conversation(UUID), task(UUID) }
 
     @ObservedObject private var history = ChatHistoryStore.shared
     @ObservedObject private var tasks = NotchAITaskStore.shared
+    @ObservedObject private var docs = NotchAIDocuments.shared
     @State private var pane: Pane = .live
     @State private var search = ""
 
@@ -43,6 +44,7 @@ struct NotchAIWorkspaceView: View {
         NavigationSplitView {
             List(selection: $pane) {
                 Label("NotchAI", systemImage: "sparkles").tag(Pane.live)
+                Label("Documents (\(docs.documents.count))", systemImage: "doc.on.doc").tag(Pane.documents)
                 Section("Conversations") {
                     TextField("Search", text: $search).textFieldStyle(.roundedBorder)
                     ForEach(history.search(search).prefix(60)) { s in
@@ -63,6 +65,7 @@ struct NotchAIWorkspaceView: View {
         } detail: {
             switch pane {
             case .live: NotchAIView().padding(16)
+            case .documents: NotchAIDocumentsView().padding(16)
             case .conversation(let id): ConversationDetail(id: id, open: { pane = .live })
             case .task(let id): TaskDetail(id: id)
             }
