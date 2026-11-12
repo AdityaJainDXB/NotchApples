@@ -138,6 +138,7 @@ final class NowPlayingMonitor: ObservableObject {
             }
         }
         SharedStore.nowPlaying = nil
+        Self.endStrayBridges()
         startBridge()
         DispatchQueue.main.async {
             MainActor.assumeIsolated {
@@ -173,6 +174,19 @@ final class NowPlayingMonitor: ObservableObject {
             }
         }
         do { try p.run(); bridge = p } catch { bridge = nil }
+    }
+
+    /// Ends the helper when the app quits, so it is not left running on its own.
+    func shutdown() { stopBridge() }
+
+    /// An older run of the app (force quit, crash, or an update that restarted it) may have left its helper running:
+    /// end only those whose parent is gone (parent id 1).
+    private static func endStrayBridges() {
+        let p = Process()
+        p.executableURL = URL(fileURLWithPath: "/usr/bin/pkill")
+        p.arguments = ["-P", "1", "-f", "Resources/nowplaying.js"]
+        p.standardOutput = FileHandle.nullDevice; p.standardError = FileHandle.nullDevice
+        try? p.run()
     }
 
     private func stopBridge() {

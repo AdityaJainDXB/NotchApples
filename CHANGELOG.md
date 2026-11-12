@@ -4,6 +4,17 @@ Every Notch Apple release, newest first. The latest few are also on the [README]
 
 > **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is in the repository's history.
 
+### Mac 2.2.69 · Windows 2.2.69 BETA · 12 November 2026 · 🪶 Lighter in the background, Screen buttons work
+
+**Mac**
+
+- Fixed: the Now Playing helper could be left running after Notch Apple quit or restarted for an update, one more each time, all polling in the background. It now stops with the app, ends by itself if the app is gone, and leftovers from older runs are ended when Notch Apple starts
+- Fixed: in NotchAI's Screen section the buttons stayed greyed out until you found the switch. Pressing one now turns Screen awareness on and asks for Screen Recording if it is missing. After you allow it in System Settings, quit and reopen Notch Apple; macOS only applies it after a restart
+
+**Windows**
+
+- No Windows changes in this release. It keeps the same version number as the Mac app
+
 ### Mac 2.2.68 · Windows 2.2.68 BETA · 12 November 2026 · 🧭 Choose what stays on your screen
 
 **Mac**
