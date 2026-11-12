@@ -2,6 +2,17 @@
 
 For the next agent (or person) picking this up. Read `CLAUDE.md` first: its release, README and safety rules apply. Facts below were true when written; check them (`gh release list`, `gh run list`) before relying on them.
 
+## Added later on 12 November: 2.2.70 is on `main` but the Mac build is NOT released yet
+
+A second session (on a Mac with no Xcode and without the signing keychain) built the rest of the NotchAI roadmap and prepared **2.2.70**: more voice engines (Piper, Whisper, OpenAI), hands-free and an optional wake word, drawing on the screen and a hand-drawn style, diagrams and real 3D files, folders and search in Documents, one-press connectors (Notion, Linear, Sentry, GitHub), drafting from the screen, and a NotchAI chat tab on Windows. Notes are in `release-notes/2.2.70.md` and `release-notes/win-2.2.70.md`; `project.yml`, `WhatsNew.swift`, `CHANGELOG.md` and the README already say 2.2.70. Details and what was and was not verified: `docs/NOTCHAI_ROADMAP.md` (backlog and living status).
+
+- **Windows 2.2.70** was released from CI (`win-v2.2.70`, pre-release).
+- **Mac 2.2.70 was deliberately not released.** A CI build (`mac-v*` tag) is signed ad-hoc, which would undo the fixed-certificate signing from 2.2.67 and make every Mac lose Accessibility again. It has to be built on the Mac that holds `~/Library/Keychains/notchapple-signing.keychain-db`. **Do not push a `mac-v2.2.70` tag.** On that Mac, in the release checkout: `git pull`, `scripts/fetch-premium.sh`, `scripts/run-app-tests.sh` (648 tests), then
+  `scripts/release.sh "NotchAI: more voices, drawing, diagrams, and a Windows chat" release-notes/2.2.70.md "Mac 2.2.70"`.
+  If something else has to ship first, bump the version and move the 2.2.70 notes up with it; never lower the number.
+- Checked before merging: 648 Mac logic tests, 553 Windows tests, a whole-app type-check, and the Release compile in CI ("Module test build" on `module-rel-2.2.70`). **Not run on a real device:** anything with a microphone, speaker, screen capture, browser sign-in or a Windows PC. The wake word is labelled experimental for that reason.
+- Still open from the roadmap: real-device verification (backlog 1) and the Do It check (backlog 2; the private branch `notchai-doit-bridge` is still not merged into the private `main`).
+
 ## State right now
 
 - **Mac 2.2.69** (`v2.2.69`) is the Latest release, installed on the owner's Mac. **Windows 2.2.69** (`win-v2.2.69`) is published as a pre-release with its `.exe` and `.msi`. `scripts/prune-releases.sh` has been run.
@@ -22,7 +33,7 @@ For the next agent (or person) picking this up. Read `CLAUDE.md` first: its rele
 4. **Memory/CPU report:** the owner said the app overloaded memory and they quit it. At idle it measured about 0.1% CPU and 80–120 MB; the cause was not reproduced. Ask which tab was open, then profile that (`sample`, `vmmap -summary`).
 5. **Issue #65** (revoked Ultimate key): the owner said they will handle it.
 6. **Refund wording:** the owner says there is a no-refund policy, but `web/terms.html` says "handled case by case". Ask which to keep.
-7. Not built from the NotchAI roadmap (`docs/NOTCHAI_ROADMAP.md`): voice engines and hands-free, drawing and real 3D models, NotchAI on Windows, final parity audit. Most NotchAI features are only unit-tested, not run on a real mic, speaker or screen.
+7. The NotchAI roadmap items that were not built (voice engines and hands-free, drawing and real 3D models, NotchAI chat on Windows, the parity re-audit) are built in 2.2.70: see the section at the top. Most NotchAI features are only unit-tested, not run on a real mic, speaker or screen.
 
 ## Rules to keep
 
