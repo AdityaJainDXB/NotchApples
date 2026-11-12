@@ -83,3 +83,55 @@ enum NotchAIQuietLogic {
         }
     }
 }
+
+// MARK: - Screen-aware drafting
+
+/// Dictation that knows what you are looking at: you say what you want written ("reply that Thursday works"), NotchAI
+/// reads the window you were using (only when you press the button), and the model writes the text. The draft goes
+/// into the same editable box as ordinary dictation; nothing is typed until you press Insert.
+enum ScreenDraftLogic {
+    static let maxScreenCharacters = 6_000
+    static let system = "You write the exact text a person wants to type into the app in front of them. Reply with that text only."
+
+    static func prompt(instruction: String, appName: String, windowTitle: String?, screenText: String) -> String {
+        let cut = screenText.count > maxScreenCharacters
+        return """
+        I am typing in \(appName)\(windowTitle.map { " (window: \($0))" } ?? "").
+        What is on my screen right now\(cut ? " (cut short)" : ""):
+        ---
+        \(String(screenText.prefix(maxScreenCharacters)))
+        ---
+        Write this for me: \(instruction)
+
+        Reply with ONLY the text to insert: no greeting to me, no explanation, no quotation marks around it. Match the language and tone of what is on screen. Do not invent facts that are not on screen or in my request.
+        """
+    }
+
+    /// The text to put in the box: code fences, wrapping quotes and a leading "Here is…:" line are removed.
+    static func clean(_ reply: String) -> String {
+        var t = reply.trimmingCharacters(in: .whitespacesAndNewlines)
+        if t.hasPrefix("```"), let end = t.range(of: "```", options: .backwards), end.lowerBound > t.startIndex {
+            var inner = String(t[t.index(t.startIndex, offsetBy: 3)..<end.lowerBound])
+            if let nl = inner.firstIndex(of: "\n"), !inner[..<nl].contains(" ") { inner = String(inner[inner.index(after: nl)...]) }   // the language tag
+            t = inner.trimmingCharacters(in: .whitespacesAndNewlines)
+        }
+        let lines = t.components(separatedBy: "\n")
+        if lines.count > 1, let first = lines.first, first.hasSuffix(":"), first.count < 80,
+           first.lowercased().range(of: "^(here|sure|okay|ok|certainly)\\b", options: .regularExpression) != nil {
+            t = lines.dropFirst().joined(separator: "\n").trimmingCharacters(in: .whitespacesAndNewlines)
+        }
+        for (open, close) in [("\"", "\""), ("“", "”"), ("'", "'")] where t.count >= 2 && t.hasPrefix(open) && t.hasSuffix(close) {
+            let inner = String(t.dropFirst().dropLast())
+            if !inner.contains(open) && !inner.contains(close) { t = inner }
+        }
+        return t
+    }
+
+    /// Why a draft cannot start, or nil.
+    static func problem(instruction: String, proAllowed: Bool, screenOn: Bool) -> String? {
+        if instruction.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty { return "Say or type what you want written first (for example: reply that Thursday works)." }
+        if !proAllowed { return "Drafting from the screen is part of Pro." }
+        if !screenOn { return "Turn on Screen awareness in the Screen section first." }
+        return nil
+    }
+}

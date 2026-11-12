@@ -36,7 +36,8 @@ enum LocalProgram {
                 let out = Pipe(), err = Pipe(), stdin = Pipe()
                 p.standardOutput = out; p.standardError = err; p.standardInput = stdin
                 do { try p.run() } catch { c.resume(throwing: Failure(message: "Could not start \(binary): \(error.localizedDescription)")); return }
-                let killer = DispatchWorkItem { if p.isRunning { p.terminate() } }
+                let timedOut = TimedOutFlag()
+                let killer = DispatchWorkItem { if p.isRunning { timedOut.value = true; p.terminate() } }
                 DispatchQueue.global().asyncAfter(deadline: .now() + timeout, execute: killer)
                 // Drain the error pipe on the side so a chatty program cannot block on a full pipe.
                 var errData = Data()
@@ -49,13 +50,17 @@ enum LocalProgram {
                 killer.cancel()
                 errQueue.sync {}
                 if p.terminationStatus == 0 { c.resume(returning: String(decoding: data, as: UTF8.self)) }
-                else {
+                else if timedOut.value {
+                    c.resume(throwing: Failure(message: "\(URL(fileURLWithPath: binary).lastPathComponent) took longer than \(Int(timeout)) seconds and was stopped."))
+                } else {
                     let why = String(decoding: errData, as: UTF8.self).split(separator: "\n").last.map(String.init) ?? "exit code \(p.terminationStatus)"
                     c.resume(throwing: Failure(message: "\(URL(fileURLWithPath: binary).lastPathComponent) failed: \(why)"))
                 }
             }
         }
     }
+
+    private final class TimedOutFlag: @unchecked Sendable { var value = false }
 
     static var home: String { NSHomeDirectory() }
     static func isExecutable(_ path: String) -> Bool { FileManager.default.isExecutableFile(atPath: path) }

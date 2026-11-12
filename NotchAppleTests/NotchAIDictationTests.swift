@@ -70,4 +70,37 @@ final class NotchAIDictationTests: XCTestCase {
         XCTAssertNotNil(NotchAIQuietLogic.announcement(title: "x", state: .failed))
         for s in [TaskState.running, .queued, .paused, .cancelled] { XCTAssertNil(NotchAIQuietLogic.announcement(title: "x", state: s)) }
     }
+
+    // MARK: Screen-aware drafting
+
+    func testTheDraftPromptCarriesTheAppTheScreenAndTheRequest() {
+        let p = ScreenDraftLogic.prompt(instruction: "reply that Thursday works", appName: "Mail", windowTitle: "Re: Lunch", screenText: "Are you free Thursday?")
+        XCTAssertTrue(p.contains("I am typing in Mail (window: Re: Lunch)."))
+        XCTAssertTrue(p.contains("Are you free Thursday?"))
+        XCTAssertTrue(p.contains("Write this for me: reply that Thursday works"))
+        XCTAssertTrue(p.contains("ONLY the text to insert"))
+        let long = ScreenDraftLogic.prompt(instruction: "x", appName: "Notes", windowTitle: nil, screenText: String(repeating: "a", count: ScreenDraftLogic.maxScreenCharacters + 500))
+        XCTAssertTrue(long.contains("(cut short)"))
+        XCTAssertFalse(long.contains(String(repeating: "a", count: ScreenDraftLogic.maxScreenCharacters + 1)))
+        XCTAssertTrue(long.contains("I am typing in Notes."))
+    }
+
+    func testTheDraftIsCleanedOfWrappingAndPreamble() {
+        XCTAssertEqual(ScreenDraftLogic.clean("  Thursday works for me.  "), "Thursday works for me.")
+        XCTAssertEqual(ScreenDraftLogic.clean("\"Thursday works for me.\""), "Thursday works for me.")
+        XCTAssertEqual(ScreenDraftLogic.clean("“Thursday works.”"), "Thursday works.")
+        XCTAssertEqual(ScreenDraftLogic.clean("Here is the reply:\nThursday works.\nSee you then."), "Thursday works.\nSee you then.")
+        XCTAssertEqual(ScreenDraftLogic.clean("```text\nThursday works.\n```"), "Thursday works.")
+        XCTAssertEqual(ScreenDraftLogic.clean("```\nline one\nline two\n```"), "line one\nline two")
+        XCTAssertEqual(ScreenDraftLogic.clean("She said \"yes\" and \"no\""), "She said \"yes\" and \"no\"", "quotes inside the text stay")
+        XCTAssertEqual(ScreenDraftLogic.clean("Agenda:\n1. Budget"), "Agenda:\n1. Budget", "a real first line ending in a colon stays")
+        XCTAssertEqual(ScreenDraftLogic.clean(""), "")
+    }
+
+    func testDraftingSaysWhatIsMissing() {
+        XCTAssertNotNil(ScreenDraftLogic.problem(instruction: "  ", proAllowed: true, screenOn: true))
+        XCTAssertTrue(ScreenDraftLogic.problem(instruction: "reply", proAllowed: false, screenOn: true)!.contains("Pro"))
+        XCTAssertTrue(ScreenDraftLogic.problem(instruction: "reply", proAllowed: true, screenOn: false)!.contains("Screen awareness"))
+        XCTAssertNil(ScreenDraftLogic.problem(instruction: "reply", proAllowed: true, screenOn: true))
+    }
 }

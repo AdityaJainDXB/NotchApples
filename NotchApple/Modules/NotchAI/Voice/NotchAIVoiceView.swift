@@ -112,6 +112,10 @@ struct NotchAIVoiceView: View {
                     Button(dictation.listening ? "Done" : "Dictate") { dictation.toggle() }.tint(NotchAIView.green)
                     Button("Insert") { dictation.insert() }.disabled(dictation.text.isEmpty || dictation.listening)
                     Button("Cancel") { dictation.cancel() }.disabled(dictation.text.isEmpty && !dictation.listening)
+                    Button("Draft from the screen") { dictation.draftFromScreen() }
+                        .disabled(dictation.text.isEmpty || dictation.listening || dictation.drafting)
+                        .help("Say what you want written, then press this: NotchAI reads the window you were using and writes it for you (Pro)")
+                    if dictation.drafting { ProgressView().controlSize(.small) }
                     if let s = dictation.status { Text(s).font(.system(size: 10)).foregroundStyle(Theme.textSecondary) }
                 }
                 TextField("Dictated text appears here. You can edit it before inserting.", text: $dictation.text, axis: .vertical)
@@ -125,6 +129,8 @@ struct NotchAIVoiceView: View {
                     HStack { Text("\(k) → \(v)").font(.system(size: 10, design: .monospaced)).foregroundStyle(Theme.textSecondary); Spacer()
                         Button { dictation.removeWord(k) } label: { Image(systemName: "xmark.circle") }.buttonStyle(.plain) }
                 }
+                Text("Draft from the screen: dictate or type what you want written (“reply that Thursday works”), then press the button. The window is read once, on this Mac, and the draft waits in the box until you press Insert.")
+                    .font(.system(size: 10)).foregroundStyle(Theme.textSecondary)
                 Text("Say “comma”, “period”, “question mark”, “new line”, “new paragraph”. Text goes only into the field you choose, through Accessibility (never the clipboard).")
                     .font(.system(size: 10)).foregroundStyle(Theme.textSecondary)
                 Divider().opacity(0.3)

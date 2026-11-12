@@ -20,6 +20,17 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.2.66", date: "12 November 2026", headline: "NotchAI: more voices, drawing, diagrams, and a Windows chat", items: [
+            "- New: NotchAI Voice has more engines. Piper (a natural voice) and Whisper (speech to text) run on your Mac once you install them and set their paths in Voice. OpenAI's voice is there too and, like every cloud voice, stays blocked while Local first is on",
+            "- New: hands-free talking. Turn it on in Voice and a pause ends your sentence, and NotchAI listens again after it answers. A wake word (\"Hey Notch\") is also there: it is off by default, is recognised on your Mac only, shows when the microphone is open, and is experimental",
+            "- New (Pro): draw on your screen. Turn it on in Screen, hold Control and Option and move the pointer to draw, then ask NotchAI to explain what you drew around. NotchAI's own arrows, circles and boxes can use a hand-drawn style",
+            "- New: Visual can draw a diagram of boxes and arrows for a topic, and can open your own 3D files (USDZ, OBJ, STL and others) to turn around and click",
+            "- New (Pro): Documents takes whole folders, searches inside your files, and reads old Word (.doc) and rich text files",
+            "- New (Pro): one-press connectors for Notion, Linear and Sentry that sign in through your browser, GitHub with a token, and more than one account for each",
+            "- New (Pro): dictation can draft from the screen. Say what you want written, press Draft from the screen, and NotchAI reads the window you were using and writes it for you to check before it is inserted",
+            "- New (Ultimate): ask an agent a follow-up question about a task it has finished, from the Agents section",
+            "- Fixed: Up next names the day (for example Saturday) instead of saying Tomorrow for everything after today"
+        ]),
         ReleaseNote(version: "2.2.65", date: "12 November 2026", headline: "Add friends to a group", items: [
             "- Fixed: in a Messenger group chat anyone in the group can now add their own friends, not just whoever made it. Open the group's ⋯ menu (or right-click it) and choose Add friends. Only the person who made the group can rename it or remove people. Everyone in the group needs this update for the new people to show up for them",
         ]),

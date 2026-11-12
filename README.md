@@ -150,6 +150,19 @@ More screenshots of the capture overlay, the AI answer, the settings and the Win
 
 ## What's new
 
+### Mac 2.2.66 · Windows 2.2.66 · 12 November 2026 · NotchAI: more voices, drawing, diagrams, and a Windows chat
+
+- New: NotchAI Voice has more engines. Piper (a natural voice) and Whisper (speech to text) run on your Mac once you install them and set their paths in Voice. OpenAI's voice is there too and, like every cloud voice, stays blocked while Local first is on
+- New: hands-free talking. Turn it on in Voice and a pause ends your sentence, and NotchAI listens again after it answers. A wake word ("Hey Notch") is also there: it is off by default, is recognised on your Mac only, shows when the microphone is open, and is experimental
+- New (Pro): draw on your screen. Turn it on in Screen, hold Control and Option and move the pointer to draw, then ask NotchAI to explain what you drew around. NotchAI's own arrows, circles and boxes can use a hand-drawn style
+- New: Visual can draw a diagram of boxes and arrows for a topic, and can open your own 3D files (USDZ, OBJ, STL and others) to turn around and click
+- New (Pro): Documents takes whole folders, searches inside your files, and reads old Word (.doc) and rich text files
+- New (Pro): one-press connectors for Notion, Linear and Sentry that sign in through your browser, GitHub with a token, and more than one account for each
+- New (Pro): dictation can draft from the screen. Say what you want written, press Draft from the screen, and NotchAI reads the window you were using and writes it for you to check before it is inserted
+- New (Ultimate): ask an agent a follow-up question about a task it has finished, from the Agents section
+- Fixed: Up next names the day (for example Saturday) instead of saying Tomorrow for everything after today
+- Windows: New: a NotchAI tab (beta). It is a chat that stays on this PC: with Local first on, it only uses a model Ollama has installed here and refuses anything else before it is sent. It has Stop, Regenerate, New chat and can read answers aloud. Voice questions, screen reading, files and agents are on the Mac only for now
+
 ### Mac 2.2.65 · Windows 2.2.65 · 12 November 2026 · 👥 Add friends to a group
 
 - Fixed: in a Messenger group chat anyone in the group can now add their own friends, not just whoever made it. Open the group's ⋯ menu (or right-click it) and choose Add friends. Only the person who made the group can rename it or remove people. Everyone in the group needs this update for the new people to show up for them
@@ -159,15 +172,6 @@ More screenshots of the capture overlay, the AI answer, the settings and the Win
 - Fixed: text you type in the notch is easier to see. Fields such as a group name, your friend code and several search boxes showed dark text on the dark notch; they now use your theme's text colour
 - Fixed: the date and time pill under the notch now keeps the time up to date, goes away when you move off the notch or open it, and no longer pops up while the notch is closing
 - Fixed: changing the volume with the keys, by scrolling on the notch, or with the slider in Audio no longer freezes or stutters. The changes are now merged and written in the background
-
-### Mac 2.2.63 · Windows 2.2.63 · 12 November 2026 · More for NotchAI, and a Report tab
-
-- New: NotchAI chat keeps a history, has Stop and Regenerate, checks your Ollama setup, can start at login and respects Reduce Motion. NotchAI stays local first: cloud and unverified models are refused unless you turn them on
-- New (Pro): NotchAI can search the web with no key (DuckDuckGo, your own SearXNG server, or Wikipedia, your choice in Research), read the top pages and answer with citations. Each question says which service it goes to, and nothing is searched until you ask
-- New (Pro): NotchAI reads Word, Excel and PowerPoint files as well as PDF, text and images, only reading them and never changing them. Drop files on the NotchAI tab or its window to list them in Documents and summarise them
-- New: Settings has a Report tab. It opens a GitHub issue that already says Mac, your version and your plan; you read it and press Submit yourself
-- Fixed: only Messenger is locked when you take the lock offer. Games and Search had been locked too by an old default; they are unlocked now unless you chose to lock them yourself
-- Fixed: typing in the Settings search box now shows your text
 
 ## Plugins
 

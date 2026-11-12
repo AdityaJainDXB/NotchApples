@@ -50,6 +50,29 @@ final class NotchAIDictation: ObservableObject {
         VoiceInput.shared.start { [weak self] heard in self?.raw = heard; self?.text = NotchAIDictationLogic.clean(heard, vocabulary: self?.vocabulary ?? [:]) }
     }
 
+    @Published private(set) var drafting = false
+
+    /// Screen-aware drafting: what is in the box is the instruction; the window you were using is read once, now,
+    /// and the model's draft replaces the instruction in the box for you to check before Insert.
+    func draftFromScreen() {
+        guard !drafting, !listening else { return }
+        let instruction = text
+        if let p = ScreenDraftLogic.problem(instruction: instruction, proAllowed: NotchAITier.allows(.pro), screenOn: ScreenIntelligence.shared.isOn) { status = p; return }
+        drafting = true; status = "Reading the window and drafting…"
+        Task {
+            defer { drafting = false }
+            do {
+                let seen = try await ScreenIntelligence.shared.captureForAgent(scope: .window)
+                let reply = try await AgentModelClient.complete(agent: "screen", system: ScreenDraftLogic.system,
+                                                                user: ScreenDraftLogic.prompt(instruction: instruction, appName: seen.appName, windowTitle: seen.windowTitle, screenText: seen.ocrText))
+                let draft = ScreenDraftLogic.clean(reply)
+                guard !draft.isEmpty else { status = "The model returned nothing to insert."; return }
+                text = draft; raw = draft
+                status = "Drafted from \(seen.appName). Check it, then press Insert."
+            } catch { status = error.localizedDescription }
+        }
+    }
+
     func cancel() { if listening { listening = false; VoiceInput.shared.stop() }; text = ""; raw = ""; status = nil }
 
     func setWord(_ heard: String, meaning: String) {
