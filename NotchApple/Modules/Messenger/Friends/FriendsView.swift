@@ -37,10 +37,18 @@ struct FriendsView: View {
             if let key = selected, Friends.isGroupKey(key), let group = client.group(key) { groupChat(group) }
             else if let box = selected, let friend = client.book.record(box), friend.status == .active { chat(friend) } else { placeholder }
         }
-        .sheet(isPresented: $showNewGroup) { newGroupSheet }
         // Shown inside the notch, not as a system dialog: a dialog is another window, and an unpinned notch closes the moment it loses focus,
         // which hid the confirmation and made Clear chat look like it did nothing.
         .overlay { if confirmClear { clearCard } }
+        .overlay { if showNewGroup { newGroupCard } }
+        .overlay { if confirmLeave, let key = selected, let g = client.group(key) {
+            confirmCard("Leave \(g.name)?", "Its messages are deleted from this Mac, and the others are told you left.", "Leave", close: { confirmLeave = false }) {
+                client.leaveGroup(g.key); selected = nil
+            } } }
+        .overlay { if confirmRemove, let box = selected, let f = client.book.record(box) {
+            confirmCard("Remove \(f.displayName)?", "They won't be told why, and you can add them again later.", "Remove", close: { confirmRemove = false }) {
+                client.remove(f.box); selected = nil
+            } } }
         .onAppear { client.activate(); if selected == nil { selected = client.friends.first?.box } }
         .onDisappear { client.viewing = nil; NotchPrefs.chatGame("friend", false) }
         .onChange(of: friendGameShowing) { _, on in NotchPrefs.chatGame("friend", on) }
@@ -178,33 +186,69 @@ struct FriendsView: View {
         }
     }
 
-    private var newGroupSheet: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            Text("New group").font(.system(size: 15, weight: .semibold))
-            TextField("Group name", text: $groupName).textFieldStyle(.roundedBorder)
-            Text("Pick friends to add").font(.system(size: 11)).foregroundStyle(Theme.textSecondary)
-            ScrollView {
-                VStack(alignment: .leading, spacing: 4) {
-                    ForEach(client.friends) { f in
-                        Toggle(f.displayName, isOn: Binding(get: { groupPick.contains(f.box) }, set: { on in if on { groupPick.insert(f.box) } else { groupPick.remove(f.box) } }))
+    /// Shown inside the notch, like the clear-chat card: a system sheet is another window, and an unpinned notch closes the moment it
+    /// loses focus, which made choosing group members close the whole notch.
+    private var newGroupCard: some View {
+        ZStack {
+            Color.black.opacity(0.55).onTapGesture { showNewGroup = false }
+            VStack(alignment: .leading, spacing: 10) {
+                Text("New group").font(.system(size: 15, weight: .semibold)).foregroundStyle(Theme.textPrimary)
+                TextField("Group name", text: $groupName).textFieldStyle(.plain).font(.system(size: 12)).padding(.horizontal, 8).frame(height: 28)
+                    .background(Theme.surface, in: RoundedRectangle(cornerRadius: 8))
+                Text("Pick friends to add").font(.system(size: 11)).foregroundStyle(Theme.textSecondary)
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 4) {
+                        ForEach(client.friends) { f in
+                            let on = groupPick.contains(f.box)
+                            Button { if on { groupPick.remove(f.box) } else { groupPick.insert(f.box) } } label: {
+                                HStack(spacing: 8) {
+                                    Image(systemName: on ? "checkmark.square.fill" : "square").foregroundStyle(on ? Theme.accentBright : Theme.textSecondary)
+                                    Text(f.displayName).font(.system(size: 12)).foregroundStyle(Theme.textPrimary).lineLimit(1)
+                                    Spacer()
+                                }
+                                .padding(.horizontal, 8).padding(.vertical, 5).contentShape(Rectangle())
+                                .background(on ? Theme.surfaceHover : Theme.surface, in: RoundedRectangle(cornerRadius: 8))
+                            }.buttonStyle(.plain)
+                        }
                     }
                 }
-            }
-            .frame(height: 150)
-            Text("Everyone in a group sees messages only from people who are also their friends, so add people who know each other. Each message is encrypted separately for each person.")
-                .font(.system(size: 10)).foregroundStyle(Theme.textSecondary).fixedSize(horizontal: false, vertical: true)
-            if let note = groupNote { Text(note).font(.system(size: 11)).foregroundStyle(.orange) }
-            HStack {
-                Spacer()
-                Button("Cancel") { showNewGroup = false }
-                Button("Create") {
-                    groupNote = client.createGroup(name: groupName, members: Array(groupPick))
-                    if groupNote == nil { showNewGroup = false; selected = client.groups.first?.key }
+                .frame(maxHeight: 150)
+                Text("Everyone in a group sees messages only from people who are also their friends, so add people who know each other. Each message is encrypted separately for each person.")
+                    .font(.system(size: 10)).foregroundStyle(Theme.textSecondary).fixedSize(horizontal: false, vertical: true)
+                if let note = groupNote { Text(note).font(.system(size: 11)).foregroundStyle(.orange) }
+                HStack {
+                    Spacer()
+                    Button("Cancel") { showNewGroup = false }.buttonStyle(PurpleButtonStyle(prominent: false))
+                    Button("Create") {
+                        groupNote = client.createGroup(name: groupName, members: Array(groupPick))
+                        if groupNote == nil { showNewGroup = false; selected = client.groups.first?.key }
+                    }
+                    .buttonStyle(PurpleButtonStyle()).disabled(groupPick.isEmpty)
                 }
-                .keyboardShortcut(.defaultAction).disabled(groupPick.isEmpty)
             }
+            .padding(14).frame(maxWidth: 340)
+            .background(Theme.deep, in: RoundedRectangle(cornerRadius: 14))
+            .overlay(RoundedRectangle(cornerRadius: 14).stroke(Theme.separator))
         }
-        .padding(18).frame(width: 320)
+    }
+
+    /// A confirmation inside the notch (never a system dialog, which would close the notch).
+    private func confirmCard(_ title: String, _ message: String, _ button: String, close: @escaping () -> Void, action: @escaping () -> Void) -> some View {
+        ZStack {
+            Color.black.opacity(0.55).onTapGesture(perform: close)
+            VStack(alignment: .leading, spacing: 10) {
+                Text(title).font(.system(size: 14, weight: .semibold)).foregroundStyle(Theme.textPrimary)
+                Text(message).font(.system(size: 11)).foregroundStyle(Theme.textSecondary).fixedSize(horizontal: false, vertical: true)
+                HStack {
+                    Spacer()
+                    Button("Cancel", action: close).buttonStyle(PurpleButtonStyle(prominent: false))
+                    Button(button) { action(); close() }.buttonStyle(PurpleButtonStyle())
+                }
+            }
+            .padding(14).frame(maxWidth: 380)
+            .background(Theme.deep, in: RoundedRectangle(cornerRadius: 14))
+            .overlay(RoundedRectangle(cornerRadius: 14).stroke(Theme.separator))
+        }
     }
 
     private func groupChat(_ g: FriendGroup) -> some View {
@@ -222,9 +266,6 @@ struct FriendsView: View {
                     Button("Leave group", role: .destructive) { confirmLeave = true }
                 } label: { Image(systemName: "ellipsis.circle") }
                     .menuStyle(.borderlessButton).frame(width: 28)
-            }
-            .confirmationDialog("Leave \(g.name)? Its messages are deleted from this Mac, and the others are told you left.", isPresented: $confirmLeave) {
-                Button("Leave", role: .destructive) { client.leaveGroup(g.key); selected = nil }
             }
             if client.unreachable(g) > 0 {
                 Text("\(client.unreachable(g)) in this group aren't your friends, so you can't message or hear from them here.")
@@ -364,9 +405,6 @@ struct FriendsView: View {
                 } label: { Image(systemName: "ellipsis.circle") }.menuStyle(.borderlessButton).frame(width: 28)
             }
             .popover(isPresented: $renaming) { nicknameEditor(friend) }
-            .confirmationDialog("Remove \(friend.displayName)? They won't be told why, and you can add them again later.", isPresented: $confirmRemove) {
-                Button("Remove", role: .destructive) { client.remove(friend.box); selected = nil }
-            }
             if let game = client.games[friend.box] { TicTacToeCard(io: gameIO(friend.box), game: game, myID: client.identity.box) }
             PlayCard(play: client.play(friend.box), source: "friend-play")
             messageList(friend.box, empty: "Say hi. Messages are encrypted on this Mac; the server only holds them until \(friend.displayName) is online.", group: false)
