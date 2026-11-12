@@ -16,6 +16,14 @@ A second session (on a Mac with no Xcode and without the signing keychain) built
 - Checked before merging: 648 Mac logic tests, 553 Windows tests and a whole-app type-check. The Release compile in CI had not finished (see above). **Not run on a real device:** anything with a microphone, speaker, screen capture, browser sign-in or a Windows PC. The wake word is labelled experimental for that reason.
 - Still open from the roadmap: real-device verification (backlog 1) and the Do It check (backlog 2; the private branch `notchai-doit-bridge` is still not merged into the private `main`).
 
+## Asked for by the owner, not started (design and an idea)
+
+1. **Liquid metal for the notch.** The owner wants the real notch UI to use the liquid-metal look, and the notch to show liquid metal in the current theme's colour when the pointer hovers over it. Only browser prototypes exist; nothing is in the app. The prototypes are in this repo, open them in a browser:
+   - `docs/prototypes/liquid-metal-notch.html`: the notch with liquid-metal buttons, a different metal on hover, and a theme-coloured metal rim when hovering over the notch. The owner approved this one ("really good").
+   - `docs/prototypes/notch-orb-prototype.html`: the earlier orb prototype for searching and solving states.
+   They are built from Jakub Antalik's MIT-licensed repos (github.com/Jakubantalik: `metal-fx` and the transitions.dev tokens). The effect is a WebGL shader, so the Mac app needs a port to Metal or a SwiftUI shader (it cannot be dropped in as is); Windows (Tauri) can use the web code directly. Keep the MIT notice with any code that is reused, respect Reduce Motion, and check CPU and battery use before turning it on for everyone.
+2. **Idea: desktop widgets, Mac and Windows.** Let people put widgets on the desktop for the apps or tabs they choose, and one for the notch itself. Not designed. Questions to settle with the owner first: which tabs make sense as widgets, whether Mac uses WidgetKit (a widget extension, new for this project) or the app's own desktop-level windows, how Windows does it (Tauri windows pinned to the desktop), and which plan it belongs to.
+
 ## State right now
 
 - **Mac 2.2.69** (`v2.2.69`) is the Latest release, installed on the owner's Mac. **Windows 2.2.69** (`win-v2.2.69`) is published as a pre-release with its `.exe` and `.msi`. `scripts/prune-releases.sh` has been run.
