@@ -19,6 +19,8 @@ struct MCPServerConfig: Codable, Identifiable, Equatable {
     var url: String = ""
     var command: String = ""
     var arguments: [String] = []
+    /// Signed in through the browser (OAuth) instead of a pasted key. Optional so connector lists saved before this still load.
+    var oauth: Bool?
     /// Per-tool permissions by tool name; a tool not listed asks each time.
     var permissions: [String: MCPToolPermission] = [:]
 }
@@ -52,6 +54,35 @@ final class MCPStore: ObservableObject {
         set { KeychainHelper.set(String(decoding: (try? JSONEncoder().encode(newValue)) ?? Data("{}".utf8), as: UTF8.self), for: .mcpTokens) }
     }
 
+    // MARK: Browser sign-in (OAuth). Tokens live in the same private store as keys, under "oauth:<id>".
+
+    private func oauthTokens(_ id: String) -> OAuthTokens? { tokens["oauth:\(id)"].flatMap { try? JSONDecoder().decode(OAuthTokens.self, from: Data($0.utf8)) } }
+    private func setOAuthTokens(_ id: String, _ t: OAuthTokens?) {
+        var all = tokens
+        if let t, let d = try? JSONEncoder().encode(t) { all["oauth:\(id)"] = String(decoding: d, as: UTF8.self) } else { all.removeValue(forKey: "oauth:\(id)") }
+        tokens = all
+    }
+    /// One registration per sign-in server is reused, so signing in twice does not register the app twice.
+    private func knownClientID(for server: URL) -> String? { tokens["oauthclient:\(server.host ?? "")"] }
+
+    func signIn(_ id: String) {
+        guard let s = servers.first(where: { $0.id == id }), s.oauth == true, let u = URL(string: s.url) else { return }
+        guard NotchAITier.allows(.pro) else { problem = NotchAITier.lockedMessage(.pro); return }
+        problem = nil
+        states[id] = .connecting
+        Task {
+            do {
+                let t = try await MCPOAuthFlow.signIn(server: u, clientName: "Notch Apple", knownClientID: knownClientID(for: u))
+                setOAuthTokens(id, t)
+                var all = tokens; all["oauthclient:\(u.host ?? "")"] = t.clientID; tokens = all
+                connect(id)
+            } catch {
+                states[id] = (error as? OAuthError) == .cancelled ? .disconnected : .failed(error.localizedDescription)
+                if (error as? OAuthError) != .cancelled { problem = error.localizedDescription }
+            }
+        }
+    }
+
     // MARK: Adding and removing
 
     @discardableResult
@@ -60,6 +91,19 @@ final class MCPStore: ObservableObject {
             problem = "Enter a web address starting with http:// or https://."; return false
         }
         return add(MCPServerConfig(id: MCPNaming.slug(from: name), name: name, kind: .remote, url: u.absoluteString), key: key)
+    }
+
+    /// Adds a remote connector that signs in through the browser: no key is typed or stored by hand.
+    @discardableResult
+    func addRemoteWithBrowserSignIn(name: String, address: String) -> Bool {
+        guard let u = URL(string: address.trimmingCharacters(in: .whitespaces)), OAuthLogic.isSecure(u) else {
+            problem = "Browser sign-in needs a secure address starting with https://."; return false
+        }
+        var s = MCPServerConfig(id: MCPNaming.slug(from: name), name: name, kind: .remote, url: u.absoluteString)
+        s.oauth = true
+        guard add(s, key: "") else { return false }
+        signIn(s.id)
+        return true
     }
 
     @discardableResult
@@ -82,7 +126,7 @@ final class MCPStore: ObservableObject {
     func remove(_ id: String) {
         disconnect(id)
         servers.removeAll { $0.id == id }
-        var t = tokens; t.removeValue(forKey: id); tokens = t
+        var t = tokens; t.removeValue(forKey: id); t.removeValue(forKey: "oauth:\(id)"); tokens = t
         save()
     }
 
@@ -98,7 +142,21 @@ final class MCPStore: ObservableObject {
             switch s.kind {
             case .remote:
                 guard let u = URL(string: s.url) else { states[id] = .failed("bad address"); return }
-                transport = HTTPMCPTransport(url: u, token: tokens[id])
+                if s.oauth == true {
+                    // Refresh a token that is about to expire first; with nothing usable the person signs in again.
+                    guard let saved = oauthTokens(id) else { states[id] = .expired; return }
+                    if saved.needsRefresh() {
+                        guard saved.canRefresh else { states[id] = .expired; return }
+                        Task {
+                            do { setOAuthTokens(id, try await OAuthClient().refresh(saved)); connect(id) }
+                            catch { states[id] = .expired }
+                        }
+                        return
+                    }
+                    transport = HTTPMCPTransport(url: u, token: saved.accessToken)
+                } else {
+                    transport = HTTPMCPTransport(url: u, token: tokens[id])
+                }
             case .local:
                 transport = try StdioMCPTransport(command: s.command, arguments: s.arguments, environment: [:])
             }
