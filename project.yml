@@ -163,6 +163,8 @@ targets:
       - NotchApple/Core/NotchAIMCP.swift
       - NotchApple/Core/NotchAIDictationLogic.swift
       - NotchApple/Core/NotchAITeachingLogic.swift
+      - NotchApple/Core/NotchAIVisualLogic.swift
+      - NotchApple/Modules/NotchAI/Visual/NotchAIVisualScene.swift
       - NotchApple/Core/NotchAIWebSearch.swift
       - NotchApple/Core/NotchAIOrchestratorCore.swift
       - NotchApple/Modules/NotchAI/Screen/ScreenOCR.swift
