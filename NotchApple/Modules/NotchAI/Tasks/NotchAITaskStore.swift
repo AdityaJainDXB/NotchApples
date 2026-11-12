@@ -140,8 +140,10 @@ final class NotchAITaskStore: ObservableObject {
     // MARK: Persistence
 
     fileprivate func update(_ t: NotchAITask) {
+        let old = tasks.first { $0.id == t.id }?.state
         if let i = tasks.firstIndex(where: { $0.id == t.id }) { tasks[i] = t } else { tasks.insert(t, at: 0) }
         save()
+        if t.depth == 0 { NotchAINotifier.shared.taskChanged(title: t.title, from: old, to: t.state) }
         if t.state.isFinished, let w = waiters.removeValue(forKey: t.id) { w.forEach { $0.resume(returning: t) } }
     }
 

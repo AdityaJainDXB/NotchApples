@@ -52,6 +52,10 @@ final class NotchAIVoice: ObservableObject {
         volume = d.object(forKey: "notchai.voice.volume") as? Double ?? 1
         speakReplies = d.bool(forKey: "notchai.voice.speakReplies")
         for p in providers {
+            p.onChunkStart = { [weak self, weak p] text in
+                guard let self, let p, p.id == self.providerID else { return }
+                self.caption = text
+            }
             p.onSpeakingChange = { [weak self, weak p] speaking in
                 guard let self, let p, p.id == self.providerID else { return }
                 self.handle(speaking ? .speakingStarted : .speakingFinished)

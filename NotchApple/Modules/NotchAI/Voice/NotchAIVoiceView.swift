@@ -13,6 +13,10 @@ struct NotchAIVoiceView: View {
     @ObservedObject private var voice = NotchAIVoice.shared
     @ObservedObject private var input = VoiceInput.shared
     @ObservedObject private var convo = NotchAIConversation.shared
+    @ObservedObject private var dictation = NotchAIDictation.shared
+    @ObservedObject private var notifier = NotchAINotifier.shared
+    @State private var heard = ""
+    @State private var meant = ""
 
     private var voices: [SpeechVoice] { voice.provider.listVoices() }
 
@@ -54,6 +58,38 @@ struct NotchAIVoiceView: View {
                 slider("Pitch", $voice.pitch, 0.5...2, "\(String(format: "%.1f", voice.pitch))×", enabled: voice.provider.id == "apple")
                 slider("Volume", $voice.volume, 0...1, "\(Int(voice.volume * 100))%", enabled: true)
                 Toggle("Speak every answer aloud", isOn: $voice.speakReplies).toggleStyle(.switch).controlSize(.small)
+                Toggle("Live captions while NotchAI speaks", isOn: $notifier.captions).toggleStyle(.switch).controlSize(.small)
+                Text("Shortcut: ⌃⌥V starts and ends Talk from any app.").font(.system(size: 10)).foregroundStyle(Theme.textSecondary)
+                Divider().opacity(0.3)
+                Text("Dictation into other apps").font(.system(size: 12, weight: .semibold)).foregroundStyle(.white)
+                HStack {
+                    Button(dictation.listening ? "Done" : "Dictate") { dictation.toggle() }.tint(NotchAIView.green)
+                    Button("Insert") { dictation.insert() }.disabled(dictation.text.isEmpty || dictation.listening)
+                    Button("Cancel") { dictation.cancel() }.disabled(dictation.text.isEmpty && !dictation.listening)
+                    if let s = dictation.status { Text(s).font(.system(size: 10)).foregroundStyle(Theme.textSecondary) }
+                }
+                TextField("Dictated text appears here. You can edit it before inserting.", text: $dictation.text, axis: .vertical)
+                    .textFieldStyle(.roundedBorder).lineLimit(2...5)
+                HStack {
+                    TextField("Heard as…", text: $heard).textFieldStyle(.roundedBorder)
+                    TextField("Should be…", text: $meant).textFieldStyle(.roundedBorder)
+                    Button("Add word") { dictation.setWord(heard, meaning: meant); heard = ""; meant = "" }.disabled(heard.isEmpty || meant.isEmpty)
+                }
+                ForEach(dictation.vocabulary.sorted { $0.key < $1.key }, id: \.key) { k, v in
+                    HStack { Text("\(k) → \(v)").font(.system(size: 10, design: .monospaced)).foregroundStyle(Theme.textSecondary); Spacer()
+                        Button { dictation.removeWord(k) } label: { Image(systemName: "xmark.circle") }.buttonStyle(.plain) }
+                }
+                Text("Say “comma”, “period”, “question mark”, “new line”, “new paragraph”. Text goes only into the field you choose, through Accessibility (never the clipboard).")
+                    .font(.system(size: 10)).foregroundStyle(Theme.textSecondary)
+                Divider().opacity(0.3)
+                Text("Alerts").font(.system(size: 12, weight: .semibold)).foregroundStyle(.white)
+                Toggle("Notify me when a task finishes or needs approval", isOn: Binding(get: { notifier.notify }, set: { notifier.notify = $0; if $0 { notifier.requestPermission() } }))
+                    .toggleStyle(.switch).controlSize(.small)
+                Toggle("Play a chime", isOn: $notifier.chime).toggleStyle(.switch).controlSize(.small)
+                Toggle("Say it aloud", isOn: $notifier.speak).toggleStyle(.switch).controlSize(.small)
+                Toggle("Quiet mode (no sounds or speech)", isOn: $notifier.quietManual).toggleStyle(.switch).controlSize(.small)
+                Text("Sounds and speech also stay off while Zoom, Teams, FaceTime or Webex is in front. macOS Focus decides whether banners appear.")
+                    .font(.system(size: 10)).foregroundStyle(Theme.textSecondary)
                 Text("Speech recognition and the voice run on this Mac by default. Talk opens the microphone only until you stop speaking; it needs Microphone and Speech Recognition permission. The AI model, the speech recogniser and the voice are separate choices.")
                     .font(.system(size: 10)).foregroundStyle(Theme.textSecondary)
             }

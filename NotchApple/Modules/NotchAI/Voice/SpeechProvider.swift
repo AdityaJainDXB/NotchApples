@@ -49,6 +49,8 @@ protocol SpeechProvider: AnyObject {
     var isSpeaking: Bool { get }
     /// Called with true when speech starts and false when it ends or is stopped.
     var onSpeakingChange: ((Bool) -> Void)? { get set }
+    /// Called with the text of each chunk as it starts being spoken (for live captions).
+    var onChunkStart: ((String) -> Void)? { get set }
 
     func speak(_ text: String) throws
     func stop()
@@ -70,6 +72,7 @@ final class AppleSpeechProvider: NSObject, SpeechProvider, AVSpeechSynthesizerDe
     let displayName = "Apple voice (on this Mac)"
     let runsLocally = true
     var onSpeakingChange: ((Bool) -> Void)?
+    var onChunkStart: ((String) -> Void)?
 
     private let synth = AVSpeechSynthesizer()
     private var voiceID: String?
@@ -131,6 +134,11 @@ final class AppleSpeechProvider: NSObject, SpeechProvider, AVSpeechSynthesizerDe
         }
     }
 
+    nonisolated func speechSynthesizer(_ s: AVSpeechSynthesizer, didStart u: AVSpeechUtterance) {
+        let text = u.speechString
+        Task { @MainActor in self.onChunkStart?(text) }
+    }
+
     nonisolated func speechSynthesizer(_ s: AVSpeechSynthesizer, didCancel u: AVSpeechUtterance) {}
 }
 
@@ -142,6 +150,7 @@ final class GeminiSpeechProvider: NSObject, SpeechProvider, AVAudioPlayerDelegat
     let displayName = "Gemini voice (cloud)"
     let runsLocally = false
     var onSpeakingChange: ((Bool) -> Void)?
+    var onChunkStart: ((String) -> Void)?
 
     /// The model that makes the audio. A setting, because Google renames these; this is the documented TTS model.
     static let defaultModel = "gemini-2.5-flash-preview-tts"
@@ -171,6 +180,7 @@ final class GeminiSpeechProvider: NSObject, SpeechProvider, AVAudioPlayerDelegat
                     try Task.checkCancellation()
                     let wav = try await Self.fetch(chunk, voice: voice, model: model, key: key)
                     try Task.checkCancellation()
+                    await MainActor.run { self?.onChunkStart?(chunk) }
                     await self?.play(wav)
                 }
             } catch {}

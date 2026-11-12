@@ -41,6 +41,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         ModuleRegistry.shared.register(CursorCompanion.shared)
         CursorCompanion.shared.start()   // no-op unless the user turned the green dot on
         AgentHUD.shared.refresh()        // no-op unless the user turned on the agent cards
+        CaptionOverlay.shared.start()    // shows words only while NotchAI is speaking
+        if UserDefaults.standard.object(forKey: "notchai.voice.hotkey") as? Bool ?? true {
+            GlobalHotkeyManager.shared.register(.notchAITalk) { NotchAIVoice.shared.talk() }   // ctrl-option-V: press to talk, press again to send
+        }
         #if DEBUG
         // Test hook (DEBUG only): `-notchai.selftest.settings claude` opens that Settings tab at launch.
         if let raw = UserDefaults.standard.string(forKey: "notchai.selftest.settings"), let tab = SettingsTab(rawValue: raw) {
