@@ -60,6 +60,7 @@ struct ReadFileTool: TaskTool {
     func run(argument: String, results: [String: String]) async throws -> String {
         guard await allowedPath() == argument else { throw ResearchError.unreadable }
         let s = try await ResearchIO.read(URL(fileURLWithPath: argument))
+        await MainActor.run { NotchAIDocuments.shared.record(path: argument) }       // listed in Documents, so the user can see what was used
         return encode(PageToolResult(ok: true, title: s.title, location: s.location, text: s.text, truncated: s.truncated, error: nil))
     }
 }

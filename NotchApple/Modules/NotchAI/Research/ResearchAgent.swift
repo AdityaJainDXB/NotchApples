@@ -63,18 +63,26 @@ final class ResearchAgent: ObservableObject {
         panel.allowsMultipleSelection = false
         panel.canChooseDirectories = false
         panel.message = "Choose a file for NotchAI to read. It is only read, never changed."
-        if panel.runModal() == .OK { pickedFile = panel.url; status = nil }
+        if panel.runModal() == .OK { pickedFile = panel.url; status = nil; if let u = panel.url { NotchAIDocuments.shared.add(u, source: .chosen) } }
     }
 
     func askAboutFile(question: String) {
         status = nil
-        guard NotchAITier.allows(.pro) else { status = NotchAITier.lockedMessage(.pro); return }
         guard let url = pickedFile else { status = "Choose a file first."; return }
+        ask(about: url, question: question)
+    }
+
+    /// Summarises or asks about a file (one the user chose or dropped). Read-only; runs as a task.
+    func ask(about url: URL, question: String) {
+        status = nil
+        guard NotchAITier.allows(.pro) else { status = NotchAITier.lockedMessage(.pro); return }
+        pickedFile = url                              // the only file the read tool will open
         let q = question.trimmingCharacters(in: .whitespacesAndNewlines)
         let ask = q.isEmpty ? "Summarise this document." : q
         let steps = [TaskStep(tool: "read_file", title: "Read \(url.lastPathComponent)", argument: url.path, risk: .readOnly, idempotencyKey: "src0"),
                      TaskStep(tool: "ask_model", title: "Answer from the file", argument: ask, risk: .readOnly, idempotencyKey: "ask")]
         if NotchAITaskStore.shared.start(NotchAITask(title: "File: \(url.lastPathComponent)", agent: "file", steps: steps)) {
+            NotchAIDocuments.shared.add(url, source: .chosen)
             NotchAINav.shared.section = .tasks
         } else { status = "Too many tasks are running. Wait for one to finish." }
     }

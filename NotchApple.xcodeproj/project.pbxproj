@@ -33,6 +33,7 @@
 		0D4B0F11E881D4BBB4E941AE /* FoldCapture.swift in Sources */ = {isa = PBXBuildFile; fileRef = 90503DA53EA8A9669CE5AFA7 /* FoldCapture.swift */; };
 		0D4F28291AFFD278E9E3F512 /* ClipboardLinkLogic.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E30AC01CF48D89F98A97E0E /* ClipboardLinkLogic.swift */; };
 		0E660E7247D927D8585B8973 /* PurgeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5ADCED15F89DDEB6FD1BC44 /* PurgeView.swift */; };
+		0E67EEB87B0E3A356788E883 /* NotchAIDocumentLogic.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15058B968CAA74BE2AFB5D7C /* NotchAIDocumentLogic.swift */; };
 		0EF4A23EABCE37652389673D /* NotchAIAgents.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0F4FC9A7191A19291819130 /* NotchAIAgents.swift */; };
 		0F3F35C29DCE3595C506A304 /* CtfGameView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9D4FADAB2335D1E735AA1EF8 /* CtfGameView.swift */; };
 		100C12900BB95D8674885241 /* RocketGameView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A02EE54C6072F47A369B5DB8 /* RocketGameView.swift */; };
@@ -48,6 +49,7 @@
 		12C051F6E83B0077BEE52E57 /* SettingsBackup.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB841124163B085F8C4FDD78 /* SettingsBackup.swift */; };
 		13A990C6CA3F55B655C3D818 /* SecretLogic.swift in Sources */ = {isa = PBXBuildFile; fileRef = A86F7ABE9C93935F6764DF17 /* SecretLogic.swift */; };
 		1420BEF1F9AE0A256FD141B3 /* FoldSurface.swift in Sources */ = {isa = PBXBuildFile; fileRef = D077F8329BD06B571E7C0A86 /* FoldSurface.swift */; };
+		144A71E8E0319F59B0E7DE2F /* NotchAIDocumentLogic.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15058B968CAA74BE2AFB5D7C /* NotchAIDocumentLogic.swift */; };
 		14A7FC6AC9FE4D4AE3CDACE8 /* MascotGreeting.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6DC9C2F6E6F455AD29AE54F7 /* MascotGreeting.swift */; };
 		14BB6F024439C7EDE0DCBD2C /* nowplaying.js in Resources */ = {isa = PBXBuildFile; fileRef = FC6F714640D09B5653DF1D9F /* nowplaying.js */; };
 		14DFFBAD9343EABD28237F7C /* OpenRouterFallback.swift in Sources */ = {isa = PBXBuildFile; fileRef = 66DBB35434CEBAA72E675AD4 /* OpenRouterFallback.swift */; };
@@ -407,6 +409,7 @@
 		AC3F95130978AB662D033CAC /* BambuSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1B46C85D50EF864599EA96B /* BambuSettingsView.swift */; };
 		ACA4458DEE4A2201654D8EC7 /* DoItPolicyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0BABFA210B92DCAD31AE16D8 /* DoItPolicyTests.swift */; };
 		AD294B339A41BC7A6C7A28EC /* GamesMenuLogic.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3BF9A890031FCE78F1EA4EDD /* GamesMenuLogic.swift */; };
+		AD9256CC0C69398032E74CC0 /* NotchAIDocumentLogicTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DBE6C260659E1E9C7794243D /* NotchAIDocumentLogicTests.swift */; };
 		ADA7B95035CEAD9434C62504 /* TwoPlayerGames.swift in Sources */ = {isa = PBXBuildFile; fileRef = 74F9DD1ED3B9968B73847DC4 /* TwoPlayerGames.swift */; };
 		AE13CA2588D8FC5F6A016A76 /* ClipboardLinkLogic.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E30AC01CF48D89F98A97E0E /* ClipboardLinkLogic.swift */; };
 		AE583F6F2392D283FE3F2919 /* LidFoldModule.swift in Sources */ = {isa = PBXBuildFile; fileRef = 85CA8FE61A7F037A9E9A3142 /* LidFoldModule.swift */; };
@@ -560,6 +563,7 @@
 		EDB3F6D7E8B4BD35C460ED51 /* NotchAIOfficeReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 602B2E8A2FA24537681574CC /* NotchAIOfficeReader.swift */; };
 		EE0A4D311D76B8E3CEB0DF0B /* WebScriptGame.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5DDB1DB48C93BECF97137C8 /* WebScriptGame.swift */; };
 		EE11A5E5C10F6E3EAEEC0863 /* ModelLocality.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBF3DAEC5D6E71106D9278BE /* ModelLocality.swift */; };
+		EE152D5A27D8E8F804B931EA /* NotchAIDocuments.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7FE82F3C55958F6C18C387BC /* NotchAIDocuments.swift */; };
 		EEDB5DD5A9BC5F7A72305996 /* SecretLogic.swift in Sources */ = {isa = PBXBuildFile; fileRef = A86F7ABE9C93935F6764DF17 /* SecretLogic.swift */; };
 		EF02204760AC6C1EDD00A135 /* CompanionPairing.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E7ACC6F1129AAB5813B46CB /* CompanionPairing.swift */; };
 		EFF20A8A9B9E9074DD68C003 /* NotchAIOfficeReaderTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF49A743A06AD509B4C7F54A /* NotchAIOfficeReaderTests.swift */; };
@@ -672,6 +676,7 @@
 		14A58A151882263600938577 /* BambuPinTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BambuPinTests.swift; sourceTree = "<group>"; };
 		14A58F9BC7E277210622450E /* NotchAIVisual.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotchAIVisual.swift; sourceTree = "<group>"; };
 		14C5EABD0E7B9A75B1F89B9B /* ResearchAgent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResearchAgent.swift; sourceTree = "<group>"; };
+		15058B968CAA74BE2AFB5D7C /* NotchAIDocumentLogic.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotchAIDocumentLogic.swift; sourceTree = "<group>"; };
 		15345A507ECD309839CCAA0F /* NotchAIMemory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotchAIMemory.swift; sourceTree = "<group>"; };
 		15E4C40B0E52107163ADD5B8 /* NotchGestures.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotchGestures.swift; sourceTree = "<group>"; };
 		18329B6DF3C3AF37BA61B8B4 /* ProjectFocusTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectFocusTests.swift; sourceTree = "<group>"; };
@@ -875,6 +880,7 @@
 		7F930FB2B441D55D595B0094 /* rocket-logic.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = "rocket-logic.js"; sourceTree = "<group>"; };
 		7FA95D922A40D6601CCC213A /* AppAudioTap.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppAudioTap.swift; sourceTree = "<group>"; };
 		7FDE01CD471675041FCD4DD9 /* NotchAIRoutinesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotchAIRoutinesView.swift; sourceTree = "<group>"; };
+		7FE82F3C55958F6C18C387BC /* NotchAIDocuments.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotchAIDocuments.swift; sourceTree = "<group>"; };
 		81150E6B4F5BE3E2EB5CE1A1 /* PermissionsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PermissionsView.swift; sourceTree = "<group>"; };
 		813CF5ACE0591AF47CA5C5F6 /* MeetingNotesLogic.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeetingNotesLogic.swift; sourceTree = "<group>"; };
 		817DDCD453E4AD4BA5A96101 /* OllamaDiagnosticsLogic.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OllamaDiagnosticsLogic.swift; sourceTree = "<group>"; };
@@ -1056,6 +1062,7 @@
 		DA0A248DCE35D87F12F7F090 /* klick */ = {isa = PBXFileReference; lastKnownFileType = folder; name = klick; path = NotchWindows/src/sounds/klick; sourceTree = SOURCE_ROOT; };
 		DB032195DAEF1B929D59A828 /* ClaudeUsageTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClaudeUsageTests.swift; sourceTree = "<group>"; };
 		DBB5D5B8C80009365348035A /* Profiles.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Profiles.swift; sourceTree = "<group>"; };
+		DBE6C260659E1E9C7794243D /* NotchAIDocumentLogicTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotchAIDocumentLogicTests.swift; sourceTree = "<group>"; };
 		DC8C118088B36E22640A6C5F /* plane-sim.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = "plane-sim.js"; sourceTree = "<group>"; };
 		DDC4F19F20B6E7371AC64B8C /* RemoteWebGame.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemoteWebGame.swift; sourceTree = "<group>"; };
 		DDFCC31A3176DE1F4E70A774 /* NotchAITaskLogic.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotchAITaskLogic.swift; sourceTree = "<group>"; };
@@ -1515,6 +1522,7 @@
 				191608C86B8A7A6A05121AA3 /* NotchAIConversationTests.swift */,
 				D28DA59E1F14A580A8995731 /* NotchAIDictationTests.swift */,
 				A796045509A3D302FB95EF4A /* NotchAIDocumentAndSearchTests.swift */,
+				DBE6C260659E1E9C7794243D /* NotchAIDocumentLogicTests.swift */,
 				205D059FF2604C33360CE928 /* NotchAIMCPTests.swift */,
 				C093D41C88F5E6545DDD16BB /* NotchAIMemoryTests.swift */,
 				FF49A743A06AD509B4C7F54A /* NotchAIOfficeReaderTests.swift */,
@@ -1624,6 +1632,7 @@
 				BB63454B0761715BDBAA4F80 /* NotchAIConversationLogic.swift */,
 				982D940C5EE446B9F0AF3F6B /* NotchAIDictationLogic.swift */,
 				6447E51386679AB2CE334197 /* NotchAIDocumentIndex.swift */,
+				15058B968CAA74BE2AFB5D7C /* NotchAIDocumentLogic.swift */,
 				71AED4901E3F83AC15CF1ECC /* NotchAIMCP.swift */,
 				A47F8700F54DC2BB4E617EBC /* NotchAIMemoryLogic.swift */,
 				602B2E8A2FA24537681574CC /* NotchAIOfficeReader.swift */,
@@ -1680,6 +1689,7 @@
 		5E1739E09312FC06BEC39993 /* Workspace */ = {
 			isa = PBXGroup;
 			children = (
+				7FE82F3C55958F6C18C387BC /* NotchAIDocuments.swift */,
 				2123CC2F5028FB383E903865 /* NotchAIWorkspace.swift */,
 			);
 			path = Workspace;
@@ -2703,6 +2713,8 @@
 				C17E3097A25283802567EE82 /* NotchAIDictation.swift in Sources */,
 				4EE43B47C35CAFE3515E63D6 /* NotchAIDictationLogic.swift in Sources */,
 				4AB071636A278AB25212EB81 /* NotchAIDocumentIndex.swift in Sources */,
+				0E67EEB87B0E3A356788E883 /* NotchAIDocumentLogic.swift in Sources */,
+				EE152D5A27D8E8F804B931EA /* NotchAIDocuments.swift in Sources */,
 				62792B43AD37423438EC1759 /* NotchAIGuard.swift in Sources */,
 				9B3009C1AB7E478413C659E4 /* NotchAIIntegrationsView.swift in Sources */,
 				31475CCDCB071F98815A103F /* NotchAIMCP.swift in Sources */,
@@ -2997,6 +3009,8 @@
 				6D48075FA2D67950C5B976A7 /* NotchAIDictationTests.swift in Sources */,
 				E4941F65974C6225F2B1F131 /* NotchAIDocumentAndSearchTests.swift in Sources */,
 				7F5B1A1E02227487E3B3F9EE /* NotchAIDocumentIndex.swift in Sources */,
+				144A71E8E0319F59B0E7DE2F /* NotchAIDocumentLogic.swift in Sources */,
+				AD9256CC0C69398032E74CC0 /* NotchAIDocumentLogicTests.swift in Sources */,
 				AE936F104EF32AF9CBBBCD67 /* NotchAIGuard.swift in Sources */,
 				565A0109C8971DA002CAECDA /* NotchAIMCP.swift in Sources */,
 				1B1D2D22008B8E60CE19181B /* NotchAIMCPTests.swift in Sources */,
