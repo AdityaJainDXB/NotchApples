@@ -94,6 +94,57 @@ struct NotchAITask: Codable, Identifiable, Equatable {
     var depth = 0
     var started: Date?
     var finished: Date?
+    /// The conversation with this task's agent: follow-up questions and its answers. Missing in tasks saved before this existed.
+    var chat: [AgentChatMessage]?
+}
+
+/// One message in a task's own conversation.
+struct AgentChatMessage: Codable, Equatable, Identifiable {
+    enum Role: String, Codable { case user, agent }
+    var id = UUID()
+    var role: Role
+    var text: String
+    var date = Date()
+}
+
+/// Rules for talking to the agent that did a task: who a follow-up goes to, what the agent is told, and how much is kept.
+enum AgentChatLogic {
+    static let maxMessages = 40
+    static let maxLength = 4000
+    static let maxContext = 6000
+
+    /// Adds a message (trimmed and capped, empty ones ignored); the oldest go when there are too many.
+    static func appended(_ chat: [AgentChatMessage]?, role: AgentChatMessage.Role, text: String, now: Date = .now) -> [AgentChatMessage] {
+        var out = chat ?? []
+        let t = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !t.isEmpty else { return out }
+        out.append(AgentChatMessage(role: role, text: String(t.prefix(maxLength)), date: now))
+        if out.count > maxMessages { out.removeFirst(out.count - maxMessages) }
+        return out
+    }
+
+    /// What the task produced: the result of its last finished step.
+    static func outcome(_ t: NotchAITask) -> String? {
+        t.steps.last { $0.state == .done && !($0.result ?? "").isEmpty }?.result
+    }
+
+    /// A follow-up can be answered once the task has finished with something to talk about (a failed or cancelled one has no answer to discuss).
+    static func canFollowUp(_ t: NotchAITask) -> Bool { t.state == .completed && outcome(t) != nil }
+
+    /// The task a message belongs to: the one it was sent from, else the most recent finished top-level task that can be followed up.
+    static func target(explicit: UUID?, tasks: [NotchAITask]) -> UUID? {
+        if let explicit, tasks.contains(where: { $0.id == explicit }) { return explicit }
+        return tasks.filter { $0.depth == 0 && canFollowUp($0) }.max { $0.updated < $1.updated }?.id
+    }
+
+    /// What the agent is shown: the original request, what it found, the conversation so far, and the new question.
+    static func prompt(task t: NotchAITask, question: String) -> String {
+        let found = String((outcome(t) ?? "").prefix(maxContext))
+        let earlier = (t.chat ?? []).suffix(10).map { ($0.role == .user ? "User: " : "You: ") + $0.text }.joined(separator: "\n")
+        return "You did this task for the user: \(t.title)\n\nWhat you found:\n\(found)\n"
+            + (earlier.isEmpty ? "" : "\nThe conversation so far:\n\(earlier)\n")
+            + "\nThe user now asks: \(question)\nAnswer from what you found. If it does not cover the question, say so instead of guessing."
+    }
 }
 
 enum TaskLogic {

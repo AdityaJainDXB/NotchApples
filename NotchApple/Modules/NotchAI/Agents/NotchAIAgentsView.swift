@@ -34,6 +34,7 @@ struct NotchAIAgentsView: View {
                     .onChange(of: hudOn) { _ in AgentHUD.shared.refresh() }
 
                 AgentCards(compact: false)
+                AgentChatPanel()
 
                 Divider().opacity(0.3)
                 HStack {
@@ -215,4 +216,49 @@ final class AgentHUD {
     }
 
     private func hide() { panel?.orderOut(nil); panel = nil }
+}
+
+/// Talk to the agent that did a finished task: pick the task, ask a follow-up, see its answers. Each task keeps its own conversation.
+private struct AgentChatPanel: View {
+    @ObservedObject private var tasks = NotchAITaskStore.shared
+    @State private var selected: UUID?
+    @State private var draft = ""
+    @State private var problem: String?
+
+    private var candidates: [NotchAITask] { tasks.tasks.filter { $0.depth == 0 && AgentChatLogic.canFollowUp($0) } }
+    private var current: NotchAITask? { AgentChatLogic.target(explicit: selected, tasks: tasks.tasks).flatMap { id in tasks.tasks.first { $0.id == id } } }
+
+    var body: some View {
+        if let t = current {
+            VStack(alignment: .leading, spacing: 6) {
+                HStack {
+                    Text("Ask about a finished task").font(.system(size: 12, weight: .semibold)).foregroundStyle(.white)
+                    Spacer()
+                    Picker("", selection: Binding(get: { t.id }, set: { selected = $0 })) {
+                        ForEach(candidates) { c in Text("\(c.agent) · \(c.title)").lineLimit(1).tag(c.id) }
+                    }.labelsHidden().frame(maxWidth: 240)
+                }
+                ForEach(t.chat ?? []) { m in
+                    HStack(alignment: .top) {
+                        if m.role == .user { Spacer(minLength: 30) }
+                        Text(m.text).font(.system(size: 11)).foregroundStyle(.white).textSelection(.enabled)
+                            .padding(7).background(m.role == .user ? NotchAIView.green.opacity(0.25) : Theme.surface, in: RoundedRectangle(cornerRadius: 8))
+                        if m.role == .agent { Spacer(minLength: 30) }
+                    }
+                }
+                if tasks.answering.contains(t.id) {
+                    HStack { ProgressView().controlSize(.small); Text("\(t.agent) is answering…").font(.system(size: 10)).foregroundStyle(Theme.textSecondary)
+                        Button("Stop") { tasks.stopAnswer(t.id) }.controlSize(.small) }
+                }
+                if let p = problem { Text(p).font(.system(size: 10)).foregroundStyle(.orange) }
+                HStack(spacing: 6) {
+                    TextField("Ask \(t.agent) a follow-up", text: $draft).textFieldStyle(.roundedBorder).onSubmit(send)
+                    Button("Ask") { send() }.disabled(draft.trimmingCharacters(in: .whitespaces).isEmpty || tasks.answering.contains(t.id))
+                }
+            }
+            .padding(8).background(Theme.surface.opacity(0.5), in: RoundedRectangle(cornerRadius: 9))
+        }
+    }
+
+    private func send() { problem = tasks.followUp(current?.id, draft); if problem == nil { draft = "" } }
 }
