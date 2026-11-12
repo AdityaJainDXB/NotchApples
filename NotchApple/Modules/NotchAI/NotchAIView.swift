@@ -12,7 +12,7 @@ import SwiftUI
 
 struct NotchAIView: View {
     enum Section: String, CaseIterable, Identifiable {
-        case overview = "Overview", companion = "Companion", chat = "Chat", voice = "Voice", screen = "Screen", research = "Research"
+        case overview = "Overview", companion = "Companion", chat = "Chat", voice = "Voice", screen = "Screen", research = "Research", memory = "Memory"
         var id: String { rawValue }
     }
 
@@ -39,7 +39,7 @@ struct NotchAIView: View {
                 }
                 Spacer()
                 Picker("", selection: Binding(get: { nav.section }, set: { nav.section = $0 })) { ForEach(Section.allCases) { Text($0.rawValue).tag($0) } }
-                    .pickerStyle(.segmented).labelsHidden().frame(width: 410)
+                    .pickerStyle(.segmented).labelsHidden().frame(width: 490)
             }
             switch section {
             case .overview: overview
@@ -48,6 +48,7 @@ struct NotchAIView: View {
             case .voice: NotchAIVoiceView()
             case .screen: NotchAIScreenView()
             case .research: NotchAIResearchView()
+            case .memory: NotchAIMemoryView()
             }
         }
     }

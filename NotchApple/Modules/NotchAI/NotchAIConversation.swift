@@ -97,6 +97,7 @@ final class NotchAIConversation: ObservableObject {
             history[i].imageBase64 = image
         }
         messages.append(ChatMessage(role: .assistant, text: ""))
+        let system = NotchAIMemory.shared.systemPrompt(base: AIClient.systemPrompt)
         let session = sessionID
         CursorCompanion.shared.setState(.thinking)
 
@@ -105,7 +106,7 @@ final class NotchAIConversation: ObservableObject {
             var error: Error?
             do {
                 try await NotchAIGuard.check(provider: provider, model: model)
-                for try await piece in AIClient.stream(history, provider: provider, model: model, system: AIClient.systemPrompt) {
+                for try await piece in AIClient.stream(history, provider: provider, model: model, system: system) {
                     reply += piece
                     self?.updateReply(reply)
                 }

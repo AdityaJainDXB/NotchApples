@@ -153,6 +153,7 @@ targets:
       - NotchApple/Core/NotchAIVoiceLogic.swift
       - NotchApple/Core/ScreenContextLogic.swift
       - NotchApple/Core/ResearchLogic.swift
+      - NotchApple/Core/NotchAIMemoryLogic.swift
       - NotchApple/Modules/NotchAI/Screen/ScreenOCR.swift
       - NotchApple/Core/OllamaDiagnosticsLogic.swift
       - NotchApple/Modules/Games/GameEngines.swift
