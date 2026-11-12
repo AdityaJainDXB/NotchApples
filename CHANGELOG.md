@@ -4,7 +4,7 @@ Every Notch Apple release, newest first. The latest few are also on the [README]
 
 > **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is in the repository's history.
 
-### Mac 2.2.66 · Windows 2.2.66 BETA · 12 November 2026 · NotchAI: more voices, drawing, diagrams, and a Windows chat
+### Mac 2.2.70 · Windows 2.2.70 BETA · 12 November 2026 · NotchAI: more voices, drawing, diagrams, and a Windows chat
 
 **Mac**
 
@@ -15,12 +15,56 @@ Every Notch Apple release, newest first. The latest few are also on the [README]
 - New (Pro): Documents takes whole folders, searches inside your files, and reads old Word (.doc) and rich text files
 - New (Pro): one-press connectors for Notion, Linear and Sentry that sign in through your browser, GitHub with a token, and more than one account for each
 - New (Pro): dictation can draft from the screen. Say what you want written, press Draft from the screen, and NotchAI reads the window you were using and writes it for you to check before it is inserted
-- New (Ultimate): ask an agent a follow-up question about a task it has finished, from the Agents section
-- Fixed: Up next names the day (for example Saturday) instead of saying Tomorrow for everything after today
 
 **Windows**
 
 - New: a NotchAI tab (beta). It is a chat that stays on this PC: with Local first on, it only uses a model Ollama has installed here and refuses anything else before it is sent. It has Stop, Regenerate, New chat and can read answers aloud. Voice questions, screen reading, files and agents are on the Mac only for now
+
+### Mac 2.2.69 · Windows 2.2.69 BETA · 12 November 2026 · 🪶 Lighter in the background, Screen buttons work
+
+**Mac**
+
+- Fixed: the Now Playing helper could be left running after Notch Apple quit or restarted for an update, one more each time, all polling in the background. It now stops with the app, ends by itself if the app is gone, and leftovers from older runs are ended when Notch Apple starts
+- Fixed: in NotchAI's Screen section the buttons stayed greyed out until you found the switch. Pressing one now turns Screen awareness on and asks for Screen Recording if it is missing. After you allow it in System Settings, quit and reopen Notch Apple; macOS only applies it after a restart
+
+**Windows**
+
+- No Windows changes in this release. It keeps the same version number as the Mac app
+
+### Mac 2.2.68 · Windows 2.2.68 BETA · 12 November 2026 · 🧭 Choose what stays on your screen
+
+**Mac**
+
+- Added: after an update, a one-time card asks "What should stay on your screen?". Switch off the features you don't want in the notch; the recommended ones start on, nothing changes until you press a button, and you can change any of it later in Settings → Modules
+- Added: in NotchAI you can ask an agent a follow-up question about a task it has finished. It answers in its own chat for that task, using the same model, and the Local first rule still applies
+
+**Windows**
+
+- No Windows changes in this release. It keeps the same version number as the Mac app
+
+**Website**
+
+- A new homepage (the old one is at /classic.html), and the claims about the free VPN are gone, because the VPN was retired in Mac 2.0.52 and Windows 1.55.0
+
+### Mac 2.2.67 · Windows 2.2.67 BETA · 12 November 2026 · 🔊 Volume and brightness stay after updates
+
+**Mac**
+
+- Fixed: the volume and brightness gauge in the notch kept disappearing after an update, because macOS forgot the Accessibility permission every time. The app is now signed with a fixed certificate, so the permission survives future updates. After installing this one, remove Notch Apple from System Settings → Privacy & Security → Accessibility (the − button), add it again and switch it on. That is needed one last time
+
+**Windows**
+
+- No Windows changes in this release. It keeps the same version number as the Mac app
+
+### Mac 2.2.66 · Windows 2.2.66 BETA · 12 November 2026 · 📅 Up next shows the real day
+
+**Mac**
+
+- Fixed: the Up next list said Tomorrow for every event after today, so a Saturday event seen on Thursday read Tomorrow. It now shows Today, Tomorrow, the weekday name for the next week (for example Saturday), or the date after that
+
+**Windows**
+
+- No Windows changes in this release; Windows already shows the real day. It keeps the same version number as the Mac app
 
 ### Mac 2.2.65 · Windows 2.2.65 BETA · 12 November 2026 · 👥 Add friends to a group
 

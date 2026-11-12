@@ -68,11 +68,13 @@ final class ScreenIntelligence: ObservableObject {
 
     /// Reads the text on screen on this Mac and shows it. No AI involved.
     func readText(scope: ScreenScope) {
+        armedByButton()
         Task { _ = try? await snapshot(scope: scope, showText: true) }
     }
 
     /// Captures, reads, and asks the conversation `question` about it.
     func ask(_ question: String, label: String? = nil, scope: ScreenScope) {
+        armedByButton()
         Task {
             guard let (snap, image) = try? await snapshot(scope: scope, showText: false) else { return }
             let prompt = ScreenContextLogic.prompt(question: question, snapshot: snap)
@@ -110,6 +112,7 @@ final class ScreenIntelligence: ObservableObject {
     /// Draws the area picker, then reads the text in the chosen area on this Mac (no AI), or asks `question` about it.
     func chooseArea(question: String?, label: String? = nil) {
         status = nil
+        armedByButton()
         guard canCaptureNow() else { return }
         ScreenRegionPicker.pick { [weak self] selection in
             guard let self else { return }
@@ -121,6 +124,7 @@ final class ScreenIntelligence: ObservableObject {
     /// Reads (or asks about) an area that is already known, for example the area around what the user drew.
     func askAbout(area: CGRect, on screen: NSScreen, question: String?, label: String? = nil) {
         status = nil
+        armedByButton()
         guard canCaptureNow() else { return }
         read(area: area, on: screen, name: "the area I drew around", question: question, label: label)
     }
@@ -178,11 +182,23 @@ final class ScreenIntelligence: ObservableObject {
         NotchAINav.shared.section = .chat
     }
 
+    static let permissionHelp = "Screen Recording is not allowed for Notch Apple yet. Switch it on in System Settings → Privacy & Security → Screen Recording, then quit and reopen Notch Apple (macOS only applies it after a restart)."
+
+    /// Pressing one of the screen buttons is the user's own request to capture, so it switches screen awareness on
+    /// (the switch visibly flips) and asks for the Screen Recording permission if it is missing, instead of leaving
+    /// the buttons greyed out. It is still one capture per press; nothing runs in the background.
+    private func armedByButton() {
+        guard NotchAITier.allows(.pro) else { return }
+        if !isOn { isOn = true }
+        refreshPermission()
+        if !permissionGranted { requestPermission() }
+    }
+
     private func canCaptureNow() -> Bool {
         guard NotchAITier.allows(.pro) else { status = NotchAITier.lockedMessage(.pro); return false }
         guard isOn else { status = "Screen awareness is off. Turn it on first."; return false }
         refreshPermission()
-        guard permissionGranted else { status = "Screen Recording permission is needed. Press “Allow screen access”."; return false }
+        guard permissionGranted else { status = Self.permissionHelp; return false }
         return true
     }
 
@@ -191,7 +207,7 @@ final class ScreenIntelligence: ObservableObject {
         guard NotchAITier.allows(.pro) else { status = NotchAITier.lockedMessage(.pro); throw Failure.refused }
         guard isOn else { status = "Screen awareness is off. Turn it on first."; throw Failure.refused }
         refreshPermission()
-        guard permissionGranted else { status = "Screen Recording permission is needed. Press “Allow screen access”."; throw Failure.refused }
+        guard permissionGranted else { status = Self.permissionHelp; throw Failure.refused }
         guard let app = lastExternalApp else { status = "No app to read: click the window you mean first."; throw Failure.refused }
         let bundle = app.bundleIdentifier ?? ""
         if ScreenContextLogic.isExcluded(bundleID: bundle, exclusions: exclusions) {

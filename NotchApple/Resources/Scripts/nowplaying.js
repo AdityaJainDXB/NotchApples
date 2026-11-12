@@ -4,6 +4,7 @@
 // It runs inside /usr/bin/osascript because macOS only lets Apple's own tools
 // read MediaRemote. Artwork is sent (base64) once per track.
 ObjC.import('Foundation');
+ObjC.import('unistd');
 $.NSBundle.bundleWithPath('/System/Library/PrivateFrameworks/MediaRemote.framework/').load;
 const R = $.NSClassFromString('MRNowPlayingRequest');
 const out = $.NSFileHandle.fileHandleWithStandardOutput;
@@ -12,6 +13,8 @@ let last = '', lastArtKey = '';
 function run(argv) {
   const interval = parseFloat(argv[0] || '1');
   while (true) {
+    // The app that started this helper is gone (quit, crashed, updated): stop, so no helper is ever left running.
+    if ($.getppid() === 1) $.exit(0);
     const o = {};
     try {
       o.playing = !!R.localIsPlaying;

@@ -276,6 +276,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationWillTerminate(_ notification: Notification) {
         BrightnessBlackout.shared.restore()   // never leave the screen dark behind
         ClosedLidAwake.shared.restoreOnQuit()   // let the Mac sleep again
+        NowPlayingMonitor.shared.shutdown()   // do not leave the now-playing helper running
         // Say goodbye to the room but remember it for next launch.
         WebP2PManager.shared.leave(remember: true)
         LocalP2PManager.shared.stop()

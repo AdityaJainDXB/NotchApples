@@ -150,7 +150,7 @@ More screenshots of the capture overlay, the AI answer, the settings and the Win
 
 ## What's new
 
-### Mac 2.2.66 · Windows 2.2.66 · 12 November 2026 · NotchAI: more voices, drawing, diagrams, and a Windows chat
+### Mac 2.2.70 · Windows 2.2.70 · 12 November 2026 · NotchAI: more voices, drawing, diagrams, and a Windows chat
 
 - New: NotchAI Voice has more engines. Piper (a natural voice) and Whisper (speech to text) run on your Mac once you install them and set their paths in Voice. OpenAI's voice is there too and, like every cloud voice, stays blocked while Local first is on
 - New: hands-free talking. Turn it on in Voice and a pause ends your sentence, and NotchAI listens again after it answers. A wake word ("Hey Notch") is also there: it is off by default, is recognised on your Mac only, shows when the microphone is open, and is experimental
@@ -159,19 +159,17 @@ More screenshots of the capture overlay, the AI answer, the settings and the Win
 - New (Pro): Documents takes whole folders, searches inside your files, and reads old Word (.doc) and rich text files
 - New (Pro): one-press connectors for Notion, Linear and Sentry that sign in through your browser, GitHub with a token, and more than one account for each
 - New (Pro): dictation can draft from the screen. Say what you want written, press Draft from the screen, and NotchAI reads the window you were using and writes it for you to check before it is inserted
-- New (Ultimate): ask an agent a follow-up question about a task it has finished, from the Agents section
-- Fixed: Up next names the day (for example Saturday) instead of saying Tomorrow for everything after today
 - Windows: New: a NotchAI tab (beta). It is a chat that stays on this PC: with Local first on, it only uses a model Ollama has installed here and refuses anything else before it is sent. It has Stop, Regenerate, New chat and can read answers aloud. Voice questions, screen reading, files and agents are on the Mac only for now
 
-### Mac 2.2.65 · Windows 2.2.65 · 12 November 2026 · 👥 Add friends to a group
+### Mac 2.2.69 · Windows 2.2.69 · 12 November 2026 · 🪶 Lighter in the background, Screen buttons work
 
-- Fixed: in a Messenger group chat anyone in the group can now add their own friends, not just whoever made it. Open the group's ⋯ menu (or right-click it) and choose Add friends. Only the person who made the group can rename it or remove people. Everyone in the group needs this update for the new people to show up for them
+- Fixed: the Now Playing helper could be left running after Notch Apple quit or restarted for an update, one more each time, all polling in the background. It now stops with the app, ends by itself if the app is gone, and leftovers from older runs are ended when Notch Apple starts
+- Fixed: in NotchAI's Screen section the buttons stayed greyed out until you found the switch. Pressing one now turns Screen awareness on and asks for Screen Recording if it is missing. After you allow it in System Settings, quit and reopen Notch Apple; macOS only applies it after a restart
 
-### Mac 2.2.64 · Windows 2.2.64 · 12 November 2026 · Typing, the time pill and volume
+### Mac 2.2.68 · Windows 2.2.68 · 12 November 2026 · 🧭 Choose what stays on your screen
 
-- Fixed: text you type in the notch is easier to see. Fields such as a group name, your friend code and several search boxes showed dark text on the dark notch; they now use your theme's text colour
-- Fixed: the date and time pill under the notch now keeps the time up to date, goes away when you move off the notch or open it, and no longer pops up while the notch is closing
-- Fixed: changing the volume with the keys, by scrolling on the notch, or with the slider in Audio no longer freezes or stutters. The changes are now merged and written in the background
+- Added: after an update, a one-time card asks "What should stay on your screen?". Switch off the features you don't want in the notch; the recommended ones start on, nothing changes until you press a button, and you can change any of it later in Settings → Modules
+- Added: in NotchAI you can ask an agent a follow-up question about a task it has finished. It answers in its own chat for that task, using the same model, and the Local first rule still applies
 
 ## Plugins
 

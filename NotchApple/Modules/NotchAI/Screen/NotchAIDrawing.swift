@@ -127,7 +127,7 @@ struct NotchAIDrawingCard: View {
                     guard let area = draw.drawnArea else { return }
                     screen.askAbout(area: area.rect, on: area.screen, question: ScreenContextLogic.explainQuestion, label: "Explain what I drew around")
                 }
-                .disabled(draw.strokes.isEmpty || !screen.isOn || screen.capturing)
+                .disabled(draw.strokes.isEmpty || screen.capturing)
                 Button("Clear") { draw.clear() }.disabled(draw.strokes.isEmpty)
             }
             Toggle("Hand-drawn style for NotchAI's own arrows, circles and boxes", isOn: $draw.handDrawn).toggleStyle(.switch).controlSize(.mini).font(.system(size: 10))

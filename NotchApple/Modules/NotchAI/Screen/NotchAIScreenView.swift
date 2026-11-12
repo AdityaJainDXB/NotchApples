@@ -39,7 +39,7 @@ struct NotchAIScreenView: View {
                     Button("Summarise this app") { screen.ask(ScreenContextLogic.summariseQuestion, label: "Summarise this app", scope: scope) }
                     Button("Read the text only") { screen.readText(scope: scope) }
                 }
-                .disabled(!unlocked || !screen.isOn || screen.capturing)
+                .disabled(!unlocked || screen.capturing)
                 HStack(spacing: 8) {
                     Button("Choose an area…") { screen.chooseArea(question: ScreenContextLogic.explainQuestion, label: "Explain the area I chose") }
                         .help("Drag a rectangle on any screen; NotchAI reads and explains just that")
@@ -48,7 +48,7 @@ struct NotchAIScreenView: View {
                         .help("Uses the text selected in the app you were just using (needs Accessibility)")
                     Button("Show selected text") { screen.useSelection(question: nil) }
                 }
-                .disabled(!unlocked || !screen.isOn || screen.capturing)
+                .disabled(!unlocked || screen.capturing)
                 Toggle(isOn: $screen.sendImage) {
                     Text("Send the screenshot too")
                     Text(config.provider.likelySupportsVision(config.model)
@@ -94,7 +94,7 @@ struct NotchAIScreenView: View {
         HStack(spacing: 8) {
             Image(systemName: screen.permissionGranted ? "checkmark.circle.fill" : "exclamationmark.circle.fill")
                 .foregroundStyle(screen.permissionGranted ? NotchAIView.green : .orange)
-            Text(screen.permissionGranted ? "Screen Recording is allowed for Notch Apple." : "Screen Recording is not allowed yet.")
+            Text(screen.permissionGranted ? "Screen Recording is allowed for Notch Apple." : "Screen Recording is not allowed yet. Allow it, then quit and reopen Notch Apple.")
                 .font(.system(size: 11)).foregroundStyle(.white)
             Spacer()
             if !screen.permissionGranted { Button("Allow screen access") { screen.requestPermission() }.controlSize(.small) }

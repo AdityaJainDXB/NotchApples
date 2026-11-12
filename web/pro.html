@@ -65,11 +65,11 @@ h2{font-size:clamp(28px,3.6vw,40px);letter-spacing:-.03em;font-weight:600;line-h
 .plan li:before{content:"\e182";font-family:Phosphor;position:absolute;left:0;top:1px;color:var(--ac-ink);font-size:15px}
 .plan li.soon:before{content:"\e19a";color:var(--gold)}
 /* buttons */
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:9px;width:100%;margin-top:10px;height:48px;padding:0 20px;border-radius:99px;font:600 15px Geist,system-ui;background:var(--ac-strong);color:#fff;border:0;cursor:pointer;box-shadow:inset 0 1px 0 rgba(255,255,255,.22),0 8px 20px -10px rgba(0,0,0,.7);transition:transform 160ms var(--ease-out),background-color .2s ease,opacity .2s}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:9px;width:100%;margin-top:10px;height:48px;padding:0 20px;border-radius:14px;font:600 15px Geist,system-ui;background:radial-gradient(120% 90% at 50% 0%,#6162e4 0%,#4f46dc 55%,#4a42d6 100%);color:#fff;border:1.5px solid #3a33ad;box-shadow:inset 0 1px 1px rgba(255,255,255,.38),inset 0 -2px 4px rgba(24,18,110,.3),0 8px 18px -8px rgba(79,70,220,.7),0 1px 2px rgba(0,0,0,.3);cursor:pointer;transition:transform 160ms var(--ease-out),background-color .2s ease,opacity .2s}
 .btn:active:not(:disabled){transform:scale(.97)}
-.btn.ghost{background:rgba(255,255,255,.06);box-shadow:inset 0 0 0 1px var(--line2)}
+.btn.ghost{background:linear-gradient(180deg,#fff 0%,#f8f9fb 100%);color:#111827;border-color:#e3e4e8;box-shadow:inset 0 -2px 3px rgba(17,24,39,.05),0 8px 18px -10px rgba(0,0,0,.55),0 1px 2px rgba(0,0,0,.2)}
 .btn:disabled{opacity:.45;cursor:default}
-@media (hover:hover) and (pointer:fine){.btn:hover:not(:disabled){background:#6a44e0}.btn.ghost:hover:not(:disabled){background:rgba(255,255,255,.1)}}
+@media (hover:hover) and (pointer:fine){.btn:hover:not(:disabled){filter:brightness(1.06)}.btn.ghost:hover:not(:disabled){filter:none;background:#fff}}
 /* comparison */
 .tblwrap{overflow-x:auto;border-radius:var(--r-m);box-shadow:inset 0 0 0 1px var(--line);background:var(--surface)}
 table{width:100%;border-collapse:collapse;font-size:14.5px}
@@ -194,7 +194,7 @@ footer{border-top:1px solid var(--line);padding:30px 0 44px;color:var(--dim);fon
         <li>Markets, live flight status, more teams, week forecast, meeting planner</li>
         <li>22 themes and a theme editor, resize, gestures, edge zones, styles</li>
         <li>Klick keyboard sounds, including premium sounds downloaded with your key</li>
-        <li>Audio, VPN, Voice Notes, Screen Time, Launcher, Snippets, Mirror, Focus, sync</li>
+        <li>Audio, Voice Notes, Screen Time, Launcher, Snippets, Mirror, Focus, sync</li>
       </ul>
       <button class="btn" data-buy="pro" id="proBtn">Get Pro, $5</button>
       <p class="muted whop-pay" style="font-size:13px;margin:8px 0 0;text-align:center"><a href="https://whop.com/checkout/ch_592NS3uitgEidbE/" target="_blank" rel="noopener" style="text-decoration:underline" data-whop-usd="https://whop.com/checkout/ch_592NS3uitgEidbE/" data-whop-aed="https://whop.com/checkout/plan_ebtYN1VAJeNt8">Or pay Pro ($5) on Whop</a> (card, Apple Pay, Google Pay). Your key is emailed to you.</p>
@@ -618,8 +618,10 @@ const WHOP_LINKS = { usd: { pro: 'https://whop.com/checkout/ch_592NS3uitgEidbE/'
 /// Whop takes the payment and the license server emails the key to the address given on Whop (a Whop webhook calls the server).
 function startWhop(btn, statusId, body) {
   if (body.upgradeFrom) return status(statusId, uaeRegion ? 'Upgrading from Pro is not on Whop yet. Pay with the card (Ziina) or crypto instead.' : 'Upgrading from Pro is not on Whop yet. Pay with crypto instead.', 'err', false);
+  // Same as the card and crypto routes: ask for the email here first, so nobody lands on Whop's checkout without one.
+  if (!validEmail(body.email)) return status(statusId, 'Enter a valid email address first. Use the same one on Whop: your key is sent there after you pay.', 'err', false);
   const url = WHOP_LINKS[CUR === 'AED' ? 'aed' : 'usd'][body.tier === 'ultimate' ? 'ultimate' : 'pro'];
-  status(statusId, 'Opening Whop. Use the email you want your key sent to; it arrives by email after you pay.', '', false);
+  status(statusId, 'Opening Whop. Enter ' + body.email + ' there; your key arrives at that address after you pay.', '', false);
   location.href = url;
 }
 async function startOrder(btn, statusId, body) {
