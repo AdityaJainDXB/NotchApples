@@ -90,9 +90,25 @@ struct FriendsView: View {
                             .font(.system(size: 10)).foregroundStyle(Theme.textSecondary).fixedSize(horizontal: false, vertical: true)
                     }
                     ForEach(client.groups) { groupRow($0) }
+                    if !client.book.blockedPeople.isEmpty {
+                        sectionLabel("Blocked")
+                        ForEach(client.book.blockedPeople) { blockedRow($0) }
+                        Text("Unblock someone and they can send you a request again, or you can add their code.")
+                            .font(.system(size: 10)).foregroundStyle(Theme.textSecondary).fixedSize(horizontal: false, vertical: true)
+                    }
                 }
             }
         }
+    }
+
+    /// A person you blocked, with a button to unblock just them.
+    private func blockedRow(_ b: BlockedPerson) -> some View {
+        HStack(spacing: 6) {
+            Text(b.name).font(.system(size: 12)).foregroundStyle(Theme.textSecondary).lineLimit(1)
+            Spacer()
+            Button("Unblock") { client.unblock(b.fingerprint) }.buttonStyle(PurpleButtonStyle(prominent: false))
+        }
+        .padding(.horizontal, 8).padding(.vertical, 4).background(Theme.surface, in: RoundedRectangle(cornerRadius: 8))
     }
 
     private func sectionLabel(_ t: String) -> some View { Text(t.uppercased()).font(.system(size: 9, weight: .bold)).foregroundStyle(Theme.textSecondary).padding(.top, 4) }
@@ -524,7 +540,10 @@ struct FriendsSettingsSection: View {
             TextField("Name shown in friend requests", text: $client.nick, prompt: Text(MessengerIdentity.shared.handle))
             Toggle("Send read receipts and typing", isOn: $client.receipts)
             if !client.book.vault.blocked.isEmpty {
-                LabeledContent("Blocked people") { Button("Unblock all (\(client.book.vault.blocked.count))") { client.unblockAll() } }
+                ForEach(client.book.blockedPeople) { b in
+                    LabeledContent(b.name) { Button("Unblock") { client.unblock(b.fingerprint) } }
+                }
+                LabeledContent("Everyone you blocked") { Button("Unblock all (\(client.book.vault.blocked.count))") { client.unblockAll() } }
             }
             Button(deleting ? "Deleting…" : "Delete all my chat data", role: .destructive) { confirmDelete = true }.disabled(deleting)
                 .confirmationDialog("Delete every friend, message and block, here and on the server? Your friend code stays the same.", isPresented: $confirmDelete) {

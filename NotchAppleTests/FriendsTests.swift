@@ -485,4 +485,45 @@ final class FriendsTests: XCTestCase {
         XCTAssertEqual(game?.status, .playing)
         XCTAssertEqual(game?.x, "a"); XCTAssertEqual(game?.o, "b")
     }
+
+    // MARK: Unblocking one person
+
+    func testABlockedPersonCanBeUnblockedOnTheirOwnAndReachesYouAgain() {
+        let alice = FriendIdentity.generate(), bob = FriendIdentity.generate()
+        var book = FriendsBook()
+        _ = book.receiveRequest(request(alice)); _ = book.receiveRequest(request(bob))
+        book.setAlias(box: alice.box, "Alice from school")
+        book.block(box: alice.box); book.block(box: bob.box)
+        XCTAssertEqual(book.blockedPeople.count, 2)
+        XCTAssertEqual(book.blockedPeople.first?.name, "Alice from school")
+        let aliceFP = book.blockedPeople[0].fingerprint
+        book.unblock(fingerprint: aliceFP)
+        XCTAssertEqual(book.blockedPeople.count, 1, "only Alice is unblocked")
+        XCTAssertNil(book.vault.blockedNames[aliceFP])
+        XCTAssertEqual(book.receiveRequest(request(bob)), .ignored, "Bob is still blocked")
+        XCTAssertNotEqual(book.receiveRequest(request(alice)), .ignored, "Alice can send a request again")
+        book.unblock(fingerprint: "not-in-the-list")
+        XCTAssertEqual(book.blockedPeople.count, 1, "an unknown fingerprint changes nothing")
+        book.unblockAll()
+        XCTAssertTrue(book.blockedPeople.isEmpty); XCTAssertTrue(book.vault.blockedNames.isEmpty)
+    }
+
+    func testAVaultSavedBeforeBlockedNamesStillLoadsAndShowsAShortCode() throws {
+        let old = Data(#"{"friends":[],"blocked":["abcd1234"]}"#.utf8)
+        let v = try JSONDecoder().decode(FriendsVault.self, from: old)
+        XCTAssertEqual(v.blocked, ["abcd1234"])
+        let book = FriendsBook(vault: v)
+        XCTAssertEqual(book.blockedPeople.first?.name, "Someone you blocked (ABCD)")
+        let withNames = Data(#"{"blocked":["f1"],"blockedNames":{"f1":"Sam","other":"Not blocked"}}"#.utf8)
+        XCTAssertEqual(try JSONDecoder().decode(FriendsVault.self, from: withNames).blockedNames, ["f1": "Sam"])
+    }
+
+    func testBlockedNamesSurviveEncoding() throws {
+        let alice = FriendIdentity.generate()
+        var book = FriendsBook()
+        _ = book.receiveRequest(request(alice)); book.block(box: alice.box)
+        let back = try JSONDecoder().decode(FriendsVault.self, from: JSONEncoder().encode(book.vault))
+        XCTAssertEqual(back, book.vault)
+        XCTAssertEqual(FriendsBook(vault: back).blockedPeople.count, 1)
+    }
 }
