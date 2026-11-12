@@ -206,58 +206,83 @@ As of November 2026.
 
 ## Living status
 
-Updated 12 November 2026. Milestone 1 is in PR #63; milestones 2 to 6 are built and committed on a local branch stacked on it (`notchai-roadmap-m6-tasks`), not pushed, not merged, not released. 404 pure-logic tests pass. Status words are the ones defined at the top of this document.
+Updated 12 November 2026. Milestone 1 is in PR #63 (`notchai-step1-stability`). Milestones 2 to 12 are built and committed on local branches stacked on it, ending at `notchai-roadmap-m12-workspace`; none is pushed, merged or released. About 494 pure-logic tests pass. **All testing in milestones 7 to 12 was virtual** (unit tests with fake models, fake tools and a fake MCP server, offscreen renders of drawings and a 3D scene): nothing was run on a real screen, microphone, speaker, browser or display, at the owner's request. Anything that needs a real device is listed as unverified.
+
+Status words are the ones defined at the top of this document.
 
 | Area | Status | Notes |
 |---|---|---|
-| Cursor companion (dot, Quick Ask, right-click opens tab) | Implemented but not fully verified | Shipped in 2.2.60; Milestone 1 added start at login and Reduce Motion. Multiple displays and reconnection, start at login and Reduce Motion are not verified live (one display on the test Mac; the other two are system settings). |
-| Quick Ask reopen guard | Implemented but not fully verified | Pure rule unit tested; the real click sequence needs a manual check. |
-| Chat: stream, stop, regenerate, new, Markdown, history | Implemented and verified (real Qwen3 via Ollama) | Quick Ask and the tab share one conversation, saved to AI History. Not implemented: attachments, conversation search inside NotchAI, restoring an old chat into the tab. |
-| Providers (8 built in, hosted, custom OpenAI-compatible) | Implemented and verified (unit and fake-server tests) | Per-agent model routing is Not implemented. |
-| Local-first guard (NotchAI) | Implemented and verified | NotchAI only; app-wide local first is a future milestone. Covers chat, voice (cloud voice refused), research and screen questions. |
-| Ollama diagnostics | Implemented and verified | Overview card, real local Ollama. |
-| Voice: push-to-talk, spoken answers, states, interruption | Implemented but not fully verified | Apple Speech (on-device) in, Apple voice out, chunked, speed/pitch/volume/voice, live caption, state machine drives the dot. The state machine, chunking and TTS rendering are tested (Apple TTS rendered to memory buffers, nothing played). Not run: a real microphone, real speakers, interrupting speech by voice. Automatic end-of-speech uses the recogniser's own end, not a separate detector. |
-| TTS engines | Partially implemented | Apple (default) done. Gemini TTS written, opt-in and blocked while Local first is on, but never run (no key used, no cloud request made). Piper and OpenAI TTS: Not implemented. |
+| Cursor companion (dot, Quick Ask, right-click opens tab) | Implemented but not fully verified | Shipped in 2.2.60; start at login and Reduce Motion added. Multiple displays, reconnection, login item and Reduce Motion unverified (system settings or one display). |
+| Chat: stream, stop, regenerate, new, Markdown, history, restore | Implemented and verified (real Qwen3 via Ollama, earlier) | Shared by Quick Ask and the tab; saved to AI History; a saved chat can be continued from the workspace window. Not implemented: attachments, search inside the tab (the workspace sidebar searches AI History). |
+| Providers, per-agent model routing | Implemented and verified (unit and fake-server tests) | Each agent can have its own provider and model; every call passes the Local-first guard. |
+| Local-first guard | Implemented and verified | Covers chat, voice, research, screen, agents and teaching model calls. |
+| Ollama diagnostics | Implemented and verified | Overview card. |
+| Voice: push-to-talk, spoken answers, states, interruption, captions | Implemented but not fully verified | Apple Speech in, Apple voice out, chunked; state machine drives the dot; live captions overlay; Control-Option-V global shortcut. No real microphone, speaker or key press was used. |
+| TTS engines | Partially implemented | Apple (default). Gemini TTS written, opt-in, blocked while Local first is on, never run. Piper and OpenAI TTS: Not implemented. |
 | STT engines | Partially implemented | Apple Speech only. Local Whisper: Not implemented. |
-| Wake word, hands-free, universal dictation, global voice shortcut, captions near the cursor, announcement/quiet-mode controls | Not implemented | Live captions exist inside the Voice section only. The global shortcut needs the shared hotkey system and was left alone. |
-| Screen awareness (Pro) | Partially implemented | On demand only: window, display and half/centre region capture via ScreenCaptureKit, Apple Vision OCR, app and window title, exclusion list (password managers by default), capture indicator, optional screenshot for vision models. OCR verified on a drawn image; the rest is unit tested. Not run: a real screen capture (needs Screen Recording for the build under test). Free-form region selection overlay, selected-text capture, screen history: Not implemented. Pro gating reads the existing tier; no licensing code was changed. |
-| Screen annotations, teaching mode | Not implemented | |
-| Research (Pro) | Partially implemented | Fetches public http(s) pages only, readable-text extraction, cited answers from numbered sources, runs as a task. Verified live on example.com with local Qwen3. No web search engine (SearchProvider has no conformer; no paid API), no link following, no interactive browser agent. |
-| File reading (Pro) | Partially implemented | User-chosen text, Markdown, CSV, JSON, code, PDF and images (OCR), read-only, cited, runs as a task. Not implemented: DOCX, XLSX, PPTX, folders and repositories, searching files, creating or editing files, document-level chunking and retrieval. |
-| Memory and response style | Implemented but not fully verified | User-controlled list, refuses secrets, style presets, on/off. Pure rules tested; the screen was rendered; not exercised through a long real session. Screen-context memory: Not implemented (deliberately). |
-| Skills | Partially implemented | Markdown skill files matched by app, text only. Integrations and connectors (Gmail, Notion, GitHub, Slack...): Not implemented. MCP connectors: Not implemented. |
-| Browser extension | Not implemented | |
-| Tool registry, task model, approvals, checkpoints, recovery | Implemented and verified (unit tests with fake tools, live task, simulated crash) | Tools today are read-only (fetch_page, read_file, ask_model). Approval policy, retries, timeouts, cancellation, idempotent recovery and Stop all are built and tested. |
-| Task dashboard (Tasks) | Implemented but not fully verified | Rendered and driven by real tasks; approve/deny buttons were exercised only through the engine tests. |
-| Multi-agent orchestration, agent registry, parallel agents, Agent HUD, nested delegation | Not implemented | Tasks have an agent label and depth limits, but there is no planner, no agent that delegates, and no HUD. Per-agent model routing, custom agents: Not implemented. |
-| Computer control (through Do It) | Not implemented for NotchAI | Do It is a protected premium module and was not touched. |
-| Whole-document intelligence, visual explanations and 3D models, agent usage and approvals reporting, adaptive preferences beyond style | Not implemented / partial | Style presets exist; the rest are not built. |
-| Windows | Not applicable so far | NotchAI is macOS only. |
+| Dictation into other apps | Implemented but not fully verified | Spoken punctuation, filler removal, vocabulary, edit-before-insert, Accessibility insertion with no clipboard fallback. Text rules unit tested; insertion not run. No hold-to-dictate, hands-free or screen-aware drafting. |
+| Wake word, hands-free mode | Not implemented | Deliberately not built: an always-on microphone cannot be verified without a real device and the roadmap says push-to-talk must be stable first. |
+| Alerts, chime, spoken updates, quiet mode | Implemented but not fully verified | Pure rules tested; notifications and sounds not delivered on a real Mac. |
+| Screen awareness (Pro) | Partially implemented | On demand: window, display, half and centre regions; Vision OCR; exclusions; capture indicator; optional screenshot. OCR verified on a drawn image. Real capture, a free-form region picker and selected-text capture: not run / Not implemented. |
+| Screen annotations and teaching mode (Pro) | Implemented but not fully verified | Arrows, circles, boxes, target rings, numbered badges, labels; teaching plans of up to 15 steps; targets found by OCR; steps advance when expected text appears. Drawing verified pixel by pixel and as an image; the on-screen overlay and live capture loop were not run. |
+| Visual explanations and 3D models (free) | Partially implemented | The model sketches a validated scene of simple shapes; rotate, zoom, click a part and ask about it; labelled as a generated illustration. Scene verified as an offscreen render. Not implemented: real object models (USDZ), images, diagrams. |
+| Research (Pro) | Partially implemented | Wikipedia search (the only engine, free, no key), public page fetch, cited answers, runs as a task. Verified live earlier on example.com with local Qwen3. No general web search, no link following. |
+| File reading and whole-document intelligence (Pro) | Partially implemented | Text, Markdown, CSV, JSON, code, PDF and images; BM25 retrieval with page references for long documents (`search_document`). Not implemented: DOCX, XLSX, PPTX, folders and repositories, file search, creating or editing files. |
+| Memory and response style | Implemented but not fully verified | List the user controls, refuses secrets, style presets. |
+| Skills | Partially implemented | Markdown skill files matched by app, text only. No library or sharing. |
+| MCP connectors (Pro) | Implemented and verified (fake server; stdio checked against a scripted server) | Remote address with optional key, or local command; discovery and refresh; states connecting, connected, expired, failed; per-tool ask, read-only or blocked; disconnect and remove. Not implemented: browser sign-in (OAuth) flows, so only key or no-auth servers. No built-in Gmail, Notion or GitHub connector. |
+| Browser extension | Not implemented | Needs a native-messaging or local bridge, which the project forbids. A browser agent works through AppleScript instead (open a page, read the front tab, with approval each time). |
+| Browser agent | Partially implemented | `browser_open` and `browser_read` for Safari, Chrome, Edge, Brave and Arc, escaped and approval-gated; scripts tested, never run. No clicking, form filling or uploads. |
+| Tool registry, task model, approvals, checkpoints, recovery | Implemented and verified (unit tests, a live task, a simulated crash) | Read-only and approval-gated tools; retries, timeouts, cancellation, idempotent recovery, Stop all. |
+| Agents: registry, planner, orchestrator, delegation, parallel agents, nested depth, custom agents, per-agent routing, usage, cards | Implemented and verified virtually (fake planner model, real engine, fake tools) | 8 built-in agents plus custom ones; plans validated (one repair attempt); parallel waves up to 3; children limited to their agent's tools by the engine; finished children reused after a restart; usage estimated per agent. Multi-agent is Ultimate. The floating cards are not seen on screen. Not implemented: agent-to-agent messaging beyond result passing, per-agent conversations and follow-ups. |
+| Computer control (through Do It) | Not implemented for NotchAI (hook ready) | A `computer_task` tool exists (Ultimate, always asks) and calls `PremiumRegistry.doItRun`, which nothing sets. Connecting it needs a change in the private Do It entry, which needs the owner's explicit approval. |
+| Task dashboard | Implemented but not fully verified | Tasks section, workspace window with steps, results, log and delegated steps. |
+| Expanded workspace window with sidebar | Implemented but not fully verified | Resizable window; conversations and tasks sidebar; continue a saved chat. No documents-beside-chat pane. |
+| Agent usage and approvals reporting | Partially implemented | Estimated usage per agent; approvals shown on the cards and in Tasks; no approval-preference history. |
+| Routines (scheduled repeating jobs) | Not implemented | |
+| Windows | Not applicable so far | See the Windows plan below. |
 
 ## Hey Clicky parity checklist
 
-Dated 11 November 2026. **Not yet researched:** the first step of the parity work is to read Hey Clicky's current public documentation and changelog and fill this table from them. Until then no row is marked equivalent or verified, and the rows below list only the capabilities named in sections 24 and 25.
+Dated **12 November 2026**. Sources read that day: heyclicky.com (features, pricing, FAQ) and heyclicky.com/changelog (entries from v1.0 on 6 April 2026 to v1.1.3 on 6 November 2026). Hey Clicky publishes no separate documentation or API pages. This table compares capabilities named there with what NotchAI has **built** (not what a person has verified: see the living status). No row is "equivalent and verified": nothing here has been checked against Hey Clicky itself or on a real device.
 
-| Capability (from sections 24 and 25) | Confirmed in Hey Clicky's docs? | NotchAI today | Class |
-|---|---|---|---|
-| Global hotkey and instant screen context | To check | None | Missing |
-| Real-time voice | To check | None | Missing |
-| Universal dictation | To check | None | Missing |
-| Interactive teaching mode | To check | None | Missing |
-| Application-specific skills | To check | None | Missing |
-| Agent creation, clarifying questions, cancellation window | To check | None | Missing |
-| Expanded resizable workspace with conversation sidebar | To check | Basic tab (Overview, Companion, Chat) | Partially equivalent |
-| Visual explanations and 3D models | To check | None | Missing |
-| Long-running tasks | To check | None | Missing |
-| MCP connectors | To check | None | Missing |
-| Browser extension | To check | None | Missing |
-| Whole-document intelligence | To check | None | Missing |
-| Agent HUD | To check | None | Missing |
-| Captions and announcement controls | To check | None | Missing |
-| Adaptive response preferences | To check | None | Missing |
-| Agent usage and approvals | To check | None | Missing |
-| Cursor companion with Quick Ask | To check | Shipped in 2.2.60 | Partially equivalent (not yet verified on screen) |
-| Local models and a local-first guard | To check | Shipped in 2.2.60 | Better or extended (to confirm against their docs) |
+Classes: Equivalent and verified · Better or extended · Partially equivalent / partially implemented · Missing · Not applicable.
+
+| Hey Clicky capability (per its site and changelog) | NotchAI today | Class |
+|---|---|---|
+| Hotkey voice questions, screen seen only when asked (v1.0, site) | Control-Option-V talk; screen read only on a button press; screen text not attached to a spoken question automatically | Partially equivalent |
+| Realtime voice, barge-in, 130+ languages, 30 voices (v1.0.21, v1.0.22, v1.1.2) | Push-to-talk with Apple Speech and Apple voices; interrupt by pressing talk again; languages and voices are macOS's | Partially equivalent (not realtime duplex) |
+| Voice speed 0.5x to 1.5x (v1.0.45) | 0.5x to 2x, plus pitch and volume (Apple voice) | Better or extended (unverified) |
+| Captions for spoken replies (v1.1.1) | Live caption bar while speaking | Partially equivalent (unverified) |
+| Dictation into any app, hold or hands-free, personal dictionary, screen-aware drafting (v1.0.37) | Toggle dictation, vocabulary, Accessibility insertion; no hold, hands-free or screen-aware drafting | Partially equivalent (unverified) |
+| Teaching mode and draw-on-screen walkthroughs up to 15 steps (v1.0.26, v1.0.21, v1.0.48) | Walkthroughs up to 15 steps with ring, arrow, badge, label; OCR finds the target; advances when text appears | Partially equivalent (unverified) |
+| Draw on screen with Control+Option; hand-drawn style (v1.0.25, v1.0.40) | Programmatic annotations only; user drawing and hand-drawn style are not built | Missing |
+| 3D models of real objects you can rotate and click (v1.1.1) | Generated sketches from simple shapes you can rotate and click; no real object models | Partially equivalent |
+| Agents ("Clickys"): named, memory, files, own chats, long jobs, follow-ups, Stop, Retry (v1.0.49 to v1.1.3) | Agents with tasks, steps, Stop, Retry, resume after restart, usage; no per-agent chat, memory, files or follow-ups | Partially equivalent |
+| Several agents created in one request; agent HUD cards (v1.0.51, v1.0.24) | Planner runs several agents in parallel waves; floating cards (off by default) | Partially equivalent (cards unverified) |
+| Computer use ("drive"): mouse and keyboard with permission, background mode (v1.1.1, v1.0.52) | Not connected: the tool exists and asks every time, but Do It is not wired to NotchAI | Missing |
+| Chrome extension, own tab group, file uploads with approval (v1.1.1, v1.1.2, v1.1.3) | Not built (needs a bridge the project forbids); AppleScript browser tools instead | Missing |
+| Custom MCP connections by URL or local command (v1.0.49) | Same two kinds, per-tool permissions, states; key only, no browser sign-in | Partially equivalent |
+| Connections to Gmail, Notion, Linear, Google Workspace, Calendar (v1.0.11, v1.0.15) | None built in; only through MCP servers the user adds | Missing |
+| App skills for 89 apps; skills library; team skills (v1.0.28, v1.0.33, v1.0.44; paused in v1.0.49) | User-written skill files matched by app; no library or sharing | Partially equivalent |
+| Memory files for profile and project; remembers how to address you (v1.0.33, v1.1.3) | User-controlled memory list and answer style | Partially equivalent |
+| Routines: scheduled repeating jobs (v1.0.49, v1.1.3) | Not built | Missing |
+| Whole-document understanding of PDFs, files, web pages (v1.0.47) | Page reading and BM25 passage retrieval with page references; no deeper-model routing | Partially equivalent |
+| Resizable window with sidebar of chats and every agent's chat; documents beside chat (v1.1.2) | Resizable window with conversation and task sidebar; no documents pane | Partially equivalent (unverified) |
+| Quieter behaviour during calls; recording apps do not count as calls (v1.0.51, v1.1.3) | Quiet mode, auto on conferencing apps (recorders excluded); macOS Focus honoured by banners | Partially equivalent |
+| Drag files into the notch (v1.0.23) | Not built | Missing |
+| Local models and a local-first guard | Ollama and custom endpoints, verified-local check, cloud blocked by default | Better or extended |
+| Screenshots not stored, summaries kept (site privacy note) | Nothing captured is stored; memory is user-written only | Better or extended |
+| Accounts, billing, referrals, student discount, usage limits (site) | Not applicable (NotchAI uses the app's existing tiers) | Not applicable |
+| Windows app (v1.1.1) | NotchAI is macOS only | Missing on Windows (see plan) |
+
+### Windows plan
+
+NotchAI is macOS only. The Windows app is a Tauri app (`NotchWindows/`) with its own JavaScript services. Each feature needs its own implementation, not a port of the Swift code:
+
+- **Reusable pure logic, by rewriting in JS with the same tests:** conversation rules, voice chunking and state machine, task engine and recovery, plan validation, document retrieval, memory rules, MCP protocol layer, teaching and visual-spec rules. The Swift tests are the specification.
+- **Windows-specific pieces:** screen capture (Windows.Graphics.Capture) and OCR (Windows.Media.Ocr), speech (Windows.Media.SpeechRecognition and SpeechSynthesis), global hotkey and overlay windows (Tauri), UI Automation for computer control (the Do It Windows engine already uses it), the cursor dot overlay.
+- **Order:** chat and Ollama first, then voice, then screen and OCR, then tasks and agents. Nothing is started.
 
 ## Acceptance checklists
 
