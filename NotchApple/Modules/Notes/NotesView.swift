@@ -154,7 +154,7 @@ struct NotesView: View {
                 VStack(alignment: .leading, spacing: 8) {
                     HStack(spacing: 6) {
                         Image(systemName: "magnifyingglass").foregroundStyle(Theme.textSecondary)
-                        TextField("Search notes", text: $search).textFieldStyle(.plain).font(.system(size: 12))
+                        TextField("Search notes", text: $search).textFieldStyle(.plain).foregroundStyle(Theme.textPrimary).font(.system(size: 12))
                         IconButton(systemImage: "square.and.pencil", help: "New note") { store.add() }
                         IconButton(systemImage: "doc.on.clipboard", help: "New note from clipboard") {
                             store.add(NSPasteboard.general.string(forType: .string) ?? "")

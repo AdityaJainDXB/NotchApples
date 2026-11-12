@@ -206,11 +206,39 @@ final class FriendsTests: XCTestCase {
         let got = try XCTUnwrap(theirs.receiveGroup(from: me.box, invite, myBox: a.box))
         XCTAssertEqual(Set(got.members), [me.box, b.box])
         XCTAssertEqual(got.creator, me.box)
-        // Only whoever made it can change it.
+        // Only whoever made it can rename it or remove people; another member can only add.
         _ = theirs.receiveRequest(request(b)); _ = theirs.accept(box: b.box, myTokenHash: "h")
         var hijack = invite; hijack.gname = "Hijacked"
-        XCTAssertNil(theirs.receiveGroup(from: b.box, hijack, myBox: a.box))
-        XCTAssertEqual(theirs.group(got.key)?.name, "Study")
+        _ = theirs.receiveGroup(from: b.box, hijack, myBox: a.box)
+        XCTAssertEqual(theirs.group(got.key)?.name, "Study", "a member cannot rename")
+        var drop = invite; drop.gm = [me.box, a.box]
+        XCTAssertNil(theirs.receiveGroup(from: b.box, drop, myBox: a.box), "a member cannot remove people")
+        XCTAssertEqual(Set(theirs.group(got.key)?.members ?? []), [me.box, b.box])
+    }
+
+    func testAnyMemberCanAddTheirOwnFriendsToAGroup() throws {
+        // Viraj (creator) made the group with me; I add my friend Arjun without asking Viraj.
+        var (book, viraj, arjun) = twoFriends()
+        let g = try XCTUnwrap(book.createGroup(name: "Trip", members: [viraj.box]))
+        XCTAssertEqual(book.addToGroup(g.key, members: ["stranger"]), [], "only my friends")
+        XCTAssertEqual(book.addToGroup(g.key, members: [viraj.box]), [], "already in")
+        XCTAssertEqual(book.addToGroup(g.key, members: [arjun.box]), [arjun.box])
+        XCTAssertEqual(Set(book.group(g.key)?.members ?? []), [viraj.box, arjun.box])
+
+        // Viraj's side: the group is his (creator nil); my update comes from me, a member, and only adds.
+        let me = FriendIdentity.generate()
+        var virajBook = FriendsBook()
+        _ = virajBook.receiveRequest(request(me)); _ = virajBook.accept(box: me.box, myTokenHash: "h")
+        let mine = try XCTUnwrap(virajBook.createGroup(name: "Trip", members: [me.box], id: g.id))
+        var update = FriendBody(t: "grp", from: me.box); update.g = g.id; update.gname = "Trip"; update.gm = [me.box, viraj.box, arjun.box]
+        let after = try XCTUnwrap(virajBook.receiveGroup(from: me.box, update, myBox: viraj.box))
+        XCTAssertEqual(Set(after.members), [me.box, arjun.box])
+        XCTAssertEqual(after.key, mine.key)
+        // A stranger to the group cannot add anyone.
+        let outsider = FriendIdentity.generate()
+        _ = virajBook.receiveRequest(request(outsider)); _ = virajBook.accept(box: outsider.box, myTokenHash: "h")
+        var bad = update; bad.from = outsider.box; bad.gm = [outsider.box, me.box, viraj.box, arjun.box, "x"]
+        XCTAssertNil(virajBook.receiveGroup(from: outsider.box, bad, myBox: viraj.box))
     }
 
     func testGroupMessagesComeOnlyFromMembersAndOnlyOnce() throws {
@@ -484,5 +512,46 @@ final class FriendsTests: XCTestCase {
         game = TicTacToe.reduce(game, TicTacToe.start(g, acceptor: "b"), from: "a")
         XCTAssertEqual(game?.status, .playing)
         XCTAssertEqual(game?.x, "a"); XCTAssertEqual(game?.o, "b")
+    }
+
+    // MARK: Unblocking one person
+
+    func testABlockedPersonCanBeUnblockedOnTheirOwnAndReachesYouAgain() {
+        let alice = FriendIdentity.generate(), bob = FriendIdentity.generate()
+        var book = FriendsBook()
+        _ = book.receiveRequest(request(alice)); _ = book.receiveRequest(request(bob))
+        book.setAlias(box: alice.box, "Alice from school")
+        book.block(box: alice.box); book.block(box: bob.box)
+        XCTAssertEqual(book.blockedPeople.count, 2)
+        XCTAssertEqual(book.blockedPeople.first?.name, "Alice from school")
+        let aliceFP = book.blockedPeople[0].fingerprint
+        book.unblock(fingerprint: aliceFP)
+        XCTAssertEqual(book.blockedPeople.count, 1, "only Alice is unblocked")
+        XCTAssertNil(book.vault.blockedNames[aliceFP])
+        XCTAssertEqual(book.receiveRequest(request(bob)), .ignored, "Bob is still blocked")
+        XCTAssertNotEqual(book.receiveRequest(request(alice)), .ignored, "Alice can send a request again")
+        book.unblock(fingerprint: "not-in-the-list")
+        XCTAssertEqual(book.blockedPeople.count, 1, "an unknown fingerprint changes nothing")
+        book.unblockAll()
+        XCTAssertTrue(book.blockedPeople.isEmpty); XCTAssertTrue(book.vault.blockedNames.isEmpty)
+    }
+
+    func testAVaultSavedBeforeBlockedNamesStillLoadsAndShowsAShortCode() throws {
+        let old = Data(#"{"friends":[],"blocked":["abcd1234"]}"#.utf8)
+        let v = try JSONDecoder().decode(FriendsVault.self, from: old)
+        XCTAssertEqual(v.blocked, ["abcd1234"])
+        let book = FriendsBook(vault: v)
+        XCTAssertEqual(book.blockedPeople.first?.name, "Someone you blocked (ABCD)")
+        let withNames = Data(#"{"blocked":["f1"],"blockedNames":{"f1":"Sam","other":"Not blocked"}}"#.utf8)
+        XCTAssertEqual(try JSONDecoder().decode(FriendsVault.self, from: withNames).blockedNames, ["f1": "Sam"])
+    }
+
+    func testBlockedNamesSurviveEncoding() throws {
+        let alice = FriendIdentity.generate()
+        var book = FriendsBook()
+        _ = book.receiveRequest(request(alice)); book.block(box: alice.box)
+        let back = try JSONDecoder().decode(FriendsVault.self, from: JSONEncoder().encode(book.vault))
+        XCTAssertEqual(back, book.vault)
+        XCTAssertEqual(FriendsBook(vault: back).blockedPeople.count, 1)
     }
 }

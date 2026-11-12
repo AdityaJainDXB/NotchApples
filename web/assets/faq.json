@@ -342,9 +342,9 @@
   "a": "Yes. The Share tab sends files with AirDrop, or with PairDrop between devices on the same Wi-Fi using a 6-digit code. No server is involved. You can also AirDrop everything on the File Shelf."
  },
  {
-  "q": "Does it have a VPN or audio mixer?",
-  "k": "vpn audio volume equalizer eq per-app output device",
-  "a": "Yes. The Audio module lets you pick the output device, set the volume and change per-app volume (0 to 150%) with a 10-band EQ. The VPN module (Pro) offers free OpenVPN servers or your own .ovpn or .conf file."
+  "q": "Does it have an audio mixer?",
+  "k": "audio volume equalizer eq per-app output device",
+  "a": "Yes. The Audio module lets you pick the output device, set the volume and change per-app volume (0 to 150%) with a 10-band EQ."
  },
  {
   "q": "Can it show AirPods or device batteries?",

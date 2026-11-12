@@ -74,7 +74,7 @@ export const MODULES = [
     blurb: 'See how long you spend in each app, set daily limits, and block distracting apps during Focus. Stays on your PC.' },
   { id: 'quickadd', name: 'Quick Add', icon: '⚡', feature: 'quickAdd', load: () => import('./modules/quickadd.js'),
     blurb: 'Type “Dentist tomorrow 3pm” or “remind me to pay rent on the 1st” and it becomes a to-do with a reminder, or a calendar event.' },
-  { id: 'messenger', name: 'Messenger', icon: '💬', feature: 'messenger', load: () => import('./modules/messenger.js'),
+  { id: 'messenger', name: 'Messenger', icon: '💬', load: () => import('./modules/messenger.js'),
     blurb: 'Chat in an end-to-end encrypted room joined by a code. Mac and Windows users can be in the same room.' },
   { id: 'mirror', name: 'Mirror', icon: '🪞', feature: 'mirror', load: () => import('./modules/mirror.js'),
     blurb: 'A mirror using your camera, to check how you look before a call. Nothing is recorded.' },

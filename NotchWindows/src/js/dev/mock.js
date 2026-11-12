@@ -68,7 +68,7 @@ const commands = {
   path_info: ({ path }) => ({ name: path.split(/[\\/]/).pop(), path, parent: path.split(/[\\/]/).slice(0, -1).join('\\'), is_dir: !/\.\w+$/.test(path), size: 1024, kind: 'file', modified: 0 }),
   launch_app: () => {}, open_path: () => {}, reveal_path: () => {}, open_url: ({ url }) => window.open(url, '_blank'),
   pick_app: () => ({ name: 'Notepad', path: 'C:\\Windows\\notepad.exe', icon: null }), pick_folder: () => 'C:\\Users\\you\\Projects', pick_file: () => 'C:\\Users\\you\\Documents\\notes.txt',
-  open_browser: ({ url }) => window.open(url, '_blank'),
+  open_browser: ({ url }) => window.open(url, '_blank'), browser_place: () => {}, browser_hide: () => {}, browser_close: () => {}, browser_nav: () => {},
   search_files: ({ query }) => (query ? hits(query) : []), set_search_folders: () => {}, search_status: () => [true, 48213],
   icons: () => ({}),
   clipboard_pause: () => {}, clipboard_copy_text: ({ text }) => navigator.clipboard?.writeText(text).catch(() => {}), clipboard_copy_image: () => {}, clipboard_forget: () => {},

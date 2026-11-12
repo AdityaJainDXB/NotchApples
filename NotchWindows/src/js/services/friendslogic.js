@@ -66,7 +66,7 @@ export function clean(raw) {
 
 // ---- the data model
 
-export const newVault = () => ({ friends: [], messages: {}, blocked: [], seen: [], groups: [], clears: {}, pendingClears: {} });
+export const newVault = () => ({ friends: [], messages: {}, blocked: [], blockedNames: {}, seen: [], groups: [], clears: {}, pendingClears: {} });
 /** A vault read back from disk, with anything missing filled in. */
 export function normalizeVault(raw) {
   const v = newVault();
@@ -74,6 +74,10 @@ export function normalizeVault(raw) {
   if (Array.isArray(raw.friends)) v.friends = raw.friends.filter((f) => f && typeof f.box === 'string');
   if (raw.messages && typeof raw.messages === 'object') v.messages = raw.messages;
   if (Array.isArray(raw.blocked)) v.blocked = raw.blocked.filter((x) => typeof x === 'string');
+  // The names shown in the blocked list (added later): a vault without them loads fine and shows a short code instead.
+  if (raw.blockedNames && typeof raw.blockedNames === 'object' && !Array.isArray(raw.blockedNames)) {
+    for (const [fp, name] of Object.entries(raw.blockedNames)) if (v.blocked.includes(fp) && typeof name === 'string') v.blockedNames[fp] = name.slice(0, 64);
+  }
   if (Array.isArray(raw.seen)) v.seen = raw.seen.filter((x) => typeof x === 'string');
   // A vault saved before groups existed has no `groups`: that must load as "no groups", never wipe the friends.
   if (Array.isArray(raw.groups)) v.groups = raw.groups.filter((g) => g && typeof g.id === 'string' && Array.isArray(g.members));
@@ -210,10 +214,17 @@ export function block(v, box) {
   if (i < 0) return;
   const fp = v.friends[i].fp;
   if (fp && !v.blocked.includes(fp)) v.blocked.push(fp);
+  if (fp) v.blockedNames[fp] = displayName(v.friends[i]);   // so the blocked list can say who it is
   v.friends.splice(i, 1); delete v.messages[box]; delete v.clears[box]; delete v.pendingClears[box];
 }
 export function remove(v, box) { v.friends = v.friends.filter((f) => f.box !== box); delete v.messages[box]; delete v.clears[box]; delete v.pendingClears[box]; }
-export function unblockAll(v) { v.blocked = []; }
+export function unblockAll(v) { v.blocked = []; v.blockedNames = {}; }
+
+/** Unblocks one person (by the fingerprint in the blocked list). They can then send a request again, or be added by their code. */
+export function unblock(v, fp) { v.blocked = v.blocked.filter((x) => x !== fp); delete v.blockedNames[fp]; }
+
+/** The blocked list for display: who, and the fingerprint to unblock them by. */
+export const blockedPeople = (v) => v.blocked.map((fp) => ({ fp, name: v.blockedNames[fp] || `Someone you blocked (${String(fp).slice(0, 4).toUpperCase()})` }));
 
 // ---- files and groups (the Mac's "Files and groups" in FriendsLogic.swift; wire format in docs/FRIENDS_PROTOCOL.md)
 
@@ -253,6 +264,15 @@ export function createGroup(v, name, members, id = globalThis.crypto.randomUUID(
 }
 
 /** An invite or a change from a friend. It must list me, and only the person who made the group can change it. */
+/** I add some of my friends to a group I'm in, whoever made it. Returns the people actually added (none if it isn't allowed). */
+export function addToGroup(v, key, members) {
+  const g = group(v, key);
+  if (!g) return [];
+  const fresh = [...new Set(members)].filter((b) => record(v, b)?.status === 'active' && !g.members.includes(b)).sort();
+  if (!fresh.length || g.members.length + fresh.length >= MAX_GROUP_MEMBERS) return [];
+  g.members = [...g.members, ...fresh].sort();
+  return fresh;
+}
 export function receiveGroup(v, from, body, myBox, now = Date.now()) {
   v.groups ||= [];
   const all = body && Array.isArray(body.gm) ? body.gm : null;
@@ -262,8 +282,10 @@ export function receiveGroup(v, from, body, myBox, now = Date.now()) {
   const name = clean(body.gname) || 'Group';
   const i = groupIndex(v, groupKey(body.g));
   if (i >= 0) {
-    if (v.groups[i].creator !== from) return null;
-    v.groups[i].name = name; v.groups[i].members = others;
+    if (v.groups[i].creator === from) { v.groups[i].name = name; v.groups[i].members = others; return v.groups[i]; }
+    // Any other member may only ADD people (their own friends): the list must keep everyone already in, and the name stays.
+    if (!v.groups[i].members.includes(from) || !v.groups[i].members.every((b) => others.includes(b))) return null;
+    v.groups[i].members = others;
     return v.groups[i];
   }
   if (v.groups.length >= MAX_GROUPS) return null;

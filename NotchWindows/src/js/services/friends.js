@@ -409,6 +409,16 @@ export async function reveal(id, name, chat = null) {
 
 // ---- groups
 
+/** Adds some of my friends to a group I'm in (no need to ask whoever made it). Everyone I can reach is told the new list. */
+export function addToGroup(key, members) {
+  if (!members.length) return 'Pick at least one friend.';
+  const added = L.addToGroup(vault, key, members), g = L.group(vault, key);
+  if (!added.length || !g) return `Couldn't add them (a group can have up to ${L.MAX_GROUP_MEMBERS} people, and they must be your friends).`;
+  persist();
+  for (const box of g.members) { const f = L.record(vault, box); if (f && f.status === 'active') post(f, L.groupInviteBody(me.box, g, Date.now())); }
+  return null;
+}
+
 /** Makes a group of friends and invites them. Returns a message when it didn't work. */
 export function createGroup(name, members) {
   if (!members.length) return 'Pick at least one friend.';
@@ -541,6 +551,8 @@ export function remove(box) {
 
 export function setAlias(box, alias) { L.setAlias(vault, box, alias); persist(); }
 export function unblockAll() { L.unblockAll(vault); persist(); }
+export function unblock(fp) { L.unblock(vault, fp); persist(); }
+export const blockedPeople = () => L.blockedPeople(vault);
 
 /** "Delete all my chat data": the server mailbox, the history, friends and block list. The code and keys stay. */
 export async function deleteEverything() {

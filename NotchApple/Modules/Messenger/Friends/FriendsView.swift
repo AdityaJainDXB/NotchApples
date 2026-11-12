@@ -27,6 +27,7 @@ struct FriendsView: View {
     @State private var groupName = ""
     @State private var groupPick = Set<String>()
     @State private var groupNote: String?
+    @State private var addToGroupKey: String?
     @State private var confirmLeave = false
     @State private var confirmClear = false
 
@@ -37,11 +38,19 @@ struct FriendsView: View {
             if let key = selected, Friends.isGroupKey(key), let group = client.group(key) { groupChat(group) }
             else if let box = selected, let friend = client.book.record(box), friend.status == .active { chat(friend) } else { placeholder }
         }
-        .sheet(isPresented: $showNewGroup) { newGroupSheet }
         // Shown inside the notch, not as a system dialog: a dialog is another window, and an unpinned notch closes the moment it loses focus,
         // which hid the confirmation and made Clear chat look like it did nothing.
         .overlay { if confirmClear { clearCard } }
-        .overlay(alignment: .bottomTrailing) { myCodePill }
+        .overlay { if showNewGroup { newGroupCard } }
+        .overlay { if let key = addToGroupKey { addMembersCard(key) } }
+        .overlay { if confirmLeave, let key = selected, let g = client.group(key) {
+            confirmCard("Leave \(g.name)?", "Its messages are deleted from this Mac, and the others are told you left.", "Leave", close: { confirmLeave = false }) {
+                client.leaveGroup(g.key); selected = nil
+            } } }
+        .overlay { if confirmRemove, let box = selected, let f = client.book.record(box) {
+            confirmCard("Remove \(f.displayName)?", "They won't be told why, and you can add them again later.", "Remove", close: { confirmRemove = false }) {
+                client.remove(f.box); selected = nil
+            } } }
         .onAppear { client.activate(); if selected == nil { selected = client.friends.first?.box } }
         .onDisappear { client.viewing = nil; NotchPrefs.chatGame("friend", false) }
         .onChange(of: friendGameShowing) { _, on in NotchPrefs.chatGame("friend", on) }
@@ -61,7 +70,7 @@ struct FriendsView: View {
             }
             HStack(spacing: 4) {
                 TextField("Friend code", text: $addText)
-                    .textFieldStyle(.plain).font(.system(size: 12)).padding(.horizontal, 8).frame(height: 28)
+                    .textFieldStyle(.plain).foregroundStyle(Theme.textPrimary).font(.system(size: 12)).padding(.horizontal, 8).frame(height: 28)
                     .background(Theme.surface, in: Capsule()).onSubmit(add)
                 Button(action: add) { Image(systemName: adding ? "hourglass" : "person.badge.plus") }
                     .buttonStyle(PurpleButtonStyle()).disabled(adding || addText.trimmingCharacters(in: .whitespaces).isEmpty)
@@ -74,7 +83,7 @@ struct FriendsView: View {
                     if !client.pending.isEmpty { sectionLabel("Waiting for an answer"); ForEach(client.pending) { pendingRow($0) } }
                     sectionLabel("Friends")
                     if client.friends.isEmpty {
-                        Text("Type a friend's code above to add them, or share yours (bottom right).")
+                        Text("Type a friend's code above to add them, or share yours (bottom left).")
                             .font(.system(size: 10)).foregroundStyle(Theme.textSecondary).fixedSize(horizontal: false, vertical: true)
                     }
                     ForEach(client.friends) { friendRow($0) }
@@ -90,16 +99,33 @@ struct FriendsView: View {
                             .font(.system(size: 10)).foregroundStyle(Theme.textSecondary).fixedSize(horizontal: false, vertical: true)
                     }
                     ForEach(client.groups) { groupRow($0) }
+                    if !client.book.blockedPeople.isEmpty {
+                        sectionLabel("Blocked")
+                        ForEach(client.book.blockedPeople) { blockedRow($0) }
+                        Text("Unblock someone and they can send you a request again, or you can add their code.")
+                            .font(.system(size: 10)).foregroundStyle(Theme.textSecondary).fixedSize(horizontal: false, vertical: true)
+                    }
                 }
             }
+            myCodePill
         }
+    }
+
+    /// A person you blocked, with a button to unblock just them.
+    private func blockedRow(_ b: BlockedPerson) -> some View {
+        HStack(spacing: 6) {
+            Text(b.name).font(.system(size: 12)).foregroundStyle(Theme.textSecondary).lineLimit(1)
+            Spacer()
+            Button("Unblock") { client.unblock(b.fingerprint) }.buttonStyle(PurpleButtonStyle(prominent: false))
+        }
+        .padding(.horizontal, 8).padding(.vertical, 4).background(Theme.surface, in: RoundedRectangle(cornerRadius: 8))
     }
 
     private func sectionLabel(_ t: String) -> some View { Text(t.uppercased()).font(.system(size: 9, weight: .bold)).foregroundStyle(Theme.textSecondary).padding(.top, 4) }
 
     private func requestRow(_ r: FriendRecord) -> some View {
         VStack(alignment: .leading, spacing: 4) {
-            Text(r.displayName).font(.system(size: 12, weight: .semibold)).foregroundStyle(.white).lineLimit(1)
+            Text(r.displayName).font(.system(size: 12, weight: .semibold)).foregroundStyle(Theme.textPrimary).lineLimit(1)
             Text("wants to be friends").font(.system(size: 10)).foregroundStyle(Theme.textSecondary)
             HStack(spacing: 4) {
                 Button("Accept") { Task { addNote = await client.accept(r.box); if addNote == nil { selected = r.box } } }.buttonStyle(PurpleButtonStyle())
@@ -121,12 +147,12 @@ struct FriendsView: View {
     private func friendRow(_ r: FriendRecord) -> some View {
         Button { selected = r.box } label: {
             HStack(spacing: 6) {
-                Text(String(r.displayName.prefix(1)).uppercased()).font(.system(size: 11, weight: .bold)).foregroundStyle(.white)
+                Text(String(r.displayName.prefix(1)).uppercased()).font(.system(size: 11, weight: .bold)).foregroundStyle(Theme.onAccent)
                     .frame(width: 22, height: 22).background(MessengerMessage.color(for: r.box).gradient, in: Circle())
-                Text(r.displayName).font(.system(size: 12, weight: .medium)).foregroundStyle(.white).lineLimit(1)
+                Text(r.displayName).font(.system(size: 12, weight: .medium)).foregroundStyle(Theme.textPrimary).lineLimit(1)
                 Spacer(minLength: 2)
                 if r.unread > 0 {
-                    Text("\(r.unread)").font(.system(size: 10, weight: .bold)).foregroundStyle(.white).padding(.horizontal, 6).padding(.vertical, 1).background(Theme.accentBright, in: Capsule())
+                    Text("\(r.unread)").font(.system(size: 10, weight: .bold)).foregroundStyle(Theme.onAccent).padding(.horizontal, 6).padding(.vertical, 1).background(Theme.accentBright, in: Capsule())
                 }
             }
             .padding(.horizontal, 6).padding(.vertical, 4).contentShape(Rectangle())
@@ -144,12 +170,12 @@ struct FriendsView: View {
     private func groupRow(_ g: FriendGroup) -> some View {
         Button { selected = g.key } label: {
             HStack(spacing: 6) {
-                Image(systemName: "person.3.fill").font(.system(size: 10)).foregroundStyle(.white)
+                Image(systemName: "person.3.fill").font(.system(size: 10)).foregroundStyle(Theme.onAccent)
                     .frame(width: 22, height: 22).background(MessengerMessage.color(for: g.id).gradient, in: Circle())
-                Text(g.name).font(.system(size: 12, weight: .medium)).foregroundStyle(.white).lineLimit(1)
+                Text(g.name).font(.system(size: 12, weight: .medium)).foregroundStyle(Theme.textPrimary).lineLimit(1)
                 Spacer(minLength: 2)
                 if g.unread > 0 {
-                    Text("\(g.unread)").font(.system(size: 10, weight: .bold)).foregroundStyle(.white).padding(.horizontal, 6).padding(.vertical, 1).background(Theme.accentBright, in: Capsule())
+                    Text("\(g.unread)").font(.system(size: 10, weight: .bold)).foregroundStyle(Theme.onAccent).padding(.horizontal, 6).padding(.vertical, 1).background(Theme.accentBright, in: Capsule())
                 }
             }
             .padding(.horizontal, 6).padding(.vertical, 4).contentShape(Rectangle())
@@ -158,37 +184,120 @@ struct FriendsView: View {
         .buttonStyle(.plain)
         .contextMenu {
             Button("Clear chat…", role: .destructive) { selected = g.key; confirmClear = true }
+            Button("Add friends…") { groupPick = []; groupNote = nil; addToGroupKey = g.key }
             Button("Leave group", role: .destructive) { client.leaveGroup(g.key); if selected == g.key { selected = nil } }
         }
     }
 
-    private var newGroupSheet: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            Text("New group").font(.system(size: 15, weight: .semibold))
-            TextField("Group name", text: $groupName).textFieldStyle(.roundedBorder)
-            Text("Pick friends to add").font(.system(size: 11)).foregroundStyle(.secondary)
-            ScrollView {
-                VStack(alignment: .leading, spacing: 4) {
-                    ForEach(client.friends) { f in
-                        Toggle(f.displayName, isOn: Binding(get: { groupPick.contains(f.box) }, set: { on in if on { groupPick.insert(f.box) } else { groupPick.remove(f.box) } }))
+    /// Shown inside the notch, like the clear-chat card: a system sheet is another window, and an unpinned notch closes the moment it
+    /// loses focus, which made choosing group members close the whole notch.
+    private var newGroupCard: some View {
+        ZStack {
+            Color.black.opacity(0.55).onTapGesture { showNewGroup = false }
+            VStack(alignment: .leading, spacing: 10) {
+                Text("New group").font(.system(size: 15, weight: .semibold)).foregroundStyle(Theme.textPrimary)
+                TextField("Group name", text: $groupName).textFieldStyle(.plain).foregroundStyle(Theme.textPrimary).font(.system(size: 12)).padding(.horizontal, 8).frame(height: 28)
+                    .background(Theme.surface, in: RoundedRectangle(cornerRadius: 8))
+                Text("Pick friends to add").font(.system(size: 11)).foregroundStyle(Theme.textSecondary)
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 4) {
+                        ForEach(client.friends) { f in
+                            let on = groupPick.contains(f.box)
+                            Button { if on { groupPick.remove(f.box) } else { groupPick.insert(f.box) } } label: {
+                                HStack(spacing: 8) {
+                                    Image(systemName: on ? "checkmark.square.fill" : "square").foregroundStyle(on ? Theme.accentBright : Theme.textSecondary)
+                                    Text(f.displayName).font(.system(size: 12)).foregroundStyle(Theme.textPrimary).lineLimit(1)
+                                    Spacer()
+                                }
+                                .padding(.horizontal, 8).padding(.vertical, 5).contentShape(Rectangle())
+                                .background(on ? Theme.surfaceHover : Theme.surface, in: RoundedRectangle(cornerRadius: 8))
+                            }.buttonStyle(.plain)
+                        }
                     }
                 }
-            }
-            .frame(height: 150)
-            Text("Everyone in a group sees messages only from people who are also their friends, so add people who know each other. Each message is encrypted separately for each person.")
-                .font(.system(size: 10)).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
-            if let note = groupNote { Text(note).font(.system(size: 11)).foregroundStyle(.orange) }
-            HStack {
-                Spacer()
-                Button("Cancel") { showNewGroup = false }
-                Button("Create") {
-                    groupNote = client.createGroup(name: groupName, members: Array(groupPick))
-                    if groupNote == nil { showNewGroup = false; selected = client.groups.first?.key }
+                .frame(maxHeight: 150)
+                Text("Everyone in a group sees messages only from people who are also their friends, so add people who know each other. Each message is encrypted separately for each person.")
+                    .font(.system(size: 10)).foregroundStyle(Theme.textSecondary).fixedSize(horizontal: false, vertical: true)
+                if let note = groupNote { Text(note).font(.system(size: 11)).foregroundStyle(.orange) }
+                HStack {
+                    Spacer()
+                    Button("Cancel") { showNewGroup = false }.buttonStyle(PurpleButtonStyle(prominent: false))
+                    Button("Create") {
+                        groupNote = client.createGroup(name: groupName, members: Array(groupPick))
+                        if groupNote == nil { showNewGroup = false; selected = client.groups.first?.key }
+                    }
+                    .buttonStyle(PurpleButtonStyle()).disabled(groupPick.isEmpty)
                 }
-                .keyboardShortcut(.defaultAction).disabled(groupPick.isEmpty)
             }
+            .padding(14).frame(maxWidth: 340)
+            .background(Theme.deep, in: RoundedRectangle(cornerRadius: 14))
+            .overlay(RoundedRectangle(cornerRadius: 14).stroke(Theme.separator))
         }
-        .padding(18).frame(width: 320)
+    }
+
+    /// A confirmation inside the notch (never a system dialog, which would close the notch).
+    private func confirmCard(_ title: String, _ message: String, _ button: String, close: @escaping () -> Void, action: @escaping () -> Void) -> some View {
+        ZStack {
+            Color.black.opacity(0.55).onTapGesture(perform: close)
+            VStack(alignment: .leading, spacing: 10) {
+                Text(title).font(.system(size: 14, weight: .semibold)).foregroundStyle(Theme.textPrimary)
+                Text(message).font(.system(size: 11)).foregroundStyle(Theme.textSecondary).fixedSize(horizontal: false, vertical: true)
+                HStack {
+                    Spacer()
+                    Button("Cancel", action: close).buttonStyle(PurpleButtonStyle(prominent: false))
+                    Button(button) { action(); close() }.buttonStyle(PurpleButtonStyle())
+                }
+            }
+            .padding(14).frame(maxWidth: 380)
+            .background(Theme.deep, in: RoundedRectangle(cornerRadius: 14))
+            .overlay(RoundedRectangle(cornerRadius: 14).stroke(Theme.separator))
+        }
+    }
+
+    /// Pick more of my friends to add to a group I'm in. Anyone in the group can do this, not just whoever made it.
+    private func addMembersCard(_ key: String) -> some View {
+        let g = client.group(key)
+        let candidates = client.friends.filter { f in !(g?.members.contains(f.box) ?? true) }
+        return ZStack {
+            Color.black.opacity(0.55).onTapGesture { addToGroupKey = nil }
+            VStack(alignment: .leading, spacing: 10) {
+                Text("Add to \(g?.name ?? "group")").font(.system(size: 15, weight: .semibold)).foregroundStyle(Theme.textPrimary)
+                if candidates.isEmpty {
+                    Text("All your friends are already in this group.").font(.system(size: 11)).foregroundStyle(Theme.textSecondary)
+                } else {
+                    ScrollView {
+                        VStack(alignment: .leading, spacing: 4) {
+                            ForEach(candidates) { f in
+                                let on = groupPick.contains(f.box)
+                                Button { if on { groupPick.remove(f.box) } else { groupPick.insert(f.box) } } label: {
+                                    HStack(spacing: 8) {
+                                        Image(systemName: on ? "checkmark.square.fill" : "square").foregroundStyle(on ? Theme.accentBright : Theme.textSecondary)
+                                        Text(f.displayName).font(.system(size: 12)).foregroundStyle(Theme.textPrimary).lineLimit(1)
+                                        Spacer()
+                                    }
+                                    .padding(.horizontal, 8).padding(.vertical, 5).contentShape(Rectangle())
+                                    .background(on ? Theme.surfaceHover : Theme.surface, in: RoundedRectangle(cornerRadius: 8))
+                                }.buttonStyle(.plain)
+                            }
+                        }
+                    }.frame(maxHeight: 150)
+                }
+                Text("You can add your own friends without asking whoever made the group. They only see messages from people who are also their friends.")
+                    .font(.system(size: 10)).foregroundStyle(Theme.textSecondary).fixedSize(horizontal: false, vertical: true)
+                if let note = groupNote { Text(note).font(.system(size: 11)).foregroundStyle(.orange) }
+                HStack {
+                    Spacer()
+                    Button("Cancel") { addToGroupKey = nil }.buttonStyle(PurpleButtonStyle(prominent: false))
+                    Button("Add") {
+                        groupNote = client.addToGroup(key, members: Array(groupPick))
+                        if groupNote == nil { addToGroupKey = nil }
+                    }.buttonStyle(PurpleButtonStyle()).disabled(groupPick.isEmpty)
+                }
+            }
+            .padding(14).frame(maxWidth: 340)
+            .background(Theme.deep, in: RoundedRectangle(cornerRadius: 14))
+            .overlay(RoundedRectangle(cornerRadius: 14).stroke(Theme.separator))
+        }
     }
 
     private func groupChat(_ g: FriendGroup) -> some View {
@@ -196,19 +305,17 @@ struct FriendsView: View {
             HStack {
                 Image(systemName: "person.3.fill").foregroundStyle(Theme.accentGradient)
                 VStack(alignment: .leading, spacing: 0) {
-                    Text(g.name).font(.system(size: 13, weight: .semibold)).foregroundStyle(.white)
+                    Text(g.name).font(.system(size: 13, weight: .semibold)).foregroundStyle(Theme.textPrimary)
                     Text(([ "You" ] + g.members.map { client.name(ofBox: $0) }).joined(separator: ", "))
                         .font(.system(size: 10)).foregroundStyle(Theme.textSecondary).lineLimit(1)
                 }
                 Spacer()
                 Menu {
+                    Button("Add friends…") { groupPick = []; groupNote = nil; addToGroupKey = g.key }
                     Button("Clear chat…", role: .destructive) { confirmClear = true }
                     Button("Leave group", role: .destructive) { confirmLeave = true }
                 } label: { Image(systemName: "ellipsis.circle") }
                     .menuStyle(.borderlessButton).frame(width: 28)
-            }
-            .confirmationDialog("Leave \(g.name)? Its messages are deleted from this Mac, and the others are told you left.", isPresented: $confirmLeave) {
-                Button("Leave", role: .destructive) { client.leaveGroup(g.key); selected = nil }
             }
             if client.unreachable(g) > 0 {
                 Text("\(client.unreachable(g)) in this group aren't your friends, so you can't message or hear from them here.")
@@ -238,7 +345,7 @@ struct FriendsView: View {
             Button { attach(to: key) } label: { Image(systemName: "paperclip").font(.system(size: 15)).frame(width: 28, height: 28).contentShape(Rectangle()) }
                 .buttonStyle(.plain).foregroundStyle(Theme.textSecondary).help("Send a file (up to \(Friends.maxFileText)). It is encrypted like a message.")
             TextField("Message", text: $draft)
-                .textFieldStyle(.plain).font(.system(size: 13)).padding(.horizontal, 12).frame(height: 32)
+                .textFieldStyle(.plain).foregroundStyle(Theme.textPrimary).font(.system(size: 13)).padding(.horizontal, 12).frame(height: 32)
                 .background(Theme.surface, in: Capsule())
                 .onSubmit(send)
                 .onChange(of: draft) { _, new in if typing, !new.isEmpty { client.typingChanged(to: key) } }
@@ -290,29 +397,33 @@ struct FriendsView: View {
         }
     }
 
-    /// Your own code, always in view at the bottom right, so it is easy to read out or copy; the QR shows the same code.
+    /// Your own code, always in view at the bottom of the sidebar (never over the message bar), so it is easy to read out or
+    /// copy; the QR shows the same code.
     private var myCodePill: some View {
-        HStack(spacing: 6) {
+        VStack(alignment: .leading, spacing: 2) {
             Text("Your code").font(.system(size: 10)).foregroundStyle(Theme.textSecondary)
-            Text(Friends.displayCode(client.identity.code)).font(.system(size: 13, weight: .bold, design: .monospaced)).foregroundStyle(.white).textSelection(.enabled)
-            Button { NSPasteboard.general.clearContents(); NSPasteboard.general.setString(Friends.displayCode(client.identity.code), forType: .string)
-                copiedCode = true; DispatchQueue.main.asyncAfter(deadline: .now() + 2) { copiedCode = false } } label: {
-                Image(systemName: copiedCode ? "checkmark" : "doc.on.doc").font(.system(size: 11))
-            }.buttonStyle(.plain).hitTarget().foregroundStyle(Theme.accentBright).help("Copy your friend code")
-            Button { showQR = true } label: { Image(systemName: "qrcode").font(.system(size: 12)) }
-                .buttonStyle(.plain).foregroundStyle(Theme.accentBright).help("Show your QR code")
-                .popover(isPresented: $showQR) {
-                    VStack(spacing: 8) {
-                        if let qr = FriendsSettingsSection.qr(client.identity.link) { Image(nsImage: qr).interpolation(.none).resizable().frame(width: 170, height: 170) }
-                        Text(Friends.displayCode(client.identity.code)).font(.system(size: 14, weight: .bold, design: .monospaced))
-                        Text("A friend scans this with their camera, or types the code.").font(.system(size: 11)).foregroundStyle(.secondary).frame(width: 190)
-                    }.padding(14)
-                }
+            HStack(spacing: 6) {
+                Text(Friends.displayCode(client.identity.code)).font(.system(size: 13, weight: .bold, design: .monospaced)).foregroundStyle(Theme.textPrimary).textSelection(.enabled)
+                    .lineLimit(1).minimumScaleFactor(0.8)
+                Spacer(minLength: 0)
+                Button { NSPasteboard.general.clearContents(); NSPasteboard.general.setString(Friends.displayCode(client.identity.code), forType: .string)
+                    copiedCode = true; DispatchQueue.main.asyncAfter(deadline: .now() + 2) { copiedCode = false } } label: {
+                    Image(systemName: copiedCode ? "checkmark" : "doc.on.doc").font(.system(size: 11))
+                }.buttonStyle(.plain).hitTarget().foregroundStyle(Theme.accentBright).help("Copy your friend code")
+                Button { showQR = true } label: { Image(systemName: "qrcode").font(.system(size: 12)) }
+                    .buttonStyle(.plain).hitTarget().foregroundStyle(Theme.accentBright).help("Show your QR code")
+                    .popover(isPresented: $showQR) {
+                        VStack(spacing: 8) {
+                            if let qr = FriendsSettingsSection.qr(client.identity.link) { Image(nsImage: qr).interpolation(.none).resizable().frame(width: 170, height: 170) }
+                            Text(Friends.displayCode(client.identity.code)).font(.system(size: 14, weight: .bold, design: .monospaced))
+                            Text("A friend scans this with their camera, or types the code.").font(.system(size: 11)).foregroundStyle(.secondary).frame(width: 190)
+                        }.padding(14)
+                    }
+            }
         }
-        .padding(.horizontal, 10).padding(.vertical, 5)
-        .background(.black.opacity(0.35), in: Capsule())
-        .overlay(Capsule().stroke(Color.white.opacity(0.12)))
-        .padding(4)
+        .padding(.horizontal, 10).padding(.vertical, 6)
+        .background(Theme.surface, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: 10, style: .continuous).stroke(Theme.separator))
     }
 
     // MARK: Chat
@@ -329,7 +440,7 @@ struct FriendsView: View {
     private func chat(_ friend: FriendRecord) -> some View {
         VStack(spacing: 8) {
             HStack {
-                Text(friend.displayName).font(.system(size: 13, weight: .semibold)).foregroundStyle(.white)
+                Text(friend.displayName).font(.system(size: 13, weight: .semibold)).foregroundStyle(Theme.textPrimary)
                 if client.typing.contains(friend.box) { Text("typing…").font(.system(size: 11)).foregroundStyle(Theme.accentBright) }
                 Spacer()
                 FriendGamesMenu(client: client, box: friend.box, play: client.play(friend.box))
@@ -344,9 +455,6 @@ struct FriendsView: View {
                 } label: { Image(systemName: "ellipsis.circle") }.menuStyle(.borderlessButton).frame(width: 28)
             }
             .popover(isPresented: $renaming) { nicknameEditor(friend) }
-            .confirmationDialog("Remove \(friend.displayName)? They won't be told why, and you can add them again later.", isPresented: $confirmRemove) {
-                Button("Remove", role: .destructive) { client.remove(friend.box); selected = nil }
-            }
             if let game = client.games[friend.box] { TicTacToeCard(io: gameIO(friend.box), game: game, myID: client.identity.box) }
             PlayCard(play: client.play(friend.box), source: "friend-play")
             messageList(friend.box, empty: "Say hi. Messages are encrypted on this Mac; the server only holds them until \(friend.displayName) is online.", group: false)
@@ -359,7 +467,7 @@ struct FriendsView: View {
         ZStack {
             Color.black.opacity(0.55).onTapGesture { confirmClear = false }
             VStack(alignment: .leading, spacing: 10) {
-                Text(clearTitle).font(.system(size: 14, weight: .semibold)).foregroundStyle(.white)
+                Text(clearTitle).font(.system(size: 14, weight: .semibold)).foregroundStyle(Theme.textPrimary)
                 Text(Self.clearWarning(who: clearWho)).font(.system(size: 11)).foregroundStyle(Theme.textSecondary).fixedSize(horizontal: false, vertical: true)
                 HStack {
                     Spacer()
@@ -408,7 +516,7 @@ struct FriendsView: View {
             Text("Safety number with \(friend.displayName)").font(.system(size: 13, weight: .semibold))
             ForEach(rows, id: \.self) { Text($0).font(.system(size: 14, design: .monospaced)) }
             Text("Read these out (in person or on a call). If they match on both Macs, no one can read your chat in the middle.")
-                .font(.system(size: 11)).foregroundStyle(.secondary).frame(width: 260, alignment: .leading)
+                .font(.system(size: 11)).foregroundStyle(Theme.textSecondary).frame(width: 260, alignment: .leading)
         }
         .padding(14)
     }
@@ -464,13 +572,13 @@ private struct FriendBubble: View {
                                 Text(Self.size(file.size)).font(.system(size: 10)).opacity(0.7)
                             }
                         }
-                        .foregroundStyle(.white).padding(.horizontal, 10).padding(.vertical, 6).frame(maxWidth: 240, alignment: .leading)
+                        .foregroundStyle(message.mine ? Theme.onAccent : Theme.textPrimary).padding(.horizontal, 10).padding(.vertical, 6).frame(maxWidth: 240, alignment: .leading)
                         .background(RoundedRectangle(cornerRadius: 12, style: .continuous).fill(message.mine ? AnyShapeStyle(Theme.accentGradient) : AnyShapeStyle(Theme.surfaceHover)))
                     }
                     .buttonStyle(.plain).help("Show in Finder")
                 }
                 if !message.text.isEmpty {
-                    Text(message.text).font(.system(size: 13)).foregroundStyle(.white).textSelection(.enabled)
+                    Text(message.text).font(.system(size: 13)).foregroundStyle(message.mine ? Theme.onAccent : Theme.textPrimary).textSelection(.enabled)
                         .padding(.horizontal, 12).padding(.vertical, 7)
                         .background(RoundedRectangle(cornerRadius: 14, style: .continuous).fill(message.mine ? AnyShapeStyle(Theme.accentGradient) : AnyShapeStyle(Theme.surfaceHover)))
                 }
@@ -524,7 +632,10 @@ struct FriendsSettingsSection: View {
             TextField("Name shown in friend requests", text: $client.nick, prompt: Text(MessengerIdentity.shared.handle))
             Toggle("Send read receipts and typing", isOn: $client.receipts)
             if !client.book.vault.blocked.isEmpty {
-                LabeledContent("Blocked people") { Button("Unblock all (\(client.book.vault.blocked.count))") { client.unblockAll() } }
+                ForEach(client.book.blockedPeople) { b in
+                    LabeledContent(b.name) { Button("Unblock") { client.unblock(b.fingerprint) } }
+                }
+                LabeledContent("Everyone you blocked") { Button("Unblock all (\(client.book.vault.blocked.count))") { client.unblockAll() } }
             }
             Button(deleting ? "Deleting…" : "Delete all my chat data", role: .destructive) { confirmDelete = true }.disabled(deleting)
                 .confirmationDialog("Delete every friend, message and block, here and on the server? Your friend code stays the same.", isPresented: $confirmDelete) {

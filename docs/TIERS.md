@@ -138,7 +138,7 @@
 
 | Module | Today | Proposed |
 |---|---|---|
-| Messenger | Pro | PRO |
+| Messenger | Free | FREE (moved from Pro in 2.2.62) |
 | Audio (per-app volume) | Pro | PRO |
 | Voice Notes | Pro | PRO |
 | Screen Time and Focus Blocker | Pro | PRO |

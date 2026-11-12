@@ -348,6 +348,7 @@ final class FriendsClient: ObservableObject {
 
     func setAlias(_ box: String, _ alias: String?) { book.setAlias(box: box, alias); persist() }
     func unblockAll() { book.unblockAll(); persist() }
+    func unblock(_ fingerprint: String) { book.unblock(fingerprint: fingerprint); persist() }
 
     /// "Delete all my chat data": the server mailbox, the history, friends and block list. The code and keys stay.
     func deleteEverything() async {
@@ -546,6 +547,16 @@ final class FriendsClient: ObservableObject {
         guard !members.isEmpty else { return "Pick at least one friend." }
         guard members.count < Friends.maxGroupMembers else { return "A group can have up to \(Friends.maxGroupMembers) people." }
         guard let g = book.createGroup(name: name, members: members) else { return "Couldn't make the group (\(Friends.maxGroups) groups at most, and everyone must be a friend)." }
+        persist()
+        sendGroupInvite(g)
+        return nil
+    }
+
+    /// Adds some of my friends to a group I'm in (no need to ask whoever made it). Everyone I can reach is told the new list.
+    func addToGroup(_ key: String, members: [String]) -> String? {
+        guard !members.isEmpty else { return "Pick at least one friend." }
+        let added = book.addToGroup(key, members: members)
+        guard !added.isEmpty, let g = book.group(key) else { return "Couldn't add them (a group can have up to \(Friends.maxGroupMembers) people, and they must be your friends)." }
         persist()
         sendGroupInvite(g)
         return nil

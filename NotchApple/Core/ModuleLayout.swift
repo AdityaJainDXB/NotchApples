@@ -120,7 +120,7 @@ final class ModuleLayout: ObservableObject {
     func setHomeClosed(_ closed: Bool, for m: Module) { set(closed ? .homeHidden : .homeExpanded, for: m) }
 
     /// Takes a widget off Home. It gets its own tab so nothing becomes unreachable.
-    func removeFromHome(_ m: Module) { set(.standalone, for: m) }
+    func removeFromHome(_ m: Module) { set(.nonNecessities, for: m) }
 
     /// Everything shown inside the Non-Necessities tab.
     var nonNecessities: [Module] {

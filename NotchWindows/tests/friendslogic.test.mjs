@@ -175,3 +175,47 @@ test('the safety number is shown as three rows of four groups', () => {
   const rows = L.safetyRows('15339 92774 60316 35367 16261 21826 25653 63881 36886 95197 57797 31678');
   assert.deepEqual(rows, ['15339  92774  60316  35367', '16261  21826  25653  63881', '36886  95197  57797  31678']);
 });
+
+test('a blocked person can be unblocked on their own, and then reaches you again', () => {
+  const alice = person(1), bob = person(2), v = L.newVault();
+  L.receiveRequest(v, request(alice), alice.fp); L.receiveRequest(v, request(bob), bob.fp);
+  L.setAlias(v, alice.box, 'Alice from school');
+  L.block(v, alice.box); L.block(v, bob.box);
+  assert.deepEqual(L.blockedPeople(v).map((b) => b.name), ['Alice from school', L.blockedPeople(v)[1].name]);
+  assert.ok(L.blockedPeople(v)[1].name.startsWith('Friend') || L.blockedPeople(v)[1].name.length > 0);
+  L.unblock(v, alice.fp);
+  assert.deepEqual(v.blocked, [bob.fp], 'only Alice is unblocked');
+  assert.equal(v.blockedNames[alice.fp], undefined);
+  assert.equal(L.receiveRequest(v, request(bob), bob.fp).kind, 'ignored', 'Bob is still blocked');
+  assert.notEqual(L.receiveRequest(v, request(alice), alice.fp).kind, 'ignored', 'Alice can send a request again');
+  L.unblock(v, 'not-in-the-list'); assert.deepEqual(v.blocked, [bob.fp], 'an unknown fingerprint changes nothing');
+  L.unblockAll(v); assert.deepEqual(v.blocked, []); assert.deepEqual(v.blockedNames, {});
+});
+
+test('a vault saved before the blocked list had names still loads, and shows a short code', () => {
+  const v = L.normalizeVault({ friends: [], blocked: ['abcd1234'] });
+  assert.deepEqual(v.blockedNames, {});
+  assert.equal(L.blockedPeople(v)[0].name, 'Someone you blocked (ABCD)');
+  const w = L.normalizeVault({ blocked: ['f1'], blockedNames: { f1: 'Sam', other: 'Not blocked', f2: 5 } });
+  assert.deepEqual(w.blockedNames, { f1: 'Sam' }, 'only names of blocked people, only strings');
+});
+
+test('any member can add their own friends to a group, but cannot rename it or remove people', () => {
+  const viraj = person(1), arjun = person(2), v = L.newVault();
+  L.receiveRequest(v, request(viraj), viraj.fp); L.receiveRequest(v, request(arjun), arjun.fp);
+  v.friends.forEach((f) => { f.status = 'active'; });
+  const g = L.createGroup(v, 'Trip', [viraj.box]);
+  assert.deepEqual(L.addToGroup(v, L.groupKey(g.id), ['stranger']), [], 'only my friends');
+  assert.deepEqual(L.addToGroup(v, L.groupKey(g.id), [viraj.box]), [], 'already in');
+  assert.deepEqual(L.addToGroup(v, L.groupKey(g.id), [arjun.box]), [arjun.box]);
+  assert.deepEqual(L.group(v, L.groupKey(g.id)).members, [viraj.box, arjun.box].sort());
+  // Viraj's side: I am a member, so my update that only adds Arjun is accepted.
+  const w = L.newVault(), me = person(3);
+  L.receiveRequest(w, request(me), me.fp); w.friends[0].status = 'active';
+  L.createGroup(w, 'Trip', [me.box], g.id);
+  const upd = { t: 'grp', from: me.box, g: g.id, gname: 'Renamed', gm: [me.box, viraj.box, arjun.box] };
+  const after = L.receiveGroup(w, me.box, upd, viraj.box);
+  assert.deepEqual(after.members, [me.box, arjun.box].sort());
+  assert.equal(after.name, 'Trip', 'a member cannot rename');
+  assert.equal(L.receiveGroup(w, me.box, { ...upd, gm: [me.box, viraj.box] }, viraj.box), null, 'a member cannot remove people');
+});

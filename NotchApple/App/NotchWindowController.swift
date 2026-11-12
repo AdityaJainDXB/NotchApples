@@ -1052,10 +1052,16 @@ final class NotchWindowController {
 
     private var peekPanel: NotchPanel?
     private var peekWork: DispatchWorkItem?
+    /// Hides the pill by itself if nothing else did, so it can never sit under the notch for minutes.
+    private var peekExpire: DispatchWorkItem?
+    /// Bumped on every show and hide, so a fade-out that finishes late cannot hide a pill that was shown again.
+    private var peekToken = 0
+    /// No new peek until this time: right after the notch closes the pointer is still on it, and the pill used to pop up as it closed.
+    private var peekQuietUntil = Date.distantPast
 
     private func peekChanged(inside: Bool) {
         peekWork?.cancel()
-        guard inside, UserDefaults.standard.object(forKey: "notch.peek") as? Bool ?? true,
+        guard inside, Date() >= peekQuietUntil, UserDefaults.standard.object(forKey: "notch.peek") as? Bool ?? true,
               !state.isExpanded, !state.isAutoHidden, !SettingsManager.shared.isNotchHidden else { hidePeek(); return }
         let work = DispatchWorkItem { [weak self] in self?.showPeek() }
         peekWork = work
@@ -1065,6 +1071,7 @@ final class NotchWindowController {
     private func showPeek() {
         guard let screen = targetScreen, !state.isExpanded else { return }
         let info = PeekView.current()
+        peekToken += 1
         let panel = peekPanel ?? {
             let p = NotchPanel(contentRect: .zero)
             p.ignoresMouseEvents = true
@@ -1086,6 +1093,10 @@ final class NotchWindowController {
             c.duration = NSWorkspace.shared.accessibilityDisplayShouldReduceMotion ? 0.05 : 0.18
             panel.animator().alphaValue = 1
         }
+        peekExpire?.cancel()
+        let expire = DispatchWorkItem { [weak self] in self?.hidePeek() }
+        peekExpire = expire
+        DispatchQueue.main.asyncAfter(deadline: .now() + 6, execute: expire)
     }
 
     /// For the screenshot build.
@@ -1093,8 +1104,16 @@ final class NotchWindowController {
 
     private func hidePeek() {
         peekWork?.cancel()
-        guard let panel = peekPanel, panel.alphaValue > 0 else { return }
-        NSAnimationContext.runAnimationGroup({ c in c.duration = 0.12; panel.animator().alphaValue = 0 }) { panel.orderOut(nil) }
+        peekExpire?.cancel()
+        peekToken += 1
+        let token = peekToken
+        // Not "alpha > 0": during the fade-in the alpha can still read 0, and the pill then fades in and stays.
+        guard let panel = peekPanel, panel.isVisible else { return }
+        if NSWorkspace.shared.accessibilityDisplayShouldReduceMotion { panel.alphaValue = 0; panel.orderOut(nil); return }
+        NSAnimationContext.runAnimationGroup({ c in c.duration = 0.1; panel.animator().alphaValue = 0 }) { [weak self] in
+            // Only if it was not shown again meanwhile.
+            if self?.peekToken == token { panel.orderOut(nil) }
+        }
     }
 
     private func hoverChanged(inside: Bool, overPanel: Bool) {
@@ -1134,6 +1153,8 @@ final class NotchWindowController {
         if SettingsManager.shared.stickyNotch && !force { return }
         if Self.holdOpen > 0 && !force { return }
         hoverWork?.cancel()
+        hidePeek()
+        peekQuietUntil = Date().addingTimeInterval(1.2)
         openedByHover = false
         pinnedByClick = false
         // The pin keeps the notch open only until it is closed (Esc, the close button, the shortcut). It used to

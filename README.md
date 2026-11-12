@@ -150,27 +150,17 @@ More screenshots of the capture overlay, the AI answer, the settings and the Win
 
 ## What's new
 
-### Mac 2.2.60 · Windows 2.2.60 · 11 November 2026 · ✨ NotchAI, a free assistant with a green dot
+### Mac 2.2.67 · Windows 2.2.67 · 12 November 2026 · 🔊 Volume and brightness stay after updates
 
-- New: NotchAI, a free assistant tab. Chat with the AI you chose in Settings → AI, with streamed answers, Stop and Clear. It is on by default and can be hidden like any tab
-- New: an optional green dot that follows your cursor. It is off until you turn it on in NotchAI → Companion. Click it for Quick Ask: one question, one streamed answer, closed by Esc or a click elsewhere. Right-click it to open the NotchAI tab. The dot never calls an AI by itself, so it works with every provider off
-- New: a Custom provider in Settings → AI for any OpenAI-compatible server (Ollama, LM Studio, vLLM or a proxy): base URL, optional key (kept in the Keychain), model list and Test connection
-- New: Local first for NotchAI. With "Allow cloud and unverified models" off (the default), NotchAI only uses Apple Intelligence or a model that Ollama confirms is installed on this Mac. Cloud providers, Ollama Cloud models and anything that can't be verified are refused before anything is sent, and are never used as a fallback. This switch covers NotchAI only: elsewhere in Notch Apple your chosen provider works as before, except that Ollama Cloud models and unverifiable Ollama or custom servers are refused there too while it is off
-- New: the model list in Settings → AI says Local, Local network, Cloud or Unverified next to each model
-- Feedback welcome: NotchAI is new and has had little time on setups with more than one display, so please report anything odd with the dot
+- Fixed: the volume and brightness gauge in the notch kept disappearing after an update, because macOS forgot the Accessibility permission every time. The app is now signed with a fixed certificate, so the permission survives future updates. After installing this one, remove Notch Apple from System Settings → Privacy & Security → Accessibility (the − button), add it again and switch it on. That is needed one last time
 
-### Mac 2.2.59 · Windows 2.2.59 · 11 November 2026 · 🏎️ The 2025 F1 grid in Racing
+### Mac 2.2.66 · Windows 2.2.66 · 12 November 2026 · 📅 Up next shows the real day
 
-- New: the Racing game's local F1 races now have the 2025 F1 grid: ten teams in their team colours, with driver names on the tower. Online rooms and your own car do not have teams yet
-- Changed: the race rules moved into tested functions, so they behave the same everywhere
+- Fixed: the Up next list said Tomorrow for every event after today, so a Saturday event seen on Thursday read Tomorrow. It now shows Today, Tomorrow, the weekday name for the next week (for example Saturday), or the date after that
 
-### Mac 2.2.58 · Windows 2.2.58 · 11 November 2026 · 🤖 Do It: a new engine
+### Mac 2.2.65 · Windows 2.2.65 · 12 November 2026 · 👥 Add friends to a group
 
-- Changed: Do It has a new engine, a big change under the hood. It now reads the app's accessibility tree instead of guessing from pixels, tells you the outcome of every step, notices when it is stuck, and retries with backoff
-- New: Do It has a progress budget instead of the flat 80-step cap. While it is making progress it keeps going; when the budget runs out you get a Continue button
-- Better: scrolling and menus are more reliable in Do It
-- Feedback welcome: this engine is new, so please report anything odd in Do It
-
+- Fixed: in a Messenger group chat anyone in the group can now add their own friends, not just whoever made it. Open the group's ⋯ menu (or right-click it) and choose Add friends. Only the person who made the group can rename it or remove people. Everyone in the group needs this update for the new people to show up for them
 
 ## Plugins
 

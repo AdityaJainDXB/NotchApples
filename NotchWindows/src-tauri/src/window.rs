@@ -28,8 +28,8 @@ impl Default for Layout {
             position: "center".into(),
             pill_width: 240.0,
             pill_height: 34.0,
-            width: 780.0,
-            height: 460.0,
+            width: 740.0,
+            height: 420.0,
             inset: 120.0,
         }
     }

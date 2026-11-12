@@ -13,8 +13,8 @@ packages:
 settings:
   base:
     SWIFT_VERSION: "5.0"
-    MARKETING_VERSION: "2.2.60"
-    CURRENT_PROJECT_VERSION: "238"
+    MARKETING_VERSION: "2.2.67"
+    CURRENT_PROJECT_VERSION: "245"
     CODE_SIGN_IDENTITY: "-"
     CODE_SIGN_STYLE: Manual
     DEVELOPMENT_TEAM: ""
@@ -202,6 +202,8 @@ targets:
       - NotchApple/Core/ClaudeUsageLogic.swift
       - NotchApple/Core/SmartHomeLogic.swift
       - NotchApple/Core/ClipboardLinkLogic.swift
+      - NotchApple/Core/TabChoicesLogic.swift
+      - NotchApple/Core/ReportLogic.swift
       - NotchApple/Core/DevToolkitLogic.swift
       - NotchApple/Core/WellbeingLogic.swift
       - NotchApple/Core/SystemWatchLogic.swift

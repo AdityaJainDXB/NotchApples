@@ -18,7 +18,10 @@ struct PeekView: View {
         HStack(spacing: 8) {
             Image(systemName: symbol).foregroundStyle(Theme.accentBright)
             Text(text).lineLimit(1).foregroundStyle(.white)
-            Text(Date.now.formatted(date: .omitted, time: .shortened)).foregroundStyle(Theme.textSecondary).monospacedDigit()
+            // Re-read every few seconds: the pill used to show the time it was built at and never changed.
+            TimelineView(.periodic(from: .now, by: 5)) { context in
+                Text(context.date.formatted(date: .omitted, time: .shortened)).foregroundStyle(Theme.textSecondary).monospacedDigit()
+            }
         }
         .font(.system(size: 12, weight: .semibold))
         .fontDesign(StylePrefs.fontDesign)

@@ -39,7 +39,7 @@ enum LayoutChoice: String, CaseIterable, Identifiable {
 
 enum ModuleLayoutLogic {
     /// Merged into the one Non-Necessities tab by default.
-    static let nonNecessities = ["focus", "worldClock", "audio", "snippets", "shortcuts", "timer", "plugins", "voiceNotes", "screenTime", "smartHome"]
+    static let nonNecessities = ["focus", "audio", "snippets", "shortcuts", "timer", "plugins", "voiceNotes", "screenTime", "smartHome"]
     /// Shown on Home as an accordion that is closed until you click it.
     static let homeAccordions = ["clipboard", "nowPlaying", "notes"]
     /// Shown on Home as a small card that is always visible (Claude usage only when you add it).
@@ -53,8 +53,9 @@ enum ModuleLayoutLogic {
 
     /// The choices offered for a module, in the order shown.
     static func allowed(_ module: String) -> [LayoutChoice] {
-        canLiveOnHome(module) ? [.homeExpanded, .homeHidden, .standalone, .nonNecessities, .disabled]
-                              : [.standalone, .nonNecessities, .disabled]
+        // No "its own tab": a feature that can live in a group is always in one (Home or Non-Necessities), or off.
+        canLiveOnHome(module) ? [.homeExpanded, .homeHidden, .nonNecessities, .disabled]
+                              : [.nonNecessities, .disabled]
     }
 
     /// Where a module goes if you never chose. `wasOn` is whether it was switched on before the reorganisation.

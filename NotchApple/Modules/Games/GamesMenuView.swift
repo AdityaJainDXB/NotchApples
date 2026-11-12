@@ -43,7 +43,7 @@ struct GamesMenuView: View {
             HStack(spacing: 10) {
                 HStack(spacing: 6) {
                     Image(systemName: "magnifyingglass").font(.system(size: 11)).foregroundStyle(Theme.textSecondary)
-                    TextField("Search games", text: $query).textFieldStyle(.plain).font(.system(size: 12))
+                    TextField("Search games", text: $query).textFieldStyle(.plain).foregroundStyle(Theme.textPrimary).font(.system(size: 12))
                 }
                 .padding(.horizontal, 9).padding(.vertical, 6)
                 .background(RoundedRectangle(cornerRadius: 10, style: .continuous).fill(Color.white.opacity(0.07)))
@@ -218,7 +218,7 @@ private struct GameCodeDialog: View {
                 Text("A private game. Enter the access code you were given to unlock it on this Mac. It stays unlocked.")
                     .font(.system(size: 12)).foregroundStyle(Theme.textSecondary).multilineTextAlignment(.center)
                 TextField("XXXX-XXXX-XXXX", text: $code)
-                    .textFieldStyle(.plain).font(.system(size: 15, weight: .semibold, design: .monospaced)).multilineTextAlignment(.center)
+                    .textFieldStyle(.plain).foregroundStyle(Theme.textPrimary).font(.system(size: 15, weight: .semibold, design: .monospaced)).multilineTextAlignment(.center)
                     .padding(9).background(RoundedRectangle(cornerRadius: 10, style: .continuous).fill(Color.black.opacity(0.4)))
                     .focused($focused).onSubmit(go)
                     .onChange(of: code) { _, v in let p = GameCode.pretty(v); if p != v { code = p } }

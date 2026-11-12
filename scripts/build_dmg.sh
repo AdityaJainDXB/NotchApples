@@ -14,13 +14,27 @@ xcodebuild -project NotchApple.xcodeproj -scheme NotchApple -configuration Relea
 APP="build/dd/Build/Products/Release/Notch Apple.app"
 [ -d "$APP" ] || { echo "Build failed"; exit 1; }
 
-# Ad-hoc signatures identify the app by its exact hash, so every new build
-# looks like a different app to macOS and loses its Accessibility permission.
-# Re-sign with a designated requirement based on the bundle ID instead, so a
-# permission granted once keeps working across updates.
+# An ad-hoc signature identifies the app by its exact hash, so every new build looks like a different app to macOS and
+# loses its Accessibility permission (and the notch's volume and brightness gauge with it). Official builds are signed
+# with a fixed self-signed certificate (scripts/setup-signing.sh) and a requirement tied to it, so a permission granted
+# once keeps working across updates. Without that certificate (any other Mac) the build falls back to ad-hoc.
 xattr -cr "$APP"
-codesign --force --sign - --preserve-metadata=entitlements,flags,runtime \
-  -r='designated => identifier "com.notchapple.app"' "$APP"
+SIGN_KC="$HOME/Library/Keychains/notchapple-signing.keychain-db"
+SIGN_HASH=""
+if [ -f "$SIGN_KC" ]; then
+  security unlock-keychain -p "" "$SIGN_KC" 2>/dev/null || true
+  SIGN_HASH=$(security find-identity -p codesigning "$SIGN_KC" 2>/dev/null | awk '/Notch Apple Self-Signed/ {print $2; exit}')
+fi
+if [ -n "$SIGN_HASH" ]; then
+  LEAF=$(echo "$SIGN_HASH" | tr 'A-F' 'a-f')
+  codesign --force --sign "$SIGN_HASH" --keychain "$SIGN_KC" --preserve-metadata=entitlements,flags,runtime \
+    -r="designated => identifier \"com.notchapple.app\" and certificate leaf = H\"$LEAF\"" "$APP"
+  echo "Signed with the fixed Notch Apple certificate ($SIGN_HASH)" >&2
+else
+  codesign --force --sign - --preserve-metadata=entitlements,flags,runtime \
+    -r='designated => identifier "com.notchapple.app"' "$APP"
+  echo "No fixed certificate on this Mac: signed ad-hoc (run scripts/setup-signing.sh)" >&2
+fi
 
 # Optional extras (BackgroundMusic driver, licences) ship inside the app:
 # Settings → Audio installs the driver; licences are in Contents/Resources.

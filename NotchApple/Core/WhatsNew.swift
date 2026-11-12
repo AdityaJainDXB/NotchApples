@@ -20,6 +20,39 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.2.67", date: "12 November 2026", headline: "Volume and brightness stay after updates", items: [
+            "- Fixed: the volume and brightness gauge in the notch kept disappearing after an update, because macOS forgot the Accessibility permission every time. The app is now signed with a fixed certificate, so the permission survives future updates. After installing this one, remove Notch Apple from System Settings → Privacy & Security → Accessibility (the − button), add it again and switch it on. That is needed one last time",
+        ]),
+        ReleaseNote(version: "2.2.66", date: "12 November 2026", headline: "Up next shows the real day", items: [
+            "- Fixed: the Up next list said Tomorrow for every event after today, so a Saturday event seen on Thursday read Tomorrow. It now shows Today, Tomorrow, the weekday name for the next week (for example Saturday), or the date after that",
+        ]),
+        ReleaseNote(version: "2.2.65", date: "12 November 2026", headline: "Add friends to a group", items: [
+            "- Fixed: in a Messenger group chat anyone in the group can now add their own friends, not just whoever made it. Open the group's ⋯ menu (or right-click it) and choose Add friends. Only the person who made the group can rename it or remove people. Everyone in the group needs this update for the new people to show up for them",
+        ]),
+        ReleaseNote(version: "2.2.64", date: "12 November 2026", headline: "Typing, the time pill and volume", items: [
+            "- Fixed: text you type in the notch is easier to see. Fields such as a group name, your friend code and several search boxes showed dark text on the dark notch; they now use your theme's text colour",
+            "- Fixed: the date and time pill under the notch now keeps the time up to date, goes away when you move off the notch or open it, and no longer pops up while the notch is closing",
+            "- Fixed: changing the volume with the keys, by scrolling on the notch, or with the slider in Audio no longer freezes or stutters. The changes are now merged and written in the background"
+        ]),
+        ReleaseNote(version: "2.2.63", date: "12 November 2026", headline: "More for NotchAI, and a Report tab", items: [
+            "- New: NotchAI chat keeps a history, has Stop and Regenerate, checks your Ollama setup, can start at login and respects Reduce Motion. NotchAI stays local first: cloud and unverified models are refused unless you turn them on",
+            "- New (Pro): NotchAI can search the web with no key (DuckDuckGo, your own SearXNG server, or Wikipedia, your choice in Research), read the top pages and answer with citations. Each question says which service it goes to, and nothing is searched until you ask",
+            "- New (Pro): NotchAI reads Word, Excel and PowerPoint files as well as PDF, text and images, only reading them and never changing them. Drop files on the NotchAI tab or its window to list them in Documents and summarise them",
+            "- New (Pro): draw an area on any screen to read or explain just that area, or ask about the text you have selected in another app. Windows of apps on your exclusion list are blanked out of screen captures",
+            "- New: routines run a saved question on a schedule (every N minutes, daily or weekly). They wait for the internet, pause after three failures and ask for approval like any task. Also new in this release: voice and dictation, memory you control, agents (Ultimate), connectors with browser sign-in (Pro), a resizable NotchAI window and simple 3D sketches",
+            "- New: Settings has a Report tab. It opens a GitHub issue that already says Mac, your version and your plan; you read it and press Submit yourself",
+            "- Fixed: Messenger and game text follows each theme's text colour and is easier to read. Your friend code now sits in the sidebar instead of covering the message bar. New group, Leave group and Remove friend open inside the notch, so choosing people no longer closes it",
+            "- Fixed: only Messenger is locked when you take the lock offer. Games and Search had been locked too by an old default; they are unlocked now unless you chose to lock them yourself",
+            "- Changed: World Clock is no longer a tab or an option of its own. It lives in Utilities for everyone, and if you used it before, Utilities is switched on for you so you keep it",
+            "- Fixed: Utilities has its own icon, NotchAI has its own icon, and the app suggestion no longer covers the page",
+            "- Feedback welcome: much of NotchAI is new. It was built without a microphone, a second display or most real services in front of it, so please report anything odd. Computer control through Do It is not in this release"
+        ]),
+        ReleaseNote(version: "2.2.62", date: "12 November 2026", headline: "Messenger is free", items: [
+            "- Changed: Messenger is now free. It moved from Pro to the free tier, so everyone can chat in nearby (Wi-Fi) rooms, encrypted rooms joined by a code, and with friends, with nothing to unlock. If you already have Pro, nothing changes for you.",
+        ]),
+        ReleaseNote(version: "2.2.61", date: "12 November 2026", headline: "Unblock people in Messenger friends", items: [
+            "- Fixed: in Messenger friends you can now unblock people. A new Blocked list in Friends shows who you blocked, each with an Unblock button (also in the Friends settings, next to Unblock all). After unblocking, they can send you a request again, or you can add their friend code. Anyone you blocked before this update shows as \"Someone you blocked (ABCD)\" and can be unblocked the same way",
+        ]),
         ReleaseNote(version: "2.2.60", date: "11 November 2026", headline: "NotchAI, a free assistant with a green dot", items: [
             "New: NotchAI, a free assistant tab. Chat with the AI you chose in Settings → AI, with streamed answers, Stop and Clear. It is on by default and can be hidden like any tab",
             "New: an optional green dot that follows your cursor. It is off until you turn it on in NotchAI → Companion. Click it for Quick Ask: one question, one streamed answer, closed by Esc or a click elsewhere. Right-click it to open the NotchAI tab. The dot never calls an AI by itself, so it works with every provider off",

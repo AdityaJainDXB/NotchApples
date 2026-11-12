@@ -879,7 +879,7 @@ struct ClaudeChatView: View {
         VStack(alignment: .leading, spacing: 4) {
             TextField(placeholder, text: $model.draft, axis: .vertical)
                 .lineLimit(1...4)
-                .textFieldStyle(.plain)
+                .textFieldStyle(.plain).foregroundStyle(Theme.textPrimary)
                 .focused($fieldFocused)
                 .padding(.horizontal, 6).padding(.top, 4)
                 .onSubmit(model.send)

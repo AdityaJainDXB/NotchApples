@@ -254,7 +254,7 @@ struct HomeScreenView: View {
     }
 
     private func eventTime(_ e: TodayModel.Event) -> String {
-        let day = Calendar.current.isDateInToday(e.start) ? "Today" : "Tomorrow"
+        let day = TodoLogic.dayLabel(e.start)
         return e.isAllDay ? "\(day) · All day" : "\(day) · \(e.start.formatted(date: .omitted, time: .shortened))"
     }
 

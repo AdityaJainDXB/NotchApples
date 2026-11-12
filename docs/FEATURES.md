@@ -4,7 +4,7 @@ Everything Notch Apple can do, and how each part works. Back to the [README](../
 
 ## Features
 
-Every module is **optional** and can be switched on or off in **Settings → Modules**. **Pro** features (AI, Messenger, Audio, Voice Notes, Screen Time & Focus Blocker, Quick Add) need an access code; everything else, including Now Playing, is free.
+Every module is **optional** and can be switched on or off in **Settings → Modules**. **Pro** features (AI, Audio, Voice Notes, Screen Time & Focus Blocker, Quick Add) need an access code; everything else, including Messenger and Now Playing, is free.
 
 | Module | What it does |
 | --- | --- |

@@ -93,6 +93,7 @@ struct NotchRootView: View {
     @ObservedObject private var tour = TourModel.shared
     @ObservedObject private var topBar = TopBarPrefs.shared
     @ObservedObject private var greeting = GreetingPrefs.shared
+    @ObservedObject private var tabChoices = TabChoices.shared
 
     @Namespace private var duoSpace
     /// The tab that was showing before this switch, so the new page knows which side to slide in from.
@@ -203,6 +204,9 @@ struct NotchRootView: View {
                 state.close()
                 if chose { DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) { HelloAnimation.show(force: true) } }
             }.insetInNotch().overlay(alignment: .topTrailing) { closeButton }
+        } else if !tabChoices.chosen {
+            // Once, after an update or install: choose what stays on screen. It returns until answered, however often the notch is closed.
+            TabChoicesView().insetInNotch().overlay(alignment: .topTrailing) { closeButton }
         } else if updater.reminderDue, let release = updater.reminderRelease {
             // Every 4th or 5th time the notch is opened while an update is waiting.
             RequiredUpdateView(release: release, skippable: true).insetInNotch().overlay(alignment: .topTrailing) { closeButton }
@@ -223,13 +227,13 @@ struct NotchRootView: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
             }
             .overlay(alignment: .bottom) { UndoToast().padding(.bottom, 4) }
-            .overlay(alignment: .bottom) {
+            // Below the page, not on top of it: the page gives up that room, so the chip never covers a button or the message bar.
+            .safeAreaInset(edge: .bottom, spacing: 6) {
                 if let s = suggestion {
                     AppSuggestionChip(suggestion: s, open: {
                         withAnimation(Duo.animation) { state.selected = s.tab }
                         withAnimation(Theme.quick) { suggestion = nil }
                     }, dismiss: { withAnimation(Theme.quick) { suggestion = nil } })
-                    .padding(.bottom, 40)
                 }
             }
             .onAppear(perform: showSuggestion)
@@ -238,6 +242,8 @@ struct NotchRootView: View {
             .onAppear(perform: ensureValidSelection)
             .onAppear { previousSelected = state.selected }
             .onAppear { settings.undoAILockFromOffer() }
+            .onAppear { settings.undoGamesSearchLockFromOffer() }
+            .onAppear { settings.moveWorldClockIntoUtilities() }
             .onAppear { NotchWidgetCenter.shared.update(selected: state.selected, open: true) }
             .onDisappear { NotchWidgetCenter.shared.update(selected: state.selected, open: false) }
             .onChange(of: state.selected) { _, new in

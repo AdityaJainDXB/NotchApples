@@ -305,11 +305,19 @@ struct FriendGroup: Codable, Identifiable, Equatable {
     var key: String { Friends.groupKey(id) }
 }
 
+/// One person on the blocked list.
+struct BlockedPerson: Identifiable, Equatable {
+    var fingerprint: String
+    var name: String
+    var id: String { fingerprint }
+}
+
 /// Everything kept on the device (sealed on disk by FriendsStore).
 struct FriendsVault: Codable, Equatable {
     var friends: [FriendRecord] = []
     var messages: [String: [FriendMessage]] = [:]    // by friend box
     var blocked: [String] = []                       // fingerprints (hex) of people I blocked
+    var blockedNames: [String: String] = [:]         // fingerprint -> the name I knew them by, so the blocked list can say who it is
     var seen: [String] = []                          // recent message ids, so a repeated one is dropped
     var groups: [FriendGroup] = []
     var clears: [String: ClearMark] = [:]            // by chat key (a friend's box or "g:<id>")
@@ -322,12 +330,15 @@ struct FriendsVault: Codable, Equatable {
         friends = try c.decodeIfPresent([FriendRecord].self, forKey: .friends) ?? []
         messages = try c.decodeIfPresent([String: [FriendMessage]].self, forKey: .messages) ?? [:]
         blocked = try c.decodeIfPresent([String].self, forKey: .blocked) ?? []
+        // Added later: a vault saved without names loads fine and shows a short code instead.
+        let names = try c.decodeIfPresent([String: String].self, forKey: .blockedNames) ?? [:]
+        blockedNames = names.filter { blocked.contains($0.key) }
         seen = try c.decodeIfPresent([String].self, forKey: .seen) ?? []
         groups = try c.decodeIfPresent([FriendGroup].self, forKey: .groups) ?? []
         clears = try c.decodeIfPresent([String: ClearMark].self, forKey: .clears) ?? [:]
         pendingClears = try c.decodeIfPresent([String: PendingClear].self, forKey: .pendingClears) ?? [:]
     }
-    private enum Keys: String, CodingKey { case friends, messages, blocked, seen, groups, clears, pendingClears }
+    private enum Keys: String, CodingKey { case friends, messages, blocked, blockedNames, seen, groups, clears, pendingClears }
 }
 
 // MARK: - The rules
@@ -456,15 +467,29 @@ struct FriendsBook {
         return g
     }
 
-    /// An invite or a change from a friend. It must list me, and only the person who made the group can change it.
+    /// I add some of my friends to a group I'm in, whoever made it. Returns the people actually added (none if it isn't allowed).
+    mutating func addToGroup(_ key: String, members: [String]) -> [String] {
+        guard let gi = groupIndex(key) else { return [] }
+        let fresh = Array(Set(members)).filter { record($0)?.status == .active && !vault.groups[gi].members.contains($0) }.sorted()
+        guard !fresh.isEmpty, vault.groups[gi].members.count + fresh.count < Friends.maxGroupMembers else { return [] }
+        vault.groups[gi].members = (vault.groups[gi].members + fresh).sorted()
+        return fresh
+    }
+
+    /// An invite or a change from a friend. It must list me. The person who made the group can change it; any other member can only add people.
     mutating func receiveGroup(from box: String, _ body: FriendBody, myBox: String, now: Date = .now) -> FriendGroup? {
         guard record(box)?.status == .active, let id = body.g, Friends.isPlainID(id), let all = body.gm,
               all.count <= Friends.maxGroupMembers, all.contains(myBox), all.contains(box), all.allSatisfy({ !$0.isEmpty && $0.count <= 64 }) else { return nil }
         let others = Array(Set(all)).filter { $0 != myBox }.sorted()
         let name = Self.clean(body.gname) ?? "Group"
         if let i = groupIndex(Friends.groupKey(id)) {
-            guard vault.groups[i].creator == box else { return nil }
-            vault.groups[i].name = name; vault.groups[i].members = others
+            if vault.groups[i].creator == box {
+                vault.groups[i].name = name; vault.groups[i].members = others
+                return vault.groups[i]
+            }
+            // Any other member may only ADD people (their own friends): the list must keep everyone already in, and the name stays.
+            guard vault.groups[i].members.contains(box), Set(vault.groups[i].members).isSubset(of: Set(others)) else { return nil }
+            vault.groups[i].members = others
             return vault.groups[i]
         }
         guard vault.groups.count < Friends.maxGroups else { return nil }
@@ -657,10 +682,19 @@ struct FriendsBook {
         guard let i = index(box) else { return }
         let fp = Friends.hex(vault.friends[i].fingerprint)
         if !vault.blocked.contains(fp) { vault.blocked.append(fp) }
+        vault.blockedNames[fp] = vault.friends[i].displayName
         vault.friends.remove(at: i); vault.messages[box] = nil; vault.clears[box] = nil; vault.pendingClears[box] = nil
     }
     mutating func remove(box: String) { vault.friends.removeAll { $0.box == box }; vault.messages[box] = nil; vault.clears[box] = nil; vault.pendingClears[box] = nil }
-    mutating func unblockAll() { vault.blocked = [] }
+    mutating func unblockAll() { vault.blocked = []; vault.blockedNames = [:] }
+
+    /// Unblocks one person, by the fingerprint in the blocked list. They can then send a request again, or be added by their code.
+    mutating func unblock(fingerprint fp: String) { vault.blocked.removeAll { $0 == fp }; vault.blockedNames[fp] = nil }
+
+    /// The blocked list for display: who, and the fingerprint to unblock them by.
+    var blockedPeople: [BlockedPerson] {
+        vault.blocked.map { fp in BlockedPerson(fingerprint: fp, name: vault.blockedNames[fp] ?? "Someone you blocked (\(fp.prefix(4).uppercased()))") }
+    }
 
     /// Names are shown to the person who received them, so keep them short, single-line and free of control characters.
     static func clean(_ raw: String?) -> String? {
