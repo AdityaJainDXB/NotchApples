@@ -142,7 +142,8 @@ final class NotchAIOfficeReaderTests: XCTestCase {
         XCTAssertEqual(ResearchLogic.kind(forExtension: "docx"), .office)
         XCTAssertEqual(ResearchLogic.kind(forExtension: "XLSX"), .office)
         XCTAssertEqual(ResearchLogic.kind(forExtension: "pptx"), .office)
-        XCTAssertEqual(ResearchLogic.kind(forExtension: "doc"), .unsupported)    // the old binary formats are not read
+        XCTAssertEqual(ResearchLogic.kind(forExtension: "doc"), .text)           // old Word files are read by macOS itself
+        XCTAssertEqual(ResearchLogic.kind(forExtension: "ppt"), .unsupported)    // old PowerPoint and Excel files are not read
     }
 }
 
