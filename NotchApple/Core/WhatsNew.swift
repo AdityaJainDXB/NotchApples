@@ -20,6 +20,11 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.2.64", date: "12 November 2026", headline: "Typing, the time pill and volume", items: [
+            "- Fixed: text you type in the notch is easier to see. Fields such as a group name, your friend code and several search boxes showed dark text on the dark notch; they now use your theme's text colour",
+            "- Fixed: the date and time pill under the notch now keeps the time up to date, goes away when you move off the notch or open it, and no longer pops up while the notch is closing",
+            "- Fixed: changing the volume with the keys, by scrolling on the notch, or with the slider in Audio no longer freezes or stutters. The changes are now merged and written in the background"
+        ]),
         ReleaseNote(version: "2.2.63", date: "12 November 2026", headline: "More for NotchAI, and a Report tab", items: [
             "- New: NotchAI chat keeps a history, has Stop and Regenerate, checks your Ollama setup, can start at login and respects Reduce Motion. NotchAI stays local first: cloud and unverified models are refused unless you turn them on",
             "- New (Pro): NotchAI can search the web with no key (DuckDuckGo, your own SearXNG server, or Wikipedia, your choice in Research), read the top pages and answer with citations. Each question says which service it goes to, and nothing is searched until you ask",

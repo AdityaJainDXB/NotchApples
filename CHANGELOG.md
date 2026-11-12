@@ -4,6 +4,18 @@ Every Notch Apple release, newest first. The latest few are also on the [README]
 
 > **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is in the repository's history.
 
+### Mac 2.2.64 · Windows 2.2.64 BETA · 12 November 2026 · Typing, the time pill and volume
+
+**Mac**
+
+- Fixed: text you type in the notch is easier to see. Fields such as a group name, your friend code and several search boxes showed dark text on the dark notch; they now use your theme's text colour
+- Fixed: the date and time pill under the notch now keeps the time up to date, goes away when you move off the notch or open it, and no longer pops up while the notch is closing
+- Fixed: changing the volume with the keys, by scrolling on the notch, or with the slider in Audio no longer freezes or stutters. The changes are now merged and written in the background
+
+**Windows**
+
+- No changes for Windows in this version
+
 ### Mac 2.2.63 · Windows 2.2.63 BETA · 12 November 2026 · More for NotchAI, and a Report tab
 
 **Mac**

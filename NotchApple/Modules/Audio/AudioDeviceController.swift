@@ -90,16 +90,38 @@ final class AudioDeviceController: ObservableObject {
         appVolumes.forEach { reapply($0) }
     }
 
+    private let volumeWriteQueue = DispatchQueue(label: "notchapple.audio.volume", qos: .userInteractive)
+    private let volumeLock = NSLock()
+    private var latestVolume: Float?
+
+    /// The slider moves dozens of times a second. The number on screen follows at once; the CoreAudio write happens off the main thread
+    /// and only the newest value is written, so dragging never waits on the audio device (it froze with Bluetooth outputs).
     func setVolume(_ value: Float) {
         volume = value
-        var v = value
+        volumeLock.lock()
+        let idle = latestVolume == nil
+        latestVolume = value
+        volumeLock.unlock()
+        guard idle else { return }
+        let device = defaultOutput
+        volumeWriteQueue.async { [weak self] in
+            guard let self else { return }
+            while true {
+                self.volumeLock.lock(); let next = self.latestVolume; self.latestVolume = nil; self.volumeLock.unlock()
+                guard var v = next else { return }
+                Self.writeVolume(&v, to: device)
+            }
+        }
+    }
+
+    private static func writeVolume(_ v: inout Float, to device: AudioObjectID) {
         // Try the master element first, then fall back to per-channel (L/R).
         for element in [kAudioObjectPropertyElementMain, 1, 2] {
             var addr = AudioObjectPropertyAddress(mSelector: kAudioDevicePropertyVolumeScalar,
                                                   mScope: kAudioDevicePropertyScopeOutput, mElement: element)
             var settable: DarwinBoolean = false
-            if AudioObjectIsPropertySettable(defaultOutput, &addr, &settable) == noErr, settable.boolValue {
-                AudioObjectSetPropertyData(defaultOutput, &addr, 0, nil, UInt32(MemoryLayout<Float>.size), &v)
+            if AudioObjectIsPropertySettable(device, &addr, &settable) == noErr, settable.boolValue {
+                AudioObjectSetPropertyData(device, &addr, 0, nil, UInt32(MemoryLayout<Float>.size), &v)
                 if element == kAudioObjectPropertyElementMain { return }
             }
         }
