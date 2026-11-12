@@ -157,7 +157,7 @@ body.collapsed #panel { display: none; }
 .wrap { flex-wrap: wrap; }
 .center { display: grid; place-items: center; text-align: center; gap: 8px; height: 100%; }
 .spacer { flex: 1; }
-.gap-4 { gap: 4px } .gap-6 { gap: 6px } .gap-14 { gap: 14px }
+.gap-4 { gap: 4px } .gap-6 { gap: 6px } .gap-8 { gap: 8px } .gap-14 { gap: 14px }
 .grid { display: grid; gap: 10px; }
 .hstack { display: flex; align-items: center; gap: 8px; min-width: 0; }
 
@@ -167,7 +167,7 @@ body.collapsed #panel { display: none; }
 .big { font-size: 26px; font-weight: 700; letter-spacing: -.5px; line-height: 1.15; }
 .huge { font-size: 52px; font-weight: 700; letter-spacing: -2px; line-height: 1; }
 .section-title { font-size: 12px; font-weight: 700; color: var(--text-dim); letter-spacing: .2px; }
-.dim { color: var(--text-dim); } .faint { color: var(--text-faint); }
+.dim, .muted { color: var(--text-dim); } .faint { color: var(--text-faint); }
 .small { font-size: 11px; } .tiny { font-size: 10px; }
 .mono, .num { font-variant-numeric: tabular-nums; }
 .mono { font-family: var(--mono); }
