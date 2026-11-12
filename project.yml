@@ -150,6 +150,7 @@ targets:
       - NotchApple/Core/ModelLocality.swift
       - NotchApple/Modules/NotchAI/NotchAIGuard.swift
       - NotchApple/Core/NotchAIConversationLogic.swift
+      - NotchApple/Core/NotchAIVoiceLogic.swift
       - NotchApple/Core/OllamaDiagnosticsLogic.swift
       - NotchApple/Modules/Games/GameEngines.swift
       - NotchApple/Modules/Games/GamesMenuLogic.swift

@@ -12,7 +12,7 @@ import SwiftUI
 
 struct NotchAIView: View {
     enum Section: String, CaseIterable, Identifiable {
-        case overview = "Overview", companion = "Companion", chat = "Chat"
+        case overview = "Overview", companion = "Companion", chat = "Chat", voice = "Voice"
         var id: String { rawValue }
     }
 
@@ -39,12 +39,13 @@ struct NotchAIView: View {
                 }
                 Spacer()
                 Picker("", selection: Binding(get: { nav.section }, set: { nav.section = $0 })) { ForEach(Section.allCases) { Text($0.rawValue).tag($0) } }
-                    .pickerStyle(.segmented).labelsHidden().frame(width: 200)
+                    .pickerStyle(.segmented).labelsHidden().frame(width: 270)
             }
             switch section {
             case .overview: overview
             case .companion: companion
             case .chat: NotchAIConversationView()
+            case .voice: NotchAIVoiceView()
             }
         }
     }
@@ -63,7 +64,7 @@ struct NotchAIView: View {
                               on: loc == .local)
                 }
                 statusRow("Screen awareness", "Coming in a later update (Pro)", on: false, dim: true)
-                statusRow("Voice", "Coming in a later update (Pro)", on: false, dim: true)
+                statusRow("Voice", NotchAIVoice.shared.provider.runsLocally ? "Talk and spoken answers, on this Mac" : "Talk and spoken answers (cloud voice)", on: true)
                 statusRow("Agents and computer control", "Coming in a later update (Ultimate)", on: false, dim: true)
                 HStack {
                     Button(dot.isOn ? "Turn the dot off" : "Turn the dot on") { dot.isOn.toggle() }

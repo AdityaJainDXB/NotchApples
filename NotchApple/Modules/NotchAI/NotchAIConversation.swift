@@ -124,6 +124,7 @@ final class NotchAIConversation: ObservableObject {
         // A reply that never arrived leaves no empty bubble behind.
         if reply.isEmpty, messages.last?.role == .assistant { messages.removeLast() }
         CursorCompanion.shared.setState(.idle)
+        NotchAIVoice.shared.conversationFinished(reply: reply.isEmpty ? nil : reply, error: error)
         guard session == sessionID, !reply.isEmpty else { return }   // not saved if the chat was reset meanwhile, or nothing came back
         let history = ChatHistoryStore.shared
         if !questionSaved {
