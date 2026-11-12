@@ -467,15 +467,29 @@ struct FriendsBook {
         return g
     }
 
-    /// An invite or a change from a friend. It must list me, and only the person who made the group can change it.
+    /// I add some of my friends to a group I'm in, whoever made it. Returns the people actually added (none if it isn't allowed).
+    mutating func addToGroup(_ key: String, members: [String]) -> [String] {
+        guard let gi = groupIndex(key) else { return [] }
+        let fresh = Array(Set(members)).filter { record($0)?.status == .active && !vault.groups[gi].members.contains($0) }.sorted()
+        guard !fresh.isEmpty, vault.groups[gi].members.count + fresh.count < Friends.maxGroupMembers else { return [] }
+        vault.groups[gi].members = (vault.groups[gi].members + fresh).sorted()
+        return fresh
+    }
+
+    /// An invite or a change from a friend. It must list me. The person who made the group can change it; any other member can only add people.
     mutating func receiveGroup(from box: String, _ body: FriendBody, myBox: String, now: Date = .now) -> FriendGroup? {
         guard record(box)?.status == .active, let id = body.g, Friends.isPlainID(id), let all = body.gm,
               all.count <= Friends.maxGroupMembers, all.contains(myBox), all.contains(box), all.allSatisfy({ !$0.isEmpty && $0.count <= 64 }) else { return nil }
         let others = Array(Set(all)).filter { $0 != myBox }.sorted()
         let name = Self.clean(body.gname) ?? "Group"
         if let i = groupIndex(Friends.groupKey(id)) {
-            guard vault.groups[i].creator == box else { return nil }
-            vault.groups[i].name = name; vault.groups[i].members = others
+            if vault.groups[i].creator == box {
+                vault.groups[i].name = name; vault.groups[i].members = others
+                return vault.groups[i]
+            }
+            // Any other member may only ADD people (their own friends): the list must keep everyone already in, and the name stays.
+            guard vault.groups[i].members.contains(box), Set(vault.groups[i].members).isSubset(of: Set(others)) else { return nil }
+            vault.groups[i].members = others
             return vault.groups[i]
         }
         guard vault.groups.count < Friends.maxGroups else { return nil }
