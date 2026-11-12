@@ -20,6 +20,10 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.2.68", date: "12 November 2026", headline: "Choose what stays on your screen", items: [
+            "- Added: after an update, a one-time card asks \"What should stay on your screen?\". Switch off the features you don't want in the notch; the recommended ones start on, nothing changes until you press a button, and you can change any of it later in Settings → Modules",
+            "- Added: in NotchAI you can ask an agent a follow-up question about a task it has finished. It answers in its own chat for that task, using the same model, and the Local first rule still applies",
+        ]),
         ReleaseNote(version: "2.2.67", date: "12 November 2026", headline: "Volume and brightness stay after updates", items: [
             "- Fixed: the volume and brightness gauge in the notch kept disappearing after an update, because macOS forgot the Accessibility permission every time. The app is now signed with a fixed certificate, so the permission survives future updates. After installing this one, remove Notch Apple from System Settings → Privacy & Security → Accessibility (the − button), add it again and switch it on. That is needed one last time",
         ]),

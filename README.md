@@ -150,6 +150,11 @@ More screenshots of the capture overlay, the AI answer, the settings and the Win
 
 ## What's new
 
+### Mac 2.2.68 · Windows 2.2.68 · 12 November 2026 · 🧭 Choose what stays on your screen
+
+- Added: after an update, a one-time card asks "What should stay on your screen?". Switch off the features you don't want in the notch; the recommended ones start on, nothing changes until you press a button, and you can change any of it later in Settings → Modules
+- Added: in NotchAI you can ask an agent a follow-up question about a task it has finished. It answers in its own chat for that task, using the same model, and the Local first rule still applies
+
 ### Mac 2.2.67 · Windows 2.2.67 · 12 November 2026 · 🔊 Volume and brightness stay after updates
 
 - Fixed: the volume and brightness gauge in the notch kept disappearing after an update, because macOS forgot the Accessibility permission every time. The app is now signed with a fixed certificate, so the permission survives future updates. After installing this one, remove Notch Apple from System Settings → Privacy & Security → Accessibility (the − button), add it again and switch it on. That is needed one last time
@@ -157,10 +162,6 @@ More screenshots of the capture overlay, the AI answer, the settings and the Win
 ### Mac 2.2.66 · Windows 2.2.66 · 12 November 2026 · 📅 Up next shows the real day
 
 - Fixed: the Up next list said Tomorrow for every event after today, so a Saturday event seen on Thursday read Tomorrow. It now shows Today, Tomorrow, the weekday name for the next week (for example Saturday), or the date after that
-
-### Mac 2.2.65 · Windows 2.2.65 · 12 November 2026 · 👥 Add friends to a group
-
-- Fixed: in a Messenger group chat anyone in the group can now add their own friends, not just whoever made it. Open the group's ⋯ menu (or right-click it) and choose Add friends. Only the person who made the group can rename it or remove people. Everyone in the group needs this update for the new people to show up for them
 
 ## Plugins
 

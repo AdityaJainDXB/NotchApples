@@ -4,6 +4,21 @@ Every Notch Apple release, newest first. The latest few are also on the [README]
 
 > **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is in the repository's history.
 
+### Mac 2.2.68 · Windows 2.2.68 BETA · 12 November 2026 · 🧭 Choose what stays on your screen
+
+**Mac**
+
+- Added: after an update, a one-time card asks "What should stay on your screen?". Switch off the features you don't want in the notch; the recommended ones start on, nothing changes until you press a button, and you can change any of it later in Settings → Modules
+- Added: in NotchAI you can ask an agent a follow-up question about a task it has finished. It answers in its own chat for that task, using the same model, and the Local first rule still applies
+
+**Windows**
+
+- No Windows changes in this release. It keeps the same version number as the Mac app
+
+**Website**
+
+- A new homepage (the old one is at /classic.html), and the claims about the free VPN are gone, because the VPN was retired in Mac 2.0.52 and Windows 1.55.0
+
 ### Mac 2.2.67 · Windows 2.2.67 BETA · 12 November 2026 · 🔊 Volume and brightness stay after updates
 
 **Mac**
