@@ -23,17 +23,32 @@ For Hey Clicky comparison rows: Equivalent and verified · Better or extended ·
 
 The owner is handing the remaining features to another developer. This section is the starting point; the **Living status** table further down is the detailed truth for each row.
 
+### Your first steps (do these in order)
+
+You have access to both repositories, the public one (`AdityaJainDXB/NotchApples`) and the private one (`AdityaJainDXB/NotchApples-Premium`). The private repo holds Do It and the other Ultimate modules; the public build copies them in with `scripts/fetch-premium.sh`.
+
+1. **Clone both repos side by side**, because the script looks for `../NotchApples-Premium` next to the public checkout:
+   `NotchApples/` and `NotchApples-Premium/` in the same parent folder.
+2. **Get the public work.** In `NotchApples`, `git fetch`, then check out `notchai-roadmap-m12-workspace` (draft PR #64, which includes #63's work). Run `xcodegen generate`, then `scripts/run-app-tests.sh`; it should report about 496 tests and 0 failures. Do not merge anything yet.
+3. **Get the private Do It bridge.** The Do It connection for the Computer agent is one small commit in the private repo, on its own branch `notchai-doit-bridge` (commit `cdf33eb`, only `mac/Modules/PremiumEntry/PremiumEntry.swift` changed). In `NotchApples-Premium`, `git fetch` and check out `notchai-doit-bridge`. Read the diff: it sets `PremiumRegistry.doItRun` and adds `NotchAIDoItBridge`, which hands one task to Do It through Do It's own public entry points, makes Do It confirm every action, stops Do It if the NotchAI task is cancelled, and gives up after 15 minutes. **Do It itself is not changed.** It is not on the private `main` yet.
+4. **Build with it.** In `NotchApples`, run `scripts/fetch-premium.sh` (it copies the private files in; they are gitignored, so they are never committed to the public repo), then build the Debug app. Grant Screen Recording and Accessibility to the build when macOS asks.
+5. **Run the Do It check (backlog item 2).** In the Agents section, run a harmless request that needs the Computer agent, for example "Open TextEdit and type: hello". Confirm all of: a NotchAI approval appears first; Do It then asks to confirm each action in its own bar; cancelling the NotchAI task stops Do It; the outcome comes back as the task's result; a failed Do It run shows as a failed step, not a success. Fix problems **in the bridge or in the public NotchAI code**. Do not edit Do It's own files (`DoItAgent.swift`, `DoItAX.swift`, ...) without the owner's approval.
+6. **Ask the owner to merge the private branch** into the private `main` once step 5 passes. Official releases run `scripts/fetch-premium.sh --require`, so whatever is on the private `main` ships with the next release: do not merge it earlier, and never merge it from a build that failed step 5.
+7. **Then work down the backlog below**, starting with item 1 (real-device verification, which needs a real Mac), updating the status table and this section as you go, one milestone at a time, reporting after each.
+
+Rules for the private repo: commit only what the task needs; never put keys, license data or personal data in it; changes to Do It, Convert, Smart Home, Claude Usage or Purge need the owner's explicit say-so; the public repo must keep building without it (`PremiumRegistry` slots stay empty and tabs say "included in the official build").
+
 ### Where the code is
 
 | What | Where |
 |---|---|
 | Milestone 1 (chat, regenerate, Ollama diagnostics, start at login, Reduce Motion) | PR #63, branch `notchai-step1-stability` |
 | Milestones 2 to 12 (voice, screen, research and files, memory, tasks, agents, MCP, dictation and alerts, teaching, 3D, workspace) | Draft PR #64, branch `notchai-roadmap-m12-workspace`, based on #63. Not merged, not released |
-| Do It bridge for the Computer agent | `NotchApples-Premium` (private), commit `cdf33eb` on `main`, **not pushed**. Public side: `PremiumRegistry.doItRun` |
+| Do It bridge for the Computer agent | `NotchApples-Premium` (private), branch `notchai-doit-bridge`, commit `cdf33eb`; **not on the private `main`**. Public side: `PremiumRegistry.doItRun` |
 | Module code | `NotchApple/Modules/NotchAI/` (Agents, Integrations, Memory, Research, Screen, Skills, Tasks, Teaching, Visual, Voice, Workspace). Pure rules live in `NotchApple/Core/NotchAI*Logic.swift`, `ScreenContextLogic.swift`, `ResearchLogic.swift`, `ModelLocality.swift`, `CompanionMotion.swift` |
 | Tests | `NotchAppleTests/NotchAI*Tests.swift` and others; run all with `scripts/run-app-tests.sh` (about 496 tests). The Xcode test target does not compile on `main` for unrelated reasons (missing `Chess`, `LockCode`...), so that script is the way to run them. New logic files must be added to `project.yml` (test sources) and `scripts/run-app-tests.sh` |
 
-Merge order: #63, then #64 (retarget to `main`), then the private commit if the owner agrees. Nothing here is released; follow the release rules in `CLAUDE.md` and `docs/VERSIONING.md`.
+Merge order: #63, then #64 (retarget to `main`), then the private branch `notchai-doit-bridge` into the private `main`, only after the Do It check passes and the owner agrees. Nothing here is released; follow the release rules in `CLAUDE.md` and `docs/VERSIONING.md`.
 
 ### How to build and test
 
@@ -57,7 +72,7 @@ Merge order: #63, then #64 (retarget to `main`), then the private commit if the 
 | # | Work | Done when | Notes |
 |---|---|---|---|
 | 1 | **Real-device verification** of what was only built | Each item in the "Verified" column of the status table moves from unverified to verified, with the date | Needs a real Mac and a person: speak to Talk and hear the answer; interrupt speech; Screen Recording granted to the build, then Explain my screen, OCR, Teach me; dictate into TextEdit; notifications and chime; floating agent cards; the Control-Option-V shortcut; two displays; start at login; Reduce Motion; browser tools in Safari/Chrome (Automation prompt) |
-| 2 | **Computer control through Do It**: run one harmless task end to end | A Computer-agent step shows an approval, Do It confirms each action, cancelling the NotchAI task stops Do It, and the result returns | Bridge exists (`NotchAIDoItBridge` in the private `PremiumEntry.swift`); never run. Needs Screen Recording and Accessibility. Push the private commit only with the owner's OK |
+| 2 | **Computer control through Do It**: run one harmless task end to end | A Computer-agent step shows an approval, Do It confirms each action, cancelling the NotchAI task stops Do It, and the result returns | Bridge exists (`NotchAIDoItBridge` in the private `PremiumEntry.swift`); never run. Needs Screen Recording and Accessibility. Merge the private branch into the private `main` only with the owner's OK |
 | 3 | **General web search** | A `SearchProvider` other than Wikipedia works and is labelled as sending the query off the device | Owner wants no paid API first; options to propose: a free keyless engine or a self-hosted one. Add as a new conformer plus fixture tests like `WikipediaSearchProvider` |
 | 4 | **Routines** (scheduled repeating tasks) | A saved task runs on a schedule, survives restart, pauses after three failures, waits for network and Mac awake | Build on `NotchAITask` and `TaskEngine`; add a scheduler and a store; reuse recovery rules |
 | 5 | **Per-agent conversations and follow-ups** | An agent's task has its own chat; a follow-up message routes to the right task; Stop button on it | Extend `NotchAITask` with a message list; Agents cards open it |
