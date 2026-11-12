@@ -43,10 +43,7 @@ final class ResearchAgent: ObservableObject {
             if engine == .searxng, SearXNGSearchProvider.normalizedBase(UserDefaults.standard.string(forKey: SearchEngineChoice.searxngKey) ?? "") == nil {
                 status = "Set your SearXNG address below, or pick another search engine."; return
             }
-            steps = [TaskStep(tool: "search_web", title: "Search the web (sends your question to \(engine.label))", argument: q, risk: .readOnly, idempotencyKey: "search")]
-            steps += (1...3).map { n in
-                TaskStep(tool: "fetch_search_hit", title: "Read search result \(n)", argument: String(n), risk: .readOnly, idempotencyKey: "src\(n - 1)")
-            }
+            steps = RoutineLogic.searchSteps(question: q, engine: engine.label)
         } else {
             steps = urls.prefix(5).enumerated().map { i, u in
                 TaskStep(tool: "fetch_page", title: "Read \(u.host ?? u.absoluteString)", argument: u.absoluteString, risk: .readOnly, idempotencyKey: "src\(i)")
