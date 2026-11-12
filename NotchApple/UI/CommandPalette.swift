@@ -173,7 +173,7 @@ private struct PaletteView: View {
             HStack(spacing: 10) {
                 Image(systemName: "command").foregroundStyle(Theme.accent)
                 TextField("Search actions, tabs, snippets, apps, “emoji heart”, or ask AI…", text: $query)
-                    .textFieldStyle(.plain).font(.system(size: 18)).focused($focused)
+                    .textFieldStyle(.plain).foregroundStyle(Theme.textPrimary).font(.system(size: 18)).focused($focused)
                     .onSubmit(runSelected)
                     .onChange(of: query) { _, _ in selected = 0 }
             }
