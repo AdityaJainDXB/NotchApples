@@ -19,6 +19,9 @@ enum PremiumRegistry {
     static var smartHomeConfigured: (() -> Bool)?
     static var claudePace: (() -> AnyView)?
     static var claudeStart: (() -> Void)?
+    /// Runs one Do It task and returns what happened. NotchAI's Computer agent calls this. The private entry would
+    /// set it; until it does (and in a public build) the Computer agent reports that Do It is not available.
+    static var doItRun: ((String) async throws -> String)?
 
     /// True in an official build.
     static var included: Bool { !views.isEmpty }

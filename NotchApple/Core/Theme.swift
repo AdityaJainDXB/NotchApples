@@ -24,6 +24,19 @@ enum Theme {
     static var deeper: Color { current.backgroundColor }
 
     static var textPrimary: Color { current.textColor }
+    /// Text that sits ON the accent colour (the sender's own chat bubble, unread badges, avatars): white or near-black, whichever
+    /// reads better on that theme's accent, so a light theme never ends up with white on pale.
+    static var onAccent: Color { readableOn(primary: current.primaryAccent, secondary: current.secondaryAccent) }
+    static func readableOn(primary: Color, secondary: Color) -> Color {
+        func lum(_ c: Color) -> Double {
+            let n = NSColor(c).usingColorSpace(.sRGB) ?? .gray
+            func lin(_ v: CGFloat) -> Double { let x = Double(v); return x <= 0.03928 ? x / 12.92 : pow((x + 0.055) / 1.055, 2.4) }
+            return 0.2126 * lin(n.redComponent) + 0.7152 * lin(n.greenComponent) + 0.0722 * lin(n.blueComponent)
+        }
+        let l = (lum(primary) + lum(secondary)) / 2      // the bubble is a gradient of the two
+        // White wins while the background is darker than about 0.18 luminance (contrast >= 4.5:1 with white at 0.183).
+        return l > 0.18 ? Color(red: 0.07, green: 0.05, blue: 0.12) : .white
+    }
     /// ~7:1 on the backdrop, comfortably above the 4.5:1 minimum for small text.
     static var textSecondary: Color { current.textColor.opacity(highContrast ? 0.92 : 0.74) }
     /// System Settings → Accessibility → Display → Increase contrast.

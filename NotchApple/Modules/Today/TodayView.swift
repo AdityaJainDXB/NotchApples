@@ -258,7 +258,7 @@ struct TodayView: View {
     }
 
     private func timeText(_ e: TodayModel.Event) -> String {
-        let day = Calendar.current.isDateInToday(e.start) ? "Today" : "Tomorrow"
+        let day = TodoLogic.dayLabel(e.start)
         if e.isAllDay { return "\(day) · All day" }
         return "\(day) · \(e.start.formatted(date: .omitted, time: .shortened)) – \(e.end.formatted(date: .omitted, time: .shortened))"
     }

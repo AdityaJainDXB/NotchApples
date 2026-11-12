@@ -43,7 +43,7 @@ struct ClipboardView: View {
             HStack(spacing: 8) {
                 HStack(spacing: 6) {
                     Image(systemName: "magnifyingglass").foregroundStyle(Theme.textSecondary)
-                    TextField("Search clipboard history", text: $search).textFieldStyle(.plain).font(.system(size: 13))
+                    TextField("Search clipboard history", text: $search).textFieldStyle(.plain).foregroundStyle(Theme.textPrimary).font(.system(size: 13))
                 }
                 .padding(.horizontal, 10).frame(height: 30)
                 .background(Theme.surface, in: RoundedRectangle(cornerRadius: 8))

@@ -199,3 +199,23 @@ test('a vault saved before the blocked list had names still loads, and shows a s
   const w = L.normalizeVault({ blocked: ['f1'], blockedNames: { f1: 'Sam', other: 'Not blocked', f2: 5 } });
   assert.deepEqual(w.blockedNames, { f1: 'Sam' }, 'only names of blocked people, only strings');
 });
+
+test('any member can add their own friends to a group, but cannot rename it or remove people', () => {
+  const viraj = person(1), arjun = person(2), v = L.newVault();
+  L.receiveRequest(v, request(viraj), viraj.fp); L.receiveRequest(v, request(arjun), arjun.fp);
+  v.friends.forEach((f) => { f.status = 'active'; });
+  const g = L.createGroup(v, 'Trip', [viraj.box]);
+  assert.deepEqual(L.addToGroup(v, L.groupKey(g.id), ['stranger']), [], 'only my friends');
+  assert.deepEqual(L.addToGroup(v, L.groupKey(g.id), [viraj.box]), [], 'already in');
+  assert.deepEqual(L.addToGroup(v, L.groupKey(g.id), [arjun.box]), [arjun.box]);
+  assert.deepEqual(L.group(v, L.groupKey(g.id)).members, [viraj.box, arjun.box].sort());
+  // Viraj's side: I am a member, so my update that only adds Arjun is accepted.
+  const w = L.newVault(), me = person(3);
+  L.receiveRequest(w, request(me), me.fp); w.friends[0].status = 'active';
+  L.createGroup(w, 'Trip', [me.box], g.id);
+  const upd = { t: 'grp', from: me.box, g: g.id, gname: 'Renamed', gm: [me.box, viraj.box, arjun.box] };
+  const after = L.receiveGroup(w, me.box, upd, viraj.box);
+  assert.deepEqual(after.members, [me.box, arjun.box].sort());
+  assert.equal(after.name, 'Trip', 'a member cannot rename');
+  assert.equal(L.receiveGroup(w, me.box, { ...upd, gm: [me.box, viraj.box] }, viraj.box), null, 'a member cannot remove people');
+});

@@ -161,6 +161,7 @@ final class GlobalHotkeyManager {
         // Window snapping, ⌃⌥ + key.
         case snapLeft = 10, snapRight, snapTop, snapBottom, snapMaximize, snapCenter, snapRestore
         case stopRemote = 17                   // Ends any iPhone remote view or control at once, Control-Option-Shift-K
+        case notchAITalk = 19                  // NotchAI push-to-talk, Control-Option-V
         case toggleNotchAlt = 18               // ⌃⌥N also opens and closes the notch (the website says so); ⌘E stays the default
 
         static let windowKeys: [Key] = [.snapLeft, .snapRight, .snapTop, .snapBottom, .snapMaximize, .snapCenter, .snapRestore]
@@ -178,6 +179,7 @@ final class GlobalHotkeyManager {
             case .quickCapture: UInt32(kVK_ANSI_J)
             case .stopRemote: UInt32(kVK_ANSI_K)
             case .toggleNotchAlt: UInt32(kVK_ANSI_N)
+            case .notchAITalk: UInt32(kVK_ANSI_V)
             case .snapLeft: UInt32(kVK_LeftArrow)
             case .snapRight: UInt32(kVK_RightArrow)
             case .snapTop: UInt32(kVK_UpArrow)
@@ -197,6 +199,7 @@ final class GlobalHotkeyManager {
             case .foldToggle: HotkeyBinding.lidFold.modifiers
             case .closeNotch, .foldDismiss: 0
             case .panic, .stopRemote: UInt32(controlKey | optionKey | shiftKey)
+            case .notchAITalk: UInt32(controlKey | optionKey)
             case .quickCapture: UInt32(controlKey | optionKey)
             default: UInt32(controlKey | optionKey)
             }

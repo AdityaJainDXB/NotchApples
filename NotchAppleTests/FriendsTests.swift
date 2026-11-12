@@ -206,11 +206,39 @@ final class FriendsTests: XCTestCase {
         let got = try XCTUnwrap(theirs.receiveGroup(from: me.box, invite, myBox: a.box))
         XCTAssertEqual(Set(got.members), [me.box, b.box])
         XCTAssertEqual(got.creator, me.box)
-        // Only whoever made it can change it.
+        // Only whoever made it can rename it or remove people; another member can only add.
         _ = theirs.receiveRequest(request(b)); _ = theirs.accept(box: b.box, myTokenHash: "h")
         var hijack = invite; hijack.gname = "Hijacked"
-        XCTAssertNil(theirs.receiveGroup(from: b.box, hijack, myBox: a.box))
-        XCTAssertEqual(theirs.group(got.key)?.name, "Study")
+        _ = theirs.receiveGroup(from: b.box, hijack, myBox: a.box)
+        XCTAssertEqual(theirs.group(got.key)?.name, "Study", "a member cannot rename")
+        var drop = invite; drop.gm = [me.box, a.box]
+        XCTAssertNil(theirs.receiveGroup(from: b.box, drop, myBox: a.box), "a member cannot remove people")
+        XCTAssertEqual(Set(theirs.group(got.key)?.members ?? []), [me.box, b.box])
+    }
+
+    func testAnyMemberCanAddTheirOwnFriendsToAGroup() throws {
+        // Viraj (creator) made the group with me; I add my friend Arjun without asking Viraj.
+        var (book, viraj, arjun) = twoFriends()
+        let g = try XCTUnwrap(book.createGroup(name: "Trip", members: [viraj.box]))
+        XCTAssertEqual(book.addToGroup(g.key, members: ["stranger"]), [], "only my friends")
+        XCTAssertEqual(book.addToGroup(g.key, members: [viraj.box]), [], "already in")
+        XCTAssertEqual(book.addToGroup(g.key, members: [arjun.box]), [arjun.box])
+        XCTAssertEqual(Set(book.group(g.key)?.members ?? []), [viraj.box, arjun.box])
+
+        // Viraj's side: the group is his (creator nil); my update comes from me, a member, and only adds.
+        let me = FriendIdentity.generate()
+        var virajBook = FriendsBook()
+        _ = virajBook.receiveRequest(request(me)); _ = virajBook.accept(box: me.box, myTokenHash: "h")
+        let mine = try XCTUnwrap(virajBook.createGroup(name: "Trip", members: [me.box], id: g.id))
+        var update = FriendBody(t: "grp", from: me.box); update.g = g.id; update.gname = "Trip"; update.gm = [me.box, viraj.box, arjun.box]
+        let after = try XCTUnwrap(virajBook.receiveGroup(from: me.box, update, myBox: viraj.box))
+        XCTAssertEqual(Set(after.members), [me.box, arjun.box])
+        XCTAssertEqual(after.key, mine.key)
+        // A stranger to the group cannot add anyone.
+        let outsider = FriendIdentity.generate()
+        _ = virajBook.receiveRequest(request(outsider)); _ = virajBook.accept(box: outsider.box, myTokenHash: "h")
+        var bad = update; bad.from = outsider.box; bad.gm = [outsider.box, me.box, viraj.box, arjun.box, "x"]
+        XCTAssertNil(virajBook.receiveGroup(from: outsider.box, bad, myBox: viraj.box))
     }
 
     func testGroupMessagesComeOnlyFromMembersAndOnlyOnce() throws {

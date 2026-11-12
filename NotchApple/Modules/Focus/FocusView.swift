@@ -79,7 +79,7 @@ struct FocusView: View {
                 if Entitlements.shared.canUse(.focusProjects) {
                     HStack(spacing: 6) {
                         Image(systemName: "folder").foregroundStyle(Theme.textSecondary).font(.system(size: 11))
-                        TextField("Project (optional)", text: $timer.project).textFieldStyle(.plain).font(.system(size: 12)).frame(width: 150)
+                        TextField("Project (optional)", text: $timer.project).textFieldStyle(.plain).foregroundStyle(Theme.textPrimary).font(.system(size: 12)).frame(width: 150)
                             .onSubmit { timer.project = ProjectFocusLogic.clean(timer.project) }
                         if !timer.projectNames.isEmpty {
                             Menu {

@@ -94,7 +94,15 @@ let openedByHover = false;
 export const isExpanded = () => expanded;
 export const activeTab = () => active;
 
+/// Someone who had World Clock as its own tab keeps it: Utilities is switched on for them, once.
+function moveClockIntoUtilities() {
+  if (load('worldclock.moved', false)) return;
+  save('worldclock.moved', true);
+  if (enabledIds().includes('worldclock') && !enabledIds().includes('utilities')) setEnabled('utilities', true);
+}
+
 export function buildTabs() {
+  moveClockIntoUtilities();
   const order = tabOrder().map(byId).filter((m) => m && isEnabled(m.id) && m.id !== 'settings' && !insideUtilities(enabledIds(), m.id));   // Settings is pinned at the right of the header
   if (active !== 'settings' && active !== 'welcome' && active !== 'weeklyupdates' && active !== 'greetingchoice' && !order.some((m) => m.id === active)) active = order[0]?.id ?? 'settings';
   const mode = pref('ui.compactTabs');
@@ -523,11 +531,18 @@ export function chatGame(source, on, tall = false) {
   if (tall) tallChatGames.add(source); else tallChatGames.delete(source);
   sendLayout();
 }
+/// The Browser tab with a page open: the panel is at least 1100 x 700, like the Mac (a web page needs the room).
+let bigBrowserOn = false;
+const BIG_BROWSER_SIZE = { width: 1100, height: 700 };
+export function bigBrowser(on) { on = !!on; if (bigBrowserOn === on) return; bigBrowserOn = on; sendLayout(); }
+/// While a page is showing in the notch, clicking the page (another window) must not close the notch.
+export function holdOpen(on) { busy = Math.max(0, busy + (on ? 1 : -1)); }
 function sendLayout() {
   const sizeName = canUse('notchResize') ? pref('ui.size') : 'standard';
   const size = { ...(SIZES[sizeName] || SIZES.standard) };
   if (chatGames.size) { size.width = Math.max(size.width, CHAT_GAME_SIZE.width); size.height = Math.max(size.height, CHAT_GAME_SIZE.height); }
   if (tallChatGames.size) { size.width = Math.max(size.width, TALL_CHAT_GAME_SIZE.width); size.height = Math.max(size.height, TALL_CHAT_GAME_SIZE.height); }
+  if (bigBrowserOn) { size.width = Math.max(size.width, BIG_BROWSER_SIZE.width); size.height = Math.max(size.height, BIG_BROWSER_SIZE.height); }
   invoke('set_layout', { layout: { position: pref('ui.position'), inset: pref('ui.inset'), ...size } }).catch(console.error);
 }
 

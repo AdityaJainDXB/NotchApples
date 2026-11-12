@@ -35,6 +35,11 @@ enum CompanionMotion {
     static func trailStrength(velocity: CGFloat) -> CGFloat {
         min(max((velocity - 350) / 1250, 0), 1)
     }
+
+    /// The motion trail shows only for fast movement, only if the user has it on, and never under Reduce Motion.
+    static func showsTrail(user: Bool, reduceMotion: Bool, velocity: CGFloat) -> Bool {
+        user && !reduceMotion && trailStrength(velocity: velocity) > 0
+    }
 }
 
 /// Whether a click on the dot should open Quick Ask. Clicking the dot while the panel is open closes it; and if that

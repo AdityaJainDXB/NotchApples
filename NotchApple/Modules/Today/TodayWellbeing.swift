@@ -16,7 +16,7 @@ struct OneThingToday: View {
 
     var body: some View {
         TextField("The one thing today…", text: $draft)
-            .textFieldStyle(.plain).font(.system(size: 12))
+            .textFieldStyle(.plain).foregroundStyle(Theme.textPrimary).font(.system(size: 12))
             .padding(.horizontal, 8).padding(.vertical, 5)
             .background(Theme.surface, in: RoundedRectangle(cornerRadius: 8))
             .onSubmit { text = String(draft.prefix(90)).trimmingCharacters(in: .whitespaces); day = today }

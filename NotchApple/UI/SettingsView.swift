@@ -18,7 +18,7 @@ import UniformTypeIdentifiers
 
 /// Panes in the Settings window. `selection` lets other code jump to a pane.
 enum SettingsTab: String, CaseIterable, Identifiable, Hashable {
-    case general, notch, appearance, profiles, extras, backup, browser, license, shortcuts, permissions, authentication, modules, lidFold, windows, claude, aiHistory, messenger, clipboard, bambu, fileSearch, focus, audio, widget, iphone, updates, privacy, help, about
+    case general, notch, appearance, profiles, extras, backup, browser, license, shortcuts, permissions, authentication, modules, lidFold, windows, claude, aiHistory, messenger, clipboard, bambu, fileSearch, focus, audio, widget, iphone, updates, privacy, report, help, about
     static let selection = PassthroughSubject<SettingsTab, Never>()
 
     var id: String { rawValue }
@@ -51,6 +51,7 @@ enum SettingsTab: String, CaseIterable, Identifiable, Hashable {
         case .updates: "Updates"
         case .privacy: "Privacy"
         case .iphone: "iPhone"
+        case .report: "Report"
         case .help: "Help & Feedback"
         case .about: "About"
         }
@@ -84,6 +85,7 @@ enum SettingsTab: String, CaseIterable, Identifiable, Hashable {
         case .updates: "arrow.down.circle.fill"
         case .privacy: "hand.raised.square.fill"
         case .iphone: "iphone"
+        case .report: "exclamationmark.bubble.fill"
         case .help: "questionmark.bubble.fill"
         case .about: "info.circle.fill"
         }
@@ -117,6 +119,7 @@ enum SettingsTab: String, CaseIterable, Identifiable, Hashable {
         case .updates: .green
         case .privacy: .blue
         case .iphone: .gray
+        case .report: .red
         case .help: .orange
         case .about: .indigo
         case .lidFold: .cyan
@@ -145,6 +148,7 @@ extension SettingsTab {
         case .updates: "version homebrew beta"
         case .privacy: "privacy data network permissions delete tracking analytics"
         case .iphone: "iphone companion phone pair send link sideload"
+        case .report: "bug problem issue crash idea suggestion feature question github feedback broken"
         case .help: "feedback bug report crash support beta translate donate icloud notes sync"
         default: ""
         }
@@ -171,7 +175,7 @@ extension SettingsTab {
             (nil, [.general, .notch, .appearance, .modules, .shortcuts]),
             ("Features", [.claude, .aiHistory, .clipboard, .fileSearch, .messenger, .audio, .windows, .lidFold, .browser, .bambu, .widget, .iphone, .extras, .profiles]),
             ("Account & safety", [.license, .backup, .permissions, .authentication]),
-            ("App", [.updates, .help, .about]),
+            ("App", [.updates, .report, .help, .about]),
         ]
         let placed = Set(listed.flatMap(\.1))
         let rest = sidebar.filter { !placed.contains($0) }
@@ -320,6 +324,7 @@ struct SettingsView: View {
                 case .updates: UpdatesSettings()
                 case .privacy: PrivacyPermissionsPane(tab: $tab) { PrivacyDashboard() }
                 case .iphone: CompanionSettings()
+                case .report: ReportSettings()
                 case .help: HelpSettings()
                 case .about: AboutSettings()
                 }
@@ -932,7 +937,7 @@ private struct ModulesSettings: View {
                 HomeScreenSettings()
             }
             Section {
-                ForEach(Module.allCases.filter { $0 != .nonNecessities && $0 != .translator && (router.isolatedModule == nil || $0 == router.isolatedModule) }) { module in
+                ForEach(Module.allCases.filter { $0 != .nonNecessities && $0 != .translator && !SettingsManager.onlyInsideUtilities.contains($0) && (router.isolatedModule == nil || $0 == router.isolatedModule) }) { module in
                     Group {
                     if ModuleLayoutLogic.isManaged(module.rawValue) {
                         // Reorganised features: pick where they live instead of an on/off switch.
