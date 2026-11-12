@@ -45,6 +45,32 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         if let raw = UserDefaults.standard.string(forKey: "notchai.selftest.settings"), let tab = SettingsTab(rawValue: raw) {
             DispatchQueue.main.asyncAfter(deadline: .now() + 2) { SettingsWindowController.shared.show(tab: tab) }
         }
+        // Snapshot hook (DEBUG only): `-notchai.selftest.snapshot overview|companion|chat` renders that NotchAI section
+        // off-screen to /tmp/notchai-snap-<section>.png, so the UI can be checked without touching the desktop.
+        if let name = UserDefaults.standard.string(forKey: "notchai.selftest.snapshot"),
+           let section = NotchAIView.Section(rawValue: name.prefix(1).uppercased() + name.dropFirst()) {
+            Task { @MainActor in
+                OllamaDiagnosticsView.debugReport = await OllamaDiagnostics.run(selectedModel: "qwen3:8b", allowCloud: false)
+                try? await Task.sleep(nanoseconds: 3_000_000_000)
+                NotchAINav.shared.section = section
+                let view = NotchAIView().frame(width: 700, height: 420).padding(16)
+                    .background(LinearGradient(colors: [Color(red: 0.12, green: 0.05, blue: 0.28), Color(red: 0.07, green: 0.03, blue: 0.16)], startPoint: .topLeading, endPoint: .bottomTrailing))
+                    .environment(\.colorScheme, .dark)
+                // A hidden window, so AppKit-backed controls (picker, scroll view, fields) draw too.
+                let host = NSHostingView(rootView: view)
+                host.frame = CGRect(x: 0, y: 0, width: 732, height: 452)
+                let win = NSWindow(contentRect: host.frame, styleMask: [.borderless], backing: .buffered, defer: false)
+                win.contentView = host
+                win.setFrameOrigin(CGPoint(x: -4000, y: -4000))   // off every screen, never shown
+                host.layoutSubtreeIfNeeded()
+                try? await Task.sleep(nanoseconds: 800_000_000)
+                host.layoutSubtreeIfNeeded()
+                if let rep = host.bitmapImageRepForCachingDisplay(in: host.bounds) {
+                    host.cacheDisplay(in: host.bounds, to: rep)
+                    if let png = rep.representation(using: .png, properties: [:]) { try? png.write(to: URL(fileURLWithPath: "/tmp/notchai-snap-\(name).png")) }
+                }
+            }
+        }
         #endif
 
         // Now Playing and Messenger are gated: they start now if a code is saved, or the moment one is entered.

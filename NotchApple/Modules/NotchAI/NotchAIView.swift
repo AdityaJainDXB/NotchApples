@@ -2,11 +2,12 @@
 //  NotchAIView.swift
 //  Notch Apple
 //
-//  The NotchAI tab (free). Overview of what is on, the cursor companion's settings, and a basic chat box that
-//  uses the provider chosen in Settings → AI. Screen understanding (Pro) and agents / computer control
+//  The NotchAI tab (free). Overview of what is on, the cursor companion's settings, and a chat (shared with Quick Ask)
+//  that uses the provider chosen in Settings → AI. Screen understanding (Pro) and agents / computer control
 //  (Ultimate) arrive in later milestones and are listed here as "coming" so the tiers are visible.
 //
 
+import ServiceManagement
 import SwiftUI
 
 struct NotchAIView: View {
@@ -15,7 +16,9 @@ struct NotchAIView: View {
         var id: String { rawValue }
     }
 
-    @State private var section: Section = .overview
+    @ObservedObject private var nav = NotchAINav.shared
+    private var section: Section { get { nav.section } nonmutating set { nav.section = newValue } }
+    @State private var launchAtLogin = SMAppService.mainApp.status == .enabled
     @StateObject private var dot = CursorCompanion.shared
     @ObservedObject private var config = AIConfig.shared
 
@@ -35,13 +38,13 @@ struct NotchAIView: View {
                         .font(.system(size: 11)).foregroundStyle(Theme.textSecondary).lineLimit(1)
                 }
                 Spacer()
-                Picker("", selection: $section) { ForEach(Section.allCases) { Text($0.rawValue).tag($0) } }
+                Picker("", selection: Binding(get: { nav.section }, set: { nav.section = $0 })) { ForEach(Section.allCases) { Text($0.rawValue).tag($0) } }
                     .pickerStyle(.segmented).labelsHidden().frame(width: 200)
             }
             switch section {
             case .overview: overview
             case .companion: companion
-            case .chat: NotchAIChat()
+            case .chat: NotchAIConversationView()
             }
         }
     }
@@ -67,6 +70,7 @@ struct NotchAIView: View {
                     Text("Nothing is captured or sent unless you ask.").font(.system(size: 10)).foregroundStyle(Theme.textSecondary)
                 }
                 .padding(.top, 4)
+                OllamaDiagnosticsView().padding(.top, 6)
             }
         }
     }
@@ -92,6 +96,14 @@ struct NotchAIView: View {
                     Spacer()
                     Toggle("Pause following", isOn: $dot.paused).toggleStyle(.switch).controlSize(.small).disabled(!dot.isOn)
                 }
+                Toggle(isOn: $launchAtLogin) {
+                    Text("Start at login")
+                    Text(dot.reduceMotion ? "The dot comes back when Notch Apple opens. Reduce Motion is on, so it stays still apart from following you."
+                                          : "Notch Apple opens when you log in, and the dot with it (if it is on).")
+                        .font(.system(size: 10)).foregroundStyle(Theme.textSecondary)
+                }
+                .toggleStyle(.switch).controlSize(.small)
+                .onChange(of: launchAtLogin) { on in on ? PermissionsModel.shared.enableLoginItem() : PermissionsModel.shared.disableLoginItem() }
                 slider("Size", $dot.size, 8...40, "\(Int(dot.size)) pt")
                 slider("Glow", $dot.glow, 0...1, "\(Int(dot.glow * 100))%")
                 slider("Follow speed", $dot.speed, 0.1...1, "\(Int(dot.speed * 100))%")
@@ -119,72 +131,9 @@ struct NotchAIView: View {
     }
 }
 
-/// Basic chat: text in, streamed answer out, through the provider in Settings → AI. Not saved to history.
-private struct NotchAIChat: View {
-    @ObservedObject private var config = AIConfig.shared
-    @State private var messages: [ChatMessage] = []
-    @State private var input = ""
-    @State private var busy = false
-    @State private var failure: String?
-    @State private var task: Task<Void, Never>?
-
-    var body: some View {
-        VStack(spacing: 8) {
-            ScrollViewReader { proxy in
-                ScrollView {
-                    VStack(alignment: .leading, spacing: 6) {
-                        if messages.isEmpty {
-                            Text(config.provider.isConfigured ? "Ask anything. Uses \(config.provider.title) · \(config.model) (\(ModelLocality.of(provider: config.provider, model: config.model).label.lowercased())). Text only."
-                                 : "Choose a provider in Settings → AI to start.")
-                                .font(.system(size: 11)).foregroundStyle(Theme.textSecondary)
-                        }
-                        ForEach(messages) { m in
-                            Text(m.text.isEmpty ? "…" : m.text)
-                                .font(.system(size: 12)).foregroundStyle(.white).textSelection(.enabled)
-                                .padding(8)
-                                .frame(maxWidth: .infinity, alignment: m.role == .user ? .trailing : .leading)
-                                .background(m.role == .user ? NotchAIView.green.opacity(0.25) : Theme.surface, in: RoundedRectangle(cornerRadius: 8))
-                                .id(m.id)
-                        }
-                        if let failure { Text(failure).font(.system(size: 11)).foregroundStyle(.red) }
-                    }
-                }
-                .onChange(of: messages.last?.text) { _ in if let id = messages.last?.id { proxy.scrollTo(id, anchor: .bottom) } }
-            }
-            HStack(spacing: 6) {
-                TextField("Ask NotchAI…", text: $input).textFieldStyle(.roundedBorder).onSubmit(send)
-                    .disabled(!config.provider.isConfigured)
-                Button(busy ? "Stop" : "Send") { busy ? stop() : send() }
-                    .disabled(!busy && input.trimmingCharacters(in: .whitespaces).isEmpty)
-                Button("Clear") { stop(); messages = []; failure = nil }.disabled(messages.isEmpty)
-            }
-        }
-    }
-
-    private func send() {
-        let q = input.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !q.isEmpty, !busy else { return }
-        input = ""; failure = nil; busy = true
-        messages.append(ChatMessage(role: .user, text: q))
-        let history = messages
-        messages.append(ChatMessage(role: .assistant, text: ""))
-        let provider = config.provider, model = config.model
-        CursorCompanion.shared.setState(.thinking)
-        task = Task {
-            do {
-                try await NotchAIGuard.check(provider: provider, model: model)
-                for try await piece in AIClient.stream(history, provider: provider, model: model, system: AIClient.systemPrompt) {
-                    if let i = messages.indices.last { messages[i].text += piece }
-                }
-                if messages.last?.text.isEmpty == true { failure = AIError.empty.localizedDescription }
-            } catch is CancellationError {
-            } catch {
-                failure = error.localizedDescription
-            }
-            busy = false
-            CursorCompanion.shared.setState(.idle)
-        }
-    }
-
-    private func stop() { task?.cancel(); busy = false; CursorCompanion.shared.setState(.idle) }
+/// Which section of the NotchAI tab is showing. Shared so "Continue in NotchAI" from Quick Ask can open on Chat.
+@MainActor
+final class NotchAINav: ObservableObject {
+    static let shared = NotchAINav()
+    @Published var section: NotchAIView.Section = .overview
 }

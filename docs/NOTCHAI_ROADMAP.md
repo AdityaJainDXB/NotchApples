@@ -206,16 +206,16 @@ As of November 2026.
 
 ## Living status
 
-Updated 11 November 2026, at the 2.2.60 release.
+Updated 12 November 2026, after Milestone 1 (core stability) was built on branch `notchai-step1-stability` (not merged or released).
 
 | Area | Status | Notes |
 |---|---|---|
-| Cursor companion (dot, Quick Ask, right-click opens tab) | Implemented but not fully verified | Shipped in 2.2.60. Logic tested; on-screen behaviour, multiple displays and display reconnection not yet verified by a person. No start at login or reduced-motion support yet. |
+| Cursor companion (dot, Quick Ask, right-click opens tab) | Implemented but not fully verified | Shipped in 2.2.60. Milestone 1 adds start at login (reuses the app's login item) and Reduce Motion support (still dot; no breathing, pulsing, spinning ring or trail). Both are implemented but not verified live: changing the login item or the macOS Reduce Motion setting is a system setting, so it was left for a person. Multiple displays and display reconnection are still unverified (one display on the test Mac). |
 | Quick Ask reopen guard | Implemented but not fully verified | Pure rule is unit tested; the real click sequence needs a manual check. |
-| Basic chat, streaming, stop, clear | Implemented but not fully verified | Conversation history, regenerate, Markdown rendering, attachments and search are not implemented. |
+| Chat: streaming, stop, regenerate, new, Markdown, history | Implemented and verified (real Qwen3 via Ollama) | Milestone 1. Quick Ask and the NotchAI tab share one conversation (`NotchAIConversation`); "Continue in NotchAI" opens the Chat section. Finished chats are saved to AI History. Verified: a real ask plus regenerate against local Qwen3 (2 requests, saved once with both replies). Not implemented: attachments, conversation search inside NotchAI, restoring an old chat into the tab. |
 | Providers (8 built in, hosted, custom OpenAI-compatible) | Implemented and verified (unit and fake-server tests) | A real Qwen3 conversation with cloud off still needs a person. |
 | Local-first guard (NotchAI) | Implemented and verified (unit and real-HTTP tests) | Scope is NotchAI only; app-wide local first is a future milestone. Remembered verification, labels (Local, Local network, Cloud, Unverified) shipped. |
-| Ollama diagnostics | Not implemented | Milestone 1. |
+| Ollama diagnostics | Implemented and verified (unit tests and the real local Ollama) | Milestone 1. "Check Ollama" on the Overview: running or not, version, models with Local / Cloud / Unverified badges, size, quantisation and context window, and whether the selected model will work. Local requests only, run on demand. |
 | Voice (STT, TTS, push-to-talk, interruption, wake word, dictation) | Not implemented | Apple Speech and AVSpeech are used elsewhere in the app (Voice Notes, Translator) and can be reused. |
 | Screen awareness, OCR, region capture, annotations | Not implemented | `ScreenCapture.swift` and `ScreenCaptureActions.swift` exist and can be reused. |
 | Research, browser agent, file agent, whole-document intelligence | Not implemented | |

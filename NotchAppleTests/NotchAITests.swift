@@ -81,4 +81,11 @@ final class NotchAITests: XCTestCase {
         XCTAssertTrue(QuickAskRule.shouldOpen(isOpen: false, lastFocusLossClose: 100, now: 100 + QuickAskRule.reopenGuard + 0.01))
         XCTAssertTrue(QuickAskRule.shouldOpen(isOpen: false, lastFocusLossClose: 100, now: 99))   // clock went backwards
     }
+
+    func testTrailNeverShowsUnderReduceMotion() {
+        XCTAssertTrue(CompanionMotion.showsTrail(user: true, reduceMotion: false, velocity: 3000))
+        XCTAssertFalse(CompanionMotion.showsTrail(user: true, reduceMotion: true, velocity: 3000))
+        XCTAssertFalse(CompanionMotion.showsTrail(user: false, reduceMotion: false, velocity: 3000))
+        XCTAssertFalse(CompanionMotion.showsTrail(user: true, reduceMotion: false, velocity: 100))
+    }
 }

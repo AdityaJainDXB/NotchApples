@@ -307,4 +307,20 @@ final class CustomProviderTests: XCTestCase {
         guard case .success(let v2)? = box2.value else { return XCTFail("no result") }
         if case .unverified? = v2["qwen3:8b-64k"] {} else { XCTFail("an unreachable server must leave models unverified") }
     }
+
+    // MARK: Local first, up front
+
+    func testLocalFirstRefusesCloudProvidersUpFront() {
+        let key = ModelLocality.allowCloudKey
+        let saved = UserDefaults.standard.object(forKey: key)
+        defer { if let saved { UserDefaults.standard.set(saved, forKey: key) } else { UserDefaults.standard.removeObject(forKey: key) } }
+        UserDefaults.standard.set(false, forKey: key)
+        XCTAssertTrue(NotchAIGuard.refusesProvider(.gemini))
+        XCTAssertTrue(NotchAIGuard.refusesProvider(.openAI))
+        XCTAssertFalse(NotchAIGuard.refusesProvider(.ollama))   // decided later, from the server's model list
+        XCTAssertFalse(NotchAIGuard.refusesProvider(.custom))
+        XCTAssertFalse(NotchAIGuard.refusesProvider(.apple))
+        UserDefaults.standard.set(true, forKey: key)
+        XCTAssertFalse(NotchAIGuard.refusesProvider(.gemini))
+    }
 }
