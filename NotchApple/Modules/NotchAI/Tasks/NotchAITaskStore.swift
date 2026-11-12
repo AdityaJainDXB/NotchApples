@@ -116,6 +116,50 @@ final class NotchAITaskStore: ObservableObject {
         }
     }
 
+    // MARK: Talking to an agent about a finished task
+
+    @Published private(set) var answering: Set<UUID> = []
+    private var chatHandles: [UUID: Task<Void, Never>] = [:]
+
+    /// Sends a follow-up to the agent that did the task. The question and the answer are saved in the task's own conversation.
+    /// Returns a message when it cannot be sent. The agent's model is the one it is routed to, through the Local-first guard.
+    @discardableResult
+    func followUp(_ id: UUID?, _ text: String) -> String? {
+        let q = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !q.isEmpty else { return "Type a question first." }
+        guard let tid = AgentChatLogic.target(explicit: id, tasks: tasks), let i = tasks.firstIndex(where: { $0.id == tid }) else {
+            return "There is no finished task to ask about yet."
+        }
+        guard AgentChatLogic.canFollowUp(tasks[i]) else { return "That task has not finished with a result, so there is nothing to ask about." }
+        guard !answering.contains(tid) else { return "It is still answering the last question." }
+        let task = tasks[i]
+        let prompt = AgentChatLogic.prompt(task: task, question: q)
+        tasks[i].chat = AgentChatLogic.appended(tasks[i].chat, role: .user, text: q)
+        tasks[i].updated = Date()
+        save(); answering.insert(tid)
+        chatHandles[tid] = Task { [weak self] in
+            let system = await MainActor.run { AgentStore.shared.agent(task.agent)?.systemPrompt ?? AIClient.systemPrompt }
+            let reply: String
+            do { reply = try await AgentModelClient.complete(agent: task.agent, system: system, user: prompt) }
+            catch is CancellationError { reply = "Stopped." }
+            catch { reply = "I couldn't answer that: \(error.localizedDescription)" }
+            await MainActor.run {
+                guard let self else { return }
+                if let j = self.tasks.firstIndex(where: { $0.id == tid }) { self.tasks[j].chat = AgentChatLogic.appended(self.tasks[j].chat, role: .agent, text: reply) }
+                self.answering.remove(tid); self.chatHandles[tid] = nil; self.save()
+            }
+        }
+        return nil
+    }
+
+    #if DEBUG
+    /// Test hook: adds a finished task so a follow-up can be tried without running a whole plan.
+    func debugInsert(_ t: NotchAITask) { tasks.insert(t, at: 0) }
+    #endif
+
+    /// Stops an answer that is still being written.
+    func stopAnswer(_ id: UUID) { chatHandles[id]?.cancel() }
+
     func approve(_ id: UUID, _ approved: Bool) { Task { await engine.resolveApproval(id, approved: approved) } }
 
     /// Resume a paused task (after a restart) or retry failed steps. Finished steps are never run again.

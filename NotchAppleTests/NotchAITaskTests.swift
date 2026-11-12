@@ -280,4 +280,62 @@ final class NotchAITaskTests: XCTestCase {
         let dec = JSONDecoder(); dec.dateDecodingStrategy = .secondsSince1970
         XCTAssertEqual(try dec.decode(NotchAITask.self, from: enc.encode(t)).steps, t.steps)
     }
+
+    // MARK: Talking to an agent about a finished task
+
+    private func finished(_ title: String = "Compare two topics", result: String? = "A is older than B.", state: TaskState = .completed, updated: Date = .now, depth: Int = 0) -> NotchAITask {
+        var s = TaskStep(tool: "answer_request", title: "Answer", argument: "q", risk: .readOnly, idempotencyKey: "a")
+        s.state = result == nil ? .failed : .done; s.result = result
+        var t = NotchAITask(title: title, agent: "research", steps: [s]); t.state = state; t.updated = updated; t.depth = depth
+        return t
+    }
+
+    func testChatMessagesAreTrimmedCappedAndEmptyOnesIgnored() {
+        var chat = AgentChatLogic.appended(nil, role: .user, text: "  hi  ")
+        XCTAssertEqual(chat.map(\.text), ["hi"])
+        XCTAssertEqual(AgentChatLogic.appended(chat, role: .agent, text: "   ").count, 1)
+        XCTAssertEqual(AgentChatLogic.appended(nil, role: .user, text: String(repeating: "x", count: 9000))[0].text.count, AgentChatLogic.maxLength)
+        for i in 0..<60 { chat = AgentChatLogic.appended(chat, role: .user, text: "m\(i)") }
+        XCTAssertEqual(chat.count, AgentChatLogic.maxMessages)
+        XCTAssertEqual(chat.last?.text, "m59")
+    }
+
+    func testOnlyACompletedTaskWithAResultCanBeFollowedUp() {
+        XCTAssertTrue(AgentChatLogic.canFollowUp(finished()))
+        XCTAssertFalse(AgentChatLogic.canFollowUp(finished(result: nil, state: .failed)))
+        XCTAssertFalse(AgentChatLogic.canFollowUp(finished(state: .running)))
+        XCTAssertFalse(AgentChatLogic.canFollowUp(finished(state: .cancelled)))
+    }
+
+    func testAFollowUpGoesToTheTaskItWasSentFromOtherwiseTheMostRecentFinishedOne() {
+        let old = finished("Old", updated: Date(timeIntervalSince1970: 100)), new = finished("New", updated: Date(timeIntervalSince1970: 200))
+        let running = finished("Busy", state: .running, updated: Date(timeIntervalSince1970: 300))
+        let child = finished("Child", updated: Date(timeIntervalSince1970: 400), depth: 1)
+        let all = [old, new, running, child]
+        XCTAssertEqual(AgentChatLogic.target(explicit: old.id, tasks: all), old.id)
+        XCTAssertEqual(AgentChatLogic.target(explicit: nil, tasks: all), new.id, "not the running task, not a child")
+        XCTAssertEqual(AgentChatLogic.target(explicit: UUID(), tasks: all), new.id, "an unknown task falls back")
+        XCTAssertNil(AgentChatLogic.target(explicit: nil, tasks: [running]))
+    }
+
+    func testTheAgentIsShownWhatItFoundAndTheConversationSoFar() {
+        var t = finished()
+        t.chat = AgentChatLogic.appended(AgentChatLogic.appended(nil, role: .user, text: "Which is older?"), role: .agent, text: "A.")
+        let p = AgentChatLogic.prompt(task: t, question: "By how much?")
+        XCTAssertTrue(p.contains("A is older than B."))
+        XCTAssertTrue(p.contains("User: Which is older?") && p.contains("You: A."))
+        XCTAssertTrue(p.contains("By how much?") && p.contains("say so instead of guessing"))
+        t.steps[0].result = String(repeating: "z", count: 20_000)
+        XCTAssertLessThan(AgentChatLogic.prompt(task: t, question: "q").count, 8000)
+    }
+
+    func testATaskSavedBeforeChatsExistedStillLoads() throws {
+        var t = finished(); t.chat = nil
+        let e = JSONEncoder(), d = JSONDecoder()
+        var json = try XCTUnwrap(JSONSerialization.jsonObject(with: e.encode(t)) as? [String: Any])
+        json["chat"] = nil
+        let back = try d.decode(NotchAITask.self, from: JSONSerialization.data(withJSONObject: json))
+        XCTAssertNil(back.chat)
+        XCTAssertEqual(back.title, t.title)
+    }
 }

@@ -68,6 +68,21 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         if let req = d.string(forKey: "notchai.selftest.agents") {
             DispatchQueue.main.asyncAfter(deadline: .now() + 2) { if let why = NotchAIOrchestrator.run(request: req) { NSLog("NotchAI selftest: agents not started: %@", why) } }
         }
+        // `-notchai.selftest.followup "<question>"` fakes one finished task, asks the question, and logs the reply.
+        if let q = d.string(forKey: "notchai.selftest.followup") {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                var s = TaskStep(tool: "answer_request", title: "Answer", argument: "x", risk: .readOnly, idempotencyKey: "a")
+                s.state = .done; s.result = "Mount Everest is 8,849 m tall. K2 is 8,611 m. Everest is therefore 238 m taller."
+                var t = NotchAITask(title: "Compare Everest and K2", agent: "research", steps: [s]); t.state = .completed
+                NotchAITaskStore.shared.debugInsert(t)
+                NSLog("NotchAI followup: %@", NotchAITaskStore.shared.followUp(t.id, q) ?? "sent")
+                Task { @MainActor in
+                    while NotchAITaskStore.shared.answering.contains(t.id) { try? await Task.sleep(nanoseconds: 1_000_000_000) }
+                    for m in NotchAITaskStore.shared.tasks.first(where: { $0.id == t.id })?.chat ?? [] { NSLog("NotchAI followup %@: %@", m.role.rawValue, m.text) }
+                    NSLog("NotchAI followup done")
+                }
+            }
+        }
         if d.bool(forKey: "notchai.selftest.workspace") { DispatchQueue.main.asyncAfter(deadline: .now() + 2) { NotchAIWorkspaceWindow.open() } }
         if d.bool(forKey: "notchai.selftest.overlay") {
             DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
