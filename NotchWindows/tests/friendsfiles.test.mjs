@@ -213,10 +213,10 @@ test('only whoever made the group can change it', () => {
   const g = L.receiveGroup(v, 'box1', invite('box1', 'G', ['box1', ME], { gname: 'Renamed' }), ME);
   assert.equal(g.name, 'Renamed'); assert.deepEqual(g.members, ['box1']);
   assert.equal(v.groups.length, 1);
-  // A group I made is never changed by someone else's invite with the same id.
+  // A group I made is never renamed or shrunk by someone else's invite with the same id; a member can only add people.
   const mine = L.createGroup(v, 'Mine', ['box2'], 'H');
-  assert.equal(L.receiveGroup(v, 'box2', invite('box2', 'H', ['box2', ME]), ME), null);
-  assert.equal(mine.members.length, 1);
+  L.receiveGroup(v, 'box2', invite('box2', 'H', ['box2', ME], { gname: 'Taken' }), ME);
+  assert.equal(mine.name, 'Mine'); assert.equal(mine.members.length, 1);
 });
 
 test('group messages: only from a member who is an active friend; duplicates dropped; no receipts, unread counts', () => {

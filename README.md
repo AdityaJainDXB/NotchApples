@@ -150,6 +150,10 @@ More screenshots of the capture overlay, the AI answer, the settings and the Win
 
 ## What's new
 
+### Mac 2.2.65 · Windows 2.2.65 · 12 November 2026 · 👥 Add friends to a group
+
+- Fixed: in a Messenger group chat anyone in the group can now add their own friends, not just whoever made it. Open the group's ⋯ menu (or right-click it) and choose Add friends. Only the person who made the group can rename it or remove people. Everyone in the group needs this update for the new people to show up for them
+
 ### Mac 2.2.64 · Windows 2.2.64 · 12 November 2026 · Typing, the time pill and volume
 
 - Fixed: text you type in the notch is easier to see. Fields such as a group name, your friend code and several search boxes showed dark text on the dark notch; they now use your theme's text colour
@@ -164,23 +168,6 @@ More screenshots of the capture overlay, the AI answer, the settings and the Win
 - New: Settings has a Report tab. It opens a GitHub issue that already says Mac, your version and your plan; you read it and press Submit yourself
 - Fixed: only Messenger is locked when you take the lock offer. Games and Search had been locked too by an old default; they are unlocked now unless you chose to lock them yourself
 - Fixed: typing in the Settings search box now shows your text
-
-### Mac 2.2.62 · Windows 2.2.62 · 12 November 2026 · 💬 Messenger is free
-
-- Changed: Messenger is now free. It moved from Pro to the free tier, so everyone can chat in nearby (Wi-Fi) rooms, encrypted rooms joined by a code, and with friends, with nothing to unlock. If you already have Pro, nothing changes for you.
-
-### Mac 2.2.61 · Windows 2.2.61 · 12 November 2026 · 🚫 Unblock people in Messenger friends
-
-- Fixed: in Messenger friends you can now unblock people. A new Blocked list in Friends shows who you blocked, each with an Unblock button (also in the Friends settings, next to Unblock all). After unblocking, they can send you a request again, or you can add their friend code. Anyone you blocked before this update shows as "Someone you blocked (ABCD)" and can be unblocked the same way
-
-### Mac 2.2.60 · Windows 2.2.60 · 11 November 2026 · ✨ NotchAI, a free assistant with a green dot
-
-- New: NotchAI, a free assistant tab. Chat with the AI you chose in Settings → AI, with streamed answers, Stop and Clear. It is on by default and can be hidden like any tab
-- New: an optional green dot that follows your cursor. It is off until you turn it on in NotchAI → Companion. Click it for Quick Ask: one question, one streamed answer, closed by Esc or a click elsewhere. Right-click it to open the NotchAI tab. The dot never calls an AI by itself, so it works with every provider off
-- New: a Custom provider in Settings → AI for any OpenAI-compatible server (Ollama, LM Studio, vLLM or a proxy): base URL, optional key (kept in the Keychain), model list and Test connection
-- New: Local first for NotchAI. With "Allow cloud and unverified models" off (the default), NotchAI only uses Apple Intelligence or a model that Ollama confirms is installed on this Mac. Cloud providers, Ollama Cloud models and anything that can't be verified are refused before anything is sent, and are never used as a fallback. This switch covers NotchAI only: elsewhere in Notch Apple your chosen provider works as before, except that Ollama Cloud models and unverifiable Ollama or custom servers are refused there too while it is off
-- New: the model list in Settings → AI says Local, Local network, Cloud or Unverified next to each model
-- Feedback welcome: NotchAI is new and has had little time on setups with more than one display, so please report anything odd with the dot
 
 ## Plugins
 
