@@ -206,27 +206,33 @@ As of November 2026.
 
 ## Living status
 
-Updated 12 November 2026, after Milestone 1 (core stability) was built on branch `notchai-step1-stability` (not merged or released).
+Updated 12 November 2026. Milestone 1 is in PR #63; milestones 2 to 6 are built and committed on a local branch stacked on it (`notchai-roadmap-m6-tasks`), not pushed, not merged, not released. 404 pure-logic tests pass. Status words are the ones defined at the top of this document.
 
 | Area | Status | Notes |
 |---|---|---|
-| Cursor companion (dot, Quick Ask, right-click opens tab) | Implemented but not fully verified | Shipped in 2.2.60. Milestone 1 adds start at login (reuses the app's login item) and Reduce Motion support (still dot; no breathing, pulsing, spinning ring or trail). Both are implemented but not verified live: changing the login item or the macOS Reduce Motion setting is a system setting, so it was left for a person. Multiple displays and display reconnection are still unverified (one display on the test Mac). |
-| Quick Ask reopen guard | Implemented but not fully verified | Pure rule is unit tested; the real click sequence needs a manual check. |
-| Chat: streaming, stop, regenerate, new, Markdown, history | Implemented and verified (real Qwen3 via Ollama) | Milestone 1. Quick Ask and the NotchAI tab share one conversation (`NotchAIConversation`); "Continue in NotchAI" opens the Chat section. Finished chats are saved to AI History. Verified: a real ask plus regenerate against local Qwen3 (2 requests, saved once with both replies). Not implemented: attachments, conversation search inside NotchAI, restoring an old chat into the tab. |
-| Providers (8 built in, hosted, custom OpenAI-compatible) | Implemented and verified (unit and fake-server tests) | A real Qwen3 conversation with cloud off still needs a person. |
-| Local-first guard (NotchAI) | Implemented and verified (unit and real-HTTP tests) | Scope is NotchAI only; app-wide local first is a future milestone. Remembered verification, labels (Local, Local network, Cloud, Unverified) shipped. |
-| Ollama diagnostics | Implemented and verified (unit tests and the real local Ollama) | Milestone 1. "Check Ollama" on the Overview: running or not, version, models with Local / Cloud / Unverified badges, size, quantisation and context window, and whether the selected model will work. Local requests only, run on demand. |
-| Voice (STT, TTS, push-to-talk, interruption, wake word, dictation) | Not implemented | Apple Speech and AVSpeech are used elsewhere in the app (Voice Notes, Translator) and can be reused. |
-| Screen awareness, OCR, region capture, annotations | Not implemented | `ScreenCapture.swift` and `ScreenCaptureActions.swift` exist and can be reused. |
-| Research, browser agent, file agent, whole-document intelligence | Not implemented | |
-| Memory, response preferences | Not implemented | |
-| Skills, app-specific skills, integrations, MCP connectors | Not implemented | |
+| Cursor companion (dot, Quick Ask, right-click opens tab) | Implemented but not fully verified | Shipped in 2.2.60; Milestone 1 added start at login and Reduce Motion. Multiple displays and reconnection, start at login and Reduce Motion are not verified live (one display on the test Mac; the other two are system settings). |
+| Quick Ask reopen guard | Implemented but not fully verified | Pure rule unit tested; the real click sequence needs a manual check. |
+| Chat: stream, stop, regenerate, new, Markdown, history | Implemented and verified (real Qwen3 via Ollama) | Quick Ask and the tab share one conversation, saved to AI History. Not implemented: attachments, conversation search inside NotchAI, restoring an old chat into the tab. |
+| Providers (8 built in, hosted, custom OpenAI-compatible) | Implemented and verified (unit and fake-server tests) | Per-agent model routing is Not implemented. |
+| Local-first guard (NotchAI) | Implemented and verified | NotchAI only; app-wide local first is a future milestone. Covers chat, voice (cloud voice refused), research and screen questions. |
+| Ollama diagnostics | Implemented and verified | Overview card, real local Ollama. |
+| Voice: push-to-talk, spoken answers, states, interruption | Implemented but not fully verified | Apple Speech (on-device) in, Apple voice out, chunked, speed/pitch/volume/voice, live caption, state machine drives the dot. The state machine, chunking and TTS rendering are tested (Apple TTS rendered to memory buffers, nothing played). Not run: a real microphone, real speakers, interrupting speech by voice. Automatic end-of-speech uses the recogniser's own end, not a separate detector. |
+| TTS engines | Partially implemented | Apple (default) done. Gemini TTS written, opt-in and blocked while Local first is on, but never run (no key used, no cloud request made). Piper and OpenAI TTS: Not implemented. |
+| STT engines | Partially implemented | Apple Speech only. Local Whisper: Not implemented. |
+| Wake word, hands-free, universal dictation, global voice shortcut, captions near the cursor, announcement/quiet-mode controls | Not implemented | Live captions exist inside the Voice section only. The global shortcut needs the shared hotkey system and was left alone. |
+| Screen awareness (Pro) | Partially implemented | On demand only: window, display and half/centre region capture via ScreenCaptureKit, Apple Vision OCR, app and window title, exclusion list (password managers by default), capture indicator, optional screenshot for vision models. OCR verified on a drawn image; the rest is unit tested. Not run: a real screen capture (needs Screen Recording for the build under test). Free-form region selection overlay, selected-text capture, screen history: Not implemented. Pro gating reads the existing tier; no licensing code was changed. |
+| Screen annotations, teaching mode | Not implemented | |
+| Research (Pro) | Partially implemented | Fetches public http(s) pages only, readable-text extraction, cited answers from numbered sources, runs as a task. Verified live on example.com with local Qwen3. No web search engine (SearchProvider has no conformer; no paid API), no link following, no interactive browser agent. |
+| File reading (Pro) | Partially implemented | User-chosen text, Markdown, CSV, JSON, code, PDF and images (OCR), read-only, cited, runs as a task. Not implemented: DOCX, XLSX, PPTX, folders and repositories, searching files, creating or editing files, document-level chunking and retrieval. |
+| Memory and response style | Implemented but not fully verified | User-controlled list, refuses secrets, style presets, on/off. Pure rules tested; the screen was rendered; not exercised through a long real session. Screen-context memory: Not implemented (deliberately). |
+| Skills | Partially implemented | Markdown skill files matched by app, text only. Integrations and connectors (Gmail, Notion, GitHub, Slack...): Not implemented. MCP connectors: Not implemented. |
 | Browser extension | Not implemented | |
-| Tool registry, agent registry, task model, persistent tasks, checkpoints | Not implemented | Must come before specialised agents. |
-| Multi-agent orchestration, Agent HUD, task dashboard | Not implemented | |
-| Computer control (through Do It) | Not implemented for NotchAI | Do It exists as a protected premium module with its own engine. |
-| Teaching mode, 3D models and visual explanations | Not implemented | |
-| Windows | Not applicable so far | NotchAI is macOS only in 2.2.60. Each feature needs its own Windows plan. |
+| Tool registry, task model, approvals, checkpoints, recovery | Implemented and verified (unit tests with fake tools, live task, simulated crash) | Tools today are read-only (fetch_page, read_file, ask_model). Approval policy, retries, timeouts, cancellation, idempotent recovery and Stop all are built and tested. |
+| Task dashboard (Tasks) | Implemented but not fully verified | Rendered and driven by real tasks; approve/deny buttons were exercised only through the engine tests. |
+| Multi-agent orchestration, agent registry, parallel agents, Agent HUD, nested delegation | Not implemented | Tasks have an agent label and depth limits, but there is no planner, no agent that delegates, and no HUD. Per-agent model routing, custom agents: Not implemented. |
+| Computer control (through Do It) | Not implemented for NotchAI | Do It is a protected premium module and was not touched. |
+| Whole-document intelligence, visual explanations and 3D models, agent usage and approvals reporting, adaptive preferences beyond style | Not implemented / partial | Style presets exist; the rest are not built. |
+| Windows | Not applicable so far | NotchAI is macOS only. |
 
 ## Hey Clicky parity checklist
 

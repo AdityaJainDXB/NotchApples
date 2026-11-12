@@ -97,7 +97,7 @@ final class NotchAIConversation: ObservableObject {
             history[i].imageBase64 = image
         }
         messages.append(ChatMessage(role: .assistant, text: ""))
-        let system = NotchAIMemory.shared.systemPrompt(base: AIClient.systemPrompt)
+        let system = NotchAISkills.shared.systemPrompt(base: NotchAIMemory.shared.systemPrompt(base: AIClient.systemPrompt))
         let session = sessionID
         CursorCompanion.shared.setState(.thinking)
 

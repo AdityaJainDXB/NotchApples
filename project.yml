@@ -154,6 +154,7 @@ targets:
       - NotchApple/Core/ScreenContextLogic.swift
       - NotchApple/Core/ResearchLogic.swift
       - NotchApple/Core/NotchAIMemoryLogic.swift
+      - NotchApple/Core/NotchAISkillLogic.swift
       - NotchApple/Core/NotchAITaskLogic.swift
       - NotchApple/Core/NotchAITaskEngine.swift
       - NotchApple/Modules/NotchAI/Screen/ScreenOCR.swift

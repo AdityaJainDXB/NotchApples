@@ -12,7 +12,7 @@ import SwiftUI
 
 struct NotchAIView: View {
     enum Section: String, CaseIterable, Identifiable {
-        case overview = "Overview", companion = "Companion", chat = "Chat", voice = "Voice", screen = "Screen", research = "Research", tasks = "Tasks", memory = "Memory"
+        case overview = "Overview", companion = "Companion", chat = "Chat", voice = "Voice", screen = "Screen", research = "Research", tasks = "Tasks", memory = "Memory", skills = "Skills"
         var id: String { rawValue }
     }
 
@@ -50,6 +50,7 @@ struct NotchAIView: View {
             case .research: NotchAIResearchView()
             case .tasks: NotchAITasksView()
             case .memory: NotchAIMemoryView()
+            case .skills: NotchAISkillsView()
             }
         }
     }
@@ -69,15 +70,27 @@ struct NotchAIView: View {
                 }
                 statusRow("Screen awareness", NotchAITier.allows(.pro) ? (ScreenIntelligence.shared.isOn ? "On: only when you ask" : "Off") : "Pro", on: ScreenIntelligence.shared.isOn && NotchAITier.allows(.pro), dim: !NotchAITier.allows(.pro))
                 statusRow("Voice", NotchAIVoice.shared.provider.runsLocally ? "Talk and spoken answers, on this Mac" : "Talk and spoken answers (cloud voice)", on: true)
-                statusRow("Agents and computer control", "Coming in a later update (Ultimate)", on: false, dim: true)
+                statusRow("Agents and computer control", "Tasks run (read-only); agents and computer control are not built yet (Ultimate)", on: false, dim: true)
                 HStack {
                     Button(dot.isOn ? "Turn the dot off" : "Turn the dot on") { dot.isOn.toggle() }
                     Text("Nothing is captured or sent unless you ask.").font(.system(size: 10)).foregroundStyle(Theme.textSecondary)
                 }
                 .padding(.top, 4)
+                quickActions.padding(.top, 4)
                 OllamaDiagnosticsView().padding(.top, 6)
             }
         }
+    }
+
+    private var quickActions: some View {
+        HStack(spacing: 8) {
+            Button("Ask NotchAI") { nav.section = .chat }
+            Button("Explain my screen") { nav.section = .screen; ScreenIntelligence.shared.ask(ScreenContextLogic.explainQuestion, label: "Explain my screen", scope: .window) }
+                .disabled(!NotchAITier.allows(.pro) || !ScreenIntelligence.shared.isOn)
+            Button("Start voice mode") { nav.section = .voice; NotchAIVoice.shared.talk() }
+            Button("Stop all tasks") { NotchAITaskStore.shared.stopAll() }.tint(.red)
+        }
+        .controlSize(.small)
     }
 
     private func statusRow(_ title: String, _ value: String, on: Bool, dim: Bool = false) -> some View {
