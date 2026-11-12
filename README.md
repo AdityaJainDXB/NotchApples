@@ -150,6 +150,10 @@ More screenshots of the capture overlay, the AI answer, the settings and the Win
 
 ## What's new
 
+### Mac 2.2.66 · Windows 2.2.66 · 12 November 2026 · 📅 Up next shows the real day
+
+- Fixed: the Up next list said Tomorrow for every event after today, so a Saturday event seen on Thursday read Tomorrow. It now shows Today, Tomorrow, the weekday name for the next week (for example Saturday), or the date after that
+
 ### Mac 2.2.65 · Windows 2.2.65 · 12 November 2026 · 👥 Add friends to a group
 
 - Fixed: in a Messenger group chat anyone in the group can now add their own friends, not just whoever made it. Open the group's ⋯ menu (or right-click it) and choose Add friends. Only the person who made the group can rename it or remove people. Everyone in the group needs this update for the new people to show up for them
@@ -159,15 +163,6 @@ More screenshots of the capture overlay, the AI answer, the settings and the Win
 - Fixed: text you type in the notch is easier to see. Fields such as a group name, your friend code and several search boxes showed dark text on the dark notch; they now use your theme's text colour
 - Fixed: the date and time pill under the notch now keeps the time up to date, goes away when you move off the notch or open it, and no longer pops up while the notch is closing
 - Fixed: changing the volume with the keys, by scrolling on the notch, or with the slider in Audio no longer freezes or stutters. The changes are now merged and written in the background
-
-### Mac 2.2.63 · Windows 2.2.63 · 12 November 2026 · More for NotchAI, and a Report tab
-
-- New: NotchAI chat keeps a history, has Stop and Regenerate, checks your Ollama setup, can start at login and respects Reduce Motion. NotchAI stays local first: cloud and unverified models are refused unless you turn them on
-- New (Pro): NotchAI can search the web with no key (DuckDuckGo, your own SearXNG server, or Wikipedia, your choice in Research), read the top pages and answer with citations. Each question says which service it goes to, and nothing is searched until you ask
-- New (Pro): NotchAI reads Word, Excel and PowerPoint files as well as PDF, text and images, only reading them and never changing them. Drop files on the NotchAI tab or its window to list them in Documents and summarise them
-- New: Settings has a Report tab. It opens a GitHub issue that already says Mac, your version and your plan; you read it and press Submit yourself
-- Fixed: only Messenger is locked when you take the lock offer. Games and Search had been locked too by an old default; they are unlocked now unless you chose to lock them yourself
-- Fixed: typing in the Settings search box now shows your text
 
 ## Plugins
 

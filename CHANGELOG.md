@@ -4,6 +4,16 @@ Every Notch Apple release, newest first. The latest few are also on the [README]
 
 > **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is in the repository's history.
 
+### Mac 2.2.66 · Windows 2.2.66 BETA · 12 November 2026 · 📅 Up next shows the real day
+
+**Mac**
+
+- Fixed: the Up next list said Tomorrow for every event after today, so a Saturday event seen on Thursday read Tomorrow. It now shows Today, Tomorrow, the weekday name for the next week (for example Saturday), or the date after that
+
+**Windows**
+
+- No Windows changes in this release; Windows already shows the real day. It keeps the same version number as the Mac app
+
 ### Mac 2.2.65 · Windows 2.2.65 BETA · 12 November 2026 · 👥 Add friends to a group
 
 **Mac**
