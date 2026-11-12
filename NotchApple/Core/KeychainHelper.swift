@@ -24,6 +24,7 @@ enum KeychainHelper {
         case openAIAPIKey = "openai.apiKey"
         case deepSeekAPIKey = "deepseek.apiKey"
         case customAPIKey = "custom.apiKey"
+        case mcpTokens = "notchai.mcp.tokens"
         case faceTemplate = "faceUnlock.template"
         case activated = "license.activated"
         case activatedCodeHash = "license.codeHash"

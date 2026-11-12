@@ -160,6 +160,7 @@ targets:
       - NotchApple/Core/NotchAIAgentLogic.swift
       - NotchApple/Core/NotchAIDocumentIndex.swift
       - NotchApple/Core/NotchAIAgentSupport.swift
+      - NotchApple/Core/NotchAIMCP.swift
       - NotchApple/Core/NotchAIWebSearch.swift
       - NotchApple/Core/NotchAIOrchestratorCore.swift
       - NotchApple/Modules/NotchAI/Screen/ScreenOCR.swift

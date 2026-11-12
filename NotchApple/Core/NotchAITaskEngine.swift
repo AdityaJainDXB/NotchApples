@@ -52,6 +52,8 @@ actor TaskEngine {
         /// For tasks delegated by an orchestrator (depth > 0): the tools an agent may use. A step outside it fails
         /// without running, even if a plan asked for it. Nil = no extra limit.
         var childToolPolicy: @Sendable (_ agent: String) -> Set<String>? = { _ in nil }
+        /// Tools that are not fixed at start-up (connector tools): looked up by id when the built-in ones have no match.
+        var dynamicTool: @Sendable (_ id: String) -> TaskTool? = { _ in nil }
     }
 
     private let tools: [String: TaskTool]
@@ -87,7 +89,7 @@ actor TaskEngine {
 
         while let step = TaskLogic.nextStep(t), let i = t.steps.firstIndex(where: { $0.id == step.id }) {
             if cancelled.contains(t.id) || Task.isCancelled { return await finish(&t, .cancelled, "Cancelled.") }
-            guard let tool = tools[step.tool] else {
+            guard let tool = tools[step.tool] ?? config.dynamicTool(step.tool) else {
                 t.steps[i].state = .failed; t.steps[i].error = "No tool called “\(step.tool)”."
                 return await finish(&t, .failed, "Step “\(step.title)” failed: no such tool.")
             }

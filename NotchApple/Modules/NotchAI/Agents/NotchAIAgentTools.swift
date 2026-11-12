@@ -38,7 +38,7 @@ enum NotchAIToolCatalog {
     ]
 
     /// Tools an agent may be given. The orchestrator's own steps and the single-agent research steps are internal.
-    static var ids: Set<String> { Set(descriptions.keys) }
+    static var ids: Set<String> { Set(descriptions.keys).union(MCPToolRegistry.shared.ids) }
 }
 
 enum AgentToolError: LocalizedError {

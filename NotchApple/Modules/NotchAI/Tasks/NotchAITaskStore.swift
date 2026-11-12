@@ -42,7 +42,7 @@ final class NotchAITaskStore: ObservableObject {
             DispatchQueue.main.sync { AgentStore.shared.agent(agent).map { Set($0.tools) } }
         }
         let level = { @Sendable () -> PermissionLevel in PermissionLevel(rawValue: UserDefaults.standard.string(forKey: "notchai.permission.level") ?? "") ?? .askBeforeActing }
-        engine = TaskEngine(tools: tools, config: .init(level: level, trustedTools: { [] }, stepTimeout: 60, childToolPolicy: policy),
+        engine = TaskEngine(tools: tools, config: .init(level: level, trustedTools: { [] }, stepTimeout: 60, childToolPolicy: policy, dynamicTool: { MCPToolRegistry.shared.tool($0) }),
                             persist: { [weak self] t in await MainActor.run { self?.update(t) } })
         save()
     }
