@@ -238,6 +238,7 @@ struct NotchRootView: View {
             .onAppear(perform: ensureValidSelection)
             .onAppear { previousSelected = state.selected }
             .onAppear { settings.undoAILockFromOffer() }
+            .onAppear { settings.undoGamesSearchLockFromOffer() }
             .onAppear { NotchWidgetCenter.shared.update(selected: state.selected, open: true) }
             .onDisappear { NotchWidgetCenter.shared.update(selected: state.selected, open: false) }
             .onChange(of: state.selected) { _, new in

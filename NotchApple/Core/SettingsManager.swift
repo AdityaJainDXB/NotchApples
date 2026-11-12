@@ -262,15 +262,26 @@ final class SettingsManager: ObservableObject {
     /// Off by default. With "Lock Notch Apple" on, this asks to unlock only on the tabs chosen in `securityLockedTabs` (the others open
     /// as normal): the prompt shows when the tab you land on, or switch to, is one of them (issue 45).
     @AppStorage("security.onlyTabs") var securityOnlyTabs = false
-    @AppStorage("security.lockedTabs") var securityLockedTabs = "games,search,messenger"
+    @AppStorage("security.lockedTabs") var securityLockedTabs = "messenger"
+    /// What older versions started with, before only Messenger was meant to be locked. Used to tell "never changed" from "chosen".
+    static let legacyLockedTabs = "games,search,messenger"
     /// The one-time "Lock your messages?" card in the Messenger tab: set once it was answered either way.
     @AppStorage("chatLock.offerDone") var chatLockOfferDone = false
     /// Turns the lock on for Messenger only (everything else, AI included, opens as normal).
     func lockMessages() {
         securityEnabled = true
         securityOnlyTabs = true
+        // The old default also locked Games and Search. Only Messenger was meant to be locked, so an untouched list becomes just that.
+        if securityLockedTabs == Self.legacyLockedTabs { securityLockedTabs = "messenger" }
         if !isLockedTab(.messenger) { setLockedTab(.messenger, true) }
         chatLockOfferDone = true
+    }
+    /// Anyone who took the Messenger offer before this fix still has Games and Search locked by the old default. If they never chose
+    /// those themselves (the list is exactly the old default), Games and Search are unlocked, once.
+    func undoGamesSearchLockFromOffer() {
+        guard chatLockOfferDone, !UserDefaults.standard.bool(forKey: "chatLock.gamesSearchUndone") else { return }
+        UserDefaults.standard.set(true, forKey: "chatLock.gamesSearchUndone")
+        if securityLockedTabs == Self.legacyLockedTabs { securityLockedTabs = "messenger"; objectWillChange.send() }
     }
     /// 2.2.52 also locked AI when you accepted the offer; that was a mistake. Anyone who took the offer gets AI unlocked, once.
     func undoAILockFromOffer() {

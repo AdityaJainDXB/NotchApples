@@ -156,6 +156,7 @@ More screenshots of the capture overlay, the AI answer, the settings and the Win
 - New (Pro): NotchAI can search the web with no key (DuckDuckGo, your own SearXNG server, or Wikipedia, your choice in Research), read the top pages and answer with citations. Each question says which service it goes to, and nothing is searched until you ask
 - New (Pro): NotchAI reads Word, Excel and PowerPoint files as well as PDF, text and images, only reading them and never changing them. Drop files on the NotchAI tab or its window to list them in Documents and summarise them
 - New: Settings has a Report tab. It opens a GitHub issue that already says Mac, your version and your plan; you read it and press Submit yourself
+- Fixed: only Messenger is locked when you take the lock offer. Games and Search had been locked too by an old default; they are unlocked now unless you chose to lock them yourself
 - Fixed: typing in the Settings search box now shows your text
 
 ### Mac 2.2.62 · Windows 2.2.62 · 12 November 2026 · 💬 Messenger is free
