@@ -45,6 +45,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         if let raw = UserDefaults.standard.string(forKey: "notchai.selftest.settings"), let tab = SettingsTab(rawValue: raw) {
             DispatchQueue.main.asyncAfter(deadline: .now() + 2) { SettingsWindowController.shared.show(tab: tab) }
         }
+        // Task hooks (DEBUG only): `-notchai.selftest.research "<url> | <question>"` runs a real research task;
+        // `-notchai.selftest.resume YES` resumes every paused task after a simulated restart.
+        if let spec = UserDefaults.standard.string(forKey: "notchai.selftest.research") {
+            let parts = spec.components(separatedBy: " | ")
+            DispatchQueue.main.asyncAfter(deadline: .now() + 2) { ResearchAgent.shared.research(question: parts.last ?? "", urlText: parts.first ?? "") }
+        }
+        if UserDefaults.standard.bool(forKey: "notchai.selftest.resume") {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                for t in NotchAITaskStore.shared.tasks where t.state == .paused { NotchAITaskStore.shared.resume(t.id) }
+            }
+        }
         // Snapshot hook (DEBUG only): `-notchai.selftest.snapshot overview|companion|chat` renders that NotchAI section
         // off-screen to /tmp/notchai-snap-<section>.png, so the UI can be checked without touching the desktop.
         if let name = UserDefaults.standard.string(forKey: "notchai.selftest.snapshot"),

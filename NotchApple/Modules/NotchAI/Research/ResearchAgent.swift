@@ -2,12 +2,14 @@
 //  ResearchAgent.swift
 //  Notch Apple
 //
-//  NotchAI's research and file reading (Pro). It does real work and reports exactly what it did:
-//   • Web pages: fetches the public URLs the user gives (http/https only, never localhost or the local network),
-//     extracts the readable text, and asks the model to answer from those sources with [1], [2] citations.
-//   • Files: reads files the user picks in a file dialog (text, Markdown, CSV, JSON, code, PDF; images through
-//     on-device OCR). Files are only read, never changed.
-//  The source list is exactly what was fetched or read; a page that fails is listed as failed, never cited.
+//  NotchAI's research and file reading (Pro). It does real work and reports exactly what it did, as a TASK the user
+//  can watch in the Tasks section (steps, log, cancel, retry):
+//   • Web pages: one "fetch_page" step per public URL the user gives (http/https only, never localhost or the local
+//     network), then an "ask_model" step that asks the model to answer ONLY from the readable text, with [1], [2]
+//     citations.
+//   • Files: a "read_file" step for a file the user picked in a file dialog (text, Markdown, CSV, JSON, code, PDF;
+//     images through on-device OCR), then "ask_model". Files are only read, never changed.
+//  The source list is exactly what was fetched or read; a page that fails is recorded as failed and never cited.
 //  The question goes through the shared conversation and so through the Local-first guard.
 //
 //  Not built yet: a web search engine (SearchProvider has no conformer; no paid API), following links, and an
@@ -22,52 +24,58 @@ import SwiftUI
 final class ResearchAgent: ObservableObject {
     static let shared = ResearchAgent()
 
-    struct Outcome: Identifiable {
-        let id = UUID()
-        let location: String
-        let ok: Bool
-        let note: String
-    }
-
-    @Published private(set) var working = false
-    @Published private(set) var outcomes: [Outcome] = []
     @Published private(set) var status: String?
     @Published private(set) var pickedFile: URL?
-
-    private let maxBytes = 2_000_000
 
     // MARK: Web pages
 
     func research(question: String, urlText: String) {
-        status = nil; outcomes = []
+        status = nil
         guard NotchAITier.allows(.pro) else { status = NotchAITier.lockedMessage(.pro); return }
         let q = question.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !q.isEmpty else { status = "Type a question first."; return }
         let urls = ResearchLogic.urls(in: urlText + " " + q)
         guard !urls.isEmpty else { status = "Paste at least one web address (http or https). There is no built-in web search yet."; return }
-        working = true
-        Task {
-            var sources: [ResearchSource] = []
-            var results: [Outcome] = []
-            for url in urls.prefix(5) {
-                do {
-                    let s = try await fetch(url)
-                    sources.append(s)
-                    results.append(Outcome(location: url.absoluteString, ok: true, note: "Read \(s.text.count.formatted()) characters"))
-                } catch {
-                    results.append(Outcome(location: url.absoluteString, ok: false, note: error.localizedDescription))
-                }
-            }
-            outcomes = results
-            working = false
-            guard !sources.isEmpty else { status = "None of the pages could be read, so nothing was asked."; return }
-            let prompt = ResearchLogic.prompt(question: q, sources: sources)
-            NotchAIConversation.shared.send(prompt, display: "Research: \(q)\n\(ResearchLogic.sourceList(sources))")
-            NotchAINav.shared.section = .chat
+        var steps = urls.prefix(5).enumerated().map { i, u in
+            TaskStep(tool: "fetch_page", title: "Read \(u.host ?? u.absoluteString)", argument: u.absoluteString, risk: .readOnly, idempotencyKey: "src\(i)")
         }
+        steps.append(TaskStep(tool: "ask_model", title: "Answer from the pages", argument: q, risk: .readOnly, idempotencyKey: "ask"))
+        if NotchAITaskStore.shared.start(NotchAITask(title: "Research: \(q)", agent: "research", steps: steps)) {
+            NotchAINav.shared.section = .tasks
+        } else { status = "Too many tasks are running. Wait for one to finish." }
     }
 
-    private func fetch(_ url: URL) async throws -> ResearchSource {
+    // MARK: Files
+
+    /// A file dialog: the user chooses; nothing else is ever read.
+    func chooseFile() {
+        let panel = NSOpenPanel()
+        panel.allowsMultipleSelection = false
+        panel.canChooseDirectories = false
+        panel.message = "Choose a file for NotchAI to read. It is only read, never changed."
+        if panel.runModal() == .OK { pickedFile = panel.url; status = nil }
+    }
+
+    func askAboutFile(question: String) {
+        status = nil
+        guard NotchAITier.allows(.pro) else { status = NotchAITier.lockedMessage(.pro); return }
+        guard let url = pickedFile else { status = "Choose a file first."; return }
+        let q = question.trimmingCharacters(in: .whitespacesAndNewlines)
+        let ask = q.isEmpty ? "Summarise this document." : q
+        let steps = [TaskStep(tool: "read_file", title: "Read \(url.lastPathComponent)", argument: url.path, risk: .readOnly, idempotencyKey: "src0"),
+                     TaskStep(tool: "ask_model", title: "Answer from the file", argument: ask, risk: .readOnly, idempotencyKey: "ask")]
+        if NotchAITaskStore.shared.start(NotchAITask(title: "File: \(url.lastPathComponent)", agent: "file", steps: steps)) {
+            NotchAINav.shared.section = .tasks
+        } else { status = "Too many tasks are running. Wait for one to finish." }
+    }
+}
+
+// MARK: - The real work (no UI state)
+
+enum ResearchIO {
+    static let maxBytes = 2_000_000
+
+    static func fetch(_ url: URL) async throws -> ResearchSource {
         guard ResearchLogic.isFetchable(url) else { throw ResearchError.notPublic }
         var r = URLRequest(url: url)
         r.timeoutInterval = 15
@@ -84,39 +92,7 @@ final class ResearchAgent: ObservableObject {
         return ResearchSource(title: page.title, location: url.absoluteString, text: page.text, truncated: data.count > maxBytes)
     }
 
-    // MARK: Files
-
-    /// A file dialog: the user chooses; nothing else is ever read.
-    func chooseFile() {
-        let panel = NSOpenPanel()
-        panel.allowsMultipleSelection = false
-        panel.canChooseDirectories = false
-        panel.message = "Choose a file for NotchAI to read. It is only read, never changed."
-        if panel.runModal() == .OK { pickedFile = panel.url; outcomes = []; status = nil }
-    }
-
-    func askAboutFile(question: String) {
-        status = nil; outcomes = []
-        guard NotchAITier.allows(.pro) else { status = NotchAITier.lockedMessage(.pro); return }
-        guard let url = pickedFile else { status = "Choose a file first."; return }
-        let q = question.trimmingCharacters(in: .whitespacesAndNewlines)
-        working = true
-        Task {
-            defer { working = false }
-            do {
-                let source = try await read(url)
-                outcomes = [Outcome(location: url.lastPathComponent, ok: true, note: "Read \(source.text.count.formatted()) characters")]
-                let ask = q.isEmpty ? "Summarise this document." : q
-                NotchAIConversation.shared.send(ResearchLogic.prompt(question: ask, sources: [source]),
-                                                display: "File: \(url.lastPathComponent)\n\(ask)")
-                NotchAINav.shared.section = .chat
-            } catch {
-                outcomes = [Outcome(location: url.lastPathComponent, ok: false, note: error.localizedDescription)]
-            }
-        }
-    }
-
-    private func read(_ url: URL) async throws -> ResearchSource {
+    static func read(_ url: URL) async throws -> ResearchSource {
         let kind = ResearchLogic.kind(forExtension: url.pathExtension)
         let size = (try? url.resourceValues(forKeys: [.fileSizeKey]).fileSize) ?? 0
         if kind != .pdf, kind != .image, size > maxBytes * 2 { throw ResearchError.tooBig }

@@ -22,8 +22,7 @@ struct NotchAIResearchView: View {
                 TextField("Paste one or more web addresses (https://…)", text: $urls).textFieldStyle(.roundedBorder)
                 TextField("Your question about them", text: $question).textFieldStyle(.roundedBorder).onSubmit(research)
                 HStack {
-                    Button("Read pages and answer") { research() }.disabled(!unlocked || agent.working)
-                    if agent.working { ProgressView().controlSize(.small) }
+                    Button("Read pages and answer") { research() }.disabled(!unlocked)
                 }
                 Divider().opacity(0.3)
                 Text("A file").font(.system(size: 12, weight: .semibold)).foregroundStyle(.white)
@@ -32,14 +31,10 @@ struct NotchAIResearchView: View {
                     Text(agent.pickedFile?.lastPathComponent ?? "None chosen").font(.system(size: 11)).foregroundStyle(Theme.textSecondary)
                     Spacer()
                     Button(question.isEmpty ? "Summarise it" : "Ask about it") { agent.askAboutFile(question: question) }
-                        .disabled(!unlocked || agent.pickedFile == nil || agent.working)
+                        .disabled(!unlocked || agent.pickedFile == nil)
                 }
                 if let s = agent.status { Text(s).font(.system(size: 11)).foregroundStyle(.orange) }
-                ForEach(agent.outcomes) { o in
-                    Label("\(o.location): \(o.note)", systemImage: o.ok ? "checkmark.circle.fill" : "xmark.octagon.fill")
-                        .font(.system(size: 11)).foregroundStyle(o.ok ? NotchAIView.green : .red).lineLimit(2)
-                }
-                Text("Pages are fetched from the public web only. Files are only read, never changed. Answers use only these sources and cite them; if they don't answer, NotchAI says so. There is no built-in web search yet.")
+                Text("Pages are fetched from the public web only. Files are only read, never changed. Each question runs as a task you can watch in Tasks; answers use only the sources it read and cite them; if they don't answer, NotchAI says so. There is no built-in web search yet.")
                     .font(.system(size: 10)).foregroundStyle(Theme.textSecondary)
             }
         }

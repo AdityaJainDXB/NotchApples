@@ -1,0 +1,107 @@
+//
+//  NotchAITaskStore.swift
+//  Notch Apple
+//
+//  Owns NotchAI's tasks: starts them on the TaskEngine, keeps them (JSON in Application Support, saved at every
+//  checkpoint), shows them in the Tasks section, and recovers them after a restart. A task that was running when the
+//  app quit comes back PAUSED with its finished steps kept; nothing is repeated (see TaskLogic.recover).
+//
+//  Emergency stop (stopAll) cancels every task, the answer being written and any speech.
+//
+
+import Foundation
+import SwiftUI
+
+@MainActor
+final class NotchAITaskStore: ObservableObject {
+    static let shared = NotchAITaskStore()
+
+    @Published private(set) var tasks: [NotchAITask] = []
+    @AppStorage("notchai.permission.level") private var levelRaw = PermissionLevel.askBeforeActing.rawValue
+    var level: PermissionLevel {
+        get { PermissionLevel(rawValue: levelRaw) ?? .askBeforeActing }
+        set { objectWillChange.send(); levelRaw = newValue.rawValue }
+    }
+
+    private let url: URL
+    private var handles: [UUID: Task<Void, Never>] = [:]
+    private var engine: TaskEngine!
+
+    private init() {
+        let dir = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0].appendingPathComponent("Notch apple", isDirectory: true)
+        try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        url = dir.appendingPathComponent("notchai-tasks.json")
+        if let data = try? Data(contentsOf: url), let decoded = try? Self.decoder.decode([NotchAITask].self, from: data) {
+            tasks = decoded.map { TaskLogic.recover($0) }       // a task that was mid-run is paused, never repeated
+        }
+        let tools: [TaskTool] = [FetchPageTool(), AskModelTool(), ReadFileTool(allowedPath: { await MainActor.run { ResearchAgent.shared.pickedFile?.path } })]
+        let level = { @Sendable () -> PermissionLevel in PermissionLevel(rawValue: UserDefaults.standard.string(forKey: "notchai.permission.level") ?? "") ?? .askBeforeActing }
+        engine = TaskEngine(tools: tools, config: .init(level: level, trustedTools: { [] }, stepTimeout: 60),
+                            persist: { [weak self] t in await MainActor.run { self?.update(t) } })
+        save()
+    }
+
+    private static var encoder: JSONEncoder { let e = JSONEncoder(); e.dateEncodingStrategy = .secondsSince1970; return e }
+    private static var decoder: JSONDecoder { let d = JSONDecoder(); d.dateDecodingStrategy = .secondsSince1970; return d }
+
+    var runningCount: Int { tasks.filter { $0.state == .running || $0.state == .waitingApproval }.count }
+    var waitingForApproval: [NotchAITask] { tasks.filter { $0.state == .waitingApproval } }
+
+    // MARK: Control
+
+    /// Adds the task and runs it. False if too many are already running or the task is invalid.
+    @discardableResult
+    func start(_ task: NotchAITask) -> Bool {
+        guard TaskLogic.canStart(running: runningCount, depth: task.depth), TaskLogic.validate(task) == nil else { return false }
+        tasks.insert(task, at: 0)
+        run(task)
+        return true
+    }
+
+    private func run(_ task: NotchAITask) {
+        let engine = engine!
+        handles[task.id] = Task { [weak self] in
+            let final = await engine.run(task)
+            self?.update(final)
+            self?.handles[task.id] = nil
+        }
+    }
+
+    func cancel(_ id: UUID) {
+        handles[id]?.cancel()
+        Task { await engine.cancel(id) }
+    }
+
+    func approve(_ id: UUID, _ approved: Bool) { Task { await engine.resolveApproval(id, approved: approved) } }
+
+    /// Resume a paused task (after a restart) or retry failed steps. Finished steps are never run again.
+    func resume(_ id: UUID) {
+        guard let t = tasks.first(where: { $0.id == id }), TaskLogic.canStart(running: runningCount, depth: t.depth) else { return }
+        let next = t.state == .failed ? TaskLogic.retrying(t) : t
+        update(next)
+        run(next)
+    }
+
+    func delete(_ id: UUID) { cancel(id); tasks.removeAll { $0.id == id }; save() }
+    func clearFinished() { tasks.removeAll { $0.state.isFinished }; save() }
+
+    /// The emergency stop: every task, the answer being written, and any speech or listening.
+    func stopAll() {
+        for t in tasks where !t.state.isFinished && t.state != .paused { cancel(t.id) }
+        NotchAIConversation.shared.stop()
+        NotchAIVoice.shared.stopSpeaking()
+        NotchAIVoice.shared.cancelListening()
+    }
+
+    // MARK: Persistence
+
+    fileprivate func update(_ t: NotchAITask) {
+        if let i = tasks.firstIndex(where: { $0.id == t.id }) { tasks[i] = t } else { tasks.insert(t, at: 0) }
+        save()
+    }
+
+    private func save() {
+        guard let data = try? Self.encoder.encode(tasks) else { return }
+        try? data.write(to: url, options: [.atomic])
+    }
+}
