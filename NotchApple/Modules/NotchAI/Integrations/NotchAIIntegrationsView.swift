@@ -12,6 +12,7 @@ import SwiftUI
 struct NotchAIIntegrationsView: View {
     @ObservedObject private var store = MCPStore.shared
     @State private var adding = false
+    @State private var tokenHint: String?
     @State private var remote = true
     @State private var name = ""
     @State private var address = ""
@@ -29,14 +30,42 @@ struct NotchAIIntegrationsView: View {
                     Spacer()
                     Button(adding ? "Close" : "Add a connector") { adding.toggle() }.disabled(!unlocked).controlSize(.small)
                 }
+                presets
                 if adding { form }
                 if let p = store.problem { Text(p).font(.system(size: 11)).foregroundStyle(.orange) }
                 if store.servers.isEmpty {
-                    Text("No connectors yet. A connector gives NotchAI tools from another service (an MCP server). Every tool asks before it runs unless you mark it read-only, and you can block any tool. Gmail, Notion and GitHub connectors work through MCP servers you add here; none are built in.")
+                    Text("No connectors yet. A connector gives NotchAI tools from another service (an MCP server). Every tool asks before it runs unless you mark it read-only, and you can block any tool. Notion, Linear, Sentry and GitHub have a button above. Google does not offer a Gmail connector of this kind yet, so Gmail needs a server you add by address.")
                         .font(.system(size: 11)).foregroundStyle(Theme.textSecondary)
                 }
                 ForEach(store.servers) { s in card(s) }
             }
+        }
+    }
+
+    /// One-press connectors for services that run their own MCP server.
+    private var presets: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            HStack(spacing: 6) {
+                ForEach(ConnectorCatalog.presets) { p in
+                    let count = ConnectorCatalog.accounts(of: p, in: store.servers.map(\.url))
+                    Button(count == 0 ? p.name : "\(p.name) (add another account)") { add(p) }
+                        .controlSize(.small).disabled(!unlocked).help(p.about)
+                }
+            }
+            Text("These sign in on the service's own site in your browser; NotchAI never sees your password. Nothing connects until you press one.")
+                .font(.system(size: 10)).foregroundStyle(Theme.textSecondary)
+        }
+    }
+
+    private func add(_ p: ConnectorPreset) {
+        let free = ConnectorCatalog.freeName(p.name, taken: store.servers.map(\.name))
+        switch p.signIn {
+        case .browser:
+            store.addRemoteWithBrowserSignIn(name: free, address: p.address)
+        case .token(let hint):
+            // A token has to be pasted, so open the form filled in and say where the token comes from.
+            adding = true; remote = true; name = free; address = p.address; key = ""
+            tokenHint = hint
         }
     }
 
@@ -47,6 +76,7 @@ struct NotchAIIntegrationsView: View {
             if remote {
                 TextField("Address (https://…)", text: $address).textFieldStyle(.roundedBorder)
                 SecureField("Key (optional, kept in the app's private store)", text: $key).textFieldStyle(.roundedBorder)
+                if let h = tokenHint { Text(h).font(.system(size: 10)).foregroundStyle(.orange) }
                 Text("Requests go to this address and nowhere else. Nothing connects until you press Connect.").font(.system(size: 10)).foregroundStyle(Theme.textSecondary)
             } else {
                 TextField("Command (e.g. npx)", text: $command).textFieldStyle(.roundedBorder)
@@ -59,11 +89,11 @@ struct NotchAIIntegrationsView: View {
                     if store.addRemoteWithBrowserSignIn(name: name, address: address) { adding = false; name = ""; address = ""; key = ""; command = ""; args = "" }
                 }
                 .disabled(name.trimmingCharacters(in: .whitespaces).isEmpty || address.isEmpty)
-                .help("For services that offer sign-in (Gmail, Notion, GitHub and others through their MCP servers). No key to paste.")
+                .help("For services whose MCP server offers sign-in. No key to paste.")
             }
             Button("Add") {
                 let ok = remote ? store.addRemote(name: name, address: address, key: key) : store.addLocal(name: name, command: command, arguments: args)
-                if ok { adding = false; name = ""; address = ""; key = ""; command = ""; args = "" }
+                if ok { adding = false; name = ""; address = ""; key = ""; command = ""; args = ""; tokenHint = nil }
             }.disabled(name.trimmingCharacters(in: .whitespaces).isEmpty)
         }
         .padding(8).background(Theme.surface, in: RoundedRectangle(cornerRadius: 8))

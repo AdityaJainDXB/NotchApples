@@ -21,6 +21,7 @@ struct NotchAIView: View {
     @State private var launchAtLogin = SMAppService.mainApp.status == .enabled
     @StateObject private var dot = CursorCompanion.shared
     @ObservedObject private var config = AIConfig.shared
+    @ObservedObject private var wake = NotchAIWakeWord.shared
 
     static let green = Color(red: 0x22 / 255, green: 0xC5 / 255, blue: 0x5E / 255)
 
@@ -38,6 +39,11 @@ struct NotchAIView: View {
                         .font(.system(size: 11)).foregroundStyle(Theme.textSecondary).lineLimit(1)
                 }
                 Spacer()
+                if wake.listening {
+                    Label("Wake word", systemImage: "mic.fill").font(.system(size: 9, weight: .semibold)).foregroundStyle(.orange)
+                        .padding(.horizontal, 6).padding(.vertical, 2).background(Color.orange.opacity(0.15), in: Capsule())
+                        .help("The microphone is open: NotchAI is listening for the wake word on this Mac. Turn it off in Voice.")
+                }
                 Button { NotchAIWorkspaceWindow.open() } label: { Image(systemName: "macwindow") }.buttonStyle(.plain).help("Open the NotchAI window")
                 Picker("", selection: Binding(get: { nav.section }, set: { nav.section = $0 })) { ForEach(Section.allCases) { Text($0.rawValue).tag($0) } }
                     .pickerStyle(.menu).labelsHidden().frame(width: 130)

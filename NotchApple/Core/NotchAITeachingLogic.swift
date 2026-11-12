@@ -24,6 +24,8 @@ enum AnnotationShape: Equatable {
     case ring(center: CGPoint)                            // a target ring: concentric circles
     case badge(center: CGPoint, number: Int)
     case label(origin: CGPoint, text: String)
+    /// A freehand line (the user's own drawing): points as fractions of the screen.
+    case stroke([CGPoint])
 }
 
 struct TeachingStep: Equatable {
@@ -119,13 +121,47 @@ enum AnnotationRenderer {
     static let green = CGColor(red: 0x22 / 255.0, green: 0xC5 / 255.0, blue: 0x5E / 255.0, alpha: 1)
 
     /// Draws into `ctx`, whose size is `size` points. `flipped`: true when the context's origin is already top-left.
-    static func draw(_ shapes: [AnnotationShape], in ctx: CGContext, size: CGSize, flipped: Bool = false) {
+    /// `handDrawn`: boxes, circles, rings and arrow shafts are sketched as slightly wobbly lines (see HandDrawn).
+    static func draw(_ shapes: [AnnotationShape], in ctx: CGContext, size: CGSize, flipped: Bool = false, handDrawn: Bool = false) {
         ctx.saveGState()
         if !flipped { ctx.translateBy(x: 0, y: size.height); ctx.scaleBy(x: 1, y: -1) }      // work top-left
         func p(_ pt: CGPoint) -> CGPoint { CGPoint(x: pt.x * size.width, y: pt.y * size.height) }
         ctx.setLineCap(.round); ctx.setLineJoin(.round)
+        func polyline(_ pts: [CGPoint]) {
+            guard let first = pts.first else { return }
+            ctx.move(to: first)
+            for q in pts.dropFirst() { ctx.addLine(to: q) }
+            ctx.strokePath()
+        }
         for s in shapes {
             switch s {
+            case .stroke(let pts):
+                guard pts.count >= 2 else { continue }
+                ctx.setStrokeColor(green); ctx.setLineWidth(4)
+                // Through the midpoints, so a fast, sparse line still looks round.
+                let q = pts.map(p)
+                ctx.move(to: q[0])
+                for i in 1..<q.count {
+                    let mid = CGPoint(x: (q[i - 1].x + q[i].x) / 2, y: (q[i - 1].y + q[i].y) / 2)
+                    ctx.addQuadCurve(to: mid, control: q[i - 1])
+                }
+                ctx.addLine(to: q[q.count - 1])
+                ctx.strokePath()
+            case .box(let r) where handDrawn:
+                let px = CGRect(x: r.minX * size.width, y: r.minY * size.height, width: r.width * size.width, height: r.height * size.height)
+                ctx.setStrokeColor(green); ctx.setLineWidth(3)
+                polyline(HandDrawn.rect(px, seed: HandDrawn.seed(px.minX, px.minY, px.width, px.height)))
+            case .circle(let c, let radius) where handDrawn:
+                let rr = radius * size.width, cc = p(c)
+                ctx.setStrokeColor(green); ctx.setLineWidth(4)
+                polyline(HandDrawn.ellipse(in: CGRect(x: cc.x - rr, y: cc.y - rr, width: rr * 2, height: rr * 2), seed: HandDrawn.seed(cc.x, cc.y, rr)))
+            case .ring(let c) where handDrawn:
+                let cc = p(c)
+                for (i, r) in [12.0, 24.0].enumerated() {
+                    ctx.setStrokeColor(CGColor(red: 0x22 / 255.0, green: 0xC5 / 255.0, blue: 0x5E / 255.0, alpha: 1 - Double(i) * 0.35))
+                    ctx.setLineWidth(3)
+                    polyline(HandDrawn.ellipse(in: CGRect(x: cc.x - r, y: cc.y - r, width: r * 2, height: r * 2), seed: HandDrawn.seed(cc.x, cc.y, r), amplitude: 1.5))
+                }
             case .box(let r):
                 ctx.setStrokeColor(green); ctx.setLineWidth(3)
                 ctx.addPath(CGPath(roundedRect: CGRect(x: r.minX * size.width, y: r.minY * size.height, width: r.width * size.width, height: r.height * size.height),
@@ -144,7 +180,8 @@ enum AnnotationRenderer {
             case .arrow(let from, let to):
                 let a = p(from), b = p(to)
                 ctx.setStrokeColor(green); ctx.setLineWidth(5)
-                ctx.move(to: a); ctx.addLine(to: b); ctx.strokePath()
+                if handDrawn { polyline(HandDrawn.line(from: a, to: b, seed: HandDrawn.seed(a.x, a.y, b.x, b.y))) }
+                else { ctx.move(to: a); ctx.addLine(to: b); ctx.strokePath() }
                 let angle = atan2(b.y - a.y, b.x - a.x), head: CGFloat = 18
                 ctx.setFillColor(green)
                 ctx.move(to: b)

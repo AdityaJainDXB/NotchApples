@@ -139,3 +139,37 @@ final class NotchAIOAuthTests: XCTestCase {
         for e in [OAuthError.noMetadata("x"), .insecure("y"), .noRegistration, .denied("z"), .stateMismatch, .noCode, .badResponse("b"), .cancelled] { XCTAssertFalse((e.errorDescription ?? "").isEmpty) }
     }
 }
+
+final class NotchAIConnectorCatalogTests: XCTestCase {
+    func testEveryPresetIsASecureAddressWithAUniqueID() {
+        XCTAssertEqual(Set(ConnectorCatalog.presets.map(\.id)).count, ConnectorCatalog.presets.count)
+        for p in ConnectorCatalog.presets {
+            let u = URL(string: p.address)
+            XCTAssertEqual(u?.scheme, "https", p.name)
+            XCTAssertNotNil(u?.host, p.name)
+            XCTAssertTrue(MCPNaming.isValidServerID(MCPNaming.slug(from: p.name)), p.name)
+            XCTAssertFalse(p.about.isEmpty)
+        }
+        XCTAssertFalse(ConnectorCatalog.presets.contains { $0.name.lowercased().contains("gmail") }, "there is no public Gmail server to point at")
+    }
+
+    func testASecondAccountGetsItsOwnName() {
+        XCTAssertEqual(ConnectorCatalog.freeName("Notion", taken: []), "Notion")
+        XCTAssertEqual(ConnectorCatalog.freeName("Notion", taken: ["notion"]), "Notion 2")
+        XCTAssertEqual(ConnectorCatalog.freeName("Notion", taken: ["Notion", "Notion 2", "Linear"]), "Notion 3")
+        XCTAssertNotEqual(MCPNaming.slug(from: "Notion"), MCPNaming.slug(from: "Notion 2"))
+    }
+
+    func testAccountsAreCountedByAddress() {
+        let notion = ConnectorCatalog.presets.first { $0.id == "notion" }!
+        XCTAssertEqual(ConnectorCatalog.accounts(of: notion, in: []), 0)
+        XCTAssertEqual(ConnectorCatalog.accounts(of: notion, in: ["https://mcp.notion.com/mcp/", "HTTPS://MCP.NOTION.COM/mcp", "https://mcp.linear.app/mcp"]), 2)
+    }
+
+    func testGitHubAsksForATokenAndTheOthersUseTheBrowser() {
+        for p in ConnectorCatalog.presets {
+            if p.id == "github" { if case .token(let hint) = p.signIn { XCTAssertTrue(hint.contains("token")) } else { XCTFail() } }
+            else { XCTAssertEqual(p.signIn, .browser, p.name) }
+        }
+    }
+}

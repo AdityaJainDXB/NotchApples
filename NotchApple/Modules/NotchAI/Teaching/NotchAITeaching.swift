@@ -126,7 +126,7 @@ private final class AnnotationCanvas: NSView {
     override var isFlipped: Bool { true }
     override func draw(_ dirtyRect: NSRect) {
         guard let ctx = NSGraphicsContext.current?.cgContext else { return }
-        AnnotationRenderer.draw(shapes, in: ctx, size: bounds.size, flipped: true)
+        AnnotationRenderer.draw(shapes, in: ctx, size: bounds.size, flipped: true, handDrawn: UserDefaults.standard.bool(forKey: "notchai.draw.handDrawn"))
     }
 }
 

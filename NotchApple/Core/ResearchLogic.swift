@@ -148,9 +148,12 @@ enum ResearchLogic {
 
     enum FileKind: String { case text, markdown, csv, json, code, pdf, image, office, unsupported }
 
+    /// Rich text and old Word files hold formatting codes, so they are read through the system's own reader, not as plain text.
+    static func needsRichReader(_ ext: String) -> Bool { ["rtf", "doc"].contains(ext.lowercased()) }
+
     static func kind(forExtension ext: String) -> FileKind {
         switch ext.lowercased() {
-        case "txt", "log", "rtf": .text
+        case "txt", "log", "rtf", "doc": .text
         case "md", "markdown": .markdown
         case "csv", "tsv": .csv
         case "json", "yaml", "yml", "xml", "plist", "toml": .json

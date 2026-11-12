@@ -10,7 +10,8 @@
 //   • GeminiSpeechProvider: Gemini TTS, a cloud voice, OFF unless the user turned on "Allow cloud and unverified
 //     models" (Local first). It sends the text to Google, so it is never used as a fallback and never used silently.
 //
-//  Piper (local neural TTS) and OpenAI TTS are not built yet; they would be two more conformers of this protocol.
+//   • OpenAISpeechProvider (cloud, same Local-first rule as Gemini) and PiperSpeechProvider (a local neural voice the
+//     user installs) are in NotchAIVoiceEngines.swift.
 //  OpenRouter is not a TTS provider and is not offered here.
 //
 
@@ -28,6 +29,8 @@ struct SpeechVoice: Identifiable, Equatable {
 enum SpeechError: LocalizedError {
     case cloudNotAllowed(String)
     case missingKey
+    case missingKeyFor(String)
+    case notReady(String)
     case badResponse(String)
 
     var errorDescription: String? {
@@ -35,6 +38,8 @@ enum SpeechError: LocalizedError {
         case .cloudNotAllowed(let name):
             "\(name) is a cloud voice: it sends the text to its servers. Local first is on, so nothing was sent. Allow cloud models in Settings → AI, or use the on-device voice."
         case .missingKey: "Add your Gemini key in Settings → AI to use Gemini TTS."
+        case .missingKeyFor(let name): "Add your \(name) key in Settings → AI to use this voice."
+        case .notReady(let why): why
         case .badResponse(let m): "The voice service didn't return audio: \(m)"
         }
     }

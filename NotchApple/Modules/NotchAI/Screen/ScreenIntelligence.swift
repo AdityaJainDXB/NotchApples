@@ -114,13 +114,26 @@ final class ScreenIntelligence: ObservableObject {
         ScreenRegionPicker.pick { [weak self] selection in
             guard let self else { return }
             guard let selection else { self.status = "No area chosen."; return }
+            self.read(area: selection.rect, on: selection.screen, name: "the area I chose", question: question, label: label)
+        }
+    }
+
+    /// Reads (or asks about) an area that is already known, for example the area around what the user drew.
+    func askAbout(area: CGRect, on screen: NSScreen, question: String?, label: String? = nil) {
+        status = nil
+        guard canCaptureNow() else { return }
+        read(area: area, on: screen, name: "the area I drew around", question: question, label: label)
+    }
+
+    private func read(area: CGRect, on screen: NSScreen, name: String, question: String?, label: String?) {
+        do {
             Task { @MainActor in
                 self.capturing = true
                 defer { self.capturing = false }
                 do {
-                    let image = try await ScreenGrab.captureRegion(selection.rect, on: selection.screen, excluding: self.exclusions)
+                    let image = try await ScreenGrab.captureRegion(area, on: screen, excluding: self.exclusions)
                     let text = ScreenOCR.text(try await ScreenOCR.recognize(image))
-                    let snap = ScreenSnapshot(appName: "the area I chose", bundleID: "", windowTitle: nil, ocrText: text, scope: .region)
+                    let snap = ScreenSnapshot(appName: name, bundleID: "", windowTitle: nil, ocrText: text, scope: .region)
                     guard let question else {
                         self.lastText = text.isEmpty ? "No text found." : text
                         self.status = "Read \(text.count.formatted()) characters from the area. Nothing was sent."

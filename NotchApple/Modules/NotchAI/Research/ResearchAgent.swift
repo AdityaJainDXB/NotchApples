@@ -136,6 +136,12 @@ enum ResearchIO {
             if text.count > maxBytes { text = String(text.prefix(maxBytes)); truncated = true }
         case .unsupported:
             throw ResearchError.unsupported(url.pathExtension)
+        case .text where ResearchLogic.needsRichReader(url.pathExtension):
+            // Rich text and old Word (.doc): macOS reads them itself; only the words are kept.
+            guard let rich = try? NSAttributedString(url: url, options: [:], documentAttributes: nil) else { throw ResearchError.unreadable }
+            text = rich.string
+            if text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty { throw ResearchError.noText }
+            if text.count > maxBytes { text = String(text.prefix(maxBytes)); truncated = true }
         default:
             guard let data = try? Data(contentsOf: url, options: .mappedIfSafe) else { throw ResearchError.unreadable }
             text = String(data: data.prefix(maxBytes), encoding: .utf8) ?? String(decoding: data.prefix(maxBytes), as: UTF8.self)

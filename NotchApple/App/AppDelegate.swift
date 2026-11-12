@@ -42,8 +42,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         CursorCompanion.shared.start()   // no-op unless the user turned the green dot on
         AgentHUD.shared.refresh()        // no-op unless the user turned on the agent cards
         CaptionOverlay.shared.start()    // shows words only while NotchAI is speaking
+        if UserDefaults.standard.bool(forKey: "notchai.draw.on") { NotchAIDrawing.shared.refresh() }   // draw on screen with ctrl-option, only if turned on
         if UserDefaults.standard.object(forKey: "notchai.voice.hotkey") as? Bool ?? true {
             GlobalHotkeyManager.shared.register(.notchAITalk) { NotchAIVoice.shared.talk() }   // ctrl-option-V: press to talk, press again to send
+            // The wake word (off by default) starts with the app only if the user turned it on.
+            if UserDefaults.standard.bool(forKey: "notchai.voice.wakeWord") { _ = NotchAIVoice.shared }
         }
         #if DEBUG
         // Test hook (DEBUG only): `-notchai.selftest.settings claude` opens that Settings tab at launch.
