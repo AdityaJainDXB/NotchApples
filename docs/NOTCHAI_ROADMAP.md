@@ -4,6 +4,7 @@ Post-2.2.60 development specification. Written 11 November 2026 from the owner's
 
 ## How to use this document
 
+- **If you are picking this up, read "Handoff" below first.**
 - Work one milestone at a time, in the order in section 21 (explain any change of order before doing it).
 - Every milestone: unit tests, integration tests, security tests, real tool-execution tests, UI verification where it applies, performance measurements, regression tests and documentation. Compiling is not proof a feature works.
 - Keep the **living status** table at the end up to date.
@@ -15,6 +16,68 @@ Post-2.2.60 development specification. Written 11 November 2026 from the owner's
 Implemented and verified · Implemented but not fully verified · Partially implemented · Not implemented · Blocked by dependency · Not applicable to platform.
 
 For Hey Clicky comparison rows: Equivalent and verified · Better or extended · Partially equivalent / partially implemented · Missing · Not applicable.
+
+---
+
+## Handoff: what remains, for whoever continues (12 November 2026)
+
+The owner is handing the remaining features to another developer. This section is the starting point; the **Living status** table further down is the detailed truth for each row.
+
+### Where the code is
+
+| What | Where |
+|---|---|
+| Milestone 1 (chat, regenerate, Ollama diagnostics, start at login, Reduce Motion) | PR #63, branch `notchai-step1-stability` |
+| Milestones 2 to 12 (voice, screen, research and files, memory, tasks, agents, MCP, dictation and alerts, teaching, 3D, workspace) | Draft PR #64, branch `notchai-roadmap-m12-workspace`, based on #63. Not merged, not released |
+| Do It bridge for the Computer agent | `NotchApples-Premium` (private), commit `cdf33eb` on `main`, **not pushed**. Public side: `PremiumRegistry.doItRun` |
+| Module code | `NotchApple/Modules/NotchAI/` (Agents, Integrations, Memory, Research, Screen, Skills, Tasks, Teaching, Visual, Voice, Workspace). Pure rules live in `NotchApple/Core/NotchAI*Logic.swift`, `ScreenContextLogic.swift`, `ResearchLogic.swift`, `ModelLocality.swift`, `CompanionMotion.swift` |
+| Tests | `NotchAppleTests/NotchAI*Tests.swift` and others; run all with `scripts/run-app-tests.sh` (about 496 tests). The Xcode test target does not compile on `main` for unrelated reasons (missing `Chess`, `LockCode`...), so that script is the way to run them. New logic files must be added to `project.yml` (test sources) and `scripts/run-app-tests.sh` |
+
+Merge order: #63, then #64 (retarget to `main`), then the private commit if the owner agrees. Nothing here is released; follow the release rules in `CLAUDE.md` and `docs/VERSIONING.md`.
+
+### How to build and test
+
+- Build: `xcodegen generate` then `xcodebuild -project NotchApple.xcodeproj -scheme NotchApple -configuration Debug -destination 'platform=macOS' build CODE_SIGNING_ALLOWED=NO`. `scripts/fetch-premium.sh` copies the private Do It code in.
+- DEBUG-only launch flags (compiled out of Release; check with `grep -rac selftest "<Release app>"`): `-notchai.dot.on YES`, `-notchai.selftest "<question>"`, `.provider`, `.model`, `.regenerate`, `.research "<url> | <question>"`, `.agents "<request>"`, `.resume YES`, `.workspace YES`, `.overlay YES`, `.speak "<text>"`, `.settings <tab>`, `.snapshot <section>`. Pass them after `--args`; use `-ai.provider ollama` to pin the model provider.
+- Local model used in testing: Ollama `qwen3:8b` at `localhost:11434` (about 20 tokens per second, and it reasons for a minute or more, so give model steps generous time limits).
+- Capture only Notch Apple's own windows when testing on a Mac (`screencapture -l <window id>`), and never inject keystrokes: an earlier attempt pressed Return in the wrong app.
+
+### Standing rules (from the owner; keep them)
+
+1. Local first stays fail closed: cloud and unverifiable models are blocked unless "Allow cloud and unverified models" is on; never a silent cloud or paid fallback. Every model call (chat, agents, planner, teaching, 3D, voice) goes through `NotchAIGuard`.
+2. Do not change licensing or entitlement code. Tiers read `Entitlements.tier` through `NotchAITier`: Free (tab, dot, chat, history, local Ollama, 3D sketches), Pro (screen, research, files, connectors, teaching), Ultimate (multi-agent, computer control).
+3. Do It, Convert, Smart Home, Claude Usage and Purge are protected premium modules: change them only with the owner's explicit approval (the Do It bridge was approved on 12 Nov, in the entry file only).
+4. No helper app, localhost server, bridge or WebSocket. (A local MCP command the user adds runs only while connected.)
+5. Every tool declares a risk (`ToolRisk`); sensitive and destructive steps always ask at every permission level. A plan can never grant a permission.
+6. No merge or release without the owner's go-ahead. Never claim a feature works without a real run; say what was only virtual.
+7. Keep this document's status table current, and keep the README and CHANGELOG rules in `CLAUDE.md`.
+
+### Backlog (suggested order, each with how to know it is done)
+
+| # | Work | Done when | Notes |
+|---|---|---|---|
+| 1 | **Real-device verification** of what was only built | Each item in the "Verified" column of the status table moves from unverified to verified, with the date | Needs a real Mac and a person: speak to Talk and hear the answer; interrupt speech; Screen Recording granted to the build, then Explain my screen, OCR, Teach me; dictate into TextEdit; notifications and chime; floating agent cards; the Control-Option-V shortcut; two displays; start at login; Reduce Motion; browser tools in Safari/Chrome (Automation prompt) |
+| 2 | **Computer control through Do It**: run one harmless task end to end | A Computer-agent step shows an approval, Do It confirms each action, cancelling the NotchAI task stops Do It, and the result returns | Bridge exists (`NotchAIDoItBridge` in the private `PremiumEntry.swift`); never run. Needs Screen Recording and Accessibility. Push the private commit only with the owner's OK |
+| 3 | **General web search** | A `SearchProvider` other than Wikipedia works and is labelled as sending the query off the device | Owner wants no paid API first; options to propose: a free keyless engine or a self-hosted one. Add as a new conformer plus fixture tests like `WikipediaSearchProvider` |
+| 4 | **Routines** (scheduled repeating tasks) | A saved task runs on a schedule, survives restart, pauses after three failures, waits for network and Mac awake | Build on `NotchAITask` and `TaskEngine`; add a scheduler and a store; reuse recovery rules |
+| 5 | **Per-agent conversations and follow-ups** | An agent's task has its own chat; a follow-up message routes to the right task; Stop button on it | Extend `NotchAITask` with a message list; Agents cards open it |
+| 6 | **More file types**: DOCX, XLSX, PPTX, folders, file search | Each is read read-only and cited with a location | Add to `ResearchIO.read` and `ResearchLogic.kind`; keep size caps |
+| 7 | **Voice**: local Whisper, Piper, OpenAI TTS, hands-free, optional wake word | Each engine is a `SpeechProvider` or `SpeechInput` conformer; wake word is off by default with a visible indicator and a privacy note | Wake word only after push-to-talk is verified. Never send audio off the Mac without telling the user |
+| 8 | **Screen**: free-form region picker, selected-text capture, screen-aware dictation | The picker draws a rectangle and captures it; dictation can draft from the screen | `ScreenGrab`, `ScreenIntelligence` |
+| 9 | **Drawing and 3D**: user drawing with a modifier key, hand-drawn style, real object models (USDZ), diagrams | Each works on the real screen | `AnnotationRenderer`, `VisualSceneBuilder` |
+| 10 | **Connectors**: browser sign-in (OAuth) for MCP, built-in Gmail/Notion/GitHub through MCP servers, multiple accounts per connector | A connector signs in without pasting a key; tokens stay in `KeychainHelper` | `MCPStore`, `HTTPMCPTransport` |
+| 11 | **Documents pane** in the workspace window; drag files into the notch | Files created or read by agents are listed beside the conversation | `NotchAIWorkspace.swift` |
+| 12 | **Browser extension** | Only if the owner changes the "no bridge" rule | Currently forbidden; the AppleScript browser tools are the substitute |
+| 13 | **Windows**: see "Windows plan" under the parity checklist | A Windows build of chat first | Rewrite the pure logic in JS with the Swift tests as the spec |
+| 14 | **Final parity audit** | Re-read heyclicky.com and its changelog, update the dated table, and re-class each row after real verification | The current table is dated 12 Nov 2026 and verifies nothing against Hey Clicky itself |
+
+### Known issues and things to look at first
+
+- The first live agent run failed because model steps timed out at 60 seconds; per-tool limits were added (`TaskTool.timeout`). If a new model step times out, set its `timeout` rather than raising the global default.
+- A regenerated answer is saved next to the first one in AI History, not in place of it.
+- `GeminiSpeechProvider` has never run (it would send text to Google); verify with a test key only if the owner allows a cloud request.
+- Hey Clicky's changelog says it removed its own "skills" in one release and brought back a second version later; do not copy their feature list blindly, check what the owner wants.
+- The orchestrator's final answer uses the chat's model (Settings → AI), not the planner's route; decide whether that is what the owner wants.
 
 ---
 
