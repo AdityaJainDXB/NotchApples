@@ -346,28 +346,91 @@ async fn pick_file(app: AppHandle) -> Result<Option<String>, String> {
     pick(app, false, None).await
 }
 
-/// Opens a page in a separate always-on-top browser window. The notch panel is
-/// too short to read a web page in. Async on purpose: building a window inside a synchronous command
-/// deadlocks on Windows (the notch freezes while the page's window is created).
+/// Where the page goes, in CSS pixels from the top-left of the notch's own web view (the empty area under the Browser tab's
+/// address bar). The page is a separate window with no access to the app, laid exactly over that area, so it looks like part
+/// of the notch; it is hidden when the notch closes or another tab opens.
+#[derive(serde::Deserialize, Clone, Copy)]
+struct BrowserRect { x: f64, y: f64, w: f64, h: f64 }
+
+fn place_browser(app: &AppHandle, win: &tauri::WebviewWindow, r: BrowserRect) -> Result<(), String> {
+    let notch = app.get_webview_window("notch").ok_or("no notch window")?;
+    let pos = notch.inner_position().map_err(|e| e.to_string())?;
+    let scale = notch.scale_factor().map_err(|e| e.to_string())?;
+    let w = (r.w * scale).round().max(240.0) as u32;
+    let h = (r.h * scale).round().max(160.0) as u32;
+    win.set_size(tauri::PhysicalSize::new(w, h)).map_err(|e| e.to_string())?;
+    win.set_position(tauri::PhysicalPosition::new(pos.x + (r.x * scale).round() as i32, pos.y + (r.y * scale).round() as i32)).map_err(|e| e.to_string())?;
+    Ok(())
+}
+
+/// Opens a page. With `rect` it sits inside the notch (no frame, no taskbar button, over the notch's page area); without it,
+/// in its own always-on-top window. Async on purpose: building a window inside a synchronous command deadlocks on Windows
+/// (the notch freezes while the page's window is created).
 #[tauri::command]
-async fn open_browser(app: AppHandle, url: String) -> Result<(), String> {
+async fn open_browser(app: AppHandle, url: String, rect: Option<BrowserRect>) -> Result<(), String> {
     let parsed: tauri::Url = url.parse().map_err(|_| "That doesn't look like a web address.")?;
     if !matches!(parsed.scheme(), "http" | "https") {
         return Err("Only web pages can be opened here.".into());
     }
     if let Some(existing) = app.get_webview_window("browser") {
+        let _ = existing.set_decorations(rect.is_none());
+        let _ = existing.set_skip_taskbar(rect.is_some());
+        let _ = existing.set_always_on_top(true);
+        if let Some(r) = rect { place_browser(&app, &existing, r)?; } else { let _ = existing.center(); }
         let _ = existing.show();
         let _ = existing.unminimize();
         let _ = existing.set_focus();
         let _ = existing.eval(&format!("location.href = {}", serde_json::to_string(&url).unwrap_or_default()));
         return Ok(());
     }
-    WebviewWindowBuilder::new(&app, "browser", WebviewUrl::External(parsed))
+    let mut b = WebviewWindowBuilder::new(&app, "browser", WebviewUrl::External(parsed))
         .title("Notch Apple — Browser")
-        .inner_size(1100.0, 760.0)
-        .center()
-        .build()
-        .map_err(|e| e.to_string())?;
+        .always_on_top(true);
+    b = match rect {
+        Some(r) => b.decorations(false).resizable(false).skip_taskbar(true).shadow(false).inner_size(r.w.max(240.0), r.h.max(160.0)).visible(false),
+        None => b.inner_size(1100.0, 760.0).center(),
+    };
+    let win = b.build().map_err(|e| e.to_string())?;
+    if let Some(r) = rect {
+        place_browser(&app, &win, r)?;
+        let _ = win.show();
+    }
+    Ok(())
+}
+
+/// Moves the in-notch page to a new area (the notch grew, or the layout changed) and shows it if it was hidden.
+#[tauri::command]
+async fn browser_place(app: AppHandle, rect: BrowserRect) -> Result<(), String> {
+    let win = app.get_webview_window("browser").ok_or("no page is open")?;
+    place_browser(&app, &win, rect)?;
+    let _ = win.show();
+    Ok(())
+}
+
+/// Hides the page without closing it (another tab is showing, or the notch closed). Its place in the page is kept.
+#[tauri::command]
+async fn browser_hide(app: AppHandle) -> Result<(), String> {
+    if let Some(w) = app.get_webview_window("browser") { let _ = w.hide(); }
+    Ok(())
+}
+
+/// Closes the page.
+#[tauri::command]
+async fn browser_close(app: AppHandle) -> Result<(), String> {
+    if let Some(w) = app.get_webview_window("browser") { let _ = w.close(); }
+    Ok(())
+}
+
+/// Back, forward or reload in the page.
+#[tauri::command]
+async fn browser_nav(app: AppHandle, action: String) -> Result<(), String> {
+    let js = match action.as_str() {
+        "back" => "history.back()",
+        "forward" => "history.forward()",
+        "reload" => "location.reload()",
+        _ => return Err("unknown action".into()),
+    };
+    if let Some(w) = app.get_webview_window("browser") { let _ = w.eval(js); }
     Ok(())
 }
 
@@ -617,7 +680,7 @@ fn main() {
             awake::set_keep_awake, awake::keep_awake_state,
             system_stats, top_processes, transliterate, capture_screen,
             installed_apps, path_info, launch_app, open_path, reveal_path, open_url,
-            pick_app, pick_folder, pick_file, open_browser, lyrics_overlay_show, lyrics_overlay_hide, greeting_show, greeting_hide, privategame::private_game_save, privategame::private_game_open, privategame::private_game_remove,
+            pick_app, pick_folder, pick_file, open_browser, browser_place, browser_hide, browser_close, browser_nav, lyrics_overlay_show, lyrics_overlay_hide, greeting_show, greeting_hide, privategame::private_game_save, privategame::private_game_open, privategame::private_game_remove,
             index::search_files, index::set_search_folders, index::search_status,
             icons::icons,
             watch::screen_time, watch::set_edge_trigger, watch::privacy_now, watch::foreground_now, watch::minimize_external,

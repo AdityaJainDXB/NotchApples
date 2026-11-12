@@ -47,8 +47,9 @@ export const pref = (key) => {
 export const setPref = (key, value) => save(key, value);
 
 export const SIZES = {
-  compact:  { pillWidth: 200, pillHeight: 30, width: 700, height: 420 },
-  standard: { pillWidth: 240, pillHeight: 34, width: 780, height: 460 },
+  compact:  { pillWidth: 200, pillHeight: 30, width: 640, height: 380 },
+  // The Mac's default panel (740 x 420); its custom range is 620-1000 x 360-600.
+  standard: { pillWidth: 240, pillHeight: 34, width: 740, height: 420 },
   large:    { pillWidth: 280, pillHeight: 38, width: 920, height: 560 },
 };
 
