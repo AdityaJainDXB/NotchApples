@@ -77,4 +77,16 @@ final class TodoLogicTests: XCTestCase {
         XCTAssertTrue(TodoLogic.isOverdue(item("x", .low, due: now.addingTimeInterval(-60)), now: now))
         XCTAssertFalse(TodoLogic.isOverdue(item("x", .low, done: true, due: now.addingTimeInterval(-60)), now: now))
     }
+
+    func testUpNextNamesTheDayInsteadOfSayingTomorrowForEverythingLater() {
+        var cal = Calendar(identifier: .gregorian); cal.timeZone = TimeZone(identifier: "UTC")!; cal.locale = Locale(identifier: "en_US")
+        let thursday = cal.date(from: DateComponents(year: 2026, month: 11, day: 12, hour: 21))!
+        func at(_ day: Int, hour: Int = 7) -> Date { cal.date(from: DateComponents(year: 2026, month: 11, day: day, hour: hour))! }
+        XCTAssertEqual(TodoLogic.dayLabel(at(12, hour: 23), now: thursday, calendar: cal), "Today")
+        XCTAssertEqual(TodoLogic.dayLabel(at(13), now: thursday, calendar: cal), "Tomorrow")
+        XCTAssertEqual(TodoLogic.dayLabel(at(14), now: thursday, calendar: cal), "Saturday", "two days away is named, not 'Tomorrow'")
+        XCTAssertEqual(TodoLogic.dayLabel(at(18), now: thursday, calendar: cal), "Wednesday")
+        XCTAssertNotEqual(TodoLogic.dayLabel(at(19), now: thursday, calendar: cal), "Thursday", "a week away is a date, not a weekday that could mean today")
+        XCTAssertTrue(TodoLogic.dayLabel(at(19), now: thursday, calendar: cal).contains("19"))
+    }
 }
