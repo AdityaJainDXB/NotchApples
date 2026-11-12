@@ -96,6 +96,7 @@
 		24F83028F1AEB920C645968B /* MusicSleepTimer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 426F46C6AD7DEAFB4B5D938E /* MusicSleepTimer.swift */; };
 		25596AE5ED9D2BD27643B323 /* NotchAITier.swift in Sources */ = {isa = PBXBuildFile; fileRef = 07BAB3971ADC752912DA22B5 /* NotchAITier.swift */; };
 		260DC3E3C52E0B1023D405F4 /* FocusTimer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C191B301A7AE40F175BA044 /* FocusTimer.swift */; };
+		268D96C212911DE3C249ADEE /* ScreenRegionPicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10D36D55F93F5D913F761F5F /* ScreenRegionPicker.swift */; };
 		26B0D2A8600059E93BC78637 /* MeetingNotesTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3A2D492850F6E7302EE68BC /* MeetingNotesTests.swift */; };
 		26D09B0E866D702D64C68CEB /* AcknowledgementsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E215AC0F99CCC1E81AC1732 /* AcknowledgementsView.swift */; };
 		26F5863DB636C5DCF506B2CE /* wordle.js in Resources */ = {isa = PBXBuildFile; fileRef = AAEC0E1A6526DE9FE3CCD09C /* wordle.js */; };
@@ -660,6 +661,7 @@
 		0EE2E453CA2D381EA8DC3001 /* LayoutPicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LayoutPicker.swift; sourceTree = "<group>"; };
 		0F548E2157A119D180EAC46E /* NamedTimerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NamedTimerTests.swift; sourceTree = "<group>"; };
 		109E43BCE08792C473471623 /* TodoView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodoView.swift; sourceTree = "<group>"; };
+		10D36D55F93F5D913F761F5F /* ScreenRegionPicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenRegionPicker.swift; sourceTree = "<group>"; };
 		112EF10C851E0687733A7B89 /* TokenTrailStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TokenTrailStore.swift; sourceTree = "<group>"; };
 		124BDFBD62457B30249EC257 /* ResearchLogicTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResearchLogicTests.swift; sourceTree = "<group>"; };
 		13BA89CC14259A92057EDFDC /* ProductKeys.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProductKeys.swift; sourceTree = "<group>"; };
@@ -1166,6 +1168,7 @@
 				318722B5FCE2CACCA528B917 /* NotchAIScreenView.swift */,
 				7102E6F57648A855C4F1C0AA /* ScreenIntelligence.swift */,
 				4DDBEBAA2622F90970497E2B /* ScreenOCR.swift */,
+				10D36D55F93F5D913F761F5F /* ScreenRegionPicker.swift */,
 			);
 			path = Screen;
 			sourceTree = "<group>";
@@ -2800,6 +2803,7 @@
 				BEE3E6BFE3CD3DE26BF6B09D /* ScreenOCR.swift in Sources */,
 				1CBAB31C782A4307CEAD9136 /* ScreenRecorder.swift in Sources */,
 				B04F3036E9BBE628D875CCA6 /* ScreenRecordingDetector.swift in Sources */,
+				268D96C212911DE3C249ADEE /* ScreenRegionPicker.swift in Sources */,
 				D6AB6D3B477B7BBBEFB85708 /* ScreenTimeView.swift in Sources */,
 				F6E3BFD260D3182D21C66E29 /* ScreenTools.swift in Sources */,
 				B0A049343A21AB11F45495FB /* ScribbleGameView.swift in Sources */,

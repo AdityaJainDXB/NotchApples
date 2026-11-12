@@ -91,3 +91,73 @@ final class ScreenContextTests: XCTestCase {
         XCTAssertTrue(lines.isEmpty)
     }
 }
+
+final class ScreenRegionAndSelectionTests: XCTestCase {
+    private typealias L = ScreenContextLogic
+
+    func testADragWorksInEveryDirection() {
+        let want = CGRect(x: 10, y: 20, width: 100, height: 50)
+        XCTAssertEqual(L.dragRect(from: CGPoint(x: 10, y: 20), to: CGPoint(x: 110, y: 70)), want)
+        XCTAssertEqual(L.dragRect(from: CGPoint(x: 110, y: 70), to: CGPoint(x: 10, y: 20)), want)
+        XCTAssertEqual(L.dragRect(from: CGPoint(x: 110, y: 20), to: CGPoint(x: 10, y: 70)), want)
+        XCTAssertEqual(L.dragRect(from: CGPoint(x: 5, y: 5), to: CGPoint(x: 5, y: 5)).size, .zero)
+    }
+
+    func testASelectionIsFlippedToTopLeftOriginOnItsDisplay() {
+        let screen = CGRect(x: 0, y: 0, width: 1440, height: 900)
+        // 100 wide, 50 tall, its bottom-left 200 from the left and 300 up from the bottom: its top is 550 up, so 350 down from the top.
+        let r = L.regionOnDisplay(selection: CGRect(x: 200, y: 300, width: 100, height: 50), screenFrame: screen)
+        XCTAssertEqual(r, CGRect(x: 200, y: 550, width: 100, height: 50))
+    }
+
+    func testASecondDisplayAbovePrimaryAndLeftOfIt() {
+        let left = CGRect(x: -1920, y: 0, width: 1920, height: 1080)
+        XCTAssertEqual(L.regionOnDisplay(selection: CGRect(x: -1900, y: 1000, width: 40, height: 60), screenFrame: left), CGRect(x: 20, y: 20, width: 40, height: 60))
+        let above = CGRect(x: 0, y: 900, width: 1440, height: 900)
+        XCTAssertEqual(L.regionOnDisplay(selection: CGRect(x: 10, y: 1700, width: 50, height: 100), screenFrame: above), CGRect(x: 10, y: 0, width: 50, height: 100))
+    }
+
+    func testASelectionPastTheEdgeIsClippedAndATinyOneIsRefused() {
+        let screen = CGRect(x: 0, y: 0, width: 1000, height: 800)
+        XCTAssertEqual(L.regionOnDisplay(selection: CGRect(x: 900, y: 700, width: 300, height: 300), screenFrame: screen), CGRect(x: 900, y: 0, width: 100, height: 100))
+        XCTAssertNil(L.regionOnDisplay(selection: CGRect(x: 10, y: 10, width: 5, height: 200), screenFrame: screen))
+        XCTAssertNil(L.regionOnDisplay(selection: CGRect(x: 2000, y: 2000, width: 100, height: 100), screenFrame: screen))   // another display
+        XCTAssertNil(L.regionOnDisplay(selection: .zero, screenFrame: screen))
+    }
+
+    func testPixelSizeFollowsTheScaleAndIsCapped() {
+        XCTAssertEqual(L.pixelSize(of: CGRect(x: 0, y: 0, width: 300, height: 200), scale: 2).width, 600)
+        XCTAssertEqual(L.pixelSize(of: CGRect(x: 0, y: 0, width: 300, height: 200), scale: 2).height, 400)
+        let big = L.pixelSize(of: CGRect(x: 0, y: 0, width: 6000, height: 3000), scale: 2)
+        XCTAssertEqual(big.width, 4096)
+        XCTAssertEqual(big.height, 2048)                      // same shape
+        XCTAssertGreaterThanOrEqual(L.pixelSize(of: CGRect(x: 0, y: 0, width: 0.2, height: 0.2), scale: 1).width, 1)
+    }
+
+    func testTheDrawnAreaIsNotAPreset() {
+        XCTAssertFalse(ScreenScope.presets.contains(.region))
+        XCTAssertTrue(ScreenScope.presets.contains(.window))
+        XCTAssertNil(ScreenScope.region.crop)
+        XCTAssertEqual(ScreenScope.region.title, "A chosen area")
+    }
+
+    func testSelectedTextBlankIsRefusedAndLongIsCutWithANote() {
+        XCTAssertNil(L.usableSelection(nil))
+        XCTAssertNil(L.usableSelection("  \n\t "))
+        XCTAssertEqual(L.usableSelection("  hello \n")?.text, "hello")
+        XCTAssertEqual(L.usableSelection("hello")?.wasCut, false)
+        let long = L.usableSelection(String(repeating: "a", count: 20_000))
+        XCTAssertEqual(long?.text.count, L.maxSelection)
+        XCTAssertEqual(long?.wasCut, true)
+    }
+
+    func testSelectionPromptNamesTheAppAndQuotesTheText() {
+        let p = L.selectionPrompt(question: "Explain", appName: "Safari", text: "Na+ is a cation", wasCut: false)
+        XCTAssertTrue(p.hasPrefix("Explain\n"))
+        XCTAssertTrue(p.contains("selected in Safari"))
+        XCTAssertTrue(p.contains("\"\"\"\nNa+ is a cation\n\"\"\""))
+        XCTAssertFalse(p.contains("very long"))
+        XCTAssertTrue(L.selectionPrompt(question: "q", appName: "A", text: "t", wasCut: true).contains("very long"))
+        XCTAssertEqual(L.selectionBubble(question: "Explain", appName: "Safari", characters: 1500), "Explain  ·  selected text in Safari, 1,500 characters")
+    }
+}

@@ -100,9 +100,77 @@ final class ScreenIntelligence: ObservableObject {
         if ScreenContextLogic.isExcluded(bundleID: app.bundleIdentifier ?? "", exclusions: exclusions) { throw TeachingError.refused("\(app.localizedName ?? "That app") is on the exclusion list.") }
         capturing = true
         defer { capturing = false }
-        let (image, _) = try await ScreenGrab.capture(app: app, scope: scope)
+        let (image, _) = try await ScreenGrab.capture(app: app, scope: scope, excluding: exclusions)
         let lines = try await ScreenOCR.recognize(image)
         return (app.localizedName ?? "the app", lines.map { OCRBox(text: $0.text, box: $0.box) }, ScreenOCR.text(lines))
+    }
+
+    // MARK: A drawn area and selected text
+
+    /// Draws the area picker, then reads the text in the chosen area on this Mac (no AI), or asks `question` about it.
+    func chooseArea(question: String?, label: String? = nil) {
+        status = nil
+        guard canCaptureNow() else { return }
+        ScreenRegionPicker.pick { [weak self] selection in
+            guard let self else { return }
+            guard let selection else { self.status = "No area chosen."; return }
+            Task { @MainActor in
+                self.capturing = true
+                defer { self.capturing = false }
+                do {
+                    let image = try await ScreenGrab.captureRegion(selection.rect, on: selection.screen, excluding: self.exclusions)
+                    let text = ScreenOCR.text(try await ScreenOCR.recognize(image))
+                    let snap = ScreenSnapshot(appName: "the area I chose", bundleID: "", windowTitle: nil, ocrText: text, scope: .region)
+                    guard let question else {
+                        self.lastText = text.isEmpty ? "No text found." : text
+                        self.status = "Read \(text.count.formatted()) characters from the area. Nothing was sent."
+                        return
+                    }
+                    NotchAIConversation.shared.send(ScreenContextLogic.prompt(question: question, snapshot: snap),
+                                                    display: ScreenContextLogic.bubble(question: label ?? question, snapshot: snap),
+                                                    imageBase64: self.sendImage ? ScreenGrab.jpegBase64(image) : nil)
+                    NotchAINav.shared.section = .chat
+                    self.status = nil
+                } catch { self.status = "Couldn't capture: \(error.localizedDescription)" }
+            }
+        }
+    }
+
+    /// The text selected in the app the user was just using, read through Accessibility (no copying, no key presses).
+    /// With a question it goes to the conversation; without one it is only shown.
+    func useSelection(question: String?, label: String? = nil) {
+        status = nil
+        guard NotchAITier.allows(.pro) else { status = NotchAITier.lockedMessage(.pro); return }
+        guard isOn else { status = "Screen awareness is off. Turn it on first."; return }
+        guard let app = lastExternalApp else { status = "No app to read: select some text in a window first."; return }
+        if ScreenContextLogic.isExcluded(bundleID: app.bundleIdentifier ?? "", exclusions: exclusions) {
+            status = "\(app.localizedName ?? "That app") is on the exclusion list, so its text is never read."; return
+        }
+        guard SelectedTextReader.trusted else {
+            status = "Accessibility permission is needed to read selected text. macOS is asking; allow Notch Apple, then press the button again."
+            SelectedTextReader.requestTrust(); return
+        }
+        guard let sel = ScreenContextLogic.usableSelection(SelectedTextReader.read(pid: app.processIdentifier)) else {
+            status = "No text is selected in \(app.localizedName ?? "that app"), or that app does not share its selection. Select some text and try again."
+            return
+        }
+        let name = app.localizedName ?? "the app"
+        guard let question else {
+            lastText = sel.text
+            status = "Read \(sel.text.count.formatted()) selected characters from \(name). Nothing was sent."
+            return
+        }
+        NotchAIConversation.shared.send(ScreenContextLogic.selectionPrompt(question: question, appName: name, text: sel.text, wasCut: sel.wasCut),
+                                        display: ScreenContextLogic.selectionBubble(question: label ?? question, appName: name, characters: sel.text.count))
+        NotchAINav.shared.section = .chat
+    }
+
+    private func canCaptureNow() -> Bool {
+        guard NotchAITier.allows(.pro) else { status = NotchAITier.lockedMessage(.pro); return false }
+        guard isOn else { status = "Screen awareness is off. Turn it on first."; return false }
+        refreshPermission()
+        guard permissionGranted else { status = "Screen Recording permission is needed. Press “Allow screen access”."; return false }
+        return true
     }
 
     private func snapshot(scope: ScreenScope, showText: Bool) async throws -> (ScreenSnapshot, String?) {
@@ -120,7 +188,7 @@ final class ScreenIntelligence: ObservableObject {
         capturing = true
         defer { capturing = false }
         do {
-            let (image, title) = try await ScreenGrab.capture(app: app, scope: scope)
+            let (image, title) = try await ScreenGrab.capture(app: app, scope: scope, excluding: exclusions)
             let lines = try await ScreenOCR.recognize(image)
             let text = ScreenOCR.text(lines)
             let snap = ScreenSnapshot(appName: app.localizedName ?? bundle, bundleID: bundle, windowTitle: title, ocrText: text, scope: scope)
@@ -139,14 +207,18 @@ final class ScreenIntelligence: ObservableObject {
 
 enum ScreenGrab {
     enum GrabError: LocalizedError {
-        case noWindow, noDisplay
+        case noWindow, noDisplay, tooSmall
         var errorDescription: String? {
-            switch self { case .noWindow: "that app has no visible window"; case .noDisplay: "no display found" }
+            switch self {
+            case .noWindow: "that app has no visible window"
+            case .noDisplay: "no display found"
+            case .tooSmall: "that area is too small"
+            }
         }
     }
 
     /// The window (or display) as an image, cropped for region presets, and the window's title.
-    static func capture(app: NSRunningApplication, scope: ScreenScope) async throws -> (CGImage, String?) {
+    static func capture(app: NSRunningApplication, scope: ScreenScope, excluding excluded: [String] = []) async throws -> (CGImage, String?) {
         let content = try await SCShareableContent.excludingDesktopWindows(true, onScreenWindowsOnly: true)
         var title: String?
         let image: CGImage
@@ -154,7 +226,7 @@ enum ScreenGrab {
         config.showsCursor = false
         if scope == .display || scope.crop != nil {
             guard let display = content.displays.first(where: { $0.displayID == CGMainDisplayID() }) ?? content.displays.first else { throw GrabError.noDisplay }
-            let own = content.applications.filter { $0.bundleIdentifier == Bundle.main.bundleIdentifier }
+            let own = content.applications.filter { $0.bundleIdentifier == Bundle.main.bundleIdentifier || ScreenContextLogic.isExcluded(bundleID: $0.bundleIdentifier, exclusions: excluded) }   // a password manager on screen is blanked out, not just refused as the target
             let filter = SCContentFilter(display: display, excludingApplications: own, exceptingWindows: [])
             config.width = display.width * 2; config.height = display.height * 2
             image = try await SCScreenshotManager.captureImage(contentFilter: filter, configuration: config)
@@ -170,6 +242,22 @@ enum ScreenGrab {
             return (cropped, title)
         }
         return (image, title)
+    }
+
+    /// An area the user drew (AppKit screen coordinates) on one display. Notch Apple's own windows and any excluded app's windows are
+    /// left out of the picture.
+    static func captureRegion(_ selection: CGRect, on screen: NSScreen, excluding excluded: [String]) async throws -> CGImage {
+        guard let local = ScreenContextLogic.regionOnDisplay(selection: selection, screenFrame: screen.frame) else { throw GrabError.tooSmall }
+        let id = (screen.deviceDescription[NSDeviceDescriptionKey("NSScreenNumber")] as? NSNumber)?.uint32Value ?? CGMainDisplayID()
+        let content = try await SCShareableContent.excludingDesktopWindows(true, onScreenWindowsOnly: true)
+        guard let display = content.displays.first(where: { $0.displayID == id }) else { throw GrabError.noDisplay }
+        let left = content.applications.filter { $0.bundleIdentifier == Bundle.main.bundleIdentifier || ScreenContextLogic.isExcluded(bundleID: $0.bundleIdentifier, exclusions: excluded) }
+        let config = SCStreamConfiguration()
+        config.showsCursor = false
+        config.sourceRect = local
+        let px = ScreenContextLogic.pixelSize(of: local, scale: screen.backingScaleFactor)
+        config.width = px.width; config.height = px.height
+        return try await SCScreenshotManager.captureImage(contentFilter: SCContentFilter(display: display, excludingApplications: left, exceptingWindows: []), configuration: config)
     }
 
     static func jpegBase64(_ image: CGImage) -> String? {

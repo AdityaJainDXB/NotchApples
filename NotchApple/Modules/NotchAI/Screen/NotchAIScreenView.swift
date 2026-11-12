@@ -31,13 +31,22 @@ struct NotchAIScreenView: View {
                 permissionRow
                 HStack {
                     Text("Read").font(.system(size: 11)).foregroundStyle(.white).frame(width: 60, alignment: .leading)
-                    Picker("", selection: $scope) { ForEach(ScreenScope.allCases) { Text($0.title).tag($0) } }.labelsHidden().frame(width: 150)
+                    Picker("", selection: $scope) { ForEach(ScreenScope.presets) { Text($0.title).tag($0) } }.labelsHidden().frame(width: 150)
                     Text("of the app you were just using").font(.system(size: 10)).foregroundStyle(Theme.textSecondary)
                 }
                 HStack(spacing: 8) {
                     Button("Explain my screen") { screen.ask(ScreenContextLogic.explainQuestion, label: "Explain my screen", scope: scope) }
                     Button("Summarise this app") { screen.ask(ScreenContextLogic.summariseQuestion, label: "Summarise this app", scope: scope) }
                     Button("Read the text only") { screen.readText(scope: scope) }
+                }
+                .disabled(!unlocked || !screen.isOn || screen.capturing)
+                HStack(spacing: 8) {
+                    Button("Choose an area…") { screen.chooseArea(question: ScreenContextLogic.explainQuestion, label: "Explain the area I chose") }
+                        .help("Drag a rectangle on any screen; NotchAI reads and explains just that")
+                    Button("Read an area’s text") { screen.chooseArea(question: nil) }
+                    Button("Explain selected text") { screen.useSelection(question: ScreenContextLogic.selectionExplainQuestion, label: "Explain my selected text") }
+                        .help("Uses the text selected in the app you were just using (needs Accessibility)")
+                    Button("Show selected text") { screen.useSelection(question: nil) }
                 }
                 .disabled(!unlocked || !screen.isOn || screen.capturing)
                 Toggle(isOn: $screen.sendImage) {
