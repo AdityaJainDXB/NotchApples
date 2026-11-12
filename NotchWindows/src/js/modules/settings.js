@@ -11,14 +11,15 @@ import { setting, toggle, select, segmented, toast, confirm, button, prompt, mar
 import { icon } from '../icons.js';
 import { keyField, BUY_URL, badge } from './activation.js';
 import { securityCard } from './security.js';
-import { buildIndex, search, fold } from './settingssearch.js';
+import { buildIndex, search, searchFeatures, fold } from './settingssearch.js';
+import * as Report from './reportlogic.js';
 
-export const PANES = { General, Updates, Appearance, Tabs, Shortcuts, AI, Calendar, Weather, Clipboard, Security, Rules, Automations, Access, About };
+export const PANES = { General, Updates, Appearance, Tabs, Shortcuts, AI, Calendar, Weather, Clipboard, Security, Rules, Automations, Access, Report: ReportPane, About };
 const NAV = { General: ['settings', '#8e8e93'], Updates: ['share', '#30d158'], Appearance: ['appearance', '#bf5af2'], Tabs: ['home', '#5e5ce6'], Shortcuts: ['shortcuts', '#64d2ff'], AI: ['ai', '#ff9f0a'],
   Calendar: ['calendar', '#ff453a'], Weather: ['weather', '#32ade6'], Clipboard: ['clipboard', '#ffd60a'], Security: ['security', '#ff6b6b'], Rules: ['rules', '#30d158'],
-  Automations: ['automations', '#bf5af2'], Access: ['access', '#0a84ff'], About: ['about', '#5e5ce6'] };
+  Automations: ['automations', '#bf5af2'], Access: ['access', '#0a84ff'], Report: ['about', '#ff453a'], About: ['about', '#5e5ce6'] };
 const ICONS_UPDATES = 1;
-const ICONS = { General: '⚙', Appearance: '🎨', Tabs: '🗂', Shortcuts: '⌨', AI: '✨', Calendar: '📅', Weather: '⛅', Clipboard: '📋', Security: '🔒', Rules: '🧭', Automations: '🤖', Access: '🔑', About: 'ℹ' };
+const ICONS = { Report: '🐞', General: '⚙', Appearance: '🎨', Tabs: '🗂', Shortcuts: '⌨', AI: '✨', Calendar: '📅', Weather: '⛅', Clipboard: '📋', Security: '🔒', Rules: '🧭', Automations: '🤖', Access: '🔑', About: 'ℹ' };
 
 /// Keys that hold a secret (a licence, an AI key, a token, the clipboard-link code): never in a backup, never restored from one.
 const SECRET_KEY = /^(ai\.key\.|license\.|entitle\.|clipsync\.code$)|\.(token|pass|password|secret)$/;
@@ -49,15 +50,20 @@ export function render(root, opts = {}) {
   if (!PANES[current]) current = 'General';
   let query = '';
   let found = [];
+  let features = [];
+  let flashFeature = null;
   const list = el('div', { class: 'col gap-4' });
   const body = el('div', { class: 'scroll', style: 'flex:1;padding-right:6px' });
-  const box = el('input', { class: 'input settings-search', type: 'search', placeholder: 'Search settings', 'aria-label': 'Search settings' });
+  const box = el('input', { class: 'field settings-search', type: 'text', autocomplete: 'off', spellcheck: 'false', placeholder: 'Search settings', 'aria-label': 'Search settings' });
   const nav = el('div', { class: 'col gap-4 scroll', style: 'flex:0 0 172px;padding-right:8px;border-right:1px solid var(--border)' }, box, list);
   const open = (n) => { current = n; save('settings.pane', n); paint(); };
-  box.addEventListener('input', () => { query = box.value; found = search(settingsIndex(), query, Object.keys(PANES)); paint(); });
+  /// A feature match opens Tabs with that feature's row highlighted, like the Mac opening Modules with it isolated.
+  const openFeature = (m) => { flashFeature = m.id; open('Tabs'); };
+  box.addEventListener('input', () => { query = box.value; found = search(settingsIndex(), query, Object.keys(PANES)); features = searchFeatures(MODULES, query); flashFeature = null; paint(); });
   box.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter' && found[0]) open(found[0].pane);
-    if (e.key === 'Escape' && query) { box.value = ''; query = ''; found = []; paint(); e.stopPropagation(); }
+    // As on the Mac, a feature match comes first: "games" opens the Games feature, then the first pane that matches.
+    if (e.key === 'Enter') { if (features[0]) openFeature(features[0]); else if (found[0]) open(found[0].pane); }
+    if (e.key === 'Escape' && query) { box.value = ''; query = ''; found = []; features = []; flashFeature = null; paint(); e.stopPropagation(); }
   });
   /// After a pane opens from a search, bring its first matching row into view and flash it.
   function markMatches() {
@@ -70,6 +76,12 @@ export function render(root, opts = {}) {
     }
     first?.scrollIntoView({ block: 'center' });
   }
+  function markFeature() {
+    if (!flashFeature) return;
+    const row = body.querySelector(`[data-module="${flashFeature}"]`);
+    if (row) { row.classList.add('search-hit'); row.scrollIntoView({ block: 'center' }); }
+    flashFeature = null;
+  }
   function paint() {
     const shown = query ? found.map((f) => f.pane) : Object.keys(PANES);
     const rows = shown.map((n) => {
@@ -79,10 +91,14 @@ export function render(root, opts = {}) {
         el('span', { class: 'tile-ico', style: `background:${NAV[n][1]}` }, icon(NAV[n][0], 17)),
         el('span', { class: 'main' }, n, sub ? el('span', { class: 'tiny dim', style: 'display:block;font-weight:400' }, sub) : null));
     });
-    list.replaceChildren(...(query && !rows.length ? [el('div', { class: 'tiny dim', style: 'padding:6px 8px' }, 'No settings match that.')] : rows));
+    const featureRows = query ? features.slice(0, 6).map((m) => el('div', { class: 'navrow', onclick: () => openFeature(m) },
+      el('span', { class: 'tile-ico', style: 'background:#5e5ce6;font-size:13px' }, m.icon),
+      el('span', { class: 'main' }, m.name, el('span', { class: 'tiny dim', style: 'display:block;font-weight:400' }, 'Feature')))) : [];
+    list.replaceChildren(...(query && !rows.length && !featureRows.length ? [el('div', { class: 'tiny dim', style: 'padding:6px 8px' }, 'No settings match that.')] : [...featureRows, ...rows]));
     body.replaceChildren(el('div', { class: 'col' }, ...[].concat(PANES[current](paint, opts))));
     opts = {};
     markMatches();
+    markFeature();
   }
   root.append(el('div', { class: 'row fill' }, nav, body));
   paint();
@@ -271,7 +287,7 @@ function Appearance(repaint) {
 function Tabs(repaint) {
   const order = tabOrder();
   return [el('div', { class: 'hstack' }, el('div', { class: 'small dim grow' }, 'Turn tabs on or off. Drag tabs in the bar to reorder them.'), button('Choose with pictures…', () => show('welcome'), { kind: 'quiet' })),
-    ...order.filter((id) => id !== 'settings').map((id) => MODULES.find((m) => m.id === id)).map((m, i, arr) => el('div', { class: 'item', style: 'border:1px solid var(--border)' },
+    ...order.filter((id) => id !== 'settings').map((id) => MODULES.find((m) => m.id === id)).map((m, i, arr) => el('div', { class: 'item', 'data-module': m.id, style: 'border:1px solid var(--border)' },
       el('span', { style: 'font-size:18px;width:24px' }, m.icon),
       el('div', { class: 'main' }, el('div', { class: 'hstack', style: 'gap:6px' }, el('b', {}, m.name), m.feature ? badge(m.feature) : null), el('div', { class: 'tiny dim' }, m.blurb), m.note ? el('div', { class: 'tiny warn', style: 'font-weight:600' }, `(${m.note})`) : null),
       el('button', { class: 'icon-btn', title: 'Move up', onclick: () => { if (i) { const o = tabOrder(); const a = o.indexOf(m.id), b = o.indexOf(arr[i - 1].id); [o[a], o[b]] = [o[b], o[a]]; setTabOrder(o); repaint(); } } }, '↑'),
@@ -436,6 +452,24 @@ function Access(repaint) {
   card('What’s included', ...feats.map(([id, f]) => el('div', { class: 'hstack small', style: 'padding:3px 0' },
     el('span', { style: 'width:16px' }, canUse(id) ? '✓' : ''), el('span', { class: 'grow' }, f.title, el('span', { class: 'tiny faint' }, ` — ${f.mac ? `Mac only: ${f.mac}` : f.detail}`)), badge(id)))),
   el('div', { class: 'small dim' }, 'Lost your key? notchapples.support@gmail.com')].filter(Boolean);
+}
+
+function ReportPane() {
+  let kind = 'bug';
+  const info = { platform: 'Windows', version: '…', tier: tierLabel(tier()), system: (navigator.userAgent.match(/Windows NT [\d.]+/) || ['Windows'])[0] };
+  appInfo.then((i) => { info.version = i.version; fill(); }).catch(() => {});
+  const text = el('textarea', { class: 'field', style: 'min-height:130px', placeholder: Report.KINDS[kind].prompt, maxlength: Report.MAX_DESCRIPTION });
+  const count = el('span', { class: 'tiny dim' }, `0/${Report.MAX_DESCRIPTION}`);
+  const send = button('Open on GitHub…', () => openUrl(Report.issueUrl(kind, info, text.value)));
+  const facts = el('div', { class: 'small dim' });
+  function fill() { facts.replaceChildren(...Report.environment(info).map((l) => el('div', {}, l))); }
+  const refresh = () => { count.textContent = `${text.value.length}/${Report.MAX_DESCRIPTION}`; send.disabled = !Report.isReady(text.value); };
+  text.addEventListener('input', refresh);
+  const kinds = segmented(Object.entries(Report.KINDS).map(([value, k]) => ({ value, label: k.title })), kind, (v) => { kind = v; text.placeholder = Report.KINDS[v].prompt; });
+  fill(); refresh();
+  return [card('Report a problem or an idea', kinds, text, el('div', { class: 'hstack' }, count, el('div', { class: 'grow' }), send),
+      el('div', { class: 'tiny dim' }, 'This opens a GitHub issue in your browser, filled in for you. You read it and press Submit yourself; Notch Apple sends nothing. You need a free GitHub account.')),
+    card('What the report says about you', facts, el('div', { class: 'tiny dim', style: 'padding-top:6px' }, 'Only these four lines are added. No keys, notes, history, file names or personal details.'))];
 }
 
 function About() {

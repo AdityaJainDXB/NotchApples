@@ -1,9 +1,11 @@
-// Browser, ported from BrowserModel.swift: type a website or a search and it
-// opens in a separate always-on-top window (the notch is too short to read a web
-// page in). Your own quick links and recent pages are one click away.
+// Browser, ported from BrowserModel.swift: type a website or a search and the page opens INSIDE the notch, like the Mac
+// (the panel grows to 1100 x 700 while a page is open). The page is a separate frameless window with no access to the app,
+// laid exactly over the notch's page area; it hides when you change tab or the notch closes. "Own window" pops it out.
+// Your own quick links and recent pages are one click away.
 
 import { el, load, save, timeAgo } from '../store.js';
 import { invoke } from '../native.js';
+import { bigBrowser, holdOpen } from '../app.js';
 import { menu, prompt, toast } from '../ui.js';
 
 export const ENGINES = {
@@ -46,6 +48,9 @@ const DEFAULT_LINKS = [
 
 const host = (url) => { try { return new URL(url).hostname.replace(/^www\./, ''); } catch { return url; } };
 
+/// A page is open in the notch (it stays open across tab switches, like the Mac's browser).
+let pageOpen = false;
+
 export function render(root) {
   let engine = load('browser.engine', 'duckduckgo');
   const bar = el('input', { class: 'field', style: 'flex:1', placeholder: `Search ${ENGINES[engine].name} or type a website` });
@@ -53,18 +58,49 @@ export function render(root) {
   const linksGrid = el('div', { class: 'grid', style: 'grid-template-columns:repeat(auto-fill,minmax(84px,1fr))' });
   const recent = el('div', { class: 'col gap-4' });
 
+  const stage = el('div', { class: 'card', style: 'flex:1;min-height:0;display:none;align-items:center;justify-content:center' }, el('div', { class: 'small dim' }, 'Loading the page…'));
+  const startPage = el('div', { class: 'row', style: 'flex:1;min-height:0' });
+  let held = false, ro = null;
+  const rectOf = () => { const r = stage.getBoundingClientRect(); return { x: r.left, y: r.top, w: r.width, h: r.height }; };
+  const place = () => { if (pageOpen && stage.isConnected) invoke('browser_place', { rect: rectOf() }).catch(() => {}); };
+  function showStage(on) {
+    stage.style.display = on ? 'flex' : 'none';
+    startPage.style.display = on ? 'none' : 'flex';
+    navRow.style.display = on ? 'flex' : 'none';
+    if (on && !held) { held = true; holdOpen(true); }
+    if (!on && held) { held = false; holdOpen(false); }
+    bigBrowser(on);
+    if (on) { setTimeout(place, 120); setTimeout(place, 450); setTimeout(place, 900); }   // the panel grows first; the page follows
+  }
+  const navBtn = (label, title, action) => el('button', { class: 'btn small quiet', title, onclick: () => invoke('browser_nav', { action }).catch(() => {}) }, label);
+  const navRow = el('div', { class: 'hstack', style: 'display:none' },
+    navBtn('←', 'Back', 'back'), navBtn('→', 'Forward', 'forward'), navBtn('↻', 'Reload', 'reload'),
+    el('div', { class: 'small dim grow ellipsis', id: 'browser-host' }, ''),
+    el('button', { class: 'btn small quiet', title: 'Show this page in its own window', onclick: async () => {
+      const u = recentUrl; if (!u) return;
+      await invoke('browser_close').catch(() => {}); pageOpen = false; showStage(false);
+      invoke('open_browser', { url: u }).catch((e) => toast(e.message || String(e), { error: true }));
+    } }, 'Own window'),
+    el('button', { class: 'btn small quiet', onclick: () => closePage() }, 'Close page'));
+  let recentUrl = '';
+  async function closePage() { await invoke('browser_close').catch(() => {}); pageOpen = false; showStage(false); }
+
   async function open(what) {
     const url = resolve(what, engine);
     if (!url) return;
     status.textContent = `Opening ${host(url)}…`;
     try {
-      await invoke('open_browser', { url });
+      recentUrl = url;
+      showStage(true); pageOpen = true;
+      navRow.querySelector('#browser-host').textContent = host(url);
+      await new Promise((r) => setTimeout(r, 60));     // let the panel start growing, then measure
+      await invoke('open_browser', { url, rect: rectOf() });
       const hist = load('browser.history', []).filter((h) => h.url !== url);
       save('browser.history', [{ url, title: /[?&]q=/.test(url) ? `Search: ${what}` : host(url), at: Date.now() }, ...hist].slice(0, 30));
       status.textContent = '';
       bar.value = '';
       paintRecent();
-    } catch (e) { status.replaceChildren(el('span', { class: 'err' }, e.message)); }
+    } catch (e) { pageOpen = false; showStage(false); status.replaceChildren(el('span', { class: 'err' }, e.message || String(e))); }
   }
 
   bar.addEventListener('keydown', (e) => { if (e.key === 'Enter') open(bar.value); });
@@ -105,12 +141,23 @@ export function render(root) {
 
   paintLinks();
   paintRecent();
+  startPage.append(
+    el('div', { class: 'card col', style: 'flex:1.3' }, el('div', { class: 'section-title' }, 'Quick links'), el('div', { class: 'scroll' }, linksGrid),
+      el('div', { class: 'tiny faint' }, 'Right-click a link to rename or remove it.')),
+    el('div', { class: 'card col scroll', style: 'flex:1' }, recent));
+  startPage.style.display = 'flex';
   root.append(el('div', { class: 'col fill' },
     el('div', { class: 'hstack' }, bar, el('button', { class: 'btn', onclick: () => open(bar.value) }, 'Go'), engineSel),
-    status,
-    el('div', { class: 'row', style: 'flex:1;min-height:0' },
-      el('div', { class: 'card col', style: 'flex:1.3' }, el('div', { class: 'section-title' }, 'Quick links'), el('div', { class: 'scroll' }, linksGrid),
-        el('div', { class: 'tiny faint' }, 'Right-click a link to rename or remove it.')),
-      el('div', { class: 'card col scroll', style: 'flex:1' }, recent))));
+    status, navRow, startPage, stage));
+  // Coming back to the tab with a page still open: show it again where it belongs.
+  if (pageOpen) { showStage(true); }
+  ro = new ResizeObserver(place); ro.observe(stage);
   setTimeout(() => bar.focus(), 40);
+  // Leaving the tab (or the notch closing) hides the page and gives the panel its normal size back.
+  return () => {
+    ro?.disconnect();
+    if (held) { held = false; holdOpen(false); }
+    bigBrowser(false);
+    invoke('browser_hide').catch(() => {});
+  };
 }
