@@ -18,11 +18,26 @@
 
 import Foundation
 
+/// Who is running a step: the task's agent, its id and how deep in a delegation it is.
+struct TaskContext: Sendable {
+    var agent: String
+    var taskID: UUID
+    var depth: Int
+}
+
 protocol TaskTool: Sendable {
     var id: String { get }
     var risk: ToolRisk { get }
     /// `results` holds the results of the steps that finished before this one, by idempotency key.
     func run(argument: String, results: [String: String]) async throws -> String
+    /// Same, for tools that need to know which agent is asking (model routing). Defaults to the plain version.
+    func run(argument: String, results: [String: String], context: TaskContext) async throws -> String
+}
+
+extension TaskTool {
+    func run(argument: String, results: [String: String], context: TaskContext) async throws -> String {
+        try await run(argument: argument, results: results)
+    }
 }
 
 struct TaskTimeout: LocalizedError {
@@ -34,6 +49,9 @@ actor TaskEngine {
         var level: @Sendable () -> PermissionLevel
         var trustedTools: @Sendable () -> Set<String>
         var stepTimeout: TimeInterval = 60
+        /// For tasks delegated by an orchestrator (depth > 0): the tools an agent may use. A step outside it fails
+        /// without running, even if a plan asked for it. Nil = no extra limit.
+        var childToolPolicy: @Sendable (_ agent: String) -> Set<String>? = { _ in nil }
     }
 
     private let tools: [String: TaskTool]
@@ -74,6 +92,11 @@ actor TaskEngine {
                 return await finish(&t, .failed, "Step “\(step.title)” failed: no such tool.")
             }
             t.steps[i].risk = tool.risk    // the tool's real risk, not what the step claims
+            if t.depth > 0, let allowed = config.childToolPolicy(t.agent), !allowed.contains(tool.id) {
+                t.steps[i].state = .failed
+                t.steps[i].error = "The \(t.agent) agent is not allowed to use “\(tool.id)”."
+                return await finish(&t, .failed, t.steps[i].error!)
+            }
 
             switch TaskLogic.decide(risk: tool.risk, tool: tool.id, level: config.level(), trustedTools: config.trustedTools()) {
             case .allow: break
@@ -103,7 +126,8 @@ actor TaskEngine {
 
             let results = Dictionary(t.steps.compactMap { s in s.state == .done ? s.result.map { (s.idempotencyKey, $0) } : nil }, uniquingKeysWith: { a, _ in a })
             do {
-                let result = try await withTimeout(config.stepTimeout) { try await tool.run(argument: step.argument, results: results) }
+                let context = TaskContext(agent: t.agent, taskID: t.id, depth: t.depth)
+                let result = try await withTimeout(config.stepTimeout) { try await tool.run(argument: step.argument, results: results, context: context) }
                 t.steps[i].state = .done
                 t.steps[i].result = result
                 t.steps[i].error = nil

@@ -34,9 +34,15 @@ final class NotchAITaskStore: ObservableObject {
         if let data = try? Data(contentsOf: url), let decoded = try? Self.decoder.decode([NotchAITask].self, from: data) {
             tasks = decoded.map { TaskLogic.recover($0) }       // a task that was mid-run is paused, never repeated
         }
-        let tools: [TaskTool] = [FetchPageTool(), AskModelTool(), ReadFileTool(allowedPath: { await MainActor.run { ResearchAgent.shared.pickedFile?.path } })]
+        let tools: [TaskTool] = [FetchPageTool(), AskModelTool(), ReadFileTool(allowedPath: { await MainActor.run { ResearchAgent.shared.pickedFile?.path } }),
+                                 SearchWebTool(), SearchDocumentTool(), AgentAskTool(), ReadScreenTool(), SpeakTool(), BrowserOpenTool(), BrowserReadTool(),
+                                 ComputerTaskTool(), PlanRequestTool(), RunPlanTool(), AnswerRequestTool()]
+        // A task an orchestrator delegated may only use its agent's tools, even if a plan asked for another.
+        let policy = { @Sendable (agent: String) -> Set<String>? in
+            DispatchQueue.main.sync { AgentStore.shared.agent(agent).map { Set($0.tools) } }
+        }
         let level = { @Sendable () -> PermissionLevel in PermissionLevel(rawValue: UserDefaults.standard.string(forKey: "notchai.permission.level") ?? "") ?? .askBeforeActing }
-        engine = TaskEngine(tools: tools, config: .init(level: level, trustedTools: { [] }, stepTimeout: 60),
+        engine = TaskEngine(tools: tools, config: .init(level: level, trustedTools: { [] }, stepTimeout: 60, childToolPolicy: policy),
                             persist: { [weak self] t in await MainActor.run { self?.update(t) } })
         save()
     }
@@ -44,7 +50,8 @@ final class NotchAITaskStore: ObservableObject {
     private static var encoder: JSONEncoder { let e = JSONEncoder(); e.dateEncodingStrategy = .secondsSince1970; return e }
     private static var decoder: JSONDecoder { let d = JSONDecoder(); d.dateDecodingStrategy = .secondsSince1970; return d }
 
-    var runningCount: Int { tasks.filter { $0.state == .running || $0.state == .waitingApproval }.count }
+    /// Top-level tasks only: the children an orchestrator starts are limited by the plan's own parallel limit.
+    var runningCount: Int { tasks.filter { $0.depth == 0 && ($0.state == .running || $0.state == .waitingApproval) }.count }
     var waitingForApproval: [NotchAITask] { tasks.filter { $0.state == .waitingApproval } }
 
     // MARK: Control
@@ -70,6 +77,43 @@ final class NotchAITaskStore: ObservableObject {
     func cancel(_ id: UUID) {
         handles[id]?.cancel()
         Task { await engine.cancel(id) }
+        // Cancelling an orchestration cancels what it delegated.
+        for child in tasks where child.parentID == id && !child.state.isFinished { cancel(child.id) }
+    }
+
+    // MARK: Delegation (the orchestrator's children)
+
+    private var waiters: [UUID: [CheckedContinuation<NotchAITask, Never>]] = [:]
+
+    /// Runs child tasks at the same time and returns them finished. A child that already finished (before a restart)
+    /// is reused, not run again; one that was paused by a restart is resumed.
+    func runChildren(_ children: [NotchAITask]) async -> [NotchAITask] {
+        await withTaskGroup(of: NotchAITask.self) { group in
+            for c in children { group.addTask { await self.runChild(c) } }
+            var out: [NotchAITask] = []
+            for await t in group { out.append(t) }
+            return out
+        }
+    }
+
+    private func runChild(_ child: NotchAITask) async -> NotchAITask {
+        let existing = tasks.first { $0.parentID == child.parentID && $0.steps.first?.idempotencyKey == child.steps.first?.idempotencyKey }
+        switch ChildReuse.decision(for: existing) {
+        case .reuse: return existing!
+        case .resume:
+            let t = existing!
+            return await withCheckedContinuation { cont in
+                waiters[t.id, default: []].append(cont)
+                let next = t.state == .paused ? t : t
+                update(next); run(next)
+            }
+        case .startNew:
+            return await withCheckedContinuation { cont in
+                waiters[child.id, default: []].append(cont)
+                tasks.insert(child, at: 0)
+                run(child)
+            }
+        }
     }
 
     func approve(_ id: UUID, _ approved: Bool) { Task { await engine.resolveApproval(id, approved: approved) } }
@@ -98,6 +142,7 @@ final class NotchAITaskStore: ObservableObject {
     fileprivate func update(_ t: NotchAITask) {
         if let i = tasks.firstIndex(where: { $0.id == t.id }) { tasks[i] = t } else { tasks.insert(t, at: 0) }
         save()
+        if t.state.isFinished, let w = waiters.removeValue(forKey: t.id) { w.forEach { $0.resume(returning: t) } }
     }
 
     private func save() {

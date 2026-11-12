@@ -26,7 +26,7 @@ struct FetchPageTool: TaskTool {
     let id = "fetch_page"
     let risk = ToolRisk.readOnly
     func run(argument: String, results: [String: String]) async throws -> String {
-        guard let url = URL(string: argument) else { throw ResearchError.notPublic }
+        guard let url = ResearchLogic.urls(in: argument).first ?? URL(string: argument) else { throw ResearchError.notPublic }
         do {
             let s = try await ResearchIO.fetch(url)
             return encode(PageToolResult(ok: true, title: s.title, location: s.location, text: s.text, truncated: s.truncated, error: nil))

@@ -84,6 +84,12 @@ final class ScreenIntelligence: ObservableObject {
         }
     }
 
+    /// For an agent that was approved to read the screen: the same checks as the buttons (Pro, switch, permission,
+    /// exclusions), then the app, window and text.
+    func captureForAgent(scope: ScreenScope = .window) async throws -> ScreenSnapshot {
+        try await snapshot(scope: scope, showText: false).0
+    }
+
     private func snapshot(scope: ScreenScope, showText: Bool) async throws -> (ScreenSnapshot, String?) {
         status = nil
         guard NotchAITier.allows(.pro) else { status = NotchAITier.lockedMessage(.pro); throw Failure.refused }

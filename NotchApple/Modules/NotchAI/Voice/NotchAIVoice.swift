@@ -106,6 +106,12 @@ final class NotchAIVoice: ObservableObject {
         if state == .speaking { handle(.interrupt); handle(.cancelled); handle(.reset) }
     }
 
+    /// Speaks text for an agent (the Voice agent's tool). Cloud voices still obey Local first.
+    func speakText(_ text: String) throws {
+        applySettings()
+        try provider.speak(text)
+    }
+
     func previewVoice() {
         problem = nil
         applySettings()

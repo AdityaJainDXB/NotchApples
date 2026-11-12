@@ -12,7 +12,7 @@ import SwiftUI
 
 struct NotchAIView: View {
     enum Section: String, CaseIterable, Identifiable {
-        case overview = "Overview", companion = "Companion", chat = "Chat", voice = "Voice", screen = "Screen", research = "Research", tasks = "Tasks", memory = "Memory", skills = "Skills"
+        case overview = "Overview", companion = "Companion", chat = "Chat", voice = "Voice", screen = "Screen", research = "Research", agents = "Agents", tasks = "Tasks", memory = "Memory", skills = "Skills"
         var id: String { rawValue }
     }
 
@@ -48,6 +48,7 @@ struct NotchAIView: View {
             case .voice: NotchAIVoiceView()
             case .screen: NotchAIScreenView()
             case .research: NotchAIResearchView()
+            case .agents: NotchAIAgentsView()
             case .tasks: NotchAITasksView()
             case .memory: NotchAIMemoryView()
             case .skills: NotchAISkillsView()
@@ -70,7 +71,7 @@ struct NotchAIView: View {
                 }
                 statusRow("Screen awareness", NotchAITier.allows(.pro) ? (ScreenIntelligence.shared.isOn ? "On: only when you ask" : "Off") : "Pro", on: ScreenIntelligence.shared.isOn && NotchAITier.allows(.pro), dim: !NotchAITier.allows(.pro))
                 statusRow("Voice", NotchAIVoice.shared.provider.runsLocally ? "Talk and spoken answers, on this Mac" : "Talk and spoken answers (cloud voice)", on: true)
-                statusRow("Agents and computer control", "Tasks run (read-only); agents and computer control are not built yet (Ultimate)", on: false, dim: true)
+                statusRow("Agents", NotchAITier.allows(.ultimate) ? "\(AgentStore.shared.agents.filter(\.enabled).count) agents ready" : "Ultimate", on: NotchAITier.allows(.ultimate), dim: !NotchAITier.allows(.ultimate))
                 HStack {
                     Button(dot.isOn ? "Turn the dot off" : "Turn the dot on") { dot.isOn.toggle() }
                     Text("Nothing is captured or sent unless you ask.").font(.system(size: 10)).foregroundStyle(Theme.textSecondary)
