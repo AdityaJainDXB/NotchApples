@@ -99,7 +99,7 @@ struct PlayCard: View {
                 else if s.status == .playing { Button("Join the game") { joinedScribble = s.gid }.buttonStyle(PurpleButtonStyle()) }
                 else { Text("Scribble").font(.system(size: 11)).foregroundStyle(Theme.textSecondary) }
             }
-            Text(statusLine(s, me: me)).font(.system(size: 12, weight: myTurn(s, me: me) ? .bold : .regular)).foregroundStyle(.white).multilineTextAlignment(.center)
+            Text(statusLine(s, me: me)).font(.system(size: 12, weight: myTurn(s, me: me) ? .bold : .regular)).foregroundStyle(Theme.textPrimary).multilineTextAlignment(.center)
             HStack(spacing: 8) {
                 if s.status == .finished, me != nil {
                     let asked = s.rematch.contains(myID)
@@ -283,9 +283,9 @@ struct PlayCard: View {
         VStack(spacing: 8) {
             if let me {
                 HStack(spacing: 14) {
-                    Text("You \(s.rps.score[me])").font(.system(size: 13, weight: .bold)).foregroundStyle(.white)
+                    Text("You \(s.rps.score[me])").font(.system(size: 13, weight: .bold)).foregroundStyle(Theme.textPrimary)
                     Text("–").foregroundStyle(Theme.textSecondary)
-                    Text("\(play.name(s.player(1 - me))) \(s.rps.score[1 - me])").font(.system(size: 13, weight: .bold)).foregroundStyle(.white)
+                    Text("\(play.name(s.player(1 - me))) \(s.rps.score[1 - me])").font(.system(size: 13, weight: .bold)).foregroundStyle(Theme.textPrimary)
                 }
                 if let last = s.rps.last {
                     let mine = last[me], theirs = last[1 - me]
@@ -307,7 +307,7 @@ struct PlayCard: View {
                     }
                 }
             } else {
-                Text("\(play.name(s.p1)) \(s.rps.score[0]) – \(s.rps.score[1]) \(play.name(s.p2))").font(.system(size: 13, weight: .bold)).foregroundStyle(.white)
+                Text("\(play.name(s.p1)) \(s.rps.score[0]) – \(s.rps.score[1]) \(play.name(s.p2))").font(.system(size: 13, weight: .bold)).foregroundStyle(Theme.textPrimary)
             }
         }
     }
