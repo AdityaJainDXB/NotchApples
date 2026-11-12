@@ -113,6 +113,18 @@ enum TodoLogic {
         return date.formatted(.dateTime.month(.abbreviated).day()) + time
     }
 
+    /// The day an event is on, for the Up next list: "Today", "Tomorrow", the weekday within the next week ("Saturday"), else "Mon 23 Nov".
+    static func dayLabel(_ date: Date, now: Date = Date(), calendar: Calendar = .current) -> String {
+        let days = calendar.dateComponents([.day], from: calendar.startOfDay(for: now), to: calendar.startOfDay(for: date)).day ?? 0
+        switch days {
+        case ..<0: return date.formatted(.dateTime.weekday(.abbreviated).day().month(.abbreviated))
+        case 0: return "Today"
+        case 1: return "Tomorrow"
+        case 2...6: return calendar.weekdaySymbols[calendar.component(.weekday, from: date) - 1]
+        default: return date.formatted(.dateTime.weekday(.abbreviated).day().month(.abbreviated))
+        }
+    }
+
     static func isOverdue(_ item: TodoItem, now: Date = Date()) -> Bool {
         guard !item.done, let due = item.due else { return false }
         return due < now
