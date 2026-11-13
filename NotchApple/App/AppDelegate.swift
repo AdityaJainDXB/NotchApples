@@ -124,6 +124,42 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 }
             }
         }
+        // Every theme (DEBUG only): `-notch.selftest.snapshotThemes YES` draws the closed notch with the hover rim and the tab row for
+        // each colour theme to /tmp/notch-themes.png, off-screen.
+        if UserDefaults.standard.bool(forKey: "notch.selftest.snapshotThemes") {
+            Task { @MainActor in
+                try? await Task.sleep(nanoseconds: 2_500_000_000)
+                let themes = AppTheme.allThemes.values.sorted { $0.name < $1.name }
+                func closed(_ c: Color) -> some View {
+                    ZStack(alignment: .top) {
+                        NotchShape(topRadius: 8, bottomRadius: 12).fill(Color.black)
+                        LiquidMetalCapsule(hover: true, tint: c, veil: false).mask { NotchShape(topRadius: 8, bottomRadius: 12, closed: false).stroke(style: StrokeStyle(lineWidth: 3.5, lineCap: .round)) }
+                    }.frame(width: 190, height: 36)
+                }
+                func tabs(_ t: AppTheme) -> some View {
+                    HStack(spacing: 6) {
+                        ForEach(Array(["Home", "AI", "Games", "Sports"].enumerated()), id: \.offset) { i, n in
+                            Text(n).font(.system(size: 13, weight: .semibold)).foregroundStyle(.white).padding(.horizontal, 12).frame(height: 30)
+                                .background { if i == 2 { LiquidMetalCapsule(tint: t.secondaryAccent).shadow(color: t.primaryAccent.opacity(0.45), radius: 6) } else if i == 1 { LiquidMetalCapsule(hover: true, tint: t.secondaryAccent).opacity(0.55) } }
+                        }
+                    }
+                }
+                let sheet = VStack(alignment: .leading, spacing: 8) {
+                    ForEach(themes) { t in
+                        HStack(spacing: 18) {
+                            Text(t.name).font(.system(size: 12)).foregroundStyle(.white.opacity(0.8)).frame(width: 130, alignment: .leading)
+                            closed(t.secondaryAccent).padding(.top, -4)
+                            tabs(t)
+                        }
+                        .padding(.vertical, 6).padding(.horizontal, 12)
+                        .background(LinearGradient(colors: [t.backgroundColor, t.backdropEnd], startPoint: .topLeading, endPoint: .bottomTrailing), in: RoundedRectangle(cornerRadius: 12))
+                    }
+                }.padding(14).frame(width: 760).background(Color(white: 0.06))
+                try? await Task.sleep(nanoseconds: 1_000_000_000)
+                let r = ImageRenderer(content: sheet); r.scale = 2
+                if let img = r.nsImage, let tiff = img.tiffRepresentation, let rep = NSBitmapImageRep(data: tiff), let png = rep.representation(using: .png, properties: [:]) { try? png.write(to: URL(fileURLWithPath: "/tmp/notch-themes.png")) }
+            }
+        }
         // Whole-notch snapshot (DEBUG only): `-notch.selftest.snapshotRoot YES [-appearance.liquidMetal YES]` draws the open notch
         // off-screen to /tmp/notch-root-snap.png (hidden window, never shown), so the look can be checked without the desktop.
         if UserDefaults.standard.bool(forKey: "notch.selftest.snapshotRoot") {

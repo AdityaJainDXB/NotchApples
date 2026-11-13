@@ -19,6 +19,10 @@ enum LiquidMetalSetting {
 /// A capsule filled with flowing metal in the theme colour. `hover` (0 or 1) makes the metal brighter and faster.
 struct LiquidMetalCapsule: View {
     var hover: Bool = false
+    /// The metal's tint; the current theme's bright accent when nil.
+    var tint: Color? = nil
+    /// A dark veil keeps white text readable on the metal (tabs). A rim around the notch has no text, so it goes without.
+    var veil: Bool = true
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
@@ -28,9 +32,9 @@ struct LiquidMetalCapsule: View {
                 ZStack {
                     Capsule()
                         .fill(.white)
-                        .colorEffect(ShaderLibrary.liquidMetal(.float2(geo.size), .float(t), .float(1), .float(hover ? 1 : 0), .color(Theme.accentBright)))
+                        .colorEffect(ShaderLibrary.liquidMetal(.float2(geo.size), .float(t), .float(1), .float(hover ? 1 : 0), .color(tint ?? Theme.accentBright)))
                     // A soft dark veil keeps the white tab name readable on the brightest part of the metal.
-                    Capsule().fill(Color.black.opacity(hover ? 0.30 : 0.42))
+                    if veil { Capsule().fill(Color.black.opacity(hover ? 0.30 : 0.42)) }
                 }
             }
         }

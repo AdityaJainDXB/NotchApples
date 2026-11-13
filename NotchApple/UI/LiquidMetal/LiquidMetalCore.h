@@ -51,7 +51,11 @@ static inline float3 liquidMetalRGB(float2 p, float2 size, float t, float3 tint,
     float sweep = smoothstep(0.0, 1.0, 1.0 - abs(fract(uv.x * 0.9 - t * 0.06 * (1.0 + hover)) - 0.5) * 2.0);
     silver += spec * float3(1.0) * (0.35 + 0.65 * sweep);
     // The theme colour tints the metal without turning it into paint.
-    float3 tinted = silver * mix(float3(1.0), tint * 1.25 + 0.2, 0.38);
+    // Strong tint: the metal is the theme's colour (dark tone to bright tone of that colour), with the white highlights kept.
+    float3 hue = tint / max(max(tint.r, max(tint.g, tint.b)), 0.001);          // the colour at full brightness
+    float lum = dot(silver, float3(0.333));
+    float3 coloured = mix(hue * 0.18, hue, smoothstep(0.1, 0.85, lum)) + hue * pow(max(lum - 0.75, 0.0) * 4.0, 1.5) * 0.35 + float3(spec * 0.5);
+    float3 tinted = mix(silver, coloured, 0.88);
     // Darker rim near the edges gives it thickness.
     float2 e = min(uv, 1.0 - uv) * float2(min(size.x, size.y) / max(size.x, 1.0), min(size.x, size.y) / max(size.y, 1.0)) * 6.0;
     float rim = smoothstep(0.0, 1.0, min(e.x, e.y) * 4.0);

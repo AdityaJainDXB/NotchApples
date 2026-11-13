@@ -107,7 +107,7 @@ final class NotchTriggerView: NSView {
     private func updateMetalRim() {
         let on = isHovered && LiquidMetalSetting.isOn && !NSWorkspace.shared.accessibilityDisplayShouldReduceMotion
         if on, rimHost == nil {
-            let host = PassThroughHost(rootView: LiquidMetalCapsule(hover: true))
+            let host = PassThroughHost(rootView: LiquidMetalCapsule(hover: true, veil: false))
             host.wantsLayer = true
             host.alphaValue = 0
             addSubview(host)
@@ -122,7 +122,7 @@ final class NotchTriggerView: NSView {
             var notch = NSRect(x: bounds.midX - width / 2, y: bounds.minY + pad.height, width: width, height: bounds.height - pad.height)
             notch = notch.insetBy(dx: -6, dy: 0); notch.origin.y -= 3; notch.size.height += 3
             let path = Self.notchPath(in: notch, shoulder: shoulder, bottom: min(10, notch.height / 2))
-            let ring = path.cgPath.copy(strokingWithWidth: 3, lineCap: .round, lineJoin: .round, miterLimit: 1)
+            let ring = path.cgPath.copy(strokingWithWidth: 3.5, lineCap: .round, lineJoin: .round, miterLimit: 1)
             let mask = CAShapeLayer(); mask.path = ring; mask.fillColor = NSColor.black.cgColor
             host.frame = bounds
             host.layer?.mask = mask
