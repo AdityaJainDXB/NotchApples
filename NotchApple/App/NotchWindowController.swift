@@ -93,8 +93,47 @@ final class NotchTriggerView: NSView {
     var onDragEnter: () -> Void = {}
     var onHoverChange: (Bool) -> Void = { _ in }
 
-    private var isHovered = false { didSet { needsDisplay = true } }
+    private var isHovered = false { didSet { needsDisplay = true; updateMetalRim() } }
     private var tracking: NSTrackingArea?
+
+    // MARK: Liquid metal rim (opt-in: Settings → Appearance)
+
+    /// A click-through SwiftUI layer that shows flowing metal around the closed notch while the pointer is on it.
+    private final class PassThroughHost: NSHostingView<LiquidMetalCapsule> {
+        override func hitTest(_ point: NSPoint) -> NSView? { nil }
+    }
+    private var rimHost: PassThroughHost?
+
+    private func updateMetalRim() {
+        let on = isHovered && LiquidMetalSetting.isOn && !NSWorkspace.shared.accessibilityDisplayShouldReduceMotion
+        if on, rimHost == nil {
+            let host = PassThroughHost(rootView: LiquidMetalCapsule(hover: true))
+            host.wantsLayer = true
+            host.alphaValue = 0
+            addSubview(host)
+            rimHost = host
+        }
+        guard let host = rimHost else { return }
+        if on {
+            // The same silhouette as the hover outline in draw(_:), stroked 3 points wide, is the window the metal shows through.
+            let pad = Self.hitPadding
+            let shoulder = NotchRootView.collapsedShoulder
+            let width = notchWidth + 2 * (shoulder + displayedEar)
+            var notch = NSRect(x: bounds.midX - width / 2, y: bounds.minY + pad.height, width: width, height: bounds.height - pad.height)
+            notch = notch.insetBy(dx: -6, dy: 0); notch.origin.y -= 3; notch.size.height += 3
+            let path = Self.notchPath(in: notch, shoulder: shoulder, bottom: min(10, notch.height / 2))
+            let ring = path.cgPath.copy(strokingWithWidth: 3, lineCap: .round, lineJoin: .round, miterLimit: 1)
+            let mask = CAShapeLayer(); mask.path = ring; mask.fillColor = NSColor.black.cgColor
+            host.frame = bounds
+            host.layer?.mask = mask
+            NSAnimationContext.runAnimationGroup { $0.duration = 0.18; host.animator().alphaValue = 1 }
+        } else {
+            NSAnimationContext.runAnimationGroup({ $0.duration = 0.18; host.animator().alphaValue = 0 }, completionHandler: { [weak self] in
+                guard let self, !self.isHovered else { return }
+                self.rimHost?.removeFromSuperview(); self.rimHost = nil
+            })
+        }
+    }
 
     override init(frame: NSRect) {
         super.init(frame: frame)

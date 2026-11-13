@@ -124,6 +124,56 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 }
             }
         }
+        // Whole-notch snapshot (DEBUG only): `-notch.selftest.snapshotRoot YES [-appearance.liquidMetal YES]` draws the open notch
+        // off-screen to /tmp/notch-root-snap.png (hidden window, never shown), so the look can be checked without the desktop.
+        if UserDefaults.standard.bool(forKey: "notch.selftest.snapshotRoot") {
+            Task { @MainActor in
+                try? await Task.sleep(nanoseconds: 2_000_000_000)
+                let st = NotchState(); st.isExpanded = true
+                st.expandedSize = CGSize(width: 740, height: 420)
+                let view = NotchRootView().environmentObject(st).environmentObject(SettingsManager.shared).environment(\.colorScheme, .dark)
+                    .frame(width: 740, height: 420).background(Color.black)
+                let host = NSHostingView(rootView: view)
+                host.frame = CGRect(x: 0, y: 0, width: 740, height: 420)
+                let win = NSWindow(contentRect: host.frame, styleMask: [.borderless], backing: .buffered, defer: false)
+                win.contentView = host; win.setFrameOrigin(CGPoint(x: -4000, y: -4000))
+                host.layoutSubtreeIfNeeded()
+                // The tab row with liquid metal: the open tab and a hovered tab, drawn with the same capsule the notch uses.
+                func strip(metal: Bool) -> some View {
+                    HStack(spacing: 6) {
+                        ForEach(Array([("house.fill", "Home"), ("sparkles", "AI"), ("globe", "Browser"), ("gamecontroller.fill", "Games"), ("bubble.left.and.bubble.right.fill", "Messenger"), ("sportscourt", "Sports")].enumerated()), id: \.offset) { i, t in
+                            Label(t.1, systemImage: t.0).font(.system(size: 13, weight: .semibold)).foregroundStyle(.white).padding(.horizontal, 11).frame(height: Theme.minTarget + 2)
+                                .background {
+                                    if i == 3 { if metal { LiquidMetalCapsule().shadow(color: Theme.accent.opacity(0.45), radius: 8) } else { Capsule().fill(Theme.accentGradient).shadow(color: Theme.accent.opacity(0.5), radius: 8) } }
+                                    if i == 1 && metal { LiquidMetalCapsule(hover: true).opacity(0.55) }
+                                }
+                        }
+                    }.padding(20).frame(width: 740, height: 90, alignment: .leading)
+                    .background(LinearGradient(colors: [Color(red: 0.12, green: 0.05, blue: 0.28), Color(red: 0.07, green: 0.03, blue: 0.16)], startPoint: .topLeading, endPoint: .bottomTrailing))
+                }
+                for (n, m) in [(7, false), (8, true)] {
+                    try? await Task.sleep(nanoseconds: 800_000_000)
+                    let r = ImageRenderer(content: strip(metal: m)); r.scale = 2
+                    if let img = r.nsImage, let tiff = img.tiffRepresentation, let rep = NSBitmapImageRep(data: tiff), let png = rep.representation(using: .png, properties: [:]) { try? png.write(to: URL(fileURLWithPath: "/tmp/notch-tabs-\(n).png")) }
+                }
+                // ImageRenderer runs SwiftUI shaders (cacheDisplay does not), so this is the one that shows the metal.
+                for n in 4...6 {
+                    try? await Task.sleep(nanoseconds: 1_500_000_000)
+                    let r = ImageRenderer(content: view); r.scale = 2
+                    if let img = r.nsImage, let tiff = img.tiffRepresentation, let rep = NSBitmapImageRep(data: tiff), let png = rep.representation(using: .png, properties: [:]) {
+                        try? png.write(to: URL(fileURLWithPath: "/tmp/notch-root-snap-\(n).png"))
+                    }
+                }
+                for n in 1...1 {
+                    try? await Task.sleep(nanoseconds: 1_200_000_000)
+                    host.layoutSubtreeIfNeeded()
+                    if let rep = host.bitmapImageRepForCachingDisplay(in: host.bounds) {
+                        host.cacheDisplay(in: host.bounds, to: rep)
+                        if let png = rep.representation(using: .png, properties: [:]) { try? png.write(to: URL(fileURLWithPath: "/tmp/notch-root-snap-\(n).png")) }
+                    }
+                }
+            }
+        }
         #endif
 
         // Now Playing and Messenger are gated: they start now if a code is saved, or the moment one is entered.

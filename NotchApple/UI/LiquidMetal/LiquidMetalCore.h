@@ -37,13 +37,13 @@ static inline float lm_fbm(float2 p) {
 static inline float3 liquidMetalRGB(float2 p, float2 size, float t, float3 tint, float hover) {
     float2 uv = p / max(size, float2(1.0));
     float aspect = size.x / max(size.y, 1.0);
-    float2 q = float2(uv.x * aspect, uv.y) * 0.85;
+    float2 q = float2(uv.x * aspect * 0.55, uv.y * 0.9);
     // Two passes of domain warping make the surface look like it flows instead of sliding.
     float2 w = float2(lm_fbm(q + float2(0.0, t * 0.07)), lm_fbm(q + float2(5.2, 1.3) - t * 0.05));
     float h = lm_fbm(q + 0.9 * w + float2(t * 0.03, 0.0));
     // Bands of light and dark, like polished chrome.
     float band = 0.5 + 0.5 * sin(h * 13.0 + w.x * 2.5 + uv.x * 2.4 + uv.y * 3.0 + t * (0.35 + 0.8 * hover));
-    float shade = smoothstep(0.38, 0.62, band);
+    float shade = smoothstep(0.30, 0.70, band) * 0.8;
     float3 dark = float3(0.10, 0.11, 0.15), light = float3(0.92, 0.94, 0.98);
     float3 silver = mix(dark, light, shade);
     // A sharp bright highlight that drifts across (stronger on hover).

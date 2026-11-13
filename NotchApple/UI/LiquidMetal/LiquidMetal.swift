@@ -25,9 +25,13 @@ struct LiquidMetalCapsule: View {
         GeometryReader { geo in
             TimelineView(.animation(minimumInterval: 1.0 / 30.0, paused: reduceMotion)) { ctx in
                 let t = reduceMotion ? 4.0 : ctx.date.timeIntervalSinceReferenceDate.truncatingRemainder(dividingBy: 3600)
-                Capsule()
-                    .fill(.white)
-                    .colorEffect(ShaderLibrary.liquidMetal(.float2(geo.size), .float(t), .float(1), .float(hover ? 1 : 0), .color(Theme.accentBright)))
+                ZStack {
+                    Capsule()
+                        .fill(.white)
+                        .colorEffect(ShaderLibrary.liquidMetal(.float2(geo.size), .float(t), .float(1), .float(hover ? 1 : 0), .color(Theme.accentBright)))
+                    // A soft dark veil keeps the white tab name readable on the brightest part of the metal.
+                    Capsule().fill(Color.black.opacity(hover ? 0.30 : 0.42))
+                }
             }
         }
     }
