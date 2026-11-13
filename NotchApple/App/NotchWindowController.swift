@@ -107,7 +107,7 @@ final class NotchTriggerView: NSView {
     private func updateMetalRim() {
         let on = isHovered && LiquidMetalSetting.isOn && !NSWorkspace.shared.accessibilityDisplayShouldReduceMotion
         if on, rimHost == nil {
-            let host = PassThroughHost(rootView: LiquidMetalCapsule(hover: true, veil: false))
+            let host = PassThroughHost(rootView: LiquidMetalCapsule(hover: true, mode: 2, veil: false))
             host.wantsLayer = true
             host.alphaValue = 0
             addSubview(host)
