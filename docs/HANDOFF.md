@@ -2,19 +2,13 @@
 
 For the next agent (or person) picking this up. Read `CLAUDE.md` first: its release, README and safety rules apply. Facts below were true when written; check them (`gh release list`, `gh run list`) before relying on them.
 
-## Added later on 12 November: 2.2.70 is on `main` but NOT released yet (read this first)
+## 2.2.70 is RELEASED (13 November 2026)
 
-A second session (on a Mac with no Xcode and without the signing keychain) built the rest of the NotchAI roadmap and prepared **2.2.70**: more voice engines (Piper, Whisper, OpenAI), hands-free and an optional wake word, drawing on the screen and a hand-drawn style, diagrams and real 3D files, folders and search in Documents, one-press connectors (Notion, Linear, Sentry, GitHub), drafting from the screen, and a NotchAI chat tab on Windows. Notes are in `release-notes/2.2.70.md` and `release-notes/win-2.2.70.md`; `project.yml`, `WhatsNew.swift`, `CHANGELOG.md` and the README already say 2.2.70. Details and what was and was not verified: `docs/NOTCHAI_ROADMAP.md` (backlog and living status).
-
-- **Nothing of 2.2.70 is released yet, Mac or Windows.** It is merged into `main` only.
-- **To do, Windows:** once the Mac release below is out (or before, they are independent), tag the cask commit or `main`: `git tag win-v2.2.70 && git push origin win-v2.2.70`, wait for "Windows build", then `gh release edit win-v2.2.70 --prerelease --title "Notch Apple for Windows 2.2.70 (beta)" --notes-file release-notes/win-2.2.70.md`.
-- **To do first:** confirm the Release compile passed: `gh run list --workflow module-build.yml --limit 1` (run 43278669697 on `module-rel-2.2.70` was still building when this was merged, at the owner's request). If it failed, fix the compile error before releasing.
-- **Cannot be done on the second session's Mac:** installing Xcode (needs the owner's Apple ID in the App Store) and the signing keychain (its private key exists only on the release Mac; running `scripts/setup-signing.sh` elsewhere makes a NEW identity and breaks Accessibility for everyone, so do not).
-- **Mac 2.2.70 was deliberately not released.** A CI build (`mac-v*` tag) is signed ad-hoc, which would undo the fixed-certificate signing from 2.2.67 and make every Mac lose Accessibility again. It has to be built on the Mac that holds `~/Library/Keychains/notchapple-signing.keychain-db`. **Do not push a `mac-v2.2.70` tag.** On that Mac, in the release checkout: `git pull`, `scripts/fetch-premium.sh`, `scripts/run-app-tests.sh` (648 tests), then
-  `scripts/release.sh "NotchAI: more voices, drawing, diagrams, and a Windows chat" release-notes/2.2.70.md "Mac 2.2.70"`.
-  If something else has to ship first, bump the version and move the 2.2.70 notes up with it; never lower the number.
-- Checked before merging: 648 Mac logic tests, 553 Windows tests and a whole-app type-check. The Release compile in CI had not finished (see above). **Not run on a real device:** anything with a microphone, speaker, screen capture, browser sign-in or a Windows PC. The wake word is labelled experimental for that reason.
-- Still open from the roadmap: real-device verification (backlog 1) and the Do It check (backlog 2; the private branch `notchai-doit-bridge` is still not merged into the private `main`).
+- **Mac 2.2.70** (`v2.2.70`) is the Latest release, built on the signing Mac with the fixed certificate (checked: the shipped app's requirement names the same certificate as 2.2.67), and installed on the owner's Mac. **Windows 2.2.70** (`win-v2.2.70`) is a pre-release with its `.exe` and `.msi`. `scripts/prune-releases.sh` has been run.
+- What it contains: more NotchAI voice engines (Piper, Whisper, OpenAI), hands-free and an optional wake word (experimental), drawing on the screen and a hand-drawn style, diagrams and real 3D files, folders and search in Documents, and a NotchAI chat tab on Windows. Before releasing: 648 Mac logic tests, 0 failures; the Release compile in CI (`module-rel-2.2.70`) passed.
+- **Do not push a `mac-v*` tag.** A CI build is signed ad-hoc, which would undo the fixed-certificate signing and make every Mac lose Accessibility again. Mac releases are built only on the Mac that holds `~/Library/Keychains/notchapple-signing.keychain-db`; never run `scripts/setup-signing.sh` anywhere else (it makes a NEW identity).
+- **Not run on a real device:** anything with a microphone, speaker, screen capture, browser sign-in or a Windows PC. Real-device verification (NotchAI roadmap backlog 1) and the Do It check (backlog 2; the private branch `notchai-doit-bridge` is still not merged into the private `main`) are still open.
+- The website deploy passed on 12 Nov and `latest.json` serves 2.2.69 at the time of writing; it moves to 2.2.70 after the next "Deploy website" run. Check `gh run list --workflow "Deploy website" --limit 1` and the live `latest.json`.
 
 ## Asked for by the owner, not started (design and an idea)
 
