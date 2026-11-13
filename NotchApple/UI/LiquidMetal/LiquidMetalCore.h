@@ -112,14 +112,18 @@ static inline float3 liquidMetalRing(float2 p, float2 size, float t, float3 tint
 static inline float3 liquidMetalChrome(float2 p, float t, float3 tint, float hover) {
     float hue_max = max(max(tint.r, max(tint.g, tint.b)), 0.001);
     float3 hue = tint / hue_max;
-    float k = t * (0.45 + 0.5 * hover);
-    float s1 = 0.5 + 0.5 * sin(p.x * 0.052 + p.y * 0.07 + k + 1.6 * sin(p.x * 0.017 - k * 0.6));
-    float s2 = 0.5 + 0.5 * sin(p.x * 0.031 - p.y * 0.05 - k * 0.7 + 2.0);
-    float band = smoothstep(0.30, 0.70, 0.62 * s1 + 0.38 * s2);
-    float glint = pow(smoothstep(0.55, 1.0, s1), 6.0);
+    float k = t * (1.1 + 1.0 * hover);                                                   // lively: the bands move quickly
+    // Several overlapping waves, so the outline is full of moving bands rather than a few slow ones.
+    float s1 = 0.5 + 0.5 * sin(p.x * 0.085 + p.y * 0.09 + k + 1.8 * sin(p.x * 0.021 - k * 0.7));
+    float s2 = 0.5 + 0.5 * sin(p.x * 0.047 - p.y * 0.06 - k * 0.8 + 2.0);
+    float s3 = 0.5 + 0.5 * sin(p.x * 0.13 + k * 1.3 + p.y * 0.05);
+    float band = smoothstep(0.28, 0.72, 0.5 * s1 + 0.3 * s2 + 0.2 * s3);
+    float glint = pow(smoothstep(0.55, 1.0, s1), 5.0);
+    // A bright highlight that sweeps along the outline.
+    float sweep = pow(smoothstep(0.0, 1.0, 1.0 - abs(fract(p.x * 0.0105 - t * 0.55) - 0.5) * 2.0), 6.0);
     float3 steel = float3(0.035, 0.035, 0.055) + hue * 0.03;
     float3 silver = mix(float3(0.90, 0.92, 0.97), hue * 0.85 + 0.15, 0.42);
-    float3 rgb = mix(steel, silver, band) + float3(glint) * 0.35;
+    float3 rgb = mix(steel, silver, band) + float3(glint) * 0.4 + silver * sweep * 0.6;
     return clamp(rgb, 0.0, 1.0);
 }
 

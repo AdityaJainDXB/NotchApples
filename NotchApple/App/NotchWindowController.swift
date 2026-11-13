@@ -103,37 +103,45 @@ final class NotchTriggerView: NSView {
         override func hitTest(_ point: NSPoint) -> NSView? { nil }
     }
     private var rimHost: PassThroughHost?
+    /// A faint flowing-metal sheen inside the closed notch while it is hovered, so the whole pill is alive.
+    private var sheenHost: PassThroughHost?
 
     private func updateMetalRim() {
         let on = isHovered && LiquidMetalSetting.isOn && !NSWorkspace.shared.accessibilityDisplayShouldReduceMotion
         if on, rimHost == nil {
-            let host = PassThroughHost(rootView: LiquidMetalCapsule(hover: true, mode: 3, veil: false))
-            host.wantsLayer = true
-            host.alphaValue = 0
-            addSubview(host)
-            rimHost = host
+            let rim = PassThroughHost(rootView: LiquidMetalCapsule(hover: true, mode: 3, veil: false))
+            let sheen = PassThroughHost(rootView: LiquidMetalCapsule(hover: true, mode: 0, veil: false))
+            for h in [sheen, rim] { h.wantsLayer = true; h.alphaValue = 0; addSubview(h) }
+            rimHost = rim; sheenHost = sheen
         }
-        guard let host = rimHost else { return }
+        guard let rim = rimHost, let sheen = sheenHost else { return }
         if on {
-            // The same silhouette as the hover outline in draw(_:), stroked 3 points wide, is the window the metal shows through.
+            // The same silhouette as the hover outline in draw(_:).
             let pad = Self.hitPadding
             let shoulder = NotchRootView.collapsedShoulder
             let width = notchWidth + 2 * (shoulder + displayedEar)
             var notch = NSRect(x: bounds.midX - width / 2, y: bounds.minY + pad.height, width: width, height: bounds.height - pad.height)
             notch = notch.insetBy(dx: -6, dy: 0); notch.origin.y -= 3; notch.size.height += 3
             let path = Self.notchPath(in: notch, shoulder: shoulder, bottom: min(10, notch.height / 2))
-            // The hosting view is flipped (origin top-left) and this view is not, so the outline is mirrored to land in the right place.
+            // The top corners of the silhouette flare outward (the "shoulders"). Cut them off so no metal pokes out past the black pill:
+            // only what is below the shoulders is kept.
+            let keep = CGPath(rect: NSRect(x: notch.minX - 8, y: notch.minY - 8, width: notch.width + 16, height: notch.height + 8 - (shoulder + 5)), transform: nil)
+            // The hosting views are flipped (origin top-left) and this view is not, so the shapes are mirrored to land in the right place.
             var flip = CGAffineTransform(a: 1, b: 0, c: 0, d: -1, tx: 0, ty: bounds.height)
-            let stroked = path.cgPath.copy(strokingWithWidth: 5.5, lineCap: .round, lineJoin: .round, miterLimit: 1)
-            let ring = stroked.copy(using: &flip) ?? stroked
-            let mask = CAShapeLayer(); mask.path = ring; mask.fillColor = NSColor.black.cgColor
-            host.frame = bounds
-            host.layer?.mask = mask
-            NSAnimationContext.runAnimationGroup { $0.duration = 0.18; host.animator().alphaValue = 1 }
+            func mask(_ shape: CGPath) -> CAShapeLayer {
+                let clipped = shape.intersection(keep)
+                let m = CAShapeLayer(); m.path = clipped.copy(using: &flip) ?? clipped; m.fillColor = NSColor.black.cgColor
+                return m
+            }
+            rim.frame = bounds; sheen.frame = bounds
+            rim.layer?.mask = mask(path.cgPath.copy(strokingWithWidth: 5.5, lineCap: .round, lineJoin: .round, miterLimit: 1))
+            sheen.layer?.mask = mask(path.cgPath)
+            NSAnimationContext.runAnimationGroup { $0.duration = 0.18; rim.animator().alphaValue = 1; sheen.animator().alphaValue = 0.2 }
         } else {
-            NSAnimationContext.runAnimationGroup({ $0.duration = 0.18; host.animator().alphaValue = 0 }, completionHandler: { [weak self] in
+            NSAnimationContext.runAnimationGroup({ $0.duration = 0.18; rim.animator().alphaValue = 0; sheen.animator().alphaValue = 0 }, completionHandler: { [weak self] in
                 guard let self, !self.isHovered else { return }
                 self.rimHost?.removeFromSuperview(); self.rimHost = nil
+                self.sheenHost?.removeFromSuperview(); self.sheenHost = nil
             })
         }
     }
