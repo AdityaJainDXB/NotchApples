@@ -54,7 +54,7 @@ struct GamesMenuView: View {
                 Button { soundOn.toggle() } label: {
                     Image(systemName: soundOn ? "speaker.wave.2.fill" : "speaker.slash.fill").font(.system(size: 12)).foregroundStyle(Theme.textSecondary)
                 }
-                .buttonStyle(.plain).help("Game sound")
+                .buttonStyle(MetalPlainStyle()).help("Game sound")
             }
             if let notice { Text(notice).font(.system(size: 11)).foregroundStyle(Color(hex: "#ff8a9a")) }
             ScrollView(.vertical, showsIndicators: false) {
@@ -98,7 +98,7 @@ struct GamesMenuView: View {
             .padding(.horizontal, 11).padding(.vertical, 5)
             .background(Capsule().fill(on ? Color.white : Color.white.opacity(0.07)))
         }
-        .buttonStyle(.plain)
+        .buttonStyle(MetalPlainStyle())
     }
 
     private func recentCard(_ g: GamesCatalog.Entry) -> some View {
@@ -114,7 +114,7 @@ struct GamesMenuView: View {
             .padding(.horizontal, 10).padding(.vertical, 8)
             .background(RoundedRectangle(cornerRadius: 12, style: .continuous).fill(Color.white.opacity(0.06)))
         }
-        .buttonStyle(.plain)
+        .buttonStyle(MetalPlainStyle())
     }
 
     private func art(_ g: GamesCatalog.Entry) -> some View {
@@ -153,7 +153,7 @@ struct GamesMenuView: View {
             .offset(y: hover ? -3 : 0)
             .shadow(color: .black.opacity(hover ? 0.5 : 0), radius: 10, y: 6)
         }
-        .buttonStyle(.plain)
+        .buttonStyle(MetalPlainStyle())
         .onHover { inside in
             if inside { hovered = g.id } else if hovered == g.id { hovered = nil }
         }
@@ -224,7 +224,7 @@ private struct GameCodeDialog: View {
                     .onChange(of: code) { _, v in let p = GameCode.pretty(v); if p != v { code = p } }
                 Text(message).font(.system(size: 12)).foregroundStyle(good ? Color(hex: "#6ee7a8") : Color(hex: "#ff8a9a")).frame(minHeight: 16).multilineTextAlignment(.center)
                 HStack {
-                    Button("Cancel") { close() }.buttonStyle(.plain).foregroundStyle(Theme.textSecondary).font(.system(size: 12))
+                    Button("Cancel") { close() }.buttonStyle(MetalPlainStyle()).foregroundStyle(Theme.textSecondary).font(.system(size: 12))
                     Spacer()
                     Button(busy ? "Checking…" : "Unlock") { go() }.buttonStyle(PurpleButtonStyle()).disabled(busy)
                 }

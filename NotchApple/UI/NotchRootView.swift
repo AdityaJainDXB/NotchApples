@@ -405,7 +405,7 @@ private struct TabButton: View {
                     }
                 }
         }
-        .buttonStyle(.plain)
+        .buttonStyle(MetalPlainStyle())
         .onHover { hovering = $0 }
         .help(module == .messenger && notifier.unread > 0 ? "Messenger · \(notifier.unread) unread" : module.title)
         .accessibilityLabel(module.title)

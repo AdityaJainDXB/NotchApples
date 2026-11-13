@@ -744,7 +744,7 @@ struct ClaudeChatView: View {
             }
             Spacer()
             Button { model.clearInput() } label: { Image(systemName: "xmark.circle.fill").font(.system(size: 15)) }
-                .buttonStyle(.plain).foregroundStyle(Theme.textSecondary)
+                .buttonStyle(MetalPlainStyle()).foregroundStyle(Theme.textSecondary)
                 .help("New task (⌘N)").accessibilityLabel("Remove input and start a new task")
         }
         .padding(8)
@@ -816,8 +816,8 @@ struct ClaudeChatView: View {
                         .fixedSize(horizontal: false, vertical: true)
                     HStack(spacing: 10) {
                         Link("Get \(feature.tier.name), \(feature.tier.price) →", destination: URL(string: LicenseServer.site)!)
-                        Button("I have a key") { AppDelegate.openSettingsWindow(tab: .license) }.buttonStyle(.plain)
-                        Button("Not now") { model.locked = nil }.buttonStyle(.plain).foregroundStyle(Theme.textSecondary)
+                        Button("I have a key") { AppDelegate.openSettingsWindow(tab: .license) }.buttonStyle(MetalPlainStyle())
+                        Button("Not now") { model.locked = nil }.buttonStyle(MetalPlainStyle()).foregroundStyle(Theme.textSecondary)
                     }
                     .font(.caption).foregroundStyle(Theme.accent)
                 }
@@ -870,7 +870,7 @@ struct ClaudeChatView: View {
             }
             Button { model.clear() } label: { Label("New task", systemImage: "plus") }.help("New task (⌘N)")
         }
-        .buttonStyle(.plain).font(.system(size: 11, weight: .medium)).foregroundStyle(Theme.accentBright)
+        .buttonStyle(MetalPlainStyle()).font(.system(size: 11, weight: .medium)).foregroundStyle(Theme.accentBright)
         .labelStyle(.titleAndIcon)
     }
 
@@ -978,7 +978,7 @@ private struct Bubble: View {
                                 NSPasteboard.general.clearContents()
                                 NSPasteboard.general.setString(MathText.plain(message.text), forType: .string)
                             } label: { Image(systemName: "doc.on.doc").font(.system(size: 10)) }
-                                .buttonStyle(.plain).foregroundStyle(Theme.textSecondary).help("Copy this answer")
+                                .buttonStyle(MetalPlainStyle()).foregroundStyle(Theme.textSecondary).help("Copy this answer")
                                 .accessibilityLabel("Copy this answer")
                         }
                     }
@@ -1042,7 +1042,7 @@ struct AISetupCard: View {
             HStack {
                 Label("Set up AI in three steps", systemImage: "sparkles").font(.system(size: 14, weight: .bold)).foregroundStyle(.white)
                 Spacer()
-                Button("Skip") { setupDone = true }.buttonStyle(.plain).font(.system(size: 11)).foregroundStyle(Theme.textSecondary)
+                Button("Skip") { setupDone = true }.buttonStyle(MetalPlainStyle()).font(.system(size: 11)).foregroundStyle(Theme.textSecondary)
             }
             Text("1  Choose: free Gemini in the cloud, or Ollama, which runs on this Mac and keeps everything private.")
                 .font(.system(size: 12)).foregroundStyle(Theme.textSecondary)

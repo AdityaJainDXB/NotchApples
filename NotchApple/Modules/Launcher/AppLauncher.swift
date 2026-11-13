@@ -190,7 +190,7 @@ private struct LauncherTile: View {
             .animation(Theme.quick, value: hovering)
             .contentShape(Rectangle())
         }
-        .buttonStyle(.plain)
+        .buttonStyle(MetalPlainStyle())
         .onHover { hovering = $0 }
         .contextMenu {
             Button("Open") { store.launch(app) }.disabled(url == nil)
@@ -229,7 +229,7 @@ private struct AppPicker: View {
                     }
                     .contentShape(Rectangle())
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(MetalPlainStyle())
             }
             .frame(height: 300)
             HStack {

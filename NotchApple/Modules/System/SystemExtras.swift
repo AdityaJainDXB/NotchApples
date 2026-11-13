@@ -85,7 +85,7 @@ struct TopProcessesView: View {
                     Text(String(format: "%.0f MB", p.memMB)).monospacedDigit().foregroundStyle(.secondary).frame(width: 70, alignment: .trailing)
                     // Only real apps can be quit (asked politely, like ⌘Q); background processes just show.
                     if let app = Self.quittable(p) {
-                        Button { asking = p } label: { Image(systemName: "xmark.circle") }.buttonStyle(.plain).foregroundStyle(.secondary)
+                        Button { asking = p } label: { Image(systemName: "xmark.circle") }.buttonStyle(MetalPlainStyle()).foregroundStyle(.secondary)
                             .help("Quit \(app.localizedName ?? p.name)")
                     } else { Color.clear.frame(width: 14) }
                 }

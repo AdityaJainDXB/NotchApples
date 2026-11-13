@@ -120,7 +120,7 @@ struct NotchAIIntegrationsView: View {
                         if s.oauth == true && state != .disconnected && state != .connecting { store.signIn(s.id) } else if s.oauth == true { store.connect(s.id) } else { store.connect(s.id) }
                     }.controlSize(.small).disabled(state == .connecting || !unlocked)
                 }
-                Button { store.remove(s.id) } label: { Image(systemName: "trash") }.buttonStyle(.plain).foregroundStyle(.red.opacity(0.8))
+                Button { store.remove(s.id) } label: { Image(systemName: "trash") }.buttonStyle(MetalPlainStyle()).foregroundStyle(.red.opacity(0.8))
             }
             if case .failed(let why) = state { Text(why).font(.system(size: 10)).foregroundStyle(.red) }
             if state == .expired { Text(s.oauth == true ? "Your sign-in ended. Press Sign in again." : "The service refused the key. Remove the connector and add it again with a new key.").font(.system(size: 10)).foregroundStyle(.orange) }

@@ -81,7 +81,7 @@ struct HabitsView: View {
                             .frame(width: 16, height: 16)
                             .frame(width: 22, height: Theme.minTarget).contentShape(Rectangle())
                     }
-                    .buttonStyle(.plain).help(day == store.today ? "Today" : day)
+                    .buttonStyle(MetalPlainStyle()).help(day == store.today ? "Today" : day)
                 }
             }
             Label("\(streak)", systemImage: "flame.fill").font(.system(size: 13, weight: .bold, design: .rounded))

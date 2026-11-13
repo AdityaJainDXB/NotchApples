@@ -32,7 +32,7 @@ struct WorldClockView: View {
                     Button { if Entitlements.shared.canUse(.meetingPlanner) { planning = true } } label: {
                         Label("Plan a meeting", systemImage: Entitlements.shared.canUse(.meetingPlanner) ? "calendar.badge.clock" : "lock.fill")
                     }
-                    .buttonStyle(.plain).font(.system(size: 11, weight: .semibold)).foregroundStyle(Theme.accentBright)
+                    .buttonStyle(MetalPlainStyle()).font(.system(size: 11, weight: .semibold)).foregroundStyle(Theme.accentBright)
                     .help(Entitlements.shared.canUse(.meetingPlanner) ? Feature.meetingPlanner.benefit : "Pro: \(Feature.meetingPlanner.benefit)")
                     .popover(isPresented: $planning, arrowEdge: .bottom) { MeetingPlanner(zones: zones) }
                     IconButton(systemImage: adding ? "xmark" : "plus", help: adding ? "Done" : "Add a city") { adding.toggle(); search = "" }
@@ -61,7 +61,7 @@ struct WorldClockView: View {
                             Text(Self.city(id)).font(.system(size: 13, weight: .semibold)).foregroundStyle(.white).lineLimit(1)
                             Spacer()
                             Button { remove(id) } label: { Image(systemName: "minus.circle").foregroundStyle(Theme.textSecondary) }
-                                .buttonStyle(.plain).hitTarget().help("Remove")
+                                .buttonStyle(MetalPlainStyle()).hitTarget().help("Remove")
                         }
                         Text(now.formatted(Date.FormatStyle(date: .omitted, time: .shortened, timeZone: zone)))
                             .font(.system(size: 26, weight: .semibold, design: .rounded)).monospacedDigit().foregroundStyle(.white)
@@ -93,7 +93,7 @@ struct WorldClockView: View {
                             }
                             .padding(.vertical, 4).contentShape(Rectangle())
                         }
-                        .buttonStyle(.plain)
+                        .buttonStyle(MetalPlainStyle())
                     }
                 }
             }

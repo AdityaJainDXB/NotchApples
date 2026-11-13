@@ -52,7 +52,7 @@ struct FileSearchView: View {
                 Button { text = ""; focused = true } label: {
                     Image(systemName: "xmark.circle.fill").foregroundStyle(Theme.textSecondary)
                 }
-                .buttonStyle(.plain).help("Clear").accessibilityLabel("Clear search")
+                .buttonStyle(MetalPlainStyle()).help("Clear").accessibilityLabel("Clear search")
             }
         }
         .padding(.horizontal, 12).frame(height: 36)

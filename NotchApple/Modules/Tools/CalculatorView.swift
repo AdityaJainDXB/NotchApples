@@ -64,7 +64,7 @@ struct CalculatorView: View {
                         Spacer()
                         if let last = rows.last(where: { $0.kind != .error && !$0.output.isEmpty }) {
                             Button { copy(last) } label: { Label(copied ? "Copied" : "Copy last", systemImage: copied ? "checkmark" : "doc.on.doc").font(.system(size: 11, weight: .semibold)) }
-                                .buttonStyle(.plain).foregroundStyle(Theme.accentBright)
+                                .buttonStyle(MetalPlainStyle()).foregroundStyle(Theme.accentBright)
                         }
                     }
                     if rows.isEmpty {

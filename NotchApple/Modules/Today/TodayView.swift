@@ -81,7 +81,7 @@ struct ForecastButton: View {
             }
             .foregroundStyle(Theme.accentBright)
         }
-        .buttonStyle(.plain)
+        .buttonStyle(MetalPlainStyle())
         .help(Entitlements.shared.canUse(.forecast) ? "Hourly and 7-day forecast" : "Pro: \(Feature.forecast.benefit)")
         .popover(isPresented: $showing, arrowEdge: .bottom) { ForecastView() }
     }

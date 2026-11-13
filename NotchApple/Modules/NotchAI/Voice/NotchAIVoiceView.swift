@@ -127,7 +127,7 @@ struct NotchAIVoiceView: View {
                 }
                 ForEach(dictation.vocabulary.sorted { $0.key < $1.key }, id: \.key) { k, v in
                     HStack { Text("\(k) → \(v)").font(.system(size: 10, design: .monospaced)).foregroundStyle(Theme.textSecondary); Spacer()
-                        Button { dictation.removeWord(k) } label: { Image(systemName: "xmark.circle") }.buttonStyle(.plain) }
+                        Button { dictation.removeWord(k) } label: { Image(systemName: "xmark.circle") }.buttonStyle(MetalPlainStyle()) }
                 }
                 Text("Draft from the screen: dictate or type what you want written (“reply that Thursday works”), then press the button. The window is read once, on this Mac, and the draft waits in the box until you press Insert.")
                     .font(.system(size: 10)).foregroundStyle(Theme.textSecondary)

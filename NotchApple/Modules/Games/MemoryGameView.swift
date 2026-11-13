@@ -158,7 +158,7 @@ struct MemoryGameView: View {
                 .scaleEffect(on ? 1.04 : 1)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
-        .buttonStyle(.plain)
+        .buttonStyle(MetalPlainStyle())
         .disabled(model.phase != .input)
         .accessibilityLabel(["Up", "Right", "Down", "Left"][pad] + " pad")
     }

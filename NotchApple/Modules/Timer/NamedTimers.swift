@@ -105,7 +105,7 @@ struct NamedTimersView: View {
                                 Text(t.done ? "Done" : NamedTimerLogic.clock(store.remaining(t, now: context.date)))
                                     .font(.system(size: 15, weight: .bold, design: .rounded)).monospacedDigit().foregroundStyle(t.done ? .yellow : .white)
                                 Button { store.remove(t.id) } label: { Image(systemName: "xmark") }
-                                    .buttonStyle(.plain).foregroundStyle(Theme.textSecondary).help("Remove")
+                                    .buttonStyle(MetalPlainStyle()).foregroundStyle(Theme.textSecondary).help("Remove")
                             }
                             .padding(.horizontal, 8).padding(.vertical, 5)
                             .background(RoundedRectangle(cornerRadius: 8).fill(Theme.surface))

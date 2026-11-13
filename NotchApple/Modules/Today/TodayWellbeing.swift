@@ -65,7 +65,7 @@ struct CountdownsList: View {
             HStack {
                 Text("Countdowns").sectionTitle()
                 Spacer()
-                Button("+ Add") { adding = true }.buttonStyle(.plain).font(.system(size: 11, weight: .semibold)).foregroundStyle(Theme.accentBright)
+                Button("+ Add") { adding = true }.buttonStyle(MetalPlainStyle()).font(.system(size: 11, weight: .semibold)).foregroundStyle(Theme.accentBright)
                     .popover(isPresented: $adding) {
                         VStack(alignment: .leading, spacing: 8) {
                             TextField("What is it? (Exam, Trip, Launch…)", text: $title).textFieldStyle(.roundedBorder).frame(width: 220)
@@ -82,7 +82,7 @@ struct CountdownsList: View {
                     Text(entry.item.title).font(.system(size: 13)).foregroundStyle(.white).lineLimit(1)
                     Spacer()
                     Text(WellbeingLogic.countdownLabel(days: entry.days)).font(.system(size: 13, weight: .bold)).foregroundStyle(.white).monospacedDigit()
-                    Button { store.remove(entry.item) } label: { Image(systemName: "xmark") }.buttonStyle(.plain).hitTarget().foregroundStyle(Theme.textSecondary).font(.system(size: 9))
+                    Button { store.remove(entry.item) } label: { Image(systemName: "xmark") }.buttonStyle(MetalPlainStyle()).hitTarget().foregroundStyle(Theme.textSecondary).font(.system(size: 9))
                         .help("Remove")
                 }
             }
@@ -115,7 +115,7 @@ struct PinnedNotesToday: View {
                         }
                         .frame(maxWidth: .infinity, alignment: .leading)
                     }
-                    .buttonStyle(.plain)
+                    .buttonStyle(MetalPlainStyle())
                 }
             }
         }

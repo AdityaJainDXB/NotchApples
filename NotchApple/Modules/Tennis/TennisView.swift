@@ -64,7 +64,7 @@ struct TennisView: View {
                                     .background(Capsule().fill(on ? (e.slam ? Self.slamRed : Theme.accent) : Theme.surface))
                                     .overlay(Capsule().strokeBorder(e.slam && !on ? Self.slamRed : .clear))
                             }
-                            .buttonStyle(.plain)
+                            .buttonStyle(MetalPlainStyle())
                         }
                     }
                 }
@@ -137,7 +137,7 @@ struct TennisView: View {
                 }
                 HStack(spacing: 6) {
                     if tennis.week != 0 {
-                        Button("Today") { tennis.go(week: 0) }.buttonStyle(.plain)
+                        Button("Today") { tennis.go(week: 0) }.buttonStyle(MetalPlainStyle())
                             .font(.system(size: 10, weight: .semibold)).foregroundStyle(.white)
                     }
                     slamMenu
@@ -385,7 +385,7 @@ struct TennisView: View {
                                 .background(Capsule().fill(Self.gold.opacity(0.14)))
                                 .overlay(Capsule().strokeBorder(Self.gold.opacity(0.35)))
                             }
-                            .buttonStyle(.plain).help("Stop following \(f)")
+                            .buttonStyle(MetalPlainStyle()).help("Stop following \(f)")
                         }
                     }
                 }

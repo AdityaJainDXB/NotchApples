@@ -286,12 +286,18 @@ struct AppearanceSettings: View {
     @ObservedObject private var entitlements = Entitlements.shared
     @AppStorage("appearance.settingsWindow") private var windowMode = "system"
     @AppStorage("appearance.liquidMetal") private var liquidMetal = false
+    @AppStorage("appearance.liquidMetalColour") private var liquidMetalColour = 0
 
     var body: some View {
         let current = manager.currentTheme
         Form {
             Section {
                 Toggle("Liquid metal (experimental)", isOn: $liquidMetal)
+                if liquidMetal {
+                    Picker("Liquid metal colour", selection: $liquidMetalColour) {
+                        Text("Theme colour").tag(0); Text("Rainbow").tag(1); Text("Gold").tag(2)
+                    }.pickerStyle(.segmented)
+                }
             } footer: {
                 Text("A flowing liquid-metal highlight behind the open tab, and brighter metal under the pointer. It uses the graphics chip a little, holds still with Reduce Motion, and is off by default.")
             }

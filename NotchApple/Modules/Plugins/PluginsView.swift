@@ -235,7 +235,7 @@ struct PluginsView: View {
                     Button { host.perform(line) } label: {
                         Label(line.text, systemImage: line.href != nil ? "link" : "play.fill").lineLimit(1)
                     }
-                    .buttonStyle(.plain).font(.system(size: 12)).foregroundStyle(Theme.accentBright)
+                    .buttonStyle(MetalPlainStyle()).font(.system(size: 12)).foregroundStyle(Theme.accentBright)
                 } else {
                     Text(line.text).font(.system(size: 12)).foregroundStyle(Theme.textSecondary).lineLimit(2)
                 }

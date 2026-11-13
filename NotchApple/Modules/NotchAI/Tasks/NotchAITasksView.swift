@@ -45,7 +45,7 @@ struct NotchAITasksView: View {
                 }
                 Spacer()
                 actions(t)
-                Button { toggle(t.id) } label: { Image(systemName: expanded.contains(t.id) ? "chevron.up" : "chevron.down") }.buttonStyle(.plain)
+                Button { toggle(t.id) } label: { Image(systemName: expanded.contains(t.id) ? "chevron.up" : "chevron.down") }.buttonStyle(MetalPlainStyle())
             }
             ProgressView(value: TaskLogic.progress(t)).tint(NotchAIView.green)
             if t.state == .waitingApproval, let step = t.steps.first(where: { $0.state == .pending }) {
@@ -83,7 +83,7 @@ struct NotchAITasksView: View {
         case .failed: Button("Retry") { store.resume(t.id) }.controlSize(.small)
         default: EmptyView()
         }
-        if t.state.isFinished || t.state == .paused { Button { store.delete(t.id) } label: { Image(systemName: "trash") }.buttonStyle(.plain).foregroundStyle(.red.opacity(0.8)) }
+        if t.state.isFinished || t.state == .paused { Button { store.delete(t.id) } label: { Image(systemName: "trash") }.buttonStyle(MetalPlainStyle()).foregroundStyle(.red.opacity(0.8)) }
     }
 
     private func toggle(_ id: UUID) { if expanded.contains(id) { expanded.remove(id) } else { expanded.insert(id) } }

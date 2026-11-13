@@ -172,7 +172,7 @@ struct QuickAddView: View {
                     Text("Try").sectionTitle()
                     ForEach(examples.prefix(3), id: \.self) { ex in
                         Button { model.text = ex } label: { Label(ex, systemImage: "text.cursor").font(.system(size: 12)) }
-                            .buttonStyle(.plain).foregroundStyle(Theme.accentBright)
+                            .buttonStyle(MetalPlainStyle()).foregroundStyle(Theme.accentBright)
                     }
                 }
             }

@@ -256,7 +256,7 @@ struct AIExtrasBar: View {
             Toggle(isOn: Binding(get: { model.webSearch }, set: { on in if !on || model.allowed(.webSearch) { model.webSearch = on } })) {
                 Image(systemName: "globe")
             }
-            .toggleStyle(.button).buttonStyle(.plain)
+            .toggleStyle(.button).buttonStyle(MetalPlainStyle())
             .foregroundStyle(model.webSearch ? Theme.accentBright : Theme.textSecondary)
             .help(model.webSearch ? "Web search on: answers cite their sources" : "Search the web for the next answers (Pro)")
             .accessibilityLabel("Web search")
@@ -265,7 +265,7 @@ struct AIExtrasBar: View {
                 guard model.allowed(.voice) else { return }
                 voice.toggle { text in model.draft = text }
             } label: { Image(systemName: voice.isListening ? "mic.fill" : "mic") }
-            .buttonStyle(.plain)
+            .buttonStyle(MetalPlainStyle())
             .foregroundStyle(voice.isListening ? .red : Theme.textSecondary)
             .help(voice.isListening ? "Stop dictating" : "Dictate your question (Pro)")
             .accessibilityLabel(voice.isListening ? "Stop dictating" : "Dictate")
@@ -274,7 +274,7 @@ struct AIExtrasBar: View {
                 guard model.allowed(.voice), let a = model.lastAnswer else { return }
                 speaker.toggle(a.text)
             } label: { Image(systemName: speaker.isSpeaking ? "speaker.slash.fill" : "speaker.wave.2") }
-            .buttonStyle(.plain).foregroundStyle(Theme.textSecondary)
+            .buttonStyle(MetalPlainStyle()).foregroundStyle(Theme.textSecondary)
             .disabled(model.lastAnswer == nil)
             .help(speaker.isSpeaking ? "Stop reading" : "Read the answer aloud (Pro)")
             .accessibilityLabel(speaker.isSpeaking ? "Stop reading" : "Read aloud")
