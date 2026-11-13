@@ -10,6 +10,13 @@ Mac **2.2.70** (`v2.2.70`) is the Latest release and **Windows 2.2.70** (`win-v2
 - Mac builds must come from the Mac that holds `~/Library/Keychains/notchapple-signing.keychain-db` (fixed signing keeps Accessibility across updates). Never push a `mac-v*` tag from CI, and never run `scripts/setup-signing.sh` on another Mac.
 - Still open from the roadmap: real-device verification (backlog 1) and the Do It check (backlog 2; the private branch `notchai-doit-bridge` is still not merged into the private `main`).
 
+## Update 13 November (later): Xcode is installed, liquid metal started on Windows
+
+- **Xcode 27.2 is installed and set up on the second Mac** (licence accepted, `xcode-select` points at it, first-launch components installed). The Debug app builds there: `xcodegen generate` (after `scripts/fetch-premium.sh` and a placeholder `NotchApple/Resources/GoogleService-Info.plist`), then `xcodebuild -project NotchApple.xcodeproj -scheme NotchApple -configuration Debug -destination 'platform=macOS' -derivedDataPath <dir> build CODE_SIGNING_ALLOWED=NO` gave BUILD SUCCEEDED on 2.2.70's source. That Mac still lacks the signing keychain, so it cannot make the official Mac release. The app has **not been launched** there yet (no real-device checks, see backlog 1 and 2 in `docs/NOTCHAI_ROADMAP.md`).
+- **UTM:** that Mac has a Windows ARM VM (`Windows.utm`, 4 GB RAM, stopped). It is the place to look at the Windows app on a real Windows desktop.
+- **Windows liquid metal: draft PR #82 (`liquid-metal-and-widgets`), not merged.** Settings has "Liquid metal (experimental)", off by default: metal on the open tab and a metal rim while the pointer is on the notch (Jakub Antalik's metal-fx, MIT, bundled in `NotchWindows/src/js/vendor/metalfx.js`; glue in `liquidmetal.js`). In a browser preview the metal draws and the rim fades in, but the active-tab highlight looked wrong, so it must be looked at on a real Windows PC (the UTM VM) before merging. Mac liquid metal is not started (needs a Metal or SwiftUI shader port).
+- Desktop widgets: not started; the three questions below are still open.
+
 ## Asked for by the owner, not started (design and an idea)
 
 1. **Liquid metal for the notch.** The owner wants the real notch UI to use the liquid-metal look, and the notch to show liquid metal in the current theme's colour when the pointer hovers over it. Only browser prototypes exist; nothing is in the app. The prototypes are in this repo, open them in a browser:
