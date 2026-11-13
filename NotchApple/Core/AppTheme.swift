@@ -292,14 +292,14 @@ struct AppearanceSettings: View {
         let current = manager.currentTheme
         Form {
             Section {
-                Toggle("Liquid metal (experimental)", isOn: $liquidMetal)
+                Toggle("Liquid metal (recommended)", isOn: $liquidMetal)
                 if liquidMetal {
                     Picker("Liquid metal colour", selection: $liquidMetalColour) {
                         Text("Theme colour").tag(0); Text("Purple").tag(3); Text("Rainbow").tag(1); Text("Gold").tag(2)
                     }.pickerStyle(.segmented)
                 }
             } footer: {
-                Text("A flowing liquid-metal highlight behind the open tab, and brighter metal under the pointer. It uses the graphics chip a little, holds still with Reduce Motion, and is off by default.")
+                Text("Recommended. A flowing liquid-metal look for the open tab, the closed notch, and every button when you point at it or click it. It uses the graphics chip a little and holds still with Reduce Motion.")
             }
             Section {
                 Picker("Settings window", selection: $windowMode) {
