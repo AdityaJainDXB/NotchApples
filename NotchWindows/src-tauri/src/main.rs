@@ -505,7 +505,7 @@ async fn widget_show(app: AppHandle, kind: String, index: u32, x: Option<f64>, y
         (Some(x), Some(y)) if x >= origin.x - w + 60.0 && x <= origin.x + screen.width - 60.0 && y >= origin.y && y <= origin.y + screen.height - 40.0 => (x, y),
         _ => (origin.x + screen.width - w - 24.0, origin.y + 64.0 + (index as f64) * 190.0),
     };
-    WebviewWindowBuilder::new(&app, &label, WebviewUrl::App(format!("widget.html?kind={kind}").into()))
+    let window = WebviewWindowBuilder::new(&app, &label, WebviewUrl::App(format!("widget.html?kind={kind}").into()))
         .title("Notch Apple widget")
         .inner_size(w, h)
         .position(px, py)
@@ -518,6 +518,15 @@ async fn widget_show(app: AppHandle, kind: String, index: u32, x: Option<f64>, y
         .focused(false)
         .build()
         .map_err(|e| e.to_string())?;
+    // Tell the main window where the widget was dropped, so the position is remembered (it saves it; see services/desktopwidgets.js).
+    let handle = app.clone();
+    let kind_moved = kind.clone();
+    window.on_window_event(move |event| {
+        if let WindowEvent::Moved(pos) = event {
+            let scale = handle.get_webview_window(&format!("widget-{kind_moved}")).and_then(|w| w.scale_factor().ok()).unwrap_or(1.0);
+            let _ = handle.emit("widget-moved", serde_json::json!({ "kind": kind_moved, "x": pos.x as f64 / scale, "y": pos.y as f64 / scale }));
+        }
+    });
     Ok(())
 }
 

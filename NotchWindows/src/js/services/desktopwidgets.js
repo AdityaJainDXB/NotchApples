@@ -41,8 +41,17 @@ function tick() {
   if (shown.size) send();
 }
 
+/// A widget was dragged: remember where it ended up (saved once it stops moving, not on every pixel).
+const timers = {};
+function remember(p) {
+  if (!p || !KINDS.includes(p.kind) || !Number.isFinite(p.x) || !Number.isFinite(p.y)) return;
+  clearTimeout(timers[p.kind]);
+  timers[p.kind] = setTimeout(() => save(`widgets.pos.${p.kind}`, { x: Math.round(p.x), y: Math.round(p.y) }), 400);
+}
+
 export function start() {
   // A freshly opened widget asks for the current state, so it never starts blank.
+  listen('widget-moved', (e) => remember(e.payload)).catch(() => {});
   listen('widget-ready', () => { last = ''; send(); }).catch(() => {});
   setInterval(tick, 1000);
   tick();
