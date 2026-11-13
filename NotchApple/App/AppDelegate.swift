@@ -133,7 +133,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 func closed(_ c: Color) -> some View {
                     ZStack(alignment: .top) {
                         NotchShape(topRadius: 8, bottomRadius: 12).fill(Color.black)
-                        LiquidMetalCapsule(hover: true, mode: 3, tint: c, veil: false).mask { NotchShape(topRadius: 8, bottomRadius: 12, closed: false).stroke(style: StrokeStyle(lineWidth: 5.5, lineCap: .round)) }
+                        LiquidMetalCapsule(hover: true, mode: 3, tint: c, veil: false).mask { NotchShape(topRadius: 8, bottomRadius: 12).stroke(style: StrokeStyle(lineWidth: 11, lineCap: .round)) }.clipShape(NotchShape(topRadius: 8, bottomRadius: 12))
                     }.frame(width: 190, height: 36)
                 }
                 func tabs(_ t: AppTheme) -> some View {

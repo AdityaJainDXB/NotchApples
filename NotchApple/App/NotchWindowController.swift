@@ -123,19 +123,19 @@ final class NotchTriggerView: NSView {
             var notch = NSRect(x: bounds.midX - width / 2, y: bounds.minY + pad.height, width: width, height: bounds.height - pad.height)
             notch = notch.insetBy(dx: -6, dy: 0); notch.origin.y -= 3; notch.size.height += 3
             let path = Self.notchPath(in: notch, shoulder: shoulder, bottom: min(10, notch.height / 2))
-            // The top corners of the silhouette flare outward (the "shoulders"). Cut them off so no metal pokes out past the black pill:
-            // only what is below the shoulders is kept.
-            let keep = CGPath(rect: NSRect(x: notch.minX - 8, y: notch.minY - 8, width: notch.width + 16, height: notch.height + 8 - (shoulder + 5)), transform: nil)
+            // The metal lives INSIDE the notch's own outline: a band along the whole edge (top included), cut to the filled silhouette, so
+            // it can never poke out past the black pill.
+            let filled = path.cgPath
+            let band = filled.copy(strokingWithWidth: 11, lineCap: .round, lineJoin: .round, miterLimit: 1).intersection(filled)
             // The hosting views are flipped (origin top-left) and this view is not, so the shapes are mirrored to land in the right place.
             var flip = CGAffineTransform(a: 1, b: 0, c: 0, d: -1, tx: 0, ty: bounds.height)
             func mask(_ shape: CGPath) -> CAShapeLayer {
-                let clipped = shape.intersection(keep)
-                let m = CAShapeLayer(); m.path = clipped.copy(using: &flip) ?? clipped; m.fillColor = NSColor.black.cgColor
+                let m = CAShapeLayer(); m.path = shape.copy(using: &flip) ?? shape; m.fillColor = NSColor.black.cgColor
                 return m
             }
             rim.frame = bounds; sheen.frame = bounds
-            rim.layer?.mask = mask(path.cgPath.copy(strokingWithWidth: 5.5, lineCap: .round, lineJoin: .round, miterLimit: 1))
-            sheen.layer?.mask = mask(path.cgPath)
+            rim.layer?.mask = mask(band)
+            sheen.layer?.mask = mask(filled)
             NSAnimationContext.runAnimationGroup { $0.duration = 0.18; rim.animator().alphaValue = 1; sheen.animator().alphaValue = 0.2 }
         } else {
             NSAnimationContext.runAnimationGroup({ $0.duration = 0.18; rim.animator().alphaValue = 0; sheen.animator().alphaValue = 0 }, completionHandler: { [weak self] in
