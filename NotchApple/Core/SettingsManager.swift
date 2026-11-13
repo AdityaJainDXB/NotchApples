@@ -120,11 +120,11 @@ enum Module: String, CaseIterable, Identifiable {
         case .smartHome: "lightbulb.fill"
         case .devTools: "hammer.fill"
         case .wellbeing: "leaf.fill"
-        case .utilities: "wrench.and.screwdriver.fill"
+        case .utilities: "briefcase.fill"   // Tools keeps the wrench and screwdriver; two tabs must not share an icon
         case .nonNecessities: "ellipsis.circle.fill"
         case .todo: "checklist"
         case .bambu: "printer.fill"
-        case .notchAI: "sparkles"
+        case .notchAI: "cursorarrow.rays"   // the green dot that follows the cursor; AI keeps the sparkles
         }
     }
 
@@ -262,15 +262,26 @@ final class SettingsManager: ObservableObject {
     /// Off by default. With "Lock Notch Apple" on, this asks to unlock only on the tabs chosen in `securityLockedTabs` (the others open
     /// as normal): the prompt shows when the tab you land on, or switch to, is one of them (issue 45).
     @AppStorage("security.onlyTabs") var securityOnlyTabs = false
-    @AppStorage("security.lockedTabs") var securityLockedTabs = "games,search,messenger"
+    @AppStorage("security.lockedTabs") var securityLockedTabs = "messenger"
+    /// What older versions started with, before only Messenger was meant to be locked. Used to tell "never changed" from "chosen".
+    static let legacyLockedTabs = "games,search,messenger"
     /// The one-time "Lock your messages?" card in the Messenger tab: set once it was answered either way.
     @AppStorage("chatLock.offerDone") var chatLockOfferDone = false
     /// Turns the lock on for Messenger only (everything else, AI included, opens as normal).
     func lockMessages() {
         securityEnabled = true
         securityOnlyTabs = true
+        // The old default also locked Games and Search. Only Messenger was meant to be locked, so an untouched list becomes just that.
+        if securityLockedTabs == Self.legacyLockedTabs { securityLockedTabs = "messenger" }
         if !isLockedTab(.messenger) { setLockedTab(.messenger, true) }
         chatLockOfferDone = true
+    }
+    /// Anyone who took the Messenger offer before this fix still has Games and Search locked by the old default. If they never chose
+    /// those themselves (the list is exactly the old default), Games and Search are unlocked, once.
+    func undoGamesSearchLockFromOffer() {
+        guard chatLockOfferDone, !UserDefaults.standard.bool(forKey: "chatLock.gamesSearchUndone") else { return }
+        UserDefaults.standard.set(true, forKey: "chatLock.gamesSearchUndone")
+        if securityLockedTabs == Self.legacyLockedTabs { securityLockedTabs = "messenger"; objectWillChange.send() }
     }
     /// 2.2.52 also locked AI when you accepted the offer; that was a mistake. Anyone who took the offer gets AI unlocked, once.
     func undoAILockFromOffer() {
@@ -438,7 +449,7 @@ final class SettingsManager: ObservableObject {
         case .smartHome: $smartHomeEnabled
         case .devTools: $devToolsEnabled
         case .wellbeing: $wellbeingEnabled
-        case .utilities: $utilitiesEnabled
+        case .utilities: .constant(true)      // Utilities is always there: it holds Stats, Shelf, World Clock, Purge, Convert and Launcher
         case .nonNecessities: .constant(true)
         case .todo: $todoEnabled
         case .bambu: $bambuEnabled
@@ -446,14 +457,23 @@ final class SettingsManager: ObservableObject {
         }
     }
 
-    /// The modules the Utilities tab holds. While Utilities is on, they have no tab of their own: they live there.
+    /// The modules the Utilities tab holds. They never have a tab or a switch of their own: they live there, always.
     static let utilitiesMembers: [Module] = [.stats, .shelf, .worldClock, .cacheCleaner, .convert, .launcher]
 
     /// Is this module shown only inside the Utilities tab right now?
-    func isInsideUtilities(_ module: Module) -> Bool { utilitiesEnabled && Self.utilitiesMembers.contains(module) }
+    /// World Clock is never a tab or an option of its own: it lives in Utilities for everyone. The other members are inside Utilities while it is on.
+    func isInsideUtilities(_ module: Module) -> Bool { Self.utilitiesMembers.contains(module) }
+    /// Modules that have no switch or tab of their own anywhere (they are part of Utilities).
+    static let onlyInsideUtilities: Set<Module> = Set(utilitiesMembers)
+    /// Anyone who had World Clock as its own tab keeps it: Utilities is switched on for them, once, so it does not vanish.
+    func moveWorldClockIntoUtilities() {
+        guard !UserDefaults.standard.bool(forKey: "worldClock.movedToUtilities") else { return }
+        UserDefaults.standard.set(true, forKey: "worldClock.movedToUtilities")
+        if worldClockEnabled && !utilitiesEnabled { utilitiesEnabled = true }
+    }
 
     /// Where a dropped file should land: the Shelf tab, or the Utilities tab that holds the Shelf.
-    var shelfTab: Module { utilitiesEnabled ? .utilities : .shelf }
+    var shelfTab: Module { .utilities }
 
     /// Tabs to show in the notch, in display order.
     var enabledTabs: [Module] {

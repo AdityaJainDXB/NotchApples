@@ -40,10 +40,88 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         if LidFoldModule.shared.enabled { LidFoldModule.shared.start() }
         ModuleRegistry.shared.register(CursorCompanion.shared)
         CursorCompanion.shared.start()   // no-op unless the user turned the green dot on
+        AgentHUD.shared.refresh()        // no-op unless the user turned on the agent cards
+        CaptionOverlay.shared.start()    // shows words only while NotchAI is speaking
+        if UserDefaults.standard.bool(forKey: "notchai.draw.on") { NotchAIDrawing.shared.refresh() }   // draw on screen with ctrl-option, only if turned on
+        if UserDefaults.standard.object(forKey: "notchai.voice.hotkey") as? Bool ?? true {
+            GlobalHotkeyManager.shared.register(.notchAITalk) { NotchAIVoice.shared.talk() }   // ctrl-option-V: press to talk, press again to send
+            // The wake word (off by default) starts with the app only if the user turned it on.
+            if UserDefaults.standard.bool(forKey: "notchai.voice.wakeWord") { _ = NotchAIVoice.shared }
+        }
         #if DEBUG
         // Test hook (DEBUG only): `-notchai.selftest.settings claude` opens that Settings tab at launch.
         if let raw = UserDefaults.standard.string(forKey: "notchai.selftest.settings"), let tab = SettingsTab(rawValue: raw) {
             DispatchQueue.main.asyncAfter(deadline: .now() + 2) { SettingsWindowController.shared.show(tab: tab) }
+        }
+        // Task hooks (DEBUG only): `-notchai.selftest.research "<url> | <question>"` runs a real research task;
+        // `-notchai.selftest.resume YES` resumes every paused task after a simulated restart.
+        if let spec = UserDefaults.standard.string(forKey: "notchai.selftest.research") {
+            let parts = spec.components(separatedBy: " | ")
+            DispatchQueue.main.asyncAfter(deadline: .now() + 2) { ResearchAgent.shared.research(question: parts.last ?? "", urlText: parts.first ?? "") }
+        }
+        if UserDefaults.standard.bool(forKey: "notchai.selftest.resume") {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                for t in NotchAITaskStore.shared.tasks where t.state == .paused { NotchAITaskStore.shared.resume(t.id) }
+            }
+        }
+        // More test hooks (DEBUG only): `-notchai.selftest.agents "<request>"` runs a multi-agent request;
+        // `-notchai.selftest.workspace YES` opens the workspace window; `-notchai.selftest.overlay YES` draws a sample
+        // annotation for a few seconds; `-notchai.selftest.speak "<text>"` speaks a short phrase.
+        let d = UserDefaults.standard
+        if let req = d.string(forKey: "notchai.selftest.agents") {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 2) { if let why = NotchAIOrchestrator.run(request: req) { NSLog("NotchAI selftest: agents not started: %@", why) } }
+        }
+        // `-notchai.selftest.followup "<question>"` fakes one finished task, asks the question, and logs the reply.
+        if let q = d.string(forKey: "notchai.selftest.followup") {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                var s = TaskStep(tool: "answer_request", title: "Answer", argument: "x", risk: .readOnly, idempotencyKey: "a")
+                s.state = .done; s.result = "Mount Everest is 8,849 m tall. K2 is 8,611 m. Everest is therefore 238 m taller."
+                var t = NotchAITask(title: "Compare Everest and K2", agent: "research", steps: [s]); t.state = .completed
+                NotchAITaskStore.shared.debugInsert(t)
+                NSLog("NotchAI followup: %@", NotchAITaskStore.shared.followUp(t.id, q) ?? "sent")
+                Task { @MainActor in
+                    while NotchAITaskStore.shared.answering.contains(t.id) { try? await Task.sleep(nanoseconds: 1_000_000_000) }
+                    for m in NotchAITaskStore.shared.tasks.first(where: { $0.id == t.id })?.chat ?? [] { NSLog("NotchAI followup %@: %@", m.role.rawValue, m.text) }
+                    NSLog("NotchAI followup done")
+                }
+            }
+        }
+        if d.bool(forKey: "notchai.selftest.workspace") { DispatchQueue.main.asyncAfter(deadline: .now() + 2) { NotchAIWorkspaceWindow.open() } }
+        if d.bool(forKey: "notchai.selftest.overlay") {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                let step = TeachingStep(instruction: "Click Save to keep your changes", target: "Save", expected: ["Saved"])
+                AnnotationOverlay.shared.show(TeachingLogic.annotations(step: step, number: 2, target: CGRect(x: 0.55, y: 0.45, width: 0.1, height: 0.06)))
+            }
+            DispatchQueue.main.asyncAfter(deadline: .now() + 14) { AnnotationOverlay.shared.hide() }
+        }
+        if let text = d.string(forKey: "notchai.selftest.speak") {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 2) { do { try NotchAIVoice.shared.speakText(text) } catch { NSLog("NotchAI selftest speak failed: %@", error.localizedDescription) } }
+        }
+        // Snapshot hook (DEBUG only): `-notchai.selftest.snapshot overview|companion|chat` renders that NotchAI section
+        // off-screen to /tmp/notchai-snap-<section>.png, so the UI can be checked without touching the desktop.
+        if let name = UserDefaults.standard.string(forKey: "notchai.selftest.snapshot"),
+           let section = NotchAIView.Section(rawValue: name.prefix(1).uppercased() + name.dropFirst()) {
+            Task { @MainActor in
+                OllamaDiagnosticsView.debugReport = await OllamaDiagnostics.run(selectedModel: "qwen3:8b", allowCloud: false)
+                try? await Task.sleep(nanoseconds: 3_000_000_000)
+                NotchAINav.shared.section = section
+                let view = NotchAIView().frame(width: 700, height: 420).padding(16)
+                    .background(LinearGradient(colors: [Color(red: 0.12, green: 0.05, blue: 0.28), Color(red: 0.07, green: 0.03, blue: 0.16)], startPoint: .topLeading, endPoint: .bottomTrailing))
+                    .environment(\.colorScheme, .dark)
+                // A hidden window, so AppKit-backed controls (picker, scroll view, fields) draw too.
+                let host = NSHostingView(rootView: view)
+                host.frame = CGRect(x: 0, y: 0, width: 732, height: 452)
+                let win = NSWindow(contentRect: host.frame, styleMask: [.borderless], backing: .buffered, defer: false)
+                win.contentView = host
+                win.setFrameOrigin(CGPoint(x: -4000, y: -4000))   // off every screen, never shown
+                host.layoutSubtreeIfNeeded()
+                try? await Task.sleep(nanoseconds: 800_000_000)
+                host.layoutSubtreeIfNeeded()
+                if let rep = host.bitmapImageRepForCachingDisplay(in: host.bounds) {
+                    host.cacheDisplay(in: host.bounds, to: rep)
+                    if let png = rep.representation(using: .png, properties: [:]) { try? png.write(to: URL(fileURLWithPath: "/tmp/notchai-snap-\(name).png")) }
+                }
+            }
         }
         #endif
 
@@ -198,6 +276,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationWillTerminate(_ notification: Notification) {
         BrightnessBlackout.shared.restore()   // never leave the screen dark behind
         ClosedLidAwake.shared.restoreOnQuit()   // let the Mac sleep again
+        NowPlayingMonitor.shared.shutdown()   // do not leave the now-playing helper running
         // Say goodbye to the room but remember it for next launch.
         WebP2PManager.shared.leave(remember: true)
         LocalP2PManager.shared.stop()

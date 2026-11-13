@@ -264,6 +264,15 @@ export function createGroup(v, name, members, id = globalThis.crypto.randomUUID(
 }
 
 /** An invite or a change from a friend. It must list me, and only the person who made the group can change it. */
+/** I add some of my friends to a group I'm in, whoever made it. Returns the people actually added (none if it isn't allowed). */
+export function addToGroup(v, key, members) {
+  const g = group(v, key);
+  if (!g) return [];
+  const fresh = [...new Set(members)].filter((b) => record(v, b)?.status === 'active' && !g.members.includes(b)).sort();
+  if (!fresh.length || g.members.length + fresh.length >= MAX_GROUP_MEMBERS) return [];
+  g.members = [...g.members, ...fresh].sort();
+  return fresh;
+}
 export function receiveGroup(v, from, body, myBox, now = Date.now()) {
   v.groups ||= [];
   const all = body && Array.isArray(body.gm) ? body.gm : null;
@@ -273,8 +282,10 @@ export function receiveGroup(v, from, body, myBox, now = Date.now()) {
   const name = clean(body.gname) || 'Group';
   const i = groupIndex(v, groupKey(body.g));
   if (i >= 0) {
-    if (v.groups[i].creator !== from) return null;
-    v.groups[i].name = name; v.groups[i].members = others;
+    if (v.groups[i].creator === from) { v.groups[i].name = name; v.groups[i].members = others; return v.groups[i]; }
+    // Any other member may only ADD people (their own friends): the list must keep everyone already in, and the name stays.
+    if (!v.groups[i].members.includes(from) || !v.groups[i].members.every((b) => others.includes(b))) return null;
+    v.groups[i].members = others;
     return v.groups[i];
   }
   if (v.groups.length >= MAX_GROUPS) return null;

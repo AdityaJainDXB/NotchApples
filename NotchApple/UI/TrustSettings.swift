@@ -405,3 +405,55 @@ final class NotesCloudSync: ObservableObject {
         if pulled { NotesStore.shared.reloadFromDisk(); TodoStore.shared.reloadFromDisk() }
     }
 }
+
+// MARK: - Report
+
+/// Settings → Report: a bug, an idea or a question, opened as a GitHub issue that already says Mac, the version and the plan.
+/// Nothing is sent by the app; the issue form opens in the browser and the person reviews and submits it.
+struct ReportSettings: View {
+    @ObservedObject private var entitlements = Entitlements.shared
+    @State private var kind: ReportLogic.Kind = .bug
+    @State private var text = ""
+
+    private var version: String { "\(WhatsNew.currentVersion) (\(Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "?"))" }
+    private var system: String { "macOS \(ProcessInfo.processInfo.operatingSystemVersionString)" }
+
+    var body: some View {
+        Form {
+            Section {
+                Picker("This is a", selection: $kind) { ForEach(ReportLogic.Kind.allCases) { Text($0.title).tag($0) } }.pickerStyle(.segmented)
+                ZStack(alignment: .topLeading) {
+                    TextEditor(text: $text).font(.system(size: 13)).frame(minHeight: 130)
+                        .onChange(of: text) { _, new in if new.count > ReportLogic.maxDescription { text = String(new.prefix(ReportLogic.maxDescription)) } }
+                    if text.isEmpty { Text(kind.prompt).foregroundStyle(.secondary).padding(.horizontal, 5).padding(.vertical, 8).allowsHitTesting(false) }
+                }
+                HStack {
+                    Text("\(text.count)/\(ReportLogic.maxDescription)").font(.caption).foregroundStyle(.secondary).monospacedDigit()
+                    Spacer()
+                    Button("Open on GitHub…") { send() }.buttonStyle(.borderedProminent).disabled(!ReportLogic.isReady(text))
+                }
+            } header: {
+                Text("Report a problem or an idea")
+            } footer: {
+                Text("This opens a GitHub issue in your browser, filled in for you. You read it and press Submit yourself; Notch Apple sends nothing. You need a free GitHub account.")
+            }
+            Section {
+                LabeledContent("App", value: "Notch Apple for Mac")
+                LabeledContent("Version", value: version)
+                LabeledContent("Plan", value: entitlements.tier.name)
+                LabeledContent("System", value: system)
+            } header: {
+                Text("What the report says about you")
+            } footer: {
+                Text("Only these four lines are added. No keys, notes, history, file names or personal details.")
+            }
+        }
+        .formStyle(.grouped)
+    }
+
+    private func send() {
+        if let url = ReportLogic.issueURL(kind: kind, platform: "Mac", version: version, tier: entitlements.tier.name, system: system, description: text) {
+            NSWorkspace.shared.open(url)
+        }
+    }
+}

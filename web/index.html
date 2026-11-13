@@ -76,16 +76,16 @@ h3{font-size:19px;letter-spacing:-.015em;line-height:1.3}
 section[id],header[id],[id].anchor{scroll-margin-top:84px}
 
 /* ============ Buttons ============ */
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:9px;height:48px;padding:0 22px;border-radius:99px;font:600 15px/1 Geist,sans-serif;background:var(--ac-strong);color:#fff;border:0;cursor:pointer;white-space:nowrap;box-shadow:inset 0 1px 0 rgba(255,255,255,.22),0 8px 20px -10px rgba(0,0,0,.7);transition:transform 160ms var(--ease-out),background-color .2s ease,box-shadow .2s ease;-webkit-tap-highlight-color:transparent}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:9px;height:48px;padding:0 22px;border-radius:14px;font:600 15px/1 Geist,sans-serif;background:radial-gradient(120% 90% at 50% 0%,#6162e4 0%,#4f46dc 55%,#4a42d6 100%);color:#fff;border:1.5px solid #3a33ad;box-shadow:inset 0 1px 1px rgba(255,255,255,.38),inset 0 -2px 4px rgba(24,18,110,.3),0 8px 18px -8px rgba(79,70,220,.7),0 1px 2px rgba(0,0,0,.3);cursor:pointer;white-space:nowrap;transition:transform 160ms var(--ease-out),background-color .2s ease,box-shadow .2s ease;-webkit-tap-highlight-color:transparent}
 .btn .ph{font-size:18px}
 .btn:active{transform:scale(.96)}
-.btn.ghost{background:rgba(255,255,255,.06);box-shadow:inset 0 0 0 1px var(--line2);color:var(--tx)}
+.btn.ghost{background:linear-gradient(180deg,#fff 0%,#f8f9fb 100%);color:#111827;border-color:#e3e4e8;box-shadow:inset 0 -2px 3px rgba(17,24,39,.05),0 8px 18px -10px rgba(0,0,0,.55),0 1px 2px rgba(0,0,0,.2)}
 .btn.sm{height:36px;padding:0 15px;font-size:13.5px}
 .link{display:inline-flex;align-items:center;gap:6px;font-weight:600;color:var(--tx);height:48px;padding:0 6px}
 .link .ph{transition:transform .25s var(--ease-out)}
 @media (hover:hover) and (pointer:fine){
-  .btn:hover{background:#6a44e0}
-  .btn.ghost:hover{background:rgba(255,255,255,.1)}
+  .btn:hover{filter:brightness(1.06)}
+  .btn.ghost:hover{filter:none;background:#fff}
   .link:hover .ph{transform:translate(2px,-2px)}
 }
 
@@ -130,6 +130,10 @@ section[id],header[id],[id].anchor{scroll-margin-top:84px}
 .hero-top{position:relative;display:grid;grid-template-columns:1.25fr 1fr;gap:48px;align-items:end}
 h1{font-size:clamp(48px,7.6vw,96px);line-height:.98;letter-spacing:-.04em;font-weight:600}
 h1 .l2{display:block;color:var(--mut)}
+.rotw{display:inline-block;padding-bottom:.14em;background:linear-gradient(135deg,#cdbfff 0%,#8b6cff 100%);-webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent;transition:opacity .22s ease-out,transform .22s ease-out,filter .22s ease-out}
+.rotw.is-exit{opacity:0;transform:translateY(-10px);filter:blur(3px)}
+.rotw.is-enter-start{opacity:0;transform:translateY(10px);filter:blur(3px);transition:none}
+@media(prefers-reduced-motion:reduce){.rotw{transition:none}}
 .hero-side .sub{color:var(--mut);font-size:clamp(17px,1.5vw,19px);max-width:42ch;text-wrap:pretty}
 .hero-side .sub b{color:var(--tx)}
 .kbd{font:500 .86em var(--mono);color:var(--tx);background:rgba(255,255,255,.08);box-shadow:inset 0 0 0 1px var(--line2);border-radius:7px;padding:1px 7px;white-space:nowrap}
@@ -648,7 +652,7 @@ html.pre .intro,html.pre h1 .hw{animation-play-state:paused}
   </div>
   <div class="wrap">
     <div class="hero-top">
-      <h1><span class="intro" style="--i:0">The notch,</span> <span class="l2 intro" style="--i:1">put to work.</span></h1>
+      <h1 aria-label="Your notch, finally useful: AI, games, clipboard, live sports, a browser and Do It"><span class="intro" style="--i:0">Your notch, finally useful:</span> <span class="rotw" id="rotw" aria-hidden="true">AI</span></h1>
       <div class="hero-side">
         <p class="sub intro" style="--i:2">Press <span class="kbd">⌃⌥S</span>, drag over anything on screen, and get it <b>solved, explained or translated</b>. Thirty more tools live right beside it.</p>
         <div class="cta intro" style="--i:3">
@@ -921,7 +925,6 @@ html.pre .intro,html.pre h1 .hw{animation-play-state:paused}
     <div class="fi" data-c="net"><span class="ic"><i class="ph ph-package"></i></span><div><h3>Live tracking</h3><p>Paste a parcel or flight number and follow it from the notch.</p></div></div>
     <div class="fi" data-c="net"><span class="ic"><i class="ph ph-chat-teardrop-dots"></i></span><div><h3>Messenger</h3><p>Chat on the same Wi-Fi or in an encrypted room. Random handles, no accounts.</p></div></div>
     <div class="fi" data-c="net"><span class="ic"><i class="ph ph-speaker-high"></i></span><div><h3>Per-app audio <span class="tag">Pro</span></h3><p>Volume up to 150% and a 10-band EQ for each app.</p></div></div>
-    <div class="fi" data-c="net"><span class="ic"><i class="ph ph-shield-check"></i></span><div><h3>Free VPN <span class="tag">Pro</span></h3><p>A list of free OpenVPN servers, or import your own profiles.</p></div></div>
     <div class="fi" data-c="net"><span class="ic"><i class="ph ph-cloud-arrow-up"></i></span><div><h3>Sign in and sync <span class="tag">Pro</span></h3><p>Your setup and key follow you to a new Mac. Or use iCloud or a backup file.</p></div></div>
     <div class="fi" data-c="net"><span class="ic"><i class="ph ph-scan-smiley"></i></span><div><h3>Face ID-style lock</h3><p>Lock the notch with Touch ID, your password or your webcam.</p></div></div>
 
@@ -972,7 +975,7 @@ html.pre .intro,html.pre h1 .hw{animation-play-state:paused}
         <li><i class="ph ph-check"></i>Home dashboard, profiles, command palette</li>
         <li><i class="ph ph-check"></i>Notch Apple AI included: no key to set up</li>
         <li><i class="ph ph-check"></i>Markets, flight status, Klick keyboard sounds, 22 themes</li>
-        <li><i class="ph ph-check"></i>Audio, VPN, Voice Notes, Screen Time</li>
+        <li><i class="ph ph-check"></i>Audio, Voice Notes, Screen Time</li>
         <li><i class="ph ph-check"></i>Works offline on up to 3 Macs</li>
       </ul>
       <a class="btn" href="pro.html">Get Pro</a>
@@ -1211,6 +1214,11 @@ if(!reduce){const hero=$('.hero'),nt=$('#notch'),por=$('.portal'),rim=$('.portal
   addEventListener('scroll',()=>{if(!q)q=requestAnimationFrame(upd)},{passive:true});addEventListener('resize',upd);upd()}
 /* 2026 polish: headline word reveal, cursor glow, laptop lean (all off with reduced motion) */
 if(!reduce){
+// The word at the end of the headline changes every couple of seconds (AI, games, clipboard, ...).
+(function(){const el=document.getElementById('rotw');if(!el||matchMedia('(prefers-reduced-motion: reduce)').matches)return;
+  const words=['AI','games','clipboard','live sports','a browser','Do It'];let i=0;
+  setInterval(()=>{if(document.hidden)return;el.className='rotw is-exit';setTimeout(()=>{i=(i+1)%words.length;el.textContent=words[i];el.className='rotw is-enter-start';requestAnimationFrame(()=>requestAnimationFrame(()=>{el.className='rotw'}))},220)},2200);
+})();
   let wi=0;$$('h1 .intro').forEach(sp=>{const t=sp.textContent;sp.setAttribute('aria-label',t);sp.innerHTML=t.trim().split(/\s+/).map(w=>`<span class="hw" aria-hidden="true" style="--w:${wi++}">${w}</span>`).join(' ')});
   document.addEventListener('pointermove',e=>{const c=e.target.closest&&e.target.closest('.cell,.card');if(!c)return;const r=c.getBoundingClientRect();c.style.setProperty('--mx',e.clientX-r.left+'px');c.style.setProperty('--my',e.clientY-r.top+'px')},{passive:true});
   const scr=$('.screen'),hero=$('.hero');let px=0,py=0,sx=0,sy=0,run=0;
@@ -1294,12 +1302,12 @@ const shots=[
  ['Notch','timer','Timer','Countdown and stopwatch'],['Notch','notch-update','Update','A new release, one click away'],['Notch','live','Live','Scores and tracking'],['Notch','devices','Devices','Accessory battery, mic and camera'],
  ['Notch','notifications','Notifications','Reply to iMessages'],['Notch','plugins','Plugins','Widgets from any script'],['Notch','snippets','Snippets','Paste saved text anywhere'],
  ['Notch','today','Home','Weather, events, devices and widgets'],['Notch','windows','Windows','Snap, tile and save layouts'],['Notch','window-snap-zones','Snap zones','Drag a window to the notch'],['Notch','tools','Tools','Keep Awake, colours, calculator'],['Notch','mirror','Mirror','Add-on. Camera placeholder shown'],['Notch','world-clock','World Clock','Add-on. Cities and time difference'],['Notch','clipboard','Clipboard','Search, pin and filter'],
- ['Notch','notes','Notes','Saved automatically'],['Notch','messenger','Messenger','Anonymous encrypted rooms'],['Notch','focus','Focus','Pomodoro timer'],['Notch','share','Share','AirDrop and PairDrop'],['Notch','shelf','File Shelf','Drop files into the notch'],['Notch','audio','Audio','Per-app volume and EQ'],['Notch','vpn','VPN','Free servers'],
+ ['Notch','notes','Notes','Saved automatically'],['Notch','messenger','Messenger','Anonymous encrypted rooms'],['Notch','focus','Focus','Pomodoro timer'],['Notch','share','Share','AirDrop and PairDrop'],['Notch','shelf','File Shelf','Drop files into the notch'],['Notch','audio','Audio','Per-app volume and EQ'],
  ['Settings','settings-notch','Notch','Hover, fullscreen, size, gestures',1],['Settings','settings-themes','Themes','22 themes and your own',1],['Settings','settings-profiles','Profiles','Pro. By app or time of day',1],['Settings','settings-privacy','Privacy','Everything it can access',1],['Settings','settings-help','Help and Feedback','Reviewed before it\'s sent',1],['Settings','onboarding','Welcome','Four short steps',1],['Settings','onboarding-tour','Tour','A quick look around',1],
  ['Settings','settings-extras','Notch Extras','What shows beside the notch'],['Settings','settings-backup','Backup and Sync','Google account, iCloud, backup files'],['Settings','settings-license','Sign in','Pro unlocked on every Mac'],
  ['Settings','settings-general','General','Like System Settings'],['Settings','settings-modules','Modules','Every feature is optional'],['Settings','settings-updates','Updates','Update or Not now'],['Settings','settings-windows','Windows','Zones, shortcuts, gaps'],
  ['Settings','settings-permissions','Permissions','Everything in one place'],['Settings','settings-authentication','Face unlock','Face ID-style'],['Settings','settings-clipboard','Clipboard','History settings'],
- ['Settings','settings-messenger','Messenger','Handle and notifications'],['Settings','settings-audio','Audio','Built-in engine'],['Settings','settings-vpn','VPN','Profiles and servers'],['Settings','settings-widget','Widget','Location or a city'],['Settings','settings-focus','Focus','Session lengths'],
+ ['Settings','settings-messenger','Messenger','Handle and notifications'],['Settings','settings-audio','Audio','Built-in engine'],['Settings','settings-widget','Widget','Location or a city'],['Settings','settings-focus','Focus','Session lengths'],
  ['Flight sim','plane-home','Start screen','Clean start, fly with others, weather and time of day',1],['Flight sim','plane-clean-start','Clean start','Battery, beacon, engine: the checklist walks you through it',1],['Flight sim','plane-night','Night','Glowing runway lights and the tower',1],
  ['Flight sim','plane-ils','ILS approach','Needles, autopilot approach and AI traffic',1],['Flight sim','plane-share','Fly with others','Other Notch pilots, with callsigns',1],
  ['Get Pro','pro','Unlock Pro','In the notch',1],['Get Pro','settings-pro','Pro in Settings','Your tier and key',1],['Get Pro','get-pro-ltc','Pay with Litecoin','The classic checkout'],['Get Pro','get-pro-key','Your product key','Made instantly']

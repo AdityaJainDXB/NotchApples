@@ -12,6 +12,8 @@ export const MODULES = [
     blurb: 'Weather with the hourly and week forecast, your next calendar events, and your PC at a glance.' },
   { id: 'ai', name: 'AI', icon: '✨', load: () => import('./modules/ai.js'),
     blurb: 'Chat with AI: free Gemini, Groq, OpenRouter or local Ollama, or paid Claude, ChatGPT and DeepSeek. Ask about your screen.' },
+  { id: 'notchai', name: 'NotchAI', icon: '🟢', load: () => import('./modules/notchai.js'),
+    blurb: 'NotchAI (beta on Windows): a chat that stays on this PC. With Local first on it only uses a model Ollama has installed here, and refuses anything else before it is sent.' },
   { id: 'sports', name: 'Sports', icon: '⚽', load: () => import('./modules/sports.js'),
     blurb: 'Follow your team (Barcelona unless you pick another): next match, every competition, results and the live score on the pill.' },
   { id: 'f1', name: 'F1', icon: '🏁', load: () => import('./modules/f1.js'),

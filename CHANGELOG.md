@@ -4,6 +4,116 @@ Every Notch Apple release, newest first. The latest few are also on the [README]
 
 > **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is in the repository's history.
 
+### Mac 2.2.70 · Windows 2.2.70 BETA · 12 November 2026 · NotchAI: more voices, drawing, diagrams, and a Windows chat
+
+**Mac**
+
+- New: NotchAI Voice has more engines. Piper (a natural voice) and Whisper (speech to text) run on your Mac once you install them and set their paths in Voice. OpenAI's voice is there too and, like every cloud voice, stays blocked while Local first is on
+- New: hands-free talking. Turn it on in Voice and a pause ends your sentence, and NotchAI listens again after it answers. A wake word ("Hey Notch") is also there: it is off by default, is recognised on your Mac only, shows when the microphone is open, and is experimental
+- New (Pro): draw on your screen. Turn it on in Screen, hold Control and Option and move the pointer to draw, then ask NotchAI to explain what you drew around. NotchAI's own arrows, circles and boxes can use a hand-drawn style
+- New: Visual can draw a diagram of boxes and arrows for a topic, and can open your own 3D files (USDZ, OBJ, STL and others) to turn around and click
+- New (Pro): Documents takes whole folders, searches inside your files, and reads old Word (.doc) and rich text files
+- New (Pro): one-press connectors for Notion, Linear and Sentry that sign in through your browser, GitHub with a token, and more than one account for each
+- New (Pro): dictation can draft from the screen. Say what you want written, press Draft from the screen, and NotchAI reads the window you were using and writes it for you to check before it is inserted
+
+**Windows**
+
+- New: a NotchAI tab (beta). It is a chat that stays on this PC: with Local first on, it only uses a model Ollama has installed here and refuses anything else before it is sent. It has Stop, Regenerate, New chat and can read answers aloud. Voice questions, screen reading, files and agents are on the Mac only for now
+
+### Mac 2.2.69 · Windows 2.2.69 BETA · 12 November 2026 · 🪶 Lighter in the background, Screen buttons work
+
+**Mac**
+
+- Fixed: the Now Playing helper could be left running after Notch Apple quit or restarted for an update, one more each time, all polling in the background. It now stops with the app, ends by itself if the app is gone, and leftovers from older runs are ended when Notch Apple starts
+- Fixed: in NotchAI's Screen section the buttons stayed greyed out until you found the switch. Pressing one now turns Screen awareness on and asks for Screen Recording if it is missing. After you allow it in System Settings, quit and reopen Notch Apple; macOS only applies it after a restart
+
+**Windows**
+
+- No Windows changes in this release. It keeps the same version number as the Mac app
+
+### Mac 2.2.68 · Windows 2.2.68 BETA · 12 November 2026 · 🧭 Choose what stays on your screen
+
+**Mac**
+
+- Added: after an update, a one-time card asks "What should stay on your screen?". Switch off the features you don't want in the notch; the recommended ones start on, nothing changes until you press a button, and you can change any of it later in Settings → Modules
+- Added: in NotchAI you can ask an agent a follow-up question about a task it has finished. It answers in its own chat for that task, using the same model, and the Local first rule still applies
+
+**Windows**
+
+- No Windows changes in this release. It keeps the same version number as the Mac app
+
+**Website**
+
+- A new homepage (the old one is at /classic.html), and the claims about the free VPN are gone, because the VPN was retired in Mac 2.0.52 and Windows 1.55.0
+
+### Mac 2.2.67 · Windows 2.2.67 BETA · 12 November 2026 · 🔊 Volume and brightness stay after updates
+
+**Mac**
+
+- Fixed: the volume and brightness gauge in the notch kept disappearing after an update, because macOS forgot the Accessibility permission every time. The app is now signed with a fixed certificate, so the permission survives future updates. After installing this one, remove Notch Apple from System Settings → Privacy & Security → Accessibility (the − button), add it again and switch it on. That is needed one last time
+
+**Windows**
+
+- No Windows changes in this release. It keeps the same version number as the Mac app
+
+### Mac 2.2.66 · Windows 2.2.66 BETA · 12 November 2026 · 📅 Up next shows the real day
+
+**Mac**
+
+- Fixed: the Up next list said Tomorrow for every event after today, so a Saturday event seen on Thursday read Tomorrow. It now shows Today, Tomorrow, the weekday name for the next week (for example Saturday), or the date after that
+
+**Windows**
+
+- No Windows changes in this release; Windows already shows the real day. It keeps the same version number as the Mac app
+
+### Mac 2.2.65 · Windows 2.2.65 BETA · 12 November 2026 · 👥 Add friends to a group
+
+**Mac**
+
+- Fixed: in a Messenger group chat anyone in the group can now add their own friends, not just whoever made it. Open the group's ⋯ menu (or right-click it) and choose Add friends. Only the person who made the group can rename it or remove people. Everyone in the group needs this update for the new people to show up for them
+
+**Windows**
+
+- Fixed: in a Messenger group chat anyone in the group can now add their own friends, not just whoever made it. Open the group's ⋯ menu (or right-click it) and choose Add friends. Only the person who made the group can rename it or remove people. Everyone in the group needs this update for the new people to show up for them
+
+### Mac 2.2.64 · Windows 2.2.64 BETA · 12 November 2026 · Typing, the time pill and volume
+
+**Mac**
+
+- Fixed: text you type in the notch is easier to see. Fields such as a group name, your friend code and several search boxes showed dark text on the dark notch; they now use your theme's text colour
+- Fixed: the date and time pill under the notch now keeps the time up to date, goes away when you move off the notch or open it, and no longer pops up while the notch is closing
+- Fixed: changing the volume with the keys, by scrolling on the notch, or with the slider in Audio no longer freezes or stutters. The changes are now merged and written in the background
+
+**Windows**
+
+- No changes for Windows in this version
+
+### Mac 2.2.63 · Windows 2.2.63 BETA · 12 November 2026 · More for NotchAI, and a Report tab
+
+**Mac**
+
+- New: NotchAI chat keeps a history, has Stop and Regenerate, checks your Ollama setup, can start at login and respects Reduce Motion. NotchAI stays local first: cloud and unverified models are refused unless you turn them on
+- New (Pro): NotchAI can search the web with no key (DuckDuckGo, your own SearXNG server, or Wikipedia, your choice in Research), read the top pages and answer with citations. Each question says which service it goes to, and nothing is searched until you ask
+- New (Pro): NotchAI reads Word, Excel and PowerPoint files as well as PDF, text and images, only reading them and never changing them. Drop files on the NotchAI tab or its window to list them in Documents and summarise them
+- New (Pro): draw an area on any screen to read or explain just that area, or ask about the text you have selected in another app. Windows of apps on your exclusion list are blanked out of screen captures
+- New: routines run a saved question on a schedule (every N minutes, daily or weekly). They wait for the internet, pause after three failures and ask for approval like any task. Also new in this release: voice and dictation, memory you control, agents (Ultimate), connectors with browser sign-in (Pro), a resizable NotchAI window and simple 3D sketches
+- New: Settings has a Report tab. It opens a GitHub issue that already says Mac, your version and your plan; you read it and press Submit yourself
+- Fixed: Messenger and game text follows each theme's text colour and is easier to read. Your friend code now sits in the sidebar instead of covering the message bar. New group, Leave group and Remove friend open inside the notch, so choosing people no longer closes it
+- Fixed: only Messenger is locked when you take the lock offer. Games and Search had been locked too by an old default; they are unlocked now unless you chose to lock them yourself
+- Changed: World Clock is no longer a tab or an option of its own. It lives in Utilities for everyone, and if you used it before, Utilities is switched on for you so you keep it
+- Fixed: Utilities has its own icon, NotchAI has its own icon, and the app suggestion no longer covers the page
+- Feedback welcome: much of NotchAI is new. It was built without a microphone, a second display or most real services in front of it, so please report anything odd. Computer control through Do It is not in this release
+
+**Windows**
+
+- Fixed: typing in the Settings search box now shows your text
+- New: Settings search works like the Mac's. It finds panes by keywords and features by name, and Enter opens a feature first
+- Changed: the Browser opens pages inside the notch, which grows to fit, and a page no longer closes the notch when you click it. There is an Own window button if you prefer the old way
+- Changed: the notch opens at the Mac's size (740 by 420), and Small is a little smaller
+- New: Settings has a Report tab that opens a GitHub issue saying Windows, your version and your plan
+- Changed: World Clock is no longer a tab or an option of its own. It lives in Utilities for everyone, and if you used it before, Utilities is switched on for you so you keep it
+- Fixed: two missing styles in the printer tab (spacing and note text)
+
 ### Mac 2.2.62 · Windows 2.2.62 BETA · 12 November 2026 · 💬 Messenger is free
 
 **Mac and Windows**

@@ -1,0 +1,3 @@
+## Notch Apple for Windows 2.2.65 (BETA)
+
+- Fixed: in a Messenger group chat anyone in the group can now add their own friends, not just whoever made it. Open the group's ⋯ menu (or right-click it) and choose Add friends. Only the person who made the group can rename it or remove people. Everyone in the group needs this update for the new people to show up for them

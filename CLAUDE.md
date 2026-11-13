@@ -1,5 +1,14 @@
 # Notes for any Claude agent working in this repo
 
+## Read the handoffs first (standing rule from the owner's side, 12 November 2026)
+
+Before doing anything in this repo, `git fetch` and read these on the latest `main`. They hold tasks that have to be completed, and several sessions work here in parallel, so the state changes between sessions:
+
+- `docs/HANDOFF.md`: the main handoff (what is released, what is waiting, what the owner asked for).
+- `docs/NOTCHAI_ROADMAP.md`, the section "Handoff: what remains": the NotchAI handoff and backlog.
+
+Treat their open items as work to do or to report on, and update both before you finish.
+
 ## Releases: keep the newest Mac AND Windows build findable (standing rule from the owner)
 
 Mac releases are far more frequent than Windows ones, so Windows users could not find theirs. Always:

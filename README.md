@@ -150,22 +150,26 @@ More screenshots of the capture overlay, the AI answer, the settings and the Win
 
 ## What's new
 
-### Mac 2.2.62 · Windows 2.2.62 · 12 November 2026 · 💬 Messenger is free
+### Mac 2.2.70 · Windows 2.2.70 · 12 November 2026 · NotchAI: more voices, drawing, diagrams, and a Windows chat
 
-- Changed: Messenger is now free. It moved from Pro to the free tier, so everyone can chat in nearby (Wi-Fi) rooms, encrypted rooms joined by a code, and with friends, with nothing to unlock. If you already have Pro, nothing changes for you.
+- New: NotchAI Voice has more engines. Piper (a natural voice) and Whisper (speech to text) run on your Mac once you install them and set their paths in Voice. OpenAI's voice is there too and, like every cloud voice, stays blocked while Local first is on
+- New: hands-free talking. Turn it on in Voice and a pause ends your sentence, and NotchAI listens again after it answers. A wake word ("Hey Notch") is also there: it is off by default, is recognised on your Mac only, shows when the microphone is open, and is experimental
+- New (Pro): draw on your screen. Turn it on in Screen, hold Control and Option and move the pointer to draw, then ask NotchAI to explain what you drew around. NotchAI's own arrows, circles and boxes can use a hand-drawn style
+- New: Visual can draw a diagram of boxes and arrows for a topic, and can open your own 3D files (USDZ, OBJ, STL and others) to turn around and click
+- New (Pro): Documents takes whole folders, searches inside your files, and reads old Word (.doc) and rich text files
+- New (Pro): one-press connectors for Notion, Linear and Sentry that sign in through your browser, GitHub with a token, and more than one account for each
+- New (Pro): dictation can draft from the screen. Say what you want written, press Draft from the screen, and NotchAI reads the window you were using and writes it for you to check before it is inserted
+- Windows: New: a NotchAI tab (beta). It is a chat that stays on this PC: with Local first on, it only uses a model Ollama has installed here and refuses anything else before it is sent. It has Stop, Regenerate, New chat and can read answers aloud. Voice questions, screen reading, files and agents are on the Mac only for now
 
-### Mac 2.2.61 · Windows 2.2.61 · 12 November 2026 · 🚫 Unblock people in Messenger friends
+### Mac 2.2.69 · Windows 2.2.69 · 12 November 2026 · 🪶 Lighter in the background, Screen buttons work
 
-- Fixed: in Messenger friends you can now unblock people. A new Blocked list in Friends shows who you blocked, each with an Unblock button (also in the Friends settings, next to Unblock all). After unblocking, they can send you a request again, or you can add their friend code. Anyone you blocked before this update shows as "Someone you blocked (ABCD)" and can be unblocked the same way
+- Fixed: the Now Playing helper could be left running after Notch Apple quit or restarted for an update, one more each time, all polling in the background. It now stops with the app, ends by itself if the app is gone, and leftovers from older runs are ended when Notch Apple starts
+- Fixed: in NotchAI's Screen section the buttons stayed greyed out until you found the switch. Pressing one now turns Screen awareness on and asks for Screen Recording if it is missing. After you allow it in System Settings, quit and reopen Notch Apple; macOS only applies it after a restart
 
-### Mac 2.2.60 · Windows 2.2.60 · 11 November 2026 · ✨ NotchAI, a free assistant with a green dot
+### Mac 2.2.68 · Windows 2.2.68 · 12 November 2026 · 🧭 Choose what stays on your screen
 
-- New: NotchAI, a free assistant tab. Chat with the AI you chose in Settings → AI, with streamed answers, Stop and Clear. It is on by default and can be hidden like any tab
-- New: an optional green dot that follows your cursor. It is off until you turn it on in NotchAI → Companion. Click it for Quick Ask: one question, one streamed answer, closed by Esc or a click elsewhere. Right-click it to open the NotchAI tab. The dot never calls an AI by itself, so it works with every provider off
-- New: a Custom provider in Settings → AI for any OpenAI-compatible server (Ollama, LM Studio, vLLM or a proxy): base URL, optional key (kept in the Keychain), model list and Test connection
-- New: Local first for NotchAI. With "Allow cloud and unverified models" off (the default), NotchAI only uses Apple Intelligence or a model that Ollama confirms is installed on this Mac. Cloud providers, Ollama Cloud models and anything that can't be verified are refused before anything is sent, and are never used as a fallback. This switch covers NotchAI only: elsewhere in Notch Apple your chosen provider works as before, except that Ollama Cloud models and unverifiable Ollama or custom servers are refused there too while it is off
-- New: the model list in Settings → AI says Local, Local network, Cloud or Unverified next to each model
-- Feedback welcome: NotchAI is new and has had little time on setups with more than one display, so please report anything odd with the dot
+- Added: after an update, a one-time card asks "What should stay on your screen?". Switch off the features you don't want in the notch; the recommended ones start on, nothing changes until you press a button, and you can change any of it later in Settings → Modules
+- Added: in NotchAI you can ask an agent a follow-up question about a task it has finished. It answers in its own chat for that task, using the same model, and the Local first rule still applies
 
 ## Plugins
 

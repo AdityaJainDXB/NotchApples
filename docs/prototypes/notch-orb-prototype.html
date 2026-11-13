@@ -1,0 +1,1483 @@
+<title>Notch Orb Prototype</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Familjen+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: a small Mac screen with the notch at its top edge; the notch is the whole point, so it sits above the controls that drive it.
+   Palette: page chrome follows the viewer's theme; the screen mock and the notch keep their own fixed colours (they are a picture of a Mac). */
+:root {
+  --bg: #f3f1f6; --fg: #17141f; --muted: #6a6578; --line: #d9d5e3; --card: #ffffff; --accent: #6c3fe0; --accent-ink: #ffffff;
+  --display: "Familjen Grotesk", "Helvetica Neue", Arial, sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  --sys: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", system-ui, sans-serif;
+  /* the notch and its screen: always dark, like the real thing */
+  --n-bg: #000; --n-fg: #f4f2f8; --n-dim: #a7a2b6; --n-line: rgba(255,255,255,.12); --n-surface: rgba(255,255,255,.07); --n-hover: rgba(255,255,255,.13);
+  --n-accent: #a98bff; --n-good: #22c55e;
+  /* Jakub Antalik's transitions.dev tokens (MIT), unchanged where used */
+  --resize-dur: 300ms; --resize-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --badge-slide-dur: 260ms; --badge-pop-dur: 500ms; --badge-pop-close-dur: 180ms; --badge-fade-dur: 400ms; --badge-fade-close-dur: 180ms;
+  --badge-blur: 2px; --badge-offset-x: -8.2px; --badge-offset-y: 12.4px;
+  --badge-slide-ease: cubic-bezier(0.22, 1, 0.36, 1); --badge-pop-ease: cubic-bezier(0.34, 1.36, 0.64, 1); --badge-close-ease: cubic-bezier(0.4, 0, 0.2, 1);
+  --text-swap-dur: 200ms; --text-swap-translate-y: 8px; --text-swap-blur: 2px; --text-swap-ease: ease-out;
+  --dropdown-open-dur: 250ms; --dropdown-close-dur: 150ms; --dropdown-pre-scale: 0.97; --dropdown-closing-scale: 0.99; --dropdown-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --panel-open-dur: 400ms; --panel-close-dur: 350ms; --panel-translate-y: 24px; --panel-blur: 2px; --panel-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --icon-swap-dur: 200ms; --icon-swap-blur: 2px; --icon-swap-start-scale: 0.25; --icon-swap-ease: ease-in-out;
+  --check-opacity-dur: 550ms; --check-rotate-dur: 550ms; --check-rotate-from: 80deg; --check-bob-dur: 450ms; --check-y-amount: 14px;
+  --check-blur-dur: 500ms; --check-blur-from: 10px; --check-path-dur: 550ms; --check-path-delay: 80ms;
+  --check-ease-out: cubic-bezier(0.22, 1, 0.36, 1); --check-ease-bob: cubic-bezier(0.34, 1.35, 0.64, 1);
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg: #0f0d16; --fg: #efecf6; --muted: #9a94ad; --line: #2a2536; --card: #171322; --accent: #a98bff; --accent-ink: #14101f; color-scheme: dark } }
+:root[data-theme="dark"] { --bg: #0f0d16; --fg: #efecf6; --muted: #9a94ad; --line: #2a2536; --card: #171322; --accent: #a98bff; --accent-ink: #14101f; color-scheme: dark }
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--fg); font: 15px/1.55 var(--sys); padding-block: 28px 48px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.wrap { max-width: 980px; margin: 0 auto; display: grid; gap: 22px; }
+h1 { font: 700 clamp(26px, 5vw, 40px)/1.05 var(--display); letter-spacing: -.02em; margin: 0; text-wrap: balance; }
+.lede { margin: 6px 0 0; color: var(--muted); max-width: 62ch; }
+.mono { font-family: var(--mono); font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+
+/* ---- the screen ---- */
+.screen { position: relative; border-radius: 18px; overflow: hidden; min-height: 470px; border: 1px solid var(--line);
+  background: radial-gradient(120% 90% at 20% 110%, #5b3fa8 0%, transparent 55%), radial-gradient(90% 80% at 90% 0%, #2d6ea8 0%, transparent 60%), linear-gradient(160deg, #1d1a33, #0c0b16); }
+.menubar { height: 26px; display: flex; align-items: center; justify-content: space-between; padding: 0 14px; background: rgba(0,0,0,.28); color: rgba(255,255,255,.86); font: 500 12px var(--sys); }
+.menubar span:first-child { opacity: .9 }
+.notch-slot { position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: min(660px, calc(100% - 20px)); display: flex; justify-content: center; }
+
+/* ---- the notch ---- */
+.notch { position: relative; background: var(--n-bg); color: var(--n-fg); font-family: var(--sys); overflow: hidden;
+  width: 196px; height: 34px; border-radius: 0 0 16px 16px;
+  transition: width var(--resize-dur) var(--resize-ease), height var(--resize-dur) var(--resize-ease), border-radius var(--resize-dur) var(--resize-ease);
+  box-shadow: 0 18px 50px -12px rgba(0,0,0,.6); }
+.notch[data-open="true"] { width: 100%; height: 318px; border-radius: 0 0 26px 26px; }
+.pill { position: absolute; inset: 0 0 auto 0; height: 34px; display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer; border: 0; background: none; color: inherit; font: inherit; width: 100%; padding: 0 14px;
+  transition: opacity 160ms ease; }
+.notch[data-open="true"] .pill { opacity: 0; pointer-events: none; }
+.pill-status { font-size: 12px; color: var(--n-dim); min-width: 78px; text-align: left; white-space: nowrap; }
+.orb20 { width: 20px; height: 20px; display: block; flex: none; }
+
+.body { position: absolute; inset: 0; padding: 40px 16px 14px; display: flex; flex-direction: column; gap: 10px; }
+.t-panel-slide { transform: translateY(var(--panel-translate-y)); opacity: 0; filter: blur(var(--panel-blur)); pointer-events: none;
+  transition: transform var(--panel-close-dur) var(--panel-ease), opacity var(--panel-close-dur) var(--panel-ease), filter var(--panel-close-dur) var(--panel-ease); will-change: transform, opacity, filter; }
+.t-panel-slide[data-open="true"] { transform: translateY(0); opacity: 1; filter: blur(0); pointer-events: auto;
+  transition: transform var(--panel-open-dur) var(--panel-ease), opacity var(--panel-open-dur) var(--panel-ease), filter var(--panel-open-dur) var(--panel-ease); }
+
+.tabs { display: flex; align-items: center; gap: 2px; }
+.tab { position: relative; width: 34px; height: 30px; border-radius: 9px; border: 0; background: none; color: var(--n-dim); display: grid; place-items: center; cursor: pointer; }
+.tab:hover { background: var(--n-hover); color: var(--n-fg); }
+.tab[aria-selected="true"] { background: var(--n-surface); color: var(--n-fg); }
+.tab:focus-visible, .chip:focus-visible, .btn:focus-visible, .pill:focus-visible, .model:focus-visible { outline: 2px solid var(--n-accent); outline-offset: 2px; }
+.tab svg { width: 17px; height: 17px; stroke: currentColor; fill: none; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; grid-area: 1 / 1; }
+/* icon swap: the selected tab's icon swaps to its filled twin */
+.tab .on { opacity: 0; transform: scale(var(--icon-swap-start-scale)); filter: blur(var(--icon-swap-blur)); transition: all var(--icon-swap-dur) var(--icon-swap-ease); }
+.tab .off { transition: all var(--icon-swap-dur) var(--icon-swap-ease); }
+.tab[aria-selected="true"] .on { opacity: 1; transform: scale(1); filter: blur(0); }
+.tab[aria-selected="true"] .off { opacity: 0; transform: scale(var(--icon-swap-start-scale)); filter: blur(var(--icon-swap-blur)); }
+.tab .on { fill: currentColor; }
+.spacer { flex: 1; }
+.collapse { width: 30px; height: 30px; border-radius: 50%; border: 0; background: var(--n-surface); color: var(--n-dim); cursor: pointer; display: grid; place-items: center; }
+.collapse:hover { background: var(--n-hover); color: var(--n-fg); }
+
+/* badge */
+.t-badge { position: absolute; top: -2px; right: -1px; pointer-events: none; opacity: 0; filter: blur(var(--badge-blur));
+  transform: translate(var(--badge-offset-x), var(--badge-offset-y));
+  transition: transform var(--badge-slide-dur) var(--badge-close-ease), opacity var(--badge-fade-close-dur) var(--badge-close-ease), filter var(--badge-fade-close-dur) var(--badge-close-ease); }
+.t-badge[data-open="true"] { opacity: 1; filter: blur(0); transform: translate(0, 0);
+  transition: transform var(--badge-slide-dur) var(--badge-slide-ease), opacity var(--badge-fade-dur) var(--badge-slide-ease), filter var(--badge-fade-dur) var(--badge-slide-ease); }
+.t-badge-dot { display: grid; place-items: center; min-width: 14px; height: 14px; padding: 0 4px; border-radius: 7px; background: #ff4d5e; color: #fff; font: 700 9px var(--sys);
+  transform: scale(.4); transition: transform var(--badge-pop-close-dur) var(--badge-close-ease); }
+.t-badge[data-open="true"] .t-badge-dot { transform: scale(1); transition: transform var(--badge-pop-dur) var(--badge-pop-ease); }
+
+/* text swap */
+.t-text-swap { display: inline-block; transform: translateY(0); filter: blur(0); opacity: 1; transition: transform var(--text-swap-dur) var(--text-swap-ease), filter var(--text-swap-dur) var(--text-swap-ease), opacity var(--text-swap-dur) var(--text-swap-ease); will-change: transform, filter, opacity; }
+.t-text-swap.is-exit { transform: translateY(calc(var(--text-swap-translate-y) * -1)); filter: blur(var(--text-swap-blur)); opacity: 0; }
+.t-text-swap.is-enter-start { transform: translateY(var(--text-swap-translate-y)); filter: blur(var(--text-swap-blur)); opacity: 0; transition: none; }
+
+.view { flex: 1; min-height: 0; display: grid; grid-template-columns: 112px 1fr; gap: 16px; align-items: center; }
+.view[hidden] { display: none !important; }
+.orbbox { display: grid; place-items: center; gap: 6px; }
+.orb64 { width: 64px; height: 64px; display: block; }
+.statusline { font-size: 13px; font-weight: 600; min-height: 20px; display: flex; align-items: center; gap: 6px; }
+.sub { font-size: 12px; color: var(--n-dim); margin: 2px 0 8px; }
+.chips { display: flex; flex-wrap: wrap; gap: 5px; }
+.chip { font: 500 11px var(--sys); padding: 4px 9px; border-radius: 999px; border: 1px solid var(--n-line); background: none; color: var(--n-dim); cursor: pointer; }
+.chip:hover { color: var(--n-fg); background: var(--n-surface); }
+.chip[aria-pressed="true"] { background: var(--n-accent); border-color: var(--n-accent); color: #140e26; }
+.row { display: flex; align-items: center; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+.btn { font: 600 12px var(--sys); padding: 6px 13px; border-radius: 999px; border: 0; background: var(--n-fg); color: #111; cursor: pointer; }
+.btn:hover { filter: brightness(.92); }
+.btn[disabled] { opacity: .5; cursor: default; }
+.check { width: 15px; height: 15px; }
+.check path { fill: none; stroke: var(--n-good); stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 20; stroke-dashoffset: 20; }
+.check.play { animation: checkIn var(--check-opacity-dur) var(--check-ease-out) both, checkBob var(--check-bob-dur) var(--check-ease-bob) both; }
+.check.play path { animation: checkPath var(--check-path-dur) var(--check-ease-out) var(--check-path-delay) forwards; }
+@keyframes checkIn { from { opacity: 0; filter: blur(var(--check-blur-from)); transform: rotate(var(--check-rotate-from)) translateY(var(--check-y-amount)); } to { opacity: 1; filter: blur(0); transform: none; } }
+@keyframes checkBob { 0% { margin-top: 8px } 100% { margin-top: 0 } }
+@keyframes checkPath { to { stroke-dashoffset: 0 } }
+
+/* model picker (dropdown) */
+.pickwrap { position: relative; }
+.model { font: 500 11px var(--sys); display: inline-flex; align-items: center; gap: 6px; padding: 5px 10px; border-radius: 9px; background: var(--n-surface); color: var(--n-fg); border: 0; cursor: pointer; }
+.dd { position: absolute; left: 0; bottom: calc(100% + 6px); min-width: 224px; padding: 5px; border-radius: 12px; background: #17151f; border: 1px solid var(--n-line); z-index: 4;
+  opacity: 0; transform: scale(var(--dropdown-pre-scale)); transform-origin: bottom left; pointer-events: none;
+  transition: opacity var(--dropdown-close-dur) var(--dropdown-ease), transform var(--dropdown-close-dur) var(--dropdown-ease); }
+.dd[data-open="true"] { opacity: 1; transform: scale(1); pointer-events: auto; transition-duration: var(--dropdown-open-dur); }
+.opt { display: flex; align-items: center; justify-content: space-between; gap: 10px; width: 100%; padding: 6px 8px; border-radius: 8px; border: 0; background: none; color: var(--n-fg); font: 500 12px var(--sys); cursor: pointer; text-align: left; }
+.opt:hover:not([disabled]) { background: var(--n-hover); }
+.opt[disabled] { color: #6e6a7c; cursor: not-allowed; }
+.tag { font: 500 9.5px var(--mono); letter-spacing: .05em; text-transform: uppercase; padding: 2px 6px; border-radius: 6px; }
+.tag.local { background: rgba(34,197,94,.16); color: #4ade80; } .tag.lan { background: rgba(250,204,21,.16); color: #facc15; } .tag.cloud { background: rgba(255,255,255,.08); color: #a7a2b6; }
+.tool-view { display: block; font-size: 13px; color: var(--n-dim); padding-top: 4px; }
+.tool-view b { display: block; color: var(--n-fg); font-size: 15px; margin-bottom: 4px; }
+
+/* ---- controls below ---- */
+.panel { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 16px; display: grid; gap: 12px; }
+.panel h2 { margin: 0; font: 600 16px var(--display); }
+.states { display: grid; grid-template-columns: repeat(auto-fill, minmax(112px, 1fr)); gap: 8px; }
+.cell { display: grid; justify-items: center; gap: 6px; padding: 12px 6px 9px; border-radius: 12px; border: 1px solid var(--line); background: none; color: var(--fg); cursor: pointer; font: 500 12px var(--sys); }
+.cell canvas { background: #000; border-radius: 50%; padding: 6px; width: 76px; height: 76px; }
+.cell[aria-pressed="true"] { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+.cell:focus-visible, .seg button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.cell small { color: var(--muted); font: 400 10.5px var(--mono); }
+.credits { font-size: 12.5px; color: var(--muted); max-width: 78ch; }
+.credits a { color: var(--accent); }
+.themebtn { justify-self: start; font: 500 12px var(--sys); padding: 5px 12px; border-radius: 999px; border: 1px solid var(--line); background: none; color: var(--fg); cursor: pointer; }
+@media (max-width: 560px) {
+  .view { grid-template-columns: 1fr; justify-items: start; gap: 8px; }
+  .orbbox { grid-auto-flow: column; justify-content: start; gap: 12px; }
+  .notch[data-open="true"] { height: 384px; }
+  .screen { min-height: 520px; }
+}
+@media (prefers-reduced-motion: reduce) { .notch, .t-panel-slide, .t-text-swap, .tab svg, .t-badge, .t-badge-dot, .dd, .check { transition: none !important; animation: none !important; } .check path { stroke-dashoffset: 0; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="mono">Notch Apple · NotchAI · prototype</div>
+    <h1>The notch, with a thinking orb</h1>
+    <p class="lede">The green dot becomes a small orb that shows what NotchAI is doing, built from Jakub Antalik's open-source thinking-orbs and transitions.dev. Click the notch, pick an orb state, or run the demo.</p>
+  </header>
+
+  <div class="screen" id="screen">
+    <div class="menubar"><span> Notch Apple &nbsp;&nbsp; File &nbsp; Edit &nbsp; View</span><span>Thu 12 Nov &nbsp; 10:42</span></div>
+    <div class="notch-slot">
+      <div class="notch" id="notch" data-open="true">
+        <button class="pill" id="pill" aria-label="Open the notch"><canvas class="orb20" id="orb20" role="img" aria-label="NotchAI status"></canvas><span class="pill-status"><span class="t-text-swap" id="pillText">Ready</span></span></button>
+        <div class="body t-panel-slide" id="body" data-open="true">
+          <div class="tabs" role="tablist" aria-label="Notch tabs" id="tabs"></div>
+          <div class="view" id="view-ai">
+            <div class="orbbox"><canvas class="orb64" id="orb64" role="img" aria-label="NotchAI orb"></canvas></div>
+            <div>
+              <div class="statusline"><span class="t-text-swap" id="statusText">Ready when you are</span><svg class="check" id="check" viewBox="0 0 16 16" aria-hidden="true" hidden><path d="M3 8.6l3.2 3.2L13 4.6"/></svg></div>
+              <div class="sub" id="subText">Orb state: <span id="stateName">breathing</span></div>
+              <div class="chips" id="chips" role="group" aria-label="Orb state"></div>
+              <div class="row">
+                <button class="btn" id="run">Run a demo question</button>
+                <div class="pickwrap">
+                  <button class="model" id="model" aria-haspopup="menu" aria-expanded="false"><span id="modelName">qwen3:8b</span><span class="tag local" id="modelTag">Local</span></button>
+                  <div class="dd" id="dd" data-open="false" role="menu" aria-label="Model">
+                    <button class="opt" role="menuitem" data-name="qwen3:8b" data-kind="local"><span>qwen3:8b</span><span class="tag local">Local</span></button>
+                    <button class="opt" role="menuitem" data-name="llama3.2 on the NAS" data-kind="lan"><span>llama3.2 on the NAS</span><span class="tag lan">Local network</span></button>
+                    <button class="opt" role="menuitem" disabled aria-disabled="true"><span>Cloud models</span><span class="tag cloud">Off</span></button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="view tool-view" id="view-other" hidden><b id="otherTitle"></b><span id="otherText"></span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <section class="panel" aria-labelledby="h-states">
+    <h2 id="h-states">The nine orb states</h2>
+    <div class="states" id="states"></div>
+    <p class="credits">Each state is a different verb NotchAI can be doing, at 64 px here and 20 px in the pill. Pick one to drive the notch above.</p>
+    <button class="themebtn" id="themebtn" type="button">Switch page theme</button>
+  </section>
+
+  <p class="credits">Orbs: <a href="https://github.com/Jakubantalik/thinking-orbs">thinking-orbs</a> by Jakub Antalik, MIT licence; its engine is used unchanged, with the TypeScript types stripped. Motion: <a href="https://github.com/Jakubantalik/transitions.dev">transitions.dev</a> by Jakub Antalik, MIT licence (panel reveal, text swap, icon swap, notification badge, menu dropdown, success check, card resize). The notch shape, tabs and copy are Notch Apple's. This is a web sketch, not the Mac app.</p>
+</div>
+
+<script>/* thinking-orbs engine by Jakub Antalik (MIT, https://github.com/Jakubantalik/thinking-orbs), types stripped and joined unchanged. */
+(function(){
+
+// ---- src/engine/core.ts
+// Shared primitives for the dotted 3D thought-orbs. Ported from inkform
+// (PlotterLab's HalftoneSphere lineage): honestly 3D — rotated,
+// depth-shaded, z-sorted. Depth is carried by dot size and ink weight
+// alone. Plain 2D canvas fills only: no ctx.filter, no SVG filters, so
+// every mode renders identically in Chrome, Safari and Firefox.
+
+                      
+            
+            
+            
+            
+                                                                      
+                
+             
+ 
+
+/** A stroked edge between two projected points (the `connecting` web). */
+                       
+             
+             
+             
+             
+                                                   
+                
+             
+            
+ 
+
+/**
+ * One rendered instant: a complete, final set of draw instructions.
+ * `dots` is already z-sorted into draw order and radius-clamped; `lines`
+ * are drawn first. Nothing here needs further interpretation, which is what
+ * makes a frame portable to any 2D renderer.
+ */
+                           
+              
+                
+ 
+
+                                                                                      
+
+function lerp(a        , b        , f        )         {
+  return a + (b - a) * f;
+}
+
+function frac(x        )         {
+  return x - Math.floor(x);
+}
+
+/** Value noise on a 2D lattice — smooth, deterministic, cheap. */
+function vnoise(x        , y        )         {
+  const xi = Math.floor(x);
+  const yi = Math.floor(y);
+  let fx = x - xi;
+  let fy = y - yi;
+  fx = fx * fx * (3 - 2 * fx);
+  fy = fy * fy * (3 - 2 * fy);
+  const a = hashD(xi, yi);
+  const b = hashD(xi + 1, yi);
+  const c = hashD(xi, yi + 1);
+  const d = hashD(xi + 1, yi + 1);
+  return a + (b - a) * fx + (c - a) * fy + (a - b - c + d) * fx * fy;
+}
+
+/** Deterministic hash in [0, 1). */
+function hashD(a        , b        )         {
+  const h = Math.sin(a * 12.9898 + b * 78.233) * 43758.5453;
+  return h - Math.floor(h);
+}
+
+/** Stable directions on a unit sphere (Fibonacci lattice). */
+function fibDir(i        , n        )                           {
+  const golden = Math.PI * (3 - Math.sqrt(5));
+  const y = 1 - (2 * (i + 0.5)) / n;
+  const rad = Math.sqrt(1 - y * y);
+  const a = i * golden;
+  return [rad * Math.cos(a), y, rad * Math.sin(a)];
+}
+
+/** Shortest signed angular distance, wrapped to (-π, π]. */
+function angleDelta(a        , b        )         {
+  return Math.atan2(Math.sin(a - b), Math.cos(a - b));
+}
+
+/** Shared spin + tilt + orthographic projection. */
+function makeProj(yaw        , tilt        , cx        , cy        , scale        )            {
+  const st = Math.sin(tilt);
+  const ct = Math.cos(tilt);
+  const sy = Math.sin(yaw);
+  const cyw = Math.cos(yaw);
+  return (x, y, z) => {
+    const x1 = x * cyw + z * sy;
+    const z1 = -x * sy + z * cyw;
+    const y1 = y * ct - z1 * st;
+    const z2 = y * st + z1 * ct;
+    return [cx + x1 * scale, cy - y1 * scale, z2];
+  };
+}
+
+/**
+ * Painter: z-sort far→near, matte grayscale dots. On dark substrates the
+ * ink value is mirrored (1 - white) so near dots read bright — the same
+ * depth language on an inverted substrate.
+ */
+function paint(ctx                          , dots       , dark         , rMin = 0.3)       {
+  for (const d of dots) {
+    const alpha = d.a ?? 1;
+    const w = Math.min(1, Math.max(0, d.white));
+    const g = Math.round((dark ? 1 - w : w) * 255);
+    ctx.fillStyle = `rgba(${g},${g},${g},${alpha})`;
+    ctx.beginPath();
+    ctx.arc(d.x, d.y, d.r, 0, Math.PI * 2);
+    ctx.fill();
+  }
+}
+
+/** Stroke pass for edge-based modes. Runs before `paint` so nodes sit on top. */
+function paintLines(ctx                          , lines        , dark         )       {
+  for (const l of lines) {
+    const alpha = l.a ?? 1;
+    const w = Math.min(1, Math.max(0, l.white));
+    const g = Math.round((dark ? 1 - w : w) * 255);
+    ctx.strokeStyle = `rgba(${g},${g},${g},${alpha})`;
+    ctx.lineWidth = l.w;
+    ctx.beginPath();
+    ctx.moveTo(l.x1, l.y1);
+    ctx.lineTo(l.x2, l.y2);
+    ctx.stroke();
+  }
+}
+
+/**
+ * Turn raw mode output into a finished frame: drop invisible marks, clamp
+ * radii to the mode's floor, and z-sort far→near into draw order.
+ *
+ * This runs in the GEOMETRY step, not the painter, so a frame is a complete
+ * set of draw instructions: every value is final and the array order is the
+ * order to draw in. That is what lets the RN and SwiftUI ports share this
+ * output verbatim — a port draws the list, it never re-derives anything —
+ * and what lets the golden-vector tests compare numbers instead of pixels.
+ */
+function finalizeFrame(dots       , lines        , rMin = 0.3)           {
+  const visible        = [];
+  for (const d of dots) {
+    if ((d.a ?? 1) < 0.02) continue;
+    d.r = Math.max(rMin, d.r);
+    visible.push(d);
+  }
+  visible.sort((a, b) => a.z - b.z);
+  return { dots: visible, lines: lines.filter((l) => (l.a ?? 1) >= 0.02) };
+}
+
+/** Paint a finished frame. Lines first, so nodes sit on top of their edges. */
+function paintFrame(ctx                          , frame          , dark         )       {
+  if (frame.lines.length) paintLines(ctx, frame.lines, dark);
+  paint(ctx, frame.dots, dark);
+}
+
+/**
+ * Dot radii were tuned for a 300pt frame; sub-linear scaling keeps small
+ * spinners legible. Lower pow = radii shrink less with size.
+ */
+function radiusScale(size        , pow        )         {
+  return (size / 300) ** pow;
+}
+
+
+// ---- src/engine/profiles.ts
+// Density profiles + the multiplier machinery that scales them. The base
+// rows are inkform's `fine` profiles; each shipped preset (state × size)
+// applies count / radius multipliers on top, resolved once per mount.
+
+                           
+                                    
+ 
+
+// 2-D lattices (rings × dots-per-ring) come in pairs — each side takes
+// √scale so the TOTAL dot count scales by `scale`; flat lists scale
+// linearly. `iconD` sets the morph outline's sampling density.
+const COUNT_PAIRS                                           = [
+  ['latRings', 'lonDensity'],
+  ['rings', 'lonDensity'],
+  ['lanes', 'segs']
+];
+const COUNT_KEYS = ['orbitN', 'ghostN', 'nodeN', 'strandN', 'signals']         ;
+const ICON_DENSITY_KEYS = ['iconD']         ;
+
+// Every key that sets a dot's rendered radius — scaling all of them keeps
+// a dot's near/far falloff intact while shrinking or growing the mark.
+const RADIUS_KEYS = [
+  'rBase',
+  'rDepth',
+  'rActive',
+  'rDot',
+  'ghostR',
+  'partR',
+  'partRDepth',
+  'nodeR',
+  'nodeRDepth'
+]         ;
+
+function scaleCounts(opts          , scale        )           {
+  const out           = { ...opts };
+  const done = new Set        ();
+  const rt = Math.sqrt(scale);
+  for (const [a, b] of COUNT_PAIRS) {
+    const va = out[a];
+    const vb = out[b];
+    if (va != null && vb != null && !done.has(a) && !done.has(b)) {
+      out[a] = Math.max(2, Math.round(va * rt));
+      out[b] = Math.max(2, Math.round(vb * rt));
+      done.add(a);
+      done.add(b);
+    }
+  }
+  for (const k of COUNT_KEYS) {
+    const v = out[k];
+    // 0 means the mode opted out of that layer entirely (ring has no ghost
+    // sphere) — scaling must not resurrect it as a single stray dot
+    if (v != null && v !== 0 && !done.has(k)) out[k] = Math.max(1, Math.round(v * scale));
+  }
+  for (const k of ICON_DENSITY_KEYS) {
+    const v = out[k];
+    if (v != null) out[k] = Math.max(0.02, v * scale);
+  }
+  return out;
+}
+
+function scaleRadii(opts          , scale        )           {
+  const out           = { ...opts };
+  for (const k of RADIUS_KEYS) {
+    const v = out[k];
+    if (v != null) out[k] = v * scale;
+  }
+  // remember the multiplier itself — spacing-derived radii (the morph
+  // outline) use it, since they aren't based on any single radius key
+  out.rSizeMul = (out.rSizeMul ?? 1) * scale;
+  return out;
+}
+
+/** Base (fine) profiles per mode, before preset multipliers. */
+const BASE_PROFILES                           = {
+  globe: {
+    latRings: 17,
+    lonDensity: 44,
+    rBase: 0.6,
+    rDepth: 1.7,
+    rBoost: 1.0,
+    inkFar: 0.62,
+    inkSpan: 0.54,
+    rsPow: 0.6,
+    rMin: 0.3
+  },
+  orbits: {
+    orbitN: 12,
+    ghostN: 40,
+    ghostR: 0.9,
+    ghostA: 0.5,
+    particles: 3,
+    partR: 1.2,
+    partRDepth: 1.6,
+    rsPow: 0.6,
+    rMin: 0.3
+  },
+  rubik: {
+    latRings: 15,
+    lonDensity: 40,
+    moveCount: 14,
+    rBase: 0.6,
+    rDepth: 1.7,
+    rActive: 0.3,
+    inkFar: 0.62,
+    inkSpan: 0.54,
+    rsPow: 0.6,
+    rMin: 0.3
+  },
+  wave: {
+    rings: 15,
+    lonDensity: 40,
+    rBase: 0.6,
+    rDepth: 1.7,
+    rsPow: 0.6,
+    rMin: 0.3
+  },
+  web: {
+    nodeN: 30,
+    thr: 0.72,
+    signals: 5,
+    nodeR: 1.4,
+    nodeRDepth: 1.8,
+    lineW: 0.8,
+    rsPow: 0.6,
+    rMin: 0.3
+  },
+  braid: {
+    strandN: 52,
+    turns: 3.0,
+    ghostN: 150,
+    rBase: 1.2,
+    rDepth: 1.8,
+    rsPow: 0.6,
+    rMin: 0.3
+  },
+  ribbon: {
+    lanes: 5,
+    segs: 88,
+    ghostN: 150,
+    rBase: 1.1,
+    rDepth: 1.7,
+    rsPow: 0.6,
+    rMin: 0.3
+  },
+  // ring shares ribbon's painter; faceOn cancels the camera tilt and moves
+  // the undulation onto the radius, and there is no ghost sphere behind it
+  ring: {
+    lanes: 5,
+    segs: 88,
+    ghostN: 0,
+    faceOn: 1,
+    rBase: 1.1,
+    rDepth: 1.7,
+    rsPow: 0.6,
+    rMin: 0.3
+  },
+  morph: {
+    rDot: 0.021,
+    iconD: 1,
+    rMin: 0.25
+  }
+};
+
+
+// ---- src/engine/lattice.ts
+// The sphere-lattice modes: globe (searching), rubik (solving) and
+// wave (listening). All draw a lat/long dot field with mode-specific
+// motion, then hand off to the shared z-sorted painter.
+
+
+
+// --- the shared solver heartbeat (rubik) ------------------------------
+// Rapid eased moves scramble, then replay in reverse (palindrome) so
+// everything clicks back to solved, rests, repeats.
+
+                
+                  
+             
+             
+              
+ 
+
+function solveCycle(time        , count        , slotDur        , rest        ) {
+  const cyc = 2 * count * slotDur + rest;
+  const tc = time % cyc;
+  const amount = new Array        (count).fill(0);
+  let active = -1;
+  if (tc < 2 * count * slotDur) {
+    const slot = Math.floor(tc / slotDur);
+    const p = (tc - slot * slotDur) / slotDur;
+    const cl = Math.min(1, p / 0.7);
+    const ep = 1 - (1 - cl) ** 3; // machine ease-out
+    if (slot < count) {
+      for (let i = 0; i < slot; i++) amount[i] = 1;
+      amount[slot] = ep;
+      active = slot;
+    } else {
+      const u = 2 * count - 1 - slot;
+      for (let i = 0; i < u; i++) amount[i] = 1;
+      amount[u] = 1 - ep;
+      active = u;
+    }
+  }
+  return { amount, active };
+}
+
+function applyMoves(
+  pt3                          ,
+  moves        ,
+  sc                                      
+)                                    {
+  let [x, y, z] = pt3;
+  let inActive = false;
+  for (let i = 0; i < moves.length; i++) {
+    if (sc.amount[i] <= 0) continue;
+    const mv = moves[i];
+    const coord = mv.axis === 0 ? x : mv.axis === 1 ? y : z;
+    if (coord < mv.lo || coord >= mv.hi) continue;
+    if (i === sc.active) inActive = true;
+    const a = mv.ang * sc.amount[i];
+    const ca = Math.cos(a);
+    const sa = Math.sin(a);
+    if (mv.axis === 0) {
+      const y2 = y * ca - z * sa;
+      z = y * sa + z * ca;
+      y = y2;
+    } else if (mv.axis === 1) {
+      const x2 = x * ca + z * sa;
+      z = -x * sa + z * ca;
+      x = x2;
+    } else {
+      const x2 = x * ca - y * sa;
+      y = x * sa + y * ca;
+      x = x2;
+    }
+  }
+  return [x, y, z, inActive];
+}
+
+function makeMoves(count        )         {
+  const moves         = [];
+  for (let i = 0; i < count; i++) {
+    const axis = Math.min(2, Math.floor(hashD(i, 2.3) * 3))             ;
+    const lo = -1.0 + 0.5 * Math.min(3, Math.floor(hashD(i, 5.9) * 4));
+    const dir = hashD(i, 7.7) < 0.5 ? 1 : -1;
+    moves.push({ axis, lo, hi: lo + 0.5, ang: (dir * Math.PI) / 2 });
+  }
+  return moves;
+}
+
+// --- Globe: lat/long field, a scan meridian sweeps — searching --------
+
+const frameGlobe            = (size, t, o) => {
+  const spin = 0.5;
+  const cx = size / 2;
+  const cy = size / 2;
+  const radius = (size / 2) * 0.82;
+  const tilt = 0.4 + 0.06 * Math.sin(t * 0.35);
+  const pt = makeProj(t * spin, tilt, cx, cy, radius);
+  // scan sweeps relative to the spin; scanMul scales that relative rate
+  const scan = t * (spin + (1.7 - spin) * (o.scanMul ?? 1));
+  const rs = radiusScale(size, o.rsPow ?? 0.6);
+  const dimBase = o.dimBase ?? 1;
+
+  const dots        = [];
+  const latRings = o.latRings ?? 17;
+  const lonDensity = o.lonDensity ?? 44;
+  for (let li = 0; li <= latRings; li++) {
+    const lat = -Math.PI / 2 + (li / latRings) * Math.PI;
+    const cosLat = Math.cos(lat);
+    const sinLat = Math.sin(lat);
+    const lonCount = Math.max(1, Math.round(Math.abs(cosLat) * lonDensity));
+    for (let lj = 0; lj < lonCount; lj++) {
+      const lon = (lj / lonCount) * 2 * Math.PI;
+      const [px, py, z] = pt(cosLat * Math.cos(lon), sinLat, cosLat * Math.sin(lon));
+      const depth = (z + 1) / 2;
+      // the scan: a moving meridian read as a size ripple, not a shine
+      const d = angleDelta(lon + t * spin, scan);
+      const boost = Math.exp(-(d * d) / 0.18) * Math.max(0, z);
+      dots.push({
+        x: px,
+        y: py,
+        z,
+        r: ((o.rBase ?? 0.6) + (o.rDepth ?? 1.7) * depth + (o.rBoost ?? 1) * boost) * rs,
+        white: (o.inkFar ?? 0.62) - (o.inkSpan ?? 0.54) * depth,
+        // dimBase < 1 fades un-scanned dots so the meridian reads clearly
+        a: dimBase + (1 - dimBase) * Math.min(1, boost)
+      });
+    }
+  }
+  return finalizeFrame(dots, [], o.rMin);
+};
+
+// --- Rubik: bands twist in quarter turns, scramble → solve — solving --
+
+const frameRubik            = (size, t, o) => {
+  const cx = size / 2;
+  const cy = size / 2;
+  const R = (size / 2) * 0.82;
+  const pt = makeProj(t * 0.55, 0.35 + 0.1 * Math.sin(t * 0.9), cx, cy, R);
+  const rs = radiusScale(size, o.rsPow ?? 0.6);
+  const moveCount = o.moveCount ?? 14;
+  const moves = makeMoves(moveCount);
+  const sc = solveCycle(t, moveCount, 0.42, 1.2);
+
+  const dots        = [];
+  const latRings = o.latRings ?? 15;
+  const lonDensity = o.lonDensity ?? 40;
+  for (let li = 0; li <= latRings; li++) {
+    const lat = -Math.PI / 2 + (li / latRings) * Math.PI;
+    const cosLat = Math.cos(lat);
+    const sinLat = Math.sin(lat);
+    const lonCount = Math.max(1, Math.round(Math.abs(cosLat) * lonDensity));
+    for (let lj = 0; lj < lonCount; lj++) {
+      const lon = (lj / lonCount) * 2 * Math.PI;
+      const [x, y, z, inActive] = applyMoves([cosLat * Math.cos(lon), sinLat, cosLat * Math.sin(lon)], moves, sc);
+      const [px, py, zr] = pt(x, y, z);
+      const depth = (zr + 1) / 2;
+      // the band being turned inks a touch darker — the "hand"
+      dots.push({
+        x: px,
+        y: py,
+        z: zr,
+        r: ((o.rBase ?? 0.6) + (o.rDepth ?? 1.7) * depth + (inActive ? (o.rActive ?? 0.3) : 0)) * rs,
+        white: (o.inkFar ?? 0.62) - (o.inkSpan ?? 0.54) * depth - (inActive ? 0.14 : 0)
+      });
+    }
+  }
+  return finalizeFrame(dots, [], o.rMin);
+};
+
+// --- Wave: a waveform rolls through the rings — listening -------------
+
+const frameWave            = (size, t, o) => {
+  const cx = size / 2;
+  const cy = size / 2;
+  // 0.76 base × 1.15 — the undulation pulls the sphere inward, so wave read
+  // ~15% smaller than the other lattice modes; scaled up to match them
+  const R = (size / 2) * 0.874;
+  const pt = makeProj(t * 0.18, 0.38, cx, cy, 1);
+  const rs = radiusScale(size, o.rsPow ?? 0.6);
+
+  const dots        = [];
+  const rings = o.rings ?? 15;
+  const lonDensity = o.lonDensity ?? 40;
+  for (let ri = 0; ri <= rings; ri++) {
+    const lat = -Math.PI / 2 + (ri / rings) * Math.PI;
+    const cosLat = Math.cos(lat);
+    const sinLat = Math.sin(lat);
+    // two waves, different tempi — organic, never quite repeating
+    const w = 0.62 * Math.sin(t * 2.1 - ri * 0.52) + 0.38 * Math.sin(t * 1.27 + ri * 0.83);
+    const rr = R * (0.88 + 0.105 * w);
+    const lonCount = Math.max(1, Math.round(Math.abs(cosLat) * lonDensity));
+    for (let lj = 0; lj < lonCount; lj++) {
+      const lon = (lj / lonCount) * 2 * Math.PI;
+      const [px, py, z] = pt(cosLat * Math.cos(lon) * rr, sinLat * rr, cosLat * Math.sin(lon) * rr);
+      const depth = (z / R + 1) / 2;
+      const crest = Math.max(0, w);
+      dots.push({
+        x: px,
+        y: py,
+        z,
+        r: ((o.rBase ?? 0.6) + (o.rDepth ?? 1.7) * depth) * (1 + 0.4 * crest) * rs,
+        white: 0.66 - 0.56 * depth - 0.1 * crest
+      });
+    }
+  }
+  return finalizeFrame(dots, [], o.rMin);
+};
+
+
+// ---- src/engine/morph.ts
+// Morph: a dotted outline cycling circle → triangle → square → circle —
+// the "shaping" state. Each shape is a continuous closed path
+// parameterised by arc length (top-centre start, clockwise). Every
+// frame the engine blends the two neighbouring paths, then lays the
+// dots EVENLY along the blended outline — spacing stays uniform at
+// every instant of the morph, holds and transitions alike. Plain
+// circle fills only: no canvas/SVG filters, fully cross-browser.
+
+
+
+                                            
+
+function smoothE(x        )         {
+  return x * x * (3 - 2 * x);
+}
+
+function polyPath(verts                                          )       {
+  const V = verts.length;
+  const L           = [];
+  let total = 0;
+  for (let i = 0; i < V; i++) {
+    const a = verts[i];
+    const b = verts[(i + 1) % V];
+    const l = Math.hypot(b[0] - a[0], b[1] - a[1]);
+    L.push(l);
+    total += l;
+  }
+  return (f) => {
+    let target = f * total;
+    let i = 0;
+    while (target > L[i] && i < V - 1) {
+      target -= L[i];
+      i++;
+    }
+    const a = verts[i];
+    const b = verts[(i + 1) % V];
+    const ff = L[i] ? Math.min(1, target / L[i]) : 0;
+    return [a[0] + (b[0] - a[0]) * ff, a[1] + (b[1] - a[1]) * ff];
+  };
+}
+
+const CIRCLE       = (f) => {
+  const a = -Math.PI / 2 + f * 2 * Math.PI;
+  return [Math.cos(a) * 0.24, Math.sin(a) * 0.24];
+};
+const TRIANGLE = polyPath([
+  [0.0, -0.26],
+  [0.24, 0.16],
+  [-0.24, 0.16]
+]);
+// 5-vertex walk so the path STARTS at top-centre like the other shapes
+const SQUARE = polyPath([
+  [0, -0.2],
+  [0.2, -0.2],
+  [0.2, 0.2],
+  [-0.2, 0.2],
+  [-0.2, -0.2]
+]);
+const CYCLE         = [CIRCLE, TRIANGLE, SQUARE];
+
+// low floor keeps sparse outlines possible while never degenerating
+function morphN(d        )         {
+  return Math.max(6, Math.round(34 * d));
+}
+
+const HOLD = 1.4;
+const MORPH = 0.9;
+const SEG = HOLD + MORPH;
+
+// This state was tuned in inkform, which paints it through a blur +
+// threshold "goo" filter; we draw plain circles instead, since `ctx.filter`
+// and SVG filter refs are not safe to rely on across Chrome / Safari /
+// Firefox. The dot GEOMETRY is identical either way — the threshold just
+// yields a hard edge where a plain fill has an antialiased one, so these
+// dots read a touch softer than inkform's. Don't "correct" for that by
+// shrinking the radius: it makes the mark genuinely smaller than the tuning.
+
+const frameMorph            = (size, t, o) => {
+  const K = CYCLE.length;
+  const tc = t % (SEG * K);
+  const k = Math.floor(tc / SEG);
+  const local = tc - k * SEG;
+  const m = local > HOLD ? smoothE((local - HOLD) / MORPH) : 0;
+  const sprd = o.spread ?? 1;
+
+  // blend the two shape PATHS at m, then measure the blended outline
+  const pA = CYCLE[k];
+  const pB = CYCLE[(k + 1) % K];
+  const M = 160;
+  const pts                          = [];
+  for (let i = 0; i < M; i++) {
+    const f = i / M;
+    const a = pA(f);
+    const b = pB(f);
+    pts.push([(a[0] + (b[0] - a[0]) * m) * sprd, (a[1] + (b[1] - a[1]) * m) * sprd]);
+  }
+  const L           = [];
+  let total = 0;
+  for (let i = 0; i < M; i++) {
+    const a = pts[i];
+    const b = pts[(i + 1) % M];
+    const l = Math.hypot(b[0] - a[0], b[1] - a[1]);
+    L.push(l);
+    total += l;
+  }
+
+  // dot radius depends ONLY on rDot (the size knob); the count sets the
+  // gaps. Formed shapes breathe a little (uniform pulse).
+  const n = morphN(o.iconD ?? 1);
+  const re = (o.rDot ?? 0.021) * 1.35 * sprd;
+  const pulse = 1 + 0.02 * Math.sin(local * 3.1);
+
+  const dots        = [];
+  const c2 = size / 2;
+  let seg = 0;
+  let acc = 0;
+  for (let k2 = 0; k2 < n; k2++) {
+    const target = (k2 / n) * total;
+    while (acc + L[seg] < target && seg < M - 1) {
+      acc += L[seg];
+      seg++;
+    }
+    const a = pts[seg];
+    const b = pts[(seg + 1) % M];
+    const f = L[seg] ? Math.min(1, (target - acc) / L[seg]) : 0;
+    const x = (a[0] + (b[0] - a[0]) * f) * pulse;
+    const y = (a[1] + (b[1] - a[1]) * f) * pulse;
+    dots.push({
+      x: c2 + x * size,
+      y: c2 + y * size,
+      z: 0,
+      r: Math.max(0.35, re * size),
+      white: 0.1
+    });
+  }
+  return finalizeFrame(dots, [], o.rMin);
+};
+
+
+// ---- src/engine/orbits.ts
+// Orbits: particles on tilted orbits — the "working" state. No nucleus
+// (the tuned preset runs coreless): just ghost paths and the particles
+// doing the work.
+
+
+
+const frameOrbits            = (size, t, o) => {
+  const cx = size / 2;
+  const cy = size / 2;
+  const R = (size / 2) * 0.82;
+  const pt = makeProj(t * 0.12, 0.3, cx, cy, 1);
+  const rs = radiusScale(size, o.rsPow ?? 0.6);
+
+  const dots        = [];
+  const orbitN = o.orbitN ?? 12;
+  const ghostN = o.ghostN ?? 40;
+  const particles = o.particles ?? 3;
+
+  // orbits: each a tilted circle — a ghost path + running particles
+  for (let orb = 0; orb < orbitN; orb++) {
+    const h1 = hashD(orb, 1.7);
+    const h2 = hashD(orb, 5.2);
+    const h3 = hashD(orb, 8.9);
+    const ro = R * (0.45 + 0.52 * h1);
+    const th = h1 * 2 * Math.PI;
+    const phi = Math.acos(2 * h2 - 1);
+    // orbit plane basis (u, v ⟂ normal n)
+    const nx = Math.sin(phi) * Math.cos(th);
+    const ny = Math.cos(phi);
+    const nz = Math.sin(phi) * Math.sin(th);
+    let ux = -ny;
+    let uy = nx;
+    const uz = 0;
+    const ul = Math.max(1e-6, Math.sqrt(ux * ux + uy * uy));
+    ux /= ul;
+    uy /= ul;
+    const vx = ny * uz - nz * uy;
+    const vy = nz * ux - nx * uz;
+    const vz = nx * uy - ny * ux;
+    const speed = (0.25 + 0.55 * h3) * (h3 > 0.5 ? 1 : -1);
+
+    // ghost path
+    for (let k = 0; k < ghostN; k++) {
+      const a = (k / ghostN) * 2 * Math.PI;
+      const [px, py, z] = pt(
+        (ux * Math.cos(a) + vx * Math.sin(a)) * ro,
+        (uy * Math.cos(a) + vy * Math.sin(a)) * ro,
+        (uz * Math.cos(a) + vz * Math.sin(a)) * ro
+      );
+      const depth = (z / ro + 1) / 2;
+      dots.push({
+        x: px,
+        y: py,
+        z,
+        r: (o.ghostR ?? 0.9) * rs,
+        white: 0.72,
+        a: (o.ghostA ?? 0.5) * (0.4 + 0.6 * depth)
+      });
+    }
+    // the particles doing the work
+    for (let m = 0; m < particles; m++) {
+      const a = t * speed + (m / particles) * 2 * Math.PI + h2 * 6;
+      const [px, py, z] = pt(
+        (ux * Math.cos(a) + vx * Math.sin(a)) * ro,
+        (uy * Math.cos(a) + vy * Math.sin(a)) * ro,
+        (uz * Math.cos(a) + vz * Math.sin(a)) * ro
+      );
+      const depth = (z / ro + 1) / 2;
+      dots.push({
+        x: px,
+        y: py,
+        z,
+        r: ((o.partR ?? 1.2) + (o.partRDepth ?? 1.6) * depth) * rs,
+        white: 0.3 - 0.22 * depth
+      });
+    }
+  }
+  return finalizeFrame(dots, [], o.rMin);
+};
+
+
+// ---- src/engine/ribbon.ts
+// Ribbon: an undulating sash of parallel strands rides a great circle —
+// the "composing" state. The tuned preset freezes the 3D tumble
+// (spin 0), leaving the traveling undulation on a fixed band.
+//
+// The same painter also drives "breathing" (ring), via the `faceOn` flag:
+// a face-on circle whose radius — not its out-of-plane offset — undulates,
+// so it reads as a ring slowly morphing rather than a sash in orbit.
+
+
+
+const frameRibbon            = (size, t, o) => {
+  const cx = size / 2;
+  const cy = size / 2;
+  const R = (size / 2) * 0.78;
+  // spin scales the 3D tumble; spin=0 freezes the band's orientation,
+  // leaving only the traveling undulation
+  const spin = o.spin ?? 1;
+  const camTilt = 0.3;
+  const pt = makeProj(t * 0.1 * spin, camTilt, cx, cy, 1);
+  const rs = radiusScale(size, o.rsPow ?? 0.6);
+
+  const dots        = [];
+  const ghostN = o.ghostN ?? 150;
+  for (let i = 0; i < ghostN; i++) {
+    const d = fibDir(i, ghostN);
+    const [px, py, z] = pt(d[0] * R, d[1] * R, d[2] * R);
+    const depth = (z / R + 1) / 2;
+    dots.push({ x: px, y: py, z, r: 0.8 * rs, white: 0.78, a: 0.1 + 0.22 * depth });
+  }
+
+  // The band plane, precessing (frozen when spin=0). The projection squashes
+  // the band's great circle vertically by cos(ta + camTilt); face-on sets
+  // ta = -camTilt so that term is 1 and the band reads as a true circle
+  // rather than ribbon's tilted ellipse.
+  const ya = t * 0.24 * spin;
+  const ta = o.faceOn ? -camTilt : 0.55 + 0.3 * Math.sin(t * 0.18) * spin;
+  const ux = Math.cos(ya);
+  const uy = 0;
+  const uz = Math.sin(ya);
+  const vx = -uz * Math.sin(ta);
+  const vy = Math.cos(ta);
+  const vz = ux * Math.sin(ta);
+  // plane normal n = u × v
+  const nx = uy * vz - uz * vy;
+  const ny = uz * vx - ux * vz;
+  const nz = ux * vy - uy * vx;
+
+  // Radial lobes swell past R, so pull the base radius in by (most of) the
+  // wobble amplitude. The silhouette then stays inside the frame however far
+  // the deformation is pushed, while lobes keep getting deeper relative to
+  // the mean radius.
+  const wobAmp = 0.23 * (o.wobMul ?? 1);
+  const baseR = o.faceOn ? R / (1 + 0.85 * wobAmp) : R;
+
+  const baseLanes = o.lanes ?? 5;
+  const segs = o.segs ?? 88;
+  const lanes = Math.max(1, Math.round(baseLanes * (o.bandMul ?? 1)));
+  for (let w = 0; w < lanes; w++) {
+    const laneOff = (w - (lanes - 1) / 2) * 0.075;
+    const edge = Math.abs(w - (lanes - 1) / 2) / Math.max(1, (lanes - 1) / 2);
+    for (let k = 0; k < segs; k++) {
+      const a = (k / segs) * 2 * Math.PI;
+      // the undulation: two traveling waves along the band; wobMul
+      // scales the deformation — 0 is a clean band
+      const wob =
+        (0.16 * Math.sin(a * 3 - t * 1.7 + w * 0.22) + 0.07 * Math.sin(a * 5 + t * 1.1)) * (o.wobMul ?? 1);
+      // A normal-direction wobble is cancelled by the re-normalisation below:
+      // the point lands back on the sphere, so the silhouette is pinned at R
+      // and the deformation can only ever pull dots inward. Face-on instead
+      // modulates the in-plane RADIUS, so lobes genuinely swell outward and
+      // pinch inward. Ribbon keeps the original out-of-plane sash wobble.
+      const radial = o.faceOn ? 1 + wob : 1;
+      const off = o.faceOn ? laneOff : laneOff + wob;
+      const x = ux * Math.cos(a) + vx * Math.sin(a) + nx * off;
+      const y = uy * Math.cos(a) + vy * Math.sin(a) + ny * off;
+      const z = uz * Math.cos(a) + vz * Math.sin(a) + nz * off;
+      const l = Math.sqrt(x * x + y * y + z * z);
+      const rr = baseR * radial;
+      const [px, py, zr] = pt((x / l) * rr, (y / l) * rr, (z / l) * rr);
+      const depth = (zr / R + 1) / 2;
+      dots.push({
+        x: px,
+        y: py,
+        z: zr,
+        r: ((o.rBase ?? 1.1) + (o.rDepth ?? 1.7) * depth) * (1 - 0.25 * edge) * rs,
+        white: 0.52 - 0.44 * depth + 0.18 * edge,
+        a: 0.4 + 0.6 * depth
+      });
+    }
+  }
+  return finalizeFrame(dots, [], o.rMin);
+};
+
+
+// ---- src/engine/braid.ts
+// Braid: three strands plait around the sphere — the "weaving" state.
+// Each strand runs pole to pole on a helix, and a radial breathing term
+// makes them trade places, reading as the over/under of a plait.
+
+
+
+const frameBraid            = (size, t, o) => {
+  const cx = size / 2;
+  const cy = size / 2;
+  const R = (size / 2) * 0.76;
+  const pt = makeProj(t * 0.4, 0.3, cx, cy, 1);
+  const rs = radiusScale(size, o.rsPow ?? 0.6);
+
+  const dots        = [];
+  const ghostN = o.ghostN ?? 150;
+  for (let i = 0; i < ghostN; i++) {
+    const d = fibDir(i, ghostN);
+    const [px, py, z] = pt(d[0] * R, d[1] * R, d[2] * R);
+    const depth = (z / R + 1) / 2;
+    dots.push({ x: px, y: py, z, r: 0.8 * rs, white: 0.78, a: 0.1 + 0.22 * depth });
+  }
+
+  const strandN = o.strandN ?? 52;
+  const turns = o.turns ?? 3;
+  for (let s = 0; s < 3; s++) {
+    const phase = (s / 3) * 2 * Math.PI;
+    for (let i = 0; i < strandN; i++) {
+      // u walks pole to pole; the frac() drift slides the whole strand along
+      const u = (frac(i / strandN + t * 0.045) * 2 - 1) * 0.96;
+      const surf = Math.sqrt(Math.max(0, 1 - u * u));
+      const endFade = Math.min(1, (1 - Math.abs(u)) / 0.1);
+      const a = u * Math.PI * turns + phase;
+      // radial breathing: strands trade places — the over/under of a plait
+      const weave = 1 + 0.075 * Math.sin(u * Math.PI * turns * 2 + phase * 2 + t * 0.8);
+      const rr = surf * R * weave;
+      const [px, py, zr] = pt(Math.cos(a) * rr, u * R * weave, Math.sin(a) * rr);
+      const depth = (zr / R + 1) / 2;
+      dots.push({
+        x: px,
+        y: py,
+        z: zr,
+        r: ((o.rBase ?? 1.2) + (o.rDepth ?? 1.8) * depth) * rs,
+        white: 0.55 - 0.45 * depth,
+        a: endFade * (0.45 + 0.55 * depth)
+      });
+    }
+  }
+  return finalizeFrame(dots, [], o.rMin);
+};
+
+
+// ---- src/engine/web.ts
+// Web: a constellation wires itself — the "connecting" state. Nodes drift
+// on the sphere under slow value noise; any pair closer than `thr` grows an
+// edge, and bright packets run along randomly re-picked node pairs.
+
+
+
+const frameWeb            = (size, t, o) => {
+  const cx = size / 2;
+  const cy = size / 2;
+  const R = (size / 2) * 0.8 * (o.spread ?? 1);
+  // note the projector carries the radius as its scale, so node vectors stay
+  // unit-length and distances below are in unit-sphere space
+  const pt = makeProj(t * 0.12, 0.32, cx, cy, R);
+  const rs = radiusScale(size, o.rsPow ?? 0.6);
+
+  const nodeN = o.nodeN ?? 30;
+  const thr = o.thr ?? 0.72;
+  const nodeR = o.nodeR ?? 1.4;
+  const nodeRDepth = o.nodeRDepth ?? 1.8;
+
+  // nodes: fib lattice + slow noise wander, renormalised to the surface
+  const nodes                                  = [];
+  for (let i = 0; i < nodeN; i++) {
+    const d = fibDir(i, nodeN);
+    const x = d[0] + 0.3 * (vnoise(i * 0.31 + 9, t * 0.24) - 0.5) * 2;
+    const y = d[1] + 0.3 * (vnoise(i * 0.53 + 27, t * 0.21) - 0.5) * 2;
+    const z = d[2] + 0.3 * (vnoise(i * 0.77 + 55, t * 0.27) - 0.5) * 2;
+    const l = Math.sqrt(x * x + y * y + z * z);
+    nodes.push([x / l, y / l, z / l]);
+  }
+
+  const lines         = [];
+  const dots        = [];
+
+  // edges between close neighbours, alpha by proximity + depth
+  for (let i = 0; i < nodeN; i++) {
+    for (let j = i + 1; j < nodeN; j++) {
+      const dx = nodes[i][0] - nodes[j][0];
+      const dy = nodes[i][1] - nodes[j][1];
+      const dz = nodes[i][2] - nodes[j][2];
+      const dist = Math.sqrt(dx * dx + dy * dy + dz * dz);
+      if (dist >= thr) continue;
+      const [x1, y1, z1] = pt(nodes[i][0], nodes[i][1], nodes[i][2]);
+      const [x2, y2, z2] = pt(nodes[j][0], nodes[j][1], nodes[j][2]);
+      const depth = ((z1 + z2) / 2 + 1) / 2;
+      lines.push({
+        x1,
+        y1,
+        x2,
+        y2,
+        white: 0.42,
+        a: (1 - dist / thr) * (0.3 + 0.55 * depth),
+        w: Math.max(0.6, (o.lineW ?? 0.8) * rs)
+      });
+    }
+  }
+
+  for (let i = 0; i < nodeN; i++) {
+    const [px, py, z] = pt(nodes[i][0], nodes[i][1], nodes[i][2]);
+    const depth = (z + 1) / 2;
+    const pulse = 1 + 0.25 * Math.sin(t * 1.4 + i * 2.7);
+    dots.push({
+      x: px,
+      y: py,
+      z,
+      r: (nodeR + nodeRDepth * depth) * pulse * rs,
+      white: 0.55 - 0.45 * depth
+    });
+  }
+
+  // signals: bright packets running between paired nodes
+  const signals = o.signals ?? 5;
+  for (let s = 0; s < signals; s++) {
+    const seg = Math.floor(t * 0.55 + s * 7.31);
+    const a = Math.floor(hashD(seg, s * 3.1 + 1.7) * nodeN);
+    const b = Math.floor(hashD(seg, s * 5.7 + 4.2) * nodeN);
+    if (a === b) continue;
+    const f = frac(t * 0.55 + s * 7.31);
+    const x = lerp(nodes[a][0], nodes[b][0], f);
+    const y = lerp(nodes[a][1], nodes[b][1], f);
+    const z = lerp(nodes[a][2], nodes[b][2], f);
+    const l = Math.max(1e-6, Math.sqrt(x * x + y * y + z * z));
+    const [px, py, zr] = pt(x / l, y / l, z / l);
+    const depth = (zr + 1) / 2;
+    dots.push({
+      x: px,
+      y: py,
+      z: zr,
+      r: (nodeR * 1.5 + nodeRDepth * depth) * rs,
+      white: 0.05,
+      a: 0.5 + 0.5 * depth
+    });
+  }
+
+  return finalizeFrame(dots, lines, o.rMin);
+};
+
+
+// ---- src/engine/registry.ts
+// Mode key → geometry builder. Kept separate from the presets so tree
+// shaking can in principle drop unused modes in custom builds.
+
+
+
+
+
+
+
+
+
+
+/**
+ * The portable surface: pure geometry, no canvas. The React Native port
+ * imports exactly these functions, so its output is identical to the web's
+ * by construction rather than by re-implementation.
+ */
+const MODE_FRAMES                             = {
+  orbits: frameOrbits,
+  globe: frameGlobe,
+  rubik: frameRubik,
+  wave: frameWave,
+  web: frameWeb,
+  braid: frameBraid,
+  ribbon: frameRibbon,
+  // ring shares ribbon's geometry — the `faceOn` profile flag switches it
+  ring: frameRibbon,
+  morph: frameMorph
+};
+
+/** Canvas painters, derived from the geometry. The 2D-canvas binding. */
+const MODE_DRAWS                            = Object.fromEntries(
+  Object.entries(MODE_FRAMES).map(([key, frame]) => [
+    key,
+    ((ctx, size, t, dark, opts) => paintFrame(ctx, frame(size, t, opts), dark))            
+  ])
+)                             ;
+
+
+// ---- src/presets.ts
+// The shipped tunings: nine states × two sizes, baked from the inkform
+// mini-page tuning session. `count`/`size` are multipliers over the base
+// fine profiles; `speed` multiplies the shared clock. Resolved once per
+// (state, size) pair and cached — the render loop sees plain numbers.
+
+
+
+
+                     
+            
+           
+           
+          
+         
+           
+            
+          
+            
+
+const STATE_TO_MODE                            = {
+  working: 'orbits',
+  searching: 'globe',
+  solving: 'rubik',
+  listening: 'wave',
+  connecting: 'web',
+  weaving: 'braid',
+  composing: 'ribbon',
+  breathing: 'ring',
+  shaping: 'morph'
+};
+
+                         
+                
+                
+               
+                                                       
+                   
+ 
+
+/** Exported so `scripts/extract-spec.ts` can emit them for the native ports. */
+const PRESETS                                           = {
+  orbits: {
+    64: { speed: 1.885, count: 1, size: 1 },
+    20: { speed: 3.9, count: 0.238, size: 2.4 }
+  },
+  globe: {
+    64: { speed: 2.015, count: 0.42, size: 1.15, extra: { scanMul: 4.08, dimBase: 0.45 } },
+    20: { speed: 2.665, count: 0.105, size: 1.75, extra: { scanMul: 4.335, dimBase: 0.45 } }
+  },
+  rubik: {
+    64: { speed: 1.82, count: 0.35, size: 1.05 },
+    20: { speed: 1.95, count: 0.088, size: 1.9 }
+  },
+  wave: {
+    64: { speed: 4.388, count: 0.341, size: 1 },
+    20: { speed: 3.998, count: 0.105, size: 1.6 }
+  },
+  web: {
+    64: { speed: 3.315, count: 1.35, size: 0.95 },
+    20: { speed: 6.63, count: 0.25, size: 1.52 }
+  },
+  braid: {
+    64: { speed: 1.625, count: 0.5, size: 1 },
+    20: { speed: 2.75, count: 0.1125, size: 1.36 }
+  },
+  ribbon: {
+    64: { speed: 2.34, count: 0.25, size: 0.85, extra: { spin: 0, bandMul: 3.9, wobMul: 1 } },
+    20: { speed: 3.12, count: 0.051, size: 1.073, extra: { spin: 0, bandMul: 4.94, wobMul: 1 } }
+  },
+  ring: {
+    64: { speed: 3.24, count: 0.25, size: 0.956, extra: { spin: 0, bandMul: 3.627, wobMul: 0.368 } },
+    20: { speed: 3.78, count: 0.028, size: 1.622, extra: { spin: 0, bandMul: 3.968, wobMul: 0.565 } }
+  },
+  morph: {
+    64: { speed: 2.405, count: 0.702, size: 0.395, extra: { spread: 1.45 } },
+    20: { speed: 2.08, count: 0.53, size: 1.011, extra: { spread: 1.45 } }
+  }
+};
+
+                           
+                
+                
+                 
+ 
+
+const cache = new Map                  ();
+
+/** Resolve a (state, size) pair to its mode + fully-scaled draw options. */
+function resolvePreset(state          , size         )           {
+  const key = `${state}-${size}`;
+  const hit = cache.get(key);
+  if (hit) return hit;
+
+  const mode = STATE_TO_MODE[state];
+  const preset = PRESETS[mode][size];
+  let opts           = { ...BASE_PROFILES[mode] };
+  if (preset.count !== 1) opts = scaleCounts(opts, preset.count);
+  if (preset.size !== 1) opts = scaleRadii(opts, preset.size);
+  if (preset.extra) opts = { ...opts, ...preset.extra };
+
+  const resolved           = { mode, speed: preset.speed, opts };
+  cache.set(key, resolved);
+  return resolved;
+}
+
+
+window.ThinkingOrbs = { MODE_DRAWS, MODE_FRAMES, resolvePreset };
+})();
+</script>
+<script>
+(function () {
+  var TO = window.ThinkingOrbs;
+  var STATES = ['working', 'searching', 'solving', 'listening', 'connecting', 'weaving', 'composing', 'breathing', 'shaping'];
+  var LABEL = { working: 'Working', searching: 'Searching', solving: 'Solving', listening: 'Listening', connecting: 'Connecting', weaving: 'Weaving', composing: 'Composing', breathing: 'Thinking', shaping: 'Shaping' };
+  var reduced = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var $ = function (id) { return document.getElementById(id); };
+
+  /* a tiny canvas driver around the engine (same loop the React component runs) */
+  function Orb(canvas, size, state) {
+    this.c = canvas; this.size = size; this.dpr = Math.min(2, window.devicePixelRatio || 1);
+    canvas.width = Math.round(size * this.dpr); canvas.height = Math.round(size * this.dpr);
+    canvas.style.width = canvas.style.height = size + 'px';
+    this.ctx = canvas.getContext('2d'); this.set(state);
+  }
+  Orb.prototype.set = function (state) { this.state = state; this.r = TO.resolvePreset(state, this.size); };
+  Orb.prototype.draw = function (now) {
+    var s = this.ctx; s.setTransform(this.dpr, 0, 0, this.dpr, 0, 0); s.clearRect(0, 0, this.size, this.size);
+    TO.MODE_DRAWS[this.r.mode](s, this.size, now / 1000 * this.r.speed, true, this.r.opts);
+  };
+  var orbs = [new Orb($('orb64'), 64, 'breathing'), new Orb($('orb20'), 20, 'breathing')];
+  var cells = [];
+  function frame(now) { orbs.forEach(function (o) { o.draw(now); }); cells.forEach(function (c) { c.draw(now); }); if (!reduced) requestAnimationFrame(frame); }
+
+  /* the nine states, as a gallery that also drives the notch */
+  var grid = $('states'), chips = $('chips');
+  STATES.forEach(function (st) {
+    var b = document.createElement('button'); b.className = 'cell'; b.type = 'button'; b.setAttribute('aria-pressed', 'false'); b.dataset.state = st;
+    var cv = document.createElement('canvas'); cv.setAttribute('role', 'img'); cv.setAttribute('aria-label', LABEL[st] + ' orb');
+    var o = new Orb(cv, 64, st); cells.push(o);
+    var l = document.createElement('span'); l.textContent = LABEL[st];
+    var m = document.createElement('small'); m.textContent = TO.resolvePreset(st, 64).mode;
+    b.append(cv, l, m); grid.append(b); b.addEventListener('click', function () { pick(st); });
+    var ch = document.createElement('button'); ch.className = 'chip'; ch.type = 'button'; ch.setAttribute('aria-pressed', 'false'); ch.textContent = LABEL[st]; ch.dataset.state = st;
+    ch.addEventListener('click', function () { pick(st); }); chips.append(ch);
+  });
+  function pick(st) {
+    orbs.forEach(function (o) { o.set(st); });
+    document.querySelectorAll('[data-state]').forEach(function (e) { if (e.tagName === 'BUTTON') e.setAttribute('aria-pressed', String(e.dataset.state === st)); });
+    $('stateName').textContent = st;
+    if (reduced) frame(performance.now());
+  }
+
+  /* transitions.dev: text swap */
+  function swap(el, next) {
+    if (el.textContent === next) return;
+    var dur = 200;
+    el.classList.add('is-exit');
+    setTimeout(function () { el.textContent = next; el.classList.remove('is-exit'); el.classList.add('is-enter-start'); void el.offsetHeight; el.classList.remove('is-enter-start'); }, reduced ? 0 : dur);
+  }
+
+  /* the notch: open, close, tabs */
+  var notch = $('notch'), body = $('body');
+  function setOpen(on) { notch.dataset.open = String(on); body.dataset.open = String(on); $('pill').setAttribute('aria-label', on ? 'Close the notch' : 'Open the notch'); }
+  $('pill').addEventListener('click', function () { setOpen(true); });
+  var TABS = [
+    { id: 'ai', name: 'NotchAI', off: '<path d="M5 4l12 6-5 1.6L10 17z"/><path d="M14 14l4 4"/>', on: '<path d="M5 4l12 6-5 1.6L10 17z"/>' },
+    { id: 'chat', name: 'Chat', off: '<path d="M4 6a3 3 0 013-3h10a3 3 0 013 3v7a3 3 0 01-3 3H10l-4 3v-3H7a3 3 0 01-3-3z"/>', on: '<path d="M4 6a3 3 0 013-3h10a3 3 0 013 3v7a3 3 0 01-3 3H10l-4 3v-3H7a3 3 0 01-3-3z"/>', text: 'Ask anything. Answers stream in and are saved to AI History.' },
+    { id: 'research', name: 'Research', off: '<circle cx="11" cy="11" r="6"/><path d="M16 16l4 4"/>', on: '<circle cx="11" cy="11" r="6"/><path d="M16 16l4 4"/>', text: 'Search the web with DuckDuckGo or your own SearXNG, read the top pages and answer with citations.' },
+    { id: 'docs', name: 'Documents', off: '<path d="M7 3h7l5 5v13H7z"/><path d="M14 3v5h5"/>', on: '<path d="M7 3h7l5 5v13H7z"/>', text: 'Drop a Word, Excel, PowerPoint or PDF file here to summarise it. Files are only read.' },
+    { id: 'routines', name: 'Routines', off: '<circle cx="12" cy="12" r="8"/><path d="M12 7v5l3 2"/>', on: '<circle cx="12" cy="12" r="8"/>', text: 'Run a saved question every morning. Pauses itself after three failures.' },
+    { id: 'report', name: 'Report', off: '<path d="M5 5h14v10H11l-4 4v-4H5z"/><path d="M12 8v3M12 12.8v.2"/>', on: '<path d="M5 5h14v10H11l-4 4v-4H5z"/>', text: 'Report a bug or an idea. It opens a GitHub issue that already says Mac, version and plan.' },
+  ];
+  var tabs = $('tabs'), current = 'ai';
+  TABS.forEach(function (t) {
+    var b = document.createElement('button'); b.className = 'tab'; b.type = 'button'; b.setAttribute('role', 'tab'); b.setAttribute('aria-label', t.name); b.title = t.name; b.dataset.id = t.id; b.setAttribute('aria-selected', String(t.id === current));
+    var svg = function (cls, inner) { return '<svg class="' + cls + '" viewBox="0 0 24 24" aria-hidden="true">' + inner + '</svg>'; };
+    b.innerHTML = svg('off', t.off) + svg('on', t.on);
+    if (t.id === 'report') b.insertAdjacentHTML('beforeend', '<span class="t-badge" id="badge" data-open="false"><span class="t-badge-dot">1</span></span>');
+    b.addEventListener('click', function () { show(t.id); }); tabs.append(b);
+  });
+  tabs.insertAdjacentHTML('beforeend', '<span class="spacer"></span><button class="collapse" id="collapse" type="button" aria-label="Close the notch"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 15l6-6 6 6"/></svg></button>');
+  $('collapse').addEventListener('click', function () { setOpen(false); });
+  function show(id) {
+    current = id;
+    tabs.querySelectorAll('.tab').forEach(function (b) { b.setAttribute('aria-selected', String(b.dataset.id === id)); });
+    var t = TABS.filter(function (x) { return x.id === id; })[0];
+    $('view-ai').hidden = id !== 'ai'; $('view-other').hidden = id === 'ai';
+    if (id !== 'ai') { $('otherTitle').textContent = t.name; $('otherText').textContent = t.text; }
+    if (id === 'report') $('badge').dataset.open = 'false';
+  }
+  setTimeout(function () { $('badge').dataset.open = 'true'; }, 900);          // a notification arrives on Report
+
+  /* model picker with the Local first labels */
+  var dd = $('dd'), model = $('model');
+  function ddOpen(on) { dd.dataset.open = String(on); model.setAttribute('aria-expanded', String(on)); }
+  model.addEventListener('click', function (e) { e.stopPropagation(); ddOpen(dd.dataset.open !== 'true'); });
+  document.addEventListener('click', function () { ddOpen(false); });
+  dd.querySelectorAll('.opt:not([disabled])').forEach(function (o) {
+    o.addEventListener('click', function () {
+      $('modelName').textContent = o.dataset.name; var tag = $('modelTag'); tag.className = 'tag ' + (o.dataset.kind === 'local' ? 'local' : 'lan'); tag.textContent = o.dataset.kind === 'local' ? 'Local' : 'Local network'; ddOpen(false);
+    });
+  });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') ddOpen(false); });
+
+  /* the demo: the same orb shows each step NotchAI really takes */
+  var running = false;
+  function status(text, orbState, sub) { swap($('statusText'), text); swap($('pillText'), text.length > 14 ? text.slice(0, 13) + '…' : text); if (orbState) pick(orbState); if (sub) $('subText').firstChild.textContent = sub; }
+  $('run').addEventListener('click', function () {
+    if (running) return; running = true; $('run').disabled = true; $('check').hidden = true; $('check').classList.remove('play');
+    var steps = [
+      [0, 'Searching the web…', 'searching', 'Step 1 of 4 · search (sends the question to DuckDuckGo)'],
+      [1700, 'Reading 3 pages…', 'connecting', 'Step 2 of 4 · public pages only'],
+      [3400, 'Thinking…', 'breathing', 'Step 3 of 4 · ' + $('modelName').textContent],
+      [5200, 'Writing the answer…', 'composing', 'Step 4 of 4 · with citations'],
+    ];
+    steps.forEach(function (s) { setTimeout(function () { status(s[1], s[2], s[3]); }, s[0]); });
+    setTimeout(function () {
+      status('Done', 'shaping', 'Answer is in Chat'); var c = $('check'); c.hidden = false; void c.getBoundingClientRect(); c.classList.add('play');
+      setTimeout(function () { status('Ready', 'breathing', 'Orb state: breathing'); $('subText').firstChild.textContent = 'Orb state: '; c.hidden = true; $('run').disabled = false; running = false; }, 2200);
+    }, 7000);
+  });
+
+  /* page theme toggle (the notch itself stays dark, like the real one) */
+  $('themebtn').addEventListener('click', function () {
+    var root = document.documentElement, dark = root.dataset.theme ? root.dataset.theme === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches;
+    root.dataset.theme = dark ? 'light' : 'dark';
+  });
+
+  pick('breathing');
+  if (reduced) frame(performance.now()); else requestAnimationFrame(frame);
+})();
+</script>
